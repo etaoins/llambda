@@ -4,8 +4,6 @@ import llambda._
 
 sealed abstract class Datum {
   def truth = false
-
-  def toProperList : Option[List[Datum]] = None
 }
 
 sealed abstract class Atom extends Datum
@@ -26,11 +24,11 @@ object FalseLiteral  extends BooleanLiteral(false)
 
 sealed abstract class NumberLiteral extends Atom 
 
-case class IntegerLiteral(value : Int) extends Atom {
+case class IntegerLiteral(value : Int) extends NumberLiteral {
   override def toString = value.toString
 }
 
-case class RealLiteral(value : Double) extends Atom {
+case class RealLiteral(value : Double) extends NumberLiteral {
   override def toString = value.toString
 }
 
@@ -49,21 +47,46 @@ case class Symbol(name : String) extends Atom {
 
 case object EmptyList extends Atom {
   override def toString = "()"
-
-  override def toProperList = Some(Nil)
 }
 
 case class Pair(car : Datum, cdr : Datum) extends Datum {
-  override def toString = toProperList match {
-      case Some(subdata) => "(" + subdata.map(_.toString).reduceLeft(_ + " " + _) + ")"
-      case None => "(" + car.toString + " . " + cdr.toString + ")"
+  override def toString = this match {
+    case ProperList(data) =>
+      "(" + data.mkString(" ") + ")"
+
+    case ImproperList(head, terminator) =>
+      "(" + head.mkString(" ") + " . " + terminator + ")"
+
+    case _ =>
+      // This isn't possible but the compile can't prove that
+      "(" + car + " . " + cdr + ")"
   }
-  
-  override def toProperList = cdr.toProperList.map(car :: _) 
+}
+
+object ImproperList {
+  def unapply(datum : Datum) : Option[(List[Datum], Datum)] = datum match {
+    case Pair(_, EmptyList) => None // This is a proper list
+    case Pair(car, tail : Pair)  => 
+      ImproperList.unapply(tail).map { case (head, terminator) =>
+        (car :: head, terminator)
+      }
+    case Pair(car, cdr) =>
+      // This is the end of an improper list
+      Some(List(car), cdr)
+    case _ => None
+  }
+
+  def apply(head : List[Datum], terminator : Datum) = {
+    head.foldRight(terminator : ast.Datum) { (car, cdr) => Pair(car, cdr) }
+  }
 }
 
 object ProperList {
-  def unapply(datum : Datum) = datum.toProperList
+  def unapply(datum : Datum) : Option[List[Datum]] = datum match {
+    case EmptyList => Some(Nil)
+    case Pair(car, cdr) => ProperList.unapply(cdr).map(car :: _)
+    case _ => None
+  }
 
   def apply(data : Datum*) : Datum = 
     data.foldRight(EmptyList : Datum) { (car, cdr) => Pair(car, cdr) }

@@ -122,7 +122,7 @@ object SchemeParser extends RegexParsers {
   }
 
   def improperList = "(" ~> rep1(datum) ~ "." ~ datum <~ ")" ^^ { case head ~ _  ~ terminator =>
-    head.foldRight(terminator : ast.Datum) { (car, cdr) => ast.Pair(car, cdr) }
+    ast.ImproperList(head, terminator)
   }
 
   def vector = "#(" ~> rep(datum) <~ ")" ^^ { ast.Vector(_ : _*) }
