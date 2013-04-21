@@ -6,10 +6,11 @@ import scala.util.parsing.combinator._
 import scala.language.postfixOps
 
 object SchemeParserDefinitions {
-  // This is monsterous to exclude a single "." from being considered an identifier
-  val identifierPattern = """(([a-zA-Z0-9\!\$\%\&\*\+\-\/\:\<\=\>\?\@\^\_\.]){2,}""" +
-                            "|" +
-                          """([a-zA-Z0-9\!\$\%\&\*\+\-\/\:\<\=\>\?\@\^\_]))"""
+  // This is monsterous to exclude a single "." and starting with numbers
+  val identifierPattern = """(([a-zA-Z\!\$\%\&\*\+\-\/\:\<\=\>\?\@\^\_\.])""" +
+                           """([a-zA-Z0-9\!\$\%\&\*\+\-\/\:\<\=\>\?\@\^\_\.])+""" +
+                              "|" +
+                           """([a-zA-Z\!\$\%\&\*\+\-\/\:\<\=\>\?\@\^\_]))"""
 
   val hexEscapePattern = """\\x([0-9A-Za-z]+);"""
   val lineContinuationPattern = """\\\s*\n\s*"""
