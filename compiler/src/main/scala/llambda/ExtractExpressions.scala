@@ -4,25 +4,25 @@ class MalformedExpressionException(message : String) extends SemanticException(m
 class BadSpecialFormException(message : String) extends SemanticException(message)
 
 object ExtractExpressions {
-  private def requiredSymbolName(datum : ast.Datum) : String = datum match {
-    case ast.Symbol(name) => name
+  private def requiredVarReference(datum : ast.Datum) : et.UnresolvedVar = datum match {
+    case ast.Symbol(name) => et.UnresolvedVar(name)
     case _ => throw new BadSpecialFormException("Symbol expected, found " + datum)
   }
 
-  def apply(datum : ast.Datum) : et.Expression = datum match {
+  def apply(datum : ast.Datum) : et.Expression[et.UnresolvedVar] = datum match {
     case ast.ProperList(ast.Symbol("lambda") :: ast.Symbol(restArg) :: body) =>
       val bodyExpressions = body.map(ExtractExpressions(_))
-      et.Procedure(List(), Some(restArg), bodyExpressions)
+      et.Procedure(List(), Some(et.UnresolvedVar(restArg)), bodyExpressions)
     
     case ast.ProperList(ast.Symbol("lambda") :: ast.ProperList(fixedArgData) :: body) =>
-      val fixedArgNames = fixedArgData.map(requiredSymbolName(_))
+      val fixedArgNames = fixedArgData.map(requiredVarReference(_))
       val bodyExpressions = body.map(ExtractExpressions(_))
       et.Procedure(fixedArgNames, None, bodyExpressions)
     
     case ast.ProperList(ast.Symbol("lambda") :: ast.ImproperList(fixedArgData, ast.Symbol(restArg)) :: body) =>
-      val fixedArgNames = fixedArgData.map(requiredSymbolName(_))
+      val fixedArgNames = fixedArgData.map(requiredVarReference(_))
       val bodyExpressions = body.map(ExtractExpressions(_))
-      et.Procedure(fixedArgNames, Some(restArg), body.map(ExtractExpressions(_)))
+      et.Procedure(fixedArgNames, Some(et.UnresolvedVar(restArg)), body.map(ExtractExpressions(_)))
     
     case ast.ProperList(ast.Symbol("quote") :: innerDatum :: Nil) =>
       et.Literal(innerDatum)
@@ -34,10 +34,10 @@ object ExtractExpressions {
       et.Conditional(ExtractExpressions(test), ExtractExpressions(trueExpr), None)
 
     case ast.ProperList(ast.Symbol(name) :: operands) =>
-      et.Application(name, operands.map(ExtractExpressions(_)))
+      et.Application(et.UnresolvedVar(name), operands.map(ExtractExpressions(_)))
 
     case ast.Symbol(varName) =>
-      et.VarReference(varName)
+      et.VarReference(et.UnresolvedVar(varName))
 
     // These all evaluate to themselves. See R7RS section 4.1.2
     case literal : ast.NumberLiteral =>

@@ -13,7 +13,7 @@ class ExtractExpressionsSuite extends FunSuite with Inside {
     }
 
   test("variable reference") {
-    assert(expressionFor("a") === et.VarReference("a"))
+    assert(expressionFor("a") === et.VarReference(et.UnresolvedVar("a")))
   }
 
   test("literals") {
@@ -80,8 +80,11 @@ class ExtractExpressionsSuite extends FunSuite with Inside {
 
   test("application") {
     assert(expressionFor("(+ 3 4)") === et.Application(
-      "+",
-      List(et.Literal(ast.IntegerLiteral(3)), et.Literal(ast.IntegerLiteral(4)))
+      et.UnresolvedVar("+"),
+      List(
+        et.Literal[et.UnresolvedVar](ast.IntegerLiteral(3)),
+        et.Literal[et.UnresolvedVar](ast.IntegerLiteral(4))
+      )
     ))
 
     // R7RS explicitly calls this an error
@@ -92,32 +95,43 @@ class ExtractExpressionsSuite extends FunSuite with Inside {
 
   test("lambdas") {
     assert(expressionFor("(lambda (x) (+ x x))") === et.Procedure(
-      List("x"), None,
+      List(et.UnresolvedVar("x")), None,
       List(
-        et.Application("+", List(et.VarReference("x"), et.VarReference("x")))
+        et.Application(
+          et.UnresolvedVar("+"), 
+          List(
+            et.VarReference(et.UnresolvedVar("x")),
+            et.VarReference(et.UnresolvedVar("x"))
+          )
+        )
       )
     ))
 
     assert(expressionFor("(lambda x x)") === et.Procedure(
-      Nil, Some("x"),
-      List(et.VarReference("x"))
+      Nil, Some(et.UnresolvedVar("x")),
+      List(et.VarReference(et.UnresolvedVar("x")))
     ))
 
     assert(expressionFor("(lambda (x y . z) z)") === et.Procedure(
-      List("x", "y"), Some("z"),
-      List(et.VarReference("z"))
+      List(et.UnresolvedVar("x"), et.UnresolvedVar("y")), Some(et.UnresolvedVar("z")),
+      List(et.VarReference(et.UnresolvedVar("z")))
     ))
   }
 
   test("conditionals") {
     assert(expressionFor("(if (> 3 2) 'yes 'no)") === et.Conditional(
-      et.Application(">", List(et.Literal(ast.IntegerLiteral(3)), et.Literal(ast.IntegerLiteral(2)))),
+      et.Application(et.UnresolvedVar(">"), List(
+        et.Literal[et.UnresolvedVar](ast.IntegerLiteral(3)),
+        et.Literal[et.UnresolvedVar](ast.IntegerLiteral(2)))
+      ),
       et.Literal(ast.Symbol("yes")),
-      Some(et.Literal(ast.Symbol("no")))
+      Some(et.Literal[et.UnresolvedVar](ast.Symbol("no")))
     ))
     
     assert(expressionFor("(if (> 3 2) 'yes)") === et.Conditional(
-      et.Application(">", List(et.Literal(ast.IntegerLiteral(3)), et.Literal(ast.IntegerLiteral(2)))),
+      et.Application(et.UnresolvedVar(">"), List(
+        et.Literal[et.UnresolvedVar](ast.IntegerLiteral(3)),
+        et.Literal[et.UnresolvedVar](ast.IntegerLiteral(2)))),
       et.Literal(ast.Symbol("yes")),
       None
     ))
