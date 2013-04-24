@@ -58,6 +58,10 @@ case class SyntaxRule[T <: AbstractVar](pattern : List[ast.Datum], template : Ex
     indentSubexpr(template.toString)
 }
 
+case class DefineVar[T <: AbstractVar](variable : T, value : Expression[T]) extends Expression[T] {
+  override def toString = s"var ${variable} = ${value}"
+}
+
 case class DefineSyntax[T <: AbstractVar](keyword : T, literals : List[String], rules : List[SyntaxRule[T]]) extends Expression[T] with IndentedSubexpr {
   override def toString = s"define ${keyword} with literal (${literals.mkString(", ")})\n" +
     rules.map { rule =>

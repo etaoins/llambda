@@ -137,6 +137,39 @@ class ExtractExpressionsSuite extends FunSuite with Inside {
     ))
   }
 
+  test("define") {
+    assert(expressionFor("""(define a 2)""") === et.DefineVar(
+      et.UnresolvedVar("a"), et.Literal(ast.IntegerLiteral(2))
+    ))
+
+    assert(expressionFor("""(define (return-true unused-param) #t)""") === et.DefineVar(
+      et.UnresolvedVar("return-true"),
+      et.Procedure(
+        List(et.UnresolvedVar("unused-param")),
+        None,
+        List(et.Literal[et.UnresolvedVar](ast.TrueLiteral))
+      )
+    ))
+    
+    assert(expressionFor("""(define (return-false some . rest) #f)""") === et.DefineVar(
+      et.UnresolvedVar("return-false"),
+      et.Procedure(
+        List(et.UnresolvedVar("some")),
+        Some(et.UnresolvedVar("rest")),
+        List(et.Literal[et.UnresolvedVar](ast.FalseLiteral))
+      )
+    ))
+    
+    assert(expressionFor("""(define (return-six . rest) 6)""") === et.DefineVar(
+      et.UnresolvedVar("return-six"),
+      et.Procedure(
+        List(),
+        Some(et.UnresolvedVar("rest")),
+        List(et.Literal[et.UnresolvedVar](ast.IntegerLiteral(6)))
+      )
+    ))
+  }
+
   test("macros") {
     assert(expressionFor(
       """(define-syntax and

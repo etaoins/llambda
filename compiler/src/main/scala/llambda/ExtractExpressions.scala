@@ -9,20 +9,21 @@ object ExtractExpressions {
     case _ => throw new BadSpecialFormException("Symbol expected, found " + datum)
   }
 
+  private def parseProcedure(fixedArgs : List[ast.Datum], restArg : Option[String], body : List[ast.Datum]) : et.Procedure[et.UnresolvedVar] = {
+      val fixedArgNames = fixedArgs.map(requiredVarReference(_))
+      val bodyExpressions = body.map(ExtractExpressions(_))
+      et.Procedure(fixedArgNames, restArg.map(et.UnresolvedVar(_)), bodyExpressions)
+  }
+
   def apply(datum : ast.Datum) : et.Expression[et.UnresolvedVar] = datum match {
     case ast.ProperList(ast.Symbol("lambda") :: ast.Symbol(restArg) :: body) =>
-      val bodyExpressions = body.map(ExtractExpressions(_))
-      et.Procedure(List(), Some(et.UnresolvedVar(restArg)), bodyExpressions)
+      parseProcedure(List(), Some(restArg), body)
     
     case ast.ProperList(ast.Symbol("lambda") :: ast.ProperList(fixedArgData) :: body) =>
-      val fixedArgNames = fixedArgData.map(requiredVarReference(_))
-      val bodyExpressions = body.map(ExtractExpressions(_))
-      et.Procedure(fixedArgNames, None, bodyExpressions)
+      parseProcedure(fixedArgData, None, body)
     
     case ast.ProperList(ast.Symbol("lambda") :: ast.ImproperList(fixedArgData, ast.Symbol(restArg)) :: body) =>
-      val fixedArgNames = fixedArgData.map(requiredVarReference(_))
-      val bodyExpressions = body.map(ExtractExpressions(_))
-      et.Procedure(fixedArgNames, Some(et.UnresolvedVar(restArg)), body.map(ExtractExpressions(_)))
+      parseProcedure(fixedArgData, Some(restArg), body)
     
     case ast.ProperList(ast.Symbol("define-syntax") :: ast.Symbol(keyword) ::
                          ast.ProperList(
@@ -40,6 +41,15 @@ object ExtractExpressions {
       }
 
       et.DefineSyntax(et.UnresolvedVar(keyword), literalNames, parsedRules)
+
+    case ast.ProperList(ast.Symbol("define") :: ast.Symbol(variable) :: value :: Nil) =>
+      et.DefineVar(et.UnresolvedVar(variable), ExtractExpressions(value))
+    
+    case ast.ProperList(ast.Symbol("define") :: ast.ImproperList(ast.Symbol(variable) :: fixedArgs, ast.Symbol(restArg)) :: body) =>
+      et.DefineVar(et.UnresolvedVar(variable), parseProcedure(fixedArgs, Some(restArg), body))
+    
+    case ast.ProperList(ast.Symbol("define") :: ast.ProperList(ast.Symbol(variable) :: fixedArgs) :: body) =>
+      et.DefineVar(et.UnresolvedVar(variable), parseProcedure(fixedArgs, None, body))
     
     case ast.ProperList(ast.Symbol("quote") :: innerDatum :: Nil) =>
       et.Literal(innerDatum)
