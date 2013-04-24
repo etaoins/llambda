@@ -136,5 +136,50 @@ class ExtractExpressionsSuite extends FunSuite with Inside {
       None
     ))
   }
+
+  test("macros") {
+    assert(expressionFor(
+      """(define-syntax and
+           (syntax-rules ()
+             ((and) #t)
+             ((and test) test)
+             ((and test1 test2 ...)
+               (if test1 (and test2 ...) #f))))"""
+      ) === et.DefineSyntax[et.UnresolvedVar](et.UnresolvedVar("and"), Nil, List(
+        et.SyntaxRule(Nil, et.Literal(ast.TrueLiteral)),
+        et.SyntaxRule(List(ast.Symbol("test")), et.VarReference(et.UnresolvedVar("test"))),
+        et.SyntaxRule(List(ast.Symbol("test1"), ast.Symbol("test2"), ast.Symbol("...")), 
+          et.Conditional(
+            et.VarReference(et.UnresolvedVar("test1")),
+            et.Application(et.UnresolvedVar("and"),
+              List(et.VarReference(et.UnresolvedVar("test2")), et.VarReference(et.UnresolvedVar("...")))
+            ),
+            Some(et.Literal(ast.FalseLiteral))
+          )
+        )
+      )))
+
+    assert(expressionFor(
+      """(define-syntax cond
+           (syntax-rules (else =>)
+             ((cond (else result1 result2 ...))
+              (begin result1 result2 ...))))"""
+    ) === et.DefineSyntax[et.UnresolvedVar](et.UnresolvedVar("cond"), List("else", "=>"),
+      List(
+        et.SyntaxRule(
+          List(ast.ProperList(
+              ast.Symbol("else"), ast.Symbol("result1"), ast.Symbol("result2"), ast.Symbol("...")
+          )),
+          et.Application(et.UnresolvedVar("begin"), 
+            List(
+              et.VarReference(et.UnresolvedVar("result1")),
+              et.VarReference(et.UnresolvedVar("result2")),
+              et.VarReference(et.UnresolvedVar("..."))
+            )
+          )
+        )
+      )
+    ))
+  }
 }
 

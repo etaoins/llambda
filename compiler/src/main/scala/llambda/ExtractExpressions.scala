@@ -24,6 +24,23 @@ object ExtractExpressions {
       val bodyExpressions = body.map(ExtractExpressions(_))
       et.Procedure(fixedArgNames, Some(et.UnresolvedVar(restArg)), body.map(ExtractExpressions(_)))
     
+    case ast.ProperList(ast.Symbol("define-syntax") :: ast.Symbol(keyword) ::
+                         ast.ProperList(
+                           ast.Symbol("syntax-rules") :: ast.ProperList(literals) :: rules
+                         ) :: Nil) =>
+      val literalNames = literals.map { 
+        case ast.Symbol(name) => name
+        case nonSymbol => throw new BadSpecialFormException("Symbol expected in literal list, found " + nonSymbol)
+      }
+
+      val parsedRules = rules.map {
+        case ast.ProperList(ast.ProperList(_ :: pattern) :: template :: Nil) =>
+          et.SyntaxRule(pattern, ExtractExpressions(template))
+        case noMatch => throw new BadSpecialFormException("Unable to parse syntax rule " + noMatch)
+      }
+
+      et.DefineSyntax(et.UnresolvedVar(keyword), literalNames, parsedRules)
+    
     case ast.ProperList(ast.Symbol("quote") :: innerDatum :: Nil) =>
       et.Literal(innerDatum)
     
