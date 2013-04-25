@@ -40,14 +40,7 @@ class ParseOnlyMode extends SchemeParsingMode("parse") {
     data.map(_.toString)
 }
 
-/** Extracts primitive expressions from (scheme core) */
-class PrimitiveExpressionMode extends SchemeParsingMode("primitive") {
-  implicit val primitiveScope = new Scope(SchemePrimitives.bindings)
-
-  def evalData(data : List[ast.Datum]) =
-    data.map(ExtractExpressions(_).toString)
-}
-
+/** Extract expressions allowed in a library, program or lambda body */
 class BodyExpressionMode extends SchemeParsingMode("body") {
   implicit var currentScope = new Scope(SchemePrimitives.bindings)
 
@@ -71,9 +64,6 @@ object Repl {
 
       case ":parse" =>
         acceptInput(new ParseOnlyMode)
-      
-      case ":primitive" =>
-        acceptInput(new PrimitiveExpressionMode)
       
       case ":body" =>
         acceptInput(new BodyExpressionMode)

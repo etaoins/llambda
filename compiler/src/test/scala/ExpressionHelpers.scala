@@ -5,12 +5,8 @@ import llambda._
 
 trait ExpressionHelpers extends FunSuite {
   def expressionFor(scheme : String)(implicit scope : Scope)  = {
-    SchemeParser(scheme) match {
-      case SchemeParser.Success(datum :: Nil, _) =>
-        ExtractExpressions(datum)(scope)
-      case err =>
-        fail(err.toString)
-    }
+    val (expr :: Nil, _) = bodyFor(scheme)
+    expr
   }
   
    def bodyFor(scheme : String)(implicit scope : Scope) = {
