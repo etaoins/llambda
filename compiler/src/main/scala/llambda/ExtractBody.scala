@@ -13,6 +13,18 @@ object ExtractBody {
     (storageLoc, scope + (varName -> storageLoc))
   }
 
+  private def continueBodyWithDefine(restData : List[ast.Datum], varName : String, varExpr : et.Expression)(implicit scope : Scope) : (List[et.Expression], Scope) = {
+    val (storageLoc, newScope) = defineVar(varName)(scope)
+
+    // Use the old scope when expanding the definitions
+    val setExpr = et.SetVar(storageLoc, varExpr)
+    
+    ExtractBody(restData)(newScope) match {
+      case (exprs, finalScope) =>
+        (setExpr :: exprs, finalScope)
+    }
+  }
+
   def apply(data : List[ast.Datum])(implicit scope : Scope) : (List[et.Expression], Scope) = data match {
     // We're done!
     case Nil => (Nil, scope)
@@ -20,16 +32,14 @@ object ExtractBody {
     case datum :: restData =>
       datum match {
         case ast.ProperList(ast.Symbol("define") :: ast.Symbol(varName) :: value :: Nil) =>
-          val (storageLoc, newScope) = defineVar(varName)(scope)
+          continueBodyWithDefine(restData, varName, ExtractExpressions(value))
 
-          // Use the old scope when expanding the definitions
-          val setExpr = et.SetVar(storageLoc, ExtractExpressions(value)(scope))
-          
-          ExtractBody(restData)(newScope) match {
-            case (exprs, finalScope) =>
-              (setExpr :: exprs, finalScope)
-          }
-
+        case ast.ProperList(ast.Symbol("define") :: ast.ProperList(ast.Symbol(varName) :: fixedArgs) :: body) =>
+          continueBodyWithDefine(restData, varName, CreateLambda(fixedArgs, None, body))
+        
+        case ast.ProperList(ast.Symbol("define") :: ast.ImproperList(ast.Symbol(varName) :: fixedArgs, ast.Symbol(restArg)) :: body) =>
+          continueBodyWithDefine(restData, varName, CreateLambda(fixedArgs, Some(restArg), body))
+        
         case expressionDatum =>
           var expression = ExtractExpressions(expressionDatum)(scope)
 

@@ -44,4 +44,34 @@ class ExtractBodySuite extends FunSuite with Inside with OptionValues with Expre
         ))
     }
   }
+
+
+  test("lambda shorthand") {
+    inside(bodyFor("(define (return-true unused-param) #t)")) {
+      case (exprs, scope) =>
+        val procLoc = scope.get("return-true").value
+        inside(exprs) {
+          case List(et.SetVar(procLoc, et.Procedure(_ :: Nil, None, bodyExprs))) =>
+            assert(bodyExprs === List(et.Literal(ast.TrueLiteral)))
+        }
+    }
+    
+    inside(bodyFor("(define (return-false some . rest) #f)")) {
+      case (exprs, scope) =>
+        val procLoc = scope.get("return-false").value
+        inside(exprs) {
+          case List(et.SetVar(procLoc, et.Procedure(_ :: Nil, Some(_), bodyExprs))) =>
+            assert(bodyExprs === List(et.Literal(ast.FalseLiteral)))
+        }
+    }
+    
+    inside(bodyFor("(define (return-six . rest) 6)")) {
+      case (exprs, scope) =>
+        val procLoc = scope.get("return-six").value
+        inside(exprs) {
+          case List(et.SetVar(procLoc, et.Procedure(Nil, Some(_), bodyExprs))) =>
+            assert(bodyExprs === List(et.Literal(ast.IntegerLiteral(6))))
+        }
+    }
+  }
 }
