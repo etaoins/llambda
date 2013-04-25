@@ -31,8 +31,10 @@ class ParseOnlyMode extends SchemeParsingMode("parse") {
   }
 }
 
-/** Extracts expressions */
-class ExpressionMode extends SchemeParsingMode("expr") {
+/** Extracts primitive expressions from (scheme core) */
+class PrimitiveExpressionMode extends SchemeParsingMode("primitive") {
+  implicit val primitiveScope = new Scope(SchemePrimitives.bindings)
+
   def evalData(data : List[ast.Datum]) { 
     for(datum <- data) {
       try {
@@ -43,6 +45,8 @@ class ExpressionMode extends SchemeParsingMode("expr") {
           println("malformed: " + malformed.getMessage)
         case badspecial : BadSpecialFormException =>
           println("bad special form: " + badspecial.getMessage)
+        case unbound : UnboundVariableException =>
+          println("unbound variable: " + unbound.getMessage)
       }
     }
   }
@@ -61,8 +65,8 @@ object Repl {
       case ":parse" =>
         acceptInput(new ParseOnlyMode)
       
-      case ":expr" =>
-        acceptInput(new ExpressionMode)
+      case ":primitive" =>
+        acceptInput(new PrimitiveExpressionMode)
 
       case userString =>
         mode.evaluate(userString)
@@ -72,6 +76,6 @@ object Repl {
 
   def apply() {
     val reader = new ConsoleReader;
-    acceptInput(new ExpressionMode)(reader)
+    acceptInput(new PrimitiveExpressionMode)(reader)
   }
 }
