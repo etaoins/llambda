@@ -3,17 +3,8 @@ package test.scala
 import org.scalatest.{FunSuite,Inside}
 import llambda._
 
-class ExtractBodySuite extends FunSuite with Inside {
+class ExtractBodySuite extends FunSuite with Inside with ExpressionHelpers {
   implicit val primitiveScope = new Scope(SchemePrimitives.bindings)
-  
-  private def bodyFor(scheme : String) = {
-    SchemeParser(scheme) match {
-      case SchemeParser.Success(data, _) =>
-        ExtractBody(data)(primitiveScope)
-      case err =>
-        fail(err.toString)
-    }
-  }
 
   test("define variable") {
     inside(bodyFor("(define a 2)")) {

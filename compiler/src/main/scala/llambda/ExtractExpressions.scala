@@ -25,6 +25,15 @@ object ExtractExpressions {
       case (SchemePrimitives.Set, ast.Symbol(variableName) :: value :: Nil) =>
         et.SetVar(getVar(variableName), ExtractExpressions(value))
 
+      case (SchemePrimitives.Lambda, ast.Symbol(restArg) :: body) =>
+        CreateLambda(List(), Some(restArg), body)(scope)
+
+      case (SchemePrimitives.Lambda, ast.ProperList(fixedArgData) :: body) =>
+        CreateLambda(fixedArgData, None, body)
+
+      case (SchemePrimitives.Lambda, ast.ImproperList(fixedArgData, ast.Symbol(restArg)) :: body) =>
+        CreateLambda(fixedArgData, Some(restArg), body)(scope)
+
       case _ =>
         et.ProcedureCall(procedure, operands.map(ExtractExpressions(_)))
     }

@@ -3,17 +3,8 @@ package test.scala
 import org.scalatest.{FunSuite,Inside}
 import llambda._
 
-class PrimitiveExpressionsSuite extends FunSuite with Inside {
+class PrimitiveExpressionsSuite extends FunSuite with Inside with ExpressionHelpers {
   implicit val primitiveScope = new Scope(SchemePrimitives.bindings)
-  
-  private def expressionFor(scheme : String)(implicit scope : Scope)  = {
-    SchemeParser(scheme) match {
-      case SchemeParser.Success(datum :: Nil, _) =>
-        ExtractExpressions(datum)(scope)
-      case err =>
-        fail(err.toString)
-    }
-  }
 
   test("variable reference") {
     // "a" isn't a binding in the primitive expressions
@@ -123,32 +114,6 @@ class PrimitiveExpressionsSuite extends FunSuite with Inside {
       expressionFor("(set! b 1)")
     }
   }
-
-  /*
-  test("lambdas") {
-    assert(expressionFor("(lambda (x) (+ x x))") === et.Procedure(
-      List(et.UnresolvedVar("x")), None,
-      List(
-        et.ProcedureCall(
-          et.UnresolvedVar("+"), 
-          List(
-            et.VarReference(et.UnresolvedVar("x")),
-            et.VarReference(et.UnresolvedVar("x"))
-          )
-        )
-      )
-    ))
-
-    assert(expressionFor("(lambda x x)") === et.Procedure(
-      Nil, Some(et.UnresolvedVar("x")),
-      List(et.VarReference(et.UnresolvedVar("x")))
-    ))
-
-    assert(expressionFor("(lambda (x y . z) z)") === et.Procedure(
-      List(et.UnresolvedVar("x"), et.UnresolvedVar("y")), Some(et.UnresolvedVar("z")),
-      List(et.VarReference(et.UnresolvedVar("z")))
-    ))
-  }*/
 
   test("conditionals") {
     assert(expressionFor("(if #t 'yes 'no)") === et.Conditional(
