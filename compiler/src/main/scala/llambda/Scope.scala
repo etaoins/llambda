@@ -3,7 +3,7 @@ package llambda
 sealed abstract class BoundValue
 
 // These are normal bindings
-class BoundExpression(expression : et.Expression) extends BoundValue
+class StorageLocation extends BoundValue
 
 // These are arguments to a procedure
 class ProcedureArg extends BoundValue
@@ -15,14 +15,23 @@ sealed abstract class PrimitiveExpression extends BoundValue
 case class SyntaxRule(pattern : List[ast.Datum], template : ast.Datum)
 case class SyntaxBinding(literals : List[String], rules : List[SyntaxRule], scope : Scope)  extends BoundValue
 
-class Scope(bindings : Map[String, BoundValue], parent : Option[Scope] = None) {
+/** BindingResolvers can look up bindings by name */
+trait BindingResolver {
+  def get(name : String) : Option[BoundValue]
+}
+
+final class Scope(bindings : Map[String, BoundValue], parent : Option[BindingResolver] = None) extends BindingResolver {
   def get(name : String) : Option[BoundValue] = 
     bindings.get(name).orElse {
       parent match {
-        case Some(parentScope) => parentScope.get(name)
+        case Some(resolver) => resolver.get(name)
         case None => None
       }
     }
+
+  def +(kv : (String, BoundValue)) : Scope = {
+    new Scope(bindings + kv, parent)
+  }
 }
 
 /** Bindings for the primitive expressions defined in (scheme core) */

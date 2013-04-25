@@ -87,12 +87,12 @@ class PrimitiveExpressionsSuite extends FunSuite with Inside {
   }
 
   test("application") {
-    // Make a fake scope binding '+' to the literal '+'
-    val plusValue = new BoundExpression(et.Literal(ast.Symbol("+")))
-    val plusScope = new Scope(Map("+" -> plusValue), Some(primitiveScope))
+    // Make a storage location for +
+    val plusLoc = new StorageLocation
+    val plusScope = new Scope(Map("+" -> plusLoc), Some(primitiveScope))
 
     assert(expressionFor("(+ 3 4)")(plusScope) === et.ProcedureCall(
-      plusValue,
+      plusLoc,
       List(
         et.Literal(ast.IntegerLiteral(3)),
         et.Literal(ast.IntegerLiteral(4))
@@ -110,12 +110,12 @@ class PrimitiveExpressionsSuite extends FunSuite with Inside {
   }
 
   test("set!") {
-    // Make a binding of a => 'a
-    val variable = new BoundExpression(et.Literal(ast.Symbol("a")))
-    val varScope = new Scope(Map("a" -> variable), Some(primitiveScope))
+    // Make a storage location for a
+    val storageLoc = new StorageLocation
+    val varScope = new Scope(Map("a" -> storageLoc), Some(primitiveScope))
 
     assert(expressionFor("(set! a 1)")(varScope) === et.SetVar(
-      variable,
+      storageLoc,
       et.Literal(ast.IntegerLiteral(1))
     ))
 
