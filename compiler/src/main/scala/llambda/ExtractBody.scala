@@ -1,5 +1,7 @@
 package llambda
 
+import collection.mutable.ListBuffer
+
 class MalformedExpressionException(message : String) extends SemanticException(message)
 class BadSpecialFormException(message : String) extends SemanticException(message)
 class UnboundVariableException(message : String) extends SemanticException(message)
@@ -23,16 +25,13 @@ object ExtractBody {
     (storageLoc, scope + (varName -> storageLoc))
   }
 
-  private def continueBodyWithDefine(restData : List[ast.Datum], varName : String, varExpr : et.Expression)(implicit scope : Scope) : (List[et.Expression], Scope) = {
+  private def defineExpression(varName : String, varExpr : et.Expression)(implicit scope : Scope) : (Option[et.Expression], Scope) = {
     val (storageLoc, newScope) = defineVar(varName)(scope)
 
     // Use the old scope when expanding the definitions
     val setExpr = et.SetVar(storageLoc, varExpr)
-    
-    ExtractBody(restData)(newScope) match {
-      case (exprs, finalScope) =>
-        (setExpr :: exprs, finalScope)
-    }
+
+    (Some(setExpr), newScope)
   }
   
   private def createLambda(fixedArgData : List[ast.Datum], restArgName : Option[String], body : List[ast.Datum])(implicit parentScope : Scope) : et.Procedure = {
@@ -120,28 +119,31 @@ object ExtractBody {
       throw new MalformedExpressionException(malformed.toString)
   }
 
-  def apply(data : List[ast.Datum])(implicit scope : Scope) : (List[et.Expression], Scope) = data match {
-    // We're done!
-    case Nil => (Nil, scope)
+  private def extractBodyExpression(datum : ast.Datum)(implicit scope : Scope) : (Option[et.Expression], Scope) = datum match {
+    case ast.ProperList(ast.Symbol("define") :: ast.Symbol(varName) :: value :: Nil) =>
+      defineExpression(varName, extractExpression(value))
 
-    case datum :: restData =>
-      datum match {
-        case ast.ProperList(ast.Symbol("define") :: ast.Symbol(varName) :: value :: Nil) =>
-          continueBodyWithDefine(restData, varName, extractExpression(value))
+    case ast.ProperList(ast.Symbol("define") :: ast.ProperList(ast.Symbol(varName) :: fixedArgs) :: body) =>
+      defineExpression(varName, createLambda(fixedArgs, None, body))
+    
+    case ast.ProperList(ast.Symbol("define") :: ast.ImproperList(ast.Symbol(varName) :: fixedArgs, ast.Symbol(restArg)) :: body) =>
+      defineExpression(varName, createLambda(fixedArgs, Some(restArg), body))
+    
+    case expressionDatum =>
+      // Scope is unmodified
+      (Some(extractExpression(expressionDatum)(scope)), scope)
+  }
 
-        case ast.ProperList(ast.Symbol("define") :: ast.ProperList(ast.Symbol(varName) :: fixedArgs) :: body) =>
-          continueBodyWithDefine(restData, varName, createLambda(fixedArgs, None, body))
-        
-        case ast.ProperList(ast.Symbol("define") :: ast.ImproperList(ast.Symbol(varName) :: fixedArgs, ast.Symbol(restArg)) :: body) =>
-          continueBodyWithDefine(restData, varName, createLambda(fixedArgs, Some(restArg), body))
-        
-        case expressionDatum =>
-          var expression = extractExpression(expressionDatum)(scope)
+  def apply(data : List[ast.Datum])(implicit initialScope : Scope) : (List[et.Expression], Scope) = {
+    val expressions = ListBuffer[et.Expression]()
 
-          ExtractBody(restData)(scope) match {
-            case (exprs, finalScope) =>
-              (expression :: exprs, finalScope)
-          }
-      }
+    val finalScope = data.foldLeft(initialScope) { (scope, datum) =>
+      val (expr, newScope) = extractBodyExpression(datum)(scope)
+      expressions ++= expr.toList
+
+      newScope
+    }
+
+    (expressions.toList, finalScope)
   }
 }
