@@ -17,7 +17,7 @@ object ExtractBody {
     val storageLoc = scope.get(varName) match {
       // Unbound or syntax binding
       case None => new StorageLocation
-      case Some(_ : SyntaxBinding) => new StorageLocation
+      case Some(_ : BoundSyntax) => new StorageLocation
       // Reuse existing binding
       case Some(location) => location
     }
@@ -119,6 +119,27 @@ object ExtractBody {
       throw new MalformedExpressionException(malformed.toString)
   }
 
+  private def defineSyntax(datum : ast.Datum)(implicit scope : Scope) : Scope = datum match {
+    case ast.ProperList(ast.Symbol("define-syntax") :: ast.Symbol(keyword) ::
+                         ast.ProperList(
+                           ast.Symbol("syntax-rules") :: ast.ProperList(literals) :: rules
+                         ) :: Nil) =>
+      val literalNames = literals.map { 
+        case ast.Symbol(name) => name
+        case nonSymbol => throw new BadSpecialFormException("Symbol expected in literal list, found " + nonSymbol)
+      }
+
+      val parsedRules = rules.map {
+        case ast.ProperList(ast.ProperList(_ :: pattern) :: template :: Nil) =>
+          SyntaxRule(pattern, template)
+        case noMatch => throw new BadSpecialFormException("Unable to parse syntax rule " + noMatch)
+      }
+
+      scope + (keyword ->  BoundSyntax(literalNames, parsedRules, scope))
+    case noMatch =>
+      throw new BadSpecialFormException("Unrecognized define-syntax form " + noMatch)
+  }
+
   private def extractBodyExpression(datum : ast.Datum)(implicit scope : Scope) : (Option[et.Expression], Scope) = datum match {
     case ast.ProperList(ast.Symbol("define") :: ast.Symbol(varName) :: value :: Nil) =>
       defineExpression(varName, extractExpression(value))
@@ -128,6 +149,9 @@ object ExtractBody {
     
     case ast.ProperList(ast.Symbol("define") :: ast.ImproperList(ast.Symbol(varName) :: fixedArgs, ast.Symbol(restArg)) :: body) =>
       defineExpression(varName, createLambda(fixedArgs, Some(restArg), body))
+
+    case ast.ProperList(ast.Symbol("define-syntax") :: _) =>
+      (None, defineSyntax(datum))
     
     case expressionDatum =>
       // Scope is unmodified

@@ -13,7 +13,7 @@ sealed abstract class PrimitiveExpression extends BoundValue
 
 // These are what (define-syntax) creates
 case class SyntaxRule(pattern : List[ast.Datum], template : ast.Datum)
-case class SyntaxBinding(literals : List[String], rules : List[SyntaxRule], scope : Scope)  extends BoundValue
+case class BoundSyntax(literals : List[String], rules : List[SyntaxRule], scope : Scope)  extends BoundValue
 
 /** BindingResolvers can look up bindings by name */
 trait BindingResolver {
