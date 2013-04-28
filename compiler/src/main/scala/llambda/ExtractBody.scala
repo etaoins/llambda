@@ -117,9 +117,8 @@ object ExtractBody {
       case (SchemePrimitives.Lambda, sst.ScopedProperList(fixedArgData) :: body) =>
         createLambda(fixedArgData, None, body)(outerScope)
 
-        /*
-      case (SchemePrimitives.Lambda, ast.ImproperList(fixedArgData, ast.Symbol(restArg)) :: body) =>
-        createLambda(fixedArgData, Some(restArg), body)(scope)*/
+      case (SchemePrimitives.Lambda, sst.ScopedImproperList(fixedArgData, sst.ScopedSymbol(_, restArg)) :: body) =>
+        createLambda(fixedArgData, Some(restArg), body)(outerScope)
 
       case _ =>
         et.ProcedureCall(procedure, operands.map(extractExpression(_)))
@@ -180,9 +179,8 @@ object ExtractBody {
     case sst.ScopedProperList(sst.ScopedSymbol(defineScope, "define") :: sst.ScopedProperList(sst.ScopedSymbol(assignScope, varName) :: fixedArgs) :: body) =>
       defineExpression(varName, createLambda(fixedArgs, None, body)(defineScope))(assignScope)
     
-/*
-    case sst.ScopedProperList(sst.ScopedSymbol(_, "define") :: sst.ScopedImproperList(ast.Symbol(varName) :: fixedArgs, ast.Symbol(restArg)) :: body) =>
-      defineExpression(varName, createLambda(fixedArgs, Some(restArg), body))*/
+    case sst.ScopedProperList(sst.ScopedSymbol(defineScope, "define") :: sst.ScopedImproperList(sst.ScopedSymbol(assignScope, varName) :: fixedArgs, sst.ScopedSymbol(_, restArg)) :: body) =>
+      defineExpression(varName, createLambda(fixedArgs, Some(restArg), body)(defineScope))(assignScope)
 
     case sst.ScopedProperList(sst.ScopedSymbol(_, "define-syntax") :: _) =>
       (None, defineSyntax(datum))

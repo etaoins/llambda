@@ -16,6 +16,20 @@ case class ScopedAtom(scope : Scope, atom : ast.Atom) extends ScopedDatum {
   def unscope = atom
 }
 
+// The following two objects are essential copied from AbstractSyntaxTree
+// TODO: Find a way to share code that actually creates less code
+object ScopedImproperList {
+  def unapply(datum : ScopedDatum) : Option[(List[ScopedDatum], ScopedDatum)] = datum match {
+    case ScopedPair(_, _, ScopedAtom(_, ast.EmptyList)) => None // This is a proper list
+    case ScopedPair(_, car, tail : ScopedPair)  => 
+      ScopedImproperList.unapply(tail).map { case (head, terminator) =>
+        (car :: head, terminator)
+      }
+    case ScopedPair(_, car, cdr) => Some(List(car), cdr)
+    case _ => None
+  }
+}
+
 object ScopedProperList {
   def unapply(datum : ScopedDatum) : Option[List[ScopedDatum]] = datum match {
     case ScopedAtom(_, ast.EmptyList) => Some(Nil)
