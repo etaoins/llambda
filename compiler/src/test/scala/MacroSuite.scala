@@ -6,51 +6,50 @@ import llambda._
 class MacroSuite extends FunSuite with Inside with OptionValues with ExpressionHelpers {
   implicit val primitiveScope = new Scope(SchemePrimitives.bindings)
 
-  test("define simple macro") {
-    assert(bindingFor(
-      """(define-syntax and
-           (syntax-rules ()
-             ((and) #t)
-             ((and test) test)
-             ((and test1 test2 ...)
-               (if test1 (and test2 ...) #f))))""", 
-      "and"
-      ) === BoundSyntax(Nil,
-        List(
-          SyntaxRule(Nil, ast.TrueLiteral),
-          SyntaxRule(List(ast.Symbol("test")), ast.Symbol("test")),
-          SyntaxRule(List(ast.Symbol("test1"), ast.Symbol("test2"), ast.Symbol("...")), 
-            ast.ProperList(
-              ast.Symbol("if"),
-              ast.Symbol("test1"),
-              ast.ProperList(ast.Symbol("and"), ast.Symbol("test2"), ast.Symbol("...")),
-              ast.FalseLiteral
-            )
-          )
-        ), primitiveScope
-    ))
+  test("multiple template is error") {
+    intercept[BadSpecialFormException] {
+      bodyFor(
+        """(define-syntax six
+             (syntax-rules ()
+             ((six)
+               5
+               6
+           )))""")
 
-    assert(bindingFor(
-      """(define-syntax cond
-           (syntax-rules (else =>)
-             ((cond (else result1 result2 ...))
-               (begin result1 result2 ...))))""",
-      "cond"
-      ) === BoundSyntax(List("else", "=>"),
-        List(
-          SyntaxRule(
-            List(ast.ProperList(
-                ast.Symbol("else"), ast.Symbol("result1"), ast.Symbol("result2"), ast.Symbol("...")
-            )),
-            ast.ProperList(
-              ast.Symbol("begin"), 
-              ast.Symbol("result1"),
-              ast.Symbol("result2"),
-              ast.Symbol("...")
-            )
-          )
-        ), primitiveScope
-    ))
+    }
+  }
+
+  test("trivial replacement") {
+    assert(expressionFor(
+      """(define-syntax false-literal
+           (syntax-rules ()
+             ((false-literal)
+               #f
+         )))
+         (false-literal)"""
+    ) === et.Literal(ast.FalseLiteral))
+  }
+  
+  test("simple expansion") {
+    assert(expressionFor(
+      """(define-syntax return-single
+           (syntax-rules ()
+             ((freturn-single foo)
+               foo
+         )))
+         (return-single 6)"""
+    ) === et.Literal(ast.IntegerLiteral(6)))
+  }
+  
+  test("wildcards") {
+    assert(expressionFor(
+      """(define-syntax return-second
+           (syntax-rules ()
+             ((freturn-second _ foo)
+               foo
+         )))
+         (return-second 'a 'b)"""
+    ) === et.Literal(ast.Symbol("b")))
   }
 }
 

@@ -2,10 +2,7 @@ package llambda.ast
 
 import llambda._
 
-sealed abstract class Datum {
-  def truth = false
-}
-
+sealed abstract class Datum
 sealed abstract class Atom extends Datum
 
 case class StringLiteral(name : String) extends Atom {
