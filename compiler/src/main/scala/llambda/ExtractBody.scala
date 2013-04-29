@@ -10,20 +10,12 @@ object ExtractBody {
   private def rescope(datum : sst.ScopedDatum, mapping : (Scope, Scope)) : sst.ScopedDatum = { 
     val (from, to) = mapping
 
-    val newScope = if (datum.scope == from) {
-      // Map to our new scope
-      to
-    }
-    else {
-      // Keep the existing scope
-      datum.scope
-    }
-
     datum match {
-      case sst.ScopedPair(_, car, cdr) =>
-        sst.ScopedPair(newScope, rescope(car, mapping), rescope(cdr, mapping))
-      case sst.ScopedAtom(_, atom) =>
-        sst.ScopedAtom(newScope, atom)
+      case sst.ScopedPair(car, cdr) =>
+        sst.ScopedPair(rescope(car, mapping), rescope(cdr, mapping))
+      case sst.ScopedSymbol(scope, name) if scope == from =>
+        sst.ScopedSymbol(to, name)
+      case other => other
     }
   }
 
@@ -54,7 +46,7 @@ object ExtractBody {
     (Some(setExpr), newScope)
   }
   
-  private def createLambda(fixedArgData : List[sst.ScopedDatum], restArgName : Option[String], body : List[sst.ScopedDatum])(definingScope : Scope) : et.Procedure = {
+  private def createLambda(fixedArgData : List[sst.ScopedDatum], restArgName : Option[String], body : List[sst.ScopedDatum])(evalScope : Scope) : et.Procedure = {
     // Create our actual procedure arguments
     // These unique identify the argument independently of its binding at a
     // given time
@@ -78,15 +70,15 @@ object ExtractBody {
       ((fixedArgNames zip fixedArgs) ++ (restArgName zip restArg).toList) : _*
     )
 
-    val initialScope = new Scope(binding, Some(definingScope))
+    val initialScope = new Scope(binding, Some(evalScope))
 
     val expressions = ListBuffer[et.Expression]()
 
     body.foldLeft(initialScope) { (scope, datum) =>
       // Replace instances of our defining scope with the inner scope
-      val rescopedDatum = rescope(datum, definingScope -> scope)
+      val rescopedDatum = rescope(datum, evalScope -> scope)
     
-      val (expr, newScope) = extractBodyExpression(rescopedDatum)
+      val (expr, newScope) = extractBodyExpression(rescopedDatum)(scope)
       expressions ++= expr.toList
 
       newScope
@@ -135,31 +127,31 @@ object ExtractBody {
       et.VarReference(getVar(variableName)(scope))
 
     // These all evaluate to themselves. See R7RS section 4.1.2
-    case sst.ScopedAtom(_, literal : ast.NumberLiteral) =>
+    case sst.NonSymbolAtom(literal : ast.NumberLiteral) =>
       et.Literal(literal)
-    case sst.ScopedAtom(_, literal : ast.StringLiteral) =>
+    case sst.NonSymbolAtom(literal : ast.StringLiteral) =>
       et.Literal(literal)
-    case sst.ScopedAtom(_, literal : ast.CharLiteral) =>
+    case sst.NonSymbolAtom(literal : ast.CharLiteral) =>
       et.Literal(literal)
-    case sst.ScopedAtom(_, literal : ast.Vector) =>
+    case sst.NonSymbolAtom(literal : ast.Vector) =>
       et.Literal(literal)
-    case sst.ScopedAtom(_, literal : ast.ByteVector) =>
+    case sst.NonSymbolAtom(literal : ast.ByteVector) =>
       et.Literal(literal)
-    case sst.ScopedAtom(_, literal : ast.BooleanLiteral) =>
+    case sst.NonSymbolAtom(literal : ast.BooleanLiteral) =>
       et.Literal(literal)
 
     case malformed =>
       throw new MalformedExpressionException(malformed.toString)
   }
 
-  private def defineSyntax(datum : sst.ScopedDatum) : Scope = datum match {
+  private def defineSyntax(datum : sst.ScopedDatum)(evalScope : Scope) : Scope = datum match {
     case sst.ScopedProperList(sst.ScopedSymbol(_, "define-syntax") :: sst.ScopedSymbol(assignScope, keyword) ::
                          sst.ScopedProperList(
                            sst.ScopedSymbol(_, "syntax-rules") :: sst.ScopedProperList(literals) :: rules
                          ) :: Nil) =>
       
       // Create our new scope before and 
-      val newScope = new Scope(collection.mutable.Map(), Some(datum.scope))
+      val newScope = new Scope(collection.mutable.Map(), Some(evalScope))
 
       val literalNames = literals.map { 
         case sst.ScopedSymbol(_, name) => name
@@ -168,7 +160,7 @@ object ExtractBody {
 
       // Rescope the rules to our new scope
       val rescopedRules = rules map { rule =>
-        rescope(rule, rule.scope -> newScope)
+        rescope(rule, evalScope -> newScope)
       }
         
       val parsedRules = rescopedRules map {
@@ -185,32 +177,32 @@ object ExtractBody {
       throw new BadSpecialFormException("Unrecognized define-syntax form " + noMatch)
   }
 
-  private def extractBodyExpression(datum : sst.ScopedDatum) : (Option[et.Expression], Scope) = datum match {
+  private def extractBodyExpression(datum : sst.ScopedDatum)(evalScope : Scope) : (Option[et.Expression], Scope) = datum match {
     case sst.ScopedProperList(sst.ScopedSymbol(_, "define") :: sst.ScopedSymbol(assignScope, varName) :: value :: Nil) =>
       defineExpression(varName, extractExpression(value))(assignScope)
 
     case sst.ScopedProperList(sst.ScopedSymbol(defineScope, "define") :: sst.ScopedProperList(sst.ScopedSymbol(assignScope, varName) :: fixedArgs) :: body) =>
-      defineExpression(varName, createLambda(fixedArgs, None, body)(defineScope))(assignScope)
+      defineExpression(varName, createLambda(fixedArgs, None, body)(evalScope))(assignScope)
     
     case sst.ScopedProperList(sst.ScopedSymbol(defineScope, "define") :: sst.ScopedImproperList(sst.ScopedSymbol(assignScope, varName) :: fixedArgs, sst.ScopedSymbol(_, restArg)) :: body) =>
-      defineExpression(varName, createLambda(fixedArgs, Some(restArg), body)(defineScope))(assignScope)
+      defineExpression(varName, createLambda(fixedArgs, Some(restArg), body)(evalScope))(assignScope)
 
     case sst.ScopedProperList(sst.ScopedSymbol(_, "define-syntax") :: _) =>
-      (None, defineSyntax(datum))
+      (None, defineSyntax(datum)(evalScope))
     
     case expressionDatum =>
       // Scope is unmodified
-      (Some(extractExpression(expressionDatum)), datum.scope)
+      (Some(extractExpression(expressionDatum)), evalScope)
   }
 
   def apply(data : List[ast.Datum])(implicit initialScope : Scope) : (List[et.Expression], Scope) = {
     val expressions = ListBuffer[et.Expression]()
 
-    val finalScope = data.foldLeft(initialScope) { (scope, datum) =>
-      // Annotate our AST with our initial scope
-      val scopedDatum = sst.ScopedDatum(scope, datum)
+    val finalScope = data.foldLeft(initialScope) { (evalScope, datum) =>
+      // Annotate our symbols with our current scope
+      val scopedDatum = sst.ScopedDatum(evalScope, datum)
 
-      val (expr, newScope) = extractBodyExpression(scopedDatum)
+      val (expr, newScope) = extractBodyExpression(scopedDatum)(evalScope)
       expressions ++= expr.toList
 
       newScope

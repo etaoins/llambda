@@ -52,8 +52,8 @@ object ExpandMacro {
             // TODO: Should we handle splices in the middle of the list?
             case sst.ScopedProperList(sst.ScopedSymbol(symScope, symIdentifier) :: sst.ScopedSymbol(_, "...") :: Nil) =>
               if ((symScope == scope) && (symIdentifier == identifier)) {
-                return expansion.foldRight(sst.ScopedAtom(symScope, ast.EmptyList) : sst.ScopedDatum) { (car, cdr) =>
-                  sst.ScopedPair(symScope, car, cdr) 
+                return expansion.foldRight(sst.NonSymbolAtom(ast.EmptyList) : sst.ScopedDatum) { (car, cdr) =>
+                  sst.ScopedPair(car, cdr) 
                 }
               }
 
@@ -70,8 +70,8 @@ object ExpandMacro {
     }
 
     template match {
-      case sst.ScopedPair(scope, car, cdr) =>
-        sst.ScopedPair(scope, expandTemplate(car, rewrites), expandTemplate(cdr, rewrites))
+      case sst.ScopedPair(car, cdr) =>
+        sst.ScopedPair(expandTemplate(car, rewrites), expandTemplate(cdr, rewrites))
 
       case _ =>
         template

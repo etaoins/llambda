@@ -5,11 +5,14 @@ import llambda._
 sealed abstract class Datum
 sealed abstract class Atom extends Datum
 
-case class StringLiteral(name : String) extends Atom {
+// This helps out ScopedSyntaxTree by grouping all the types that don't need scope
+sealed abstract class NonSymbolAtom extends Atom
+
+case class StringLiteral(name : String) extends NonSymbolAtom {
   override def toString = '"' + name + '"'
 }
 
-case class BooleanLiteral(value : Boolean) extends Atom {
+case class BooleanLiteral(value : Boolean) extends NonSymbolAtom {
   override def toString = value match {
     case true => "#t"
     case false => "#f"
@@ -19,7 +22,7 @@ case class BooleanLiteral(value : Boolean) extends Atom {
 object TrueLiteral extends BooleanLiteral(true)
 object FalseLiteral  extends BooleanLiteral(false)
 
-sealed abstract class NumberLiteral extends Atom 
+sealed abstract class NumberLiteral extends NonSymbolAtom 
 
 case class IntegerLiteral(value : Int) extends NumberLiteral {
   override def toString = value.toString
@@ -42,7 +45,7 @@ case class Symbol(name : String) extends Atom {
   }
 }
 
-case object EmptyList extends Atom {
+case object EmptyList extends NonSymbolAtom {
   override def toString = "()"
 }
 
@@ -89,17 +92,17 @@ object ProperList {
     data.foldRight(EmptyList : Datum) { (car, cdr) => Pair(car, cdr) }
 }
 
-case class Vector(elements : Datum*) extends Atom {
+case class Vector(elements : Datum*) extends NonSymbolAtom {
   override def toString = 
     "#(" + elements.map(_.toString).mkString(" ") + ")"
 }
 
-case class ByteVector(elements : Int*) extends Atom {
+case class ByteVector(elements : Int*) extends NonSymbolAtom {
   override def toString = 
     "#u8(" + elements.map(_.toString).mkString(" ") + ")"
 }
 
-case class CharLiteral(value : Char) extends Atom {
+case class CharLiteral(value : Char) extends NonSymbolAtom {
   override def toString = value match {
     case '\0' => """\#null"""
     case ' '  => """\#space"""
