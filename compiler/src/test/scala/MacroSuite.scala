@@ -96,6 +96,16 @@ class MacroSuite extends FunSuite with Inside with OptionValues with ExpressionH
          (return-second 'a 'b)"""
     ) === et.Literal(ast.Symbol("b")))
   }
-  
+
+  test("zero or more match") {
+    assert(expressionFor(
+      """(define-syntax return-all
+           (syntax-rules ()
+             ((return-all values ...)
+               '(values ...)
+         )))
+         (return-all 1 2 3)"""
+    ) === et.Literal(ast.ProperList(ast.IntegerLiteral(1), ast.IntegerLiteral(2), ast.IntegerLiteral(3))))
+  }
 }
 
