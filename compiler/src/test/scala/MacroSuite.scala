@@ -30,26 +30,72 @@ class MacroSuite extends FunSuite with Inside with OptionValues with ExpressionH
     ) === et.Literal(ast.FalseLiteral))
   }
   
+  test("first pattern symbol is ignored") {
+    assert(expressionFor(
+      """(define-syntax false-literal
+           (syntax-rules ()
+             ((SOMETHING-COMPLETELY-DIFFERENT)
+               #f
+         )))
+         (false-literal)"""
+    ) === et.Literal(ast.FalseLiteral))
+  }
+  
   test("simple expansion") {
     assert(expressionFor(
       """(define-syntax return-single
            (syntax-rules ()
-             ((freturn-single foo)
+             ((return-single foo)
                foo
          )))
          (return-single 6)"""
     ) === et.Literal(ast.IntegerLiteral(6)))
   }
   
+  test("two value expansion") {
+    assert(expressionFor(
+      """(define-syntax return-two
+           (syntax-rules ()
+             ((return-two a b)
+               '(a . b)
+         )))
+         (return-two #t #f)"""
+    ) === et.Literal(ast.Pair(ast.TrueLiteral, ast.FalseLiteral)))
+  }
+  
+  test("multiple rules") {
+    assert(expressionFor(
+      """(define-syntax arg-count
+           (syntax-rules ()
+             ((arg-count) 0)
+             ((arg-count _) 1)
+             ((arg-count _ _) 2)
+         ))
+         (arg-count 1.0)"""
+    ) === et.Literal(ast.IntegerLiteral(1)))
+  }
+  
+  test("recursive expansion") {
+    assert(expressionFor(
+      """(define-syntax recurse
+           (syntax-rules ()
+             ((recurse) 7)
+             ((recurse _) (recurse))
+         ))
+         (recurse 'a)"""
+    ) === et.Literal(ast.IntegerLiteral(7)))
+  }
+  
   test("wildcards") {
     assert(expressionFor(
       """(define-syntax return-second
            (syntax-rules ()
-             ((freturn-second _ foo)
+             ((return-second _ foo)
                foo
          )))
          (return-second 'a 'b)"""
     ) === et.Literal(ast.Symbol("b")))
   }
+  
 }
 

@@ -80,7 +80,7 @@ class ExtractBodySuite extends FunSuite with Inside with OptionValues with Expre
   test("application") {
     // Make a storage location for +
     val plusLoc = new StorageLocation
-    val plusScope = new Scope(Map("+" -> plusLoc), Some(primitiveScope))
+    val plusScope = new Scope(collection.mutable.Map("+" -> plusLoc), Some(primitiveScope))
 
     assert(expressionFor("(+ 3 4)")(plusScope) === et.ProcedureCall(
       plusLoc,
@@ -103,7 +103,7 @@ class ExtractBodySuite extends FunSuite with Inside with OptionValues with Expre
   test("set!") {
     // Make a storage location for a
     val storageLoc = new StorageLocation
-    val varScope = new Scope(Map("a" -> storageLoc), Some(primitiveScope))
+    val varScope = new Scope(collection.mutable.Map("a" -> storageLoc), Some(primitiveScope))
 
     assert(expressionFor("(set! a 1)")(varScope) === et.SetVar(
       storageLoc,

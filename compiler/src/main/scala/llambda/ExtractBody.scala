@@ -74,8 +74,9 @@ object ExtractBody {
     }
 
     // Create a new scope with the args bound to their names
-    val binding : Map[String, ProcedureArg] =
-      ((fixedArgNames zip fixedArgs) ++ (restArgName zip restArg).toList).toMap
+    val binding = collection.mutable.Map[String, BoundValue](
+      ((fixedArgNames zip fixedArgs) ++ (restArgName zip restArg).toList) : _*
+    )
 
     val initialScope = new Scope(binding, Some(definingScope))
 
@@ -156,18 +157,30 @@ object ExtractBody {
                          sst.ScopedProperList(
                            sst.ScopedSymbol(_, "syntax-rules") :: sst.ScopedProperList(literals) :: rules
                          ) :: Nil) =>
+      
+      // Create our new scope before and 
+      val newScope = new Scope(collection.mutable.Map(), Some(datum.scope))
+
       val literalNames = literals.map { 
         case sst.ScopedSymbol(_, name) => name
         case nonSymbol => throw new BadSpecialFormException("Symbol expected in literal list, found " + nonSymbol)
       }
 
-      val parsedRules = rules map {
+      // Rescope the rules to our new scope
+      val rescopedRules = rules map { rule =>
+        rescope(rule, rule.scope -> newScope)
+      }
+        
+      val parsedRules = rescopedRules map {
         case sst.ScopedProperList(sst.ScopedProperList(_ :: pattern) :: template :: Nil) =>
           SyntaxRule(pattern, template)
         case noMatch => throw new BadSpecialFormException("Unable to parse syntax rule " + noMatch)
       }
 
-      datum.scope + (keyword ->  BoundSyntax(literalNames, parsedRules))
+      // Inject the binding in to the new scope to allow recursive macro expansion
+      newScope += keyword -> BoundSyntax(literalNames, parsedRules)
+
+      newScope
     case noMatch =>
       throw new BadSpecialFormException("Unrecognized define-syntax form " + noMatch)
   }

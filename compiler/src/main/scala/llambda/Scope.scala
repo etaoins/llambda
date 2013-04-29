@@ -20,7 +20,7 @@ trait BindingResolver {
   def get(name : String) : Option[BoundValue]
 }
 
-final class Scope(bindings : Map[String, BoundValue], parent : Option[BindingResolver] = None) extends BindingResolver {
+final class Scope(bindings : collection.mutable.Map[String, BoundValue], parent : Option[BindingResolver] = None) extends BindingResolver {
   def get(name : String) : Option[BoundValue] = 
     bindings.get(name).orElse {
       parent match {
@@ -32,6 +32,12 @@ final class Scope(bindings : Map[String, BoundValue], parent : Option[BindingRes
   def +(kv : (String, BoundValue)) : Scope = {
     new Scope(bindings + kv, parent)
   }
+
+  // This is a hack for define-syntax to inject the new syntax definition in to its scope
+  // Otherwise recursive macros don't work correctly
+  def +=(kv : (String, BoundValue)) {
+    bindings += kv
+  }
 }
 
 /** Bindings for the primitive expressions defined in (scheme core) */
@@ -42,7 +48,7 @@ object SchemePrimitives {
   object Set extends PrimitiveExpression
 
   val bindings = {
-    Map(
+    collection.mutable.Map[String, BoundValue](
       "lambda" -> Lambda,
       "quote" -> Quote,
       "if" -> If,
