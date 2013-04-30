@@ -63,6 +63,18 @@ class MacroSuite extends FunSuite with Inside with OptionValues with ExpressionH
     ) === et.Literal(ast.Pair(ast.TrueLiteral, ast.FalseLiteral)))
   }
   
+  test("literals must exactly match") {
+    intercept[NoSyntaxRuleException] {
+      expressionFor(
+        """(define-syntax for
+             (syntax-rules (in)
+               ((for a in b)
+                 '(a . b)
+           )))
+           (for 1 foo 2)""")
+    }
+  }
+  
   test("multiple rules") {
     assert(expressionFor(
       """(define-syntax arg-count
