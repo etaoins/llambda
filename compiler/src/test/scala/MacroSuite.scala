@@ -98,6 +98,48 @@ class MacroSuite extends FunSuite with Inside with OptionValues with ExpressionH
     ) === et.Literal(ast.IntegerLiteral(7)))
   }
   
+  test("proper list matching") {
+    assert(expressionFor(
+      """(define-syntax second-element
+           (syntax-rules ()
+             ((second-element (first second third) after) 
+               '(second . after))
+         ))
+         (second-element (a b c) 4)"""
+    ) === et.Literal(ast.Pair(ast.Symbol("b"), ast.IntegerLiteral(4))))
+  }
+  
+  test("constant matching") {
+    assert(expressionFor(
+      """(define-syntax truth-symbol
+           (syntax-rules ()
+             ((truth-symbol #t) 'true) 
+             ((truth-symbol #f) 'false) 
+         ))
+         (truth-symbol #t)"""
+    ) === et.Literal(ast.Symbol("true")))
+    
+    assert(expressionFor(
+      """(define-syntax truth-symbol
+           (syntax-rules ()
+             ((truth-symbol #t) 'true) 
+             ((truth-symbol #f) 'false) 
+         ))
+         (truth-symbol #f)"""
+    ) === et.Literal(ast.Symbol("false")))
+
+    intercept[NoSyntaxRuleException] {
+      expressionFor(
+        """(define-syntax truth-symbol
+             (syntax-rules ()
+               ((truth-symbol #t) 'true) 
+               ((truth-symbol #f) 'false) 
+           ))
+           (truth-symbol 6)"""
+      )
+    }
+  }
+  
   test("wildcards") {
     assert(expressionFor(
       """(define-syntax return-second

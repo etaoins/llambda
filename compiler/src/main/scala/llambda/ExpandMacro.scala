@@ -21,9 +21,10 @@ object ExpandMacro {
           // They misused a literal - no match
           None
         }
-
-        // The literal doesn't cause any rewrites. We just ignore it
-        matchRule(literals, restOperands, restOperands)
+        else {
+          // The literal doesn't cause any rewrites. We just ignore it
+          matchRule(literals, restPattern, restOperands)
+        }
 
       case (sst.ScopedSymbol(patternScope, patternIdent) :: sst.ScopedSymbol(_, "...") :: Nil, operands) =>
         // This is a splice like the "rest ..." in (first rest ...)
@@ -34,6 +35,16 @@ object ExpandMacro {
         matchRule(literals, restPattern, restOperands) map { rewrites =>
           SubstituteRewrite(patternScope, patternIdent, operand) :: rewrites
         }
+
+      case (sst.ScopedProperList(subpattern) :: restPattern, sst.ScopedProperList(suboperands) :: restOperands) =>
+        // Recurse inside the proper list and the rest of our pattern
+        for(subRewrites <- matchRule(literals, subpattern, suboperands);
+            restRewrites <- matchRule(literals, restPattern, restOperands)) 
+          yield subRewrites ++ restRewrites
+
+      case ((patternAtom : sst.NonSymbolAtom) :: restPattern, (operandAtom : sst.NonSymbolAtom) :: restOperands) if patternAtom == operandAtom => 
+        // Operand match
+        matchRule(literals, restPattern, restOperands)
 
       case (Nil, Nil) =>
         // We both ended at the same time - this is expected
