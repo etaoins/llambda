@@ -29,12 +29,18 @@ object ExpandMacro {
         }
 
       case (sst.ScopedSymbol(patternScope, patternIdent) :: sst.ScopedSymbol(_, "...") :: restPattern,
-            allOperands) if allOperands.length >= restPattern.length =>
-        val (operands, restOperands) = allOperands.splitAt(allOperands.length - restPattern.length)
+            allOperands) if (!literals.contains("...")) =>
+        if (allOperands.length >= restPattern.length) {
+          val (operands, restOperands) = allOperands.splitAt(allOperands.length - restPattern.length)
 
-        // If the match doesn't fail later add our rewrite rule on
-        matchRule(literals, restPattern, restOperands) map { rewrites =>
-          SpliceRewrite(patternScope, patternIdent, operands) :: rewrites
+          // If the match doesn't fail later add our rewrite rule on
+          matchRule(literals, restPattern, restOperands) map { rewrites =>
+            SpliceRewrite(patternScope, patternIdent, operands) :: rewrites
+          }
+        }
+        else {
+          // Not enough values left
+          None
         }
 
       case (sst.ScopedSymbol(patternScope, patternIdent) :: restPattern,
@@ -77,7 +83,6 @@ object ExpandMacro {
       rewrite match {
         case SpliceRewrite(scope, identifier, expansion) =>
           template match {
-            // TODO: Should we handle splices in the middle of the list?
             case sst.ScopedPair(sst.ScopedSymbol(symScope, symIdentifier), sst.ScopedPair(sst.ScopedSymbol(_, "..."), cdr)) =>
               if ((symScope == scope) && (symIdentifier == identifier)) {
                 val expandedCdr = expandTemplate(cdr, rewrites)
@@ -100,6 +105,10 @@ object ExpandMacro {
     }
 
     template match {
+      // Escaped ellipsis
+      case sst.ScopedProperList(sst.ScopedSymbol(scope, "...") :: sst.ScopedSymbol(_, "...") :: Nil) =>
+        sst.ScopedSymbol(scope, "...")
+
       case sst.ScopedPair(car, cdr) =>
         sst.ScopedPair(expandTemplate(car, rewrites), expandTemplate(cdr, rewrites))
 

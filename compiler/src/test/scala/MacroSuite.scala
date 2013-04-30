@@ -75,6 +75,19 @@ class MacroSuite extends FunSuite with Inside with OptionValues with ExpressionH
     }
   }
   
+  test("ellipsis can be a literal") {
+    intercept[NoSyntaxRuleException] {
+      // If ellipsis wasn't a literal the middle of the list would match "b ..."
+      expressionFor(
+        """(define-syntax ellipsis-literal
+             (syntax-rules (...)
+               ((ellipsis-literal a b ... c)
+                 #f
+           )))
+           (ellipsis-literal 10 11 12 13 14)""")
+    }
+  }
+  
   test("multiple rules") {
     assert(expressionFor(
       """(define-syntax arg-count
@@ -182,6 +195,17 @@ class MacroSuite extends FunSuite with Inside with OptionValues with ExpressionH
          )))
          (return-all-but-first-last 1 2 3 4 5)"""
     ) === et.Literal(ast.ProperList(ast.IntegerLiteral(2), ast.IntegerLiteral(3), ast.IntegerLiteral(4))))
+    
+    // This requires at least two datums
+    intercept[NoSyntaxRuleException] {
+      expressionFor(
+        """(define-syntax return-all-but-first-last
+             (syntax-rules ()
+               ((return-all-but-first-last first values ... last)
+                 '(values ...)
+           )))
+           (return-all-but-first-last 'a)""")
+    }
   }
   
   test("splice to middle of proper list") {
@@ -219,6 +243,17 @@ class MacroSuite extends FunSuite with Inside with OptionValues with ExpressionH
           et.SetVar(scope.get("a").value, et.Literal(ast.IntegerLiteral(2)))
         ))
     }
+  }
+  
+  test("escape ellipsis") {
+    assert(expressionFor(
+      """(define-syntax literal-ellipsis
+           (syntax-rules ()
+             ((literal-ellipsis values ...)
+               '(... ...)
+         )))
+         (literal-ellipsis 1 2 3)"""
+    ) === et.Literal(ast.Symbol("...")))
   }
 }
 
