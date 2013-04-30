@@ -12,37 +12,46 @@ object ExpandMacro {
 
   private def matchRule(literals : List[String], pattern : List[sst.ScopedDatum], operands : List[sst.ScopedDatum]) : Option[List[Rewrite]] = {
     (pattern, operands) match {
-      case (sst.ScopedSymbol(_, "_") :: restPattern, _ :: restOperands) =>
+      case (sst.ScopedSymbol(_, "_") :: restPattern,
+            _ :: restOperands) =>
         // They used a wildcard - ignore this
         matchRule(literals, restPattern, restOperands)
 
-      case (sst.ScopedSymbol(_, patternIdent) :: restPattern, sst.ScopedSymbol(_, operandIdent) :: restOperands) if literals.contains(patternIdent) =>
-        if (patternIdent != operandIdent) {
-          // They misused a literal - no match
-          None
-        }
-        else {
+      case (sst.ScopedSymbol(_, patternIdent) :: restPattern, 
+            sst.ScopedSymbol(_, operandIdent) :: restOperands) if literals.contains(patternIdent) =>
+        if (patternIdent == operandIdent) {
           // The literal doesn't cause any rewrites. We just ignore it
           matchRule(literals, restPattern, restOperands)
         }
+        else {
+          // They misused a literal - no match
+          None
+        }
 
-      case (sst.ScopedSymbol(patternScope, patternIdent) :: sst.ScopedSymbol(_, "...") :: Nil, operands) =>
-        // This is a splice like the "rest ..." in (first rest ...)
-        Some(List(SpliceRewrite(patternScope, patternIdent, operands)))
+      case (sst.ScopedSymbol(patternScope, patternIdent) :: sst.ScopedSymbol(_, "...") :: restPattern,
+            allOperands) if allOperands.length >= restPattern.length =>
+        val (operands, restOperands) = allOperands.splitAt(allOperands.length - restPattern.length)
 
-      case (sst.ScopedSymbol(patternScope, patternIdent) :: restPattern, operand :: restOperands) =>
         // If the match doesn't fail later add our rewrite rule on
+        matchRule(literals, restPattern, restOperands) map { rewrites =>
+          SpliceRewrite(patternScope, patternIdent, operands) :: rewrites
+        }
+
+      case (sst.ScopedSymbol(patternScope, patternIdent) :: restPattern,
+            operand :: restOperands) =>
         matchRule(literals, restPattern, restOperands) map { rewrites =>
           SubstituteRewrite(patternScope, patternIdent, operand) :: rewrites
         }
 
-      case (sst.ScopedProperList(subpattern) :: restPattern, sst.ScopedProperList(suboperands) :: restOperands) =>
+      case (sst.ScopedProperList(subpattern) :: restPattern,
+            sst.ScopedProperList(suboperands) :: restOperands) =>
         // Recurse inside the proper list and the rest of our pattern
         for(subRewrites <- matchRule(literals, subpattern, suboperands);
             restRewrites <- matchRule(literals, restPattern, restOperands)) 
           yield subRewrites ++ restRewrites
 
-      case ((patternAtom : sst.NonSymbolAtom) :: restPattern, (operandAtom : sst.NonSymbolAtom) :: restOperands) if patternAtom == operandAtom => 
+      case ((patternAtom : sst.NonSymbolAtom) :: restPattern,
+            (operandAtom : sst.NonSymbolAtom) :: restOperands) if patternAtom == operandAtom => 
         // Operand match
         matchRule(literals, restPattern, restOperands)
 

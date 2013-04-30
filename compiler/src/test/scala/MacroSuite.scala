@@ -151,7 +151,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with ExpressionH
     ) === et.Literal(ast.Symbol("b")))
   }
 
-  test("zero or more match") {
+  test("terminal zero or more match") {
     assert(expressionFor(
       """(define-syntax return-all
            (syntax-rules ()
@@ -160,6 +160,17 @@ class MacroSuite extends FunSuite with Inside with OptionValues with ExpressionH
          )))
          (return-all 1 2 3)"""
     ) === et.Literal(ast.ProperList(ast.IntegerLiteral(1), ast.IntegerLiteral(2), ast.IntegerLiteral(3))))
+  }
+  
+  test("middle zero or more match") {
+    assert(expressionFor(
+      """(define-syntax return-all-but-first-last
+           (syntax-rules ()
+             ((return-all-but-first-last first values ... last)
+               '(values ...)
+         )))
+         (return-all-but-first-last 1 2 3 4 5)"""
+    ) === et.Literal(ast.ProperList(ast.IntegerLiteral(2), ast.IntegerLiteral(3), ast.IntegerLiteral(4))))
   }
 }
 
