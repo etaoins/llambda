@@ -49,6 +49,14 @@ object ExpandMacro {
         for(subRewrites <- matchRule(literals, subpattern, suboperands);
             restRewrites <- matchRule(literals, restPattern, restOperands)) 
           yield subRewrites ++ restRewrites
+      
+      case (sst.ScopedImproperList(subpattern, termPattern) :: restPattern,
+            sst.ScopedImproperList(suboperands, termOperand) :: restOperands) =>
+        // This is essentially the same as the proper list except with terminator matching
+        for(subRewrites <- matchRule(literals, subpattern, suboperands);
+            termRewrites <- matchRule(literals, List(termPattern), List(termOperand));
+            restRewrites <- matchRule(literals, restPattern, restOperands)) 
+          yield subRewrites ++ termRewrites ++ restRewrites
 
       case ((patternAtom : sst.NonSymbolAtom) :: restPattern,
             (operandAtom : sst.NonSymbolAtom) :: restOperands) if patternAtom == operandAtom => 
@@ -72,7 +80,9 @@ object ExpandMacro {
             // TODO: Should we handle splices in the middle of the list?
             case sst.ScopedPair(sst.ScopedSymbol(symScope, symIdentifier), sst.ScopedPair(sst.ScopedSymbol(_, "..."), cdr)) =>
               if ((symScope == scope) && (symIdentifier == identifier)) {
-                return expansion.foldRight(cdr) { (car, cdr) =>
+                val expandedCdr = expandTemplate(cdr, rewrites)
+
+                return expansion.foldRight(expandedCdr) { (car, cdr) =>
                   sst.ScopedPair(car, cdr) 
                 }
               }
