@@ -194,5 +194,20 @@ class MacroSuite extends FunSuite with Inside with OptionValues with ExpressionH
          (append-improper-false 1 2)"""
     ) === et.Literal(ast.ImproperList(List(ast.IntegerLiteral(1), ast.IntegerLiteral(2)), ast.FalseLiteral)))
   }
+
+  test("body expressions allowed in body context") {
+    inside(bodyFor(
+      """(define-syntax my-define
+           (syntax-rules ()
+             ((my-define ident value) (define ident value))
+         ))
+         (my-define a 2)"""
+    )) {
+      case (exprs, scope) =>
+        assert(exprs == List(
+          et.SetVar(scope.get("a").value, et.Literal(ast.IntegerLiteral(2)))
+        ))
+    }
+  }
 }
 

@@ -188,10 +188,21 @@ object ExtractBody {
 
     case sst.ScopedProperList(sst.ScopedSymbol(_, "define-syntax") :: _) =>
       (None, defineSyntax(evalScope)(datum))
+
+    // Cheap hack to look for macros early
+    // We need to expand them in a body context if they appear in a body
+    // Otherwise (define) etc won't work in macros
+    case sst.ScopedProperList(sst.ScopedSymbol(scope, procedureName) :: operands) =>
+      scope.get(procedureName) match {
+        case Some(syntax : BoundSyntax) =>
+          extractBodyExpression(evalScope)(ExpandMacro(syntax, operands))
+        case _ =>
+          (Some(extractExpression(datum)), evalScope)
+      }
     
-    case expressionDatum =>
+    case _ =>
       // Scope is unmodified
-      (Some(extractExpression(expressionDatum)), evalScope)
+      (Some(extractExpression(datum)), evalScope)
   }
 
   def apply(data : List[ast.Datum])(implicit initialScope : Scope) : (List[et.Expression], Scope) = {
