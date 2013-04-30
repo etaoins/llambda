@@ -172,5 +172,27 @@ class MacroSuite extends FunSuite with Inside with OptionValues with ExpressionH
          (return-all-but-first-last 1 2 3 4 5)"""
     ) === et.Literal(ast.ProperList(ast.IntegerLiteral(2), ast.IntegerLiteral(3), ast.IntegerLiteral(4))))
   }
+  
+  test("splice to middle of proper list") {
+    assert(expressionFor(
+      """(define-syntax append-false
+           (syntax-rules ()
+             ((append-false values ...)
+               '(values ... #f)
+         )))
+         (append-false 1 2)"""
+    ) === et.Literal(ast.ProperList(ast.IntegerLiteral(1), ast.IntegerLiteral(2), ast.FalseLiteral)))
+  }
+  
+  test("splice to middle of improper list") {
+    assert(expressionFor(
+      """(define-syntax append-improper-false
+           (syntax-rules ()
+             ((append-improper-false values ...)
+               '(values ... . #f)
+         )))
+         (append-improper-false 1 2)"""
+    ) === et.Literal(ast.ImproperList(List(ast.IntegerLiteral(1), ast.IntegerLiteral(2)), ast.FalseLiteral)))
+  }
 }
 

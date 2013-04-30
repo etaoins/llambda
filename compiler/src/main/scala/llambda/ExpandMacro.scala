@@ -70,9 +70,9 @@ object ExpandMacro {
         case SpliceRewrite(scope, identifier, expansion) =>
           template match {
             // TODO: Should we handle splices in the middle of the list?
-            case sst.ScopedProperList(sst.ScopedSymbol(symScope, symIdentifier) :: sst.ScopedSymbol(_, "...") :: Nil) =>
+            case sst.ScopedPair(sst.ScopedSymbol(symScope, symIdentifier), sst.ScopedPair(sst.ScopedSymbol(_, "..."), cdr)) =>
               if ((symScope == scope) && (symIdentifier == identifier)) {
-                return expansion.foldRight(sst.NonSymbolAtom(ast.EmptyList) : sst.ScopedDatum) { (car, cdr) =>
+                return expansion.foldRight(cdr) { (car, cdr) =>
                   sst.ScopedPair(car, cdr) 
                 }
               }
