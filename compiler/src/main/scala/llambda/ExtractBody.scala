@@ -19,13 +19,13 @@ object ExtractBody {
     }
   }
 
-  private def getVar(name : String)(scope : Scope) : BoundValue = {
+  private def getVar(scope : Scope)(name : String) : BoundValue = {
     scope.get(name).getOrElse {
       throw new UnboundVariableException(name)
     }
   }
 
-  private def defineVar(varName : String)(scope : Scope) : (BoundValue, Scope) = {
+  private def defineVar(scope : Scope)(varName : String) : (BoundValue, Scope) = {
     val storageLoc = scope.get(varName) match {
       // Unbound or syntax binding
       case None => new StorageLocation
@@ -37,16 +37,15 @@ object ExtractBody {
     (storageLoc, scope + (varName -> storageLoc))
   }
 
-  private def defineExpression(varName : String, varExpr : et.Expression)(scope : Scope) : (Option[et.Expression], Scope) = {
-    val (storageLoc, newScope) = defineVar(varName)(scope)
+  private def defineExpression(scope : Scope)(varName : String, varExpr : et.Expression) : (Option[et.Expression], Scope) = {
+    val (storageLoc, newScope) = defineVar(scope)(varName)
 
-    // Use the old scope when expanding the definitions
     val setExpr = et.SetVar(storageLoc, varExpr)
 
     (Some(setExpr), newScope)
   }
   
-  private def createLambda(fixedArgData : List[sst.ScopedDatum], restArgName : Option[String], body : List[sst.ScopedDatum])(evalScope : Scope) : et.Procedure = {
+  private def createLambda(evalScope : Scope)(fixedArgData : List[sst.ScopedDatum], restArgName : Option[String], body : List[sst.ScopedDatum]) : et.Procedure = {
     // Create our actual procedure arguments
     // These unique identify the argument independently of its binding at a
     // given time
@@ -78,7 +77,7 @@ object ExtractBody {
       // Replace instances of our defining scope with the inner scope
       val rescopedDatum = rescope(datum, evalScope -> scope)
     
-      val (expr, newScope) = extractBodyExpression(rescopedDatum)(scope)
+      val (expr, newScope) = extractBodyExpression(scope)(rescopedDatum)
       expressions ++= expr.toList
 
       newScope
@@ -87,7 +86,7 @@ object ExtractBody {
     et.Procedure(fixedArgs, restArg, expressions.toList)
   }
 
-  private def extractApplication(procedure : BoundValue, operands : List[sst.ScopedDatum])(outerScope : Scope) : et.Expression = {
+  private def extractApplication(outerScope : Scope)(procedure : BoundValue, operands : List[sst.ScopedDatum]) : et.Expression = {
     (procedure, operands) match {
       case (syntax : BoundSyntax, operands) =>
         extractExpression(ExpandMacro(syntax, operands))
@@ -102,16 +101,16 @@ object ExtractBody {
         et.Conditional(extractExpression(test), extractExpression(trueExpr), None)
 
       case (SchemePrimitives.Set, sst.ScopedSymbol(scope, variableName) :: value :: Nil) =>
-        et.SetVar(getVar(variableName)(scope), extractExpression(value))
+        et.SetVar(getVar(scope)(variableName), extractExpression(value))
 
       case (SchemePrimitives.Lambda, sst.ScopedSymbol(_, restArg) :: body) =>
-        createLambda(List(), Some(restArg), body)(outerScope)
+        createLambda(outerScope)(List(), Some(restArg), body)
 
       case (SchemePrimitives.Lambda, sst.ScopedProperList(fixedArgData) :: body) =>
-        createLambda(fixedArgData, None, body)(outerScope)
+        createLambda(outerScope)(fixedArgData, None, body)
 
       case (SchemePrimitives.Lambda, sst.ScopedImproperList(fixedArgData, sst.ScopedSymbol(_, restArg)) :: body) =>
-        createLambda(fixedArgData, Some(restArg), body)(outerScope)
+        createLambda(outerScope)(fixedArgData, Some(restArg), body)
 
       case _ =>
         et.ProcedureCall(procedure, operands.map(extractExpression(_)))
@@ -121,10 +120,10 @@ object ExtractBody {
   def extractExpression(datum : sst.ScopedDatum) : et.Expression = datum match {
     // Normal procedure call
     case sst.ScopedProperList(sst.ScopedSymbol(scope, procedureName) :: operands) =>
-      extractApplication(getVar(procedureName)(scope), operands)(scope)
+      extractApplication(scope)(getVar(scope)(procedureName), operands)
 
     case sst.ScopedSymbol(scope, variableName) =>
-      et.VarReference(getVar(variableName)(scope))
+      et.VarReference(getVar(scope)(variableName))
 
     // These all evaluate to themselves. See R7RS section 4.1.2
     case sst.NonSymbolAtom(literal : ast.NumberLiteral) =>
@@ -144,7 +143,7 @@ object ExtractBody {
       throw new MalformedExpressionException(malformed.toString)
   }
 
-  private def defineSyntax(datum : sst.ScopedDatum)(evalScope : Scope) : Scope = datum match {
+  private def defineSyntax(evalScope : Scope)(datum : sst.ScopedDatum) : Scope = datum match {
     case sst.ScopedProperList(sst.ScopedSymbol(_, "define-syntax") :: sst.ScopedSymbol(assignScope, keyword) ::
                          sst.ScopedProperList(
                            sst.ScopedSymbol(_, "syntax-rules") :: sst.ScopedProperList(literals) :: rules
@@ -177,18 +176,18 @@ object ExtractBody {
       throw new BadSpecialFormException("Unrecognized define-syntax form " + noMatch)
   }
 
-  private def extractBodyExpression(datum : sst.ScopedDatum)(evalScope : Scope) : (Option[et.Expression], Scope) = datum match {
+  private def extractBodyExpression(evalScope : Scope)(datum : sst.ScopedDatum) : (Option[et.Expression], Scope) = datum match {
     case sst.ScopedProperList(sst.ScopedSymbol(_, "define") :: sst.ScopedSymbol(assignScope, varName) :: value :: Nil) =>
-      defineExpression(varName, extractExpression(value))(assignScope)
+      defineExpression(assignScope)(varName, extractExpression(value))
 
     case sst.ScopedProperList(sst.ScopedSymbol(defineScope, "define") :: sst.ScopedProperList(sst.ScopedSymbol(assignScope, varName) :: fixedArgs) :: body) =>
-      defineExpression(varName, createLambda(fixedArgs, None, body)(evalScope))(assignScope)
+      defineExpression(assignScope)(varName, createLambda(evalScope)(fixedArgs, None, body))
     
     case sst.ScopedProperList(sst.ScopedSymbol(defineScope, "define") :: sst.ScopedImproperList(sst.ScopedSymbol(assignScope, varName) :: fixedArgs, sst.ScopedSymbol(_, restArg)) :: body) =>
-      defineExpression(varName, createLambda(fixedArgs, Some(restArg), body)(evalScope))(assignScope)
+      defineExpression(assignScope)(varName, createLambda(evalScope)(fixedArgs, Some(restArg), body))
 
     case sst.ScopedProperList(sst.ScopedSymbol(_, "define-syntax") :: _) =>
-      (None, defineSyntax(datum)(evalScope))
+      (None, defineSyntax(evalScope)(datum))
     
     case expressionDatum =>
       // Scope is unmodified
@@ -202,7 +201,7 @@ object ExtractBody {
       // Annotate our symbols with our current scope
       val scopedDatum = sst.ScopedDatum(evalScope, datum)
 
-      val (expr, newScope) = extractBodyExpression(scopedDatum)(evalScope)
+      val (expr, newScope) = extractBodyExpression(evalScope)(scopedDatum)
       expressions ++= expr.toList
 
       newScope
