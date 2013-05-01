@@ -175,6 +175,27 @@ class MacroSuite extends FunSuite with Inside with OptionValues with ExpressionH
     }
   }
   
+  test("deeply nested matching") {
+    assert(expressionFor(
+      """(define-syntax deep-extract
+           (syntax-rules ()
+             ((deep-extract (1 #(first #t (_ . second)))) 
+               '(first . second))
+         ))
+         (deep-extract (1 #(y #t (_ . z))))"""
+    ) === et.Literal(ast.Pair(ast.Symbol("y"), ast.Symbol("z"))))
+
+    intercept[NoSyntaxRuleException] {
+      expressionFor(
+        """(define-syntax deep-extract
+             (syntax-rules ()
+               ((deep-extract (1 #(first #t (_ . second)))) 
+                 '(first . second))
+           ))
+           (deep-extract (1 #(y #f (_ . z))))""")
+    }
+  }
+  
   test("wildcards") {
     assert(expressionFor(
       """(define-syntax return-second
