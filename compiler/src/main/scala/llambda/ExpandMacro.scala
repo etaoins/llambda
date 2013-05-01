@@ -113,8 +113,10 @@ object ExpandMacro {
 
     template match {
       // Escaped ellipsis
-      case sst.ScopedProperList(sst.ScopedSymbol(scope, "...") :: sst.ScopedSymbol(_, "...") :: Nil) =>
-        sst.ScopedSymbol(scope, "...")
+      case sst.ScopedProperList(sst.ScopedSymbol(scope, "...") :: datum :: Nil) =>
+        // Remove all the splice rewrite rules
+        val nonSpliceRewrites = rewrites.filterNot(_.isInstanceOf[SpliceRewrite])
+        expandTemplate(datum, nonSpliceRewrites)
 
       case sst.ScopedPair(car, cdr) =>
         sst.ScopedPair(expandTemplate(car, rewrites), expandTemplate(cdr, rewrites))

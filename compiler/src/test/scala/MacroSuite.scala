@@ -265,6 +265,15 @@ class MacroSuite extends FunSuite with Inside with OptionValues with ExpressionH
          )))
          (literal-ellipsis 1 2 3)"""
     ) === et.Literal(ast.Symbol("...")))
+    
+    assert(expressionFor(
+      """(define-syntax ignore-ellipsis
+           (syntax-rules ()
+             ((ignore-ellipsis first values ...)
+               '(... (first values ...))
+         )))
+         (ignore-ellipsis 1 2 3)"""
+    ) === et.Literal(ast.ProperList(List(ast.IntegerLiteral(1), ast.Symbol("values"), ast.Symbol("...")))))
   }
 }
 
