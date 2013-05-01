@@ -3,16 +3,16 @@ package llambda.ast
 import llambda._
 
 sealed abstract class Datum
-sealed abstract class Atom extends Datum
 
-// This helps out ScopedSyntaxTree by grouping all the types that don't need scope
-sealed abstract class NonSymbolAtom extends Atom
+// This helps out ScopedSyntaxTree by grouping all the types that have scope
+// or contain datums with scope
+sealed abstract class NonSymbolLeaf extends Datum
 
-case class StringLiteral(name : String) extends NonSymbolAtom {
+case class StringLiteral(name : String) extends NonSymbolLeaf {
   override def toString = '"' + name + '"'
 }
 
-case class BooleanLiteral(value : Boolean) extends NonSymbolAtom {
+case class BooleanLiteral(value : Boolean) extends NonSymbolLeaf {
   override def toString = value match {
     case true => "#t"
     case false => "#f"
@@ -22,7 +22,7 @@ case class BooleanLiteral(value : Boolean) extends NonSymbolAtom {
 object TrueLiteral extends BooleanLiteral(true)
 object FalseLiteral  extends BooleanLiteral(false)
 
-sealed abstract class NumberLiteral extends NonSymbolAtom 
+sealed abstract class NumberLiteral extends NonSymbolLeaf 
 
 case class IntegerLiteral(value : Int) extends NumberLiteral {
   override def toString = value.toString
@@ -36,7 +36,7 @@ object PositiveInfinityLiteral extends RealLiteral(Double.PositiveInfinity)
 object NegativeInfinityLiteral extends RealLiteral(Double.NegativeInfinity)
 object NaNLiteral extends RealLiteral(Double.NaN)
 
-case class Symbol(name : String) extends Atom {
+case class Symbol(name : String) extends Datum {
   override def toString = if (name.matches(SchemeParserDefinitions.identifierPattern)) {
     name
   }
@@ -45,7 +45,7 @@ case class Symbol(name : String) extends Atom {
   }
 }
 
-case object EmptyList extends NonSymbolAtom {
+case object EmptyList extends NonSymbolLeaf {
   override def toString = "()"
 }
 
@@ -92,17 +92,17 @@ object ProperList {
     data.foldRight(EmptyList : Datum) { (car, cdr) => Pair(car, cdr) }
 }
 
-case class Vector(elements : Datum*) extends NonSymbolAtom {
+case class Vector(elements : Datum*) extends Datum {
   override def toString = 
     "#(" + elements.map(_.toString).mkString(" ") + ")"
 }
 
-case class ByteVector(elements : Int*) extends NonSymbolAtom {
+case class ByteVector(elements : Int*) extends NonSymbolLeaf {
   override def toString = 
     "#u8(" + elements.map(_.toString).mkString(" ") + ")"
 }
 
-case class CharLiteral(value : Char) extends NonSymbolAtom {
+case class CharLiteral(value : Char) extends NonSymbolLeaf {
   override def toString = value match {
     case '\0' => """\#null"""
     case ' '  => """\#space"""

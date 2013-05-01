@@ -15,7 +15,10 @@ object ExtractBody {
         sst.ScopedPair(rescope(car, mapping), rescope(cdr, mapping))
       case sst.ScopedSymbol(scope, name) if scope == from =>
         sst.ScopedSymbol(to, name)
-      case other => other
+      case sst.ScopedVector(elements @ _*) =>
+        sst.ScopedVector(elements.map(rescope(_, mapping)) : _*)
+      case leaf : sst.NonSymbolLeaf => 
+        leaf
     }
   }
 
@@ -126,17 +129,17 @@ object ExtractBody {
       et.VarReference(getVar(scope)(variableName))
 
     // These all evaluate to themselves. See R7RS section 4.1.2
-    case sst.NonSymbolAtom(literal : ast.NumberLiteral) =>
+    case literal : sst.ScopedVector =>
+      et.Literal(literal.unscope)
+    case sst.NonSymbolLeaf(literal : ast.NumberLiteral) =>
       et.Literal(literal)
-    case sst.NonSymbolAtom(literal : ast.StringLiteral) =>
+    case sst.NonSymbolLeaf(literal : ast.StringLiteral) =>
       et.Literal(literal)
-    case sst.NonSymbolAtom(literal : ast.CharLiteral) =>
+    case sst.NonSymbolLeaf(literal : ast.CharLiteral) =>
       et.Literal(literal)
-    case sst.NonSymbolAtom(literal : ast.Vector) =>
+    case sst.NonSymbolLeaf(literal : ast.ByteVector) =>
       et.Literal(literal)
-    case sst.NonSymbolAtom(literal : ast.ByteVector) =>
-      et.Literal(literal)
-    case sst.NonSymbolAtom(literal : ast.BooleanLiteral) =>
+    case sst.NonSymbolLeaf(literal : ast.BooleanLiteral) =>
       et.Literal(literal)
 
     case malformed =>

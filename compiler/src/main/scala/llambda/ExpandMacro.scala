@@ -56,6 +56,13 @@ object ExpandMacro {
             restRewrites <- matchRule(literals, restPattern, restOperands)) 
           yield subRewrites ++ restRewrites
       
+      case (sst.ScopedVector(subpattern @ _*) :: restPattern,
+            sst.ScopedVector(suboperands @ _*) :: restOperands) =>
+        // Recurse inside the vector and the rest of our pattern
+        for(subRewrites <- matchRule(literals, subpattern.toList, suboperands.toList);
+            restRewrites <- matchRule(literals, restPattern, restOperands)) 
+          yield subRewrites ++ restRewrites
+      
       case (sst.ScopedImproperList(subpattern, termPattern) :: restPattern,
             sst.ScopedImproperList(suboperands, termOperand) :: restOperands) =>
         // This is essentially the same as the proper list except with terminator matching
@@ -64,8 +71,8 @@ object ExpandMacro {
             restRewrites <- matchRule(literals, restPattern, restOperands)) 
           yield subRewrites ++ termRewrites ++ restRewrites
 
-      case ((patternAtom : sst.NonSymbolAtom) :: restPattern,
-            (operandAtom : sst.NonSymbolAtom) :: restOperands) if patternAtom == operandAtom => 
+      case ((patternAtom : sst.NonSymbolLeaf) :: restPattern,
+            (operandAtom : sst.NonSymbolLeaf) :: restOperands) if patternAtom == operandAtom => 
         // Operand match
         matchRule(literals, restPattern, restOperands)
 

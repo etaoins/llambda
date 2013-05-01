@@ -80,7 +80,7 @@ object SchemeParser extends RegexParsers {
     ast.ProperList(ast.Symbol("unquote-splicing"), innerDatum) 
   }
 
-  def atom : Parser[ast.Atom] = string | number | boolean | symbol | vector | bytevector | character 
+  def atom : Parser[ast.Datum] = string | number | boolean | symbol | vector | bytevector | character 
 
   def boolean = trueLiteral | falseLiteral
   def trueLiteral = """#t(rue)?""".r ^^^ ast.TrueLiteral

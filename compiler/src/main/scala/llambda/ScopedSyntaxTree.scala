@@ -11,7 +11,13 @@ case class ScopedPair(car : ScopedDatum, cdr : ScopedDatum) extends ScopedDatum 
   override def toString = "(" + car + " . " + cdr + ")"
 }
 
-case class NonSymbolAtom(atom : ast.NonSymbolAtom) extends ScopedDatum {
+case class ScopedVector(elements : ScopedDatum*) extends ScopedDatum {
+  def unscope = ast.Vector(elements.map(_.unscope) : _*)
+  override def toString = 
+    "#(" + elements.map(_.toString).mkString(" ") + ")"
+}
+
+case class NonSymbolLeaf(atom : ast.NonSymbolLeaf) extends ScopedDatum {
   def unscope = atom
   override def toString = atom.toString
 }
@@ -25,7 +31,7 @@ case class ScopedSymbol(scope : Scope, name : String) extends ScopedDatum {
 // TODO: Find a way to share code that actually creates less code
 object ScopedImproperList {
   def unapply(datum : ScopedDatum) : Option[(List[ScopedDatum], ScopedDatum)] = datum match {
-    case ScopedPair(_, NonSymbolAtom(ast.EmptyList)) => None // This is a proper list
+    case ScopedPair(_, NonSymbolLeaf(ast.EmptyList)) => None // This is a proper list
     case ScopedPair(car, tail : ScopedPair)  => 
       ScopedImproperList.unapply(tail).map { case (head, terminator) =>
         (car :: head, terminator)
@@ -37,7 +43,7 @@ object ScopedImproperList {
 
 object ScopedProperList {
   def unapply(datum : ScopedDatum) : Option[List[ScopedDatum]] = datum match {
-    case NonSymbolAtom(ast.EmptyList) => Some(Nil)
+    case NonSymbolLeaf(ast.EmptyList) => Some(Nil)
     case ScopedPair(car, cdr) => ScopedProperList.unapply(cdr).map(car :: _)
     case _ => None
   }
@@ -46,7 +52,8 @@ object ScopedProperList {
 object ScopedDatum {
   def apply(scope : Scope, datum : ast.Datum) : ScopedDatum = datum match {
     case ast.Pair(car, cdr) => ScopedPair(ScopedDatum(scope, car), ScopedDatum(scope, cdr))
+    case ast.Vector(elements @ _*) => ScopedVector(elements.map(ScopedDatum.apply(scope, _)) : _*)
     case ast.Symbol(name) => ScopedSymbol(scope, name)
-    case nonSymbol : ast.NonSymbolAtom  => NonSymbolAtom(nonSymbol)
+    case nonSymbol : ast.NonSymbolLeaf  => NonSymbolLeaf(nonSymbol)
   }
 }

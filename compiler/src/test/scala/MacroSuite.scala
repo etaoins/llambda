@@ -133,6 +133,17 @@ class MacroSuite extends FunSuite with Inside with OptionValues with ExpressionH
     ) === et.Literal(ast.ProperList(ast.Symbol("b"), ast.Symbol("c"), ast.Symbol("g"), ast.Symbol("d"))))
   }
   
+  test("vector matching") {
+    assert(expressionFor(
+      """(define-syntax vector-mid
+           (syntax-rules ()
+             ((ivector-mid #(var1 var2 ... last)) 
+               '(#f var2 ... #t))
+         ))
+         (vector-mid #(a b c d))"""
+    ) === et.Literal(ast.ProperList(ast.FalseLiteral, ast.Symbol("b"), ast.Symbol("c"), ast.TrueLiteral)))
+  }
+  
   test("constant matching") {
     assert(expressionFor(
       """(define-syntax truth-symbol
