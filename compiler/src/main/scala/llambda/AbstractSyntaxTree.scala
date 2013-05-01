@@ -88,16 +88,16 @@ object ProperList {
     case _ => None
   }
 
-  def apply(data : Datum*) : Datum = 
+  def apply(data : List[Datum]) : Datum = 
     data.foldRight(EmptyList : Datum) { (car, cdr) => Pair(car, cdr) }
 }
 
-case class Vector(elements : Datum*) extends Datum {
+case class VectorLiteral(elements : Vector[Datum]) extends Datum {
   override def toString = 
     "#(" + elements.map(_.toString).mkString(" ") + ")"
 }
 
-case class ByteVector(elements : Int*) extends NonSymbolLeaf {
+case class ByteVector(elements : Vector[Int]) extends NonSymbolLeaf {
   override def toString = 
     "#u8(" + elements.map(_.toString).mkString(" ") + ")"
 }

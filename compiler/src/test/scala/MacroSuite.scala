@@ -130,7 +130,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with ExpressionH
                '(var2 ... g varn))
          ))
          (improper-mix (a b c . d))"""
-    ) === et.Literal(ast.ProperList(ast.Symbol("b"), ast.Symbol("c"), ast.Symbol("g"), ast.Symbol("d"))))
+    ) === et.Literal(ast.ProperList(List(ast.Symbol("b"), ast.Symbol("c"), ast.Symbol("g"), ast.Symbol("d")))))
   }
   
   test("vector matching") {
@@ -141,7 +141,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with ExpressionH
                '(#f var2 ... #t))
          ))
          (vector-mid #(a b c d))"""
-    ) === et.Literal(ast.ProperList(ast.FalseLiteral, ast.Symbol("b"), ast.Symbol("c"), ast.TrueLiteral)))
+    ) === et.Literal(ast.ProperList(List(ast.FalseLiteral, ast.Symbol("b"), ast.Symbol("c"), ast.TrueLiteral))))
   }
   
   test("constant matching") {
@@ -194,7 +194,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with ExpressionH
                '(values ...)
          )))
          (return-all 1 2 3)"""
-    ) === et.Literal(ast.ProperList(ast.IntegerLiteral(1), ast.IntegerLiteral(2), ast.IntegerLiteral(3))))
+    ) === et.Literal(ast.ProperList(List(ast.IntegerLiteral(1), ast.IntegerLiteral(2), ast.IntegerLiteral(3)))))
   }
   
   test("middle zero or more match") {
@@ -205,7 +205,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with ExpressionH
                '(values ...)
          )))
          (return-all-but-first-last 1 2 3 4 5)"""
-    ) === et.Literal(ast.ProperList(ast.IntegerLiteral(2), ast.IntegerLiteral(3), ast.IntegerLiteral(4))))
+    ) === et.Literal(ast.ProperList(List(ast.IntegerLiteral(2), ast.IntegerLiteral(3), ast.IntegerLiteral(4)))))
     
     // This requires at least two datums
     intercept[NoSyntaxRuleException] {
@@ -227,7 +227,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with ExpressionH
                '(values ... #f)
          )))
          (append-false 1 2)"""
-    ) === et.Literal(ast.ProperList(ast.IntegerLiteral(1), ast.IntegerLiteral(2), ast.FalseLiteral)))
+    ) === et.Literal(ast.ProperList(List(ast.IntegerLiteral(1), ast.IntegerLiteral(2), ast.FalseLiteral))))
   }
   
   test("splice to middle of improper list") {

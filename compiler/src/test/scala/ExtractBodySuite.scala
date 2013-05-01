@@ -19,21 +19,21 @@ class ExtractBodySuite extends FunSuite with Inside with OptionValues with Expre
     assert(expressionFor("'a") === et.Literal(ast.Symbol("a")))
 
     assert(expressionFor("'#(a b c)") === et.Literal(
-      ast.Vector(ast.Symbol("a"), ast.Symbol("b"), ast.Symbol("c"))
+      ast.VectorLiteral(Vector(ast.Symbol("a"), ast.Symbol("b"), ast.Symbol("c")))
     ))
     
     assert(expressionFor("'()") === et.Literal(ast.EmptyList))
     
     assert(expressionFor("'(+ 1 2)") === et.Literal(
-      ast.ProperList(ast.Symbol("+"), ast.IntegerLiteral(1), ast.IntegerLiteral(2))
+      ast.ProperList(List(ast.Symbol("+"), ast.IntegerLiteral(1), ast.IntegerLiteral(2)))
     ))
     
     assert(expressionFor("'(quote a)") === et.Literal(
-      ast.ProperList(ast.Symbol("quote"), ast.Symbol("a"))
+      ast.ProperList(List(ast.Symbol("quote"), ast.Symbol("a")))
     ))
     
     assert(expressionFor("''a") === et.Literal(
-      ast.ProperList(ast.Symbol("quote"), ast.Symbol("a"))
+      ast.ProperList(List(ast.Symbol("quote"), ast.Symbol("a")))
     ))
 
     assert(expressionFor("'145932") === et.Literal(
@@ -53,19 +53,19 @@ class ExtractBodySuite extends FunSuite with Inside with OptionValues with Expre
     ))
     
     assert(expressionFor("'#(a 10)") === et.Literal(
-      ast.Vector(ast.Symbol("a"), ast.IntegerLiteral(10))
+      ast.VectorLiteral(Vector(ast.Symbol("a"), ast.IntegerLiteral(10)))
     ))
     
     assert(expressionFor("#(a 10)") === et.Literal(
-      ast.Vector(ast.Symbol("a"), ast.IntegerLiteral(10))
+      ast.VectorLiteral(Vector(ast.Symbol("a"), ast.IntegerLiteral(10)))
     ))
     
     assert(expressionFor("'#u8(64 65)") === et.Literal(
-      ast.ByteVector(64, 65)
+      ast.ByteVector(Vector(64, 65))
     ))
     
     assert(expressionFor("#u8(64 65)") === et.Literal(
-      ast.ByteVector(64, 65)
+      ast.ByteVector(Vector(64, 65))
     ))
     
     assert(expressionFor("'#t") === et.Literal(

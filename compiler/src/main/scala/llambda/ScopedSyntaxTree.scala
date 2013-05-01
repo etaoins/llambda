@@ -11,8 +11,8 @@ case class ScopedPair(car : ScopedDatum, cdr : ScopedDatum) extends ScopedDatum 
   override def toString = "(" + car + " . " + cdr + ")"
 }
 
-case class ScopedVector(elements : ScopedDatum*) extends ScopedDatum {
-  def unscope = ast.Vector(elements.map(_.unscope) : _*)
+case class ScopedVectorLiteral(elements : Vector[ScopedDatum]) extends ScopedDatum {
+  def unscope = ast.VectorLiteral(elements.map(_.unscope))
   override def toString = 
     "#(" + elements.map(_.toString).mkString(" ") + ")"
 }
@@ -52,7 +52,7 @@ object ScopedProperList {
 object ScopedDatum {
   def apply(scope : Scope, datum : ast.Datum) : ScopedDatum = datum match {
     case ast.Pair(car, cdr) => ScopedPair(ScopedDatum(scope, car), ScopedDatum(scope, cdr))
-    case ast.Vector(elements @ _*) => ScopedVector(elements.map(ScopedDatum.apply(scope, _)) : _*)
+    case ast.VectorLiteral(elements) => ScopedVectorLiteral(elements.map(ScopedDatum.apply(scope, _)))
     case ast.Symbol(name) => ScopedSymbol(scope, name)
     case nonSymbol : ast.NonSymbolLeaf  => NonSymbolLeaf(nonSymbol)
   }

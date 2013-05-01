@@ -5,12 +5,12 @@ import llambda._
 
 class ASTListCompanionSuite extends FunSuite {
   test("proper list creation") {
-    assert(ast.ProperList() === ast.EmptyList)
+    assert(ast.ProperList(List()) === ast.EmptyList)
     
-    assert(ast.ProperList(ast.Symbol("a")) === 
+    assert(ast.ProperList(List(ast.Symbol("a"))) === 
       ast.Pair(ast.Symbol("a"), ast.EmptyList))
 
-    assert(ast.ProperList(ast.Symbol("a"), ast.Symbol("b")) === 
+    assert(ast.ProperList(List(ast.Symbol("a"), ast.Symbol("b"))) === 
       ast.Pair(ast.Symbol("a"),
         ast.Pair(ast.Symbol("b"),
           ast.EmptyList

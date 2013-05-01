@@ -15,8 +15,8 @@ object ExtractBody {
         sst.ScopedPair(rescope(car, mapping), rescope(cdr, mapping))
       case sst.ScopedSymbol(scope, name) if scope == from =>
         sst.ScopedSymbol(to, name)
-      case sst.ScopedVector(elements @ _*) =>
-        sst.ScopedVector(elements.map(rescope(_, mapping)) : _*)
+      case sst.ScopedVectorLiteral(elements) =>
+        sst.ScopedVectorLiteral(elements.map(rescope(_, mapping)))
       case leaf : sst.NonSymbolLeaf => 
         leaf
     }
@@ -129,7 +129,7 @@ object ExtractBody {
       et.VarReference(getVar(scope)(variableName))
 
     // These all evaluate to themselves. See R7RS section 4.1.2
-    case literal : sst.ScopedVector =>
+    case literal : sst.ScopedVectorLiteral =>
       et.Literal(literal.unscope)
     case sst.NonSymbolLeaf(literal : ast.NumberLiteral) =>
       et.Literal(literal)

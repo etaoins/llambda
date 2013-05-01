@@ -56,8 +56,8 @@ object ExpandMacro {
             restRewrites <- matchRule(literals, restPattern, restOperands)) 
           yield subRewrites ++ restRewrites
       
-      case (sst.ScopedVector(subpattern @ _*) :: restPattern,
-            sst.ScopedVector(suboperands @ _*) :: restOperands) =>
+      case (sst.ScopedVectorLiteral(subpattern) :: restPattern,
+            sst.ScopedVectorLiteral(suboperands) :: restOperands) =>
         // Recurse inside the vector and the rest of our pattern
         for(subRewrites <- matchRule(literals, subpattern.toList, suboperands.toList);
             restRewrites <- matchRule(literals, restPattern, restOperands)) 

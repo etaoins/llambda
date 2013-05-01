@@ -65,19 +65,19 @@ object SchemeParser extends RegexParsers {
   def commentedDatum : Parser[Comment] = """#;""".r ~> (atom | list) ^^^ Comment() 
 
   def quotedDatum = "'" ~> datum ^^ { innerDatum => 
-    ast.ProperList(ast.Symbol("quote"), innerDatum) 
+    ast.ProperList(List(ast.Symbol("quote"), innerDatum)) 
   }
 
   def quasiquotedDatum = "`" ~> datum ^^ { innerDatum =>
-    ast.ProperList(ast.Symbol("quasiquote"), innerDatum) 
+    ast.ProperList(List(ast.Symbol("quasiquote"), innerDatum)) 
   }
 
   def unquotedDatum =  "," ~> datum ^^ { innerDatum => 
-    ast.ProperList(ast.Symbol("unquote"), innerDatum) 
+    ast.ProperList(List(ast.Symbol("unquote"), innerDatum)) 
   }
 
   def splicingUnquotedDatum = ",@" ~> datum ^^ { innerDatum =>
-    ast.ProperList(ast.Symbol("unquote-splicing"), innerDatum) 
+    ast.ProperList(List(ast.Symbol("unquote-splicing"), innerDatum))
   }
 
   def atom : Parser[ast.Datum] = string | number | boolean | symbol | vector | bytevector | character 
@@ -119,17 +119,19 @@ object SchemeParser extends RegexParsers {
     // Filter out comments
     ast.ProperList(values.collect {
       case x : ast.Datum => x
-    } : _*)
+    })
   }
 
   def improperList = "(" ~> rep1(datum) ~ "." ~ datum <~ ")" ^^ { case head ~ _  ~ terminator =>
     ast.ImproperList(head, terminator)
   }
 
-  def vector = "#(" ~> rep(datum) <~ ")" ^^ { ast.Vector(_ : _*) }
+  def vector = "#(" ~> rep(datum) <~ ")" ^^ { data =>
+    ast.VectorLiteral(data.toVector) 
+  }
   
   def bytevector = "#u8(" ~> rep("""\d+""".r) <~ ")" ^^ { byteStrs =>
-    ast.ByteVector(byteStrs.map(Integer.parseInt(_)) : _*) 
+    ast.ByteVector(byteStrs.map(Integer.parseInt(_)).toVector) 
   }
 
   def character = symbolicCharacter | hexScalarCharacter | literalSpace | literalCharacter

@@ -19,32 +19,32 @@ class SchemeParserSuite extends FunSuite with Inside {
     inside(SchemeParser(shorthand + "foo")) {
       case SchemeParser.Success(datum :: Nil, _) =>
         assert(datum === 
-          ast.ProperList(ast.Symbol(symbolName), ast.Symbol("foo"))
+          ast.ProperList(List(ast.Symbol(symbolName), ast.Symbol("foo")))
         )
     }
 
     inside(SchemeParser(shorthand + "(1 . 2)")) { 
       case SchemeParser.Success(datum :: Nil, _) =>
         assert(datum === 
-          ast.ProperList(ast.Symbol(symbolName), ast.Pair(ast.IntegerLiteral(1), ast.IntegerLiteral(2)))
+          ast.ProperList(List(ast.Symbol(symbolName), ast.Pair(ast.IntegerLiteral(1), ast.IntegerLiteral(2))))
         )
     }
     
     inside(SchemeParser(shorthand + "(real? 1.0)")) { 
       case SchemeParser.Success(datum :: Nil, _) =>
         assert(datum === 
-          ast.ProperList(ast.Symbol(symbolName), ast.ProperList(ast.Symbol("real?"), ast.RealLiteral(1.0)))
+          ast.ProperList(List(ast.Symbol(symbolName), ast.ProperList(List(ast.Symbol("real?"), ast.RealLiteral(1.0)))))
         )
     }
     
     inside(SchemeParser(shorthand + shorthand + "#true")) {
       case SchemeParser.Success(datum :: Nil, _) =>
         assert(datum ===
-          ast.ProperList(ast.Symbol(symbolName),
-            ast.ProperList(ast.Symbol(symbolName),
+          ast.ProperList(List(ast.Symbol(symbolName),
+            ast.ProperList(List(ast.Symbol(symbolName),
               ast.TrueLiteral
-            )
-          )
+            ))
+          ))
         )
     }
   }
@@ -139,13 +139,13 @@ newline""", "Bare\nnewline")
 
   test("proper lists") {
     assert(scm"(#true integer? |Hello| -1 2.0)" === List(
-      ast.ProperList(
+      ast.ProperList(List(
         ast.TrueLiteral, 
         ast.Symbol("integer?"), 
         ast.Symbol("Hello"),
         ast.IntegerLiteral(-1),
         ast.RealLiteral(2.0)
-      )
+      ))
     ))
   }
 
@@ -159,8 +159,8 @@ newline""", "Bare\nnewline")
 
   test("multiple expression") {
     assert(scm"(define x 4) (add x 1)" === List(
-      ast.ProperList(ast.Symbol("define"), ast.Symbol("x"), ast.IntegerLiteral(4)),
-      ast.ProperList(ast.Symbol("add"), ast.Symbol("x"), ast.IntegerLiteral(1))
+      ast.ProperList(List(ast.Symbol("define"), ast.Symbol("x"), ast.IntegerLiteral(4))),
+      ast.ProperList(List(ast.Symbol("add"), ast.Symbol("x"), ast.IntegerLiteral(1)))
     ))
   }
 
@@ -182,27 +182,27 @@ newline""", "Bare\nnewline")
 
   test("vectors") {
     assert(scm"#(0 (2 2 2 2) Anna)" === List(
-      ast.Vector(
+      ast.VectorLiteral(Vector(
         ast.IntegerLiteral(0), 
-        ast.ProperList(
+        ast.ProperList(List(
           ast.IntegerLiteral(2),
           ast.IntegerLiteral(2),
           ast.IntegerLiteral(2),
           ast.IntegerLiteral(2)
-        ),
+        )),
         ast.Symbol("Anna")
-      )
+      ))
     ))
     
-    assert(scm"#()" === List(ast.Vector()))
+    assert(scm"#()" === List(ast.VectorLiteral(Vector())))
   }
 
   test("bytevectors") {
     assert(scm"#u8(0 10 5)" === List(
-      ast.ByteVector(0, 10, 5)
+      ast.ByteVector(Vector(0, 10, 5))
     ))
 
-    assert(scm"#u8()" === List(ast.ByteVector()))
+    assert(scm"#u8()" === List(ast.ByteVector(Vector())))
   }
 
   test("characters") { 
@@ -225,7 +225,7 @@ newline""", "Bare\nnewline")
 
   test("comments") {
     assert(scm"test ; COMMENT" === List(ast.Symbol("test")))
-    assert(scm"(Hello #;(you jerk))" === List(ast.ProperList(ast.Symbol("Hello"))))
+    assert(scm"(Hello #;(you jerk))" === List(ast.ProperList(ast.Symbol("Hello") :: Nil)))
 
     val multilineTest = """
       #| This is a block comment
@@ -234,7 +234,7 @@ newline""", "Bare\nnewline")
       """;
 
     inside(SchemeParser(multilineTest)) { case SchemeParser.Success(data, _) =>
-      assert(data === List(ast.ProperList(ast.Symbol("display"), ast.StringLiteral("LOL"))))
+      assert(data === List(ast.ProperList(List(ast.Symbol("display"), ast.StringLiteral("LOL")))))
     }
   }
 }
