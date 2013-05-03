@@ -276,6 +276,17 @@ class MacroSuite extends FunSuite with Inside with OptionValues with ExpressionH
         ))
     }
   }
+
+  test("syntax-error") {
+    intercept[UserDefinedSyntaxError] {
+      expressionFor(
+        """(define-syntax error-if-pair
+             (syntax-rules ()
+               ((error-if-pair (a . b))
+                 (syntax-error "Did not expect pair" (a . b)))))
+           (error-if-pair (1 . 2))""")
+    }
+  }
   
   test("escape ellipsis") {
     assert(expressionFor(

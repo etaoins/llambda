@@ -5,6 +5,7 @@ import collection.mutable.ListBuffer
 class MalformedExpressionException(message : String) extends SemanticException(message)
 class BadSpecialFormException(message : String) extends SemanticException(message)
 class UnboundVariableException(message : String) extends SemanticException(message)
+class UserDefinedSyntaxError(errorString  : String, data : List[ast.Datum]) extends SemanticException(errorString + " " + data.map(_.toString).mkString(" "))
 
 object ExtractBody {
   private def rescope(datum : sst.ScopedDatum, mapping : (Scope, Scope)) : sst.ScopedDatum = { 
@@ -114,6 +115,9 @@ object ExtractBody {
 
       case (SchemePrimitives.Lambda, sst.ScopedImproperList(fixedArgData, sst.ScopedSymbol(_, restArg)) :: body) =>
         createLambda(outerScope)(fixedArgData, Some(restArg), body)
+
+      case (SchemePrimitives.SyntaxError, sst.NonSymbolLeaf(ast.StringLiteral(errorString)) :: data) =>
+        throw new UserDefinedSyntaxError(errorString, data.map(_.unscope))
 
       case _ =>
         et.ProcedureCall(procedure, operands.map(extractExpression(_)))
