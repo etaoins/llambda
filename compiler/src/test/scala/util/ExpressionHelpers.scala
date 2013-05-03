@@ -1,4 +1,4 @@
-package test.scala
+package test.scala.util
 
 import org.scalatest.{FunSuite,OptionValues}
 import llambda._

@@ -3,8 +3,8 @@ package test.scala
 import org.scalatest.{FunSuite,Inside,OptionValues}
 import llambda._
 
-class ExtractBodySuite extends FunSuite with Inside with OptionValues with ExpressionHelpers {
-  implicit val primitiveScope = new Scope(SchemePrimitives.bindings)
+class ExtractBodySuite extends FunSuite with Inside with OptionValues with util.ExpressionHelpers {
+  implicit val primitiveScope = new Scope(collection.mutable.Map(SchemePrimitives.bindings.toSeq : _*))
   
   test("variable reference") {
     // "a" isn't a binding in the primitive expressions

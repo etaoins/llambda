@@ -42,7 +42,7 @@ class ParseOnlyMode extends SchemeParsingMode("parse") {
 
 /** Extract expressions allowed in a library, program or lambda body */
 class BodyExpressionMode extends SchemeParsingMode("body") {
-  implicit var currentScope = new Scope(SchemePrimitives.bindings)
+  implicit var currentScope = new Scope(collection.mutable.Map(SchemePrimitives.bindings.toSeq : _*))
 
   def evalData(data : List[ast.Datum]) = {
     val (exprs, newScope) = ExtractBody(data)(currentScope)

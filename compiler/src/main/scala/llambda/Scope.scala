@@ -15,12 +15,8 @@ sealed abstract class PrimitiveExpression extends BoundValue
 case class SyntaxRule(pattern : List[sst.ScopedDatum], template : sst.ScopedDatum)
 case class BoundSyntax(literals : List[String], rules : List[SyntaxRule])  extends BoundValue
 
-/** BindingResolvers can look up bindings by name */
-trait BindingResolver {
-  def get(name : String) : Option[BoundValue]
-}
-
-final class Scope(bindings : collection.mutable.Map[String, BoundValue], parent : Option[BindingResolver] = None) extends BindingResolver {
+/** BindingSets can look up bindings by name and return a list of all identifiers  */
+final class Scope(val bindings : collection.mutable.Map[String, BoundValue], parent : Option[Scope] = None) {
   def get(name : String) : Option[BoundValue] = 
     bindings.get(name).orElse {
       parent match {
@@ -31,6 +27,10 @@ final class Scope(bindings : collection.mutable.Map[String, BoundValue], parent 
 
   def +(kv : (String, BoundValue)) : Scope = {
     new Scope(bindings + kv, parent)
+  }
+
+  def ++(values : Map[String, BoundValue]) : Scope = {
+    new Scope(bindings ++ values, parent)
   }
 
   // This is a hack for define-syntax to inject the new syntax definition in to its scope
@@ -46,13 +46,15 @@ object SchemePrimitives {
   object Quote extends PrimitiveExpression
   object If extends PrimitiveExpression
   object Set extends PrimitiveExpression
+  object SyntaxError extends PrimitiveExpression
 
   val bindings = {
-    collection.mutable.Map[String, BoundValue](
+    Map[String, BoundValue](
       "lambda" -> Lambda,
       "quote" -> Quote,
       "if" -> If,
-      "set!" -> Set
+      "set!" -> Set,
+      "syntax-error" -> SyntaxError
     )
   }
 }
