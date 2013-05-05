@@ -170,6 +170,15 @@ class ExtractBodySuite extends FunSuite with Inside with OptionValues with util.
 
 
   test("lambda shorthand") {
+    inside(bodyFor("(define (return-true) #t)")) {
+      case (exprs, scope) =>
+        val procLoc = scope.get("return-true").value
+        inside(exprs) {
+          case List(et.SetVar(procLoc, et.Procedure(Nil, None, bodyExprs))) =>
+            assert(bodyExprs === List(et.Literal(ast.TrueLiteral)))
+        }
+    }
+
     inside(bodyFor("(define (return-true unused-param) #t)")) {
       case (exprs, scope) =>
         val procLoc = scope.get("return-true").value
@@ -199,6 +208,11 @@ class ExtractBodySuite extends FunSuite with Inside with OptionValues with util.
   }
   
   test("lambdas") {
+    inside(expressionFor("(lambda () #t)")) {
+      case et.Procedure(Nil, None, body) =>
+        assert(body === List(et.Literal(ast.TrueLiteral)))
+    }
+
     inside(expressionFor("(lambda (x) x)")) {
       case et.Procedure(argX :: Nil, None, body) =>
         assert(body === List(et.VarReference(argX)))
