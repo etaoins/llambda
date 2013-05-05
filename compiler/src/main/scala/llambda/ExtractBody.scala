@@ -60,6 +60,10 @@ object ExtractBody {
       }
     }
 
+    if (fixedArgNames.toSet.size < fixedArgNames.size) {
+      throw new BadSpecialFormException("Duplicate formal parameters: " + fixedArgNames)
+    }
+
     val fixedArgs : List[ProcedureArg] = fixedArgNames.map { _ =>
       new ProcedureArg
     }

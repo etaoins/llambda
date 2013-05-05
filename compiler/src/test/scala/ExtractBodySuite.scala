@@ -219,6 +219,12 @@ class ExtractBodySuite extends FunSuite with Inside with OptionValues with util.
     }
   }
 
+  test("duplicate formals failure") {
+    intercept[BadSpecialFormException] {
+      expressionFor("(lambda (x x) x)")
+    }
+  }
+
   test("shadowing") {
     inside(bodyFor("(define x 1)(lambda (x) x)")) {
       case (exprs, scope) =>
