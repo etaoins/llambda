@@ -41,15 +41,15 @@ object ExtractBody {
     (storageLoc, scope + (varName -> storageLoc))
   }
 
-  private def defineExpression(scope : Scope)(varName : String, varExpr : et.Expression) : (Option[et.Expression], Scope) = {
+  private def defineExpression(scope : Scope, varName : String)(exprBlock : BoundValue => et.Expression) : (Option[et.Expression], Scope) = {
     val (storageLoc, newScope) = defineVar(scope)(varName)
 
-    val setExpr = et.SetVar(storageLoc, varExpr)
+    val setExpr = et.SetVar(storageLoc, exprBlock(storageLoc))
 
     (Some(setExpr), newScope)
   }
   
-  private def createLambda(evalScope : Scope)(fixedArgData : List[sst.ScopedDatum], restArgName : Option[String], body : List[sst.ScopedDatum]) : et.Procedure = {
+  private def createLambda(evalScope : Scope)(selfRef : Option[(String, BoundValue)], fixedArgData : List[sst.ScopedDatum], restArgName : Option[String], body : List[sst.ScopedDatum]) : et.Procedure = {
     // Create our actual procedure arguments
     // These unique identify the argument independently of its binding at a
     // given time
@@ -73,12 +73,11 @@ object ExtractBody {
     }
 
     // Create a new scope with the args bound to their names
-    val binding = collection.mutable.Map[String, BoundValue](
-      ((fixedArgNames zip fixedArgs) ++ (restArgName zip restArg).toList) : _*
-    )
-
+    val bindingsList = (fixedArgNames zip fixedArgs) ++  (restArgName zip restArg).toList ++ selfRef.toList
+    val binding = collection.mutable.Map[String, BoundValue](bindingsList : _*)
     val initialScope = new Scope(binding, Some(evalScope))
 
+    // Parse our body
     val expressions = ListBuffer[et.Expression]()
 
     body.foldLeft(initialScope) { (scope, datum) =>
@@ -112,13 +111,13 @@ object ExtractBody {
         et.SetVar(getVar(scope)(variableName), extractExpression(value))
 
       case (SchemePrimitives.Lambda, sst.ScopedSymbol(_, restArg) :: body) =>
-        createLambda(outerScope)(List(), Some(restArg), body)
+        createLambda(outerScope)(None, List(), Some(restArg), body)
 
       case (SchemePrimitives.Lambda, sst.ScopedProperList(fixedArgData) :: body) =>
-        createLambda(outerScope)(fixedArgData, None, body)
+        createLambda(outerScope)(None, fixedArgData, None, body)
 
       case (SchemePrimitives.Lambda, sst.ScopedImproperList(fixedArgData, sst.ScopedSymbol(_, restArg)) :: body) =>
-        createLambda(outerScope)(fixedArgData, Some(restArg), body)
+        createLambda(outerScope)(None, fixedArgData, Some(restArg), body)
 
       case (SchemePrimitives.SyntaxError, sst.NonSymbolLeaf(ast.StringLiteral(errorString)) :: data) =>
         throw new UserDefinedSyntaxError(errorString, data.map(_.unscope))
@@ -160,7 +159,7 @@ object ExtractBody {
                            sst.ScopedSymbol(_, "syntax-rules") :: sst.ScopedProperList(literals) :: rules
                          ) :: Nil) =>
       
-      // Create our new scope before and 
+      // Create our new scope before 
       val newScope = new Scope(collection.mutable.Map(), Some(evalScope))
 
       val literalNames = literals.map { 
@@ -189,13 +188,19 @@ object ExtractBody {
 
   private def extractBodyExpression(evalScope : Scope)(datum : sst.ScopedDatum) : (Option[et.Expression], Scope) = datum match {
     case sst.ScopedProperList(sst.ScopedSymbol(_, "define") :: sst.ScopedSymbol(assignScope, varName) :: value :: Nil) =>
-      defineExpression(assignScope)(varName, extractExpression(value))
+      defineExpression(assignScope, varName) { _ => 
+        extractExpression(value)
+      }
 
     case sst.ScopedProperList(sst.ScopedSymbol(defineScope, "define") :: sst.ScopedProperList(sst.ScopedSymbol(assignScope, varName) :: fixedArgs) :: body) =>
-      defineExpression(assignScope)(varName, createLambda(evalScope)(fixedArgs, None, body))
+      defineExpression(assignScope, varName) { selfRef => 
+        createLambda(evalScope)(Some(varName -> selfRef), fixedArgs, None, body)
+      }
     
     case sst.ScopedProperList(sst.ScopedSymbol(defineScope, "define") :: sst.ScopedImproperList(sst.ScopedSymbol(assignScope, varName) :: fixedArgs, sst.ScopedSymbol(_, restArg)) :: body) =>
-      defineExpression(assignScope)(varName, createLambda(evalScope)(fixedArgs, Some(restArg), body))
+      defineExpression(assignScope, varName) { selfRef =>
+        createLambda(evalScope)(Some(varName -> selfRef), fixedArgs, Some(restArg), body)
+      }
 
     case sst.ScopedProperList(sst.ScopedSymbol(_, "define-syntax") :: _) =>
       (None, defineSyntax(evalScope)(datum))

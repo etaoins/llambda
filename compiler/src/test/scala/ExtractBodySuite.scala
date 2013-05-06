@@ -168,6 +168,31 @@ class ExtractBodySuite extends FunSuite with Inside with OptionValues with util.
     }
   }
 
+  test("lambdas") {
+    inside(expressionFor("(lambda () #t)")) {
+      case et.Procedure(Nil, None, body) =>
+        assert(body === List(et.Literal(ast.TrueLiteral)))
+    }
+
+    inside(expressionFor("(lambda (x) x)")) {
+      case et.Procedure(argX :: Nil, None, body) =>
+        assert(body === List(et.VarReference(argX)))
+    }
+    
+    inside(expressionFor("(lambda x x)")) {
+      case et.Procedure(Nil, Some(restArg), body) =>
+        assert(body === List(et.VarReference(restArg)))
+    }
+
+    inside(expressionFor("(lambda (x y . z) x y z)")) {
+      case et.Procedure(argX :: argY :: Nil, Some(restArg), body) =>
+        assert(body === List(
+          et.VarReference(argX),
+          et.VarReference(argY),
+          et.VarReference(restArg)
+        ))
+    }
+  }
 
   test("lambda shorthand") {
     inside(bodyFor("(define (return-true) #t)")) {
@@ -206,33 +231,18 @@ class ExtractBodySuite extends FunSuite with Inside with OptionValues with util.
         }
     }
   }
-  
-  test("lambdas") {
-    inside(expressionFor("(lambda () #t)")) {
-      case et.Procedure(Nil, None, body) =>
-        assert(body === List(et.Literal(ast.TrueLiteral)))
-    }
 
-    inside(expressionFor("(lambda (x) x)")) {
-      case et.Procedure(argX :: Nil, None, body) =>
-        assert(body === List(et.VarReference(argX)))
-    }
-    
-    inside(expressionFor("(lambda x x)")) {
-      case et.Procedure(Nil, Some(restArg), body) =>
-        assert(body === List(et.VarReference(restArg)))
-    }
-
-    inside(expressionFor("(lambda (x y . z) x y z)")) {
-      case et.Procedure(argX :: argY :: Nil, Some(restArg), body) =>
-        assert(body === List(
-          et.VarReference(argX),
-          et.VarReference(argY),
-          et.VarReference(restArg)
-        ))
+  test("recursive lambda") {
+    inside(bodyFor("(define (return-self) return-self)")) {
+      case (exprs, scope) =>
+        val procLoc = scope.get("return-self").value
+        inside(exprs) {
+          case List(et.SetVar(procLoc, et.Procedure(Nil, None, bodyExprs))) =>
+            assert(bodyExprs === List(et.VarReference(procLoc)))
+        }
     }
   }
-
+  
   test("duplicate formals failure") {
     intercept[BadSpecialFormException] {
       expressionFor("(lambda (x x) x)")
