@@ -14,8 +14,13 @@ object ExtractBody {
     datum match {
       case sst.ScopedPair(car, cdr) =>
         sst.ScopedPair(rescope(car, mapping), rescope(cdr, mapping))
-      case sst.ScopedSymbol(scope, name) if scope == from =>
-        sst.ScopedSymbol(to, name)
+      case sst.ScopedSymbol(scope, name) =>
+        if (scope == from) {
+          sst.ScopedSymbol(to, name)
+        }
+        else {
+          datum
+        }
       case sst.ScopedVectorLiteral(elements) =>
         sst.ScopedVectorLiteral(elements.map(rescope(_, mapping)))
       case leaf : sst.NonSymbolLeaf => 

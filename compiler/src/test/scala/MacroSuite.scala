@@ -52,6 +52,21 @@ class MacroSuite extends FunSuite with Inside with OptionValues with util.Expres
     ) === et.Literal(ast.IntegerLiteral(6)))
   }
   
+  test("expansion with lambdas") {
+    // This expands a macro containing a lambda inside a lambda
+    // We have a bug with rescoping that got confused while rescoping a lambda
+    // body that contained symbols from a different scope. This triggered it.
+    assert(expressionFor(
+      """(define-syntax func-returning
+           (syntax-rules ()
+             ((func-returning value)
+               (lambda () value)
+         )))
+         (lambda () 
+           (func-returning if))"""
+    ) === et.Procedure(Nil, None, List(et.Procedure(Nil, None, List(et.VarReference(SchemePrimitives.If))))) )
+  }
+  
   test("two value expansion") {
     assert(expressionFor(
       """(define-syntax return-two
