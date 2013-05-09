@@ -249,11 +249,24 @@ class ExtractBodySuite extends FunSuite with Inside with OptionValues with util.
     }
   }
 
-  test("shadowing") {
+  test("parameters shadow") {
     inside(bodyFor("(define x 1)(lambda (x) x)")) {
       case (exprs, scope) =>
         inside(exprs) {
           case List(et.SetVar(shadowed, _), et.Procedure(argX :: Nil, None, et.VarReference(inner) :: Nil)) =>
+            assert(inner != shadowed)
+        }
+    }
+  }
+  
+  test("define shadows") {
+    inside(bodyFor(
+      """(define x 1)
+         (lambda () (define x 2))"""
+    )) {
+      case (exprs, scope) =>
+        inside(exprs) {
+          case List(et.SetVar(shadowed, _), et.Procedure(Nil, None, et.SetVar(inner, _) :: Nil)) =>
             assert(inner != shadowed)
         }
     }

@@ -35,7 +35,7 @@ object ExtractBody {
   }
 
   private def defineVar(scope : Scope)(varName : String) : (BoundValue, Scope) = {
-    val storageLoc = scope.get(varName) match {
+    val storageLoc = scope.bindings.get(varName) match {
       // Unbound or syntax binding
       case None => new StorageLocation
       case Some(_ : BoundSyntax) => new StorageLocation
