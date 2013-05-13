@@ -10,14 +10,14 @@ abstract class ReplMode(val name : String) {
 
 /** Base class for REPL modes that involve parsing scheme */
 abstract class SchemeParsingMode(name : String) extends ReplMode(name) {
-  def evalData(data : List[ast.Datum]) : List[String]
+  def evalDatum(data : ast.Datum) : String
 
   def evaluate(userString : String) {
     SchemeParser(userString) match {
       case SchemeParser.Success(data, _) => 
         try {
-          for(result <- evalData(data)) {
-            println("res: " + result)
+          for(datum <- data) {
+            println("res: " + evalDatum(datum))
           }
         }
         catch {
@@ -27,6 +27,8 @@ abstract class SchemeParsingMode(name : String) extends ReplMode(name) {
             println("bad special form: " + badspecial.getMessage)
           case unbound : UnboundVariableException =>
             println("unbound variable: " + unbound.getMessage)
+          case libnotfound : LibraryNotFoundException =>
+            println("library not found: " + libnotfound.getMessage)
         }
       case err =>
         println("error: " + err)
@@ -36,19 +38,32 @@ abstract class SchemeParsingMode(name : String) extends ReplMode(name) {
 
 /** Just parses Scheme */
 class ParseOnlyMode extends SchemeParsingMode("parse") {
-  def evalData(data : List[ast.Datum]) : List[String] =
-    data.map(_.toString)
+  def evalDatum(datum : ast.Datum) : String =
+    datum.toString
 }
 
 /** Extract expressions allowed in a library, program or lambda body */
 class BodyExpressionMode extends SchemeParsingMode("body") {
-  implicit var currentScope = new Scope(collection.mutable.Map(SchemePrimitives.bindings.toSeq : _*))
+  private val schemeCoreBindings = (new DefaultLibraryLoader).loadSchemeCore
+  implicit var currentScope = new Scope(collection.mutable.Map(schemeCoreBindings.toSeq : _*))
 
-  def evalData(data : List[ast.Datum]) = {
-    val (exprs, newScope) = ExtractBody(data)(currentScope)
+  def evalDatum(datum : ast.Datum) = {
+    datum match {
+      case ast.ProperList(ast.Symbol("import") :: _) =>
+        // This is an import decl - import our new bindings
+        val loader = new DefaultLibraryLoader
+        val newBindings = ResolveImportDecl(datum)(loader.load)
 
-    currentScope = newScope
-    exprs.map(_.toString)
+        currentScope = currentScope ++ newBindings
+
+        "loaded"
+      case _ =>
+        // Treat this like a body expression
+        val (exprs, newScope) = ExtractBody(datum :: Nil)(currentScope)
+
+        currentScope = newScope
+        exprs.map(_.toString).mkString(" ")
+    }
   }
 }
 

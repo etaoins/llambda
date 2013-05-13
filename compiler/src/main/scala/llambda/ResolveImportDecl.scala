@@ -4,7 +4,7 @@ class ImportedIdentifierNotFoundException(val identifier : String)
   extends SemanticException(identifier)
 
 object ResolveImportDecl {
-  type LibraryLoader = Seq[LibraryNameComponent] => Map[String, BoundValue]
+  type LibraryLoader = List[LibraryNameComponent] => Map[String, BoundValue]
 
   private def parseIdentifier(datum : ast.Datum) : String = datum match {
     case ast.Symbol(name) => name

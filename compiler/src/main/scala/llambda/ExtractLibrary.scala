@@ -3,7 +3,7 @@ package llambda
 import collection.mutable.{ListBuffer, MapBuilder}
 
 object ExtractLibrary {
-  def apply(datum : ast.Datum)(implicit libraryLoader : Seq[LibraryNameComponent] => Map[String, BoundValue]) : Library = datum match {
+  def apply(datum : ast.Datum)(implicit libraryLoader : List[LibraryNameComponent] => Map[String, BoundValue]) : Library = datum match {
     case ast.ProperList(ast.Symbol("define-library") :: libraryNameData :: decls) =>
       // Parse the library name
       val libraryName = ParseLibraryName(libraryNameData)

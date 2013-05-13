@@ -5,6 +5,8 @@ import scala.util.parsing.combinator._
 
 import scala.language.postfixOps
 
+class ParseErrorException(message : String) extends Exception(message)
+
 object SchemeParserDefinitions {
   // This is monsterous to exclude a single "." and starting with numbers
   val identifierPattern = """(([a-zA-Z\!\$\%\&\*\+\-\/\:\<\=\>\?\@\^\_\.])""" +
@@ -50,6 +52,13 @@ object SchemeParser extends RegexParsers {
   case class Comment()
 
   import SchemeParserDefinitions._
+
+  def parseStringAsData(input : String) : List[ast.Datum] = 
+    apply(input) match {
+      case SchemeParser.Success(data, _) => data
+      case err =>
+        throw new ParseErrorException(err.toString)
+    }
 
   def apply(input : String) : ParseResult[List[ast.Datum]] = parseAll(program, input)
 
