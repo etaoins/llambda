@@ -279,10 +279,24 @@ object ExtractBody {
       scope.get(procedureName) match {
         case Some(syntax : BoundSyntax) =>
           extractBodyExpression(evalScope)(ExpandMacro(syntax, operands))
+
+        case Some(InternalPrimitives.DefineReportProcedure) =>
+          operands match {
+            case sst.ScopedSymbol(_, varName) :: definitionData :: Nil =>
+              val reportProc = new ReportProcedure(varName)
+              val newScope = scope + (varName -> reportProc)
+              val definitionExpr = extractExpression(definitionData)
+
+              (Some(et.SetVar(reportProc, definitionExpr)), newScope)
+
+            case _ =>
+              throw new BadSpecialFormException("define-report-procedure requires exactly two arguments")
+          }
+
         case _ =>
           (Some(extractExpression(datum)), evalScope)
       }
-    
+
     case _ =>
       // Scope is unmodified
       (Some(extractExpression(datum)), evalScope)

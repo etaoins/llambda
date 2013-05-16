@@ -31,6 +31,27 @@ class DefaultLibraryLoaderSuite extends FunSuite {
     assert(bindings.contains("set!"))
   }
 
+  test("load llambda primitives") {
+    val loader = new DefaultLibraryLoader
+    val bindings = loader.load(StringComponent("llambda") :: StringComponent("primitives") :: Nil)
+
+    assert(bindings.contains("set!"))
+  }
+  
+  test("load llambda nfi") {
+    val loader = new DefaultLibraryLoader
+    val bindings = loader.load(StringComponent("llambda") :: StringComponent("nfi") :: Nil)
+
+    assert(bindings.contains("native-function"))
+  }
+
+  test("load llambda internal") {
+    val loader = new DefaultLibraryLoader
+    val bindings = loader.load(StringComponent("llambda") :: StringComponent("internal") :: Nil)
+
+    assert(bindings.contains("define-report-procedure"))
+  }
+
   test("unmatched library name") {
     val loader = new DefaultLibraryLoader
 

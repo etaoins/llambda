@@ -52,6 +52,9 @@ class DefaultLibraryLoader {
       case StringComponent("llambda") :: StringComponent("nfi") :: Nil =>
         NativeFunctionPrimitives.bindings
 
+      case StringComponent("llambda") :: StringComponent("internal") :: Nil =>
+        InternalPrimitives.bindings
+
       case fileComponents =>
         val filename = (libraryName map {
           case StringComponent(str) => 

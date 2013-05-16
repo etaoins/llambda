@@ -8,6 +8,11 @@ class StorageLocation extends BoundValue
 // These are arguments to a procedure
 class ProcedureArg extends BoundValue
 
+// These are procedure with the semantics of the same procedure defined in R7RS
+// This allows the compile to optimize or REPL emulate them based on their 
+// documented semantics
+class ReportProcedure(val name : String) extends StorageLocation
+
 // These are the primitive expression types in R7Rs
 sealed abstract class PrimitiveExpression extends BoundValue
 
@@ -65,6 +70,16 @@ object NativeFunctionPrimitives {
   val bindings = {
     Map[String, BoundValue](
       "native-function" -> NativeFunction
+    )
+  }
+}
+
+object InternalPrimitives {
+  object DefineReportProcedure extends PrimitiveExpression
+
+  val bindings = {
+    Map[String, BoundValue](
+      "define-report-procedure" -> DefineReportProcedure
     )
   }
 }

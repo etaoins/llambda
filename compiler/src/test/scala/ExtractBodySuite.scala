@@ -281,4 +281,24 @@ class ExtractBodySuite extends FunSuite with Inside with OptionValues with util.
         }
     }
   }
+
+  test("define report procedure") {
+    val allBindings = InternalPrimitives.bindings ++ SchemePrimitives.bindings
+    val internalScope = new Scope(collection.mutable.Map(allBindings.toSeq : _*))
+
+    inside(bodyFor("(define-report-procedure list (lambda () #f))")(internalScope)) {
+      case (exprs, scope) =>
+        val listBinding = scope.get("list").value
+
+        inside(listBinding) {
+          case rp : ReportProcedure =>
+            assert(rp.name === "list")
+        }
+
+        inside(exprs) {
+          case et.SetVar(loc, et.Procedure(Nil, None, List(et.Literal(ast.FalseLiteral)))) :: Nil =>
+            assert(loc === listBinding)
+        }
+    }
+  }
 }
