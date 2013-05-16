@@ -47,8 +47,10 @@ class DefaultLibraryLoader {
   def load(libraryName : List[LibraryNameComponent]) : Map[String, BoundValue] = {
     libraryName match {
       case StringComponent("llambda") :: StringComponent("primitives") :: Nil =>
-        // This is easy
         SchemePrimitives.bindings
+      
+      case StringComponent("llambda") :: StringComponent("nfi") :: Nil =>
+        NativeFunctionPrimitives.bindings
 
       case fileComponents =>
         val filename = (libraryName map {

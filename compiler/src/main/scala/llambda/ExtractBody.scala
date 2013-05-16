@@ -53,6 +53,65 @@ object ExtractBody {
 
     (Some(setExpr), newScope)
   }
+
+  private def createNativeFunction(fixedArgData : List[sst.ScopedDatum], restArgType : Option[String], returnTypeString : String, nativeSymbol : String) : et.NativeFunction = {
+    def parseNativeType(typeString : String) : nfi.NativeType = typeString match {
+      case "bool"   => nfi.Bool
+      case "int8"   => nfi.Int8
+      case "int16"  => nfi.Int16
+      case "int32"  => nfi.Int32
+      case "int64"  => nfi.Int64
+      case "float"  => nfi.Float
+      case "double" => nfi.Double
+
+      // XXX: This assumes Unix-like LP64: 64bit Linux, FreeBSD, Mac OS X, etc 
+      // These aliases are here so we can do the right thing when porting to other archs
+      case "short" => nfi.Int16
+      case "int"   => nfi.Int32
+      case "long"  => nfi.Int64
+      case "wchar" => nfi.Int32
+
+      case "boxeddatum" => nfi.BoxedDatum
+      case _ => throw new BadSpecialFormException("Unknown native type: " + typeString)
+    }
+    
+    var fixedArgTypes = fixedArgData map {
+      case sst.ScopedSymbol(_, typeName) => parseNativeType(typeName)
+      case nonsymbol => throw new BadSpecialFormException("Excepted native type name to be string: " + nonsymbol)
+    }
+
+    val hasRestArg = restArgType match {
+      case Some("boxeddatum") => true
+      case Some(other) => throw new BadSpecialFormException("Only boxeddatum can be used as a rest argument. Found: " + other)
+      case None => false
+    }
+
+    val returnType = returnTypeString match {
+      case "void" => None
+      case _ => Some(parseNativeType(returnTypeString))
+    }
+
+    et.NativeFunction(
+      fixedArgs = fixedArgTypes,
+      hasRestArg = hasRestArg,
+      returnType = returnType,
+      nativeSymbol = nativeSymbol)
+  }
+
+  private def extractNativeFunction(operands : List[sst.ScopedDatum]) : et.NativeFunction = operands match {
+    // These mirror the lambda forms
+    case sst.NonSymbolLeaf(ast.StringLiteral(nativeSymbol)) :: sst.ScopedProperList(fixedArgs) :: sst.ScopedSymbol(_, returnType) :: Nil =>
+      createNativeFunction(fixedArgs, None, returnType, nativeSymbol)
+    
+    case sst.NonSymbolLeaf(ast.StringLiteral(nativeSymbol)) :: sst.ScopedSymbol(_, restArgType) :: sst.ScopedSymbol(_, returnType) :: Nil =>
+      createNativeFunction(Nil, Some(restArgType), returnType, nativeSymbol)
+    
+    case sst.NonSymbolLeaf(ast.StringLiteral(nativeSymbol)) :: sst.ScopedImproperList(fixedArgs, sst.ScopedSymbol(_, restArgType)) :: sst.ScopedSymbol(_, returnType) :: Nil =>
+      createNativeFunction(fixedArgs, Some(restArgType), returnType, nativeSymbol)
+
+    case _ =>
+      throw new BadSpecialFormException("Bad native-function operands: " + operands.mkString(" "))
+  }
   
   private def createLambda(evalScope : Scope)(selfRef : Option[(String, BoundValue)], fixedArgData : List[sst.ScopedDatum], restArgName : Option[String], body : List[sst.ScopedDatum]) : et.Procedure = {
     // Create our actual procedure arguments
@@ -126,6 +185,9 @@ object ExtractBody {
 
       case (SchemePrimitives.SyntaxError, sst.NonSymbolLeaf(ast.StringLiteral(errorString)) :: data) =>
         throw new UserDefinedSyntaxError(errorString, data.map(_.unscope))
+
+      case (NativeFunctionPrimitives.NativeFunction, _) =>
+        extractNativeFunction(operands)
 
       case _ =>
         et.ProcedureCall(procedure, operands.map(extractExpression(_)))

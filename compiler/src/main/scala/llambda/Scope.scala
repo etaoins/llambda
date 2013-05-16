@@ -58,3 +58,13 @@ object SchemePrimitives {
     )
   }
 }
+
+object NativeFunctionPrimitives {
+  object NativeFunction extends PrimitiveExpression
+
+  val bindings = {
+    Map[String, BoundValue](
+      "native-function" -> NativeFunction
+    )
+  }
+}
