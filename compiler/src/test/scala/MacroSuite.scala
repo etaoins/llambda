@@ -221,6 +221,17 @@ class MacroSuite extends FunSuite with Inside with OptionValues with util.Expres
          (return-second 'a 'b)"""
     ) === et.Literal(ast.Symbol("b")))
   }
+  
+  test("first rule matches") {
+    assert(expressionFor(
+      """(define-syntax return-one
+           (syntax-rules ()
+             ((return-one foo bar) 0)
+             ((return-one foobar) 1)
+             ((return-one foobaz) 2)))
+         (return-one #t)"""
+    ) === et.Literal(ast.IntegerLiteral(1)))
+  }
 
   test("terminal zero or more match") {
     assert(expressionFor(

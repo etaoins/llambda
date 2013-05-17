@@ -1,7 +1,6 @@
 package llambda
 
 class NoSyntaxRuleException(message : String) extends SemanticException(message)
-class AmbiguousSyntaxRuleException(message : String) extends SemanticException(message)
 
 object ExpandMacro {
   sealed abstract class Rewrite
@@ -127,21 +126,15 @@ object ExpandMacro {
   }
 
   def apply(syntax : BoundSyntax, operands : List[sst.ScopedDatum]) : sst.ScopedDatum = {
-    val possibleExpandables = syntax.rules.flatMap { rule =>
+    val expandable = syntax.rules.flatMap { rule =>
       matchRule(syntax.literals, rule.pattern, operands) map { rewrites =>
         Expandable(rule.template, rewrites)
       }
+    }.headOption.getOrElse {
+      throw new NoSyntaxRuleException(syntax.toString)
     }
 
-    possibleExpandables match {
-      case Nil => throw new NoSyntaxRuleException(syntax.toString)
-      case Expandable(template, rewrites) :: Nil =>
-        // Expand!
-        expandTemplate(template, rewrites)
-
-      case _ =>
-        throw new AmbiguousSyntaxRuleException(syntax.toString)
-    }
+    expandTemplate(expandable.template, expandable.rewrites)
   }
 }
 
