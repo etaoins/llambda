@@ -3,7 +3,7 @@ import llambda._
 
 sealed abstract trait Expression 
 
-case class ProcedureCall(function : BoundValue, operands : List[Expression]) extends Expression 
+case class ProcedureCall(function : Expression, operands : List[Expression]) extends Expression 
 
 case class VarReference(variable : BoundValue) extends Expression 
 

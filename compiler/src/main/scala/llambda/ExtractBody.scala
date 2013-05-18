@@ -157,47 +157,54 @@ object ExtractBody {
     et.Procedure(fixedArgs, restArg, expressions.toList)
   }
 
-  private def extractApplication(outerScope : Scope)(procedure : BoundValue, operands : List[sst.ScopedDatum]) : et.Expression = {
+  private def extractApplication(evalScope : Scope)(procedure : et.Expression, operands : List[sst.ScopedDatum]) : et.Expression = {
     (procedure, operands) match {
-      case (syntax : BoundSyntax, operands) =>
-        extractExpression(ExpandMacro(syntax, operands))
+      case (et.VarReference(syntax : BoundSyntax), operands) =>
+        extractExpression(evalScope)(ExpandMacro(syntax, operands))
 
-      case (SchemePrimitives.Quote, innerDatum :: Nil) =>
+      case (et.VarReference(SchemePrimitives.Quote), innerDatum :: Nil) =>
         et.Literal(innerDatum.unscope)
 
-      case (SchemePrimitives.If, test :: trueExpr :: falseExpr :: Nil) =>
-        et.Conditional(extractExpression(test), extractExpression(trueExpr), Some(extractExpression(falseExpr)))
+      case (et.VarReference(SchemePrimitives.If), test :: trueExpr :: falseExpr :: Nil) =>
+        et.Conditional(
+          extractExpression(evalScope)(test), 
+          extractExpression(evalScope)(trueExpr), 
+          Some(extractExpression(evalScope)(falseExpr)))
       
-      case (SchemePrimitives.If, test :: trueExpr :: Nil) =>
-        et.Conditional(extractExpression(test), extractExpression(trueExpr), None)
+      case (et.VarReference(SchemePrimitives.If), test :: trueExpr :: Nil) =>
+        et.Conditional(
+          extractExpression(evalScope)(test), 
+          extractExpression(evalScope)(trueExpr), 
+          None)
 
-      case (SchemePrimitives.Set, sst.ScopedSymbol(scope, variableName) :: value :: Nil) =>
-        et.SetVar(getVar(scope)(variableName), extractExpression(value))
+      case (et.VarReference(SchemePrimitives.Set), sst.ScopedSymbol(scope, variableName) :: value :: Nil) =>
+        et.SetVar(getVar(scope)(variableName), extractExpression(evalScope)(value))
 
-      case (SchemePrimitives.Lambda, sst.ScopedSymbol(_, restArg) :: body) =>
-        createLambda(outerScope)(None, List(), Some(restArg), body)
+      case (et.VarReference(SchemePrimitives.Lambda), sst.ScopedSymbol(_, restArg) :: body) =>
+        createLambda(evalScope)(None, List(), Some(restArg), body)
 
-      case (SchemePrimitives.Lambda, sst.ScopedProperList(fixedArgData) :: body) =>
-        createLambda(outerScope)(None, fixedArgData, None, body)
+      case (et.VarReference(SchemePrimitives.Lambda), sst.ScopedProperList(fixedArgData) :: body) =>
+        createLambda(evalScope)(None, fixedArgData, None, body)
 
-      case (SchemePrimitives.Lambda, sst.ScopedImproperList(fixedArgData, sst.ScopedSymbol(_, restArg)) :: body) =>
-        createLambda(outerScope)(None, fixedArgData, Some(restArg), body)
+      case (et.VarReference(SchemePrimitives.Lambda), sst.ScopedImproperList(fixedArgData, sst.ScopedSymbol(_, restArg)) :: body) =>
+        createLambda(evalScope)(None, fixedArgData, Some(restArg), body)
 
-      case (SchemePrimitives.SyntaxError, sst.NonSymbolLeaf(ast.StringLiteral(errorString)) :: data) =>
+      case (et.VarReference(SchemePrimitives.SyntaxError), sst.NonSymbolLeaf(ast.StringLiteral(errorString)) :: data) =>
         throw new UserDefinedSyntaxError(errorString, data.map(_.unscope))
 
-      case (NativeFunctionPrimitives.NativeFunction, _) =>
+      case (et.VarReference(NativeFunctionPrimitives.NativeFunction), _) =>
         extractNativeFunction(operands)
 
       case _ =>
-        et.ProcedureCall(procedure, operands.map(extractExpression(_)))
+        et.ProcedureCall(procedure, operands.map(extractExpression(evalScope)(_)))
     }
   }
 
-  def extractExpression(datum : sst.ScopedDatum) : et.Expression = datum match {
+  def extractExpression(evalScope : Scope)(datum : sst.ScopedDatum) : et.Expression = datum match {
     // Normal procedure call
-    case sst.ScopedProperList(sst.ScopedSymbol(scope, procedureName) :: operands) =>
-      extractApplication(scope)(getVar(scope)(procedureName), operands)
+    case sst.ScopedProperList(procedure :: operands) =>
+      val procedureExpr = extractExpression(evalScope)(procedure)
+      extractApplication(evalScope)(procedureExpr, operands)
 
     case sst.ScopedSymbol(scope, variableName) =>
       et.VarReference(getVar(scope)(variableName))
@@ -256,7 +263,7 @@ object ExtractBody {
   private def extractBodyExpression(evalScope : Scope)(datum : sst.ScopedDatum) : (Option[et.Expression], Scope) = datum match {
     case sst.ScopedProperList(sst.ScopedSymbol(_, "define") :: sst.ScopedSymbol(assignScope, varName) :: value :: Nil) =>
       defineExpression(assignScope, varName) { _ => 
-        extractExpression(value)
+        extractExpression(evalScope)(value)
       }
 
     case sst.ScopedProperList(sst.ScopedSymbol(defineScope, "define") :: sst.ScopedProperList(sst.ScopedSymbol(assignScope, varName) :: fixedArgs) :: body) =>
@@ -285,7 +292,7 @@ object ExtractBody {
             case sst.ScopedSymbol(_, varName) :: definitionData :: Nil =>
               val reportProc = new ReportProcedure(varName)
               val newScope = scope + (varName -> reportProc)
-              val definitionExpr = extractExpression(definitionData)
+              val definitionExpr = extractExpression(evalScope)(definitionData)
 
               (Some(et.SetVar(reportProc, definitionExpr)), newScope)
 
@@ -294,12 +301,12 @@ object ExtractBody {
           }
 
         case _ =>
-          (Some(extractExpression(datum)), evalScope)
+          (Some(extractExpression(evalScope)(datum)), evalScope)
       }
 
     case _ =>
       // Scope is unmodified
-      (Some(extractExpression(datum)), evalScope)
+      (Some(extractExpression(evalScope)(datum)), evalScope)
   }
 
   def apply(data : List[ast.Datum])(implicit initialScope : Scope) : (List[et.Expression], Scope) = {

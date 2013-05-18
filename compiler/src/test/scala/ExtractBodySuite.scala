@@ -83,7 +83,7 @@ class ExtractBodySuite extends FunSuite with Inside with OptionValues with util.
     val plusScope = new Scope(collection.mutable.Map("+" -> plusLoc), Some(primitiveScope))
 
     assert(expressionFor("(+ 3 4)")(plusScope) === et.ProcedureCall(
-      plusLoc,
+      et.VarReference(plusLoc),
       List(
         et.Literal(ast.IntegerLiteral(3)),
         et.Literal(ast.IntegerLiteral(4))
@@ -191,6 +191,14 @@ class ExtractBodySuite extends FunSuite with Inside with OptionValues with util.
           et.VarReference(argY),
           et.VarReference(restArg)
         ))
+    }
+  }
+  
+  test("self-executing lambdas") {
+    inside(expressionFor("((lambda (x) x) 1)")) {
+      case et.ProcedureCall(et.Procedure(argX :: Nil, None, body), value :: Nil) =>
+        assert(body === List(et.VarReference(argX)))
+        assert(value === et.Literal(ast.IntegerLiteral(1)))
     }
   }
 
