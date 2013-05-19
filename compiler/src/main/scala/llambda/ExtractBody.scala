@@ -120,7 +120,7 @@ object ExtractBody {
     val fixedArgNames = fixedArgData.map { datum =>
       datum match {
         case sst.ScopedSymbol(_, name) => name
-        case _ => throw new BadSpecialFormException("Symbol expected, found " + datum)
+        case _ => throw new BadSpecialFormException("Symbol expected, found " + datum.unscope)
       }
     }
 

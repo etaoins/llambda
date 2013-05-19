@@ -9,78 +9,93 @@ object ExpandMacro {
 
   case class Expandable(template : sst.ScopedDatum, rewrites : List[Rewrite])
 
-  private def matchRule(literals : List[String], pattern : List[sst.ScopedDatum], operands : List[sst.ScopedDatum]) : Option[List[Rewrite]] = {
-    (pattern, operands) match {
-      case (sst.ScopedSymbol(_, "_") :: restPattern,
-            _ :: restOperands) =>
+  // This is used for flow control which is a bit icky
+  // We will continue on trying to match the next syntax rule if this is thrown
+  private class MatchFailedException extends Exception
+  
+  private def matchNonRepeatingRule(literals : List[String], pattern : sst.ScopedDatum, operand : sst.ScopedDatum) : List[Rewrite] = {
+    (pattern, operand) match {
+      case (sst.ScopedSymbol(_, "_"), _) =>
         // They used a wildcard - ignore this
-        matchRule(literals, restPattern, restOperands)
+        Nil
 
-      case (sst.ScopedSymbol(_, patternIdent) :: restPattern, 
-            sst.ScopedSymbol(_, operandIdent) :: restOperands) if literals.contains(patternIdent) =>
+      case (sst.ScopedSymbol(_, patternIdent), 
+            sst.ScopedSymbol(_, operandIdent)) if literals.contains(patternIdent) =>
         if (patternIdent == operandIdent) {
           // The literal doesn't cause any rewrites. We just ignore it
-          matchRule(literals, restPattern, restOperands)
+          Nil
         }
         else {
           // They misused a literal - no match
-          None
+          throw new MatchFailedException
         }
 
-      case (sst.ScopedSymbol(patternScope, patternIdent) :: sst.ScopedSymbol(_, "...") :: restPattern,
+      case (sst.ScopedSymbol(patternScope, patternIdent), operand) =>
+        List(SubstituteRewrite(patternScope, patternIdent, operand))
+
+      case (sst.ScopedProperList(subpattern), sst.ScopedProperList(suboperands)) =>
+        // Recurse inside the proper list
+        matchRule(literals, subpattern, suboperands)
+      
+      case (sst.ScopedVectorLiteral(subpattern), sst.ScopedVectorLiteral(suboperands)) =>
+        // Recurse inside the vector and the rest of our pattern
+        matchRule(literals, subpattern.toList, suboperands.toList)
+      
+      case (sst.ScopedImproperList(subpattern, termPattern), sst.ScopedImproperList(suboperands, termOperand)) =>
+        // This is essentially the same as the proper list except with terminator matching
+        matchRule(literals, subpattern, suboperands) ++ matchRule(literals, List(termPattern), List(termOperand))
+
+      case ((patternAtom : sst.NonSymbolLeaf), (operandAtom : sst.NonSymbolLeaf)) if patternAtom == operandAtom => 
+        Nil
+
+      case _ =>
+        // No match!
+        throw new MatchFailedException
+    }
+  }
+
+  private def matchRule(literals : List[String], patterns : List[sst.ScopedDatum], operands : List[sst.ScopedDatum]) : List[Rewrite] = {
+    (patterns, operands) match {
+      case (subpattern :: sst.ScopedSymbol(_, "...") :: restPattern,
             allOperands) if (!literals.contains("...")) =>
         if (allOperands.length >= restPattern.length) {
-          val (operands, restOperands) = allOperands.splitAt(allOperands.length - restPattern.length)
+          val (repeatingOperands, restOperands) = allOperands.splitAt(allOperands.length - restPattern.length)
 
-          // If the match doesn't fail later add our rewrite rule on
-          matchRule(literals, restPattern, restOperands) map { rewrites =>
-            SpliceRewrite(patternScope, patternIdent, operands) :: rewrites
+          val repeatingRewrites = (repeatingOperands map { repeatingOperand =>
+            matchNonRepeatingRule(literals, subpattern, repeatingOperand) 
+          }).flatten : List[Rewrite]
+
+          // Fail if there are any splice rewrites inside the list
+          // Not sure how that would be handled
+          val repeatingSubstitutions = repeatingRewrites.map { 
+            case substitution : SubstituteRewrite => substitution
+            case _ => throw new MatchFailedException
+          } : List[SubstituteRewrite]
+          
+          val groupedSubstitutions = repeatingSubstitutions.groupBy { substitution =>
+            (substitution.scope, substitution.identifier)
           }
+            
+          // Convert the substitution rewrite list in to splice rewrites
+          (groupedSubstitutions.toList map {
+            case ((scope, identifier), rewrites) =>
+              SpliceRewrite(scope, identifier, rewrites.map(_.expansion))
+          }) ++ matchRule(literals, restPattern, restOperands)
         }
         else {
           // Not enough values left
-          None
+          throw new MatchFailedException
         }
 
-      case (sst.ScopedSymbol(patternScope, patternIdent) :: restPattern,
-            operand :: restOperands) =>
-        matchRule(literals, restPattern, restOperands) map { rewrites =>
-          SubstituteRewrite(patternScope, patternIdent, operand) :: rewrites
-        }
-
-      case (sst.ScopedProperList(subpattern) :: restPattern,
-            sst.ScopedProperList(suboperands) :: restOperands) =>
-        // Recurse inside the proper list and the rest of our pattern
-        for(subRewrites <- matchRule(literals, subpattern, suboperands);
-            restRewrites <- matchRule(literals, restPattern, restOperands)) 
-          yield subRewrites ++ restRewrites
-      
-      case (sst.ScopedVectorLiteral(subpattern) :: restPattern,
-            sst.ScopedVectorLiteral(suboperands) :: restOperands) =>
-        // Recurse inside the vector and the rest of our pattern
-        for(subRewrites <- matchRule(literals, subpattern.toList, suboperands.toList);
-            restRewrites <- matchRule(literals, restPattern, restOperands)) 
-          yield subRewrites ++ restRewrites
-      
-      case (sst.ScopedImproperList(subpattern, termPattern) :: restPattern,
-            sst.ScopedImproperList(suboperands, termOperand) :: restOperands) =>
-        // This is essentially the same as the proper list except with terminator matching
-        for(subRewrites <- matchRule(literals, subpattern, suboperands);
-            termRewrites <- matchRule(literals, List(termPattern), List(termOperand));
-            restRewrites <- matchRule(literals, restPattern, restOperands)) 
-          yield subRewrites ++ termRewrites ++ restRewrites
-
-      case ((patternAtom : sst.NonSymbolLeaf) :: restPattern,
-            (operandAtom : sst.NonSymbolLeaf) :: restOperands) if patternAtom == operandAtom => 
-        // Operand match
-        matchRule(literals, restPattern, restOperands)
+      case (pattern :: restPatterns, operand :: restOperands) =>
+        matchNonRepeatingRule(literals, pattern, operand) ++ matchRule(literals, restPatterns, restOperands)
 
       case (Nil, Nil) =>
         // We both ended at the same time - this is expected
-        Some(Nil)
+        Nil
 
       case _ =>
-        None
+        throw new MatchFailedException
     }
   }
 
@@ -127,8 +142,11 @@ object ExpandMacro {
 
   def apply(syntax : BoundSyntax, operands : List[sst.ScopedDatum]) : sst.ScopedDatum = {
     val expandable = syntax.rules.flatMap { rule =>
-      matchRule(syntax.literals, rule.pattern, operands) map { rewrites =>
-        Expandable(rule.template, rewrites)
+      try {
+        Some(Expandable(rule.template, matchRule(syntax.literals, rule.pattern, operands)))
+      }
+      catch {
+        case _ : MatchFailedException => None
       }
     }.headOption.getOrElse {
       throw new NoSyntaxRuleException(syntax.toString)

@@ -303,6 +303,25 @@ class MacroSuite extends FunSuite with Inside with OptionValues with util.Expres
     }
   }
 
+  test("restructuring expansion") {
+    inside(bodyFor(
+      """(define-syntax let
+           (syntax-rules ()
+             ((let ((name val) ...) body1 body2 ...)
+               ((lambda (name ...) body1 body2 ...)
+                 val ...))))
+         (let ((a 1) (b 2)) a b)"""
+    )) {
+      case (expr :: Nil, scope) =>
+        inside(expr) {
+          case et.ProcedureCall(et.Procedure(arg1 :: arg2 :: Nil, None, body), argVal1 :: argVal2 :: Nil) =>
+            assert(body === List(et.VarReference(arg1), et.VarReference(arg2)))
+            assert(argVal1 === et.Literal(ast.IntegerLiteral(1)))
+            assert(argVal2 === et.Literal(ast.IntegerLiteral(2)))
+        }
+    }
+  }
+
   test("syntax-error") {
     intercept[UserDefinedSyntaxError] {
       expressionFor(
