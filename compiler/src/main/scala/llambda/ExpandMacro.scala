@@ -12,6 +12,13 @@ object ExpandMacro {
   // This is used for flow control which is a bit icky
   // We will continue on trying to match the next syntax rule if this is thrown
   private class MatchFailedException extends Exception
+
+  private def findAllSymbols(datum : sst.ScopedDatum) : List[sst.ScopedSymbol] = datum match {
+    case symbol : sst.ScopedSymbol => symbol :: Nil
+    case sst.ScopedPair(car, cdr) => findAllSymbols(car) ++ findAllSymbols(cdr)
+    case sst.ScopedVectorLiteral(elements) => elements.toList.flatMap(findAllSymbols(_))
+    case _ : sst.NonSymbolLeaf => Nil
+  }
   
   private def matchNonRepeatingRule(literals : List[String], pattern : sst.ScopedDatum, operand : sst.ScopedDatum) : List[Rewrite] = {
     (pattern, operand) match {
@@ -58,7 +65,21 @@ object ExpandMacro {
     (patterns, operands) match {
       case (subpattern :: sst.ScopedSymbol(_, "...") :: restPattern,
             allOperands) if (!literals.contains("...")) =>
-        if (allOperands.length >= restPattern.length) {
+
+        if (allOperands.length == restPattern.length) {
+          val allSymbols = findAllSymbols(subpattern)
+
+          // Super gross
+          // We work by incrementally matching our pattern against our input and creating rewrites as we go
+          // However, in the case of a zero or more match we have to generate the rewrites without any input to match
+          // against. Just look for all the identifiers in the subpattern and filter out the literals
+          allSymbols filterNot { symbol =>
+            literals.contains(symbol.name)
+          } map { symbol =>
+            SpliceRewrite(symbol.scope, symbol.name, Nil)
+          }
+        }
+        else if (allOperands.length >= restPattern.length) {
           val (repeatingOperands, restOperands) = allOperands.splitAt(allOperands.length - restPattern.length)
 
           val repeatingRewrites = (repeatingOperands map { repeatingOperand =>

@@ -244,6 +244,17 @@ class MacroSuite extends FunSuite with Inside with OptionValues with util.Expres
     ) === et.Literal(ast.ProperList(List(ast.IntegerLiteral(1), ast.IntegerLiteral(2), ast.IntegerLiteral(3)))))
   }
   
+  test("zero or more match with zero matches") {
+    assert(expressionFor(
+      """(define-syntax return-all
+           (syntax-rules ()
+             ((return-all values ...)
+               '(values ...)
+         )))
+         (return-all)"""
+    ) === et.Literal(ast.EmptyList))
+  }
+  
   test("middle zero or more match") {
     assert(expressionFor(
       """(define-syntax return-all-but-first-last
@@ -320,6 +331,32 @@ class MacroSuite extends FunSuite with Inside with OptionValues with util.Expres
             assert(argVal2 === et.Literal(ast.IntegerLiteral(2)))
         }
     }
+  }
+  
+  test("dependent macros") {
+    inside(bodyFor(
+      """(define-syntax let
+           (syntax-rules ()
+             ((let ((name val) ...) body1 body2 ...)
+               ((lambda (name ...) body1 body2 ...)
+                 val ...))))
+
+         (define-syntax or
+           (syntax-rules ()
+             ((or test) test)
+             ((or test1 test2 ...)
+               (let ((x test1))
+                 (if x x (or test2 ...))))))
+         
+         (or 1 2)"""
+    )) {
+      case (expr :: Nil, scope) =>
+        inside(expr) {
+          case et.ProcedureCall(et.Procedure(arg :: Nil, None, bodyExpr :: Nil), argVal :: Nil) =>
+            assert(bodyExpr === et.Conditional(et.VarReference(arg), et.VarReference(arg), Some(et.Literal(ast.IntegerLiteral(2)))))
+            assert(argVal === et.Literal(ast.IntegerLiteral(1)))
+        }
+   }
   }
 
   test("syntax-error") {
