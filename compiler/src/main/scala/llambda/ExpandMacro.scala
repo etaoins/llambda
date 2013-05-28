@@ -170,7 +170,7 @@ object ExpandMacro {
         case _ : MatchFailedException => None
       }
     }.headOption.getOrElse {
-      throw new NoSyntaxRuleException(syntax.toString)
+      throw new NoSyntaxRuleException(operands.map(_.unscope.toString).mkString(" "))
     }
 
     expandTemplate(expandable.template, expandable.rewrites)

@@ -25,6 +25,8 @@ abstract class SchemeParsingMode(name : String) extends ReplMode(name) {
             println("malformed: " + malformed.getMessage)
           case badspecial : BadSpecialFormException =>
             println("bad special form: " + badspecial.getMessage)
+          case nosyntax : llambda.NoSyntaxRuleException =>
+            println("no syntax rule for: " + nosyntax.getMessage)
           case unbound : UnboundVariableException =>
             println("unbound variable: " + unbound.getMessage)
           case libnotfound : LibraryNotFoundException =>
