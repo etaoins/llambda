@@ -12,10 +12,9 @@ object ExtractProgram {
     val initialBindingList = importData.flatMap(ResolveImportDecl(_))
 
     // Convert it to a scope
-    val initialScope = new Scope(collection.mutable.Map(initialBindingList : _*), None)
+    val scope = new Scope(collection.mutable.Map(initialBindingList : _*), None)
 
     // Extract the body expressions
-    val (expressions, _) = ExtractBody(expressionData)(initialScope)
-    expressions
+    ExtractBody(expressionData)(scope)
   }
 }

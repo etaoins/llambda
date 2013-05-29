@@ -20,8 +20,8 @@ sealed abstract class PrimitiveExpression extends BoundValue
 case class SyntaxRule(pattern : List[sst.ScopedDatum], template : sst.ScopedDatum)
 case class BoundSyntax(literals : List[String], rules : List[SyntaxRule])  extends BoundValue
 
-/** BindingSets can look up bindings by name and return a list of all identifiers  */
-final class Scope(val bindings : collection.mutable.Map[String, BoundValue], parent : Option[Scope] = None) {
+/** Scope can look up bindings by name and return a list of all identifiers  */
+sealed class Scope(val bindings : collection.mutable.Map[String, BoundValue], parent : Option[Scope] = None) {
   def get(name : String) : Option[BoundValue] = 
     bindings.get(name).orElse {
       parent match {
@@ -38,10 +38,22 @@ final class Scope(val bindings : collection.mutable.Map[String, BoundValue], par
     new Scope(bindings ++ values, parent)
   }
 
-  // This is a hack for define-syntax to inject the new syntax definition in to its scope
-  // Otherwise recursive macros don't work correctly
+  def ++=(values : Map[String, BoundValue]) = {
+    bindings ++= values
+  }
+    
   def +=(kv : (String, BoundValue)) {
     bindings += kv
+  }
+}
+
+final class ImmutableScope(binding : collection.mutable.Map[String, BoundValue], parent : Option[Scope] = None) extends Scope(binding, parent) {
+  override def ++=(values : Map[String, BoundValue]) = {
+    throw new InternalCompilerErrorException("Attempted to mutate an immutable scope")
+  }
+  
+  override def +=(kv : (String, BoundValue)) {
+    throw new InternalCompilerErrorException("Attempted to mutate an immutable scope")
   }
 }
 

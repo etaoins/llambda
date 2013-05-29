@@ -7,6 +7,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with util.Expres
   implicit val primitiveScope = new Scope(collection.mutable.Map(SchemePrimitives.bindings.toSeq : _*))
 
   test("multiple template is error") {
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     intercept[BadSpecialFormException] {
       bodyFor(
         """(define-syntax six
@@ -14,7 +16,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with util.Expres
              ((six)
                5
                6
-           )))""")
+           )))""")(scope)
 
     }
   }
@@ -300,41 +302,45 @@ class MacroSuite extends FunSuite with Inside with OptionValues with util.Expres
   }
 
   test("body expressions allowed in body context") {
-    inside(bodyFor(
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
+    val exprs = bodyFor(
       """(define-syntax my-define
            (syntax-rules ()
              ((my-define ident value) (define ident value))
          ))
          (my-define a 2)"""
-    )) {
-      case (exprs, scope) =>
-        assert(exprs == List(
-          et.SetVar(scope.get("a").value, et.Literal(ast.IntegerLiteral(2)))
-        ))
-    }
+    )(scope) 
+
+    assert(exprs == List(
+      et.SetVar(scope.get("a").value, et.Literal(ast.IntegerLiteral(2)))
+    ))
   }
 
   test("restructuring expansion") {
-    inside(bodyFor(
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
+    val expr :: Nil = bodyFor(
       """(define-syntax let
            (syntax-rules ()
              ((let ((name val) ...) body1 body2 ...)
                ((lambda (name ...) body1 body2 ...)
                  val ...))))
          (let ((a 1) (b 2)) a b)"""
-    )) {
-      case (expr :: Nil, scope) =>
-        inside(expr) {
-          case et.ProcedureCall(et.Procedure(arg1 :: arg2 :: Nil, None, body), argVal1 :: argVal2 :: Nil) =>
-            assert(body === List(et.VarReference(arg1), et.VarReference(arg2)))
-            assert(argVal1 === et.Literal(ast.IntegerLiteral(1)))
-            assert(argVal2 === et.Literal(ast.IntegerLiteral(2)))
-        }
+    )(scope) 
+
+    inside(expr) {
+      case et.ProcedureCall(et.Procedure(arg1 :: arg2 :: Nil, None, body), argVal1 :: argVal2 :: Nil) =>
+        assert(body === List(et.VarReference(arg1), et.VarReference(arg2)))
+        assert(argVal1 === et.Literal(ast.IntegerLiteral(1)))
+        assert(argVal2 === et.Literal(ast.IntegerLiteral(2)))
     }
   }
   
   test("dependent macros") {
-    inside(bodyFor(
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
+    val expr = expressionFor(
       """(define-syntax let
            (syntax-rules ()
              ((let ((name val) ...) body1 body2 ...)
@@ -349,14 +355,41 @@ class MacroSuite extends FunSuite with Inside with OptionValues with util.Expres
                  (if x x (or test2 ...))))))
          
          (or 1 2)"""
-    )) {
-      case (expr :: Nil, scope) =>
-        inside(expr) {
-          case et.ProcedureCall(et.Procedure(arg :: Nil, None, bodyExpr :: Nil), argVal :: Nil) =>
-            assert(bodyExpr === et.Conditional(et.VarReference(arg), et.VarReference(arg), Some(et.Literal(ast.IntegerLiteral(2)))))
-            assert(argVal === et.Literal(ast.IntegerLiteral(1)))
-        }
-   }
+    )(scope)
+
+    inside(expr) {
+      case et.ProcedureCall(et.Procedure(arg :: Nil, None, bodyExpr :: Nil), argVal :: Nil) =>
+        assert(bodyExpr === et.Conditional(et.VarReference(arg), et.VarReference(arg), Some(et.Literal(ast.IntegerLiteral(2)))))
+        assert(argVal === et.Literal(ast.IntegerLiteral(1)))
+    }
+  }
+
+  test("expanded macros can access their original scope") {
+    val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    
+    bodyFor(
+      """(define-syntax let
+           (syntax-rules ()
+             ((let ((name val) ...) body1 body2 ...)
+               ((lambda (name ...) body1 body2 ...)
+                 val ...))))
+
+         (define-syntax or
+           (syntax-rules ()
+             ((or test) test)
+             ((or test1 test2 ...)
+               (let ((x test1))
+                 (if x x (or test2 ...))))))"""
+    )(syntaxScope)
+
+    val expandScope = new Scope(collection.mutable.Map("or" -> syntaxScope.get("or").value))
+    val expr = expressionFor("(or 1 2)")(expandScope) 
+
+    inside(expr) {
+      case et.ProcedureCall(et.Procedure(arg :: Nil, None, bodyExpr :: Nil), argVal :: Nil) =>
+        assert(bodyExpr === et.Conditional(et.VarReference(arg), et.VarReference(arg), Some(et.Literal(ast.IntegerLiteral(2)))))
+        assert(argVal === et.Literal(ast.IntegerLiteral(1)))
+    }
   }
 
   test("syntax-error") {

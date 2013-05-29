@@ -47,7 +47,7 @@ class ParseOnlyMode extends SchemeParsingMode("parse") {
 /** Extract expressions allowed in a library, program or lambda body */
 class BodyExpressionMode extends SchemeParsingMode("body") {
   private val schemeCoreBindings = (new DefaultLibraryLoader).loadSchemeCore
-  implicit var currentScope = new Scope(collection.mutable.Map(schemeCoreBindings.toSeq : _*))
+  implicit val scope = new Scope(collection.mutable.Map(schemeCoreBindings.toSeq : _*))
 
   def evalDatum(datum : ast.Datum) = {
     datum match {
@@ -56,15 +56,12 @@ class BodyExpressionMode extends SchemeParsingMode("body") {
         val loader = new DefaultLibraryLoader
         val newBindings = ResolveImportDecl(datum)(loader.load)
 
-        currentScope = currentScope ++ newBindings
+        scope ++= newBindings
 
         "loaded"
       case _ =>
         // Treat this like a body expression
-        val (exprs, newScope) = ExtractBody(datum :: Nil)(currentScope)
-
-        currentScope = newScope
-        exprs.map(_.toString).mkString(" ")
+        ExtractBody(datum :: Nil)(scope).map(_.toString).mkString(" ")
     }
   }
 }

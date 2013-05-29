@@ -8,19 +8,28 @@ class UnboundVariableException(message : String) extends SemanticException(messa
 class UserDefinedSyntaxError(errorString  : String, data : List[ast.Datum]) extends SemanticException(errorString + " " + data.map(_.toString).mkString(" "))
 
 object ExtractBody {
-  private def rescope(datum : sst.ScopedDatum, mapping : (Scope, Scope)) : sst.ScopedDatum = { 
-    val (from, to) = mapping
+  private def uniqueScopes(datum : sst.ScopedDatum) : Set[Scope] = {
+    datum match {
+      case sst.ScopedPair(car, cdr) => uniqueScopes(car) ++ uniqueScopes(cdr)
+      case sst.ScopedSymbol(scope, name) => Set(scope)
+      case sst.ScopedVectorLiteral(elements) => 
+        elements.foldLeft(Set[Scope]()) { (scopes, element) =>
+          scopes ++ uniqueScopes(element)
+        }
+      case leaf : sst.NonSymbolLeaf => Set()
+    }
+  }
 
+  private def rescope(datum : sst.ScopedDatum, mapping : Map[Scope, Scope]) : sst.ScopedDatum = { 
     datum match {
       case sst.ScopedPair(car, cdr) =>
         sst.ScopedPair(rescope(car, mapping), rescope(cdr, mapping))
       case sst.ScopedSymbol(scope, name) =>
-        if (scope == from) {
-          sst.ScopedSymbol(to, name)
+        mapping.get(scope) match {
+          case Some(newScope) => sst.ScopedSymbol(newScope, name)
+          case _ => datum
         }
-        else {
-          datum
-        }
+
       case sst.ScopedVectorLiteral(elements) =>
         sst.ScopedVectorLiteral(elements.map(rescope(_, mapping)))
       case leaf : sst.NonSymbolLeaf => 
@@ -34,7 +43,7 @@ object ExtractBody {
     }
   }
 
-  private def defineVar(scope : Scope)(varName : String) : (BoundValue, Scope) = {
+  private def defineVar(scope : Scope)(varName : String) : BoundValue = {
     val storageLoc = scope.bindings.get(varName) match {
       // Unbound or syntax binding
       case None => new StorageLocation
@@ -43,15 +52,13 @@ object ExtractBody {
       case Some(location) => location
     }
 
-    (storageLoc, scope + (varName -> storageLoc))
+    scope += (varName -> storageLoc)
+    storageLoc
   }
 
-  private def defineExpression(scope : Scope, varName : String)(exprBlock : BoundValue => et.Expression) : (Option[et.Expression], Scope) = {
-    val (storageLoc, newScope) = defineVar(scope)(varName)
-
-    val setExpr = et.SetVar(storageLoc, exprBlock(storageLoc))
-
-    (Some(setExpr), newScope)
+  private def defineExpression(scope : Scope, varName : String)(exprBlock : => et.Expression) : et.Expression = {
+    val storageLoc =  defineVar(scope)(varName)
+    et.SetVar(storageLoc, exprBlock)
   }
 
   private def createNativeFunction(fixedArgData : List[sst.ScopedDatum], restArgType : Option[String], returnTypeString : String, nativeSymbol : String) : et.NativeFunction = {
@@ -113,81 +120,95 @@ object ExtractBody {
       throw new BadSpecialFormException("Bad native-function operands: " + operands.mkString(" "))
   }
   
-  private def createLambda(evalScope : Scope)(selfRef : Option[(String, BoundValue)], fixedArgData : List[sst.ScopedDatum], restArgName : Option[String], body : List[sst.ScopedDatum]) : et.Procedure = {
+  private def createLambda(fixedArgData : List[sst.ScopedDatum], restArgDatum : Option[sst.ScopedSymbol], body : List[sst.ScopedDatum]) : et.Procedure = {
     // Create our actual procedure arguments
     // These unique identify the argument independently of its binding at a
     // given time
-    val fixedArgNames = fixedArgData.map { datum =>
-      datum match {
-        case sst.ScopedSymbol(_, name) => name
-        case _ => throw new BadSpecialFormException("Symbol expected, found " + datum.unscope)
-      }
+    case class ScopedArgument(scope : Scope, name : String, boundValue : ProcedureArg)
+
+    // Determine our arguments
+    val fixedArgs = fixedArgData.map {
+      case sst.ScopedSymbol(scope, name) => ScopedArgument(scope, name, new ProcedureArg)
+      case datum => throw new BadSpecialFormException("Symbol expected, found " + datum.unscope)
     }
 
-    if (fixedArgNames.toSet.size < fixedArgNames.size) {
-      throw new BadSpecialFormException("Duplicate formal parameters: " + fixedArgNames)
+    val restArg = restArgDatum.map { scopedSymbol  =>
+      ScopedArgument(scopedSymbol.scope, scopedSymbol.name, new ProcedureArg)
     }
-
-    val fixedArgs : List[ProcedureArg] = fixedArgNames.map { _ =>
-      new ProcedureArg
-    }
-
-    val restArg : Option[ProcedureArg] = restArgName.map { _ =>
-      new ProcedureArg
-    }
-
-    // Create a new scope with the args bound to their names
-    val bindingsList = (fixedArgNames zip fixedArgs) ++  (restArgName zip restArg).toList ++ selfRef.toList
-    val binding = collection.mutable.Map[String, BoundValue](bindingsList : _*)
-    val initialScope = new Scope(binding, Some(evalScope))
-
-    // Parse our body
-    val expressions = ListBuffer[et.Expression]()
-
-    body.foldLeft(initialScope) { (scope, datum) =>
-      // Replace instances of our defining scope with the inner scope
-      val rescopedDatum = rescope(datum, evalScope -> scope)
     
-      val (expr, newScope) = extractBodyExpression(scope)(rescopedDatum)
-      expressions ++= expr.toList
+    val allArgs = fixedArgs ++ restArg.toList
 
-      newScope
+    // Find are all the scopes in the body
+    val bodyScopes = body.foldLeft(Set[Scope]()) { (scopes, datum) =>
+      scopes ++ uniqueScopes(datum)
     }
 
-    et.Procedure(fixedArgs, restArg, expressions.toList)
+    // Introduce new scopes with our arguments injected in to them
+    val argsForScope = allArgs groupBy(_.scope)
+      
+    val scopeMapping = (bodyScopes map { outerScope => 
+      val scopeArgs = argsForScope.getOrElse(outerScope, List())
+      
+      // Check for duplicate args within this scope
+      val scopeArgNames = scopeArgs.map(_.name)
+
+      if (scopeArgNames.toSet.size != scopeArgNames.size) {
+        throw new BadSpecialFormException("Duplicate formal parameters: " + scopeArgNames)
+      }
+
+      val binding = collection.mutable.Map(scopeArgs.map { arg =>
+        (arg.name -> arg.boundValue)
+      } : _*) : collection.mutable.Map[String, BoundValue]
+
+      val innerScope = new Scope(binding, Some(outerScope))
+
+      (outerScope -> innerScope)
+    }).toMap
+
+    // Find all scopes that don't have an inner scope created due to lack of args
+    // Otherwise argless lambdas will modify their parent scope
+    
+    // Parse our body
+    val expressions = body flatMap { datum =>
+      // Replace instances of our defining scope with the inner scope
+      val rescopedDatum = rescope(datum, scopeMapping)
+      extractBodyExpression(rescopedDatum)
+    }
+
+    et.Procedure(fixedArgs.map(_.boundValue), restArg.map(_.boundValue), expressions.toList)
   }
 
-  private def extractApplication(evalScope : Scope)(procedure : et.Expression, operands : List[sst.ScopedDatum]) : et.Expression = {
+  private def extractApplication(procedure : et.Expression, operands : List[sst.ScopedDatum]) : et.Expression = {
     (procedure, operands) match {
       case (et.VarReference(syntax : BoundSyntax), operands) =>
-        extractExpression(evalScope)(ExpandMacro(syntax, operands))
+        extractExpression(ExpandMacro(syntax, operands))
 
       case (et.VarReference(SchemePrimitives.Quote), innerDatum :: Nil) =>
         et.Literal(innerDatum.unscope)
 
       case (et.VarReference(SchemePrimitives.If), test :: trueExpr :: falseExpr :: Nil) =>
         et.Conditional(
-          extractExpression(evalScope)(test), 
-          extractExpression(evalScope)(trueExpr), 
-          Some(extractExpression(evalScope)(falseExpr)))
+          extractExpression(test), 
+          extractExpression(trueExpr), 
+          Some(extractExpression(falseExpr)))
       
       case (et.VarReference(SchemePrimitives.If), test :: trueExpr :: Nil) =>
         et.Conditional(
-          extractExpression(evalScope)(test), 
-          extractExpression(evalScope)(trueExpr), 
+          extractExpression(test), 
+          extractExpression(trueExpr), 
           None)
 
       case (et.VarReference(SchemePrimitives.Set), sst.ScopedSymbol(scope, variableName) :: value :: Nil) =>
-        et.SetVar(getVar(scope)(variableName), extractExpression(evalScope)(value))
+        et.SetVar(getVar(scope)(variableName), extractExpression(value))
 
-      case (et.VarReference(SchemePrimitives.Lambda), sst.ScopedSymbol(_, restArg) :: body) =>
-        createLambda(evalScope)(None, List(), Some(restArg), body)
+      case (et.VarReference(SchemePrimitives.Lambda), (restArgDatum : sst.ScopedSymbol) :: body) =>
+        createLambda(List(), Some(restArgDatum), body)
 
       case (et.VarReference(SchemePrimitives.Lambda), sst.ScopedProperList(fixedArgData) :: body) =>
-        createLambda(evalScope)(None, fixedArgData, None, body)
+        createLambda(fixedArgData, None, body)
 
-      case (et.VarReference(SchemePrimitives.Lambda), sst.ScopedImproperList(fixedArgData, sst.ScopedSymbol(_, restArg)) :: body) =>
-        createLambda(evalScope)(None, fixedArgData, Some(restArg), body)
+      case (et.VarReference(SchemePrimitives.Lambda), sst.ScopedImproperList(fixedArgData, (restArgDatum : sst.ScopedSymbol)) :: body) =>
+        createLambda(fixedArgData, Some(restArgDatum), body)
 
       case (et.VarReference(SchemePrimitives.SyntaxError), sst.NonSymbolLeaf(ast.StringLiteral(errorString)) :: data) =>
         throw new UserDefinedSyntaxError(errorString, data.map(_.unscope))
@@ -196,15 +217,15 @@ object ExtractBody {
         extractNativeFunction(operands)
 
       case _ =>
-        et.ProcedureCall(procedure, operands.map(extractExpression(evalScope)(_)))
+        et.ProcedureCall(procedure, operands.map(extractExpression))
     }
   }
 
-  def extractExpression(evalScope : Scope)(datum : sst.ScopedDatum) : et.Expression = datum match {
+  def extractExpression(datum : sst.ScopedDatum) : et.Expression = datum match {
     // Normal procedure call
     case sst.ScopedProperList(procedure :: operands) =>
-      val procedureExpr = extractExpression(evalScope)(procedure)
-      extractApplication(evalScope)(procedureExpr, operands)
+      val procedureExpr = extractExpression(procedure)
+      extractApplication(procedureExpr, operands)
 
     case sst.ScopedSymbol(scope, variableName) =>
       et.VarReference(getVar(scope)(variableName))
@@ -227,57 +248,48 @@ object ExtractBody {
       throw new MalformedExpressionException(malformed.toString)
   }
 
-  private def defineSyntax(evalScope : Scope)(datum : sst.ScopedDatum) : Scope = datum match {
+  private def defineSyntax(datum : sst.ScopedDatum) : Unit = datum match {
     case sst.ScopedProperList(sst.ScopedSymbol(_, "define-syntax") :: sst.ScopedSymbol(assignScope, keyword) ::
                          sst.ScopedProperList(
                            sst.ScopedSymbol(_, "syntax-rules") :: sst.ScopedProperList(literals) :: rules
                          ) :: Nil) =>
-      
-      // Create our new scope before 
-      val newScope = new Scope(collection.mutable.Map(), Some(evalScope))
-
       val literalNames = literals.map { 
         case sst.ScopedSymbol(_, name) => name
         case nonSymbol => throw new BadSpecialFormException("Symbol expected in literal list, found " + nonSymbol)
       }
-
-      // Rescope the rules to our new scope
-      val rescopedRules = rules map { rule =>
-        rescope(rule, evalScope -> newScope)
-      }
-        
-      val parsedRules = rescopedRules map {
+      
+      val parsedRules = rules map {
         case sst.ScopedProperList(sst.ScopedProperList(_ :: pattern) :: template :: Nil) =>
           SyntaxRule(pattern, template)
         case noMatch => throw new BadSpecialFormException("Unable to parse syntax rule " + noMatch)
       }
 
       // Inject the binding in to the new scope to allow recursive macro expansion
-      newScope += keyword -> BoundSyntax(literalNames, parsedRules)
+      assignScope += keyword -> BoundSyntax(literalNames, parsedRules)
 
-      newScope
     case noMatch =>
       throw new BadSpecialFormException("Unrecognized define-syntax form " + noMatch)
   }
 
-  private def extractBodyExpression(evalScope : Scope)(datum : sst.ScopedDatum) : (Option[et.Expression], Scope) = datum match {
+  private def extractBodyExpression(datum : sst.ScopedDatum) : Option[et.Expression] = datum match {
     case sst.ScopedProperList(sst.ScopedSymbol(_, "define") :: sst.ScopedSymbol(assignScope, varName) :: value :: Nil) =>
-      defineExpression(assignScope, varName) { _ => 
-        extractExpression(evalScope)(value)
-      }
+      Some(defineExpression(assignScope, varName) { 
+        extractExpression(value)
+      })
 
     case sst.ScopedProperList(sst.ScopedSymbol(defineScope, "define") :: sst.ScopedProperList(sst.ScopedSymbol(assignScope, varName) :: fixedArgs) :: body) =>
-      defineExpression(assignScope, varName) { selfRef => 
-        createLambda(evalScope)(Some(varName -> selfRef), fixedArgs, None, body)
-      }
+      Some(defineExpression(assignScope, varName) {
+        createLambda(fixedArgs, None, body)
+      })
     
-    case sst.ScopedProperList(sst.ScopedSymbol(defineScope, "define") :: sst.ScopedImproperList(sst.ScopedSymbol(assignScope, varName) :: fixedArgs, sst.ScopedSymbol(_, restArg)) :: body) =>
-      defineExpression(assignScope, varName) { selfRef =>
-        createLambda(evalScope)(Some(varName -> selfRef), fixedArgs, Some(restArg), body)
-      }
+    case sst.ScopedProperList(sst.ScopedSymbol(defineScope, "define") :: sst.ScopedImproperList(sst.ScopedSymbol(assignScope, varName) :: fixedArgs, (restArgDatum : sst.ScopedSymbol)) :: body) =>
+      Some(defineExpression(assignScope, varName) {
+        createLambda(fixedArgs, Some(restArgDatum), body)
+      })
 
     case sst.ScopedProperList(sst.ScopedSymbol(_, "define-syntax") :: _) =>
-      (None, defineSyntax(evalScope)(datum))
+      defineSyntax(datum)
+      None
 
     // Cheap hack to look for macros early
     // We need to expand them in a body context if they appear in a body
@@ -285,43 +297,37 @@ object ExtractBody {
     case sst.ScopedProperList(sst.ScopedSymbol(scope, procedureName) :: operands) =>
       scope.get(procedureName) match {
         case Some(syntax : BoundSyntax) =>
-          extractBodyExpression(evalScope)(ExpandMacro(syntax, operands))
+          extractBodyExpression(ExpandMacro(syntax, operands))
 
         case Some(InternalPrimitives.DefineReportProcedure) =>
           operands match {
             case sst.ScopedSymbol(_, varName) :: definitionData :: Nil =>
               val reportProc = new ReportProcedure(varName)
-              val newScope = scope + (varName -> reportProc)
-              val definitionExpr = extractExpression(evalScope)(definitionData)
+              scope += (varName -> reportProc)
+              val definitionExpr = extractExpression(definitionData)
 
-              (Some(et.SetVar(reportProc, definitionExpr)), newScope)
+              Some(et.SetVar(reportProc, definitionExpr))
 
             case _ =>
               throw new BadSpecialFormException("define-report-procedure requires exactly two arguments")
           }
 
         case _ =>
-          (Some(extractExpression(evalScope)(datum)), evalScope)
+          Some(extractExpression(datum))
       }
 
     case _ =>
       // Scope is unmodified
-      (Some(extractExpression(evalScope)(datum)), evalScope)
+      Some(extractExpression(datum))
   }
 
-  def apply(data : List[ast.Datum])(implicit initialScope : Scope) : (List[et.Expression], Scope) = {
+  def apply(data : List[ast.Datum])(implicit evalScope : Scope) : List[et.Expression] = {
     val expressions = ListBuffer[et.Expression]()
 
-    val finalScope = data.foldLeft(initialScope) { (evalScope, datum) =>
+    data flatMap { datum =>
       // Annotate our symbols with our current scope
       val scopedDatum = sst.ScopedDatum(evalScope, datum)
-
-      val (expr, newScope) = extractBodyExpression(evalScope)(scopedDatum)
-      expressions ++= expr.toList
-
-      newScope
+      extractBodyExpression(scopedDatum)
     }
-
-    (expressions.toList, finalScope)
   }
 }

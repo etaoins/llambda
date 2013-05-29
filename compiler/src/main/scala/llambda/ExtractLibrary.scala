@@ -30,7 +30,7 @@ object ExtractLibrary {
       val importDeclData = groupedDecls.getOrElse(DeclType.Import, List())
       val initialBindings = importDeclData.flatMap(ResolveImportDecl(_))
       
-      val initialScope = new Scope(collection.mutable.Map(initialBindings : _*), None)
+      val scope = new Scope(collection.mutable.Map(initialBindings : _*), None)
       
       // Evaluate all (begin)s
       val beginDeclData = groupedDecls.getOrElse(DeclType.Begin, List())
@@ -40,7 +40,7 @@ object ExtractLibrary {
         case other => throw new BadSpecialFormException("Bad begin declaration: " + other)
       }
 
-      val (expressions, finalScope) = ExtractBody(expressionData)(initialScope)
+      val expressions = ExtractBody(expressionData)(scope)
 
       // Evaluate exports to determine our exported bindings
       val exportDeclData = groupedDecls.getOrElse(DeclType.Export, List())
@@ -53,14 +53,14 @@ object ExtractLibrary {
 
       val exportedBinding = (exportSpecData map {
         case ast.ProperList(ast.Symbol("rename") :: ast.Symbol(internalIdent) :: ast.Symbol(externalIdent) :: Nil) =>
-          val boundValue = finalScope.get(internalIdent).getOrElse {
+          val boundValue = scope.get(internalIdent).getOrElse {
             throw new UnboundVariableException(internalIdent)
           }
 
           (externalIdent, boundValue)
 
         case ast.Symbol(ident) =>
-          val boundValue = finalScope.get(ident).getOrElse {
+          val boundValue = scope.get(ident).getOrElse {
             throw new UnboundVariableException(ident)
           }
 

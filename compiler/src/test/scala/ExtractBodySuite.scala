@@ -4,7 +4,7 @@ import org.scalatest.{FunSuite,Inside,OptionValues}
 import llambda._
 
 class ExtractBodySuite extends FunSuite with Inside with OptionValues with util.ExpressionHelpers {
-  implicit val primitiveScope = new Scope(collection.mutable.Map(SchemePrimitives.bindings.toSeq : _*))
+  implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(SchemePrimitives.bindings.toSeq : _*))
   
   test("variable reference") {
     // "a" isn't a binding in the primitive expressions
@@ -130,42 +130,38 @@ class ExtractBodySuite extends FunSuite with Inside with OptionValues with util.
   }
 
   test("define variable") {
-    inside(bodyFor("(define a 2)")) {
-      case (exprs, scope) =>
-        assert(exprs == List(
-          et.SetVar(scope.get("a").value, et.Literal(ast.IntegerLiteral(2)))
-        ))
-    }
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
+    assert(bodyFor("(define a 2)")(scope) === List(
+      et.SetVar(scope.get("a").value, et.Literal(ast.IntegerLiteral(2)))
+    ))
   }
 
   test("redefine variable") {
-    inside(bodyFor("(define a 2)(define a 3)")) {
-      case (exprs, scope) =>
-        assert(exprs == List(
-          et.SetVar(scope.get("a").value, et.Literal(ast.IntegerLiteral(2))),
-          et.SetVar(scope.get("a").value, et.Literal(ast.IntegerLiteral(3)))
-        ))
-    }
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
+    assert(bodyFor("(define a 2)(define a 3)")(scope) === List(
+      et.SetVar(scope.get("a").value, et.Literal(ast.IntegerLiteral(2))),
+      et.SetVar(scope.get("a").value, et.Literal(ast.IntegerLiteral(3)))
+    ))
   }
   
   test("indirect define") {
-    inside(bodyFor("(define a 2)(define b a)")) {
-      case (exprs, scope) =>
-        assert(exprs == List(
-          et.SetVar(scope.get("a").value, et.Literal(ast.IntegerLiteral(2))),
-          et.SetVar(scope.get("b").value, et.VarReference(scope.get("a").value))
-        ))
-    }
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
+    assert(bodyFor("(define a 2)(define b a)")(scope) === List(
+      et.SetVar(scope.get("a").value, et.Literal(ast.IntegerLiteral(2))),
+      et.SetVar(scope.get("b").value, et.VarReference(scope.get("a").value))
+    ))
   }
   
   test("reference variable") {
-    inside(bodyFor("(define a 2) a")) {
-      case (exprs, scope) =>
-        assert(exprs == List(
-          et.SetVar(scope.get("a").value, et.Literal(ast.IntegerLiteral(2))),
-          et.VarReference(scope.get("a").value)
-        ))
-    }
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
+    assert(bodyFor("(define a 2) a")(scope) === List(
+      et.SetVar(scope.get("a").value, et.Literal(ast.IntegerLiteral(2))),
+      et.VarReference(scope.get("a").value)
+    ))
   }
 
   test("lambdas") {
@@ -202,52 +198,60 @@ class ExtractBodySuite extends FunSuite with Inside with OptionValues with util.
     }
   }
 
-  test("lambda shorthand") {
-    inside(bodyFor("(define (return-true) #t)")) {
-      case (exprs, scope) =>
-        val procLoc = scope.get("return-true").value
-        inside(exprs) {
-          case List(et.SetVar(procLoc, et.Procedure(Nil, None, bodyExprs))) =>
-            assert(bodyExprs === List(et.Literal(ast.TrueLiteral)))
-        }
-    }
+  test("argless lambda shorthand") {
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 
-    inside(bodyFor("(define (return-true unused-param) #t)")) {
-      case (exprs, scope) =>
-        val procLoc = scope.get("return-true").value
-        inside(exprs) {
-          case List(et.SetVar(procLoc, et.Procedure(_ :: Nil, None, bodyExprs))) =>
-            assert(bodyExprs === List(et.Literal(ast.TrueLiteral)))
-        }
+    val exprs = bodyFor("(define (return-true) #t)")(scope)
+    val procLoc = scope.get("return-true").value
+
+    inside(exprs) {
+      case List(et.SetVar(procLoc, et.Procedure(Nil, None, bodyExprs))) =>
+        assert(bodyExprs === List(et.Literal(ast.TrueLiteral)))
     }
-    
-    inside(bodyFor("(define (return-false some . rest) #f)")) {
-      case (exprs, scope) =>
-        val procLoc = scope.get("return-false").value
-        inside(exprs) {
-          case List(et.SetVar(procLoc, et.Procedure(_ :: Nil, Some(_), bodyExprs))) =>
-            assert(bodyExprs === List(et.Literal(ast.FalseLiteral)))
-        }
+  }
+  
+  test("one arg lambda shorthand") {
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
+    val exprs = bodyFor("(define (return-true unused-param) #t)")(scope)
+    val procLoc = scope.get("return-true").value
+
+    inside(exprs) {
+      case List(et.SetVar(procLoc, et.Procedure(_ :: Nil, None, bodyExprs))) =>
+        assert(bodyExprs === List(et.Literal(ast.TrueLiteral)))
     }
+  }
+
+  test("fixed and rest arg lambda shorthand") {
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
     
-    inside(bodyFor("(define (return-six . rest) 6)")) {
-      case (exprs, scope) =>
-        val procLoc = scope.get("return-six").value
-        inside(exprs) {
-          case List(et.SetVar(procLoc, et.Procedure(Nil, Some(_), bodyExprs))) =>
-            assert(bodyExprs === List(et.Literal(ast.IntegerLiteral(6))))
-        }
+    val exprs = bodyFor("(define (return-false some . rest) #f)")(scope)
+    val procLoc = scope.get("return-false").value
+    inside(exprs) {
+      case List(et.SetVar(procLoc, et.Procedure(_ :: Nil, Some(_), bodyExprs))) =>
+        assert(bodyExprs === List(et.Literal(ast.FalseLiteral)))
+    }
+  }
+    
+  test("rest only arg lambda shorthand") {
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    
+    val exprs = bodyFor("(define (return-six . rest) 6)")(scope)
+    val procLoc = scope.get("return-six").value
+    inside(exprs) {
+      case List(et.SetVar(procLoc, et.Procedure(Nil, Some(_), bodyExprs))) =>
+        assert(bodyExprs === List(et.Literal(ast.IntegerLiteral(6))))
     }
   }
 
   test("recursive lambda") {
-    inside(bodyFor("(define (return-self) return-self)")) {
-      case (exprs, scope) =>
-        val procLoc = scope.get("return-self").value
-        inside(exprs) {
-          case List(et.SetVar(procLoc, et.Procedure(Nil, None, bodyExprs))) =>
-            assert(bodyExprs === List(et.VarReference(procLoc)))
-        }
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
+    val exprs = bodyFor("(define (return-self) return-self)")(scope)
+    val procLoc = scope.get("return-self").value
+    inside(exprs) {
+      case List(et.SetVar(procLoc, et.Procedure(Nil, None, bodyExprs))) =>
+        assert(bodyExprs === List(et.VarReference(procLoc)))
     }
   }
   
@@ -258,35 +262,36 @@ class ExtractBodySuite extends FunSuite with Inside with OptionValues with util.
   }
 
   test("parameters shadow") {
-    inside(bodyFor("(define x 1)(lambda (x) x)")) {
-      case (exprs, scope) =>
-        inside(exprs) {
-          case List(et.SetVar(shadowed, _), et.Procedure(argX :: Nil, None, et.VarReference(inner) :: Nil)) =>
-            assert(inner != shadowed)
-        }
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
+    val exprs = bodyFor("(define x 1)(lambda (x) x)")(scope)
+    inside(exprs) {
+      case List(et.SetVar(shadowed, _), et.Procedure(argX :: Nil, None, et.VarReference(inner) :: Nil)) =>
+        assert(inner != shadowed)
     }
   }
   
   test("define shadows") {
-    inside(bodyFor(
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
+    val exprs = bodyFor(
       """(define x 1)
          (lambda () (define x 2))"""
-    )) {
-      case (exprs, scope) =>
-        inside(exprs) {
-          case List(et.SetVar(shadowed, _), et.Procedure(Nil, None, et.SetVar(inner, _) :: Nil)) =>
-            assert(inner != shadowed)
-        }
+    )(scope) 
+
+    inside(exprs) {
+      case List(et.SetVar(shadowed, _), et.Procedure(Nil, None, et.SetVar(inner, _) :: Nil)) =>
+        assert(inner != shadowed)
     }
   }
   
   test("capturing") {
-    inside(bodyFor("(define y 1)(lambda (x) y)")) {
-      case (exprs, scope) =>
-        inside(exprs) {
-          case List(et.SetVar(outer, _), et.Procedure(argX :: Nil, None, et.VarReference(inner) :: Nil)) =>
-            assert(outer === inner)
-        }
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val exprs = bodyFor("(define y 1)(lambda (x) y)")(scope)
+
+    inside(exprs) {
+      case List(et.SetVar(outer, _), et.Procedure(argX :: Nil, None, et.VarReference(inner) :: Nil)) =>
+        assert(outer === inner)
     }
   }
 
@@ -294,19 +299,17 @@ class ExtractBodySuite extends FunSuite with Inside with OptionValues with util.
     val allBindings = InternalPrimitives.bindings ++ SchemePrimitives.bindings
     val internalScope = new Scope(collection.mutable.Map(allBindings.toSeq : _*))
 
-    inside(bodyFor("(define-report-procedure list (lambda () #f))")(internalScope)) {
-      case (exprs, scope) =>
-        val listBinding = scope.get("list").value
+    val exprs = bodyFor("(define-report-procedure list (lambda () #f))")(internalScope)
+    val listBinding = internalScope.get("list").value
 
-        inside(listBinding) {
-          case rp : ReportProcedure =>
-            assert(rp.name === "list")
-        }
+    inside(listBinding) {
+      case rp : ReportProcedure =>
+        assert(rp.name === "list")
+    }
 
-        inside(exprs) {
-          case et.SetVar(loc, et.Procedure(Nil, None, List(et.Literal(ast.FalseLiteral)))) :: Nil =>
-            assert(loc === listBinding)
-        }
+    inside(exprs) {
+      case et.SetVar(loc, et.Procedure(Nil, None, List(et.Literal(ast.FalseLiteral)))) :: Nil =>
+        assert(loc === listBinding)
     }
   }
 }
