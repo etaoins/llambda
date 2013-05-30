@@ -223,6 +223,10 @@ newline""", "Bare\nnewline")
     assert(scm"#\x03BB" === List(ast.CharLiteral(0x3bb)))
   }
 
+  test("unspecific") {
+    assert(scm"#!unspecific" === List(ast.UnspecificValue))
+  }
+
   test("comments") {
     assert(scm"test ; COMMENT" === List(ast.Symbol("test")))
     assert(scm"(Hello #;(you jerk))" === List(ast.ProperList(ast.Symbol("Hello") :: Nil)))

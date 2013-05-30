@@ -190,13 +190,13 @@ object ExtractBody {
         et.Conditional(
           extractExpression(test), 
           extractExpression(trueExpr), 
-          Some(extractExpression(falseExpr)))
+          extractExpression(falseExpr))
       
       case (et.VarReference(SchemePrimitives.If), test :: trueExpr :: Nil) =>
         et.Conditional(
           extractExpression(test), 
           extractExpression(trueExpr), 
-          None)
+          et.Literal(ast.UnspecificValue))
 
       case (et.VarReference(SchemePrimitives.Set), sst.ScopedSymbol(scope, variableName) :: value :: Nil) =>
         et.SetVar(getVar(scope)(variableName), extractExpression(value))

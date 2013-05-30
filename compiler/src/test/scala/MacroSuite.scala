@@ -359,7 +359,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with util.Expres
 
     inside(expr) {
       case et.ProcedureCall(et.Procedure(arg :: Nil, None, bodyExpr :: Nil), argVal :: Nil) =>
-        assert(bodyExpr === et.Conditional(et.VarReference(arg), et.VarReference(arg), Some(et.Literal(ast.IntegerLiteral(2)))))
+        assert(bodyExpr === et.Conditional(et.VarReference(arg), et.VarReference(arg), et.Literal(ast.IntegerLiteral(2))))
         assert(argVal === et.Literal(ast.IntegerLiteral(1)))
     }
   }
@@ -387,7 +387,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with util.Expres
 
     inside(expr) {
       case et.ProcedureCall(et.Procedure(arg :: Nil, None, bodyExpr :: Nil), argVal :: Nil) =>
-        assert(bodyExpr === et.Conditional(et.VarReference(arg), et.VarReference(arg), Some(et.Literal(ast.IntegerLiteral(2)))))
+        assert(bodyExpr === et.Conditional(et.VarReference(arg), et.VarReference(arg), et.Literal(ast.IntegerLiteral(2))))
         assert(argVal === et.Literal(ast.IntegerLiteral(1)))
     }
   }

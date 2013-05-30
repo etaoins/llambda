@@ -89,7 +89,7 @@ object SchemeParser extends RegexParsers {
     ast.ProperList(List(ast.Symbol("unquote-splicing"), innerDatum))
   }
 
-  def atom : Parser[ast.Datum] = string | number | boolean | symbol | vector | bytevector | character 
+  def atom : Parser[ast.Datum] = string | number | boolean | symbol | vector | bytevector | character | unspecific 
 
   def boolean = trueLiteral | falseLiteral
   def trueLiteral = """#t(rue)?""".r ^^^ ast.TrueLiteral
@@ -166,7 +166,9 @@ object SchemeParser extends RegexParsers {
   // We need this explicitly so the parser doesn't treat it as whitespace
   def literalSpace = """#\ """ ^^^ ast.CharLiteral(' ')
   def literalCharacter = """#\""" ~> """.""".r ^^ { literalStr => ast.CharLiteral(literalStr.charAt(0)) }
-  
+
+  def unspecific = "#!unspecific" ^^^ ast.UnspecificValue
+
   // Space, ; comments and #| |# comments are whitespace. Datum comments are handled by commentedDatum
   override protected val whiteSpace = """(\s|;.*(\n|$)|#\|(.|\n)*\|#)+""".r
 }

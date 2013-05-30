@@ -10,6 +10,12 @@ sealed abstract class Datum {
 // or contain datums with scope
 sealed abstract class NonSymbolLeaf extends Datum
 
+case object UnspecificValue extends NonSymbolLeaf {
+  val schemeType = st.UnspecificType
+
+  override def toString = "#!unspecific"
+}
+
 case class StringLiteral(name : String) extends NonSymbolLeaf {
   val schemeType = st.StringType
 

@@ -119,13 +119,13 @@ class ExtractBodySuite extends FunSuite with Inside with OptionValues with util.
     assert(expressionFor("(if #t 'yes 'no)") === et.Conditional(
       et.Literal(ast.TrueLiteral),
       et.Literal(ast.Symbol("yes")),
-      Some(et.Literal(ast.Symbol("no")))
+      et.Literal(ast.Symbol("no"))
     ))
     
     assert(expressionFor("(if #f 'yes)") === et.Conditional(
       et.Literal(ast.FalseLiteral),
       et.Literal(ast.Symbol("yes")),
-      None
+      et.Literal(ast.UnspecificValue)
     ))
   }
 
