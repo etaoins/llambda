@@ -1,4 +1,6 @@
-package llambda
+package llambda.frontend
+
+import llambda._
 
 class DubiousLibraryNameComponentException(val name : String) extends SemanticException(name)
 class LibraryNotFoundException(val filename : String) extends SemanticException(filename)

@@ -1,9 +1,9 @@
-package test.scala
+package llambda.frontend
 
 import org.scalatest.{FunSuite,Inside,OptionValues}
 import llambda._
 
-class ExtractBodySuite extends FunSuite with Inside with OptionValues with util.ExpressionHelpers {
+class ExtractBodySuite extends FunSuite with Inside with OptionValues with testutil.ExpressionHelpers {
   implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(SchemePrimitives.bindings.toSeq : _*))
   
   test("variable reference") {

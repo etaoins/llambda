@@ -1,4 +1,6 @@
-package llambda
+package llambda.frontend
+
+import llambda._
 
 object ExtractProgram {
   def apply(data : List[ast.Datum])(implicit libraryLoader : Seq[LibraryNameComponent] => Map[String, BoundValue]) : List[et.Expression] = {

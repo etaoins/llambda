@@ -1,8 +1,9 @@
-package llambda
+package llambda.frontend
 
+import llambda._
 import collection.mutable.{ListBuffer, MapBuilder}
 
-object ExtractLibrary {
+private[frontend] object ExtractLibrary {
   def apply(datum : ast.Datum)(implicit libraryLoader : List[LibraryNameComponent] => Map[String, BoundValue]) : Library = datum match {
     case ast.ProperList(ast.Symbol("define-library") :: libraryNameData :: decls) =>
       // Parse the library name

@@ -1,4 +1,4 @@
-package test.scala
+package llambda.frontend
 
 import org.scalatest.{FunSuite,Inside}
 import llambda._
@@ -7,7 +7,7 @@ class ExtractProgramSuite extends FunSuite with Inside {
   def programFor(scheme : String) = {
     SchemeParser(scheme) match {
       case SchemeParser.Success(data, _) =>
-        ExtractProgram(data)(util.TestLibraryLoader.apply)
+        frontend.ExtractProgram(data)(testutil.TestLibraryLoader.apply)
       case err =>
         fail(err.toString)
     }

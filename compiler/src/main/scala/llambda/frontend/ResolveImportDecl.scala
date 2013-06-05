@@ -1,4 +1,6 @@
-package llambda
+package llambda.frontend
+
+import llambda._
 
 class ImportedIdentifierNotFoundException(val identifier : String) 
   extends SemanticException(identifier)

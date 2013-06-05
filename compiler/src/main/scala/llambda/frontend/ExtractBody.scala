@@ -1,5 +1,6 @@
-package llambda
+package llambda.frontend
 
+import llambda._
 import collection.mutable.ListBuffer
 
 class MalformedExpressionException(message : String) extends SemanticException(message)

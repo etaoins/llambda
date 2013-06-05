@@ -1,8 +1,10 @@
-package llambda
+package llambda.frontend
+
+import llambda._
 
 class NoSyntaxRuleException(message : String) extends SemanticException(message)
 
-object ExpandMacro {
+private[frontend] object ExpandMacro {
   sealed abstract class Rewrite
   case class SubstituteRewrite(scope : Scope, identifier : String, expansion : sst.ScopedDatum) extends Rewrite
   case class SpliceRewrite(scope : Scope, identifier : String, expansion : List[sst.ScopedDatum]) extends Rewrite

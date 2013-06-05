@@ -1,9 +1,9 @@
-package test.scala
+package llambda.frontend
 
 import org.scalatest.FunSuite
 import llambda._
 
-class NativeFunctionDeclSuite extends FunSuite with util.ExpressionHelpers {
+class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   implicit val nfiScope = new Scope(collection.mutable.Map(NativeFunctionPrimitives.bindings.toSeq : _*))
   
   test("void native function") {

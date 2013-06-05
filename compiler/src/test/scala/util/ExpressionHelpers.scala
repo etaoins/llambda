@@ -1,4 +1,4 @@
-package test.scala.util
+package llambda.testutil
 
 import org.scalatest.{FunSuite,OptionValues}
 import llambda._
@@ -17,7 +17,7 @@ trait ExpressionHelpers extends FunSuite with OptionValues {
   def bodyFor(scheme : String)(scope : Scope) = {
     SchemeParser(scheme) match {
       case SchemeParser.Success(data, _) =>
-        ExtractBody(data)(scope)
+        frontend.ExtractBody(data)(scope)
       case err =>
         fail(err.toString)
     }

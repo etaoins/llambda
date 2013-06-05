@@ -1,7 +1,6 @@
-package test.scala
+package llambda
 
 import org.scalatest.FunSuite
-import llambda._
 
 class ASTListCompanionSuite extends FunSuite {
   test("proper list creation") {

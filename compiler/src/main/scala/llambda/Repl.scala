@@ -21,15 +21,15 @@ abstract class SchemeParsingMode(name : String) extends ReplMode(name) {
           }
         }
         catch {
-          case malformed : MalformedExpressionException =>
+          case malformed : frontend.MalformedExpressionException =>
             println("malformed: " + malformed.getMessage)
-          case badspecial : BadSpecialFormException =>
+          case badspecial : frontend.BadSpecialFormException =>
             println("bad special form: " + badspecial.getMessage)
-          case nosyntax : llambda.NoSyntaxRuleException =>
+          case nosyntax : frontend.NoSyntaxRuleException =>
             println("no syntax rule for: " + nosyntax.getMessage)
-          case unbound : UnboundVariableException =>
+          case unbound : frontend.UnboundVariableException =>
             println("unbound variable: " + unbound.getMessage)
-          case libnotfound : LibraryNotFoundException =>
+          case libnotfound : frontend.LibraryNotFoundException =>
             println("library not found: " + libnotfound.getMessage)
         }
       case err =>
@@ -46,22 +46,22 @@ class ParseOnlyMode extends SchemeParsingMode("parse") {
 
 /** Extract expressions allowed in a library, program or lambda body */
 class BodyExpressionMode extends SchemeParsingMode("body") {
-  private val schemeCoreBindings = (new DefaultLibraryLoader).loadSchemeCore
+  private val loader = new frontend.DefaultLibraryLoader
+  private val schemeCoreBindings = loader.loadSchemeCore
   implicit val scope = new Scope(collection.mutable.Map(schemeCoreBindings.toSeq : _*))
 
   def evalDatum(datum : ast.Datum) = {
     datum match {
       case ast.ProperList(ast.Symbol("import") :: _) =>
         // This is an import decl - import our new bindings
-        val loader = new DefaultLibraryLoader
-        val newBindings = ResolveImportDecl(datum)(loader.load)
+        val newBindings = frontend.ResolveImportDecl(datum)(loader.load)
 
         scope ++= newBindings
 
         "loaded"
       case _ =>
         // Treat this like a body expression
-        ExtractBody(datum :: Nil)(scope).map(_.toString).mkString(" ")
+        frontend.ExtractBody(datum :: Nil)(scope).map(_.toString).mkString(" ")
     }
   }
 }

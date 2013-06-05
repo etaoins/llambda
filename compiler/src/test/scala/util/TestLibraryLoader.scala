@@ -1,4 +1,4 @@
-package test.scala.util
+package llambda.testutil
 
 import llambda._
 

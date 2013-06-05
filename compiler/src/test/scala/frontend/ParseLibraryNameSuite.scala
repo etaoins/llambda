@@ -1,4 +1,4 @@
-package test.scala
+package llambda.frontend
 
 import org.scalatest.FunSuite
 import llambda._

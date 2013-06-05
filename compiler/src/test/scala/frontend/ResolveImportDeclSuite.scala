@@ -1,4 +1,4 @@
-package test.scala
+package llambda.frontend
 
 import org.scalatest.FunSuite
 import llambda._
@@ -7,7 +7,7 @@ class ResolveImportDeclSuite extends FunSuite {
   def bindingFor(scheme : String) = {
     SchemeParser(scheme) match {
       case SchemeParser.Success(datum :: Nil, _) =>
-        ResolveImportDecl(datum)(util.TestLibraryLoader.apply)
+        ResolveImportDecl(datum)(testutil.TestLibraryLoader.apply)
       case err =>
         fail(err.toString)
     }
