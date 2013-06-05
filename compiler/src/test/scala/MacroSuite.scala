@@ -56,7 +56,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with util.Expres
   
   test("expansion with lambdas") {
     // This expands a macro containing a lambda inside a lambda
-    // We have a bug with rescoping that got confused while rescoping a lambda
+    // We had a bug with rescoping and became confused while rescoping a lambda
     // body that contained symbols from a different scope. This triggered it.
     assert(expressionFor(
       """(define-syntax func-returning

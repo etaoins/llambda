@@ -198,6 +198,17 @@ class ExtractBodySuite extends FunSuite with Inside with OptionValues with util.
     }
   }
 
+  test("recursive lambda define") {
+    inside(expressionFor("""
+      (lambda (x)
+        (define foo (lambda (y) (bar x y)))
+        (define bar (lambda (a b) (if a b)))
+        (foo #t))""")) {
+      case et.Procedure(passedArg :: Nil, None, boundValues, bodyExprs) =>
+        assert(true)
+    }
+  }
+
   test("argless lambda shorthand") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 

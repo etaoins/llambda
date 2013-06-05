@@ -165,9 +165,6 @@ object ExtractBody {
       (outerScope -> innerScope)
     }).toMap
 
-    // Find all scopes that don't have an inner scope created due to lack of args
-    // Otherwise argless lambdas will modify their parent scope
-    
     // Parse our body
     val expressions = body flatMap { datum =>
       // Replace instances of our defining scope with the inner scope
@@ -291,12 +288,12 @@ object ExtractBody {
       defineSyntax(datum)
       None
 
-    // Cheap hack to look for macros early
-    // We need to expand them in a body context if they appear in a body
-    // Otherwise (define) etc won't work in macros
     case sst.ScopedProperList(sst.ScopedSymbol(scope, procedureName) :: operands) =>
       scope.get(procedureName) match {
         case Some(syntax : BoundSyntax) =>
+          // Cheap hack to look for macros early
+          // We need to expand them in a body context if they appear in a body
+          // Otherwise (define) etc won't work in macros
           extractBodyExpression(ExpandMacro(syntax, operands))
 
         case Some(InternalPrimitives.DefineReportProcedure) =>
@@ -317,7 +314,6 @@ object ExtractBody {
       }
 
     case _ =>
-      // Scope is unmodified
       Some(extractExpression(datum))
   }
 
