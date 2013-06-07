@@ -17,7 +17,7 @@ trait ExpressionHelpers extends FunSuite with OptionValues {
   def bodyFor(scheme : String)(scope : Scope) = {
     SchemeParser(scheme) match {
       case SchemeParser.Success(data, _) =>
-        frontend.ExtractBody(data)(scope)
+        frontend.ExtractModuleBody(data)(scope)
       case err =>
         fail(err.toString)
     }

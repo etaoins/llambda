@@ -43,7 +43,7 @@ class ExtractLibrarySuite extends FunSuite with Inside {
              (define number5 5)))"""
      )) {
        case Library(_, bindings, exprs) =>
-         assert(exprs === List(et.SetVar(bindings("number5"), et.Literal(ast.IntegerLiteral(5)))))
+         assert(exprs === List(et.Let(List(bindings("number5") -> et.Literal(ast.IntegerLiteral(5))), Nil)))
      }
   }
 

@@ -61,7 +61,7 @@ class BodyExpressionMode extends SchemeParsingMode("body") {
         "loaded"
       case _ =>
         // Treat this like a body expression
-        frontend.ExtractBody(datum :: Nil)(scope).map(_.toString).mkString(" ")
+        frontend.ExtractModuleBody(datum :: Nil)(scope).map(_.toString).mkString(" ")
     }
   }
 }

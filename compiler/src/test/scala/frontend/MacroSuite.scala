@@ -66,7 +66,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
          )))
          (lambda () 
            (func-returning if))"""
-    ) === et.Procedure(Nil, None, List(et.Procedure(Nil, None, List(et.VarReference(SchemePrimitives.If))))) )
+    ) === et.Lambda(Nil, None, List(et.Lambda(Nil, None, List(et.VarRef(SchemePrimitives.If))))) )
   }
   
   test("two value expansion") {
@@ -313,7 +313,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
     )(scope) 
 
     assert(exprs == List(
-      et.SetVar(scope.get("a").value, et.Literal(ast.IntegerLiteral(2)))
+      et.Let((scope.get("a").value, et.Literal(ast.IntegerLiteral(2))) :: Nil, Nil)
     ))
   }
 
@@ -330,8 +330,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
     )(scope) 
 
     inside(expr) {
-      case et.ProcedureCall(et.Procedure(arg1 :: arg2 :: Nil, None, body), argVal1 :: argVal2 :: Nil) =>
-        assert(body === List(et.VarReference(arg1), et.VarReference(arg2)))
+      case et.Apply(et.Lambda(arg1 :: arg2 :: Nil, None, body), argVal1 :: argVal2 :: Nil) =>
+        assert(body === List(et.VarRef(arg1), et.VarRef(arg2)))
         assert(argVal1 === et.Literal(ast.IntegerLiteral(1)))
         assert(argVal2 === et.Literal(ast.IntegerLiteral(2)))
     }
@@ -358,8 +358,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
     )(scope)
 
     inside(expr) {
-      case et.ProcedureCall(et.Procedure(arg :: Nil, None, bodyExpr :: Nil), argVal :: Nil) =>
-        assert(bodyExpr === et.Conditional(et.VarReference(arg), et.VarReference(arg), et.Literal(ast.IntegerLiteral(2))))
+      case et.Apply(et.Lambda(arg :: Nil, None, bodyExpr :: Nil), argVal :: Nil) =>
+        assert(bodyExpr === et.Cond(et.VarRef(arg), et.VarRef(arg), et.Literal(ast.IntegerLiteral(2))))
         assert(argVal === et.Literal(ast.IntegerLiteral(1)))
     }
   }
@@ -386,8 +386,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
     val expr = expressionFor("(or 1 2)")(expandScope) 
 
     inside(expr) {
-      case et.ProcedureCall(et.Procedure(arg :: Nil, None, bodyExpr :: Nil), argVal :: Nil) =>
-        assert(bodyExpr === et.Conditional(et.VarReference(arg), et.VarReference(arg), et.Literal(ast.IntegerLiteral(2))))
+      case et.Apply(et.Lambda(arg :: Nil, None, bodyExpr :: Nil), argVal :: Nil) =>
+        assert(bodyExpr === et.Cond(et.VarRef(arg), et.VarRef(arg), et.Literal(ast.IntegerLiteral(2))))
         assert(argVal === et.Literal(ast.IntegerLiteral(1)))
     }
   }

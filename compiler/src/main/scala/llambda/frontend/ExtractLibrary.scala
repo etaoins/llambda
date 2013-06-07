@@ -41,7 +41,7 @@ private[frontend] object ExtractLibrary {
         case other => throw new BadSpecialFormException("Bad begin declaration: " + other)
       }
 
-      val expressions = ExtractBody(expressionData)(scope)
+      val expressions = ExtractModuleBody(expressionData)(scope)
 
       // Evaluate exports to determine our exported bindings
       val exportDeclData = groupedDecls.getOrElse(DeclType.Export, List())

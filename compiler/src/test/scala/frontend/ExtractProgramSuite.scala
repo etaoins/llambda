@@ -32,7 +32,7 @@ class ExtractProgramSuite extends FunSuite with Inside {
          (import (only (test primitives) lambda)) 
          set!
          lambda"""
-      ) === List(et.VarReference(SchemePrimitives.Set), et.VarReference(SchemePrimitives.Lambda)))
+      ) === List(et.VarRef(SchemePrimitives.Set), et.VarRef(SchemePrimitives.Lambda)))
   }
 
   test("program body is body context") {
@@ -40,8 +40,8 @@ class ExtractProgramSuite extends FunSuite with Inside {
       """(import (test primitives))
          (define my-set set!)"""
     )) {
-      case et.SetVar(_, expression) :: Nil =>
-        assert(expression === et.VarReference(SchemePrimitives.Set))
+      case et.Let((_, expression) :: Nil, Nil) :: Nil =>
+        assert(expression === et.VarRef(SchemePrimitives.Set))
     }
   }
 }
