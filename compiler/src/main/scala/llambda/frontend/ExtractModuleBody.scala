@@ -57,7 +57,7 @@ object ExtractModuleBody {
 
   private def createNativeFunction(fixedArgData : List[sst.ScopedDatum], restArgType : Option[String], returnTypeString : String, nativeSymbol : String) : et.NativeFunction = {
     def parseNativeType(typeString : String) : nfi.NativeType = typeString match {
-      case "bool"   => nfi.Bool
+      case "bool32" => nfi.Bool32
       case "int8"   => nfi.Int8
       case "int16"  => nfi.Int16
       case "int32"  => nfi.Int32
@@ -67,6 +67,7 @@ object ExtractModuleBody {
 
       // XXX: This assumes Unix-like LP64: 64bit Linux, FreeBSD, Mac OS X, etc 
       // These aliases are here so we can do the right thing when porting to other archs
+      case "bool"  => nfi.Bool32
       case "short" => nfi.Int16
       case "int"   => nfi.Int32
       case "long"  => nfi.Int64
