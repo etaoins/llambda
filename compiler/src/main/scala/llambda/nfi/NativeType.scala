@@ -10,7 +10,7 @@ class IntType(val bits : Integer) extends NativeType {
   val schemeType : Option[st.SchemeType] = Some(st.ExactIntegerType)
 }
 
-case object Bool32 extends IntType(32) {
+case object Bool8 extends IntType(8) {
   override val schemeType = Some(st.BooleanType)
 }
 
