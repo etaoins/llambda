@@ -25,7 +25,7 @@ case object VoidType extends IrType with ReturnableType {
   def toIr = "void"
 }
 
-case class ArrayType(elements : Integer, innerType : IrType) extends FirstClassType {
+case class ArrayType(elements : Integer, innerType : FirstClassType) extends FirstClassType {
   def toIr = s"[$elements x $innerType]"
 }
 
