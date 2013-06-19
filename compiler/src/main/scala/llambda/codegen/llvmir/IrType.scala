@@ -1,11 +1,8 @@
 package llambda.codegen.llvmir
 
-sealed abstract class IrType {
-  def toIr : String
-  override def toString = toIr
-}
+sealed abstract class IrType extends Irable
 
-sealed trait ReturnableType
+sealed trait ReturnableType extends IrType
 
 // This seems to be everything but void
 sealed abstract class FirstClassType extends IrType with ReturnableType
