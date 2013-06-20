@@ -2,11 +2,6 @@ package llambda.frontend
 
 import llambda._
 
-class DubiousLibraryNameComponentException(val name : String) extends SemanticException(name)
-class LibraryNotFoundException(val filename : String) extends SemanticException(filename)
-class LibraryNameMismatchException(val loadedName : List[LibraryNameComponent], val definedName : List[LibraryNameComponent]) extends
-  Exception(loadedName.mkString(" ") + " doesn't match " + definedName.mkString(" "))
-
 class DefaultLibraryLoader {
   private val exprBuffer = collection.mutable.ListBuffer[et.Expression]()
   private val loadedFiles = collection.mutable.Map.empty[String, Map[String, BoundValue]]

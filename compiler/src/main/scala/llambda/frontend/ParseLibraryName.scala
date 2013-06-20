@@ -2,9 +2,6 @@ package llambda.frontend
 
 import llambda._
 
-case class InvalidLibraryNameException(val datum : ast.Datum) 
-  extends SemanticException(datum.toString)
-
 private[frontend] object ParseLibraryName {
   def apply(datum : ast.Datum) : List[LibraryNameComponent] = datum match {
     case ast.ProperList(firstComponent :: restComponent) =>

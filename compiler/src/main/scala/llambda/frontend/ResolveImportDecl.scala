@@ -2,9 +2,6 @@ package llambda.frontend
 
 import llambda._
 
-class ImportedIdentifierNotFoundException(val identifier : String) 
-  extends SemanticException(identifier)
-
 object ResolveImportDecl {
   type LibraryLoader = List[LibraryNameComponent] => Map[String, BoundValue]
 

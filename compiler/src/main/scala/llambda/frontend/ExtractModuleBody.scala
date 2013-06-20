@@ -4,11 +4,6 @@ import llambda._
 
 import collection.mutable.ListBuffer
 
-class MalformedExpressionException(message : String) extends SemanticException(message)
-class BadSpecialFormException(message : String) extends SemanticException(message)
-class UnboundVariableException(message : String) extends SemanticException(message)
-class UserDefinedSyntaxError(errorString  : String, data : List[ast.Datum]) extends SemanticException(errorString + " " + data.map(_.toString).mkString(" "))
-
 object ExtractModuleBody {
   // If expr is None it doesn't need to exist in the expression tree; it's a 
   // frontend-only binding such as a macro

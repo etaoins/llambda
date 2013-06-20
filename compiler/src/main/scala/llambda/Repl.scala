@@ -21,19 +21,11 @@ abstract class SchemeParsingMode(name : String) extends ReplMode(name) {
           }
         }
         catch {
-          case malformed : frontend.MalformedExpressionException =>
-            println("malformed: " + malformed.getMessage)
-          case badspecial : frontend.BadSpecialFormException =>
-            println("bad special form: " + badspecial.getMessage)
-          case nosyntax : frontend.NoSyntaxRuleException =>
-            println("no syntax rule for: " + nosyntax.getMessage)
-          case unbound : frontend.UnboundVariableException =>
-            println("unbound variable: " + unbound.getMessage)
-          case libnotfound : frontend.LibraryNotFoundException =>
-            println("library not found: " + libnotfound.getMessage)
+          case semantic : frontend.SemanticException =>
+            println(s"${semantic.semanticErrorType}: ${semantic.getMessage}")
         }
       case err =>
-        println("error: " + err)
+        println("parse error: " + err)
     }
   }
 }
