@@ -6,7 +6,7 @@ class DefaultLibraryLoader {
   private val exprBuffer = collection.mutable.ListBuffer[et.Expression]()
   private val loadedFiles = collection.mutable.Map.empty[String, Map[String, BoundValue]]
 
-  private def loadLibraryFile(filename : String, libraryName : List[LibraryNameComponent]) : Map[String, BoundValue] = {
+  private def loadLibraryFile(filename : String, libraryName : Seq[LibraryNameComponent]) : Map[String, BoundValue] = {
     // Just look at our resources for now
     val stream = getClass.getClassLoader.getResourceAsStream("libraries/" + filename)
 
@@ -33,7 +33,7 @@ class DefaultLibraryLoader {
     }
   }
 
-  private def loadLibraryFileOnce(filename : String, libraryName : List[LibraryNameComponent]) : Map[String, BoundValue] = {
+  private def loadLibraryFileOnce(filename : String, libraryName : Seq[LibraryNameComponent]) : Map[String, BoundValue] = {
     loadedFiles.getOrElse(filename, {
       val newBindings = loadLibraryFile(filename, libraryName)
       loadedFiles += (filename -> newBindings)
@@ -41,7 +41,7 @@ class DefaultLibraryLoader {
     })
   }
 
-  def load(libraryName : List[LibraryNameComponent]) : Map[String, BoundValue] = {
+  def load(libraryName : Seq[LibraryNameComponent]) : Map[String, BoundValue] = {
     libraryName match {
       case StringComponent("llambda") :: StringComponent("primitives") :: Nil =>
         SchemePrimitives.bindings

@@ -14,7 +14,7 @@ class LibraryNotFoundException(val filename : String) extends SemanticException(
   val semanticErrorType = "library not found"
 }
 
-class LibraryNameMismatchException(val loadedName : List[LibraryNameComponent], val definedName : List[LibraryNameComponent]) extends
+class LibraryNameMismatchException(val loadedName : Seq[LibraryNameComponent], val definedName : List[LibraryNameComponent]) extends
   SemanticException(loadedName.mkString(" ") + " doesn't match " + definedName.mkString(" ")) {
   val semanticErrorType = "library name mismatch"
 }
