@@ -37,8 +37,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   }
   
   test("function with fixed and rest args") {
-    expectResult(et.NativeFunction(nfi.Bool8 :: Nil, true, Some(nfi.Int32), "lliby_misc")) {
-      expressionFor("""(native-function "lliby_misc" (bool8 . boxeddatum) int)""")
+    expectResult(et.NativeFunction(nfi.Bool32 :: Nil, true, Some(nfi.Int32), "lliby_misc")) {
+      expressionFor("""(native-function "lliby_misc" (bool32 . boxeddatum) int)""")
     }
   }
   
