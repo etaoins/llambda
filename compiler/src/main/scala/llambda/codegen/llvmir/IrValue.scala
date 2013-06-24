@@ -16,6 +16,13 @@ sealed abstract class FloatingPointConstant extends IrConstant {
   def IrType : FloatingPointType
 }
 
+sealed abstract class ArrayLikeConstant extends IrConstant {
+  val innerType : FirstClassType
+  val length : Int
+    
+  def irType = ArrayType(length, innerType)
+}
+
 case object TrueConstant extends BoolConstant {
   def toIr = "true"
 }
@@ -64,8 +71,30 @@ case class StructureConstant(members : List[IrConstant]) extends IrConstant {
   def toIr = "{" + members.map(_.toIrWithType).mkString(", ") + "}"
 }
 
-case class ArrayConstant(innerType : FirstClassType , members : List[IrConstant]) extends IrConstant {
-  def irType = ArrayType(members.length, innerType)
+case class ArrayConstant(innerType : FirstClassType , members : List[IrConstant]) extends ArrayLikeConstant {
+  val length = members.length
 
   def toIr = "[" + members.map(_.toIrWithType).mkString(", ") + "]"
+}
+
+case class StringConstant(str : String) extends ArrayLikeConstant {
+  // Always NULL terminate when passing to NFI
+  private val utf8Bytes = io.Codec.toUTF8(str) :+ 0.toByte
+
+  val innerType = IntegerType(8) 
+  val length = utf8Bytes.length
+
+  // String without "
+  private def innerString : String = (utf8Bytes flatMap {
+    case backslash if backslash == 92 =>
+      """\\"""
+    case doubleQuote if doubleQuote == 34 =>
+      "\\\""
+    case printable if ((printable >= 32) && (printable <= 126)) =>
+      printable.toChar.toString
+    case unprintable =>
+      f"\\$unprintable%02X"
+  }).mkString
+
+  def toIr = "\"" + innerString + "\"" 
 }
