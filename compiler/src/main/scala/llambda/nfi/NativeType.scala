@@ -30,3 +30,7 @@ case object BoxedDatum extends NativeType {
   // We don't know the type here
   val schemeType = None
 }
+
+case object Utf8String extends NativeType {
+  val schemeType = Some(st.StringType)
+}

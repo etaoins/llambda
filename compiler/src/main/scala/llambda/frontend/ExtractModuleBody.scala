@@ -60,6 +60,8 @@ object ExtractModuleBody {
       case "float"  => nfi.Float
       case "double" => nfi.Double
 
+      case "utf8-string" => nfi.Utf8String
+
       // XXX: This assumes Unix-like LP64: 64bit Linux, FreeBSD, Mac OS X, etc 
       // These aliases are here so we can do the right thing when porting to other archs
       case "bool"  => nfi.Bool32

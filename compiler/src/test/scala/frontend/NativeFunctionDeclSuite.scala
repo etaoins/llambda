@@ -18,6 +18,12 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
     }
   }
   
+  test("function returning utf8-string") {
+    expectResult(et.NativeFunction(Nil, false, Some(nfi.Utf8String), "lliby_newline")) {
+      expressionFor("""(native-function "lliby_newline" () utf8-string)""")
+    }
+  }
+  
   test("function taking int16 and returning int32") {
     expectResult(et.NativeFunction(nfi.Int16 :: Nil, false, Some(nfi.Int32), "lliby_newline")) {
       expressionFor("""(native-function "lliby_newline" (int16) int32)""")
