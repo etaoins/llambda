@@ -45,4 +45,8 @@ class IrTypeSuite extends FunSuite {
   test("pointer type") {
     assert(PointerType(ArrayType(4, i32)).toIr === "[4 x i32]*")
   }
+
+  test("user defined type") {
+    assert(UserDefinedType("genericExpr").toIr === "%genericExpr")
+  }
 }

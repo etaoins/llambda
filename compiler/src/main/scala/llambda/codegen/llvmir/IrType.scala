@@ -9,6 +9,10 @@ sealed abstract class FirstClassType extends IrType with ReturnableType
 
 sealed abstract class FloatingPointType extends FirstClassType
 
+case class UserDefinedType(name : String) extends FirstClassType {
+  def toIr = s"%${name}"
+}
+
 case class IntegerType(bits : Integer) extends FirstClassType {
   def toIr = s"i${bits}"
 }
