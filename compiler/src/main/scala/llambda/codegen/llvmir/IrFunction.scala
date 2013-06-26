@@ -1,6 +1,20 @@
 package llambda.codegen.llvmir
 
 object IrFunction {
+  sealed abstract class FunctionAttribute extends Irable
+
+  case object Cold extends FunctionAttribute {
+    def toIr = "cold"
+  }
+
+  case object NoReturn extends FunctionAttribute {
+    def toIr = "noreturn"
+  }
+  
+  case object NoUnwind extends FunctionAttribute {
+    def toIr = "nounwind"
+  }
+
   sealed abstract class ParameterAttribute extends Irable
 
   case object ZeroExt extends ParameterAttribute {
@@ -40,11 +54,12 @@ abstract trait IrFunction extends Irable {
   val result : IrFunction.Result
   val name : String
   val arguments : List[IrFunction.Argument]
+  val attributes : Set[IrFunction.FunctionAttribute]
   val gc : Option[String]
 
   def irType = FunctionType(result.irType, arguments.map(_.irType))
 
-  protected def irDecl(attributes : List[String]) : String = {
+  protected def irDecl : String = {
     val argList = arguments.map(_.toIr).mkString(", ")
 
     val declParts = List(linkage, visibility, callingConv).flatMap(_.toOptIr) ++
@@ -53,7 +68,7 @@ abstract trait IrFunction extends Irable {
                       case false => Nil
                     }) ++
                     List(s"${result.toIr} @${name}(${argList})") ++
-                    attributes ++
+                    attributes.map(_.toIr).toList.sorted ++
                     gc.map("gc \"" + _ + "\"").toList
 
     declParts.mkString(" ")
@@ -63,12 +78,13 @@ abstract trait IrFunction extends Irable {
 case class IrFunctionDecl(
   result : IrFunction.Result,
   name : String,
-  arguments: List[IrFunction.Argument],
+  arguments : List[IrFunction.Argument],
+  attributes : Set[IrFunction.FunctionAttribute] = Set(),
   linkage : Linkage.Linkage = Linkage.Default,
   visibility : Visibility.Visibility = Visibility.Default,
   callingConv : CallingConv.CallingConv = CallingConv.Default,
   unnamedAddr : Boolean = false,
   gc : Option[String] = None
 ) extends IrFunction {
-  def toIr = "declare " + irDecl(Nil)
+  def toIr = "declare " + irDecl
 }

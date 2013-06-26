@@ -30,6 +30,15 @@ class IrFunctionSuite extends FunSuite {
     assert(IrFunctionDecl(result, "returns_signed_char", Nil).toIr === "declare signext i8 @returns_signed_char()") 
   }
   
+  test("attribute decl") {
+    assert(IrFunctionDecl(
+        result=IrFunction.Result(VoidType, Set()), 
+        name="funcname",
+        arguments=Nil,
+        attributes=Set(IrFunction.Cold)
+      ).toIr === "declare void @funcname() cold")
+  }
+  
   test("linkage decl") {
     assert(IrFunctionDecl(
         result=IrFunction.Result(VoidType, Set()), 
@@ -91,8 +100,9 @@ class IrFunctionSuite extends FunSuite {
         callingConv=CallingConv.ColdCC,
         visibility=Visibility.Protected,
         unnamedAddr=true,
+        attributes=Set(IrFunction.Cold, IrFunction.NoUnwind),
         linkage=Linkage.ExternallyAvailable
-      ).toIr === "declare externally_available protected coldcc unnamed_addr zeroext i32 @superfunc(i8* noalias nocapture, [40 x i32] zeroext) gc \"shadow\"")
+      ).toIr === "declare externally_available protected coldcc unnamed_addr zeroext i32 @superfunc(i8* noalias nocapture, [40 x i32] zeroext) cold nounwind gc \"shadow\"")
   }
 }
 
