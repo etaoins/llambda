@@ -24,6 +24,22 @@ class NfiTypeToIrTypeSuite extends FunSuite {
     assert(NfiTypeToIrType(nfi.Int64) === llvmir.IntegerType(64))
   }
 
+  test("uint8") {
+    assert(NfiTypeToIrType(nfi.UInt8) === llvmir.IntegerType(8))
+  }
+  
+  test("uint16") {
+    assert(NfiTypeToIrType(nfi.UInt16) === llvmir.IntegerType(16))
+  }
+  
+  test("uint32") {
+    assert(NfiTypeToIrType(nfi.UInt32) === llvmir.IntegerType(32))
+  }
+  
+  test("uint64") {
+    assert(NfiTypeToIrType(nfi.UInt64) === llvmir.IntegerType(64))
+  }
+
   test("float") {
     assert(NfiTypeToIrType(nfi.Float) === llvmir.SingleType)
   }

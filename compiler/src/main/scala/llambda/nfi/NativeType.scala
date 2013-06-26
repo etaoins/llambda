@@ -6,20 +6,25 @@ sealed abstract class NativeType {
   val schemeType : Option[st.SchemeType]
 }
 
-class IntLikeType(val bits : Integer) extends NativeType {
+sealed abstract class IntLikeType(val bits : Integer, val signed : Boolean) extends NativeType {
   val schemeType : Option[st.SchemeType] = Some(st.ExactIntegerType)
 }
 
-case object Bool32 extends IntLikeType(32) {
+case object Bool32 extends IntLikeType(32, false) {
   override val schemeType = Some(st.BooleanType)
 }
 
-abstract class IntType(bits : Integer) extends IntLikeType(bits)
+sealed abstract class IntType(bits : Integer, signed : Boolean) extends IntLikeType(bits, signed)
 
-case object Int8 extends IntType(8)
-case object Int16 extends IntType(16)
-case object Int32 extends IntType(32)
-case object Int64 extends IntType(64)
+case object Int8 extends IntType(8, true)
+case object Int16 extends IntType(16, true)
+case object Int32 extends IntType(32, true)
+case object Int64 extends IntType(64, true)
+
+case object UInt8 extends IntType(8, false)
+case object UInt16 extends IntType(16, false)
+case object UInt32 extends IntType(32, false)
+case object UInt64 extends IntType(64, false)
 
 case object Float extends NativeType {
   val schemeType = Some(st.RealType)
