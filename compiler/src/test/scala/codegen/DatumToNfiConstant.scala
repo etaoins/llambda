@@ -5,14 +5,14 @@ import org.scalatest.{FunSuite,Inside}
 
 class DatumToNfiConstantSuite extends FunSuite with Inside {
   test("boolean values") {
-    val nfiTrue = llvmir.IntegerConstant(llvmir.IntegerType(32), 1)
-    val nfiFalse = llvmir.IntegerConstant(llvmir.IntegerType(32), 0)
+    val nfiTrue = llvmir.IntegerConstant(llvmir.IntegerType(1), 1)
+    val nfiFalse = llvmir.IntegerConstant(llvmir.IntegerType(1), 0)
 
-    assert(DatumToNfiConstant(ast.TrueLiteral, nfi.Bool32) === Some(nfiTrue))
-    assert(DatumToNfiConstant(ast.FalseLiteral, nfi.Bool32) === Some(nfiFalse))
-    assert(DatumToNfiConstant(ast.StringLiteral("HELLO"), nfi.Bool32) === Some(nfiFalse))
-    assert(DatumToNfiConstant(ast.IntegerLiteral(1), nfi.Bool32) === Some(nfiFalse))
-    assert(DatumToNfiConstant(ast.IntegerLiteral(1), nfi.Bool32) === Some(nfiFalse))
+    assert(DatumToNfiConstant(ast.TrueLiteral, nfi.Bool) === Some(nfiTrue))
+    assert(DatumToNfiConstant(ast.FalseLiteral, nfi.Bool) === Some(nfiFalse))
+    assert(DatumToNfiConstant(ast.StringLiteral("HELLO"), nfi.Bool) === Some(nfiFalse))
+    assert(DatumToNfiConstant(ast.IntegerLiteral(1), nfi.Bool) === Some(nfiFalse))
+    assert(DatumToNfiConstant(ast.IntegerLiteral(1), nfi.Bool) === Some(nfiFalse))
   }
 
   test("integer values") {

@@ -10,7 +10,7 @@ sealed abstract class IntLikeType(val bits : Integer, val signed : Boolean) exte
   val schemeType : Option[st.SchemeType] = Some(st.ExactIntegerType)
 }
 
-case object Bool32 extends IntLikeType(32, false) {
+case object Bool extends IntLikeType(1, false) {
   override val schemeType = Some(st.BooleanType)
 }
 

@@ -5,7 +5,7 @@ import org.scalatest.FunSuite
 
 class NfiTypeToIrTypeSuite extends FunSuite {
   test("bool32") {
-    assert(NfiTypeToIrType(nfi.Bool32) === llvmir.IntegerType(32))
+    assert(NfiTypeToIrType(nfi.Bool) === llvmir.IntegerType(1))
   }
   
   test("int8") {

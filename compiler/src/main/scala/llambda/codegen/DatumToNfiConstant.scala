@@ -5,12 +5,12 @@ import llambda.{ast,nfi}
 object DatumToNfiConstant {
   def apply(datum : ast.Datum, requiredType : nfi.NativeType) : Option[llvmir.IrConstant] = (datum, requiredType) match {
     // Only true is truthy
-    case (ast.TrueLiteral, nfi.Bool32) =>
-      Some(llvmir.IntegerConstant(llvmir.IntegerType(32), 1))
+    case (ast.TrueLiteral, nfi.Bool) =>
+      Some(llvmir.IntegerConstant(llvmir.IntegerType(1), 1))
 
     // Everything else is falsey
-    case (_, nfi.Bool32) =>
-      Some(llvmir.IntegerConstant(llvmir.IntegerType(32), 0))
+    case (_, nfi.Bool) =>
+      Some(llvmir.IntegerConstant(llvmir.IntegerType(1), 0))
 
     // XXX: Signed versus unsigned?
     case (ast.IntegerLiteral(value), intType : nfi.IntType) =>
