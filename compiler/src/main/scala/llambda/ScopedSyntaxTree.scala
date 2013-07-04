@@ -36,7 +36,7 @@ object ScopedImproperList {
       ScopedImproperList.unapply(tail).map { case (head, terminator) =>
         (car :: head, terminator)
       }
-    case ScopedPair(car, cdr) => Some(List(car), cdr)
+    case ScopedPair(car, cdr) => Some((List(car), cdr))
     case _ => None
   }
 }

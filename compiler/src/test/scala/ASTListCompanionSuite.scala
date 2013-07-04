@@ -62,7 +62,7 @@ class ASTListCompanionSuite extends FunSuite {
   }
 
   test("improper list extraction") {
-    expectResult(Some(List(ast.Symbol("a")), ast.Symbol("b"))) {
+    expectResult(Some((List(ast.Symbol("a")), ast.Symbol("b")))) {
       ast.ImproperList.unapply(
         ast.Pair(
           ast.Symbol("a"), ast.Symbol("b")
@@ -70,7 +70,7 @@ class ASTListCompanionSuite extends FunSuite {
       )
     }
     
-    expectResult(Some(List(ast.Symbol("a"), ast.Symbol("b")), ast.Symbol("c"))) {
+    expectResult(Some((List(ast.Symbol("a"), ast.Symbol("b")), ast.Symbol("c")))) {
       ast.ImproperList.unapply(
         ast.Pair(
           ast.Symbol("a"), ast.Pair(

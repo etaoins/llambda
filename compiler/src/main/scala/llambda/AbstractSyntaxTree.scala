@@ -92,7 +92,7 @@ object ImproperList {
       }
     case Pair(car, cdr) =>
       // This is the end of an improper list
-      Some(List(car), cdr)
+      Some((List(car), cdr))
     case _ => None
   }
 
