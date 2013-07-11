@@ -3,6 +3,20 @@ package llambda.codegen.llvmir
 import org.scalatest.FunSuite
 
 class IrValueSuite extends FunSuite {
+  test("local variable") {
+    val testLocal = LocalVariable("test", SingleType)
+
+    assert(testLocal.toIr === "%test")
+    assert(testLocal.irType === SingleType)
+  }
+  
+  test("global variable") {
+    val testLocal = GlobalVariable("test", DoubleType)
+
+    assert(testLocal.toIr === "@test")
+    assert(testLocal.irType === DoubleType)
+  }
+
   test("boolean constant") {
     assert(TrueConstant.toIr === "true")
     assert(TrueConstant.irType === IntegerType(1))

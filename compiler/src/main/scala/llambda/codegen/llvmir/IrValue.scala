@@ -6,6 +6,14 @@ sealed abstract class IrValue extends Irable {
   def toIrWithType = irType.toIr + " " + toIr
 }
 
+case class LocalVariable(name : String, irType : FirstClassType) extends IrValue {
+  def toIr = "%" + name
+}
+
+case class GlobalVariable(name : String, irType : FirstClassType) extends IrValue {
+  def toIr = "@" + name
+}
+
 sealed abstract class IrConstant extends IrValue
 
 sealed abstract class BoolConstant extends IrConstant {
