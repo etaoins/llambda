@@ -15,6 +15,14 @@ object IrFunction {
     def toIr = "nounwind"
   }
 
+  case object ReadNone extends FunctionAttribute {
+    def toIr = "readnone"
+  }
+  
+  case object ReadOnly extends FunctionAttribute {
+    def toIr = "readonly"
+  }
+
   sealed abstract class ParameterAttribute extends Irable
 
   case object ZeroExt extends ParameterAttribute {

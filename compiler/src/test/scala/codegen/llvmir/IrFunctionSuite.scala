@@ -100,9 +100,9 @@ class IrFunctionSuite extends FunSuite {
         callingConv=CallingConv.ColdCC,
         visibility=Visibility.Protected,
         unnamedAddr=true,
-        attributes=Set(IrFunction.Cold, IrFunction.NoUnwind),
+        attributes=Set(IrFunction.Cold, IrFunction.NoUnwind, IrFunction.ReadNone, IrFunction.ReadOnly),
         linkage=Linkage.ExternallyAvailable
-      ).toIr === "declare externally_available protected coldcc unnamed_addr zeroext i32 @superfunc(i8* noalias nocapture, [40 x i32] zeroext) cold nounwind gc \"shadow\"")
+      ).toIr === "declare externally_available protected coldcc unnamed_addr zeroext i32 @superfunc(i8* noalias nocapture, [40 x i32] zeroext) cold nounwind readnone readonly gc \"shadow\"")
   }
 }
 
