@@ -23,6 +23,16 @@ class IrFunctionSuite extends FunSuite {
 
     assert(IrFunctionDecl(result, "puts", arguments).irType === FunctionType(IntegerType(32), List(PointerType(IntegerType(8)))))
   }
+  
+  test("puts function decl to value") {
+    val result = IrFunction.Result(IntegerType(32), Set())
+    val arguments = List(IrFunction.Argument(PointerType(IntegerType(8)), Set(NoCapture)))
+    val irValue = IrFunctionDecl(result, "puts", arguments).irValue
+
+    assert(irValue.isInstanceOf[GlobalVariable])
+    assert(irValue.irType === PointerType(FunctionType(IntegerType(32), List(PointerType(IntegerType(8))))))
+    assert(irValue.toIr === "@puts")
+  }
 
   test("signext return decl") {
     val result = IrFunction.Result(IntegerType(8), Set(SignExt))

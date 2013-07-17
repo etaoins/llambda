@@ -54,18 +54,28 @@ object IrFunction {
   }
 }
 
-abstract trait IrFunction extends Irable {
-  val linkage : Linkage.Linkage
-  val visibility : Visibility.Visibility
+sealed abstract trait IrCallableLike {
   val callingConv : CallingConv.CallingConv
-  val unnamedAddr : Boolean
   val result : IrFunction.Result
-  val name : String
   val arguments : List[IrFunction.Argument]
   val attributes : Set[IrFunction.FunctionAttribute]
-  val gc : Option[String]
-
+  
   def irType = FunctionType(result.irType, arguments.map(_.irType))
+}
+
+case class IrCallable(
+  callingConv : CallingConv.CallingConv,
+  result : IrFunction.Result,
+  arguments : List[IrFunction.Argument],
+  attributes : Set[IrFunction.FunctionAttribute]
+) extends IrCallableLike
+
+sealed abstract trait IrFunctionDeclLike extends Irable with IrCallableLike {
+  val linkage : Linkage.Linkage
+  val visibility : Visibility.Visibility
+  val name : String
+  val unnamedAddr : Boolean
+  val gc : Option[String]
 
   protected def irDecl : String = {
     val argList = arguments.map(_.toIr).mkString(", ")
@@ -81,6 +91,10 @@ abstract trait IrFunction extends Irable {
 
     declParts.mkString(" ")
   }
+
+  def irValue : IrValue = {
+    GlobalVariable(name, PointerType(irType))
+  }
 }
 
 case class IrFunctionDecl(
@@ -93,6 +107,6 @@ case class IrFunctionDecl(
   callingConv : CallingConv.CallingConv = CallingConv.Default,
   unnamedAddr : Boolean = false,
   gc : Option[String] = None
-) extends IrFunction {
+) extends IrFunctionDeclLike {
   def toIr = "declare " + irDecl
 }
