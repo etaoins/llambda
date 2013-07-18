@@ -179,4 +179,83 @@ class MemoryInstrsSuite extends FunSuite {
 
     assert(block.toIr === "\tstore volatile i64 1, i64* %fake, align 128")
   }
+
+  test("0 index getelementptr") {
+    val fakePointer = LocalVariable("fake", PointerType(UserDefinedType("opaqueType")))
+
+    val block = new IrBlock {
+      val resultVar = getelementptr(
+        resultType=IntegerType(8),
+        basePointer=fakePointer,
+        indices=List()
+      )
+
+      assert(resultVar.irType === IntegerType(8))
+    }
+
+    assert(block.toIr === "\t%1 = getelementptr %opaqueType* %fake") 
+  }
+  
+  test("getelementptr from non-pointer") {
+    val fakeNonPointer = LocalVariable("fake", IntegerType(8))
+
+    val block = new IrBlock {
+      intercept[InternalCompilerErrorException] {
+        val resultVar = getelementptr(
+          resultType=IntegerType(8),
+          basePointer=fakeNonPointer,
+          indices=List()
+        )
+      }
+    }
+  }
+  
+  test("1 index getelementptr") {
+    val fakePointer = LocalVariable("fake", PointerType(UserDefinedType("opaqueType")))
+
+    val block = new IrBlock {
+      val resultVar = getelementptr(
+        resultType=IntegerType(16),
+        basePointer=fakePointer,
+        indices=List(42)
+      )
+
+      assert(resultVar.irType === IntegerType(16))
+    }
+
+    assert(block.toIr === "\t%1 = getelementptr %opaqueType* %fake, i32 42") 
+  }
+  
+  test("inbounds getelementptr") {
+    val fakePointer = LocalVariable("fake", PointerType(UserDefinedType("opaqueType")))
+
+    val block = new IrBlock {
+      val resultVar = getelementptr(
+        resultType=IntegerType(32),
+        basePointer=fakePointer,
+        indices=List(23),
+        inbounds=true
+      )
+
+      assert(resultVar.irType === IntegerType(32))
+    }
+
+    assert(block.toIr === "\t%1 = getelementptr inbounds %opaqueType* %fake, i32 23") 
+  }
+  
+  test("2 index getelementptr") {
+    val fakePointer = LocalVariable("fake", PointerType(UserDefinedType("opaqueType")))
+
+    val block = new IrBlock {
+      val resultVar = getelementptr(
+        resultType=IntegerType(64),
+        basePointer=fakePointer,
+        indices=List(42, 23)
+      )
+
+      assert(resultVar.irType === IntegerType(64))
+    }
+
+    assert(block.toIr === "\t%1 = getelementptr %opaqueType* %fake, i32 42, i32 23") 
+  }
 }
