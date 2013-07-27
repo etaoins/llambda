@@ -5,12 +5,9 @@ import collection.mutable.ListBuffer
 private[llvmir] abstract class IrBuilder {
   // This contains our instructions as they're built
   private[llvmir] val instructions = new ListBuffer[String]
-  private[llvmir] var nextLocalVar = 0 : Integer
 
-  private[llvmir] def allocateLocalVar(irType : FirstClassType) : LocalVariable = {
-    nextLocalVar = nextLocalVar + 1
-
-    LocalVariable(nextLocalVar.toString, irType)
+  private[llvmir] def allocateLocalVar(irType : FirstClassType)(implicit nameSource : LocalNameSource) : LocalVariable = {
+    LocalVariable(nameSource.allocate(""), irType)
   }
 }
 

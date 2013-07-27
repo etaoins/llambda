@@ -5,6 +5,7 @@ import org.scalatest.FunSuite
 
 class OtherInstrsSuite extends FunSuite {
   test("sourceless ph") {
+    implicit val nameSource = new LocalNameSource
     intercept[InternalCompilerErrorException] {
       new IrBlock {
         phi()
@@ -13,6 +14,7 @@ class OtherInstrsSuite extends FunSuite {
   }
 
   test("incompatible source phi") {
+    implicit val nameSource = new LocalNameSource
     intercept[InternalCompilerErrorException] {
       new IrBlock {
         phi(
@@ -24,6 +26,7 @@ class OtherInstrsSuite extends FunSuite {
   }
 
   test("single source phi") {
+    implicit val nameSource = new LocalNameSource
     val block = new IrBlock {
       val resultVar = phi(
         PhiSource(IntegerConstant(IntegerType(1), 0), IrLabel("one"))
@@ -36,6 +39,7 @@ class OtherInstrsSuite extends FunSuite {
   }
 
   test("two source phi") {
+    implicit val nameSource = new LocalNameSource
     val block = new IrBlock {
       val resultVar = phi(
         PhiSource(DoubleConstant(1.0), IrLabel("plusone")),
@@ -49,6 +53,7 @@ class OtherInstrsSuite extends FunSuite {
   }
   
   test("trivial call") {
+    implicit val nameSource = new LocalNameSource
     val declResult = IrFunction.Result(VoidType, Set())
     val declArgs = List()
     val decl = IrFunctionDecl(
@@ -69,6 +74,7 @@ class OtherInstrsSuite extends FunSuite {
   }
   
   test("call returning value") {
+    implicit val nameSource = new LocalNameSource
     val declResult = IrFunction.Result(IntegerType(8), Set(IrFunction.ZeroExt))
     val declArgs = List()
     val decl = IrFunctionDecl(
@@ -89,6 +95,7 @@ class OtherInstrsSuite extends FunSuite {
   }
   
   test("fastcc call") {
+    implicit val nameSource = new LocalNameSource
     val declResult = IrFunction.Result(VoidType, Set())
     val declArgs = List()
     val decl = IrFunctionDecl(
@@ -110,6 +117,7 @@ class OtherInstrsSuite extends FunSuite {
   }
   
   test("tail call") {
+    implicit val nameSource = new LocalNameSource
     val declResult = IrFunction.Result(VoidType, Set())
     val declArgs = List()
     val decl = IrFunctionDecl(
@@ -131,6 +139,7 @@ class OtherInstrsSuite extends FunSuite {
   }
 
   test("call with insufficent args") {
+    implicit val nameSource = new LocalNameSource
     val declResult = IrFunction.Result(VoidType, Set())
     val declArgs = List(IrFunction.Argument(PointerType(IntegerType(8)), Set(IrFunction.NoCapture)))
     val decl = IrFunctionDecl(
@@ -146,6 +155,7 @@ class OtherInstrsSuite extends FunSuite {
   }
 
   test("call with unmatched args") {
+    implicit val nameSource = new LocalNameSource
     val declResult = IrFunction.Result(VoidType, Set())
     val declArgs = List(IrFunction.Argument(IntegerType(8), Set(IrFunction.NoCapture)))
     val decl = IrFunctionDecl(
@@ -165,6 +175,7 @@ class OtherInstrsSuite extends FunSuite {
   }
 
   test("call with args") {
+    implicit val nameSource = new LocalNameSource
     val declResult = IrFunction.Result(VoidType, Set())
     val declArgs = List(
       IrFunction.Argument(IntegerType(8), Set(IrFunction.NoCapture)),
@@ -194,6 +205,7 @@ class OtherInstrsSuite extends FunSuite {
   }
   
   test("call with attrs") {
+    implicit val nameSource = new LocalNameSource
     val declResult = IrFunction.Result(VoidType, Set())
     val declArgs = List()
     val decl = IrFunctionDecl(
@@ -217,6 +229,7 @@ class OtherInstrsSuite extends FunSuite {
   }
 
   test("christmas tree call") {
+    implicit val nameSource = new LocalNameSource
     val declResult = IrFunction.Result(IntegerType(8), Set(IrFunction.ZeroExt))
     val declArgs = List(
       IrFunction.Argument(SingleType, Set(IrFunction.NoCapture, IrFunction.NoAlias)),
