@@ -113,6 +113,10 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     intercept[UnboundVariableException] {
       expressionFor("(set! b 1)")
     }
+    
+    intercept[BadSpecialFormException] {
+      expressionFor("(set! set! 1)")
+    }
   }
 
   test("conditionals") {
@@ -131,43 +135,56 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
   test("define variable") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
-
-    assert(bodyFor("(define a 2)")(scope) === List(
-      et.Let(List(scope.get("a").value -> et.Literal(ast.IntegerLiteral(2))), Nil)
-    ))
+    val expressions = bodyFor("(define a 2)")(scope)
 
     // Make sure we preserved our source name for debugging purposes
     inside(scope.get("a").value) {
       case storageLoc : StorageLocation =>
+        assert(expressions === List(
+          et.Let(List(storageLoc -> et.Literal(ast.IntegerLiteral(2))), Nil)
+        ))
+
         assert(storageLoc.sourceName === "a")
     }
   }
 
   test("redefine variable") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val expressions = expressionFor("(define a 2)(define a 3)")(scope)
 
-    assert(expressionFor("(define a 2)(define a 3)")(scope) === 
-      et.Let(List(scope.get("a").value -> et.Literal(ast.IntegerLiteral(2))),
-        et.MutateVar(scope.get("a").value, et.Literal(ast.IntegerLiteral(3))) :: Nil)
-    )
+    inside(scope.get("a").value) {
+      case storageLoc : StorageLocation =>
+        assert(expressions === 
+          et.Let(List(storageLoc -> et.Literal(ast.IntegerLiteral(2))),
+            et.MutateVar(storageLoc, et.Literal(ast.IntegerLiteral(3))) :: Nil)
+        )
+    }
   }
   
   test("dependent define") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val expressions = expressionFor("(define a 2)(define b a)")(scope)
 
-    assert(expressionFor("(define a 2)(define b a)")(scope) ===
-      et.Let(List(scope.get("a").value -> et.Literal(ast.IntegerLiteral(2))),
-        et.Let(List(scope.get("b").value -> et.VarRef(scope.get("a").value)), Nil) :: Nil)
-    )
+    inside((scope.get("a").value, scope.get("b").value)) {
+      case (storageLocA : StorageLocation, storageLocB : StorageLocation) =>
+        assert(expressions ===
+          et.Let(List(storageLocA -> et.Literal(ast.IntegerLiteral(2))),
+            et.Let(List(storageLocB -> et.VarRef(scope.get("a").value)), Nil) :: Nil)
+        )
+    }
   }
   
   test("reference variable") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val expressions = expressionFor("(define a 2) a")(scope)
 
-    assert(expressionFor("(define a 2) a")(scope) === 
-      et.Let(List(scope.get("a").value -> et.Literal(ast.IntegerLiteral(2))),
-        et.VarRef(scope.get("a").value) :: Nil)
-    )
+    inside(scope.get("a").value) {
+      case storageLoc : StorageLocation =>
+        assert(expressions === 
+          et.Let(List(storageLoc -> et.Literal(ast.IntegerLiteral(2))),
+            et.VarRef(storageLoc) :: Nil)
+        )
+    }
   }
 
   test("lambdas") {

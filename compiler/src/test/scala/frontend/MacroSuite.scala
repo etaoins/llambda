@@ -312,9 +312,12 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
          (my-define a 2)"""
     )(scope) 
 
-    assert(exprs == List(
-      et.Let((scope.get("a").value, et.Literal(ast.IntegerLiteral(2))) :: Nil, Nil)
-    ))
+    inside(scope.get("a").value) {
+      case storageLoc : StorageLocation =>
+        assert(exprs == List(
+          et.Let((storageLoc, et.Literal(ast.IntegerLiteral(2))) :: Nil, Nil)
+        ))
+    }
   }
 
   test("restructuring expansion") {

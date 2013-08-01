@@ -12,7 +12,7 @@ object ExtractModuleBody {
     val value : BoundValue
   }
 
-  private case class ParsedVarDefine(name : sst.ScopedSymbol, value : BoundValue, expr : () => et.Expression) extends ParsedDefine
+  private case class ParsedVarDefine(name : sst.ScopedSymbol, value : StorageLocation, expr : () => et.Expression) extends ParsedDefine
   private case class ParsedSyntaxDefine(name : sst.ScopedSymbol, value : BoundSyntax) extends ParsedDefine
 
   private def uniqueScopes(datum : sst.ScopedDatum) : Set[Scope] = {
@@ -191,7 +191,7 @@ object ExtractModuleBody {
     // Execute the expression blocks now that the scopes are prepared
     val bindings = bindingBlocks map {
       case (boundValue, exprBlock) => (boundValue -> exprBlock())
-    } : List[(BoundValue, et.Expression)]
+    } : List[(StorageLocation, et.Expression)]
 
     // Find the expressions in our body 
     val bodyExprs = bodyData.map(extractExpression) : List[et.Expression]
@@ -228,7 +228,12 @@ object ExtractModuleBody {
           et.Literal(ast.UnspecificValue))
 
       case (et.VarRef(SchemePrimitives.Set), sst.ScopedSymbol(scope, variableName) :: value :: Nil) =>
-        et.MutateVar(getVar(scope)(variableName), extractExpression(value))
+        getVar(scope)(variableName) match {
+          case storageLoc : StorageLocation =>
+            et.MutateVar(storageLoc, extractExpression(value))
+          case _ =>
+            throw new BadSpecialFormException(s"Attempted set! non-variable ${variableName}") 
+        }
 
       case (et.VarRef(SchemePrimitives.Lambda), (restArgDatum : sst.ScopedSymbol) :: definition) =>
         createLambda(List(), Some(restArgDatum), definition)
