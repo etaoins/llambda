@@ -1,0 +1,180 @@
+[
+    {
+        "name": "boxedValue",
+        "abstract": true,
+        "inherits": null,
+        "fields": [
+            {
+                "name": "typeId",
+                "llvmType": "i16",
+                "signed": false
+            },
+            {
+                "name": "gcState",
+                "llvmType": "i16",
+                "signed": false
+            }
+        ]
+    },
+    {
+        "name": "unspecific",
+        "typeId": 0,
+        "inherits": "boxedValue",
+        "fields": []
+    },
+    {
+        "name": "pair",
+        "typeId": 1,
+        "inherits": "boxedValue",
+        "fields": [
+            {
+                "name": "car",
+                "llvmType": "%boxedValue*"
+            },
+            {
+                "name": "cdr",
+                "llvmType": "%boxedValue*"
+            }
+        ]
+    },
+    {
+        "name": "emptyList",
+        "typeId": 2,
+        "inherits": "boxedValue",
+        "fields": []
+    },
+    {
+        "name": "stringLike",
+        "abstract": true,
+        "inherits": "boxedValue",
+        "fields": [
+            {
+                "name": "byteLength",
+                "llvmType": "i32",
+                "signed": false
+            },
+            {
+                "name": "utf8Data",
+                "llvmType": "i8*"
+            }
+        ]
+    },
+    {
+        "name": "string",
+        "typeId": 3,
+        "inherits": "stringLike",
+        "fields": []
+    },
+    {
+        "name": "symbol",
+        "typeId": 4,
+        "inherits": "stringLike",
+        "fields": []
+    },
+    {
+        "name": "boolean",
+        "typeId": 5,
+        "inherits": "boxedValue",
+        "fields": [
+            {
+                "name": "value",
+                "complexType": "bool"
+            }
+        ]
+    },
+    {
+        "name": "exactInteger",
+        "typeId": 6,
+        "inherits": "boxedValue",
+        "fields": [
+            {
+                "name": "value",
+                "llvmType": "i64",
+                "signed": true
+            }
+        ]
+    },
+    {
+        "name": "inexactRational",
+        "typeId": 7,
+        "inherits": "boxedValue",
+        "fields": [
+            {
+                "name": "value",
+                "llvmType": "double"
+            }
+        ]
+    },
+    {
+        "name": "character",
+        "typeId": 8,
+        "inherits": "boxedValue",
+        "fields": [
+            {
+                "name": "codePoint",
+                "llvmType": "i32",
+                "signed": false
+            }
+        ]
+    },
+    {
+        "name": "byteVector",
+        "typeId": 9,
+        "inherits": "boxedValue",
+        "fields": [
+            {
+                "name": "length",
+                "llvmType": "i32",
+                "signed": false
+            },
+            {
+                "name": "data",
+                "llvmType": "i8*"
+            }
+        ]
+    },
+    {
+        "name": "procedure",
+        "typeId": 10,
+        "inherits": "boxedValue",
+        "fields": [
+            {
+                "name": "closure",
+                "llvmType": "%closure*"
+            },
+            {
+                "name": "entryPoint",
+                "complexType": "entryPoint"
+            }
+        ]
+    },
+    {
+        "name": "vectorLike",
+        "abstract": true,
+        "typeId": "&32768",
+        "inherits": "boxedValue",
+        "fields": [
+            {
+                "name": "length",
+                "llvmType": "i32",
+                "signed": false
+            },
+            {
+                "name": "elements",
+                "llvmType": "%boxedValue**"
+            }
+        ]
+    },
+    {
+        "name": "vector",
+        "typeId": 32768,
+        "inherits": "vectorLike",
+        "fields": []
+    },
+    {
+        "name": "closure",
+        "typeId": 32769,
+        "inherits": "vectorLike",
+        "fields": []
+    }
+]
