@@ -223,7 +223,7 @@ class OtherInstrsSuite extends FunSuite {
       assert(resultVar === None)
     }
     
-    assert(block.toIr === "\tcall void @withArgs(i8 1 nocapture, i1* %local)")
+    assert(block.toIr === "\tcall void @withArgs(i8 1, i1* %local)")
   }
   
   test("call with attrs") {
@@ -278,7 +278,7 @@ class OtherInstrsSuite extends FunSuite {
       assert(resultVar.isDefined)
     }
 
-    assert(block.toIr === "\t%ret1 = tail call coldcc zeroext i8 @uberCall(float 2.0 noalias nocapture, double* %local) noreturn nounwind")
+    assert(block.toIr === "\t%ret1 = tail call coldcc zeroext i8 @uberCall(float 2.0, double* %local) noreturn nounwind")
   }
 }
 

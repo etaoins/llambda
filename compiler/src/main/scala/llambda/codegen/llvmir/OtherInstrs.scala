@@ -69,13 +69,13 @@ private[llvmir] trait OtherInstrs extends IrBuilder {
       throw new InternalCompilerErrorException("Passed argument count didn't match callable argument count")
     }
 
-    // Combine the passed arguments with their attributes from their callable
+    // Make sure the argument types match the ones expected by the callable
     val argIr = (arguments zip (callable.arguments)) map { case (arg, argDecl) =>
       if (arg.irType != argDecl.irType) {
         throw new InternalCompilerErrorException(s"Argument passed with ${arg.irType}, callable as ${argDecl.irType}")
       }
 
-      (arg.toIrWithType :: argDecl.attributes.map(_.toIr).toList.sorted).mkString(" ")
+      arg.toIrWithType
     } mkString(", ")
 
     // Only noreturn, nounwind, readnone, and readonly are allowed here
