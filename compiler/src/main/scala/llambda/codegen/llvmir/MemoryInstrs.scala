@@ -3,8 +3,8 @@ package llambda.codegen.llvmir
 import llambda.InternalCompilerErrorException
 
 private[llvmir] trait MemoryInstrs extends IrBuilder {
-  protected def alloca(irType : IrType, numElements : Integer = 1, alignment : Integer = 0)(implicit nameSource : LocalNameSource) : LocalVariable = {
-    val resultVar = allocateLocalVar(PointerType(irType))
+  protected def alloca(resultName : String)(irType : IrType, numElements : Integer = 1, alignment : Integer = 0)(implicit nameSource : LocalNameSource) : LocalVariable = {
+    val resultVar = allocateLocalVar(PointerType(irType), resultName)
 
     val baseAlloc = s"${resultVar.toIr} = alloca ${irType.toIr}"
 
@@ -39,9 +39,9 @@ private[llvmir] trait MemoryInstrs extends IrBuilder {
       throw new InternalCompilerErrorException("Attempted memory access from a non-pointer")
   }
 
-  protected def load(from : IrValue, alignment : Integer = 0, volatile : Boolean = false)(implicit nameSource : LocalNameSource) : LocalVariable = {
+  protected def load(resultName : String)(from : IrValue, alignment : Integer = 0, volatile : Boolean = false)(implicit nameSource : LocalNameSource) : LocalVariable = {
     val resultType = pointeeTypeForAccess(from.irType)
-    val resultVar = allocateLocalVar(resultType)
+    val resultVar = allocateLocalVar(resultType, resultName)
 
     val volatileIr = if (volatile) {
       " volatile"
@@ -86,8 +86,8 @@ private[llvmir] trait MemoryInstrs extends IrBuilder {
     instructions += s"store${volatileIr} ${value.toIrWithType}, ${to.toIrWithType}${alignIr}"
   }
 
-  protected def getelementptr(resultType : FirstClassType, basePointer : IrValue, indices : Seq[Integer], inbounds : Boolean = false)(implicit nameSource : LocalNameSource) : LocalVariable = {
-    val resultVar = allocateLocalVar(resultType)
+  protected def getelementptr(resultName : String)(resultType : FirstClassType, basePointer : IrValue, indices : Seq[Integer], inbounds : Boolean = false)(implicit nameSource : LocalNameSource) : LocalVariable = {
+    val resultVar = allocateLocalVar(resultType, resultName)
 
     basePointer.irType match {
       case PointerType(_) =>

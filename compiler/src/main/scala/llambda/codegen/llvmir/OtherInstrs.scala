@@ -5,7 +5,7 @@ import llambda.InternalCompilerErrorException
 private[llvmir] trait OtherInstrs extends IrBuilder {
   protected case class PhiSource(value : IrValue, label : IrLabel)
 
-  protected def phi(sources : PhiSource*)(implicit nameSource : LocalNameSource) : LocalVariable = {
+  protected def phi(resultName : String)(sources : PhiSource*)(implicit nameSource : LocalNameSource) : LocalVariable = {
     if (sources.isEmpty) {
       throw new InternalCompilerErrorException("Attempted phi with no sources")
     }
@@ -18,7 +18,7 @@ private[llvmir] trait OtherInstrs extends IrBuilder {
       newType
     }
 
-    val resultVar = allocateLocalVar(resultType)
+    val resultVar = allocateLocalVar(resultType, resultName)
 
     val sourceIr = (sources map { source =>
       s"[ ${source.value.toIr}, ${source.label.toIr} ]"
@@ -29,17 +29,17 @@ private[llvmir] trait OtherInstrs extends IrBuilder {
     resultVar
   }
 
-  protected def callDecl(decl : IrFunctionDeclLike, arguments : Seq[IrValue], tailCall : Boolean = false)(implicit nameSource : LocalNameSource) : Option[LocalVariable] = {
-    call(decl, decl.irValue, arguments, tailCall)
+  protected def callDecl(resultName : Option[String])(decl : IrFunctionDeclLike, arguments : Seq[IrValue], tailCall : Boolean = false)(implicit nameSource : LocalNameSource) : Option[LocalVariable] = {
+    call(resultName)(decl, decl.irValue, arguments, tailCall)
   }
 
-  protected def call(callable : IrCallableLike, functionPtr : IrValue, arguments : Seq[IrValue], tailCall : Boolean = false)(implicit nameSource : LocalNameSource) : Option[LocalVariable] = {
-    // We only return a result for non-void result types
+  protected def call(resultName : Option[String])(callable : IrCallableLike, functionPtr : IrValue, arguments : Seq[IrValue], tailCall : Boolean = false)(implicit nameSource : LocalNameSource) : Option[LocalVariable] = {
+    // We only return a result for non-void result types if they specify a result name
     val resultVarOpt = callable.result.irType match {
       case VoidType =>
         None
       case otherType : FirstClassType =>
-        Some(allocateLocalVar(otherType))
+        resultName.map(allocateLocalVar(otherType, _))
     }
 
     // If we're non-void we return a value

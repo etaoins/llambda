@@ -6,8 +6,8 @@ private[llvmir] abstract class IrBuilder {
   // This contains our instructions as they're built
   private[llvmir] val instructions = new ListBuffer[String]
 
-  private[llvmir] def allocateLocalVar(irType : FirstClassType)(implicit nameSource : LocalNameSource) : LocalVariable = {
-    LocalVariable(nameSource.allocate(""), irType)
+  private[llvmir] def allocateLocalVar(irType : FirstClassType, name : String)(implicit nameSource : LocalNameSource) : LocalVariable = {
+    LocalVariable(nameSource.allocate(name), irType)
   }
 }
 

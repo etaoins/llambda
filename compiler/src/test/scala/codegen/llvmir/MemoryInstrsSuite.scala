@@ -9,45 +9,47 @@ class MemoryInstrsSuite extends FunSuite {
   test("trivial alloca") {
     implicit val nameSource = new LocalNameSource
     val block = new IrBlock {
-      val resultVar = alloca(IntegerType(32))
+      val resultVar = alloca("trivial")(IntegerType(32))
 
       assert(resultVar.irType === PointerType(IntegerType(32)))
     }
 
-    assert(block.toIr === "\t%1 = alloca i32")
+    assert(block.toIr === "\t%trivial1 = alloca i32")
   }
   
   test("alloca with number of elements") {
     implicit val nameSource = new LocalNameSource
     val block = new IrBlock {
-      val resultVar = alloca(IntegerType(32), numElements=4)
+      val resultVar = alloca("numel")(IntegerType(32), numElements=4)
 
       assert(resultVar.irType === PointerType(IntegerType(32)))
     }
 
-    assert(block.toIr === "\t%1 = alloca i32, i32 4")
+    assert(block.toIr === "\t%numel1 = alloca i32, i32 4")
   }
   
   test("alloca with alignment") {
     implicit val nameSource = new LocalNameSource
     val block = new IrBlock {
-      val resultVar = alloca(IntegerType(32), alignment=1024)
+      val resultVar = alloca("align")(IntegerType(32), alignment=1024)
 
       assert(resultVar.irType === PointerType(IntegerType(32)))
     }
 
-    assert(block.toIr === "\t%1 = alloca i32, align 1024")
+    assert(block.toIr === "\t%align1 = alloca i32, align 1024")
   }
   
   test("alloca with number of elements, alignment") {
     implicit val nameSource = new LocalNameSource
     val block = new IrBlock {
-      val resultVar = alloca(IntegerType(32), numElements=4, alignment=1024)
+      val resultVar = alloca("numelalign")(
+        IntegerType(32), numElements=4, alignment=1024
+      )
 
       assert(resultVar.irType === PointerType(IntegerType(32)))
     }
 
-    assert(block.toIr === "\t%1 = alloca i32, i32 4, align 1024")
+    assert(block.toIr === "\t%numelalign1 = alloca i32, i32 4, align 1024")
   }
 
   test("trivial load") {
@@ -55,11 +57,11 @@ class MemoryInstrsSuite extends FunSuite {
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(8)))
     
     val block = new IrBlock {
-      val resultVar = load(fakePointer)
+      val resultVar = load("trivial")(fakePointer)
       assert(resultVar.irType === IntegerType(8))
     }
 
-    assert(block.toIr === "\t%1 = load i8* %fake")
+    assert(block.toIr === "\t%trivial1 = load i8* %fake")
   }
   
   test("load from non-pointer") {
@@ -68,7 +70,7 @@ class MemoryInstrsSuite extends FunSuite {
     
     val block = new IrBlock {
       intercept[InternalCompilerErrorException] {
-        load(fakePointer)
+        load("error")(fakePointer)
       }
     }
   }
@@ -79,7 +81,7 @@ class MemoryInstrsSuite extends FunSuite {
     
     val block = new IrBlock {
       intercept[InternalCompilerErrorException] {
-        load(fakePointer)
+        load("error")(fakePointer)
       }
     }
   }
@@ -89,14 +91,14 @@ class MemoryInstrsSuite extends FunSuite {
     val fakePointer = LocalVariable("fake", PointerType(SingleType))
     
     val block = new IrBlock {
-      val resultVar = load(
+      val resultVar = load("vol")(
         from=fakePointer,
         volatile=true)
 
       assert(resultVar.irType === SingleType)
     }
 
-    assert(block.toIr === "\t%1 = load volatile float* %fake")
+    assert(block.toIr === "\t%vol1 = load volatile float* %fake")
   }
   
   test("aligned load") {
@@ -104,14 +106,14 @@ class MemoryInstrsSuite extends FunSuite {
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(32)))
     
     val block = new IrBlock {
-      val resultVar = load(
+      val resultVar = load("align")(
         from=fakePointer,
         alignment=1024)
 
       assert(resultVar.irType === IntegerType(32))
     }
 
-    assert(block.toIr === "\t%1 = load i32* %fake, align 1024")
+    assert(block.toIr === "\t%align1 = load i32* %fake, align 1024")
   }
   
   test("aligned volatile load") {
@@ -119,7 +121,7 @@ class MemoryInstrsSuite extends FunSuite {
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(32)))
     
     val block = new IrBlock {
-      val resultVar = load(
+      val resultVar = load("alignvol")(
         from=fakePointer,
         volatile=true,
         alignment=1024)
@@ -127,7 +129,7 @@ class MemoryInstrsSuite extends FunSuite {
       assert(resultVar.irType === IntegerType(32))
     }
 
-    assert(block.toIr === "\t%1 = load volatile i32* %fake, align 1024")
+    assert(block.toIr === "\t%alignvol1 = load volatile i32* %fake, align 1024")
   }
   
   test("trivial store") {
@@ -195,7 +197,7 @@ class MemoryInstrsSuite extends FunSuite {
     val fakePointer = LocalVariable("fake", PointerType(UserDefinedType("opaqueType")))
 
     val block = new IrBlock {
-      val resultVar = getelementptr(
+      val resultVar = getelementptr("zeroindex")(
         resultType=IntegerType(8),
         basePointer=fakePointer,
         indices=List()
@@ -204,7 +206,7 @@ class MemoryInstrsSuite extends FunSuite {
       assert(resultVar.irType === IntegerType(8))
     }
 
-    assert(block.toIr === "\t%1 = getelementptr %opaqueType* %fake") 
+    assert(block.toIr === "\t%zeroindex1 = getelementptr %opaqueType* %fake") 
   }
   
   test("getelementptr from non-pointer") {
@@ -213,7 +215,7 @@ class MemoryInstrsSuite extends FunSuite {
 
     val block = new IrBlock {
       intercept[InternalCompilerErrorException] {
-        val resultVar = getelementptr(
+        val resultVar = getelementptr("error")(
           resultType=IntegerType(8),
           basePointer=fakeNonPointer,
           indices=List()
@@ -227,7 +229,7 @@ class MemoryInstrsSuite extends FunSuite {
     val fakePointer = LocalVariable("fake", PointerType(UserDefinedType("opaqueType")))
 
     val block = new IrBlock {
-      val resultVar = getelementptr(
+      val resultVar = getelementptr("oneindex")(
         resultType=IntegerType(16),
         basePointer=fakePointer,
         indices=List(42)
@@ -236,7 +238,7 @@ class MemoryInstrsSuite extends FunSuite {
       assert(resultVar.irType === IntegerType(16))
     }
 
-    assert(block.toIr === "\t%1 = getelementptr %opaqueType* %fake, i32 42") 
+    assert(block.toIr === "\t%oneindex1 = getelementptr %opaqueType* %fake, i32 42") 
   }
   
   test("inbounds getelementptr") {
@@ -244,7 +246,7 @@ class MemoryInstrsSuite extends FunSuite {
     val fakePointer = LocalVariable("fake", PointerType(UserDefinedType("opaqueType")))
 
     val block = new IrBlock {
-      val resultVar = getelementptr(
+      val resultVar = getelementptr("inbounds")(
         resultType=IntegerType(32),
         basePointer=fakePointer,
         indices=List(23),
@@ -254,7 +256,7 @@ class MemoryInstrsSuite extends FunSuite {
       assert(resultVar.irType === IntegerType(32))
     }
 
-    assert(block.toIr === "\t%1 = getelementptr inbounds %opaqueType* %fake, i32 23") 
+    assert(block.toIr === "\t%inbounds1 = getelementptr inbounds %opaqueType* %fake, i32 23") 
   }
   
   test("2 index getelementptr") {
@@ -262,7 +264,7 @@ class MemoryInstrsSuite extends FunSuite {
     val fakePointer = LocalVariable("fake", PointerType(UserDefinedType("opaqueType")))
 
     val block = new IrBlock {
-      val resultVar = getelementptr(
+      val resultVar = getelementptr("twoindex")(
         resultType=IntegerType(64),
         basePointer=fakePointer,
         indices=List(42, 23)
@@ -271,6 +273,6 @@ class MemoryInstrsSuite extends FunSuite {
       assert(resultVar.irType === IntegerType(64))
     }
 
-    assert(block.toIr === "\t%1 = getelementptr %opaqueType* %fake, i32 42, i32 23") 
+    assert(block.toIr === "\t%twoindex1 = getelementptr %opaqueType* %fake, i32 42, i32 23") 
   }
 }

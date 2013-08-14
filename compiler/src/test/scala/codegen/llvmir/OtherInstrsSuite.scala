@@ -8,7 +8,7 @@ class OtherInstrsSuite extends FunSuite {
     implicit val nameSource = new LocalNameSource
     intercept[InternalCompilerErrorException] {
       new IrBlock {
-        phi()
+        phi("error")()
       }
     }
   }
@@ -17,7 +17,7 @@ class OtherInstrsSuite extends FunSuite {
     implicit val nameSource = new LocalNameSource
     intercept[InternalCompilerErrorException] {
       new IrBlock {
-        phi(
+        phi("error")(
           PhiSource(IntegerConstant(IntegerType(1), 0), IrLabel("one")),
           PhiSource(SingleConstant(2.0f), IrLabel("two"))
         )
@@ -28,28 +28,28 @@ class OtherInstrsSuite extends FunSuite {
   test("single source phi") {
     implicit val nameSource = new LocalNameSource
     val block = new IrBlock {
-      val resultVar = phi(
+      val resultVar = phi("singlesource")(
         PhiSource(IntegerConstant(IntegerType(1), 0), IrLabel("one"))
       )
 
-      assert(resultVar === LocalVariable("1", IntegerType(1)))
+      assert(resultVar === LocalVariable("singlesource1", IntegerType(1)))
     }
 
-    assert(block.toIr === "\t%1 = phi i1 [ 0, %one ]")
+    assert(block.toIr === "\t%singlesource1 = phi i1 [ 0, %one ]")
   }
 
   test("two source phi") {
     implicit val nameSource = new LocalNameSource
     val block = new IrBlock {
-      val resultVar = phi(
+      val resultVar = phi("twosource")(
         PhiSource(DoubleConstant(1.0), IrLabel("plusone")),
         PhiSource(DoubleConstant(-2.0), IrLabel("minustwo"))
       )
 
-      assert(resultVar === LocalVariable("1", DoubleType))
+      assert(resultVar === LocalVariable("twosource1", DoubleType))
     }
 
-    assert(block.toIr === "\t%1 = phi double [ 1.0, %plusone ], [ -2.0, %minustwo ]")
+    assert(block.toIr === "\t%twosource1 = phi double [ 1.0, %plusone ], [ -2.0, %minustwo ]")
   }
   
   test("trivial call") {
@@ -62,7 +62,7 @@ class OtherInstrsSuite extends FunSuite {
       arguments=declArgs)
 
     val block = new IrBlock {
-      val resultVar = callDecl(
+      val resultVar = callDecl(None)(
         decl=decl,
         arguments=List()
       )
@@ -83,7 +83,7 @@ class OtherInstrsSuite extends FunSuite {
       arguments=declArgs)
 
     val block = new IrBlock {
-      val resultVar = callDecl(
+      val resultVar = callDecl(Some("ret"))(
         decl=decl,
         arguments=List()
       )
@@ -91,7 +91,28 @@ class OtherInstrsSuite extends FunSuite {
       assert(resultVar.isDefined)
     }
 
-    assert(block.toIr === "\t%1 = call zeroext i8 @returnSomething()")
+    assert(block.toIr === "\t%ret1 = call zeroext i8 @returnSomething()")
+  }
+  
+  test("call discarding value") {
+    implicit val nameSource = new LocalNameSource
+    val declResult = IrFunction.Result(IntegerType(8), Set(IrFunction.ZeroExt))
+    val declArgs = List()
+    val decl = IrFunctionDecl(
+      result=declResult,
+      name="returnSomething",
+      arguments=declArgs)
+
+    val block = new IrBlock {
+      val resultVar = callDecl(None)(
+        decl=decl,
+        arguments=List()
+      )
+
+      assert(resultVar === None)
+    }
+
+    assert(block.toIr === "\tcall zeroext i8 @returnSomething()")
   }
   
   test("fastcc call") {
@@ -105,7 +126,7 @@ class OtherInstrsSuite extends FunSuite {
       callingConv=CallingConv.FastCC)
 
     val block = new IrBlock {
-      val resultVar = callDecl(
+      val resultVar = callDecl(None)(
         decl=decl,
         arguments=List()
       )
@@ -126,7 +147,7 @@ class OtherInstrsSuite extends FunSuite {
       arguments=declArgs)
 
     val block = new IrBlock {
-      val resultVar = callDecl(
+      val resultVar = callDecl(None)(
         decl=decl,
         arguments=List(),
         tailCall=true
@@ -149,7 +170,7 @@ class OtherInstrsSuite extends FunSuite {
     
     val block = new IrBlock {
       intercept[InternalCompilerErrorException] {
-        callDecl(decl=decl, arguments=List())
+        callDecl(None)(decl=decl, arguments=List())
       }
     }
   }
@@ -167,9 +188,10 @@ class OtherInstrsSuite extends FunSuite {
       val mismatchedValue = IntegerConstant(IntegerType(16), 5)
 
       intercept[InternalCompilerErrorException] {
-        callDecl(
+        callDecl(None)(
           decl=decl,
-          arguments=List(mismatchedValue))
+          arguments=List(mismatchedValue)
+        )
       }
     }
   }
@@ -190,7 +212,7 @@ class OtherInstrsSuite extends FunSuite {
     val block = new IrBlock {
       val mismatchedValue = IntegerConstant(IntegerType(16), 5)
 
-      val resultVar = callDecl(
+      val resultVar = callDecl(None)(
         decl=decl,
         arguments=List(
           IntegerConstant(IntegerType(8), 1),
@@ -217,7 +239,7 @@ class OtherInstrsSuite extends FunSuite {
     )
 
     val block = new IrBlock {
-      val resultVar = callDecl(
+      val resultVar = callDecl(None)(
         decl=decl,
         arguments=List()
       )
@@ -244,7 +266,7 @@ class OtherInstrsSuite extends FunSuite {
     )
     
     val block = new IrBlock {
-      val resultVar = callDecl(
+      val resultVar = callDecl(Some("ret"))(
         decl=decl,
         arguments=List(
           SingleConstant(2.0f),
@@ -256,7 +278,7 @@ class OtherInstrsSuite extends FunSuite {
       assert(resultVar.isDefined)
     }
 
-    assert(block.toIr === "\t%1 = tail call coldcc zeroext i8 @uberCall(float 2.0 noalias nocapture, double* %local) noreturn nounwind")
+    assert(block.toIr === "\t%ret1 = tail call coldcc zeroext i8 @uberCall(float 2.0 noalias nocapture, double* %local) noreturn nounwind")
   }
 }
 
