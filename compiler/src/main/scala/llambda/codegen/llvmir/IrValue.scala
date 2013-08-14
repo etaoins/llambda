@@ -104,5 +104,5 @@ case class StringConstant(str : String) extends ArrayLikeConstant {
       f"\\$unprintable%02X"
   }).mkString
 
-  def toIr = "\"" + innerString + "\"" 
+  def toIr = "c\"" + innerString + "\"" 
 }

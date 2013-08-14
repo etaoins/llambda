@@ -69,21 +69,21 @@ class IrValueSuite extends FunSuite {
     val testConstant = StringConstant("Hello, world!")
 
     assert(testConstant.irType === ArrayType(14, IntegerType(8)))
-    assert(testConstant.toIr === "\"Hello, world!\\00\"")
+    assert(testConstant.toIr === "c\"Hello, world!\\00\"")
   }
   
   test("ASCII string with quote") {
     val testConstant = StringConstant("Hello\"world")
-    assert(testConstant.toIr === "\"Hello\\\"world\\00\"")
+    assert(testConstant.toIr === "c\"Hello\\\"world\\00\"")
   }
   
   test("ASCII string with newline") {
     val testConstant = StringConstant("Hello\nworld")
-    assert(testConstant.toIr === "\"Hello\\0Aworld\\00\"")
+    assert(testConstant.toIr === "c\"Hello\\0Aworld\\00\"")
   }
   
   test("UTF-8 string") {
     val testConstant = StringConstant("๛")
-    assert(testConstant.toIr === "\"\\E0\\B9\\9B\\00\"")
+    assert(testConstant.toIr === "c\"\\E0\\B9\\9B\\00\"")
   }
 }

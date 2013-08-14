@@ -58,7 +58,7 @@ class IrGlobalVariableDefSuite extends FunSuite {
     )
 
     assert(globalVarDef.variable.irType === PointerType(ArrayType(7, IntegerType(8))))
-    assert(globalVarDef.toIr === "@twelveString = hidden [7 x i8] \"twelve\\00\"")
+    assert(globalVarDef.toIr === "@twelveString = hidden [7 x i8] c\"twelve\\00\"")
   }
   
   test("christmas tree def") {
