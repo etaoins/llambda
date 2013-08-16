@@ -11,7 +11,6 @@ class BoxedTypeField(object):
         self.complex_type = field_json.get('complexType', None)
         self.signed       = field_json.get('signed', None)
 
-        # This is used for error messages
         self.qualified_name = type_name + "." + self.name
 
         # Integers must specify their signedness

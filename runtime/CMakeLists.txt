@@ -3,7 +3,11 @@
 cmake_minimum_required (VERSION 2.8)
 
 project (lliby)
-add_library(lliby core/fatal.cpp)
+add_library(lliby
+	binding/BoxedValue.cpp
+	binding/ProcedureValue.cpp
+	core/fatal.cpp
+	)
 
 # Create compile_commands.json. Clang tools like this
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
@@ -20,3 +24,9 @@ set(CMAKE_CXX_FLAGS "-Werror -Wall")
 ADD_DEFINITIONS(
 	-std=c++11 
 	)
+
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+	# Mac OS X's libstdc++ is too old for C++11 support
+	# Explicitly use libc++
+	ADD_DEFINITIONS(-stdlib=libc++)
+endif()
