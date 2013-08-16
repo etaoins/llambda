@@ -7,7 +7,10 @@ add_library(lliby
 	binding/BoxedValue.cpp
 	binding/ProcedureValue.cpp
 	core/fatal.cpp
+	stdlib/generated/predicates.cpp
 	)
+
+include_directories(${lliby_SOURCE_DIR})
 
 # Create compile_commands.json. Clang tools like this
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
