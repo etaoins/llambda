@@ -135,6 +135,28 @@ class IrFunctionSuite extends FunSuite {
       "}")
   }
 
+  test("function returning arg def") {
+    val result = Result(IntegerType(32), Set())
+    
+    val namedArguments = List("testArg" -> Argument(IntegerType(32)))
+   
+    val function = new IrFunctionDef(
+      result=result,
+      name="retArg",
+      namedArguments=namedArguments) {
+
+      addBlock("entry")(new IrBlock {
+        ret(argumentValues("testArg"))
+      })
+    }
+
+    assert(function.toIr ===
+      "define i32 @retArg(i32 %testArg) {\n" +
+      "entry1:\n" +
+      "\tret i32 %testArg\n" +
+      "}")
+  }
+
   test("hello world def") {
     val helloWorldDef = IrGlobalVariableDef(
       name="helloWorldString",
@@ -174,7 +196,7 @@ class IrFunctionSuite extends FunSuite {
     }
 
     assert(function.toIr === 
-      """|define i32 @main(i32, i8**) {
+      """|define i32 @main(i32 %argc, i8** %argv) {
          |entry1:
          |	%helloPtr1 = getelementptr [14 x i8]* @helloWorldString, i32 0, i32 0
          |	call i32 @puts(i8* %helloPtr1) nounwind

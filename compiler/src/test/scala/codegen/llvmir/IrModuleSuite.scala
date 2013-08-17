@@ -51,7 +51,7 @@ class IrModuleSuite extends FunSuite {
     assert(module.toIr ===
       "@helloWorldString = unnamed_addr constant [14 x i8] c\"Hello, world!\\00\"\n" + 
       "declare i32 @puts(i8* nocapture) nounwind\n" +
-      "define i32 @main(i32, i8**) {\n" +
+      "define i32 @main(i32 %argc, i8** %argv) {\n" +
       "entry1:\n" +
       "\t%helloPtr1 = getelementptr [14 x i8]* @helloWorldString, i32 0, i32 0\n" +
       "\tcall i32 @puts(i8* %helloPtr1) nounwind\n" +

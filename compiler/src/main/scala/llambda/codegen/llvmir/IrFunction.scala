@@ -52,15 +52,15 @@ sealed abstract trait IrFunctionDeclLike extends Irable with IrCallableLike {
   val unnamedAddr : Boolean
   val gc : Option[String]
 
-  protected def irDecl : String = {
-    val argList = arguments.map(_.toIr).mkString(", ")
+  protected def irArgList : String
 
+  protected def irDecl : String = {
     val declParts = List(linkage, visibility, callingConv).flatMap(_.toOptIr) ++
                     (unnamedAddr match {
                       case true => List("unnamed_addr")
                       case false => Nil
                     }) ++
-                    List(s"${result.toIr} @${name}(${argList})") ++
+                    List(s"${result.toIr} @${name}(${irArgList})") ++
                     attributes.map(_.toIr).toList.sorted ++
                     gc.map("gc \"" + _ + "\"").toList
 
@@ -83,6 +83,8 @@ case class IrFunctionDecl(
   unnamedAddr : Boolean = false,
   gc : Option[String] = None
 ) extends IrFunctionDeclLike {
+  protected def irArgList : String = arguments.map(_.toIr).mkString(", ")
+
   def toIr = "declare " + irDecl
 }
 
@@ -104,7 +106,10 @@ abstract class IrFunctionDef(
   val arguments = namedArguments.map(_._2)
 
   private val blocks = new collection.mutable.ListBuffer[(String, IrBlock)]
-  protected val argumentValues = namedArguments
+
+  protected val argumentValues = (namedArguments map { case (argName, argument) =>
+    (argName -> LocalVariable(argName, argument.irType))
+  }).toMap
 
   final def declareBlock(baseName : String) : IrLabel = {
     IrLabel(nameSource.allocate(baseName))
@@ -118,6 +123,12 @@ abstract class IrFunctionDef(
     val label = declareBlock(baseName)
     defineBlock(label)(block)
     label
+  }
+  
+  protected def irArgList : String = {
+    namedArguments map { case(argName, argument) =>
+      argument.toIr + " %" + argName
+    } mkString(", ")
   }
 
   final def toIr : String = {
