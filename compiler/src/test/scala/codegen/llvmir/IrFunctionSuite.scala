@@ -114,5 +114,72 @@ class IrFunctionSuite extends FunSuite {
         linkage=Linkage.ExternallyAvailable
       ).toIr === "declare externally_available protected coldcc unnamed_addr zeroext i32 @superfunc(i8* noalias nocapture, [40 x i32] zeroext) cold nounwind readnone readonly gc \"shadow\"")
   }
+
+  test("empty function def") {
+    val result = IrFunction.Result(VoidType, Set())
+   
+    val function = new IrFunctionDef(
+      result=result,
+      name="donothing",
+      namedArguments=Nil) {
+
+      addBlock("entry")(new IrBlock {
+        retVoid()
+      })
+    }
+
+    assert(function.toIr ===
+      "define void @donothing() {\n" +
+      "entry1:\n" +
+      "\tret void\n" +
+      "}")
+  }
+
+  test("hello world def") {
+    val helloWorldDef = IrGlobalVariableDef(
+      name="helloWorldString",
+      initializer=StringConstant("Hello, world!"),
+      constant=true,
+      unnamedAddr=true)
+    
+    val putsDecl = {
+      IrFunctionDecl(
+        result=IrFunction.Result(IntegerType(32), Set()),
+        arguments=List(IrFunction.Argument(PointerType(IntegerType(8)), Set(NoCapture))),
+        name="puts",
+        attributes=Set(IrFunction.NoUnwind))
+    }
+
+    val result = IrFunction.Result(IntegerType(32), Set())
+    
+    val namedArguments = List(
+      "argc" -> IrFunction.Argument(IntegerType(32)),
+      "argv" -> IrFunction.Argument(PointerType(PointerType(IntegerType(8)))))
+
+    val function = new IrFunctionDef(
+      result=result,
+      namedArguments=namedArguments,
+      name="main") {
+      
+      addBlock("entry")(new IrBlock {
+        val helloPointer = getelementptr("helloPtr")(
+          resultType=PointerType(IntegerType(8)),
+          basePointer=helloWorldDef.variable,
+          indices=List(0, 0)
+        )
+          
+        callDecl(None)(putsDecl, helloPointer :: Nil)
+        ret(IntegerConstant(IntegerType(32), 0))
+      })
+    }
+
+    assert(function.toIr === 
+      """|define i32 @main(i32, i8**) {
+         |entry1:
+         |	%helloPtr1 = getelementptr [14 x i8]* @helloWorldString, i32 0, i32 0
+         |	call i32 @puts(i8* %helloPtr1) nounwind
+         |	ret i32 0
+         |}""".stripMargin)
+  }
 }
 

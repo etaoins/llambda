@@ -41,13 +41,13 @@ object IrFunction {
     def toIr = "nocapture"
   }
 
-  case class Result(irType : ReturnableType, attributes : Set[ParameterAttribute]) {
+  case class Result(irType : ReturnableType, attributes : Set[ParameterAttribute] = Set()) {
     def toIr : String = {
       (attributes.map(_.toIr).toList.sorted ++ (irType.toIr :: Nil)).mkString(" ")
     }
   }
 
-  case class Argument(irType : FirstClassType, attributes : Set[ParameterAttribute]) {
+  case class Argument(irType : FirstClassType, attributes : Set[ParameterAttribute] = Set()) {
     def toIr : String = {
       (irType.toIr :: attributes.map(_.toIr).toList.sorted).mkString(" ")
     }
@@ -109,4 +109,43 @@ case class IrFunctionDecl(
   gc : Option[String] = None
 ) extends IrFunctionDeclLike {
   def toIr = "declare " + irDecl
+}
+
+abstract class IrFunctionDef(
+  val result : IrFunction.Result,
+  val name : String,
+  val namedArguments : List[(String, IrFunction.Argument)],
+  val attributes : Set[IrFunction.FunctionAttribute] = Set(), 
+  val linkage : Linkage.Linkage = Linkage.Default,
+  val visibility : Visibility.Visibility = Visibility.Default,
+  val callingConv : CallingConv.CallingConv = CallingConv.Default,
+  val unnamedAddr : Boolean = false,
+  val gc : Option[String] = None
+) extends IrFunctionDeclLike {
+  // This generates names for the function body
+  protected implicit val nameSource = new LocalNameSource
+
+  // This is needed for IrCallableLike
+  val arguments = namedArguments.map(_._2)
+
+  private val blocks = new collection.mutable.ListBuffer[(String, IrBlock)]
+  protected val argumentValues = namedArguments
+
+  def addBlock(name : String)(block : IrBlock) : IrLabel = {
+    val blockName = nameSource.allocate(name)
+
+    blocks.append((blockName, block))
+
+    new IrLabel(blockName)
+  }
+
+  def toIr : String = {
+    val blocksIr = blocks.map { case (name, block) =>
+      s"${name}:\n" + block.toIr
+    } mkString("\n")
+
+    "define " + irDecl + " {\n" +
+    blocksIr + "\n" +
+    "}"
+  }
 }
