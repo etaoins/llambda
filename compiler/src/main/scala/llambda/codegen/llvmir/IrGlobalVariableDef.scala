@@ -1,6 +1,6 @@
 package llambda.codegen.llvmir
 
-private[llvmir] case class IrGlobalVariableDef(
+case class IrGlobalVariableDef(
     name : String,
     initializer : IrConstant,
     linkage : Linkage.Linkage = Linkage.Default,
