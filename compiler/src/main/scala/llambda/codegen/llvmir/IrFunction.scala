@@ -106,15 +106,21 @@ abstract class IrFunctionDef(
   private val blocks = new collection.mutable.ListBuffer[(String, IrBlock)]
   protected val argumentValues = namedArguments
 
-  def addBlock(name : String)(block : IrBlock) : IrLabel = {
-    val blockName = nameSource.allocate(name)
-
-    blocks.append((blockName, block))
-
-    new IrLabel(blockName)
+  final def declareBlock(name : String) : IrLabel = {
+    IrLabel(nameSource.allocate(name))
   }
 
-  def toIr : String = {
+  final def defineBlock(label : IrLabel)(block : IrBlock) {
+    blocks.append((label.name, block))
+  }
+
+  final def addBlock(name : String)(block : IrBlock) : IrLabel = {
+    val label = declareBlock(name)
+    defineBlock(label)(block)
+    label
+  }
+
+  final def toIr : String = {
     val blocksIr = blocks.map { case (name, block) =>
       s"${name}:\n" + block.toIr
     } mkString("\n")

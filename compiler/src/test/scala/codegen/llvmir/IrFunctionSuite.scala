@@ -181,5 +181,34 @@ class IrFunctionSuite extends FunSuite {
          |	ret i32 0
          |}""".stripMargin)
   }
+  
+  test("multi block function def") {
+    val result = IrFunction.Result(VoidType, Set())
+   
+    val function = new IrFunctionDef(
+      result=result,
+      name="donothing",
+      namedArguments=Nil) {
+
+      val continueLabel = declareBlock("continue")
+
+      addBlock("entry")(new IrBlock {
+        uncondBranch(continueLabel)
+      })
+
+      defineBlock(continueLabel)(new IrBlock {
+        retVoid()
+      })
+    }
+
+    assert(function.toIr ===
+      "define void @donothing() {\n" +
+      "entry1:\n" +
+      "\tbr label %continue1\n" +
+      "continue1:\n" +
+      "\tret void\n" +
+      "}")
+  }
+
 }
 
