@@ -1,45 +1,20 @@
 package llambda.codegen.llvmir
 
 object IrFunction {
-  sealed abstract class FunctionAttribute extends Irable
+  sealed abstract class FunctionAttribute(val toIr : String) extends Irable
 
-  case object Cold extends FunctionAttribute {
-    def toIr = "cold"
-  }
+  case object Cold extends FunctionAttribute("cold")
+  case object NoReturn extends FunctionAttribute("noreturn")
+  case object NoUnwind extends FunctionAttribute("nounwind")
+  case object ReadNone extends FunctionAttribute("readnone")
+  case object ReadOnly extends FunctionAttribute("readonly")
 
-  case object NoReturn extends FunctionAttribute {
-    def toIr = "noreturn"
-  }
-  
-  case object NoUnwind extends FunctionAttribute {
-    def toIr = "nounwind"
-  }
+  sealed abstract class ParameterAttribute(val toIr : String) extends Irable
 
-  case object ReadNone extends FunctionAttribute {
-    def toIr = "readnone"
-  }
-  
-  case object ReadOnly extends FunctionAttribute {
-    def toIr = "readonly"
-  }
-
-  sealed abstract class ParameterAttribute extends Irable
-
-  case object ZeroExt extends ParameterAttribute {
-    def toIr = "zeroext"
-  }
-  
-  case object SignExt extends ParameterAttribute {
-    def toIr = "signext"
-  }
-  
-  case object NoAlias extends ParameterAttribute {
-    def toIr = "noalias"
-  }
-  
-  case object NoCapture extends ParameterAttribute {
-    def toIr = "nocapture"
-  }
+  case object ZeroExt extends ParameterAttribute("zeroext")
+  case object SignExt extends ParameterAttribute("signext")
+  case object NoAlias extends ParameterAttribute("noalias")
+  case object NoCapture extends ParameterAttribute("nocapture")
 
   case class Result(irType : ReturnableType, attributes : Set[ParameterAttribute] = Set()) {
     def toIr : String = {

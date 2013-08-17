@@ -12,35 +12,21 @@ abstract trait Irable {
 }
 
 object Visibility {
-  sealed abstract class Visibility extends Irable
+  sealed abstract class Visibility(val toIr : String) extends Irable
 
-  case object Default extends Visibility {
-    def toIr = "default"
+  case object Hidden extends Visibility("hidden")
+  case object Protected extends Visibility("protected")
+  case object Default extends Visibility("default") {
     override def toOptIr = None
-  }
-
-  case object Hidden extends Visibility {
-    def toIr = "hidden"
-  }
-
-  case object Protected extends Visibility {
-    def toIr = "protected"
   }
 }
 
 object Linkage {
-  sealed abstract class Linkage extends Irable
+  sealed abstract class Linkage(val toIr : String) extends Irable
 
-  case object Private extends Linkage {
-    def toIr = "private"
-  }
-
-  case object ExternallyAvailable extends Linkage {
-    def toIr = "externally_available"
-  }
-
-  case object External extends Linkage {
-    def toIr = "external"
+  case object Private extends Linkage("private")
+  case object ExternallyAvailable extends Linkage("externally_available")
+  case object External extends Linkage("external") {
     override def toOptIr = None
   }
 
@@ -48,19 +34,12 @@ object Linkage {
 }
 
 object CallingConv {
-  sealed abstract class CallingConv extends Irable
+  sealed abstract class CallingConv(val toIr : String) extends Irable
 
-  case object CCC extends CallingConv {
-    def toIr = "ccc"
+  case object FastCC extends CallingConv("fastcc")
+  case object ColdCC extends CallingConv("coldcc")
+  case object CCC extends CallingConv("ccc") {
     override def toOptIr = None
-  }
-
-  case object FastCC extends CallingConv {
-    def toIr = "fastcc"
-  }
-
-  case object ColdCC extends CallingConv {
-    def toIr = "coldcc"
   }
 
   val Default = CCC
