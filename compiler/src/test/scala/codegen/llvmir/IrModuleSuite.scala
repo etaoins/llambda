@@ -25,12 +25,12 @@ class IrModuleSuite extends FunSuite {
       "argc" -> IrFunction.Argument(IntegerType(32)),
       "argv" -> IrFunction.Argument(PointerType(PointerType(IntegerType(8)))))
 
-    val mainFunction = new IrFunctionDef(
+    val mainFunction = new IrFunctionBuilder(
       result=result,
       namedArguments=namedArguments,
       name="main") {
       
-      addBlock("entry")(new IrBlock {
+      addBlock("entry")(new IrBlockBuilder {
         val helloPointer = getelementptr("helloPtr")(
           resultType=PointerType(IntegerType(8)),
           basePointer=helloWorldDef.variable,
@@ -42,7 +42,7 @@ class IrModuleSuite extends FunSuite {
       })
     }
 
-    val module = new IrModule {
+    val module = new IrModuleBuilder {
       defineGlobalVariable(helloWorldDef)
       declareFunction(putsDecl)
       defineFunction(mainFunction)

@@ -8,7 +8,7 @@ class MemoryInstrsSuite extends FunSuite {
 
   test("trivial alloca") {
     implicit val nameSource = new LocalNameSource
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       val resultVar = alloca("trivial")(IntegerType(32))
 
       assert(resultVar.irType === PointerType(IntegerType(32)))
@@ -19,7 +19,7 @@ class MemoryInstrsSuite extends FunSuite {
   
   test("alloca with number of elements") {
     implicit val nameSource = new LocalNameSource
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       val resultVar = alloca("numel")(IntegerType(32), numElements=4)
 
       assert(resultVar.irType === PointerType(IntegerType(32)))
@@ -30,7 +30,7 @@ class MemoryInstrsSuite extends FunSuite {
   
   test("alloca with alignment") {
     implicit val nameSource = new LocalNameSource
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       val resultVar = alloca("align")(IntegerType(32), alignment=1024)
 
       assert(resultVar.irType === PointerType(IntegerType(32)))
@@ -41,7 +41,7 @@ class MemoryInstrsSuite extends FunSuite {
   
   test("alloca with number of elements, alignment") {
     implicit val nameSource = new LocalNameSource
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       val resultVar = alloca("numelalign")(
         IntegerType(32), numElements=4, alignment=1024
       )
@@ -56,7 +56,7 @@ class MemoryInstrsSuite extends FunSuite {
     implicit val nameSource = new LocalNameSource
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(8)))
     
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       val resultVar = load("trivial")(fakePointer)
       assert(resultVar.irType === IntegerType(8))
     }
@@ -68,7 +68,7 @@ class MemoryInstrsSuite extends FunSuite {
     implicit val nameSource = new LocalNameSource
     val fakePointer = LocalVariable("fake", IntegerType(8))
     
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       intercept[InternalCompilerErrorException] {
         load("error")(fakePointer)
       }
@@ -79,7 +79,7 @@ class MemoryInstrsSuite extends FunSuite {
     implicit val nameSource = new LocalNameSource
     val fakePointer = LocalVariable("fake", PointerType(FunctionType(i32, List(i32))))
     
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       intercept[InternalCompilerErrorException] {
         load("error")(fakePointer)
       }
@@ -90,7 +90,7 @@ class MemoryInstrsSuite extends FunSuite {
     implicit val nameSource = new LocalNameSource
     val fakePointer = LocalVariable("fake", PointerType(SingleType))
     
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       val resultVar = load("vol")(
         from=fakePointer,
         volatile=true)
@@ -105,7 +105,7 @@ class MemoryInstrsSuite extends FunSuite {
     implicit val nameSource = new LocalNameSource
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(32)))
     
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       val resultVar = load("align")(
         from=fakePointer,
         alignment=1024)
@@ -120,7 +120,7 @@ class MemoryInstrsSuite extends FunSuite {
     implicit val nameSource = new LocalNameSource
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(32)))
     
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       val resultVar = load("alignvol")(
         from=fakePointer,
         volatile=true,
@@ -135,7 +135,7 @@ class MemoryInstrsSuite extends FunSuite {
   test("trivial store") {
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(8)))
     
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       store(IntegerConstant(IntegerType(8), 1), fakePointer)
     }
 
@@ -145,7 +145,7 @@ class MemoryInstrsSuite extends FunSuite {
   test("store to non-pointer") {
     val fakePointer = LocalVariable("fake", IntegerType(8))
     
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       intercept[InternalCompilerErrorException] {
         store(IntegerConstant(IntegerType(8), 1), fakePointer)
       }
@@ -155,7 +155,7 @@ class MemoryInstrsSuite extends FunSuite {
   test("store to incompatible type") {
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(8)))
     
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       intercept[InternalCompilerErrorException] {
         store(IntegerConstant(IntegerType(16), 1), fakePointer)
       }
@@ -165,7 +165,7 @@ class MemoryInstrsSuite extends FunSuite {
   test("volatile store") {
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(16)))
     
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       store(IntegerConstant(IntegerType(16), 1), fakePointer, volatile=true)
     }
 
@@ -175,7 +175,7 @@ class MemoryInstrsSuite extends FunSuite {
   test("aligned store") {
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(32)))
     
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       store(IntegerConstant(IntegerType(32), 1), fakePointer, alignment=128)
     }
 
@@ -185,7 +185,7 @@ class MemoryInstrsSuite extends FunSuite {
   test("aligned volatile store") {
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(64)))
     
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       store(IntegerConstant(IntegerType(64), 1), fakePointer, volatile=true, alignment=128)
     }
 
@@ -196,7 +196,7 @@ class MemoryInstrsSuite extends FunSuite {
     implicit val nameSource = new LocalNameSource
     val fakePointer = LocalVariable("fake", PointerType(UserDefinedType("opaqueType")))
 
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       val resultVar = getelementptr("zeroindex")(
         resultType=IntegerType(8),
         basePointer=fakePointer,
@@ -213,7 +213,7 @@ class MemoryInstrsSuite extends FunSuite {
     implicit val nameSource = new LocalNameSource
     val fakeNonPointer = LocalVariable("fake", IntegerType(8))
 
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       intercept[InternalCompilerErrorException] {
         val resultVar = getelementptr("error")(
           resultType=IntegerType(8),
@@ -228,7 +228,7 @@ class MemoryInstrsSuite extends FunSuite {
     implicit val nameSource = new LocalNameSource
     val fakePointer = LocalVariable("fake", PointerType(UserDefinedType("opaqueType")))
 
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       val resultVar = getelementptr("oneindex")(
         resultType=IntegerType(16),
         basePointer=fakePointer,
@@ -245,7 +245,7 @@ class MemoryInstrsSuite extends FunSuite {
     implicit val nameSource = new LocalNameSource
     val fakePointer = LocalVariable("fake", PointerType(UserDefinedType("opaqueType")))
 
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       val resultVar = getelementptr("inbounds")(
         resultType=IntegerType(32),
         basePointer=fakePointer,
@@ -263,7 +263,7 @@ class MemoryInstrsSuite extends FunSuite {
     implicit val nameSource = new LocalNameSource
     val fakePointer = LocalVariable("fake", PointerType(UserDefinedType("opaqueType")))
 
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       val resultVar = getelementptr("twoindex")(
         resultType=IntegerType(64),
         basePointer=fakePointer,

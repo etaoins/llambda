@@ -18,7 +18,7 @@ object GenerateCode {
   }
 
   def apply(expressions : List[et.Expression]) : String = {
-    val module = new llvmir.IrModule {
+    val module = new llvmir.IrModuleBuilder {
       // Define main()
       val result = IrFunction.Result(IntegerType(32))
       val namedArguments = List(
@@ -26,12 +26,12 @@ object GenerateCode {
         "argv" -> IrFunction.Argument(PointerType(PointerType(IntegerType(8))))
       )
 
-      val mainFunction = new IrFunctionDef(
+      val mainFunction = new IrFunctionBuilder(
         result=result,
         namedArguments=namedArguments,
         name="main") {
 
-        addBlock("entry")(new IrBlock {
+        addBlock("entry")(new IrBlockBuilder {
           ret(IntegerConstant(IntegerType(32), 0))
         })
       }

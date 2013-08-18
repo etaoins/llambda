@@ -2,10 +2,10 @@ package llambda.codegen.llvmir
 
 import collection.mutable.ListBuffer
 
-class IrModule extends Irable {
+class IrModuleBuilder extends Irable {
   private val globalVariableDefs = new ListBuffer[IrGlobalVariableDef]
   private val functionDecls = new ListBuffer[IrFunctionDecl]
-  private val functionDefs = new ListBuffer[IrFunctionDef]
+  private val functionDefs = new ListBuffer[IrFunctionBuilder]
 
   // This generates global names
   protected implicit val nameSource = new GlobalNameSource
@@ -18,7 +18,7 @@ class IrModule extends Irable {
     functionDecls.append(function)
   }
   
-  final def defineFunction(function : IrFunctionDef) {
+  final def defineFunction(function : IrFunctionBuilder) {
     functionDefs.append(function)
   }
 

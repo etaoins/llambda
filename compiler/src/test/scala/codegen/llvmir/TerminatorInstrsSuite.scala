@@ -5,7 +5,7 @@ import org.scalatest.FunSuite
 
 class TerminatorInstrsSuite extends FunSuite {
   test("ret with value") {
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       ret(IntegerConstant(IntegerType(16), 45))
     }
 
@@ -13,7 +13,7 @@ class TerminatorInstrsSuite extends FunSuite {
   }
   
   test("ret without value") {
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       retVoid()
     }
 
@@ -21,7 +21,7 @@ class TerminatorInstrsSuite extends FunSuite {
   }
 
   test("valid conditional branch") {
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       condBranch(IntegerConstant(IntegerType(1), 0), IrLabel("true"), IrLabel("false"))
     }
 
@@ -30,14 +30,14 @@ class TerminatorInstrsSuite extends FunSuite {
 
   test("conditional branch with bad cond") {
     intercept[InternalCompilerErrorException] {
-      new IrBlock {
+      new IrBlockBuilder {
         condBranch(StringConstant("Hello, world!"), IrLabel("true"), IrLabel("false"))
       }
     }
   }
 
   test("unconditional branch") {
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       uncondBranch(IrLabel("alwayshere"))
     }
 
@@ -45,7 +45,7 @@ class TerminatorInstrsSuite extends FunSuite {
   }
 
   test("unreachable") {
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       unreachable()
     }
 

@@ -7,7 +7,7 @@ class OtherInstrsSuite extends FunSuite {
   test("sourceless ph") {
     implicit val nameSource = new LocalNameSource
     intercept[InternalCompilerErrorException] {
-      new IrBlock {
+      new IrBlockBuilder {
         phi("error")()
       }
     }
@@ -16,7 +16,7 @@ class OtherInstrsSuite extends FunSuite {
   test("incompatible source phi") {
     implicit val nameSource = new LocalNameSource
     intercept[InternalCompilerErrorException] {
-      new IrBlock {
+      new IrBlockBuilder {
         phi("error")(
           PhiSource(IntegerConstant(IntegerType(1), 0), IrLabel("one")),
           PhiSource(SingleConstant(2.0f), IrLabel("two"))
@@ -27,7 +27,7 @@ class OtherInstrsSuite extends FunSuite {
 
   test("single source phi") {
     implicit val nameSource = new LocalNameSource
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       val resultVar = phi("singlesource")(
         PhiSource(IntegerConstant(IntegerType(1), 0), IrLabel("one"))
       )
@@ -40,7 +40,7 @@ class OtherInstrsSuite extends FunSuite {
 
   test("two source phi") {
     implicit val nameSource = new LocalNameSource
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       val resultVar = phi("twosource")(
         PhiSource(DoubleConstant(1.0), IrLabel("plusone")),
         PhiSource(DoubleConstant(-2.0), IrLabel("minustwo"))
@@ -61,7 +61,7 @@ class OtherInstrsSuite extends FunSuite {
       name="doNothing",
       arguments=declArgs)
 
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       val resultVar = callDecl(None)(
         decl=decl,
         arguments=List()
@@ -82,7 +82,7 @@ class OtherInstrsSuite extends FunSuite {
       name="returnSomething",
       arguments=declArgs)
 
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       val resultVar = callDecl(Some("ret"))(
         decl=decl,
         arguments=List()
@@ -103,7 +103,7 @@ class OtherInstrsSuite extends FunSuite {
       name="returnSomething",
       arguments=declArgs)
 
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       val resultVar = callDecl(None)(
         decl=decl,
         arguments=List()
@@ -125,7 +125,7 @@ class OtherInstrsSuite extends FunSuite {
       arguments=declArgs,
       callingConv=CallingConv.FastCC)
 
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       val resultVar = callDecl(None)(
         decl=decl,
         arguments=List()
@@ -146,7 +146,7 @@ class OtherInstrsSuite extends FunSuite {
       name="doNothing",
       arguments=declArgs)
 
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       val resultVar = callDecl(None)(
         decl=decl,
         arguments=List(),
@@ -168,7 +168,7 @@ class OtherInstrsSuite extends FunSuite {
       name="notEnoughArgs",
       arguments=declArgs)
     
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       intercept[InternalCompilerErrorException] {
         callDecl(None)(decl=decl, arguments=List())
       }
@@ -184,7 +184,7 @@ class OtherInstrsSuite extends FunSuite {
       name="mismatchedArgs",
       arguments=declArgs)
     
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       val mismatchedValue = IntegerConstant(IntegerType(16), 5)
 
       intercept[InternalCompilerErrorException] {
@@ -209,7 +209,7 @@ class OtherInstrsSuite extends FunSuite {
       name="withArgs",
       arguments=declArgs)
     
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       val mismatchedValue = IntegerConstant(IntegerType(16), 5)
 
       val resultVar = callDecl(None)(
@@ -238,7 +238,7 @@ class OtherInstrsSuite extends FunSuite {
       attributes=Set(IrFunction.Cold, IrFunction.ReadOnly)
     )
 
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       val resultVar = callDecl(None)(
         decl=decl,
         arguments=List()
@@ -265,7 +265,7 @@ class OtherInstrsSuite extends FunSuite {
       callingConv=CallingConv.ColdCC
     )
     
-    val block = new IrBlock {
+    val block = new IrBlockBuilder {
       val resultVar = callDecl(Some("ret"))(
         decl=decl,
         arguments=List(

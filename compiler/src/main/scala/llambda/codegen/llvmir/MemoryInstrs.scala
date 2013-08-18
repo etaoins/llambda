@@ -2,7 +2,7 @@ package llambda.codegen.llvmir
 
 import llambda.InternalCompilerErrorException
 
-private[llvmir] trait MemoryInstrs extends IrBuilder {
+private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
   def alloca(resultName : String)(irType : IrType, numElements : Integer = 1, alignment : Integer = 0)(implicit nameSource : LocalNameSource) : LocalVariable = {
     val resultVar = allocateLocalVar(PointerType(irType), resultName)
 

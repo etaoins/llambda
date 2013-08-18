@@ -2,7 +2,7 @@ package llambda.codegen.llvmir
 
 import llambda.InternalCompilerErrorException
 
-private[llvmir] trait OtherInstrs extends IrBuilder {
+private[llvmir] trait OtherInstrs extends IrInstrBuilder {
   protected case class PhiSource(value : IrValue, label : IrLabel)
 
   def phi(resultName : String)(sources : PhiSource*)(implicit nameSource : LocalNameSource) : LocalVariable = {

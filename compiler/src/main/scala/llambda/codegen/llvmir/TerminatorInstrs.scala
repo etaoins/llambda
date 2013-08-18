@@ -2,7 +2,7 @@ package llambda.codegen.llvmir
 
 import llambda.InternalCompilerErrorException
 
-private[llvmir] trait TerminatorInstrs extends IrBuilder {
+private[llvmir] trait TerminatorInstrs extends IrInstrBuilder {
   def ret(value : IrValue) {
     instructions += s"ret ${value.toIrWithType}"
   }

@@ -88,7 +88,7 @@ case class IrFunctionDecl(
   def toIr = "declare " + irDecl
 }
 
-class IrFunctionDef(
+class IrFunctionBuilder(
   val result : IrFunction.Result,
   val name : String,
   val namedArguments : List[(String, IrFunction.Argument)],
@@ -105,7 +105,7 @@ class IrFunctionDef(
   // This is needed for IrCallableLike
   val arguments = namedArguments.map(_._2)
 
-  private val blocks = new collection.mutable.ListBuffer[(String, IrBlock)]
+  private val blocks = new collection.mutable.ListBuffer[(String, IrBlockBuilder)]
 
   val argumentValues = (namedArguments map { case (argName, argument) =>
     (argName -> LocalVariable(argName, argument.irType))
@@ -115,11 +115,11 @@ class IrFunctionDef(
     IrLabel(nameSource.allocate(baseName))
   }
 
-  final def defineBlock(label : IrLabel)(block : IrBlock) {
+  final def defineBlock(label : IrLabel)(block : IrBlockBuilder) {
     blocks.append((label.name, block))
   }
 
-  final def addBlock(baseName : String)(block : IrBlock) : IrLabel = {
+  final def addBlock(baseName : String)(block : IrBlockBuilder) : IrLabel = {
     val label = declareBlock(baseName)
     defineBlock(label)(block)
     label
