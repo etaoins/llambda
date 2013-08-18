@@ -12,7 +12,7 @@ private[llvmir] abstract class IrBuilder {
 }
 
 class IrBlock extends IrBuilder with Irable with TerminatorInstrs with MemoryInstrs with OtherInstrs {
-  protected def comment(text : String) {
+  def comment(text : String) {
     instructions += s"; ${text}"
   }
 

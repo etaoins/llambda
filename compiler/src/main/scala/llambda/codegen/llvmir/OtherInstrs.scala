@@ -5,7 +5,7 @@ import llambda.InternalCompilerErrorException
 private[llvmir] trait OtherInstrs extends IrBuilder {
   protected case class PhiSource(value : IrValue, label : IrLabel)
 
-  protected def phi(resultName : String)(sources : PhiSource*)(implicit nameSource : LocalNameSource) : LocalVariable = {
+  def phi(resultName : String)(sources : PhiSource*)(implicit nameSource : LocalNameSource) : LocalVariable = {
     if (sources.isEmpty) {
       throw new InternalCompilerErrorException("Attempted phi with no sources")
     }
@@ -29,11 +29,11 @@ private[llvmir] trait OtherInstrs extends IrBuilder {
     resultVar
   }
 
-  protected def callDecl(resultName : Option[String])(decl : IrFunctionDeclLike, arguments : Seq[IrValue], tailCall : Boolean = false)(implicit nameSource : LocalNameSource) : Option[LocalVariable] = {
+  def callDecl(resultName : Option[String])(decl : IrFunctionDeclLike, arguments : Seq[IrValue], tailCall : Boolean = false)(implicit nameSource : LocalNameSource) : Option[LocalVariable] = {
     call(resultName)(decl, decl.irValue, arguments, tailCall)
   }
 
-  protected def call(resultName : Option[String])(callable : IrCallableLike, functionPtr : IrValue, arguments : Seq[IrValue], tailCall : Boolean = false)(implicit nameSource : LocalNameSource) : Option[LocalVariable] = {
+  def call(resultName : Option[String])(callable : IrCallableLike, functionPtr : IrValue, arguments : Seq[IrValue], tailCall : Boolean = false)(implicit nameSource : LocalNameSource) : Option[LocalVariable] = {
     // We only return a result for non-void result types if they specify a result name
     val resultVarOpt = callable.result.irType match {
       case VoidType =>
