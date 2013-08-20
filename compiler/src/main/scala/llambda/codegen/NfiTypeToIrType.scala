@@ -1,6 +1,7 @@
 package llambda.codegen
 
 import llambda.nfi
+import llambda.codegen.{boxedtype => bt}
 
 object NfiTypeToIrType {
   def apply(nativeType : nfi.NativeType) : llvmir.FirstClassType = {
@@ -15,7 +16,7 @@ object NfiTypeToIrType {
         llvmir.DoubleType
 
       case nfi.BoxedDatum =>
-        llvmir.PointerType(llvmir.UserDefinedType("genericExpr"))
+        bt.BoxedValue.llvmType
 
       case nfi.Utf8String =>
         llvmir.PointerType(llvmir.IntegerType(8))

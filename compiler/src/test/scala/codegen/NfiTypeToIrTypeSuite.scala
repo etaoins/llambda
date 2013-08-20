@@ -1,6 +1,7 @@
 package llambda.codegen
 
 import llambda.nfi
+import llambda.codegen.{boxedtype => bt}
 import org.scalatest.FunSuite
 
 class NfiTypeToIrTypeSuite extends FunSuite {
@@ -49,7 +50,7 @@ class NfiTypeToIrTypeSuite extends FunSuite {
   }
   
   test("boxed datum") {
-    assert(NfiTypeToIrType(nfi.BoxedDatum) === llvmir.PointerType(llvmir.UserDefinedType("genericExpr")))
+    assert(NfiTypeToIrType(nfi.BoxedDatum) === bt.BoxedValue.llvmType)
   }
 
   test("utf8 string") {
