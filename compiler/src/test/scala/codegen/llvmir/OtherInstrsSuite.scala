@@ -5,18 +5,16 @@ import org.scalatest.FunSuite
 
 class OtherInstrsSuite extends FunSuite {
   test("sourceless ph") {
-    implicit val nameSource = new LocalNameSource
     intercept[InternalCompilerErrorException] {
-      new IrBlockBuilder {
+      new IrBlockBuilder()(new LocalNameSource) {
         phi("error")()
       }
     }
   }
 
   test("incompatible source phi") {
-    implicit val nameSource = new LocalNameSource
     intercept[InternalCompilerErrorException] {
-      new IrBlockBuilder {
+      new IrBlockBuilder()(new LocalNameSource) {
         phi("error")(
           PhiSource(IntegerConstant(IntegerType(1), 0), IrLabel("one")),
           PhiSource(SingleConstant(2.0f), IrLabel("two"))
@@ -26,8 +24,7 @@ class OtherInstrsSuite extends FunSuite {
   }
 
   test("single source phi") {
-    implicit val nameSource = new LocalNameSource
-    val block = new IrBlockBuilder {
+    val block = new IrBlockBuilder()(new LocalNameSource) {
       val resultVar = phi("singlesource")(
         PhiSource(IntegerConstant(IntegerType(1), 0), IrLabel("one"))
       )
@@ -39,8 +36,7 @@ class OtherInstrsSuite extends FunSuite {
   }
 
   test("two source phi") {
-    implicit val nameSource = new LocalNameSource
-    val block = new IrBlockBuilder {
+    val block = new IrBlockBuilder()(new LocalNameSource) {
       val resultVar = phi("twosource")(
         PhiSource(DoubleConstant(1.0), IrLabel("plusone")),
         PhiSource(DoubleConstant(-2.0), IrLabel("minustwo"))
@@ -53,7 +49,6 @@ class OtherInstrsSuite extends FunSuite {
   }
   
   test("trivial call") {
-    implicit val nameSource = new LocalNameSource
     val declResult = IrFunction.Result(VoidType, Set())
     val declArgs = List()
     val decl = IrFunctionDecl(
@@ -61,7 +56,7 @@ class OtherInstrsSuite extends FunSuite {
       name="doNothing",
       arguments=declArgs)
 
-    val block = new IrBlockBuilder {
+    val block = new IrBlockBuilder()(new LocalNameSource) {
       val resultVar = callDecl(None)(
         decl=decl,
         arguments=List()
@@ -74,7 +69,6 @@ class OtherInstrsSuite extends FunSuite {
   }
   
   test("call returning value") {
-    implicit val nameSource = new LocalNameSource
     val declResult = IrFunction.Result(IntegerType(8), Set(IrFunction.ZeroExt))
     val declArgs = List()
     val decl = IrFunctionDecl(
@@ -82,7 +76,7 @@ class OtherInstrsSuite extends FunSuite {
       name="returnSomething",
       arguments=declArgs)
 
-    val block = new IrBlockBuilder {
+    val block = new IrBlockBuilder()(new LocalNameSource) {
       val resultVar = callDecl(Some("ret"))(
         decl=decl,
         arguments=List()
@@ -95,7 +89,6 @@ class OtherInstrsSuite extends FunSuite {
   }
   
   test("call discarding value") {
-    implicit val nameSource = new LocalNameSource
     val declResult = IrFunction.Result(IntegerType(8), Set(IrFunction.ZeroExt))
     val declArgs = List()
     val decl = IrFunctionDecl(
@@ -103,7 +96,7 @@ class OtherInstrsSuite extends FunSuite {
       name="returnSomething",
       arguments=declArgs)
 
-    val block = new IrBlockBuilder {
+    val block = new IrBlockBuilder()(new LocalNameSource) {
       val resultVar = callDecl(None)(
         decl=decl,
         arguments=List()
@@ -116,7 +109,6 @@ class OtherInstrsSuite extends FunSuite {
   }
   
   test("fastcc call") {
-    implicit val nameSource = new LocalNameSource
     val declResult = IrFunction.Result(VoidType, Set())
     val declArgs = List()
     val decl = IrFunctionDecl(
@@ -125,7 +117,7 @@ class OtherInstrsSuite extends FunSuite {
       arguments=declArgs,
       callingConv=CallingConv.FastCC)
 
-    val block = new IrBlockBuilder {
+    val block = new IrBlockBuilder()(new LocalNameSource) {
       val resultVar = callDecl(None)(
         decl=decl,
         arguments=List()
@@ -138,7 +130,6 @@ class OtherInstrsSuite extends FunSuite {
   }
   
   test("tail call") {
-    implicit val nameSource = new LocalNameSource
     val declResult = IrFunction.Result(VoidType, Set())
     val declArgs = List()
     val decl = IrFunctionDecl(
@@ -146,7 +137,7 @@ class OtherInstrsSuite extends FunSuite {
       name="doNothing",
       arguments=declArgs)
 
-    val block = new IrBlockBuilder {
+    val block = new IrBlockBuilder()(new LocalNameSource) {
       val resultVar = callDecl(None)(
         decl=decl,
         arguments=List(),
@@ -160,7 +151,6 @@ class OtherInstrsSuite extends FunSuite {
   }
 
   test("call with insufficent args") {
-    implicit val nameSource = new LocalNameSource
     val declResult = IrFunction.Result(VoidType, Set())
     val declArgs = List(IrFunction.Argument(PointerType(IntegerType(8)), Set(IrFunction.NoCapture)))
     val decl = IrFunctionDecl(
@@ -168,7 +158,7 @@ class OtherInstrsSuite extends FunSuite {
       name="notEnoughArgs",
       arguments=declArgs)
     
-    val block = new IrBlockBuilder {
+    val block = new IrBlockBuilder()(new LocalNameSource) {
       intercept[InternalCompilerErrorException] {
         callDecl(None)(decl=decl, arguments=List())
       }
@@ -176,7 +166,6 @@ class OtherInstrsSuite extends FunSuite {
   }
 
   test("call with unmatched args") {
-    implicit val nameSource = new LocalNameSource
     val declResult = IrFunction.Result(VoidType, Set())
     val declArgs = List(IrFunction.Argument(IntegerType(8), Set(IrFunction.NoCapture)))
     val decl = IrFunctionDecl(
@@ -184,7 +173,7 @@ class OtherInstrsSuite extends FunSuite {
       name="mismatchedArgs",
       arguments=declArgs)
     
-    val block = new IrBlockBuilder {
+    val block = new IrBlockBuilder()(new LocalNameSource) {
       val mismatchedValue = IntegerConstant(IntegerType(16), 5)
 
       intercept[InternalCompilerErrorException] {
@@ -197,7 +186,6 @@ class OtherInstrsSuite extends FunSuite {
   }
 
   test("call with args") {
-    implicit val nameSource = new LocalNameSource
     val declResult = IrFunction.Result(VoidType, Set())
     val declArgs = List(
       IrFunction.Argument(IntegerType(8), Set(IrFunction.NoCapture)),
@@ -209,7 +197,7 @@ class OtherInstrsSuite extends FunSuite {
       name="withArgs",
       arguments=declArgs)
     
-    val block = new IrBlockBuilder {
+    val block = new IrBlockBuilder()(new LocalNameSource) {
       val mismatchedValue = IntegerConstant(IntegerType(16), 5)
 
       val resultVar = callDecl(None)(
@@ -227,7 +215,6 @@ class OtherInstrsSuite extends FunSuite {
   }
   
   test("call with attrs") {
-    implicit val nameSource = new LocalNameSource
     val declResult = IrFunction.Result(VoidType, Set())
     val declArgs = List()
     val decl = IrFunctionDecl(
@@ -238,7 +225,7 @@ class OtherInstrsSuite extends FunSuite {
       attributes=Set(IrFunction.Cold, IrFunction.ReadOnly)
     )
 
-    val block = new IrBlockBuilder {
+    val block = new IrBlockBuilder()(new LocalNameSource) {
       val resultVar = callDecl(None)(
         decl=decl,
         arguments=List()
@@ -251,7 +238,6 @@ class OtherInstrsSuite extends FunSuite {
   }
 
   test("christmas tree call") {
-    implicit val nameSource = new LocalNameSource
     val declResult = IrFunction.Result(IntegerType(8), Set(IrFunction.ZeroExt))
     val declArgs = List(
       IrFunction.Argument(SingleType, Set(IrFunction.NoCapture, IrFunction.NoAlias)),
@@ -265,7 +251,7 @@ class OtherInstrsSuite extends FunSuite {
       callingConv=CallingConv.ColdCC
     )
     
-    val block = new IrBlockBuilder {
+    val block = new IrBlockBuilder()(new LocalNameSource) {
       val resultVar = callDecl(Some("ret"))(
         decl=decl,
         arguments=List(
