@@ -1,5 +1,6 @@
 from typegen.exceptions import SemanticException
 from typegen.constants import BASE_TYPE
+from typegen.clikeutil import *
 from typegen.cxxutil import *
 
 OUTPUT_DIR = "runtime/binding/generated/"
@@ -32,7 +33,7 @@ def _generate_declaretypes(boxed_types):
     content += "{\n\n"
 
     for type_name, boxed_type in boxed_types.items():
-        cxx_type_name = type_name_to_cxx(type_name)
+        cxx_type_name = type_name_to_clike_class(type_name)
         content += "class " + cxx_type_name + ";\n"
 
     content += "typedef BoxedValue* (*ProcedureEntryPoint)(ClosureValue*, BoxedValue*);\n\n"
@@ -54,7 +55,7 @@ def _generate_casts(boxed_types):
         else:
             type_assertion = "static_cast<int>(typeId()) & " + boxed_type.type_id[1:]
 
-        cxx_type_name = type_name_to_cxx(type_name)
+        cxx_type_name = type_name_to_clike_class(type_name)
         
         content += "\t" + cxx_type_name + "* as" + cxx_type_name + "()\n" 
         content += "\t{\n"
@@ -79,7 +80,7 @@ def _generate_casts(boxed_types):
 
 def _generate_type_members(boxed_types, type_name):
     boxed_type = boxed_types[type_name]
-    base_name  = type_name_to_cxx(boxed_type.name) + 'Members'
+    base_name  = type_name_to_clike_class(boxed_type.name) + 'Members'
     filename = OUTPUT_DIR + base_name + ".h"
 
     data_content = ""

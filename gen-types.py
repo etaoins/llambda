@@ -9,6 +9,7 @@ from typegen.validate import validate_boxed_types
 from typegen.genllvmprelude import generate_llvm_prelude
 from typegen.gencxxbinding import generate_cxx_binding
 from typegen.genpredicates import generate_predicates
+from typegen.genscalaobjects import generate_scala_objects
 from typegen.exceptions import SemanticException
 
 with open('boxedTypes.json') as f:
@@ -31,6 +32,7 @@ output_files = {}
 output_files.update(generate_llvm_prelude(boxed_types))
 output_files.update(generate_cxx_binding(boxed_types))
 output_files.update(generate_predicates(boxed_types))
+output_files.update(generate_scala_objects(boxed_types))
 
 for filename, content in output_files.items():
     with codecs.open(filename, 'w', encoding='utf-8') as f:

@@ -1,13 +1,13 @@
 import re
 
 from typegen.constants import BASE_TYPE
-from typegen.cxxutil import *
+from typegen.clikeutil import *
 
 def _type_name_to_underscore(string):
     return re.sub('([A-Z]+)', r'_\1', string).lower()
 
 def generate_predicates(boxed_types):
-    cxx_base_type = type_name_to_cxx(BASE_TYPE)
+    cxx_base_type = type_name_to_clike_class(BASE_TYPE)
 
     content  = GENERATED_FILE_COMMENT
 
@@ -24,7 +24,7 @@ def generate_predicates(boxed_types):
             continue
 
         function_name = "lliby_is_" + _type_name_to_underscore(type_name)
-        cxx_type_name = type_name_to_cxx(type_name)
+        cxx_type_name = type_name_to_clike_class(type_name)
 
         content += 'bool ' + function_name + '(const ' + cxx_base_type + ' *value)\n'
         content += '{\n'
