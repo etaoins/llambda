@@ -4,7 +4,7 @@ cmake_minimum_required (VERSION 2.8)
 
 project (lliby)
 add_library(lliby
-	binding/BoxedValue.cpp
+	binding/BoxedDatum.cpp
 	binding/ProcedureValue.cpp
 	core/fatal.cpp
 	stdlib/generated/predicates.cpp

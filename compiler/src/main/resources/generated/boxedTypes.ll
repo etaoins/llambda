@@ -3,19 +3,19 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; {unsigned typeId, unsigned gcState}
-%boxedValue = type {i16, i16}
+%boxedDatum = type {i16, i16}
 
 ; {supertype}
-%unspecific = type {%boxedValue}
+%unspecific = type {%boxedDatum}
 
 ; {supertype, car, cdr}
-%pair = type {%boxedValue, %boxedValue*, %boxedValue*}
+%pair = type {%boxedDatum, %boxedDatum*, %boxedDatum*}
 
 ; {supertype}
-%emptyList = type {%boxedValue}
+%emptyList = type {%boxedDatum}
 
 ; {supertype, unsigned byteLength, utf8Data}
-%stringLike = type {%boxedValue, i32, i8*}
+%stringLike = type {%boxedDatum, i32, i8*}
 
 ; {supertype}
 %string = type {%stringLike}
@@ -24,25 +24,25 @@
 %symbol = type {%stringLike}
 
 ; {supertype, value}
-%boolean = type {%boxedValue, i8}
+%boolean = type {%boxedDatum, i8}
 
 ; {supertype, signed value}
-%exactInteger = type {%boxedValue, i64}
+%exactInteger = type {%boxedDatum, i64}
 
 ; {supertype, value}
-%inexactRational = type {%boxedValue, double}
+%inexactRational = type {%boxedDatum, double}
 
 ; {supertype, unsigned codePoint}
-%character = type {%boxedValue, i32}
+%character = type {%boxedDatum, i32}
 
 ; {supertype, unsigned length, data}
-%byteVector = type {%boxedValue, i32, i8*}
+%byteVector = type {%boxedDatum, i32, i8*}
 
 ; {supertype, closure, entryPoint}
-%procedure = type {%boxedValue, %closure*, %boxedValue* (%closure*, %boxedValue*)*}
+%procedure = type {%boxedDatum, %closure*, %boxedDatum* (%closure*, %boxedDatum*)*}
 
 ; {supertype, unsigned length, elements}
-%vectorLike = type {%boxedValue, i32, %boxedValue**}
+%vectorLike = type {%boxedDatum, i32, %boxedDatum**}
 
 ; {supertype}
 %vector = type {%vectorLike}

@@ -10,8 +10,8 @@ sealed abstract class BoxedType {
   val llvmType : PointerType
 }
 
-object BoxedValue extends BoxedType {
-  val llvmType = PointerType(UserDefinedType("boxedValue"))
+object BoxedDatum extends BoxedType {
+  val llvmType = PointerType(UserDefinedType("boxedDatum"))
 }
 
 object UnspecificValue extends BoxedType {

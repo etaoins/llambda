@@ -50,7 +50,7 @@ class NfiTypeToIrTypeSuite extends FunSuite {
   }
   
   test("boxed datum") {
-    assert(NfiTypeToIrType(nfi.BoxedDatum) === bt.BoxedValue.llvmType)
+    assert(NfiTypeToIrType(nfi.BoxedDatum) === bt.BoxedDatum.llvmType)
   }
 
   test("utf8 string") {

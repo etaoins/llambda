@@ -8,11 +8,11 @@ public:
 		return m_length;
 	}
 
-	BoxedValue** elements() const
+	BoxedDatum** elements() const
 	{
 		return m_elements;
 	}
 
 private:
 	std::uint32_t m_length;
-	BoxedValue** m_elements;
+	BoxedDatum** m_elements;

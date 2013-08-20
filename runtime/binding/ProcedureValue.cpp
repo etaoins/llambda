@@ -3,7 +3,7 @@
 namespace lliby
 {
 
-BoxedValue* ProcedureValue::invoke(BoxedValue *arguments)
+BoxedDatum* ProcedureValue::invoke(BoxedDatum *arguments)
 {
 	return m_entryPoint(m_closure, arguments);
 }

@@ -1,6 +1,6 @@
 [
     {
-        "name": "boxedValue",
+        "name": "boxedDatum",
         "abstract": true,
         "inherits": null,
         "fields": [
@@ -19,34 +19,34 @@
     {
         "name": "unspecific",
         "typeId": 0,
-        "inherits": "boxedValue",
+        "inherits": "boxedDatum",
         "fields": []
     },
     {
         "name": "pair",
         "typeId": 1,
-        "inherits": "boxedValue",
+        "inherits": "boxedDatum",
         "fields": [
             {
                 "name": "car",
-                "llvmType": "%boxedValue*"
+                "llvmType": "%boxedDatum*"
             },
             {
                 "name": "cdr",
-                "llvmType": "%boxedValue*"
+                "llvmType": "%boxedDatum*"
             }
         ]
     },
     {
         "name": "emptyList",
         "typeId": 2,
-        "inherits": "boxedValue",
+        "inherits": "boxedDatum",
         "fields": []
     },
     {
         "name": "stringLike",
         "abstract": true,
-        "inherits": "boxedValue",
+        "inherits": "boxedDatum",
         "fields": [
             {
                 "name": "byteLength",
@@ -74,7 +74,7 @@
     {
         "name": "boolean",
         "typeId": 5,
-        "inherits": "boxedValue",
+        "inherits": "boxedDatum",
         "fields": [
             {
                 "name": "value",
@@ -85,7 +85,7 @@
     {
         "name": "exactInteger",
         "typeId": 6,
-        "inherits": "boxedValue",
+        "inherits": "boxedDatum",
         "fields": [
             {
                 "name": "value",
@@ -97,7 +97,7 @@
     {
         "name": "inexactRational",
         "typeId": 7,
-        "inherits": "boxedValue",
+        "inherits": "boxedDatum",
         "fields": [
             {
                 "name": "value",
@@ -108,7 +108,7 @@
     {
         "name": "character",
         "typeId": 8,
-        "inherits": "boxedValue",
+        "inherits": "boxedDatum",
         "fields": [
             {
                 "name": "codePoint",
@@ -120,7 +120,7 @@
     {
         "name": "byteVector",
         "typeId": 9,
-        "inherits": "boxedValue",
+        "inherits": "boxedDatum",
         "fields": [
             {
                 "name": "length",
@@ -136,7 +136,7 @@
     {
         "name": "procedure",
         "typeId": 10,
-        "inherits": "boxedValue",
+        "inherits": "boxedDatum",
         "fields": [
             {
                 "name": "closure",
@@ -152,7 +152,7 @@
         "name": "vectorLike",
         "abstract": true,
         "typeId": "&32768",
-        "inherits": "boxedValue",
+        "inherits": "boxedDatum",
         "fields": [
             {
                 "name": "length",
@@ -161,7 +161,7 @@
             },
             {
                 "name": "elements",
-                "llvmType": "%boxedValue**"
+                "llvmType": "%boxedDatum**"
             }
         ]
     },

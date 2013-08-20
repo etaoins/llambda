@@ -8,7 +8,7 @@
 namespace lliby
 {
 
-class BoxedValue;
+class BoxedDatum;
 class UnspecificValue;
 class PairValue;
 class EmptyListValue;
@@ -24,7 +24,7 @@ class ProcedureValue;
 class VectorLikeValue;
 class VectorValue;
 class ClosureValue;
-typedef BoxedValue* (*ProcedureEntryPoint)(ClosureValue*, BoxedValue*);
+typedef BoxedDatum* (*ProcedureEntryPoint)(ClosureValue*, BoxedDatum*);
 
 }
 

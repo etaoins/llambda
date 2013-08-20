@@ -36,7 +36,7 @@ def _generate_declaretypes(boxed_types):
         cxx_type_name = type_name_to_clike_class(type_name)
         content += "class " + cxx_type_name + ";\n"
 
-    content += "typedef BoxedValue* (*ProcedureEntryPoint)(ClosureValue*, BoxedValue*);\n\n"
+    content += "typedef BoxedDatum* (*ProcedureEntryPoint)(ClosureValue*, BoxedDatum*);\n\n"
 
     content += "}\n\n"
 

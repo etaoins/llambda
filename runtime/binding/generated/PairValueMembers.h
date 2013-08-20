@@ -3,16 +3,16 @@
  *****************************************************************/
 
 public:
-	BoxedValue* car() const
+	BoxedDatum* car() const
 	{
 		return m_car;
 	}
 
-	BoxedValue* cdr() const
+	BoxedDatum* cdr() const
 	{
 		return m_cdr;
 	}
 
 private:
-	BoxedValue* m_car;
-	BoxedValue* m_cdr;
+	BoxedDatum* m_car;
+	BoxedDatum* m_cdr;

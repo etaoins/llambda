@@ -16,7 +16,7 @@ object NfiTypeToIrType {
         llvmir.DoubleType
 
       case nfi.BoxedDatum =>
-        bt.BoxedValue.llvmType
+        bt.BoxedDatum.llvmType
 
       case nfi.Utf8String =>
         llvmir.PointerType(llvmir.IntegerType(8))
