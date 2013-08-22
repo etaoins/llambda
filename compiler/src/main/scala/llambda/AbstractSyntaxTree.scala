@@ -43,7 +43,12 @@ case class IntegerLiteral(value : Int) extends NumberLiteral {
 
 case class RealLiteral(value : Double) extends NumberLiteral {
   val schemeType = st.RealType
-  override def toString = value.toString
+  override def toString = value match {
+    case Double.PositiveInfinity => "+inf.0"
+    case Double.NegativeInfinity => "-inf.0"
+    case nan if nan.isNaN        => "+nan.0"
+    case _ => value.toString
+  }
 }
 
 object PositiveInfinityLiteral extends RealLiteral(Double.PositiveInfinity)
@@ -57,7 +62,7 @@ case class Symbol(name : String) extends Datum {
     name
   }
   else {
-    "|" + name + "|"
+    "|" + name.replace("|", "\\|") + "|"
   }
 }
 
@@ -130,14 +135,14 @@ case class CharLiteral(value : Char) extends NonSymbolLeaf {
   val schemeType = st.CharType
 
   override def toString = value match {
-    case '\0' => """\#null"""
-    case ' '  => """\#space"""
-    case '\n' => """\#newline"""
-    case '\r' => """\#return"""
-    case '\t' => """\#tab"""
+    case '\0' => """#\null"""
+    case ' '  => """#\space"""
+    case '\n' => """#\newline"""
+    case '\r' => """#\return"""
+    case '\t' => """#\tab"""
     case _ if value.isLetterOrDigit && (value.toInt <= 127) =>
-      """\#""" + value
+      """#\""" + value
     case _ =>
-      """\#x""" + value.toInt.toHexString
+      """#\x""" + value.toInt.toHexString
   }
 }

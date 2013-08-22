@@ -4,10 +4,25 @@ import org.scalatest.{FunSuite, Inside}
 import llambda.SchemeStringImplicits._
 
 class SchemeParserSuite extends FunSuite with Inside {
-  def assertParsesAsSymbol(string : String, identifier : String) {
-    inside(SchemeParser(string)) { case SchemeParser.Success(data, _) =>
-      assert(data === List(ast.Symbol(identifier)))
+  // This checks:
+  // 1) parsed source === expected
+  // 2) parse((parsed source).toString) === expected
+  def assertReflexiveParse(source : String, expected : List[ast.Datum])
+  {
+    inside(SchemeParser(source)) { case SchemeParser.Success(parsed, _) =>
+      assert(parsed === expected)
+
+      // Convert the parsed data back to a string to make sure .toString works
+      val parsedAsSource = parsed.map(_.toString).mkString("\n")
+
+      inside(SchemeParser(parsedAsSource)) { case SchemeParser.Success(reparsed, _) =>
+        assert(reparsed === expected)
+      }
     }
+  }
+
+  def assertParsesAsSymbol(string : String, identifier : String) {
+    assertReflexiveParse(string, List(ast.Symbol(identifier)))
   }
   
   def assertParsesAsSymbol(string : String) {
@@ -15,49 +30,37 @@ class SchemeParserSuite extends FunSuite with Inside {
   }
 
   def testSymbolShorthand(shorthand : String, symbolName : String) {
-    inside(SchemeParser(shorthand + "foo")) {
-      case SchemeParser.Success(datum :: Nil, _) =>
-        assert(datum === 
-          ast.ProperList(List(ast.Symbol(symbolName), ast.Symbol("foo")))
-        )
-    }
+    assertReflexiveParse(shorthand + "foo",
+      ast.ProperList(List(ast.Symbol(symbolName), ast.Symbol("foo"))) :: Nil
+    )
 
-    inside(SchemeParser(shorthand + "(1 . 2)")) { 
-      case SchemeParser.Success(datum :: Nil, _) =>
-        assert(datum === 
-          ast.ProperList(List(ast.Symbol(symbolName), ast.Pair(ast.IntegerLiteral(1), ast.IntegerLiteral(2))))
-        )
-    }
+    assertReflexiveParse(shorthand + "(1 . 2)",
+      ast.ProperList(List(ast.Symbol(symbolName), ast.Pair(ast.IntegerLiteral(1), ast.IntegerLiteral(2)))) :: Nil
+    )
     
-    inside(SchemeParser(shorthand + "(real? 1.0)")) { 
-      case SchemeParser.Success(datum :: Nil, _) =>
-        assert(datum === 
-          ast.ProperList(List(ast.Symbol(symbolName), ast.ProperList(List(ast.Symbol("real?"), ast.RealLiteral(1.0)))))
-        )
-    }
+    assertReflexiveParse(shorthand + "(real? 1.0)",
+      ast.ProperList(List(ast.Symbol(symbolName), ast.ProperList(List(ast.Symbol("real?"), ast.RealLiteral(1.0))))) :: Nil
+    )
     
-    inside(SchemeParser(shorthand + shorthand + "#true")) {
-      case SchemeParser.Success(datum :: Nil, _) =>
-        assert(datum ===
-          ast.ProperList(List(ast.Symbol(symbolName),
-            ast.ProperList(List(ast.Symbol(symbolName),
-              ast.TrueLiteral
-            ))
-          ))
-        )
-    }
+    assertReflexiveParse(shorthand + shorthand + "#true",
+      ast.ProperList(List(ast.Symbol(symbolName),
+        ast.ProperList(List(ast.Symbol(symbolName),
+          ast.TrueLiteral
+        ))
+      )) :: Nil
+    )
   }
   
   test("empty list") {
-    assert(scm"()" === List(ast.EmptyList))
+    assertReflexiveParse("()", List(ast.EmptyList))
   }
 
   test("booleans") {
-    assert(scm"#t" === List(ast.TrueLiteral))
-    assert(scm"#true" === List(ast.TrueLiteral))
+    assertReflexiveParse("#t", List(ast.TrueLiteral))
+    assertReflexiveParse("#true", List(ast.TrueLiteral))
     
-    assert(scm"#f" === List(ast.FalseLiteral))
-    assert(scm"#false" === List(ast.FalseLiteral))
+    assertReflexiveParse("#f", List(ast.FalseLiteral))
+    assertReflexiveParse("#false", List(ast.FalseLiteral))
   }
 
   test("symbols") {
@@ -83,34 +86,34 @@ class SchemeParserSuite extends FunSuite with Inside {
   }
 
   test("integers") {
-    assert(scm"0" === List(ast.IntegerLiteral(0)))
-    assert(scm"000" === List(ast.IntegerLiteral(0)))
-    assert(scm"10000" === List(ast.IntegerLiteral(10000)))
-    assert(scm"-10000" === List(ast.IntegerLiteral(-10000)))
+    assertReflexiveParse("0", List(ast.IntegerLiteral(0)))
+    assertReflexiveParse("000", List(ast.IntegerLiteral(0)))
+    assertReflexiveParse("10000", List(ast.IntegerLiteral(10000)))
+    assertReflexiveParse("-10000", List(ast.IntegerLiteral(-10000)))
     
-    assert(scm"#b111" === List(ast.IntegerLiteral(7)))
-    assert(scm"#b-1000" === List(ast.IntegerLiteral(-8)))
+    assertReflexiveParse("#b111", List(ast.IntegerLiteral(7)))
+    assertReflexiveParse("#b-1000", List(ast.IntegerLiteral(-8)))
 
-    assert(scm"#o1234" === List(ast.IntegerLiteral(668)))
-    assert(scm"#o-010" === List(ast.IntegerLiteral(-8)))
+    assertReflexiveParse("#o1234", List(ast.IntegerLiteral(668)))
+    assertReflexiveParse("#o-010", List(ast.IntegerLiteral(-8)))
     
-    assert(scm"#xdead" === List(ast.IntegerLiteral(57005)))
-    assert(scm"#x-b00b5" === List(ast.IntegerLiteral(-721077)))
+    assertReflexiveParse("#xdead", List(ast.IntegerLiteral(57005)))
+    assertReflexiveParse("#x-b00b5", List(ast.IntegerLiteral(-721077)))
   }
 
   test("reals") {
-    assert(scm"0.0" === List(ast.RealLiteral(0.0)))
-    assert(scm"33.337" === List(ast.RealLiteral(33.337)))
-    assert(scm"-0100.0" === List(ast.RealLiteral(-100.0)))
+    assertReflexiveParse("0.0", List(ast.RealLiteral(0.0)))
+    assertReflexiveParse("33.337", List(ast.RealLiteral(33.337)))
+    assertReflexiveParse("-0100.0", List(ast.RealLiteral(-100.0)))
 
-    assert(scm"+inf.0" === List(ast.PositiveInfinityLiteral))
-    assert(scm"-inf.0" === List(ast.NegativeInfinityLiteral))
+    assertReflexiveParse("+inf.0", List(ast.PositiveInfinityLiteral))
+    assertReflexiveParse("-inf.0", List(ast.NegativeInfinityLiteral))
     
-    assert(scm"+INF.0" === List(ast.PositiveInfinityLiteral))
-    assert(scm"-INF.0" === List(ast.NegativeInfinityLiteral))
+    assertReflexiveParse("+INF.0", List(ast.PositiveInfinityLiteral))
+    assertReflexiveParse("-INF.0", List(ast.NegativeInfinityLiteral))
 
-    assert(scm"+NaN.0" === List(ast.NaNLiteral))
-    assert(scm"-NaN.0" === List(ast.NaNLiteral))
+    assertReflexiveParse("+NaN.0", List(ast.NaNLiteral))
+    assertReflexiveParse("-NaN.0", List(ast.NaNLiteral))
   }
 
   test("strings") {
@@ -180,7 +183,7 @@ newline""", "Bare\nnewline")
   }
 
   test("vectors") {
-    assert(scm"#(0 (2 2 2 2) Anna)" === List(
+    assertReflexiveParse("#(0 (2 2 2 2) Anna)", List(
       ast.VectorLiteral(Vector(
         ast.IntegerLiteral(0), 
         ast.ProperList(List(
@@ -193,42 +196,42 @@ newline""", "Bare\nnewline")
       ))
     ))
     
-    assert(scm"#()" === List(ast.VectorLiteral(Vector())))
+    assertReflexiveParse("#()", List(ast.VectorLiteral(Vector())))
   }
 
   test("bytevectors") {
-    assert(scm"#u8(0 10 5)" === List(
+    assertReflexiveParse("#u8(0 10 5)", List(
       ast.ByteVector(Vector(0, 10, 5))
     ))
 
-    assert(scm"#u8()" === List(ast.ByteVector(Vector())))
+    assertReflexiveParse("#u8()", List(ast.ByteVector(Vector())))
   }
 
   test("characters") { 
-    assert(scm"#\alarm" === List(ast.CharLiteral(0x07)))
-    assert(scm"#\backspace" === List(ast.CharLiteral(0x08)))
-    assert(scm"#\delete" === List(ast.CharLiteral(0x7f)))
-    assert(scm"#\escape" === List(ast.CharLiteral(0x1b)))
-    assert(scm"#\newline" === List(ast.CharLiteral(0x0a)))
-    assert(scm"#\null" === List(ast.CharLiteral(0x00)))
-    assert(scm"#\return" === List(ast.CharLiteral(0x0d)))
-    assert(scm"#\space" === List(ast.CharLiteral(0x20)))
-    assert(scm"#\tab" === List(ast.CharLiteral(0x09)))
+    assertReflexiveParse(raw"#\alarm", List(ast.CharLiteral(0x07)))
+    assertReflexiveParse(raw"#\backspace", List(ast.CharLiteral(0x08)))
+    assertReflexiveParse(raw"#\delete", List(ast.CharLiteral(0x7f)))
+    assertReflexiveParse(raw"#\escape", List(ast.CharLiteral(0x1b)))
+    assertReflexiveParse(raw"#\newline", List(ast.CharLiteral(0x0a)))
+    assertReflexiveParse(raw"#\null", List(ast.CharLiteral(0x00)))
+    assertReflexiveParse(raw"#\return", List(ast.CharLiteral(0x0d)))
+    assertReflexiveParse(raw"#\space", List(ast.CharLiteral(0x20)))
+    assertReflexiveParse(raw"#\tab", List(ast.CharLiteral(0x09)))
 
-    assert(scm"#\a" === List(ast.CharLiteral('a')))
-    assert(scm"#\A" === List(ast.CharLiteral('A')))
-    assert(scm"#\(" === List(ast.CharLiteral('(')))
-    assert(scm"#\ " === List(ast.CharLiteral(' ')))
-    assert(scm"#\x03BB" === List(ast.CharLiteral(0x3bb)))
+    assertReflexiveParse(raw"#\a", List(ast.CharLiteral('a')))
+    assertReflexiveParse(raw"#\A", List(ast.CharLiteral('A')))
+    assertReflexiveParse(raw"#\(", List(ast.CharLiteral('(')))
+    assertReflexiveParse(raw"#\ ", List(ast.CharLiteral(' ')))
+    assertReflexiveParse(raw"#\x03BB", List(ast.CharLiteral(0x3bb)))
   }
 
   test("unspecific") {
-    assert(scm"#!unspecific" === List(ast.UnspecificValue))
+    assertReflexiveParse("#!unspecific", List(ast.UnspecificValue))
   }
 
   test("comments") {
-    assert(scm"test ; COMMENT" === List(ast.Symbol("test")))
-    assert(scm"(Hello #;(you jerk))" === List(ast.ProperList(ast.Symbol("Hello") :: Nil)))
+    assertReflexiveParse("test ; COMMENT", List(ast.Symbol("test")))
+    assertReflexiveParse("(Hello #;(you jerk))", List(ast.ProperList(ast.Symbol("Hello") :: Nil)))
 
     val multilineTest = """
       #| This is a block comment
