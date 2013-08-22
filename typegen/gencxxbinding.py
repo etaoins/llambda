@@ -92,6 +92,8 @@ def _generate_type_members(boxed_types, type_name):
 
         if field.qualified_name == BASE_TYPE + ".typeId":
             member_type = "BoxedTypeId"
+        elif field.qualified_name == BASE_TYPE + ".gcState":
+            member_type = "GarbageState"
         else:
             member_type = field_type_to_cxx(field)
 

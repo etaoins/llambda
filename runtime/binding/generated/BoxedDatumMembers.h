@@ -8,7 +8,7 @@ public:
 		return m_typeId;
 	}
 
-	std::uint16_t gcState() const
+	GarbageState gcState() const
 	{
 		return m_gcState;
 	}
@@ -296,4 +296,4 @@ public:
 
 private:
 	BoxedTypeId m_typeId;
-	std::uint16_t m_gcState;
+	GarbageState m_gcState;
