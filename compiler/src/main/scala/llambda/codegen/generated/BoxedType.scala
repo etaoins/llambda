@@ -7,70 +7,70 @@ package llambda.codegen.boxedtype
 import llambda.codegen.llvmir.{UserDefinedType, PointerType}
 
 sealed abstract class BoxedType {
-  val llvmType : PointerType
+  val irType : PointerType
 }
 
 object BoxedDatum extends BoxedType {
-  val llvmType = PointerType(UserDefinedType("boxedDatum"))
+  val irType = PointerType(UserDefinedType("boxedDatum"))
 }
 
 object UnspecificValue extends BoxedType {
-  val llvmType = PointerType(UserDefinedType("unspecific"))
+  val irType = PointerType(UserDefinedType("unspecific"))
 }
 
 object PairValue extends BoxedType {
-  val llvmType = PointerType(UserDefinedType("pair"))
+  val irType = PointerType(UserDefinedType("pair"))
 }
 
 object EmptyListValue extends BoxedType {
-  val llvmType = PointerType(UserDefinedType("emptyList"))
+  val irType = PointerType(UserDefinedType("emptyList"))
 }
 
 object StringLikeValue extends BoxedType {
-  val llvmType = PointerType(UserDefinedType("stringLike"))
+  val irType = PointerType(UserDefinedType("stringLike"))
 }
 
 object StringValue extends BoxedType {
-  val llvmType = PointerType(UserDefinedType("string"))
+  val irType = PointerType(UserDefinedType("string"))
 }
 
 object SymbolValue extends BoxedType {
-  val llvmType = PointerType(UserDefinedType("symbol"))
+  val irType = PointerType(UserDefinedType("symbol"))
 }
 
 object BooleanValue extends BoxedType {
-  val llvmType = PointerType(UserDefinedType("boolean"))
+  val irType = PointerType(UserDefinedType("boolean"))
 }
 
 object ExactIntegerValue extends BoxedType {
-  val llvmType = PointerType(UserDefinedType("exactInteger"))
+  val irType = PointerType(UserDefinedType("exactInteger"))
 }
 
 object InexactRationalValue extends BoxedType {
-  val llvmType = PointerType(UserDefinedType("inexactRational"))
+  val irType = PointerType(UserDefinedType("inexactRational"))
 }
 
 object CharacterValue extends BoxedType {
-  val llvmType = PointerType(UserDefinedType("character"))
+  val irType = PointerType(UserDefinedType("character"))
 }
 
 object ByteVectorValue extends BoxedType {
-  val llvmType = PointerType(UserDefinedType("byteVector"))
+  val irType = PointerType(UserDefinedType("byteVector"))
 }
 
 object ProcedureValue extends BoxedType {
-  val llvmType = PointerType(UserDefinedType("procedure"))
+  val irType = PointerType(UserDefinedType("procedure"))
 }
 
 object VectorLikeValue extends BoxedType {
-  val llvmType = PointerType(UserDefinedType("vectorLike"))
+  val irType = PointerType(UserDefinedType("vectorLike"))
 }
 
 object VectorValue extends BoxedType {
-  val llvmType = PointerType(UserDefinedType("vector"))
+  val irType = PointerType(UserDefinedType("vector"))
 }
 
 object ClosureValue extends BoxedType {
-  val llvmType = PointerType(UserDefinedType("closure"))
+  val irType = PointerType(UserDefinedType("closure"))
 }
 

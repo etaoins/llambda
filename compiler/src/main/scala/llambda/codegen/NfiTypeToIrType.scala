@@ -20,7 +20,7 @@ object NfiTypeToIrType {
         FirstClassTypeWithSign(llvmir.DoubleType, None)
 
       case nfi.BoxedDatum =>
-        FirstClassTypeWithSign(bt.BoxedDatum.llvmType, None)
+        FirstClassTypeWithSign(bt.BoxedDatum.irType, None)
 
       case nfi.Utf8String =>
         FirstClassTypeWithSign(llvmir.PointerType(llvmir.IntegerType(8)), None)

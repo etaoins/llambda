@@ -85,7 +85,7 @@ class NfiTypeToIrTypeSuite extends FunSuite {
   test("boxed datum") {
     val typeWithSign = NfiTypeToIrType(nfi.BoxedDatum)
 
-    assert(typeWithSign.irType === bt.BoxedDatum.llvmType)
+    assert(typeWithSign.irType === bt.BoxedDatum.irType)
     assert(typeWithSign.signed === None)
   }
 
