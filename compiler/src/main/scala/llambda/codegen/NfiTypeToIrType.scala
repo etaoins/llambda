@@ -3,23 +3,27 @@ package llambda.codegen
 import llambda.nfi
 import llambda.codegen.{boxedtype => bt}
 
+case class FirstClassTypeWithSign(
+  irType : llvmir.FirstClassType,
+  signed : Option[Boolean])
+
 object NfiTypeToIrType {
-  def apply(nativeType : nfi.NativeType) : llvmir.FirstClassType = {
+  def apply(nativeType : nfi.NativeType) : FirstClassTypeWithSign = {
     nativeType match {
       case intLike : nfi.IntLikeType =>
-        llvmir.IntegerType(intLike.bits)
+        FirstClassTypeWithSign(llvmir.IntegerType(intLike.bits), Some(intLike.signed))
 
       case nfi.Float =>
-        llvmir.SingleType
+        FirstClassTypeWithSign(llvmir.SingleType, None)
 
       case nfi.Double =>
-        llvmir.DoubleType
+        FirstClassTypeWithSign(llvmir.DoubleType, None)
 
       case nfi.BoxedDatum =>
-        bt.BoxedDatum.llvmType
+        FirstClassTypeWithSign(bt.BoxedDatum.llvmType, None)
 
       case nfi.Utf8String =>
-        llvmir.PointerType(llvmir.IntegerType(8))
+        FirstClassTypeWithSign(llvmir.PointerType(llvmir.IntegerType(8)), None)
     }
   }
 }
