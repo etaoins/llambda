@@ -39,7 +39,7 @@ case object FalseConstant extends BoolConstant {
   def toIr = "false"
 }
 
-case class IntegerConstant(irType : IntegerType, value : Integer) extends IrConstant {
+case class IntegerConstant(irType : IntegerType, value : Int) extends IrConstant {
   def toIr = value.toString
 }
 

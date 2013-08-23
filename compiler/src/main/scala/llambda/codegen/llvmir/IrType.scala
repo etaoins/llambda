@@ -13,7 +13,7 @@ case class UserDefinedType(name : String) extends FirstClassType {
   def toIr = s"%${name}"
 }
 
-case class IntegerType(bits : Integer) extends FirstClassType {
+case class IntegerType(bits : Int) extends FirstClassType {
   def toIr = s"i${bits}"
 }
 
@@ -29,7 +29,7 @@ case object VoidType extends IrType with ReturnableType {
   def toIr = "void"
 }
 
-case class ArrayType(elements : Integer, innerType : FirstClassType) extends FirstClassType {
+case class ArrayType(elements : Int, innerType : FirstClassType) extends FirstClassType {
   def toIr = s"[$elements x $innerType]"
 }
 

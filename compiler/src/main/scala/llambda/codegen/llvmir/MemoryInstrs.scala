@@ -3,7 +3,7 @@ package llambda.codegen.llvmir
 import llambda.InternalCompilerErrorException
 
 private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
-  def alloca(resultName : String)(irType : IrType, numElements : Integer = 1, alignment : Integer = 0) : LocalVariable = {
+  def alloca(resultName : String)(irType : IrType, numElements : Int = 1, alignment : Int = 0) : LocalVariable = {
     val resultVar = allocateLocalVar(PointerType(irType), resultName)
 
     val baseAlloc = s"${resultVar.toIr} = alloca ${irType.toIr}"
@@ -39,7 +39,7 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
       throw new InternalCompilerErrorException("Attempted memory access from a non-pointer")
   }
 
-  def load(resultName : String)(from : IrValue, alignment : Integer = 0, volatile : Boolean = false) : LocalVariable = {
+  def load(resultName : String)(from : IrValue, alignment : Int = 0, volatile : Boolean = false) : LocalVariable = {
     val resultType = pointeeTypeForAccess(from.irType)
     val resultVar = allocateLocalVar(resultType, resultName)
 
@@ -62,7 +62,7 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
     resultVar
   }
 
-  def store(value : IrValue, to : IrValue, alignment : Integer = 0, volatile : Boolean = false) : Unit = {
+  def store(value : IrValue, to : IrValue, alignment : Int = 0, volatile : Boolean = false) : Unit = {
     val storedType = pointeeTypeForAccess(to.irType)
 
     if (storedType != value.irType) {
