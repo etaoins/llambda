@@ -25,7 +25,16 @@ public:
 	void operator delete(void *value) = delete;
 
 protected:
+	// Used for normal allocations
+	// alloc::allocateCons already returns the correct garbage state
 	BoxedDatum(BoxedTypeId typeId) : m_typeId(typeId)
+	{
+	}
+
+	// Used for constant allocations
+	BoxedDatum(BoxedTypeId typeId, GarbageState gcState) :
+		m_typeId(typeId),
+		m_gcState(gcState)
 	{
 	}
 };

@@ -7,6 +7,7 @@ add_library(lliby
 	alloc/allocator.cpp
 	binding/BoxedDatum.cpp
 	binding/ProcedureValue.cpp
+	core/constinstances.cpp
 	core/fatal.cpp
 	stdlib/generated/predicates.cpp
 	)
