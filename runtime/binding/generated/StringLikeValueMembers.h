@@ -3,6 +3,11 @@
  *****************************************************************/
 
 public:
+	bool asciiOnlyHint() const
+	{
+		return m_asciiOnlyHint;
+	}
+
 	std::uint32_t byteLength() const
 	{
 		return m_byteLength;
@@ -14,5 +19,6 @@ public:
 	}
 
 private:
+	bool m_asciiOnlyHint;
 	std::uint32_t m_byteLength;
 	std::uint8_t* m_utf8Data;
