@@ -9,6 +9,7 @@ add_library(lliby
 	binding/ProcedureValue.cpp
 	core/constinstances.cpp
 	core/fatal.cpp
+	core/init.cpp
 	stdlib/generated/predicates.cpp
 	)
 

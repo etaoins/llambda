@@ -5,6 +5,15 @@ import llambda.codegen.llvmir._
 import scala.io.Source
 
 object GenerateCode {
+  private val llibyInitDecl = {
+    IrFunctionDecl(
+      result=IrFunction.Result(VoidType),
+      name="lliby_init",
+      arguments=Nil,
+      attributes=Set(IrFunction.NoUnwind)
+    )
+  }
+
   def resourceAsString(resourcePath : String) : String = {
     val stream = getClass.getClassLoader.getResourceAsStream(resourcePath)
     io.Source.fromInputStream(stream).mkString
@@ -26,12 +35,17 @@ object GenerateCode {
         "argv" -> IrFunction.Argument(PointerType(PointerType(IntegerType(8))))
       )
 
+      declareFunction(llibyInitDecl)
+
       val mainFunction = new IrFunctionBuilder(
         result=result,
         namedArguments=namedArguments,
         name="main") {
 
         addBlock("entry")(new IrBlockBuilder {
+          // Initialize our runtime
+          callDecl(None)(llibyInitDecl, Nil)
+
           ret(IntegerConstant(IntegerType(32), 0))
         })
       }
