@@ -34,5 +34,18 @@ ADD_DEFINITIONS(
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	# Mac OS X's libstdc++ is too old for C++11 support
 	# Explicitly use libc++
-	ADD_DEFINITIONS(-stdlib=libc++)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 endif()
+
+# Add tests
+enable_testing()
+
+set(ALL_TEST_NAMES
+	constinstances)
+
+foreach( test_name ${ALL_TEST_NAMES} )
+	add_executable(tests/bin/test-${test_name} tests/test-${test_name}.cpp)
+	target_link_libraries(tests/bin/test-${test_name} lliby)
+
+	add_test(${test_name} tests/bin/test-${test_name})
+endforeach()
