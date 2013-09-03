@@ -11,8 +11,20 @@ object Compiler {
   private def compileLlvmIr(llvmIr : String, output : File, optimizeLevel : Integer) {
     val optimizeArg = s"-O${optimizeLevel}"
 
+    val stdlibArg = if (System.getProperty("os.name") == "Mac OS X")  {
+      // Force use of libc++ on Mac OS X
+      // This matches the logic of runtime/CMakeLists.txt
+      List("-stdlib=libc++")
+    }
+    else {
+      Nil
+    }
+
     val llcCmd = List("llc", optimizeArg)
-    val clangCmd = List("clang++", optimizeArg, "../runtime/liblliby.a", "-x", "assembler", "-", "-o", output.getAbsolutePath)
+    val clangCmd = List("clang++", optimizeArg, "../runtime/liblliby.a") ++
+      List("-x", "assembler") ++ 
+      stdlibArg ++
+      List("-", "-o", output.getAbsolutePath)
 
     val llvmIrStream = new ByteArrayInputStream(llvmIr.getBytes("UTF-8"))
     val compilePipeline = llcCmd #< llvmIrStream #| clangCmd
