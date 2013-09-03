@@ -28,6 +28,8 @@ def generate_llvm_prelude(boxed_types):
                 description = "signed "
             elif field.signed is False:
                 description = "unsigned "
+            elif field.complex_type == "bool":
+                description = "bool "
             else:
                 description = ""
 

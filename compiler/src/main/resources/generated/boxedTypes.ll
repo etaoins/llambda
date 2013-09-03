@@ -14,7 +14,7 @@
 ; {supertype}
 %emptyList = type {%boxedDatum}
 
-; {supertype, asciiOnlyHint, unsigned byteLength, utf8Data}
+; {supertype, bool asciiOnlyHint, unsigned byteLength, utf8Data}
 %stringLike = type {%boxedDatum, i8, i32, i8*}
 
 ; {supertype}
@@ -23,7 +23,7 @@
 ; {supertype}
 %symbol = type {%stringLike}
 
-; {supertype, value}
+; {supertype, bool value}
 %boolean = type {%boxedDatum, i8}
 
 ; {supertype, signed value}
