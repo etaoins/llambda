@@ -4,6 +4,110 @@ import llambda.InternalCompilerErrorException
 import org.scalatest.FunSuite
 
 class OtherInstrsSuite extends FunSuite {
+  test("integer equality") {
+    val var1 = IntegerConstant(IntegerType(32), 20)
+    val var2 = IntegerConstant(IntegerType(32), 30)
+
+    val block = new IrBlockBuilder()(new LocalNameSource) {
+      val resultVal = icmp("equal")(ComparisonCond.Equal, None, var1, var2)
+    
+    }
+
+    assert(block.toIr === "\t%equal1 = icmp eq i32 20, 30")
+  }
+  
+  test("integer inequality") {
+    val var1 = IntegerConstant(IntegerType(32), 20)
+    val var2 = IntegerConstant(IntegerType(32), 30)
+
+    val block = new IrBlockBuilder()(new LocalNameSource) {
+      val resultVal = icmp("inequal")(ComparisonCond.NotEqual, None, var1, var2)
+    
+    }
+
+    assert(block.toIr === "\t%inequal1 = icmp ne i32 20, 30")
+  }
+  
+  test("integer signed greater than") {
+    val var1 = IntegerConstant(IntegerType(32), 20)
+    val var2 = IntegerConstant(IntegerType(32), 30)
+
+    val block = new IrBlockBuilder()(new LocalNameSource) {
+      val resultVal = icmp("greaterthan")(ComparisonCond.GreaterThan, Some(true), var1, var2)
+    
+    }
+
+    assert(block.toIr === "\t%greaterthan1 = icmp sgt i32 20, 30")
+  }
+  
+  test("integer unsigned less than equals") {
+    val var1 = IntegerConstant(IntegerType(32), 20)
+    val var2 = IntegerConstant(IntegerType(32), 30)
+
+    val block = new IrBlockBuilder()(new LocalNameSource) {
+      val resultVal = icmp("lessthanequals")(ComparisonCond.LessThanEqual, Some(false), var1, var2)
+    
+    }
+
+    assert(block.toIr === "\t%lessthanequals1 = icmp ule i32 20, 30")
+  }
+  
+  test("integer equality with signedness fails") {
+    val var1 = IntegerConstant(IntegerType(32), 20)
+    val var2 = IntegerConstant(IntegerType(32), 30)
+
+    val block = new IrBlockBuilder()(new LocalNameSource) {
+      intercept[InternalCompilerErrorException] {
+        icmp("signed")(ComparisonCond.Equal, Some(true), var1, var2)
+      }
+    }
+  }
+  
+  test("integer less than without signedness fails") {
+    val var1 = IntegerConstant(IntegerType(32), 20)
+    val var2 = IntegerConstant(IntegerType(32), 30)
+
+    val block = new IrBlockBuilder()(new LocalNameSource) {
+      intercept[InternalCompilerErrorException] {
+        icmp("notsigned")(ComparisonCond.LessThan, None, var1, var2)
+      }
+    }
+  }
+  
+  test("pointer equality") {
+    val fakePointer1 = LocalVariable("fake1", PointerType(IntegerType(64)))
+    val fakePointer2 = LocalVariable("fake2", PointerType(IntegerType(64)))
+
+    val block = new IrBlockBuilder()(new LocalNameSource) {
+      val resultVal = icmp("pointer")(ComparisonCond.Equal, None, fakePointer1, fakePointer2)
+    
+    }
+
+    assert(block.toIr === "\t%pointer1 = icmp eq i64* %fake1, %fake2")
+  }
+  
+  test("integer equality with incompatible types fails") {
+    val var1 = IntegerConstant(IntegerType(64), 20)
+    val var2 = IntegerConstant(IntegerType(32), 30)
+
+    val block = new IrBlockBuilder()(new LocalNameSource) {
+      intercept[InternalCompilerErrorException] {
+        icmp("incompatible")(ComparisonCond.Equal, None, var1, var2)
+      }
+    }
+  }
+  
+  test("integer equality with doubles fails") {
+    val var1 = DoubleConstant(20.0)
+    val var2 = DoubleConstant(30.0)
+
+    val block = new IrBlockBuilder()(new LocalNameSource) {
+      intercept[InternalCompilerErrorException] {
+        icmp("noninteger")(ComparisonCond.Equal, None, var1, var2)
+      }
+    }
+  }
+
   test("sourceless ph") {
     intercept[InternalCompilerErrorException] {
       new IrBlockBuilder()(new LocalNameSource) {

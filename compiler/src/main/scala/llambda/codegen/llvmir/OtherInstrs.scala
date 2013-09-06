@@ -5,6 +5,35 @@ import llambda.InternalCompilerErrorException
 private[llvmir] trait OtherInstrs extends IrInstrBuilder {
   protected case class PhiSource(value : IrValue, label : IrLabel)
 
+  def icmp(resultName : String)(compareCond : ComparisonCond.ComparisonCond, signed : Option[Boolean], val1 : IrValue, val2 : IrValue) = {
+    if (val1.irType != val2.irType) {
+      throw new InternalCompilerErrorException("Attempted icmp with incompatible types")
+    }
+
+    val comparedType = val1.irType
+
+    comparedType match {
+      case IntegerType(_) =>
+      case PointerType(_) =>
+      case _ => throw new InternalCompilerErrorException("Attempted icmp with type besides integer or pointer")
+    }
+
+    val conditionIr = ((compareCond.signedDependent, signed) match {
+      case (true, Some(true)) => "s"
+      case (true, Some(false)) => "u"
+      case (true, None) => throw new InternalCompilerErrorException("Attempted sign dependent icmp without signed flag") 
+
+      case (false, None) => ""
+      case (false, Some(_)) => throw new InternalCompilerErrorException("Attempted sign independent icmp with signed flag") 
+    }) + compareCond.mnemonic
+    
+    val resultVar = allocateLocalVar(IntegerType(1), resultName)
+
+    instructions += s"${resultVar.toIr} = icmp ${conditionIr} ${comparedType.toIr} ${val1.toIr}, ${val2.toIr}"
+
+    resultVar
+  }
+
   def phi(resultName : String)(sources : PhiSource*) : LocalVariable = {
     if (sources.isEmpty) {
       throw new InternalCompilerErrorException("Attempted phi with no sources")
