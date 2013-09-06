@@ -108,7 +108,7 @@ class OtherInstrsSuite extends FunSuite {
     }
   }
 
-  test("sourceless ph") {
+  test("sourceless phi") {
     intercept[InternalCompilerErrorException] {
       new IrBlockBuilder()(new LocalNameSource) {
         phi("error")()
