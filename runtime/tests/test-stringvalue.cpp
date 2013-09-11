@@ -105,6 +105,99 @@ void testCharAt()
 	}
 }
 
+void testFromFill()
+{
+	using namespace lliby;
+	
+	{
+		StringValue *emptyAsciiValue = StringValue::fromFill(0, 0);
+
+		ASSERT_EQUAL(emptyAsciiValue->byteLength(), 0);
+		ASSERT_EQUAL(emptyAsciiValue->utf8Data()[0], 0);
+		ASSERT_EQUAL(emptyAsciiValue->asciiOnlyHint(), true);
+		ASSERT_EQUAL(emptyAsciiValue->charLength(), 0);
+	}
+	
+	{
+		StringValue *emptyUnicodeValue = StringValue::fromFill(0, 0x02603);
+
+		ASSERT_EQUAL(emptyUnicodeValue->byteLength(), 0);
+		ASSERT_EQUAL(emptyUnicodeValue->utf8Data()[0], 0);
+		// This is tricky - it's still ASCII only because it doesn't actually
+		// contain any characters
+		ASSERT_EQUAL(emptyUnicodeValue->asciiOnlyHint(), true);
+		ASSERT_EQUAL(emptyUnicodeValue->charLength(), 0);
+	}
+	
+	{
+		StringValue *asciiValue = StringValue::fromFill(5, 'H');
+
+		ASSERT_EQUAL(asciiValue->byteLength(), 5);
+		ASSERT_EQUAL(asciiValue->utf8Data()[5], 0);
+		ASSERT_EQUAL(asciiValue->asciiOnlyHint(), true);
+		ASSERT_EQUAL(asciiValue->charLength(), 5);
+		ASSERT_EQUAL(asciiValue->charAt(0), 'H');
+		ASSERT_EQUAL(asciiValue->charAt(4), 'H');
+		ASSERT_EQUAL(asciiValue->charAt(5), StringValue::InvalidChar);
+	}
+	
+	{
+		StringValue *unicodeValue = StringValue::fromFill(5, 0x02603);
+
+		ASSERT_EQUAL(unicodeValue->byteLength(), 15);
+		ASSERT_EQUAL(unicodeValue->utf8Data()[15], 0);
+		ASSERT_EQUAL(unicodeValue->asciiOnlyHint(), false);
+		ASSERT_EQUAL(unicodeValue->charLength(), 5);
+		ASSERT_EQUAL(unicodeValue->charAt(0), 0x02603);
+		ASSERT_EQUAL(unicodeValue->charAt(4), 0x02603);
+		ASSERT_EQUAL(unicodeValue->charAt(5), StringValue::InvalidChar);
+	}
+}
+
+void testFromAppended()
+{
+	using namespace lliby;
+
+	{
+		StringValue *emptyValue = StringValue::fromAppended(std::list<const StringValue*>());
+		ASSERT_EQUAL(emptyValue->byteLength(), 0);
+		ASSERT_EQUAL(emptyValue->utf8Data()[0], 0);
+		ASSERT_EQUAL(emptyValue->asciiOnlyHint(), true);
+		ASSERT_EQUAL(emptyValue->charLength(), 0);
+	}
+	
+	{
+		std::list<const StringValue*> appendParts = {
+			StringValue::fromUtf8CString(u8"Hello"),
+			StringValue::fromUtf8CString(u8" "),
+			StringValue::fromUtf8CString(u8"world!")
+		};
+
+		StringValue *asciiValue = StringValue::fromAppended(appendParts);
+		
+		ASSERT_EQUAL(asciiValue->byteLength(), 12);
+		ASSERT_EQUAL(asciiValue->utf8Data()[12], 0);
+		ASSERT_EQUAL(asciiValue->asciiOnlyHint(), true);
+		ASSERT_EQUAL(asciiValue->charLength(), 12);
+		ASSERT_EQUAL(memcmp(asciiValue->utf8Data(), u8"Hello world!", 12), 0);
+	}
+	
+	{
+		std::list<const StringValue*> appendParts = {
+			StringValue::fromUtf8CString(u8"Hello "),
+			StringValue::fromUtf8CString(u8"☃")
+		};
+
+		StringValue *unicodeValue = StringValue::fromAppended(appendParts);
+		
+		ASSERT_EQUAL(unicodeValue->byteLength(), 9);
+		ASSERT_EQUAL(unicodeValue->utf8Data()[9], 0);
+		ASSERT_EQUAL(unicodeValue->asciiOnlyHint(), false);
+		ASSERT_EQUAL(unicodeValue->charLength(), 7);
+		ASSERT_EQUAL(memcmp(unicodeValue->utf8Data(), "Hello ☃", 9), 0);
+	}
+}
+
 }
 
 int main(int argc, char *argv[])
@@ -112,8 +205,12 @@ int main(int argc, char *argv[])
 	lliby_init();
 
 	testFromUtf8CString();
+
 	testCompare();
 	testCharAt();
+	
+	testFromFill();
+	testFromAppended();
 
 	return 0;
 }

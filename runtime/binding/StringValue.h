@@ -2,6 +2,7 @@
 #define _LLIBY_BINDING_STRINGVALUE_H
 
 #include "StringLikeValue.h"
+#include <list>
 
 namespace lliby
 {
@@ -15,12 +16,17 @@ public:
 	{
 	}
 
+	typedef std::int32_t CodePoint;
+	static const CodePoint InvalidChar = -1;
+
 	static StringValue* fromUtf8CString(const char *str);
+	static StringValue* fromFill(std::uint32_t length, CodePoint fill);
+
+	static StringValue* fromAppended(const std::list<const StringValue*> &strings);
 
 	std::uint32_t charLength() const;
 
-	std::int32_t charAt(std::uint32_t offset);
-	static const std::int32_t InvalidChar = -1;
+	CodePoint charAt(std::uint32_t offset);
 
 	bool operator==(const StringValue &other) const
 	{
