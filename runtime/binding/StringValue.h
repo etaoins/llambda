@@ -15,10 +15,25 @@ public:
 	{
 	}
 
-	static StringValue* fromUtf8CString(const char *str)
+	static StringValue* fromUtf8CString(const char *str);
+
+	std::uint32_t charLength() const;
+
+	std::int32_t charAt(std::uint32_t offset);
+	static const std::int32_t InvalidChar = -1;
+
+	bool operator==(const StringValue &other) const
 	{
-		return reinterpret_cast<StringValue*>(StringLikeValue::fromUtf8CString(BoxedTypeId::String, str));
+		return equals(other);
 	}
+	
+	bool operator!=(const StringValue &other) const
+	{
+		return !equals(other);
+	}
+
+private:
+	std::uint8_t *charPointer(std::uint32_t offset);
 };
 
 }

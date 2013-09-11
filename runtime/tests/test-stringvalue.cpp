@@ -83,7 +83,7 @@ void testCharAt()
 	{
 		StringValue *emptyValue = StringValue::fromUtf8CString(u8"");
 
-		ASSERT_EQUAL(emptyValue->charAt(0), StringLikeValue::InvalidChar);
+		ASSERT_EQUAL(emptyValue->charAt(0), StringValue::InvalidChar);
 	}
 
 	{

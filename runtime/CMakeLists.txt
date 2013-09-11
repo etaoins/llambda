@@ -8,6 +8,7 @@ add_library(lliby
 	binding/BoxedDatum.cpp
 	binding/ProcedureValue.cpp
 	binding/StringLikeValue.cpp
+	binding/StringValue.cpp
 	core/constinstances.cpp
 	core/fatal.cpp
 	core/init.cpp
