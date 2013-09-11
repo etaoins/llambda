@@ -7,6 +7,7 @@ add_library(lliby
 	alloc/allocator.cpp
 	binding/BoxedDatum.cpp
 	binding/ProcedureValue.cpp
+	binding/StringLikeValue.cpp
 	core/constinstances.cpp
 	core/fatal.cpp
 	core/init.cpp
@@ -26,9 +27,15 @@ endif()
 # Be strict about warnings
 set(CMAKE_CXX_FLAGS "-Werror -Wall")
 
-# Enable C++11
+# Enable C++11 and disable exceptions
+# Exceptions have two issues:
+# - C++ exceptions will not propagate correctly through Scheme code 
+# - When operator new is used Clang will generate unwind code referencing 
+#   operator delete. This has been explicitly removed from BoxedDatum so it
+#   causes link errors whenever operator new is used on a BoxedDatum subclass
 ADD_DEFINITIONS(
 	-std=c++11 
+	-fno-exceptions
 	)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
@@ -41,7 +48,8 @@ endif()
 enable_testing()
 
 set(ALL_TEST_NAMES
-	constinstances)
+	constinstances
+	stringvalue)
 
 foreach( test_name ${ALL_TEST_NAMES} )
 	add_executable(tests/bin/test-${test_name} tests/test-${test_name}.cpp)
