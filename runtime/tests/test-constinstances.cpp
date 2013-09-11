@@ -15,4 +15,6 @@ int main(int argc, char *argv[])
 	ASSERT_EQUAL(BooleanValue::trueInstance()->value(), true);
 	ASSERT_EQUAL(BooleanValue::falseInstance()->value(), false);
 	ASSERT_TRUE(EmptyListValue::instance()->asEmptyListValue() != nullptr);
+
+	return 0;
 }

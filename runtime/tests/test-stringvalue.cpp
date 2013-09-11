@@ -114,4 +114,6 @@ int main(int argc, char *argv[])
 	testFromUtf8CString();
 	testCompare();
 	testCharAt();
+
+	return 0;
 }
