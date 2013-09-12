@@ -11,8 +11,8 @@ class StringValue : public StringLikeValue
 {
 #include "generated/StringValueMembers.h"
 public:
-	StringValue(std::uint8_t *utf8Data, std::uint32_t byteLength, bool asciiOnlyHint = false) :
-		StringLikeValue(BoxedTypeId::String, utf8Data, byteLength, asciiOnlyHint)
+	StringValue(std::uint8_t *utf8Data, std::uint32_t byteLength, std::uint32_t charLength) :
+		StringLikeValue(BoxedTypeId::String, utf8Data, byteLength, charLength)
 	{
 	}
 
@@ -25,8 +25,6 @@ public:
 	static StringValue* fromCodePoints(const std::list<CodePoint> &codePoints);
 
 	StringValue* copy(std::int64_t start = 0, std::int64_t end = -1); 
-
-	std::uint32_t charLength() const;
 
 	CodePoint charAt(std::uint32_t offset) const;
 	bool setCharAt(std::uint32_t offset, CodePoint codePoint);
@@ -43,6 +41,11 @@ public:
 	bool operator!=(const StringValue &other) const
 	{
 		return !equals(other);
+	}
+
+	bool asciiOnly() const
+	{
+		return byteLength() == charLength();
 	}
 
 private:

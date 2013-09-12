@@ -49,8 +49,9 @@
         "inherits": "boxedDatum",
         "fields": [
             {
-                "name": "asciiOnlyHint",
-                "complexType": "bool"
+                "name": "charLength",
+                "llvmType": "i32",
+                "signed": false
             },
             {
                 "name": "byteLength",
