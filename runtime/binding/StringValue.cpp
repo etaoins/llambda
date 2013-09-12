@@ -157,7 +157,7 @@ StringValue* StringValue::fromUtf8CString(const char *signedStr)
 	}
 
 	// Allocate the new string room for the NULL terminator
-	auto *newString = new std::uint8_t(byteLength + 1);
+	auto *newString = new std::uint8_t[byteLength + 1];
 	memcpy(newString, str, byteLength + 1);
 
 	return new StringValue(newString, byteLength, asciiOnly);
@@ -173,7 +173,7 @@ StringValue* StringValue::fromFill(std::uint32_t length, CodePoint fill)
 	const bool asciiOnly = (encodedCharSize == 1) || (length == 0);
 
 	// Allocate the string
-	auto newString = new std::uint8_t(byteLength + 1);
+	auto newString = new std::uint8_t[byteLength + 1];
 
 	// Actually fill
 	for(std::uint32_t i = 0; i < length; i++) 
@@ -203,7 +203,7 @@ StringValue* StringValue::fromAppended(const std::list<const StringValue*> &stri
 	}
 
 	// Allocate the new string and null terminate it
-	auto newString = new std::uint8_t(totalByteLength + 1);
+	auto newString = new std::uint8_t[totalByteLength + 1];
 	newString[totalByteLength] = 0;
 
 	// Copy all the string parts over
@@ -214,6 +214,34 @@ StringValue* StringValue::fromAppended(const std::list<const StringValue*> &stri
 		memcpy(copyPtr, stringPart->utf8Data(), stringPart->byteLength());
 		copyPtr += stringPart->byteLength();
 	}
+
+	return new StringValue(newString, totalByteLength, asciiOnly);
+}
+	
+StringValue* StringValue::fromCodePoints(const std::list<CodePoint> &codePoints)
+{
+	std::vector<std::uint8_t> encodedData;
+	bool asciiOnly = true;
+
+	// The encoded data will have the be at least this size
+	encodedData.reserve(codePoints.size());
+
+	for(auto codePoint : codePoints)
+	{
+		const std::vector<std::uint8_t> encodedChar = encodeUtf8Char(codePoint);
+		encodedData.insert(encodedData.end(), encodedChar.begin(), encodedChar.end());
+
+		if (codePoint > 0x7f)
+		{
+			asciiOnly = false;
+		}
+	}
+	
+	const std::uint32_t totalByteLength = encodedData.size();
+	auto newString = new std::uint8_t[totalByteLength + 1];
+	memcpy(newString, encodedData.data(), totalByteLength);
+
+	newString[totalByteLength] = 0;
 
 	return new StringValue(newString, totalByteLength, asciiOnly);
 }
@@ -240,42 +268,44 @@ std::uint32_t StringValue::charLength() const
 	return length;
 }
 	
-std::uint8_t* StringValue::charPointer(std::uint32_t offset)
+std::uint8_t* StringValue::charPointer(std::uint32_t charOffset) const
 {
-	auto bytesLeft = byteLength();
-	auto scanPtr = utf8Data();
+	return charPointer(utf8Data(), byteLength(), charOffset);
+}
+
+std::uint8_t* StringValue::charPointer(std::uint8_t *scanFrom, std::uint32_t bytesLeft, uint32_t charOffset) const
+{
+	if (asciiOnlyHint())
+	{
+		if (charOffset >= bytesLeft)
+		{
+			return nullptr;
+		}
+
+		return &scanFrom[charOffset];
+	}
 
 	while(bytesLeft > 0)
 	{
-		if (!isContinuationByte(*scanPtr))
+		if (!isContinuationByte(*scanFrom))
 		{
-			if (offset == 0)
+			if (charOffset == 0)
 			{
-				return scanPtr;
+				return scanFrom;
 			}
 			
-			offset--;
+			charOffset--;
 		}
 
 		bytesLeft--;
-		scanPtr++;
+		scanFrom++;
 	}
 
 	return nullptr;
 }
 	
-StringValue::CodePoint StringValue::charAt(std::uint32_t offset)
+StringValue::CodePoint StringValue::charAt(std::uint32_t offset) const
 {
-	if (asciiOnlyHint())
-	{
-		if (offset >= byteLength())
-		{
-			return InvalidChar;
-		}
-
-		return utf8Data()[offset];
-	}
-
 	std::uint8_t* charPtr = charPointer(offset);
 
 	if (charPtr == nullptr)
@@ -284,6 +314,268 @@ StringValue::CodePoint StringValue::charAt(std::uint32_t offset)
 	}
 
 	return decodeUtf8Char(charPtr);
+}
+	
+bool StringValue::fill(CodePoint codePoint, std::int64_t start, std::int64_t end)
+{
+	if ((end != -1) && (end < start))
+	{
+		// Doesn't make sense
+		return false;
+	}
+
+	std::uint8_t *startPointer = charPointer(start);
+
+	if (startPointer == nullptr)
+	{
+		// Fell off the end
+		return false;
+	}
+		
+	std::uint32_t charCount;
+	std::uint8_t *endPointer;
+	
+	if (end != -1)
+	{
+		// We know the exact number of characters
+		charCount = end - start + 1;
+		
+		// Find the end pointer
+		const std::uint32_t bytesLeft = byteLength() - (startPointer - utf8Data());
+		endPointer = charPointer(startPointer, bytesLeft, charCount - 1);
+
+		if (endPointer == nullptr)
+		{
+			// Fell off the end
+			return false;
+		}
+
+		// Read past the last character
+		unsigned int lastCharLength;
+		
+		if (decodeUtf8Char(endPointer, &lastCharLength) == StringValue::InvalidChar)
+		{
+			// We have corrupted UTF-8 internally (!)
+			return false;
+		}
+
+		endPointer += lastCharLength; 
+	}
+	else 
+	{
+		endPointer = &utf8Data()[byteLength()];
+
+		if (asciiOnlyHint())
+		{
+			// We can cheat here if we're ASCII
+			charCount = byteLength() - start;
+		}
+		else
+		{
+			// Count out the characters
+			charCount = 0;
+
+			for(auto scanPtr = startPointer; scanPtr < endPointer; scanPtr++)
+			{
+				if (!isContinuationByte(*scanPtr))
+				{
+					charCount++;
+				}
+			}
+		}
+	}
+
+	// Encode the new character
+	std::vector<std::uint8_t> encoded = encodeUtf8Char(codePoint);
+
+	if (encoded.size() == 0)
+	{
+		// Invalid code point
+		return false;
+	}
+	
+	// Now that we know we'll succeed clear our ASCII-only hint
+	if (codePoint > 0x7f)
+	{
+		// We're not ASCII anymore
+		setAsciiOnlyHint(false);
+	}
+	else if (((startPointer - utf8Data()) == start) &&
+			 (endPointer == &utf8Data()[byteLength()]))
+	{
+		// Everything before us was ASCII, we're ASCII, and we're filling to end
+		setAsciiOnlyHint(true);
+	}
+	
+	const unsigned int requiredBytes = encoded.size() * charCount;
+	const unsigned int replacedBytes = endPointer - startPointer;
+	
+	if (requiredBytes == replacedBytes)
+	{
+		while(charCount--)
+		{
+			memcpy(startPointer, encoded.data(), encoded.size());
+			startPointer += encoded.size();
+		}
+	}
+	else
+	{
+		// Create a new string from pieces of the old string
+		const std::uint32_t newByteLength = byteLength() + requiredBytes - replacedBytes;
+		const std::uint32_t initialBytes = startPointer - utf8Data(); 
+		// Include the NULL terminator
+		const std::uint32_t finalBytes = newByteLength + 1 - initialBytes - requiredBytes;
+		
+		const bool needRealloc = newByteLength > byteLength();
+
+		std::uint8_t* destString;
+		
+		if (needRealloc)
+		{
+			destString = new std::uint8_t[newByteLength + 1];
+			// Fill the initial chunk of the string
+			memcpy(destString, utf8Data(), initialBytes); 
+		}
+		else
+		{
+			destString = utf8Data();
+			// The initial chunk is already correct
+		}
+		
+		std::uint8_t* copyDest = destString + initialBytes;
+
+		while(charCount--)
+		{
+			memcpy(copyDest, encoded.data(), encoded.size());
+			copyDest += encoded.size();
+		}
+
+		memmove(copyDest, startPointer + replacedBytes, finalBytes);
+
+		// Update ourselves with our new string
+		setByteLength(newByteLength);
+
+		if (needRealloc)
+		{
+			delete[] utf8Data();
+			setUtf8Data(destString);
+		}
+	}
+
+	return true;
+}
+	
+bool StringValue::setCharAt(std::uint32_t offset, CodePoint codePoint)
+{
+	return fill(codePoint, offset, offset);
+}
+	
+StringValue* StringValue::copy(std::int64_t start, std::int64_t end)
+{
+	if ((end != -1) && (end < start))
+	{
+		// Doesn't make sense
+		return nullptr;
+	}
+	
+	std::uint8_t *startPointer = charPointer(start);
+	std::uint8_t *endPointer;
+	bool asciiOnly;
+
+	if (end == -1)
+	{
+		// This is easy
+		endPointer = &utf8Data()[byteLength()];
+		asciiOnly = asciiOnlyHint();
+	}
+	else
+	{
+		const std::uint32_t bytesLeft = byteLength() - (startPointer - utf8Data());
+		const std::uint32_t charLength = end - start + 1;
+		
+		// This gets a pointer to the beginning of the character
+		endPointer = charPointer(startPointer, bytesLeft, charLength - 1);
+
+		if (endPointer == nullptr)
+		{
+			// Off the end
+			return nullptr;
+		}
+
+		// Find the length of the character in bytes
+		unsigned int length;
+		if (decodeUtf8Char(endPointer, &length) == StringValue::InvalidChar)
+		{
+			return nullptr;
+		}
+
+		// Include it
+		endPointer += length;
+
+		// We scanned the entire substring so we get this for free
+		asciiOnly = charLength == (endPointer - startPointer);
+	}
+
+	const std::uint32_t newByteLength = endPointer - startPointer;
+
+	// Create the new string
+	auto newString = new std::uint8_t[newByteLength + 1];
+	memcpy(newString, startPointer, newByteLength);
+	newString[newByteLength] = 0;
+
+	return new StringValue(newString, newByteLength, asciiOnly);
+}
+	
+std::list<StringValue::CodePoint> StringValue::codePoints(std::int64_t start, std::int64_t end) const
+{
+	if ((end != -1) && (end < start))
+	{
+		// Doesn't make sense
+		return std::list<CodePoint>();
+	}
+
+	std::uint8_t *scanPtr = charPointer(start);
+	std::uint8_t *endPtr = &utf8Data()[byteLength()];
+
+	if (scanPtr == nullptr)
+	{
+		return std::list<CodePoint>();
+	}
+
+	// It doesn't look like std::list::size() is O(1)
+	unsigned int addedChars = 0;
+	std::list<CodePoint> ret;
+
+	while(scanPtr < endPtr)
+	{
+		unsigned int charLength;
+
+		CodePoint codePoint = decodeUtf8Char(scanPtr, &charLength);
+
+		if (codePoint == InvalidChar)
+		{
+			return std::list<CodePoint>();
+		}
+
+		ret.push_back(codePoint);
+
+		scanPtr += charLength;
+		addedChars++;
+
+		if ((end != -1) && (addedChars == (end - start + 1)))
+		{
+			// We have enough characters
+			return ret;
+		}
+	}
+		
+	if (end != -1)
+	{
+		// We fell off the end
+		return std::list<CodePoint>();
+	}
+
+	return ret;
 }
 
 }

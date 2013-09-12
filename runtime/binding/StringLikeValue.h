@@ -23,6 +23,21 @@ protected:
 		m_utf8Data(utf8Data)
 	{
 	}
+
+	void setAsciiOnlyHint(bool newHint)
+	{
+		m_asciiOnlyHint = newHint;
+	}
+
+	void setByteLength(std::uint32_t newByteLength)
+	{
+		m_byteLength = newByteLength;
+	}
+	
+	void setUtf8Data(std::uint8_t* newUtf8Data)
+	{
+		m_utf8Data = newUtf8Data;
+	}
 };
 
 }

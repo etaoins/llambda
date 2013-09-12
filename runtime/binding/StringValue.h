@@ -21,12 +21,19 @@ public:
 
 	static StringValue* fromUtf8CString(const char *str);
 	static StringValue* fromFill(std::uint32_t length, CodePoint fill);
-
 	static StringValue* fromAppended(const std::list<const StringValue*> &strings);
+	static StringValue* fromCodePoints(const std::list<CodePoint> &codePoints);
+
+	StringValue* copy(std::int64_t start = 0, std::int64_t end = -1); 
 
 	std::uint32_t charLength() const;
 
-	CodePoint charAt(std::uint32_t offset);
+	CodePoint charAt(std::uint32_t offset) const;
+	bool setCharAt(std::uint32_t offset, CodePoint codePoint);
+
+	bool fill(CodePoint codePoint, std::int64_t start = 0, std::int64_t end = -1);
+
+	std::list<CodePoint> codePoints(std::int64_t start = 0, std::int64_t end = -1) const;
 
 	bool operator==(const StringValue &other) const
 	{
@@ -39,7 +46,8 @@ public:
 	}
 
 private:
-	std::uint8_t *charPointer(std::uint32_t offset);
+	std::uint8_t *charPointer(std::uint8_t *scanFrom, std::uint32_t bytesLeft, uint32_t charOffset) const;
+	std::uint8_t *charPointer(std::uint32_t charOffset) const;
 };
 
 }

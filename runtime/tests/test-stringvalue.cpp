@@ -198,6 +198,400 @@ void testFromAppended()
 	}
 }
 
+void testFromCodePoints()
+{
+	using namespace lliby;
+
+	{
+		StringValue *emptyValue = StringValue::fromCodePoints(std::list<StringValue::CodePoint>());
+		ASSERT_EQUAL(emptyValue->byteLength(), 0);
+		ASSERT_EQUAL(emptyValue->utf8Data()[0], 0);
+		ASSERT_EQUAL(emptyValue->asciiOnlyHint(), true);
+		ASSERT_EQUAL(emptyValue->charLength(), 0);
+	}
+
+	{
+		const std::list<StringValue::CodePoint> helloPoints = {
+			'H',
+			'e',
+			'l',
+			'l',
+			'o'
+		};
+
+		StringValue *helloValue = StringValue::fromCodePoints(helloPoints);
+		
+		ASSERT_EQUAL(helloValue->byteLength(), 5);
+		ASSERT_EQUAL(helloValue->utf8Data()[5], 0);
+		ASSERT_EQUAL(helloValue->asciiOnlyHint(), true);
+		ASSERT_EQUAL(helloValue->charLength(), 5);
+		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"Hello", 6), 0);
+	}
+	
+	{
+		const std::list<StringValue::CodePoint> unicodePoints = {
+			0x1F409,
+			0x02603,
+			'!'
+		};
+
+		StringValue *unicodeValue = StringValue::fromCodePoints(unicodePoints);
+		
+		ASSERT_EQUAL(unicodeValue->byteLength(), 8);
+		ASSERT_EQUAL(unicodeValue->asciiOnlyHint(), false);
+		ASSERT_EQUAL(unicodeValue->charLength(), 3);
+		ASSERT_EQUAL(memcmp(unicodeValue->utf8Data(), u8"🐉☃!", 9), 0);
+	}
+}
+
+void testStringCopy()
+{
+	using namespace lliby;
+	
+	{
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+		StringValue *helloCopy = helloValue->copy();
+
+		ASSERT_EQUAL(helloCopy->byteLength(), 5);
+		ASSERT_EQUAL(helloCopy->asciiOnlyHint(), true);
+		ASSERT_EQUAL(helloCopy->charLength(), 5);
+		ASSERT_EQUAL(memcmp(helloCopy->utf8Data(), u8"Hello", 6), 0);
+	}
+	
+	{
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+		StringValue *elloCopy = helloValue->copy(1);
+
+		ASSERT_EQUAL(elloCopy->byteLength(), 4);
+		ASSERT_EQUAL(elloCopy->asciiOnlyHint(), true);
+		ASSERT_EQUAL(elloCopy->charLength(), 4);
+		ASSERT_EQUAL(memcmp(elloCopy->utf8Data(), u8"ello", 5), 0);
+	}
+	
+	{
+		// Make sure there's no boundry condition on the last character
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+		StringValue *elloCopy = helloValue->copy(1, 4);
+
+		ASSERT_EQUAL(elloCopy->byteLength(), 4);
+		ASSERT_EQUAL(elloCopy->asciiOnlyHint(), true);
+		ASSERT_EQUAL(elloCopy->charLength(), 4);
+		ASSERT_EQUAL(memcmp(elloCopy->utf8Data(), u8"ello", 5), 0);
+	}
+	
+	{
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+		StringValue *ellCopy = helloValue->copy(1, 3);
+
+		ASSERT_EQUAL(ellCopy->byteLength(), 3);
+		ASSERT_EQUAL(ellCopy->asciiOnlyHint(), true);
+		ASSERT_EQUAL(ellCopy->charLength(), 3);
+		ASSERT_EQUAL(memcmp(ellCopy->utf8Data(), u8"ell", 4), 0);
+	}
+	
+	{
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+		StringValue *invalidCopy = helloValue->copy(0, 16);
+
+		ASSERT_EQUAL(invalidCopy, NULL);
+	}
+
+	{
+		StringValue *japanValue = StringValue::fromUtf8CString(u8"日本国");
+		StringValue *japanCopy = japanValue->copy();
+
+		ASSERT_EQUAL(japanCopy->byteLength(), 9);
+		ASSERT_EQUAL(japanCopy->asciiOnlyHint(), false);
+		ASSERT_EQUAL(japanCopy->charLength(), 3);
+		ASSERT_EQUAL(memcmp(japanCopy->utf8Data(), u8"日本国", 10), 0);
+	}
+	
+	{
+		StringValue *japanValue = StringValue::fromUtf8CString(u8"日本国");
+		StringValue *japanCopy = japanValue->copy(1);
+
+		ASSERT_EQUAL(japanCopy->byteLength(), 6);
+		ASSERT_EQUAL(japanCopy->asciiOnlyHint(), false);
+		ASSERT_EQUAL(japanCopy->charLength(), 2);
+		ASSERT_EQUAL(memcmp(japanCopy->utf8Data(), u8"本国", 7), 0);
+	}
+	
+	{
+		StringValue *japanValue = StringValue::fromUtf8CString(u8"日本国");
+		// Check for the same boundry in Unicode
+		StringValue *japanCopy = japanValue->copy(1, 2);
+
+		ASSERT_EQUAL(japanCopy->byteLength(), 6);
+		ASSERT_EQUAL(japanCopy->asciiOnlyHint(), false);
+		ASSERT_EQUAL(japanCopy->charLength(), 2);
+		ASSERT_EQUAL(memcmp(japanCopy->utf8Data(), u8"本国", 7), 0);
+	}
+	
+	{
+		StringValue *japanValue = StringValue::fromUtf8CString(u8"日本国");
+		StringValue *japanCopy = japanValue->copy(1, 1);
+
+		ASSERT_EQUAL(japanCopy->byteLength(), 3);
+		ASSERT_EQUAL(japanCopy->asciiOnlyHint(), false);
+		ASSERT_EQUAL(japanCopy->charLength(), 1);
+		ASSERT_EQUAL(memcmp(japanCopy->utf8Data(), u8"本", 4), 0);
+	}
+	
+	{
+		StringValue *mixedValue = StringValue::fromUtf8CString(u8"日Hello国");
+		StringValue *helloCopy = mixedValue->copy(1, 5);
+
+		ASSERT_EQUAL(helloCopy->byteLength(), 5);
+		// The ASCII only hint should "regenerate" when doing explicit substrings because we have to character
+		// count anyway
+		ASSERT_EQUAL(helloCopy->asciiOnlyHint(), true);
+		ASSERT_EQUAL(helloCopy->charLength(), 5);
+		ASSERT_EQUAL(memcmp(helloCopy->utf8Data(), u8"Hello", 6), 0);
+	}
+}
+
+void testSetCharAt()
+{
+	using namespace lliby;
+
+	{
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+
+		ASSERT_EQUAL(helloValue->setCharAt(0, 'Y'), true);
+
+		ASSERT_EQUAL(helloValue->byteLength(), 5);
+		ASSERT_EQUAL(helloValue->asciiOnlyHint(), true);
+		ASSERT_EQUAL(helloValue->charLength(), 5);
+		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"Yello", 6), 0);
+		
+		// Going off the end of the string should fail
+		ASSERT_EQUAL(helloValue->setCharAt(5, 'Y'), false);
+	}
+	
+	{
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+
+		ASSERT_EQUAL(helloValue->setCharAt(1, 0), true);
+
+		ASSERT_EQUAL(helloValue->byteLength(), 5);
+		ASSERT_EQUAL(helloValue->asciiOnlyHint(), true);
+		ASSERT_EQUAL(helloValue->charLength(), 5);
+		ASSERT_EQUAL(helloValue->charAt(1), 0);
+	}
+	
+	{
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+
+		ASSERT_EQUAL(helloValue->setCharAt(3, 0x1F409), true);
+
+		ASSERT_EQUAL(helloValue->byteLength(), 8);
+		ASSERT_EQUAL(helloValue->asciiOnlyHint(), false);
+		ASSERT_EQUAL(helloValue->charLength(), 5);
+		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"Hel🐉o", 9), 0);
+		
+		ASSERT_EQUAL(helloValue->setCharAt(5, 'Y'), false);
+	}
+	
+	{
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"日本国");
+
+		ASSERT_EQUAL(helloValue->setCharAt(1, 'O'), true);
+
+		ASSERT_EQUAL(helloValue->byteLength(), 7);
+		ASSERT_EQUAL(helloValue->asciiOnlyHint(), false);
+		ASSERT_EQUAL(helloValue->charLength(), 3);
+		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"日O国", 8), 0);
+		
+		ASSERT_EQUAL(helloValue->setCharAt(4, 'Y'), false);
+	}
+}
+
+void testFill()
+{
+	using namespace lliby;
+	
+	{
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+
+		ASSERT_EQUAL(helloValue->fill('Y'), true);
+
+		ASSERT_EQUAL(helloValue->byteLength(), 5);
+		ASSERT_EQUAL(helloValue->asciiOnlyHint(), true);
+		ASSERT_EQUAL(helloValue->charLength(), 5);
+		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"YYYYY", 6), 0);
+	}
+	
+	{
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+
+		ASSERT_EQUAL(helloValue->fill('Y', 0, 4), true);
+
+		ASSERT_EQUAL(helloValue->byteLength(), 5);
+		ASSERT_EQUAL(helloValue->asciiOnlyHint(), true);
+		ASSERT_EQUAL(helloValue->charLength(), 5);
+		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"YYYYY", 6), 0);
+	}
+	
+	{
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+		ASSERT_EQUAL(helloValue->fill('Y', 0, 5), false);
+	}
+	
+	{
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+
+		ASSERT_EQUAL(helloValue->fill(0x2603), true);
+
+		ASSERT_EQUAL(helloValue->byteLength(), 15);
+		ASSERT_EQUAL(helloValue->asciiOnlyHint(), false);
+		ASSERT_EQUAL(helloValue->charLength(), 5);
+		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"☃☃☃☃☃", 16), 0);
+	}
+	
+	{
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+
+		ASSERT_EQUAL(helloValue->fill(0x2603, 1), true);
+
+		ASSERT_EQUAL(helloValue->byteLength(), 13);
+		ASSERT_EQUAL(helloValue->asciiOnlyHint(), false);
+		ASSERT_EQUAL(helloValue->charLength(), 5);
+		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"H☃☃☃☃", 14), 0);
+	}
+	
+	{
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+
+		ASSERT_EQUAL(helloValue->fill(0x2603, 1, 3), true);
+
+		ASSERT_EQUAL(helloValue->byteLength(), 11);
+		ASSERT_EQUAL(helloValue->asciiOnlyHint(), false);
+		ASSERT_EQUAL(helloValue->charLength(), 5);
+		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"H☃☃☃o", 12), 0);
+	}
+	
+	{
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"☃☃☃☃☃");
+		
+		ASSERT_EQUAL(helloValue->fill('Y'), true);
+
+		ASSERT_EQUAL(helloValue->byteLength(), 5);
+		// We should regain our ASCIIness
+		ASSERT_EQUAL(helloValue->asciiOnlyHint(), true);
+		ASSERT_EQUAL(helloValue->charLength(), 5);
+		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"YYYYY", 6), 0);
+	}
+	
+	{
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"☃☃☃☃☃");
+		
+		ASSERT_EQUAL(helloValue->fill('Y', 0, 4), true);
+
+		ASSERT_EQUAL(helloValue->byteLength(), 5);
+		// We should still regain our ASCIIness
+		ASSERT_EQUAL(helloValue->asciiOnlyHint(), true);
+		ASSERT_EQUAL(helloValue->charLength(), 5);
+		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"YYYYY", 6), 0);
+	}
+	
+	{
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"YYYY☃");
+		
+		ASSERT_EQUAL(helloValue->fill('Y', 4, 4), true);
+
+		ASSERT_EQUAL(helloValue->byteLength(), 5);
+		// Yup - still ASCII
+		ASSERT_EQUAL(helloValue->asciiOnlyHint(), true);
+		ASSERT_EQUAL(helloValue->charLength(), 5);
+		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"YYYYY", 6), 0);
+	}
+	
+	{
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"☃☃☃☃☃");
+		
+		ASSERT_EQUAL(helloValue->fill('Y', 1), true);
+
+		ASSERT_EQUAL(helloValue->byteLength(), 7);
+		ASSERT_EQUAL(helloValue->asciiOnlyHint(), false);
+		ASSERT_EQUAL(helloValue->charLength(), 5);
+		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"☃YYYY", 8), 0);
+	}
+}
+
+void testCodePoints()
+{
+	using namespace lliby;
+	StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello ☃!");
+
+	{
+		std::list<StringValue::CodePoint> codePoints = helloValue->codePoints();
+
+		ASSERT_TRUE(codePoints == std::list<StringValue::CodePoint>({
+				'H',
+				'e',
+				'l',
+				'l',
+				'o',
+				' ',
+				0x2603,
+				'!'
+		}));
+	}
+	
+	{
+		std::list<StringValue::CodePoint> codePoints = helloValue->codePoints(0, 7);
+
+		ASSERT_TRUE(codePoints == std::list<StringValue::CodePoint>({
+				'H',
+				'e',
+				'l',
+				'l',
+				'o',
+				' ',
+				0x2603,
+				'!'
+		}));
+	}
+	
+	{
+		std::list<StringValue::CodePoint> codePoints = helloValue->codePoints(2);
+
+		ASSERT_TRUE(codePoints == std::list<StringValue::CodePoint>({
+				'l',
+				'l',
+				'o',
+				' ',
+				0x2603,
+				'!'
+		}));
+	}
+	
+	{
+		std::list<StringValue::CodePoint> codePoints = helloValue->codePoints(2, 4);
+
+		ASSERT_TRUE(codePoints == std::list<StringValue::CodePoint>({
+				'l',
+				'l',
+				'o'
+		}));
+	}
+	
+	{
+		std::list<StringValue::CodePoint> codePoints = helloValue->codePoints(2, 19);
+		ASSERT_TRUE(codePoints.empty());
+	}
+	
+	{
+		std::list<StringValue::CodePoint> codePoints = helloValue->codePoints(19);
+		ASSERT_TRUE(codePoints.empty());
+	}
+	
+	{
+		std::list<StringValue::CodePoint> codePoints = helloValue->codePoints(19, 24);
+		ASSERT_TRUE(codePoints.empty());
+	}
+}
+
 }
 
 int main(int argc, char *argv[])
@@ -211,6 +605,14 @@ int main(int argc, char *argv[])
 	
 	testFromFill();
 	testFromAppended();
+	testFromCodePoints();
+
+	testStringCopy();
+
+	testSetCharAt();
+	testFill();
+
+	testCodePoints();
 
 	return 0;
 }

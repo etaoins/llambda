@@ -21,7 +21,7 @@ bool StringLikeValue::equals(const StringLikeValue &other) const
 	
 void StringLikeValue::finalize()
 {
-	delete m_utf8Data;
+	delete[] m_utf8Data;
 }
 
 }
