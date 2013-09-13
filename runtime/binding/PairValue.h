@@ -3,6 +3,8 @@
 
 #include "BoxedDatum.h"
 
+#include <list>
+
 namespace lliby
 {
 
@@ -16,6 +18,9 @@ public:
 		m_cdr(cdr)
 	{
 	}
+
+	static BoxedDatum *createProperList(const std::list<BoxedDatum*> &elements);
+	static PairValue *createImproperList(const std::list<BoxedDatum*> &elements);
 };
 
 }

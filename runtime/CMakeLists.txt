@@ -6,6 +6,7 @@ project (lliby)
 add_library(lliby
 	alloc/allocator.cpp
 	binding/BoxedDatum.cpp
+	binding/PairValue.cpp
 	binding/ProcedureValue.cpp
 	binding/StringLikeValue.cpp
 	binding/StringValue.cpp
@@ -51,6 +52,7 @@ enable_testing()
 set(ALL_TEST_NAMES
 	constinstances
 	inexactrationalvalue
+	pairvalue
 	stringvalue)
 
 foreach( test_name ${ALL_TEST_NAMES} )
