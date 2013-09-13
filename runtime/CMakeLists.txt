@@ -14,6 +14,7 @@ add_library(lliby
 	core/fatal.cpp
 	core/init.cpp
 	stdlib/generated/predicates.cpp
+	writer/ExternalFormDatumWriter.cpp
 	)
 
 include_directories(${lliby_SOURCE_DIR})
@@ -53,7 +54,8 @@ set(ALL_TEST_NAMES
 	constinstances
 	inexactrationalvalue
 	pairvalue
-	stringvalue)
+	stringvalue
+	externalformdatumwriter)
 
 foreach( test_name ${ALL_TEST_NAMES} )
 	add_executable(tests/bin/test-${test_name} tests/test-${test_name}.cpp)

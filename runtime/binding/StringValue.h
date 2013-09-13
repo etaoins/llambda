@@ -53,6 +53,8 @@ public:
 		return byteLength() == charLength();
 	}
 
+	SymbolValue *toSymbol() const;
+
 private:
 	std::uint8_t *charPointer(std::uint8_t *scanFrom, std::uint32_t bytesLeft, uint32_t charOffset) const;
 	std::uint8_t *charPointer(std::uint32_t charOffset) const;

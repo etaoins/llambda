@@ -16,6 +16,18 @@ public:
 		m_value(value)
 	{
 	}
+
+	static const BooleanValue* instanceForValue(bool value)
+	{
+		if (value)
+		{
+			return trueInstance();
+		}
+		else
+		{
+			return falseInstance();
+		}
+	}
 	
 	static const BooleanValue* falseInstance()
 	{

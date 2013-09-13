@@ -4,6 +4,8 @@
 #include <vector>
 #include <algorithm>
 
+#include "SymbolValue.h"
+
 namespace
 {
 	using namespace lliby;
@@ -545,6 +547,15 @@ int StringValue::compare(const StringValue *other) const
 	{
 		return 0;
 	}
+}
+	
+SymbolValue* StringValue::toSymbol() const
+{
+	// This is easy, just copy our UTF-8 data
+	auto newString = new std::uint8_t[byteLength() + 1];
+	memcpy(newString, utf8Data(), byteLength() + 1);
+
+	return new SymbolValue(newString, byteLength(), charLength());
 }
 
 }
