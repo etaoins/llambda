@@ -50,6 +50,7 @@ enable_testing()
 
 set(ALL_TEST_NAMES
 	constinstances
+	inexactrationalvalue
 	stringvalue)
 
 foreach( test_name ${ALL_TEST_NAMES} )
