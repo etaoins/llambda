@@ -28,7 +28,7 @@ def generate_predicates(boxed_types):
 
         content += 'bool ' + function_name + '(const ' + cxx_base_type + ' *value)\n'
         content += '{\n'
-        content += '\treturn value->as' + cxx_type_name + '() != nullptr;\n'
+        content += '\treturn value->is' + cxx_type_name + '();\n'
         content += '}\n\n'
     
     content += '\n'

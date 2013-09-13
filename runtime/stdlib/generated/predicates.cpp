@@ -11,72 +11,72 @@ extern "C"
 
 bool lliby_is_unspecific(const BoxedDatum *value)
 {
-	return value->asUnspecificValue() != nullptr;
+	return value->isUnspecificValue();
 }
 
 bool lliby_is_pair(const BoxedDatum *value)
 {
-	return value->asPairValue() != nullptr;
+	return value->isPairValue();
 }
 
 bool lliby_is_empty_list(const BoxedDatum *value)
 {
-	return value->asEmptyListValue() != nullptr;
+	return value->isEmptyListValue();
 }
 
 bool lliby_is_string(const BoxedDatum *value)
 {
-	return value->asStringValue() != nullptr;
+	return value->isStringValue();
 }
 
 bool lliby_is_symbol(const BoxedDatum *value)
 {
-	return value->asSymbolValue() != nullptr;
+	return value->isSymbolValue();
 }
 
 bool lliby_is_boolean(const BoxedDatum *value)
 {
-	return value->asBooleanValue() != nullptr;
+	return value->isBooleanValue();
 }
 
 bool lliby_is_exact_integer(const BoxedDatum *value)
 {
-	return value->asExactIntegerValue() != nullptr;
+	return value->isExactIntegerValue();
 }
 
 bool lliby_is_inexact_rational(const BoxedDatum *value)
 {
-	return value->asInexactRationalValue() != nullptr;
+	return value->isInexactRationalValue();
 }
 
 bool lliby_is_character(const BoxedDatum *value)
 {
-	return value->asCharacterValue() != nullptr;
+	return value->isCharacterValue();
 }
 
 bool lliby_is_byte_vector(const BoxedDatum *value)
 {
-	return value->asByteVectorValue() != nullptr;
+	return value->isByteVectorValue();
 }
 
 bool lliby_is_procedure(const BoxedDatum *value)
 {
-	return value->asProcedureValue() != nullptr;
+	return value->isProcedureValue();
 }
 
 bool lliby_is_vector_like(const BoxedDatum *value)
 {
-	return value->asVectorLikeValue() != nullptr;
+	return value->isVectorLikeValue();
 }
 
 bool lliby_is_vector(const BoxedDatum *value)
 {
-	return value->asVectorValue() != nullptr;
+	return value->isVectorValue();
 }
 
 bool lliby_is_closure(const BoxedDatum *value)
 {
-	return value->asClosureValue() != nullptr;
+	return value->isClosureValue();
 }
 
 

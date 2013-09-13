@@ -34,6 +34,11 @@ public:
 		return nullptr;
 	}
 
+	bool isUnspecificValue() const
+	{
+		return typeId() == BoxedTypeId::Unspecific;
+	}
+
 	PairValue* asPairValue()
 	{
 		if (typeId() == BoxedTypeId::Pair)
@@ -52,6 +57,11 @@ public:
 		}
 
 		return nullptr;
+	}
+
+	bool isPairValue() const
+	{
+		return typeId() == BoxedTypeId::Pair;
 	}
 
 	EmptyListValue* asEmptyListValue()
@@ -74,6 +84,11 @@ public:
 		return nullptr;
 	}
 
+	bool isEmptyListValue() const
+	{
+		return typeId() == BoxedTypeId::EmptyList;
+	}
+
 	StringValue* asStringValue()
 	{
 		if (typeId() == BoxedTypeId::String)
@@ -92,6 +107,11 @@ public:
 		}
 
 		return nullptr;
+	}
+
+	bool isStringValue() const
+	{
+		return typeId() == BoxedTypeId::String;
 	}
 
 	SymbolValue* asSymbolValue()
@@ -114,6 +134,11 @@ public:
 		return nullptr;
 	}
 
+	bool isSymbolValue() const
+	{
+		return typeId() == BoxedTypeId::Symbol;
+	}
+
 	BooleanValue* asBooleanValue()
 	{
 		if (typeId() == BoxedTypeId::Boolean)
@@ -132,6 +157,11 @@ public:
 		}
 
 		return nullptr;
+	}
+
+	bool isBooleanValue() const
+	{
+		return typeId() == BoxedTypeId::Boolean;
 	}
 
 	ExactIntegerValue* asExactIntegerValue()
@@ -154,6 +184,11 @@ public:
 		return nullptr;
 	}
 
+	bool isExactIntegerValue() const
+	{
+		return typeId() == BoxedTypeId::ExactInteger;
+	}
+
 	InexactRationalValue* asInexactRationalValue()
 	{
 		if (typeId() == BoxedTypeId::InexactRational)
@@ -172,6 +207,11 @@ public:
 		}
 
 		return nullptr;
+	}
+
+	bool isInexactRationalValue() const
+	{
+		return typeId() == BoxedTypeId::InexactRational;
 	}
 
 	CharacterValue* asCharacterValue()
@@ -194,6 +234,11 @@ public:
 		return nullptr;
 	}
 
+	bool isCharacterValue() const
+	{
+		return typeId() == BoxedTypeId::Character;
+	}
+
 	ByteVectorValue* asByteVectorValue()
 	{
 		if (typeId() == BoxedTypeId::ByteVector)
@@ -212,6 +257,11 @@ public:
 		}
 
 		return nullptr;
+	}
+
+	bool isByteVectorValue() const
+	{
+		return typeId() == BoxedTypeId::ByteVector;
 	}
 
 	ProcedureValue* asProcedureValue()
@@ -234,6 +284,11 @@ public:
 		return nullptr;
 	}
 
+	bool isProcedureValue() const
+	{
+		return typeId() == BoxedTypeId::Procedure;
+	}
+
 	VectorLikeValue* asVectorLikeValue()
 	{
 		if (static_cast<int>(typeId()) & 32768)
@@ -252,6 +307,11 @@ public:
 		}
 
 		return nullptr;
+	}
+
+	bool isVectorLikeValue() const
+	{
+		return static_cast<int>(typeId()) & 32768;
 	}
 
 	VectorValue* asVectorValue()
@@ -274,6 +334,11 @@ public:
 		return nullptr;
 	}
 
+	bool isVectorValue() const
+	{
+		return typeId() == BoxedTypeId::Vector;
+	}
+
 	ClosureValue* asClosureValue()
 	{
 		if (typeId() == BoxedTypeId::Closure)
@@ -292,6 +357,11 @@ public:
 		}
 
 		return nullptr;
+	}
+
+	bool isClosureValue() const
+	{
+		return typeId() == BoxedTypeId::Closure;
 	}
 
 private:

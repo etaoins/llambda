@@ -74,6 +74,11 @@ def _generate_casts(boxed_types):
         content += "\t\t}\n\n"
         content += "\t\treturn nullptr;\n"
         content += "\t}\n\n"
+        
+        content += "\tbool is" + cxx_type_name + "() const\n" 
+        content += "\t{\n"
+        content += "\t\treturn " + type_assertion + ";\n"
+        content += "\t}\n\n"
 
     return content
 
