@@ -318,8 +318,6 @@ void testStringCopy()
 		StringValue *helloCopy = mixedValue->copy(1, 5);
 
 		ASSERT_EQUAL(helloCopy->byteLength(), 5);
-		// The ASCII only hint should "regenerate" when doing explicit substrings because we have to character
-		// count anyway
 		ASSERT_EQUAL(helloCopy->charLength(), 5);
 		ASSERT_EQUAL(memcmp(helloCopy->utf8Data(), u8"Hello", 6), 0);
 	}
