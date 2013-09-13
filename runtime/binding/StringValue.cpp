@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <vector>
+#include <algorithm>
 
 namespace
 {
@@ -274,24 +275,12 @@ std::uint8_t* StringValue::charPointer(std::uint8_t *scanFrom, std::uint32_t byt
 	return nullptr;
 }
 	
-StringValue::CodePoint StringValue::charAt(std::uint32_t offset) const
-{
-	std::uint8_t* charPtr = charPointer(offset);
-
-	if (charPtr == nullptr)
-	{
-		return InvalidChar;
-	}
-
-	return decodeUtf8Char(charPtr);
-}
-	
-bool StringValue::fill(CodePoint codePoint, std::int64_t start, std::int64_t end)
+StringValue::CharRange StringValue::charRange(std::int64_t start, std::int64_t end) const
 {
 	if ((end != -1) && (end < start))
 	{
 		// Doesn't make sense
-		return false;
+		return CharRange { 0 };
 	}
 
 	std::uint8_t *startPointer = charPointer(start);
@@ -299,9 +288,9 @@ bool StringValue::fill(CodePoint codePoint, std::int64_t start, std::int64_t end
 	if (startPointer == nullptr)
 	{
 		// Fell off the end
-		return false;
+		return CharRange { 0 };
 	}
-		
+
 	std::uint32_t charCount;
 	std::uint8_t *endPointer;
 	
@@ -316,7 +305,7 @@ bool StringValue::fill(CodePoint codePoint, std::int64_t start, std::int64_t end
 		if (endPointer == nullptr)
 		{
 			// Fell off the end
-			return false;
+			return CharRange { 0 };
 		}
 
 		// Read past the last character
@@ -325,7 +314,7 @@ bool StringValue::fill(CodePoint codePoint, std::int64_t start, std::int64_t end
 		if (decodeUtf8Char(endPointer, &lastCharLength) == StringValue::InvalidChar)
 		{
 			// We have corrupted UTF-8 internally (!)
-			return false;
+			return CharRange { 0 };
 		}
 
 		endPointer += lastCharLength; 
@@ -336,31 +325,40 @@ bool StringValue::fill(CodePoint codePoint, std::int64_t start, std::int64_t end
 		endPointer = &utf8Data()[byteLength()];
 	}
 
-	// Encode the new character
-	std::vector<std::uint8_t> encoded = encodeUtf8Char(codePoint);
-
-	if (encoded.size() == 0)
-	{
-		// Invalid code point
-		return false;
-	}
+	return CharRange { startPointer, endPointer, charCount };
+}
 	
-	const unsigned int requiredBytes = encoded.size() * charCount;
-	const unsigned int replacedBytes = endPointer - startPointer;
+StringValue::CodePoint StringValue::charAt(std::uint32_t offset) const
+{
+	std::uint8_t* charPtr = charPointer(offset);
+
+	if (charPtr == nullptr)
+	{
+		return InvalidChar;
+	}
+
+	return decodeUtf8Char(charPtr);
+}
+	
+void StringValue::replaceBytes(const CharRange &range, std::uint8_t *pattern, unsigned int patternBytes, unsigned int count)
+{
+	const unsigned int requiredBytes = patternBytes * count;
+	const unsigned int replacedBytes = range.byteCount();
 	
 	if (requiredBytes == replacedBytes)
 	{
-		while(charCount--)
+		std::uint8_t *copyDest = range.startPointer;
+		while(count--)
 		{
-			memcpy(startPointer, encoded.data(), encoded.size());
-			startPointer += encoded.size();
+			memcpy(copyDest, pattern, patternBytes);
+			copyDest += patternBytes;
 		}
 	}
 	else
 	{
 		// Create a new string from pieces of the old string
 		const std::uint32_t newByteLength = byteLength() + requiredBytes - replacedBytes;
-		const std::uint32_t initialBytes = startPointer - utf8Data(); 
+		const std::uint32_t initialBytes = range.startPointer - utf8Data(); 
 		// Include the NULL terminator
 		const std::uint32_t finalBytes = newByteLength + 1 - initialBytes - requiredBytes;
 		
@@ -382,13 +380,14 @@ bool StringValue::fill(CodePoint codePoint, std::int64_t start, std::int64_t end
 		
 		std::uint8_t* copyDest = destString + initialBytes;
 
-		while(charCount--)
+		while(count--)
 		{
-			memcpy(copyDest, encoded.data(), encoded.size());
-			copyDest += encoded.size();
+			// memmove because ::replace() can copy a substring to itself
+			memmove(copyDest, pattern, patternBytes);
+			copyDest += patternBytes;
 		}
 
-		memmove(copyDest, startPointer + replacedBytes, finalBytes);
+		memmove(copyDest, range.startPointer + replacedBytes, finalBytes);
 
 		// Update ourselves with our new string
 		setByteLength(newByteLength);
@@ -399,6 +398,49 @@ bool StringValue::fill(CodePoint codePoint, std::int64_t start, std::int64_t end
 			setUtf8Data(destString);
 		}
 	}
+}
+	
+bool StringValue::fill(CodePoint codePoint, std::int64_t start, std::int64_t end)
+{
+	CharRange range = charRange(start, end);
+
+	if (range.isNull())
+	{
+		// Invalid range
+		return false;
+	}
+
+	// Encode the new character
+	std::vector<std::uint8_t> encoded = encodeUtf8Char(codePoint);
+
+	if (encoded.size() == 0)
+	{
+		// Invalid code point
+		return false;
+	}
+
+	replaceBytes(range, encoded.data(), encoded.size(), range.charCount);
+
+	return true;
+}
+	
+bool StringValue::replace(std::uint32_t offset, const StringValue *from, std::int64_t fromStart, std::int64_t fromEnd)
+{
+	CharRange fromRange = from->charRange(fromStart, fromEnd);
+
+	if (fromRange.isNull())
+	{
+		return false;
+	}
+
+	CharRange toRange = charRange(offset, offset + fromRange.charCount - 1);
+
+	if (toRange.isNull() || (toRange.charCount != fromRange.charCount))
+	{
+		return false;
+	}
+	
+	replaceBytes(toRange, fromRange.startPointer, fromRange.byteCount());
 
 	return true;
 }
@@ -410,55 +452,22 @@ bool StringValue::setCharAt(std::uint32_t offset, CodePoint codePoint)
 	
 StringValue* StringValue::copy(std::int64_t start, std::int64_t end)
 {
-	if ((end != -1) && (end < start))
+	CharRange range = charRange(start, end);
+
+	if (range.isNull())
 	{
-		// Doesn't make sense
+		// Invalid range
 		return nullptr;
 	}
-	
-	std::uint8_t *startPointer = charPointer(start);
-	std::uint8_t *endPointer;
-	std::uint32_t newCharLength;
 
-	if (end == -1)
-	{
-		// This is easy
-		endPointer = &utf8Data()[byteLength()];
-		newCharLength = charLength() - start;
-	}
-	else
-	{
-		const std::uint32_t bytesLeft = byteLength() - (startPointer - utf8Data());
-		newCharLength = end - start + 1;
-		
-		// This gets a pointer to the beginning of the character
-		endPointer = charPointer(startPointer, bytesLeft, newCharLength - 1);
-
-		if (endPointer == nullptr)
-		{
-			// Off the end
-			return nullptr;
-		}
-
-		// Find the length of the character in bytes
-		unsigned int length;
-		if (decodeUtf8Char(endPointer, &length) == StringValue::InvalidChar)
-		{
-			return nullptr;
-		}
-
-		// Include it
-		endPointer += length;
-	}
-
-	const std::uint32_t newByteLength = endPointer - startPointer;
+	const std::uint32_t newByteLength = range.byteCount();
 
 	// Create the new string
 	auto newString = new std::uint8_t[newByteLength + 1];
-	memcpy(newString, startPointer, newByteLength);
+	memcpy(newString, range.startPointer, newByteLength);
 	newString[newByteLength] = 0;
 
-	return new StringValue(newString, newByteLength, newCharLength);
+	return new StringValue(newString, newByteLength, range.charCount);
 }
 	
 std::list<StringValue::CodePoint> StringValue::codePoints(std::int64_t start, std::int64_t end) const
@@ -511,6 +520,31 @@ std::list<StringValue::CodePoint> StringValue::codePoints(std::int64_t start, st
 	}
 
 	return ret;
+}
+
+int StringValue::compare(const StringValue *other) const
+{
+	std::uint32_t compareBytes = std::min(byteLength(), other->byteLength());
+
+	// Bytewise comparisons in UTF-8 sort Unicode code points correctly
+	int result = memcmp(utf8Data(), other->utf8Data(), compareBytes);
+
+	if (result != 0)
+	{
+		return result;
+	}
+	else if (byteLength() > other->byteLength())
+	{
+		return 1;
+	}
+	else if (byteLength() < other->byteLength())
+	{
+		return -1;
+	}
+	else
+	{
+		return 0;
+	}
 }
 
 }

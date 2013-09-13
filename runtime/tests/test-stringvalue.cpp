@@ -46,30 +46,41 @@ void testCompare()
 {
 	using namespace lliby;
 
-	StringValue *hello1 = StringValue::fromUtf8CString("Hello");
-	StringValue *hello2 = new StringValue(utf8Bytes("Hello"), 5, 5);
-	StringValue *world = StringValue::fromUtf8CString("world");
-	StringValue *nulledHello1 = new StringValue(utf8Bytes("Hell\0o"), 6, 6);
-	StringValue *nulledHello2 = new StringValue(utf8Bytes("Hell\0o"), 6, 6);
-	StringValue *hell = StringValue::fromUtf8CString("Hell");
+	const StringValue *hello1 = StringValue::fromUtf8CString("Hello");
+	const StringValue *hello2 = new StringValue(utf8Bytes("Hello"), 5, 5);
+	const StringValue *world = StringValue::fromUtf8CString("world");
+	const StringValue *nulledHello1 = new StringValue(utf8Bytes("Hell\0o"), 6, 6);
+	const StringValue *nulledHello2 = new StringValue(utf8Bytes("Hell\0o"), 6, 6);
+	const StringValue *hell = StringValue::fromUtf8CString("Hell");
+	const StringValue *unicodeValue = StringValue::fromUtf8CString(u8"☃🐉");
 
-	// Ensure the same instance is equal to itself
 	ASSERT_TRUE(*hello1 == *hello1); 
-
+	ASSERT_TRUE(hello1->compare(hello1) == 0);
+	
 	// Ensure != works
 	ASSERT_FALSE(*hello1 != *hello1); 
 
 	// Ensure different instances with the same content are equal
 	ASSERT_TRUE(*hello1 == *hello2);
+	ASSERT_TRUE(hello1->compare(hello2) == 0);
 
 	// Ensure inequal strings are considered equal
 	ASSERT_FALSE(*hello1 == *world);
+	ASSERT_TRUE(hello1->compare(world) < 0);
 
 	// Make sure strings with nulls in them are compared correctly
 	ASSERT_TRUE(*nulledHello1 == *nulledHello2);
+	ASSERT_TRUE(nulledHello1->compare(nulledHello2) == 0);
 
 	// Ensure the comparison doesn't stop on the first NULL
+	// Also ensure that shorter strings sort before longer strings that have 
+	// them as a prefix
 	ASSERT_FALSE(*nulledHello1 == *hell);
+	ASSERT_TRUE(nulledHello1->compare(hell) > 0);
+	ASSERT_TRUE(hell->compare(nulledHello1) < 0);
+
+	// Make sure high Unicode code points sort after ASCII
+	ASSERT_TRUE(unicodeValue->compare(hello1) > 0);
 }
 
 void testCharAt()
@@ -475,6 +486,89 @@ void testFill()
 	}
 }
 
+void testReplace()
+{
+	using namespace lliby;
+
+	const StringValue *constWorld = StringValue::fromUtf8CString(u8"world");
+	const StringValue *constJapan = StringValue::fromUtf8CString(u8"日本国"); 
+
+	{
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+
+		ASSERT_EQUAL(helloValue->replace(0, constWorld), true);
+
+		ASSERT_EQUAL(helloValue->byteLength(), 5);
+		ASSERT_EQUAL(helloValue->charLength(), 5);
+		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"world", 6), 0);
+	}
+	
+	{
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+
+		ASSERT_EQUAL(helloValue->replace(0, constJapan), true);
+
+		ASSERT_EQUAL(helloValue->byteLength(), 11);
+		ASSERT_EQUAL(helloValue->charLength(), 5);
+		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"日本国lo", 12), 0);
+	}
+	
+	{
+		StringValue *japanValue = StringValue::fromUtf8CString(u8"日本国");
+
+		ASSERT_EQUAL(japanValue->replace(0, constWorld, 0, 2), true);
+
+		ASSERT_EQUAL(japanValue->byteLength(), 3);
+		ASSERT_EQUAL(japanValue->charLength(), 3);
+		ASSERT_EQUAL(memcmp(japanValue->utf8Data(), u8"wor", 4), 0);
+	}
+	
+	{
+		StringValue *japanValue = StringValue::fromUtf8CString(u8"日本国");
+
+		// Overruns the string
+		ASSERT_EQUAL(japanValue->replace(0, constWorld), false)
+	}
+	
+	{
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+
+		ASSERT_EQUAL(helloValue->replace(2, constJapan), true);
+
+		ASSERT_EQUAL(helloValue->byteLength(), 11);
+		ASSERT_EQUAL(helloValue->charLength(), 5);
+		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"He日本国", 12), 0);
+	}
+
+	{
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+
+		// Off the end
+		ASSERT_EQUAL(helloValue->replace(3, constJapan), false);
+	}
+	
+	{
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+
+		ASSERT_EQUAL(helloValue->replace(2, constJapan, 1), true);
+
+		ASSERT_EQUAL(helloValue->byteLength(), 9);
+		ASSERT_EQUAL(helloValue->charLength(), 5);
+		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"He本国o", 10), 0);
+	}
+	
+	{
+		StringValue *complexValue = StringValue::fromUtf8CString(u8"Hello 日本国");
+
+		// We should be able to replace a substring from ourselves
+		ASSERT_EQUAL(complexValue->replace(0, complexValue, 6), true);
+
+		ASSERT_EQUAL(complexValue->byteLength(), 21);
+		ASSERT_EQUAL(complexValue->charLength(), 9);
+		ASSERT_EQUAL(memcmp(complexValue->utf8Data(), u8"日本国lo 日本国", 22), 0);
+	}
+}
+
 void testCodePoints()
 {
 	using namespace lliby;
@@ -568,6 +662,7 @@ int main(int argc, char *argv[])
 
 	testSetCharAt();
 	testFill();
+	testReplace();
 
 	testCodePoints();
 

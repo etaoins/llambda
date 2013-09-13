@@ -30,6 +30,7 @@ public:
 	bool setCharAt(std::uint32_t offset, CodePoint codePoint);
 
 	bool fill(CodePoint codePoint, std::int64_t start = 0, std::int64_t end = -1);
+	bool replace(std::uint32_t offset, const StringValue *from, std::int64_t fromStart = 0, std::int64_t fromEnd = -1);
 
 	std::list<CodePoint> codePoints(std::int64_t start = 0, std::int64_t end = -1) const;
 
@@ -43,6 +44,10 @@ public:
 		return !equals(other);
 	}
 
+	// Returns and integer less than, equal to or greater than zero if the string
+	// less than, equal to or greater than the other string
+	int compare(const StringValue *other) const;
+
 	bool asciiOnly() const
 	{
 		return byteLength() == charLength();
@@ -51,6 +56,26 @@ public:
 private:
 	std::uint8_t *charPointer(std::uint8_t *scanFrom, std::uint32_t bytesLeft, uint32_t charOffset) const;
 	std::uint8_t *charPointer(std::uint32_t charOffset) const;
+
+	struct CharRange
+	{
+		std::uint8_t *startPointer;
+		std::uint8_t *endPointer;
+		std::uint32_t charCount;
+
+		bool isNull() const
+		{
+			return startPointer == nullptr;
+		};
+
+		unsigned int byteCount() const
+		{
+			return endPointer - startPointer;
+		}
+	};
+
+	CharRange charRange(std::int64_t start, std::int64_t end = -1) const; 
+	void replaceBytes(const CharRange &range, std::uint8_t *pattern, unsigned int patternBytes, unsigned int count = 1);
 };
 
 }
