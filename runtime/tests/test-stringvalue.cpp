@@ -264,7 +264,7 @@ void testStringCopy()
 	{
 		// Make sure there's no boundry condition on the last character
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
-		StringValue *elloCopy = helloValue->copy(1, 4);
+		StringValue *elloCopy = helloValue->copy(1, 5);
 
 		ASSERT_EQUAL(elloCopy->byteLength(), 4);
 		ASSERT_EQUAL(elloCopy->charLength(), 4);
@@ -272,8 +272,26 @@ void testStringCopy()
 	}
 	
 	{
+		// Allow empty strings
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
-		StringValue *ellCopy = helloValue->copy(1, 3);
+		StringValue *elloCopy = helloValue->copy(0, 0);
+
+		ASSERT_EQUAL(elloCopy->byteLength(), 0);
+		ASSERT_EQUAL(elloCopy->charLength(), 0);
+	}
+	
+	{
+		// Allow empty from the very end
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+		StringValue *elloCopy = helloValue->copy(5, 5);
+
+		ASSERT_EQUAL(elloCopy->byteLength(), 0);
+		ASSERT_EQUAL(elloCopy->charLength(), 0);
+	}
+	
+	{
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+		StringValue *ellCopy = helloValue->copy(1, 4);
 
 		ASSERT_EQUAL(ellCopy->byteLength(), 3);
 		ASSERT_EQUAL(ellCopy->charLength(), 3);
@@ -281,8 +299,17 @@ void testStringCopy()
 	}
 	
 	{
+		// Off the end
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
 		StringValue *invalidCopy = helloValue->copy(0, 16);
+
+		ASSERT_EQUAL(invalidCopy, NULL);
+	}
+	
+	{
+		// start > end
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+		StringValue *invalidCopy = helloValue->copy(3, 2);
 
 		ASSERT_EQUAL(invalidCopy, NULL);
 	}
@@ -308,7 +335,7 @@ void testStringCopy()
 	{
 		StringValue *japanValue = StringValue::fromUtf8CString(u8"日本国");
 		// Check for the same boundry in Unicode
-		StringValue *japanCopy = japanValue->copy(1, 2);
+		StringValue *japanCopy = japanValue->copy(1, 3);
 
 		ASSERT_EQUAL(japanCopy->byteLength(), 6);
 		ASSERT_EQUAL(japanCopy->charLength(), 2);
@@ -317,7 +344,7 @@ void testStringCopy()
 	
 	{
 		StringValue *japanValue = StringValue::fromUtf8CString(u8"日本国");
-		StringValue *japanCopy = japanValue->copy(1, 1);
+		StringValue *japanCopy = japanValue->copy(1, 2);
 
 		ASSERT_EQUAL(japanCopy->byteLength(), 3);
 		ASSERT_EQUAL(japanCopy->charLength(), 1);
@@ -326,7 +353,7 @@ void testStringCopy()
 	
 	{
 		StringValue *mixedValue = StringValue::fromUtf8CString(u8"日Hello国");
-		StringValue *helloCopy = mixedValue->copy(1, 5);
+		StringValue *helloCopy = mixedValue->copy(1, 6);
 
 		ASSERT_EQUAL(helloCopy->byteLength(), 5);
 		ASSERT_EQUAL(helloCopy->charLength(), 5);
@@ -403,7 +430,7 @@ void testFill()
 	{
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
 
-		ASSERT_EQUAL(helloValue->fill('Y', 0, 4), true);
+		ASSERT_EQUAL(helloValue->fill('Y', 0, 5), true);
 
 		ASSERT_EQUAL(helloValue->byteLength(), 5);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
@@ -412,7 +439,7 @@ void testFill()
 	
 	{
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
-		ASSERT_EQUAL(helloValue->fill('Y', 0, 5), false);
+		ASSERT_EQUAL(helloValue->fill('Y', 0, 6), false);
 	}
 	
 	{
@@ -438,11 +465,21 @@ void testFill()
 	{
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
 
-		ASSERT_EQUAL(helloValue->fill(0x2603, 1, 3), true);
+		ASSERT_EQUAL(helloValue->fill(0x2603, 1, 4), true);
 
 		ASSERT_EQUAL(helloValue->byteLength(), 11);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
 		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"H☃☃☃o", 12), 0);
+	}
+	
+	{
+		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+
+		ASSERT_EQUAL(helloValue->fill('Y', 1, 1), true);
+
+		ASSERT_EQUAL(helloValue->byteLength(), 5);
+		ASSERT_EQUAL(helloValue->charLength(), 5);
+		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"Hello", 6), 0);
 	}
 	
 	{
@@ -458,7 +495,7 @@ void testFill()
 	{
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"☃☃☃☃☃");
 		
-		ASSERT_EQUAL(helloValue->fill('Y', 0, 4), true);
+		ASSERT_EQUAL(helloValue->fill('Y', 0, 5), true);
 
 		ASSERT_EQUAL(helloValue->byteLength(), 5);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
@@ -468,7 +505,7 @@ void testFill()
 	{
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"YYYY☃");
 		
-		ASSERT_EQUAL(helloValue->fill('Y', 4, 4), true);
+		ASSERT_EQUAL(helloValue->fill('Y', 4, 5), true);
 
 		ASSERT_EQUAL(helloValue->byteLength(), 5);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
@@ -494,6 +531,18 @@ void testReplace()
 	const StringValue *constJapan = StringValue::fromUtf8CString(u8"日本国"); 
 
 	{
+		// From R7RS
+		StringValue *numbers = StringValue::fromUtf8CString(u8"12345");
+		StringValue *letters = StringValue::fromUtf8CString(u8"abcde");
+
+		ASSERT_EQUAL(letters->replace(1, numbers, 0, 2), true);
+
+		ASSERT_EQUAL(letters->byteLength(), 5);
+		ASSERT_EQUAL(letters->charLength(), 5);
+		ASSERT_EQUAL(memcmp(letters->utf8Data(), u8"a12de", 6), 0);
+	}
+
+	{
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
 
 		ASSERT_EQUAL(helloValue->replace(0, constWorld), true);
@@ -516,7 +565,7 @@ void testReplace()
 	{
 		StringValue *japanValue = StringValue::fromUtf8CString(u8"日本国");
 
-		ASSERT_EQUAL(japanValue->replace(0, constWorld, 0, 2), true);
+		ASSERT_EQUAL(japanValue->replace(0, constWorld, 0, 3), true);
 
 		ASSERT_EQUAL(japanValue->byteLength(), 3);
 		ASSERT_EQUAL(japanValue->charLength(), 3);
@@ -590,7 +639,7 @@ void testCodePoints()
 	}
 	
 	{
-		std::list<StringValue::CodePoint> codePoints = helloValue->codePoints(0, 7);
+		std::list<StringValue::CodePoint> codePoints = helloValue->codePoints(0, 8);
 
 		ASSERT_TRUE(codePoints == std::list<StringValue::CodePoint>({
 				'H',
@@ -602,6 +651,12 @@ void testCodePoints()
 				0x2603,
 				'!'
 		}));
+	}
+	
+	{
+		std::list<StringValue::CodePoint> codePoints = helloValue->codePoints(0, 0);
+
+		ASSERT_TRUE(codePoints == std::list<StringValue::CodePoint>({}));
 	}
 	
 	{
@@ -618,7 +673,7 @@ void testCodePoints()
 	}
 	
 	{
-		std::list<StringValue::CodePoint> codePoints = helloValue->codePoints(2, 4);
+		std::list<StringValue::CodePoint> codePoints = helloValue->codePoints(2, 5);
 
 		ASSERT_TRUE(codePoints == std::list<StringValue::CodePoint>({
 				'l',

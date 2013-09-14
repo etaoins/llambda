@@ -279,13 +279,18 @@ std::uint8_t* StringValue::charPointer(std::uint8_t *scanFrom, std::uint32_t byt
 	
 StringValue::CharRange StringValue::charRange(std::int64_t start, std::int64_t end) const
 {
-	if ((end != -1) && (end < start))
+	if (end != -1)
 	{
-		// Doesn't make sense
-		return CharRange { 0 };
+		if ((end < start) || (end > charLength()))
+		{
+			// Doesn't make sense
+			return CharRange { 0 };
+		}
 	}
 
-	std::uint8_t *startPointer = charPointer(start);
+	// We need the extra byte to allow a zero length range after the last char
+	// in the string 
+	std::uint8_t *startPointer = charPointer(utf8Data(), byteLength() + 1, start);
 
 	if (startPointer == nullptr)
 	{
@@ -298,28 +303,21 @@ StringValue::CharRange StringValue::charRange(std::int64_t start, std::int64_t e
 	
 	if (end != -1)
 	{
-		charCount = end - start + 1;
+		charCount = end - start;
 		
-		// Find the end pointer
-		const std::uint32_t bytesLeft = byteLength() - (startPointer - utf8Data());
-		endPointer = charPointer(startPointer, bytesLeft, charCount - 1);
+		// We have a NULL at the end of our data that's not included in length.
+		// Allow for that extra byte so that charPointer can return the end of 
+		// the string.
+		const std::uint32_t bytesLeft = byteLength() - (startPointer - utf8Data()) + 1;
+
+		// Find our end pointer
+		endPointer = charPointer(startPointer, bytesLeft, charCount);
 
 		if (endPointer == nullptr)
 		{
 			// Fell off the end
 			return CharRange { 0 };
 		}
-
-		// Read past the last character
-		unsigned int lastCharLength;
-		
-		if (decodeUtf8Char(endPointer, &lastCharLength) == StringValue::InvalidChar)
-		{
-			// We have corrupted UTF-8 internally (!)
-			return CharRange { 0 };
-		}
-
-		endPointer += lastCharLength; 
 	}
 	else 
 	{
@@ -435,7 +433,7 @@ bool StringValue::replace(std::uint32_t offset, const StringValue *from, std::in
 		return false;
 	}
 
-	CharRange toRange = charRange(offset, offset + fromRange.charCount - 1);
+	CharRange toRange = charRange(offset, offset + fromRange.charCount);
 
 	if (toRange.isNull() || (toRange.charCount != fromRange.charCount))
 	{
@@ -449,7 +447,7 @@ bool StringValue::replace(std::uint32_t offset, const StringValue *from, std::in
 	
 bool StringValue::setCharAt(std::uint32_t offset, CodePoint codePoint)
 {
-	return fill(codePoint, offset, offset);
+	return fill(codePoint, offset, offset + 1);
 }
 	
 StringValue* StringValue::copy(std::int64_t start, std::int64_t end)
@@ -508,7 +506,7 @@ std::list<StringValue::CodePoint> StringValue::codePoints(std::int64_t start, st
 		scanPtr += charLength;
 		addedChars++;
 
-		if ((end != -1) && (addedChars == (end - start + 1)))
+		if ((end != -1) && (addedChars == (end - start)))
 		{
 			// We have enough characters
 			return ret;
