@@ -1,11 +1,10 @@
-#include <assert.h>
-
 #include "binding/StringValue.h"
 #include "core/init.h"
 #include "assertions.h"
 
 namespace
 {
+using namespace lliby;
 
 std::uint8_t* utf8Bytes(const char *str)
 {
@@ -14,8 +13,6 @@ std::uint8_t* utf8Bytes(const char *str)
 
 void testFromUtf8CString()
 {
-	using namespace lliby;
-	
 	{
 		StringValue *emptyValue = StringValue::fromUtf8CString(u8"");
 
@@ -44,8 +41,6 @@ void testFromUtf8CString()
 
 void testCompare()
 {
-	using namespace lliby;
-
 	const StringValue *hello1 = StringValue::fromUtf8CString("Hello");
 	const StringValue *hello2 = new StringValue(utf8Bytes("Hello"), 5, 5);
 	const StringValue *world = StringValue::fromUtf8CString("world");
@@ -85,8 +80,6 @@ void testCompare()
 
 void testCharAt()
 {
-	using namespace lliby;
-		
 	{
 		StringValue *emptyValue = StringValue::fromUtf8CString(u8"");
 
@@ -114,8 +107,6 @@ void testCharAt()
 
 void testFromFill()
 {
-	using namespace lliby;
-	
 	{
 		StringValue *emptyAsciiValue = StringValue::fromFill(0, 0);
 
@@ -157,8 +148,6 @@ void testFromFill()
 
 void testFromAppended()
 {
-	using namespace lliby;
-
 	{
 		StringValue *emptyValue = StringValue::fromAppended(std::list<const StringValue*>());
 		ASSERT_EQUAL(emptyValue->byteLength(), 0);
@@ -198,8 +187,6 @@ void testFromAppended()
 
 void testFromCodePoints()
 {
-	using namespace lliby;
-
 	{
 		StringValue *emptyValue = StringValue::fromCodePoints(std::list<StringValue::CodePoint>());
 		ASSERT_EQUAL(emptyValue->byteLength(), 0);
@@ -241,8 +228,6 @@ void testFromCodePoints()
 
 void testStringCopy()
 {
-	using namespace lliby;
-	
 	{
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
 		StringValue *helloCopy = helloValue->copy();
@@ -363,8 +348,6 @@ void testStringCopy()
 
 void testSetCharAt()
 {
-	using namespace lliby;
-
 	{
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
 
@@ -415,8 +398,6 @@ void testSetCharAt()
 
 void testFill()
 {
-	using namespace lliby;
-	
 	{
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
 
@@ -525,8 +506,6 @@ void testFill()
 
 void testReplace()
 {
-	using namespace lliby;
-
 	const StringValue *constWorld = StringValue::fromUtf8CString(u8"world");
 	const StringValue *constJapan = StringValue::fromUtf8CString(u8"日本国"); 
 
@@ -620,7 +599,6 @@ void testReplace()
 
 void testCodePoints()
 {
-	using namespace lliby;
 	StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello ☃!");
 
 	{
