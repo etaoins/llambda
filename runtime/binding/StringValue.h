@@ -77,7 +77,7 @@ private:
 	};
 
 	CharRange charRange(std::int64_t start, std::int64_t end = -1) const; 
-	void replaceBytes(const CharRange &range, std::uint8_t *pattern, unsigned int patternBytes, unsigned int count = 1);
+	bool replaceBytes(const CharRange &range, std::uint8_t *pattern, unsigned int patternBytes, unsigned int count = 1);
 };
 
 }

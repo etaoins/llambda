@@ -137,7 +137,7 @@ namespace lliby
 
 StringValue* StringValue::fromUtf8CString(const char *signedStr)
 {
-	std::uint32_t byteLength = 0;
+	std::uint64_t byteLength = 0;
 	std::uint32_t charLength = 0;
 
 	auto *str = reinterpret_cast<const std::uint8_t*>(signedStr);
@@ -157,6 +157,11 @@ StringValue* StringValue::fromUtf8CString(const char *signedStr)
 		}
 
 		byteLength++;
+	}
+
+	if (byteLength > std::numeric_limits<std::uint32_t>::max())
+	{
+		return nullptr;
 	}
 
 	// Allocate the new string room for the NULL terminator
@@ -191,13 +196,19 @@ StringValue* StringValue::fromFill(std::uint32_t length, CodePoint fill)
 	
 StringValue* StringValue::fromAppended(const std::list<const StringValue*> &strings)
 {
-	std::uint32_t totalByteLength = 0;
+	std::uint64_t totalByteLength = 0;
 	std::uint32_t totalCharLength = 0;
 
 	for(auto stringPart : strings)
 	{
 		totalByteLength += stringPart->byteLength();
 		totalCharLength += stringPart->charLength();
+	}
+
+	// We only have to check bytelength because charLength must always be <=
+	if (totalByteLength > std::numeric_limits<std::uint32_t>::max())
+	{
+		return nullptr;
 	}
 
 	// Allocate the new string and null terminate it
@@ -340,7 +351,7 @@ StringValue::CodePoint StringValue::charAt(std::uint32_t offset) const
 	return decodeUtf8Char(charPtr);
 }
 	
-void StringValue::replaceBytes(const CharRange &range, std::uint8_t *pattern, unsigned int patternBytes, unsigned int count)
+bool StringValue::replaceBytes(const CharRange &range, std::uint8_t *pattern, unsigned int patternBytes, unsigned int count)
 {
 	const unsigned int requiredBytes = patternBytes * count;
 	const unsigned int replacedBytes = range.byteCount();
@@ -357,7 +368,13 @@ void StringValue::replaceBytes(const CharRange &range, std::uint8_t *pattern, un
 	else
 	{
 		// Create a new string from pieces of the old string
-		const std::uint32_t newByteLength = byteLength() + requiredBytes - replacedBytes;
+		const std::uint64_t newByteLength = byteLength() + requiredBytes - replacedBytes;
+		
+		if (newByteLength > std::numeric_limits<std::uint32_t>::max())
+		{
+			return false;
+		}
+
 		const std::uint32_t initialBytes = range.startPointer - utf8Data(); 
 		// Include the NULL terminator
 		const std::uint32_t finalBytes = newByteLength + 1 - initialBytes - requiredBytes;
@@ -398,6 +415,8 @@ void StringValue::replaceBytes(const CharRange &range, std::uint8_t *pattern, un
 			setUtf8Data(destString);
 		}
 	}
+	
+	return true;
 }
 	
 bool StringValue::fill(CodePoint codePoint, std::int64_t start, std::int64_t end)
@@ -419,9 +438,7 @@ bool StringValue::fill(CodePoint codePoint, std::int64_t start, std::int64_t end
 		return false;
 	}
 
-	replaceBytes(range, encoded.data(), encoded.size(), range.charCount);
-
-	return true;
+	return replaceBytes(range, encoded.data(), encoded.size(), range.charCount);
 }
 	
 bool StringValue::replace(std::uint32_t offset, const StringValue *from, std::int64_t fromStart, std::int64_t fromEnd)
@@ -440,9 +457,7 @@ bool StringValue::replace(std::uint32_t offset, const StringValue *from, std::in
 		return false;
 	}
 	
-	replaceBytes(toRange, fromRange.startPointer, fromRange.byteCount());
-
-	return true;
+	return replaceBytes(toRange, fromRange.startPointer, fromRange.byteCount());
 }
 	
 bool StringValue::setCharAt(std::uint32_t offset, CodePoint codePoint)
