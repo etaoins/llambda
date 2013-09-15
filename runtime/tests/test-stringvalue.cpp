@@ -1,4 +1,6 @@
 #include "binding/StringValue.h"
+#include "binding/ByteVectorValue.h"
+
 #include "core/init.h"
 #include "assertions.h"
 
@@ -32,6 +34,38 @@ void testFromUtf8CString()
 	
 	{
 		StringValue *highUnicodeValue = StringValue::fromUtf8CString(u8"☃🐉");
+
+		ASSERT_EQUAL(highUnicodeValue->byteLength(), 7);
+		ASSERT_EQUAL(highUnicodeValue->utf8Data()[7], 0);
+		ASSERT_EQUAL(highUnicodeValue->charLength(), 2);
+	}
+}
+
+void testFromUtf8Data()
+{
+	{
+		StringValue *emptyValue = StringValue::fromUtf8Data(nullptr, 0);
+
+		ASSERT_EQUAL(emptyValue->byteLength(), 0);
+		ASSERT_EQUAL(emptyValue->utf8Data()[0], 0);
+		ASSERT_EQUAL(emptyValue->charLength(), 0);
+	}
+
+	{
+		// Intentionally include NULL as a char to make sure we're NULL safe
+		auto helloBytes = reinterpret_cast<const std::uint8_t*>(u8"Hello");
+		StringValue *helloValue = StringValue::fromUtf8Data(helloBytes, 6);
+
+		ASSERT_EQUAL(helloValue->byteLength(), 6);
+		ASSERT_EQUAL(helloValue->utf8Data()[0], 'H');
+		ASSERT_EQUAL(helloValue->utf8Data()[5], 0);
+		ASSERT_EQUAL(helloValue->utf8Data()[6], 0);
+		ASSERT_EQUAL(helloValue->charLength(), 6);;
+	}
+	
+	{
+		auto highUnicodeBytes = reinterpret_cast<const std::uint8_t*>(u8"☃🐉");
+		StringValue *highUnicodeValue = StringValue::fromUtf8Data(highUnicodeBytes, 7);
 
 		ASSERT_EQUAL(highUnicodeValue->byteLength(), 7);
 		ASSERT_EQUAL(highUnicodeValue->utf8Data()[7], 0);
@@ -676,6 +710,54 @@ void testCodePoints()
 	}
 }
 
+void testToUtf8ByteVector()
+{
+	StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello ☃!");
+
+	{
+		ByteVectorValue *byteVectorValue = helloValue->toUtf8ByteVector();
+
+		ASSERT_EQUAL(byteVectorValue->length(), 10);
+		ASSERT_EQUAL(memcmp(byteVectorValue->data(), "Hello ☃!", 10), 0);
+	}
+	
+	{
+		ByteVectorValue *byteVectorValue = helloValue->toUtf8ByteVector(0, 8);
+		
+		ASSERT_EQUAL(byteVectorValue->length(), 10);
+		ASSERT_EQUAL(memcmp(byteVectorValue->data(), "Hello ☃!", 10), 0);
+	}
+	
+	{
+		ByteVectorValue *byteVectorValue = helloValue->toUtf8ByteVector(2);
+		
+		ASSERT_EQUAL(byteVectorValue->length(), 8);
+		ASSERT_EQUAL(memcmp(byteVectorValue->data(), "llo ☃!", 8), 0);
+	}
+	
+	{
+		ByteVectorValue *byteVectorValue = helloValue->toUtf8ByteVector(2, 5);
+
+		ASSERT_EQUAL(byteVectorValue->length(), 3);
+		ASSERT_EQUAL(memcmp(byteVectorValue->data(), "llo", 3), 0);
+	}
+	
+	{
+		ByteVectorValue *byteVectorValue = helloValue->toUtf8ByteVector(2, 19);
+		ASSERT_EQUAL(byteVectorValue, 0);
+	}
+	
+	{
+		ByteVectorValue *byteVectorValue = helloValue->toUtf8ByteVector(19);
+		ASSERT_EQUAL(byteVectorValue, 0);
+	}
+	
+	{
+		ByteVectorValue *byteVectorValue = helloValue->toUtf8ByteVector(19, 24);
+		ASSERT_EQUAL(byteVectorValue, 0);
+	}
+}
+
 }
 
 int main(int argc, char *argv[])
@@ -683,6 +765,7 @@ int main(int argc, char *argv[])
 	lliby_init();
 
 	testFromUtf8CString();
+	testFromUtf8Data();
 
 	testCompare();
 	testCharAt();
@@ -698,6 +781,8 @@ int main(int argc, char *argv[])
 	testReplace();
 
 	testCodePoints();
+
+	testToUtf8ByteVector();
 
 	return 0;
 }

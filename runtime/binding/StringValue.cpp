@@ -5,6 +5,7 @@
 #include <algorithm>
 
 #include "SymbolValue.h"
+#include "ByteVectorValue.h"
 
 namespace
 {
@@ -167,6 +168,28 @@ StringValue* StringValue::fromUtf8CString(const char *signedStr)
 	// Allocate the new string room for the NULL terminator
 	auto *newString = new std::uint8_t[byteLength + 1];
 	memcpy(newString, str, byteLength + 1);
+
+	return new StringValue(newString, byteLength, charLength);
+}
+	
+StringValue* StringValue::fromUtf8Data(const std::uint8_t *data, std::uint32_t byteLength)
+{
+	std::uint32_t charLength = 0;
+	auto newString = new std::uint8_t[byteLength + 1];
+
+	// It seems that the cache friendliness of doing this in one loop likely
+	// outweighs the faster copy we'd get from doing memcpy() at the end
+	for(std::uint32_t i = 0; i < byteLength; i++)
+	{
+		if (!isContinuationByte(data[i]))
+		{
+			charLength++;
+		}
+
+		newString[i] = data[i];
+	}
+
+	newString[byteLength] = 0;
 
 	return new StringValue(newString, byteLength, charLength);
 }
@@ -569,6 +592,22 @@ SymbolValue* StringValue::toSymbol() const
 	memcpy(newString, utf8Data(), byteLength() + 1);
 
 	return new SymbolValue(newString, byteLength(), charLength());
+}
+	
+ByteVectorValue* StringValue::toUtf8ByteVector(std::int64_t start, std::int64_t end) const
+{
+	CharRange range = charRange(start, end);
+
+	if (range.isNull())
+	{
+		return nullptr;
+	}
+
+	std::uint32_t newLength = range.endPointer - range.startPointer;
+	auto *newData = new std::uint8_t[newLength];
+
+	memcpy(newData, range.startPointer, newLength);
+	return new ByteVectorValue(newData, newLength);
 }
 
 }

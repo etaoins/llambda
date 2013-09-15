@@ -6,6 +6,7 @@ project (lliby)
 add_library(lliby
 	alloc/allocator.cpp
 	binding/BoxedDatum.cpp
+	binding/ByteVectorValue.cpp
 	binding/PairValue.cpp
 	binding/ProcedureValue.cpp
 	binding/StringLikeValue.cpp
@@ -51,6 +52,7 @@ endif()
 enable_testing()
 
 set(ALL_TEST_NAMES
+	bytevectorvalue
 	constinstances
 	inexactrationalvalue
 	pairvalue

@@ -20,6 +20,7 @@ public:
 	static const CodePoint InvalidChar = -1;
 
 	static StringValue* fromUtf8CString(const char *str);
+	static StringValue* fromUtf8Data(const std::uint8_t *data, std::uint32_t byteLength);
 	static StringValue* fromFill(std::uint32_t length, CodePoint fill);
 	static StringValue* fromAppended(const std::list<const StringValue*> &strings);
 	static StringValue* fromCodePoints(const std::list<CodePoint> &codePoints);
@@ -54,6 +55,7 @@ public:
 	}
 
 	SymbolValue *toSymbol() const;
+	ByteVectorValue *toUtf8ByteVector(std::int64_t start = 0, std::int64_t end = -1) const;
 
 private:
 	std::uint8_t *charPointer(std::uint8_t *scanFrom, std::uint32_t bytesLeft, uint32_t charOffset) const;
