@@ -163,6 +163,12 @@ void ExternalFormDatumWriter::renderStringLike(const StringLikeValue *value, std
 			// Can't be " even if it's not the quote character
 			(byteValue != 0x22))
 		{
+			if (byteValue > 0x7f)
+			{
+				// R7RS requires symbols to be quoted if they have non-ASCII characters
+				needsQuotes = true;
+			}
+
 			// These can be used literally
 			outBuf << static_cast<char>(byteValue);
 		}
