@@ -13,6 +13,8 @@
 #include "binding/SymbolValue.h"
 #include "binding/StringValue.h"
 #include "binding/PairValue.h"
+#include "binding/ByteVectorValue.h"
+#include "binding/VectorValue.h"
 
 namespace lliby
 {
@@ -50,6 +52,18 @@ void ExternalFormDatumWriter::render(const BoxedDatum *datum)
 	else if (auto value = datum->asPairValue())
 	{
 		renderPair(value);
+	}
+	else if (auto value = datum->asByteVectorValue())
+	{
+		renderByteVector(value);
+	}
+	else if (auto value = datum->asVectorValue())
+	{
+		renderVector(value);
+	}
+	else if (auto value = datum->asProcedureValue())
+	{
+		renderProcedure(value);
 	}
 	else
 	{
@@ -204,6 +218,53 @@ void ExternalFormDatumWriter::renderPair(const PairValue *value, bool inList)
 		render(value->cdr());
 		m_outStream << ")";
 	}
+}
+	
+void ExternalFormDatumWriter::renderByteVector(const ByteVectorValue *value)
+{
+	bool printedByte = false;
+	m_outStream << "#u8(";
+
+	for(unsigned int i = 0; i < value->length(); i++)
+	{
+		if (printedByte)
+		{
+			// Pad with a space
+			m_outStream << " ";
+		}
+
+		m_outStream << value->byteAt(i);
+
+		printedByte = true;
+	}
+
+	m_outStream << ")";
+}
+
+void ExternalFormDatumWriter::renderVector(const VectorValue *value)
+{
+	bool printedElement = false;
+	m_outStream << "#(";
+
+	for(unsigned int i = 0; i < value->length(); i++)
+	{
+		if (printedElement)
+		{
+			// Pad with a space
+			m_outStream << " ";
+		}
+
+		render(value->elementAt(i));
+
+		printedElement = true;
+	}
+
+	m_outStream << ")";
+}
+
+void ExternalFormDatumWriter::renderProcedure(const ProcedureValue *)
+{
+	m_outStream << "#!procedure";
 }
 
 }

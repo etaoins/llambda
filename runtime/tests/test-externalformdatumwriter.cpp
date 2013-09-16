@@ -10,6 +10,9 @@
 #include "binding/StringValue.h"
 #include "binding/SymbolValue.h"
 #include "binding/PairValue.h"
+#include "binding/ByteVectorValue.h"
+#include "binding/VectorValue.h"
+#include "binding/ProcedureValue.h"
 
 #include "core/init.h"
 #include "assertions.h"
@@ -118,6 +121,45 @@ void testPair()
 	assertForm(outerList, "(A B C (A B . C))");
 }
 
+void testByteVector()
+{
+	{
+		auto *emptyVector = new ByteVectorValue(nullptr, 0);
+		assertForm(emptyVector, "#u8()");
+	}
+
+	{
+		uint8_t testData[5] = { 100, 101, 202, 203, 204 };
+		auto *testVector = new ByteVectorValue(testData, 5); 
+
+		assertForm(testVector, "#u8(100 101 202 203 204)");
+	}
+}
+
+void testVector()
+{
+	{
+		VectorValue *emptyVector = VectorValue::fromFill(0);
+		assertForm(emptyVector, "#()");
+	}
+
+	{
+		VectorValue *fillVector = VectorValue::fromFill(5);
+
+		for(unsigned int i = 0; i < 5; i++)
+		{
+			fillVector->setElementAt(i, ExactIntegerValue::instanceForValue(i));
+		}
+
+		assertForm(fillVector, "#(0 1 2 3 4)");
+	}
+}
+
+void testProcedure()
+{
+	assertForm(new ProcedureValue(nullptr, nullptr), "#!procedure");
+}
+
 }
 
 int main(int argc, char *argv[])
@@ -134,4 +176,7 @@ int main(int argc, char *argv[])
 	testSymbol();
 	testString();
 	testPair();
+	testByteVector();
+	testVector();
+	testProcedure();
 }

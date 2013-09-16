@@ -26,6 +26,9 @@ protected:
 	virtual void renderInexactRational(const InexactRationalValue *value);
 	virtual void renderStringLike(const StringLikeValue *value, std::uint8_t quoteChar, bool needsQuotes);
 	virtual void renderPair(const PairValue *value, bool inList = false);
+	virtual void renderByteVector(const ByteVectorValue *value);
+	virtual void renderVector(const VectorValue *value);
+	virtual void renderProcedure(const ProcedureValue *value);
 
 	std::ostream &m_outStream;
 };
