@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "binding/StringValue.h"
 #include "binding/ByteVectorValue.h"
 
