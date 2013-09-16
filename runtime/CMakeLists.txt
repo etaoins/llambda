@@ -11,6 +11,8 @@ add_library(lliby
 	binding/ProcedureValue.cpp
 	binding/StringLikeValue.cpp
 	binding/StringValue.cpp
+	binding/VectorLikeValue.cpp
+	binding/VectorValue.cpp
 	core/constinstances.cpp
 	core/fatal.cpp
 	core/init.cpp
@@ -57,6 +59,7 @@ set(ALL_TEST_NAMES
 	inexactrationalvalue
 	pairvalue
 	stringvalue
+	vectorvalue
 	externalformdatumwriter)
 
 foreach( test_name ${ALL_TEST_NAMES} )
