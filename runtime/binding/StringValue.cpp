@@ -313,50 +313,65 @@ std::uint8_t* StringValue::charPointer(std::uint8_t *scanFrom, std::uint32_t byt
 	
 StringValue::CharRange StringValue::charRange(std::int64_t start, std::int64_t end) const
 {
-	if (end != -1)
+	if (end == -1)
 	{
-		if ((end < start) || (end > charLength()))
+		end = charLength();
+	}
+	else if (end > charLength())
+	{
+		// The end can't be greater than the string length
+		return CharRange { 0 };
+	}
+
+	if (end < start)
+	{
+		// The end can't be before the start
+		// Combined with the above logic that means the start must also be
+		// less than or equal to the length
+		return CharRange { 0 };
+	}
+
+	std::uint8_t *startPointer;
+	
+	if (start == charLength())
+	{
+		// The string scan below will fail because we want the pointer just
+		// past the last character. Note this is only possible if:
+		// start == end == charLength()
+		startPointer = &utf8Data()[byteLength()];
+	}
+	else
+	{
+		startPointer = charPointer(start);
+
+		if (startPointer == nullptr)
 		{
-			// Doesn't make sense
+			// Fell off the end looking for the start
+			// This means we have corrupted UTF-8 data because the checks above
+			// should have caught that.
 			return CharRange { 0 };
 		}
 	}
 
-	// We need the extra byte to allow a zero length range after the last char
-	// in the string 
-	std::uint8_t *startPointer = charPointer(utf8Data(), byteLength() + 1, start);
-
-	if (startPointer == nullptr)
-	{
-		// Fell off the end
-		return CharRange { 0 };
-	}
-
-	std::uint32_t charCount;
+	const std::uint32_t charCount = end - start;
 	std::uint8_t *endPointer;
 	
-	if (end != -1)
+	if (end == charLength())
 	{
-		charCount = end - start;
-		
-		// We have a NULL at the end of our data that's not included in length.
-		// Allow for that extra byte so that charPointer can return the end of 
-		// the string.
-		const std::uint32_t bytesLeft = byteLength() - (startPointer - utf8Data()) + 1;
-
+		endPointer = &utf8Data()[byteLength()];
+	}
+	else
+	{
 		// Find our end pointer
+		const std::uint32_t bytesLeft = byteLength() - (startPointer - utf8Data());
 		endPointer = charPointer(startPointer, bytesLeft, charCount);
 
 		if (endPointer == nullptr)
 		{
 			// Fell off the end
+			// This means we have corrupted UTF-8 data
 			return CharRange { 0 };
 		}
-	}
-	else 
-	{
-		charCount = charLength() - start;
-		endPointer = &utf8Data()[byteLength()];
 	}
 
 	return CharRange { startPointer, endPointer, charCount };
