@@ -1,5 +1,6 @@
 #include "PairValue.h"
 #include "EmptyListValue.h"
+#include "alloc/FreezeGc.h"
 
 namespace lliby
 {
@@ -11,9 +12,13 @@ BoxedDatum* PairValue::createProperList(const std::list<BoxedDatum*> &elements)
 	// Just cast the const away
 	BoxedDatum *cdr = const_cast<EmptyListValue*>(EmptyListValue::instance()); 
 
-	for(auto it = elements.rbegin(); it != elements.rend(); it++)
 	{
-		cdr = new PairValue(*it, cdr);
+		alloc::FreezeGc freezer(elements.size());
+
+		for(auto it = elements.rbegin(); it != elements.rend(); it++)
+		{
+			cdr = new PairValue(*it, cdr);
+		}
 	}
 
 	return cdr;
@@ -32,14 +37,18 @@ PairValue* PairValue::createImproperList(const std::list<BoxedDatum*> &elements)
 	BoxedDatum *endValue = *(it++);
 	BoxedDatum *secondLast = *(it++);
 
-	auto cdr = new PairValue(secondLast, endValue);
-
-	for(;it != elements.rend(); it++)
 	{
-		cdr = new PairValue(*it, cdr); 
-	}
+		alloc::FreezeGc freezer(elements.size() - 1);
 
-	return cdr;
+		auto cdr = new PairValue(secondLast, endValue);
+
+		for(;it != elements.rend(); it++)
+		{
+			cdr = new PairValue(*it, cdr); 
+		}
+	
+		return cdr;
+	}
 }
 
 }
