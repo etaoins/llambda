@@ -29,10 +29,10 @@ namespace
 		return (byte & ContinuationHeaderMask) == ContinuationHeaderValue;
 	}
 
-	StringValue::CodePoint decodeUtf8Char(const std::uint8_t *charPtr, unsigned int *length = nullptr)
+	CodePoint decodeUtf8Char(const std::uint8_t *charPtr, unsigned int *length = nullptr)
 	{
 		unsigned int continuationBytes;
-		StringValue::CodePoint codePoint;
+		CodePoint codePoint;
 
 		std::uint8_t firstByte = *charPtr;
 
@@ -64,7 +64,7 @@ namespace
 		}
 		else
 		{
-			return StringValue::InvalidChar;
+			return InvalidCodePoint;
 		}
 
 		if (length)
@@ -79,7 +79,7 @@ namespace
 			// This will also catch running off the end via NULL
 			if (!isContinuationByte(*charPtr))
 			{
-				return StringValue::InvalidChar;
+				return InvalidCodePoint;
 			}
 
 			codePoint = (codePoint << 6) | (*charPtr & ~ContinuationHeaderMask);
@@ -88,7 +88,7 @@ namespace
 		return codePoint;
 	}
 
-	std::vector<std::uint8_t> encodeUtf8Char(StringValue::CodePoint codePoint)
+	std::vector<std::uint8_t> encodeUtf8Char(CodePoint codePoint)
 	{
 		unsigned int continuationBytes;
 		std::uint8_t firstByteHeader;
@@ -377,13 +377,13 @@ StringValue::CharRange StringValue::charRange(std::int64_t start, std::int64_t e
 	return CharRange { startPointer, endPointer, charCount };
 }
 	
-StringValue::CodePoint StringValue::charAt(std::uint32_t offset) const
+CodePoint StringValue::charAt(std::uint32_t offset) const
 {
 	std::uint8_t* charPtr = charPointer(offset);
 
 	if (charPtr == nullptr)
 	{
-		return InvalidChar;
+		return InvalidCodePoint;
 	}
 
 	return decodeUtf8Char(charPtr);
@@ -523,7 +523,7 @@ StringValue* StringValue::copy(std::int64_t start, std::int64_t end)
 	return new StringValue(newString, newByteLength, range.charCount);
 }
 	
-std::list<StringValue::CodePoint> StringValue::codePoints(std::int64_t start, std::int64_t end) const
+std::list<CodePoint> StringValue::codePoints(std::int64_t start, std::int64_t end) const
 {
 	if ((end != -1) && (end < start))
 	{
@@ -549,7 +549,7 @@ std::list<StringValue::CodePoint> StringValue::codePoints(std::int64_t start, st
 
 		CodePoint codePoint = decodeUtf8Char(scanPtr, &charLength);
 
-		if (codePoint == InvalidChar)
+		if (codePoint == InvalidCodePoint)
 		{
 			return std::list<CodePoint>();
 		}

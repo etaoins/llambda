@@ -119,7 +119,7 @@ void testCharAt()
 	{
 		StringValue *emptyValue = StringValue::fromUtf8CString(u8"");
 
-		ASSERT_EQUAL(emptyValue->charAt(0), StringValue::InvalidChar);
+		ASSERT_EQUAL(emptyValue->charAt(0), InvalidCodePoint);
 	}
 
 	{
@@ -127,8 +127,8 @@ void testCharAt()
 
 		ASSERT_EQUAL(helloValue->charAt(0), 'H');
 		ASSERT_EQUAL(helloValue->charAt(4), 'o');
-		ASSERT_EQUAL(helloValue->charAt(5), StringValue::InvalidChar);
-		ASSERT_EQUAL(helloValue->charAt(1024), StringValue::InvalidChar);
+		ASSERT_EQUAL(helloValue->charAt(5), InvalidCodePoint);
+		ASSERT_EQUAL(helloValue->charAt(1024), InvalidCodePoint);
 	}
 	
 	{
@@ -136,8 +136,8 @@ void testCharAt()
 		
 		ASSERT_EQUAL(highUnicodeValue->charAt(0), 0x02603);
 		ASSERT_EQUAL(highUnicodeValue->charAt(1), 0x1F409);
-		ASSERT_EQUAL(highUnicodeValue->charAt(2), StringValue::InvalidChar);
-		ASSERT_EQUAL(highUnicodeValue->charAt(1024), StringValue::InvalidChar);
+		ASSERT_EQUAL(highUnicodeValue->charAt(2), InvalidCodePoint);
+		ASSERT_EQUAL(highUnicodeValue->charAt(1024), InvalidCodePoint);
 	}
 }
 
@@ -167,7 +167,7 @@ void testFromFill()
 		ASSERT_EQUAL(asciiValue->charLength(), 5);
 		ASSERT_EQUAL(asciiValue->charAt(0), 'H');
 		ASSERT_EQUAL(asciiValue->charAt(4), 'H');
-		ASSERT_EQUAL(asciiValue->charAt(5), StringValue::InvalidChar);
+		ASSERT_EQUAL(asciiValue->charAt(5), InvalidCodePoint);
 	}
 	
 	{
@@ -178,7 +178,7 @@ void testFromFill()
 		ASSERT_EQUAL(unicodeValue->charLength(), 5);
 		ASSERT_EQUAL(unicodeValue->charAt(0), 0x02603);
 		ASSERT_EQUAL(unicodeValue->charAt(4), 0x02603);
-		ASSERT_EQUAL(unicodeValue->charAt(5), StringValue::InvalidChar);
+		ASSERT_EQUAL(unicodeValue->charAt(5), InvalidCodePoint);
 	}
 }
 
@@ -224,14 +224,14 @@ void testFromAppended()
 void testFromCodePoints()
 {
 	{
-		StringValue *emptyValue = StringValue::fromCodePoints(std::list<StringValue::CodePoint>());
+		StringValue *emptyValue = StringValue::fromCodePoints(std::list<CodePoint>());
 		ASSERT_EQUAL(emptyValue->byteLength(), 0);
 		ASSERT_EQUAL(emptyValue->utf8Data()[0], 0);
 		ASSERT_EQUAL(emptyValue->charLength(), 0);
 	}
 
 	{
-		const std::list<StringValue::CodePoint> helloPoints = {
+		const std::list<CodePoint> helloPoints = {
 			'H',
 			'e',
 			'l',
@@ -248,7 +248,7 @@ void testFromCodePoints()
 	}
 	
 	{
-		const std::list<StringValue::CodePoint> unicodePoints = {
+		const std::list<CodePoint> unicodePoints = {
 			0x1F409,
 			0x02603,
 			'!'
@@ -638,9 +638,9 @@ void testCodePoints()
 	StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello ☃!");
 
 	{
-		std::list<StringValue::CodePoint> codePoints = helloValue->codePoints();
+		std::list<CodePoint> codePoints = helloValue->codePoints();
 
-		ASSERT_TRUE(codePoints == std::list<StringValue::CodePoint>({
+		ASSERT_TRUE(codePoints == std::list<CodePoint>({
 				'H',
 				'e',
 				'l',
@@ -653,9 +653,9 @@ void testCodePoints()
 	}
 	
 	{
-		std::list<StringValue::CodePoint> codePoints = helloValue->codePoints(0, 8);
+		std::list<CodePoint> codePoints = helloValue->codePoints(0, 8);
 
-		ASSERT_TRUE(codePoints == std::list<StringValue::CodePoint>({
+		ASSERT_TRUE(codePoints == std::list<CodePoint>({
 				'H',
 				'e',
 				'l',
@@ -668,15 +668,15 @@ void testCodePoints()
 	}
 	
 	{
-		std::list<StringValue::CodePoint> codePoints = helloValue->codePoints(0, 0);
+		std::list<CodePoint> codePoints = helloValue->codePoints(0, 0);
 
-		ASSERT_TRUE(codePoints == std::list<StringValue::CodePoint>({}));
+		ASSERT_TRUE(codePoints == std::list<CodePoint>({}));
 	}
 	
 	{
-		std::list<StringValue::CodePoint> codePoints = helloValue->codePoints(2);
+		std::list<CodePoint> codePoints = helloValue->codePoints(2);
 
-		ASSERT_TRUE(codePoints == std::list<StringValue::CodePoint>({
+		ASSERT_TRUE(codePoints == std::list<CodePoint>({
 				'l',
 				'l',
 				'o',
@@ -687,9 +687,9 @@ void testCodePoints()
 	}
 	
 	{
-		std::list<StringValue::CodePoint> codePoints = helloValue->codePoints(2, 5);
+		std::list<CodePoint> codePoints = helloValue->codePoints(2, 5);
 
-		ASSERT_TRUE(codePoints == std::list<StringValue::CodePoint>({
+		ASSERT_TRUE(codePoints == std::list<CodePoint>({
 				'l',
 				'l',
 				'o'
@@ -697,17 +697,17 @@ void testCodePoints()
 	}
 	
 	{
-		std::list<StringValue::CodePoint> codePoints = helloValue->codePoints(2, 19);
+		std::list<CodePoint> codePoints = helloValue->codePoints(2, 19);
 		ASSERT_TRUE(codePoints.empty());
 	}
 	
 	{
-		std::list<StringValue::CodePoint> codePoints = helloValue->codePoints(19);
+		std::list<CodePoint> codePoints = helloValue->codePoints(19);
 		ASSERT_TRUE(codePoints.empty());
 	}
 	
 	{
-		std::list<StringValue::CodePoint> codePoints = helloValue->codePoints(19, 24);
+		std::list<CodePoint> codePoints = helloValue->codePoints(19, 24);
 		ASSERT_TRUE(codePoints.empty());
 	}
 }

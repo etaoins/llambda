@@ -4,6 +4,8 @@
 #include "StringLikeValue.h"
 #include <list>
 
+#include "common/global.h"
+
 namespace lliby
 {
 
@@ -15,9 +17,6 @@ public:
 		StringLikeValue(BoxedTypeId::String, utf8Data, byteLength, charLength)
 	{
 	}
-
-	typedef std::int32_t CodePoint;
-	static const CodePoint InvalidChar = -1;
 
 	static StringValue* fromUtf8CString(const char *str);
 	static StringValue* fromUtf8Data(const std::uint8_t *data, std::uint32_t byteLength);

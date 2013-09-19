@@ -3,13 +3,13 @@
 
 #include <cstdint>
 
+#include "common/global.h"
+
 namespace lliby
 {
 
 namespace UnicodeData
 {
-	typedef std::int32_t CodePoint;
-
 	typedef std::int32_t NumericValue;
 	static const NumericValue InvalidNumericValue = -1;
 
