@@ -4,6 +4,8 @@
 #include <vector>
 #include <algorithm>
 
+#include "unicodedata/UnicodeData.h"
+
 #include "SymbolValue.h"
 #include "ByteVectorValue.h"
 
@@ -29,20 +31,17 @@ namespace
 		return (byte & ContinuationHeaderMask) == ContinuationHeaderValue;
 	}
 
-	CodePoint decodeUtf8Char(const std::uint8_t *charPtr, unsigned int *length = nullptr)
+	CodePoint decodeUtf8Char(std::uint8_t **charPtr)
 	{
 		unsigned int continuationBytes;
 		CodePoint codePoint;
 
-		std::uint8_t firstByte = *charPtr;
+		std::uint8_t firstByte = *(*charPtr);
 
 		if (firstByte <= 0x7f)
 		{
 			// This is ASCII, it's easy
-			if (length)
-			{
-				*length = 1;
-			}
+			(*charPtr)++;
 
 			return firstByte;
 		}
@@ -67,24 +66,20 @@ namespace
 			return InvalidCodePoint;
 		}
 
-		if (length)
-		{
-			*length = continuationBytes + 1;
-		}
-
 		while(continuationBytes--)
 		{
-			charPtr++;
+			(*charPtr)++;
 
 			// This will also catch running off the end via NULL
-			if (!isContinuationByte(*charPtr))
+			if (!isContinuationByte(*(*charPtr)))
 			{
 				return InvalidCodePoint;
 			}
 
-			codePoint = (codePoint << 6) | (*charPtr & ~ContinuationHeaderMask);
+			codePoint = (codePoint << 6) | (*(*charPtr) & ~ContinuationHeaderMask);
 		}
-
+			
+		(*charPtr)++;
 		return codePoint;
 	}
 
@@ -386,7 +381,7 @@ CodePoint StringValue::charAt(std::uint32_t offset) const
 		return InvalidCodePoint;
 	}
 
-	return decodeUtf8Char(charPtr);
+	return decodeUtf8Char(&charPtr);
 }
 	
 bool StringValue::replaceBytes(const CharRange &range, std::uint8_t *pattern, unsigned int patternBytes, unsigned int count)
@@ -545,9 +540,7 @@ std::list<CodePoint> StringValue::codePoints(std::int64_t start, std::int64_t en
 
 	while(scanPtr < endPtr)
 	{
-		unsigned int charLength;
-
-		CodePoint codePoint = decodeUtf8Char(scanPtr, &charLength);
+		CodePoint codePoint = decodeUtf8Char(&scanPtr);
 
 		if (codePoint == InvalidCodePoint)
 		{
@@ -556,7 +549,6 @@ std::list<CodePoint> StringValue::codePoints(std::int64_t start, std::int64_t en
 
 		ret.push_back(codePoint);
 
-		scanPtr += charLength;
 		addedChars++;
 
 		if ((end != -1) && (addedChars == (end - start)))
@@ -575,7 +567,7 @@ std::list<CodePoint> StringValue::codePoints(std::int64_t start, std::int64_t en
 	return ret;
 }
 
-int StringValue::compare(const StringValue *other) const
+int StringValue::compareCaseSensitive(const StringValue *other) const
 {
 	std::uint32_t compareBytes = std::min(byteLength(), other->byteLength());
 
@@ -597,6 +589,62 @@ int StringValue::compare(const StringValue *other) const
 	else
 	{
 		return 0;
+	}
+}
+
+int StringValue::compareCaseInsensitive(const StringValue *other) const
+{
+	std::uint8_t *ourScanPtr = utf8Data();
+	std::uint8_t *ourEndPtr = &utf8Data()[byteLength()];
+
+	std::uint8_t *theirScanPtr = other->utf8Data();
+	std::uint8_t *theirEndPtr = &other->utf8Data()[other->byteLength()];
+	
+	while(true)
+	{
+		const int ourEnd = ourScanPtr >= ourEndPtr;
+		const int theirEnd = theirScanPtr >= theirEndPtr;
+
+		if (ourEnd || theirEnd)
+		{
+			return theirEnd - ourEnd;
+		}
+
+		CodePoint ourCodePoint = decodeUtf8Char(&ourScanPtr);
+		if (ourCodePoint == InvalidCodePoint)
+		{
+			// Pretend we ended early
+			return -1;
+		}
+		
+		CodePoint theirCodePoint = decodeUtf8Char(&theirScanPtr);
+		if (theirCodePoint == InvalidCodePoint)
+		{
+			// Pretend they ended early
+			return 1;
+		}
+
+		ourCodePoint = UnicodeData::foldCase(ourCodePoint);
+		theirCodePoint = UnicodeData::foldCase(theirCodePoint);
+
+		if (ourCodePoint != theirCodePoint)
+		{
+			return ourCodePoint - theirCodePoint;
+		}
+	}
+
+	return 0;
+}
+
+int StringValue::compare(const StringValue *other, CaseSensitivity cs) const
+{
+	if (cs == CaseSensitivity::Sensitive)
+	{
+		return compareCaseSensitive(other);
+	}
+	else
+	{
+		return compareCaseInsensitive(other);
 	}
 }
 	

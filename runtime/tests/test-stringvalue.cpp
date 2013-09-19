@@ -79,11 +79,14 @@ void testCompare()
 {
 	const StringValue *hello1 = StringValue::fromUtf8CString("Hello");
 	const StringValue *hello2 = new StringValue(utf8Bytes("Hello"), 5, 5);
+	const StringValue *HELLO = StringValue::fromUtf8CString("HELLO");
 	const StringValue *world = StringValue::fromUtf8CString("world");
 	const StringValue *nulledHello1 = new StringValue(utf8Bytes("Hell\0o"), 6, 6);
 	const StringValue *nulledHello2 = new StringValue(utf8Bytes("Hell\0o"), 6, 6);
 	const StringValue *hell = StringValue::fromUtf8CString("Hell");
 	const StringValue *unicodeValue = StringValue::fromUtf8CString(u8"☃🐉");
+	const StringValue *lowercaseUnicode = StringValue::fromUtf8CString(u8"сфmmциist gязэtiйgs!");
+	const StringValue *uppercaseUnicode = StringValue::fromUtf8CString(u8"СФMMЦИIST GЯЗЭTIЙGS!");
 
 	ASSERT_TRUE(*hello1 == *hello1); 
 	ASSERT_TRUE(hello1->compare(hello1) == 0);
@@ -108,10 +111,25 @@ void testCompare()
 	// them as a prefix
 	ASSERT_FALSE(*nulledHello1 == *hell);
 	ASSERT_TRUE(nulledHello1->compare(hell) > 0);
+
 	ASSERT_TRUE(hell->compare(nulledHello1) < 0);
+	ASSERT_TRUE(hell->compare(nulledHello1, CaseSensitivity::Insensitive) < 0);
 
 	// Make sure high Unicode code points sort after ASCII
 	ASSERT_TRUE(unicodeValue->compare(hello1) > 0);
+	ASSERT_TRUE(unicodeValue->compare(hello1, CaseSensitivity::Insensitive) > 0);
+
+	// Make sure case sensitivity works on ASCII strings
+	ASSERT_TRUE(hello1->compare(HELLO) > 0);
+	ASSERT_TRUE(hello1->compare(HELLO, CaseSensitivity::Insensitive) == 0);
+
+	// Make sure case senstivity works with Unicode strings
+	ASSERT_TRUE(lowercaseUnicode->compare(uppercaseUnicode) > 0);
+	ASSERT_TRUE(lowercaseUnicode->compare(uppercaseUnicode, CaseSensitivity::Insensitive) == 0);
+
+	// Make sure case sensitivity doesn't affect Unicode symbols
+	ASSERT_TRUE(unicodeValue->compare(unicodeValue) == 0);
+	ASSERT_TRUE(unicodeValue->compare(unicodeValue, CaseSensitivity::Insensitive) == 0);
 }
 
 void testCharAt()

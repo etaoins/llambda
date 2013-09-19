@@ -9,6 +9,12 @@ namespace lliby
 typedef std::int32_t CodePoint;
 static const CodePoint InvalidCodePoint = -1;
 
+enum class CaseSensitivity
+{
+	Sensitive,
+	Insensitive
+};
+
 }
 
 #endif

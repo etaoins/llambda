@@ -46,7 +46,7 @@ public:
 
 	// Returns and integer less than, equal to or greater than zero if the string
 	// less than, equal to or greater than the other string
-	int compare(const StringValue *other) const;
+	int compare(const StringValue *other, CaseSensitivity cs = CaseSensitivity::Sensitive) const;
 
 	bool asciiOnly() const
 	{
@@ -79,6 +79,9 @@ private:
 
 	CharRange charRange(std::int64_t start, std::int64_t end = -1) const; 
 	bool replaceBytes(const CharRange &range, std::uint8_t *pattern, unsigned int patternBytes, unsigned int count = 1);
+	
+	int compareCaseSensitive(const StringValue *other) const;
+	int compareCaseInsensitive(const StringValue *other) const;
 };
 
 }
