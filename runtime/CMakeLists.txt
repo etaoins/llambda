@@ -18,6 +18,7 @@ add_library(lliby
 	core/fatal.cpp
 	core/init.cpp
 	stdlib/generated/predicates.cpp
+	unicodedata/UnicodeData.cpp
 	writer/ExternalFormDatumWriter.cpp
 	)
 
@@ -60,6 +61,7 @@ set(ALL_TEST_NAMES
 	inexactrationalvalue
 	pairvalue
 	stringvalue
+	unicodedata
 	vectorvalue
 	externalformdatumwriter)
 
