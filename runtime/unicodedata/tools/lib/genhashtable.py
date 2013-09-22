@@ -22,9 +22,6 @@ def _primes_less_than(n):
 
 _prime_cache = None
 
-def _chain_name(hashtable_name, index):
-    return hashtable_name + "HashChain" + str(index)
-
 def _hash_function(code_point, nonascii_hash_size):
     return (code_point * 2654435761) % nonascii_hash_size
 
@@ -45,6 +42,7 @@ def gen_hashtable_cpp(base_name, input_dict):
         raise Exception("Need more prime numbers!")
 
     ascii_table_name = base_name + "AsciiTable"
+    nonascii_chains_name = base_name + "NonAsciiHashChains"
     nonascii_hash_name = base_name + "NonAsciiHash"
 
     # The ASCII table is direct mapped
@@ -66,48 +64,60 @@ def gen_hashtable_cpp(base_name, input_dict):
         value = ascii_table[code_point]
 
         if value is None:
-            output += "\t-1,\n"
+            output += "\t   -1,"
         else:
-            output += "\t" + hex(value) + ",\n"
+            output += "\t" + hex(value).rjust(5) + ","
+
+        if ((code_point + 1) % 8) == 0:
+            output += "\n"
+
     output += "};\n\n"
 
     # Build the hash chains for any values that have spilt their buckets
-    for hash_index in range(nonascii_hash_size):
-        chain_values = nonascii_hash[hash_index]
+    bucket_to_chain_mapping = {}
+    chain_index  = 0
+
+    output += "const NonAsciiHashChain " + nonascii_chains_name + "[] = {\n"
+    for bucket_index in range(nonascii_hash_size):
+        chain_values = nonascii_hash[bucket_index]
 
         if (len(chain_values) < 2):
             # Nothing to do
             continue
-        
-        chain_name = _chain_name(base_name, hash_index)
-        chain_size = len(chain_values)
 
-        output += "const NonAsciiHashChain " + chain_name + "[" + str(chain_size) + "] = {\n"
+        output += "\t"
 
+        chain_entries = []
         for (index, (key, value)) in enumerate(chain_values):
             if index == len(chain_values) - 1:
                 last_value = "1"
             else:
                 last_value = "0"
 
-            output += "\t{" + last_value + ", " + hex(key) + ", " + hex(value) + "},\n" 
-
-        output += "};\n\n"
+            chain_entries.append("{" + last_value + ", " + hex(key) + ", " + hex(value) + "}")
+        
+        output += ", ".join(chain_entries) + ",\n"
+        
+        # Keep track of what bucket this chain belongs to
+        bucket_to_chain_mapping[bucket_index] = chain_index
+        chain_index += len(chain_values)
+    output += "};\n\n"
  
     # Build the hash buckets
     output += "const NonAsciiHashBucket " + nonascii_hash_name + "[" + str(nonascii_hash_size) + "] = {\n"
-    for hash_index in range(nonascii_hash_size):
-        chain_values = nonascii_hash[hash_index]
+    for bucket_index in range(nonascii_hash_size):
+        chain_values = nonascii_hash[bucket_index]
 
         if (len(chain_values) == 0):
             output += "\t{.chain = nullptr},\n"
         elif (len(chain_values) == 1):
             (only_key, only_value) = chain_values[0]
 
-            output += "\t{.isInline = 1, .codePoint = " + hex(only_key) + ", .value = " + hex(only_value) + "},\n"
+            output += "\t{.codePoint = " + hex(only_key) + ", .value = " + hex(only_value) + ", .isInline = 1},\n"
 
         else:
-            output += "\t{.chain = &" + _chain_name(base_name, hash_index) + "[0]},\n"
+            chain_index = bucket_to_chain_mapping[bucket_index]
+            output += "\t{.chain = &" + nonascii_chains_name + "[" + str(chain_index) + "]},\n"
     output += "};\n\n"
 
     output += "const UnicodeHash " + base_name + "Hash = {\n"

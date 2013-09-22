@@ -21,7 +21,10 @@ namespace
 		int entryRange;
 	};
 	
-	typedef std::int32_t AsciiTableEntry;
+	// This assumes that we only map ASCII characters to other ASCII characters
+	// This seems reasonable and if it's violated -Werror will fail our compile
+	// due to integer truncation
+	typedef std::int8_t AsciiTableEntry;
 
 	struct NonAsciiHashChain
 	{
@@ -36,9 +39,9 @@ namespace
 
 		struct
 		{
+			std::uint32_t codePoint;
+			std::uint32_t value : 31;
 			std::uint32_t isInline : 1;
-			std::uint32_t codePoint : 31;
-			std::uint32_t value;
 		};
 	};
 

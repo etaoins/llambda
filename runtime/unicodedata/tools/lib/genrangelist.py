@@ -41,7 +41,7 @@ def gen_rangelist_cpp(base_name, rangelist):
         if range_end <= 127:
             entry_index = index
 
-        output += "\t{" + str(range_start) + ", " + str(range_end) + "},\n"
+        output += "\t{" + hex(range_start) + ", " + hex(range_end) + "},\n"
     
     output += "};\n\n"
 
