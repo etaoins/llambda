@@ -55,6 +55,10 @@ public:
 
 	SymbolValue *toSymbol() const;
 	ByteVectorValue *toUtf8ByteVector(std::int64_t start = 0, std::int64_t end = -1) const;
+	
+	StringValue *toUppercaseString() const;
+	StringValue *toLowercaseString() const;
+	StringValue *toCaseFoldedString() const;
 
 private:
 	std::uint8_t *charPointer(std::uint8_t *scanFrom, std::uint32_t bytesLeft, uint32_t charOffset) const;
@@ -82,6 +86,8 @@ private:
 	
 	int compareCaseSensitive(const StringValue *other) const;
 	int compareCaseInsensitive(const StringValue *other) const;
+
+	StringValue *toConvertedString(CodePoint (*converter)(CodePoint)) const;
 };
 
 }

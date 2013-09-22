@@ -672,5 +672,58 @@ ByteVectorValue* StringValue::toUtf8ByteVector(std::int64_t start, std::int64_t 
 	memcpy(newData, range.startPointer, newLength);
 	return new ByteVectorValue(newData, newLength);
 }
+	
+StringValue *StringValue::toConvertedString(CodePoint (*converter)(CodePoint)) const
+{
+	std::vector<std::uint8_t> convertedData;
+
+	// Guess that our converted data will be about the same size as the original
+	// data. Case conversion rarely moves code points far from their original
+	// value
+	convertedData.reserve(byteLength());
+
+	std::uint8_t *scanPtr = utf8Data();
+	const std::uint8_t *endPtr = &utf8Data()[byteLength()];
+
+	while(scanPtr < endPtr)
+	{
+		const CodePoint originalChar = decodeUtf8Char(&scanPtr);
+
+		if (originalChar == InvalidCodePoint)
+		{
+			// Invalid UTF-8 encoding
+			return nullptr;
+		}
+
+		const CodePoint convertedChar = converter(originalChar);
+
+		const std::vector<std::uint8_t> encodedChar = encodeUtf8Char(convertedChar);
+		convertedData.insert(convertedData.end(), encodedChar.begin(), encodedChar.end());
+	}
+	
+	const std::uint32_t totalByteLength = convertedData.size();
+
+	auto newString = new std::uint8_t[totalByteLength + 1];
+	memcpy(newString, convertedData.data(), totalByteLength);
+
+	newString[totalByteLength] = 0;
+
+	return new StringValue(newString, totalByteLength, charLength());
+}
+
+StringValue* StringValue::toUppercaseString() const
+{
+	return toConvertedString(&UnicodeData::toUppercase);
+}
+
+StringValue* StringValue::toLowercaseString() const
+{
+	return toConvertedString(&UnicodeData::toLowercase);
+}
+
+StringValue* StringValue::toCaseFoldedString() const
+{
+	return toConvertedString(&UnicodeData::foldCase);
+}
 
 }

@@ -778,6 +778,70 @@ void testToUtf8ByteVector()
 	}
 }
 
+void testCaseConversion()
+{
+	{
+		const StringValue *mixedCaseAsciiString = StringValue::fromUtf8CString(u8"Hello, World!");
+
+		StringValue *lowercaseAsciiString = mixedCaseAsciiString->toLowercaseString();
+		StringValue *uppercaseAsciiString = mixedCaseAsciiString->toUppercaseString();
+		StringValue *caseFoldedAsciiString = mixedCaseAsciiString->toCaseFoldedString();
+
+		ASSERT_UTF8_EQUAL(lowercaseAsciiString->utf8Data(), u8"hello, world!");
+		ASSERT_UTF8_EQUAL(uppercaseAsciiString->utf8Data(), u8"HELLO, WORLD!");
+		ASSERT_UTF8_EQUAL(caseFoldedAsciiString->utf8Data(), u8"hello, world!");
+	}
+
+	{
+		const StringValue *mixedCaseUnicodeString = StringValue::fromUtf8CString(u8"Γεια σας Παγκόσμιο!");
+		
+		StringValue *lowercaseUnicodeString = mixedCaseUnicodeString->toLowercaseString();
+		StringValue *uppercaseUnicodeString = mixedCaseUnicodeString->toUppercaseString();
+		StringValue *caseFoldedUnicodeString = mixedCaseUnicodeString->toCaseFoldedString();
+		
+		ASSERT_UTF8_EQUAL(lowercaseUnicodeString->utf8Data(), u8"γεια σας παγκόσμιο!");
+		ASSERT_UTF8_EQUAL(uppercaseUnicodeString->utf8Data(), u8"ΓΕΙΑ ΣΑΣ ΠΑΓΚΌΣΜΙΟ!");
+		// Note that the final sigma folds to a normal sigma here
+		ASSERT_UTF8_EQUAL(caseFoldedUnicodeString->utf8Data(), u8"γεια σασ παγκόσμιο!");
+	}
+	
+	{
+		const StringValue *hanString = StringValue::fromUtf8CString(u8"蒮 駓駗鴀 螒螝螜 咍垀 漊 犨");
+
+		StringValue *lowercaseHanString = hanString->toLowercaseString();
+		StringValue *uppercaseHanString = hanString->toUppercaseString();
+		StringValue *caseFoldedHanString = hanString->toCaseFoldedString();
+		
+		ASSERT_UTF8_EQUAL(lowercaseHanString->utf8Data(), u8"蒮 駓駗鴀 螒螝螜 咍垀 漊 犨");
+		ASSERT_UTF8_EQUAL(uppercaseHanString->utf8Data(), u8"蒮 駓駗鴀 螒螝螜 咍垀 漊 犨");
+		ASSERT_UTF8_EQUAL(caseFoldedHanString->utf8Data(), u8"蒮 駓駗鴀 螒螝螜 咍垀 漊 犨");
+	}
+	
+	{
+		const StringValue *symbolString = StringValue::fromUtf8CString(u8"🐉☃☙");
+
+		StringValue *lowercaseSymbolString = symbolString->toLowercaseString();
+		StringValue *uppercaseSymbolString = symbolString->toUppercaseString();
+		StringValue *caseFoldedSymbolString = symbolString->toCaseFoldedString();
+		
+		ASSERT_UTF8_EQUAL(lowercaseSymbolString->utf8Data(), u8"🐉☃☙");
+		ASSERT_UTF8_EQUAL(uppercaseSymbolString->utf8Data(), u8"🐉☃☙");
+		ASSERT_UTF8_EQUAL(caseFoldedSymbolString->utf8Data(), u8"🐉☃☙");
+	}
+
+	{
+		const StringValue *unusualFoldingString = StringValue::fromUtf8CString(u8"µϵẛ");
+		
+		StringValue *lowercaseFoldingString = unusualFoldingString->toLowercaseString();
+		StringValue *uppercaseFoldingString = unusualFoldingString->toUppercaseString();
+		StringValue *caseFoldedFoldingString = unusualFoldingString->toCaseFoldedString();
+
+		ASSERT_UTF8_EQUAL(lowercaseFoldingString->utf8Data(), u8"µϵẛ");
+		ASSERT_UTF8_EQUAL(uppercaseFoldingString->utf8Data(), u8"ΜΕṠ");
+		ASSERT_UTF8_EQUAL(caseFoldedFoldingString->utf8Data(), u8"μεṡ");
+	}
+}
+
 }
 
 int main(int argc, char *argv[])
@@ -803,6 +867,8 @@ int main(int argc, char *argv[])
 	testCodePoints();
 
 	testToUtf8ByteVector();
+
+	testCaseConversion();
 
 	return 0;
 }

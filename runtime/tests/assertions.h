@@ -2,6 +2,7 @@
 #define _LLIBY_TEST_ASSERTIONS_H
 
 #include <stdlib.h>
+#include <string.h>
 #include <iostream>
 
 namespace
@@ -12,6 +13,17 @@ namespace
 	if (actual != expected) \
 	{ \
 		std::cerr << "\"" << actual << "\" does not match expected value \"" << expected << "\"" \
+			      << " at line " << __LINE__ << std::endl; \
+		exit(-1); \
+	} \
+}
+
+#define ASSERT_UTF8_EQUAL(actual, expected) \
+{ \
+	if (strcmp(reinterpret_cast<const char *>(actual), reinterpret_cast<const char *>(expected)) != 0) \
+	{ \
+		std::cerr << "\"" << reinterpret_cast<const char *>(actual) \
+		          << "\" does not match expected value \"" << reinterpret_cast<const char *>(expected) << "\"" \
 			      << " at line " << __LINE__ << std::endl; \
 		exit(-1); \
 	} \
