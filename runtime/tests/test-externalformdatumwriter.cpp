@@ -13,6 +13,7 @@
 #include "binding/ByteVectorValue.h"
 #include "binding/VectorValue.h"
 #include "binding/ProcedureValue.h"
+#include "binding/CharacterValue.h"
 
 #include "core/init.h"
 #include "assertions.h"
@@ -160,6 +161,24 @@ void testProcedure()
 	assertForm(new ProcedureValue(nullptr, nullptr), "#!procedure");
 }
 
+void testCharacter()
+{
+	assertForm(new CharacterValue(UnicodeChar(0x07)), "#\\alarm");
+	assertForm(new CharacterValue(UnicodeChar(0x08)), "#\\backspace");
+	assertForm(new CharacterValue(UnicodeChar(0x7f)), "#\\delete");
+	assertForm(new CharacterValue(UnicodeChar(0x1b)), "#\\escape");
+	assertForm(new CharacterValue(UnicodeChar(0x0a)), "#\\newline");
+	assertForm(new CharacterValue(UnicodeChar(0x00)), "#\\null");
+	assertForm(new CharacterValue(UnicodeChar(0x0d)), "#\\return");
+	assertForm(new CharacterValue(UnicodeChar(0x20)), "#\\space");
+	assertForm(new CharacterValue(UnicodeChar(0x09)), "#\\tab");
+	assertForm(new CharacterValue(UnicodeChar('A')), "#\\A");
+	assertForm(new CharacterValue(UnicodeChar('a')), "#\\a");
+	assertForm(new CharacterValue(UnicodeChar('1')), "#\\1");
+	assertForm(new CharacterValue(UnicodeChar(')')), "#\\)");
+	assertForm(new CharacterValue(UnicodeChar(0x03bb)), "#\\x3bb");
+}
+
 }
 
 int main(int argc, char *argv[])
@@ -179,4 +198,5 @@ int main(int argc, char *argv[])
 	testByteVector();
 	testVector();
 	testProcedure();
+	testCharacter();
 }

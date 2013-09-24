@@ -29,6 +29,7 @@ protected:
 	virtual void renderByteVector(const ByteVectorValue *value);
 	virtual void renderVector(const VectorValue *value);
 	virtual void renderProcedure(const ProcedureValue *value);
+	virtual void renderCharacter(const CharacterValue *value);
 
 	std::ostream &m_outStream;
 };

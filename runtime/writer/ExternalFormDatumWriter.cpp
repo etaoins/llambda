@@ -15,6 +15,7 @@
 #include "binding/PairValue.h"
 #include "binding/ByteVectorValue.h"
 #include "binding/VectorValue.h"
+#include "binding/CharacterValue.h"
 
 namespace lliby
 {
@@ -64,6 +65,10 @@ void ExternalFormDatumWriter::render(const BoxedDatum *datum)
 	else if (auto value = datum->asProcedureValue())
 	{
 		renderProcedure(value);
+	}
+	else if (auto value = datum->asCharacterValue())
+	{
+		renderCharacter(value);
 	}
 	else
 	{
@@ -128,7 +133,7 @@ void ExternalFormDatumWriter::renderStringLike(const StringLikeValue *value, std
 {
 	std::ostringstream outBuf;
 
-	const std::unordered_map<std::uint8_t, const char *> specialChars = {
+	static const std::unordered_map<std::uint8_t, const char *> specialChars = {
 		{0x07, "\\a"},
 		{0x08, "\\b"},
 		{0x09, "\\t"},
@@ -271,6 +276,41 @@ void ExternalFormDatumWriter::renderVector(const VectorValue *value)
 void ExternalFormDatumWriter::renderProcedure(const ProcedureValue *)
 {
 	m_outStream << "#!procedure";
+}
+
+void ExternalFormDatumWriter::renderCharacter(const CharacterValue *value)
+{
+	std::int32_t codePoint = value->unicodeChar().codePoint();
+	static const std::unordered_map<std::uint32_t, const char *> specialChars = {
+		{0x07, "#\\alarm"},
+		{0x08, "#\\backspace"},
+		{0x7f, "#\\delete"},
+		{0x1b, "#\\escape"},
+		{0x0a, "#\\newline"},
+		{0x00, "#\\null"},
+		{0x0d, "#\\return"},
+		{0x20, "#\\space"},
+		{0x09, "#\\tab"},
+	};
+
+	if ((codePoint >= 0x21) && (codePoint <= 0x7e))
+	{
+		m_outStream << "#\\" << static_cast<char>(codePoint);
+	}
+	else
+	{
+		auto specialCharIt = specialChars.find(codePoint);
+
+		if (specialCharIt != specialChars.cend())
+		{
+			m_outStream << specialCharIt->second;
+		}
+		else
+		{
+			m_outStream << "#\\x" << std::hex << codePoint;
+		}
+	}
+
 }
 
 }
