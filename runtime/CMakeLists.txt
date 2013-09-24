@@ -33,7 +33,7 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Be strict about warnings
-set(CMAKE_CXX_FLAGS "-Werror -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall")
 
 # Enable C++11 and disable exceptions
 # Exceptions have two issues:
