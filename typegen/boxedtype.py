@@ -3,6 +3,23 @@ from collections import OrderedDict
 
 from typegen.exceptions import SemanticException
 
+class TypeAssertion(object):
+    pass
+
+class TypeEqualsAssertion(TypeAssertion):
+    def __init__(self, boxed_type, type_id_value):
+        self.boxed_type = boxed_type
+        self.type_id_value = type_id_value
+
+class TypeBitmaskAssertion(TypeAssertion):
+    def __init__(self, boxed_type, bitmask):
+        self.boxed_type = boxed_type
+        self.bitmask = bitmask
+
+class TypeUnionAssertion(TypeAssertion):
+    def __init__(self, subassertions):
+        self.subassertions = subassertions
+
 class BoxedTypeField(object):
     def __init__(self, type_name, field_json):
         self.name = field_json['name']
@@ -27,18 +44,23 @@ class BoxedType(object):
     def __init__(self, type_json):
         self.name     = type_json['name']
         self.abstract = type_json.get('abstract', False)
-        self.type_id  = type_json.get('typeId', None)
+        raw_type_id  = type_json.get('typeId', None)
         self.inherits = type_json['inherits']
+        self.subtypes = {}
 
-        type_id = self.type_id
-
-        if not isinstance(type_id, int): 
+        if isinstance(raw_type_id, int): 
+            self._type_assertion = TypeEqualsAssertion(self, raw_type_id)
+        else:
             if not self.abstract:
                 raise SemanticException('Type "' + self.name + '" does not have a specific type ID and must be marked abstract')
-            elif type_id is not None:
+            elif raw_type_id is None:
+                self._type_assertion = None
+            else:
                 # Besides integers we only understand bit test type IDs (eg &32768)
-                if type_id[0] != '&':
-                    raise SemanticException('Unable to parse type ID "' + type_id + '"')
+                if raw_type_id[0] != '&':
+                    raise SemanticException('Unable to parse type ID "' + raw_type_id + '"')
+                else:
+                    self._type_assertion = TypeBitmaskAssertion(self, raw_type_id[1:]) 
 
         self.fields = OrderedDict()
         
@@ -49,3 +71,23 @@ class BoxedType(object):
                 raise SemanticException('Duplicate field name "' + parsed_field.qualified_name + '"')
 
             self.fields[parsed_field.name] = parsed_field
+    
+    @property
+    def type_assertion(self):
+        # Do we have a assertion from either an explicitly defined assertion or 
+        # one calculated on a previous invocation?
+        if self._type_assertion is None:
+            subtype_assertions = []
+
+            # Collect all the assertions for our subtypes
+            for subtype in self.subtypes.values():
+                subtype_assertions.append(subtype.type_assertion)
+
+            if len(subtype_assertions) != 0:
+                # Wrap the subtype assertions in a union
+                self._type_assertion = TypeUnionAssertion(subtype_assertions)
+
+        return self._type_assertion
+
+    def add_subtype(self, subtype):
+        self.subtypes[subtype.name] = subtype

@@ -1,9 +1,29 @@
 from typegen.exceptions import SemanticException
+from typegen.boxedtype import TypeEqualsAssertion, TypeBitmaskAssertion, TypeUnionAssertion 
 from typegen.constants import BASE_TYPE
 from typegen.clikeutil import *
 from typegen.cxxutil import *
 
 OUTPUT_DIR = "runtime/binding/generated/"
+
+def _type_assertion_to_cxx(assertion):
+    if isinstance(assertion, TypeEqualsAssertion):
+        type_name = assertion.boxed_type.name
+        return "typeId() == BoxedTypeId::" + type_name_to_enum_constant(type_name)
+    elif isinstance(assertion, TypeBitmaskAssertion):
+        return "static_cast<int>(typeId()) & " + assertion.bitmask
+    elif isinstance(assertion, TypeUnionAssertion):
+        # Convert our subassertions to C++
+        subassertions_cxx = []
+
+        for subassertion in assertion.subassertions:
+            subassertion_cxx = "(" + _type_assertion_to_cxx(subassertion) + ")"
+            subassertions_cxx.append(subassertion_cxx)
+
+        # Join them with ||
+        return " || ".join(subassertions_cxx)
+    else:
+        raise SemanticException("Unknown assertion type " + assertion.__name__)
 
 def _generate_typeid_enum(boxed_types):
     # Find the C++ type of our type IDs
@@ -18,9 +38,10 @@ def _generate_typeid_enum(boxed_types):
     content += "{\n"
 
     for type_name, boxed_type in boxed_types.items(): 
-        if isinstance(boxed_type.type_id, int):
+        if isinstance(boxed_type.type_assertion, TypeEqualsAssertion):
             cxx_name = type_name_to_enum_constant(type_name)
-            content += "\t" + cxx_name + " = " + str(boxed_type.type_id) + ",\n"
+            type_id = boxed_type.type_assertion.type_id_value
+            content += "\t" + cxx_name + " = " + str(type_id) + ",\n"
 
     content += "};\n\n"
 
@@ -46,15 +67,15 @@ def _generate_casts(boxed_types):
     content = ""
 
     for type_name, boxed_type in boxed_types.items():
-        if boxed_type.type_id is None:
+        if boxed_type.type_assertion is None:
+            continue
+    
+        if type_name == BASE_TYPE:
+            # Doesn't make sense - every type is a subtype of the base type
             continue
 
         # Build our type assertion
-        if isinstance(boxed_type.type_id, int):
-            type_assertion = "typeId() == BoxedTypeId::" + type_name_to_enum_constant(type_name)
-        else:
-            type_assertion = "static_cast<int>(typeId()) & " + boxed_type.type_id[1:]
-
+        type_assertion = _type_assertion_to_cxx(boxed_type.type_assertion)
         cxx_type_name = type_name_to_clike_class(type_name)
         
         content += "\t" + cxx_type_name + "* as" + cxx_type_name + "()\n" 

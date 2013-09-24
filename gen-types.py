@@ -5,7 +5,7 @@ import codecs
 from collections import OrderedDict
 
 from typegen.boxedtype import *
-from typegen.validate import validate_boxed_types
+from typegen.processtypetree import process_type_tree
 from typegen.genllvmprelude import generate_llvm_prelude
 from typegen.gencxxbinding import generate_cxx_binding
 from typegen.genpredicates import generate_predicates
@@ -25,7 +25,7 @@ for type_json in boxed_types_json:
 
     boxed_types[parsed_type.name] = parsed_type
 
-validate_boxed_types(boxed_types)
+process_type_tree(boxed_types)
 
 # Use our generator backends to build a dictionary of filename => content
 output_files = {}

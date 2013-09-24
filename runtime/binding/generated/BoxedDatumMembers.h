@@ -89,6 +89,31 @@ public:
 		return typeId() == BoxedTypeId::EmptyList;
 	}
 
+	StringLikeValue* asStringLikeValue()
+	{
+		if ((typeId() == BoxedTypeId::String) || (typeId() == BoxedTypeId::Symbol))
+		{
+			return reinterpret_cast<StringLikeValue*>(this);
+		}
+
+		return nullptr;
+	}
+
+	const StringLikeValue* asStringLikeValue() const
+	{
+		if ((typeId() == BoxedTypeId::String) || (typeId() == BoxedTypeId::Symbol))
+		{
+			return reinterpret_cast<const StringLikeValue*>(this);
+		}
+
+		return nullptr;
+	}
+
+	bool isStringLikeValue() const
+	{
+		return (typeId() == BoxedTypeId::String) || (typeId() == BoxedTypeId::Symbol);
+	}
+
 	StringValue* asStringValue()
 	{
 		if (typeId() == BoxedTypeId::String)

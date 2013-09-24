@@ -24,6 +24,11 @@ bool lliby_is_empty_list(const BoxedDatum *value)
 	return value->isEmptyListValue();
 }
 
+bool lliby_is_string_like(const BoxedDatum *value)
+{
+	return value->isStringLikeValue();
+}
+
 bool lliby_is_string(const BoxedDatum *value)
 {
 	return value->isStringValue();

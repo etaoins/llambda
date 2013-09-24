@@ -19,8 +19,12 @@ def generate_predicates(boxed_types):
     content += '{\n\n'
 
     for type_name, boxed_type in boxed_types.items():
-        if boxed_type.type_id is None:
+        if boxed_type.type_assertion is None:
             # Can't check types without a type ID
+            continue
+        
+        if type_name == BASE_TYPE:
+            # Doesn't make sense - every type is a subtype of the base type
             continue
 
         function_name = "lliby_is_" + _type_name_to_underscore(type_name)
