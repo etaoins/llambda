@@ -41,6 +41,12 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
       expressionFor("""(native-function "lliby_newline" (uint16) uint32)""")
     }
   }
+  
+  test("function taking uint8 and returning unicode char") {
+    expectResult(et.NativeFunction(nfi.Int8 :: Nil, false, Some(nfi.UnicodeChar), "lliby_newline")) {
+      expressionFor("""(native-function "lliby_newline" (int8) unicode-char)""")
+    }
+  }
 
   test("function with only rest arg") {
     expectResult(et.NativeFunction(Nil, true, Some(nfi.BoxedDatum), "lliby_vector")) {

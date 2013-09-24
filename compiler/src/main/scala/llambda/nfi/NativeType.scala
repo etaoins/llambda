@@ -42,3 +42,7 @@ case object BoxedDatum extends NativeType {
 case object Utf8String extends NativeType {
   val schemeType = Some(st.StringType)
 }
+
+case object UnicodeChar extends IntLikeType(32, true) {
+  override val schemeType = Some(st.CharType)
+}

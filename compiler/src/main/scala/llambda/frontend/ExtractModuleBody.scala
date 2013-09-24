@@ -65,6 +65,8 @@ object ExtractModuleBody {
       case "double" => nfi.Double
 
       case "utf8-string" => nfi.Utf8String
+      
+      case "unicode-char" => nfi.UnicodeChar
 
       // XXX: This assumes Unix-like LP64: 64bit Linux, FreeBSD, Mac OS X, etc 
       // These aliases are here so we can do the right thing when porting to other archs
@@ -74,7 +76,6 @@ object ExtractModuleBody {
       case "ushort" => nfi.UInt16
       case "uint"   => nfi.UInt32
       case "ulong"  => nfi.UInt64
-      case "wchar"  => nfi.Int32
 
       case "boxeddatum" => nfi.BoxedDatum
       case _ => throw new BadSpecialFormException("Unknown native type: " + typeString)
