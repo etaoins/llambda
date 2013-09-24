@@ -88,9 +88,15 @@
         ]
     },
     {
+        "name": "numeric",
+        "abstract": true,
+        "inherits": "boxedDatum",
+        "fields": []
+    },
+    {
         "name": "exactInteger",
         "typeId": 6,
-        "inherits": "boxedDatum",
+        "inherits": "numeric",
         "fields": [
             {
                 "name": "value",
@@ -102,7 +108,7 @@
     {
         "name": "inexactRational",
         "typeId": 7,
-        "inherits": "boxedDatum",
+        "inherits": "numeric",
         "fields": [
             {
                 "name": "value",

@@ -44,6 +44,11 @@ bool lliby_is_boolean(const BoxedDatum *value)
 	return value->isBooleanValue();
 }
 
+bool lliby_is_numeric(const BoxedDatum *value)
+{
+	return value->isNumericValue();
+}
+
 bool lliby_is_exact_integer(const BoxedDatum *value)
 {
 	return value->isExactIntegerValue();

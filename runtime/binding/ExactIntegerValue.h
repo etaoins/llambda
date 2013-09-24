@@ -1,12 +1,12 @@
 #ifndef _LLIBY_BINDING_EXACTINTEGERVALUE_H
 #define _LLIBY_BINDING_EXACTINTEGERVALUE_H
 
-#include "BoxedDatum.h"
+#include "NumericValue.h"
 
 namespace lliby
 {
 
-class ExactIntegerValue : public BoxedDatum
+class ExactIntegerValue : public NumericValue
 {
 #include "generated/ExactIntegerValueMembers.h"
 public:
@@ -19,7 +19,7 @@ public:
 
 private:
 	ExactIntegerValue(std::int64_t value) :
-		BoxedDatum(BoxedTypeId::ExactInteger),
+		NumericValue(BoxedTypeId::ExactInteger),
 		m_value(value)
 	{
 	}

@@ -16,6 +16,7 @@ class StringLikeValue;
 class StringValue;
 class SymbolValue;
 class BooleanValue;
+class NumericValue;
 class ExactIntegerValue;
 class InexactRationalValue;
 class CharacterValue;

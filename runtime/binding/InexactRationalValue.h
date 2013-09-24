@@ -1,7 +1,7 @@
 #ifndef _LLIBY_BINDING_INEXACTRATIONALVALUE_H
 #define _LLIBY_BINDING_INEXACTRATIONALVALUE_H
 
-#include "BoxedDatum.h"
+#include "NumericValue.h"
 
 #include <cmath>
 #include <limits>
@@ -9,12 +9,12 @@
 namespace lliby
 {
 
-class InexactRationalValue : public BoxedDatum
+class InexactRationalValue : public NumericValue
 {
 #include "generated/InexactRationalValueMembers.h"
 public:
 	InexactRationalValue(double value) :
-		BoxedDatum(BoxedTypeId::InexactRational),
+		NumericValue(BoxedTypeId::InexactRational),
 		m_value(value)
 	{
 	}

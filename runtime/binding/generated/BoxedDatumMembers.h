@@ -189,6 +189,31 @@ public:
 		return typeId() == BoxedTypeId::Boolean;
 	}
 
+	NumericValue* asNumericValue()
+	{
+		if ((typeId() == BoxedTypeId::ExactInteger) || (typeId() == BoxedTypeId::InexactRational))
+		{
+			return reinterpret_cast<NumericValue*>(this);
+		}
+
+		return nullptr;
+	}
+
+	const NumericValue* asNumericValue() const
+	{
+		if ((typeId() == BoxedTypeId::ExactInteger) || (typeId() == BoxedTypeId::InexactRational))
+		{
+			return reinterpret_cast<const NumericValue*>(this);
+		}
+
+		return nullptr;
+	}
+
+	bool isNumericValue() const
+	{
+		return (typeId() == BoxedTypeId::ExactInteger) || (typeId() == BoxedTypeId::InexactRational);
+	}
+
 	ExactIntegerValue* asExactIntegerValue()
 	{
 		if (typeId() == BoxedTypeId::ExactInteger)

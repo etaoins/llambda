@@ -42,6 +42,10 @@ object BooleanValue extends BoxedType {
   val irType = PointerType(UserDefinedType("boolean"))
 }
 
+object NumericValue extends BoxedType {
+  val irType = PointerType(UserDefinedType("numeric"))
+}
+
 object ExactIntegerValue extends BoxedType {
   val irType = PointerType(UserDefinedType("exactInteger"))
 }

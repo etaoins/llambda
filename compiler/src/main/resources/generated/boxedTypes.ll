@@ -26,11 +26,14 @@
 ; {supertype, bool value}
 %boolean = type {%boxedDatum, i8}
 
+; {supertype}
+%numeric = type {%boxedDatum}
+
 ; {supertype, signed value}
-%exactInteger = type {%boxedDatum, i64}
+%exactInteger = type {%numeric, i64}
 
 ; {supertype, value}
-%inexactRational = type {%boxedDatum, double}
+%inexactRational = type {%numeric, double}
 
 ; {supertype, unicodeChar}
 %character = type {%boxedDatum, i32}
