@@ -50,20 +50,20 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
 
   test("function with only rest arg") {
     expectResult(et.NativeFunction(Nil, true, Some(nfi.BoxedDatum), "lliby_vector")) {
-      expressionFor("""(native-function "lliby_vector" boxeddatum boxeddatum)""")
+      expressionFor("""(native-function "lliby_vector" boxed-datum boxed-datum)""")
     }
   }
   
   test("function with fixed and rest args") {
     expectResult(et.NativeFunction(nfi.Bool :: Nil, true, Some(nfi.Int32), "lliby_misc")) {
-      expressionFor("""(native-function "lliby_misc" (bool . boxeddatum) int)""")
+      expressionFor("""(native-function "lliby_misc" (bool . boxed-datum) int)""")
     }
   }
   
   
   test("function with non-boxed rest arg") {
     intercept[BadSpecialFormException] {
-      expressionFor("""(native-function "lliby_vector" int64 boxeddatum)""")
+      expressionFor("""(native-function "lliby_vector" int64 boxed-datum)""")
     }
   }
   

@@ -77,7 +77,7 @@ object ExtractModuleBody {
       case "uint"   => nfi.UInt32
       case "ulong"  => nfi.UInt64
 
-      case "boxeddatum" => nfi.BoxedDatum
+      case "boxed-datum" => nfi.BoxedDatum
       case _ => throw new BadSpecialFormException("Unknown native type: " + typeString)
     }
     
@@ -87,8 +87,8 @@ object ExtractModuleBody {
     }
 
     val hasRestArg = restArgType match {
-      case Some("boxeddatum") => true
-      case Some(other) => throw new BadSpecialFormException("Only boxeddatum can be used as a rest argument. Found: " + other)
+      case Some("boxed-datum") => true
+      case Some(other) => throw new BadSpecialFormException("Only boxed-datum can be used as a rest argument. Found: " + other)
       case None => false
     }
 
