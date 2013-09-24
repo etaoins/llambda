@@ -49,6 +49,8 @@ def _complex_type_to_cxx(complex_type):
     elif complex_type == "entryPoint":
         # This is typedef'ed in declaretypes.h
         return "ProcedureEntryPoint"
+    elif complex_type == "unicodeChar":
+        return "UnicodeChar"
     else:
         raise SemanticException('Unknown complex type "' + complex_type + '"')
 

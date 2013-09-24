@@ -116,9 +116,8 @@
         "inherits": "boxedDatum",
         "fields": [
             {
-                "name": "codePoint",
-                "llvmType": "i32",
-                "signed": false
+                "name": "unicodeChar",
+                "complexType": "unicodeChar"
             }
         ]
     },

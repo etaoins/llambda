@@ -1,9 +1,6 @@
-#include "UnicodeData.h"
-#include <iostream>
+#include "UnicodeChar.h"
 
 namespace lliby
-{
-namespace UnicodeData
 {
 
 namespace
@@ -54,7 +51,7 @@ namespace
 
 #include "generated/unicodedatabase.cpp"
 
-	std::int32_t lookupHashedValue(CodePoint codePoint, const UnicodeHash &hash, std::int32_t defaultValue = -1)
+	std::int32_t lookupHashedValue(std::int32_t codePoint, const UnicodeHash &hash, std::int32_t defaultValue = -1)
 	{
 		if (codePoint <= 127)
 		{
@@ -105,7 +102,7 @@ namespace
 		}
 	}
 
-	bool codePointInRangeSet(CodePoint codePoint, const UnicodeRangeSet &rangeSet, int min, int max, bool useInitial = false)
+	bool codePointInRangeSet(std::int32_t codePoint, const UnicodeRangeSet &rangeSet, int min, int max, bool useInitial = false)
 	{
 		if (min > max)
 		{
@@ -166,56 +163,56 @@ namespace
 		}
 	}
 
-	bool codePointInRangeSet(CodePoint codePoint, const UnicodeRangeSet &rangeSet)
+	bool codePointInRangeSet(std::int32_t codePoint, const UnicodeRangeSet &rangeSet)
 	{
 		return codePointInRangeSet(codePoint, rangeSet, 0, rangeSet.rangeCount - 1, true); 
 	}
 }
 
-bool isUppercase(CodePoint codePoint)
+bool UnicodeChar::isUppercase() const
 {
-	return codePointInRangeSet(codePoint, UppercaseRangeSet);
+	return codePointInRangeSet(codePoint(), UppercaseRangeSet);
 }
 
-bool isLowercase(CodePoint codePoint)
+bool UnicodeChar::isLowercase() const
 {
-	return codePointInRangeSet(codePoint, LowercaseRangeSet);
+	return codePointInRangeSet(codePoint(), LowercaseRangeSet);
 }
 
-bool isAlphabetic(CodePoint codePoint)
+bool UnicodeChar::isAlphabetic() const
 {
-	return codePointInRangeSet(codePoint, AlphabeticRangeSet);
+	return codePointInRangeSet(codePoint(), AlphabeticRangeSet);
 }
 
-bool isWhitespace(CodePoint codePoint)
+bool UnicodeChar::isWhitespace() const
 {
-	return codePointInRangeSet(codePoint, WhitespaceRangeSet);
+	return codePointInRangeSet(codePoint(), WhitespaceRangeSet);
 }
 	
-bool isNumericDigit(CodePoint codePoint)
+bool UnicodeChar::isNumericDigit() const
 {
-	return toNumericValue(codePoint) != -1;
+	return digitValue() != InvalidDigitValue;
 }
 
-CodePoint toUppercase(CodePoint codePoint)
+UnicodeChar UnicodeChar::toUppercase() const
 {
-	return lookupHashedValue(codePoint, ToUpperHash, codePoint);
+	return UnicodeChar(lookupHashedValue(codePoint(), ToUpperHash, codePoint()));
 }
 
-CodePoint toLowercase(CodePoint codePoint)
+UnicodeChar UnicodeChar::toLowercase() const
 {
-	return lookupHashedValue(codePoint, ToLowerHash, codePoint);
+	return UnicodeChar(lookupHashedValue(codePoint(), ToLowerHash, codePoint()));
 }
 
-NumericValue toNumericValue(CodePoint codePoint)
+UnicodeChar UnicodeChar::toCaseFolded() const
 {
-	return lookupHashedValue(codePoint, ToNumericValueHash);
+	return UnicodeChar(lookupHashedValue(codePoint(), ToFoldedHash, codePoint()));
 }
 
-CodePoint foldCase(CodePoint codePoint)
+UnicodeChar::DigitValue UnicodeChar::digitValue() const
 {
-	return lookupHashedValue(codePoint, ToFoldedHash, codePoint);
+	return lookupHashedValue(codePoint(), ToNumericValueHash);
 }
-	
-}
+
+
 }

@@ -4,7 +4,7 @@
 #include "StringLikeValue.h"
 #include <list>
 
-#include "common/global.h"
+#include "unicode/UnicodeChar.h"
 
 namespace lliby
 {
@@ -20,19 +20,19 @@ public:
 
 	static StringValue* fromUtf8CString(const char *str);
 	static StringValue* fromUtf8Data(const std::uint8_t *data, std::uint32_t byteLength);
-	static StringValue* fromFill(std::uint32_t length, CodePoint fill);
+	static StringValue* fromFill(std::uint32_t length, UnicodeChar fill);
 	static StringValue* fromAppended(const std::list<const StringValue*> &strings);
-	static StringValue* fromCodePoints(const std::list<CodePoint> &codePoints);
+	static StringValue* fromUnicodeChars(const std::list<UnicodeChar> &unicodeChars);
 
 	StringValue* copy(std::int64_t start = 0, std::int64_t end = -1); 
 
-	CodePoint charAt(std::uint32_t offset) const;
-	bool setCharAt(std::uint32_t offset, CodePoint codePoint);
+	UnicodeChar charAt(std::uint32_t offset) const;
+	bool setCharAt(std::uint32_t offset, UnicodeChar unicodeChar);
 
-	bool fill(CodePoint codePoint, std::int64_t start = 0, std::int64_t end = -1);
+	bool fill(UnicodeChar unicodeChar, std::int64_t start = 0, std::int64_t end = -1);
 	bool replace(std::uint32_t offset, const StringValue *from, std::int64_t fromStart = 0, std::int64_t fromEnd = -1);
 
-	std::list<CodePoint> codePoints(std::int64_t start = 0, std::int64_t end = -1) const;
+	std::list<UnicodeChar> unicodeChars(std::int64_t start = 0, std::int64_t end = -1) const;
 
 	bool operator==(const StringValue &other) const
 	{
@@ -87,7 +87,7 @@ private:
 	int compareCaseSensitive(const StringValue *other) const;
 	int compareCaseInsensitive(const StringValue *other) const;
 
-	StringValue *toConvertedString(CodePoint (*converter)(CodePoint)) const;
+	StringValue *toConvertedString(UnicodeChar (UnicodeChar::* converter)() const) const;
 };
 
 }

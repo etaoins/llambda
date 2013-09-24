@@ -3,10 +3,10 @@
  *****************************************************************/
 
 public:
-	std::uint32_t codePoint() const
+	UnicodeChar unicodeChar() const
 	{
-		return m_codePoint;
+		return m_unicodeChar;
 	}
 
 private:
-	std::uint32_t m_codePoint;
+	UnicodeChar m_unicodeChar;

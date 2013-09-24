@@ -4,8 +4,6 @@
 #include <vector>
 #include <algorithm>
 
-#include "unicodedata/UnicodeData.h"
-
 #include "SymbolValue.h"
 #include "ByteVectorValue.h"
 
@@ -31,10 +29,10 @@ namespace
 		return (byte & ContinuationHeaderMask) == ContinuationHeaderValue;
 	}
 
-	CodePoint decodeUtf8Char(std::uint8_t **charPtr)
+	UnicodeChar decodeUtf8Char(std::uint8_t **charPtr)
 	{
 		unsigned int continuationBytes;
-		CodePoint codePoint;
+		std::int32_t codePoint;
 
 		std::uint8_t firstByte = *(*charPtr);
 
@@ -43,7 +41,7 @@ namespace
 			// This is ASCII, it's easy
 			(*charPtr)++;
 
-			return firstByte;
+			return UnicodeChar(firstByte);
 		}
 
 		if ((firstByte & TwoByteHeaderMask) == TwoByteHeaderValue)
@@ -63,7 +61,7 @@ namespace
 		}
 		else
 		{
-			return InvalidCodePoint;
+			return UnicodeChar();
 		}
 
 		while(continuationBytes--)
@@ -73,20 +71,21 @@ namespace
 			// This will also catch running off the end via NULL
 			if (!isContinuationByte(*(*charPtr)))
 			{
-				return InvalidCodePoint;
+				return UnicodeChar();
 			}
 
 			codePoint = (codePoint << 6) | (*(*charPtr) & ~ContinuationHeaderMask);
 		}
 			
 		(*charPtr)++;
-		return codePoint;
+		return UnicodeChar(codePoint);
 	}
 
-	std::vector<std::uint8_t> encodeUtf8Char(CodePoint codePoint)
+	std::vector<std::uint8_t> encodeUtf8Char(UnicodeChar unicodeChar)
 	{
 		unsigned int continuationBytes;
 		std::uint8_t firstByteHeader;
+		std::int32_t codePoint = unicodeChar.codePoint();
 
 		if (codePoint > 0x10FFFF)
 		{
@@ -189,7 +188,7 @@ StringValue* StringValue::fromUtf8Data(const std::uint8_t *data, std::uint32_t b
 	return new StringValue(newString, byteLength, charLength);
 }
 	
-StringValue* StringValue::fromFill(std::uint32_t length, CodePoint fill)
+StringValue* StringValue::fromFill(std::uint32_t length, UnicodeChar fill)
 {
 	// Figure out how many bytes we'll need
 	std::vector<std::uint8_t> encoded = encodeUtf8Char(fill);
@@ -245,17 +244,17 @@ StringValue* StringValue::fromAppended(const std::list<const StringValue*> &stri
 	return new StringValue(newString, totalByteLength, totalCharLength);
 }
 	
-StringValue* StringValue::fromCodePoints(const std::list<CodePoint> &codePoints)
+StringValue* StringValue::fromUnicodeChars(const std::list<UnicodeChar> &unicodeChars)
 {
 	std::vector<std::uint8_t> encodedData;
 	std::uint32_t charLength = 0;
 
 	// The encoded data will have the be at least this size
-	encodedData.reserve(codePoints.size());
+	encodedData.reserve(unicodeChars.size());
 
-	for(auto codePoint : codePoints)
+	for(auto unicodeChar : unicodeChars)
 	{
-		const std::vector<std::uint8_t> encodedChar = encodeUtf8Char(codePoint);
+		const std::vector<std::uint8_t> encodedChar = encodeUtf8Char(unicodeChar);
 		encodedData.insert(encodedData.end(), encodedChar.begin(), encodedChar.end());
 
 		charLength++;
@@ -372,13 +371,13 @@ StringValue::CharRange StringValue::charRange(std::int64_t start, std::int64_t e
 	return CharRange { startPointer, endPointer, charCount };
 }
 	
-CodePoint StringValue::charAt(std::uint32_t offset) const
+UnicodeChar StringValue::charAt(std::uint32_t offset) const
 {
 	std::uint8_t* charPtr = charPointer(offset);
 
 	if (charPtr == nullptr)
 	{
-		return InvalidCodePoint;
+		return UnicodeChar();
 	}
 
 	return decodeUtf8Char(&charPtr);
@@ -452,7 +451,7 @@ bool StringValue::replaceBytes(const CharRange &range, std::uint8_t *pattern, un
 	return true;
 }
 	
-bool StringValue::fill(CodePoint codePoint, std::int64_t start, std::int64_t end)
+bool StringValue::fill(UnicodeChar unicodeChar, std::int64_t start, std::int64_t end)
 {
 	CharRange range = charRange(start, end);
 
@@ -463,7 +462,7 @@ bool StringValue::fill(CodePoint codePoint, std::int64_t start, std::int64_t end
 	}
 
 	// Encode the new character
-	std::vector<std::uint8_t> encoded = encodeUtf8Char(codePoint);
+	std::vector<std::uint8_t> encoded = encodeUtf8Char(unicodeChar);
 
 	if (encoded.size() == 0)
 	{
@@ -493,9 +492,9 @@ bool StringValue::replace(std::uint32_t offset, const StringValue *from, std::in
 	return replaceBytes(toRange, fromRange.startPointer, fromRange.byteCount());
 }
 	
-bool StringValue::setCharAt(std::uint32_t offset, CodePoint codePoint)
+bool StringValue::setCharAt(std::uint32_t offset, UnicodeChar unicodeChar)
 {
-	return fill(codePoint, offset, offset + 1);
+	return fill(unicodeChar, offset, offset + 1);
 }
 	
 StringValue* StringValue::copy(std::int64_t start, std::int64_t end)
@@ -518,12 +517,12 @@ StringValue* StringValue::copy(std::int64_t start, std::int64_t end)
 	return new StringValue(newString, newByteLength, range.charCount);
 }
 	
-std::list<CodePoint> StringValue::codePoints(std::int64_t start, std::int64_t end) const
+std::list<UnicodeChar> StringValue::unicodeChars(std::int64_t start, std::int64_t end) const
 {
 	if ((end != -1) && (end < start))
 	{
 		// Doesn't make sense
-		return std::list<CodePoint>();
+		return std::list<UnicodeChar>();
 	}
 
 	std::uint8_t *scanPtr = charPointer(start);
@@ -531,23 +530,23 @@ std::list<CodePoint> StringValue::codePoints(std::int64_t start, std::int64_t en
 
 	if (scanPtr == nullptr)
 	{
-		return std::list<CodePoint>();
+		return std::list<UnicodeChar>();
 	}
 
 	// It doesn't look like std::list::size() is O(1)
 	unsigned int addedChars = 0;
-	std::list<CodePoint> ret;
+	std::list<UnicodeChar> ret;
 
 	while(scanPtr < endPtr)
 	{
-		CodePoint codePoint = decodeUtf8Char(&scanPtr);
+		const UnicodeChar unicodeChar = decodeUtf8Char(&scanPtr);
 
-		if (codePoint == InvalidCodePoint)
+		if (!unicodeChar.isValid())
 		{
-			return std::list<CodePoint>();
+			return std::list<UnicodeChar>();
 		}
 
-		ret.push_back(codePoint);
+		ret.push_back(unicodeChar);
 
 		addedChars++;
 
@@ -561,7 +560,7 @@ std::list<CodePoint> StringValue::codePoints(std::int64_t start, std::int64_t en
 	if (end != -1)
 	{
 		// We fell off the end
-		return std::list<CodePoint>();
+		return std::list<UnicodeChar>();
 	}
 
 	return ret;
@@ -578,17 +577,9 @@ int StringValue::compareCaseSensitive(const StringValue *other) const
 	{
 		return result;
 	}
-	else if (byteLength() > other->byteLength())
-	{
-		return 1;
-	}
-	else if (byteLength() < other->byteLength())
-	{
-		return -1;
-	}
 	else
 	{
-		return 0;
+		return byteLength() - other->byteLength();
 	}
 }
 
@@ -610,26 +601,25 @@ int StringValue::compareCaseInsensitive(const StringValue *other) const
 			return theirEnd - ourEnd;
 		}
 
-		CodePoint ourCodePoint = decodeUtf8Char(&ourScanPtr);
-		if (ourCodePoint == InvalidCodePoint)
+		const UnicodeChar ourChar = decodeUtf8Char(&ourScanPtr);
+		if (!ourChar.isValid())
 		{
 			// Pretend we ended early
 			return -1;
 		}
 		
-		CodePoint theirCodePoint = decodeUtf8Char(&theirScanPtr);
-		if (theirCodePoint == InvalidCodePoint)
+		const UnicodeChar theirChar = decodeUtf8Char(&theirScanPtr);
+		if (!theirChar.isValid())
 		{
 			// Pretend they ended early
 			return 1;
 		}
 
-		ourCodePoint = UnicodeData::foldCase(ourCodePoint);
-		theirCodePoint = UnicodeData::foldCase(theirCodePoint);
+		int charCompare = ourChar.compare(theirChar, CaseSensitivity::Insensitive);
 
-		if (ourCodePoint != theirCodePoint)
+		if (charCompare != 0)
 		{
-			return ourCodePoint - theirCodePoint;
+			return charCompare;
 		}
 	}
 
@@ -673,7 +663,7 @@ ByteVectorValue* StringValue::toUtf8ByteVector(std::int64_t start, std::int64_t 
 	return new ByteVectorValue(newData, newLength);
 }
 	
-StringValue *StringValue::toConvertedString(CodePoint (*converter)(CodePoint)) const
+StringValue *StringValue::toConvertedString(UnicodeChar (UnicodeChar::* converter)() const) const
 {
 	std::vector<std::uint8_t> convertedData;
 
@@ -687,15 +677,15 @@ StringValue *StringValue::toConvertedString(CodePoint (*converter)(CodePoint)) c
 
 	while(scanPtr < endPtr)
 	{
-		const CodePoint originalChar = decodeUtf8Char(&scanPtr);
+		const UnicodeChar originalChar = decodeUtf8Char(&scanPtr);
 
-		if (originalChar == InvalidCodePoint)
+		if (!originalChar.isValid())
 		{
 			// Invalid UTF-8 encoding
 			return nullptr;
 		}
 
-		const CodePoint convertedChar = converter(originalChar);
+		const UnicodeChar convertedChar = (originalChar.*converter)();
 
 		const std::vector<std::uint8_t> encodedChar = encodeUtf8Char(convertedChar);
 		convertedData.insert(convertedData.end(), encodedChar.begin(), encodedChar.end());
@@ -713,17 +703,17 @@ StringValue *StringValue::toConvertedString(CodePoint (*converter)(CodePoint)) c
 
 StringValue* StringValue::toUppercaseString() const
 {
-	return toConvertedString(&UnicodeData::toUppercase);
+	return toConvertedString(&UnicodeChar::toUppercase);
 }
 
 StringValue* StringValue::toLowercaseString() const
 {
-	return toConvertedString(&UnicodeData::toLowercase);
+	return toConvertedString(&UnicodeChar::toLowercase);
 }
 
 StringValue* StringValue::toCaseFoldedString() const
 {
-	return toConvertedString(&UnicodeData::foldCase);
+	return toConvertedString(&UnicodeChar::toCaseFolded);
 }
 
 }

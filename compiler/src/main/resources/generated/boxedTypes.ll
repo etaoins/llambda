@@ -32,7 +32,7 @@
 ; {supertype, value}
 %inexactRational = type {%boxedDatum, double}
 
-; {supertype, unsigned codePoint}
+; {supertype, unicodeChar}
 %character = type {%boxedDatum, i32}
 
 ; {supertype, unsigned length, data}

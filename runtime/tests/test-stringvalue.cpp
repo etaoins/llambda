@@ -10,6 +10,12 @@ namespace
 {
 using namespace lliby;
 
+std::ostream& operator<<(std::ostream &stream, const lliby::UnicodeChar &unicodeChar)
+{
+	stream << std::hex << unicodeChar.codePoint();
+	return stream;
+}
+
 std::uint8_t* utf8Bytes(const char *str)
 {
 	return (std::uint8_t*)(str);
@@ -137,32 +143,32 @@ void testCharAt()
 	{
 		StringValue *emptyValue = StringValue::fromUtf8CString(u8"");
 
-		ASSERT_EQUAL(emptyValue->charAt(0), InvalidCodePoint);
+		ASSERT_FALSE(emptyValue->charAt(0).isValid());
 	}
 
 	{
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
 
-		ASSERT_EQUAL(helloValue->charAt(0), 'H');
-		ASSERT_EQUAL(helloValue->charAt(4), 'o');
-		ASSERT_EQUAL(helloValue->charAt(5), InvalidCodePoint);
-		ASSERT_EQUAL(helloValue->charAt(1024), InvalidCodePoint);
+		ASSERT_EQUAL(helloValue->charAt(0), UnicodeChar('H'));
+		ASSERT_EQUAL(helloValue->charAt(4), UnicodeChar('o'));
+		ASSERT_FALSE(helloValue->charAt(5).isValid());
+		ASSERT_FALSE(helloValue->charAt(1024).isValid());
 	}
 	
 	{
 		StringValue *highUnicodeValue = StringValue::fromUtf8CString(u8"☃🐉");
 		
-		ASSERT_EQUAL(highUnicodeValue->charAt(0), 0x02603);
-		ASSERT_EQUAL(highUnicodeValue->charAt(1), 0x1F409);
-		ASSERT_EQUAL(highUnicodeValue->charAt(2), InvalidCodePoint);
-		ASSERT_EQUAL(highUnicodeValue->charAt(1024), InvalidCodePoint);
+		ASSERT_EQUAL(highUnicodeValue->charAt(0), UnicodeChar(0x02603));
+		ASSERT_EQUAL(highUnicodeValue->charAt(1), UnicodeChar(0x1F409));
+		ASSERT_FALSE(highUnicodeValue->charAt(2).isValid());
+		ASSERT_FALSE(highUnicodeValue->charAt(1024).isValid());
 	}
 }
 
 void testFromFill()
 {
 	{
-		StringValue *emptyAsciiValue = StringValue::fromFill(0, 0);
+		StringValue *emptyAsciiValue = StringValue::fromFill(0, UnicodeChar(0));
 
 		ASSERT_EQUAL(emptyAsciiValue->byteLength(), 0);
 		ASSERT_EQUAL(emptyAsciiValue->utf8Data()[0], 0);
@@ -170,7 +176,7 @@ void testFromFill()
 	}
 	
 	{
-		StringValue *emptyUnicodeValue = StringValue::fromFill(0, 0x02603);
+		StringValue *emptyUnicodeValue = StringValue::fromFill(0, UnicodeChar(0x02603));
 
 		ASSERT_EQUAL(emptyUnicodeValue->byteLength(), 0);
 		ASSERT_EQUAL(emptyUnicodeValue->utf8Data()[0], 0);
@@ -178,25 +184,25 @@ void testFromFill()
 	}
 	
 	{
-		StringValue *asciiValue = StringValue::fromFill(5, 'H');
+		StringValue *asciiValue = StringValue::fromFill(5, UnicodeChar('H'));
 
 		ASSERT_EQUAL(asciiValue->byteLength(), 5);
 		ASSERT_EQUAL(asciiValue->utf8Data()[5], 0);
 		ASSERT_EQUAL(asciiValue->charLength(), 5);
-		ASSERT_EQUAL(asciiValue->charAt(0), 'H');
-		ASSERT_EQUAL(asciiValue->charAt(4), 'H');
-		ASSERT_EQUAL(asciiValue->charAt(5), InvalidCodePoint);
+		ASSERT_EQUAL(asciiValue->charAt(0), UnicodeChar('H'));
+		ASSERT_EQUAL(asciiValue->charAt(4), UnicodeChar('H'));
+		ASSERT_FALSE(asciiValue->charAt(5).isValid());
 	}
 	
 	{
-		StringValue *unicodeValue = StringValue::fromFill(5, 0x02603);
+		StringValue *unicodeValue = StringValue::fromFill(5, UnicodeChar(0x02603));
 
 		ASSERT_EQUAL(unicodeValue->byteLength(), 15);
 		ASSERT_EQUAL(unicodeValue->utf8Data()[15], 0);
 		ASSERT_EQUAL(unicodeValue->charLength(), 5);
-		ASSERT_EQUAL(unicodeValue->charAt(0), 0x02603);
-		ASSERT_EQUAL(unicodeValue->charAt(4), 0x02603);
-		ASSERT_EQUAL(unicodeValue->charAt(5), InvalidCodePoint);
+		ASSERT_EQUAL(unicodeValue->charAt(0), UnicodeChar(0x02603));
+		ASSERT_EQUAL(unicodeValue->charAt(4), UnicodeChar(0x02603));
+		ASSERT_FALSE(unicodeValue->charAt(5).isValid());
 	}
 }
 
@@ -239,25 +245,25 @@ void testFromAppended()
 	}
 }
 
-void testFromCodePoints()
+void testFromUnicodeChars()
 {
 	{
-		StringValue *emptyValue = StringValue::fromCodePoints(std::list<CodePoint>());
+		StringValue *emptyValue = StringValue::fromUnicodeChars(std::list<UnicodeChar>());
 		ASSERT_EQUAL(emptyValue->byteLength(), 0);
 		ASSERT_EQUAL(emptyValue->utf8Data()[0], 0);
 		ASSERT_EQUAL(emptyValue->charLength(), 0);
 	}
 
 	{
-		const std::list<CodePoint> helloPoints = {
-			'H',
-			'e',
-			'l',
-			'l',
-			'o'
+		const std::list<UnicodeChar> helloPoints = {
+			UnicodeChar('H'),
+			UnicodeChar('e'),
+			UnicodeChar('l'),
+			UnicodeChar('l'),
+			UnicodeChar('o')
 		};
 
-		StringValue *helloValue = StringValue::fromCodePoints(helloPoints);
+		StringValue *helloValue = StringValue::fromUnicodeChars(helloPoints);
 		
 		ASSERT_EQUAL(helloValue->byteLength(), 5);
 		ASSERT_EQUAL(helloValue->utf8Data()[5], 0);
@@ -266,13 +272,13 @@ void testFromCodePoints()
 	}
 	
 	{
-		const std::list<CodePoint> unicodePoints = {
-			0x1F409,
-			0x02603,
-			'!'
+		const std::list<UnicodeChar> unicodeChars = {
+			UnicodeChar(0x1F409),
+			UnicodeChar(0x02603),
+			UnicodeChar('!')
 		};
 
-		StringValue *unicodeValue = StringValue::fromCodePoints(unicodePoints);
+		StringValue *unicodeValue = StringValue::fromUnicodeChars(unicodeChars);
 		
 		ASSERT_EQUAL(unicodeValue->byteLength(), 8);
 		ASSERT_EQUAL(unicodeValue->charLength(), 3);
@@ -405,48 +411,48 @@ void testSetCharAt()
 	{
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
 
-		ASSERT_EQUAL(helloValue->setCharAt(0, 'Y'), true);
+		ASSERT_EQUAL(helloValue->setCharAt(0, UnicodeChar('Y')), true);
 
 		ASSERT_EQUAL(helloValue->byteLength(), 5);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
 		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"Yello", 6), 0);
 		
 		// Going off the end of the string should fail
-		ASSERT_EQUAL(helloValue->setCharAt(5, 'Y'), false);
+		ASSERT_EQUAL(helloValue->setCharAt(5, UnicodeChar('Y')), false);
 	}
 	
 	{
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
 
-		ASSERT_EQUAL(helloValue->setCharAt(1, 0), true);
+		ASSERT_EQUAL(helloValue->setCharAt(1, UnicodeChar(0)), true);
 
 		ASSERT_EQUAL(helloValue->byteLength(), 5);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
-		ASSERT_EQUAL(helloValue->charAt(1), 0);
+		ASSERT_EQUAL(helloValue->charAt(1), UnicodeChar(0));
 	}
 	
 	{
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
 
-		ASSERT_EQUAL(helloValue->setCharAt(3, 0x1F409), true);
+		ASSERT_EQUAL(helloValue->setCharAt(3, UnicodeChar(0x1F409)), true);
 
 		ASSERT_EQUAL(helloValue->byteLength(), 8);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
 		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"Hel🐉o", 9), 0);
 		
-		ASSERT_EQUAL(helloValue->setCharAt(5, 'Y'), false);
+		ASSERT_EQUAL(helloValue->setCharAt(5, UnicodeChar('Y')), false);
 	}
 	
 	{
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"日本国");
 
-		ASSERT_EQUAL(helloValue->setCharAt(1, 'O'), true);
+		ASSERT_EQUAL(helloValue->setCharAt(1, UnicodeChar('O')), true);
 
 		ASSERT_EQUAL(helloValue->byteLength(), 7);
 		ASSERT_EQUAL(helloValue->charLength(), 3);
 		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"日O国", 8), 0);
 		
-		ASSERT_EQUAL(helloValue->setCharAt(4, 'Y'), false);
+		ASSERT_EQUAL(helloValue->setCharAt(4, UnicodeChar('Y')), false);
 	}
 }
 
@@ -455,7 +461,7 @@ void testFill()
 	{
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
 
-		ASSERT_EQUAL(helloValue->fill('Y'), true);
+		ASSERT_EQUAL(helloValue->fill(UnicodeChar('Y')), true);
 
 		ASSERT_EQUAL(helloValue->byteLength(), 5);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
@@ -465,7 +471,7 @@ void testFill()
 	{
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
 
-		ASSERT_EQUAL(helloValue->fill('Y', 0, 5), true);
+		ASSERT_EQUAL(helloValue->fill(UnicodeChar('Y'), 0, 5), true);
 
 		ASSERT_EQUAL(helloValue->byteLength(), 5);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
@@ -474,13 +480,13 @@ void testFill()
 	
 	{
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
-		ASSERT_EQUAL(helloValue->fill('Y', 0, 6), false);
+		ASSERT_EQUAL(helloValue->fill(UnicodeChar('Y'), 0, 6), false);
 	}
 	
 	{
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
 
-		ASSERT_EQUAL(helloValue->fill(0x2603), true);
+		ASSERT_EQUAL(helloValue->fill(UnicodeChar(0x2603)), true);
 
 		ASSERT_EQUAL(helloValue->byteLength(), 15);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
@@ -490,7 +496,7 @@ void testFill()
 	{
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
 
-		ASSERT_EQUAL(helloValue->fill(0x2603, 1), true);
+		ASSERT_EQUAL(helloValue->fill(UnicodeChar(0x2603), 1), true);
 
 		ASSERT_EQUAL(helloValue->byteLength(), 13);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
@@ -500,7 +506,7 @@ void testFill()
 	{
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
 
-		ASSERT_EQUAL(helloValue->fill(0x2603, 1, 4), true);
+		ASSERT_EQUAL(helloValue->fill(UnicodeChar(0x2603), 1, 4), true);
 
 		ASSERT_EQUAL(helloValue->byteLength(), 11);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
@@ -510,7 +516,7 @@ void testFill()
 	{
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
 
-		ASSERT_EQUAL(helloValue->fill('Y', 1, 1), true);
+		ASSERT_EQUAL(helloValue->fill(UnicodeChar('Y'), 1, 1), true);
 
 		ASSERT_EQUAL(helloValue->byteLength(), 5);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
@@ -520,7 +526,7 @@ void testFill()
 	{
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"☃☃☃☃☃");
 		
-		ASSERT_EQUAL(helloValue->fill('Y'), true);
+		ASSERT_EQUAL(helloValue->fill(UnicodeChar('Y')), true);
 
 		ASSERT_EQUAL(helloValue->byteLength(), 5);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
@@ -530,7 +536,7 @@ void testFill()
 	{
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"☃☃☃☃☃");
 		
-		ASSERT_EQUAL(helloValue->fill('Y', 0, 5), true);
+		ASSERT_EQUAL(helloValue->fill(UnicodeChar('Y'), 0, 5), true);
 
 		ASSERT_EQUAL(helloValue->byteLength(), 5);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
@@ -540,7 +546,7 @@ void testFill()
 	{
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"YYYY☃");
 		
-		ASSERT_EQUAL(helloValue->fill('Y', 4, 5), true);
+		ASSERT_EQUAL(helloValue->fill(UnicodeChar('Y'), 4, 5), true);
 
 		ASSERT_EQUAL(helloValue->byteLength(), 5);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
@@ -550,7 +556,7 @@ void testFill()
 	{
 		StringValue *helloValue = StringValue::fromUtf8CString(u8"☃☃☃☃☃");
 		
-		ASSERT_EQUAL(helloValue->fill('Y', 1), true);
+		ASSERT_EQUAL(helloValue->fill(UnicodeChar('Y'), 1), true);
 
 		ASSERT_EQUAL(helloValue->byteLength(), 7);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
@@ -651,82 +657,82 @@ void testReplace()
 	}
 }
 
-void testCodePoints()
+void testUnicodeChars()
 {
 	StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello ☃!");
 
 	{
-		std::list<CodePoint> codePoints = helloValue->codePoints();
+		std::list<UnicodeChar> unicodeChars = helloValue->unicodeChars();
 
-		ASSERT_TRUE(codePoints == std::list<CodePoint>({
-				'H',
-				'e',
-				'l',
-				'l',
-				'o',
-				' ',
-				0x2603,
-				'!'
+		ASSERT_TRUE(unicodeChars == std::list<UnicodeChar>({
+				UnicodeChar('H'),
+				UnicodeChar('e'),
+				UnicodeChar('l'),
+				UnicodeChar('l'),
+				UnicodeChar('o'),
+				UnicodeChar(' '),
+				UnicodeChar(0x2603),
+				UnicodeChar('!')
 		}));
 	}
 	
 	{
-		std::list<CodePoint> codePoints = helloValue->codePoints(0, 8);
+		std::list<UnicodeChar> unicodeChars = helloValue->unicodeChars(0, 8);
 
-		ASSERT_TRUE(codePoints == std::list<CodePoint>({
-				'H',
-				'e',
-				'l',
-				'l',
-				'o',
-				' ',
-				0x2603,
-				'!'
+		ASSERT_TRUE(unicodeChars == std::list<UnicodeChar>({
+				UnicodeChar('H'),
+				UnicodeChar('e'),
+				UnicodeChar('l'),
+				UnicodeChar('l'),
+				UnicodeChar('o'),
+				UnicodeChar(' '),
+				UnicodeChar(0x2603),
+				UnicodeChar('!')
 		}));
 	}
 	
 	{
-		std::list<CodePoint> codePoints = helloValue->codePoints(0, 0);
+		std::list<UnicodeChar> unicodeChars = helloValue->unicodeChars(0, 0);
 
-		ASSERT_TRUE(codePoints == std::list<CodePoint>({}));
+		ASSERT_TRUE(unicodeChars == std::list<UnicodeChar>({}));
 	}
 	
 	{
-		std::list<CodePoint> codePoints = helloValue->codePoints(2);
+		std::list<UnicodeChar> unicodeChars = helloValue->unicodeChars(2);
 
-		ASSERT_TRUE(codePoints == std::list<CodePoint>({
-				'l',
-				'l',
-				'o',
-				' ',
-				0x2603,
-				'!'
+		ASSERT_TRUE(unicodeChars == std::list<UnicodeChar>({
+				UnicodeChar('l'),
+				UnicodeChar('l'),
+				UnicodeChar('o'),
+				UnicodeChar(' '),
+				UnicodeChar(0x2603),
+				UnicodeChar('!')
 		}));
 	}
 	
 	{
-		std::list<CodePoint> codePoints = helloValue->codePoints(2, 5);
+		std::list<UnicodeChar> unicodeChars = helloValue->unicodeChars(2, 5);
 
-		ASSERT_TRUE(codePoints == std::list<CodePoint>({
-				'l',
-				'l',
-				'o'
+		ASSERT_TRUE(unicodeChars == std::list<UnicodeChar>({
+				UnicodeChar('l'),
+				UnicodeChar('l'),
+				UnicodeChar('o')
 		}));
 	}
 	
 	{
-		std::list<CodePoint> codePoints = helloValue->codePoints(2, 19);
-		ASSERT_TRUE(codePoints.empty());
+		std::list<UnicodeChar> unicodeChars = helloValue->unicodeChars(2, 19);
+		ASSERT_TRUE(unicodeChars.empty());
 	}
 	
 	{
-		std::list<CodePoint> codePoints = helloValue->codePoints(19);
-		ASSERT_TRUE(codePoints.empty());
+		std::list<UnicodeChar> unicodeChars = helloValue->unicodeChars(19);
+		ASSERT_TRUE(unicodeChars.empty());
 	}
 	
 	{
-		std::list<CodePoint> codePoints = helloValue->codePoints(19, 24);
-		ASSERT_TRUE(codePoints.empty());
+		std::list<UnicodeChar> unicodeChars = helloValue->unicodeChars(19, 24);
+		ASSERT_TRUE(unicodeChars.empty());
 	}
 }
 
@@ -856,7 +862,7 @@ int main(int argc, char *argv[])
 	
 	testFromFill();
 	testFromAppended();
-	testFromCodePoints();
+	testFromUnicodeChars();
 
 	testStringCopy();
 
@@ -864,7 +870,7 @@ int main(int argc, char *argv[])
 	testFill();
 	testReplace();
 
-	testCodePoints();
+	testUnicodeChars();
 
 	testToUtf8ByteVector();
 

@@ -6,6 +6,8 @@ def _complex_type_to_llvm(complex_type):
         return "i8"
     elif complex_type == "entryPoint":
         return "%" + BASE_TYPE + "* (%closure*, %" + BASE_TYPE + "*)*"
+    elif complex_type == "unicodeChar":
+        return "i32"
     else:
         raise SemanticException('Unknown complex type "' + complex_type + '"')
 
