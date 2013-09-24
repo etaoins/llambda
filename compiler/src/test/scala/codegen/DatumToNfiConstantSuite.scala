@@ -47,7 +47,7 @@ class DatumToNfiConstantSuite extends FunSuite with Inside {
     }
   }
 
-  test("string vales") {
+  test("string values") {
     assert(DatumToNfiConstant(ast.StringLiteral("Hello, world!"), nfi.Utf8String) === Some(llvmir.StringConstant("Hello, world!")))
   }
 

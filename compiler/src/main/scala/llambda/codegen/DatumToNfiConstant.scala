@@ -12,7 +12,6 @@ object DatumToNfiConstant {
     case (_, nfi.Bool) =>
       Some(llvmir.IntegerConstant(llvmir.IntegerType(1), 0))
 
-    // XXX: Signed versus unsigned?
     case (ast.IntegerLiteral(value), intType : nfi.IntType) =>
       Some(llvmir.IntegerConstant(llvmir.IntegerType(intType.bits), value))
     

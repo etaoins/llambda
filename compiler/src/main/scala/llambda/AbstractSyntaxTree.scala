@@ -83,7 +83,7 @@ case class Pair(car : Datum, cdr : Datum) extends Datum {
       "(" + head.mkString(" ") + " . " + terminator + ")"
 
     case _ =>
-      // This isn't possible but the compile can't prove that
+      // This isn't possible but the compiler can't prove that
       "(" + car + " . " + cdr + ")"
   }
 }

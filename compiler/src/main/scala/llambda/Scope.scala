@@ -6,7 +6,7 @@ sealed abstract class BoundValue
 class StorageLocation(val sourceName : String) extends BoundValue
 
 // These are procedure with the semantics of the same procedure defined in R7RS
-// This allows the compile to optimize or REPL emulate them based on their 
+// This allows the compiler to optimize or REPL emulate them based on their 
 // documented semantics
 class ReportProcedure(val reportName : String) extends StorageLocation(reportName)
 
