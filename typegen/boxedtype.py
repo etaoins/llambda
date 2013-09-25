@@ -46,7 +46,7 @@ class BoxedType(object):
         self.abstract = type_json.get('abstract', False)
         raw_type_id  = type_json.get('typeId', None)
         self.inherits = type_json['inherits']
-        self.subtypes = {}
+        self.subtypes = OrderedDict()
 
         if isinstance(raw_type_id, int): 
             self._type_assertion = TypeEqualsAssertion(self, raw_type_id)
