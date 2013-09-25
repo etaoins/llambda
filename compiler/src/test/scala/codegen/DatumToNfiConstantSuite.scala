@@ -48,7 +48,7 @@ class DatumToNfiConstantSuite extends FunSuite with Inside {
   }
 
   test("string values") {
-    assert(DatumToNfiConstant(ast.StringLiteral("Hello, world!"), nfi.Utf8String) === Some(llvmir.StringConstant("Hello, world!")))
+    assert(DatumToNfiConstant(ast.StringLiteral("Hello, world!"), nfi.Utf8CString) === Some(llvmir.StringConstant("Hello, world!")))
   }
 
   test("unicode char values") {
@@ -58,7 +58,7 @@ class DatumToNfiConstantSuite extends FunSuite with Inside {
   test("nonsense conversions") {
     // These are just some random points. They are far from exhaustive
     assert(DatumToNfiConstant(ast.StringLiteral("Hello, world!"), nfi.Int8) === None)
-    assert(DatumToNfiConstant(ast.IntegerLiteral(5), nfi.Utf8String) === None)
+    assert(DatumToNfiConstant(ast.IntegerLiteral(5), nfi.Utf8CString) === None)
     assert(DatumToNfiConstant(ast.EmptyList, nfi.Float) === None)
   }
 }

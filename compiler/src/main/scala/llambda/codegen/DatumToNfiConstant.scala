@@ -27,7 +27,7 @@ object DatumToNfiConstant {
     case (ast.RealLiteral(value), nfi.Double) =>
       Some(llvmir.DoubleConstant(value))
 
-    case (ast.StringLiteral(string), nfi.Utf8String) =>
+    case (ast.StringLiteral(string), nfi.Utf8CString) =>
       Some(llvmir.StringConstant(string))
     
     case (ast.CharLiteral(codePoint), nfi.UnicodeChar) =>

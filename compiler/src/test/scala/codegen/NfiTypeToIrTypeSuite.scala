@@ -90,7 +90,7 @@ class NfiTypeToIrTypeSuite extends FunSuite {
   }
 
   test("utf8 string") {
-    val typeWithSign = NfiTypeToIrType(nfi.Utf8String)
+    val typeWithSign = NfiTypeToIrType(nfi.Utf8CString)
 
     assert(typeWithSign.irType === llvmir.PointerType(llvmir.IntegerType(8)))
     assert(typeWithSign.signed === None)

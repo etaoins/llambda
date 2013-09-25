@@ -18,9 +18,9 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
     }
   }
   
-  test("function returning utf8-string") {
-    assertResult(et.NativeFunction(Nil, false, Some(nfi.Utf8String), "lliby_newline")) {
-      expressionFor("""(native-function "lliby_newline" () utf8-string)""")
+  test("function returning utf8-cstring") {
+    assertResult(et.NativeFunction(Nil, false, Some(nfi.Utf8CString), "lliby_newline")) {
+      expressionFor("""(native-function "lliby_newline" () utf8-cstring)""")
     }
   }
   

@@ -17,7 +17,7 @@ object ExtractNativeFunction
     case "float"  => nfi.Float
     case "double" => nfi.Double
 
-    case "utf8-string" => nfi.Utf8String
+    case "utf8-cstring" => nfi.Utf8CString
 
     case "unicode-char" => nfi.UnicodeChar
 
