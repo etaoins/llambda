@@ -30,17 +30,17 @@ class ASTListCompanionSuite extends FunSuite {
   }
 
   test("proper list extraction") {
-    expectResult(Some(Nil)) {
+    assertResult(Some(Nil)) {
       ast.ProperList.unapply(ast.EmptyList)
     }
 
-    expectResult(Some(List(ast.Symbol("a")))) {
+    assertResult(Some(List(ast.Symbol("a")))) {
       ast.ProperList.unapply(
         ast.Pair(ast.Symbol("a"), ast.EmptyList)
       )
     }
     
-    expectResult(Some(List(ast.Symbol("a"), ast.Symbol("b")))) {
+    assertResult(Some(List(ast.Symbol("a"), ast.Symbol("b")))) {
       ast.ProperList.unapply(
         ast.Pair(ast.Symbol("a"), 
           ast.Pair(ast.Symbol("b"), ast.EmptyList)
@@ -48,11 +48,11 @@ class ASTListCompanionSuite extends FunSuite {
       )
     }
 
-    expectResult(None) {
+    assertResult(None) {
       ast.ProperList.unapply(ast.Symbol("a"))
     }
     
-    expectResult(None) {
+    assertResult(None) {
       ast.ProperList.unapply(
         ast.Pair(
           ast.Symbol("a"), ast.Symbol("b")
@@ -62,7 +62,7 @@ class ASTListCompanionSuite extends FunSuite {
   }
 
   test("improper list extraction") {
-    expectResult(Some((List(ast.Symbol("a")), ast.Symbol("b")))) {
+    assertResult(Some((List(ast.Symbol("a")), ast.Symbol("b")))) {
       ast.ImproperList.unapply(
         ast.Pair(
           ast.Symbol("a"), ast.Symbol("b")
@@ -70,7 +70,7 @@ class ASTListCompanionSuite extends FunSuite {
       )
     }
     
-    expectResult(Some((List(ast.Symbol("a"), ast.Symbol("b")), ast.Symbol("c")))) {
+    assertResult(Some((List(ast.Symbol("a"), ast.Symbol("b")), ast.Symbol("c")))) {
       ast.ImproperList.unapply(
         ast.Pair(
           ast.Symbol("a"), ast.Pair(
@@ -80,11 +80,11 @@ class ASTListCompanionSuite extends FunSuite {
       )
     }
     
-    expectResult(None) {
+    assertResult(None) {
       ast.ImproperList.unapply(ast.Symbol("a"))
     }
     
-    expectResult(None) {
+    assertResult(None) {
       ast.ImproperList.unapply(
         ast.Pair(ast.Symbol("a"), ast.EmptyList)
       )

@@ -7,55 +7,55 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   implicit val nfiScope = new Scope(collection.mutable.Map(NativeFunctionPrimitives.bindings.toSeq : _*))
   
   test("void native function") {
-    expectResult(et.NativeFunction(Nil, false, None, "lliby_newline")) {
+    assertResult(et.NativeFunction(Nil, false, None, "lliby_newline")) {
       expressionFor("""(native-function "lliby_newline" () void)""")
     }
   }
   
   test("function returning int8") {
-    expectResult(et.NativeFunction(Nil, false, Some(nfi.Int8), "lliby_newline")) {
+    assertResult(et.NativeFunction(Nil, false, Some(nfi.Int8), "lliby_newline")) {
       expressionFor("""(native-function "lliby_newline" () int8)""")
     }
   }
   
   test("function returning utf8-string") {
-    expectResult(et.NativeFunction(Nil, false, Some(nfi.Utf8String), "lliby_newline")) {
+    assertResult(et.NativeFunction(Nil, false, Some(nfi.Utf8String), "lliby_newline")) {
       expressionFor("""(native-function "lliby_newline" () utf8-string)""")
     }
   }
   
   test("function taking int16 and returning int32") {
-    expectResult(et.NativeFunction(nfi.Int16 :: Nil, false, Some(nfi.Int32), "lliby_newline")) {
+    assertResult(et.NativeFunction(nfi.Int16 :: Nil, false, Some(nfi.Int32), "lliby_newline")) {
       expressionFor("""(native-function "lliby_newline" (int16) int32)""")
     }
   }
   
   test("function taking int64, float and returning double") {
-    expectResult(et.NativeFunction(nfi.Int64 :: nfi.Float :: Nil, false, Some(nfi.Double), "lliby_newline")) {
+    assertResult(et.NativeFunction(nfi.Int64 :: nfi.Float :: Nil, false, Some(nfi.Double), "lliby_newline")) {
       expressionFor("""(native-function "lliby_newline" (int64 float) double)""")
     }
   }
   
   test("function taking uint16 and returning uint32") {
-    expectResult(et.NativeFunction(nfi.UInt16 :: Nil, false, Some(nfi.UInt32), "lliby_newline")) {
+    assertResult(et.NativeFunction(nfi.UInt16 :: Nil, false, Some(nfi.UInt32), "lliby_newline")) {
       expressionFor("""(native-function "lliby_newline" (uint16) uint32)""")
     }
   }
   
   test("function taking uint8 and returning unicode char") {
-    expectResult(et.NativeFunction(nfi.Int8 :: Nil, false, Some(nfi.UnicodeChar), "lliby_newline")) {
+    assertResult(et.NativeFunction(nfi.Int8 :: Nil, false, Some(nfi.UnicodeChar), "lliby_newline")) {
       expressionFor("""(native-function "lliby_newline" (int8) unicode-char)""")
     }
   }
 
   test("function with only rest arg") {
-    expectResult(et.NativeFunction(Nil, true, Some(nfi.BoxedDatum), "lliby_vector")) {
+    assertResult(et.NativeFunction(Nil, true, Some(nfi.BoxedDatum), "lliby_vector")) {
       expressionFor("""(native-function "lliby_vector" boxed-datum boxed-datum)""")
     }
   }
   
   test("function with fixed and rest args") {
-    expectResult(et.NativeFunction(nfi.Bool :: Nil, true, Some(nfi.Int32), "lliby_misc")) {
+    assertResult(et.NativeFunction(nfi.Bool :: Nil, true, Some(nfi.Int32), "lliby_misc")) {
       expressionFor("""(native-function "lliby_misc" (bool . boxed-datum) int)""")
     }
   }
