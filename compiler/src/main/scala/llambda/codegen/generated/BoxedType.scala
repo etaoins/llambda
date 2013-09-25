@@ -4,77 +4,333 @@
 
 package llambda.codegen.boxedtype
 
-import llambda.codegen.llvmir.{UserDefinedType, PointerType}
+import llambda.codegen.llvmir._
+import llambda.InternalCompilerErrorException
 
 sealed abstract class BoxedType {
-  val irType : PointerType
+  val irType : FirstClassType
+  val superType : Option[BoxedType]
 }
 
 object BoxedDatum extends BoxedType {
-  val irType = PointerType(UserDefinedType("boxedDatum"))
+  val irType = UserDefinedType("boxedDatum")
+  val superType = None
+
+  def createConstant(typeId : IrConstant) : StructureConstant = {
+    if (typeId.irType != IntegerType(16)) {
+       throw new InternalCompilerErrorException("Unexpected type for field typeId")
+    }
+
+    StructureConstant(List(
+      typeId,
+      IntegerConstant(IntegerType(16), 0)
+    ), userDefinedType=Some(irType))
+  }
 }
 
 object UnspecificValue extends BoxedType {
-  val irType = PointerType(UserDefinedType("unspecific"))
+  val irType = UserDefinedType("unspecific")
+  val superType = Some(BoxedDatum)
+  val typeId = 0
+
+  def createConstant() : StructureConstant = {
+    StructureConstant(List(
+      superType.get.createConstant(
+        typeId=IntegerConstant(IntegerType(16), typeId)
+      )
+    ), userDefinedType=Some(irType))
+  }
 }
 
 object PairValue extends BoxedType {
-  val irType = PointerType(UserDefinedType("pair"))
+  val irType = UserDefinedType("pair")
+  val superType = Some(BoxedDatum)
+  val typeId = 1
+
+  def createConstant(car : IrConstant, cdr : IrConstant) : StructureConstant = {
+    if (car.irType != PointerType(UserDefinedType("boxedDatum"))) {
+       throw new InternalCompilerErrorException("Unexpected type for field car")
+    }
+
+    if (cdr.irType != PointerType(UserDefinedType("boxedDatum"))) {
+       throw new InternalCompilerErrorException("Unexpected type for field cdr")
+    }
+
+    StructureConstant(List(
+      superType.get.createConstant(
+        typeId=IntegerConstant(IntegerType(16), typeId)
+      ),
+      car,
+      cdr
+    ), userDefinedType=Some(irType))
+  }
 }
 
 object EmptyListValue extends BoxedType {
-  val irType = PointerType(UserDefinedType("emptyList"))
+  val irType = UserDefinedType("emptyList")
+  val superType = Some(BoxedDatum)
+  val typeId = 2
+
+  def createConstant() : StructureConstant = {
+    StructureConstant(List(
+      superType.get.createConstant(
+        typeId=IntegerConstant(IntegerType(16), typeId)
+      )
+    ), userDefinedType=Some(irType))
+  }
 }
 
 object StringLikeValue extends BoxedType {
-  val irType = PointerType(UserDefinedType("stringLike"))
+  val irType = UserDefinedType("stringLike")
+  val superType = Some(BoxedDatum)
+
+  def createConstant(charLength : IrConstant, byteLength : IrConstant, utf8Data : IrConstant, typeId : IrConstant) : StructureConstant = {
+    if (charLength.irType != IntegerType(32)) {
+       throw new InternalCompilerErrorException("Unexpected type for field charLength")
+    }
+
+    if (byteLength.irType != IntegerType(32)) {
+       throw new InternalCompilerErrorException("Unexpected type for field byteLength")
+    }
+
+    if (utf8Data.irType != PointerType(IntegerType(8))) {
+       throw new InternalCompilerErrorException("Unexpected type for field utf8Data")
+    }
+
+    StructureConstant(List(
+      superType.get.createConstant(
+        typeId=typeId
+      ),
+      charLength,
+      byteLength,
+      utf8Data
+    ), userDefinedType=Some(irType))
+  }
 }
 
 object StringValue extends BoxedType {
-  val irType = PointerType(UserDefinedType("string"))
+  val irType = UserDefinedType("string")
+  val superType = Some(StringLikeValue)
+  val typeId = 3
+
+  def createConstant(charLength : IrConstant, byteLength : IrConstant, utf8Data : IrConstant) : StructureConstant = {
+    StructureConstant(List(
+      superType.get.createConstant(
+        charLength=charLength,
+        byteLength=byteLength,
+        utf8Data=utf8Data,
+        typeId=IntegerConstant(IntegerType(16), typeId)
+      )
+    ), userDefinedType=Some(irType))
+  }
 }
 
 object SymbolValue extends BoxedType {
-  val irType = PointerType(UserDefinedType("symbol"))
+  val irType = UserDefinedType("symbol")
+  val superType = Some(StringLikeValue)
+  val typeId = 4
+
+  def createConstant(charLength : IrConstant, byteLength : IrConstant, utf8Data : IrConstant) : StructureConstant = {
+    StructureConstant(List(
+      superType.get.createConstant(
+        charLength=charLength,
+        byteLength=byteLength,
+        utf8Data=utf8Data,
+        typeId=IntegerConstant(IntegerType(16), typeId)
+      )
+    ), userDefinedType=Some(irType))
+  }
 }
 
 object BooleanValue extends BoxedType {
-  val irType = PointerType(UserDefinedType("boolean"))
+  val irType = UserDefinedType("boolean")
+  val superType = Some(BoxedDatum)
+  val typeId = 5
+
+  def createConstant(value : IrConstant) : StructureConstant = {
+    if (value.irType != IntegerType(1)) {
+       throw new InternalCompilerErrorException("Unexpected type for field value")
+    }
+
+    StructureConstant(List(
+      superType.get.createConstant(
+        typeId=IntegerConstant(IntegerType(16), typeId)
+      ),
+      value
+    ), userDefinedType=Some(irType))
+  }
 }
 
 object NumericValue extends BoxedType {
-  val irType = PointerType(UserDefinedType("numeric"))
+  val irType = UserDefinedType("numeric")
+  val superType = Some(BoxedDatum)
+
+  def createConstant(typeId : IrConstant) : StructureConstant = {
+    StructureConstant(List(
+      superType.get.createConstant(
+        typeId=typeId
+      )
+    ), userDefinedType=Some(irType))
+  }
 }
 
 object ExactIntegerValue extends BoxedType {
-  val irType = PointerType(UserDefinedType("exactInteger"))
+  val irType = UserDefinedType("exactInteger")
+  val superType = Some(NumericValue)
+  val typeId = 6
+
+  def createConstant(value : IrConstant) : StructureConstant = {
+    if (value.irType != IntegerType(64)) {
+       throw new InternalCompilerErrorException("Unexpected type for field value")
+    }
+
+    StructureConstant(List(
+      superType.get.createConstant(
+        typeId=IntegerConstant(IntegerType(16), typeId)
+      ),
+      value
+    ), userDefinedType=Some(irType))
+  }
 }
 
 object InexactRationalValue extends BoxedType {
-  val irType = PointerType(UserDefinedType("inexactRational"))
+  val irType = UserDefinedType("inexactRational")
+  val superType = Some(NumericValue)
+  val typeId = 7
+
+  def createConstant(value : IrConstant) : StructureConstant = {
+    if (value.irType != DoubleType) {
+       throw new InternalCompilerErrorException("Unexpected type for field value")
+    }
+
+    StructureConstant(List(
+      superType.get.createConstant(
+        typeId=IntegerConstant(IntegerType(16), typeId)
+      ),
+      value
+    ), userDefinedType=Some(irType))
+  }
 }
 
 object CharacterValue extends BoxedType {
-  val irType = PointerType(UserDefinedType("character"))
+  val irType = UserDefinedType("character")
+  val superType = Some(BoxedDatum)
+  val typeId = 8
+
+  def createConstant(unicodeChar : IrConstant) : StructureConstant = {
+    if (unicodeChar.irType != IntegerType(32)) {
+       throw new InternalCompilerErrorException("Unexpected type for field unicodeChar")
+    }
+
+    StructureConstant(List(
+      superType.get.createConstant(
+        typeId=IntegerConstant(IntegerType(16), typeId)
+      ),
+      unicodeChar
+    ), userDefinedType=Some(irType))
+  }
 }
 
 object ByteVectorValue extends BoxedType {
-  val irType = PointerType(UserDefinedType("byteVector"))
+  val irType = UserDefinedType("byteVector")
+  val superType = Some(BoxedDatum)
+  val typeId = 9
+
+  def createConstant(length : IrConstant, data : IrConstant) : StructureConstant = {
+    if (length.irType != IntegerType(32)) {
+       throw new InternalCompilerErrorException("Unexpected type for field length")
+    }
+
+    if (data.irType != PointerType(IntegerType(8))) {
+       throw new InternalCompilerErrorException("Unexpected type for field data")
+    }
+
+    StructureConstant(List(
+      superType.get.createConstant(
+        typeId=IntegerConstant(IntegerType(16), typeId)
+      ),
+      length,
+      data
+    ), userDefinedType=Some(irType))
+  }
 }
 
 object ProcedureValue extends BoxedType {
-  val irType = PointerType(UserDefinedType("procedure"))
+  val irType = UserDefinedType("procedure")
+  val superType = Some(BoxedDatum)
+  val typeId = 10
+
+  def createConstant(closure : IrConstant, entryPoint : IrConstant) : StructureConstant = {
+    if (closure.irType != PointerType(UserDefinedType("closure"))) {
+       throw new InternalCompilerErrorException("Unexpected type for field closure")
+    }
+
+    if (entryPoint.irType != PointerType(FunctionType(PointerType(UserDefinedType("boxedDatum")), List(PointerType(UserDefinedType("closure")), PointerType(UserDefinedType("boxedDatum")) )))) {
+       throw new InternalCompilerErrorException("Unexpected type for field entryPoint")
+    }
+
+    StructureConstant(List(
+      superType.get.createConstant(
+        typeId=IntegerConstant(IntegerType(16), typeId)
+      ),
+      closure,
+      entryPoint
+    ), userDefinedType=Some(irType))
+  }
 }
 
 object VectorLikeValue extends BoxedType {
-  val irType = PointerType(UserDefinedType("vectorLike"))
+  val irType = UserDefinedType("vectorLike")
+  val superType = Some(BoxedDatum)
+
+  def createConstant(length : IrConstant, elements : IrConstant, typeId : IrConstant) : StructureConstant = {
+    if (length.irType != IntegerType(32)) {
+       throw new InternalCompilerErrorException("Unexpected type for field length")
+    }
+
+    if (elements.irType != PointerType(PointerType(UserDefinedType("boxedDatum")))) {
+       throw new InternalCompilerErrorException("Unexpected type for field elements")
+    }
+
+    StructureConstant(List(
+      superType.get.createConstant(
+        typeId=typeId
+      ),
+      length,
+      elements
+    ), userDefinedType=Some(irType))
+  }
 }
 
 object VectorValue extends BoxedType {
-  val irType = PointerType(UserDefinedType("vector"))
+  val irType = UserDefinedType("vector")
+  val superType = Some(VectorLikeValue)
+  val typeId = 32768
+
+  def createConstant(length : IrConstant, elements : IrConstant) : StructureConstant = {
+    StructureConstant(List(
+      superType.get.createConstant(
+        length=length,
+        elements=elements,
+        typeId=IntegerConstant(IntegerType(16), typeId)
+      )
+    ), userDefinedType=Some(irType))
+  }
 }
 
 object ClosureValue extends BoxedType {
-  val irType = PointerType(UserDefinedType("closure"))
+  val irType = UserDefinedType("closure")
+  val superType = Some(VectorLikeValue)
+  val typeId = 32769
+
+  def createConstant(length : IrConstant, elements : IrConstant) : StructureConstant = {
+    StructureConstant(List(
+      superType.get.createConstant(
+        length=length,
+        elements=elements,
+        typeId=IntegerConstant(IntegerType(16), typeId)
+      )
+    ), userDefinedType=Some(irType))
+  }
 }
 
