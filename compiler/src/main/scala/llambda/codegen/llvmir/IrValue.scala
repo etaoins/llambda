@@ -1,4 +1,5 @@
 package llambda.codegen.llvmir
+import llambda.InternalCompilerErrorException
 
 sealed abstract class IrValue extends Irable {
   def irType : FirstClassType
@@ -105,4 +106,22 @@ case class StringConstant(str : String) extends ArrayLikeConstant {
   }).mkString
 
   def toIr = "c\"" + innerString + "\"" 
+}
+
+case class ElementPointerConstant(resultType : FirstClassType, basePointer : GlobalVariable, indices : Seq[Integer], inbounds : Boolean = false) extends IrConstant {
+  def irType = resultType
+
+  def toIr : String = {
+    val inboundsIr = if (inbounds) {
+      " inbounds"
+    }
+    else {
+      ""
+    }
+
+    val paramParts = basePointer.toIrWithType :: indices.toList.map("i32 " + _.toString)
+    val paramIr = paramParts.mkString(", ")
+
+    s"getelementptr${inboundsIr} (${paramIr})"
+  }
 }

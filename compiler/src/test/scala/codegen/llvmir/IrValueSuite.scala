@@ -86,4 +86,22 @@ class IrValueSuite extends FunSuite {
     val testConstant = StringConstant("๛")
     assert(testConstant.toIr === "c\"\\E0\\B9\\9B\\00\"")
   }
+
+  test("element pointer constant") {
+    val globalVarDef = IrGlobalVariableDef(
+      name="helloString",
+      initializer=StringConstant("Hello"),
+      constant=true
+    )
+
+    val elementPtrConstant = ElementPointerConstant(
+      resultType=PointerType(IntegerType(8)),
+      basePointer=globalVarDef.variable,
+      indices=List(0, 2),
+      inbounds=true
+    )
+
+    assert(elementPtrConstant.irType === PointerType(IntegerType(8)))
+    assert(elementPtrConstant.toIr === "getelementptr inbounds ([6 x i8]* @helloString, i32 0, i32 2)")
+  }
 }
