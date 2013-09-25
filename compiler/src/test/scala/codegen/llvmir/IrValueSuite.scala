@@ -51,11 +51,19 @@ class IrValueSuite extends FunSuite {
     assert(NullPointerConstant(PointerType(IntegerType(8))).toIr === "null")
   }
 
-  test("structure constant") {
+  test("anonymous structure constant") {
     val testConstant = StructureConstant(List(FalseConstant, IntegerConstant(IntegerType(32), 5), NullPointerConstant(PointerType(IntegerType(32)))))
 
     assert(testConstant.irType === StructureType(List(IntegerType(1), IntegerType(32), PointerType(IntegerType(32)))))
     assert(testConstant.toIr === "{i1 false, i32 5, i32* null}")
+  }
+  
+  test("user defined structure constant") {
+    val innerConstant = StructureConstant(List(FalseConstant), userDefinedType=Some(UserDefinedType("boolStruct")))
+    val testConstant = StructureConstant(List(innerConstant), userDefinedType=Some(UserDefinedType("outerStruct")))
+
+    assert(testConstant.irType === UserDefinedType("outerStruct"))
+    assert(testConstant.toIr === "{%boolStruct {i1 false}}")
   }
   
   test("array constant") {

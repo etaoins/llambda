@@ -74,8 +74,8 @@ case class NullPointerConstant(irType : PointerType) extends IrConstant {
   def toIr = "null"
 }
 
-case class StructureConstant(members : List[IrConstant]) extends IrConstant {
-  def irType = StructureType(members.map(_.irType))
+case class StructureConstant(members : List[IrConstant], userDefinedType : Option[UserDefinedType] = None) extends IrConstant {
+  def irType = userDefinedType getOrElse StructureType(members.map(_.irType))
 
   def toIr = "{" + members.map(_.toIrWithType).mkString(", ") + "}"
 }
