@@ -8,7 +8,7 @@ import scala.sys.process._
 class ExternalCompilerException extends Exception
 
 object Compiler {
-  private def compileLlvmIr(llvmIr : String, output : File, optimizeLevel : Integer) {
+  private def compileLlvmIr(llvmIr : String, output : File, optimizeLevel : Int) {
     val optimizeArg = s"-O${optimizeLevel}"
 
     val stdlibArg = if (System.getProperty("os.name") == "Mac OS X")  {
@@ -34,7 +34,7 @@ object Compiler {
     }
   }
 
-  def apply(input : File, output : File, optimizeLevel : Integer = 0, emitLlvm : Boolean = false) {
+  def apply(input : File, output : File, optimizeLevel : Int = 0, emitLlvm : Boolean = false) {
     // Generate the LLVM IR
     val inputString = Source.fromFile(input).mkString
     val data = SchemeParser.parseStringAsData(inputString)

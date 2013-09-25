@@ -6,7 +6,7 @@ case class Config(
   inputFile : Option[File] = None,
   outputFile : Option[File] = None,
   emitLlvm : Boolean = false,
-  optimizeLevel : Integer = 0)
+  optimizeLevel : Int = 0)
 
 object LlambdaApp extends App {
   val parser = new scopt.OptionParser[Config]("llambda") {
