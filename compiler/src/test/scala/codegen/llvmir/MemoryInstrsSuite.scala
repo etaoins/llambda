@@ -212,6 +212,20 @@ class MemoryInstrsSuite extends FunSuite {
     }
   }
   
+  test("non-integer index getelementptr") {
+    val fakePointer = LocalVariable("fake", PointerType(UserDefinedType("opaqueType")))
+
+    val block = new IrBlockBuilder()(new LocalNameSource) {
+      intercept[InternalCompilerErrorException] {
+        getelementptr("error")(
+          resultType=IntegerType(16),
+          basePointer=fakePointer,
+          indices=List(StringConstant("HELLO"))
+        )
+      }
+    }
+  }
+  
   test("1 index getelementptr") {
     val fakePointer = LocalVariable("fake", PointerType(UserDefinedType("opaqueType")))
 
@@ -219,7 +233,7 @@ class MemoryInstrsSuite extends FunSuite {
       val resultVar = getelementptr("oneindex")(
         resultType=IntegerType(16),
         basePointer=fakePointer,
-        indices=List(42)
+        indices=IntegerConstant(IntegerType(32), 42) :: Nil
       )
 
       assert(resultVar.irType === IntegerType(16))
@@ -235,14 +249,14 @@ class MemoryInstrsSuite extends FunSuite {
       val resultVar = getelementptr("inbounds")(
         resultType=IntegerType(32),
         basePointer=fakePointer,
-        indices=List(23),
+        indices=IntegerConstant(IntegerType(64), 23) :: Nil,
         inbounds=true
       )
 
       assert(resultVar.irType === IntegerType(32))
     }
 
-    assert(block.toIr === "\t%inbounds1 = getelementptr inbounds %opaqueType* %fake, i32 23") 
+    assert(block.toIr === "\t%inbounds1 = getelementptr inbounds %opaqueType* %fake, i64 23") 
   }
   
   test("2 index getelementptr") {
@@ -252,7 +266,7 @@ class MemoryInstrsSuite extends FunSuite {
       val resultVar = getelementptr("twoindex")(
         resultType=IntegerType(64),
         basePointer=fakePointer,
-        indices=List(42, 23)
+        indices=List(42, 23).map(IntegerConstant(IntegerType(32), _))
       )
 
       assert(resultVar.irType === IntegerType(64))

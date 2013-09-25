@@ -34,7 +34,7 @@ class IrModuleSuite extends FunSuite {
         val helloPointer = getelementptr("helloPtr")(
           resultType=PointerType(IntegerType(8)),
           basePointer=helloWorldDef.variable,
-          indices=List(0, 0)
+          indices=List(0, 0).map(IntegerConstant(IntegerType(32), _))
         )
           
         callDecl(None)(putsDecl, helloPointer :: Nil)

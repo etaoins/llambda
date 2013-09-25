@@ -86,7 +86,7 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
     instructions += s"store${volatileIr} ${value.toIrWithType}, ${to.toIrWithType}${alignIr}"
   }
 
-  def getelementptr(resultName : String)(resultType : FirstClassType, basePointer : IrValue, indices : Seq[Integer], inbounds : Boolean = false) : LocalVariable = {
+  def getelementptr(resultName : String)(resultType : FirstClassType, basePointer : IrValue, indices : Seq[IrValue], inbounds : Boolean = false) : LocalVariable = {
     val resultVar = allocateLocalVar(resultType, resultName)
 
     basePointer.irType match {
@@ -94,6 +94,12 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
         // We're cool
       case _ =>
         throw new InternalCompilerErrorException("Attempted getelementptr from non-pointer base pointer")
+    }
+
+    indices map(_.irType) foreach { 
+      case IntegerType(_) =>
+      case _ =>
+        throw new InternalCompilerErrorException("Attempted getelementptr with non-integer index")
     }
 
     val inboundsIr = if (inbounds) {
@@ -105,7 +111,7 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
 
     val baseIr = s"${resultVar.toIr} = getelementptr${inboundsIr} ${basePointer.toIrWithType}"
 
-    val irParts = baseIr :: indices.toList.map("i32 " + _.toString)
+    val irParts = baseIr :: indices.toList.map(_.toIrWithType)
     instructions += irParts.mkString(", ")
 
     resultVar
