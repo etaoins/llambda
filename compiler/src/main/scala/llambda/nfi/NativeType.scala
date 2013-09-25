@@ -27,11 +27,11 @@ case object UInt32 extends IntType(32, false)
 case object UInt64 extends IntType(64, false)
 
 case object Float extends NativeType {
-  val schemeType = Some(st.RealType)
+  val schemeType = Some(st.InexactRationalType)
 }
 
 case object Double extends NativeType {
-  val schemeType = Some(st.RealType)
+  val schemeType = Some(st.InexactRationalType)
 }
 
 case object BoxedDatum extends NativeType {

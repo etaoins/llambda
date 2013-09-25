@@ -6,7 +6,7 @@ case object UnspecificType extends SchemeType
 case object StringType extends SchemeType 
 case object BooleanType extends SchemeType
 case object ExactIntegerType extends SchemeType
-case object RealType extends SchemeType
+case object InexactRationalType extends SchemeType
 case object SymbolType extends SchemeType
 case object EmptyListType extends SchemeType
 case object PairType extends SchemeType

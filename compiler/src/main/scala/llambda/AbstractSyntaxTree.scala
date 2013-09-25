@@ -42,7 +42,8 @@ case class IntegerLiteral(value : Int) extends NumberLiteral {
 }
 
 case class RealLiteral(value : Double) extends NumberLiteral {
-  val schemeType = st.RealType
+  val schemeType = st.InexactRationalType
+
   override def toString = value match {
     case Double.PositiveInfinity => "+inf.0"
     case Double.NegativeInfinity => "-inf.0"
