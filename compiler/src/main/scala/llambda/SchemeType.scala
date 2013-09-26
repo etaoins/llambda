@@ -1,4 +1,4 @@
-package llambda.st
+package llambda.schemetype
 
 sealed abstract trait SchemeType
 

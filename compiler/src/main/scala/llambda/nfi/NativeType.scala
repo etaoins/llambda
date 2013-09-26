@@ -1,6 +1,6 @@
 package llambda.nfi
 
-import llambda.st
+import llambda.{schemetype => st}
 
 sealed abstract class NativeType {
   val schemeType : Option[st.SchemeType]

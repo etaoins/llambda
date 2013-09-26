@@ -1,6 +1,7 @@
 package llambda.ast
 
-import llambda._
+import llambda.{schemetype => st}
+import llambda.SchemeParserDefinitions
 
 sealed abstract class Datum {
   val schemeType : st.SchemeType
@@ -103,7 +104,7 @@ object ImproperList {
   }
 
   def apply(head : List[Datum], terminator : Datum) = {
-    head.foldRight(terminator : ast.Datum) { (car, cdr) => Pair(car, cdr) }
+    head.foldRight(terminator : Datum) { (car, cdr) => Pair(car, cdr) }
   }
 }
 
