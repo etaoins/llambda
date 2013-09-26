@@ -32,14 +32,6 @@ object UnspecificValue extends BoxedType {
   val irType = UserDefinedType("unspecific")
   val superType = Some(BoxedDatum)
   val typeId = 0
-
-  def createConstant() : StructureConstant = {
-    StructureConstant(List(
-      superType.get.createConstant(
-        typeId=IntegerConstant(IntegerType(16), typeId)
-      )
-    ), userDefinedType=Some(irType))
-  }
 }
 
 object PairValue extends BoxedType {
@@ -70,14 +62,6 @@ object EmptyListValue extends BoxedType {
   val irType = UserDefinedType("emptyList")
   val superType = Some(BoxedDatum)
   val typeId = 2
-
-  def createConstant() : StructureConstant = {
-    StructureConstant(List(
-      superType.get.createConstant(
-        typeId=IntegerConstant(IntegerType(16), typeId)
-      )
-    ), userDefinedType=Some(irType))
-  }
 }
 
 object StringLikeValue extends BoxedType {
@@ -146,19 +130,6 @@ object BooleanValue extends BoxedType {
   val irType = UserDefinedType("boolean")
   val superType = Some(BoxedDatum)
   val typeId = 5
-
-  def createConstant(value : IrConstant) : StructureConstant = {
-    if (value.irType != IntegerType(1)) {
-       throw new InternalCompilerErrorException("Unexpected type for field value")
-    }
-
-    StructureConstant(List(
-      superType.get.createConstant(
-        typeId=IntegerConstant(IntegerType(16), typeId)
-      ),
-      value
-    ), userDefinedType=Some(irType))
-  }
 }
 
 object NumericValue extends BoxedType {

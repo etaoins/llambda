@@ -184,8 +184,9 @@ def generate_scala_objects(boxed_types):
         if isinstance(assertion, TypeEqualsAssertion):
             output += '  val typeId = ' + str(assertion.type_id_value) + '\n'
 
-        output += '\n'
-        output += _generate_constant_constructor(boxed_types, boxed_type)
+        if not boxed_type.singleton:
+            output += '\n'
+            output += _generate_constant_constructor(boxed_types, boxed_type)
 
         output += '}\n\n'
 

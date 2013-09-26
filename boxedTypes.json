@@ -20,6 +20,7 @@
         "name": "unspecific",
         "typeId": 0,
         "inherits": "boxedDatum",
+        "singleton": true,
         "fields": []
     },
     {
@@ -41,6 +42,7 @@
         "name": "emptyList",
         "typeId": 2,
         "inherits": "boxedDatum",
+        "singleton": true,
         "fields": []
     },
     {
@@ -80,6 +82,7 @@
         "name": "boolean",
         "typeId": 5,
         "inherits": "boxedDatum",
+        "singleton": true,
         "fields": [
             {
                 "name": "value",

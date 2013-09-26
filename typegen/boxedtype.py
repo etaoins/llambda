@@ -42,9 +42,12 @@ class BoxedTypeField(object):
 
 class BoxedType(object):
     def __init__(self, type_json):
-        self.name     = type_json['name']
-        self.abstract = type_json.get('abstract', False)
-        raw_type_id  = type_json.get('typeId', None)
+        self.name      = type_json['name']
+        self.abstract  = type_json.get('abstract', False)
+        self.singleton = type_json.get('singleton', False)
+        
+        raw_type_id = type_json.get('typeId', None)
+        
         self.inherits = type_json['inherits']
         self.subtypes = OrderedDict()
 
