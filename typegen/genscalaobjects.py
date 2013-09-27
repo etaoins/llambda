@@ -5,6 +5,9 @@ from typegen.constants import BASE_TYPE
 from typegen.boxedtype import TypeEqualsAssertion, TypeBitmaskAssertion, TypeUnionAssertion 
 from typegen.clikeutil import *
 
+def _type_name_to_nfi_decl(type_name):
+    return "boxed-" + re.sub('([A-Z][a-z]+)', r'-\1', type_name).lower()
+
 def _llvm_type_to_scala(llvm_type, signed):
     # Are we a pointer?
     if llvm_type[-1:] == '*':
@@ -153,8 +156,7 @@ def _generate_constant_constructor(boxed_types, boxed_type):
 
     return output
 
-
-def generate_scala_objects(boxed_types):
+def _generate_boxed_types(boxed_types):
     output  = GENERATED_FILE_COMMENT
     
     output += "package llambda.codegen.boxedtype\n\n"
@@ -190,4 +192,30 @@ def generate_scala_objects(boxed_types):
 
         output += '}\n\n'
 
-    return {'compiler/src/main/scala/llambda/codegen/generated/BoxedType.scala': output}
+    return output
+
+def _generate_name_to_boxed_type(boxed_types):
+    output  = GENERATED_FILE_COMMENT
+    output += 'package llambda.frontend\n\n'
+
+    output += 'import llambda.codegen.{boxedtype => bt}\n\n'
+
+    output += 'object NativeTypeNameToBoxedType {\n'
+    output += '  def apply : PartialFunction[String, bt.BoxedType] = {\n'
+
+    for type_name, boxed_type in boxed_types.items():
+        nfi_decl_name = _type_name_to_nfi_decl(type_name)
+        boxed_type_class = type_name_to_clike_class(type_name)
+
+        output += '    case "' + nfi_decl_name + '" => '
+        output += 'bt.' + boxed_type_class + '\n'
+
+    output += '  }\n'
+    output += '}\n'
+    return output
+
+def generate_scala_objects(boxed_types):
+    ROOT_PATH = 'compiler/src/main/scala/llambda/'
+
+    return {ROOT_PATH + 'codegen/generated/BoxedType.scala': _generate_boxed_types(boxed_types),
+            ROOT_PATH + 'frontend/generated/NativeTypeNameToBoxedType.scala': _generate_name_to_boxed_type(boxed_types)}

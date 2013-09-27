@@ -30,8 +30,12 @@ object ExtractNativeFunction
     case "uint"   => nfi.UInt32
     case "ulong"  => nfi.UInt64
 
-    case "boxed-datum" => nfi.BoxedDatum
-    case _ => throw new BadSpecialFormException("Unknown native type: " + typeString)
+    case _ => 
+      val boxedType = NativeTypeNameToBoxedType.apply.applyOrElse(typeString, { unknownName : String =>
+        throw new BadSpecialFormException("Unknown native type: " + unknownName)
+      })
+
+      nfi.BoxedValue(boxedType)
   }
     
   private def createNativeFunction(fixedArgData : List[sst.ScopedDatum], restArgType : Option[String], returnTypeString : String, nativeSymbol : String) : et.NativeFunction = {
@@ -41,7 +45,7 @@ object ExtractNativeFunction
     }
 
     val hasRestArg = restArgType match {
-      case Some("boxed-datum") => true
+      case Some("boxed-pair") => true
       case Some(other) => throw new BadSpecialFormException("Only boxed-datum can be used as a rest argument. Found: " + other)
       case None => false
     }

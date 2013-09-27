@@ -1,6 +1,7 @@
 package llambda.nfi
 
 import llambda.{schemetype => st}
+import llambda.codegen.{boxedtype => bt}
 
 sealed abstract class NativeType {
   val schemeType : Option[st.SchemeType]
@@ -34,7 +35,7 @@ case object Double extends NativeType {
   val schemeType = Some(st.InexactRationalType)
 }
 
-case object BoxedDatum extends NativeType {
+case class BoxedValue(boxedType : bt.BoxedType) extends NativeType {
   // We don't know the type here
   val schemeType = None
 }

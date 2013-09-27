@@ -1,7 +1,6 @@
 package llambda.codegen
 
 import llambda.nfi
-import llambda.codegen.{boxedtype => bt}
 
 case class FirstClassTypeWithSign(
   irType : llvmir.FirstClassType,
@@ -19,8 +18,8 @@ object NfiTypeToIrType {
       case nfi.Double =>
         FirstClassTypeWithSign(llvmir.DoubleType, None)
 
-      case nfi.BoxedDatum =>
-        FirstClassTypeWithSign(bt.BoxedDatum.irType, None)
+      case nfi.BoxedValue(boxedType) =>
+        FirstClassTypeWithSign(boxedType.irType, None)
 
       case nfi.Utf8CString =>
         FirstClassTypeWithSign(llvmir.PointerType(llvmir.IntegerType(8)), None)

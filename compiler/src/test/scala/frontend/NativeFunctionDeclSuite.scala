@@ -1,7 +1,9 @@
 package llambda.frontend
 
 import org.scalatest.FunSuite
+
 import llambda._
+import llambda.codegen.{boxedtype => bt}
 
 class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   implicit val nfiScope = new Scope(collection.mutable.Map(NativeFunctionPrimitives.bindings.toSeq : _*))
@@ -47,21 +49,27 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
       expressionFor("""(native-function "lliby_newline" (int8) unicode-char)""")
     }
   }
+  
+  test("function taking a boxed integer and returning a boxed rational") {
+    assertResult(et.NativeFunction(nfi.BoxedValue(bt.BoxedExactInteger) :: Nil, false, Some(nfi.BoxedValue(bt.BoxedInexactRational)), "lliby_newline")) {
+      expressionFor("""(native-function "lliby_newline" (boxed-exact-integer) boxed-inexact-rational)""")
+    }
+  }
 
   test("function with only rest arg") {
-    assertResult(et.NativeFunction(Nil, true, Some(nfi.BoxedDatum), "lliby_vector")) {
-      expressionFor("""(native-function "lliby_vector" boxed-datum boxed-datum)""")
+    assertResult(et.NativeFunction(Nil, true, Some(nfi.BoxedValue(bt.BoxedDatum)), "lliby_vector")) {
+      expressionFor("""(native-function "lliby_vector" boxed-pair boxed-datum)""")
     }
   }
   
   test("function with fixed and rest args") {
     assertResult(et.NativeFunction(nfi.Bool :: Nil, true, Some(nfi.Int32), "lliby_misc")) {
-      expressionFor("""(native-function "lliby_misc" (bool . boxed-datum) int)""")
+      expressionFor("""(native-function "lliby_misc" (bool . boxed-pair) int)""")
     }
   }
   
   
-  test("function with non-boxed rest arg") {
+  test("function with non-pair rest arg") {
     intercept[BadSpecialFormException] {
       expressionFor("""(native-function "lliby_vector" int64 boxed-datum)""")
     }
