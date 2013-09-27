@@ -11,7 +11,7 @@ private[llvmir] abstract class IrInstrBuilder(nameSource : LocalNameSource) {
   }
 }
 
-class IrBlockBuilder()(implicit nameSource : LocalNameSource) extends IrInstrBuilder(nameSource) with Irable with TerminatorInstrs with MemoryInstrs with ConversionInstrs with OtherInstrs {
+class IrBlockBuilder()(implicit nameSource : LocalNameSource) extends IrInstrBuilder(nameSource) with Irable with TerminatorInstrs with MemoryInstrs with BitwiseInstrs with ConversionInstrs with OtherInstrs {
   def comment(text : String) {
     instructions += s"; ${text}"
   }
