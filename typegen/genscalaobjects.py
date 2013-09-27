@@ -60,16 +60,15 @@ def _field_type_to_scala(field):
     else:
         return _complex_type_to_scala(field.complex_type)
 
-def _recursive_field_names(boxed_types, boxed_type):
+def _recursive_field_names(boxed_type):
     our_fields = boxed_type.fields.keys()
 
-    if boxed_type.inherits:
-        super_type = boxed_types[boxed_type.inherits]
-
+    supertype = boxed_type.supertype
+    if supertype:
         # gcState is always 0 for constants
-        super_fields = [x for x in super_type.fields.keys() if x != 'gcState']
+        super_fields = [x for x in supertype.fields.keys() if x != 'gcState']
 
-        return super_fields + _recursive_field_names(boxed_types, super_type)
+        return super_fields + _recursive_field_names(supertype)
     else:
         # No more super types
         return []
@@ -83,7 +82,7 @@ def _generate_constant_constructor(boxed_types, boxed_type):
         constant_type_id = None
 
     our_field_names = list(boxed_type.fields.keys())
-    recursive_field_names = _recursive_field_names(boxed_types, boxed_type)
+    recursive_field_names = _recursive_field_names(boxed_type)
 
     # Determine our parameters
     parameter_defs = []
@@ -116,9 +115,8 @@ def _generate_constant_constructor(boxed_types, boxed_type):
 
     output += '    StructureConstant(List(\n'
 
-    if boxed_type.inherits:
-        super_type = boxed_types[boxed_type.inherits]
-
+    supertype = boxed_type.supertype
+    if supertype:
         output += '      superType.get.createConstant(\n'
 
         super_parameters = []
@@ -156,6 +154,40 @@ def _generate_constant_constructor(boxed_types, boxed_type):
 
     return output
 
+def _generate_field_accessors(leaf_type, current_type, depth = 1):
+    field_counter = 0
+
+    output = ''
+    for field_name, field in current_type.fields.items():
+        accessor_name = field_name[0].upper() + field_name[1:]
+
+        output += '\n'
+        output += '  def pointerTo' + accessor_name + '(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {\n'
+        
+        # Make sure we're the correct type
+        exception_message = "Unexpected type for boxed value"
+        output += '    if (boxedValue.irType != UserDefinedType("' + leaf_type.name + '")) {\n'
+        output += '       throw new InternalCompilerErrorException("' + exception_message + '")\n'
+        output += '    }\n\n'
+
+        # Calculate or indices
+        indices = map(str, ([0] * depth) + [field_counter])
+        field_counter = field_counter + 1
+
+        output += '    block.getelementptr("'+ field_name + '")(\n'
+        output += '      resultType=' + _field_type_to_scala(field) + ',\n'
+        output += '      basePointer=boxedValue,\n'
+        output += '      indices=List(' + ", ".join(indices) + ').map(IntegerConstant(IntegerType(32), _)),\n'
+        output += '      inbounds=true\n'
+        output += '    )\n'
+        output += '  }\n'
+
+    supertype = current_type.supertype
+    if supertype:
+        output += _generate_field_accessors(leaf_type, supertype, depth + 1)
+
+    return output
+
 def _generate_boxed_types(boxed_types):
     output  = GENERATED_FILE_COMMENT
     
@@ -171,14 +203,14 @@ def _generate_boxed_types(boxed_types):
 
     for type_name, boxed_type in boxed_types.items():
         object_name = type_name_to_clike_class(type_name)
-        super_type_name = boxed_type.inherits
+        supertype_name = boxed_type.inherits
 
         output += 'object ' + object_name + ' extends BoxedType {\n'
         output += '  val irType = UserDefinedType("' + type_name + '")\n'
 
-        if super_type_name:
-            super_type_object = type_name_to_clike_class(super_type_name)
-            output += '  val superType = Some(' + super_type_object + ')\n'
+        if supertype_name:
+            supertype_object = type_name_to_clike_class(supertype_name)
+            output += '  val superType = Some(' + supertype_object + ')\n'
         else:
             output += '  val superType = None\n'
 
@@ -189,8 +221,11 @@ def _generate_boxed_types(boxed_types):
         if not boxed_type.singleton:
             output += '\n'
             output += _generate_constant_constructor(boxed_types, boxed_type)
+        
+        output += _generate_field_accessors(boxed_type, boxed_type)
 
         output += '}\n\n'
+
 
     return output
 

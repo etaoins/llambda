@@ -49,6 +49,9 @@ class BoxedType(object):
         raw_type_id = type_json.get('typeId', None)
         
         self.inherits = type_json['inherits']
+
+        # These are populated in processtypetree
+        self.supertype = None
         self.subtypes = OrderedDict()
 
         if isinstance(raw_type_id, int): 

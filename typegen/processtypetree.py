@@ -18,15 +18,16 @@ def process_type_tree(boxed_types):
         if inherits is None:
             continue
 
-        super_type = boxed_types[inherits]
-
-        if super_type.singleton:
-            raise SemanticException('Boxed type "' + name + '" inherits from singleton type "' + inherits + '"') 
-
         try:
-            super_type.add_subtype(boxed_type)
+            supertype = boxed_types[inherits]
         except KeyError:
             raise SemanticException('Boxed type "' + name + '" inherits from unknown boxed type "' + inherits + '"')
+
+        if supertype.singleton:
+            raise SemanticException('Boxed type "' + name + '" inherits from singleton type "' + inherits + '"') 
+
+        boxed_type.supertype = supertype
+        supertype.add_subtype(boxed_type)
 
     # Ensure type assertions are unique
     seen_type_assertions = set()
