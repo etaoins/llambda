@@ -1,1 +1,1 @@
-BASE_TYPE = "boxedDatum"
+BASE_TYPE = "datum"

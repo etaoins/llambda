@@ -1,22 +1,22 @@
-#ifndef _LLIBY_BINDING_STRINGLIKEVALUE_H
-#define _LLIBY_BINDING_STRINGLIKEVALUE_H
+#ifndef _LLIBY_BINDING_BOXEDSTRINGLIKE_H
+#define _LLIBY_BINDING_BOXEDSTRINGLIKE_H
 
 #include "BoxedDatum.h"
 
 namespace lliby
 {
 
-class StringLikeValue : public BoxedDatum
+class BoxedStringLike : public BoxedDatum
 {
-#include "generated/StringLikeValueMembers.h"
+#include "generated/BoxedStringLikeMembers.h"
 public:
 	void finalize();
 
 protected:
 	// These are NULL safe which is required by R7RS
-	bool equals(const StringLikeValue &other) const;
+	bool equals(const BoxedStringLike &other) const;
 
-	StringLikeValue(BoxedTypeId typeId, std::uint8_t *utf8Data, std::uint32_t byteLength, std::uint32_t charLength) :
+	BoxedStringLike(BoxedTypeId typeId, std::uint8_t *utf8Data, std::uint32_t byteLength, std::uint32_t charLength) :
 		BoxedDatum(typeId),
 		m_charLength(charLength),
 		m_byteLength(byteLength),

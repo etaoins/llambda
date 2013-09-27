@@ -6,67 +6,67 @@
 #include <unordered_map>
 
 #include "binding/BoxedDatum.h"
-#include "binding/UnspecificValue.h"
-#include "binding/BooleanValue.h"
-#include "binding/ExactIntegerValue.h"
-#include "binding/InexactRationalValue.h"
-#include "binding/SymbolValue.h"
-#include "binding/StringValue.h"
-#include "binding/PairValue.h"
-#include "binding/ByteVectorValue.h"
-#include "binding/VectorValue.h"
-#include "binding/CharacterValue.h"
+#include "binding/BoxedUnspecific.h"
+#include "binding/BoxedBoolean.h"
+#include "binding/BoxedExactInteger.h"
+#include "binding/BoxedInexactRational.h"
+#include "binding/BoxedSymbol.h"
+#include "binding/BoxedString.h"
+#include "binding/BoxedPair.h"
+#include "binding/BoxedByteVector.h"
+#include "binding/BoxedVector.h"
+#include "binding/BoxedCharacter.h"
 
 namespace lliby
 {
 
 void ExternalFormDatumWriter::render(const BoxedDatum *datum)
 {
-	if (auto value = datum->asUnspecificValue())
+	if (auto value = datum->asBoxedUnspecific())
 	{
 		renderUnspecific(value);
 	}
-	else if (auto value = datum->asEmptyListValue())
+	else if (auto value = datum->asBoxedEmptyList())
 	{
 		renderEmptyList(value);
 	}
-	else if (auto value = datum->asBooleanValue())
+	else if (auto value = datum->asBoxedBoolean())
 	{
 		renderBoolean(value);
 	}
-	else if (auto value = datum->asExactIntegerValue())
+	else if (auto value = datum->asBoxedExactInteger())
 	{
 		renderExactInteger(value);
 	}
-	else if (auto value = datum->asInexactRationalValue())
+	else if (auto value = datum->asBoxedInexactRational())
 	{
 		renderInexactRational(value);
 	}
-	else if (auto value = datum->asSymbolValue())
+	else if (auto value = datum->asBoxedSymbol())
 	{
 		renderStringLike(value, static_cast<std::uint8_t>('|'), false);
 	}
-	else if (auto value = datum->asStringValue())
+	else if (auto value = datum->asBoxedString())
 	{
 		renderStringLike(value, static_cast<std::uint8_t>('"'), true);
 	}
-	else if (auto value = datum->asPairValue())
+	else if (auto value = datum->asBoxedPair())
 	{
 		renderPair(value);
 	}
-	else if (auto value = datum->asByteVectorValue())
+	else if (auto value = datum->asBoxedByteVector())
 	{
 		renderByteVector(value);
 	}
-	else if (auto value = datum->asVectorValue())
+	else if (auto value = datum->asBoxedVector())
 	{
 		renderVector(value);
 	}
-	else if (auto value = datum->asProcedureValue())
+	else if (auto value = datum->asBoxedProcedure())
 	{
 		renderProcedure(value);
 	}
-	else if (auto value = datum->asCharacterValue())
+	else if (auto value = datum->asBoxedCharacter())
 	{
 		renderCharacter(value);
 	}
@@ -76,17 +76,17 @@ void ExternalFormDatumWriter::render(const BoxedDatum *datum)
 	}
 }
 
-void ExternalFormDatumWriter::renderUnspecific(const UnspecificValue *)
+void ExternalFormDatumWriter::renderUnspecific(const BoxedUnspecific *)
 {
 	m_outStream << "#!unspecific";
 }
 
-void ExternalFormDatumWriter::renderEmptyList(const EmptyListValue *)
+void ExternalFormDatumWriter::renderEmptyList(const BoxedEmptyList *)
 {
 	m_outStream << "()";
 }
 
-void ExternalFormDatumWriter::renderBoolean(const BooleanValue *value)
+void ExternalFormDatumWriter::renderBoolean(const BoxedBoolean *value)
 {
 	if (value->value())
 	{
@@ -98,12 +98,12 @@ void ExternalFormDatumWriter::renderBoolean(const BooleanValue *value)
 	}
 }
 
-void ExternalFormDatumWriter::renderExactInteger(const ExactIntegerValue *value)
+void ExternalFormDatumWriter::renderExactInteger(const BoxedExactInteger *value)
 {
 	m_outStream << value->value();
 }
 
-void ExternalFormDatumWriter::renderInexactRational(const InexactRationalValue *value)
+void ExternalFormDatumWriter::renderInexactRational(const BoxedInexactRational *value)
 {
 	if (value->isNaN())
 	{
@@ -129,7 +129,7 @@ void ExternalFormDatumWriter::renderInexactRational(const InexactRationalValue *
 	}
 }
 	
-void ExternalFormDatumWriter::renderStringLike(const StringLikeValue *value, std::uint8_t quoteChar, bool needsQuotes)
+void ExternalFormDatumWriter::renderStringLike(const BoxedStringLike *value, std::uint8_t quoteChar, bool needsQuotes)
 {
 	std::ostringstream outBuf;
 
@@ -205,7 +205,7 @@ void ExternalFormDatumWriter::renderStringLike(const StringLikeValue *value, std
 	}
 }
 	
-void ExternalFormDatumWriter::renderPair(const PairValue *value, bool inList)
+void ExternalFormDatumWriter::renderPair(const BoxedPair *value, bool inList)
 {
 	if (!inList)
 	{
@@ -214,11 +214,11 @@ void ExternalFormDatumWriter::renderPair(const PairValue *value, bool inList)
 
 	render(value->car());
 
-	if (value->cdr()->isEmptyListValue())
+	if (value->cdr()->isBoxedEmptyList())
 	{
 		m_outStream << ")";
 	}
-	else if (auto rest = value->cdr()->asPairValue())
+	else if (auto rest = value->cdr()->asBoxedPair())
 	{
 		m_outStream << " ";
 		renderPair(rest, true);
@@ -231,7 +231,7 @@ void ExternalFormDatumWriter::renderPair(const PairValue *value, bool inList)
 	}
 }
 	
-void ExternalFormDatumWriter::renderByteVector(const ByteVectorValue *value)
+void ExternalFormDatumWriter::renderByteVector(const BoxedByteVector *value)
 {
 	bool printedByte = false;
 	m_outStream << "#u8(";
@@ -252,7 +252,7 @@ void ExternalFormDatumWriter::renderByteVector(const ByteVectorValue *value)
 	m_outStream << ")";
 }
 
-void ExternalFormDatumWriter::renderVector(const VectorValue *value)
+void ExternalFormDatumWriter::renderVector(const BoxedVector *value)
 {
 	bool printedElement = false;
 	m_outStream << "#(";
@@ -273,12 +273,12 @@ void ExternalFormDatumWriter::renderVector(const VectorValue *value)
 	m_outStream << ")";
 }
 
-void ExternalFormDatumWriter::renderProcedure(const ProcedureValue *)
+void ExternalFormDatumWriter::renderProcedure(const BoxedProcedure *)
 {
 	m_outStream << "#!procedure";
 }
 
-void ExternalFormDatumWriter::renderCharacter(const CharacterValue *value)
+void ExternalFormDatumWriter::renderCharacter(const BoxedCharacter *value)
 {
 	std::int32_t codePoint = value->unicodeChar().codePoint();
 	static const std::unordered_map<std::uint32_t, const char *> specialChars = {

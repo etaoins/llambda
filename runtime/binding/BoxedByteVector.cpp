@@ -1,5 +1,5 @@
-#include "ByteVectorValue.h"
-#include "StringValue.h"
+#include "BoxedByteVector.h"
+#include "BoxedString.h"
 
 #include <limits>
 #include <string.h>
@@ -29,15 +29,15 @@ namespace
 namespace lliby
 {
 	
-ByteVectorValue* ByteVectorValue::fromFill(std::uint32_t length, std::uint8_t fill)
+BoxedByteVector* BoxedByteVector::fromFill(std::uint32_t length, std::uint8_t fill)
 {
 	auto newData = new std::uint8_t[length];
 	memset(newData, fill, length);
 
-	return new ByteVectorValue(newData, length);
+	return new BoxedByteVector(newData, length);
 }
 	
-ByteVectorValue* ByteVectorValue::fromAppended(const std::list<const ByteVectorValue*> &byteVectors)
+BoxedByteVector* BoxedByteVector::fromAppended(const std::list<const BoxedByteVector*> &byteVectors)
 {
 	std::uint64_t totalLength = 0;
 
@@ -60,10 +60,10 @@ ByteVectorValue* ByteVectorValue::fromAppended(const std::list<const ByteVectorV
 		copyPtr += byteVector->length();
 	}
 
-	return new ByteVectorValue(newData, totalLength);
+	return new BoxedByteVector(newData, totalLength);
 }
 	
-ByteVectorValue* ByteVectorValue::copy(std::int64_t start, std::int64_t end)
+BoxedByteVector* BoxedByteVector::copy(std::int64_t start, std::int64_t end)
 {
 	if (!adjustRange(start, end, length()))
 	{
@@ -75,10 +75,10 @@ ByteVectorValue* ByteVectorValue::copy(std::int64_t start, std::int64_t end)
 
 	memcpy(newData, &data()[start], newLength);
 
-	return new ByteVectorValue(newData, newLength);
+	return new BoxedByteVector(newData, newLength);
 }
 	
-bool ByteVectorValue::replace(std::uint32_t offset, const ByteVectorValue *from, std::int64_t fromStart, std::int64_t fromEnd)
+bool BoxedByteVector::replace(std::uint32_t offset, const BoxedByteVector *from, std::int64_t fromStart, std::int64_t fromEnd)
 {
 	if (!adjustRange(fromStart, fromEnd, from->length()))
 	{
@@ -97,17 +97,17 @@ bool ByteVectorValue::replace(std::uint32_t offset, const ByteVectorValue *from,
 	return true;
 }
 	
-StringValue* ByteVectorValue::utf8ToString(std::int64_t start, std::int64_t end)
+BoxedString* BoxedByteVector::utf8ToString(std::int64_t start, std::int64_t end)
 {
 	if (!adjustRange(start, end, length()))
 	{
 		return nullptr;
 	}
 
-	return StringValue::fromUtf8Data(&data()[start], end - start);
+	return BoxedString::fromUtf8Data(&data()[start], end - start);
 }
 
-void ByteVectorValue::finalize()
+void BoxedByteVector::finalize()
 {
 	delete[] m_data;
 }

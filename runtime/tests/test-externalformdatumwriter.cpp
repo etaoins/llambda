@@ -2,18 +2,18 @@
 #include <sstream>
 
 #include "writer/ExternalFormDatumWriter.h"
-#include "binding/UnspecificValue.h"
-#include "binding/EmptyListValue.h"
-#include "binding/BooleanValue.h"
-#include "binding/ExactIntegerValue.h"
-#include "binding/InexactRationalValue.h"
-#include "binding/StringValue.h"
-#include "binding/SymbolValue.h"
-#include "binding/PairValue.h"
-#include "binding/ByteVectorValue.h"
-#include "binding/VectorValue.h"
-#include "binding/ProcedureValue.h"
-#include "binding/CharacterValue.h"
+#include "binding/BoxedUnspecific.h"
+#include "binding/BoxedEmptyList.h"
+#include "binding/BoxedBoolean.h"
+#include "binding/BoxedExactInteger.h"
+#include "binding/BoxedInexactRational.h"
+#include "binding/BoxedString.h"
+#include "binding/BoxedSymbol.h"
+#include "binding/BoxedPair.h"
+#include "binding/BoxedByteVector.h"
+#include "binding/BoxedVector.h"
+#include "binding/BoxedProcedure.h"
+#include "binding/BoxedCharacter.h"
 
 #include "core/init.h"
 #include "assertions.h"
@@ -32,52 +32,52 @@ void assertForm(const BoxedDatum *datum, std::string expected)
 	ASSERT_EQUAL(outputStream.str(), expected);
 }
 
-SymbolValue *symbolFor(const char *utf8String)
+BoxedSymbol *symbolFor(const char *utf8String)
 {
-	return StringValue::fromUtf8CString(utf8String)->toSymbol();
+	return BoxedString::fromUtf8CString(utf8String)->toSymbol();
 }
 
-StringValue *stringFor(const char *utf8String)
+BoxedString *stringFor(const char *utf8String)
 {
-	return StringValue::fromUtf8CString(utf8String);
+	return BoxedString::fromUtf8CString(utf8String);
 }
 
 void testUnspecific()
 {
-	assertForm(UnspecificValue::instance(), "#!unspecific");
+	assertForm(BoxedUnspecific::instance(), "#!unspecific");
 }
 
 void testEmptyList()
 {
-	assertForm(EmptyListValue::instance(), "()");
+	assertForm(BoxedEmptyList::instance(), "()");
 }
 
 void testBoolean()
 {
-	assertForm(BooleanValue::trueInstance(), "#t");
-	assertForm(BooleanValue::falseInstance(), "#f");
+	assertForm(BoxedBoolean::trueInstance(), "#t");
+	assertForm(BoxedBoolean::falseInstance(), "#f");
 }
 
 void testExactInteger()
 {
-	assertForm(ExactIntegerValue::instanceForValue(25), "25");
-	assertForm(ExactIntegerValue::instanceForValue(0), "0");
-	assertForm(ExactIntegerValue::instanceForValue(-31337), "-31337");
+	assertForm(BoxedExactInteger::instanceForValue(25), "25");
+	assertForm(BoxedExactInteger::instanceForValue(0), "0");
+	assertForm(BoxedExactInteger::instanceForValue(-31337), "-31337");
 }
 
 void testInexactRational()
 {
-	assertForm(new InexactRationalValue(0.0), "0.0");
+	assertForm(new BoxedInexactRational(0.0), "0.0");
 
-	assertForm(new InexactRationalValue(12.5), "12.5");
-	assertForm(new InexactRationalValue(-4.55), "-4.55");
+	assertForm(new BoxedInexactRational(12.5), "12.5");
+	assertForm(new BoxedInexactRational(-4.55), "-4.55");
 
-	assertForm(new InexactRationalValue(100.0), "100.0");
-	assertForm(new InexactRationalValue(-500.0), "-500.0");
+	assertForm(new BoxedInexactRational(100.0), "100.0");
+	assertForm(new BoxedInexactRational(-500.0), "-500.0");
 
-	assertForm(InexactRationalValue::NaN(), "+nan.0");
-	assertForm(InexactRationalValue::positiveInfinity(), "+inf.0");
-	assertForm(InexactRationalValue::negativeInfinity(), "-inf.0");
+	assertForm(BoxedInexactRational::NaN(), "+nan.0");
+	assertForm(BoxedInexactRational::positiveInfinity(), "+inf.0");
+	assertForm(BoxedInexactRational::negativeInfinity(), "-inf.0");
 }
 
 void testSymbol()
@@ -104,34 +104,34 @@ void testString()
 
 void testPair()
 {
-	SymbolValue *valueA = symbolFor("A");
-	SymbolValue *valueB = symbolFor("B");
-	SymbolValue *valueC = symbolFor("C");
+	BoxedSymbol *valueA = symbolFor("A");
+	BoxedSymbol *valueB = symbolFor("B");
+	BoxedSymbol *valueC = symbolFor("C");
 
-	assertForm(PairValue::createProperList({}), "()");
-	assertForm(PairValue::createProperList({valueA}), "(A)");
-	assertForm(PairValue::createProperList({valueA, valueB}), "(A B)");
-	assertForm(PairValue::createProperList({valueA, valueB, valueC}), "(A B C)");
+	assertForm(BoxedPair::createProperList({}), "()");
+	assertForm(BoxedPair::createProperList({valueA}), "(A)");
+	assertForm(BoxedPair::createProperList({valueA, valueB}), "(A B)");
+	assertForm(BoxedPair::createProperList({valueA, valueB, valueC}), "(A B C)");
 
-	assertForm(PairValue::createImproperList({valueA, valueB}), "(A . B)");
-	assertForm(PairValue::createImproperList({valueA, valueB, valueC}), "(A B . C)");
+	assertForm(BoxedPair::createImproperList({valueA, valueB}), "(A . B)");
+	assertForm(BoxedPair::createImproperList({valueA, valueB, valueC}), "(A B . C)");
 
 	// Create a  nested list
-	BoxedDatum *innerList = PairValue::createImproperList({valueA, valueB, valueC});
-	BoxedDatum *outerList = PairValue::createProperList({valueA, valueB, valueC, innerList});
+	BoxedDatum *innerList = BoxedPair::createImproperList({valueA, valueB, valueC});
+	BoxedDatum *outerList = BoxedPair::createProperList({valueA, valueB, valueC, innerList});
 	assertForm(outerList, "(A B C (A B . C))");
 }
 
 void testByteVector()
 {
 	{
-		auto *emptyVector = new ByteVectorValue(nullptr, 0);
+		auto *emptyVector = new BoxedByteVector(nullptr, 0);
 		assertForm(emptyVector, "#u8()");
 	}
 
 	{
 		uint8_t testData[5] = { 100, 101, 202, 203, 204 };
-		auto *testVector = new ByteVectorValue(testData, 5); 
+		auto *testVector = new BoxedByteVector(testData, 5); 
 
 		assertForm(testVector, "#u8(100 101 202 203 204)");
 	}
@@ -140,16 +140,16 @@ void testByteVector()
 void testVector()
 {
 	{
-		VectorValue *emptyVector = VectorValue::fromFill(0);
+		BoxedVector *emptyVector = BoxedVector::fromFill(0);
 		assertForm(emptyVector, "#()");
 	}
 
 	{
-		VectorValue *fillVector = VectorValue::fromFill(5);
+		BoxedVector *fillVector = BoxedVector::fromFill(5);
 
 		for(unsigned int i = 0; i < 5; i++)
 		{
-			fillVector->setElementAt(i, ExactIntegerValue::instanceForValue(i));
+			fillVector->setElementAt(i, BoxedExactInteger::instanceForValue(i));
 		}
 
 		assertForm(fillVector, "#(0 1 2 3 4)");
@@ -158,25 +158,25 @@ void testVector()
 
 void testProcedure()
 {
-	assertForm(new ProcedureValue(nullptr, nullptr), "#!procedure");
+	assertForm(new BoxedProcedure(nullptr, nullptr), "#!procedure");
 }
 
 void testCharacter()
 {
-	assertForm(new CharacterValue(UnicodeChar(0x07)), "#\\alarm");
-	assertForm(new CharacterValue(UnicodeChar(0x08)), "#\\backspace");
-	assertForm(new CharacterValue(UnicodeChar(0x7f)), "#\\delete");
-	assertForm(new CharacterValue(UnicodeChar(0x1b)), "#\\escape");
-	assertForm(new CharacterValue(UnicodeChar(0x0a)), "#\\newline");
-	assertForm(new CharacterValue(UnicodeChar(0x00)), "#\\null");
-	assertForm(new CharacterValue(UnicodeChar(0x0d)), "#\\return");
-	assertForm(new CharacterValue(UnicodeChar(0x20)), "#\\space");
-	assertForm(new CharacterValue(UnicodeChar(0x09)), "#\\tab");
-	assertForm(new CharacterValue(UnicodeChar('A')), "#\\A");
-	assertForm(new CharacterValue(UnicodeChar('a')), "#\\a");
-	assertForm(new CharacterValue(UnicodeChar('1')), "#\\1");
-	assertForm(new CharacterValue(UnicodeChar(')')), "#\\)");
-	assertForm(new CharacterValue(UnicodeChar(0x03bb)), "#\\x3bb");
+	assertForm(new BoxedCharacter(UnicodeChar(0x07)), "#\\alarm");
+	assertForm(new BoxedCharacter(UnicodeChar(0x08)), "#\\backspace");
+	assertForm(new BoxedCharacter(UnicodeChar(0x7f)), "#\\delete");
+	assertForm(new BoxedCharacter(UnicodeChar(0x1b)), "#\\escape");
+	assertForm(new BoxedCharacter(UnicodeChar(0x0a)), "#\\newline");
+	assertForm(new BoxedCharacter(UnicodeChar(0x00)), "#\\null");
+	assertForm(new BoxedCharacter(UnicodeChar(0x0d)), "#\\return");
+	assertForm(new BoxedCharacter(UnicodeChar(0x20)), "#\\space");
+	assertForm(new BoxedCharacter(UnicodeChar(0x09)), "#\\tab");
+	assertForm(new BoxedCharacter(UnicodeChar('A')), "#\\A");
+	assertForm(new BoxedCharacter(UnicodeChar('a')), "#\\a");
+	assertForm(new BoxedCharacter(UnicodeChar('1')), "#\\1");
+	assertForm(new BoxedCharacter(UnicodeChar(')')), "#\\)");
+	assertForm(new BoxedCharacter(UnicodeChar(0x03bb)), "#\\x3bb");
 }
 
 }

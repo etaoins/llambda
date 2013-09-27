@@ -1,4 +1,4 @@
-#include "binding/InexactRationalValue.h"
+#include "binding/BoxedInexactRational.h"
 #include "core/init.h"
 #include "assertions.h"
 
@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 	lliby_init();
 
 	{
-		InexactRationalValue *value = new InexactRationalValue(0.0);
+		BoxedInexactRational *value = new BoxedInexactRational(0.0);
 		ASSERT_EQUAL(value->value(), 0.0);
 
 		ASSERT_TRUE(value->isInteger());
@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 	}
 	
 	{
-		InexactRationalValue *value = new InexactRationalValue(256.5);
+		BoxedInexactRational *value = new BoxedInexactRational(256.5);
 		ASSERT_EQUAL(value->value(), 256.5);
 		
 		ASSERT_FALSE(value->isInteger());
@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 	}
 	
 	{
-		InexactRationalValue *value = new InexactRationalValue(-500);
+		BoxedInexactRational *value = new BoxedInexactRational(-500);
 		ASSERT_EQUAL(value->value(), -500);
 		
 		ASSERT_TRUE(value->isInteger());
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 	}
 	
 	{
-		InexactRationalValue *value = InexactRationalValue::NaN();
+		BoxedInexactRational *value = BoxedInexactRational::NaN();
 
 		ASSERT_TRUE(value->isNaN());
 		ASSERT_FALSE(value->isInfinite());
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 	}
 	
 	{
-		InexactRationalValue *value = InexactRationalValue::positiveInfinity();
+		BoxedInexactRational *value = BoxedInexactRational::positiveInfinity();
 
 		ASSERT_FALSE(value->isNaN());
 		ASSERT_TRUE(value->isInfinite());
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 	}
 	
 	{
-		InexactRationalValue *value = InexactRationalValue::negativeInfinity();
+		BoxedInexactRational *value = BoxedInexactRational::negativeInfinity();
 
 		ASSERT_FALSE(value->isNaN());
 		ASSERT_TRUE(value->isInfinite());

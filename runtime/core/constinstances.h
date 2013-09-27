@@ -3,18 +3,18 @@
 
 namespace lliby
 {
-	class UnspecificValue;
-	class BooleanValue;
-	class EmptyListValue;
+	class BoxedUnspecific;
+	class BoxedBoolean;
+	class BoxedEmptyList;
 }
 
 extern "C"
 {
 
-extern const lliby::UnspecificValue lliby_unspecific_value;
-extern const lliby::BooleanValue lliby_false_value;
-extern const lliby::BooleanValue lliby_true_value;
-extern const lliby::EmptyListValue lliby_empty_list_value;
+extern const lliby::BoxedUnspecific lliby_unspecific_value;
+extern const lliby::BoxedBoolean lliby_false_value;
+extern const lliby::BoxedBoolean lliby_true_value;
+extern const lliby::BoxedEmptyList lliby_empty_list_value;
 
 }
 

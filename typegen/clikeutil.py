@@ -6,8 +6,5 @@ GENERATED_FILE_COMMENT = ("/****************************************************
                           "\n")
 
 def type_name_to_clike_class(type_name):
-    if type_name == BASE_TYPE:
-        return "BoxedDatum"
-    else:
-        return type_name[0].upper() + type_name[1:] + "Value"
+    return "Boxed" + type_name[0].upper() + type_name[1:]
 

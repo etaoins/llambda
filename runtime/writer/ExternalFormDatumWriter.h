@@ -19,17 +19,17 @@ public:
 	virtual void render(const BoxedDatum *datum);
 
 protected:
-	virtual void renderUnspecific(const UnspecificValue *value);
-	virtual void renderEmptyList(const EmptyListValue *value);
-	virtual void renderBoolean(const BooleanValue *value);
-	virtual void renderExactInteger(const ExactIntegerValue *value);
-	virtual void renderInexactRational(const InexactRationalValue *value);
-	virtual void renderStringLike(const StringLikeValue *value, std::uint8_t quoteChar, bool needsQuotes);
-	virtual void renderPair(const PairValue *value, bool inList = false);
-	virtual void renderByteVector(const ByteVectorValue *value);
-	virtual void renderVector(const VectorValue *value);
-	virtual void renderProcedure(const ProcedureValue *value);
-	virtual void renderCharacter(const CharacterValue *value);
+	virtual void renderUnspecific(const BoxedUnspecific *value);
+	virtual void renderEmptyList(const BoxedEmptyList *value);
+	virtual void renderBoolean(const BoxedBoolean *value);
+	virtual void renderExactInteger(const BoxedExactInteger *value);
+	virtual void renderInexactRational(const BoxedInexactRational *value);
+	virtual void renderStringLike(const BoxedStringLike *value, std::uint8_t quoteChar, bool needsQuotes);
+	virtual void renderPair(const BoxedPair *value, bool inList = false);
+	virtual void renderByteVector(const BoxedByteVector *value);
+	virtual void renderVector(const BoxedVector *value);
+	virtual void renderProcedure(const BoxedProcedure *value);
+	virtual void renderCharacter(const BoxedCharacter *value);
 
 	std::ostream &m_outStream;
 };

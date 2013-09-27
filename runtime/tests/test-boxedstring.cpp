@@ -1,7 +1,7 @@
 #include <string.h>
 
-#include "binding/StringValue.h"
-#include "binding/ByteVectorValue.h"
+#include "binding/BoxedString.h"
+#include "binding/BoxedByteVector.h"
 
 #include "core/init.h"
 #include "assertions.h"
@@ -24,7 +24,7 @@ std::uint8_t* utf8Bytes(const char *str)
 void testFromUtf8CString()
 {
 	{
-		StringValue *emptyValue = StringValue::fromUtf8CString(u8"");
+		BoxedString *emptyValue = BoxedString::fromUtf8CString(u8"");
 
 		ASSERT_EQUAL(emptyValue->byteLength(), 0);
 		ASSERT_EQUAL(emptyValue->utf8Data()[0], 0);
@@ -32,7 +32,7 @@ void testFromUtf8CString()
 	}
 
 	{
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
 
 		ASSERT_EQUAL(helloValue->byteLength(), 5);
 		ASSERT_EQUAL(helloValue->utf8Data()[0], 'H');
@@ -41,7 +41,7 @@ void testFromUtf8CString()
 	}
 	
 	{
-		StringValue *highUnicodeValue = StringValue::fromUtf8CString(u8"☃🐉");
+		BoxedString *highUnicodeValue = BoxedString::fromUtf8CString(u8"☃🐉");
 
 		ASSERT_EQUAL(highUnicodeValue->byteLength(), 7);
 		ASSERT_EQUAL(highUnicodeValue->utf8Data()[7], 0);
@@ -52,7 +52,7 @@ void testFromUtf8CString()
 void testFromUtf8Data()
 {
 	{
-		StringValue *emptyValue = StringValue::fromUtf8Data(nullptr, 0);
+		BoxedString *emptyValue = BoxedString::fromUtf8Data(nullptr, 0);
 
 		ASSERT_EQUAL(emptyValue->byteLength(), 0);
 		ASSERT_EQUAL(emptyValue->utf8Data()[0], 0);
@@ -62,7 +62,7 @@ void testFromUtf8Data()
 	{
 		// Intentionally include NULL as a char to make sure we're NULL safe
 		auto helloBytes = reinterpret_cast<const std::uint8_t*>(u8"Hello");
-		StringValue *helloValue = StringValue::fromUtf8Data(helloBytes, 6);
+		BoxedString *helloValue = BoxedString::fromUtf8Data(helloBytes, 6);
 
 		ASSERT_EQUAL(helloValue->byteLength(), 6);
 		ASSERT_EQUAL(helloValue->utf8Data()[0], 'H');
@@ -73,7 +73,7 @@ void testFromUtf8Data()
 	
 	{
 		auto highUnicodeBytes = reinterpret_cast<const std::uint8_t*>(u8"☃🐉");
-		StringValue *highUnicodeValue = StringValue::fromUtf8Data(highUnicodeBytes, 7);
+		BoxedString *highUnicodeValue = BoxedString::fromUtf8Data(highUnicodeBytes, 7);
 
 		ASSERT_EQUAL(highUnicodeValue->byteLength(), 7);
 		ASSERT_EQUAL(highUnicodeValue->utf8Data()[7], 0);
@@ -83,16 +83,16 @@ void testFromUtf8Data()
 
 void testCompare()
 {
-	const StringValue *hello1 = StringValue::fromUtf8CString("Hello");
-	const StringValue *hello2 = new StringValue(utf8Bytes("Hello"), 5, 5);
-	const StringValue *HELLO = StringValue::fromUtf8CString("HELLO");
-	const StringValue *world = StringValue::fromUtf8CString("world");
-	const StringValue *nulledHello1 = new StringValue(utf8Bytes("Hell\0o"), 6, 6);
-	const StringValue *nulledHello2 = new StringValue(utf8Bytes("Hell\0o"), 6, 6);
-	const StringValue *hell = StringValue::fromUtf8CString("Hell");
-	const StringValue *unicodeValue = StringValue::fromUtf8CString(u8"☃🐉");
-	const StringValue *lowercaseUnicode = StringValue::fromUtf8CString(u8"сфmmциist gязэtiйgs!");
-	const StringValue *uppercaseUnicode = StringValue::fromUtf8CString(u8"СФMMЦИIST GЯЗЭTIЙGS!");
+	const BoxedString *hello1 = BoxedString::fromUtf8CString("Hello");
+	const BoxedString *hello2 = new BoxedString(utf8Bytes("Hello"), 5, 5);
+	const BoxedString *HELLO = BoxedString::fromUtf8CString("HELLO");
+	const BoxedString *world = BoxedString::fromUtf8CString("world");
+	const BoxedString *nulledHello1 = new BoxedString(utf8Bytes("Hell\0o"), 6, 6);
+	const BoxedString *nulledHello2 = new BoxedString(utf8Bytes("Hell\0o"), 6, 6);
+	const BoxedString *hell = BoxedString::fromUtf8CString("Hell");
+	const BoxedString *unicodeValue = BoxedString::fromUtf8CString(u8"☃🐉");
+	const BoxedString *lowercaseUnicode = BoxedString::fromUtf8CString(u8"сфmmциist gязэtiйgs!");
+	const BoxedString *uppercaseUnicode = BoxedString::fromUtf8CString(u8"СФMMЦИIST GЯЗЭTIЙGS!");
 
 	ASSERT_TRUE(*hello1 == *hello1); 
 	ASSERT_TRUE(hello1->compare(hello1) == 0);
@@ -141,13 +141,13 @@ void testCompare()
 void testCharAt()
 {
 	{
-		StringValue *emptyValue = StringValue::fromUtf8CString(u8"");
+		BoxedString *emptyValue = BoxedString::fromUtf8CString(u8"");
 
 		ASSERT_FALSE(emptyValue->charAt(0).isValid());
 	}
 
 	{
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
 
 		ASSERT_EQUAL(helloValue->charAt(0), UnicodeChar('H'));
 		ASSERT_EQUAL(helloValue->charAt(4), UnicodeChar('o'));
@@ -156,7 +156,7 @@ void testCharAt()
 	}
 	
 	{
-		StringValue *highUnicodeValue = StringValue::fromUtf8CString(u8"☃🐉");
+		BoxedString *highUnicodeValue = BoxedString::fromUtf8CString(u8"☃🐉");
 		
 		ASSERT_EQUAL(highUnicodeValue->charAt(0), UnicodeChar(0x02603));
 		ASSERT_EQUAL(highUnicodeValue->charAt(1), UnicodeChar(0x1F409));
@@ -168,7 +168,7 @@ void testCharAt()
 void testFromFill()
 {
 	{
-		StringValue *emptyAsciiValue = StringValue::fromFill(0, UnicodeChar(0));
+		BoxedString *emptyAsciiValue = BoxedString::fromFill(0, UnicodeChar(0));
 
 		ASSERT_EQUAL(emptyAsciiValue->byteLength(), 0);
 		ASSERT_EQUAL(emptyAsciiValue->utf8Data()[0], 0);
@@ -176,7 +176,7 @@ void testFromFill()
 	}
 	
 	{
-		StringValue *emptyUnicodeValue = StringValue::fromFill(0, UnicodeChar(0x02603));
+		BoxedString *emptyUnicodeValue = BoxedString::fromFill(0, UnicodeChar(0x02603));
 
 		ASSERT_EQUAL(emptyUnicodeValue->byteLength(), 0);
 		ASSERT_EQUAL(emptyUnicodeValue->utf8Data()[0], 0);
@@ -184,7 +184,7 @@ void testFromFill()
 	}
 	
 	{
-		StringValue *asciiValue = StringValue::fromFill(5, UnicodeChar('H'));
+		BoxedString *asciiValue = BoxedString::fromFill(5, UnicodeChar('H'));
 
 		ASSERT_EQUAL(asciiValue->byteLength(), 5);
 		ASSERT_EQUAL(asciiValue->utf8Data()[5], 0);
@@ -195,7 +195,7 @@ void testFromFill()
 	}
 	
 	{
-		StringValue *unicodeValue = StringValue::fromFill(5, UnicodeChar(0x02603));
+		BoxedString *unicodeValue = BoxedString::fromFill(5, UnicodeChar(0x02603));
 
 		ASSERT_EQUAL(unicodeValue->byteLength(), 15);
 		ASSERT_EQUAL(unicodeValue->utf8Data()[15], 0);
@@ -209,20 +209,20 @@ void testFromFill()
 void testFromAppended()
 {
 	{
-		StringValue *emptyValue = StringValue::fromAppended(std::list<const StringValue*>());
+		BoxedString *emptyValue = BoxedString::fromAppended(std::list<const BoxedString*>());
 		ASSERT_EQUAL(emptyValue->byteLength(), 0);
 		ASSERT_EQUAL(emptyValue->utf8Data()[0], 0);
 		ASSERT_EQUAL(emptyValue->charLength(), 0);
 	}
 	
 	{
-		std::list<const StringValue*> appendParts = {
-			StringValue::fromUtf8CString(u8"Hello"),
-			StringValue::fromUtf8CString(u8" "),
-			StringValue::fromUtf8CString(u8"world!")
+		std::list<const BoxedString*> appendParts = {
+			BoxedString::fromUtf8CString(u8"Hello"),
+			BoxedString::fromUtf8CString(u8" "),
+			BoxedString::fromUtf8CString(u8"world!")
 		};
 
-		StringValue *asciiValue = StringValue::fromAppended(appendParts);
+		BoxedString *asciiValue = BoxedString::fromAppended(appendParts);
 		
 		ASSERT_EQUAL(asciiValue->byteLength(), 12);
 		ASSERT_EQUAL(asciiValue->utf8Data()[12], 0);
@@ -231,12 +231,12 @@ void testFromAppended()
 	}
 	
 	{
-		std::list<const StringValue*> appendParts = {
-			StringValue::fromUtf8CString(u8"Hello "),
-			StringValue::fromUtf8CString(u8"☃")
+		std::list<const BoxedString*> appendParts = {
+			BoxedString::fromUtf8CString(u8"Hello "),
+			BoxedString::fromUtf8CString(u8"☃")
 		};
 
-		StringValue *unicodeValue = StringValue::fromAppended(appendParts);
+		BoxedString *unicodeValue = BoxedString::fromAppended(appendParts);
 		
 		ASSERT_EQUAL(unicodeValue->byteLength(), 9);
 		ASSERT_EQUAL(unicodeValue->utf8Data()[9], 0);
@@ -248,7 +248,7 @@ void testFromAppended()
 void testFromUnicodeChars()
 {
 	{
-		StringValue *emptyValue = StringValue::fromUnicodeChars(std::list<UnicodeChar>());
+		BoxedString *emptyValue = BoxedString::fromUnicodeChars(std::list<UnicodeChar>());
 		ASSERT_EQUAL(emptyValue->byteLength(), 0);
 		ASSERT_EQUAL(emptyValue->utf8Data()[0], 0);
 		ASSERT_EQUAL(emptyValue->charLength(), 0);
@@ -263,7 +263,7 @@ void testFromUnicodeChars()
 			UnicodeChar('o')
 		};
 
-		StringValue *helloValue = StringValue::fromUnicodeChars(helloPoints);
+		BoxedString *helloValue = BoxedString::fromUnicodeChars(helloPoints);
 		
 		ASSERT_EQUAL(helloValue->byteLength(), 5);
 		ASSERT_EQUAL(helloValue->utf8Data()[5], 0);
@@ -278,7 +278,7 @@ void testFromUnicodeChars()
 			UnicodeChar('!')
 		};
 
-		StringValue *unicodeValue = StringValue::fromUnicodeChars(unicodeChars);
+		BoxedString *unicodeValue = BoxedString::fromUnicodeChars(unicodeChars);
 		
 		ASSERT_EQUAL(unicodeValue->byteLength(), 8);
 		ASSERT_EQUAL(unicodeValue->charLength(), 3);
@@ -289,8 +289,8 @@ void testFromUnicodeChars()
 void testStringCopy()
 {
 	{
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
-		StringValue *helloCopy = helloValue->copy();
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
+		BoxedString *helloCopy = helloValue->copy();
 
 		ASSERT_EQUAL(helloCopy->byteLength(), 5);
 		ASSERT_EQUAL(helloCopy->charLength(), 5);
@@ -298,8 +298,8 @@ void testStringCopy()
 	}
 	
 	{
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
-		StringValue *elloCopy = helloValue->copy(1);
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
+		BoxedString *elloCopy = helloValue->copy(1);
 
 		ASSERT_EQUAL(elloCopy->byteLength(), 4);
 		ASSERT_EQUAL(elloCopy->charLength(), 4);
@@ -308,8 +308,8 @@ void testStringCopy()
 	
 	{
 		// Make sure there's no boundry condition on the last character
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
-		StringValue *elloCopy = helloValue->copy(1, 5);
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
+		BoxedString *elloCopy = helloValue->copy(1, 5);
 
 		ASSERT_EQUAL(elloCopy->byteLength(), 4);
 		ASSERT_EQUAL(elloCopy->charLength(), 4);
@@ -318,8 +318,8 @@ void testStringCopy()
 	
 	{
 		// Allow empty strings
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
-		StringValue *elloCopy = helloValue->copy(0, 0);
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
+		BoxedString *elloCopy = helloValue->copy(0, 0);
 
 		ASSERT_EQUAL(elloCopy->byteLength(), 0);
 		ASSERT_EQUAL(elloCopy->charLength(), 0);
@@ -327,16 +327,16 @@ void testStringCopy()
 	
 	{
 		// Allow empty from the very end
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
-		StringValue *elloCopy = helloValue->copy(5, 5);
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
+		BoxedString *elloCopy = helloValue->copy(5, 5);
 
 		ASSERT_EQUAL(elloCopy->byteLength(), 0);
 		ASSERT_EQUAL(elloCopy->charLength(), 0);
 	}
 	
 	{
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
-		StringValue *ellCopy = helloValue->copy(1, 4);
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
+		BoxedString *ellCopy = helloValue->copy(1, 4);
 
 		ASSERT_EQUAL(ellCopy->byteLength(), 3);
 		ASSERT_EQUAL(ellCopy->charLength(), 3);
@@ -345,23 +345,23 @@ void testStringCopy()
 	
 	{
 		// Off the end
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
-		StringValue *invalidCopy = helloValue->copy(0, 16);
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
+		BoxedString *invalidCopy = helloValue->copy(0, 16);
 
 		ASSERT_EQUAL(invalidCopy, NULL);
 	}
 	
 	{
 		// start > end
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
-		StringValue *invalidCopy = helloValue->copy(3, 2);
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
+		BoxedString *invalidCopy = helloValue->copy(3, 2);
 
 		ASSERT_EQUAL(invalidCopy, NULL);
 	}
 
 	{
-		StringValue *japanValue = StringValue::fromUtf8CString(u8"日本国");
-		StringValue *japanCopy = japanValue->copy();
+		BoxedString *japanValue = BoxedString::fromUtf8CString(u8"日本国");
+		BoxedString *japanCopy = japanValue->copy();
 
 		ASSERT_EQUAL(japanCopy->byteLength(), 9);
 		ASSERT_EQUAL(japanCopy->charLength(), 3);
@@ -369,8 +369,8 @@ void testStringCopy()
 	}
 	
 	{
-		StringValue *japanValue = StringValue::fromUtf8CString(u8"日本国");
-		StringValue *japanCopy = japanValue->copy(1);
+		BoxedString *japanValue = BoxedString::fromUtf8CString(u8"日本国");
+		BoxedString *japanCopy = japanValue->copy(1);
 
 		ASSERT_EQUAL(japanCopy->byteLength(), 6);
 		ASSERT_EQUAL(japanCopy->charLength(), 2);
@@ -378,9 +378,9 @@ void testStringCopy()
 	}
 	
 	{
-		StringValue *japanValue = StringValue::fromUtf8CString(u8"日本国");
+		BoxedString *japanValue = BoxedString::fromUtf8CString(u8"日本国");
 		// Check for the same boundry in Unicode
-		StringValue *japanCopy = japanValue->copy(1, 3);
+		BoxedString *japanCopy = japanValue->copy(1, 3);
 
 		ASSERT_EQUAL(japanCopy->byteLength(), 6);
 		ASSERT_EQUAL(japanCopy->charLength(), 2);
@@ -388,8 +388,8 @@ void testStringCopy()
 	}
 	
 	{
-		StringValue *japanValue = StringValue::fromUtf8CString(u8"日本国");
-		StringValue *japanCopy = japanValue->copy(1, 2);
+		BoxedString *japanValue = BoxedString::fromUtf8CString(u8"日本国");
+		BoxedString *japanCopy = japanValue->copy(1, 2);
 
 		ASSERT_EQUAL(japanCopy->byteLength(), 3);
 		ASSERT_EQUAL(japanCopy->charLength(), 1);
@@ -397,8 +397,8 @@ void testStringCopy()
 	}
 	
 	{
-		StringValue *mixedValue = StringValue::fromUtf8CString(u8"日Hello国");
-		StringValue *helloCopy = mixedValue->copy(1, 6);
+		BoxedString *mixedValue = BoxedString::fromUtf8CString(u8"日Hello国");
+		BoxedString *helloCopy = mixedValue->copy(1, 6);
 
 		ASSERT_EQUAL(helloCopy->byteLength(), 5);
 		ASSERT_EQUAL(helloCopy->charLength(), 5);
@@ -409,7 +409,7 @@ void testStringCopy()
 void testSetCharAt()
 {
 	{
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
 
 		ASSERT_EQUAL(helloValue->setCharAt(0, UnicodeChar('Y')), true);
 
@@ -422,7 +422,7 @@ void testSetCharAt()
 	}
 	
 	{
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
 
 		ASSERT_EQUAL(helloValue->setCharAt(1, UnicodeChar(0)), true);
 
@@ -432,7 +432,7 @@ void testSetCharAt()
 	}
 	
 	{
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
 
 		ASSERT_EQUAL(helloValue->setCharAt(3, UnicodeChar(0x1F409)), true);
 
@@ -444,7 +444,7 @@ void testSetCharAt()
 	}
 	
 	{
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"日本国");
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"日本国");
 
 		ASSERT_EQUAL(helloValue->setCharAt(1, UnicodeChar('O')), true);
 
@@ -459,7 +459,7 @@ void testSetCharAt()
 void testFill()
 {
 	{
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
 
 		ASSERT_EQUAL(helloValue->fill(UnicodeChar('Y')), true);
 
@@ -469,7 +469,7 @@ void testFill()
 	}
 	
 	{
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
 
 		ASSERT_EQUAL(helloValue->fill(UnicodeChar('Y'), 0, 5), true);
 
@@ -479,12 +479,12 @@ void testFill()
 	}
 	
 	{
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
 		ASSERT_EQUAL(helloValue->fill(UnicodeChar('Y'), 0, 6), false);
 	}
 	
 	{
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
 
 		ASSERT_EQUAL(helloValue->fill(UnicodeChar(0x2603)), true);
 
@@ -494,7 +494,7 @@ void testFill()
 	}
 	
 	{
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
 
 		ASSERT_EQUAL(helloValue->fill(UnicodeChar(0x2603), 1), true);
 
@@ -504,7 +504,7 @@ void testFill()
 	}
 	
 	{
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
 
 		ASSERT_EQUAL(helloValue->fill(UnicodeChar(0x2603), 1, 4), true);
 
@@ -514,7 +514,7 @@ void testFill()
 	}
 	
 	{
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
 
 		ASSERT_EQUAL(helloValue->fill(UnicodeChar('Y'), 1, 1), true);
 
@@ -524,7 +524,7 @@ void testFill()
 	}
 	
 	{
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"☃☃☃☃☃");
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"☃☃☃☃☃");
 		
 		ASSERT_EQUAL(helloValue->fill(UnicodeChar('Y')), true);
 
@@ -534,7 +534,7 @@ void testFill()
 	}
 	
 	{
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"☃☃☃☃☃");
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"☃☃☃☃☃");
 		
 		ASSERT_EQUAL(helloValue->fill(UnicodeChar('Y'), 0, 5), true);
 
@@ -544,7 +544,7 @@ void testFill()
 	}
 	
 	{
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"YYYY☃");
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"YYYY☃");
 		
 		ASSERT_EQUAL(helloValue->fill(UnicodeChar('Y'), 4, 5), true);
 
@@ -554,7 +554,7 @@ void testFill()
 	}
 	
 	{
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"☃☃☃☃☃");
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"☃☃☃☃☃");
 		
 		ASSERT_EQUAL(helloValue->fill(UnicodeChar('Y'), 1), true);
 
@@ -566,13 +566,13 @@ void testFill()
 
 void testReplace()
 {
-	const StringValue *constWorld = StringValue::fromUtf8CString(u8"world");
-	const StringValue *constJapan = StringValue::fromUtf8CString(u8"日本国"); 
+	const BoxedString *constWorld = BoxedString::fromUtf8CString(u8"world");
+	const BoxedString *constJapan = BoxedString::fromUtf8CString(u8"日本国"); 
 
 	{
 		// From R7RS
-		StringValue *numbers = StringValue::fromUtf8CString(u8"12345");
-		StringValue *letters = StringValue::fromUtf8CString(u8"abcde");
+		BoxedString *numbers = BoxedString::fromUtf8CString(u8"12345");
+		BoxedString *letters = BoxedString::fromUtf8CString(u8"abcde");
 
 		ASSERT_EQUAL(letters->replace(1, numbers, 0, 2), true);
 
@@ -582,7 +582,7 @@ void testReplace()
 	}
 
 	{
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
 
 		ASSERT_EQUAL(helloValue->replace(0, constWorld), true);
 
@@ -592,7 +592,7 @@ void testReplace()
 	}
 	
 	{
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
 
 		ASSERT_EQUAL(helloValue->replace(0, constJapan), true);
 
@@ -602,7 +602,7 @@ void testReplace()
 	}
 	
 	{
-		StringValue *japanValue = StringValue::fromUtf8CString(u8"日本国");
+		BoxedString *japanValue = BoxedString::fromUtf8CString(u8"日本国");
 
 		ASSERT_EQUAL(japanValue->replace(0, constWorld, 0, 3), true);
 
@@ -612,14 +612,14 @@ void testReplace()
 	}
 	
 	{
-		StringValue *japanValue = StringValue::fromUtf8CString(u8"日本国");
+		BoxedString *japanValue = BoxedString::fromUtf8CString(u8"日本国");
 
 		// Overruns the string
 		ASSERT_EQUAL(japanValue->replace(0, constWorld), false)
 	}
 	
 	{
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
 
 		ASSERT_EQUAL(helloValue->replace(2, constJapan), true);
 
@@ -629,14 +629,14 @@ void testReplace()
 	}
 
 	{
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
 
 		// Off the end
 		ASSERT_EQUAL(helloValue->replace(3, constJapan), false);
 	}
 	
 	{
-		StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello");
+		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
 
 		ASSERT_EQUAL(helloValue->replace(2, constJapan, 1), true);
 
@@ -646,7 +646,7 @@ void testReplace()
 	}
 	
 	{
-		StringValue *complexValue = StringValue::fromUtf8CString(u8"Hello 日本国");
+		BoxedString *complexValue = BoxedString::fromUtf8CString(u8"Hello 日本国");
 
 		// We should be able to replace a substring from ourselves
 		ASSERT_EQUAL(complexValue->replace(0, complexValue, 6), true);
@@ -659,7 +659,7 @@ void testReplace()
 
 void testUnicodeChars()
 {
-	StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello ☃!");
+	BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello ☃!");
 
 	{
 		std::list<UnicodeChar> unicodeChars = helloValue->unicodeChars();
@@ -738,60 +738,60 @@ void testUnicodeChars()
 
 void testToUtf8ByteVector()
 {
-	StringValue *helloValue = StringValue::fromUtf8CString(u8"Hello ☃!");
+	BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello ☃!");
 
 	{
-		ByteVectorValue *byteVectorValue = helloValue->toUtf8ByteVector();
+		BoxedByteVector *byteBoxedVector = helloValue->toUtf8ByteVector();
 
-		ASSERT_EQUAL(byteVectorValue->length(), 10);
-		ASSERT_EQUAL(memcmp(byteVectorValue->data(), "Hello ☃!", 10), 0);
+		ASSERT_EQUAL(byteBoxedVector->length(), 10);
+		ASSERT_EQUAL(memcmp(byteBoxedVector->data(), "Hello ☃!", 10), 0);
 	}
 	
 	{
-		ByteVectorValue *byteVectorValue = helloValue->toUtf8ByteVector(0, 8);
+		BoxedByteVector *byteBoxedVector = helloValue->toUtf8ByteVector(0, 8);
 		
-		ASSERT_EQUAL(byteVectorValue->length(), 10);
-		ASSERT_EQUAL(memcmp(byteVectorValue->data(), "Hello ☃!", 10), 0);
+		ASSERT_EQUAL(byteBoxedVector->length(), 10);
+		ASSERT_EQUAL(memcmp(byteBoxedVector->data(), "Hello ☃!", 10), 0);
 	}
 	
 	{
-		ByteVectorValue *byteVectorValue = helloValue->toUtf8ByteVector(2);
+		BoxedByteVector *byteBoxedVector = helloValue->toUtf8ByteVector(2);
 		
-		ASSERT_EQUAL(byteVectorValue->length(), 8);
-		ASSERT_EQUAL(memcmp(byteVectorValue->data(), "llo ☃!", 8), 0);
+		ASSERT_EQUAL(byteBoxedVector->length(), 8);
+		ASSERT_EQUAL(memcmp(byteBoxedVector->data(), "llo ☃!", 8), 0);
 	}
 	
 	{
-		ByteVectorValue *byteVectorValue = helloValue->toUtf8ByteVector(2, 5);
+		BoxedByteVector *byteBoxedVector = helloValue->toUtf8ByteVector(2, 5);
 
-		ASSERT_EQUAL(byteVectorValue->length(), 3);
-		ASSERT_EQUAL(memcmp(byteVectorValue->data(), "llo", 3), 0);
+		ASSERT_EQUAL(byteBoxedVector->length(), 3);
+		ASSERT_EQUAL(memcmp(byteBoxedVector->data(), "llo", 3), 0);
 	}
 	
 	{
-		ByteVectorValue *byteVectorValue = helloValue->toUtf8ByteVector(2, 19);
-		ASSERT_EQUAL(byteVectorValue, 0);
+		BoxedByteVector *byteBoxedVector = helloValue->toUtf8ByteVector(2, 19);
+		ASSERT_EQUAL(byteBoxedVector, 0);
 	}
 	
 	{
-		ByteVectorValue *byteVectorValue = helloValue->toUtf8ByteVector(19);
-		ASSERT_EQUAL(byteVectorValue, 0);
+		BoxedByteVector *byteBoxedVector = helloValue->toUtf8ByteVector(19);
+		ASSERT_EQUAL(byteBoxedVector, 0);
 	}
 	
 	{
-		ByteVectorValue *byteVectorValue = helloValue->toUtf8ByteVector(19, 24);
-		ASSERT_EQUAL(byteVectorValue, 0);
+		BoxedByteVector *byteBoxedVector = helloValue->toUtf8ByteVector(19, 24);
+		ASSERT_EQUAL(byteBoxedVector, 0);
 	}
 }
 
 void testCaseConversion()
 {
 	{
-		const StringValue *mixedCaseAsciiString = StringValue::fromUtf8CString(u8"Hello, World!");
+		const BoxedString *mixedCaseAsciiString = BoxedString::fromUtf8CString(u8"Hello, World!");
 
-		StringValue *lowercaseAsciiString = mixedCaseAsciiString->toLowercaseString();
-		StringValue *uppercaseAsciiString = mixedCaseAsciiString->toUppercaseString();
-		StringValue *caseFoldedAsciiString = mixedCaseAsciiString->toCaseFoldedString();
+		BoxedString *lowercaseAsciiString = mixedCaseAsciiString->toLowercaseString();
+		BoxedString *uppercaseAsciiString = mixedCaseAsciiString->toUppercaseString();
+		BoxedString *caseFoldedAsciiString = mixedCaseAsciiString->toCaseFoldedString();
 
 		ASSERT_UTF8_EQUAL(lowercaseAsciiString->utf8Data(), u8"hello, world!");
 		ASSERT_UTF8_EQUAL(uppercaseAsciiString->utf8Data(), u8"HELLO, WORLD!");
@@ -799,11 +799,11 @@ void testCaseConversion()
 	}
 
 	{
-		const StringValue *mixedCaseUnicodeString = StringValue::fromUtf8CString(u8"Γεια σας Παγκόσμιο!");
+		const BoxedString *mixedCaseUnicodeString = BoxedString::fromUtf8CString(u8"Γεια σας Παγκόσμιο!");
 		
-		StringValue *lowercaseUnicodeString = mixedCaseUnicodeString->toLowercaseString();
-		StringValue *uppercaseUnicodeString = mixedCaseUnicodeString->toUppercaseString();
-		StringValue *caseFoldedUnicodeString = mixedCaseUnicodeString->toCaseFoldedString();
+		BoxedString *lowercaseUnicodeString = mixedCaseUnicodeString->toLowercaseString();
+		BoxedString *uppercaseUnicodeString = mixedCaseUnicodeString->toUppercaseString();
+		BoxedString *caseFoldedUnicodeString = mixedCaseUnicodeString->toCaseFoldedString();
 		
 		ASSERT_UTF8_EQUAL(lowercaseUnicodeString->utf8Data(), u8"γεια σας παγκόσμιο!");
 		ASSERT_UTF8_EQUAL(uppercaseUnicodeString->utf8Data(), u8"ΓΕΙΑ ΣΑΣ ΠΑΓΚΌΣΜΙΟ!");
@@ -812,11 +812,11 @@ void testCaseConversion()
 	}
 	
 	{
-		const StringValue *hanString = StringValue::fromUtf8CString(u8"蒮 駓駗鴀 螒螝螜 咍垀 漊 犨");
+		const BoxedString *hanString = BoxedString::fromUtf8CString(u8"蒮 駓駗鴀 螒螝螜 咍垀 漊 犨");
 
-		StringValue *lowercaseHanString = hanString->toLowercaseString();
-		StringValue *uppercaseHanString = hanString->toUppercaseString();
-		StringValue *caseFoldedHanString = hanString->toCaseFoldedString();
+		BoxedString *lowercaseHanString = hanString->toLowercaseString();
+		BoxedString *uppercaseHanString = hanString->toUppercaseString();
+		BoxedString *caseFoldedHanString = hanString->toCaseFoldedString();
 		
 		ASSERT_UTF8_EQUAL(lowercaseHanString->utf8Data(), u8"蒮 駓駗鴀 螒螝螜 咍垀 漊 犨");
 		ASSERT_UTF8_EQUAL(uppercaseHanString->utf8Data(), u8"蒮 駓駗鴀 螒螝螜 咍垀 漊 犨");
@@ -824,11 +824,11 @@ void testCaseConversion()
 	}
 	
 	{
-		const StringValue *symbolString = StringValue::fromUtf8CString(u8"🐉☃☙");
+		const BoxedString *symbolString = BoxedString::fromUtf8CString(u8"🐉☃☙");
 
-		StringValue *lowercaseSymbolString = symbolString->toLowercaseString();
-		StringValue *uppercaseSymbolString = symbolString->toUppercaseString();
-		StringValue *caseFoldedSymbolString = symbolString->toCaseFoldedString();
+		BoxedString *lowercaseSymbolString = symbolString->toLowercaseString();
+		BoxedString *uppercaseSymbolString = symbolString->toUppercaseString();
+		BoxedString *caseFoldedSymbolString = symbolString->toCaseFoldedString();
 		
 		ASSERT_UTF8_EQUAL(lowercaseSymbolString->utf8Data(), u8"🐉☃☙");
 		ASSERT_UTF8_EQUAL(uppercaseSymbolString->utf8Data(), u8"🐉☃☙");
@@ -836,11 +836,11 @@ void testCaseConversion()
 	}
 
 	{
-		const StringValue *unusualFoldingString = StringValue::fromUtf8CString(u8"µϵẛ");
+		const BoxedString *unusualFoldingString = BoxedString::fromUtf8CString(u8"µϵẛ");
 		
-		StringValue *lowercaseFoldingString = unusualFoldingString->toLowercaseString();
-		StringValue *uppercaseFoldingString = unusualFoldingString->toUppercaseString();
-		StringValue *caseFoldedFoldingString = unusualFoldingString->toCaseFoldedString();
+		BoxedString *lowercaseFoldingString = unusualFoldingString->toLowercaseString();
+		BoxedString *uppercaseFoldingString = unusualFoldingString->toUppercaseString();
+		BoxedString *caseFoldedFoldingString = unusualFoldingString->toCaseFoldedString();
 
 		ASSERT_UTF8_EQUAL(lowercaseFoldingString->utf8Data(), u8"µϵẛ");
 		ASSERT_UTF8_EQUAL(uppercaseFoldingString->utf8Data(), u8"ΜΕṠ");

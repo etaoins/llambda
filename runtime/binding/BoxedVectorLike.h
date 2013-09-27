@@ -1,14 +1,14 @@
-#ifndef _LLIBY_BINDING_VECTORLIKEVALUE_H
-#define _LLIBY_BINDING_VECTORLIKEVALUE_H
+#ifndef _LLIBY_BINDING_BOXEDVECTORLIKE_H
+#define _LLIBY_BINDING_BOXEDVECTORLIKE_H
 
 #include "BoxedDatum.h"
 
 namespace lliby
 {
 
-class VectorLikeValue : public BoxedDatum
+class BoxedVectorLike : public BoxedDatum
 {
-#include "generated/VectorLikeValueMembers.h"
+#include "generated/BoxedVectorLikeMembers.h"
 public:
 	void finalize();
 	
@@ -35,7 +35,7 @@ public:
 	}
 
 protected:
-	VectorLikeValue(BoxedTypeId typeId, BoxedDatum **elements, std::uint32_t length) :
+	BoxedVectorLike(BoxedTypeId typeId, BoxedDatum **elements, std::uint32_t length) :
 		BoxedDatum(typeId),
 		m_length(length),
 		m_elements(elements)

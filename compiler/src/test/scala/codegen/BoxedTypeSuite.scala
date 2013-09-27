@@ -9,11 +9,11 @@ class BoxedTypeSuite extends FunSuite {
   test("create constant boxed inexact rational") {
     val innerValue = llvmir.DoubleConstant(31.5)
 
-    val constant = bt.InexactRationalValue.createConstant(innerValue)
-    val expectedTypeId = bt.InexactRationalValue.typeId.toString
+    val constant = bt.BoxedInexactRational.createConstant(innerValue)
+    val expectedTypeId = bt.BoxedInexactRational.typeId.toString
 
     assert(constant.toIr === 
-      s"{%numeric {%boxedDatum {i16 ${expectedTypeId}, i16 0}}, double 31.5}"
+      s"{%numeric {%datum {i16 ${expectedTypeId}, i16 0}}, double 31.5}"
     )
   }
   

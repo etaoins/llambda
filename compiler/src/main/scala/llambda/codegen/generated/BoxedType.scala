@@ -13,7 +13,7 @@ sealed abstract class BoxedType {
 }
 
 object BoxedDatum extends BoxedType {
-  val irType = UserDefinedType("boxedDatum")
+  val irType = UserDefinedType("datum")
   val superType = None
 
   def createConstant(typeId : IrConstant) : StructureConstant = {
@@ -28,23 +28,23 @@ object BoxedDatum extends BoxedType {
   }
 }
 
-object UnspecificValue extends BoxedType {
+object BoxedUnspecific extends BoxedType {
   val irType = UserDefinedType("unspecific")
   val superType = Some(BoxedDatum)
   val typeId = 0
 }
 
-object PairValue extends BoxedType {
+object BoxedPair extends BoxedType {
   val irType = UserDefinedType("pair")
   val superType = Some(BoxedDatum)
   val typeId = 1
 
   def createConstant(car : IrConstant, cdr : IrConstant) : StructureConstant = {
-    if (car.irType != PointerType(UserDefinedType("boxedDatum"))) {
+    if (car.irType != PointerType(UserDefinedType("datum"))) {
        throw new InternalCompilerErrorException("Unexpected type for field car")
     }
 
-    if (cdr.irType != PointerType(UserDefinedType("boxedDatum"))) {
+    if (cdr.irType != PointerType(UserDefinedType("datum"))) {
        throw new InternalCompilerErrorException("Unexpected type for field cdr")
     }
 
@@ -58,13 +58,13 @@ object PairValue extends BoxedType {
   }
 }
 
-object EmptyListValue extends BoxedType {
+object BoxedEmptyList extends BoxedType {
   val irType = UserDefinedType("emptyList")
   val superType = Some(BoxedDatum)
   val typeId = 2
 }
 
-object StringLikeValue extends BoxedType {
+object BoxedStringLike extends BoxedType {
   val irType = UserDefinedType("stringLike")
   val superType = Some(BoxedDatum)
 
@@ -92,9 +92,9 @@ object StringLikeValue extends BoxedType {
   }
 }
 
-object StringValue extends BoxedType {
+object BoxedString extends BoxedType {
   val irType = UserDefinedType("string")
-  val superType = Some(StringLikeValue)
+  val superType = Some(BoxedStringLike)
   val typeId = 3
 
   def createConstant(charLength : IrConstant, byteLength : IrConstant, utf8Data : IrConstant) : StructureConstant = {
@@ -109,9 +109,9 @@ object StringValue extends BoxedType {
   }
 }
 
-object SymbolValue extends BoxedType {
+object BoxedSymbol extends BoxedType {
   val irType = UserDefinedType("symbol")
-  val superType = Some(StringLikeValue)
+  val superType = Some(BoxedStringLike)
   val typeId = 4
 
   def createConstant(charLength : IrConstant, byteLength : IrConstant, utf8Data : IrConstant) : StructureConstant = {
@@ -126,13 +126,13 @@ object SymbolValue extends BoxedType {
   }
 }
 
-object BooleanValue extends BoxedType {
+object BoxedBoolean extends BoxedType {
   val irType = UserDefinedType("boolean")
   val superType = Some(BoxedDatum)
   val typeId = 5
 }
 
-object NumericValue extends BoxedType {
+object BoxedNumeric extends BoxedType {
   val irType = UserDefinedType("numeric")
   val superType = Some(BoxedDatum)
 
@@ -145,9 +145,9 @@ object NumericValue extends BoxedType {
   }
 }
 
-object ExactIntegerValue extends BoxedType {
+object BoxedExactInteger extends BoxedType {
   val irType = UserDefinedType("exactInteger")
-  val superType = Some(NumericValue)
+  val superType = Some(BoxedNumeric)
   val typeId = 6
 
   def createConstant(value : IrConstant) : StructureConstant = {
@@ -164,9 +164,9 @@ object ExactIntegerValue extends BoxedType {
   }
 }
 
-object InexactRationalValue extends BoxedType {
+object BoxedInexactRational extends BoxedType {
   val irType = UserDefinedType("inexactRational")
-  val superType = Some(NumericValue)
+  val superType = Some(BoxedNumeric)
   val typeId = 7
 
   def createConstant(value : IrConstant) : StructureConstant = {
@@ -183,7 +183,7 @@ object InexactRationalValue extends BoxedType {
   }
 }
 
-object CharacterValue extends BoxedType {
+object BoxedCharacter extends BoxedType {
   val irType = UserDefinedType("character")
   val superType = Some(BoxedDatum)
   val typeId = 8
@@ -202,7 +202,7 @@ object CharacterValue extends BoxedType {
   }
 }
 
-object ByteVectorValue extends BoxedType {
+object BoxedByteVector extends BoxedType {
   val irType = UserDefinedType("byteVector")
   val superType = Some(BoxedDatum)
   val typeId = 9
@@ -226,7 +226,7 @@ object ByteVectorValue extends BoxedType {
   }
 }
 
-object ProcedureValue extends BoxedType {
+object BoxedProcedure extends BoxedType {
   val irType = UserDefinedType("procedure")
   val superType = Some(BoxedDatum)
   val typeId = 10
@@ -236,7 +236,7 @@ object ProcedureValue extends BoxedType {
        throw new InternalCompilerErrorException("Unexpected type for field closure")
     }
 
-    if (entryPoint.irType != PointerType(FunctionType(PointerType(UserDefinedType("boxedDatum")), List(PointerType(UserDefinedType("closure")), PointerType(UserDefinedType("boxedDatum")) )))) {
+    if (entryPoint.irType != PointerType(FunctionType(PointerType(UserDefinedType("datum")), List(PointerType(UserDefinedType("closure")), PointerType(UserDefinedType("datum")) )))) {
        throw new InternalCompilerErrorException("Unexpected type for field entryPoint")
     }
 
@@ -250,7 +250,7 @@ object ProcedureValue extends BoxedType {
   }
 }
 
-object VectorLikeValue extends BoxedType {
+object BoxedVectorLike extends BoxedType {
   val irType = UserDefinedType("vectorLike")
   val superType = Some(BoxedDatum)
 
@@ -259,7 +259,7 @@ object VectorLikeValue extends BoxedType {
        throw new InternalCompilerErrorException("Unexpected type for field length")
     }
 
-    if (elements.irType != PointerType(PointerType(UserDefinedType("boxedDatum")))) {
+    if (elements.irType != PointerType(PointerType(UserDefinedType("datum")))) {
        throw new InternalCompilerErrorException("Unexpected type for field elements")
     }
 
@@ -273,9 +273,9 @@ object VectorLikeValue extends BoxedType {
   }
 }
 
-object VectorValue extends BoxedType {
+object BoxedVector extends BoxedType {
   val irType = UserDefinedType("vector")
-  val superType = Some(VectorLikeValue)
+  val superType = Some(BoxedVectorLike)
   val typeId = 32768
 
   def createConstant(length : IrConstant, elements : IrConstant) : StructureConstant = {
@@ -289,9 +289,9 @@ object VectorValue extends BoxedType {
   }
 }
 
-object ClosureValue extends BoxedType {
+object BoxedClosure extends BoxedType {
   val irType = UserDefinedType("closure")
-  val superType = Some(VectorLikeValue)
+  val superType = Some(BoxedVectorLike)
   val typeId = 32769
 
   def createConstant(length : IrConstant, elements : IrConstant) : StructureConstant = {

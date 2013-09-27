@@ -1,5 +1,5 @@
-#include "VectorValue.h"
-#include "UnspecificValue.h"
+#include "BoxedVector.h"
+#include "BoxedUnspecific.h"
 
 #include <limits>
 
@@ -28,7 +28,7 @@ namespace
 namespace lliby
 {
 
-bool VectorValue::fill(BoxedDatum *fill, std::int64_t start, std::int64_t end)
+bool BoxedVector::fill(BoxedDatum *fill, std::int64_t start, std::int64_t end)
 {
 	if (!adjustRange(start, end, length()))
 	{
@@ -43,15 +43,15 @@ bool VectorValue::fill(BoxedDatum *fill, std::int64_t start, std::int64_t end)
 	return true;
 }
 	
-VectorValue* VectorValue::fromFill(std::uint32_t length, BoxedDatum *fill)
+BoxedVector* BoxedVector::fromFill(std::uint32_t length, BoxedDatum *fill)
 {
 	auto newElements = new BoxedDatum*[length];
 
-	auto newVector = new VectorValue(newElements, length);
+	auto newVector = new BoxedVector(newElements, length);
 
 	if (fill == nullptr)
 	{
-		fill = const_cast<UnspecificValue*>(UnspecificValue::instance());
+		fill = const_cast<BoxedUnspecific*>(BoxedUnspecific::instance());
 	}
 
 	newVector->fill(fill, 0, -1);
@@ -59,7 +59,7 @@ VectorValue* VectorValue::fromFill(std::uint32_t length, BoxedDatum *fill)
 	return newVector;
 }
 
-VectorValue* VectorValue::fromAppended(const std::list<const VectorValue*> &vectors)
+BoxedVector* BoxedVector::fromAppended(const std::list<const BoxedVector*> &vectors)
 {
 	std::uint64_t totalLength = 0;
 
@@ -84,10 +84,10 @@ VectorValue* VectorValue::fromAppended(const std::list<const VectorValue*> &vect
 		copyPtr += vector->length();
 	}
 
-	return new VectorValue(newElements, totalLength);
+	return new BoxedVector(newElements, totalLength);
 }
 
-VectorValue* VectorValue::copy(std::int64_t start, std::int64_t end)
+BoxedVector* BoxedVector::copy(std::int64_t start, std::int64_t end)
 {
 	if (!adjustRange(start, end, length()))
 	{
@@ -99,10 +99,10 @@ VectorValue* VectorValue::copy(std::int64_t start, std::int64_t end)
 
 	memcpy(newElements, &elements()[start], newLength * sizeof(BoxedDatum*));
 
-	return new VectorValue(newElements, newLength);
+	return new BoxedVector(newElements, newLength);
 }
 
-bool VectorValue::replace(std::uint32_t offset, const VectorValue *from, std::int64_t fromStart, std::int64_t fromEnd)
+bool BoxedVector::replace(std::uint32_t offset, const BoxedVector *from, std::int64_t fromStart, std::int64_t fromEnd)
 {
 	if (!adjustRange(fromStart, fromEnd, from->length()))
 	{

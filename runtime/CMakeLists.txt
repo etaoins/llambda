@@ -7,13 +7,13 @@ add_library(lliby
 	alloc/FreezeGc.cpp
 	alloc/allocator.cpp
 	binding/BoxedDatum.cpp
-	binding/ByteVectorValue.cpp
-	binding/PairValue.cpp
-	binding/ProcedureValue.cpp
-	binding/StringLikeValue.cpp
-	binding/StringValue.cpp
-	binding/VectorLikeValue.cpp
-	binding/VectorValue.cpp
+	binding/BoxedByteVector.cpp
+	binding/BoxedPair.cpp
+	binding/BoxedProcedure.cpp
+	binding/BoxedStringLike.cpp
+	binding/BoxedString.cpp
+	binding/BoxedVectorLike.cpp
+	binding/BoxedVector.cpp
 	core/constinstances.cpp
 	core/fatal.cpp
 	core/init.cpp
@@ -56,13 +56,13 @@ endif()
 enable_testing()
 
 set(ALL_TEST_NAMES
-	bytevectorvalue
+	boxedbytevector
 	constinstances
-	inexactrationalvalue
-	pairvalue
-	stringvalue
+	boxedinexactrational
+	boxedpair
+	boxedstring
 	unicodechar
-	vectorvalue
+	boxedvector
 	externalformdatumwriter)
 
 foreach( test_name ${ALL_TEST_NAMES} )

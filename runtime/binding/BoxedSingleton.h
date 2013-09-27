@@ -1,15 +1,15 @@
-#ifndef _LLIBY_BINDING_SINGLETONVALUE_H
-#define _LLIBY_BINDING_SINGLETONVALUE_H
+#ifndef _LLIBY_BINDING_BOXEDSINGLETON_H
+#define _LLIBY_BINDING_BOXEDSINGLETON_H
 
 #include "BoxedDatum.h"
 
 namespace lliby
 {
 
-class SingletonValue : public BoxedDatum
+class BoxedSingleton : public BoxedDatum
 {
 public:
-	explicit SingletonValue(BoxedTypeId typeId) :
+	explicit BoxedSingleton(BoxedTypeId typeId) :
 		// Don't attempt to collect this as garbage
 		BoxedDatum(typeId, GarbageState::GlobalConstant)
 	{

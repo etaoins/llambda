@@ -3,7 +3,7 @@
  *****************************************************************/
 
 public:
-	ClosureValue* closure() const
+	BoxedClosure* closure() const
 	{
 		return m_closure;
 	}
@@ -14,5 +14,5 @@ public:
 	}
 
 private:
-	ClosureValue* m_closure;
+	BoxedClosure* m_closure;
 	ProcedureEntryPoint m_entryPoint;

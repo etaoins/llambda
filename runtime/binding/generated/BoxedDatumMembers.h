@@ -14,402 +14,402 @@ public:
 	}
 
 public:
-	UnspecificValue* asUnspecificValue()
+	BoxedUnspecific* asBoxedUnspecific()
 	{
 		if (typeId() == BoxedTypeId::Unspecific)
 		{
-			return reinterpret_cast<UnspecificValue*>(this);
+			return reinterpret_cast<BoxedUnspecific*>(this);
 		}
 
 		return nullptr;
 	}
 
-	const UnspecificValue* asUnspecificValue() const
+	const BoxedUnspecific* asBoxedUnspecific() const
 	{
 		if (typeId() == BoxedTypeId::Unspecific)
 		{
-			return reinterpret_cast<const UnspecificValue*>(this);
+			return reinterpret_cast<const BoxedUnspecific*>(this);
 		}
 
 		return nullptr;
 	}
 
-	bool isUnspecificValue() const
+	bool isBoxedUnspecific() const
 	{
 		return typeId() == BoxedTypeId::Unspecific;
 	}
 
-	PairValue* asPairValue()
+	BoxedPair* asBoxedPair()
 	{
 		if (typeId() == BoxedTypeId::Pair)
 		{
-			return reinterpret_cast<PairValue*>(this);
+			return reinterpret_cast<BoxedPair*>(this);
 		}
 
 		return nullptr;
 	}
 
-	const PairValue* asPairValue() const
+	const BoxedPair* asBoxedPair() const
 	{
 		if (typeId() == BoxedTypeId::Pair)
 		{
-			return reinterpret_cast<const PairValue*>(this);
+			return reinterpret_cast<const BoxedPair*>(this);
 		}
 
 		return nullptr;
 	}
 
-	bool isPairValue() const
+	bool isBoxedPair() const
 	{
 		return typeId() == BoxedTypeId::Pair;
 	}
 
-	EmptyListValue* asEmptyListValue()
+	BoxedEmptyList* asBoxedEmptyList()
 	{
 		if (typeId() == BoxedTypeId::EmptyList)
 		{
-			return reinterpret_cast<EmptyListValue*>(this);
+			return reinterpret_cast<BoxedEmptyList*>(this);
 		}
 
 		return nullptr;
 	}
 
-	const EmptyListValue* asEmptyListValue() const
+	const BoxedEmptyList* asBoxedEmptyList() const
 	{
 		if (typeId() == BoxedTypeId::EmptyList)
 		{
-			return reinterpret_cast<const EmptyListValue*>(this);
+			return reinterpret_cast<const BoxedEmptyList*>(this);
 		}
 
 		return nullptr;
 	}
 
-	bool isEmptyListValue() const
+	bool isBoxedEmptyList() const
 	{
 		return typeId() == BoxedTypeId::EmptyList;
 	}
 
-	StringLikeValue* asStringLikeValue()
+	BoxedStringLike* asBoxedStringLike()
 	{
 		if ((typeId() == BoxedTypeId::String) || (typeId() == BoxedTypeId::Symbol))
 		{
-			return reinterpret_cast<StringLikeValue*>(this);
+			return reinterpret_cast<BoxedStringLike*>(this);
 		}
 
 		return nullptr;
 	}
 
-	const StringLikeValue* asStringLikeValue() const
+	const BoxedStringLike* asBoxedStringLike() const
 	{
 		if ((typeId() == BoxedTypeId::String) || (typeId() == BoxedTypeId::Symbol))
 		{
-			return reinterpret_cast<const StringLikeValue*>(this);
+			return reinterpret_cast<const BoxedStringLike*>(this);
 		}
 
 		return nullptr;
 	}
 
-	bool isStringLikeValue() const
+	bool isBoxedStringLike() const
 	{
 		return (typeId() == BoxedTypeId::String) || (typeId() == BoxedTypeId::Symbol);
 	}
 
-	StringValue* asStringValue()
+	BoxedString* asBoxedString()
 	{
 		if (typeId() == BoxedTypeId::String)
 		{
-			return reinterpret_cast<StringValue*>(this);
+			return reinterpret_cast<BoxedString*>(this);
 		}
 
 		return nullptr;
 	}
 
-	const StringValue* asStringValue() const
+	const BoxedString* asBoxedString() const
 	{
 		if (typeId() == BoxedTypeId::String)
 		{
-			return reinterpret_cast<const StringValue*>(this);
+			return reinterpret_cast<const BoxedString*>(this);
 		}
 
 		return nullptr;
 	}
 
-	bool isStringValue() const
+	bool isBoxedString() const
 	{
 		return typeId() == BoxedTypeId::String;
 	}
 
-	SymbolValue* asSymbolValue()
+	BoxedSymbol* asBoxedSymbol()
 	{
 		if (typeId() == BoxedTypeId::Symbol)
 		{
-			return reinterpret_cast<SymbolValue*>(this);
+			return reinterpret_cast<BoxedSymbol*>(this);
 		}
 
 		return nullptr;
 	}
 
-	const SymbolValue* asSymbolValue() const
+	const BoxedSymbol* asBoxedSymbol() const
 	{
 		if (typeId() == BoxedTypeId::Symbol)
 		{
-			return reinterpret_cast<const SymbolValue*>(this);
+			return reinterpret_cast<const BoxedSymbol*>(this);
 		}
 
 		return nullptr;
 	}
 
-	bool isSymbolValue() const
+	bool isBoxedSymbol() const
 	{
 		return typeId() == BoxedTypeId::Symbol;
 	}
 
-	BooleanValue* asBooleanValue()
+	BoxedBoolean* asBoxedBoolean()
 	{
 		if (typeId() == BoxedTypeId::Boolean)
 		{
-			return reinterpret_cast<BooleanValue*>(this);
+			return reinterpret_cast<BoxedBoolean*>(this);
 		}
 
 		return nullptr;
 	}
 
-	const BooleanValue* asBooleanValue() const
+	const BoxedBoolean* asBoxedBoolean() const
 	{
 		if (typeId() == BoxedTypeId::Boolean)
 		{
-			return reinterpret_cast<const BooleanValue*>(this);
+			return reinterpret_cast<const BoxedBoolean*>(this);
 		}
 
 		return nullptr;
 	}
 
-	bool isBooleanValue() const
+	bool isBoxedBoolean() const
 	{
 		return typeId() == BoxedTypeId::Boolean;
 	}
 
-	NumericValue* asNumericValue()
+	BoxedNumeric* asBoxedNumeric()
 	{
 		if ((typeId() == BoxedTypeId::ExactInteger) || (typeId() == BoxedTypeId::InexactRational))
 		{
-			return reinterpret_cast<NumericValue*>(this);
+			return reinterpret_cast<BoxedNumeric*>(this);
 		}
 
 		return nullptr;
 	}
 
-	const NumericValue* asNumericValue() const
+	const BoxedNumeric* asBoxedNumeric() const
 	{
 		if ((typeId() == BoxedTypeId::ExactInteger) || (typeId() == BoxedTypeId::InexactRational))
 		{
-			return reinterpret_cast<const NumericValue*>(this);
+			return reinterpret_cast<const BoxedNumeric*>(this);
 		}
 
 		return nullptr;
 	}
 
-	bool isNumericValue() const
+	bool isBoxedNumeric() const
 	{
 		return (typeId() == BoxedTypeId::ExactInteger) || (typeId() == BoxedTypeId::InexactRational);
 	}
 
-	ExactIntegerValue* asExactIntegerValue()
+	BoxedExactInteger* asBoxedExactInteger()
 	{
 		if (typeId() == BoxedTypeId::ExactInteger)
 		{
-			return reinterpret_cast<ExactIntegerValue*>(this);
+			return reinterpret_cast<BoxedExactInteger*>(this);
 		}
 
 		return nullptr;
 	}
 
-	const ExactIntegerValue* asExactIntegerValue() const
+	const BoxedExactInteger* asBoxedExactInteger() const
 	{
 		if (typeId() == BoxedTypeId::ExactInteger)
 		{
-			return reinterpret_cast<const ExactIntegerValue*>(this);
+			return reinterpret_cast<const BoxedExactInteger*>(this);
 		}
 
 		return nullptr;
 	}
 
-	bool isExactIntegerValue() const
+	bool isBoxedExactInteger() const
 	{
 		return typeId() == BoxedTypeId::ExactInteger;
 	}
 
-	InexactRationalValue* asInexactRationalValue()
+	BoxedInexactRational* asBoxedInexactRational()
 	{
 		if (typeId() == BoxedTypeId::InexactRational)
 		{
-			return reinterpret_cast<InexactRationalValue*>(this);
+			return reinterpret_cast<BoxedInexactRational*>(this);
 		}
 
 		return nullptr;
 	}
 
-	const InexactRationalValue* asInexactRationalValue() const
+	const BoxedInexactRational* asBoxedInexactRational() const
 	{
 		if (typeId() == BoxedTypeId::InexactRational)
 		{
-			return reinterpret_cast<const InexactRationalValue*>(this);
+			return reinterpret_cast<const BoxedInexactRational*>(this);
 		}
 
 		return nullptr;
 	}
 
-	bool isInexactRationalValue() const
+	bool isBoxedInexactRational() const
 	{
 		return typeId() == BoxedTypeId::InexactRational;
 	}
 
-	CharacterValue* asCharacterValue()
+	BoxedCharacter* asBoxedCharacter()
 	{
 		if (typeId() == BoxedTypeId::Character)
 		{
-			return reinterpret_cast<CharacterValue*>(this);
+			return reinterpret_cast<BoxedCharacter*>(this);
 		}
 
 		return nullptr;
 	}
 
-	const CharacterValue* asCharacterValue() const
+	const BoxedCharacter* asBoxedCharacter() const
 	{
 		if (typeId() == BoxedTypeId::Character)
 		{
-			return reinterpret_cast<const CharacterValue*>(this);
+			return reinterpret_cast<const BoxedCharacter*>(this);
 		}
 
 		return nullptr;
 	}
 
-	bool isCharacterValue() const
+	bool isBoxedCharacter() const
 	{
 		return typeId() == BoxedTypeId::Character;
 	}
 
-	ByteVectorValue* asByteVectorValue()
+	BoxedByteVector* asBoxedByteVector()
 	{
 		if (typeId() == BoxedTypeId::ByteVector)
 		{
-			return reinterpret_cast<ByteVectorValue*>(this);
+			return reinterpret_cast<BoxedByteVector*>(this);
 		}
 
 		return nullptr;
 	}
 
-	const ByteVectorValue* asByteVectorValue() const
+	const BoxedByteVector* asBoxedByteVector() const
 	{
 		if (typeId() == BoxedTypeId::ByteVector)
 		{
-			return reinterpret_cast<const ByteVectorValue*>(this);
+			return reinterpret_cast<const BoxedByteVector*>(this);
 		}
 
 		return nullptr;
 	}
 
-	bool isByteVectorValue() const
+	bool isBoxedByteVector() const
 	{
 		return typeId() == BoxedTypeId::ByteVector;
 	}
 
-	ProcedureValue* asProcedureValue()
+	BoxedProcedure* asBoxedProcedure()
 	{
 		if (typeId() == BoxedTypeId::Procedure)
 		{
-			return reinterpret_cast<ProcedureValue*>(this);
+			return reinterpret_cast<BoxedProcedure*>(this);
 		}
 
 		return nullptr;
 	}
 
-	const ProcedureValue* asProcedureValue() const
+	const BoxedProcedure* asBoxedProcedure() const
 	{
 		if (typeId() == BoxedTypeId::Procedure)
 		{
-			return reinterpret_cast<const ProcedureValue*>(this);
+			return reinterpret_cast<const BoxedProcedure*>(this);
 		}
 
 		return nullptr;
 	}
 
-	bool isProcedureValue() const
+	bool isBoxedProcedure() const
 	{
 		return typeId() == BoxedTypeId::Procedure;
 	}
 
-	VectorLikeValue* asVectorLikeValue()
+	BoxedVectorLike* asBoxedVectorLike()
 	{
 		if (static_cast<int>(typeId()) & 32768)
 		{
-			return reinterpret_cast<VectorLikeValue*>(this);
+			return reinterpret_cast<BoxedVectorLike*>(this);
 		}
 
 		return nullptr;
 	}
 
-	const VectorLikeValue* asVectorLikeValue() const
+	const BoxedVectorLike* asBoxedVectorLike() const
 	{
 		if (static_cast<int>(typeId()) & 32768)
 		{
-			return reinterpret_cast<const VectorLikeValue*>(this);
+			return reinterpret_cast<const BoxedVectorLike*>(this);
 		}
 
 		return nullptr;
 	}
 
-	bool isVectorLikeValue() const
+	bool isBoxedVectorLike() const
 	{
 		return static_cast<int>(typeId()) & 32768;
 	}
 
-	VectorValue* asVectorValue()
+	BoxedVector* asBoxedVector()
 	{
 		if (typeId() == BoxedTypeId::Vector)
 		{
-			return reinterpret_cast<VectorValue*>(this);
+			return reinterpret_cast<BoxedVector*>(this);
 		}
 
 		return nullptr;
 	}
 
-	const VectorValue* asVectorValue() const
+	const BoxedVector* asBoxedVector() const
 	{
 		if (typeId() == BoxedTypeId::Vector)
 		{
-			return reinterpret_cast<const VectorValue*>(this);
+			return reinterpret_cast<const BoxedVector*>(this);
 		}
 
 		return nullptr;
 	}
 
-	bool isVectorValue() const
+	bool isBoxedVector() const
 	{
 		return typeId() == BoxedTypeId::Vector;
 	}
 
-	ClosureValue* asClosureValue()
+	BoxedClosure* asBoxedClosure()
 	{
 		if (typeId() == BoxedTypeId::Closure)
 		{
-			return reinterpret_cast<ClosureValue*>(this);
+			return reinterpret_cast<BoxedClosure*>(this);
 		}
 
 		return nullptr;
 	}
 
-	const ClosureValue* asClosureValue() const
+	const BoxedClosure* asBoxedClosure() const
 	{
 		if (typeId() == BoxedTypeId::Closure)
 		{
-			return reinterpret_cast<const ClosureValue*>(this);
+			return reinterpret_cast<const BoxedClosure*>(this);
 		}
 
 		return nullptr;
 	}
 
-	bool isClosureValue() const
+	bool isBoxedClosure() const
 	{
 		return typeId() == BoxedTypeId::Closure;
 	}

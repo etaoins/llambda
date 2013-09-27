@@ -1,30 +1,30 @@
-#include "PairValue.h"
-#include "EmptyListValue.h"
+#include "BoxedPair.h"
+#include "BoxedEmptyList.h"
 #include "alloc/FreezeGc.h"
 
 namespace lliby
 {
 
-BoxedDatum* PairValue::createProperList(const std::list<BoxedDatum*> &elements)
+BoxedDatum* BoxedPair::createProperList(const std::list<BoxedDatum*> &elements)
 {
-	// PairValue::cdr isn't const because it can be modified through the pair
+	// BoxedPair::cdr isn't const because it can be modified through the pair
 	// However, there's nothing interesting to modify on EmptyList
 	// Just cast the const away
-	BoxedDatum *cdr = const_cast<EmptyListValue*>(EmptyListValue::instance()); 
+	BoxedDatum *cdr = const_cast<BoxedEmptyList*>(BoxedEmptyList::instance()); 
 
 	{
 		alloc::FreezeGc freezer(elements.size());
 
 		for(auto it = elements.rbegin(); it != elements.rend(); it++)
 		{
-			cdr = new PairValue(*it, cdr);
+			cdr = new BoxedPair(*it, cdr);
 		}
 	}
 
 	return cdr;
 }
 
-PairValue* PairValue::createImproperList(const std::list<BoxedDatum*> &elements)
+BoxedPair* BoxedPair::createImproperList(const std::list<BoxedDatum*> &elements)
 {
 	if (elements.size() < 2)
 	{
@@ -40,11 +40,11 @@ PairValue* PairValue::createImproperList(const std::list<BoxedDatum*> &elements)
 	{
 		alloc::FreezeGc freezer(elements.size() - 1);
 
-		auto cdr = new PairValue(secondLast, endValue);
+		auto cdr = new BoxedPair(secondLast, endValue);
 
 		for(;it != elements.rend(); it++)
 		{
-			cdr = new PairValue(*it, cdr); 
+			cdr = new BoxedPair(*it, cdr); 
 		}
 	
 		return cdr;

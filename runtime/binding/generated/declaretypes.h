@@ -9,23 +9,23 @@ namespace lliby
 {
 
 class BoxedDatum;
-class UnspecificValue;
-class PairValue;
-class EmptyListValue;
-class StringLikeValue;
-class StringValue;
-class SymbolValue;
-class BooleanValue;
-class NumericValue;
-class ExactIntegerValue;
-class InexactRationalValue;
-class CharacterValue;
-class ByteVectorValue;
-class ProcedureValue;
-class VectorLikeValue;
-class VectorValue;
-class ClosureValue;
-typedef BoxedDatum* (*ProcedureEntryPoint)(ClosureValue*, BoxedDatum*);
+class BoxedUnspecific;
+class BoxedPair;
+class BoxedEmptyList;
+class BoxedStringLike;
+class BoxedString;
+class BoxedSymbol;
+class BoxedBoolean;
+class BoxedNumeric;
+class BoxedExactInteger;
+class BoxedInexactRational;
+class BoxedCharacter;
+class BoxedByteVector;
+class BoxedProcedure;
+class BoxedVectorLike;
+class BoxedVector;
+class BoxedClosure;
+typedef BoxedDatum* (*ProcedureEntryPoint)(BoxedClosure*, BoxedDatum*);
 
 }
 

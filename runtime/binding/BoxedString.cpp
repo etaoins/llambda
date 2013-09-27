@@ -1,11 +1,11 @@
-#include "StringValue.h"
+#include "BoxedString.h"
 
 #include <string.h>
 #include <vector>
 #include <algorithm>
 
-#include "SymbolValue.h"
-#include "ByteVectorValue.h"
+#include "BoxedSymbol.h"
+#include "BoxedByteVector.h"
 
 namespace
 {
@@ -130,7 +130,7 @@ namespace
 namespace lliby
 {
 
-StringValue* StringValue::fromUtf8CString(const char *signedStr)
+BoxedString* BoxedString::fromUtf8CString(const char *signedStr)
 {
 	std::uint64_t byteLength = 0;
 	std::uint32_t charLength = 0;
@@ -163,10 +163,10 @@ StringValue* StringValue::fromUtf8CString(const char *signedStr)
 	auto *newString = new std::uint8_t[byteLength + 1];
 	memcpy(newString, str, byteLength + 1);
 
-	return new StringValue(newString, byteLength, charLength);
+	return new BoxedString(newString, byteLength, charLength);
 }
 	
-StringValue* StringValue::fromUtf8Data(const std::uint8_t *data, std::uint32_t byteLength)
+BoxedString* BoxedString::fromUtf8Data(const std::uint8_t *data, std::uint32_t byteLength)
 {
 	std::uint32_t charLength = 0;
 	auto newString = new std::uint8_t[byteLength + 1];
@@ -185,10 +185,10 @@ StringValue* StringValue::fromUtf8Data(const std::uint8_t *data, std::uint32_t b
 
 	newString[byteLength] = 0;
 
-	return new StringValue(newString, byteLength, charLength);
+	return new BoxedString(newString, byteLength, charLength);
 }
 	
-StringValue* StringValue::fromFill(std::uint32_t length, UnicodeChar fill)
+BoxedString* BoxedString::fromFill(std::uint32_t length, UnicodeChar fill)
 {
 	// Figure out how many bytes we'll need
 	std::vector<std::uint8_t> encoded = encodeUtf8Char(fill);
@@ -208,10 +208,10 @@ StringValue* StringValue::fromFill(std::uint32_t length, UnicodeChar fill)
 	// NULL terminate
 	newString[encodedCharSize * length] = 0;
 
-	return new StringValue(newString, byteLength, length);
+	return new BoxedString(newString, byteLength, length);
 }
 	
-StringValue* StringValue::fromAppended(const std::list<const StringValue*> &strings)
+BoxedString* BoxedString::fromAppended(const std::list<const BoxedString*> &strings)
 {
 	std::uint64_t totalByteLength = 0;
 	std::uint32_t totalCharLength = 0;
@@ -241,10 +241,10 @@ StringValue* StringValue::fromAppended(const std::list<const StringValue*> &stri
 		copyPtr += stringPart->byteLength();
 	}
 
-	return new StringValue(newString, totalByteLength, totalCharLength);
+	return new BoxedString(newString, totalByteLength, totalCharLength);
 }
 	
-StringValue* StringValue::fromUnicodeChars(const std::list<UnicodeChar> &unicodeChars)
+BoxedString* BoxedString::fromUnicodeChars(const std::list<UnicodeChar> &unicodeChars)
 {
 	std::vector<std::uint8_t> encodedData;
 	std::uint32_t charLength = 0;
@@ -266,15 +266,15 @@ StringValue* StringValue::fromUnicodeChars(const std::list<UnicodeChar> &unicode
 
 	newString[totalByteLength] = 0;
 
-	return new StringValue(newString, totalByteLength, charLength);
+	return new BoxedString(newString, totalByteLength, charLength);
 }
 	
-std::uint8_t* StringValue::charPointer(std::uint32_t charOffset) const
+std::uint8_t* BoxedString::charPointer(std::uint32_t charOffset) const
 {
 	return charPointer(utf8Data(), byteLength(), charOffset);
 }
 
-std::uint8_t* StringValue::charPointer(std::uint8_t *scanFrom, std::uint32_t bytesLeft, uint32_t charOffset) const
+std::uint8_t* BoxedString::charPointer(std::uint8_t *scanFrom, std::uint32_t bytesLeft, uint32_t charOffset) const
 {
 	if (asciiOnly())
 	{
@@ -305,7 +305,7 @@ std::uint8_t* StringValue::charPointer(std::uint8_t *scanFrom, std::uint32_t byt
 	return nullptr;
 }
 	
-StringValue::CharRange StringValue::charRange(std::int64_t start, std::int64_t end) const
+BoxedString::CharRange BoxedString::charRange(std::int64_t start, std::int64_t end) const
 {
 	if (end == -1)
 	{
@@ -371,7 +371,7 @@ StringValue::CharRange StringValue::charRange(std::int64_t start, std::int64_t e
 	return CharRange { startPointer, endPointer, charCount };
 }
 	
-UnicodeChar StringValue::charAt(std::uint32_t offset) const
+UnicodeChar BoxedString::charAt(std::uint32_t offset) const
 {
 	std::uint8_t* charPtr = charPointer(offset);
 
@@ -383,7 +383,7 @@ UnicodeChar StringValue::charAt(std::uint32_t offset) const
 	return decodeUtf8Char(&charPtr);
 }
 	
-bool StringValue::replaceBytes(const CharRange &range, std::uint8_t *pattern, unsigned int patternBytes, unsigned int count)
+bool BoxedString::replaceBytes(const CharRange &range, std::uint8_t *pattern, unsigned int patternBytes, unsigned int count)
 {
 	const unsigned int requiredBytes = patternBytes * count;
 	const unsigned int replacedBytes = range.byteCount();
@@ -451,7 +451,7 @@ bool StringValue::replaceBytes(const CharRange &range, std::uint8_t *pattern, un
 	return true;
 }
 	
-bool StringValue::fill(UnicodeChar unicodeChar, std::int64_t start, std::int64_t end)
+bool BoxedString::fill(UnicodeChar unicodeChar, std::int64_t start, std::int64_t end)
 {
 	CharRange range = charRange(start, end);
 
@@ -473,7 +473,7 @@ bool StringValue::fill(UnicodeChar unicodeChar, std::int64_t start, std::int64_t
 	return replaceBytes(range, encoded.data(), encoded.size(), range.charCount);
 }
 	
-bool StringValue::replace(std::uint32_t offset, const StringValue *from, std::int64_t fromStart, std::int64_t fromEnd)
+bool BoxedString::replace(std::uint32_t offset, const BoxedString *from, std::int64_t fromStart, std::int64_t fromEnd)
 {
 	CharRange fromRange = from->charRange(fromStart, fromEnd);
 
@@ -492,12 +492,12 @@ bool StringValue::replace(std::uint32_t offset, const StringValue *from, std::in
 	return replaceBytes(toRange, fromRange.startPointer, fromRange.byteCount());
 }
 	
-bool StringValue::setCharAt(std::uint32_t offset, UnicodeChar unicodeChar)
+bool BoxedString::setCharAt(std::uint32_t offset, UnicodeChar unicodeChar)
 {
 	return fill(unicodeChar, offset, offset + 1);
 }
 	
-StringValue* StringValue::copy(std::int64_t start, std::int64_t end)
+BoxedString* BoxedString::copy(std::int64_t start, std::int64_t end)
 {
 	CharRange range = charRange(start, end);
 
@@ -514,10 +514,10 @@ StringValue* StringValue::copy(std::int64_t start, std::int64_t end)
 	memcpy(newString, range.startPointer, newByteLength);
 	newString[newByteLength] = 0;
 
-	return new StringValue(newString, newByteLength, range.charCount);
+	return new BoxedString(newString, newByteLength, range.charCount);
 }
 	
-std::list<UnicodeChar> StringValue::unicodeChars(std::int64_t start, std::int64_t end) const
+std::list<UnicodeChar> BoxedString::unicodeChars(std::int64_t start, std::int64_t end) const
 {
 	if ((end != -1) && (end < start))
 	{
@@ -566,7 +566,7 @@ std::list<UnicodeChar> StringValue::unicodeChars(std::int64_t start, std::int64_
 	return ret;
 }
 
-int StringValue::compareCaseSensitive(const StringValue *other) const
+int BoxedString::compareCaseSensitive(const BoxedString *other) const
 {
 	std::uint32_t compareBytes = std::min(byteLength(), other->byteLength());
 
@@ -583,7 +583,7 @@ int StringValue::compareCaseSensitive(const StringValue *other) const
 	}
 }
 
-int StringValue::compareCaseInsensitive(const StringValue *other) const
+int BoxedString::compareCaseInsensitive(const BoxedString *other) const
 {
 	std::uint8_t *ourScanPtr = utf8Data();
 	std::uint8_t *ourEndPtr = &utf8Data()[byteLength()];
@@ -626,7 +626,7 @@ int StringValue::compareCaseInsensitive(const StringValue *other) const
 	return 0;
 }
 
-int StringValue::compare(const StringValue *other, CaseSensitivity cs) const
+int BoxedString::compare(const BoxedString *other, CaseSensitivity cs) const
 {
 	if (cs == CaseSensitivity::Sensitive)
 	{
@@ -638,16 +638,16 @@ int StringValue::compare(const StringValue *other, CaseSensitivity cs) const
 	}
 }
 	
-SymbolValue* StringValue::toSymbol() const
+BoxedSymbol* BoxedString::toSymbol() const
 {
 	// This is easy, just copy our UTF-8 data
 	auto newString = new std::uint8_t[byteLength() + 1];
 	memcpy(newString, utf8Data(), byteLength() + 1);
 
-	return new SymbolValue(newString, byteLength(), charLength());
+	return new BoxedSymbol(newString, byteLength(), charLength());
 }
 	
-ByteVectorValue* StringValue::toUtf8ByteVector(std::int64_t start, std::int64_t end) const
+BoxedByteVector* BoxedString::toUtf8ByteVector(std::int64_t start, std::int64_t end) const
 {
 	CharRange range = charRange(start, end);
 
@@ -660,10 +660,10 @@ ByteVectorValue* StringValue::toUtf8ByteVector(std::int64_t start, std::int64_t 
 	auto *newData = new std::uint8_t[newLength];
 
 	memcpy(newData, range.startPointer, newLength);
-	return new ByteVectorValue(newData, newLength);
+	return new BoxedByteVector(newData, newLength);
 }
 	
-StringValue *StringValue::toConvertedString(UnicodeChar (UnicodeChar::* converter)() const) const
+BoxedString *BoxedString::toConvertedString(UnicodeChar (UnicodeChar::* converter)() const) const
 {
 	std::vector<std::uint8_t> convertedData;
 
@@ -698,20 +698,20 @@ StringValue *StringValue::toConvertedString(UnicodeChar (UnicodeChar::* converte
 
 	newString[totalByteLength] = 0;
 
-	return new StringValue(newString, totalByteLength, charLength());
+	return new BoxedString(newString, totalByteLength, charLength());
 }
 
-StringValue* StringValue::toUppercaseString() const
+BoxedString* BoxedString::toUppercaseString() const
 {
 	return toConvertedString(&UnicodeChar::toUppercase);
 }
 
-StringValue* StringValue::toLowercaseString() const
+BoxedString* BoxedString::toLowercaseString() const
 {
 	return toConvertedString(&UnicodeChar::toLowercase);
 }
 
-StringValue* StringValue::toCaseFoldedString() const
+BoxedString* BoxedString::toCaseFoldedString() const
 {
 	return toConvertedString(&UnicodeChar::toCaseFolded);
 }

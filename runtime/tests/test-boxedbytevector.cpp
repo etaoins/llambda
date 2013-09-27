@@ -1,7 +1,7 @@
 #include <string.h>
 
-#include "binding/ByteVectorValue.h"
-#include "binding/StringValue.h"
+#include "binding/BoxedByteVector.h"
+#include "binding/BoxedString.h"
 
 #include "core/init.h"
 #include "assertions.h"
@@ -13,13 +13,13 @@ using namespace lliby;
 void testFromFill()
 {
 	{
-		ByteVectorValue *emptyVector  = ByteVectorValue::fromFill(0);
+		BoxedByteVector *emptyVector  = BoxedByteVector::fromFill(0);
 
 		ASSERT_EQUAL(emptyVector->length(), 0);
 	}
 	
 	{
-		ByteVectorValue *zeroFillVector  = ByteVectorValue::fromFill(8);
+		BoxedByteVector *zeroFillVector  = BoxedByteVector::fromFill(8);
 		const uint8_t expectedData[8] = { 0 };
 
 		ASSERT_EQUAL(zeroFillVector->length(), 8);
@@ -27,7 +27,7 @@ void testFromFill()
 	}
 	
 	{
-		ByteVectorValue *sevenFillVector  = ByteVectorValue::fromFill(4, 7);
+		BoxedByteVector *sevenFillVector  = BoxedByteVector::fromFill(4, 7);
 		const uint8_t expectedData[4] = { 7, 7, 7, 7 };
 
 		ASSERT_EQUAL(sevenFillVector->length(), 4);
@@ -38,22 +38,22 @@ void testFromFill()
 void testFromAppended()
 {
 	uint8_t vector1Data[3] = { 100, 101, 102 };
-	auto vector1 = new ByteVectorValue(vector1Data, sizeof(vector1Data));
+	auto vector1 = new BoxedByteVector(vector1Data, sizeof(vector1Data));
 
 	uint8_t vector2Data[1] = { 0 };
-	auto vector2 = new ByteVectorValue(vector2Data, sizeof(vector2Data));
+	auto vector2 = new BoxedByteVector(vector2Data, sizeof(vector2Data));
 
 	uint8_t vector3Data[3] = { 200, 201, 202 };
-	auto vector3 = new ByteVectorValue(vector3Data, sizeof(vector3Data));
+	auto vector3 = new BoxedByteVector(vector3Data, sizeof(vector3Data));
 
 	{
-		ByteVectorValue *emptyVector = ByteVectorValue::fromAppended({});
+		BoxedByteVector *emptyVector = BoxedByteVector::fromAppended({});
 
 		ASSERT_EQUAL(emptyVector->length(), 0);
 	}
 	
 	{
-		ByteVectorValue *appendedVector = ByteVectorValue::fromAppended({vector1});
+		BoxedByteVector *appendedVector = BoxedByteVector::fromAppended({vector1});
 
 		ASSERT_EQUAL(appendedVector->length(), 3);
 		
@@ -62,7 +62,7 @@ void testFromAppended()
 	}
 	
 	{
-		ByteVectorValue *appendedVector = ByteVectorValue::fromAppended({vector1, vector2, vector3});
+		BoxedByteVector *appendedVector = BoxedByteVector::fromAppended({vector1, vector2, vector3});
 
 		ASSERT_EQUAL(appendedVector->length(), 7);
 		
@@ -75,11 +75,11 @@ void testByteAccess()
 {
 	uint8_t vectorData[5] = { 0, 1, 2, 3, 4 };
 
-	auto *testVector = new ByteVectorValue(vectorData, sizeof(vectorData));
+	auto *testVector = new BoxedByteVector(vectorData, sizeof(vectorData));
 
 	ASSERT_EQUAL(testVector->byteAt(0), 0);
 	ASSERT_EQUAL(testVector->byteAt(4), 4);
-	ASSERT_EQUAL(testVector->byteAt(5), ByteVectorValue::InvalidByte);
+	ASSERT_EQUAL(testVector->byteAt(5), BoxedByteVector::InvalidByte);
 
 	ASSERT_EQUAL(testVector->setByteAt(0, 128), true);
 	ASSERT_EQUAL(testVector->byteAt(0), 128);
@@ -94,10 +94,10 @@ void testCopy()
 {
 	uint8_t vectorData[5] = { 0, 1, 2, 3, 4 };
 
-	auto *testVector = new ByteVectorValue(vectorData, sizeof(vectorData));
+	auto *testVector = new BoxedByteVector(vectorData, sizeof(vectorData));
 
 	{
-		ByteVectorValue *wholeCopy = testVector->copy();
+		BoxedByteVector *wholeCopy = testVector->copy();
 
 		ASSERT_EQUAL(wholeCopy->length(), 5);
 
@@ -105,14 +105,14 @@ void testCopy()
 	}
 	
 	{
-		ByteVectorValue *explicitWholeCopy = testVector->copy(0, 5);
+		BoxedByteVector *explicitWholeCopy = testVector->copy(0, 5);
 
 		ASSERT_EQUAL(explicitWholeCopy->length(), 5);
 		ASSERT_EQUAL(memcmp(explicitWholeCopy->data(), vectorData, 5), 0);
 	}
 	
 	{
-		ByteVectorValue *firstTwoCopy = testVector->copy(0, 2);
+		BoxedByteVector *firstTwoCopy = testVector->copy(0, 2);
 
 		ASSERT_EQUAL(firstTwoCopy->length(), 2);
 		ASSERT_EQUAL(firstTwoCopy->byteAt(0), 0);
@@ -120,7 +120,7 @@ void testCopy()
 	}
 	
 	{
-		ByteVectorValue *lastTwoCopy = testVector->copy(3, 5);
+		BoxedByteVector *lastTwoCopy = testVector->copy(3, 5);
 
 		ASSERT_EQUAL(lastTwoCopy->length(), 2);
 		ASSERT_EQUAL(lastTwoCopy->byteAt(0), 3);
@@ -128,7 +128,7 @@ void testCopy()
 	}
 	
 	{
-		ByteVectorValue *emptyCopy = testVector->copy(3, 3);
+		BoxedByteVector *emptyCopy = testVector->copy(3, 3);
 
 		ASSERT_EQUAL(emptyCopy->length(), 0);
 	}
@@ -137,11 +137,11 @@ void testCopy()
 void testReplace()
 {
 	uint8_t fromData[5] = { 200, 201, 202, 203, 204 };
-	const auto *fromVector = new ByteVectorValue(fromData, 5); 
+	const auto *fromVector = new BoxedByteVector(fromData, 5); 
 
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = new ByteVectorValue(toData, 5); 
+		auto *toVector = new BoxedByteVector(toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(0, fromVector), true);
 		ASSERT_EQUAL(toVector->length(), 5);
@@ -150,7 +150,7 @@ void testReplace()
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = new ByteVectorValue(toData, 5); 
+		auto *toVector = new BoxedByteVector(toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(0, fromVector, 0, 5), true);
 		ASSERT_EQUAL(toVector->length(), 5);
@@ -159,7 +159,7 @@ void testReplace()
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = new ByteVectorValue(toData, 5); 
+		auto *toVector = new BoxedByteVector(toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(0, fromVector, 2, 2), true);
 		ASSERT_EQUAL(toVector->length(), 5);
@@ -170,7 +170,7 @@ void testReplace()
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = new ByteVectorValue(toData, 5); 
+		auto *toVector = new BoxedByteVector(toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(0, fromVector, 0, 2), true);
 		ASSERT_EQUAL(toVector->length(), 5);
@@ -181,7 +181,7 @@ void testReplace()
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = new ByteVectorValue(toData, 5); 
+		auto *toVector = new BoxedByteVector(toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(0, fromVector, 3), true);
 		ASSERT_EQUAL(toVector->length(), 5);
@@ -192,7 +192,7 @@ void testReplace()
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = new ByteVectorValue(toData, 5); 
+		auto *toVector = new BoxedByteVector(toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(0, fromVector, 3, 5), true);
 		ASSERT_EQUAL(toVector->length(), 5);
@@ -203,7 +203,7 @@ void testReplace()
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = new ByteVectorValue(toData, 5); 
+		auto *toVector = new BoxedByteVector(toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(3, fromVector, 3, 5), true);
 		ASSERT_EQUAL(toVector->length(), 5);
@@ -214,14 +214,14 @@ void testReplace()
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = new ByteVectorValue(toData, 5); 
+		auto *toVector = new BoxedByteVector(toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(4, fromVector, 3, 5), false);
 	}
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = new ByteVectorValue(toData, 5); 
+		auto *toVector = new BoxedByteVector(toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(4, fromVector, 5, 3), false);
 	}
@@ -230,10 +230,10 @@ void testReplace()
 void testUtf8ToString()
 {
 	auto stringData = reinterpret_cast<std::uint8_t*>(strdup(u8"Hello ☃!"));
-	auto sourceVector = new ByteVectorValue(stringData, 10);
+	auto sourceVector = new BoxedByteVector(stringData, 10);
 
 	{
-		StringValue *fullString = sourceVector->utf8ToString();
+		BoxedString *fullString = sourceVector->utf8ToString();
 
 		ASSERT_EQUAL(fullString->byteLength(), 10);
 		ASSERT_EQUAL(fullString->charLength(), 8);
@@ -242,7 +242,7 @@ void testUtf8ToString()
 	}
 	
 	{
-		StringValue *fullString = sourceVector->utf8ToString(0, 10);
+		BoxedString *fullString = sourceVector->utf8ToString(0, 10);
 
 		ASSERT_EQUAL(fullString->byteLength(), 10);
 		ASSERT_EQUAL(fullString->charLength(), 8);
@@ -250,7 +250,7 @@ void testUtf8ToString()
 	}
 	
 	{
-		StringValue *emptyString = sourceVector->utf8ToString(7, 7);
+		BoxedString *emptyString = sourceVector->utf8ToString(7, 7);
 
 		ASSERT_EQUAL(emptyString->byteLength(), 0);
 		ASSERT_EQUAL(emptyString->charLength(), 0);
@@ -258,7 +258,7 @@ void testUtf8ToString()
 	}
 	
 	{
-		StringValue *helloString = sourceVector->utf8ToString(0, 5);
+		BoxedString *helloString = sourceVector->utf8ToString(0, 5);
 
 		ASSERT_EQUAL(helloString->byteLength(), 5);
 		ASSERT_EQUAL(helloString->charLength(), 5);
@@ -266,7 +266,7 @@ void testUtf8ToString()
 	}
 	
 	{
-		StringValue *endString = sourceVector->utf8ToString(6, 10);
+		BoxedString *endString = sourceVector->utf8ToString(6, 10);
 
 		ASSERT_EQUAL(endString->byteLength(), 4);
 		ASSERT_EQUAL(endString->charLength(), 2);
@@ -274,17 +274,17 @@ void testUtf8ToString()
 	}
 	
 	{
-		StringValue *invalidString = sourceVector->utf8ToString(7, 12);
+		BoxedString *invalidString = sourceVector->utf8ToString(7, 12);
 		ASSERT_EQUAL(invalidString, 0);
 	}
 	
 	{
-		StringValue *invalidString = sourceVector->utf8ToString(6, 4);
+		BoxedString *invalidString = sourceVector->utf8ToString(6, 4);
 		ASSERT_EQUAL(invalidString, 0);
 	}
 	
 	{
-		StringValue *invalidString = sourceVector->utf8ToString(11);
+		BoxedString *invalidString = sourceVector->utf8ToString(11);
 		ASSERT_EQUAL(invalidString, 0);
 	}
 

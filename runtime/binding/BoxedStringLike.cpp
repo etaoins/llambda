@@ -1,11 +1,11 @@
-#include "StringLikeValue.h"
+#include "BoxedStringLike.h"
 
 #include <string.h>
 
 namespace lliby
 {
 	
-bool StringLikeValue::equals(const StringLikeValue &other) const
+bool BoxedStringLike::equals(const BoxedStringLike &other) const
 {
 	if (byteLength() != other.byteLength())
 	{
@@ -15,7 +15,7 @@ bool StringLikeValue::equals(const StringLikeValue &other) const
 	return memcmp(utf8Data(), other.utf8Data(), byteLength()) == 0;
 }
 	
-void StringLikeValue::finalize()
+void BoxedStringLike::finalize()
 {
 	delete[] m_utf8Data;
 }
