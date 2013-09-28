@@ -28,25 +28,22 @@ class IrModuleSuite extends FunSuite {
     val mainFunction = new IrFunctionBuilder(
       result=result,
       namedArguments=namedArguments,
-      name="main") {
+      name="main")
       
-      addBlock("entry")(new IrBlockBuilder {
-        val helloPointer = getelementptr("helloPtr")(
-          resultType=PointerType(IntegerType(8)),
-          basePointer=helloWorldDef.variable,
-          indices=List(0, 0).map(IntegerConstant(IntegerType(32), _))
-        )
-          
-        callDecl(None)(putsDecl, helloPointer :: Nil)
-        ret(IntegerConstant(IntegerType(32), 0))
-      })
-    }
+    val entryBlock = mainFunction.startBlock("entry")
+    val helloPointer = entryBlock.getelementptr("helloPtr")(
+      resultType=PointerType(IntegerType(8)),
+      basePointer=helloWorldDef.variable,
+      indices=List(0, 0).map(IntegerConstant(IntegerType(32), _))
+    )
+      
+    entryBlock.callDecl(None)(putsDecl, helloPointer :: Nil)
+    entryBlock.ret(IntegerConstant(IntegerType(32), 0))
 
-    val module = new IrModuleBuilder {
-      defineGlobalVariable(helloWorldDef)
-      declareFunction(putsDecl)
-      defineFunction(mainFunction)
-    }
+    val module = new IrModuleBuilder
+    module.defineGlobalVariable(helloWorldDef)
+    module.declareFunction(putsDecl)
+    module.defineFunction(mainFunction)
 
     assert(module.toIr ===
       "@helloWorldString = unnamed_addr constant [14 x i8] c\"Hello, world!\\00\"\n" + 

@@ -11,13 +11,13 @@ private[llvmir] abstract class IrInstrBuilder(nameSource : LocalNameSource) {
   }
 }
 
-class IrBlockBuilder()(implicit nameSource : LocalNameSource) extends IrInstrBuilder(nameSource) with Irable with TerminatorInstrs with MemoryInstrs with BitwiseInstrs with ConversionInstrs with OtherInstrs {
+protected class IrBlockBuilder(nameSource : LocalNameSource, val label : String) extends IrInstrBuilder(nameSource) with Irable with TerminatorInstrs with MemoryInstrs with BitwiseInstrs with ConversionInstrs with OtherInstrs {
   def comment(text : String) {
     instructions += s"; ${text}"
   }
 
   def toIr : String = {
     // Tab indent and join with newlines
-    instructions.map("\t" + _).mkString("\n")
+    s"${label}:\n" + instructions.map("\t" + _).mkString("\n")
   }
 }

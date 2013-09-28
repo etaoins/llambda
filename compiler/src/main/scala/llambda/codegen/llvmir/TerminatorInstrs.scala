@@ -11,16 +11,16 @@ private[llvmir] trait TerminatorInstrs extends IrInstrBuilder {
     instructions += "ret void"
   }
 
-  def condBranch(cond : IrValue, trueLabel : IrLabel, falseLabel : IrLabel) {
+  def condBranch(cond : IrValue, trueBlock : IrBlockBuilder, falseBlock : IrBlockBuilder) {
     if (cond.irType != IntegerType(1)) {
       throw new InternalCompilerErrorException("Attempted to branch using non-i1")
     }
 
-    instructions += s"br ${cond.toIrWithType}, label ${trueLabel.toIr}, label ${falseLabel.toIr}"
+    instructions += s"br ${cond.toIrWithType}, label %${trueBlock.label}, label %${falseBlock.label}"
   }
 
-  def uncondBranch(label : IrLabel) {
-    instructions += s"br label ${label.toIr}"
+  def uncondBranch(block : IrBlockBuilder) {
+    instructions += s"br label %${block.label}"
   }
 
   def unreachable() {

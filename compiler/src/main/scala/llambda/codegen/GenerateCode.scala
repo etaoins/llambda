@@ -40,15 +40,13 @@ object GenerateCode {
       val mainFunction = new IrFunctionBuilder(
         result=result,
         namedArguments=namedArguments,
-        name="main") {
+        name="main") 
 
-        addBlock("entry")(new IrBlockBuilder {
-          // Initialize our runtime
-          callDecl(None)(llibyInitDecl, Nil)
+      val entryBlock = mainFunction.startBlock("entry")
 
-          ret(IntegerConstant(IntegerType(32), 0))
-        })
-      }
+      // Initialize our runtime
+      entryBlock.callDecl(None)(llibyInitDecl, Nil)
+      entryBlock.ret(IntegerConstant(IntegerType(32), 0))
 
       defineFunction(mainFunction)
     }

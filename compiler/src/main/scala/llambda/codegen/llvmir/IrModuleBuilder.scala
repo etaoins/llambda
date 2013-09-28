@@ -10,15 +10,15 @@ class IrModuleBuilder extends Irable {
   // This generates global names
   protected implicit val nameSource = new GlobalNameSource
 
-  final def defineGlobalVariable(variable : IrGlobalVariableDef) {
+  def defineGlobalVariable(variable : IrGlobalVariableDef) {
     globalVariableDefs.append(variable)
   }
 
-  final def declareFunction(function : IrFunctionDecl) {
+  def declareFunction(function : IrFunctionDecl) {
     functionDecls.append(function)
   }
   
-  final def defineFunction(function : IrFunctionBuilder) {
+  def defineFunction(function : IrFunctionBuilder) {
     functionDefs.append(function)
   }
 

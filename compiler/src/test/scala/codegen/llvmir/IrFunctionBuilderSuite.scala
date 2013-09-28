@@ -10,12 +10,10 @@ class IrFunctionBuilderSuite extends FunSuite {
     val function = new IrFunctionBuilder(
       result=result,
       name="donothing",
-      namedArguments=Nil) {
+      namedArguments=Nil)
 
-      addBlock("entry")(new IrBlockBuilder {
-        retVoid()
-      })
-    }
+    val entryBlock = function.startBlock("entry")
+    entryBlock.retVoid()
 
     assert(function.toIr ===
       "define void @donothing() {\n" +
@@ -32,12 +30,10 @@ class IrFunctionBuilderSuite extends FunSuite {
     val function = new IrFunctionBuilder(
       result=result,
       name="retArg",
-      namedArguments=namedArguments) {
+      namedArguments=namedArguments)
 
-      addBlock("entry")(new IrBlockBuilder {
-        ret(argumentValues("testArg"))
-      })
-    }
+    val entryBlock = function.startBlock("entry")
+    entryBlock.ret(function.argumentValues("testArg"))
 
     assert(function.toIr ===
       "define i32 @retArg(i32 %testArg) {\n" +
@@ -70,19 +66,18 @@ class IrFunctionBuilderSuite extends FunSuite {
     val function = new IrFunctionBuilder(
       result=result,
       namedArguments=namedArguments,
-      name="main") {
+      name="main")
       
-      addBlock("entry")(new IrBlockBuilder {
-        val helloPointer = getelementptr("helloPtr")(
-          resultType=PointerType(IntegerType(8)),
-          basePointer=helloWorldDef.variable,
-          indices=List(0, 0).map(IntegerConstant(IntegerType(32), _))
-        )
-          
-        callDecl(None)(putsDecl, helloPointer :: Nil)
-        ret(IntegerConstant(IntegerType(32), 0))
-      })
-    }
+    val entryBlock = function.startBlock("entry")
+
+    val helloPointer = entryBlock.getelementptr("helloPtr")(
+      resultType=PointerType(IntegerType(8)),
+      basePointer=helloWorldDef.variable,
+      indices=List(0, 0).map(IntegerConstant(IntegerType(32), _))
+    )
+      
+    entryBlock.callDecl(None)(putsDecl, helloPointer :: Nil)
+    entryBlock.ret(IntegerConstant(IntegerType(32), 0))
 
     assert(function.toIr === 
       """|define i32 @main(i32 %argc, i8** %argv) {
@@ -99,18 +94,14 @@ class IrFunctionBuilderSuite extends FunSuite {
     val function = new IrFunctionBuilder(
       result=result,
       name="donothing",
-      namedArguments=Nil) {
+      namedArguments=Nil)
+    
+    val entryBlock = function.startBlock("entry")
+    val continueBlock = function.startBlock("continue")
 
-      val continueLabel = declareBlock("continue")
+    entryBlock. uncondBranch(continueBlock)
 
-      addBlock("entry")(new IrBlockBuilder {
-        uncondBranch(continueLabel)
-      })
-
-      defineBlock(continueLabel)(new IrBlockBuilder {
-        retVoid()
-      })
-    }
+    continueBlock.retVoid()
 
     assert(function.toIr ===
       "define void @donothing() {\n" +

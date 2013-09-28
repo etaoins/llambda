@@ -1,54 +1,48 @@
 package llambda.codegen.llvmir
 
 import llambda.InternalCompilerErrorException
-import org.scalatest.FunSuite
 
-class TerminatorInstrsSuite extends FunSuite {
+class TerminatorInstrsSuite extends IrTestSuite {
   test("ret with value") {
-    val block = new IrBlockBuilder()(new LocalNameSource) {
-      ret(IntegerConstant(IntegerType(16), 45))
-    }
+    val block = createTestBlock()
+    block.ret(IntegerConstant(IntegerType(16), 45))
 
-    assert(block.toIr === "\tret i16 45")
+    assertInstr(block, "ret i16 45")
   }
   
   test("ret without value") {
-    val block = new IrBlockBuilder()(new LocalNameSource) {
-      retVoid()
-    }
+    val block = createTestBlock()
+    block.retVoid()
 
-    assert(block.toIr === "\tret void")
+    assertInstr(block, "ret void")
   }
 
   test("valid conditional branch") {
-    val block = new IrBlockBuilder()(new LocalNameSource) {
-      condBranch(IntegerConstant(IntegerType(1), 0), IrLabel("true"), IrLabel("false"))
-    }
+    val block = createTestBlock()
+    block.condBranch(IntegerConstant(IntegerType(1), 0), createTestBlock("true"), createTestBlock("false"))
 
-    assert(block.toIr === "\tbr i1 0, label %true, label %false")
+    assertInstr(block, "br i1 0, label %true, label %false")
   }
 
   test("conditional branch with bad cond") {
+    val block = createTestBlock()
+
     intercept[InternalCompilerErrorException] {
-      new IrBlockBuilder()(new LocalNameSource) {
-        condBranch(StringConstant("Hello, world!"), IrLabel("true"), IrLabel("false"))
-      }
+      block.condBranch(StringConstant("Hello, world!"), createTestBlock("true"), createTestBlock("false"))
     }
   }
 
   test("unconditional branch") {
-    val block = new IrBlockBuilder()(new LocalNameSource) {
-      uncondBranch(IrLabel("alwayshere"))
-    }
+    val block = createTestBlock()
+    block.uncondBranch(createTestBlock("alwayshere"))
 
-    assert(block.toIr === "\tbr label %alwayshere")
+    assertInstr(block, "br label %alwayshere")
   }
 
   test("unreachable") {
-    val block = new IrBlockBuilder()(new LocalNameSource) {
-      unreachable()
-    }
+    val block = createTestBlock()
+    block.unreachable()
 
-    assert(block.toIr === "\tunreachable")
+    assertInstr(block, "unreachable")
   }
 }

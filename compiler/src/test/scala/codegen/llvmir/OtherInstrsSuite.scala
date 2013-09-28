@@ -1,65 +1,56 @@
 package llambda.codegen.llvmir
 
 import llambda.InternalCompilerErrorException
-import org.scalatest.FunSuite
 
-class OtherInstrsSuite extends FunSuite {
+class OtherInstrsSuite extends IrTestSuite {
   test("integer equality") {
     val var1 = IntegerConstant(IntegerType(32), 20)
     val var2 = IntegerConstant(IntegerType(32), 30)
 
-    val block = new IrBlockBuilder()(new LocalNameSource) {
-      val resultVal = icmp("equal")(ComparisonCond.Equal, None, var1, var2)
-    
-    }
+    val block = createTestBlock()
+    val resultVal = block.icmp("equal")(ComparisonCond.Equal, None, var1, var2)
 
-    assert(block.toIr === "\t%equal1 = icmp eq i32 20, 30")
+    assertInstr(block, "%equal1 = icmp eq i32 20, 30")
   }
   
   test("integer inequality") {
     val var1 = IntegerConstant(IntegerType(32), 20)
     val var2 = IntegerConstant(IntegerType(32), 30)
 
-    val block = new IrBlockBuilder()(new LocalNameSource) {
-      val resultVal = icmp("inequal")(ComparisonCond.NotEqual, None, var1, var2)
-    
-    }
+    val block = createTestBlock()
+    val resultVal = block.icmp("inequal")(ComparisonCond.NotEqual, None, var1, var2)
 
-    assert(block.toIr === "\t%inequal1 = icmp ne i32 20, 30")
+    assertInstr(block, "%inequal1 = icmp ne i32 20, 30")
   }
   
   test("integer signed greater than") {
     val var1 = IntegerConstant(IntegerType(32), 20)
     val var2 = IntegerConstant(IntegerType(32), 30)
 
-    val block = new IrBlockBuilder()(new LocalNameSource) {
-      val resultVal = icmp("greaterthan")(ComparisonCond.GreaterThan, Some(true), var1, var2)
-    
-    }
+    val block = createTestBlock()
+    val resultVal = block.icmp("greaterthan")(ComparisonCond.GreaterThan, Some(true), var1, var2)
 
-    assert(block.toIr === "\t%greaterthan1 = icmp sgt i32 20, 30")
+    assertInstr(block, "%greaterthan1 = icmp sgt i32 20, 30")
   }
   
   test("integer unsigned less than equals") {
     val var1 = IntegerConstant(IntegerType(32), 20)
     val var2 = IntegerConstant(IntegerType(32), 30)
 
-    val block = new IrBlockBuilder()(new LocalNameSource) {
-      val resultVal = icmp("lessthanequals")(ComparisonCond.LessThanEqual, Some(false), var1, var2)
-    
-    }
+    val block = createTestBlock()
+    val resultVal = block.icmp("lessthanequals")(ComparisonCond.LessThanEqual, Some(false), var1, var2)
 
-    assert(block.toIr === "\t%lessthanequals1 = icmp ule i32 20, 30")
+    assertInstr(block, "%lessthanequals1 = icmp ule i32 20, 30")
   }
   
   test("integer equality with signedness fails") {
     val var1 = IntegerConstant(IntegerType(32), 20)
     val var2 = IntegerConstant(IntegerType(32), 30)
 
-    val block = new IrBlockBuilder()(new LocalNameSource) {
-      intercept[InternalCompilerErrorException] {
-        icmp("signed")(ComparisonCond.Equal, Some(true), var1, var2)
-      }
+    val block = createTestBlock()
+
+    intercept[InternalCompilerErrorException] {
+      block.icmp("signed")(ComparisonCond.Equal, Some(true), var1, var2)
     }
   }
   
@@ -67,10 +58,10 @@ class OtherInstrsSuite extends FunSuite {
     val var1 = IntegerConstant(IntegerType(32), 20)
     val var2 = IntegerConstant(IntegerType(32), 30)
 
-    val block = new IrBlockBuilder()(new LocalNameSource) {
-      intercept[InternalCompilerErrorException] {
-        icmp("notsigned")(ComparisonCond.LessThan, None, var1, var2)
-      }
+    val block = createTestBlock()
+
+    intercept[InternalCompilerErrorException] {
+      block.icmp("notsigned")(ComparisonCond.LessThan, None, var1, var2)
     }
   }
   
@@ -78,22 +69,20 @@ class OtherInstrsSuite extends FunSuite {
     val fakePointer1 = LocalVariable("fake1", PointerType(IntegerType(64)))
     val fakePointer2 = LocalVariable("fake2", PointerType(IntegerType(64)))
 
-    val block = new IrBlockBuilder()(new LocalNameSource) {
-      val resultVal = icmp("pointer")(ComparisonCond.Equal, None, fakePointer1, fakePointer2)
-    
-    }
+    val block = createTestBlock()
+    val resultVal = block.icmp("pointer")(ComparisonCond.Equal, None, fakePointer1, fakePointer2)
 
-    assert(block.toIr === "\t%pointer1 = icmp eq i64* %fake1, %fake2")
+    assertInstr(block, "%pointer1 = icmp eq i64* %fake1, %fake2")
   }
   
   test("integer equality with incompatible types fails") {
     val var1 = IntegerConstant(IntegerType(64), 20)
     val var2 = IntegerConstant(IntegerType(32), 30)
 
-    val block = new IrBlockBuilder()(new LocalNameSource) {
-      intercept[InternalCompilerErrorException] {
-        icmp("incompatible")(ComparisonCond.Equal, None, var1, var2)
-      }
+    val block = createTestBlock()
+
+    intercept[InternalCompilerErrorException] {
+      block.icmp("incompatible")(ComparisonCond.Equal, None, var1, var2)
     }
   }
   
@@ -101,55 +90,51 @@ class OtherInstrsSuite extends FunSuite {
     val var1 = DoubleConstant(20.0)
     val var2 = DoubleConstant(30.0)
 
-    val block = new IrBlockBuilder()(new LocalNameSource) {
-      intercept[InternalCompilerErrorException] {
-        icmp("noninteger")(ComparisonCond.Equal, None, var1, var2)
-      }
+    val block = createTestBlock()
+
+    intercept[InternalCompilerErrorException] {
+      block.icmp("noninteger")(ComparisonCond.Equal, None, var1, var2)
     }
   }
 
   test("sourceless phi") {
+    val block = createTestBlock()
+
     intercept[InternalCompilerErrorException] {
-      new IrBlockBuilder()(new LocalNameSource) {
-        phi("error")()
-      }
+      block.phi("error")()
     }
   }
 
   test("incompatible source phi") {
+    val block = createTestBlock()
+
     intercept[InternalCompilerErrorException] {
-      new IrBlockBuilder()(new LocalNameSource) {
-        phi("error")(
-          PhiSource(IntegerConstant(IntegerType(1), 0), IrLabel("one")),
-          PhiSource(SingleConstant(2.0f), IrLabel("two"))
-        )
-      }
+      block.phi("error")(
+        PhiSource(IntegerConstant(IntegerType(1), 0), createTestBlock("one")),
+        PhiSource(SingleConstant(2.0f), createTestBlock("two"))
+      )
     }
   }
 
   test("single source phi") {
-    val block = new IrBlockBuilder()(new LocalNameSource) {
-      val resultVar = phi("singlesource")(
-        PhiSource(IntegerConstant(IntegerType(1), 0), IrLabel("one"))
-      )
+    val block = createTestBlock()
+    val resultVar = block.phi("singlesource")(
+      PhiSource(IntegerConstant(IntegerType(1), 0), createTestBlock("one"))
+    )
 
-      assert(resultVar === LocalVariable("singlesource1", IntegerType(1)))
-    }
-
-    assert(block.toIr === "\t%singlesource1 = phi i1 [ 0, %one ]")
+    assert(resultVar === LocalVariable("singlesource1", IntegerType(1)))
+    assertInstr(block, "%singlesource1 = phi i1 [ 0, %one ]")
   }
 
   test("two source phi") {
-    val block = new IrBlockBuilder()(new LocalNameSource) {
-      val resultVar = phi("twosource")(
-        PhiSource(DoubleConstant(1.0), IrLabel("plusone")),
-        PhiSource(DoubleConstant(-2.0), IrLabel("minustwo"))
-      )
+    val block = createTestBlock()
+    val resultVar = block.phi("twosource")(
+      PhiSource(DoubleConstant(1.0), createTestBlock("plusone")),
+      PhiSource(DoubleConstant(-2.0), createTestBlock("minustwo"))
+    )
 
-      assert(resultVar === LocalVariable("twosource1", DoubleType))
-    }
-
-    assert(block.toIr === "\t%twosource1 = phi double [ 1.0, %plusone ], [ -2.0, %minustwo ]")
+    assert(resultVar === LocalVariable("twosource1", DoubleType))
+    assertInstr(block, "%twosource1 = phi double [ 1.0, %plusone ], [ -2.0, %minustwo ]")
   }
   
   test("trivial call") {
@@ -160,16 +145,14 @@ class OtherInstrsSuite extends FunSuite {
       name="doNothing",
       arguments=declArgs)
 
-    val block = new IrBlockBuilder()(new LocalNameSource) {
-      val resultVar = callDecl(None)(
-        decl=decl,
-        arguments=List()
-      )
+    val block = createTestBlock()
+    val resultVar = block.callDecl(None)(
+      decl=decl,
+      arguments=List()
+    )
 
-      assert(resultVar === None)
-    }
-
-    assert(block.toIr === "\tcall void @doNothing()")
+    assert(resultVar === None)
+    assertInstr(block, "call void @doNothing()")
   }
   
   test("call returning value") {
@@ -180,16 +163,14 @@ class OtherInstrsSuite extends FunSuite {
       name="returnSomething",
       arguments=declArgs)
 
-    val block = new IrBlockBuilder()(new LocalNameSource) {
-      val resultVar = callDecl(Some("ret"))(
-        decl=decl,
-        arguments=List()
-      )
+    val block = createTestBlock()
+    val resultVar = block.callDecl(Some("ret"))(
+      decl=decl,
+      arguments=List()
+    )
 
-      assert(resultVar.isDefined)
-    }
-
-    assert(block.toIr === "\t%ret1 = call zeroext i8 @returnSomething()")
+    assert(resultVar.isDefined)
+    assertInstr(block, "%ret1 = call zeroext i8 @returnSomething()")
   }
   
   test("call discarding value") {
@@ -200,16 +181,14 @@ class OtherInstrsSuite extends FunSuite {
       name="returnSomething",
       arguments=declArgs)
 
-    val block = new IrBlockBuilder()(new LocalNameSource) {
-      val resultVar = callDecl(None)(
-        decl=decl,
-        arguments=List()
-      )
+    val block = createTestBlock()
+    val resultVar = block.callDecl(None)(
+      decl=decl,
+      arguments=List()
+    )
 
-      assert(resultVar === None)
-    }
-
-    assert(block.toIr === "\tcall zeroext i8 @returnSomething()")
+    assert(resultVar === None)
+    assertInstr(block, "call zeroext i8 @returnSomething()")
   }
   
   test("fastcc call") {
@@ -221,16 +200,14 @@ class OtherInstrsSuite extends FunSuite {
       arguments=declArgs,
       callingConv=CallingConv.FastCC)
 
-    val block = new IrBlockBuilder()(new LocalNameSource) {
-      val resultVar = callDecl(None)(
-        decl=decl,
-        arguments=List()
-      )
+    val block = createTestBlock()
+    val resultVar = block.callDecl(None)(
+      decl=decl,
+      arguments=List()
+    )
 
-      assert(resultVar === None)
-    }
-
-    assert(block.toIr === "\tcall fastcc void @fastCc()")
+    assert(resultVar === None)
+    assertInstr(block, "call fastcc void @fastCc()")
   }
   
   test("tail call") {
@@ -241,17 +218,15 @@ class OtherInstrsSuite extends FunSuite {
       name="doNothing",
       arguments=declArgs)
 
-    val block = new IrBlockBuilder()(new LocalNameSource) {
-      val resultVar = callDecl(None)(
-        decl=decl,
-        arguments=List(),
-        tailCall=true
-      )
+    val block = createTestBlock()
+    val resultVar = block.callDecl(None)(
+      decl=decl,
+      arguments=List(),
+      tailCall=true
+    )
 
-      assert(resultVar === None)
-    }
-
-    assert(block.toIr === "\ttail call void @doNothing()")
+    assert(resultVar === None)
+    assertInstr(block, "tail call void @doNothing()")
   }
 
   test("call with insufficent args") {
@@ -262,10 +237,10 @@ class OtherInstrsSuite extends FunSuite {
       name="notEnoughArgs",
       arguments=declArgs)
     
-    val block = new IrBlockBuilder()(new LocalNameSource) {
-      intercept[InternalCompilerErrorException] {
-        callDecl(None)(decl=decl, arguments=List())
-      }
+    val block = createTestBlock()
+
+    intercept[InternalCompilerErrorException] {
+      block.callDecl(None)(decl=decl, arguments=List())
     }
   }
 
@@ -277,15 +252,14 @@ class OtherInstrsSuite extends FunSuite {
       name="mismatchedArgs",
       arguments=declArgs)
     
-    val block = new IrBlockBuilder()(new LocalNameSource) {
-      val mismatchedValue = IntegerConstant(IntegerType(16), 5)
+    val block = createTestBlock()
+    val mismatchedValue = IntegerConstant(IntegerType(16), 5)
 
-      intercept[InternalCompilerErrorException] {
-        callDecl(None)(
-          decl=decl,
-          arguments=List(mismatchedValue)
-        )
-      }
+    intercept[InternalCompilerErrorException] {
+      block.callDecl(None)(
+        decl=decl,
+        arguments=List(mismatchedValue)
+      )
     }
   }
 
@@ -301,21 +275,19 @@ class OtherInstrsSuite extends FunSuite {
       name="withArgs",
       arguments=declArgs)
     
-    val block = new IrBlockBuilder()(new LocalNameSource) {
-      val mismatchedValue = IntegerConstant(IntegerType(16), 5)
+    val block = createTestBlock()
+    val mismatchedValue = IntegerConstant(IntegerType(16), 5)
 
-      val resultVar = callDecl(None)(
-        decl=decl,
-        arguments=List(
-          IntegerConstant(IntegerType(8), 1),
-          LocalVariable("local", PointerType(IntegerType(1)))
-        )
+    val resultVar = block.callDecl(None)(
+      decl=decl,
+      arguments=List(
+        IntegerConstant(IntegerType(8), 1),
+        LocalVariable("local", PointerType(IntegerType(1)))
       )
-    
-      assert(resultVar === None)
-    }
-    
-    assert(block.toIr === "\tcall void @withArgs(i8 1, i1* %local)")
+    )
+  
+    assert(resultVar === None)
+    assertInstr(block, "call void @withArgs(i8 1, i1* %local)")
   }
   
   test("call with attrs") {
@@ -329,16 +301,14 @@ class OtherInstrsSuite extends FunSuite {
       attributes=Set(IrFunction.Cold, IrFunction.ReadOnly)
     )
 
-    val block = new IrBlockBuilder()(new LocalNameSource) {
-      val resultVar = callDecl(None)(
-        decl=decl,
-        arguments=List()
-      )
+    val block = createTestBlock()
+    val resultVar = block.callDecl(None)(
+      decl=decl,
+      arguments=List()
+    )
 
-      assert(resultVar === None)
-    }
-
-    assert(block.toIr === "\tcall void @withAttrs() readonly")
+    assert(resultVar === None)
+    assertInstr(block, "call void @withAttrs() readonly")
   }
 
   test("christmas tree call") {
@@ -355,20 +325,18 @@ class OtherInstrsSuite extends FunSuite {
       callingConv=CallingConv.ColdCC
     )
     
-    val block = new IrBlockBuilder()(new LocalNameSource) {
-      val resultVar = callDecl(Some("ret"))(
-        decl=decl,
-        arguments=List(
-          SingleConstant(2.0f),
-          LocalVariable("local", PointerType(DoubleType))
-        ),
-        tailCall=true
-      )
+    val block = createTestBlock()
+    val resultVar = block.callDecl(Some("ret"))(
+      decl=decl,
+      arguments=List(
+        SingleConstant(2.0f),
+        LocalVariable("local", PointerType(DoubleType))
+      ),
+      tailCall=true
+    )
 
-      assert(resultVar.isDefined)
-    }
-
-    assert(block.toIr === "\t%ret1 = tail call coldcc zeroext i8 @uberCall(float 2.0, double* %local) noreturn nounwind")
+    assert(resultVar.isDefined)
+    assertInstr(block, "%ret1 = tail call coldcc zeroext i8 @uberCall(float 2.0, double* %local) noreturn nounwind")
   }
 }
 

@@ -2,9 +2,9 @@ package llambda.codegen.llvmir
 
 import llambda.InternalCompilerErrorException
 
-private[llvmir] trait OtherInstrs extends IrInstrBuilder {
-  protected case class PhiSource(value : IrValue, label : IrLabel)
+protected[llvmir] case class PhiSource(value : IrValue, block : IrBlockBuilder)
 
+private[llvmir] trait OtherInstrs extends IrInstrBuilder {
   def icmp(resultName : String)(compareCond : ComparisonCond.ComparisonCond, signed : Option[Boolean], val1 : IrValue, val2 : IrValue) = {
     if (val1.irType != val2.irType) {
       throw new InternalCompilerErrorException("Attempted icmp with incompatible types")
@@ -50,7 +50,7 @@ private[llvmir] trait OtherInstrs extends IrInstrBuilder {
     val resultVar = allocateLocalVar(resultType, resultName)
 
     val sourceIr = (sources map { source =>
-      s"[ ${source.value.toIr}, ${source.label.toIr} ]"
+      s"[ ${source.value.toIr}, %${source.block.label} ]"
     }).mkString(", ")
 
     instructions += s"${resultVar.toIr} = phi ${resultType.toIr} $sourceIr"
