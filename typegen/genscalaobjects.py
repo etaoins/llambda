@@ -5,6 +5,9 @@ from typegen.constants import BASE_TYPE
 from typegen.boxedtype import TypeEqualsCondition, TypeBitmaskCondition
 from typegen.clikeutil import *
 
+def _uppercase_first(string):
+    return string[0].upper() + string[1:]
+
 def _type_name_to_nfi_decl(type_name):
     return "boxed-" + re.sub('([A-Z][a-z]+)', r'-\1', type_name).lower()
 
@@ -73,7 +76,7 @@ def _recursive_field_names(boxed_type):
         # No more super types
         return []
 
-def _generate_constant_constructor(boxed_types, boxed_type):
+def _generate_constant_constructor(all_types, boxed_type):
     constant_type_id = boxed_type.type_id
 
     our_field_names = list(boxed_type.fields.keys())
@@ -118,7 +121,7 @@ def _generate_constant_constructor(boxed_types, boxed_type):
 
         for field_name in recursive_field_names:
             if (field_name == 'typeId') and (constant_type_id is not None):
-                type_id_field = boxed_types[BASE_TYPE].fields['typeId']
+                type_id_field = all_types[BASE_TYPE].fields['typeId']
                 type_id_type = _field_type_to_scala(type_id_field)
                 type_id_constant = 'IntegerConstant(' + type_id_type + ', typeId)'                
                 super_parameters.append('        typeId=' + type_id_constant)
@@ -135,7 +138,7 @@ def _generate_constant_constructor(boxed_types, boxed_type):
     our_fields = []
     for field_name in our_field_names:
         if field_name == 'gcState':
-            gcstate_field = boxed_types[BASE_TYPE].fields['gcState']
+            gcstate_field = all_types[BASE_TYPE].fields['gcState']
             gcstate_type = _field_type_to_scala(gcstate_field)
             
             our_fields.append('      IntegerConstant(' + gcstate_type + ', 0)')
@@ -154,10 +157,10 @@ def _generate_field_accessors(leaf_type, current_type, depth = 1):
 
     output = ''
     for field_name, field in current_type.fields.items():
-        accessor_name = field_name[0].upper() + field_name[1:]
+        accessor_name = 'genPointerTo' + _uppercase_first(field_name)
 
         output += '\n'
-        output += '  def pointerTo' + accessor_name + '(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {\n'
+        output += '  def ' + accessor_name + '(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {\n'
         
         # Make sure we're the correct type
         exception_message = "Unexpected type for boxed value"
@@ -183,7 +186,59 @@ def _generate_field_accessors(leaf_type, current_type, depth = 1):
 
     return output
 
-def _generate_boxed_types(boxed_types):
+def _generate_type_check(all_types, boxed_type):
+
+    type_id_type = _field_type_to_scala(all_types[BASE_TYPE].fields['typeId'])
+
+    output  = '\n'
+    output += '  def genTypeCheck(function : IrFunctionBuilder, entryBlock : IrBlockBuilder, boxedValue : IrValue, successBlock : IrBlockBuilder, failBlock : IrBlockBuilder) {\n'
+    output += '    val typeIdPointer = genPointerToTypeId(entryBlock, boxedValue)\n'
+    output += '    val typeId = entryBlock.load("typeId")(typeIdPointer)\n'
+
+    # Start building off the entry block
+    incoming_block = 'entry'
+
+    for idx, condition in enumerate(boxed_type.type_conditions):
+        checking_type_name = condition.boxed_type.name
+        uppercase_type_name = _uppercase_first(checking_type_name)
+        
+        check_bool_name = 'is' + uppercase_type_name
+
+        output += '\n' 
+
+        if isinstance(condition, TypeEqualsCondition):
+            expected_value = 'IntegerConstant(' + type_id_type + ', ' + str(condition.type_id) + ')'
+
+            # This is just a direct comparison
+            output += '    val ' + check_bool_name + ' = '  + incoming_block + 'Block.icmp("' + check_bool_name + '")(ComparisonCond.Equal, None, typeId, ' + expected_value + ')\n'
+        elif isinstance(condition, TypeBitmaskCondition):
+            constant_zero = 'IntegerConstant(' + type_id_type + ', 0)'
+            bitmask_name = checking_type_name + 'TypeMasked'
+            bitmask = 'IntegerConstant(' + type_id_type + ', ' + hex(condition.bitmask) + ')'
+
+            # Mask the value first
+            output += '    val '  + bitmask_name + ' = ' + incoming_block + 'Block.and("' + bitmask_name + '")(typeId, ' + bitmask + ')\n'
+            # Compare the masked value with zero
+            output += '    val ' + check_bool_name + ' = ' + incoming_block + 'Block.icmp("' + check_bool_name + '")(ComparisonCond.NotEqual, None, ' + bitmask_name + ', ' + constant_zero + ')\n'
+            
+        if idx == (len(boxed_type.type_conditions) - 1):
+            # No more conditions; exit using the fail block if this check fails
+            outgoing_block = 'fail'
+        else:
+            # Allocate the outgoing block so we can use it as a brach target
+            outgoing_block = 'not' + uppercase_type_name
+            output += '    val ' + outgoing_block + 'Block = function.startBlock("' + outgoing_block + '")\n'
+
+        output += '    ' + incoming_block + 'Block.condBranch(' + check_bool_name + ', successBlock, ' + outgoing_block + 'Block)\n'
+
+        # The block we just branched to is the block we're building next
+        incoming_block = outgoing_block
+
+    output += '  }\n'
+
+    return output
+
+def _generate_boxed_types(all_types):
     output  = GENERATED_FILE_COMMENT
     
     output += "package llambda.codegen.boxedtype\n\n"
@@ -196,7 +251,7 @@ def _generate_boxed_types(boxed_types):
     output += '  val superType : Option[BoxedType]\n'
     output += '}\n\n'
 
-    for type_name, boxed_type in boxed_types.items():
+    for type_name, boxed_type in all_types.items():
         object_name = type_name_to_clike_class(type_name)
         supertype_name = boxed_type.inherits
 
@@ -215,7 +270,12 @@ def _generate_boxed_types(boxed_types):
 
         if not boxed_type.singleton:
             output += '\n'
-            output += _generate_constant_constructor(boxed_types, boxed_type)
+            output += _generate_constant_constructor(all_types, boxed_type)
+        
+        # Every type should be an instance of the base type; don't generate a
+        # type check
+        if boxed_type.type_conditions and (type_name != BASE_TYPE):
+            output += _generate_type_check(all_types, boxed_type)
         
         output += _generate_field_accessors(boxed_type, boxed_type)
 
@@ -224,7 +284,7 @@ def _generate_boxed_types(boxed_types):
 
     return output
 
-def _generate_name_to_boxed_type(boxed_types):
+def _generate_name_to_boxed_type(all_types):
     output  = GENERATED_FILE_COMMENT
     output += 'package llambda.frontend\n\n'
 
@@ -233,7 +293,7 @@ def _generate_name_to_boxed_type(boxed_types):
     output += 'object NativeTypeNameToBoxedType {\n'
     output += '  def apply : PartialFunction[String, bt.BoxedType] = {\n'
 
-    for type_name, boxed_type in boxed_types.items():
+    for type_name, boxed_type in all_types.items():
         nfi_decl_name = _type_name_to_nfi_decl(type_name)
         boxed_type_class = type_name_to_clike_class(type_name)
 
@@ -244,8 +304,8 @@ def _generate_name_to_boxed_type(boxed_types):
     output += '}\n'
     return output
 
-def generate_scala_objects(boxed_types):
+def generate_scala_objects(all_types):
     ROOT_PATH = 'compiler/src/main/scala/llambda/'
 
-    return {ROOT_PATH + 'codegen/generated/BoxedType.scala': _generate_boxed_types(boxed_types),
-            ROOT_PATH + 'frontend/generated/NativeTypeNameToBoxedType.scala': _generate_name_to_boxed_type(boxed_types)}
+    return {ROOT_PATH + 'codegen/generated/BoxedType.scala': _generate_boxed_types(all_types),
+            ROOT_PATH + 'frontend/generated/NativeTypeNameToBoxedType.scala': _generate_name_to_boxed_type(all_types)}
