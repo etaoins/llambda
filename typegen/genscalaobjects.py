@@ -164,7 +164,7 @@ def _generate_field_accessors(leaf_type, current_type, depth = 1):
         
         # Make sure we're the correct type
         exception_message = "Unexpected type for boxed value"
-        output += '    if (boxedValue.irType != UserDefinedType("' + leaf_type.name + '")) {\n'
+        output += '    if (boxedValue.irType != PointerType(UserDefinedType("' + leaf_type.name + '"))) {\n'
         output += '       throw new InternalCompilerErrorException("' + exception_message + '")\n'
         output += '    }\n\n'
 

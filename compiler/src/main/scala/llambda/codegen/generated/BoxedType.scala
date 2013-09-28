@@ -28,7 +28,7 @@ object BoxedDatum extends BoxedType {
   }
 
   def genPointerToTypeId(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("datum")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("datum"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -41,7 +41,7 @@ object BoxedDatum extends BoxedType {
   }
 
   def genPointerToGcState(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("datum")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("datum"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -68,7 +68,7 @@ object BoxedUnspecific extends BoxedType {
   }
 
   def genPointerToTypeId(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("unspecific")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("unspecific"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -81,7 +81,7 @@ object BoxedUnspecific extends BoxedType {
   }
 
   def genPointerToGcState(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("unspecific")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("unspecific"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -126,7 +126,7 @@ object BoxedPair extends BoxedType {
   }
 
   def genPointerToCar(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("pair")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("pair"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -139,7 +139,7 @@ object BoxedPair extends BoxedType {
   }
 
   def genPointerToCdr(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("pair")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("pair"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -152,7 +152,7 @@ object BoxedPair extends BoxedType {
   }
 
   def genPointerToTypeId(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("pair")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("pair"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -165,7 +165,7 @@ object BoxedPair extends BoxedType {
   }
 
   def genPointerToGcState(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("pair")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("pair"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -192,7 +192,7 @@ object BoxedEmptyList extends BoxedType {
   }
 
   def genPointerToTypeId(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("emptyList")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("emptyList"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -205,7 +205,7 @@ object BoxedEmptyList extends BoxedType {
   }
 
   def genPointerToGcState(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("emptyList")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("emptyList"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -258,7 +258,7 @@ object BoxedStringLike extends BoxedType {
   }
 
   def genPointerToCharLength(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("stringLike")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("stringLike"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -271,7 +271,7 @@ object BoxedStringLike extends BoxedType {
   }
 
   def genPointerToByteLength(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("stringLike")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("stringLike"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -284,7 +284,7 @@ object BoxedStringLike extends BoxedType {
   }
 
   def genPointerToUtf8Data(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("stringLike")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("stringLike"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -297,7 +297,7 @@ object BoxedStringLike extends BoxedType {
   }
 
   def genPointerToTypeId(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("stringLike")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("stringLike"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -310,7 +310,7 @@ object BoxedStringLike extends BoxedType {
   }
 
   def genPointerToGcState(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("stringLike")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("stringLike"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -348,7 +348,7 @@ object BoxedString extends BoxedType {
   }
 
   def genPointerToCharLength(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("string")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("string"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -361,7 +361,7 @@ object BoxedString extends BoxedType {
   }
 
   def genPointerToByteLength(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("string")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("string"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -374,7 +374,7 @@ object BoxedString extends BoxedType {
   }
 
   def genPointerToUtf8Data(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("string")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("string"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -387,7 +387,7 @@ object BoxedString extends BoxedType {
   }
 
   def genPointerToTypeId(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("string")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("string"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -400,7 +400,7 @@ object BoxedString extends BoxedType {
   }
 
   def genPointerToGcState(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("string")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("string"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -438,7 +438,7 @@ object BoxedSymbol extends BoxedType {
   }
 
   def genPointerToCharLength(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("symbol")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("symbol"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -451,7 +451,7 @@ object BoxedSymbol extends BoxedType {
   }
 
   def genPointerToByteLength(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("symbol")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("symbol"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -464,7 +464,7 @@ object BoxedSymbol extends BoxedType {
   }
 
   def genPointerToUtf8Data(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("symbol")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("symbol"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -477,7 +477,7 @@ object BoxedSymbol extends BoxedType {
   }
 
   def genPointerToTypeId(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("symbol")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("symbol"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -490,7 +490,7 @@ object BoxedSymbol extends BoxedType {
   }
 
   def genPointerToGcState(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("symbol")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("symbol"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -517,7 +517,7 @@ object BoxedBoolean extends BoxedType {
   }
 
   def genPointerToValue(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("boolean")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("boolean"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -530,7 +530,7 @@ object BoxedBoolean extends BoxedType {
   }
 
   def genPointerToTypeId(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("boolean")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("boolean"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -543,7 +543,7 @@ object BoxedBoolean extends BoxedType {
   }
 
   def genPointerToGcState(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("boolean")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("boolean"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -581,7 +581,7 @@ object BoxedNumeric extends BoxedType {
   }
 
   def genPointerToTypeId(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("numeric")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("numeric"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -594,7 +594,7 @@ object BoxedNumeric extends BoxedType {
   }
 
   def genPointerToGcState(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("numeric")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("numeric"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -634,7 +634,7 @@ object BoxedExactInteger extends BoxedType {
   }
 
   def genPointerToValue(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("exactInteger")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("exactInteger"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -647,7 +647,7 @@ object BoxedExactInteger extends BoxedType {
   }
 
   def genPointerToTypeId(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("exactInteger")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("exactInteger"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -660,7 +660,7 @@ object BoxedExactInteger extends BoxedType {
   }
 
   def genPointerToGcState(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("exactInteger")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("exactInteger"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -700,7 +700,7 @@ object BoxedInexactRational extends BoxedType {
   }
 
   def genPointerToValue(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("inexactRational")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("inexactRational"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -713,7 +713,7 @@ object BoxedInexactRational extends BoxedType {
   }
 
   def genPointerToTypeId(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("inexactRational")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("inexactRational"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -726,7 +726,7 @@ object BoxedInexactRational extends BoxedType {
   }
 
   def genPointerToGcState(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("inexactRational")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("inexactRational"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -766,7 +766,7 @@ object BoxedCharacter extends BoxedType {
   }
 
   def genPointerToUnicodeChar(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("character")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("character"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -779,7 +779,7 @@ object BoxedCharacter extends BoxedType {
   }
 
   def genPointerToTypeId(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("character")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("character"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -792,7 +792,7 @@ object BoxedCharacter extends BoxedType {
   }
 
   def genPointerToGcState(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("character")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("character"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -837,7 +837,7 @@ object BoxedByteVector extends BoxedType {
   }
 
   def genPointerToLength(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("byteVector")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("byteVector"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -850,7 +850,7 @@ object BoxedByteVector extends BoxedType {
   }
 
   def genPointerToData(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("byteVector")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("byteVector"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -863,7 +863,7 @@ object BoxedByteVector extends BoxedType {
   }
 
   def genPointerToTypeId(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("byteVector")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("byteVector"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -876,7 +876,7 @@ object BoxedByteVector extends BoxedType {
   }
 
   def genPointerToGcState(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("byteVector")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("byteVector"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -921,7 +921,7 @@ object BoxedProcedure extends BoxedType {
   }
 
   def genPointerToClosure(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("procedure")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("procedure"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -934,7 +934,7 @@ object BoxedProcedure extends BoxedType {
   }
 
   def genPointerToEntryPoint(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("procedure")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("procedure"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -947,7 +947,7 @@ object BoxedProcedure extends BoxedType {
   }
 
   def genPointerToTypeId(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("procedure")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("procedure"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -960,7 +960,7 @@ object BoxedProcedure extends BoxedType {
   }
 
   def genPointerToGcState(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("procedure")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("procedure"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -1005,7 +1005,7 @@ object BoxedVectorLike extends BoxedType {
   }
 
   def genPointerToLength(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("vectorLike")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("vectorLike"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -1018,7 +1018,7 @@ object BoxedVectorLike extends BoxedType {
   }
 
   def genPointerToElements(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("vectorLike")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("vectorLike"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -1031,7 +1031,7 @@ object BoxedVectorLike extends BoxedType {
   }
 
   def genPointerToTypeId(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("vectorLike")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("vectorLike"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -1044,7 +1044,7 @@ object BoxedVectorLike extends BoxedType {
   }
 
   def genPointerToGcState(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("vectorLike")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("vectorLike"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -1081,7 +1081,7 @@ object BoxedVector extends BoxedType {
   }
 
   def genPointerToLength(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("vector")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("vector"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -1094,7 +1094,7 @@ object BoxedVector extends BoxedType {
   }
 
   def genPointerToElements(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("vector")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("vector"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -1107,7 +1107,7 @@ object BoxedVector extends BoxedType {
   }
 
   def genPointerToTypeId(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("vector")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("vector"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -1120,7 +1120,7 @@ object BoxedVector extends BoxedType {
   }
 
   def genPointerToGcState(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("vector")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("vector"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -1157,7 +1157,7 @@ object BoxedClosure extends BoxedType {
   }
 
   def genPointerToLength(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("closure")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("closure"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -1170,7 +1170,7 @@ object BoxedClosure extends BoxedType {
   }
 
   def genPointerToElements(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("closure")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("closure"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -1183,7 +1183,7 @@ object BoxedClosure extends BoxedType {
   }
 
   def genPointerToTypeId(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("closure")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("closure"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -1196,7 +1196,7 @@ object BoxedClosure extends BoxedType {
   }
 
   def genPointerToGcState(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != UserDefinedType("closure")) {
+    if (boxedValue.irType != PointerType(UserDefinedType("closure"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
