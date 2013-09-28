@@ -2,7 +2,7 @@ import re
 
 from typegen.exceptions import SemanticException
 from typegen.constants import BASE_TYPE
-from typegen.boxedtype import TypeEqualsAssertion, TypeBitmaskAssertion, TypeUnionAssertion 
+from typegen.boxedtype import TypeEqualsCondition, TypeBitmaskCondition
 from typegen.clikeutil import *
 
 def _type_name_to_nfi_decl(type_name):
@@ -74,12 +74,7 @@ def _recursive_field_names(boxed_type):
         return []
 
 def _generate_constant_constructor(boxed_types, boxed_type):
-    # Are we fully concrete?
-    assertion = boxed_type.type_assertion
-    if isinstance(assertion, TypeEqualsAssertion):
-        constant_type_id = assertion.type_id_value
-    else:
-        constant_type_id = None
+    constant_type_id = boxed_type.type_id
 
     our_field_names = list(boxed_type.fields.keys())
     recursive_field_names = _recursive_field_names(boxed_type)
@@ -214,9 +209,9 @@ def _generate_boxed_types(boxed_types):
         else:
             output += '  val superType = None\n'
 
-        assertion = boxed_type.type_assertion
-        if isinstance(assertion, TypeEqualsAssertion):
-            output += '  val typeId = ' + str(assertion.type_id_value) + '\n'
+        type_id = boxed_type.type_id
+        if type_id is not None:
+            output += '  val typeId = ' + str(type_id) + '\n'
 
         if not boxed_type.singleton:
             output += '\n'

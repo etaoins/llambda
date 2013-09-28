@@ -19,8 +19,8 @@ def generate_predicates(boxed_types):
     content += '{\n\n'
 
     for type_name, boxed_type in boxed_types.items():
-        if boxed_type.type_assertion is None:
-            # Can't check types without a type ID
+        if not boxed_type.type_conditions:
+            # Can't check types without a type condition
             continue
         
         if type_name == BASE_TYPE:

@@ -3,22 +3,18 @@ from collections import OrderedDict
 
 from typegen.exceptions import SemanticException
 
-class TypeAssertion(object):
+class TypeCondition(object):
     pass
 
-class TypeEqualsAssertion(TypeAssertion):
-    def __init__(self, boxed_type, type_id_value):
+class TypeEqualsCondition(TypeCondition):
+    def __init__(self, boxed_type, type_id):
         self.boxed_type = boxed_type
-        self.type_id_value = type_id_value
+        self.type_id = type_id
 
-class TypeBitmaskAssertion(TypeAssertion):
+class TypeBitmaskCondition(TypeCondition):
     def __init__(self, boxed_type, bitmask):
         self.boxed_type = boxed_type
         self.bitmask = bitmask
-
-class TypeUnionAssertion(TypeAssertion):
-    def __init__(self, subassertions):
-        self.subassertions = subassertions
 
 class BoxedTypeField(object):
     def __init__(self, type_name, field_json):
@@ -55,18 +51,22 @@ class BoxedType(object):
         self.subtypes = OrderedDict()
 
         if isinstance(raw_type_id, int): 
-            self._type_assertion = TypeEqualsAssertion(self, raw_type_id)
+            self.type_id = raw_type_id
+            self._type_conditions = [TypeEqualsCondition(self, raw_type_id)]
         else:
+            self.type_id = None
+
             if not self.abstract:
                 raise SemanticException('Type "' + self.name + '" does not have a specific type ID and must be marked abstract')
-            elif raw_type_id is None:
-                self._type_assertion = None
+            
+            if raw_type_id is None:
+                self._type_conditions = None
             else:
-                # Besides integers we only understand bit test type IDs (eg &32768)
+                # Besides integers we only understand bit test type IDs (eg &0x8000)
                 if raw_type_id[0] != '&':
                     raise SemanticException('Unable to parse type ID "' + raw_type_id + '"')
                 else:
-                    self._type_assertion = TypeBitmaskAssertion(self, raw_type_id[1:]) 
+                    self._type_conditions = [TypeBitmaskCondition(self, int(raw_type_id[1:], 0))]
 
         self.fields = OrderedDict()
         
@@ -77,23 +77,19 @@ class BoxedType(object):
                 raise SemanticException('Duplicate field name "' + parsed_field.qualified_name + '"')
 
             self.fields[parsed_field.name] = parsed_field
-    
+
     @property
-    def type_assertion(self):
-        # Do we have a assertion from either an explicitly defined assertion or 
+    def type_conditions(self):
+        # Do we have a condition from either an explicitly defined condition or 
         # one calculated on a previous invocation?
-        if self._type_assertion is None:
-            subtype_assertions = []
+        if self._type_conditions is None:
+            self._type_conditions = []
 
-            # Collect all the assertions for our subtypes
+            # Collect all the conditions for our subtypes
             for subtype in self.subtypes.values():
-                subtype_assertions.append(subtype.type_assertion)
+                self._type_conditions.extend(subtype.type_conditions)
 
-            if len(subtype_assertions) != 0:
-                # Wrap the subtype assertions in a union
-                self._type_assertion = TypeUnionAssertion(subtype_assertions)
-
-        return self._type_assertion
+        return self._type_conditions
 
     def add_subtype(self, subtype):
         self.subtypes[subtype.name] = subtype

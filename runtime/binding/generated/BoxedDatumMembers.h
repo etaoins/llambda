@@ -16,7 +16,7 @@ public:
 public:
 	BoxedUnspecific* asBoxedUnspecific()
 	{
-		if (typeId() == BoxedTypeId::Unspecific)
+		if ((typeId() == BoxedTypeId::Unspecific))
 		{
 			return reinterpret_cast<BoxedUnspecific*>(this);
 		}
@@ -26,7 +26,7 @@ public:
 
 	const BoxedUnspecific* asBoxedUnspecific() const
 	{
-		if (typeId() == BoxedTypeId::Unspecific)
+		if ((typeId() == BoxedTypeId::Unspecific))
 		{
 			return reinterpret_cast<const BoxedUnspecific*>(this);
 		}
@@ -36,12 +36,12 @@ public:
 
 	bool isBoxedUnspecific() const
 	{
-		return typeId() == BoxedTypeId::Unspecific;
+		return (typeId() == BoxedTypeId::Unspecific);
 	}
 
 	BoxedPair* asBoxedPair()
 	{
-		if (typeId() == BoxedTypeId::Pair)
+		if ((typeId() == BoxedTypeId::Pair))
 		{
 			return reinterpret_cast<BoxedPair*>(this);
 		}
@@ -51,7 +51,7 @@ public:
 
 	const BoxedPair* asBoxedPair() const
 	{
-		if (typeId() == BoxedTypeId::Pair)
+		if ((typeId() == BoxedTypeId::Pair))
 		{
 			return reinterpret_cast<const BoxedPair*>(this);
 		}
@@ -61,12 +61,12 @@ public:
 
 	bool isBoxedPair() const
 	{
-		return typeId() == BoxedTypeId::Pair;
+		return (typeId() == BoxedTypeId::Pair);
 	}
 
 	BoxedEmptyList* asBoxedEmptyList()
 	{
-		if (typeId() == BoxedTypeId::EmptyList)
+		if ((typeId() == BoxedTypeId::EmptyList))
 		{
 			return reinterpret_cast<BoxedEmptyList*>(this);
 		}
@@ -76,7 +76,7 @@ public:
 
 	const BoxedEmptyList* asBoxedEmptyList() const
 	{
-		if (typeId() == BoxedTypeId::EmptyList)
+		if ((typeId() == BoxedTypeId::EmptyList))
 		{
 			return reinterpret_cast<const BoxedEmptyList*>(this);
 		}
@@ -86,7 +86,7 @@ public:
 
 	bool isBoxedEmptyList() const
 	{
-		return typeId() == BoxedTypeId::EmptyList;
+		return (typeId() == BoxedTypeId::EmptyList);
 	}
 
 	BoxedStringLike* asBoxedStringLike()
@@ -116,7 +116,7 @@ public:
 
 	BoxedString* asBoxedString()
 	{
-		if (typeId() == BoxedTypeId::String)
+		if ((typeId() == BoxedTypeId::String))
 		{
 			return reinterpret_cast<BoxedString*>(this);
 		}
@@ -126,7 +126,7 @@ public:
 
 	const BoxedString* asBoxedString() const
 	{
-		if (typeId() == BoxedTypeId::String)
+		if ((typeId() == BoxedTypeId::String))
 		{
 			return reinterpret_cast<const BoxedString*>(this);
 		}
@@ -136,12 +136,12 @@ public:
 
 	bool isBoxedString() const
 	{
-		return typeId() == BoxedTypeId::String;
+		return (typeId() == BoxedTypeId::String);
 	}
 
 	BoxedSymbol* asBoxedSymbol()
 	{
-		if (typeId() == BoxedTypeId::Symbol)
+		if ((typeId() == BoxedTypeId::Symbol))
 		{
 			return reinterpret_cast<BoxedSymbol*>(this);
 		}
@@ -151,7 +151,7 @@ public:
 
 	const BoxedSymbol* asBoxedSymbol() const
 	{
-		if (typeId() == BoxedTypeId::Symbol)
+		if ((typeId() == BoxedTypeId::Symbol))
 		{
 			return reinterpret_cast<const BoxedSymbol*>(this);
 		}
@@ -161,12 +161,12 @@ public:
 
 	bool isBoxedSymbol() const
 	{
-		return typeId() == BoxedTypeId::Symbol;
+		return (typeId() == BoxedTypeId::Symbol);
 	}
 
 	BoxedBoolean* asBoxedBoolean()
 	{
-		if (typeId() == BoxedTypeId::Boolean)
+		if ((typeId() == BoxedTypeId::Boolean))
 		{
 			return reinterpret_cast<BoxedBoolean*>(this);
 		}
@@ -176,7 +176,7 @@ public:
 
 	const BoxedBoolean* asBoxedBoolean() const
 	{
-		if (typeId() == BoxedTypeId::Boolean)
+		if ((typeId() == BoxedTypeId::Boolean))
 		{
 			return reinterpret_cast<const BoxedBoolean*>(this);
 		}
@@ -186,7 +186,7 @@ public:
 
 	bool isBoxedBoolean() const
 	{
-		return typeId() == BoxedTypeId::Boolean;
+		return (typeId() == BoxedTypeId::Boolean);
 	}
 
 	BoxedNumeric* asBoxedNumeric()
@@ -216,7 +216,7 @@ public:
 
 	BoxedExactInteger* asBoxedExactInteger()
 	{
-		if (typeId() == BoxedTypeId::ExactInteger)
+		if ((typeId() == BoxedTypeId::ExactInteger))
 		{
 			return reinterpret_cast<BoxedExactInteger*>(this);
 		}
@@ -226,7 +226,7 @@ public:
 
 	const BoxedExactInteger* asBoxedExactInteger() const
 	{
-		if (typeId() == BoxedTypeId::ExactInteger)
+		if ((typeId() == BoxedTypeId::ExactInteger))
 		{
 			return reinterpret_cast<const BoxedExactInteger*>(this);
 		}
@@ -236,12 +236,12 @@ public:
 
 	bool isBoxedExactInteger() const
 	{
-		return typeId() == BoxedTypeId::ExactInteger;
+		return (typeId() == BoxedTypeId::ExactInteger);
 	}
 
 	BoxedInexactRational* asBoxedInexactRational()
 	{
-		if (typeId() == BoxedTypeId::InexactRational)
+		if ((typeId() == BoxedTypeId::InexactRational))
 		{
 			return reinterpret_cast<BoxedInexactRational*>(this);
 		}
@@ -251,7 +251,7 @@ public:
 
 	const BoxedInexactRational* asBoxedInexactRational() const
 	{
-		if (typeId() == BoxedTypeId::InexactRational)
+		if ((typeId() == BoxedTypeId::InexactRational))
 		{
 			return reinterpret_cast<const BoxedInexactRational*>(this);
 		}
@@ -261,12 +261,12 @@ public:
 
 	bool isBoxedInexactRational() const
 	{
-		return typeId() == BoxedTypeId::InexactRational;
+		return (typeId() == BoxedTypeId::InexactRational);
 	}
 
 	BoxedCharacter* asBoxedCharacter()
 	{
-		if (typeId() == BoxedTypeId::Character)
+		if ((typeId() == BoxedTypeId::Character))
 		{
 			return reinterpret_cast<BoxedCharacter*>(this);
 		}
@@ -276,7 +276,7 @@ public:
 
 	const BoxedCharacter* asBoxedCharacter() const
 	{
-		if (typeId() == BoxedTypeId::Character)
+		if ((typeId() == BoxedTypeId::Character))
 		{
 			return reinterpret_cast<const BoxedCharacter*>(this);
 		}
@@ -286,12 +286,12 @@ public:
 
 	bool isBoxedCharacter() const
 	{
-		return typeId() == BoxedTypeId::Character;
+		return (typeId() == BoxedTypeId::Character);
 	}
 
 	BoxedByteVector* asBoxedByteVector()
 	{
-		if (typeId() == BoxedTypeId::ByteVector)
+		if ((typeId() == BoxedTypeId::ByteVector))
 		{
 			return reinterpret_cast<BoxedByteVector*>(this);
 		}
@@ -301,7 +301,7 @@ public:
 
 	const BoxedByteVector* asBoxedByteVector() const
 	{
-		if (typeId() == BoxedTypeId::ByteVector)
+		if ((typeId() == BoxedTypeId::ByteVector))
 		{
 			return reinterpret_cast<const BoxedByteVector*>(this);
 		}
@@ -311,12 +311,12 @@ public:
 
 	bool isBoxedByteVector() const
 	{
-		return typeId() == BoxedTypeId::ByteVector;
+		return (typeId() == BoxedTypeId::ByteVector);
 	}
 
 	BoxedProcedure* asBoxedProcedure()
 	{
-		if (typeId() == BoxedTypeId::Procedure)
+		if ((typeId() == BoxedTypeId::Procedure))
 		{
 			return reinterpret_cast<BoxedProcedure*>(this);
 		}
@@ -326,7 +326,7 @@ public:
 
 	const BoxedProcedure* asBoxedProcedure() const
 	{
-		if (typeId() == BoxedTypeId::Procedure)
+		if ((typeId() == BoxedTypeId::Procedure))
 		{
 			return reinterpret_cast<const BoxedProcedure*>(this);
 		}
@@ -336,12 +336,12 @@ public:
 
 	bool isBoxedProcedure() const
 	{
-		return typeId() == BoxedTypeId::Procedure;
+		return (typeId() == BoxedTypeId::Procedure);
 	}
 
 	BoxedVectorLike* asBoxedVectorLike()
 	{
-		if (static_cast<int>(typeId()) & 32768)
+		if ((static_cast<int>(typeId()) & 0x8000))
 		{
 			return reinterpret_cast<BoxedVectorLike*>(this);
 		}
@@ -351,7 +351,7 @@ public:
 
 	const BoxedVectorLike* asBoxedVectorLike() const
 	{
-		if (static_cast<int>(typeId()) & 32768)
+		if ((static_cast<int>(typeId()) & 0x8000))
 		{
 			return reinterpret_cast<const BoxedVectorLike*>(this);
 		}
@@ -361,12 +361,12 @@ public:
 
 	bool isBoxedVectorLike() const
 	{
-		return static_cast<int>(typeId()) & 32768;
+		return (static_cast<int>(typeId()) & 0x8000);
 	}
 
 	BoxedVector* asBoxedVector()
 	{
-		if (typeId() == BoxedTypeId::Vector)
+		if ((typeId() == BoxedTypeId::Vector))
 		{
 			return reinterpret_cast<BoxedVector*>(this);
 		}
@@ -376,7 +376,7 @@ public:
 
 	const BoxedVector* asBoxedVector() const
 	{
-		if (typeId() == BoxedTypeId::Vector)
+		if ((typeId() == BoxedTypeId::Vector))
 		{
 			return reinterpret_cast<const BoxedVector*>(this);
 		}
@@ -386,12 +386,12 @@ public:
 
 	bool isBoxedVector() const
 	{
-		return typeId() == BoxedTypeId::Vector;
+		return (typeId() == BoxedTypeId::Vector);
 	}
 
 	BoxedClosure* asBoxedClosure()
 	{
-		if (typeId() == BoxedTypeId::Closure)
+		if ((typeId() == BoxedTypeId::Closure))
 		{
 			return reinterpret_cast<BoxedClosure*>(this);
 		}
@@ -401,7 +401,7 @@ public:
 
 	const BoxedClosure* asBoxedClosure() const
 	{
-		if (typeId() == BoxedTypeId::Closure)
+		if ((typeId() == BoxedTypeId::Closure))
 		{
 			return reinterpret_cast<const BoxedClosure*>(this);
 		}
@@ -411,7 +411,7 @@ public:
 
 	bool isBoxedClosure() const
 	{
-		return typeId() == BoxedTypeId::Closure;
+		return (typeId() == BoxedTypeId::Closure);
 	}
 
 private:

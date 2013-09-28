@@ -164,7 +164,7 @@
     {
         "name": "vectorLike",
         "abstract": true,
-        "typeId": "&32768",
+        "typeId": "&0x8000",
         "inherits": "datum",
         "fields": [
             {

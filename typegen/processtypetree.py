@@ -29,17 +29,17 @@ def process_type_tree(boxed_types):
         boxed_type.supertype = supertype
         supertype.add_subtype(boxed_type)
 
-    # Ensure type assertions are unique
-    seen_type_assertions = set()
+    # Ensure type IDs are unique
+    seen_type_ids = set()
 
     for name, boxed_type in boxed_types.items():
-        type_assertion = boxed_type.type_assertion
+        type_id = boxed_type.type_id
 
-        if type_assertion is None:
+        if type_id is None:
             continue
 
-        if type_assertion in seen_type_assertions:
-            raise SemanticException('Boxed type "' + name + '" uses duplicate type assertion')
+        if type_id in seen_type_ids:
+            raise SemanticException('Boxed type "' + name + '" uses duplicate type ID')
 
-        seen_type_assertions.add(type_assertion)
+        seen_type_ids.add(type_id)
     
