@@ -108,7 +108,7 @@ def _generate_constant_constructor(all_types, boxed_type):
         exception_message = "Unexpected type for field " + field_name
 
         output += '    if (' + field_name + '.irType != ' + expected_type + ') {\n'
-        output += '       throw new InternalCompilerErrorException("' + exception_message + '")\n'
+        output += '      throw new InternalCompilerErrorException("' + exception_message + '")\n'
         output += '    }\n\n'
 
     output += '    StructureConstant(List(\n'
@@ -172,7 +172,7 @@ def _generate_field_accessors(leaf_type, current_type, depth = 1):
         indices = map(str, ([0] * depth) + [field_counter])
         field_counter = field_counter + 1
 
-        output += '    block.getelementptr("'+ field_name + '")(\n'
+        output += '    block.getelementptr("'+ field_name + 'Ptr")(\n'
         output += '      elementType=' + _field_type_to_scala(field) + ',\n'
         output += '      basePointer=boxedValue,\n'
         output += '      indices=List(' + ", ".join(indices) + ').map(IntegerConstant(IntegerType(32), _)),\n'
@@ -187,12 +187,12 @@ def _generate_field_accessors(leaf_type, current_type, depth = 1):
     return output
 
 def _generate_type_check(all_types, boxed_type):
-
+    base_type_object = type_name_to_clike_class(BASE_TYPE)
     type_id_type = _field_type_to_scala(all_types[BASE_TYPE].fields['typeId'])
 
     output  = '\n'
     output += '  def genTypeCheck(function : IrFunctionBuilder, entryBlock : IrBlockBuilder, boxedValue : IrValue, successBlock : IrBlockBuilder, failBlock : IrBlockBuilder) {\n'
-    output += '    val typeIdPointer = genPointerToTypeId(entryBlock, boxedValue)\n'
+    output += '    val typeIdPointer = ' + base_type_object + '.genPointerToTypeId(entryBlock, boxedValue)\n'
     output += '    val typeId = entryBlock.load("typeId")(typeIdPointer)\n'
 
     # Start building off the entry block
