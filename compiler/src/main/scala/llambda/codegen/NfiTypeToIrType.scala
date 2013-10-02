@@ -19,7 +19,7 @@ object NfiTypeToIrType {
         FirstClassTypeWithSign(llvmir.DoubleType, None)
 
       case nfi.BoxedValue(boxedType) =>
-        FirstClassTypeWithSign(boxedType.irType, None)
+        FirstClassTypeWithSign(llvmir.PointerType(boxedType.irType), None)
 
       case nfi.Utf8CString =>
         FirstClassTypeWithSign(llvmir.PointerType(llvmir.IntegerType(8)), None)
