@@ -88,7 +88,7 @@ case class IrFunctionDecl(
   def toIr = "declare " + irDecl
 }
 
-protected class IrFunctionBuilder(
+class IrFunctionBuilder(
   val result : IrFunction.Result,
   val name : String,
   val namedArguments : List[(String, IrFunction.Argument)],
