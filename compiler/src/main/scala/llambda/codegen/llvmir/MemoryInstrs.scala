@@ -86,8 +86,8 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
     instructions += s"store${volatileIr} ${value.toIrWithType}, ${to.toIrWithType}${alignIr}"
   }
 
-  def getelementptr(resultName : String)(resultType : FirstClassType, basePointer : IrValue, indices : Seq[IrValue], inbounds : Boolean = false) : LocalVariable = {
-    val resultVar = allocateLocalVar(resultType, resultName)
+  def getelementptr(resultName : String)(elementType : FirstClassType, basePointer : IrValue, indices : Seq[IrValue], inbounds : Boolean = false) : LocalVariable = {
+    val resultVar = allocateLocalVar(PointerType(elementType), resultName)
 
     basePointer.irType match {
       case PointerType(_) =>

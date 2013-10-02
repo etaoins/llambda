@@ -173,7 +173,7 @@ def _generate_field_accessors(leaf_type, current_type, depth = 1):
         field_counter = field_counter + 1
 
         output += '    block.getelementptr("'+ field_name + '")(\n'
-        output += '      resultType=' + _field_type_to_scala(field) + ',\n'
+        output += '      elementType=' + _field_type_to_scala(field) + ',\n'
         output += '      basePointer=boxedValue,\n'
         output += '      indices=List(' + ", ".join(indices) + ').map(IntegerConstant(IntegerType(32), _)),\n'
         output += '      inbounds=true\n'

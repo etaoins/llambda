@@ -168,12 +168,12 @@ class MemoryInstrsSuite extends IrTestSuite {
 
     val block = createTestBlock()
     val resultVar = block.getelementptr("zeroindex")(
-      resultType=IntegerType(8),
+      elementType=IntegerType(8),
       basePointer=fakePointer,
       indices=List()
     )
 
-    assert(resultVar.irType === IntegerType(8))
+    assert(resultVar.irType === PointerType(IntegerType(8)))
     assertInstr(block, "%zeroindex1 = getelementptr %opaqueType* %fake") 
   }
   
@@ -184,7 +184,7 @@ class MemoryInstrsSuite extends IrTestSuite {
     
     intercept[InternalCompilerErrorException] {
       block.getelementptr("error")(
-        resultType=IntegerType(8),
+        elementType=IntegerType(8),
         basePointer=fakeNonPointer,
         indices=List()
       )
@@ -198,7 +198,7 @@ class MemoryInstrsSuite extends IrTestSuite {
 
     intercept[InternalCompilerErrorException] {
       block.getelementptr("error")(
-        resultType=IntegerType(16),
+        elementType=IntegerType(16),
         basePointer=fakePointer,
         indices=List(StringConstant("HELLO"))
       )
@@ -210,12 +210,12 @@ class MemoryInstrsSuite extends IrTestSuite {
 
     val block = createTestBlock()
     val resultVar = block.getelementptr("oneindex")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=fakePointer,
       indices=IntegerConstant(IntegerType(32), 42) :: Nil
     )
 
-    assert(resultVar.irType === IntegerType(16))
+    assert(resultVar.irType === PointerType(IntegerType(16)))
     assertInstr(block, "%oneindex1 = getelementptr %opaqueType* %fake, i32 42") 
   }
   
@@ -224,13 +224,13 @@ class MemoryInstrsSuite extends IrTestSuite {
 
     val block = createTestBlock()
     val resultVar = block.getelementptr("inbounds")(
-      resultType=IntegerType(32),
+      elementType=IntegerType(32),
       basePointer=fakePointer,
       indices=IntegerConstant(IntegerType(64), 23) :: Nil,
       inbounds=true
     )
 
-    assert(resultVar.irType === IntegerType(32))
+    assert(resultVar.irType === PointerType(IntegerType(32)))
     assertInstr(block, "%inbounds1 = getelementptr inbounds %opaqueType* %fake, i64 23") 
   }
   
@@ -239,12 +239,12 @@ class MemoryInstrsSuite extends IrTestSuite {
 
     val block = createTestBlock()
     val resultVar = block.getelementptr("twoindex")(
-      resultType=IntegerType(64),
+      elementType=IntegerType(64),
       basePointer=fakePointer,
       indices=List(42, 23).map(IntegerConstant(IntegerType(32), _))
     )
 
-    assert(resultVar.irType === IntegerType(64))
+    assert(resultVar.irType === PointerType(IntegerType(64)))
     assertInstr(block, "%twoindex1 = getelementptr %opaqueType* %fake, i32 42, i32 23") 
   }
 }

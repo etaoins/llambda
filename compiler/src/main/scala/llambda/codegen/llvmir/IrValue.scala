@@ -108,8 +108,8 @@ case class StringConstant(str : String) extends ArrayLikeConstant {
   def toIr = "c\"" + innerString + "\"" 
 }
 
-case class ElementPointerConstant(resultType : FirstClassType, basePointer : GlobalVariable, indices : Seq[Integer], inbounds : Boolean = false) extends IrConstant {
-  def irType = resultType
+case class ElementPointerConstant(elementType : FirstClassType, basePointer : GlobalVariable, indices : Seq[Integer], inbounds : Boolean = false) extends IrConstant {
+  def irType = PointerType(elementType)
 
   def toIr : String = {
     val inboundsIr = if (inbounds) {

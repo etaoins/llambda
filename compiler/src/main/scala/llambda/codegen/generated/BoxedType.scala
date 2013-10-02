@@ -33,7 +33,7 @@ object BoxedDatum extends BoxedType {
     }
 
     block.getelementptr("typeId")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -46,7 +46,7 @@ object BoxedDatum extends BoxedType {
     }
 
     block.getelementptr("gcState")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -73,7 +73,7 @@ object BoxedUnspecific extends BoxedType {
     }
 
     block.getelementptr("typeId")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -86,7 +86,7 @@ object BoxedUnspecific extends BoxedType {
     }
 
     block.getelementptr("gcState")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -131,7 +131,7 @@ object BoxedPair extends BoxedType {
     }
 
     block.getelementptr("car")(
-      resultType=PointerType(UserDefinedType("datum")),
+      elementType=PointerType(UserDefinedType("datum")),
       basePointer=boxedValue,
       indices=List(0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -144,7 +144,7 @@ object BoxedPair extends BoxedType {
     }
 
     block.getelementptr("cdr")(
-      resultType=PointerType(UserDefinedType("datum")),
+      elementType=PointerType(UserDefinedType("datum")),
       basePointer=boxedValue,
       indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -157,7 +157,7 @@ object BoxedPair extends BoxedType {
     }
 
     block.getelementptr("typeId")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -170,7 +170,7 @@ object BoxedPair extends BoxedType {
     }
 
     block.getelementptr("gcState")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -197,7 +197,7 @@ object BoxedEmptyList extends BoxedType {
     }
 
     block.getelementptr("typeId")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -210,7 +210,7 @@ object BoxedEmptyList extends BoxedType {
     }
 
     block.getelementptr("gcState")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -263,7 +263,7 @@ object BoxedStringLike extends BoxedType {
     }
 
     block.getelementptr("charLength")(
-      resultType=IntegerType(32),
+      elementType=IntegerType(32),
       basePointer=boxedValue,
       indices=List(0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -276,7 +276,7 @@ object BoxedStringLike extends BoxedType {
     }
 
     block.getelementptr("byteLength")(
-      resultType=IntegerType(32),
+      elementType=IntegerType(32),
       basePointer=boxedValue,
       indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -289,7 +289,7 @@ object BoxedStringLike extends BoxedType {
     }
 
     block.getelementptr("utf8Data")(
-      resultType=PointerType(IntegerType(8)),
+      elementType=PointerType(IntegerType(8)),
       basePointer=boxedValue,
       indices=List(0, 2).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -302,7 +302,7 @@ object BoxedStringLike extends BoxedType {
     }
 
     block.getelementptr("typeId")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -315,7 +315,7 @@ object BoxedStringLike extends BoxedType {
     }
 
     block.getelementptr("gcState")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -353,7 +353,7 @@ object BoxedString extends BoxedType {
     }
 
     block.getelementptr("charLength")(
-      resultType=IntegerType(32),
+      elementType=IntegerType(32),
       basePointer=boxedValue,
       indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -366,7 +366,7 @@ object BoxedString extends BoxedType {
     }
 
     block.getelementptr("byteLength")(
-      resultType=IntegerType(32),
+      elementType=IntegerType(32),
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -379,7 +379,7 @@ object BoxedString extends BoxedType {
     }
 
     block.getelementptr("utf8Data")(
-      resultType=PointerType(IntegerType(8)),
+      elementType=PointerType(IntegerType(8)),
       basePointer=boxedValue,
       indices=List(0, 0, 2).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -392,7 +392,7 @@ object BoxedString extends BoxedType {
     }
 
     block.getelementptr("typeId")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -405,7 +405,7 @@ object BoxedString extends BoxedType {
     }
 
     block.getelementptr("gcState")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -443,7 +443,7 @@ object BoxedSymbol extends BoxedType {
     }
 
     block.getelementptr("charLength")(
-      resultType=IntegerType(32),
+      elementType=IntegerType(32),
       basePointer=boxedValue,
       indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -456,7 +456,7 @@ object BoxedSymbol extends BoxedType {
     }
 
     block.getelementptr("byteLength")(
-      resultType=IntegerType(32),
+      elementType=IntegerType(32),
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -469,7 +469,7 @@ object BoxedSymbol extends BoxedType {
     }
 
     block.getelementptr("utf8Data")(
-      resultType=PointerType(IntegerType(8)),
+      elementType=PointerType(IntegerType(8)),
       basePointer=boxedValue,
       indices=List(0, 0, 2).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -482,7 +482,7 @@ object BoxedSymbol extends BoxedType {
     }
 
     block.getelementptr("typeId")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -495,7 +495,7 @@ object BoxedSymbol extends BoxedType {
     }
 
     block.getelementptr("gcState")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -522,7 +522,7 @@ object BoxedBoolean extends BoxedType {
     }
 
     block.getelementptr("value")(
-      resultType=IntegerType(1),
+      elementType=IntegerType(1),
       basePointer=boxedValue,
       indices=List(0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -535,7 +535,7 @@ object BoxedBoolean extends BoxedType {
     }
 
     block.getelementptr("typeId")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -548,7 +548,7 @@ object BoxedBoolean extends BoxedType {
     }
 
     block.getelementptr("gcState")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -586,7 +586,7 @@ object BoxedNumeric extends BoxedType {
     }
 
     block.getelementptr("typeId")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -599,7 +599,7 @@ object BoxedNumeric extends BoxedType {
     }
 
     block.getelementptr("gcState")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -639,7 +639,7 @@ object BoxedExactInteger extends BoxedType {
     }
 
     block.getelementptr("value")(
-      resultType=IntegerType(64),
+      elementType=IntegerType(64),
       basePointer=boxedValue,
       indices=List(0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -652,7 +652,7 @@ object BoxedExactInteger extends BoxedType {
     }
 
     block.getelementptr("typeId")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -665,7 +665,7 @@ object BoxedExactInteger extends BoxedType {
     }
 
     block.getelementptr("gcState")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -705,7 +705,7 @@ object BoxedInexactRational extends BoxedType {
     }
 
     block.getelementptr("value")(
-      resultType=DoubleType,
+      elementType=DoubleType,
       basePointer=boxedValue,
       indices=List(0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -718,7 +718,7 @@ object BoxedInexactRational extends BoxedType {
     }
 
     block.getelementptr("typeId")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -731,7 +731,7 @@ object BoxedInexactRational extends BoxedType {
     }
 
     block.getelementptr("gcState")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -771,7 +771,7 @@ object BoxedCharacter extends BoxedType {
     }
 
     block.getelementptr("unicodeChar")(
-      resultType=IntegerType(32),
+      elementType=IntegerType(32),
       basePointer=boxedValue,
       indices=List(0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -784,7 +784,7 @@ object BoxedCharacter extends BoxedType {
     }
 
     block.getelementptr("typeId")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -797,7 +797,7 @@ object BoxedCharacter extends BoxedType {
     }
 
     block.getelementptr("gcState")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -842,7 +842,7 @@ object BoxedByteVector extends BoxedType {
     }
 
     block.getelementptr("length")(
-      resultType=IntegerType(32),
+      elementType=IntegerType(32),
       basePointer=boxedValue,
       indices=List(0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -855,7 +855,7 @@ object BoxedByteVector extends BoxedType {
     }
 
     block.getelementptr("data")(
-      resultType=PointerType(IntegerType(8)),
+      elementType=PointerType(IntegerType(8)),
       basePointer=boxedValue,
       indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -868,7 +868,7 @@ object BoxedByteVector extends BoxedType {
     }
 
     block.getelementptr("typeId")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -881,7 +881,7 @@ object BoxedByteVector extends BoxedType {
     }
 
     block.getelementptr("gcState")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -926,7 +926,7 @@ object BoxedProcedure extends BoxedType {
     }
 
     block.getelementptr("closure")(
-      resultType=PointerType(UserDefinedType("closure")),
+      elementType=PointerType(UserDefinedType("closure")),
       basePointer=boxedValue,
       indices=List(0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -939,7 +939,7 @@ object BoxedProcedure extends BoxedType {
     }
 
     block.getelementptr("entryPoint")(
-      resultType=PointerType(FunctionType(PointerType(UserDefinedType("datum")), List(PointerType(UserDefinedType("closure")), PointerType(UserDefinedType("datum")) ))),
+      elementType=PointerType(FunctionType(PointerType(UserDefinedType("datum")), List(PointerType(UserDefinedType("closure")), PointerType(UserDefinedType("datum")) ))),
       basePointer=boxedValue,
       indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -952,7 +952,7 @@ object BoxedProcedure extends BoxedType {
     }
 
     block.getelementptr("typeId")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -965,7 +965,7 @@ object BoxedProcedure extends BoxedType {
     }
 
     block.getelementptr("gcState")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1010,7 +1010,7 @@ object BoxedVectorLike extends BoxedType {
     }
 
     block.getelementptr("length")(
-      resultType=IntegerType(32),
+      elementType=IntegerType(32),
       basePointer=boxedValue,
       indices=List(0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1023,7 +1023,7 @@ object BoxedVectorLike extends BoxedType {
     }
 
     block.getelementptr("elements")(
-      resultType=PointerType(PointerType(UserDefinedType("datum"))),
+      elementType=PointerType(PointerType(UserDefinedType("datum"))),
       basePointer=boxedValue,
       indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1036,7 +1036,7 @@ object BoxedVectorLike extends BoxedType {
     }
 
     block.getelementptr("typeId")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1049,7 +1049,7 @@ object BoxedVectorLike extends BoxedType {
     }
 
     block.getelementptr("gcState")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1086,7 +1086,7 @@ object BoxedVector extends BoxedType {
     }
 
     block.getelementptr("length")(
-      resultType=IntegerType(32),
+      elementType=IntegerType(32),
       basePointer=boxedValue,
       indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1099,7 +1099,7 @@ object BoxedVector extends BoxedType {
     }
 
     block.getelementptr("elements")(
-      resultType=PointerType(PointerType(UserDefinedType("datum"))),
+      elementType=PointerType(PointerType(UserDefinedType("datum"))),
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1112,7 +1112,7 @@ object BoxedVector extends BoxedType {
     }
 
     block.getelementptr("typeId")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1125,7 +1125,7 @@ object BoxedVector extends BoxedType {
     }
 
     block.getelementptr("gcState")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1162,7 +1162,7 @@ object BoxedClosure extends BoxedType {
     }
 
     block.getelementptr("length")(
-      resultType=IntegerType(32),
+      elementType=IntegerType(32),
       basePointer=boxedValue,
       indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1175,7 +1175,7 @@ object BoxedClosure extends BoxedType {
     }
 
     block.getelementptr("elements")(
-      resultType=PointerType(PointerType(UserDefinedType("datum"))),
+      elementType=PointerType(PointerType(UserDefinedType("datum"))),
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1188,7 +1188,7 @@ object BoxedClosure extends BoxedType {
     }
 
     block.getelementptr("typeId")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1201,7 +1201,7 @@ object BoxedClosure extends BoxedType {
     }
 
     block.getelementptr("gcState")(
-      resultType=IntegerType(16),
+      elementType=IntegerType(16),
       basePointer=boxedValue,
       indices=List(0, 0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true

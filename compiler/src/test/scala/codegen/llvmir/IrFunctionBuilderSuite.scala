@@ -71,7 +71,7 @@ class IrFunctionBuilderSuite extends FunSuite {
     val entryBlock = function.startBlock("entry")
 
     val helloPointer = entryBlock.getelementptr("helloPtr")(
-      resultType=PointerType(IntegerType(8)),
+      elementType=IntegerType(8),
       basePointer=helloWorldDef.variable,
       indices=List(0, 0).map(IntegerConstant(IntegerType(32), _))
     )

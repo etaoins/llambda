@@ -103,7 +103,7 @@ class IrValueSuite extends FunSuite {
     )
 
     val elementPtrConstant = ElementPointerConstant(
-      resultType=PointerType(IntegerType(8)),
+      elementType=IntegerType(8),
       basePointer=globalVarDef.variable,
       indices=List(0, 2),
       inbounds=true
