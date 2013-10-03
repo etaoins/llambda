@@ -42,7 +42,7 @@ object GenerateProgram {
         namedArguments=namedArguments,
         name="main") 
 
-      val entryBlock = mainFunction.startBlock("entry")
+      val entryBlock = mainFunction.entryBlock
 
       // Initialize our runtime
       entryBlock.callDecl(None)(llibyInitDecl, Nil)

@@ -109,17 +109,8 @@ class IrFunctionBuilder(
     (argName -> LocalVariable(argName, argument.irType))
   }).toMap
 
-  private val blocks = new collection.mutable.ListBuffer[IrBlockBuilder]
+  val entryBlock = new IrEntryBlockBuilder(nameSource)
 
-  def startBlock(baseName : String) : IrBlockBuilder = {
-    val label = nameSource.allocate(baseName)
-    val block = new IrBlockBuilder(nameSource, label)
-
-    blocks += block
-
-    block
-  }
-  
   protected def irArgList : String = {
     namedArguments map { case(argName, argument) =>
       argument.toIr + " %" + argName
@@ -127,6 +118,7 @@ class IrFunctionBuilder(
   }
 
   def toIr : String = {
+    val blocks = entryBlock :: entryBlock.allChildren
     val blocksIr = blocks.map(_.toIr).mkString("\n")
 
     "define " + irDecl + " {\n" +

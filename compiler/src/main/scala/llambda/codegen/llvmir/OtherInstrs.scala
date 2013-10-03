@@ -2,8 +2,6 @@ package llambda.codegen.llvmir
 
 import llambda.InternalCompilerErrorException
 
-protected[llvmir] case class PhiSource(value : IrValue, block : IrBlockBuilder)
-
 private[llvmir] trait OtherInstrs extends IrInstrBuilder {
   def icmp(resultName : String)(compareCond : ComparisonCond.ComparisonCond, signed : Option[Boolean], val1 : IrValue, val2 : IrValue) = {
     if (val1.irType != val2.irType) {
@@ -30,30 +28,6 @@ private[llvmir] trait OtherInstrs extends IrInstrBuilder {
     val resultVar = allocateLocalVar(IntegerType(1), resultName)
 
     instructions += s"${resultVar.toIr} = icmp ${conditionIr} ${comparedType.toIr} ${val1.toIr}, ${val2.toIr}"
-
-    resultVar
-  }
-
-  def phi(resultName : String)(sources : PhiSource*) : LocalVariable = {
-    if (sources.isEmpty) {
-      throw new InternalCompilerErrorException("Attempted phi with no sources")
-    }
-
-    val resultType = sources.map(_.value.irType) reduceLeft { (currentType, newType) =>
-      if (currentType != newType) {
-        throw new InternalCompilerErrorException("Attempted phi with incompatible types")
-      }
-
-      newType
-    }
-
-    val resultVar = allocateLocalVar(resultType, resultName)
-
-    val sourceIr = (sources map { source =>
-      s"[ ${source.value.toIr}, %${source.block.label} ]"
-    }).mkString(", ")
-
-    instructions += s"${resultVar.toIr} = phi ${resultType.toIr} $sourceIr"
 
     resultVar
   }

@@ -12,12 +12,11 @@ class IrFunctionBuilderSuite extends FunSuite {
       name="donothing",
       namedArguments=Nil)
 
-    val entryBlock = function.startBlock("entry")
-    entryBlock.retVoid()
+    function.entryBlock.retVoid()
 
     assert(function.toIr ===
       "define void @donothing() {\n" +
-      "entry1:\n" +
+      "entry:\n" +
       "\tret void\n" +
       "}")
   }
@@ -32,12 +31,12 @@ class IrFunctionBuilderSuite extends FunSuite {
       name="retArg",
       namedArguments=namedArguments)
 
-    val entryBlock = function.startBlock("entry")
+    val entryBlock = function.entryBlock
     entryBlock.ret(function.argumentValues("testArg"))
 
     assert(function.toIr ===
       "define i32 @retArg(i32 %testArg) {\n" +
-      "entry1:\n" +
+      "entry:\n" +
       "\tret i32 %testArg\n" +
       "}")
   }
@@ -68,7 +67,7 @@ class IrFunctionBuilderSuite extends FunSuite {
       namedArguments=namedArguments,
       name="main")
       
-    val entryBlock = function.startBlock("entry")
+    val entryBlock = function.entryBlock
 
     val helloPointer = entryBlock.getelementptr("helloPtr")(
       elementType=IntegerType(8),
@@ -81,7 +80,7 @@ class IrFunctionBuilderSuite extends FunSuite {
 
     assert(function.toIr === 
       """|define i32 @main(i32 %argc, i8** %argv) {
-         |entry1:
+         |entry:
          |	%helloPtr1 = getelementptr [14 x i8]* @helloWorldString, i32 0, i32 0
          |	call i32 @puts(i8* %helloPtr1) nounwind
          |	ret i32 0
@@ -96,8 +95,8 @@ class IrFunctionBuilderSuite extends FunSuite {
       name="donothing",
       namedArguments=Nil)
     
-    val entryBlock = function.startBlock("entry")
-    val continueBlock = function.startBlock("continue")
+    val entryBlock = function.entryBlock
+    val continueBlock = entryBlock.startChildBlock("continue")
 
     entryBlock. uncondBranch(continueBlock)
 
@@ -105,7 +104,7 @@ class IrFunctionBuilderSuite extends FunSuite {
 
     assert(function.toIr ===
       "define void @donothing() {\n" +
-      "entry1:\n" +
+      "entry:\n" +
       "\tbr label %continue1\n" +
       "continue1:\n" +
       "\tret void\n" +

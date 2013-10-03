@@ -30,7 +30,7 @@ class IrModuleSuite extends FunSuite {
       namedArguments=namedArguments,
       name="main")
       
-    val entryBlock = mainFunction.startBlock("entry")
+    val entryBlock = mainFunction.entryBlock
     val helloPointer = entryBlock.getelementptr("helloPtr")(
       elementType=IntegerType(8),
       basePointer=helloWorldDef.variable,
@@ -49,7 +49,7 @@ class IrModuleSuite extends FunSuite {
       "@helloWorldString = unnamed_addr constant [14 x i8] c\"Hello, world!\\00\"\n" + 
       "declare i32 @puts(i8* nocapture) nounwind\n" +
       "define i32 @main(i32 %argc, i8** %argv) {\n" +
-      "entry1:\n" +
+      "entry:\n" +
       "\t%helloPtr1 = getelementptr [14 x i8]* @helloWorldString, i32 0, i32 0\n" +
       "\tcall i32 @puts(i8* %helloPtr1) nounwind\n" +
       "\tret i32 0\n" +

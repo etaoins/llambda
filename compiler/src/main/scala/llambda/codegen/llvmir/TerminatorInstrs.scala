@@ -11,7 +11,7 @@ private[llvmir] trait TerminatorInstrs extends IrInstrBuilder {
     instructions += "ret void"
   }
 
-  def condBranch(cond : IrValue, trueBlock : IrBlockBuilder, falseBlock : IrBlockBuilder) {
+  def condBranch(cond : IrValue, trueBlock : IrBranchTarget, falseBlock : IrBranchTarget) {
     if (cond.irType != IntegerType(1)) {
       throw new InternalCompilerErrorException("Attempted to branch using non-i1")
     }
@@ -19,7 +19,7 @@ private[llvmir] trait TerminatorInstrs extends IrInstrBuilder {
     instructions += s"br ${cond.toIrWithType}, label %${trueBlock.label}, label %${falseBlock.label}"
   }
 
-  def uncondBranch(block : IrBlockBuilder) {
+  def uncondBranch(block : IrBranchTarget) {
     instructions += s"br label %${block.label}"
   }
 

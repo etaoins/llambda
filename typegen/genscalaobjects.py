@@ -191,12 +191,12 @@ def _generate_type_check(all_types, boxed_type):
     type_id_type = _field_type_to_scala(all_types[BASE_TYPE].fields['typeId'])
 
     output  = '\n'
-    output += '  def genTypeCheck(function : IrFunctionBuilder, entryBlock : IrBlockBuilder, boxedValue : IrValue, successBlock : IrBlockBuilder, failBlock : IrBlockBuilder) {\n'
-    output += '    val typeIdPointer = ' + base_type_object + '.genPointerToTypeId(entryBlock, boxedValue)\n'
-    output += '    val typeId = entryBlock.load("typeId")(typeIdPointer)\n'
+    output += '  def genTypeCheck(startBlock : IrBlockBuilder, boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {\n'
+    output += '    val typeIdPointer = ' + base_type_object + '.genPointerToTypeId(startBlock, boxedValue)\n'
+    output += '    val typeId = startBlock.load("typeId")(typeIdPointer)\n'
 
-    # Start building off the entry block
-    incoming_block = 'entry'
+    # Start building off the start block
+    incoming_block = 'start'
 
     for idx, condition in enumerate(boxed_type.type_conditions):
         checking_type_name = condition.boxed_type.name
@@ -227,7 +227,7 @@ def _generate_type_check(all_types, boxed_type):
         else:
             # Allocate the outgoing block so we can use it as a brach target
             outgoing_block = 'not' + uppercase_type_name
-            output += '    val ' + outgoing_block + 'Block = function.startBlock("' + outgoing_block + '")\n'
+            output += '    val ' + outgoing_block + 'Block = ' + incoming_block + 'Block.startChildBlock("' + outgoing_block + '")\n'
 
         output += '    ' + incoming_block + 'Block.condBranch(' + check_bool_name + ', successBlock, ' + outgoing_block + 'Block)\n'
 
