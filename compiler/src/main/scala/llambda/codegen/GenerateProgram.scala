@@ -4,7 +4,7 @@ import llambda._
 import llambda.codegen.llvmir._
 import scala.io.Source
 
-object GenerateCode {
+object GenerateProgram {
   private val llibyInitDecl = {
     IrFunctionDecl(
       result=IrFunction.Result(VoidType),

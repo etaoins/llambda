@@ -42,7 +42,7 @@ object Compiler {
     val loader = new frontend.DefaultLibraryLoader
     val expressions = frontend.ExtractProgram(data)(loader.load)
 
-    val llvmIr = codegen.GenerateCode(expressions)
+    val llvmIr = codegen.GenerateProgram(expressions)
 
     if (emitLlvm) {
       // Write the IR directly to disk
