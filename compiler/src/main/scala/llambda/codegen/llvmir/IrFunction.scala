@@ -39,10 +39,10 @@ sealed abstract trait IrCallableLike {
 }
 
 case class IrCallable(
-  callingConv : CallingConv.CallingConv,
   result : IrFunction.Result,
   arguments : List[IrFunction.Argument],
-  attributes : Set[IrFunction.FunctionAttribute]
+  attributes : Set[IrFunction.FunctionAttribute] = Set(),
+  callingConv : CallingConv.CallingConv = CallingConv.Default
 ) extends IrCallableLike
 
 sealed abstract trait IrFunctionDeclLike extends Irable with IrCallableLike {
