@@ -27,7 +27,7 @@ class BoxedTypeField(object):
         self.qualified_name = type_name + "." + self.name
 
         # Integers must specify their signedness
-        if self.llvm_type and re.match("^i\\d+$", self.llvm_type) and (self.signed is None):
+        if self.llvm_type and re.match("^i\\d+$", self.llvm_type) and not isinstance(self.signed, bool):
             raise SemanticException('Integer field "' + self.qualified_name + '" does not specify signedness')
 
         if self.llvm_type is None and self.complex_type is None:
