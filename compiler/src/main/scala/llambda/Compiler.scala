@@ -11,7 +11,7 @@ object Compiler {
   private def compileLlvmIr(llvmIr : String, output : File, optimizeLevel : Int) {
     val optimizeArg = s"-O${optimizeLevel}"
 
-    val stdlibArg = if (System.getProperty("os.name") == "Mac OS X")  {
+    val stdlibArg = if (scala.util.Properties.isMac) {
       // Force use of libc++ on Mac OS X
       // This matches the logic of runtime/CMakeLists.txt
       List("-stdlib=libc++")
