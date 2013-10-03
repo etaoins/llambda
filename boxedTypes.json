@@ -158,8 +158,13 @@
         "inherits": "datum",
         "fields": [
             {
-                "name": "closure",
-                "llvmType": "%closure*"
+                "name": "capturedDataLength",
+                "llvmType": "i32",
+                "signed": false
+            },
+            {
+                "name": "capturedData",
+                "llvmType": "%datum***"
             },
             {
                 "name": "entryPoint",
@@ -187,12 +192,6 @@
     {
         "name": "vector",
         "typeId": 32768,
-        "inherits": "vectorLike",
-        "fields": []
-    },
-    {
-        "name": "closure",
-        "typeId": 32769,
         "inherits": "vectorLike",
         "fields": []
     }

@@ -25,8 +25,7 @@ class BoxedByteVector;
 class BoxedProcedure;
 class BoxedVectorLike;
 class BoxedVector;
-class BoxedClosure;
-typedef BoxedDatum* (*ProcedureEntryPoint)(BoxedClosure*, BoxedDatum*);
+typedef BoxedDatum* (*ProcedureEntryPoint)(BoxedProcedure*, BoxedListElement*);
 
 }
 

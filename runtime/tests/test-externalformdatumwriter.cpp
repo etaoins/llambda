@@ -158,7 +158,7 @@ void testVector()
 
 void testProcedure()
 {
-	assertForm(new BoxedProcedure(nullptr, nullptr), "#!procedure");
+	assertForm(new BoxedProcedure(0, nullptr, nullptr), "#!procedure");
 }
 
 void testCharacter()

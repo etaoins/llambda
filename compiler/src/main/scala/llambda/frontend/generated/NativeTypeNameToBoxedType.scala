@@ -25,6 +25,5 @@ object NativeTypeNameToBoxedType {
     case "boxed-procedure" => bt.BoxedProcedure
     case "boxed-vector-like" => bt.BoxedVectorLike
     case "boxed-vector" => bt.BoxedVector
-    case "boxed-closure" => bt.BoxedClosure
   }
 }

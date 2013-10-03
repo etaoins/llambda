@@ -5,7 +5,7 @@ def _complex_type_to_llvm(complex_type):
     if complex_type == "bool":
         return "i8"
     elif complex_type == "entryPoint":
-        return "%" + BASE_TYPE + "* (%closure*, %" + BASE_TYPE + "*)*"
+        return "%" + BASE_TYPE + "* (%procedure*, %listElement*)*"
     elif complex_type == "unicodeChar":
         return "i32"
     else:

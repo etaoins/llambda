@@ -89,10 +89,5 @@ bool lliby_is_vector(const BoxedDatum *value)
 	return value->isBoxedVector();
 }
 
-bool lliby_is_closure(const BoxedDatum *value)
-{
-	return value->isBoxedClosure();
-}
-
 
 }

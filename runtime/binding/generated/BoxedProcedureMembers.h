@@ -3,9 +3,14 @@
  *****************************************************************/
 
 public:
-	BoxedClosure* closure() const
+	std::uint32_t capturedDataLength() const
 	{
-		return m_closure;
+		return m_capturedDataLength;
+	}
+
+	BoxedDatum*** capturedData() const
+	{
+		return m_capturedData;
 	}
 
 	ProcedureEntryPoint entryPoint() const
@@ -14,5 +19,6 @@ public:
 	}
 
 private:
-	BoxedClosure* m_closure;
+	std::uint32_t m_capturedDataLength;
+	BoxedDatum*** m_capturedData;
 	ProcedureEntryPoint m_entryPoint;

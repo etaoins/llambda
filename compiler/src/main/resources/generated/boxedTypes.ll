@@ -44,14 +44,11 @@
 ; {supertype, unsigned length, data}
 %byteVector = type {%datum, i32, i8*}
 
-; {supertype, closure, entryPoint}
-%procedure = type {%datum, %closure*, %datum* (%closure*, %datum*)*}
+; {supertype, unsigned capturedDataLength, capturedData, entryPoint}
+%procedure = type {%datum, i32, %datum***, %datum* (%procedure*, %listElement*)*}
 
 ; {supertype, unsigned length, elements}
 %vectorLike = type {%datum, i32, %datum**}
 
 ; {supertype}
 %vector = type {%vectorLike}
-
-; {supertype}
-%closure = type {%vectorLike}

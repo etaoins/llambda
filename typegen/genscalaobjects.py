@@ -46,8 +46,8 @@ def _complex_type_to_scala(complex_type):
                   'FunctionType('
                     'PointerType(UserDefinedType("' + BASE_TYPE + '")), '
                     'List('
-                      'PointerType(UserDefinedType("closure")), '
-                      'PointerType(UserDefinedType("' + BASE_TYPE + '")) '
+                      'PointerType(UserDefinedType("procedure")), '
+                      'PointerType(UserDefinedType("listElement")) '
                     ')' 
                   ')'
                 ')')

@@ -5,7 +5,7 @@ def process_type_tree(boxed_types):
     # Ensure that our special types exist
     # These are types that we assume exist under the listed name for the
     # purposes code generation 
-    SPECIAL_TYPES = [BASE_TYPE, "closure"]
+    SPECIAL_TYPES = [BASE_TYPE, "procedure", "listElement"]
 
     for special_type in SPECIAL_TYPES:
         if special_type not in boxed_types:

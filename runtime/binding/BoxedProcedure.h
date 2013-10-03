@@ -10,14 +10,15 @@ class BoxedProcedure : public BoxedDatum
 {
 #include "generated/BoxedProcedureMembers.h"
 public:
-	BoxedProcedure(BoxedClosure *closure, ProcedureEntryPoint entryPoint) :
+	BoxedProcedure(std::uint32_t capturedDataLength, BoxedDatum ***capturedData, ProcedureEntryPoint entryPoint) :
 		BoxedDatum(BoxedTypeId::Procedure),
-		m_closure(closure),
+		m_capturedDataLength(capturedDataLength),
+		m_capturedData(capturedData),
 		m_entryPoint(entryPoint)
 	{
 	}
 
-	BoxedDatum* invoke(BoxedDatum *arguments);
+	BoxedDatum* invoke(BoxedListElement *arguments);
 };
 
 }

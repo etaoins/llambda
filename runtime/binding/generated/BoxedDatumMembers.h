@@ -414,31 +414,6 @@ public:
 		return (typeId() == BoxedTypeId::Vector);
 	}
 
-	BoxedClosure* asBoxedClosure()
-	{
-		if ((typeId() == BoxedTypeId::Closure))
-		{
-			return reinterpret_cast<BoxedClosure*>(this);
-		}
-
-		return nullptr;
-	}
-
-	const BoxedClosure* asBoxedClosure() const
-	{
-		if ((typeId() == BoxedTypeId::Closure))
-		{
-			return reinterpret_cast<const BoxedClosure*>(this);
-		}
-
-		return nullptr;
-	}
-
-	bool isBoxedClosure() const
-	{
-		return (typeId() == BoxedTypeId::Closure);
-	}
-
 private:
 	BoxedTypeId m_typeId;
 	GarbageState m_gcState;

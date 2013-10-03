@@ -24,7 +24,6 @@ enum class BoxedTypeId : std::uint16_t
 	ByteVector = 9,
 	Procedure = 10,
 	Vector = 32768,
-	Closure = 32769,
 };
 
 }

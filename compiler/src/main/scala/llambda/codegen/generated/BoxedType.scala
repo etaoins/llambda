@@ -945,12 +945,16 @@ object BoxedProcedure extends BoxedType {
   val superType = Some(BoxedDatum)
   val typeId = 10
 
-  def createConstant(closure : IrConstant, entryPoint : IrConstant) : StructureConstant = {
-    if (closure.irType != PointerType(UserDefinedType("closure"))) {
-      throw new InternalCompilerErrorException("Unexpected type for field closure")
+  def createConstant(capturedDataLength : IrConstant, capturedData : IrConstant, entryPoint : IrConstant) : StructureConstant = {
+    if (capturedDataLength.irType != IntegerType(32)) {
+      throw new InternalCompilerErrorException("Unexpected type for field capturedDataLength")
     }
 
-    if (entryPoint.irType != PointerType(FunctionType(PointerType(UserDefinedType("datum")), List(PointerType(UserDefinedType("closure")), PointerType(UserDefinedType("datum")) )))) {
+    if (capturedData.irType != PointerType(PointerType(PointerType(UserDefinedType("datum"))))) {
+      throw new InternalCompilerErrorException("Unexpected type for field capturedData")
+    }
+
+    if (entryPoint.irType != PointerType(FunctionType(PointerType(UserDefinedType("datum")), List(PointerType(UserDefinedType("procedure")), PointerType(UserDefinedType("listElement")) )))) {
       throw new InternalCompilerErrorException("Unexpected type for field entryPoint")
     }
 
@@ -958,7 +962,8 @@ object BoxedProcedure extends BoxedType {
       superType.get.createConstant(
         typeId=IntegerConstant(IntegerType(16), typeId)
       ),
-      closure,
+      capturedDataLength,
+      capturedData,
       entryPoint
     ), userDefinedType=Some(irType))
   }
@@ -971,15 +976,28 @@ object BoxedProcedure extends BoxedType {
     entryBlock.condBranch(isProcedure, successBlock, failBlock)
   }
 
-  def genPointerToClosure(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
+  def genPointerToCapturedDataLength(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
     if (boxedValue.irType != PointerType(UserDefinedType("procedure"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
-    block.getelementptr("closurePtr")(
-      elementType=PointerType(UserDefinedType("closure")),
+    block.getelementptr("capturedDataLengthPtr")(
+      elementType=IntegerType(32),
       basePointer=boxedValue,
       indices=List(0, 0).map(IntegerConstant(IntegerType(32), _)),
+      inbounds=true
+    )
+  }
+
+  def genPointerToCapturedData(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
+    if (boxedValue.irType != PointerType(UserDefinedType("procedure"))) {
+       throw new InternalCompilerErrorException("Unexpected type for boxed value")
+    }
+
+    block.getelementptr("capturedDataPtr")(
+      elementType=PointerType(PointerType(PointerType(UserDefinedType("datum")))),
+      basePointer=boxedValue,
+      indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
     )
   }
@@ -990,9 +1008,9 @@ object BoxedProcedure extends BoxedType {
     }
 
     block.getelementptr("entryPointPtr")(
-      elementType=PointerType(FunctionType(PointerType(UserDefinedType("datum")), List(PointerType(UserDefinedType("closure")), PointerType(UserDefinedType("datum")) ))),
+      elementType=PointerType(FunctionType(PointerType(UserDefinedType("datum")), List(PointerType(UserDefinedType("procedure")), PointerType(UserDefinedType("listElement")) ))),
       basePointer=boxedValue,
-      indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
+      indices=List(0, 2).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
     )
   }
@@ -1172,82 +1190,6 @@ object BoxedVector extends BoxedType {
 
   def genPointerToGcState(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
     if (boxedValue.irType != PointerType(UserDefinedType("vector"))) {
-       throw new InternalCompilerErrorException("Unexpected type for boxed value")
-    }
-
-    block.getelementptr("gcStatePtr")(
-      elementType=IntegerType(16),
-      basePointer=boxedValue,
-      indices=List(0, 0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
-      inbounds=true
-    )
-  }
-}
-
-object BoxedClosure extends BoxedType {
-  val irType = UserDefinedType("closure")
-  val superType = Some(BoxedVectorLike)
-  val typeId = 32769
-
-  def createConstant(length : IrConstant, elements : IrConstant) : StructureConstant = {
-    StructureConstant(List(
-      superType.get.createConstant(
-        length=length,
-        elements=elements,
-        typeId=IntegerConstant(IntegerType(16), typeId)
-      )
-    ), userDefinedType=Some(irType))
-  }
-
-  def genTypeCheck(function : IrFunctionBuilder, entryBlock : IrBlockBuilder, boxedValue : IrValue, successBlock : IrBlockBuilder, failBlock : IrBlockBuilder) {
-    val typeIdPointer = BoxedDatum.genPointerToTypeId(entryBlock, boxedValue)
-    val typeId = entryBlock.load("typeId")(typeIdPointer)
-
-    val isClosure = entryBlock.icmp("isClosure")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 32769))
-    entryBlock.condBranch(isClosure, successBlock, failBlock)
-  }
-
-  def genPointerToLength(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != PointerType(UserDefinedType("closure"))) {
-       throw new InternalCompilerErrorException("Unexpected type for boxed value")
-    }
-
-    block.getelementptr("lengthPtr")(
-      elementType=IntegerType(32),
-      basePointer=boxedValue,
-      indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
-      inbounds=true
-    )
-  }
-
-  def genPointerToElements(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != PointerType(UserDefinedType("closure"))) {
-       throw new InternalCompilerErrorException("Unexpected type for boxed value")
-    }
-
-    block.getelementptr("elementsPtr")(
-      elementType=PointerType(PointerType(UserDefinedType("datum"))),
-      basePointer=boxedValue,
-      indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
-      inbounds=true
-    )
-  }
-
-  def genPointerToTypeId(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != PointerType(UserDefinedType("closure"))) {
-       throw new InternalCompilerErrorException("Unexpected type for boxed value")
-    }
-
-    block.getelementptr("typeIdPtr")(
-      elementType=IntegerType(16),
-      basePointer=boxedValue,
-      indices=List(0, 0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
-      inbounds=true
-    )
-  }
-
-  def genPointerToGcState(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != PointerType(UserDefinedType("closure"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
