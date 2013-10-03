@@ -9,7 +9,7 @@ import llambda.codegen.{boxedtype => bt}
 import llambda.codegen.llvmir._
 import llambda.codegen.llvmir.IrFunction._
 
-class NativeFunctionToIrDeclSuite extends FunSuite {
+class NativeSignatureToIrCallableSuite extends FunSuite {
   test("argless void function") {
     val testNativeFunc = NativeFunction(
       fixedArgs=Nil,
@@ -17,11 +17,10 @@ class NativeFunctionToIrDeclSuite extends FunSuite {
       returnType=None,
       nativeSymbol="lliby_test")
 
-    val irDecl = NativeFunctionToIrDecl(testNativeFunc)
+    val irCallable = NativeSignatureToIrCallable(testNativeFunc)
 
-    assert(irDecl === IrFunctionDecl(
+    assert(irCallable === IrCallable(
       result=Result(VoidType),
-      name="lliby_test",
       arguments=Nil
     ))
   }
@@ -33,11 +32,10 @@ class NativeFunctionToIrDeclSuite extends FunSuite {
       returnType=Some(nfi.Int32),
       nativeSymbol="lliby_test")
 
-    val irDecl = NativeFunctionToIrDecl(testNativeFunc)
+    val irCallable = NativeSignatureToIrCallable(testNativeFunc)
 
-    assert(irDecl === IrFunctionDecl(
+    assert(irCallable === IrCallable(
       result=Result(IntegerType(32), Set(SignExt)),
-      name="lliby_test",
       arguments=Argument(PointerType(IntegerType(8))) :: Argument(IntegerType(16), Set(ZeroExt)) :: Nil
     ))
   }
@@ -49,11 +47,10 @@ class NativeFunctionToIrDeclSuite extends FunSuite {
       returnType=Some(nfi.UInt32),
       nativeSymbol="lliby_test")
 
-    val irDecl = NativeFunctionToIrDecl(testNativeFunc)
+    val irCallable = NativeSignatureToIrCallable(testNativeFunc)
 
-    assert(irDecl === IrFunctionDecl(
+    assert(irCallable === IrCallable(
       result=Result(IntegerType(32), Set(ZeroExt)),
-      name="lliby_test",
       arguments=Argument(PointerType(bt.BoxedPair.irType)) :: Nil
     ))
   }
@@ -65,11 +62,10 @@ class NativeFunctionToIrDeclSuite extends FunSuite {
       returnType=Some(nfi.BoxedValue(bt.BoxedInexactRational)),
       nativeSymbol="lliby_test")
 
-    val irDecl = NativeFunctionToIrDecl(testNativeFunc)
+    val irCallable = NativeSignatureToIrCallable(testNativeFunc)
 
-    assert(irDecl === IrFunctionDecl(
+    assert(irCallable === IrCallable(
       result=Result(PointerType(bt.BoxedInexactRational.irType)),
-      name="lliby_test",
       arguments=List(
         Argument(PointerType(bt.BoxedNumeric.irType)),
         Argument(PointerType(bt.BoxedNumeric.irType)), 

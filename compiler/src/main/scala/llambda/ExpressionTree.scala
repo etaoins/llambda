@@ -17,4 +17,9 @@ case class Lambda(fixedArgs : List[StorageLocation], restArg : Option[StorageLoc
 
 case class Let(bindings : List[(StorageLocation, Expression)], innerExprs : List[Expression]) extends Expression
 
-case class NativeFunction(fixedArgs : List[nfi.NativeType], hasRestArg : Boolean, returnType : Option[nfi.NativeType], nativeSymbol : String) extends Expression
+case class NativeFunction(
+  fixedArgs : List[nfi.NativeType],
+  hasRestArg : Boolean,
+  returnType : Option[nfi.NativeType],
+  nativeSymbol : String
+) extends Expression with nfi.NativeSignature
