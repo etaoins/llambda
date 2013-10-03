@@ -10,6 +10,7 @@ namespace lliby
 
 class BoxedDatum;
 class BoxedUnspecific;
+class BoxedListElement;
 class BoxedPair;
 class BoxedEmptyList;
 class BoxedStringLike;

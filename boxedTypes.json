@@ -24,9 +24,15 @@
         "fields": []
     },
     {
+        "name": "listElement",
+        "abstract": true,
+        "inherits": "datum",
+        "fields": []
+    },
+    {
         "name": "pair",
         "typeId": 1,
-        "inherits": "datum",
+        "inherits": "listElement",
         "fields": [
             {
                 "name": "car",
@@ -41,7 +47,7 @@
     {
         "name": "emptyList",
         "typeId": 2,
-        "inherits": "datum",
+        "inherits": "listElement",
         "singleton": true,
         "fields": []
     },

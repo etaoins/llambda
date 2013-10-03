@@ -14,6 +14,11 @@ bool lliby_is_unspecific(const BoxedDatum *value)
 	return value->isBoxedUnspecific();
 }
 
+bool lliby_is_list_element(const BoxedDatum *value)
+{
+	return value->isBoxedListElement();
+}
+
 bool lliby_is_pair(const BoxedDatum *value)
 {
 	return value->isBoxedPair();

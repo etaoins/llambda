@@ -8,11 +8,14 @@
 ; {supertype}
 %unspecific = type {%datum}
 
+; {supertype}
+%listElement = type {%datum}
+
 ; {supertype, car, cdr}
-%pair = type {%datum, %datum*, %datum*}
+%pair = type {%listElement, %datum*, %datum*}
 
 ; {supertype}
-%emptyList = type {%datum}
+%emptyList = type {%listElement}
 
 ; {supertype, unsigned charLength, unsigned byteLength, utf8Data}
 %stringLike = type {%datum, i32, i32, i8*}

@@ -7,7 +7,7 @@
 namespace lliby
 {
 
-class BoxedUnspecific : public BoxedSingleton
+class BoxedUnspecific : public BoxedSingleton<BoxedDatum>
 {
 #include "generated/BoxedUnspecificMembers.h"
 public:

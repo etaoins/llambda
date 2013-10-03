@@ -1,26 +1,21 @@
 #ifndef _LLIBY_BINDING_BOXEDPAIR_H
 #define _LLIBY_BINDING_BOXEDPAIR_H
 
-#include "BoxedDatum.h"
-
-#include <list>
+#include "BoxedListElement.h"
 
 namespace lliby
 {
 
-class BoxedPair : public BoxedDatum
+class BoxedPair : public BoxedListElement
 {
 #include "generated/BoxedPairMembers.h"
 public:
 	BoxedPair(BoxedDatum *car, BoxedDatum *cdr) :
-		BoxedDatum(BoxedTypeId::Pair),
+		BoxedListElement(BoxedTypeId::Pair),
 		m_car(car),
 		m_cdr(cdr)
 	{
 	}
-
-	static BoxedDatum *createProperList(const std::list<BoxedDatum*> &elements);
-	static BoxedPair *createImproperList(const std::list<BoxedDatum*> &elements);
 };
 
 }

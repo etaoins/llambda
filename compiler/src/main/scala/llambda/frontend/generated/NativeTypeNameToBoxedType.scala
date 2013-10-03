@@ -10,6 +10,7 @@ object NativeTypeNameToBoxedType {
   def apply : PartialFunction[String, bt.BoxedType] = {
     case "boxed-datum" => bt.BoxedDatum
     case "boxed-unspecific" => bt.BoxedUnspecific
+    case "boxed-list-element" => bt.BoxedListElement
     case "boxed-pair" => bt.BoxedPair
     case "boxed-empty-list" => bt.BoxedEmptyList
     case "boxed-string-like" => bt.BoxedStringLike

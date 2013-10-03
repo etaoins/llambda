@@ -39,6 +39,31 @@ public:
 		return (typeId() == BoxedTypeId::Unspecific);
 	}
 
+	BoxedListElement* asBoxedListElement()
+	{
+		if ((typeId() == BoxedTypeId::Pair) || (typeId() == BoxedTypeId::EmptyList))
+		{
+			return reinterpret_cast<BoxedListElement*>(this);
+		}
+
+		return nullptr;
+	}
+
+	const BoxedListElement* asBoxedListElement() const
+	{
+		if ((typeId() == BoxedTypeId::Pair) || (typeId() == BoxedTypeId::EmptyList))
+		{
+			return reinterpret_cast<const BoxedListElement*>(this);
+		}
+
+		return nullptr;
+	}
+
+	bool isBoxedListElement() const
+	{
+		return (typeId() == BoxedTypeId::Pair) || (typeId() == BoxedTypeId::EmptyList);
+	}
+
 	BoxedPair* asBoxedPair()
 	{
 		if ((typeId() == BoxedTypeId::Pair))

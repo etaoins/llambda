@@ -6,9 +6,9 @@ project (lliby)
 add_library(lliby
 	alloc/FreezeGc.cpp
 	alloc/allocator.cpp
-	binding/BoxedDatum.cpp
 	binding/BoxedByteVector.cpp
-	binding/BoxedPair.cpp
+	binding/BoxedDatum.cpp
+	binding/BoxedListElement.cpp
 	binding/BoxedProcedure.cpp
 	binding/BoxedStringLike.cpp
 	binding/BoxedString.cpp
@@ -59,7 +59,7 @@ set(ALL_TEST_NAMES
 	boxedbytevector
 	constinstances
 	boxedinexactrational
-	boxedpair
+	boxedlistelement
 	boxedstring
 	unicodechar
 	boxedvector

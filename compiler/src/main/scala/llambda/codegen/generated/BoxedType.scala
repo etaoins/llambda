@@ -94,9 +94,60 @@ object BoxedUnspecific extends BoxedType {
   }
 }
 
+object BoxedListElement extends BoxedType {
+  val irType = UserDefinedType("listElement")
+  val superType = Some(BoxedDatum)
+
+  def createConstant(typeId : IrConstant) : StructureConstant = {
+    StructureConstant(List(
+      superType.get.createConstant(
+        typeId=typeId
+      )
+    ), userDefinedType=Some(irType))
+  }
+
+  def genTypeCheck(function : IrFunctionBuilder, entryBlock : IrBlockBuilder, boxedValue : IrValue, successBlock : IrBlockBuilder, failBlock : IrBlockBuilder) {
+    val typeIdPointer = BoxedDatum.genPointerToTypeId(entryBlock, boxedValue)
+    val typeId = entryBlock.load("typeId")(typeIdPointer)
+
+    val isPair = entryBlock.icmp("isPair")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 1))
+    val notPairBlock = function.startBlock("notPair")
+    entryBlock.condBranch(isPair, successBlock, notPairBlock)
+
+    val isEmptyList = notPairBlock.icmp("isEmptyList")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 2))
+    notPairBlock.condBranch(isEmptyList, successBlock, failBlock)
+  }
+
+  def genPointerToTypeId(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
+    if (boxedValue.irType != PointerType(UserDefinedType("listElement"))) {
+       throw new InternalCompilerErrorException("Unexpected type for boxed value")
+    }
+
+    block.getelementptr("typeIdPtr")(
+      elementType=IntegerType(16),
+      basePointer=boxedValue,
+      indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
+      inbounds=true
+    )
+  }
+
+  def genPointerToGcState(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
+    if (boxedValue.irType != PointerType(UserDefinedType("listElement"))) {
+       throw new InternalCompilerErrorException("Unexpected type for boxed value")
+    }
+
+    block.getelementptr("gcStatePtr")(
+      elementType=IntegerType(16),
+      basePointer=boxedValue,
+      indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
+      inbounds=true
+    )
+  }
+}
+
 object BoxedPair extends BoxedType {
   val irType = UserDefinedType("pair")
-  val superType = Some(BoxedDatum)
+  val superType = Some(BoxedListElement)
   val typeId = 1
 
   def createConstant(car : IrConstant, cdr : IrConstant) : StructureConstant = {
@@ -159,7 +210,7 @@ object BoxedPair extends BoxedType {
     block.getelementptr("typeIdPtr")(
       elementType=IntegerType(16),
       basePointer=boxedValue,
-      indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
+      indices=List(0, 0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
     )
   }
@@ -172,7 +223,7 @@ object BoxedPair extends BoxedType {
     block.getelementptr("gcStatePtr")(
       elementType=IntegerType(16),
       basePointer=boxedValue,
-      indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
+      indices=List(0, 0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
     )
   }
@@ -180,7 +231,7 @@ object BoxedPair extends BoxedType {
 
 object BoxedEmptyList extends BoxedType {
   val irType = UserDefinedType("emptyList")
-  val superType = Some(BoxedDatum)
+  val superType = Some(BoxedListElement)
   val typeId = 2
 
   def genTypeCheck(function : IrFunctionBuilder, entryBlock : IrBlockBuilder, boxedValue : IrValue, successBlock : IrBlockBuilder, failBlock : IrBlockBuilder) {
@@ -199,7 +250,7 @@ object BoxedEmptyList extends BoxedType {
     block.getelementptr("typeIdPtr")(
       elementType=IntegerType(16),
       basePointer=boxedValue,
-      indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
+      indices=List(0, 0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
     )
   }
@@ -212,7 +263,7 @@ object BoxedEmptyList extends BoxedType {
     block.getelementptr("gcStatePtr")(
       elementType=IntegerType(16),
       basePointer=boxedValue,
-      indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
+      indices=List(0, 0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
     )
   }

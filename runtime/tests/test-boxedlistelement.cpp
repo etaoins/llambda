@@ -1,3 +1,4 @@
+#include "binding/BoxedListElement.h"
 #include "binding/BoxedPair.h"
 #include "binding/BoxedEmptyList.h"
 #include "binding/BoxedString.h"
@@ -16,13 +17,13 @@ int main(int argc, char *argv[])
 	BoxedString *valueC = BoxedString::fromUtf8CString("C");
 	
 	{
-		BoxedDatum *properList = BoxedPair::createProperList({});
+		BoxedListElement *properList = BoxedListElement::createProperList({});
 
 		ASSERT_EQUAL(properList, BoxedEmptyList::instance());
 	}
 	
 	{
-		BoxedDatum *properList = BoxedPair::createProperList({
+		BoxedListElement *properList = BoxedListElement::createProperList({
 			valueA
 		});
 
@@ -34,7 +35,7 @@ int main(int argc, char *argv[])
 	}
 	
 	{
-		BoxedDatum *properList = BoxedPair::createProperList({
+		BoxedListElement *properList = BoxedListElement::createProperList({
 			valueA,
 			valueB,
 			valueC
@@ -56,12 +57,12 @@ int main(int argc, char *argv[])
 	}
 
 	{
-		BoxedPair *improperList = BoxedPair::createImproperList({});
+		BoxedPair *improperList = BoxedListElement::createImproperList({});
 		ASSERT_TRUE(improperList == nullptr);
 	}
 	
 	{
-		BoxedPair *improperList = BoxedPair::createImproperList({
+		BoxedPair *improperList = BoxedListElement::createImproperList({
 			valueA
 		});
 
@@ -69,7 +70,7 @@ int main(int argc, char *argv[])
 	}
 	
 	{
-		BoxedPair *onlyPair = BoxedPair::createImproperList({
+		BoxedPair *onlyPair = BoxedListElement::createImproperList({
 			valueA,
 			valueB
 		});
@@ -79,7 +80,7 @@ int main(int argc, char *argv[])
 	}
 	
 	{
-		BoxedPair *firstPair = BoxedPair::createImproperList({
+		BoxedPair *firstPair = BoxedListElement::createImproperList({
 			valueA,
 			valueB,
 			valueC

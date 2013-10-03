@@ -2,12 +2,13 @@
 #define _LLIBY_BINDING_BOXEDEMPTYLIST_H
 
 #include "BoxedSingleton.h"
+#include "BoxedListElement.h"
 #include "core/constinstances.h"
 
 namespace lliby
 {
 
-class BoxedEmptyList : public BoxedSingleton
+class BoxedEmptyList : public BoxedSingleton<BoxedListElement>
 {
 #include "generated/BoxedEmptyListMembers.h"
 public:

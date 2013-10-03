@@ -7,7 +7,7 @@
 namespace lliby
 {
 
-class BoxedBoolean : public BoxedSingleton
+class BoxedBoolean : public BoxedSingleton<BoxedDatum>
 {
 #include "generated/BoxedBooleanMembers.h"
 public:

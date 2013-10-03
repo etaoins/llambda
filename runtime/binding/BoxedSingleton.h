@@ -6,12 +6,13 @@
 namespace lliby
 {
 
-class BoxedSingleton : public BoxedDatum
+template <class T>
+class BoxedSingleton : public T
 {
 public:
 	explicit BoxedSingleton(BoxedTypeId typeId) :
 		// Don't attempt to collect this as garbage
-		BoxedDatum(typeId, GarbageState::GlobalConstant)
+		T(typeId, GarbageState::GlobalConstant)
 	{
 	}
 
