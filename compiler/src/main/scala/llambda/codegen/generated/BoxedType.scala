@@ -856,8 +856,8 @@ object BoxedCharacter extends BoxedType {
   }
 }
 
-object BoxedByteVector extends BoxedType {
-  val irType = UserDefinedType("byteVector")
+object BoxedBytevector extends BoxedType {
+  val irType = UserDefinedType("bytevector")
   val superType = Some(BoxedDatum)
   val typeId = 9
 
@@ -883,12 +883,12 @@ object BoxedByteVector extends BoxedType {
     val typeIdPointer = BoxedDatum.genPointerToTypeId(entryBlock, boxedValue)
     val typeId = entryBlock.load("typeId")(typeIdPointer)
 
-    val isByteVector = entryBlock.icmp("isByteVector")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 9))
-    entryBlock.condBranch(isByteVector, successBlock, failBlock)
+    val isBytevector = entryBlock.icmp("isBytevector")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 9))
+    entryBlock.condBranch(isBytevector, successBlock, failBlock)
   }
 
   def genPointerToLength(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != PointerType(UserDefinedType("byteVector"))) {
+    if (boxedValue.irType != PointerType(UserDefinedType("bytevector"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -901,7 +901,7 @@ object BoxedByteVector extends BoxedType {
   }
 
   def genPointerToData(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != PointerType(UserDefinedType("byteVector"))) {
+    if (boxedValue.irType != PointerType(UserDefinedType("bytevector"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -914,7 +914,7 @@ object BoxedByteVector extends BoxedType {
   }
 
   def genPointerToTypeId(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != PointerType(UserDefinedType("byteVector"))) {
+    if (boxedValue.irType != PointerType(UserDefinedType("bytevector"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 
@@ -927,7 +927,7 @@ object BoxedByteVector extends BoxedType {
   }
 
   def genPointerToGcState(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != PointerType(UserDefinedType("byteVector"))) {
+    if (boxedValue.irType != PointerType(UserDefinedType("bytevector"))) {
        throw new InternalCompilerErrorException("Unexpected type for boxed value")
     }
 

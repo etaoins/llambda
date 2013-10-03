@@ -205,7 +205,7 @@ object ExtractModuleBody {
       et.Literal(literal)
     case sst.NonSymbolLeaf(literal : ast.CharLiteral) =>
       et.Literal(literal)
-    case sst.NonSymbolLeaf(literal : ast.ByteVector) =>
+    case sst.NonSymbolLeaf(literal : ast.Bytevector) =>
       et.Literal(literal)
     case sst.NonSymbolLeaf(literal : ast.BooleanLiteral) =>
       et.Literal(literal)

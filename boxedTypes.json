@@ -137,7 +137,7 @@
         ]
     },
     {
-        "name": "byteVector",
+        "name": "bytevector",
         "typeId": 9,
         "inherits": "datum",
         "fields": [

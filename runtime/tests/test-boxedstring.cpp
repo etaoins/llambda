@@ -1,7 +1,7 @@
 #include <string.h>
 
 #include "binding/BoxedString.h"
-#include "binding/BoxedByteVector.h"
+#include "binding/BoxedBytevector.h"
 
 #include "core/init.h"
 #include "assertions.h"
@@ -736,50 +736,50 @@ void testUnicodeChars()
 	}
 }
 
-void testToUtf8ByteVector()
+void testToUtf8Bytevector()
 {
 	BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello ☃!");
 
 	{
-		BoxedByteVector *byteBoxedVector = helloValue->toUtf8ByteVector();
+		BoxedBytevector *byteBoxedVector = helloValue->toUtf8Bytevector();
 
 		ASSERT_EQUAL(byteBoxedVector->length(), 10);
 		ASSERT_EQUAL(memcmp(byteBoxedVector->data(), "Hello ☃!", 10), 0);
 	}
 	
 	{
-		BoxedByteVector *byteBoxedVector = helloValue->toUtf8ByteVector(0, 8);
+		BoxedBytevector *byteBoxedVector = helloValue->toUtf8Bytevector(0, 8);
 		
 		ASSERT_EQUAL(byteBoxedVector->length(), 10);
 		ASSERT_EQUAL(memcmp(byteBoxedVector->data(), "Hello ☃!", 10), 0);
 	}
 	
 	{
-		BoxedByteVector *byteBoxedVector = helloValue->toUtf8ByteVector(2);
+		BoxedBytevector *byteBoxedVector = helloValue->toUtf8Bytevector(2);
 		
 		ASSERT_EQUAL(byteBoxedVector->length(), 8);
 		ASSERT_EQUAL(memcmp(byteBoxedVector->data(), "llo ☃!", 8), 0);
 	}
 	
 	{
-		BoxedByteVector *byteBoxedVector = helloValue->toUtf8ByteVector(2, 5);
+		BoxedBytevector *byteBoxedVector = helloValue->toUtf8Bytevector(2, 5);
 
 		ASSERT_EQUAL(byteBoxedVector->length(), 3);
 		ASSERT_EQUAL(memcmp(byteBoxedVector->data(), "llo", 3), 0);
 	}
 	
 	{
-		BoxedByteVector *byteBoxedVector = helloValue->toUtf8ByteVector(2, 19);
+		BoxedBytevector *byteBoxedVector = helloValue->toUtf8Bytevector(2, 19);
 		ASSERT_EQUAL(byteBoxedVector, 0);
 	}
 	
 	{
-		BoxedByteVector *byteBoxedVector = helloValue->toUtf8ByteVector(19);
+		BoxedBytevector *byteBoxedVector = helloValue->toUtf8Bytevector(19);
 		ASSERT_EQUAL(byteBoxedVector, 0);
 	}
 	
 	{
-		BoxedByteVector *byteBoxedVector = helloValue->toUtf8ByteVector(19, 24);
+		BoxedBytevector *byteBoxedVector = helloValue->toUtf8Bytevector(19, 24);
 		ASSERT_EQUAL(byteBoxedVector, 0);
 	}
 }
@@ -872,7 +872,7 @@ int main(int argc, char *argv[])
 
 	testUnicodeChars();
 
-	testToUtf8ByteVector();
+	testToUtf8Bytevector();
 
 	testCaseConversion();
 

@@ -201,10 +201,10 @@ newline""", "Bare\nnewline")
 
   test("bytevectors") {
     assertReflexiveParse("#u8(0 10 5)", List(
-      ast.ByteVector(Vector(0, 10, 5))
+      ast.Bytevector(Vector(0, 10, 5))
     ))
 
-    assertReflexiveParse("#u8()", List(ast.ByteVector(Vector())))
+    assertReflexiveParse("#u8()", List(ast.Bytevector(Vector())))
   }
 
   test("characters") { 

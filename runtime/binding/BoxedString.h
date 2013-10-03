@@ -54,7 +54,7 @@ public:
 	}
 
 	BoxedSymbol *toSymbol() const;
-	BoxedByteVector *toUtf8ByteVector(std::int64_t start = 0, std::int64_t end = -1) const;
+	BoxedBytevector *toUtf8Bytevector(std::int64_t start = 0, std::int64_t end = -1) const;
 	
 	BoxedString *toUppercaseString() const;
 	BoxedString *toLowercaseString() const;

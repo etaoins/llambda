@@ -5,7 +5,7 @@
 #include <algorithm>
 
 #include "BoxedSymbol.h"
-#include "BoxedByteVector.h"
+#include "BoxedBytevector.h"
 
 namespace
 {
@@ -647,7 +647,7 @@ BoxedSymbol* BoxedString::toSymbol() const
 	return new BoxedSymbol(newString, byteLength(), charLength());
 }
 	
-BoxedByteVector* BoxedString::toUtf8ByteVector(std::int64_t start, std::int64_t end) const
+BoxedBytevector* BoxedString::toUtf8Bytevector(std::int64_t start, std::int64_t end) const
 {
 	CharRange range = charRange(start, end);
 
@@ -660,7 +660,7 @@ BoxedByteVector* BoxedString::toUtf8ByteVector(std::int64_t start, std::int64_t 
 	auto *newData = new std::uint8_t[newLength];
 
 	memcpy(newData, range.startPointer, newLength);
-	return new BoxedByteVector(newData, newLength);
+	return new BoxedBytevector(newData, newLength);
 }
 	
 BoxedString *BoxedString::toConvertedString(UnicodeChar (UnicodeChar::* converter)() const) const

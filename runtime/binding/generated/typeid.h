@@ -21,7 +21,7 @@ enum class BoxedTypeId : std::uint16_t
 	ExactInteger = 6,
 	InexactRational = 7,
 	Character = 8,
-	ByteVector = 9,
+	Bytevector = 9,
 	Procedure = 10,
 	Vector = 32768,
 };

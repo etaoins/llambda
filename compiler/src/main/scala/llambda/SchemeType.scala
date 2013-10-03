@@ -11,7 +11,7 @@ case object SymbolType extends SchemeType
 case object EmptyListType extends SchemeType
 case object PairType extends SchemeType
 case object VectorType extends SchemeType
-case object ByteVectorType extends SchemeType
+case object BytevectorType extends SchemeType
 case object CharType extends SchemeType
 case object ProcedureType extends SchemeType
 

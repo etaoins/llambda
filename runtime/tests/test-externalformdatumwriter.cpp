@@ -10,7 +10,7 @@
 #include "binding/BoxedString.h"
 #include "binding/BoxedSymbol.h"
 #include "binding/BoxedPair.h"
-#include "binding/BoxedByteVector.h"
+#include "binding/BoxedBytevector.h"
 #include "binding/BoxedVector.h"
 #include "binding/BoxedProcedure.h"
 #include "binding/BoxedCharacter.h"
@@ -122,16 +122,16 @@ void testPair()
 	assertForm(outerList, "(A B C (A B . C))");
 }
 
-void testByteVector()
+void testBytevector()
 {
 	{
-		auto *emptyVector = new BoxedByteVector(nullptr, 0);
+		auto *emptyVector = new BoxedBytevector(nullptr, 0);
 		assertForm(emptyVector, "#u8()");
 	}
 
 	{
 		uint8_t testData[5] = { 100, 101, 202, 203, 204 };
-		auto *testVector = new BoxedByteVector(testData, 5); 
+		auto *testVector = new BoxedBytevector(testData, 5); 
 
 		assertForm(testVector, "#u8(100 101 202 203 204)");
 	}
@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
 	testSymbol();
 	testString();
 	testPair();
-	testByteVector();
+	testBytevector();
 	testVector();
 	testProcedure();
 	testCharacter();

@@ -21,7 +21,7 @@ class BoxedNumeric;
 class BoxedExactInteger;
 class BoxedInexactRational;
 class BoxedCharacter;
-class BoxedByteVector;
+class BoxedBytevector;
 class BoxedProcedure;
 class BoxedVectorLike;
 class BoxedVector;

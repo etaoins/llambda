@@ -42,7 +42,7 @@
 %character = type {%datum, i32}
 
 ; {supertype, unsigned length, data}
-%byteVector = type {%datum, i32, i8*}
+%bytevector = type {%datum, i32, i8*}
 
 ; {supertype, unsigned capturedDataLength, capturedData, entryPoint}
 %procedure = type {%datum, i32, %datum***, %datum* (%procedure*, %listElement*)*}

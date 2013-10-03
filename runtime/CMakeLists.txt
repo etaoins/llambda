@@ -6,7 +6,7 @@ project (lliby)
 add_library(lliby
 	alloc/FreezeGc.cpp
 	alloc/allocator.cpp
-	binding/BoxedByteVector.cpp
+	binding/BoxedBytevector.cpp
 	binding/BoxedDatum.cpp
 	binding/BoxedListElement.cpp
 	binding/BoxedProcedure.cpp

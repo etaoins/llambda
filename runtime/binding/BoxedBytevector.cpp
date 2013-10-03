@@ -1,4 +1,4 @@
-#include "BoxedByteVector.h"
+#include "BoxedBytevector.h"
 #include "BoxedString.h"
 
 #include <limits>
@@ -29,15 +29,15 @@ namespace
 namespace lliby
 {
 	
-BoxedByteVector* BoxedByteVector::fromFill(std::uint32_t length, std::uint8_t fill)
+BoxedBytevector* BoxedBytevector::fromFill(std::uint32_t length, std::uint8_t fill)
 {
 	auto newData = new std::uint8_t[length];
 	memset(newData, fill, length);
 
-	return new BoxedByteVector(newData, length);
+	return new BoxedBytevector(newData, length);
 }
 	
-BoxedByteVector* BoxedByteVector::fromAppended(const std::list<const BoxedByteVector*> &byteVectors)
+BoxedBytevector* BoxedBytevector::fromAppended(const std::list<const BoxedBytevector*> &byteVectors)
 {
 	std::uint64_t totalLength = 0;
 
@@ -60,10 +60,10 @@ BoxedByteVector* BoxedByteVector::fromAppended(const std::list<const BoxedByteVe
 		copyPtr += byteVector->length();
 	}
 
-	return new BoxedByteVector(newData, totalLength);
+	return new BoxedBytevector(newData, totalLength);
 }
 	
-BoxedByteVector* BoxedByteVector::copy(std::int64_t start, std::int64_t end)
+BoxedBytevector* BoxedBytevector::copy(std::int64_t start, std::int64_t end)
 {
 	if (!adjustRange(start, end, length()))
 	{
@@ -75,10 +75,10 @@ BoxedByteVector* BoxedByteVector::copy(std::int64_t start, std::int64_t end)
 
 	memcpy(newData, &data()[start], newLength);
 
-	return new BoxedByteVector(newData, newLength);
+	return new BoxedBytevector(newData, newLength);
 }
 	
-bool BoxedByteVector::replace(std::uint32_t offset, const BoxedByteVector *from, std::int64_t fromStart, std::int64_t fromEnd)
+bool BoxedBytevector::replace(std::uint32_t offset, const BoxedBytevector *from, std::int64_t fromStart, std::int64_t fromEnd)
 {
 	if (!adjustRange(fromStart, fromEnd, from->length()))
 	{
@@ -97,7 +97,7 @@ bool BoxedByteVector::replace(std::uint32_t offset, const BoxedByteVector *from,
 	return true;
 }
 	
-BoxedString* BoxedByteVector::utf8ToString(std::int64_t start, std::int64_t end)
+BoxedString* BoxedBytevector::utf8ToString(std::int64_t start, std::int64_t end)
 {
 	if (!adjustRange(start, end, length()))
 	{
@@ -107,7 +107,7 @@ BoxedString* BoxedByteVector::utf8ToString(std::int64_t start, std::int64_t end)
 	return BoxedString::fromUtf8Data(&data()[start], end - start);
 }
 
-void BoxedByteVector::finalize()
+void BoxedBytevector::finalize()
 {
 	delete[] m_data;
 }

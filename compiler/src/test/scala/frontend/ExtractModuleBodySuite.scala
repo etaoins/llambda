@@ -61,11 +61,11 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     ))
     
     assert(expressionFor("'#u8(64 65)") === et.Literal(
-      ast.ByteVector(Vector(64, 65))
+      ast.Bytevector(Vector(64, 65))
     ))
     
     assert(expressionFor("#u8(64 65)") === et.Literal(
-      ast.ByteVector(Vector(64, 65))
+      ast.Bytevector(Vector(64, 65))
     ))
     
     assert(expressionFor("'#t") === et.Literal(

@@ -69,9 +69,9 @@ bool lliby_is_character(const BoxedDatum *value)
 	return value->isBoxedCharacter();
 }
 
-bool lliby_is_byte_vector(const BoxedDatum *value)
+bool lliby_is_bytevector(const BoxedDatum *value)
 {
-	return value->isBoxedByteVector();
+	return value->isBoxedBytevector();
 }
 
 bool lliby_is_procedure(const BoxedDatum *value)

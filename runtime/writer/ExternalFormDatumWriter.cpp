@@ -13,7 +13,7 @@
 #include "binding/BoxedSymbol.h"
 #include "binding/BoxedString.h"
 #include "binding/BoxedPair.h"
-#include "binding/BoxedByteVector.h"
+#include "binding/BoxedBytevector.h"
 #include "binding/BoxedVector.h"
 #include "binding/BoxedCharacter.h"
 
@@ -54,9 +54,9 @@ void ExternalFormDatumWriter::render(const BoxedDatum *datum)
 	{
 		renderPair(value);
 	}
-	else if (auto value = datum->asBoxedByteVector())
+	else if (auto value = datum->asBoxedBytevector())
 	{
-		renderByteVector(value);
+		renderBytevector(value);
 	}
 	else if (auto value = datum->asBoxedVector())
 	{
@@ -231,7 +231,7 @@ void ExternalFormDatumWriter::renderPair(const BoxedPair *value, bool inList)
 	}
 }
 	
-void ExternalFormDatumWriter::renderByteVector(const BoxedByteVector *value)
+void ExternalFormDatumWriter::renderBytevector(const BoxedBytevector *value)
 {
 	bool printedByte = false;
 	m_outStream << "#u8(";

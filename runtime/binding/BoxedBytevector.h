@@ -7,12 +7,12 @@
 namespace lliby
 {
 
-class BoxedByteVector : public BoxedDatum
+class BoxedBytevector : public BoxedDatum
 {
-#include "generated/BoxedByteVectorMembers.h"
+#include "generated/BoxedBytevectorMembers.h"
 public:
-	BoxedByteVector(std::uint8_t *data, std::uint32_t length) :
-		BoxedDatum(BoxedTypeId::ByteVector),
+	BoxedBytevector(std::uint8_t *data, std::uint32_t length) :
+		BoxedDatum(BoxedTypeId::Bytevector),
 		m_length(length),
 		m_data(data)
 	{
@@ -22,11 +22,11 @@ public:
 
 	void finalize();
 
-	static BoxedByteVector* fromFill(std::uint32_t length, std::uint8_t fill = 0);
-	static BoxedByteVector* fromAppended(const std::list<const BoxedByteVector*> &byteVectors);
+	static BoxedBytevector* fromFill(std::uint32_t length, std::uint8_t fill = 0);
+	static BoxedBytevector* fromAppended(const std::list<const BoxedBytevector*> &byteVectors);
 
-	BoxedByteVector* copy(std::int64_t start = 0, std::int64_t end = -1); 
-	bool replace(std::uint32_t offset, const BoxedByteVector *from, std::int64_t fromStart = 0, std::int64_t fromEnd = -1);
+	BoxedBytevector* copy(std::int64_t start = 0, std::int64_t end = -1); 
+	bool replace(std::uint32_t offset, const BoxedBytevector *from, std::int64_t fromStart = 0, std::int64_t fromEnd = -1);
 
 	BoxedString* utf8ToString(std::int64_t start = 0, std::int64_t end = -1);
 

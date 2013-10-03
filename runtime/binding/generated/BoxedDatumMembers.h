@@ -314,29 +314,29 @@ public:
 		return (typeId() == BoxedTypeId::Character);
 	}
 
-	BoxedByteVector* asBoxedByteVector()
+	BoxedBytevector* asBoxedBytevector()
 	{
-		if ((typeId() == BoxedTypeId::ByteVector))
+		if ((typeId() == BoxedTypeId::Bytevector))
 		{
-			return reinterpret_cast<BoxedByteVector*>(this);
+			return reinterpret_cast<BoxedBytevector*>(this);
 		}
 
 		return nullptr;
 	}
 
-	const BoxedByteVector* asBoxedByteVector() const
+	const BoxedBytevector* asBoxedBytevector() const
 	{
-		if ((typeId() == BoxedTypeId::ByteVector))
+		if ((typeId() == BoxedTypeId::Bytevector))
 		{
-			return reinterpret_cast<const BoxedByteVector*>(this);
+			return reinterpret_cast<const BoxedBytevector*>(this);
 		}
 
 		return nullptr;
 	}
 
-	bool isBoxedByteVector() const
+	bool isBoxedBytevector() const
 	{
-		return (typeId() == BoxedTypeId::ByteVector);
+		return (typeId() == BoxedTypeId::Bytevector);
 	}
 
 	BoxedProcedure* asBoxedProcedure()
