@@ -18,6 +18,7 @@ add_library(lliby
 	core/fatal.cpp
 	core/init.cpp
 	stdlib/generated/predicates.cpp
+	stdlib/output.cpp
 	unicode/UnicodeChar.cpp
 	writer/ExternalFormDatumWriter.cpp
 	)
