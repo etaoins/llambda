@@ -17,10 +17,10 @@ case object UnspecificValue extends NonSymbolLeaf {
   override def toString = "#!unspecific"
 }
 
-case class StringLiteral(name : String) extends NonSymbolLeaf {
+case class StringLiteral(content : String) extends NonSymbolLeaf {
   val schemeType = st.StringType
 
-  override def toString = '"' + name + '"'
+  override def toString = '"' + content + '"'
 }
 
 case class BooleanLiteral(value : Boolean) extends NonSymbolLeaf {
