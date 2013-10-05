@@ -1,14 +1,30 @@
+#include "fatal.h"
+
 #include <iostream>
 #include <unistd.h>
 
-#include "fatal.h"
+#include "binding/BoxedDatum.h"
+#include "writer/ExternalFormDatumWriter.h"
+
+using namespace lliby;
 
 extern "C"
 {
-	void lliby_fatal(const char *message)
+
+void _lliby_fatal(const char *message, const BoxedDatum *evidence)
+{
+	if (evidence) 
 	{
-		std::cerr << message << std::endl;
-		exit(-1);
-		__builtin_unreachable();
+		ExternalFormDatumWriter writer(std::cerr);
+
+		std::cerr << "Datum: ";
+		writer.render(evidence);
+		std::cerr << std::endl;
 	}
+
+	std::cerr << message << std::endl;
+	exit(-1);
+	__builtin_unreachable();
+}
+
 }
