@@ -64,7 +64,7 @@ object LlambdaApp extends App {
           new File(".scm$".r.replaceAllIn(inputFilePath, targetExtension))
         }
 
-        Compiler(input, output,
+        Compiler.compileFile(input, output,
           optimizeLevel=config.optimizeLevel,
           emitLlvm=config.emitLlvm)
 

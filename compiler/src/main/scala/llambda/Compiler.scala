@@ -33,15 +33,19 @@ object Compiler {
       throw new ExternalCompilerException
     }
   }
+  
+  def compileFile(input : File, output : File, optimizeLevel : Int = 0, emitLlvm : Boolean = false) : Unit =
+    compileString(Source.fromFile(input).mkString, output, optimizeLevel, emitLlvm)
+  
+  def compileString(inputString : String, output : File, optimizeLevel : Int = 0, emitLlvm : Boolean = false) : Unit =
+    compileData(SchemeParser.parseStringAsData(inputString), output, optimizeLevel, emitLlvm)
 
-  def apply(input : File, output : File, optimizeLevel : Int = 0, emitLlvm : Boolean = false) {
-    // Generate the LLVM IR
-    val inputString = Source.fromFile(input).mkString
-    val data = SchemeParser.parseStringAsData(inputString)
-
+  def compileData(data : List[ast.Datum], output : File, optimizeLevel : Int = 0, emitLlvm : Boolean = false) : Unit = {
+    // Parse the program
     val loader = new frontend.DefaultLibraryLoader
     val expressions = frontend.ExtractProgram(data)(loader.load)
 
+    // Generate the LLVM IR
     val llvmIr = codegen.GenProgram(expressions)
 
     if (emitLlvm) {
