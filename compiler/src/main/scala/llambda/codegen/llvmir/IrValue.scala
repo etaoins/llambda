@@ -7,15 +7,17 @@ sealed abstract class IrValue extends Irable {
   def toIrWithType = irType.toIr + " " + toIr
 }
 
+sealed abstract class IrConstant extends IrValue
+
 case class LocalVariable(name : String, irType : FirstClassType) extends IrValue {
   def toIr = "%" + name
 }
 
-case class GlobalVariable(name : String, irType : FirstClassType) extends IrValue {
+// Global variables are constants because they're simply pointers to a
+// possibly mutable value. The pointer itself is a link-time constant
+case class GlobalVariable(name : String, irType : PointerType) extends IrConstant {
   def toIr = "@" + name
 }
-
-sealed abstract class IrConstant extends IrValue
 
 sealed abstract class BoolConstant extends IrConstant {
   def irType = IntegerType(1)

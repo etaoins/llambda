@@ -11,10 +11,10 @@ class IrValueSuite extends FunSuite {
   }
   
   test("global variable") {
-    val testLocal = GlobalVariable("test", DoubleType)
+    val testLocal = GlobalVariable("test", PointerType(DoubleType))
 
     assert(testLocal.toIr === "@test")
-    assert(testLocal.irType === DoubleType)
+    assert(testLocal.irType === PointerType(DoubleType))
   }
 
   test("boolean constant") {
