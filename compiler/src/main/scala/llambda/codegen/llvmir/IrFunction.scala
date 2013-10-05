@@ -45,7 +45,7 @@ case class IrSignature(
   callingConv : CallingConv.CallingConv = CallingConv.Default
 ) extends IrSignatureLike
 
-sealed abstract trait IrFunctionDeclLike extends Irable with IrSignatureLike {
+sealed abstract trait IrFunctionDeclLike extends Irable with IrSignatureLike with IrNamedGlobal {
   val linkage : Linkage.Linkage
   val visibility : Visibility.Visibility
   val name : String

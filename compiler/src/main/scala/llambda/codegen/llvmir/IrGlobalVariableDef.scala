@@ -6,7 +6,7 @@ case class IrGlobalVariableDef(
     linkage : Linkage.Linkage = Linkage.Default,
     visibility : Visibility.Visibility = Visibility.Default,
     unnamedAddr : Boolean = false,
-    constant : Boolean = false) extends Irable {
+    constant : Boolean = false) extends Irable with IrNamedGlobal {
   def variable : GlobalVariable =
     GlobalVariable(name, PointerType(initializer.irType))
 

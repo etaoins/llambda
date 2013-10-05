@@ -45,6 +45,18 @@ class IrModuleSuite extends FunSuite {
     module.declareFunction(putsDecl)
     module.defineFunction(mainFunction)
 
+    // Make sure unlessDeclared works
+    module.unlessDeclared(putsDecl) {
+      assert(false)
+    }
+
+    var blockRun = false
+    module.unlessDeclared("randomString") {
+      blockRun = true
+    }
+
+    assert(blockRun)
+
     assert(module.toIr ===
       "@helloWorldString = unnamed_addr constant [14 x i8] c\"Hello, world!\\00\"\n" + 
       "declare i32 @puts(i8* nocapture) nounwind\n" +
