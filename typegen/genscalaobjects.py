@@ -160,7 +160,7 @@ def _generate_field_accessors(leaf_type, current_type, depth = 1):
         accessor_name = 'genPointerTo' + _uppercase_first(field_name)
 
         output += '\n'
-        output += '  def ' + accessor_name + '(block : IrBlockBuilder, boxedValue : IrValue) : IrValue = {\n'
+        output += '  def ' + accessor_name + '(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {\n'
         
         # Make sure we're the correct type
         exception_message = "Unexpected type for boxed value"
@@ -191,8 +191,8 @@ def _generate_type_check(all_types, boxed_type):
     type_id_type = _field_type_to_scala(all_types[BASE_TYPE].fields['typeId'])
 
     output  = '\n'
-    output += '  def genTypeCheck(startBlock : IrBlockBuilder, boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {\n'
-    output += '    val typeIdPointer = ' + base_type_object + '.genPointerToTypeId(startBlock, boxedValue)\n'
+    output += '  def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {\n'
+    output += '    val typeIdPointer = ' + base_type_object + '.genPointerToTypeId(startBlock)(boxedValue)\n'
     output += '    val typeId = startBlock.load("typeId")(typeIdPointer)\n'
 
     # Start building off the start block
@@ -272,7 +272,7 @@ def _generate_boxed_types(all_types):
     output += '  def subtypes : List[BoxedType] = \n'
     output += '    directSubtypes ++ (directSubtypes flatMap (_.directSubtypes))\n'
     output += '\n'
-    output += '  def genPointerBitcast(uncastValue : IrValue, block : IrBlockBuilder) : IrValue =\n'
+    output += '  def genPointerBitcast(block : IrBlockBuilder)(uncastValue : IrValue) : IrValue =\n'
     output += '    if (uncastValue.irType == PointerType(irType)) {\n'
     output += '      uncastValue\n'
     output += '    }\n'

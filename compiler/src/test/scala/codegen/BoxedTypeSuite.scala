@@ -49,7 +49,7 @@ class BoxedTypeSuite extends llvmir.IrTestSuite {
     val nullNumeric = llvmir.NullPointerConstant(llvmir.PointerType(bt.BoxedNumeric.irType))
 
     val block = createTestBlock()
-    val resultValue = bt.BoxedNumeric.genPointerBitcast(nullNumeric, block)
+    val resultValue = bt.BoxedNumeric.genPointerBitcast(block)(nullNumeric)
 
     assert(resultValue === nullNumeric)
   }
@@ -58,7 +58,7 @@ class BoxedTypeSuite extends llvmir.IrTestSuite {
     val nullNumeric = llvmir.NullPointerConstant(llvmir.PointerType(bt.BoxedNumeric.irType))
 
     val block = createTestBlock()
-    val resultValue = bt.BoxedDatum.genPointerBitcast(nullNumeric, block)
+    val resultValue = bt.BoxedDatum.genPointerBitcast(block)(nullNumeric)
 
     assertInstr(block, "%datumCast1 = bitcast %numeric* null to %datum*") 
 
