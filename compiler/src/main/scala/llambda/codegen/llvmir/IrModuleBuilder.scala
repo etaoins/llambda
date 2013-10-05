@@ -10,7 +10,7 @@ class IrModuleBuilder extends Irable {
   private val declaredNames = collection.mutable.Set[String]()
 
   // This generates global names
-  protected implicit val nameSource = new GlobalNameSource
+  val nameSource = new GlobalNameSource
 
   def defineGlobalVariable(variableDef : IrGlobalVariableDef) {
     globalVariableDefs.append(variableDef)
