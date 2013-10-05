@@ -115,7 +115,7 @@ def _generate_constant_constructor(all_types, boxed_type):
 
     supertype = boxed_type.supertype
     if supertype:
-        output += '      superType.get.createConstant(\n'
+        output += '      supertype.get.createConstant(\n'
 
         super_parameters = []
 
@@ -247,22 +247,74 @@ def _generate_boxed_types(all_types):
     output += "import llambda.InternalCompilerErrorException\n\n"
         
     output += 'sealed abstract class BoxedType {\n'
+    output += '  val name : String\n'
     output += '  val irType : FirstClassType\n'
-    output += '  val superType : Option[BoxedType]\n'
+    output += '  val supertype : Option[BoxedType]\n'
+    output += '  val directSubtypes : List[BoxedType]\n'
+    output += '  val isAbstract : Boolean\n' 
+    output += '\n'
+    output += '  def isTypeOrSubtypeOf(otherType : BoxedType) : Boolean = {\n'
+    output += '    if (otherType == this) {\n'
+    output += '      return true\n'
+    output += '    }\n'
+    output += '\n'
+    output += '    supertype map (_.isTypeOrSubtypeOf(otherType)) getOrElse false\n'
+    output += '  }\n'
+    output += '\n'
+    output += '  def isTypeOrSupertypeOf(otherType : BoxedType) : Boolean = {\n'
+    output += '    if (otherType == this) {\n'
+    output += '      return true\n'
+    output += '    }\n'
+    output += '\n'
+    output += '    directSubtypes exists (_.isTypeOrSupertypeOf(otherType))\n'
+    output += '  }\n'
+    output += '\n'
+    output += '  def subtypes : List[BoxedType] = \n'
+    output += '    directSubtypes ++ (directSubtypes flatMap (_.directSubtypes))\n'
+    output += '\n'
+    output += '  def genPointerBitcast(uncastValue : IrValue, block : IrBlockBuilder) : IrValue =\n'
+    output += '    if (uncastValue.irType == PointerType(irType)) {\n'
+    output += '      uncastValue\n'
+    output += '    }\n'
+    output += '    else {\n'
+    output += '      block.bitcastTo(name + "Cast")(uncastValue, PointerType(irType))\n'
+    output += '    }\n'
+    output += '}\n\n'
+
+    output += 'sealed abstract class ConcreteBoxedType extends BoxedType {\n'
+    output += '  val typeId : Int\n'
     output += '}\n\n'
 
     for type_name, boxed_type in all_types.items():
         object_name = type_name_to_clike_class(type_name)
         supertype_name = boxed_type.inherits
 
-        output += 'object ' + object_name + ' extends BoxedType {\n'
+        if boxed_type.abstract:
+            scala_superclass = 'BoxedType'
+        else:
+            scala_superclass = 'ConcreteBoxedType'
+
+        output += 'object ' + object_name + ' extends ' + scala_superclass + ' {\n'
+        output += '  val name = "' + type_name + '"\n'
         output += '  val irType = UserDefinedType("' + type_name + '")\n'
 
         if supertype_name:
             supertype_object = type_name_to_clike_class(supertype_name)
-            output += '  val superType = Some(' + supertype_object + ')\n'
+            output += '  val supertype = Some(' + supertype_object + ')\n'
         else:
-            output += '  val superType = None\n'
+            output += '  val supertype = None\n'
+
+        subtype_scala_names = []
+        for subtype_name in boxed_type.subtypes.keys():
+            subtype_object = type_name_to_clike_class(subtype_name)
+            subtype_scala_names.append(subtype_object)
+
+        output += '  val directSubtypes = List(' + ", ".join(subtype_scala_names) + ')\n'
+
+        if boxed_type.abstract:
+            output += '  val isAbstract = true\n'
+        else:
+            output += '  val isAbstract = false\n'
 
         type_id = boxed_type.type_id
         if type_id is not None:
@@ -280,7 +332,6 @@ def _generate_boxed_types(all_types):
         output += _generate_field_accessors(boxed_type, boxed_type)
 
         output += '}\n\n'
-
 
     return output
 

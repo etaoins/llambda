@@ -8,13 +8,50 @@ import llambda.codegen.llvmir._
 import llambda.InternalCompilerErrorException
 
 sealed abstract class BoxedType {
+  val name : String
   val irType : FirstClassType
-  val superType : Option[BoxedType]
+  val supertype : Option[BoxedType]
+  val directSubtypes : List[BoxedType]
+  val isAbstract : Boolean
+
+  def isTypeOrSubtypeOf(otherType : BoxedType) : Boolean = {
+    if (otherType == this) {
+      return true
+    }
+
+    supertype map (_.isTypeOrSubtypeOf(otherType)) getOrElse false
+  }
+
+  def isTypeOrSupertypeOf(otherType : BoxedType) : Boolean = {
+    if (otherType == this) {
+      return true
+    }
+
+    directSubtypes exists (_.isTypeOrSupertypeOf(otherType))
+  }
+
+  def subtypes : List[BoxedType] = 
+    directSubtypes ++ (directSubtypes flatMap (_.directSubtypes))
+
+  def genPointerBitcast(uncastValue : IrValue, block : IrBlockBuilder) : IrValue =
+    if (uncastValue.irType == PointerType(irType)) {
+      uncastValue
+    }
+    else {
+      block.bitcastTo(name + "Cast")(uncastValue, PointerType(irType))
+    }
+}
+
+sealed abstract class ConcreteBoxedType extends BoxedType {
+  val typeId : Int
 }
 
 object BoxedDatum extends BoxedType {
+  val name = "datum"
   val irType = UserDefinedType("datum")
-  val superType = None
+  val supertype = None
+  val directSubtypes = List(BoxedUnspecific, BoxedListElement, BoxedStringLike, BoxedBoolean, BoxedNumeric, BoxedCharacter, BoxedBytevector, BoxedProcedure, BoxedVectorLike)
+  val isAbstract = true
 
   def createConstant(typeId : IrConstant) : StructureConstant = {
     if (typeId.irType != IntegerType(16)) {
@@ -54,9 +91,12 @@ object BoxedDatum extends BoxedType {
   }
 }
 
-object BoxedUnspecific extends BoxedType {
+object BoxedUnspecific extends ConcreteBoxedType {
+  val name = "unspecific"
   val irType = UserDefinedType("unspecific")
-  val superType = Some(BoxedDatum)
+  val supertype = Some(BoxedDatum)
+  val directSubtypes = List()
+  val isAbstract = false
   val typeId = 0
 
   def genTypeCheck(startBlock : IrBlockBuilder, boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
@@ -95,12 +135,15 @@ object BoxedUnspecific extends BoxedType {
 }
 
 object BoxedListElement extends BoxedType {
+  val name = "listElement"
   val irType = UserDefinedType("listElement")
-  val superType = Some(BoxedDatum)
+  val supertype = Some(BoxedDatum)
+  val directSubtypes = List(BoxedPair, BoxedEmptyList)
+  val isAbstract = true
 
   def createConstant(typeId : IrConstant) : StructureConstant = {
     StructureConstant(List(
-      superType.get.createConstant(
+      supertype.get.createConstant(
         typeId=typeId
       )
     ), userDefinedType=Some(irType))
@@ -145,9 +188,12 @@ object BoxedListElement extends BoxedType {
   }
 }
 
-object BoxedPair extends BoxedType {
+object BoxedPair extends ConcreteBoxedType {
+  val name = "pair"
   val irType = UserDefinedType("pair")
-  val superType = Some(BoxedListElement)
+  val supertype = Some(BoxedListElement)
+  val directSubtypes = List()
+  val isAbstract = false
   val typeId = 1
 
   def createConstant(car : IrConstant, cdr : IrConstant) : StructureConstant = {
@@ -160,7 +206,7 @@ object BoxedPair extends BoxedType {
     }
 
     StructureConstant(List(
-      superType.get.createConstant(
+      supertype.get.createConstant(
         typeId=IntegerConstant(IntegerType(16), typeId)
       ),
       car,
@@ -229,9 +275,12 @@ object BoxedPair extends BoxedType {
   }
 }
 
-object BoxedEmptyList extends BoxedType {
+object BoxedEmptyList extends ConcreteBoxedType {
+  val name = "emptyList"
   val irType = UserDefinedType("emptyList")
-  val superType = Some(BoxedListElement)
+  val supertype = Some(BoxedListElement)
+  val directSubtypes = List()
+  val isAbstract = false
   val typeId = 2
 
   def genTypeCheck(startBlock : IrBlockBuilder, boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
@@ -270,8 +319,11 @@ object BoxedEmptyList extends BoxedType {
 }
 
 object BoxedStringLike extends BoxedType {
+  val name = "stringLike"
   val irType = UserDefinedType("stringLike")
-  val superType = Some(BoxedDatum)
+  val supertype = Some(BoxedDatum)
+  val directSubtypes = List(BoxedString, BoxedSymbol)
+  val isAbstract = true
 
   def createConstant(charLength : IrConstant, byteLength : IrConstant, utf8Data : IrConstant, typeId : IrConstant) : StructureConstant = {
     if (charLength.irType != IntegerType(32)) {
@@ -287,7 +339,7 @@ object BoxedStringLike extends BoxedType {
     }
 
     StructureConstant(List(
-      superType.get.createConstant(
+      supertype.get.createConstant(
         typeId=typeId
       ),
       charLength,
@@ -374,14 +426,17 @@ object BoxedStringLike extends BoxedType {
   }
 }
 
-object BoxedString extends BoxedType {
+object BoxedString extends ConcreteBoxedType {
+  val name = "string"
   val irType = UserDefinedType("string")
-  val superType = Some(BoxedStringLike)
+  val supertype = Some(BoxedStringLike)
+  val directSubtypes = List()
+  val isAbstract = false
   val typeId = 3
 
   def createConstant(charLength : IrConstant, byteLength : IrConstant, utf8Data : IrConstant) : StructureConstant = {
     StructureConstant(List(
-      superType.get.createConstant(
+      supertype.get.createConstant(
         charLength=charLength,
         byteLength=byteLength,
         utf8Data=utf8Data,
@@ -464,14 +519,17 @@ object BoxedString extends BoxedType {
   }
 }
 
-object BoxedSymbol extends BoxedType {
+object BoxedSymbol extends ConcreteBoxedType {
+  val name = "symbol"
   val irType = UserDefinedType("symbol")
-  val superType = Some(BoxedStringLike)
+  val supertype = Some(BoxedStringLike)
+  val directSubtypes = List()
+  val isAbstract = false
   val typeId = 4
 
   def createConstant(charLength : IrConstant, byteLength : IrConstant, utf8Data : IrConstant) : StructureConstant = {
     StructureConstant(List(
-      superType.get.createConstant(
+      supertype.get.createConstant(
         charLength=charLength,
         byteLength=byteLength,
         utf8Data=utf8Data,
@@ -554,9 +612,12 @@ object BoxedSymbol extends BoxedType {
   }
 }
 
-object BoxedBoolean extends BoxedType {
+object BoxedBoolean extends ConcreteBoxedType {
+  val name = "boolean"
   val irType = UserDefinedType("boolean")
-  val superType = Some(BoxedDatum)
+  val supertype = Some(BoxedDatum)
+  val directSubtypes = List()
+  val isAbstract = false
   val typeId = 5
 
   def genTypeCheck(startBlock : IrBlockBuilder, boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
@@ -608,12 +669,15 @@ object BoxedBoolean extends BoxedType {
 }
 
 object BoxedNumeric extends BoxedType {
+  val name = "numeric"
   val irType = UserDefinedType("numeric")
-  val superType = Some(BoxedDatum)
+  val supertype = Some(BoxedDatum)
+  val directSubtypes = List(BoxedExactInteger, BoxedInexactRational)
+  val isAbstract = true
 
   def createConstant(typeId : IrConstant) : StructureConstant = {
     StructureConstant(List(
-      superType.get.createConstant(
+      supertype.get.createConstant(
         typeId=typeId
       )
     ), userDefinedType=Some(irType))
@@ -658,9 +722,12 @@ object BoxedNumeric extends BoxedType {
   }
 }
 
-object BoxedExactInteger extends BoxedType {
+object BoxedExactInteger extends ConcreteBoxedType {
+  val name = "exactInteger"
   val irType = UserDefinedType("exactInteger")
-  val superType = Some(BoxedNumeric)
+  val supertype = Some(BoxedNumeric)
+  val directSubtypes = List()
+  val isAbstract = false
   val typeId = 6
 
   def createConstant(value : IrConstant) : StructureConstant = {
@@ -669,7 +736,7 @@ object BoxedExactInteger extends BoxedType {
     }
 
     StructureConstant(List(
-      superType.get.createConstant(
+      supertype.get.createConstant(
         typeId=IntegerConstant(IntegerType(16), typeId)
       ),
       value
@@ -724,9 +791,12 @@ object BoxedExactInteger extends BoxedType {
   }
 }
 
-object BoxedInexactRational extends BoxedType {
+object BoxedInexactRational extends ConcreteBoxedType {
+  val name = "inexactRational"
   val irType = UserDefinedType("inexactRational")
-  val superType = Some(BoxedNumeric)
+  val supertype = Some(BoxedNumeric)
+  val directSubtypes = List()
+  val isAbstract = false
   val typeId = 7
 
   def createConstant(value : IrConstant) : StructureConstant = {
@@ -735,7 +805,7 @@ object BoxedInexactRational extends BoxedType {
     }
 
     StructureConstant(List(
-      superType.get.createConstant(
+      supertype.get.createConstant(
         typeId=IntegerConstant(IntegerType(16), typeId)
       ),
       value
@@ -790,9 +860,12 @@ object BoxedInexactRational extends BoxedType {
   }
 }
 
-object BoxedCharacter extends BoxedType {
+object BoxedCharacter extends ConcreteBoxedType {
+  val name = "character"
   val irType = UserDefinedType("character")
-  val superType = Some(BoxedDatum)
+  val supertype = Some(BoxedDatum)
+  val directSubtypes = List()
+  val isAbstract = false
   val typeId = 8
 
   def createConstant(unicodeChar : IrConstant) : StructureConstant = {
@@ -801,7 +874,7 @@ object BoxedCharacter extends BoxedType {
     }
 
     StructureConstant(List(
-      superType.get.createConstant(
+      supertype.get.createConstant(
         typeId=IntegerConstant(IntegerType(16), typeId)
       ),
       unicodeChar
@@ -856,9 +929,12 @@ object BoxedCharacter extends BoxedType {
   }
 }
 
-object BoxedBytevector extends BoxedType {
+object BoxedBytevector extends ConcreteBoxedType {
+  val name = "bytevector"
   val irType = UserDefinedType("bytevector")
-  val superType = Some(BoxedDatum)
+  val supertype = Some(BoxedDatum)
+  val directSubtypes = List()
+  val isAbstract = false
   val typeId = 9
 
   def createConstant(length : IrConstant, data : IrConstant) : StructureConstant = {
@@ -871,7 +947,7 @@ object BoxedBytevector extends BoxedType {
     }
 
     StructureConstant(List(
-      superType.get.createConstant(
+      supertype.get.createConstant(
         typeId=IntegerConstant(IntegerType(16), typeId)
       ),
       length,
@@ -940,9 +1016,12 @@ object BoxedBytevector extends BoxedType {
   }
 }
 
-object BoxedProcedure extends BoxedType {
+object BoxedProcedure extends ConcreteBoxedType {
+  val name = "procedure"
   val irType = UserDefinedType("procedure")
-  val superType = Some(BoxedDatum)
+  val supertype = Some(BoxedDatum)
+  val directSubtypes = List()
+  val isAbstract = false
   val typeId = 10
 
   def createConstant(capturedDataLength : IrConstant, capturedData : IrConstant, entryPoint : IrConstant) : StructureConstant = {
@@ -959,7 +1038,7 @@ object BoxedProcedure extends BoxedType {
     }
 
     StructureConstant(List(
-      superType.get.createConstant(
+      supertype.get.createConstant(
         typeId=IntegerConstant(IntegerType(16), typeId)
       ),
       capturedDataLength,
@@ -1043,8 +1122,11 @@ object BoxedProcedure extends BoxedType {
 }
 
 object BoxedVectorLike extends BoxedType {
+  val name = "vectorLike"
   val irType = UserDefinedType("vectorLike")
-  val superType = Some(BoxedDatum)
+  val supertype = Some(BoxedDatum)
+  val directSubtypes = List(BoxedVector)
+  val isAbstract = true
 
   def createConstant(length : IrConstant, elements : IrConstant, typeId : IrConstant) : StructureConstant = {
     if (length.irType != IntegerType(32)) {
@@ -1056,7 +1138,7 @@ object BoxedVectorLike extends BoxedType {
     }
 
     StructureConstant(List(
-      superType.get.createConstant(
+      supertype.get.createConstant(
         typeId=typeId
       ),
       length,
@@ -1126,14 +1208,17 @@ object BoxedVectorLike extends BoxedType {
   }
 }
 
-object BoxedVector extends BoxedType {
+object BoxedVector extends ConcreteBoxedType {
+  val name = "vector"
   val irType = UserDefinedType("vector")
-  val superType = Some(BoxedVectorLike)
+  val supertype = Some(BoxedVectorLike)
+  val directSubtypes = List()
+  val isAbstract = false
   val typeId = 32768
 
   def createConstant(length : IrConstant, elements : IrConstant) : StructureConstant = {
     StructureConstant(List(
-      superType.get.createConstant(
+      supertype.get.createConstant(
         length=length,
         elements=elements,
         typeId=IntegerConstant(IntegerType(16), typeId)
