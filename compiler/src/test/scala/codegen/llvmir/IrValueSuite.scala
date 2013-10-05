@@ -112,4 +112,13 @@ class IrValueSuite extends FunSuite {
     assert(elementPtrConstant.irType === PointerType(IntegerType(8)))
     assert(elementPtrConstant.toIr === "getelementptr inbounds ([6 x i8]* @helloString, i32 0, i32 2)")
   }
+  
+  test("bitcast constant") {
+    val sourceValue = IntegerConstant(IntegerType(32), 50)
+
+    val bitcastConstant = BitcastToConstant(sourceValue, SingleType)
+
+    assert(bitcastConstant.irType === SingleType)
+    assert(bitcastConstant.toIr === "bitcast (i32 50 to float)")
+  }
 }

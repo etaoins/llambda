@@ -127,3 +127,11 @@ case class ElementPointerConstant(elementType : FirstClassType, basePointer : Gl
     s"getelementptr${inboundsIr} (${paramIr})"
   }
 }
+
+case class BitcastToConstant(value : IrConstant, toType : FirstClassType) extends IrConstant {
+  def irType = toType
+
+  def toIr : String = {
+    s"bitcast (${value.toIrWithType} to ${toType.toIr})"
+  }
+}
