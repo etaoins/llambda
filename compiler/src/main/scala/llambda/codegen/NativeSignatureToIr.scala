@@ -1,11 +1,11 @@
 package llambda.codegen
 
-import llambda.et.NativeFunction
+import llambda.nfi.NativeSignature
 import llambda.codegen.{boxedtype => bt}
-import llambda.codegen.llvmir.{IrCallable, PointerType, VoidType}
+import llambda.codegen.llvmir.{IrSignature, PointerType, VoidType}
 import llambda.codegen.llvmir.IrFunction._
 
-object NativeSignatureToIrCallable {
+object NativeSignatureToIr {
   private def paramSignednessToAttribs(signedness : Option[Boolean]) : Set[ParameterAttribute] = {
     signedness match {
       case Some(true) => Set(SignExt)
@@ -14,18 +14,27 @@ object NativeSignatureToIrCallable {
     }
   }
 
-  def apply(signature : NativeFunction) : IrCallable = {
+  def apply(signature : NativeSignature) : IrSignature = {
+    val selfArgs = if (signature.hasSelfArg) {
+      List(Argument(PointerType(bt.BoxedProcedure.irType), Set()))
+    }
+    else {
+      Nil
+    }
+
     val fixedArgs = signature.fixedArgs map (NfiTypeToIrType(_)) map {
       case SignedFirstClassType(irType, signedness) =>
         Argument(irType, paramSignednessToAttribs(signedness))
     }
 
-    val allArgs : List[Argument] = if (signature.hasRestArg) {
-      fixedArgs :+ Argument(PointerType(bt.BoxedPair.irType), Set())
+    val restArgs = if (signature.hasRestArg) {
+      List(Argument(PointerType(bt.BoxedListElement.irType), Set()))
     }
     else {
-      fixedArgs
+      Nil
     } 
+
+    val allArgs = selfArgs ++ fixedArgs ++ restArgs
 
     val result = signature.returnType map (NfiTypeToIrType(_)) match {
       case None => 
@@ -34,6 +43,6 @@ object NativeSignatureToIrCallable {
         Result(irType, paramSignednessToAttribs(signedness))
     }
 
-    IrCallable(result=result, arguments=allArgs)
+    IrSignature(result=result, arguments=allArgs)
   }
 }

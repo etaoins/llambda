@@ -36,9 +36,9 @@ private[llvmir] trait OtherInstrs extends IrInstrBuilder {
     call(resultName)(decl, decl.irValue, arguments, tailCall)
   }
 
-  def call(resultName : Option[String])(callable : IrCallableLike, functionPtr : IrValue, arguments : Seq[IrValue], tailCall : Boolean = false) : Option[LocalVariable] = {
+  def call(resultName : Option[String])(signature : IrSignatureLike, functionPtr : IrValue, arguments : Seq[IrValue], tailCall : Boolean = false) : Option[LocalVariable] = {
     // We only return a result for non-void result types if they specify a result name
-    val resultVarOpt = callable.result.irType match {
+    val resultVarOpt = signature.result.irType match {
       case VoidType =>
         None
       case otherType : FirstClassType =>
@@ -57,32 +57,32 @@ private[llvmir] trait OtherInstrs extends IrInstrBuilder {
     }
 
     // Add our calling convention if we're using a non-default one
-    val callingConvIrOpt = callable.callingConv.toOptIr
+    val callingConvIrOpt = signature.callingConv.toOptIr
 
     // Only zeroext, signext, inreg are allowed here
     // We don't support inreg
-    val filteredRetAttrs = callable.result.attributes.intersect(Set(IrFunction.ZeroExt, IrFunction.SignExt))
+    val filteredRetAttrs = signature.result.attributes.intersect(Set(IrFunction.ZeroExt, IrFunction.SignExt))
     val retAttrIrs = filteredRetAttrs.map(_.toIr)
 
-    val resultTypeIr = callable.result.irType.toIr
+    val resultTypeIr = signature.result.irType.toIr
 
     val functionPtrIr = functionPtr.toIr
 
-    if (arguments.length != callable.arguments.length) {
-      throw new InternalCompilerErrorException("Passed argument count didn't match callable argument count")
+    if (arguments.length != signature.arguments.length) {
+      throw new InternalCompilerErrorException("Passed argument count didn't match signature argument count")
     }
 
-    // Make sure the argument types match the ones expected by the callable
-    val argIr = (arguments zip (callable.arguments)) map { case (arg, argDecl) =>
+    // Make sure the argument types match the ones expected by the signature
+    val argIr = (arguments zip (signature.arguments)) map { case (arg, argDecl) =>
       if (arg.irType != argDecl.irType) {
-        throw new InternalCompilerErrorException(s"Argument passed with ${arg.irType}, callable as ${argDecl.irType}")
+        throw new InternalCompilerErrorException(s"Argument passed with ${arg.irType}, signature as ${argDecl.irType}")
       }
 
       arg.toIrWithType
     } mkString(", ")
 
     // Only noreturn, nounwind, readnone, and readonly are allowed here
-    val filteredFuncAttrs = callable.attributes.intersect(Set(IrFunction.NoReturn, IrFunction.NoUnwind, IrFunction.ReadNone, IrFunction.ReadOnly))
+    val filteredFuncAttrs = signature.attributes.intersect(Set(IrFunction.NoReturn, IrFunction.NoUnwind, IrFunction.ReadNone, IrFunction.ReadOnly))
     val funcAttrIrs = filteredFuncAttrs.map(_.toIr).toList.sorted
 
     // Start string building

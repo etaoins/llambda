@@ -22,4 +22,6 @@ case class NativeFunction(
   hasRestArg : Boolean,
   returnType : Option[nfi.NativeType],
   nativeSymbol : String
-) extends Expression with nfi.NativeSignature
+) extends Expression with nfi.NativeSignature {
+  val hasSelfArg = false
+}

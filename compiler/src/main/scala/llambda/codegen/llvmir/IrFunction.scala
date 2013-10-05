@@ -29,7 +29,7 @@ object IrFunction {
   }
 }
 
-sealed abstract trait IrCallableLike {
+sealed abstract trait IrSignatureLike {
   val callingConv : CallingConv.CallingConv
   val result : IrFunction.Result
   val arguments : List[IrFunction.Argument]
@@ -38,14 +38,14 @@ sealed abstract trait IrCallableLike {
   def irType = FunctionType(result.irType, arguments.map(_.irType))
 }
 
-case class IrCallable(
+case class IrSignature(
   result : IrFunction.Result,
   arguments : List[IrFunction.Argument],
   attributes : Set[IrFunction.FunctionAttribute] = Set(),
   callingConv : CallingConv.CallingConv = CallingConv.Default
-) extends IrCallableLike
+) extends IrSignatureLike
 
-sealed abstract trait IrFunctionDeclLike extends Irable with IrCallableLike {
+sealed abstract trait IrFunctionDeclLike extends Irable with IrSignatureLike {
   val linkage : Linkage.Linkage
   val visibility : Visibility.Visibility
   val name : String
@@ -102,7 +102,7 @@ class IrFunctionBuilder(
   // This generates names for the function body
   private val nameSource = new LocalNameSource
 
-  // This is needed for IrCallableLike
+  // This is needed for IrSignatureLike
   val arguments = namedArguments.map(_._2)
   
   val argumentValues = (namedArguments map { case (argName, argument) =>
