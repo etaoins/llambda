@@ -24,7 +24,7 @@ class DatumToNfiConstantSuite extends FunSuite with Inside {
 
   test("single values") {
     assert(DatumToNfiConstant(ast.IntegerLiteral(5), nfi.Float) === Some(llvmir.SingleConstant(5.0f)))
-    assert(DatumToNfiConstant(ast.RealLiteral(5.0), nfi.Float) === Some(llvmir.SingleConstant(5.0f)))
+    assert(DatumToNfiConstant(ast.RationalLiteral(5.0), nfi.Float) === Some(llvmir.SingleConstant(5.0f)))
     assert(DatumToNfiConstant(ast.PositiveInfinityLiteral, nfi.Float) === Some(llvmir.SingleConstant(Float.PositiveInfinity)))
     assert(DatumToNfiConstant(ast.NegativeInfinityLiteral, nfi.Float) === Some(llvmir.SingleConstant(Float.NegativeInfinity)))
 
@@ -37,7 +37,7 @@ class DatumToNfiConstantSuite extends FunSuite with Inside {
   
   test("double values") {
     assert(DatumToNfiConstant(ast.IntegerLiteral(5), nfi.Double) === Some(llvmir.DoubleConstant(5.0f)))
-    assert(DatumToNfiConstant(ast.RealLiteral(5.0), nfi.Double) === Some(llvmir.DoubleConstant(5.0)))
+    assert(DatumToNfiConstant(ast.RationalLiteral(5.0), nfi.Double) === Some(llvmir.DoubleConstant(5.0)))
     assert(DatumToNfiConstant(ast.PositiveInfinityLiteral, nfi.Double) === Some(llvmir.DoubleConstant(Double.PositiveInfinity)))
     assert(DatumToNfiConstant(ast.NegativeInfinityLiteral, nfi.Double) === Some(llvmir.DoubleConstant(Double.NegativeInfinity)))
     

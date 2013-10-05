@@ -42,7 +42,7 @@ case class IntegerLiteral(value : Int) extends NumberLiteral {
   override def toString = value.toString
 }
 
-case class RealLiteral(value : Double) extends NumberLiteral {
+case class RationalLiteral(value : Double) extends NumberLiteral {
   val schemeType = st.InexactRationalType
 
   override def toString = value match {
@@ -53,9 +53,9 @@ case class RealLiteral(value : Double) extends NumberLiteral {
   }
 }
 
-object PositiveInfinityLiteral extends RealLiteral(Double.PositiveInfinity)
-object NegativeInfinityLiteral extends RealLiteral(Double.NegativeInfinity)
-object NaNLiteral extends RealLiteral(Double.NaN)
+object PositiveInfinityLiteral extends RationalLiteral(Double.PositiveInfinity)
+object NegativeInfinityLiteral extends RationalLiteral(Double.NegativeInfinity)
+object NaNLiteral extends RationalLiteral(Double.NaN)
 
 case class Symbol(name : String) extends Datum {
   val schemeType = st.SymbolType

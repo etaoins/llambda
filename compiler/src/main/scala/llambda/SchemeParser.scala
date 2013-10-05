@@ -106,7 +106,7 @@ object SchemeParser extends RegexParsers {
   def hexInteger = "#[xX]".r ~> """-?[0-9a-fA-F]+""".r ^^ intLiteralInBase(16)
   
   def real = decimalReal | positiveInf | negativeInf | notANumber
-  def decimalReal = opt("#[dD]".r) ~>  """-?\d+\.\d+""".r  ^^ { x => ast.RealLiteral(x.toDouble) }
+  def decimalReal = opt("#[dD]".r) ~>  """-?\d+\.\d+""".r  ^^ { x => ast.RationalLiteral(x.toDouble) }
   def positiveInf = """(?i)\+inf\.0""".r   ^^^ ast.PositiveInfinityLiteral
   def negativeInf = """(?i)-inf\.0""".r    ^^^ ast.NegativeInfinityLiteral
   def notANumber = """(?i)[+\-]nan\.0""".r ^^^ ast.NaNLiteral

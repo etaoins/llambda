@@ -18,13 +18,13 @@ object DatumToNfiConstant {
     case (ast.IntegerLiteral(value), nfi.Float) =>
       Some(llvmir.SingleConstant(value.toFloat))
 
-    case (ast.RealLiteral(value), nfi.Float) =>
+    case (ast.RationalLiteral(value), nfi.Float) =>
       Some(llvmir.SingleConstant(value.toFloat))
     
     case (ast.IntegerLiteral(value), nfi.Double) =>
       Some(llvmir.DoubleConstant(value.toDouble))
 
-    case (ast.RealLiteral(value), nfi.Double) =>
+    case (ast.RationalLiteral(value), nfi.Double) =>
       Some(llvmir.DoubleConstant(value))
 
     case (ast.StringLiteral(string), nfi.Utf8CString) =>
