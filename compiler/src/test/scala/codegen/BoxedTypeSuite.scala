@@ -18,5 +18,10 @@ class BoxedTypeSuite extends FunSuite {
   }
   
   test("create constant with incorrect type") {
+    val innerValue = llvmir.StringConstant("Hello, world!")
+    
+    intercept[InternalCompilerErrorException] {
+      bt.BoxedInexactRational.createConstant(innerValue)
+    }
   }
 }
