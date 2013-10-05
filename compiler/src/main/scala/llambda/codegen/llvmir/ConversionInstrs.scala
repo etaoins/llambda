@@ -3,7 +3,7 @@ package llambda.codegen.llvmir
 import llambda.InternalCompilerErrorException
 
 private[llvmir] trait ConversionInstrs extends IrInstrBuilder {
-  def truncto(resultName : String)(value : IrValue, toType : IntegerType) : IrValue = {
+  def truncTo(resultName : String)(value : IrValue, toType : IntegerType) : IrValue = {
     value.irType match {
       case IntegerType(fromBits) =>
         if (fromBits <= toType.bits) {
@@ -19,7 +19,7 @@ private[llvmir] trait ConversionInstrs extends IrInstrBuilder {
     resultVar
   }
 
-  private def genericExttoInstr(instruction : String)(resultName : String)(value : IrValue, toType : IntegerType) : IrValue = {
+  private def genericExtToInstr(instruction : String)(resultName : String)(value : IrValue, toType : IntegerType) : IrValue = {
     value.irType match {
       case IntegerType(fromBits) =>
         if (fromBits >= toType.bits) {
@@ -35,10 +35,10 @@ private[llvmir] trait ConversionInstrs extends IrInstrBuilder {
     resultVar
   }
 
-  val sextto = genericExttoInstr("sext")_
-  val zextto = genericExttoInstr("zext")_
+  val sextTo = genericExtToInstr("sext")_
+  val zextTo = genericExtToInstr("zext")_
   
-  def bitcastto(resultName : String)(value : IrValue, toType : FirstClassType) : IrValue = {
+  def bitcastTo(resultName : String)(value : IrValue, toType : FirstClassType) : IrValue = {
     val resultVar = allocateLocalVar(toType, resultName)
     instructions += s"${resultVar.toIr} = bitcast ${value.toIrWithType} to ${toType.toIr}"
 
