@@ -27,29 +27,40 @@ object GenProgram {
   }
 
   def apply(expressions : List[et.Expression]) : String = {
-    val module = new llvmir.IrModuleBuilder {
-      // Define main()
-      val result = IrFunction.Result(IntegerType(32))
-      val namedArguments = List(
-        "argc" -> IrFunction.Argument(IntegerType(32)),
-        "argv" -> IrFunction.Argument(PointerType(PointerType(IntegerType(8))))
-      )
+    val module = new llvmir.IrModuleBuilder
 
-      declareFunction(llibyInitDecl)
+    // Define main()
+    val result = IrFunction.Result(IntegerType(32))
+    val namedArguments = List(
+      "argc" -> IrFunction.Argument(IntegerType(32)),
+      "argv" -> IrFunction.Argument(PointerType(PointerType(IntegerType(8))))
+    )
 
-      val mainFunction = new IrFunctionBuilder(
-        result=result,
-        namedArguments=namedArguments,
-        name="main") 
+    module.declareFunction(llibyInitDecl)
 
-      val entryBlock = mainFunction.entryBlock
+    val mainFunction = new IrFunctionBuilder(
+      result=result,
+      namedArguments=namedArguments,
+      name="main") 
 
-      // Initialize our runtime
-      entryBlock.callDecl(None)(llibyInitDecl, Nil)
-      entryBlock.ret(IntegerConstant(IntegerType(32), 0))
+    val entryBlock = mainFunction.entryBlock
 
-      defineFunction(mainFunction)
+    // Initialize our runtime
+    entryBlock.callDecl(None)(llibyInitDecl, Nil)
+
+    // Create a blank generation state
+    val startState = GenerationState(
+      module=module,
+      currentBlock=entryBlock)
+
+    // Generate our expressions
+    expressions.foldLeft(startState) { (state, expr) => 
+      GenExpression(state)(expr).state
     }
+
+    entryBlock.ret(IntegerConstant(IntegerType(32), 0))
+
+    module.defineFunction(mainFunction)
 
     preludeIr + "\n" + module.toIr + "\n"
   }
