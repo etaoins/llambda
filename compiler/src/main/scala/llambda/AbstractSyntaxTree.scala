@@ -1,31 +1,22 @@
 package llambda.ast
 
-import llambda.{schemetype => st}
 import llambda.SchemeParserDefinitions
 
-sealed abstract class Datum {
-  val schemeType : st.SchemeType
-}
+sealed abstract class Datum
 
 // This helps out ScopedSyntaxTree by grouping all the types that have scope
 // or contain datums with scope
 sealed abstract class NonSymbolLeaf extends Datum
 
 case object UnspecificValue extends NonSymbolLeaf {
-  val schemeType = st.UnspecificType
-
   override def toString = "#!unspecific"
 }
 
 case class StringLiteral(content : String) extends NonSymbolLeaf {
-  val schemeType = st.StringType
-
   override def toString = '"' + content + '"'
 }
 
 case class BooleanLiteral(value : Boolean) extends NonSymbolLeaf {
-  val schemeType = st.BooleanType
-
   override def toString = value match {
     case true => "#t"
     case false => "#f"
@@ -38,13 +29,10 @@ object FalseLiteral  extends BooleanLiteral(false)
 sealed abstract class NumberLiteral extends NonSymbolLeaf 
 
 case class IntegerLiteral(value : Int) extends NumberLiteral {
-  val schemeType = st.ExactIntegerType
   override def toString = value.toString
 }
 
 case class RationalLiteral(value : Double) extends NumberLiteral {
-  val schemeType = st.InexactRationalType
-
   override def toString = value match {
     case Double.PositiveInfinity => "+inf.0"
     case Double.NegativeInfinity => "-inf.0"
@@ -58,8 +46,6 @@ object NegativeInfinityLiteral extends RationalLiteral(Double.NegativeInfinity)
 object NaNLiteral extends RationalLiteral(Double.NaN)
 
 case class Symbol(name : String) extends Datum {
-  val schemeType = st.SymbolType
-
   override def toString = if (name.matches(SchemeParserDefinitions.identifierPattern)) {
     name
   }
@@ -69,14 +55,10 @@ case class Symbol(name : String) extends Datum {
 }
 
 case object EmptyList extends NonSymbolLeaf {
-  val schemeType = st.EmptyListType
-
   override def toString = "()"
 }
 
 case class Pair(car : Datum, cdr : Datum) extends Datum {
-  val schemeType = st.PairType
-
   override def toString = this match {
     case ProperList(data) =>
       "(" + data.mkString(" ") + ")"
@@ -120,22 +102,16 @@ object ProperList {
 }
 
 case class VectorLiteral(elements : Vector[Datum]) extends Datum {
-  val schemeType = st.VectorType
-
   override def toString = 
     "#(" + elements.map(_.toString).mkString(" ") + ")"
 }
 
 case class Bytevector(elements : Vector[Int]) extends NonSymbolLeaf {
-  val schemeType = st.BytevectorType
-
   override def toString = 
     "#u8(" + elements.map(_.toString).mkString(" ") + ")"
 }
 
 case class CharLiteral(value : Char) extends NonSymbolLeaf {
-  val schemeType = st.CharType
-
   override def toString = value match {
     case '\0' => """#\null"""
     case ' '  => """#\space"""

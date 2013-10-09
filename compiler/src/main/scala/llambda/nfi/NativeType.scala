@@ -1,19 +1,12 @@
 package llambda.nfi
 
-import llambda.{schemetype => st}
 import llambda.codegen.{boxedtype => bt}
 
-sealed abstract class NativeType {
-  val schemeType : Option[st.SchemeType]
-}
+sealed abstract class NativeType
 
-sealed abstract class IntLikeType(val bits : Int, val signed : Boolean) extends NativeType {
-  val schemeType : Option[st.SchemeType] = Some(st.ExactIntegerType)
-}
+sealed abstract class IntLikeType(val bits : Int, val signed : Boolean) extends NativeType
 
-case object Bool extends IntLikeType(1, false) {
-  override val schemeType = Some(st.BooleanType)
-}
+case object Bool extends IntLikeType(1, false)
 
 sealed abstract class IntType(bits : Int, signed : Boolean) extends IntLikeType(bits, signed)
 
@@ -27,23 +20,12 @@ case object UInt16 extends IntType(16, false)
 case object UInt32 extends IntType(32, false)
 case object UInt64 extends IntType(64, false)
 
-case object Float extends NativeType {
-  val schemeType = Some(st.InexactRationalType)
-}
+case object Float extends NativeType
 
-case object Double extends NativeType {
-  val schemeType = Some(st.InexactRationalType)
-}
+case object Double extends NativeType 
 
-case class BoxedValue(boxedType : bt.BoxedType) extends NativeType {
-  // We don't know the type here
-  val schemeType = None
-}
+case class BoxedValue(boxedType : bt.BoxedType) extends NativeType
 
-case object Utf8CString extends NativeType {
-  val schemeType = Some(st.StringType)
-}
+case object Utf8CString extends NativeType
 
-case object UnicodeChar extends IntLikeType(32, true) {
-  override val schemeType = Some(st.CharType)
-}
+case object UnicodeChar extends IntLikeType(32, true)
