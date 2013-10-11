@@ -18,7 +18,7 @@ case object Int64 extends IntType(64, true)
 case object UInt8 extends IntType(8, false)
 case object UInt16 extends IntType(16, false)
 case object UInt32 extends IntType(32, false)
-case object UInt64 extends IntType(64, false)
+// UInt64 is outside the range we can represent
 
 case object Float extends NativeType
 

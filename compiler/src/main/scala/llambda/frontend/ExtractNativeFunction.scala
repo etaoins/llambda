@@ -12,7 +12,6 @@ object ExtractNativeFunction
     case "uint8"  => nfi.UInt8
     case "uint16" => nfi.UInt16
     case "uint32" => nfi.UInt32
-    case "uint64" => nfi.UInt64
     case "float"  => nfi.Float
     case "double" => nfi.Double
 
@@ -28,7 +27,6 @@ object ExtractNativeFunction
     case "long"   => nfi.Int64
     case "ushort" => nfi.UInt16
     case "uint"   => nfi.UInt32
-    case "ulong"  => nfi.UInt64
 
     case _ => 
       val boxedType = NativeTypeNameToBoxedType.apply.applyOrElse(typeString, { unknownName : String =>
