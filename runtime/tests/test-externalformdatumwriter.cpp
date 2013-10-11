@@ -60,9 +60,9 @@ void testBoolean()
 
 void testExactInteger()
 {
-	assertForm(BoxedExactInteger::instanceForValue(25), "25");
-	assertForm(BoxedExactInteger::instanceForValue(0), "0");
-	assertForm(BoxedExactInteger::instanceForValue(-31337), "-31337");
+	assertForm(new BoxedExactInteger(25), "25");
+	assertForm(new BoxedExactInteger(0), "0");
+	assertForm(new BoxedExactInteger(-31337), "-31337");
 }
 
 void testInexactRational()
@@ -149,7 +149,7 @@ void testVector()
 
 		for(unsigned int i = 0; i < 5; i++)
 		{
-			fillVector->setElementAt(i, BoxedExactInteger::instanceForValue(i));
+			fillVector->setElementAt(i, new BoxedExactInteger(i));
 		}
 
 		assertForm(fillVector, "#(0 1 2 3 4)");
