@@ -298,5 +298,40 @@ class OtherInstrsSuite extends IrTestSuite {
     assert(resultVar.isDefined)
     assertInstr(block, "%ret1 = tail call coldcc zeroext i8 @uberCall(float 2.0, double* %local) noreturn nounwind")
   }
+  
+  test("trivial select") {
+    val condValue = IntegerConstant(IntegerType(1), 1) 
+    val trueValue = IntegerConstant(IntegerType(32), 20)
+    val falseValue = IntegerConstant(IntegerType(32), 30)
+
+    val block = createTestBlock()
+    val resultVal = block.select("trivial")(condValue, trueValue, falseValue)
+
+    assertInstr(block, "%trivial1 = select i1 1, i32 20, i32 30")
+  }
+
+  test("select with non-boolean") {
+    val condValue = DoubleConstant(1.0)
+    val trueValue = IntegerConstant(IntegerType(32), 20)
+    val falseValue = IntegerConstant(IntegerType(32), 30)
+
+    val block = createTestBlock()
+
+    intercept[InternalCompilerErrorException] {
+      block.select("nonbool")(condValue, trueValue, falseValue)
+    }
+  }
+  
+  test("select with incompatible types") {
+    val condValue = IntegerConstant(IntegerType(1), 1) 
+    val trueValue = IntegerConstant(IntegerType(32), 20)
+    val falseValue = IntegerConstant(IntegerType(64), 30)
+
+    val block = createTestBlock()
+    
+    intercept[InternalCompilerErrorException] {
+      block.select("incompattypes")(condValue, trueValue, falseValue)
+    }
+  }
 }
 

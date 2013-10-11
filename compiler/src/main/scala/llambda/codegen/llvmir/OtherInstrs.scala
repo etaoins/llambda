@@ -95,4 +95,22 @@ private[llvmir] trait OtherInstrs extends IrInstrBuilder {
 
     resultVarOpt
   }
+
+  def select(resultName : String)(cond : IrValue, trueValue : IrValue, falseValue : IrValue) = {
+    if (cond.irType != IntegerType(1)) {
+      throw new InternalCompilerErrorException("Attempted to select using non-i1")
+    }
+    
+    if (trueValue.irType != falseValue.irType) {
+      throw new InternalCompilerErrorException("Attempted select with incompatible types")
+    }
+    
+    val resultType = trueValue.irType
+    val resultVar = allocateLocalVar(resultType, resultName)
+
+    instructions += s"${resultVar.toIr} = select ${cond.toIrWithType}, ${trueValue.toIrWithType}, ${falseValue.toIrWithType}"
+
+    resultVar
+
+  }
 }
