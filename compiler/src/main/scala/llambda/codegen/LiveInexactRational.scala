@@ -17,7 +17,7 @@ private class ConstantLiveInexactRational(constantValue : Double) extends Consta
   
   val genUnboxedConstant : PartialFunction[nfi.NativeType, IrConstant] = {
     case nfi.Float =>
-      SingleConstant(constantValue.toFloat)
+      FloatConstant(constantValue.toFloat)
     case nfi.Double =>
       DoubleConstant(constantValue)
   }

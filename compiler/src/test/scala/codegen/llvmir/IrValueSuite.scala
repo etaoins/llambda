@@ -4,10 +4,10 @@ import org.scalatest.FunSuite
 
 class IrValueSuite extends FunSuite {
   test("local variable") {
-    val testLocal = LocalVariable("test", SingleType)
+    val testLocal = LocalVariable("test", FloatType)
 
     assert(testLocal.toIr === "%test")
-    assert(testLocal.irType === SingleType)
+    assert(testLocal.irType === FloatType)
   }
   
   test("global variable") {
@@ -30,12 +30,12 @@ class IrValueSuite extends FunSuite {
   }
 
   test("single constant") {
-    assert(SingleConstant(0.0f).irType === SingleType)
-    assert(SingleConstant(20.0f).toIr === "20.0")
-    assert(SingleConstant(-300.2f).toIr === "-300.2")
-    assert(SingleConstant(Float.PositiveInfinity).toIr === "0x7f800000")
-    assert(SingleConstant(Float.NegativeInfinity).toIr === "0xff800000")
-    assert(SingleConstant(Float.NaN).toIr === "0x7fc00000")
+    assert(FloatConstant(0.0f).irType === FloatType)
+    assert(FloatConstant(20.0f).toIr === "20.0")
+    assert(FloatConstant(-300.2f).toIr === "-300.2")
+    assert(FloatConstant(Float.PositiveInfinity).toIr === "0x7f800000")
+    assert(FloatConstant(Float.NegativeInfinity).toIr === "0xff800000")
+    assert(FloatConstant(Float.NaN).toIr === "0x7fc00000")
   }
   
   test("double constant") {
@@ -67,9 +67,9 @@ class IrValueSuite extends FunSuite {
   }
   
   test("array constant") {
-    val testConstant = ArrayConstant(SingleType, List(SingleConstant(1), SingleConstant(1), SingleConstant(2), SingleConstant(3), SingleConstant(5)))
+    val testConstant = ArrayConstant(FloatType, List(FloatConstant(1), FloatConstant(1), FloatConstant(2), FloatConstant(3), FloatConstant(5)))
 
-    assert(testConstant.irType === ArrayType(5, SingleType))
+    assert(testConstant.irType === ArrayType(5, FloatType))
     assert(testConstant.toIr === "[float 1.0, float 1.0, float 2.0, float 3.0, float 5.0]")
   }
 
@@ -116,9 +116,9 @@ class IrValueSuite extends FunSuite {
   test("bitcast constant") {
     val sourceValue = IntegerConstant(IntegerType(32), 50)
 
-    val bitcastConstant = BitcastToConstant(sourceValue, SingleType)
+    val bitcastConstant = BitcastToConstant(sourceValue, FloatType)
 
-    assert(bitcastConstant.irType === SingleType)
+    assert(bitcastConstant.irType === FloatType)
     assert(bitcastConstant.toIr === "bitcast (i32 50 to float)")
   }
 }

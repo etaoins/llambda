@@ -17,7 +17,7 @@ class PhiInstrSuite extends IrTestSuite {
     intercept[InternalCompilerErrorException] {
       block.phi("error")(
         PhiSource(IntegerConstant(IntegerType(1), 0), createTestBlock("one")),
-        PhiSource(SingleConstant(2.0f), createTestBlock("two"))
+        PhiSource(FloatConstant(2.0f), createTestBlock("two"))
       )
     }
   }

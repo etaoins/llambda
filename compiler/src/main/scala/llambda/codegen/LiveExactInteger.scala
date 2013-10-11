@@ -19,7 +19,7 @@ private class ConstantLiveExactInteger(constantValue : Int) extends ConstantLive
     case intType : nfi.IntType =>
       IntegerConstant(IntegerType(intType.bits), constantValue)
     case nfi.Float =>
-      SingleConstant(constantValue.toFloat)
+      FloatConstant(constantValue.toFloat)
     case nfi.Double =>
       DoubleConstant(constantValue.toDouble)
   }

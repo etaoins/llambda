@@ -28,7 +28,7 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
         case ast.ProperList(ast.Symbol("define-test") :: ast.StringLiteral(name) :: condition :: Nil) =>
           // Start a nested test
           test(name) {
-            runSingleCondition(condition)
+            runFloatCondition(condition)
           }
 
         case other =>
@@ -37,7 +37,7 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
     }
   }
 
-  private def runSingleCondition(condition : ast.Datum) {
+  private def runFloatCondition(condition : ast.Datum) {
     condition match {
       case ast.ProperList(ast.Symbol("expect") :: expectation :: program) if !program.isEmpty =>
         val result = executeProgram(program)

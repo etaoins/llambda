@@ -138,9 +138,9 @@ class ConversionInstrsSuite extends IrTestSuite {
     val sourceValue = IntegerConstant(IntegerType(32), 50)
 
     val block = createTestBlock()
-    val resultVar = block.bitcastTo("castvalue")(sourceValue, SingleType)
+    val resultVar = block.bitcastTo("castvalue")(sourceValue, FloatType)
 
-    assert(resultVar.irType === SingleType)
+    assert(resultVar.irType === FloatType)
     assertInstr(block, "%castvalue1 = bitcast i32 50 to float")
   }
 }

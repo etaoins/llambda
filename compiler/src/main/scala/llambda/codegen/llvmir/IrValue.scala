@@ -46,8 +46,8 @@ case class IntegerConstant(irType : IntegerType, value : Int) extends IrConstant
   def toIr = value.toString
 }
 
-case class SingleConstant(value : Float) extends IrConstant {
-  def irType = SingleType
+case class FloatConstant(value : Float) extends IrConstant {
+  def irType = FloatType
 
   def toIr = {
     if (value.isInfinity || value.isNaN) {

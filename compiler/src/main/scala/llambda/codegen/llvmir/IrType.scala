@@ -7,7 +7,7 @@ sealed trait ReturnableType extends IrType
 // This seems to be everything but void
 sealed abstract class FirstClassType extends IrType with ReturnableType
 
-sealed abstract class FloatingPointType extends FirstClassType
+sealed abstract class FloatingPointType(val bits : Int) extends FirstClassType
 
 case class UserDefinedType(name : String) extends FirstClassType {
   def toIr = s"%${name}"
@@ -17,11 +17,11 @@ case class IntegerType(bits : Int) extends FirstClassType {
   def toIr = s"i${bits}"
 }
 
-case object SingleType extends FloatingPointType {
+case object FloatType extends FloatingPointType(32) {
   def toIr = "float"
 }
 
-case object DoubleType extends FloatingPointType {
+case object DoubleType extends FloatingPointType(64) {
   def toIr = "double"
 }
 

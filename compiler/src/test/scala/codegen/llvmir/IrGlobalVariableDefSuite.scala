@@ -16,11 +16,11 @@ class IrGlobalVariableDefSuite extends FunSuite {
   test("constant def") {
     val globalVarDef = IrGlobalVariableDef(
       name="twelveFloat",
-      initializer=SingleConstant(12.0f),
+      initializer=FloatConstant(12.0f),
       constant=true
     )
 
-    assert(globalVarDef.variable.irType === PointerType(SingleType))
+    assert(globalVarDef.variable.irType === PointerType(FloatType))
     assert(globalVarDef.toIr === "@twelveFloat = constant float 12.0")
   }
   

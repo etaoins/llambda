@@ -64,7 +64,7 @@ class NfiTypeToIrTypeSuite extends FunSuite {
   test("float") {
     val typeWithSign = NfiTypeToIrType(nfi.Float)
 
-    assert(typeWithSign.irType === llvmir.SingleType)
+    assert(typeWithSign.irType === llvmir.FloatType)
     assert(typeWithSign.signed === None)
   }
   

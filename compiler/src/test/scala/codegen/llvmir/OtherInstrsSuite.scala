@@ -274,7 +274,7 @@ class OtherInstrsSuite extends IrTestSuite {
   test("christmas tree call") {
     val declResult = IrFunction.Result(IntegerType(8), Set(IrFunction.ZeroExt))
     val declArgs = List(
-      IrFunction.Argument(SingleType, Set(IrFunction.NoCapture, IrFunction.NoAlias)),
+      IrFunction.Argument(FloatType, Set(IrFunction.NoCapture, IrFunction.NoAlias)),
       IrFunction.Argument(PointerType(DoubleType), Set())
     )
     val decl = IrFunctionDecl(
@@ -289,7 +289,7 @@ class OtherInstrsSuite extends IrTestSuite {
     val resultVar = block.callDecl(Some("ret"))(
       decl=decl,
       arguments=List(
-        SingleConstant(2.0f),
+        FloatConstant(2.0f),
         LocalVariable("local", PointerType(DoubleType))
       ),
       tailCall=true

@@ -71,14 +71,14 @@ class MemoryInstrsSuite extends IrTestSuite {
   }
   
   test("volatile load") {
-    val fakePointer = LocalVariable("fake", PointerType(SingleType))
+    val fakePointer = LocalVariable("fake", PointerType(FloatType))
     
     val block = createTestBlock()
     val resultVar = block.load("vol")(
       from=fakePointer,
       volatile=true)
 
-    assert(resultVar.irType === SingleType)
+    assert(resultVar.irType === FloatType)
     assertInstr(block, "%vol1 = load volatile float* %fake")
   }
   

@@ -13,7 +13,7 @@ object NfiTypeToIrType {
         SignedFirstClassType(llvmir.IntegerType(intLike.bits), Some(intLike.signed))
 
       case nfi.Float =>
-        SignedFirstClassType(llvmir.SingleType, None)
+        SignedFirstClassType(llvmir.FloatType, None)
 
       case nfi.Double =>
         SignedFirstClassType(llvmir.DoubleType, None)
