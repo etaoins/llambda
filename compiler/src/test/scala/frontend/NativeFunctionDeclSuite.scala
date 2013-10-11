@@ -63,7 +63,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   }
   
   test("function with fixed and rest args") {
-    assertResult(et.NativeFunction(nfi.Bool :: Nil, true, Some(nfi.Int32), "lliby_misc")) {
+    assertResult(et.NativeFunction(nfi.CBool :: Nil, true, Some(nfi.Int32), "lliby_misc")) {
       expressionFor("""(native-function "lliby_misc" (bool . boxed-pair) int)""")
     }
   }

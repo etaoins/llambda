@@ -5,10 +5,10 @@ import llambda.codegen.{boxedtype => bt}
 import org.scalatest.FunSuite
 
 class NfiTypeToIrTypeSuite extends FunSuite {
-  test("bool32") {
-    val typeWithSign = NfiTypeToIrType(nfi.Bool)
+  test("bool") {
+    val typeWithSign = NfiTypeToIrType(nfi.CBool)
 
-    assert(typeWithSign.irType === llvmir.IntegerType(1))
+    assert(typeWithSign.irType === llvmir.IntegerType(8))
     assert(typeWithSign.signed === Some(false))
   }
   

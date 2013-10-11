@@ -39,7 +39,7 @@ abstract class ConstantLiveValue(boxedType : bt.ConcreteBoxedType) extends LiveV
           Some((state, genCastBoxedConstant(state.module)(expectedType)))
         }
 
-      case nfi.Bool =>
+      case nfi.CBool =>
         // Convert our truthiness to 1/0
         val boolInt = if (booleanValue) {
           1

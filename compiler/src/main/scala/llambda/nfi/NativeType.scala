@@ -6,7 +6,7 @@ sealed abstract class NativeType
 
 sealed abstract class IntLikeType(val bits : Int, val signed : Boolean) extends NativeType
 
-case object Bool extends IntLikeType(1, false)
+case object CBool extends IntLikeType(8, false)
 
 sealed abstract class IntType(bits : Int, signed : Boolean) extends IntLikeType(bits, signed)
 

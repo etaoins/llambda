@@ -5,7 +5,6 @@ import llambda._
 object ExtractNativeFunction
 {
   private def parseNativeType(typeString : String) : nfi.NativeType = typeString match {
-    case "bool" => nfi.Bool
     case "int8"   => nfi.Int8
     case "int16"  => nfi.Int16
     case "int32"  => nfi.Int32
@@ -23,6 +22,7 @@ object ExtractNativeFunction
 
     // XXX: This assumes Unix-like LP64: 64bit Linux, FreeBSD, Mac OS X, etc 
     // These aliases are here so we can do the right thing when porting to other archs
+    case "bool"   => nfi.CBool
     case "short"  => nfi.Int16
     case "int"    => nfi.Int32
     case "long"   => nfi.Int64
