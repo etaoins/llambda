@@ -44,8 +44,11 @@ object SchemeParserDefinitions {
     }
   })
   
-  def intLiteralInBase(base : Int)(literalStr : String) =
-    ast.IntegerLiteral(Integer.parseInt(literalStr, base))
+  def intLiteralInBase(base : Int)(literalStr : String) = {
+    // Scheme allows trailing dots on exact integers
+    val withoutTrailingDot = """\.$""".r.replaceFirstIn(literalStr, "")
+    ast.IntegerLiteral(Integer.parseInt(withoutTrailingDot, base))
+  }
 }
 
 object SchemeParser extends RegexParsers {
@@ -102,7 +105,7 @@ object SchemeParser extends RegexParsers {
   def integer = binaryInteger | octalInteger | hexInteger | decimalInteger
   def binaryInteger = "#[bB]".r ~>"""-?[0-1]+""".r     ^^ intLiteralInBase(2)
   def octalInteger = "#[oO]".r ~> """-?[0-7]+""".r     ^^ intLiteralInBase(8)
-  def decimalInteger = opt("#[dD]".r) ~>"""-?\d+""".r  ^^ intLiteralInBase(10)
+  def decimalInteger = opt("#[dD]".r) ~>"""-?\d+\.?""".r  ^^ intLiteralInBase(10)
   def hexInteger = "#[xX]".r ~> """-?[0-9a-fA-F]+""".r ^^ intLiteralInBase(16)
   
   def real = decimalReal | positiveInf | negativeInf | notANumber

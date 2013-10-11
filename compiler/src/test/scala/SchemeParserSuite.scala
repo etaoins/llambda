@@ -91,6 +91,8 @@ class SchemeParserSuite extends FunSuite with Inside {
     assertReflexiveParse("10000", List(ast.IntegerLiteral(10000)))
     assertReflexiveParse("-10000", List(ast.IntegerLiteral(-10000)))
     
+    assertReflexiveParse("3.", List(ast.IntegerLiteral(3)))
+    
     assertReflexiveParse("#b111", List(ast.IntegerLiteral(7)))
     assertReflexiveParse("#b-1000", List(ast.IntegerLiteral(-8)))
 
