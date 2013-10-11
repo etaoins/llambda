@@ -2,7 +2,7 @@ package llambda.frontend
 
 import llambda._
 
-class DefaultLibraryLoader {
+class DefaultLibraryLoader extends LibraryLoader {
   private val exprBuffer = collection.mutable.ListBuffer[et.Expression]()
   private val loadedFiles = collection.mutable.Map.empty[String, Map[String, BoundValue]]
 
@@ -18,7 +18,7 @@ class DefaultLibraryLoader {
     val libraryData = SchemeParser.parseStringAsData(libraryString)
 
     val library = libraryData match {
-      case datum :: Nil => ExtractLibrary(datum)(this.load)
+      case datum :: Nil => ExtractLibrary(datum)(this)
       case _ =>
         throw new BadSpecialFormException("Multiple top-level data in library file: " + filename)
     }

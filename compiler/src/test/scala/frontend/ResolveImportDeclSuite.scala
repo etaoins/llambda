@@ -7,7 +7,7 @@ class ResolveImportDeclSuite extends FunSuite {
   def bindingFor(scheme : String) = {
     SchemeParser(scheme) match {
       case SchemeParser.Success(datum :: Nil, _) =>
-        ResolveImportDecl(datum)(testutil.TestLibraryLoader.apply)
+        ResolveImportDecl(datum)(testutil.TestLibraryLoader)
       case err =>
         fail(err.toString)
     }

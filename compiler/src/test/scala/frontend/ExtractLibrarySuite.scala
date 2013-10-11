@@ -9,7 +9,7 @@ class ExtractLibrarySuite extends FunSuite with Inside {
   def libraryFor(scheme : String) = {
     SchemeParser(scheme) match {
       case SchemeParser.Success(datum :: Nil, _) =>
-        ExtractLibrary(datum)(testutil.TestLibraryLoader.apply)
+        ExtractLibrary(datum)(testutil.TestLibraryLoader)
       case err =>
         fail(err.toString)
     }

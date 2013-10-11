@@ -43,7 +43,7 @@ object Compiler {
   def compileData(data : List[ast.Datum], output : File, optimizeLevel : Int = 0, emitLlvm : Boolean = false) : Unit = {
     // Parse the program
     val loader = new frontend.DefaultLibraryLoader
-    val expressions = frontend.ExtractProgram(data)(loader.load)
+    val expressions = frontend.ExtractProgram(data)(loader)
 
     // Generate the LLVM IR
     val llvmIr = codegen.GenProgram(expressions)

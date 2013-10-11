@@ -46,7 +46,7 @@ class BodyExpressionMode extends SchemeParsingMode("body") {
     datum match {
       case ast.ProperList(ast.Symbol("import") :: _) =>
         // This is an import decl - import our new bindings
-        val newBindings = frontend.ResolveImportDecl(datum)(loader.load)
+        val newBindings = frontend.ResolveImportDecl(datum)(loader)
 
         scope ++= newBindings
 

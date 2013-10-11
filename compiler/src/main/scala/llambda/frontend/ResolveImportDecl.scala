@@ -3,8 +3,6 @@ package llambda.frontend
 import llambda._
 
 object ResolveImportDecl {
-  type LibraryLoader = List[LibraryNameComponent] => Map[String, BoundValue]
-
   private def parseIdentifier(datum : ast.Datum) : String = datum match {
     case ast.Symbol(name) => name
     case other => throw new BadSpecialFormException("Symbol expected, found " + datum) 
@@ -60,7 +58,7 @@ object ResolveImportDecl {
       }
 
     case libraryNameDatum => 
-      libraryLoader(ParseLibraryName(libraryNameDatum))
+      libraryLoader.load(ParseLibraryName(libraryNameDatum))
   }
 
   def apply(datum : ast.Datum)(implicit libraryLoader : LibraryLoader) : Map[String, BoundValue] = datum match {
