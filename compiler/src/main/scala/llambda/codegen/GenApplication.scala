@@ -5,12 +5,7 @@ import llambda.nfi.NativeSignature
 import llambda.{NotImplementedException, InternalCompilerErrorException}
 
 object GenApplication {
-  private case class FunctionCallResult(
-    exitBlock : IrBlockBuilder,
-    returnValue : LiveValue 
-  )
-
-  private def genProcedureCall(state : GenerationState)(procedure : LiveProcedure, liveOperands : List[LiveValue]) : FunctionCallResult = {
+  private def genProcedureCall(state : GenerationState)(procedure : LiveProcedure, liveOperands : List[LiveValue]) : ExpressionResult = {
     val signature = procedure.signature
 
     if (signature.hasSelfArg) {
@@ -32,7 +27,9 @@ object GenApplication {
 
     // Convert our operands to IrValues of the expected type
     val irOperands = liveOperands.zip(signature.fixedArgs).map { case (liveOperand, nativeType) =>
-      LiveValueToNative(state.module, state.currentBlock)(liveOperand, nativeType)
+      // XXX: Handle state change
+      val (_, value) = liveOperand.toRequiredNativeType(state)(nativeType)
+      value
     }
 
     // Get our IrSignature
@@ -40,17 +37,16 @@ object GenApplication {
 
     state.currentBlock.call(None)(irSignature, procedure.functionPointer, irOperands)
 
-    FunctionCallResult(state.currentBlock, LiveUnspecific) 
+    ExpressionResult(
+      state=state, 
+      value=LiveUnspecific
+    ) 
   }
 
   def apply(state : GenerationState)(procedure : LiveValue, operands : List[LiveValue]) : ExpressionResult = {
     procedure match {
       case procedure : LiveProcedure =>
-        val callResult = genProcedureCall(state)(procedure, operands) 
-
-        ExpressionResult(
-          state=state.copy(currentBlock=callResult.exitBlock),
-          value=callResult.returnValue)
+        genProcedureCall(state)(procedure, operands) 
     }
   }
 }

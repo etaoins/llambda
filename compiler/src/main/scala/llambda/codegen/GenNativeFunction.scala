@@ -19,9 +19,8 @@ object GenNativeFunction {
 
     // Wrap it in a LiveValue
     // We'll lazily generated the boxed version later if needed
-    LiveProcedure(
+    new LiveProcedure(
       signature=nativeFunc,
-      boxedValue=None,
       functionPointer=irFunctionDecl.irValue) 
   }
 }

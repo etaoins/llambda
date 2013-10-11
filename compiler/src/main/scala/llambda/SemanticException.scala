@@ -1,4 +1,4 @@
-package llambda.frontend
+package llambda
 
 import llambda._
 
@@ -47,4 +47,8 @@ class UserDefinedSyntaxError(val errorString  : String, val data : List[ast.Datu
 
 class ImportedIdentifierNotFoundException(val identifier : String) extends SemanticException(identifier) {
   val semanticErrorType = "imported identifier not found"
+}
+
+class ImpossibleTypeConversionException(message : String) extends SemanticException(message) {
+  val semanticErrorType = "impossible type conversion"
 }

@@ -1,63 +1,74 @@
 package llambda.codegen
 
-import llambda.{ast, nfi}
+import llambda.{nfi, ImpossibleTypeConversionException}
 import llambda.codegen.{boxedtype => bt}
 import llambda.codegen.llvmir._
 
-sealed trait LiveValue {
+abstract class LiveValue {
   val possibleTypes : Set[bt.ConcreteBoxedType]
-  val boxedValue : Option[IrValue]
+
+  def toNativeType(state : GenerationState)(targetType : nfi.NativeType) : Option[(GenerationState, IrValue)]
+
+  def toRequiredNativeType(state : GenerationState)(targetType : nfi.NativeType) : (GenerationState, IrValue) = {
+    toNativeType(state)(targetType) getOrElse {
+      throw new ImpossibleTypeConversionException("Unable to convert " + this.toString + " to " + targetType)
+    }
+  }
 }
 
-case class LiveString(constantValue : Option[String], boxedValue : Option[IrValue], utf8Pointer : Option[IrValue]) extends LiveValue {
-  val possibleTypes = Set[bt.ConcreteBoxedType](bt.BoxedString)
-}
+abstract class ConstantLiveValue(boxedType : bt.ConcreteBoxedType) extends LiveValue {
+  val possibleTypes = Set(boxedType)
+  val booleanValue = false
 
-case class LiveSymbol(constantValue : Option[String], boxedValue : Option[IrValue], utf8Pointer : Option[IrValue]) extends LiveValue {
-  val possibleTypes = Set[bt.ConcreteBoxedType](bt.BoxedSymbol)
-}
+  def genBoxedConstant(module : IrModuleBuilder) : IrConstant
+  val genUnboxedConstant : PartialFunction[nfi.NativeType, IrConstant]
 
-case class LiveExactInteger(constantValue : Option[Int], boxedValue : Option[IrValue]) extends LiveValue {
-  val possibleTypes = Set[bt.ConcreteBoxedType](bt.BoxedExactInteger)
-}
+  def genCastBoxedConstant(module : IrModuleBuilder)(targetType : bt.BoxedType) = {
+    val uncastIrValue = genBoxedConstant(module)
+    BitcastToConstant(uncastIrValue, PointerType(targetType.irType))
+  }
+  
+  def toNativeType(state : GenerationState)(targetType : nfi.NativeType) : Option[(GenerationState, IrConstant)] = {
+    targetType match {
+      case nfi.BoxedValue(expectedType) =>
+        if (!boxedType.isTypeOrSubtypeOf(expectedType)) {
+          // Not possible
+          None
+        }
+        else {
+          Some((state, genCastBoxedConstant(state.module)(expectedType)))
+        }
 
-case class LiveInexactRational(constantValue : Option[Double], boxedValue : Option[IrValue]) extends LiveValue {
-  val possibleTypes = Set[bt.ConcreteBoxedType](bt.BoxedInexactRational)
-}
+      case nfi.Bool =>
+        // Convert our truthiness to 1/0
+        val boolInt = if (booleanValue) {
+          1
+        }
+        else {
+          0
+        }
+      
+        // Make a constant out of it
+        val boolConstant = IntegerConstant(IntegerType(1), boolInt)
 
-case class LiveBoolean(constantValue : Option[Boolean], boxedValue : Option[IrValue]) extends LiveValue {
-  val possibleTypes = Set[bt.ConcreteBoxedType](bt.BoxedBoolean)
-}
+        Some((state, boolConstant))
 
-case class LiveProcedure(signature : nfi.NativeSignature, boxedValue : Option[IrValue], functionPointer : IrValue) extends LiveValue {
-  val possibleTypes = Set[bt.ConcreteBoxedType](bt.BoxedProcedure)
-}
+      case unboxedType =>
+        genUnboxedConstant.lift.apply(unboxedType).map((state, _))
+    }
+  }
 
-case class LiveCharacter(constantValue : Option[Char], boxedValue : Option[IrValue]) extends LiveValue {
-  val possibleTypes = Set[bt.ConcreteBoxedType](bt.BoxedCharacter)
-}
+  protected def declareBoxedConstant(module : IrModuleBuilder)(name : String, initializer  : IrConstant) : IrConstant = {
+    val boxedConstantDef = IrGlobalVariableDef(
+      name=name,
+      initializer=initializer,
+      visibility=Visibility.Hidden,
+      unnamedAddr=true,
+      constant=true)
 
-case class LivePair(constantValue : Option[(LiveValue, LiveValue)], boxedValue : Option[IrValue]) extends LiveValue {
-  val possibleTypes = Set[bt.ConcreteBoxedType](bt.BoxedPair)
-}
+    module.defineGlobalVariable(boxedConstantDef)
 
-case class LiveVector(constantValue : Option[Vector[LiveValue]], boxedValue : Option[IrValue]) extends LiveValue {
-  val possibleTypes = Set[bt.ConcreteBoxedType](bt.BoxedVector)
-}
-
-case class LiveBytevector(constantValue : Option[Vector[Int]], boxedValue : Option[IrValue]) extends LiveValue {
-  val possibleTypes = Set[bt.ConcreteBoxedType](bt.BoxedBytevector)
-}
-
-case object LiveUnspecific extends LiveValue {
-  val possibleTypes = Set[bt.ConcreteBoxedType](bt.BoxedUnspecific)
-  val singletonValue = GlobalVariable("lliby_unspecific_value", PointerType(bt.BoxedUnspecific.irType))
-  val boxedValue = Some(singletonValue)
-}
-
-case object LiveEmptyList extends LiveValue {
-  val possibleTypes = Set[bt.ConcreteBoxedType](bt.BoxedEmptyList)
-  val singletonValue = GlobalVariable("lliby_empty_list_value", PointerType(bt.BoxedEmptyList.irType))
-  val boxedValue = Some(singletonValue)
+    boxedConstantDef.variable
+  }
 }
 

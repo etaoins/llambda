@@ -21,7 +21,7 @@ abstract class SchemeParsingMode(name : String) extends ReplMode(name) {
           }
         }
         catch {
-          case semantic : frontend.SemanticException =>
+          case semantic : SemanticException =>
             println(s"${semantic.semanticErrorType}: ${semantic.getMessage}")
         }
       case err =>

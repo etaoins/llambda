@@ -3,54 +3,34 @@ package llambda.codegen
 import llambda.{ast, nfi}
 
 object GenLiteral {
-  def apply(datum : ast.Datum) : LiveValue = {
+  def apply(datum : ast.Datum) : ConstantLiveValue = {
     datum match {
       case ast.StringLiteral(content) =>
-        LiveString(
-          constantValue=Some(content),
-          boxedValue=None,
-          utf8Pointer=None)
+        LiveString.fromConstant(content)
       
       case ast.Symbol(content) =>
-        LiveSymbol(
-          constantValue=Some(content),
-          boxedValue=None,
-          utf8Pointer=None)
+        LiveSymbol.fromConstant(content)
 
       case ast.IntegerLiteral(value) =>
-        LiveExactInteger(
-          constantValue=Some(value),
-          boxedValue=None)
+        LiveExactInteger.fromConstant(value)
       
       case ast.RationalLiteral(value) =>
-        LiveInexactRational(
-          constantValue=Some(value),
-          boxedValue=None)
+        LiveInexactRational.fromConstant(value)
       
       case ast.BooleanLiteral(value) =>
-        LiveBoolean(
-          constantValue=Some(value),
-          boxedValue=None)
+        LiveBoolean.fromConstant(value)
       
       case ast.CharLiteral(value) =>
-        LiveCharacter(
-          constantValue=Some(value),
-          boxedValue=None)
+        LiveCharacter.fromConstant(value)
       
       case ast.Pair(car, cdr) =>
-        LivePair(
-          constantValue=Some((GenLiteral(car), GenLiteral(cdr))),
-          boxedValue=None)
+        LivePair.fromConstant(GenLiteral(car), GenLiteral(cdr))
       
       case ast.VectorLiteral(elements) =>
-        LiveVector(
-          constantValue=Some(elements.map(GenLiteral.apply)),
-          boxedValue=None)
+        LiveVector.fromConstant(elements.map(GenLiteral.apply))
       
       case ast.Bytevector(elements) =>
-        LiveBytevector(
-          constantValue=Some(elements),
-          boxedValue=None)
+        LiveBytevector.fromConstant(elements)
 
       case ast.UnspecificValue =>
         LiveUnspecific
