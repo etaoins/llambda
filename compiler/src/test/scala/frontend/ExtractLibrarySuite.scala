@@ -45,7 +45,7 @@ class ExtractLibrarySuite extends FunSuite with Inside {
        case Library(_, bindings, exprs) =>
           inside(bindings("number5")) {
             case storageLoc : StorageLocation =>
-              assert(exprs === List(et.Let(List(storageLoc -> et.Literal(ast.IntegerLiteral(5))), Nil)))
+              assert(exprs === List(et.Bind(List(storageLoc -> et.Literal(ast.IntegerLiteral(5))))))
           }
      }
   }

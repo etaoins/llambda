@@ -15,7 +15,7 @@ case class Cond(test : Expression, trueExpr : Expression, falseExpr : Expression
 
 case class Lambda(fixedArgs : List[StorageLocation], restArg : Option[StorageLocation], expressions : List[Expression]) extends Expression
 
-case class Let(bindings : List[(StorageLocation, Expression)], innerExprs : List[Expression]) extends Expression
+case class Bind(bindings : List[(StorageLocation, Expression)]) extends Expression
 
 case class NativeFunction(
   fixedArgs : List[nfi.NativeType],

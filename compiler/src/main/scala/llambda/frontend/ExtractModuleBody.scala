@@ -133,7 +133,7 @@ object ExtractModuleBody {
     // that makes the unit tests a bit unwieldly
     val boundExprs = bindings match {
       case Nil => bodyExprs
-      case _ => List(et.Let(bindings, bodyExprs))
+      case _ => et.Bind(bindings) :: bodyExprs
     }
       
     et.Lambda(fixedArgs.map(_.boundValue), restArg.map(_.boundValue), boundExprs)
@@ -299,7 +299,7 @@ object ExtractModuleBody {
               // This is a fresh binding
               // Place the rest of the body inside an et.Let
               symbol.scope += (symbol.name -> boundValue)
-              et.Let(List(boundValue -> exprBlock()), apply(tailData)) :: Nil
+              et.Bind(List(boundValue -> exprBlock())) :: apply(tailData)
           }
 
         case Some(ParsedSyntaxDefine(symbol, boundValue)) =>

@@ -40,7 +40,7 @@ class ExtractProgramSuite extends FunSuite with Inside {
       """(import (test primitives))
          (define my-set set!)"""
     )) {
-      case et.Let((_, expression) :: Nil, Nil) :: Nil =>
+      case et.Bind((_, expression) :: Nil) :: Nil =>
         assert(expression === et.VarRef(SchemePrimitives.Set))
     }
   }

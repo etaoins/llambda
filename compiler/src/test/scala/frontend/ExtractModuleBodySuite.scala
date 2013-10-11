@@ -141,7 +141,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     inside(scope.get("a").value) {
       case storageLoc : StorageLocation =>
         assert(expressions === List(
-          et.Let(List(storageLoc -> et.Literal(ast.IntegerLiteral(2))), Nil)
+          et.Bind(List(storageLoc -> et.Literal(ast.IntegerLiteral(2))))
         ))
 
         assert(storageLoc.sourceName === "a")
@@ -150,40 +150,40 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
   test("redefine variable") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
-    val expressions = expressionFor("(define a 2)(define a 3)")(scope)
+    val expressions = bodyFor("(define a 2)(define a 3)")(scope)
 
     inside(scope.get("a").value) {
       case storageLoc : StorageLocation =>
-        assert(expressions === 
-          et.Let(List(storageLoc -> et.Literal(ast.IntegerLiteral(2))),
-            et.MutateVar(storageLoc, et.Literal(ast.IntegerLiteral(3))) :: Nil)
-        )
+        assert(expressions === List(
+          et.Bind(List(storageLoc -> et.Literal(ast.IntegerLiteral(2)))),
+          et.MutateVar(storageLoc, et.Literal(ast.IntegerLiteral(3)))
+        ))
     }
   }
   
   test("dependent define") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
-    val expressions = expressionFor("(define a 2)(define b a)")(scope)
+    val expressions = bodyFor("(define a 2)(define b a)")(scope)
 
     inside((scope.get("a").value, scope.get("b").value)) {
       case (storageLocA : StorageLocation, storageLocB : StorageLocation) =>
-        assert(expressions ===
-          et.Let(List(storageLocA -> et.Literal(ast.IntegerLiteral(2))),
-            et.Let(List(storageLocB -> et.VarRef(scope.get("a").value)), Nil) :: Nil)
-        )
+        assert(expressions === List(
+          et.Bind(List(storageLocA -> et.Literal(ast.IntegerLiteral(2)))),
+          et.Bind(List(storageLocB -> et.VarRef(scope.get("a").value)))
+        ))
     }
   }
   
   test("reference variable") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
-    val expressions = expressionFor("(define a 2) a")(scope)
+    val expressions = bodyFor("(define a 2) a")(scope)
 
     inside(scope.get("a").value) {
       case storageLoc : StorageLocation =>
-        assert(expressions === 
-          et.Let(List(storageLoc -> et.Literal(ast.IntegerLiteral(2))),
-            et.VarRef(storageLoc) :: Nil)
-        )
+        assert(expressions === List(
+          et.Bind(List(storageLoc -> et.Literal(ast.IntegerLiteral(2)))),
+          et.VarRef(storageLoc)
+        ))
     }
   }
 
@@ -227,16 +227,16 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
         (define foo (lambda (y) (bar x y)))
         (define bar (lambda (a b) (if a b)))
         (foo #t))""")) {
-      case et.Lambda(xLoc :: Nil, None, outerExpr :: Nil) =>
-        inside(outerExpr) {
-          case et.Let(
+      case et.Lambda(xLoc :: Nil, None, bindExpr :: bodyExpr :: Nil) =>
+        inside(bindExpr) {
+          case et.Bind(
             (fooLoc, et.Lambda(yLoc :: Nil, None, fooExpr :: Nil)) ::
-            (barLoc, et.Lambda(aLoc :: bLoc :: Nil, None, barExpr :: Nil)) :: Nil,
-            outerBodyExpr :: Nil) =>
+            (barLoc, et.Lambda(aLoc :: bLoc :: Nil, None, barExpr :: Nil)) :: Nil) =>
 
           assert(fooExpr === et.Apply(et.VarRef(barLoc), et.VarRef(xLoc) :: et.VarRef(yLoc) :: Nil))
           assert(barExpr === et.Cond(et.VarRef(aLoc), et.VarRef(bLoc), et.Literal(ast.UnspecificValue)))
-          assert(outerBodyExpr === et.Apply(et.VarRef(fooLoc), et.Literal(ast.TrueLiteral) :: Nil))
+
+          assert(bodyExpr === et.Apply(et.VarRef(fooLoc), et.Literal(ast.TrueLiteral) :: Nil))
         }
     }
   }
@@ -248,7 +248,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-true").value
 
     inside(expr) {
-      case et.Let((procLoc, et.Lambda(Nil, None, bodyExprs)) :: Nil, Nil) =>
+      case et.Bind((procLoc, et.Lambda(Nil, None, bodyExprs)) :: Nil) =>
         assert(bodyExprs === List(et.Literal(ast.TrueLiteral)))
     }
 
@@ -265,7 +265,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-true").value
 
     inside(expr) {
-      case et.Let((procLoc, et.Lambda(_ :: Nil, None, bodyExprs)) :: Nil, Nil) =>
+      case et.Bind((procLoc, et.Lambda(_ :: Nil, None, bodyExprs)) :: Nil) =>
         assert(bodyExprs === List(et.Literal(ast.TrueLiteral)))
     }
 
@@ -282,7 +282,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-false").value
 
     inside(expr) {
-      case et.Let((procLoc, et.Lambda(_ :: Nil, Some(_), bodyExprs)) :: Nil, Nil) =>
+      case et.Bind((procLoc, et.Lambda(_ :: Nil, Some(_), bodyExprs)) :: Nil) =>
         assert(bodyExprs === List(et.Literal(ast.FalseLiteral)))
     }
 
@@ -298,7 +298,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val expr = expressionFor("(define (return-six . rest) 6)")(scope)
     val procLoc = scope.get("return-six").value
     inside(expr) {
-      case et.Let((procLoc, et.Lambda(Nil, Some(_), bodyExprs)) :: Nil, Nil) =>
+      case et.Bind((procLoc, et.Lambda(Nil, Some(_), bodyExprs)) :: Nil) =>
         assert(bodyExprs === List(et.Literal(ast.IntegerLiteral(6))))
     }
     
@@ -314,7 +314,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val expr = expressionFor("(define (return-self) return-self)")(scope)
     val procLoc = scope.get("return-self").value
     inside(expr) {
-      case et.Let((procLoc, et.Lambda(Nil, None, bodyExprs)) :: Nil, Nil) =>
+      case et.Bind((procLoc, et.Lambda(Nil, None, bodyExprs)) :: Nil) =>
         assert(bodyExprs === List(et.VarRef(procLoc)))
     }
   }
@@ -328,9 +328,9 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   test("parameters shadow") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 
-    val expr = expressionFor("(define x 1)(lambda (x) x)")(scope)
-    inside(expr) {
-      case et.Let((shadowed, _) :: Nil, et.Lambda(argX :: Nil, None, et.VarRef(inner) :: Nil) :: Nil) =>
+    val expressions = bodyFor("(define x 1)(lambda (x) x)")(scope)
+    inside(expressions) {
+      case et.Bind((shadowed, _) :: Nil) :: et.Lambda(argX :: Nil, None, et.VarRef(inner) :: Nil) :: Nil =>
         assert(inner != shadowed)
     }
   }
@@ -338,23 +338,23 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   test("define shadows") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 
-    val exprs = expressionFor(
+    val expressions = bodyFor(
       """(define x 1)
          (lambda () (define x 2))"""
     )(scope) 
 
-    inside(exprs) {
-      case et.Let((shadowed, _) :: Nil, et.Lambda(Nil, None, et.Let((inner, _) :: Nil, Nil) :: Nil) :: Nil) =>
+    inside(expressions) {
+      case et.Bind((shadowed, _) :: Nil) :: et.Lambda(Nil, None, et.Bind((inner, _) :: Nil) :: Nil) :: Nil =>
         assert(inner != shadowed)
     }
   }
   
   test("capturing") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
-    val expr = expressionFor("(define y 1)(lambda (x) y)")(scope)
+    val expressions = bodyFor("(define y 1)(lambda (x) y)")(scope)
 
-    inside(expr) {
-      case et.Let((outer, _) :: Nil, et.Lambda(argX :: Nil, None, et.VarRef(inner) :: Nil) :: Nil) =>
+    inside(expressions) {
+      case et.Bind((outer, _) :: Nil) :: et.Lambda(argX :: Nil, None, et.VarRef(inner) :: Nil) :: Nil =>
         assert(outer === inner)
     }
   }
@@ -372,7 +372,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     }
 
     inside(expr) {
-      case et.Let((loc, et.Lambda(Nil, None, List(et.Literal(ast.FalseLiteral)))) :: Nil, Nil) =>
+      case et.Bind((loc, et.Lambda(Nil, None, List(et.Literal(ast.FalseLiteral)))) :: Nil) =>
         assert(loc === listBinding)
     }
   }
