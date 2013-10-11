@@ -6,5 +6,6 @@ import llambda.codegen.llvmir.{IrModuleBuilder, IrBlockBuilder}
 case class GenerationState(
   module : IrModuleBuilder,
   currentBlock : IrBlockBuilder,
-  liveVariables : Map[StorageLocation, LiveValue] = Map())
-
+  mutableVariables : Set[StorageLocation],
+  liveVariables : Map[StorageLocation, LiveValue] = Map()
+)

@@ -2,6 +2,8 @@ package llambda.codegen
 
 import llambda._
 import llambda.codegen.llvmir._
+import llambda.analyze.FindMutableVars
+
 import scala.io.Source
 
 object GenProgram {
@@ -27,6 +29,9 @@ object GenProgram {
   }
 
   def apply(expressions : List[et.Expression]) : String = {
+    // Find all mutables vars
+    val mutableVars = expressions.flatMap(FindMutableVars.apply).toSet
+
     val module = new llvmir.IrModuleBuilder
 
     // Define main()
@@ -51,7 +56,8 @@ object GenProgram {
     // Create a blank generation state
     val startState = GenerationState(
       module=module,
-      currentBlock=entryBlock)
+      currentBlock=entryBlock,
+      mutableVariables=mutableVars)
 
     // Generate our expressions
     expressions.foldLeft(startState) { (state, expr) => 
