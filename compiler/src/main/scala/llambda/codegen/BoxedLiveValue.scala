@@ -4,7 +4,7 @@ import llambda.{nfi, ImpossibleTypeConversionException}
 import llambda.codegen.{boxedtype => bt}
 import llambda.codegen.llvmir._
 
-class LiveBoxedValue(boxedType : bt.BoxedType, boxedValue : IrValue) extends LiveValue {
+class BoxedLiveValue(boxedType : bt.BoxedType, boxedValue : IrValue) extends LiveValue {
   val possibleTypes : Set[bt.ConcreteBoxedType] =
     (boxedType :: boxedType.subtypes).collect({
         case concrete : bt.ConcreteBoxedType => concrete
