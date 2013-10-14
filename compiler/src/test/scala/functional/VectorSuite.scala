@@ -1,3 +1,3 @@
-package llambda
+package llambda.functional
 
 class VectorSuite extends SchemeFunctionalTestRunner("VectorSuite")
