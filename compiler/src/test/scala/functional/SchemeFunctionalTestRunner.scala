@@ -44,6 +44,18 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
 
         assert(result.success === true)
         assert(result.output === expectation)
+      
+      case ast.ProperList(ast.Symbol("expect-failure") :: program) if !program.isEmpty =>
+        try {
+          val result = executeProgram(program)
+
+          // If we compiled make sure we fail at runtime
+          assert(result.success === false)
+        }
+        catch {
+          case e : SemanticException =>
+            // Semantic exceptions are allowed
+        }
 
       case other =>
           fail("Unable to parse condition: " + condition.toString)
@@ -92,17 +104,20 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
     // Request the exit value now which will wait for the process to finish
     val exitValue = testProcess.exitValue()
   
-    val output = SchemeParser(outputString) match {
-      case SchemeParser.Success(data :: Nil, _) => data
-      case other => fail(other.toString)
-    }
+    if (exitValue == 0) {
+      val output = SchemeParser(outputString) match {
+        case SchemeParser.Success(data :: Nil, _) => data
+        case other => fail(other.toString)
+      }
 
-    if (!errorString.isEmpty) {
-      fail(errorString)
-    }
+      if (!errorString.isEmpty) {
+        fail(errorString)
+      }
 
-    ExecutionResult(
-      success=(exitValue == 0),
-      output=output)
+      ExecutionResult(success=true, output=output)
+    }
+    else {
+      ExecutionResult(success=false, output=ast.UnspecificValue)
+    }
   }
 }
