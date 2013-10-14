@@ -23,6 +23,7 @@ add_library(lliby
 	stdlib/character.cpp
 	stdlib/list.cpp
 	stdlib/output.cpp
+	stdlib/vector.cpp
 	unicode/UnicodeChar.cpp
 	writer/ExternalFormDatumWriter.cpp
 	)

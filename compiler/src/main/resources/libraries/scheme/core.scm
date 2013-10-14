@@ -85,4 +85,11 @@
 	  (define digit-value (native-function "lliby_digit_value" (unicode-char) boxed-datum))
 	  (define char->integer (native-function "lliby_char_to_integer" (unicode-char) int32))
 	  (define integer->char (native-function "lliby_integer_to_char" (int32) unicode-char)))
+	
+	(export vector? make-vector vector-ref vector-set!)
+	(begin
+	  (define vector? (native-function "lliby_is_vector" (boxed-datum) bool))
+	  (define make-vector (native-function "lliby_make_vector" (uint32 boxed-datum) boxed-vector))
+	  (define vector-ref (native-function "lliby_vector_ref" (boxed-vector uint32) boxed-vector))
+	  (define vector-set! (native-function "lliby_vector_set" (boxed-vector uint32 boxed-datum) void)))
 )
