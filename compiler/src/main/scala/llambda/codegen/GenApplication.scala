@@ -21,10 +21,15 @@ object GenApplication {
       throw new InternalCompilerErrorException("Attempted to generate function application with incompatible arity")
     }
 
+    // Give up and use a var here
+    // foldLeft + zip ends up being a right mess
+    var currentState = initialState 
+
     // Convert our operands to IrValues of the expected type
     val irOperands = liveOperands.zip(signature.fixedArgs).map { case (liveOperand, nativeType) =>
-      // XXX: Handle state change
-      val (_, value) = liveOperand.toRequiredNativeType(initialState)(nativeType)
+      val (newState, value) = liveOperand.toRequiredNativeType(currentState)(nativeType)
+      currentState = newState
+
       value
     }
 
@@ -33,9 +38,9 @@ object GenApplication {
 
     signature.returnType match {
       case Some(returnType) =>
-        val Some(nativeReturn) = initialState.currentBlock.call(Some("ret"))(irSignature, procedure.functionPointer, irOperands)
+        val Some(nativeReturn) = currentState.currentBlock.call(Some("ret"))(irSignature, procedure.functionPointer, irOperands)
 
-        val (finalState, liveValue) = NativeToLiveValue(initialState)(returnType, nativeReturn)
+        val (finalState, liveValue) = NativeToLiveValue(currentState)(returnType, nativeReturn)
 
         ExpressionResult(
           state=finalState, 
@@ -43,10 +48,10 @@ object GenApplication {
         ) 
       
       case None =>
-        initialState.currentBlock.call(None)(irSignature, procedure.functionPointer, irOperands)
+        currentState.currentBlock.call(None)(irSignature, procedure.functionPointer, irOperands)
 
         ExpressionResult(
-          state=initialState, 
+          state=currentState, 
           value=LiveUnspecific
         ) 
     }

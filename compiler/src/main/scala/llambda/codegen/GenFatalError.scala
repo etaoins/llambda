@@ -49,5 +49,8 @@ object GenFatalError {
 
     // Call _lliby_fatal
     block.callDecl(None)(llibyFatalDecl, List(stringStartPtr, evidencePtr))
+
+    // Terminate the failure block
+    block.unreachable
   }
 }

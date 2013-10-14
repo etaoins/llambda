@@ -60,11 +60,11 @@ object GenProgram {
       mutableVariables=mutableVars)
 
     // Generate our expressions
-    expressions.foldLeft(startState) { (state, expr) => 
+    val endState = expressions.foldLeft(startState) { (state, expr) => 
       GenExpression(state)(expr).state
     }
 
-    entryBlock.ret(IntegerConstant(IntegerType(32), 0))
+    endState.currentBlock.ret(IntegerConstant(IntegerType(32), 0))
 
     module.defineFunction(mainFunction)
 
