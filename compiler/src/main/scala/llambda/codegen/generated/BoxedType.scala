@@ -14,6 +14,8 @@ sealed abstract class BoxedType {
   val directSubtypes : List[BoxedType]
   val isAbstract : Boolean
 
+  def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget)
+
   def isTypeOrSubtypeOf(otherType : BoxedType) : Boolean = {
     if (otherType == this) {
       return true
@@ -62,6 +64,10 @@ object BoxedDatum extends BoxedType {
       typeId,
       IntegerConstant(IntegerType(16), 0)
     ), userDefinedType=Some(irType))
+  }
+
+  def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
+    startBlock.uncondBranch(successBlock)
   }
 
   def genPointerToTypeId(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {

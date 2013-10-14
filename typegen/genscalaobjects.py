@@ -186,12 +186,18 @@ def _generate_field_accessors(leaf_type, current_type, depth = 1):
 
     return output
 
+def _generate_unconditional_type_check():
+    output  = '  def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {\n'
+    output += '    startBlock.uncondBranch(successBlock)\n'
+    output += '  }\n'
+
+    return output
+
 def _generate_type_check(all_types, boxed_type):
     base_type_object = type_name_to_clike_class(BASE_TYPE)
     type_id_type = _field_type_to_scala(all_types[BASE_TYPE].fields['typeId'])
 
-    output  = '\n'
-    output += '  def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {\n'
+    output  = '  def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {\n'
     output += '    val typeIdPointer = ' + base_type_object + '.genPointerToTypeId(startBlock)(boxedValue)\n'
     output += '    val typeId = startBlock.load("typeId")(typeIdPointer)\n'
 
@@ -252,6 +258,8 @@ def _generate_boxed_types(all_types):
     output += '  val supertype : Option[BoxedType]\n'
     output += '  val directSubtypes : List[BoxedType]\n'
     output += '  val isAbstract : Boolean\n' 
+    output += '\n'
+    output += '  def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget)\n'
     output += '\n'
     output += '  def isTypeOrSubtypeOf(otherType : BoxedType) : Boolean = {\n'
     output += '    if (otherType == this) {\n'
@@ -324,9 +332,13 @@ def _generate_boxed_types(all_types):
             output += '\n'
             output += _generate_constant_constructor(all_types, boxed_type)
         
-        # Every type should be an instance of the base type; don't generate a
-        # type check
-        if boxed_type.type_conditions and (type_name != BASE_TYPE):
+        output += '\n'
+
+        if type_name == BASE_TYPE:
+            # Every type should be an instance of the base type; generate a 
+            # stub type check that always passes
+            output += _generate_unconditional_type_check()
+        else:
             output += _generate_type_check(all_types, boxed_type)
         
         output += _generate_field_accessors(boxed_type, boxed_type)

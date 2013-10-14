@@ -28,6 +28,11 @@ def process_type_tree(boxed_types):
 
         boxed_type.supertype = supertype
         supertype.add_subtype(boxed_type)
+    
+    # Ensure that it's possible to have instances of each type
+    for name, boxed_type in boxed_types.items():
+        if not boxed_type.type_conditions:
+            raise SemanticException('Boxed type "' + name + '" cannot have instances. It must either have subtypes or be concrete')
 
     # Ensure type IDs are unique
     seen_type_ids = set()
