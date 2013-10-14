@@ -143,4 +143,84 @@ class ConversionInstrsSuite extends IrTestSuite {
     assert(resultVar.irType === FloatType)
     assertInstr(block, "%castvalue1 = bitcast i32 50 to float")
   }
+
+  test("trivial fptruncTo") {
+    val sourceValue = DoubleConstant(60.0)
+
+    val block = createTestBlock()
+    val resultVar = block.fptruncTo("trivial")(sourceValue, FloatType)
+    
+    assert(resultVar.irType === FloatType)
+    assertInstr(block, "%trivial1 = fptrunc double 60.0 to float")
+  }
+  
+  test("fptruncTo of same bit length") {
+    val sourceValue = FloatConstant(50.0f)
+
+    val block = createTestBlock()
+
+    intercept[InternalCompilerErrorException] {
+      block.fptruncTo("error")(sourceValue, FloatType)
+    }
+  }
+  
+  test("fptruncTo to larger bit length") {
+    val sourceValue = FloatConstant(50.0f)
+
+    val block = createTestBlock()
+
+    intercept[InternalCompilerErrorException] {
+      block.fptruncTo("error")(sourceValue, DoubleType)
+    }
+  }
+  
+  test("truncTo from non-float") {
+    val sourceValue = IntegerConstant(IntegerType(64), 145)
+
+    val block = createTestBlock()
+
+    intercept[InternalCompilerErrorException] {
+      block.fptruncTo("error")(sourceValue, FloatType)
+    }
+  }
+  
+  test("trivial fpextTo") {
+    val sourceValue = FloatConstant(50.0f)
+
+    val block = createTestBlock()
+    val resultVar = block.fpextTo("trivial")(sourceValue, DoubleType)
+    
+    assert(resultVar.irType === DoubleType)
+    assertInstr(block, "%trivial1 = fpext float 50.0 to double")
+  }
+  
+  test("fpextTo of same bit length") {
+    val sourceValue = FloatConstant(50.0f)
+
+    val block = createTestBlock()
+
+    intercept[InternalCompilerErrorException] {
+      block.fpextTo("error")(sourceValue, FloatType)
+    }
+  }
+  
+  test("fpextTo to smaller bit length") {
+    val sourceValue = DoubleConstant(50.0f)
+
+    val block = createTestBlock()
+
+    intercept[InternalCompilerErrorException] {
+      block.fpextTo("error")(sourceValue, FloatType)
+    }
+  }
+  
+  test("fpextTo from non-float") {
+    val sourceValue = IntegerConstant(IntegerType(32), 145)
+
+    val block = createTestBlock()
+
+    intercept[InternalCompilerErrorException] {
+      block.fpextTo("error")(sourceValue, DoubleType)
+    }
+  }
 }

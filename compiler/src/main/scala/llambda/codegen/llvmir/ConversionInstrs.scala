@@ -44,4 +44,36 @@ private[llvmir] trait ConversionInstrs extends IrInstrBuilder {
 
     resultVar
   }
+  
+  def fptruncTo(resultName : String)(value : IrValue, toType : FloatingPointType) : IrValue = {
+    value.irType match {
+      case fromType : FloatingPointType =>
+        if (fromType.bits <= toType.bits) {
+          throw new InternalCompilerErrorException(s"Attempted fptruncto from ${fromType.bits} to ${toType.bits}")
+        }
+
+      case _ => throw new InternalCompilerErrorException("Attempted fptruncto from non-floating point type")
+    }
+
+    val resultVar = allocateLocalVar(toType, resultName)
+    instructions += s"${resultVar.toIr} = fptrunc ${value.toIrWithType} to ${toType.toIr}"
+    
+    resultVar
+  }
+
+  def fpextTo(resultName : String)(value : IrValue, toType : FloatingPointType) : IrValue = {
+    value.irType match {
+      case fromType : FloatingPointType =>
+        if (fromType.bits >= toType.bits) {
+          throw new InternalCompilerErrorException(s"Attempted fpextto from ${fromType.bits} to ${toType.bits}")
+        }
+
+      case _ => throw new InternalCompilerErrorException("Attempted ifpextto from non-floating point type")
+    }
+
+    val resultVar = allocateLocalVar(toType, resultName)
+    instructions += s"${resultVar.toIr} = fpext ${value.toIrWithType} to ${toType.toIr}"
+
+    resultVar
+  }
 }
