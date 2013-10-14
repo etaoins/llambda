@@ -52,3 +52,7 @@ class ImportedIdentifierNotFoundException(val identifier : String) extends Seman
 class ImpossibleTypeConversionException(message : String) extends SemanticException(message) {
   val semanticErrorType = "impossible type conversion"
 }
+
+class IncompatibleArityException(message : String) extends SemanticException(message) {
+  val semanticErrorType = "incompatible arity"
+}

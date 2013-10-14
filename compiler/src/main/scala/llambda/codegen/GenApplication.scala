@@ -2,7 +2,7 @@ package llambda.codegen
 
 import llambda.codegen.llvmir._
 import llambda.nfi.NativeSignature
-import llambda.{NotImplementedException, InternalCompilerErrorException}
+import llambda.{NotImplementedException, IncompatibleArityException}
 
 object GenApplication {
   private def genProcedureCall(initialState : GenerationState)(procedure : LiveProcedure, liveOperands : List[LiveValue]) : ExpressionResult = {
@@ -16,9 +16,8 @@ object GenApplication {
       throw new NotImplementedException("Rest arguments not implemented")
     }
 
-    if (signature.fixedArgs.length != procedure.signature.fixedArgs.length) {
-      // XXX: Make the frontend catch this
-      throw new InternalCompilerErrorException("Attempted to generate function application with incompatible arity")
+    if (signature.fixedArgs.length != liveOperands.length) {
+      throw new IncompatibleArityException(s"Called function with ${liveOperands.length} arguments; requires exactly${signature.fixedArgs.length} arguments")
     }
 
     // Give up and use a var here
