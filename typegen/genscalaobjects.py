@@ -26,7 +26,7 @@ def _llvm_type_to_scala(llvm_type, signed):
         return "DoubleType"
 
     if llvm_type == 'float':
-        return 'SingleType'
+        return 'FloatType'
 
     # Check if we're an integer
     integer_match = re.match("^i(\\d+)$", llvm_type)
