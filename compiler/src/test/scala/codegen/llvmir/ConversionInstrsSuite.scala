@@ -223,4 +223,44 @@ class ConversionInstrsSuite extends IrTestSuite {
       block.fpextTo("error")(sourceValue, DoubleType)
     }
   }
+  
+  test("trivial uitofp") {
+    val sourceValue = IntegerConstant(IntegerType(32), 50) 
+
+    val block = createTestBlock()
+    val resultVar = block.uitofp("trivial")(sourceValue, FloatType)
+    
+    assert(resultVar.irType === FloatType)
+    assertInstr(block, "%trivial1 = uitofp i32 50 to float")
+  }
+  
+  test("uitofp from non-integer") {
+    val sourceValue = DoubleConstant(50.0)
+
+    val block = createTestBlock()
+    
+    intercept[InternalCompilerErrorException] {
+      val resultVar = block.uitofp("trivial")(sourceValue, FloatType)
+    }
+  }
+ 
+  test("trivial sitofp") {
+    val sourceValue = IntegerConstant(IntegerType(32), 50) 
+
+    val block = createTestBlock()
+    val resultVar = block.sitofp("trivial")(sourceValue, DoubleType)
+    
+    assert(resultVar.irType === DoubleType)
+    assertInstr(block, "%trivial1 = sitofp i32 50 to double")
+  }
+  
+  test("sitofp from non-integer") {
+    val sourceValue = DoubleConstant(50.0)
+
+    val block = createTestBlock()
+    
+    intercept[InternalCompilerErrorException] {
+      val resultVar = block.sitofp("trivial")(sourceValue, FloatType)
+    }
+  }
 }

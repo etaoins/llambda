@@ -76,4 +76,19 @@ private[llvmir] trait ConversionInstrs extends IrInstrBuilder {
 
     resultVar
   }
+  
+  private def genericItofpInstr(instruction : String)(resultName : String)(value : IrValue, toType : FloatingPointType) : IrValue = {
+    value.irType match {
+      case fromType : IntegerType => // Good to go
+      case _ => throw new InternalCompilerErrorException(s"Attempted ${instruction} from non-integer type")
+    }
+    
+    val resultVar = allocateLocalVar(toType, resultName)
+    instructions += s"${resultVar.toIr} = ${instruction} ${value.toIrWithType} to ${toType.toIr}"
+
+    resultVar
+  }
+
+  val uitofp = genericItofpInstr("uitofp")_
+  val sitofp = genericItofpInstr("sitofp")_
 }
