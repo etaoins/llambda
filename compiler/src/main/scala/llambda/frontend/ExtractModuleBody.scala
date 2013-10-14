@@ -5,8 +5,6 @@ import llambda._
 import collection.mutable.ListBuffer
 
 object ExtractModuleBody {
-  // If expr is None it doesn't need to exist in the expression tree; it's a 
-  // frontend-only binding such as a macro
   abstract sealed class ParsedDefine {
     val name : sst.ScopedSymbol
     val value : BoundValue
@@ -260,7 +258,7 @@ object ExtractModuleBody {
         case Some(syntax : BoundSyntax) =>
           // Cheap hack to look for macros early
           // We need to expand them in a body context if they appear in a body
-          // Otherwise (define) etc won't work in macros
+          // Otherwise (define) won't work in macros
           parseDefine(ExpandMacro(syntax, operands))
 
         case Some(InternalPrimitives.DefineReportProcedure) =>

@@ -42,7 +42,7 @@ object ResolveImportDecl {
       val childBindings = resolveImportSet(childSet) 
 
       (renameData map {
-        // Convert to a from -> to pairs
+        // Convert to from -> to pairs
         case ast.ProperList(ast.Symbol(from) :: ast.Symbol(to) :: Nil) =>
           (from -> to)
         case other =>
@@ -53,7 +53,7 @@ object ResolveImportDecl {
           throw new ImportedIdentifierNotFoundException(from)
         })
 
-        // Update the bidings
+        // Update the bindings
         bindings - from + (to -> boundValue)
       }
 

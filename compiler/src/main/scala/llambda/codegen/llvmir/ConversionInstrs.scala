@@ -23,7 +23,7 @@ private[llvmir] trait ConversionInstrs extends IrInstrBuilder {
     value.irType match {
       case IntegerType(fromBits) =>
         if (fromBits >= toType.bits) {
-          throw new InternalCompilerErrorException(s"Attempted extcto from ${fromBits} to ${toType.bits}")
+          throw new InternalCompilerErrorException(s"Attempted extto from ${fromBits} to ${toType.bits}")
         }
 
       case _ => throw new InternalCompilerErrorException("Attempted extto from non-integer")
