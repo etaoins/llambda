@@ -16,6 +16,16 @@ public:
 		m_cdr(cdr)
 	{
 	}
+
+	void setCar(BoxedDatum *obj)
+	{
+		m_car = obj;
+	}
+	
+	void setCdr(BoxedDatum *obj)
+	{
+		m_cdr = obj;
+	}
 };
 
 }

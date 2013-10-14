@@ -18,7 +18,7 @@ abstract class LiveValue {
 
 abstract class ConstantLiveValue(boxedType : bt.ConcreteBoxedType) extends LiveValue {
   val possibleTypes = Set(boxedType)
-  val booleanValue = false
+  val booleanValue = true
 
   def genBoxedConstant(module : IrModuleBuilder) : IrConstant
   val genUnboxedConstant : PartialFunction[nfi.NativeType, IrConstant]
@@ -49,7 +49,7 @@ abstract class ConstantLiveValue(boxedType : bt.ConcreteBoxedType) extends LiveV
         }
       
         // Make a constant out of it
-        val boolConstant = IntegerConstant(IntegerType(1), boolInt)
+        val boolConstant = IntegerConstant(IntegerType(8), boolInt)
 
         Some((state, boolConstant))
 
@@ -72,3 +72,49 @@ abstract class ConstantLiveValue(boxedType : bt.ConcreteBoxedType) extends LiveV
   }
 }
 
+abstract class UnboxedLiveValue(boxedType : bt.ConcreteBoxedType, nativeType : nfi.NativeType, unboxedValue : IrValue) extends LiveValue {
+  val possibleTypes = Set(boxedType)
+
+  // Should only be overriden by LiveBoolean
+  def genBooleanValue(state : GenerationState) : IrValue = 
+    GlobalVariable("lliby_true_value", PointerType(bt.BoxedBoolean.irType))
+
+  def genBoxedValue(state : GenerationState) : IrValue
+
+  def genCastBoxedValue(state : GenerationState)(targetType : bt.BoxedType) : IrValue = {
+    val uncastIrValue = genBoxedValue(state)
+    val castValueName = "castTo" + targetType.name
+
+    state.currentBlock.bitcastTo(castValueName)(uncastIrValue, PointerType(targetType.irType))
+  }
+
+  // This should be good for most subclasses except for numerics which support
+  // implicit conversions
+  def genUnboxedValue(state : GenerationState)(targetType : nfi.NativeType) : Option[IrValue] = {
+    if (targetType != nativeType) {
+      None
+    }
+    else {
+      Some(unboxedValue)
+    }
+  }
+  
+  def toNativeType(state : GenerationState)(targetType : nfi.NativeType) : Option[(GenerationState, IrValue)] = {
+    targetType match {
+      case nfi.BoxedValue(expectedType) =>
+        if (!boxedType.isTypeOrSubtypeOf(expectedType)) {
+          // Not possible
+          None
+        }
+        else {
+          Some((state, genCastBoxedValue(state)(expectedType)))
+        }
+
+      case nfi.CBool =>
+        Some((state, genBooleanValue(state)))
+
+      case unboxedType =>
+        genUnboxedValue(state)(targetType).map((state, _))
+    }
+  }
+}

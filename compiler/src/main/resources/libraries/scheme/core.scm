@@ -1,5 +1,6 @@
 (define-library (scheme core)
 	(import (llambda primitives))
+	(import (llambda nfi))
 	(export lambda quote if set! syntax-error)
 
 	(export begin)
@@ -40,4 +41,48 @@
 							((when test result1 result2 ...)
 							 (if test
 								(begin result1 result2 ...))))))
+
+	(export number? real? rational? exact? exact-integer? inexact? cos sin tan)
+	(begin
+	  (define number? (native-function "lliby_is_numeric" (boxed-datum) bool))
+	  ; We only support real and rational numbers
+	  (define real? number?)
+	  (define rational? number?)
+	  
+	  (define exact? (native-function "lliby_is_exact_integer" (boxed-datum) bool))
+	  (define exact-integer? exact?)
+	  (define inexact? (native-function "lliby_is_inexact_rational" (boxed-datum) bool))
+	  
+	  ; These always return inexact numbers so we can use the C standard
+	  ; library directly
+	  (define sin (native-function "sin" (double) double))
+	  (define cos (native-function "cos" (double) double))
+	  (define tan (native-function "tan" (double) double)))
+
+	(export boolean? not)
+	(begin
+	  (define boolean? (native-function "lliby_is_boolean" (boxed-datum) bool))
+	  (define not (native-function "lliby_not" (bool) bool)))
+
+	(export write)
+	(begin
+	  (define write (native-function "lliby_write" (boxed-datum) void)))
+
+	(export pair? null? cons car cdr set-car! set-cdr! length)
+	(begin 
+	  (define pair? (native-function "lliby_is_pair" (boxed-datum) bool))
+	  (define null? (native-function "lliby_is_empty_list" (boxed-datum) bool))
+	  (define cons (native-function "lliby_cons" (boxed-datum boxed-datum) boxed-pair))
+	  (define car (native-function "lliby_car" (boxed-pair) boxed-datum))
+	  (define cdr (native-function "lliby_cdr" (boxed-pair) boxed-datum))
+	  (define set-car! (native-function "lliby_set_car" (boxed-pair boxed-datum) void))
+	  (define set-cdr! (native-function "lliby_set_cdr" (boxed-pair boxed-datum) void))
+	  (define length (native-function "lliby_length" (boxed-list-element) uint32)))
+
+	(export char? digit-value char->integer integer->char)
+	(begin
+	  (define char? (native-function "lliby_is_character" (boxed-datum) bool))
+	  (define digit-value (native-function "lliby_digit_value" (unicode-char) boxed-datum))
+	  (define char->integer (native-function "lliby_char_to_integer" (unicode-char) int32))
+	  (define integer->char (native-function "lliby_integer_to_char" (int32) unicode-char)))
 )

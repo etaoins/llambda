@@ -15,9 +15,13 @@ add_library(lliby
 	binding/BoxedVectorLike.cpp
 	binding/BoxedVector.cpp
 	core/constinstances.cpp
-	core/fatal.cpp
+	core/box.cpp
 	core/init.cpp
+	core/fatal.cpp
 	stdlib/generated/predicates.cpp
+	stdlib/boolean.cpp
+	stdlib/character.cpp
+	stdlib/list.cpp
 	stdlib/output.cpp
 	unicode/UnicodeChar.cpp
 	writer/ExternalFormDatumWriter.cpp

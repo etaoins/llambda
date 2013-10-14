@@ -15,7 +15,9 @@ object GenNativeFunction {
       attributes=irSignature.attributes,
       callingConv=irSignature.callingConv)
 
-    module.declareFunction(irFunctionDecl)
+    module.unlessDeclared(irFunctionDecl) {
+      module.declareFunction(irFunctionDecl)
+    }
 
     // Wrap it in a LiveValue
     // We'll lazily generated the boxed version later if needed

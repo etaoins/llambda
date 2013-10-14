@@ -20,9 +20,10 @@ case object UInt16 extends IntType(16, false)
 case object UInt32 extends IntType(32, false)
 // UInt64 is outside the range we can represent
 
-case object Float extends NativeType
+sealed abstract class FpType extends NativeType
 
-case object Double extends NativeType 
+case object Float extends FpType
+case object Double extends FpType 
 
 case class BoxedValue(boxedType : bt.BoxedType) extends NativeType
 

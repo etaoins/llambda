@@ -25,7 +25,43 @@ private class ConstantLiveExactInteger(constantValue : Int) extends ConstantLive
   }
 }
 
+private class UnboxedLiveExactInteger(unboxedValue : IrValue, nativeType : nfi.IntType) extends UnboxedLiveValue(bt.BoxedExactInteger, nativeType, unboxedValue) {
+  def genBoxedValue(state : GenerationState) : IrValue = {
+    val block = state.currentBlock
+
+    // Cast to a signed int64. This is our preferred integer representation
+    val int64Value = if (nativeType.bits < 64) {
+      if (nativeType.signed) {
+        block.sextTo("sextedInt64")(unboxedValue, IntegerType(64))
+      }
+      else {
+        block.zextTo("zextedInt64")(unboxedValue, IntegerType(64))
+      }
+    }
+    else {
+      unboxedValue
+    }
+
+    // Make sure _lliby_box_exact_integer is declared
+    val llibyBoxExactIntegerDecl = IrFunctionDecl(
+      result=IrFunction.Result(PointerType(bt.BoxedExactInteger.irType)),
+      name="_lliby_box_exact_integer",
+      arguments=List(IrFunction.Argument(IntegerType(64))),
+      attributes=Set(IrFunction.NoUnwind)
+    )
+
+    state.module.unlessDeclared(llibyBoxExactIntegerDecl) {
+      state.module.declareFunction(llibyBoxExactIntegerDecl)
+    }
+
+    block.callDecl(Some("boxedInt"))(llibyBoxExactIntegerDecl, List(int64Value)).get
+  }
+}
+
 object LiveExactInteger {
   def fromConstant(value : Int) : ConstantLiveValue =
     new ConstantLiveExactInteger(value)
+
+  def fromUnboxed(unboxedValue : IrValue, nativeType : nfi.IntType) : LiveValue =
+    new UnboxedLiveExactInteger(unboxedValue, nativeType)
 } 

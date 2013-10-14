@@ -20,7 +20,25 @@ private class ConstantLiveBoolean(constantValue : Boolean) extends ConstantLiveV
   val genUnboxedConstant : PartialFunction[nfi.NativeType, IrConstant] = Map.empty
 }
 
+private class UnboxedLiveBoolean(unboxedValue : IrValue) extends UnboxedLiveValue(bt.BoxedBoolean, nfi.CBool, unboxedValue) {
+  def genBoxedValue(state : GenerationState) : IrValue = {
+    val block = state.currentBlock
+
+    // Cast the value to i1
+    val predValue = block.truncTo("pred")(unboxedValue, IntegerType(1))
+
+    // Use a select to pick the correct instance
+    val trueValue = GlobalVariable("lliby_true_value", PointerType(bt.BoxedBoolean.irType))
+    val falseValue = GlobalVariable("lliby_false_value", PointerType(bt.BoxedBoolean.irType))
+
+    block.select("boxedBool")(predValue, trueValue, falseValue)
+  }
+}
+
 object LiveBoolean {
   def fromConstant(value : Boolean) : ConstantLiveValue =
     new ConstantLiveBoolean(value)
+
+  def fromUnboxed(value : IrValue) : LiveValue = 
+    new UnboxedLiveBoolean(value)
 } 
