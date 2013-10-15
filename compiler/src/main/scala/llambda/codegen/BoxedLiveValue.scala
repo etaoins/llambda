@@ -10,8 +10,17 @@ class BoxedLiveValue(boxedType : bt.BoxedType, boxedValue : IrValue) extends Liv
         case concrete : bt.ConcreteBoxedType => concrete
     }).toSet
   
-  protected def genUnboxing(state : GenerationState)(targetType : nfi.NativeType) : Option[IrValue] = 
-    None
+  private def genGenericUnboxing(initialState : GenerationState)(targetType : nfi.UnboxedType) : Option[(GenerationState, IrValue)] = 
+    targetType match {
+      case nfi.CBool =>
+        if (possibleTypes.contains(bt.BoxedBoolean)) {
+          LiveBoolean.genCheckedUnboxing(initialState)(boxedValue)
+        }
+        else {
+          // All non-boolean values evaluate as true
+          Some((initialState, IntegerConstant(IntegerType(8), 1)))
+        }
+    }
 
   protected def genCastToBoxed(initialState : GenerationState)(targetType : bt.BoxedType) : Option[(GenerationState, IrValue)] = {
     if (targetType.isTypeOrSupertypeOf(boxedType)) {
@@ -46,6 +55,9 @@ class BoxedLiveValue(boxedType : bt.BoxedType, boxedValue : IrValue) extends Liv
     targetType match {
       case nfi.BoxedValue(expectedType) =>
         genCastToBoxed(state)(expectedType)
+
+      case unboxedType : nfi.UnboxedType =>
+        genGenericUnboxing(state)(unboxedType)
     }
   }
 }
