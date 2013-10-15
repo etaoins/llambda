@@ -13,6 +13,8 @@ void lliby_write(BoxedDatum *datum)
 	// XXX: Use the current port
 	auto writer = new ExternalFormDatumWriter(std::cout);
 	writer->render(datum);
+
+	std::cout << std::endl;
 }
 
 }
