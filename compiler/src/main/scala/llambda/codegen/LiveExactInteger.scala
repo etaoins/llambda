@@ -64,4 +64,20 @@ object LiveExactInteger {
 
   def fromUnboxed(unboxedValue : IrValue, nativeType : nfi.IntType) : LiveValue =
     new UnboxedLiveExactInteger(unboxedValue, nativeType)
+  
+  def genUnboxing(state : GenerationState)(boxedValue : IrValue, intType : nfi.IntType) : IrValue = {
+    val block = state.currentBlock
+
+    val pointerToValue = bt.BoxedExactInteger.genPointerToValue(block)(boxedValue)
+    val intValue = block.load("unboxedIntValue")(pointerToValue)
+
+    // Do we need to trunc this value?
+    if (intType.bits < 64) {
+      block.truncTo("truncedIntValue")(intValue, IntegerType(intType.bits))
+    }
+    else {
+      // No need to truncate
+      intValue
+    }
+  }
 } 

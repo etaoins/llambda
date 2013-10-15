@@ -42,7 +42,7 @@ object LiveBoolean {
   def fromUnboxed(value : IrValue) : LiveValue = 
     new UnboxedLiveBoolean(value)
 
-  def genCheckedUnboxing(initialState : GenerationState)(boxedValue : IrValue) : Option[(GenerationState, IrValue)] = {
+  def genTruthinessCheck(initialState : GenerationState)(boxedValue : IrValue) : Option[(GenerationState, IrValue)] = {
     val block = initialState.currentBlock
 
     // Bitcast false constant to the expected value

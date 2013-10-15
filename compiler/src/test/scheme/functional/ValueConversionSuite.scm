@@ -17,3 +17,13 @@
 	(import (scheme core))
 	; This assumes (not) takes an unboxed boolean
 	(not (car '('() . #f)))))
+
+(define-test "exact int can be unboxed as integer" (expect #(#t #t #t)
+	(import (scheme core))
+	; This assumes (make-vector) takes an unboxed exact integer
+	(make-vector (car '(3 . #f)) #t)))
+
+(define-test "inexact rational cannot be unboxed as integer" (expect-failure
+	(import (scheme core))
+	; This assumes (make-vector) takes an unboxed exact integer
+	(make-vector (car '(3.0 . #f)) #t)))

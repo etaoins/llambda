@@ -7,19 +7,26 @@ import llambda.codegen.llvmir._
 class BoxedLiveValue(boxedType : bt.BoxedType, boxedValue : IrValue) extends LiveValue {
   val possibleTypes : Set[bt.ConcreteBoxedType] =
     (boxedType :: boxedType.subtypes).collect({
-        case concrete : bt.ConcreteBoxedType => concrete
+      case concrete : bt.ConcreteBoxedType => concrete
     }).toSet
   
   private def genGenericUnboxing(initialState : GenerationState)(targetType : nfi.UnboxedType) : Option[(GenerationState, IrValue)] = 
     targetType match {
       case nfi.CBool =>
         if (possibleTypes.contains(bt.BoxedBoolean)) {
-          LiveBoolean.genCheckedUnboxing(initialState)(boxedValue)
+          LiveBoolean.genTruthinessCheck(initialState)(boxedValue)
         }
         else {
           // All non-boolean values evaluate as true
           Some((initialState, IntegerConstant(IntegerType(8), 1)))
         }
+
+      case intType : nfi.IntType =>
+        genCastToBoxed(initialState)(bt.BoxedExactInteger).map({ case (state, boxedValue) =>
+          val unboxedValue = LiveExactInteger.genUnboxing(state)(boxedValue, intType)
+
+          (state, unboxedValue)
+        })
     }
 
   protected def genCastToBoxed(initialState : GenerationState)(targetType : bt.BoxedType) : Option[(GenerationState, IrValue)] = {
