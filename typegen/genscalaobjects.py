@@ -153,9 +153,17 @@ def _generate_constant_constructor(all_types, boxed_type):
     return output
 
 def _generate_field_accessors(leaf_type, current_type, depth = 1):
-    field_counter = 0
+    supertype = current_type.supertype
 
-    output = ''
+    if supertype:
+        output  = _generate_field_accessors(leaf_type, supertype, depth + 1)
+
+        # Our supertype is our first "field"
+        field_counter = 1
+    else:
+        output = ''
+        field_counter = 0
+
     for field_name, field in current_type.fields.items():
         accessor_name = 'genPointerTo' + _uppercase_first(field_name)
 
@@ -179,10 +187,6 @@ def _generate_field_accessors(leaf_type, current_type, depth = 1):
         output += '      inbounds=true\n'
         output += '    )\n'
         output += '  }\n'
-
-    supertype = current_type.supertype
-    if supertype:
-        output += _generate_field_accessors(leaf_type, supertype, depth + 1)
 
     return output
 
