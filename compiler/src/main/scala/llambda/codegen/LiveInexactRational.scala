@@ -57,5 +57,18 @@ object LiveInexactRational {
 
   def fromUnboxed(unboxedValue : IrValue, nativeType : nfi.FpType) : LiveValue =
     new UnboxedLiveInexactRational(unboxedValue, nativeType)
+  
+  def genUnboxing(block : IrBlockBuilder)(boxedValue : IrValue, fpType : nfi.FpType) : IrValue = {
+    val pointerToValue = bt.BoxedInexactRational.genPointerToValue(block)(boxedValue)
+    val fpValue = block.load("unboxedFpValue")(pointerToValue)
+
+    fpType match {
+      case nfi.Float =>
+        // This needs to be 
+        block.fptruncTo("truncedFpValue")(fpValue, FloatType)
+      case nfi.Double =>
+        fpValue
+    }
+  }
 } 
 

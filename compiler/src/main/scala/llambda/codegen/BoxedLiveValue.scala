@@ -23,10 +23,38 @@ class BoxedLiveValue(boxedType : bt.BoxedType, boxedValue : IrValue) extends Liv
 
       case intType : nfi.IntType =>
         genCastToBoxed(initialState)(bt.BoxedExactInteger).map({ case (state, boxedValue) =>
-          val unboxedValue = LiveExactInteger.genUnboxing(state)(boxedValue, intType)
+          val unboxedValue = LiveExactInteger.genIntUnboxing(state.currentBlock)(boxedValue, intType)
 
           (state, unboxedValue)
         })
+
+      case fpType : nfi.FpType => 
+        if (boxedType == bt.BoxedExactInteger) {
+          // Unbox directly from exact int
+          val block = initialState.currentBlock
+
+          val exactIntBoxedValue = bt.BoxedExactInteger.genPointerBitcast(block)(boxedValue)
+          val unboxedValue = LiveExactInteger.genFpUnboxing(block)(exactIntBoxedValue, fpType)
+
+          Some((initialState, unboxedValue))
+        }
+        else if (boxedType == bt.BoxedInexactRational) {
+          // Unbox directly from inexact rational
+          val block = initialState.currentBlock
+
+          val rationalBoxedValue = bt.BoxedInexactRational.genPointerBitcast(block)(boxedValue)
+          val unboxedValue = LiveInexactRational.genUnboxing(block)(rationalBoxedValue, fpType)
+
+          Some((initialState, unboxedValue))
+        }
+        else if (possibleTypes.contains(bt.BoxedExactInteger) || possibleTypes.contains(bt.BoxedInexactRational)) {
+          // This is quite complex. Consult LiveNumeric for details.
+          Some(LiveNumeric.genCheckedUnboxing(initialState)(boxedValue, fpType))
+        }
+        else {
+          // Not possible
+          None
+        }
     }
 
   protected def genCastToBoxed(initialState : GenerationState)(targetType : bt.BoxedType) : Option[(GenerationState, IrValue)] = {

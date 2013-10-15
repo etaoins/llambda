@@ -65,9 +65,7 @@ object LiveExactInteger {
   def fromUnboxed(unboxedValue : IrValue, nativeType : nfi.IntType) : LiveValue =
     new UnboxedLiveExactInteger(unboxedValue, nativeType)
   
-  def genUnboxing(state : GenerationState)(boxedValue : IrValue, intType : nfi.IntType) : IrValue = {
-    val block = state.currentBlock
-
+  def genIntUnboxing(block : IrBlockBuilder)(boxedValue : IrValue, intType : nfi.IntType) : IrValue = {
     val pointerToValue = bt.BoxedExactInteger.genPointerToValue(block)(boxedValue)
     val intValue = block.load("unboxedIntValue")(pointerToValue)
 
@@ -78,6 +76,19 @@ object LiveExactInteger {
     else {
       // No need to truncate
       intValue
+    }
+  }
+  
+  def genFpUnboxing(block : IrBlockBuilder)(boxedValue : IrValue, fpType : nfi.FpType) : IrValue = {
+    val pointerToValue = bt.BoxedExactInteger.genPointerToValue(block)(boxedValue)
+    val intValue = block.load("unboxedIntValue")(pointerToValue)
+
+    // Convert to floating point
+    fpType match {
+      case nfi.Float =>
+        block.sitofp("floatConv")(intValue, FloatType)
+      case nfi.Double =>
+        block.sitofp("floatConv")(intValue, DoubleType)
     }
   }
 } 
