@@ -16,5 +16,30 @@ abstract class LiveValue {
       throw new ImpossibleTypeConversionException("Unable to convert " + this.toString + " to " + targetType)
     }
   }
+
+  def genPhiWith(ourInitialState : GenerationState, theirInitialState : GenerationState)(theirValue : LiveValue) : (GenerationState, LiveValue) = {
+    // This can be potentially be tragically expensive
+    // Subclasses can override this to do saner things
+    val Some((ourState, ourBoxedValue)) = toNativeType(ourInitialState)(nfi.BoxedValue(bt.BoxedDatum))
+    val Some((theirState, theirBoxedValue)) = theirValue.toNativeType(theirInitialState)(nfi.BoxedValue(bt.BoxedDatum))
+
+    // Figure out the possible types of our phi'ed value
+    val mergedPossibleTypes = possibleTypes ++ theirValue.possibleTypes
+
+    // Jump to the phi block
+    val phiBlock = ourState.currentBlock.startChildBlock("valuePhi") 
+    ourState.currentBlock.uncondBranch(phiBlock)
+    theirState.currentBlock.uncondBranch(phiBlock)
+
+    val resultIrValue = phiBlock.phi("phiResult")(
+      PhiSource(value=ourBoxedValue, block=ourState.currentBlock),
+      PhiSource(value=theirBoxedValue, block=theirState.currentBlock)
+    )
+    
+    val resultValue = new BoxedLiveValue(mergedPossibleTypes, resultIrValue) 
+
+    // XXX: Which state should we use here as a template?
+    (ourState.copy(currentBlock=phiBlock), resultValue)
+  }
 }
 
