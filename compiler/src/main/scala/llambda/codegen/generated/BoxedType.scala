@@ -106,7 +106,8 @@ object BoxedUnspecific extends ConcreteBoxedType {
   val typeId = 0
 
   def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
-    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(boxedValue)
+    val datumValue = BoxedDatum.genPointerBitcast(startBlock)(boxedValue)
+    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
     val isUnspecific = startBlock.icmp("isUnspecific")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 0))
@@ -156,7 +157,8 @@ object BoxedListElement extends BoxedType {
   }
 
   def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
-    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(boxedValue)
+    val datumValue = BoxedDatum.genPointerBitcast(startBlock)(boxedValue)
+    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
     val isPair = startBlock.icmp("isPair")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 1))
@@ -221,7 +223,8 @@ object BoxedPair extends ConcreteBoxedType {
   }
 
   def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
-    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(boxedValue)
+    val datumValue = BoxedDatum.genPointerBitcast(startBlock)(boxedValue)
+    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
     val isPair = startBlock.icmp("isPair")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 1))
@@ -290,7 +293,8 @@ object BoxedEmptyList extends ConcreteBoxedType {
   val typeId = 2
 
   def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
-    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(boxedValue)
+    val datumValue = BoxedDatum.genPointerBitcast(startBlock)(boxedValue)
+    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
     val isEmptyList = startBlock.icmp("isEmptyList")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 2))
@@ -355,7 +359,8 @@ object BoxedStringLike extends BoxedType {
   }
 
   def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
-    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(boxedValue)
+    val datumValue = BoxedDatum.genPointerBitcast(startBlock)(boxedValue)
+    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
     val isString = startBlock.icmp("isString")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 3))
@@ -452,7 +457,8 @@ object BoxedString extends ConcreteBoxedType {
   }
 
   def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
-    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(boxedValue)
+    val datumValue = BoxedDatum.genPointerBitcast(startBlock)(boxedValue)
+    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
     val isString = startBlock.icmp("isString")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 3))
@@ -545,7 +551,8 @@ object BoxedSymbol extends ConcreteBoxedType {
   }
 
   def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
-    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(boxedValue)
+    val datumValue = BoxedDatum.genPointerBitcast(startBlock)(boxedValue)
+    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
     val isSymbol = startBlock.icmp("isSymbol")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 4))
@@ -627,7 +634,8 @@ object BoxedBoolean extends ConcreteBoxedType {
   val typeId = 5
 
   def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
-    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(boxedValue)
+    val datumValue = BoxedDatum.genPointerBitcast(startBlock)(boxedValue)
+    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
     val isBoolean = startBlock.icmp("isBoolean")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 5))
@@ -690,7 +698,8 @@ object BoxedNumeric extends BoxedType {
   }
 
   def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
-    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(boxedValue)
+    val datumValue = BoxedDatum.genPointerBitcast(startBlock)(boxedValue)
+    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
     val isExactInteger = startBlock.icmp("isExactInteger")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 6))
@@ -750,7 +759,8 @@ object BoxedExactInteger extends ConcreteBoxedType {
   }
 
   def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
-    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(boxedValue)
+    val datumValue = BoxedDatum.genPointerBitcast(startBlock)(boxedValue)
+    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
     val isExactInteger = startBlock.icmp("isExactInteger")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 6))
@@ -819,7 +829,8 @@ object BoxedInexactRational extends ConcreteBoxedType {
   }
 
   def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
-    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(boxedValue)
+    val datumValue = BoxedDatum.genPointerBitcast(startBlock)(boxedValue)
+    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
     val isInexactRational = startBlock.icmp("isInexactRational")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 7))
@@ -888,7 +899,8 @@ object BoxedCharacter extends ConcreteBoxedType {
   }
 
   def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
-    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(boxedValue)
+    val datumValue = BoxedDatum.genPointerBitcast(startBlock)(boxedValue)
+    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
     val isCharacter = startBlock.icmp("isCharacter")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 8))
@@ -962,7 +974,8 @@ object BoxedBytevector extends ConcreteBoxedType {
   }
 
   def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
-    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(boxedValue)
+    val datumValue = BoxedDatum.genPointerBitcast(startBlock)(boxedValue)
+    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
     val isBytevector = startBlock.icmp("isBytevector")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 9))
@@ -1054,7 +1067,8 @@ object BoxedProcedure extends ConcreteBoxedType {
   }
 
   def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
-    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(boxedValue)
+    val datumValue = BoxedDatum.genPointerBitcast(startBlock)(boxedValue)
+    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
     val isProcedure = startBlock.icmp("isProcedure")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 10))
@@ -1153,7 +1167,8 @@ object BoxedVectorLike extends BoxedType {
   }
 
   def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
-    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(boxedValue)
+    val datumValue = BoxedDatum.genPointerBitcast(startBlock)(boxedValue)
+    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
     val vectorLikeTypeMasked = startBlock.and("vectorLikeTypeMasked")(typeId, IntegerConstant(IntegerType(16), 0x8000))
@@ -1233,7 +1248,8 @@ object BoxedVector extends ConcreteBoxedType {
   }
 
   def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
-    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(boxedValue)
+    val datumValue = BoxedDatum.genPointerBitcast(startBlock)(boxedValue)
+    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
     val isVector = startBlock.icmp("isVector")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 32768))

@@ -202,7 +202,8 @@ def _generate_type_check(all_types, boxed_type):
     type_id_type = _field_type_to_scala(all_types[BASE_TYPE].fields['typeId'])
 
     output  = '  def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {\n'
-    output += '    val typeIdPointer = ' + base_type_object + '.genPointerToTypeId(startBlock)(boxedValue)\n'
+    output += '    val datumValue = ' + base_type_object + '.genPointerBitcast(startBlock)(boxedValue)\n'
+    output += '    val typeIdPointer = ' + base_type_object + '.genPointerToTypeId(startBlock)(datumValue)\n'
     output += '    val typeId = startBlock.load("typeId")(typeIdPointer)\n'
 
     # Start building off the start block
