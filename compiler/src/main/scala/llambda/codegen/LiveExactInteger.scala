@@ -26,21 +26,40 @@ private class ConstantLiveExactInteger(module : IrModuleBuilder)(constantValue :
 }
 
 private class UnboxedLiveExactInteger(unboxedValue : IrValue, nativeType : nfi.IntType) extends UnboxedLiveValue(bt.BoxedExactInteger, nativeType, unboxedValue) {
+  private def genUnboxedInt(state : GenerationState)(targetType : nfi.IntType) : IrValue = {
+    val block = state.currentBlock
+    val destIrType = IntegerType(targetType.bits)
+
+    if (targetType.bits > nativeType.bits) {
+      // Extend ourselves to the dest type's width
+      if (nativeType.signed) {
+        block.sextTo("sextedInt")(unboxedValue, destIrType)
+      }
+      else {
+        block.zextTo("zextedInt")(unboxedValue, destIrType)
+      }
+    }
+    else if (targetType.bits < nativeType.bits) {
+      // Truncate ourselves down
+      block.truncTo("truncedint")(unboxedValue, destIrType)
+    } else {
+      // We're already the right width
+      unboxedValue
+    }
+  }
+
+  override def genUnboxedValue(state : GenerationState)(targetType : nfi.UnboxedType) : Option[IrValue] = targetType match {
+    case destNativeType : nfi.IntType =>
+      Some(genUnboxedInt(state)(destNativeType))
+
+    case _ => None
+  }
+
   def genBoxedValue(state : GenerationState) : IrValue = {
     val block = state.currentBlock
 
     // Cast to a signed int64. This is our preferred integer representation
-    val int64Value = if (nativeType.bits < 64) {
-      if (nativeType.signed) {
-        block.sextTo("sextedInt64")(unboxedValue, IntegerType(64))
-      }
-      else {
-        block.zextTo("zextedInt64")(unboxedValue, IntegerType(64))
-      }
-    }
-    else {
-      unboxedValue
-    }
+    val int64Value = genUnboxedInt(state)(nfi.Int64)
 
     // Make sure _lliby_box_exact_integer is declared
     val llibyBoxExactIntegerDecl = IrFunctionDecl(

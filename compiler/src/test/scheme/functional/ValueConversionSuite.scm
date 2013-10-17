@@ -38,6 +38,12 @@
 	; This assumes (cos) takes an unboxed double
 	(cos (car '(0 . #f)))))
 
+(define-test "unboxed i64 can be passed as an unboxed i32" (expect b
+	(import (scheme core))
+	; This assumes (exact) returns an unboxed i64 and (vector-ref) takes an
+	; unboxed i32
+	(vector-ref #(a b c) (exact 1))))
+
 (define-test "'3' can be unboxed as a character" (expect 3
 	(import (scheme core))
 	; This assumes (digit-value) takes an unboxed Unicode character
