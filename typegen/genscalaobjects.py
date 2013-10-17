@@ -171,9 +171,9 @@ def _generate_field_accessors(leaf_type, current_type, depth = 1):
         output += '  def ' + accessor_name + '(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {\n'
         
         # Make sure we're the correct type
-        exception_message = "Unexpected type for boxed value"
+        exception_message = "Unexpected type for boxed value. Passed ${boxedValue.irType}, expected %" + leaf_type.name + "*"
         output += '    if (boxedValue.irType != PointerType(UserDefinedType("' + leaf_type.name + '"))) {\n'
-        output += '       throw new InternalCompilerErrorException("' + exception_message + '")\n'
+        output += '       throw new InternalCompilerErrorException(s"' + exception_message + '")\n'
         output += '    }\n\n'
 
         # Calculate or indices
