@@ -47,7 +47,7 @@ object SchemeParserDefinitions {
   def intLiteralInBase(base : Int)(literalStr : String) = {
     // Scheme allows trailing dots on exact integers
     val withoutTrailingDot = """\.$""".r.replaceFirstIn(literalStr, "")
-    ast.IntegerLiteral(Integer.parseInt(withoutTrailingDot, base))
+    ast.IntegerLiteral(java.lang.Long.parseLong(withoutTrailingDot, base))
   }
 }
 

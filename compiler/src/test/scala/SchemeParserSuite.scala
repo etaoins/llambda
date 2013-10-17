@@ -101,6 +101,9 @@ class SchemeParserSuite extends FunSuite with Inside {
     
     assertReflexiveParse("#xdead", List(ast.IntegerLiteral(57005)))
     assertReflexiveParse("#x-b00b5", List(ast.IntegerLiteral(-721077)))
+    
+    // This is too large to be parsed as a 32bit integer or a double
+    assertReflexiveParse("9007199254740993", List(ast.IntegerLiteral(9007199254740993L)))
   }
 
   test("reals") {

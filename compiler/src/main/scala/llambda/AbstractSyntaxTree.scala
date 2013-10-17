@@ -28,7 +28,7 @@ object FalseLiteral  extends BooleanLiteral(false)
 
 sealed abstract class NumberLiteral extends NonSymbolLeaf 
 
-case class IntegerLiteral(value : Int) extends NumberLiteral {
+case class IntegerLiteral(value : Long) extends NumberLiteral {
   override def toString = value.toString
 }
 
