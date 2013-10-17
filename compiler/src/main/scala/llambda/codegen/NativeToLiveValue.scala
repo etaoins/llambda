@@ -24,5 +24,8 @@ object NativeToLiveValue {
     
     case nfi.UnicodeChar =>
       (state, LiveCharacter.fromUnboxed(nativeValue))
+
+    case nfi.Utf8CString => 
+      (state, LiveString.fromUtf8Unboxed(nativeValue))
   }
 }

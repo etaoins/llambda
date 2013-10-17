@@ -37,3 +37,24 @@
 	(import (scheme core))
 	; This assumes (cos) takes an unboxed double
 	(cos (car '(0 . #f)))))
+
+(define-test "'3' can be unboxed as a character" (expect 3
+	(import (scheme core))
+	; This assumes (digit-value) takes an unboxed Unicode character
+	(digit-value (car '(#\3 . #f)))))
+
+(define-test "string can be unboxed as a UTF-8 C string" (expect 6
+	(import (scheme core))
+	(import (llambda nfi))
+	; Nothing in our stdlib takes UTF-8 C strings because they're binary unsafe
+	; and require O(n) importing to determine their length/non-ASCII content.
+	; Use strlen from the C standard library for this test
+	(define strlen (native-function "strlen" (utf8-cstring) int64))
+	(strlen (car '("Hello!" . #f)))))
+
+(define-test "UTF-8 C string can be boxed as string" (expect "Hello, world!"
+	(import (scheme core))
+	(import (llambda nfi))
+	; See above test for why we need to use the C standard library
+	(define strdup (native-function "strdup" (utf8-cstring) utf8-cstring))
+	(strdup "Hello, world!")))

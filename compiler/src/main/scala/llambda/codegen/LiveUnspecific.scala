@@ -5,7 +5,7 @@ import llambda.codegen.llvmir._
 import llambda.nfi
 
 object LiveUnspecific extends ConstantLiveValue(bt.BoxedUnspecific) {
-  def genBoxedConstant(module : IrModuleBuilder) : IrConstant = {
+  def genBoxedConstant() : IrConstant = {
     GlobalVariable("lliby_unspecific_value", PointerType(bt.BoxedUnspecific.irType))
   }
   

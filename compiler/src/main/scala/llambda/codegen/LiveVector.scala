@@ -4,9 +4,9 @@ import llambda.codegen.{boxedtype => bt}
 import llambda.codegen.llvmir._
 import llambda.nfi
 
-private class ConstantLiveVector(constantElements : Seq[ConstantLiveValue]) extends ConstantLiveValue(bt.BoxedVector) {
-  def genBoxedConstant(module : IrModuleBuilder) : IrConstant = {
-    val irElements = constantElements.map(_.genCastBoxedConstant(module)(bt.BoxedDatum))
+private class ConstantLiveVector(module : IrModuleBuilder)(constantElements : Seq[ConstantLiveValue]) extends ConstantLiveValue(bt.BoxedVector) {
+  def genBoxedConstant() : IrConstant = {
+    val irElements = constantElements.map(_.genCastBoxedConstant(bt.BoxedDatum))
     
     // Make our elements
     val baseName = module.nameSource.allocate("schemeVector")
@@ -37,8 +37,8 @@ private class ConstantLiveVector(constantElements : Seq[ConstantLiveValue]) exte
 }
 
 object LiveVector {
-  def fromConstant(elements : Seq[ConstantLiveValue]) : ConstantLiveValue =
-    new ConstantLiveVector(elements)
+  def fromConstant(module : IrModuleBuilder)(elements : Seq[ConstantLiveValue]) : ConstantLiveValue =
+    new ConstantLiveVector(module)(elements)
 } 
 
 

@@ -4,10 +4,10 @@ import llambda.codegen.{boxedtype => bt}
 import llambda.codegen.llvmir._
 import llambda.nfi
 
-private class ConstantLiveBoolean(constantValue : Boolean) extends ConstantLiveValue(bt.BoxedBoolean) {
+private class ConstantLiveBoolean(module : IrModuleBuilder)(constantValue : Boolean) extends ConstantLiveValue(bt.BoxedBoolean) {
   override val booleanValue = constantValue
 
-  def genBoxedConstant(module : IrModuleBuilder) : IrConstant = {
+  def genBoxedConstant() : IrConstant = {
     if (constantValue) {
       LiveBoolean.trueIrValue
     }
@@ -36,8 +36,8 @@ object LiveBoolean {
   val trueIrValue = GlobalVariable("lliby_true_value", PointerType(bt.BoxedBoolean.irType))
   val falseIrValue = GlobalVariable("lliby_false_value", PointerType(bt.BoxedBoolean.irType))
 
-  def fromConstant(value : Boolean) : ConstantLiveValue =
-    new ConstantLiveBoolean(value)
+  def fromConstant(module : IrModuleBuilder)(value : Boolean) : ConstantLiveValue =
+    new ConstantLiveBoolean(module)(value)
 
   def fromUnboxed(value : IrValue) : LiveValue = 
     new UnboxedLiveBoolean(value)

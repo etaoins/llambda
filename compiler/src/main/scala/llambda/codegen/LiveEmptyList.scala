@@ -5,7 +5,7 @@ import llambda.codegen.llvmir._
 import llambda.nfi
 
 object LiveEmptyList extends ConstantLiveValue(bt.BoxedEmptyList) {
-  def genBoxedConstant(module : IrModuleBuilder) : IrConstant = {
+  def genBoxedConstant() : IrConstant = {
     GlobalVariable("lliby_empty_list_value", PointerType(bt.BoxedEmptyList.irType))
   }
   

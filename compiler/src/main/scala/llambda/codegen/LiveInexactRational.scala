@@ -4,8 +4,8 @@ import llambda.codegen.{boxedtype => bt}
 import llambda.codegen.llvmir._
 import llambda.nfi
 
-private class ConstantLiveInexactRational(constantValue : Double) extends ConstantLiveValue(bt.BoxedInexactRational) {
-  def genBoxedConstant(module : IrModuleBuilder) : IrConstant = {
+private class ConstantLiveInexactRational(module : IrModuleBuilder)(constantValue : Double) extends ConstantLiveValue(bt.BoxedInexactRational) {
+  def genBoxedConstant() : IrConstant = {
     val boxedRationalName = module.nameSource.allocate("schemeInexactRational")
 
     val boxedRational = bt.BoxedInexactRational.createConstant(
@@ -52,8 +52,8 @@ private class UnboxedLiveInexactRational(unboxedValue : IrValue, nativeType : nf
 }
 
 object LiveInexactRational {
-  def fromConstant(value : Double) : ConstantLiveValue =
-    new ConstantLiveInexactRational(value)
+  def fromConstant(module : IrModuleBuilder)(value : Double) : ConstantLiveValue =
+    new ConstantLiveInexactRational(module)(value)
 
   def fromUnboxed(unboxedValue : IrValue, nativeType : nfi.FpType) : LiveValue =
     new UnboxedLiveInexactRational(unboxedValue, nativeType)

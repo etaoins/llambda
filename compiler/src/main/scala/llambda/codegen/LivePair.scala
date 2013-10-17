@@ -4,10 +4,10 @@ import llambda.codegen.{boxedtype => bt}
 import llambda.codegen.llvmir._
 import llambda.nfi
 
-private class ConstantLivePair(constantCar : ConstantLiveValue, constantCdr : ConstantLiveValue) extends ConstantLiveValue(bt.BoxedPair) {
-  def genBoxedConstant(module : IrModuleBuilder) : IrConstant = {
-    val irCar = constantCar.genCastBoxedConstant(module)(bt.BoxedDatum)
-    val irCdr = constantCdr.genCastBoxedConstant(module)(bt.BoxedDatum)
+private class ConstantLivePair(module : IrModuleBuilder)(constantCar : ConstantLiveValue, constantCdr : ConstantLiveValue) extends ConstantLiveValue(bt.BoxedPair) {
+  def genBoxedConstant() : IrConstant = {
+    val irCar = constantCar.genCastBoxedConstant(bt.BoxedDatum)
+    val irCdr = constantCdr.genCastBoxedConstant(bt.BoxedDatum)
     
     val boxedPairName = module.nameSource.allocate("schemePair")
 
@@ -24,7 +24,7 @@ private class ConstantLivePair(constantCar : ConstantLiveValue, constantCdr : Co
 }
 
 object LivePair {
-  def fromConstant(car : ConstantLiveValue, cdr : ConstantLiveValue) : ConstantLiveValue =
-    new ConstantLivePair(car, cdr)
+  def fromConstant(module : IrModuleBuilder)(car : ConstantLiveValue, cdr : ConstantLiveValue) : ConstantLiveValue =
+    new ConstantLivePair(module)(car, cdr)
 } 
 

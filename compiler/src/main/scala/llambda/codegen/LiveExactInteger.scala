@@ -4,8 +4,8 @@ import llambda.codegen.{boxedtype => bt}
 import llambda.codegen.llvmir._
 import llambda.nfi
 
-private class ConstantLiveExactInteger(constantValue : Int) extends ConstantLiveValue(bt.BoxedExactInteger) {
-  def genBoxedConstant(module : IrModuleBuilder) : IrConstant = {
+private class ConstantLiveExactInteger(module : IrModuleBuilder)(constantValue : Int) extends ConstantLiveValue(bt.BoxedExactInteger) {
+  def genBoxedConstant() : IrConstant = {
     val boxedIntName = module.nameSource.allocate("schemeExactInteger")
 
     val boxedInt = bt.BoxedExactInteger.createConstant(
@@ -59,8 +59,8 @@ private class UnboxedLiveExactInteger(unboxedValue : IrValue, nativeType : nfi.I
 }
 
 object LiveExactInteger {
-  def fromConstant(value : Int) : ConstantLiveValue =
-    new ConstantLiveExactInteger(value)
+  def fromConstant(module : IrModuleBuilder)(value : Int) : ConstantLiveValue =
+    new ConstantLiveExactInteger(module)(value)
 
   def fromUnboxed(unboxedValue : IrValue, nativeType : nfi.IntType) : LiveValue =
     new UnboxedLiveExactInteger(unboxedValue, nativeType)

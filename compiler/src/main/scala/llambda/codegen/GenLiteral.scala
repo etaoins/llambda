@@ -3,34 +3,34 @@ package llambda.codegen
 import llambda.{ast, nfi}
 
 object GenLiteral {
-  def apply(datum : ast.Datum) : ConstantLiveValue = {
+  def apply(module : llvmir.IrModuleBuilder)(datum : ast.Datum) : ConstantLiveValue = {
     datum match {
       case ast.StringLiteral(content) =>
-        LiveString.fromConstant(content)
+        LiveString.fromConstant(module)(content)
       
       case ast.Symbol(content) =>
-        LiveSymbol.fromConstant(content)
+        LiveSymbol.fromConstant(module)(content)
 
       case ast.IntegerLiteral(value) =>
-        LiveExactInteger.fromConstant(value)
+        LiveExactInteger.fromConstant(module)(value)
       
       case ast.RationalLiteral(value) =>
-        LiveInexactRational.fromConstant(value)
+        LiveInexactRational.fromConstant(module)(value)
       
       case ast.BooleanLiteral(value) =>
-        LiveBoolean.fromConstant(value)
+        LiveBoolean.fromConstant(module)(value)
       
       case ast.CharLiteral(value) =>
-        LiveCharacter.fromConstant(value)
+        LiveCharacter.fromConstant(module)(value)
       
       case ast.Pair(car, cdr) =>
-        LivePair.fromConstant(GenLiteral(car), GenLiteral(cdr))
+        LivePair.fromConstant(module)(GenLiteral(module)(car), GenLiteral(module)(cdr))
       
       case ast.VectorLiteral(elements) =>
-        LiveVector.fromConstant(elements.map(GenLiteral.apply))
+        LiveVector.fromConstant(module)(elements.map(GenLiteral(module)_))
       
       case ast.Bytevector(elements) =>
-        LiveBytevector.fromConstant(elements)
+        LiveBytevector.fromConstant(module)(elements)
 
       case ast.UnspecificValue =>
         LiveUnspecific

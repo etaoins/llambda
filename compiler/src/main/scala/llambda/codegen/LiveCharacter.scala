@@ -4,8 +4,8 @@ import llambda.codegen.{boxedtype => bt}
 import llambda.codegen.llvmir._
 import llambda.nfi
 
-private class ConstantLiveCharacter(codePoint : Char) extends ConstantLiveValue(bt.BoxedCharacter) {
-  def genBoxedConstant(module : IrModuleBuilder) : IrConstant = {
+private class ConstantLiveCharacter(module : IrModuleBuilder)(codePoint : Char) extends ConstantLiveValue(bt.BoxedCharacter) {
+  def genBoxedConstant() : IrConstant = {
     val boxedCharName = module.nameSource.allocate("schemeCharacter")
 
     val boxedChar = bt.BoxedCharacter.createConstant(
@@ -42,10 +42,15 @@ private class UnboxedLiveCharacter(unboxedValue : IrValue) extends UnboxedLiveVa
 }
 
 object LiveCharacter {
-  def fromConstant(value : Char) : ConstantLiveValue =
-    new ConstantLiveCharacter(value)
+  def fromConstant(module : IrModuleBuilder)(value : Char) : ConstantLiveValue =
+    new ConstantLiveCharacter(module)(value)
 
   def fromUnboxed(unboxedValue : IrValue) : LiveValue =
     new UnboxedLiveCharacter(unboxedValue)
+  
+  def genUnboxing(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
+    val pointerToValue = bt.BoxedCharacter.genPointerToUnicodeChar(block)(boxedValue)
+    block.load("unboxedUnicodeChar")(pointerToValue)
+  }
 } 
 

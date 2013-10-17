@@ -50,6 +50,20 @@ class BoxedLiveValue(val possibleTypes : Set[bt.ConcreteBoxedType], boxedValue :
           // Not possible
           None
         }
+
+      case nfi.UnicodeChar =>
+        genCastToBoxed(initialState)(bt.BoxedCharacter).map({ case (state, boxedValue) =>
+          val unboxedValue = LiveCharacter.genUnboxing(state.currentBlock)(boxedValue)
+
+          (state, unboxedValue)
+        })
+
+      case nfi.Utf8CString =>
+        genCastToBoxed(initialState)(bt.BoxedString).map({ case (state, boxedValue) =>
+          val unboxedValue = LiveString.genUtf8Unboxing(state.currentBlock)(boxedValue)
+
+          (state, unboxedValue)
+        })
     }
 
   protected def genCastToBoxed(initialState : GenerationState)(targetType : bt.BoxedType) : Option[(GenerationState, IrValue)] = {

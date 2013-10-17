@@ -37,7 +37,7 @@ object GenExpression {
         throw new InternalCompilerErrorException("Non-StorageLocation VarRef leaked to codegen")
 
       case et.Literal(datum) =>
-        ExpressionResult(state=initialState, value=GenLiteral(datum))
+        ExpressionResult(state=initialState, value=GenLiteral(initialState.module)(datum))
 
       case nativeFunc : et.NativeFunction =>
         val funcValue = GenNativeFunction(initialState.module)(nativeFunc) 

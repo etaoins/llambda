@@ -20,11 +20,11 @@ abstract class ConstantLiveValue(boxedType : bt.ConcreteBoxedType) extends LiveV
   val possibleTypes = Set(boxedType)
   val booleanValue = true
 
-  def genBoxedConstant(module : IrModuleBuilder) : IrConstant
+  def genBoxedConstant() : IrConstant
   val genUnboxedConstant : PartialFunction[nfi.NativeType, IrConstant]
 
-  def genCastBoxedConstant(module : IrModuleBuilder)(targetType : bt.BoxedType) = {
-    val uncastIrValue = genBoxedConstant(module)
+  def genCastBoxedConstant(targetType : bt.BoxedType) = {
+    val uncastIrValue = genBoxedConstant()
     BitcastToConstant(uncastIrValue, PointerType(targetType.irType))
   }
   
@@ -36,7 +36,7 @@ abstract class ConstantLiveValue(boxedType : bt.ConcreteBoxedType) extends LiveV
           None
         }
         else {
-          Some((state, genCastBoxedConstant(state.module)(expectedType)))
+          Some((state, genCastBoxedConstant(expectedType)))
         }
 
       case nfi.CBool =>
