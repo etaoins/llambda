@@ -65,3 +65,7 @@
 (define-test "length of empty list" (expect 0
 	(import (scheme core))
 	(length '())))
+
+(define-test "length of improper list fails" (expect-failure
+	(import (scheme core))
+	(length '(1 . 2))))

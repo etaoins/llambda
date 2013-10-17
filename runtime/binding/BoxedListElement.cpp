@@ -53,4 +53,24 @@ BoxedPair* BoxedListElement::createImproperList(const std::list<BoxedDatum*> &el
 	}
 }
 
+std::int64_t BoxedListElement::listLength() const
+{
+	const BoxedDatum *datum = this;
+	std::uint32_t length = 0;
+
+	while(auto pair = datum->asBoxedPair())
+	{
+		length++;
+		datum = pair->cdr();
+	}
+
+	if (datum != BoxedEmptyList::instance())
+	{
+		// Not a list
+		return InvalidListLength;
+	}
+
+	return length;
+}
+
 }

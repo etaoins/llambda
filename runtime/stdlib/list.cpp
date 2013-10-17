@@ -1,5 +1,6 @@
 #include "binding/BoxedPair.h"
 #include "binding/BoxedEmptyList.h"
+#include "core/fatal.h"
 
 using namespace lliby;
 
@@ -33,13 +34,11 @@ void lliby_set_cdr(BoxedPair *pair, BoxedDatum *obj)
 
 std::uint32_t lliby_length(const BoxedListElement *element) 
 {
-	const BoxedDatum *datum = element;
-	std::uint32_t length = 0;
+	std::int64_t length = element->listLength();;
 
-	while(auto pair = datum->asBoxedPair())
+	if (length == BoxedListElement::InvalidListLength)
 	{
-		length++;
-		datum = pair->cdr();
+		_lliby_fatal("Non-list passed to list-length", element);
 	}
 
 	return length;
