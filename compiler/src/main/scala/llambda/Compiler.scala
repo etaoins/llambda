@@ -45,8 +45,16 @@ object Compiler {
     val loader = new frontend.DefaultLibraryLoader
     val expressions = frontend.ExtractProgram(data)(loader)
 
+    // Optimize
+    val optimizedExpressions = if (optimizeLevel > 1) {
+      expressions.map(optimize.FlattenSelfExecutingLambdas.apply)
+    }
+    else {
+      expressions
+    }
+
     // Generate the LLVM IR
-    val llvmIr = codegen.GenProgram(expressions)
+    val llvmIr = codegen.GenProgram(optimizedExpressions)
 
     if (emitLlvm) {
       // Write the IR directly to disk

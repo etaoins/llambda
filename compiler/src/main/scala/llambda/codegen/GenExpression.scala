@@ -82,6 +82,16 @@ object GenExpression {
         }
 
         GenApplication(operandState)(procValue, operandValues)
+
+      case et.Begin(expressions) =>
+        val defaultResult = ExpressionResult(
+          state=initialState,
+          value=LiveUnspecific
+        )
+
+        expressions.foldLeft(defaultResult) { case (currentResult, expression) =>
+          GenExpression(currentResult.state)(expression)
+        }
     }
   }
 }
