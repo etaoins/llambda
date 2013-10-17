@@ -22,6 +22,7 @@ add_library(lliby
 	stdlib/boolean.cpp
 	stdlib/character.cpp
 	stdlib/list.cpp
+	stdlib/number.cpp
 	stdlib/output.cpp
 	stdlib/vector.cpp
 	unicode/UnicodeChar.cpp

@@ -50,6 +50,31 @@
 	(import (scheme core))
 	(exact-integer? 32.0)))
 
+(define-test "Exact -32.0 is -32" (expect -32
+	(import (scheme core))
+	(exact -32.0)))
+
+(define-test "Exact 64 is 64" (expect 64
+	(import (scheme core))
+	(exact 64)))
+
+(define-test "Exact 112.5 fails" (expect-failure
+	(import (scheme core))
+	(exact 112.5)))
+
+(define-test "Inexact 567 is 567.0" (expect 567.0
+	(import (scheme core))
+	(inexact 567)))
+
+(define-test "Inexact -3289.5 is -3289.5" (expect -3289.5
+	(import (scheme core))
+	(inexact -3289.5)))
+
+; This can't be exactly represented by a double
+(define-test "Inexact 9007199254740993 fails" (expect-failure
+	(import (scheme core))
+	(inexact 9007199254740993)))
+
 ; Super ghetto but anything else depends too much on floating point
 ; representations
 (define-test "inexact sin 0 is 0" (expect 0.0
