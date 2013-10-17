@@ -4,12 +4,7 @@ import llambda.{nfi, ImpossibleTypeConversionException}
 import llambda.codegen.{boxedtype => bt}
 import llambda.codegen.llvmir._
 
-class BoxedLiveValue(boxedType : bt.BoxedType, boxedValue : IrValue) extends LiveValue {
-  val possibleTypes : Set[bt.ConcreteBoxedType] =
-    (boxedType :: boxedType.subtypes).collect({
-      case concrete : bt.ConcreteBoxedType => concrete
-    }).toSet
-  
+class BoxedLiveValue(val possibleTypes : Set[bt.ConcreteBoxedType], boxedValue : IrValue) extends LiveValue {
   private def genGenericUnboxing(initialState : GenerationState)(targetType : nfi.UnboxedType) : Option[(GenerationState, IrValue)] = 
     targetType match {
       case nfi.CBool =>
@@ -29,7 +24,7 @@ class BoxedLiveValue(boxedType : bt.BoxedType, boxedValue : IrValue) extends Liv
         })
 
       case fpType : nfi.FpType => 
-        if (boxedType == bt.BoxedExactInteger) {
+        if (possibleTypes == Set(bt.BoxedExactInteger)) {
           // Unbox directly from exact int
           val block = initialState.currentBlock
 
@@ -38,7 +33,7 @@ class BoxedLiveValue(boxedType : bt.BoxedType, boxedValue : IrValue) extends Liv
 
           Some((initialState, unboxedValue))
         }
-        else if (boxedType == bt.BoxedInexactRational) {
+        else if (possibleTypes == Set(bt.BoxedInexactRational)) {
           // Unbox directly from inexact rational
           val block = initialState.currentBlock
 
@@ -58,13 +53,14 @@ class BoxedLiveValue(boxedType : bt.BoxedType, boxedValue : IrValue) extends Liv
     }
 
   protected def genCastToBoxed(initialState : GenerationState)(targetType : bt.BoxedType) : Option[(GenerationState, IrValue)] = {
-    if (targetType.isTypeOrSupertypeOf(boxedType)) {
+    // Is the target type either equal to or the supertype of each of our possible types?
+    if (possibleTypes.forall(targetType.isTypeOrSupertypeOf(_))) {
       // This doesn't require any type assertions
       val supertypeValue = targetType.genPointerBitcast(initialState.currentBlock)(boxedValue)
 
       Some((initialState, supertypeValue))
     }
-    else if (targetType.isTypeOrSubtypeOf(boxedType)) {
+    else if (possibleTypes.exists(targetType.isTypeOrSubtypeOf(_))) {
       // We need to build a type assertion
       val successBlock = initialState.currentBlock.startChildBlock(targetType.name + "SubcastSuccess") 
       val failBlock = initialState.currentBlock.startChildBlock(targetType.name + "SubcastFail") 
@@ -73,8 +69,8 @@ class BoxedLiveValue(boxedType : bt.BoxedType, boxedValue : IrValue) extends Liv
       targetType.genTypeCheck(initialState.currentBlock)(boxedValue, successBlock, failBlock)
     
       // Generate the fail branch
-      val errorName = s"subcastFrom${boxedType.name.capitalize}To${targetType.name.capitalize}"
-      val errorMessage = s"Runtime cast from '${boxedType.name}' to subtype '${targetType.name}' failed" 
+      val errorName = s"subcastTo${targetType.name.capitalize}Failed"
+      val errorMessage = s"Runtime cast to subtype '${targetType.name}' failed" 
       GenFatalError(initialState.module, failBlock)(errorName, errorMessage)
 
       // Continue building on the success block
@@ -82,6 +78,7 @@ class BoxedLiveValue(boxedType : bt.BoxedType, boxedValue : IrValue) extends Liv
       Some((initialState.copy(currentBlock=successBlock), subtypeValue))
     }
     else {
+      // This conversion is impossible
       None
     }
   }
