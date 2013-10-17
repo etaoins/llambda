@@ -18,6 +18,22 @@
 	(import (scheme core))
 	(make-vector 3 5.0)))
 
+(define-test "vector length of non-empty constant vector" (expect 3
+	(import (scheme core))
+	(vector-length #(1 2 3))))
+
+(define-test "vector length of empty constant vector" (expect 0
+	(import (scheme core))
+	(vector-length #())))
+
+(define-test "vector length of non-empty constructed vector" (expect 15
+	(import (scheme core))
+	(vector-length (make-vector 15 #f))))
+
+(define-test "vector length of empty constructed vector" (expect 0
+	(import (scheme core))
+	(vector-length (make-vector 0 #f))))
+
 (define-test "vector-ref" (expect c
 	(import (scheme core))
 	(vector-ref #(a b c d e f) 2)))
