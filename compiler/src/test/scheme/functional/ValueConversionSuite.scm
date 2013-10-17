@@ -52,6 +52,24 @@
 	(define strlen (native-function "strlen" (utf8-cstring) int64))
 	(strlen (car '("Hello!" . #f)))))
 
+(define-test "unboxed int 0 converts to unboxed boolean true" (expect #f
+	(import (scheme core))
+	; This assumes (exact) returns an unboxed integer and (not) takes an unboxed boolean
+	(not (exact 0))))
+
+; This seems stupid but it was actually broken at one point
+(define-test "unboxed boolean false can be passed to a procedure" (expect #t
+	(import (scheme core))
+	; This assumes (not) takes and returns an unboxed boolean
+	(not (not #t))))
+
+; Make sure if we use type analysis to short circuit bool evaluation do it right
+; This was also broken at one point
+(define-test "types that cannot be boolean evaluate as true" (expect #f
+	(import (scheme core))
+	; This assumes (not) takes an unboxed boolean and (con) returns a boxed pair
+	(not (cons 1 2))))
+
 (define-test "UTF-8 C string can be boxed as string" (expect "Hello, world!"
 	(import (scheme core))
 	(import (llambda nfi))

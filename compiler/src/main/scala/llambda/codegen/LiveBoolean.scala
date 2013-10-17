@@ -21,14 +21,18 @@ private class ConstantLiveBoolean(module : IrModuleBuilder)(constantValue : Bool
 }
 
 private class UnboxedLiveBoolean(unboxedValue : IrValue) extends UnboxedLiveValue(bt.BoxedBoolean, nfi.CBool, unboxedValue) {
-  def genBoxedValue(state : GenerationState) : IrValue = {
+  override def genTruthyPredicate(state : GenerationState) : IrValue = {
     val block = state.currentBlock
 
     // Cast the value to i1
-    val predValue = block.truncTo("pred")(unboxedValue, IntegerType(1))
+    block.truncTo("truthyPred")(unboxedValue, IntegerType(1))
+  }
+
+  def genBoxedValue(state : GenerationState) : IrValue = {
+    val predValue = genTruthyPredicate(state)
 
     // Use a select to pick the correct instance
-    block.select("boxedBool")(predValue, LiveBoolean.trueIrValue, LiveBoolean.falseIrValue)
+    state.currentBlock.select("boxedBool")(predValue, LiveBoolean.trueIrValue, LiveBoolean.falseIrValue)
   }
 }
 
@@ -42,17 +46,13 @@ object LiveBoolean {
   def fromUnboxed(value : IrValue) : LiveValue = 
     new UnboxedLiveBoolean(value)
 
-  def genTruthinessCheck(initialState : GenerationState)(boxedValue : IrValue) : Option[(GenerationState, IrValue)] = {
+  def genTruthyCheck(initialState : GenerationState)(boxedValue : IrValue) : IrValue = {
     val block = initialState.currentBlock
 
     // Bitcast false constant to the expected value
     val bitcastFalseIrValue = BitcastToConstant(falseIrValue, boxedValue.irType)
 
     // Check if this is equal to the false singleton. If not, it's true
-    val falsePred = block.icmp("boxedFalsePred")(ComparisonCond.NotEqual, None, boxedValue, bitcastFalseIrValue)
-    // Sign extend to the CBool size
-    val falseBool = block.zextTo("boxedFalseBool")(falsePred, IntegerType(nfi.CBool.bits))
-
-    Some((initialState, falseBool))
+    block.icmp("truthyPred")(ComparisonCond.NotEqual, None, boxedValue, bitcastFalseIrValue)
   }
 } 

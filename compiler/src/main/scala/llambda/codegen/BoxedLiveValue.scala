@@ -5,16 +5,27 @@ import llambda.codegen.{boxedtype => bt}
 import llambda.codegen.llvmir._
 
 class BoxedLiveValue(val possibleTypes : Set[bt.ConcreteBoxedType], boxedValue : IrValue) extends LiveValue {
+  def genTruthyPredicate(state : GenerationState) : IrValue = {
+    if (possibleTypes.contains(bt.BoxedBoolean)) {
+      LiveBoolean.genTruthyCheck(state)(boxedValue)
+    }
+    else {
+      // All non-boolean values evaluate as true
+      IntegerConstant(IntegerType(1), 1)
+    }
+  }
+  
   private def genGenericUnboxing(initialState : GenerationState)(targetType : nfi.UnboxedType) : Option[(GenerationState, IrValue)] = 
     targetType match {
       case nfi.CBool =>
-        if (possibleTypes.contains(bt.BoxedBoolean)) {
-          LiveBoolean.genTruthinessCheck(initialState)(boxedValue)
-        }
-        else {
-          // All non-boolean values evaluate as true
-          Some((initialState, IntegerConstant(IntegerType(8), 1)))
-        }
+        // Generate the boolean predicate
+        val truthPred = genTruthyPredicate(initialState)
+
+        // Sign extend to the CBool size
+        val block = initialState.currentBlock
+        val truthBool = block.zextTo("truthBool")(truthPred, IntegerType(nfi.CBool.bits))
+
+        Some((initialState, truthBool))
 
       case intType : nfi.IntType =>
         genCastToBoxed(initialState)(bt.BoxedExactInteger).map({ case (state, boxedValue) =>

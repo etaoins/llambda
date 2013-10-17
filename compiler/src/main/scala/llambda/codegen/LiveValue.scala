@@ -9,6 +9,8 @@ abstract class LiveValue {
 
   def toNativeType(state : GenerationState)(targetType : nfi.NativeType) : Option[(GenerationState, IrValue)]
 
+  def genTruthyPredicate(state : GenerationState) : IrValue
+
   def toRequiredNativeType(state : GenerationState)(targetType : nfi.NativeType) : (GenerationState, IrValue) = {
     toNativeType(state)(targetType) getOrElse {
       throw new ImpossibleTypeConversionException("Unable to convert " + this.toString + " to " + targetType)
@@ -27,6 +29,12 @@ abstract class ConstantLiveValue(boxedType : bt.ConcreteBoxedType) extends LiveV
     val uncastIrValue = genBoxedConstant()
     BitcastToConstant(uncastIrValue, PointerType(targetType.irType))
   }
+
+  def genTruthyPredicate(state : GenerationState) : IrValue = {
+    val booleanIntValue = if (booleanValue) 1 else 0
+
+    IntegerConstant(IntegerType(1), booleanIntValue)
+  }
   
   def toNativeType(state : GenerationState)(targetType : nfi.NativeType) : Option[(GenerationState, IrConstant)] = {
     targetType match {
@@ -40,16 +48,9 @@ abstract class ConstantLiveValue(boxedType : bt.ConcreteBoxedType) extends LiveV
         }
 
       case nfi.CBool =>
-        // Convert our truthiness to 1/0
-        val boolInt = if (booleanValue) {
-          1
-        }
-        else {
-          0
-        }
-      
         // Make a constant out of it
-        val boolConstant = IntegerConstant(IntegerType(8), boolInt)
+        val booleanIntValue = if (booleanValue) 1 else 0
+        val boolConstant = IntegerConstant(IntegerType(8), booleanIntValue)
 
         Some((state, boolConstant))
 
@@ -76,8 +77,8 @@ abstract class UnboxedLiveValue(boxedType : bt.ConcreteBoxedType, nativeType : n
   val possibleTypes = Set(boxedType)
 
   // Should only be overriden by LiveBoolean
-  def genBooleanValue(state : GenerationState) : IrValue = 
-    GlobalVariable("lliby_true_value", PointerType(bt.BoxedBoolean.irType))
+  def genTruthyPredicate(state : GenerationState) : IrValue =
+    IntegerConstant(IntegerType(1), 1)
 
   def genBoxedValue(state : GenerationState) : IrValue
 
@@ -90,7 +91,7 @@ abstract class UnboxedLiveValue(boxedType : bt.ConcreteBoxedType, nativeType : n
 
   // This should be good for most subclasses except for numerics which support
   // implicit conversions
-  def genUnboxedValue(state : GenerationState)(targetType : nfi.NativeType) : Option[IrValue] = {
+  def genUnboxedValue(state : GenerationState)(targetType : nfi.UnboxedType) : Option[IrValue] = {
     if (targetType != nativeType) {
       None
     }
@@ -110,11 +111,18 @@ abstract class UnboxedLiveValue(boxedType : bt.ConcreteBoxedType, nativeType : n
           Some((state, genCastBoxedValue(state)(expectedType)))
         }
 
-      case nfi.CBool =>
-        Some((state, genBooleanValue(state)))
+      // If we're already a CBool we want to fall to genUnboxedValue so we 
+      // directly return our unboxed value instead of truncating then extending
+      case nfi.CBool if (nativeType != nfi.CBool) =>
+        val block = state.currentBlock
 
-      case unboxedType =>
-        genUnboxedValue(state)(targetType).map((state, _))
+        val truthyPred = genTruthyPredicate(state)
+        val truthyBool = block.zextTo("truthyBool")(truthyPred, IntegerType(nfi.CBool.bits))
+
+        Some((state, truthyBool))
+
+      case unboxedType : nfi.UnboxedType =>
+        genUnboxedValue(state)(unboxedType).map((state, _))
     }
   }
 }
