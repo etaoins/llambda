@@ -69,3 +69,23 @@
 (define-test "length of improper list fails" (expect-failure
 	(import (scheme core))
 	(length '(1 . 2))))
+
+(define-test "make empty list" (expect ()
+	(import (scheme core))
+	(make-list 0 4.0)))
+
+(define-test "make non-empty list" (expect (4.0 4.0 4.0 4.0)
+	(import (scheme core))
+	(make-list 4 4.0)))
+
+(define-test "copy empty list" (expect ()
+	(import (scheme core))
+	(list-copy '())))
+
+(define-test "copy non-empty list" (expect ((1.0 2.0 3.0) . (-1.0 2.0 3.0))
+	(import (scheme core))
+	(define immutable-list '(1.0 2.0 3.0))
+	(define copied-list (list-copy immutable-list))
+	; This shouldn't effect the immutable list
+	(set-car! copied-list -1.0)
+	(cons immutable-list copied-list)))

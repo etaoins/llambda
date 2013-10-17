@@ -8,9 +8,9 @@ namespace lliby
 namespace alloc
 {
     
-void *allocateCons()
+void *allocateCons(size_t count)
 {
-	return malloc(sizeof(Cons));
+	return malloc(sizeof(Cons) * count);
 }
 
 void preallocCons(size_t count)

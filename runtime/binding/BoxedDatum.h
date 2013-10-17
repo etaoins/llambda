@@ -21,6 +21,11 @@ public:
 		return alloc::allocateCons();
 	}
 
+	void *operator new(size_t s, BoxedDatum *placement)
+	{
+		return placement;
+	}
+
 	// We're garbage collected; don't allow delete
 	void operator delete(void *value) = delete;
 

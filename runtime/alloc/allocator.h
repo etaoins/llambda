@@ -11,7 +11,7 @@ namespace alloc
 /**
  * Allocator for BoxedDatums
  */
-void *allocateCons();
+void *allocateCons(size_t count = 1);
 void preallocCons(size_t count);
 void freeCons(void *);
 	
