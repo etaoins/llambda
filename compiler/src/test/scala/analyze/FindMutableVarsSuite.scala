@@ -78,7 +78,7 @@ class FindMutableVarsSuite extends FunSuite {
         et.Lambda(
           fixedArgs=Nil,
           restArg=None,
-          expressions=Nil
+          body=et.Begin(Nil)
         ),
         List(
           et.MutateVar(testLocA, et.Literal(ast.EmptyList))
@@ -105,9 +105,7 @@ class FindMutableVarsSuite extends FunSuite {
         et.Lambda(
           fixedArgs=Nil,
           restArg=None,
-          expressions=List(
-            et.MutateVar(testLocA, et.Literal(ast.EmptyList))
-          )
+          body=et.MutateVar(testLocA, et.Literal(ast.EmptyList))
         ),
         Nil
       )
@@ -131,7 +129,7 @@ class FindMutableVarsSuite extends FunSuite {
       et.Lambda(
         fixedArgs=Nil,
         restArg=None,
-        expressions=List(et.MutateVar(testLocA, et.Literal(ast.EmptyList)))
+        body=et.MutateVar(testLocA, et.Literal(ast.EmptyList))
       )
     )
     

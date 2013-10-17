@@ -5,6 +5,10 @@ sealed abstract trait Expression {
   val subexpressions : List[Expression]
 }
 
+case class Begin(expressions : List[Expression]) extends Expression {
+  val subexpressions = expressions
+}
+
 case class Apply(procedure : Expression, operands : List[Expression]) extends Expression {
   val subexpressions  = procedure :: operands
 }
@@ -25,8 +29,8 @@ case class Cond(test : Expression, trueExpr : Expression, falseExpr : Expression
   val subexpressions = test :: trueExpr :: falseExpr :: Nil
 }
 
-case class Lambda(fixedArgs : List[StorageLocation], restArg : Option[StorageLocation], expressions : List[Expression]) extends Expression {
-  val subexpressions = expressions
+case class Lambda(fixedArgs : List[StorageLocation], restArg : Option[StorageLocation], body : Expression) extends Expression {
+  val subexpressions = body :: Nil
 }
 
 case class Bind(bindings : List[(StorageLocation, Expression)]) extends Expression {

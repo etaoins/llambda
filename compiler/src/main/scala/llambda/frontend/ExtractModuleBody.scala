@@ -133,8 +133,17 @@ object ExtractModuleBody {
       case Nil => bodyExprs
       case _ => et.Bind(bindings) :: bodyExprs
     }
+
+    // Wrap our expressions in an et.Begin unless there's exactly one
+    // This isn't required but produces more readable ETs and unit tests
+    val bodyExpression = boundExprs match {
+      case singleValue :: Nil => 
+        singleValue
+      case otherValues =>
+        et.Begin(boundExprs)
+    }
       
-    et.Lambda(fixedArgs.map(_.boundValue), restArg.map(_.boundValue), boundExprs)
+    et.Lambda(fixedArgs.map(_.boundValue), restArg.map(_.boundValue), bodyExpression)
   }
 
   private def extractApplication(procedure : et.Expression, operands : List[sst.ScopedDatum]) : et.Expression = {

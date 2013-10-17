@@ -66,7 +66,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
          )))
          (lambda () 
            (func-returning if))"""
-    ) === et.Lambda(Nil, None, List(et.Lambda(Nil, None, List(et.VarRef(SchemePrimitives.If))))) )
+    ) === et.Lambda(Nil, None, et.Lambda(Nil, None, et.VarRef(SchemePrimitives.If))) )
   }
   
   test("two value expansion") {
@@ -334,7 +334,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
 
     inside(expr) {
       case et.Apply(et.Lambda(arg1 :: arg2 :: Nil, None, body), argVal1 :: argVal2 :: Nil) =>
-        assert(body === List(et.VarRef(arg1), et.VarRef(arg2)))
+        assert(body === et.Begin(List(et.VarRef(arg1), et.VarRef(arg2))))
         assert(argVal1 === et.Literal(ast.IntegerLiteral(1)))
         assert(argVal2 === et.Literal(ast.IntegerLiteral(2)))
     }
@@ -361,7 +361,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
     )(scope)
 
     inside(expr) {
-      case et.Apply(et.Lambda(arg :: Nil, None, bodyExpr :: Nil), argVal :: Nil) =>
+      case et.Apply(et.Lambda(arg :: Nil, None, bodyExpr), argVal :: Nil) =>
         assert(bodyExpr === et.Cond(et.VarRef(arg), et.VarRef(arg), et.Literal(ast.IntegerLiteral(2))))
         assert(argVal === et.Literal(ast.IntegerLiteral(1)))
     }
@@ -389,7 +389,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
     val expr = expressionFor("(or 1 2)")(expandScope) 
 
     inside(expr) {
-      case et.Apply(et.Lambda(arg :: Nil, None, bodyExpr :: Nil), argVal :: Nil) =>
+      case et.Apply(et.Lambda(arg :: Nil, None, bodyExpr), argVal :: Nil) =>
         assert(bodyExpr === et.Cond(et.VarRef(arg), et.VarRef(arg), et.Literal(ast.IntegerLiteral(2))))
         assert(argVal === et.Literal(ast.IntegerLiteral(1)))
     }

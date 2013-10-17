@@ -190,33 +190,33 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   test("lambdas") {
     inside(expressionFor("(lambda () #t)")) {
       case et.Lambda(Nil, None, body) =>
-        assert(body === List(et.Literal(ast.TrueLiteral)))
+        assert(body === et.Literal(ast.TrueLiteral))
     }
 
     inside(expressionFor("(lambda (x) x)")) {
       case et.Lambda(argX :: Nil, None, body) =>
-        assert(body === List(et.VarRef(argX)))
+        assert(body === et.VarRef(argX))
     }
     
     inside(expressionFor("(lambda x x)")) {
       case et.Lambda(Nil, Some(restArg), body) =>
-        assert(body === List(et.VarRef(restArg)))
+        assert(body === et.VarRef(restArg))
     }
 
     inside(expressionFor("(lambda (x y . z) x y z)")) {
       case et.Lambda(argX :: argY :: Nil, Some(restArg), body) =>
-        assert(body === List(
+        assert(body === et.Begin(List(
           et.VarRef(argX),
           et.VarRef(argY),
           et.VarRef(restArg)
-        ))
+        )))
     }
   }
   
   test("self-executing lambdas") {
     inside(expressionFor("((lambda (x) x) 1)")) {
       case et.Apply(et.Lambda(argX :: Nil, None, body), value :: Nil) =>
-        assert(body === List(et.VarRef(argX)))
+        assert(body === et.VarRef(argX))
         assert(value === et.Literal(ast.IntegerLiteral(1)))
     }
   }
@@ -227,11 +227,11 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
         (define foo (lambda (y) (bar x y)))
         (define bar (lambda (a b) (if a b)))
         (foo #t))""")) {
-      case et.Lambda(xLoc :: Nil, None, bindExpr :: bodyExpr :: Nil) =>
+      case et.Lambda(xLoc :: Nil, None, et.Begin(bindExpr :: bodyExpr :: Nil)) =>
         inside(bindExpr) {
           case et.Bind(
-            (fooLoc, et.Lambda(yLoc :: Nil, None, fooExpr :: Nil)) ::
-            (barLoc, et.Lambda(aLoc :: bLoc :: Nil, None, barExpr :: Nil)) :: Nil) =>
+            (fooLoc, et.Lambda(yLoc :: Nil, None, fooExpr)) ::
+            (barLoc, et.Lambda(aLoc :: bLoc :: Nil, None, barExpr)) :: Nil) =>
 
           assert(fooExpr === et.Apply(et.VarRef(barLoc), et.VarRef(xLoc) :: et.VarRef(yLoc) :: Nil))
           assert(barExpr === et.Cond(et.VarRef(aLoc), et.VarRef(bLoc), et.Literal(ast.UnspecificValue)))
@@ -248,8 +248,8 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-true").value
 
     inside(expr) {
-      case et.Bind((procLoc, et.Lambda(Nil, None, bodyExprs)) :: Nil) =>
-        assert(bodyExprs === List(et.Literal(ast.TrueLiteral)))
+      case et.Bind((procLoc, et.Lambda(Nil, None, bodyExpr)) :: Nil) =>
+        assert(bodyExpr === et.Literal(ast.TrueLiteral))
     }
 
     inside(scope.get("return-true").value) {
@@ -265,8 +265,8 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-true").value
 
     inside(expr) {
-      case et.Bind((procLoc, et.Lambda(_ :: Nil, None, bodyExprs)) :: Nil) =>
-        assert(bodyExprs === List(et.Literal(ast.TrueLiteral)))
+      case et.Bind((procLoc, et.Lambda(_ :: Nil, None, bodyExpr)) :: Nil) =>
+        assert(bodyExpr === et.Literal(ast.TrueLiteral))
     }
 
     inside(scope.get("return-true").value) {
@@ -282,8 +282,8 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-false").value
 
     inside(expr) {
-      case et.Bind((procLoc, et.Lambda(_ :: Nil, Some(_), bodyExprs)) :: Nil) =>
-        assert(bodyExprs === List(et.Literal(ast.FalseLiteral)))
+      case et.Bind((procLoc, et.Lambda(_ :: Nil, Some(_), bodyExpr)) :: Nil) =>
+        assert(bodyExpr === et.Literal(ast.FalseLiteral))
     }
 
     inside(scope.get("return-false").value) {
@@ -298,8 +298,8 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val expr = expressionFor("(define (return-six . rest) 6)")(scope)
     val procLoc = scope.get("return-six").value
     inside(expr) {
-      case et.Bind((procLoc, et.Lambda(Nil, Some(_), bodyExprs)) :: Nil) =>
-        assert(bodyExprs === List(et.Literal(ast.IntegerLiteral(6))))
+      case et.Bind((procLoc, et.Lambda(Nil, Some(_), bodyExpr)) :: Nil) =>
+        assert(bodyExpr === et.Literal(ast.IntegerLiteral(6)))
     }
     
     inside(scope.get("return-six").value) {
@@ -314,8 +314,8 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val expr = expressionFor("(define (return-self) return-self)")(scope)
     val procLoc = scope.get("return-self").value
     inside(expr) {
-      case et.Bind((procLoc, et.Lambda(Nil, None, bodyExprs)) :: Nil) =>
-        assert(bodyExprs === List(et.VarRef(procLoc)))
+      case et.Bind((procLoc, et.Lambda(Nil, None, bodyExpr)) :: Nil) =>
+        assert(bodyExpr === et.VarRef(procLoc))
     }
   }
   
@@ -330,7 +330,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     val expressions = bodyFor("(define x 1)(lambda (x) x)")(scope)
     inside(expressions) {
-      case et.Bind((shadowed, _) :: Nil) :: et.Lambda(argX :: Nil, None, et.VarRef(inner) :: Nil) :: Nil =>
+      case et.Bind((shadowed, _) :: Nil) :: et.Lambda(argX :: Nil, None, et.VarRef(inner)) :: Nil =>
         assert(inner != shadowed)
     }
   }
@@ -344,7 +344,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     )(scope) 
 
     inside(expressions) {
-      case et.Bind((shadowed, _) :: Nil) :: et.Lambda(Nil, None, et.Bind((inner, _) :: Nil) :: Nil) :: Nil =>
+      case et.Bind((shadowed, _) :: Nil) :: et.Lambda(Nil, None, et.Bind((inner, _) :: Nil)) :: Nil =>
         assert(inner != shadowed)
     }
   }
@@ -354,7 +354,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val expressions = bodyFor("(define y 1)(lambda (x) y)")(scope)
 
     inside(expressions) {
-      case et.Bind((outer, _) :: Nil) :: et.Lambda(argX :: Nil, None, et.VarRef(inner) :: Nil) :: Nil =>
+      case et.Bind((outer, _) :: Nil) :: et.Lambda(argX :: Nil, None, et.VarRef(inner)) :: Nil =>
         assert(outer === inner)
     }
   }
@@ -372,7 +372,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     }
 
     inside(expr) {
-      case et.Bind((loc, et.Lambda(Nil, None, List(et.Literal(ast.FalseLiteral)))) :: Nil) =>
+      case et.Bind((loc, et.Lambda(Nil, None, et.Literal(ast.FalseLiteral))) :: Nil) =>
         assert(loc === listBinding)
     }
   }
