@@ -6,16 +6,16 @@ from typegen.cxxutil import *
 
 OUTPUT_DIR = "runtime/binding/generated/"
 
-def _type_conditions_to_cxx(conditions):
+def _type_conditions_to_cxx(conditions, datum_access = ""):
     conditions_cxx = []
 
     # Build the C++ for each condition
     for condition in conditions:
         if isinstance(condition, TypeEqualsCondition):
             type_name = condition.boxed_type.name
-            conditions_cxx.append("(typeId() == BoxedTypeId::" + type_name_to_enum_constant(type_name) + ")")
+            conditions_cxx.append("(" + datum_access + "typeId() == BoxedTypeId::" + type_name_to_enum_constant(type_name) + ")")
         elif isinstance(condition, TypeBitmaskCondition):
-            conditions_cxx.append("(static_cast<int>(typeId()) & " + hex(condition.bitmask) + ")")
+            conditions_cxx.append("(static_cast<int>(" + datum_access + "typeId()) & " + hex(condition.bitmask) + ")")
         else:
             raise SemanticException("Unknown condition type " + condition.__name__)
 
@@ -64,51 +64,42 @@ def _generate_declaretypes(boxed_types):
 
     return guard_cxx_header(content, "_LLIBY_BINDING_DECLARETYPES_H")
 
-def _generate_casts(boxed_types):
-    content = ""
+def _generate_casts(boxed_types, type_name):
+    type_condition = _type_conditions_to_cxx(boxed_types[type_name].type_conditions, "datum->")
 
-    for type_name, boxed_type in boxed_types.items():
-        if not boxed_type.type_conditions:
-            continue
+    cxx_base_type_name = type_name_to_clike_class(BASE_TYPE)
+    cxx_type_name = type_name_to_clike_class(type_name)
+
+    content  = "\tstatic " + cxx_type_name + "* fromDatum(" + cxx_base_type_name + " *datum)\n" 
+    content += "\t{\n"
+    content += "\t\tif (" + type_condition + ")\n"
+    content += "\t\t{\n"
+    content += "\t\t\treturn reinterpret_cast<" + cxx_type_name + "*>(datum);\n"
+    content += "\t\t}\n\n"
+    content += "\t\treturn nullptr;\n"
+    content += "\t}\n\n"
     
-        if type_name == BASE_TYPE:
-            # Doesn't make sense - every type is a subtype of the base type
-            continue
-
-        # Build our type condition
-        type_condition = _type_conditions_to_cxx(boxed_type.type_conditions)
-        cxx_type_name = type_name_to_clike_class(type_name)
-        
-        content += "\t" + cxx_type_name + "* as" + cxx_type_name + "()\n" 
-        content += "\t{\n"
-        content += "\t\tif (" + type_condition + ")\n"
-        content += "\t\t{\n"
-        content += "\t\t\treturn reinterpret_cast<" + cxx_type_name + "*>(this);\n"
-        content += "\t\t}\n\n"
-        content += "\t\treturn nullptr;\n"
-        content += "\t}\n\n"
-        
-        content += "\tconst " + cxx_type_name + "* as" + cxx_type_name + "() const\n" 
-        content += "\t{\n"
-        content += "\t\tif (" + type_condition + ")\n"
-        content += "\t\t{\n"
-        content += "\t\t\treturn reinterpret_cast<const " + cxx_type_name + "*>(this);\n"
-        content += "\t\t}\n\n"
-        content += "\t\treturn nullptr;\n"
-        content += "\t}\n\n"
-        
-        content += "\tbool is" + cxx_type_name + "() const\n" 
-        content += "\t{\n"
-        content += "\t\treturn " + type_condition + ";\n"
-        content += "\t}\n\n"
+    content += "\tstatic const " + cxx_type_name + "* fromDatum(const " + cxx_base_type_name + " *datum)\n" 
+    content += "\t{\n"
+    content += "\t\tif (" + type_condition + ")\n"
+    content += "\t\t{\n"
+    content += "\t\t\treturn reinterpret_cast<const " + cxx_type_name + "*>(datum);\n"
+    content += "\t\t}\n\n"
+    content += "\t\treturn nullptr;\n"
+    content += "\t}\n\n"
+    
+    content += "\tstatic bool isInstance(const " + cxx_base_type_name + " *datum)\n" 
+    content += "\t{\n"
+    content += "\t\treturn " + type_condition + ";\n"
+    content += "\t}\n\n"
 
     return content
 
 
 def _generate_type_members(boxed_types, type_name):
     boxed_type = boxed_types[type_name]
-    base_name  = type_name_to_clike_class(boxed_type.name) + 'Members'
-    filename = OUTPUT_DIR + base_name + ".h"
+    filename  = type_name_to_clike_class(boxed_type.name) + 'Members'
+    file_path = OUTPUT_DIR + filename + ".h"
 
     data_content = ""
     accessor_content = ""
@@ -130,7 +121,7 @@ def _generate_type_members(boxed_types, type_name):
         accessor_content += "\t{\n"
         accessor_content += "\t\treturn " + member_name + ";\n"
         accessor_content += "\t}\n\n"
-    
+
     # Glue everything together in the right order
     content  = GENERATED_FILE_COMMENT
 
@@ -138,15 +129,15 @@ def _generate_type_members(boxed_types, type_name):
         content += "public:\n"
         content += accessor_content
 
-    if (type_name == BASE_TYPE):
+    if type_name != BASE_TYPE:
         content += "public:\n"
-        content += _generate_casts(boxed_types)
+        content += _generate_casts(boxed_types, type_name)
 
     if data_content:
         content += "private:\n"
         content += data_content
 
-    return {filename: content}
+    return {file_path: content}
 
 def generate_cxx_binding(boxed_types):
     files = {}

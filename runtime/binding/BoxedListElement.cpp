@@ -58,7 +58,7 @@ std::int64_t BoxedListElement::listLength() const
 	const BoxedDatum *datum = this;
 	std::uint32_t length = 0;
 
-	while(auto pair = datum->asBoxedPair())
+	while(auto pair = datum_cast<BoxedPair>(datum))
 	{
 		length++;
 		datum = pair->cdr();

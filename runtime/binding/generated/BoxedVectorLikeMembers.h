@@ -13,6 +13,32 @@ public:
 		return m_elements;
 	}
 
+public:
+	static BoxedVectorLike* fromDatum(BoxedDatum *datum)
+	{
+		if ((static_cast<int>(datum->typeId()) & 0x8000))
+		{
+			return reinterpret_cast<BoxedVectorLike*>(datum);
+		}
+
+		return nullptr;
+	}
+
+	static const BoxedVectorLike* fromDatum(const BoxedDatum *datum)
+	{
+		if ((static_cast<int>(datum->typeId()) & 0x8000))
+		{
+			return reinterpret_cast<const BoxedVectorLike*>(datum);
+		}
+
+		return nullptr;
+	}
+
+	static bool isInstance(const BoxedDatum *datum)
+	{
+		return (static_cast<int>(datum->typeId()) & 0x8000);
+	}
+
 private:
 	std::uint32_t m_length;
 	BoxedDatum** m_elements;

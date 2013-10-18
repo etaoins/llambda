@@ -8,5 +8,31 @@ public:
 		return m_unicodeChar;
 	}
 
+public:
+	static BoxedCharacter* fromDatum(BoxedDatum *datum)
+	{
+		if ((datum->typeId() == BoxedTypeId::Character))
+		{
+			return reinterpret_cast<BoxedCharacter*>(datum);
+		}
+
+		return nullptr;
+	}
+
+	static const BoxedCharacter* fromDatum(const BoxedDatum *datum)
+	{
+		if ((datum->typeId() == BoxedTypeId::Character))
+		{
+			return reinterpret_cast<const BoxedCharacter*>(datum);
+		}
+
+		return nullptr;
+	}
+
+	static bool isInstance(const BoxedDatum *datum)
+	{
+		return (datum->typeId() == BoxedTypeId::Character);
+	}
+
 private:
 	UnicodeChar m_unicodeChar;

@@ -44,6 +44,30 @@ protected:
 	}
 };
 
+template <class T>
+T* datum_cast(BoxedDatum *datumValue)
+{
+	return T::fromDatum(datumValue);
+}
+
+template <class T>
+const T* datum_cast(const BoxedDatum *datumValue)
+{
+	return T::fromDatum(datumValue);
+}
+
+template <>
+inline BoxedDatum* datum_cast<BoxedDatum>(BoxedDatum *datumValue)
+{
+	return datumValue;
+}
+
+template <>
+inline const BoxedDatum* datum_cast<BoxedDatum>(const BoxedDatum *datumValue)
+{
+	return datumValue;
+}
+
 }
 
 #endif

@@ -11,10 +11,10 @@ int main(int argc, char *argv[])
 
 	lliby_init();
 
-	ASSERT_TRUE(BoxedUnspecific::instance()->asBoxedUnspecific() != nullptr);
+	ASSERT_TRUE(BoxedUnspecific::isInstance(BoxedUnspecific::instance()));
 	ASSERT_EQUAL(BoxedBoolean::trueInstance()->value(), true);
 	ASSERT_EQUAL(BoxedBoolean::falseInstance()->value(), false);
-	ASSERT_TRUE(BoxedEmptyList::instance()->asBoxedEmptyList() != nullptr);
+	ASSERT_TRUE(BoxedEmptyList::isInstance(BoxedEmptyList::instance()));
 
 	return 0;
 }

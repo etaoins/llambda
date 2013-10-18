@@ -3,6 +3,22 @@
  *****************************************************************/
 
 #include "binding/BoxedDatum.h"
+#include "binding/BoxedUnspecific.h"
+#include "binding/BoxedListElement.h"
+#include "binding/BoxedPair.h"
+#include "binding/BoxedEmptyList.h"
+#include "binding/BoxedStringLike.h"
+#include "binding/BoxedString.h"
+#include "binding/BoxedSymbol.h"
+#include "binding/BoxedBoolean.h"
+#include "binding/BoxedNumeric.h"
+#include "binding/BoxedExactInteger.h"
+#include "binding/BoxedInexactRational.h"
+#include "binding/BoxedCharacter.h"
+#include "binding/BoxedBytevector.h"
+#include "binding/BoxedProcedure.h"
+#include "binding/BoxedVectorLike.h"
+#include "binding/BoxedVector.h"
 
 using namespace lliby;
 
@@ -11,82 +27,82 @@ extern "C"
 
 bool lliby_is_unspecific(const BoxedDatum *value)
 {
-	return value->isBoxedUnspecific();
+	return BoxedUnspecific::isInstance(value);
 }
 
 bool lliby_is_list_element(const BoxedDatum *value)
 {
-	return value->isBoxedListElement();
+	return BoxedListElement::isInstance(value);
 }
 
 bool lliby_is_pair(const BoxedDatum *value)
 {
-	return value->isBoxedPair();
+	return BoxedPair::isInstance(value);
 }
 
 bool lliby_is_empty_list(const BoxedDatum *value)
 {
-	return value->isBoxedEmptyList();
+	return BoxedEmptyList::isInstance(value);
 }
 
 bool lliby_is_string_like(const BoxedDatum *value)
 {
-	return value->isBoxedStringLike();
+	return BoxedStringLike::isInstance(value);
 }
 
 bool lliby_is_string(const BoxedDatum *value)
 {
-	return value->isBoxedString();
+	return BoxedString::isInstance(value);
 }
 
 bool lliby_is_symbol(const BoxedDatum *value)
 {
-	return value->isBoxedSymbol();
+	return BoxedSymbol::isInstance(value);
 }
 
 bool lliby_is_boolean(const BoxedDatum *value)
 {
-	return value->isBoxedBoolean();
+	return BoxedBoolean::isInstance(value);
 }
 
 bool lliby_is_numeric(const BoxedDatum *value)
 {
-	return value->isBoxedNumeric();
+	return BoxedNumeric::isInstance(value);
 }
 
 bool lliby_is_exact_integer(const BoxedDatum *value)
 {
-	return value->isBoxedExactInteger();
+	return BoxedExactInteger::isInstance(value);
 }
 
 bool lliby_is_inexact_rational(const BoxedDatum *value)
 {
-	return value->isBoxedInexactRational();
+	return BoxedInexactRational::isInstance(value);
 }
 
 bool lliby_is_character(const BoxedDatum *value)
 {
-	return value->isBoxedCharacter();
+	return BoxedCharacter::isInstance(value);
 }
 
 bool lliby_is_bytevector(const BoxedDatum *value)
 {
-	return value->isBoxedBytevector();
+	return BoxedBytevector::isInstance(value);
 }
 
 bool lliby_is_procedure(const BoxedDatum *value)
 {
-	return value->isBoxedProcedure();
+	return BoxedProcedure::isInstance(value);
 }
 
 bool lliby_is_vector_like(const BoxedDatum *value)
 {
-	return value->isBoxedVectorLike();
+	return BoxedVectorLike::isInstance(value);
 }
 
 bool lliby_is_vector(const BoxedDatum *value)
 {
-	return value->isBoxedVector();
+	return BoxedVector::isInstance(value);
 }
 
 

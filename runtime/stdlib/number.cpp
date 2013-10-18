@@ -11,7 +11,7 @@ extern "C"
 
 std::int64_t lliby_exact(BoxedNumeric *numeric)
 {
-	if (auto exactInt = numeric->asBoxedExactInteger())
+	if (auto exactInt = datum_cast<BoxedExactInteger>(numeric))
 	{
 		// This is already exact
 		return exactInt->value();
@@ -30,7 +30,7 @@ std::int64_t lliby_exact(BoxedNumeric *numeric)
 
 double lliby_inexact(BoxedNumeric *numeric)
 {
-	if (auto inexactRational = numeric->asBoxedInexactRational())
+	if (auto inexactRational = datum_cast<BoxedInexactRational>(numeric))
 	{
 		// This is already inexact
 		return inexactRational->value();

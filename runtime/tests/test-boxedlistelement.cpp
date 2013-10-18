@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
 			valueA
 		});
 
-		BoxedPair *onlyPair = properList->asBoxedPair();
+		BoxedPair *onlyPair = datum_cast<BoxedPair>(properList);
 
 		ASSERT_TRUE(onlyPair != nullptr);
 		ASSERT_EQUAL(onlyPair->car(), valueA);
@@ -43,18 +43,18 @@ int main(int argc, char *argv[])
 			valueC
 		});
 
-		BoxedPair *firstPair = properList->asBoxedPair();
+		BoxedPair *firstPair = datum_cast<BoxedPair>(properList);
 
 		ASSERT_TRUE(firstPair != nullptr);
 		ASSERT_EQUAL(firstPair->car(), valueA);
 		ASSERT_EQUAL(firstPair->listLength(), 3);
 
-		BoxedPair *secondPair = firstPair->cdr()->asBoxedPair();
+		BoxedPair *secondPair = datum_cast<BoxedPair>(firstPair->cdr());
 		ASSERT_TRUE(secondPair != nullptr);
 		ASSERT_EQUAL(secondPair->car(), valueB);
 		ASSERT_EQUAL(secondPair->listLength(), 2);
 		
-		BoxedPair *thirdPair = secondPair->cdr()->asBoxedPair();
+		BoxedPair *thirdPair = datum_cast<BoxedPair>(secondPair->cdr());
 		ASSERT_TRUE(thirdPair != nullptr);
 		ASSERT_EQUAL(thirdPair->car(), valueC);
 		ASSERT_EQUAL(thirdPair->cdr(), BoxedEmptyList::instance());
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 		ASSERT_EQUAL(firstPair->car(), valueA);
 		ASSERT_EQUAL(firstPair->listLength(), BoxedListElement::InvalidListLength);
 
-		BoxedPair *secondPair = firstPair->cdr()->asBoxedPair();
+		BoxedPair *secondPair = datum_cast<BoxedPair>(firstPair->cdr());
 		ASSERT_TRUE(secondPair != nullptr);
 		
 		ASSERT_EQUAL(secondPair->car(), valueB);

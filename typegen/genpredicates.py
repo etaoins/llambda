@@ -11,7 +11,11 @@ def generate_predicates(boxed_types):
 
     content  = GENERATED_FILE_COMMENT
 
-    content += '#include "binding/' + cxx_base_type + '.h"\n\n'
+    for type_name, boxed_type in boxed_types.items():
+        cxx_type_name = type_name_to_clike_class(type_name)
+        content += '#include "binding/' + cxx_type_name + '.h"\n'
+
+    content += '\n'
 
     content += 'using namespace lliby;\n\n'
 
@@ -19,10 +23,6 @@ def generate_predicates(boxed_types):
     content += '{\n\n'
 
     for type_name, boxed_type in boxed_types.items():
-        if not boxed_type.type_conditions:
-            # Can't check types without a type condition
-            continue
-        
         if type_name == BASE_TYPE:
             # Doesn't make sense - every type is a subtype of the base type
             continue
@@ -32,7 +32,7 @@ def generate_predicates(boxed_types):
 
         content += 'bool ' + function_name + '(const ' + cxx_base_type + ' *value)\n'
         content += '{\n'
-        content += '\treturn value->is' + cxx_type_name + '();\n'
+        content += '\treturn ' + cxx_type_name + '::isInstance(value);\n'
         content += '}\n\n'
     
     content += '\n'

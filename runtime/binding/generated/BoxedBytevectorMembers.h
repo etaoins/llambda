@@ -13,6 +13,32 @@ public:
 		return m_data;
 	}
 
+public:
+	static BoxedBytevector* fromDatum(BoxedDatum *datum)
+	{
+		if ((datum->typeId() == BoxedTypeId::Bytevector))
+		{
+			return reinterpret_cast<BoxedBytevector*>(datum);
+		}
+
+		return nullptr;
+	}
+
+	static const BoxedBytevector* fromDatum(const BoxedDatum *datum)
+	{
+		if ((datum->typeId() == BoxedTypeId::Bytevector))
+		{
+			return reinterpret_cast<const BoxedBytevector*>(datum);
+		}
+
+		return nullptr;
+	}
+
+	static bool isInstance(const BoxedDatum *datum)
+	{
+		return (datum->typeId() == BoxedTypeId::Bytevector);
+	}
+
 private:
 	std::uint32_t m_length;
 	std::uint8_t* m_data;

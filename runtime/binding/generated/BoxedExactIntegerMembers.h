@@ -8,5 +8,31 @@ public:
 		return m_value;
 	}
 
+public:
+	static BoxedExactInteger* fromDatum(BoxedDatum *datum)
+	{
+		if ((datum->typeId() == BoxedTypeId::ExactInteger))
+		{
+			return reinterpret_cast<BoxedExactInteger*>(datum);
+		}
+
+		return nullptr;
+	}
+
+	static const BoxedExactInteger* fromDatum(const BoxedDatum *datum)
+	{
+		if ((datum->typeId() == BoxedTypeId::ExactInteger))
+		{
+			return reinterpret_cast<const BoxedExactInteger*>(datum);
+		}
+
+		return nullptr;
+	}
+
+	static bool isInstance(const BoxedDatum *datum)
+	{
+		return (datum->typeId() == BoxedTypeId::ExactInteger);
+	}
+
 private:
 	std::int64_t m_value;

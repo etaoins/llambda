@@ -18,6 +18,32 @@ public:
 		return m_utf8Data;
 	}
 
+public:
+	static BoxedStringLike* fromDatum(BoxedDatum *datum)
+	{
+		if ((datum->typeId() == BoxedTypeId::String) || (datum->typeId() == BoxedTypeId::Symbol))
+		{
+			return reinterpret_cast<BoxedStringLike*>(datum);
+		}
+
+		return nullptr;
+	}
+
+	static const BoxedStringLike* fromDatum(const BoxedDatum *datum)
+	{
+		if ((datum->typeId() == BoxedTypeId::String) || (datum->typeId() == BoxedTypeId::Symbol))
+		{
+			return reinterpret_cast<const BoxedStringLike*>(datum);
+		}
+
+		return nullptr;
+	}
+
+	static bool isInstance(const BoxedDatum *datum)
+	{
+		return (datum->typeId() == BoxedTypeId::String) || (datum->typeId() == BoxedTypeId::Symbol);
+	}
+
 private:
 	std::uint32_t m_charLength;
 	std::uint32_t m_byteLength;

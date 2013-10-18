@@ -16,57 +16,59 @@
 #include "binding/BoxedBytevector.h"
 #include "binding/BoxedVector.h"
 #include "binding/BoxedCharacter.h"
+#include "binding/BoxedEmptyList.h"
+#include "binding/BoxedProcedure.h"
 
 namespace lliby
 {
 
 void ExternalFormDatumWriter::render(const BoxedDatum *datum)
 {
-	if (auto value = datum->asBoxedUnspecific())
+	if (auto value = datum_cast<BoxedUnspecific>(datum))
 	{
 		renderUnspecific(value);
 	}
-	else if (auto value = datum->asBoxedEmptyList())
+	else if (auto value = datum_cast<BoxedEmptyList>(datum))
 	{
 		renderEmptyList(value);
 	}
-	else if (auto value = datum->asBoxedBoolean())
+	else if (auto value = datum_cast<BoxedBoolean>(datum))
 	{
 		renderBoolean(value);
 	}
-	else if (auto value = datum->asBoxedExactInteger())
+	else if (auto value = datum_cast<BoxedExactInteger>(datum))
 	{
 		renderExactInteger(value);
 	}
-	else if (auto value = datum->asBoxedInexactRational())
+	else if (auto value = datum_cast<BoxedInexactRational>(datum))
 	{
 		renderInexactRational(value);
 	}
-	else if (auto value = datum->asBoxedSymbol())
+	else if (auto value = datum_cast<BoxedSymbol>(datum))
 	{
 		renderStringLike(value, static_cast<std::uint8_t>('|'), false);
 	}
-	else if (auto value = datum->asBoxedString())
+	else if (auto value = datum_cast<BoxedString>(datum))
 	{
 		renderStringLike(value, static_cast<std::uint8_t>('"'), true);
 	}
-	else if (auto value = datum->asBoxedPair())
+	else if (auto value = datum_cast<BoxedPair>(datum))
 	{
 		renderPair(value);
 	}
-	else if (auto value = datum->asBoxedBytevector())
+	else if (auto value = datum_cast<BoxedBytevector>(datum))
 	{
 		renderBytevector(value);
 	}
-	else if (auto value = datum->asBoxedVector())
+	else if (auto value = datum_cast<BoxedVector>(datum))
 	{
 		renderVector(value);
 	}
-	else if (auto value = datum->asBoxedProcedure())
+	else if (auto value = datum_cast<BoxedProcedure>(datum))
 	{
 		renderProcedure(value);
 	}
-	else if (auto value = datum->asBoxedCharacter())
+	else if (auto value = datum_cast<BoxedCharacter>(datum))
 	{
 		renderCharacter(value);
 	}
@@ -214,11 +216,11 @@ void ExternalFormDatumWriter::renderPair(const BoxedPair *value, bool inList)
 
 	render(value->car());
 
-	if (value->cdr()->isBoxedEmptyList())
+	if (BoxedEmptyList::isInstance(value->cdr()))
 	{
 		m_outStream << ")";
 	}
-	else if (auto rest = value->cdr()->asBoxedPair())
+	else if (auto rest = datum_cast<BoxedPair>(value->cdr()))
 	{
 		m_outStream << " ";
 		renderPair(rest, true);

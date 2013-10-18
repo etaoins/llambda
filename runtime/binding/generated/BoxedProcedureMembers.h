@@ -18,6 +18,32 @@ public:
 		return m_entryPoint;
 	}
 
+public:
+	static BoxedProcedure* fromDatum(BoxedDatum *datum)
+	{
+		if ((datum->typeId() == BoxedTypeId::Procedure))
+		{
+			return reinterpret_cast<BoxedProcedure*>(datum);
+		}
+
+		return nullptr;
+	}
+
+	static const BoxedProcedure* fromDatum(const BoxedDatum *datum)
+	{
+		if ((datum->typeId() == BoxedTypeId::Procedure))
+		{
+			return reinterpret_cast<const BoxedProcedure*>(datum);
+		}
+
+		return nullptr;
+	}
+
+	static bool isInstance(const BoxedDatum *datum)
+	{
+		return (datum->typeId() == BoxedTypeId::Procedure);
+	}
+
 private:
 	std::uint32_t m_capturedDataLength;
 	BoxedDatum*** m_capturedData;

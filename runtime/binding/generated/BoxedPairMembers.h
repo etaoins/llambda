@@ -13,6 +13,32 @@ public:
 		return m_cdr;
 	}
 
+public:
+	static BoxedPair* fromDatum(BoxedDatum *datum)
+	{
+		if ((datum->typeId() == BoxedTypeId::Pair))
+		{
+			return reinterpret_cast<BoxedPair*>(datum);
+		}
+
+		return nullptr;
+	}
+
+	static const BoxedPair* fromDatum(const BoxedDatum *datum)
+	{
+		if ((datum->typeId() == BoxedTypeId::Pair))
+		{
+			return reinterpret_cast<const BoxedPair*>(datum);
+		}
+
+		return nullptr;
+	}
+
+	static bool isInstance(const BoxedDatum *datum)
+	{
+		return (datum->typeId() == BoxedTypeId::Pair);
+	}
+
 private:
 	BoxedDatum* m_car;
 	BoxedDatum* m_cdr;
