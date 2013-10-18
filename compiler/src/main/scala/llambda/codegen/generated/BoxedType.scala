@@ -42,6 +42,10 @@ sealed abstract class BoxedType {
     else {
       block.bitcastTo(name + "Cast")(uncastValue, PointerType(irType))
     }
+
+  def genPointerToTypeId(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue
+
+  def genPointerToGcState(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue
 }
 
 sealed abstract class ConcreteBoxedType extends BoxedType {

@@ -152,11 +152,11 @@ def _generate_constant_constructor(all_types, boxed_type):
 
     return output
 
-def _generate_field_accessors(leaf_type, current_type, depth = 1):
+def _generate_field_accessors(leaf_type, current_type, declare_only = False, depth = 1):
     supertype = current_type.supertype
 
     if supertype:
-        output  = _generate_field_accessors(leaf_type, supertype, depth + 1)
+        output  = _generate_field_accessors(leaf_type, supertype, declare_only, depth + 1)
 
         # Our supertype is our first "field"
         field_counter = 1
@@ -168,7 +168,14 @@ def _generate_field_accessors(leaf_type, current_type, depth = 1):
         accessor_name = 'genPointerTo' + _uppercase_first(field_name)
 
         output += '\n'
-        output += '  def ' + accessor_name + '(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {\n'
+        output += '  def ' + accessor_name + '(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue'
+
+        if declare_only:
+            output += '\n'
+            # Only need the declaration
+            continue
+        
+        output += ' = {\n'
         
         # Make sure we're the correct type
         exception_message = "Unexpected type for boxed value. Passed ${boxedValue.irType}, expected %" + leaf_type.name + "*"
@@ -250,6 +257,8 @@ def _generate_type_check(all_types, boxed_type):
     return output
 
 def _generate_boxed_types(all_types):
+    base_type = all_types[BASE_TYPE]
+
     output  = GENERATED_FILE_COMMENT
     
     output += "package llambda.codegen.boxedtype\n\n"
@@ -292,6 +301,7 @@ def _generate_boxed_types(all_types):
     output += '    else {\n'
     output += '      block.bitcastTo(name + "Cast")(uncastValue, PointerType(irType))\n'
     output += '    }\n'
+    output += _generate_field_accessors(base_type, base_type, True)
     output += '}\n\n'
 
     output += 'sealed abstract class ConcreteBoxedType extends BoxedType {\n'
