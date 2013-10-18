@@ -43,8 +43,8 @@ object ExtractNativeFunction
     }
 
     val hasRestArg = restArgType match {
-      case Some("boxed-pair") => true
-      case Some(other) => throw new BadSpecialFormException("Only boxed-datum can be used as a rest argument. Found: " + other)
+      case Some("boxed-list-element") => true
+      case Some(other) => throw new BadSpecialFormException("Only boxed-list-element can be used as a rest argument. Found: " + other)
       case None => false
     }
 
