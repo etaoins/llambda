@@ -62,10 +62,11 @@
 	  (define exact (native-function "lliby_exact" (boxed-numeric) int64))
 	  (define inexact (native-function "lliby_inexact" (boxed-numeric) double)))
 
-	(export boolean? not)
+	(export boolean? not boolean=?)
 	(begin
 	  (define boolean? (native-function "lliby_is_boolean" (boxed-datum) bool))
-	  (define not (native-function "lliby_not" (bool) bool)))
+	  (define not (native-function "lliby_not" (truthy-bool) bool))
+	  (define boolean=? (native-function "lliby_boolean_equal" (strict-bool strict-bool . boxed-list-element) bool)))
 
 	(export write)
 	(begin

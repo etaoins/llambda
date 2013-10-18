@@ -41,14 +41,16 @@ abstract class UnboxedLiveValue(boxedType : bt.ConcreteBoxedType, nativeType : n
         else {
           Some((state, genCastBoxedValue(state)(expectedType)))
         }
+      
+      case nfi.CTruthyBool if nativeType == nfi.CStrictBool =>
+        // We can return this directy without truncating and extending it
+        Some((state, unboxedValue))
 
-      // If we're already a CBool we want to fall to genUnboxedValue so we 
-      // directly return our unboxed value instead of truncating then extending
-      case nfi.CBool if (nativeType != nfi.CBool) =>
+      case nfi.CTruthyBool =>
         val block = state.currentBlock
 
         val truthyPred = genTruthyPredicate(state)
-        val truthyBool = block.zextTo("truthyBool")(truthyPred, IntegerType(nfi.CBool.bits))
+        val truthyBool = block.zextTo("truthyBool")(truthyPred, IntegerType(nfi.CStrictBool.bits))
 
         Some((state, truthyBool))
 

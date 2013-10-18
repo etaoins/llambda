@@ -8,7 +8,9 @@ sealed abstract class UnboxedType extends NativeType
 
 sealed abstract class IntLikeType(val bits : Int, val signed : Boolean) extends UnboxedType
 
-case object CBool extends IntLikeType(8, false)
+sealed abstract class CBool extends IntLikeType(8, false)
+case object CStrictBool extends CBool
+case object CTruthyBool extends CBool
 
 sealed abstract class IntType(bits : Int, signed : Boolean) extends IntLikeType(bits, signed)
 

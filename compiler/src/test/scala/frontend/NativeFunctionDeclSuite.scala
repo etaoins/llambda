@@ -44,6 +44,18 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
     }
   }
   
+  test("function taking strict-bool and returning bool") {
+    assertResult(et.NativeFunction(nfi.CStrictBool :: Nil, false, Some(nfi.CStrictBool), "lliby_newline")) {
+      expressionFor("""(native-function "lliby_newline" (strict-bool) bool)""")
+    }
+  }
+  
+  test("function taking truthy-bool and returning bool") {
+    assertResult(et.NativeFunction(nfi.CTruthyBool :: Nil, false, Some(nfi.CStrictBool), "lliby_newline")) {
+      expressionFor("""(native-function "lliby_newline" (truthy-bool) bool)""")
+    }
+  }
+  
   test("function taking uint8 and returning unicode char") {
     assertResult(et.NativeFunction(nfi.Int8 :: Nil, false, Some(nfi.UnicodeChar), "lliby_newline")) {
       expressionFor("""(native-function "lliby_newline" (int8) unicode-char)""")
@@ -63,11 +75,10 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   }
   
   test("function with fixed and rest args") {
-    assertResult(et.NativeFunction(nfi.CBool :: Nil, true, Some(nfi.Int32), "lliby_misc")) {
-      expressionFor("""(native-function "lliby_misc" (bool . boxed-list-element) int)""")
+    assertResult(et.NativeFunction(nfi.CStrictBool :: Nil, true, Some(nfi.Int32), "lliby_misc")) {
+      expressionFor("""(native-function "lliby_misc" (strict-bool . boxed-list-element) int)""")
     }
   }
-  
   
   test("function with non-list element rest arg") {
     intercept[BadSpecialFormException] {
@@ -96,6 +107,18 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   test("function taking non-symbol") {
     intercept[BadSpecialFormException] {
       expressionFor("""(native-function "lliby_newline" (4) void)""")
+    }
+  }
+  
+  test("function returning truthy bool") {
+    intercept[BadSpecialFormException] {
+      expressionFor("""(native-function "lliby_newline" () truthy-bool)""")
+    }
+  }
+  
+  test("function returning strict  bool") {
+    intercept[BadSpecialFormException] {
+      expressionFor("""(native-function "lliby_newline" () strict-bool)""")
     }
   }
 }

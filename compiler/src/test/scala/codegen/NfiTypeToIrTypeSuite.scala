@@ -6,7 +6,7 @@ import org.scalatest.FunSuite
 
 class NfiTypeToIrTypeSuite extends FunSuite {
   test("bool") {
-    val typeWithSign = NfiTypeToIrType(nfi.CBool)
+    val typeWithSign = NfiTypeToIrType(nfi.CStrictBool)
 
     assert(typeWithSign.irType === llvmir.IntegerType(8))
     assert(typeWithSign.signed === Some(false))

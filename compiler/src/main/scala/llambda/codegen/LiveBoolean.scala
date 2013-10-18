@@ -16,11 +16,14 @@ private class ConstantLiveBoolean(module : IrModuleBuilder)(constantValue : Bool
     }
   }
   
-  // This is handled by ConstantLiveValue looking at booleanValue 
-  val genUnboxedConstant : PartialFunction[nfi.NativeType, IrConstant] = Map.empty
+  val genUnboxedConstant : PartialFunction[nfi.NativeType, IrConstant] = {
+    case nfi.CStrictBool =>
+      val booleanIntValue = if (booleanValue) 1 else 0
+      IntegerConstant(IntegerType(nfi.CStrictBool.bits), booleanIntValue)
+  }
 }
 
-private class UnboxedLiveBoolean(unboxedValue : IrValue) extends UnboxedLiveValue(bt.BoxedBoolean, nfi.CBool, unboxedValue) {
+private class UnboxedLiveBoolean(unboxedValue : IrValue) extends UnboxedLiveValue(bt.BoxedBoolean, nfi.CStrictBool, unboxedValue) {
   override def genTruthyPredicate(state : GenerationState) : IrValue = {
     val block = state.currentBlock
 

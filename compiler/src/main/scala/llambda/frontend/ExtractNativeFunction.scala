@@ -4,7 +4,7 @@ import llambda._
 
 object ExtractNativeFunction
 {
-  private def parseNativeType(typeString : String) : nfi.NativeType = typeString match {
+  private def parseNativeType(typeString : String, returnType : Boolean) : nfi.NativeType = typeString match {
     case "int8"   => nfi.Int8
     case "int16"  => nfi.Int16
     case "int32"  => nfi.Int32
@@ -18,10 +18,13 @@ object ExtractNativeFunction
     case "utf8-cstring" => nfi.Utf8CString
 
     case "unicode-char" => nfi.UnicodeChar
+    
+    case "bool"        if returnType   => nfi.CStrictBool
+    case "strict-bool" if !returnType  => nfi.CStrictBool
+    case "truthy-bool" if !returnType  => nfi.CTruthyBool
 
     // XXX: This assumes Unix-like LP64: 64bit Linux, FreeBSD, Mac OS X, etc 
     // These aliases are here so we can do the right thing when porting to other archs
-    case "bool"   => nfi.CBool
     case "short"  => nfi.Int16
     case "int"    => nfi.Int32
     case "long"   => nfi.Int64
@@ -38,7 +41,7 @@ object ExtractNativeFunction
     
   private def createNativeFunction(fixedArgData : List[sst.ScopedDatum], restArgType : Option[String], returnTypeString : String, nativeSymbol : String) : et.NativeFunction = {
     var fixedArgTypes = fixedArgData map {
-      case sst.ScopedSymbol(_, typeName) => parseNativeType(typeName)
+      case sst.ScopedSymbol(_, typeName) => parseNativeType(typeName, false)
       case nonsymbol => throw new BadSpecialFormException("Excepted native type name to be string: " + nonsymbol)
     }
 
@@ -50,7 +53,7 @@ object ExtractNativeFunction
 
     val returnType = returnTypeString match {
       case "void" => None
-      case _ => Some(parseNativeType(returnTypeString))
+      case _ => Some(parseNativeType(returnTypeString, true))
     }
 
     et.NativeFunction(

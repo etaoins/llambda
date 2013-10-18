@@ -17,15 +17,22 @@ class BoxedLiveValue(val possibleTypes : Set[bt.ConcreteBoxedType], boxedValue :
   
   private def genGenericUnboxing(initialState : GenerationState)(targetType : nfi.UnboxedType) : Option[(GenerationState, IrValue)] = 
     targetType match {
-      case nfi.CBool =>
+      case nfi.CTruthyBool =>
         // Generate the boolean predicate
         val truthPred = genTruthyPredicate(initialState)
 
         // Sign extend to the CBool size
         val block = initialState.currentBlock
-        val truthBool = block.zextTo("truthBool")(truthPred, IntegerType(nfi.CBool.bits))
+        val truthBool = block.zextTo("truthBool")(truthPred, IntegerType(nfi.CStrictBool.bits))
 
         Some((initialState, truthBool))
+
+      case nfi.CStrictBool =>
+        // Strict bools must be of type boolean
+        genCastToBoxed(initialState)(bt.BoxedBoolean).map({ case (state, boxedValue) =>
+          // Otherwise it's the same as truthy bools
+          genGenericUnboxing(state)(nfi.CTruthyBool).get
+        })
 
       case intType : nfi.IntType =>
         genCastToBoxed(initialState)(bt.BoxedExactInteger).map({ case (state, boxedValue) =>

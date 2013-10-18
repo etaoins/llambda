@@ -33,10 +33,10 @@ abstract class ConstantLiveValue(boxedType : bt.ConcreteBoxedType) extends LiveV
           Some((state, genCastBoxedConstant(expectedType)))
         }
 
-      case nfi.CBool =>
+      case nfi.CTruthyBool =>
         // Make a constant out of it
         val booleanIntValue = if (booleanValue) 1 else 0
-        val boolConstant = IntegerConstant(IntegerType(8), booleanIntValue)
+        val boolConstant = IntegerConstant(IntegerType(nfi.CStrictBool.bits), booleanIntValue)
 
         Some((state, boolConstant))
 

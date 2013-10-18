@@ -13,9 +13,9 @@ object NativeToLiveValue {
 
       (state, new BoxedLiveValue(possibleTypes, nativeValue))
 
-    case nfi.CBool =>
+    case boolType : nfi.CBool =>
       (state, LiveBoolean.fromUnboxed(nativeValue))
-
+    
     case intType : nfi.IntType =>
       (state, LiveExactInteger.fromUnboxed(nativeValue, intType))
 

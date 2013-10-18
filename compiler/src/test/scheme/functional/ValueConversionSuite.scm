@@ -3,20 +3,36 @@
 	; This assumes (vector-ref) takes a boxed pair
 	(vector-ref (car '(#(1) . #f)) 0)))
 
-(define-test "#false can be unboxed as boolean" (expect #t
+(define-test "#false can be unboxed as truthy" (expect #t
 	(import (scheme core))
-	; This assumes (not) takes an unboxed boolean
+	; This assumes (not) takes an unboxed truthy boolean
 	(not (car '(#f . #f)))))
+
+(define-test "#false can be unboxed as strict bool" (expect #t
+	(import (scheme core))
+	; This assumes (boolean=?) takes two unboxed booleans
+	(boolean=? #f (car '(#f . #f)))))
 
 (define-test "#true can be unboxed as boolean" (expect #f
 	(import (scheme core))
-	; This assumes (not) takes an unboxed boolean
+	; This assumes (not) takes an unboxed truthy
 	(not (car '(#t . #f)))))
 
-(define-test "empty list can be unboxed as boolean" (expect #f
+(define-test "#true can be unboxed as strict bool" (expect #t
 	(import (scheme core))
-	; This assumes (not) takes an unboxed boolean
+	; This assumes (boolean=?) takes two unboxed booleans
+	(boolean=? #t (car '(#t . #f)))))
+
+(define-test "empty list can be unboxed as truthy" (expect #f
+	(import (scheme core))
+	; This assumes (not) takes an unboxed truthy
 	(not (car '('() . #f)))))
+
+(define-test "empty list cannot unboxed as strict bool" (expect-failure
+	(import (scheme core))
+	(import (scheme core))
+	; This assumes (boolean=?) takes two unboxed booleans
+	(boolean=? #t (car '('() . #f)))))
 
 (define-test "exact int can be unboxed as integer" (expect #(#t #t #t)
 	(import (scheme core))
@@ -58,16 +74,21 @@
 	(define strlen (native-function "strlen" (utf8-cstring) int64))
 	(strlen (car '("Hello!" . #f)))))
 
-(define-test "unboxed int 0 converts to unboxed boolean true" (expect #f
+(define-test "unboxed int 0 converts to unboxed truthy true" (expect #f
 	(import (scheme core))
-	; This assumes (exact) returns an unboxed integer and (not) takes an unboxed boolean
+	; This assumes (exact) returns an unboxed integer and (not) takes an unboxed truthy
 	(not (exact 0))))
 
 ; This seems stupid but it was actually broken at one point
-(define-test "unboxed boolean false can be passed to a procedure" (expect #t
+(define-test "unboxed boolean false can be passed to a procedure as truthy" (expect #t
 	(import (scheme core))
-	; This assumes (not) takes and returns an unboxed boolean
+	; This assumes (not) takes an unboxed truthy
 	(not (not #t))))
+
+(define-test "unboxed boolean false can be passed to a procedure as strict bool" (expect #f
+	(import (scheme core))
+	; Thie assumes (boolean=? takes two unboxed strict bools
+	(boolean=? (not #t) (not #f))))
 
 ; Make sure if we use type analysis to short circuit bool evaluation do it right
 ; This was also broken at one point
