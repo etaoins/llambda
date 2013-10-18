@@ -71,7 +71,7 @@
 	(begin
 	  (define write (native-function "lliby_write" (boxed-datum) void)))
 
-	(export pair? null? cons car cdr set-car! set-cdr! length list-copy make-list)
+	(export pair? null? cons car cdr set-car! set-cdr! length list-copy make-list list)
 	(begin 
 	  (define pair? (native-function "lliby_is_pair" (boxed-datum) bool))
 	  (define null? (native-function "lliby_is_empty_list" (boxed-datum) bool))
@@ -82,7 +82,8 @@
 	  (define set-cdr! (native-function "lliby_set_cdr" (boxed-pair boxed-datum) void))
 	  (define length (native-function "lliby_length" (boxed-list-element) uint32))
 	  (define list-copy (native-function "lliby_list_copy" (boxed-list-element) boxed-list-element))
-	  (define make-list (native-function "lliby_make_list" (uint32 boxed-datum) boxed-list-element)))
+	  (define make-list (native-function "lliby_make_list" (uint32 boxed-datum) boxed-list-element))
+	  (define list (native-function "lliby_list" boxed-list-element boxed-list-element)))
 
 	(export char? digit-value char->integer integer->char)
 	(begin

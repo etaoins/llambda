@@ -89,3 +89,11 @@
 	; This shouldn't effect the immutable list
 	(set-car! copied-list -1.0)
 	(cons immutable-list copied-list)))
+
+(define-test "empty (list)" (expect ()
+	(import (scheme core))
+	(list)))
+
+(define-test "non-empty (list)" (expect (1 2 3)
+	(import (scheme core))
+	(list 1 2 3)))
