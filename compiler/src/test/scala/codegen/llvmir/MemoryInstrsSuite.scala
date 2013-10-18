@@ -210,17 +210,31 @@ class MemoryInstrsSuite extends IrTestSuite {
 
     val block = createTestBlock()
     val resultVar = block.getelementptr("oneindex")(
-      elementType=IntegerType(16),
+      elementType=UserDefinedType("opaqueType"),
       basePointer=fakePointer,
       indices=IntegerConstant(IntegerType(32), 42) :: Nil
     )
 
-    assert(resultVar.irType === PointerType(IntegerType(16)))
+    assert(resultVar.irType === PointerType(UserDefinedType("opaqueType")))
     assertInstr(block, "%oneindex1 = getelementptr %opaqueType* %fake, i32 42") 
   }
   
-  test("inbounds getelementptr") {
+  test("1 index getelementptr with mismatched type") {
     val fakePointer = LocalVariable("fake", PointerType(UserDefinedType("opaqueType")))
+
+    val block = createTestBlock()
+    
+    intercept[InternalCompilerErrorException] {
+      block.getelementptr("oneindexMismatch")(
+        elementType=IntegerType(16),
+        basePointer=fakePointer,
+        indices=IntegerConstant(IntegerType(32), 42) :: Nil
+      )
+    }
+  }
+  
+  test("inbounds getelementptr") {
+    val fakePointer = LocalVariable("fake", PointerType(IntegerType(32)))
 
     val block = createTestBlock()
     val resultVar = block.getelementptr("inbounds")(
@@ -231,7 +245,7 @@ class MemoryInstrsSuite extends IrTestSuite {
     )
 
     assert(resultVar.irType === PointerType(IntegerType(32)))
-    assertInstr(block, "%inbounds1 = getelementptr inbounds %opaqueType* %fake, i64 23") 
+    assertInstr(block, "%inbounds1 = getelementptr inbounds i32* %fake, i64 23") 
   }
   
   test("2 index getelementptr") {

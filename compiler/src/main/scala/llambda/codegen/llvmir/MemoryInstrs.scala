@@ -90,8 +90,14 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
     val resultVar = allocateLocalVar(PointerType(elementType), resultName)
 
     basePointer.irType match {
-      case PointerType(_) =>
-        // We're cool
+      case pointerType : PointerType =>
+        if (indices.length == 1) {
+          val pointeeType = pointerType.pointeeType
+
+          if (elementType != pointerType.pointeeType) {
+            throw new InternalCompilerErrorException(s"getelementptr passed element type ${elementType}; actual element type is ${pointeeType}")
+          }
+        }
       case _ =>
         throw new InternalCompilerErrorException("Attempted getelementptr from non-pointer base pointer")
     }
