@@ -2,9 +2,25 @@
 #include "binding/BoxedPair.h"
 #include "binding/BoxedEmptyList.h"
 #include "binding/BoxedString.h"
+#include "binding/ProperList.h"
 
 #include "core/init.h"
 #include "assertions.h"
+
+namespace
+{
+	using namespace lliby;
+
+	bool isProperList(const BoxedListElement *head)
+	{
+		return ProperList<BoxedDatum>(head).isValid();
+	}
+
+	std::uint32_t listLength(const BoxedListElement *head)
+	{
+		return ProperList<BoxedDatum>(head).length();
+	}
+}
 
 int main(int argc, char *argv[])
 {
@@ -20,7 +36,7 @@ int main(int argc, char *argv[])
 		BoxedListElement *properList = BoxedListElement::createProperList({});
 
 		ASSERT_EQUAL(properList, BoxedEmptyList::instance());
-		ASSERT_EQUAL(properList->listLength(), 0);
+		ASSERT_EQUAL(listLength(properList), 0);
 	}
 	
 	{
@@ -33,7 +49,7 @@ int main(int argc, char *argv[])
 		ASSERT_TRUE(onlyPair != nullptr);
 		ASSERT_EQUAL(onlyPair->car(), valueA);
 		ASSERT_EQUAL(onlyPair->cdr(), BoxedEmptyList::instance());
-		ASSERT_EQUAL(onlyPair->listLength(), 1);
+		ASSERT_EQUAL(listLength(onlyPair), 1);
 	}
 	
 	{
@@ -47,18 +63,18 @@ int main(int argc, char *argv[])
 
 		ASSERT_TRUE(firstPair != nullptr);
 		ASSERT_EQUAL(firstPair->car(), valueA);
-		ASSERT_EQUAL(firstPair->listLength(), 3);
+		ASSERT_EQUAL(listLength(firstPair), 3);
 
 		BoxedPair *secondPair = datum_cast<BoxedPair>(firstPair->cdr());
 		ASSERT_TRUE(secondPair != nullptr);
 		ASSERT_EQUAL(secondPair->car(), valueB);
-		ASSERT_EQUAL(secondPair->listLength(), 2);
+		ASSERT_EQUAL(listLength(secondPair), 2);
 		
 		BoxedPair *thirdPair = datum_cast<BoxedPair>(secondPair->cdr());
 		ASSERT_TRUE(thirdPair != nullptr);
 		ASSERT_EQUAL(thirdPair->car(), valueC);
 		ASSERT_EQUAL(thirdPair->cdr(), BoxedEmptyList::instance());
-		ASSERT_EQUAL(thirdPair->listLength(), 1);
+		ASSERT_EQUAL(listLength(thirdPair), 1);
 	}
 
 	{
@@ -82,7 +98,7 @@ int main(int argc, char *argv[])
 
 		ASSERT_EQUAL(onlyPair->car(), valueA);
 		ASSERT_EQUAL(onlyPair->cdr(), valueB);
-		ASSERT_EQUAL(onlyPair->listLength(), BoxedListElement::InvalidListLength);
+		ASSERT_FALSE(isProperList(onlyPair));
 	}
 	
 	{
@@ -93,13 +109,13 @@ int main(int argc, char *argv[])
 		});
 
 		ASSERT_EQUAL(firstPair->car(), valueA);
-		ASSERT_EQUAL(firstPair->listLength(), BoxedListElement::InvalidListLength);
+		ASSERT_FALSE(isProperList(firstPair));
 
 		BoxedPair *secondPair = datum_cast<BoxedPair>(firstPair->cdr());
 		ASSERT_TRUE(secondPair != nullptr);
 		
 		ASSERT_EQUAL(secondPair->car(), valueB);
 		ASSERT_EQUAL(secondPair->cdr(), valueC);
-		ASSERT_EQUAL(secondPair->listLength(), BoxedListElement::InvalidListLength);
+		ASSERT_FALSE(isProperList(secondPair));
 	}
 }

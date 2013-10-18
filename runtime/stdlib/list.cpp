@@ -1,5 +1,6 @@
 #include "binding/BoxedPair.h"
 #include "binding/BoxedEmptyList.h"
+#include "binding/ProperList.h"
 #include "core/fatal.h"
 #include "alloc/allocator.h"
 
@@ -35,14 +36,14 @@ void lliby_set_cdr(BoxedPair *pair, BoxedDatum *obj)
 
 std::uint32_t lliby_length(const BoxedListElement *head) 
 {
-	std::int64_t length = head->listLength();;
+	ProperList<BoxedDatum> properList(head);
 
-	if (length == BoxedListElement::InvalidListLength)
+	if (!properList.isValid())
 	{
 		_lliby_fatal("Non-list passed to list-length", head);
 	}
 
-	return length;
+	return properList.length();
 }
 
 BoxedListElement* lliby_make_list(std::uint32_t count, BoxedDatum *fill)
@@ -72,16 +73,23 @@ BoxedListElement* lliby_make_list(std::uint32_t count, BoxedDatum *fill)
 
 BoxedListElement* lliby_list_copy(const BoxedListElement *sourceHead)
 {
-	// Find the length of the list to copy
-	const std::uint32_t listLength = sourceHead->listLength();
+	// Find the number of pairs in the list
+	// We can't use ProperList because we need to work with improper lists
+	std::uint32_t pairCount = 0;
 
-	if (listLength == 0)
+	for(auto pair = datum_cast<BoxedPair>(sourceHead);
+		pair != nullptr;
+		pair = datum_cast<BoxedPair>(pair->cdr()))
 	{
-		// Nothing to do
+		pairCount++;
+	}
+
+	if (pairCount == 0)
+	{
 		return const_cast<BoxedEmptyList*>(BoxedEmptyList::instance());
 	}
 
-	BoxedPair *destHead = static_cast<BoxedPair*>(alloc::allocateCons(listLength));
+	BoxedPair *destHead = static_cast<BoxedPair*>(alloc::allocateCons(pairCount));
 	BoxedPair *destPair = destHead;
 
 	// Because we're a proper list this has to be a pair
@@ -91,15 +99,7 @@ BoxedListElement* lliby_list_copy(const BoxedListElement *sourceHead)
 	{
 		BoxedDatum *sourceCdr = sourcePair->cdr();
 
-		if (sourceCdr == BoxedEmptyList::instance())
-		{
-			// Place our last pair cdr'ed to the empty list
-			new (destPair) BoxedPair(sourcePair->car(), sourceCdr);
-
-			// All done!
-			return destHead;
-		}
-		else
+		if (BoxedPair::isInstance(sourceCdr))
 		{
 			// Create the new pair cdr'ed to the next pair
 			new (destPair) BoxedPair(sourcePair->car(), destPair + 1);
@@ -108,6 +108,16 @@ BoxedListElement* lliby_list_copy(const BoxedListElement *sourceHead)
 
 			// Move to the next pair
 			sourcePair = static_cast<BoxedPair*>(sourceCdr);
+		}
+		else
+		{
+			// Place our last pair cdr'ed to the last cdr
+			// For proper lists this is the empty list
+			// For improper list this is another type of non-pair datum
+			new (destPair) BoxedPair(sourcePair->car(), sourceCdr);
+
+			// All done!
+			return destHead;
 		}
 	}
 }

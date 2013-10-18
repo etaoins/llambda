@@ -90,6 +90,10 @@
 	(set-car! copied-list -1.0)
 	(cons immutable-list copied-list)))
 
+(define-test "copy improper lit" (expect (1 2 . 3)
+	(import (scheme core))
+	(list-copy '(1 2 . 3))))
+
 (define-test "empty (list)" (expect ()
 	(import (scheme core))
 	(list)))
