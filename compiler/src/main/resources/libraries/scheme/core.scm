@@ -100,4 +100,16 @@
 	  (define vector-length (native-function "lliby_vector_length" (boxed-vector) uint32))
 	  (define vector-ref (native-function "lliby_vector_ref" (boxed-vector uint32) boxed-vector))
 	  (define vector-set! (native-function "lliby_vector_set" (boxed-vector uint32 boxed-datum) void)))
+	
+	(export string? make-string string string-length string-ref string-set! string-append list->string)
+	(begin
+	  (define string? (native-function "lliby_is_string" (boxed-datum) bool))
+	  (define make-string (native-function "lliby_make_string" (uint32 unicode-char) boxed-string))
+	  (define string (native-function "lliby_string" boxed-list-element boxed-string))
+	  ; This is the same runtime function but instead of using a rest arg explicitly pass in the list
+	  (define list->string (native-function "lliby_string" (boxed-list-element) boxed-string))
+	  (define string-length (native-function "lliby_string_length" (boxed-string) uint32))
+	  (define string-ref (native-function "lliby_string_ref" (boxed-string uint32) unicode-char))
+	  (define string-set! (native-function "lliby_string_set" (boxed-string uint32 unicode-char) void))
+	  (define string-append (native-function "lliby_string_append" boxed-list-element boxed-string)))
 )

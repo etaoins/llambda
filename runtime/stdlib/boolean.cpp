@@ -25,7 +25,7 @@ bool lliby_boolean_equal(bool value1, bool value2, BoxedListElement *argHead)
 	if (!properList.isValid())
 	{
 		// We're not supposed to abort here, just return false
-		_lliby_fatal("Non-boolean passed to boolean=?", argHead);
+		_lliby_fatal("Non-boolean passed to (boolean=?)", argHead);
 		return false;
 	}
 
