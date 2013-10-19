@@ -21,7 +21,7 @@ public:
 		return alloc::allocateCons();
 	}
 
-	void *operator new(size_t s, BoxedDatum *placement)
+	void *operator new(size_t s, void *placement)
 	{
 		return placement;
 	}

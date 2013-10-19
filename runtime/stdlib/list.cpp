@@ -3,6 +3,7 @@
 #include "binding/ProperList.h"
 #include "core/fatal.h"
 #include "alloc/allocator.h"
+#include "alloc/RangeAlloc.h"
 
 using namespace lliby;
 
@@ -48,27 +49,18 @@ std::uint32_t lliby_length(const BoxedListElement *head)
 
 BoxedListElement* lliby_make_list(std::uint32_t count, BoxedDatum *fill)
 {
-	if (count == 0)
-	{
-		return const_cast<BoxedEmptyList*>(BoxedEmptyList::instance());
-	}
+	BoxedListElement *cdr = const_cast<BoxedEmptyList*>(BoxedEmptyList::instance());
 
 	// Allocate all the new pairs at once
-	// This prevents us from having to pause GC
-	BoxedPair *destHead = static_cast<BoxedPair*>(alloc::allocateCons(count));
-	BoxedPair *destPair = destHead;
+	alloc::RangeAlloc allocation(alloc::allocateRange(count));
+	auto allocIt = allocation.end();
 
-	// This will stop when there's one more pair left
-	while(--count)
+	while(allocIt != allocation.begin())
 	{
-		new (destPair) BoxedPair(fill, destPair + 1);
-		destPair++;
+		cdr = new (*--allocIt) BoxedPair(fill, cdr);
 	}
-		
-	// Terminate with the empty list
-	new (destPair) BoxedPair(fill, const_cast<BoxedEmptyList*>(BoxedEmptyList::instance()));
 
-	return destHead;
+	return cdr;
 }
 
 BoxedListElement* lliby_list_copy(const BoxedListElement *sourceHead)

@@ -4,7 +4,6 @@ cmake_minimum_required (VERSION 2.8)
 
 project (lliby)
 add_library(lliby
-	alloc/FreezeGc.cpp
 	alloc/allocator.cpp
 	binding/BoxedBytevector.cpp
 	binding/BoxedDatum.cpp

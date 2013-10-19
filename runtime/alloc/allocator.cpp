@@ -1,5 +1,6 @@
 #include "alloc/allocator.h"
 #include "alloc/Cons.h"
+#include "alloc/RangeAlloc.h"
 
 #include <stdlib.h>
 #include <iostream>
@@ -58,6 +59,14 @@ void *allocateCons(size_t count)
 	}
 
 	return allocation;
+}
+
+RangeAlloc allocateRange(size_t count)
+{
+	auto start = static_cast<Cons*>(allocateCons(count));
+	auto end = start + count;
+
+	return RangeAlloc(start, end);
 }
 
 void preallocCons(size_t count)
