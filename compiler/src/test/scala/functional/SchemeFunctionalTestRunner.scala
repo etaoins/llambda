@@ -5,6 +5,7 @@ import scala.sys.process._
 import llambda._
 import llambda.codegen.{boxedtype => bt}
 import org.scalatest.{FunSuite, Inside}
+import java.io.{InputStream}
 
 abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite with Inside {
   private case class ExecutionResult(success : Boolean, output : ast.Datum)
@@ -17,7 +18,7 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
   }
 
   // Load the tests
-  val allTestSource = io.Source.fromInputStream(stream).mkString
+  val allTestSource = io.Source.fromInputStream(stream, "UTF-8").mkString
 
   SchemeParser(allTestSource) match {
     case SchemeParser.Success(parsed, _) =>
@@ -66,6 +67,9 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
     }
   }
 
+  private def utf8InputStreamToString(stream : InputStream) : String =
+    io.Source.fromInputStream(stream, "UTF-8").mkString
+
   private def executeProgram(program : List[ast.Datum]) : ExecutionResult = {
     // Import llambda.nfi for native-function
     val importDecl = ast.ProperList(List(
@@ -95,20 +99,24 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
     Compiler.compileData(printingProgram, outputFile, optimizeLevel=2)
 
     // Create our output logger
-    var outputString = new String
-    var errorString = new String
+    var stdout : Option[InputStream] = None
+    var stderr : Option[InputStream] = None
 
-    val outputLogger = ProcessLogger(
-      line => outputString += line,
-      line => errorString += line
+    val outputIO = new ProcessIO(
+      stdin  => Unit, // Don't care
+      stdoutStream => stdout = Some(stdoutStream),
+      stderrStream => stderr = Some(stderrStream)
     )
 
     // Call the program
-    val testProcess = Process(outputFile.getAbsolutePath).run(outputLogger)
+    val testProcess = Process(outputFile.getAbsolutePath).run(outputIO)
     // Request the exit value now which will wait for the process to finish
     val exitValue = testProcess.exitValue()
   
     if (exitValue == 0) {
+      val outputString = utf8InputStreamToString(stdout.get)
+      val errorString = utf8InputStreamToString(stderr.get)
+
       val output = SchemeParser(outputString) match {
         case SchemeParser.Success(data :: Nil, _) => data
         case other => fail(other.toString)

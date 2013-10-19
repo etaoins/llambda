@@ -14,7 +14,7 @@ class DefaultLibraryLoader extends LibraryLoader {
       throw new LibraryNotFoundException(filename)
     }
 
-    val libraryString = io.Source.fromInputStream(stream).mkString
+    val libraryString = io.Source.fromInputStream(stream, "UTF-8").mkString
     val libraryData = SchemeParser.parseStringAsData(libraryString)
 
     val library = libraryData match {
