@@ -10,3 +10,6 @@
 
 @_lliby_alloc_start = external global %cons*
 @_lliby_alloc_end = external global %cons*
+
+; LLVM intrinsics
+declare i1 @llvm.expect.i1(i1, i1)
