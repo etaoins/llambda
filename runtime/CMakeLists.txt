@@ -70,7 +70,8 @@ set(ALL_TEST_NAMES
 	boxedstring
 	unicodechar
 	boxedvector
-	externalformdatumwriter)
+	externalformdatumwriter
+	properlist)
 
 foreach( test_name ${ALL_TEST_NAMES} )
 	add_executable(tests/bin/test-${test_name} tests/test-${test_name}.cpp)

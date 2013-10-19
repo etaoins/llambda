@@ -14,7 +14,7 @@ template<class T>
 class ProperList
 {
 public:
-	class ConstIterator : std::iterator<std::forward_iterator_tag, T>
+	class ConstIterator : public std::iterator<std::forward_iterator_tag, T*>
 	{
 		friend class ProperList;
 	public:
@@ -34,25 +34,22 @@ public:
 			return m_head != other.m_head;
 		}
 
-		void operator++()
+		ConstIterator& operator++()
 		{
-			BoxedDatum *cdr = m_head->cdr();
-
-			if (cdr == BoxedEmptyList::instance())
-			{
-				// End if the list
-				m_head = nullptr;
-			}
-			else
-			{
-				// Because we're a proper list this must be a pair
-				m_head = reinterpret_cast<BoxedPair*>(cdr);
-			}
+			m_head = static_cast<const BoxedPair*>(m_head->cdr());
+			return *this;
+		}
+		
+		ConstIterator operator++(int postfix)
+		{
+			ConstIterator originalValue(*this);
+			++(*this);
+			return originalValue;
 		}
 
 	private:
-		explicit ConstIterator(const BoxedPair *head = nullptr) :
-			m_head(head)
+		explicit ConstIterator(const BoxedListElement *head) :
+			m_head(static_cast<const BoxedPair*>(head))
 		{
 		}
 		
@@ -60,7 +57,7 @@ public:
 	};
 
 	explicit ProperList(const BoxedListElement *head) :
-		m_head(nullptr),
+		m_head(BoxedEmptyList::instance()),
 		m_valid(false),
 		m_length(0)
 	{
@@ -86,15 +83,19 @@ public:
 			return;
 		}
 
-		// nullptr m_head means we're an empty list
-		m_head = datum_cast<BoxedPair>(head);
-		m_length = length;
+		m_head = head;
 		m_valid = true;
+		m_length = length;
 	}
 
 	bool isValid() const
 	{
 		return m_valid;
+	}
+
+	bool isEmpty() const
+	{
+		return m_length == 0;
 	}
 
 	std::uint32_t length() const
@@ -109,11 +110,11 @@ public:
 
 	ConstIterator end() const
 	{
-		return ConstIterator(nullptr);
+		return ConstIterator(BoxedEmptyList::instance());
 	}
 
 private:
-	const BoxedPair *m_head;
+	const BoxedListElement *m_head;
 	bool m_valid;
 	std::uint32_t m_length;
 };
