@@ -34,7 +34,7 @@ object GenConsAllocation {
 
       // Cast to the destination type
       val pointerName = s"cons${index}${asType.name.capitalize}Ptr"
-      val typedPointer = block.bitcastTo(pointerName)(consPointer, PointerType(bt.BoxedPair.irType))
+      val typedPointer = block.bitcastTo(pointerName)(consPointer, PointerType(asType.irType))
       
       // Set its type
       val typeIdPointer = asType.genPointerToTypeId(block)(typedPointer)

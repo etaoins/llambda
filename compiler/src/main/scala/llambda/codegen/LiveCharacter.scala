@@ -22,22 +22,19 @@ private class ConstantLiveCharacter(module : IrModuleBuilder)(codePoint : Char) 
 }
 
 private class UnboxedLiveCharacter(unboxedValue : IrValue) extends UnboxedLiveValue(bt.BoxedCharacter, nfi.UnicodeChar, unboxedValue) {
-  def genBoxedValue(state : GenerationState) : IrValue = {
+  def genBoxedValue(initialState : GenerationState) : (GenerationState, IrValue) = {
+    // Allocate the cons
+    val (state, allocation) = GenConsAllocation(initialState)(1)
+
     val block = state.currentBlock
 
-    // Make sure _lliby_box_character is declared
-    val llibyBoxCharacterDecl = IrFunctionDecl(
-      result=IrFunction.Result(PointerType(bt.BoxedCharacter.irType)),
-      name="_lliby_box_character",
-      arguments=List(IrFunction.Argument(IntegerType(32))),
-      attributes=Set(IrFunction.NoUnwind)
-    )
+    // Initialize it
+    val boxedCharCons = allocation.genTypedPointer(state)(0, bt.BoxedCharacter) 
+    val codePointPointer = bt.BoxedCharacter.genPointerToUnicodeChar(block)(boxedCharCons)
 
-    state.module.unlessDeclared(llibyBoxCharacterDecl) {
-      state.module.declareFunction(llibyBoxCharacterDecl)
-    }
+    block.store(unboxedValue, codePointPointer)
 
-    block.callDecl(Some("boxedChar"))(llibyBoxCharacterDecl, List(unboxedValue)).get
+    (state, boxedCharCons)
   }
 }
 
@@ -49,8 +46,8 @@ object LiveCharacter {
     new UnboxedLiveCharacter(unboxedValue)
   
   def genUnboxing(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
-    val pointerToValue = bt.BoxedCharacter.genPointerToUnicodeChar(block)(boxedValue)
-    block.load("unboxedUnicodeChar")(pointerToValue)
+    val pointerToUnicodeChar = bt.BoxedCharacter.genPointerToUnicodeChar(block)(boxedValue)
+    block.load("unboxedUnicodeChar")(pointerToUnicodeChar)
   }
 } 
 

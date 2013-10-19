@@ -24,30 +24,28 @@ private class ConstantLiveInexactRational(module : IrModuleBuilder)(constantValu
 }
 
 private class UnboxedLiveInexactRational(unboxedValue : IrValue, nativeType : nfi.FpType) extends UnboxedLiveValue(bt.BoxedInexactRational, nativeType, unboxedValue) {
-  def genBoxedValue(state : GenerationState) : IrValue = {
-    val block = state.currentBlock
+  def genBoxedValue(initialState : GenerationState) : (GenerationState, IrValue) = {
+    val startBlock = initialState.currentBlock
 
     // Cast to double. This is our preferred floating point type
     val doubleValue = nativeType match {
       case nfi.Float =>
-        block.fpextTo("fpextedDouble")(unboxedValue, DoubleType)
+        startBlock.fpextTo("fpextedDouble")(unboxedValue, DoubleType)
       case nfi.Double =>
         unboxedValue
     }
+    
+    // Allocate the cons
+    val (state, allocation) = GenConsAllocation(initialState)(1)
 
-    // Make sure _lliby_box_inexact_rational is declared
-    val llibyBoxInexactRationalDecl = IrFunctionDecl(
-      result=IrFunction.Result(PointerType(bt.BoxedInexactRational.irType)),
-      name="_lliby_box_inexact_rational",
-      arguments=List(IrFunction.Argument(DoubleType)),
-      attributes=Set(IrFunction.NoUnwind)
-    )
+    // Initialize it
+    val exitBlock = state.currentBlock
+    val boxedRationalCons = allocation.genTypedPointer(state)(0, bt.BoxedInexactRational) 
+    val valuePointer = bt.BoxedInexactRational.genPointerToValue(exitBlock)(boxedRationalCons)
 
-    state.module.unlessDeclared(llibyBoxInexactRationalDecl) {
-      state.module.declareFunction(llibyBoxInexactRationalDecl)
-    }
+    exitBlock.store(doubleValue, valuePointer)
 
-    block.callDecl(Some("boxedRational"))(llibyBoxInexactRationalDecl, List(doubleValue)).get
+    (state, boxedRationalCons)
   }
 }
 

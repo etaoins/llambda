@@ -55,25 +55,21 @@ private class UnboxedLiveExactInteger(unboxedValue : IrValue, nativeType : nfi.I
     case _ => None
   }
 
-  def genBoxedValue(state : GenerationState) : IrValue = {
-    val block = state.currentBlock
-
+  def genBoxedValue(initialState : GenerationState) : (GenerationState, IrValue) = {
     // Cast to a signed int64. This is our preferred integer representation
-    val int64Value = genUnboxedInt(state)(nfi.Int64)
+    val int64Value = genUnboxedInt(initialState)(nfi.Int64)
 
-    // Make sure _lliby_box_exact_integer is declared
-    val llibyBoxExactIntegerDecl = IrFunctionDecl(
-      result=IrFunction.Result(PointerType(bt.BoxedExactInteger.irType)),
-      name="_lliby_box_exact_integer",
-      arguments=List(IrFunction.Argument(IntegerType(64))),
-      attributes=Set(IrFunction.NoUnwind)
-    )
+    // Allocate the cons
+    val (state, allocation) = GenConsAllocation(initialState)(1)
 
-    state.module.unlessDeclared(llibyBoxExactIntegerDecl) {
-      state.module.declareFunction(llibyBoxExactIntegerDecl)
-    }
+    // Initialize it
+    val block = state.currentBlock
+    val boxedIntCons = allocation.genTypedPointer(state)(0, bt.BoxedExactInteger) 
+    val valuePointer = bt.BoxedExactInteger.genPointerToValue(block)(boxedIntCons)
 
-    block.callDecl(Some("boxedInt"))(llibyBoxExactIntegerDecl, List(int64Value)).get
+    block.store(int64Value, valuePointer)
+
+    (state, boxedIntCons)
   }
 }
 

@@ -12,7 +12,7 @@ private class ConstantLiveString(module : IrModuleBuilder)(constantValue : Strin
 }
 
 private class UnboxedLiveUtf8String(unboxedValue : IrValue) extends UnboxedLiveValue(bt.BoxedExactInteger, nfi.Utf8CString, unboxedValue) {
-  def genBoxedValue(state : GenerationState) : IrValue = {
+  def genBoxedValue(state : GenerationState) : (GenerationState, IrValue) = {
     val block = state.currentBlock
 
     // Make sure _lliby_string_from_utf8 is declared
@@ -27,7 +27,8 @@ private class UnboxedLiveUtf8String(unboxedValue : IrValue) extends UnboxedLiveV
       state.module.declareFunction(llibyStringFromUtf8Decl)
     }
 
-    block.callDecl(Some("boxedString"))(llibyStringFromUtf8Decl, List(unboxedValue)).get
+    val boxedValue = block.callDecl(Some("boxedString"))(llibyStringFromUtf8Decl, List(unboxedValue)).get
+    (state, boxedValue)
   }
 }
 

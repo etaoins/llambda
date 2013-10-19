@@ -31,11 +31,14 @@ private class UnboxedLiveBoolean(unboxedValue : IrValue) extends UnboxedLiveValu
     block.truncTo("truthyPred")(unboxedValue, IntegerType(1))
   }
 
-  def genBoxedValue(state : GenerationState) : IrValue = {
+  def genBoxedValue(state : GenerationState) : (GenerationState, IrValue) = {
     val predValue = genTruthyPredicate(state)
 
     // Use a select to pick the correct instance
-    state.currentBlock.select("boxedBool")(predValue, LiveBoolean.trueIrValue, LiveBoolean.falseIrValue)
+    val block = state.currentBlock
+    val boxedValue = block.select("boxedBool")(predValue, LiveBoolean.trueIrValue, LiveBoolean.falseIrValue)
+
+    (state, boxedValue)
   }
 }
 

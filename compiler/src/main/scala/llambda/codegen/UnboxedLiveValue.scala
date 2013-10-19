@@ -11,13 +11,14 @@ abstract class UnboxedLiveValue(boxedType : bt.ConcreteBoxedType, nativeType : n
   def genTruthyPredicate(state : GenerationState) : IrValue =
     IntegerConstant(IntegerType(1), 1)
 
-  def genBoxedValue(state : GenerationState) : IrValue
+  def genBoxedValue(state : GenerationState) : (GenerationState, IrValue)
 
-  def genCastBoxedValue(state : GenerationState)(targetType : bt.BoxedType) : IrValue = {
-    val uncastIrValue = genBoxedValue(state)
+  def genCastBoxedValue(initialState : GenerationState)(targetType : bt.BoxedType) : (GenerationState, IrValue) = {
+    val (state, uncastIrValue) = genBoxedValue(initialState)
     val castValueName = "castTo" + targetType.name
 
-    state.currentBlock.bitcastTo(castValueName)(uncastIrValue, PointerType(targetType.irType))
+    val block = state.currentBlock
+    (state, block.bitcastTo(castValueName)(uncastIrValue, PointerType(targetType.irType)))
   }
 
   // This should be good for most subclasses except for numerics which support
@@ -39,7 +40,7 @@ abstract class UnboxedLiveValue(boxedType : bt.ConcreteBoxedType, nativeType : n
           None
         }
         else {
-          Some((state, genCastBoxedValue(state)(expectedType)))
+          Some(genCastBoxedValue(state)(expectedType))
         }
       
       case nfi.CTruthyBool if nativeType == nfi.CStrictBool =>
