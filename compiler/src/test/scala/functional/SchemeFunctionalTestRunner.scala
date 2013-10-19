@@ -12,6 +12,10 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
   val resourcePath = s"functional/${testName}.scm"
   val stream = getClass.getClassLoader.getResourceAsStream(resourcePath)
 
+  if (stream == null) {
+    throw new Exception(s"Unable to load Scheme test source from ${resourcePath}")
+  }
+
   // Load the tests
   val allTestSource = io.Source.fromInputStream(stream).mkString
 
@@ -42,7 +46,7 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
       case ast.ProperList(ast.Symbol("expect") :: expectation :: program) if !program.isEmpty =>
         val result = executeProgram(program)
 
-        assert(result.success === true)
+        assert(result.success === true, "Execution unexpectedly failed")
         assert(result.output === expectation)
       
       case ast.ProperList(ast.Symbol("expect-failure") :: program) if !program.isEmpty =>
@@ -50,7 +54,7 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
           val result = executeProgram(program)
 
           // If we compiled make sure we fail at runtime
-          assert(result.success === false)
+          assert(result.success === false, "Execution unexpectedly succeeded")
         }
         catch {
           case e : SemanticException =>
