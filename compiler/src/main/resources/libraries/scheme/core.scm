@@ -42,7 +42,7 @@
 							 (if test
 								(begin result1 result2 ...))))))
 
-	(export number? real? rational? exact? exact-integer? inexact? cos sin tan exact inexact)
+	(export number? real? rational? exact? exact-integer? inexact? cos sin tan exact inexact + - / *)
 	(begin
 	  (define number? (native-function "lliby_is_numeric" (boxed-datum) bool))
 	  ; We only support real and rational numbers
@@ -60,7 +60,12 @@
 	  (define tan (native-function "tan" (double) double))
 	  
 	  (define exact (native-function "lliby_exact" (boxed-numeric) int64))
-	  (define inexact (native-function "lliby_inexact" (boxed-numeric) double)))
+	  (define inexact (native-function "lliby_inexact" (boxed-numeric) double))
+	  
+	  (define + (native-function "lliby_add" boxed-list-element boxed-numeric))
+	  (define - (native-function "lliby_sub" (boxed-numeric . boxed-list-element) boxed-numeric))
+	  (define * (native-function "lliby_mul" boxed-list-element boxed-numeric))
+	  (define / (native-function "lliby_div" (boxed-numeric . boxed-list-element) double)))
 
 	(export boolean? not boolean=?)
 	(begin
