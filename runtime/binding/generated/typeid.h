@@ -23,6 +23,7 @@ enum class BoxedTypeId : std::uint16_t
 	Character = 8,
 	Bytevector = 9,
 	Procedure = 10,
+	MutableVar = 11,
 	Vector = 32768,
 };
 

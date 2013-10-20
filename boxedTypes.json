@@ -173,6 +173,17 @@
         ]
     },
     {
+        "name": "mutableVar",
+        "typeId": 11,
+        "inherits": "datum",
+        "fields": [
+            {
+                "name": "currentValue",
+                "llvmType": "%datum*"
+            }
+        ]
+    },
+    {
         "name": "vectorLike",
         "abstract": true,
         "typeId": "&0x8000",

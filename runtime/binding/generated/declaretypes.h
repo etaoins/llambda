@@ -23,6 +23,7 @@ class BoxedInexactRational;
 class BoxedCharacter;
 class BoxedBytevector;
 class BoxedProcedure;
+class BoxedMutableVar;
 class BoxedVectorLike;
 class BoxedVector;
 typedef BoxedDatum* (*ProcedureEntryPoint)(BoxedProcedure*, BoxedListElement*);

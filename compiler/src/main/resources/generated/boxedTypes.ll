@@ -62,10 +62,14 @@
 %procedure = type {%datum, i32, %datum***, %datum* (%procedure*, %listElement*)*}
 !14 = metadata !{metadata !"procedure", metadata !0}
 
+; {supertype, currentValue}
+%mutableVar = type {%datum, %datum*}
+!15 = metadata !{metadata !"mutableVar", metadata !0}
+
 ; {supertype, unsigned length, elements}
 %vectorLike = type {%datum, i32, %datum**}
-!15 = metadata !{metadata !"vectorLike", metadata !0}
+!16 = metadata !{metadata !"vectorLike", metadata !0}
 
 ; {supertype}
 %vector = type {%vectorLike}
-!16 = metadata !{metadata !"vector", metadata !15}
+!17 = metadata !{metadata !"vector", metadata !16}

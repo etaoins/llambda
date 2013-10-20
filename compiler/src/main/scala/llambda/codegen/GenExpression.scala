@@ -1,8 +1,9 @@
 package llambda.codegen
 
 import llambda.{StorageLocation, InternalCompilerErrorException}
-import llambda.et
+import llambda.{et, nfi}
 import llambda.codegen.llvmir._
+import llambda.codegen.{boxedtype => bt}
 
 case class ExpressionResult(
   state : GenerationState,
@@ -13,28 +14,83 @@ object GenExpression {
     expr match {
       case et.Bind(bindings) =>
         val finalState = bindings.foldLeft(initialState) { case (state, (storageLoc, bindValue)) =>
+          // Evaluate the expression
           val bindResult = GenExpression(state)(bindValue)
 
-          // Add the new variable to our liveVariables
-          val newLiveVars = bindResult.state.liveVariables + (storageLoc -> bindResult.value)
+          if (state.mutableVariables.contains(storageLoc)) {
+            // Cast to %datum*
+            val (castState, datumValue) = bindResult.value.toRequiredNativeType(bindResult.state)(nfi.BoxedValue(bt.BoxedDatum))
 
-          // Return the modified state
-          bindResult.state.copy(
-            liveVariables=newLiveVars
-          )
+            // Allocate a new Cons for the mutable variable
+            val (allocState, allocation) = GenConsAllocation(castState)(1)
+
+            val mutableCons = allocation.genTypedPointer(allocState)(0, bt.BoxedMutableVar) 
+            bt.BoxedMutableVar.genStoreToCurrentValue(allocState.currentBlock)(datumValue, mutableCons)
+
+            val newLiveMutables = allocState.liveMutables + (storageLoc -> mutableCons)
+
+            allocState.copy(
+              liveMutables=newLiveMutables
+            )
+          }
+          else {
+            // Add the new variable to our liveImmutables
+            val newLiveImmutables = bindResult.state.liveImmutables + (storageLoc -> bindResult.value)
+
+            // Return the modified state
+            bindResult.state.copy(
+              liveImmutables=newLiveImmutables
+            )
+          }
         }
 
         ExpressionResult(state=finalState, value=LiveUnspecific)
         
-      case et.VarRef(storageLoc : StorageLocation) =>
-        // XXX: Can this fail?
+      case et.VarRef(storageLoc : StorageLocation) if !initialState.mutableVariables.contains(storageLoc) =>
+        // Immutable variable - this is trivial
         ExpressionResult(
           state=initialState,
-          value=initialState.liveVariables(storageLoc)
+          value=initialState.liveImmutables(storageLoc)
+        )
+      
+      case et.VarRef(storageLoc : StorageLocation) =>
+        // Mutable variable. This is unfortunate
+        val block = initialState.currentBlock
+
+        val boxedMutable = initialState.liveMutables(storageLoc)
+        val currentDatum = bt.BoxedMutableVar.genLoadFromCurrentValue(block)(boxedMutable)
+
+        val possibleTypes = (bt.BoxedDatum.subtypes).collect({
+          case concrete : bt.ConcreteBoxedType => concrete
+        }).toSet
+
+        val liveValue = new BoxedLiveValue(possibleTypes, currentDatum)
+
+        ExpressionResult(
+          state=initialState,
+          value=liveValue
         )
 
       case et.VarRef(_) =>
         throw new InternalCompilerErrorException("Non-StorageLocation VarRef leaked to codegen")
+
+      case et.MutateVar(storageLoc, value) =>
+        // Find our MutableVar's IrValue
+        val boxedMutable = initialState.liveMutables(storageLoc)
+            
+        // Evaluate the new value for the variable
+        val valueResult = GenExpression(initialState)(value)
+        
+        // Cast to %datum*
+        val (castState, datumValue) = valueResult.value.toRequiredNativeType(valueResult.state)(nfi.BoxedValue(bt.BoxedDatum))
+
+        // Store to the mutable variable
+        bt.BoxedMutableVar.genStoreToCurrentValue(valueResult.state.currentBlock)(datumValue, boxedMutable)
+
+        ExpressionResult(
+          state=castState,
+          value=LiveUnspecific
+        )
 
       case et.Literal(datum) =>
         ExpressionResult(state=initialState, value=GenLiteral(initialState.module)(datum))

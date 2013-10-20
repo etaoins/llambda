@@ -1,11 +1,12 @@
 package llambda.codegen
 
 import llambda.StorageLocation
-import llambda.codegen.llvmir.{IrModuleBuilder, IrBlockBuilder}
+import llambda.codegen.llvmir.{IrModuleBuilder, IrBlockBuilder, IrValue}
 
 case class GenerationState(
   module : IrModuleBuilder,
   currentBlock : IrBlockBuilder,
   mutableVariables : Set[StorageLocation],
-  liveVariables : Map[StorageLocation, LiveValue] = Map()
+  liveImmutables : Map[StorageLocation, LiveValue] = Map(),
+  liveMutables : Map[StorageLocation, IrValue] = Map()
 )
