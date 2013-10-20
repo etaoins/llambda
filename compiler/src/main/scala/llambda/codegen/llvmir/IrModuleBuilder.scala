@@ -27,8 +27,11 @@ class IrModuleBuilder extends Irable {
     declaredNames += function.name
   }
 
-  def isDeclared(name : String) = 
+  def isDeclared(name : String) : Boolean = 
     declaredNames.contains(name)
+  
+  def isDeclared(global : IrNamedGlobal) : Boolean = 
+    isDeclared(global.name)
 
   def unlessDeclared(name : String)(unlessBlock : => Unit) : Unit = {
     if (!isDeclared(name)) {
