@@ -14,4 +14,8 @@ libraryDependencies += "com.github.scopt" %% "scopt" % "3.0.0"
 
 scalacOptions ++= Seq("-deprecation", "-feature", "-Xlint")
 
-unmanagedResourceDirectories in Test += new File("src/test/scheme")
+val schemeSourceDir = new File("src/main/scheme")
+
+unmanagedResourceDirectories in Compile += schemeSourceDir
+
+unmanagedResourceDirectories in Test ++= Seq(new File("src/test/scheme"), schemeSourceDir)
