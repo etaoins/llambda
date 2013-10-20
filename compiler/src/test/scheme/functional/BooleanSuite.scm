@@ -26,9 +26,13 @@
 	(import (scheme core))
 	(not #f)))
 
-(define-test "not 'nil is true" (expect #f
+(define-test "not 'nil is false" (expect #f
 	(import (scheme core))
 	(not 'nil)))
+
+(define-test "not + is false" (expect #f
+	(import (scheme core))
+	(not +)))
 
 (define-test "boolean=? requires at least two arguments" (expect-failure
 	(import (scheme core))

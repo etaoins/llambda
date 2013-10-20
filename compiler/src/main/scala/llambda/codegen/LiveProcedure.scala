@@ -10,7 +10,14 @@ class LiveProcedure(val signature : nfi.NativeSignature, val functionPointer : I
   def genTruthyPredicate(state : GenerationState) : IrValue =
     IntegerConstant(IntegerType(1), 1)
   
-  def toNativeType(state : GenerationState)(targetType : nfi.NativeType) : Option[(GenerationState, IrValue)] =
-    // Nothing supported yet
-    None
+  def toNativeType(state : GenerationState)(targetType : nfi.NativeType) : Option[(GenerationState, IrValue)] = {
+    targetType match {
+      case nfi.CTruthyBool =>
+        val boolConstant = IntegerConstant(IntegerType(nfi.CStrictBool.bits), 1)
+        Some((state, boolConstant))
+
+      case _ =>
+        None
+    }
+  }
 }
