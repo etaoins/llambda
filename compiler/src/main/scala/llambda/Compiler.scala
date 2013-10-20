@@ -21,10 +21,11 @@ object Compiler {
     }
 
     val llcCmd = List("llc", optimizeArg)
-    val clangCmd = List("clang++", optimizeArg, "../runtime/liblliby.a") ++
-      List("-x", "assembler") ++ 
+    val clangCmd = List("clang++", optimizeArg) ++
       stdlibArg ++
-      List("-", "-o", output.getAbsolutePath)
+      List("-x", "assembler", "-") ++ 
+      List("-x", "none", "../runtime/liblliby.a") ++
+      List("-o", output.getAbsolutePath)
 
     val llvmIrStream = new ByteArrayInputStream(llvmIr.getBytes("UTF-8"))
     val compilePipeline = llcCmd #< llvmIrStream #| clangCmd
