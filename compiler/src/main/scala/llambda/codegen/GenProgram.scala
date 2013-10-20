@@ -61,7 +61,7 @@ object GenProgram {
 
     // Generate our expressions
     val endState = expressions.foldLeft(startState) { (state, expr) => 
-      GenExpression(state)(expr).state
+      GenExpression(state)(expr)._1
     }
 
     endState.currentBlock.ret(IntegerConstant(IntegerType(32), 0))

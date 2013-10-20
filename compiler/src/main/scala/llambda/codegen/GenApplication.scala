@@ -7,7 +7,7 @@ import llambda.nfi.NativeSignature
 import llambda.{NotImplementedException, IncompatibleArityException}
 
 object GenApplication {
-  private def genProcedureCall(initialState : GenerationState)(procedure : LiveProcedure, liveOperands : List[LiveValue]) : ExpressionResult = {
+  private def genProcedureCall(initialState : GenerationState)(procedure : LiveProcedure, liveOperands : List[LiveValue]) : (GenerationState, LiveValue) = {
     val signature = procedure.signature
 
     if (signature.hasSelfArg) {
@@ -69,24 +69,16 @@ object GenApplication {
       case Some(returnType) =>
         val Some(nativeReturn) = currentState.currentBlock.call(Some("ret"))(irSignature, procedure.functionPointer, irOperands)
 
-        val (finalState, liveValue) = NativeToLiveValue(currentState)(returnType, nativeReturn)
-
-        ExpressionResult(
-          state=finalState, 
-          value=liveValue
-        ) 
+        NativeToLiveValue(currentState)(returnType, nativeReturn)
       
       case None =>
         currentState.currentBlock.call(None)(irSignature, procedure.functionPointer, irOperands)
 
-        ExpressionResult(
-          state=currentState, 
-          value=LiveUnspecific
-        ) 
+        (currentState, LiveUnspecific)
     }
   }
 
-  def apply(state : GenerationState)(procedure : LiveValue, operands : List[LiveValue]) : ExpressionResult = {
+  def apply(state : GenerationState)(procedure : LiveValue, operands : List[LiveValue]) : (GenerationState, LiveValue) = {
     procedure match {
       case procedure : LiveProcedure =>
         genProcedureCall(state)(procedure, operands) 
