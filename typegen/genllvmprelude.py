@@ -50,7 +50,19 @@ def generate_llvm_prelude(boxed_types):
 
         output += "%" + type_name + ' = type {'
         output += ', '.join(field_irs)
-        output += '}\n\n'
+        output += '}\n'
+
+        # Start with our type name as a string
+        tbaa_parts = ['metadata !"' + type_name + '"']
+
+        if boxed_type.supertype:
+            tbaa_parts.append('metadata !' + str(boxed_type.supertype.index))
+
+            if boxed_type.singleton:
+                # Indicate we point to constant memory
+                tbaa_parts.append('i64 1')
+
+        output += '!' + str(boxed_type.index) + ' = metadata !{' + ', '.join(tbaa_parts) + '}\n\n'
 
     # Remove the extra \n
     return {"compiler/src/main/resources/generated/boxedTypes.ll": output[:-1]}

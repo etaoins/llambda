@@ -30,9 +30,7 @@ private class UnboxedLiveCharacter(unboxedValue : IrValue) extends UnboxedLiveVa
 
     // Initialize it
     val boxedCharCons = allocation.genTypedPointer(state)(0, bt.BoxedCharacter) 
-    val codePointPointer = bt.BoxedCharacter.genPointerToUnicodeChar(block)(boxedCharCons)
-
-    block.store(unboxedValue, codePointPointer)
+    bt.BoxedCharacter.genStoreToUnicodeChar(block)(unboxedValue, boxedCharCons)
 
     (state, boxedCharCons)
   }

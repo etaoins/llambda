@@ -165,35 +165,61 @@ def _generate_field_accessors(leaf_type, current_type, declare_only = False, dep
         field_counter = 0
 
     for field_name, field in current_type.fields.items():
-        accessor_name = 'genPointerTo' + _uppercase_first(field_name)
+        uppercase_field_name = _uppercase_first(field_name)
+
+        pointer_method_name = 'genPointerTo' + uppercase_field_name
+        store_method_name = 'genStoreTo' + uppercase_field_name
+        load_method_name = 'genLoadFrom' + uppercase_field_name
 
         output += '\n'
-        output += '  def ' + accessor_name + '(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue'
 
+        output += '  def ' + pointer_method_name + '(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue'
         if declare_only:
             output += '\n'
-            # Only need the declaration
-            continue
-        
-        output += ' = {\n'
-        
-        # Make sure we're the correct type
-        exception_message = "Unexpected type for boxed value. Passed ${boxedValue.irType}, expected %" + leaf_type.name + "*"
-        output += '    if (boxedValue.irType != PointerType(UserDefinedType("' + leaf_type.name + '"))) {\n'
-        output += '       throw new InternalCompilerErrorException(s"' + exception_message + '")\n'
-        output += '    }\n\n'
+        else:
+            output += ' = {\n'
+            
+            # Make sure we're the correct type
+            exception_message = "Unexpected type for boxed value. Passed ${boxedValue.irType}, expected %" + leaf_type.name + "*"
+            output += '    if (boxedValue.irType != PointerType(UserDefinedType("' + leaf_type.name + '"))) {\n'
+            output += '       throw new InternalCompilerErrorException(s"' + exception_message + '")\n'
+            output += '    }\n\n'
 
-        # Calculate or indices
-        indices = map(str, ([0] * depth) + [field_counter])
-        field_counter = field_counter + 1
+            # Calculate or indices
+            indices = map(str, ([0] * depth) + [field_counter])
+            field_counter = field_counter + 1
 
-        output += '    block.getelementptr("'+ field_name + 'Ptr")(\n'
-        output += '      elementType=' + _field_type_to_scala(field) + ',\n'
-        output += '      basePointer=boxedValue,\n'
-        output += '      indices=List(' + ", ".join(indices) + ').map(IntegerConstant(IntegerType(32), _)),\n'
-        output += '      inbounds=true\n'
-        output += '    )\n'
-        output += '  }\n'
+            output += '    block.getelementptr("'+ field_name + 'Ptr")(\n'
+            output += '      elementType=' + _field_type_to_scala(field) + ',\n'
+            output += '      basePointer=boxedValue,\n'
+            output += '      indices=List(' + ", ".join(indices) + ').map(IntegerConstant(IntegerType(32), _)),\n'
+            output += '      inbounds=true\n'
+            output += '    )\n'
+            output += '  }\n'
+            output += '\n'
+        
+        output += '  def ' + store_method_name  + '(block : IrBlockBuilder)(toStore : IrValue, boxedValue : IrValue) : Unit'
+        if declare_only:
+            output += '\n'
+        else:
+            output += ' = {\n'
+
+            pointer_name = field_name + 'Pointer'
+            output += '    val ' + pointer_name + ' = ' + pointer_method_name + '(block)(boxedValue)\n'
+            output += '    block.store(toStore, ' + pointer_name + ', tbaaIndex=Some(tbaaIndex))\n' 
+            output += '  }\n'
+            output += '\n'
+        
+        output += '  def ' + load_method_name  + '(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue'
+        if declare_only:
+            output += '\n'
+        else:
+            output += ' = {\n'
+
+            pointer_name = field_name + 'Pointer'
+            output += '    val ' + pointer_name + ' = ' + pointer_method_name + '(block)(boxedValue)\n'
+            output += '    block.load("' + field_name + '")(' + pointer_name + ', tbaaIndex=Some(tbaaIndex))\n' 
+            output += '  }\n'
 
     return output
 
@@ -272,6 +298,7 @@ def _generate_boxed_types(all_types):
     output += '  val supertype : Option[BoxedType]\n'
     output += '  val directSubtypes : List[BoxedType]\n'
     output += '  val isAbstract : Boolean\n' 
+    output += '  val tbaaIndex : Int\n' 
     output += '\n'
     output += '  def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget)\n'
     output += '\n'
@@ -338,6 +365,8 @@ def _generate_boxed_types(all_types):
             output += '  val isAbstract = true\n'
         else:
             output += '  val isAbstract = false\n'
+
+        output += '  val tbaaIndex = ' + str(boxed_type.index) + '\n'
 
         type_id = boxed_type.type_id
         if type_id is not None:

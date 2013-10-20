@@ -49,6 +49,7 @@ class BoxedType(object):
         # These are populated in processtypetree
         self.supertype = None
         self.subtypes = OrderedDict()
+        self.index = None
 
         if isinstance(raw_type_id, int): 
             self.type_id = raw_type_id

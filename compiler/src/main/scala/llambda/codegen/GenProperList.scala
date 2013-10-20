@@ -23,12 +23,10 @@ object GenProperList {
       val pairPointer = allocation.genTypedPointer(state)(index, bt.BoxedPair)
 
       // Set the car
-      val carPointer = bt.BoxedPair.genPointerToCar(block)(pairPointer)
-      block.store(irBoxedDatum, carPointer)
+      bt.BoxedPair.genStoreToCar(block)(irBoxedDatum, pairPointer)
 
       // Set the cdr
-      val cdrPointer = bt.BoxedPair.genPointerToCdr(block)(pairPointer)
-      block.store(nextElement, cdrPointer)
+      bt.BoxedPair.genStoreToCdr(block)(nextElement, pairPointer)
 
       // Pass value to the element before us
       block.bitcastTo(s"element${index}DatumCast")(pairPointer, PointerType(bt.BoxedDatum.irType))

@@ -37,8 +37,8 @@ object GenConsAllocation {
       val typedPointer = block.bitcastTo(pointerName)(consPointer, PointerType(asType.irType))
       
       // Set its type
-      val typeIdPointer = asType.genPointerToTypeId(block)(typedPointer)
-      block.store(IntegerConstant(IntegerType(16), asType.typeId), typeIdPointer)
+      val typeId = IntegerConstant(IntegerType(16), asType.typeId)
+      asType.genStoreToTypeId(block)(typeId, typedPointer)
 
       // Return the typed pointer
       typedPointer

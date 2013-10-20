@@ -40,10 +40,9 @@ private class UnboxedLiveInexactRational(unboxedValue : IrValue, nativeType : nf
 
     // Initialize it
     val exitBlock = state.currentBlock
-    val boxedRationalCons = allocation.genTypedPointer(state)(0, bt.BoxedInexactRational) 
-    val valuePointer = bt.BoxedInexactRational.genPointerToValue(exitBlock)(boxedRationalCons)
 
-    exitBlock.store(doubleValue, valuePointer)
+    val boxedRationalCons = allocation.genTypedPointer(state)(0, bt.BoxedInexactRational) 
+    bt.BoxedInexactRational.genStoreToValue(exitBlock)(doubleValue, boxedRationalCons)
 
     (state, boxedRationalCons)
   }

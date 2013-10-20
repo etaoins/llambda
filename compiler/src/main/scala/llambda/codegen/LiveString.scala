@@ -39,8 +39,6 @@ object LiveString {
   def fromUtf8Unboxed(unboxedValue : IrValue) : LiveValue =
     new UnboxedLiveUtf8String(unboxedValue)
   
-  def genUtf8Unboxing(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
-    val pointerToValue = bt.BoxedString.genPointerToUtf8Data(block)(boxedValue)
-    block.load("unboxedUtf8Data")(pointerToValue)
-  }
+  def genUtf8Unboxing(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = 
+    bt.BoxedString.genLoadFromUtf8Data(block)(boxedValue)
 } 

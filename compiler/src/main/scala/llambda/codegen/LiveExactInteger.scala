@@ -64,10 +64,9 @@ private class UnboxedLiveExactInteger(unboxedValue : IrValue, nativeType : nfi.I
 
     // Initialize it
     val block = state.currentBlock
-    val boxedIntCons = allocation.genTypedPointer(state)(0, bt.BoxedExactInteger) 
-    val valuePointer = bt.BoxedExactInteger.genPointerToValue(block)(boxedIntCons)
 
-    block.store(int64Value, valuePointer)
+    val boxedIntCons = allocation.genTypedPointer(state)(0, bt.BoxedExactInteger) 
+    bt.BoxedExactInteger.genStoreToValue(block)(int64Value, boxedIntCons)
 
     (state, boxedIntCons)
   }

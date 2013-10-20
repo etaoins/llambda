@@ -10,6 +10,13 @@ def process_type_tree(boxed_types):
     for special_type in SPECIAL_TYPES:
         if special_type not in boxed_types:
             raise SemanticException('Boxed type "' + special_type + '" is required to exist for code generation.')
+    
+    # Assign each type an index. This is used for TBAA
+    type_index = 0
+
+    for boxed_type in boxed_types.values():
+        boxed_type.index = type_index
+        type_index = type_index + 1
 
     # Ensure that types inherit valid types and add them as subtypes where requires
     for name, boxed_type in boxed_types.items():

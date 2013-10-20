@@ -4,51 +4,68 @@
 
 ; {unsigned typeId, unsigned gcState}
 %datum = type {i16, i16}
+!0 = metadata !{metadata !"datum"}
 
 ; {supertype}
 %unspecific = type {%datum}
+!1 = metadata !{metadata !"unspecific", metadata !0, i64 1}
 
 ; {supertype}
 %listElement = type {%datum}
+!2 = metadata !{metadata !"listElement", metadata !0}
 
 ; {supertype, car, cdr}
 %pair = type {%listElement, %datum*, %datum*}
+!3 = metadata !{metadata !"pair", metadata !2}
 
 ; {supertype}
 %emptyList = type {%listElement}
+!4 = metadata !{metadata !"emptyList", metadata !2, i64 1}
 
 ; {supertype, unsigned charLength, unsigned byteLength, utf8Data}
 %stringLike = type {%datum, i32, i32, i8*}
+!5 = metadata !{metadata !"stringLike", metadata !0}
 
 ; {supertype}
 %string = type {%stringLike}
+!6 = metadata !{metadata !"string", metadata !5}
 
 ; {supertype}
 %symbol = type {%stringLike}
+!7 = metadata !{metadata !"symbol", metadata !5}
 
 ; {supertype, bool value}
 %boolean = type {%datum, i8}
+!8 = metadata !{metadata !"boolean", metadata !0, i64 1}
 
 ; {supertype}
 %numeric = type {%datum}
+!9 = metadata !{metadata !"numeric", metadata !0}
 
 ; {supertype, signed value}
 %exactInteger = type {%numeric, i64}
+!10 = metadata !{metadata !"exactInteger", metadata !9}
 
 ; {supertype, value}
 %inexactRational = type {%numeric, double}
+!11 = metadata !{metadata !"inexactRational", metadata !9}
 
 ; {supertype, unicodeChar}
 %character = type {%datum, i32}
+!12 = metadata !{metadata !"character", metadata !0}
 
 ; {supertype, unsigned length, data}
 %bytevector = type {%datum, i32, i8*}
+!13 = metadata !{metadata !"bytevector", metadata !0}
 
 ; {supertype, unsigned capturedDataLength, capturedData, entryPoint}
 %procedure = type {%datum, i32, %datum***, %datum* (%procedure*, %listElement*)*}
+!14 = metadata !{metadata !"procedure", metadata !0}
 
 ; {supertype, unsigned length, elements}
 %vectorLike = type {%datum, i32, %datum**}
+!15 = metadata !{metadata !"vectorLike", metadata !0}
 
 ; {supertype}
 %vector = type {%vectorLike}
+!16 = metadata !{metadata !"vector", metadata !15}
