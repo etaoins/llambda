@@ -20,8 +20,8 @@ abstract class LiveValue {
   def genPhiWith(ourInitialState : GenerationState, theirInitialState : GenerationState)(theirValue : LiveValue) : (GenerationState, LiveValue) = {
     // This can be potentially be tragically expensive
     // Subclasses can override this to do saner things
-    val Some((ourState, ourBoxedValue)) = toNativeType(ourInitialState)(nfi.BoxedValue(bt.BoxedDatum))
-    val Some((theirState, theirBoxedValue)) = theirValue.toNativeType(theirInitialState)(nfi.BoxedValue(bt.BoxedDatum))
+    val (ourState, ourBoxedValue) = toRequiredNativeType(ourInitialState)(nfi.BoxedValue(bt.BoxedDatum))
+    val (theirState, theirBoxedValue) = theirValue.toRequiredNativeType(theirInitialState)(nfi.BoxedValue(bt.BoxedDatum))
 
     // Figure out the possible types of our phi'ed value
     val mergedPossibleTypes = possibleTypes ++ theirValue.possibleTypes
