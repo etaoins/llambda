@@ -39,7 +39,7 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
       throw new InternalCompilerErrorException("Attempted memory access from a non-pointer")
   }
 
-  def load(resultName : String)(from : IrValue, alignment : Int = 0, volatile : Boolean = false) : LocalVariable = {
+  def load(resultName : String)(from : IrValue, alignment : Int = 0, volatile : Boolean = false, tbaaIndex : Option[Int] = None) : LocalVariable = {
     val resultType = pointeeTypeForAccess(from.irType)
     val resultVar = allocateLocalVar(resultType, resultName)
 
@@ -56,13 +56,19 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
     else {
       ""
     }
+    
+    val tbaaIr = tbaaIndex.map({ index =>
+      s", !tbaa !${index.toString}"
+    }).getOrElse(
+      ""
+    )
 
-    instructions += s"${resultVar.toIr} = load${volatileIr} ${from.toIrWithType}${alignIr}"
+    instructions += s"${resultVar.toIr} = load${volatileIr} ${from.toIrWithType}${alignIr}${tbaaIr}"
 
     resultVar
   }
 
-  def store(value : IrValue, to : IrValue, alignment : Int = 0, volatile : Boolean = false) : Unit = {
+  def store(value : IrValue, to : IrValue, alignment : Int = 0, volatile : Boolean = false, tbaaIndex : Option[Int] = None) : Unit = {
     val storedType = pointeeTypeForAccess(to.irType)
 
     if (storedType != value.irType) {
@@ -82,8 +88,14 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
     else {
       ""
     }
+    
+    val tbaaIr = tbaaIndex.map({ index =>
+      s", !tbaa !${index.toString}"
+    }).getOrElse(
+      ""
+    )
 
-    instructions += s"store${volatileIr} ${value.toIrWithType}, ${to.toIrWithType}${alignIr}"
+    instructions += s"store${volatileIr} ${value.toIrWithType}, ${to.toIrWithType}${alignIr}${tbaaIr}"
   }
 
   def getelementptr(resultName : String)(elementType : FirstClassType, basePointer : IrValue, indices : Seq[IrValue], inbounds : Boolean = false) : LocalVariable = {

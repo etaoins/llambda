@@ -94,17 +94,30 @@ class MemoryInstrsSuite extends IrTestSuite {
     assertInstr(block, "%align1 = load i32* %fake, align 1024")
   }
   
-  test("aligned volatile load") {
+  test("tbaa load") {
+    val fakePointer = LocalVariable("fake", PointerType(IntegerType(32)))
+    
+    val block = createTestBlock()
+    val resultVar = block.load("align")(
+      from=fakePointer,
+      tbaaIndex=Some(5))
+
+    assert(resultVar.irType === IntegerType(32))
+    assertInstr(block, "%align1 = load i32* %fake, !tbaa !5")
+  }
+  
+  test("aligned volatile tbaa load") {
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(32)))
     
     val block = createTestBlock()
     val resultVar = block.load("alignvol")(
       from=fakePointer,
       volatile=true,
-      alignment=1024)
+      alignment=1024,
+      tbaaIndex=Some(10))
 
     assert(resultVar.irType === IntegerType(32))
-    assertInstr(block, "%alignvol1 = load volatile i32* %fake, align 1024")
+    assertInstr(block, "%alignvol1 = load volatile i32* %fake, align 1024, !tbaa !10")
   }
   
   test("trivial store") {
@@ -154,13 +167,22 @@ class MemoryInstrsSuite extends IrTestSuite {
     assertInstr(block, "store i32 1, i32* %fake, align 128")
   }
   
-  test("aligned volatile store") {
+  test("tbaa store") {
+    val fakePointer = LocalVariable("fake", PointerType(IntegerType(32)))
+    
+    val block = createTestBlock()
+    block.store(IntegerConstant(IntegerType(32), 1), fakePointer, tbaaIndex=Some(0))
+
+    assertInstr(block, "store i32 1, i32* %fake, !tbaa !0")
+  }
+  
+  test("aligned volatile tbaa store") {
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(64)))
     
     val block = createTestBlock()
-    block.store(IntegerConstant(IntegerType(64), 1), fakePointer, volatile=true, alignment=128)
+    block.store(IntegerConstant(IntegerType(64), 1), fakePointer, volatile=true, alignment=128, tbaaIndex=Some(45))
 
-    assertInstr(block, "store volatile i64 1, i64* %fake, align 128")
+    assertInstr(block, "store volatile i64 1, i64* %fake, align 128, !tbaa !45")
   }
 
   test("0 index getelementptr") {
