@@ -76,13 +76,13 @@ class IrFunctionSuite extends FunSuite {
       ).toIr === "declare fastcc void @funcname()")
   }
   
-  test("unnamed_attr decl") {
+  test("unnamed_addr decl") {
     assert(IrFunctionDecl(
         result=IrFunction.Result(VoidType, Set()), 
         name="funcname",
         arguments=Nil,
         unnamedAddr=true
-      ).toIr === "declare unnamed_addr void @funcname()")
+      ).toIr === "declare void @funcname() unnamed_addr")
   }
 
   test("garabge collector decl") {
@@ -112,6 +112,6 @@ class IrFunctionSuite extends FunSuite {
         unnamedAddr=true,
         attributes=Set(IrFunction.Cold, IrFunction.NoUnwind, IrFunction.ReadNone, IrFunction.ReadOnly),
         linkage=Linkage.ExternallyAvailable
-      ).toIr === "declare externally_available protected coldcc unnamed_addr zeroext i32 @superfunc(i8* noalias nocapture, [40 x i32] zeroext) cold nounwind readnone readonly gc \"shadow\"")
+      ).toIr === "declare externally_available protected coldcc zeroext i32 @superfunc(i8* noalias nocapture, [40 x i32] zeroext) unnamed_addr cold nounwind readnone readonly gc \"shadow\"")
   }
 }
