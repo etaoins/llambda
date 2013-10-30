@@ -45,12 +45,12 @@
 	(make-vector (car '(3.0 . #f)) #t)))
 
 (define-test "inexact rational can be unboxed as double" (expect 1.0
-	(import (scheme core))
+	(import (scheme core) (scheme inexact))
 	; This assumes (cos) takes an unboxed double
 	(cos (car '(0.0 . #f)))))
 
 (define-test "exact integer can be unboxed as double" (expect 1.0
-	(import (scheme core))
+	(import (scheme core) (scheme inexact))
 	; This assumes (cos) takes an unboxed double
 	(cos (car '(0 . #f)))))
 

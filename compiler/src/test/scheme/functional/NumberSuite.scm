@@ -78,27 +78,27 @@
 ; Super ghetto but anything else depends too much on floating point
 ; representations
 (define-test "inexact sin 0 is 0" (expect 0.0
-	(import (scheme core))
+	(import (scheme core) (scheme inexact))
 	(sin 0.0)))
 
 (define-test "inexact cos 0 is 1" (expect 1.0
-	(import (scheme core))
+	(import (scheme core) (scheme inexact))
 	(cos 0.0)))
 
 (define-test "inexact tan 0 is 0" (expect 0.0
-	(import (scheme core))
+	(import (scheme core) (scheme inexact))
 	(tan 0.0)))
 
 (define-test "exact sin 0 is 0" (expect 0.0
-	(import (scheme core))
+	(import (scheme core) (scheme inexact))
 	(sin 0)))
 
 (define-test "exact cos 0 is 1" (expect 1.0
-	(import (scheme core))
+	(import (scheme core) (scheme inexact))
 	(cos 0)))
 
 (define-test "exact tan 0 is 0" (expect 0.0
-	(import (scheme core))
+	(import (scheme core) (scheme inexact))
 	(tan 0)))
 
 (define-test "adding no numbers is exact 0" (expect 0

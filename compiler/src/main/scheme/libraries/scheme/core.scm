@@ -43,7 +43,7 @@
 							 (if test
 								(begin result1 result2 ...))))))
 
-	(export number? real? rational? exact? exact-integer? inexact? cos sin tan exact inexact + - / *)
+	(export number? real? rational? exact? exact-integer? inexact? exact inexact + - / *)
 	(begin
 	  (define-r7rs number? (native-function "lliby_is_numeric" (boxed-datum) bool))
 	  ; We only support real and rational numbers
@@ -53,12 +53,6 @@
 	  (define-r7rs exact? (native-function "lliby_is_exact_integer" (boxed-datum) bool))
 	  (define-r7rs exact-integer? exact?)
 	  (define-r7rs inexact? (native-function "lliby_is_inexact_rational" (boxed-datum) bool))
-	  
-	  ; These always return inexact numbers so we can use the C standard
-	  ; library directly
-	  (define-r7rs sin (native-function "sin" (double) double))
-	  (define-r7rs cos (native-function "cos" (double) double))
-	  (define-r7rs tan (native-function "tan" (double) double))
 	  
 	  (define-r7rs exact (native-function "lliby_exact" (boxed-numeric) int64))
 	  (define-r7rs inexact (native-function "lliby_inexact" (boxed-numeric) double))
@@ -73,10 +67,6 @@
 	  (define-r7rs boolean? (native-function "lliby_is_boolean" (boxed-datum) bool))
 	  (define-r7rs not (native-function "lliby_not" (truthy-bool) bool))
 	  (define-r7rs boolean=? (native-function "lliby_boolean_equal" (strict-bool strict-bool . boxed-list-element) bool)))
-
-	(export write)
-	(begin
-	  (define-r7rs write (native-function "lliby_write" (boxed-datum) void)))
 
 	(export pair? null? cons car cdr set-car! set-cdr! length list-copy make-list list)
 	(begin 
