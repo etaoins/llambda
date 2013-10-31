@@ -2,13 +2,13 @@ package llambda
 
 import java.io.File
 
-case class Config(
-  inputFile : Option[File] = None,
-  outputFile : Option[File] = None,
-  emitLlvm : Boolean = false,
-  optimizeLevel : Int = 0)
-
 object LlambdaApp extends App {
+  case class Config(
+    inputFile : Option[File] = None,
+    outputFile : Option[File] = None,
+    emitLlvm : Boolean = false,
+    optimizeLevel : Int = 0)
+
   val parser = new scopt.OptionParser[Config]("llambda") {
     head("llambda")
 
@@ -64,9 +64,22 @@ object LlambdaApp extends App {
           new File(".scm$".r.replaceAllIn(inputFilePath, targetExtension))
         }
 
-        Compiler.compileFile(input, output,
-          optimizeLevel=config.optimizeLevel,
-          emitLlvm=config.emitLlvm)
+        // Get the URL of the file's parent directory
+        val inputDirUrl = input.getParentFile.toURI.toURL
+
+        // Build the include path
+        val includePath = frontend.IncludePath(
+          fileParentDir=Some(inputDirUrl),
+          packageRootDir=Some(inputDirUrl)
+        )
+
+        // Create our compiler config
+        val compileConfig = CompileConfig(
+          includePath=includePath,
+          emitLlvm=config.emitLlvm,
+          optimizeLevel=config.optimizeLevel)
+
+        Compiler.compileFile(input, output, compileConfig)
 
       case None =>
         // Launch the REPL

@@ -287,7 +287,7 @@ object ExtractModuleBody {
     case _ => None
   }
 
-  def apply(data : List[ast.Datum])(implicit evalScope : Scope) : List[et.Expression] = data match {
+  def apply(data : List[ast.Datum])(implicit evalScope : Scope, includePath : IncludePath) : List[et.Expression] = data match {
     case Nil => Nil
     case datum :: tailData =>
       // Annotate our symbols with our current scope

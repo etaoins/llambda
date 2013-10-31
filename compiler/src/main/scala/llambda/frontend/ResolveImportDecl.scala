@@ -8,7 +8,7 @@ object ResolveImportDecl {
     case other => throw new BadSpecialFormException("Symbol expected, found " + datum) 
   }
 
-  private def resolveImportSet(datum : ast.Datum)(implicit libraryLoader : LibraryLoader) : Map[String, BoundValue] = datum match {
+  private def resolveImportSet(datum : ast.Datum)(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : Map[String, BoundValue] = datum match {
     case ast.ProperList(ast.Symbol("only") :: childSet :: identifierHead :: identifierTail) =>
       val childBindings = resolveImportSet(childSet) 
       val identifiers = (identifierHead :: identifierTail).map(parseIdentifier)
@@ -61,7 +61,7 @@ object ResolveImportDecl {
       libraryLoader.load(ParseLibraryName(libraryNameDatum))
   }
 
-  def apply(datum : ast.Datum)(implicit libraryLoader : LibraryLoader) : Map[String, BoundValue] = datum match {
+  def apply(datum : ast.Datum)(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : Map[String, BoundValue] = datum match {
     case ast.ProperList(ast.Symbol("import") :: importSets) =>
       importSets.flatMap(resolveImportSet).toMap
 

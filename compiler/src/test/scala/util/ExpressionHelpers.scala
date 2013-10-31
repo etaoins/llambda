@@ -1,10 +1,21 @@
 package llambda.testutil
 
 import org.scalatest.{FunSuite,OptionValues}
+
 import llambda._
+import llambda.frontend.IncludePath
 
 trait ExpressionHelpers extends FunSuite with OptionValues {
-  def expressionFor(scheme : String)(implicit scope : Scope)  = {
+  // Resolve imports relative to /
+  // This corresponds to src/test/scheme in our source
+  val resourceBaseUrl = getClass.getClassLoader.getResource("/")
+
+  val includePath = IncludePath(
+    fileParentDir=Some(resourceBaseUrl),
+    packageRootDir=Some(resourceBaseUrl)
+  )
+
+  def expressionFor(scheme : String)(implicit scope : Scope) = {
     val (expr :: Nil) = bodyFor(scheme)(scope)
     expr
   }
@@ -17,7 +28,7 @@ trait ExpressionHelpers extends FunSuite with OptionValues {
   def bodyFor(scheme : String)(scope : Scope) = {
     SchemeParser(scheme) match {
       case SchemeParser.Success(data, _) =>
-        frontend.ExtractModuleBody(data)(scope)
+        frontend.ExtractModuleBody(data)(scope, includePath)
       case err =>
         fail(err.toString)
     }

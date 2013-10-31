@@ -9,7 +9,7 @@ class ExtractLibrarySuite extends FunSuite with Inside {
   def libraryFor(scheme : String) = {
     SchemeParser(scheme) match {
       case SchemeParser.Success(datum :: Nil, _) =>
-        ExtractLibrary(datum)(testutil.TestLibraryLoader)
+        ExtractLibrary(datum)(new LibraryLoader, IncludePath())
       case err =>
         fail(err.toString)
     }
@@ -30,7 +30,7 @@ class ExtractLibrarySuite extends FunSuite with Inside {
   test("exporting imported symbol") {
     assert(libraryFor(
       """(define-library (example lib)
-           (import (test primitives))
+           (import (llambda primitives))
            (export set! lambda))"""
       ) === Library(exampleName, Map("set!" -> SchemePrimitives.Set, "lambda" -> SchemePrimitives.Lambda), Nil)) 
   }
@@ -61,7 +61,7 @@ class ExtractLibrarySuite extends FunSuite with Inside {
   test("renaming exports") {
     assert(libraryFor(
       """(define-library (example lib)
-           (import (test primitives))
+           (import (llambda primitives))
            (export set! (rename lambda new-lambda)))"""
       ) === Library(exampleName, Map("set!" -> SchemePrimitives.Set, "new-lambda" -> SchemePrimitives.Lambda), Nil)) 
   }

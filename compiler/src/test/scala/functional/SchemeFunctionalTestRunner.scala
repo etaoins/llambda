@@ -10,7 +10,15 @@ import java.io.{InputStream}
 abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite with Inside {
   private case class ExecutionResult(success : Boolean, output : ast.Datum)
 
-  val resourcePath = s"functional/${testName}.scm"
+  val resourceBaseDir = "functional/"
+  val resourceBaseUrl = getClass.getClassLoader.getResource(resourceBaseDir)
+  val resourcePath = s"${resourceBaseDir}${testName}.scm"
+
+  val includePath = frontend.IncludePath(
+    fileParentDir=Some(resourceBaseUrl),
+    packageRootDir=Some(resourceBaseUrl)
+  )
+  
   val stream = getClass.getClassLoader.getResourceAsStream(resourcePath)
 
   if (stream == null) {
@@ -95,8 +103,12 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
     // Compile the program
     val outputFile = File.createTempFile("llambdafunc", null, null)
 
-    // Optimize to catch more miscompilations
-    Compiler.compileData(printingProgram, outputFile, optimizeLevel=2)
+    val compileConfig = CompileConfig(
+      includePath=includePath,
+      // Optimize to catch more miscompilations
+      optimizeLevel=2)
+
+    Compiler.compileData(printingProgram, outputFile, compileConfig)
 
     // Create our output logger
     var stdout : Option[InputStream] = None

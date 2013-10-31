@@ -4,7 +4,7 @@ import llambda._
 import collection.mutable.{ListBuffer, MapBuilder}
 
 private[frontend] object ExtractLibrary {
-  def apply(datum : ast.Datum)(implicit libraryLoader : LibraryLoader) : Library = datum match {
+  def apply(datum : ast.Datum)(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : Library = datum match {
     case ast.ProperList(ast.Symbol("define-library") :: libraryNameData :: decls) =>
       // Parse the library name
       val libraryName = ParseLibraryName(libraryNameData)
@@ -41,7 +41,7 @@ private[frontend] object ExtractLibrary {
         case other => throw new BadSpecialFormException("Bad begin declaration: " + other)
       }
 
-      val expressions = ExtractModuleBody(expressionData)(scope)
+      val expressions = ExtractModuleBody(expressionData)(scope, includePath)
 
       // Evaluate exports to determine our exported bindings
       val exportDeclData = groupedDecls.getOrElse(DeclType.Export, List())

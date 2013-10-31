@@ -35,19 +35,19 @@ object Compiler {
     }
   }
   
-  def compileFile(input : File, output : File, optimizeLevel : Int = 0, emitLlvm : Boolean = false) : Unit =
-    compileString(Source.fromFile(input, "UTF-8").mkString, output, optimizeLevel, emitLlvm)
+  def compileFile(input : File, output : File, config : CompileConfig) : Unit =
+    compileString(Source.fromFile(input, "UTF-8").mkString, output, config)
   
-  def compileString(inputString : String, output : File, optimizeLevel : Int = 0, emitLlvm : Boolean = false) : Unit =
-    compileData(SchemeParser.parseStringAsData(inputString), output, optimizeLevel, emitLlvm)
+  def compileString(inputString : String, output : File, config : CompileConfig) : Unit =
+    compileData(SchemeParser.parseStringAsData(inputString), output, config)
 
-  def compileData(data : List[ast.Datum], output : File, optimizeLevel : Int = 0, emitLlvm : Boolean = false) : Unit = {
+  def compileData(data : List[ast.Datum], output : File, config : CompileConfig) : Unit = {
     // Parse the program
-    val loader = new frontend.DefaultLibraryLoader
-    val expressions = frontend.ExtractProgram(data)(loader)
+    val loader = new frontend.LibraryLoader
+    val expressions = frontend.ExtractProgram(data)(loader, config.includePath)
 
     // Optimize
-    val optimizedExpressions = if (optimizeLevel > 1) {
+    val optimizedExpressions = if (config.optimizeLevel > 1) {
       expressions.map(optimize.FlattenSelfExecutingLambdas.apply)
     }
     else {
@@ -57,14 +57,14 @@ object Compiler {
     // Generate the LLVM IR
     val llvmIr = codegen.GenProgram(optimizedExpressions)
 
-    if (emitLlvm) {
+    if (config.emitLlvm) {
       // Write the IR directly to disk
       val llvmIrOutStream = new FileOutputStream(output)
       llvmIrOutStream.write(llvmIr.getBytes("UTF-8"))
     }
     else {
       // Compile the IR using llc and clang++
-      compileLlvmIr(llvmIr, output, optimizeLevel)
+      compileLlvmIr(llvmIr, output, config.optimizeLevel)
     }
   }
 }

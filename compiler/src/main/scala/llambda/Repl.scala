@@ -2,6 +2,7 @@ package llambda
 
 import scala.tools.jline.console.ConsoleReader
 import annotation.tailrec
+import java.io.File
 
 /** Base class for all REPL modes */
 abstract class ReplMode(val name : String) {
@@ -38,22 +39,32 @@ class ParseOnlyMode extends SchemeParsingMode("parse") {
 
 /** Extract expressions allowed in a library, program or lambda body */
 class BodyExpressionMode extends SchemeParsingMode("body") {
-  private val loader = new frontend.DefaultLibraryLoader
+  private val loader = new frontend.LibraryLoader
   private val schemeCoreBindings = loader.loadSchemeCore
+
   implicit val scope = new Scope(collection.mutable.Map(schemeCoreBindings.toSeq : _*))
+
+  // Make our include path with the current directory
+  val currentDirUrl = (new File(System.getProperty("user.dir"))).toURI.toURL
+  implicit val includePath = frontend.IncludePath(
+    fileParentDir=Some(currentDirUrl),
+    packageRootDir=Some(currentDirUrl)
+  )
 
   def evalDatum(datum : ast.Datum) = {
     datum match {
       case ast.ProperList(ast.Symbol("import") :: _) =>
+
+
         // This is an import decl - import our new bindings
-        val newBindings = frontend.ResolveImportDecl(datum)(loader)
+        val newBindings = frontend.ResolveImportDecl(datum)(loader, includePath)
 
         scope ++= newBindings
 
         "loaded"
       case _ =>
         // Treat this like a body expression
-        frontend.ExtractModuleBody(datum :: Nil)(scope).map(_.toString).mkString(" ")
+        frontend.ExtractModuleBody(datum :: Nil).map(_.toString).mkString(" ")
     }
   }
 }

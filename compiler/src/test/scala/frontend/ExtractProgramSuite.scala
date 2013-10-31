@@ -7,7 +7,7 @@ class ExtractProgramSuite extends FunSuite with Inside {
   def programFor(scheme : String) = {
     SchemeParser(scheme) match {
       case SchemeParser.Success(data, _) =>
-        frontend.ExtractProgram(data)(testutil.TestLibraryLoader)
+        frontend.ExtractProgram(data)(new LibraryLoader, IncludePath())
       case err =>
         fail(err.toString)
     }
@@ -21,15 +21,15 @@ class ExtractProgramSuite extends FunSuite with Inside {
   
   test("import introduces bindings") {
     assert(programFor(
-      """(import (test primitives)) 
+      """(import (llambda primitives)) 
          (quote a)"""
       ) === List(et.Literal(ast.Symbol("a"))))
   }
   
   test("multiple imports") {
     assert(programFor(
-      """(import (only (test primitives) set!)) 
-         (import (only (test primitives) lambda)) 
+      """(import (only (llambda primitives) set!)) 
+         (import (only (llambda primitives) lambda)) 
          set!
          lambda"""
       ) === List(et.VarRef(SchemePrimitives.Set), et.VarRef(SchemePrimitives.Lambda)))
@@ -37,7 +37,7 @@ class ExtractProgramSuite extends FunSuite with Inside {
 
   test("program body is body context") {
     inside(programFor(
-      """(import (test primitives))
+      """(import (llambda primitives))
          (define my-set set!)"""
     )) {
       case et.Bind((_, expression) :: Nil) :: Nil =>
