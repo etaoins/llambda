@@ -42,6 +42,9 @@ sealed class Scope(val bindings : collection.mutable.Map[String, BoundValue], pa
   def +=(kv : (String, BoundValue)) {
     bindings += kv
   }
+
+  def apply(name : String) =
+    get(name).get
 }
 
 final class ImmutableScope(binding : collection.mutable.Map[String, BoundValue], parent : Option[Scope] = None) extends Scope(binding, parent) {
@@ -61,6 +64,7 @@ object SchemePrimitives {
   object If extends PrimitiveExpression
   object Set extends PrimitiveExpression
   object SyntaxError extends PrimitiveExpression
+  object Include extends PrimitiveExpression
 
   val bindings = {
     Map[String, BoundValue](
@@ -68,7 +72,8 @@ object SchemePrimitives {
       "quote" -> Quote,
       "if" -> If,
       "set!" -> Set,
-      "syntax-error" -> SyntaxError
+      "syntax-error" -> SyntaxError,
+      "include" -> Include
     )
   }
 }

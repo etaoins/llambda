@@ -376,4 +376,52 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
         assert(loc === listBinding)
     }
   }
+
+  test("trivial include") {
+    // Simple include should return an et.Begin with the contents of the ifle
+    assert(expressionFor("""(include "includes/include1.scm")""") ===
+      et.Begin(List(
+        et.Literal(ast.StringLiteral("include1-line1")), 
+        et.Literal(ast.StringLiteral("include1-line2"))
+      ))
+    )
+  }
+
+  test("include multiple files in order") {
+    // (include) with multiple files should read them in order and wrap them
+    // in a single et.Begin
+    assert(expressionFor("""(include "includes/include1.scm" "includes/include2.scm")""") ===
+      et.Begin(List(
+        et.Literal(ast.StringLiteral("include1-line1")), 
+        et.Literal(ast.StringLiteral("include1-line2")),
+        et.Literal(ast.StringLiteral("include2-line1")), 
+        et.Literal(ast.StringLiteral("include2-line2"))
+      ))
+    )
+  }
+
+  test("include handles relative includes and scope correctly") {
+    // This tests both relative (include)s and that scoping works correctly
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val expression = expressionFor("""(include "includes/definea.scm")""")(scope)
+
+    inside(scope("a")) {
+      case storageLocA : StorageLocation =>
+        inside(scope("b")) {
+          case storageLocB : StorageLocation =>
+            assert(expression === 
+              et.Begin(List(
+                et.Bind(List(storageLocA -> et.Literal(ast.IntegerLiteral(1)))),
+                et.Begin(List(
+                  et.Bind(List(storageLocB -> et.Literal(ast.IntegerLiteral(2)))),
+                  et.Begin(List(
+                    et.VarRef(storageLocA),
+                    et.VarRef(storageLocB)
+                  ))
+                ))
+              ))
+            )
+        }
+    }
+  }
 }

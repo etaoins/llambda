@@ -48,7 +48,7 @@ object ExtractModuleBody {
     }
   }
 
-  private def createLambda(fixedArgData : List[sst.ScopedDatum], restArgDatum : Option[sst.ScopedSymbol], definition : List[sst.ScopedDatum]) : et.Lambda = {
+  private def createLambda(fixedArgData : List[sst.ScopedDatum], restArgDatum : Option[sst.ScopedSymbol], definition : List[sst.ScopedDatum])(implicit includePath : IncludePath) : et.Lambda = {
     // Create our actual procedure arguments
     // These unique identify the argument independently of its binding at a
     // given time
@@ -146,7 +146,21 @@ object ExtractModuleBody {
     et.Lambda(fixedArgs.map(_.boundValue), restArg.map(_.boundValue), bodyExpression)
   }
 
-  private def extractApplication(procedure : et.Expression, operands : List[sst.ScopedDatum]) : et.Expression = {
+  private def extractInclude(scope : Scope, includeNameData : List[sst.ScopedDatum])(implicit includePath : IncludePath) : et.Expression = {
+    val includeResults = ResolveIncludeList(includeNameData.map(_.unscope))
+
+    val includeExprs = includeResults flatMap { result =>
+      // XXX: Should we disallow body defines here in a non-body context?
+      // R7RS says (include) should act like a (begin) with the contents of the
+      // files. Its example definition of (begin) uses a self-executing lambda
+      // which would create a body context. This seems to imply this is allowed.
+      apply(result.data)(scope, result.innerIncludePath)
+    }
+
+    et.Begin(includeExprs)
+  }
+
+  private def extractApplication(procedure : et.Expression, procedureDatum : sst.ScopedDatum, operands : List[sst.ScopedDatum])(implicit includePath : IncludePath) : et.Expression = {
     (procedure, operands) match {
       case (et.VarRef(syntax : BoundSyntax), operands) =>
         extractExpression(ExpandMacro(syntax, operands))
@@ -186,6 +200,17 @@ object ExtractModuleBody {
       case (et.VarRef(SchemePrimitives.SyntaxError), sst.NonSymbolLeaf(ast.StringLiteral(errorString)) :: data) =>
         throw new UserDefinedSyntaxError(errorString, data.map(_.unscope))
 
+      case (et.VarRef(SchemePrimitives.Include), includeNames) =>
+        // We need the scope from the (include) to rescope the included file
+        val scope = procedureDatum match {
+          case sst.ScopedSymbol(scope, _) =>
+            scope
+          case _ =>
+            throw new InternalCompilerErrorException("Unable to determine scope of (include)")
+        }
+
+        extractInclude(scope, includeNames)
+
       case (et.VarRef(NativeFunctionPrimitives.NativeFunction), _) =>
         ExtractNativeFunction(operands)
 
@@ -194,11 +219,11 @@ object ExtractModuleBody {
     }
   }
 
-  def extractExpression(datum : sst.ScopedDatum) : et.Expression = datum match {
+  def extractExpression(datum : sst.ScopedDatum)(implicit includePath : IncludePath) : et.Expression = datum match {
     // Normal procedure call
     case sst.ScopedProperList(procedure :: operands) =>
       val procedureExpr = extractExpression(procedure)
-      extractApplication(procedureExpr, operands)
+      extractApplication(procedureExpr, procedure, operands)
 
     case sst.ScopedSymbol(scope, variableName) =>
       et.VarRef(getVar(scope)(variableName))
@@ -243,7 +268,7 @@ object ExtractModuleBody {
       throw new BadSpecialFormException("Unrecognized define-syntax form " + noMatch)
   }
 
-  private def parseDefine(datum : sst.ScopedDatum) : Option[ParsedDefine] = datum match {
+  private def parseDefine(datum : sst.ScopedDatum)(implicit includePath : IncludePath) : Option[ParsedDefine] = datum match {
     case sst.ScopedProperList(sst.ScopedSymbol(_, "define") :: (symbol : sst.ScopedSymbol) :: value :: Nil) =>
       Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name), () => {
         extractExpression(value)
@@ -287,7 +312,7 @@ object ExtractModuleBody {
     case _ => None
   }
 
-  def apply(data : List[ast.Datum])(implicit evalScope : Scope, includePath : IncludePath) : List[et.Expression] = data match {
+  def apply(data : Seq[ast.Datum])(implicit evalScope : Scope, includePath : IncludePath) : List[et.Expression] = data match {
     case Nil => Nil
     case datum :: tailData =>
       // Annotate our symbols with our current scope

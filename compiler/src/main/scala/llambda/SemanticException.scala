@@ -10,8 +10,14 @@ class DubiousLibraryNameComponentException(val libraryName : String) extends Sem
   val semanticErrorType = "dubious library name"
 }
 
-class LibraryNotFoundException(val filename : String) extends SemanticException(filename) {
+abstract class ReferencedFileNotFoundException(val filename : String) extends SemanticException(filename)
+
+class LibraryNotFoundException(filename : String) extends ReferencedFileNotFoundException(filename) {
   val semanticErrorType = "library not found"
+}
+
+class IncludeNotFoundException(filename : String) extends ReferencedFileNotFoundException(filename) {
+  val semanticErrorType = "include not found"
 }
 
 class LibraryNameMismatchException(val loadedName : Seq[LibraryNameComponent], val definedName : List[LibraryNameComponent]) extends

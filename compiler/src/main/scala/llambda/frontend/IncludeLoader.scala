@@ -5,11 +5,6 @@ import java.net.URL
 import java.io.FileNotFoundException
 import annotation.tailrec
 
-private[frontend] case class IncludeLoadResult(
-  innerIncludePath : IncludePath,
-  data : Seq[ast.Datum]
-)
-
 private[frontend] object IncludeLoader {
   private def attemptLoad(rootDir : URL, includeName : String)(implicit includePath : IncludePath) : Option[IncludeLoadResult] = {
     // Parse the include name relative to our root

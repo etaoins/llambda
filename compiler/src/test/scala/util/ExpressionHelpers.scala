@@ -8,9 +8,9 @@ import llambda.frontend.IncludePath
 trait ExpressionHelpers extends FunSuite with OptionValues {
   // Resolve imports relative to /
   // This corresponds to src/test/scheme in our source
-  val resourceBaseUrl = getClass.getClassLoader.getResource("/")
-
-  val includePath = IncludePath(
+  val resourceBaseUrl = getClass.getClassLoader.getResource("")
+  
+  val includePath = frontend.IncludePath(
     fileParentDir=Some(resourceBaseUrl),
     packageRootDir=Some(resourceBaseUrl)
   )

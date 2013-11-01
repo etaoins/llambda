@@ -2,7 +2,10 @@
 	(import (llambda primitives))
 	(import (llambda nfi))
 	(import (rename (llambda internal) (define-report-procedure define-r7rs)))
-	(export lambda quote if set! syntax-error)
+
+	; Export (lambda primitives)
+	; These are virtual definitions provided by the compiler
+	(export lambda quote if set! syntax-error include)
 
 	(export begin)
 	(begin
