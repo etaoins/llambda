@@ -40,9 +40,9 @@ class ParseOnlyMode extends SchemeParsingMode("parse") {
 /** Extract expressions allowed in a library, program or lambda body */
 class BodyExpressionMode extends SchemeParsingMode("body") {
   private val loader = new frontend.LibraryLoader
-  private val schemeCoreBindings = loader.loadSchemeCore
+  private val schemeBaseBindings = loader.loadSchemeBase
 
-  implicit val scope = new Scope(collection.mutable.Map(schemeCoreBindings.toSeq : _*))
+  implicit val scope = new Scope(collection.mutable.Map(schemeBaseBindings.toSeq : _*))
 
   // Make our include path with the current directory
   val currentDirUrl = (new File(System.getProperty("user.dir"))).toURI.toURL

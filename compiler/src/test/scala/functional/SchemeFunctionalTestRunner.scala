@@ -80,8 +80,8 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
     io.Source.fromInputStream(stream, "UTF-8").mkString
 
   private def executeProgram(program : List[ast.Datum]) : ExecutionResult = {
-    // Import (llambda nfi) and (scheme core)
-    val importDecl = datum"(import (llambda nfi) (scheme core))"
+    // Import (llambda nfi) and (scheme base)
+    val importDecl = datum"(import (llambda nfi) (scheme base))"
 
     // Modify the last expression to print using lliby_write
     val valueDatum = program.last

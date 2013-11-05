@@ -15,7 +15,7 @@ class ParseLibraryNameSuite extends FunSuite {
   }
   
   test("multiple string component") {
-    assert(ParseLibraryName(datum"(scheme core)") === List(StringComponent("scheme"), StringComponent("core")))
+    assert(ParseLibraryName(datum"(scheme base)") === List(StringComponent("scheme"), StringComponent("base")))
   }
   
   test("mixed components") {

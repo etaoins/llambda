@@ -67,8 +67,8 @@ class LibraryLoader {
     }
   }
 
-  def loadSchemeCore =
-    load(List("scheme", "core").map(StringComponent(_)))(IncludePath())
+  def loadSchemeBase =
+    load(List("scheme", "base").map(StringComponent(_)))(IncludePath())
 
   def libraryExpressions : List[et.Expression] = 
     exprBuffer.toList

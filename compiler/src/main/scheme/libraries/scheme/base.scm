@@ -1,4 +1,4 @@
-(define-library (scheme core)
+(define-library (scheme base)
 	(import (llambda primitives))
 	(import (llambda nfi))
 	(import (rename (llambda internal) (define-report-procedure define-r7rs)))

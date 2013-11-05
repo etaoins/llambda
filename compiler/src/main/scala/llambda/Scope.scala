@@ -57,7 +57,7 @@ final class ImmutableScope(binding : collection.mutable.Map[String, BoundValue],
   }
 }
 
-/** Bindings for the primitive expressions defined in (scheme core) */
+/** Bindings for the primitive expressions defined in (scheme base) */
 object SchemePrimitives {
   object Lambda extends PrimitiveExpression
   object Quote extends PrimitiveExpression

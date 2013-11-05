@@ -26,9 +26,9 @@ class LibraryLoaderSuite extends FunSuite {
     }
   }
 
-  test("load scheme core") {
+  test("load scheme base") {
     val loader = new LibraryLoader
-    val bindings = loader.loadSchemeCore
+    val bindings = loader.loadSchemeBase
 
     assert(bindings.contains("set!"))
   }
