@@ -23,27 +23,21 @@
 	#f))
 
 (define-test "symbol" (expect symbol
-	; Need (scheme core) for quote
-	(import (scheme core))
 	'symbol))
 
 (define-test "unspecific" (expect #!unspecific
-	(import (scheme core))
 	'#!unspecific))
 
 (define-test "empty list" (expect ()
-	(import (scheme core))
 	'()))
 
 (define-test "character" (expect #\a
 	#\a))
 
 (define-test "proper list" (expect (1 2 3 4)
-	(import (scheme core))
 	'(1 2 3 4)))
 
 (define-test "improper list" (expect (1 2 3 . 4)
-	(import (scheme core))
 	'(1 2 3 . 4)))
 
 (define-test "vector" (expect #(a b c) 
@@ -53,5 +47,4 @@
 	#u8(0 1 127 128 255)))
 
 (define-test "complex structure" (expect (0 . (#t #(a #\b #u8(3)) 4 #("five" "six") 7.0 #t))
-	(import (scheme core))
 	'(0 . (#t #(a #\b #u8(3)) 4 #("five" "six") 7.0 #t)) ))

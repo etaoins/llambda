@@ -6,6 +6,7 @@ import llambda._
 import llambda.codegen.{boxedtype => bt}
 import org.scalatest.{FunSuite, Inside}
 import java.io.{InputStream}
+import SchemeStringImplicits._
 
 abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite with Inside {
   private case class ExecutionResult(success : Boolean, output : ast.Datum)
@@ -79,12 +80,8 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
     io.Source.fromInputStream(stream, "UTF-8").mkString
 
   private def executeProgram(program : List[ast.Datum]) : ExecutionResult = {
-    // Import llambda.nfi for native-function
-    val importDecl = ast.ProperList(List(
-      ast.Symbol("import"), 
-      ast.ProperList(List(
-        ast.Symbol("llambda"),
-        ast.Symbol("nfi")))))
+    // Import (llambda nfi) and (scheme core)
+    val importDecl = datum"(import (llambda nfi) (scheme core))"
 
     // Modify the last expression to print using lliby_write
     val valueDatum = program.last
