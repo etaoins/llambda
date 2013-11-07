@@ -48,7 +48,7 @@ object ExtractModuleBody {
     }
   }
 
-  private def createLambda(fixedArgData : List[sst.ScopedDatum], restArgDatum : Option[sst.ScopedSymbol], definition : List[sst.ScopedDatum])(implicit includePath : IncludePath) : et.Lambda = {
+  private def createLambda(fixedArgData : List[sst.ScopedDatum], restArgDatum : Option[sst.ScopedSymbol], definition : List[sst.ScopedDatum])(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : et.Lambda = {
     // Create our actual procedure arguments
     // These unique identify the argument independently of its binding at a
     // given time
@@ -146,7 +146,7 @@ object ExtractModuleBody {
     et.Lambda(fixedArgs.map(_.boundValue), restArg.map(_.boundValue), bodyExpression)
   }
 
-  private def extractInclude(scope : Scope, includeNameData : List[sst.ScopedDatum])(implicit includePath : IncludePath) : et.Expression = {
+  private def extractInclude(scope : Scope, includeNameData : List[sst.ScopedDatum])(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : et.Expression = {
     val includeResults = ResolveIncludeList(includeNameData.map(_.unscope))
 
     val includeExprs = includeResults flatMap { result =>
@@ -154,13 +154,13 @@ object ExtractModuleBody {
       // R7RS says (include) should act like a (begin) with the contents of the
       // files. Its example definition of (begin) uses a self-executing lambda
       // which would create a body context. This seems to imply this is allowed.
-      apply(result.data)(scope, result.innerIncludePath)
+      apply(result.data)(scope, libraryLoader, result.innerIncludePath)
     }
 
     et.Begin(includeExprs)
   }
 
-  private def extractApplication(procedure : et.Expression, procedureDatum : sst.ScopedDatum, operands : List[sst.ScopedDatum])(implicit includePath : IncludePath) : et.Expression = {
+  private def extractApplication(procedure : et.Expression, procedureDatum : sst.ScopedDatum, operands : List[sst.ScopedDatum])(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : et.Expression = {
     (procedure, operands) match {
       case (et.VarRef(syntax : BoundSyntax), operands) =>
         extractExpression(ExpandMacro(syntax, operands))
@@ -219,7 +219,7 @@ object ExtractModuleBody {
     }
   }
 
-  def extractExpression(datum : sst.ScopedDatum)(implicit includePath : IncludePath) : et.Expression = datum match {
+  def extractExpression(datum : sst.ScopedDatum)(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : et.Expression = datum match {
     // Normal procedure call
     case sst.ScopedProperList(procedure :: operands) =>
       val procedureExpr = extractExpression(procedure)
@@ -268,7 +268,7 @@ object ExtractModuleBody {
       throw new BadSpecialFormException("Unrecognized define-syntax form " + noMatch)
   }
 
-  private def parseDefine(datum : sst.ScopedDatum)(implicit includePath : IncludePath) : Option[ParsedDefine] = datum match {
+  private def parseDefine(datum : sst.ScopedDatum)(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : Option[ParsedDefine] = datum match {
     case sst.ScopedProperList(sst.ScopedSymbol(_, "define") :: (symbol : sst.ScopedSymbol) :: value :: Nil) =>
       Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name), () => {
         extractExpression(value)
@@ -312,7 +312,7 @@ object ExtractModuleBody {
     case _ => None
   }
 
-  def apply(data : Seq[ast.Datum])(implicit evalScope : Scope, includePath : IncludePath) : List[et.Expression] = data match {
+  def apply(data : Seq[ast.Datum])(implicit evalScope : Scope, libraryLoader : LibraryLoader, includePath : IncludePath) : List[et.Expression] = data match {
     case Nil => Nil
     case datum :: tailData =>
       // Annotate our symbols with our current scope

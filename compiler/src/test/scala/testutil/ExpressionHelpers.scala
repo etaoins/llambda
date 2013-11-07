@@ -3,12 +3,14 @@ package llambda.testutil
 import org.scalatest.{FunSuite,OptionValues}
 
 import llambda._
-import llambda.frontend.IncludePath
+import llambda.frontend.{LibraryLoader, IncludePath}
 
 trait ExpressionHelpers extends FunSuite with OptionValues {
   // Resolve imports relative to /
   // This corresponds to src/test/scheme in our source
   val resourceBaseUrl = getClass.getClassLoader.getResource("")
+
+  val libraryLoader = new LibraryLoader
   
   val includePath = frontend.IncludePath(
     fileParentDir=Some(resourceBaseUrl),
@@ -28,7 +30,7 @@ trait ExpressionHelpers extends FunSuite with OptionValues {
   def bodyFor(scheme : String)(scope : Scope) = {
     SchemeParser(scheme) match {
       case SchemeParser.Success(data, _) =>
-        frontend.ExtractModuleBody(data)(scope, includePath)
+        frontend.ExtractModuleBody(data)(scope, libraryLoader, includePath)
       case err =>
         fail(err.toString)
     }

@@ -17,7 +17,7 @@ object ExtractProgram {
     val scope = new Scope(collection.mutable.Map(initialBindingList : _*), None)
 
     // Extract the program's body expressions
-    val programExpressions = ExtractModuleBody(expressionData)(scope, includePath)
+    val programExpressions = ExtractModuleBody(expressionData)(scope, libraryLoader, includePath)
 
     libraryLoader.libraryExpressions ++ programExpressions
   }
