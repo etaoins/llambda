@@ -1,5 +1,6 @@
 #include "binding/BoxedDatum.h"
 #include "binding/BoxedVector.h"
+#include "binding/ProperList.h"
 
 #include "core/fatal.h"
 
@@ -36,6 +37,29 @@ void lliby_vector_set(BoxedVector *vector, std::uint32_t index, BoxedDatum *obj)
 	{
 		_lliby_fatal("Vector index out of bounds", vector);	
 	}
+}
+
+BoxedVector *lliby_vector(BoxedListElement *argHead)
+{
+	ProperList<BoxedDatum> properList(argHead);
+	
+	if (!properList.isValid())
+	{
+		_lliby_fatal("Non-list passed to (list->vector)", argHead); 
+	}
+
+	auto length = properList.length();
+	auto newElements = new BoxedDatum*[length];
+	unsigned int elementIndex = 0;
+
+	// Fill out the new elements from the list
+	for(auto element : properList)
+	{
+		newElements[elementIndex++] = element;
+	}
+
+	// Return the new vector
+	return new BoxedVector(newElements, length);
 }
 
 }

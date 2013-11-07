@@ -7,11 +7,26 @@
 (define-test "exact integer is not a vector" (expect #f
 	(vector? 4)))
 
-(define-test "construct empty vector" (expect #()
+(define-test "(make-vector) an empty vector" (expect #()
 	(make-vector 0 #f)))
 
-(define-test "construct filled vector" (expect #(5.0 5.0 5.0)
+(define-test "(make-vector) a filled vector" (expect #(5.0 5.0 5.0)
 	(make-vector 3 5.0)))
+
+(define-test "(vector) an empty vector" (expect #()
+	(vector)))
+
+(define-test "(vector) a non-empty vector" (expect #(a b c)
+	(vector 'a 'b 'c)))
+
+(define-test "(list->vector) an empty vector" (expect #()
+	(list->vector '())))
+
+(define-test "(list->vector) a non-empty vector" (expect #(a b c)
+	(list->vector '(a b c))))
+
+(define-test "(list->vector) with non-list fails" (expect-failure
+	(list->vector 'a)))
 
 (define-test "vector length of non-empty constant vector" (expect 3
 	(vector-length #(1 2 3))))

@@ -92,10 +92,13 @@
 	  (define-r7rs char->integer (native-function "lliby_char_to_integer" (unicode-char) int32))
 	  (define-r7rs integer->char (native-function "lliby_integer_to_char" (int32) unicode-char)))
 	
-	(export vector? make-vector vector-length vector-ref vector-set!)
+	(export vector? make-vector vector vector-length vector-ref vector-set! list->vector)
 	(begin
 	  (define-r7rs vector? (native-function "lliby_is_vector" (boxed-datum) bool))
 	  (define-r7rs make-vector (native-function "lliby_make_vector" (uint32 boxed-datum) boxed-vector))
+	  (define-r7rs vector (native-function "lliby_vector" boxed-list-element boxed-vector))
+	  ; This is the same runtime function but instead of using a rest arg explicitly pass in the list
+	  (define-r7rs list->vector (native-function "lliby_vector" (boxed-list-element) boxed-vector))
 	  (define-r7rs vector-length (native-function "lliby_vector_length" (boxed-vector) uint32))
 	  (define-r7rs vector-ref (native-function "lliby_vector_ref" (boxed-vector uint32) boxed-vector))
 	  (define-r7rs vector-set! (native-function "lliby_vector_set" (boxed-vector uint32 boxed-datum) void)))
