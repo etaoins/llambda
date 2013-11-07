@@ -78,23 +78,16 @@ int main(int argc, char *argv[])
 	}
 
 	{
-		BoxedPair *improperList = BoxedListElement::createImproperList({});
-		ASSERT_TRUE(improperList == nullptr);
-	}
-	
-	{
-		BoxedPair *improperList = BoxedListElement::createImproperList({
-			valueA
-		});
+		BoxedDatum *improperList = BoxedListElement::createList({}, valueA);
 
-		ASSERT_TRUE(improperList == nullptr);
+		ASSERT_TRUE(improperList == valueA);
 	}
 	
 	{
-		BoxedPair *onlyPair = BoxedListElement::createImproperList({
-			valueA,
-			valueB
-		});
+		BoxedDatum *improperList = BoxedListElement::createList({valueA}, valueB);
+
+		auto *onlyPair = datum_cast<BoxedPair>(improperList);
+		ASSERT_TRUE(onlyPair != nullptr);
 
 		ASSERT_EQUAL(onlyPair->car(), valueA);
 		ASSERT_EQUAL(onlyPair->cdr(), valueB);
@@ -102,16 +95,18 @@ int main(int argc, char *argv[])
 	}
 	
 	{
-		BoxedPair *firstPair = BoxedListElement::createImproperList({
+		BoxedDatum *improperList = BoxedListElement::createList({
 			valueA,
-			valueB,
-			valueC
-		});
+			valueB
+		}, valueC);
+		
+		auto *firstPair = datum_cast<BoxedPair>(improperList);
+		ASSERT_TRUE(firstPair != nullptr);
 
 		ASSERT_EQUAL(firstPair->car(), valueA);
 		ASSERT_FALSE(isProperList(firstPair));
 
-		BoxedPair *secondPair = datum_cast<BoxedPair>(firstPair->cdr());
+		auto secondPair = datum_cast<BoxedPair>(firstPair->cdr());
 		ASSERT_TRUE(secondPair != nullptr);
 		
 		ASSERT_EQUAL(secondPair->car(), valueB);

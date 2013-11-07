@@ -13,7 +13,7 @@ class BoxedListElement : public BoxedDatum
 #include "generated/BoxedListElementMembers.h"
 public:
 	static BoxedListElement *createProperList(const std::list<BoxedDatum*> &elements);
-	static BoxedPair *createImproperList(const std::list<BoxedDatum*> &elements);
+	static BoxedDatum *createList(const std::list<BoxedDatum*> &elements, BoxedDatum *tail);
 
 protected:
 	explicit BoxedListElement(BoxedTypeId typeId) :

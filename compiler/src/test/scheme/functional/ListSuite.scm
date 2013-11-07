@@ -76,3 +76,22 @@
 
 (define-test "non-empty (list)" (expect (1 2 3)
 	(list 1 2 3)))
+
+(define-test "(append) with no arguments" (expect ()
+	(append)))
+
+(define-test "(append) with single argument returns it" (expect a
+	(append 'a)))
+
+(define-test "(append) three proper lists" (expect (1 2 3 4 5 6)
+	(append '(1 2) '(3 4) '(5 6))))
+
+(define-test "(append) three empty lists" (expect ()
+	(append '() '() '())))
+
+(define-test "(append) with non-terminal non-list fails" (expect-failure
+	(append '(1 2) 3 '(4 5))))
+
+(define-test "(append) empty list with symbol" (expect a
+	(append '() 'a)))
+

@@ -49,8 +49,11 @@ int main(int argc, char *argv[])
 	}
 	
 	{
-		BoxedListElement *stringImproperHead = BoxedListElement::createImproperList({valueA, valueB, valueC});
+		BoxedDatum *improperList = BoxedListElement::createList({valueA, valueB}, valueC);
 		
+		auto stringImproperHead = datum_cast<BoxedListElement>(improperList);
+		ASSERT_TRUE(stringImproperHead != nullptr);
+
 		// Improper list
 		ProperList<BoxedString> properList(stringImproperHead);
 

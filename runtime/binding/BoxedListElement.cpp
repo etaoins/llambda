@@ -10,38 +10,18 @@ namespace lliby
 
 BoxedListElement* BoxedListElement::createProperList(const std::list<BoxedDatum*> &elements)
 {
-	const size_t length = elements.size();
+	auto list = createList(elements, const_cast<BoxedEmptyList*>(BoxedEmptyList::instance()));
 
-	alloc::RangeAlloc allocation = alloc::allocateRange(length);
-	auto allocIt = allocation.end();
-
-	BoxedListElement *cdr = const_cast<BoxedEmptyList*>(BoxedEmptyList::instance()); 
-
-	for(auto it = elements.rbegin(); it != elements.rend(); it++)
-	{
-		cdr = new (*--allocIt) BoxedPair(*it, cdr);
-	}
-
-	return cdr;
+	return static_cast<BoxedListElement*>(list);
 }
 
-BoxedPair* BoxedListElement::createImproperList(const std::list<BoxedDatum*> &elements)
+BoxedDatum* BoxedListElement::createList(const std::list<BoxedDatum*> &elements, BoxedDatum *tail)
 {
-	if (elements.size() < 2)
-	{
-		// Doesn't make sense
-		return nullptr;
-	}
-	
-	alloc::RangeAlloc allocation = alloc::allocateRange(elements.size() - 1);
+	alloc::RangeAlloc allocation = alloc::allocateRange(elements.size());
 	auto allocIt = allocation.end();
 	
 	auto it = elements.rbegin();
-
-	BoxedDatum *endValue = *(it++);
-	BoxedDatum *secondLast = *(it++);
-
-	auto cdr = new BoxedPair(secondLast, endValue);
+	BoxedDatum *cdr = tail;
 
 	for(;it != elements.rend(); it++)
 	{

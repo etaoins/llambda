@@ -71,7 +71,7 @@
 	  (define-r7rs not (native-function "lliby_not" (truthy-bool) bool))
 	  (define-r7rs boolean=? (native-function "lliby_boolean_equal" (strict-bool strict-bool . boxed-list-element) bool)))
 
-	(export pair? null? cons car cdr set-car! set-cdr! length list-copy make-list list)
+	(export pair? null? cons car cdr set-car! set-cdr! length list-copy make-list list append)
 	(begin 
 	  (define-r7rs pair? (native-function "lliby_is_pair" (boxed-datum) bool))
 	  (define-r7rs null? (native-function "lliby_is_empty_list" (boxed-datum) bool))
@@ -83,7 +83,8 @@
 	  (define-r7rs length (native-function "lliby_length" (boxed-list-element) uint32))
 	  (define-r7rs list-copy (native-function "lliby_list_copy" (boxed-list-element) boxed-list-element))
 	  (define-r7rs make-list (native-function "lliby_make_list" (uint32 boxed-datum) boxed-list-element))
-	  (define-r7rs list (native-function "lliby_list" boxed-list-element boxed-list-element)))
+	  (define-r7rs list (native-function "lliby_list" boxed-list-element boxed-list-element))
+	  (define-r7rs append (native-function "lliby_append" boxed-list-element boxed-datum)))
 
 	(export char? digit-value char->integer integer->char)
 	(begin

@@ -123,4 +123,53 @@ BoxedListElement* lliby_list(BoxedListElement *head)
 	return head;
 }
 
+BoxedDatum* lliby_append(BoxedListElement *argHead)
+{
+	ProperList<BoxedDatum> argList(argHead);
+
+	if (!argList.isValid())
+	{
+		_lliby_fatal("Invalid argument list passed to (append)", argHead);
+	}
+
+	auto argCount = argList.length();
+
+	if (argCount == 0)
+	{
+		// Nothing to append
+		return const_cast<BoxedEmptyList*>(BoxedEmptyList::instance());
+	}
+
+	// XXX: This is not very efficient
+	std::list<BoxedDatum*> appenedElements;
+	auto argIt = argList.begin();
+
+	while(--argCount)
+	{
+		auto listHead = datum_cast<BoxedListElement>(*(argIt++));
+
+		if (listHead == nullptr)
+		{
+			_lliby_fatal("Non-list passed to (append) in non-terminal position", listHead);
+		}
+
+		// Get the passed list
+		ProperList<BoxedDatum> properList(listHead);
+
+		if (!properList.isValid())
+		{
+			_lliby_fatal("Improper list passed to (append) in non-terminal position", listHead);
+		}
+
+		for(auto element : properList)
+		{
+			appenedElements.push_back(element);
+		}
+	}
+
+	// Use createList to append the last list on sharing its structure.
+	// This is required by R7RS
+	return BoxedListElement::createList(appenedElements, *(argIt++));
+}
+
 }

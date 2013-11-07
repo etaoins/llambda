@@ -113,11 +113,11 @@ void testPair()
 	assertForm(BoxedPair::createProperList({valueA, valueB}), "(A B)");
 	assertForm(BoxedPair::createProperList({valueA, valueB, valueC}), "(A B C)");
 
-	assertForm(BoxedPair::createImproperList({valueA, valueB}), "(A . B)");
-	assertForm(BoxedPair::createImproperList({valueA, valueB, valueC}), "(A B . C)");
+	assertForm(BoxedPair::createList({valueA}, valueB), "(A . B)");
+	assertForm(BoxedPair::createList({valueA, valueB}, valueC), "(A B . C)");
 
 	// Create a  nested list
-	BoxedDatum *innerList = BoxedPair::createImproperList({valueA, valueB, valueC});
+	BoxedDatum *innerList = BoxedPair::createList({valueA, valueB}, valueC);
 	BoxedDatum *outerList = BoxedPair::createProperList({valueA, valueB, valueC, innerList});
 	assertForm(outerList, "(A B C (A B . C))");
 }
