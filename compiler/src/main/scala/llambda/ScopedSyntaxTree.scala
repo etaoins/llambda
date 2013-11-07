@@ -25,6 +25,8 @@ case class NonSymbolLeaf(atom : ast.NonSymbolLeaf) extends ScopedDatum {
 case class ScopedSymbol(scope : Scope, name : String) extends ScopedDatum {
   def unscope = ast.Symbol(name)
   override def toString = name + "@" + scope.hashCode.toHexString
+
+  def resolve : Option[BoundValue] = scope.get(name)
 }
 
 // The following two objects are essential copied from AbstractSyntaxTree

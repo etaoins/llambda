@@ -145,6 +145,23 @@ object ExtractModuleBody {
       
     et.Lambda(fixedArgs.map(_.boundValue), restArg.map(_.boundValue), bodyExpression)
   }
+  
+  private def buildQuasiquotation(builderName : String, data : Seq[sst.ScopedDatum])(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : et.Expression = {
+    // Load (scheme base) and get our builder procedure
+    val schemeBase = libraryLoader.loadSchemeBase
+    val builderProc = schemeBase(builderName)
+
+    val builderArgs = data map {
+      case sst.ScopedProperList((unquote : sst.ScopedSymbol) :: unquotedDatum :: Nil) if unquote.resolve == Some(SchemePrimitives.Unquote) =>
+        extractExpression(unquotedDatum)
+
+      case quotedData =>
+        // Keep this quoted
+        et.Literal(quotedData.unscope)
+    }
+
+    et.Apply(et.VarRef(builderProc), builderArgs.toList)
+  }
 
   private def extractInclude(scope : Scope, includeNameData : List[sst.ScopedDatum])(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : et.Expression = {
     val includeResults = ResolveIncludeList(includeNameData.map(_.unscope))
@@ -213,6 +230,18 @@ object ExtractModuleBody {
 
       case (et.VarRef(NativeFunctionPrimitives.NativeFunction), _) =>
         ExtractNativeFunction(operands)
+
+      case (et.VarRef(SchemePrimitives.Quasiquote), sst.ScopedProperList(listData) :: Nil) => 
+        buildQuasiquotation("list", listData)
+      
+      case (et.VarRef(SchemePrimitives.Quasiquote), sst.ScopedVectorLiteral(elements) :: Nil) => 
+        buildQuasiquotation("vector", elements)
+      
+      case (et.VarRef(SchemePrimitives.Unquote), _) =>
+          throw new BadSpecialFormException(s"Attempted (unquote) outside of quasiquotation") 
+      
+      case (et.VarRef(SchemePrimitives.UnquoteSplicing), _) =>
+          throw new BadSpecialFormException(s"Attempted (unquote-splicing) outside of quasiquotation") 
 
       case _ =>
         et.Apply(procedure, operands.map(extractExpression))
@@ -323,7 +352,7 @@ object ExtractModuleBody {
         case Some(ParsedVarDefine(symbol, boundValue, exprBlock)) =>
           // There's a wart in Scheme that allows a top-level (define) to become
           // a (set!) if the value is already defined as a storage location
-          symbol.scope.get(symbol.name) match {
+          symbol.resolve match {
             case Some(storageLoc : StorageLocation) =>
               // Convert this to a (set!)
               et.MutateVar(storageLoc, exprBlock()) :: apply(tailData)
