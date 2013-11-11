@@ -1,14 +1,15 @@
 package llambda.ast
 
 import llambda.SchemeParserDefinitions
+import llambda.SourceLocated
 
-sealed abstract class Datum
+sealed abstract class Datum extends SourceLocated
 
 // This helps out ScopedSyntaxTree by grouping all the types that have scope
 // or contain datums with scope
 sealed abstract class NonSymbolLeaf extends Datum
 
-case object UnspecificValue extends NonSymbolLeaf {
+case class UnspecificValue() extends NonSymbolLeaf {
   override def toString = "#!unspecific"
 }
 
@@ -23,9 +24,6 @@ case class BooleanLiteral(value : Boolean) extends NonSymbolLeaf {
   }
 }
 
-object TrueLiteral extends BooleanLiteral(true)
-object FalseLiteral  extends BooleanLiteral(false)
-
 sealed abstract class NumberLiteral extends NonSymbolLeaf 
 
 case class IntegerLiteral(value : Long) extends NumberLiteral {
@@ -33,6 +31,22 @@ case class IntegerLiteral(value : Long) extends NumberLiteral {
 }
 
 case class RationalLiteral(value : Double) extends NumberLiteral {
+  // Consider all NaN literals to be equal
+  // This is different from numeric equality which indeed doesn't make sense
+  // for NaNs
+  override def equals(other : Any) : Boolean = other match {
+    case RationalLiteral(otherValue) =>
+      if (otherValue.isNaN) {
+        value.isNaN
+      }
+      else {
+        value == otherValue
+      }
+
+    case _ =>
+      false
+  }
+
   override def toString = value match {
     case Double.PositiveInfinity => "+inf.0"
     case Double.NegativeInfinity => "-inf.0"
@@ -41,9 +55,17 @@ case class RationalLiteral(value : Double) extends NumberLiteral {
   }
 }
 
-object PositiveInfinityLiteral extends RationalLiteral(Double.PositiveInfinity)
-object NegativeInfinityLiteral extends RationalLiteral(Double.NegativeInfinity)
-object NaNLiteral extends RationalLiteral(Double.NaN)
+object PositiveInfinityLiteral {
+  def apply() = RationalLiteral(Double.PositiveInfinity)
+}
+
+object NegativeInfinityLiteral {
+  def apply() = RationalLiteral(Double.NegativeInfinity)
+}
+
+object NaNLiteral {
+  def apply() =  RationalLiteral(Double.NaN)
+}
 
 case class Symbol(name : String) extends Datum {
   override def toString = if (name.matches(SchemeParserDefinitions.identifierPattern)) {
@@ -54,7 +76,7 @@ case class Symbol(name : String) extends Datum {
   }
 }
 
-case object EmptyList extends NonSymbolLeaf {
+case class EmptyList() extends NonSymbolLeaf {
   override def toString = "()"
 }
 
@@ -74,7 +96,7 @@ case class Pair(car : Datum, cdr : Datum) extends Datum {
 
 object ImproperList {
   def unapply(datum : Datum) : Option[(List[Datum], Datum)] = datum match {
-    case Pair(_, EmptyList) => None // This is a proper list
+    case Pair(_, EmptyList()) => None // This is a proper list
     case Pair(car, tail : Pair)  => 
       ImproperList.unapply(tail).map { case (head, terminator) =>
         (car :: head, terminator)
@@ -92,13 +114,13 @@ object ImproperList {
 
 object ProperList {
   def unapply(datum : Datum) : Option[List[Datum]] = datum match {
-    case EmptyList => Some(Nil)
+    case EmptyList() => Some(Nil)
     case Pair(car, cdr) => ProperList.unapply(cdr).map(car :: _)
     case _ => None
   }
 
   def apply(data : List[Datum]) : Datum = 
-    data.foldRight(EmptyList : Datum) { (car, cdr) => Pair(car, cdr) }
+    data.foldRight(EmptyList() : Datum) { (car, cdr) => Pair(car, cdr) }
 }
 
 case class VectorLiteral(elements : Vector[Datum]) extends Datum {

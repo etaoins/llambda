@@ -4,15 +4,15 @@ import org.scalatest.FunSuite
 
 class ASTListCompanionSuite extends FunSuite {
   test("proper list creation") {
-    assert(ast.ProperList(List()) === ast.EmptyList)
+    assert(ast.ProperList(List()) === ast.EmptyList())
     
     assert(ast.ProperList(List(ast.Symbol("a"))) === 
-      ast.Pair(ast.Symbol("a"), ast.EmptyList))
+      ast.Pair(ast.Symbol("a"), ast.EmptyList()))
 
     assert(ast.ProperList(List(ast.Symbol("a"), ast.Symbol("b"))) === 
       ast.Pair(ast.Symbol("a"),
         ast.Pair(ast.Symbol("b"),
-          ast.EmptyList
+          ast.EmptyList()
         )
       )
     )
@@ -31,19 +31,19 @@ class ASTListCompanionSuite extends FunSuite {
 
   test("proper list extraction") {
     assertResult(Some(Nil)) {
-      ast.ProperList.unapply(ast.EmptyList)
+      ast.ProperList.unapply(ast.EmptyList())
     }
 
     assertResult(Some(List(ast.Symbol("a")))) {
       ast.ProperList.unapply(
-        ast.Pair(ast.Symbol("a"), ast.EmptyList)
+        ast.Pair(ast.Symbol("a"), ast.EmptyList())
       )
     }
     
     assertResult(Some(List(ast.Symbol("a"), ast.Symbol("b")))) {
       ast.ProperList.unapply(
         ast.Pair(ast.Symbol("a"), 
-          ast.Pair(ast.Symbol("b"), ast.EmptyList)
+          ast.Pair(ast.Symbol("b"), ast.EmptyList())
         )
       )
     }
@@ -86,7 +86,7 @@ class ASTListCompanionSuite extends FunSuite {
     
     assertResult(None) {
       ast.ImproperList.unapply(
-        ast.Pair(ast.Symbol("a"), ast.EmptyList)
+        ast.Pair(ast.Symbol("a"), ast.EmptyList())
       )
     }
   }

@@ -7,18 +7,15 @@ class SchemeParserSuite extends FunSuite with Inside {
   // This checks:
   // 1) parsed source === expected
   // 2) parse((parsed source).toString) === expected
-  def assertReflexiveParse(source : String, expected : List[ast.Datum])
-  {
-    inside(SchemeParser(source)) { case SchemeParser.Success(parsed, _) =>
-      assert(parsed === expected)
+  def assertReflexiveParse(source : String, expected : List[ast.Datum]) {
+    val parsed = SchemeParser.parseStringAsData(source)
+    assert(parsed === expected)
 
-      // Convert the parsed data back to a string to make sure .toString works
-      val parsedAsSource = parsed.map(_.toString).mkString("\n")
+    // Convert the parsed data back to a string to make sure .toString works
+    val parsedAsSource = parsed.map(_.toString).mkString("\n")
 
-      inside(SchemeParser(parsedAsSource)) { case SchemeParser.Success(reparsed, _) =>
-        assert(reparsed === expected)
-      }
-    }
+    val reparsed = SchemeParser.parseStringAsData(parsedAsSource)
+    assert(reparsed === expected)
   }
 
   def assertParsesAsSymbol(string : String, identifier : String) {
@@ -45,22 +42,22 @@ class SchemeParserSuite extends FunSuite with Inside {
     assertReflexiveParse(shorthand + shorthand + "#true",
       ast.ProperList(List(ast.Symbol(symbolName),
         ast.ProperList(List(ast.Symbol(symbolName),
-          ast.TrueLiteral
+          ast.BooleanLiteral(true)
         ))
       )) :: Nil
     )
   }
   
   test("empty list") {
-    assertReflexiveParse("()", List(ast.EmptyList))
+    assertReflexiveParse("()", List(ast.EmptyList()))
   }
 
   test("booleans") {
-    assertReflexiveParse("#t", List(ast.TrueLiteral))
-    assertReflexiveParse("#true", List(ast.TrueLiteral))
+    assertReflexiveParse("#t", List(ast.BooleanLiteral(true)))
+    assertReflexiveParse("#true", List(ast.BooleanLiteral(true)))
     
-    assertReflexiveParse("#f", List(ast.FalseLiteral))
-    assertReflexiveParse("#false", List(ast.FalseLiteral))
+    assertReflexiveParse("#f", List(ast.BooleanLiteral(false)))
+    assertReflexiveParse("#false", List(ast.BooleanLiteral(false)))
   }
 
   test("symbols") {
@@ -111,21 +108,21 @@ class SchemeParserSuite extends FunSuite with Inside {
     assertReflexiveParse("33.337", List(ast.RationalLiteral(33.337)))
     assertReflexiveParse("-0100.0", List(ast.RationalLiteral(-100.0)))
 
-    assertReflexiveParse("+inf.0", List(ast.PositiveInfinityLiteral))
-    assertReflexiveParse("-inf.0", List(ast.NegativeInfinityLiteral))
+    assertReflexiveParse("+inf.0", List(ast.PositiveInfinityLiteral()))
+    assertReflexiveParse("-inf.0", List(ast.NegativeInfinityLiteral()))
     
-    assertReflexiveParse("+INF.0", List(ast.PositiveInfinityLiteral))
-    assertReflexiveParse("-INF.0", List(ast.NegativeInfinityLiteral))
+    assertReflexiveParse("+INF.0", List(ast.PositiveInfinityLiteral()))
+    assertReflexiveParse("-INF.0", List(ast.NegativeInfinityLiteral()))
 
-    assertReflexiveParse("+NaN.0", List(ast.NaNLiteral))
-    assertReflexiveParse("-NaN.0", List(ast.NaNLiteral))
+    assertReflexiveParse("+NaN.0", List(ast.NaNLiteral()))
+    assertReflexiveParse("-NaN.0", List(ast.NaNLiteral()))
   }
 
   test("strings") {
-     def assertStringParsesAs(schemeString : String, result : String) =
-      inside(SchemeParser("\"" + schemeString + "\"")) { case SchemeParser.Success(data, _) =>
-        assert(data === List(ast.StringLiteral(result)))
-      }
+     def assertStringParsesAs(schemeString : String, result : String) = {
+       val data = SchemeParser.parseStringAsData("\"" + schemeString + "\"")
+       assert(data === List(ast.StringLiteral(result)))
+     }
 
     assertStringParsesAs("", "")
     assertStringParsesAs("""Hello, world!""", "Hello, world!")
@@ -147,7 +144,7 @@ newline""", "Bare\nnewline")
   test("proper lists") {
     assert(scm"(#true integer? |Hello| -1 2.0)" === List(
       ast.ProperList(List(
-        ast.TrueLiteral, 
+        ast.BooleanLiteral(true), 
         ast.Symbol("integer?"), 
         ast.Symbol("Hello"),
         ast.IntegerLiteral(-1),
@@ -158,9 +155,9 @@ newline""", "Bare\nnewline")
 
   test("improper lists") {
     assert(scm"(#false ONE 2.0 . +inf.0)" == List(
-      ast.Pair(ast.FalseLiteral,
+      ast.Pair(ast.BooleanLiteral(false),
         ast.Pair(ast.Symbol("ONE"),
-          ast.Pair(ast.RationalLiteral(2.0), ast.PositiveInfinityLiteral
+          ast.Pair(ast.RationalLiteral(2.0), ast.PositiveInfinityLiteral()
     )))))
   }
 
@@ -231,7 +228,7 @@ newline""", "Bare\nnewline")
   }
 
   test("unspecific") {
-    assertReflexiveParse("#!unspecific", List(ast.UnspecificValue))
+    assertReflexiveParse("#!unspecific", List(ast.UnspecificValue()))
   }
 
   test("comments") {
@@ -244,8 +241,7 @@ newline""", "Bare\nnewline")
       (display "LOL")
       """;
 
-    inside(SchemeParser(multilineTest)) { case SchemeParser.Success(data, _) =>
-      assert(data === List(ast.ProperList(List(ast.Symbol("display"), ast.StringLiteral("LOL")))))
-    }
+    val data = SchemeParser.parseStringAsData(multilineTest)
+    assert(data === List(ast.ProperList(List(ast.Symbol("display"), ast.StringLiteral("LOL")))))
   }
 }

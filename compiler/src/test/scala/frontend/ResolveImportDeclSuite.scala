@@ -5,12 +5,8 @@ import llambda._
 
 class ResolveImportDeclSuite extends FunSuite { 
   def bindingFor(scheme : String) = {
-    SchemeParser(scheme) match {
-      case SchemeParser.Success(datum :: Nil, _) =>
-        ResolveImportDecl(datum)(new LibraryLoader, IncludePath())
-      case err =>
-        fail(err.toString)
-    }
+    val datum :: Nil = SchemeParser.parseStringAsData(scheme)
+    ResolveImportDecl(datum)(new LibraryLoader, IncludePath())
   }
   
   test("import all primitives") {

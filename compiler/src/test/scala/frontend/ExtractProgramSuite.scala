@@ -4,13 +4,9 @@ import org.scalatest.{FunSuite,Inside}
 import llambda._
 
 class ExtractProgramSuite extends FunSuite with Inside {
-  def programFor(scheme : String) = {
-    SchemeParser(scheme) match {
-      case SchemeParser.Success(data, _) =>
-        frontend.ExtractProgram(data)(new LibraryLoader, IncludePath())
-      case err =>
-        fail(err.toString)
-    }
+  def programFor(scheme : String) : List[et.Expression] = {
+    val data = SchemeParser.parseStringAsData(scheme)
+    frontend.ExtractProgram(data)(new LibraryLoader, IncludePath())
   }
 
   test("initial environment has no bindings") {

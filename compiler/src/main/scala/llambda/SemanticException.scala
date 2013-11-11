@@ -6,52 +6,55 @@ sealed abstract class SemanticException(message : String) extends Exception(mess
   val semanticErrorType : String
 }
 
-class DubiousLibraryNameComponentException(val libraryName : String) extends SemanticException(libraryName) {
+// XXX: Make everything a LocatedSemanticException
+sealed abstract class LocatedSemanticException(val located : SourceLocated, message : String) extends SemanticException(message + "\n" + located.locationString)
+
+class DubiousLibraryNameComponentException(located : SourceLocated, val libraryName : String) extends LocatedSemanticException(located, libraryName) {
   val semanticErrorType = "dubious library name"
 }
 
-abstract class ReferencedFileNotFoundException(val filename : String) extends SemanticException(filename)
+abstract class ReferencedFileNotFoundException(located : SourceLocated, val filename : String) extends LocatedSemanticException(located, filename)
 
-class LibraryNotFoundException(filename : String) extends ReferencedFileNotFoundException(filename) {
+class LibraryNotFoundException(located : SourceLocated, filename : String) extends ReferencedFileNotFoundException(located, filename) {
   val semanticErrorType = "library not found"
 }
 
-class IncludeNotFoundException(filename : String) extends ReferencedFileNotFoundException(filename) {
+class IncludeNotFoundException(located : SourceLocated, filename : String) extends ReferencedFileNotFoundException(located, filename) {
   val semanticErrorType = "include not found"
 }
 
-class LibraryNameMismatchException(val loadedName : Seq[LibraryNameComponent], val definedName : List[LibraryNameComponent]) extends
-  SemanticException(loadedName.mkString(" ") + " doesn't match " + definedName.mkString(" ")) {
+class LibraryNameMismatchException(located : SourceLocated, val loadedName : Seq[LibraryNameComponent], val definedName : List[LibraryNameComponent]) extends
+  LocatedSemanticException(located, "(" + loadedName.mkString(" ") + ") doesn't match (" + definedName.mkString(" ") + ")") {
   val semanticErrorType = "library name mismatch"
 }
 
-case class InvalidLibraryNameException(val datum : ast.Datum) extends SemanticException(datum.toString) {
+case class InvalidLibraryNameException(val datum : ast.Datum) extends LocatedSemanticException(datum, datum.toString) {
   val semanticErrorType = "invalid library name"
 }
 
-class NoSyntaxRuleException(message : String) extends SemanticException(message) {
+class NoSyntaxRuleException(located : SourceLocated, message : String) extends LocatedSemanticException(located, message) {
   val semanticErrorType = "no syntax rule"
 }
 
-class MalformedExpressionException(message : String) extends SemanticException(message) {
+class MalformedExpressionException(located : SourceLocated, message : String) extends LocatedSemanticException(located, message) {
   val semanticErrorType = "malformed expression"
 }
 
-class BadSpecialFormException(message : String) extends SemanticException(message) {
+class BadSpecialFormException(located : SourceLocated, message : String) extends LocatedSemanticException(located, message) {
   val semanticErrorType = "bad special form"
 }
 
-class UnboundVariableException(val variableName : String) extends SemanticException(variableName) {
+class UnboundVariableException(located : SourceLocated, val variableName : String) extends LocatedSemanticException(located, variableName) {
   val semanticErrorType = "unbound variable"
 }
 
-class UserDefinedSyntaxError(val errorString  : String, val data : List[ast.Datum])
-  extends SemanticException(errorString + " " + data.map(_.toString).mkString(" ")) {
+class UserDefinedSyntaxError(located : SourceLocated, val errorString  : String, val data : List[ast.Datum])
+  extends LocatedSemanticException(located, errorString + " " + data.map(_.toString).mkString(" ")) {
 
   val semanticErrorType = "user defined syntax error"
 }
 
-class ImportedIdentifierNotFoundException(val identifier : String) extends SemanticException(identifier) {
+class ImportedIdentifierNotFoundException(located : SourceLocated, val identifier : String) extends LocatedSemanticException(located, identifier) {
   val semanticErrorType = "imported identifier not found"
 }
 

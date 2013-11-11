@@ -42,26 +42,20 @@ object ExtractModuleBody {
     }
   }
 
-  private def getVar(scope : Scope)(name : String) : BoundValue = {
-    scope.get(name).getOrElse {
-      throw new UnboundVariableException(name)
-    }
-  }
-
   private def createLambda(fixedArgData : List[sst.ScopedDatum], restArgDatum : Option[sst.ScopedSymbol], definition : List[sst.ScopedDatum])(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : et.Lambda = {
     // Create our actual procedure arguments
     // These unique identify the argument independently of its binding at a
     // given time
-    case class ScopedArgument(scope : Scope, name : String, boundValue : StorageLocation)
+    case class ScopedArgument(symbol : sst.ScopedSymbol, boundValue : StorageLocation)
 
     // Determine our arguments
     val fixedArgs = fixedArgData.map {
-      case sst.ScopedSymbol(scope, name) => ScopedArgument(scope, name, new StorageLocation(name))
-      case datum => throw new BadSpecialFormException("Symbol expected, found " + datum.unscope)
+      case symbol : sst.ScopedSymbol => ScopedArgument(symbol, new StorageLocation(symbol.name))
+      case datum => throw new BadSpecialFormException(datum, "Symbol expected")
     }
 
     val restArg = restArgDatum.map { scopedSymbol  =>
-      ScopedArgument(scopedSymbol.scope, scopedSymbol.name, new StorageLocation(scopedSymbol.name))
+      ScopedArgument(scopedSymbol, new StorageLocation(scopedSymbol.name))
     }
     
     val allArgs = fixedArgs ++ restArg.toList
@@ -72,20 +66,24 @@ object ExtractModuleBody {
     }
 
     // Introduce new scopes with our arguments injected in to them
-    val argsForScope = allArgs groupBy(_.scope)
+    val argsForScope = allArgs groupBy(_.symbol.scope)
       
     val scopeMapping = (definitionScopes map { outerScope => 
       val scopeArgs = argsForScope.getOrElse(outerScope, List())
       
       // Check for duplicate args within this scope
-      val scopeArgNames = scopeArgs.map(_.name)
+      scopeArgs.foldLeft(Set[String]()) { case (names, scopeArg) =>  
+        val name = scopeArg.symbol.name
 
-      if (scopeArgNames.toSet.size != scopeArgNames.size) {
-        throw new BadSpecialFormException("Duplicate formal parameters: " + scopeArgNames)
+        if (names.contains(name)) {
+          throw new BadSpecialFormException(scopeArg.symbol, "Duplicate formal parameter: " + name)
+        }
+
+        names + name
       }
 
       val binding = collection.mutable.Map(scopeArgs.map { arg =>
-        (arg.name -> arg.boundValue)
+        (arg.symbol.name -> arg.boundValue)
       } : _*) : collection.mutable.Map[String, BoundValue]
 
       val innerScope = new Scope(binding, Some(outerScope))
@@ -163,8 +161,8 @@ object ExtractModuleBody {
     et.Apply(et.VarRef(builderProc), builderArgs.toList)
   }
 
-  private def extractInclude(scope : Scope, includeNameData : List[sst.ScopedDatum])(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : et.Expression = {
-    val includeResults = ResolveIncludeList(includeNameData.map(_.unscope))
+  private def extractInclude(scope : Scope, includeNameData : List[sst.ScopedDatum], includeLocation : SourceLocated)(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : et.Expression = {
+    val includeResults = ResolveIncludeList(includeNameData.map(_.unscope), includeLocation)
 
     val includeExprs = includeResults flatMap { result =>
       // XXX: Should we disallow body defines here in a non-body context?
@@ -180,7 +178,7 @@ object ExtractModuleBody {
   private def extractApplication(procedure : et.Expression, procedureDatum : sst.ScopedDatum, operands : List[sst.ScopedDatum])(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : et.Expression = {
     (procedure, operands) match {
       case (et.VarRef(syntax : BoundSyntax), operands) =>
-        extractExpression(ExpandMacro(syntax, operands))
+        extractExpression(ExpandMacro(syntax, operands, procedureDatum))
 
       case (et.VarRef(SchemePrimitives.Quote), innerDatum :: Nil) =>
         et.Literal(innerDatum.unscope)
@@ -195,14 +193,16 @@ object ExtractModuleBody {
         et.Cond(
           extractExpression(test), 
           extractExpression(trueExpr), 
-          et.Literal(ast.UnspecificValue))
+          et.Literal(ast.UnspecificValue()))
 
-      case (et.VarRef(SchemePrimitives.Set), sst.ScopedSymbol(scope, variableName) :: value :: Nil) =>
-        getVar(scope)(variableName) match {
-          case storageLoc : StorageLocation =>
+      case (et.VarRef(SchemePrimitives.Set), (scopedSymbol : sst.ScopedSymbol) :: value :: Nil) =>
+        scopedSymbol.resolve match {
+          case Some(storageLoc : StorageLocation) =>
             et.MutateVar(storageLoc, extractExpression(value))
+          case None =>
+            throw new UnboundVariableException(scopedSymbol, scopedSymbol.name)
           case _ =>
-            throw new BadSpecialFormException(s"Attempted set! non-variable ${variableName}") 
+            throw new BadSpecialFormException(scopedSymbol, s"Attempted set! non-variable ${scopedSymbol.name}") 
         }
 
       case (et.VarRef(SchemePrimitives.Lambda), (restArgDatum : sst.ScopedSymbol) :: definition) =>
@@ -214,8 +214,8 @@ object ExtractModuleBody {
       case (et.VarRef(SchemePrimitives.Lambda), sst.ScopedImproperList(fixedArgData, (restArgDatum : sst.ScopedSymbol)) :: definition) =>
         createLambda(fixedArgData, Some(restArgDatum), definition)
 
-      case (et.VarRef(SchemePrimitives.SyntaxError), sst.NonSymbolLeaf(ast.StringLiteral(errorString)) :: data) =>
-        throw new UserDefinedSyntaxError(errorString, data.map(_.unscope))
+      case (et.VarRef(SchemePrimitives.SyntaxError), (errorDatum @ sst.NonSymbolLeaf(ast.StringLiteral(errorString))) :: data) =>
+        throw new UserDefinedSyntaxError(errorDatum, errorString, data.map(_.unscope))
 
       case (et.VarRef(SchemePrimitives.Include), includeNames) =>
         // We need the scope from the (include) to rescope the included file
@@ -226,10 +226,10 @@ object ExtractModuleBody {
             throw new InternalCompilerErrorException("Unable to determine scope of (include)")
         }
 
-        extractInclude(scope, includeNames)
+        extractInclude(scope, includeNames, procedureDatum)
 
       case (et.VarRef(NativeFunctionPrimitives.NativeFunction), _) =>
-        ExtractNativeFunction(operands)
+        ExtractNativeFunction(operands, procedureDatum)
 
       case (et.VarRef(SchemePrimitives.Quasiquote), sst.ScopedProperList(listData) :: Nil) => 
         buildQuasiquotation("list", listData)
@@ -238,10 +238,10 @@ object ExtractModuleBody {
         buildQuasiquotation("vector", elements)
       
       case (et.VarRef(SchemePrimitives.Unquote), _) =>
-          throw new BadSpecialFormException(s"Attempted (unquote) outside of quasiquotation") 
+        throw new BadSpecialFormException(procedureDatum, "Attempted (unquote) outside of quasiquotation") 
       
       case (et.VarRef(SchemePrimitives.UnquoteSplicing), _) =>
-          throw new BadSpecialFormException(s"Attempted (unquote-splicing) outside of quasiquotation") 
+        throw new BadSpecialFormException(procedureDatum, "Attempted (unquote-splicing) outside of quasiquotation") 
 
       case _ =>
         et.Apply(procedure, operands.map(extractExpression))
@@ -254,8 +254,13 @@ object ExtractModuleBody {
       val procedureExpr = extractExpression(procedure)
       extractApplication(procedureExpr, procedure, operands)
 
-    case sst.ScopedSymbol(scope, variableName) =>
-      et.VarRef(getVar(scope)(variableName))
+    case scopedSymbol : sst.ScopedSymbol =>
+      scopedSymbol.resolve match {
+        case Some(variable) =>
+          et.VarRef(variable)
+        case _ =>
+          throw new UnboundVariableException(scopedSymbol, scopedSymbol.name)
+      }
 
     // These all evaluate to themselves. See R7RS section 4.1.2
     case literal : sst.ScopedVectorLiteral =>
@@ -272,7 +277,7 @@ object ExtractModuleBody {
       et.Literal(literal)
 
     case malformed =>
-      throw new MalformedExpressionException(malformed.toString)
+      throw new MalformedExpressionException(malformed, malformed.toString)
   }
 
   private def parseSyntaxDefine(datum : sst.ScopedDatum) : ParsedSyntaxDefine = datum match {
@@ -282,19 +287,19 @@ object ExtractModuleBody {
                          ) :: Nil) =>
       val literalNames = literals.map { 
         case sst.ScopedSymbol(_, name) => name
-        case nonSymbol => throw new BadSpecialFormException("Symbol expected in literal list, found " + nonSymbol)
+        case nonSymbol => throw new BadSpecialFormException(nonSymbol, "Symbol expected in literal list")
       }
       
       val parsedRules = rules map {
         case sst.ScopedProperList(sst.ScopedProperList(_ :: pattern) :: template :: Nil) =>
           SyntaxRule(pattern, template)
-        case noMatch => throw new BadSpecialFormException("Unable to parse syntax rule " + noMatch)
+        case noMatch => throw new BadSpecialFormException(noMatch, "Unable to parse syntax rule")
       }
 
       ParsedSyntaxDefine(symbol, new BoundSyntax(literalNames, parsedRules))
 
     case noMatch =>
-      throw new BadSpecialFormException("Unrecognized define-syntax form " + noMatch)
+      throw new BadSpecialFormException(noMatch, "Unrecognized (define-syntax) form")
   }
 
   private def parseDefine(datum : sst.ScopedDatum)(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : Option[ParsedDefine] = datum match {
@@ -316,13 +321,13 @@ object ExtractModuleBody {
     case sst.ScopedProperList(sst.ScopedSymbol(_, "define-syntax") :: _) =>
       Some(parseSyntaxDefine(datum))
 
-    case sst.ScopedProperList(sst.ScopedSymbol(scope, procedureName) :: operands) =>
-      scope.get(procedureName) match {
+    case sst.ScopedProperList((scopedSymbol : sst.ScopedSymbol) :: operands) =>
+      scopedSymbol.resolve match {
         case Some(syntax : BoundSyntax) =>
           // Cheap hack to look for macros early
           // We need to expand them in a body context if they appear in a body
           // Otherwise (define) won't work in macros
-          parseDefine(ExpandMacro(syntax, operands))
+          parseDefine(ExpandMacro(syntax, operands, scopedSymbol))
 
         case Some(InternalPrimitives.DefineReportProcedure) =>
           operands match {
@@ -332,7 +337,7 @@ object ExtractModuleBody {
               }))
 
             case _ =>
-              throw new BadSpecialFormException("define-report-procedure requires exactly two arguments")
+              throw new BadSpecialFormException(scopedSymbol, "(define-report-procedure) requires exactly two arguments")
           }
 
         case _ => None

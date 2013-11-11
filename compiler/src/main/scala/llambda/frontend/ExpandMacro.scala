@@ -161,7 +161,7 @@ private[frontend] object ExpandMacro {
     }
   }
 
-  def apply(syntax : BoundSyntax, operands : List[sst.ScopedDatum]) : sst.ScopedDatum = {
+  def apply(syntax : BoundSyntax, operands : List[sst.ScopedDatum], located : SourceLocated) : sst.ScopedDatum = {
     val expandable = syntax.rules.flatMap { rule =>
       try {
         Some(Expandable(rule.template, matchRule(syntax.literals, rule.pattern, operands)))
@@ -170,7 +170,7 @@ private[frontend] object ExpandMacro {
         case _ : MatchFailedException => None
       }
     }.headOption.getOrElse {
-      throw new NoSyntaxRuleException(operands.map(_.unscope.toString).mkString(" "))
+      throw new NoSyntaxRuleException(located, operands.map(_.unscope.toString).mkString(" "))
     }
 
     expandTemplate(expandable.template, expandable.rewrites)

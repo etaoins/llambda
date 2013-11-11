@@ -35,7 +35,7 @@ class FindMutableVarsSuite extends FunSuite {
           testLocB -> et.Literal(ast.BooleanLiteral(false))
         )
       ),
-      et.MutateVar(testLocA, et.Literal(ast.EmptyList))
+      et.MutateVar(testLocA, et.Literal(ast.EmptyList()))
     )
 
     val mutables = testExprs.flatMap(FindMutableVars.apply).toSet
@@ -55,8 +55,8 @@ class FindMutableVarsSuite extends FunSuite {
       ),
       et.Cond(
         et.Literal(ast.BooleanLiteral(false)),
-        et.MutateVar(testLocA, et.Literal(ast.EmptyList)),
-        et.Literal(ast.UnspecificValue)
+        et.MutateVar(testLocA, et.Literal(ast.EmptyList())),
+        et.Literal(ast.UnspecificValue())
       ))
 
     val mutables = testExprs.flatMap(FindMutableVars.apply).toSet
@@ -81,7 +81,7 @@ class FindMutableVarsSuite extends FunSuite {
           body=et.Begin(Nil)
         ),
         List(
-          et.MutateVar(testLocA, et.Literal(ast.EmptyList))
+          et.MutateVar(testLocA, et.Literal(ast.EmptyList()))
         )
       )
     )
@@ -105,7 +105,7 @@ class FindMutableVarsSuite extends FunSuite {
         et.Lambda(
           fixedArgs=Nil,
           restArg=None,
-          body=et.MutateVar(testLocA, et.Literal(ast.EmptyList))
+          body=et.MutateVar(testLocA, et.Literal(ast.EmptyList()))
         ),
         Nil
       )
@@ -129,7 +129,7 @@ class FindMutableVarsSuite extends FunSuite {
       et.Lambda(
         fixedArgs=Nil,
         restArg=None,
-        body=et.MutateVar(testLocA, et.Literal(ast.EmptyList))
+        body=et.MutateVar(testLocA, et.Literal(ast.EmptyList()))
       )
     )
     
@@ -151,7 +151,7 @@ class FindMutableVarsSuite extends FunSuite {
       ),
       et.Bind(
         List(
-          testLocC -> et.MutateVar(testLocA, et.Literal(ast.EmptyList))
+          testLocC -> et.MutateVar(testLocA, et.Literal(ast.EmptyList()))
         )
       )
     )

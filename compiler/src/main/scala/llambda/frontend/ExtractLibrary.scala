@@ -7,7 +7,7 @@ private[frontend] object ExtractLibrary {
   private def expandIncludeDecls(datum : ast.Datum)(implicit includePath : IncludePath) : List[(IncludePath, ast.Datum)] = datum match {
     case ast.ProperList(ast.Symbol("include") :: includeNameData) =>
       // Include the files and wrap them in (begin)
-      val includeResults = ResolveIncludeList(includeNameData)
+      val includeResults = ResolveIncludeList(includeNameData, datum)
 
       includeResults map { result =>
         (result.innerIncludePath, ast.ProperList(ast.Symbol("begin") :: result.data))
@@ -15,7 +15,7 @@ private[frontend] object ExtractLibrary {
     
     case ast.ProperList(ast.Symbol("include-library-declarations") :: includeNameData) =>
       // Splice the includes in directly
-      val includeResults = ResolveIncludeList(includeNameData)
+      val includeResults = ResolveIncludeList(includeNameData, datum)
       
       includeResults flatMap { result =>
         result.data flatMap { datum =>
@@ -28,10 +28,16 @@ private[frontend] object ExtractLibrary {
       List((includePath, nonInclude))
   }
 
-  def apply(datum : ast.Datum)(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : Library = datum match {
+  def apply(datum : ast.Datum, expectedName : Option[Seq[LibraryNameComponent]] = None)(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : Library = datum match {
     case ast.ProperList(ast.Symbol("define-library") :: libraryNameData :: decls) =>
       // Parse the library name
       val libraryName = ParseLibraryName(libraryNameData)
+    
+      for (expected <- expectedName) {
+        if (libraryName != expected) {
+          throw new LibraryNameMismatchException(libraryNameData, expected, libraryName)
+        }
+      }
 
       // Expand both types of includes in our first pass
       // Construct the proper include path at the same time so second-order
@@ -51,8 +57,8 @@ private[frontend] object ExtractLibrary {
           case ast.Pair(ast.Symbol("import"), _) => DeclType.Import
           case ast.Pair(ast.Symbol("export"), _) => DeclType.Export
           case ast.Pair(ast.Symbol("begin"), _) => DeclType.Begin
-          case _ =>
-            throw new BadSpecialFormException("Bad library declaration: " + datum)
+          case other =>
+            throw new BadSpecialFormException(other, "Bad library declaration")
         }
       }
 
@@ -72,7 +78,7 @@ private[frontend] object ExtractLibrary {
           ExtractModuleBody(exprs)(scope, libraryLoader, beginIncludePath)
 
         case (_, other) =>
-          throw new BadSpecialFormException("Bad begin declaration: " + other)
+          throw new BadSpecialFormException(other, "Bad begin declaration")
       }
 
       // Evaluate exports to determine our exported bindings
@@ -81,32 +87,32 @@ private[frontend] object ExtractLibrary {
       // Flatten out our decls
       val exportSpecs = exportDecls map(_._2) flatMap {
         case ast.ProperList(ast.Symbol("export") :: decls) => decls
-        case other => throw new BadSpecialFormException("Bad export declaration: " + other)
+        case other => throw new BadSpecialFormException(other, "Bad export declaration")
       }
 
       val exportedBinding = (exportSpecs map {
-        case ast.ProperList(ast.Symbol("rename") :: ast.Symbol(internalIdent) :: ast.Symbol(externalIdent) :: Nil) =>
+        case ast.ProperList(ast.Symbol("rename") :: (internalSymbol @ ast.Symbol(internalIdent)) :: ast.Symbol(externalIdent) :: Nil) =>
           val boundValue = scope.get(internalIdent).getOrElse {
-            throw new UnboundVariableException(internalIdent)
+            throw new UnboundVariableException(internalSymbol, internalIdent)
           }
 
           (externalIdent, boundValue)
 
-        case ast.Symbol(ident) =>
+        case internalSymbol @ ast.Symbol(ident) =>
           val boundValue = scope.get(ident).getOrElse {
-            throw new UnboundVariableException(ident)
+            throw new UnboundVariableException(internalSymbol, ident)
           }
 
           (ident, boundValue)
 
         case other =>
-          throw new BadSpecialFormException("Bad export specification: " + other)
+          throw new BadSpecialFormException(other, "Bad export specification")
       }).toMap
       
       Library(libraryName, exportedBinding, expressions)
 
-    case _ =>
-      throw new BadSpecialFormException("Bad library declaration: " + datum)
+    case other =>
+      throw new BadSpecialFormException(other, "Bad library declaration")
   }
 }
 

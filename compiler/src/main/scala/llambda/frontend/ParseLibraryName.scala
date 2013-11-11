@@ -8,7 +8,7 @@ private[frontend] object ParseLibraryName {
       (firstComponent :: restComponent) map {
         case ast.Symbol(str) => StringComponent(str)
         case ast.IntegerLiteral(int) if int > 0 => IntegerComponent(int)
-        case otherComponent => throw new InvalidLibraryNameException(datum) 
+        case otherComponent => throw new InvalidLibraryNameException(otherComponent) 
       }
 
     case _ => throw new InvalidLibraryNameException(datum)

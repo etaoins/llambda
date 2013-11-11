@@ -32,10 +32,10 @@ object GenLiteral {
       case ast.Bytevector(elements) =>
         LiveBytevector.fromConstant(module)(elements)
 
-      case ast.UnspecificValue =>
+      case ast.UnspecificValue() =>
         LiveUnspecific
       
-      case ast.EmptyList =>
+      case ast.EmptyList() =>
         LiveEmptyList
     }
   }

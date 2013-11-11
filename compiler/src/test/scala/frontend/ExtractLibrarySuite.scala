@@ -14,13 +14,9 @@ class ExtractLibrarySuite extends FunSuite with Inside {
 
   val exampleName = List(StringComponent("example"), StringComponent("lib"))
 
-  def libraryFor(scheme : String) = {
-    SchemeParser(scheme) match {
-      case SchemeParser.Success(datum :: Nil, _) =>
-        ExtractLibrary(datum)(new LibraryLoader, includePath)
-      case err =>
-        fail(err.toString)
-    }
+  def libraryFor(scheme : String) : Library = {
+    val datum :: Nil = SchemeParser.parseStringAsData(scheme)
+    ExtractLibrary(datum)(new LibraryLoader, includePath)
   }
   
   test("empty datum is invalid") {

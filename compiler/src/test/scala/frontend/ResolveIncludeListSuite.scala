@@ -35,7 +35,7 @@ class ResolveIncludeListSuite extends FunSuite {
   test("including a proper list fails") {
     intercept[BadSpecialFormException] {
       ResolveIncludeList(List(
-        ast.StringLiteral("Hello"),
+        ast.StringLiteral("includes/include1.scm"),
         ast.ProperList(List(
           ast.StringLiteral("World")
         ))

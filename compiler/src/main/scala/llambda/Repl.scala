@@ -14,19 +14,19 @@ abstract class SchemeParsingMode(name : String) extends ReplMode(name) {
   def evalDatum(data : ast.Datum) : String
 
   def evaluate(userString : String) {
-    SchemeParser(userString) match {
-      case SchemeParser.Success(data, _) => 
-        try {
-          for(datum <- data) {
-            println("res: " + evalDatum(datum))
-          }
-        }
-        catch {
-          case semantic : SemanticException =>
-            println(s"${semantic.semanticErrorType}: ${semantic.getMessage}")
-        }
-      case err =>
-        println("parse error: " + err)
+    try {
+      val data = SchemeParser.parseStringAsData(userString, Some("input")) 
+
+      for(datum <- data) {
+        println("res: " + evalDatum(datum))
+      }
+    }
+    catch {
+      case semantic : SemanticException =>
+        println(s"${semantic.semanticErrorType}: ${semantic.getMessage}")
+      
+      case parse : ParseErrorException =>
+        println("parse error: " + parse)
     }
   }
 }

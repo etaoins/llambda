@@ -29,7 +29,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                #f
          )))
          (false-literal)"""
-    ) === et.Literal(ast.FalseLiteral))
+    ) === et.Literal(ast.BooleanLiteral(false)))
   }
   
   test("first pattern symbol is ignored") {
@@ -40,7 +40,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                #f
          )))
          (false-literal)"""
-    ) === et.Literal(ast.FalseLiteral))
+    ) === et.Literal(ast.BooleanLiteral(false)))
   }
   
   test("simple expansion") {
@@ -77,7 +77,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                '(a . b)
          )))
          (return-two #t #f)"""
-    ) === et.Literal(ast.Pair(ast.TrueLiteral, ast.FalseLiteral)))
+    ) === et.Literal(ast.Pair(ast.BooleanLiteral(true), ast.BooleanLiteral(false))))
   }
   
   test("literals must exactly match") {
@@ -158,7 +158,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                '(#f var2 ... #t))
          ))
          (vector-mid #(a b c d))"""
-    ) === et.Literal(ast.ProperList(List(ast.FalseLiteral, ast.Symbol("b"), ast.Symbol("c"), ast.TrueLiteral))))
+    ) === et.Literal(ast.ProperList(List(ast.BooleanLiteral(false), ast.Symbol("b"), ast.Symbol("c"), ast.BooleanLiteral(true)))))
   }
   
   test("constant matching") {
@@ -254,7 +254,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                '(values ...)
          )))
          (return-all)"""
-    ) === et.Literal(ast.EmptyList))
+    ) === et.Literal(ast.EmptyList()))
   }
   
   test("middle zero or more match") {
@@ -287,7 +287,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                '(values ... #f)
          )))
          (append-false 1 2)"""
-    ) === et.Literal(ast.ProperList(List(ast.IntegerLiteral(1), ast.IntegerLiteral(2), ast.FalseLiteral))))
+    ) === et.Literal(ast.ProperList(List(ast.IntegerLiteral(1), ast.IntegerLiteral(2), ast.BooleanLiteral(false)))))
   }
   
   test("splice to middle of improper list") {
@@ -298,7 +298,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                '(values ... . #f)
          )))
          (append-improper-false 1 2)"""
-    ) === et.Literal(ast.ImproperList(List(ast.IntegerLiteral(1), ast.IntegerLiteral(2)), ast.FalseLiteral)))
+    ) === et.Literal(ast.ImproperList(List(ast.IntegerLiteral(1), ast.IntegerLiteral(2)), ast.BooleanLiteral(false))))
   }
 
   test("body expressions allowed in body context") {

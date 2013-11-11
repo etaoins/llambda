@@ -29,12 +29,8 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
   // Load the tests
   val allTestSource = io.Source.fromInputStream(stream, "UTF-8").mkString
 
-  SchemeParser(allTestSource) match {
-    case SchemeParser.Success(parsed, _) =>
-      runAllTests(parsed)
-    case other =>
-      fail(other.toString)
-  }
+  val parsed = SchemeParser.parseStringAsData(allTestSource, Some(s":/${resourcePath}"))
+  runAllTests(parsed)
 
   private def runAllTests(allTests : List[ast.Datum]) {
     for(singleTest <- allTests) {
@@ -126,10 +122,7 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
       val outputString = utf8InputStreamToString(stdout.get)
       val errorString = utf8InputStreamToString(stderr.get)
 
-      val output = SchemeParser(outputString) match {
-        case SchemeParser.Success(data :: Nil, _) => data
-        case other => fail(other.toString)
-      }
+      val output :: Nil = SchemeParser.parseStringAsData(outputString)
 
       if (!errorString.isEmpty) {
         fail(errorString)
@@ -138,7 +131,7 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
       ExecutionResult(success=true, output=output)
     }
     else {
-      ExecutionResult(success=false, output=ast.UnspecificValue)
+      ExecutionResult(success=false, output=ast.UnspecificValue())
     }
   }
 }

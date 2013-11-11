@@ -14,7 +14,14 @@ private[frontend] object IncludeLoader {
       val stream = includeUrl.openStream()
     
       val libraryString = io.Source.fromInputStream(stream, "UTF-8").mkString
-      val data = SchemeParser.parseStringAsData(libraryString)
+
+      // Find our filename
+      val filename = includeUrl.getProtocol match {
+        case "file" => includeUrl.getPath
+        case _ => includeUrl.toString
+      }
+      
+      val data = SchemeParser.parseStringAsData(libraryString, Some(filename))
 
       // Make a new IncludePath
       // This makes includes and libraries prefer loading other libraries from 

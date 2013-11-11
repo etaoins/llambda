@@ -2,10 +2,13 @@ package llambda
 
 import scala.util.matching.Regex
 import scala.util.parsing.combinator._
+import scala.io.Source
+import java.io.File
 
 import scala.language.postfixOps
 
-class ParseErrorException(message : String) extends Exception(message)
+class ParseErrorException(val filename : Option[String], val message : String) extends
+  Exception(filename.getOrElse("(unknown)") + ": " + message)
 
 object SchemeParserDefinitions {
   // This is monsterous to exclude a single "." and starting with numbers
@@ -51,17 +54,10 @@ object SchemeParserDefinitions {
   }
 }
 
-object SchemeParser extends RegexParsers {
+class SchemeParser(filename : Option[String]) extends RegexParsers {
   case class Comment()
 
   import SchemeParserDefinitions._
-
-  def parseStringAsData(input : String) : List[ast.Datum] = 
-    apply(input) match {
-      case SchemeParser.Success(data, _) => data
-      case err =>
-        throw new ParseErrorException(err.toString)
-    }
 
   def apply(input : String) : ParseResult[List[ast.Datum]] = parseAll(program, input)
 
@@ -72,31 +68,48 @@ object SchemeParser extends RegexParsers {
     }
   }
 
-  def datum : Parser[ast.Datum] = atom | list | quotedDatum | quasiquotedDatum | splicingUnquotedDatum | unquotedDatum
+  def datum : Parser[ast.Datum] = positioned(atom | list | quotedDatum | quasiquotedDatum | splicingUnquotedDatum | unquotedDatum) ^^ { innerDatum =>
+    // Update our filename for our source location
+    // The "positioned" above will set the line/column for us
+    innerDatum.setFilename(filename)
+  }
 
   def commentedDatum : Parser[Comment] = """#;""".r ~> (atom | list) ^^^ Comment() 
 
   def quotedDatum = "'" ~> datum ^^ { innerDatum => 
-    ast.ProperList(List(ast.Symbol("quote"), innerDatum)) 
+    val syntheticSymbol = ast.Symbol("quote")
+    // This ensures our synthetic symbol as a source location for error messages
+    innerDatum.assignLocationTo(syntheticSymbol)
+
+    ast.ProperList(List(syntheticSymbol, innerDatum)) 
   }
 
   def quasiquotedDatum = "`" ~> datum ^^ { innerDatum =>
-    ast.ProperList(List(ast.Symbol("quasiquote"), innerDatum)) 
+    val syntheticSymbol = ast.Symbol("quasiquote")
+    innerDatum.assignLocationTo(syntheticSymbol)
+    
+    ast.ProperList(List(syntheticSymbol, innerDatum)) 
   }
 
   def unquotedDatum =  "," ~> datum ^^ { innerDatum => 
-    ast.ProperList(List(ast.Symbol("unquote"), innerDatum)) 
+    val syntheticSymbol = ast.Symbol("unquote")
+    innerDatum.assignLocationTo(syntheticSymbol)
+    
+    ast.ProperList(List(syntheticSymbol, innerDatum)) 
   }
 
   def splicingUnquotedDatum = ",@" ~> datum ^^ { innerDatum =>
-    ast.ProperList(List(ast.Symbol("unquote-splicing"), innerDatum))
+    val syntheticSymbol = ast.Symbol("unquote-splicing")
+    innerDatum.assignLocationTo(syntheticSymbol)
+
+    ast.ProperList(List(syntheticSymbol, innerDatum))
   }
 
   def atom : Parser[ast.Datum] = string | number | boolean | symbol | vector | bytevector | character | unspecific 
 
   def boolean = trueLiteral | falseLiteral
-  def trueLiteral = """#t(rue)?""".r ^^^ ast.TrueLiteral
-  def falseLiteral = """#f(alse)?""".r ^^^ ast.FalseLiteral
+  def trueLiteral = """#t(rue)?""".r ^^^ ast.BooleanLiteral(true)
+  def falseLiteral = """#f(alse)?""".r ^^^ ast.BooleanLiteral(false)
 
   // Ignore the integer suffixes as we're not required to do anything with the storage hints
   def number = numberValue <~ opt("(?i)[sfdle]0".r)
@@ -110,9 +123,9 @@ object SchemeParser extends RegexParsers {
   
   def real = decimalReal | positiveInf | negativeInf | notANumber
   def decimalReal = opt("#[dD]".r) ~>  """-?\d+\.\d+""".r  ^^ { x => ast.RationalLiteral(x.toDouble) }
-  def positiveInf = """(?i)\+inf\.0""".r   ^^^ ast.PositiveInfinityLiteral
-  def negativeInf = """(?i)-inf\.0""".r    ^^^ ast.NegativeInfinityLiteral
-  def notANumber = """(?i)[+\-]nan\.0""".r ^^^ ast.NaNLiteral
+  def positiveInf = """(?i)\+inf\.0""".r   ^^^ ast.PositiveInfinityLiteral()
+  def negativeInf = """(?i)-inf\.0""".r    ^^^ ast.NegativeInfinityLiteral()
+  def notANumber = """(?i)[+\-]nan\.0""".r ^^^ ast.NaNLiteral()
 
   def string = ("\"" + """([^"\\]|""" + stringEscapePattern + """)*""" + "\"").r  ^^ { rawString => 
     ast.StringLiteral(unescapeString(rawString.drop(1).dropRight(1)))
@@ -170,8 +183,27 @@ object SchemeParser extends RegexParsers {
   def literalSpace = """#\ """ ^^^ ast.CharLiteral(' ')
   def literalCharacter = """#\""" ~> """.""".r ^^ { literalStr => ast.CharLiteral(literalStr.charAt(0)) }
 
-  def unspecific = "#!unspecific" ^^^ ast.UnspecificValue
+  def unspecific = "#!unspecific" ^^^ ast.UnspecificValue()
 
   // Space, ; comments and #| |# comments are whitespace. Datum comments are handled by commentedDatum
   override protected val whiteSpace = """(\s|;.*(\n|$)|#\|(.|\n)*\|#)+""".r
+}
+
+object SchemeParser {
+  def parseFileAsData(input : File) : List[ast.Datum] = {
+    val filename = input.getAbsolutePath 
+    val inputString = Source.fromFile(input, "UTF-8").mkString
+
+    parseStringAsData(inputString, Some(filename))
+  }
+
+  def parseStringAsData(input : String, filename : Option[String] = None) : List[ast.Datum] = {
+    val parser = new SchemeParser(filename)
+
+    parser(input) match {
+      case parser.Success(data, _) => data
+      case err =>
+        throw new ParseErrorException(filename, err.toString)
+    }
+  }
 }

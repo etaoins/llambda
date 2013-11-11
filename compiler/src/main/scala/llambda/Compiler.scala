@@ -36,7 +36,7 @@ object Compiler {
   }
   
   def compileFile(input : File, output : File, config : CompileConfig) : Unit =
-    compileString(Source.fromFile(input, "UTF-8").mkString, output, config)
+    compileData(SchemeParser.parseFileAsData(input), output, config)
   
   def compileString(inputString : String, output : File, config : CompileConfig) : Unit =
     compileData(SchemeParser.parseStringAsData(inputString), output, config)

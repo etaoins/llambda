@@ -6,39 +6,34 @@ class LibraryLoader {
   private val exprBuffer = collection.mutable.ListBuffer[et.Expression]()
   private val loadedFiles = collection.mutable.Map.empty[String, Map[String, BoundValue]]
 
-  private def loadLibraryFile(filename : String, libraryName : Seq[LibraryNameComponent])(implicit includePath : IncludePath) : Map[String, BoundValue] = {
+  private def loadLibraryFile(filename : String, libraryName : Seq[LibraryNameComponent], loadLocation : SourceLocated)(implicit includePath : IncludePath) : Map[String, BoundValue] = {
     val searchRoots = includePath.librarySearchRoots
 
     val library = IncludeLoader(searchRoots, filename) match {
       case Some(IncludeLoadResult(libraryIncludePath, datum :: Nil)) =>
-        ExtractLibrary(datum)(this, libraryIncludePath)
+        ExtractLibrary(datum, Some(libraryName))(this, libraryIncludePath)
 
       case Some(IncludeLoadResult(_, data)) =>
-        throw new BadSpecialFormException("Multiple top-level data in library file: " + filename)
+        throw new BadSpecialFormException(loadLocation, "Multiple top-level data in library file: " + filename)
 
       case None =>
-        throw new LibraryNotFoundException(filename)
+        throw new LibraryNotFoundException(loadLocation, filename)
     }
 
     exprBuffer ++= library.expressions
 
-    if (library.name != libraryName) {
-      throw new LibraryNameMismatchException(libraryName, library.name)
-    }
-    else {
-      library.exports
-    }
+    library.exports
   }
 
-  private def loadLibraryFileOnce(filename : String, libraryName : Seq[LibraryNameComponent])(implicit includePath : IncludePath) : Map[String, BoundValue] = {
+  private def loadLibraryFileOnce(filename : String, libraryName : Seq[LibraryNameComponent], loadLocation : SourceLocated)(implicit includePath : IncludePath) : Map[String, BoundValue] = {
     loadedFiles.getOrElse(filename, {
-      val newBindings = loadLibraryFile(filename, libraryName)
+      val newBindings = loadLibraryFile(filename, libraryName, loadLocation)
       loadedFiles += (filename -> newBindings)
       newBindings
     })
   }
 
-  def load(libraryName : Seq[LibraryNameComponent])(implicit includePath : IncludePath) : Map[String, BoundValue] = {
+  def load(libraryName : Seq[LibraryNameComponent], loadLocation : SourceLocated = NoSourceLocation)(implicit includePath : IncludePath) : Map[String, BoundValue] = {
     libraryName match {
       case StringComponent("llambda") :: StringComponent("primitives") :: Nil =>
         SchemePrimitives.bindings
@@ -54,7 +49,7 @@ class LibraryLoader {
           case StringComponent(str) => 
             // These are reserved characters for POSIX paths
             if (str.contains('\0') || str.contains('/')) {
-              throw new DubiousLibraryNameComponentException(str)
+              throw new DubiousLibraryNameComponentException(loadLocation, str)
             }
             else {
               str
@@ -63,12 +58,12 @@ class LibraryLoader {
             int.toString
         }).mkString("/") + ".scm"
 
-        loadLibraryFileOnce(filename, libraryName)
+        loadLibraryFileOnce(filename, libraryName, loadLocation)
     }
   }
 
   def loadSchemeBase =
-    load(List("scheme", "base").map(StringComponent(_)))(IncludePath())
+    load(List("scheme", "base").map(StringComponent(_)), NoSourceLocation)(IncludePath())
 
   def libraryExpressions : List[et.Expression] = 
     exprBuffer.toList

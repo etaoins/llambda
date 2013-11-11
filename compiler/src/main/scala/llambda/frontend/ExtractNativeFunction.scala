@@ -2,9 +2,8 @@ package llambda.frontend
 
 import llambda._
 
-object ExtractNativeFunction
-{
-  private def parseNativeType(typeString : String, returnType : Boolean) : nfi.NativeType = typeString match {
+object ExtractNativeFunction {
+  private def parseNativeType(typeDatum : sst.ScopedSymbol, returnType : Boolean) : nfi.NativeType = typeDatum.name match {
     case "int8"   => nfi.Int8
     case "int16"  => nfi.Int16
     case "int32"  => nfi.Int32
@@ -31,29 +30,32 @@ object ExtractNativeFunction
     case "ushort" => nfi.UInt16
     case "uint"   => nfi.UInt32
 
-    case _ => 
+    case typeString => 
       val boxedType = NativeTypeNameToBoxedType.apply.applyOrElse(typeString, { unknownName : String =>
-        throw new BadSpecialFormException("Unknown native type: " + unknownName)
+        throw new BadSpecialFormException(typeDatum, "Unknown native type: " + unknownName)
       })
 
       nfi.BoxedValue(boxedType)
   }
     
-  private def createNativeFunction(fixedArgData : List[sst.ScopedDatum], restArgType : Option[String], returnTypeString : String, nativeSymbol : String) : et.NativeFunction = {
+  private def createNativeFunction(fixedArgData : List[sst.ScopedDatum], restArgDatum : Option[sst.ScopedSymbol], returnTypeDatum : sst.ScopedSymbol, nativeSymbol : String) : et.NativeFunction = {
     var fixedArgTypes = fixedArgData map {
-      case sst.ScopedSymbol(_, typeName) => parseNativeType(typeName, false)
-      case nonsymbol => throw new BadSpecialFormException("Excepted native type name to be string: " + nonsymbol)
+      case symbol : sst.ScopedSymbol =>
+        parseNativeType(symbol, false)
+      case nonsymbol =>
+        throw new BadSpecialFormException(nonsymbol, "Excepted native type name to be symbol")
     }
 
-    val hasRestArg = restArgType match {
-      case Some("boxed-list-element") => true
-      case Some(other) => throw new BadSpecialFormException("Only boxed-list-element can be used as a rest argument. Found: " + other)
+    val hasRestArg = restArgDatum match {
+      case Some(sst.ScopedSymbol(_, "boxed-list-element")) => true
+      case Some(other) => 
+        throw new BadSpecialFormException(other, "Only boxed-list-element can be used as a rest argument")
       case None => false
     }
 
-    val returnType = returnTypeString match {
-      case "void" => None
-      case _ => Some(parseNativeType(returnTypeString, true))
+    val returnType = returnTypeDatum match {
+      case sst.ScopedSymbol(_, "void") => None
+      case typeDatum => Some(parseNativeType(typeDatum, true))
     }
 
     et.NativeFunction(
@@ -63,18 +65,18 @@ object ExtractNativeFunction
       nativeSymbol = nativeSymbol)
   }
 
-  def apply(operands : List[sst.ScopedDatum]) : et.NativeFunction = operands match {
+  def apply(operands : List[sst.ScopedDatum], defineLocation : SourceLocated) : et.NativeFunction = operands match {
     // These mirror the lambda forms
-    case sst.NonSymbolLeaf(ast.StringLiteral(nativeSymbol)) :: sst.ScopedProperList(fixedArgs) :: sst.ScopedSymbol(_, returnType) :: Nil =>
-      createNativeFunction(fixedArgs, None, returnType, nativeSymbol)
+    case sst.NonSymbolLeaf(ast.StringLiteral(nativeSymbol)) :: sst.ScopedProperList(fixedArgs) :: (returnTypeDatum : sst.ScopedSymbol) :: Nil =>
+      createNativeFunction(fixedArgs, None, returnTypeDatum, nativeSymbol)
     
-    case sst.NonSymbolLeaf(ast.StringLiteral(nativeSymbol)) :: sst.ScopedSymbol(_, restArgType) :: sst.ScopedSymbol(_, returnType) :: Nil =>
-      createNativeFunction(Nil, Some(restArgType), returnType, nativeSymbol)
+    case sst.NonSymbolLeaf(ast.StringLiteral(nativeSymbol)) :: (restArgDatum : sst.ScopedSymbol) :: (returnTypeDatum : sst.ScopedSymbol) :: Nil =>
+      createNativeFunction(Nil, Some(restArgDatum), returnTypeDatum, nativeSymbol)
     
-    case sst.NonSymbolLeaf(ast.StringLiteral(nativeSymbol)) :: sst.ScopedImproperList(fixedArgs, sst.ScopedSymbol(_, restArgType)) :: sst.ScopedSymbol(_, returnType) :: Nil =>
-      createNativeFunction(fixedArgs, Some(restArgType), returnType, nativeSymbol)
+    case sst.NonSymbolLeaf(ast.StringLiteral(nativeSymbol)) :: sst.ScopedImproperList(fixedArgs, (restArgDatum : sst.ScopedSymbol)) :: (returnTypeDatum : sst.ScopedSymbol) :: Nil =>
+      createNativeFunction(fixedArgs, Some(restArgDatum), returnTypeDatum, nativeSymbol)
 
     case _ =>
-      throw new BadSpecialFormException("Bad native-function operands: " + operands.mkString(" "))
+      throw new BadSpecialFormException(defineLocation, "Bad native-function operands")
   }
 }

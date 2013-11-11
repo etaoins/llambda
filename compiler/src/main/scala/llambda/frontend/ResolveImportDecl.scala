@@ -5,29 +5,31 @@ import llambda._
 object ResolveImportDecl {
   private def parseIdentifier(datum : ast.Datum) : String = datum match {
     case ast.Symbol(name) => name
-    case other => throw new BadSpecialFormException("Symbol expected, found " + datum) 
+    case other => throw new BadSpecialFormException(datum, "Symbol expected") 
   }
 
   private def resolveImportSet(datum : ast.Datum)(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : Map[String, BoundValue] = datum match {
     case ast.ProperList(ast.Symbol("only") :: childSet :: identifierHead :: identifierTail) =>
       val childBindings = resolveImportSet(childSet) 
-      val identifiers = (identifierHead :: identifierTail).map(parseIdentifier)
-
-      (identifiers map { identifer =>
-        val boundValue = childBindings.getOrElse(identifer, {
-          throw new ImportedIdentifierNotFoundException(identifer)
+      
+      (identifierHead :: identifierTail).map({ identifierDatum => 
+        val identifier = parseIdentifier(identifierDatum)
+        
+        val boundValue = childBindings.getOrElse(identifier, {
+          throw new ImportedIdentifierNotFoundException(identifierDatum, identifier)
         })
 
-        (identifer -> boundValue)
+        (identifier -> boundValue)
       }).toMap
     
     case ast.ProperList(ast.Symbol("except") :: childSet :: identifierHead :: identifierTail) =>
       val childBindings = resolveImportSet(childSet) 
-      val identifiers = (identifierHead :: identifierTail).map(parseIdentifier)
-      
-      identifiers.foldLeft(childBindings) { (bindings, identifier) =>
+
+      (identifierHead :: identifierTail).foldLeft(childBindings) { (bindings, identifierDatum) =>
+        val identifier = parseIdentifier(identifierDatum)
+
         if (!bindings.contains(identifier)) {
-          throw new ImportedIdentifierNotFoundException(identifier)
+          throw new ImportedIdentifierNotFoundException(identifierDatum, identifier)
         }
 
         bindings - identifier
@@ -41,31 +43,32 @@ object ResolveImportDecl {
     case ast.ProperList(ast.Symbol("rename") :: childSet :: renameData) =>
       val childBindings = resolveImportSet(childSet) 
 
-      (renameData map {
-        // Convert to from -> to pairs
-        case ast.ProperList(ast.Symbol(from) :: ast.Symbol(to) :: Nil) =>
-          (from -> to)
-        case other =>
-          throw new BadSpecialFormException("Rename expected, found " + other)
-      }).foldLeft(childBindings) { case (bindings, (from, to)) =>
-        // Make sure the renamed identifier exists
-        val boundValue = bindings.getOrElse(from, { 
-          throw new ImportedIdentifierNotFoundException(from)
-        })
+      renameData.foldLeft(childBindings) { case (bindings, renameDatum) =>
+        renameDatum match {
+          // Convert to from -> to pairs
+          case ast.ProperList(ast.Symbol(from) :: ast.Symbol(to) :: Nil) =>
+            // Make sure the renamed identifier exists
+            val boundValue = bindings.getOrElse(from, { 
+              throw new ImportedIdentifierNotFoundException(renameDatum, from)
+            })
+            
+            bindings - from + (to -> boundValue)
 
-        // Update the bindings
-        bindings - from + (to -> boundValue)
+          case other =>
+            throw new BadSpecialFormException(other, "Rename expected")
+        }
       }
 
     case libraryNameDatum => 
-      libraryLoader.load(ParseLibraryName(libraryNameDatum))
+      libraryLoader.load(ParseLibraryName(libraryNameDatum), libraryNameDatum)
   }
 
   def apply(datum : ast.Datum)(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : Map[String, BoundValue] = datum match {
     case ast.ProperList(ast.Symbol("import") :: importSets) =>
       importSets.flatMap(resolveImportSet).toMap
 
-    case _ => throw new BadSpecialFormException("Unable to parse import declaration");
+    case _ =>
+      throw new BadSpecialFormException(datum, "Unable to parse import declaration");
   }
 }
 
