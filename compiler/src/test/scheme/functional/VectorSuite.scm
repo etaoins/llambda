@@ -54,3 +54,18 @@
 	(define test-vector (make-vector 5 1))
 	(vector-set! test-vector 2 2)
 	test-vector))
+
+(define-test "(vector-append) with no arguments" (expect #()
+	(vector-append)))
+
+(define-test "(vector-append) with single argument" (expect #(a b c)
+	(vector-append #(a b c))))
+
+(define-test "(append) three vectors" (expect #(1 2 3 4 5 6)
+	(vector-append #(1 2) #(3 4) #(5 6))))
+
+(define-test "(vector-append) three empty vectors" (expect #()
+	(vector-append #() #() #())))
+
+(define-test "(vector-append) with non-vector fails" (expect-failure
+	(vector-append '(1 2) '(3 4))))

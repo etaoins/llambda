@@ -62,4 +62,20 @@ BoxedVector *lliby_vector(BoxedListElement *argHead)
 	return new BoxedVector(newElements, length);
 }
 
+BoxedVector *lliby_vector_append(BoxedListElement *argHead)
+{
+	ProperList<BoxedVector> argList(argHead);
+	
+	if (!argList.isValid())
+	{
+		_lliby_fatal("Non-vector passed to (vector-append)", argHead); 
+	}
+
+	// Create a std::list
+	auto vectorList = std::list<const BoxedVector*>(argList.begin(), argList.end());
+
+	// Append the vectors
+	return BoxedVector::fromAppended(vectorList);
+}
+
 }
