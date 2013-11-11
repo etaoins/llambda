@@ -23,21 +23,25 @@ class ExtractProgramSuite extends FunSuite with Inside {
   }
   
   test("multiple imports") {
-    assert(programFor(
-      """(import (only (llambda primitives) set!)) 
-         (import (only (llambda primitives) lambda)) 
-         set!
-         lambda"""
-      ) === List(et.VarRef(SchemePrimitives.Set), et.VarRef(SchemePrimitives.Lambda)))
+    inside(programFor(
+      """(import (only (test singleexpr) a)) 
+         (import (rename (test singleexpr) (a b))) 
+         a
+         b"""
+    )) {
+      case et.Bind((ref1, _) :: Nil) :: et.VarRef(ref2) :: et.VarRef(ref3) :: Nil =>
+        assert(ref1 === ref2)
+        assert(ref2 === ref3)
+    }
   }
 
   test("program body is body context") {
     inside(programFor(
-      """(import (llambda primitives))
-         (define my-set set!)"""
+      """(import (test singleexpr))
+         (define b a)"""
     )) {
-      case et.Bind((_, expression) :: Nil) :: Nil =>
-        assert(expression === et.VarRef(SchemePrimitives.Set))
+      case et.Bind((storageLoc1, _) :: Nil) :: et.Bind((storageLoc2, expression) :: Nil) :: Nil =>
+        assert(expression === et.VarRef(storageLoc1))
     }
   }
 }

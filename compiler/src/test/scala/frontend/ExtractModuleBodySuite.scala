@@ -6,13 +6,16 @@ import llambda._
 class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with testutil.ExpressionHelpers {
   implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(SchemePrimitives.bindings.toSeq : _*))
   
+  val plusLoc = new StorageLocation("+")
+  val plusScope = new Scope(collection.mutable.Map("+" -> plusLoc), Some(primitiveScope))
+  
   test("variable reference") {
     // "a" isn't a binding in the primitive expressions
     intercept[UnboundVariableException] {
       expressionFor("a")
     }
 
-    assert(expressionFor("set!") === et.VarRef(SchemePrimitives.Set))
+    assert(expressionFor("+")(plusScope) === et.VarRef(plusLoc))
   }
 
   test("literals") {
@@ -78,10 +81,6 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   }
 
   test("application") {
-    // Make a storage location for +
-    val plusLoc = new StorageLocation("+")
-    val plusScope = new Scope(collection.mutable.Map("+" -> plusLoc), Some(primitiveScope))
-
     assert(expressionFor("(+ 3 4)")(plusScope) === et.Apply(
       et.VarRef(plusLoc),
       List(
@@ -97,6 +96,12 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     // R7RS explicitly calls this an error
     intercept[MalformedExpressionException] {
       expressionFor("()")
+    }
+  }
+
+  test("primtivies cannot be expressions") {
+    intercept[MalformedExpressionException] {
+      expressionFor("include")
     }
   }
 
@@ -169,7 +174,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
       case (storageLocA : StorageLocation, storageLocB : StorageLocation) =>
         assert(expressions === List(
           et.Bind(List(storageLocA -> et.Literal(ast.IntegerLiteral(2)))),
-          et.Bind(List(storageLocB -> et.VarRef(scope.get("a").value)))
+          et.Bind(List(storageLocB -> et.VarRef(storageLocA)))
         ))
     }
   }

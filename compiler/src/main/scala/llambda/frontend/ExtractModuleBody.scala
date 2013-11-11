@@ -147,10 +147,16 @@ object ExtractModuleBody {
   private def buildQuasiquotation(builderName : String, data : Seq[sst.ScopedDatum])(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : et.Expression = {
     // Load (scheme base) and get our builder procedure
     val schemeBase = libraryLoader.loadSchemeBase
-    val builderProc = schemeBase(builderName)
+    val builderProc = schemeBase(builderName) match {
+      case storageLoc : StorageLocation =>
+        storageLoc
+
+      case _ =>
+        throw new InternalCompilerErrorException("Builder passed that does not correspond to a storage location") 
+    }
 
     val builderArgs = data map {
-      case sst.ScopedProperList((unquote : sst.ScopedSymbol) :: unquotedDatum :: Nil) if unquote.resolve == Some(SchemePrimitives.Unquote) =>
+      case sst.ScopedProperList((unquote : sst.ScopedSymbol) :: unquotedDatum :: Nil) if unquote.resolveOpt == Some(SchemePrimitives.Unquote) =>
         extractExpression(unquotedDatum)
 
       case quotedData =>
@@ -175,91 +181,106 @@ object ExtractModuleBody {
     et.Begin(includeExprs)
   }
 
-  private def extractApplication(procedure : et.Expression, procedureDatum : sst.ScopedDatum, operands : List[sst.ScopedDatum])(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : et.Expression = {
-    (procedure, operands) match {
-      case (et.VarRef(syntax : BoundSyntax), operands) =>
-        extractExpression(ExpandMacro(syntax, operands, procedureDatum))
-
-      case (et.VarRef(SchemePrimitives.Quote), innerDatum :: Nil) =>
+  private def extractSymbolApplication(appliedSymbol : sst.ScopedSymbol, operands : List[sst.ScopedDatum])(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : et.Expression = {
+    (appliedSymbol.resolve, operands) match {
+      case (SchemePrimitives.Quote, innerDatum :: Nil) =>
         et.Literal(innerDatum.unscope)
 
-      case (et.VarRef(SchemePrimitives.If), test :: trueExpr :: falseExpr :: Nil) =>
+      case (SchemePrimitives.If, test :: trueExpr :: falseExpr :: Nil) =>
         et.Cond(
           extractExpression(test), 
           extractExpression(trueExpr), 
           extractExpression(falseExpr))
       
-      case (et.VarRef(SchemePrimitives.If), test :: trueExpr :: Nil) =>
+      case (SchemePrimitives.If, test :: trueExpr :: Nil) =>
         et.Cond(
           extractExpression(test), 
           extractExpression(trueExpr), 
           et.Literal(ast.UnspecificValue()))
 
-      case (et.VarRef(SchemePrimitives.Set), (scopedSymbol : sst.ScopedSymbol) :: value :: Nil) =>
+      case (SchemePrimitives.Set, (scopedSymbol : sst.ScopedSymbol) :: value :: Nil) =>
         scopedSymbol.resolve match {
-          case Some(storageLoc : StorageLocation) =>
+          case storageLoc : StorageLocation =>
             et.MutateVar(storageLoc, extractExpression(value))
-          case None =>
-            throw new UnboundVariableException(scopedSymbol, scopedSymbol.name)
           case _ =>
-            throw new BadSpecialFormException(scopedSymbol, s"Attempted set! non-variable ${scopedSymbol.name}") 
+            throw new BadSpecialFormException(scopedSymbol, s"Attempted (set!) non-variable ${scopedSymbol.name}") 
         }
 
-      case (et.VarRef(SchemePrimitives.Lambda), (restArgDatum : sst.ScopedSymbol) :: definition) =>
+      case (SchemePrimitives.Lambda, (restArgDatum : sst.ScopedSymbol) :: definition) =>
         createLambda(List(), Some(restArgDatum), definition)
 
-      case (et.VarRef(SchemePrimitives.Lambda), sst.ScopedProperList(fixedArgData) :: definition) =>
+      case (SchemePrimitives.Lambda, sst.ScopedProperList(fixedArgData) :: definition) =>
         createLambda(fixedArgData, None, definition)
 
-      case (et.VarRef(SchemePrimitives.Lambda), sst.ScopedImproperList(fixedArgData, (restArgDatum : sst.ScopedSymbol)) :: definition) =>
+      case (SchemePrimitives.Lambda, sst.ScopedImproperList(fixedArgData, (restArgDatum : sst.ScopedSymbol)) :: definition) =>
         createLambda(fixedArgData, Some(restArgDatum), definition)
 
-      case (et.VarRef(SchemePrimitives.SyntaxError), (errorDatum @ sst.NonSymbolLeaf(ast.StringLiteral(errorString))) :: data) =>
+      case (SchemePrimitives.SyntaxError, (errorDatum @ sst.NonSymbolLeaf(ast.StringLiteral(errorString))) :: data) =>
         throw new UserDefinedSyntaxError(errorDatum, errorString, data.map(_.unscope))
 
-      case (et.VarRef(SchemePrimitives.Include), includeNames) =>
+      case (SchemePrimitives.Include, includeNames) =>
         // We need the scope from the (include) to rescope the included file
-        val scope = procedureDatum match {
+        val scope = appliedSymbol match {
           case sst.ScopedSymbol(scope, _) =>
             scope
           case _ =>
             throw new InternalCompilerErrorException("Unable to determine scope of (include)")
         }
 
-        extractInclude(scope, includeNames, procedureDatum)
+        extractInclude(scope, includeNames, appliedSymbol)
 
-      case (et.VarRef(NativeFunctionPrimitives.NativeFunction), _) =>
-        ExtractNativeFunction(operands, procedureDatum)
+      case (NativeFunctionPrimitives.NativeFunction, _) =>
+        ExtractNativeFunction(operands, appliedSymbol)
 
-      case (et.VarRef(SchemePrimitives.Quasiquote), sst.ScopedProperList(listData) :: Nil) => 
+      case (SchemePrimitives.Quasiquote, sst.ScopedProperList(listData) :: Nil) => 
         buildQuasiquotation("list", listData)
       
-      case (et.VarRef(SchemePrimitives.Quasiquote), sst.ScopedVectorLiteral(elements) :: Nil) => 
+      case (SchemePrimitives.Quasiquote, sst.ScopedVectorLiteral(elements) :: Nil) => 
         buildQuasiquotation("vector", elements)
       
-      case (et.VarRef(SchemePrimitives.Unquote), _) =>
-        throw new BadSpecialFormException(procedureDatum, "Attempted (unquote) outside of quasiquotation") 
+      case (SchemePrimitives.Unquote, _) =>
+        throw new BadSpecialFormException(appliedSymbol, "Attempted (unquote) outside of quasiquotation") 
       
-      case (et.VarRef(SchemePrimitives.UnquoteSplicing), _) =>
-        throw new BadSpecialFormException(procedureDatum, "Attempted (unquote-splicing) outside of quasiquotation") 
+      case (SchemePrimitives.UnquoteSplicing, _) =>
+        throw new BadSpecialFormException(appliedSymbol, "Attempted (unquote-splicing) outside of quasiquotation") 
 
-      case _ =>
-        et.Apply(procedure, operands.map(extractExpression))
+      case (syntax : BoundSyntax, operands) =>
+        extractExpression(ExpandMacro(syntax, operands, appliedSymbol))
+
+      case (storagLoc : StorageLocation, operands) =>
+        et.Apply(et.VarRef(storagLoc), operands.map(extractExpression))
+
+      case otherPrimitive =>
+        throw new BadSpecialFormException(appliedSymbol, "Invalid primitive syntax")
     }
   }
 
   def extractExpression(datum : sst.ScopedDatum)(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : et.Expression = datum match {
     // Normal procedure call
     case sst.ScopedProperList(procedure :: operands) =>
-      val procedureExpr = extractExpression(procedure)
-      extractApplication(procedureExpr, procedure, operands)
+      procedure match {
+        case scopedSymbol : sst.ScopedSymbol =>
+          // Apply the symbol
+          // This is the only way to "apply" syntax and primitives
+          // They cannot appear as normal expression values
+          extractSymbolApplication(scopedSymbol, operands)
+
+        case _ =>
+          // Apply the result of the inner expression
+          val procedureExpr = extractExpression(procedure)
+          et.Apply(procedureExpr, operands.map(extractExpression))
+      }
 
     case scopedSymbol : sst.ScopedSymbol =>
       scopedSymbol.resolve match {
-        case Some(variable) =>
-          et.VarRef(variable)
-        case _ =>
-          throw new UnboundVariableException(scopedSymbol, scopedSymbol.name)
+        case storageLoc : StorageLocation =>
+          et.VarRef(storageLoc)
+
+        case syntax : BoundSyntax =>
+          throw new MalformedExpressionException(scopedSymbol, "Syntax cannot be used as an expression")
+
+        case primitive : PrimitiveExpression =>
+          throw new MalformedExpressionException(scopedSymbol, "Primitive cannot be used as an expression")
       }
 
     // These all evaluate to themselves. See R7RS section 4.1.2
@@ -322,7 +343,7 @@ object ExtractModuleBody {
       Some(parseSyntaxDefine(datum))
 
     case sst.ScopedProperList((scopedSymbol : sst.ScopedSymbol) :: operands) =>
-      scopedSymbol.resolve match {
+      scopedSymbol.resolveOpt match {
         case Some(syntax : BoundSyntax) =>
           // Cheap hack to look for macros early
           // We need to expand them in a body context if they appear in a body
@@ -357,11 +378,15 @@ object ExtractModuleBody {
         case Some(ParsedVarDefine(symbol, boundValue, exprBlock)) =>
           // There's a wart in Scheme that allows a top-level (define) to become
           // a (set!) if the value is already defined as a storage location
-          symbol.resolve match {
+          symbol.resolveOpt match {
             case Some(storageLoc : StorageLocation) =>
               // Convert this to a (set!)
               et.MutateVar(storageLoc, exprBlock()) :: apply(tailData)
-            case _  =>
+
+            case Some(_) =>
+              throw new BadSpecialFormException(symbol, s"Attempted mutating (define) non-variable ${symbol.name}") 
+
+            case None  =>
               // This is a fresh binding
               // Place the rest of the body inside an et.Let
               symbol.scope += (symbol.name -> boundValue)

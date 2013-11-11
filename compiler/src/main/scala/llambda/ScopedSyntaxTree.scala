@@ -34,7 +34,11 @@ case class ScopedSymbol(scope : Scope, name : String) extends ScopedDatum {
   def unlocatedUnscope = ast.Symbol(name)
   override def toString = name + "@" + scope.hashCode.toHexString
 
-  def resolve : Option[BoundValue] = scope.get(name)
+  def resolveOpt : Option[BoundValue] = scope.get(name)
+
+  def resolve : BoundValue = resolveOpt getOrElse {
+    throw new UnboundVariableException(this, name)
+  }
 }
 
 // The following two objects are essential copied from AbstractSyntaxTree

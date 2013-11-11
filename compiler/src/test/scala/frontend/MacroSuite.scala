@@ -5,6 +5,9 @@ import llambda._
 
 class MacroSuite extends FunSuite with Inside with OptionValues with testutil.ExpressionHelpers {
   implicit val primitiveScope = new Scope(collection.mutable.Map(SchemePrimitives.bindings.toSeq : _*))
+  
+  val plusLoc = new StorageLocation("+")
+  val plusScope = new Scope(collection.mutable.Map("+" -> plusLoc), Some(primitiveScope))
 
   test("multiple template is error") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
@@ -30,6 +33,18 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
          )))
          (false-literal)"""
     ) === et.Literal(ast.BooleanLiteral(false)))
+  }
+  
+  test("syntax cannot be used as expression") {
+    intercept[MalformedExpressionException] {
+      expressionFor(
+        """(define-syntax false-literal
+             (syntax-rules ()
+               ((false-literal)
+                 #f
+           )))
+           false-literal""")
+    }
   }
   
   test("first pattern symbol is ignored") {
@@ -65,8 +80,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                (lambda () value)
          )))
          (lambda () 
-           (func-returning if))"""
-    ) === et.Lambda(Nil, None, et.Lambda(Nil, None, et.VarRef(SchemePrimitives.If))) )
+           (func-returning +))"""
+    )(plusScope) === et.Lambda(Nil, None, et.Lambda(Nil, None, et.VarRef(plusLoc))) )
   }
   
   test("two value expansion") {

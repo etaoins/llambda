@@ -21,7 +21,7 @@ case class Apply(procedure : Expression, operands : List[Expression]) extends Ex
     et.Apply(f(procedure), operands.map(f))
 }
 
-case class VarRef(variable : BoundValue) extends Expression {
+case class VarRef(variable : StorageLocation) extends Expression {
   val subexpressions = Nil
 
   def map(f : Expression => Expression) : et.VarRef = this
