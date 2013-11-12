@@ -19,6 +19,10 @@ case class Apply(procedure : Expression, operands : List[Expression]) extends Ex
 
   def map(f : Expression => Expression) : et.Apply =
     et.Apply(f(procedure), operands.map(f))
+
+  override def toString = 
+    // Make the operands follow the procedure directly like in Scheme
+    "Apply(" + (procedure :: operands).mkString(", ") + ")"
 }
 
 case class VarRef(variable : StorageLocation) extends Expression {
@@ -38,6 +42,8 @@ case class Literal(value : ast.Datum) extends Expression {
   val subexpressions = Nil
 
   def map(f : Expression => Expression) : et.Literal = this
+
+  override def toString = "'" + value.toString
 }
 
 case class Cond(test : Expression, trueExpr : Expression, falseExpr : Expression) extends Expression {

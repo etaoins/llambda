@@ -3,12 +3,16 @@ package llambda
 sealed abstract class BoundValue
 
 // These are normal bindings
-class StorageLocation(val sourceName : String) extends BoundValue
+class StorageLocation(val sourceName : String) extends BoundValue {
+  override def toString = "$" + sourceName
+}
 
 // These are procedure with the semantics of the same procedure defined in R7RS
 // This allows the compiler to optimize or REPL emulate them based on their 
 // documented semantics
-class ReportProcedure(val reportName : String) extends StorageLocation(reportName)
+class ReportProcedure(val reportName : String) extends StorageLocation(reportName) {
+  override def toString = "&" + reportName
+}
 
 // These are the primitive expression types in R7Rs
 sealed abstract class PrimitiveExpression extends BoundValue
