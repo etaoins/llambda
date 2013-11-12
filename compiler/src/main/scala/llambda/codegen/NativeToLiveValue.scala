@@ -7,11 +7,7 @@ import llambda.codegen.llvmir._
 object NativeToLiveValue {
   def apply(state : GenerationState)(nativeType : nfi.NativeType, nativeValue : IrValue) : (GenerationState, LiveValue) = nativeType match {
     case nfi.BoxedValue(boxedType) =>
-      val possibleTypes = (boxedType :: boxedType.subtypes).collect({
-        case concrete : bt.ConcreteBoxedType => concrete
-      }).toSet
-
-      (state, new BoxedLiveValue(possibleTypes, nativeValue))
+      (state, new BoxedLiveValue(boxedType.concreteTypes, nativeValue))
 
     case boolType : nfi.CBool =>
       (state, LiveBoolean.fromUnboxed(nativeValue))

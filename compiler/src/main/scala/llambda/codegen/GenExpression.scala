@@ -53,10 +53,7 @@ object GenExpression {
         val boxedMutable = initialState.liveMutables(storageLoc)
         val currentDatum = bt.BoxedMutableVar.genLoadFromCurrentValue(block)(boxedMutable)
 
-        val possibleTypes = (bt.BoxedDatum.subtypes).collect({
-          case concrete : bt.ConcreteBoxedType => concrete
-        }).toSet
-
+        val possibleTypes = bt.BoxedDatum.concreteTypes
         val liveValue = new BoxedLiveValue(possibleTypes, currentDatum)
 
         (initialState, liveValue)

@@ -44,6 +44,12 @@ class BoxedTypeSuite extends llvmir.IrTestSuite {
     assert(bt.BoxedInexactRational.isTypeOrSupertypeOf(bt.BoxedNumeric) === false)
     assert(bt.BoxedInexactRational.isTypeOrSupertypeOf(bt.BoxedDatum) === false)
   }
+
+  test("concreteTypes") {
+    assert(bt.BoxedListElement.concreteTypes === Set(bt.BoxedPair, bt.BoxedEmptyList))
+    assert(bt.BoxedNumeric.concreteTypes === Set(bt.BoxedExactInteger, bt.BoxedInexactRational))
+    assert(bt.BoxedString.concreteTypes === Set(bt.BoxedString))
+  }
   
   test("noop bitcast") {
     val nullNumeric = llvmir.NullPointerConstant(llvmir.PointerType(bt.BoxedNumeric.irType))

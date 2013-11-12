@@ -85,3 +85,7 @@
 	; See above test for why we need to use the C standard library
 	(define strdup (native-function "strdup" (utf8-cstring) utf8-cstring))
 	(strdup "Hello, world!")))
+
+; This was broken due to list element being an abstract type
+(define-test "datum can be converted to a boxed list element" (expect 4
+	(length (append '(1 2) '(3 4)))))

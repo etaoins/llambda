@@ -11,7 +11,7 @@ sealed abstract class BoxedType {
   val name : String
   val irType : FirstClassType
   val supertype : Option[BoxedType]
-  val directSubtypes : List[BoxedType]
+  val directSubtypes : Set[BoxedType]
   val isAbstract : Boolean
   val tbaaIndex : Int
 
@@ -33,8 +33,10 @@ sealed abstract class BoxedType {
     directSubtypes exists (_.isTypeOrSupertypeOf(otherType))
   }
 
-  def subtypes : List[BoxedType] = 
-    directSubtypes ++ (directSubtypes flatMap (_.directSubtypes))
+  def concreteTypes : Set[ConcreteBoxedType] = this match {
+    case concreteType : ConcreteBoxedType => Set(concreteType)
+    case abstractType => directSubtypes.flatMap(_.concreteTypes)
+  }
 
   def genPointerBitcast(block : IrBlockBuilder)(uncastValue : IrValue) : IrValue =
     if (uncastValue.irType == PointerType(irType)) {
@@ -61,7 +63,7 @@ object BoxedDatum extends BoxedType {
   val name = "datum"
   val irType = UserDefinedType("datum")
   val supertype = None
-  val directSubtypes = List(BoxedUnspecific, BoxedListElement, BoxedStringLike, BoxedBoolean, BoxedNumeric, BoxedCharacter, BoxedBytevector, BoxedProcedure, BoxedMutableVar, BoxedVectorLike)
+  val directSubtypes = Set[BoxedType](BoxedUnspecific, BoxedListElement, BoxedStringLike, BoxedBoolean, BoxedNumeric, BoxedCharacter, BoxedBytevector, BoxedProcedure, BoxedMutableVar, BoxedVectorLike)
   val isAbstract = true
   val tbaaIndex = 0
 
@@ -131,7 +133,7 @@ object BoxedUnspecific extends ConcreteBoxedType {
   val name = "unspecific"
   val irType = UserDefinedType("unspecific")
   val supertype = Some(BoxedDatum)
-  val directSubtypes = List()
+  val directSubtypes = Set[BoxedType]()
   val isAbstract = false
   val tbaaIndex = 1
   val typeId = 0
@@ -196,7 +198,7 @@ object BoxedListElement extends BoxedType {
   val name = "listElement"
   val irType = UserDefinedType("listElement")
   val supertype = Some(BoxedDatum)
-  val directSubtypes = List(BoxedPair, BoxedEmptyList)
+  val directSubtypes = Set[BoxedType](BoxedPair, BoxedEmptyList)
   val isAbstract = true
   val tbaaIndex = 2
 
@@ -272,7 +274,7 @@ object BoxedPair extends ConcreteBoxedType {
   val name = "pair"
   val irType = UserDefinedType("pair")
   val supertype = Some(BoxedListElement)
-  val directSubtypes = List()
+  val directSubtypes = Set[BoxedType]()
   val isAbstract = false
   val tbaaIndex = 3
   val typeId = 1
@@ -401,7 +403,7 @@ object BoxedEmptyList extends ConcreteBoxedType {
   val name = "emptyList"
   val irType = UserDefinedType("emptyList")
   val supertype = Some(BoxedListElement)
-  val directSubtypes = List()
+  val directSubtypes = Set[BoxedType]()
   val isAbstract = false
   val tbaaIndex = 4
   val typeId = 2
@@ -466,7 +468,7 @@ object BoxedStringLike extends BoxedType {
   val name = "stringLike"
   val irType = UserDefinedType("stringLike")
   val supertype = Some(BoxedDatum)
-  val directSubtypes = List(BoxedString, BoxedSymbol)
+  val directSubtypes = Set[BoxedType](BoxedString, BoxedSymbol)
   val isAbstract = true
   val tbaaIndex = 5
 
@@ -626,7 +628,7 @@ object BoxedString extends ConcreteBoxedType {
   val name = "string"
   val irType = UserDefinedType("string")
   val supertype = Some(BoxedStringLike)
-  val directSubtypes = List()
+  val directSubtypes = Set[BoxedType]()
   val isAbstract = false
   val tbaaIndex = 6
   val typeId = 3
@@ -771,7 +773,7 @@ object BoxedSymbol extends ConcreteBoxedType {
   val name = "symbol"
   val irType = UserDefinedType("symbol")
   val supertype = Some(BoxedStringLike)
-  val directSubtypes = List()
+  val directSubtypes = Set[BoxedType]()
   val isAbstract = false
   val tbaaIndex = 7
   val typeId = 4
@@ -916,7 +918,7 @@ object BoxedBoolean extends ConcreteBoxedType {
   val name = "boolean"
   val irType = UserDefinedType("boolean")
   val supertype = Some(BoxedDatum)
-  val directSubtypes = List()
+  val directSubtypes = Set[BoxedType]()
   val isAbstract = false
   val tbaaIndex = 8
   val typeId = 5
@@ -1004,7 +1006,7 @@ object BoxedNumeric extends BoxedType {
   val name = "numeric"
   val irType = UserDefinedType("numeric")
   val supertype = Some(BoxedDatum)
-  val directSubtypes = List(BoxedExactInteger, BoxedInexactRational)
+  val directSubtypes = Set[BoxedType](BoxedExactInteger, BoxedInexactRational)
   val isAbstract = true
   val tbaaIndex = 9
 
@@ -1080,7 +1082,7 @@ object BoxedExactInteger extends ConcreteBoxedType {
   val name = "exactInteger"
   val irType = UserDefinedType("exactInteger")
   val supertype = Some(BoxedNumeric)
-  val directSubtypes = List()
+  val directSubtypes = Set[BoxedType]()
   val isAbstract = false
   val tbaaIndex = 10
   val typeId = 6
@@ -1181,7 +1183,7 @@ object BoxedInexactRational extends ConcreteBoxedType {
   val name = "inexactRational"
   val irType = UserDefinedType("inexactRational")
   val supertype = Some(BoxedNumeric)
-  val directSubtypes = List()
+  val directSubtypes = Set[BoxedType]()
   val isAbstract = false
   val tbaaIndex = 11
   val typeId = 7
@@ -1282,7 +1284,7 @@ object BoxedCharacter extends ConcreteBoxedType {
   val name = "character"
   val irType = UserDefinedType("character")
   val supertype = Some(BoxedDatum)
-  val directSubtypes = List()
+  val directSubtypes = Set[BoxedType]()
   val isAbstract = false
   val tbaaIndex = 12
   val typeId = 8
@@ -1383,7 +1385,7 @@ object BoxedBytevector extends ConcreteBoxedType {
   val name = "bytevector"
   val irType = UserDefinedType("bytevector")
   val supertype = Some(BoxedDatum)
-  val directSubtypes = List()
+  val directSubtypes = Set[BoxedType]()
   val isAbstract = false
   val tbaaIndex = 13
   val typeId = 9
@@ -1512,7 +1514,7 @@ object BoxedProcedure extends ConcreteBoxedType {
   val name = "procedure"
   val irType = UserDefinedType("procedure")
   val supertype = Some(BoxedDatum)
-  val directSubtypes = List()
+  val directSubtypes = Set[BoxedType]()
   val isAbstract = false
   val tbaaIndex = 14
   val typeId = 10
@@ -1669,7 +1671,7 @@ object BoxedMutableVar extends ConcreteBoxedType {
   val name = "mutableVar"
   val irType = UserDefinedType("mutableVar")
   val supertype = Some(BoxedDatum)
-  val directSubtypes = List()
+  val directSubtypes = Set[BoxedType]()
   val isAbstract = false
   val tbaaIndex = 15
   val typeId = 11
@@ -1770,7 +1772,7 @@ object BoxedVectorLike extends BoxedType {
   val name = "vectorLike"
   val irType = UserDefinedType("vectorLike")
   val supertype = Some(BoxedDatum)
-  val directSubtypes = List(BoxedVector)
+  val directSubtypes = Set[BoxedType](BoxedVector)
   val isAbstract = true
   val tbaaIndex = 16
 
@@ -1899,7 +1901,7 @@ object BoxedVector extends ConcreteBoxedType {
   val name = "vector"
   val irType = UserDefinedType("vector")
   val supertype = Some(BoxedVectorLike)
-  val directSubtypes = List()
+  val directSubtypes = Set[BoxedType]()
   val isAbstract = false
   val tbaaIndex = 17
   val typeId = 32768

@@ -296,7 +296,7 @@ def _generate_boxed_types(all_types):
     output += '  val name : String\n'
     output += '  val irType : FirstClassType\n'
     output += '  val supertype : Option[BoxedType]\n'
-    output += '  val directSubtypes : List[BoxedType]\n'
+    output += '  val directSubtypes : Set[BoxedType]\n'
     output += '  val isAbstract : Boolean\n' 
     output += '  val tbaaIndex : Int\n' 
     output += '\n'
@@ -318,8 +318,10 @@ def _generate_boxed_types(all_types):
     output += '    directSubtypes exists (_.isTypeOrSupertypeOf(otherType))\n'
     output += '  }\n'
     output += '\n'
-    output += '  def subtypes : List[BoxedType] = \n'
-    output += '    directSubtypes ++ (directSubtypes flatMap (_.directSubtypes))\n'
+    output += '  def concreteTypes : Set[ConcreteBoxedType] = this match {\n'
+    output += '    case concreteType : ConcreteBoxedType => Set(concreteType)\n'
+    output += '    case abstractType => directSubtypes.flatMap(_.concreteTypes)\n'
+    output += '  }\n'
     output += '\n'
     output += '  def genPointerBitcast(block : IrBlockBuilder)(uncastValue : IrValue) : IrValue =\n'
     output += '    if (uncastValue.irType == PointerType(irType)) {\n'
@@ -359,7 +361,7 @@ def _generate_boxed_types(all_types):
             subtype_object = type_name_to_clike_class(subtype_name)
             subtype_scala_names.append(subtype_object)
 
-        output += '  val directSubtypes = List(' + ", ".join(subtype_scala_names) + ')\n'
+        output += '  val directSubtypes = Set[BoxedType](' + ", ".join(subtype_scala_names) + ')\n'
 
         if boxed_type.abstract:
             output += '  val isAbstract = true\n'

@@ -85,14 +85,16 @@ class BoxedLiveValue(val possibleTypes : Set[bt.ConcreteBoxedType], boxedValue :
     }
 
   protected def genCastToBoxed(initialState : GenerationState)(targetType : bt.BoxedType) : Option[(GenerationState, IrValue)] = {
-    // Is the target type either equal to or the supertype of each of our possible types?
-    if (possibleTypes.forall(targetType.isTypeOrSupertypeOf(_))) {
+    val targetConcreteTypes = targetType.concreteTypes
+
+    // Are our possible concrete types a subset of the target types?
+    if (possibleTypes.subsetOf(targetConcreteTypes)) {
       // This doesn't require any type assertions
       val supertypeValue = targetType.genPointerBitcast(initialState.currentBlock)(boxedValue)
 
       Some((initialState, supertypeValue))
     }
-    else if (possibleTypes.exists(targetType.isTypeOrSubtypeOf(_))) {
+    else if (!possibleTypes.intersect(targetConcreteTypes).isEmpty) {
       // We need to build a type assertion
       val successBlock = initialState.currentBlock.startChildBlock(targetType.name + "SubcastSuccess") 
       val failBlock = initialState.currentBlock.startChildBlock(targetType.name + "SubcastFail") 
