@@ -9,7 +9,7 @@ import java.io.{InputStream}
 import SchemeStringImplicits._
 
 abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite with Inside {
-  private case class ExecutionResult(success : Boolean, output : ast.Datum)
+  private case class ExecutionResult(success : Boolean, output : ast.Datum, errorString : String)
 
   val resourceBaseDir = "functional/"
   val resourceBaseUrl = getClass.getClassLoader.getResource(resourceBaseDir)
@@ -52,7 +52,16 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
       case ast.ProperList(ast.Symbol("expect") :: expectation :: program) if !program.isEmpty =>
         val result = executeProgram(program)
 
-        assert(result.success === true, "Execution unexpectedly failed")
+        if (!result.success) {
+          if (result.errorString.isEmpty) {
+            fail("Execution unexpectedly failed with no output")
+          }
+          else {
+            // Use the error string the program provided
+            fail(result.errorString)
+          }
+        }
+
         assert(result.output === expectation)
       
       case ast.ProperList(ast.Symbol("expect-failure") :: program) if !program.isEmpty =>
@@ -115,23 +124,20 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
 
     // Call the program
     val testProcess = Process(outputFile.getAbsolutePath).run(outputIO)
+
     // Request the exit value now which will wait for the process to finish
     val exitValue = testProcess.exitValue()
-  
+      
+    val errorString = utf8InputStreamToString(stderr.get)
+    
     if (exitValue == 0) {
       val outputString = utf8InputStreamToString(stdout.get)
-      val errorString = utf8InputStreamToString(stderr.get)
-
       val output :: Nil = SchemeParser.parseStringAsData(outputString)
 
-      if (!errorString.isEmpty) {
-        fail(errorString)
-      }
-
-      ExecutionResult(success=true, output=output)
+      ExecutionResult(success=true, output=output, errorString=errorString)
     }
     else {
-      ExecutionResult(success=false, output=ast.UnspecificValue())
+      ExecutionResult(success=false, output=ast.UnspecificValue(), errorString=errorString)
     }
   }
 }
