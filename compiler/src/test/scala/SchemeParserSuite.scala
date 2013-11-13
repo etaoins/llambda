@@ -227,6 +227,17 @@ newline""", "Bare\nnewline")
     assertReflexiveParse(raw"#\(", List(ast.CharLiteral('(')))
     assertReflexiveParse(raw"#\ ", List(ast.CharLiteral(' ')))
     assertReflexiveParse(raw"#\x03BB", List(ast.CharLiteral(0x3bb)))
+
+    // Symbolic names are case sensitive by default
+    // Additionally, an alphabetic character literal cannot be followed by an
+    // identifier character without whitespace
+    intercept[ParseErrorException] {
+      SchemeParser.parseStringAsData(raw"#\SPACE")
+    }
+
+    // However, non-alphabetic character literls can be immediately followed
+    // by another token. This is probably a bad idea to use in practice.
+    assertReflexiveParse(raw"#\1moretime", List(ast.CharLiteral('1'), ast.Symbol("moretime")))
   }
 
   test("unspecific") {

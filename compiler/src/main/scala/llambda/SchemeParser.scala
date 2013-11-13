@@ -11,9 +11,12 @@ class ParseErrorException(val filename : Option[String], val message : String) e
   Exception(filename.getOrElse("(unknown)") + ": " + message)
 
 object SchemeParserDefinitions {
+  // These are the characters that can appear in an identifier
+  val identifierCharacterPattern= """[a-zA-Z0-9\!\$\%\&\*\+\-\/\:\<\=\>\?\@\^\_\.]"""
+
   // This is monsterous to exclude a single "." and starting with numbers
   val identifierPattern = """(([a-zA-Z\!\$\%\&\*\+\-\/\:\<\=\>\?\@\^\_\.])""" +
-                           """([a-zA-Z0-9\!\$\%\&\*\+\-\/\:\<\=\>\?\@\^\_\.])+""" +
+                           identifierCharacterPattern + "+" +
                               "|" +
                            """([a-zA-Z\!\$\%\&\*\+\-\/\:\<\=\>\?\@\^\_]))"""
 
@@ -161,7 +164,7 @@ class SchemeParser(filename : Option[String]) extends RegexParsers {
     ast.Bytevector(byteStrs.map(Integer.parseInt(_)).toVector) 
   }
 
-  def character = symbolicCharacter | hexScalarCharacter | literalSpace | literalCharacter
+  def character = symbolicCharacter | hexScalarCharacter | literalCharacter
 
   def symbolicCharacter = symbolicAlarm | symbolicBackspace | symbolicDelete |
                           symbolicEscape | symbolicNewline | symbolicNull |
@@ -181,9 +184,25 @@ class SchemeParser(filename : Option[String]) extends RegexParsers {
     ast.CharLiteral(Integer.parseInt(literalStr.drop(3), 16).toChar)
   }
 
+  def literalCharacter = literalSpace | literalAlphabeticCharacter | literalNonAlphabeticCharacter
+
   // We need this explicitly so the parser doesn't treat it as whitespace
   def literalSpace = """#\ """ ^^^ ast.CharLiteral(' ')
-  def literalCharacter = """#\""" ~> """.""".r ^^ { literalStr => ast.CharLiteral(literalStr.charAt(0)) }
+
+  // Alphabetic literals cannot be followed by a character allowed in an
+  // identifier. This is to prevent unrecognized symbolic characters being
+  // treated as their first character followed by a symbol composed of the
+  // rest of their characters. For example, #\lambda would be treated as 
+  // #\l ambda without this rule.
+  def literalAlphabeticCharacter = """#\""" ~> ("""\p{IsAlphabetic}(?!""" + identifierCharacterPattern + ")").r ^^ { literalStr => 
+    ast.CharLiteral(literalStr.charAt(0)) 
+  }
+
+  // Non-alphabetic literals can be immediately followed by another token
+  // without whitespace
+  def literalNonAlphabeticCharacter = """#\""" ~> """[^\p{IsAlphabetic}]""".r ^^ { literalStr => 
+    ast.CharLiteral(literalStr.charAt(0)) 
+  }
 
   def unspecific = "#!unspecific" ^^^ ast.UnspecificValue()
 
