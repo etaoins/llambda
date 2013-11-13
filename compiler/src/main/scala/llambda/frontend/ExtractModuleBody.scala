@@ -143,29 +143,6 @@ object ExtractModuleBody {
       
     et.Lambda(fixedArgs.map(_.boundValue), restArg.map(_.boundValue), bodyExpression)
   }
-  
-  private def buildQuasiquotation(builderName : String, data : Seq[sst.ScopedDatum])(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : et.Expression = {
-    // Load (scheme base) and get our builder procedure
-    val schemeBase = libraryLoader.loadSchemeBase
-    val builderProc = schemeBase(builderName) match {
-      case storageLoc : StorageLocation =>
-        storageLoc
-
-      case _ =>
-        throw new InternalCompilerErrorException("Builder passed that does not correspond to a storage location") 
-    }
-
-    val builderArgs = data map {
-      case sst.ScopedProperList((unquote : sst.ScopedSymbol) :: unquotedDatum :: Nil) if unquote.resolveOpt == Some(SchemePrimitives.Unquote) =>
-        extractExpression(unquotedDatum)
-
-      case quotedData =>
-        // Keep this quoted
-        et.Literal(quotedData.unscope)
-    }
-
-    et.Apply(et.VarRef(builderProc), builderArgs.toList)
-  }
 
   private def extractInclude(scope : Scope, includeNameData : List[sst.ScopedDatum], includeLocation : SourceLocated)(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : et.Expression = {
     val includeResults = ResolveIncludeList(includeNameData.map(_.unscope), includeLocation)
@@ -233,10 +210,10 @@ object ExtractModuleBody {
         ExtractNativeFunction(operands, appliedSymbol)
 
       case (SchemePrimitives.Quasiquote, sst.ScopedProperList(listData) :: Nil) => 
-        buildQuasiquotation("list", listData)
+        (new ListQuasiquotationExpander(extractExpression, libraryLoader))(listData)
       
       case (SchemePrimitives.Quasiquote, sst.ScopedVectorLiteral(elements) :: Nil) => 
-        buildQuasiquotation("vector", elements)
+        (new VectorQuasiquotationExpander(extractExpression, libraryLoader))(elements.toList)
       
       case (SchemePrimitives.Unquote, _) =>
         throw new BadSpecialFormException(appliedSymbol, "Attempted (unquote) outside of quasiquotation") 
