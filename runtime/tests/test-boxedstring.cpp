@@ -348,7 +348,7 @@ void testStringCopy()
 		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
 		BoxedString *invalidCopy = helloValue->copy(0, 16);
 
-		ASSERT_EQUAL(invalidCopy, NULL);
+		ASSERT_NULL(invalidCopy);
 	}
 	
 	{
@@ -356,7 +356,7 @@ void testStringCopy()
 		BoxedString *helloValue = BoxedString::fromUtf8CString(u8"Hello");
 		BoxedString *invalidCopy = helloValue->copy(3, 2);
 
-		ASSERT_EQUAL(invalidCopy, NULL);
+		ASSERT_NULL(invalidCopy);
 	}
 
 	{

@@ -49,6 +49,16 @@ namespace
 	} \
 }
 
+#define ASSERT_NULL(value) \
+{ \
+	if (value != nullptr) \
+	{ \
+		std::cerr << "Value unexpectedly non-null" \
+			      << " at line " << __LINE__ << std::endl; \
+		exit(-1); \
+	} \
+}
+
 }
 
 #endif
