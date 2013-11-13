@@ -127,6 +127,8 @@ class SchemeParserSuite extends FunSuite with Inside {
     assertStringParsesAs("", "")
     assertStringParsesAs("""Hello, world!""", "Hello, world!")
     assertStringParsesAs("""Hello\"World""", "Hello\"World")
+    assertStringParsesAs("""Hello\\World""", "Hello\\World")
+    assertStringParsesAs("""Hello\|World""", "Hello|World")
     assertStringParsesAs("""Tab\t""", "Tab\t")
     assertStringParsesAs("""\nnewline""", "\nnewline")
     assertStringParsesAs("""carriage: \r""", "carriage: \r")

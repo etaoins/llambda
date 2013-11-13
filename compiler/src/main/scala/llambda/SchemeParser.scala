@@ -20,7 +20,7 @@ object SchemeParserDefinitions {
   val hexEscapePattern = """\\x([0-9A-Za-z]+);"""
   val lineContinuationPattern = """\\\s*\n\s*"""
   val stringEscapePattern = "(" +
-                              """\\(a|b|t|n|r|"|\|)""" + "|" +
+                              """\\(a|b|t|n|r|"|\\|\|)""" + "|" +
                               hexEscapePattern + "|" + 
                               lineContinuationPattern + 
                             ")"
@@ -33,17 +33,19 @@ object SchemeParserDefinitions {
     matchData.matched match {
       case LineContinuation() => ""
       case other =>
-        (other match {
-          case """\a""" => 0x07
-          case """\b""" => 0x08
-          case """\t""" => 0x09
-          case """\n""" => 0x0a
-          case """\r""" => 0x0d
-          case EscapedQuote => 0x22
-          case """\\""" => 0x5c
-          case """\|""" => 0x7c
-          case HexEscape(value) => Integer.parseInt(value, 16) 
-        }).toChar.toString
+        Regex.quoteReplacement(
+          (other match {
+            case """\a""" => 0x07
+            case """\b""" => 0x08
+            case """\t""" => 0x09
+            case """\n""" => 0x0a
+            case """\r""" => 0x0d
+            case EscapedQuote => 0x22
+            case """\\""" => 0x5c
+            case """\|""" => 0x7c
+            case HexEscape(value) => Integer.parseInt(value, 16) 
+          }).toChar.toString
+        )
     }
   })
   
