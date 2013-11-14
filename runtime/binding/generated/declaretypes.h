@@ -21,11 +21,10 @@ class BoxedNumeric;
 class BoxedExactInteger;
 class BoxedInexactRational;
 class BoxedCharacter;
+class BoxedVector;
 class BoxedBytevector;
 class BoxedProcedure;
 class BoxedMutableVar;
-class BoxedVectorLike;
-class BoxedVector;
 typedef BoxedDatum* (*ProcedureEntryPoint)(BoxedProcedure*, BoxedListElement*);
 
 }

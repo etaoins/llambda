@@ -1,23 +1,17 @@
 from typegen.exceptions import SemanticException
-from typegen.boxedtype import TypeEqualsCondition, TypeBitmaskCondition
 from typegen.constants import BASE_TYPE
 from typegen.clikeutil import *
 from typegen.cxxutil import *
 
 OUTPUT_DIR = "runtime/binding/generated/"
 
-def _type_conditions_to_cxx(conditions, datum_access = ""):
+def _type_conditions_to_cxx(boxed_type, datum_access = ""):
     conditions_cxx = []
 
     # Build the C++ for each condition
-    for condition in conditions:
-        if isinstance(condition, TypeEqualsCondition):
-            type_name = condition.boxed_type.name
-            conditions_cxx.append("(" + datum_access + "typeId() == BoxedTypeId::" + type_name_to_enum_constant(type_name) + ")")
-        elif isinstance(condition, TypeBitmaskCondition):
-            conditions_cxx.append("(static_cast<int>(" + datum_access + "typeId()) & " + hex(condition.bitmask) + ")")
-        else:
-            raise SemanticException("Unknown condition type " + condition.__name__)
+    for concrete_name, concrete_type in boxed_type.concrete_types.items():
+        type_name = concrete_type.name
+        conditions_cxx.append("(" + datum_access + "typeId() == BoxedTypeId::" + type_name_to_enum_constant(concrete_name) + ")")
 
     # Join them with ||
     return " || ".join(conditions_cxx)
@@ -65,7 +59,7 @@ def _generate_declaretypes(boxed_types):
     return guard_cxx_header(content, "_LLIBY_BINDING_DECLARETYPES_H")
 
 def _generate_casts(boxed_types, type_name):
-    type_condition = _type_conditions_to_cxx(boxed_types[type_name].type_conditions, "datum->")
+    type_condition = _type_conditions_to_cxx(boxed_types[type_name], "datum->")
 
     cxx_base_type_name = type_name_to_clike_class(BASE_TYPE)
     cxx_type_name = type_name_to_clike_class(type_name)

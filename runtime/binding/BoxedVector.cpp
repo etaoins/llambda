@@ -122,4 +122,9 @@ bool BoxedVector::replace(std::uint32_t offset, const BoxedVector *from, std::in
 	return true;
 }
 
+void BoxedVector::finalize()
+{
+	delete[] m_elements;
+}
+
 }

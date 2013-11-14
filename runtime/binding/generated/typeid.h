@@ -21,10 +21,10 @@ enum class BoxedTypeId : std::uint16_t
 	ExactInteger = 6,
 	InexactRational = 7,
 	Character = 8,
-	Bytevector = 9,
-	Procedure = 10,
-	MutableVar = 11,
-	Vector = 32768,
+	Vector = 9,
+	Bytevector = 10,
+	Procedure = 11,
+	MutableVar = 12,
 };
 
 }

@@ -54,22 +54,18 @@
 %character = type {%datum, i32}
 !12 = metadata !{metadata !"character", metadata !0}
 
+; {supertype, unsigned length, elements}
+%vector = type {%datum, i32, %datum**}
+!13 = metadata !{metadata !"vector", metadata !0}
+
 ; {supertype, unsigned length, data}
 %bytevector = type {%datum, i32, i8*}
-!13 = metadata !{metadata !"bytevector", metadata !0}
+!14 = metadata !{metadata !"bytevector", metadata !0}
 
 ; {supertype, unsigned capturedDataLength, capturedData, entryPoint}
 %procedure = type {%datum, i32, %datum***, %datum* (%procedure*, %listElement*)*}
-!14 = metadata !{metadata !"procedure", metadata !0}
+!15 = metadata !{metadata !"procedure", metadata !0}
 
 ; {supertype, currentValue}
 %mutableVar = type {%datum, %datum*}
-!15 = metadata !{metadata !"mutableVar", metadata !0}
-
-; {supertype, unsigned length, elements}
-%vectorLike = type {%datum, i32, %datum**}
-!16 = metadata !{metadata !"vectorLike", metadata !0}
-
-; {supertype}
-%vector = type {%vectorLike}
-!17 = metadata !{metadata !"vector", metadata !16}
+!16 = metadata !{metadata !"mutableVar", metadata !0}

@@ -1,22 +1,46 @@
 #ifndef _LLIBY_BINDING_BOXEDVECTOR_H
 #define _LLIBY_BINDING_BOXEDVECTOR_H
 
+#include "BoxedDatum.h"
 #include <list>
-
-#include "BoxedVectorLike.h"
 
 namespace lliby
 {
 
-class BoxedVector : public BoxedVectorLike
+class BoxedVector : public BoxedDatum
 {
 #include "generated/BoxedVectorMembers.h"
 public:
 	BoxedVector(BoxedDatum **elements, std::uint32_t length) :
-		BoxedVectorLike(BoxedTypeId::Vector, elements, length)
+		BoxedDatum(BoxedTypeId::Vector),
+		m_length(length),
+		m_elements(elements)
 	{
 	}
 	
+	void finalize();
+	
+	BoxedDatum* elementAt(std::uint32_t offset) const
+	{
+		if (offset >= length())
+		{
+			return nullptr;
+		}
+		
+		return elements()[offset];
+	}
+
+	bool setElementAt(std::uint32_t offset, BoxedDatum *value)
+	{
+		if (offset >= length())
+		{
+			return false;
+		}
+
+		elements()[offset] = value;
+
+		return true;
+	}
 	static BoxedVector* fromFill(std::uint32_t length, BoxedDatum *fill = nullptr);
 	static BoxedVector* fromAppended(const std::list<const BoxedVector*> &vectors);
 	

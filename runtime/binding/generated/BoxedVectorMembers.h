@@ -3,6 +3,17 @@
  *****************************************************************/
 
 public:
+	std::uint32_t length() const
+	{
+		return m_length;
+	}
+
+	BoxedDatum** elements() const
+	{
+		return m_elements;
+	}
+
+public:
 	static BoxedVector* fromDatum(BoxedDatum *datum)
 	{
 		if ((datum->typeId() == BoxedTypeId::Vector))
@@ -28,3 +39,6 @@ public:
 		return (datum->typeId() == BoxedTypeId::Vector);
 	}
 
+private:
+	std::uint32_t m_length;
+	BoxedDatum** m_elements;

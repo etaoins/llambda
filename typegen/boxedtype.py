@@ -3,19 +3,6 @@ from collections import OrderedDict
 
 from typegen.exceptions import SemanticException
 
-class TypeCondition(object):
-    pass
-
-class TypeEqualsCondition(TypeCondition):
-    def __init__(self, boxed_type, type_id):
-        self.boxed_type = boxed_type
-        self.type_id = type_id
-
-class TypeBitmaskCondition(TypeCondition):
-    def __init__(self, boxed_type, bitmask):
-        self.boxed_type = boxed_type
-        self.bitmask = bitmask
-
 class BoxedTypeField(object):
     def __init__(self, type_name, field_json):
         self.name = field_json['name']
@@ -39,35 +26,29 @@ class BoxedTypeField(object):
 class BoxedType(object):
     def __init__(self, type_json):
         self.name      = type_json['name']
-        self.abstract  = type_json.get('abstract', False)
         self.singleton = type_json.get('singleton', False)
         
-        raw_type_id = type_json.get('typeId', None)
-        
+        self.type_id = type_json.get('typeId', None)
         self.inherits = type_json['inherits']
+        
+        # This is just to test that this agrees with the presence or absence
+        # of "type_id"
+        marked_abstract  = type_json.get('abstract', False)
 
         # These are populated in processtypetree
         self.supertype = None
         self.subtypes = OrderedDict()
         self.index = None
 
-        if isinstance(raw_type_id, int): 
-            self.type_id = raw_type_id
-            self._type_conditions = [TypeEqualsCondition(self, raw_type_id)]
-        else:
-            self.type_id = None
+        # Types must either have a type ID or be abstract
+        if (self.type_id is None) and (not marked_abstract):
+            raise SemanticException('Type "' + self.name + '" does not have a type ID and must be marked abstract')
+        elif (self.type_id is not None) and marked_abstract: 
+            raise SemanticException('Type "' + self.name + '" has a type ID and cannot be marked abstract')
 
-            if not self.abstract:
-                raise SemanticException('Type "' + self.name + '" does not have a specific type ID and must be marked abstract')
-            
-            if raw_type_id is None:
-                self._type_conditions = None
-            else:
-                # Besides integers we only understand bit test type IDs (eg &0x8000)
-                if raw_type_id[0] != '&':
-                    raise SemanticException('Unable to parse type ID "' + raw_type_id + '"')
-                else:
-                    self._type_conditions = [TypeBitmaskCondition(self, int(raw_type_id[1:], 0))]
+        # Singleton types must be concrete
+        if self.singleton and self.abstract:
+            raise SemanticException('Type "' + self.name + '" is a singleton and cannot be abstract')
 
         self.fields = OrderedDict()
         
@@ -80,17 +61,24 @@ class BoxedType(object):
             self.fields[parsed_field.name] = parsed_field
 
     @property
-    def type_conditions(self):
-        # Do we have a condition from either an explicitly defined condition or 
-        # one calculated on a previous invocation?
-        if self._type_conditions is None:
-            self._type_conditions = []
+    def abstract(self):
+        return self.type_id is None
+    
+    @property
+    def concrete(self):
+        return self.type_id is not None
 
-            # Collect all the conditions for our subtypes
+    @property
+    def concrete_types(self):
+        if self.type_id is not None:
+            return OrderedDict({self.name: self}) 
+        else:
+            types = OrderedDict()
+
             for subtype in self.subtypes.values():
-                self._type_conditions.extend(subtype.type_conditions)
+                types.update(subtype.concrete_types)
 
-        return self._type_conditions
+            return types
 
     def add_subtype(self, subtype):
         self.subtypes[subtype.name] = subtype

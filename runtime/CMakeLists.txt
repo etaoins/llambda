@@ -11,7 +11,6 @@ add_library(lliby
 	binding/BoxedProcedure.cpp
 	binding/BoxedStringLike.cpp
 	binding/BoxedString.cpp
-	binding/BoxedVectorLike.cpp
 	binding/BoxedVector.cpp
 	core/constinstances.cpp
 	core/box.cpp

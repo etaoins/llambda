@@ -63,7 +63,7 @@ object BoxedDatum extends BoxedType {
   val name = "datum"
   val irType = UserDefinedType("datum")
   val supertype = None
-  val directSubtypes = Set[BoxedType](BoxedUnspecific, BoxedListElement, BoxedStringLike, BoxedBoolean, BoxedNumeric, BoxedCharacter, BoxedBytevector, BoxedProcedure, BoxedMutableVar, BoxedVectorLike)
+  val directSubtypes = Set[BoxedType](BoxedUnspecific, BoxedListElement, BoxedStringLike, BoxedBoolean, BoxedNumeric, BoxedCharacter, BoxedVector, BoxedBytevector, BoxedProcedure, BoxedMutableVar)
   val isAbstract = true
   val tbaaIndex = 0
 
@@ -1381,14 +1381,143 @@ object BoxedCharacter extends ConcreteBoxedType {
   }
 }
 
+object BoxedVector extends ConcreteBoxedType {
+  val name = "vector"
+  val irType = UserDefinedType("vector")
+  val supertype = Some(BoxedDatum)
+  val directSubtypes = Set[BoxedType]()
+  val isAbstract = false
+  val tbaaIndex = 13
+  val typeId = 9
+
+  def createConstant(length : IrConstant, elements : IrConstant) : StructureConstant = {
+    if (length.irType != IntegerType(32)) {
+      throw new InternalCompilerErrorException("Unexpected type for field length")
+    }
+
+    if (elements.irType != PointerType(PointerType(UserDefinedType("datum")))) {
+      throw new InternalCompilerErrorException("Unexpected type for field elements")
+    }
+
+    StructureConstant(List(
+      supertype.get.createConstant(
+        typeId=IntegerConstant(IntegerType(16), typeId)
+      ),
+      length,
+      elements
+    ), userDefinedType=Some(irType))
+  }
+
+  def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
+    val datumValue = BoxedDatum.genPointerBitcast(startBlock)(boxedValue)
+    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
+    val typeId = startBlock.load("typeId")(typeIdPointer)
+
+    val isVector = startBlock.icmp("isVector")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 9))
+    startBlock.condBranch(isVector, successBlock, failBlock)
+  }
+
+  def genPointerToTypeId(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
+    if (boxedValue.irType != PointerType(UserDefinedType("vector"))) {
+       throw new InternalCompilerErrorException(s"Unexpected type for boxed value. Passed ${boxedValue.irType}, expected %vector*")
+    }
+
+    block.getelementptr("typeIdPtr")(
+      elementType=IntegerType(16),
+      basePointer=boxedValue,
+      indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
+      inbounds=true
+    )
+  }
+
+  def genStoreToTypeId(block : IrBlockBuilder)(toStore : IrValue, boxedValue : IrValue) : Unit = {
+    val typeIdPointer = genPointerToTypeId(block)(boxedValue)
+    block.store(toStore, typeIdPointer, tbaaIndex=Some(tbaaIndex))
+  }
+
+  def genLoadFromTypeId(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
+    val typeIdPointer = genPointerToTypeId(block)(boxedValue)
+    block.load("typeId")(typeIdPointer, tbaaIndex=Some(tbaaIndex))
+  }
+
+  def genPointerToGcState(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
+    if (boxedValue.irType != PointerType(UserDefinedType("vector"))) {
+       throw new InternalCompilerErrorException(s"Unexpected type for boxed value. Passed ${boxedValue.irType}, expected %vector*")
+    }
+
+    block.getelementptr("gcStatePtr")(
+      elementType=IntegerType(16),
+      basePointer=boxedValue,
+      indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
+      inbounds=true
+    )
+  }
+
+  def genStoreToGcState(block : IrBlockBuilder)(toStore : IrValue, boxedValue : IrValue) : Unit = {
+    val gcStatePointer = genPointerToGcState(block)(boxedValue)
+    block.store(toStore, gcStatePointer, tbaaIndex=Some(tbaaIndex))
+  }
+
+  def genLoadFromGcState(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
+    val gcStatePointer = genPointerToGcState(block)(boxedValue)
+    block.load("gcState")(gcStatePointer, tbaaIndex=Some(tbaaIndex))
+  }
+
+  def genPointerToLength(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
+    if (boxedValue.irType != PointerType(UserDefinedType("vector"))) {
+       throw new InternalCompilerErrorException(s"Unexpected type for boxed value. Passed ${boxedValue.irType}, expected %vector*")
+    }
+
+    block.getelementptr("lengthPtr")(
+      elementType=IntegerType(32),
+      basePointer=boxedValue,
+      indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
+      inbounds=true
+    )
+  }
+
+  def genStoreToLength(block : IrBlockBuilder)(toStore : IrValue, boxedValue : IrValue) : Unit = {
+    val lengthPointer = genPointerToLength(block)(boxedValue)
+    block.store(toStore, lengthPointer, tbaaIndex=Some(tbaaIndex))
+  }
+
+  def genLoadFromLength(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
+    val lengthPointer = genPointerToLength(block)(boxedValue)
+    block.load("length")(lengthPointer, tbaaIndex=Some(tbaaIndex))
+  }
+
+  def genPointerToElements(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
+    if (boxedValue.irType != PointerType(UserDefinedType("vector"))) {
+       throw new InternalCompilerErrorException(s"Unexpected type for boxed value. Passed ${boxedValue.irType}, expected %vector*")
+    }
+
+    block.getelementptr("elementsPtr")(
+      elementType=PointerType(PointerType(UserDefinedType("datum"))),
+      basePointer=boxedValue,
+      indices=List(0, 2).map(IntegerConstant(IntegerType(32), _)),
+      inbounds=true
+    )
+  }
+
+  def genStoreToElements(block : IrBlockBuilder)(toStore : IrValue, boxedValue : IrValue) : Unit = {
+    val elementsPointer = genPointerToElements(block)(boxedValue)
+    block.store(toStore, elementsPointer, tbaaIndex=Some(tbaaIndex))
+  }
+
+  def genLoadFromElements(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
+    val elementsPointer = genPointerToElements(block)(boxedValue)
+    block.load("elements")(elementsPointer, tbaaIndex=Some(tbaaIndex))
+  }
+}
+
 object BoxedBytevector extends ConcreteBoxedType {
   val name = "bytevector"
   val irType = UserDefinedType("bytevector")
   val supertype = Some(BoxedDatum)
   val directSubtypes = Set[BoxedType]()
   val isAbstract = false
-  val tbaaIndex = 13
-  val typeId = 9
+  val tbaaIndex = 14
+  val typeId = 10
 
   def createConstant(length : IrConstant, data : IrConstant) : StructureConstant = {
     if (length.irType != IntegerType(32)) {
@@ -1413,7 +1542,7 @@ object BoxedBytevector extends ConcreteBoxedType {
     val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
-    val isBytevector = startBlock.icmp("isBytevector")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 9))
+    val isBytevector = startBlock.icmp("isBytevector")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 10))
     startBlock.condBranch(isBytevector, successBlock, failBlock)
   }
 
@@ -1516,8 +1645,8 @@ object BoxedProcedure extends ConcreteBoxedType {
   val supertype = Some(BoxedDatum)
   val directSubtypes = Set[BoxedType]()
   val isAbstract = false
-  val tbaaIndex = 14
-  val typeId = 10
+  val tbaaIndex = 15
+  val typeId = 11
 
   def createConstant(capturedDataLength : IrConstant, capturedData : IrConstant, entryPoint : IrConstant) : StructureConstant = {
     if (capturedDataLength.irType != IntegerType(32)) {
@@ -1547,7 +1676,7 @@ object BoxedProcedure extends ConcreteBoxedType {
     val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
-    val isProcedure = startBlock.icmp("isProcedure")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 10))
+    val isProcedure = startBlock.icmp("isProcedure")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 11))
     startBlock.condBranch(isProcedure, successBlock, failBlock)
   }
 
@@ -1673,8 +1802,8 @@ object BoxedMutableVar extends ConcreteBoxedType {
   val supertype = Some(BoxedDatum)
   val directSubtypes = Set[BoxedType]()
   val isAbstract = false
-  val tbaaIndex = 15
-  val typeId = 11
+  val tbaaIndex = 16
+  val typeId = 12
 
   def createConstant(currentValue : IrConstant) : StructureConstant = {
     if (currentValue.irType != PointerType(UserDefinedType("datum"))) {
@@ -1694,7 +1823,7 @@ object BoxedMutableVar extends ConcreteBoxedType {
     val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
-    val isMutableVar = startBlock.icmp("isMutableVar")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 11))
+    val isMutableVar = startBlock.icmp("isMutableVar")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 12))
     startBlock.condBranch(isMutableVar, successBlock, failBlock)
   }
 
@@ -1765,256 +1894,6 @@ object BoxedMutableVar extends ConcreteBoxedType {
   def genLoadFromCurrentValue(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
     val currentValuePointer = genPointerToCurrentValue(block)(boxedValue)
     block.load("currentValue")(currentValuePointer, tbaaIndex=Some(tbaaIndex))
-  }
-}
-
-object BoxedVectorLike extends BoxedType {
-  val name = "vectorLike"
-  val irType = UserDefinedType("vectorLike")
-  val supertype = Some(BoxedDatum)
-  val directSubtypes = Set[BoxedType](BoxedVector)
-  val isAbstract = true
-  val tbaaIndex = 16
-
-  def createConstant(length : IrConstant, elements : IrConstant, typeId : IrConstant) : StructureConstant = {
-    if (length.irType != IntegerType(32)) {
-      throw new InternalCompilerErrorException("Unexpected type for field length")
-    }
-
-    if (elements.irType != PointerType(PointerType(UserDefinedType("datum")))) {
-      throw new InternalCompilerErrorException("Unexpected type for field elements")
-    }
-
-    StructureConstant(List(
-      supertype.get.createConstant(
-        typeId=typeId
-      ),
-      length,
-      elements
-    ), userDefinedType=Some(irType))
-  }
-
-  def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
-    val datumValue = BoxedDatum.genPointerBitcast(startBlock)(boxedValue)
-    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
-    val typeId = startBlock.load("typeId")(typeIdPointer)
-
-    val vectorLikeTypeMasked = startBlock.and("vectorLikeTypeMasked")(typeId, IntegerConstant(IntegerType(16), 0x8000))
-    val isVectorLike = startBlock.icmp("isVectorLike")(ComparisonCond.NotEqual, None, vectorLikeTypeMasked, IntegerConstant(IntegerType(16), 0))
-    startBlock.condBranch(isVectorLike, successBlock, failBlock)
-  }
-
-  def genPointerToTypeId(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != PointerType(UserDefinedType("vectorLike"))) {
-       throw new InternalCompilerErrorException(s"Unexpected type for boxed value. Passed ${boxedValue.irType}, expected %vectorLike*")
-    }
-
-    block.getelementptr("typeIdPtr")(
-      elementType=IntegerType(16),
-      basePointer=boxedValue,
-      indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
-      inbounds=true
-    )
-  }
-
-  def genStoreToTypeId(block : IrBlockBuilder)(toStore : IrValue, boxedValue : IrValue) : Unit = {
-    val typeIdPointer = genPointerToTypeId(block)(boxedValue)
-    block.store(toStore, typeIdPointer, tbaaIndex=Some(tbaaIndex))
-  }
-
-  def genLoadFromTypeId(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
-    val typeIdPointer = genPointerToTypeId(block)(boxedValue)
-    block.load("typeId")(typeIdPointer, tbaaIndex=Some(tbaaIndex))
-  }
-
-  def genPointerToGcState(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != PointerType(UserDefinedType("vectorLike"))) {
-       throw new InternalCompilerErrorException(s"Unexpected type for boxed value. Passed ${boxedValue.irType}, expected %vectorLike*")
-    }
-
-    block.getelementptr("gcStatePtr")(
-      elementType=IntegerType(16),
-      basePointer=boxedValue,
-      indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
-      inbounds=true
-    )
-  }
-
-  def genStoreToGcState(block : IrBlockBuilder)(toStore : IrValue, boxedValue : IrValue) : Unit = {
-    val gcStatePointer = genPointerToGcState(block)(boxedValue)
-    block.store(toStore, gcStatePointer, tbaaIndex=Some(tbaaIndex))
-  }
-
-  def genLoadFromGcState(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
-    val gcStatePointer = genPointerToGcState(block)(boxedValue)
-    block.load("gcState")(gcStatePointer, tbaaIndex=Some(tbaaIndex))
-  }
-
-  def genPointerToLength(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != PointerType(UserDefinedType("vectorLike"))) {
-       throw new InternalCompilerErrorException(s"Unexpected type for boxed value. Passed ${boxedValue.irType}, expected %vectorLike*")
-    }
-
-    block.getelementptr("lengthPtr")(
-      elementType=IntegerType(32),
-      basePointer=boxedValue,
-      indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
-      inbounds=true
-    )
-  }
-
-  def genStoreToLength(block : IrBlockBuilder)(toStore : IrValue, boxedValue : IrValue) : Unit = {
-    val lengthPointer = genPointerToLength(block)(boxedValue)
-    block.store(toStore, lengthPointer, tbaaIndex=Some(tbaaIndex))
-  }
-
-  def genLoadFromLength(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
-    val lengthPointer = genPointerToLength(block)(boxedValue)
-    block.load("length")(lengthPointer, tbaaIndex=Some(tbaaIndex))
-  }
-
-  def genPointerToElements(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != PointerType(UserDefinedType("vectorLike"))) {
-       throw new InternalCompilerErrorException(s"Unexpected type for boxed value. Passed ${boxedValue.irType}, expected %vectorLike*")
-    }
-
-    block.getelementptr("elementsPtr")(
-      elementType=PointerType(PointerType(UserDefinedType("datum"))),
-      basePointer=boxedValue,
-      indices=List(0, 2).map(IntegerConstant(IntegerType(32), _)),
-      inbounds=true
-    )
-  }
-
-  def genStoreToElements(block : IrBlockBuilder)(toStore : IrValue, boxedValue : IrValue) : Unit = {
-    val elementsPointer = genPointerToElements(block)(boxedValue)
-    block.store(toStore, elementsPointer, tbaaIndex=Some(tbaaIndex))
-  }
-
-  def genLoadFromElements(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
-    val elementsPointer = genPointerToElements(block)(boxedValue)
-    block.load("elements")(elementsPointer, tbaaIndex=Some(tbaaIndex))
-  }
-}
-
-object BoxedVector extends ConcreteBoxedType {
-  val name = "vector"
-  val irType = UserDefinedType("vector")
-  val supertype = Some(BoxedVectorLike)
-  val directSubtypes = Set[BoxedType]()
-  val isAbstract = false
-  val tbaaIndex = 17
-  val typeId = 32768
-
-  def createConstant(length : IrConstant, elements : IrConstant) : StructureConstant = {
-    StructureConstant(List(
-      supertype.get.createConstant(
-        length=length,
-        elements=elements,
-        typeId=IntegerConstant(IntegerType(16), typeId)
-      )
-    ), userDefinedType=Some(irType))
-  }
-
-  def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
-    val datumValue = BoxedDatum.genPointerBitcast(startBlock)(boxedValue)
-    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
-    val typeId = startBlock.load("typeId")(typeIdPointer)
-
-    val isVector = startBlock.icmp("isVector")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 32768))
-    startBlock.condBranch(isVector, successBlock, failBlock)
-  }
-
-  def genPointerToTypeId(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != PointerType(UserDefinedType("vector"))) {
-       throw new InternalCompilerErrorException(s"Unexpected type for boxed value. Passed ${boxedValue.irType}, expected %vector*")
-    }
-
-    block.getelementptr("typeIdPtr")(
-      elementType=IntegerType(16),
-      basePointer=boxedValue,
-      indices=List(0, 0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
-      inbounds=true
-    )
-  }
-
-  def genStoreToTypeId(block : IrBlockBuilder)(toStore : IrValue, boxedValue : IrValue) : Unit = {
-    val typeIdPointer = genPointerToTypeId(block)(boxedValue)
-    block.store(toStore, typeIdPointer, tbaaIndex=Some(tbaaIndex))
-  }
-
-  def genLoadFromTypeId(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
-    val typeIdPointer = genPointerToTypeId(block)(boxedValue)
-    block.load("typeId")(typeIdPointer, tbaaIndex=Some(tbaaIndex))
-  }
-
-  def genPointerToGcState(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != PointerType(UserDefinedType("vector"))) {
-       throw new InternalCompilerErrorException(s"Unexpected type for boxed value. Passed ${boxedValue.irType}, expected %vector*")
-    }
-
-    block.getelementptr("gcStatePtr")(
-      elementType=IntegerType(16),
-      basePointer=boxedValue,
-      indices=List(0, 0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
-      inbounds=true
-    )
-  }
-
-  def genStoreToGcState(block : IrBlockBuilder)(toStore : IrValue, boxedValue : IrValue) : Unit = {
-    val gcStatePointer = genPointerToGcState(block)(boxedValue)
-    block.store(toStore, gcStatePointer, tbaaIndex=Some(tbaaIndex))
-  }
-
-  def genLoadFromGcState(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
-    val gcStatePointer = genPointerToGcState(block)(boxedValue)
-    block.load("gcState")(gcStatePointer, tbaaIndex=Some(tbaaIndex))
-  }
-
-  def genPointerToLength(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != PointerType(UserDefinedType("vector"))) {
-       throw new InternalCompilerErrorException(s"Unexpected type for boxed value. Passed ${boxedValue.irType}, expected %vector*")
-    }
-
-    block.getelementptr("lengthPtr")(
-      elementType=IntegerType(32),
-      basePointer=boxedValue,
-      indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
-      inbounds=true
-    )
-  }
-
-  def genStoreToLength(block : IrBlockBuilder)(toStore : IrValue, boxedValue : IrValue) : Unit = {
-    val lengthPointer = genPointerToLength(block)(boxedValue)
-    block.store(toStore, lengthPointer, tbaaIndex=Some(tbaaIndex))
-  }
-
-  def genLoadFromLength(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
-    val lengthPointer = genPointerToLength(block)(boxedValue)
-    block.load("length")(lengthPointer, tbaaIndex=Some(tbaaIndex))
-  }
-
-  def genPointerToElements(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
-    if (boxedValue.irType != PointerType(UserDefinedType("vector"))) {
-       throw new InternalCompilerErrorException(s"Unexpected type for boxed value. Passed ${boxedValue.irType}, expected %vector*")
-    }
-
-    block.getelementptr("elementsPtr")(
-      elementType=PointerType(PointerType(UserDefinedType("datum"))),
-      basePointer=boxedValue,
-      indices=List(0, 0, 2).map(IntegerConstant(IntegerType(32), _)),
-      inbounds=true
-    )
-  }
-
-  def genStoreToElements(block : IrBlockBuilder)(toStore : IrValue, boxedValue : IrValue) : Unit = {
-    val elementsPointer = genPointerToElements(block)(boxedValue)
-    block.store(toStore, elementsPointer, tbaaIndex=Some(tbaaIndex))
-  }
-
-  def genLoadFromElements(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
-    val elementsPointer = genPointerToElements(block)(boxedValue)
-    block.load("elements")(elementsPointer, tbaaIndex=Some(tbaaIndex))
   }
 }
 

@@ -137,8 +137,24 @@
         ]
     },
     {
-        "name": "bytevector",
+        "name": "vector",
         "typeId": 9,
+        "inherits": "datum",
+        "fields": [
+            {
+                "name": "length",
+                "llvmType": "i32",
+                "signed": false
+            },
+            {
+                "name": "elements",
+                "llvmType": "%datum**"
+            }
+        ]
+    },
+    {
+        "name": "bytevector",
+        "typeId": 10,
         "inherits": "datum",
         "fields": [
             {
@@ -154,7 +170,7 @@
     },
     {
         "name": "procedure",
-        "typeId": 10,
+        "typeId": 11,
         "inherits": "datum",
         "fields": [
             {
@@ -174,7 +190,7 @@
     },
     {
         "name": "mutableVar",
-        "typeId": 11,
+        "typeId": 12,
         "inherits": "datum",
         "fields": [
             {
@@ -182,28 +198,5 @@
                 "llvmType": "%datum*"
             }
         ]
-    },
-    {
-        "name": "vectorLike",
-        "abstract": true,
-        "typeId": "&0x8000",
-        "inherits": "datum",
-        "fields": [
-            {
-                "name": "length",
-                "llvmType": "i32",
-                "signed": false
-            },
-            {
-                "name": "elements",
-                "llvmType": "%datum**"
-            }
-        ]
-    },
-    {
-        "name": "vector",
-        "typeId": 32768,
-        "inherits": "vectorLike",
-        "fields": []
     }
 ]

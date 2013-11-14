@@ -2,7 +2,6 @@ import re
 
 from typegen.exceptions import SemanticException
 from typegen.constants import BASE_TYPE
-from typegen.boxedtype import TypeEqualsCondition, TypeBitmaskCondition
 from typegen.clikeutil import *
 
 def _uppercase_first(string):
@@ -242,30 +241,17 @@ def _generate_type_check(all_types, boxed_type):
     # Start building off the start block
     incoming_block = 'start'
 
-    for idx, condition in enumerate(boxed_type.type_conditions):
-        checking_type_name = condition.boxed_type.name
+    for idx, concrete_type in enumerate(boxed_type.concrete_types.values()):
+        checking_type_name = concrete_type.name
         uppercase_type_name = _uppercase_first(checking_type_name)
         
         check_bool_name = 'is' + uppercase_type_name
+        expected_value = 'IntegerConstant(' + type_id_type + ', ' + str(concrete_type.type_id) + ')'
 
         output += '\n' 
-
-        if isinstance(condition, TypeEqualsCondition):
-            expected_value = 'IntegerConstant(' + type_id_type + ', ' + str(condition.type_id) + ')'
-
-            # This is just a direct comparison
-            output += '    val ' + check_bool_name + ' = '  + incoming_block + 'Block.icmp("' + check_bool_name + '")(ComparisonCond.Equal, None, typeId, ' + expected_value + ')\n'
-        elif isinstance(condition, TypeBitmaskCondition):
-            constant_zero = 'IntegerConstant(' + type_id_type + ', 0)'
-            bitmask_name = checking_type_name + 'TypeMasked'
-            bitmask = 'IntegerConstant(' + type_id_type + ', ' + hex(condition.bitmask) + ')'
-
-            # Mask the value first
-            output += '    val '  + bitmask_name + ' = ' + incoming_block + 'Block.and("' + bitmask_name + '")(typeId, ' + bitmask + ')\n'
-            # Compare the masked value with zero
-            output += '    val ' + check_bool_name + ' = ' + incoming_block + 'Block.icmp("' + check_bool_name + '")(ComparisonCond.NotEqual, None, ' + bitmask_name + ', ' + constant_zero + ')\n'
+        output += '    val ' + check_bool_name + ' = '  + incoming_block + 'Block.icmp("' + check_bool_name + '")(ComparisonCond.Equal, None, typeId, ' + expected_value + ')\n'
             
-        if idx == (len(boxed_type.type_conditions) - 1):
+        if idx == (len(boxed_type.concrete_types) - 1):
             # No more conditions; exit using the fail block if this check fails
             outgoing_block = 'fail'
         else:
