@@ -1,7 +1,7 @@
 (define-test "empty (and) evaluates to true" (expect #t
 	(and)))
 
-(define-test "(and #t #f) is falso" (expect #f
+(define-test "(and #t #f) is false" (expect #f
 	(and #t #f)))
 
 (define-test "(and) returns the last evaluated datum" (expect (f g)
