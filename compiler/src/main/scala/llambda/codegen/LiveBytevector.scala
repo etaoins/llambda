@@ -4,7 +4,7 @@ import llambda.codegen.{boxedtype => bt}
 import llambda.codegen.llvmir._
 import llambda.nfi
 
-private class ConstantLiveBytevector(module : IrModuleBuilder)(constantElements : Seq[Int]) extends ConstantLiveValue(bt.BoxedBytevector) {
+private class ConstantLiveBytevector(module : IrModuleBuilder)(constantElements : Seq[Short]) extends ConstantLiveValue(bt.BoxedBytevector) {
   def genBoxedConstant() : IrConstant = {
     val irElements = constantElements.map(IntegerConstant(IntegerType(8), _))
     
@@ -37,7 +37,7 @@ private class ConstantLiveBytevector(module : IrModuleBuilder)(constantElements 
 }
 
 object LiveBytevector {
-  def fromConstant(module : IrModuleBuilder)(elements : Seq[Int]) : ConstantLiveValue =
+  def fromConstant(module : IrModuleBuilder)(elements : Seq[Short]) : ConstantLiveValue =
     new ConstantLiveBytevector(module)(elements)
 } 
 

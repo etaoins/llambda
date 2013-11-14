@@ -128,7 +128,7 @@ case class VectorLiteral(elements : Vector[Datum]) extends Datum {
     "#(" + elements.map(_.toString).mkString(" ") + ")"
 }
 
-case class Bytevector(elements : Vector[Int]) extends NonSymbolLeaf {
+case class Bytevector(elements : Vector[Short]) extends NonSymbolLeaf {
   override def toString = 
     "#u8(" + elements.map(_.toString).mkString(" ") + ")"
 }

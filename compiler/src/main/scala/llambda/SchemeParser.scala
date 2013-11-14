@@ -161,7 +161,7 @@ class SchemeParser(filename : Option[String]) extends RegexParsers {
   }
   
   def bytevector = "#u8(" ~> rep("""\d+""".r) <~ ")" ^^ { byteStrs =>
-    ast.Bytevector(byteStrs.map(Integer.parseInt(_)).toVector) 
+    ast.Bytevector(byteStrs.map(Integer.parseInt(_).toShort).toVector) 
   }
 
   def character = symbolicCharacter | hexScalarCharacter | literalCharacter
