@@ -4,7 +4,7 @@
 
 package llambda.frontend
 
-import llambda.codegen.{boxedtype => bt}
+import llambda.{boxedtype => bt}
 
 object NativeTypeNameToBoxedType {
   def apply : PartialFunction[String, bt.BoxedType] = {

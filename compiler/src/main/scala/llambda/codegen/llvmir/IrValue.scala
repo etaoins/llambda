@@ -76,13 +76,13 @@ case class NullPointerConstant(irType : PointerType) extends IrConstant {
   def toIr = "null"
 }
 
-case class StructureConstant(members : List[IrConstant], userDefinedType : Option[UserDefinedType] = None) extends IrConstant {
+case class StructureConstant(members : Seq[IrConstant], userDefinedType : Option[UserDefinedType] = None) extends IrConstant {
   def irType = userDefinedType getOrElse StructureType(members.map(_.irType))
 
   def toIr = "{" + members.map(_.toIrWithType).mkString(", ") + "}"
 }
 
-case class ArrayConstant(innerType : FirstClassType , members : List[IrConstant]) extends ArrayLikeConstant {
+case class ArrayConstant(innerType : FirstClassType , members : Seq[IrConstant]) extends ArrayLikeConstant {
   val length = members.length
 
   def toIr = "[" + members.map(_.toIrWithType).mkString(", ") + "]"

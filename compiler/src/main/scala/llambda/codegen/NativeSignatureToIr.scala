@@ -1,7 +1,7 @@
 package llambda.codegen
 
 import llambda.nfi.NativeSignature
-import llambda.codegen.{boxedtype => bt}
+import llambda.{boxedtype => bt}
 import llambda.codegen.llvmir.{IrSignature, PointerType, VoidType}
 import llambda.codegen.llvmir.IrFunction._
 

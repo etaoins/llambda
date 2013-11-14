@@ -1,6 +1,6 @@
 package llambda.nfi
 
-import llambda.codegen.{boxedtype => bt}
+import llambda.{boxedtype => bt}
 
 sealed abstract class NativeType
 

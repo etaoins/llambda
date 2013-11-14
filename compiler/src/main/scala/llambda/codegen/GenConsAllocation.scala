@@ -1,7 +1,7 @@
 package llambda.codegen
 
 import llambda.InternalCompilerErrorException
-import llambda.codegen.{boxedtype => bt}
+import llambda.{boxedtype => bt}
 import llambda.codegen.llvmir._
 import llambda.codegen.llvmir.IrFunction._
 
@@ -20,10 +20,8 @@ object GenConsAllocation {
     attributes=Set(NoUnwind)
   )
 
-  protected class ConsAllocation(basePointer : IrValue, count : Int) {
-    def genTypedPointer(state : GenerationState)(index : Int, asType : bt.ConcreteBoxedType) : IrValue = {
-      val block = state.currentBlock
-
+  class ConsAllocation(basePointer : IrValue, count : Int) {
+    def genTypedPointer(block : IrBlockBuilder)(index : Int, asType : bt.ConcreteBoxedType) : IrValue = {
       if (index >= count) {
         throw new InternalCompilerErrorException("Attempted to access cons past end of allocation")
       }

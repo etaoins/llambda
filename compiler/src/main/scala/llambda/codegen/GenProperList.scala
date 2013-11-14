@@ -1,26 +1,22 @@
 package llambda.codegen
 
 import llambda.InternalCompilerErrorException
-import llambda.codegen.{boxedtype => bt}
+import llambda.{boxedtype => bt}
 import llambda.codegen.llvmir._
 import llambda.codegen.llvmir.IrFunction._
 
 object GenProperList {
   // boxedData must be of type %datum*
-  def apply(initialState : GenerationState)(irBoxedData : Seq[IrValue]) : (GenerationState, IrValue) ={
+  def apply(block : IrBlockBuilder)(allocation : GenConsAllocation.ConsAllocation, allocBase : Int, irBoxedData : Seq[IrValue]) : IrValue ={
     val listLength = irBoxedData.length
-    val emptyList = LiveEmptyList.genBoxedConstant()
+    val emptyList = GlobalDefines.emptyListIrValue
 
-    // This is a noop on listLength == 0
-    val (state, allocation) = GenConsAllocation(initialState)(listLength) 
-
-    val block = state.currentBlock
     val bitcastEmptyList = block.bitcastTo("emptyListCast")(emptyList, PointerType(bt.BoxedDatum.irType))
 
     val head = irBoxedData.zipWithIndex.foldRight(bitcastEmptyList) { case ((irBoxedDatum, index), nextElement) =>
       block.comment(s"initializing list element ${index}")
 
-      val pairPointer = allocation.genTypedPointer(state)(index, bt.BoxedPair)
+      val pairPointer = allocation.genTypedPointer(block)(allocBase + index, bt.BoxedPair)
 
       // Set the car
       bt.BoxedPair.genStoreToCar(block)(irBoxedDatum, pairPointer)
@@ -32,8 +28,6 @@ object GenProperList {
       block.bitcastTo(s"element${index}DatumCast")(pairPointer, PointerType(bt.BoxedDatum.irType))
     }
 
-    val headCast = block.bitcastTo("headListElementCast")(head, PointerType(bt.BoxedListElement.irType))
-
-    (state, headCast)
+    block.bitcastTo("headListElementCast")(head, PointerType(bt.BoxedListElement.irType))
   }
 }

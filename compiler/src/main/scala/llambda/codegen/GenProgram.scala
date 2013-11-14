@@ -2,7 +2,7 @@ package llambda.codegen
 
 import llambda._
 import llambda.codegen.llvmir._
-import llambda.analyze.FindMutableVars
+import llambda.planner.{step => ps}
 
 import scala.io.Source
 
@@ -28,10 +28,7 @@ object GenProgram {
     ) mkString "\n"
   }
 
-  def apply(expressions : List[et.Expression]) : String = {
-    // Find all mutables vars
-    val mutableVars = expressions.flatMap(FindMutableVars.apply).toSet
-
+  def apply(steps : List[ps.Step]) : String = {
     val module = new llvmir.IrModuleBuilder
 
     // Define main()
@@ -56,13 +53,10 @@ object GenProgram {
     // Create a blank generation state
     val startState = GenerationState(
       module=module,
-      currentBlock=entryBlock,
-      mutableVariables=mutableVars)
+      currentBlock=entryBlock)
 
-    // Generate our expressions
-    val endState = expressions.foldLeft(startState) { (state, expr) => 
-      GenExpression(state)(expr)._1
-    }
+    // Generate our steps
+    val endState = GenPlanSteps(startState)(steps)
 
     endState.currentBlock.ret(IntegerConstant(IntegerType(32), 0))
 

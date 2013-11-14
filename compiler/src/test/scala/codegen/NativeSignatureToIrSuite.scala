@@ -5,7 +5,7 @@ import org.scalatest.FunSuite
 import llambda.et.NativeFunction
 import llambda.nfi
 
-import llambda.codegen.{boxedtype => bt}
+import llambda.{boxedtype => bt}
 import llambda.codegen.llvmir._
 import llambda.codegen.llvmir.IrFunction._
 

@@ -3,7 +3,7 @@ package llambda.functional
 import java.io.File
 import scala.sys.process._
 import llambda._
-import llambda.codegen.{boxedtype => bt}
+import llambda.{boxedtype => bt}
 import org.scalatest.{FunSuite, Inside}
 import java.io.{InputStream}
 import SchemeStringImplicits._

@@ -33,11 +33,11 @@ case class ArrayType(elements : Int, innerType : FirstClassType) extends FirstCl
   def toIr = s"[$elements x $innerType]"
 }
 
-case class FunctionType(returnType : ReturnableType, parameterTypes : List[FirstClassType]) extends IrType {
+case class FunctionType(returnType : ReturnableType, parameterTypes : Seq[FirstClassType]) extends IrType {
   def toIr = returnType + " (" + parameterTypes.map(_.toIr).mkString(", ") + ")"
 }
 
-case class StructureType(memberTypes : List[FirstClassType]) extends FirstClassType {
+case class StructureType(memberTypes : Seq[FirstClassType]) extends FirstClassType {
   def toIr = "{" + memberTypes.mkString(", ") + "}"
 }
 

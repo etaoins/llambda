@@ -1,7 +1,7 @@
 package llambda.codegen
 
 import llambda.codegen.llvmir._
-import llambda.codegen.{boxedtype => bt}
+import llambda.{boxedtype => bt}
 
 object GenFatalError {
   def apply(module : IrModuleBuilder, block : IrBlockBuilder)(errorName : String, errorText : String, evidence : Option[IrValue] = None) = {

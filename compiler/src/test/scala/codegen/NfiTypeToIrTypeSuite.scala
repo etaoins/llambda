@@ -1,7 +1,7 @@
 package llambda.codegen
 
 import llambda.nfi
-import llambda.codegen.{boxedtype => bt}
+import llambda.{boxedtype => bt}
 import org.scalatest.FunSuite
 
 class NfiTypeToIrTypeSuite extends FunSuite {

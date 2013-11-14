@@ -1,6 +1,6 @@
 package llambda.codegen
 
-import llambda.codegen.{boxedtype => bt}
+import llambda.{boxedtype => bt}
 import llambda.InternalCompilerErrorException
 
 import org.scalatest.FunSuite

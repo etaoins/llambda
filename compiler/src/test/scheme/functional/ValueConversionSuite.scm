@@ -39,10 +39,20 @@
 	; This assumes (cos) takes an unboxed double
 	(cos (car '(0.0 . #f)))))
 
+(define-test "inexact rational can be unboxed as float" (expect 10.0
+	; Nothing in the stdlib takes float
+	(define fabsf (native-function "fabsf" (float) float))
+	(fabsf (car '(-10.0 . #f)))))
+
 (define-test "exact integer can be unboxed as double" (expect 1.0
 	(import (scheme inexact))
 	; This assumes (cos) takes an unboxed double
 	(cos (car '(0 . #f)))))
+
+(define-test "exact integer can be unboxed as float" (expect 10.0
+	; Nothing in the stdlib takes float
+	(define fabsf (native-function "fabsf" (float) float))
+	(fabsf (car '(-10 . #f)))))
 
 (define-test "unboxed i64 can be passed as an unboxed i32" (expect b
 	; This assumes (exact) returns an unboxed i64 and (vector-ref) takes an
@@ -73,6 +83,11 @@
 (define-test "unboxed boolean false can be passed to a procedure as strict bool" (expect #f
 	; Thie assumes (boolean=? takes two unboxed strict bools
 	(boolean=? (not #t) (not #f))))
+
+(define-test "exact integer can be passed to a procedure as float" (expect 10.0
+	; Nothing in the stdlib takes float
+	(define fabsf (native-function "fabsf" (float) float))
+	(fabsf -10)))
 
 ; Make sure if we use type analysis to short circuit bool evaluation do it right
 ; This was also broken at one point

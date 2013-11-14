@@ -54,8 +54,14 @@ object Compiler {
       expressions
     }
 
+    // Analyize
+    val analysis = analyzer.Analyize(optimizedExpressions)
+
+    // Plan execution
+    val planSteps = planner.PlanExpressions(optimizedExpressions)(analysis)
+
     // Generate the LLVM IR
-    val llvmIr = codegen.GenProgram(optimizedExpressions)
+    val llvmIr = codegen.GenProgram(planSteps)
 
     if (config.emitLlvm) {
       // Write the IR directly to disk

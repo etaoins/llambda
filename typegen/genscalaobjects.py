@@ -287,7 +287,7 @@ def _generate_boxed_types(all_types):
 
     output  = GENERATED_FILE_COMMENT
     
-    output += "package llambda.codegen.boxedtype\n\n"
+    output += "package llambda.boxedtype\n\n"
 
     output += "import llambda.codegen.llvmir._\n"
     output += "import llambda.InternalCompilerErrorException\n\n"
@@ -397,7 +397,7 @@ def _generate_name_to_boxed_type(all_types):
     output  = GENERATED_FILE_COMMENT
     output += 'package llambda.frontend\n\n'
 
-    output += 'import llambda.codegen.{boxedtype => bt}\n\n'
+    output += 'import llambda.{boxedtype => bt}\n\n'
 
     output += 'object NativeTypeNameToBoxedType {\n'
     output += '  def apply : PartialFunction[String, bt.BoxedType] = {\n'
@@ -416,5 +416,5 @@ def _generate_name_to_boxed_type(all_types):
 def generate_scala_objects(all_types):
     ROOT_PATH = 'compiler/src/main/scala/llambda/'
 
-    return {ROOT_PATH + 'codegen/generated/BoxedType.scala': _generate_boxed_types(all_types),
+    return {ROOT_PATH + 'boxedtype/generated/BoxedType.scala': _generate_boxed_types(all_types),
             ROOT_PATH + 'frontend/generated/NativeTypeNameToBoxedType.scala': _generate_name_to_boxed_type(all_types)}

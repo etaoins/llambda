@@ -1,7 +1,7 @@
 package llambda.codegen
 
 import llambda.nfi.{NativeSignature, BoxedValue}
-import llambda.codegen.{boxedtype => bt}
+import llambda.{boxedtype => bt}
 
 // All boxed procedures have this signature
 // If they are wrapping a function with a different signature a thunk must

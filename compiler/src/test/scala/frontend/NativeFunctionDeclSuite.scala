@@ -3,7 +3,7 @@ package llambda.frontend
 import org.scalatest.FunSuite
 
 import llambda._
-import llambda.codegen.{boxedtype => bt}
+import llambda.{boxedtype => bt}
 
 class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   implicit val nfiScope = new Scope(collection.mutable.Map(NativeFunctionPrimitives.bindings.toSeq : _*))
