@@ -1,9 +1,9 @@
 package llambda.planner.intermediatevalue
 
-import llambda.{nfi, ImpossibleTypeConversionException}
+import llambda.nfi
 import llambda.{boxedtype => bt}
 import llambda.planner.{step => ps}
-import llambda.planner.StepBuffer
+import llambda.planner.{StepBuffer, UnlocatedImpossibleTypeConversionException}
 
 abstract class IntermediateValue {
   val possibleTypes : Set[bt.ConcreteBoxedType]
@@ -43,7 +43,7 @@ abstract class IntermediateValue {
   
   def toRequiredTempValue(targetType : nfi.NativeType)(implicit planSteps : StepBuffer) =
     toTempValue(targetType) getOrElse {
-      throw new ImpossibleTypeConversionException(s"Unable to convert ${this.toString} to ${targetType}")
+      throw new UnlocatedImpossibleTypeConversionException(s"Unable to convert ${this.toString} to ${targetType}")
     }
 
   def planPhiWith(theirValue : IntermediateValue)(ourSteps : StepBuffer, theirSteps : StepBuffer) : PlanPhiResult = {

@@ -232,7 +232,7 @@ object ExtractModuleBody {
     }
   }
 
-  def extractExpression(datum : sst.ScopedDatum)(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : et.Expression = datum match {
+  def extractExpression(datum : sst.ScopedDatum)(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : et.Expression = (datum match {
     // Normal procedure call
     case sst.ScopedProperList(procedure :: operands) =>
       procedure match {
@@ -276,7 +276,7 @@ object ExtractModuleBody {
 
     case malformed =>
       throw new MalformedExpressionException(malformed, malformed.toString)
-  }
+  }).assignLocationFrom(datum)
 
   private def parseSyntaxDefine(datum : sst.ScopedDatum) : ParsedSyntaxDefine = datum match {
     case sst.ScopedProperList(sst.ScopedSymbol(_, "define-syntax") :: (symbol : sst.ScopedSymbol) ::
@@ -355,10 +355,10 @@ object ExtractModuleBody {
         case Some(ParsedVarDefine(symbol, boundValue, exprBlock)) =>
           // There's a wart in Scheme that allows a top-level (define) to become
           // a (set!) if the value is already defined as a storage location
-          symbol.resolveOpt match {
+          (symbol.resolveOpt match {
             case Some(storageLoc : StorageLocation) =>
               // Convert this to a (set!)
-              et.MutateVar(storageLoc, exprBlock()) :: apply(tailData)
+              et.MutateVar(storageLoc, exprBlock())
 
             case Some(_) =>
               throw new BadSpecialFormException(symbol, s"Attempted mutating (define) non-variable ${symbol.name}") 
@@ -367,8 +367,8 @@ object ExtractModuleBody {
               // This is a fresh binding
               // Place the rest of the body inside an et.Let
               symbol.scope += (symbol.name -> boundValue)
-              et.Bind(List(boundValue -> exprBlock())) :: apply(tailData)
-          }
+              et.Bind(List(boundValue -> exprBlock()))
+          }).assignLocationFrom(datum) :: apply(tailData)
 
         case Some(ParsedSyntaxDefine(symbol, boundValue)) =>
           // This doesn't create any expression tree nodes 

@@ -1,7 +1,7 @@
 package llambda.et
 import llambda._
 
-sealed abstract trait Expression {
+sealed abstract trait Expression extends SourceLocated {
   val subexpressions : List[Expression]
 
   def map(f : Expression => Expression) : Expression

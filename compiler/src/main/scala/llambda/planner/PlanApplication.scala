@@ -4,7 +4,7 @@ import llambda.nfi
 import llambda.planner.{step => ps}
 import llambda.planner.{intermediatevalue => iv}
 import llambda.{boxedtype => bt}
-import llambda.{NotImplementedException, IncompatibleArityException}
+import llambda.NotImplementedException
 
 object PlanApplication {
   private def boxRestArgs(restArgs : List[iv.IntermediateValue])(implicit planSteps : StepBuffer) : ps.TempValue = {
@@ -42,12 +42,12 @@ object PlanApplication {
     // Ensure our arity is sane
     if (signature.hasRestArg) {
       if (operandValues.length < signature.fixedArgs.length) {
-        throw new IncompatibleArityException(s"Called function with ${operandValues.length} arguments; requires at least ${signature.fixedArgs.length} arguments")
+        throw new UnlocatedIncompatibleArityException(s"Called function with ${operandValues.length} arguments; requires at least ${signature.fixedArgs.length} arguments")
       }
     }
     else {
       if (signature.fixedArgs.length != operandValues.length) {
-        throw new IncompatibleArityException(s"Called function with ${operandValues.length} arguments; requires exactly ${signature.fixedArgs.length} arguments")
+        throw new UnlocatedIncompatibleArityException(s"Called function with ${operandValues.length} arguments; requires exactly ${signature.fixedArgs.length} arguments")
       }
     }
 

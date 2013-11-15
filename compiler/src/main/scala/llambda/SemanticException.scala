@@ -2,12 +2,13 @@ package llambda
 
 import llambda._
 
-sealed abstract class SemanticException(message : String) extends Exception(message) {
+abstract class SemanticException(message : String) extends Exception(message) {
   val semanticErrorType : String
 }
 
-// XXX: Make everything a LocatedSemanticException
-sealed abstract class LocatedSemanticException(val located : SourceLocated, message : String) extends SemanticException(message + "\n" + located.locationString)
+sealed abstract class LocatedSemanticException(val located : SourceLocated, message : String) extends 
+  SemanticException(message + "\n" + located.locationString) {
+}
 
 class DubiousLibraryNameComponentException(located : SourceLocated, val libraryName : String) extends LocatedSemanticException(located, libraryName) {
   val semanticErrorType = "dubious library name"
@@ -58,10 +59,14 @@ class ImportedIdentifierNotFoundException(located : SourceLocated, val identifie
   val semanticErrorType = "imported identifier not found"
 }
 
-class ImpossibleTypeConversionException(message : String) extends SemanticException(message) {
+// This has an unlocated version in planner
+trait ImpossibleTypeConversionExceptionLike extends SemanticException {
   val semanticErrorType = "impossible type conversion"
 }
+class ImpossibleTypeConversionException(located : SourceLocated, message : String) extends LocatedSemanticException(located, message) with ImpossibleTypeConversionExceptionLike 
 
-class IncompatibleArityException(message : String) extends SemanticException(message) {
+// This has an unlocated version in planner
+trait IncompatibleArityExceptionLike extends SemanticException {
   val semanticErrorType = "incompatible arity"
 }
+class IncompatibleArityException(located : SourceLocated, message : String) extends LocatedSemanticException(located, message) with IncompatibleArityExceptionLike 

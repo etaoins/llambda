@@ -14,6 +14,13 @@ abstract trait SourceLocated extends Positional {
     other.setPos(pos)
     other.setFilename(filename)
   }
+  
+  def assignLocationFrom(other : SourceLocated) : SourceLocated.this.type = {
+    setPos(other.pos)
+    setFilename(other.filename)
+
+    this
+  }
 
   def locationString : String = {
     val filenameString = filename getOrElse "(unknown)"
