@@ -21,7 +21,6 @@ object LocateExceptionsWith {
       }
       catch {
         case unlocatedException : UnlocatedSemanticException =>
-          println("RELOCATING")
           throw unlocatedException.toLocatedException(sourceLocated)
       }
     }
