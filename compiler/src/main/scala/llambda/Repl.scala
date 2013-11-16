@@ -1,8 +1,11 @@
 package llambda
 
 import scala.tools.jline.console.ConsoleReader
+import scala.sys.process._
 import annotation.tailrec
 import java.io.File
+
+class ReplProcessNonZeroExitException(val code : Int, val output : String) extends Exception(s"Process exited with code ${code}. Output:\n${output}")
 
 /** Base class for all REPL modes */
 abstract class ReplMode(val name : String) {
@@ -26,8 +29,23 @@ abstract class SchemeParsingMode(name : String) extends ReplMode(name) {
         println(s"${semantic.semanticErrorType}: ${semantic.getMessage}")
       
       case parse : ParseErrorException =>
-        println("parse error: " + parse)
+        println("parse error: " + parse.getMessage)
+      
+      case nonzero : ReplProcessNonZeroExitException  =>
+        println("non-zero exit: " + nonzero.getMessage)
     }
+  }
+}
+
+/** Provides an include path with the current directory */
+object ReplIncludePath {
+  def apply() : frontend.IncludePath =  {
+    val currentDirUrl = (new File(System.getProperty("user.dir"))).toURI.toURL
+
+    frontend.IncludePath(
+      fileParentDir=Some(currentDirUrl),
+      packageRootDir=Some(currentDirUrl)
+    )
   }
 }
 
@@ -38,18 +56,12 @@ class ParseOnlyMode extends SchemeParsingMode("parse") {
 }
 
 /** Extract expressions allowed in a library, program or lambda body */
-class BodyExpressionMode extends SchemeParsingMode("body") {
+class BodyExpressionMode extends SchemeParsingMode("expr") {
   private implicit val loader = new frontend.LibraryLoader
   private val schemeBaseBindings = loader.loadSchemeBase
 
   implicit val scope = new Scope(collection.mutable.Map(schemeBaseBindings.toSeq : _*))
-
-  // Make our include path with the current directory
-  val currentDirUrl = (new File(System.getProperty("user.dir"))).toURI.toURL
-  implicit val includePath = frontend.IncludePath(
-    fileParentDir=Some(currentDirUrl),
-    packageRootDir=Some(currentDirUrl)
-  )
+  implicit val includePath = ReplIncludePath()
 
   def evalDatum(datum : ast.Datum) = {
     datum match {
@@ -69,6 +81,56 @@ class BodyExpressionMode extends SchemeParsingMode("body") {
   }
 }
 
+/** Compiles expressions as a standalone program and executes them */
+class CompileMode extends SchemeParsingMode("compile") {
+  val compileConfig = CompileConfig(
+    includePath=ReplIncludePath(),
+    optimizeLevel=2)
+
+  def evalDatum(userDatum : ast.Datum) = {
+    val outputFile = File.createTempFile("llambdarepl", null, null)
+    outputFile.deleteOnExit()
+
+    // Implicitly import (scheme base) and wrap in (write)
+    // This is encouraged for REPLs by R7RS
+    val programData = ast.ProperList(List(
+      ast.Symbol("import"),
+      ast.ProperList(List(
+        ast.Symbol("scheme"),
+        ast.Symbol("base")
+      )),
+      ast.ProperList(List(
+        ast.Symbol("scheme"),
+        ast.Symbol("write")
+      ))
+    )) :: ast.ProperList(List(
+      ast.Symbol("write"),
+      userDatum
+    )) :: Nil
+
+    try {
+      Compiler.compileData(programData, outputFile, compileConfig)
+
+      var outputString = ""
+      val outLogger = ProcessLogger(line => outputString += line + "\n",
+                                    line => outputString += line + "\n")
+
+      // Run and capture the output
+      val process = Process(outputFile.getAbsolutePath).run(outLogger)
+
+      if (process.exitValue() != 0) {
+        throw new ReplProcessNonZeroExitException(process.exitValue(), outputString)
+      }
+
+      outputString
+
+    }
+    finally {
+      outputFile.delete()
+    }
+  }
+}
+
 /** Implements the REPL loop and switching modes */
 object Repl {
   @tailrec
@@ -82,8 +144,11 @@ object Repl {
       case ":parse" =>
         acceptInput(new ParseOnlyMode)
       
-      case ":body" =>
+      case ":expr" =>
         acceptInput(new BodyExpressionMode)
+      
+      case ":compile" =>
+        acceptInput(new CompileMode)
 
       case userString =>
         mode.evaluate(userString)
@@ -93,6 +158,6 @@ object Repl {
 
   def apply() {
     val reader = new ConsoleReader;
-    acceptInput(new BodyExpressionMode)(reader)
+    acceptInput(new CompileMode)(reader)
   }
 }
