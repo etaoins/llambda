@@ -1,6 +1,7 @@
 (define-test "datum can be cast to pair" (expect 1
+	(import (llambda test-util))
 	; This assumes (vector-ref) takes a boxed pair
-	(vector-ref (car '(#(1) . #f)) 0)))
+	(vector-ref (typeless-boxed #(1)) 0)))
 
 (define-test "#false can be unboxed as truthy" (expect #t
 	; This assumes (not) takes an unboxed truthy boolean
@@ -11,48 +12,58 @@
 	(boolean=? #f (car '(#f . #f)))))
 
 (define-test "#true can be unboxed as boolean" (expect #f
+	(import (llambda test-util))
 	; This assumes (not) takes an unboxed truthy
-	(not (car '(#t . #f)))))
+	(not (typeless-boxed #t))))
 
 (define-test "#true can be unboxed as strict bool" (expect #t
+	(import (llambda test-util))
 	; This assumes (boolean=?) takes two unboxed booleans
-	(boolean=? #t (car '(#t . #f)))))
+	(boolean=? #t (typeless-boxed #t))))
 
 (define-test "empty list can be unboxed as truthy" (expect #f
+	(import (llambda test-util))
 	; This assumes (not) takes an unboxed truthy
-	(not (car '('() . #f)))))
+	(not (typeless-boxed '()))))
 
 (define-test "empty list cannot unboxed as strict bool" (expect-failure
+	(import (llambda test-util))
 	; This assumes (boolean=?) takes two unboxed booleans
-	(boolean=? #t (car '('() . #f)))))
+	(boolean=? #t (typeless-boxed '()))))
 
 (define-test "exact int can be unboxed as integer" (expect #(#t #t #t)
+	(import (llambda test-util))
 	; This assumes (make-vector) takes an unboxed exact integer
-	(make-vector (car '(3 . #f)) #t)))
+	(make-vector (typeless-boxed 3) #t)))
 
 (define-test "inexact rational cannot be unboxed as integer" (expect-failure
+	(import (llambda test-util))
 	; This assumes (make-vector) takes an unboxed exact integer
-	(make-vector (car '(3.0 . #f)) #t)))
+	(make-vector (typeless-boxed 3.0) #t)))
 
 (define-test "inexact rational can be unboxed as double" (expect 1.0
 	(import (scheme inexact))
+	(import (llambda test-util))
 	; This assumes (cos) takes an unboxed double
-	(cos (car '(0.0 . #f)))))
+	(cos (typeless-boxed 0.0))))
 
 (define-test "inexact rational can be unboxed as float" (expect 10.0
+	(import (llambda test-util))
 	; Nothing in the stdlib takes float
 	(define fabsf (native-function "fabsf" (float) float))
-	(fabsf (car '(-10.0 . #f)))))
+	(fabsf (typeless-boxed -10.0))))
 
 (define-test "exact integer can be unboxed as double" (expect 1.0
 	(import (scheme inexact))
+	(import (llambda test-util))
 	; This assumes (cos) takes an unboxed double
-	(cos (car '(0 . #f)))))
+	(cos (typeless-boxed 0))))
 
 (define-test "exact integer can be unboxed as float" (expect 10.0
+	(import (llambda test-util))
 	; Nothing in the stdlib takes float
 	(define fabsf (native-function "fabsf" (float) float))
-	(fabsf (car '(-10 . #f)))))
+	(fabsf (typeless-boxed -10))))
 
 (define-test "unboxed i64 can be passed as an unboxed i32" (expect b
 	; This assumes (exact) returns an unboxed i64 and (vector-ref) takes an
@@ -60,16 +71,18 @@
 	(vector-ref #(a b c) (exact 1))))
 
 (define-test "'3' can be unboxed as a character" (expect 3
+	(import (llambda test-util))
 	; This assumes (digit-value) takes an unboxed Unicode character
-	(digit-value (car '(#\3 . #f)))))
+	(digit-value (typeless-boxed #\3))))
 
 (define-test "string can be unboxed as a UTF-8 C string" (expect 6
 	(import (llambda nfi))
+	(import (llambda test-util))
 	; Nothing in our stdlib takes UTF-8 C strings because they're binary unsafe
 	; and require O(n) importing to determine their length/non-ASCII content.
 	; Use strlen from the C standard library for this test
 	(define strlen (native-function "strlen" (utf8-cstring) int64))
-	(strlen (car '("Hello!" . #f)))))
+	(strlen (typeless-boxed "Hello!"))))
 
 (define-test "unboxed int 0 converts to unboxed truthy true" (expect #f
 	; This assumes (exact) returns an unboxed integer and (not) takes an unboxed truthy
