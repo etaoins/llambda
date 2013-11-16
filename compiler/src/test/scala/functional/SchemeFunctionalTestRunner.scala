@@ -104,40 +104,49 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
 
     // Compile the program
     val outputFile = File.createTempFile("llambdafunc", null, null)
+    outputFile.deleteOnExit()
 
-    val compileConfig = CompileConfig(
-      includePath=includePath,
-      // Optimize to catch more miscompilations
-      optimizeLevel=2)
+    try {
+      val compileConfig = CompileConfig(
+        includePath=includePath,
+        // Optimize to catch more miscompilations
+        optimizeLevel=2)
 
-    Compiler.compileData(printingProgram, outputFile, compileConfig)
+      Compiler.compileData(printingProgram, outputFile, compileConfig)
 
-    // Create our output logger
-    var stdout : Option[InputStream] = None
-    var stderr : Option[InputStream] = None
+      // Create our output logger
+      var stdout : Option[InputStream] = None
+      var stderr : Option[InputStream] = None
 
-    val outputIO = new ProcessIO(
-      stdin  => Unit, // Don't care
-      stdoutStream => stdout = Some(stdoutStream),
-      stderrStream => stderr = Some(stderrStream)
-    )
+      val outputIO = new ProcessIO(
+        stdin  => Unit, // Don't care
+        stdoutStream => stdout = Some(stdoutStream),
+        stderrStream => stderr = Some(stderrStream)
+      )
 
-    // Call the program
-    val testProcess = Process(outputFile.getAbsolutePath).run(outputIO)
+      // Call the program
+      val testProcess = Process(outputFile.getAbsolutePath).run(outputIO)
 
-    // Request the exit value now which will wait for the process to finish
-    val exitValue = testProcess.exitValue()
+      // Request the exit value now which will wait for the process to finish
+      val exitValue = testProcess.exitValue()
+
+      // Clean up the temporary executable
+      outputFile.delete()
+        
+      val errorString = utf8InputStreamToString(stderr.get)
       
-    val errorString = utf8InputStreamToString(stderr.get)
-    
-    if (exitValue == 0) {
-      val outputString = utf8InputStreamToString(stdout.get)
-      val output :: Nil = SchemeParser.parseStringAsData(outputString)
+      if (exitValue == 0) {
+        val outputString = utf8InputStreamToString(stdout.get)
+        val output :: Nil = SchemeParser.parseStringAsData(outputString)
 
-      ExecutionResult(success=true, output=output, errorString=errorString)
+        ExecutionResult(success=true, output=output, errorString=errorString)
+      }
+      else {
+        ExecutionResult(success=false, output=ast.UnspecificValue(), errorString=errorString)
+      }
     }
-    else {
-      ExecutionResult(success=false, output=ast.UnspecificValue(), errorString=errorString)
+    finally {
+      outputFile.delete()
     }
   }
 }
