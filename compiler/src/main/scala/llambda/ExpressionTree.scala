@@ -11,14 +11,14 @@ case class Begin(expressions : List[Expression]) extends Expression {
   val subexpressions = expressions
 
   def map(f : Expression => Expression) : et.Begin =
-    et.Begin(expressions.map(f))
+    et.Begin(expressions.map(f)).assignLocationFrom(this)
 }
 
 case class Apply(procedure : Expression, operands : List[Expression]) extends Expression {
   val subexpressions = procedure :: operands
 
   def map(f : Expression => Expression) : et.Apply =
-    et.Apply(f(procedure), operands.map(f))
+    et.Apply(f(procedure), operands.map(f)).assignLocationFrom(this)
 
   override def toString = 
     // Make the operands follow the procedure directly like in Scheme
@@ -35,7 +35,7 @@ case class MutateVar(variable : StorageLocation, value : Expression) extends Exp
   val subexpressions = value :: Nil
 
   def map(f : Expression => Expression) : et.MutateVar =
-    et.MutateVar(variable, f(value))
+    et.MutateVar(variable, f(value)).assignLocationFrom(this)
 }
 
 case class Literal(value : ast.Datum) extends Expression {
@@ -50,14 +50,14 @@ case class Cond(test : Expression, trueExpr : Expression, falseExpr : Expression
   val subexpressions = test :: trueExpr :: falseExpr :: Nil
 
   def map(f : Expression => Expression) : et.Cond =
-    et.Cond(f(test), f(trueExpr), f(falseExpr))
+    et.Cond(f(test), f(trueExpr), f(falseExpr)).assignLocationFrom(this)
 }
 
 case class Lambda(fixedArgs : List[StorageLocation], restArg : Option[StorageLocation], body : Expression) extends Expression {
   val subexpressions = body :: Nil
 
   def map(f : Expression => Expression) : et.Lambda =
-    et.Lambda(fixedArgs, restArg, f(body))
+    et.Lambda(fixedArgs, restArg, f(body)).assignLocationFrom(this)
 }
 
 case class Bind(bindings : List[(StorageLocation, Expression)]) extends Expression {
@@ -66,7 +66,7 @@ case class Bind(bindings : List[(StorageLocation, Expression)]) extends Expressi
   def map(f : Expression => Expression) : et.Bind =
     et.Bind(bindings.map { case (storageLoc, expr) =>
       (storageLoc, f(expr))
-    })
+    }).assignLocationFrom(this)
 }
 
 case class NativeFunction(
