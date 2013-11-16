@@ -83,7 +83,7 @@ private[planner] object PlanExpression {
           value=initialState.immutables(storageLoc)
         )
       
-      case et.VarRef(storageLoc : StorageLocation) =>
+      case et.VarRef(storageLoc) =>
         val mutableTemp = initialState.mutables(storageLoc)
         val resultTemp = new ps.TempValue
 
@@ -97,9 +97,6 @@ private[planner] object PlanExpression {
           value=new iv.DynamicBoxedValue(possibleTypes, bt.BoxedDatum, resultTemp)
         )
       
-      case et.VarRef(_) =>
-        throw new InternalCompilerErrorException("Non-storage variable reference leaked to planner!")
-
       case et.MutateVar(storageLoc, valueExpr) =>
         val mutableTemp = initialState.mutables(storageLoc)
         
