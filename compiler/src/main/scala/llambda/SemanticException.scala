@@ -59,6 +59,10 @@ class ImportedIdentifierNotFoundException(located : SourceLocated, val identifie
   val semanticErrorType = "imported identifier not found"
 }
 
+class ValueNotApplicableException(located : SourceLocated) extends LocatedSemanticException(located, "Value not applicable") {
+  val semanticErrorType = "not applicable"
+}
+
 // This has an unlocated version in planner
 trait ImpossibleTypeConversionExceptionLike extends SemanticException {
   val semanticErrorType = "impossible type conversion"

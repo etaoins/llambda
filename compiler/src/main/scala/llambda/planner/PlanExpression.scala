@@ -3,7 +3,7 @@ package llambda.planner
 import collection.mutable
 
 import llambda.nfi
-import llambda.{et, StorageLocation, InternalCompilerErrorException}
+import llambda.{et, StorageLocation, ValueNotApplicableException}
 import llambda.{boxedtype => bt}
 import llambda.planner.{step => ps}
 import llambda.planner.{intermediatevalue => iv}
@@ -39,7 +39,7 @@ private[planner] object PlanExpression {
           case invokable : InvokableProcedure =>
             invokable
           case _ =>
-            throw new InternalCompilerErrorException("Attempted to invoke non-invokable value")
+            throw new ValueNotApplicableException(expr)
         }
 
         val applyValueOpt = PlanApplication(invokableProc, operandValues.toList) 
