@@ -5,7 +5,7 @@ namespace lliby
 
 BoxedDatum* BoxedProcedure::invoke(BoxedListElement *arguments)
 {
-	return m_entryPoint(this, arguments);
+	return m_entryPoint(recordData(), arguments);
 }
 
 }

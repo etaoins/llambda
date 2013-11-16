@@ -62,10 +62,14 @@
 %bytevector = type {%datum, i32, i8*}
 !14 = metadata !{metadata !"bytevector", metadata !0}
 
-; {supertype, unsigned capturedDataLength, capturedData, entryPoint}
-%procedure = type {%datum, i32, %datum***, %datum* (%procedure*, %listElement*)*}
-!15 = metadata !{metadata !"procedure", metadata !0}
+; {supertype, unsigned recordClassId, recordData}
+%recordLike = type {%datum, i32, i8*}
+!15 = metadata !{metadata !"recordLike", metadata !0}
+
+; {supertype, entryPoint}
+%procedure = type {%recordLike, %datum* (i8*, %listElement*)*}
+!16 = metadata !{metadata !"procedure", metadata !15}
 
 ; {supertype, currentValue}
 %mutableVar = type {%datum, %datum*}
-!16 = metadata !{metadata !"mutableVar", metadata !0}
+!17 = metadata !{metadata !"mutableVar", metadata !0}

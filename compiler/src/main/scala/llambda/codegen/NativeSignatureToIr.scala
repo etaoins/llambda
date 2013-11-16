@@ -15,7 +15,7 @@ object NativeSignatureToIr {
   }
 
   def apply(signature : NativeSignature) : IrSignature = {
-    val selfArgs = if (signature.hasSelfArg) {
+    val closureArgs = if (signature.hasClosureArg) {
       List(Argument(PointerType(bt.BoxedProcedure.irType), Set()))
     }
     else {
@@ -34,7 +34,7 @@ object NativeSignatureToIr {
       Nil
     } 
 
-    val allArgs = selfArgs ++ fixedArgs ++ restArgs
+    val allArgs = closureArgs ++ fixedArgs ++ restArgs
 
     val result = signature.returnType map (NfiTypeToIrType(_)) match {
       case None => 

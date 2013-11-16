@@ -49,10 +49,9 @@ def _generate_declaretypes(boxed_types):
         content += "class " + cxx_type_name + ";\n"
 
     datum_class = type_name_to_clike_class(BASE_TYPE)
-    procedure_class = type_name_to_clike_class('procedure')
     list_element_class = type_name_to_clike_class('listElement')
 
-    content += "typedef " + datum_class + "* (*ProcedureEntryPoint)(" + procedure_class + "*, " + list_element_class + "*);\n\n"
+    content += "typedef " + datum_class + "* (*ProcedureEntryPoint)(void*, " + list_element_class + "*);\n\n"
 
     content += "}\n\n"
 

@@ -10,11 +10,11 @@ def _uppercase_first(string):
 def _type_name_to_nfi_decl(type_name):
     return "boxed-" + re.sub('([A-Z][a-z]+)', r'-\1', type_name).lower()
 
-def _llvm_type_to_scala(llvm_type, signed):
+def _llvm_type_to_scala(llvm_type):
     # Are we a pointer?
     if llvm_type[-1:] == '*':
         # Recursively call ourselves with our base type
-        return 'PointerType(' +  _llvm_type_to_scala(llvm_type[:-1], signed) + ')'
+        return 'PointerType(' +  _llvm_type_to_scala(llvm_type[:-1]) + ')'
 
     # Are we a struct?
     if llvm_type[0] == '%':
@@ -45,20 +45,22 @@ def _complex_type_to_scala(complex_type):
                   'FunctionType('
                     'PointerType(UserDefinedType("' + BASE_TYPE + '")), '
                     'List('
-                      'PointerType(UserDefinedType("procedure")), '
+                      'PointerType(IntegerType(8)), '
                       'PointerType(UserDefinedType("listElement")) '
                     ')' 
                   ')'
                 ')')
 
     elif complex_type == "unicodeChar":
-        return 'IntegerType(32)'
+        return _llvm_type_to_scala('i32')
+    elif complex_type == "void*":
+        return _llvm_type_to_scala('i8*')
     else:
         raise SemanticException('Unknown complex type "' + complex_type + '"')
 
 def _field_type_to_scala(field):
     if field.llvm_type:
-        return _llvm_type_to_scala(field.llvm_type, field.signed)
+        return _llvm_type_to_scala(field.llvm_type)
     else:
         return _complex_type_to_scala(field.complex_type)
 

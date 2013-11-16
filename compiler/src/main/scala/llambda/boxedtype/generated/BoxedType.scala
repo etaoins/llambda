@@ -63,7 +63,7 @@ object BoxedDatum extends BoxedType {
   val name = "datum"
   val irType = UserDefinedType("datum")
   val supertype = None
-  val directSubtypes = Set[BoxedType](BoxedUnspecific, BoxedListElement, BoxedStringLike, BoxedBoolean, BoxedNumeric, BoxedCharacter, BoxedVector, BoxedBytevector, BoxedProcedure, BoxedMutableVar)
+  val directSubtypes = Set[BoxedType](BoxedUnspecific, BoxedListElement, BoxedStringLike, BoxedBoolean, BoxedNumeric, BoxedCharacter, BoxedVector, BoxedBytevector, BoxedRecordLike, BoxedMutableVar)
   val isAbstract = true
   val tbaaIndex = 0
 
@@ -1639,34 +1639,154 @@ object BoxedBytevector extends ConcreteBoxedType {
   }
 }
 
+object BoxedRecordLike extends BoxedType {
+  val name = "recordLike"
+  val irType = UserDefinedType("recordLike")
+  val supertype = Some(BoxedDatum)
+  val directSubtypes = Set[BoxedType](BoxedProcedure)
+  val isAbstract = true
+  val tbaaIndex = 15
+
+  def createConstant(recordClassId : IrConstant, recordData : IrConstant, typeId : IrConstant) : StructureConstant = {
+    if (recordClassId.irType != IntegerType(32)) {
+      throw new InternalCompilerErrorException("Unexpected type for field recordClassId")
+    }
+
+    if (recordData.irType != PointerType(IntegerType(8))) {
+      throw new InternalCompilerErrorException("Unexpected type for field recordData")
+    }
+
+    StructureConstant(List(
+      supertype.get.createConstant(
+        typeId=typeId
+      ),
+      recordClassId,
+      recordData
+    ), userDefinedType=Some(irType))
+  }
+
+  def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
+    val datumValue = BoxedDatum.genPointerBitcast(startBlock)(boxedValue)
+    val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
+    val typeId = startBlock.load("typeId")(typeIdPointer)
+
+    val isProcedure = startBlock.icmp("isProcedure")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 11))
+    startBlock.condBranch(isProcedure, successBlock, failBlock)
+  }
+
+  def genPointerToTypeId(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
+    if (boxedValue.irType != PointerType(UserDefinedType("recordLike"))) {
+       throw new InternalCompilerErrorException(s"Unexpected type for boxed value. Passed ${boxedValue.irType}, expected %recordLike*")
+    }
+
+    block.getelementptr("typeIdPtr")(
+      elementType=IntegerType(16),
+      basePointer=boxedValue,
+      indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
+      inbounds=true
+    )
+  }
+
+  def genStoreToTypeId(block : IrBlockBuilder)(toStore : IrValue, boxedValue : IrValue) : Unit = {
+    val typeIdPointer = genPointerToTypeId(block)(boxedValue)
+    block.store(toStore, typeIdPointer, tbaaIndex=Some(tbaaIndex))
+  }
+
+  def genLoadFromTypeId(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
+    val typeIdPointer = genPointerToTypeId(block)(boxedValue)
+    block.load("typeId")(typeIdPointer, tbaaIndex=Some(tbaaIndex))
+  }
+
+  def genPointerToGcState(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
+    if (boxedValue.irType != PointerType(UserDefinedType("recordLike"))) {
+       throw new InternalCompilerErrorException(s"Unexpected type for boxed value. Passed ${boxedValue.irType}, expected %recordLike*")
+    }
+
+    block.getelementptr("gcStatePtr")(
+      elementType=IntegerType(16),
+      basePointer=boxedValue,
+      indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
+      inbounds=true
+    )
+  }
+
+  def genStoreToGcState(block : IrBlockBuilder)(toStore : IrValue, boxedValue : IrValue) : Unit = {
+    val gcStatePointer = genPointerToGcState(block)(boxedValue)
+    block.store(toStore, gcStatePointer, tbaaIndex=Some(tbaaIndex))
+  }
+
+  def genLoadFromGcState(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
+    val gcStatePointer = genPointerToGcState(block)(boxedValue)
+    block.load("gcState")(gcStatePointer, tbaaIndex=Some(tbaaIndex))
+  }
+
+  def genPointerToRecordClassId(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
+    if (boxedValue.irType != PointerType(UserDefinedType("recordLike"))) {
+       throw new InternalCompilerErrorException(s"Unexpected type for boxed value. Passed ${boxedValue.irType}, expected %recordLike*")
+    }
+
+    block.getelementptr("recordClassIdPtr")(
+      elementType=IntegerType(32),
+      basePointer=boxedValue,
+      indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
+      inbounds=true
+    )
+  }
+
+  def genStoreToRecordClassId(block : IrBlockBuilder)(toStore : IrValue, boxedValue : IrValue) : Unit = {
+    val recordClassIdPointer = genPointerToRecordClassId(block)(boxedValue)
+    block.store(toStore, recordClassIdPointer, tbaaIndex=Some(tbaaIndex))
+  }
+
+  def genLoadFromRecordClassId(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
+    val recordClassIdPointer = genPointerToRecordClassId(block)(boxedValue)
+    block.load("recordClassId")(recordClassIdPointer, tbaaIndex=Some(tbaaIndex))
+  }
+
+  def genPointerToRecordData(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
+    if (boxedValue.irType != PointerType(UserDefinedType("recordLike"))) {
+       throw new InternalCompilerErrorException(s"Unexpected type for boxed value. Passed ${boxedValue.irType}, expected %recordLike*")
+    }
+
+    block.getelementptr("recordDataPtr")(
+      elementType=PointerType(IntegerType(8)),
+      basePointer=boxedValue,
+      indices=List(0, 2).map(IntegerConstant(IntegerType(32), _)),
+      inbounds=true
+    )
+  }
+
+  def genStoreToRecordData(block : IrBlockBuilder)(toStore : IrValue, boxedValue : IrValue) : Unit = {
+    val recordDataPointer = genPointerToRecordData(block)(boxedValue)
+    block.store(toStore, recordDataPointer, tbaaIndex=Some(tbaaIndex))
+  }
+
+  def genLoadFromRecordData(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
+    val recordDataPointer = genPointerToRecordData(block)(boxedValue)
+    block.load("recordData")(recordDataPointer, tbaaIndex=Some(tbaaIndex))
+  }
+}
+
 object BoxedProcedure extends ConcreteBoxedType {
   val name = "procedure"
   val irType = UserDefinedType("procedure")
-  val supertype = Some(BoxedDatum)
+  val supertype = Some(BoxedRecordLike)
   val directSubtypes = Set[BoxedType]()
   val isAbstract = false
-  val tbaaIndex = 15
+  val tbaaIndex = 16
   val typeId = 11
 
-  def createConstant(capturedDataLength : IrConstant, capturedData : IrConstant, entryPoint : IrConstant) : StructureConstant = {
-    if (capturedDataLength.irType != IntegerType(32)) {
-      throw new InternalCompilerErrorException("Unexpected type for field capturedDataLength")
-    }
-
-    if (capturedData.irType != PointerType(PointerType(PointerType(UserDefinedType("datum"))))) {
-      throw new InternalCompilerErrorException("Unexpected type for field capturedData")
-    }
-
-    if (entryPoint.irType != PointerType(FunctionType(PointerType(UserDefinedType("datum")), List(PointerType(UserDefinedType("procedure")), PointerType(UserDefinedType("listElement")) )))) {
+  def createConstant(entryPoint : IrConstant, recordClassId : IrConstant, recordData : IrConstant) : StructureConstant = {
+    if (entryPoint.irType != PointerType(FunctionType(PointerType(UserDefinedType("datum")), List(PointerType(IntegerType(8)), PointerType(UserDefinedType("listElement")) )))) {
       throw new InternalCompilerErrorException("Unexpected type for field entryPoint")
     }
 
     StructureConstant(List(
       supertype.get.createConstant(
+        recordClassId=recordClassId,
+        recordData=recordData,
         typeId=IntegerConstant(IntegerType(16), typeId)
       ),
-      capturedDataLength,
-      capturedData,
       entryPoint
     ), userDefinedType=Some(irType))
   }
@@ -1688,7 +1808,7 @@ object BoxedProcedure extends ConcreteBoxedType {
     block.getelementptr("typeIdPtr")(
       elementType=IntegerType(16),
       basePointer=boxedValue,
-      indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
+      indices=List(0, 0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
     )
   }
@@ -1711,7 +1831,7 @@ object BoxedProcedure extends ConcreteBoxedType {
     block.getelementptr("gcStatePtr")(
       elementType=IntegerType(16),
       basePointer=boxedValue,
-      indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
+      indices=List(0, 0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
     )
   }
@@ -1726,50 +1846,50 @@ object BoxedProcedure extends ConcreteBoxedType {
     block.load("gcState")(gcStatePointer, tbaaIndex=Some(tbaaIndex))
   }
 
-  def genPointerToCapturedDataLength(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
+  def genPointerToRecordClassId(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
     if (boxedValue.irType != PointerType(UserDefinedType("procedure"))) {
        throw new InternalCompilerErrorException(s"Unexpected type for boxed value. Passed ${boxedValue.irType}, expected %procedure*")
     }
 
-    block.getelementptr("capturedDataLengthPtr")(
+    block.getelementptr("recordClassIdPtr")(
       elementType=IntegerType(32),
       basePointer=boxedValue,
-      indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
+      indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
     )
   }
 
-  def genStoreToCapturedDataLength(block : IrBlockBuilder)(toStore : IrValue, boxedValue : IrValue) : Unit = {
-    val capturedDataLengthPointer = genPointerToCapturedDataLength(block)(boxedValue)
-    block.store(toStore, capturedDataLengthPointer, tbaaIndex=Some(tbaaIndex))
+  def genStoreToRecordClassId(block : IrBlockBuilder)(toStore : IrValue, boxedValue : IrValue) : Unit = {
+    val recordClassIdPointer = genPointerToRecordClassId(block)(boxedValue)
+    block.store(toStore, recordClassIdPointer, tbaaIndex=Some(tbaaIndex))
   }
 
-  def genLoadFromCapturedDataLength(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
-    val capturedDataLengthPointer = genPointerToCapturedDataLength(block)(boxedValue)
-    block.load("capturedDataLength")(capturedDataLengthPointer, tbaaIndex=Some(tbaaIndex))
+  def genLoadFromRecordClassId(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
+    val recordClassIdPointer = genPointerToRecordClassId(block)(boxedValue)
+    block.load("recordClassId")(recordClassIdPointer, tbaaIndex=Some(tbaaIndex))
   }
 
-  def genPointerToCapturedData(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
+  def genPointerToRecordData(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
     if (boxedValue.irType != PointerType(UserDefinedType("procedure"))) {
        throw new InternalCompilerErrorException(s"Unexpected type for boxed value. Passed ${boxedValue.irType}, expected %procedure*")
     }
 
-    block.getelementptr("capturedDataPtr")(
-      elementType=PointerType(PointerType(PointerType(UserDefinedType("datum")))),
+    block.getelementptr("recordDataPtr")(
+      elementType=PointerType(IntegerType(8)),
       basePointer=boxedValue,
-      indices=List(0, 2).map(IntegerConstant(IntegerType(32), _)),
+      indices=List(0, 0, 2).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
     )
   }
 
-  def genStoreToCapturedData(block : IrBlockBuilder)(toStore : IrValue, boxedValue : IrValue) : Unit = {
-    val capturedDataPointer = genPointerToCapturedData(block)(boxedValue)
-    block.store(toStore, capturedDataPointer, tbaaIndex=Some(tbaaIndex))
+  def genStoreToRecordData(block : IrBlockBuilder)(toStore : IrValue, boxedValue : IrValue) : Unit = {
+    val recordDataPointer = genPointerToRecordData(block)(boxedValue)
+    block.store(toStore, recordDataPointer, tbaaIndex=Some(tbaaIndex))
   }
 
-  def genLoadFromCapturedData(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
-    val capturedDataPointer = genPointerToCapturedData(block)(boxedValue)
-    block.load("capturedData")(capturedDataPointer, tbaaIndex=Some(tbaaIndex))
+  def genLoadFromRecordData(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
+    val recordDataPointer = genPointerToRecordData(block)(boxedValue)
+    block.load("recordData")(recordDataPointer, tbaaIndex=Some(tbaaIndex))
   }
 
   def genPointerToEntryPoint(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue = {
@@ -1778,9 +1898,9 @@ object BoxedProcedure extends ConcreteBoxedType {
     }
 
     block.getelementptr("entryPointPtr")(
-      elementType=PointerType(FunctionType(PointerType(UserDefinedType("datum")), List(PointerType(UserDefinedType("procedure")), PointerType(UserDefinedType("listElement")) ))),
+      elementType=PointerType(FunctionType(PointerType(UserDefinedType("datum")), List(PointerType(IntegerType(8)), PointerType(UserDefinedType("listElement")) ))),
       basePointer=boxedValue,
-      indices=List(0, 3).map(IntegerConstant(IntegerType(32), _)),
+      indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
     )
   }
@@ -1802,8 +1922,8 @@ object BoxedMutableVar extends ConcreteBoxedType {
   val supertype = Some(BoxedDatum)
   val directSubtypes = Set[BoxedType]()
   val isAbstract = false
-  val tbaaIndex = 16
-  val typeId = 12
+  val tbaaIndex = 17
+  val typeId = 13
 
   def createConstant(currentValue : IrConstant) : StructureConstant = {
     if (currentValue.irType != PointerType(UserDefinedType("datum"))) {
@@ -1823,7 +1943,7 @@ object BoxedMutableVar extends ConcreteBoxedType {
     val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
-    val isMutableVar = startBlock.icmp("isMutableVar")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 12))
+    val isMutableVar = startBlock.icmp("isMutableVar")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 13))
     startBlock.condBranch(isMutableVar, successBlock, failBlock)
   }
 

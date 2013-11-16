@@ -7,7 +7,7 @@ import llambda.{boxedtype => bt}
 // If they are wrapping a function with a different signature a thunk must
 // be generated
 object BoxedProcedureSignature extends NativeSignature {
-  val hasSelfArg = true 
+  val hasClosureArg = true 
   val fixedArgs = Nil
   val hasRestArg = true
   val returnType = Some(BoxedValue(bt.BoxedDatum))

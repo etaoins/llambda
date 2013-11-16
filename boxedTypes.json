@@ -169,19 +169,26 @@
         ]
     },
     {
-        "name": "procedure",
-        "typeId": 11,
+        "name": "recordLike",
+        "abstract": true,
         "inherits": "datum",
         "fields": [
             {
-                "name": "capturedDataLength",
+                "name": "recordClassId",
                 "llvmType": "i32",
                 "signed": false
             },
             {
-                "name": "capturedData",
-                "llvmType": "%datum***"
-            },
+                "name": "recordData",
+                "complexType": "void*"
+            }
+        ]
+    },
+    {
+        "name": "procedure",
+        "typeId": 11,
+        "inherits": "recordLike",
+        "fields": [
             {
                 "name": "entryPoint",
                 "complexType": "entryPoint"
@@ -190,7 +197,7 @@
     },
     {
         "name": "mutableVar",
-        "typeId": 12,
+        "typeId": 13,
         "inherits": "datum",
         "fields": [
             {

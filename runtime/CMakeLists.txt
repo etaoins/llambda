@@ -9,6 +9,7 @@ add_library(lliby
 	binding/BoxedDatum.cpp
 	binding/BoxedListElement.cpp
 	binding/BoxedProcedure.cpp
+	binding/BoxedRecordLike.cpp
 	binding/BoxedStringLike.cpp
 	binding/BoxedString.cpp
 	binding/BoxedVector.cpp

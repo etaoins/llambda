@@ -75,7 +75,7 @@ case class NativeFunction(
   returnType : Option[nfi.NativeType],
   nativeSymbol : String
 ) extends Expression with nfi.NativeSignature {
-  val hasSelfArg = false
+  val hasClosureArg = false
 
   val subexpressions = Nil
   def map(f : Expression => Expression) : et.NativeFunction = this

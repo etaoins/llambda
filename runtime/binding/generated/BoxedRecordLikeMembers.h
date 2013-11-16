@@ -3,27 +3,32 @@
  *****************************************************************/
 
 public:
-	ProcedureEntryPoint entryPoint() const
+	std::uint32_t recordClassId() const
 	{
-		return m_entryPoint;
+		return m_recordClassId;
+	}
+
+	void* recordData() const
+	{
+		return m_recordData;
 	}
 
 public:
-	static BoxedProcedure* fromDatum(BoxedDatum *datum)
+	static BoxedRecordLike* fromDatum(BoxedDatum *datum)
 	{
 		if ((datum->typeId() == BoxedTypeId::Procedure))
 		{
-			return reinterpret_cast<BoxedProcedure*>(datum);
+			return reinterpret_cast<BoxedRecordLike*>(datum);
 		}
 
 		return nullptr;
 	}
 
-	static const BoxedProcedure* fromDatum(const BoxedDatum *datum)
+	static const BoxedRecordLike* fromDatum(const BoxedDatum *datum)
 	{
 		if ((datum->typeId() == BoxedTypeId::Procedure))
 		{
-			return reinterpret_cast<const BoxedProcedure*>(datum);
+			return reinterpret_cast<const BoxedRecordLike*>(datum);
 		}
 
 		return nullptr;
@@ -35,4 +40,5 @@ public:
 	}
 
 private:
-	ProcedureEntryPoint m_entryPoint;
+	std::uint32_t m_recordClassId;
+	void* m_recordData;

@@ -51,6 +51,8 @@ def _complex_type_to_cxx(complex_type):
         return "ProcedureEntryPoint"
     elif complex_type == "unicodeChar":
         return "UnicodeChar"
+    elif complex_type == "void*":
+        return "void*"
     else:
         raise SemanticException('Unknown complex type "' + complex_type + '"')
 

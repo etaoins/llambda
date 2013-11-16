@@ -17,6 +17,7 @@
 #include "binding/BoxedCharacter.h"
 #include "binding/BoxedVector.h"
 #include "binding/BoxedBytevector.h"
+#include "binding/BoxedRecordLike.h"
 #include "binding/BoxedProcedure.h"
 #include "binding/BoxedMutableVar.h"
 
@@ -93,6 +94,11 @@ bool lliby_is_vector(const BoxedDatum *value)
 bool lliby_is_bytevector(const BoxedDatum *value)
 {
 	return BoxedBytevector::isInstance(value);
+}
+
+bool lliby_is_record_like(const BoxedDatum *value)
+{
+	return BoxedRecordLike::isInstance(value);
 }
 
 bool lliby_is_procedure(const BoxedDatum *value)

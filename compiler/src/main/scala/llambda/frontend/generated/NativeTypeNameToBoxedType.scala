@@ -23,6 +23,7 @@ object NativeTypeNameToBoxedType {
     case "boxed-character" => bt.BoxedCharacter
     case "boxed-vector" => bt.BoxedVector
     case "boxed-bytevector" => bt.BoxedBytevector
+    case "boxed-record-like" => bt.BoxedRecordLike
     case "boxed-procedure" => bt.BoxedProcedure
     case "boxed-mutable-var" => bt.BoxedMutableVar
   }
