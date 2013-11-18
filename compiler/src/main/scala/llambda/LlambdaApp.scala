@@ -33,7 +33,9 @@ object LlambdaApp extends App {
       else {
         success
       }
-    }text("set optimization level")
+    } text("set optimization level")
+
+    help("help")
   }
 
   parser.parse(args, Config()) map { config =>
