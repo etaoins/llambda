@@ -116,4 +116,8 @@
 	  (define-r7rs string-ref (native-function "lliby_string_ref" (boxed-string uint32) unicode-char))
 	  (define-r7rs string-set! (native-function "lliby_string_set" (boxed-string uint32 unicode-char) void))
 	  (define-r7rs string-append (native-function "lliby_string_append" boxed-list-element boxed-string)))
+
+	(export procedure?)
+	(begin
+	  (define-r7rs procedure? (native-function "lliby_is_procedure" (boxed-datum) bool)))
 )
