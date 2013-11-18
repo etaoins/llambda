@@ -3,7 +3,7 @@ package llambda.planner.intermediatevalue
 import llambda.nfi
 import llambda.{boxedtype => bt}
 import llambda.planner.{step => ps}
-import llambda.planner.{StepBuffer, UnlocatedImpossibleTypeConversionException}
+import llambda.planner.{StepBuffer, UnlocatedImpossibleTypeConversionException, InvokableProcedure}
 
 abstract class IntermediateValue {
   val possibleTypes : Set[bt.ConcreteBoxedType]
@@ -24,6 +24,8 @@ abstract class IntermediateValue {
 
     trueTemp
   }
+  
+  def toInvokableProcedure()(implicit planSteps : StepBuffer) : Option[InvokableProcedure]
 
   protected def toTempValue(targetType : nfi.NativeType)(implicit planSteps : StepBuffer) : Option[ps.TempValue] = targetType match {
     case nfi.CTruthyBool =>

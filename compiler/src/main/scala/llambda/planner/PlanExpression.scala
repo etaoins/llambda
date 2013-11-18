@@ -35,11 +35,8 @@ private[planner] object PlanExpression {
           operandResult.state
         }
 
-        val invokableProc = procResult.value match {
-          case invokable : InvokableProcedure =>
-            invokable
-          case _ =>
-            throw new ValueNotApplicableException(expr)
+        val invokableProc = procResult.value.toInvokableProcedure() getOrElse {
+          throw new ValueNotApplicableException(expr)
         }
 
         val applyValueOpt = PlanApplication(invokableProc, operandValues.toList) 

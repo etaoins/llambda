@@ -3,10 +3,16 @@ package llambda.planner.intermediatevalue
 import llambda.nfi
 import llambda.{boxedtype => bt}
 import llambda.planner.{step => ps}
-import llambda.planner.StepBuffer
+import llambda.planner.{StepBuffer, InvokableProcedure}
 
 sealed abstract class UnboxedValue(val nativeType : nfi.NativeType, val boxedType : bt.ConcreteBoxedType, val tempValue : ps.TempValue) extends IntermediateValue {
   val possibleTypes = Set(boxedType)
+  
+  def toInvokableProcedure()(implicit planSteps : StepBuffer) : Option[InvokableProcedure] = 
+    // Procedure values have no unboxed intermediate value
+    // They're either KnownProcedures which are a special direct subclass of
+    // IntermediateValue or they're DynamicBoxedValues of type bt.BoxedProcedure
+    None
 
   // This is used for our shortcut in planPhiWith to build a new phi'ed intermediate
   protected def withNewTempValue(tempValue : ps.TempValue) : UnboxedValue

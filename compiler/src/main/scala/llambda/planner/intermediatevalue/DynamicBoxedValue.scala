@@ -3,7 +3,7 @@ package llambda.planner.intermediatevalue
 import llambda.nfi
 import llambda.{boxedtype => bt}
 import llambda.planner.{step => ps}
-import llambda.planner.StepBuffer
+import llambda.planner.{StepBuffer, InvokableProcedure}
 
 class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType : bt.BoxedType, tempValue : ps.TempValue) extends IntermediateValue {
   override def toTruthyPredicate()(implicit planSteps : StepBuffer) : ps.TempValue = {
@@ -18,6 +18,10 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
 
     truthyTemp
   }
+  
+  def toInvokableProcedure()(implicit planSteps : StepBuffer) : Option[InvokableProcedure] = 
+    // XXX: Unboxing procedures
+    None
 
   def toBoxedTempValue(targetType : bt.BoxedType)(implicit planSteps : StepBuffer) : Option[ps.TempValue] = {
     val targetConcreteTypes = targetType.concreteTypes

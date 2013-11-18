@@ -3,12 +3,15 @@ package llambda.planner.intermediatevalue
 import llambda.nfi
 import llambda.{boxedtype => bt}
 import llambda.planner.{step => ps}
-import llambda.planner.StepBuffer
+import llambda.planner.{StepBuffer, InvokableProcedure}
 
 sealed abstract class ConstantValue(boxedType : bt.ConcreteBoxedType) extends IntermediateValue {
   val possibleTypes = Set(boxedType)
     
   def toConstantBoxedTempValue()(implicit planSteps : StepBuffer) : ps.TempValue
+
+  def toInvokableProcedure()(implicit planSteps : StepBuffer) : Option[InvokableProcedure] = 
+    None
 
   def toBoxedTempValue(targetType : bt.BoxedType)(implicit planSteps : StepBuffer) : Option[ps.TempValue] =
     if (targetType.isTypeOrSupertypeOf(boxedType)) {
