@@ -138,3 +138,6 @@ case class BoxExactInteger(result : TempValue, allocation : TempAllocation, allo
 case class BoxInexactRational(result : TempValue, allocation : TempAllocation, allocIndex : Int, unboxed : TempValue) extends BoxValue
 case class BoxCharacter(result : TempValue, allocation : TempAllocation, allocIndex : Int, unboxed : TempValue) extends BoxValue
 case class BoxUtf8String(result : TempValue, unboxed : TempValue) extends BoxValue with GcBarrier
+
+/** Returns from the current function */
+case class Return(returnValue : Option[TempValue]) extends Step

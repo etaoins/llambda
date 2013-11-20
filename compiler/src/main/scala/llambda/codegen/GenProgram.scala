@@ -28,17 +28,40 @@ object GenProgram {
     ) mkString "\n"
   }
 
-  def apply(steps : List[ps.Step]) : String = {
+  def apply(functions : Map[String, planner.PlannedFunction]) : String = {
     val module = new llvmir.IrModuleBuilder
 
-    // Define main()
+    // Build each program-supplied function
+    for((nativeSymbol, plannedFunction) <- functions) {
+      val nativeSignature = NativeSignatureToIr(plannedFunction.signature)
+
+      // This function does not need to be externally accessible
+      // This allows LLVM to more aggressively optimize and reduces the chance
+      // of symbol conflicts with other objects
+      val generatedFunction = new IrFunctionBuilder(
+        result=nativeSignature.result,
+        namedArguments=Nil,
+        name=nativeSymbol,
+        linkage=Linkage.Internal,
+        attributes=Set(IrFunction.NoUnwind)) 
+
+      // Create a blank generation state
+      val startState = GenerationState(
+        module=module,
+        currentBlock=generatedFunction.entryBlock)
+
+      // Generate our steps
+      GenPlanSteps(startState)(plannedFunction.steps)
+
+      module.defineFunction(generatedFunction)
+    }
+    
+    // Build our main() glue to init the runtime and call our program
     val result = IrFunction.Result(IntegerType(32))
     val namedArguments = List(
       "argc" -> IrFunction.Argument(IntegerType(32)),
       "argv" -> IrFunction.Argument(PointerType(PointerType(IntegerType(8))))
     )
-
-    module.declareFunction(llibyInitDecl)
 
     val mainFunction = new IrFunctionBuilder(
       result=result,
@@ -48,20 +71,23 @@ object GenProgram {
     val entryBlock = mainFunction.entryBlock
 
     // Initialize our runtime
+    module.declareFunction(llibyInitDecl) 
     entryBlock.callDecl(None)(llibyInitDecl, Nil)
+    
+    // Call __llambda_exec
+    // This must be defined by the planner
+    val execIrSignature = NativeSignatureToIr(LlambdaExecSignature)
+    val execValue = GenKnownEntryPoint(module)(LlambdaExecSignature, LlambdaExecSignature.nativeSymbol) 
 
-    // Create a blank generation state
-    val startState = GenerationState(
-      module=module,
-      currentBlock=entryBlock)
+    entryBlock.call(None)(execIrSignature, execValue, Nil, false)
 
-    // Generate our steps
-    val endState = GenPlanSteps(startState)(steps)
-
-    endState.currentBlock.ret(IntegerConstant(IntegerType(32), 0))
+    // Return 0
+    // Scheme can only return non-zero exit codes using (exit)
+    entryBlock.ret(IntegerConstant(IntegerType(32), 0))
 
     module.defineFunction(mainFunction)
 
+    // Convert our IR to one big string
     preludeIr + "\n" + module.toIr + "\n"
   }
 }

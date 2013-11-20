@@ -172,5 +172,15 @@ object GenPlanStep {
         case None =>
           state
       }
+
+    case ps.Return(None) =>
+      state.currentBlock.retVoid()
+      state
+    
+    case ps.Return(Some(returnValueTemp)) =>
+      val irRetValue = state.liveTemps(returnValueTemp)
+
+      state.currentBlock.ret(irRetValue)
+      state
  }
 }
