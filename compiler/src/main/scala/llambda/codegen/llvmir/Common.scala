@@ -25,6 +25,7 @@ object Linkage {
   sealed abstract class Linkage(val toIr : String) extends Irable
 
   case object Private extends Linkage("private")
+  case object Internal extends Linkage("internal")
   case object ExternallyAvailable extends Linkage("externally_available")
   case object External extends Linkage("external") {
     override def toOptIr = None
