@@ -182,5 +182,17 @@ object GenPlanStep {
 
       state.currentBlock.ret(irRetValue)
       state
+
+    case ps.StorePairCar(resultTemp, pairTemp) =>
+      val pairIr = state.liveTemps(pairTemp)
+      val carIr = bt.BoxedPair.genLoadFromCar(state.currentBlock)(pairIr)
+
+      state.withTempValue(resultTemp -> carIr)
+    
+    case ps.StorePairCdr(resultTemp, pairTemp) =>
+      val pairIr = state.liveTemps(pairTemp)
+      val cdrIr = bt.BoxedPair.genLoadFromCdr(state.currentBlock)(pairIr)
+
+      state.withTempValue(resultTemp -> cdrIr)
  }
 }

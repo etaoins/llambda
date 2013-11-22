@@ -58,7 +58,12 @@ object Compiler {
     val analysis = analyzer.Analyize(optimizedExpressions)
 
     // Plan execution
-    val functions = planner.PlanProgram(optimizedExpressions)(analysis)
+    val planConfig = planner.PlanConfig(
+      optimize=config.optimizeLevel > 1,
+      analysis=analysis
+    )
+
+    val functions = planner.PlanProgram(optimizedExpressions)(planConfig)
 
     // Generate the LLVM IR
     val llvmIr = codegen.GenProgram(functions)

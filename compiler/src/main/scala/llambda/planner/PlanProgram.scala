@@ -7,11 +7,11 @@ import llambda.codegen.LlambdaExecSignature
 import llambda.nfi
 
 object PlanProgram {
-  def apply(exprs : List[et.Expression])(analysis : AnalysisResult) : Map[String, PlannedFunction] = {
+  def apply(exprs : List[et.Expression])(planConfig : PlanConfig) : Map[String, PlannedFunction] = {
     val emptyState = PlannerState() 
     val plan = PlanWriter()
       
-    PlanExpression(emptyState)(et.Begin(exprs))(analysis, plan)
+    PlanExpression(emptyState)(et.Begin(exprs))(planConfig, plan)
 
     // __llambda_exec is a void function
     plan.steps += ps.Return(None)

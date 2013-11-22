@@ -126,6 +126,13 @@ case class UnboxInexactRational(result : TempValue, boxed : TempValue) extends U
 case class UnboxCharacter(result : TempValue, boxed : TempValue) extends UnboxValue
 case class UnboxStringAsUtf8(result : TempValue, boxed : TempValue) extends UnboxValue
 
+// These aren't quite an unboxing because there's two values per boxed value
+
+/** Stores the car of the passed BoxedPair as a BoxedDatum */
+case class StorePairCar(result : TempValue, boxed : TempValue) extends Step
+/** Stores the cdr of the passed BoxedPair as a BoxedDatum */
+case class StorePairCdr(result : TempValue, boxed : TempValue) extends Step
+
 /** Indicates a step that boxes an unboxed value */
 sealed trait BoxValue extends Step {
   val result : TempValue

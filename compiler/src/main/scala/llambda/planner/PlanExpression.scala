@@ -3,14 +3,19 @@ package llambda.planner
 import collection.mutable
 
 import llambda.nfi
-import llambda.{et, StorageLocation, ValueNotApplicableException}
+import llambda.{et, StorageLocation, ValueNotApplicableException, ReportProcedure}
 import llambda.{boxedtype => bt}
 import llambda.planner.{step => ps}
 import llambda.planner.{intermediatevalue => iv}
-import llambda.analyzer.AnalysisResult
 
 private[planner] object PlanExpression {
-  def apply(initialState : PlannerState)(expr : et.Expression)(implicit analysis : AnalysisResult, plan : PlanWriter) : PlanResult = LocateExceptionsWith(expr) {
+  // These objects know how to implement certain report procedure directly
+  //with plan steps
+  private val reportProcPlanners = List(
+    reportproc.CadrProcPlanner
+  )
+
+  def apply(initialState : PlannerState)(expr : et.Expression)(implicit planConfig : PlanConfig, plan : PlanWriter) : PlanResult = LocateExceptionsWith(expr) {
     expr match {
       case et.Begin(exprs) =>
         var finalValue : iv.IntermediateValue = iv.UnspecificValue 
@@ -27,19 +32,38 @@ private[planner] object PlanExpression {
       case et.Apply(procExpr, operandExprs) =>
         val procResult = apply(initialState)(procExpr)
 
-        val operandValues = new mutable.ListBuffer[iv.IntermediateValue]
+        val operandValueBuffer = new mutable.ListBuffer[iv.IntermediateValue]
         val finalState = operandExprs.foldLeft(procResult.state) { case (state, operandExpr) =>
           val operandResult = apply(state)(operandExpr)
 
-          operandValues += operandResult.value
+          operandValueBuffer += operandResult.value
           operandResult.state
         }
+
+        val operandValues = operandValueBuffer.toList
 
         val invokableProc = procResult.value.toInvokableProcedure() getOrElse {
           throw new ValueNotApplicableException(expr)
         }
 
-        val applyValueOpt = PlanApplication(invokableProc, operandValues.toList) 
+        procResult.value match {
+          case knownProc : iv.KnownProcedure if knownProc.reportName.isDefined && planConfig.optimize =>
+            val reportName = knownProc.reportName.get
+
+            // Give our reportProcPlanners a chance to plan this more
+            // efficiently than a function call
+            for(reportProcPlanner <- reportProcPlanners) {
+              for(planResult <- reportProcPlanner(finalState)(reportName, operandValues)) {
+                // We created an alternative plan; we're done
+                return planResult
+              }
+            }
+          
+          case other => other
+        }
+
+        // Perform a function call
+        val applyValueOpt = PlanApplication(invokableProc, operandValues) 
 
         PlanResult(
           state=finalState,
@@ -49,7 +73,7 @@ private[planner] object PlanExpression {
         val finalState = bindings.foldLeft(initialState) { case (state, (storageLoc, initialValue)) =>
           val initialValueResult = apply(state)(initialValue)
 
-          if (analysis.mutableVars.contains(storageLoc)) {
+          if (planConfig.analysis.mutableVars.contains(storageLoc)) {
             val allocTemp = new ps.TempAllocation
             val mutableTemp = new ps.TempValue
             val variableTemp = new ps.TempValue
@@ -63,8 +87,20 @@ private[planner] object PlanExpression {
             initialValueResult.state.withMutable(storageLoc -> mutableTemp)
           }
           else {
+            val reportNamedValue = (initialValueResult.value, storageLoc) match {
+              case (knownProc : iv.KnownProcedure, reportProc : ReportProcedure) =>
+                // Annotate with our report name so we can optimize when we try
+                // to apply this
+                // Note this is agnostic to if the implementation is a  native
+                // function versus a Scheme  procedures
+                knownProc.withReportName(reportProc.reportName)
+
+              case (otherValue, _) =>
+                otherValue
+            }
+
             // No planning, just remember this intermediate value
-            initialValueResult.state.withImmutable(storageLoc -> initialValueResult.value)
+            initialValueResult.state.withImmutable(storageLoc -> reportNamedValue)
           }
         }
 
@@ -73,7 +109,7 @@ private[planner] object PlanExpression {
           value=iv.UnspecificValue
         )
 
-      case et.VarRef(storageLoc : StorageLocation) if !analysis.mutableVars.contains(storageLoc) =>
+      case et.VarRef(storageLoc : StorageLocation) if !planConfig.analysis.mutableVars.contains(storageLoc) =>
         // Return the value directly 
         PlanResult(
           state=initialState,
@@ -118,10 +154,10 @@ private[planner] object PlanExpression {
         val truthyPred = testResult.value.toTruthyPredicate()
 
         val trueWriter = plan.forkPlan()
-        val trueValue = apply(testResult.state)(trueExpr)(analysis, trueWriter).value
+        val trueValue = apply(testResult.state)(trueExpr)(planConfig, trueWriter).value
 
         val falseWriter = plan.forkPlan() 
-        val falseValue = apply(testResult.state)(falseExpr)(analysis, falseWriter).value
+        val falseValue = apply(testResult.state)(falseExpr)(planConfig, falseWriter).value
     
         val planPhiResult = trueValue.planPhiWith(falseValue)(trueWriter, falseWriter)
 
