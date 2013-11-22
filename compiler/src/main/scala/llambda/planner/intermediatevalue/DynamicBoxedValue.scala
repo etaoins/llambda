@@ -19,9 +19,17 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
     truthyTemp
   }
   
-  def toInvokableProcedure()(implicit plan : PlanWriter) : Option[InvokableProcedure] = 
-    // XXX: Unboxing procedures
-    None
+  def toInvokableProcedure()(implicit plan : PlanWriter) : Option[InvokableProcedure] =  {
+    if (possibleTypes.contains(bt.BoxedProcedure)) {
+      // Cast to a procedure
+      val boxedProcTmep = toRequiredTempValue(nfi.BoxedValue(bt.BoxedProcedure))
+
+      Some(new InvokableBoxedProcedure(boxedProcTmep))
+    }
+    else {
+      None
+    }
+  }
 
   def toBoxedTempValue(targetType : bt.BoxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] = {
     val targetConcreteTypes = targetType.concreteTypes

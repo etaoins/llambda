@@ -4,8 +4,8 @@ import llambda.nfi
 import llambda.planner.{step => ps}
 import llambda.codegen.llvmir._
 
-object GenKnownEntryPoint {
-  def apply(module : IrModuleBuilder)(signature : nfi.NativeSignature, nativeSymbol : String) : IrValue = {
+object GenNamedEntryPoint {
+  def apply(module : IrModuleBuilder)(signature : nfi.NativeSignature, nativeSymbol : String, plannedSymbols : Set[String]) : IrValue = {
     // Declare the function
     val irSignature = NativeSignatureToIr(signature)
 
@@ -16,8 +16,11 @@ object GenKnownEntryPoint {
       attributes=irSignature.attributes,
       callingConv=irSignature.callingConv)
 
-    module.unlessDeclared(irFunctionDecl) {
-      module.declareFunction(irFunctionDecl)
+    // Don't declare this if we're about to generate it
+    if (!plannedSymbols.contains(nativeSymbol)) {
+      module.unlessDeclared(irFunctionDecl) {
+        module.declareFunction(irFunctionDecl)
+      }
     }
 
     irFunctionDecl.irValue

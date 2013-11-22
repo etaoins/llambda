@@ -18,6 +18,7 @@ object PlanProgram {
 
     (plan.plannedFunctions + (LlambdaExecSignature.nativeSymbol -> PlannedFunction(
       signature=LlambdaExecSignature,
+      namedArguments=Nil,
       steps = plan.steps.toList 
     ))).toMap
   }

@@ -4,7 +4,6 @@ import llambda.nfi
 import llambda.planner.{step => ps}
 import llambda.planner.{intermediatevalue => iv}
 import llambda.{boxedtype => bt}
-import llambda.NotImplementedException
 
 object PlanApplication {
   private def boxRestArgs(restArgs : List[iv.IntermediateValue])(implicit plan : PlanWriter) : ps.TempValue = {
@@ -51,6 +50,13 @@ object PlanApplication {
       }
     }
 
+    val closureTemps = if (signature.hasClosureArg) {
+      invokableProc.planClosure() :: Nil
+    }
+    else {
+      Nil
+    }
+
     // Convert all the operands
     val fixedTemps = operandValues.zip(signature.fixedArgs) map { case (operandValue, nativeType) =>
       operandValue.toRequiredTempValue(nativeType)
@@ -63,7 +69,7 @@ object PlanApplication {
       Nil
     }
 
-    val argTemps = fixedTemps ++ restTemps
+    val argTemps = closureTemps ++ fixedTemps ++ restTemps
 
     val resultTemp = signature.returnType.map { _ =>
       new ps.TempValue

@@ -23,7 +23,7 @@ sealed trait GcBarrier extends Step
 
 /** Invokes an entry point with the given arguments
   *
-  * Entry points can be loaded with StoreKnownEntryPoint */
+  * Entry points can be loaded with StoreNamedEntryPoint */
 case class Invoke(result : Option[TempValue], signature : nfi.NativeSignature, entryPoint : TempValue, arguments : List[TempValue]) extends Step with GcBarrier
 
 /** Allocates a given number of Cons cells at runtime */
@@ -89,7 +89,7 @@ sealed trait StoreConstant extends Step {
   *
   * This can be called with Invoke
   */
-case class StoreKnownEntryPoint(result : TempValue, signature : nfi.NativeSignature, nativeSymbol : String) extends Step
+case class StoreNamedEntryPoint(result : TempValue, signature : nfi.NativeSignature, nativeSymbol : String) extends Step
 
 /** Indicates a step that stores a boxed constant */
 sealed trait StoreBoxedConstant extends StoreConstant 
@@ -133,6 +133,11 @@ case class StorePairCar(result : TempValue, boxed : TempValue) extends Step
 /** Stores the cdr of the passed BoxedPair as a BoxedDatum */
 case class StorePairCdr(result : TempValue, boxed : TempValue) extends Step
 
+/** Store the closure of a procedure */
+case class StoreProcedureClosure(result : TempValue, boxed : TempValue) extends Step
+/** Store the entry point of a procedure */
+case class StoreProcedureEntryPoint(result : TempValue, boxed : TempValue) extends Step
+
 /** Indicates a step that boxes an unboxed value */
 sealed trait BoxValue extends Step {
   val result : TempValue
@@ -145,6 +150,7 @@ case class BoxExactInteger(result : TempValue, allocation : TempAllocation, allo
 case class BoxInexactRational(result : TempValue, allocation : TempAllocation, allocIndex : Int, unboxed : TempValue) extends BoxValue
 case class BoxCharacter(result : TempValue, allocation : TempAllocation, allocIndex : Int, unboxed : TempValue) extends BoxValue
 case class BoxUtf8String(result : TempValue, unboxed : TempValue) extends BoxValue with GcBarrier
+case class BoxProcedure(result : TempValue, allocation : TempAllocation, allocIndex : Int, unboxed : TempValue) extends BoxValue
 
 /** Returns from the current function */
 case class Return(returnValue : Option[TempValue]) extends Step

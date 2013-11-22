@@ -7,7 +7,7 @@ import llambda.codegen.llvmir._
 import llambda.{boxedtype => bt}
 
 object GenPlanStep {
-  def apply(state : GenerationState)(step : ps.Step) : GenerationState = step match {
+  def apply(state : GenerationState, plannedSymbols : Set[String])(step : ps.Step) : GenerationState = step match {
     case ps.AllocateCons(tempAlloc, count) =>
       val (allocState, allocation) = GenConsAllocation(state)(count)
       allocState.withAllocation(tempAlloc -> allocation)
@@ -57,8 +57,8 @@ object GenPlanStep {
 
       state.withTempValue(resultTemp -> currentDatum)
     
-    case ps.StoreKnownEntryPoint(resultTemp, signature, nativeSymbol) =>
-      val irValue = GenKnownEntryPoint(state.module)(signature, nativeSymbol)
+    case ps.StoreNamedEntryPoint(resultTemp, signature, nativeSymbol) =>
+      val irValue = GenNamedEntryPoint(state.module)(signature, nativeSymbol, plannedSymbols)
 
       state.withTempValue((resultTemp -> irValue))
 
@@ -138,10 +138,10 @@ object GenPlanStep {
       val trueStartState = state.copy(currentBlock=trueStartBlock)
       val falseStartState = state.copy(currentBlock=falseStartBlock)
 
-      val trueEndState = GenPlanSteps(trueStartState)(trueSteps)
+      val trueEndState = GenPlanSteps(trueStartState, plannedSymbols)(trueSteps)
       val trueEndBlock = trueEndState.currentBlock
 
-      val falseEndState = GenPlanSteps(falseStartState)(falseSteps)
+      val falseEndState = GenPlanSteps(falseStartState, plannedSymbols)(falseSteps)
       val falseEndBlock = falseEndState.currentBlock
       
       // Get the IR values from either side
@@ -194,5 +194,17 @@ object GenPlanStep {
       val cdrIr = bt.BoxedPair.genLoadFromCdr(state.currentBlock)(pairIr)
 
       state.withTempValue(resultTemp -> cdrIr)
+
+    case ps.StoreProcedureClosure(resultTemp, procTemp) =>
+      val procIr = state.liveTemps(procTemp)
+      val closureIr = bt.BoxedProcedure.genLoadFromRecordData(state.currentBlock)(procIr)
+
+      state.withTempValue(resultTemp -> closureIr)
+    
+    case ps.StoreProcedureEntryPoint(resultTemp, procTemp) =>
+      val procIr = state.liveTemps(procTemp)
+      val entryPoint = bt.BoxedProcedure.genLoadFromEntryPoint(state.currentBlock)(procIr)
+
+      state.withTempValue(resultTemp -> entryPoint)
  }
 }
