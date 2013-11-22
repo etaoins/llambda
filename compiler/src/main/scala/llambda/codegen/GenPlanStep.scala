@@ -161,9 +161,9 @@ object GenPlanStep {
     case ps.Invoke(resultOpt, signature, funcPtrTemp, argumentTemps) =>
       val irSignature = NativeSignatureToIr(signature)
       val irFuncPtr = state.liveTemps(funcPtrTemp)
-      val irArguemnts = argumentTemps.map(state.liveTemps.apply)
+      val irArguments = argumentTemps.map(state.liveTemps.apply)
 
-      val irRetOpt = state.currentBlock.call(Some("ret"))(irSignature, irFuncPtr, irArguemnts)
+      val irRetOpt = state.currentBlock.call(Some("ret"))(irSignature, irFuncPtr, irArguments)
 
       resultOpt match {
         case Some(resultTemp) =>
