@@ -80,7 +80,7 @@ class NativeSignatureToIrSuite extends FunSuite {
     assert(irSignature === IrSignature(
       result=Result(PointerType(bt.BoxedDatum.irType)),
       arguments=List(
-        Argument(PointerType(bt.BoxedProcedure.irType)),
+        Argument(PointerType(IntegerType(8))),
         Argument(PointerType(bt.BoxedListElement.irType))
       )
     ))

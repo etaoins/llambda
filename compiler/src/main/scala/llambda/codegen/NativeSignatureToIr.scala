@@ -2,7 +2,7 @@ package llambda.codegen
 
 import llambda.nfi.NativeSignature
 import llambda.{boxedtype => bt}
-import llambda.codegen.llvmir.{IrSignature, PointerType, VoidType}
+import llambda.codegen.llvmir.{IrSignature, PointerType, VoidType, IntegerType}
 import llambda.codegen.llvmir.IrFunction._
 
 object NativeSignatureToIr {
@@ -16,7 +16,7 @@ object NativeSignatureToIr {
 
   def apply(signature : NativeSignature) : IrSignature = {
     val closureArgs = if (signature.hasClosureArg) {
-      List(Argument(PointerType(bt.BoxedProcedure.irType), Set()))
+      List(Argument(PointerType(IntegerType(8)), Set()))
     }
     else {
       Nil
