@@ -22,7 +22,7 @@ object GenBoxing {
       val block = state.currentBlock
       val allocation = state.liveAllocations(allocTemp)
 
-      val boxedIntCons = allocation.genTypedPointer(block)(0, bt.BoxedExactInteger) 
+      val boxedIntCons = allocation.genTypedPointer(block)(allocIndex, bt.BoxedExactInteger) 
       bt.BoxedExactInteger.genStoreToValue(block)(unboxedValue, boxedIntCons)
 
       boxedIntCons
@@ -31,7 +31,7 @@ object GenBoxing {
       val block = state.currentBlock
       val allocation = state.liveAllocations(allocTemp)
 
-      val boxedRationalCons = allocation.genTypedPointer(block)(0, bt.BoxedInexactRational) 
+      val boxedRationalCons = allocation.genTypedPointer(block)(allocIndex, bt.BoxedInexactRational) 
       bt.BoxedInexactRational.genStoreToValue(block)(unboxedValue, boxedRationalCons)
 
       boxedRationalCons
@@ -40,7 +40,7 @@ object GenBoxing {
       val block = state.currentBlock
       val allocation = state.liveAllocations(allocTemp)
 
-      val boxedCharCons = allocation.genTypedPointer(block)(0, bt.BoxedCharacter) 
+      val boxedCharCons = allocation.genTypedPointer(block)(allocIndex, bt.BoxedCharacter) 
       bt.BoxedCharacter.genStoreToUnicodeChar(block)(unboxedValue, boxedCharCons)
 
       boxedCharCons
