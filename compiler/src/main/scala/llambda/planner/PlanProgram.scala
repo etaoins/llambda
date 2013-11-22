@@ -9,16 +9,16 @@ import llambda.nfi
 object PlanProgram {
   def apply(exprs : List[et.Expression])(analysis : AnalysisResult) : Map[String, PlannedFunction] = {
     val emptyState = PlannerState() 
-    val planSteps = new StepBuffer
+    val plan = PlanWriter()
       
-    PlanExpression(emptyState)(et.Begin(exprs))(analysis, planSteps)
+    PlanExpression(emptyState)(et.Begin(exprs))(analysis, plan)
 
     // __llambda_exec is a void function
-    planSteps += ps.Return(None)
+    plan.steps += ps.Return(None)
 
-    Map(LlambdaExecSignature.nativeSymbol -> PlannedFunction(
+    (plan.plannedFunctions + (LlambdaExecSignature.nativeSymbol -> PlannedFunction(
       signature=LlambdaExecSignature,
-      steps = planSteps.toList 
-    ))
+      steps = plan.steps.toList 
+    ))).toMap
   }
 }

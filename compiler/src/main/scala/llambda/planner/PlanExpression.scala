@@ -10,7 +10,7 @@ import llambda.planner.{intermediatevalue => iv}
 import llambda.analyzer.AnalysisResult
 
 private[planner] object PlanExpression {
-  def apply(initialState : PlannerState)(expr : et.Expression)(implicit analysis : AnalysisResult, planSteps : StepBuffer) : PlanResult = LocateExceptionsWith(expr) {
+  def apply(initialState : PlannerState)(expr : et.Expression)(implicit analysis : AnalysisResult, plan : PlanWriter) : PlanResult = LocateExceptionsWith(expr) {
     expr match {
       case et.Begin(exprs) =>
         var finalValue : iv.IntermediateValue = iv.UnspecificValue 
@@ -56,9 +56,9 @@ private[planner] object PlanExpression {
             
             val initialValueTemp = initialValueResult.value.toRequiredTempValue(nfi.BoxedValue(bt.BoxedDatum))
 
-            planSteps += ps.AllocateCons(allocTemp, 1)
-            planSteps += ps.MutableVarInit(mutableTemp, allocTemp, 0)
-            planSteps += ps.MutableVarSet(mutableTemp, initialValueTemp)
+            plan.steps += ps.AllocateCons(allocTemp, 1)
+            plan.steps += ps.MutableVarInit(mutableTemp, allocTemp, 0)
+            plan.steps += ps.MutableVarSet(mutableTemp, initialValueTemp)
             
             initialValueResult.state.withMutable(storageLoc -> mutableTemp)
           }
@@ -84,7 +84,7 @@ private[planner] object PlanExpression {
         val mutableTemp = initialState.mutables(storageLoc)
         val resultTemp = new ps.TempValue
 
-        planSteps += ps.MutableVarRef(resultTemp, mutableTemp)
+        plan.steps += ps.MutableVarRef(resultTemp, mutableTemp)
         
         // We can be anything here
         val possibleTypes = bt.BoxedDatum.concreteTypes
@@ -100,7 +100,7 @@ private[planner] object PlanExpression {
         val newValueResult = apply(initialState)(valueExpr)
         val newValueTemp = newValueResult.value.toRequiredTempValue(nfi.BoxedValue(bt.BoxedDatum))
 
-        planSteps += ps.MutableVarSet(mutableTemp, newValueTemp)
+        plan.steps += ps.MutableVarSet(mutableTemp, newValueTemp)
 
         PlanResult(
           state=newValueResult.state,
@@ -117,19 +117,19 @@ private[planner] object PlanExpression {
         val testResult = apply(initialState)(testExpr)
         val truthyPred = testResult.value.toTruthyPredicate()
 
-        val trueSteps = new StepBuffer
-        val trueValue = apply(testResult.state)(trueExpr)(analysis, trueSteps).value
+        val trueWriter = plan.forkPlan()
+        val trueValue = apply(testResult.state)(trueExpr)(analysis, trueWriter).value
 
-        val falseSteps = new StepBuffer
-        val falseValue = apply(testResult.state)(falseExpr)(analysis, falseSteps).value
+        val falseWriter = plan.forkPlan() 
+        val falseValue = apply(testResult.state)(falseExpr)(analysis, falseWriter).value
     
-        val planPhiResult = trueValue.planPhiWith(falseValue)(trueSteps, falseSteps)
+        val planPhiResult = trueValue.planPhiWith(falseValue)(trueWriter, falseWriter)
 
-        planSteps += ps.CondBranch(
+        plan.steps += ps.CondBranch(
           planPhiResult.resultTemp,
           truthyPred,
-          trueSteps.toList, planPhiResult.ourTempValue,
-          falseSteps.toList, planPhiResult.theirTempValue
+          trueWriter.steps.toList, planPhiResult.ourTempValue,
+          falseWriter.steps.toList, planPhiResult.theirTempValue
         )
 
         PlanResult(

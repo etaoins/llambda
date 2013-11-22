@@ -3,27 +3,27 @@ package llambda.planner.intermediatevalue
 import llambda.nfi
 import llambda.{boxedtype => bt}
 import llambda.planner.{step => ps}
-import llambda.planner.{StepBuffer, InvokableProcedure}
+import llambda.planner.{PlanWriter, InvokableProcedure}
 
 class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType : bt.BoxedType, tempValue : ps.TempValue) extends IntermediateValue {
-  override def toTruthyPredicate()(implicit planSteps : StepBuffer) : ps.TempValue = {
+  override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     val truthyTemp = new ps.TempValue
 
     if (possibleTypes.contains(bt.BoxedBoolean)) {
-      planSteps += ps.UnboxAsTruthy(truthyTemp, tempValue) 
+      plan.steps += ps.UnboxAsTruthy(truthyTemp, tempValue) 
     }
     else {
-      planSteps += ps.StoreNativeInteger(truthyTemp, 1, 1) 
+      plan.steps += ps.StoreNativeInteger(truthyTemp, 1, 1) 
     }
 
     truthyTemp
   }
   
-  def toInvokableProcedure()(implicit planSteps : StepBuffer) : Option[InvokableProcedure] = 
+  def toInvokableProcedure()(implicit plan : PlanWriter) : Option[InvokableProcedure] = 
     // XXX: Unboxing procedures
     None
 
-  def toBoxedTempValue(targetType : bt.BoxedType)(implicit planSteps : StepBuffer) : Option[ps.TempValue] = {
+  def toBoxedTempValue(targetType : bt.BoxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] = {
     val targetConcreteTypes = targetType.concreteTypes
 
     // Are our possible concrete types a subset of the target types?
@@ -33,7 +33,7 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
         // We've confirmed that no checking is needed because all of our 
         // possible types are equal to or supertypes of the target type
         val castTemp = new ps.TempValue
-        planSteps += ps.CastBoxedToTypeUnchecked(castTemp, tempValue, targetType)
+        plan.steps += ps.CastBoxedToTypeUnchecked(castTemp, tempValue, targetType)
 
         Some(castTemp)
       }
@@ -44,7 +44,7 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
     }
     else if (!possibleTypes.intersect(targetConcreteTypes).isEmpty) {
       val castTemp = new ps.TempValue
-      planSteps += ps.CastBoxedToSubtypeChecked(castTemp, tempValue, targetType)
+      plan.steps += ps.CastBoxedToSubtypeChecked(castTemp, tempValue, targetType)
       Some(castTemp)
     }
     else {
@@ -53,7 +53,7 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
     }
   }
 
-  def toUnboxedTempValue(unboxedType : nfi.UnboxedType)(implicit planSteps : StepBuffer) : Option[ps.TempValue] = unboxedType match {
+  def toUnboxedTempValue(unboxedType : nfi.UnboxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] = unboxedType match {
     case nfi.CStrictBool =>
       // Make sure we're actually a boolean
       toTempValue(nfi.BoxedValue(bt.BoxedBoolean)) map { _ =>
@@ -63,7 +63,7 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
     case nfi.UnicodeChar =>
       toTempValue(nfi.BoxedValue(bt.BoxedCharacter)) map { boxedChar =>
         val unboxedTemp = new ps.TempValue
-        planSteps += ps.UnboxCharacter(unboxedTemp, boxedChar)
+        plan.steps += ps.UnboxCharacter(unboxedTemp, boxedChar)
 
         unboxedTemp
       }
@@ -71,7 +71,7 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
     case nfi.Utf8CString =>
       toTempValue(nfi.BoxedValue(bt.BoxedString)) map { boxedString =>
         val unboxedTemp = new ps.TempValue
-        planSteps += ps.UnboxStringAsUtf8(unboxedTemp, boxedString)
+        plan.steps += ps.UnboxStringAsUtf8(unboxedTemp, boxedString)
 
         unboxedTemp
       }
@@ -79,7 +79,7 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
     case intType : nfi.IntType =>
       toTempValue(nfi.BoxedValue(bt.BoxedExactInteger)) map { boxedExactInt =>
         val unboxedTemp = new ps.TempValue
-        planSteps += ps.UnboxExactInteger(unboxedTemp, boxedExactInt)
+        plan.steps += ps.UnboxExactInteger(unboxedTemp, boxedExactInt)
 
         if (intType.bits == 64) {
           // Correct width
@@ -89,7 +89,7 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
           val convTemp = new ps.TempValue
 
           // Convert to the right width
-          planSteps += ps.ConvertNativeInteger(convTemp, unboxedTemp, intType.bits, intType.signed) 
+          plan.steps += ps.ConvertNativeInteger(convTemp, unboxedTemp, intType.bits, intType.signed) 
           convTemp
         }
       }
@@ -106,11 +106,11 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
         toTempValue(nfi.BoxedValue(bt.BoxedExactInteger)) map { boxedExactInt =>
           // Unbox as exact int
           val unboxedTemp = new ps.TempValue
-          planSteps += ps.UnboxExactInteger(unboxedTemp, boxedExactInt)
+          plan.steps += ps.UnboxExactInteger(unboxedTemp, boxedExactInt)
 
           // Convert to the wanted type
           val convTemp = new ps.TempValue
-          planSteps += ps.ConvertNativeIntegerToFloat(convTemp, unboxedTemp, true, fpType)
+          plan.steps += ps.ConvertNativeIntegerToFloat(convTemp, unboxedTemp, true, fpType)
 
           convTemp
         }
@@ -119,7 +119,7 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
         toTempValue(nfi.BoxedValue(bt.BoxedInexactRational)) map { boxedInexactRational =>
           // Unbox as inexact rational
           val unboxedTemp = new ps.TempValue
-          planSteps += ps.UnboxInexactRational(unboxedTemp, boxedInexactRational)
+          plan.steps += ps.UnboxInexactRational(unboxedTemp, boxedInexactRational)
 
           if (fpType == nfi.Double) {
             // No conversion needed
@@ -128,7 +128,7 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
           else {
             val convTemp = new ps.TempValue
 
-            planSteps += ps.ConvertNativeFloat(convTemp, unboxedTemp, fpType)
+            plan.steps += ps.ConvertNativeFloat(convTemp, unboxedTemp, fpType)
             convTemp
           }
         }
@@ -137,21 +137,23 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
         // We have to check types here and branch on the result
         val isExactIntPred = new ps.TempValue
 
-        planSteps += ps.TestBoxedType(isExactIntPred, tempValue, bt.BoxedExactInteger)
+        plan.steps += ps.TestBoxedType(isExactIntPred, tempValue, bt.BoxedExactInteger)
 
         // Try again with constrained types
         // This will hit the branches above us
-        val trueSteps = new StepBuffer
+        val trueWriter = plan.forkPlan()
         val trueDynamicValue = new DynamicBoxedValue(Set(bt.BoxedExactInteger), valueType, tempValue)
-        val trueTempValue = trueDynamicValue.toRequiredTempValue(fpType)(trueSteps)
+        val trueTempValue = trueDynamicValue.toRequiredTempValue(fpType)(trueWriter)
 
-        val falseSteps = new StepBuffer
+        val falseWriter = plan.forkPlan()
         val falseDynamicValue = new DynamicBoxedValue(possibleTypes - bt.BoxedExactInteger, valueType, tempValue)
-        val falseTempValue = falseDynamicValue.toRequiredTempValue(fpType)(falseSteps)
+        val falseTempValue = falseDynamicValue.toRequiredTempValue(fpType)(falseWriter)
       
         val phiTemp = new ps.TempValue
 
-        planSteps += ps.CondBranch(phiTemp, isExactIntPred, trueSteps.toList, trueTempValue, falseSteps.toList, falseTempValue) 
+        plan.steps += ps.CondBranch(phiTemp, isExactIntPred, 
+          trueWriter.steps.toList, trueTempValue,
+          falseWriter.steps.toList, falseTempValue) 
 
         Some(phiTemp)
       }

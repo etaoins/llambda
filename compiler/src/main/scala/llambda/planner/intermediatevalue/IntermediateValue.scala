@@ -3,7 +3,7 @@ package llambda.planner.intermediatevalue
 import llambda.nfi
 import llambda.{boxedtype => bt}
 import llambda.planner.{step => ps}
-import llambda.planner.{StepBuffer, UnlocatedImpossibleTypeConversionException, InvokableProcedure}
+import llambda.planner.{PlanWriter, UnlocatedImpossibleTypeConversionException, InvokableProcedure}
 
 abstract class IntermediateValue {
   val possibleTypes : Set[bt.ConcreteBoxedType]
@@ -15,24 +15,24 @@ abstract class IntermediateValue {
     resultIntermediate : IntermediateValue
   )
 
-  protected def toBoxedTempValue(boxedType : bt.BoxedType)(implicit planSteps : StepBuffer) : Option[ps.TempValue]
-  protected def toUnboxedTempValue(unboxedType : nfi.UnboxedType)(implicit planSteps : StepBuffer) : Option[ps.TempValue]
+  protected def toBoxedTempValue(boxedType : bt.BoxedType)(implicit plan : PlanWriter) : Option[ps.TempValue]
+  protected def toUnboxedTempValue(unboxedType : nfi.UnboxedType)(implicit plan : PlanWriter) : Option[ps.TempValue]
 
-  def toTruthyPredicate()(implicit planSteps : StepBuffer) : ps.TempValue = {
+  def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     val trueTemp = new ps.TempValue
-    planSteps += ps.StoreNativeInteger(trueTemp, 1, 1) 
+    plan.steps += ps.StoreNativeInteger(trueTemp, 1, 1) 
 
     trueTemp
   }
   
-  def toInvokableProcedure()(implicit planSteps : StepBuffer) : Option[InvokableProcedure]
+  def toInvokableProcedure()(implicit plan : PlanWriter) : Option[InvokableProcedure]
 
-  protected def toTempValue(targetType : nfi.NativeType)(implicit planSteps : StepBuffer) : Option[ps.TempValue] = targetType match {
+  protected def toTempValue(targetType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = targetType match {
     case nfi.CTruthyBool =>
       val truthyPredTemp = toTruthyPredicate()
 
       val intConvTemp = new ps.TempValue
-      planSteps += ps.ConvertNativeInteger(intConvTemp, truthyPredTemp, nfi.CTruthyBool.bits, false)
+      plan.steps += ps.ConvertNativeInteger(intConvTemp, truthyPredTemp, nfi.CTruthyBool.bits, false)
 
       Some(intConvTemp)
 
@@ -43,16 +43,16 @@ abstract class IntermediateValue {
       toUnboxedTempValue(unboxedType)
   }
   
-  def toRequiredTempValue(targetType : nfi.NativeType)(implicit planSteps : StepBuffer) =
+  def toRequiredTempValue(targetType : nfi.NativeType)(implicit plan : PlanWriter) =
     toTempValue(targetType) getOrElse {
       throw new UnlocatedImpossibleTypeConversionException(s"Unable to convert ${this.toString} to ${targetType}")
     }
 
-  def planPhiWith(theirValue : IntermediateValue)(ourSteps : StepBuffer, theirSteps : StepBuffer) : PlanPhiResult = {
+  def planPhiWith(theirValue : IntermediateValue)(ourPlan : PlanWriter, theirPlan : PlanWriter) : PlanPhiResult = {
     // This is extremely inefficient for compatible unboxed types
     // This should be overridden where possible
-    val ourTempValue = this.toRequiredTempValue(nfi.BoxedValue(bt.BoxedDatum))(ourSteps)
-    val theirTempValue = theirValue.toRequiredTempValue(nfi.BoxedValue(bt.BoxedDatum))(theirSteps)
+    val ourTempValue = this.toRequiredTempValue(nfi.BoxedValue(bt.BoxedDatum))(ourPlan)
+    val theirTempValue = theirValue.toRequiredTempValue(nfi.BoxedValue(bt.BoxedDatum))(theirPlan)
 
     val phiResultTemp = new ps.TempValue
     val phiPossibleTypes = possibleTypes ++ theirValue.possibleTypes

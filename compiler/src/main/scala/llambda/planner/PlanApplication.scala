@@ -7,16 +7,16 @@ import llambda.{boxedtype => bt}
 import llambda.NotImplementedException
 
 object PlanApplication {
-  private def boxRestArgs(restArgs : List[iv.IntermediateValue])(implicit planSteps : StepBuffer) : ps.TempValue = {
+  private def boxRestArgs(restArgs : List[iv.IntermediateValue])(implicit plan : PlanWriter) : ps.TempValue = {
     val restArgCount = restArgs.length
 
     if (restArgCount == 0) {
       // Avoid a cons allocation here so our plan optimizer knows we don't need GC
       val emptyListTemp = new ps.TempValue
-      planSteps += ps.StoreBoxedEmptyList(emptyListTemp)
+      plan.steps += ps.StoreBoxedEmptyList(emptyListTemp)
 
       val listElemCast = new ps.TempValue
-      planSteps += ps.CastBoxedToTypeUnchecked(listElemCast, emptyListTemp, bt.BoxedListElement)
+      plan.steps += ps.CastBoxedToTypeUnchecked(listElemCast, emptyListTemp, bt.BoxedListElement)
 
       listElemCast
     }
@@ -28,14 +28,14 @@ object PlanApplication {
         _.toRequiredTempValue(nfi.BoxedValue(bt.BoxedDatum))
       }
 
-      planSteps += ps.AllocateCons(allocTemp, restArgCount)
-      planSteps += ps.BuildProperList(restArgTemp, allocTemp, 0, argTemps)
+      plan.steps += ps.AllocateCons(allocTemp, restArgCount)
+      plan.steps += ps.BuildProperList(restArgTemp, allocTemp, 0, argTemps)
 
       restArgTemp
     }
   }
 
-  def apply(invokableProc : InvokableProcedure, operandValues : List[iv.IntermediateValue])(implicit planSteps : StepBuffer) : Option[iv.IntermediateValue] = {
+  def apply(invokableProc : InvokableProcedure, operandValues : List[iv.IntermediateValue])(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
     val entryPointTemp = invokableProc.planEntryPoint()
     val signature = invokableProc.signature
 
@@ -69,7 +69,7 @@ object PlanApplication {
       new ps.TempValue
     }
 
-    planSteps += ps.Invoke(resultTemp, signature, entryPointTemp, argTemps)
+    plan.steps += ps.Invoke(resultTemp, signature, entryPointTemp, argTemps)
 
     resultTemp.map { tempValue =>
       NativeToIntermediateValue(signature.returnType.get, tempValue)
