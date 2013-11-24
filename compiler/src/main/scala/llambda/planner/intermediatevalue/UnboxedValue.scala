@@ -72,7 +72,7 @@ sealed abstract class UnboxedValue(val nativeType : nfi.NativeType, val boxedTyp
   }
 }
 
-class UnboxedBooleanValue(tempValue : ps.TempValue) extends UnboxedValue(nfi.CStrictBool, bt.BoxedBoolean, tempValue) {
+class UnboxedBooleanValue(tempValue : ps.TempValue) extends UnboxedValue(nfi.CBool, bt.BoxedBoolean, tempValue) {
   def withNewTempValue(tempValue : ps.TempValue) = new UnboxedBooleanValue(tempValue)
 
   override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {

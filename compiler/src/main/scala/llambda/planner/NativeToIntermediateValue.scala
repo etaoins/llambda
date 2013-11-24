@@ -8,11 +8,7 @@ import llambda.InternalCompilerErrorException
 
 object NativeToIntermediateValue {
   def apply(nativeType : nfi.NativeType, tempValue : ps.TempValue) : iv.IntermediateValue = nativeType match {
-    case nfi.CTruthyBool =>
-      // "Truthy" can only be a conversion target
-      throw new InternalCompilerErrorException("Impossible to convert truthy bool to intermediate type")
-
-    case nfi.CStrictBool =>
+    case nfi.CBool =>
       new iv.UnboxedBooleanValue(tempValue)
 
     case intType : nfi.IntType =>

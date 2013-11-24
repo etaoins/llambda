@@ -3,7 +3,8 @@ package llambda.frontend
 import llambda._
 
 object ExtractNativeFunction {
-  private def parseNativeType(typeDatum : sst.ScopedSymbol, returnType : Boolean) : nfi.NativeType = typeDatum.name match {
+  private def parseNativeType(typeDatum : sst.ScopedSymbol) : nfi.NativeType = typeDatum.name match {
+    case "bool"   => nfi.CBool
     case "int8"   => nfi.Int8
     case "int16"  => nfi.Int16
     case "int32"  => nfi.Int32
@@ -17,10 +18,6 @@ object ExtractNativeFunction {
     case "utf8-cstring" => nfi.Utf8CString
 
     case "unicode-char" => nfi.UnicodeChar
-    
-    case "bool"        if returnType   => nfi.CStrictBool
-    case "strict-bool" if !returnType  => nfi.CStrictBool
-    case "truthy-bool" if !returnType  => nfi.CTruthyBool
 
     // XXX: This assumes Unix-like LP64: 64bit Linux, FreeBSD, Mac OS X, etc 
     // These aliases are here so we can do the right thing when porting to other archs
@@ -41,7 +38,7 @@ object ExtractNativeFunction {
   private def createNativeFunction(fixedArgData : List[sst.ScopedDatum], restArgDatum : Option[sst.ScopedSymbol], returnTypeDatum : sst.ScopedSymbol, nativeSymbol : String) : et.NativeFunction = {
     var fixedArgTypes = fixedArgData map {
       case symbol : sst.ScopedSymbol =>
-        parseNativeType(symbol, false)
+        parseNativeType(symbol)
       case nonsymbol =>
         throw new BadSpecialFormException(nonsymbol, "Excepted native type name to be symbol")
     }
@@ -55,7 +52,7 @@ object ExtractNativeFunction {
 
     val returnType = returnTypeDatum match {
       case sst.ScopedSymbol(_, "void") => None
-      case typeDatum => Some(parseNativeType(typeDatum, true))
+      case typeDatum => Some(parseNativeType(typeDatum))
     }
 
     et.NativeFunction(

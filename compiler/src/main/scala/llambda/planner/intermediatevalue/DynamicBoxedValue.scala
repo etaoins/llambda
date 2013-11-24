@@ -62,12 +62,6 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
   }
 
   def toUnboxedTempValue(unboxedType : nfi.UnboxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] = unboxedType match {
-    case nfi.CStrictBool =>
-      // Make sure we're actually a boolean
-      toTempValue(nfi.BoxedValue(bt.BoxedBoolean)) map { _ =>
-        toTempValue(nfi.CTruthyBool).get
-      }
-
     case nfi.UnicodeChar =>
       toTempValue(nfi.BoxedValue(bt.BoxedCharacter)) map { boxedChar =>
         val unboxedTemp = new ps.TempValue

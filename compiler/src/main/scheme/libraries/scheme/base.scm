@@ -68,8 +68,8 @@
 	(export boolean? not boolean=?)
 	(begin
 	  (define-r7rs boolean? (native-function "lliby_is_boolean" (boxed-datum) bool))
-	  (define-r7rs not (native-function "lliby_not" (truthy-bool) bool))
-	  (define-r7rs boolean=? (native-function "lliby_boolean_equal" (strict-bool strict-bool . boxed-list-element) bool)))
+	  (define-r7rs not (native-function "lliby_not" (bool) bool))
+	  (define-r7rs boolean=? (native-function "lliby_boolean_equal" (boxed-boolean boxed-boolean . boxed-list-element) bool)))
 
 	(export pair? null? cons car cdr set-car! set-cdr! length list-copy make-list list append)
 	(begin 

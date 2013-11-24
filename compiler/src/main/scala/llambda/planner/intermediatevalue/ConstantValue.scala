@@ -108,16 +108,9 @@ class ConstantBooleanValue(value : Boolean) extends TrivialConstantValue(bt.Boxe
     predTemp
   }
 
-  def toUnboxedTempValue(unboxedType : nfi.UnboxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] = unboxedType match {
-    case nfi.CStrictBool =>
-      val constantTemp = new ps.TempValue
-
-      plan.steps += ps.StoreNativeInteger(constantTemp, intValue, nfi.CStrictBool.bits)
-      Some(constantTemp)
-
-    case _ =>
-      None
-  }
+  def toUnboxedTempValue(unboxedType : nfi.UnboxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] = 
+    // toTruthyPredicate() will catch our conversion to bool
+    None
 }
 
 class ConstantBytevectorValue(value : Vector[Short]) extends TrivialConstantValue(bt.BoxedBytevector, value, ps.StoreBoxedBytevector.apply) {

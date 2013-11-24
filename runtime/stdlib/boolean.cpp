@@ -13,7 +13,7 @@ bool lliby_not(bool value)
 	return !value;
 }
 
-bool lliby_boolean_equal(bool value1, bool value2, BoxedListElement *argHead)
+bool lliby_boolean_equal(BoxedBoolean *value1, BoxedBoolean *value2, BoxedListElement *argHead)
 {
 	if (value1 != value2)
 	{
@@ -31,7 +31,7 @@ bool lliby_boolean_equal(bool value1, bool value2, BoxedListElement *argHead)
 
 	for(auto boxedBool : properList)
 	{
-		if (boxedBool->value() != value1)
+		if (boxedBool != value1)
 		{
 			return false;
 		}

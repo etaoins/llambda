@@ -28,11 +28,11 @@ abstract class IntermediateValue {
   def toInvokableProcedure()(implicit plan : PlanWriter) : Option[InvokableProcedure]
 
   protected def toTempValue(targetType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = targetType match {
-    case nfi.CTruthyBool =>
+    case nfi.CBool =>
       val truthyPredTemp = toTruthyPredicate()
 
       val intConvTemp = new ps.TempValue
-      plan.steps += ps.ConvertNativeInteger(intConvTemp, truthyPredTemp, nfi.CTruthyBool.bits, false)
+      plan.steps += ps.ConvertNativeInteger(intConvTemp, truthyPredTemp, nfi.CBool.bits, false)
 
       Some(intConvTemp)
 
