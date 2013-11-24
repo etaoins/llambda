@@ -81,7 +81,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   }
   
   test("function returning unknown type") {
-    intercept[BadSpecialFormException] {
+    intercept[UnboundVariableException] {
       expressionFor("""(native-function "lliby_newline" () not-a-type)""")
     }
   }
@@ -93,7 +93,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   }
   
   test("function taking unknown type") {
-    intercept[BadSpecialFormException] {
+    intercept[UnboundVariableException] {
       expressionFor("""(native-function "lliby_newline" (not-a-type))""")
     }
   }

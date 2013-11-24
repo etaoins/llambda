@@ -387,9 +387,10 @@ def _generate_name_to_boxed_type(all_types):
 
     output += 'import llambda.{boxedtype => bt}\n\n'
 
-    output += 'object NativeTypeNameToBoxedType {\n'
-    output += '  def apply : PartialFunction[String, bt.BoxedType] = {\n'
+    output += 'object IntrinsicBoxedTypes {\n'
+    output += '  def apply() : Map[String, bt.BoxedType] = Map(\n'
 
+    map_members = []
     for type_name, boxed_type in all_types.items():
         if boxed_type.internal:
             # This isn't meant to be exposed as an NFI type
@@ -398,10 +399,11 @@ def _generate_name_to_boxed_type(all_types):
         nfi_decl_name = _type_name_to_nfi_decl(type_name)
         boxed_type_class = type_name_to_clike_class(type_name)
 
-        output += '    case "' + nfi_decl_name + '" => '
-        output += 'bt.' + boxed_type_class + '\n'
+        map_members.append('    ("' + nfi_decl_name + '" -> ' + 'bt.' + boxed_type_class + ')')
 
-    output += '  }\n'
+    output += ',\n'.join(map_members) + '\n'
+
+    output += '  )\n'
     output += '}\n'
     return output
 
@@ -409,4 +411,4 @@ def generate_scala_objects(all_types):
     ROOT_PATH = 'compiler/src/main/scala/llambda/'
 
     return {ROOT_PATH + 'boxedtype/generated/BoxedType.scala': _generate_boxed_types(all_types),
-            ROOT_PATH + 'frontend/generated/NativeTypeNameToBoxedType.scala': _generate_name_to_boxed_type(all_types)}
+            ROOT_PATH + 'frontend/generated/IntrinsicBoxedTypes.scala': _generate_name_to_boxed_type(all_types)}

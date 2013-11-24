@@ -258,6 +258,9 @@ object ExtractModuleBody {
 
         case primitive : PrimitiveExpression =>
           throw new MalformedExpressionException(scopedSymbol, "Primitive cannot be used as an expression")
+
+        case boundType : BoundType =>
+          throw new MalformedExpressionException(scopedSymbol, "Type cannot be used as an expression")
       }
 
     // These all evaluate to themselves. See R7RS section 4.1.2

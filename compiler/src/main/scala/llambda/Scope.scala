@@ -21,6 +21,10 @@ sealed abstract class PrimitiveExpression extends BoundValue
 case class SyntaxRule(pattern : List[sst.ScopedDatum], template : sst.ScopedDatum)
 case class BoundSyntax(literals : List[String], rules : List[SyntaxRule])  extends BoundValue
 
+// These are either intrinsic types or ones introduced by (define-record-type)
+// or (define-native-type)
+case class BoundType(nativeType : nfi.NativeType) extends BoundValue
+
 /** Scope can look up bindings by name and return a list of all identifiers  */
 sealed class Scope(val bindings : collection.mutable.Map[String, BoundValue], parent : Option[Scope] = None) {
   def get(name : String) : Option[BoundValue] = 
@@ -91,10 +95,10 @@ object SchemePrimitives {
 object NativeFunctionPrimitives {
   object NativeFunction extends PrimitiveExpression
 
-  val bindings = {
+  lazy val bindings = {
     Map[String, BoundValue](
       "native-function" -> NativeFunction
-    )
+    ) ++ frontend.IntrinsicTypes().mapValues(BoundType.apply)
   }
 }
 
