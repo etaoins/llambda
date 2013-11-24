@@ -391,6 +391,10 @@ def _generate_name_to_boxed_type(all_types):
     output += '  def apply : PartialFunction[String, bt.BoxedType] = {\n'
 
     for type_name, boxed_type in all_types.items():
+        if boxed_type.internal:
+            # This isn't meant to be exposed as an NFI type
+            continue
+
         nfi_decl_name = _type_name_to_nfi_decl(type_name)
         boxed_type_class = type_name_to_clike_class(type_name)
 

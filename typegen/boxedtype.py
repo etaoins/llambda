@@ -30,6 +30,7 @@ class BoxedType(object):
         
         self.type_id = type_json.get('typeId', None)
         self.inherits = type_json['inherits']
+        self.internal = type_json.get('internal', False)
         
         # This is just to test that this agrees with the presence or absence
         # of "type_id"

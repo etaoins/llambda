@@ -13,7 +13,9 @@ def generate_predicates(boxed_types):
 
     for type_name, boxed_type in boxed_types.items():
         cxx_type_name = type_name_to_clike_class(type_name)
-        content += '#include "binding/' + cxx_type_name + '.h"\n'
+
+        if not boxed_type.internal:
+            content += '#include "binding/' + cxx_type_name + '.h"\n'
 
     content += '\n'
 
@@ -25,6 +27,10 @@ def generate_predicates(boxed_types):
     for type_name, boxed_type in boxed_types.items():
         if type_name == BASE_TYPE:
             # Doesn't make sense - every type is a subtype of the base type
+            continue
+
+        if boxed_type.internal:
+            # Don't generate predicates for internal types
             continue
 
         function_name = "lliby_is_" + _type_name_to_underscore(type_name)

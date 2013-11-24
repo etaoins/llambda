@@ -13,7 +13,6 @@ object NativeTypeNameToBoxedType {
     case "boxed-list-element" => bt.BoxedListElement
     case "boxed-pair" => bt.BoxedPair
     case "boxed-empty-list" => bt.BoxedEmptyList
-    case "boxed-string-like" => bt.BoxedStringLike
     case "boxed-string" => bt.BoxedString
     case "boxed-symbol" => bt.BoxedSymbol
     case "boxed-boolean" => bt.BoxedBoolean
@@ -23,8 +22,6 @@ object NativeTypeNameToBoxedType {
     case "boxed-character" => bt.BoxedCharacter
     case "boxed-vector" => bt.BoxedVector
     case "boxed-bytevector" => bt.BoxedBytevector
-    case "boxed-record-like" => bt.BoxedRecordLike
     case "boxed-procedure" => bt.BoxedProcedure
-    case "boxed-mutable-var" => bt.BoxedMutableVar
   }
 }

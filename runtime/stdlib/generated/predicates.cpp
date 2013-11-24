@@ -7,7 +7,6 @@
 #include "binding/BoxedListElement.h"
 #include "binding/BoxedPair.h"
 #include "binding/BoxedEmptyList.h"
-#include "binding/BoxedStringLike.h"
 #include "binding/BoxedString.h"
 #include "binding/BoxedSymbol.h"
 #include "binding/BoxedBoolean.h"
@@ -17,9 +16,7 @@
 #include "binding/BoxedCharacter.h"
 #include "binding/BoxedVector.h"
 #include "binding/BoxedBytevector.h"
-#include "binding/BoxedRecordLike.h"
 #include "binding/BoxedProcedure.h"
-#include "binding/BoxedMutableVar.h"
 
 using namespace lliby;
 
@@ -44,11 +41,6 @@ bool lliby_is_pair(const BoxedDatum *value)
 bool lliby_is_empty_list(const BoxedDatum *value)
 {
 	return BoxedEmptyList::isInstance(value);
-}
-
-bool lliby_is_string_like(const BoxedDatum *value)
-{
-	return BoxedStringLike::isInstance(value);
 }
 
 bool lliby_is_string(const BoxedDatum *value)
@@ -96,19 +88,9 @@ bool lliby_is_bytevector(const BoxedDatum *value)
 	return BoxedBytevector::isInstance(value);
 }
 
-bool lliby_is_record_like(const BoxedDatum *value)
-{
-	return BoxedRecordLike::isInstance(value);
-}
-
 bool lliby_is_procedure(const BoxedDatum *value)
 {
 	return BoxedProcedure::isInstance(value);
-}
-
-bool lliby_is_mutable_var(const BoxedDatum *value)
-{
-	return BoxedMutableVar::isInstance(value);
 }
 
 

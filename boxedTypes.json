@@ -54,6 +54,7 @@
     {
         "name": "stringLike",
         "abstract": true,
+        "internal": true,
         "inherits": "datum",
         "fields": [
             {
@@ -171,6 +172,7 @@
     {
         "name": "recordLike",
         "abstract": true,
+        "internal": true,
         "inherits": "datum",
         "fields": [
             {
@@ -198,6 +200,7 @@
     {
         "name": "mutableVar",
         "typeId": 13,
+        "internal": true,
         "inherits": "datum",
         "fields": [
             {
