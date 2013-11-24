@@ -24,6 +24,7 @@ enum class BoxedTypeId : std::uint16_t
 	Vector = 9,
 	Bytevector = 10,
 	Procedure = 11,
+	Record = 12,
 	MutableVar = 13,
 };
 

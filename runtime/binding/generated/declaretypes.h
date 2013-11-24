@@ -25,6 +25,7 @@ class BoxedVector;
 class BoxedBytevector;
 class BoxedRecordLike;
 class BoxedProcedure;
+class BoxedRecord;
 class BoxedMutableVar;
 typedef BoxedDatum* (*ProcedureEntryPoint)(void*, BoxedListElement*);
 

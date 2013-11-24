@@ -198,6 +198,13 @@
         ]
     },
     {
+        "name": "record",
+        "typeId": 12,
+        "internal": true,
+        "inherits": "recordLike",
+        "fields": []
+    },
+    {
         "name": "mutableVar",
         "typeId": 13,
         "internal": true,

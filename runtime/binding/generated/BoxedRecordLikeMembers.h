@@ -16,7 +16,7 @@ public:
 public:
 	static BoxedRecordLike* fromDatum(BoxedDatum *datum)
 	{
-		if ((datum->typeId() == BoxedTypeId::Procedure))
+		if ((datum->typeId() == BoxedTypeId::Procedure) || (datum->typeId() == BoxedTypeId::Record))
 		{
 			return reinterpret_cast<BoxedRecordLike*>(datum);
 		}
@@ -26,7 +26,7 @@ public:
 
 	static const BoxedRecordLike* fromDatum(const BoxedDatum *datum)
 	{
-		if ((datum->typeId() == BoxedTypeId::Procedure))
+		if ((datum->typeId() == BoxedTypeId::Procedure) || (datum->typeId() == BoxedTypeId::Record))
 		{
 			return reinterpret_cast<const BoxedRecordLike*>(datum);
 		}
@@ -36,7 +36,7 @@ public:
 
 	static bool isInstance(const BoxedDatum *datum)
 	{
-		return (datum->typeId() == BoxedTypeId::Procedure);
+		return (datum->typeId() == BoxedTypeId::Procedure) || (datum->typeId() == BoxedTypeId::Record);
 	}
 
 private:

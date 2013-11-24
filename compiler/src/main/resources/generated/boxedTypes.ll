@@ -70,6 +70,10 @@
 %procedure = type {%recordLike, %datum* (i8*, %listElement*)*}
 !16 = metadata !{metadata !"procedure", metadata !15}
 
+; {supertype}
+%record = type {%recordLike}
+!17 = metadata !{metadata !"record", metadata !15}
+
 ; {supertype, currentValue}
 %mutableVar = type {%datum, %datum*}
-!17 = metadata !{metadata !"mutableVar", metadata !0}
+!18 = metadata !{metadata !"mutableVar", metadata !0}
