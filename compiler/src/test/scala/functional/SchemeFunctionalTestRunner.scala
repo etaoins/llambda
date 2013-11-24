@@ -95,8 +95,7 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
       ast.ProperList(List(
         ast.Symbol("native-function"),
         ast.StringLiteral("lliby_write"),
-        ast.ProperList(List(ast.Symbol("boxed-datum"))),
-        ast.Symbol("void"))),
+        ast.ProperList(List(ast.Symbol("boxed-datum"))))),
       valueDatum))
 
     // Rebuild the program with the import and value printing

@@ -5,5 +5,5 @@
 	
 	(export write)
 	(begin
-	  (define-r7rs write (native-function "lliby_write" (boxed-datum) void)))
+	  (define-r7rs write (native-function "lliby_write" (boxed-datum))))
 )

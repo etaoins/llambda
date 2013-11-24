@@ -78,8 +78,8 @@
 	  (define-r7rs cons (native-function "lliby_cons" (boxed-datum boxed-datum) boxed-pair))
 	  (define-r7rs car (native-function "lliby_car" (boxed-pair) boxed-datum))
 	  (define-r7rs cdr (native-function "lliby_cdr" (boxed-pair) boxed-datum))
-	  (define-r7rs set-car! (native-function "lliby_set_car" (boxed-pair boxed-datum) void))
-	  (define-r7rs set-cdr! (native-function "lliby_set_cdr" (boxed-pair boxed-datum) void))
+	  (define-r7rs set-car! (native-function "lliby_set_car" (boxed-pair boxed-datum)))
+	  (define-r7rs set-cdr! (native-function "lliby_set_cdr" (boxed-pair boxed-datum)))
 	  (define-r7rs length (native-function "lliby_length" (boxed-list-element) uint32))
 	  (define-r7rs list-copy (native-function "lliby_list_copy" (boxed-list-element) boxed-list-element))
 	  (define-r7rs make-list (native-function "lliby_make_list" (uint32 boxed-datum) boxed-list-element))
@@ -102,7 +102,7 @@
 	  (define-r7rs list->vector (native-function "lliby_vector" (boxed-list-element) boxed-vector))
 	  (define-r7rs vector-length (native-function "lliby_vector_length" (boxed-vector) uint32))
 	  (define-r7rs vector-ref (native-function "lliby_vector_ref" (boxed-vector uint32) boxed-vector))
-	  (define-r7rs vector-set! (native-function "lliby_vector_set" (boxed-vector uint32 boxed-datum) void))
+	  (define-r7rs vector-set! (native-function "lliby_vector_set" (boxed-vector uint32 boxed-datum)))
 	  (define-r7rs vector-append (native-function "lliby_vector_append" boxed-list-element boxed-vector)))
 	
 	(export string? make-string string string-length string-ref string-set! string-append list->string)
@@ -114,7 +114,7 @@
 	  (define-r7rs list->string (native-function "lliby_string" (boxed-list-element) boxed-string))
 	  (define-r7rs string-length (native-function "lliby_string_length" (boxed-string) uint32))
 	  (define-r7rs string-ref (native-function "lliby_string_ref" (boxed-string uint32) unicode-char))
-	  (define-r7rs string-set! (native-function "lliby_string_set" (boxed-string uint32 unicode-char) void))
+	  (define-r7rs string-set! (native-function "lliby_string_set" (boxed-string uint32 unicode-char)))
 	  (define-r7rs string-append (native-function "lliby_string_append" boxed-list-element boxed-string)))
 
 	(export procedure?)

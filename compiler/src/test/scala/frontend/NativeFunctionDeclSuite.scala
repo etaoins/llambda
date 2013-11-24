@@ -10,7 +10,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   
   test("void native function") {
     assertResult(et.NativeFunction(Nil, false, None, "lliby_newline")) {
-      expressionFor("""(native-function "lliby_newline" () void)""")
+      expressionFor("""(native-function "lliby_newline" ())""")
     }
   }
   
@@ -94,13 +94,13 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   
   test("function taking unknown type") {
     intercept[BadSpecialFormException] {
-      expressionFor("""(native-function "lliby_newline" (not-a-type) void)""")
+      expressionFor("""(native-function "lliby_newline" (not-a-type))""")
     }
   }
   
   test("function taking non-symbol") {
     intercept[BadSpecialFormException] {
-      expressionFor("""(native-function "lliby_newline" (4) void)""")
+      expressionFor("""(native-function "lliby_newline" (4))""")
     }
   }
 }
