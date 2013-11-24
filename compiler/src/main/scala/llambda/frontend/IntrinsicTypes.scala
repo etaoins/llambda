@@ -4,27 +4,27 @@ import llambda.nfi
 
 object IntrinsicTypes {
   def apply() : Map[String, nfi.NativeType] = Map(
-    ("bool"   -> nfi.CBool),
-    ("int8"   -> nfi.Int8),
-    ("int16"  -> nfi.Int16),
-    ("int32"  -> nfi.Int32),
-    ("int64"  -> nfi.Int64),
-    ("uint8"  -> nfi.UInt8),
-    ("uint16" -> nfi.UInt16),
-    ("uint32" -> nfi.UInt32),
-    ("float"  -> nfi.Float),
-    ("double" -> nfi.Double),
+    ("<bool>"   -> nfi.CBool),
+    ("<int8>"   -> nfi.Int8),
+    ("<int16>"  -> nfi.Int16),
+    ("<int32>"  -> nfi.Int32),
+    ("<int64>"  -> nfi.Int64),
+    ("<uint8>"  -> nfi.UInt8),
+    ("<uint16>" -> nfi.UInt16),
+    ("<uint32>" -> nfi.UInt32),
+    ("<float>"  -> nfi.Float),
+    ("<double>" -> nfi.Double),
 
-    ("utf8-cstring" -> nfi.Utf8CString),
+    ("<utf8-cstring>" -> nfi.Utf8CString),
 
-    ("unicode-char" -> nfi.UnicodeChar),
+    ("<unicode-char>" -> nfi.UnicodeChar),
 
     // XXX: This assumes Unix-like LP64: 64bit Linux, FreeBSD, Mac OS X, etc 
     // These aliases are here so we can do the right thing when porting to other archs
-    ("short"  -> nfi.Int16),
-    ("int"    -> nfi.Int32),
-    ("long"   -> nfi.Int64),
-    ("ushort" -> nfi.UInt16),
-    ("uint"   -> nfi.UInt32)
+    ("<short>"  -> nfi.Int16),
+    ("<int>"    -> nfi.Int32),
+    ("<long>"   -> nfi.Int64),
+    ("<ushort>" -> nfi.UInt16),
+    ("<uint>"   -> nfi.UInt32)
   ) ++ (IntrinsicBoxedTypes().mapValues(nfi.BoxedValue.apply))
 }

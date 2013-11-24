@@ -50,7 +50,7 @@
 (define-test "inexact rational can be unboxed as float" (expect 10.0
 	(import (llambda test-util))
 	; Nothing in the stdlib takes float
-	(define fabsf (native-function "fabsf" (float) float))
+	(define fabsf (native-function "fabsf" (<float>) <float>))
 	(fabsf (typeless-boxed -10.0))))
 
 (define-test "exact integer can be unboxed as double" (expect 1.0
@@ -62,7 +62,7 @@
 (define-test "exact integer can be unboxed as float" (expect 10.0
 	(import (llambda test-util))
 	; Nothing in the stdlib takes float
-	(define fabsf (native-function "fabsf" (float) float))
+	(define fabsf (native-function "fabsf" (<float>) <float>))
 	(fabsf (typeless-boxed -10))))
 
 (define-test "unboxed i64 can be passed as an unboxed i32" (expect b
@@ -81,7 +81,7 @@
 	; Nothing in our stdlib takes UTF-8 C strings because they're binary unsafe
 	; and require O(n) importing to determine their length/non-ASCII content.
 	; Use strlen from the C standard library for this test
-	(define strlen (native-function "strlen" (utf8-cstring) int64))
+	(define strlen (native-function "strlen" (<utf8-cstring>) <int64>))
 	(strlen (typeless-boxed "Hello!"))))
 
 (define-test "unboxed int 0 converts to unboxed truthy true" (expect #f
@@ -99,7 +99,7 @@
 
 (define-test "exact integer can be passed to a procedure as float" (expect 10.0
 	; Nothing in the stdlib takes float
-	(define fabsf (native-function "fabsf" (float) float))
+	(define fabsf (native-function "fabsf" (<float>) <float>))
 	(fabsf -10)))
 
 ; Make sure if we use type analysis to short circuit bool evaluation do it right
@@ -111,7 +111,7 @@
 (define-test "UTF-8 C string can be boxed as string" (expect "Hello, world!"
 	(import (llambda nfi))
 	; See above test for why we need to use the C standard library
-	(define strdup (native-function "strdup" (utf8-cstring) utf8-cstring))
+	(define strdup (native-function "strdup" (<utf8-cstring>) <utf8-cstring>))
 	(strdup "Hello, world!")))
 
 ; This was broken due to list element being an abstract type

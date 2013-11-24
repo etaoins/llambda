@@ -7,7 +7,7 @@
 	(begin
 	  ; These always return inexact numbers so we can use the C standard
 	  ; library directly
-	  (define-r7rs sin (native-function "sin" (double) double))
-	  (define-r7rs cos (native-function "cos" (double) double))
-	  (define-r7rs tan (native-function "tan" (double) double)))
+	  (define-r7rs sin (native-function "sin" (<double>) <double>))
+	  (define-r7rs cos (native-function "cos" (<double>) <double>))
+	  (define-r7rs tan (native-function "tan" (<double>) <double>)))
 )	  

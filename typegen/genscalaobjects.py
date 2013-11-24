@@ -399,7 +399,7 @@ def _generate_name_to_boxed_type(all_types):
         nfi_decl_name = _type_name_to_nfi_decl(type_name)
         boxed_type_class = type_name_to_clike_class(type_name)
 
-        map_members.append('    ("' + nfi_decl_name + '" -> ' + 'bt.' + boxed_type_class + ')')
+        map_members.append('    ("<' + nfi_decl_name + '>" -> ' + 'bt.' + boxed_type_class + ')')
 
     output += ',\n'.join(map_members) + '\n'
 

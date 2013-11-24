@@ -8,20 +8,20 @@ import llambda.{boxedtype => bt}
 
 object IntrinsicBoxedTypes {
   def apply() : Map[String, bt.BoxedType] = Map(
-    ("boxed-datum" -> bt.BoxedDatum),
-    ("boxed-unspecific" -> bt.BoxedUnspecific),
-    ("boxed-list-element" -> bt.BoxedListElement),
-    ("boxed-pair" -> bt.BoxedPair),
-    ("boxed-empty-list" -> bt.BoxedEmptyList),
-    ("boxed-string" -> bt.BoxedString),
-    ("boxed-symbol" -> bt.BoxedSymbol),
-    ("boxed-boolean" -> bt.BoxedBoolean),
-    ("boxed-numeric" -> bt.BoxedNumeric),
-    ("boxed-exact-integer" -> bt.BoxedExactInteger),
-    ("boxed-inexact-rational" -> bt.BoxedInexactRational),
-    ("boxed-character" -> bt.BoxedCharacter),
-    ("boxed-vector" -> bt.BoxedVector),
-    ("boxed-bytevector" -> bt.BoxedBytevector),
-    ("boxed-procedure" -> bt.BoxedProcedure)
+    ("<boxed-datum>" -> bt.BoxedDatum),
+    ("<boxed-unspecific>" -> bt.BoxedUnspecific),
+    ("<boxed-list-element>" -> bt.BoxedListElement),
+    ("<boxed-pair>" -> bt.BoxedPair),
+    ("<boxed-empty-list>" -> bt.BoxedEmptyList),
+    ("<boxed-string>" -> bt.BoxedString),
+    ("<boxed-symbol>" -> bt.BoxedSymbol),
+    ("<boxed-boolean>" -> bt.BoxedBoolean),
+    ("<boxed-numeric>" -> bt.BoxedNumeric),
+    ("<boxed-exact-integer>" -> bt.BoxedExactInteger),
+    ("<boxed-inexact-rational>" -> bt.BoxedInexactRational),
+    ("<boxed-character>" -> bt.BoxedCharacter),
+    ("<boxed-vector>" -> bt.BoxedVector),
+    ("<boxed-bytevector>" -> bt.BoxedBytevector),
+    ("<boxed-procedure>" -> bt.BoxedProcedure)
   )
 }
