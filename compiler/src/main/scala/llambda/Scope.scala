@@ -14,7 +14,7 @@ class ReportProcedure(val reportName : String) extends StorageLocation(reportNam
   override def toString = "&" + reportName
 }
 
-// These are the primitive expression types in R7Rs
+// These are the primitive expression types in R7RS
 sealed abstract class PrimitiveExpression extends BoundValue
 
 // These are what (define-syntax) creates
