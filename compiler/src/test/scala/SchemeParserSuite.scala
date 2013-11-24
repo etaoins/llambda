@@ -120,8 +120,7 @@ class SchemeParserSuite extends FunSuite with Inside {
 
   test("strings") {
      def assertStringParsesAs(schemeString : String, result : String) = {
-       val data = SchemeParser.parseStringAsData("\"" + schemeString + "\"")
-       assert(data === List(ast.StringLiteral(result)))
+       assertReflexiveParse("\"" + schemeString + "\"", List(ast.StringLiteral(result)))
      }
 
     assertStringParsesAs("", "")

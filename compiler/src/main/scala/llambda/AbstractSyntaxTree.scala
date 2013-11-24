@@ -14,7 +14,12 @@ case class UnspecificValue() extends NonSymbolLeaf {
 }
 
 case class StringLiteral(content : String) extends NonSymbolLeaf {
-  override def toString = '"' + content + '"'
+  private def escapedContent = 
+    content.replaceAllLiterally("\\", "\\" + "\\")
+           .replaceAllLiterally("\"", "\\" + "\"")
+
+  override def toString =
+    '"' + escapedContent + '"'
 }
 
 case class BooleanLiteral(value : Boolean) extends NonSymbolLeaf {
