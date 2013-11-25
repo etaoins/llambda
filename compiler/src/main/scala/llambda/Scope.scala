@@ -1,5 +1,7 @@
 package llambda
 
+import llambda.{valuetype => vt}
+
 sealed abstract class BoundValue
 
 // These are normal bindings
@@ -23,7 +25,7 @@ case class BoundSyntax(literals : List[String], rules : List[SyntaxRule])  exten
 
 // These are either intrinsic types or ones introduced by (define-record-type)
 // or (define-native-type)
-case class BoundType(nativeType : nfi.NativeType) extends BoundValue
+case class BoundType(valueType : vt.ValueType) extends BoundValue
 
 /** Scope can look up bindings by name and return a list of all identifiers  */
 sealed class Scope(val bindings : collection.mutable.Map[String, BoundValue], parent : Option[Scope] = None) {

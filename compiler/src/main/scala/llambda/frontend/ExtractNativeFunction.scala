@@ -2,13 +2,13 @@ package llambda.frontend
 
 import llambda._
 import llambda.{boxedtype => bt}
+import llambda.{valuetype => vt}
 
 object ExtractNativeFunction {
-  private def datumToNativeType(datum : sst.ScopedDatum) : nfi.NativeType = datum match { 
+  private def datumToValueType(datum : sst.ScopedDatum) : vt.ValueType = datum match { 
     case symbol : sst.ScopedSymbol =>
       symbol.resolve match {
-        case BoundType(nativeType) =>
-          nativeType
+        case BoundType(schemeType) => schemeType
 
         case _ =>
           throw new BadSpecialFormException(symbol, "Non-type value used as type")
@@ -19,12 +19,12 @@ object ExtractNativeFunction {
   }
 
   private def createNativeFunction(fixedArgData : List[sst.ScopedDatum], restArgDatum : Option[sst.ScopedSymbol], returnTypeDatum : Option[sst.ScopedSymbol], nativeSymbol : String) : et.NativeFunction = {
-    var fixedArgTypes = fixedArgData map datumToNativeType
+    var fixedArgTypes = fixedArgData map datumToValueType
 
     val hasRestArg = restArgDatum match {
       case Some(datum) =>
-        datumToNativeType(datum) match {
-          case nfi.BoxedValue(bt.BoxedListElement) => true
+        datumToValueType(datum) match {
+          case vt.BoxedValue(bt.BoxedListElement) => true
           case _ =>
             throw new BadSpecialFormException(datum, "Only boxed-list-element can be used as a rest argument")
         }
@@ -32,7 +32,7 @@ object ExtractNativeFunction {
       case None => false
     }
 
-    val returnType = returnTypeDatum map datumToNativeType
+    val returnType = returnTypeDatum map datumToValueType
 
     et.NativeFunction(
       fixedArgs = fixedArgTypes,

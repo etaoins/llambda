@@ -2,6 +2,7 @@ package llambda.planner.intermediatevalue
 
 import llambda.nfi
 import llambda.{boxedtype => bt}
+import llambda.{valuetype => vt}
 import llambda.planner.{step => ps}
 import llambda.planner.{PlanWriter, InvokableProcedure}
 
@@ -22,7 +23,7 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
   def toInvokableProcedure()(implicit plan : PlanWriter) : Option[InvokableProcedure] =  {
     if (possibleTypes.contains(bt.BoxedProcedure)) {
       // Cast to a procedure
-      val boxedProcTmep = toRequiredTempValue(nfi.BoxedValue(bt.BoxedProcedure))
+      val boxedProcTmep = toRequiredTempValue(vt.BoxedValue(bt.BoxedProcedure))
 
       Some(new InvokableBoxedProcedure(boxedProcTmep))
     }
@@ -61,9 +62,9 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
     }
   }
 
-  def toUnboxedTempValue(unboxedType : nfi.UnboxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] = unboxedType match {
+  def toScalarTempValue(unboxedType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = unboxedType match {
     case nfi.UnicodeChar =>
-      toTempValue(nfi.BoxedValue(bt.BoxedCharacter)) map { boxedChar =>
+      toTempValue(vt.BoxedValue(bt.BoxedCharacter)) map { boxedChar =>
         val unboxedTemp = new ps.TempValue
         plan.steps += ps.UnboxCharacter(unboxedTemp, boxedChar)
 
@@ -71,7 +72,7 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
       }
       
     case nfi.Utf8CString =>
-      toTempValue(nfi.BoxedValue(bt.BoxedString)) map { boxedString =>
+      toTempValue(vt.BoxedValue(bt.BoxedString)) map { boxedString =>
         val unboxedTemp = new ps.TempValue
         plan.steps += ps.UnboxStringAsUtf8(unboxedTemp, boxedString)
 
@@ -79,7 +80,7 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
       }
 
     case intType : nfi.IntType =>
-      toTempValue(nfi.BoxedValue(bt.BoxedExactInteger)) map { boxedExactInt =>
+      toTempValue(vt.BoxedValue(bt.BoxedExactInteger)) map { boxedExactInt =>
         val unboxedTemp = new ps.TempValue
         plan.steps += ps.UnboxExactInteger(unboxedTemp, boxedExactInt)
 
@@ -105,7 +106,7 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
         None
       }
       else if (possiblyExactInt & !possiblyInexactRational) {
-        toTempValue(nfi.BoxedValue(bt.BoxedExactInteger)) map { boxedExactInt =>
+        toTempValue(vt.BoxedValue(bt.BoxedExactInteger)) map { boxedExactInt =>
           // Unbox as exact int
           val unboxedTemp = new ps.TempValue
           plan.steps += ps.UnboxExactInteger(unboxedTemp, boxedExactInt)
@@ -118,7 +119,7 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
         }
       }
       else if (!possiblyExactInt && possiblyInexactRational) {
-        toTempValue(nfi.BoxedValue(bt.BoxedInexactRational)) map { boxedInexactRational =>
+        toTempValue(vt.BoxedValue(bt.BoxedInexactRational)) map { boxedInexactRational =>
           // Unbox as inexact rational
           val unboxedTemp = new ps.TempValue
           plan.steps += ps.UnboxInexactRational(unboxedTemp, boxedInexactRational)
@@ -145,11 +146,11 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
         // This will hit the branches above us
         val trueWriter = plan.forkPlan()
         val trueDynamicValue = new DynamicBoxedValue(Set(bt.BoxedExactInteger), valueType, tempValue)
-        val trueTempValue = trueDynamicValue.toRequiredTempValue(fpType)(trueWriter)
+        val trueTempValue = trueDynamicValue.toRequiredTempValue(vt.ScalarType(fpType))(trueWriter)
 
         val falseWriter = plan.forkPlan()
         val falseDynamicValue = new DynamicBoxedValue(possibleTypes - bt.BoxedExactInteger, valueType, tempValue)
-        val falseTempValue = falseDynamicValue.toRequiredTempValue(fpType)(falseWriter)
+        val falseTempValue = falseDynamicValue.toRequiredTempValue(vt.ScalarType(fpType))(falseWriter)
       
         val phiTemp = new ps.TempValue
 
@@ -163,5 +164,9 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
     case _ =>
       None
   }
+  
+  protected def toRecordTempValue(recordType : vt.RecordType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
+    // XXX: Unboxing records
+    None
 }
 

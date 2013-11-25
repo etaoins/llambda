@@ -6,6 +6,7 @@ import llambda.et.NativeFunction
 import llambda.nfi
 
 import llambda.{boxedtype => bt}
+import llambda.{valuetype => vt}
 import llambda.codegen.llvmir._
 import llambda.codegen.llvmir.IrFunction._
 
@@ -27,9 +28,9 @@ class NativeSignatureToIrSuite extends FunSuite {
   
   test("function taking UTF-8 string, unsigned int returning signed int") {
     val testNativeFunc = NativeFunction(
-      fixedArgs=nfi.Utf8CString :: nfi.UInt16 :: Nil,
+      fixedArgs=vt.ScalarType(nfi.Utf8CString) :: vt.ScalarType(nfi.UInt16) :: Nil,
       hasRestArg=false,
-      returnType=Some(nfi.Int32),
+      returnType=Some(vt.ScalarType(nfi.Int32)),
       nativeSymbol="lliby_test")
 
     val irSignature = NativeSignatureToIr(testNativeFunc)
@@ -44,7 +45,7 @@ class NativeSignatureToIrSuite extends FunSuite {
     val testNativeFunc = NativeFunction(
       fixedArgs=Nil,
       hasRestArg=true,
-      returnType=Some(nfi.UInt32),
+      returnType=Some(vt.ScalarType(nfi.UInt32)),
       nativeSymbol="lliby_test")
 
     val irSignature = NativeSignatureToIr(testNativeFunc)
@@ -57,9 +58,9 @@ class NativeSignatureToIrSuite extends FunSuite {
   
   test("function taking two numerics, rest arg returning rational") {
     val testNativeFunc = NativeFunction(
-      fixedArgs=nfi.BoxedValue(bt.BoxedNumeric) :: nfi.BoxedValue(bt.BoxedNumeric) :: Nil,
+      fixedArgs=vt.BoxedValue(bt.BoxedNumeric) :: vt.BoxedValue(bt.BoxedNumeric) :: Nil,
       hasRestArg=true,
-      returnType=Some(nfi.BoxedValue(bt.BoxedInexactRational)),
+      returnType=Some(vt.BoxedValue(bt.BoxedInexactRational)),
       nativeSymbol="lliby_test")
 
     val irSignature = NativeSignatureToIr(testNativeFunc)

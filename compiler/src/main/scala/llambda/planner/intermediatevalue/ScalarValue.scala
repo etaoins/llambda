@@ -2,10 +2,11 @@ package llambda.planner.intermediatevalue
 
 import llambda.nfi
 import llambda.{boxedtype => bt}
+import llambda.{valuetype => vt}
 import llambda.planner.{step => ps}
 import llambda.planner.{PlanWriter, InvokableProcedure}
 
-sealed abstract class UnboxedValue(val nativeType : nfi.NativeType, val boxedType : bt.ConcreteBoxedType, val tempValue : ps.TempValue) extends IntermediateValue {
+sealed abstract class ScalarValue(val nativeType : nfi.NativeType, val boxedType : bt.ConcreteBoxedType, val tempValue : ps.TempValue) extends IntermediateValue {
   val possibleTypes = Set(boxedType)
   
   def toInvokableProcedure()(implicit plan : PlanWriter) : Option[InvokableProcedure] = 
@@ -13,11 +14,15 @@ sealed abstract class UnboxedValue(val nativeType : nfi.NativeType, val boxedTyp
     // They're either KnownProcedures which are a special direct subclass of
     // IntermediateValue or they're DynamicBoxedValues of type bt.BoxedProcedure
     None
+  
+  def toRecordTempValue(recordType : vt.RecordType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
+    // It's impossible for a scalar to be a record by definition
+    None
 
   // This is used for our shortcut in planPhiWith to build a new phi'ed intermediate
-  protected def withNewTempValue(tempValue : ps.TempValue) : UnboxedValue
+  protected def withNewTempValue(tempValue : ps.TempValue) : ScalarValue
 
-  protected def planCastToUnboxedTempValue(unboxedType : nfi.UnboxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] = 
+  protected def planCastToUnboxedTempValue(unboxedType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = 
     None
   
   protected def planCastToBoxedTempValue(boxedType : bt.BoxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] = 
@@ -25,9 +30,9 @@ sealed abstract class UnboxedValue(val nativeType : nfi.NativeType, val boxedTyp
   
   protected def planBoxedTempValue()(implicit plan : PlanWriter) : ps.TempValue
 
-  def toUnboxedTempValue(unboxedType : nfi.UnboxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] = 
+  def toScalarTempValue(unboxedType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = 
     if (unboxedType == nativeType) {
-      return Some(tempValue )
+      return Some(tempValue)
     }
     else {
       planCastToUnboxedTempValue(unboxedType)
@@ -55,7 +60,7 @@ sealed abstract class UnboxedValue(val nativeType : nfi.NativeType, val boxedTyp
   }
   
   override def planPhiWith(theirValue : IntermediateValue)(ourPlan : PlanWriter, theirPlan : PlanWriter) : PlanPhiResult = theirValue match {
-    case theirUnboxed : UnboxedValue if nativeType == theirUnboxed.nativeType =>
+    case theirUnboxed : ScalarValue if nativeType == theirUnboxed.nativeType =>
       // Our types exactly match - no conversion needed!
       val phiResultTemp = new ps.TempValue
 
@@ -72,7 +77,7 @@ sealed abstract class UnboxedValue(val nativeType : nfi.NativeType, val boxedTyp
   }
 }
 
-class UnboxedBooleanValue(tempValue : ps.TempValue) extends UnboxedValue(nfi.CBool, bt.BoxedBoolean, tempValue) {
+class UnboxedBooleanValue(tempValue : ps.TempValue) extends ScalarValue(nfi.CBool, bt.BoxedBoolean, tempValue) {
   def withNewTempValue(tempValue : ps.TempValue) = new UnboxedBooleanValue(tempValue)
 
   override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
@@ -90,10 +95,10 @@ class UnboxedBooleanValue(tempValue : ps.TempValue) extends UnboxedValue(nfi.CBo
   }
 }
 
-class UnboxedExactIntegerValue(tempValue : ps.TempValue, nativeType : nfi.IntType) extends UnboxedValue(nativeType, bt.BoxedExactInteger, tempValue) {
+class UnboxedExactIntegerValue(tempValue : ps.TempValue, nativeType : nfi.IntType) extends ScalarValue(nativeType, bt.BoxedExactInteger, tempValue) {
   def withNewTempValue(tempValue : ps.TempValue) = new UnboxedExactIntegerValue(tempValue, nativeType)
 
-  override def planCastToUnboxedTempValue(unboxedType : nfi.UnboxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] = unboxedType match {
+  override def planCastToUnboxedTempValue(unboxedType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = unboxedType match {
     case intType : nfi.IntType =>
       val convTemp = new ps.TempValue
       plan.steps += ps.ConvertNativeInteger(convTemp, tempValue, intType.bits, intType.signed)
@@ -119,7 +124,7 @@ class UnboxedExactIntegerValue(tempValue : ps.TempValue, nativeType : nfi.IntTyp
       // Convert us to double and box
       val boxedTemp = new ps.TempValue
       
-      plan.steps += ps.BoxInexactRational(boxedTemp, allocTemp, 0, toRequiredTempValue(nfi.Double))
+      plan.steps += ps.BoxInexactRational(boxedTemp, allocTemp, 0, toRequiredTempValue(vt.ScalarType(nfi.Double)))
 
       Some(boxedTemp)
     
@@ -134,16 +139,16 @@ class UnboxedExactIntegerValue(tempValue : ps.TempValue, nativeType : nfi.IntTyp
 
     // We can only box 64bit signed ints
     val boxedTemp = new ps.TempValue
-    plan.steps += ps.BoxExactInteger(boxedTemp, allocTemp, 0, toRequiredTempValue(nfi.Int64))
+    plan.steps += ps.BoxExactInteger(boxedTemp, allocTemp, 0, toRequiredTempValue(vt.ScalarType(nfi.Int64)))
 
     boxedTemp
   }
 }
 
-class UnboxedInexactRationalValue(tempValue : ps.TempValue, nativeType : nfi.FpType) extends UnboxedValue(nativeType, bt.BoxedInexactRational, tempValue) {
+class UnboxedInexactRationalValue(tempValue : ps.TempValue, nativeType : nfi.FpType) extends ScalarValue(nativeType, bt.BoxedInexactRational, tempValue) {
   def withNewTempValue(tempValue : ps.TempValue) = new UnboxedInexactRationalValue(tempValue, nativeType)
 
-  override def planCastToUnboxedTempValue(unboxedType : nfi.UnboxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] = unboxedType match {
+  override def planCastToUnboxedTempValue(unboxedType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = unboxedType match {
     case fpType : nfi.FpType =>
       val convTemp = new ps.TempValue
       plan.steps += ps.ConvertNativeFloat(convTemp, tempValue, fpType)
@@ -161,13 +166,13 @@ class UnboxedInexactRationalValue(tempValue : ps.TempValue, nativeType : nfi.FpT
 
     // We can only box 64bit signed ints
     val boxedTemp = new ps.TempValue
-    plan.steps += ps.BoxInexactRational(boxedTemp, allocTemp, 0, toRequiredTempValue(nfi.Double))
+    plan.steps += ps.BoxInexactRational(boxedTemp, allocTemp, 0, toRequiredTempValue(vt.ScalarType(nfi.Double)))
 
     boxedTemp
   }
 }
 
-class UnboxedCharacterValue(tempValue : ps.TempValue) extends UnboxedValue(nfi.UnicodeChar, bt.BoxedCharacter, tempValue) {
+class UnboxedCharacterValue(tempValue : ps.TempValue) extends ScalarValue(nfi.UnicodeChar, bt.BoxedCharacter, tempValue) {
   def withNewTempValue(tempValue : ps.TempValue) = new UnboxedCharacterValue(tempValue)
 
   def planBoxedTempValue()(implicit plan : PlanWriter) : ps.TempValue =  {
@@ -183,7 +188,7 @@ class UnboxedCharacterValue(tempValue : ps.TempValue) extends UnboxedValue(nfi.U
   }
 }
 
-class UnboxedUtf8String(tempValue : ps.TempValue) extends UnboxedValue(nfi.Utf8CString, bt.BoxedString, tempValue) {
+class UnboxedUtf8String(tempValue : ps.TempValue) extends ScalarValue(nfi.Utf8CString, bt.BoxedString, tempValue) {
   def withNewTempValue(tempValue : ps.TempValue) = new UnboxedUtf8String(tempValue)
 
   def planBoxedTempValue()(implicit plan : PlanWriter) : ps.TempValue =  {

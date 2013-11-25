@@ -1,8 +1,10 @@
 package llambda.nfi
 
+import llambda.{valuetype => vt}
+
 trait NativeSignature {
   val hasClosureArg : Boolean
-  val fixedArgs : List[NativeType]
+  val fixedArgs : List[vt.ValueType]
   val hasRestArg : Boolean
-  val returnType : Option[NativeType]
+  val returnType : Option[vt.ValueType]
 }

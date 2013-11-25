@@ -2,28 +2,29 @@ package llambda.planner
 
 import llambda.nfi
 import llambda.{boxedtype => bt}
+import llambda.{valuetype => vt}
 import llambda.planner.{step => ps}
 import llambda.planner.{intermediatevalue => iv}
 import llambda.InternalCompilerErrorException
 
-object NativeToIntermediateValue {
-  def apply(nativeType : nfi.NativeType, tempValue : ps.TempValue) : iv.IntermediateValue = nativeType match {
-    case nfi.CBool =>
+object TempValueToIntermediate {
+  def apply(valueType : vt.ValueType, tempValue : ps.TempValue) : iv.IntermediateValue = valueType match {
+    case vt.ScalarType(nfi.CBool) =>
       new iv.UnboxedBooleanValue(tempValue)
 
-    case intType : nfi.IntType =>
+    case vt.ScalarType(intType : nfi.IntType) =>
       new iv.UnboxedExactIntegerValue(tempValue, intType)
     
-    case fpType : nfi.FpType =>
+    case vt.ScalarType(fpType : nfi.FpType) =>
       new iv.UnboxedInexactRationalValue(tempValue, fpType)
 
-    case nfi.UnicodeChar =>
+    case vt.ScalarType(nfi.UnicodeChar) =>
       new iv.UnboxedCharacterValue(tempValue)
 
-    case nfi.Utf8CString =>
+    case vt.ScalarType(nfi.Utf8CString) =>
       new iv.UnboxedUtf8String(tempValue)
 
-    case nfi.BoxedValue(boxedType) =>
+    case vt.BoxedValue(boxedType) =>
       new iv.DynamicBoxedValue(boxedType.concreteTypes, boxedType, tempValue)
   }
 }

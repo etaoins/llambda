@@ -22,7 +22,7 @@ object NativeSignatureToIr {
       Nil
     }
 
-    val fixedArgs = signature.fixedArgs map (NfiTypeToIrType(_)) map {
+    val fixedArgs = signature.fixedArgs map (ValueTypeToIr(_)) map {
       case SignedFirstClassType(irType, signedness) =>
         Argument(irType, paramSignednessToAttribs(signedness))
     }
@@ -36,7 +36,7 @@ object NativeSignatureToIr {
 
     val allArgs = closureArgs ++ fixedArgs ++ restArgs
 
-    val result = signature.returnType map (NfiTypeToIrType(_)) match {
+    val result = signature.returnType map (ValueTypeToIr(_)) match {
       case None => 
         Result(VoidType, Set())
       case Some(SignedFirstClassType(irType, signedness)) =>

@@ -1,6 +1,7 @@
 package llambda.codegen
 
-import llambda.nfi.{NativeSignature, BoxedValue}
+import llambda.nfi.NativeSignature
+import llambda.{valuetype => vt}
 import llambda.{boxedtype => bt}
 
 // All boxed procedures have this signature
@@ -10,5 +11,5 @@ object BoxedProcedureSignature extends NativeSignature {
   val hasClosureArg = true 
   val fixedArgs = Nil
   val hasRestArg = true
-  val returnType = Some(BoxedValue(bt.BoxedDatum))
+  val returnType = Some(vt.BoxedValue(bt.BoxedDatum))
 }

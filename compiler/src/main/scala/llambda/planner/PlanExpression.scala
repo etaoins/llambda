@@ -5,6 +5,7 @@ import collection.mutable
 import llambda.nfi
 import llambda.{et, StorageLocation, ValueNotApplicableException, ReportProcedure}
 import llambda.{boxedtype => bt}
+import llambda.{valuetype => vt}
 import llambda.planner.{step => ps}
 import llambda.planner.{intermediatevalue => iv}
 
@@ -78,7 +79,7 @@ private[planner] object PlanExpression {
             val mutableTemp = new ps.TempValue
             val variableTemp = new ps.TempValue
             
-            val initialValueTemp = initialValueResult.value.toRequiredTempValue(nfi.BoxedValue(bt.BoxedDatum))
+            val initialValueTemp = initialValueResult.value.toRequiredTempValue(vt.BoxedValue(bt.BoxedDatum))
 
             plan.steps += ps.AllocateCons(allocTemp, 1)
             plan.steps += ps.MutableVarInit(mutableTemp, allocTemp, 0)
@@ -134,7 +135,7 @@ private[planner] object PlanExpression {
         val mutableTemp = initialState.mutables(storageLoc)
         
         val newValueResult = apply(initialState)(valueExpr)
-        val newValueTemp = newValueResult.value.toRequiredTempValue(nfi.BoxedValue(bt.BoxedDatum))
+        val newValueTemp = newValueResult.value.toRequiredTempValue(vt.BoxedValue(bt.BoxedDatum))
 
         plan.steps += ps.MutableVarSet(mutableTemp, newValueTemp)
 

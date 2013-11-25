@@ -1,6 +1,6 @@
 package llambda.codegen
 
-import llambda.nfi.{NativeSignature, BoxedValue}
+import llambda.nfi.NativeSignature
 import llambda.{boxedtype => bt}
 
 // This is the signature of llambda_exec

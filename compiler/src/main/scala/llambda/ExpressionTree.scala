@@ -1,5 +1,7 @@
 package llambda.et
+
 import llambda._
+import llambda.{valuetype => vt}
 
 sealed abstract trait Expression extends SourceLocated {
   val subexpressions : List[Expression]
@@ -70,9 +72,9 @@ case class Bind(bindings : List[(StorageLocation, Expression)]) extends Expressi
 }
 
 case class NativeFunction(
-  fixedArgs : List[nfi.NativeType],
+  fixedArgs : List[vt.ValueType],
   hasRestArg : Boolean,
-  returnType : Option[nfi.NativeType],
+  returnType : Option[vt.ValueType],
   nativeSymbol : String
 ) extends Expression with nfi.NativeSignature {
   val hasClosureArg = false
@@ -80,3 +82,15 @@ case class NativeFunction(
   val subexpressions = Nil
   def map(f : Expression => Expression) : et.NativeFunction = this
 }
+
+sealed abstract class RecordTypeProcedure extends Expression {
+  val recordType : vt.RecordType
+
+  val subexpressions = Nil
+  def map(f : Expression => Expression) : this.type = this
+}
+
+case class RecordTypeConstructor(recordType : vt.RecordType, fieldNames : List[String]) extends RecordTypeProcedure
+case class RecordTypePredicate(recordType : vt.RecordType) extends RecordTypeProcedure
+case class RecordTypeAccessor(recordType : vt.RecordType, fieldName : String) extends RecordTypeProcedure
+case class RecordTypeModifier(recordType : vt.RecordType, fieldName : String) extends RecordTypeProcedure

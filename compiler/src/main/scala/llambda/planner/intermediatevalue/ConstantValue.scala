@@ -2,6 +2,7 @@ package llambda.planner.intermediatevalue
 
 import llambda.nfi
 import llambda.{boxedtype => bt}
+import llambda.{valuetype => vt}
 import llambda.planner.{step => ps}
 import llambda.planner.{PlanWriter, InvokableProcedure}
 
@@ -11,6 +12,10 @@ sealed abstract class ConstantValue(boxedType : bt.ConcreteBoxedType) extends In
   def toConstantBoxedTempValue()(implicit plan : PlanWriter) : ps.TempValue
 
   def toInvokableProcedure()(implicit plan : PlanWriter) : Option[InvokableProcedure] = 
+    None
+  
+  def toRecordTempValue(recordType : vt.RecordType)(implicit plan : PlanWriter) : Option[ps.TempValue] = 
+    // Record literals aren't defined by R7RS and we don't add them
     None
 
   def toBoxedTempValue(targetType : bt.BoxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
@@ -44,7 +49,7 @@ sealed abstract class TrivialConstantValue[T, U <: ps.StoreBoxedConstant](boxedT
 }
 
 class ConstantStringValue(value : String) extends TrivialConstantValue(bt.BoxedString, value, ps.StoreBoxedString.apply) {
-  def toUnboxedTempValue(unboxedType : nfi.UnboxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] = unboxedType match {
+  def toScalarTempValue(nativeType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = nativeType match {
     case nfi.Utf8CString =>
       val constantTemp = new ps.TempValue
       plan.steps += ps.StoreNativeUtf8String(constantTemp, value)
@@ -55,13 +60,13 @@ class ConstantStringValue(value : String) extends TrivialConstantValue(bt.BoxedS
 }
 
 class ConstantSymbolValue(value : String) extends TrivialConstantValue(bt.BoxedSymbol, value, ps.StoreBoxedSymbol.apply) {
-  def toUnboxedTempValue(unboxedType : nfi.UnboxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
+  def toScalarTempValue(nativeType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
     // Symbols have no NFI representation
     None
 }
 
 class ConstantExactIntegerValue(value : Long) extends TrivialConstantValue(bt.BoxedExactInteger, value, ps.StoreBoxedExactInteger.apply) {
-  def toUnboxedTempValue(unboxedType : nfi.UnboxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] = unboxedType match {
+  def toScalarTempValue(nativeType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = nativeType match {
     case intType : nfi.IntType =>
       val constantTemp = new ps.TempValue
       plan.steps += ps.StoreNativeInteger(constantTemp, value, intType.bits)
@@ -77,7 +82,7 @@ class ConstantExactIntegerValue(value : Long) extends TrivialConstantValue(bt.Bo
 }
 
 class ConstantInexactRationalValue(value : Double) extends TrivialConstantValue(bt.BoxedInexactRational, value, ps.StoreBoxedInexactRational.apply) {
-  def toUnboxedTempValue(unboxedType : nfi.UnboxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] = unboxedType match {
+  def toScalarTempValue(nativeType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = nativeType match {
     case fpType : nfi.FpType =>
       val constantTemp = new ps.TempValue
       plan.steps += ps.StoreNativeFloat(constantTemp, value, fpType)
@@ -88,7 +93,7 @@ class ConstantInexactRationalValue(value : Double) extends TrivialConstantValue(
 }
 
 class ConstantCharacterValue(value : Char) extends TrivialConstantValue(bt.BoxedCharacter, value, ps.StoreBoxedCharacter.apply) {
-  def toUnboxedTempValue(unboxedType : nfi.UnboxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] = unboxedType match {
+  def toScalarTempValue(nativeType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = nativeType match {
     case nfi.UnicodeChar =>
       val constantTemp = new ps.TempValue
       plan.steps += ps.StoreNativeInteger(constantTemp, value, nfi.UnicodeChar.bits)
@@ -108,13 +113,13 @@ class ConstantBooleanValue(value : Boolean) extends TrivialConstantValue(bt.Boxe
     predTemp
   }
 
-  def toUnboxedTempValue(unboxedType : nfi.UnboxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] = 
+  def toScalarTempValue(nativeType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = 
     // toTruthyPredicate() will catch our conversion to bool
     None
 }
 
 class ConstantBytevectorValue(value : Vector[Short]) extends TrivialConstantValue(bt.BoxedBytevector, value, ps.StoreBoxedBytevector.apply) {
-  def toUnboxedTempValue(unboxedType : nfi.UnboxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
+  def toScalarTempValue(nativeType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
     // Bytevectors can't be unboxed
     None
 }
@@ -124,15 +129,15 @@ class ConstantPairValue(car : ConstantValue, cdr : ConstantValue) extends Consta
     val constantTemp = new ps.TempValue
 
     // Box our car/cdr first
-    val carTemp = car.toRequiredTempValue(nfi.BoxedValue(bt.BoxedDatum))
-    val cdrTemp = cdr.toRequiredTempValue(nfi.BoxedValue(bt.BoxedDatum))
+    val carTemp = car.toRequiredTempValue(vt.BoxedValue(bt.BoxedDatum))
+    val cdrTemp = cdr.toRequiredTempValue(vt.BoxedValue(bt.BoxedDatum))
 
     plan.steps += ps.StoreBoxedPair(constantTemp, carTemp, cdrTemp)
 
     constantTemp
   }
 
-  def toUnboxedTempValue(unboxedType : nfi.UnboxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
+  def toScalarTempValue(nativeType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
     // Pairs cannot be unboxed
     None
 }
@@ -143,7 +148,7 @@ class ConstantVectorValue(elements : Vector[ConstantValue]) extends ConstantValu
 
     // Box our elements
     val elementTemps = elements.map {
-      _.toRequiredTempValue(nfi.BoxedValue(bt.BoxedDatum))
+      _.toRequiredTempValue(vt.BoxedValue(bt.BoxedDatum))
     }
 
     plan.steps += ps.StoreBoxedVector(constantTemp, elementTemps)
@@ -151,7 +156,7 @@ class ConstantVectorValue(elements : Vector[ConstantValue]) extends ConstantValu
     constantTemp
   }
 
-  def toUnboxedTempValue(unboxedType : nfi.UnboxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
+  def toScalarTempValue(nativeType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
     // Pairs cannot be unboxed
     None
 }
@@ -163,7 +168,7 @@ object EmptyListValue extends ConstantValue(bt.BoxedEmptyList) {
     constantTemp
   }
 
-  def toUnboxedTempValue(unboxedType : nfi.UnboxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
+  def toScalarTempValue(nativeType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
     None
 }
 
@@ -174,7 +179,7 @@ object UnspecificValue extends ConstantValue(bt.BoxedUnspecific) {
     constantTemp
   }
 
-  def toUnboxedTempValue(unboxedType : nfi.UnboxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
+  def toScalarTempValue(nativeType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
     None
 }
 

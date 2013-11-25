@@ -2,6 +2,7 @@ package llambda.planner.intermediatevalue
 
 import llambda.nfi
 import llambda.{boxedtype => bt}
+import llambda.{valuetype => vt}
 import llambda.planner.{step => ps}
 import llambda.planner.{PlanWriter, InvokableProcedure}
 import llambda.codegen.BoxedProcedureSignature
@@ -57,10 +58,13 @@ class KnownProcedure(val signature : nfi.NativeSignature, val nativeSymbol : Str
     }
   }
   
-  def toUnboxedTempValue(unboxedType : nfi.UnboxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] = {
+  def toScalarTempValue(unboxedType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
     // Procedures have no unboxed representation
     None
-  }
+  
+  def toRecordTempValue(recordType : vt.RecordType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
+    // Procedures can't be converted to normal Scheme records
+    None
 
   def withReportName(newReportName : String) : KnownProcedure = {
     new KnownProcedure(signature, nativeSymbol, Some(newReportName))

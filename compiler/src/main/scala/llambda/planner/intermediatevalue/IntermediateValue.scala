@@ -1,6 +1,7 @@
 package llambda.planner.intermediatevalue
 
 import llambda.nfi
+import llambda.{valuetype => vt}
 import llambda.{boxedtype => bt}
 import llambda.planner.{step => ps}
 import llambda.planner.{PlanWriter, UnlocatedImpossibleTypeConversionException, InvokableProcedure}
@@ -16,7 +17,8 @@ abstract class IntermediateValue {
   )
 
   protected def toBoxedTempValue(boxedType : bt.BoxedType)(implicit plan : PlanWriter) : Option[ps.TempValue]
-  protected def toUnboxedTempValue(unboxedType : nfi.UnboxedType)(implicit plan : PlanWriter) : Option[ps.TempValue]
+  protected def toScalarTempValue(nativeType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue]
+  protected def toRecordTempValue(recordType : vt.RecordType)(implicit plan : PlanWriter) : Option[ps.TempValue]
 
   def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     val trueTemp = new ps.TempValue
@@ -27,8 +29,8 @@ abstract class IntermediateValue {
   
   def toInvokableProcedure()(implicit plan : PlanWriter) : Option[InvokableProcedure]
 
-  protected def toTempValue(targetType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = targetType match {
-    case nfi.CBool =>
+  protected def toTempValue(targetType : vt.ValueType)(implicit plan : PlanWriter) : Option[ps.TempValue] = targetType match {
+    case vt.ScalarType(nfi.CBool) =>
       val truthyPredTemp = toTruthyPredicate()
 
       val intConvTemp = new ps.TempValue
@@ -36,14 +38,17 @@ abstract class IntermediateValue {
 
       Some(intConvTemp)
 
-    case nfi.BoxedValue(boxedType) =>
+    case vt.ScalarType(nativeType : nfi.NativeType) =>
+      toScalarTempValue(nativeType)
+
+    case vt.BoxedValue(boxedType) =>
       toBoxedTempValue(boxedType)
 
-    case unboxedType : nfi.UnboxedType =>
-      toUnboxedTempValue(unboxedType)
+    case recordType : vt.RecordType =>
+      toRecordTempValue(recordType)
   }
   
-  def toRequiredTempValue(targetType : nfi.NativeType)(implicit plan : PlanWriter) =
+  def toRequiredTempValue(targetType : vt.ValueType)(implicit plan : PlanWriter) =
     toTempValue(targetType) getOrElse {
       throw new UnlocatedImpossibleTypeConversionException(s"Unable to convert ${this.toString} to ${targetType}")
     }
@@ -51,8 +56,8 @@ abstract class IntermediateValue {
   def planPhiWith(theirValue : IntermediateValue)(ourPlan : PlanWriter, theirPlan : PlanWriter) : PlanPhiResult = {
     // This is extremely inefficient for compatible unboxed types
     // This should be overridden where possible
-    val ourTempValue = this.toRequiredTempValue(nfi.BoxedValue(bt.BoxedDatum))(ourPlan)
-    val theirTempValue = theirValue.toRequiredTempValue(nfi.BoxedValue(bt.BoxedDatum))(theirPlan)
+    val ourTempValue = this.toRequiredTempValue(vt.BoxedValue(bt.BoxedDatum))(ourPlan)
+    val theirTempValue = theirValue.toRequiredTempValue(vt.BoxedValue(bt.BoxedDatum))(theirPlan)
 
     val phiResultTemp = new ps.TempValue
     val phiPossibleTypes = possibleTypes ++ theirValue.possibleTypes

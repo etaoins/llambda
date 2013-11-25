@@ -3,6 +3,7 @@ package llambda.planner
 import llambda.nfi
 import llambda.planner.{step => ps}
 import llambda.planner.{intermediatevalue => iv}
+import llambda.{valuetype => vt}
 import llambda.{boxedtype => bt}
 
 object PlanApplication {
@@ -24,7 +25,7 @@ object PlanApplication {
       val restArgTemp = new ps.TempValue
 
       val argTemps = restArgs.map {
-        _.toRequiredTempValue(nfi.BoxedValue(bt.BoxedDatum))
+        _.toRequiredTempValue(vt.BoxedValue(bt.BoxedDatum))
       }
 
       plan.steps += ps.AllocateCons(allocTemp, restArgCount)
@@ -78,7 +79,7 @@ object PlanApplication {
     plan.steps += ps.Invoke(resultTemp, signature, entryPointTemp, argTemps)
 
     resultTemp.map { tempValue =>
-      NativeToIntermediateValue(signature.returnType.get, tempValue)
+      TempValueToIntermediate(signature.returnType.get, tempValue)
     }
   }
 }
