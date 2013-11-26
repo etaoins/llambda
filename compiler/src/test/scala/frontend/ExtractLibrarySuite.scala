@@ -42,6 +42,7 @@ class ExtractLibrarySuite extends FunSuite with Inside {
   test("exporting internal symbol") {
     inside(libraryFor(
       """(define-library (example lib)
+           (import (llambda primitives))
            (export number5)
            (begin 
              (define number5 5)))"""

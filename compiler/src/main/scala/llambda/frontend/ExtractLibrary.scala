@@ -75,7 +75,8 @@ private[frontend] object ExtractLibrary {
 
       val expressions = beginDeclData flatMap {
         case (beginIncludePath, ast.ProperList(ast.Symbol("begin") :: exprs)) =>
-          ExtractModuleBody(exprs)(scope, libraryLoader, beginIncludePath)
+          val bodyExtractor = new ModuleBodyExtractor(libraryLoader, beginIncludePath)
+          bodyExtractor(exprs, scope)
 
         case (_, other) =>
           throw new BadSpecialFormException(other, "Bad begin declaration")

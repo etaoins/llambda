@@ -38,6 +38,7 @@ class ExtractProgramSuite extends FunSuite with Inside {
   test("program body is body context") {
     inside(programFor(
       """(import (test singleexpr))
+         (import (llambda primitives))
          (define b a)"""
     )) {
       case et.Bind((storageLoc1, _) :: Nil) :: et.Bind((storageLoc2, expression) :: Nil) :: Nil =>

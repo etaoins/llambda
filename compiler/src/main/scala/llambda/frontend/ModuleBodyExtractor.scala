@@ -4,14 +4,14 @@ import llambda._
 
 import collection.mutable.ListBuffer
 
-object ExtractModuleBody {
+class ModuleBodyExtractor(libraryLoader : LibraryLoader, includePath : IncludePath) {
   abstract sealed class ParsedDefine {
     val name : sst.ScopedSymbol
     val value : BoundValue
   }
 
   private case class ParsedVarDefine(name : sst.ScopedSymbol, value : StorageLocation, expr : () => et.Expression) extends ParsedDefine
-  private case class ParsedSyntaxDefine(name : sst.ScopedSymbol, value : BoundSyntax) extends ParsedDefine
+  private case class ParsedNonVarDefine(name : sst.ScopedSymbol, value : BoundSyntax) extends ParsedDefine
 
   private def uniqueScopes(datum : sst.ScopedDatum) : Set[Scope] = {
     datum match {
@@ -26,7 +26,7 @@ object ExtractModuleBody {
   }
 
   private def rescope(datum : sst.ScopedDatum, mapping : Map[Scope, Scope]) : sst.ScopedDatum = { 
-    datum match {
+    (datum match {
       case sst.ScopedPair(car, cdr) =>
         sst.ScopedPair(rescope(car, mapping), rescope(cdr, mapping))
       case sst.ScopedSymbol(scope, name) =>
@@ -39,10 +39,10 @@ object ExtractModuleBody {
         sst.ScopedVectorLiteral(elements.map(rescope(_, mapping)))
       case leaf : sst.NonSymbolLeaf => 
         leaf
-    }
+    }).assignLocationFrom(datum)
   }
 
-  private def createLambda(fixedArgData : List[sst.ScopedDatum], restArgDatum : Option[sst.ScopedSymbol], definition : List[sst.ScopedDatum])(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : et.Lambda = {
+  private def createLambda(fixedArgData : List[sst.ScopedDatum], restArgDatum : Option[sst.ScopedSymbol], definition : List[sst.ScopedDatum]) : et.Lambda = {
     // Create our actual procedure arguments
     // These unique identify the argument independently of its binding at a
     // given time
@@ -97,21 +97,21 @@ object ExtractModuleBody {
     val defineBuilder = new ListBuffer[ParsedDefine]
 
     // Split our definition is to (define)s and a body
-    val bodyData = scopedDefinition.dropWhile { datum => 
-      parseDefine(datum) match {
+    val bodyData = scopedDefinition.dropWhile { datum =>
+      parseDefineDatum(datum) match {
         case Some(define) =>
           defineBuilder += define
           true
         case None => false
       }
     }
-    
+
     // Expand our scopes with all of the defines
     val bindingBlocks = defineBuilder.toList flatMap {
       case ParsedVarDefine(symbol, boundValue, exprBlock) =>
         symbol.scope += (symbol.name -> boundValue)
         Some((boundValue, exprBlock))
-      case ParsedSyntaxDefine(symbol, boundValue) =>
+      case ParsedNonVarDefine(symbol, boundValue) =>
         symbol.scope += (symbol.name -> boundValue)
         None
     }
@@ -144,22 +144,23 @@ object ExtractModuleBody {
     et.Lambda(fixedArgs.map(_.boundValue), restArg.map(_.boundValue), bodyExpression)
   }
 
-  private def extractInclude(scope : Scope, includeNameData : List[sst.ScopedDatum], includeLocation : SourceLocated)(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : et.Expression = {
-    val includeResults = ResolveIncludeList(includeNameData.map(_.unscope), includeLocation)
+  private def extractInclude(scope : Scope, includeNameData : List[sst.ScopedDatum], includeLocation : SourceLocated) : et.Expression = {
+    val includeResults = ResolveIncludeList(includeNameData.map(_.unscope), includeLocation)(includePath)
 
     val includeExprs = includeResults flatMap { result =>
       // XXX: Should we disallow body defines here in a non-body context?
       // R7RS says (include) should act like a (begin) with the contents of the
       // files. Its example definition of (begin) uses a self-executing lambda
       // which would create a body context. This seems to imply this is allowed.
-      apply(result.data)(scope, libraryLoader, result.innerIncludePath)
+      val includeBodyExtractor = new ModuleBodyExtractor(libraryLoader, result.innerIncludePath)
+      includeBodyExtractor(result.data, scope)
     }
 
     et.Begin(includeExprs)
   }
 
-  private def extractSymbolApplication(appliedSymbol : sst.ScopedSymbol, operands : List[sst.ScopedDatum])(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : et.Expression = {
-    (appliedSymbol.resolve, operands) match {
+  private def extractSymbolApplication(boundValue : BoundValue, appliedSymbol : sst.ScopedSymbol, operands : List[sst.ScopedDatum]) : et.Expression = {
+    (boundValue, operands) match {
       case (SchemePrimitives.Quote, innerDatum :: Nil) =>
         et.Literal(innerDatum.unscope)
 
@@ -175,12 +176,12 @@ object ExtractModuleBody {
           extractExpression(trueExpr), 
           et.Literal(ast.UnspecificValue()))
 
-      case (SchemePrimitives.Set, (scopedSymbol : sst.ScopedSymbol) :: value :: Nil) =>
-        scopedSymbol.resolve match {
+      case (SchemePrimitives.Set, (mutatingSymbol : sst.ScopedSymbol) :: value :: Nil) =>
+        mutatingSymbol.resolve match {
           case storageLoc : StorageLocation =>
             et.MutateVar(storageLoc, extractExpression(value))
           case _ =>
-            throw new BadSpecialFormException(scopedSymbol, s"Attempted (set!) non-variable ${scopedSymbol.name}") 
+            throw new BadSpecialFormException(mutatingSymbol, s"Attempted (set!) non-variable ${mutatingSymbol.name}") 
         }
 
       case (SchemePrimitives.Lambda, (restArgDatum : sst.ScopedSymbol) :: definition) =>
@@ -197,13 +198,7 @@ object ExtractModuleBody {
 
       case (SchemePrimitives.Include, includeNames) =>
         // We need the scope from the (include) to rescope the included file
-        val scope = appliedSymbol match {
-          case sst.ScopedSymbol(scope, _) =>
-            scope
-          case _ =>
-            throw new InternalCompilerErrorException("Unable to determine scope of (include)")
-        }
-
+        val scope = appliedSymbol.scope
         extractInclude(scope, includeNames, appliedSymbol)
 
       case (NativeFunctionPrimitives.NativeFunction, _) =>
@@ -221,9 +216,6 @@ object ExtractModuleBody {
       case (SchemePrimitives.UnquoteSplicing, _) =>
         throw new BadSpecialFormException(appliedSymbol, "Attempted (unquote-splicing) outside of quasiquotation") 
 
-      case (syntax : BoundSyntax, operands) =>
-        extractExpression(ExpandMacro(syntax, operands, appliedSymbol))
-
       case (storagLoc : StorageLocation, operands) =>
         et.Apply(et.VarRef(storagLoc), operands.map(extractExpression))
 
@@ -232,21 +224,137 @@ object ExtractModuleBody {
     }
   }
 
-  def extractExpression(datum : sst.ScopedDatum)(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : et.Expression = (datum match {
-    // Normal procedure call
-    case sst.ScopedProperList(procedure :: operands) =>
-      procedure match {
-        case scopedSymbol : sst.ScopedSymbol =>
+  private def parseSyntaxDefine(appliedSymbol : sst.ScopedSymbol, operands : List[sst.ScopedDatum]) : ParsedNonVarDefine = operands match {
+    case (symbol : sst.ScopedSymbol) ::
+             sst.ScopedProperList(
+               sst.ScopedSymbol(_, "syntax-rules") :: sst.ScopedProperList(literals) :: rules
+             ) :: Nil =>
+      val literalNames = literals.map { 
+        case sst.ScopedSymbol(_, name) => name
+        case nonSymbol => throw new BadSpecialFormException(nonSymbol, "Symbol expected in literal list")
+      }
+      
+      val parsedRules = rules map {
+        case sst.ScopedProperList(sst.ScopedProperList(_ :: pattern) :: template :: Nil) =>
+          SyntaxRule(pattern, template)
+        case noMatch => throw new BadSpecialFormException(appliedSymbol, "Unable to parse syntax rule")
+      }
+
+      ParsedNonVarDefine(symbol, new BoundSyntax(literalNames, parsedRules))
+
+    case _ =>
+      throw new BadSpecialFormException(appliedSymbol, "Unrecognized (define-syntax) form")
+  }
+
+  private def parseDefineDatum(datum : sst.ScopedDatum) : Option[ParsedDefine] = datum match {
+    // Could this be define-y?
+    case sst.ScopedProperList((appliedSymbol : sst.ScopedSymbol) :: operands) =>
+      // Don't do a hard resolve here in case we're referencing something
+      // we haven't defined yet
+      appliedSymbol.resolveOpt flatMap { boundValue =>
+        parseDefine(boundValue, appliedSymbol, operands)
+      }
+
+    case _ => None
+  }
+
+  private def parseDefine(boundValue : BoundValue, appliedSymbol : sst.ScopedSymbol, operands : List[sst.ScopedDatum]) : Option[ParsedDefine] =
+    (boundValue, operands) match {
+      case (SchemePrimitives.Define, (symbol : sst.ScopedSymbol) :: value :: Nil) =>
+        Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name), () => {
+          extractExpression(value)
+        }))
+
+      case (SchemePrimitives.Define, sst.ScopedProperList((symbol : sst.ScopedSymbol) :: fixedArgs) :: body) =>
+        Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name), () => {
+          createLambda(fixedArgs, None, body)
+        }))
+      
+      case (SchemePrimitives.Define, sst.ScopedImproperList((symbol : sst.ScopedSymbol) :: fixedArgs, (restArgDatum : sst.ScopedSymbol)) :: body) =>
+        Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name), () => {
+          createLambda(fixedArgs, Some(restArgDatum), body)
+        }))
+
+      case (SchemePrimitives.DefineSyntax, _) =>
+        Some(parseSyntaxDefine(appliedSymbol, operands))
+
+      case (InternalPrimitives.DefineReportProcedure, _) =>
+        operands match {
+          case (symbol : sst.ScopedSymbol) :: definitionData :: Nil =>
+            Some(ParsedVarDefine(symbol, new ReportProcedure(symbol.name), () => {
+              extractExpression(definitionData)
+            }))
+
+          case _ =>
+            throw new BadSpecialFormException(appliedSymbol, "(define-report-procedure) requires exactly two arguments")
+        }
+
+      case _ => None
+  } 
+
+  private def extractApplicationLike(procedure : sst.ScopedDatum, operands : List[sst.ScopedDatum], atOutermostLevel : Boolean) : et.Expression = procedure match {
+    case scopedSymbol : sst.ScopedSymbol =>
+      scopedSymbol.resolve match {
+        case syntax : BoundSyntax =>
+          // This is a macro - expand it and call extractGenericExpression again
+          extractGenericExpression(ExpandMacro(syntax, operands, scopedSymbol), atOutermostLevel)
+
+        case otherBoundValue =>
+          // Try to parse this as a type of definition
+          parseDefine(otherBoundValue, scopedSymbol, operands) match {
+            case Some(_) if !atOutermostLevel=>
+              throw new BadSpecialFormException(scopedSymbol, "Definitions can only be introduced in at the outermost level or at the beginning of a body")
+
+            case Some(ParsedVarDefine(symbol, boundValue, exprBlock)) =>
+              // There's a wart in Scheme that allows a top-level (define) to become
+              // a (set!) if the value is already defined as a storage location
+              return symbol.resolveOpt match {
+                case Some(storageLoc : StorageLocation) =>
+                  // Convert this to a (set!)
+                  et.MutateVar(storageLoc, exprBlock())
+
+                case Some(_) =>
+                  throw new BadSpecialFormException(symbol, s"Attempted mutating (define) non-variable ${symbol.name}") 
+
+                case None  =>
+                  // This is a fresh binding
+                  // Place the rest of the body inside an et.Let
+                  symbol.scope += (symbol.name -> boundValue)
+                  et.Bind(List(boundValue -> exprBlock()))
+              }
+
+            case Some(ParsedNonVarDefine(symbol, boundValue)) =>
+              // This doesn't create any expression tree nodes 
+              symbol.scope += (symbol.name -> boundValue)
+              return et.Begin(Nil)
+
+            case None =>
+              // Continue below
+          }
+
           // Apply the symbol
           // This is the only way to "apply" syntax and primitives
           // They cannot appear as normal expression values
-          extractSymbolApplication(scopedSymbol, operands)
+          extractSymbolApplication(otherBoundValue, scopedSymbol, operands)
+        }
+        
+    case _ =>
+      // Apply the result of the inner expression
+      val procedureExpr = extractExpression(procedure)
+      et.Apply(procedureExpr, operands.map(extractExpression))
+  }
 
-        case _ =>
-          // Apply the result of the inner expression
-          val procedureExpr = extractExpression(procedure)
-          et.Apply(procedureExpr, operands.map(extractExpression))
-      }
+  private def extractOutermostLevelExpression(datum : sst.ScopedDatum) : et.Expression =
+    extractGenericExpression(datum, true)
+
+  private def extractExpression(datum : sst.ScopedDatum) : et.Expression =
+    // Non-body datums must either result in an expression or an exception
+    extractGenericExpression(datum, false)
+  
+  private def extractGenericExpression(datum : sst.ScopedDatum, atOutermostLevel : Boolean) : et.Expression = (datum match {
+    case sst.ScopedProperList(procedure :: operands) =>
+      // This looks like an application
+      extractApplicationLike(procedure, operands, atOutermostLevel)
 
     case scopedSymbol : sst.ScopedSymbol =>
       scopedSymbol.resolve match {
@@ -279,108 +387,15 @@ object ExtractModuleBody {
 
     case malformed =>
       throw new MalformedExpressionException(malformed, malformed.toString)
-  }).assignLocationFrom(datum)
+  }).map(_.assignLocationFrom(datum))
 
-  private def parseSyntaxDefine(datum : sst.ScopedDatum) : ParsedSyntaxDefine = datum match {
-    case sst.ScopedProperList(sst.ScopedSymbol(_, "define-syntax") :: (symbol : sst.ScopedSymbol) ::
-                         sst.ScopedProperList(
-                           sst.ScopedSymbol(_, "syntax-rules") :: sst.ScopedProperList(literals) :: rules
-                         ) :: Nil) =>
-      val literalNames = literals.map { 
-        case sst.ScopedSymbol(_, name) => name
-        case nonSymbol => throw new BadSpecialFormException(nonSymbol, "Symbol expected in literal list")
-      }
-      
-      val parsedRules = rules map {
-        case sst.ScopedProperList(sst.ScopedProperList(_ :: pattern) :: template :: Nil) =>
-          SyntaxRule(pattern, template)
-        case noMatch => throw new BadSpecialFormException(noMatch, "Unable to parse syntax rule")
-      }
+  def apply(data : List[ast.Datum], evalScope : Scope) : List[et.Expression] = data flatMap { datum => 
+    // Annotate our symbols with our current scope
+    val scopedDatum = sst.ScopedDatum(evalScope, datum)
 
-      ParsedSyntaxDefine(symbol, new BoundSyntax(literalNames, parsedRules))
-
-    case noMatch =>
-      throw new BadSpecialFormException(noMatch, "Unrecognized (define-syntax) form")
-  }
-
-  private def parseDefine(datum : sst.ScopedDatum)(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : Option[ParsedDefine] = datum match {
-    case sst.ScopedProperList(sst.ScopedSymbol(_, "define") :: (symbol : sst.ScopedSymbol) :: value :: Nil) =>
-      Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name), () => {
-        extractExpression(value)
-      }))
-
-    case sst.ScopedProperList(sst.ScopedSymbol(defineScope, "define") :: sst.ScopedProperList((symbol : sst.ScopedSymbol) :: fixedArgs) :: body) =>
-      Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name), () => {
-        createLambda(fixedArgs, None, body)
-      }))
-    
-    case sst.ScopedProperList(sst.ScopedSymbol(defineScope, "define") :: sst.ScopedImproperList((symbol : sst.ScopedSymbol) :: fixedArgs, (restArgDatum : sst.ScopedSymbol)) :: body) =>
-      Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name), () => {
-        createLambda(fixedArgs, Some(restArgDatum), body)
-      }))
-
-    case sst.ScopedProperList(sst.ScopedSymbol(_, "define-syntax") :: _) =>
-      Some(parseSyntaxDefine(datum))
-
-    case sst.ScopedProperList((scopedSymbol : sst.ScopedSymbol) :: operands) =>
-      scopedSymbol.resolveOpt match {
-        case Some(syntax : BoundSyntax) =>
-          // Cheap hack to look for macros early
-          // We need to expand them in a body context if they appear in a body
-          // Otherwise (define) won't work in macros
-          parseDefine(ExpandMacro(syntax, operands, scopedSymbol))
-
-        case Some(InternalPrimitives.DefineReportProcedure) =>
-          operands match {
-            case (symbol : sst.ScopedSymbol) :: definitionData :: Nil =>
-              Some(ParsedVarDefine(symbol, new ReportProcedure(symbol.name), () => {
-                extractExpression(definitionData)
-              }))
-
-            case _ =>
-              throw new BadSpecialFormException(scopedSymbol, "(define-report-procedure) requires exactly two arguments")
-          }
-
-        case _ => None
-      }
-
-    case _ => None
-  }
-
-  def apply(data : Seq[ast.Datum])(implicit evalScope : Scope, libraryLoader : LibraryLoader, includePath : IncludePath) : List[et.Expression] = data match {
-    case Nil => Nil
-    case datum :: tailData =>
-      // Annotate our symbols with our current scope
-      val scopedDatum = sst.ScopedDatum(evalScope, datum)
-
-      // Try to parse this as a type of definition
-      parseDefine(scopedDatum) match {
-        case Some(ParsedVarDefine(symbol, boundValue, exprBlock)) =>
-          // There's a wart in Scheme that allows a top-level (define) to become
-          // a (set!) if the value is already defined as a storage location
-          (symbol.resolveOpt match {
-            case Some(storageLoc : StorageLocation) =>
-              // Convert this to a (set!)
-              et.MutateVar(storageLoc, exprBlock())
-
-            case Some(_) =>
-              throw new BadSpecialFormException(symbol, s"Attempted mutating (define) non-variable ${symbol.name}") 
-
-            case None  =>
-              // This is a fresh binding
-              // Place the rest of the body inside an et.Let
-              symbol.scope += (symbol.name -> boundValue)
-              et.Bind(List(boundValue -> exprBlock()))
-          }).assignLocationFrom(datum) :: apply(tailData)
-
-        case Some(ParsedSyntaxDefine(symbol, boundValue)) =>
-          // This doesn't create any expression tree nodes 
-          symbol.scope += (symbol.name -> boundValue)
-          apply(tailData)
-          
-        case None =>
-          // This isn't a define
-          extractExpression(scopedDatum) :: apply(tailData)
-      }
+    extractOutermostLevelExpression(scopedDatum) match {
+      case et.Begin(Nil) => None
+      case other => Some(other)
+    }
   }
 }

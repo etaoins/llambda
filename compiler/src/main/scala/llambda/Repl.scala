@@ -57,17 +57,17 @@ class ParseOnlyMode extends SchemeParsingMode("parse") {
 
 /** Extract expressions allowed in a library, program or lambda body */
 class BodyExpressionMode extends SchemeParsingMode("expr") {
-  private implicit val loader = new frontend.LibraryLoader
+  private val loader = new frontend.LibraryLoader
   private val schemeBaseBindings = loader.loadSchemeBase
 
-  implicit val scope = new Scope(collection.mutable.Map(schemeBaseBindings.toSeq : _*))
-  implicit val includePath = ReplIncludePath()
+  val scope = new Scope(collection.mutable.Map(schemeBaseBindings.toSeq : _*))
+  val includePath = ReplIncludePath()
+
+  val bodyExtractor = new frontend.ModuleBodyExtractor(loader, includePath)
 
   def evalDatum(datum : ast.Datum) = {
     datum match {
       case ast.ProperList(ast.Symbol("import") :: _) =>
-
-
         // This is an import decl - import our new bindings
         val newBindings = frontend.ResolveImportDecl(datum)(loader, includePath)
 
@@ -76,7 +76,7 @@ class BodyExpressionMode extends SchemeParsingMode("expr") {
         "loaded"
       case _ =>
         // Treat this like a body expression
-        frontend.ExtractModuleBody(datum :: Nil).map(_.toString).mkString(" ")
+        bodyExtractor(datum :: Nil, scope).map(_.toString).mkString(" ")
     }
   }
 }

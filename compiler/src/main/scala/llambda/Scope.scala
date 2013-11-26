@@ -76,6 +76,8 @@ object SchemePrimitives {
   object Quasiquote extends PrimitiveExpression
   object Unquote extends PrimitiveExpression
   object UnquoteSplicing extends PrimitiveExpression
+  object Define extends PrimitiveExpression
+  object DefineSyntax extends PrimitiveExpression
 
   val bindings = {
     Map[String, BoundValue](
@@ -87,7 +89,9 @@ object SchemePrimitives {
       "include" -> Include,
       "quasiquote" -> Quasiquote,
       "unquote" -> Unquote,
-      "unquote-splicing" -> UnquoteSplicing
+      "unquote-splicing" -> UnquoteSplicing,
+      "define" -> Define,
+      "define-syntax" -> DefineSyntax
     )
   }
 }
