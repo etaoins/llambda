@@ -61,7 +61,7 @@ object GenBoxing {
       val boxedProcCons = allocation.genTypedPointer(block)(allocIndex, bt.BoxedProcedure) 
       
       // XXX: Implement closures
-      val constantZero = IntegerConstant(IntegerType(32), 0)
+      val constantZero = IntegerConstant(bt.BoxedProcedure.recordClassIdIrType, 0)
       bt.BoxedProcedure.genStoreToRecordClassId(block)(constantZero, boxedProcCons)
 
       val constantNull = NullPointerConstant(PointerType(IntegerType(8)))
