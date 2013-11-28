@@ -67,8 +67,8 @@ object BoxedDatum extends BoxedType {
   val isAbstract = true
   val tbaaIndex = 0
 
-  val typeIdIrType = IntegerType(16)
-  val gcStateIrType = IntegerType(16)
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
 
   def createConstant(typeId : Long) : StructureConstant = {
     StructureConstant(List(
@@ -137,8 +137,8 @@ object BoxedUnspecific extends ConcreteBoxedType {
   val tbaaIndex = 1
   val typeId = 0
 
-  val typeIdIrType = IntegerType(16)
-  val gcStateIrType = IntegerType(16)
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
 
   def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
     val datumValue = BoxedDatum.genPointerBitcast(startBlock)(boxedValue)
@@ -204,8 +204,8 @@ object BoxedListElement extends BoxedType {
   val isAbstract = true
   val tbaaIndex = 2
 
-  val typeIdIrType = IntegerType(16)
-  val gcStateIrType = IntegerType(16)
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
 
   def createConstant(typeId : Long) : StructureConstant = {
     StructureConstant(List(
@@ -284,8 +284,8 @@ object BoxedPair extends ConcreteBoxedType {
   val tbaaIndex = 3
   val typeId = 1
 
-  val typeIdIrType = IntegerType(16)
-  val gcStateIrType = IntegerType(16)
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
   val carIrType = PointerType(UserDefinedType("datum"))
   val cdrIrType = PointerType(UserDefinedType("datum"))
 
@@ -418,8 +418,8 @@ object BoxedEmptyList extends ConcreteBoxedType {
   val tbaaIndex = 4
   val typeId = 2
 
-  val typeIdIrType = IntegerType(16)
-  val gcStateIrType = IntegerType(16)
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
 
   def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
     val datumValue = BoxedDatum.genPointerBitcast(startBlock)(boxedValue)
@@ -485,8 +485,8 @@ object BoxedStringLike extends BoxedType {
   val isAbstract = true
   val tbaaIndex = 5
 
-  val typeIdIrType = IntegerType(16)
-  val gcStateIrType = IntegerType(16)
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
   val charLengthIrType = IntegerType(32)
   val byteLengthIrType = IntegerType(32)
   val utf8DataIrType = PointerType(IntegerType(8))
@@ -644,8 +644,8 @@ object BoxedString extends ConcreteBoxedType {
   val tbaaIndex = 6
   val typeId = 3
 
-  val typeIdIrType = IntegerType(16)
-  val gcStateIrType = IntegerType(16)
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
   val charLengthIrType = IntegerType(32)
   val byteLengthIrType = IntegerType(32)
   val utf8DataIrType = PointerType(IntegerType(8))
@@ -795,8 +795,8 @@ object BoxedSymbol extends ConcreteBoxedType {
   val tbaaIndex = 7
   val typeId = 4
 
-  val typeIdIrType = IntegerType(16)
-  val gcStateIrType = IntegerType(16)
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
   val charLengthIrType = IntegerType(32)
   val byteLengthIrType = IntegerType(32)
   val utf8DataIrType = PointerType(IntegerType(8))
@@ -946,8 +946,8 @@ object BoxedBoolean extends ConcreteBoxedType {
   val tbaaIndex = 8
   val typeId = 5
 
-  val typeIdIrType = IntegerType(16)
-  val gcStateIrType = IntegerType(16)
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
   val valueIrType = IntegerType(8)
 
   def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
@@ -1037,8 +1037,8 @@ object BoxedNumeric extends BoxedType {
   val isAbstract = true
   val tbaaIndex = 9
 
-  val typeIdIrType = IntegerType(16)
-  val gcStateIrType = IntegerType(16)
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
 
   def createConstant(typeId : Long) : StructureConstant = {
     StructureConstant(List(
@@ -1117,8 +1117,8 @@ object BoxedExactInteger extends ConcreteBoxedType {
   val tbaaIndex = 10
   val typeId = 6
 
-  val typeIdIrType = IntegerType(16)
-  val gcStateIrType = IntegerType(16)
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
   val valueIrType = IntegerType(64)
 
   def createConstant(value : Long) : StructureConstant = {
@@ -1218,8 +1218,8 @@ object BoxedInexactRational extends ConcreteBoxedType {
   val tbaaIndex = 11
   val typeId = 7
 
-  val typeIdIrType = IntegerType(16)
-  val gcStateIrType = IntegerType(16)
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
   val valueIrType = DoubleType
 
   def createConstant(value : IrConstant) : StructureConstant = {
@@ -1323,8 +1323,8 @@ object BoxedCharacter extends ConcreteBoxedType {
   val tbaaIndex = 12
   val typeId = 8
 
-  val typeIdIrType = IntegerType(16)
-  val gcStateIrType = IntegerType(16)
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
   val unicodeCharIrType = IntegerType(32)
 
   def createConstant(unicodeChar : IrConstant) : StructureConstant = {
@@ -1428,8 +1428,8 @@ object BoxedVector extends ConcreteBoxedType {
   val tbaaIndex = 13
   val typeId = 9
 
-  val typeIdIrType = IntegerType(16)
-  val gcStateIrType = IntegerType(16)
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
   val lengthIrType = IntegerType(32)
   val elementsIrType = PointerType(PointerType(UserDefinedType("datum")))
 
@@ -1558,8 +1558,8 @@ object BoxedBytevector extends ConcreteBoxedType {
   val tbaaIndex = 14
   val typeId = 10
 
-  val typeIdIrType = IntegerType(16)
-  val gcStateIrType = IntegerType(16)
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
   val lengthIrType = IntegerType(32)
   val dataIrType = PointerType(IntegerType(8))
 
@@ -1687,8 +1687,8 @@ object BoxedRecordLike extends BoxedType {
   val isAbstract = true
   val tbaaIndex = 15
 
-  val typeIdIrType = IntegerType(16)
-  val gcStateIrType = IntegerType(16)
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
   val recordClassIdIrType = IntegerType(32)
   val recordDataIrType = PointerType(IntegerType(8))
 
@@ -1817,8 +1817,8 @@ object BoxedProcedure extends ConcreteBoxedType {
   val tbaaIndex = 16
   val typeId = 11
 
-  val typeIdIrType = IntegerType(16)
-  val gcStateIrType = IntegerType(16)
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
   val recordClassIdIrType = IntegerType(32)
   val recordDataIrType = PointerType(IntegerType(8))
   val entryPointIrType = PointerType(FunctionType(PointerType(UserDefinedType("datum")), List(PointerType(IntegerType(8)), PointerType(UserDefinedType("listElement")) )))
@@ -1972,8 +1972,8 @@ object BoxedMutableVar extends ConcreteBoxedType {
   val tbaaIndex = 17
   val typeId = 13
 
-  val typeIdIrType = IntegerType(16)
-  val gcStateIrType = IntegerType(16)
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
   val currentValueIrType = PointerType(UserDefinedType("datum"))
 
   def createConstant(currentValue : IrConstant) : StructureConstant = {

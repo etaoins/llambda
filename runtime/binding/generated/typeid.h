@@ -10,7 +10,7 @@
 namespace lliby
 {
 
-enum class BoxedTypeId : std::uint16_t
+enum class BoxedTypeId : std::uint8_t
 {
 	Unspecific = 0,
 	Pair = 1,

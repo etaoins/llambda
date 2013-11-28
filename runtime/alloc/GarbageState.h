@@ -6,7 +6,7 @@
 namespace lliby
 {
 
-enum class GarbageState : std::uint16_t
+enum class GarbageState : std::uint8_t
 {
 	GlobalConstant = 0,
 	StackAllocation = 1,
