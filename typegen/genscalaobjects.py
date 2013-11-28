@@ -38,7 +38,7 @@ def _llvm_type_to_scala(llvm_type):
 
 def _complex_type_to_scala(complex_type):
     if complex_type == "bool":
-        return 'IntegerType(1)'
+        return 'IntegerType(8)'
     elif complex_type == "entryPoint":
         # Good lord
         return ('PointerType(' 

@@ -984,7 +984,7 @@ object BoxedBoolean extends ConcreteBoxedType {
     }
 
     block.getelementptr("valuePtr")(
-      elementType=IntegerType(1),
+      elementType=IntegerType(8),
       basePointer=boxedValue,
       indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
