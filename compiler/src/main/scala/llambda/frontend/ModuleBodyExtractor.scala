@@ -1,18 +1,11 @@
 package llambda.frontend
 
 import llambda._
+import llambda.{valuetype => vt}
 
 import collection.mutable.ListBuffer
 
 class ModuleBodyExtractor(libraryLoader : LibraryLoader, includePath : IncludePath) {
-  abstract sealed class ParsedDefine {
-    val name : sst.ScopedSymbol
-    val value : BoundValue
-  }
-
-  private case class ParsedVarDefine(name : sst.ScopedSymbol, value : StorageLocation, expr : () => et.Expression) extends ParsedDefine
-  private case class ParsedNonVarDefine(name : sst.ScopedSymbol, value : BoundSyntax) extends ParsedDefine
-
   private def uniqueScopes(datum : sst.ScopedDatum) : Set[Scope] = {
     datum match {
       case sst.ScopedPair(car, cdr) => uniqueScopes(car) ++ uniqueScopes(cdr)
@@ -110,10 +103,19 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, includePath : IncludePa
     val bindingBlocks = defineBuilder.toList flatMap {
       case ParsedVarDefine(symbol, boundValue, exprBlock) =>
         symbol.scope += (symbol.name -> boundValue)
-        Some((boundValue, exprBlock))
-      case ParsedNonVarDefine(symbol, boundValue) =>
+        (boundValue, exprBlock) :: Nil
+      case ParsedSyntaxDefine(symbol, boundValue) =>
         symbol.scope += (symbol.name -> boundValue)
-        None
+        Nil
+      case ParsedRecordTypeDefine(typeSymbol, recordType, procedures) =>
+        typeSymbol.scope += (typeSymbol.name -> BoundType(recordType))
+
+        procedures.map { case (procedureSymbol, expr) =>
+          val storageLoc = new StorageLocation(procedureSymbol.name)
+
+          procedureSymbol.scope += (procedureSymbol.name -> storageLoc)
+          (storageLoc, () => expr) 
+        }
     }
 
     // Execute the expression blocks now that the scopes are prepared
@@ -224,28 +226,6 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, includePath : IncludePa
     }
   }
 
-  private def parseSyntaxDefine(appliedSymbol : sst.ScopedSymbol, operands : List[sst.ScopedDatum]) : ParsedNonVarDefine = operands match {
-    case (symbol : sst.ScopedSymbol) ::
-             sst.ScopedProperList(
-               sst.ScopedSymbol(_, "syntax-rules") :: sst.ScopedProperList(literals) :: rules
-             ) :: Nil =>
-      val literalNames = literals.map { 
-        case sst.ScopedSymbol(_, name) => name
-        case nonSymbol => throw new BadSpecialFormException(nonSymbol, "Symbol expected in literal list")
-      }
-      
-      val parsedRules = rules map {
-        case sst.ScopedProperList(sst.ScopedProperList(_ :: pattern) :: template :: Nil) =>
-          SyntaxRule(pattern, template)
-        case noMatch => throw new BadSpecialFormException(appliedSymbol, "Unable to parse syntax rule")
-      }
-
-      ParsedNonVarDefine(symbol, new BoundSyntax(literalNames, parsedRules))
-
-    case _ =>
-      throw new BadSpecialFormException(appliedSymbol, "Unrecognized (define-syntax) form")
-  }
-
   private def parseDefineDatum(datum : sst.ScopedDatum) : Option[ParsedDefine] = datum match {
     // Could this be define-y?
     case sst.ScopedProperList((appliedSymbol : sst.ScopedSymbol) :: operands) =>
@@ -276,7 +256,10 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, includePath : IncludePa
         }))
 
       case (SchemePrimitives.DefineSyntax, _) =>
-        Some(parseSyntaxDefine(appliedSymbol, operands))
+        Some(ParseSyntaxDefine(appliedSymbol, operands))
+      
+      case (SchemePrimitives.DefineRecordType, _) =>
+        Some(ParseRecordTypeDefine(appliedSymbol, operands))
 
       case (InternalPrimitives.DefineReportProcedure, _) =>
         operands match {
@@ -323,10 +306,20 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, includePath : IncludePa
                   et.Bind(List(boundValue -> exprBlock()))
               }
 
-            case Some(ParsedNonVarDefine(symbol, boundValue)) =>
+            case Some(ParsedSyntaxDefine(symbol, boundValue)) =>
               // This doesn't create any expression tree nodes 
               symbol.scope += (symbol.name -> boundValue)
               return et.Begin(Nil)
+
+            case Some(ParsedRecordTypeDefine(typeSymbol, recordType, procedures)) =>
+              typeSymbol.scope += (typeSymbol.name -> BoundType(recordType))
+
+              return et.Bind((procedures.map { case (procedureSymbol, expr) =>
+                val storageLoc = new StorageLocation(procedureSymbol.name)
+
+                procedureSymbol.scope += (procedureSymbol.name -> storageLoc)
+                (storageLoc, expr) 
+              }).toList)
 
             case None =>
               // Continue below

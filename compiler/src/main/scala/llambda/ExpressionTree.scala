@@ -90,7 +90,7 @@ sealed abstract class RecordTypeProcedure extends Expression {
   def map(f : Expression => Expression) : this.type = this
 }
 
-case class RecordTypeConstructor(recordType : vt.RecordType, fieldNames : List[String]) extends RecordTypeProcedure
+case class RecordTypeConstructor(recordType : vt.RecordType, fields : List[vt.RecordField]) extends RecordTypeProcedure
 case class RecordTypePredicate(recordType : vt.RecordType) extends RecordTypeProcedure
-case class RecordTypeAccessor(recordType : vt.RecordType, fieldName : String) extends RecordTypeProcedure
-case class RecordTypeModifier(recordType : vt.RecordType, fieldName : String) extends RecordTypeProcedure
+case class RecordTypeAccessor(recordType : vt.RecordType, field : vt.RecordField) extends RecordTypeProcedure
+case class RecordTypeMutator(recordType : vt.RecordType, field : vt.RecordField) extends RecordTypeProcedure

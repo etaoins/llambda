@@ -5,25 +5,12 @@ import llambda.{boxedtype => bt}
 import llambda.{valuetype => vt}
 
 object ExtractNativeFunction {
-  private def datumToValueType(datum : sst.ScopedDatum) : vt.ValueType = datum match { 
-    case symbol : sst.ScopedSymbol =>
-      symbol.resolve match {
-        case BoundType(schemeType) => schemeType
-
-        case _ =>
-          throw new BadSpecialFormException(symbol, "Non-type value used as type")
-      }
-
-    case nonsymbol => 
-      throw new BadSpecialFormException(nonsymbol, "Excepted type name to be symbol")
-  }
-
   private def createNativeFunction(fixedArgData : List[sst.ScopedDatum], restArgDatum : Option[sst.ScopedSymbol], returnTypeDatum : Option[sst.ScopedSymbol], nativeSymbol : String) : et.NativeFunction = {
-    var fixedArgTypes = fixedArgData map datumToValueType
+    var fixedArgTypes = fixedArgData map DatumToValueType.apply
 
     val hasRestArg = restArgDatum match {
       case Some(datum) =>
-        datumToValueType(datum) match {
+        DatumToValueType(datum) match {
           case vt.BoxedValue(bt.BoxedListElement) => true
           case _ =>
             throw new BadSpecialFormException(datum, "Only boxed-list-element can be used as a rest argument")
@@ -32,7 +19,7 @@ object ExtractNativeFunction {
       case None => false
     }
 
-    val returnType = returnTypeDatum map datumToValueType
+    val returnType = returnTypeDatum map DatumToValueType.apply
 
     et.NativeFunction(
       fixedArgs = fixedArgTypes,
