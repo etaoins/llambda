@@ -1,5 +1,6 @@
 package llambda.frontend
 
+import util.control.Exception._
 import llambda._
 
 private[frontend] object ExpandMacro {
@@ -163,12 +164,7 @@ private[frontend] object ExpandMacro {
 
   def apply(syntax : BoundSyntax, operands : List[sst.ScopedDatum], located : SourceLocated) : sst.ScopedDatum = {
     val expandable = syntax.rules.flatMap { rule =>
-      try {
-        Some(Expandable(rule.template, matchRule(syntax.literals, rule.pattern, operands)))
-      }
-      catch {
-        case _ : MatchFailedException => None
-      }
+      catching(classOf[MatchFailedException]) opt Expandable(rule.template, matchRule(syntax.literals, rule.pattern, operands))
     }.headOption.getOrElse {
       throw new NoSyntaxRuleException(located, operands.map(_.unscope.toString).mkString(" "))
     }
