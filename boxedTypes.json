@@ -6,12 +6,12 @@
         "fields": [
             {
                 "name": "typeId",
-                "llvmType": "i16",
+                "llvmType": "i8",
                 "signed": false
             },
             {
                 "name": "gcState",
-                "llvmType": "i16",
+                "llvmType": "i8",
                 "signed": false
             }
         ]

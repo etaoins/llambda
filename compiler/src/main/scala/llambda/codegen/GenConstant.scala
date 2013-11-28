@@ -43,10 +43,10 @@ object GenConstant {
     val boxedStringLikeName = baseName + ".box"
 
     val boxedStringLike = bt.BoxedStringLike.createConstant(
-      typeId=IntegerConstant(IntegerType(16), concreteType.typeId),
-      charLength=IntegerConstant(IntegerType(32), value.length),
+      typeId=concreteType.typeId,
+      charLength=value.length,
       // Don't include the NULL terminator
-      byteLength=IntegerConstant(IntegerType(32), utf8Constant.byteLength),
+      byteLength=utf8Constant.byteLength,
       utf8Data=utf8Constant.irValue)
 
     defineConstantData(module)(boxedStringLikeName, boxedStringLike)
@@ -65,7 +65,7 @@ object GenConstant {
 
     val boxedBytevectorName = baseName + ".box"
     val boxedBytevector = bt.BoxedBytevector.createConstant(
-      length=IntegerConstant(IntegerType(32), elements.length),
+      length=elements.length,
       data=ElementPointerConstant(IntegerType(8), elementsValue, List(0, 0)))
 
     defineConstantData(module)(boxedBytevectorName, boxedBytevector)
@@ -83,7 +83,7 @@ object GenConstant {
     val boxedVectorName = baseName + ".box"
 
     val boxedVector = bt.BoxedVector.createConstant(
-      length=IntegerConstant(IntegerType(32), irElements.length),
+      length=irElements.length,
       elements=ElementPointerConstant(PointerType(bt.BoxedDatum.irType), elementsDef, List(0, 0)))
 
     defineConstantData(module)(boxedVectorName, boxedVector)
@@ -111,7 +111,7 @@ object GenConstant {
       val boxedIntName = state.module.nameSource.allocate("schemeExactInteger")
 
       val boxedInt = bt.BoxedExactInteger.createConstant(
-        value=IntegerConstant(IntegerType(64), value)
+        value=value
       )
 
       defineConstantData(state.module)(boxedIntName, boxedInt)

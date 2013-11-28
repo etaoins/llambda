@@ -67,14 +67,13 @@ object BoxedDatum extends BoxedType {
   val isAbstract = true
   val tbaaIndex = 0
 
-  def createConstant(typeId : IrConstant) : StructureConstant = {
-    if (typeId.irType != IntegerType(16)) {
-      throw new InternalCompilerErrorException("Unexpected type for field typeId")
-    }
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
 
+  def createConstant(typeId : Long) : StructureConstant = {
     StructureConstant(List(
-      typeId,
-      IntegerConstant(IntegerType(16), 0)
+      IntegerConstant(typeIdIrType, typeId),
+      IntegerConstant(gcStateIrType, 0)
     ), userDefinedType=Some(irType))
   }
 
@@ -88,7 +87,7 @@ object BoxedDatum extends BoxedType {
     }
 
     block.getelementptr("typeIdPtr")(
-      elementType=IntegerType(16),
+      elementType=typeIdIrType,
       basePointer=boxedValue,
       indices=List(0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -111,7 +110,7 @@ object BoxedDatum extends BoxedType {
     }
 
     block.getelementptr("gcStatePtr")(
-      elementType=IntegerType(16),
+      elementType=gcStateIrType,
       basePointer=boxedValue,
       indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -138,12 +137,15 @@ object BoxedUnspecific extends ConcreteBoxedType {
   val tbaaIndex = 1
   val typeId = 0
 
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
+
   def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
     val datumValue = BoxedDatum.genPointerBitcast(startBlock)(boxedValue)
     val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
-    val isUnspecific = startBlock.icmp("isUnspecific")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 0))
+    val isUnspecific = startBlock.icmp("isUnspecific")(ComparisonCond.Equal, None, typeId, IntegerConstant(typeIdIrType, 0))
     startBlock.condBranch(isUnspecific, successBlock, failBlock)
   }
 
@@ -153,7 +155,7 @@ object BoxedUnspecific extends ConcreteBoxedType {
     }
 
     block.getelementptr("typeIdPtr")(
-      elementType=IntegerType(16),
+      elementType=typeIdIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -176,7 +178,7 @@ object BoxedUnspecific extends ConcreteBoxedType {
     }
 
     block.getelementptr("gcStatePtr")(
-      elementType=IntegerType(16),
+      elementType=gcStateIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -202,7 +204,10 @@ object BoxedListElement extends BoxedType {
   val isAbstract = true
   val tbaaIndex = 2
 
-  def createConstant(typeId : IrConstant) : StructureConstant = {
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
+
+  def createConstant(typeId : Long) : StructureConstant = {
     StructureConstant(List(
       supertype.get.createConstant(
         typeId=typeId
@@ -215,11 +220,11 @@ object BoxedListElement extends BoxedType {
     val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
-    val isPair = startBlock.icmp("isPair")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 1))
+    val isPair = startBlock.icmp("isPair")(ComparisonCond.Equal, None, typeId, IntegerConstant(typeIdIrType, 1))
     val notPairBlock = startBlock.startChildBlock("notPair")
     startBlock.condBranch(isPair, successBlock, notPairBlock)
 
-    val isEmptyList = notPairBlock.icmp("isEmptyList")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 2))
+    val isEmptyList = notPairBlock.icmp("isEmptyList")(ComparisonCond.Equal, None, typeId, IntegerConstant(typeIdIrType, 2))
     notPairBlock.condBranch(isEmptyList, successBlock, failBlock)
   }
 
@@ -229,7 +234,7 @@ object BoxedListElement extends BoxedType {
     }
 
     block.getelementptr("typeIdPtr")(
-      elementType=IntegerType(16),
+      elementType=typeIdIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -252,7 +257,7 @@ object BoxedListElement extends BoxedType {
     }
 
     block.getelementptr("gcStatePtr")(
-      elementType=IntegerType(16),
+      elementType=gcStateIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -279,18 +284,23 @@ object BoxedPair extends ConcreteBoxedType {
   val tbaaIndex = 3
   val typeId = 1
 
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
+  val carIrType = PointerType(UserDefinedType("datum"))
+  val cdrIrType = PointerType(UserDefinedType("datum"))
+
   def createConstant(car : IrConstant, cdr : IrConstant) : StructureConstant = {
-    if (car.irType != PointerType(UserDefinedType("datum"))) {
+    if (car.irType != carIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field car")
     }
 
-    if (cdr.irType != PointerType(UserDefinedType("datum"))) {
+    if (cdr.irType != cdrIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field cdr")
     }
 
     StructureConstant(List(
       supertype.get.createConstant(
-        typeId=IntegerConstant(IntegerType(16), typeId)
+        typeId=typeId
       ),
       car,
       cdr
@@ -302,7 +312,7 @@ object BoxedPair extends ConcreteBoxedType {
     val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
-    val isPair = startBlock.icmp("isPair")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 1))
+    val isPair = startBlock.icmp("isPair")(ComparisonCond.Equal, None, typeId, IntegerConstant(typeIdIrType, 1))
     startBlock.condBranch(isPair, successBlock, failBlock)
   }
 
@@ -312,7 +322,7 @@ object BoxedPair extends ConcreteBoxedType {
     }
 
     block.getelementptr("typeIdPtr")(
-      elementType=IntegerType(16),
+      elementType=typeIdIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -335,7 +345,7 @@ object BoxedPair extends ConcreteBoxedType {
     }
 
     block.getelementptr("gcStatePtr")(
-      elementType=IntegerType(16),
+      elementType=gcStateIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -358,7 +368,7 @@ object BoxedPair extends ConcreteBoxedType {
     }
 
     block.getelementptr("carPtr")(
-      elementType=PointerType(UserDefinedType("datum")),
+      elementType=carIrType,
       basePointer=boxedValue,
       indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -381,7 +391,7 @@ object BoxedPair extends ConcreteBoxedType {
     }
 
     block.getelementptr("cdrPtr")(
-      elementType=PointerType(UserDefinedType("datum")),
+      elementType=cdrIrType,
       basePointer=boxedValue,
       indices=List(0, 2).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -408,12 +418,15 @@ object BoxedEmptyList extends ConcreteBoxedType {
   val tbaaIndex = 4
   val typeId = 2
 
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
+
   def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
     val datumValue = BoxedDatum.genPointerBitcast(startBlock)(boxedValue)
     val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
-    val isEmptyList = startBlock.icmp("isEmptyList")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 2))
+    val isEmptyList = startBlock.icmp("isEmptyList")(ComparisonCond.Equal, None, typeId, IntegerConstant(typeIdIrType, 2))
     startBlock.condBranch(isEmptyList, successBlock, failBlock)
   }
 
@@ -423,7 +436,7 @@ object BoxedEmptyList extends ConcreteBoxedType {
     }
 
     block.getelementptr("typeIdPtr")(
-      elementType=IntegerType(16),
+      elementType=typeIdIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -446,7 +459,7 @@ object BoxedEmptyList extends ConcreteBoxedType {
     }
 
     block.getelementptr("gcStatePtr")(
-      elementType=IntegerType(16),
+      elementType=gcStateIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -472,16 +485,14 @@ object BoxedStringLike extends BoxedType {
   val isAbstract = true
   val tbaaIndex = 5
 
-  def createConstant(charLength : IrConstant, byteLength : IrConstant, utf8Data : IrConstant, typeId : IrConstant) : StructureConstant = {
-    if (charLength.irType != IntegerType(32)) {
-      throw new InternalCompilerErrorException("Unexpected type for field charLength")
-    }
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
+  val charLengthIrType = IntegerType(32)
+  val byteLengthIrType = IntegerType(32)
+  val utf8DataIrType = PointerType(IntegerType(8))
 
-    if (byteLength.irType != IntegerType(32)) {
-      throw new InternalCompilerErrorException("Unexpected type for field byteLength")
-    }
-
-    if (utf8Data.irType != PointerType(IntegerType(8))) {
+  def createConstant(charLength : Long, byteLength : Long, utf8Data : IrConstant, typeId : Long) : StructureConstant = {
+    if (utf8Data.irType != utf8DataIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field utf8Data")
     }
 
@@ -489,8 +500,8 @@ object BoxedStringLike extends BoxedType {
       supertype.get.createConstant(
         typeId=typeId
       ),
-      charLength,
-      byteLength,
+      IntegerConstant(charLengthIrType, charLength),
+      IntegerConstant(byteLengthIrType, byteLength),
       utf8Data
     ), userDefinedType=Some(irType))
   }
@@ -500,11 +511,11 @@ object BoxedStringLike extends BoxedType {
     val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
-    val isString = startBlock.icmp("isString")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 3))
+    val isString = startBlock.icmp("isString")(ComparisonCond.Equal, None, typeId, IntegerConstant(typeIdIrType, 3))
     val notStringBlock = startBlock.startChildBlock("notString")
     startBlock.condBranch(isString, successBlock, notStringBlock)
 
-    val isSymbol = notStringBlock.icmp("isSymbol")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 4))
+    val isSymbol = notStringBlock.icmp("isSymbol")(ComparisonCond.Equal, None, typeId, IntegerConstant(typeIdIrType, 4))
     notStringBlock.condBranch(isSymbol, successBlock, failBlock)
   }
 
@@ -514,7 +525,7 @@ object BoxedStringLike extends BoxedType {
     }
 
     block.getelementptr("typeIdPtr")(
-      elementType=IntegerType(16),
+      elementType=typeIdIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -537,7 +548,7 @@ object BoxedStringLike extends BoxedType {
     }
 
     block.getelementptr("gcStatePtr")(
-      elementType=IntegerType(16),
+      elementType=gcStateIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -560,7 +571,7 @@ object BoxedStringLike extends BoxedType {
     }
 
     block.getelementptr("charLengthPtr")(
-      elementType=IntegerType(32),
+      elementType=charLengthIrType,
       basePointer=boxedValue,
       indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -583,7 +594,7 @@ object BoxedStringLike extends BoxedType {
     }
 
     block.getelementptr("byteLengthPtr")(
-      elementType=IntegerType(32),
+      elementType=byteLengthIrType,
       basePointer=boxedValue,
       indices=List(0, 2).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -606,7 +617,7 @@ object BoxedStringLike extends BoxedType {
     }
 
     block.getelementptr("utf8DataPtr")(
-      elementType=PointerType(IntegerType(8)),
+      elementType=utf8DataIrType,
       basePointer=boxedValue,
       indices=List(0, 3).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -633,13 +644,19 @@ object BoxedString extends ConcreteBoxedType {
   val tbaaIndex = 6
   val typeId = 3
 
-  def createConstant(charLength : IrConstant, byteLength : IrConstant, utf8Data : IrConstant) : StructureConstant = {
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
+  val charLengthIrType = IntegerType(32)
+  val byteLengthIrType = IntegerType(32)
+  val utf8DataIrType = PointerType(IntegerType(8))
+
+  def createConstant(charLength : Long, byteLength : Long, utf8Data : IrConstant) : StructureConstant = {
     StructureConstant(List(
       supertype.get.createConstant(
         charLength=charLength,
         byteLength=byteLength,
         utf8Data=utf8Data,
-        typeId=IntegerConstant(IntegerType(16), typeId)
+        typeId=typeId
       )
     ), userDefinedType=Some(irType))
   }
@@ -649,7 +666,7 @@ object BoxedString extends ConcreteBoxedType {
     val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
-    val isString = startBlock.icmp("isString")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 3))
+    val isString = startBlock.icmp("isString")(ComparisonCond.Equal, None, typeId, IntegerConstant(typeIdIrType, 3))
     startBlock.condBranch(isString, successBlock, failBlock)
   }
 
@@ -659,7 +676,7 @@ object BoxedString extends ConcreteBoxedType {
     }
 
     block.getelementptr("typeIdPtr")(
-      elementType=IntegerType(16),
+      elementType=typeIdIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -682,7 +699,7 @@ object BoxedString extends ConcreteBoxedType {
     }
 
     block.getelementptr("gcStatePtr")(
-      elementType=IntegerType(16),
+      elementType=gcStateIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -705,7 +722,7 @@ object BoxedString extends ConcreteBoxedType {
     }
 
     block.getelementptr("charLengthPtr")(
-      elementType=IntegerType(32),
+      elementType=charLengthIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -728,7 +745,7 @@ object BoxedString extends ConcreteBoxedType {
     }
 
     block.getelementptr("byteLengthPtr")(
-      elementType=IntegerType(32),
+      elementType=byteLengthIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 2).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -751,7 +768,7 @@ object BoxedString extends ConcreteBoxedType {
     }
 
     block.getelementptr("utf8DataPtr")(
-      elementType=PointerType(IntegerType(8)),
+      elementType=utf8DataIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 3).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -778,13 +795,19 @@ object BoxedSymbol extends ConcreteBoxedType {
   val tbaaIndex = 7
   val typeId = 4
 
-  def createConstant(charLength : IrConstant, byteLength : IrConstant, utf8Data : IrConstant) : StructureConstant = {
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
+  val charLengthIrType = IntegerType(32)
+  val byteLengthIrType = IntegerType(32)
+  val utf8DataIrType = PointerType(IntegerType(8))
+
+  def createConstant(charLength : Long, byteLength : Long, utf8Data : IrConstant) : StructureConstant = {
     StructureConstant(List(
       supertype.get.createConstant(
         charLength=charLength,
         byteLength=byteLength,
         utf8Data=utf8Data,
-        typeId=IntegerConstant(IntegerType(16), typeId)
+        typeId=typeId
       )
     ), userDefinedType=Some(irType))
   }
@@ -794,7 +817,7 @@ object BoxedSymbol extends ConcreteBoxedType {
     val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
-    val isSymbol = startBlock.icmp("isSymbol")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 4))
+    val isSymbol = startBlock.icmp("isSymbol")(ComparisonCond.Equal, None, typeId, IntegerConstant(typeIdIrType, 4))
     startBlock.condBranch(isSymbol, successBlock, failBlock)
   }
 
@@ -804,7 +827,7 @@ object BoxedSymbol extends ConcreteBoxedType {
     }
 
     block.getelementptr("typeIdPtr")(
-      elementType=IntegerType(16),
+      elementType=typeIdIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -827,7 +850,7 @@ object BoxedSymbol extends ConcreteBoxedType {
     }
 
     block.getelementptr("gcStatePtr")(
-      elementType=IntegerType(16),
+      elementType=gcStateIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -850,7 +873,7 @@ object BoxedSymbol extends ConcreteBoxedType {
     }
 
     block.getelementptr("charLengthPtr")(
-      elementType=IntegerType(32),
+      elementType=charLengthIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -873,7 +896,7 @@ object BoxedSymbol extends ConcreteBoxedType {
     }
 
     block.getelementptr("byteLengthPtr")(
-      elementType=IntegerType(32),
+      elementType=byteLengthIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 2).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -896,7 +919,7 @@ object BoxedSymbol extends ConcreteBoxedType {
     }
 
     block.getelementptr("utf8DataPtr")(
-      elementType=PointerType(IntegerType(8)),
+      elementType=utf8DataIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 3).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -923,12 +946,16 @@ object BoxedBoolean extends ConcreteBoxedType {
   val tbaaIndex = 8
   val typeId = 5
 
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
+  val valueIrType = IntegerType(8)
+
   def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
     val datumValue = BoxedDatum.genPointerBitcast(startBlock)(boxedValue)
     val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
-    val isBoolean = startBlock.icmp("isBoolean")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 5))
+    val isBoolean = startBlock.icmp("isBoolean")(ComparisonCond.Equal, None, typeId, IntegerConstant(typeIdIrType, 5))
     startBlock.condBranch(isBoolean, successBlock, failBlock)
   }
 
@@ -938,7 +965,7 @@ object BoxedBoolean extends ConcreteBoxedType {
     }
 
     block.getelementptr("typeIdPtr")(
-      elementType=IntegerType(16),
+      elementType=typeIdIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -961,7 +988,7 @@ object BoxedBoolean extends ConcreteBoxedType {
     }
 
     block.getelementptr("gcStatePtr")(
-      elementType=IntegerType(16),
+      elementType=gcStateIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -984,7 +1011,7 @@ object BoxedBoolean extends ConcreteBoxedType {
     }
 
     block.getelementptr("valuePtr")(
-      elementType=IntegerType(8),
+      elementType=valueIrType,
       basePointer=boxedValue,
       indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1010,7 +1037,10 @@ object BoxedNumeric extends BoxedType {
   val isAbstract = true
   val tbaaIndex = 9
 
-  def createConstant(typeId : IrConstant) : StructureConstant = {
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
+
+  def createConstant(typeId : Long) : StructureConstant = {
     StructureConstant(List(
       supertype.get.createConstant(
         typeId=typeId
@@ -1023,11 +1053,11 @@ object BoxedNumeric extends BoxedType {
     val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
-    val isExactInteger = startBlock.icmp("isExactInteger")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 6))
+    val isExactInteger = startBlock.icmp("isExactInteger")(ComparisonCond.Equal, None, typeId, IntegerConstant(typeIdIrType, 6))
     val notExactIntegerBlock = startBlock.startChildBlock("notExactInteger")
     startBlock.condBranch(isExactInteger, successBlock, notExactIntegerBlock)
 
-    val isInexactRational = notExactIntegerBlock.icmp("isInexactRational")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 7))
+    val isInexactRational = notExactIntegerBlock.icmp("isInexactRational")(ComparisonCond.Equal, None, typeId, IntegerConstant(typeIdIrType, 7))
     notExactIntegerBlock.condBranch(isInexactRational, successBlock, failBlock)
   }
 
@@ -1037,7 +1067,7 @@ object BoxedNumeric extends BoxedType {
     }
 
     block.getelementptr("typeIdPtr")(
-      elementType=IntegerType(16),
+      elementType=typeIdIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1060,7 +1090,7 @@ object BoxedNumeric extends BoxedType {
     }
 
     block.getelementptr("gcStatePtr")(
-      elementType=IntegerType(16),
+      elementType=gcStateIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1087,16 +1117,16 @@ object BoxedExactInteger extends ConcreteBoxedType {
   val tbaaIndex = 10
   val typeId = 6
 
-  def createConstant(value : IrConstant) : StructureConstant = {
-    if (value.irType != IntegerType(64)) {
-      throw new InternalCompilerErrorException("Unexpected type for field value")
-    }
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
+  val valueIrType = IntegerType(64)
 
+  def createConstant(value : Long) : StructureConstant = {
     StructureConstant(List(
       supertype.get.createConstant(
-        typeId=IntegerConstant(IntegerType(16), typeId)
+        typeId=typeId
       ),
-      value
+      IntegerConstant(valueIrType, value)
     ), userDefinedType=Some(irType))
   }
 
@@ -1105,7 +1135,7 @@ object BoxedExactInteger extends ConcreteBoxedType {
     val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
-    val isExactInteger = startBlock.icmp("isExactInteger")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 6))
+    val isExactInteger = startBlock.icmp("isExactInteger")(ComparisonCond.Equal, None, typeId, IntegerConstant(typeIdIrType, 6))
     startBlock.condBranch(isExactInteger, successBlock, failBlock)
   }
 
@@ -1115,7 +1145,7 @@ object BoxedExactInteger extends ConcreteBoxedType {
     }
 
     block.getelementptr("typeIdPtr")(
-      elementType=IntegerType(16),
+      elementType=typeIdIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1138,7 +1168,7 @@ object BoxedExactInteger extends ConcreteBoxedType {
     }
 
     block.getelementptr("gcStatePtr")(
-      elementType=IntegerType(16),
+      elementType=gcStateIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1161,7 +1191,7 @@ object BoxedExactInteger extends ConcreteBoxedType {
     }
 
     block.getelementptr("valuePtr")(
-      elementType=IntegerType(64),
+      elementType=valueIrType,
       basePointer=boxedValue,
       indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1188,14 +1218,18 @@ object BoxedInexactRational extends ConcreteBoxedType {
   val tbaaIndex = 11
   val typeId = 7
 
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
+  val valueIrType = DoubleType
+
   def createConstant(value : IrConstant) : StructureConstant = {
-    if (value.irType != DoubleType) {
+    if (value.irType != valueIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field value")
     }
 
     StructureConstant(List(
       supertype.get.createConstant(
-        typeId=IntegerConstant(IntegerType(16), typeId)
+        typeId=typeId
       ),
       value
     ), userDefinedType=Some(irType))
@@ -1206,7 +1240,7 @@ object BoxedInexactRational extends ConcreteBoxedType {
     val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
-    val isInexactRational = startBlock.icmp("isInexactRational")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 7))
+    val isInexactRational = startBlock.icmp("isInexactRational")(ComparisonCond.Equal, None, typeId, IntegerConstant(typeIdIrType, 7))
     startBlock.condBranch(isInexactRational, successBlock, failBlock)
   }
 
@@ -1216,7 +1250,7 @@ object BoxedInexactRational extends ConcreteBoxedType {
     }
 
     block.getelementptr("typeIdPtr")(
-      elementType=IntegerType(16),
+      elementType=typeIdIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1239,7 +1273,7 @@ object BoxedInexactRational extends ConcreteBoxedType {
     }
 
     block.getelementptr("gcStatePtr")(
-      elementType=IntegerType(16),
+      elementType=gcStateIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1262,7 +1296,7 @@ object BoxedInexactRational extends ConcreteBoxedType {
     }
 
     block.getelementptr("valuePtr")(
-      elementType=DoubleType,
+      elementType=valueIrType,
       basePointer=boxedValue,
       indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1289,14 +1323,18 @@ object BoxedCharacter extends ConcreteBoxedType {
   val tbaaIndex = 12
   val typeId = 8
 
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
+  val unicodeCharIrType = IntegerType(32)
+
   def createConstant(unicodeChar : IrConstant) : StructureConstant = {
-    if (unicodeChar.irType != IntegerType(32)) {
+    if (unicodeChar.irType != unicodeCharIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field unicodeChar")
     }
 
     StructureConstant(List(
       supertype.get.createConstant(
-        typeId=IntegerConstant(IntegerType(16), typeId)
+        typeId=typeId
       ),
       unicodeChar
     ), userDefinedType=Some(irType))
@@ -1307,7 +1345,7 @@ object BoxedCharacter extends ConcreteBoxedType {
     val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
-    val isCharacter = startBlock.icmp("isCharacter")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 8))
+    val isCharacter = startBlock.icmp("isCharacter")(ComparisonCond.Equal, None, typeId, IntegerConstant(typeIdIrType, 8))
     startBlock.condBranch(isCharacter, successBlock, failBlock)
   }
 
@@ -1317,7 +1355,7 @@ object BoxedCharacter extends ConcreteBoxedType {
     }
 
     block.getelementptr("typeIdPtr")(
-      elementType=IntegerType(16),
+      elementType=typeIdIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1340,7 +1378,7 @@ object BoxedCharacter extends ConcreteBoxedType {
     }
 
     block.getelementptr("gcStatePtr")(
-      elementType=IntegerType(16),
+      elementType=gcStateIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1363,7 +1401,7 @@ object BoxedCharacter extends ConcreteBoxedType {
     }
 
     block.getelementptr("unicodeCharPtr")(
-      elementType=IntegerType(32),
+      elementType=unicodeCharIrType,
       basePointer=boxedValue,
       indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1390,20 +1428,21 @@ object BoxedVector extends ConcreteBoxedType {
   val tbaaIndex = 13
   val typeId = 9
 
-  def createConstant(length : IrConstant, elements : IrConstant) : StructureConstant = {
-    if (length.irType != IntegerType(32)) {
-      throw new InternalCompilerErrorException("Unexpected type for field length")
-    }
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
+  val lengthIrType = IntegerType(32)
+  val elementsIrType = PointerType(PointerType(UserDefinedType("datum")))
 
-    if (elements.irType != PointerType(PointerType(UserDefinedType("datum")))) {
+  def createConstant(length : Long, elements : IrConstant) : StructureConstant = {
+    if (elements.irType != elementsIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field elements")
     }
 
     StructureConstant(List(
       supertype.get.createConstant(
-        typeId=IntegerConstant(IntegerType(16), typeId)
+        typeId=typeId
       ),
-      length,
+      IntegerConstant(lengthIrType, length),
       elements
     ), userDefinedType=Some(irType))
   }
@@ -1413,7 +1452,7 @@ object BoxedVector extends ConcreteBoxedType {
     val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
-    val isVector = startBlock.icmp("isVector")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 9))
+    val isVector = startBlock.icmp("isVector")(ComparisonCond.Equal, None, typeId, IntegerConstant(typeIdIrType, 9))
     startBlock.condBranch(isVector, successBlock, failBlock)
   }
 
@@ -1423,7 +1462,7 @@ object BoxedVector extends ConcreteBoxedType {
     }
 
     block.getelementptr("typeIdPtr")(
-      elementType=IntegerType(16),
+      elementType=typeIdIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1446,7 +1485,7 @@ object BoxedVector extends ConcreteBoxedType {
     }
 
     block.getelementptr("gcStatePtr")(
-      elementType=IntegerType(16),
+      elementType=gcStateIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1469,7 +1508,7 @@ object BoxedVector extends ConcreteBoxedType {
     }
 
     block.getelementptr("lengthPtr")(
-      elementType=IntegerType(32),
+      elementType=lengthIrType,
       basePointer=boxedValue,
       indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1492,7 +1531,7 @@ object BoxedVector extends ConcreteBoxedType {
     }
 
     block.getelementptr("elementsPtr")(
-      elementType=PointerType(PointerType(UserDefinedType("datum"))),
+      elementType=elementsIrType,
       basePointer=boxedValue,
       indices=List(0, 2).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1519,20 +1558,21 @@ object BoxedBytevector extends ConcreteBoxedType {
   val tbaaIndex = 14
   val typeId = 10
 
-  def createConstant(length : IrConstant, data : IrConstant) : StructureConstant = {
-    if (length.irType != IntegerType(32)) {
-      throw new InternalCompilerErrorException("Unexpected type for field length")
-    }
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
+  val lengthIrType = IntegerType(32)
+  val dataIrType = PointerType(IntegerType(8))
 
-    if (data.irType != PointerType(IntegerType(8))) {
+  def createConstant(length : Long, data : IrConstant) : StructureConstant = {
+    if (data.irType != dataIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field data")
     }
 
     StructureConstant(List(
       supertype.get.createConstant(
-        typeId=IntegerConstant(IntegerType(16), typeId)
+        typeId=typeId
       ),
-      length,
+      IntegerConstant(lengthIrType, length),
       data
     ), userDefinedType=Some(irType))
   }
@@ -1542,7 +1582,7 @@ object BoxedBytevector extends ConcreteBoxedType {
     val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
-    val isBytevector = startBlock.icmp("isBytevector")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 10))
+    val isBytevector = startBlock.icmp("isBytevector")(ComparisonCond.Equal, None, typeId, IntegerConstant(typeIdIrType, 10))
     startBlock.condBranch(isBytevector, successBlock, failBlock)
   }
 
@@ -1552,7 +1592,7 @@ object BoxedBytevector extends ConcreteBoxedType {
     }
 
     block.getelementptr("typeIdPtr")(
-      elementType=IntegerType(16),
+      elementType=typeIdIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1575,7 +1615,7 @@ object BoxedBytevector extends ConcreteBoxedType {
     }
 
     block.getelementptr("gcStatePtr")(
-      elementType=IntegerType(16),
+      elementType=gcStateIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1598,7 +1638,7 @@ object BoxedBytevector extends ConcreteBoxedType {
     }
 
     block.getelementptr("lengthPtr")(
-      elementType=IntegerType(32),
+      elementType=lengthIrType,
       basePointer=boxedValue,
       indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1621,7 +1661,7 @@ object BoxedBytevector extends ConcreteBoxedType {
     }
 
     block.getelementptr("dataPtr")(
-      elementType=PointerType(IntegerType(8)),
+      elementType=dataIrType,
       basePointer=boxedValue,
       indices=List(0, 2).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1647,12 +1687,13 @@ object BoxedRecordLike extends BoxedType {
   val isAbstract = true
   val tbaaIndex = 15
 
-  def createConstant(recordClassId : IrConstant, recordData : IrConstant, typeId : IrConstant) : StructureConstant = {
-    if (recordClassId.irType != IntegerType(32)) {
-      throw new InternalCompilerErrorException("Unexpected type for field recordClassId")
-    }
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
+  val recordClassIdIrType = IntegerType(32)
+  val recordDataIrType = PointerType(IntegerType(8))
 
-    if (recordData.irType != PointerType(IntegerType(8))) {
+  def createConstant(recordClassId : Long, recordData : IrConstant, typeId : Long) : StructureConstant = {
+    if (recordData.irType != recordDataIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field recordData")
     }
 
@@ -1660,7 +1701,7 @@ object BoxedRecordLike extends BoxedType {
       supertype.get.createConstant(
         typeId=typeId
       ),
-      recordClassId,
+      IntegerConstant(recordClassIdIrType, recordClassId),
       recordData
     ), userDefinedType=Some(irType))
   }
@@ -1670,11 +1711,11 @@ object BoxedRecordLike extends BoxedType {
     val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
-    val isProcedure = startBlock.icmp("isProcedure")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 11))
+    val isProcedure = startBlock.icmp("isProcedure")(ComparisonCond.Equal, None, typeId, IntegerConstant(typeIdIrType, 11))
     val notProcedureBlock = startBlock.startChildBlock("notProcedure")
     startBlock.condBranch(isProcedure, successBlock, notProcedureBlock)
 
-    val isRecord = notProcedureBlock.icmp("isRecord")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 12))
+    val isRecord = notProcedureBlock.icmp("isRecord")(ComparisonCond.Equal, None, typeId, IntegerConstant(typeIdIrType, 12))
     notProcedureBlock.condBranch(isRecord, successBlock, failBlock)
   }
 
@@ -1684,7 +1725,7 @@ object BoxedRecordLike extends BoxedType {
     }
 
     block.getelementptr("typeIdPtr")(
-      elementType=IntegerType(16),
+      elementType=typeIdIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1707,7 +1748,7 @@ object BoxedRecordLike extends BoxedType {
     }
 
     block.getelementptr("gcStatePtr")(
-      elementType=IntegerType(16),
+      elementType=gcStateIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1730,7 +1771,7 @@ object BoxedRecordLike extends BoxedType {
     }
 
     block.getelementptr("recordClassIdPtr")(
-      elementType=IntegerType(32),
+      elementType=recordClassIdIrType,
       basePointer=boxedValue,
       indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1753,7 +1794,7 @@ object BoxedRecordLike extends BoxedType {
     }
 
     block.getelementptr("recordDataPtr")(
-      elementType=PointerType(IntegerType(8)),
+      elementType=recordDataIrType,
       basePointer=boxedValue,
       indices=List(0, 2).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1780,8 +1821,14 @@ object BoxedProcedure extends ConcreteBoxedType {
   val tbaaIndex = 16
   val typeId = 11
 
-  def createConstant(entryPoint : IrConstant, recordClassId : IrConstant, recordData : IrConstant) : StructureConstant = {
-    if (entryPoint.irType != PointerType(FunctionType(PointerType(UserDefinedType("datum")), List(PointerType(IntegerType(8)), PointerType(UserDefinedType("listElement")) )))) {
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
+  val recordClassIdIrType = IntegerType(32)
+  val recordDataIrType = PointerType(IntegerType(8))
+  val entryPointIrType = PointerType(FunctionType(PointerType(UserDefinedType("datum")), List(PointerType(IntegerType(8)), PointerType(UserDefinedType("listElement")) )))
+
+  def createConstant(entryPoint : IrConstant, recordClassId : Long, recordData : IrConstant) : StructureConstant = {
+    if (entryPoint.irType != entryPointIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field entryPoint")
     }
 
@@ -1789,7 +1836,7 @@ object BoxedProcedure extends ConcreteBoxedType {
       supertype.get.createConstant(
         recordClassId=recordClassId,
         recordData=recordData,
-        typeId=IntegerConstant(IntegerType(16), typeId)
+        typeId=typeId
       ),
       entryPoint
     ), userDefinedType=Some(irType))
@@ -1800,7 +1847,7 @@ object BoxedProcedure extends ConcreteBoxedType {
     val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
-    val isProcedure = startBlock.icmp("isProcedure")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 11))
+    val isProcedure = startBlock.icmp("isProcedure")(ComparisonCond.Equal, None, typeId, IntegerConstant(typeIdIrType, 11))
     startBlock.condBranch(isProcedure, successBlock, failBlock)
   }
 
@@ -1810,7 +1857,7 @@ object BoxedProcedure extends ConcreteBoxedType {
     }
 
     block.getelementptr("typeIdPtr")(
-      elementType=IntegerType(16),
+      elementType=typeIdIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1833,7 +1880,7 @@ object BoxedProcedure extends ConcreteBoxedType {
     }
 
     block.getelementptr("gcStatePtr")(
-      elementType=IntegerType(16),
+      elementType=gcStateIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1856,7 +1903,7 @@ object BoxedProcedure extends ConcreteBoxedType {
     }
 
     block.getelementptr("recordClassIdPtr")(
-      elementType=IntegerType(32),
+      elementType=recordClassIdIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1879,7 +1926,7 @@ object BoxedProcedure extends ConcreteBoxedType {
     }
 
     block.getelementptr("recordDataPtr")(
-      elementType=PointerType(IntegerType(8)),
+      elementType=recordDataIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 2).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1902,7 +1949,7 @@ object BoxedProcedure extends ConcreteBoxedType {
     }
 
     block.getelementptr("entryPointPtr")(
-      elementType=PointerType(FunctionType(PointerType(UserDefinedType("datum")), List(PointerType(IntegerType(8)), PointerType(UserDefinedType("listElement")) ))),
+      elementType=entryPointIrType,
       basePointer=boxedValue,
       indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1929,12 +1976,17 @@ object BoxedRecord extends ConcreteBoxedType {
   val tbaaIndex = 17
   val typeId = 12
 
-  def createConstant(recordClassId : IrConstant, recordData : IrConstant) : StructureConstant = {
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
+  val recordClassIdIrType = IntegerType(32)
+  val recordDataIrType = PointerType(IntegerType(8))
+
+  def createConstant(recordClassId : Long, recordData : IrConstant) : StructureConstant = {
     StructureConstant(List(
       supertype.get.createConstant(
         recordClassId=recordClassId,
         recordData=recordData,
-        typeId=IntegerConstant(IntegerType(16), typeId)
+        typeId=typeId
       )
     ), userDefinedType=Some(irType))
   }
@@ -1944,7 +1996,7 @@ object BoxedRecord extends ConcreteBoxedType {
     val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
-    val isRecord = startBlock.icmp("isRecord")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 12))
+    val isRecord = startBlock.icmp("isRecord")(ComparisonCond.Equal, None, typeId, IntegerConstant(typeIdIrType, 12))
     startBlock.condBranch(isRecord, successBlock, failBlock)
   }
 
@@ -1954,7 +2006,7 @@ object BoxedRecord extends ConcreteBoxedType {
     }
 
     block.getelementptr("typeIdPtr")(
-      elementType=IntegerType(16),
+      elementType=typeIdIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -1977,7 +2029,7 @@ object BoxedRecord extends ConcreteBoxedType {
     }
 
     block.getelementptr("gcStatePtr")(
-      elementType=IntegerType(16),
+      elementType=gcStateIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -2000,7 +2052,7 @@ object BoxedRecord extends ConcreteBoxedType {
     }
 
     block.getelementptr("recordClassIdPtr")(
-      elementType=IntegerType(32),
+      elementType=recordClassIdIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -2023,7 +2075,7 @@ object BoxedRecord extends ConcreteBoxedType {
     }
 
     block.getelementptr("recordDataPtr")(
-      elementType=PointerType(IntegerType(8)),
+      elementType=recordDataIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 2).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -2050,14 +2102,18 @@ object BoxedMutableVar extends ConcreteBoxedType {
   val tbaaIndex = 18
   val typeId = 13
 
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
+  val currentValueIrType = PointerType(UserDefinedType("datum"))
+
   def createConstant(currentValue : IrConstant) : StructureConstant = {
-    if (currentValue.irType != PointerType(UserDefinedType("datum"))) {
+    if (currentValue.irType != currentValueIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field currentValue")
     }
 
     StructureConstant(List(
       supertype.get.createConstant(
-        typeId=IntegerConstant(IntegerType(16), typeId)
+        typeId=typeId
       ),
       currentValue
     ), userDefinedType=Some(irType))
@@ -2068,7 +2124,7 @@ object BoxedMutableVar extends ConcreteBoxedType {
     val typeIdPointer = BoxedDatum.genPointerToTypeId(startBlock)(datumValue)
     val typeId = startBlock.load("typeId")(typeIdPointer)
 
-    val isMutableVar = startBlock.icmp("isMutableVar")(ComparisonCond.Equal, None, typeId, IntegerConstant(IntegerType(16), 13))
+    val isMutableVar = startBlock.icmp("isMutableVar")(ComparisonCond.Equal, None, typeId, IntegerConstant(typeIdIrType, 13))
     startBlock.condBranch(isMutableVar, successBlock, failBlock)
   }
 
@@ -2078,7 +2134,7 @@ object BoxedMutableVar extends ConcreteBoxedType {
     }
 
     block.getelementptr("typeIdPtr")(
-      elementType=IntegerType(16),
+      elementType=typeIdIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -2101,7 +2157,7 @@ object BoxedMutableVar extends ConcreteBoxedType {
     }
 
     block.getelementptr("gcStatePtr")(
-      elementType=IntegerType(16),
+      elementType=gcStateIrType,
       basePointer=boxedValue,
       indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
@@ -2124,7 +2180,7 @@ object BoxedMutableVar extends ConcreteBoxedType {
     }
 
     block.getelementptr("currentValuePtr")(
-      elementType=PointerType(UserDefinedType("datum")),
+      elementType=currentValueIrType,
       basePointer=boxedValue,
       indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
       inbounds=true

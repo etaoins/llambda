@@ -7,6 +7,9 @@
 #include <stdio.h>
 #include <sys/mman.h>
 
+// Statically check that everything can fit in to a Cons cell
+#include "generated/sizecheck.h"
+
 extern "C"
 {
 

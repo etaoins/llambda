@@ -13,7 +13,7 @@ class BoxedTypeSuite extends llvmir.IrTestSuite {
     val expectedTypeId = bt.BoxedInexactRational.typeId.toString
 
     assert(constant.toIr === 
-      s"{%numeric {%datum {i16 ${expectedTypeId}, i16 0}}, double 31.5}"
+      s"{%numeric {%datum {i8 ${expectedTypeId}, i8 0}}, double 31.5}"
     )
   }
   

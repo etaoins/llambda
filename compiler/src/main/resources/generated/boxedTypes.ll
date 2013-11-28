@@ -3,7 +3,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; {unsigned typeId, unsigned gcState}
-%datum = type {i16, i16}
+%datum = type {i8, i8}
 !0 = metadata !{metadata !"datum"}
 
 ; {supertype}

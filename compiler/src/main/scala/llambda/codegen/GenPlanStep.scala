@@ -120,7 +120,7 @@ object GenPlanStep {
       val datumIr = bt.BoxedDatum.genPointerBitcast(block)(boxedIr)
       val typeIdIr = bt.BoxedDatum.genLoadFromTypeId(block)(datumIr)
 
-      val resultIr = block.icmp(boxedType.name + "Check")(ComparisonCond.Equal, None, typeIdIr, IntegerConstant(IntegerType(16), boxedType.typeId))
+      val resultIr = block.icmp(boxedType.name + "Check")(ComparisonCond.Equal, None, typeIdIr, IntegerConstant(bt.BoxedDatum.typeIdIrType, boxedType.typeId))
 
       state.withTempValue(resultTemp -> resultIr)
 

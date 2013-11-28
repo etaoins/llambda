@@ -10,6 +10,18 @@ def _uppercase_first(string):
 def _type_name_to_nfi_decl(type_name):
     return "boxed-" + re.sub('([A-Z][a-z]+)', r'-\1', type_name).lower()
 
+def _llvm_type_integer_bits(llvm_type):
+    if llvm_type is None:
+        return None
+
+    # Check if we're an integer
+    integer_match = re.match("^i(\\d+)$", llvm_type)
+
+    if integer_match:
+        return int(integer_match.group(1))
+
+    return None
+
 def _llvm_type_to_scala(llvm_type):
     # Are we a pointer?
     if llvm_type[-1:] == '*':
@@ -28,11 +40,10 @@ def _llvm_type_to_scala(llvm_type):
         return 'FloatType'
 
     # Check if we're an integer
-    integer_match = re.match("^i(\\d+)$", llvm_type)
+    integer_bits = _llvm_type_integer_bits(llvm_type)
 
-    if integer_match:
-        bit_width = integer_match.group(1)
-        return 'IntegerType(' + str(bit_width) + ')'
+    if integer_bits:
+        return 'IntegerType(' + str(integer_bits) + ')'
 
     raise SemanticException('Cannot convert type "' + llvm_type + '"')
 
@@ -64,15 +75,28 @@ def _field_type_to_scala(field):
     else:
         return _complex_type_to_scala(field.complex_type)
 
-def _recursive_field_names(boxed_type):
-    our_fields = boxed_type.fields.keys()
+def _generate_field_types(current_type):
+    supertype = current_type.supertype
+
+    if supertype:
+        output  = _generate_field_types(supertype)
+    else:
+        output = ''
+
+    for field_name, field in current_type.fields.items():
+        output += '  val ' + field_name + 'IrType = ' + _field_type_to_scala(field) + '\n'
+
+    return output
+
+def _recursive_fields(boxed_type):
+    our_fields = boxed_type.fields.values()
 
     supertype = boxed_type.supertype
     if supertype:
         # gcState is always 0 for constants
-        super_fields = [x for x in supertype.fields.keys() if x != 'gcState']
+        super_fields = [x for x in supertype.fields.values() if x.name != 'gcState']
 
-        return super_fields + _recursive_field_names(supertype)
+        return super_fields + _recursive_fields(supertype)
     else:
         # No more super types
         return []
@@ -80,22 +104,34 @@ def _recursive_field_names(boxed_type):
 def _generate_constant_constructor(all_types, boxed_type):
     constant_type_id = boxed_type.type_id
 
-    our_field_names = list(boxed_type.fields.keys())
-    recursive_field_names = _recursive_field_names(boxed_type)
+    our_fields = list(boxed_type.fields.values())
+    recursive_fields = _recursive_fields(boxed_type)
 
     # Determine our parameters
     parameter_defs = []
 
-    for field_name in our_field_names + recursive_field_names:
-        if field_name == 'gcState':
+    for field in our_fields + recursive_fields:
+        if field.name == 'gcState':
             # This is always 0 for constants
             continue
 
-        if (field_name == 'typeId') and constant_type_id is not None:
+        if (field.name == 'typeId') and constant_type_id is not None:
             # We know our own type ID
             continue
 
-        parameter_defs.append(field_name + ' : IrConstant')
+
+        # See if this is an integer field
+        field_int_bits = _llvm_type_integer_bits(field.llvm_type)
+
+        if field_int_bits:
+            # Take an integer directly
+            param_type = 'Long'
+        else:
+            # Require a llvmir.IrConstant
+            param_type = 'IrConstant'
+
+
+        parameter_defs.append(field.name + ' : ' + param_type)
 
     output = '  def createConstant('
     output += ', '.join(parameter_defs) + ') : StructureConstant = {\n'
@@ -105,10 +141,13 @@ def _generate_constant_constructor(all_types, boxed_type):
             # These are provided internally
             continue
 
-        expected_type = _field_type_to_scala(field)
+        if _llvm_type_integer_bits(field.llvm_type):
+            # We generate the IrContants ourselces
+            continue
+
         exception_message = "Unexpected type for field " + field_name
 
-        output += '    if (' + field_name + '.irType != ' + expected_type + ') {\n'
+        output += '    if (' + field_name + '.irType != ' + field_name + 'IrType) {\n'
         output += '      throw new InternalCompilerErrorException("' + exception_message + '")\n'
         output += '    }\n\n'
 
@@ -120,33 +159,33 @@ def _generate_constant_constructor(all_types, boxed_type):
 
         super_parameters = []
 
-        for field_name in recursive_field_names:
-            if (field_name == 'typeId') and (constant_type_id is not None):
-                type_id_field = all_types[BASE_TYPE].fields['typeId']
-                type_id_type = _field_type_to_scala(type_id_field)
-                type_id_constant = 'IntegerConstant(' + type_id_type + ', typeId)'                
-                super_parameters.append('        typeId=' + type_id_constant)
+        for field in recursive_fields:
+            if (field.name == 'typeId') and (constant_type_id is not None):
+                super_parameters.append('        typeId=typeId')
             else:
-                super_parameters.append('        ' + field_name + '=' + field_name)
+                super_parameters.append('        ' + field.name + '=' + field.name)
 
         output += ",\n".join(super_parameters) + "\n"
 
-        if len(our_field_names):
+        if len(our_fields):
             output += '      ),\n'
         else:
             output += '      )'
 
-    our_fields = []
-    for field_name in our_field_names:
-        if field_name == 'gcState':
-            gcstate_field = all_types[BASE_TYPE].fields['gcState']
-            gcstate_type = _field_type_to_scala(gcstate_field)
-            
-            our_fields.append('      IntegerConstant(' + gcstate_type + ', 0)')
+    our_field_values = []
+    for field in our_fields:
+        if field.name == 'gcState':
+            our_field_values.append('      IntegerConstant(gcStateIrType, 0)')
         else:
-            our_fields.append('      ' + field_name)
+            field_int_bits = _llvm_type_integer_bits(field.llvm_type)
 
-    output += ",\n".join(our_fields) + "\n"
+            if field_int_bits:
+                # Wrap the integer for them
+                our_field_values.append('      IntegerConstant(' + field.name + 'IrType, ' + field.name + ')')
+            else:
+                our_field_values.append('      ' + field.name)
+
+    output += ",\n".join(our_field_values) + "\n"
 
     output += '    ), userDefinedType=Some(irType))\n'
     output += '  }\n'
@@ -191,7 +230,7 @@ def _generate_field_accessors(leaf_type, current_type, declare_only = False, dep
             field_counter = field_counter + 1
 
             output += '    block.getelementptr("'+ field_name + 'Ptr")(\n'
-            output += '      elementType=' + _field_type_to_scala(field) + ',\n'
+            output += '      elementType=' + field_name + 'IrType,\n'
             output += '      basePointer=boxedValue,\n'
             output += '      indices=List(' + ", ".join(indices) + ').map(IntegerConstant(IntegerType(32), _)),\n'
             output += '      inbounds=true\n'
@@ -233,7 +272,6 @@ def _generate_unconditional_type_check():
 
 def _generate_type_check(all_types, boxed_type):
     base_type_object = type_name_to_clike_class(BASE_TYPE)
-    type_id_type = _field_type_to_scala(all_types[BASE_TYPE].fields['typeId'])
 
     output  = '  def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {\n'
     output += '    val datumValue = ' + base_type_object + '.genPointerBitcast(startBlock)(boxedValue)\n'
@@ -248,7 +286,7 @@ def _generate_type_check(all_types, boxed_type):
         uppercase_type_name = _uppercase_first(checking_type_name)
         
         check_bool_name = 'is' + uppercase_type_name
-        expected_value = 'IntegerConstant(' + type_id_type + ', ' + str(concrete_type.type_id) + ')'
+        expected_value = 'IntegerConstant(typeIdIrType, ' + str(concrete_type.type_id) + ')'
 
         output += '\n' 
         output += '    val ' + check_bool_name + ' = '  + incoming_block + 'Block.icmp("' + check_bool_name + '")(ComparisonCond.Equal, None, typeId, ' + expected_value + ')\n'
@@ -361,6 +399,9 @@ def _generate_boxed_types(all_types):
         type_id = boxed_type.type_id
         if type_id is not None:
             output += '  val typeId = ' + str(type_id) + '\n'
+        output += "\n"
+        
+        output += _generate_field_types(boxed_type)
 
         if not boxed_type.singleton:
             output += '\n'
