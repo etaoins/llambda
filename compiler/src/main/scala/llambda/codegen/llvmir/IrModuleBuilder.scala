@@ -6,6 +6,7 @@ class IrModuleBuilder extends Irable {
   private val globalVariableDefs = new ListBuffer[IrGlobalVariableDef]
   private val functionDecls = new ListBuffer[IrFunctionDecl]
   private val functionDefs = new ListBuffer[IrFunctionBuilder]
+  private val tbaaNodes = new ListBuffer[IrTbaaNode]
 
   private val declaredNames = collection.mutable.Set[String]()
 
@@ -27,6 +28,10 @@ class IrModuleBuilder extends Irable {
     declaredNames += function.name
   }
 
+  def defineTbaaNode(tbaaNode : IrTbaaNode) {
+    tbaaNodes += tbaaNode
+  }
+
   def isDeclared(name : String) : Boolean = 
     declaredNames.contains(name)
   
@@ -44,7 +49,10 @@ class IrModuleBuilder extends Irable {
 
   def toIr : String = {
     val allIr : List[Irable] =
-      globalVariableDefs.toList ++ functionDecls.toList ++ functionDefs.toList
+      tbaaNodes.toList ++
+      globalVariableDefs.toList ++
+      functionDecls.toList ++
+      functionDefs.toList
     
     allIr.map(_.toIr).mkString("\n")
   }

@@ -41,6 +41,8 @@ class IrModuleSuite extends FunSuite {
     entryBlock.ret(IntegerConstant(IntegerType(32), 0))
 
     val module = new IrModuleBuilder
+
+    module.defineTbaaNode(IrTbaaNode(0, "root type"))
     module.defineGlobalVariable(helloWorldDef)
     module.declareFunction(putsDecl)
     module.defineFunction(mainFunction)
@@ -58,6 +60,7 @@ class IrModuleSuite extends FunSuite {
     assert(blockRun)
 
     assert(module.toIr ===
+      "!0 = metadata !{ metadata !\"root type\" }\n" +
       "@helloWorldString = unnamed_addr constant [14 x i8] c\"Hello, world!\\00\"\n" + 
       "declare i32 @puts(i8* nocapture) nounwind\n" +
       "define i32 @main(i32 %argc, i8** %argv) {\n" +
