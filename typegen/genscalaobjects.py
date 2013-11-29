@@ -275,35 +275,20 @@ def _generate_type_check(all_types, boxed_type):
 
     output  = '  def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {\n'
     output += '    val datumValue = ' + base_type_object + '.genPointerBitcast(startBlock)(boxedValue)\n'
-    output += '    val typeIdPointer = ' + base_type_object + '.genPointerToTypeId(startBlock)(datumValue)\n'
-    output += '    val typeId = startBlock.load("typeId")(typeIdPointer)\n'
+    output += '    val typeId = BoxedDatum.genLoadFromTypeId(startBlock)(datumValue)\n'
 
-    # Start building off the start block
-    incoming_block = 'start'
+    switch_params = []
 
-    for idx, concrete_type in enumerate(boxed_type.concrete_types.values()):
-        checking_type_name = concrete_type.name
-        uppercase_type_name = _uppercase_first(checking_type_name)
+    # Switch on the type ID
+    switch_params.append("typeId")
+
+    # If the type ID isn't known then fail the branch
+    switch_params.append("failBlock")
+
+    for concrete_type in boxed_type.concrete_types.values():
+        switch_params.append("(" + str(concrete_type.type_id) + "L -> successBlock)")
         
-        check_bool_name = 'is' + uppercase_type_name
-        expected_value = 'IntegerConstant(typeIdIrType, ' + str(concrete_type.type_id) + ')'
-
-        output += '\n' 
-        output += '    val ' + check_bool_name + ' = '  + incoming_block + 'Block.icmp("' + check_bool_name + '")(ComparisonCond.Equal, None, typeId, ' + expected_value + ')\n'
-            
-        if idx == (len(boxed_type.concrete_types) - 1):
-            # No more conditions; exit using the fail block if this check fails
-            outgoing_block = 'fail'
-        else:
-            # Allocate the outgoing block so we can use it as a brach target
-            outgoing_block = 'not' + uppercase_type_name
-            output += '    val ' + outgoing_block + 'Block = ' + incoming_block + 'Block.startChildBlock("' + outgoing_block + '")\n'
-
-        output += '    ' + incoming_block + 'Block.condBranch(' + check_bool_name + ', successBlock, ' + outgoing_block + 'Block)\n'
-
-        # The block we just branched to is the block we're building next
-        incoming_block = outgoing_block
-
+    output += '    startBlock.switch(' + ", ".join(switch_params) + ')\n'
     output += '  }\n'
 
     return output
