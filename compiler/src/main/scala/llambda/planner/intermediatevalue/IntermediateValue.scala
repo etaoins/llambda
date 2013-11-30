@@ -18,7 +18,7 @@ abstract class IntermediateValue {
 
   protected def toBoxedTempValue(boxedType : bt.BoxedType)(implicit plan : PlanWriter) : Option[ps.TempValue]
   protected def toScalarTempValue(nativeType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue]
-  protected def toRecordTempValue(recordType : vt.RecordType)(implicit plan : PlanWriter) : Option[ps.TempValue]
+  protected def toBoxedRecordTempValue(recordDataType : vt.RecordDataType)(implicit plan : PlanWriter) : Option[ps.TempValue]
 
   def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     val trueTemp = new ps.TempValue
@@ -44,8 +44,8 @@ abstract class IntermediateValue {
     case vt.BoxedValue(boxedType) =>
       toBoxedTempValue(boxedType)
 
-    case recordType : vt.RecordType =>
-      toRecordTempValue(recordType)
+    case recordType : vt.BoxedRecordType =>
+      toBoxedRecordTempValue(recordType.recordDataType)
   }
   
   def toRequiredTempValue(targetType : vt.ValueType)(implicit plan : PlanWriter) =

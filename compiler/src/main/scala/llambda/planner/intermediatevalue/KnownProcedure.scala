@@ -62,7 +62,7 @@ class KnownProcedure(val signature : nfi.NativeSignature, val nativeSymbol : Str
     // Procedures have no unboxed representation
     None
   
-  def toRecordTempValue(recordType : vt.RecordType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
+  def toBoxedRecordTempValue(recordDataType : vt.RecordDataType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
     // Procedures can't be converted to normal Scheme records
     None
 

@@ -165,7 +165,7 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
       None
   }
   
-  protected def toRecordTempValue(recordType : vt.RecordType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
+  protected def toBoxedRecordTempValue(recordDataType : vt.RecordDataType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
     // XXX: Unboxing records
     None
 }

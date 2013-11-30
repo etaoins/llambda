@@ -15,7 +15,7 @@ sealed abstract class ScalarValue(val nativeType : nfi.NativeType, val boxedType
     // IntermediateValue or they're DynamicBoxedValues of type bt.BoxedProcedure
     None
   
-  def toRecordTempValue(recordType : vt.RecordType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
+  def toBoxedRecordTempValue(recordDataType : vt.RecordDataType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
     // It's impossible for a scalar to be a record by definition
     None
 

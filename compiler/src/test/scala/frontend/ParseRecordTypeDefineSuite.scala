@@ -16,7 +16,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
       case other => fail("Expected storage location, got " + other.toString)
     }
 
-  implicit class RecordTypeHelpers(recordType : vt.RecordType) {
+  implicit class RecordTypeHelpers(recordType : vt.RecordDataType) {
     def fieldForSourceName(sourceName : String) : vt.RecordField = 
       recordType.fields.find(_.sourceName == sourceName) getOrElse {
         fail("Unable to find field named " + sourceName)
@@ -56,7 +56,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
                            new-type?)""")(scope)
 
     inside(scope("<new-type>")) {
-      case BoundType(recordType : vt.RecordType) =>
+      case BoundType(recordType : vt.RecordDataType) =>
         val consLoc = storageLocFor(scope, "new-type")
         val predLoc = storageLocFor(scope, "new-type?")
 
@@ -82,7 +82,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
                            (const-datum new-type-const-datum))""")(scope)
 
     inside(scope("<new-type>")) {
-      case BoundType(recordType : vt.RecordType) =>
+      case BoundType(recordType : vt.RecordDataType) =>
         val consLoc = storageLocFor(scope, "new-type")
         val predLoc = storageLocFor(scope, "new-type?")
         val constDatumAccessorLoc = storageLocFor(scope, "new-type-const-datum")
@@ -113,7 +113,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
                            ((const-int : <int64>) new-type-const-int))""")(scope)
 
     inside(scope("<new-type>")) {
-      case BoundType(recordType : vt.RecordType) =>
+      case BoundType(recordType : vt.RecordDataType) =>
         val consLoc = storageLocFor(scope, "new-type")
         val predLoc = storageLocFor(scope, "new-type?")
         val constIntAccessorLoc = storageLocFor(scope, "new-type-const-int")
@@ -143,7 +143,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
                            ((next : <new-type>) new-type-next))""")(scope)
 
     inside(scope("<new-type>")) {
-      case BoundType(recordType : vt.RecordType) =>
+      case BoundType(recordType : vt.RecordDataType) =>
         val consLoc = storageLocFor(scope, "new-type")
         val predLoc = storageLocFor(scope, "new-type?")
         val constAccessorLoc = storageLocFor(scope, "new-type-next")
@@ -174,7 +174,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
                            ((mutable-int : <boxed-exact-integer>) new-type-mutable-int set-new-type-mutable-int!))""")(scope)
 
     inside(scope("<new-type>")) {
-      case BoundType(recordType : vt.RecordType) =>
+      case BoundType(recordType : vt.RecordDataType) =>
         val consLoc = storageLocFor(scope, "new-type")
         val predLoc = storageLocFor(scope, "new-type?")
         val constAccessorLoc = storageLocFor(scope, "new-type-const-datum")
@@ -210,7 +210,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
                                 inner-type?)""")(scope)
 
     inside(scope("<inner-type>")) {
-      case BoundType(innerType : vt.RecordType) =>
+      case BoundType(innerType : vt.RecordDataType) =>
         val innerConsLoc = storageLocFor(scope, "inner-type")
         val innerPredLoc = storageLocFor(scope, "inner-type?")
         
@@ -231,7 +231,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
                                     ((inner-field : <inner-type>) outer-type-inner-field))""")(scope)
 
         inside(scope("<outer-type>")) {
-          case BoundType(outerType : vt.RecordType) =>
+          case BoundType(outerType : vt.RecordDataType) =>
             val outerConsLoc = storageLocFor(scope, "outer-type")
             val outerPredLoc = storageLocFor(scope, "outer-type?")
             val innerFieldAccessorLoc = storageLocFor(scope, "outer-type-inner-field")

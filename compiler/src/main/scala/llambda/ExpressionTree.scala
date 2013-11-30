@@ -84,13 +84,13 @@ case class NativeFunction(
 }
 
 sealed abstract class RecordTypeProcedure extends Expression {
-  val recordType : vt.RecordType
+  val recordType : vt.RecordDataType
 
   val subexpressions = Nil
   def map(f : Expression => Expression) : this.type = this
 }
 
-case class RecordTypeConstructor(recordType : vt.RecordType, fields : List[vt.RecordField]) extends RecordTypeProcedure
-case class RecordTypePredicate(recordType : vt.RecordType) extends RecordTypeProcedure
-case class RecordTypeAccessor(recordType : vt.RecordType, field : vt.RecordField) extends RecordTypeProcedure
-case class RecordTypeMutator(recordType : vt.RecordType, field : vt.RecordField) extends RecordTypeProcedure
+case class RecordTypeConstructor(recordType : vt.RecordDataType, fields : List[vt.RecordField]) extends RecordTypeProcedure
+case class RecordTypePredicate(recordType : vt.RecordDataType) extends RecordTypeProcedure
+case class RecordTypeAccessor(recordType : vt.RecordDataType, field : vt.RecordField) extends RecordTypeProcedure
+case class RecordTypeMutator(recordType : vt.RecordDataType, field : vt.RecordField) extends RecordTypeProcedure

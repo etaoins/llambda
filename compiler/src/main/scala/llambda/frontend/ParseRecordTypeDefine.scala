@@ -16,7 +16,7 @@ private[frontend] object ParseRecordTypeDefine {
     mutatorSymbol : Option[sst.ScopedSymbol]
   )
 
-  private def parseFields(typeSymbol : sst.ScopedSymbol, recordType : vt.RecordType, fieldData : List[sst.ScopedDatum]) : ListMap[sst.ScopedSymbol, ParsedField] =
+  private def parseFields(typeSymbol : sst.ScopedSymbol, recordDataType : vt.RecordDataType, fieldData : List[sst.ScopedDatum]) : ListMap[sst.ScopedSymbol, ParsedField] =
     fieldData.foldLeft(ListMap[sst.ScopedSymbol, ParsedField]()) {
       case (parsedFields, fieldDatum @ sst.ScopedProperList(fieldDefDatum :: procedureData)) =>
         // We can either be just a symbol and have no type or we can be a
@@ -32,7 +32,7 @@ private[frontend] object ParseRecordTypeDefine {
             // Resolve the field's type
             val resolvedType = if (fieldTypeSymbol == typeSymbol) {
               // Recursive type
-              recordType
+              recordDataType
             }
             else {
               DatumToValueType(fieldTypeSymbol)
@@ -73,7 +73,7 @@ private[frontend] object ParseRecordTypeDefine {
         throw new BadSpecialFormException(other, "Unrecognized record field definition")
     }
 
-  private def parseConstructor(recordType : vt.RecordType, symbolToField : Map[sst.ScopedSymbol, vt.RecordField], constructorDatum : sst.ScopedDatum) : (sst.ScopedSymbol, et.RecordTypeConstructor) =
+  private def parseConstructor(recordDataType : vt.RecordDataType, symbolToField : Map[sst.ScopedSymbol, vt.RecordField], constructorDatum : sst.ScopedDatum) : (sst.ScopedSymbol, et.RecordTypeConstructor) =
     constructorDatum match {
       case sst.ScopedProperList((constructorSymbol : sst.ScopedSymbol) :: initializerData) =>
         val initializedFields = initializerData.foldLeft(List[vt.RecordField]()) {
@@ -107,7 +107,7 @@ private[frontend] object ParseRecordTypeDefine {
           }
         }
 
-        (constructorSymbol -> et.RecordTypeConstructor(recordType, initializedFields))
+        (constructorSymbol -> et.RecordTypeConstructor(recordDataType, initializedFields))
 
       case other =>
         throw new BadSpecialFormException(other, "Unrecognized record type constructor form")
@@ -117,26 +117,26 @@ private[frontend] object ParseRecordTypeDefine {
     case (typeSymbol : sst.ScopedSymbol) :: constructorDatum :: (predicateSymbol : sst.ScopedSymbol) :: fieldData => 
       // Build an empty record type first so fields referencing our own type
       // have something to point to
-      val recordType = new vt.RecordType(typeSymbol.name)
+      val recordDataType = new vt.RecordDataType(typeSymbol.name)
 
       // Parse our fields first
-      val symbolToParsedField = parseFields(typeSymbol, recordType, fieldData)
+      val symbolToParsedField = parseFields(typeSymbol, recordDataType, fieldData)
 
       // Set our fields
-      recordType.fields = symbolToParsedField.values.toList.map(_.field)
+      recordDataType.fields = symbolToParsedField.values.toList.map(_.field)
 
       // Create our constructor and predicate procedures
-      val constructorProcedure = parseConstructor(recordType, symbolToParsedField.mapValues(_.field), constructorDatum)
-      val predicateProcedure = (predicateSymbol -> et.RecordTypePredicate(recordType))
+      val constructorProcedure = parseConstructor(recordDataType, symbolToParsedField.mapValues(_.field), constructorDatum)
+      val predicateProcedure = (predicateSymbol -> et.RecordTypePredicate(recordDataType))
 
       // Collect all of our accessors and mutators
       val accessorProcedures = (symbolToParsedField.values.map { parsedField => 
-        (parsedField.accessorSymbol -> et.RecordTypeAccessor(recordType, parsedField.field))
+        (parsedField.accessorSymbol -> et.RecordTypeAccessor(recordDataType, parsedField.field))
       }).toList
       
       val mutatorProcedures = (symbolToParsedField.values.flatMap { parsedField => 
         parsedField.mutatorSymbol map { mutator =>
-          (mutator -> et.RecordTypeMutator(recordType, parsedField.field))
+          (mutator -> et.RecordTypeMutator(recordDataType, parsedField.field))
         }
       }).toList
       
@@ -153,7 +153,7 @@ private[frontend] object ParseRecordTypeDefine {
 
       val allProcedures = constructorProcedure :: predicateProcedure :: (accessorProcedures ++ mutatorProcedures)
       
-      ParsedRecordTypeDefine(typeSymbol, recordType, allProcedures.toMap)
+      ParsedRecordTypeDefine(typeSymbol, recordDataType, allProcedures.toMap)
 
     case _ =>
       throw new BadSpecialFormException(appliedSymbol, "Unrecognized record type form")

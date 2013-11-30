@@ -14,7 +14,7 @@ sealed abstract class ConstantValue(boxedType : bt.ConcreteBoxedType) extends In
   def toInvokableProcedure()(implicit plan : PlanWriter) : Option[InvokableProcedure] = 
     None
   
-  def toRecordTempValue(recordType : vt.RecordType)(implicit plan : PlanWriter) : Option[ps.TempValue] = 
+  def toBoxedRecordTempValue(recordDataType : vt.RecordDataType)(implicit plan : PlanWriter) : Option[ps.TempValue] = 
     // Record literals aren't defined by R7RS and we don't add them
     None
 
