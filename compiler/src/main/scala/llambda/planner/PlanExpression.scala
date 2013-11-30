@@ -16,7 +16,7 @@ private[planner] object PlanExpression {
     reportproc.CadrProcPlanner
   )
 
-  def apply(initialState : PlannerState)(expr : et.Expression)(implicit planConfig : PlanConfig, plan : PlanWriter) : PlanResult = LocateExceptionsWith(expr) {
+  def apply(initialState : PlannerState)(expr : et.Expression, sourceNameHint : Option[String] = None)(implicit planConfig : PlanConfig, plan : PlanWriter) : PlanResult = LocateExceptionsWith(expr) {
     expr match {
       case et.Begin(exprs) =>
         var finalValue : iv.IntermediateValue = iv.UnspecificValue 
@@ -72,13 +72,12 @@ private[planner] object PlanExpression {
 
       case et.Bind(bindings) =>
         val finalState = bindings.foldLeft(initialState) { case (state, (storageLoc, initialValue)) =>
-          val initialValueResult = apply(state)(initialValue)
-
           if (planConfig.analysis.mutableVars.contains(storageLoc)) {
             val allocTemp = new ps.TempAllocation
             val mutableTemp = new ps.TempValue
             val variableTemp = new ps.TempValue
             
+            val initialValueResult = apply(state)(initialValue)
             val initialValueTemp = initialValueResult.value.toRequiredTempValue(vt.BoxedValue(bt.BoxedDatum))
 
             plan.steps += ps.AllocateCons(allocTemp, 1)
@@ -88,6 +87,9 @@ private[planner] object PlanExpression {
             initialValueResult.state.withMutable(storageLoc -> mutableTemp)
           }
           else {
+            // Send a hint about our name
+            val initialValueResult = apply(state)(initialValue, Some(storageLoc.sourceName))
+
             val reportNamedValue = (initialValueResult.value, storageLoc) match {
               case (knownProc : iv.KnownProcedure, reportProc : ReportProcedure) =>
                 // Annotate with our report name so we can optimize when we try
