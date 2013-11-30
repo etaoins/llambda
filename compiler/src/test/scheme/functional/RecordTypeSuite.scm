@@ -7,11 +7,18 @@
 	(define-record-type <type2> (type2) type2?)
 	(type1? (type2))))
 
-(define-test "constructing record type with one typeless immutable field" (expect 1
+(define-test "constructing record type with one typeless initialized immutable field" (expect 1
 	(define-record-type <single-value> (single-value field) single-value?
 		(field single-value-field))
 	
 	(define instance (single-value 1))
+	(single-value-field instance)))
+
+(define-test "constructing record type with one typeless uninitialized immutable field" (expect #!unspecific
+	(define-record-type <single-value> (single-value) single-value?
+		(field single-value-field))
+	
+	(define instance (single-value))
 	(single-value-field instance)))
 
 (define-test "constructing record type with one typed immutable field" (expect "Test string"
