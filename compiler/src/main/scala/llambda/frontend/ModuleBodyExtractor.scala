@@ -387,7 +387,7 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, includePath : IncludePa
 
     case malformed =>
       throw new MalformedExpressionException(malformed, malformed.toString)
-  }).map(_.assignLocationFrom(datum))
+  }).assignLocationFrom(datum)
 
   def apply(data : List[ast.Datum], evalScope : Scope) : List[et.Expression] = data flatMap { datum => 
     // Annotate our symbols with our current scope
