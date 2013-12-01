@@ -4,20 +4,10 @@ import llambda.nfi
 import llambda.{boxedtype => bt}
 import llambda.{valuetype => vt}
 import llambda.planner.{step => ps}
-import llambda.planner.{PlanWriter, InvokableProcedure}
+import llambda.planner.PlanWriter
 
-sealed abstract class ScalarValue(val nativeType : nfi.NativeType, val boxedType : bt.ConcreteBoxedType, val tempValue : ps.TempValue) extends IntermediateValue {
+sealed abstract class ScalarValue(val nativeType : nfi.NativeType, val boxedType : bt.ConcreteBoxedType, val tempValue : ps.TempValue) extends IntermediateValue with UninvokableValue with NonRecordValue {
   val possibleTypes = Set(boxedType)
-  
-  def toInvokableProcedure()(implicit plan : PlanWriter) : Option[InvokableProcedure] = 
-    // Procedure values have no unboxed intermediate value
-    // They're either KnownProcedures which are a special direct subclass of
-    // IntermediateValue or they're DynamicBoxedValues of type bt.BoxedProcedure
-    None
-  
-  def toBoxedRecordTempValue(recordDataType : vt.RecordDataType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
-    // It's impossible for a scalar to be a record by definition
-    None
 
   // This is used for our shortcut in planPhiWith to build a new phi'ed intermediate
   protected def withNewTempValue(tempValue : ps.TempValue) : ScalarValue

@@ -25,7 +25,7 @@ object PlanApplication {
       val restArgTemp = new ps.TempValue
 
       val argTemps = restArgs.map {
-        _.toRequiredTempValue(vt.BoxedValue(bt.BoxedDatum))
+        _.toRequiredTempValue(vt.BoxedIntrinsicType(bt.BoxedDatum))
       }
 
       plan.steps += ps.AllocateCons(allocTemp, restArgCount)

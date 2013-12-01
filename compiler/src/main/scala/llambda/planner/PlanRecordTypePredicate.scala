@@ -10,15 +10,15 @@ import llambda.planner.{intermediatevalue => iv}
 object PlanRecordTypePredicate {
   def apply(expr : et.RecordTypePredicate)(implicit parentPlan : PlanWriter) : PlannedFunction = 
     expr match {
-      case et.RecordTypePredicate(recordDataType) =>
+      case et.RecordTypePredicate(recordType) =>
         // Determine our signature
         val predicateSignature = new nfi.NativeSignature {
           val hasClosureArg : Boolean = false
           val hasRestArg : Boolean = false
 
           // We must be able to take any data type without erroring out
-          val fixedArgs : List[vt.ValueType] = List(vt.BoxedValue(bt.BoxedDatum))
-          val returnType : Option[vt.ValueType] = Some(vt.BoxedValue(bt.BoxedRecord))
+          val fixedArgs : List[vt.ValueType] = List(vt.BoxedIntrinsicType(bt.BoxedDatum))
+          val returnType : Option[vt.ValueType] = Some(vt.BoxedIntrinsicType(bt.BoxedRecord))
         }
         
         // We only have a single argument
@@ -37,7 +37,7 @@ object PlanRecordTypePredicate {
             isRecordPlan.steps += ps.CastBoxedToTypeUnchecked(boxedRecordTemp, argumentTemp, bt.BoxedRecord)
 
             val classMatchedPred = new ps.TempValue
-            isRecordPlan.steps += ps.TestBoxedRecordClass(classMatchedPred, boxedRecordTemp, recordDataType) 
+            isRecordPlan.steps += ps.TestBoxedRecordClass(classMatchedPred, boxedRecordTemp, recordType) 
 
             val classMatchedBool = new ps.TempValue
             isRecordPlan.steps += ps.ConvertNativeInteger(classMatchedBool, classMatchedPred, nfi.CBool.bits, false)

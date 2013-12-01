@@ -8,7 +8,7 @@ import llambda.planner.{PlanWriter, InvokableProcedure}
 import llambda.codegen.BoxedProcedureSignature
 import llambda.NotImplementedException
 
-class KnownProcedure(val signature : nfi.NativeSignature, val nativeSymbol : String, val reportName : Option[String] = None) extends IntermediateValue with InvokableProcedure {
+class KnownProcedure(val signature : nfi.NativeSignature, val nativeSymbol : String, val reportName : Option[String] = None) extends IntermediateValue with InvokableProcedure with NonRecordValue {
   val possibleTypes = Set[bt.ConcreteBoxedType](bt.BoxedProcedure) 
   
   def toInvokableProcedure()(implicit plan : PlanWriter) : Option[InvokableProcedure] = 
@@ -60,10 +60,6 @@ class KnownProcedure(val signature : nfi.NativeSignature, val nativeSymbol : Str
   
   def toScalarTempValue(unboxedType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
     // Procedures have no unboxed representation
-    None
-  
-  def toBoxedRecordTempValue(recordDataType : vt.RecordDataType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
-    // Procedures can't be converted to normal Scheme records
     None
 
   def withReportName(newReportName : String) : KnownProcedure = {

@@ -6,6 +6,7 @@ import llambda.{valuetype => vt}
 import llambda.planner.{step => ps}
 import llambda.planner.{intermediatevalue => iv}
 import llambda.InternalCompilerErrorException
+import llambda.NotImplementedException
 
 object TempValueToIntermediate {
   def apply(valueType : vt.ValueType, tempValue : ps.TempValue) : iv.IntermediateValue = valueType match {
@@ -24,7 +25,10 @@ object TempValueToIntermediate {
     case vt.ScalarType(nfi.Utf8CString) =>
       new iv.UnboxedUtf8String(tempValue)
 
-    case vt.BoxedValue(boxedType) =>
-      new iv.DynamicBoxedValue(boxedType.concreteTypes, boxedType, tempValue)
+    case vt.BoxedIntrinsicType(boxedType) =>
+      new iv.BoxedIntrinsicValue(boxedType.concreteTypes, boxedType, tempValue)
+
+    case recordType : vt.BoxedRecordType =>
+      new iv.BoxedRecordValue(recordType, tempValue)
   }
 }

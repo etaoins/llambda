@@ -14,6 +14,15 @@
 	(define instance (single-value 1))
 	(single-value-field instance)))
 
+(define-test "record types can be converted to and from boxed data" (expect 1
+	(import (llambda test-util))
+
+	(define-record-type <single-value> (single-value field) single-value?
+		(field single-value-field))
+	
+	(define instance (single-value 1))
+	(single-value-field (typeless-boxed instance))))
+
 (define-test "constructing record type with one typeless uninitialized immutable field" (expect #!unspecific
 	(define-record-type <single-value> (single-value) single-value?
 		(field single-value-field))
@@ -71,7 +80,7 @@
 		(field2 two-value-field2 set-two-value-field2!))
 	
 	(define instance (two-value 20 30))
-	(set-two-value-field2! 40)
+	(set-two-value-field2! instance 40)
 
 	(list (two-value-field1 instance) (two-value-field2 instance))))
 

@@ -58,9 +58,9 @@ class NativeSignatureToIrSuite extends FunSuite {
   
   test("function taking two numerics, rest arg returning rational") {
     val testNativeFunc = NativeFunction(
-      fixedArgs=vt.BoxedValue(bt.BoxedNumeric) :: vt.BoxedValue(bt.BoxedNumeric) :: Nil,
+      fixedArgs=vt.BoxedIntrinsicType(bt.BoxedNumeric) :: vt.BoxedIntrinsicType(bt.BoxedNumeric) :: Nil,
       hasRestArg=true,
-      returnType=Some(vt.BoxedValue(bt.BoxedInexactRational)),
+      returnType=Some(vt.BoxedIntrinsicType(bt.BoxedInexactRational)),
       nativeSymbol="lliby_test")
 
     val irSignature = NativeSignatureToIr(testNativeFunc)

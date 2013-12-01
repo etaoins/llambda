@@ -8,7 +8,7 @@ sealed abstract class ValueType
 sealed abstract trait IntrinsicType extends ValueType
 
 case class ScalarType(nativeType : nfi.NativeType) extends IntrinsicType
-case class BoxedValue(boxedType : bt.BoxedType) extends IntrinsicType
+case class BoxedIntrinsicType(boxedType : bt.BoxedType) extends IntrinsicType
 
 /** Identifies a record field
   *
@@ -22,11 +22,9 @@ final class RecordField(val sourceName : String, val fieldType : ValueType)
 /** Uniquely identifies a record type even if has the same name and internal
   * structure as another type 
   */
-final class RecordDataType(val sourceName : String) extends ValueType {
+case class BoxedRecordType(val sourceName : String) extends ValueType {
   // This is a var so we can deal with recursive types
   // We build an empty RecordType first and any self-referencing fields will
   // reference the empty RecordType. Afterwards the real fields are assigned.
-  var fields : List[RecordField] = Nil
+  var fields : List[RecordField] = null
 }
-
-case class BoxedRecordType(recordDataType : RecordDataType) extends ValueType

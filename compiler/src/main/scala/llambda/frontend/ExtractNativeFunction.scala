@@ -11,7 +11,7 @@ object ExtractNativeFunction {
     val hasRestArg = restArgDatum match {
       case Some(datum) =>
         DatumToValueType(datum) match {
-          case vt.BoxedValue(bt.BoxedListElement) => true
+          case vt.BoxedIntrinsicType(bt.BoxedListElement) => true
           case _ =>
             throw new BadSpecialFormException(datum, "Only boxed-list-element can be used as a rest argument")
         }

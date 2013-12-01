@@ -78,7 +78,7 @@ private[planner] object PlanExpression {
             val variableTemp = new ps.TempValue
             
             val initialValueResult = apply(state)(initialValue)
-            val initialValueTemp = initialValueResult.value.toRequiredTempValue(vt.BoxedValue(bt.BoxedDatum))
+            val initialValueTemp = initialValueResult.value.toRequiredTempValue(vt.BoxedIntrinsicType(bt.BoxedDatum))
 
             plan.steps += ps.AllocateCons(allocTemp, 1)
             plan.steps += ps.MutableVarInit(mutableTemp, allocTemp, 0)
@@ -130,14 +130,14 @@ private[planner] object PlanExpression {
 
         PlanResult(
           state=initialState,
-          value=new iv.DynamicBoxedValue(possibleTypes, bt.BoxedDatum, resultTemp)
+          value=new iv.BoxedIntrinsicValue(possibleTypes, bt.BoxedDatum, resultTemp)
         )
       
       case et.MutateVar(storageLoc, valueExpr) =>
         val mutableTemp = initialState.mutables(storageLoc)
         
         val newValueResult = apply(initialState)(valueExpr)
-        val newValueTemp = newValueResult.value.toRequiredTempValue(vt.BoxedValue(bt.BoxedDatum))
+        val newValueTemp = newValueResult.value.toRequiredTempValue(vt.BoxedIntrinsicType(bt.BoxedDatum))
 
         plan.steps += ps.MutableVarSet(mutableTemp, newValueTemp)
 

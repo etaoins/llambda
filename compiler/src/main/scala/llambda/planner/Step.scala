@@ -152,19 +152,21 @@ case class BoxInexactRational(result : TempValue, allocation : TempAllocation, a
 case class BoxCharacter(result : TempValue, allocation : TempAllocation, allocIndex : Int, unboxed : TempValue) extends BoxValue
 case class BoxUtf8String(result : TempValue, unboxed : TempValue) extends BoxValue with GcBarrier
 case class BoxProcedure(result : TempValue, allocation : TempAllocation, allocIndex : Int, unboxed : TempValue) extends BoxValue
-case class BoxRecord(result : TempValue, allocation : TempAllocation, allocIndex : Int, recordDataType : vt.RecordDataType, unboxed : TempValue) extends BoxValue
+case class BoxRecord(result : TempValue, allocation : TempAllocation, allocIndex : Int, recordType : vt.BoxedRecordType, unboxed : TempValue) extends BoxValue
 
 /** Returns from the current function */
 case class Return(returnValue : Option[TempValue]) extends Step
 
 /** Allocates a record of a give type */
-case class RecordAllocate(result : TempValue, recordDataType : vt.RecordDataType) extends Step
+case class RecordAllocate(result : TempValue, recordType : vt.BoxedRecordType) extends Step
 /** Sets a record field. The value must match the type of record field */
-case class RecordFieldSet(recordData : TempValue, recordDataType : vt.RecordDataType, recordField : vt.RecordField, newValue : TempValue) extends Step
+case class RecordFieldSet(recordData : TempValue, recordType : vt.BoxedRecordType, recordField : vt.RecordField, newValue : TempValue) extends Step
 /** Reads a record field. The value must match the type of record field */
-case class RecordFieldRef(result : TempValue, recordData : TempValue, recordDataType : vt.RecordDataType, recordField : vt.RecordField) extends Step
+case class RecordFieldRef(result : TempValue, recordData : TempValue, recordType : vt.BoxedRecordType, recordField : vt.RecordField) extends Step
 
 /** Tests to see if a record is of a given class */
-case class TestBoxedRecordClass(result : TempValue, boxedRecord : TempValue, recordDataType : vt.RecordDataType) extends Step
+case class TestBoxedRecordClass(result : TempValue, boxedRecord : TempValue, recordType : vt.BoxedRecordType) extends Step
+/** Asserts that a record is of a given class */
+case class AssertBoxedRecordClass(boxedRecord : TempValue, recordType : vt.BoxedRecordType) extends Step
 /** Stores the data of a record */
-case class StoreBoxedRecordData(result : TempValue, boxedRecord : TempValue, recordDataType : vt.RecordDataType) extends Step
+case class StoreBoxedRecordData(result : TempValue, boxedRecord : TempValue, recordType : vt.BoxedRecordType) extends Step

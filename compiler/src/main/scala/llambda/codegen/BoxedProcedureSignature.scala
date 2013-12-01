@@ -11,5 +11,5 @@ object BoxedProcedureSignature extends NativeSignature {
   val hasClosureArg = true 
   val fixedArgs = Nil
   val hasRestArg = true
-  val returnType = Some(vt.BoxedValue(bt.BoxedDatum))
+  val returnType = Some(vt.BoxedIntrinsicType(bt.BoxedDatum))
 }

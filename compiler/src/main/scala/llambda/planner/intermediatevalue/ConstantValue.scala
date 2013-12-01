@@ -6,17 +6,10 @@ import llambda.{valuetype => vt}
 import llambda.planner.{step => ps}
 import llambda.planner.{PlanWriter, InvokableProcedure}
 
-sealed abstract class ConstantValue(boxedType : bt.ConcreteBoxedType) extends IntermediateValue {
+sealed abstract class ConstantValue(boxedType : bt.ConcreteBoxedType) extends IntermediateValue with UninvokableValue with NonRecordValue {
   val possibleTypes = Set(boxedType)
     
   def toConstantBoxedTempValue()(implicit plan : PlanWriter) : ps.TempValue
-
-  def toInvokableProcedure()(implicit plan : PlanWriter) : Option[InvokableProcedure] = 
-    None
-  
-  def toBoxedRecordTempValue(recordDataType : vt.RecordDataType)(implicit plan : PlanWriter) : Option[ps.TempValue] = 
-    // Record literals aren't defined by R7RS and we don't add them
-    None
 
   def toBoxedTempValue(targetType : bt.BoxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
     if (targetType.isTypeOrSupertypeOf(boxedType)) {
@@ -129,8 +122,8 @@ class ConstantPairValue(car : ConstantValue, cdr : ConstantValue) extends Consta
     val constantTemp = new ps.TempValue
 
     // Box our car/cdr first
-    val carTemp = car.toRequiredTempValue(vt.BoxedValue(bt.BoxedDatum))
-    val cdrTemp = cdr.toRequiredTempValue(vt.BoxedValue(bt.BoxedDatum))
+    val carTemp = car.toRequiredTempValue(vt.BoxedIntrinsicType(bt.BoxedDatum))
+    val cdrTemp = cdr.toRequiredTempValue(vt.BoxedIntrinsicType(bt.BoxedDatum))
 
     plan.steps += ps.StoreBoxedPair(constantTemp, carTemp, cdrTemp)
 
@@ -148,7 +141,7 @@ class ConstantVectorValue(elements : Vector[ConstantValue]) extends ConstantValu
 
     // Box our elements
     val elementTemps = elements.map {
-      _.toRequiredTempValue(vt.BoxedValue(bt.BoxedDatum))
+      _.toRequiredTempValue(vt.BoxedIntrinsicType(bt.BoxedDatum))
     }
 
     plan.steps += ps.StoreBoxedVector(constantTemp, elementTemps)

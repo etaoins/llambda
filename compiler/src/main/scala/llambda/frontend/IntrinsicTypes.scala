@@ -29,5 +29,5 @@ object IntrinsicTypes {
       ("<ushort>" -> nfi.UInt16),
       ("<uint>"   -> nfi.UInt32)
     ).mapValues(vt.ScalarType.apply) ++
-    (IntrinsicBoxedTypes().mapValues(vt.BoxedValue.apply))
+    (IntrinsicBoxedTypes().mapValues(vt.BoxedIntrinsicType.apply))
 }

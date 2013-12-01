@@ -18,7 +18,7 @@ abstract class IntermediateValue {
 
   protected def toBoxedTempValue(boxedType : bt.BoxedType)(implicit plan : PlanWriter) : Option[ps.TempValue]
   protected def toScalarTempValue(nativeType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue]
-  protected def toBoxedRecordTempValue(recordDataType : vt.RecordDataType)(implicit plan : PlanWriter) : Option[ps.TempValue]
+  protected def toBoxedRecordTempValue(boxedRecordType : vt.BoxedRecordType)(implicit plan : PlanWriter) : Option[ps.TempValue]
 
   def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     val trueTemp = new ps.TempValue
@@ -41,11 +41,11 @@ abstract class IntermediateValue {
     case vt.ScalarType(nativeType : nfi.NativeType) =>
       toScalarTempValue(nativeType)
 
-    case vt.BoxedValue(boxedType) =>
+    case vt.BoxedIntrinsicType(boxedType) =>
       toBoxedTempValue(boxedType)
 
-    case recordType : vt.BoxedRecordType =>
-      toBoxedRecordTempValue(recordType.recordDataType)
+    case boxedRecordType : vt.BoxedRecordType =>
+      toBoxedRecordTempValue(boxedRecordType)
   }
   
   def toRequiredTempValue(targetType : vt.ValueType)(implicit plan : PlanWriter) =
@@ -56,8 +56,8 @@ abstract class IntermediateValue {
   def planPhiWith(theirValue : IntermediateValue)(ourPlan : PlanWriter, theirPlan : PlanWriter) : PlanPhiResult = {
     // This is extremely inefficient for compatible unboxed types
     // This should be overridden where possible
-    val ourTempValue = this.toRequiredTempValue(vt.BoxedValue(bt.BoxedDatum))(ourPlan)
-    val theirTempValue = theirValue.toRequiredTempValue(vt.BoxedValue(bt.BoxedDatum))(theirPlan)
+    val ourTempValue = this.toRequiredTempValue(vt.BoxedIntrinsicType(bt.BoxedDatum))(ourPlan)
+    val theirTempValue = theirValue.toRequiredTempValue(vt.BoxedIntrinsicType(bt.BoxedDatum))(theirPlan)
 
     val phiResultTemp = new ps.TempValue
     val phiPossibleTypes = possibleTypes ++ theirValue.possibleTypes
@@ -66,7 +66,7 @@ abstract class IntermediateValue {
       ourTempValue=ourTempValue,
       theirTempValue=theirTempValue,
       resultTemp=phiResultTemp,
-      resultIntermediate=new DynamicBoxedValue(phiPossibleTypes, bt.BoxedDatum, phiResultTemp)
+      resultIntermediate=new BoxedIntrinsicValue(phiPossibleTypes, bt.BoxedDatum, phiResultTemp)
     )
   }
 }

@@ -6,7 +6,7 @@ import llambda.{valuetype => vt}
 import llambda.planner.{step => ps}
 import llambda.planner.{PlanWriter, InvokableProcedure}
 
-class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType : bt.BoxedType, tempValue : ps.TempValue) extends IntermediateValue {
+class BoxedIntrinsicValue(val possibleTypes : Set[bt.ConcreteBoxedType], val valueType : bt.BoxedType, val tempValue : ps.TempValue) extends BoxedIntermediateValue {
   override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     val truthyTemp = new ps.TempValue
 
@@ -23,7 +23,7 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
   def toInvokableProcedure()(implicit plan : PlanWriter) : Option[InvokableProcedure] =  {
     if (possibleTypes.contains(bt.BoxedProcedure)) {
       // Cast to a procedure
-      val boxedProcTmep = toRequiredTempValue(vt.BoxedValue(bt.BoxedProcedure))
+      val boxedProcTmep = toRequiredTempValue(vt.BoxedIntrinsicType(bt.BoxedProcedure))
 
       Some(new InvokableBoxedProcedure(boxedProcTmep))
     }
@@ -32,39 +32,9 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
     }
   }
 
-  def toBoxedTempValue(targetType : bt.BoxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] = {
-    val targetConcreteTypes = targetType.concreteTypes
-
-    // Are our possible concrete types a subset of the target types?
-    if (possibleTypes.subsetOf(targetConcreteTypes)) {
-      if (valueType != targetType) {
-        // Need to cast to the right type
-        // We've confirmed that no checking is needed because all of our 
-        // possible types are equal to or supertypes of the target type
-        val castTemp = new ps.TempValue
-        plan.steps += ps.CastBoxedToTypeUnchecked(castTemp, tempValue, targetType)
-
-        Some(castTemp)
-      }
-      else {
-        // We're already of the required type
-        Some(tempValue)
-      }
-    }
-    else if (!possibleTypes.intersect(targetConcreteTypes).isEmpty) {
-      val castTemp = new ps.TempValue
-      plan.steps += ps.CastBoxedToSubtypeChecked(castTemp, tempValue, targetType)
-      Some(castTemp)
-    }
-    else {
-      // Not possible
-      None
-    }
-  }
-
   def toScalarTempValue(unboxedType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = unboxedType match {
     case nfi.UnicodeChar =>
-      toTempValue(vt.BoxedValue(bt.BoxedCharacter)) map { boxedChar =>
+      toTempValue(vt.BoxedIntrinsicType(bt.BoxedCharacter)) map { boxedChar =>
         val unboxedTemp = new ps.TempValue
         plan.steps += ps.UnboxCharacter(unboxedTemp, boxedChar)
 
@@ -72,7 +42,7 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
       }
       
     case nfi.Utf8CString =>
-      toTempValue(vt.BoxedValue(bt.BoxedString)) map { boxedString =>
+      toTempValue(vt.BoxedIntrinsicType(bt.BoxedString)) map { boxedString =>
         val unboxedTemp = new ps.TempValue
         plan.steps += ps.UnboxStringAsUtf8(unboxedTemp, boxedString)
 
@@ -80,7 +50,7 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
       }
 
     case intType : nfi.IntType =>
-      toTempValue(vt.BoxedValue(bt.BoxedExactInteger)) map { boxedExactInt =>
+      toTempValue(vt.BoxedIntrinsicType(bt.BoxedExactInteger)) map { boxedExactInt =>
         val unboxedTemp = new ps.TempValue
         plan.steps += ps.UnboxExactInteger(unboxedTemp, boxedExactInt)
 
@@ -106,7 +76,7 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
         None
       }
       else if (possiblyExactInt & !possiblyInexactRational) {
-        toTempValue(vt.BoxedValue(bt.BoxedExactInteger)) map { boxedExactInt =>
+        toTempValue(vt.BoxedIntrinsicType(bt.BoxedExactInteger)) map { boxedExactInt =>
           // Unbox as exact int
           val unboxedTemp = new ps.TempValue
           plan.steps += ps.UnboxExactInteger(unboxedTemp, boxedExactInt)
@@ -119,7 +89,7 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
         }
       }
       else if (!possiblyExactInt && possiblyInexactRational) {
-        toTempValue(vt.BoxedValue(bt.BoxedInexactRational)) map { boxedInexactRational =>
+        toTempValue(vt.BoxedIntrinsicType(bt.BoxedInexactRational)) map { boxedInexactRational =>
           // Unbox as inexact rational
           val unboxedTemp = new ps.TempValue
           plan.steps += ps.UnboxInexactRational(unboxedTemp, boxedInexactRational)
@@ -145,11 +115,11 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
         // Try again with constrained types
         // This will hit the branches above us
         val trueWriter = plan.forkPlan()
-        val trueDynamicValue = new DynamicBoxedValue(Set(bt.BoxedExactInteger), valueType, tempValue)
+        val trueDynamicValue = new BoxedIntrinsicValue(Set(bt.BoxedExactInteger), valueType, tempValue)
         val trueTempValue = trueDynamicValue.toRequiredTempValue(vt.ScalarType(fpType))(trueWriter)
 
         val falseWriter = plan.forkPlan()
-        val falseDynamicValue = new DynamicBoxedValue(possibleTypes - bt.BoxedExactInteger, valueType, tempValue)
+        val falseDynamicValue = new BoxedIntrinsicValue(possibleTypes - bt.BoxedExactInteger, valueType, tempValue)
         val falseTempValue = falseDynamicValue.toRequiredTempValue(vt.ScalarType(fpType))(falseWriter)
       
         val phiTemp = new ps.TempValue
@@ -165,8 +135,14 @@ class DynamicBoxedValue(val possibleTypes : Set[bt.ConcreteBoxedType], valueType
       None
   }
   
-  protected def toBoxedRecordTempValue(recordDataType : vt.RecordDataType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
-    // XXX: Unboxing records
-    None
+  protected def toBoxedRecordTempValue(recordType : vt.BoxedRecordType)(implicit plan : PlanWriter) : Option[ps.TempValue] = {
+    // Convert ourselves to a record
+    val recordTemp = toRequiredTempValue(vt.BoxedIntrinsicType(bt.BoxedRecord))
+
+    // Make sure we we're of the right class
+    plan.steps += ps.AssertBoxedRecordClass(tempValue, recordType)
+
+    Some(recordTemp)
+  }
 }
 

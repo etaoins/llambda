@@ -77,14 +77,14 @@ class ValueTypeToIrSuite extends FunSuite {
   }
   
   test("boxed datum") {
-    val typeWithSign = ValueTypeToIr(vt.BoxedValue(bt.BoxedDatum))
+    val typeWithSign = ValueTypeToIr(vt.BoxedIntrinsicType(bt.BoxedDatum))
 
     assert(typeWithSign.irType === llvmir.PointerType(bt.BoxedDatum.irType))
     assert(typeWithSign.signed === None)
   }
   
   test("boxed boolean") {
-    val typeWithSign = ValueTypeToIr(vt.BoxedValue(bt.BoxedBoolean))
+    val typeWithSign = ValueTypeToIr(vt.BoxedIntrinsicType(bt.BoxedBoolean))
 
     assert(typeWithSign.irType === llvmir.PointerType(bt.BoxedBoolean.irType))
     assert(typeWithSign.signed === None)

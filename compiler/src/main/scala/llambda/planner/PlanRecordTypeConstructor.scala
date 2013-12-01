@@ -10,19 +10,19 @@ import llambda.planner.{intermediatevalue => iv}
 object PlanRecordTypeConstructor {
   def apply(expr : et.RecordTypeConstructor)(implicit parentPlan : PlanWriter) : PlannedFunction = 
     expr match {
-      case et.RecordTypeConstructor(recordDataType, initializedFields) =>
+      case et.RecordTypeConstructor(recordType, initializedFields) =>
         // Determine our signature
         val constructorSignature = new nfi.NativeSignature {
           val hasClosureArg : Boolean = false
           val hasRestArg : Boolean = false
 
           val fixedArgs : List[vt.ValueType] = initializedFields.map(_.fieldType)
-          val returnType : Option[vt.ValueType] = Some(vt.BoxedRecordType(recordDataType))
+          val returnType : Option[vt.ValueType] = Some(recordType)
         }
         
         val plan = parentPlan.forkPlan()
 
-        val fieldToTempValue = (recordDataType.fields.map { field =>
+        val fieldToTempValue = (recordType.fields.map { field =>
           (field, new ps.TempValue)
         }).toMap
 
@@ -35,11 +35,11 @@ object PlanRecordTypeConstructor {
         // Make our bare record
         val recordDataTemp = new ps.TempValue 
 
-        plan.steps += ps.RecordAllocate(recordDataTemp, recordDataType)
+        plan.steps += ps.RecordAllocate(recordDataTemp, recordType)
         
         // Set all our fields
         for(field <- initializedFields) {
-          plan.steps += ps.RecordFieldSet(recordDataTemp, recordDataType, field, fieldToTempValue(field))
+          plan.steps += ps.RecordFieldSet(recordDataTemp, recordType, field, fieldToTempValue(field))
         }
 
         // Box the result
@@ -47,7 +47,7 @@ object PlanRecordTypeConstructor {
         val boxedTemp = new ps.TempValue
 
         plan.steps += ps.AllocateCons(allocation, 1)
-        plan.steps += ps.BoxRecord(boxedTemp, allocation, 0, recordDataType, recordDataTemp)
+        plan.steps += ps.BoxRecord(boxedTemp, allocation, 0, recordType, recordDataTemp)
         plan.steps += ps.Return(Some(boxedTemp))
 
         PlannedFunction(

@@ -21,7 +21,7 @@ object ValueTypeToIr {
     case vt.ScalarType(nfi.Utf8CString) =>
       SignedFirstClassType(llvmir.PointerType(llvmir.IntegerType(8)), None)
 
-    case vt.BoxedValue(boxedType) =>
+    case vt.BoxedIntrinsicType(boxedType) =>
       SignedFirstClassType(llvmir.PointerType(boxedType.irType), None)
   }
 }

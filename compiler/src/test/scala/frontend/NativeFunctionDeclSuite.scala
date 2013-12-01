@@ -58,13 +58,13 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   }
   
   test("function taking a boxed integer and returning a boxed rational") {
-    assertResult(et.NativeFunction(vt.BoxedValue(bt.BoxedExactInteger) :: Nil, false, Some(vt.BoxedValue(bt.BoxedInexactRational)), "lliby_newline")) {
+    assertResult(et.NativeFunction(vt.BoxedIntrinsicType(bt.BoxedExactInteger) :: Nil, false, Some(vt.BoxedIntrinsicType(bt.BoxedInexactRational)), "lliby_newline")) {
       expressionFor("""(native-function "lliby_newline" (<boxed-exact-integer>) <boxed-inexact-rational>)""")
     }
   }
 
   test("function with only rest arg") {
-    assertResult(et.NativeFunction(Nil, true, Some(vt.BoxedValue(bt.BoxedDatum)), "lliby_vector")) {
+    assertResult(et.NativeFunction(Nil, true, Some(vt.BoxedIntrinsicType(bt.BoxedDatum)), "lliby_vector")) {
       expressionFor("""(native-function "lliby_vector" <boxed-list-element> <boxed-datum>)""")
     }
   }
