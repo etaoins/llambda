@@ -1,7 +1,7 @@
 package llambda.codegen.llvmir
 
 import llambda.InternalCompilerErrorException
-
+  
 private[llvmir] trait TerminatorInstrs extends IrInstrBuilder {
   def ret(value : IrValue) {
     instructions += s"ret ${value.toIrWithType}"
@@ -25,6 +25,33 @@ private[llvmir] trait TerminatorInstrs extends IrInstrBuilder {
 
   def unreachable() {
     instructions += "unreachable"
+  }
+
+  def switch(testValue : IrValue, defaultBlock : IrBranchTarget, entries : (Long, IrBranchTarget)*) {
+    val testValueType = testValue.irType match {
+      case integerType : IntegerType =>
+        integerType
+
+      case _ =>
+        throw new InternalCompilerErrorException("Attempted switch with non-integer type")
+    }
+
+    entries.foldLeft(Set[Long]()) { case (seenValues, (compareConstant, _)) =>
+      if (seenValues.contains(compareConstant)) {
+        throw new InternalCompilerErrorException("Attempted switch with duplicate comparison constant of ${compareConstant}")
+      }
+
+      seenValues + compareConstant
+    }
+
+    val entriesIr = (entries map { case (value, targetBlock) =>
+      // Build an IR constant of the correct type:
+      val irConstant = IntegerConstant(testValueType, value)
+
+      s"${irConstant.toIrWithType}, label %${targetBlock.label}"
+    }).mkString("  ")
+
+    instructions += s"switch ${testValue.toIrWithType}, label %${defaultBlock.label} [ ${entriesIr} ]"
   }
 }
 

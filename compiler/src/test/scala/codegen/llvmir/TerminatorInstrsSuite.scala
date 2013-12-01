@@ -45,4 +45,72 @@ class TerminatorInstrsSuite extends IrTestSuite {
 
     assertInstr(block, "unreachable")
   }
+
+  test("empty switch") {
+    val block = createTestBlock()
+
+    val testValue = IntegerConstant(IntegerType(32), 0) 
+    val defaultBlock = createTestBlock("default")
+
+    block.switch(testValue, defaultBlock)
+
+    assertInstr(block, "switch i32 0, label %default [  ]")
+  }
+  
+  test("switch with non-integer types fails") {
+    val block = createTestBlock()
+
+    val testValue = DoubleConstant(15.0)
+    val defaultBlock = createTestBlock("default")
+
+    intercept[InternalCompilerErrorException] {
+      block.switch(testValue, defaultBlock)
+    }
+  }
+  
+  test("switch with one target") {
+    val block = createTestBlock()
+
+    val testValue = IntegerConstant(IntegerType(32), 0) 
+    val defaultBlock = createTestBlock("default")
+    val blockOne = createTestBlock("blockOne")
+
+    block.switch(testValue, defaultBlock,
+      (5L -> blockOne)
+    )
+
+    assertInstr(block, "switch i32 0, label %default [ i32 5, label %blockOne ]")
+  }
+  
+  test("switch with two targets") {
+    val block = createTestBlock()
+
+    val testValue = IntegerConstant(IntegerType(16), 0) 
+    val defaultBlock = createTestBlock("default")
+    val blockOne = createTestBlock("blockOne")
+    val blockTwo = createTestBlock("blockTwo")
+
+    block.switch(testValue, defaultBlock,
+      (1L -> blockOne),
+      (2L -> blockTwo)
+    )
+
+    assertInstr(block, "switch i16 0, label %default [ i16 1, label %blockOne  i16 2, label %blockTwo ]")
+  }
+  
+  test("switch with duplicate comparison constant fails") {
+    val block = createTestBlock()
+
+    val testValue = IntegerConstant(IntegerType(16), 0) 
+    val defaultBlock = createTestBlock("default")
+    val blockOne = createTestBlock("blockOne")
+    val blockTwo = createTestBlock("blockTwo")
+
+    intercept[InternalCompilerErrorException] {
+      block.switch(testValue, defaultBlock,
+        (1L -> blockOne),
+        (1L -> blockTwo)
+      )
+    }
+  }
 }
