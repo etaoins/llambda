@@ -75,8 +75,8 @@
 
 	(list (two-value-field1 instance) (two-value-field2 instance))))
 
-(define-test "nested-record-types" (expect 'it-actually-worked
-	(define-record-type <inner-type> (inner-type) inner-type?
+(define-test "nested record types" (expect 'it-actually-worked
+	(define-record-type <inner-type> (inner-type field) inner-type?
 		(field inner-type-field))
 	
 	(define-record-type <outer-type> (outer-type inner-instance) outer-type?

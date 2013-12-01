@@ -181,6 +181,83 @@ private[planner] object PlanExpression {
           state=initialState,
           value=new iv.KnownProcedure(nativeFunc, nativeFunc.nativeSymbol)
         )
+
+      case recordConstructor : et.RecordTypeConstructor =>
+        val procName = sourceNameHint.getOrElse {
+          // By convention the constructor name is the type name without <>
+          recordConstructor.recordType.sourceName
+            .replaceAllLiterally("<", "")
+            .replaceAllLiterally(">", "")
+        }
+
+        val nativeSymbol = plan.allocProcedureSymbol(procName)
+        val plannedConstructor = PlanRecordTypeConstructor(recordConstructor)
+
+        plan.plannedFunctions += (nativeSymbol -> plannedConstructor)
+
+        PlanResult(
+          state=initialState,
+          value=new iv.KnownProcedure(plannedConstructor.signature, nativeSymbol)
+        )
+      
+      case recordPredicate : et.RecordTypePredicate =>
+        val procName = sourceNameHint.getOrElse {
+          // By convention the predicate name is the type name without <> followed by ?
+          recordPredicate.recordType.sourceName
+            .replaceAllLiterally("<", "")
+            .replaceAllLiterally(">", "") + "?"
+        }
+
+        val nativeSymbol = plan.allocProcedureSymbol(procName)
+        val plannedPredicate = PlanRecordTypePredicate(recordPredicate)
+
+        plan.plannedFunctions += (nativeSymbol -> plannedPredicate)
+
+        PlanResult(
+          state=initialState,
+          value=new iv.KnownProcedure(plannedPredicate.signature, nativeSymbol)
+        )
+      
+      case recordAccessor : et.RecordTypeAccessor =>
+        val procName = sourceNameHint.getOrElse {
+          // By convention the accessor name is "{constructorName}-{fieldName}"
+          recordAccessor.recordType.sourceName
+            .replaceAllLiterally("<", "")
+            .replaceAllLiterally(">", "") + 
+            "-" + recordAccessor.field.sourceName
+        }
+
+        val nativeSymbol = plan.allocProcedureSymbol(procName)
+        val plannedAccessor = PlanRecordTypeAccessor(recordAccessor)
+
+        plan.plannedFunctions += (nativeSymbol -> plannedAccessor)
+
+        PlanResult(
+          state=initialState,
+          value=new iv.KnownProcedure(plannedAccessor.signature, nativeSymbol)
+        )
+      
+      case recordMutator : et.RecordTypeMutator =>
+        val procName = sourceNameHint.getOrElse {
+          // By convention the mutatorName name is "set-{constructorName}-{fieldName}!"
+          // By convention the predicate name is the type name without <> followed by the field's source name?
+          "set-" +
+            recordMutator.recordType.sourceName
+            .replaceAllLiterally("<", "")
+            .replaceAllLiterally(">", "") + 
+            "-" + recordMutator.field.sourceName +
+            "!"
+        }
+
+        val nativeSymbol = plan.allocProcedureSymbol(procName)
+        val plannedMutator = PlanRecordTypeMutator(recordMutator)
+
+        plan.plannedFunctions += (nativeSymbol -> plannedMutator)
+
+        PlanResult(
+          state=initialState,
+          value=new iv.KnownProcedure(plannedMutator.signature, nativeSymbol)
+        )
     }
   }
 }
