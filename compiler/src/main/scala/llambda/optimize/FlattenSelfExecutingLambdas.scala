@@ -10,11 +10,11 @@ object FlattenSelfExecutingLambdas {
       // This is required to keep the semantics of the lambda receiving copies
       // of its arguments
       val bindingsExprs = fixedArgs.zip(operands) map { case (arg, operand) =>
-        et.Bind(List(arg -> operand))
+        et.Bind(List(arg -> operand)).assignLocationFrom(expr)
       }
 
       // Replace the whole lambda with a (begin)
-      et.Begin(bindingsExprs :+ body.map(apply))
+      et.Begin(bindingsExprs :+ body.map(apply)).assignLocationFrom(expr)
 
     case _ =>
       expr.map(apply)
