@@ -3,9 +3,14 @@ package llambda.codegen.llvmir
 import collection.mutable.ListBuffer
 
 class IrModuleBuilder extends Irable {
+  private case class NamedType(name : String, irType : IrType) extends Irable {
+    def toIr = s"%${name} = type ${irType.toIr}"
+  }
+
   private val globalVariableDefs = new ListBuffer[IrGlobalVariableDef]
   private val functionDecls = new ListBuffer[IrFunctionDecl]
   private val functionDefs = new ListBuffer[IrFunctionBuilder]
+  private val namedTypes = new ListBuffer[NamedType]
   private val tbaaNodes = new ListBuffer[IrTbaaNode]
 
   private val declaredNames = collection.mutable.Set[String]()
@@ -26,6 +31,13 @@ class IrModuleBuilder extends Irable {
   def defineFunction(function : IrFunctionBuilder) {
     functionDefs.append(function)
     declaredNames += function.name
+  }
+
+  def nameType(name : String, irType : IrType) : UserDefinedType = {
+    namedTypes += NamedType(name, irType)
+    declaredNames += name
+
+    UserDefinedType(name)
   }
 
   def defineTbaaNode(tbaaNode : IrTbaaNode) {
@@ -49,6 +61,7 @@ class IrModuleBuilder extends Irable {
 
   def toIr : String = {
     val allIr : List[Irable] =
+      namedTypes.toList ++
       tbaaNodes.toList ++
       globalVariableDefs.toList ++
       functionDecls.toList ++
