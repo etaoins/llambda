@@ -157,8 +157,8 @@ case class BoxRecord(result : TempValue, allocation : TempAllocation, allocIndex
 /** Returns from the current function */
 case class Return(returnValue : Option[TempValue]) extends Step
 
-/** Allocates a record of a give type */
-case class RecordAllocate(result : TempValue, recordType : vt.BoxedRecordType) extends Step
+/** Allocates data for a given record a given type */
+case class RecordDataAllocate(result : TempValue, recordType : vt.BoxedRecordType) extends Step
 /** Sets a record field. The value must match the type of record field */
 case class RecordFieldSet(recordData : TempValue, recordType : vt.BoxedRecordType, recordField : vt.RecordField, newValue : TempValue) extends Step
 /** Reads a record field. The value must match the type of record field */

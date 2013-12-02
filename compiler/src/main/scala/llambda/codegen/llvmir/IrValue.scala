@@ -111,7 +111,11 @@ case class StringConstant(str : String) extends ArrayLikeConstant {
   def toIr = "c\"" + innerString + "\"" 
 }
 
-case class ElementPointerConstant(elementType : FirstClassType, basePointer : GlobalVariable, indices : Seq[Integer], inbounds : Boolean = false) extends IrConstant {
+case class ElementPointerConstant(elementType : FirstClassType, basePointer : IrConstant, indices : Seq[Integer], inbounds : Boolean = false) extends IrConstant {
+  if (!basePointer.irType.isInstanceOf[PointerType]) {
+    throw new InternalCompilerErrorException("Attempted to create a getelementptr constant from non-pointer")
+  }
+
   def irType = PointerType(elementType)
 
   def toIr : String = {

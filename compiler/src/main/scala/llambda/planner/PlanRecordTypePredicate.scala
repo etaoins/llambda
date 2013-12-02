@@ -18,7 +18,7 @@ object PlanRecordTypePredicate {
 
           // We must be able to take any data type without erroring out
           val fixedArgs : List[vt.ValueType] = List(vt.BoxedIntrinsicType(bt.BoxedDatum))
-          val returnType : Option[vt.ValueType] = Some(vt.BoxedIntrinsicType(bt.BoxedRecord))
+          val returnType : Option[vt.ValueType] = Some(vt.ScalarType(nfi.CBool))
         }
         
         // We only have a single argument

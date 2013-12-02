@@ -35,11 +35,19 @@ object PlanRecordTypeConstructor {
         // Make our bare record
         val recordDataTemp = new ps.TempValue 
 
-        plan.steps += ps.RecordAllocate(recordDataTemp, recordType)
+        plan.steps += ps.RecordDataAllocate(recordDataTemp, recordType)
         
         // Set all our fields
-        for(field <- initializedFields) {
-          plan.steps += ps.RecordFieldSet(recordDataTemp, recordType, field, fieldToTempValue(field))
+        for(field <- recordType.fields) {
+          val fieldTemp = if (initializedFields.contains(field)) {
+            fieldToTempValue(field)
+          }
+          else {
+            iv.UnspecificValue.toRequiredTempValue(field.fieldType)(plan)
+          }
+            
+          plan.steps += ps.RecordFieldSet(recordDataTemp, recordType, field, fieldTemp)
+
         }
 
         // Box the result

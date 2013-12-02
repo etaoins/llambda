@@ -7,7 +7,7 @@ import llambda.codegen.llvmir._
 import llambda.{boxedtype => bt}
 
 object GenPlanStep {
-  def apply(state : GenerationState, plannedSymbols : Set[String])(step : ps.Step) : GenerationState = step match {
+  def apply(state : GenerationState, plannedSymbols : Set[String], recordTypeGenerator : RecordTypeGenerator)(step : ps.Step) : GenerationState = step match {
     case ps.AllocateCons(tempAlloc, count) =>
       val (allocState, allocation) = GenConsAllocation(state)(count)
       allocState.withAllocation(tempAlloc -> allocation)
@@ -44,7 +44,7 @@ object GenPlanStep {
     
     case boxValueStep : ps.BoxValue =>
       val irUnboxed = state.liveTemps(boxValueStep.unboxed)
-      val irResult = GenBoxing(state)(boxValueStep, irUnboxed)
+      val irResult = GenBoxing(state, recordTypeGenerator)(boxValueStep, irUnboxed)
 
       state.withTempValue(boxValueStep.result -> irResult)
 
@@ -138,10 +138,10 @@ object GenPlanStep {
       val trueStartState = state.copy(currentBlock=trueStartBlock)
       val falseStartState = state.copy(currentBlock=falseStartBlock)
 
-      val trueEndState = GenPlanSteps(trueStartState, plannedSymbols)(trueSteps)
+      val trueEndState = GenPlanSteps(trueStartState, plannedSymbols, recordTypeGenerator)(trueSteps)
       val trueEndBlock = trueEndState.currentBlock
 
-      val falseEndState = GenPlanSteps(falseStartState, plannedSymbols)(falseSteps)
+      val falseEndState = GenPlanSteps(falseStartState, plannedSymbols, recordTypeGenerator)(falseSteps)
       val falseEndBlock = falseEndState.currentBlock
       
       // Get the IR values from either side
@@ -206,5 +206,64 @@ object GenPlanStep {
       val entryPoint = bt.BoxedProcedure.genLoadFromEntryPoint(state.currentBlock)(procIr)
 
       state.withTempValue(resultTemp -> entryPoint)
+
+    case ps.RecordDataAllocate(resultTemp, recordType) => 
+      val generatedRecordType = recordTypeGenerator(recordType)
+
+      val irResult = GenRecordDataAllocate(state.module, state.currentBlock)(generatedRecordType.irType)
+      state.withTempValue(resultTemp -> irResult)
+    
+    case ps.TestBoxedRecordClass(resultTemp, boxedRecordTemp, recordType) => 
+      val generatedRecordType = recordTypeGenerator(recordType)
+
+      val boxedRecordIr = state.liveTemps(boxedRecordTemp)
+      val irResult = GenTestBoxedRecordClass(state.currentBlock)(boxedRecordIr, generatedRecordType.classId)
+
+      state.withTempValue(resultTemp -> irResult)
+    
+    case ps.AssertBoxedRecordClass(boxedRecordTemp, recordType) => 
+      val generatedRecordType = recordTypeGenerator(recordType)
+      
+      // Start our branches
+      val fatalBlock = state.currentBlock.startChildBlock("wrongRecordClass")
+      val successBlock = state.currentBlock.startChildBlock("correctRecordClass")
+
+      // Generate code for a fatal error
+      val errorName = "recordClassIsNot" + generatedRecordType.irType.name
+      val errorText = "Record is not of class " + recordType.sourceName
+
+      GenFatalError(state.module, fatalBlock)(errorName, errorText)
+
+      // Branch if we're not of the right class
+      val boxedRecordIr = state.liveTemps(boxedRecordTemp)
+      val irResult = GenTestBoxedRecordClass(state.currentBlock)(boxedRecordIr, generatedRecordType.classId)
+
+      state.currentBlock.condBranch(irResult, successBlock, fatalBlock)
+
+      // Continue with the successful block
+      state.copy(currentBlock=successBlock)
+  
+    case ps.RecordFieldSet(recordDataTemp, recordType, recordField, newValueTemp) =>
+      val recordDataIr = state.liveTemps(recordDataTemp)
+      val newValueIr = state.liveTemps(newValueTemp)
+  
+      GenRecordFieldSet(state.currentBlock)(recordDataIr, recordType, recordField, newValueIr)
+
+      state
+    
+    case ps.RecordFieldRef(resultTemp, recordDataTemp, recordType, recordField) =>
+      val recordDataIr = state.liveTemps(recordDataTemp)
+  
+      val resultIr = GenRecordFieldRef(state.currentBlock)(recordDataIr, recordType, recordField)
+
+      state.withTempValue(resultTemp -> resultIr)
+
+    case ps.StoreBoxedRecordData(resultTemp, boxedRecordTemp, recordType) =>
+      val generatedRecordType = recordTypeGenerator(recordType)
+      val boxedRecordIr = state.liveTemps(boxedRecordTemp)
+
+      val resultIr = GenStoreBoxedRecordData(state.currentBlock)(boxedRecordIr, generatedRecordType.irType)
+
+      state.withTempValue(resultTemp -> resultIr)
  }
 }

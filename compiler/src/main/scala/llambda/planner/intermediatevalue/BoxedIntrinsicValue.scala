@@ -140,7 +140,7 @@ class BoxedIntrinsicValue(val possibleTypes : Set[bt.ConcreteBoxedType], val val
     val recordTemp = toRequiredTempValue(vt.BoxedIntrinsicType(bt.BoxedRecord))
 
     // Make sure we we're of the right class
-    plan.steps += ps.AssertBoxedRecordClass(tempValue, recordType)
+    plan.steps += ps.AssertBoxedRecordClass(recordTemp, recordType)
 
     Some(recordTemp)
   }

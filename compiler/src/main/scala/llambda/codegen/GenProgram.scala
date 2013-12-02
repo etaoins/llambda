@@ -31,6 +31,7 @@ object GenProgram {
   def apply(functions : Map[String, planner.PlannedFunction]) : String = {
     val module = new llvmir.IrModuleBuilder
     val plannedSymbols = functions.keySet
+    val recordTypeGenerator = new RecordTypeGenerator(module)
 
     // Build each program-supplied function
     for((nativeSymbol, plannedFunction) <- functions) {
@@ -60,7 +61,7 @@ object GenProgram {
         liveTemps=argTemps)
 
       // Generate our steps
-      GenPlanSteps(startState, plannedSymbols)(plannedFunction.steps)
+      GenPlanSteps(startState, plannedSymbols, recordTypeGenerator)(plannedFunction.steps)
 
       module.defineFunction(generatedFunction)
     }
