@@ -2,6 +2,7 @@ package llambda.codegen
 
 import llambda.nfi
 import llambda.{valuetype => vt}
+import llambda.{boxedtype => bt}
 
 case class SignedFirstClassType(
   irType : llvmir.FirstClassType,
@@ -23,5 +24,10 @@ object ValueTypeToIr {
 
     case vt.BoxedIntrinsicType(boxedType) =>
       SignedFirstClassType(llvmir.PointerType(boxedType.irType), None)
+
+    case _ : vt.BoxedRecordType =>
+      // All boxed records have the same IR type. Their data is cast to the 
+      // correct type on demand
+      apply(vt.BoxedIntrinsicType(bt.BoxedRecord))
   }
 }

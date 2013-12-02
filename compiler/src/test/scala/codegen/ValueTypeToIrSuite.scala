@@ -103,4 +103,14 @@ class ValueTypeToIrSuite extends FunSuite {
     assert(typeWithSign.irType === llvmir.IntegerType(32))
     assert(typeWithSign.signed === Some(true))
   }
+  
+  test("boxed record") {
+    val recordType = new vt.BoxedRecordType("recordType")
+    recordType.fields = List()
+
+    val typeWithSign = ValueTypeToIr(recordType)
+
+    assert(typeWithSign.irType === llvmir.PointerType(bt.BoxedRecord.irType))
+    assert(typeWithSign.signed === None)
+  }
 }
