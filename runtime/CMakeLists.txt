@@ -13,10 +13,11 @@ add_library(lliby
 	binding/BoxedStringLike.cpp
 	binding/BoxedString.cpp
 	binding/BoxedVector.cpp
-	core/constinstances.cpp
 	core/box.cpp
-	core/init.cpp
+	core/constinstances.cpp
 	core/fatal.cpp
+	core/init.cpp
+	core/recorddata.cpp
 	stdlib/generated/predicates.cpp
 	stdlib/boolean.cpp
 	stdlib/character.cpp
