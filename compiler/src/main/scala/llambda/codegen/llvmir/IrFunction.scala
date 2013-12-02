@@ -55,8 +55,10 @@ sealed abstract trait IrFunctionDeclLike extends Irable with IrSignatureLike wit
   protected def irArgList : String
 
   protected def irDecl : String = {
+    val escapedName = EscapeIdentifier(name)
+
     val declParts = List(linkage, visibility, callingConv).flatMap(_.toOptIr) ++
-                    List(s"${result.toIr} @${name}(${irArgList})") ++
+                    List(s"${result.toIr} @${escapedName}(${irArgList})") ++
                     (unnamedAddr match {
                       case true => List("unnamed_addr")
                       case false => Nil
@@ -113,7 +115,7 @@ class IrFunctionBuilder(
 
   protected def irArgList : String = {
     namedArguments map { case(argName, argument) =>
-      argument.toIr + " %" + argName
+      argument.toIr + " %" + EscapeIdentifier(argName)
     } mkString(", ")
   }
 

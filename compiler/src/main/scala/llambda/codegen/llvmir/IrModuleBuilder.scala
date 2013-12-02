@@ -4,7 +4,9 @@ import collection.mutable.ListBuffer
 
 class IrModuleBuilder extends Irable {
   private case class NamedType(name : String, irType : IrType) extends Irable {
-    def toIr = s"%${name} = type ${irType.toIr}"
+    private val escapedName = EscapeIdentifier(name)
+
+    def toIr = s"%${escapedName} = type ${irType.toIr}"
   }
 
   private val globalVariableDefs = new ListBuffer[IrGlobalVariableDef]

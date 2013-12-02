@@ -10,7 +10,9 @@ sealed abstract class FirstClassType extends IrType with ReturnableType
 sealed abstract class FloatingPointType(val bits : Int) extends FirstClassType
 
 case class UserDefinedType(name : String) extends FirstClassType {
-  def toIr = s"%${name}"
+  private val escapedName = EscapeIdentifier(name)
+
+  def toIr = s"%${escapedName}"
 }
 
 case class IntegerType(bits : Int) extends FirstClassType {

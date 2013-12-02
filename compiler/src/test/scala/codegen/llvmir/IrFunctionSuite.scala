@@ -76,6 +76,14 @@ class IrFunctionSuite extends FunSuite {
       ).toIr === "declare fastcc void @funcname()")
   }
   
+  test("escaped identiifer decl") {
+    assert(IrFunctionDecl(
+        result=IrFunction.Result(VoidType, Set()), 
+        name="Function Name",
+        arguments=Nil
+      ).toIr === "declare void @\"Function Name\"()")
+  }
+  
   test("unnamed_addr decl") {
     assert(IrFunctionDecl(
         result=IrFunction.Result(VoidType, Set()), 

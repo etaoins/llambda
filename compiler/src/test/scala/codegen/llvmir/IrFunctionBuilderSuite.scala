@@ -59,7 +59,7 @@ class IrFunctionBuilderSuite extends FunSuite {
     val result = IrFunction.Result(IntegerType(32), Set())
     
     val namedArguments = List(
-      "argc" -> IrFunction.Argument(IntegerType(32)),
+      "Argument Count" -> IrFunction.Argument(IntegerType(32)),
       "argv" -> IrFunction.Argument(PointerType(PointerType(IntegerType(8)))))
 
     val function = new IrFunctionBuilder(
@@ -79,7 +79,7 @@ class IrFunctionBuilderSuite extends FunSuite {
     entryBlock.ret(IntegerConstant(IntegerType(32), 0))
 
     assert(function.toIr === 
-      """|define i32 @main(i32 %argc, i8** %argv) {
+      """|define i32 @main(i32 %"Argument Count", i8** %argv) {
          |entry:
          |	%helloPtr1 = getelementptr [14 x i8]* @helloWorldString, i32 0, i32 0
          |	call i32 @puts(i8* %helloPtr1) nounwind

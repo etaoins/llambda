@@ -4,7 +4,11 @@ import org.scalatest.FunSuite
 
 class EscapeIdentifierSuite extends FunSuite {
   test("trivial identifier") {
-    assert(EscapeIdentifier("hello") === "\"hello\"")
+    assert(EscapeIdentifier("hello") === "hello")
+  }
+  
+  test("identifier with underscores") {
+    assert(EscapeIdentifier("hello_world") === "hello_world")
   }
   
   test("identifier with spaces") {

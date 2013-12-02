@@ -48,5 +48,7 @@ class IrTypeSuite extends FunSuite {
 
   test("user defined type") {
     assert(UserDefinedType("genericExpr").toIr === "%genericExpr")
+    
+    assert(UserDefinedType("needs escape").toIr === "%\"needs escape\"")
   }
 }

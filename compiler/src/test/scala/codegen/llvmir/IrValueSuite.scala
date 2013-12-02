@@ -11,10 +11,24 @@ class IrValueSuite extends FunSuite {
     assert(testLocal.irType === FloatType)
   }
   
+  test("local variable is escaped") {
+    val testLocal = LocalVariable("Test Local", FloatType)
+
+    assert(testLocal.toIr === "%\"Test Local\"")
+    assert(testLocal.irType === FloatType)
+  }
+  
   test("global variable") {
     val testLocal = GlobalVariable("test", PointerType(DoubleType))
 
     assert(testLocal.toIr === "@test")
+    assert(testLocal.irType === PointerType(DoubleType))
+  }
+  
+  test("global variable is escaped") {
+    val testLocal = GlobalVariable("Test Global", PointerType(DoubleType))
+
+    assert(testLocal.toIr === "@\"Test Global\"")
     assert(testLocal.irType === PointerType(DoubleType))
   }
 
