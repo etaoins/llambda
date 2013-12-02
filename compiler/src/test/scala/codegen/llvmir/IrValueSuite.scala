@@ -1,5 +1,6 @@
 package llambda.codegen.llvmir
 
+import llambda.InternalCompilerErrorException
 import org.scalatest.FunSuite
 
 class IrValueSuite extends FunSuite {
@@ -120,5 +121,36 @@ class IrValueSuite extends FunSuite {
 
     assert(bitcastConstant.irType === FloatType)
     assert(bitcastConstant.toIr === "bitcast (i32 50 to float)")
+  }
+  
+  test("ptrtoint constant") {
+    val sourceValue = NullPointerConstant(PointerType(DoubleType))
+
+    val intConstant = PtrToIntConstant(sourceValue, IntegerType(32))
+
+    assert(intConstant.irType === IntegerType(32))
+    assert(intConstant.toIr === "ptrtoint (double* null to i32)")
+
+  }
+
+  test("ptrtoint with non-pointer fails") {
+    intercept[InternalCompilerErrorException] {
+      PtrToIntConstant(IntegerConstant(IntegerType(64), 5), IntegerType(64))
+    }
+  }
+  
+  test("inttoptr constant") {
+    val sourceValue = IntegerConstant(IntegerType(64), 67)
+
+    val ptrConstant = IntToPtrConstant(sourceValue, PointerType(FloatType))
+
+    assert(ptrConstant.irType === PointerType(FloatType))
+    assert(ptrConstant.toIr === "inttoptr (i64 67 to float*)")
+  }
+  
+  test("inttoptr with non-integer fails") {
+    intercept[InternalCompilerErrorException] {
+      IntToPtrConstant(DoubleConstant(50.0), PointerType(FloatType))
+    }
   }
 }

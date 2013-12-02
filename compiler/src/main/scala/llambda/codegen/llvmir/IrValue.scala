@@ -1,4 +1,5 @@
 package llambda.codegen.llvmir
+
 import llambda.InternalCompilerErrorException
 
 sealed abstract class IrValue extends Irable {
@@ -133,5 +134,29 @@ case class BitcastToConstant(value : IrConstant, toType : FirstClassType) extend
 
   def toIr : String = {
     s"bitcast (${value.toIrWithType} to ${toType.toIr})"
+  }
+}
+
+case class PtrToIntConstant(value : IrConstant, toType : IntegerType) extends IrConstant {
+  if (!value.irType.isInstanceOf[PointerType]) {
+    throw new InternalCompilerErrorException("Attempted to create a ptrtoint constant from non-pointer")
+  }
+
+  def irType = toType
+
+  def toIr : String = {
+    s"ptrtoint (${value.toIrWithType} to ${toType.toIr})"
+  }
+}
+
+case class IntToPtrConstant(value : IrConstant, toType : PointerType) extends IrConstant {
+  if (!value.irType.isInstanceOf[IntegerType]) {
+    throw new InternalCompilerErrorException("Attempted to create a inttoptr constant from non-integer")
+  }
+
+  def irType = toType
+
+  def toIr : String = {
+    s"inttoptr (${value.toIrWithType} to ${toType.toIr})"
   }
 }

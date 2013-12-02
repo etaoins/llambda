@@ -77,6 +77,28 @@ private[llvmir] trait ConversionInstrs extends IrInstrBuilder {
     resultVar
   }
   
+  def ptrtoint(resultName : String)(value : IrValue, toType : IntegerType) : IrValue = {
+    if (!value.irType.isInstanceOf[PointerType]) {
+      throw new InternalCompilerErrorException("Attempted ptrtoint with non-pointer")
+    }
+
+    val resultVar = allocateLocalVar(toType, resultName)
+    instructions += s"${resultVar.toIr} = ptrtoint ${value.toIrWithType} to ${toType.toIr}"
+
+    resultVar
+  }
+
+  def inttoptr(resultName : String)(value : IrValue, toType : PointerType) : IrValue = {
+    if (!value.irType.isInstanceOf[IntegerType]) {
+      throw new InternalCompilerErrorException("Attempted inttoptr with non-integer")
+    }
+
+    val resultVar = allocateLocalVar(toType, resultName)
+    instructions += s"${resultVar.toIr} = inttoptr ${value.toIrWithType} to ${toType.toIr}"
+
+    resultVar
+  }
+  
   private def genericItofpInstr(instruction : String)(resultName : String)(value : IrValue, toType : FloatingPointType) : IrValue = {
     value.irType match {
       case fromType : IntegerType => // Good to go

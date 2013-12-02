@@ -263,4 +263,40 @@ class ConversionInstrsSuite extends IrTestSuite {
       val resultVar = block.sitofp("trivial")(sourceValue, FloatType)
     }
   }
+
+  test("trivial ptrtoint") {
+    val sourceValue = NullPointerConstant(PointerType(DoubleType))
+    val block = createTestBlock()
+
+    val resultVar = block.ptrtoint("trivial")(sourceValue, IntegerType(32))
+
+    assert(resultVar.irType === IntegerType(32))
+    assertInstr(block, "%trivial1 = ptrtoint double* null to i32")
+  }
+
+  test("ptrtoint with non-pointer fails") {
+    val block = createTestBlock()
+
+    intercept[InternalCompilerErrorException] {
+      block.ptrtoint("fails")(IntegerConstant(IntegerType(64), 5), IntegerType(64))
+    }
+  }
+  
+  test("trivial inttoptr") {
+    val sourceValue = IntegerConstant(IntegerType(64), 67)
+    val block = createTestBlock()
+
+    val resultVar = block.inttoptr("trivial")(sourceValue, PointerType(FloatType))
+
+    assert(resultVar.irType === PointerType(FloatType))
+    assertInstr(block, "%trivial1 = inttoptr i64 67 to float*")
+  }
+  
+  test("inttoptr with non-integer fails") {
+    val block = createTestBlock()
+
+    intercept[InternalCompilerErrorException] {
+      block.inttoptr("fails")(DoubleConstant(50.0), PointerType(FloatType))
+    }
+  }
 }
