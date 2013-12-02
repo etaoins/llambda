@@ -28,8 +28,8 @@ object PlanRecordTypeConstructor {
 
         // Get unique argument names
         val argumentUniquer = new SourceNameUniquer
-        val namedArguments = (fieldToTempValue.map { case (field, tempValue) =>
-          (argumentUniquer(field.sourceName) -> tempValue)
+        val namedArguments = (initializedFields.map { case field =>
+          (argumentUniquer(field.sourceName) -> fieldToTempValue(field))
         }).toList
 
         // Make our bare record
