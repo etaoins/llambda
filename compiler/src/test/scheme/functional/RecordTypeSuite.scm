@@ -7,6 +7,17 @@
 	(define-record-type <type2> (type2) type2?)
 	(type1? (type2))))
 
+(define-test "record types with same source name are disjoint" (expect #f
+	(define type1? ((lambda ()
+		(define-record-type <same-name> (same-name) same-name?)
+		same-name?)))
+
+	(define type2-cons ((lambda ()
+		(define-record-type <same-name> (same-name) same-name?)
+		same-name)))
+	
+	(type1? (type2-cons))))
+
 (define-test "constructing record type with one typeless initialized immutable field" (expect 1
 	(define-record-type <single-value> (single-value field) single-value?
 		(field single-value-field))
