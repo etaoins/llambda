@@ -30,6 +30,7 @@ protected:
 	virtual void renderVector(const BoxedVector *value);
 	virtual void renderProcedure(const BoxedProcedure *value);
 	virtual void renderCharacter(const BoxedCharacter *value);
+	virtual void renderRecord(const BoxedRecord *value);
 
 	std::ostream &m_outStream;
 };

@@ -14,6 +14,7 @@
 #include "binding/BoxedVector.h"
 #include "binding/BoxedProcedure.h"
 #include "binding/BoxedCharacter.h"
+#include "binding/BoxedRecord.h"
 
 #include "core/init.h"
 #include "assertions.h"
@@ -179,6 +180,11 @@ void testCharacter()
 	assertForm(new BoxedCharacter(UnicodeChar(0x03bb)), "#\\x3bb");
 }
 
+void testRecord()
+{
+    assertForm(new BoxedRecord(0, nullptr), "#!record");
+}
+
 }
 
 int main(int argc, char *argv[])
@@ -199,4 +205,5 @@ int main(int argc, char *argv[])
 	testVector();
 	testProcedure();
 	testCharacter();
+    testRecord();
 }

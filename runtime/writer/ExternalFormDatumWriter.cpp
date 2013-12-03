@@ -18,6 +18,7 @@
 #include "binding/BoxedCharacter.h"
 #include "binding/BoxedEmptyList.h"
 #include "binding/BoxedProcedure.h"
+#include "binding/BoxedRecord.h"
 
 namespace lliby
 {
@@ -71,6 +72,10 @@ void ExternalFormDatumWriter::render(const BoxedDatum *datum)
 	else if (auto value = datum_cast<BoxedCharacter>(datum))
 	{
 		renderCharacter(value);
+	}
+	else if (auto value = datum_cast<BoxedRecord>(datum))
+	{
+		renderRecord(value);
 	}
 	else
 	{
@@ -313,6 +318,12 @@ void ExternalFormDatumWriter::renderCharacter(const BoxedCharacter *value)
 		}
 	}
 
+}
+
+void ExternalFormDatumWriter::renderRecord(const BoxedRecord *)
+{
+    // XXX: Can codegen give us enough type information to render record contents?
+	m_outStream << "#!record";
 }
 
 }
