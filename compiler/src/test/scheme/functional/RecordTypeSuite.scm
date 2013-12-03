@@ -84,6 +84,19 @@
 
 	(list (two-value-field1 instance) (two-value-field2 instance))))
 
+(define-test "constructors, accessors and mutators be boxed and invoked" (expect (20 40)
+	(import (llambda nfi))
+	(import (llambda test-util))
+
+	(define-record-type <two-value> (two-value field1 field2) two-value?
+		((field1 : <int64>) two-value-field1)
+		(field2 two-value-field2 set-two-value-field2!))
+	
+	(define instance ((typeless-boxed two-value) 20 30))
+	((typeless-boxed set-two-value-field2!) instance 40)
+
+	(list ((typeless-boxed two-value-field1) instance) ((typeless-boxed two-value-field2) instance))))
+
 (define-test "nested record types" (expect it-actually-worked
 	(define-record-type <inner-type> (inner-type field) inner-type?
 		(field inner-type-field))
