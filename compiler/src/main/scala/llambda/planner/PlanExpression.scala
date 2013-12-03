@@ -240,7 +240,6 @@ private[planner] object PlanExpression {
       case recordMutator : et.RecordTypeMutator =>
         val procName = sourceNameHint.getOrElse {
           // By convention the mutatorName name is "set-{constructorName}-{fieldName}!"
-          // By convention the predicate name is the type name without <> followed by the field's source name?
           "set-" +
             recordMutator.recordType.sourceName
             .replaceAllLiterally("<", "")
