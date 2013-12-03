@@ -1,7 +1,7 @@
 package llambda.codegen
 
 import llambda.InternalCompilerErrorException
-import llambda.{boxedtype => bt}
+import llambda.{celltype => ct}
 import llambda.codegen.llvmir._
 import llambda.codegen.llvmir.IrFunction._
 
@@ -21,7 +21,7 @@ object GenConsAllocation {
   )
 
   class ConsAllocation(basePointer : IrValue, count : Int) {
-    def genTypedPointer(block : IrBlockBuilder)(index : Int, asType : bt.ConcreteBoxedType) : IrValue = {
+    def genTypedPointer(block : IrBlockBuilder)(index : Int, asType : ct.ConcreteCellType) : IrValue = {
       if (index >= count) {
         throw new InternalCompilerErrorException("Attempted to access cons past end of allocation")
       }
@@ -35,7 +35,7 @@ object GenConsAllocation {
       val typedPointer = block.bitcastTo(pointerName)(consPointer, PointerType(asType.irType))
       
       // Set its type
-      val typeId = IntegerConstant(bt.BoxedDatum.typeIdIrType, asType.typeId)
+      val typeId = IntegerConstant(ct.DatumCell.typeIdIrType, asType.typeId)
       asType.genStoreToTypeId(block)(typeId, typedPointer)
 
       // Return the typed pointer

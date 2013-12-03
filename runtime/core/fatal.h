@@ -4,14 +4,14 @@
 namespace lliby
 {
 
-class BoxedDatum;
+class DatumCell;
 
 }
 
 extern "C"
 {
 
-void _lliby_fatal(const char *message, const lliby::BoxedDatum *evidence = nullptr);
+void _lliby_fatal(const char *message, const lliby::DatumCell *evidence = nullptr);
 
 }
 

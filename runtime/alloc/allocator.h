@@ -13,7 +13,7 @@ class RangeAlloc;
 void init();
 
 /**
- * Allocator for BoxedDatums
+ * Allocator for DatumCells
  */
 void *allocateCons(size_t count = 1);
 RangeAlloc allocateRange(size_t count);

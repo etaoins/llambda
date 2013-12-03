@@ -1,10 +1,10 @@
 package llambda.codegen
 
-import llambda.nfi.NativeSignature
-import llambda.{boxedtype => bt}
+import llambda.ProcedureSignature
+import llambda.{celltype => ct}
 
 // This is the signature of llambda_exec
-object LlambdaExecSignature extends NativeSignature {
+object LlambdaExecSignature extends ProcedureSignature {
   val hasClosureArg = false
   val fixedArgs = Nil
   val hasRestArg = false

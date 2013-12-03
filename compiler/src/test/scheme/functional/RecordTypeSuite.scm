@@ -25,14 +25,14 @@
 	(define instance (single-value 1))
 	(single-value-field instance)))
 
-(define-test "record types can be converted to and from boxed data" (expect 1
+(define-test "record types can be converted to and from typeless data" (expect 1
 	(import (llambda test-util))
 
 	(define-record-type <single-value> (single-value field) single-value?
 		(field single-value-field))
 	
 	(define instance (single-value 1))
-	(single-value-field (typeless-boxed instance))))
+	(single-value-field (typeless-cell instance))))
 
 (define-test "constructing record type with one typeless uninitialized immutable field" (expect #!unspecific
 	(define-record-type <single-value> (single-value) single-value?
@@ -45,7 +45,7 @@
 	(import (llambda nfi))
 
 	(define-record-type <single-value> (single-value field) single-value?
-		((field : <boxed-string>) single-value-field))
+		((field : <string-cell>) single-value-field))
 	
 	(single-value-field (single-value "Test string"))))
 
@@ -53,7 +53,7 @@
 	(import (llambda nfi))
 
 	(define-record-type <single-value> (single-value field) single-value?
-		((field : <boxed-string>) single-value-field))
+		((field : <string-cell>) single-value-field))
 	
 	(single-value 50.5)))
 
@@ -103,10 +103,10 @@
 		((field1 : <int64>) two-value-field1)
 		(field2 two-value-field2 set-two-value-field2!))
 	
-	(define instance ((typeless-boxed two-value) 20 30))
-	((typeless-boxed set-two-value-field2!) instance 40)
+	(define instance ((typeless-cell two-value) 20 30))
+	((typeless-cell set-two-value-field2!) instance 40)
 
-	(list ((typeless-boxed two-value-field1) instance) ((typeless-boxed two-value-field2) instance))))
+	(list ((typeless-cell two-value-field1) instance) ((typeless-cell two-value-field2) instance))))
 
 (define-test "nested record types" (expect it-actually-worked
 	(define-record-type <inner-type> (inner-type field) inner-type?

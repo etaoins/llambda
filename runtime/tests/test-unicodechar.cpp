@@ -78,7 +78,7 @@ void testToFolded()
 	ASSERT_EQUAL(UnicodeChar(0x017F).toCaseFolded(), UnicodeChar(0x73))
 }
 
-void testToBoxedNumeric()
+void testToNumericCell()
 {
 	// Latin 1
 	ASSERT_TRUE(UnicodeChar(0x31).isNumericDigit());
@@ -277,7 +277,7 @@ int main(int argc, char *argv[])
 	testToUpper();
 	testToLower();
 	testToFolded();
-	testToBoxedNumeric();
+	testToNumericCell();
 
 	testUnicodePredicates();
 

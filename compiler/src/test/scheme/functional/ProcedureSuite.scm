@@ -18,7 +18,7 @@
 
 	(math-op 2 3 5)))
 
-(define-test "boxed datums can be applied" (expect 10
+(define-test "datum cells can be applied" (expect 10
 	(import (llambda test-util))
 
-	((typeless-boxed -) 80 50 20)))
+	((typeless-cell -) 80 50 20)))

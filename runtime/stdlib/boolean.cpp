@@ -1,5 +1,5 @@
-#include "binding/BoxedListElement.h"
-#include "binding/BoxedBoolean.h"
+#include "binding/ListElementCell.h"
+#include "binding/BooleanCell.h"
 #include "binding/ProperList.h"
 #include "core/fatal.h"
 
@@ -13,14 +13,14 @@ bool lliby_not(bool value)
 	return !value;
 }
 
-bool lliby_boolean_equal(BoxedBoolean *value1, BoxedBoolean *value2, BoxedListElement *argHead)
+bool lliby_boolean_equal(BooleanCell *value1, BooleanCell *value2, ListElementCell *argHead)
 {
 	if (value1 != value2)
 	{
 		return false;
 	}
 	
-	ProperList<BoxedBoolean> properList(argHead);
+	ProperList<BooleanCell> properList(argHead);
 
 	if (!properList.isValid())
 	{
@@ -29,9 +29,9 @@ bool lliby_boolean_equal(BoxedBoolean *value1, BoxedBoolean *value2, BoxedListEl
 		return false;
 	}
 
-	for(auto boxedBool : properList)
+	for(auto boolCell : properList)
 	{
-		if (boxedBool != value1)
+		if (boolCell != value1)
 		{
 			return false;
 		}

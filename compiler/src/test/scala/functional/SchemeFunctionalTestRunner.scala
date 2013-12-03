@@ -3,7 +3,7 @@ package llambda.functional
 import java.io.File
 import scala.sys.process._
 import llambda._
-import llambda.{boxedtype => bt}
+import llambda.{celltype => ct}
 import org.scalatest.{FunSuite, Inside}
 import java.io.{InputStream}
 import SchemeStringImplicits._
@@ -95,7 +95,7 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
       ast.ProperList(List(
         ast.Symbol("native-function"),
         ast.StringLiteral("lliby_write"),
-        ast.ProperList(List(ast.Symbol("<boxed-datum>"))))),
+        ast.ProperList(List(ast.Symbol("<datum-cell>"))))),
       valueDatum))
 
     // Rebuild the program with the import and value printing

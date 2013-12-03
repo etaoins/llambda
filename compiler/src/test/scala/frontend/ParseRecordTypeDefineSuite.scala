@@ -1,7 +1,7 @@
 package llambda.frontend
 
 import org.scalatest.{FunSuite,Inside}
-import llambda.{boxedtype => bt}
+import llambda.{celltype => ct}
 import llambda.{valuetype => vt}
 import llambda._
 
@@ -16,7 +16,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
       case other => fail("Expected storage location, got " + other.toString)
     }
 
-  implicit class RecordTypeHelpers(recordType : vt.BoxedRecordType) {
+  implicit class RecordTypeHelpers(recordType : vt.RecordCellType) {
     def fieldForSourceName(sourceName : String) : vt.RecordField = 
       recordType.fields.find(_.sourceName == sourceName) getOrElse {
         fail("Unable to find field named " + sourceName)
@@ -56,7 +56,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
                            new-type?)""")(scope)
 
     inside(scope("<new-type>")) {
-      case BoundType(recordType : vt.BoxedRecordType) =>
+      case BoundType(recordType : vt.RecordCellType) =>
         val consLoc = storageLocFor(scope, "new-type")
         val predLoc = storageLocFor(scope, "new-type?")
 
@@ -82,7 +82,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
                            (const-datum new-type-const-datum))""")(scope)
 
     inside(scope("<new-type>")) {
-      case BoundType(recordType : vt.BoxedRecordType) =>
+      case BoundType(recordType : vt.RecordCellType) =>
         val consLoc = storageLocFor(scope, "new-type")
         val predLoc = storageLocFor(scope, "new-type?")
         val constDatumAccessorLoc = storageLocFor(scope, "new-type-const-datum")
@@ -90,8 +90,8 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
         assert(recordType.sourceName === "<new-type>")
 
         val constDatumField = recordType.fieldForSourceName("const-datum")
-        // No type defaults to <boxed-datum>, the most permissive type
-        assert(constDatumField.fieldType === vt.BoxedIntrinsicType(bt.BoxedDatum))
+        // No type defaults to <datum-cell>, the most permissive type
+        assert(constDatumField.fieldType === vt.IntrinsicCellType(ct.DatumCell))
 
         inside(exprs) {
           case et.Bind(bindings) :: Nil =>
@@ -113,7 +113,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
                            ((const-int : <int64>) new-type-const-int))""")(scope)
 
     inside(scope("<new-type>")) {
-      case BoundType(recordType : vt.BoxedRecordType) =>
+      case BoundType(recordType : vt.RecordCellType) =>
         val consLoc = storageLocFor(scope, "new-type")
         val predLoc = storageLocFor(scope, "new-type?")
         val constIntAccessorLoc = storageLocFor(scope, "new-type-const-int")
@@ -121,7 +121,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
         assert(recordType.sourceName === "<new-type>")
 
         val constIntField = recordType.fieldForSourceName("const-int")
-        assert(constIntField.fieldType === vt.ScalarType(nfi.Int64))
+        assert(constIntField.fieldType === vt.Int64)
 
         inside(exprs) {
           case et.Bind(bindings) :: Nil =>
@@ -141,10 +141,10 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
                            (new-type mutable-int const-datum)
                            new-type?
                            (const-datum new-type-const-datum)
-                           ((mutable-int : <boxed-exact-integer>) new-type-mutable-int set-new-type-mutable-int!))""")(scope)
+                           ((mutable-int : <exact-integer-cell>) new-type-mutable-int set-new-type-mutable-int!))""")(scope)
 
     inside(scope("<new-type>")) {
-      case BoundType(recordType : vt.BoxedRecordType) =>
+      case BoundType(recordType : vt.RecordCellType) =>
         val consLoc = storageLocFor(scope, "new-type")
         val predLoc = storageLocFor(scope, "new-type?")
         val constAccessorLoc = storageLocFor(scope, "new-type-const-datum")
@@ -156,8 +156,8 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
         val constDatumField = recordType.fieldForSourceName("const-datum")
         val mutableIntField = recordType.fieldForSourceName("mutable-int")
           
-        assert(constDatumField.fieldType === vt.BoxedIntrinsicType(bt.BoxedDatum))
-        assert(mutableIntField.fieldType === vt.BoxedIntrinsicType(bt.BoxedExactInteger))
+        assert(constDatumField.fieldType === vt.IntrinsicCellType(ct.DatumCell))
+        assert(mutableIntField.fieldType === vt.IntrinsicCellType(ct.ExactIntegerCell))
 
         inside(exprs) {
           case et.Bind(bindings) :: Nil =>
@@ -180,7 +180,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
                                 inner-type?)""")(scope)
 
     inside(scope("<inner-type>")) {
-      case BoundType(innerType : vt.BoxedRecordType) =>
+      case BoundType(innerType : vt.RecordCellType) =>
         val innerConsLoc = storageLocFor(scope, "inner-type")
         val innerPredLoc = storageLocFor(scope, "inner-type?")
         
@@ -201,7 +201,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
                                     ((inner-field : <inner-type>) outer-type-inner-field))""")(scope)
 
         inside(scope("<outer-type>")) {
-          case BoundType(outerType : vt.BoxedRecordType) =>
+          case BoundType(outerType : vt.RecordCellType) =>
             val outerConsLoc = storageLocFor(scope, "outer-type")
             val outerPredLoc = storageLocFor(scope, "outer-type?")
             val innerFieldAccessorLoc = storageLocFor(scope, "outer-type-inner-field")
@@ -229,7 +229,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
                  (new-type const-int)
                  new-type?
                  ((const-int : <int64>) new-type-const-int)
-                 ((const-int : <boxed-exact-integer>) new-type-mutable-int set-new-type-mutable-int!))""")(scope)
+                 ((const-int : <exact-integer-cell>) new-type-mutable-int set-new-type-mutable-int!))""")(scope)
     }
   }
   
@@ -270,7 +270,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 
     intercept[BadSpecialFormException] {
-      // Everything but boxed-datum and boxed-undefined have no default value
+      // Everything but datum-cell and unspecific-cell have no default value
       bodyFor("""(define-record-type <new-type>
                  (new-type)
                  new-type?

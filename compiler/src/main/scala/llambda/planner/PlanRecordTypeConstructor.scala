@@ -1,9 +1,9 @@
 package llambda.planner
 
 import llambda.et
-import llambda.nfi
+import llambda.ProcedureSignature
 import llambda.{valuetype => vt}
-import llambda.{boxedtype => bt}
+import llambda.{celltype => ct}
 import llambda.planner.{step => ps}
 import llambda.planner.{intermediatevalue => iv}
 
@@ -12,7 +12,7 @@ object PlanRecordTypeConstructor {
     expr match {
       case et.RecordTypeConstructor(recordType, initializedFields) =>
         // Determine our signature
-        val constructorSignature = new nfi.NativeSignature {
+        val constructorSignature = new ProcedureSignature {
           val hasClosureArg : Boolean = false
           val hasRestArg : Boolean = false
 

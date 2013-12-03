@@ -1,6 +1,6 @@
-#include "binding/BoxedCharacter.h"
-#include "binding/BoxedExactInteger.h"
-#include "binding/BoxedBoolean.h"
+#include "binding/CharacterCell.h"
+#include "binding/ExactIntegerCell.h"
+#include "binding/BooleanCell.h"
 #include "unicode/UnicodeChar.h"
 
 using namespace lliby;
@@ -8,17 +8,17 @@ using namespace lliby;
 extern "C"
 {
 
-const BoxedDatum *lliby_digit_value(UnicodeChar character)
+const DatumCell *lliby_digit_value(UnicodeChar character)
 {
 	UnicodeChar::DigitValue digitValue = character.digitValue();
 
 	if (digitValue == UnicodeChar::InvalidDigitValue)
 	{
 		// Not a digit. Return #f
-		return BoxedBoolean::falseInstance();
+		return BooleanCell::falseInstance();
 	}
 
-	return new BoxedExactInteger(digitValue);
+	return new ExactIntegerCell(digitValue);
 }
 
 std::int32_t lliby_char_to_integer(UnicodeChar character)

@@ -4,7 +4,6 @@ import llambda.et
 import llambda.planner.{step => ps}
 import llambda.analyzer.AnalysisResult
 import llambda.codegen.LlambdaExecSignature
-import llambda.nfi
 
 object PlanProgram {
   def apply(exprs : List[et.Expression])(planConfig : PlanConfig) : Map[String, PlannedFunction] = {

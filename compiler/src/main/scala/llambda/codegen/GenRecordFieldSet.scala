@@ -2,10 +2,10 @@ package llambda.codegen
 
 import llambda.codegen.llvmir._
 import llambda.{valuetype => vt}
-import BoxedRecordTypeImplicits._
+import RecordCellTypeImplicits._
 
 object GenRecordFieldSet {
-  def apply(block : IrBlockBuilder)(recordDataIr : IrValue, recordType : vt.BoxedRecordType, recordField : vt.RecordField, newValueIr : IrValue) {
+  def apply(block : IrBlockBuilder)(recordDataIr : IrValue, recordType : vt.RecordCellType, recordField : vt.RecordField, newValueIr : IrValue) {
     val fieldIndex = recordType.indexOfField(recordField)
     val fieldIrType = ValueTypeToIr(recordField.fieldType).irType
 

@@ -1,22 +1,22 @@
 package llambda.planner.intermediatevalue
 
-import llambda.nfi
-import llambda.{boxedtype => bt}
+import llambda.ProcedureSignature
+import llambda.{celltype => ct}
 import llambda.{valuetype => vt}
 import llambda.planner.{step => ps}
 import llambda.planner.{PlanWriter, InvokableProcedure}
-import llambda.codegen.BoxedProcedureSignature
+import llambda.codegen.AdaptedProcedureSignature
 import llambda.NotImplementedException
 
-class KnownProcedure(val signature : nfi.NativeSignature, val nativeSymbol : String, val reportName : Option[String] = None) extends IntermediateValue with InvokableProcedure with NonRecordValue {
-  val possibleTypes = Set[bt.ConcreteBoxedType](bt.BoxedProcedure) 
+class KnownProcedure(val signature : ProcedureSignature, val nativeSymbol : String, val reportName : Option[String] = None) extends IntermediateValue with InvokableProcedure with NonRecordValue {
+  val possibleTypes = Set[ct.ConcreteCellType](ct.ProcedureCell) 
   
   def toInvokableProcedure()(implicit plan : PlanWriter) : Option[InvokableProcedure] = 
     Some(this)
 
-  def toBoxedTempValue(targetType : bt.BoxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] = {
-    if (targetType.isTypeOrSupertypeOf(bt.BoxedProcedure)) {
-      val entryPointTemp = if (signature == BoxedProcedureSignature) {
+  def toCellTempValue(targetType : ct.CellType)(implicit plan : PlanWriter) : Option[ps.TempValue] = {
+    if (targetType.isTypeOrSupertypeOf(ct.ProcedureCell)) {
+      val entryPointTemp = if (signature == AdaptedProcedureSignature) {
         // We can load this directly
         planEntryPoint()
       }
@@ -30,7 +30,7 @@ class KnownProcedure(val signature : nfi.NativeSignature, val nativeSymbol : Str
 
         // Load the trampoline's entry point
         val trampEntryPointTemp = new ps.TempValue
-        plan.steps += ps.StoreNamedEntryPoint(trampEntryPointTemp, BoxedProcedureSignature, trampolineSymbol) 
+        plan.steps += ps.StoreNamedEntryPoint(trampEntryPointTemp, AdaptedProcedureSignature, trampolineSymbol) 
 
         trampEntryPointTemp
       }
@@ -42,10 +42,10 @@ class KnownProcedure(val signature : nfi.NativeSignature, val nativeSymbol : Str
       val boxedTemp = new ps.TempValue
       plan.steps += ps.BoxProcedure(boxedTemp, tempAllocation, 0, entryPointTemp)
 
-      if (targetType != bt.BoxedProcedure) {
+      if (targetType != ct.ProcedureCell) {
         // Cast this to super
         val castTemp = new ps.TempValue
-        plan.steps += ps.CastBoxedToTypeUnchecked(castTemp, boxedTemp, targetType)
+        plan.steps += ps.CastCellToTypeUnchecked(castTemp, boxedTemp, targetType)
 
         Some(castTemp)
       }
@@ -58,7 +58,7 @@ class KnownProcedure(val signature : nfi.NativeSignature, val nativeSymbol : Str
     }
   }
   
-  def toScalarTempValue(unboxedType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
+  def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
     // Procedures have no unboxed representation
     None
 

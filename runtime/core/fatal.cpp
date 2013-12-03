@@ -3,7 +3,7 @@
 #include <iostream>
 #include <unistd.h>
 
-#include "binding/BoxedDatum.h"
+#include "binding/DatumCell.h"
 #include "writer/ExternalFormDatumWriter.h"
 
 using namespace lliby;
@@ -11,7 +11,7 @@ using namespace lliby;
 extern "C"
 {
 
-void _lliby_fatal(const char *message, const BoxedDatum *evidence)
+void _lliby_fatal(const char *message, const DatumCell *evidence)
 {
 	if (evidence) 
 	{

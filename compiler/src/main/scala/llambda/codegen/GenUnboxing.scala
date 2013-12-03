@@ -4,7 +4,7 @@ import llambda.InternalCompilerErrorException
 
 import llambda.planner.{step => ps}
 import llambda.codegen.llvmir._
-import llambda.{boxedtype => bt}
+import llambda.{celltype => ct}
 
 object GenUnboxing {
   def apply(state : GenerationState)(unboxStep : ps.UnboxValue, boxedValue : IrValue) : IrValue = unboxStep match {
@@ -19,19 +19,19 @@ object GenUnboxing {
 
     case _ : ps.UnboxExactInteger =>
       val block = state.currentBlock
-      bt.BoxedExactInteger.genLoadFromValue(block)(boxedValue)
+      ct.ExactIntegerCell.genLoadFromValue(block)(boxedValue)
     
     case _ : ps.UnboxInexactRational =>
       val block = state.currentBlock
-      bt.BoxedInexactRational.genLoadFromValue(block)(boxedValue)
+      ct.InexactRationalCell.genLoadFromValue(block)(boxedValue)
     
     case _ : ps.UnboxCharacter =>
       val block = state.currentBlock
-      bt.BoxedCharacter.genLoadFromUnicodeChar(block)(boxedValue)
+      ct.CharacterCell.genLoadFromUnicodeChar(block)(boxedValue)
     
     case _ : ps.UnboxStringAsUtf8 =>
       val block = state.currentBlock
-      bt.BoxedString.genLoadFromUtf8Data(block)(boxedValue)
+      ct.StringCell.genLoadFromUtf8Data(block)(boxedValue)
   }
 }
 

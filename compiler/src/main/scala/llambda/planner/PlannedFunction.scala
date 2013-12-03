@@ -1,10 +1,10 @@
 package llambda.planner
 
-import llambda.nfi
+import llambda.ProcedureSignature
 import llambda.planner.{step => ps}
 
 case class PlannedFunction(
-  signature : nfi.NativeSignature,
+  signature : ProcedureSignature,
   namedArguments : List[(String,  ps.TempValue)],
   steps : List[ps.Step]
 )

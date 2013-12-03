@@ -1,6 +1,6 @@
-#include "binding/BoxedCharacter.h"
-#include "binding/BoxedListElement.h"
-#include "binding/BoxedString.h"
+#include "binding/CharacterCell.h"
+#include "binding/ListElementCell.h"
+#include "binding/StringCell.h"
 #include "binding/ProperList.h"
 #include "core/fatal.h"
 
@@ -9,14 +9,14 @@ using namespace lliby;
 extern "C"
 {
 
-BoxedString *lliby_make_string(std::uint32_t length, UnicodeChar fill)
+StringCell *lliby_make_string(std::uint32_t length, UnicodeChar fill)
 {
-	return BoxedString::fromFill(length, fill);
+	return StringCell::fromFill(length, fill);
 }
 
-BoxedString *lliby_string(const BoxedListElement *argHead)
+StringCell *lliby_string(const ListElementCell *argHead)
 {
-	ProperList<BoxedCharacter> charProperList(argHead);
+	ProperList<CharacterCell> charProperList(argHead);
 
 	if (!charProperList.isValid())
 	{
@@ -25,20 +25,20 @@ BoxedString *lliby_string(const BoxedListElement *argHead)
 
 	std::list<UnicodeChar> unicodeCharList;
 
-	for(auto boxedChar : charProperList)
+	for(auto charCell : charProperList)
 	{
-		unicodeCharList.push_back(boxedChar->unicodeChar());
+		unicodeCharList.push_back(charCell->unicodeChar());
 	}
 
-	return BoxedString::fromUnicodeChars(unicodeCharList);
+	return StringCell::fromUnicodeChars(unicodeCharList);
 }
 
-std::uint32_t lliby_string_length(const BoxedString *string)
+std::uint32_t lliby_string_length(const StringCell *string)
 {
 	return string->charLength();
 }
 
-std::int32_t lliby_string_ref(const BoxedString *string, std::uint32_t index)
+std::int32_t lliby_string_ref(const StringCell *string, std::uint32_t index)
 {
 	UnicodeChar unicodeChar(string->charAt(index).codePoint());
 
@@ -50,7 +50,7 @@ std::int32_t lliby_string_ref(const BoxedString *string, std::uint32_t index)
 	return unicodeChar.codePoint();
 }
 
-void lliby_string_set(BoxedString *string, std::uint32_t index, UnicodeChar unicodeChar)
+void lliby_string_set(StringCell *string, std::uint32_t index, UnicodeChar unicodeChar)
 {
 	if (!string->setCharAt(index, unicodeChar))
 	{
@@ -58,9 +58,9 @@ void lliby_string_set(BoxedString *string, std::uint32_t index, UnicodeChar unic
 	}
 }
 
-BoxedString* lliby_string_append(BoxedListElement *argHead)
+StringCell* lliby_string_append(ListElementCell *argHead)
 {
-	ProperList<BoxedString> properList(argHead);
+	ProperList<StringCell> properList(argHead);
 
 	if (!properList.isValid())
 	{
@@ -68,9 +68,9 @@ BoxedString* lliby_string_append(BoxedListElement *argHead)
 	}
 
 	// Use the std::list range constructor 
-	std::list<const BoxedString*> stringList(properList.begin(), properList.end()); 
+	std::list<const StringCell*> stringList(properList.begin(), properList.end()); 
 
-	return BoxedString::fromAppended(stringList);
+	return StringCell::fromAppended(stringList);
 }
 
 }

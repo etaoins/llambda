@@ -5,14 +5,14 @@ cmake_minimum_required (VERSION 2.8)
 project (lliby)
 add_library(lliby
 	alloc/allocator.cpp
-	binding/BoxedBytevector.cpp
-	binding/BoxedDatum.cpp
-	binding/BoxedListElement.cpp
-	binding/BoxedProcedure.cpp
-	binding/BoxedRecordLike.cpp
-	binding/BoxedStringLike.cpp
-	binding/BoxedString.cpp
-	binding/BoxedVector.cpp
+	binding/BytevectorCell.cpp
+	binding/DatumCell.cpp
+	binding/ListElementCell.cpp
+	binding/ProcedureCell.cpp
+	binding/RecordLikeCell.cpp
+	binding/StringLikeCell.cpp
+	binding/StringCell.cpp
+	binding/VectorCell.cpp
 	core/box.cpp
 	core/constinstances.cpp
 	core/fatal.cpp
@@ -47,8 +47,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall")
 # Exceptions have two issues:
 # - C++ exceptions will not propagate correctly through Scheme code 
 # - When operator new is used Clang will generate unwind code referencing 
-#   operator delete. This has been explicitly removed from BoxedDatum so it
-#   causes link errors whenever operator new is used on a BoxedDatum subclass
+#   operator delete. This has been explicitly removed from DatumCell so it
+#   causes link errors whenever operator new is used on a DatumCell subclass
 ADD_DEFINITIONS(
 	-std=c++11 
 	-fno-exceptions
@@ -64,13 +64,13 @@ endif()
 enable_testing()
 
 set(ALL_TEST_NAMES
-	boxedbytevector
+	bytevector
 	constinstances
-	boxedinexactrational
-	boxedlistelement
-	boxedstring
+	inexactrational
+	listelement
+	string
 	unicodechar
-	boxedvector
+	vector
 	externalformdatumwriter
 	properlist)
 

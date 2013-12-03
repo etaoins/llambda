@@ -1,5 +1,5 @@
-#include "binding/BoxedDatum.h"
-#include "binding/BoxedVector.h"
+#include "binding/DatumCell.h"
+#include "binding/VectorCell.h"
 #include "binding/ProperList.h"
 
 #include "core/fatal.h"
@@ -9,19 +9,19 @@ using namespace lliby;
 extern "C"
 {
 
-BoxedVector *lliby_make_vector(std::uint32_t length, BoxedDatum *fill)
+VectorCell *lliby_make_vector(std::uint32_t length, DatumCell *fill)
 {
-	return BoxedVector::fromFill(length, fill);
+	return VectorCell::fromFill(length, fill);
 }
 
-std::uint32_t lliby_vector_length(BoxedVector *vector)
+std::uint32_t lliby_vector_length(VectorCell *vector)
 {
 	return vector->length();
 }
 
-BoxedDatum* lliby_vector_ref(const BoxedVector *vector, std::uint32_t index)
+DatumCell* lliby_vector_ref(const VectorCell *vector, std::uint32_t index)
 {
-	BoxedDatum* element = vector->elementAt(index);
+	DatumCell* element = vector->elementAt(index);
 
 	if (element == nullptr)
 	{
@@ -31,7 +31,7 @@ BoxedDatum* lliby_vector_ref(const BoxedVector *vector, std::uint32_t index)
 	return element;
 }
 
-void lliby_vector_set(BoxedVector *vector, std::uint32_t index, BoxedDatum *obj)
+void lliby_vector_set(VectorCell *vector, std::uint32_t index, DatumCell *obj)
 {
 	if (!vector->setElementAt(index, obj))
 	{
@@ -39,9 +39,9 @@ void lliby_vector_set(BoxedVector *vector, std::uint32_t index, BoxedDatum *obj)
 	}
 }
 
-BoxedVector *lliby_vector(BoxedListElement *argHead)
+VectorCell *lliby_vector(ListElementCell *argHead)
 {
-	ProperList<BoxedDatum> properList(argHead);
+	ProperList<DatumCell> properList(argHead);
 	
 	if (!properList.isValid())
 	{
@@ -49,7 +49,7 @@ BoxedVector *lliby_vector(BoxedListElement *argHead)
 	}
 
 	auto length = properList.length();
-	auto newElements = new BoxedDatum*[length];
+	auto newElements = new DatumCell*[length];
 	unsigned int elementIndex = 0;
 
 	// Fill out the new elements from the list
@@ -59,12 +59,12 @@ BoxedVector *lliby_vector(BoxedListElement *argHead)
 	}
 
 	// Return the new vector
-	return new BoxedVector(newElements, length);
+	return new VectorCell(newElements, length);
 }
 
-BoxedVector *lliby_vector_append(BoxedListElement *argHead)
+VectorCell *lliby_vector_append(ListElementCell *argHead)
 {
-	ProperList<BoxedVector> argList(argHead);
+	ProperList<VectorCell> argList(argHead);
 	
 	if (!argList.isValid())
 	{
@@ -72,10 +72,10 @@ BoxedVector *lliby_vector_append(BoxedListElement *argHead)
 	}
 
 	// Create a std::list
-	auto vectorList = std::list<const BoxedVector*>(argList.begin(), argList.end());
+	auto vectorList = std::list<const VectorCell*>(argList.begin(), argList.end());
 
 	// Append the vectors
-	return BoxedVector::fromAppended(vectorList);
+	return VectorCell::fromAppended(vectorList);
 }
 
 }

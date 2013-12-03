@@ -1,28 +1,27 @@
 package llambda.planner.intermediatevalue
 
-import llambda.nfi
-import llambda.{boxedtype => bt}
+import llambda.{celltype => ct}
 import llambda.{valuetype => vt}
 import llambda.planner.{step => ps}
 import llambda.planner.{PlanWriter, InvokableProcedure}
 
-sealed abstract class ConstantValue(boxedType : bt.ConcreteBoxedType) extends IntermediateValue with UninvokableValue with NonRecordValue {
-  val possibleTypes = Set(boxedType)
+sealed abstract class ConstantValue(cellType : ct.ConcreteCellType) extends IntermediateValue with UninvokableValue with NonRecordValue {
+  val possibleTypes = Set(cellType)
     
-  def toConstantBoxedTempValue()(implicit plan : PlanWriter) : ps.TempValue
+  def toConstantCellTempValue()(implicit plan : PlanWriter) : ps.TempValue
 
-  def toBoxedTempValue(targetType : bt.BoxedType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
-    if (targetType.isTypeOrSupertypeOf(boxedType)) {
-      val boxedTempValue = toConstantBoxedTempValue()
+  def toCellTempValue(targetType : ct.CellType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
+    if (targetType.isTypeOrSupertypeOf(cellType)) {
+      val boxedTempValue = toConstantCellTempValue()
       
-      if (targetType == boxedType) {
+      if (targetType == cellType) {
         // Perfect!
         Some(boxedTempValue)
       }
       else {
         // Cast to supertype before returning
         val castTemp = new ps.TempValue
-        plan.steps += ps.CastBoxedToTypeUnchecked(castTemp, boxedTempValue, targetType)
+        plan.steps += ps.CastCellToTypeUnchecked(castTemp, boxedTempValue, targetType)
 
         Some(castTemp)
       }
@@ -33,17 +32,17 @@ sealed abstract class ConstantValue(boxedType : bt.ConcreteBoxedType) extends In
     }
 }
 
-sealed abstract class TrivialConstantValue[T, U <: ps.StoreBoxedConstant](boxedType : bt.ConcreteBoxedType, value : T, stepConstructor : (ps.TempValue, T) => U) extends ConstantValue(boxedType) {
-  def toConstantBoxedTempValue()(implicit plan : PlanWriter) : ps.TempValue = {
+sealed abstract class TrivialConstantValue[T, U <: ps.StoreConstantCell](cellType : ct.ConcreteCellType, value : T, stepConstructor : (ps.TempValue, T) => U) extends ConstantValue(cellType) {
+  def toConstantCellTempValue()(implicit plan : PlanWriter) : ps.TempValue = {
     val constantTemp = new ps.TempValue
     plan.steps += stepConstructor(constantTemp, value)
     constantTemp
   }
 }
 
-class ConstantStringValue(value : String) extends TrivialConstantValue(bt.BoxedString, value, ps.StoreBoxedString.apply) {
-  def toScalarTempValue(nativeType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = nativeType match {
-    case nfi.Utf8CString =>
+class ConstantStringValue(value : String) extends TrivialConstantValue(ct.StringCell, value, ps.StoreStringCell.apply) {
+  def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = nativeType match {
+    case vt.Utf8CString =>
       val constantTemp = new ps.TempValue
       plan.steps += ps.StoreNativeUtf8String(constantTemp, value)
       Some(constantTemp)
@@ -52,20 +51,20 @@ class ConstantStringValue(value : String) extends TrivialConstantValue(bt.BoxedS
   }
 }
 
-class ConstantSymbolValue(value : String) extends TrivialConstantValue(bt.BoxedSymbol, value, ps.StoreBoxedSymbol.apply) {
-  def toScalarTempValue(nativeType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
+class ConstantSymbolValue(value : String) extends TrivialConstantValue(ct.SymbolCell, value, ps.StoreSymbolCell.apply) {
+  def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
     // Symbols have no NFI representation
     None
 }
 
-class ConstantExactIntegerValue(value : Long) extends TrivialConstantValue(bt.BoxedExactInteger, value, ps.StoreBoxedExactInteger.apply) {
-  def toScalarTempValue(nativeType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = nativeType match {
-    case intType : nfi.IntType =>
+class ConstantExactIntegerValue(value : Long) extends TrivialConstantValue(ct.ExactIntegerCell, value, ps.StoreExactIntegerCell.apply) {
+  def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = nativeType match {
+    case intType : vt.IntType =>
       val constantTemp = new ps.TempValue
       plan.steps += ps.StoreNativeInteger(constantTemp, value, intType.bits)
       Some(constantTemp)
 
-    case fpType : nfi.FpType =>
+    case fpType : vt.FpType =>
       val constantTemp = new ps.TempValue
       plan.steps += ps.StoreNativeFloat(constantTemp, value.toDouble, fpType)
       Some(constantTemp)
@@ -74,9 +73,9 @@ class ConstantExactIntegerValue(value : Long) extends TrivialConstantValue(bt.Bo
   }
 }
 
-class ConstantInexactRationalValue(value : Double) extends TrivialConstantValue(bt.BoxedInexactRational, value, ps.StoreBoxedInexactRational.apply) {
-  def toScalarTempValue(nativeType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = nativeType match {
-    case fpType : nfi.FpType =>
+class ConstantInexactRationalValue(value : Double) extends TrivialConstantValue(ct.InexactRationalCell, value, ps.StoreInexactRationalCell.apply) {
+  def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = nativeType match {
+    case fpType : vt.FpType =>
       val constantTemp = new ps.TempValue
       plan.steps += ps.StoreNativeFloat(constantTemp, value, fpType)
       Some(constantTemp)
@@ -85,18 +84,18 @@ class ConstantInexactRationalValue(value : Double) extends TrivialConstantValue(
   }
 }
 
-class ConstantCharacterValue(value : Char) extends TrivialConstantValue(bt.BoxedCharacter, value, ps.StoreBoxedCharacter.apply) {
-  def toScalarTempValue(nativeType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = nativeType match {
-    case nfi.UnicodeChar =>
+class ConstantCharacterValue(value : Char) extends TrivialConstantValue(ct.CharacterCell, value, ps.StoreCharacterCell.apply) {
+  def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = nativeType match {
+    case vt.UnicodeChar =>
       val constantTemp = new ps.TempValue
-      plan.steps += ps.StoreNativeInteger(constantTemp, value, nfi.UnicodeChar.bits)
+      plan.steps += ps.StoreNativeInteger(constantTemp, value, vt.UnicodeChar.bits)
       Some(constantTemp)
 
     case _ => None
   }
 }
 
-class ConstantBooleanValue(value : Boolean) extends TrivialConstantValue(bt.BoxedBoolean, value, ps.StoreBoxedBoolean.apply) {
+class ConstantBooleanValue(value : Boolean) extends TrivialConstantValue(ct.BooleanCell, value, ps.StoreBooleanCell.apply) {
   private val intValue = if (value) 1 else 0
 
   override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
@@ -106,73 +105,73 @@ class ConstantBooleanValue(value : Boolean) extends TrivialConstantValue(bt.Boxe
     predTemp
   }
 
-  def toScalarTempValue(nativeType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = 
+  def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = 
     // toTruthyPredicate() will catch our conversion to bool
     None
 }
 
-class ConstantBytevectorValue(value : Vector[Short]) extends TrivialConstantValue(bt.BoxedBytevector, value, ps.StoreBoxedBytevector.apply) {
-  def toScalarTempValue(nativeType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
+class ConstantBytevectorValue(value : Vector[Short]) extends TrivialConstantValue(ct.BytevectorCell, value, ps.StoreBytevectorCell.apply) {
+  def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
     // Bytevectors can't be unboxed
     None
 }
 
-class ConstantPairValue(car : ConstantValue, cdr : ConstantValue) extends ConstantValue(bt.BoxedPair) {
-  def toConstantBoxedTempValue()(implicit plan : PlanWriter) : ps.TempValue = {
+class ConstantPairValue(car : ConstantValue, cdr : ConstantValue) extends ConstantValue(ct.PairCell) {
+  def toConstantCellTempValue()(implicit plan : PlanWriter) : ps.TempValue = {
     val constantTemp = new ps.TempValue
 
     // Box our car/cdr first
-    val carTemp = car.toRequiredTempValue(vt.BoxedIntrinsicType(bt.BoxedDatum))
-    val cdrTemp = cdr.toRequiredTempValue(vt.BoxedIntrinsicType(bt.BoxedDatum))
+    val carTemp = car.toRequiredTempValue(vt.IntrinsicCellType(ct.DatumCell))
+    val cdrTemp = cdr.toRequiredTempValue(vt.IntrinsicCellType(ct.DatumCell))
 
-    plan.steps += ps.StoreBoxedPair(constantTemp, carTemp, cdrTemp)
+    plan.steps += ps.StorePairCell(constantTemp, carTemp, cdrTemp)
 
     constantTemp
   }
 
-  def toScalarTempValue(nativeType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
+  def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
     // Pairs cannot be unboxed
     None
 }
 
-class ConstantVectorValue(elements : Vector[ConstantValue]) extends ConstantValue(bt.BoxedVector) {
-  def toConstantBoxedTempValue()(implicit plan : PlanWriter) : ps.TempValue = {
+class ConstantVectorValue(elements : Vector[ConstantValue]) extends ConstantValue(ct.VectorCell) {
+  def toConstantCellTempValue()(implicit plan : PlanWriter) : ps.TempValue = {
     val constantTemp = new ps.TempValue
 
     // Box our elements
     val elementTemps = elements.map {
-      _.toRequiredTempValue(vt.BoxedIntrinsicType(bt.BoxedDatum))
+      _.toRequiredTempValue(vt.IntrinsicCellType(ct.DatumCell))
     }
 
-    plan.steps += ps.StoreBoxedVector(constantTemp, elementTemps)
+    plan.steps += ps.StoreVectorCell(constantTemp, elementTemps)
 
     constantTemp
   }
 
-  def toScalarTempValue(nativeType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
+  def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
     // Pairs cannot be unboxed
     None
 }
 
-object EmptyListValue extends ConstantValue(bt.BoxedEmptyList) {
-  def toConstantBoxedTempValue()(implicit plan : PlanWriter) : ps.TempValue = {
+object EmptyListValue extends ConstantValue(ct.EmptyListCell) {
+  def toConstantCellTempValue()(implicit plan : PlanWriter) : ps.TempValue = {
     val constantTemp = new ps.TempValue
-    plan.steps += ps.StoreBoxedEmptyList(constantTemp)
+    plan.steps += ps.StoreEmptyListCell(constantTemp)
     constantTemp
   }
 
-  def toScalarTempValue(nativeType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
+  def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
     None
 }
 
-object UnspecificValue extends ConstantValue(bt.BoxedUnspecific) {
-  def toConstantBoxedTempValue()(implicit plan : PlanWriter) : ps.TempValue = {
+object UnspecificValue extends ConstantValue(ct.UnspecificCell) {
+  def toConstantCellTempValue()(implicit plan : PlanWriter) : ps.TempValue = {
     val constantTemp = new ps.TempValue
-    plan.steps += ps.StoreBoxedUnspecific(constantTemp)
+    plan.steps += ps.StoreUnspecificCell(constantTemp)
     constantTemp
   }
 
-  def toScalarTempValue(nativeType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
+  def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
     None
 }
 

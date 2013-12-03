@@ -1,13 +1,12 @@
 package llambda.planner.intermediatevalue
 
-import llambda.nfi
 import llambda.{valuetype => vt}
-import llambda.{boxedtype => bt}
+import llambda.{celltype => ct}
 import llambda.planner.{step => ps}
 import llambda.planner.{PlanWriter, UnlocatedImpossibleTypeConversionException, InvokableProcedure}
 
 abstract class IntermediateValue {
-  val possibleTypes : Set[bt.ConcreteBoxedType]
+  val possibleTypes : Set[ct.ConcreteCellType]
 
   case class PlanPhiResult(
     ourTempValue : ps.TempValue,
@@ -16,9 +15,9 @@ abstract class IntermediateValue {
     resultIntermediate : IntermediateValue
   )
 
-  protected def toBoxedTempValue(boxedType : bt.BoxedType)(implicit plan : PlanWriter) : Option[ps.TempValue]
-  protected def toScalarTempValue(nativeType : nfi.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue]
-  protected def toBoxedRecordTempValue(boxedRecordType : vt.BoxedRecordType)(implicit plan : PlanWriter) : Option[ps.TempValue]
+  protected def toCellTempValue(cellType : ct.CellType)(implicit plan : PlanWriter) : Option[ps.TempValue]
+  protected def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue]
+  protected def toRecordCellTempValue(recordCellType : vt.RecordCellType)(implicit plan : PlanWriter) : Option[ps.TempValue]
 
   def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     val trueTemp = new ps.TempValue
@@ -30,22 +29,22 @@ abstract class IntermediateValue {
   def toInvokableProcedure()(implicit plan : PlanWriter) : Option[InvokableProcedure]
 
   protected def toTempValue(targetType : vt.ValueType)(implicit plan : PlanWriter) : Option[ps.TempValue] = targetType match {
-    case vt.ScalarType(nfi.CBool) =>
+    case vt.CBool =>
       val truthyPredTemp = toTruthyPredicate()
 
       val intConvTemp = new ps.TempValue
-      plan.steps += ps.ConvertNativeInteger(intConvTemp, truthyPredTemp, nfi.CBool.bits, false)
+      plan.steps += ps.ConvertNativeInteger(intConvTemp, truthyPredTemp, vt.CBool.bits, false)
 
       Some(intConvTemp)
 
-    case vt.ScalarType(nativeType : nfi.NativeType) =>
-      toScalarTempValue(nativeType)
+    case nativeType : vt.NativeType =>
+      toNativeTempValue(nativeType)
 
-    case vt.BoxedIntrinsicType(boxedType) =>
-      toBoxedTempValue(boxedType)
+    case vt.IntrinsicCellType(cellType) =>
+      toCellTempValue(cellType)
 
-    case boxedRecordType : vt.BoxedRecordType =>
-      toBoxedRecordTempValue(boxedRecordType)
+    case recordCellType : vt.RecordCellType =>
+      toRecordCellTempValue(recordCellType)
   }
   
   def toRequiredTempValue(targetType : vt.ValueType)(implicit plan : PlanWriter) =
@@ -54,10 +53,10 @@ abstract class IntermediateValue {
     }
 
   def planPhiWith(theirValue : IntermediateValue)(ourPlan : PlanWriter, theirPlan : PlanWriter) : PlanPhiResult = {
-    // This is extremely inefficient for compatible unboxed types
+    // This is extremely inefficient for compatible native types
     // This should be overridden where possible
-    val ourTempValue = this.toRequiredTempValue(vt.BoxedIntrinsicType(bt.BoxedDatum))(ourPlan)
-    val theirTempValue = theirValue.toRequiredTempValue(vt.BoxedIntrinsicType(bt.BoxedDatum))(theirPlan)
+    val ourTempValue = this.toRequiredTempValue(vt.IntrinsicCellType(ct.DatumCell))(ourPlan)
+    val theirTempValue = theirValue.toRequiredTempValue(vt.IntrinsicCellType(ct.DatumCell))(theirPlan)
 
     val phiResultTemp = new ps.TempValue
     val phiPossibleTypes = possibleTypes ++ theirValue.possibleTypes
@@ -66,7 +65,7 @@ abstract class IntermediateValue {
       ourTempValue=ourTempValue,
       theirTempValue=theirTempValue,
       resultTemp=phiResultTemp,
-      resultIntermediate=new BoxedIntrinsicValue(phiPossibleTypes, bt.BoxedDatum, phiResultTemp)
+      resultIntermediate=new IntrinsicCellValue(phiPossibleTypes, ct.DatumCell, phiResultTemp)
     )
   }
 }

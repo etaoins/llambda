@@ -1,7 +1,7 @@
 package llambda.codegen
 
 import llambda.codegen.llvmir._
-import llambda.{boxedtype => bt}
+import llambda.{celltype => ct}
 
 object GenFatalError {
   def apply(module : IrModuleBuilder, block : IrBlockBuilder)(errorName : String, errorText : String, evidence : Option[IrValue] = None) = {
@@ -24,7 +24,7 @@ object GenFatalError {
       name="_lliby_fatal",
       arguments=List(
         IrFunction.Argument(PointerType(IntegerType(8)), Set(IrFunction.NoCapture)),
-        IrFunction.Argument(PointerType(bt.BoxedDatum.irType), Set(IrFunction.NoCapture))
+        IrFunction.Argument(PointerType(ct.DatumCell.irType), Set(IrFunction.NoCapture))
       ),
       attributes=Set(IrFunction.NoReturn, IrFunction.ReadOnly, IrFunction.NoUnwind)
     )
@@ -33,11 +33,11 @@ object GenFatalError {
       module.declareFunction(llibyFatalDecl)
     }
 
-    // Build our evidence - assume it's a boxed datum
+    // Build our evidence - assume it's a datum cell
     val evidencePtr = evidence.map(
-      bt.BoxedDatum.genPointerBitcast(block)(_)
+      ct.DatumCell.genPointerBitcast(block)(_)
     ).getOrElse(
-      NullPointerConstant(PointerType(bt.BoxedDatum.irType))
+      NullPointerConstant(PointerType(ct.DatumCell.irType))
     )
 
     // Get a pointer to the first element

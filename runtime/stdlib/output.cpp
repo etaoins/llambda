@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "binding/BoxedDatum.h"
+#include "binding/DatumCell.h"
 #include "writer/ExternalFormDatumWriter.h"
 
 using namespace lliby;
@@ -8,7 +8,7 @@ using namespace lliby;
 extern "C"
 {
 
-void lliby_write(BoxedDatum *datum)
+void lliby_write(DatumCell *datum)
 {
 	// XXX: Use the current port
 	auto writer = new ExternalFormDatumWriter(std::cout);

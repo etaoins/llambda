@@ -1,8 +1,7 @@
 package llambda.codegen
 
-import llambda.nfi
 import llambda.{valuetype => vt}
-import llambda.{boxedtype => bt}
+import llambda.{celltype => ct}
 
 case class SignedFirstClassType(
   irType : llvmir.FirstClassType,
@@ -10,24 +9,24 @@ case class SignedFirstClassType(
 
 object ValueTypeToIr {
   def apply(valueType : vt.ValueType) : SignedFirstClassType = valueType match {
-    case vt.ScalarType(intLike : nfi.IntLikeType) =>
+    case intLike : vt.IntLikeType =>
       SignedFirstClassType(llvmir.IntegerType(intLike.bits), Some(intLike.signed))
 
-    case vt.ScalarType(nfi.Float) =>
+    case vt.Float =>
       SignedFirstClassType(llvmir.FloatType, None)
 
-    case vt.ScalarType(nfi.Double) =>
+    case vt.Double =>
       SignedFirstClassType(llvmir.DoubleType, None)
 
-    case vt.ScalarType(nfi.Utf8CString) =>
+    case vt.Utf8CString =>
       SignedFirstClassType(llvmir.PointerType(llvmir.IntegerType(8)), None)
 
-    case vt.BoxedIntrinsicType(boxedType) =>
-      SignedFirstClassType(llvmir.PointerType(boxedType.irType), None)
+    case vt.IntrinsicCellType(cellType) =>
+      SignedFirstClassType(llvmir.PointerType(cellType.irType), None)
 
-    case _ : vt.BoxedRecordType =>
-      // All boxed records have the same IR type. Their data is cast to the 
+    case _ : vt.RecordCellType =>
+      // All record cells have the same IR type. Their data is cast to the 
       // correct type on demand
-      apply(vt.BoxedIntrinsicType(bt.BoxedRecord))
+      apply(vt.IntrinsicCellType(ct.RecordCell))
   }
 }

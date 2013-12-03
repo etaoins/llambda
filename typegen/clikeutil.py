@@ -6,5 +6,5 @@ GENERATED_FILE_COMMENT = ("/****************************************************
                           "\n")
 
 def type_name_to_clike_class(type_name):
-    return "Boxed" + type_name[0].upper() + type_name[1:]
+    return type_name[0].upper() + type_name[1:] + "Cell"
 

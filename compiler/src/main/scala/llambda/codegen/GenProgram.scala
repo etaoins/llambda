@@ -23,7 +23,7 @@ object GenProgram {
 
   def preludeIr : String = {
     List(
-      resourceAsString("generated/boxedTypes.ll"),
+      resourceAsString("generated/cellTypes.ll"),
       resourceAsString("defines.ll")
     ) mkString "\n"
   }
@@ -35,7 +35,7 @@ object GenProgram {
 
     // Build each program-supplied function
     for((nativeSymbol, plannedFunction) <- functions) {
-      val irSignature = NativeSignatureToIr(plannedFunction.signature)
+      val irSignature = ProcedureSignatureToIr(plannedFunction.signature)
 
       val argumentNames = plannedFunction.namedArguments.map(_._1)
       val namedIrArguments = argumentNames.zip(irSignature.arguments)
@@ -86,7 +86,7 @@ object GenProgram {
     
     // Call __llambda_exec
     // This must be defined by the planner
-    val execIrSignature = NativeSignatureToIr(LlambdaExecSignature)
+    val execIrSignature = ProcedureSignatureToIr(LlambdaExecSignature)
     val execValue = GenNamedEntryPoint(module)(LlambdaExecSignature, LlambdaExecSignature.nativeSymbol, plannedSymbols) 
 
     entryBlock.call(None)(execIrSignature, execValue, Nil, false)

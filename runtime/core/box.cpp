@@ -1,18 +1,18 @@
 #include "unicode/UnicodeChar.h"
 
-#include "binding/BoxedExactInteger.h"
-#include "binding/BoxedInexactRational.h"
-#include "binding/BoxedCharacter.h"
-#include "binding/BoxedString.h"
+#include "binding/ExactIntegerCell.h"
+#include "binding/InexactRationalCell.h"
+#include "binding/CharacterCell.h"
+#include "binding/StringCell.h"
 
 using namespace lliby;
 
 extern "C"
 {
 
-BoxedString *_lliby_string_from_utf8(const char *str)
+StringCell *_lliby_string_from_utf8(const char *str)
 {
-	return BoxedString::fromUtf8CString(str);
+	return StringCell::fromUtf8CString(str);
 }
 
 }

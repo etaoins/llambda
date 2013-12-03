@@ -16,21 +16,21 @@ public:
 	{
 	}
 
-	virtual void render(const BoxedDatum *datum);
+	virtual void render(const DatumCell *datum);
 
 protected:
-	virtual void renderUnspecific(const BoxedUnspecific *value);
-	virtual void renderEmptyList(const BoxedEmptyList *value);
-	virtual void renderBoolean(const BoxedBoolean *value);
-	virtual void renderExactInteger(const BoxedExactInteger *value);
-	virtual void renderInexactRational(const BoxedInexactRational *value);
-	virtual void renderStringLike(const BoxedStringLike *value, std::uint8_t quoteChar, bool needsQuotes);
-	virtual void renderPair(const BoxedPair *value, bool inList = false);
-	virtual void renderBytevector(const BoxedBytevector *value);
-	virtual void renderVector(const BoxedVector *value);
-	virtual void renderProcedure(const BoxedProcedure *value);
-	virtual void renderCharacter(const BoxedCharacter *value);
-	virtual void renderRecord(const BoxedRecord *value);
+	virtual void renderUnspecific(const UnspecificCell *value);
+	virtual void renderEmptyList(const EmptyListCell *value);
+	virtual void renderBoolean(const BooleanCell *value);
+	virtual void renderExactInteger(const ExactIntegerCell *value);
+	virtual void renderInexactRational(const InexactRationalCell *value);
+	virtual void renderStringLike(const StringLikeCell *value, std::uint8_t quoteChar, bool needsQuotes);
+	virtual void renderPair(const PairCell *value, bool inList = false);
+	virtual void renderBytevector(const BytevectorCell *value);
+	virtual void renderVector(const VectorCell *value);
+	virtual void renderProcedure(const ProcedureCell *value);
+	virtual void renderCharacter(const CharacterCell *value);
+	virtual void renderRecord(const RecordCell *value);
 
 	std::ostream &m_outStream;
 };

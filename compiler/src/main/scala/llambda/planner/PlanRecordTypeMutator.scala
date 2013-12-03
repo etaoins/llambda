@@ -1,7 +1,7 @@
 package llambda.planner
 
 import llambda.et
-import llambda.nfi
+import llambda.ProcedureSignature
 import llambda.{valuetype => vt}
 import llambda.planner.{step => ps}
 
@@ -10,7 +10,7 @@ object PlanRecordTypeMutator {
     expr match {
       case et.RecordTypeMutator(recordType, field) =>
         // Determine our signature
-        val constructorSignature = new nfi.NativeSignature {
+        val constructorSignature = new ProcedureSignature {
           val hasClosureArg : Boolean = false
           val hasRestArg : Boolean = false
 
@@ -19,11 +19,11 @@ object PlanRecordTypeMutator {
         }
 
         // Set up our arguments
-        val boxedRecordTemp = new ps.TempValue
+        val recordCellTemp = new ps.TempValue
         val newValueTemp = new ps.TempValue
 
         val namedArguments = List(
-          ("boxedRecord" -> boxedRecordTemp),
+          ("recordCell" -> recordCellTemp),
           ("newValue" -> newValueTemp)
         )
         
@@ -31,7 +31,7 @@ object PlanRecordTypeMutator {
         
         // Extract the record data
         val recordDataTemp = new ps.TempValue
-        plan.steps += ps.StoreBoxedRecordData(recordDataTemp, boxedRecordTemp, recordType) 
+        plan.steps += ps.StoreRecordCellData(recordDataTemp, recordCellTemp, recordType) 
 
         val fieldValueTemp = new ps.TempValue
         plan.steps += ps.RecordFieldSet(recordDataTemp, recordType, field, newValueTemp) 

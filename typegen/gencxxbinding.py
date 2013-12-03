@@ -5,31 +5,31 @@ from typegen.cxxutil import *
 
 OUTPUT_DIR = "runtime/binding/generated/"
 
-def _type_conditions_to_cxx(boxed_type, datum_access = ""):
+def _type_conditions_to_cxx(cell_type, datum_access = ""):
     conditions_cxx = []
 
     # Build the C++ for each condition
-    for concrete_name, concrete_type in boxed_type.concrete_types.items():
+    for concrete_name, concrete_type in cell_type.concrete_types.items():
         type_name = concrete_type.name
-        conditions_cxx.append("(" + datum_access + "typeId() == BoxedTypeId::" + type_name_to_enum_constant(concrete_name) + ")")
+        conditions_cxx.append("(" + datum_access + "typeId() == CellTypeId::" + type_name_to_enum_constant(concrete_name) + ")")
 
     # Join them with ||
     return " || ".join(conditions_cxx)
 
-def _generate_typeid_enum(boxed_types):
+def _generate_typeid_enum(cell_types):
     # Find the C++ type of our type IDs
-    typeid_type = field_type_to_cxx(boxed_types[BASE_TYPE].fields["typeId"])
+    typeid_type = field_type_to_cxx(cell_types[BASE_TYPE].fields["typeId"])
     
     content  = "#include <cstdint>\n\n"
 
     content += "namespace lliby\n" 
     content += "{\n\n"
 
-    content += "enum class BoxedTypeId : " + typeid_type + "\n"
+    content += "enum class CellTypeId : " + typeid_type + "\n"
     content += "{\n"
 
-    for type_name, boxed_type in boxed_types.items(): 
-        type_id = boxed_type.type_id
+    for type_name, cell_type in cell_types.items(): 
+        type_id = cell_type.type_id
         if type_id is not None:
             cxx_name = type_name_to_enum_constant(type_name)
             content += "\t" + cxx_name + " = " + str(type_id) + ",\n"
@@ -40,11 +40,11 @@ def _generate_typeid_enum(boxed_types):
 
     return guard_cxx_header(content, "_LLIBY_BINDING_TYPEID_H")
 
-def _generate_declaretypes(boxed_types):
+def _generate_declaretypes(cell_types):
     content  = "namespace lliby\n" 
     content += "{\n\n"
 
-    for type_name, boxed_type in boxed_types.items():
+    for type_name, cell_type in cell_types.items():
         cxx_type_name = type_name_to_clike_class(type_name)
         content += "class " + cxx_type_name + ";\n"
 
@@ -57,8 +57,8 @@ def _generate_declaretypes(boxed_types):
 
     return guard_cxx_header(content, "_LLIBY_BINDING_DECLARETYPES_H")
 
-def _generate_casts(boxed_types, type_name):
-    type_condition = _type_conditions_to_cxx(boxed_types[type_name], "datum->")
+def _generate_casts(cell_types, type_name):
+    type_condition = _type_conditions_to_cxx(cell_types[type_name], "datum->")
 
     cxx_base_type_name = type_name_to_clike_class(BASE_TYPE)
     cxx_type_name = type_name_to_clike_class(type_name)
@@ -89,20 +89,20 @@ def _generate_casts(boxed_types, type_name):
     return content
 
 
-def _generate_type_members(boxed_types, type_name):
-    boxed_type = boxed_types[type_name]
-    filename  = type_name_to_clike_class(boxed_type.name) + 'Members'
+def _generate_type_members(cell_types, type_name):
+    cell_type = cell_types[type_name]
+    filename  = type_name_to_clike_class(cell_type.name) + 'Members'
     file_path = OUTPUT_DIR + filename + ".h"
 
     data_content = ""
     accessor_content = ""
 
     # Build the data and accessors in one pass 
-    for field_name, field in boxed_type.fields.items():
+    for field_name, field in cell_type.fields.items():
         member_name = "m_" + field_name
 
         if field.qualified_name == BASE_TYPE + ".typeId":
-            member_type = "BoxedTypeId"
+            member_type = "CellTypeId"
         elif field.qualified_name == BASE_TYPE + ".gcState":
             member_type = "GarbageState"
         else:
@@ -124,7 +124,7 @@ def _generate_type_members(boxed_types, type_name):
 
     if type_name != BASE_TYPE:
         content += "public:\n"
-        content += _generate_casts(boxed_types, type_name)
+        content += _generate_casts(cell_types, type_name)
 
     if data_content:
         content += "private:\n"
@@ -132,13 +132,13 @@ def _generate_type_members(boxed_types, type_name):
 
     return {file_path: content}
 
-def generate_cxx_binding(boxed_types):
+def generate_cxx_binding(cell_types):
     files = {}
 
-    files[OUTPUT_DIR + "typeid.h"] = _generate_typeid_enum(boxed_types)
-    files[OUTPUT_DIR + "declaretypes.h"] = _generate_declaretypes(boxed_types)
+    files[OUTPUT_DIR + "typeid.h"] = _generate_typeid_enum(cell_types)
+    files[OUTPUT_DIR + "declaretypes.h"] = _generate_declaretypes(cell_types)
 
-    for type_name, boxed_type in boxed_types.items():
-        files.update(_generate_type_members(boxed_types, type_name))
+    for type_name, cell_type in cell_types.items():
+        files.update(_generate_type_members(cell_types, type_name))
 
     return files

@@ -1,5 +1,5 @@
-#include "binding/BoxedString.h"
-#include "binding/BoxedSymbol.h"
+#include "binding/StringCell.h"
+#include "binding/SymbolCell.h"
 #include "binding/ProperList.h"
 
 #include "core/init.h"
@@ -11,14 +11,14 @@ int main(int argc, char *argv[])
 
 	lliby_init();
 	
-	BoxedString *valueA = BoxedString::fromUtf8CString("A");
-	BoxedString *valueB = BoxedString::fromUtf8CString("B");
-	BoxedString *valueC = BoxedString::fromUtf8CString("C");
+	StringCell *valueA = StringCell::fromUtf8CString("A");
+	StringCell *valueB = StringCell::fromUtf8CString("B");
+	StringCell *valueC = StringCell::fromUtf8CString("C");
 	
 	{
-		BoxedListElement *emptyListHead = BoxedListElement::createProperList({});
+		ListElementCell *emptyListHead = ListElementCell::createProperList({});
 
-		ProperList<BoxedDatum> properList(emptyListHead);
+		ProperList<DatumCell> properList(emptyListHead);
 
 		ASSERT_TRUE(properList.isValid());
 		ASSERT_TRUE(properList.begin() == properList.end());
@@ -27,9 +27,9 @@ int main(int argc, char *argv[])
 	}
 	
 	{
-		BoxedListElement *stringListHead = BoxedListElement::createProperList({valueA, valueB, valueC});
+		ListElementCell *stringListHead = ListElementCell::createProperList({valueA, valueB, valueC});
 
-		ProperList<BoxedDatum> properList(stringListHead);
+		ProperList<DatumCell> properList(stringListHead);
 
 		ASSERT_TRUE(properList.isValid());
 		ASSERT_TRUE(properList.begin() != properList.end());
@@ -49,13 +49,13 @@ int main(int argc, char *argv[])
 	}
 	
 	{
-		BoxedDatum *improperList = BoxedListElement::createList({valueA, valueB}, valueC);
+		DatumCell *improperList = ListElementCell::createList({valueA, valueB}, valueC);
 		
-		auto stringImproperHead = datum_cast<BoxedListElement>(improperList);
+		auto stringImproperHead = datum_cast<ListElementCell>(improperList);
 		ASSERT_TRUE(stringImproperHead != nullptr);
 
 		// Improper list
-		ProperList<BoxedString> properList(stringImproperHead);
+		ProperList<StringCell> properList(stringImproperHead);
 
 		ASSERT_FALSE(properList.isValid());
 		ASSERT_TRUE(properList.begin() == properList.end());

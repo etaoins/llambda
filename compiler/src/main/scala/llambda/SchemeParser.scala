@@ -164,7 +164,7 @@ class SchemeParser(filename : Option[String]) extends RegexParsers {
     ast.Bytevector(byteStrs.map(Integer.parseInt(_).toShort).toVector) 
   }
 
-  def character = symbolicCharacter | hexScalarCharacter | literalCharacter
+  def character = symbolicCharacter | hexNativeCharacter | literalCharacter
 
   def symbolicCharacter = symbolicAlarm | symbolicBackspace | symbolicDelete |
                           symbolicEscape | symbolicNewline | symbolicNull |
@@ -180,7 +180,7 @@ class SchemeParser(filename : Option[String]) extends RegexParsers {
   def symbolicSpace =     """#\\space""".r     ^^^ ast.CharLiteral(' ')
   def symbolicTab =       """#\\tab""".r       ^^^ ast.CharLiteral(0x09)
 
-  def hexScalarCharacter = """(?i)#\\x[0-9a-z]+""".r ^^ { literalStr =>
+  def hexNativeCharacter = """(?i)#\\x[0-9a-z]+""".r ^^ { literalStr =>
     ast.CharLiteral(Integer.parseInt(literalStr.drop(3), 16).toChar)
   }
 

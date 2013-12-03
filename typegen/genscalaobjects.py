@@ -8,7 +8,7 @@ def _uppercase_first(string):
     return string[0].upper() + string[1:]
 
 def _type_name_to_nfi_decl(type_name):
-    return "boxed-" + re.sub('([A-Z][a-z]+)', r'-\1', type_name).lower()
+    return re.sub('([A-Z][a-z]+)', r'-\1', type_name).lower() + "-cell"
 
 def _llvm_type_integer_bits(llvm_type):
     if llvm_type is None:
@@ -88,10 +88,10 @@ def _generate_field_types(current_type):
 
     return output
 
-def _recursive_fields(boxed_type):
-    our_fields = boxed_type.fields.values()
+def _recursive_fields(cell_type):
+    our_fields = cell_type.fields.values()
 
-    supertype = boxed_type.supertype
+    supertype = cell_type.supertype
     if supertype:
         # gcState is always 0 for constants
         super_fields = [x for x in supertype.fields.values() if x.name != 'gcState']
@@ -101,11 +101,11 @@ def _recursive_fields(boxed_type):
         # No more super types
         return []
 
-def _generate_constant_constructor(all_types, boxed_type):
-    constant_type_id = boxed_type.type_id
+def _generate_constant_constructor(all_types, cell_type):
+    constant_type_id = cell_type.type_id
 
-    our_fields = list(boxed_type.fields.values())
-    recursive_fields = _recursive_fields(boxed_type)
+    our_fields = list(cell_type.fields.values())
+    recursive_fields = _recursive_fields(cell_type)
 
     # Determine our parameters
     parameter_defs = []
@@ -136,7 +136,7 @@ def _generate_constant_constructor(all_types, boxed_type):
     output = '  def createConstant('
     output += ', '.join(parameter_defs) + ') : StructureConstant = {\n'
 
-    for field_name, field in boxed_type.fields.items():
+    for field_name, field in cell_type.fields.items():
         if field_name == 'gcState':
             # These are provided internally
             continue
@@ -153,7 +153,7 @@ def _generate_constant_constructor(all_types, boxed_type):
 
     output += '    StructureConstant(List(\n'
 
-    supertype = boxed_type.supertype
+    supertype = cell_type.supertype
     if supertype:
         output += '      supertype.get.createConstant(\n'
 
@@ -213,15 +213,15 @@ def _generate_field_accessors(leaf_type, current_type, declare_only = False, dep
 
         output += '\n'
 
-        output += '  def ' + pointer_method_name + '(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue'
+        output += '  def ' + pointer_method_name + '(block : IrBlockBuilder)(valueCell : IrValue) : IrValue'
         if declare_only:
             output += '\n'
         else:
             output += ' = {\n'
             
             # Make sure we're the correct type
-            exception_message = "Unexpected type for boxed value. Passed ${boxedValue.irType}, expected %" + leaf_type.name + "*"
-            output += '    if (boxedValue.irType != PointerType(UserDefinedType("' + leaf_type.name + '"))) {\n'
+            exception_message = "Unexpected type for cell value. Passed ${valueCell.irType}, expected %" + leaf_type.name + "*"
+            output += '    if (valueCell.irType != PointerType(UserDefinedType("' + leaf_type.name + '"))) {\n'
             output += '       throw new InternalCompilerErrorException(s"' + exception_message + '")\n'
             output += '    }\n\n'
 
@@ -231,51 +231,51 @@ def _generate_field_accessors(leaf_type, current_type, declare_only = False, dep
 
             output += '    block.getelementptr("'+ field_name + 'Ptr")(\n'
             output += '      elementType=' + field_name + 'IrType,\n'
-            output += '      basePointer=boxedValue,\n'
+            output += '      basePointer=valueCell,\n'
             output += '      indices=List(' + ", ".join(indices) + ').map(IntegerConstant(IntegerType(32), _)),\n'
             output += '      inbounds=true\n'
             output += '    )\n'
             output += '  }\n'
             output += '\n'
         
-        output += '  def ' + store_method_name  + '(block : IrBlockBuilder)(toStore : IrValue, boxedValue : IrValue) : Unit'
+        output += '  def ' + store_method_name  + '(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue) : Unit'
         if declare_only:
             output += '\n'
         else:
             output += ' = {\n'
 
             pointer_name = field_name + 'Pointer'
-            output += '    val ' + pointer_name + ' = ' + pointer_method_name + '(block)(boxedValue)\n'
+            output += '    val ' + pointer_name + ' = ' + pointer_method_name + '(block)(valueCell)\n'
             output += '    block.store(toStore, ' + pointer_name + ', tbaaIndex=Some(tbaaIndex))\n' 
             output += '  }\n'
             output += '\n'
         
-        output += '  def ' + load_method_name  + '(block : IrBlockBuilder)(boxedValue : IrValue) : IrValue'
+        output += '  def ' + load_method_name  + '(block : IrBlockBuilder)(valueCell : IrValue) : IrValue'
         if declare_only:
             output += '\n'
         else:
             output += ' = {\n'
 
             pointer_name = field_name + 'Pointer'
-            output += '    val ' + pointer_name + ' = ' + pointer_method_name + '(block)(boxedValue)\n'
+            output += '    val ' + pointer_name + ' = ' + pointer_method_name + '(block)(valueCell)\n'
             output += '    block.load("' + field_name + '")(' + pointer_name + ', tbaaIndex=Some(tbaaIndex))\n' 
             output += '  }\n'
 
     return output
 
 def _generate_unconditional_type_check():
-    output  = '  def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {\n'
+    output  = '  def genTypeCheck(startBlock : IrBlockBuilder)(valueCell : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {\n'
     output += '    startBlock.uncondBranch(successBlock)\n'
     output += '  }\n'
 
     return output
 
-def _generate_type_check(all_types, boxed_type):
+def _generate_type_check(all_types, cell_type):
     base_type_object = type_name_to_clike_class(BASE_TYPE)
 
-    output  = '  def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {\n'
-    output += '    val datumValue = ' + base_type_object + '.genPointerBitcast(startBlock)(boxedValue)\n'
-    output += '    val typeId = BoxedDatum.genLoadFromTypeId(startBlock)(datumValue)\n'
+    output  = '  def genTypeCheck(startBlock : IrBlockBuilder)(valueCell : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {\n'
+    output += '    val datumValue = ' + base_type_object + '.genPointerBitcast(startBlock)(valueCell)\n'
+    output += '    val typeId = DatumCell.genLoadFromTypeId(startBlock)(datumValue)\n'
 
     switch_params = []
 
@@ -285,7 +285,7 @@ def _generate_type_check(all_types, boxed_type):
     # If the type ID isn't known then fail the branch
     switch_params.append("failBlock")
 
-    for concrete_type in boxed_type.concrete_types.values():
+    for concrete_type in cell_type.concrete_types.values():
         switch_params.append("(" + str(concrete_type.type_id) + "L -> successBlock)")
         
     output += '    startBlock.switch(' + ", ".join(switch_params) + ')\n'
@@ -293,27 +293,27 @@ def _generate_type_check(all_types, boxed_type):
 
     return output
 
-def _generate_boxed_types(all_types):
+def _generate_cell_types(all_types):
     base_type = all_types[BASE_TYPE]
 
     output  = GENERATED_FILE_COMMENT
     
-    output += "package llambda.boxedtype\n\n"
+    output += "package llambda.celltype\n\n"
 
     output += "import llambda.codegen.llvmir._\n"
     output += "import llambda.InternalCompilerErrorException\n\n"
         
-    output += 'sealed abstract class BoxedType {\n'
+    output += 'sealed abstract class CellType {\n'
     output += '  val name : String\n'
     output += '  val irType : FirstClassType\n'
-    output += '  val supertype : Option[BoxedType]\n'
-    output += '  val directSubtypes : Set[BoxedType]\n'
+    output += '  val supertype : Option[CellType]\n'
+    output += '  val directSubtypes : Set[CellType]\n'
     output += '  val isAbstract : Boolean\n' 
     output += '  val tbaaIndex : Int\n' 
     output += '\n'
-    output += '  def genTypeCheck(startBlock : IrBlockBuilder)(boxedValue : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget)\n'
+    output += '  def genTypeCheck(startBlock : IrBlockBuilder)(valueCell : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget)\n'
     output += '\n'
-    output += '  def isTypeOrSubtypeOf(otherType : BoxedType) : Boolean = {\n'
+    output += '  def isTypeOrSubtypeOf(otherType : CellType) : Boolean = {\n'
     output += '    if (otherType == this) {\n'
     output += '      return true\n'
     output += '    }\n'
@@ -321,7 +321,7 @@ def _generate_boxed_types(all_types):
     output += '    supertype map (_.isTypeOrSubtypeOf(otherType)) getOrElse false\n'
     output += '  }\n'
     output += '\n'
-    output += '  def isTypeOrSupertypeOf(otherType : BoxedType) : Boolean = {\n'
+    output += '  def isTypeOrSupertypeOf(otherType : CellType) : Boolean = {\n'
     output += '    if (otherType == this) {\n'
     output += '      return true\n'
     output += '    }\n'
@@ -329,8 +329,8 @@ def _generate_boxed_types(all_types):
     output += '    directSubtypes exists (_.isTypeOrSupertypeOf(otherType))\n'
     output += '  }\n'
     output += '\n'
-    output += '  def concreteTypes : Set[ConcreteBoxedType] = this match {\n'
-    output += '    case concreteType : ConcreteBoxedType => Set(concreteType)\n'
+    output += '  def concreteTypes : Set[ConcreteCellType] = this match {\n'
+    output += '    case concreteType : ConcreteCellType => Set(concreteType)\n'
     output += '    case abstractType => directSubtypes.flatMap(_.concreteTypes)\n'
     output += '  }\n'
     output += '\n'
@@ -344,18 +344,18 @@ def _generate_boxed_types(all_types):
     output += _generate_field_accessors(base_type, base_type, True)
     output += '}\n\n'
 
-    output += 'sealed abstract class ConcreteBoxedType extends BoxedType {\n'
+    output += 'sealed abstract class ConcreteCellType extends CellType {\n'
     output += '  val typeId : Int\n'
     output += '}\n\n'
 
-    for type_name, boxed_type in all_types.items():
+    for type_name, cell_type in all_types.items():
         object_name = type_name_to_clike_class(type_name)
-        supertype_name = boxed_type.inherits
+        supertype_name = cell_type.inherits
 
-        if boxed_type.abstract:
-            scala_superclass = 'BoxedType'
+        if cell_type.abstract:
+            scala_superclass = 'CellType'
         else:
-            scala_superclass = 'ConcreteBoxedType'
+            scala_superclass = 'ConcreteCellType'
 
         output += 'object ' + object_name + ' extends ' + scala_superclass + ' {\n'
         output += '  val name = "' + type_name + '"\n'
@@ -368,29 +368,29 @@ def _generate_boxed_types(all_types):
             output += '  val supertype = None\n'
 
         subtype_scala_names = []
-        for subtype_name in boxed_type.subtypes.keys():
+        for subtype_name in cell_type.subtypes.keys():
             subtype_object = type_name_to_clike_class(subtype_name)
             subtype_scala_names.append(subtype_object)
 
-        output += '  val directSubtypes = Set[BoxedType](' + ", ".join(subtype_scala_names) + ')\n'
+        output += '  val directSubtypes = Set[CellType](' + ", ".join(subtype_scala_names) + ')\n'
 
-        if boxed_type.abstract:
+        if cell_type.abstract:
             output += '  val isAbstract = true\n'
         else:
             output += '  val isAbstract = false\n'
 
-        output += '  val tbaaIndex = ' + str(boxed_type.index) + '\n'
+        output += '  val tbaaIndex = ' + str(cell_type.index) + '\n'
 
-        type_id = boxed_type.type_id
+        type_id = cell_type.type_id
         if type_id is not None:
             output += '  val typeId = ' + str(type_id) + '\n'
         output += "\n"
         
-        output += _generate_field_types(boxed_type)
+        output += _generate_field_types(cell_type)
 
-        if not boxed_type.singleton:
+        if not cell_type.singleton:
             output += '\n'
-            output += _generate_constant_constructor(all_types, boxed_type)
+            output += _generate_constant_constructor(all_types, cell_type)
         
         output += '\n'
 
@@ -399,33 +399,33 @@ def _generate_boxed_types(all_types):
             # stub type check that always passes
             output += _generate_unconditional_type_check()
         else:
-            output += _generate_type_check(all_types, boxed_type)
+            output += _generate_type_check(all_types, cell_type)
         
-        output += _generate_field_accessors(boxed_type, boxed_type)
+        output += _generate_field_accessors(cell_type, cell_type)
 
         output += '}\n\n'
 
     return output
 
-def _generate_name_to_boxed_type(all_types):
+def _generate_name_to_cell_type(all_types):
     output  = GENERATED_FILE_COMMENT
     output += 'package llambda.frontend\n\n'
 
-    output += 'import llambda.{boxedtype => bt}\n\n'
+    output += 'import llambda.{celltype => ct}\n\n'
 
-    output += 'object IntrinsicBoxedTypes {\n'
-    output += '  def apply() : Map[String, bt.BoxedType] = Map(\n'
+    output += 'object IntrinsicCellTypes {\n'
+    output += '  def apply() : Map[String, ct.CellType] = Map(\n'
 
     map_members = []
-    for type_name, boxed_type in all_types.items():
-        if boxed_type.internal:
+    for type_name, cell_type in all_types.items():
+        if cell_type.internal:
             # This isn't meant to be exposed as an NFI type
             continue
 
         nfi_decl_name = _type_name_to_nfi_decl(type_name)
-        boxed_type_class = type_name_to_clike_class(type_name)
+        cell_type_class = type_name_to_clike_class(type_name)
 
-        map_members.append('    ("<' + nfi_decl_name + '>" -> ' + 'bt.' + boxed_type_class + ')')
+        map_members.append('    ("<' + nfi_decl_name + '>" -> ' + 'ct.' + cell_type_class + ')')
 
     output += ',\n'.join(map_members) + '\n'
 
@@ -436,5 +436,5 @@ def _generate_name_to_boxed_type(all_types):
 def generate_scala_objects(all_types):
     ROOT_PATH = 'compiler/src/main/scala/llambda/'
 
-    return {ROOT_PATH + 'boxedtype/generated/BoxedType.scala': _generate_boxed_types(all_types),
-            ROOT_PATH + 'frontend/generated/IntrinsicBoxedTypes.scala': _generate_name_to_boxed_type(all_types)}
+    return {ROOT_PATH + 'celltype/generated/CellType.scala': _generate_cell_types(all_types),
+            ROOT_PATH + 'frontend/generated/IntrinsicCellTypes.scala': _generate_name_to_cell_type(all_types)}

@@ -8,26 +8,26 @@
 namespace lliby
 {
 
-class BoxedDatum;
-class BoxedUnspecific;
-class BoxedListElement;
-class BoxedPair;
-class BoxedEmptyList;
-class BoxedStringLike;
-class BoxedString;
-class BoxedSymbol;
-class BoxedBoolean;
-class BoxedNumeric;
-class BoxedExactInteger;
-class BoxedInexactRational;
-class BoxedCharacter;
-class BoxedVector;
-class BoxedBytevector;
-class BoxedRecordLike;
-class BoxedProcedure;
-class BoxedRecord;
-class BoxedMutableVar;
-typedef BoxedDatum* (*ProcedureEntryPoint)(void*, BoxedListElement*);
+class DatumCell;
+class UnspecificCell;
+class ListElementCell;
+class PairCell;
+class EmptyListCell;
+class StringLikeCell;
+class StringCell;
+class SymbolCell;
+class BooleanCell;
+class NumericCell;
+class ExactIntegerCell;
+class InexactRationalCell;
+class CharacterCell;
+class VectorCell;
+class BytevectorCell;
+class RecordLikeCell;
+class ProcedureCell;
+class RecordCell;
+class MutableVarCell;
+typedef DatumCell* (*ProcedureEntryPoint)(void*, ListElementCell*);
 
 }
 

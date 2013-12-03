@@ -6,7 +6,7 @@ import collection.immutable.ListMap
 import llambda.sst
 import llambda.et
 import llambda.{valuetype => vt}
-import llambda.{boxedtype => bt}
+import llambda.{celltype => ct}
 import llambda.BadSpecialFormException
 
 private[frontend] object ParseRecordTypeDefine {
@@ -24,9 +24,9 @@ private[frontend] object ParseRecordTypeDefine {
         // This is a compatible extension to R7RS
         val (fieldNameSymbol, fieldType) = fieldDefDatum match {
           case nameSymbol : sst.ScopedSymbol => 
-            // Just a bare symbol - implicitly we're of type <boxed-datum>
+            // Just a bare symbol - implicitly we're of type <datum-cell>
             // This is our root type
-            (nameSymbol, vt.BoxedIntrinsicType(bt.BoxedDatum))
+            (nameSymbol, vt.IntrinsicCellType(ct.DatumCell))
 
           case sst.ScopedProperList((nameSymbol : sst.ScopedSymbol) :: sst.ScopedSymbol(_, ":") :: (fieldTypeSymbol : sst.ScopedSymbol) :: Nil) =>
             // Resolve the field's type
@@ -65,7 +65,7 @@ private[frontend] object ParseRecordTypeDefine {
         throw new BadSpecialFormException(other, "Unrecognized record field definition")
     }
 
-  private def parseConstructor(recordType : vt.BoxedRecordType, symbolToField : Map[sst.ScopedSymbol, vt.RecordField], constructorDatum : sst.ScopedDatum) : (sst.ScopedSymbol, et.RecordTypeConstructor) =
+  private def parseConstructor(recordType : vt.RecordCellType, symbolToField : Map[sst.ScopedSymbol, vt.RecordField], constructorDatum : sst.ScopedDatum) : (sst.ScopedSymbol, et.RecordTypeConstructor) =
     constructorDatum match {
       case sst.ScopedProperList((constructorSymbol : sst.ScopedSymbol) :: initializerData) =>
         val initializedFields = initializerData.foldLeft(List[vt.RecordField]()) {
@@ -90,7 +90,7 @@ private[frontend] object ParseRecordTypeDefine {
           if (!initializedFields.contains(field)) {
             // Make sure this can be initialized to #!unspecific
             field.fieldType match {
-              case vt.BoxedIntrinsicType(boxedType) if boxedType.isTypeOrSupertypeOf(bt.BoxedUnspecific) =>
+              case vt.IntrinsicCellType(cellType) if cellType.isTypeOrSupertypeOf(ct.UnspecificCell) =>
                 // This is okay
 
               case _ =>
@@ -112,7 +112,7 @@ private[frontend] object ParseRecordTypeDefine {
 
       // Build our record type
       val recordFields = symbolToParsedField.values.toList.map(_.field)
-      val recordType = new vt.BoxedRecordType(typeSymbol.name, recordFields)
+      val recordType = new vt.RecordCellType(typeSymbol.name, recordFields)
 
       // Create our constructor and predicate procedures
       val constructorProcedure = parseConstructor(recordType, symbolToParsedField.mapValues(_.field), constructorDatum)

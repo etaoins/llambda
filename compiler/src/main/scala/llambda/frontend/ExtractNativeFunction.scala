@@ -1,7 +1,7 @@
 package llambda.frontend
 
 import llambda._
-import llambda.{boxedtype => bt}
+import llambda.{celltype => ct}
 import llambda.{valuetype => vt}
 
 object ExtractNativeFunction {
@@ -11,9 +11,9 @@ object ExtractNativeFunction {
     val hasRestArg = restArgDatum match {
       case Some(datum) =>
         DatumToValueType(datum) match {
-          case vt.BoxedIntrinsicType(bt.BoxedListElement) => true
+          case vt.IntrinsicCellType(ct.ListElementCell) => true
           case _ =>
-            throw new BadSpecialFormException(datum, "Only boxed-list-element can be used as a rest argument")
+            throw new BadSpecialFormException(datum, "Only list-element-cell can be used as a rest argument")
         }
 
       case None => false

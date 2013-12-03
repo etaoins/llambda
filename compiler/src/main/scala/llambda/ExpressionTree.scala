@@ -76,7 +76,7 @@ case class NativeFunction(
   hasRestArg : Boolean,
   returnType : Option[vt.ValueType],
   nativeSymbol : String
-) extends Expression with nfi.NativeSignature {
+) extends Expression with ProcedureSignature {
   val hasClosureArg = false
 
   val subexpressions = Nil
@@ -84,13 +84,13 @@ case class NativeFunction(
 }
 
 sealed abstract class RecordTypeProcedure extends Expression {
-  val recordType : vt.BoxedRecordType
+  val recordType : vt.RecordCellType
 
   val subexpressions = Nil
   def map(f : Expression => Expression) : this.type = this
 }
 
-case class RecordTypeConstructor(recordType : vt.BoxedRecordType, initializedFields : List[vt.RecordField]) extends RecordTypeProcedure
-case class RecordTypePredicate(recordType : vt.BoxedRecordType) extends RecordTypeProcedure
-case class RecordTypeAccessor(recordType : vt.BoxedRecordType, field : vt.RecordField) extends RecordTypeProcedure
-case class RecordTypeMutator(recordType : vt.BoxedRecordType, field : vt.RecordField) extends RecordTypeProcedure
+case class RecordTypeConstructor(recordType : vt.RecordCellType, initializedFields : List[vt.RecordField]) extends RecordTypeProcedure
+case class RecordTypePredicate(recordType : vt.RecordCellType) extends RecordTypeProcedure
+case class RecordTypeAccessor(recordType : vt.RecordCellType, field : vt.RecordField) extends RecordTypeProcedure
+case class RecordTypeMutator(recordType : vt.RecordCellType, field : vt.RecordField) extends RecordTypeProcedure

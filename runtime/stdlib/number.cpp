@@ -1,6 +1,6 @@
-#include "binding/BoxedNumeric.h"
-#include "binding/BoxedExactInteger.h"
-#include "binding/BoxedInexactRational.h"
+#include "binding/NumericCell.h"
+#include "binding/ExactIntegerCell.h"
+#include "binding/InexactRationalCell.h"
 #include "binding/ProperList.h"
 
 #include "core/fatal.h"
@@ -10,16 +10,16 @@ using namespace lliby;
 extern "C"
 {
 
-std::int64_t lliby_exact(BoxedNumeric *numeric)
+std::int64_t lliby_exact(NumericCell *numeric)
 {
-	if (auto exactInt = datum_cast<BoxedExactInteger>(numeric))
+	if (auto exactInt = datum_cast<ExactIntegerCell>(numeric))
 	{
 		// This is already exact
 		return exactInt->value();
 	}
 
 	// This must be rational; we don't need a type check
-	auto inexactRational = static_cast<BoxedInexactRational*>(numeric);
+	auto inexactRational = static_cast<InexactRationalCell*>(numeric);
 
 	if (!inexactRational->isInteger())
 	{
@@ -29,16 +29,16 @@ std::int64_t lliby_exact(BoxedNumeric *numeric)
 	return static_cast<std::int64_t>(inexactRational->value());
 }
 
-double lliby_inexact(BoxedNumeric *numeric)
+double lliby_inexact(NumericCell *numeric)
 {
-	if (auto inexactRational = datum_cast<BoxedInexactRational>(numeric))
+	if (auto inexactRational = datum_cast<InexactRationalCell>(numeric))
 	{
 		// This is already inexact
 		return inexactRational->value();
 	}
 
 	// This must be an exact int; we don't need a type check
-	auto exactInt = static_cast<BoxedExactInteger*>(numeric);
+	auto exactInt = static_cast<ExactIntegerCell*>(numeric);
 
 	// Cast to a double
 	double inexactValue = static_cast<double>(exactInt->value());
@@ -53,9 +53,9 @@ double lliby_inexact(BoxedNumeric *numeric)
 	return inexactValue;
 }
 
-BoxedNumeric *lliby_add(BoxedListElement *argHead)
+NumericCell *lliby_add(ListElementCell *argHead)
 {
-	const ProperList<BoxedNumeric> argList(argHead);
+	const ProperList<NumericCell> argList(argHead);
 
 	if (!argList.isValid())
 	{
@@ -68,13 +68,13 @@ BoxedNumeric *lliby_add(BoxedListElement *argHead)
 
 	for (auto numeric : argList)
 	{
-		if (auto exactInteger = datum_cast<BoxedExactInteger>(numeric))
+		if (auto exactInteger = datum_cast<ExactIntegerCell>(numeric))
 		{
 			exactSum += exactInteger->value();
 		}
 		else
 		{
-			auto inexactRational = static_cast<BoxedInexactRational*>(numeric);
+			auto inexactRational = static_cast<InexactRationalCell*>(numeric);
 
 			inexactSum += inexactRational->value();
 			resultInexact = true;
@@ -83,17 +83,17 @@ BoxedNumeric *lliby_add(BoxedListElement *argHead)
 
 	if (resultInexact)
 	{
-		return new BoxedInexactRational(exactSum + inexactSum);
+		return new InexactRationalCell(exactSum + inexactSum);
 	}
 	else
 	{
-		return new BoxedExactInteger(exactSum);
+		return new ExactIntegerCell(exactSum);
 	}
 }
 
-BoxedNumeric *lliby_mul(BoxedListElement *argHead)
+NumericCell *lliby_mul(ListElementCell *argHead)
 {
-	const ProperList<BoxedNumeric> argList(argHead);
+	const ProperList<NumericCell> argList(argHead);
 
 	if (!argList.isValid())
 	{
@@ -106,13 +106,13 @@ BoxedNumeric *lliby_mul(BoxedListElement *argHead)
 
 	for (auto numeric : argList)
 	{
-		if (auto exactInteger = datum_cast<BoxedExactInteger>(numeric))
+		if (auto exactInteger = datum_cast<ExactIntegerCell>(numeric))
 		{
 			exactProduct *= exactInteger->value();
 		}
 		else
 		{
-			auto inexactRational = static_cast<BoxedInexactRational*>(numeric);
+			auto inexactRational = static_cast<InexactRationalCell*>(numeric);
 
 			inexactProduct *= inexactRational->value();
 			resultInexact = true;
@@ -121,17 +121,17 @@ BoxedNumeric *lliby_mul(BoxedListElement *argHead)
 
 	if (resultInexact)
 	{
-		return new BoxedInexactRational(exactProduct * inexactProduct);
+		return new InexactRationalCell(exactProduct * inexactProduct);
 	}
 	else
 	{
-		return new BoxedExactInteger(exactProduct);
+		return new ExactIntegerCell(exactProduct);
 	}
 }
 
-BoxedNumeric *lliby_sub(BoxedNumeric *startValue, BoxedListElement *argHead)
+NumericCell *lliby_sub(NumericCell *startValue, ListElementCell *argHead)
 {
-	const ProperList<BoxedNumeric> argList(argHead);
+	const ProperList<NumericCell> argList(argHead);
 
 	if (!argList.isValid())
 	{
@@ -142,12 +142,12 @@ BoxedNumeric *lliby_sub(BoxedNumeric *startValue, BoxedListElement *argHead)
 	double inexactDifference;
 	bool resultInexact;
 
-	if (auto exactInteger = datum_cast<BoxedExactInteger>(startValue))
+	if (auto exactInteger = datum_cast<ExactIntegerCell>(startValue))
 	{
 		if (argList.isEmpty())
 		{
 			// Return the inverse
-			return new BoxedExactInteger(-exactInteger->value());
+			return new ExactIntegerCell(-exactInteger->value());
 		}
 
 		exactDifference = exactInteger->value();
@@ -156,12 +156,12 @@ BoxedNumeric *lliby_sub(BoxedNumeric *startValue, BoxedListElement *argHead)
 	}
 	else
 	{
-		auto inexactRational = static_cast<BoxedInexactRational*>(startValue);
+		auto inexactRational = static_cast<InexactRationalCell*>(startValue);
 
 		if (argList.isEmpty())
 		{
 			// Return the inverse
-			return new BoxedInexactRational(-inexactRational->value());
+			return new InexactRationalCell(-inexactRational->value());
 		}
 
 		exactDifference = 0;
@@ -171,13 +171,13 @@ BoxedNumeric *lliby_sub(BoxedNumeric *startValue, BoxedListElement *argHead)
 	
 	for (auto numeric : argList)
 	{
-		if (auto exactInteger = datum_cast<BoxedExactInteger>(numeric))
+		if (auto exactInteger = datum_cast<ExactIntegerCell>(numeric))
 		{
 			exactDifference -= exactInteger->value();
 		}
 		else
 		{
-			auto inexactRational = static_cast<BoxedInexactRational*>(numeric);
+			auto inexactRational = static_cast<InexactRationalCell*>(numeric);
 
 			inexactDifference -= inexactRational->value();
 			resultInexact = true;
@@ -186,17 +186,17 @@ BoxedNumeric *lliby_sub(BoxedNumeric *startValue, BoxedListElement *argHead)
 	
 	if (resultInexact)
 	{
-		return new BoxedInexactRational(exactDifference + inexactDifference);
+		return new InexactRationalCell(exactDifference + inexactDifference);
 	}
 	else
 	{
-		return new BoxedExactInteger(exactDifference);
+		return new ExactIntegerCell(exactDifference);
 	}
 }
 
-double lliby_div(BoxedNumeric *startValue, BoxedListElement *argHead)
+double lliby_div(NumericCell *startValue, ListElementCell *argHead)
 {
-	const ProperList<BoxedNumeric> argList(argHead);
+	const ProperList<NumericCell> argList(argHead);
 
 	if (!argList.isValid())
 	{
@@ -205,13 +205,13 @@ double lliby_div(BoxedNumeric *startValue, BoxedListElement *argHead)
 
 	double currentValue;
 
-	if (auto exactInteger = datum_cast<BoxedExactInteger>(startValue))
+	if (auto exactInteger = datum_cast<ExactIntegerCell>(startValue))
 	{
 		currentValue = exactInteger->value();
 	}
 	else
 	{
-		auto inexactRational = static_cast<BoxedInexactRational*>(startValue);
+		auto inexactRational = static_cast<InexactRationalCell*>(startValue);
 
 		currentValue = inexactRational->value();
 	}
@@ -224,13 +224,13 @@ double lliby_div(BoxedNumeric *startValue, BoxedListElement *argHead)
 	
 	for (auto numeric : argList)
 	{
-		if (auto exactInteger = datum_cast<BoxedExactInteger>(numeric))
+		if (auto exactInteger = datum_cast<ExactIntegerCell>(numeric))
 		{
 			currentValue /= exactInteger->value();
 		}
 		else
 		{
-			auto inexactRational = static_cast<BoxedInexactRational*>(numeric);
+			auto inexactRational = static_cast<InexactRationalCell*>(numeric);
 
 			currentValue /= inexactRational->value();
 		}

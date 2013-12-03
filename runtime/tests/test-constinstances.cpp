@@ -1,6 +1,6 @@
-#include "binding/BoxedBoolean.h"
-#include "binding/BoxedUnspecific.h"
-#include "binding/BoxedEmptyList.h"
+#include "binding/BooleanCell.h"
+#include "binding/UnspecificCell.h"
+#include "binding/EmptyListCell.h"
 
 #include "core/init.h"
 #include "assertions.h"
@@ -11,10 +11,10 @@ int main(int argc, char *argv[])
 
 	lliby_init();
 
-	ASSERT_TRUE(BoxedUnspecific::isInstance(BoxedUnspecific::instance()));
-	ASSERT_EQUAL(BoxedBoolean::trueInstance()->value(), true);
-	ASSERT_EQUAL(BoxedBoolean::falseInstance()->value(), false);
-	ASSERT_TRUE(BoxedEmptyList::isInstance(BoxedEmptyList::instance()));
+	ASSERT_TRUE(UnspecificCell::isInstance(UnspecificCell::instance()));
+	ASSERT_EQUAL(BooleanCell::trueInstance()->value(), true);
+	ASSERT_EQUAL(BooleanCell::falseInstance()->value(), false);
+	ASSERT_TRUE(EmptyListCell::isInstance(EmptyListCell::instance()));
 
 	return 0;
 }

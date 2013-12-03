@@ -1,10 +1,9 @@
 package llambda.planner
 
-import llambda.nfi
 import llambda.planner.{step => ps}
 import llambda.planner.{intermediatevalue => iv}
 import llambda.{valuetype => vt}
-import llambda.{boxedtype => bt}
+import llambda.{celltype => ct}
 
 object PlanApplication {
   private def boxRestArgs(restArgs : List[iv.IntermediateValue])(implicit plan : PlanWriter) : ps.TempValue = {
@@ -13,10 +12,10 @@ object PlanApplication {
     if (restArgCount == 0) {
       // Avoid a cons allocation here so our plan optimizer knows we don't need GC
       val emptyListTemp = new ps.TempValue
-      plan.steps += ps.StoreBoxedEmptyList(emptyListTemp)
+      plan.steps += ps.StoreEmptyListCell(emptyListTemp)
 
       val listElemCast = new ps.TempValue
-      plan.steps += ps.CastBoxedToTypeUnchecked(listElemCast, emptyListTemp, bt.BoxedListElement)
+      plan.steps += ps.CastCellToTypeUnchecked(listElemCast, emptyListTemp, ct.ListElementCell)
 
       listElemCast
     }
@@ -25,7 +24,7 @@ object PlanApplication {
       val restArgTemp = new ps.TempValue
 
       val argTemps = restArgs.map {
-        _.toRequiredTempValue(vt.BoxedIntrinsicType(bt.BoxedDatum))
+        _.toRequiredTempValue(vt.IntrinsicCellType(ct.DatumCell))
       }
 
       plan.steps += ps.AllocateCons(allocTemp, restArgCount)

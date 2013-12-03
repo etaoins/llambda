@@ -6,15 +6,15 @@ from typegen.clikeutil import *
 def _type_name_to_underscore(string):
     return re.sub('([A-Z]+)', r'_\1', string).lower()
 
-def generate_predicates(boxed_types):
+def generate_predicates(cell_types):
     cxx_base_type = type_name_to_clike_class(BASE_TYPE)
 
     content  = GENERATED_FILE_COMMENT
 
-    for type_name, boxed_type in boxed_types.items():
+    for type_name, cell_type in cell_types.items():
         cxx_type_name = type_name_to_clike_class(type_name)
 
-        if not boxed_type.internal:
+        if not cell_type.internal:
             content += '#include "binding/' + cxx_type_name + '.h"\n'
 
     content += '\n'
@@ -24,12 +24,12 @@ def generate_predicates(boxed_types):
     content += 'extern "C"\n'
     content += '{\n\n'
 
-    for type_name, boxed_type in boxed_types.items():
+    for type_name, cell_type in cell_types.items():
         if type_name == BASE_TYPE:
             # Doesn't make sense - every type is a subtype of the base type
             continue
 
-        if boxed_type.internal:
+        if cell_type.internal:
             # Don't generate predicates for internal types
             continue
 

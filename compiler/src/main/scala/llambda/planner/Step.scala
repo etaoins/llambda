@@ -1,8 +1,8 @@
 package llambda.planner.step
 
-import llambda.nfi
+import llambda.ProcedureSignature
 import llambda.ast
-import llambda.{boxedtype => bt}
+import llambda.{celltype => ct}
 import llambda.{valuetype => vt}
 
 final class TempValue {
@@ -25,7 +25,7 @@ sealed trait GcBarrier extends Step
 /** Invokes an entry point with the given arguments
   *
   * Entry points can be loaded with StoreNamedEntryPoint */
-case class Invoke(result : Option[TempValue], signature : nfi.NativeSignature, entryPoint : TempValue, arguments : List[TempValue]) extends Step with GcBarrier
+case class Invoke(result : Option[TempValue], signature : ProcedureSignature, entryPoint : TempValue, arguments : List[TempValue]) extends Step with GcBarrier
 
 /** Allocates a given number of Cons cells at runtime */
 case class AllocateCons(result : TempAllocation, count : Int) extends Step with GcBarrier
@@ -37,10 +37,10 @@ case class AllocateCons(result : TempAllocation, count : Int) extends Step with 
   */
 case class MutableVarInit(result : TempValue, allocation : TempAllocation, allocIndex : Int) extends Step
 
-/** Sets a mutable variable to the passed BoxedDatum value */
+/** Sets a mutable variable to the passed DatumCell value */
 case class MutableVarSet(mutable : TempValue, newValue : TempValue) extends Step
 
-/** Returns the contents of a mutable variable as a BoxedDatum */
+/** Returns the contents of a mutable variable as a DatumCell */
 case class MutableVarRef(result : TempValue, mutable : TempValue) extends Step
 
 /** Conditionally branches based on a value 
@@ -55,29 +55,29 @@ case class MutableVarRef(result : TempValue, mutable : TempValue) extends Step
   */
 case class CondBranch(result : TempValue, test : TempValue, trueSteps : List[Step], trueValue : TempValue, falseSteps : List[Step], falseValue : TempValue) extends Step
 
-/** Tests if a boxed value is of a given type */
-case class TestBoxedType(result : TempValue, value : TempValue, testType : bt.ConcreteBoxedType) extends Step
+/** Tests if a cell is of a given type */
+case class TestCellType(result : TempValue, value : TempValue, testType : ct.ConcreteCellType) extends Step
 
-/** Casts a boxed value to a subtype aborting if the cast is impossible */
-case class CastBoxedToSubtypeChecked(result : TempValue, value : TempValue, toType : bt.BoxedType) extends Step
+/** Casts a cell to a subtype aborting if the cast is impossible */
+case class CastCellToSubtypeChecked(result : TempValue, value : TempValue, toType : ct.CellType) extends Step
 
-/** Casts a boxed value to another type without checking the validity of the cast */
-case class CastBoxedToTypeUnchecked(result : TempValue, value : TempValue, toType : bt.BoxedType) extends Step
+/** Casts a cell to another type without checking the validity of the cast */
+case class CastCellToTypeUnchecked(result : TempValue, value : TempValue, toType : ct.CellType) extends Step
 
-/** Converts an unboxed integer to another width and/or signedness */
+/** Converts an native integer to another width and/or signedness */
 case class ConvertNativeInteger(result : TempValue, fromValue : TempValue, toBits : Int, signed : Boolean) extends Step
 
-/** Converts an unboxed float to another type */
-case class ConvertNativeFloat(result : TempValue, fromValue : TempValue, toType : nfi.FpType) extends Step
-/** Converts an unboxed integer to a float */
-case class ConvertNativeIntegerToFloat(result : TempValue, fromValue : TempValue, fromSigned: Boolean, toType : nfi.FpType) extends Step
+/** Converts an native float to another type */
+case class ConvertNativeFloat(result : TempValue, fromValue : TempValue, toType : vt.FpType) extends Step
+/** Converts an native integer to a float */
+case class ConvertNativeIntegerToFloat(result : TempValue, fromValue : TempValue, fromSigned: Boolean, toType : vt.FpType) extends Step
       
 /** Builds a proper list at runtime
   *
   * @param result      location to store the head of the proper list
   * @param allocation  allocation to allocate from
   * @param allocIndex  offset in the allocation to allocate from
-  * @param listValues  BoxedDatum values to add to the list
+  * @param listValues  DatumCell values to add to the list
   */
 case class BuildProperList(result : TempValue, allocation : TempAllocation, allocIndex : Int, listValues : List[TempValue]) extends Step
 
@@ -90,37 +90,37 @@ sealed trait StoreConstant extends Step {
   *
   * This can be called with Invoke
   */
-case class StoreNamedEntryPoint(result : TempValue, signature : nfi.NativeSignature, nativeSymbol : String) extends Step
+case class StoreNamedEntryPoint(result : TempValue, signature : ProcedureSignature, nativeSymbol : String) extends Step
 
-/** Indicates a step that stores a boxed constant */
-sealed trait StoreBoxedConstant extends StoreConstant 
+/** Indicates a step that stores a constant cell */
+sealed trait StoreConstantCell extends StoreConstant 
 
-case class StoreBoxedString(result : TempValue, value : String) extends StoreBoxedConstant
-case class StoreBoxedSymbol(result : TempValue, value : String) extends StoreBoxedConstant
-case class StoreBoxedExactInteger(result : TempValue, value : Long) extends StoreBoxedConstant
-case class StoreBoxedInexactRational(result : TempValue, value : Double) extends StoreBoxedConstant
-case class StoreBoxedCharacter(result : TempValue, value : Char) extends StoreBoxedConstant
-case class StoreBoxedBoolean(result : TempValue, value : Boolean) extends StoreBoxedConstant
-case class StoreBoxedBytevector(result : TempValue, elements : Vector[Short]) extends StoreBoxedConstant
-case class StoreBoxedPair(result : TempValue, car : TempValue, cdr : TempValue) extends StoreBoxedConstant
-case class StoreBoxedVector(result : TempValue, elements : Vector[TempValue]) extends StoreBoxedConstant
-case class StoreBoxedUnspecific(result : TempValue) extends StoreBoxedConstant
-case class StoreBoxedEmptyList(result : TempValue) extends StoreBoxedConstant
+case class StoreStringCell(result : TempValue, value : String) extends StoreConstantCell
+case class StoreSymbolCell(result : TempValue, value : String) extends StoreConstantCell
+case class StoreExactIntegerCell(result : TempValue, value : Long) extends StoreConstantCell
+case class StoreInexactRationalCell(result : TempValue, value : Double) extends StoreConstantCell
+case class StoreCharacterCell(result : TempValue, value : Char) extends StoreConstantCell
+case class StoreBooleanCell(result : TempValue, value : Boolean) extends StoreConstantCell
+case class StoreBytevectorCell(result : TempValue, elements : Vector[Short]) extends StoreConstantCell
+case class StorePairCell(result : TempValue, car : TempValue, cdr : TempValue) extends StoreConstantCell
+case class StoreVectorCell(result : TempValue, elements : Vector[TempValue]) extends StoreConstantCell
+case class StoreUnspecificCell(result : TempValue) extends StoreConstantCell
+case class StoreEmptyListCell(result : TempValue) extends StoreConstantCell
 
-/** Indicates a step that stores an unboxed constant */
+/** Indicates a step that stores a native constant */
 sealed trait StoreNativeConstant extends StoreConstant
 
 case class StoreNativeUtf8String(result : TempValue, value : String) extends StoreNativeConstant
 case class StoreNativeInteger(result : TempValue, value : Long, bits : Int) extends StoreNativeConstant
-case class StoreNativeFloat(result : TempValue, value : Double, fpType : nfi.FpType) extends StoreNativeConstant
+case class StoreNativeFloat(result : TempValue, value : Double, fpType : vt.FpType) extends StoreNativeConstant
 
-/** Indicates a step that unboxes a boxed value */
+/** Indicates a step that unboxes a cell */
 sealed trait UnboxValue extends Step {
   val result : TempValue
   val boxed : TempValue
 }
 
-/** Stores if a boxed value is "truthy". All values except false are truthy. */
+/** Stores if a cell is "truthy". All values except false are truthy. */
 case class UnboxAsTruthy(result : TempValue, boxed : TempValue) extends UnboxValue
 case class UnboxExactInteger(result : TempValue, boxed : TempValue) extends UnboxValue
 case class UnboxInexactRational(result : TempValue, boxed : TempValue) extends UnboxValue
@@ -129,9 +129,9 @@ case class UnboxStringAsUtf8(result : TempValue, boxed : TempValue) extends Unbo
 
 // These aren't quite an unboxing because there's two values per boxed value
 
-/** Stores the car of the passed BoxedPair as a BoxedDatum */
+/** Stores the car of the passed PairCell as a DatumCell */
 case class StorePairCar(result : TempValue, boxed : TempValue) extends Step
-/** Stores the cdr of the passed BoxedPair as a BoxedDatum */
+/** Stores the cdr of the passed PairCell as a DatumCell */
 case class StorePairCdr(result : TempValue, boxed : TempValue) extends Step
 
 /** Store the closure of a procedure */
@@ -139,7 +139,7 @@ case class StoreProcedureClosure(result : TempValue, boxed : TempValue) extends 
 /** Store the entry point of a procedure */
 case class StoreProcedureEntryPoint(result : TempValue, boxed : TempValue) extends Step
 
-/** Indicates a step that boxes an unboxed value */
+/** Indicates a step that boxes a native value */
 sealed trait BoxValue extends Step {
   val result : TempValue
   val unboxed : TempValue
@@ -152,21 +152,21 @@ case class BoxInexactRational(result : TempValue, allocation : TempAllocation, a
 case class BoxCharacter(result : TempValue, allocation : TempAllocation, allocIndex : Int, unboxed : TempValue) extends BoxValue
 case class BoxUtf8String(result : TempValue, unboxed : TempValue) extends BoxValue with GcBarrier
 case class BoxProcedure(result : TempValue, allocation : TempAllocation, allocIndex : Int, unboxed : TempValue) extends BoxValue
-case class BoxRecord(result : TempValue, allocation : TempAllocation, allocIndex : Int, recordType : vt.BoxedRecordType, unboxed : TempValue) extends BoxValue
+case class BoxRecord(result : TempValue, allocation : TempAllocation, allocIndex : Int, recordType : vt.RecordCellType, unboxed : TempValue) extends BoxValue
 
 /** Returns from the current function */
 case class Return(returnValue : Option[TempValue]) extends Step
 
 /** Allocates data for a given record a given type */
-case class RecordDataAllocate(result : TempValue, recordType : vt.BoxedRecordType) extends Step
+case class RecordDataAllocate(result : TempValue, recordType : vt.RecordCellType) extends Step
 /** Sets a record field. The value must match the type of record field */
-case class RecordFieldSet(recordData : TempValue, recordType : vt.BoxedRecordType, recordField : vt.RecordField, newValue : TempValue) extends Step
+case class RecordFieldSet(recordData : TempValue, recordType : vt.RecordCellType, recordField : vt.RecordField, newValue : TempValue) extends Step
 /** Reads a record field. The value must match the type of record field */
-case class RecordFieldRef(result : TempValue, recordData : TempValue, recordType : vt.BoxedRecordType, recordField : vt.RecordField) extends Step
+case class RecordFieldRef(result : TempValue, recordData : TempValue, recordType : vt.RecordCellType, recordField : vt.RecordField) extends Step
 
 /** Tests to see if a record is of a given class */
-case class TestBoxedRecordClass(result : TempValue, boxedRecord : TempValue, recordType : vt.BoxedRecordType) extends Step
+case class TestRecordCellClass(result : TempValue, recordCell : TempValue, recordType : vt.RecordCellType) extends Step
 /** Asserts that a record is of a given class */
-case class AssertBoxedRecordClass(boxedRecord : TempValue, recordType : vt.BoxedRecordType) extends Step
+case class AssertRecordCellClass(recordCell : TempValue, recordType : vt.RecordCellType) extends Step
 /** Stores the data of a record */
-case class StoreBoxedRecordData(result : TempValue, boxedRecord : TempValue, recordType : vt.BoxedRecordType) extends Step
+case class StoreRecordCellData(result : TempValue, recordCell : TempValue, recordType : vt.RecordCellType) extends Step

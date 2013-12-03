@@ -1,8 +1,8 @@
 #include "constinstances.h"
 
-#include "binding/BoxedUnspecific.h"
-#include "binding/BoxedBoolean.h"
-#include "binding/BoxedEmptyList.h"
+#include "binding/UnspecificCell.h"
+#include "binding/BooleanCell.h"
+#include "binding/EmptyListCell.h"
 
 extern "C"
 {
@@ -14,9 +14,9 @@ extern "C"
 //    optimization 
 // 2) These values can be used without an allocation and the associated stress
 //    on the garbage collector
-const lliby::BoxedUnspecific lliby_unspecific_value;
-const lliby::BoxedBoolean lliby_false_value(false);
-const lliby::BoxedBoolean lliby_true_value(true);
-const lliby::BoxedEmptyList lliby_empty_list_value;
+const lliby::UnspecificCell lliby_unspecific_value;
+const lliby::BooleanCell lliby_false_value(false);
+const lliby::BooleanCell lliby_true_value(true);
+const lliby::EmptyListCell lliby_empty_list_value;
 
 }

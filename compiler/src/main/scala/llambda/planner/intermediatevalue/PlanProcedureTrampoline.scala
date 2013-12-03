@@ -2,23 +2,23 @@ package llambda.planner.intermediatevalue
 
 import collection.mutable
 
-import llambda.nfi
+import llambda.ProcedureSignature
 import llambda.ast
 import llambda.planner._
 import llambda.planner.{step => ps}
-import llambda.{boxedtype => bt}
+import llambda.{celltype => ct}
 import llambda.{valuetype => vt}
-import llambda.codegen.BoxedProcedureSignature
+import llambda.codegen.AdaptedProcedureSignature
 
 private[intermediatevalue] object PlanProcedureTrampoline {
-  def apply(signature : nfi.NativeSignature, nativeSymbol : String)(implicit parentPlan : PlanWriter) : PlannedFunction = {
+  def apply(signature : ProcedureSignature, nativeSymbol : String)(implicit parentPlan : PlanWriter) : PlannedFunction = {
     val closureTemp = new ps.TempValue
     val argListHeadTemp = new ps.TempValue
 
     implicit val plan = parentPlan.forkPlan()
 
     // Change our argListHeadTemp to a IntermediateValue
-    val argListHeadValue = TempValueToIntermediate(vt.BoxedIntrinsicType(bt.BoxedListElement), argListHeadTemp)
+    val argListHeadValue = TempValueToIntermediate(vt.IntrinsicCellType(ct.ListElementCell), argListHeadTemp)
 
     val argTemps = new mutable.ListBuffer[ps.TempValue]
 
@@ -30,14 +30,14 @@ private[intermediatevalue] object PlanProcedureTrampoline {
     // Convert our arg list in to the arguments our procedure is expecting
     val restArgValue = signature.fixedArgs.foldLeft(argListHeadValue) { case (argListElementValue, nativeType) =>
       // Make sure this is a pair
-      val argPairTemp = argListElementValue.toRequiredTempValue(vt.BoxedIntrinsicType(bt.BoxedPair))(plan)
+      val argPairTemp = argListElementValue.toRequiredTempValue(vt.IntrinsicCellType(ct.PairCell))(plan)
 
       // Get the car of the pair as the arg's value 
       val argDatumTemp = new ps.TempValue
       plan.steps += ps.StorePairCar(argDatumTemp, argPairTemp)
 
       // Convert it to the expected type
-      val argValue = TempValueToIntermediate(vt.BoxedIntrinsicType(bt.BoxedDatum), argDatumTemp)
+      val argValue = TempValueToIntermediate(vt.IntrinsicCellType(ct.DatumCell), argDatumTemp)
       val argTemp = argValue.toRequiredTempValue(nativeType)(plan)
 
       argTemps += argTemp
@@ -46,13 +46,13 @@ private[intermediatevalue] object PlanProcedureTrampoline {
       val argCdrTemp = new ps.TempValue
       plan.steps += ps.StorePairCdr(argCdrTemp, argPairTemp)
 
-      // We know this is a list element but its type will be BoxedDatum
-      new BoxedIntrinsicValue(bt.BoxedListElement.concreteTypes, bt.BoxedDatum, argCdrTemp)
+      // We know this is a list element but its type will be DatumCell
+      new IntrinsicCellValue(ct.ListElementCell.concreteTypes, ct.DatumCell, argCdrTemp)
     }
 
     if (signature.hasRestArg) {
-      // This is already a BoxedListElement
-      argTemps += restArgValue.toRequiredTempValue(vt.BoxedIntrinsicType(bt.BoxedListElement))(plan)
+      // This is already a ListElementCell
+      argTemps += restArgValue.toRequiredTempValue(vt.IntrinsicCellType(ct.ListElementCell))(plan)
     }
 
     // Load the entry point for the function we're jumping to
@@ -73,11 +73,11 @@ private[intermediatevalue] object PlanProcedureTrampoline {
       DatumToConstantValue(ast.UnspecificValue())
     }
 
-    val returnTemp = returnValue.toRequiredTempValue(vt.BoxedIntrinsicType(bt.BoxedDatum))(plan)
+    val returnTemp = returnValue.toRequiredTempValue(vt.IntrinsicCellType(ct.DatumCell))(plan)
     plan.steps += ps.Return(Some(returnTemp))
 
     PlannedFunction(
-      signature=BoxedProcedureSignature,
+      signature=AdaptedProcedureSignature,
       namedArguments=List(
         ("closure" -> closureTemp),
         ("argList" -> argListHeadTemp)

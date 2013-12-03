@@ -1,10 +1,9 @@
 package llambda.codegen
 
 import llambda.InternalCompilerErrorException
-import llambda.nfi
 import llambda.planner.{step => ps}
 import llambda.codegen.llvmir._
-import llambda.{boxedtype => bt}
+import llambda.{celltype => ct}
 
 object GenPlanStep {
   def apply(state : GenerationState, plannedSymbols : Set[String], recordTypeGenerator : RecordTypeGenerator)(step : ps.Step) : GenerationState = step match {
@@ -16,7 +15,7 @@ object GenPlanStep {
       val allocation = state.liveAllocations(tempAlloc) 
 
       // Grab the variable from the cons allocation
-      val mutableCons = allocation.genTypedPointer(state.currentBlock)(allocIndex, bt.BoxedMutableVar) 
+      val mutableCons = allocation.genTypedPointer(state.currentBlock)(allocIndex, ct.MutableVarCell) 
 
       // Add it to our state
       state.withTempValue(resultTemp -> mutableCons)
@@ -27,7 +26,7 @@ object GenPlanStep {
       val newValueIr = state.liveTemps(newValueTemp)
 
       // Store to the mutable variable
-      bt.BoxedMutableVar.genStoreToCurrentValue(state.currentBlock)(newValueIr, mutableIr)
+      ct.MutableVarCell.genStoreToCurrentValue(state.currentBlock)(newValueIr, mutableIr)
 
       state
 
@@ -53,7 +52,7 @@ object GenPlanStep {
       val mutableIr = state.liveTemps(mutableTemp)
 
       val block = state.currentBlock
-      val currentDatum = bt.BoxedMutableVar.genLoadFromCurrentValue(block)(mutableIr)
+      val currentDatum = ct.MutableVarCell.genLoadFromCurrentValue(block)(mutableIr)
 
       state.withTempValue(resultTemp -> currentDatum)
     
@@ -62,7 +61,7 @@ object GenPlanStep {
 
       state.withTempValue((resultTemp -> irValue))
 
-    case ps.CastBoxedToTypeUnchecked(resultTemp, subvalueTemp, targetType) =>
+    case ps.CastCellToTypeUnchecked(resultTemp, subvalueTemp, targetType) =>
       val subvalueIr = state.liveTemps(subvalueTemp)
 
       val irValue = subvalueIr match {
@@ -76,10 +75,10 @@ object GenPlanStep {
       
       state.withTempValue((resultTemp -> irValue))
 
-    case ps.CastBoxedToSubtypeChecked(resultTemp, supervalueTemp, targetType) =>
+    case ps.CastCellToSubtypeChecked(resultTemp, supervalueTemp, targetType) =>
       val supervalueIr = state.liveTemps(supervalueTemp)
 
-      val (successBlock, subvalueIr) = GenCastBoxedToSubtype(state)(supervalueIr, targetType)
+      val (successBlock, subvalueIr) = GenCastCellToSubtype(state)(supervalueIr, targetType)
 
       state.withTempValue(resultTemp -> subvalueIr).copy(currentBlock=successBlock)
 
@@ -112,15 +111,15 @@ object GenPlanStep {
 
       state.withTempValue(resultTemp -> properListIr)
 
-    case ps.TestBoxedType(resultTemp, boxedTemp, boxedType) =>
-      val boxedIr = state.liveTemps(boxedTemp)
+    case ps.TestCellType(resultTemp, cellTemp, cellType) =>
+      val cellIr = state.liveTemps(cellTemp)
 
       // Load the type ID
       val block = state.currentBlock
-      val datumIr = bt.BoxedDatum.genPointerBitcast(block)(boxedIr)
-      val typeIdIr = bt.BoxedDatum.genLoadFromTypeId(block)(datumIr)
+      val datumIr = ct.DatumCell.genPointerBitcast(block)(cellIr)
+      val typeIdIr = ct.DatumCell.genLoadFromTypeId(block)(datumIr)
 
-      val resultIr = block.icmp(boxedType.name + "Check")(ComparisonCond.Equal, None, typeIdIr, IntegerConstant(bt.BoxedDatum.typeIdIrType, boxedType.typeId))
+      val resultIr = block.icmp(cellType.name + "Check")(ComparisonCond.Equal, None, typeIdIr, IntegerConstant(ct.DatumCell.typeIdIrType, cellType.typeId))
 
       state.withTempValue(resultTemp -> resultIr)
 
@@ -159,7 +158,7 @@ object GenPlanStep {
       state.copy(currentBlock=phiBlock).withTempValue(resultTemp -> phiValueIr) 
 
     case ps.Invoke(resultOpt, signature, funcPtrTemp, argumentTemps) =>
-      val irSignature = NativeSignatureToIr(signature)
+      val irSignature = ProcedureSignatureToIr(signature)
       val irFuncPtr = state.liveTemps(funcPtrTemp)
       val irArguments = argumentTemps.map(state.liveTemps.apply)
 
@@ -185,25 +184,25 @@ object GenPlanStep {
 
     case ps.StorePairCar(resultTemp, pairTemp) =>
       val pairIr = state.liveTemps(pairTemp)
-      val carIr = bt.BoxedPair.genLoadFromCar(state.currentBlock)(pairIr)
+      val carIr = ct.PairCell.genLoadFromCar(state.currentBlock)(pairIr)
 
       state.withTempValue(resultTemp -> carIr)
     
     case ps.StorePairCdr(resultTemp, pairTemp) =>
       val pairIr = state.liveTemps(pairTemp)
-      val cdrIr = bt.BoxedPair.genLoadFromCdr(state.currentBlock)(pairIr)
+      val cdrIr = ct.PairCell.genLoadFromCdr(state.currentBlock)(pairIr)
 
       state.withTempValue(resultTemp -> cdrIr)
 
     case ps.StoreProcedureClosure(resultTemp, procTemp) =>
       val procIr = state.liveTemps(procTemp)
-      val closureIr = bt.BoxedProcedure.genLoadFromRecordData(state.currentBlock)(procIr)
+      val closureIr = ct.ProcedureCell.genLoadFromRecordData(state.currentBlock)(procIr)
 
       state.withTempValue(resultTemp -> closureIr)
     
     case ps.StoreProcedureEntryPoint(resultTemp, procTemp) =>
       val procIr = state.liveTemps(procTemp)
-      val entryPoint = bt.BoxedProcedure.genLoadFromEntryPoint(state.currentBlock)(procIr)
+      val entryPoint = ct.ProcedureCell.genLoadFromEntryPoint(state.currentBlock)(procIr)
 
       state.withTempValue(resultTemp -> entryPoint)
 
@@ -219,15 +218,15 @@ object GenPlanStep {
 
       state.withTempValue(resultTemp -> irResult)
     
-    case ps.TestBoxedRecordClass(resultTemp, boxedRecordTemp, recordType) => 
+    case ps.TestRecordCellClass(resultTemp, recordCellTemp, recordType) => 
       val generatedRecordType = recordTypeGenerator(recordType)
 
-      val boxedRecordIr = state.liveTemps(boxedRecordTemp)
-      val irResult = GenTestBoxedRecordClass(state.currentBlock)(boxedRecordIr, generatedRecordType.classId)
+      val recordCellIr = state.liveTemps(recordCellTemp)
+      val irResult = GenTestRecordCellClass(state.currentBlock)(recordCellIr, generatedRecordType.classId)
 
       state.withTempValue(resultTemp -> irResult)
     
-    case ps.AssertBoxedRecordClass(boxedRecordTemp, recordType) => 
+    case ps.AssertRecordCellClass(recordCellTemp, recordType) => 
       val generatedRecordType = recordTypeGenerator(recordType)
       
       // Start our branches
@@ -241,8 +240,8 @@ object GenPlanStep {
       GenFatalError(state.module, fatalBlock)(errorName, errorText)
 
       // Branch if we're not of the right class
-      val boxedRecordIr = state.liveTemps(boxedRecordTemp)
-      val irResult = GenTestBoxedRecordClass(state.currentBlock)(boxedRecordIr, generatedRecordType.classId)
+      val recordCellIr = state.liveTemps(recordCellTemp)
+      val irResult = GenTestRecordCellClass(state.currentBlock)(recordCellIr, generatedRecordType.classId)
 
       state.currentBlock.condBranch(irResult, successBlock, fatalBlock)
 
@@ -264,11 +263,11 @@ object GenPlanStep {
 
       state.withTempValue(resultTemp -> resultIr)
 
-    case ps.StoreBoxedRecordData(resultTemp, boxedRecordTemp, recordType) =>
+    case ps.StoreRecordCellData(resultTemp, recordCellTemp, recordType) =>
       val generatedRecordType = recordTypeGenerator(recordType)
-      val boxedRecordIr = state.liveTemps(boxedRecordTemp)
+      val recordCellIr = state.liveTemps(recordCellTemp)
 
-      val resultIr = GenStoreBoxedRecordData(state.currentBlock)(boxedRecordIr, generatedRecordType.irType)
+      val resultIr = GenStoreRecordCellData(state.currentBlock)(recordCellIr, generatedRecordType.irType)
 
       state.withTempValue(resultTemp -> resultIr)
  }

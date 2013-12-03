@@ -2,9 +2,8 @@ package llambda.planner
 
 import collection.mutable
 
-import llambda.nfi
 import llambda.{et, StorageLocation, ValueNotApplicableException, ReportProcedure}
-import llambda.{boxedtype => bt}
+import llambda.{celltype => ct}
 import llambda.{valuetype => vt}
 import llambda.planner.{step => ps}
 import llambda.planner.{intermediatevalue => iv}
@@ -78,7 +77,7 @@ private[planner] object PlanExpression {
             val variableTemp = new ps.TempValue
             
             val initialValueResult = apply(state)(initialValue)
-            val initialValueTemp = initialValueResult.value.toRequiredTempValue(vt.BoxedIntrinsicType(bt.BoxedDatum))
+            val initialValueTemp = initialValueResult.value.toRequiredTempValue(vt.IntrinsicCellType(ct.DatumCell))
 
             plan.steps += ps.AllocateCons(allocTemp, 1)
             plan.steps += ps.MutableVarInit(mutableTemp, allocTemp, 0)
@@ -126,18 +125,18 @@ private[planner] object PlanExpression {
         plan.steps += ps.MutableVarRef(resultTemp, mutableTemp)
         
         // We can be anything here
-        val possibleTypes = bt.BoxedDatum.concreteTypes
+        val possibleTypes = ct.DatumCell.concreteTypes
 
         PlanResult(
           state=initialState,
-          value=new iv.BoxedIntrinsicValue(possibleTypes, bt.BoxedDatum, resultTemp)
+          value=new iv.IntrinsicCellValue(possibleTypes, ct.DatumCell, resultTemp)
         )
       
       case et.MutateVar(storageLoc, valueExpr) =>
         val mutableTemp = initialState.mutables(storageLoc)
         
         val newValueResult = apply(initialState)(valueExpr)
-        val newValueTemp = newValueResult.value.toRequiredTempValue(vt.BoxedIntrinsicType(bt.BoxedDatum))
+        val newValueTemp = newValueResult.value.toRequiredTempValue(vt.IntrinsicCellType(ct.DatumCell))
 
         plan.steps += ps.MutableVarSet(mutableTemp, newValueTemp)
 

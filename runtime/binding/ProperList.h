@@ -3,9 +3,9 @@
 
 #include <iterator>
 
-#include "BoxedListElement.h"
-#include "BoxedPair.h"
-#include "BoxedEmptyList.h"
+#include "ListElementCell.h"
+#include "PairCell.h"
+#include "EmptyListCell.h"
 
 namespace lliby
 {
@@ -36,7 +36,7 @@ public:
 
 		ConstIterator& operator++()
 		{
-			m_head = static_cast<const BoxedPair*>(m_head->cdr());
+			m_head = static_cast<const PairCell*>(m_head->cdr());
 			return *this;
 		}
 		
@@ -48,23 +48,23 @@ public:
 		}
 
 	private:
-		explicit ConstIterator(const BoxedListElement *head) :
-			m_head(static_cast<const BoxedPair*>(head))
+		explicit ConstIterator(const ListElementCell *head) :
+			m_head(static_cast<const PairCell*>(head))
 		{
 		}
 		
-		const BoxedPair *m_head;
+		const PairCell *m_head;
 	};
 
-	explicit ProperList(const BoxedListElement *head) :
-		m_head(BoxedEmptyList::instance()),
+	explicit ProperList(const ListElementCell *head) :
+		m_head(EmptyListCell::instance()),
 		m_valid(false),
 		m_length(0)
 	{
-		const BoxedDatum *datum = head;
+		const DatumCell *datum = head;
 		std::uint32_t length = 0;
 
-		while(auto pair = datum_cast<BoxedPair>(datum))
+		while(auto pair = datum_cast<PairCell>(datum))
 		{
 			length++;
 			
@@ -77,7 +77,7 @@ public:
 			datum = pair->cdr();
 		}
 
-		if (datum != BoxedEmptyList::instance())
+		if (datum != EmptyListCell::instance())
 		{
 			// Not a proper list
 			return;
@@ -110,11 +110,11 @@ public:
 
 	ConstIterator end() const
 	{
-		return ConstIterator(BoxedEmptyList::instance());
+		return ConstIterator(EmptyListCell::instance());
 	}
 
 private:
-	const BoxedListElement *m_head;
+	const ListElementCell *m_head;
 	bool m_valid;
 	std::uint32_t m_length;
 };

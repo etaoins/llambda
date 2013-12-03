@@ -6,10 +6,10 @@ import llambda.codegen.llvmir._
 case class GeneratedRecordType(irType : UserDefinedType, classId : Long)
 
 class RecordTypeGenerator(module : IrModuleBuilder) {
-  private val generatedRecordTypes = collection.mutable.Map[vt.BoxedRecordType, GeneratedRecordType]()
+  private val generatedRecordTypes = collection.mutable.Map[vt.RecordCellType, GeneratedRecordType]()
   private var nextClassId : Long = 1
 
-  def apply(recordType : vt.BoxedRecordType) : GeneratedRecordType = {
+  def apply(recordType : vt.RecordCellType) : GeneratedRecordType = {
     generatedRecordTypes.getOrElseUpdate(recordType, {
       val recordTypeName = module.nameSource.allocate(recordType.sourceName)
       val irType = StructureType(recordType.fields.map { field =>

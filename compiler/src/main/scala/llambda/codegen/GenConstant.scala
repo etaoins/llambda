@@ -4,8 +4,8 @@ import llambda.InternalCompilerErrorException
 
 import llambda.planner.{step => ps}
 import llambda.codegen.llvmir._
-import llambda.{boxedtype => bt}
-import llambda.nfi
+import llambda.{celltype => ct}
+import llambda.{valuetype => vt}
 
 object GenConstant {
   protected case class Utf8Constant(irValue : IrConstant, byteLength : Int)
@@ -36,23 +36,23 @@ object GenConstant {
     )
   }
   
-  def genBoxedStringLike(module : IrModuleBuilder)(concreteType : bt.ConcreteBoxedType, baseName: String, value : String) : IrConstant = {
+  def genStringLikeCell(module : IrModuleBuilder)(concreteType : ct.ConcreteCellType, baseName: String, value : String) : IrConstant = {
     // Build the inner string constant
     val utf8Constant = genUtf8Constant(module)(baseName, value)
 
-    val boxedStringLikeName = baseName + ".box"
+    val stringLikeCellName = baseName + ".cell"
 
-    val boxedStringLike = bt.BoxedStringLike.createConstant(
+    val stringLikeCell = ct.StringLikeCell.createConstant(
       typeId=concreteType.typeId,
       charLength=value.length,
       // Don't include the NULL terminator
       byteLength=utf8Constant.byteLength,
       utf8Data=utf8Constant.irValue)
 
-    defineConstantData(module)(boxedStringLikeName, boxedStringLike)
+    defineConstantData(module)(stringLikeCellName, stringLikeCell)
   }
 
-  def genBoxedBytevector(module : IrModuleBuilder)(elements : Seq[Short]) : IrConstant = {
+  def genBytevectorCell(module : IrModuleBuilder)(elements : Seq[Short]) : IrConstant = {
     // Make our elements
     val baseName = module.nameSource.allocate("schemeBytevector")
 
@@ -63,87 +63,87 @@ object GenConstant {
     
     val elementsValue = defineConstantData(module)(elementsName, elementsInitializer)
 
-    val boxedBytevectorName = baseName + ".box"
-    val boxedBytevector = bt.BoxedBytevector.createConstant(
+    val bytevectorCellName = baseName + ".cell"
+    val bytevectorCell = ct.BytevectorCell.createConstant(
       length=elements.length,
       data=ElementPointerConstant(IntegerType(8), elementsValue, List(0, 0)))
 
-    defineConstantData(module)(boxedBytevectorName, boxedBytevector)
+    defineConstantData(module)(bytevectorCellName, bytevectorCell)
   }
   
-  def genBoxedVector(module : IrModuleBuilder)(irElements : Seq[IrConstant]) : IrConstant = {
+  def genVectorCell(module : IrModuleBuilder)(irElements : Seq[IrConstant]) : IrConstant = {
     // Make our elements
     val baseName = module.nameSource.allocate("schemeVector")
 
     val elementsName = baseName + ".elements"
-    val elementsInitializer = ArrayConstant(PointerType(bt.BoxedDatum.irType), irElements.toList)
+    val elementsInitializer = ArrayConstant(PointerType(ct.DatumCell.irType), irElements.toList)
     
     val elementsDef = defineConstantData(module)(elementsName, elementsInitializer)
 
-    val boxedVectorName = baseName + ".box"
+    val vectorCellName = baseName + ".cell"
 
-    val boxedVector = bt.BoxedVector.createConstant(
+    val vectorCell = ct.VectorCell.createConstant(
       length=irElements.length,
-      elements=ElementPointerConstant(PointerType(bt.BoxedDatum.irType), elementsDef, List(0, 0)))
+      elements=ElementPointerConstant(PointerType(ct.DatumCell.irType), elementsDef, List(0, 0)))
 
-    defineConstantData(module)(boxedVectorName, boxedVector)
+    defineConstantData(module)(vectorCellName, vectorCell)
   }
 
   def apply(state : GenerationState)(storeStep : ps.StoreConstant) : IrConstant = storeStep match {
-    case ps.StoreBoxedString(_, value) =>
+    case ps.StoreStringCell(_, value) =>
       val baseName = state.module.nameSource.allocate("schemeString")
-      val stringLike = genBoxedStringLike(state.module)(bt.BoxedString, baseName, value)
+      val stringLike = genStringLikeCell(state.module)(ct.StringCell, baseName, value)
 
-      BitcastToConstant(stringLike, PointerType(bt.BoxedString.irType))
+      BitcastToConstant(stringLike, PointerType(ct.StringCell.irType))
 
-    case ps.StoreBoxedSymbol(_, value) =>
+    case ps.StoreSymbolCell(_, value) =>
       val baseName = state.module.nameSource.allocate("schemeSymbol")
-      val stringLike = genBoxedStringLike(state.module)(bt.BoxedSymbol, baseName, value)
+      val stringLike = genStringLikeCell(state.module)(ct.SymbolCell, baseName, value)
       
-      BitcastToConstant(stringLike, PointerType(bt.BoxedSymbol.irType))
+      BitcastToConstant(stringLike, PointerType(ct.SymbolCell.irType))
 
     case ps.StoreNativeUtf8String(_, value) =>
       val utf8StringName = state.module.nameSource.allocate("schemeBareCString")
 
       genUtf8Constant(state.module)(utf8StringName, value).irValue
 
-    case ps.StoreBoxedExactInteger(_, value) =>
-      val boxedIntName = state.module.nameSource.allocate("schemeExactInteger")
+    case ps.StoreExactIntegerCell(_, value) =>
+      val intCellName = state.module.nameSource.allocate("schemeExactInteger")
 
-      val boxedInt = bt.BoxedExactInteger.createConstant(
+      val intCell = ct.ExactIntegerCell.createConstant(
         value=value
       )
 
-      defineConstantData(state.module)(boxedIntName, boxedInt)
+      defineConstantData(state.module)(intCellName, intCell)
     
-    case ps.StoreBoxedInexactRational(_, value) =>
-      val boxedRationalName = state.module.nameSource.allocate("schemeInexactRational")
+    case ps.StoreInexactRationalCell(_, value) =>
+      val rationalCellName = state.module.nameSource.allocate("schemeInexactRational")
 
-      val boxedRational = bt.BoxedInexactRational.createConstant(
+      val rationalCell = ct.InexactRationalCell.createConstant(
         value=DoubleConstant(value)
       )
 
-      defineConstantData(state.module)(boxedRationalName, boxedRational)
+      defineConstantData(state.module)(rationalCellName, rationalCell)
 
-    case ps.StoreBoxedBoolean(_, true) =>
+    case ps.StoreBooleanCell(_, true) =>
       GlobalDefines.trueIrValue
 
-    case ps.StoreBoxedBoolean(_, false) =>
+    case ps.StoreBooleanCell(_, false) =>
       GlobalDefines.falseIrValue
     
-    case ps.StoreBoxedCharacter(_, value) =>
-      val boxedCharName = state.module.nameSource.allocate("schemeCharacter")
+    case ps.StoreCharacterCell(_, value) =>
+      val charCellName = state.module.nameSource.allocate("schemeCharacter")
 
-      val boxedChar = bt.BoxedCharacter.createConstant(
+      val charCell = ct.CharacterCell.createConstant(
         unicodeChar=IntegerConstant(IntegerType(32), value)
       )
 
-      defineConstantData(state.module)(boxedCharName, boxedChar)
+      defineConstantData(state.module)(charCellName, charCell)
     
-    case ps.StoreBoxedBytevector(_, elements) =>
-      genBoxedBytevector(state.module)(elements)
+    case ps.StoreBytevectorCell(_, elements) =>
+      genBytevectorCell(state.module)(elements)
     
-    case ps.StoreBoxedVector(_, elementTemps) =>
+    case ps.StoreVectorCell(_, elementTemps) =>
       val elementIrs = elementTemps.map { elementTemp =>
         state.liveTemps(elementTemp) match {
           case constant : IrConstant => constant
@@ -152,10 +152,10 @@ object GenConstant {
         }
       }
 
-      genBoxedVector(state.module)(elementIrs)
+      genVectorCell(state.module)(elementIrs)
 
-    case ps.StoreBoxedPair(_, carTemp, cdrTemp) =>
-      val boxedPairName = state.module.nameSource.allocate("schemeInexactPair")
+    case ps.StorePairCell(_, carTemp, cdrTemp) =>
+      val pairCellName = state.module.nameSource.allocate("schemeInexactPair")
       val carIrConstant = state.liveTemps(carTemp) match {
         case constant : IrConstant => constant
         case other =>
@@ -168,26 +168,26 @@ object GenConstant {
           throw new InternalCompilerErrorException(s"Attempted to create constant pair with non-constant cdr: ${other}")
       }
 
-      val boxedPair = bt.BoxedPair.createConstant(
+      val pairCell = ct.PairCell.createConstant(
         car=carIrConstant,
         cdr=cdrIrConstant
       )
 
-      defineConstantData(state.module)(boxedPairName, boxedPair)
+      defineConstantData(state.module)(pairCellName, pairCell)
 
-    case ps.StoreBoxedUnspecific(_) =>
+    case ps.StoreUnspecificCell(_) =>
       GlobalDefines.unspecificIrValue
 
-    case ps.StoreBoxedEmptyList(_) =>
+    case ps.StoreEmptyListCell(_) =>
       GlobalDefines.emptyListIrValue
 
     case ps.StoreNativeInteger(_, value, bits) =>
       IntegerConstant(IntegerType(bits), value)
     
-    case ps.StoreNativeFloat(_, value, fpType) if fpType == nfi.Double =>
+    case ps.StoreNativeFloat(_, value, fpType) if fpType == vt.Double =>
       DoubleConstant(value)
 
-    case ps.StoreNativeFloat(_, value, fpType) if fpType == nfi.Float =>
+    case ps.StoreNativeFloat(_, value, fpType) if fpType == vt.Float =>
       FloatConstant(value.toFloat)
   }
 }

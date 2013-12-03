@@ -1,12 +1,12 @@
 package llambda.codegen
 
 import llambda.codegen.llvmir._
-import llambda.nfi
+import llambda.{valuetype => vt}
 
 import llambda.InternalCompilerErrorException
 
 object GenIntegerToFloatConversion {
-  def apply(block : IrBlockBuilder)(fromValue : IrValue, fromSigned : Boolean, fpType : nfi.FpType) : IrValue = {
+  def apply(block : IrBlockBuilder)(fromValue : IrValue, fromSigned : Boolean, fpType : vt.FpType) : IrValue = {
     val convFunction = if (fromSigned) {
       block.sitofp
     }
@@ -16,9 +16,9 @@ object GenIntegerToFloatConversion {
     
     // Convert to floating point
     fpType match {
-      case nfi.Float =>
+      case vt.Float =>
         convFunction("floatConv")(fromValue, FloatType)
-      case nfi.Double =>
+      case vt.Double =>
         convFunction("floatConv")(fromValue, DoubleType)
     }
   }

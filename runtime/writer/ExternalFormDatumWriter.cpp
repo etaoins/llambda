@@ -5,75 +5,75 @@
 #include <iomanip>
 #include <unordered_map>
 
-#include "binding/BoxedDatum.h"
-#include "binding/BoxedUnspecific.h"
-#include "binding/BoxedBoolean.h"
-#include "binding/BoxedExactInteger.h"
-#include "binding/BoxedInexactRational.h"
-#include "binding/BoxedSymbol.h"
-#include "binding/BoxedString.h"
-#include "binding/BoxedPair.h"
-#include "binding/BoxedBytevector.h"
-#include "binding/BoxedVector.h"
-#include "binding/BoxedCharacter.h"
-#include "binding/BoxedEmptyList.h"
-#include "binding/BoxedProcedure.h"
-#include "binding/BoxedRecord.h"
+#include "binding/DatumCell.h"
+#include "binding/UnspecificCell.h"
+#include "binding/BooleanCell.h"
+#include "binding/ExactIntegerCell.h"
+#include "binding/InexactRationalCell.h"
+#include "binding/SymbolCell.h"
+#include "binding/StringCell.h"
+#include "binding/PairCell.h"
+#include "binding/BytevectorCell.h"
+#include "binding/VectorCell.h"
+#include "binding/CharacterCell.h"
+#include "binding/EmptyListCell.h"
+#include "binding/ProcedureCell.h"
+#include "binding/RecordCell.h"
 
 namespace lliby
 {
 
-void ExternalFormDatumWriter::render(const BoxedDatum *datum)
+void ExternalFormDatumWriter::render(const DatumCell *datum)
 {
-	if (auto value = datum_cast<BoxedUnspecific>(datum))
+	if (auto value = datum_cast<UnspecificCell>(datum))
 	{
 		renderUnspecific(value);
 	}
-	else if (auto value = datum_cast<BoxedEmptyList>(datum))
+	else if (auto value = datum_cast<EmptyListCell>(datum))
 	{
 		renderEmptyList(value);
 	}
-	else if (auto value = datum_cast<BoxedBoolean>(datum))
+	else if (auto value = datum_cast<BooleanCell>(datum))
 	{
 		renderBoolean(value);
 	}
-	else if (auto value = datum_cast<BoxedExactInteger>(datum))
+	else if (auto value = datum_cast<ExactIntegerCell>(datum))
 	{
 		renderExactInteger(value);
 	}
-	else if (auto value = datum_cast<BoxedInexactRational>(datum))
+	else if (auto value = datum_cast<InexactRationalCell>(datum))
 	{
 		renderInexactRational(value);
 	}
-	else if (auto value = datum_cast<BoxedSymbol>(datum))
+	else if (auto value = datum_cast<SymbolCell>(datum))
 	{
 		renderStringLike(value, static_cast<std::uint8_t>('|'), false);
 	}
-	else if (auto value = datum_cast<BoxedString>(datum))
+	else if (auto value = datum_cast<StringCell>(datum))
 	{
 		renderStringLike(value, static_cast<std::uint8_t>('"'), true);
 	}
-	else if (auto value = datum_cast<BoxedPair>(datum))
+	else if (auto value = datum_cast<PairCell>(datum))
 	{
 		renderPair(value);
 	}
-	else if (auto value = datum_cast<BoxedBytevector>(datum))
+	else if (auto value = datum_cast<BytevectorCell>(datum))
 	{
 		renderBytevector(value);
 	}
-	else if (auto value = datum_cast<BoxedVector>(datum))
+	else if (auto value = datum_cast<VectorCell>(datum))
 	{
 		renderVector(value);
 	}
-	else if (auto value = datum_cast<BoxedProcedure>(datum))
+	else if (auto value = datum_cast<ProcedureCell>(datum))
 	{
 		renderProcedure(value);
 	}
-	else if (auto value = datum_cast<BoxedCharacter>(datum))
+	else if (auto value = datum_cast<CharacterCell>(datum))
 	{
 		renderCharacter(value);
 	}
-	else if (auto value = datum_cast<BoxedRecord>(datum))
+	else if (auto value = datum_cast<RecordCell>(datum))
 	{
 		renderRecord(value);
 	}
@@ -83,17 +83,17 @@ void ExternalFormDatumWriter::render(const BoxedDatum *datum)
 	}
 }
 
-void ExternalFormDatumWriter::renderUnspecific(const BoxedUnspecific *)
+void ExternalFormDatumWriter::renderUnspecific(const UnspecificCell *)
 {
 	m_outStream << "#!unspecific";
 }
 
-void ExternalFormDatumWriter::renderEmptyList(const BoxedEmptyList *)
+void ExternalFormDatumWriter::renderEmptyList(const EmptyListCell *)
 {
 	m_outStream << "()";
 }
 
-void ExternalFormDatumWriter::renderBoolean(const BoxedBoolean *value)
+void ExternalFormDatumWriter::renderBoolean(const BooleanCell *value)
 {
 	if (value->value())
 	{
@@ -105,12 +105,12 @@ void ExternalFormDatumWriter::renderBoolean(const BoxedBoolean *value)
 	}
 }
 
-void ExternalFormDatumWriter::renderExactInteger(const BoxedExactInteger *value)
+void ExternalFormDatumWriter::renderExactInteger(const ExactIntegerCell *value)
 {
 	m_outStream << value->value();
 }
 
-void ExternalFormDatumWriter::renderInexactRational(const BoxedInexactRational *value)
+void ExternalFormDatumWriter::renderInexactRational(const InexactRationalCell *value)
 {
 	if (value->isNaN())
 	{
@@ -136,7 +136,7 @@ void ExternalFormDatumWriter::renderInexactRational(const BoxedInexactRational *
 	}
 }
 	
-void ExternalFormDatumWriter::renderStringLike(const BoxedStringLike *value, std::uint8_t quoteChar, bool needsQuotes)
+void ExternalFormDatumWriter::renderStringLike(const StringLikeCell *value, std::uint8_t quoteChar, bool needsQuotes)
 {
 	std::ostringstream outBuf;
 
@@ -212,7 +212,7 @@ void ExternalFormDatumWriter::renderStringLike(const BoxedStringLike *value, std
 	}
 }
 	
-void ExternalFormDatumWriter::renderPair(const BoxedPair *value, bool inList)
+void ExternalFormDatumWriter::renderPair(const PairCell *value, bool inList)
 {
 	if (!inList)
 	{
@@ -221,11 +221,11 @@ void ExternalFormDatumWriter::renderPair(const BoxedPair *value, bool inList)
 
 	render(value->car());
 
-	if (BoxedEmptyList::isInstance(value->cdr()))
+	if (EmptyListCell::isInstance(value->cdr()))
 	{
 		m_outStream << ")";
 	}
-	else if (auto rest = datum_cast<BoxedPair>(value->cdr()))
+	else if (auto rest = datum_cast<PairCell>(value->cdr()))
 	{
 		m_outStream << " ";
 		renderPair(rest, true);
@@ -238,7 +238,7 @@ void ExternalFormDatumWriter::renderPair(const BoxedPair *value, bool inList)
 	}
 }
 	
-void ExternalFormDatumWriter::renderBytevector(const BoxedBytevector *value)
+void ExternalFormDatumWriter::renderBytevector(const BytevectorCell *value)
 {
 	bool printedByte = false;
 	m_outStream << "#u8(";
@@ -259,7 +259,7 @@ void ExternalFormDatumWriter::renderBytevector(const BoxedBytevector *value)
 	m_outStream << ")";
 }
 
-void ExternalFormDatumWriter::renderVector(const BoxedVector *value)
+void ExternalFormDatumWriter::renderVector(const VectorCell *value)
 {
 	bool printedElement = false;
 	m_outStream << "#(";
@@ -280,12 +280,12 @@ void ExternalFormDatumWriter::renderVector(const BoxedVector *value)
 	m_outStream << ")";
 }
 
-void ExternalFormDatumWriter::renderProcedure(const BoxedProcedure *)
+void ExternalFormDatumWriter::renderProcedure(const ProcedureCell *)
 {
 	m_outStream << "#!procedure";
 }
 
-void ExternalFormDatumWriter::renderCharacter(const BoxedCharacter *value)
+void ExternalFormDatumWriter::renderCharacter(const CharacterCell *value)
 {
 	std::int32_t codePoint = value->unicodeChar().codePoint();
 	static const std::unordered_map<std::uint32_t, const char *> specialChars = {
@@ -320,7 +320,7 @@ void ExternalFormDatumWriter::renderCharacter(const BoxedCharacter *value)
 
 }
 
-void ExternalFormDatumWriter::renderRecord(const BoxedRecord *)
+void ExternalFormDatumWriter::renderRecord(const RecordCell *)
 {
     // XXX: Can codegen give us enough type information to render record contents?
 	m_outStream << "#!record";

@@ -1,13 +1,13 @@
 package llambda.codegen
 
-import llambda.nfi
+import llambda.ProcedureSignature
 import llambda.planner.{step => ps}
 import llambda.codegen.llvmir._
 
 object GenNamedEntryPoint {
-  def apply(module : IrModuleBuilder)(signature : nfi.NativeSignature, nativeSymbol : String, plannedSymbols : Set[String]) : IrValue = {
+  def apply(module : IrModuleBuilder)(signature : ProcedureSignature, nativeSymbol : String, plannedSymbols : Set[String]) : IrValue = {
     // Declare the function
-    val irSignature = NativeSignatureToIr(signature)
+    val irSignature = ProcedureSignatureToIr(signature)
 
     val irFunctionDecl = IrFunctionDecl(
       result=irSignature.result,

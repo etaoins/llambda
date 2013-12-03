@@ -1,5 +1,5 @@
-#include "binding/BoxedPair.h"
-#include "binding/BoxedEmptyList.h"
+#include "binding/PairCell.h"
+#include "binding/EmptyListCell.h"
 #include "binding/ProperList.h"
 #include "core/fatal.h"
 #include "alloc/allocator.h"
@@ -10,34 +10,34 @@ using namespace lliby;
 extern "C"
 {
 
-BoxedPair *lliby_cons(BoxedDatum *car, BoxedDatum *cdr)
+PairCell *lliby_cons(DatumCell *car, DatumCell *cdr)
 {
-	return new BoxedPair(car, cdr);
+	return new PairCell(car, cdr);
 }
 
-BoxedDatum *lliby_car(BoxedPair *pair)
+DatumCell *lliby_car(PairCell *pair)
 {
 	return pair->car();
 }
 
-BoxedDatum *lliby_cdr(BoxedPair *pair)
+DatumCell *lliby_cdr(PairCell *pair)
 {
 	return pair->cdr();
 }
 
-void lliby_set_car(BoxedPair *pair, BoxedDatum *obj)
+void lliby_set_car(PairCell *pair, DatumCell *obj)
 {
 	return pair->setCar(obj);
 }
 
-void lliby_set_cdr(BoxedPair *pair, BoxedDatum *obj)
+void lliby_set_cdr(PairCell *pair, DatumCell *obj)
 {
 	return pair->setCdr(obj);
 }
 
-std::uint32_t lliby_length(const BoxedListElement *head) 
+std::uint32_t lliby_length(const ListElementCell *head) 
 {
-	ProperList<BoxedDatum> properList(head);
+	ProperList<DatumCell> properList(head);
 
 	if (!properList.isValid())
 	{
@@ -47,9 +47,9 @@ std::uint32_t lliby_length(const BoxedListElement *head)
 	return properList.length();
 }
 
-BoxedListElement* lliby_make_list(std::uint32_t count, BoxedDatum *fill)
+ListElementCell* lliby_make_list(std::uint32_t count, DatumCell *fill)
 {
-	BoxedListElement *cdr = const_cast<BoxedEmptyList*>(BoxedEmptyList::instance());
+	ListElementCell *cdr = const_cast<EmptyListCell*>(EmptyListCell::instance());
 
 	// Allocate all the new pairs at once
 	alloc::RangeAlloc allocation(alloc::allocateRange(count));
@@ -57,56 +57,56 @@ BoxedListElement* lliby_make_list(std::uint32_t count, BoxedDatum *fill)
 
 	while(allocIt != allocation.begin())
 	{
-		cdr = new (*--allocIt) BoxedPair(fill, cdr);
+		cdr = new (*--allocIt) PairCell(fill, cdr);
 	}
 
 	return cdr;
 }
 
-BoxedListElement* lliby_list_copy(const BoxedListElement *sourceHead)
+ListElementCell* lliby_list_copy(const ListElementCell *sourceHead)
 {
 	// Find the number of pairs in the list
 	// We can't use ProperList because we need to work with improper lists
 	std::uint32_t pairCount = 0;
 
-	for(auto pair = datum_cast<BoxedPair>(sourceHead);
+	for(auto pair = datum_cast<PairCell>(sourceHead);
 		pair != nullptr;
-		pair = datum_cast<BoxedPair>(pair->cdr()))
+		pair = datum_cast<PairCell>(pair->cdr()))
 	{
 		pairCount++;
 	}
 
 	if (pairCount == 0)
 	{
-		return const_cast<BoxedEmptyList*>(BoxedEmptyList::instance());
+		return const_cast<EmptyListCell*>(EmptyListCell::instance());
 	}
 
-	BoxedPair *destHead = static_cast<BoxedPair*>(alloc::allocateCons(pairCount));
-	BoxedPair *destPair = destHead;
+	PairCell *destHead = static_cast<PairCell*>(alloc::allocateCons(pairCount));
+	PairCell *destPair = destHead;
 
 	// Because we're a proper list this has to be a pair
-	const BoxedPair *sourcePair = static_cast<const BoxedPair*>(sourceHead);
+	const PairCell *sourcePair = static_cast<const PairCell*>(sourceHead);
 
 	while(true)
 	{
-		BoxedDatum *sourceCdr = sourcePair->cdr();
+		DatumCell *sourceCdr = sourcePair->cdr();
 
-		if (BoxedPair::isInstance(sourceCdr))
+		if (PairCell::isInstance(sourceCdr))
 		{
 			// Create the new pair cdr'ed to the next pair
-			new (destPair) BoxedPair(sourcePair->car(), destPair + 1);
+			new (destPair) PairCell(sourcePair->car(), destPair + 1);
 
 			destPair++;
 
 			// Move to the next pair
-			sourcePair = static_cast<BoxedPair*>(sourceCdr);
+			sourcePair = static_cast<PairCell*>(sourceCdr);
 		}
 		else
 		{
 			// Place our last pair cdr'ed to the last cdr
 			// For proper lists this is the empty list
 			// For improper list this is another type of non-pair datum
-			new (destPair) BoxedPair(sourcePair->car(), sourceCdr);
+			new (destPair) PairCell(sourcePair->car(), sourceCdr);
 
 			// All done!
 			return destHead;
@@ -114,7 +114,7 @@ BoxedListElement* lliby_list_copy(const BoxedListElement *sourceHead)
 	}
 }
 
-BoxedListElement* lliby_list(BoxedListElement *head)
+ListElementCell* lliby_list(ListElementCell *head)
 {
 	// Our calling convention requires that any rest parameters are passed as
 	// a proper list. Because (list) is defined as only having rest args the
@@ -123,9 +123,9 @@ BoxedListElement* lliby_list(BoxedListElement *head)
 	return head;
 }
 
-BoxedDatum* lliby_append(BoxedListElement *argHead)
+DatumCell* lliby_append(ListElementCell *argHead)
 {
-	ProperList<BoxedDatum> argList(argHead);
+	ProperList<DatumCell> argList(argHead);
 
 	if (!argList.isValid())
 	{
@@ -137,16 +137,16 @@ BoxedDatum* lliby_append(BoxedListElement *argHead)
 	if (argCount == 0)
 	{
 		// Nothing to append
-		return const_cast<BoxedEmptyList*>(BoxedEmptyList::instance());
+		return const_cast<EmptyListCell*>(EmptyListCell::instance());
 	}
 
 	// XXX: This is not very efficient
-	std::list<BoxedDatum*> appenedElements;
+	std::list<DatumCell*> appenedElements;
 	auto argIt = argList.begin();
 
 	while(--argCount)
 	{
-		auto listHead = datum_cast<BoxedListElement>(*(argIt++));
+		auto listHead = datum_cast<ListElementCell>(*(argIt++));
 
 		if (listHead == nullptr)
 		{
@@ -154,7 +154,7 @@ BoxedDatum* lliby_append(BoxedListElement *argHead)
 		}
 
 		// Get the passed list
-		ProperList<BoxedDatum> properList(listHead);
+		ProperList<DatumCell> properList(listHead);
 
 		if (!properList.isValid())
 		{
@@ -169,7 +169,7 @@ BoxedDatum* lliby_append(BoxedListElement *argHead)
 
 	// Use createList to append the last list on sharing its structure.
 	// This is required by R7RS
-	return BoxedListElement::createList(appenedElements, *(argIt++));
+	return ListElementCell::createList(appenedElements, *(argIt++));
 }
 
 }

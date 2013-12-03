@@ -1,7 +1,7 @@
 package llambda.planner
 
 import llambda.et
-import llambda.nfi
+import llambda.ProcedureSignature
 import llambda.{valuetype => vt}
 import llambda.planner.{step => ps}
 
@@ -10,7 +10,7 @@ object PlanRecordTypeAccessor {
     expr match {
       case et.RecordTypeAccessor(recordType, field) =>
         // Determine our signature
-        val constructorSignature = new nfi.NativeSignature {
+        val constructorSignature = new ProcedureSignature {
           val hasClosureArg : Boolean = false
           val hasRestArg : Boolean = false
 
@@ -18,13 +18,13 @@ object PlanRecordTypeAccessor {
           val returnType : Option[vt.ValueType] = Some(field.fieldType)
         }
 
-        val boxedRecordTemp = new ps.TempValue
+        val recordCellTemp = new ps.TempValue
         
         val plan = parentPlan.forkPlan()
 
         // Extract the record data
         val recordDataTemp = new ps.TempValue
-        plan.steps += ps.StoreBoxedRecordData(recordDataTemp, boxedRecordTemp, recordType) 
+        plan.steps += ps.StoreRecordCellData(recordDataTemp, recordCellTemp, recordType) 
         
         // Read the field
         val fieldValueTemp = new ps.TempValue
@@ -34,7 +34,7 @@ object PlanRecordTypeAccessor {
 
         PlannedFunction(
           signature=constructorSignature,
-          namedArguments=List(("boxedRecord" -> boxedRecordTemp)),
+          namedArguments=List(("recordCell" -> recordCellTemp)),
           steps=plan.steps.toList
         )
     }
