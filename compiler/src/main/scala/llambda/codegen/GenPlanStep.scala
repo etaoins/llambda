@@ -210,7 +210,13 @@ object GenPlanStep {
     case ps.RecordDataAllocate(resultTemp, recordType) => 
       val generatedRecordType = recordTypeGenerator(recordType)
 
-      val irResult = GenRecordDataAllocate(state.module, state.currentBlock)(generatedRecordType.irType)
+      val irResult = if (recordType.fields.isEmpty) {
+        NullPointerConstant(PointerType(generatedRecordType.irType))
+      }
+      else {
+        GenRecordDataAllocate(state.module, state.currentBlock)(generatedRecordType.irType)
+      }
+
       state.withTempValue(resultTemp -> irResult)
     
     case ps.TestBoxedRecordClass(resultTemp, boxedRecordTemp, recordType) => 
