@@ -105,8 +105,7 @@ class ValueTypeToIrSuite extends FunSuite {
   }
   
   test("boxed record") {
-    val recordType = new vt.BoxedRecordType("recordType")
-    recordType.fields = List()
+    val recordType = new vt.BoxedRecordType("recordType", Nil)
 
     val typeWithSign = ValueTypeToIr(recordType)
 

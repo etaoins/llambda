@@ -134,36 +134,6 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
     }
   }
   
-  test("recursive type") {
-    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
-
-    val exprs = bodyFor("""(define-record-type <new-type>
-                           (new-type next)
-                           new-type?
-                           ((next : <new-type>) new-type-next))""")(scope)
-
-    inside(scope("<new-type>")) {
-      case BoundType(recordType : vt.BoxedRecordType) =>
-        val consLoc = storageLocFor(scope, "new-type")
-        val predLoc = storageLocFor(scope, "new-type?")
-        val constAccessorLoc = storageLocFor(scope, "new-type-next")
-        
-        assert(recordType.sourceName === "<new-type>")
-        
-        val nextField = recordType.fieldForSourceName("next")
-        assert(nextField.fieldType === recordType)
-
-        inside(exprs) {
-          case et.Bind(bindings) :: Nil =>
-            assert(bindings.toSet === Set( 
-              (consLoc -> et.RecordTypeConstructor(recordType, List(nextField))),
-              (predLoc -> et.RecordTypePredicate(recordType)),
-              (constAccessorLoc -> et.RecordTypeAccessor(recordType, nextField))
-            ))
-        }
-    }
-  }
-  
   test("read-only and mutable field") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 

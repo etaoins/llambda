@@ -16,7 +16,7 @@ private[frontend] object ParseRecordTypeDefine {
     mutatorSymbol : Option[sst.ScopedSymbol]
   )
 
-  private def parseFields(typeSymbol : sst.ScopedSymbol, recordType : vt.BoxedRecordType, fieldData : List[sst.ScopedDatum]) : ListMap[sst.ScopedSymbol, ParsedField] =
+  private def parseFields(typeSymbol : sst.ScopedSymbol, fieldData : List[sst.ScopedDatum]) : ListMap[sst.ScopedSymbol, ParsedField] =
     fieldData.foldLeft(ListMap[sst.ScopedSymbol, ParsedField]()) {
       case (parsedFields, fieldDatum @ sst.ScopedProperList(fieldDefDatum :: procedureData)) =>
         // We can either be just a symbol and have no type or we can be a
@@ -30,15 +30,7 @@ private[frontend] object ParseRecordTypeDefine {
 
           case sst.ScopedProperList((nameSymbol : sst.ScopedSymbol) :: sst.ScopedSymbol(_, ":") :: (fieldTypeSymbol : sst.ScopedSymbol) :: Nil) =>
             // Resolve the field's type
-            val resolvedType = if (fieldTypeSymbol == typeSymbol) {
-              // Recursive type
-              recordType
-            }
-            else {
-              DatumToValueType(fieldTypeSymbol)
-            }
-
-            (nameSymbol, resolvedType)
+            (nameSymbol, DatumToValueType(fieldTypeSymbol))
 
           case other =>
             throw new BadSpecialFormException(other, "Unrecognized record field name definition. Must be either identiifer or (identifier : <type>).")
@@ -115,15 +107,12 @@ private[frontend] object ParseRecordTypeDefine {
 
   def apply(appliedSymbol : sst.ScopedSymbol, operands : List[sst.ScopedDatum]) : ParsedRecordTypeDefine = operands match {
     case (typeSymbol : sst.ScopedSymbol) :: constructorDatum :: (predicateSymbol : sst.ScopedSymbol) :: fieldData => 
-      // Build an empty record type first so fields referencing our own type
-      // have something to point to
-      val recordType = new vt.BoxedRecordType(typeSymbol.name)
-
       // Parse our fields first
-      val symbolToParsedField = parseFields(typeSymbol, recordType, fieldData)
+      val symbolToParsedField = parseFields(typeSymbol, fieldData)
 
-      // Set our fields
-      recordType.fields = symbolToParsedField.values.toList.map(_.field)
+      // Build our record type
+      val recordFields = symbolToParsedField.values.toList.map(_.field)
+      val recordType = new vt.BoxedRecordType(typeSymbol.name, recordFields)
 
       // Create our constructor and predicate procedures
       val constructorProcedure = parseConstructor(recordType, symbolToParsedField.mapValues(_.field), constructorDatum)
