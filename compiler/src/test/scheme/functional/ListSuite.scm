@@ -68,7 +68,7 @@
 	(set-car! copied-list -1.0)
 	(cons immutable-list copied-list)))
 
-(define-test "copy improper lit" (expect (1 2 . 3)
+(define-test "copy improper list" (expect (1 2 . 3)
 	(list-copy '(1 2 . 3))))
 
 (define-test "empty (list)" (expect ()
