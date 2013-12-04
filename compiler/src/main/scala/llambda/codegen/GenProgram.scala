@@ -3,6 +3,7 @@ package llambda.codegen
 import llambda._
 import llambda.codegen.llvmir._
 import llambda.planner.{step => ps}
+import llambda.{celltype => ct}
 
 import scala.io.Source
 
@@ -28,10 +29,15 @@ object GenProgram {
     ) mkString "\n"
   }
 
+  private def maxCellTbaaIndex(cellType : ct.CellType) : Long = 
+    (cellType.directSubtypes.map(maxCellTbaaIndex) + cellType.tbaaIndex).max
+
   def apply(functions : Map[String, planner.PlannedFunction]) : String = {
     val module = new llvmir.IrModuleBuilder
     val plannedSymbols = functions.keySet
-    val recordTypeGenerator = new RecordTypeGenerator(module)
+
+    val nextTbaaIndex = maxCellTbaaIndex(ct.DatumCell) + 1
+    val recordTypeGenerator = new RecordTypeGenerator(module, nextTbaaIndex)
 
     // Build each program-supplied function
     for((nativeSymbol, plannedFunction) <- functions) {

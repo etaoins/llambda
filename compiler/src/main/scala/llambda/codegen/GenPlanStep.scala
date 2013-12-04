@@ -251,21 +251,23 @@ object GenPlanStep {
     case ps.RecordFieldSet(recordDataTemp, recordType, recordField, newValueTemp) =>
       val recordDataIr = state.liveTemps(recordDataTemp)
       val newValueIr = state.liveTemps(newValueTemp)
+      val generatedRecordType = recordTypeGenerator(recordType)
   
-      GenRecordFieldSet(state.currentBlock)(recordDataIr, recordType, recordField, newValueIr)
+      GenRecordFieldSet(state.currentBlock)(recordDataIr, generatedRecordType, recordField,newValueIr)
 
       state
     
     case ps.RecordFieldRef(resultTemp, recordDataTemp, recordType, recordField) =>
       val recordDataIr = state.liveTemps(recordDataTemp)
+      val generatedRecordType = recordTypeGenerator(recordType)
   
-      val resultIr = GenRecordFieldRef(state.currentBlock)(recordDataIr, recordType, recordField)
+      val resultIr = GenRecordFieldRef(state.currentBlock)(recordDataIr, generatedRecordType, recordField)
 
       state.withTempValue(resultTemp -> resultIr)
 
     case ps.StoreRecordCellData(resultTemp, recordCellTemp, recordType) =>
-      val generatedRecordType = recordTypeGenerator(recordType)
       val recordCellIr = state.liveTemps(recordCellTemp)
+      val generatedRecordType = recordTypeGenerator(recordType)
 
       val resultIr = GenStoreRecordCellData(state.currentBlock)(recordCellIr, generatedRecordType.irType)
 
