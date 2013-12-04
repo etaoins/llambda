@@ -5,34 +5,34 @@ import llambda.{celltype => ct}
 import llambda.codegen.llvmir._
 import llambda.codegen.llvmir.IrFunction._
 
-object GenConsAllocation {
-  private val consType = UserDefinedType("cons")
-  private val consPointerType = PointerType(consType)
+object GenCellAllocation {
+  private val cellType = UserDefinedType("cell")
+  private val cellPointerType = PointerType(cellType)
   
   // Note these are pointers-to-pointers
-  private val llibyAllocStart = GlobalVariable("_lliby_alloc_start", PointerType(consPointerType))
-  private val llibyAllocEnd = GlobalVariable("_lliby_alloc_end", PointerType(consPointerType))
+  private val llibyAllocStart = GlobalVariable("_lliby_alloc_start", PointerType(cellPointerType))
+  private val llibyAllocEnd = GlobalVariable("_lliby_alloc_end", PointerType(cellPointerType))
 
-  private val llibyAllocCons = IrFunctionDecl(
-    result=Result(consPointerType),
-    name="_lliby_alloc_cons",
+  private val llibyAllocCells = IrFunctionDecl(
+    result=Result(cellPointerType),
+    name="_lliby_alloc_cells",
     arguments=List(Argument(IntegerType(64))),
     attributes=Set(NoUnwind)
   )
 
-  class ConsAllocation(basePointer : IrValue, count : Int) {
+  class CellAllocation(basePointer : IrValue, count : Int) {
     def genTypedPointer(block : IrBlockBuilder)(index : Int, asType : ct.ConcreteCellType) : IrValue = {
       if (index >= count) {
-        throw new InternalCompilerErrorException("Attempted to access cons past end of allocation")
+        throw new InternalCompilerErrorException("Attempted to access cell past end of allocation")
       }
 
-      // We have to do this on %cons because the target type might be the wrong size
+      // We have to do this on %cell because the target type might be the wrong size
       val indexValue = IntegerConstant(IntegerType(32), index)
-      val consPointer = block.getelementptr(s"cons${index}Ptr")(consType, basePointer, List(indexValue))
+      val cellPointer = block.getelementptr(s"cell${index}Ptr")(cellType, basePointer, List(indexValue))
 
       // Cast to the destination type
-      val pointerName = s"cons${index}${asType.name.capitalize}Ptr"
-      val typedPointer = block.bitcastTo(pointerName)(consPointer, PointerType(asType.irType))
+      val pointerName = s"cell{index}${asType.name.capitalize}Ptr"
+      val typedPointer = block.bitcastTo(pointerName)(cellPointer, PointerType(asType.irType))
       
       // Set its type
       val typeId = IntegerConstant(ct.DatumCell.typeIdIrType, asType.typeId)
@@ -43,19 +43,19 @@ object GenConsAllocation {
     }
   }
 
-  def apply(initialState : GenerationState)(count : Int) : (GenerationState, ConsAllocation)  = {
+  def apply(initialState : GenerationState)(count : Int) : (GenerationState, CellAllocation)  = {
     val startBlock = initialState.currentBlock
 
     if (count == 0) {
-      val allocation = new ConsAllocation(NullPointerConstant(consPointerType), 0)
+      val allocation = new CellAllocation(NullPointerConstant(cellPointerType), 0)
       return (initialState, allocation)
     }
 
-    initialState.module.unlessDeclared(llibyAllocCons) {
-      initialState.module.declareFunction(llibyAllocCons)
+    initialState.module.unlessDeclared(llibyAllocCells) {
+      initialState.module.declareFunction(llibyAllocCells)
     }
 
-    startBlock.comment(s"allocating ${count} cons")
+    startBlock.comment(s"allocating ${count} cells")
 
     // We need this a few times
     val allocCountValue = IntegerConstant(IntegerType(64), count)
@@ -68,7 +68,7 @@ object GenConsAllocation {
     val allocEndValue = startBlock.load("allocEnd")(llibyAllocEnd)
 
     // Add our allocation count on to our allocation
-    val newAllocStartValue = startBlock.getelementptr("newAllocStart")(consType, directAllocValue, List(allocCountValue))
+    val newAllocStartValue = startBlock.getelementptr("newAllocStart")(cellType, directAllocValue, List(allocCountValue))
 
     // Create our child blocks for the upcoming branch
     val directSuccessBlock = startBlock.startChildBlock("directSuccess")
@@ -88,7 +88,7 @@ object GenConsAllocation {
     directSuccessBlock.uncondBranch(allocFinishedBlock)
 
     // In the garage collection block call out to the runtime
-    val Some(runtimeAllocValue) = collectGarbageBlock.callDecl(Some("runtimeAlloc"))(llibyAllocCons, List(allocCountValue))
+    val Some(runtimeAllocValue) = collectGarbageBlock.callDecl(Some("runtimeAlloc"))(llibyAllocCells, List(allocCountValue))
     collectGarbageBlock.uncondBranch(allocFinishedBlock)
 
     // Phi the two values together
@@ -97,7 +97,7 @@ object GenConsAllocation {
       PhiSource(runtimeAllocValue, collectGarbageBlock)
     )
 
-    val allocation = new ConsAllocation(allocResultValue, count)
+    val allocation = new CellAllocation(allocResultValue, count)
     (initialState.copy(currentBlock=allocFinishedBlock), allocation)
   }
 }

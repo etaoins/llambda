@@ -54,7 +54,7 @@ object PlanRecordTypeConstructor {
         val allocation = new ps.TempAllocation
         val boxedTemp = new ps.TempValue
 
-        plan.steps += ps.AllocateCons(allocation, 1)
+        plan.steps += ps.AllocateCells(allocation, 1)
         plan.steps += ps.BoxRecord(boxedTemp, allocation, 0, recordType, recordDataTemp)
         plan.steps += ps.Return(Some(boxedTemp))
 

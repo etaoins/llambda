@@ -37,7 +37,7 @@ class KnownProcedure(val signature : ProcedureSignature, val nativeSymbol : Stri
 
       // Box the whole thing
       val tempAllocation = new ps.TempAllocation
-      plan.steps += ps.AllocateCons(tempAllocation, 1)
+      plan.steps += ps.AllocateCells(tempAllocation, 1)
 
       val boxedTemp = new ps.TempValue
       plan.steps += ps.BoxProcedure(boxedTemp, tempAllocation, 0, entryPointTemp)

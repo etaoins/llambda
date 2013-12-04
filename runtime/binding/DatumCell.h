@@ -18,7 +18,7 @@ class DatumCell
 public:
 	void *operator new(std::size_t size)
 	{
-		return alloc::allocateCons();
+		return alloc::allocateCells(1);
 	}
 
 	void *operator new(size_t s, void *placement)

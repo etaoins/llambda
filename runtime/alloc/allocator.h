@@ -15,10 +15,10 @@ void init();
 /**
  * Allocator for DatumCells
  */
-void *allocateCons(size_t count = 1);
+void *allocateCells(size_t count = 1);
 RangeAlloc allocateRange(size_t count);
 
-void preallocCons(size_t count);
+void preallocCells(size_t count);
 	
 }
 }

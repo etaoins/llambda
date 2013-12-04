@@ -6,10 +6,10 @@
 
 ; These are defined in alloc/allocator.cpp in our runtime
 ; They define the interface to our memory allocator
-%cons = type {%pair}
+%cell = type {%pair}
 
-@_lliby_alloc_start = external global %cons*
-@_lliby_alloc_end = external global %cons*
+@_lliby_alloc_start = external global %cell*
+@_lliby_alloc_end = external global %cell*
 
 ; LLVM intrinsics
 declare i1 @llvm.expect.i1(i1, i1)

@@ -81,7 +81,7 @@ ListElementCell* lliby_list_copy(const ListElementCell *sourceHead)
 		return const_cast<EmptyListCell*>(EmptyListCell::instance());
 	}
 
-	PairCell *destHead = static_cast<PairCell*>(alloc::allocateCons(pairCount));
+	PairCell *destHead = static_cast<PairCell*>(alloc::allocateCells(pairCount));
 	PairCell *destPair = destHead;
 
 	// Because we're a proper list this has to be a pair

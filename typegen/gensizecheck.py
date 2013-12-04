@@ -22,10 +22,10 @@ def generate_size_check(cell_types):
             continue
 
         cxx_type_name = type_name_to_clike_class(type_name)
-        # This assumes "Cons" is our allocation size
-        messsage = cxx_type_name + " does not fit in to a Cons cell"
+        # This assumes "alloc::Cell" is our allocation size
+        messsage = cxx_type_name + " does not fit in to a cell"
 
-        content += 'static_assert(sizeof(lliby::' + cxx_type_name + ') <= sizeof(lliby::alloc::Cons), "' + messsage + '");\n'
+        content += 'static_assert(sizeof(lliby::' + cxx_type_name + ') <= sizeof(lliby::alloc::Cell), "' + messsage + '");\n'
 
     return {'runtime/alloc/generated/sizecheck.h': content}
 

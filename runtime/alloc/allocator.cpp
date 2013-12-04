@@ -1,5 +1,5 @@
 #include "alloc/allocator.h"
-#include "alloc/Cons.h"
+#include "alloc/Cell.h"
 #include "alloc/RangeAlloc.h"
 
 #include <stdlib.h>
@@ -7,19 +7,19 @@
 #include <stdio.h>
 #include <sys/mman.h>
 
-// Statically check that everything can fit in to a Cons cell
+// Statically check that everything can fit in to a cell
 #include "generated/sizecheck.h"
 
 extern "C"
 {
 
-using lliby::alloc::Cons;
+using lliby::alloc::Cell;
 
 // These are used directly by generated code to avoid function call overhead
-Cons *_lliby_alloc_start = nullptr;
-Cons *_lliby_alloc_end = nullptr;
+Cell *_lliby_alloc_start = nullptr;
+Cell *_lliby_alloc_end = nullptr;
 
-auto _lliby_alloc_cons = lliby::alloc::allocateCons;
+auto _lliby_alloc_cells = lliby::alloc::allocateCells;
 
 }
 
@@ -45,13 +45,13 @@ void init()
 		exit(-2);
 	}
 
-	_lliby_alloc_start = static_cast<Cons*>(mmappedMemory);
-	_lliby_alloc_end = reinterpret_cast<Cons*>(static_cast<char*>(mmappedMemory) + SemiSpaceSize);
+	_lliby_alloc_start = static_cast<Cell*>(mmappedMemory);
+	_lliby_alloc_end = reinterpret_cast<Cell*>(static_cast<char*>(mmappedMemory) + SemiSpaceSize);
 }
     
-void *allocateCons(size_t count)
+void *allocateCells(size_t count)
 {
-	Cons *allocation = _lliby_alloc_start;
+	Cell *allocation = _lliby_alloc_start;
 
 	_lliby_alloc_start += count;
 
@@ -66,13 +66,13 @@ void *allocateCons(size_t count)
 
 RangeAlloc allocateRange(size_t count)
 {
-	auto start = static_cast<Cons*>(allocateCons(count));
+	auto start = static_cast<Cell*>(allocateCells(count));
 	auto end = start + count;
 
 	return RangeAlloc(start, end);
 }
 
-void preallocCons(size_t count)
+void preallocCells(size_t count)
 {
 }
 

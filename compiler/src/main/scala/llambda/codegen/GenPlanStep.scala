@@ -7,14 +7,14 @@ import llambda.{celltype => ct}
 
 object GenPlanStep {
   def apply(state : GenerationState, plannedSymbols : Set[String], recordTypeGenerator : RecordTypeGenerator)(step : ps.Step) : GenerationState = step match {
-    case ps.AllocateCons(tempAlloc, count) =>
-      val (allocState, allocation) = GenConsAllocation(state)(count)
+    case ps.AllocateCells(tempAlloc, count) =>
+      val (allocState, allocation) = GenCellAllocation(state)(count)
       allocState.withAllocation(tempAlloc -> allocation)
 
     case ps.MutableVarInit(resultTemp, tempAlloc, allocIndex) =>
       val allocation = state.liveAllocations(tempAlloc) 
 
-      // Grab the variable from the cons allocation
+      // Grab the variable from the cell allocation
       val mutableCons = allocation.genTypedPointer(state.currentBlock)(allocIndex, ct.MutableVarCell) 
 
       // Add it to our state

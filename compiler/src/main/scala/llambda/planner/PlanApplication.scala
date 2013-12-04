@@ -10,7 +10,7 @@ object PlanApplication {
     val restArgCount = restArgs.length
 
     if (restArgCount == 0) {
-      // Avoid a cons allocation here so our plan optimizer knows we don't need GC
+      // Avoid a cell allocation here so our plan optimizer knows we don't need GC
       val emptyListTemp = new ps.TempValue
       plan.steps += ps.StoreEmptyListCell(emptyListTemp)
 
@@ -27,7 +27,7 @@ object PlanApplication {
         _.toRequiredTempValue(vt.IntrinsicCellType(ct.DatumCell))
       }
 
-      plan.steps += ps.AllocateCons(allocTemp, restArgCount)
+      plan.steps += ps.AllocateCells(allocTemp, restArgCount)
       plan.steps += ps.BuildProperList(restArgTemp, allocTemp, 0, argTemps)
 
       restArgTemp

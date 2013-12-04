@@ -79,7 +79,7 @@ private[planner] object PlanExpression {
             val initialValueResult = apply(state)(initialValue)
             val initialValueTemp = initialValueResult.value.toRequiredTempValue(vt.IntrinsicCellType(ct.DatumCell))
 
-            plan.steps += ps.AllocateCons(allocTemp, 1)
+            plan.steps += ps.AllocateCells(allocTemp, 1)
             plan.steps += ps.MutableVarInit(mutableTemp, allocTemp, 0)
             plan.steps += ps.MutableVarSet(mutableTemp, initialValueTemp)
             

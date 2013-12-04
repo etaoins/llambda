@@ -108,7 +108,7 @@ class NativeExactIntegerValue(tempValue : ps.TempValue, nativeType : vt.IntType)
     case ct.InexactRationalCell =>
       // Allocate space for the int
       val allocTemp = new ps.TempAllocation
-      plan.steps += ps.AllocateCons(allocTemp, 1)
+      plan.steps += ps.AllocateCells(allocTemp, 1)
 
       // Convert us to double and box
       val boxedTemp = new ps.TempValue
@@ -124,7 +124,7 @@ class NativeExactIntegerValue(tempValue : ps.TempValue, nativeType : vt.IntType)
   def planCellTempValue()(implicit plan : PlanWriter) : ps.TempValue =  {
     // Allocate space for the int
     val allocTemp = new ps.TempAllocation
-    plan.steps += ps.AllocateCons(allocTemp, 1)
+    plan.steps += ps.AllocateCells(allocTemp, 1)
 
     // We can only box 64bit signed ints
     val boxedTemp = new ps.TempValue
@@ -151,7 +151,7 @@ class NativeInexactRationalValue(tempValue : ps.TempValue, nativeType : vt.FpTyp
   def planCellTempValue()(implicit plan : PlanWriter) : ps.TempValue =  {
     // Allocate space for the int
     val allocTemp = new ps.TempAllocation
-    plan.steps += ps.AllocateCons(allocTemp, 1)
+    plan.steps += ps.AllocateCells(allocTemp, 1)
 
     // We can only box 64bit signed ints
     val boxedTemp = new ps.TempValue
@@ -167,7 +167,7 @@ class NativeCharacterValue(tempValue : ps.TempValue) extends NativeValue(vt.Unic
   def planCellTempValue()(implicit plan : PlanWriter) : ps.TempValue =  {
     // Allocate space for the int
     val allocTemp = new ps.TempAllocation
-    plan.steps += ps.AllocateCons(allocTemp, 1)
+    plan.steps += ps.AllocateCells(allocTemp, 1)
 
     // We can only box 64bit signed ints
     val boxedTemp = new ps.TempValue

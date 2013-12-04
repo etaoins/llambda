@@ -27,8 +27,8 @@ sealed trait GcBarrier extends Step
   * Entry points can be loaded with StoreNamedEntryPoint */
 case class Invoke(result : Option[TempValue], signature : ProcedureSignature, entryPoint : TempValue, arguments : List[TempValue]) extends Step with GcBarrier
 
-/** Allocates a given number of Cons cells at runtime */
-case class AllocateCons(result : TempAllocation, count : Int) extends Step with GcBarrier
+/** Allocates a given number of cells at runtime */
+case class AllocateCells(result : TempAllocation, count : Int) extends Step with GcBarrier
 
 /** Initializes a mutable variable from an allocation 
   *

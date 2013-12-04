@@ -7,7 +7,7 @@ import llambda.codegen.llvmir.IrFunction._
 
 object GenProperList {
   // irDatumCell must be of type %datum*
-  def apply(block : IrBlockBuilder)(allocation : GenConsAllocation.ConsAllocation, allocBase : Int, irDataCells : Seq[IrValue]) : IrValue ={
+  def apply(block : IrBlockBuilder)(allocation : GenCellAllocation.CellAllocation, allocBase : Int, irDataCells : Seq[IrValue]) : IrValue ={
     val listLength = irDataCells.length
     val emptyList = GlobalDefines.emptyListIrValue
 

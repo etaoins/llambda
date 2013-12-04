@@ -4,7 +4,7 @@
 #include <iterator>
 #include <assert.h>
 
-#include "Cons.h"
+#include "Cell.h"
 
 namespace lliby
 {
@@ -20,25 +20,25 @@ public:
 	public:
 		bool operator==(const Iterator &other) const
 		{
-			return m_currentCons == other.m_currentCons;
+			return m_currentCell == other.m_currentCell;
 		}
 		
 		bool operator!=(const Iterator &other) const
 		{
-			return m_currentCons != other.m_currentCons;
+			return m_currentCell != other.m_currentCell;
 		}
 
 		void* operator*()
 		{
 			// Make sure we're dereferencing in range
-			assert((m_currentCons >= m_startPointer) && (m_currentCons < m_endPointer));
+			assert((m_currentCell >= m_startPointer) && (m_currentCell < m_endPointer));
 
-			return m_currentCons;
+			return m_currentCell;
 		}
 		
 		Iterator& operator++()
 		{
-			m_currentCons++;
+			m_currentCell++;
 			return *this;
 		}
 		
@@ -51,7 +51,7 @@ public:
 		
 		Iterator& operator--()
 		{
-			m_currentCons--;
+			m_currentCell--;
 			return *this;
 		}
 		
@@ -63,20 +63,20 @@ public:
 		}
 
 	private:
-		Iterator(Cons *startPointer, Cons *currentCons, Cons *endPointer) :
+		Iterator(Cell *startPointer, Cell *currentCell, Cell *endPointer) :
 			m_startPointer(startPointer),
-			m_currentCons(currentCons),
+			m_currentCell(currentCell),
 			m_endPointer(endPointer)
 		{
 		}
 
-		Cons *m_startPointer;
-		Cons *m_currentCons;
-		Cons *m_endPointer;
+		Cell *m_startPointer;
+		Cell *m_currentCell;
+		Cell *m_endPointer;
 	};
 
 public:
-	RangeAlloc(Cons *startPointer, Cons *endPointer) :
+	RangeAlloc(Cell *startPointer, Cell *endPointer) :
 		m_startPointer(startPointer),
 		m_endPointer(endPointer)
 	{
@@ -98,8 +98,8 @@ public:
 	}
 
 private:
-	Cons *m_startPointer;
-	Cons *m_endPointer;
+	Cell *m_startPointer;
+	Cell *m_endPointer;
 };
 
 }
