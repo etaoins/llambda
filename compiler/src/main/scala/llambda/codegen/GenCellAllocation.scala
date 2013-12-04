@@ -31,7 +31,7 @@ object GenCellAllocation {
       val cellPointer = block.getelementptr(s"cell${index}Ptr")(cellType, basePointer, List(indexValue))
 
       // Cast to the destination type
-      val pointerName = s"cell{index}${asType.name.capitalize}Ptr"
+      val pointerName = s"cell${index}${asType.name.capitalize}Ptr"
       val typedPointer = block.bitcastTo(pointerName)(cellPointer, PointerType(asType.irType))
       
       // Set its type
