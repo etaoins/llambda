@@ -1,6 +1,6 @@
 package llambda.codegen.llvmir
 
-case class IrTbaaNode(index : Int, identity : String, parentIndex : Option[Int] = None, constant : Boolean = false) extends Irable {
+case class IrTbaaNode(index : Long, identity : String, parentIndex : Option[Long] = None, constant : Boolean = false) extends Irable {
   def toIr : String = {
     val identityField = "metadata !\"" + identity + "\""
 

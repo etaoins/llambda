@@ -39,7 +39,7 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
       throw new InternalCompilerErrorException("Attempted memory access from a non-pointer")
   }
 
-  def load(resultName : String)(from : IrValue, alignment : Int = 0, volatile : Boolean = false, tbaaIndex : Option[Int] = None) : LocalVariable = {
+  def load(resultName : String)(from : IrValue, alignment : Int = 0, volatile : Boolean = false, tbaaIndex : Option[Long] = None) : LocalVariable = {
     val resultType = pointeeTypeForAccess(from.irType)
     val resultVar = allocateLocalVar(resultType, resultName)
 
@@ -68,7 +68,7 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
     resultVar
   }
 
-  def store(value : IrValue, to : IrValue, alignment : Int = 0, volatile : Boolean = false, tbaaIndex : Option[Int] = None) : Unit = {
+  def store(value : IrValue, to : IrValue, alignment : Int = 0, volatile : Boolean = false, tbaaIndex : Option[Long] = None) : Unit = {
     val storedType = pointeeTypeForAccess(to.irType)
 
     if (storedType != value.irType) {
