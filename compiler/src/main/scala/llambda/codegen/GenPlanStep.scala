@@ -43,7 +43,7 @@ object GenPlanStep {
     
     case boxValueStep : ps.BoxValue =>
       val irUnboxed = state.liveTemps(boxValueStep.unboxed)
-      val irResult = GenBoxing(state, recordTypeGenerator)(boxValueStep, irUnboxed)
+      val irResult = GenBoxing(state)(boxValueStep, irUnboxed)
 
       state.withTempValue(boxValueStep.result -> irResult)
 
@@ -206,17 +206,12 @@ object GenPlanStep {
 
       state.withTempValue(resultTemp -> entryPoint)
 
-    case ps.RecordDataAllocate(resultTemp, recordType) => 
-      val generatedRecordType = recordTypeGenerator(recordType)
+    case initStep @ ps.RecordInit(cellResultTemp, dataResultTemp, _, _, _) =>
+      val initedRecord = GenRecordInit(state, recordTypeGenerator)(initStep)
 
-      val irResult = if (recordType.fields.isEmpty) {
-        NullPointerConstant(PointerType(generatedRecordType.irType))
-      }
-      else {
-        GenRecordDataAllocate(state.module, state.currentBlock)(generatedRecordType.irType)
-      }
-
-      state.withTempValue(resultTemp -> irResult)
+      state
+        .withTempValue(cellResultTemp -> initedRecord.recordCell)
+        .withTempValue(dataResultTemp -> initedRecord.recordData)
     
     case ps.TestRecordCellClass(resultTemp, recordCellTemp, recordType) => 
       val generatedRecordType = recordTypeGenerator(recordType)
@@ -269,7 +264,7 @@ object GenPlanStep {
       val recordCellIr = state.liveTemps(recordCellTemp)
       val generatedRecordType = recordTypeGenerator(recordType)
 
-      val resultIr = GenStoreRecordCellData(state.currentBlock)(recordCellIr, generatedRecordType.irType)
+      val resultIr = GenStoreRecordCellData(state.currentBlock)(recordCellIr, generatedRecordType)
 
       state.withTempValue(resultTemp -> resultIr)
  }

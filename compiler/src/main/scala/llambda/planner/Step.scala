@@ -152,13 +152,19 @@ case class BoxInexactRational(result : TempValue, allocation : TempAllocation, a
 case class BoxCharacter(result : TempValue, allocation : TempAllocation, allocIndex : Int, unboxed : TempValue) extends BoxValue
 case class BoxUtf8String(result : TempValue, unboxed : TempValue) extends BoxValue with GcBarrier
 case class BoxProcedure(result : TempValue, allocation : TempAllocation, allocIndex : Int, unboxed : TempValue) extends BoxValue
-case class BoxRecord(result : TempValue, allocation : TempAllocation, allocIndex : Int, recordType : vt.RecordCellType, unboxed : TempValue) extends BoxValue
 
 /** Returns from the current function */
 case class Return(returnValue : Option[TempValue]) extends Step
 
-/** Allocates data for a given record a given type */
-case class RecordDataAllocate(result : TempValue, recordType : vt.RecordCellType) extends Step
+/** Allocates data for a given record a given type 
+ *
+ * @param cellResult  location to store the record cell 
+ * @param dataResult  location to store the uninitialized record data 
+ * @param allocation  allocation to allocate the cell from
+ * @param allocIndex  offset in the allocation to allocate from
+ * @param recordType  type of record to create
+ */
+case class RecordInit(cellResult : TempValue, dataResult : TempValue, allocation : TempAllocation, allocIndex : Int, recordType : vt.RecordCellType) extends Step
 /** Sets a record field. The value must match the type of record field */
 case class RecordFieldSet(recordData : TempValue, recordType : vt.RecordCellType, recordField : vt.RecordField, newValue : TempValue) extends Step
 /** Reads a record field. The value must match the type of record field */

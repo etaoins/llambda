@@ -31,11 +31,16 @@ object PlanRecordTypeConstructor {
         val namedArguments = (initializedFields.map { case field =>
           (argumentUniquer(field.sourceName) -> fieldToTempValue(field))
         }).toList
+        
+        // Allocate the cell
+        val allocation = new ps.TempAllocation
+        plan.steps += ps.AllocateCells(allocation, 1)
 
-        // Make our bare record
-        val recordDataTemp = new ps.TempValue 
+        // Initialize the record
+        val cellTemp = new ps.TempValue 
+        val dataTemp = new ps.TempValue 
 
-        plan.steps += ps.RecordDataAllocate(recordDataTemp, recordType)
+        plan.steps += ps.RecordInit(cellTemp, dataTemp, allocation, 0, recordType)
         
         // Set all our fields
         for(field <- recordType.fields) {
@@ -46,17 +51,11 @@ object PlanRecordTypeConstructor {
             iv.UnspecificValue.toRequiredTempValue(field.fieldType)(plan)
           }
             
-          plan.steps += ps.RecordFieldSet(recordDataTemp, recordType, field, fieldTemp)
-
+          plan.steps += ps.RecordFieldSet(dataTemp, recordType, field, fieldTemp)
         }
 
-        // Box the result
-        val allocation = new ps.TempAllocation
-        val boxedTemp = new ps.TempValue
-
-        plan.steps += ps.AllocateCells(allocation, 1)
-        plan.steps += ps.BoxRecord(boxedTemp, allocation, 0, recordType, recordDataTemp)
-        plan.steps += ps.Return(Some(boxedTemp))
+        // Return the record
+        plan.steps += ps.Return(Some(cellTemp))
 
         PlannedFunction(
           signature=constructorSignature,

@@ -14,7 +14,7 @@ object GenBoxing {
     attributes=Set(IrFunction.NoUnwind)
   )
 
-  def apply(state : GenerationState, recordTypeGenerator : RecordTypeGenerator)(boxStep : ps.BoxValue, nativeValue : IrValue) : IrValue = boxStep match {
+  def apply(state : GenerationState)(boxStep : ps.BoxValue, nativeValue : IrValue) : IrValue = boxStep match {
     case _ : ps.BoxBoolean =>
       state.currentBlock.select("boxedBool")(nativeValue, GlobalDefines.trueIrValue, GlobalDefines.falseIrValue)
 
@@ -71,25 +71,6 @@ object GenBoxing {
       ct.ProcedureCell.genStoreToEntryPoint(block)(nativeValue, boxedProcCons)
 
       boxedProcCons
-
-    case ps.BoxRecord(_, allocTemp, allocIndex, recordType, _) =>
-      val block = state.currentBlock
-      val allocation = state.liveAllocations(allocTemp)
-
-      val boxedRecordCons = allocation.genTypedPointer(block)(allocIndex, ct.RecordCell) 
-      
-      // Get our record type information
-      val generatedRecordType = recordTypeGenerator(recordType)
-
-      // Set the class ID
-      val classIdIr = IntegerConstant(ct.RecordCell.recordClassIdIrType, generatedRecordType.classId)
-      ct.RecordCell.genStoreToRecordClassId(block)(classIdIr, boxedRecordCons)
-
-      // Cast the data pointer to void*
-      val voidDataPtr = block.bitcastTo("voidDataPtr")(nativeValue, PointerType(IntegerType(8)))
-      ct.RecordCell.genStoreToRecordData(block)(voidDataPtr, boxedRecordCons)
-
-      boxedRecordCons
   }
 }
 
