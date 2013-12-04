@@ -14,16 +14,16 @@ object GenBoxing {
     attributes=Set(IrFunction.NoUnwind)
   )
 
-  def apply(state : GenerationState, recordTypeGenerator : RecordTypeGenerator)(boxStep : ps.BoxValue, bativeValue : IrValue) : IrValue = boxStep match {
+  def apply(state : GenerationState, recordTypeGenerator : RecordTypeGenerator)(boxStep : ps.BoxValue, nativeValue : IrValue) : IrValue = boxStep match {
     case _ : ps.BoxBoolean =>
-      state.currentBlock.select("boxedBool")(bativeValue, GlobalDefines.trueIrValue, GlobalDefines.falseIrValue)
+      state.currentBlock.select("boxedBool")(nativeValue, GlobalDefines.trueIrValue, GlobalDefines.falseIrValue)
 
     case ps.BoxExactInteger(_, allocTemp, allocIndex, _) =>
       val block = state.currentBlock
       val allocation = state.liveAllocations(allocTemp)
 
       val boxedIntCons = allocation.genTypedPointer(block)(allocIndex, ct.ExactIntegerCell) 
-      ct.ExactIntegerCell.genStoreToValue(block)(bativeValue, boxedIntCons)
+      ct.ExactIntegerCell.genStoreToValue(block)(nativeValue, boxedIntCons)
 
       boxedIntCons
     
@@ -32,7 +32,7 @@ object GenBoxing {
       val allocation = state.liveAllocations(allocTemp)
 
       val boxedRationalCons = allocation.genTypedPointer(block)(allocIndex, ct.InexactRationalCell) 
-      ct.InexactRationalCell.genStoreToValue(block)(bativeValue, boxedRationalCons)
+      ct.InexactRationalCell.genStoreToValue(block)(nativeValue, boxedRationalCons)
 
       boxedRationalCons
 
@@ -41,7 +41,7 @@ object GenBoxing {
       val allocation = state.liveAllocations(allocTemp)
 
       val boxedCharCons = allocation.genTypedPointer(block)(allocIndex, ct.CharacterCell) 
-      ct.CharacterCell.genStoreToUnicodeChar(block)(bativeValue, boxedCharCons)
+      ct.CharacterCell.genStoreToUnicodeChar(block)(nativeValue, boxedCharCons)
 
       boxedCharCons
 
@@ -52,7 +52,7 @@ object GenBoxing {
         state.module.declareFunction(llibyStringFromUtf8Decl)
       }
 
-      block.callDecl(Some("boxedString"))(llibyStringFromUtf8Decl, List(bativeValue)).get
+      block.callDecl(Some("boxedString"))(llibyStringFromUtf8Decl, List(nativeValue)).get
 
     case ps.BoxProcedure(_, allocTemp, allocIndex, _) =>
       val block = state.currentBlock
@@ -68,7 +68,7 @@ object GenBoxing {
       ct.ProcedureCell.genStoreToRecordData(block)(constantNull, boxedProcCons)
 
       // Store the entry point
-      ct.ProcedureCell.genStoreToEntryPoint(block)(bativeValue, boxedProcCons)
+      ct.ProcedureCell.genStoreToEntryPoint(block)(nativeValue, boxedProcCons)
 
       boxedProcCons
 
@@ -86,7 +86,7 @@ object GenBoxing {
       ct.RecordCell.genStoreToRecordClassId(block)(classIdIr, boxedRecordCons)
 
       // Cast the data pointer to void*
-      val voidDataPtr = block.bitcastTo("voidDataPtr")(bativeValue, PointerType(IntegerType(8)))
+      val voidDataPtr = block.bitcastTo("voidDataPtr")(nativeValue, PointerType(IntegerType(8)))
       ct.RecordCell.genStoreToRecordData(block)(voidDataPtr, boxedRecordCons)
 
       boxedRecordCons
