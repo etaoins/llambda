@@ -6,7 +6,7 @@ import llambda.codegen.llvmir._
 import llambda.{celltype => ct}
 
 object GenPlanStep {
-  def apply(state : GenerationState, plannedSymbols : Set[String], recordTypeGenerator : RecordTypeGenerator)(step : ps.Step) : GenerationState = step match {
+  def apply(state : GenerationState, plannedSymbols : Set[String], typeGenerator : TypeGenerator)(step : ps.Step) : GenerationState = step match {
     case ps.AllocateCells(tempAlloc, count) =>
       val (allocState, allocation) = GenCellAllocation(state)(count)
       allocState.withAllocation(tempAlloc -> allocation)
@@ -109,10 +109,10 @@ object GenPlanStep {
       val trueStartState = state.copy(currentBlock=trueStartBlock)
       val falseStartState = state.copy(currentBlock=falseStartBlock)
 
-      val trueEndState = GenPlanSteps(trueStartState, plannedSymbols, recordTypeGenerator)(trueSteps)
+      val trueEndState = GenPlanSteps(trueStartState, plannedSymbols, typeGenerator)(trueSteps)
       val trueEndBlock = trueEndState.currentBlock
 
-      val falseEndState = GenPlanSteps(falseStartState, plannedSymbols, recordTypeGenerator)(falseSteps)
+      val falseEndState = GenPlanSteps(falseStartState, plannedSymbols, typeGenerator)(falseSteps)
       val falseEndBlock = falseEndState.currentBlock
       
       // Get the IR values from either side
@@ -179,36 +179,36 @@ object GenPlanStep {
       state.withTempValue(resultTemp -> entryPoint)
 
     case initStep @ ps.RecordInit(cellResultTemp, dataResultTemp, _, _, _) =>
-      val initedRecord = GenRecordInit(state, recordTypeGenerator)(initStep)
+      val initedRecord = GenRecordInit(state, typeGenerator)(initStep)
 
       state
         .withTempValue(cellResultTemp -> initedRecord.recordCell)
         .withTempValue(dataResultTemp -> initedRecord.recordData)
     
     case ps.TestRecordCellClass(resultTemp, recordCellTemp, recordType) => 
-      val generatedRecordType = recordTypeGenerator(recordType)
+      val generatedType = typeGenerator(recordType)
 
       val recordCellIr = state.liveTemps(recordCellTemp)
-      val irResult = GenTestRecordCellClass(state.currentBlock)(recordCellIr, generatedRecordType.classId)
+      val irResult = GenTestRecordCellClass(state.currentBlock)(recordCellIr, generatedType.classId)
 
       state.withTempValue(resultTemp -> irResult)
     
     case ps.AssertRecordCellClass(recordCellTemp, recordType) => 
-      val generatedRecordType = recordTypeGenerator(recordType)
+      val generatedType = typeGenerator(recordType)
       
       // Start our branches
       val fatalBlock = state.currentBlock.startChildBlock("wrongRecordClass")
       val successBlock = state.currentBlock.startChildBlock("correctRecordClass")
 
       // Generate code for a fatal error
-      val errorName = "recordClassIsNot" + generatedRecordType.irType.name
+      val errorName = "recordClassIsNot" + generatedType.irType.name
       val errorText = "Record is not of class " + recordType.sourceName
 
       GenFatalError(state.module, fatalBlock)(errorName, errorText)
 
       // Branch if we're not of the right class
       val recordCellIr = state.liveTemps(recordCellTemp)
-      val irResult = GenTestRecordCellClass(state.currentBlock)(recordCellIr, generatedRecordType.classId)
+      val irResult = GenTestRecordCellClass(state.currentBlock)(recordCellIr, generatedType.classId)
 
       state.currentBlock.condBranch(irResult, successBlock, fatalBlock)
 
@@ -218,25 +218,25 @@ object GenPlanStep {
     case ps.RecordFieldSet(recordDataTemp, recordType, recordField, newValueTemp) =>
       val recordDataIr = state.liveTemps(recordDataTemp)
       val newValueIr = state.liveTemps(newValueTemp)
-      val generatedRecordType = recordTypeGenerator(recordType)
+      val generatedType = typeGenerator(recordType)
   
-      GenRecordFieldSet(state.currentBlock)(recordDataIr, generatedRecordType, recordField,newValueIr)
+      GenRecordFieldSet(state.currentBlock)(recordDataIr, generatedType, recordField,newValueIr)
 
       state
     
     case ps.RecordFieldRef(resultTemp, recordDataTemp, recordType, recordField) =>
       val recordDataIr = state.liveTemps(recordDataTemp)
-      val generatedRecordType = recordTypeGenerator(recordType)
+      val generatedType = typeGenerator(recordType)
   
-      val resultIr = GenRecordFieldRef(state.currentBlock)(recordDataIr, generatedRecordType, recordField)
+      val resultIr = GenRecordFieldRef(state.currentBlock)(recordDataIr, generatedType, recordField)
 
       state.withTempValue(resultTemp -> resultIr)
 
     case ps.StoreRecordCellData(resultTemp, recordCellTemp, recordType) =>
       val recordCellIr = state.liveTemps(recordCellTemp)
-      val generatedRecordType = recordTypeGenerator(recordType)
+      val generatedType = typeGenerator(recordType)
 
-      val resultIr = GenStoreRecordCellData(state.currentBlock)(recordCellIr, generatedRecordType)
+      val resultIr = GenStoreRecordCellData(state.currentBlock)(recordCellIr, generatedType)
 
       state.withTempValue(resultTemp -> resultIr)
  }

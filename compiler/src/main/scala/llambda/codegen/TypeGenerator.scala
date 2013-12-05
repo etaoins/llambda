@@ -3,25 +3,25 @@ package llambda.codegen
 import llambda.{valuetype => vt}
 import llambda.codegen.llvmir._
 
-object RecordDataStorage extends Enumeration {
-  type RecordDataStorage = Value
+object TypeDataStorage extends Enumeration {
+  type TypeDataStorage = Value
   val Empty, Inline, OutOfLine = Value
 }
 
-case class GeneratedRecordType(
+case class GeneratedType(
   recordType : vt.RecordCellType,
   irType : UserDefinedType,
   classId : Long,
   fieldToTbaaIndex : Map[vt.RecordField, Long],
-  storageType : RecordDataStorage.Value
+  storageType : TypeDataStorage.Value
 )
 
-class RecordTypeGenerator(module : IrModuleBuilder, var nextTbaaIndex : Long) {
-  private val generatedRecordTypes = collection.mutable.Map[vt.RecordCellType, GeneratedRecordType]()
+class TypeGenerator(module : IrModuleBuilder, var nextTbaaIndex : Long) {
+  private val generatedTypes = collection.mutable.Map[vt.RecordCellType, GeneratedType]()
   private var nextClassId : Long = 1
 
-  def apply(recordType : vt.RecordCellType) : GeneratedRecordType = {
-    generatedRecordTypes.getOrElseUpdate(recordType, {
+  def apply(recordType : vt.RecordCellType) : GeneratedType = {
+    generatedTypes.getOrElseUpdate(recordType, {
       val recordTypeName = module.nameSource.allocate(recordType.sourceName)
 
       val irType = StructureType(recordType.fields.map { field =>
@@ -48,24 +48,24 @@ class RecordTypeGenerator(module : IrModuleBuilder, var nextTbaaIndex : Long) {
       val storageType = recordType.fields match {
         case Nil =>
           // No data to store
-          RecordDataStorage.Empty
+          TypeDataStorage.Empty
 
         case singleField :: Nil =>
           // If there's only a single field we can inline the data
           // XXX: This is broken on 32bit because we're inlining over a pointer
           // and Int64 and Double are larger than 32bits. The alignment could also
           // be incorrect on 32bit.
-          RecordDataStorage.Inline
+          TypeDataStorage.Inline
 
         case _ =>
-          RecordDataStorage.OutOfLine
+          TypeDataStorage.OutOfLine
       }
 
       // Allocate it a class ID
       val classId = nextClassId
       nextClassId = nextClassId + 1
 
-      GeneratedRecordType(
+      GeneratedType(
         recordType=recordType,
         irType=userDefinedType,
         classId=classId,

@@ -7,18 +7,18 @@ import llambda.{celltype => ct}
 import llambda.InternalCompilerErrorException
 
 object GenStoreRecordCellData {
-  def apply(block : IrBlockBuilder)(recordCellIr : IrValue, generatedRecordType : GeneratedRecordType) : IrValue = {
-    val recordDataIrType = generatedRecordType.irType 
+  def apply(block : IrBlockBuilder)(recordCellIr : IrValue, generatedType : GeneratedType) : IrValue = {
+    val recordDataIrType = generatedType.irType 
 
-    val uncastRecordData = generatedRecordType.storageType match {
-      case RecordDataStorage.Empty =>
+    val uncastRecordData = generatedType.storageType match {
+      case TypeDataStorage.Empty =>
         throw new InternalCompilerErrorException("Attempted to get record data pointer for empty record")
 
-      case RecordDataStorage.Inline =>
+      case TypeDataStorage.Inline =>
         // Our data is inline; return a pointer to the record data pointer itself
         ct.RecordCell.genPointerToRecordData(block)(recordCellIr)
 
-      case RecordDataStorage.OutOfLine =>
+      case TypeDataStorage.OutOfLine =>
         // Our data is out-of-line; dereference the record data pointer
         ct.RecordCell.genLoadFromRecordData(block)(recordCellIr)
     }

@@ -8,7 +8,7 @@ import llambda.{valuetype => vt}
 object GenRecordInit {
   case class InitializedRecord(recordCell : IrValue, recordData : IrValue)
 
-  def apply(state : GenerationState, recordTypeGenerator : RecordTypeGenerator)(initStep : ps.RecordInit) : InitializedRecord  = { 
+  def apply(state : GenerationState, typeGenerator : TypeGenerator)(initStep : ps.RecordInit) : InitializedRecord  = { 
     // Declare _lliby_record_data_alloc
     val llibyRecordDataAlloc = IrFunctionDecl(
       result=IrFunction.Result(PointerType(IntegerType(8))),
@@ -32,24 +32,24 @@ object GenRecordInit {
     
     // Get our record type information
     val recordType = initStep.recordType
-    val generatedRecordType = recordTypeGenerator(recordType)
-    val recordDataIrType = generatedRecordType.irType 
+    val generatedType = typeGenerator(recordType)
+    val recordDataIrType = generatedType.irType 
     
     // Set the class ID
-    val classIdIr = IntegerConstant(ct.RecordCell.recordClassIdIrType, generatedRecordType.classId)
+    val classIdIr = IntegerConstant(ct.RecordCell.recordClassIdIrType, generatedType.classId)
     ct.RecordCell.genStoreToRecordClassId(block)(classIdIr, recordCell)
 
-    val uncastRecordData = generatedRecordType.storageType match {
-      case RecordDataStorage.Empty =>
+    val uncastRecordData = generatedType.storageType match {
+      case TypeDataStorage.Empty =>
         // No fields; don't bother allocating or setting the recordData pointer
         NullPointerConstant(PointerType(IntegerType(8)))
 
-      case RecordDataStorage.Inline =>
+      case TypeDataStorage.Inline =>
         // Store the value inline in the cell on top of the recordData field
         // instead of going through another level of indirection
         ct.RecordCell.genPointerToRecordData(block)(recordCell)
 
-      case RecordDataStorage.OutOfLine =>
+      case TypeDataStorage.OutOfLine =>
         // Find the size of the record data
         val irSize = GenSizeOf(block)(recordDataIrType)
     

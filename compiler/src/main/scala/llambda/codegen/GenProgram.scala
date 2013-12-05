@@ -37,7 +37,7 @@ object GenProgram {
     val plannedSymbols = functions.keySet
 
     val nextTbaaIndex = maxCellTbaaIndex(ct.DatumCell) + 1
-    val recordTypeGenerator = new RecordTypeGenerator(module, nextTbaaIndex)
+    val typeGenerator = new TypeGenerator(module, nextTbaaIndex)
 
     // Build each program-supplied function
     for((nativeSymbol, plannedFunction) <- functions) {
@@ -67,7 +67,7 @@ object GenProgram {
         liveTemps=argTemps)
 
       // Generate our steps
-      GenPlanSteps(startState, plannedSymbols, recordTypeGenerator)(plannedFunction.steps)
+      GenPlanSteps(startState, plannedSymbols, typeGenerator)(plannedFunction.steps)
 
       module.defineFunction(generatedFunction)
     }
