@@ -14,7 +14,7 @@ object GenConstant {
     val constantDataDef = IrGlobalVariableDef(
       name=name,
       initializer=initializer,
-      visibility=Visibility.Hidden,
+      linkage=Linkage.Private,
       unnamedAddr=true,
       constant=true)
 
