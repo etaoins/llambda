@@ -2,7 +2,7 @@ package llambda.frontend
 
 import llambda._
 
-class LibraryLoader {
+class LibraryLoader(targetPlatform : platform.TargetPlatform) {
   private val exprBuffer = collection.mutable.ListBuffer[et.Expression]()
   private val loadedFiles = collection.mutable.Map.empty[String, Map[String, BoundValue]]
 
@@ -39,7 +39,9 @@ class LibraryLoader {
         SchemePrimitives.bindings
       
       case StringComponent("llambda") :: StringComponent("nfi") :: Nil =>
-        NativeFunctionPrimitives.bindings
+        // Our NFI types depend on our target platform
+        NativeFunctionPrimitives.bindings ++
+          IntrinsicTypes(targetPlatform).mapValues(BoundType.apply)
 
       case StringComponent("llambda") :: StringComponent("internal") :: Nil =>
         InternalPrimitives.bindings

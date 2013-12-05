@@ -6,7 +6,7 @@ import llambda._
 class ResolveImportDeclSuite extends FunSuite { 
   def bindingFor(scheme : String) = {
     val datum :: Nil = SchemeParser.parseStringAsData(scheme)
-    ResolveImportDecl(datum)(new LibraryLoader, IncludePath())
+    ResolveImportDecl(datum)(new LibraryLoader(platform.Posix64), IncludePath())
   }
   
   test("import all primitives") {

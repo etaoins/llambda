@@ -109,7 +109,8 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
       val compileConfig = CompileConfig(
         includePath=includePath,
         // Optimize to catch more miscompilations
-        optimizeLevel=2)
+        optimizeLevel=2,
+        targetPlatform=platform.DetectJvmPlatform())
 
       Compiler.compileData(printingProgram, outputFile, compileConfig)
 

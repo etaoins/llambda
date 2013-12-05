@@ -56,8 +56,8 @@ class ParseOnlyMode extends SchemeParsingMode("parse") {
 }
 
 /** Extract expressions allowed in a library, program or lambda body */
-class BodyExpressionMode extends SchemeParsingMode("expr") {
-  private val loader = new frontend.LibraryLoader
+class BodyExpressionMode(targetPlatform : platform.TargetPlatform) extends SchemeParsingMode("expr") {
+  private val loader = new frontend.LibraryLoader(targetPlatform)
   private val schemeBaseBindings = loader.loadSchemeBase
 
   val scope = new Scope(collection.mutable.Map(schemeBaseBindings.toSeq : _*))
@@ -82,10 +82,11 @@ class BodyExpressionMode extends SchemeParsingMode("expr") {
 }
 
 /** Compiles expressions as a standalone program and executes them */
-class CompileMode extends SchemeParsingMode("compile") {
+class CompileMode(targetPlatform : platform.TargetPlatform) extends SchemeParsingMode("compile") {
   val compileConfig = CompileConfig(
     includePath=ReplIncludePath(),
-    optimizeLevel=2)
+    optimizeLevel=2,
+    targetPlatform=targetPlatform)
 
   def evalDatum(userDatum : ast.Datum) = {
     val outputFile = File.createTempFile("llambdarepl", null, null)
@@ -132,7 +133,7 @@ class CompileMode extends SchemeParsingMode("compile") {
 }
 
 /** Implements the REPL loop and switching modes */
-object Repl {
+class Repl(targetPlatform : platform.TargetPlatform) {
   @tailrec
   private def acceptInput(mode : ReplMode)(implicit reader : ConsoleReader) {
     val command = reader.readLine(mode.name + "> ")
@@ -145,10 +146,10 @@ object Repl {
         acceptInput(new ParseOnlyMode)
       
       case ":expr" =>
-        acceptInput(new BodyExpressionMode)
+        acceptInput(new BodyExpressionMode(targetPlatform))
       
       case ":compile" =>
-        acceptInput(new CompileMode)
+        acceptInput(new CompileMode(targetPlatform))
 
       case userString =>
         mode.evaluate(userString)
@@ -158,6 +159,6 @@ object Repl {
 
   def apply() {
     val reader = new ConsoleReader;
-    acceptInput(new CompileMode)(reader)
+    acceptInput(new CompileMode(targetPlatform))(reader)
   }
 }

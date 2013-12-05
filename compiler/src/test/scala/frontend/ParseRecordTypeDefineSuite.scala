@@ -7,8 +7,15 @@ import llambda._
 
 class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelpers with Inside {
   // We need NFI for types and SchemePrimitives for (define-record-type)
-  val bindings = NativeFunctionPrimitives.bindings ++ SchemePrimitives.bindings
-  val primitiveScope = new Scope(collection.mutable.Map(bindings.toSeq : _*))
+  val baseScope = {
+    implicit val includePath = IncludePath()
+    val libraryLoader = new LibraryLoader(platform.Posix64)
+
+    val nfiExports = libraryLoader.load(List(StringComponent("llambda"), StringComponent("nfi")))
+    val allBindings = nfiExports ++ SchemePrimitives.bindings
+
+    new Scope(collection.mutable.Map(allBindings.toSeq : _*))
+  }
 
   private def storageLocFor(scope : Scope, name : String) : StorageLocation = 
     scope(name) match {
@@ -24,7 +31,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
   }
 
   test("define-record-type with no arguments fails") {
-    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val scope = new Scope(collection.mutable.Map(), Some(baseScope))
 
     intercept[BadSpecialFormException] {
       bodyFor("""(define-record-type)""")(scope)
@@ -32,7 +39,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
   }
   
   test("define-record-type with 1 argument fails") {
-    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val scope = new Scope(collection.mutable.Map(), Some(baseScope))
 
     intercept[BadSpecialFormException] {
       bodyFor("""(define-record-type <new-type>)""")(scope)
@@ -40,7 +47,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
   }
   
   test("define-record-type with 2 argument fails") {
-    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val scope = new Scope(collection.mutable.Map(), Some(baseScope))
 
     intercept[BadSpecialFormException] {
       bodyFor("""(define-record-type <new-type> 
@@ -49,7 +56,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
   }
   
   test("fieldless record type") {
-    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val scope = new Scope(collection.mutable.Map(), Some(baseScope))
 
     val exprs = bodyFor("""(define-record-type <new-type>
                            (new-type)
@@ -74,7 +81,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
   }
 
   test("single read-only untyped field") {
-    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val scope = new Scope(collection.mutable.Map(), Some(baseScope))
 
     val exprs = bodyFor("""(define-record-type <new-type>
                            (new-type const-datum)
@@ -105,7 +112,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
   }
   
   test("single read-only typeled field") {
-    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val scope = new Scope(collection.mutable.Map(), Some(baseScope))
 
     val exprs = bodyFor("""(define-record-type <new-type>
                            (new-type const-int)
@@ -135,7 +142,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
   }
   
   test("read-only and mutable field") {
-    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val scope = new Scope(collection.mutable.Map(), Some(baseScope))
 
     val exprs = bodyFor("""(define-record-type <new-type>
                            (new-type mutable-int const-datum)
@@ -173,7 +180,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
   }
   
   test("nested record types") {
-    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val scope = new Scope(collection.mutable.Map(), Some(baseScope))
 
     val innerExprs = bodyFor("""(define-record-type <inner-type>
                                 (inner-type)
@@ -222,7 +229,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
   }
   
   test("duplicate field name fails") {
-    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val scope = new Scope(collection.mutable.Map(), Some(baseScope))
 
     intercept[BadSpecialFormException] {
       bodyFor("""(define-record-type <new-type>
@@ -234,7 +241,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
   }
   
   test("duplicate initializer fails") {
-    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val scope = new Scope(collection.mutable.Map(), Some(baseScope))
 
     intercept[BadSpecialFormException] {
       bodyFor("""(define-record-type <new-type>
@@ -245,7 +252,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
   }
   
   test("invalid type reference fails") {
-    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val scope = new Scope(collection.mutable.Map(), Some(baseScope))
 
     intercept[UnboundVariableException] {
       bodyFor("""(define-record-type <new-type>
@@ -256,7 +263,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
   }
   
   test("initializer for non-field fails") {
-    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val scope = new Scope(collection.mutable.Map(), Some(baseScope))
 
     intercept[BadSpecialFormException] {
       bodyFor("""(define-record-type <new-type>
@@ -267,7 +274,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
   }
   
   test("lack of initializer for non-defaultable type fails") {
-    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val scope = new Scope(collection.mutable.Map(), Some(baseScope))
 
     intercept[BadSpecialFormException] {
       // Everything but datum-cell and unspecific-cell have no default value
@@ -279,7 +286,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
   }
   
   test("duplicate procedure name fails") {
-    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val scope = new Scope(collection.mutable.Map(), Some(baseScope))
 
     intercept[BadSpecialFormException] {
       bodyFor("""(define-record-type <new-type>

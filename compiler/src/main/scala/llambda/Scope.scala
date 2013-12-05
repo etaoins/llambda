@@ -106,7 +106,7 @@ object NativeFunctionPrimitives {
   lazy val bindings = {
     Map[String, BoundValue](
       "native-function" -> NativeFunction
-    ) ++ frontend.IntrinsicTypes().mapValues(BoundType.apply)
+    )
   }
 }
 

@@ -43,7 +43,7 @@ object Compiler {
 
   def compileData(data : List[ast.Datum], output : File, config : CompileConfig) : Unit = {
     // Parse the program
-    val loader = new frontend.LibraryLoader
+    val loader = new frontend.LibraryLoader(config.targetPlatform)
     val expressions = frontend.ExtractProgram(data)(loader, config.includePath)
 
     // Optimize

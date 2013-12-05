@@ -7,7 +7,16 @@ object LlambdaApp extends App {
     inputFile : Option[File] = None,
     outputFile : Option[File] = None,
     emitLlvm : Boolean = false,
-    optimizeLevel : Int = 0)
+    optimizeLevel : Int = 0,
+    targetPlatformOpt : Option[platform.TargetPlatform] = None)
+  
+  private val stringToPlatform = Map(
+    ("posix64" -> platform.Posix64),
+    ("posix32" -> platform.Posix32),
+    ("win32"   -> platform.Win32),
+    ("win64"   -> platform.Win64)
+  )
+
 
   val parser = new scopt.OptionParser[Config]("llambda") {
     head("llambda")
@@ -35,10 +44,27 @@ object LlambdaApp extends App {
       }
     } text("set optimization level")
 
+    opt[String]("target-platform") action { (platformString, c) =>
+      c.copy(targetPlatformOpt=Some(stringToPlatform(platformString)))
+    } validate { platformString =>
+      if (!stringToPlatform.contains(platformString)) {
+        val validPlatforms = stringToPlatform.keys.toList.sorted
+        failure("Unknown target platform. Valid values are: " + validPlatforms.mkString(", "))
+      }
+      else {
+        success
+      }
+    } text("target platform")
+
     help("help")
   }
 
   parser.parse(args, Config()) map { config =>
+    // Determine our target platform
+    val targetPlatform = config.targetPlatformOpt getOrElse {
+      platform.DetectJvmPlatform()
+    }
+
     config.inputFile match {
       case Some(input) =>
         // Make sure this is a real file that exists
@@ -79,13 +105,15 @@ object LlambdaApp extends App {
         val compileConfig = CompileConfig(
           includePath=includePath,
           emitLlvm=config.emitLlvm,
-          optimizeLevel=config.optimizeLevel)
+          optimizeLevel=config.optimizeLevel,
+          targetPlatform=targetPlatform)
 
         Compiler.compileFile(input, output, compileConfig)
 
       case None =>
         // Launch the REPL
-        Repl()
+        val repl = new Repl(targetPlatform)
+        repl()
     }
   }  getOrElse {
     sys.exit(1)

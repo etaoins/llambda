@@ -1,9 +1,12 @@
 package llambda.frontend
 
+import llambda.platform.TargetPlatform
 import llambda.{valuetype => vt}
 
 object IntrinsicTypes {
-  def apply() : Map[String, vt.IntrinsicType] = 
+  private val cellTypes = IntrinsicCellTypes().mapValues(vt.IntrinsicCellType.apply)
+
+  def apply(targetPlatform : TargetPlatform) : Map[String, vt.IntrinsicType] = 
     Map(
       ("<bool>"   -> vt.CBool),
       ("<int8>"   -> vt.Int8),
@@ -20,13 +23,12 @@ object IntrinsicTypes {
 
       ("<unicode-char>" -> vt.UnicodeChar),
 
-      // XXX: This assumes Unix-like LP64: 64bit Linux, FreeBSD, Mac OS X, etc 
-      // These aliases are here so we can do the right thing when porting to other archs
-      ("<short>"  -> vt.Int16),
-      ("<int>"    -> vt.Int32),
-      ("<long>"   -> vt.Int64),
-      ("<ushort>" -> vt.UInt16),
-      ("<uint>"   -> vt.UInt32)
-    ) ++
-    (IntrinsicCellTypes().mapValues(vt.IntrinsicCellType.apply))
+      ("<short>"   -> targetPlatform.shortType),
+      ("<int>"     -> targetPlatform.intType),
+      ("<long>"    -> targetPlatform.longType),
+      ("<ushort>"  -> targetPlatform.ushortType),
+      ("<uint>"    -> targetPlatform.uintType),
+      ("<size_t>"  -> targetPlatform.sizeType),
+      ("<wchar_t>" -> targetPlatform.wcharType)
+    ) ++ cellTypes
 }
