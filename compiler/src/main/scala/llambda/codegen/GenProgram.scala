@@ -103,6 +103,9 @@ object GenProgram {
 
     module.defineFunction(mainFunction)
 
+    // Dump our type map
+    typeGenerator.emitTypeMaps()
+
     // Convert our IR to one big string
     preludeIr + "\n" + module.toIr + "\n"
   }

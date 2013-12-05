@@ -5,6 +5,7 @@ import llambda.{celltype => ct}
 
 sealed abstract class ValueType
 sealed abstract trait IntrinsicType extends ValueType
+sealed abstract trait CellValueType
 
 sealed abstract class NativeType extends IntrinsicType
 
@@ -33,7 +34,7 @@ case object Utf8CString extends NativeType
 
 case object UnicodeChar extends IntLikeType(32, true)
 
-case class IntrinsicCellType(cellType : ct.CellType) extends IntrinsicType
+case class IntrinsicCellType(cellType : ct.CellType) extends IntrinsicType with CellValueType
 
 /** Identifies a record field
   *
@@ -47,4 +48,4 @@ class RecordField(val sourceName : String, val fieldType : ValueType)
 /** Uniquely identifies a record type even if has the same name and internal
   * structure as another type 
   */
-class RecordCellType(val sourceName : String, val fields : List[RecordField]) extends ValueType
+class RecordCellType(val sourceName : String, val fields : List[RecordField]) extends ValueType with CellValueType
