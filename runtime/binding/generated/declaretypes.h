@@ -26,7 +26,6 @@ class BytevectorCell;
 class RecordLikeCell;
 class ProcedureCell;
 class RecordCell;
-class MutableVarCell;
 typedef DatumCell* (*ProcedureEntryPoint)(void*, ListElementCell*);
 
 }

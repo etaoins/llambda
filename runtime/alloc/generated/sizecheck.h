@@ -15,7 +15,6 @@
 #include "binding/BytevectorCell.h"
 #include "binding/ProcedureCell.h"
 #include "binding/RecordCell.h"
-#include "binding/MutableVarCell.h"
 
 static_assert(sizeof(lliby::UnspecificCell) <= sizeof(lliby::alloc::Cell), "UnspecificCell does not fit in to a cell");
 static_assert(sizeof(lliby::PairCell) <= sizeof(lliby::alloc::Cell), "PairCell does not fit in to a cell");
@@ -30,4 +29,3 @@ static_assert(sizeof(lliby::VectorCell) <= sizeof(lliby::alloc::Cell), "VectorCe
 static_assert(sizeof(lliby::BytevectorCell) <= sizeof(lliby::alloc::Cell), "BytevectorCell does not fit in to a cell");
 static_assert(sizeof(lliby::ProcedureCell) <= sizeof(lliby::alloc::Cell), "ProcedureCell does not fit in to a cell");
 static_assert(sizeof(lliby::RecordCell) <= sizeof(lliby::alloc::Cell), "RecordCell does not fit in to a cell");
-static_assert(sizeof(lliby::MutableVarCell) <= sizeof(lliby::alloc::Cell), "MutableVarCell does not fit in to a cell");

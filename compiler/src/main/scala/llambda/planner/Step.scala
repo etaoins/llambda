@@ -30,19 +30,6 @@ case class Invoke(result : Option[TempValue], signature : ProcedureSignature, en
 /** Allocates a given number of cells at runtime */
 case class AllocateCells(result : TempAllocation, count : Int) extends Step with GcBarrier
 
-/** Initializes a mutable variable from an allocation 
-  *
-  * It's contents are initially undefined. It is an error to reference the
-  * variable or enter the GC without setting the variable with MutableVarSet
-  */
-case class MutableVarInit(result : TempValue, allocation : TempAllocation, allocIndex : Int) extends Step
-
-/** Sets a mutable variable to the passed DatumCell value */
-case class MutableVarSet(mutable : TempValue, newValue : TempValue) extends Step
-
-/** Returns the contents of a mutable variable as a DatumCell */
-case class MutableVarRef(result : TempValue, mutable : TempValue) extends Step
-
 /** Conditionally branches based on a value 
   *
   * @param result      location to store trueValue or falseValue when the branch

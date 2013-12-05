@@ -73,7 +73,3 @@
 ; {supertype}
 %record = type {%recordLike}
 !17 = metadata !{metadata !"record", metadata !15}
-
-; {supertype, currentValue}
-%mutableVar = type {%datum, %datum*}
-!18 = metadata !{metadata !"mutableVar", metadata !0}

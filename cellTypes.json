@@ -203,17 +203,5 @@
         "internal": true,
         "inherits": "recordLike",
         "fields": []
-    },
-    {
-        "name": "mutableVar",
-        "typeId": 13,
-        "internal": true,
-        "inherits": "datum",
-        "fields": [
-            {
-                "name": "currentValue",
-                "llvmType": "%datum*"
-            }
-        ]
     }
 ]

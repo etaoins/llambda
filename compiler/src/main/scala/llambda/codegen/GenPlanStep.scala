@@ -11,25 +11,6 @@ object GenPlanStep {
       val (allocState, allocation) = GenCellAllocation(state)(count)
       allocState.withAllocation(tempAlloc -> allocation)
 
-    case ps.MutableVarInit(resultTemp, tempAlloc, allocIndex) =>
-      val allocation = state.liveAllocations(tempAlloc) 
-
-      // Grab the variable from the cell allocation
-      val mutableCons = allocation.genTypedPointer(state.currentBlock)(allocIndex, ct.MutableVarCell) 
-
-      // Add it to our state
-      state.withTempValue(resultTemp -> mutableCons)
-    
-    case ps.MutableVarSet(mutableTemp, newValueTemp) =>
-      // Find our MutableVar's IrValue
-      val mutableIr = state.liveTemps(mutableTemp)
-      val newValueIr = state.liveTemps(newValueTemp)
-
-      // Store to the mutable variable
-      ct.MutableVarCell.genStoreToCurrentValue(state.currentBlock)(newValueIr, mutableIr)
-
-      state
-
     case storeConstantStep : ps.StoreConstant =>
       val irResult = GenConstant(state)(storeConstantStep)
 
@@ -47,15 +28,6 @@ object GenPlanStep {
 
       state.withTempValue(boxValueStep.result -> irResult)
 
-    case ps.MutableVarRef(resultTemp, mutableTemp) =>
-      // Mutable variable. This is unfortunate
-      val mutableIr = state.liveTemps(mutableTemp)
-
-      val block = state.currentBlock
-      val currentDatum = ct.MutableVarCell.genLoadFromCurrentValue(block)(mutableIr)
-
-      state.withTempValue(resultTemp -> currentDatum)
-    
     case ps.StoreNamedEntryPoint(resultTemp, signature, nativeSymbol) =>
       val irValue = GenNamedEntryPoint(state.module)(signature, nativeSymbol, plannedSymbols)
 

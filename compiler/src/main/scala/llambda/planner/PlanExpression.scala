@@ -80,8 +80,13 @@ private[planner] object PlanExpression {
             val initialValueTemp = initialValueResult.value.toRequiredTempValue(vt.IntrinsicCellType(ct.DatumCell))
 
             plan.steps += ps.AllocateCells(allocTemp, 1)
-            plan.steps += ps.MutableVarInit(mutableTemp, allocTemp, 0)
-            plan.steps += ps.MutableVarSet(mutableTemp, initialValueTemp)
+
+            // Create a new mutable
+            val recordDataTemp = new ps.TempValue
+            plan.steps += ps.RecordInit(mutableTemp, recordDataTemp, allocTemp, 0, vt.MutableCellType)
+
+            // Set the value
+            plan.steps += ps.RecordFieldSet(recordDataTemp, vt.MutableCellType, vt.MutableField, initialValueTemp)
             
             initialValueResult.state.withMutable(storageLoc -> mutableTemp)
           }
@@ -120,9 +125,14 @@ private[planner] object PlanExpression {
       
       case et.VarRef(storageLoc) =>
         val mutableTemp = initialState.mutables(storageLoc)
+        
+        // Load our data pointer
+        val recordDataTemp = new ps.TempValue
+        plan.steps += ps.StoreRecordCellData(recordDataTemp, mutableTemp, vt.MutableCellType)
+        
+        // Load the data
         val resultTemp = new ps.TempValue
-
-        plan.steps += ps.MutableVarRef(resultTemp, mutableTemp)
+        plan.steps += ps.RecordFieldRef(resultTemp, recordDataTemp, vt.MutableCellType, vt.MutableField)
         
         // We can be anything here
         val possibleTypes = ct.DatumCell.concreteTypes
@@ -138,7 +148,13 @@ private[planner] object PlanExpression {
         val newValueResult = apply(initialState)(valueExpr)
         val newValueTemp = newValueResult.value.toRequiredTempValue(vt.IntrinsicCellType(ct.DatumCell))
 
-        plan.steps += ps.MutableVarSet(mutableTemp, newValueTemp)
+        // Load our data pointer
+        val recordDataTemp = new ps.TempValue
+        plan.steps += ps.StoreRecordCellData(recordDataTemp, mutableTemp, vt.MutableCellType)
+        
+        // Store the data
+        val resultTemp = new ps.TempValue
+        plan.steps += ps.RecordFieldSet(recordDataTemp, vt.MutableCellType, vt.MutableField, newValueTemp)
 
         PlanResult(
           state=newValueResult.state,

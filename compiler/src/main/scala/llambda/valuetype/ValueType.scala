@@ -42,7 +42,7 @@ case class IntrinsicCellType(cellType : ct.CellType) extends IntrinsicType
   * for one type to have fields with the same source name if they come from
   * different scopes.
   */
-final class RecordField(val sourceName : String, val fieldType : ValueType)
+class RecordField(val sourceName : String, val fieldType : ValueType)
 
 /** Uniquely identifies a record type even if has the same name and internal
   * structure as another type 

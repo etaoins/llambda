@@ -63,7 +63,7 @@ object DatumCell extends CellType {
   val name = "datum"
   val irType = UserDefinedType("datum")
   val supertype = None
-  val directSubtypes = Set[CellType](UnspecificCell, ListElementCell, StringLikeCell, BooleanCell, NumericCell, CharacterCell, VectorCell, BytevectorCell, RecordLikeCell, MutableVarCell)
+  val directSubtypes = Set[CellType](UnspecificCell, ListElementCell, StringLikeCell, BooleanCell, NumericCell, CharacterCell, VectorCell, BytevectorCell, RecordLikeCell)
   val isAbstract = true
   val tbaaIndex = 0
 
@@ -2023,108 +2023,6 @@ object RecordCell extends ConcreteCellType {
   def genLoadFromRecordData(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
     val recordDataPointer = genPointerToRecordData(block)(valueCell)
     block.load("recordData")(recordDataPointer, tbaaIndex=Some(tbaaIndex))
-  }
-}
-
-object MutableVarCell extends ConcreteCellType {
-  val name = "mutableVar"
-  val irType = UserDefinedType("mutableVar")
-  val supertype = Some(DatumCell)
-  val directSubtypes = Set[CellType]()
-  val isAbstract = false
-  val tbaaIndex = 18
-  val typeId = 13
-
-  val typeIdIrType = IntegerType(8)
-  val gcStateIrType = IntegerType(8)
-  val currentValueIrType = PointerType(UserDefinedType("datum"))
-
-  def createConstant(currentValue : IrConstant) : StructureConstant = {
-    if (currentValue.irType != currentValueIrType) {
-      throw new InternalCompilerErrorException("Unexpected type for field currentValue")
-    }
-
-    StructureConstant(List(
-      supertype.get.createConstant(
-        typeId=typeId
-      ),
-      currentValue
-    ), userDefinedType=Some(irType))
-  }
-
-  def genTypeCheck(startBlock : IrBlockBuilder)(valueCell : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
-    val datumValue = DatumCell.genPointerBitcast(startBlock)(valueCell)
-    val typeId = DatumCell.genLoadFromTypeId(startBlock)(datumValue)
-    startBlock.switch(typeId, failBlock, (13L -> successBlock))
-  }
-
-  def genPointerToTypeId(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
-    if (valueCell.irType != PointerType(UserDefinedType("mutableVar"))) {
-       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected %mutableVar*")
-    }
-
-    block.getelementptr("typeIdPtr")(
-      elementType=typeIdIrType,
-      basePointer=valueCell,
-      indices=List(0, 0, 0).map(IntegerConstant(IntegerType(32), _)),
-      inbounds=true
-    )
-  }
-
-  def genStoreToTypeId(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue) : Unit = {
-    val typeIdPointer = genPointerToTypeId(block)(valueCell)
-    block.store(toStore, typeIdPointer, tbaaIndex=Some(tbaaIndex))
-  }
-
-  def genLoadFromTypeId(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
-    val typeIdPointer = genPointerToTypeId(block)(valueCell)
-    block.load("typeId")(typeIdPointer, tbaaIndex=Some(tbaaIndex))
-  }
-
-  def genPointerToGcState(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
-    if (valueCell.irType != PointerType(UserDefinedType("mutableVar"))) {
-       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected %mutableVar*")
-    }
-
-    block.getelementptr("gcStatePtr")(
-      elementType=gcStateIrType,
-      basePointer=valueCell,
-      indices=List(0, 0, 1).map(IntegerConstant(IntegerType(32), _)),
-      inbounds=true
-    )
-  }
-
-  def genStoreToGcState(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue) : Unit = {
-    val gcStatePointer = genPointerToGcState(block)(valueCell)
-    block.store(toStore, gcStatePointer, tbaaIndex=Some(tbaaIndex))
-  }
-
-  def genLoadFromGcState(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
-    val gcStatePointer = genPointerToGcState(block)(valueCell)
-    block.load("gcState")(gcStatePointer, tbaaIndex=Some(tbaaIndex))
-  }
-
-  def genPointerToCurrentValue(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
-    if (valueCell.irType != PointerType(UserDefinedType("mutableVar"))) {
-       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected %mutableVar*")
-    }
-
-    block.getelementptr("currentValuePtr")(
-      elementType=currentValueIrType,
-      basePointer=valueCell,
-      indices=List(0, 1).map(IntegerConstant(IntegerType(32), _)),
-      inbounds=true
-    )
-  }
-
-  def genStoreToCurrentValue(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue) : Unit = {
-    val currentValuePointer = genPointerToCurrentValue(block)(valueCell)
-    block.store(toStore, currentValuePointer, tbaaIndex=Some(tbaaIndex))
-  }
-
-  def genLoadFromCurrentValue(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
-    val currentValuePointer = genPointerToCurrentValue(block)(valueCell)
-    block.load("currentValue")(currentValuePointer, tbaaIndex=Some(tbaaIndex))
   }
 }
 
