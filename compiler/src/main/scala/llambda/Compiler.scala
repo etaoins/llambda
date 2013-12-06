@@ -66,7 +66,7 @@ object Compiler {
     val functions = planner.PlanProgram(optimizedExpressions)(planConfig)
 
     // Generate the LLVM IR
-    val llvmIr = codegen.GenProgram(functions)
+    val llvmIr = codegen.GenProgram(functions, config.targetPlatform)
 
     if (config.emitLlvm) {
       // Write the IR directly to disk

@@ -2,11 +2,10 @@ package llambda.codegen
 
 import llambda.codegen.llvmir._
 import llambda.{valuetype => vt}
-import RecordCellTypeImplicits._
 
 object GenRecordFieldSet {
   def apply(block : IrBlockBuilder)(recordDataIr : IrValue, generatedType : GeneratedType, recordField : vt.RecordField, newValueIr : IrValue) {
-    val fieldIndex = generatedType.recordType.indexOfField(recordField)
+    val fieldIndex = generatedType.fieldToStructIndex(recordField)
     val fieldIrType = ValueTypeToIr(recordField.fieldType).irType
     
     // Find the TBAA index

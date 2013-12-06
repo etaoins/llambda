@@ -2,6 +2,7 @@ package llambda.codegen
 
 import llambda.{valuetype => vt}
 import llambda.codegen.llvmir._
+import llambda.platform.TargetPlatform
 import llambda.InternalCompilerErrorException
 
 object TypeDataStorage extends Enumeration {
@@ -13,19 +14,43 @@ case class GeneratedType(
   recordType : vt.RecordCellType,
   irType : UserDefinedType,
   classId : Long,
+  fieldToStructIndex : Map[vt.RecordField, Int],
   fieldToTbaaIndex : Map[vt.RecordField, Long],
   storageType : TypeDataStorage.Value
 )
 
-class TypeGenerator(module : IrModuleBuilder, var nextTbaaIndex : Long) {
+class TypeGenerator(module : IrModuleBuilder, targetPlatform : TargetPlatform, var nextTbaaIndex : Long) {
   private val generatedTypes = collection.mutable.Map[vt.RecordCellType, GeneratedType]()
   private var nextClassId : Long = 0
 
   def apply(recordType : vt.RecordCellType) : GeneratedType = {
     generatedTypes.getOrElseUpdate(recordType, {
+      // Determine our storage type and layout
+      val (storageType, fieldOrder) = if (recordType.fields.isEmpty) {
+        (TypeDataStorage.Empty, Nil)
+      }
+      else {
+        // Records have two pointer sized fields for inline data storage
+        val inlineDataSize = (targetPlatform.pointerBits * 2) / 8
+
+        // Try to pack the record fields
+        val packedRecord = PackRecordInline(recordType.fields, inlineDataSize, targetPlatform)
+
+        // Check if we can inline
+        val storage = if (packedRecord.inline) {
+          TypeDataStorage.Inline
+        }
+        else {
+          TypeDataStorage.OutOfLine
+        }
+
+        (storage, packedRecord.fieldOrder)
+      }
+
+      // Define the type
       val recordTypeName = module.nameSource.allocate(recordType.sourceName)
 
-      val irType = StructureType(recordType.fields.map { field =>
+      val irType = StructureType(fieldOrder.map { field =>
         ValueTypeToIr(field.fieldType).irType
       })
 
@@ -46,22 +71,6 @@ class TypeGenerator(module : IrModuleBuilder, var nextTbaaIndex : Long) {
         (field, tbaaIndex)
       }).toMap
 
-      val storageType = recordType.fields match {
-        case Nil =>
-          // No data to store
-          TypeDataStorage.Empty
-
-        case singleField :: Nil =>
-          // If there's only a single field we can inline the data
-          // XXX: This is broken on 32bit because we're inlining over a pointer
-          // and Int64 and Double are larger than 32bits. The alignment could also
-          // be incorrect on 32bit.
-          TypeDataStorage.Inline
-
-        case _ =>
-          TypeDataStorage.OutOfLine
-      }
-
       // Allocate it a class ID
       val classId = nextClassId
       nextClassId = nextClassId + 1
@@ -70,6 +79,7 @@ class TypeGenerator(module : IrModuleBuilder, var nextTbaaIndex : Long) {
         recordType=recordType,
         irType=userDefinedType,
         classId=classId,
+        fieldToStructIndex=fieldOrder.zipWithIndex.toMap,
         fieldToTbaaIndex=fieldToTbaaIndex,
         storageType=storageType)
     })

@@ -83,17 +83,19 @@
 	
 	(set-mutable-value-field! (mutable-value 50) #t)))
 
-(define-test "constructing record type with multiple fields" (expect (20 40)
+(define-test "constructing record type with multiple fields" (expect (20 40 50.0)
 	(import (llambda nfi))
 
-	(define-record-type <two-value> (two-value field1 field2) two-value?
-		((field1 : <int64>) two-value-field1)
-		(field2 two-value-field2 set-two-value-field2!))
+	; Use at least three 64bit fields to force out-of-line storage
+	(define-record-type <three-value> (three-value field1 field2 field3) three-value?
+		((field1 : <int64>) three-value-field1)
+		(field2 three-value-field2 set-three-value-field2!)
+		((field3 : <double>) three-value-field3 set-three-value-field3!))
 	
-	(define instance (two-value 20 30))
-	(set-two-value-field2! instance 40)
+	(define instance (three-value 20 30 50))
+	(set-three-value-field2! instance 40)
 
-	(list (two-value-field1 instance) (two-value-field2 instance))))
+	(list (three-value-field1 instance) (three-value-field2 instance) (three-value-field3 instance))))
 
 (define-test "constructors, accessors and mutators be boxed and invoked" (expect (20 40)
 	(import (llambda nfi))
@@ -107,6 +109,17 @@
 	((typeless-cell set-two-value-field2!) instance 40)
 
 	(list ((typeless-cell two-value-field1) instance) ((typeless-cell two-value-field2) instance))))
+
+; On 64bit we'll reorder these fields to fit inside the record's cell
+(define-test "possibly repacked record type" (expect (1 2 3.0)
+	(define-record-type <single-value> (single-value field1 field2 field3) single-value?
+		((field1 : <int32>) single-value-field1)
+		((field2 : <int64>) single-value-field2)
+		((field3 : <float>) single-value-field3))
+
+	(define instance (single-value 1 2 3.0))
+
+	(list (single-value-field1 instance) (single-value-field2 instance) (single-value-field3 instance))))
 
 (define-test "nested record types" (expect it-actually-worked
 	(define-record-type <inner-type> (inner-type field) inner-type?
