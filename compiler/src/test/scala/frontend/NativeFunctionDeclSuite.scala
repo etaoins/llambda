@@ -8,12 +8,7 @@ import llambda.{valuetype => vt}
 
 class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   implicit val nfiScope = {
-    implicit val includePath = IncludePath()
-    val libraryLoader = new LibraryLoader(platform.Posix64)
-
-    val exports = libraryLoader.load(List(StringComponent("llambda"), StringComponent("nfi")))
-
-    new Scope(collection.mutable.Map(exports.toSeq : _*))
+    new Scope(testutil.NfiExports())
   }
   
   test("void native function") {

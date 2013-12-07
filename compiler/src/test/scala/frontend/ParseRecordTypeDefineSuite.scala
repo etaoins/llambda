@@ -8,12 +8,7 @@ import llambda._
 class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelpers with Inside {
   // We need NFI for types and SchemePrimitives for (define-record-type)
   val baseScope = {
-    implicit val includePath = IncludePath()
-    val libraryLoader = new LibraryLoader(platform.Posix64)
-
-    val nfiExports = libraryLoader.load(List(StringComponent("llambda"), StringComponent("nfi")))
-    val allBindings = nfiExports ++ SchemePrimitives.bindings
-
+    val allBindings = testutil.NfiExports() ++ SchemePrimitives.bindings
     new Scope(collection.mutable.Map(allBindings.toSeq : _*))
   }
 
