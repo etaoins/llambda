@@ -1,4 +1,4 @@
 (define-library (pathedsingleexpr)
-	(import (llambda primitives))
+	(import (llambda internal primitives))
 	(begin 
 	  (define a 1)))

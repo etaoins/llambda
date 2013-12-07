@@ -1,7 +1,6 @@
 (define-library (scheme base)
-	(import (llambda primitives))
+	(import (rename (llambda internal primitives) (define-report-procedure define-r7rs)))
 	(import (llambda nfi))
-	(import (rename (llambda internal) (define-report-procedure define-r7rs)))
 
 	; Export (lambda primitives) that occur in (scheme base)
 	; These are virtual definitions provided by the compiler

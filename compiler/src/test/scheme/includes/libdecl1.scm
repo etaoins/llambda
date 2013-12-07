@@ -1,1 +1,1 @@
-(import (llambda primitives))
+(import (llambda internal primitives))

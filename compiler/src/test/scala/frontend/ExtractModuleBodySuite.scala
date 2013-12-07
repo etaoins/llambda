@@ -4,7 +4,7 @@ import org.scalatest.{FunSuite,Inside,OptionValues}
 import llambda._
 
 class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with testutil.ExpressionHelpers {
-  implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(SchemePrimitives.bindings.toSeq : _*))
+  implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(PrimitiveExpressions.bindings.toSeq : _*))
   
   val plusLoc = new StorageLocation("+")
   val plusScope = new Scope(collection.mutable.Map("+" -> plusLoc), Some(primitiveScope))
@@ -387,11 +387,10 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   }
 
   test("define report procedure") {
-    val allBindings = InternalPrimitives.bindings ++ SchemePrimitives.bindings
-    val internalScope = new Scope(collection.mutable.Map(allBindings.toSeq : _*))
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 
-    val expr = expressionFor("(define-report-procedure list (lambda () #f))")(internalScope)
-    val listBinding = internalScope.get("list").value
+    val expr = expressionFor("(define-report-procedure list (lambda () #f))")(scope)
+    val listBinding = scope.get("list").value
 
     inside(listBinding) {
       case rp : ReportProcedure =>

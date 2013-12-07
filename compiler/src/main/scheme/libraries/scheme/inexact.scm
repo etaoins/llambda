@@ -1,7 +1,7 @@
 (define-library (scheme inexact)
 	(import (llambda nfi))
 	(import (scheme base))
-	(import (rename (llambda internal) (define-report-procedure define-r7rs)))
+	(import (rename (llambda internal primitives) (define-report-procedure define-r7rs)))
 
 	(export cos sin tan)
 	(begin

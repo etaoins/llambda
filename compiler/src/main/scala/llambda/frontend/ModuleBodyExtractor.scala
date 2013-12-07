@@ -163,22 +163,22 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, includePath : IncludePa
 
   private def extractSymbolApplication(boundValue : BoundValue, appliedSymbol : sst.ScopedSymbol, operands : List[sst.ScopedDatum]) : et.Expression = {
     (boundValue, operands) match {
-      case (SchemePrimitives.Quote, innerDatum :: Nil) =>
+      case (PrimitiveExpressions.Quote, innerDatum :: Nil) =>
         et.Literal(innerDatum.unscope)
 
-      case (SchemePrimitives.If, test :: trueExpr :: falseExpr :: Nil) =>
+      case (PrimitiveExpressions.If, test :: trueExpr :: falseExpr :: Nil) =>
         et.Cond(
           extractExpression(test), 
           extractExpression(trueExpr), 
           extractExpression(falseExpr))
       
-      case (SchemePrimitives.If, test :: trueExpr :: Nil) =>
+      case (PrimitiveExpressions.If, test :: trueExpr :: Nil) =>
         et.Cond(
           extractExpression(test), 
           extractExpression(trueExpr), 
           et.Literal(ast.UnspecificValue()))
 
-      case (SchemePrimitives.Set, (mutatingSymbol : sst.ScopedSymbol) :: value :: Nil) =>
+      case (PrimitiveExpressions.Set, (mutatingSymbol : sst.ScopedSymbol) :: value :: Nil) =>
         mutatingSymbol.resolve match {
           case storageLoc : StorageLocation =>
             et.MutateVar(storageLoc, extractExpression(value))
@@ -186,36 +186,36 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, includePath : IncludePa
             throw new BadSpecialFormException(mutatingSymbol, s"Attempted (set!) non-variable ${mutatingSymbol.name}") 
         }
 
-      case (SchemePrimitives.Lambda, (restArgDatum : sst.ScopedSymbol) :: definition) =>
+      case (PrimitiveExpressions.Lambda, (restArgDatum : sst.ScopedSymbol) :: definition) =>
         createLambda(List(), Some(restArgDatum), definition)
 
-      case (SchemePrimitives.Lambda, sst.ScopedProperList(fixedArgData) :: definition) =>
+      case (PrimitiveExpressions.Lambda, sst.ScopedProperList(fixedArgData) :: definition) =>
         createLambda(fixedArgData, None, definition)
 
-      case (SchemePrimitives.Lambda, sst.ScopedImproperList(fixedArgData, (restArgDatum : sst.ScopedSymbol)) :: definition) =>
+      case (PrimitiveExpressions.Lambda, sst.ScopedImproperList(fixedArgData, (restArgDatum : sst.ScopedSymbol)) :: definition) =>
         createLambda(fixedArgData, Some(restArgDatum), definition)
 
-      case (SchemePrimitives.SyntaxError, (errorDatum @ sst.NonSymbolLeaf(ast.StringLiteral(errorString))) :: data) =>
+      case (PrimitiveExpressions.SyntaxError, (errorDatum @ sst.NonSymbolLeaf(ast.StringLiteral(errorString))) :: data) =>
         throw new UserDefinedSyntaxError(errorDatum, errorString, data.map(_.unscope))
 
-      case (SchemePrimitives.Include, includeNames) =>
+      case (PrimitiveExpressions.Include, includeNames) =>
         // We need the scope from the (include) to rescope the included file
         val scope = appliedSymbol.scope
         extractInclude(scope, includeNames, appliedSymbol)
 
-      case (NativeFunctionPrimitives.NativeFunction, _) =>
+      case (PrimitiveExpressions.NativeFunction, _) =>
         ExtractNativeFunction(operands, appliedSymbol)
 
-      case (SchemePrimitives.Quasiquote, sst.ScopedProperList(listData) :: Nil) => 
+      case (PrimitiveExpressions.Quasiquote, sst.ScopedProperList(listData) :: Nil) => 
         (new ListQuasiquotationExpander(extractExpression, libraryLoader))(listData)
       
-      case (SchemePrimitives.Quasiquote, sst.ScopedVectorLiteral(elements) :: Nil) => 
+      case (PrimitiveExpressions.Quasiquote, sst.ScopedVectorLiteral(elements) :: Nil) => 
         (new VectorQuasiquotationExpander(extractExpression, libraryLoader))(elements.toList)
       
-      case (SchemePrimitives.Unquote, _) =>
+      case (PrimitiveExpressions.Unquote, _) =>
         throw new BadSpecialFormException(appliedSymbol, "Attempted (unquote) outside of quasiquotation") 
       
-      case (SchemePrimitives.UnquoteSplicing, _) =>
+      case (PrimitiveExpressions.UnquoteSplicing, _) =>
         throw new BadSpecialFormException(appliedSymbol, "Attempted (unquote-splicing) outside of quasiquotation") 
 
       case (storagLoc : StorageLocation, operands) =>
@@ -240,31 +240,31 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, includePath : IncludePa
 
   private def parseDefine(boundValue : BoundValue, appliedSymbol : sst.ScopedSymbol, operands : List[sst.ScopedDatum]) : Option[ParsedDefine] =
     (boundValue, operands) match {
-      case (SchemePrimitives.Define, (symbol : sst.ScopedSymbol) :: value :: Nil) =>
+      case (PrimitiveExpressions.Define, (symbol : sst.ScopedSymbol) :: value :: Nil) =>
         Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name), () => {
           extractExpression(value)
         }))
 
-      case (SchemePrimitives.Define, sst.ScopedProperList((symbol : sst.ScopedSymbol) :: fixedArgs) :: body) =>
+      case (PrimitiveExpressions.Define, sst.ScopedProperList((symbol : sst.ScopedSymbol) :: fixedArgs) :: body) =>
         Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name), () => {
           createLambda(fixedArgs, None, body)
         }))
       
-      case (SchemePrimitives.Define, sst.ScopedImproperList((symbol : sst.ScopedSymbol) :: fixedArgs, (restArgDatum : sst.ScopedSymbol)) :: body) =>
+      case (PrimitiveExpressions.Define, sst.ScopedImproperList((symbol : sst.ScopedSymbol) :: fixedArgs, (restArgDatum : sst.ScopedSymbol)) :: body) =>
         Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name), () => {
           createLambda(fixedArgs, Some(restArgDatum), body)
         }))
 
-      case (SchemePrimitives.DefineSyntax, _) =>
+      case (PrimitiveExpressions.DefineSyntax, _) =>
         Some(ParseSyntaxDefine(appliedSymbol, operands))
       
-      case (SchemePrimitives.DefineRecordType, _) =>
+      case (PrimitiveExpressions.DefineRecordType, _) =>
         Some(ParseRecordTypeDefine(appliedSymbol, operands))
 
-      case (SchemePrimitives.DefineType, (typeAlias : sst.ScopedSymbol) :: existingTypeDatum :: Nil) =>
+      case (PrimitiveExpressions.DefineType, (typeAlias : sst.ScopedSymbol) :: existingTypeDatum :: Nil) =>
         Some(ParsedSimpleDefine(typeAlias, BoundType(DatumToValueType(existingTypeDatum)))) 
 
-      case (InternalPrimitives.DefineReportProcedure, _) =>
+      case (PrimitiveExpressions.DefineReportProcedure, _) =>
         operands match {
           case (symbol : sst.ScopedSymbol) :: definitionData :: Nil =>
             Some(ParsedVarDefine(symbol, new ReportProcedure(symbol.name), () => {

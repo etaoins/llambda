@@ -1,5 +1,5 @@
 (define-library (llambda typed)
-	(import (llambda primitives))
+	(import (llambda internal primitives))
 	(import (llambda nfi))
 	
 	; Re-export (define-type) from (llambda primitives) 

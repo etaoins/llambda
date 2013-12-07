@@ -4,7 +4,7 @@ import org.scalatest.{FunSuite,Inside,OptionValues}
 import llambda._
 
 class MacroSuite extends FunSuite with Inside with OptionValues with testutil.ExpressionHelpers {
-  implicit val primitiveScope = new Scope(collection.mutable.Map(SchemePrimitives.bindings.toSeq : _*))
+  implicit val primitiveScope = new Scope(collection.mutable.Map(PrimitiveExpressions.bindings.toSeq : _*))
   
   val plusLoc = new StorageLocation("+")
   val plusScope = new Scope(collection.mutable.Map("+" -> plusLoc), Some(primitiveScope))

@@ -34,15 +34,15 @@ class ExtractLibrarySuite extends FunSuite with Inside {
   test("exporting imported symbol") {
     assert(libraryFor(
       """(define-library (example lib)
-           (import (llambda primitives))
+           (import (llambda internal primitives))
            (export set! lambda))"""
-      ) === Library(exampleName, Map("set!" -> SchemePrimitives.Set, "lambda" -> SchemePrimitives.Lambda), Nil)) 
+      ) === Library(exampleName, Map("set!" -> PrimitiveExpressions.Set, "lambda" -> PrimitiveExpressions.Lambda), Nil)) 
   }
   
   test("exporting internal symbol") {
     inside(libraryFor(
       """(define-library (example lib)
-           (import (llambda primitives))
+           (import (llambda internal primitives))
            (export number5)
            (begin 
              (define number5 5)))"""
@@ -66,15 +66,15 @@ class ExtractLibrarySuite extends FunSuite with Inside {
   test("renaming exports") {
     assert(libraryFor(
       """(define-library (example lib)
-           (import (llambda primitives))
+           (import (llambda internal primitives))
            (export set! (rename lambda new-lambda)))"""
-      ) === Library(exampleName, Map("set!" -> SchemePrimitives.Set, "new-lambda" -> SchemePrimitives.Lambda), Nil)) 
+      ) === Library(exampleName, Map("set!" -> PrimitiveExpressions.Set, "new-lambda" -> PrimitiveExpressions.Lambda), Nil)) 
   }
 
   test("single body include") {
     inside(libraryFor(
         """(define-library (example lib)
-             (import (llambda primitives))
+             (import (llambda internal primitives))
              (include "includes/include1.scm"))"""
     )) {
        case Library(_, bindings, exprs) =>
@@ -90,7 +90,7 @@ class ExtractLibrarySuite extends FunSuite with Inside {
   test("multiple body include") {
     inside(libraryFor(
         """(define-library (example lib)
-             (import (llambda primitives))
+             (import (llambda internal primitives))
              (include "includes/include1.scm" "includes/include2.scm"))"""
     )) {
        case Library(_, bindings, exprs) =>
@@ -108,7 +108,7 @@ class ExtractLibrarySuite extends FunSuite with Inside {
   test("body include with relative includes and scope") {
     inside(libraryFor(
         """(define-library (example lib)
-             (import (llambda primitives))
+             (import (llambda internal primitives))
              (export a b)
              (include "includes/definea.scm"))"""
     )) {

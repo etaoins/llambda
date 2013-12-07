@@ -16,8 +16,8 @@ class ReportProcedure(val reportName : String) extends StorageLocation(reportNam
   override def toString = "&" + reportName
 }
 
-// These are the primitive expression types in R7RS
-sealed abstract class PrimitiveExpression extends BoundValue
+// These are primitive expressions treated specially by the frontend
+abstract class PrimitiveExpression extends BoundValue
 
 // These are what (define-syntax) creates
 case class SyntaxRule(pattern : List[sst.ScopedDatum], template : sst.ScopedDatum)
@@ -67,57 +67,3 @@ final class ImmutableScope(binding : collection.mutable.Map[String, BoundValue],
   }
 }
 
-/** Bindings for the primitive expressions defined in (scheme base) */
-object SchemePrimitives {
-  object Lambda extends PrimitiveExpression
-  object Quote extends PrimitiveExpression
-  object If extends PrimitiveExpression
-  object Set extends PrimitiveExpression
-  object SyntaxError extends PrimitiveExpression
-  object Include extends PrimitiveExpression
-  object Quasiquote extends PrimitiveExpression
-  object Unquote extends PrimitiveExpression
-  object UnquoteSplicing extends PrimitiveExpression
-  object Define extends PrimitiveExpression
-  object DefineSyntax extends PrimitiveExpression
-  object DefineRecordType extends PrimitiveExpression
-  object DefineType extends PrimitiveExpression
-
-  val bindings = {
-    Map[String, BoundValue](
-      "lambda" -> Lambda,
-      "quote" -> Quote,
-      "if" -> If,
-      "set!" -> Set,
-      "syntax-error" -> SyntaxError,
-      "include" -> Include,
-      "quasiquote" -> Quasiquote,
-      "unquote" -> Unquote,
-      "unquote-splicing" -> UnquoteSplicing,
-      "define" -> Define,
-      "define-syntax" -> DefineSyntax,
-      "define-record-type" -> DefineRecordType,
-      "define-type" -> DefineType
-    )
-  }
-}
-
-object NativeFunctionPrimitives {
-  object NativeFunction extends PrimitiveExpression
-
-  lazy val bindings = {
-    Map[String, BoundValue](
-      "native-function" -> NativeFunction
-    )
-  }
-}
-
-object InternalPrimitives {
-  object DefineReportProcedure extends PrimitiveExpression
-
-  val bindings = {
-    Map[String, BoundValue](
-      "define-report-procedure" -> DefineReportProcedure
-    )
-  }
-}

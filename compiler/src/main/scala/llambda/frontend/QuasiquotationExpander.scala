@@ -71,7 +71,7 @@ abstract class QuasiquotationExpander(extractExpression : sst.ScopedDatum => et.
   
       head match {
         case sst.ScopedProperList((unquote : sst.ScopedSymbol) :: unquotedDatum :: Nil)
-            if unquote.resolveOpt == Some(SchemePrimitives.Unquote) =>
+            if unquote.resolveOpt == Some(PrimitiveExpressions.Unquote) =>
 
           val appendingExpr = extractExpression(unquotedDatum)
 
@@ -90,7 +90,7 @@ abstract class QuasiquotationExpander(extractExpression : sst.ScopedDatum => et.
           }
           
         case sst.ScopedProperList((unquoteSplicing : sst.ScopedSymbol) :: unquotedDatum :: Nil)
-            if unquoteSplicing.resolveOpt == Some(SchemePrimitives.UnquoteSplicing) =>
+            if unquoteSplicing.resolveOpt == Some(PrimitiveExpressions.UnquoteSplicing) =>
           // This is always a new segement
           SplicedSegment(extractExpression(unquotedDatum)) :: restSegments
 

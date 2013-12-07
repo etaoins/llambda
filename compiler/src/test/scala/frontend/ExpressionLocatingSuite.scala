@@ -6,7 +6,7 @@ import scala.util.parsing.input.NoPosition
 import llambda._
 
 class ExpressionLocatingSuite extends FunSuite with testutil.ExpressionHelpers {
-  val primitiveScope = new ImmutableScope(collection.mutable.Map(SchemePrimitives.bindings.toSeq : _*))
+  val primitiveScope = new ImmutableScope(collection.mutable.Map(PrimitiveExpressions.bindings.toSeq : _*))
   
   val plusLoc = new StorageLocation("+")
   implicit val plusScope = new Scope(collection.mutable.Map("+" -> plusLoc), Some(primitiveScope))

@@ -1,7 +1,7 @@
 (define-library (scheme write)
 	(import (llambda nfi))
 	(import (scheme base))
-	(import (rename (llambda internal) (define-report-procedure define-r7rs)))
+	(import (rename (llambda internal primitives) (define-report-procedure define-r7rs)))
 	
 	(export write)
 	(begin

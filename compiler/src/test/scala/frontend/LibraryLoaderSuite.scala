@@ -35,7 +35,7 @@ class LibraryLoaderSuite extends FunSuite {
 
   test("load llambda primitives") {
     val loader = new LibraryLoader(platform.Posix64)
-    val bindings = loader.load(StringComponent("llambda") :: StringComponent("primitives") :: Nil)
+    val bindings = loader.load(List("llambda", "internal", "primitives").map(StringComponent(_)))
 
     assert(bindings.contains("set!"))
   }
@@ -45,13 +45,6 @@ class LibraryLoaderSuite extends FunSuite {
     val bindings = loader.load(StringComponent("llambda") :: StringComponent("nfi") :: Nil)
 
     assert(bindings.contains("native-function"))
-  }
-
-  test("load llambda internal") {
-    val loader = new LibraryLoader(platform.Posix64)
-    val bindings = loader.load(StringComponent("llambda") :: StringComponent("internal") :: Nil)
-
-    assert(bindings.contains("define-report-procedure"))
   }
 
   test("unmatched library name") {

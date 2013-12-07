@@ -35,16 +35,13 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
 
   def load(libraryName : Seq[LibraryNameComponent], loadLocation : SourceLocated = NoSourceLocation)(implicit includePath : IncludePath) : Map[String, BoundValue] = {
     libraryName match {
-      case StringComponent("llambda") :: StringComponent("primitives") :: Nil =>
-        SchemePrimitives.bindings
+      case StringComponent("llambda") :: StringComponent("internal") :: StringComponent("primitives") :: Nil =>
+        PrimitiveExpressions.bindings
       
       case StringComponent("llambda") :: StringComponent("nfi") :: Nil =>
         // Our NFI types depend on our target platform
-        NativeFunctionPrimitives.bindings ++
-          IntrinsicTypes(targetPlatform).mapValues(BoundType.apply)
-
-      case StringComponent("llambda") :: StringComponent("internal") :: Nil =>
-        InternalPrimitives.bindings
+        IntrinsicTypes(targetPlatform).mapValues(BoundType.apply) +
+          ("native-function" -> PrimitiveExpressions.NativeFunction)
 
       case fileComponents =>
         val filename = (libraryName map {

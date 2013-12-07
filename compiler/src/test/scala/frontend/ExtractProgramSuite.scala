@@ -17,7 +17,7 @@ class ExtractProgramSuite extends FunSuite with Inside {
   
   test("import introduces bindings") {
     assert(programFor(
-      """(import (llambda primitives)) 
+      """(import (llambda internal primitives)) 
          (quote a)"""
       ) === List(et.Literal(ast.Symbol("a"))))
   }
@@ -38,7 +38,7 @@ class ExtractProgramSuite extends FunSuite with Inside {
   test("program body is body context") {
     inside(programFor(
       """(import (test singleexpr))
-         (import (llambda primitives))
+         (import (llambda internal primitives))
          (define b a)"""
     )) {
       case et.Bind((storageLoc1, _) :: Nil) :: et.Bind((storageLoc2, expression) :: Nil) :: Nil =>
