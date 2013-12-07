@@ -81,6 +81,7 @@ object SchemePrimitives {
   object Define extends PrimitiveExpression
   object DefineSyntax extends PrimitiveExpression
   object DefineRecordType extends PrimitiveExpression
+  object DefineType extends PrimitiveExpression
 
   val bindings = {
     Map[String, BoundValue](
@@ -95,7 +96,8 @@ object SchemePrimitives {
       "unquote-splicing" -> UnquoteSplicing,
       "define" -> Define,
       "define-syntax" -> DefineSyntax,
-      "define-record-type" -> DefineRecordType
+      "define-record-type" -> DefineRecordType,
+      "define-type" -> DefineType
     )
   }
 }

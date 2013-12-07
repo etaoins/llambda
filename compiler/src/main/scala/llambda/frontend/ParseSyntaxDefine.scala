@@ -5,7 +5,7 @@ import llambda.{SyntaxRule, BoundSyntax}
 import llambda.BadSpecialFormException
 
 private[frontend] object ParseSyntaxDefine {
-  def apply(appliedSymbol : sst.ScopedSymbol, operands : List[sst.ScopedDatum]) : ParsedSyntaxDefine = operands match {
+  def apply(appliedSymbol : sst.ScopedSymbol, operands : List[sst.ScopedDatum]) : ParsedSimpleDefine = operands match {
     case (symbol : sst.ScopedSymbol) ::
              sst.ScopedProperList(
                sst.ScopedSymbol(_, "syntax-rules") :: sst.ScopedProperList(literals) :: rules
@@ -21,7 +21,7 @@ private[frontend] object ParseSyntaxDefine {
         case noMatch => throw new BadSpecialFormException(appliedSymbol, "Unable to parse syntax rule")
       }
 
-      ParsedSyntaxDefine(symbol, new BoundSyntax(literalNames, parsedRules))
+      ParsedSimpleDefine(symbol, new BoundSyntax(literalNames, parsedRules))
 
     case _ =>
       throw new BadSpecialFormException(appliedSymbol, "Unrecognized (define-syntax) form")

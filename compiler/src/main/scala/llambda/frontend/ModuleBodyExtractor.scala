@@ -104,7 +104,7 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, includePath : IncludePa
       case ParsedVarDefine(symbol, boundValue, exprBlock) =>
         symbol.scope += (symbol.name -> boundValue)
         (boundValue, exprBlock) :: Nil
-      case ParsedSyntaxDefine(symbol, boundValue) =>
+      case ParsedSimpleDefine(symbol, boundValue) =>
         symbol.scope += (symbol.name -> boundValue)
         Nil
       case ParsedRecordTypeDefine(typeSymbol, recordType, procedures) =>
@@ -261,6 +261,9 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, includePath : IncludePa
       case (SchemePrimitives.DefineRecordType, _) =>
         Some(ParseRecordTypeDefine(appliedSymbol, operands))
 
+      case (SchemePrimitives.DefineType, (typeAlias : sst.ScopedSymbol) :: existingTypeDatum :: Nil) =>
+        Some(ParsedSimpleDefine(typeAlias, BoundType(DatumToValueType(existingTypeDatum)))) 
+
       case (InternalPrimitives.DefineReportProcedure, _) =>
         operands match {
           case (symbol : sst.ScopedSymbol) :: definitionData :: Nil =>
@@ -306,7 +309,7 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, includePath : IncludePa
                   et.Bind(List(boundValue -> exprBlock()))
               }
 
-            case Some(ParsedSyntaxDefine(symbol, boundValue)) =>
+            case Some(ParsedSimpleDefine(symbol, boundValue)) =>
               // This doesn't create any expression tree nodes 
               symbol.scope += (symbol.name -> boundValue)
               return et.Begin(Nil)

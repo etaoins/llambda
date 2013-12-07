@@ -8,6 +8,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   
   val plusLoc = new StorageLocation("+")
   val plusScope = new Scope(collection.mutable.Map("+" -> plusLoc), Some(primitiveScope))
+  val nfiScope = new ImmutableScope(testutil.NfiExports(), Some(primitiveScope))
   
   test("variable reference") {
     // "a" isn't a binding in the primitive expressions
@@ -189,6 +190,27 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
           et.Bind(List(storageLoc -> et.Literal(ast.IntegerLiteral(2)))),
           et.VarRef(storageLoc)
         ))
+    }
+  }
+  
+  test("define type") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+    val expressions = bodyFor("(define-type <custom-type> <int32>)")(scope)
+
+    assert(scope("<custom-type>") === BoundType(valuetype.Int32))
+
+    intercept[UnboundVariableException] {
+      bodyFor("(define-type <another-type> <doesnt-exist>)")(scope)
+    }
+    
+    intercept[BadSpecialFormException] {
+      // Not enough args
+      bodyFor("(define-type <another-type>)")(scope)
+    }
+    
+    intercept[BadSpecialFormException] {
+      // Too many args
+      bodyFor("(define-type <another-type> <int32> <unicode-char>)")(scope)
     }
   }
 
