@@ -2,8 +2,8 @@
 	(import (llambda internal primitives))
 	(import (llambda nfi))
 	
-	; Re-export (define-type) from (llambda primitives) 
-	(export define-type)
+	; Re-export from (llambda primitives) 
+	(export define-type ann)
 
 	(export <any> <list-element> <pair> <empty-list> <string> <symbol> <boolean> <integer> <flonum> <char> <vector> <bytevector> <procedure>)
 	(begin 

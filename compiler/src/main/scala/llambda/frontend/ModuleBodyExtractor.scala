@@ -221,6 +221,9 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, includePath : IncludePa
       case (storagLoc : StorageLocation, operands) =>
         et.Apply(et.VarRef(storagLoc), operands.map(extractExpression))
 
+      case (PrimitiveExpressions.AnnotateType, valueExpr :: typeDatum :: Nil) =>
+        et.Cast(extractExpression(valueExpr), DatumToValueType(typeDatum))
+
       case otherPrimitive =>
         throw new BadSpecialFormException(appliedSymbol, "Invalid primitive syntax")
     }

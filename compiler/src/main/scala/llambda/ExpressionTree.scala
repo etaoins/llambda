@@ -94,3 +94,10 @@ case class RecordTypeConstructor(recordType : vt.RecordCellType, initializedFiel
 case class RecordTypePredicate(recordType : vt.RecordCellType) extends RecordTypeProcedure
 case class RecordTypeAccessor(recordType : vt.RecordCellType, field : vt.RecordField) extends RecordTypeProcedure
 case class RecordTypeMutator(recordType : vt.RecordCellType, field : vt.RecordField) extends RecordTypeProcedure
+
+case class Cast(valueExpr : Expression, targetType : vt.ValueType) extends Expression {
+  val subexpressions = valueExpr :: Nil
+
+  def map(f : Expression => Expression) : et.Cast =
+    et.Cast(f(valueExpr), targetType).assignLocationFrom(this)
+}

@@ -1,0 +1,3 @@
+package llambda.functional
+
+class AnnotateExpressionSuite extends SchemeFunctionalTestRunner("AnnotateExpressionSuite")

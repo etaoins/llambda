@@ -17,6 +17,7 @@ object PrimitiveExpressions {
   object DefineType extends PrimitiveExpression
   object NativeFunction extends PrimitiveExpression
   object DefineReportProcedure extends PrimitiveExpression
+  object AnnotateType extends PrimitiveExpression
 
   val bindings = {
     Map[String, BoundValue](
@@ -34,7 +35,8 @@ object PrimitiveExpressions {
       "define-record-type" -> DefineRecordType,
       "define-type" -> DefineType,
       "native-function" -> NativeFunction,
-      "define-report-procedure" -> DefineReportProcedure
+      "define-report-procedure" -> DefineReportProcedure,
+      "ann" -> AnnotateType
     )
   }
 }

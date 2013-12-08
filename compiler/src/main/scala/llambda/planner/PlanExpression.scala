@@ -272,6 +272,14 @@ private[planner] object PlanExpression {
           state=initialState,
           value=new iv.KnownProcedure(plannedMutator.signature, nativeSymbol)
         )
-    }
+
+      case et.Cast(valueExpr, targetType) =>
+        val valueResult = apply(initialState)(valueExpr)
+
+        val castTemp = valueResult.value.toRequiredTempValue(targetType)
+        val castValue = TempValueToIntermediate(targetType, castTemp)
+          
+        PlanResult(state=valueResult.state, value=castValue)
+    }  
   }
 }

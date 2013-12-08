@@ -1,7 +1,9 @@
 package llambda.frontend
 
 import org.scalatest.{FunSuite,Inside,OptionValues}
+
 import llambda._
+import llambda.{valuetype => vt}
 
 class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with testutil.ExpressionHelpers {
   implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(PrimitiveExpressions.bindings.toSeq : _*))
@@ -197,7 +199,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
     val expressions = bodyFor("(define-type <custom-type> <int32>)")(scope)
 
-    assert(scope("<custom-type>") === BoundType(valuetype.Int32))
+    assert(scope("<custom-type>") === BoundType(vt.Int32))
 
     intercept[UnboundVariableException] {
       bodyFor("(define-type <another-type> <doesnt-exist>)")(scope)
@@ -448,6 +450,27 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
               ))
             )
         }
+    }
+  }
+  
+  test("annotate expression types") {
+    assert(expressionFor("(ann #t <bool>)")(nfiScope) === 
+      et.Cast(et.Literal(ast.BooleanLiteral(true)), vt.CBool)
+    )
+  
+    intercept[BadSpecialFormException] {
+      // No args
+      expressionFor("(ann #t)")(nfiScope)
+    }
+    
+    intercept[BadSpecialFormException] {
+      // Too many args
+      expressionFor("(ann #t <bool> <int32>)")(nfiScope)
+    }
+    
+    intercept[UnboundVariableException] {
+      // Not a type
+      expressionFor("(ann #t <not-a-type>)")(nfiScope)
     }
   }
 }
