@@ -22,4 +22,7 @@ class RecordCellValue(val recordType : vt.RecordCellType, val tempValue : ps.Tem
       // Not of the correct type
       None
     }
+  
+  def preferredRepresentation : vt.ValueType =
+    recordType
 }

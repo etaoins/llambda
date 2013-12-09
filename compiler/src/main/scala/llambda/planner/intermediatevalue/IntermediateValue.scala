@@ -68,5 +68,14 @@ abstract class IntermediateValue {
       resultIntermediate=new IntrinsicCellValue(phiPossibleTypes, ct.DatumCell, phiResultTemp)
     )
   }
+
+  /** Returns the preferred type to represent this value
+    * 
+    * For realized values this will be the type of the TempValue. For unrealized
+    * values such as constants and known procedures this will be the type
+    * that can specifically represent the value with the minimum of boxing
+    * and conversion.
+    */
+  def preferredRepresentation : vt.ValueType
 }
 

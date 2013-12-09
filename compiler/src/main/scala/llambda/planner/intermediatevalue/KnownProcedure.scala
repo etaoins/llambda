@@ -75,5 +75,8 @@ class KnownProcedure(val signature : ProcedureSignature, val nativeSymbol : Stri
 
   def planClosure()(implicit plan : PlanWriter) : ps.TempValue = 
     throw new NotImplementedException("Closures not implemented")
+  
+  def preferredRepresentation : vt.ValueType =
+    vt.IntrinsicCellType(ct.ProcedureCell)
 }
 

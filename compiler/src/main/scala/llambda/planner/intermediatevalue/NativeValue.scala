@@ -64,6 +64,9 @@ sealed abstract class NativeValue(val nativeType : vt.NativeType, val cellType :
       // Fall back to dumb unboxing
       super.planPhiWith(theirValue)(ourPlan, theirPlan)
   }
+  
+  def preferredRepresentation : vt.ValueType =
+    nativeType
 }
 
 class NativeBooleanValue(tempValue : ps.TempValue) extends NativeValue(vt.CBool, ct.BooleanCell, tempValue) {

@@ -30,6 +30,9 @@ sealed abstract class ConstantValue(cellType : ct.ConcreteCellType) extends Inte
       // Impossible conversion
       None
     }
+  
+  def preferredRepresentation : vt.ValueType =
+    vt.IntrinsicCellType(cellType)
 }
 
 sealed abstract class TrivialConstantValue[T, U <: ps.StoreConstantCell](cellType : ct.ConcreteCellType, value : T, stepConstructor : (ps.TempValue, T) => U) extends ConstantValue(cellType) {
@@ -71,6 +74,9 @@ class ConstantExactIntegerValue(value : Long) extends TrivialConstantValue(ct.Ex
 
     case _ => None
   }
+  
+  override def preferredRepresentation : vt.ValueType =
+    vt.Int64
 }
 
 class ConstantInexactRationalValue(value : Double) extends TrivialConstantValue(ct.InexactRationalCell, value, ps.StoreInexactRationalCell.apply) {
@@ -82,6 +88,9 @@ class ConstantInexactRationalValue(value : Double) extends TrivialConstantValue(
 
     case _ => None
   }
+  
+  override def preferredRepresentation : vt.ValueType =
+    vt.Double
 }
 
 class ConstantCharacterValue(value : Char) extends TrivialConstantValue(ct.CharacterCell, value, ps.StoreCharacterCell.apply) {
@@ -93,6 +102,9 @@ class ConstantCharacterValue(value : Char) extends TrivialConstantValue(ct.Chara
 
     case _ => None
   }
+  
+  override def preferredRepresentation : vt.ValueType =
+    vt.UnicodeChar
 }
 
 class ConstantBooleanValue(value : Boolean) extends TrivialConstantValue(ct.BooleanCell, value, ps.StoreBooleanCell.apply) {
@@ -108,6 +120,9 @@ class ConstantBooleanValue(value : Boolean) extends TrivialConstantValue(ct.Bool
   def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = 
     // toTruthyPredicate() will catch our conversion to bool
     None
+  
+  override def preferredRepresentation : vt.ValueType =
+    vt.CBool
 }
 
 class ConstantBytevectorValue(value : Vector[Short]) extends TrivialConstantValue(ct.BytevectorCell, value, ps.StoreBytevectorCell.apply) {
