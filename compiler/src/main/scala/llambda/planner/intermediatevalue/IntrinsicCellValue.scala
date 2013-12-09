@@ -5,7 +5,7 @@ import llambda.{valuetype => vt}
 import llambda.planner.{step => ps}
 import llambda.planner.{PlanWriter, InvokableProcedure}
 
-class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val valueType : ct.CellType, val tempValue : ps.TempValue) extends IntermediateCellValue {
+class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellType : ct.CellType, val tempValue : ps.TempValue) extends IntermediateCellValue {
   override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     val truthyTemp = new ps.TempValue
 
@@ -114,11 +114,11 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val value
         // Try again with constrained types
         // This will hit the branches above us
         val trueWriter = plan.forkPlan()
-        val trueDynamicValue = new IntrinsicCellValue(Set(ct.ExactIntegerCell), valueType, tempValue)
+        val trueDynamicValue = new IntrinsicCellValue(Set(ct.ExactIntegerCell), cellType, tempValue)
         val trueTempValue = trueDynamicValue.toRequiredTempValue(fpType)(trueWriter)
 
         val falseWriter = plan.forkPlan()
-        val falseDynamicValue = new IntrinsicCellValue(possibleTypes - ct.ExactIntegerCell, valueType, tempValue)
+        val falseDynamicValue = new IntrinsicCellValue(possibleTypes - ct.ExactIntegerCell, cellType, tempValue)
         val falseTempValue = falseDynamicValue.toRequiredTempValue(fpType)(falseWriter)
       
         val phiTemp = new ps.TempValue

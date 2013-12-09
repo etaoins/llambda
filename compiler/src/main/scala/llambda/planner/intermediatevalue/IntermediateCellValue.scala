@@ -5,7 +5,7 @@ import llambda.planner.PlanWriter
 import llambda.{celltype => ct}
 
 trait IntermediateCellValue extends IntermediateValue {
-  val valueType : ct.CellType   
+  val cellType : ct.CellType   
   val tempValue : ps.TempValue
 
   def toCellTempValue(targetType : ct.CellType)(implicit plan : PlanWriter) : Option[ps.TempValue] = {
@@ -13,7 +13,7 @@ trait IntermediateCellValue extends IntermediateValue {
 
     // Are our possible concrete types a subset of the target types?
     if (possibleTypes.subsetOf(targetConcreteTypes)) {
-      if (valueType != targetType) {
+      if (cellType != targetType) {
         // Need to cast to the right type
         // We've confirmed that no checking is needed because all of our 
         // possible types are equal to or supertypes of the target type
