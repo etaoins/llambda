@@ -15,6 +15,13 @@ private[planner] object PlanExpression {
     reportproc.CadrProcPlanner
   )
 
+  private def storePlannedFunction(suggestedName : String, plannedFunction : PlannedFunction)(implicit plan : PlanWriter) : iv.IntermediateValue = {
+    val nativeSymbol = plan.allocProcedureSymbol(suggestedName)
+    plan.plannedFunctions += (nativeSymbol -> plannedFunction)
+
+    new iv.KnownProcedure(plannedFunction.signature, nativeSymbol)
+  }
+
   def apply(initialState : PlannerState)(expr : et.Expression, sourceNameHint : Option[String] = None)(implicit planConfig : PlanConfig, plan : PlanWriter) : PlanResult = LocateExceptionsWith(expr) {
     expr match {
       case et.Begin(exprs) =>
@@ -205,14 +212,12 @@ private[planner] object PlanExpression {
             .replaceAllLiterally(">", "")
         }
 
-        val nativeSymbol = plan.allocProcedureSymbol(procName)
-        val plannedConstructor = PlanRecordTypeConstructor(recordConstructor)
-
-        plan.plannedFunctions += (nativeSymbol -> plannedConstructor)
-
         PlanResult(
           state=initialState,
-          value=new iv.KnownProcedure(plannedConstructor.signature, nativeSymbol)
+          value=storePlannedFunction(
+            procName,
+            PlanRecordTypeConstructor(recordConstructor)
+          )
         )
       
       case recordPredicate : et.RecordTypePredicate =>
@@ -223,14 +228,12 @@ private[planner] object PlanExpression {
             .replaceAllLiterally(">", "") + "?"
         }
 
-        val nativeSymbol = plan.allocProcedureSymbol(procName)
-        val plannedPredicate = PlanRecordTypePredicate(recordPredicate)
-
-        plan.plannedFunctions += (nativeSymbol -> plannedPredicate)
-
         PlanResult(
           state=initialState,
-          value=new iv.KnownProcedure(plannedPredicate.signature, nativeSymbol)
+          value=storePlannedFunction(
+            procName,
+            PlanRecordTypePredicate(recordPredicate)
+          )
         )
       
       case recordAccessor : et.RecordTypeAccessor =>
@@ -242,14 +245,12 @@ private[planner] object PlanExpression {
             "-" + recordAccessor.field.sourceName
         }
 
-        val nativeSymbol = plan.allocProcedureSymbol(procName)
-        val plannedAccessor = PlanRecordTypeAccessor(recordAccessor)
-
-        plan.plannedFunctions += (nativeSymbol -> plannedAccessor)
-
         PlanResult(
           state=initialState,
-          value=new iv.KnownProcedure(plannedAccessor.signature, nativeSymbol)
+          value=storePlannedFunction(
+            procName, 
+            PlanRecordTypeAccessor(recordAccessor)
+          )
         )
       
       case recordMutator : et.RecordTypeMutator =>
@@ -263,14 +264,12 @@ private[planner] object PlanExpression {
             "!"
         }
 
-        val nativeSymbol = plan.allocProcedureSymbol(procName)
-        val plannedMutator = PlanRecordTypeMutator(recordMutator)
-
-        plan.plannedFunctions += (nativeSymbol -> plannedMutator)
-
         PlanResult(
           state=initialState,
-          value=new iv.KnownProcedure(plannedMutator.signature, nativeSymbol)
+          value=storePlannedFunction(
+            procName,
+            PlanRecordTypeMutator(recordMutator)
+          )
         )
 
       case et.Cast(valueExpr, targetType) =>
@@ -280,6 +279,17 @@ private[planner] object PlanExpression {
         val castValue = TempValueToIntermediate(targetType, castTemp)
           
         PlanResult(state=valueResult.state, value=castValue)
+
+      case et.Lambda(fixedArgs, restArg, body) =>
+        val procName = sourceNameHint.getOrElse("anonymous-procedure")
+
+        PlanResult(
+          state=initialState,
+          storePlannedFunction(
+            procName,
+            PlanLambda(fixedArgs, restArg, body)
+          )
+        )
     }  
   }
 }
