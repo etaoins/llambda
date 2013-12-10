@@ -17,7 +17,7 @@ abstract class IntermediateValue {
 
   protected def toCellTempValue(cellType : ct.CellType)(implicit plan : PlanWriter) : Option[ps.TempValue]
   protected def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue]
-  protected def toRecordCellTempValue(recordCellType : vt.RecordCellType)(implicit plan : PlanWriter) : Option[ps.TempValue]
+  protected def toRecordTempValue(recordType : vt.RecordType)(implicit plan : PlanWriter) : Option[ps.TempValue]
 
   def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     val trueTemp = new ps.TempValue
@@ -43,8 +43,13 @@ abstract class IntermediateValue {
     case vt.IntrinsicCellType(cellType) =>
       toCellTempValue(cellType)
 
-    case recordCellType : vt.RecordCellType =>
-      toRecordCellTempValue(recordCellType)
+    case recordType : vt.RecordType =>
+      toRecordTempValue(recordType)
+
+    case closureType : vt.ClosureType =>
+      // Closure types are an internal implementation detail.
+      // Nothing should attempt to convert to them
+      None
   }
   
   def toRequiredTempValue(targetType : vt.ValueType)(implicit plan : PlanWriter) =

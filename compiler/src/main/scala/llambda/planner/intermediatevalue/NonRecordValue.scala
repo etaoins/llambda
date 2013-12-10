@@ -6,6 +6,6 @@ import llambda.planner.PlanWriter
 
 /** Trait for IntermediateValues that cannot represent records */
 trait NonRecordValue extends IntermediateValue {
-  protected def toRecordCellTempValue(recordCellType : vt.RecordCellType)(implicit plan : PlanWriter) : Option[ps.TempValue] = None
+  protected def toRecordTempValue(recordType : vt.RecordType)(implicit plan : PlanWriter) : Option[ps.TempValue] = None
 }
 

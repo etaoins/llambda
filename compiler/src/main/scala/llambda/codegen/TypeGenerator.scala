@@ -11,7 +11,7 @@ object TypeDataStorage extends Enumeration {
 }
 
 case class GeneratedType(
-  recordType : vt.RecordCellType,
+  recordLikeType : vt.RecordLikeType,
   irType : UserDefinedType,
   classId : Long,
   fieldToStructIndex : Map[vt.RecordField, Int],
@@ -20,21 +20,28 @@ case class GeneratedType(
 )
 
 class TypeGenerator(module : IrModuleBuilder, targetPlatform : TargetPlatform, var nextTbaaIndex : Long) {
-  private val generatedTypes = collection.mutable.Map[vt.RecordCellType, GeneratedType]()
+  private val generatedTypes = collection.mutable.Map[vt.RecordLikeType, GeneratedType]()
   private var nextClassId : Long = 0
 
-  def apply(recordType : vt.RecordCellType) : GeneratedType = {
-    generatedTypes.getOrElseUpdate(recordType, {
+  def apply(recordLikeType : vt.RecordLikeType) : GeneratedType = {
+    generatedTypes.getOrElseUpdate(recordLikeType, {
       // Determine our storage type and layout
-      val (storageType, fieldOrder) = if (recordType.fields.isEmpty) {
+      val (storageType, fieldOrder) = if (recordLikeType.fields.isEmpty) {
         (TypeDataStorage.Empty, Nil)
       }
       else {
-        // Records have two pointer sized fields for inline data storage
-        val inlineDataSize = (targetPlatform.pointerBits * 2) / 8
+        val inlineDataSize = (recordLikeType match {
+          case _ : vt.RecordType =>
+            // Records have two pointer sized fields for inline data storage
+            2
+          case _ : vt.ClosureType =>
+            // Procedures have one pointer for inline storage. The second
+            // pointer points to the procedure's entry point
+            1
+        }) * (targetPlatform.pointerBits / 8) 
 
         // Try to pack the record fields
-        val packedRecord = PackRecordInline(recordType.fields, inlineDataSize, targetPlatform)
+        val packedRecord = PackRecordLikeInline(recordLikeType.fields, inlineDataSize, targetPlatform)
 
         // Check if we can inline
         val storage = if (packedRecord.inline) {
@@ -48,7 +55,7 @@ class TypeGenerator(module : IrModuleBuilder, targetPlatform : TargetPlatform, v
       }
 
       // Define the type
-      val recordTypeName = module.nameSource.allocate(recordType.sourceName)
+      val recordTypeName = module.nameSource.allocate(recordLikeType.sourceName)
 
       val irType = StructureType(fieldOrder.map { field =>
         ValueTypeToIr(field.fieldType).irType
@@ -58,14 +65,14 @@ class TypeGenerator(module : IrModuleBuilder, targetPlatform : TargetPlatform, v
       val userDefinedType = module.nameType(recordTypeName, irType)
 
       // Make TBAA nodes for each field
-      val fieldToTbaaIndex = (recordType.fields map { field =>
+      val fieldToTbaaIndex = (recordLikeType.fields map { field =>
         val tbaaIndex = nextTbaaIndex
         nextTbaaIndex = nextTbaaIndex + 1
 
         // Each field cannot be aliased with any other fields
         // If we allow toll-free briding with C structs we'll need to loosen
         // this at least for them
-        val nodeName = s"${recordType.sourceName}::${field.sourceName}"
+        val nodeName = s"${recordTypeName}::${field.sourceName}"
         module.defineTbaaNode(IrTbaaNode(tbaaIndex, nodeName))
 
         (field, tbaaIndex)
@@ -76,7 +83,7 @@ class TypeGenerator(module : IrModuleBuilder, targetPlatform : TargetPlatform, v
       nextClassId = nextClassId + 1
 
       GeneratedType(
-        recordType=recordType,
+        recordLikeType=recordLikeType,
         irType=userDefinedType,
         classId=classId,
         fieldToStructIndex=fieldOrder.zipWithIndex.toMap,
@@ -90,12 +97,12 @@ class TypeGenerator(module : IrModuleBuilder, targetPlatform : TargetPlatform, v
 
     // Output the type maps for each generated type
     val typeMapVars = generatedTypes.values.toList.sortBy(_.classId).map { generatedType =>
-      val recordCellType = generatedType.recordType
+      val recordLikeType = generatedType.recordLikeType
       val recordCellNullPointer = NullPointerConstant(PointerType(generatedType.irType))
 
       // Generate an expression for the offset of each field that points to a
       // cell
-      val cellOffsets = recordCellType.fields.zipWithIndex.filter({ case (field, _) =>
+      val cellOffsets = recordLikeType.fields.zipWithIndex.filter({ case (field, _) =>
         // We only want value cell types
         field.fieldType.isInstanceOf[vt.CellValueType]
       }).map({ case (field, fieldIndex) =>
@@ -131,7 +138,7 @@ class TypeGenerator(module : IrModuleBuilder, targetPlatform : TargetPlatform, v
         val cellOffsetsConstant = ArrayConstant(offsetIrType, headerValue :: cellOffsets) 
 
         // Define it
-        val typeMapName = module.nameSource.allocate(recordCellType.sourceName + "Map")
+        val typeMapName = module.nameSource.allocate(recordLikeType.sourceName + "Map")
 
         // XXX: Clang 3.4 doesn't actually merge these constants. We should
         // investigate doing merging of obviously identical maps ourselves

@@ -3,13 +3,13 @@ package llambda.codegen
 import llambda.{valuetype => vt}
 import llambda.platform.TargetPlatform
 
-object PackRecordInline {
-  /** Packed record
+object PackRecordLikeInline {
+  /** Packed record-like
     *
     * @param fieldOrder  Record fields in their memory order
     * @param inline      True if the record fields will fit within the inline data area
     */
-  case class PackedRecord(
+  case class PackedRecordLike(
     fieldOrder : List[vt.RecordField],
     inline : Boolean
   )
@@ -42,11 +42,11 @@ object PackRecordInline {
     * @param inlineDataByres   Number of bytes available for inline data storage
     * @param targetPlatform    Target platform to use when determing type sizes and alignments 
     */
-  def apply(recordFields : List[vt.RecordField], inlineDataBytes : Int, targetPlatform : TargetPlatform) : PackedRecord = {
+  def apply(recordFields : List[vt.RecordField], inlineDataBytes : Int, targetPlatform : TargetPlatform) : PackedRecordLike = {
     // The existing order stored out-of-line
-    lazy val existingOutOfLine = PackedRecord(recordFields, false)
+    lazy val existingOutOfLine = PackedRecordLike(recordFields, false)
     // The existing order stored inline
-    lazy val existingInline = PackedRecord(recordFields, true)
+    lazy val existingInline = PackedRecordLike(recordFields, true)
 
     if (!targetPlatform.usesNaturalAlignment) {
       // We assume natural alignment
@@ -78,7 +78,7 @@ object PackRecordInline {
       // Does the new order fit?
       if (sizeOfStruct(candidateOrder.map(_.fieldType), targetPlatform) <= inlineDataBytes) {
         // Repack successful!
-        return PackedRecord(candidateOrder, true)
+        return PackedRecordLike(candidateOrder, true)
       }
     }
 

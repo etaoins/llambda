@@ -31,10 +31,10 @@ object PlanRecordTypeMutator {
         
         // Extract the record data
         val recordDataTemp = new ps.TempValue
-        plan.steps += ps.StoreRecordCellData(recordDataTemp, recordCellTemp, recordType) 
+        plan.steps += ps.StoreRecordLikeData(recordDataTemp, recordCellTemp, recordType) 
 
         val fieldValueTemp = new ps.TempValue
-        plan.steps += ps.RecordFieldSet(recordDataTemp, recordType, field, newValueTemp) 
+        plan.steps += ps.RecordDataFieldSet(recordDataTemp, recordType, field, newValueTemp) 
 
         plan.steps += ps.Return(None)
 

@@ -5,7 +5,6 @@ import llambda.{valuetype => vt}
 import llambda.planner.{step => ps}
 import llambda.planner.{intermediatevalue => iv}
 import llambda.InternalCompilerErrorException
-import llambda.NotImplementedException
 
 object TempValueToIntermediate {
   def apply(valueType : vt.ValueType, tempValue : ps.TempValue) : iv.IntermediateValue = valueType match {
@@ -27,7 +26,12 @@ object TempValueToIntermediate {
     case vt.IntrinsicCellType(cellType) =>
       new iv.IntrinsicCellValue(cellType.concreteTypes, cellType, tempValue)
 
-    case recordType : vt.RecordCellType =>
-      new iv.RecordCellValue(recordType, tempValue)
+    case recordType : vt.RecordType =>
+      new iv.RecordValue(recordType, tempValue)
+
+    case _ : vt.ClosureType =>
+      // "Closures" are mostly a fiction to re-use the machinery of records.
+      // They should be treated as procedures
+      throw new InternalCompilerErrorException("Closure used as a first-class type")
   }
 }

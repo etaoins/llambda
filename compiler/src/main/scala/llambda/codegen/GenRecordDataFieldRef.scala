@@ -3,7 +3,7 @@ package llambda.codegen
 import llambda.codegen.llvmir._
 import llambda.{valuetype => vt}
 
-object GenRecordFieldRef {
+object GenRecordDataFieldRef {
   def apply(block : IrBlockBuilder)(recordDataIr : IrValue, generatedType : GeneratedType, recordField : vt.RecordField) : IrValue = {
     val fieldIndex = generatedType.fieldToStructIndex(recordField)
     val fieldIrType = ValueTypeToIr(recordField.fieldType).irType

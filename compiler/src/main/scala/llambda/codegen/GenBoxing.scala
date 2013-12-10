@@ -53,24 +53,6 @@ object GenBoxing {
       }
 
       block.callDecl(Some("boxedString"))(llibyStringFromUtf8Decl, List(nativeValue)).get
-
-    case ps.BoxProcedure(_, allocTemp, allocIndex, _) =>
-      val block = state.currentBlock
-      val allocation = state.liveAllocations(allocTemp)
-
-      val boxedProcCons = allocation.genTypedPointer(block)(allocIndex, ct.ProcedureCell) 
-      
-      // XXX: Implement closures
-      val constantZero = IntegerConstant(ct.ProcedureCell.recordClassIdIrType, 0)
-      ct.ProcedureCell.genStoreToRecordClassId(block)(constantZero, boxedProcCons)
-
-      val constantNull = NullPointerConstant(PointerType(IntegerType(8)))
-      ct.ProcedureCell.genStoreToRecordData(block)(constantNull, boxedProcCons)
-
-      // Store the entry point
-      ct.ProcedureCell.genStoreToEntryPoint(block)(nativeValue, boxedProcCons)
-
-      boxedProcCons
   }
 }
 

@@ -134,12 +134,12 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
       None
   }
   
-  protected def toRecordCellTempValue(recordType : vt.RecordCellType)(implicit plan : PlanWriter) : Option[ps.TempValue] = {
+  protected def toRecordTempValue(recordType : vt.RecordType)(implicit plan : PlanWriter) : Option[ps.TempValue] = {
     // Convert ourselves to a record
     val recordTemp = toRequiredTempValue(vt.IntrinsicCellType(ct.RecordCell))
 
     // Make sure we we're of the right class
-    plan.steps += ps.AssertRecordCellClass(recordTemp, recordType)
+    plan.steps += ps.AssertRecordLikeClass(recordTemp, recordType)
 
     Some(recordTemp)
   }

@@ -9,4 +9,4 @@ abstract sealed class ParsedDefine
 
 case class ParsedVarDefine(name : sst.ScopedSymbol, value : StorageLocation, expr : () => et.Expression) extends ParsedDefine
 case class ParsedSimpleDefine(name : sst.ScopedSymbol, value : BoundValue) extends ParsedDefine
-case class ParsedRecordTypeDefine(typeSymbol : sst.ScopedSymbol, recordType : vt.RecordCellType, procedures : Map[sst.ScopedSymbol, et.RecordTypeProcedure]) extends ParsedDefine
+case class ParsedRecordTypeDefine(typeSymbol : sst.ScopedSymbol, recordType : vt.RecordType, procedures : Map[sst.ScopedSymbol, et.RecordTypeProcedure]) extends ParsedDefine

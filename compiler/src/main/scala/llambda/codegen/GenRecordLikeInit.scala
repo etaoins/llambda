@@ -5,10 +5,12 @@ import llambda.planner.{step => ps}
 import llambda.{celltype => ct}
 import llambda.{valuetype => vt}
 
-object GenRecordInit {
-  case class InitializedRecord(recordCell : IrValue, recordData : IrValue)
+object GenRecordLikeInit {
+  case class InitializedRecordLike(recordCell : IrValue, recordData : IrValue)
 
-  def apply(state : GenerationState, typeGenerator : TypeGenerator)(initStep : ps.RecordInit) : InitializedRecord  = { 
+  def apply(state : GenerationState, typeGenerator : TypeGenerator)(initStep : ps.RecordLikeInit) : InitializedRecordLike  = { 
+    val cellType = initStep.recordLikeType.cellType
+
     // Declare _lliby_record_data_alloc
     val llibyRecordDataAlloc = IrFunctionDecl(
       result=IrFunction.Result(PointerType(IntegerType(8))),
@@ -28,16 +30,16 @@ object GenRecordInit {
     
     // Get a pointer to the new cell
     val allocation = state.liveAllocations(initStep.allocation)
-    val recordCell = allocation.genTypedPointer(block)(initStep.allocIndex, ct.RecordCell) 
+    val recordCell = allocation.genTypedPointer(block)(initStep.allocIndex, cellType) 
     
     // Get our record type information
-    val recordType = initStep.recordType
-    val generatedType = typeGenerator(recordType)
+    val recordLikeType = initStep.recordLikeType
+    val generatedType = typeGenerator(recordLikeType)
     val recordDataIrType = generatedType.irType 
     
     // Set the class ID
-    val classIdIr = IntegerConstant(ct.RecordCell.recordClassIdIrType, generatedType.classId)
-    ct.RecordCell.genStoreToRecordClassId(block)(classIdIr, recordCell)
+    val classIdIr = IntegerConstant(cellType.recordClassIdIrType, generatedType.classId)
+    cellType.genStoreToRecordClassId(block)(classIdIr, recordCell)
 
     val uncastRecordData = generatedType.storageType match {
       case TypeDataStorage.Empty =>
@@ -47,7 +49,7 @@ object GenRecordInit {
       case TypeDataStorage.Inline =>
         // Store the value inline in the cell on top of the recordData field
         // instead of going through another level of indirection
-        ct.RecordCell.genPointerToRecordData(block)(recordCell)
+        cellType.genPointerToRecordData(block)(recordCell)
 
       case TypeDataStorage.OutOfLine =>
         // Find the size of the record data
@@ -57,14 +59,14 @@ object GenRecordInit {
         val voidRecordData = block.callDecl(Some("rawRecordData"))(llibyRecordDataAlloc, List(irSize)).get
 
         // Store the record data pointer in the new cell
-        ct.RecordCell.genStoreToRecordData(block)(voidRecordData, recordCell)
+        cellType.genStoreToRecordData(block)(voidRecordData, recordCell)
 
         voidRecordData
     }
 
     val castRecordData = block.bitcastTo("castRecordData")(uncastRecordData, PointerType(recordDataIrType))
 
-    InitializedRecord(
+    InitializedRecordLike(
       recordCell=recordCell,
       recordData=castRecordData
     )

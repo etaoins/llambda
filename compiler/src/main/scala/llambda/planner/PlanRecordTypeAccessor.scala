@@ -24,11 +24,11 @@ object PlanRecordTypeAccessor {
 
         // Extract the record data
         val recordDataTemp = new ps.TempValue
-        plan.steps += ps.StoreRecordCellData(recordDataTemp, recordCellTemp, recordType) 
+        plan.steps += ps.StoreRecordLikeData(recordDataTemp, recordCellTemp, recordType) 
         
         // Read the field
         val fieldValueTemp = new ps.TempValue
-        plan.steps += ps.RecordFieldRef(fieldValueTemp, recordDataTemp, recordType, field) 
+        plan.steps += ps.RecordDataFieldRef(fieldValueTemp, recordDataTemp, recordType, field) 
 
         plan.steps += ps.Return(Some(fieldValueTemp))
 

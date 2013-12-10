@@ -5,7 +5,7 @@ import llambda.{celltype => ct}
 import llambda.planner.{step => ps}
 import llambda.planner.PlanWriter
 
-class RecordCellValue(val recordType : vt.RecordCellType, val tempValue : ps.TempValue) extends IntermediateCellValue with UninvokableValue {
+class RecordValue(val recordType : vt.RecordType, val tempValue : ps.TempValue) extends IntermediateCellValue with UninvokableValue {
   val possibleTypes = Set[ct.ConcreteCellType](ct.RecordCell)
   val cellType = ct.RecordCell
 
@@ -13,7 +13,7 @@ class RecordCellValue(val recordType : vt.RecordCellType, val tempValue : ps.Tem
     // Records have no bative representation
     None
   
-  def toRecordCellTempValue(targetRecordType : vt.RecordCellType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
+  def toRecordTempValue(targetRecordType : vt.RecordType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
     if (recordType == targetRecordType) {
       // We're of the correct type
       Some(tempValue)

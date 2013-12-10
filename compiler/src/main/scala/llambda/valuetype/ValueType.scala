@@ -73,9 +73,28 @@ case class IntrinsicCellType(cellType : ct.CellType) extends IntrinsicType with 
   */
 class RecordField(val sourceName : String, val fieldType : ValueType)
 
+/** Pointer to a garabge collected value cell containing a record-like type */
+sealed abstract class RecordLikeType extends CellValueType {
+  val sourceName : String
+  val fields : List[RecordField]
+  val cellType : ct.ConcreteCellType with ct.RecordLikeFields
+}
+
 /** Pointer to a garabge collected value cell containing a user-defined record type
   * 
   * This uniquely identifies a record type even if has the same name and internal
   * structure as another type 
   */
-class RecordCellType(val sourceName : String, val fields : List[RecordField]) extends ValueType with CellValueType
+class RecordType(val sourceName : String, val fields : List[RecordField]) extends RecordLikeType {
+  val cellType = ct.RecordCell
+}
+
+/** Pointer to a closure type
+  *
+  * Closure types store the data needed for a procedure from its parent
+  * lexical scope. The storage is internally implemented identically to 
+  * user-defined record types.
+  **/
+class ClosureType(val sourceName : String, val fields : List[RecordField]) extends RecordLikeType {
+  val cellType = ct.ProcedureCell
+}

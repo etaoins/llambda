@@ -90,10 +90,10 @@ private[planner] object PlanExpression {
 
             // Create a new mutable
             val recordDataTemp = new ps.TempValue
-            plan.steps += ps.RecordInit(mutableTemp, recordDataTemp, allocTemp, 0, vt.MutableCellType)
+            plan.steps += ps.RecordLikeInit(mutableTemp, recordDataTemp, allocTemp, 0, vt.MutableType)
 
             // Set the value
-            plan.steps += ps.RecordFieldSet(recordDataTemp, vt.MutableCellType, vt.MutableField, initialValueTemp)
+            plan.steps += ps.RecordDataFieldSet(recordDataTemp, vt.MutableType, vt.MutableField, initialValueTemp)
             
             initialValueResult.state.withMutable(storageLoc -> mutableTemp)
           }
@@ -135,11 +135,11 @@ private[planner] object PlanExpression {
         
         // Load our data pointer
         val recordDataTemp = new ps.TempValue
-        plan.steps += ps.StoreRecordCellData(recordDataTemp, mutableTemp, vt.MutableCellType)
+        plan.steps += ps.StoreRecordLikeData(recordDataTemp, mutableTemp, vt.MutableType)
         
         // Load the data
         val resultTemp = new ps.TempValue
-        plan.steps += ps.RecordFieldRef(resultTemp, recordDataTemp, vt.MutableCellType, vt.MutableField)
+        plan.steps += ps.RecordDataFieldRef(resultTemp, recordDataTemp, vt.MutableType, vt.MutableField)
         
         // We can be anything here
         val possibleTypes = ct.DatumCell.concreteTypes
@@ -157,11 +157,11 @@ private[planner] object PlanExpression {
 
         // Load our data pointer
         val recordDataTemp = new ps.TempValue
-        plan.steps += ps.StoreRecordCellData(recordDataTemp, mutableTemp, vt.MutableCellType)
+        plan.steps += ps.StoreRecordLikeData(recordDataTemp, mutableTemp, vt.MutableType)
         
         // Store the data
         val resultTemp = new ps.TempValue
-        plan.steps += ps.RecordFieldSet(recordDataTemp, vt.MutableCellType, vt.MutableField, newValueTemp)
+        plan.steps += ps.RecordDataFieldSet(recordDataTemp, vt.MutableType, vt.MutableField, newValueTemp)
 
         PlanResult(
           state=newValueResult.state,

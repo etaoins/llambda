@@ -65,7 +65,7 @@ private[frontend] object ParseRecordTypeDefine {
         throw new BadSpecialFormException(other, "Unrecognized record field definition")
     }
 
-  private def parseConstructor(recordType : vt.RecordCellType, symbolToField : Map[sst.ScopedSymbol, vt.RecordField], constructorDatum : sst.ScopedDatum) : (sst.ScopedSymbol, et.RecordTypeConstructor) =
+  private def parseConstructor(recordType : vt.RecordType, symbolToField : Map[sst.ScopedSymbol, vt.RecordField], constructorDatum : sst.ScopedDatum) : (sst.ScopedSymbol, et.RecordTypeConstructor) =
     constructorDatum match {
       case sst.ScopedProperList((constructorSymbol : sst.ScopedSymbol) :: initializerData) =>
         val initializedFields = initializerData.foldLeft(List[vt.RecordField]()) {
@@ -112,7 +112,7 @@ private[frontend] object ParseRecordTypeDefine {
 
       // Build our record type
       val recordFields = symbolToParsedField.values.toList.map(_.field)
-      val recordType = new vt.RecordCellType(typeSymbol.name, recordFields)
+      val recordType = new vt.RecordType(typeSymbol.name, recordFields)
 
       // Create our constructor and predicate procedures
       val constructorProcedure = parseConstructor(recordType, symbolToParsedField.mapValues(_.field), constructorDatum)

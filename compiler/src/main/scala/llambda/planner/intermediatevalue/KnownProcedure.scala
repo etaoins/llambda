@@ -39,18 +39,21 @@ class KnownProcedure(val signature : ProcedureSignature, val nativeSymbol : Stri
       val tempAllocation = new ps.TempAllocation
       plan.steps += ps.AllocateCells(tempAllocation, 1)
 
-      val boxedTemp = new ps.TempValue
-      plan.steps += ps.BoxProcedure(boxedTemp, tempAllocation, 0, entryPointTemp)
+      val cellTemp = new ps.TempValue
+      val dataTemp = new ps.TempValue
+
+      plan.steps += ps.RecordLikeInit(cellTemp, dataTemp, tempAllocation, 0, vt.EmptyClosureType)
+      plan.steps += ps.SetProcedureEntryPoint(cellTemp, entryPointTemp)
 
       if (targetType != ct.ProcedureCell) {
         // Cast this to super
         val castTemp = new ps.TempValue
-        plan.steps += ps.CastCellToTypeUnchecked(castTemp, boxedTemp, targetType)
+        plan.steps += ps.CastCellToTypeUnchecked(castTemp, cellTemp, targetType)
 
         Some(castTemp)
       }
       else {
-        Some(boxedTemp)
+        Some(cellTemp)
       }
     }
     else {

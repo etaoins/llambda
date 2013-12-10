@@ -6,4 +6,4 @@ import llambda.{celltype => ct}
 object MutableField extends RecordField("value", IntrinsicCellType(ct.DatumCell))
 
 /** Mutable values are implemented as single field records */
-object MutableCellType extends RecordCellType("mutable", List(MutableField))
+object MutableType extends RecordType("mutable", List(MutableField))

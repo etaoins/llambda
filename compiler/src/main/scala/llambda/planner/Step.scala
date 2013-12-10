@@ -138,7 +138,6 @@ case class BoxExactInteger(result : TempValue, allocation : TempAllocation, allo
 case class BoxInexactRational(result : TempValue, allocation : TempAllocation, allocIndex : Int, unboxed : TempValue) extends BoxValue
 case class BoxCharacter(result : TempValue, allocation : TempAllocation, allocIndex : Int, unboxed : TempValue) extends BoxValue
 case class BoxUtf8String(result : TempValue, unboxed : TempValue) extends BoxValue with GcBarrier
-case class BoxProcedure(result : TempValue, allocation : TempAllocation, allocIndex : Int, unboxed : TempValue) extends BoxValue
 
 /** Returns from the current function */
 case class Return(returnValue : Option[TempValue]) extends Step
@@ -151,15 +150,22 @@ case class Return(returnValue : Option[TempValue]) extends Step
  * @param allocIndex  offset in the allocation to allocate from
  * @param recordType  type of record to create
  */
-case class RecordInit(cellResult : TempValue, dataResult : TempValue, allocation : TempAllocation, allocIndex : Int, recordType : vt.RecordCellType) extends Step
+case class RecordLikeInit(cellResult : TempValue, dataResult : TempValue, allocation : TempAllocation, allocIndex : Int, recordLikeType : vt.RecordLikeType) extends Step
+
 /** Sets a record field. The value must match the type of record field */
-case class RecordFieldSet(recordData : TempValue, recordType : vt.RecordCellType, recordField : vt.RecordField, newValue : TempValue) extends Step
+case class RecordDataFieldSet(recordData : TempValue, recordLikeType : vt.RecordLikeType, recordField : vt.RecordField, newValue : TempValue) extends Step
 /** Reads a record field. The value must match the type of record field */
-case class RecordFieldRef(result : TempValue, recordData : TempValue, recordType : vt.RecordCellType, recordField : vt.RecordField) extends Step
+case class RecordDataFieldRef(result : TempValue, recordData : TempValue, recordLikeType : vt.RecordLikeType, recordField : vt.RecordField) extends Step
 
 /** Tests to see if a record is of a given class */
-case class TestRecordCellClass(result : TempValue, recordCell : TempValue, recordType : vt.RecordCellType) extends Step
+case class TestRecordLikeClass(result : TempValue, recordCell : TempValue, recordLikeType : vt.RecordLikeType) extends Step
 /** Asserts that a record is of a given class */
-case class AssertRecordCellClass(recordCell : TempValue, recordType : vt.RecordCellType) extends Step
+case class AssertRecordLikeClass(recordCell : TempValue, recordLikeType : vt.RecordLikeType) extends Step
 /** Stores the data of a record */
-case class StoreRecordCellData(result : TempValue, recordCell : TempValue, recordType : vt.RecordCellType) extends Step
+case class StoreRecordLikeData(result : TempValue, recordCell : TempValue, recordLikeType : vt.RecordLikeType) extends Step
+
+/** Sets the entry point of a procedure
+  *
+  * The procedure should be created using RecordLikeInit with a ClosureType
+  */
+case class SetProcedureEntryPoint(procedureCell : TempValue, entryPoint : TempValue) extends Step

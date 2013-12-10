@@ -178,23 +178,23 @@ object GenPlanStep {
 
       state.withTempValue(resultTemp -> entryPoint)
 
-    case initStep @ ps.RecordInit(cellResultTemp, dataResultTemp, _, _, _) =>
-      val initedRecord = GenRecordInit(state, typeGenerator)(initStep)
+    case initStep : ps.RecordLikeInit  =>
+      val initedRecordLike = GenRecordLikeInit(state, typeGenerator)(initStep)
 
       state
-        .withTempValue(cellResultTemp -> initedRecord.recordCell)
-        .withTempValue(dataResultTemp -> initedRecord.recordData)
+        .withTempValue(initStep.cellResult -> initedRecordLike.recordCell)
+        .withTempValue(initStep.dataResult -> initedRecordLike.recordData)
     
-    case ps.TestRecordCellClass(resultTemp, recordCellTemp, recordType) => 
-      val generatedType = typeGenerator(recordType)
+    case ps.TestRecordLikeClass(resultTemp, recordCellTemp, recordLikeType) => 
+      val generatedType = typeGenerator(recordLikeType)
 
       val recordCellIr = state.liveTemps(recordCellTemp)
-      val irResult = GenTestRecordCellClass(state.currentBlock)(recordCellIr, generatedType.classId)
+      val irResult = GenTestRecordLikeClass(state.currentBlock)(recordCellIr, generatedType)
 
       state.withTempValue(resultTemp -> irResult)
     
-    case ps.AssertRecordCellClass(recordCellTemp, recordType) => 
-      val generatedType = typeGenerator(recordType)
+    case ps.AssertRecordLikeClass(recordCellTemp, recordLikeType) => 
+      val generatedType = typeGenerator(recordLikeType)
       
       // Start our branches
       val fatalBlock = state.currentBlock.startChildBlock("wrongRecordClass")
@@ -202,42 +202,51 @@ object GenPlanStep {
 
       // Generate code for a fatal error
       val errorName = "recordClassIsNot" + generatedType.irType.name
-      val errorText = "Record is not of class " + recordType.sourceName
+      val errorText = "Record is not of class " + recordLikeType.sourceName
 
       GenFatalError(state.module, fatalBlock)(errorName, errorText)
 
       // Branch if we're not of the right class
       val recordCellIr = state.liveTemps(recordCellTemp)
-      val irResult = GenTestRecordCellClass(state.currentBlock)(recordCellIr, generatedType.classId)
+      val irResult = GenTestRecordLikeClass(state.currentBlock)(recordCellIr, generatedType)
 
       state.currentBlock.condBranch(irResult, successBlock, fatalBlock)
 
       // Continue with the successful block
       state.copy(currentBlock=successBlock)
   
-    case ps.RecordFieldSet(recordDataTemp, recordType, recordField, newValueTemp) =>
+    case ps.RecordDataFieldSet(recordDataTemp, recordType, recordField, newValueTemp) =>
       val recordDataIr = state.liveTemps(recordDataTemp)
       val newValueIr = state.liveTemps(newValueTemp)
       val generatedType = typeGenerator(recordType)
   
-      GenRecordFieldSet(state.currentBlock)(recordDataIr, generatedType, recordField,newValueIr)
+      GenRecordDataFieldSet(state.currentBlock)(recordDataIr, generatedType, recordField,newValueIr)
 
       state
     
-    case ps.RecordFieldRef(resultTemp, recordDataTemp, recordType, recordField) =>
+    case ps.RecordDataFieldRef(resultTemp, recordDataTemp, recordLikeType, recordField) =>
       val recordDataIr = state.liveTemps(recordDataTemp)
-      val generatedType = typeGenerator(recordType)
+      val generatedType = typeGenerator(recordLikeType)
   
-      val resultIr = GenRecordFieldRef(state.currentBlock)(recordDataIr, generatedType, recordField)
+      val resultIr = GenRecordDataFieldRef(state.currentBlock)(recordDataIr, generatedType, recordField)
 
       state.withTempValue(resultTemp -> resultIr)
 
-    case ps.StoreRecordCellData(resultTemp, recordCellTemp, recordType) =>
+    case ps.StoreRecordLikeData(resultTemp, recordCellTemp, recordLikeType) =>
       val recordCellIr = state.liveTemps(recordCellTemp)
-      val generatedType = typeGenerator(recordType)
+      val generatedType = typeGenerator(recordLikeType)
 
-      val resultIr = GenStoreRecordCellData(state.currentBlock)(recordCellIr, generatedType)
+      val resultIr = GenStoreRecordLikeData(state.currentBlock)(recordCellIr, generatedType)
 
       state.withTempValue(resultTemp -> resultIr)
+      
+    case ps.SetProcedureEntryPoint(procedureCellTemp, entryPointTemp) =>
+      val procedureCellIr = state.liveTemps(procedureCellTemp)
+      val entryPointIr = state.liveTemps(entryPointTemp)
+
+      // Store the entry point
+      ct.ProcedureCell.genStoreToEntryPoint(state.currentBlock)(entryPointIr, procedureCellIr)
+
+      state
  }
 }

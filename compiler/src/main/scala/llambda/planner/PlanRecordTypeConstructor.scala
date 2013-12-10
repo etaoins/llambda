@@ -40,7 +40,7 @@ object PlanRecordTypeConstructor {
         val cellTemp = new ps.TempValue 
         val dataTemp = new ps.TempValue 
 
-        plan.steps += ps.RecordInit(cellTemp, dataTemp, allocation, 0, recordType)
+        plan.steps += ps.RecordLikeInit(cellTemp, dataTemp, allocation, 0, recordType)
         
         // Set all our fields
         for(field <- recordType.fields) {
@@ -51,7 +51,7 @@ object PlanRecordTypeConstructor {
             iv.UnspecificValue.toRequiredTempValue(field.fieldType)(plan)
           }
             
-          plan.steps += ps.RecordFieldSet(dataTemp, recordType, field, fieldTemp)
+          plan.steps += ps.RecordDataFieldSet(dataTemp, recordType, field, fieldTemp)
         }
 
         // Return the record

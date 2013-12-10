@@ -37,7 +37,7 @@ object PlanRecordTypePredicate {
             isRecordPlan.steps += ps.CastCellToTypeUnchecked(recordCellTemp, argumentTemp, ct.RecordCell)
 
             val classMatchedPred = new ps.TempValue
-            isRecordPlan.steps += ps.TestRecordCellClass(classMatchedPred, recordCellTemp, recordType) 
+            isRecordPlan.steps += ps.TestRecordLikeClass(classMatchedPred, recordCellTemp, recordType) 
 
             val classMatchedBool = new ps.TempValue
             isRecordPlan.steps += ps.ConvertNativeInteger(classMatchedBool, classMatchedPred, vt.CBool.bits, false)
