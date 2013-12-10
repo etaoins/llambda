@@ -38,3 +38,10 @@
 (define-test "procedure adding its arguments" (expect 7
 	(define (add-two-values a b) (+ a b))
 	(add-two-values 4 3)))
+
+(define-test "procedure mutating args does not affect caller" (expect 7
+	(define (set-arg a) (set! a -89))
+	
+	(define outer-value 7)
+	(set-arg outer-value)
+	outer-value))

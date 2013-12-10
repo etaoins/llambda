@@ -7,7 +7,13 @@ import llambda.planner.{step => ps}
 import llambda.{StorageLocation, ProcedureSignature}
 
 private[planner] object PlanLambda {
-  def findRefedVariables(expr : et.Expression) : Set[StorageLocation] = expr match {
+  case class Argument(
+    storageLoc : StorageLocation,
+    tempValue : ps.TempValue,
+    valueType : vt.ValueType
+  )
+
+  private def findRefedVariables(expr : et.Expression) : Set[StorageLocation] = expr match {
     case et.VarRef(variable) =>
       Set(variable)
 
@@ -15,23 +21,47 @@ private[planner] object PlanLambda {
       otherExpr.subexpressions.flatMap(findRefedVariables).toSet
   }
 
+  private def initializeMutableArgs(initialState : PlannerState)(mutableArgs : List[Argument])(implicit plan : PlanWriter) : PlannerState = mutableArgs.length match {
+    case 0 =>
+      // Nothing to do
+      initialState
+
+    case argCount =>
+      // Allocate all of our space
+      val allocTemp = new ps.TempAllocation
+      plan.steps += ps.AllocateCells(allocTemp, argCount)
+
+      mutableArgs.zipWithIndex.foldLeft(initialState) { case (state, (Argument(storageLoc, tempValue, _), index)) =>
+        // Init the mutable
+        val mutableTemp = new ps.TempValue
+        val recordDataTemp = new ps.TempValue
+
+        plan.steps += ps.RecordLikeInit(mutableTemp, recordDataTemp, allocTemp, index, vt.MutableType)
+
+        // Set the value
+        plan.steps += ps.RecordDataFieldSet(recordDataTemp, vt.MutableType, vt.MutableField, tempValue)
+        
+        state.withMutable(storageLoc -> mutableTemp)
+      }
+  }
+
   def apply(parentState : PlannerState)(fixedArgLocs : List[StorageLocation], restArgLoc : Option[StorageLocation], body : et.Expression)(implicit planConfig : PlanConfig) : PlannedFunction = {
     // Setup our arguments
-    val fixedArgTemps = fixedArgLocs map { storageLoc =>
-      (storageLoc, new ps.TempValue)
+    val allArgs = fixedArgLocs.map({ storageLoc =>
+      Argument(storageLoc, new ps.TempValue, vt.IntrinsicCellType(ct.DatumCell))
+    }) ++
+    restArgLoc.map({ storageLoc =>
+      Argument(storageLoc, new ps.TempValue, vt.IntrinsicCellType(ct.ListElementCell))
+    })
+
+    // Split our args in to mutable and immutable
+    val (mutableArgs, immutableArgs) = allArgs.partition { case Argument(storageLoc, _, _) =>
+      planConfig.analysis.mutableVars.contains(storageLoc)
     }
 
-    val restArgTemp = restArgLoc map { storageLoc =>
-      (storageLoc, new ps.TempValue)
-    }
-
-    val argImmutables = (fixedArgTemps.map { case (storageLoc, tempValue) =>
-      val argType = vt.IntrinsicCellType(ct.DatumCell)
-      (storageLoc, TempValueToIntermediate(argType, tempValue))
-    } ++
-    restArgTemp.map { case (storageLoc, tempValue) =>
-      val argType = vt.IntrinsicCellType(ct.ListElementCell)
-      (storageLoc, TempValueToIntermediate(argType, tempValue))
+    // Immutable vars can be used immediately
+    val argImmutables = (immutableArgs.map { case Argument(storageLoc, tempValue, valueType) =>
+      (storageLoc, TempValueToIntermediate(valueType, tempValue))
     }).toMap
 
     // Find the variables that are closed by the parent scope
@@ -54,12 +84,15 @@ private[planner] object PlanLambda {
 
     // Start a new state for the procedure
     val initialImmutables = argImmutables ++ importedImmutables
-    val state = PlannerState(immutables=initialImmutables) 
+    val preMutableState = PlannerState(immutables=initialImmutables) 
 
     implicit val plan = PlanWriter()
+
+    // Initialize aoll of our mutable parameters
+    val postMutableState = initializeMutableArgs(preMutableState)(mutableArgs) 
         
     // Plan the body
-    val planResult = PlanExpression(state)(body)(planConfig, plan)
+    val planResult = PlanExpression(postMutableState)(body)(planConfig, plan)
 
     // Are we returning anything?
     val unspecificType = vt.IntrinsicCellType(ct.UnspecificCell)
@@ -89,7 +122,7 @@ private[planner] object PlanLambda {
     }
 
     // Name our function arguments
-    val namedArguments = (fixedArgTemps ++ restArgTemp.toList).map { case (storageLoc, tempValue) =>
+    val namedArguments = allArgs.map { case Argument(storageLoc, tempValue, _) =>
       (storageLoc.sourceName -> tempValue)
     }
 
