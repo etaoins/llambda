@@ -33,6 +33,10 @@ sealed abstract class ConstantValue(cellType : ct.ConcreteCellType) extends Inte
   
   def preferredRepresentation : vt.ValueType =
     vt.IntrinsicCellType(cellType)
+  
+  def closureRepresentation : Option[vt.ValueType] = 
+    // Constants don't need to be captured
+    None
 }
 
 sealed abstract class TrivialConstantValue[T, U <: ps.StoreConstantCell](cellType : ct.ConcreteCellType, value : T, stepConstructor : (ps.TempValue, T) => U) extends ConstantValue(cellType) {

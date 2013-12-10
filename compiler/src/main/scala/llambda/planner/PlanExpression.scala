@@ -287,7 +287,7 @@ private[planner] object PlanExpression {
           state=initialState,
           storePlannedFunction(
             procName,
-            PlanLambda(fixedArgs, restArg, body)
+            PlanLambda(initialState)(fixedArgs, restArg, body)
           )
         )
     }  

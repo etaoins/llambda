@@ -25,4 +25,7 @@ class RecordValue(val recordType : vt.RecordType, val tempValue : ps.TempValue) 
   
   def preferredRepresentation : vt.ValueType =
     recordType
+  
+  def closureRepresentation : Option[vt.ValueType] = 
+    Some(recordType)
 }

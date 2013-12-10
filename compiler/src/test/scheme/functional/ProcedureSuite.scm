@@ -34,3 +34,7 @@
 (define-test "procedure returning its only argument" (expect 7
 	(define (return-value value) value)
 	(return-value 7)))
+
+(define-test "procedure adding its arguments" (expect 7
+	(define (add-two-values a b) (+ a b))
+	(add-two-values 4 3)))

@@ -67,6 +67,9 @@ sealed abstract class NativeValue(val nativeType : vt.NativeType, val cellType :
   
   def preferredRepresentation : vt.ValueType =
     nativeType
+  
+  def closureRepresentation : Option[vt.ValueType] = 
+    Some(nativeType)
 }
 
 class NativeBooleanValue(tempValue : ps.TempValue) extends NativeValue(vt.CBool, ct.BooleanCell, tempValue) {

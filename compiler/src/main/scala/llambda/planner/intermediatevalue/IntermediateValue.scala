@@ -82,5 +82,13 @@ abstract class IntermediateValue {
     * and conversion.
     */
   def preferredRepresentation : vt.ValueType
+
+  /** Returns the type that should be used to capture this value inside a 
+    * closure
+    *
+    * If None is returned the value does not need to be captured and can instead 
+    * be used directly without storing any data in the closure.
+    */
+  def closureRepresentation : Option[vt.ValueType]
 }
 

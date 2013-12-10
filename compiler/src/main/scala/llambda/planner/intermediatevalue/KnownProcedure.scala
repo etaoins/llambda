@@ -81,5 +81,9 @@ class KnownProcedure(val signature : ProcedureSignature, val nativeSymbol : Stri
   
   def preferredRepresentation : vt.ValueType =
     vt.IntrinsicCellType(ct.ProcedureCell)
+
+  def closureRepresentation : Option[vt.ValueType] = 
+    // XXX: If we have a closure ourselves we'll need to be captured
+    None
 }
 
