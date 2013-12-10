@@ -5,7 +5,7 @@ import llambda.{celltype => ct}
 
 // This is the signature of llambda_exec
 object LlambdaExecSignature extends ProcedureSignature {
-  val hasClosureArg = false
+  val hasSelfArg = false
   val fixedArgs = Nil
   val hasRestArg = false
   val returnType = None

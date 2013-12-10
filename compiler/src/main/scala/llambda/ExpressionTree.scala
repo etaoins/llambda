@@ -77,7 +77,7 @@ case class NativeFunction(
   returnType : Option[vt.ValueType],
   nativeSymbol : String
 ) extends Expression with ProcedureSignature {
-  val hasClosureArg = false
+  val hasSelfArg = false
 
   val subexpressions = Nil
   def map(f : Expression => Expression) : et.NativeFunction = this

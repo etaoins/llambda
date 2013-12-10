@@ -15,8 +15,8 @@ object ProcedureSignatureToIr {
   }
 
   def apply(signature : ProcedureSignature) : IrSignature = {
-    val closureArgs = if (signature.hasClosureArg) {
-      List(Argument(PointerType(IntegerType(8)), Set()))
+    val selfArgs = if (signature.hasSelfArg) {
+      List(Argument(PointerType(ct.ProcedureCell.irType), Set()))
     }
     else {
       Nil
@@ -34,7 +34,7 @@ object ProcedureSignatureToIr {
       Nil
     } 
 
-    val allArgs = closureArgs ++ fixedArgs ++ restArgs
+    val allArgs = selfArgs ++ fixedArgs ++ restArgs
 
     val result = signature.returnType map (ValueTypeToIr(_)) match {
       case None => 

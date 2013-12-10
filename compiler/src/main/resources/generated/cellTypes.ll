@@ -67,7 +67,7 @@
 !15 = metadata !{metadata !"recordLike", metadata !0}
 
 ; {supertype, entryPoint}
-%procedure = type {%recordLike, %datum* (i8*, %listElement*)*}
+%procedure = type {%recordLike, %datum* (%procedure*, %listElement*)*}
 !16 = metadata !{metadata !"procedure", metadata !15}
 
 ; {supertype}

@@ -13,7 +13,7 @@ object PlanRecordTypeConstructor {
       case et.RecordTypeConstructor(recordType, initializedFields) =>
         // Determine our signature
         val constructorSignature = new ProcedureSignature {
-          val hasClosureArg : Boolean = false
+          val hasSelfArg : Boolean = false
           val hasRestArg : Boolean = false
 
           val fixedArgs : List[vt.ValueType] = initializedFields.map(_.fieldType)

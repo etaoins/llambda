@@ -45,3 +45,61 @@
 	(define outer-value 7)
 	(set-arg outer-value)
 	outer-value))
+
+(define-test "capturing constants" (expect 7
+	(define two 2)
+	
+	(define (add-two value)
+	  (+ two value))
+
+	(add-two 5)))
+
+(define-test "capturing immutable variables" (expect 7
+	(define (create-adder-proc to-add)
+	  (lambda (value)
+		 (+ to-add value)))
+
+	(define add-five (create-adder-proc 5))
+	(add-five 2)))
+
+(define-test "capturing mutable variables" (expect (1 2 1 3 2 3)
+	(define (create-counter)
+	  (define value 0)
+	  (lambda ()
+		 (set! value (+ value 1))
+		 value))
+
+	(define first-counter (create-counter))
+	(define second-counter (create-counter))
+
+	(define first-value (first-counter))  ; 1
+	(define second-value (first-counter)) ; 2
+	(define third-value (second-counter)) ; 1
+	(define fourth-value (first-counter)) ; 3
+	(define fifth-value (second-counter)) ; 2
+	(define sixth-value (second-counter)) ; 3
+	
+
+	(list first-value second-value third-value fourth-value fifth-value sixth-value)))
+
+(define-test "capturing another lambda" (expect (2 4 6)
+	(define (create-multiplier factor)
+	  (lambda (value)
+		 (* factor value)))
+
+	(define (create-transformed-counter transformer)
+	  (define value 0)
+	  (lambda ()
+		 (set! value (+ value 1))
+		 (transformer value)))
+
+	; Create a transformer
+	(define times-two (create-multiplier 2))
+	; Pass the transformer to our counter
+	(define counter (create-transformed-counter times-two))
+
+	(define first-value (counter))
+	(define second-value (counter))
+	(define third-value (counter))
+	
+	(list first-value second-value third-value)))

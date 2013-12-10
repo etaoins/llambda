@@ -11,7 +11,7 @@ object PlanRecordTypeAccessor {
       case et.RecordTypeAccessor(recordType, field) =>
         // Determine our signature
         val constructorSignature = new ProcedureSignature {
-          val hasClosureArg : Boolean = false
+          val hasSelfArg : Boolean = false
           val hasRestArg : Boolean = false
 
           val fixedArgs : List[vt.ValueType] = List(recordType)

@@ -166,12 +166,6 @@ object GenPlanStep {
 
       state.withTempValue(resultTemp -> cdrIr)
 
-    case ps.StoreProcedureClosure(resultTemp, procTemp) =>
-      val procIr = state.liveTemps(procTemp)
-      val closureIr = ct.ProcedureCell.genLoadFromRecordData(state.currentBlock)(procIr)
-
-      state.withTempValue(resultTemp -> closureIr)
-    
     case ps.StoreProcedureEntryPoint(resultTemp, procTemp) =>
       val procIr = state.liveTemps(procTemp)
       val entryPoint = ct.ProcedureCell.genLoadFromEntryPoint(state.currentBlock)(procIr)

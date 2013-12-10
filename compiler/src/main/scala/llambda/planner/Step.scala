@@ -121,8 +121,6 @@ case class StorePairCar(result : TempValue, boxed : TempValue) extends Step
 /** Stores the cdr of the passed PairCell as a DatumCell */
 case class StorePairCdr(result : TempValue, boxed : TempValue) extends Step
 
-/** Store the closure of a procedure */
-case class StoreProcedureClosure(result : TempValue, boxed : TempValue) extends Step
 /** Store the entry point of a procedure */
 case class StoreProcedureEntryPoint(result : TempValue, boxed : TempValue) extends Step
 

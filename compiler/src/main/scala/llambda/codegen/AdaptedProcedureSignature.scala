@@ -8,7 +8,7 @@ import llambda.{celltype => ct}
 // If they are wrapping a procedure with a different signature a thunk must
 // be generated with this signature
 object AdaptedProcedureSignature extends ProcedureSignature {
-  val hasClosureArg = true 
+  val hasSelfArg = true 
   val fixedArgs = Nil
   val hasRestArg = true
   val returnType = Some(vt.IntrinsicCellType(ct.DatumCell))

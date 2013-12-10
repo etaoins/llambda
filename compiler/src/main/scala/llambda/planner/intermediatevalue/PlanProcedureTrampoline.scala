@@ -12,7 +12,7 @@ import llambda.codegen.AdaptedProcedureSignature
 
 private[intermediatevalue] object PlanProcedureTrampoline {
   def apply(signature : ProcedureSignature, nativeSymbol : String)(implicit parentPlan : PlanWriter) : PlannedFunction = {
-    val closureTemp = new ps.TempValue
+    val selfTemp = new ps.TempValue
     val argListHeadTemp = new ps.TempValue
 
     implicit val plan = parentPlan.forkPlan()
@@ -22,9 +22,9 @@ private[intermediatevalue] object PlanProcedureTrampoline {
 
     val argTemps = new mutable.ListBuffer[ps.TempValue]
 
-    if (signature.hasClosureArg) {
+    if (signature.hasSelfArg) {
       // Pass the closure through directly
-      argTemps += closureTemp
+      argTemps += selfTemp
     }
     
     // Convert our arg list in to the arguments our procedure is expecting
@@ -79,7 +79,7 @@ private[intermediatevalue] object PlanProcedureTrampoline {
     PlannedFunction(
       signature=AdaptedProcedureSignature,
       namedArguments=List(
-        ("closure" -> closureTemp),
+        ("closure" -> selfTemp),
         ("argList" -> argListHeadTemp)
       ),
       steps=plan.steps.toList

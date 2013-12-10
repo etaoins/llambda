@@ -7,5 +7,5 @@ trait InvokableProcedure {
   val signature : ProcedureSignature
 
   def planEntryPoint()(implicit plan : PlanWriter) : ps.TempValue
-  def planClosure()(implicit plan : PlanWriter) : ps.TempValue
+  def planSelf()(implicit plan : PlanWriter) : ps.TempValue
 }

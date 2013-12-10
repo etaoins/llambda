@@ -51,7 +51,7 @@ def _generate_declaretypes(cell_types):
     datum_class = type_name_to_clike_class(BASE_TYPE)
     list_element_class = type_name_to_clike_class('listElement')
 
-    content += "typedef " + datum_class + "* (*ProcedureEntryPoint)(void*, " + list_element_class + "*);\n\n"
+    content += "typedef " + datum_class + "* (*ProcedureEntryPoint)(ProcedureCell*, " + list_element_class + "*);\n\n"
 
     content += "}\n\n"
 

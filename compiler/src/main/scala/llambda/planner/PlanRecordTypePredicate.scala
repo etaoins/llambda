@@ -13,7 +13,7 @@ object PlanRecordTypePredicate {
       case et.RecordTypePredicate(recordType) =>
         // Determine our signature
         val predicateSignature = new ProcedureSignature {
-          val hasClosureArg : Boolean = false
+          val hasSelfArg : Boolean = false
           val hasRestArg : Boolean = false
 
           // We must be able to take any data type without erroring out

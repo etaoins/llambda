@@ -80,7 +80,7 @@ class ProcedureSignatureToIrSuite extends FunSuite {
     assert(irSignature === IrSignature(
       result=Result(PointerType(ct.DatumCell.irType)),
       arguments=List(
-        Argument(PointerType(IntegerType(8))),
+        Argument(PointerType(ct.ProcedureCell.irType)),
         Argument(PointerType(ct.ListElementCell.irType))
       )
     ))

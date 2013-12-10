@@ -19,7 +19,7 @@ private[planner] object PlanExpression {
     val nativeSymbol = plan.allocProcedureSymbol(suggestedName)
     plan.plannedFunctions += (nativeSymbol -> plannedFunction)
 
-    new iv.KnownProcedure(plannedFunction.signature, nativeSymbol)
+    new iv.KnownProcedure(plannedFunction.signature, nativeSymbol, None)
   }
 
   def apply(initialState : PlannerState)(expr : et.Expression, sourceNameHint : Option[String] = None)(implicit planConfig : PlanConfig, plan : PlanWriter) : PlanResult = LocateExceptionsWith(expr) {
@@ -201,7 +201,7 @@ private[planner] object PlanExpression {
       case nativeFunc : et.NativeFunction =>
         PlanResult(
           state=initialState,
-          value=new iv.KnownProcedure(nativeFunc, nativeFunc.nativeSymbol)
+          value=new iv.KnownProcedure(nativeFunc, nativeFunc.nativeSymbol, None)
         )
 
       case recordConstructor : et.RecordTypeConstructor =>
@@ -281,15 +281,7 @@ private[planner] object PlanExpression {
         PlanResult(state=valueResult.state, value=castValue)
 
       case et.Lambda(fixedArgs, restArg, body) =>
-        val procName = sourceNameHint.getOrElse("anonymous-procedure")
-
-        PlanResult(
-          state=initialState,
-          storePlannedFunction(
-            procName,
-            PlanLambda(initialState)(fixedArgs, restArg, body)
-          )
-        )
+        PlanLambda(initialState, plan)(fixedArgs, restArg, body, sourceNameHint)
     }  
   }
 }

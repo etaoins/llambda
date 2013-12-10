@@ -50,8 +50,8 @@ object PlanApplication {
       }
     }
 
-    val closureTemps = if (signature.hasClosureArg) {
-      invokableProc.planClosure() :: Nil
+    val selfTemps = if (signature.hasSelfArg) {
+      invokableProc.planSelf() :: Nil
     }
     else {
       Nil
@@ -69,7 +69,7 @@ object PlanApplication {
       Nil
     }
 
-    val argTemps = closureTemps ++ fixedTemps ++ restTemps
+    val argTemps = selfTemps ++ fixedTemps ++ restTemps
 
     val resultTemp = signature.returnType.map { _ =>
       new ps.TempValue

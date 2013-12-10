@@ -8,12 +8,8 @@ import llambda.codegen.AdaptedProcedureSignature
 class InvokableProcedureCell(tempValue : ps.TempValue) extends InvokableProcedure {
   val signature = AdaptedProcedureSignature
   
-  def planClosure()(implicit plan : PlanWriter) : ps.TempValue = {
-    val closureTemp = new ps.TempValue
-    plan.steps += ps.StoreProcedureClosure(closureTemp, tempValue)
-
-    closureTemp
-  }
+  def planSelf()(implicit plan : PlanWriter) : ps.TempValue = 
+    tempValue
   
   def planEntryPoint()(implicit plan : PlanWriter) : ps.TempValue = {
     val entryPointTemp = new ps.TempValue

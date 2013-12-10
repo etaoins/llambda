@@ -1808,7 +1808,7 @@ object RecordLikeCell extends CellType with RecordLikeFields {
 }
 
 sealed trait ProcedureFields extends RecordLikeFields {
-  val entryPointIrType = PointerType(FunctionType(PointerType(UserDefinedType("datum")), List(PointerType(IntegerType(8)), PointerType(UserDefinedType("listElement")) )))
+  val entryPointIrType = PointerType(FunctionType(PointerType(UserDefinedType("datum")), List(PointerType(UserDefinedType("procedure")), PointerType(UserDefinedType("listElement")) )))
 
   def genPointerToEntryPoint(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
   def genStoreToEntryPoint(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue) : Unit
