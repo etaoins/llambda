@@ -10,6 +10,9 @@ def _uppercase_first(string):
 def _type_name_to_nfi_decl(type_name):
     return re.sub('([A-Z][a-z]+)', r'-\1', type_name).lower() + "-cell"
 
+def _type_name_to_fields_trait(type_name):
+    return type_name[0].upper() + type_name[1:] + "Fields"
+
 def _llvm_type_integer_bits(llvm_type):
     if llvm_type is None:
         return None
@@ -78,11 +81,7 @@ def _field_type_to_scala(field):
 def _generate_field_types(current_type):
     supertype = current_type.supertype
 
-    if supertype:
-        output  = _generate_field_types(supertype)
-    else:
-        output = ''
-
+    output = ''
     for field_name, field in current_type.fields.items():
         output += '  val ' + field_name + 'IrType = ' + _field_type_to_scala(field) + '\n'
 
@@ -118,7 +117,6 @@ def _generate_constant_constructor(all_types, cell_type):
         if (field.name == 'typeId') and constant_type_id is not None:
             # We know our own type ID
             continue
-
 
         # See if this is an integer field
         field_int_bits = _llvm_type_integer_bits(field.llvm_type)
@@ -192,10 +190,10 @@ def _generate_constant_constructor(all_types, cell_type):
 
     return output
 
-def _generate_field_accessors(leaf_type, current_type, declare_only = False, depth = 1):
+def _generate_field_accessors(leaf_type, current_type, declare_only = False, depth = 1, recurse = True):
     supertype = current_type.supertype
 
-    if supertype:
+    if supertype and recurse:
         output  = _generate_field_accessors(leaf_type, supertype, declare_only, depth + 1)
 
         # Our supertype is our first "field"
@@ -303,7 +301,8 @@ def _generate_cell_types(all_types):
     output += "import llambda.codegen.llvmir._\n"
     output += "import llambda.InternalCompilerErrorException\n\n"
         
-    output += 'sealed abstract class CellType {\n'
+    base_type_fields_trait = _type_name_to_fields_trait(BASE_TYPE) 
+    output += 'sealed abstract class CellType extends ' + base_type_fields_trait + ' {\n'
     output += '  val name : String\n'
     output += '  val irType : FirstClassType\n'
     output += '  val supertype : Option[CellType]\n'
@@ -341,7 +340,6 @@ def _generate_cell_types(all_types):
     output += '    else {\n'
     output += '      block.bitcastTo(name + "Cast")(uncastValue, PointerType(irType))\n'
     output += '    }\n'
-    output += _generate_field_accessors(base_type, base_type, True)
     output += '}\n\n'
 
     output += 'sealed abstract class ConcreteCellType extends CellType {\n'
@@ -350,14 +348,26 @@ def _generate_cell_types(all_types):
 
     for type_name, cell_type in all_types.items():
         object_name = type_name_to_clike_class(type_name)
+        fields_trait_name = _type_name_to_fields_trait(type_name)
         supertype_name = cell_type.inherits
+
+        # Make the trait with our field information
+        if supertype_name:
+            fields_supertrait_decl = 'extends ' + _type_name_to_fields_trait(supertype_name)
+        else:
+            fields_supertrait_decl = ''
+
+        output += 'sealed trait ' + fields_trait_name + ' ' + fields_supertrait_decl + ' {\n'
+        output += _generate_field_types(cell_type)
+        output += _generate_field_accessors(cell_type, cell_type, True, 1, False)
+        output += '}\n\n'
 
         if cell_type.abstract:
             scala_superclass = 'CellType'
         else:
             scala_superclass = 'ConcreteCellType'
 
-        output += 'object ' + object_name + ' extends ' + scala_superclass + ' {\n'
+        output += 'object ' + object_name + ' extends ' + scala_superclass + ' with ' + fields_trait_name + ' {\n'
         output += '  val name = "' + type_name + '"\n'
         output += '  val irType = UserDefinedType("' + type_name + '")\n'
 
@@ -384,10 +394,7 @@ def _generate_cell_types(all_types):
         type_id = cell_type.type_id
         if type_id is not None:
             output += '  val typeId = ' + str(type_id) + '\n'
-        output += "\n"
         
-        output += _generate_field_types(cell_type)
-
         if not cell_type.singleton:
             output += '\n'
             output += _generate_constant_constructor(all_types, cell_type)

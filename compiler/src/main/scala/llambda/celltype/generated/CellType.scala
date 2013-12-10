@@ -7,7 +7,7 @@ package llambda.celltype
 import llambda.codegen.llvmir._
 import llambda.InternalCompilerErrorException
 
-sealed abstract class CellType {
+sealed abstract class CellType extends DatumFields {
   val name : String
   val irType : FirstClassType
   val supertype : Option[CellType]
@@ -45,6 +45,15 @@ sealed abstract class CellType {
     else {
       block.bitcastTo(name + "Cast")(uncastValue, PointerType(irType))
     }
+}
+
+sealed abstract class ConcreteCellType extends CellType {
+  val typeId : Int
+}
+
+sealed trait DatumFields  {
+  val typeIdIrType = IntegerType(8)
+  val gcStateIrType = IntegerType(8)
 
   def genPointerToTypeId(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
   def genStoreToTypeId(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue) : Unit
@@ -55,20 +64,13 @@ sealed abstract class CellType {
   def genLoadFromGcState(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
 }
 
-sealed abstract class ConcreteCellType extends CellType {
-  val typeId : Int
-}
-
-object DatumCell extends CellType {
+object DatumCell extends CellType with DatumFields {
   val name = "datum"
   val irType = UserDefinedType("datum")
   val supertype = None
   val directSubtypes = Set[CellType](UnspecificCell, ListElementCell, StringLikeCell, BooleanCell, NumericCell, CharacterCell, VectorCell, BytevectorCell, RecordLikeCell)
   val isAbstract = true
   val tbaaIndex = 0
-
-  val typeIdIrType = IntegerType(8)
-  val gcStateIrType = IntegerType(8)
 
   def createConstant(typeId : Long) : StructureConstant = {
     StructureConstant(List(
@@ -128,7 +130,10 @@ object DatumCell extends CellType {
   }
 }
 
-object UnspecificCell extends ConcreteCellType {
+sealed trait UnspecificFields extends DatumFields {
+}
+
+object UnspecificCell extends ConcreteCellType with UnspecificFields {
   val name = "unspecific"
   val irType = UserDefinedType("unspecific")
   val supertype = Some(DatumCell)
@@ -136,9 +141,6 @@ object UnspecificCell extends ConcreteCellType {
   val isAbstract = false
   val tbaaIndex = 1
   val typeId = 0
-
-  val typeIdIrType = IntegerType(8)
-  val gcStateIrType = IntegerType(8)
 
   def genTypeCheck(startBlock : IrBlockBuilder)(valueCell : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
     val datumValue = DatumCell.genPointerBitcast(startBlock)(valueCell)
@@ -193,16 +195,16 @@ object UnspecificCell extends ConcreteCellType {
   }
 }
 
-object ListElementCell extends CellType {
+sealed trait ListElementFields extends DatumFields {
+}
+
+object ListElementCell extends CellType with ListElementFields {
   val name = "listElement"
   val irType = UserDefinedType("listElement")
   val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType](PairCell, EmptyListCell)
   val isAbstract = true
   val tbaaIndex = 2
-
-  val typeIdIrType = IntegerType(8)
-  val gcStateIrType = IntegerType(8)
 
   def createConstant(typeId : Long) : StructureConstant = {
     StructureConstant(List(
@@ -265,7 +267,20 @@ object ListElementCell extends CellType {
   }
 }
 
-object PairCell extends ConcreteCellType {
+sealed trait PairFields extends ListElementFields {
+  val carIrType = PointerType(UserDefinedType("datum"))
+  val cdrIrType = PointerType(UserDefinedType("datum"))
+
+  def genPointerToCar(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+  def genStoreToCar(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue) : Unit
+  def genLoadFromCar(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+
+  def genPointerToCdr(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+  def genStoreToCdr(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue) : Unit
+  def genLoadFromCdr(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+}
+
+object PairCell extends ConcreteCellType with PairFields {
   val name = "pair"
   val irType = UserDefinedType("pair")
   val supertype = Some(ListElementCell)
@@ -273,11 +288,6 @@ object PairCell extends ConcreteCellType {
   val isAbstract = false
   val tbaaIndex = 3
   val typeId = 1
-
-  val typeIdIrType = IntegerType(8)
-  val gcStateIrType = IntegerType(8)
-  val carIrType = PointerType(UserDefinedType("datum"))
-  val cdrIrType = PointerType(UserDefinedType("datum"))
 
   def createConstant(car : IrConstant, cdr : IrConstant) : StructureConstant = {
     if (car.irType != carIrType) {
@@ -396,7 +406,10 @@ object PairCell extends ConcreteCellType {
   }
 }
 
-object EmptyListCell extends ConcreteCellType {
+sealed trait EmptyListFields extends ListElementFields {
+}
+
+object EmptyListCell extends ConcreteCellType with EmptyListFields {
   val name = "emptyList"
   val irType = UserDefinedType("emptyList")
   val supertype = Some(ListElementCell)
@@ -404,9 +417,6 @@ object EmptyListCell extends ConcreteCellType {
   val isAbstract = false
   val tbaaIndex = 4
   val typeId = 2
-
-  val typeIdIrType = IntegerType(8)
-  val gcStateIrType = IntegerType(8)
 
   def genTypeCheck(startBlock : IrBlockBuilder)(valueCell : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
     val datumValue = DatumCell.genPointerBitcast(startBlock)(valueCell)
@@ -461,19 +471,31 @@ object EmptyListCell extends ConcreteCellType {
   }
 }
 
-object StringLikeCell extends CellType {
+sealed trait StringLikeFields extends DatumFields {
+  val charLengthIrType = IntegerType(32)
+  val byteLengthIrType = IntegerType(32)
+  val utf8DataIrType = PointerType(IntegerType(8))
+
+  def genPointerToCharLength(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+  def genStoreToCharLength(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue) : Unit
+  def genLoadFromCharLength(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+
+  def genPointerToByteLength(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+  def genStoreToByteLength(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue) : Unit
+  def genLoadFromByteLength(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+
+  def genPointerToUtf8Data(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+  def genStoreToUtf8Data(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue) : Unit
+  def genLoadFromUtf8Data(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+}
+
+object StringLikeCell extends CellType with StringLikeFields {
   val name = "stringLike"
   val irType = UserDefinedType("stringLike")
   val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType](StringCell, SymbolCell)
   val isAbstract = true
   val tbaaIndex = 5
-
-  val typeIdIrType = IntegerType(8)
-  val gcStateIrType = IntegerType(8)
-  val charLengthIrType = IntegerType(32)
-  val byteLengthIrType = IntegerType(32)
-  val utf8DataIrType = PointerType(IntegerType(8))
 
   def createConstant(charLength : Long, byteLength : Long, utf8Data : IrConstant, typeId : Long) : StructureConstant = {
     if (utf8Data.irType != utf8DataIrType) {
@@ -612,7 +634,10 @@ object StringLikeCell extends CellType {
   }
 }
 
-object StringCell extends ConcreteCellType {
+sealed trait StringFields extends StringLikeFields {
+}
+
+object StringCell extends ConcreteCellType with StringFields {
   val name = "string"
   val irType = UserDefinedType("string")
   val supertype = Some(StringLikeCell)
@@ -620,12 +645,6 @@ object StringCell extends ConcreteCellType {
   val isAbstract = false
   val tbaaIndex = 6
   val typeId = 3
-
-  val typeIdIrType = IntegerType(8)
-  val gcStateIrType = IntegerType(8)
-  val charLengthIrType = IntegerType(32)
-  val byteLengthIrType = IntegerType(32)
-  val utf8DataIrType = PointerType(IntegerType(8))
 
   def createConstant(charLength : Long, byteLength : Long, utf8Data : IrConstant) : StructureConstant = {
     StructureConstant(List(
@@ -760,7 +779,10 @@ object StringCell extends ConcreteCellType {
   }
 }
 
-object SymbolCell extends ConcreteCellType {
+sealed trait SymbolFields extends StringLikeFields {
+}
+
+object SymbolCell extends ConcreteCellType with SymbolFields {
   val name = "symbol"
   val irType = UserDefinedType("symbol")
   val supertype = Some(StringLikeCell)
@@ -768,12 +790,6 @@ object SymbolCell extends ConcreteCellType {
   val isAbstract = false
   val tbaaIndex = 7
   val typeId = 4
-
-  val typeIdIrType = IntegerType(8)
-  val gcStateIrType = IntegerType(8)
-  val charLengthIrType = IntegerType(32)
-  val byteLengthIrType = IntegerType(32)
-  val utf8DataIrType = PointerType(IntegerType(8))
 
   def createConstant(charLength : Long, byteLength : Long, utf8Data : IrConstant) : StructureConstant = {
     StructureConstant(List(
@@ -908,7 +924,15 @@ object SymbolCell extends ConcreteCellType {
   }
 }
 
-object BooleanCell extends ConcreteCellType {
+sealed trait BooleanFields extends DatumFields {
+  val valueIrType = IntegerType(8)
+
+  def genPointerToValue(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+  def genStoreToValue(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue) : Unit
+  def genLoadFromValue(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+}
+
+object BooleanCell extends ConcreteCellType with BooleanFields {
   val name = "boolean"
   val irType = UserDefinedType("boolean")
   val supertype = Some(DatumCell)
@@ -916,10 +940,6 @@ object BooleanCell extends ConcreteCellType {
   val isAbstract = false
   val tbaaIndex = 8
   val typeId = 5
-
-  val typeIdIrType = IntegerType(8)
-  val gcStateIrType = IntegerType(8)
-  val valueIrType = IntegerType(8)
 
   def genTypeCheck(startBlock : IrBlockBuilder)(valueCell : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
     val datumValue = DatumCell.genPointerBitcast(startBlock)(valueCell)
@@ -997,16 +1017,16 @@ object BooleanCell extends ConcreteCellType {
   }
 }
 
-object NumericCell extends CellType {
+sealed trait NumericFields extends DatumFields {
+}
+
+object NumericCell extends CellType with NumericFields {
   val name = "numeric"
   val irType = UserDefinedType("numeric")
   val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType](ExactIntegerCell, InexactRationalCell)
   val isAbstract = true
   val tbaaIndex = 9
-
-  val typeIdIrType = IntegerType(8)
-  val gcStateIrType = IntegerType(8)
 
   def createConstant(typeId : Long) : StructureConstant = {
     StructureConstant(List(
@@ -1069,7 +1089,15 @@ object NumericCell extends CellType {
   }
 }
 
-object ExactIntegerCell extends ConcreteCellType {
+sealed trait ExactIntegerFields extends NumericFields {
+  val valueIrType = IntegerType(64)
+
+  def genPointerToValue(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+  def genStoreToValue(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue) : Unit
+  def genLoadFromValue(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+}
+
+object ExactIntegerCell extends ConcreteCellType with ExactIntegerFields {
   val name = "exactInteger"
   val irType = UserDefinedType("exactInteger")
   val supertype = Some(NumericCell)
@@ -1077,10 +1105,6 @@ object ExactIntegerCell extends ConcreteCellType {
   val isAbstract = false
   val tbaaIndex = 10
   val typeId = 6
-
-  val typeIdIrType = IntegerType(8)
-  val gcStateIrType = IntegerType(8)
-  val valueIrType = IntegerType(64)
 
   def createConstant(value : Long) : StructureConstant = {
     StructureConstant(List(
@@ -1167,7 +1191,15 @@ object ExactIntegerCell extends ConcreteCellType {
   }
 }
 
-object InexactRationalCell extends ConcreteCellType {
+sealed trait InexactRationalFields extends NumericFields {
+  val valueIrType = DoubleType
+
+  def genPointerToValue(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+  def genStoreToValue(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue) : Unit
+  def genLoadFromValue(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+}
+
+object InexactRationalCell extends ConcreteCellType with InexactRationalFields {
   val name = "inexactRational"
   val irType = UserDefinedType("inexactRational")
   val supertype = Some(NumericCell)
@@ -1175,10 +1207,6 @@ object InexactRationalCell extends ConcreteCellType {
   val isAbstract = false
   val tbaaIndex = 11
   val typeId = 7
-
-  val typeIdIrType = IntegerType(8)
-  val gcStateIrType = IntegerType(8)
-  val valueIrType = DoubleType
 
   def createConstant(value : IrConstant) : StructureConstant = {
     if (value.irType != valueIrType) {
@@ -1269,7 +1297,15 @@ object InexactRationalCell extends ConcreteCellType {
   }
 }
 
-object CharacterCell extends ConcreteCellType {
+sealed trait CharacterFields extends DatumFields {
+  val unicodeCharIrType = IntegerType(32)
+
+  def genPointerToUnicodeChar(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+  def genStoreToUnicodeChar(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue) : Unit
+  def genLoadFromUnicodeChar(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+}
+
+object CharacterCell extends ConcreteCellType with CharacterFields {
   val name = "character"
   val irType = UserDefinedType("character")
   val supertype = Some(DatumCell)
@@ -1277,10 +1313,6 @@ object CharacterCell extends ConcreteCellType {
   val isAbstract = false
   val tbaaIndex = 12
   val typeId = 8
-
-  val typeIdIrType = IntegerType(8)
-  val gcStateIrType = IntegerType(8)
-  val unicodeCharIrType = IntegerType(32)
 
   def createConstant(unicodeChar : IrConstant) : StructureConstant = {
     if (unicodeChar.irType != unicodeCharIrType) {
@@ -1371,7 +1403,20 @@ object CharacterCell extends ConcreteCellType {
   }
 }
 
-object VectorCell extends ConcreteCellType {
+sealed trait VectorFields extends DatumFields {
+  val lengthIrType = IntegerType(32)
+  val elementsIrType = PointerType(PointerType(UserDefinedType("datum")))
+
+  def genPointerToLength(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+  def genStoreToLength(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue) : Unit
+  def genLoadFromLength(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+
+  def genPointerToElements(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+  def genStoreToElements(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue) : Unit
+  def genLoadFromElements(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+}
+
+object VectorCell extends ConcreteCellType with VectorFields {
   val name = "vector"
   val irType = UserDefinedType("vector")
   val supertype = Some(DatumCell)
@@ -1379,11 +1424,6 @@ object VectorCell extends ConcreteCellType {
   val isAbstract = false
   val tbaaIndex = 13
   val typeId = 9
-
-  val typeIdIrType = IntegerType(8)
-  val gcStateIrType = IntegerType(8)
-  val lengthIrType = IntegerType(32)
-  val elementsIrType = PointerType(PointerType(UserDefinedType("datum")))
 
   def createConstant(length : Long, elements : IrConstant) : StructureConstant = {
     if (elements.irType != elementsIrType) {
@@ -1498,7 +1538,20 @@ object VectorCell extends ConcreteCellType {
   }
 }
 
-object BytevectorCell extends ConcreteCellType {
+sealed trait BytevectorFields extends DatumFields {
+  val lengthIrType = IntegerType(32)
+  val dataIrType = PointerType(IntegerType(8))
+
+  def genPointerToLength(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+  def genStoreToLength(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue) : Unit
+  def genLoadFromLength(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+
+  def genPointerToData(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+  def genStoreToData(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue) : Unit
+  def genLoadFromData(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+}
+
+object BytevectorCell extends ConcreteCellType with BytevectorFields {
   val name = "bytevector"
   val irType = UserDefinedType("bytevector")
   val supertype = Some(DatumCell)
@@ -1506,11 +1559,6 @@ object BytevectorCell extends ConcreteCellType {
   val isAbstract = false
   val tbaaIndex = 14
   val typeId = 10
-
-  val typeIdIrType = IntegerType(8)
-  val gcStateIrType = IntegerType(8)
-  val lengthIrType = IntegerType(32)
-  val dataIrType = PointerType(IntegerType(8))
 
   def createConstant(length : Long, data : IrConstant) : StructureConstant = {
     if (data.irType != dataIrType) {
@@ -1625,18 +1673,26 @@ object BytevectorCell extends ConcreteCellType {
   }
 }
 
-object RecordLikeCell extends CellType {
+sealed trait RecordLikeFields extends DatumFields {
+  val recordClassIdIrType = IntegerType(32)
+  val recordDataIrType = PointerType(IntegerType(8))
+
+  def genPointerToRecordClassId(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+  def genStoreToRecordClassId(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue) : Unit
+  def genLoadFromRecordClassId(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+
+  def genPointerToRecordData(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+  def genStoreToRecordData(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue) : Unit
+  def genLoadFromRecordData(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+}
+
+object RecordLikeCell extends CellType with RecordLikeFields {
   val name = "recordLike"
   val irType = UserDefinedType("recordLike")
   val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType](ProcedureCell, RecordCell)
   val isAbstract = true
   val tbaaIndex = 15
-
-  val typeIdIrType = IntegerType(8)
-  val gcStateIrType = IntegerType(8)
-  val recordClassIdIrType = IntegerType(32)
-  val recordDataIrType = PointerType(IntegerType(8))
 
   def createConstant(recordClassId : Long, recordData : IrConstant, typeId : Long) : StructureConstant = {
     if (recordData.irType != recordDataIrType) {
@@ -1751,7 +1807,15 @@ object RecordLikeCell extends CellType {
   }
 }
 
-object ProcedureCell extends ConcreteCellType {
+sealed trait ProcedureFields extends RecordLikeFields {
+  val entryPointIrType = PointerType(FunctionType(PointerType(UserDefinedType("datum")), List(PointerType(IntegerType(8)), PointerType(UserDefinedType("listElement")) )))
+
+  def genPointerToEntryPoint(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+  def genStoreToEntryPoint(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue) : Unit
+  def genLoadFromEntryPoint(block : IrBlockBuilder)(valueCell : IrValue) : IrValue
+}
+
+object ProcedureCell extends ConcreteCellType with ProcedureFields {
   val name = "procedure"
   val irType = UserDefinedType("procedure")
   val supertype = Some(RecordLikeCell)
@@ -1759,12 +1823,6 @@ object ProcedureCell extends ConcreteCellType {
   val isAbstract = false
   val tbaaIndex = 16
   val typeId = 11
-
-  val typeIdIrType = IntegerType(8)
-  val gcStateIrType = IntegerType(8)
-  val recordClassIdIrType = IntegerType(32)
-  val recordDataIrType = PointerType(IntegerType(8))
-  val entryPointIrType = PointerType(FunctionType(PointerType(UserDefinedType("datum")), List(PointerType(IntegerType(8)), PointerType(UserDefinedType("listElement")) )))
 
   def createConstant(entryPoint : IrConstant, recordClassId : Long, recordData : IrConstant) : StructureConstant = {
     if (entryPoint.irType != entryPointIrType) {
@@ -1903,7 +1961,10 @@ object ProcedureCell extends ConcreteCellType {
   }
 }
 
-object RecordCell extends ConcreteCellType {
+sealed trait RecordFields extends RecordLikeFields {
+}
+
+object RecordCell extends ConcreteCellType with RecordFields {
   val name = "record"
   val irType = UserDefinedType("record")
   val supertype = Some(RecordLikeCell)
@@ -1911,11 +1972,6 @@ object RecordCell extends ConcreteCellType {
   val isAbstract = false
   val tbaaIndex = 17
   val typeId = 12
-
-  val typeIdIrType = IntegerType(8)
-  val gcStateIrType = IntegerType(8)
-  val recordClassIdIrType = IntegerType(32)
-  val recordDataIrType = PointerType(IntegerType(8))
 
   def createConstant(recordClassId : Long, recordData : IrConstant) : StructureConstant = {
     StructureConstant(List(
