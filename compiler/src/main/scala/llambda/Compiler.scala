@@ -28,7 +28,14 @@ object Compiler {
       List("-o", output.getAbsolutePath)
 
     val llvmIrStream = new ByteArrayInputStream(llvmIr.getBytes("UTF-8"))
-    val compilePipeline = llcCmd #< llvmIrStream #| clangCmd
+
+    val compilePipeline = if (optimizeLevel > 1) { 
+      val optCmd = List("opt", optimizeArg)
+      optCmd #< llvmIrStream #| llcCmd #| clangCmd
+    }
+    else {
+      llcCmd #< llvmIrStream #| clangCmd
+    }
 
     if (compilePipeline.! != 0) {
       throw new ExternalCompilerException
