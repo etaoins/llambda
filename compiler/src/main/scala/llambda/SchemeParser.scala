@@ -170,15 +170,15 @@ class SchemeParser(filename : Option[String]) extends RegexParsers {
                           symbolicEscape | symbolicNewline | symbolicNull |
                           symbolicReturn | symbolicSpace | symbolicTab
 
-  def symbolicAlarm =     """#\\alarm""".r     ^^^ ast.CharLiteral(0x07)
-  def symbolicBackspace = """#\\backspace""".r ^^^ ast.CharLiteral(0x08)
-  def symbolicDelete =    """#\\delete""".r    ^^^ ast.CharLiteral(0x7f)
-  def symbolicEscape =    """#\\escape""".r    ^^^ ast.CharLiteral(0x1b)
-  def symbolicNewline =   """#\\newline""".r   ^^^ ast.CharLiteral('\n')
-  def symbolicNull =      """#\\null""".r      ^^^ ast.CharLiteral(0x00)
-  def symbolicReturn =    """#\\return""".r    ^^^ ast.CharLiteral(0x0d)
-  def symbolicSpace =     """#\\space""".r     ^^^ ast.CharLiteral(' ')
-  def symbolicTab =       """#\\tab""".r       ^^^ ast.CharLiteral(0x09)
+  def symbolicAlarm =     """#\alarm"""     ^^^ ast.CharLiteral(0x07)
+  def symbolicBackspace = """#\backspace""" ^^^ ast.CharLiteral(0x08)
+  def symbolicDelete =    """#\delete"""    ^^^ ast.CharLiteral(0x7f)
+  def symbolicEscape =    """#\escape"""    ^^^ ast.CharLiteral(0x1b)
+  def symbolicNewline =   """#\newline"""   ^^^ ast.CharLiteral('\n')
+  def symbolicNull =      """#\null"""      ^^^ ast.CharLiteral(0x00)
+  def symbolicReturn =    """#\return"""    ^^^ ast.CharLiteral(0x0d)
+  def symbolicSpace =     """#\space"""     ^^^ ast.CharLiteral(' ')
+  def symbolicTab =       """#\tab"""       ^^^ ast.CharLiteral(0x09)
 
   def hexNativeCharacter = """(?i)#\\x[0-9a-z]+""".r ^^ { literalStr =>
     ast.CharLiteral(Integer.parseInt(literalStr.drop(3), 16).toChar)
