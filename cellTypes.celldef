@@ -1,0 +1,101 @@
+// LLVM IR doesn't have a boolean type
+fieldtype bool : uint8 {
+	extern ctype = bool;
+};
+
+// void* is represented as i8* in LLVM IR
+// This wouldn't make sense as a bare type
+fieldtype void : int8 {
+	extern ctype = void;
+};
+
+// The runtime has a UnicodeChar class that provides access to Unicode utility
+// methods
+fieldtype UnicodeChar : uint32 {
+	extern ctype = UnicodeChar;
+};
+
+// Entry point for adapted procedures
+fieldtype ProcedureEntryPoint : datum* (*)(procedure*, listElement*);
+
+// This is a special type
+fieldtype TypeId : uint8 {
+	ctype = CellTypeId;
+};
+
+// C++ garbage collector defines the meaning of this field
+fieldtype GarbageState : uint8 {
+	extern ctype = GarbageState;
+};
+
+abstract cell Datum {
+	TypeId typeId;
+	GarbageState gcState;
+};
+
+// "unspecific" values in Scheme
+// This is similar to the unit type
+preconstructed cell Unspecific : Datum;
+
+abstract cell ListElement : Datum;
+
+concrete cell Pair : ListElement {
+	Datum* car;
+	Datum* cdr;
+};
+
+preconstructed cell EmptyList : ListElement;
+
+abstract internal cell StringLike : Datum {
+	uint32 charLength;
+	uint32 byteLength;
+	int8* utf8Data;
+};
+
+concrete cell String : StringLike;
+concrete cell Symbol : StringLike;
+
+preconstructed cell Boolean : Datum {
+	bool value;
+};
+
+abstract cell Numeric : Datum;
+
+concrete cell ExactInteger : Numeric {
+	int64 value;
+};
+
+concrete cell ExactInteger : Numeric {
+	int64 value;
+};
+
+concrete cell InexactRational : Numeric {
+	double value;
+};
+
+concrete cell Character : Datum {
+	UnicodeChar unicodeChar;
+};
+
+concrete cell Vector : Datum {
+	uint32 length;
+	datum** data;
+};
+
+concrete cell ByteVector : Datum {
+	uint32 length;
+	uint8** data;
+};
+
+abstract internal cell RecordLike : Datum {
+	uint32 recordClassId;
+	void* recordData;
+};
+
+concrete cell Procedure : RecordLike {
+	ProcedureEntryPoint entryPoint;
+};
+
+concrete cell Record : RecordLike {
+	void* extraData;
+};
