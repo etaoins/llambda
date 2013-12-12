@@ -2,7 +2,7 @@ package io.llambda.compiler.codegen
 import io.llambda
 
 import llambda.compiler.StorageLocation
-import llambda.compiler.codegen.llvmir.{IrModuleBuilder, IrBlockBuilder, IrValue}
+import llambda.llvmir.{IrModuleBuilder, IrBlockBuilder, IrValue}
 import llambda.compiler.planner.{step => ps}
 
 case class GenerationState(

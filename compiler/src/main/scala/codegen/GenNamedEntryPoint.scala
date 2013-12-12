@@ -3,7 +3,7 @@ import io.llambda
 
 import llambda.compiler.ProcedureSignature
 import llambda.compiler.planner.{step => ps}
-import llambda.compiler.codegen.llvmir._
+import llambda.llvmir._
 
 object GenNamedEntryPoint {
   def apply(module : IrModuleBuilder)(signature : ProcedureSignature, nativeSymbol : String, plannedSymbols : Set[String]) : IrValue = {

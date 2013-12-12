@@ -1,12 +1,20 @@
 package io.llambda.compiler.codegen
 import io.llambda
 
+import llambda.llvmir
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.InternalCompilerErrorException
 
 import org.scalatest.FunSuite
 
-class CellTypeSuite extends llvmir.IrTestSuite {
+class CellTypeSuite extends FunSuite {
+  private def createTestBlock() =
+    (new llvmir.IrFunctionBuilder(
+      llvmir.IrFunction.Result(llvmir.VoidType), 
+      "dontcare", 
+      Nil)
+    ).entryBlock
+
   test("create constant inexact rational cell") {
     val innerValue = llvmir.DoubleConstant(31.5)
 
@@ -67,7 +75,7 @@ class CellTypeSuite extends llvmir.IrTestSuite {
     val block = createTestBlock()
     val resultValue = ct.DatumCell.genPointerBitcast(block)(nullNumeric)
 
-    assertInstr(block, "%datumCast1 = bitcast %numeric* null to %datum*") 
+    assert(block.toIr === "entry:\n\t%datumCast1 = bitcast %numeric* null to %datum*") 
 
     assert(resultValue != nullNumeric)
     assert(resultValue.irType === llvmir.PointerType(ct.DatumCell.irType))

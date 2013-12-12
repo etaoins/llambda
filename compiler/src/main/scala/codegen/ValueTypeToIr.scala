@@ -1,6 +1,7 @@
 package io.llambda.compiler.codegen
 import io.llambda
 
+import llambda.llvmir
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 

@@ -1,7 +1,7 @@
 package io.llambda.compiler.codegen
 import io.llambda
 
-import llambda.compiler.codegen.llvmir._
+import llambda.llvmir._
 
 object GenLlvmExpect {
   def apply(block : IrBlockBuilder)(value : IrValue, expectation : IrConstant) : IrValue = {

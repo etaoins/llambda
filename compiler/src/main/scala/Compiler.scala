@@ -25,7 +25,7 @@ object Compiler {
     val clangCmd = List("clang++", optimizeArg) ++
       stdlibArg ++
       List("-x", "assembler", "-") ++ 
-      List("-x", "none", "../runtime/liblliby.a") ++
+      List("-x", "none", "runtime/liblliby.a") ++
       List("-o", output.getAbsolutePath)
 
     val llvmIrStream = new ByteArrayInputStream(llvmIr.getBytes("UTF-8"))

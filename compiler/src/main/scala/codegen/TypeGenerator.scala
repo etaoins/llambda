@@ -2,7 +2,7 @@ package io.llambda.compiler.codegen
 import io.llambda
 
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.codegen.llvmir._
+import llambda.llvmir._
 import llambda.compiler.platform.TargetPlatform
 import llambda.compiler.InternalCompilerErrorException
 

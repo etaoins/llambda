@@ -5,7 +5,7 @@
 package io.llambda.compiler.celltype
 import io.llambda
 
-import llambda.compiler.codegen.llvmir._
+import llambda.llvmir._
 import llambda.compiler.InternalCompilerErrorException
 
 sealed abstract class CellType extends DatumFields {

@@ -7,8 +7,8 @@ import llambda.compiler.et.NativeFunction
 
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.codegen.llvmir._
-import llambda.compiler.codegen.llvmir.IrFunction._
+import llambda.llvmir._
+import llambda.llvmir.IrFunction._
 
 class ProcedureSignatureToIrSuite extends FunSuite {
   test("argless void function") {

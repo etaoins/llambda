@@ -3,8 +3,8 @@ import io.llambda
 
 import llambda.compiler.InternalCompilerErrorException
 import llambda.compiler.{celltype => ct}
-import llambda.compiler.codegen.llvmir._
-import llambda.compiler.codegen.llvmir.IrFunction._
+import llambda.llvmir._
+import llambda.llvmir.IrFunction._
 
 object GenProperList {
   // irDatumCell must be of type %datum*

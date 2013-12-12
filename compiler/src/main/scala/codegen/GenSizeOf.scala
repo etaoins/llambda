@@ -1,7 +1,7 @@
 package io.llambda.compiler.codegen
 import io.llambda
 
-import llambda.compiler.codegen.llvmir._
+import llambda.llvmir._
 
 object GenSizeOf {
   def apply(block : IrBlockBuilder)(irType : FirstClassType) : IrValue = {

@@ -3,8 +3,8 @@ import io.llambda
 
 import llambda.compiler.ProcedureSignature
 import llambda.compiler.{celltype => ct}
-import llambda.compiler.codegen.llvmir.{IrSignature, PointerType, VoidType, IntegerType}
-import llambda.compiler.codegen.llvmir.IrFunction._
+import llambda.llvmir.{IrSignature, PointerType, VoidType, IntegerType}
+import llambda.llvmir.IrFunction._
 
 object ProcedureSignatureToIr {
   private def paramSignednessToAttribs(signedness : Option[Boolean]) : Set[ParameterAttribute] = {

@@ -4,7 +4,7 @@ import io.llambda
 import scala.io.Source
 
 import llambda.compiler._
-import llambda.compiler.codegen.llvmir._
+import llambda.llvmir._
 import llambda.compiler.platform.TargetPlatform
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{celltype => ct}
@@ -35,7 +35,7 @@ object GenProgram {
     (cellType.directSubtypes.map(maxCellTbaaIndex) + cellType.tbaaIndex).max
 
   def apply(functions : Map[String, planner.PlannedFunction], targetPlatform : TargetPlatform) : String = {
-    val module = new llvmir.IrModuleBuilder
+    val module = new IrModuleBuilder
     val plannedSymbols = functions.keySet
 
     val nextTbaaIndex = maxCellTbaaIndex(ct.DatumCell) + 1

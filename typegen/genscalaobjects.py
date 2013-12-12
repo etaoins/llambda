@@ -299,7 +299,7 @@ def _generate_cell_types(all_types):
     output += "package io.llambda.compiler.celltype\n"
     output += "import io.llambda\n\n"
 
-    output += "import llambda.compiler.codegen.llvmir._\n"
+    output += "import llambda.llvmir._\n"
     output += "import llambda.compiler.InternalCompilerErrorException\n\n"
         
     base_type_fields_trait = _type_name_to_fields_trait(BASE_TYPE) 
