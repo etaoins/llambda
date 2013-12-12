@@ -1,7 +1,8 @@
-package llambda.frontend
+package io.llambda.compiler.frontend
+import io.llambda
 
 import org.scalatest.{FunSuite,Inside}
-import llambda._
+import llambda.compiler._
 
 class ExtractLibrarySuite extends FunSuite with Inside {
   val resourceBaseUrl = getClass.getClassLoader.getResource("")

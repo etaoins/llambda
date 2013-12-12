@@ -1,7 +1,8 @@
-package llambda.frontend
+package io.llambda.compiler.frontend
+import io.llambda
 
 import org.scalatest.FunSuite
-import llambda._
+import llambda.compiler._
 
 import SchemeStringImplicits._
 

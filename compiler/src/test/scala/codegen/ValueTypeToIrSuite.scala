@@ -1,7 +1,8 @@
-package llambda.codegen
+package io.llambda.compiler.codegen
+import io.llambda
 
-import llambda.{celltype => ct}
-import llambda.{valuetype => vt}
+import llambda.compiler.{celltype => ct}
+import llambda.compiler.{valuetype => vt}
 import org.scalatest.FunSuite
 
 class ValueTypeToIrSuite extends FunSuite {

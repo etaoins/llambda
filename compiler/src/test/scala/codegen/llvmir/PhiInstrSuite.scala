@@ -1,6 +1,7 @@
-package llambda.codegen.llvmir
+package io.llambda.compiler.codegen.llvmir
+import io.llambda
 
-import llambda.InternalCompilerErrorException
+import llambda.compiler.InternalCompilerErrorException
 
 class PhiInstrSuite extends IrTestSuite {
   test("sourceless phi") {

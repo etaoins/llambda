@@ -1,7 +1,8 @@
-package llambda.testutil
+package io.llambda.compiler.testutil
+import io.llambda
 
-import llambda.frontend.{LibraryLoader, IncludePath}
-import llambda._
+import llambda.compiler.frontend.{LibraryLoader, IncludePath}
+import llambda.compiler._
 
 object NfiExports {
   def apply() : collection.mutable.Map[String, BoundValue] = {

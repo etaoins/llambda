@@ -1,12 +1,15 @@
-package llambda.functional
+package io.llambda.compiler.functional
+import io.llambda
 
 import java.io.File
-import scala.sys.process._
-import llambda._
-import llambda.{celltype => ct}
-import org.scalatest.{FunSuite, Inside}
 import java.io.{InputStream}
-import SchemeStringImplicits._
+import scala.io.Source
+import scala.sys.process._
+import org.scalatest.{FunSuite, Inside}
+
+import llambda.compiler._
+import llambda.compiler.SchemeStringImplicits._
+import llambda.compiler.{celltype => ct}
 
 abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite with Inside {
   private case class ExecutionResult(success : Boolean, output : ast.Datum, errorString : String)
@@ -27,7 +30,7 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
   }
 
   // Load the tests
-  val allTestSource = io.Source.fromInputStream(stream, "UTF-8").mkString
+  val allTestSource = Source.fromInputStream(stream, "UTF-8").mkString
 
   val parsed = SchemeParser.parseStringAsData(allTestSource, Some(s":/${resourcePath}"))
   runAllTests(parsed)
@@ -82,7 +85,7 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
   }
 
   private def utf8InputStreamToString(stream : InputStream) : String =
-    io.Source.fromInputStream(stream, "UTF-8").mkString
+    Source.fromInputStream(stream, "UTF-8").mkString
 
   private def executeProgram(program : List[ast.Datum]) : ExecutionResult = {
     // Import (llambda nfi) and (scheme base)

@@ -1,7 +1,8 @@
-package llambda
+package io.llambda.compiler
+import io.llambda
 
 import org.scalatest.{FunSuite, Inside}
-import llambda.SchemeStringImplicits._
+import llambda.compiler.SchemeStringImplicits._
 
 class SchemeParserSuite extends FunSuite with Inside {
   // This checks:

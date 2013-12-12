@@ -1,9 +1,10 @@
-package llambda.frontend
+package io.llambda.compiler.frontend
+import io.llambda
 
 import org.scalatest.FunSuite
 import scala.util.parsing.input.NoPosition
 
-import llambda._
+import llambda.compiler._
 
 class ExpressionLocatingSuite extends FunSuite with testutil.ExpressionHelpers {
   val primitiveScope = new ImmutableScope(collection.mutable.Map(PrimitiveExpressions.bindings.toSeq : _*))

@@ -1,8 +1,8 @@
-name := "llambda"
+name := "compiler"
 
 version := "0.0.1"
 
-organization := "llambda"
+organization := "io.llambda"
 
 scalaVersion := "2.10.3"
 

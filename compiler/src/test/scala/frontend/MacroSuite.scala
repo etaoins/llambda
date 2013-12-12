@@ -1,7 +1,8 @@
-package llambda.frontend
+package io.llambda.compiler.frontend
+import io.llambda
 
 import org.scalatest.{FunSuite,Inside,OptionValues}
-import llambda._
+import llambda.compiler._
 
 class MacroSuite extends FunSuite with Inside with OptionValues with testutil.ExpressionHelpers {
   implicit val primitiveScope = new Scope(collection.mutable.Map(PrimitiveExpressions.bindings.toSeq : _*))

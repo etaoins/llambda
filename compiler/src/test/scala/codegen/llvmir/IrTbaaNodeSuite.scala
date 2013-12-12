@@ -1,4 +1,5 @@
-package llambda.codegen.llvmir
+package io.llambda.compiler.codegen.llvmir
+import io.llambda
 
 import org.scalatest.FunSuite
 

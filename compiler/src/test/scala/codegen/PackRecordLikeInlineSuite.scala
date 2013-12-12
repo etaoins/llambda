@@ -1,10 +1,11 @@
-package llambda.codegen
+package io.llambda.compiler.codegen
+import io.llambda
 
 import org.scalatest.FunSuite
 
-import llambda.platform
-import llambda.{celltype => ct}
-import llambda.{valuetype => vt}
+import llambda.compiler.platform
+import llambda.compiler.{celltype => ct}
+import llambda.compiler.{valuetype => vt}
 
 class PackRecordLikeInlineSuite extends FunSuite {
   test("empty record can be packed") {

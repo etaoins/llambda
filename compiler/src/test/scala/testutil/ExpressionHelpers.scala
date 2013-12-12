@@ -1,9 +1,10 @@
-package llambda.testutil
+package io.llambda.compiler.testutil
+import io.llambda
 
 import org.scalatest.{FunSuite,OptionValues}
 
-import llambda._
-import llambda.frontend.{LibraryLoader, IncludePath}
+import llambda.compiler._
+import llambda.compiler.frontend.{LibraryLoader, IncludePath}
 
 trait ExpressionHelpers extends FunSuite with OptionValues {
   // Resolve imports relative to /

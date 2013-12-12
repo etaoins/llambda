@@ -1,10 +1,11 @@
-package llambda.frontend
+package io.llambda.compiler.frontend
+import io.llambda
 
 import org.scalatest.FunSuite
 
-import llambda._
-import llambda.{celltype => ct}
-import llambda.{valuetype => vt}
+import llambda.compiler._
+import llambda.compiler.{celltype => ct}
+import llambda.compiler.{valuetype => vt}
 
 class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   implicit val nfiScope = {

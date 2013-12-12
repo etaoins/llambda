@@ -1,9 +1,10 @@
-package llambda.frontend
+package io.llambda.compiler.frontend
+import io.llambda
 
 import org.scalatest.{FunSuite,Inside,OptionValues}
 
-import llambda._
-import llambda.{valuetype => vt}
+import llambda.compiler._
+import llambda.compiler.{valuetype => vt}
 
 class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with testutil.ExpressionHelpers {
   implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(PrimitiveExpressions.bindings.toSeq : _*))

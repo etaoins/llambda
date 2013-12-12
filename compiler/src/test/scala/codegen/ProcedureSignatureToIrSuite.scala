@@ -1,13 +1,14 @@
-package llambda.codegen
+package io.llambda.compiler.codegen
+import io.llambda
 
 import org.scalatest.FunSuite
 
-import llambda.et.NativeFunction
+import llambda.compiler.et.NativeFunction
 
-import llambda.{celltype => ct}
-import llambda.{valuetype => vt}
-import llambda.codegen.llvmir._
-import llambda.codegen.llvmir.IrFunction._
+import llambda.compiler.{celltype => ct}
+import llambda.compiler.{valuetype => vt}
+import llambda.compiler.codegen.llvmir._
+import llambda.compiler.codegen.llvmir.IrFunction._
 
 class ProcedureSignatureToIrSuite extends FunSuite {
   test("argless void function") {

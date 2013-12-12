@@ -1,9 +1,10 @@
-package llambda.frontend
+package io.llambda.compiler.frontend
+import io.llambda
 
 import org.scalatest.{FunSuite,Inside}
-import llambda.{celltype => ct}
-import llambda.{valuetype => vt}
-import llambda._
+import llambda.compiler.{celltype => ct}
+import llambda.compiler.{valuetype => vt}
+import llambda.compiler._
 
 class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelpers with Inside {
   // We need NFI for types and SchemePrimitives for (define-record-type)

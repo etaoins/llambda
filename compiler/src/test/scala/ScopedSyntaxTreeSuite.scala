@@ -1,4 +1,5 @@
-package llambda
+package io.llambda.compiler
+import io.llambda
 
 import org.scalatest.FunSuite
 import util.parsing.input.Position

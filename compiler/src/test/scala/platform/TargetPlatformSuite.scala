@@ -1,9 +1,10 @@
-package llambda.platform
+package io.llambda.compiler.platform
+import io.llambda
 
 import org.scalatest.FunSuite
 
-import llambda.{celltype => ct}
-import llambda.{valuetype => vt}
+import llambda.compiler.{celltype => ct}
+import llambda.compiler.{valuetype => vt}
 
 class TargetPlatformSuite extends FunSuite {
   test("short is always 16 bits") {

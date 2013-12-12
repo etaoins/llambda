@@ -296,10 +296,11 @@ def _generate_cell_types(all_types):
 
     output  = GENERATED_FILE_COMMENT
     
-    output += "package llambda.celltype\n\n"
+    output += "package io.llambda.compiler.celltype\n"
+    output += "import io.llambda\n\n"
 
-    output += "import llambda.codegen.llvmir._\n"
-    output += "import llambda.InternalCompilerErrorException\n\n"
+    output += "import llambda.compiler.codegen.llvmir._\n"
+    output += "import llambda.compiler.InternalCompilerErrorException\n\n"
         
     base_type_fields_trait = _type_name_to_fields_trait(BASE_TYPE) 
     output += 'sealed abstract class CellType extends ' + base_type_fields_trait + ' {\n'
@@ -416,9 +417,10 @@ def _generate_cell_types(all_types):
 
 def _generate_name_to_cell_type(all_types):
     output  = GENERATED_FILE_COMMENT
-    output += 'package llambda.frontend\n\n'
+    output += "package io.llambda.compiler.frontend\n"
+    output += "import io.llambda\n\n"
 
-    output += 'import llambda.{celltype => ct}\n\n'
+    output += 'import llambda.compiler.{celltype => ct}\n\n'
 
     output += 'object IntrinsicCellTypes {\n'
     output += '  def apply() : Map[String, ct.CellType] = Map(\n'
@@ -441,7 +443,7 @@ def _generate_name_to_cell_type(all_types):
     return output
 
 def generate_scala_objects(all_types):
-    ROOT_PATH = 'compiler/src/main/scala/llambda/'
+    ROOT_PATH = 'compiler/src/main/scala/'
 
     return {ROOT_PATH + 'celltype/generated/CellType.scala': _generate_cell_types(all_types),
             ROOT_PATH + 'frontend/generated/IntrinsicCellTypes.scala': _generate_name_to_cell_type(all_types)}

@@ -1,6 +1,7 @@
-package llambda.analyzer
+package io.llambda.compiler.analyzer
+import io.llambda
 
-import llambda.{et, ast, StorageLocation}
+import llambda.compiler.{et, ast, StorageLocation}
 import org.scalatest.FunSuite
 
 class FindMutableVarsSuite extends FunSuite {
