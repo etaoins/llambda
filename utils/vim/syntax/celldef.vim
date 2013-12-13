@@ -6,10 +6,10 @@ endif
 syn region celldefBodyBlock start="{" end="}" fold transparent contains=celldefBodyKeyword, celldefIntType, celldefFloatType, celldefComment
 
 syn keyword celldefTopLevelKeyword abstract concrete internal preconstructed cell fieldtype
-syn keyword celldefBodyKeyword     ctype extern contained
+syn keyword celldefBodyKeyword     cppname extern contained
 
 syn match   celldefIntType    /\<u\?int\d\+\>/ 
-syn keyword celldefFloatType float double
+syn keyword celldefFloatType float double bool untypedptr
 
 syn match   celldefComment /\/\/.*/
 

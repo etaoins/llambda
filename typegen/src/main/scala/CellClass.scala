@@ -19,3 +19,11 @@ object CellClass {
   object Preconstructed extends InstanceType
 }
 
+final class CellClass(
+  val name : String,
+  val instanceType : CellClass.InstanceType,
+  val inherits : Option[CellClass],
+  val fields : List[CellField],
+  val internal : Boolean,
+  val typeId : Int
+)
