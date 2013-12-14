@@ -20,7 +20,7 @@ fieldtype GarbageState : uint8 {
 	extern cppname = GarbageState;
 };
 
-abstract cell Datum {
+root cell Datum {
 	TypeId typeId;
 	GarbageState gcState;
 };
@@ -74,7 +74,7 @@ concrete cell Character : Datum {
 
 concrete cell Vector : Datum {
 	uint32 length;
-	datum** data;
+	Datum** data;
 };
 
 concrete cell ByteVector : Datum {

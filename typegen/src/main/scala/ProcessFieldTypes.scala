@@ -5,37 +5,10 @@ import collection.immutable.ListMap
 import io.llambda.llvmir
 
 object ProcessFieldTypes {
-  private case class ResolvedType(llvmType : llvmir.FirstClassType, signed : Option[Boolean])
-
-  private def resolveParsedType(parsedType : ParsedType)(implicit knownFieldTypes : Map[String, FieldType]) : ResolvedType =
-    parsedType match {
-      case ParsedPointerType(pointeeType) =>
-        ResolvedType(llvmir.PointerType(resolveParsedType(pointeeType).llvmType), None)
-
-      case ParsedFunctionPointerType(returnType, arguments) =>
-        // We use an Option to represent the return type while LLVM has a void
-        // pseudo-type
-        val llvmReturnType = returnType.map(resolveParsedType(_).llvmType).getOrElse(llvmir.VoidType)
-
-        val llvmType = llvmir.PointerType(
-          llvmir.FunctionType(llvmReturnType, arguments.map(resolveParsedType(_).llvmType))
-        )
-
-        ResolvedType(llvmType, None)
-
-      case parsedTypeName @ ParsedTypeName(name) =>
-        // Look up the name from our already defined types
-        val fieldType = knownFieldTypes.getOrElse(name, {
-          throw new UnknownTypeException(parsedTypeName)
-        })
-
-        ResolvedType(fieldType.llvmType, fieldType.signed)
-    }
-
   def apply(definitions : List[ParsedDefinition]) : ListMap[String, FieldType] = {
-    val predefinedFieldTypes = ListMap(PredefinedFieldTypes().toSeq : _*)
+    val predefinedFieldTypes = ListMap[String, FieldType](PredefinedFieldTypes().toSeq : _*)
     
-    // Create all of our field types
+    // Create field types for our cells and aliases
     definitions.foldLeft(predefinedFieldTypes) { case (fieldTypes, definition) =>
       definition match {
         case cellDeclLike : ParsedCellClassDeclarationLike =>
@@ -43,28 +16,25 @@ object ProcessFieldTypes {
           val cellNames = CellClassNames(cellDeclLike.name)
 
           fieldTypes + (cellDeclLike.name ->
-            FieldType(
+            PrimitiveFieldType(
               signed=None,
               llvmType=llvmir.UserDefinedType(cellNames.llvmName),
-              cppTypeName=cellNames.cppName,
-              // This is declared elsewere
-              needsDefinition=false
+              cppTypeName=cellNames.cppName
             )
           )
 
-        case userFieldType : ParsedUserDefinedFieldType =>
-          val superType = resolveParsedType(userFieldType.aliasOf)(fieldTypes)
+        case userFieldType : ParsedFieldTypeAlias =>
+          val resolvedAlias = ResolveParsedType(fieldTypes)(userFieldType.aliasedType)
 
           // Default to the definition name if the C name isn't given
-          val cppTypeName = userFieldType.cppType.map(_.name).getOrElse(userFieldType.name)
+          val cppTypeName = userFieldType.cppType.map(_.name)
 
-          // Default to needing definition unless otherwise specified
-          val needsDefinition = userFieldType.cppType.map(_.needsDefinition).getOrElse(true)
+          // If no cppname is specified then this is purely a front-end alias 
+          val needsDefinition = userFieldType.cppType.map(_.needsDefinition).getOrElse(false)
 
           fieldTypes + (userFieldType.name ->
-            FieldType(
-              signed=superType.signed,
-              llvmType=superType.llvmType,
+            new FieldTypeAlias(
+              resolvedAlias,
               cppTypeName=cppTypeName,
               needsDefinition=needsDefinition
             )

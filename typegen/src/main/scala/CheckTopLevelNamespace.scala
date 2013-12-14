@@ -1,6 +1,6 @@
 package io.llambda.typegen
 
-object CheckTypeNames {
+object CheckTopLevelNamespace {
   def apply(definitions : List[ParsedDefinition]) {
     val predefinedTypeNames = PredefinedFieldTypes().keys.toSet
 
@@ -16,14 +16,14 @@ object CheckTypeNames {
     }
     
     val parsedUserFieldTypes = definitions collect {
-      case userFieldType : ParsedUserDefinedFieldType => 
+      case userFieldType : ParsedFieldTypeAlias => 
         userFieldType
     }
 
     // Make sure all declared cell classes are eventually defined
     for(cellDecl <- parsedCellDecls) {
       if (!parsedCellDefs.exists(_.name == cellDecl.name)) {
-        throw new UndefinedCellClassException(cellDecl)
+        throw new UndefinedCellClassException(cellDecl, cellDecl.name)
       }
     }
 

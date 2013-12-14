@@ -1,9 +1,26 @@
 package io.llambda.typegen
 
+import collection.immutable.ListMap
+import scala.util.parsing.input.Positional
+
+import io.llambda.llvmir
+
+/** Defined field inside a class cell
+  *
+  * This is a wrapper to ensure fields with the same type aren't considered
+  * equal
+  */
+final class CellField(
+  val fieldType : FieldType
+)
+
 /** Common types related to cell classes */
 object CellClass {
   /** Instance type of a cell class */
   sealed abstract class InstanceType
+  
+  /** Abstract root of all cell classes */
+  object Root extends InstanceType
   
   /** Cell class is concrete; it can be instanciated at runtime */
   object Concrete extends InstanceType
@@ -19,11 +36,24 @@ object CellClass {
   object Preconstructed extends InstanceType
 }
 
-final class CellClass(
-  val name : String,
-  val instanceType : CellClass.InstanceType,
-  val inherits : Option[CellClass],
-  val fields : List[CellField],
-  val internal : Boolean,
-  val typeId : Int
-)
+sealed abstract class CellClass extends Positional {
+  val name : String
+  val instanceType : CellClass.InstanceType
+  val fields : ListMap[String, CellField]
+  val internal : Boolean
+  val typeId : Option[Int]
+  val optionalParent : Option[CellClass]
+  
+  // This also contains the TBAA nodes for the fields we inherit
+  val fieldTbaaNodes : Map[CellField, llvmir.IrTbaaNode]
+}
+
+case class RootCellClass(name : String, fields : ListMap[String, CellField], internal : Boolean, fieldTbaaNodes : Map[CellField, llvmir.IrTbaaNode]) extends CellClass {
+  val instanceType = CellClass.Abstract
+  val typeId = None
+  val optionalParent = None
+}
+
+case class ChildCellClass(name : String, instanceType : CellClass.InstanceType, parent : CellClass, fields : ListMap[String, CellField], internal : Boolean, typeId : Option[Int], fieldTbaaNodes : Map[CellField, llvmir.IrTbaaNode]) extends CellClass {
+  val optionalParent = Some(parent)
+}

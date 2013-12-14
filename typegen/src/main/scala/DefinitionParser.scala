@@ -4,6 +4,7 @@ import scala.util.parsing.combinator._
 import java.io.File
 import scala.io.Source
 import collection.immutable.ListMap
+import scala.util.parsing.input.Positional
 
 class ParseErrorException(message : String) extends Exception(message)
 
@@ -26,10 +27,10 @@ trait CommonParsers extends RegexParsers {
   def nonVoidReturn = valueType ^^ (Some(_))
 }
 
-trait UserDefinedFieldTypeParser extends CommonParsers {
-  def fieldDefinition = positioned("fieldtype" ~> (identifier ~ typeInheritence ~ opt(fieldTypeBody)) <~ ";" ^^ {
+trait FieldTypeAliasParser extends CommonParsers {
+  def fieldTypeAlias = positioned("fieldtype" ~> (identifier ~ typeInheritence ~ opt(fieldTypeBody)) <~ ";" ^^ {
     case typeName ~ inherits ~ cTypeNameOptOpt =>
-      new ParsedUserDefinedFieldType(typeName, inherits, cTypeNameOptOpt getOrElse None)
+      new ParsedFieldTypeAlias(typeName, inherits, cTypeNameOptOpt getOrElse None)
   })
 
   def typeInheritence = ":" ~> fieldSuperType
@@ -55,9 +56,16 @@ trait CellDeclarationParser extends CommonParsers {
 }
 
 trait CellDefinitionParser extends CommonParsers {
-  def cellDefinition = positioned(instanceType ~ internal ~ ("cell" ~> identifier) ~ opt(cellInheritence) ~ fields <~ ";" ^^ {
-    case instanceType ~ internal ~ typeName ~ inheritsOpt ~ fields =>
-      new ParsedCellClassDefinition(typeName, instanceType, inheritsOpt, fields, internal)
+  def cellDefinition = rootCellDefinition | childCellDefinition
+
+  def rootCellDefinition = positioned("root" ~ internal ~ "cell" ~ identifier ~ fields ~ ";" ^^ {
+    case _ ~ internal ~ _ ~ typeName ~ fields ~ _ =>
+      new ParsedRootClassDefinition(typeName, fields, internal)
+  })
+
+  def childCellDefinition = positioned(instanceType ~ internal ~ ("cell" ~> identifier) ~ cellInheritence ~ fields <~ ";" ^^ {
+    case instanceType ~ internal ~ typeName ~ inherits ~ fields =>
+      new ParsedChildClassDefinition(typeName, instanceType, inherits, fields, internal)
   })
 
   def instanceType = concreteSpecifier | abstractSpecifier | preconstructedSpecifier
@@ -85,11 +93,11 @@ trait CellDefinitionParser extends CommonParsers {
   }
 }
 
-class DefinitionParser extends CellDeclarationParser with CellDefinitionParser with UserDefinedFieldTypeParser {
+class DefinitionParser extends CellDeclarationParser with CellDefinitionParser with FieldTypeAliasParser {
   def typeDefinitions : Parser[List[ParsedDefinition]] =
       rep1(typeDefinition)
 
-  def typeDefinition = cellDeclaration | cellDefinition | fieldDefinition
+  def typeDefinition = cellDeclaration | cellDefinition | fieldTypeAlias
 
   override protected val whiteSpace = """(\s|//.*\n)+""".r
 }

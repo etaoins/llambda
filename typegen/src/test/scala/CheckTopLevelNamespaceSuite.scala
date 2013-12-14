@@ -2,17 +2,20 @@ package io.llambda.typegen
 
 import org.scalatest.FunSuite
 
-class CheckTypeNamesSuite extends FunSuite {
+class CheckTopLevelNamespaceSuite extends FunSuite {
   def checkString(str : String) = 
-    CheckTypeNames(DefinitionParser.parseString(str))
+    CheckTopLevelNamespace(DefinitionParser.parseString(str))
 
   test("duplicate cell name fails") {
     intercept[DuplicateTypeNameException] {
       checkString("""
-        abstract cell datum {
+        root cell Datum {
         };
 
-        concrete cell datum {
+        concrete cell String : Datum {
+        };
+
+        concrete cell String : Datum {
         };
       """)
     }
@@ -38,7 +41,7 @@ class CheckTypeNamesSuite extends FunSuite {
   test("conflicting field type and cell class name") {
     intercept[DuplicateTypeNameException] {
       checkString("""
-        abstract cell myint {
+        root cell myint {
         };
 
         fieldtype myint : uint64;

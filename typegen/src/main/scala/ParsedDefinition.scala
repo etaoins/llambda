@@ -8,30 +8,30 @@ sealed abstract class ParsedDefinition extends Positional {
 
 sealed abstract trait ParsedCellClassDeclarationLike extends ParsedDefinition
 
-final class ParsedCellField(
-  val name : String,
-  val fieldType : ParsedType
-) extends Positional 
+case class ParsedCellField(name : String, fieldType : ParsedType)  extends Positional 
 
-final class ParsedCellClassDeclaration(
+case class ParsedCellClassDeclaration(name : String) extends ParsedCellClassDeclarationLike
+
+sealed abstract class ParsedCellClassDefinition extends ParsedCellClassDeclarationLike {
   val name : String
-) extends ParsedCellClassDeclarationLike
-
-final class ParsedCellClassDefinition(
-  val name : String,
-  val instanceType : CellClass.InstanceType,
-  val inherits : Option[String],
-  val fields : List[ParsedCellField],
+  val instanceType : CellClass.InstanceType
+  val fields : List[ParsedCellField]
   val internal : Boolean
-) extends ParsedCellClassDeclarationLike
+  val optionalParent : Option[String]
+} 
+
+case class ParsedChildClassDefinition(name : String, instanceType : CellClass.InstanceType, parent : String, fields : List[ParsedCellField], internal : Boolean) extends ParsedCellClassDefinition {
+  val optionalParent = Some(parent)
+}
+
+case class ParsedRootClassDefinition(name : String, fields : List[ParsedCellField], internal : Boolean) extends ParsedCellClassDefinition {
+  val instanceType = CellClass.Abstract
+  val optionalParent = None
+}
 
 case class ParsedCppType(
   name : String,
   needsDefinition : Boolean
 )
 
-final class ParsedUserDefinedFieldType(
-  val name : String,
-  val aliasOf : ParsedType,
-  val cppType : Option[ParsedCppType]
-) extends ParsedDefinition
+case class ParsedFieldTypeAlias(name : String, aliasedType : ParsedType, cppType : Option[ParsedCppType]) extends ParsedDefinition

@@ -25,74 +25,82 @@ class DefinitionParserSuite extends FunSuite {
     assert(cellDecl.name === "datum")
   }
   
-  test("internal cell class definition") {
-    val (cellType : ParsedCellClassDefinition) :: Nil = parseString("""
-      abstract internal cell datum {
+  test("internal root cell class definition") {
+    val (cellType : ParsedRootClassDefinition) :: Nil = parseString("""
+      root internal cell Datum {
       };
     """)
 
-    assert(cellType.name === "datum")
+    assert(cellType.name === "Datum")
     assert(cellType.instanceType === CellClass.Abstract)
-    assert(cellType.inherits === None)
+    assert(cellType.internal === true)
+  }
+  
+  test("internal child cell class definition") {
+    val (cellType : ParsedChildClassDefinition) :: Nil = parseString("""
+      abstract internal cell Symbol : Datum {
+      };
+    """)
+
+    assert(cellType.name === "Symbol")
+    assert(cellType.instanceType === CellClass.Abstract)
+    assert(cellType.parent === "Datum")
     assert(cellType.internal === true)
   }
   
   test("preconstructed cell class definition") {
-    val (cellType : ParsedCellClassDefinition) :: Nil = parseString("""
-      preconstructed cell datum {
+    val (cellType : ParsedChildClassDefinition) :: Nil = parseString("""
+      preconstructed cell EmptyList : Datum {
       };
     """)
     
-    assert(cellType.name === "datum")
+    assert(cellType.name === "EmptyList")
     assert(cellType.instanceType === CellClass.Preconstructed)
-    assert(cellType.inherits === None)
+    assert(cellType.parent === "Datum")
     assert(cellType.internal === false)
   }
 
   test("single line comments") {
-    val (cellType : ParsedCellClassDefinition) :: Nil = parseString("""
+    val (cellType : ParsedRootClassDefinition) :: Nil = parseString("""
       // This is a simple cell
-      abstract cell datum {
+      root cell Datum {
       };
     """)
 
-    assert(cellType.name === "datum")
+    assert(cellType.name === "Datum")
     assert(cellType.instanceType === CellClass.Abstract)
-    assert(cellType.inherits === None)
     assert(cellType.internal === false)
   }
   
   test("multiple definitions") {
-    val (datumType : ParsedCellClassDefinition) :: (numericType : ParsedCellClassDefinition) :: Nil = parseString("""
-      abstract cell datum {
+    val (datumType : ParsedRootClassDefinition) :: (numericType : ParsedChildClassDefinition) :: Nil = parseString("""
+      root cell Datum {
       };
 
-      concrete cell numeric : datum {
+      concrete cell Numeric : Datum {
       };
     """)
 
-    assert(datumType.name === "datum")
+    assert(datumType.name === "Datum")
     assert(datumType.instanceType === CellClass.Abstract)
-    assert(datumType.inherits === None)
     assert(datumType.internal === false)
     
     assert(numericType.instanceType === CellClass.Concrete)
-    assert(numericType.name === "numeric")
-    assert(numericType.inherits === Some("datum"))
+    assert(numericType.name === "Numeric")
+    assert(numericType.parent === "Datum")
     assert(numericType.internal === false)
   }
 
-  test("cell class with fields") {
-    val (cellType : ParsedCellClassDefinition) :: Nil = parseString("""
-      abstract cell datum {
+  test("root cell class with fields") {
+    val (cellType : ParsedRootClassDefinition) :: Nil = parseString("""
+      root cell Datum {
         uint8 typeId;
         uint8* garbageState;
       };
     """)
 
-    assert(cellType.name === "datum")
+    assert(cellType.name === "Datum")
     assert(cellType.instanceType === CellClass.Abstract)
-    assert(cellType.inherits === None)
 
     val typeIdField :: garbageStateField :: Nil = cellType.fields
 
@@ -103,17 +111,17 @@ class DefinitionParserSuite extends FunSuite {
     assert(garbageStateField.fieldType === ParsedPointerType(ParsedTypeName("uint8")))
   }
   
-  test("cell class with function pointers") {
-    val (cellType : ParsedCellClassDefinition) :: Nil = parseString("""
-      abstract cell datum {
+  test("child cell class with function pointers") {
+    val (cellType : ParsedChildClassDefinition) :: Nil = parseString("""
+      abstract cell Procedure : Datum {
         void (*callback)(int64, double *);
         int64* (*delegate)();
       };
     """)
 
-    assert(cellType.name === "datum")
+    assert(cellType.name === "Procedure")
     assert(cellType.instanceType === CellClass.Abstract)
-    assert(cellType.inherits === None)
+    assert(cellType.parent === "Datum")
 
     val callbackField :: delegateField :: Nil = cellType.fields
 
@@ -134,23 +142,23 @@ class DefinitionParserSuite extends FunSuite {
   }
   
   test("simple user defined field type") {
-    val (fieldType : ParsedUserDefinedFieldType) :: Nil = parseString("""
+    val (fieldType : ParsedFieldTypeAlias) :: Nil = parseString("""
       fieldtype unicodeChar : int32;
     """)
 
     assert(fieldType.name === "unicodeChar")
-    assert(fieldType.aliasOf === ParsedTypeName("int32"))
+    assert(fieldType.aliasedType === ParsedTypeName("int32"))
     assert(fieldType.cppType === None)
   }
   
   test("empty braces are allowed in a user defined field type") {
-    val (fieldType : ParsedUserDefinedFieldType) :: Nil = parseString("""
+    val (fieldType : ParsedFieldTypeAlias) :: Nil = parseString("""
       fieldtype unicodeChar : int32** {
       };
     """)
 
     assert(fieldType.name === "unicodeChar")
-    assert(fieldType.aliasOf === ParsedPointerType(ParsedPointerType(ParsedTypeName("int32"))))
+    assert(fieldType.aliasedType === ParsedPointerType(ParsedPointerType(ParsedTypeName("int32"))))
     assert(fieldType.cppType === None)
   }
   
@@ -163,26 +171,26 @@ class DefinitionParserSuite extends FunSuite {
   }
   
   test("field type with external C type") {
-    val (fieldType : ParsedUserDefinedFieldType) :: Nil = parseString("""
+    val (fieldType : ParsedFieldTypeAlias) :: Nil = parseString("""
       fieldtype unicodeChar : untypedptr {
         extern cppname = UnicodeChar;
       };
     """)
     
     assert(fieldType.name === "unicodeChar")
-    assert(fieldType.aliasOf === ParsedTypeName("untypedptr"))
+    assert(fieldType.aliasedType === ParsedTypeName("untypedptr"))
     assert(fieldType.cppType === Some(ParsedCppType("UnicodeChar", false)))
   }
   
   test("field type with typedef C type") {
-    val (fieldType : ParsedUserDefinedFieldType) :: Nil = parseString("""
+    val (fieldType : ParsedFieldTypeAlias) :: Nil = parseString("""
       fieldtype unicodeChar : int8 {
         cppname = UnicodeChar;
       };
     """)
     
     assert(fieldType.name === "unicodeChar")
-    assert(fieldType.aliasOf === ParsedTypeName("int8"))
+    assert(fieldType.aliasedType === ParsedTypeName("int8"))
     assert(fieldType.cppType === Some(ParsedCppType("UnicodeChar", true)))
   }
   
@@ -197,7 +205,7 @@ class DefinitionParserSuite extends FunSuite {
   }
   
   test("field type inheriting function pointer") {
-    val (fieldType : ParsedUserDefinedFieldType) :: Nil = parseString("""
+    val (fieldType : ParsedFieldTypeAlias) :: Nil = parseString("""
       fieldtype procedureEntryPoint : Datum* (*)(Procedure*, ListElement*) {
         cppname = ProcedureEntryPoint;
       };
@@ -212,7 +220,7 @@ class DefinitionParserSuite extends FunSuite {
     )
     
     assert(fieldType.name === "procedureEntryPoint")
-    assert(fieldType.aliasOf ===  aliasedType)
+    assert(fieldType.aliasedType ===  aliasedType)
     assert(fieldType.cppType === Some(ParsedCppType("ProcedureEntryPoint", true)))
   }
   
