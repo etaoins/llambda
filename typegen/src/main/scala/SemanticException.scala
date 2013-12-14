@@ -16,8 +16,8 @@ class UndefinedCellClassException(errorPos : Positional, val cellClassName : Str
 class UnknownTypeException(val parsedTypeName : ParsedTypeName) extends
   PositionedSemanticException(parsedTypeName, s"Unknown type name: ${parsedTypeName.toString}")
 
-class DuplicateRootCellClassException(val duplicateDecl : ParsedRootClassDefinition) extends
-  PositionedSemanticException(duplicateDecl, s"Duplicate root cell class: ${duplicateDecl.name}")
+class DuplicateRootCellClassException(val duplicateClass : RootCellClass) extends
+  PositionedSemanticException(duplicateClass, s"Duplicate root cell class: ${duplicateClass.name}")
 
 class NoRootCellClassException extends SemanticException("No root cell class defined")
 

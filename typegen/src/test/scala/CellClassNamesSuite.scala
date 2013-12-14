@@ -9,6 +9,7 @@ class CellNamesSuite extends FunSuite {
     assert(names.definitionName === "Datum")
     assert(names.llvmName === "datum")
     assert(names.cppName === "DatumCell")
+    assert(names.underscoreName === "datum")
   }
   
   test("camel case name") {
@@ -17,5 +18,6 @@ class CellNamesSuite extends FunSuite {
     assert(names.definitionName === "StringLike")
     assert(names.llvmName === "stringLike")
     assert(names.cppName === "StringLikeCell")
+    assert(names.underscoreName === "string_like")
   }
 }

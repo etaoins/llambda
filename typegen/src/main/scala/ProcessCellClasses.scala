@@ -4,11 +4,6 @@ import io.llambda.llvmir
 
 import collection.immutable.ListMap
 
-case class ProcessCellClassesResult(
-  nextTbaaIndex : Int,
-  cellClasses : Map[String, CellClass]
-)
-
 object ProcessCellClasses {
   /** Simple class encapsulting an incrementing integer counter */
   private class IntCounter {
@@ -55,7 +50,7 @@ object ProcessCellClasses {
     }
   }
 
-  def apply(fieldTypes : Map[String, FieldType])(definitions : List[ParsedDefinition]) : ProcessCellClassesResult = {
+  def apply(fieldTypes : Map[String, FieldType])(definitions : List[ParsedDefinition]) : ProcessedTypes = {
     val parsedCellDefs = definitions.collect {
       case parsedCellDef : ParsedCellClassDefinition =>
         parsedCellDef
@@ -64,27 +59,9 @@ object ProcessCellClasses {
     val typeIdGenerator = new IntCounter
     val tbbaIndexGenerator = new IntCounter
 
-    // Make sure we have exactly one root cell class
-    val hasRootClassDef = parsedCellDefs.foldLeft(false) { (seenRootClassDef, parsedCellDef) =>
-      parsedCellDef match {
-        case rootClass : ParsedRootClassDefinition =>
-          if (seenRootClassDef) {
-            throw new DuplicateRootCellClassException(rootClass)
-          }
-
-          true
-
-        case _ => seenRootClassDef
-      }
-    }
-
-    if (!hasRootClassDef) {
-      throw new NoRootCellClassException;
-    }
-
     val cellClasses = parsedCellDefs.foldLeft(ListMap[String, CellClass]()) { case (cellClasses, parsedCellDef) =>
       // Process our fields
-      val cellFields = processFields(fieldTypes : Map[String, FieldType])(parsedCellDef.fields)
+      val cellFields = processFields(fieldTypes)(parsedCellDef.fields)
 
       // Assign us a type ID if one is needed
       val typeId = if (parsedCellDef.instanceType == CellClass.Abstract) {
@@ -132,10 +109,30 @@ object ProcessCellClasses {
 
       cellClasses + (cellClass.name -> positionedCellClass)
     }
+    
+    // Make sure we have exactly one root cell class
+    val rootCellClassOpt = cellClasses.values.foldLeft(None : Option[CellClass]) { (seenRootClass, cellClass) =>
+      cellClass match {
+        case rootClass : RootCellClass  =>
+          if (seenRootClass.isDefined) {
+            throw new DuplicateRootCellClassException(rootClass)
+          }
 
-    ProcessCellClassesResult(
+          Some(rootClass)
+
+        case _ => seenRootClass
+      }
+    }
+
+    val rootCellClass = rootCellClassOpt.getOrElse({
+      throw new NoRootCellClassException;
+    })
+
+    ProcessedTypes(
       nextTbaaIndex=tbbaIndexGenerator(),
-      cellClasses=cellClasses
+      fieldTypes=fieldTypes,
+      cellClasses=cellClasses,
+      rootCellClass=rootCellClass
     )
   }
 }

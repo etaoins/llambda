@@ -20,7 +20,7 @@ fieldtype GarbageState : uint8 {
 	extern cppname = GarbageState;
 };
 
-root cell Datum {
+root internal cell Datum {
 	TypeId typeId;
 	GarbageState gcState;
 };
@@ -77,7 +77,7 @@ concrete cell Vector : Datum {
 	Datum** data;
 };
 
-concrete cell ByteVector : Datum {
+concrete cell Bytevector : Datum {
 	uint32 length;
 	uint8** data;
 };
@@ -91,6 +91,8 @@ concrete cell Procedure : RecordLike {
 	ProcedureEntryPoint entryPoint;
 };
 
-concrete cell Record : RecordLike {
+// Records are internal because each record class is exposed as its own 
+// first-class type in Scheme
+concrete internal cell Record : RecordLike {
 	untypedptr extraData;
 };

@@ -61,13 +61,13 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
   }
 
   test("simple empty root class") {
-    val processedClasses = processString("""
+    val processedTypes = processString("""
       root cell Datum {
       };
     """)
 
-    val classes = processedClasses.cellClasses
-    assert(processedClasses.nextTbaaIndex === 0)
+    val classes = processedTypes.cellClasses
+    assert(processedTypes.nextTbaaIndex === 0)
 
     inside(classes("Datum")) { case (datumClass : RootCellClass) =>
       assert(datumClass.name === "Datum")
@@ -75,17 +75,19 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       assert(datumClass.internal === false)
       assert(datumClass.typeId === None)
       assert(datumClass.fieldTbaaNodes.isEmpty)
+
+      assert(processedTypes.rootCellClass === datumClass)
     }
   }
   
   test("simple empty internal root class") {
-    val processedClasses = processString("""
+    val processedTypes = processString("""
       root internal cell Datum {
       };
     """)
     
-    val classes = processedClasses.cellClasses
-    assert(processedClasses.nextTbaaIndex === 0)
+    val classes = processedTypes.cellClasses
+    assert(processedTypes.nextTbaaIndex === 0)
 
     inside(classes("Datum")) { case (datumClass : RootCellClass) =>
       assert(datumClass.internal === true)
@@ -93,15 +95,15 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
   }
   
   test("root class with fields") {
-    val processedClasses = processString("""
+    val processedTypes = processString("""
       root cell Datum {
         int32 typeId;
         int8 gcState;
       };
     """)
     
-    val classes = processedClasses.cellClasses
-    assert(processedClasses.nextTbaaIndex === 2)
+    val classes = processedTypes.cellClasses
+    assert(processedTypes.nextTbaaIndex === 2)
 
     inside(classes("Datum")) { case (datumClass : RootCellClass) =>
       assert(datumClass.name === "Datum")
@@ -134,7 +136,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
   }
   
   test("abstract child class with fields of root class with fields") {
-    val processedClasses = processString("""
+    val processedTypes = processString("""
       root cell Datum {
         int32 typeId;
         int8 gcState;
@@ -147,8 +149,8 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       };
     """)
     
-    val classes = processedClasses.cellClasses
-    assert(processedClasses.nextTbaaIndex === 7)
+    val classes = processedTypes.cellClasses
+    assert(processedTypes.nextTbaaIndex === 7)
 
     val datumClass = classes("Datum")
 
@@ -212,7 +214,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
   }
   
   test("concrete and preconstructed child classes") {
-    val processedClasses = processString("""
+    val processedTypes = processString("""
       root cell Datum {
       };
 
@@ -223,8 +225,8 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       };
     """)
 
-    val classes = processedClasses.cellClasses
-    assert(processedClasses.nextTbaaIndex === 0)
+    val classes = processedTypes.cellClasses
+    assert(processedTypes.nextTbaaIndex === 0)
 
     val datumClass = classes("Datum")
 
