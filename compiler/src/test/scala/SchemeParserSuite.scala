@@ -252,6 +252,7 @@ newline""", "Bare\nnewline")
       #| This is a block comment
          This can be as many lines as it wants |#
       (display "LOL")
+      #| Make sure we treat this as a separate comment |#
       """;
 
     val data = SchemeParser.parseStringAsData(multilineTest)

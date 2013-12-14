@@ -208,7 +208,7 @@ class SchemeParser(filename : Option[String]) extends RegexParsers {
   def unspecific = "#!unspecific" ^^^ ast.UnspecificValue()
 
   // Space, ; comments and #| |# comments are whitespace. Datum comments are handled by commentedDatum
-  override protected val whiteSpace = """(\s|;.*(\n|$)|#\|(.|\n)*\|#)+""".r
+  override protected val whiteSpace = """(\s|;.*(\n|$)|#\|(.|\n)*?\|#)+""".r
 }
 
 object SchemeParser {
