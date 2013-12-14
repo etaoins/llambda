@@ -3,7 +3,7 @@ import io.llambda
 
 import java.io.File
 
-object LlambdaApp extends App {
+object CompilerApp extends App {
   case class Config(
     inputFile : Option[File] = None,
     outputFile : Option[File] = None,
