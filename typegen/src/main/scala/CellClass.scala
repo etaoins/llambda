@@ -46,6 +46,8 @@ sealed abstract class CellClass extends Positional {
   
   // This also contains the TBAA nodes for the fields we inherit
   val fieldTbaaNodes : Map[CellField, llvmir.IrTbaaNode]
+
+  lazy val names = CellClassNames(name)
 }
 
 case class RootCellClass(name : String, fields : ListMap[String, CellField], internal : Boolean, fieldTbaaNodes : Map[CellField, llvmir.IrTbaaNode]) extends CellClass {

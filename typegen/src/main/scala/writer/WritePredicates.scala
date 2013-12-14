@@ -10,18 +10,13 @@ object WritePredicates {
     // Get the C++ name for the root class
     val rootClassCppName = CellClassNames(processedTypes.rootCellClass.name).cppName
 
-    // Get the names for each cell class
-    val namedCellClasses = publicCellClasses.map { cellClass =>
-      (CellClassNames(cellClass.name), cellClass)
-    }
-
     // Start our builder
     val cppBuilder = new CppBuilder
 
     cppBuilder.appendRaw(GeneratedFileComment)
 
-    namedCellClasses foreach { case (cellNames, cellClass) =>
-      cppBuilder += "#include \"binding/" + cellNames.cppName + ".h\""
+    publicCellClasses foreach { cellClass =>
+      cppBuilder += "#include \"binding/" + cellClass.names.cppName + ".h\""
     }
 
     cppBuilder.sep()
@@ -31,19 +26,18 @@ object WritePredicates {
     cppBuilder += "{"
     cppBuilder.sep()
 
-    namedCellClasses foreach { case (cellNames, cellClass) =>
-      val functionName = s"lliby_is_${cellNames.underscoreName}" 
+    publicCellClasses foreach { cellClass =>
+      val functionName = s"lliby_is_${cellClass.names.underscoreName}" 
 
       cppBuilder += s"bool ${functionName}(const ${rootClassCppName} *value)"
 
       cppBuilder.block {
-        cppBuilder += s"return ${cellNames.cppName}::isInstance(value);"
+        cppBuilder += s"return ${cellClass.names.cppName}::isInstance(value);"
       }
     }
     
     cppBuilder.sep()
     cppBuilder += "}"
-    cppBuilder.sep()
 
     Map("runtime/stdlib/generated/predicates.cpp" -> cppBuilder.toString)
   }
