@@ -72,6 +72,21 @@ class DefinitionParserSuite extends FunSuite {
     assert(cellType.internal === false)
   }
   
+  test("multiline comments") {
+    val (cellType : ParsedRootClassDefinition) :: Nil = parseString("""
+      /* This is 
+       * a multiline comment
+       */
+      root cell Datum {
+        /* This could be multiple lines but it isn't */
+      };
+    """)
+
+    assert(cellType.name === "Datum")
+    assert(cellType.instanceType === CellClass.Abstract)
+    assert(cellType.internal === false)
+  }
+  
   test("multiple definitions") {
     val (datumType : ParsedRootClassDefinition) :: (numericType : ParsedChildClassDefinition) :: Nil = parseString("""
       root cell Datum {

@@ -99,7 +99,7 @@ class DefinitionParser extends CellDeclarationParser with CellDefinitionParser w
 
   def typeDefinition = cellDeclaration | cellDefinition | fieldTypeAlias
 
-  override protected val whiteSpace = """(\s|//.*\n)+""".r
+  override protected val whiteSpace = """(\s|//.*\n|/\*(.|\n)*?\*/)+""".r
 }
 
 object DefinitionParser {
