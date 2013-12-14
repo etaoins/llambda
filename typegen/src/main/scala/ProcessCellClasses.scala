@@ -4,7 +4,7 @@ import io.llambda.llvmir
 
 import collection.immutable.ListMap
 
-case class ProcessedCellClasses(
+case class ProcessCellClassesResult(
   nextTbaaIndex : Int,
   cellClasses : Map[String, CellClass]
 )
@@ -55,7 +55,7 @@ object ProcessCellClasses {
     }
   }
 
-  def apply(fieldTypes : Map[String, FieldType])(definitions : List[ParsedDefinition]) : ProcessedCellClasses = {
+  def apply(fieldTypes : Map[String, FieldType])(definitions : List[ParsedDefinition]) : ProcessCellClassesResult = {
     val parsedCellDefs = definitions.collect {
       case parsedCellDef : ParsedCellClassDefinition =>
         parsedCellDef
@@ -133,7 +133,7 @@ object ProcessCellClasses {
       cellClasses + (cellClass.name -> positionedCellClass)
     }
 
-    ProcessedCellClasses(
+    ProcessCellClassesResult(
       nextTbaaIndex=tbbaIndexGenerator(),
       cellClasses=cellClasses
     )

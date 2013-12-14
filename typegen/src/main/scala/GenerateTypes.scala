@@ -14,6 +14,10 @@ object GenerateTypes {
     val fieldTypes = ProcessFieldTypes(definitions)
 
     // Extract our cell classes
-    val cellClasses = ProcessCellClasses(fieldTypes)(definitions)
+    val processedCellClasses = ProcessCellClasses(fieldTypes)(definitions)
+    val cellClasses = processedCellClasses.cellClasses
+    
+    // Make sure there are no childless abstract cells
+    CheckChildlessAbstractCellClasses(cellClasses.values.toList)
   }
 }
