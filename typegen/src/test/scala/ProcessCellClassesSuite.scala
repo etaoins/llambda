@@ -260,4 +260,20 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       assert(characterClass.parent === datumClass) 
     }
   }
+  
+  test("inheriting from non-abstract cell class fails") {
+    intercept[InheritingNonAbstractCellClassException] {
+      processString("""
+        root cell Datum typetag typeId {
+          int32 typeId;
+        };
+
+        preconstructed cell Boolean : Datum {
+        };
+        
+        concrete cell Character : Boolean {
+        };
+      """)
+    }
+  }
 }

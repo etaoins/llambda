@@ -76,7 +76,7 @@ object ProcessCellClasses {
       }
       
       // Find our parent class
-      val parentCellClass = parsedCellDef.optionalParent map { parentName =>
+      val parentCellClassOpt = parsedCellDef.optionalParent map { parentName =>
         cellClasses.getOrElse(parentName, {
           // Our parent hasn't been declared yet
           throw new UndefinedCellClassException(parsedCellDef, parentName)
@@ -84,7 +84,7 @@ object ProcessCellClasses {
       }
 
       // Assign our TBAA nodes
-      val fieldTbaaNodes = createTbaaNodes(parsedCellDef.name, cellFields, parentCellClass, tbbaIndexGenerator.apply)
+      val fieldTbaaNodes = createTbaaNodes(parsedCellDef.name, cellFields, parentCellClassOpt, tbbaIndexGenerator.apply)
 
       // Turn each cell definition in to a cell class
       val cellClass = parsedCellDef match {
@@ -103,10 +103,17 @@ object ProcessCellClasses {
           )
 
         case childClass : ParsedChildClassDefinition =>
+          val parentCellClass = parentCellClassOpt.get
+
+          // It doesn't make sense to inherit from non-abstract cell classes
+          if (parentCellClass.instanceType != CellClass.Abstract) {
+            throw new InheritingNonAbstractCellClassException(childClass)
+          }
+
           ChildCellClass(
             name=childClass.name,
             instanceType=childClass.instanceType,
-            parent=parentCellClass.get,
+            parent=parentCellClass,
             fields=cellFields,
             internal=childClass.internal,
             typeId=typeId,
