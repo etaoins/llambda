@@ -46,7 +46,7 @@ preconstructed cell EmptyList : ListElement {
 abstract internal cell StringLike : Datum {
 	uint32 charLength;
 	uint32 byteLength;
-	int8* utf8Data;
+	uint8* utf8Data;
 };
 
 concrete cell String : StringLike {
@@ -76,12 +76,12 @@ concrete cell Character : Datum {
 
 concrete cell Vector : Datum {
 	uint32 length;
-	Datum** data;
+	Datum** elements;
 };
 
 concrete cell Bytevector : Datum {
 	uint32 length;
-	uint8** data;
+	uint8* data;
 };
 
 abstract internal cell RecordLike : Datum {
