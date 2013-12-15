@@ -9,7 +9,8 @@ object GenerateTypes {
   private val writers = List(
     writer.WritePredicates.apply,
     writer.WriteSizeCheck.apply,
-    writer.WriteDeclaretypes.apply
+    writer.WriteDeclaretypes.apply,
+    writer.WriteTypeid.apply
   ) : List[writer.OutputWriter]
 
   def apply(celldefFile : File, outputDir : File) {
