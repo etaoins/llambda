@@ -19,7 +19,7 @@ object WriteSizeCheck {
     cppBuilder.sep()
 
     // static_assert(sizeof(lliby::RecordCell) <= sizeof(lliby::alloc::Cell), "RecordCell does not fit in to a cell");
-    nonAbstractCellClasses foreach { cellClass =>
+    for(cellClass <- nonAbstractCellClasses) {
       val cppName = cellClass.names.cppName
       val assertString = "\"" + s"${cppName} does not fit in to a cell" + "\""
 

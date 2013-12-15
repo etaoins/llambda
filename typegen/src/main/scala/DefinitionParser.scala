@@ -58,9 +58,9 @@ trait CellDeclarationParser extends CommonParsers {
 trait CellDefinitionParser extends CommonParsers {
   def cellDefinition = rootCellDefinition | childCellDefinition
 
-  def rootCellDefinition = positioned("root" ~ internal ~ "cell" ~ identifier ~ fields ~ ";" ^^ {
-    case _ ~ internal ~ _ ~ typeName ~ fields ~ _ =>
-      new ParsedRootClassDefinition(typeName, fields, internal)
+  def rootCellDefinition = positioned("root" ~ internal ~ "cell" ~ identifier ~ "typetag" ~ identifier ~ fields ~ ";" ^^ {
+    case _ ~ internal ~ _ ~ typeName ~ _ ~  typeTagField  ~ fields ~ _ =>
+      new ParsedRootClassDefinition(typeName, typeTagField, fields, internal)
   })
 
   def childCellDefinition = positioned(instanceType ~ internal ~ ("cell" ~> identifier) ~ cellInheritence ~ fields <~ ";" ^^ {

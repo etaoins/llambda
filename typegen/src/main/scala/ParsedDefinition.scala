@@ -24,7 +24,7 @@ case class ParsedChildClassDefinition(name : String, instanceType : CellClass.In
   val optionalParent = Some(parent)
 }
 
-case class ParsedRootClassDefinition(name : String, fields : List[ParsedCellField], internal : Boolean) extends ParsedCellClassDefinition {
+case class ParsedRootClassDefinition(name : String, typeTagField : String, fields : List[ParsedCellField], internal : Boolean) extends ParsedCellClassDefinition {
   val instanceType = CellClass.Abstract
   val optionalParent = None
 }

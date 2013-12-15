@@ -15,7 +15,7 @@ object WritePredicates {
 
     cppBuilder.appendRaw(GeneratedFileComment)
 
-    publicCellClasses foreach { cellClass =>
+    for(cellClass <- publicCellClasses) {
       cppBuilder += "#include \"binding/" + cellClass.names.cppName + ".h\""
     }
 
@@ -26,7 +26,7 @@ object WritePredicates {
     cppBuilder += "{"
     cppBuilder.sep()
 
-    publicCellClasses foreach { cellClass =>
+    for(cellClass <- publicCellClasses) {
       val functionName = s"lliby_is_${cellClass.names.underscoreName}" 
 
       cppBuilder += s"bool ${functionName}(const ${rootClassCppName} *value)"

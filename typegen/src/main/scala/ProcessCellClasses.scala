@@ -85,8 +85,14 @@ object ProcessCellClasses {
       // Turn each cell definition in to a cell class
       val cellClass = parsedCellDef match {
         case rootClass : ParsedRootClassDefinition =>
+          // Find our type ID tag field
+          val typeTagField = cellFields.getOrElse(rootClass.typeTagField, {
+            throw new UndefinedTypeTagFieldException(rootClass)
+          })
+
           RootCellClass(
             name=rootClass.name,
+            typeTagField=typeTagField,
             fields=cellFields,
             internal=rootClass.internal,
             fieldTbaaNodes=fieldTbaaNodes
@@ -111,7 +117,7 @@ object ProcessCellClasses {
     }
     
     // Make sure we have exactly one root cell class
-    val rootCellClassOpt = cellClasses.values.foldLeft(None : Option[CellClass]) { (seenRootClass, cellClass) =>
+    val rootCellClassOpt = cellClasses.values.foldLeft(None : Option[RootCellClass]) { (seenRootClass, cellClass) =>
       cellClass match {
         case rootClass : RootCellClass  =>
           if (seenRootClass.isDefined) {

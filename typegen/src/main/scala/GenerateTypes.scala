@@ -8,7 +8,8 @@ import java.io._
 object GenerateTypes {
   private val writers = List(
     writer.WritePredicates.apply,
-    writer.WriteSizeCheck.apply
+    writer.WriteSizeCheck.apply,
+    writer.WriteDeclaretypes.apply
   ) : List[writer.OutputWriter]
 
   def apply(celldefFile : File, outputDir : File) {

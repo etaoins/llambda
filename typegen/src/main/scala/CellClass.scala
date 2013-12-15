@@ -50,7 +50,7 @@ sealed abstract class CellClass extends Positional {
   lazy val names = CellClassNames(name)
 }
 
-case class RootCellClass(name : String, fields : ListMap[String, CellField], internal : Boolean, fieldTbaaNodes : Map[CellField, llvmir.IrTbaaNode]) extends CellClass {
+case class RootCellClass(name : String, typeTagField : CellField, fields : ListMap[String, CellField], internal : Boolean, fieldTbaaNodes : Map[CellField, llvmir.IrTbaaNode]) extends CellClass {
   val instanceType = CellClass.Abstract
   val typeId = None
   val optionalParent = None

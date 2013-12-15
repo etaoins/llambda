@@ -83,6 +83,7 @@ abstract class SourceBuilder {
     sourceString.toString
 }
 
+/** Builds indented C++ source strings */
 class CppBuilder extends SourceBuilder {
   protected val indentString = "\t"
 
@@ -94,5 +95,15 @@ class CppBuilder extends SourceBuilder {
   protected def buildBlockEnd() {
     this += "}"
   }
+}
 
+/** Builds indented C++ header source with include guards */
+class CppIncludeBuilder(guardName : String) extends CppBuilder {
+  override def toString :String = {
+    s"#ifndef ${guardName}\n" + 
+    s"#define ${guardName}\n" + 
+    "\n" +
+    super.toString +
+    s"#endif\n"
+  }
 }

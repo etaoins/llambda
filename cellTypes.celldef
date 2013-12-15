@@ -8,7 +8,9 @@ fieldtype UnicodeChar : uint32 {
 cell Datum;
 cell Procedure;
 cell ListElement;
-fieldtype ProcedureEntryPoint : Datum* (*)(Procedure*, ListElement*);
+fieldtype ProcedureEntryPoint : Datum* (*)(Procedure*, ListElement*) {
+	cppname = ProcedureEntryPoint;
+};
 
 // This is a special type
 fieldtype TypeId : uint8 {
@@ -20,7 +22,7 @@ fieldtype GarbageState : uint8 {
 	extern cppname = GarbageState;
 };
 
-root internal cell Datum {
+root internal cell Datum typetag typeId {
 	TypeId typeId;
 	GarbageState gcState;
 };

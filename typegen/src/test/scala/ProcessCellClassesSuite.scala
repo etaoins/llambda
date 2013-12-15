@@ -17,10 +17,12 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
   test("multiple root cell classes fails") {
     intercept[DuplicateRootCellClassException] {
       processString("""
-        root cell FirstRoot {
+        root cell FirstRoot typetag typeId {
+          int32 typeId;
         };
 
-        root cell SecondRoot {
+        root cell SecondRoot typetag typeId {
+          int32 typeId;
         };
       """)
     }
@@ -43,7 +45,17 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
         abstract cell Numeric : Datum {
         };
 
-        root cell Datum {
+        root cell Datum typetag typeId {
+          int32 typeId;
+        };
+      """)
+    }
+  }
+ 
+  test("root class with undefined tag field fails") {
+    intercept[UndefinedTypeTagFieldException] {
+      processString("""
+        root cell FirstRoot typetag typeId {
         };
       """)
     }
@@ -52,7 +64,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
   test("duplicate field names fails") {
     intercept[DuplicateFieldNameException] {
       processString("""
-        root cell FirstRoot {
+        root cell FirstRoot typetag typeId {
           int32 typeId;
           int64 typeId;
         };
@@ -60,43 +72,44 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
     }
   }
 
-  test("simple empty root class") {
+  test("minimal root class") {
     val processedTypes = processString("""
-      root cell Datum {
+      root cell Datum typetag typeId {
+        int32 typeId;
       };
     """)
 
     val classes = processedTypes.cellClasses
-    assert(processedTypes.nextTbaaIndex === 0)
+    assert(processedTypes.nextTbaaIndex === 1)
 
     inside(classes("Datum")) { case (datumClass : RootCellClass) =>
       assert(datumClass.name === "Datum")
-      assert(datumClass.fields.isEmpty)
+      assert(datumClass.fields.size === 1)
       assert(datumClass.internal === false)
       assert(datumClass.typeId === None)
-      assert(datumClass.fieldTbaaNodes.isEmpty)
+      assert(datumClass.fieldTbaaNodes.size === 1)
 
       assert(processedTypes.rootCellClass === datumClass)
     }
   }
   
-  test("simple empty internal root class") {
+  test("minimal internal root class") {
     val processedTypes = processString("""
-      root internal cell Datum {
+      root internal cell Datum typetag typeId {
+        int32 typeId;
       };
     """)
     
     val classes = processedTypes.cellClasses
-    assert(processedTypes.nextTbaaIndex === 0)
 
     inside(classes("Datum")) { case (datumClass : RootCellClass) =>
       assert(datumClass.internal === true)
     }
   }
   
-  test("root class with fields") {
+  test("root class with additional fields") {
     val processedTypes = processString("""
-      root cell Datum {
+      root cell Datum typetag typeId {
         int32 typeId;
         int8 gcState;
       };
@@ -137,7 +150,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
   
   test("abstract child class with fields of root class with fields") {
     val processedTypes = processString("""
-      root cell Datum {
+      root cell Datum typetag typeId {
         int32 typeId;
         int8 gcState;
       };
@@ -215,7 +228,8 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
   
   test("concrete and preconstructed child classes") {
     val processedTypes = processString("""
-      root cell Datum {
+      root cell Datum typetag typeId {
+        int32 typeId;
       };
 
       preconstructed cell Boolean : Datum {
@@ -226,7 +240,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
     """)
 
     val classes = processedTypes.cellClasses
-    assert(processedTypes.nextTbaaIndex === 0)
+    assert(processedTypes.nextTbaaIndex === 3)
 
     val datumClass = classes("Datum")
 

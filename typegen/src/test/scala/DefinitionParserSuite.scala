@@ -27,11 +27,12 @@ class DefinitionParserSuite extends FunSuite {
   
   test("internal root cell class definition") {
     val (cellType : ParsedRootClassDefinition) :: Nil = parseString("""
-      root internal cell Datum {
+      root internal cell Datum typetag typeId {
       };
     """)
 
     assert(cellType.name === "Datum")
+    assert(cellType.typeTagField === "typeId")
     assert(cellType.instanceType === CellClass.Abstract)
     assert(cellType.internal === true)
   }
@@ -63,11 +64,12 @@ class DefinitionParserSuite extends FunSuite {
   test("single line comments") {
     val (cellType : ParsedRootClassDefinition) :: Nil = parseString("""
       // This is a simple cell
-      root cell Datum {
+      root cell Datum typetag typeId {
       };
     """)
 
     assert(cellType.name === "Datum")
+    assert(cellType.typeTagField === "typeId")
     assert(cellType.instanceType === CellClass.Abstract)
     assert(cellType.internal === false)
   }
@@ -77,19 +79,20 @@ class DefinitionParserSuite extends FunSuite {
       /* This is 
        * a multiline comment
        */
-      root cell Datum {
+      root cell Datum typetag typeId{
         /* This could be multiple lines but it isn't */
       };
     """)
 
     assert(cellType.name === "Datum")
+    assert(cellType.typeTagField === "typeId")
     assert(cellType.instanceType === CellClass.Abstract)
     assert(cellType.internal === false)
   }
   
   test("multiple definitions") {
     val (datumType : ParsedRootClassDefinition) :: (numericType : ParsedChildClassDefinition) :: Nil = parseString("""
-      root cell Datum {
+      root cell Datum typetag typeId {
       };
 
       concrete cell Numeric : Datum {
@@ -108,7 +111,7 @@ class DefinitionParserSuite extends FunSuite {
 
   test("root cell class with fields") {
     val (cellType : ParsedRootClassDefinition) :: Nil = parseString("""
-      root cell Datum {
+      root cell Datum typetag typeId {
         uint8 typeId;
         uint8* garbageState;
       };

@@ -16,7 +16,8 @@ class CheckChildlessAbstractCellClassesSuite extends FunSuite {
   test("childless root cell class fails") {
     intercept[ChildlessAbstractCellClassException] {
       checkString("""
-        root cell Datum {
+        root cell Datum typetag typeId {
+          int32 typeId;
         };
       """);
     }
@@ -24,7 +25,8 @@ class CheckChildlessAbstractCellClassesSuite extends FunSuite {
   
   test("root cell with concrete child succeeds") {
     checkString("""
-      root cell Datum {
+      root cell Datum typetag typeId {
+        int32 typeId;
       };
 
       concrete cell Child : Datum {
@@ -34,7 +36,8 @@ class CheckChildlessAbstractCellClassesSuite extends FunSuite {
 
   test("root cell with preconstructed child succeeds") {
     checkString("""
-      root cell Datum {
+      root cell Datum typetag typeId {
+        int32 typeId;
       };
 
       preconstructed cell Child : Datum {
@@ -46,7 +49,8 @@ class CheckChildlessAbstractCellClassesSuite extends FunSuite {
   test("childless child cell class fails") {
     intercept[ChildlessAbstractCellClassException] {
       checkString("""
-        root cell Datum {
+        root cell Datum typetag typeId {
+          int32 typeId;
         };
 
         abstract cell ChildCell : Datum {
@@ -57,7 +61,8 @@ class CheckChildlessAbstractCellClassesSuite extends FunSuite {
   
   test("child cell class with concrete child succeeds") {
     checkString("""
-      root cell Datum {
+      root cell Datum typetag typeId {
+        int32 typeId;
       };
 
       abstract cell ChildCell : Datum {

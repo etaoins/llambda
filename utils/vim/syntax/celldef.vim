@@ -5,7 +5,7 @@ endif
 " Treat all bodies as the same
 syn region celldefBodyBlock start="{" end="}" fold transparent contains=celldefBodyKeyword, celldefIntType, celldefFloatType, celldefLineComment, celldefCommentBlock
 
-syn keyword celldefTopLevelKeyword root abstract concrete internal preconstructed cell fieldtype
+syn keyword celldefTopLevelKeyword root abstract concrete internal preconstructed cell fieldtype typetag
 syn keyword celldefBodyKeyword     cppname extern contained
 
 syn match   celldefIntType    /\<u\?int\d\+\>/ 

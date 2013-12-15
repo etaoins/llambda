@@ -9,7 +9,7 @@ class CheckTopLevelNamespaceSuite extends FunSuite {
   test("duplicate cell name fails") {
     intercept[DuplicateTypeNameException] {
       checkString("""
-        root cell Datum {
+        root cell Datum typetag typeId {
         };
 
         concrete cell String : Datum {
@@ -41,7 +41,7 @@ class CheckTopLevelNamespaceSuite extends FunSuite {
   test("conflicting field type and cell class name") {
     intercept[DuplicateTypeNameException] {
       checkString("""
-        root cell myint {
+        root cell myint typetag typeId{
         };
 
         fieldtype myint : uint64;
