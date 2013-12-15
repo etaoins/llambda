@@ -10,7 +10,8 @@ object GenerateTypes {
     writer.WritePredicates.apply,
     writer.WriteSizeCheck.apply,
     writer.WriteDeclaretypes.apply,
-    writer.WriteTypeid.apply
+    writer.WriteTypeid.apply,
+    writer.WriteCellMembmers.apply
   ) : List[writer.OutputWriter]
 
   def apply(celldefFile : File, outputDir : File) {

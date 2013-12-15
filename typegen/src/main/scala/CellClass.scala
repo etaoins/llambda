@@ -5,12 +5,9 @@ import scala.util.parsing.input.Positional
 
 import io.llambda.llvmir
 
-/** Defined field inside a class cell
-  *
-  * This is a wrapper to ensure fields with the same type aren't considered
-  * equal
-  */
+/** Defined field inside a class cell */
 final class CellField(
+  val name : String,
   val fieldType : FieldType
 ) extends Positional
 
