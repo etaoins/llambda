@@ -32,13 +32,15 @@ object ProcessFieldTypes {
           // If no cppname is specified then this is purely a front-end alias 
           val needsDefinition = userFieldType.cppType.map(_.needsDefinition).getOrElse(false)
 
-          fieldTypes + (userFieldType.name ->
-            new FieldTypeAlias(
+          val fieldTypeAlias = new FieldTypeAlias(
               resolvedAlias,
               cppTypeName=cppTypeName,
               needsDefinition=needsDefinition
-            )
           )
+
+          val positionedFieldTypeAlias = fieldTypeAlias.setPos(userFieldType.pos)
+
+          fieldTypes + (userFieldType.name -> positionedFieldTypeAlias)
       }
     }
   }

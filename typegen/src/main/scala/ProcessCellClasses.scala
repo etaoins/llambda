@@ -46,7 +46,11 @@ object ProcessCellClasses {
       }
 
       val resolvedType = ResolveParsedType(fieldTypes)(parsedField.fieldType)
-      seenFields + (parsedField.name -> new CellField(resolvedType))
+
+      val cellField = new CellField(resolvedType)
+      val positionedCellField = cellField.setPos(parsedField.pos)
+
+      seenFields + (parsedField.name -> positionedCellField)
     }
   }
 

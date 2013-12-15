@@ -29,3 +29,15 @@ class DuplicateFieldNameException(val parsedCellField : ParsedCellField) extends
 
 class ChildlessAbstractCellClassException(val cellClass : CellClass) extends
   PositionedSemanticException(cellClass, s"""Abstract cell class "${cellClass.name}" has no children""")
+
+class NonAliasedTypeTagFieldException(val typeTagField : CellField) extends 
+  PositionedSemanticException(typeTagField, s"Type tag field must have a type introduced by fieldtype")
+
+class TypeTagAliasMissingCppNameException(val fieldTypeAlias : FieldTypeAlias) extends 
+  PositionedSemanticException(fieldTypeAlias, s"Type tag field type alias must have a cppname")
+
+class TypeTagAliasExternallyDefinedException(val fieldTypeAlias : FieldTypeAlias) extends 
+  PositionedSemanticException(fieldTypeAlias, s"Type tag field type alias must not have an external definition")
+
+class TypeTagAliasNonIntegralException(val fieldTypeAlias : FieldTypeAlias) extends 
+  PositionedSemanticException(fieldTypeAlias, s"Type tag field type alias must have an integral type")

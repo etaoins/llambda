@@ -1,5 +1,7 @@
 package io.llambda.typegen
 
+import scala.util.parsing.input.Positional
+
 import io.llambda.llvmir
 
 sealed abstract class FieldType 
@@ -12,4 +14,4 @@ class FieldTypeAlias(
   val aliasedType : FieldType,
   val cppTypeName : Option[String],
   val needsDefinition : Boolean
-) extends FieldType
+) extends FieldType with Positional

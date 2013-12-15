@@ -28,6 +28,9 @@ object GenerateTypes {
     
     // Make sure there are no childless abstract cells
     CheckChildlessAbstractCellClasses(cellClasses.values.toList)
+    
+    // Make sure our type tag field is sane
+    CheckTypeTagField(processedTypes.rootCellClass)
 
     // Run our writers
     // Make sure they all succeed before we start writing

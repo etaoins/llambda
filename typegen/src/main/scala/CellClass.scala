@@ -12,7 +12,7 @@ import io.llambda.llvmir
   */
 final class CellField(
   val fieldType : FieldType
-)
+) extends Positional
 
 /** Common types related to cell classes */
 object CellClass {
