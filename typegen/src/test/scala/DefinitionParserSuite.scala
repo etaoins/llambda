@@ -225,7 +225,7 @@ class DefinitionParserSuite extends FunSuite {
   test("field type inheriting function pointer") {
     val (fieldType : ParsedFieldTypeAlias) :: Nil = parseString("""
       fieldtype procedureEntryPoint : Datum* (*)(Procedure*, ListElement*) {
-        cppname = ProcedureEntryPoint;
+        cppname = Types::Callbacks::procedure_entry_point;
       };
     """)
 
@@ -239,7 +239,7 @@ class DefinitionParserSuite extends FunSuite {
     
     assert(fieldType.name === "procedureEntryPoint")
     assert(fieldType.aliasedType ===  aliasedType)
-    assert(fieldType.cppType === Some(ParsedCppType("ProcedureEntryPoint", true)))
+    assert(fieldType.cppType === Some(ParsedCppType("Types::Callbacks::procedure_entry_point", true)))
   }
   
   test("field type inheriting named function pointer fails") {
