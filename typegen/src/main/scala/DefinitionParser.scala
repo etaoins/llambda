@@ -10,9 +10,9 @@ class ParseErrorException(message : String) extends Exception(message)
 
 trait CommonParsers extends RegexParsers {
   // Be very strict about identifiers for now
-  private val identifierPattern = """[a-zA-Z][a-zA-Z0-9]+"""
-
-  def identifier = identifierPattern.r
+  // We assume all names are camelCase when we rename them for different
+  // output langauges
+  def identifier = """[a-zA-Z][a-zA-Z0-9]+""".r
 
   // Types are identifiers plus zero or more pointer indirections
   def valueType = positioned(identifier ~ rep("*") ^^ { case typeName ~ indirections =>
