@@ -22,7 +22,7 @@ fieldtype GarbageState : uint8 {
 	extern cppname = GarbageState;
 };
 
-root internal cell Datum typetag typeId {
+root cell Datum typetag typeId {
 	TypeId typeId;
 	GarbageState gcState;
 };
