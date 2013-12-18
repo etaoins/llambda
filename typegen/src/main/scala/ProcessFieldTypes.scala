@@ -19,7 +19,7 @@ object ProcessFieldTypes {
             PrimitiveFieldType(
               signed=None,
               llvmType=llvmir.UserDefinedType(cellNames.llvmName),
-              cppTypeName=cellNames.cppName
+              cppTypeName=cellNames.cppClassName
             )
           )
 

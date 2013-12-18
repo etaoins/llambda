@@ -14,7 +14,7 @@ object WriteDeclaretypes {
 
     // Forward declare each cell class
     for(cellClass <- processedTypes.cellClasses.values) {
-      val cppName = cellClass.names.cppName
+      val cppName = cellClass.names.cppClassName
       incBuilder += s"class ${cppName};"
     }
     

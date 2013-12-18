@@ -2,7 +2,8 @@ package io.llambda.typegen
 
 case class CellClassNames(definitionName : String) {
   lazy val llvmName = definitionName.charAt(0).toLower + definitionName.drop(1)
-  lazy val cppName = definitionName + "Cell"
+  lazy val cppClassName = definitionName + "Cell"
+  lazy val scalaObjectName = cppClassName
 
   // Insert a _ before any capital letter not at the beginning of a string and
   // lowercase the result

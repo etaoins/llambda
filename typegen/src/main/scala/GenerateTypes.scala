@@ -11,7 +11,8 @@ object GenerateTypes {
     writer.WriteSizeCheck.apply,
     writer.WriteDeclaretypes.apply,
     writer.WriteTypeid.apply,
-    writer.WriteCellMembmers.apply
+    writer.WriteCellMembmers.apply,
+    writer.WriteIntrinsicCellTypes.apply
   ) : List[writer.OutputWriter]
 
   def apply(celldefFile : File, outputDir : File) {

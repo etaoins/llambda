@@ -8,7 +8,7 @@ object WritePredicates {
     val publicCellClasses = processedTypes.cellClasses.values.filter(!_.internal)
     
     // Get the C++ name for the root class
-    val rootClassCppName = CellClassNames(processedTypes.rootCellClass.name).cppName
+    val rootClassCppName = CellClassNames(processedTypes.rootCellClass.name).cppClassName
 
     // Start our builder
     val cppBuilder = new CppBuilder
@@ -16,7 +16,7 @@ object WritePredicates {
     cppBuilder.appendRaw(GeneratedFileComment)
 
     for(cellClass <- publicCellClasses) {
-      cppBuilder += "#include \"binding/" + cellClass.names.cppName + ".h\""
+      cppBuilder += "#include \"binding/" + cellClass.names.cppClassName + ".h\""
     }
 
     cppBuilder.sep()
@@ -32,7 +32,7 @@ object WritePredicates {
       cppBuilder += s"bool ${functionName}(const ${rootClassCppName} *value)"
 
       cppBuilder.blockSep {
-        cppBuilder += s"return ${cellClass.names.cppName}::isInstance(value);"
+        cppBuilder += s"return ${cellClass.names.cppClassName}::isInstance(value);"
       }
     }
     

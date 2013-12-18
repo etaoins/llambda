@@ -13,14 +13,14 @@ object WriteSizeCheck {
     cppBuilder.appendRaw(GeneratedFileComment)
 
     nonAbstractCellClasses foreach { cellClass =>
-      cppBuilder += "#include \"binding/" + cellClass.names.cppName + ".h\""
+      cppBuilder += "#include \"binding/" + cellClass.names.cppClassName + ".h\""
     }
 
     cppBuilder.sep()
 
     // static_assert(sizeof(lliby::RecordCell) <= sizeof(lliby::alloc::Cell), "RecordCell does not fit in to a cell");
     for(cellClass <- nonAbstractCellClasses) {
-      val cppName = cellClass.names.cppName
+      val cppName = cellClass.names.cppClassName
       val assertString = "\"" + s"${cppName} does not fit in to a cell" + "\""
 
       cppBuilder += s"static_assert(sizeof(lliby::${cppName}) <= sizeof(lliby::alloc::Cell), ${assertString});"

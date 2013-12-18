@@ -27,8 +27,8 @@ object WriteCellMembmers {
 
 
   private def writeMemberFile(processedTypes : ProcessedTypes, cellClass : CellClass) : String = {
-    val cppName = cellClass.names.cppName
-    val rootCellCppName = processedTypes.rootCellClass.names.cppName
+    val cppName = cellClass.names.cppClassName
+    val rootCellCppName = processedTypes.rootCellClass.names.cppClassName
 
     val cppBuilder = new CppBuilder
 
@@ -89,7 +89,7 @@ object WriteCellMembmers {
 
   def apply(processedTypes : ProcessedTypes) : Map[String, String] = {
     (processedTypes.cellClasses.values.map { cellClass =>
-      val cppName = cellClass.names.cppName
+      val cppName = cellClass.names.cppClassName
       val outputPath = s"runtime/binding/generated/${cppName}Members.h"
 
       (outputPath -> writeMemberFile(processedTypes, cellClass))

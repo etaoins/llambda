@@ -9,7 +9,7 @@ abstract class SourceBuilder {
   protected def buildBlockEnd()
 
   protected var indentLevel : Int = 0
-  protected val sourceString = new StringBuilder 
+  protected var sourceString = new StringBuilder 
   protected var shouldSep : Boolean = false
 
   /** Add a new line to the source string
@@ -18,6 +18,18 @@ abstract class SourceBuilder {
     */
   def +=(line : String) {
     appendRaw((indentString * indentLevel) + line + "\n")
+  }
+
+  /** Appends multiple lines separated by the specified string 
+    * 
+    * This is useful for creating lists where each value is a separate line.
+    */
+  def appendLines(lines : Iterable[String], separator : String) {
+    if (!lines.isEmpty) {
+      val indentPrefix = indentString * indentLevel
+
+      appendRaw(indentPrefix + lines.mkString(separator + "\n" + indentPrefix) + "\n")
+    }
   }
 
   /** Directly includes a string in the source
@@ -64,7 +76,6 @@ abstract class SourceBuilder {
     indentLevel = indentLevel - 1
 
     buildBlockEnd()
-    sep()
     result
   }
   
@@ -115,5 +126,19 @@ class CppIncludeBuilder(guardName : String) extends CppBuilder {
     "\n" +
     super.toString +
     s"#endif\n"
+  }
+}
+
+/** Builds idented Scala source */
+class ScalaBuilder extends SourceBuilder {
+  protected val indentString = "  "
+
+  protected def buildBlockStart() {
+    sourceString = new StringBuilder(sourceString.stripLineEnd)
+    sourceString ++= " {\n"
+  }
+
+  protected def buildBlockEnd() {
+    this += "}"
   }
 }
