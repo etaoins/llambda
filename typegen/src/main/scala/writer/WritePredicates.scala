@@ -31,7 +31,7 @@ object WritePredicates {
 
       cppBuilder += s"bool ${functionName}(const ${rootClassCppName} *value)"
 
-      cppBuilder.block {
+      cppBuilder.blockSep {
         cppBuilder += s"return ${cellClass.names.cppName}::isInstance(value);"
       }
     }

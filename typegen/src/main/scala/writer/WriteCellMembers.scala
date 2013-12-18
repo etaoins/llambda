@@ -42,7 +42,7 @@ object WriteCellMembmers {
           val cppReturnType = FieldTypeToCpp(field.fieldType, None)
 
           cppBuilder += s"${cppReturnType} ${fieldName}() const"
-          cppBuilder.block {
+          cppBuilder.blockSep {
             cppBuilder += s"return m_${fieldName};"
           }
         }
@@ -53,7 +53,7 @@ object WriteCellMembmers {
     cppBuilder.indented {
       // Make our type check
       cppBuilder += s"static bool isInstance(const ${rootCellCppName} *datum)"
-      cppBuilder.block {
+      cppBuilder.blockSep {
         cppBuilder += "return " + cppTypePredicate(processedTypes, cellClass) + ";"
       }
   
@@ -61,9 +61,9 @@ object WriteCellMembmers {
         // Make our type casters 
         for(constPrefix <- List("", "const ")) {
           cppBuilder += s"static ${constPrefix}${cppName}* fromDatum(${constPrefix}${rootCellCppName} *datum)"
-          cppBuilder.block {
+          cppBuilder.blockSep {
             cppBuilder += "if (isInstance(datum))"
-            cppBuilder.block {
+            cppBuilder.blockSep {
               cppBuilder += s"return static_cast<${constPrefix}${cppName}*>(datum);"
             }
           

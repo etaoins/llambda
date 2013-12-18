@@ -67,6 +67,16 @@ abstract class SourceBuilder {
     sep()
     result
   }
+  
+  /** Starts a new block in the target language followed by a separator
+    *
+    * This is shorthand for block + sep
+    */
+  def blockSep[T](innerBlock : => T) : T = {
+    val result = block(innerBlock)
+    sep()
+    result
+  }
 
   /** Adds a blank line to the source strings
     *
