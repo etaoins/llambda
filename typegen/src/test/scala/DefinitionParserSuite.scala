@@ -13,7 +13,10 @@ class DefinitionParserSuite extends FunSuite {
 
   test("cell class without concrete specifier fails") {
     intercept[ParseErrorException] {
-      parseString("cell class datum;")
+      parseString("""
+        cell class datum {
+        };
+      """)
     }
   }
 
