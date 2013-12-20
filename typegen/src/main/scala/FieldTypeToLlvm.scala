@@ -2,6 +2,7 @@ package io.llambda.typegen
 
 import io.llambda.llvmir
 
+/** Converts a [[FieldType]] to an LLVM type */
 object FieldTypeToLlvm {
   def apply(fieldType : FieldType) : llvmir.FirstClassType = {
     fieldType match {

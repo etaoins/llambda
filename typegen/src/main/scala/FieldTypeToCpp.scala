@@ -1,5 +1,12 @@
 package io.llambda.typegen
 
+/** Convert a [[FieldType]] instance to a C++ type name 
+  *
+  * @param fieldType    [[FieldType]] instance to convert 
+  * @param definedName  If None then just the type name is returned. If defined
+  *                     then a definition suitable for a member variable or 
+  *                     typedef is generated
+  */
 object FieldTypeToCpp {
   def apply(fieldType : FieldType, definedName : Option[String]) : String = {
     // Except for function pointers we can define an instance or name for a type

@@ -1,5 +1,11 @@
 package io.llambda.typegen
 
+/** Checks the sanity of the top-level type namespace
+  *
+  * If any declared classes are not eventually defined then 
+  * [[UndefinedCellClassException]] in thrown. If a duplicate type names are
+  * encountered then [[DuplicateTypeNameException]] is thrown.
+  */
 object CheckTopLevelNamespace {
   def apply(definitions : List[ParsedDefinition]) {
     val predefinedTypeNames = PredefinedFieldTypes().keys.toSet

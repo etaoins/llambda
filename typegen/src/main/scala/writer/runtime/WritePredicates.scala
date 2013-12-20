@@ -27,8 +27,7 @@ object WritePredicates extends writer.OutputWriter {
     cppBuilder.sep()
 
     for(cellClass <- publicCellClasses) {
-      val functionName = s"lliby_is_${cellClass.names.underscoreName}" 
-
+      val functionName = cellClass.names.predicateFunctionName
       cppBuilder += s"bool ${functionName}(const ${rootClassCppName} *value)"
 
       cppBuilder.blockSep {
