@@ -8,7 +8,8 @@ import io.llambda.llvmir
 /** Defined field inside a class cell */
 final class CellField(
   val name : String,
-  val fieldType : FieldType
+  val fieldType : FieldType,
+  val initializer : Option[Long]
 ) extends Positional
 
 /** Common types related to cell classes */

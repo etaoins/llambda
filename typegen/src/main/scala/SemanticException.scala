@@ -27,6 +27,9 @@ class NoRootCellClassException extends SemanticException("No root cell class def
 class DuplicateFieldNameException(val parsedCellField : ParsedCellField) extends
   PositionedSemanticException(parsedCellField, s"Duplicate field name: ${parsedCellField.name}")
 
+class InitializingNonIntegralFieldException(val parsedDef : ParsedCellField) extends
+  PositionedSemanticException(parsedDef, s"Initializers must be for fields with integral types")
+
 class InheritingNonAbstractCellClassException(val parsedChildClass : ParsedChildClassDefinition) extends
   PositionedSemanticException(parsedChildClass, s"Inheriting from non-abstract cell class: ${parsedChildClass.parent}")
 

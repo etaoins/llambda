@@ -85,13 +85,19 @@ trait CellDefinitionParser extends CommonParsers {
 
   def field = positioned(functionPointerField | valueField)
 
-  def valueField = (valueType ~ identifier) <~ ";" ^^ { case fieldType ~ fieldName => 
-    new ParsedCellField(fieldName, fieldType)
+  def valueField = valueType ~ identifier ~ initializer <~ ";" ^^ { case fieldType ~ fieldName ~ fieldInitializer => 
+    new ParsedCellField(fieldName, fieldType, fieldInitializer)
+  }
+  
+  def initializer = opt("=" ~> """\d+""".r) ^^ { initializerOpt =>
+    initializerOpt.map { initializer =>
+      java.lang.Long.parseLong(initializer)
+    }
   }
   
   def functionPointerField = returnType ~ "(" ~ "*" ~ identifier ~ ")" ~ "(" ~ repsep(valueType, ",") ~ ")" <~ ";" ^^ {
     case retType ~ _  ~ _ ~ fieldName ~ _ ~ _ ~ argTypes ~ _ =>
-      new ParsedCellField(fieldName, ParsedFunctionPointerType(retType, argTypes))
+      new ParsedCellField(fieldName, ParsedFunctionPointerType(retType, argTypes), None)
   }
 }
 

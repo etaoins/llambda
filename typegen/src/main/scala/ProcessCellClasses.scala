@@ -47,7 +47,16 @@ object ProcessCellClasses {
 
       val resolvedType = ResolveParsedType(fieldTypes)(parsedField.fieldType)
 
-      val cellField = new CellField(parsedField.name, resolvedType)
+      if (parsedField.initializer.isDefined) {
+        // We only support integer intiializers
+        FieldTypeToLlvm(resolvedType) match {
+          case llvmir.IntegerType(_) => // Good
+          case _ =>
+            throw new InitializingNonIntegralFieldException(parsedField)
+        }
+      }
+
+      val cellField = new CellField(parsedField.name, resolvedType, parsedField.initializer)
       val positionedCellField = cellField.setPos(parsedField.pos)
 
       seenFields + (parsedField.name -> positionedCellField)

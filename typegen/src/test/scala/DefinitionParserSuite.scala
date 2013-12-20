@@ -112,11 +112,11 @@ class DefinitionParserSuite extends FunSuite {
     assert(numericType.internal === false)
   }
 
-  test("root cell class with fields") {
+  test("root cell class with fields and initializer") {
     val (cellType : ParsedRootClassDefinition) :: Nil = parseString("""
       root cell Datum typetag typeId {
         uint8 typeId;
-        uint8* garbageState;
+        uint8* garbageState = 256;
       };
     """)
 
@@ -127,9 +127,11 @@ class DefinitionParserSuite extends FunSuite {
 
     assert(typeIdField.name === "typeId")
     assert(typeIdField.fieldType === ParsedTypeName("uint8"))
+    assert(typeIdField.initializer === None)
 
     assert(garbageStateField.name === "garbageState")
     assert(garbageStateField.fieldType === ParsedPointerType(ParsedTypeName("uint8")))
+    assert(garbageStateField.initializer === Some(256))
   }
   
   test("child cell class with function pointers") {

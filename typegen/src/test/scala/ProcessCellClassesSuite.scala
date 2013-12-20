@@ -71,6 +71,17 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       """)
     }
   }
+  
+  test("initializing non-integer field fails") {
+    intercept[InitializingNonIntegralFieldException] {
+      processString("""
+        root cell FirstRoot typetag typeId {
+          int32 typeId;
+          untypedptr somePtr = 5;
+        };
+      """)
+    }
+  }
 
   test("minimal root class") {
     val processedTypes = processString("""
@@ -111,7 +122,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
     val processedTypes = processString("""
       root cell Datum typetag typeId {
         int32 typeId;
-        int8 gcState;
+        int8 gcState = 16;
       };
     """)
     
@@ -130,6 +141,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
         llvmir.IntegerType(32),
         "std::int32_t"
       ))
+      assert(typeIdField.initializer === None)
 
       val gcStateField = datumClass.fields("gcState")
       assert(gcStateField.fieldType === PrimitiveFieldType(
@@ -137,6 +149,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
         llvmir.IntegerType(8),
         "std::int8_t"
       ))
+      assert(gcStateField.initializer === Some(16))
 
       val typeIdTbaaNode = datumClass.fieldTbaaNodes(typeIdField)
       assert(typeIdTbaaNode.index === 0)

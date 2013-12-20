@@ -8,7 +8,7 @@ sealed abstract class ParsedDefinition extends Positional {
 
 sealed abstract trait ParsedCellClassDeclarationLike extends ParsedDefinition
 
-case class ParsedCellField(name : String, fieldType : ParsedType)  extends Positional 
+case class ParsedCellField(name : String, fieldType : ParsedType, initializer : Option[Long]) extends Positional 
 
 case class ParsedCellClassDeclaration(name : String) extends ParsedCellClassDeclarationLike
 
