@@ -14,7 +14,8 @@ object GenerateTypes {
     writer.runtime.WriteCellMembers,
 
     writer.compiler.WriteIntrinsicCellTypes,
-    writer.compiler.WriteLlvmCellTypes
+    writer.compiler.WriteLlvmCellTypes,
+    writer.compiler.WriteScalaObjects
   ) : List[writer.OutputWriter]
 
   def apply(celldefFile : File, outputDir : File) {

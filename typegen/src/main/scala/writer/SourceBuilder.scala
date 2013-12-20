@@ -75,6 +75,11 @@ abstract class SourceBuilder {
     val result = innerBlock
     indentLevel = indentLevel - 1
 
+    // We don't need a sep at the end of the block
+    if (sourceString.endsWith("\n\n")) {
+      sourceString = sourceString.dropRight(1)
+    }
+
     buildBlockEnd()
     result
   }

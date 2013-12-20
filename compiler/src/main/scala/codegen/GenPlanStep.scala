@@ -92,7 +92,7 @@ object GenPlanStep {
       val datumIr = ct.DatumCell.genPointerBitcast(block)(cellIr)
       val typeIdIr = ct.DatumCell.genLoadFromTypeId(block)(datumIr)
 
-      val resultIr = block.icmp(cellType.name + "Check")(ComparisonCond.Equal, None, typeIdIr, IntegerConstant(ct.DatumCell.typeIdIrType, cellType.typeId))
+      val resultIr = block.icmp(cellType.llvmName + "Check")(ComparisonCond.Equal, None, typeIdIr, IntegerConstant(ct.DatumCell.typeIdIrType, cellType.typeId))
 
       state.withTempValue(resultTemp -> resultIr)
 
