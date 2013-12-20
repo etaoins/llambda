@@ -1,12 +1,12 @@
-package io.llambda.typegen.writer
+package io.llambda.typegen.writer.compiler
 
 import io.llambda.typegen._
 
-object WriteIntrinsicCellTypes {
+object WriteIntrinsicCellTypes extends writer.OutputWriter {
   def apply(processedTypes : ProcessedTypes) : Map[String, String] = {
     val scalaBuilder = new ScalaBuilder
     
-    scalaBuilder.appendRaw(GeneratedFileComment)
+    scalaBuilder.appendRaw(writer.GeneratedClikeFileComment)
 
     scalaBuilder += "package io.llambda.compiler.frontend"
     scalaBuilder += "import io.llambda"

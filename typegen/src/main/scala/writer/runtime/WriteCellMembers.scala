@@ -1,8 +1,8 @@
-package io.llambda.typegen.writer
+package io.llambda.typegen.writer.runtime
 
 import io.llambda.typegen._
 
-object WriteCellMembmers {
+object WriteCellMembers extends writer.OutputWriter {
   private def cppTypePredicate(processedTypes : ProcessedTypes, cellClass : CellClass) : String = cellClass match {
     case _ : RootCellClass =>
       // We're always an instance of the root classes
@@ -32,7 +32,7 @@ object WriteCellMembmers {
 
     val cppBuilder = new CppBuilder
 
-    cppBuilder.appendRaw(GeneratedFileComment)
+    cppBuilder.appendRaw(writer.GeneratedClikeFileComment)
 
     // Make accessors for each field
     if (!cellClass.fields.isEmpty) {

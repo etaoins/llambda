@@ -1,12 +1,12 @@
-package io.llambda.typegen.writer
+package io.llambda.typegen.writer.runtime
 
 import io.llambda.typegen._
 
-object WriteDeclaretypes {
+object WriteDeclaretypes extends writer.OutputWriter {
   def apply(processedTypes : ProcessedTypes) : Map[String, String] = {
     val incBuilder = new CppIncludeBuilder("_LLIBY_BINDING_DECLARETYPES_H")
 
-    incBuilder.appendRaw(GeneratedFileComment)
+    incBuilder.appendRaw(writer.GeneratedClikeFileComment)
 
     incBuilder += "namespace lliby"
     incBuilder += "{"

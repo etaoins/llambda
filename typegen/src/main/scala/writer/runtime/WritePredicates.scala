@@ -1,8 +1,8 @@
-package io.llambda.typegen.writer
+package io.llambda.typegen.writer.runtime
 
 import io.llambda.typegen._
 
-object WritePredicates {
+object WritePredicates extends writer.OutputWriter {
   def apply(processedTypes : ProcessedTypes) : Map[String, String] = {
     // Get a list of non-internal cell classes
     val publicCellClasses = processedTypes.cellClasses.values.filter(!_.internal)
@@ -13,7 +13,7 @@ object WritePredicates {
     // Start our builder
     val cppBuilder = new CppBuilder
 
-    cppBuilder.appendRaw(GeneratedFileComment)
+    cppBuilder.appendRaw(writer.GeneratedClikeFileComment)
 
     for(cellClass <- publicCellClasses) {
       cppBuilder += "#include \"binding/" + cellClass.names.cppClassName + ".h\""

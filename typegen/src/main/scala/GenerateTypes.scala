@@ -7,12 +7,13 @@ import java.io._
 
 object GenerateTypes {
   private val writers = List(
-    writer.WritePredicates.apply,
-    writer.WriteSizeCheck.apply,
-    writer.WriteDeclaretypes.apply,
-    writer.WriteTypeid.apply,
-    writer.WriteCellMembmers.apply,
-    writer.WriteIntrinsicCellTypes.apply
+    writer.runtime.WritePredicates,
+    writer.runtime.WriteSizeCheck,
+    writer.runtime.WriteDeclaretypes,
+    writer.runtime.WriteTypeid,
+    writer.runtime.WriteCellMembers,
+
+    writer.compiler.WriteIntrinsicCellTypes
   ) : List[writer.OutputWriter]
 
   def apply(celldefFile : File, outputDir : File) {

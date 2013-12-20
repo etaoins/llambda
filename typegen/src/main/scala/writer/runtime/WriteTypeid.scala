@@ -1,8 +1,8 @@
-package io.llambda.typegen.writer
+package io.llambda.typegen.writer.runtime
 
 import io.llambda.typegen._
 
-object WriteTypeid {
+object WriteTypeid extends writer.OutputWriter {
   def apply(processedTypes : ProcessedTypes) : Map[String, String] = {
     // Get information about our type tag
     val typeTagField = processedTypes.rootCellClass.typeTagField
@@ -22,7 +22,7 @@ object WriteTypeid {
 
     val incBuilder = new CppIncludeBuilder("_LLIBY_BINDING_TYPEID_H")
     
-    incBuilder.appendRaw(GeneratedFileComment)
+    incBuilder.appendRaw(writer.GeneratedClikeFileComment)
 
     // Our C++ type names assume this is included
     incBuilder += "#include <cstdint>"

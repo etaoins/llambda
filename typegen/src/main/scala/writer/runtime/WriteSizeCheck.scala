@@ -1,8 +1,8 @@
-package io.llambda.typegen.writer
+package io.llambda.typegen.writer.runtime
 
 import io.llambda.typegen._
 
-object WriteSizeCheck {
+object WriteSizeCheck extends writer.OutputWriter {
   def apply(processedTypes : ProcessedTypes) : Map[String, String] = {
     // Get a list of non-abstract cell classes
     val nonAbstractCellClasses = processedTypes.cellClasses.values.filter(_.instanceType != CellClass.Abstract)
@@ -10,7 +10,7 @@ object WriteSizeCheck {
     // Start our builder
     val cppBuilder = new CppBuilder
 
-    cppBuilder.appendRaw(GeneratedFileComment)
+    cppBuilder.appendRaw(writer.GeneratedClikeFileComment)
 
     nonAbstractCellClasses foreach { cellClass =>
       cppBuilder += "#include \"binding/" + cellClass.names.cppClassName + ".h\""
