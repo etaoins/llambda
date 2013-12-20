@@ -18,9 +18,9 @@ object ProcessCellClasses {
   }
 
   /** Creates TBAA nodes for our fields and the fields we inherit from our superclasses */
-  private def createTbaaNodes(selfName : String, selfFields : Map[String, CellField], parentClass : Option[CellClass], indexCounter : () => Int) : Map[CellField, llvmir.IrTbaaNode] = {
+  private def createTbaaNodes(selfName : String, selfFields : ListMap[String, CellField], parentClass : Option[CellClass], indexCounter : () => Int) : ListMap[CellField, llvmir.IrTbaaNode] = {
     // Inherit the TBAA nodes from our parents
-    val inheritsNodes = parentClass.map(_.fieldTbaaNodes).getOrElse(Map.empty).map { case (cellField, parentTbaaNode) =>
+    val inheritsNodes = parentClass.map(_.fieldTbaaNodes).getOrElse(ListMap.empty).map { case (cellField, parentTbaaNode) =>
       val identity = s"${parentTbaaNode.identity}->${selfName}"
       val tbaaIndex = indexCounter()
 
@@ -33,9 +33,9 @@ object ProcessCellClasses {
       val tbaaIndex = indexCounter()
 
       (cellField -> llvmir.IrTbaaNode(tbaaIndex, identity, None))
-    }).toMap
+    })
 
-    selfNodes ++ inheritsNodes
+    inheritsNodes ++ selfNodes
   }
 
   /** Converts a list of parsed fields in to CellField instances by resolving their types */ 

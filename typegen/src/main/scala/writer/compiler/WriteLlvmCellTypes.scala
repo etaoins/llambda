@@ -50,8 +50,6 @@ object WriteLlvmCellTypes extends writer.OutputWriter {
       }
     }
     
-    
-    
     Map("compiler/src/main/resources/generated/cellTypes.ll" -> sourceString.toString)
   }
 }
