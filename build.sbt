@@ -7,3 +7,5 @@ organization := "io.llambda"
 lazy val llvmir = project
 
 lazy val compiler = project.dependsOn(llvmir)
+
+lazy val typegen = project.dependsOn(llvmir)

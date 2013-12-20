@@ -136,7 +136,7 @@ object GenConstant {
       val charCellName = state.module.nameSource.allocate("schemeCharacter")
 
       val charCell = ct.CharacterCell.createConstant(
-        unicodeChar=IntegerConstant(IntegerType(32), value)
+        unicodeChar=value
       )
 
       defineConstantData(state.module)(charCellName, charCell)

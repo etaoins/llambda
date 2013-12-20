@@ -31,14 +31,11 @@ object GenProgram {
     ) mkString "\n"
   }
 
-  private def maxCellTbaaIndex(cellType : ct.CellType) : Long = 
-    (cellType.directSubtypes.map(maxCellTbaaIndex) + cellType.tbaaIndex).max
-
   def apply(functions : Map[String, planner.PlannedFunction], targetPlatform : TargetPlatform) : String = {
     val module = new IrModuleBuilder
     val plannedSymbols = functions.keySet
 
-    val nextTbaaIndex = maxCellTbaaIndex(ct.DatumCell) + 1
+    val nextTbaaIndex = ct.CellType.nextTbaaIndex
     val typeGenerator = new TypeGenerator(module, targetPlatform, nextTbaaIndex)
 
     // Build each program-supplied function

@@ -1,0 +1,100 @@
+// The runtime has a UnicodeChar class that provides access to Unicode utility
+// methods
+fieldtype UnicodeChar : uint32 {
+	extern cppname = UnicodeChar;
+};
+
+// Entry point for adapted procedures
+cell Datum;
+cell Procedure;
+cell ListElement;
+fieldtype ProcedureEntryPoint : Datum* (*)(Procedure*, ListElement*) {
+	cppname = ProcedureEntryPoint;
+};
+
+// This is a special type
+fieldtype TypeId : uint8 {
+	cppname = CellTypeId;
+};
+
+// C++ garbage collector defines the meaning of this field
+fieldtype GarbageState : uint8 {
+	extern cppname = GarbageState;
+};
+
+root cell Datum typetag typeId {
+	TypeId typeId;
+	GarbageState gcState = 0;
+};
+
+// "unspecific" values in Scheme
+// This is similar to the unit type
+preconstructed cell Unspecific : Datum {
+};
+
+abstract cell ListElement : Datum {
+};
+
+concrete cell Pair : ListElement {
+	Datum* car;
+	Datum* cdr;
+};
+
+preconstructed cell EmptyList : ListElement {
+};
+
+abstract internal cell StringLike : Datum {
+	uint32 charLength;
+	uint32 byteLength;
+	uint8* utf8Data;
+};
+
+concrete cell String : StringLike {
+};
+
+concrete cell Symbol : StringLike {
+};
+
+preconstructed cell Boolean : Datum {
+	bool value;
+};
+
+abstract cell Numeric : Datum {
+};
+
+concrete cell ExactInteger : Numeric {
+	int64 value;
+};
+
+concrete cell InexactRational : Numeric {
+	double value;
+};
+
+concrete cell Character : Datum {
+	UnicodeChar unicodeChar;
+};
+
+concrete cell Vector : Datum {
+	uint32 length;
+	Datum** elements;
+};
+
+concrete cell Bytevector : Datum {
+	uint32 length;
+	uint8* data;
+};
+
+abstract internal cell RecordLike : Datum {
+	uint32 recordClassId;
+	untypedptr recordData;
+};
+
+concrete cell Procedure : RecordLike {
+	ProcedureEntryPoint entryPoint;
+};
+
+// Records are internal because each record class is exposed as its own 
+// first-class type in Scheme
+concrete internal cell Record : RecordLike {
+	untypedptr extraData;
+};
