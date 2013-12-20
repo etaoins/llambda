@@ -4,5 +4,6 @@ case class ProcessedTypes(
   nextTbaaIndex : Int,
   fieldTypes : Map[String, FieldType],
   cellClasses : Map[String, CellClass],
-  rootCellClass : RootCellClass
+  rootCellClass : RootCellClass,
+  cellClassesByParent : Map[CellClass, List[ChildCellClass]]
 )

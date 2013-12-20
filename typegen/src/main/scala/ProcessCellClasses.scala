@@ -145,11 +145,18 @@ object ProcessCellClasses {
       throw new NoRootCellClassException;
     })
 
+    // Calculate this once so it's easy to navigate the cell class
+    // hierarchy downwards
+    val cellClassesByParent = cellClasses.values.toList.collect({
+      case childClass : ChildCellClass => childClass
+    }).groupBy(_.parent)
+
     ProcessedTypes(
       nextTbaaIndex=tbbaIndexGenerator(),
       fieldTypes=fieldTypes,
       cellClasses=cellClasses,
-      rootCellClass=rootCellClass
+      rootCellClass=rootCellClass,
+      cellClassesByParent=cellClassesByParent
     )
   }
 }

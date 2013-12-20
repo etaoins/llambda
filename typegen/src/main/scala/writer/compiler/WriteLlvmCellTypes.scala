@@ -34,7 +34,7 @@ object WriteLlvmCellTypes extends writer.OutputWriter {
       }
 
       // Find the LLVM type pointer to your supertype
-      val superLlvmType = cellClass.optionalParent.map { parent =>
+      val superLlvmType = cellClass.parentOption.map { parent =>
         llvmir.UserDefinedType(parent.names.llvmName)
       }
 

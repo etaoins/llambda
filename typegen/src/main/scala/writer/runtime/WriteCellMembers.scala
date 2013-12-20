@@ -10,7 +10,7 @@ object WriteCellMembers extends writer.OutputWriter {
 
     case _ if cellClass.instanceType == CellClass.Abstract =>
       // Our type check is the union of the type checks for our child classes
-      val allChildren = processedTypes.cellClasses.values.filter(_.optionalParent == Some(cellClass))
+      val allChildren = processedTypes.cellClasses.values.filter(_.parentOption == Some(cellClass))
 
       val childTypeChecks = allChildren map { childCellClass =>
         "(" + cppTypePredicate(processedTypes, childCellClass) + ")"

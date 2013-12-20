@@ -29,10 +29,9 @@ object GenerateTypes {
 
     // Extract our cell classes
     val processedTypes = ProcessCellClasses(fieldTypes)(definitions)
-    val cellClasses = processedTypes.cellClasses
     
     // Make sure there are no childless abstract cells
-    CheckChildlessAbstractCellClasses(cellClasses.values.toList)
+    CheckChildlessAbstractCellClasses(processedTypes)
     
     // Make sure our type tag field is sane
     CheckTypeTagField(processedTypes.rootCellClass)

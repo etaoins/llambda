@@ -8,9 +8,9 @@ class CheckChildlessAbstractCellClassesSuite extends FunSuite {
     CheckTopLevelNamespace(defns)
 
     val fieldTypes = ProcessFieldTypes(defns)
-    val cellClasses = ProcessCellClasses(fieldTypes)(defns).cellClasses
+    val processedTypes = ProcessCellClasses(fieldTypes)(defns)
 
-    CheckChildlessAbstractCellClasses(cellClasses.values.toList)
+    CheckChildlessAbstractCellClasses(processedTypes)
   }
 
   test("childless root cell class fails") {

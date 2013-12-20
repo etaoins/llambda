@@ -39,7 +39,7 @@ sealed abstract class CellClass extends Positional {
   val fields : ListMap[String, CellField]
   val internal : Boolean
   val typeId : Option[Int]
-  val optionalParent : Option[CellClass]
+  val parentOption : Option[CellClass]
   
   // This also contains the TBAA nodes for the fields we inherit
   val fieldTbaaNodes : ListMap[CellField, llvmir.IrTbaaNode]
@@ -50,9 +50,9 @@ sealed abstract class CellClass extends Positional {
 case class RootCellClass(name : String, typeTagField : CellField, fields : ListMap[String, CellField], internal : Boolean, fieldTbaaNodes : ListMap[CellField, llvmir.IrTbaaNode]) extends CellClass {
   val instanceType = CellClass.Abstract
   val typeId = None
-  val optionalParent = None
+  val parentOption = None
 }
 
 case class ChildCellClass(name : String, instanceType : CellClass.InstanceType, parent : CellClass, fields : ListMap[String, CellField], internal : Boolean, typeId : Option[Int], fieldTbaaNodes : ListMap[CellField, llvmir.IrTbaaNode]) extends CellClass {
-  val optionalParent = Some(parent)
+  val parentOption = Some(parent)
 }
