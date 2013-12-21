@@ -13,8 +13,8 @@ class StringCell : public StringLikeCell
 {
 #include "generated/StringCellMembers.h"
 public:
-	StringCell(std::uint8_t *utf8Data, std::uint32_t byteLength, std::uint32_t charLength) :
-		StringLikeCell(CellTypeId::String, utf8Data, byteLength, charLength)
+	StringCell(std::uint8_t *utf8Data, std::uint32_t byteLength, std::uint32_t charLength, std::int16_t allocSlackBytes = 0) :
+		StringLikeCell(CellTypeId::String, utf8Data, byteLength, charLength, allocSlackBytes)
 	{
 	}
 
@@ -61,6 +61,9 @@ public:
 	StringCell *toCaseFoldedString() const;
 
 private:
+	// Creates an uninitialized cell with the given size
+	static StringCell* createUninitialized(std::uint32_t byteLength);
+
 	std::uint8_t *charPointer(std::uint8_t *scanFrom, std::uint32_t bytesLeft, uint32_t charOffset) const;
 	std::uint8_t *charPointer(std::uint32_t charOffset) const;
 

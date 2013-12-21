@@ -44,6 +44,7 @@ preconstructed cell EmptyList : ListElement {
 };
 
 abstract internal cell StringLike : Datum {
+	uint16 allocSlackBytes;
 	uint32 charLength;
 	uint32 byteLength;
 	uint8* utf8Data;

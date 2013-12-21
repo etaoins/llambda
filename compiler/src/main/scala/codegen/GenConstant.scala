@@ -45,6 +45,7 @@ object GenConstant {
 
     val stringLikeCell = ct.StringLikeCell.createConstant(
       typeId=concreteType.typeId,
+      allocSlackBytes=0,
       charLength=value.length,
       // Don't include the NULL terminator
       byteLength=utf8Constant.byteLength,

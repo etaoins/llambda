@@ -11,6 +11,34 @@ namespace
 {
 	using namespace lliby;
 
+	// We will shrink our allocation if we would create more slack than this
+	// Note this must fit in to StringLikeCell::m_allocSlackBytes
+	const std::uint32_t MaximumAllocationSlack = 16 * 1024;
+
+	// We round up allocations to this boundary
+	// 
+	// - Mac OS X 10.9/amd64 does small allocations in 16 byte multiples starting
+	//   at 16 bytes
+	//
+	// - glibc 2.17/amd64 does small allocations in 16 byte multiples starting at
+	//   24 bytes
+	//
+	// Rounding up to the next 8 byte binary will conservatively cover the above
+	// two strategies without adding platform-specific logic 
+	const std::uint32_t AllocationGranularity = 8;
+
+	std::uint16_t suggestAllocSlackBytes(std::uint32_t minimumSize) 
+	{
+		std::uint32_t allocationOverrun = minimumSize % AllocationGranularity;
+
+		if (allocationOverrun == 0)
+		{
+			return 0;
+		}
+
+		return AllocationGranularity - allocationOverrun;
+	}
+
 	const std::uint8_t ContinuationHeaderMask  = 0xC0;
 	const std::uint8_t ContinuationHeaderValue = 0x80;
 
@@ -129,6 +157,19 @@ namespace
 
 namespace lliby
 {
+	
+StringCell* StringCell::createUninitialized(std::uint32_t byteLength)
+{
+	// We need 1 extra byte for the NULL terminator
+	std::int32_t minimumSize = byteLength + 1;
+
+	// Figure how much slack we should have
+	std::int16_t allocSlackBytes = suggestAllocSlackBytes(minimumSize);
+
+	auto utf8Data = new std::uint8_t[minimumSize + allocSlackBytes];
+	
+	return new StringCell(utf8Data, byteLength, 0, allocSlackBytes);
+}
 
 StringCell* StringCell::fromUtf8CString(const char *signedStr)
 {
@@ -159,17 +200,22 @@ StringCell* StringCell::fromUtf8CString(const char *signedStr)
 		return nullptr;
 	}
 
-	// Allocate the new string room for the NULL terminator
-	auto *newString = new std::uint8_t[byteLength + 1];
-	memcpy(newString, str, byteLength + 1);
+	// Allocate the new string
+	auto *newString = StringCell::createUninitialized(byteLength);
 
-	return new StringCell(newString, byteLength, charLength);
+	// Initialize it
+	newString->setCharLength(charLength);
+	memcpy(newString->utf8Data(), str, byteLength + 1);
+
+	return newString;
 }
 	
 StringCell* StringCell::fromUtf8Data(const std::uint8_t *data, std::uint32_t byteLength)
 {
 	std::uint32_t charLength = 0;
-	auto newString = new std::uint8_t[byteLength + 1];
+	auto newString = StringCell::createUninitialized(byteLength);
+
+	std::uint8_t *utf8Data = newString->utf8Data();
 
 	// It seems that the cache friendliness of doing this in one loop likely
 	// outweighs the faster copy we'd get from doing memcpy() at the end
@@ -180,12 +226,15 @@ StringCell* StringCell::fromUtf8Data(const std::uint8_t *data, std::uint32_t byt
 			charLength++;
 		}
 
-		newString[i] = data[i];
+		utf8Data[i] = data[i];
 	}
 
-	newString[byteLength] = 0;
+	utf8Data[byteLength] = 0;
 
-	return new StringCell(newString, byteLength, charLength);
+	// We know the character length now
+	newString->setCharLength(charLength);
+
+	return newString;
 }
 	
 StringCell* StringCell::fromFill(std::uint32_t length, UnicodeChar fill)
@@ -197,18 +246,21 @@ StringCell* StringCell::fromFill(std::uint32_t length, UnicodeChar fill)
 	const std::uint32_t byteLength = encodedCharSize * length;
 
 	// Allocate the string
-	auto newString = new std::uint8_t[byteLength + 1];
+	auto newString = StringCell::createUninitialized(byteLength);
+	newString->setCharLength(length);
+
+	std::uint8_t *utf8Data = newString->utf8Data();
 
 	// Actually fill
 	for(std::uint32_t i = 0; i < length; i++) 
 	{
-		memcpy(&newString[i * encodedCharSize], encoded.data(), encodedCharSize);
+		memcpy(&utf8Data[i * encodedCharSize], encoded.data(), encodedCharSize);
 	}
 
 	// NULL terminate
-	newString[encodedCharSize * length] = 0;
+	utf8Data[encodedCharSize * length] = 0;
 
-	return new StringCell(newString, byteLength, length);
+	return newString;
 }
 	
 StringCell* StringCell::fromAppended(const std::list<const StringCell*> &strings)
@@ -229,19 +281,21 @@ StringCell* StringCell::fromAppended(const std::list<const StringCell*> &strings
 	}
 
 	// Allocate the new string and null terminate it
-	auto newString = new std::uint8_t[totalByteLength + 1];
-	newString[totalByteLength] = 0;
+	auto newString = StringCell::createUninitialized(totalByteLength);
+	newString->setCharLength(totalCharLength);
+
+	std::uint8_t *copyPtr = newString->utf8Data();
 
 	// Copy all the string parts over
-	auto copyPtr = newString;
-	
 	for(auto stringPart : strings)
 	{
 		memcpy(copyPtr, stringPart->utf8Data(), stringPart->byteLength());
 		copyPtr += stringPart->byteLength();
 	}
+	
+	copyPtr[0] = 0;
 
-	return new StringCell(newString, totalByteLength, totalCharLength);
+	return newString;
 }
 	
 StringCell* StringCell::fromUnicodeChars(const std::list<UnicodeChar> &unicodeChars)
@@ -261,12 +315,18 @@ StringCell* StringCell::fromUnicodeChars(const std::list<UnicodeChar> &unicodeCh
 	}
 	
 	const std::uint32_t totalByteLength = encodedData.size();
-	auto newString = new std::uint8_t[totalByteLength + 1];
-	memcpy(newString, encodedData.data(), totalByteLength);
 
-	newString[totalByteLength] = 0;
+	// Create a new string to write in to
+	auto newString = StringCell::createUninitialized(totalByteLength);
+	newString->setCharLength(charLength);
 
-	return new StringCell(newString, totalByteLength, charLength);
+	std::uint8_t *utf8Data = newString->utf8Data();
+
+	memcpy(utf8Data, encodedData.data(), totalByteLength);
+
+	utf8Data[totalByteLength] = 0;
+
+	return newString;
 }
 	
 std::uint8_t* StringCell::charPointer(std::uint32_t charOffset) const
@@ -411,21 +471,41 @@ bool StringCell::replaceBytes(const CharRange &range, std::uint8_t *pattern, uns
 		// Include the NULL terminator
 		const std::uint32_t finalBytes = newByteLength + 1 - initialBytes - requiredBytes;
 		
-		const bool needRealloc = newByteLength > byteLength();
+		// Figure out how much slack our allocation would have after this	
+		const std::int64_t newAllocSlackBytes = static_cast<std::int64_t>(byteLength()) - newByteLength + allocSlackBytes();
+
+		// Make sure we have enough space and we don't exceed our maximum allocation size
+		const bool needRealloc = (newAllocSlackBytes < 0) ||
+			                      (newAllocSlackBytes > MaximumAllocationSlack);
 
 		std::uint8_t* destString;
 		
 		if (needRealloc)
 		{
-			destString = new std::uint8_t[newByteLength + 1];
+			std::uint32_t newSlackBytes = suggestAllocSlackBytes(newByteLength);
+
+			// Create our new destination string
+			destString = new std::uint8_t[newByteLength + 1 + newSlackBytes];
+
+			// Update our slack byte count
+			setAllocSlackBytes(newSlackBytes);
+
 			// Fill the initial chunk of the string
 			memcpy(destString, utf8Data(), initialBytes); 
 		}
 		else
 		{
+			setAllocSlackBytes(newAllocSlackBytes);
 			destString = utf8Data();
+
 			// The initial chunk is already correct
 		}
+		
+		// Move the unchanged chunk at the end
+		// We need to do this now because if the pattern bytes are longer than the
+		// byte we're replacing then we might overwrite the beginning of the
+		// unchanged chunk 
+		memmove(destString + initialBytes + requiredBytes, range.startPointer + replacedBytes, finalBytes);
 		
 		std::uint8_t* copyDest = destString + initialBytes;
 
@@ -435,8 +515,6 @@ bool StringCell::replaceBytes(const CharRange &range, std::uint8_t *pattern, uns
 			memmove(copyDest, pattern, patternBytes);
 			copyDest += patternBytes;
 		}
-
-		memmove(copyDest, range.startPointer + replacedBytes, finalBytes);
 
 		// Update ourselves with our new string
 		setByteLength(newByteLength);
@@ -510,11 +588,15 @@ StringCell* StringCell::copy(std::int64_t start, std::int64_t end)
 	const std::uint32_t newByteLength = range.byteCount();
 
 	// Create the new string
-	auto newString = new std::uint8_t[newByteLength + 1];
-	memcpy(newString, range.startPointer, newByteLength);
-	newString[newByteLength] = 0;
+	auto newString = StringCell::createUninitialized(newByteLength);
+	newString->setCharLength(range.charCount);
 
-	return new StringCell(newString, newByteLength, range.charCount);
+	std::uint8_t *newUtf8Data = newString->utf8Data();
+
+	memcpy(newUtf8Data, range.startPointer, newByteLength);
+	newUtf8Data[newByteLength] = 0;
+
+	return newString;
 }
 	
 std::list<UnicodeChar> StringCell::unicodeChars(std::int64_t start, std::int64_t end) const
