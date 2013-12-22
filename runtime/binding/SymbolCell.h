@@ -14,6 +14,16 @@ public:
 		StringLikeCell(CellTypeId::Symbol, utf8Data, byteLength, charLength)
 	{
 	}
+	
+	bool operator==(const SymbolCell &other) const
+	{
+		return equals(other);
+	}
+	
+	bool operator!=(const SymbolCell &other) const
+	{
+		return !equals(other);
+	}
 };
 
 }

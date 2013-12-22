@@ -21,6 +21,7 @@ add_library(lliby
 	stdlib/generated/predicates.cpp
 	stdlib/boolean.cpp
 	stdlib/character.cpp
+	stdlib/eqv.cpp
 	stdlib/list.cpp
 	stdlib/number.cpp
 	stdlib/output.cpp

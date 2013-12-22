@@ -29,6 +29,8 @@ public:
 	// We're garbage collected; don't allow delete
 	void operator delete(void *value) = delete;
 
+	bool isEqv(const DatumCell *other) const;
+
 protected:
 	// Used for normal allocations
 	// alloc::allocateCons already returns the correct garbage state
