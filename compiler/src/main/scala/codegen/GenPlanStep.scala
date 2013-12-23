@@ -13,7 +13,7 @@ object GenPlanStep {
       allocState.withAllocation(tempAlloc -> allocation)
 
     case storeConstantStep : ps.StoreConstant =>
-      val irResult = GenConstant(state)(storeConstantStep)
+      val irResult = GenConstant(state, typeGenerator)(storeConstantStep)
 
       state.withTempValue(storeConstantStep.result -> irResult)
 

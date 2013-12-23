@@ -37,25 +37,7 @@ class KnownProcedure(val signature : ProcedureSignature, nativeSymbol : String, 
 
   def toCellTempValue(targetType : ct.CellType)(implicit plan : PlanWriter) : Option[ps.TempValue] = {
     if (targetType.isTypeOrSupertypeOf(ct.ProcedureCell)) {
-      val cellTemp = selfTempOpt getOrElse {
-        // This must have an empty closure
-        // If we had a closure selfTempOpt would have been defined to contain it
-        // This means we have to create a new closureless procedure cell to
-        // contain the entry point
-        val tempAllocation = new ps.TempAllocation
-        plan.steps += ps.AllocateCells(tempAllocation, 1)
-
-        val cellTemp = new ps.TempValue
-        val dataTemp = new ps.TempValue
-
-        plan.steps += ps.RecordLikeInit(cellTemp, dataTemp, tempAllocation, 0, vt.EmptyClosureType)
-
-        cellTemp
-      }
-
-      // At this point cellTemp doesn't have a valid entry point set regardless
-      // of where it came from. Try to get an entry point with an adapated
-      // signature
+      // Store an entry point with an adapted signature
       val entryPointTemp = if (signature == AdaptedProcedureSignature) {
         // The procedure already has the correct signature
         // This is unlikely but worth checking
@@ -80,10 +62,27 @@ class KnownProcedure(val signature : ProcedureSignature, nativeSymbol : String, 
 
         trampEntryPointTemp
       }
-    
-      // Store the entry point in the procedure cell
-      plan.steps += ps.SetProcedureEntryPoint(cellTemp, entryPointTemp)
+      
+      val cellTemp = selfTempOpt match {
+        case Some(selfTemp) =>
+          // Store the entry point in the procedure cell containing our closure
+          // data
+          plan.steps += ps.SetProcedureEntryPoint(selfTemp, entryPointTemp)
 
+          selfTemp
+
+        case None =>
+          // This must have an empty closure
+          // If we had a closure selfTempOpt would have been defined to contain it
+          // This means we have to create a new closureless procedure cell to
+          // contain the entry point
+          val cellTemp = new ps.TempValue
+
+          plan.steps += ps.StoreEmptyClosure(cellTemp, entryPointTemp)
+
+          cellTemp
+      }
+    
       if (targetType != ct.ProcedureCell) {
         // Cast this to super
         val castTemp = new ps.TempValue

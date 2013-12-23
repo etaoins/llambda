@@ -95,6 +95,14 @@ case class StoreVectorCell(result : TempValue, elements : Vector[TempValue]) ext
 case class StoreUnspecificCell(result : TempValue) extends StoreConstantCell
 case class StoreEmptyListCell(result : TempValue) extends StoreConstantCell
 
+/** Stores a procedure with an empty closure 
+  *
+  * This is equalivent to RecordLikeInit(vt.EmptyClosureType] followed by
+  * StoreProcedureEntryPoint except it uses a compile time constani cell and 
+  * is considerably more efficient
+  **/
+case class StoreEmptyClosure(result : TempValue, entryPoint : TempValue) extends StoreConstantCell
+
 /** Indicates a step that stores a native constant */
 sealed trait StoreNativeConstant extends StoreConstant
 

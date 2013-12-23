@@ -91,7 +91,25 @@ object GenConstant {
     defineConstantData(module)(vectorCellName, vectorCell)
   }
 
-  def apply(state : GenerationState)(storeStep : ps.StoreConstant) : IrConstant = storeStep match {
+  def genEmptyClosure(module : IrModuleBuilder, typeGenerator : TypeGenerator)(entryPoint : IrConstant) : IrConstant = {
+    val procCellName = module.nameSource.allocate("schemeProcedure")
+
+    // Find the class ID for the empty closure type
+    val generatedType = typeGenerator(vt.EmptyClosureType)
+      
+    val procCell = ct.ProcedureCell.createConstant(
+      entryPoint=entryPoint,
+      recordClassId=generatedType.classId,
+      // This can be anything as it's unused. Dynamic record cells leave this
+      // uninitialized to be instruction thrifty but we have to supply a value
+      // here
+      recordData=NullPointerConstant(ct.ProcedureCell.recordDataIrType)
+    )
+
+    defineConstantData(module)(procCellName, procCell)
+  }
+
+  def apply(state : GenerationState, typeGenerator : TypeGenerator)(storeStep : ps.StoreConstant) : IrConstant = storeStep match {
     case ps.StoreStringCell(_, value) =>
       val baseName = state.module.nameSource.allocate("schemeString")
       val stringLike = genStringLikeCell(state.module)(ct.StringCell, baseName, value)
@@ -182,6 +200,15 @@ object GenConstant {
 
     case ps.StoreEmptyListCell(_) =>
       GlobalDefines.emptyListIrValue
+
+    case ps.StoreEmptyClosure(_, entryPointTemp) =>
+      val entryPointConstant = state.liveTemps(entryPointTemp) match {
+        case constant : IrConstant => constant
+        case other =>
+          throw new InternalCompilerErrorException(s"Attempted to create constant closure with non-constant entry point: ${other}")
+      }
+
+      genEmptyClosure(state.module, typeGenerator)(entryPointConstant)
 
     case ps.StoreNativeInteger(_, value, bits) =>
       IntegerConstant(IntegerType(bits), value)
