@@ -11,6 +11,7 @@ class DatumCell;
 extern "C"
 {
 
+[[noreturn]]
 void _lliby_fatal(const char *message, const lliby::DatumCell *evidence = nullptr);
 
 }
