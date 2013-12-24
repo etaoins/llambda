@@ -24,7 +24,6 @@ bool lliby_boolean_equal(BooleanCell *value1, BooleanCell *value2, ListElementCe
 
 	if (!properList.isValid())
 	{
-		// We're not supposed to abort here, just return false
 		_lliby_fatal("Non-boolean passed to (boolean=?)", argHead);
 		return false;
 	}
