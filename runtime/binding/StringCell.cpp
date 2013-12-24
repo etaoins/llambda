@@ -328,6 +328,20 @@ StringCell* StringCell::fromUnicodeChars(const std::list<UnicodeChar> &unicodeCh
 
 	return newString;
 }
+
+StringCell* StringCell::fromSymbol(const SymbolCell *symbol)
+{
+	// Create the new string
+	auto newString = StringCell::createUninitialized(symbol->byteLength());
+	newString->setCharLength(symbol->charLength());
+
+	std::uint8_t *newUtf8Data = newString->utf8Data();
+
+	// Copy the symbol data plus NULL terminator
+	memcpy(newUtf8Data, symbol->utf8Data(), symbol->byteLength() + 1);
+
+	return newString;
+}
 	
 std::uint8_t* StringCell::charPointer(std::uint32_t charOffset) const
 {

@@ -4,8 +4,14 @@
 (define-test "#f and #f are eqv" (expect #t
 	(eqv? #f #f)))
 
-(define-test "'test and 'test are eqv" (expect #t
+(define-test "constant 'test and 'test are eqv" (expect #t
 	(eqv? 'test 'test)))
+
+(define-test "calculated 'test and 'test are eqv" (expect #t
+	(eqv? (string->symbol "test") (string->symbol "test"))))
+
+(define-test "constant 'test and calculated 'test are eqv" (expect #t
+	(eqv? 'test (string->symbol "test"))))
 
 (define-test "constant -163 and -163 are eqv" (expect #t
 	(eqv? -163 -163)))

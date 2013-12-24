@@ -89,6 +89,13 @@
 	  (define-r7rs list (native-function "lliby_list" <list-element-cell> <list-element-cell>))
 	  (define-r7rs append (native-function "lliby_append" <list-element-cell> <datum-cell>)))
 
+	(export symbol? symbol=? symbol->string string->symbol)
+	(begin 
+	  (define-r7rs symbol? (native-function "lliby_is_symbol" (<datum-cell>) <bool>))
+	  (define-r7rs symbol=? (native-function "lliby_symbol_equal" (<symbol-cell> <symbol-cell> . <list-element-cell>) <bool>))
+	  (define-r7rs symbol->string (native-function "lliby_symbol_to_string" (<symbol-cell>) <string-cell>))
+	  (define-r7rs string->symbol (native-function "lliby_string_to_symbol" (<string-cell>) <symbol-cell>)))
+
 	(export char? digit-value char->integer integer->char)
 	(begin
 	  (define-r7rs char? (native-function "lliby_is_character" (<datum-cell>) <bool>))

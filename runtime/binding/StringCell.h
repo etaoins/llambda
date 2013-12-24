@@ -23,6 +23,7 @@ public:
 	static StringCell* fromFill(std::uint32_t length, UnicodeChar fill);
 	static StringCell* fromAppended(const std::list<const StringCell*> &strings);
 	static StringCell* fromUnicodeChars(const std::list<UnicodeChar> &unicodeChars);
+	static StringCell* fromSymbol(const SymbolCell *symbol);
 
 	StringCell* copy(std::int64_t start = 0, std::int64_t end = -1) const; 
 
