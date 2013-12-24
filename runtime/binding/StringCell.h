@@ -24,7 +24,7 @@ public:
 	static StringCell* fromAppended(const std::list<const StringCell*> &strings);
 	static StringCell* fromUnicodeChars(const std::list<UnicodeChar> &unicodeChars);
 
-	StringCell* copy(std::int64_t start = 0, std::int64_t end = -1); 
+	StringCell* copy(std::int64_t start = 0, std::int64_t end = -1) const; 
 
 	UnicodeChar charAt(std::uint32_t offset) const;
 	bool setCharAt(std::uint32_t offset, UnicodeChar unicodeChar);

@@ -575,7 +575,7 @@ bool StringCell::setCharAt(std::uint32_t offset, UnicodeChar unicodeChar)
 	return fill(unicodeChar, offset, offset + 1);
 }
 	
-StringCell* StringCell::copy(std::int64_t start, std::int64_t end)
+StringCell* StringCell::copy(std::int64_t start, std::int64_t end) const
 {
 	CharRange range = charRange(start, end);
 
