@@ -113,7 +113,7 @@
 	  ; This is the same runtime function but instead of using a rest arg explicitly pass in the list
 	  (define-r7rs list->vector (native-function "lliby_vector" (<list-element-cell>) <vector-cell>))
 	  (define-r7rs vector-length (native-function "lliby_vector_length" (<vector-cell>) <uint32>))
-	  (define-r7rs vector-ref (native-function "lliby_vector_ref" (<vector-cell> <uint32>) <vector-cell>))
+	  (define-r7rs vector-ref (native-function "lliby_vector_ref" (<vector-cell> <uint32>) <datum-cell>))
 	  (define-r7rs vector-set! (native-function "lliby_vector_set" (<vector-cell> <uint32> <datum-cell>)))
 	  (define-r7rs vector-append (native-function "lliby_vector_append" <list-element-cell> <vector-cell>)))
 	

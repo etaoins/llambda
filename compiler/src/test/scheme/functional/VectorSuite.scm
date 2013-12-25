@@ -43,6 +43,9 @@
 (define-test "vector-ref" (expect c
 	(vector-ref #(a b c d e f) 2)))
 
+(define-test "vector-ref can return procedure" (expect 5
+	((vector-ref (vector +) 0) 2 3)))
+
 (define-test "vector-ref out of bounds fails" (expect-failure
 	(vector-ref #(a b c d e f) 7)))
 
