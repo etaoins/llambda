@@ -20,6 +20,7 @@ add_library(lliby
 	core/recorddata.cpp
 	stdlib/generated/predicates.cpp
 	stdlib/boolean.cpp
+	stdlib/bytevector.cpp
 	stdlib/character.cpp
 	stdlib/eqv.cpp
 	stdlib/list.cpp

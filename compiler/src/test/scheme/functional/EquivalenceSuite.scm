@@ -148,4 +148,11 @@
 (define-test "constructed vectors with differing content are inequal" (expect #f
 	(equal? (make-vector 5 'a) (make-vector 5 'b))))
 
-; XXX: Test constructed bytevectors
+(define-test "constructed bytevectors with equal content are equal" (expect #t
+	(equal? (make-bytevector 5 200) (make-bytevector 5 200))))
+
+(define-test "constructed bytevectors with differing lengths are inequal" (expect #f
+	(equal? (make-bytevector 5 200) (make-bytevector 6 200))))
+
+(define-test "constructed bytevectors with differing content are inequal" (expect #f
+	(equal? (make-bytevector 5 100) (make-bytevector 5 200))))

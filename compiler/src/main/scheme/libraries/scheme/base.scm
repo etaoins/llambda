@@ -117,6 +117,16 @@
 	  (define-r7rs vector-set! (native-function "lliby_vector_set" (<vector-cell> <uint32> <datum-cell>)))
 	  (define-r7rs vector-append (native-function "lliby_vector_append" <list-element-cell> <vector-cell>)))
 	
+	(export bytevector? make-bytevector bytevector bytevector-length bytevector-u8-ref bytevector-u8-set! bytevector-append)
+	(begin
+	  (define-r7rs bytevector? (native-function "lliby_is_bytevector" (<datum-cell>) <bool>))
+	  (define-r7rs make-bytevector (native-function "lliby_make_bytevector" (<uint32> <uint8>) <bytevector-cell>))
+	  (define-r7rs bytevector (native-function "lliby_bytevector" <list-element-cell> <bytevector-cell>))
+	  (define-r7rs bytevector-length (native-function "lliby_bytevector_length" (<bytevector-cell>) <uint32>))
+	  (define-r7rs bytevector-u8-ref (native-function "lliby_bytevector_u8_ref" (<bytevector-cell> <uint32>) <uint8>))
+	  (define-r7rs bytevector-u8-set! (native-function "lliby_bytevector_u8_set" (<bytevector-cell> <uint32> <uint8>)))
+	  (define-r7rs bytevector-append (native-function "lliby_bytevector_append" <list-element-cell> <bytevector-cell>)))
+	
 	(export string? make-string string string-length string-ref string-set! string-append list->string)
 	(begin
 	  (define-r7rs string? (native-function "lliby_is_string" (<datum-cell>) <bool>))
