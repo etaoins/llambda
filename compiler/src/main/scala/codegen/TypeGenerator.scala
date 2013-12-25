@@ -141,7 +141,7 @@ class TypeGenerator(module : IrModuleBuilder, targetPlatform : TargetPlatform, v
         // Define it
         val typeMapName = module.nameSource.allocate(recordLikeType.sourceName + "Map")
 
-        // XXX: Clang 3.4 doesn't actually merge these constants. We should
+        // XXX: Clang 3.3 doesn't actually merge these constants. We should
         // investigate doing merging of obviously identical maps ourselves
         val typeMapDef = IrGlobalVariableDef(
           name=typeMapName,
