@@ -61,7 +61,7 @@
 (define-test "(vector-append) with single argument" (expect #(a b c)
 	(vector-append #(a b c))))
 
-(define-test "(append) three vectors" (expect #(1 2 3 4 5 6)
+(define-test "(vector-append) three vectors" (expect #(1 2 3 4 5 6)
 	(vector-append #(1 2) #(3 4) #(5 6))))
 
 (define-test "(vector-append) three empty vectors" (expect #()
