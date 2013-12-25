@@ -90,3 +90,30 @@
 	(define (procecedure1) 1)
 	(define (procecedure2) 2)
 	(eqv? procecedure1 procecedure2)))
+
+(define-test "constant 'a and 'a are eq" (expect #t
+	(eq? 'a 'a)))
+
+(define-test "constructed lists are not eq" (expect #f
+	(eq? (list 'a) (list 'a))))
+
+(define-test "'() and '() are eq" (expect #t
+	(eq? '() '())))
+
+(define-test "native functions are eq" (expect #t
+	(eq? car car)))
+
+(define-test "lists in the same storage location are eq" (expect #t
+ 	(let ((x '(a)))
+		(eq? x x))))
+
+(define-test "vectors in the same storage location are eq" (expect #t
+ 	(let ((x '#()))
+		(eq? x x))))
+
+(define-test "procedures in the same storage location are eq" (expect #t
+ 	(let ((x (lambda (x) x)))
+		(eq? x x))))
+
+(define-test "calculated 'test and 'test are eq" (expect #t
+	(eq? (string->symbol "test") (string->symbol "test"))))
