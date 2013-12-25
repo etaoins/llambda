@@ -117,3 +117,35 @@
 
 (define-test "calculated 'test and 'test are eq" (expect #t
 	(eq? (string->symbol "test") (string->symbol "test"))))
+
+(define-test "constant 'a and 'a are equal" (expect #t
+	(equal? 'a 'a)))
+
+(define-test "constant lists are equal" (expect #t
+	(equal? '(a) '(a))))
+
+(define-test "constructed lists with equal content are equal" (expect #t
+	(equal? (list 1 2 3) (list 1 2 3))))
+
+(define-test "constructed lists withi different content are inequal" (expect #f
+	(equal? (list 1 2 3) (list 1 2 5))))
+
+(define-test "constant nested lists are equal" (expect #t
+	(equal? '(a (b) c) '(a (b) c))))
+
+(define-test "constant strings are equal" (expect #t
+	(equal? "abc" "abc")))
+
+(define-test "constant exact integers are equal" (expect #t
+	(equal? 2 2)))
+
+(define-test "constructed vectors with equal content are equal" (expect #t
+	(equal? (make-vector 5 'a) (make-vector 5 'a))))
+
+(define-test "constructed vectors with differing lengths are inequal" (expect #f
+	(equal? (make-vector 5 'a) (make-vector 6 'a))))
+
+(define-test "constructed vectors with differing content are inequal" (expect #f
+	(equal? (make-vector 5 'a) (make-vector 5 'b))))
+
+; XXX: Test constructed bytevectors

@@ -45,10 +45,11 @@
 							 (if test
 								(begin result1 result2 ...))))))
 	
-	(export eqv? eq?)
+	(export eqv? eq? equal?)
 	(begin
 	  (define-r7rs eqv? (native-function "lliby_is_eqv" (<datum-cell> <datum-cell>) <bool>))
-	  (define-r7rs eq? eqv?))
+	  (define-r7rs eq? eqv?)
+	  (define-r7rs equal? (native-function "lliby_is_equal" (<datum-cell> <datum-cell>) <bool>)))
 
 	(export number? real? rational? exact? exact-integer? inexact? exact inexact + - / *)
 	(begin

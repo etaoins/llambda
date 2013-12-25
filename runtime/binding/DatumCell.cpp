@@ -1,8 +1,15 @@
 #include "DatumCell.h"
+
+#include <string.h>
+
 #include "ExactIntegerCell.h"
 #include "InexactRationalCell.h"
 #include "SymbolCell.h"
 #include "ProcedureCell.h"
+#include "PairCell.h"
+#include "VectorCell.h"
+#include "BytevectorCell.h"
+
 
 namespace lliby
 {
@@ -51,6 +58,59 @@ bool DatumCell::isEqv(const DatumCell *other) const
 			{
 				return true;
 			}
+		}
+	}
+
+	return false;
+}
+
+bool DatumCell::isEqual(const DatumCell *other) const
+{
+	if (isEqv(other))
+	{
+		return true;
+	}
+
+	if (auto thisPair = datum_cast<PairCell>(this))
+	{
+		if (auto otherPair = datum_cast<PairCell>(other))
+		{
+			return thisPair->car()->isEqual(otherPair->car()) &&
+				    thisPair->cdr()->isEqual(otherPair->cdr());
+		}
+	}
+	else if (auto thisVector = datum_cast<VectorCell>(this))
+	{
+		if (auto otherVector = datum_cast<VectorCell>(other))
+		{
+			if (thisVector->length() != otherVector->length())
+			{
+				return false;
+			}
+
+			// Compare the vector element for element
+			for(std::uint32_t i = 0; i < thisVector->length(); i++)
+			{
+				if (!thisVector->elementAt(i)->isEqual(otherVector->elementAt(i)))
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+	}
+	else if (auto thisBytevector = datum_cast<BytevectorCell>(this))
+	{
+		if (auto otherBytevector = datum_cast<BytevectorCell>(other))
+		{
+			if (thisBytevector->length() != otherBytevector->length())
+			{
+				return false;
+			}
+
+			// Compare the data byte for byte
+			return memcmp(thisBytevector->data(), otherBytevector->data(), thisBytevector->length()) == 0;
 		}
 	}
 

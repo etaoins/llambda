@@ -29,7 +29,17 @@ public:
 	// We're garbage collected; don't allow delete
 	void operator delete(void *value) = delete;
 
+	/**
+	 * Returns true if the other datum is equivalent to this one in the sense of
+	 * eqv?
+	 */
 	bool isEqv(const DatumCell *other) const;
+	
+	/**
+	 * Returns true if the other datum is equal to this one in the sense of
+	 * equal?
+	 */
+	bool isEqual(const DatumCell *other) const;
 
 protected:
 	// Used for normal allocations
