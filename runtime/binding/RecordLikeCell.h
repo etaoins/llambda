@@ -19,6 +19,9 @@ protected:
 		m_recordData(recordData)
 	{
 	}
+
+	// TypeGenerator.scala always allocates this first
+	static const std::uint32_t EmptyClosureRecordClassId = 0;
 };
 
 }

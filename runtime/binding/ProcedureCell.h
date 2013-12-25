@@ -17,6 +17,14 @@ public:
 	}
 
 	DatumCell* invoke(ListElementCell *arguments);
+
+	/**
+	 * Indicates if this procedure captures variables from its enclosing scope
+	 */
+	bool capturesVariables() const
+	{
+		return recordClassId() != EmptyClosureRecordClassId;
+	}
 };
 
 }

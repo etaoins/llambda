@@ -35,27 +35,25 @@
 	(eqv? '() '())))
 
 (define-test "pairs in the same location are eqv" (expect #t
-	(define var1 '(a b))
-	(define var2 var1)
-	(eqv? var1 var2)))
+	(let ((var '(a b)))
+		(eqv? var var))))
 
 (define-test "vectors in the same location are eqv" (expect #t
-	(define var1 #(1 2 3))
-	(define var2 var1)
-	(eqv? var1 var2)))
+	(let ((var #(1 2 3)))
+		(eqv? var var))))
 
 (define-test "records in the same location are eqv" (expect #t
 	(define-record-type <unit> (unit) unit?)
-	(define var1 (unit))
-	(define var2 var1)
-	(eqv? var1 var2)))
+
+	(let ((var (unit)))
+		(eqv? var var))))
 
 (define-test "procedures in the same location are eqv" (expect #t
-	(define (procecedure) 5)
+	(let ((procecedure (lambda () 5)))
+		(eqv? procecedure procecedure))))
 
-	(define var1 procecedure)
-	(define var2 var1)
-	(eqv? var1 var2)))
+(define-test "native functions are eqv" (expect #t
+	(eqv? eqv? eqv?)))
 
 (define-test "1 and #t are not eqv" (expect #f
 	(eqv? 1 #t)))

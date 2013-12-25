@@ -24,6 +24,11 @@ class TypeGenerator(module : IrModuleBuilder, targetPlatform : TargetPlatform, v
   private val generatedTypes = collection.mutable.Map[vt.RecordLikeType, GeneratedType]()
   private var nextClassId : Long = 0
 
+  // Ensure empty closures always have class ID 0
+  // This is to implement eqv? properly for closureless procedures boxed in
+  // different locations 
+  apply(vt.EmptyClosureType)
+
   def apply(recordLikeType : vt.RecordLikeType) : GeneratedType = {
     generatedTypes.getOrElseUpdate(recordLikeType, {
       // Determine our storage type and layout
