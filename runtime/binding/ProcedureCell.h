@@ -16,7 +16,7 @@ public:
 	{
 	}
 
-	DatumCell* invoke(ListElementCell *arguments);
+	DatumCell* apply(ListElementCell *arguments);
 
 	/**
 	 * Indicates if this procedure captures variables from its enclosing scope

@@ -23,6 +23,16 @@
 
 	((typeless-cell -) 80 50 20)))
 
+(define-test "applying datum cells with too many arguments fails" (expect-failure
+	(import (llambda test-util))
+
+	((typeless-cell exact?) 80 20)))
+
+(define-test "applying datum cells with insufficient arguments fails" (expect-failure
+	(import (llambda test-util))
+
+	((typeless-cell exact?))))
+
 (define-test "procedure returning nothing" (expect #!unspecific
 	(define (return-nothing))
 	(return-nothing)))

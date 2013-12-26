@@ -22,6 +22,7 @@ add_library(lliby
 	stdlib/boolean.cpp
 	stdlib/bytevector.cpp
 	stdlib/character.cpp
+	stdlib/control.cpp
 	stdlib/eqv.cpp
 	stdlib/list.cpp
 	stdlib/number.cpp

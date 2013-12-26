@@ -11,6 +11,14 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.codegen.AdaptedProcedureSignature
 
+/** Plans a trampoline for the passed procedure 
+  * 
+  * All trampolines have AdaptedProcedureSignature which means they can be
+  * called without knowing the signature of the underlying procedure. It is 
+  * assumed the argument list a proper list; it is inappropriate to pass user
+  * provided arguments lists to a trampoline without confirming the list is
+  * proper beforehand.
+  */
 private[intermediatevalue] object PlanProcedureTrampoline {
   def apply(signature : ProcedureSignature, nativeSymbol : String)(implicit parentPlan : PlanWriter) : PlannedFunction = {
     val selfTemp = new ps.TempValue
@@ -54,6 +62,12 @@ private[intermediatevalue] object PlanProcedureTrampoline {
     if (signature.hasRestArg) {
       // This is already a ListElementCell
       argTemps += restArgValue.toRequiredTempValue(vt.IntrinsicCellType(ct.ListElementCell))(plan)
+    }
+    else {
+      val unusedTemp = new ps.TempValue
+      
+      // Make sure we're out of args by doing a check cast to an empty list
+      restArgValue.toRequiredTempValue(vt.IntrinsicCellType(ct.EmptyListCell))(plan)
     }
 
     // Load the entry point for the function we're jumping to
