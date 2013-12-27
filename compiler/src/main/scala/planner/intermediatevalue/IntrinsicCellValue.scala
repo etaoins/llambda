@@ -139,8 +139,8 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
   
   def preferredRepresentation : vt.ValueType = possibleTypes.toList match {
     case singleType :: Nil =>
-      // Even if we're current a supertype we know the value itself has a more
-      // specific type
+      // Even if our temp value is currently a supertype we know the cell
+      // itself has a more specific type
       vt.IntrinsicCellType(singleType)
 
     case _ =>
