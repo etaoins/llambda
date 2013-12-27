@@ -13,7 +13,6 @@ add_library(lliby
 	binding/StringLikeCell.cpp
 	binding/StringCell.cpp
 	binding/VectorCell.cpp
-	core/box.cpp
 	core/constinstances.cpp
 	core/fatal.cpp
 	core/init.cpp

@@ -183,16 +183,3 @@ class NativeCharacterValue(tempValue : ps.TempValue) extends NativeValue(vt.Unic
     boxedTemp
   }
 }
-
-class NativeUtf8String(tempValue : ps.TempValue) extends NativeValue(vt.Utf8CString, ct.StringCell, tempValue) {
-  def withNewTempValue(tempValue : ps.TempValue) = new NativeUtf8String(tempValue)
-
-  def planCellTempValue()(implicit plan : PlanWriter) : ps.TempValue =  {
-    // We can only box 64bit signed ints
-    val boxedTemp = new ps.TempValue
-    plan.steps += ps.BoxUtf8String(boxedTemp, tempValue)
-
-    boxedTemp
-  }
-}
-

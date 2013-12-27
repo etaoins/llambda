@@ -106,7 +106,6 @@ case class StoreEmptyClosure(result : TempValue, entryPoint : TempValue) extends
 /** Indicates a step that stores a native constant */
 sealed trait StoreNativeConstant extends StoreConstant
 
-case class StoreNativeUtf8String(result : TempValue, value : String) extends StoreNativeConstant
 case class StoreNativeInteger(result : TempValue, value : Long, bits : Int) extends StoreNativeConstant
 case class StoreNativeFloat(result : TempValue, value : Double, fpType : vt.FpType) extends StoreNativeConstant
 
@@ -121,7 +120,6 @@ case class UnboxAsTruthy(result : TempValue, boxed : TempValue) extends UnboxVal
 case class UnboxExactInteger(result : TempValue, boxed : TempValue) extends UnboxValue
 case class UnboxInexactRational(result : TempValue, boxed : TempValue) extends UnboxValue
 case class UnboxCharacter(result : TempValue, boxed : TempValue) extends UnboxValue
-case class UnboxStringAsUtf8(result : TempValue, boxed : TempValue) extends UnboxValue
 
 // These aren't quite an unboxing because there's two values per boxed value
 
@@ -144,7 +142,6 @@ case class BoxBoolean(result : TempValue, unboxed : TempValue) extends BoxValue
 case class BoxExactInteger(result : TempValue, allocation : TempAllocation, allocIndex : Int, unboxed : TempValue) extends BoxValue
 case class BoxInexactRational(result : TempValue, allocation : TempAllocation, allocIndex : Int, unboxed : TempValue) extends BoxValue
 case class BoxCharacter(result : TempValue, allocation : TempAllocation, allocIndex : Int, unboxed : TempValue) extends BoxValue
-case class BoxUtf8String(result : TempValue, unboxed : TempValue) extends BoxValue with GcBarrier
 
 /** Returns from the current function */
 case class Return(returnValue : Option[TempValue]) extends Step

@@ -67,10 +67,10 @@ class TargetPlatformSuite extends FunSuite {
   }
   
   test("bytesForType for pointers") {
-    assert(Posix64.bytesForType(vt.Utf8CString) === 8)
-    assert(Posix32.bytesForType(vt.Utf8CString) === 4)
-    assert(Win64.bytesForType(vt.Utf8CString) === 8)
-    assert(Win32.bytesForType(vt.Utf8CString) === 4)
+    assert(Posix64.bytesForType(vt.IntrinsicCellType(ct.StringCell)) === 8)
+    assert(Posix32.bytesForType(vt.IntrinsicCellType(ct.StringCell)) === 4)
+    assert(Win64.bytesForType(vt.IntrinsicCellType(ct.StringCell)) === 8)
+    assert(Win32.bytesForType(vt.IntrinsicCellType(ct.StringCell)) === 4)
   }
   
   test("platform feature identifiers") {

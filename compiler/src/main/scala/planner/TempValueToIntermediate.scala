@@ -21,9 +21,6 @@ object TempValueToIntermediate {
     case vt.UnicodeChar =>
       new iv.NativeCharacterValue(tempValue)
 
-    case vt.Utf8CString =>
-      new iv.NativeUtf8String(tempValue)
-
     case vt.IntrinsicCellType(cellType) =>
       new iv.IntrinsicCellValue(cellType.concreteTypes, cellType, tempValue)
 

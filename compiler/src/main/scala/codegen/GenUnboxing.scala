@@ -29,10 +29,6 @@ object GenUnboxing {
     case _ : ps.UnboxCharacter =>
       val block = state.currentBlock
       ct.CharacterCell.genLoadFromUnicodeChar(block)(boxedValue)
-    
-    case _ : ps.UnboxStringAsUtf8 =>
-      val block = state.currentBlock
-      ct.StringCell.genLoadFromUtf8Data(block)(boxedValue)
   }
 }
 

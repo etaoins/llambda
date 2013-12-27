@@ -49,14 +49,8 @@ sealed abstract class TrivialConstantValue[T, U <: ps.StoreConstantCell](cellTyp
 }
 
 class ConstantStringValue(value : String) extends TrivialConstantValue(ct.StringCell, value, ps.StoreStringCell.apply) {
-  def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = nativeType match {
-    case vt.Utf8CString =>
-      val constantTemp = new ps.TempValue
-      plan.steps += ps.StoreNativeUtf8String(constantTemp, value)
-      Some(constantTemp)
-    
-    case _ => None
-  }
+  def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = 
+    None
 }
 
 class ConstantSymbolValue(value : String) extends TrivialConstantValue(ct.SymbolCell, value, ps.StoreSymbolCell.apply) {

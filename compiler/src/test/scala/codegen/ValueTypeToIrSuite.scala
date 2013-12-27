@@ -91,13 +91,6 @@ class ValueTypeToIrSuite extends FunSuite {
     assert(typeWithSign.signed === None)
   }
 
-  test("utf8 string") {
-    val typeWithSign = ValueTypeToIr(vt.Utf8CString)
-
-    assert(typeWithSign.irType === llvmir.PointerType(llvmir.IntegerType(8)))
-    assert(typeWithSign.signed === None)
-  }
-  
   test("unicode char") {
     val typeWithSign = ValueTypeToIr(vt.UnicodeChar)
 

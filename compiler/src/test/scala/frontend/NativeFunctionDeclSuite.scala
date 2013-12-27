@@ -24,12 +24,6 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
     }
   }
   
-  test("function returning utf8-cstring") {
-    assertResult(et.NativeFunction(Nil, false, Some(vt.Utf8CString), "lliby_newline")) {
-      expressionFor("""(native-function "lliby_newline" () <utf8-cstring>)""")
-    }
-  }
-  
   test("function taking int16 and returning int32") {
     assertResult(et.NativeFunction(vt.Int16 :: Nil, false, Some(vt.Int32), "lliby_newline")) {
       expressionFor("""(native-function "lliby_newline" (<int16>) <int32>)""")

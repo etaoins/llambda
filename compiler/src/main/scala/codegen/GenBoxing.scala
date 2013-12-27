@@ -45,15 +45,6 @@ object GenBoxing {
       ct.CharacterCell.genStoreToUnicodeChar(block)(nativeValue, boxedCharCons)
 
       boxedCharCons
-
-    case _ : ps.BoxUtf8String =>
-      val block = state.currentBlock
-
-      state.module.unlessDeclared(llibyStringFromUtf8Decl) {
-        state.module.declareFunction(llibyStringFromUtf8Decl)
-      }
-
-      block.callDecl(Some("boxedString"))(llibyStringFromUtf8Decl, List(nativeValue)).get
   }
 }
 

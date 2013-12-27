@@ -20,8 +20,6 @@ object IntrinsicTypes {
       ("<float>"  -> vt.Float),
       ("<double>" -> vt.Double),
 
-      ("<utf8-cstring>" -> vt.Utf8CString),
-
       ("<unicode-char>" -> vt.UnicodeChar),
 
       ("<short>"   -> targetPlatform.shortType),

@@ -26,9 +26,9 @@ class ProcedureSignatureToIrSuite extends FunSuite {
     ))
   }
   
-  test("function taking UTF-8 string, unsigned int returning signed int") {
+  test("function taking boolean, unsigned int returning signed int") {
     val testNativeFunc = NativeFunction(
-      fixedArgs=vt.Utf8CString :: vt.UInt16 :: Nil,
+      fixedArgs=vt.CBool :: vt.UInt16 :: Nil,
       hasRestArg=false,
       returnType=Some(vt.Int32),
       nativeSymbol="lliby_test")
@@ -37,7 +37,7 @@ class ProcedureSignatureToIrSuite extends FunSuite {
 
     assert(irSignature === IrSignature(
       result=Result(IntegerType(32), Set(SignExt)),
-      arguments=Argument(PointerType(IntegerType(8))) :: Argument(IntegerType(16), Set(ZeroExt)) :: Nil
+      arguments=Argument(IntegerType(8), Set(ZeroExt)) :: Argument(IntegerType(16), Set(ZeroExt)) :: Nil
     ))
   }
   

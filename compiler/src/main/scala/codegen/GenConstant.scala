@@ -122,11 +122,6 @@ object GenConstant {
       
       BitcastToConstant(stringLike, PointerType(ct.SymbolCell.irType))
 
-    case ps.StoreNativeUtf8String(_, value) =>
-      val utf8StringName = state.module.nameSource.allocate("schemeBareCString")
-
-      genUtf8Constant(state.module)(utf8StringName, value).irValue
-
     case ps.StoreExactIntegerCell(_, value) =>
       val intCellName = state.module.nameSource.allocate("schemeExactInteger")
 

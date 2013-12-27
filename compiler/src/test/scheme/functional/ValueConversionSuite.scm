@@ -75,15 +75,6 @@
 	; This assumes (digit-value) takes an native Unicode character
 	(digit-value (typeless-cell #\3))))
 
-(define-test "string can be unboxed as a UTF-8 C string" (expect 6
-	(import (llambda nfi))
-	(import (llambda test-util))
-	; Nothing in our stdlib takes UTF-8 C strings because they're binary unsafe
-	; and require O(n) importing to determine their length/non-ASCII content.
-	; Use strlen from the C standard library for this test
-	(define strlen (native-function "strlen" (<utf8-cstring>) <int64>))
-	(strlen (typeless-cell "Hello!"))))
-
 (define-test "native int 0 converts to unboxed truthy true" (expect #f
 	; This assumes (exact) returns an native integer and (not) takes a truthy
 	(not (exact 0))))
@@ -107,12 +98,6 @@
 (define-test "types that cannot be boolean evaluate as true" (expect #f
 	; This assumes (not) takes an native boolean and (con) returns a pair
 	(not (cons 1 2))))
-
-(define-test "UTF-8 C string can be boxed as string" (expect "Hello, world!"
-	(import (llambda nfi))
-	; See above test for why we need to use the C standard library
-	(define strdup (native-function "strdup" (<utf8-cstring>) <utf8-cstring>))
-	(strdup "Hello, world!")))
 
 ; This was broken due to list element being an abstract type
 (define-test "datum can be converted to a list element" (expect 4

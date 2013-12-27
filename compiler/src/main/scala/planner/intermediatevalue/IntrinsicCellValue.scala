@@ -41,14 +41,6 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
         unboxedTemp
       }
       
-    case vt.Utf8CString =>
-      toTempValue(vt.IntrinsicCellType(ct.StringCell)) map { boxedString =>
-        val unboxedTemp = new ps.TempValue
-        plan.steps += ps.UnboxStringAsUtf8(unboxedTemp, boxedString)
-
-        unboxedTemp
-      }
-
     case intType : vt.IntType =>
       toTempValue(vt.IntrinsicCellType(ct.ExactIntegerCell)) map { boxedExactInt =>
         val unboxedTemp = new ps.TempValue

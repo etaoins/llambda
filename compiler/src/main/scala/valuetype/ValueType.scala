@@ -56,9 +56,6 @@ sealed abstract class FpType extends NativeType
 case object Float extends FpType
 case object Double extends FpType 
 
-/** C-style NULL terminated UTF-8 string */
-case object Utf8CString extends NativeType with PointerType
-
 /** Native integer representing a Unicode code point */
 case object UnicodeChar extends IntLikeType(32, true)
 
