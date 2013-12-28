@@ -65,7 +65,7 @@
 	(define fabsf (native-function "fabsf" (<float>) <float>))
 	(fabsf (typeless-cell -10))))
 
-(define-test "native i64 can be passed as an scala i32" (expect b
+(define-test "native i64 can be passed as an native i32" (expect b
 	; This assumes (exact) returns an native i64 and (vector-ref) takes an
 	; native i32
 	(vector-ref #(a b c) (exact 1))))
