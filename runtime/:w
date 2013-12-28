@@ -1,0 +1,24 @@
+#include "binding/ProcedureCell.h"
+#include "binding/ProperList.h"
+#include "core/fatal.h"
+
+using namespace lliby;
+
+extern "C"
+{
+
+DatumCell *lliby_apply(ProcedureCell *procedure, ListElementCell *argHead)
+{
+	ProperList<DatumCell> applyArgList(argHead);
+
+	if (!applyArgList.isValid())
+	{
+		_lliby_fatal("Non-list passed to (apply)", argHead);
+	}
+
+	if (applyArgList.
+	
+	return procedure->apply(args);
+}
+
+}

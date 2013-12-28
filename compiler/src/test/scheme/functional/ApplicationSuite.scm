@@ -1,22 +1,26 @@
-(define-test "application with insufficent args fails" (expect-failure
+(define-test "direct application with insufficent args fails" (expect-failure
 	(boolean?)))
 
-(define-test "application with extraneous args fails" (expect-failure
+(define-test "direct application with extraneous args fails" (expect-failure
 	(boolean? #t #f)))
 
-(define-test "applying non-capturing procedure with proper list" (expect 5
+(define-test "applying non-capturing procedure with no arguments" (expect 0
+	(apply +)))
+
+(define-test "applying non-capturing procedure with just proper list" (expect 5
 	(apply + '(2 3))))
 
-; The wording in R7RS 6.10 makes me think this is wrong but I can't decode
-; what it's trying to say. mit-scheme doesn't allow improper lists at all.
-(define-test "applying procedure with improper list fails" (expect-failure
+(define-test "applying with non-capturing procdure standalone args and terminal proper list" (expect 6
+	(apply + 1 2 '(3))))
+
+(define-test "applying procedure with terminal improper list fails" (expect-failure
 	(apply + '(2 3 . 5))))
 
-(define-test "applying procedure with non-list fails" (expect-failure
+(define-test "applying procedure with terminal non-list fails" (expect-failure
 	(apply - 2)))
 
-(define-test "applying with too many arguments fails" (expect-failure
-	(apply exact? '(1 2))))
+(define-test "nested apply" (expect 3
+	(apply apply (list + '(1 2)))))
 
 (define-test "applying a capturing procedure" (expect 7
 	(define (create-adder-proc to-add)

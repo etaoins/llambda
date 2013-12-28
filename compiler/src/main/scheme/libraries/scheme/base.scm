@@ -142,5 +142,5 @@
 	(export procedure? apply)
 	(begin
 	  (define-r7rs procedure? (native-function "lliby_is_procedure" (<datum-cell>) <bool>))
-	  (define-r7rs apply (native-function "lliby_apply" (<procedure-cell> <list-element-cell>) <datum-cell>)))
+	  (define-r7rs apply (native-function "lliby_apply" (<procedure-cell> . <list-element-cell>) <datum-cell>)))
 )
