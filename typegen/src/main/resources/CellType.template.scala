@@ -6,6 +6,7 @@ import llambda.compiler.InternalCompilerErrorException
 
 sealed abstract class CellType extends ${ROOT_CLASS_FIELDS_TRAIT} {
   val llvmName : String
+  val schemeName : String
   val irType : FirstClassType
   val supertype : Option[CellType]
   val directSubtypes : Set[CellType]

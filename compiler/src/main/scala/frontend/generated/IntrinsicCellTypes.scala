@@ -9,20 +9,20 @@ import llambda.compiler.{celltype => ct}
 
 object IntrinsicCellTypes {
   def apply() : Map[String, ct.CellType] = Map(
-    ("<datum-cell>" -> ct.DatumCell),
-    ("<unspecific-cell>" -> ct.UnspecificCell),
-    ("<list-element-cell>" -> ct.ListElementCell),
-    ("<pair-cell>" -> ct.PairCell),
-    ("<empty-list-cell>" -> ct.EmptyListCell),
-    ("<string-cell>" -> ct.StringCell),
-    ("<symbol-cell>" -> ct.SymbolCell),
-    ("<boolean-cell>" -> ct.BooleanCell),
-    ("<numeric-cell>" -> ct.NumericCell),
-    ("<exact-integer-cell>" -> ct.ExactIntegerCell),
-    ("<inexact-rational-cell>" -> ct.InexactRationalCell),
-    ("<character-cell>" -> ct.CharacterCell),
-    ("<vector-cell>" -> ct.VectorCell),
-    ("<bytevector-cell>" -> ct.BytevectorCell),
-    ("<procedure-cell>" -> ct.ProcedureCell)
+    (ct.DatumCell.schemeName -> ct.DatumCell),
+    (ct.UnspecificCell.schemeName -> ct.UnspecificCell),
+    (ct.ListElementCell.schemeName -> ct.ListElementCell),
+    (ct.PairCell.schemeName -> ct.PairCell),
+    (ct.EmptyListCell.schemeName -> ct.EmptyListCell),
+    (ct.StringCell.schemeName -> ct.StringCell),
+    (ct.SymbolCell.schemeName -> ct.SymbolCell),
+    (ct.BooleanCell.schemeName -> ct.BooleanCell),
+    (ct.NumericCell.schemeName -> ct.NumericCell),
+    (ct.ExactIntegerCell.schemeName -> ct.ExactIntegerCell),
+    (ct.InexactRationalCell.schemeName -> ct.InexactRationalCell),
+    (ct.CharacterCell.schemeName -> ct.CharacterCell),
+    (ct.VectorCell.schemeName -> ct.VectorCell),
+    (ct.BytevectorCell.schemeName -> ct.BytevectorCell),
+    (ct.ProcedureCell.schemeName -> ct.ProcedureCell)
   )
 }

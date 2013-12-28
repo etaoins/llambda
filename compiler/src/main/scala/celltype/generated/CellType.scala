@@ -10,6 +10,7 @@ import llambda.compiler.InternalCompilerErrorException
 
 sealed abstract class CellType extends DatumFields {
   val llvmName : String
+  val schemeName : String
   val irType : FirstClassType
   val supertype : Option[CellType]
   val directSubtypes : Set[CellType]
@@ -124,6 +125,7 @@ sealed trait DatumFields {
 
 object DatumCell extends CellType with DatumFields {
   val llvmName = "datum"
+  val schemeName = "<datum-cell>"
   val irType = UserDefinedType("datum")
   val supertype = None
   val directSubtypes = Set[CellType](UnspecificCell, ListElementCell, StringLikeCell, BooleanCell, NumericCell, CharacterCell, VectorCell, BytevectorCell, RecordLikeCell)
@@ -148,6 +150,7 @@ sealed trait UnspecificFields extends DatumFields {
 
 object UnspecificCell extends ConcreteCellType with UnspecificFields {
   val llvmName = "unspecific"
+  val schemeName = "<unspecific-cell>"
   val irType = UserDefinedType("unspecific")
   val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType]()
@@ -167,6 +170,7 @@ sealed trait ListElementFields extends DatumFields {
 
 object ListElementCell extends CellType with ListElementFields {
   val llvmName = "listElement"
+  val schemeName = "<list-element-cell>"
   val irType = UserDefinedType("listElement")
   val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType](PairCell, EmptyListCell)
@@ -244,6 +248,7 @@ sealed trait PairFields extends ListElementFields {
 
 object PairCell extends ConcreteCellType with PairFields {
   val llvmName = "pair"
+  val schemeName = "<pair-cell>"
   val irType = UserDefinedType("pair")
   val supertype = Some(ListElementCell)
   val directSubtypes = Set[CellType]()
@@ -283,6 +288,7 @@ sealed trait EmptyListFields extends ListElementFields {
 
 object EmptyListCell extends ConcreteCellType with EmptyListFields {
   val llvmName = "emptyList"
+  val schemeName = "<empty-list-cell>"
   val irType = UserDefinedType("emptyList")
   val supertype = Some(ListElementCell)
   val directSubtypes = Set[CellType]()
@@ -410,6 +416,7 @@ sealed trait StringLikeFields extends DatumFields {
 
 object StringLikeCell extends CellType with StringLikeFields {
   val llvmName = "stringLike"
+  val schemeName = "<string-like-cell>"
   val irType = UserDefinedType("stringLike")
   val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType](StringCell, SymbolCell)
@@ -449,6 +456,7 @@ sealed trait StringFields extends StringLikeFields {
 
 object StringCell extends ConcreteCellType with StringFields {
   val llvmName = "string"
+  val schemeName = "<string-cell>"
   val irType = UserDefinedType("string")
   val supertype = Some(StringLikeCell)
   val directSubtypes = Set[CellType]()
@@ -482,6 +490,7 @@ sealed trait SymbolFields extends StringLikeFields {
 
 object SymbolCell extends ConcreteCellType with SymbolFields {
   val llvmName = "symbol"
+  val schemeName = "<symbol-cell>"
   val irType = UserDefinedType("symbol")
   val supertype = Some(StringLikeCell)
   val directSubtypes = Set[CellType]()
@@ -542,6 +551,7 @@ sealed trait BooleanFields extends DatumFields {
 
 object BooleanCell extends ConcreteCellType with BooleanFields {
   val llvmName = "boolean"
+  val schemeName = "<boolean-cell>"
   val irType = UserDefinedType("boolean")
   val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType]()
@@ -563,6 +573,7 @@ sealed trait NumericFields extends DatumFields {
 
 object NumericCell extends CellType with NumericFields {
   val llvmName = "numeric"
+  val schemeName = "<numeric-cell>"
   val irType = UserDefinedType("numeric")
   val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType](ExactIntegerCell, InexactRationalCell)
@@ -613,6 +624,7 @@ sealed trait ExactIntegerFields extends NumericFields {
 
 object ExactIntegerCell extends ConcreteCellType with ExactIntegerFields {
   val llvmName = "exactInteger"
+  val schemeName = "<exact-integer-cell>"
   val irType = UserDefinedType("exactInteger")
   val supertype = Some(NumericCell)
   val directSubtypes = Set[CellType]()
@@ -668,6 +680,7 @@ sealed trait InexactRationalFields extends NumericFields {
 
 object InexactRationalCell extends ConcreteCellType with InexactRationalFields {
   val llvmName = "inexactRational"
+  val schemeName = "<inexact-rational-cell>"
   val irType = UserDefinedType("inexactRational")
   val supertype = Some(NumericCell)
   val directSubtypes = Set[CellType]()
@@ -727,6 +740,7 @@ sealed trait CharacterFields extends DatumFields {
 
 object CharacterCell extends ConcreteCellType with CharacterFields {
   val llvmName = "character"
+  val schemeName = "<character-cell>"
   val irType = UserDefinedType("character")
   val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType]()
@@ -809,6 +823,7 @@ sealed trait VectorFields extends DatumFields {
 
 object VectorCell extends ConcreteCellType with VectorFields {
   val llvmName = "vector"
+  val schemeName = "<vector-cell>"
   val irType = UserDefinedType("vector")
   val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType]()
@@ -898,6 +913,7 @@ sealed trait BytevectorFields extends DatumFields {
 
 object BytevectorCell extends ConcreteCellType with BytevectorFields {
   val llvmName = "bytevector"
+  val schemeName = "<bytevector-cell>"
   val irType = UserDefinedType("bytevector")
   val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType]()
@@ -987,6 +1003,7 @@ sealed trait RecordLikeFields extends DatumFields {
 
 object RecordLikeCell extends CellType with RecordLikeFields {
   val llvmName = "recordLike"
+  val schemeName = "<record-like-cell>"
   val irType = UserDefinedType("recordLike")
   val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType](ProcedureCell, RecordCell)
@@ -1047,6 +1064,7 @@ sealed trait ProcedureFields extends RecordLikeFields {
 
 object ProcedureCell extends ConcreteCellType with ProcedureFields {
   val llvmName = "procedure"
+  val schemeName = "<procedure-cell>"
   val irType = UserDefinedType("procedure")
   val supertype = Some(RecordLikeCell)
   val directSubtypes = Set[CellType]()
@@ -1110,6 +1128,7 @@ sealed trait RecordFields extends RecordLikeFields {
 
 object RecordCell extends ConcreteCellType with RecordFields {
   val llvmName = "record"
+  val schemeName = "<record-cell>"
   val irType = UserDefinedType("record")
   val supertype = Some(RecordLikeCell)
   val directSubtypes = Set[CellType]()

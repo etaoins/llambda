@@ -18,7 +18,7 @@ object WriteIntrinsicCellTypes extends writer.OutputWriter {
       scalaBuilder += "def apply() : Map[String, ct.CellType] = Map("
       scalaBuilder.indented {
         val mapLines = for(cellClass <- processedTypes.cellClasses.values if !cellClass.internal) yield 
-          s"""("${cellClass.names.schemeName}" -> ct.${cellClass.names.scalaObjectName})"""
+          s"""(ct.${cellClass.names.scalaObjectName}.schemeName -> ct.${cellClass.names.scalaObjectName})"""
 
         scalaBuilder.appendLines(mapLines, ",")
       }

@@ -11,7 +11,9 @@ import llambda.compiler.{celltype => ct}
   * and IntrinsicCellType(ct.ExactIntegerCell) are both exact integers but have
   * different native representations.
   */
-sealed abstract class ValueType
+sealed abstract class ValueType {
+  val schemeName : String
+}
 
 /** Type represented by a native pointer */
 sealed abstract trait PointerType extends ValueType
@@ -35,10 +37,19 @@ sealed abstract class NativeType extends IntrinsicType
 sealed abstract class IntLikeType(val bits : Int, val signed : Boolean) extends NativeType
 
 /** C99/C++ style single byte boolean */
-case object CBool extends IntLikeType(8, false)
+case object CBool extends IntLikeType(8, false) {
+  val schemeName = "<bool>"
+}
 
 /** Native integer type representing a Scheme exact integer */
-sealed abstract class IntType(bits : Int, signed : Boolean) extends IntLikeType(bits, signed)
+sealed abstract class IntType(bits : Int, signed : Boolean) extends IntLikeType(bits, signed) {
+  val schemeName = if (signed) {
+    s"<int${bits}>"
+  }
+  else {
+    s"<uint${bits}>"
+  }
+}
 
 case object Int8 extends IntType(8, true)
 case object Int16 extends IntType(16, true)
@@ -53,14 +64,23 @@ case object UInt32 extends IntType(32, false)
 /** Native floating point type representing a Scheme inexact rational */
 sealed abstract class FpType extends NativeType
 
-case object Float extends FpType
-case object Double extends FpType 
+case object Float extends FpType {
+  val schemeName = "<float>"
+}
+
+case object Double extends FpType {
+  val schemeName = "<double>"
+}
 
 /** Native integer representing a Unicode code point */
-case object UnicodeChar extends IntLikeType(32, true)
+case object UnicodeChar extends IntLikeType(32, true) {
+  val schemeName = "<unicode-char>"
+}
 
 /** Pointer to a garbage collected value cell containing an intrinsic type */
-case class IntrinsicCellType(cellType : ct.CellType) extends IntrinsicType with CellValueType
+case class IntrinsicCellType(cellType : ct.CellType) extends IntrinsicType with CellValueType {
+  val schemeName = cellType.schemeName
+}
 
 /** Identifies a record field
   *
@@ -85,6 +105,7 @@ sealed abstract class RecordLikeType extends CellValueType {
   */
 class RecordType(val sourceName : String, val fields : List[RecordField]) extends RecordLikeType {
   val cellType = ct.RecordCell
+  val schemeName = sourceName
 }
 
 /** Pointer to a closure type
@@ -95,4 +116,5 @@ class RecordType(val sourceName : String, val fields : List[RecordField]) extend
   **/
 class ClosureType(val sourceName : String, val fields : List[RecordField]) extends RecordLikeType {
   val cellType = ct.ProcedureCell
+  val schemeName = "<internal-closure-type>"
 }

@@ -230,6 +230,7 @@ object WriteScalaObjects extends writer.OutputWriter {
       val scalaConstructor = LlvmTypeToScalaConstructor(irType)
 
       scalaBuilder += "val llvmName = \"" + names.llvmName + "\"" 
+      scalaBuilder += "val schemeName = \"" + names.schemeName + "\"" 
       scalaBuilder += s"val irType = ${scalaConstructor}"
       scalaBuilder += "val supertype = " + (cellClass.parentOption match {
         case None => "None"

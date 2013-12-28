@@ -8,21 +8,24 @@ object IntrinsicTypes {
   private val cellTypes = IntrinsicCellTypes().mapValues(vt.IntrinsicCellType.apply)
 
   def apply(targetPlatform : TargetPlatform) : Map[String, vt.IntrinsicType] = 
+    // Intrinsic native types
+    List(
+      vt.CBool,
+      vt.Int8,
+      vt.Int16,
+      vt.Int32,
+      vt.Int64,
+      vt.UInt8,
+      vt.UInt16,
+      vt.UInt32,
+      vt.Float,
+      vt.Double,
+      vt.UnicodeChar
+    ).map({nativeType =>
+      (nativeType.schemeName -> nativeType)
+    }).toMap ++
+    // Type aliases
     Map(
-      ("<bool>"   -> vt.CBool),
-      ("<int8>"   -> vt.Int8),
-      ("<int16>"  -> vt.Int16),
-      ("<int32>"  -> vt.Int32),
-      ("<int64>"  -> vt.Int64),
-      ("<uint8>"  -> vt.UInt8),
-      ("<uint16>" -> vt.UInt16),
-      ("<uint32>" -> vt.UInt32),
-      ("<float>"  -> vt.Float),
-      ("<double>" -> vt.Double),
-
-      ("<unicode-char>" -> vt.UnicodeChar),
-
-      ("<short>"   -> targetPlatform.shortType),
       ("<int>"     -> targetPlatform.intType),
       ("<long>"    -> targetPlatform.longType),
       ("<ushort>"  -> targetPlatform.ushortType),
