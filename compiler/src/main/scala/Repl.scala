@@ -3,6 +3,7 @@ import io.llambda
 
 import scala.tools.jline.console.{ConsoleReader, history}
 import scala.sys.process._
+import scala.collection.mutable.ListBuffer
 import annotation.tailrec
 import java.io.File
 
@@ -66,36 +67,33 @@ class BodyExpressionMode(targetPlatform : platform.TargetPlatform) extends Schem
 
   val bodyExtractor = new frontend.ModuleBodyExtractor(loader, includePath)
 
-  def evalDatum(datum : ast.Datum) = {
-    datum match {
-      case ast.ProperList(ast.Symbol("import") :: _) =>
-        // This is an import decl - import our new bindings
-        val newBindings = frontend.ResolveImportDecl(datum)(loader, includePath)
+  def evalDatum(datum : ast.Datum) : String = datum match {
+    case ast.ProperList(ast.Symbol("import") :: _) =>
+      // This is an import decl - import our new bindings
+      val newBindings = frontend.ResolveImportDecl(datum)(loader, includePath)
 
-        scope ++= newBindings
+      scope ++= newBindings
 
-        "loaded"
-      case _ =>
-        // Treat this like a body expression
-        bodyExtractor(datum :: Nil, scope).map(_.toString).mkString(" ")
-    }
+      "loaded"
+    case _ =>
+      // Treat this like a body expression
+      bodyExtractor(datum :: Nil, scope).map(_.toString).mkString(" ")
   }
 }
 
 /** Compiles expressions as a standalone program and executes them */
 class CompileMode(targetPlatform : platform.TargetPlatform) extends SchemeParsingMode("compile") {
-  val compileConfig = CompileConfig(
-    includePath=ReplIncludePath(),
+  private val includePath = ReplIncludePath()
+  private val compileConfig = CompileConfig(
+    includePath=includePath,
     optimizeLevel=2,
     targetPlatform=targetPlatform)
 
-  def evalDatum(userDatum : ast.Datum) = {
-    val outputFile = File.createTempFile("llambdarepl", null, null)
-    outputFile.deleteOnExit()
+  private val loader = new frontend.LibraryLoader(targetPlatform)
+  private val importDecls = new ListBuffer[ast.Datum]
 
-    // Implicitly import (scheme base) and wrap in (write)
-    // This is encouraged for REPLs by R7RS
-    val programData = ast.ProperList(List(
+  importDecls +=  
+    ast.ProperList(List(
       ast.Symbol("import"),
       ast.ProperList(List(
         ast.Symbol("scheme"),
@@ -105,31 +103,47 @@ class CompileMode(targetPlatform : platform.TargetPlatform) extends SchemeParsin
         ast.Symbol("scheme"),
         ast.Symbol("write")
       ))
-    )) :: ast.ProperList(List(
-      ast.Symbol("write"),
-      userDatum
-    )) :: Nil
+    ))
 
-    try {
-      Compiler.compileData(programData, outputFile, compileConfig)
+  def evalDatum(userDatum : ast.Datum) : String = userDatum match {
+    case importDecl @ ast.ProperList(ast.Symbol("import") :: _) =>
+      // Make sure this exists up front
+      frontend.ResolveImportDecl(importDecl)(loader, includePath)
 
-      var outputString = ""
-      val outLogger = ProcessLogger(line => outputString += line + "\n",
-                                    line => outputString += line + "\n")
+      importDecls += importDecl
+      "loaded"
 
-      // Run and capture the output
-      val process = Process(outputFile.getAbsolutePath).run(outLogger)
+    case _ =>
+      val outputFile = File.createTempFile("llambdarepl", null, null)
+      outputFile.deleteOnExit()
 
-      if (process.exitValue() != 0) {
-        throw new ReplProcessNonZeroExitException(process.exitValue(), outputString)
+      // Implicitly import (scheme base) and wrap in (write)
+      // This is encouraged for REPLs by R7RS
+      val programData = importDecls.toList :+
+        ast.ProperList(List(
+          ast.Symbol("write"),
+          userDatum
+        ))
+
+      try {
+        Compiler.compileData(programData, outputFile, compileConfig)
+
+        var outputString = ""
+        val outLogger = ProcessLogger(line => outputString += line + "\n",
+                                      line => outputString += line + "\n")
+
+        // Run and capture the output
+        val process = Process(outputFile.getAbsolutePath).run(outLogger)
+
+        if (process.exitValue() != 0) {
+          throw new ReplProcessNonZeroExitException(process.exitValue(), outputString)
+        }
+
+        outputString
       }
-
-      outputString
-
-    }
-    finally {
-      outputFile.delete()
-    }
+      finally {
+        outputFile.delete()
+      }
   }
 }
 
