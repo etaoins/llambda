@@ -45,7 +45,7 @@ sealed abstract class NativeValue(val nativeType : vt.NativeType, val cellType :
       }
     }
     else {
-      planCastToCellTempValue(cellType)
+      planCastToCellTempValue(targetType)
     }
   }
   

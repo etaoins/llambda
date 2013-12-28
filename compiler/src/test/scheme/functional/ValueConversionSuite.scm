@@ -70,6 +70,11 @@
 	; native i32
 	(vector-ref #(a b c) (exact 1))))
 
+(define-test "native i64 can be boxed as an inexact rational" (expect -53.0
+	(define inexact->inexact (native-function "lliby_inexact" (<inexact-rational-cell>) <double>))
+	; This assumes (exact) returns an native i64
+	(inexact->inexact (exact -53))))
+
 (define-test "'3' can be unboxed as a character" (expect 3
 	(import (llambda test-util))
 	; This assumes (digit-value) takes an native Unicode character
