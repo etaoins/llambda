@@ -10,18 +10,18 @@ class RecordValue(val recordType : vt.RecordType, val tempValue : ps.TempValue) 
   val possibleTypes = Set[ct.ConcreteCellType](ct.RecordCell)
   val cellType = ct.RecordCell
 
-  def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
-    // Records have no bative representation
-    None
+  def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : ps.TempValue =
+    // Records have no native representation
+    impossibleConversion(s"Cannot convert record of type ${recordType.schemeName} to requested type ${nativeType.schemeName} or any other native type")
   
-  def toRecordTempValue(targetRecordType : vt.RecordType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
+  def toRecordTempValue(targetRecordType : vt.RecordType)(implicit plan : PlanWriter) : ps.TempValue =
     if (recordType == targetRecordType) {
       // We're of the correct type
-      Some(tempValue)
+      tempValue
     }
     else {
       // Not of the correct type
-      None
+      impossibleConversion(s"Cannot convert record of type ${recordType.sourceName} to record of type ${targetRecordType.sourceName}")
     }
   
   def preferredRepresentation : vt.ValueType =

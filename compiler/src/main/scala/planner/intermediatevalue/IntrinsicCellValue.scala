@@ -5,6 +5,7 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{PlanWriter, InvokableProcedure}
+import llambda.compiler.InternalCompilerErrorException
 
 class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellType : ct.CellType, val tempValue : ps.TempValue) extends IntermediateCellValue {
   override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
@@ -23,40 +24,38 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
   def toInvokableProcedure()(implicit plan : PlanWriter) : Option[InvokableProcedure] =  {
     if (possibleTypes.contains(ct.ProcedureCell)) {
       // Cast to a procedure
-      val boxedProcTmep = toRequiredTempValue(vt.IntrinsicCellType(ct.ProcedureCell))
+      val boxedProcTemp = toTempValue(vt.IntrinsicCellType(ct.ProcedureCell))
 
-      Some(new InvokableProcedureCell(boxedProcTmep))
+      Some(new InvokableProcedureCell(boxedProcTemp))
     }
     else {
       None
     }
   }
 
-  def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = nativeType match {
+  def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : ps.TempValue = nativeType match {
     case vt.UnicodeChar =>
-      toTempValue(vt.IntrinsicCellType(ct.CharacterCell)) map { boxedChar =>
-        val unboxedTemp = new ps.TempValue
-        plan.steps += ps.UnboxCharacter(unboxedTemp, boxedChar)
+      val boxedChar = toTempValue(vt.IntrinsicCellType(ct.CharacterCell))
+      val unboxedTemp = new ps.TempValue
+      plan.steps += ps.UnboxCharacter(unboxedTemp, boxedChar)
 
-        unboxedTemp
-      }
+      unboxedTemp
       
     case intType : vt.IntType =>
-      toTempValue(vt.IntrinsicCellType(ct.ExactIntegerCell)) map { boxedExactInt =>
-        val unboxedTemp = new ps.TempValue
-        plan.steps += ps.UnboxExactInteger(unboxedTemp, boxedExactInt)
+      val boxedExactInt = toTempValue(vt.IntrinsicCellType(ct.ExactIntegerCell))
+      val unboxedTemp = new ps.TempValue
+      plan.steps += ps.UnboxExactInteger(unboxedTemp, boxedExactInt)
 
-        if (intType.bits == 64) {
-          // Correct width
-          unboxedTemp
-        }
-        else {
-          val convTemp = new ps.TempValue
+      if (intType.bits == 64) {
+        // Correct width
+        unboxedTemp
+      }
+      else {
+        val convTemp = new ps.TempValue
 
-          // Convert to the right width
-          plan.steps += ps.ConvertNativeInteger(convTemp, unboxedTemp, intType.bits, intType.signed) 
-          convTemp
-        }
+        // Convert to the right width
+        plan.steps += ps.ConvertNativeInteger(convTemp, unboxedTemp, intType.bits, intType.signed) 
+        convTemp
       }
 
     case fpType : vt.FpType =>
@@ -65,37 +64,35 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
 
       if (!possiblyExactInt && !possiblyInexactRational) {
         // Not possible
-        None
+        impossibleConversion(s"Unable to convert non-numeric ${typeDescription} to ${fpType.schemeName}")
       }
       else if (possiblyExactInt & !possiblyInexactRational) {
-        toTempValue(vt.IntrinsicCellType(ct.ExactIntegerCell)) map { boxedExactInt =>
-          // Unbox as exact int
-          val unboxedTemp = new ps.TempValue
-          plan.steps += ps.UnboxExactInteger(unboxedTemp, boxedExactInt)
+        // Unbox as exact int
+        val boxedExactInt = toTempValue(vt.IntrinsicCellType(ct.ExactIntegerCell)) 
+        val unboxedTemp = new ps.TempValue
+        plan.steps += ps.UnboxExactInteger(unboxedTemp, boxedExactInt)
 
-          // Convert to the wanted type
-          val convTemp = new ps.TempValue
-          plan.steps += ps.ConvertNativeIntegerToFloat(convTemp, unboxedTemp, true, fpType)
+        // Convert to the wanted type
+        val convTemp = new ps.TempValue
+        plan.steps += ps.ConvertNativeIntegerToFloat(convTemp, unboxedTemp, true, fpType)
 
-          convTemp
-        }
+        convTemp
       }
       else if (!possiblyExactInt && possiblyInexactRational) {
-        toTempValue(vt.IntrinsicCellType(ct.InexactRationalCell)) map { boxedInexactRational =>
-          // Unbox as inexact rational
-          val unboxedTemp = new ps.TempValue
-          plan.steps += ps.UnboxInexactRational(unboxedTemp, boxedInexactRational)
+        // Unbox as inexact rational
+        val boxedInexactRational = toTempValue(vt.IntrinsicCellType(ct.InexactRationalCell)) 
+        val unboxedTemp = new ps.TempValue
+        plan.steps += ps.UnboxInexactRational(unboxedTemp, boxedInexactRational)
 
-          if (fpType == vt.Double) {
-            // No conversion needed
-            unboxedTemp
-          }
-          else {
-            val convTemp = new ps.TempValue
+        if (fpType == vt.Double) {
+          // No conversion needed
+          unboxedTemp
+        }
+        else {
+          val convTemp = new ps.TempValue
 
-            plan.steps += ps.ConvertNativeFloat(convTemp, unboxedTemp, fpType)
-            convTemp
-          }
+          plan.steps += ps.ConvertNativeFloat(convTemp, unboxedTemp, fpType)
+          convTemp
         }
       }
       else {
@@ -108,11 +105,11 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
         // This will hit the branches above us
         val trueWriter = plan.forkPlan()
         val trueDynamicValue = new IntrinsicCellValue(Set(ct.ExactIntegerCell), cellType, tempValue)
-        val trueTempValue = trueDynamicValue.toRequiredTempValue(fpType)(trueWriter)
+        val trueTempValue = trueDynamicValue.toTempValue(fpType)(trueWriter)
 
         val falseWriter = plan.forkPlan()
         val falseDynamicValue = new IntrinsicCellValue(possibleTypes - ct.ExactIntegerCell, cellType, tempValue)
-        val falseTempValue = falseDynamicValue.toRequiredTempValue(fpType)(falseWriter)
+        val falseTempValue = falseDynamicValue.toTempValue(fpType)(falseWriter)
       
         val phiTemp = new ps.TempValue
 
@@ -120,21 +117,21 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
           trueWriter.steps.toList, trueTempValue,
           falseWriter.steps.toList, falseTempValue) 
 
-        Some(phiTemp)
+        phiTemp
       }
 
-    case _ =>
-      None
+    case vt.CBool =>
+      throw new InternalCompilerErrorException("Attempt to directly convert to CBool. Should be caught by toTruthyPredicate.")
   }
   
-  protected def toRecordTempValue(recordType : vt.RecordType)(implicit plan : PlanWriter) : Option[ps.TempValue] = {
+  protected def toRecordTempValue(recordType : vt.RecordType)(implicit plan : PlanWriter) : ps.TempValue = {
     // Convert ourselves to a record
-    val recordTemp = toRequiredTempValue(vt.IntrinsicCellType(ct.RecordCell))
+    val recordTemp = toTempValue(vt.IntrinsicCellType(ct.RecordCell))
 
     // Make sure we we're of the right class
     plan.steps += ps.AssertRecordLikeClass(recordTemp, recordType)
 
-    Some(recordTemp)
+    recordTemp
   }
   
   def preferredRepresentation : vt.ValueType = possibleTypes.toList match {

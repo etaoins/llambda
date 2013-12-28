@@ -12,37 +12,27 @@ sealed abstract class NativeValue(val nativeType : vt.NativeType, val cellType :
   // This is used for our shortcut in planPhiWith to build a new phi'ed intermediate
   protected def withNewTempValue(tempValue : ps.TempValue) : NativeValue
 
-  protected def planCastToNativeTempValue(targetType : vt.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = 
-    None
+  protected def planCastToNativeTempValue(targetType : vt.NativeType)(implicit plan : PlanWriter) : ps.TempValue = 
+    impossibleConversion(s"Cannot convert native value of type ${nativeType.schemeName} to requested type ${targetType.schemeName} or any other native type")
   
-  protected def planCastToCellTempValue(cellType : ct.CellType)(implicit plan : PlanWriter) : Option[ps.TempValue] = 
-    None
+  protected def planCastToCellTempValue(targetType : ct.CellType)(implicit plan : PlanWriter) : ps.TempValue  = 
+    impossibleConversion(s"Cannot convert native value of type ${nativeType.schemeName} to requested type ${targetType.schemeName} or any other cell type except ${cellType.schemeName}")
   
   protected def planCellTempValue()(implicit plan : PlanWriter) : ps.TempValue
 
-  def toNativeTempValue(targetType : vt.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = 
+  def toNativeTempValue(targetType : vt.NativeType)(implicit plan : PlanWriter) : ps.TempValue = 
     if (targetType == nativeType) {
-      return Some(tempValue)
+      tempValue
     }
     else {
       planCastToNativeTempValue(targetType)
     }
   
-  def toCellTempValue(targetType : ct.CellType)(implicit plan : PlanWriter) : Option[ps.TempValue] = {
+  def toCellTempValue(targetType : ct.CellType)(implicit plan : PlanWriter) : ps.TempValue = {
     if (targetType.isTypeOrSupertypeOf(cellType)) {
       val boxedTemp = planCellTempValue()
 
-      if (cellType == targetType) {
-        // No casting
-        Some(boxedTemp)
-      }
-      else {
-        // Cast to its supertype
-        val castTemp = new ps.TempValue
-        plan.steps += ps.CastCellToTypeUnchecked(castTemp, boxedTemp, targetType)
-
-        Some(castTemp)
-      }
+      cellTempToSupertype(boxedTemp, cellType, targetType)
     }
     else {
       planCastToCellTempValue(targetType)
@@ -94,24 +84,24 @@ class NativeBooleanValue(tempValue : ps.TempValue) extends NativeValue(vt.CBool,
 class NativeExactIntegerValue(tempValue : ps.TempValue, nativeType : vt.IntType) extends NativeValue(nativeType, ct.ExactIntegerCell, tempValue) {
   def withNewTempValue(tempValue : ps.TempValue) = new NativeExactIntegerValue(tempValue, nativeType)
 
-  override def planCastToNativeTempValue(targetType : vt.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = targetType match {
+  override def planCastToNativeTempValue(targetType : vt.NativeType)(implicit plan : PlanWriter) : ps.TempValue = targetType match {
     case intType : vt.IntType =>
       val convTemp = new ps.TempValue
       plan.steps += ps.ConvertNativeInteger(convTemp, tempValue, intType.bits, intType.signed)
 
-      Some(convTemp)
+      convTemp
 
     case fpType : vt.FpType =>
       val convTemp = new ps.TempValue
       plan.steps += ps.ConvertNativeIntegerToFloat(convTemp, tempValue, nativeType.signed, fpType)
 
-      Some(convTemp)
+      convTemp
 
     case _ => 
-      None
+      impossibleConversion(s"Cannot convert native value of type ${nativeType.schemeName} to non-numeric native type ${targetType.schemeName}") 
   }
   
-  override def planCastToCellTempValue(cellType : ct.CellType)(implicit plan : PlanWriter) : Option[ps.TempValue] = cellType match {
+  override def planCastToCellTempValue(cellType : ct.CellType)(implicit plan : PlanWriter) : ps.TempValue = cellType match {
     case ct.InexactRationalCell =>
       // Allocate space for the int
       val allocTemp = new ps.TempAllocation
@@ -120,12 +110,12 @@ class NativeExactIntegerValue(tempValue : ps.TempValue, nativeType : vt.IntType)
       // Convert us to double and box
       val boxedTemp = new ps.TempValue
       
-      plan.steps += ps.BoxInexactRational(boxedTemp, allocTemp, 0, toRequiredTempValue(vt.Double))
+      plan.steps += ps.BoxInexactRational(boxedTemp, allocTemp, 0, toTempValue(vt.Double))
 
-      Some(boxedTemp)
+      boxedTemp
     
     case _ =>
-      None
+      impossibleConversion(s"Cannot convert native value of type ${nativeType.schemeName} to non-numeric cell type ${cellType.schemeName}") 
   }
 
   def planCellTempValue()(implicit plan : PlanWriter) : ps.TempValue =  {
@@ -135,7 +125,7 @@ class NativeExactIntegerValue(tempValue : ps.TempValue, nativeType : vt.IntType)
 
     // We can only box 64bit signed ints
     val boxedTemp = new ps.TempValue
-    plan.steps += ps.BoxExactInteger(boxedTemp, allocTemp, 0, toRequiredTempValue(vt.Int64))
+    plan.steps += ps.BoxExactInteger(boxedTemp, allocTemp, 0, toTempValue(vt.Int64))
 
     boxedTemp
   }
@@ -144,15 +134,15 @@ class NativeExactIntegerValue(tempValue : ps.TempValue, nativeType : vt.IntType)
 class NativeInexactRationalValue(tempValue : ps.TempValue, nativeType : vt.FpType) extends NativeValue(nativeType, ct.InexactRationalCell, tempValue) {
   def withNewTempValue(tempValue : ps.TempValue) = new NativeInexactRationalValue(tempValue, nativeType)
 
-  override def planCastToNativeTempValue(targetType : vt.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] = targetType match {
+  override def planCastToNativeTempValue(targetType : vt.NativeType)(implicit plan : PlanWriter) : ps.TempValue = targetType match {
     case fpType : vt.FpType =>
       val convTemp = new ps.TempValue
       plan.steps += ps.ConvertNativeFloat(convTemp, tempValue, fpType)
 
-      Some(convTemp)
+      convTemp
 
     case _ => 
-      None
+      impossibleConversion(s"Cannot convert native floating value of type ${nativeType.schemeName} to non-float native type ${targetType.schemeName}") 
   }
   
   def planCellTempValue()(implicit plan : PlanWriter) : ps.TempValue =  {
@@ -162,7 +152,7 @@ class NativeInexactRationalValue(tempValue : ps.TempValue, nativeType : vt.FpTyp
 
     // We can only box 64bit signed ints
     val boxedTemp = new ps.TempValue
-    plan.steps += ps.BoxInexactRational(boxedTemp, allocTemp, 0, toRequiredTempValue(vt.Double))
+    plan.steps += ps.BoxInexactRational(boxedTemp, allocTemp, 0, toTempValue(vt.Double))
 
     boxedTemp
   }

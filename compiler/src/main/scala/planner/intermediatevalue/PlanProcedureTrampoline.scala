@@ -39,7 +39,7 @@ private[intermediatevalue] object PlanProcedureTrampoline {
     // Convert our arg list in to the arguments our procedure is expecting
     val restArgValue = signature.fixedArgs.foldLeft(argListHeadValue) { case (argListElementValue, nativeType) =>
       // Make sure this is a pair
-      val argPairTemp = argListElementValue.toRequiredTempValue(vt.IntrinsicCellType(ct.PairCell))(plan)
+      val argPairTemp = argListElementValue.toTempValue(vt.IntrinsicCellType(ct.PairCell))(plan)
 
       // Get the car of the pair as the arg's value 
       val argDatumTemp = new ps.TempValue
@@ -47,7 +47,7 @@ private[intermediatevalue] object PlanProcedureTrampoline {
 
       // Convert it to the expected type
       val argValue = TempValueToIntermediate(vt.IntrinsicCellType(ct.DatumCell), argDatumTemp)
-      val argTemp = argValue.toRequiredTempValue(nativeType)(plan)
+      val argTemp = argValue.toTempValue(nativeType)(plan)
 
       argTemps += argTemp
 
@@ -61,13 +61,13 @@ private[intermediatevalue] object PlanProcedureTrampoline {
 
     if (signature.hasRestArg) {
       // This is already a ListElementCell
-      argTemps += restArgValue.toRequiredTempValue(vt.IntrinsicCellType(ct.ListElementCell))(plan)
+      argTemps += restArgValue.toTempValue(vt.IntrinsicCellType(ct.ListElementCell))(plan)
     }
     else {
       val unusedTemp = new ps.TempValue
       
       // Make sure we're out of args by doing a check cast to an empty list
-      restArgValue.toRequiredTempValue(vt.IntrinsicCellType(ct.EmptyListCell))(plan)
+      restArgValue.toTempValue(vt.IntrinsicCellType(ct.EmptyListCell))(plan)
     }
 
     // Load the entry point for the function we're jumping to
@@ -88,7 +88,7 @@ private[intermediatevalue] object PlanProcedureTrampoline {
       DatumToConstantValue(ast.UnspecificValue())
     }
 
-    val returnTemp = returnValue.toRequiredTempValue(vt.IntrinsicCellType(ct.DatumCell))(plan)
+    val returnTemp = returnValue.toTempValue(vt.IntrinsicCellType(ct.DatumCell))(plan)
     plan.steps += ps.Return(Some(returnTemp))
 
     PlannedFunction(

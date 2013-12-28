@@ -3,7 +3,7 @@ import io.llambda
 
 import collection.mutable
 
-import llambda.compiler.{et, StorageLocation, ValueNotApplicableException, ReportProcedure}
+import llambda.compiler.{et, StorageLocation, ValueNotApplicableException, ReportProcedure, SourceLocated}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
@@ -40,15 +40,16 @@ private[planner] object PlanExpression {
       case et.Apply(procExpr, operandExprs) =>
         val procResult = apply(initialState)(procExpr)
 
-        val operandValueBuffer = new mutable.ListBuffer[iv.IntermediateValue]
+        val operandBuffer = new mutable.ListBuffer[(SourceLocated, iv.IntermediateValue)]
+
         val finalState = operandExprs.foldLeft(procResult.state) { case (state, operandExpr) =>
           val operandResult = apply(state)(operandExpr)
 
-          operandValueBuffer += operandResult.value
+          operandBuffer += ((operandExpr, operandResult.value))
           operandResult.state
         }
 
-        val operandValues = operandValueBuffer.toList
+        val operands = operandBuffer.toList
 
         val invokableProc = procResult.value.toInvokableProcedure() getOrElse {
           throw new ValueNotApplicableException(expr)
@@ -61,7 +62,7 @@ private[planner] object PlanExpression {
             // Give our reportProcPlanners a chance to plan this more
             // efficiently than a function call
             for(reportProcPlanner <- reportProcPlanners) {
-              for(planResult <- reportProcPlanner(finalState)(reportName, operandValues)) {
+              for(planResult <- reportProcPlanner(finalState)(reportName, operands)) {
                 // We created an alternative plan; we're done
                 return planResult
               }
@@ -71,7 +72,7 @@ private[planner] object PlanExpression {
         }
 
         // Perform a function call
-        val applyValueOpt = PlanApplication(invokableProc, operandValues) 
+        val applyValueOpt = PlanApplication(invokableProc, operands) 
 
         PlanResult(
           state=finalState,
@@ -85,7 +86,7 @@ private[planner] object PlanExpression {
             val variableTemp = new ps.TempValue
             
             val initialValueResult = apply(state)(initialValue)
-            val initialValueTemp = initialValueResult.value.toRequiredTempValue(vt.IntrinsicCellType(ct.DatumCell))
+            val initialValueTemp = initialValueResult.value.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
 
             plan.steps += ps.AllocateCells(allocTemp, 1)
 
@@ -154,7 +155,7 @@ private[planner] object PlanExpression {
         val mutableTemp = initialState.mutables(storageLoc)
         
         val newValueResult = apply(initialState)(valueExpr)
-        val newValueTemp = newValueResult.value.toRequiredTempValue(vt.IntrinsicCellType(ct.DatumCell))
+        val newValueTemp = newValueResult.value.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
 
         // Load our data pointer
         val recordDataTemp = new ps.TempValue
@@ -276,7 +277,7 @@ private[planner] object PlanExpression {
       case et.Cast(valueExpr, targetType) =>
         val valueResult = apply(initialState)(valueExpr)
 
-        val castTemp = valueResult.value.toRequiredTempValue(targetType)
+        val castTemp = valueResult.value.toTempValue(targetType)
         val castValue = TempValueToIntermediate(targetType, castTemp)
           
         PlanResult(state=valueResult.state, value=castValue)

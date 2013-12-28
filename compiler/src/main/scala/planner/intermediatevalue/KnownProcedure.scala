@@ -35,7 +35,7 @@ class KnownProcedure(val signature : ProcedureSignature, nativeSymbol : String, 
   def toInvokableProcedure()(implicit plan : PlanWriter) : Option[InvokableProcedure] = 
     Some(this)
 
-  def toCellTempValue(targetType : ct.CellType)(implicit plan : PlanWriter) : Option[ps.TempValue] = {
+  def toCellTempValue(targetType : ct.CellType)(implicit plan : PlanWriter) : ps.TempValue = {
     if (targetType.isTypeOrSupertypeOf(ct.ProcedureCell)) {
       // Store an entry point with an adapted signature
       val entryPointTemp = if (signature == AdaptedProcedureSignature) {
@@ -83,25 +83,16 @@ class KnownProcedure(val signature : ProcedureSignature, nativeSymbol : String, 
           cellTemp
       }
     
-      if (targetType != ct.ProcedureCell) {
-        // Cast this to super
-        val castTemp = new ps.TempValue
-        plan.steps += ps.CastCellToTypeUnchecked(castTemp, cellTemp, targetType)
-
-        Some(castTemp)
-      }
-      else {
-        Some(cellTemp)
-      }
+      cellTempToSupertype(cellTemp, ct.ProcedureCell, targetType)
     }
     else {
-      None
+      impossibleConversion(s"Cannot convert procedure to non-procedure type ${targetType.schemeName}")
     }
   }
   
-  def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : Option[ps.TempValue] =
+  def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : ps.TempValue =
     // Procedures have no unboxed representation
-    None
+    impossibleConversion(s"Cannot convert procedure to requested type ${nativeType.schemeName} or any other native type")
 
   def withReportName(newReportName : String) : KnownProcedure = {
     new KnownProcedure(signature, nativeSymbol, selfTempOpt, Some(newReportName))

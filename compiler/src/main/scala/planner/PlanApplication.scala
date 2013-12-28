@@ -3,6 +3,7 @@ import io.llambda
 
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
+import llambda.compiler.SourceLocated
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 
@@ -25,7 +26,7 @@ object PlanApplication {
       val restArgTemp = new ps.TempValue
 
       val argTemps = restArgs.map {
-        _.toRequiredTempValue(vt.IntrinsicCellType(ct.DatumCell))
+        _.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
       }
 
       plan.steps += ps.AllocateCells(allocTemp, restArgCount)
@@ -35,19 +36,19 @@ object PlanApplication {
     }
   }
 
-  def apply(invokableProc : InvokableProcedure, operandValues : List[iv.IntermediateValue])(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
+  def apply(invokableProc : InvokableProcedure, operands : List[(SourceLocated, iv.IntermediateValue)])(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
     val entryPointTemp = invokableProc.planEntryPoint()
     val signature = invokableProc.signature
 
     // Ensure our arity is sane
     if (signature.hasRestArg) {
-      if (operandValues.length < signature.fixedArgs.length) {
-        throw new UnlocatedIncompatibleArityException(s"Called function with ${operandValues.length} arguments; requires at least ${signature.fixedArgs.length} arguments")
+      if (operands.length < signature.fixedArgs.length) {
+        throw new UnlocatedIncompatibleArityException(s"Called procedure with ${operands.length} arguments; requires at least ${signature.fixedArgs.length} arguments")
       }
     }
     else {
-      if (signature.fixedArgs.length != operandValues.length) {
-        throw new UnlocatedIncompatibleArityException(s"Called function with ${operandValues.length} arguments; requires exactly ${signature.fixedArgs.length} arguments")
+      if (signature.fixedArgs.length != operands.length) {
+        throw new UnlocatedIncompatibleArityException(s"Called procedure with ${operands.length} arguments; requires exactly ${signature.fixedArgs.length} arguments")
       }
     }
 
@@ -59,12 +60,14 @@ object PlanApplication {
     }
 
     // Convert all the operands
-    val fixedTemps = operandValues.zip(signature.fixedArgs) map { case (operandValue, nativeType) =>
-      operandValue.toRequiredTempValue(nativeType)
+    val fixedTemps = operands.zip(signature.fixedArgs) map { case ((sourceLocated, operand), nativeType) =>
+      LocateExceptionsWith(sourceLocated) {
+        operand.toTempValue(nativeType)
+      }
     }
 
     val restTemps = if (signature.hasRestArg) {
-      boxRestArgs(operandValues.drop(signature.fixedArgs.length)) :: Nil
+      boxRestArgs(operands.map(_._2).drop(signature.fixedArgs.length)) :: Nil
     }
     else {
       Nil

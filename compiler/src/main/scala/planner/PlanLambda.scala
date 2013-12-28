@@ -90,7 +90,7 @@ private[planner] object PlanLambda {
       val varTemp = capturedVar match {
         case immutable : CapturedImmutatable =>
           // Cast the value to its preferred type
-          immutable.parentIntermediate.toRequiredTempValue(capturedVar.valueType)
+          immutable.parentIntermediate.toTempValue(capturedVar.valueType)
 
         case mutable : CapturedMutable =>
           // Store the pointer to the mutable directly
@@ -216,7 +216,7 @@ private[planner] object PlanLambda {
 
     // Return from the function
     procPlan.steps += ps.Return(returnTypeOpt map { returnType =>
-      planResult.value.toRequiredTempValue(returnType)(procPlan)
+      planResult.value.toTempValue(returnType)(procPlan)
     })
     
     // Determine our signature
