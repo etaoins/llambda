@@ -1,7 +1,7 @@
 package io.llambda.compiler
 import io.llambda
 
-import scala.tools.jline.console.ConsoleReader
+import scala.tools.jline.console.{ConsoleReader, history}
 import scala.sys.process._
 import annotation.tailrec
 import java.io.File
@@ -139,6 +139,12 @@ class Repl(targetPlatform : platform.TargetPlatform) {
   private def acceptInput(mode : ReplMode)(implicit reader : ConsoleReader) {
     val command = reader.readLine(mode.name + "> ")
 
+    // Flush the last command to our history file
+    reader.getHistory match {
+      case flushable : history.PersistentHistory =>
+        flushable.flush()
+    }
+
     command match {
       case ":quit" =>
         return;
@@ -159,7 +165,14 @@ class Repl(targetPlatform : platform.TargetPlatform) {
   }
 
   def apply() {
+    // Get our history file
+    val llambdaDir = new File(System.getProperty("user.home"), ".llambda")
+    llambdaDir.mkdir()
+    val historyFile = new File(llambdaDir, "repl-history")
+
     val reader = new ConsoleReader;
+    reader.setHistory(new history.FileHistory(historyFile))
+
     acceptInput(new CompileMode(targetPlatform))(reader)
   }
 }
