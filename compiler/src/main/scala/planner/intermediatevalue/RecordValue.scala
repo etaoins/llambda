@@ -5,16 +5,17 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.PlanWriter
+import llambda.compiler.RuntimeErrorMessage
 
 class RecordValue(val recordType : vt.RecordType, val tempValue : ps.TempValue) extends IntermediateCellValue with UninvokableValue {
   val possibleTypes = Set[ct.ConcreteCellType](ct.RecordCell)
   val cellType = ct.RecordCell
 
-  def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : ps.TempValue =
+  def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue =
     // Records have no native representation
     impossibleConversion(s"Cannot convert record of type ${recordType.schemeName} to requested type ${nativeType.schemeName} or any other native type")
   
-  def toRecordTempValue(targetRecordType : vt.RecordType)(implicit plan : PlanWriter) : ps.TempValue =
+  def toRecordTempValue(targetRecordType : vt.RecordType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue =
     if (recordType == targetRecordType) {
       // We're of the correct type
       tempValue

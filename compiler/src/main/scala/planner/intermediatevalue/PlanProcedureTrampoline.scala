@@ -10,6 +10,7 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.codegen.AdaptedProcedureSignature
+import llambda.compiler.RuntimeErrorMessage
 
 /** Plans a trampoline for the passed procedure 
   * 
@@ -35,11 +36,24 @@ private[intermediatevalue] object PlanProcedureTrampoline {
       // Pass the closure through directly
       argTemps += selfTemp
     }
+
+    val insufficientArgsMessage = if (signature.hasRestArg) {
+      RuntimeErrorMessage(
+        name=s"insufficientArgsFor${nativeSymbol}",
+        text=s"Called ${nativeSymbol} with insufficient arguments; requires at least ${signature.fixedArgs.length} arguments."
+      )
+    }
+    else {
+      RuntimeErrorMessage(
+        name=s"insufficientArgsFor${nativeSymbol}",
+        text=s"Called ${nativeSymbol} with insufficient arguments; requires exactly ${signature.fixedArgs.length} arguments."
+      )
+    }
     
     // Convert our arg list in to the arguments our procedure is expecting
     val restArgValue = signature.fixedArgs.foldLeft(argListHeadValue) { case (argListElementValue, nativeType) =>
       // Make sure this is a pair
-      val argPairTemp = argListElementValue.toTempValue(vt.IntrinsicCellType(ct.PairCell))(plan)
+      val argPairTemp = argListElementValue.toTempValue(vt.IntrinsicCellType(ct.PairCell), Some(insufficientArgsMessage))(plan)
 
       // Get the car of the pair as the arg's value 
       val argDatumTemp = new ps.TempValue
@@ -65,9 +79,14 @@ private[intermediatevalue] object PlanProcedureTrampoline {
     }
     else {
       val unusedTemp = new ps.TempValue
+
+      val tooManyArgsMessage = RuntimeErrorMessage(
+        name=s"tooManyArgsFor${nativeSymbol}",
+        text=s"Called ${nativeSymbol} with too many arguments; requires exactly ${signature.fixedArgs.length} arguments."
+      )
       
       // Make sure we're out of args by doing a check cast to an empty list
-      restArgValue.toTempValue(vt.IntrinsicCellType(ct.EmptyListCell))(plan)
+      restArgValue.toTempValue(vt.IntrinsicCellType(ct.EmptyListCell), Some(tooManyArgsMessage))(plan)
     }
 
     // Load the entry point for the function we're jumping to

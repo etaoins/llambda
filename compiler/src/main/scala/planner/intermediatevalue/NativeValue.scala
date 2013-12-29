@@ -5,6 +5,7 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.PlanWriter
+import llambda.compiler.RuntimeErrorMessage
 
 sealed abstract class NativeValue(val nativeType : vt.NativeType, val cellType : ct.ConcreteCellType, val tempValue : ps.TempValue) extends IntermediateValue with UninvokableValue with NonRecordValue {
   val possibleTypes = Set(cellType)
@@ -20,7 +21,7 @@ sealed abstract class NativeValue(val nativeType : vt.NativeType, val cellType :
   
   protected def planCellTempValue()(implicit plan : PlanWriter) : ps.TempValue
 
-  def toNativeTempValue(targetType : vt.NativeType)(implicit plan : PlanWriter) : ps.TempValue = 
+  def toNativeTempValue(targetType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue = 
     if (targetType == nativeType) {
       tempValue
     }
@@ -28,7 +29,7 @@ sealed abstract class NativeValue(val nativeType : vt.NativeType, val cellType :
       planCastToNativeTempValue(targetType)
     }
   
-  def toCellTempValue(targetType : ct.CellType)(implicit plan : PlanWriter) : ps.TempValue = {
+  def toCellTempValue(targetType : ct.CellType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue = {
     if (targetType.isTypeOrSupertypeOf(cellType)) {
       val boxedTemp = planCellTempValue()
 

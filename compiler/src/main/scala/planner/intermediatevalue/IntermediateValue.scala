@@ -3,6 +3,7 @@ import io.llambda
 
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
+import llambda.compiler.RuntimeErrorMessage
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{PlanWriter, UnlocatedImpossibleTypeConversionException, InvokableProcedure}
 import llambda.compiler.InternalCompilerErrorException
@@ -39,9 +40,9 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     resultIntermediate : IntermediateValue
   )
 
-  protected def toCellTempValue(cellType : ct.CellType)(implicit plan : PlanWriter) : ps.TempValue
-  protected def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : ps.TempValue
-  protected def toRecordTempValue(recordType : vt.RecordType)(implicit plan : PlanWriter) : ps.TempValue
+  protected def toCellTempValue(cellType : ct.CellType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue
+  protected def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue
+  protected def toRecordTempValue(recordType : vt.RecordType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue
 
   def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     val trueTemp = new ps.TempValue
@@ -52,7 +53,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
   
   def toInvokableProcedure()(implicit plan : PlanWriter) : Option[InvokableProcedure]
 
-  def toTempValue(targetType : vt.ValueType)(implicit plan : PlanWriter) : ps.TempValue = targetType match {
+  def toTempValue(targetType : vt.ValueType, errorMessageOpt : Option[RuntimeErrorMessage] = None)(implicit plan : PlanWriter) : ps.TempValue = targetType match {
     case vt.CBool =>
       val truthyPredTemp = toTruthyPredicate()
 
@@ -62,13 +63,13 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
       intConvTemp
 
     case nativeType : vt.NativeType =>
-      toNativeTempValue(nativeType)
+      toNativeTempValue(nativeType, errorMessageOpt)
 
     case vt.IntrinsicCellType(cellType) =>
-      toCellTempValue(cellType)
+      toCellTempValue(cellType, errorMessageOpt)
 
     case recordType : vt.RecordType =>
-      toRecordTempValue(recordType)
+      toRecordTempValue(recordType, errorMessageOpt)
 
     case closureType : vt.ClosureType =>
       // Closure types are an internal implementation detail.

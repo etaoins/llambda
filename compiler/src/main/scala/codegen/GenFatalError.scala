@@ -3,14 +3,15 @@ import io.llambda
 
 import llambda.llvmir._
 import llambda.compiler.{celltype => ct}
+import llambda.compiler.RuntimeErrorMessage
 
 object GenFatalError {
-  def apply(module : IrModuleBuilder, block : IrBlockBuilder)(errorName : String, errorText : String, evidence : Option[IrValue] = None) = {
+  def apply(module : IrModuleBuilder, block : IrBlockBuilder)(errorMessage : RuntimeErrorMessage, evidence : Option[IrValue] = None) = {
     // Define the error string
-    val stringConstantName = s"${errorName}ErrorString"
+    val stringConstantName = s"${errorMessage.name}ErrorString"
     val stringConstantVar = IrGlobalVariableDef(
       name=stringConstantName,
-      initializer=StringConstant(errorText),
+      initializer=StringConstant(errorMessage.text),
       visibility=Visibility.Hidden,
       constant=true,
       unnamedAddr=true)

@@ -4,6 +4,7 @@ import io.llambda
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{PlanWriter}
 import llambda.compiler.{celltype => ct}
+import llambda.compiler.RuntimeErrorMessage
 
 trait IntermediateCellValue extends IntermediateValue {
   val cellType : ct.CellType   
@@ -17,7 +18,7 @@ trait IntermediateCellValue extends IntermediateValue {
       "cell with possible types {" + multiple.map(_.schemeName).mkString(", ") + "}" 
   }
 
-  def toCellTempValue(targetType : ct.CellType)(implicit plan : PlanWriter) : ps.TempValue = {
+  def toCellTempValue(targetType : ct.CellType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue = {
     val targetConcreteTypes = targetType.concreteTypes
 
     // Are our possible concrete types a subset of the target types?
@@ -28,8 +29,16 @@ trait IntermediateCellValue extends IntermediateValue {
       cellTempToSupertype(tempValue, cellType, targetType) 
     }
     else if (!possibleTypes.intersect(targetConcreteTypes).isEmpty) {
+      val errorMessage = errorMessageOpt getOrElse {
+        RuntimeErrorMessage(
+          name=s"subcastTo${targetType.llvmName.capitalize}Failed",
+          text=s"Runtime cast to subtype '${targetType.schemeName}' failed"
+        )
+      }
+
+      // This is possible but not guaranteed. Verify the type at runtime.
       val castTemp = new ps.TempValue
-      plan.steps += ps.CastCellToSubtypeChecked(castTemp, tempValue, targetType)
+      plan.steps += ps.CastCellToSubtypeChecked(castTemp, tempValue, targetType, errorMessage)
       castTemp
     }
     else {

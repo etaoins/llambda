@@ -8,6 +8,7 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{PlanWriter, InvokableProcedure}
 import llambda.compiler.codegen.AdaptedProcedureSignature
 import llambda.compiler.InternalCompilerErrorException
+import llambda.compiler.RuntimeErrorMessage
 
 /** Represents a procedure with a known signature and direct entry point
   *
@@ -35,7 +36,7 @@ class KnownProcedure(val signature : ProcedureSignature, nativeSymbol : String, 
   def toInvokableProcedure()(implicit plan : PlanWriter) : Option[InvokableProcedure] = 
     Some(this)
 
-  def toCellTempValue(targetType : ct.CellType)(implicit plan : PlanWriter) : ps.TempValue = {
+  def toCellTempValue(targetType : ct.CellType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue = {
     if (targetType.isTypeOrSupertypeOf(ct.ProcedureCell)) {
       // Store an entry point with an adapted signature
       val entryPointTemp = if (signature == AdaptedProcedureSignature) {
@@ -90,7 +91,7 @@ class KnownProcedure(val signature : ProcedureSignature, nativeSymbol : String, 
     }
   }
   
-  def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : ps.TempValue =
+  def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue =
     // Procedures have no unboxed representation
     impossibleConversion(s"Cannot convert procedure to requested type ${nativeType.schemeName} or any other native type")
 

@@ -1,7 +1,7 @@
 package io.llambda.compiler.planner.step
 import io.llambda
 
-import llambda.compiler.ProcedureSignature
+import llambda.compiler.{ProcedureSignature, RuntimeErrorMessage}
 import llambda.compiler.ast
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
@@ -47,7 +47,7 @@ case class CondBranch(result : TempValue, test : TempValue, trueSteps : List[Ste
 case class TestCellType(result : TempValue, value : TempValue, testType : ct.ConcreteCellType) extends Step
 
 /** Casts a cell to a subtype aborting if the cast is impossible */
-case class CastCellToSubtypeChecked(result : TempValue, value : TempValue, toType : ct.CellType) extends Step
+case class CastCellToSubtypeChecked(result : TempValue, value : TempValue, toType : ct.CellType, errorMessage : RuntimeErrorMessage) extends Step
 
 /** Casts a cell to another type without checking the validity of the cast */
 case class CastCellToTypeUnchecked(result : TempValue, value : TempValue, toType : ct.CellType) extends Step
@@ -163,8 +163,13 @@ case class RecordDataFieldRef(result : TempValue, recordData : TempValue, record
 
 /** Tests to see if a record is of a given class */
 case class TestRecordLikeClass(result : TempValue, recordCell : TempValue, recordLikeType : vt.RecordLikeType) extends Step
-/** Asserts that a record is of a given class */
-case class AssertRecordLikeClass(recordCell : TempValue, recordLikeType : vt.RecordLikeType) extends Step
+
+/** Asserts that a record is of a given class 
+  *
+  * A runtime error will occur if the record isn't of the passed class
+  */
+case class AssertRecordLikeClass(recordCell : TempValue, recordLikeType : vt.RecordLikeType, errorMessage : RuntimeErrorMessage) extends Step
+
 /** Stores the data of a record */
 case class StoreRecordLikeData(result : TempValue, recordCell : TempValue, recordLikeType : vt.RecordLikeType) extends Step
 

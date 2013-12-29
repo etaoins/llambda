@@ -6,6 +6,7 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{PlanWriter, InvokableProcedure}
 import llambda.compiler.InternalCompilerErrorException
+import llambda.compiler.RuntimeErrorMessage
 
 class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellType : ct.CellType, val tempValue : ps.TempValue) extends IntermediateCellValue {
   override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
@@ -33,7 +34,7 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
     }
   }
 
-  def toNativeTempValue(nativeType : vt.NativeType)(implicit plan : PlanWriter) : ps.TempValue = nativeType match {
+  def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue = nativeType match {
     case vt.UnicodeChar =>
       val boxedChar = toTempValue(vt.IntrinsicCellType(ct.CharacterCell))
       val unboxedTemp = new ps.TempValue
@@ -124,12 +125,19 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
       throw new InternalCompilerErrorException("Attempt to directly convert to CBool. Should be caught by toTruthyPredicate.")
   }
   
-  protected def toRecordTempValue(recordType : vt.RecordType)(implicit plan : PlanWriter) : ps.TempValue = {
+  protected def toRecordTempValue(recordType : vt.RecordType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue = {
     // Convert ourselves to a record
     val recordTemp = toTempValue(vt.IntrinsicCellType(ct.RecordCell))
 
     // Make sure we we're of the right class
-    plan.steps += ps.AssertRecordLikeClass(recordTemp, recordType)
+    val errorMessage = errorMessageOpt getOrElse {
+      RuntimeErrorMessage(
+        name=s"recordClassIsNot${recordType.schemeName}",
+        text=s"Runtime cast to record type '${recordType.schemeName}' failed"
+      )
+    }
+
+    plan.steps += ps.AssertRecordLikeClass(recordTemp, recordType, errorMessage)
 
     recordTemp
   }
