@@ -20,7 +20,7 @@ case class PointerFieldType(pointeeType : FieldType) extends FieldType
   */
 case class FunctionPointerFieldType(returnType : Option[FieldType], arguments : List[FieldType] ) extends FieldType
 
-/** Primitive fields type
+/** Primitive field type
   * 
   * @param signed       Sign of an integer type or None otherwise. This is used
   *                     to comment the LLVM definition.

@@ -217,7 +217,7 @@ class DefinitionParserSuite extends FunSuite {
     assert(fieldType.cppType === Some(ParsedCppType("UnicodeChar", true)))
   }
   
-  test("field type inheriting named type failed") {
+  test("field type inheriting named type fails") {
     intercept[ParseErrorException] {
       parseString("""
         fieldtype unicodeChar : int8 myint {
