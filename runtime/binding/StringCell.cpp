@@ -12,7 +12,7 @@ namespace
 	using namespace lliby;
 
 	// We will shrink our allocation if we would create more slack than this
-	// Note this must fit in to StringLikeCell::m_allocSlackBytes
+	// Note this must fit in to StringCell::m_allocSlackBytes
 	const std::uint32_t MaximumAllocationSlack = 16 * 1024;
 
 	// We round up allocations to this boundary
@@ -660,6 +660,16 @@ std::list<UnicodeChar> StringCell::unicodeChars(std::int64_t start, std::int64_t
 	}
 
 	return ret;
+}
+	
+bool StringCell::operator==(const StringCell &other) const
+{
+	if (byteLength() != other.byteLength())
+	{
+		return false;
+	}
+	
+	return memcmp(utf8Data(), other.utf8Data(), byteLength()) == 0;
 }
 
 int StringCell::compareCaseSensitive(const StringCell *other) const

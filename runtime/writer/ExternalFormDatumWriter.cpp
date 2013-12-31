@@ -47,11 +47,11 @@ void ExternalFormDatumWriter::render(const DatumCell *datum)
 	}
 	else if (auto value = datum_cast<SymbolCell>(datum))
 	{
-		renderStringLike(value, static_cast<std::uint8_t>('|'), false);
+		renderStringLike(value->utf8Data(), value->byteLength(), static_cast<std::uint8_t>('|'), false);
 	}
 	else if (auto value = datum_cast<StringCell>(datum))
 	{
-		renderStringLike(value, static_cast<std::uint8_t>('"'), true);
+		renderStringLike(value->utf8Data(), value->byteLength(), static_cast<std::uint8_t>('"'), true);
 	}
 	else if (auto value = datum_cast<PairCell>(datum))
 	{
@@ -136,7 +136,7 @@ void ExternalFormDatumWriter::renderInexactRational(const InexactRationalCell *v
 	}
 }
 	
-void ExternalFormDatumWriter::renderStringLike(const StringLikeCell *value, std::uint8_t quoteChar, bool needsQuotes)
+void ExternalFormDatumWriter::renderStringLike(const std::uint8_t *utf8Data, std::uint32_t byteLength, std::uint8_t quoteChar, bool needsQuotes)
 {
 	std::ostringstream outBuf;
 
@@ -151,15 +151,15 @@ void ExternalFormDatumWriter::renderStringLike(const StringLikeCell *value, std:
 		{0x22, "\""}
 	};
 
-	if (value->byteLength() == 0)
+	if (byteLength == 0)
 	{
 		// This is for the empty symbol which is represented by ||
 		needsQuotes = true;
 	}
 
-	for(std::uint32_t i = 0; i < value->byteLength(); i++)
+	for(std::uint32_t i = 0; i < byteLength; i++)
 	{
-		std::uint8_t byteValue = value->utf8Data()[i];
+		std::uint8_t byteValue = utf8Data[i];
 
 		if (byteValue == quoteChar)
 		{

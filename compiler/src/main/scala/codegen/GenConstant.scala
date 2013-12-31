@@ -36,23 +36,6 @@ object GenConstant {
       byteLength=innerConstantInitializer.length - 1
     )
   }
-  
-  def genStringLikeCell(module : IrModuleBuilder)(concreteType : ct.ConcreteCellType, baseName: String, value : String) : IrConstant = {
-    // Build the inner string constant
-    val utf8Constant = genUtf8Constant(module)(baseName, value)
-
-    val stringLikeCellName = baseName + ".cell"
-
-    val stringLikeCell = ct.StringLikeCell.createConstant(
-      typeId=concreteType.typeId,
-      allocSlackBytes=0,
-      charLength=value.length,
-      // Don't include the NULL terminator
-      byteLength=utf8Constant.byteLength,
-      utf8Data=utf8Constant.irValue)
-
-    defineConstantData(module)(stringLikeCellName, stringLikeCell)
-  }
 
   def genBytevectorCell(module : IrModuleBuilder)(elements : Seq[Short]) : IrConstant = {
     // Make our elements
@@ -112,15 +95,29 @@ object GenConstant {
   def apply(state : GenerationState, typeGenerator : TypeGenerator)(storeStep : ps.StoreConstant) : IrConstant = storeStep match {
     case ps.StoreStringCell(_, value) =>
       val baseName = state.module.nameSource.allocate("schemeString")
-      val stringLike = genStringLikeCell(state.module)(ct.StringCell, baseName, value)
+      val utf8Constant = genUtf8Constant(state.module)(baseName, value)
+      val stringCellName = baseName + ".cell"
 
-      BitcastToConstant(stringLike, PointerType(ct.StringCell.irType))
+      val stringCell = ct.StringCell.createConstant(
+        allocSlackBytes=0,
+        charLength=value.length,
+        // Don't include the NULL terminatoruuu
+        byteLength=utf8Constant.byteLength,
+        utf8Data=utf8Constant.irValue)
+
+      defineConstantData(state.module)(stringCellName, stringCell)
 
     case ps.StoreSymbolCell(_, value) =>
       val baseName = state.module.nameSource.allocate("schemeSymbol")
-      val stringLike = genStringLikeCell(state.module)(ct.SymbolCell, baseName, value)
-      
-      BitcastToConstant(stringLike, PointerType(ct.SymbolCell.irType))
+      val utf8Constant = genUtf8Constant(state.module)(baseName, value)
+      val symbolCellName = baseName + ".cell"
+
+      val symbolCell = ct.SymbolCell.createConstant(
+        charLength=value.length,
+        byteLength=utf8Constant.byteLength,
+        utf8Data=utf8Constant.irValue)
+
+      defineConstantData(state.module)(symbolCellName, symbolCell)
 
     case ps.StoreExactIntegerCell(_, value) =>
       val intCellName = state.module.nameSource.allocate("schemeExactInteger")

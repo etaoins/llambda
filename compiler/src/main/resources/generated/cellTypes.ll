@@ -30,94 +30,84 @@
 !11 = metadata !{ metadata !"Datum::gcState->ListElement->EmptyList", metadata !5 }
 
 ; {supertype, unsigned allocSlackBytes, unsigned charLength, unsigned byteLength, utf8Data}
-%stringLike = type {%datum, i16, i32, i32, i8*}
-!12 = metadata !{ metadata !"Datum::typeId->StringLike", metadata !0 }
-!13 = metadata !{ metadata !"Datum::gcState->StringLike", metadata !1 }
-!14 = metadata !{ metadata !"StringLike::allocSlackBytes" }
-!15 = metadata !{ metadata !"StringLike::charLength" }
-!16 = metadata !{ metadata !"StringLike::byteLength" }
-!17 = metadata !{ metadata !"StringLike::utf8Data" }
+%string = type {%datum, i16, i32, i32, i8*}
+!12 = metadata !{ metadata !"Datum::typeId->String", metadata !0 }
+!13 = metadata !{ metadata !"Datum::gcState->String", metadata !1 }
+!14 = metadata !{ metadata !"String::allocSlackBytes" }
+!15 = metadata !{ metadata !"String::charLength" }
+!16 = metadata !{ metadata !"String::byteLength" }
+!17 = metadata !{ metadata !"String::utf8Data" }
 
-; {supertype}
-%string = type {%stringLike}
-!18 = metadata !{ metadata !"Datum::typeId->StringLike->String", metadata !12 }
-!19 = metadata !{ metadata !"Datum::gcState->StringLike->String", metadata !13 }
-!20 = metadata !{ metadata !"StringLike::allocSlackBytes->String", metadata !14 }
-!21 = metadata !{ metadata !"StringLike::charLength->String", metadata !15 }
-!22 = metadata !{ metadata !"StringLike::byteLength->String", metadata !16 }
-!23 = metadata !{ metadata !"StringLike::utf8Data->String", metadata !17 }
-
-; {supertype}
-%symbol = type {%stringLike}
-!24 = metadata !{ metadata !"Datum::typeId->StringLike->Symbol", metadata !12 }
-!25 = metadata !{ metadata !"Datum::gcState->StringLike->Symbol", metadata !13 }
-!26 = metadata !{ metadata !"StringLike::allocSlackBytes->Symbol", metadata !14 }
-!27 = metadata !{ metadata !"StringLike::charLength->Symbol", metadata !15 }
-!28 = metadata !{ metadata !"StringLike::byteLength->Symbol", metadata !16 }
-!29 = metadata !{ metadata !"StringLike::utf8Data->Symbol", metadata !17 }
+; {supertype, unsigned charLength, unsigned byteLength, utf8Data}
+%symbol = type {%datum, i32, i32, i8*}
+!18 = metadata !{ metadata !"Datum::typeId->Symbol", metadata !0 }
+!19 = metadata !{ metadata !"Datum::gcState->Symbol", metadata !1 }
+!20 = metadata !{ metadata !"Symbol::charLength" }
+!21 = metadata !{ metadata !"Symbol::byteLength" }
+!22 = metadata !{ metadata !"Symbol::utf8Data" }
 
 ; {supertype, bool value}
 %boolean = type {%datum, i8}
-!30 = metadata !{ metadata !"Datum::typeId->Boolean", metadata !0 }
-!31 = metadata !{ metadata !"Datum::gcState->Boolean", metadata !1 }
-!32 = metadata !{ metadata !"Boolean::value" }
+!23 = metadata !{ metadata !"Datum::typeId->Boolean", metadata !0 }
+!24 = metadata !{ metadata !"Datum::gcState->Boolean", metadata !1 }
+!25 = metadata !{ metadata !"Boolean::value" }
 
 ; {supertype}
 %numeric = type {%datum}
-!33 = metadata !{ metadata !"Datum::typeId->Numeric", metadata !0 }
-!34 = metadata !{ metadata !"Datum::gcState->Numeric", metadata !1 }
+!26 = metadata !{ metadata !"Datum::typeId->Numeric", metadata !0 }
+!27 = metadata !{ metadata !"Datum::gcState->Numeric", metadata !1 }
 
 ; {supertype, signed value}
 %exactInteger = type {%numeric, i64}
-!35 = metadata !{ metadata !"Datum::typeId->Numeric->ExactInteger", metadata !33 }
-!36 = metadata !{ metadata !"Datum::gcState->Numeric->ExactInteger", metadata !34 }
-!37 = metadata !{ metadata !"ExactInteger::value" }
+!28 = metadata !{ metadata !"Datum::typeId->Numeric->ExactInteger", metadata !26 }
+!29 = metadata !{ metadata !"Datum::gcState->Numeric->ExactInteger", metadata !27 }
+!30 = metadata !{ metadata !"ExactInteger::value" }
 
 ; {supertype, value}
 %inexactRational = type {%numeric, double}
-!38 = metadata !{ metadata !"Datum::typeId->Numeric->InexactRational", metadata !33 }
-!39 = metadata !{ metadata !"Datum::gcState->Numeric->InexactRational", metadata !34 }
-!40 = metadata !{ metadata !"InexactRational::value" }
+!31 = metadata !{ metadata !"Datum::typeId->Numeric->InexactRational", metadata !26 }
+!32 = metadata !{ metadata !"Datum::gcState->Numeric->InexactRational", metadata !27 }
+!33 = metadata !{ metadata !"InexactRational::value" }
 
 ; {supertype, unicodeChar}
 %character = type {%datum, i32}
-!41 = metadata !{ metadata !"Datum::typeId->Character", metadata !0 }
-!42 = metadata !{ metadata !"Datum::gcState->Character", metadata !1 }
-!43 = metadata !{ metadata !"Character::unicodeChar" }
+!34 = metadata !{ metadata !"Datum::typeId->Character", metadata !0 }
+!35 = metadata !{ metadata !"Datum::gcState->Character", metadata !1 }
+!36 = metadata !{ metadata !"Character::unicodeChar" }
 
 ; {supertype, unsigned length, elements}
 %vector = type {%datum, i32, %datum**}
-!44 = metadata !{ metadata !"Datum::typeId->Vector", metadata !0 }
-!45 = metadata !{ metadata !"Datum::gcState->Vector", metadata !1 }
-!46 = metadata !{ metadata !"Vector::length" }
-!47 = metadata !{ metadata !"Vector::elements" }
+!37 = metadata !{ metadata !"Datum::typeId->Vector", metadata !0 }
+!38 = metadata !{ metadata !"Datum::gcState->Vector", metadata !1 }
+!39 = metadata !{ metadata !"Vector::length" }
+!40 = metadata !{ metadata !"Vector::elements" }
 
 ; {supertype, unsigned length, data}
 %bytevector = type {%datum, i32, i8*}
-!48 = metadata !{ metadata !"Datum::typeId->Bytevector", metadata !0 }
-!49 = metadata !{ metadata !"Datum::gcState->Bytevector", metadata !1 }
-!50 = metadata !{ metadata !"Bytevector::length" }
-!51 = metadata !{ metadata !"Bytevector::data" }
+!41 = metadata !{ metadata !"Datum::typeId->Bytevector", metadata !0 }
+!42 = metadata !{ metadata !"Datum::gcState->Bytevector", metadata !1 }
+!43 = metadata !{ metadata !"Bytevector::length" }
+!44 = metadata !{ metadata !"Bytevector::data" }
 
 ; {supertype, unsigned recordClassId, recordData}
 %recordLike = type {%datum, i32, i8*}
-!52 = metadata !{ metadata !"Datum::typeId->RecordLike", metadata !0 }
-!53 = metadata !{ metadata !"Datum::gcState->RecordLike", metadata !1 }
-!54 = metadata !{ metadata !"RecordLike::recordClassId" }
-!55 = metadata !{ metadata !"RecordLike::recordData" }
+!45 = metadata !{ metadata !"Datum::typeId->RecordLike", metadata !0 }
+!46 = metadata !{ metadata !"Datum::gcState->RecordLike", metadata !1 }
+!47 = metadata !{ metadata !"RecordLike::recordClassId" }
+!48 = metadata !{ metadata !"RecordLike::recordData" }
 
 ; {supertype, entryPoint}
 %procedure = type {%recordLike, %datum* (%procedure*, %listElement*) *}
-!56 = metadata !{ metadata !"Datum::typeId->RecordLike->Procedure", metadata !52 }
-!57 = metadata !{ metadata !"Datum::gcState->RecordLike->Procedure", metadata !53 }
-!58 = metadata !{ metadata !"RecordLike::recordClassId->Procedure", metadata !54 }
-!59 = metadata !{ metadata !"RecordLike::recordData->Procedure", metadata !55 }
-!60 = metadata !{ metadata !"Procedure::entryPoint" }
+!49 = metadata !{ metadata !"Datum::typeId->RecordLike->Procedure", metadata !45 }
+!50 = metadata !{ metadata !"Datum::gcState->RecordLike->Procedure", metadata !46 }
+!51 = metadata !{ metadata !"RecordLike::recordClassId->Procedure", metadata !47 }
+!52 = metadata !{ metadata !"RecordLike::recordData->Procedure", metadata !48 }
+!53 = metadata !{ metadata !"Procedure::entryPoint" }
 
 ; {supertype, extraData}
 %record = type {%recordLike, i8*}
-!61 = metadata !{ metadata !"Datum::typeId->RecordLike->Record", metadata !52 }
-!62 = metadata !{ metadata !"Datum::gcState->RecordLike->Record", metadata !53 }
-!63 = metadata !{ metadata !"RecordLike::recordClassId->Record", metadata !54 }
-!64 = metadata !{ metadata !"RecordLike::recordData->Record", metadata !55 }
-!65 = metadata !{ metadata !"Record::extraData" }
+!54 = metadata !{ metadata !"Datum::typeId->RecordLike->Record", metadata !45 }
+!55 = metadata !{ metadata !"Datum::gcState->RecordLike->Record", metadata !46 }
+!56 = metadata !{ metadata !"RecordLike::recordClassId->Record", metadata !47 }
+!57 = metadata !{ metadata !"RecordLike::recordData->Record", metadata !48 }
+!58 = metadata !{ metadata !"Record::extraData" }

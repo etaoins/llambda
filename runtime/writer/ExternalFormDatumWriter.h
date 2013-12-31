@@ -24,7 +24,7 @@ protected:
 	virtual void renderBoolean(const BooleanCell *value);
 	virtual void renderExactInteger(const ExactIntegerCell *value);
 	virtual void renderInexactRational(const InexactRationalCell *value);
-	virtual void renderStringLike(const StringLikeCell *value, std::uint8_t quoteChar, bool needsQuotes);
+	virtual void renderStringLike(const std::uint8_t *utf8Data, std::uint32_t byteLength, std::uint8_t quoteChar, bool needsQuotes);
 	virtual void renderPair(const PairCell *value, bool inList = false);
 	virtual void renderBytevector(const BytevectorCell *value);
 	virtual void renderVector(const VectorCell *value);

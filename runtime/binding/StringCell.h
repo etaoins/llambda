@@ -1,7 +1,7 @@
 #ifndef _LLIBY_BINDING_STRINGCELL_H
 #define _LLIBY_BINDING_STRINGCELL_H
 
-#include "StringLikeCell.h"
+#include "DatumCell.h"
 #include <list>
 
 #include "unicode/UnicodeChar.h"
@@ -9,12 +9,16 @@
 namespace lliby
 {
 
-class StringCell : public StringLikeCell
+class StringCell : public DatumCell
 {
 #include "generated/StringCellMembers.h"
 public:
 	StringCell(std::uint8_t *utf8Data, std::uint32_t byteLength, std::uint32_t charLength, std::int16_t allocSlackBytes = 0) :
-		StringLikeCell(CellTypeId::String, utf8Data, byteLength, charLength, allocSlackBytes)
+		DatumCell(CellTypeId::String),
+		m_allocSlackBytes(allocSlackBytes),
+		m_charLength(charLength),
+		m_byteLength(byteLength),
+		m_utf8Data(utf8Data)
 	{
 	}
 
@@ -34,15 +38,12 @@ public:
 	bool replace(std::uint32_t offset, const StringCell *from, std::int64_t fromStart = 0, std::int64_t fromEnd = -1);
 
 	std::list<UnicodeChar> unicodeChars(std::int64_t start = 0, std::int64_t end = -1) const;
-
-	bool operator==(const StringCell &other) const
-	{
-		return equals(other);
-	}
+	
+	bool operator==(const StringCell &other) const;
 	
 	bool operator!=(const StringCell &other) const
 	{
-		return !equals(other);
+		return !(*this == other);
 	}
 
 	// Returns and integer less than, equal to or greater than zero if the string
@@ -92,6 +93,26 @@ private:
 	int compareCaseInsensitive(const StringCell *other) const;
 
 	StringCell *toConvertedString(UnicodeChar (UnicodeChar::* converter)() const) const;
+
+	void setByteLength(std::uint32_t newByteLength)
+	{
+		m_byteLength = newByteLength;
+	}
+	
+	void setCharLength(std::uint32_t newCharLength)
+	{
+		m_charLength = newCharLength;
+	}
+	
+	void setUtf8Data(std::uint8_t* newUtf8Data)
+	{
+		m_utf8Data = newUtf8Data;
+	}
+
+	void setAllocSlackBytes(std::uint16_t newAllocSlackBytes)
+	{
+		m_allocSlackBytes = newAllocSlackBytes;
+	}
 };
 
 }

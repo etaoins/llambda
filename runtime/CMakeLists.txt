@@ -10,8 +10,8 @@ add_library(lliby
 	binding/ListElementCell.cpp
 	binding/ProcedureCell.cpp
 	binding/RecordLikeCell.cpp
-	binding/StringLikeCell.cpp
 	binding/StringCell.cpp
+	binding/SymbolCell.cpp
 	binding/VectorCell.cpp
 	core/constinstances.cpp
 	core/fatal.cpp

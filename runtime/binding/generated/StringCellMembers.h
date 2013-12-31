@@ -3,6 +3,27 @@
  ************************************************************/
 
 public:
+	std::uint16_t allocSlackBytes() const
+	{
+		return m_allocSlackBytes;
+	}
+
+	std::uint32_t charLength() const
+	{
+		return m_charLength;
+	}
+
+	std::uint32_t byteLength() const
+	{
+		return m_byteLength;
+	}
+
+	std::uint8_t* utf8Data() const
+	{
+		return m_utf8Data;
+	}
+
+public:
 	static bool isInstance(const DatumCell *datum)
 	{
 		return datum->typeId() == CellTypeId::String;
@@ -28,3 +49,8 @@ public:
 		return nullptr;
 	}
 
+private:
+	std::uint16_t m_allocSlackBytes;
+	std::uint32_t m_charLength;
+	std::uint32_t m_byteLength;
+	std::uint8_t* m_utf8Data;

@@ -13,7 +13,6 @@ class UnspecificCell;
 class ListElementCell;
 class PairCell;
 class EmptyListCell;
-class StringLikeCell;
 class StringCell;
 class SymbolCell;
 class BooleanCell;
