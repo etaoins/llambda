@@ -16,6 +16,18 @@ class LlvmTypeToScalaConstructorSuite extends FunSuite {
     )
   }
   
+  test("array type") {
+    assert(LlvmTypeToScalaConstructor(llvmir.ArrayType(5, llvmir.DoubleType)) ===
+      """ArrayType(5, DoubleType)"""
+    )
+  }
+  
+  test("multidimensional array type") {
+    assert(LlvmTypeToScalaConstructor(llvmir.ArrayType(15, llvmir.ArrayType(5, llvmir.DoubleType))) ===
+      """ArrayType(15, ArrayType(5, DoubleType))"""
+    )
+  }
+  
   test("float type") {
     assert(LlvmTypeToScalaConstructor(llvmir.FloatType) ===
       """FloatType"""

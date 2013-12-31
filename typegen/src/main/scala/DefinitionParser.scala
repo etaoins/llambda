@@ -14,12 +14,20 @@ trait CommonParsers extends RegexParsers {
   // output langauges
   def identifier = """[a-zA-Z][a-zA-Z0-9]+""".r
 
+  def valueType = positioned(arrayType | nonArrayType)
+
+  def arrayDimensions = rep1("[" ~> """\d+""".r <~ "]") ^^ { _.map(Integer.parseInt(_)) }
+
   // Types are identifiers plus zero or more pointer indirections
-  def valueType = positioned(identifier ~ rep("*") ^^ { case typeName ~ indirections =>
-    indirections.foldLeft(ParsedTypeName(typeName) : ParsedType) { case (innerType, _) =>
+  def nonArrayType = identifier ~ rep("*") ^^ { case typeName ~ indirections =>
+    indirections.foldRight(ParsedTypeName(typeName) : ParsedType) { case (indirection, innerType) =>
       ParsedPointerType(innerType)
     }
-  })
+  }
+
+  def arrayType = nonArrayType ~ arrayDimensions ^^ { case elementType ~ dimensions =>
+    ParsedArrayType(dimensions, elementType)
+  }
   
   // Functions can return "void" in addition to an actual type
   def returnType = voidReturn | nonVoidReturn
@@ -83,9 +91,9 @@ trait CellDefinitionParser extends CommonParsers {
 
   def fields = "{" ~> rep(field) <~ "}"
 
-  def field = positioned(functionPointerField | valueField)
+  def field = positioned(arrayField | functionPointerField | valueField) <~ ";"
 
-  def valueField = valueType ~ identifier ~ initializer <~ ";" ^^ { case fieldType ~ fieldName ~ fieldInitializer => 
+  def valueField = nonArrayType ~ identifier ~ initializer ^^ { case fieldType ~ fieldName ~ fieldInitializer => 
     new ParsedCellField(fieldName, fieldType, fieldInitializer)
   }
   
@@ -94,8 +102,12 @@ trait CellDefinitionParser extends CommonParsers {
       java.lang.Long.parseLong(initializer)
     }
   }
+
+  def arrayField = valueType ~ identifier ~ arrayDimensions ^^ { case elementType ~ fieldName ~ dimensions =>
+    new ParsedCellField(fieldName, ParsedArrayType(dimensions, elementType), None)
+  }
   
-  def functionPointerField = returnType ~ "(" ~ "*" ~ identifier ~ ")" ~ "(" ~ repsep(valueType, ",") ~ ")" <~ ";" ^^ {
+  def functionPointerField = returnType ~ "(" ~ "*" ~ identifier ~ ")" ~ "(" ~ repsep(valueType, ",") ~ ")" ^^ {
     case retType ~ _  ~ _ ~ fieldName ~ _ ~ _ ~ argTypes ~ _ =>
       new ParsedCellField(fieldName, ParsedFunctionPointerType(retType, argTypes), None)
   }

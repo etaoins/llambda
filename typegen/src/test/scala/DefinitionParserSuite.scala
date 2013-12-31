@@ -117,13 +117,14 @@ class DefinitionParserSuite extends FunSuite {
       root cell Datum typetag typeId {
         uint8 typeId;
         uint8* garbageState = 256;
+        int64* intPointers[3][5];
       };
     """)
 
     assert(cellType.name === "Datum")
     assert(cellType.instanceType === CellClass.Abstract)
 
-    val typeIdField :: garbageStateField :: Nil = cellType.fields
+    val List(typeIdField, garbageStateField, intPointersField) = cellType.fields
 
     assert(typeIdField.name === "typeId")
     assert(typeIdField.fieldType === ParsedTypeName("uint8"))
@@ -132,12 +133,16 @@ class DefinitionParserSuite extends FunSuite {
     assert(garbageStateField.name === "garbageState")
     assert(garbageStateField.fieldType === ParsedPointerType(ParsedTypeName("uint8")))
     assert(garbageStateField.initializer === Some(256))
+    
+    assert(intPointersField.name === "intPointers")
+    assert(intPointersField.fieldType === ParsedArrayType(List(3, 5), ParsedPointerType(ParsedTypeName("int64"))))
+    assert(intPointersField.initializer === None)
   }
   
   test("child cell class with function pointers") {
     val (cellType : ParsedChildClassDefinition) :: Nil = parseString("""
       abstract cell Procedure : Datum {
-        void (*callback)(int64, double *);
+        void (*callback)(int64[5], double *);
         int64* (*delegate)();
       };
     """)
@@ -152,7 +157,7 @@ class DefinitionParserSuite extends FunSuite {
     assert(callbackField.fieldType === ParsedFunctionPointerType(
       None,
       List(
-        ParsedTypeName("int64"),
+        ParsedArrayType(List(5), ParsedTypeName("int64")),
         ParsedPointerType(ParsedTypeName("double"))
       )
     ))
@@ -162,6 +167,16 @@ class DefinitionParserSuite extends FunSuite {
       Some(ParsedPointerType(ParsedTypeName("int64"))),
       Nil
     ))
+  }
+  
+  test("child cell class with array brackets before identifier fails") {
+    intercept[ParseErrorException] {
+      parseString("""
+        abstract cell Procedure : Datum {
+          int64*[5] badArray;
+        };
+      """)
+    }
   }
   
   test("simple user defined field type") {
@@ -222,6 +237,30 @@ class DefinitionParserSuite extends FunSuite {
       parseString("""
         fieldtype unicodeChar : int8 myint {
           cppname = UnicodeChar;
+        };
+      """)
+    }
+  }
+  
+  test("field type inheriting array of pointers") {
+    val (fieldType : ParsedFieldTypeAlias) :: Nil = parseString("""
+      fieldtype vectorPair : Vector*[2] {
+        cppname = VectorPair;
+      };
+    """)
+
+    val aliasedType = ParsedArrayType(List(2), ParsedPointerType(ParsedTypeName("Vector")))
+    
+    assert(fieldType.name === "vectorPair")
+    assert(fieldType.aliasedType ===  aliasedType)
+    assert(fieldType.cppType === Some(ParsedCppType("VectorPair", true)))
+  }
+  
+  test("field type inheriting type with array brackets before pointer fails") {
+    intercept[ParseErrorException] {
+      parseString("""
+        fieldtype vectorPair : Vector[2]* {
+          cppname = VectorPair;
         };
       """)
     }

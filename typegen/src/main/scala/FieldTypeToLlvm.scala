@@ -21,6 +21,13 @@ object FieldTypeToLlvm {
           )
         )
 
+      case ArrayFieldType(dimensions, elementType) =>
+        val elementTypeLlvm = apply(elementType)
+
+        dimensions.foldRight(elementTypeLlvm) { (elements, innerType) =>
+          llvmir.ArrayType(elements, innerType)
+        }
+
       case PrimitiveFieldType(_, llvmType, _) =>
         llvmType
 

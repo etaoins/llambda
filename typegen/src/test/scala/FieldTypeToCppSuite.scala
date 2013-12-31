@@ -36,6 +36,22 @@ class FieldTypeToCppSuite extends FunSuite {
     assert(FieldTypeToCpp(testType, Some("member")) === "double* member")
   }
   
+  test("array of doubles") {
+    val testType = ArrayFieldType(List(10), doubleType)
+
+    assert(FieldTypeToCpp(testType, None) === "double[10]")
+    assert(FieldTypeToCpp(testType, Some("member")) === "double member[10]")
+    assert(FieldTypeToCpp(testType, None, true) === "double*")
+  }
+  
+  test("multidimensional array of doubles") {
+    val testType = ArrayFieldType(List(5, 10), doubleType)
+
+    assert(FieldTypeToCpp(testType, None) === "double[5][10]")
+    assert(FieldTypeToCpp(testType, Some("member")) === "double member[5][10]")
+    assert(FieldTypeToCpp(testType, None, true) === "double**")
+  }
+  
   test("aliased type with explicit C++ name") {
     val aliasedType = PointerFieldType(doubleType)
 

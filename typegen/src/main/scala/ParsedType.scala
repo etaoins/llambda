@@ -17,6 +17,10 @@ case class ParsedPointerType(pointeeType : ParsedType) extends ParsedType {
   }
 }
 
+case class ParsedArrayType(dimensions : List[Int], elementType : ParsedType) extends ParsedType {
+  override def toString = elementType.toString + dimensions.map("[" + _.toString + "]")
+}
+
 case class ParsedFunctionPointerType(returnType : Option[ParsedType], arguments : List[ParsedType]) extends ParsedType {
   override def toString = s"""${returnType.getOrElse("void")} (*)(${arguments.mkString(", ")})"""
 }

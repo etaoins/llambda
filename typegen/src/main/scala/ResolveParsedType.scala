@@ -10,6 +10,9 @@ object ResolveParsedType {
       case ParsedPointerType(pointeeType) =>
         PointerFieldType(recursiveResolve(pointeeType))
 
+      case ParsedArrayType(dimensions, elementType) =>
+        ArrayFieldType(dimensions, recursiveResolve(elementType))
+
       case ParsedFunctionPointerType(returnType, arguments) =>
         val retType = returnType.map(recursiveResolve)
         FunctionPointerFieldType(retType, arguments.map(recursiveResolve))

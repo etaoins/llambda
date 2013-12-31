@@ -34,6 +34,18 @@ class FieldTypeToLlvmSuite extends FunSuite {
     assert(FieldTypeToLlvm(testType) === llvmir.PointerType(llvmir.DoubleType))
   }
   
+  test("array of doubles") {
+    val testType = ArrayFieldType(List(10), doubleType)
+
+    assert(FieldTypeToLlvm(testType) === llvmir.ArrayType(10, llvmir.DoubleType))
+  }
+  
+  test("multidimensional array of doubles") {
+    val testType = ArrayFieldType(List(5, 10), doubleType)
+    
+    assert(FieldTypeToLlvm(testType) === llvmir.ArrayType(5, llvmir.ArrayType(10, llvmir.DoubleType)))
+  }
+  
   test("aliased type with explicit C++ name") {
     val aliasedType = PointerFieldType(doubleType)
 

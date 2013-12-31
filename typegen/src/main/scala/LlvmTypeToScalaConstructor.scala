@@ -19,6 +19,8 @@ object LlvmTypeToScalaConstructor {
         "PointerType(" + apply(pointeeType) + ")"
       case llvmir.VoidType =>
         "VoidType"
+      case llvmir.ArrayType(elements, innerType) =>
+        s"ArrayType(${elements}, " + apply(innerType) + ")"
       case llvmir.UserDefinedType(name) =>
         val quotedName = (name 
           .replaceAllLiterally("""\""", """\\""")

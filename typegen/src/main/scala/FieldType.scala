@@ -20,6 +20,13 @@ case class PointerFieldType(pointeeType : FieldType) extends FieldType
   */
 case class FunctionPointerFieldType(returnType : Option[FieldType], arguments : List[FieldType] ) extends FieldType
 
+/** Fixed array field type
+  *
+  * @param dimensions   Dimensions of the array
+  * @param elementType  Type of the array elements
+  */
+case class ArrayFieldType(dimensions : List[Int], elementType : FieldType) extends FieldType
+
 /** Primitive field type
   * 
   * @param signed       Sign of an integer type or None otherwise. This is used
