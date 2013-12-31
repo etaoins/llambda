@@ -10,7 +10,7 @@ object WriteCellMembers extends writer.OutputWriter {
 
     case _ if cellClass.instanceType == CellClass.Abstract =>
       // Our type check is the union of the type checks for our child classes
-      val allChildren = processedTypes.cellClasses.values.filter(_.parentOption == Some(cellClass))
+      val allChildren = processedTypes.taggedCellClassesByParent(cellClass)
 
       val childTypeChecks = allChildren map { childCellClass =>
         "(" + cppTypePredicate(processedTypes, childCellClass) + ")"
@@ -39,40 +39,63 @@ object WriteCellMembers extends writer.OutputWriter {
       cppBuilder += "public:"
       cppBuilder.indented {
         for(field <- cellClass.fields) {
-          val cppReturnType = FieldTypeToCpp(field.fieldType, None)
+          val cppReturnType = FieldTypeToCpp(field.fieldType, None, true)
+          // Are we returning a pointer to a member variable?
+          val returningPointerToMemeber = field.fieldType.isInstanceOf[ArrayFieldType]
 
-          cppBuilder += s"${cppReturnType} ${field.name}() const"
-          cppBuilder.blockSep {
-            cppBuilder += s"return m_${field.name};"
-          }
-        }
-      }
-    }
-    
-    cppBuilder += "public:"
-    cppBuilder.indented {
-      // Make our type check
-      cppBuilder += s"static bool isInstance(const ${rootCellCppName} *datum)"
-      cppBuilder.blockSep {
-        cppBuilder += "return " + cppTypePredicate(processedTypes, cellClass) + ";"
-      }
-  
-      if (cellClass != processedTypes.rootCellClass) {
-        // Make our type casters 
-        for(constPrefix <- List("", "const ")) {
-          cppBuilder += s"static ${constPrefix}${cppName}* fromDatum(${constPrefix}${rootCellCppName} *datum)"
-          cppBuilder.blockSep {
-            cppBuilder += "if (isInstance(datum))"
+          if (returningPointerToMemeber) {
+            // Build const version returning const pointer
+            cppBuilder += s"const ${cppReturnType} ${field.name}() const"
             cppBuilder.blockSep {
-              cppBuilder += s"return static_cast<${constPrefix}${cppName}*>(datum);"
+              cppBuilder += s"return m_${field.name};"
             }
-          
-            cppBuilder += s"return nullptr;"
+            
+            // And non-const version
+            cppBuilder += s"${cppReturnType} ${field.name}()"
+            cppBuilder.blockSep {
+              cppBuilder += s"return m_${field.name};"
+            }
+          }
+          else {
+            // We're returning by value; this can be const
+            cppBuilder += s"${cppReturnType} ${field.name}() const"
+            cppBuilder.blockSep {
+              cppBuilder += s"return m_${field.name};"
+            }
           }
         }
       }
     }
 
+    cellClass match {
+      case _ : VariantCellClass =>
+        // Variants can only be distinguished in a variant-specific way at runtime
+
+      case _ =>
+        cppBuilder += "public:"
+        cppBuilder.indented {
+          // Make our type check
+          cppBuilder += s"static bool isInstance(const ${rootCellCppName} *datum)"
+          cppBuilder.blockSep {
+            cppBuilder += "return " + cppTypePredicate(processedTypes, cellClass) + ";"
+          }
+      
+          if (cellClass != processedTypes.rootCellClass) {
+            // Make our type casters 
+            for(constPrefix <- List("", "const ")) {
+              cppBuilder += s"static ${constPrefix}${cppName}* fromDatum(${constPrefix}${rootCellCppName} *datum)"
+              cppBuilder.blockSep {
+                cppBuilder += "if (isInstance(datum))"
+                cppBuilder.blockSep {
+                  cppBuilder += s"return static_cast<${constPrefix}${cppName}*>(datum);"
+                }
+              
+                cppBuilder += s"return nullptr;"
+              }
+            }
+          }
+        }
+    }
 
     if (!cellClass.fields.isEmpty) {
       // Define each field member variable
@@ -88,7 +111,7 @@ object WriteCellMembers extends writer.OutputWriter {
   }
 
   def apply(processedTypes : ProcessedTypes) : Map[String, String] = {
-    (processedTypes.cellClasses.values.map { cellClass =>
+    (processedTypes.cellClasses.values.map { case cellClass =>
       val cppName = cellClass.names.cppClassName
       val outputPath = s"runtime/binding/generated/${cppName}Members.h"
 

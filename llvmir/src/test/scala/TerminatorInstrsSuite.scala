@@ -26,7 +26,7 @@ class TerminatorInstrsSuite extends IrTestSuite {
     val block = createTestBlock()
 
     intercept[InconsistentIrException] {
-      block.condBranch(StringConstant("Hello, world!"), createTestBlock("true"), createTestBlock("false"))
+      block.condBranch(StringConstant.fromUtf8String("Hello, world!"), createTestBlock("true"), createTestBlock("false"))
     }
   }
 

@@ -40,8 +40,24 @@ class DefinitionParserSuite extends FunSuite {
     assert(cellType.internal === true)
   }
   
-  test("internal child cell class definition") {
-    val (cellType : ParsedChildClassDefinition) :: Nil = parseString("""
+  test("root cell class definition with variants fails") {
+    intercept[ParseErrorException] {
+      parseString("""
+        root internal cell Datum typetag typeId {
+          variant InlineDatum {
+            uint32 field1;
+          };
+          
+          variant HeapDatum {
+            uint32 field2;
+          };
+        };
+      """)
+    }
+  }
+  
+  test("internal tagged cell class definition") {
+    val (cellType : ParsedTaggedClassDefinition) :: Nil = parseString("""
       abstract internal cell Symbol : Datum {
       };
     """)
@@ -53,7 +69,7 @@ class DefinitionParserSuite extends FunSuite {
   }
   
   test("preconstructed cell class definition") {
-    val (cellType : ParsedChildClassDefinition) :: Nil = parseString("""
+    val (cellType : ParsedTaggedClassDefinition) :: Nil = parseString("""
       preconstructed cell EmptyList : Datum {
       };
     """)
@@ -94,7 +110,7 @@ class DefinitionParserSuite extends FunSuite {
   }
   
   test("multiple definitions") {
-    val (datumType : ParsedRootClassDefinition) :: (numericType : ParsedChildClassDefinition) :: Nil = parseString("""
+    val (datumType : ParsedRootClassDefinition) :: (numericType : ParsedTaggedClassDefinition) :: Nil = parseString("""
       root cell Datum typetag typeId {
       };
 
@@ -139,8 +155,60 @@ class DefinitionParserSuite extends FunSuite {
     assert(intPointersField.initializer === None)
   }
   
-  test("child cell class with function pointers") {
-    val (cellType : ParsedChildClassDefinition) :: Nil = parseString("""
+  test("tagged cell class with variants") {
+    val cellTypes = parseString("""
+      concrete cell Procedure : Datum {
+        uint16 commonField;
+      };
+      
+      variant cell InlineProcedure : Procedure {
+        uint32 inlineField1;
+        uint64 inlineField2;
+      };
+
+      variant cell HeapProcedure : Procedure {
+        double heapField;
+      };
+    """)
+
+    val List(
+      procedureType : ParsedTaggedClassDefinition,
+      inlineVariant : ParsedVariantClassDefinition,
+      heapVariant : ParsedVariantClassDefinition
+    ) = cellTypes
+    
+    assert(procedureType.name === "Procedure")
+    assert(procedureType.instanceType === CellClass.Concrete)
+
+    val List(commonField) = procedureType.fields
+
+    assert(commonField.name === "commonField")
+    assert(commonField.fieldType === ParsedTypeName("uint16"))
+    assert(commonField.initializer === None)
+
+    assert(inlineVariant.name === "InlineProcedure")
+    assert(inlineVariant.instanceType === CellClass.Variant)
+
+    val List(inlineField1, inlineField2) = inlineVariant.fields
+    assert(inlineField1.name === "inlineField1")
+    assert(inlineField1.fieldType === ParsedTypeName("uint32"))
+    assert(inlineField1.initializer === None)
+    
+    assert(inlineField2.name === "inlineField2")
+    assert(inlineField2.fieldType === ParsedTypeName("uint64"))
+    assert(inlineField2.initializer === None)
+
+    assert(heapVariant.name === "HeapProcedure")
+    assert(heapVariant.instanceType === CellClass.Variant)
+
+    val List(heapField) = heapVariant.fields
+    assert(heapField.name === "heapField")
+    assert(heapField.fieldType === ParsedTypeName("double"))
+    assert(heapField.initializer === None)
+  }
+  
+  test("tagged cell class with function pointers") {
+    val (cellType : ParsedTaggedClassDefinition) :: Nil = parseString("""
       abstract cell Procedure : Datum {
         void (*callback)(int64[5], double *);
         int64* (*delegate)();
@@ -169,7 +237,7 @@ class DefinitionParserSuite extends FunSuite {
     ))
   }
   
-  test("child cell class with array brackets before identifier fails") {
+  test("tagged cell class with array brackets before identifier fails") {
     intercept[ParseErrorException] {
       parseString("""
         abstract cell Procedure : Datum {

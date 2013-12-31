@@ -1,3 +1,4 @@
+; This test assumes the inline -> heap transition happens after 11 characters
 (define-test "symbol constant is a symbol" (expect #t
 	(symbol? 'test)))
 
@@ -13,8 +14,11 @@
 (define-test "symbol=? with two inequal args" (expect #f
 	(symbol=? 'test 'nottest)))
 
-(define-test "symbol=? with three equal args" (expect #t
+(define-test "symbol=? with three equal inline args" (expect #t
 	(symbol=? 'test 'test 'test)))
+
+(define-test "symbol=? with three equal heap args" (expect #t
+	(symbol=? 'very-long-test-symbol 'very-long-test-symbol 'very-long-test-symbol)))
 
 (define-test "symbol=? with three inequal args" (expect #f
 	(symbol=? 'test 'test 'nottest)))
@@ -22,11 +26,20 @@
 (define-test "symbol=? with non-symbol fails" (expect-failure
 	(symbol=? 'test 'test "test")))
 
-(define-test "symbol->string" (expect "flying-fish"
-	(symbol->string 'flying-fish)))
+(define-test "symbol->string with inline symbol" (expect "flying-cat"
+	(symbol->string 'flying-cat)))
 
-(define-test "string->symbol" (expect mISSISSIppi
+(define-test "symbol->string with heap symbol" (expect "flying-hippopotamus"
+	(symbol->string 'flying-hippopotamus)))
+
+(define-test "string->symbol with inline symbol" (expect mISSISSIppi
 	(string->symbol "mISSISSIppi")))
 
-(define-test "(string->symbol (symbol->string))" (expect LollyPop
+(define-test "string->symbol with heap symbol" (expect MassaCHUsetts
+	(string->symbol "MassaCHUsetts")))
+
+(define-test "(string->symbol (symbol->string)) with inline symbol" (expect LollyPop
 	(string->symbol (symbol->string 'LollyPop))))
+
+(define-test "(string->symbol (symbol->string)) with heap symbol" (expect SourPatchKids
+	(string->symbol (symbol->string 'SourPatchKids))))

@@ -84,6 +84,7 @@ void testInexactRational()
 void testSymbol()
 {
 	assertForm(symbolFor(u8"Hello"), u8"Hello");
+	assertForm(symbolFor(u8"HelloWorldThisRequiresHeapAllocation"), u8"HelloWorldThisRequiresHeapAllocation");
 	assertForm(symbolFor(u8"λ"), u8"|λ|");
 	assertForm(symbolFor(u8"Hello, world"), u8"|Hello, world|");
 	assertForm(symbolFor(u8"Back\\slash"), u8"|Back\\\\slash|");

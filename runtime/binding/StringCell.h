@@ -13,15 +13,6 @@ class StringCell : public DatumCell
 {
 #include "generated/StringCellMembers.h"
 public:
-	StringCell(std::uint8_t *utf8Data, std::uint32_t byteLength, std::uint32_t charLength, std::int16_t allocSlackBytes = 0) :
-		DatumCell(CellTypeId::String),
-		m_allocSlackBytes(allocSlackBytes),
-		m_charLength(charLength),
-		m_byteLength(byteLength),
-		m_utf8Data(utf8Data)
-	{
-	}
-
 	static StringCell* fromUtf8CString(const char *str);
 	static StringCell* fromUtf8Data(const std::uint8_t *data, std::uint32_t byteLength);
 	static StringCell* fromFill(std::uint32_t length, UnicodeChar fill);
@@ -61,8 +52,20 @@ public:
 	StringCell *toUppercaseString() const;
 	StringCell *toLowercaseString() const;
 	StringCell *toCaseFoldedString() const;
+	
+	std::uint8_t* utf8Data() const;
 
-private:
+protected:
+	StringCell(std::uint32_t byteLength, std::uint32_t charLength, std::int16_t allocSlackBytes) :
+		DatumCell(CellTypeId::String),
+		m_allocSlackBytes(allocSlackBytes),
+		m_charLength(charLength),
+		m_byteLength(byteLength)
+	{
+	}
+	
+	static const std::uint32_t InlineDataSize = 12;
+
 	// Creates an uninitialized cell with the given size
 	static StringCell* createUninitialized(std::uint32_t byteLength);
 
@@ -93,7 +96,10 @@ private:
 	int compareCaseInsensitive(const StringCell *other) const;
 
 	StringCell *toConvertedString(UnicodeChar (UnicodeChar::* converter)() const) const;
-
+	
+	static size_t inlineDataSize();
+	bool dataIsInline() const;
+	
 	void setByteLength(std::uint32_t newByteLength)
 	{
 		m_byteLength = newByteLength;
@@ -104,14 +110,37 @@ private:
 		m_charLength = newCharLength;
 	}
 	
-	void setUtf8Data(std::uint8_t* newUtf8Data)
-	{
-		m_utf8Data = newUtf8Data;
-	}
-
 	void setAllocSlackBytes(std::uint16_t newAllocSlackBytes)
 	{
 		m_allocSlackBytes = newAllocSlackBytes;
+	}
+};
+
+class HeapStringCell : public StringCell
+{
+	friend class StringCell;
+#include "generated/HeapStringCellMembers.h"
+private:
+	HeapStringCell(std::uint8_t *heapData, std::uint32_t byteLength, std::uint32_t charLength, std::uint16_t allocSlackBytes) :
+		StringCell(byteLength, charLength, allocSlackBytes),
+		m_heapData(heapData)
+	{
+	}
+	
+	void setHeapData(std::uint8_t* newHeapData)
+	{
+		m_heapData = newHeapData;
+	}
+};
+
+class InlineStringCell : public StringCell
+{
+	friend class StringCell;
+#include "generated/InlineStringCellMembers.h"
+private:
+	InlineStringCell(std::uint32_t byteLength, std::uint32_t charLength) :
+		StringCell(byteLength, charLength, InlineDataSize - byteLength - 1)
+	{
 	}
 };
 

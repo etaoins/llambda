@@ -11,7 +11,7 @@ object GenFatalError {
     val stringConstantName = s"${errorMessage.name}ErrorString"
     val stringConstantVar = IrGlobalVariableDef(
       name=stringConstantName,
-      initializer=StringConstant(errorMessage.text),
+      initializer=StringConstant.fromUtf8String(errorMessage.text),
       visibility=Visibility.Hidden,
       constant=true,
       unnamedAddr=true)

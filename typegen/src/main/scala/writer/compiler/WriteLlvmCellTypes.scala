@@ -6,6 +6,45 @@ import io.llambda.typegen._
 import io.llambda.llvmir
 
 object WriteLlvmCellTypes extends writer.OutputWriter {
+  private def defineCellClass(cellClass : CellClass) : String = {
+    val sourceString = new collection.mutable.StringBuilder
+
+    // Build the description chunks for our comment
+    val fieldDescriptions = cellClass.fields map { field =>
+      field.fieldType match {
+        case PrimitiveFieldType(_, _, "bool")      => s"bool ${field.name}"
+        case PrimitiveFieldType(Some(false), _, _) => s"unsigned ${field.name}"
+        case PrimitiveFieldType(Some(true), _, _)  => s"signed ${field.name}"
+        case _ => field.name
+      }
+    }
+
+    sourceString ++= "; {" + ("supertype" :: fieldDescriptions).mkString(", ") + "}\n" 
+    
+    // Find the LLVM types for our fields
+    val fieldLlvmTypes = cellClass.fields map { field =>
+      FieldTypeToLlvm(field.fieldType)
+    }
+
+    // Find the LLVM type pointer to our supertype
+    val superLlvmType = cellClass.parentOption.map { parent =>
+      llvmir.UserDefinedType(parent.names.llvmName)
+    }
+
+    // Define our type
+    val allMemberTypes = superLlvmType.toList ++ fieldLlvmTypes
+    val cellClassLlvmType = llvmir.StructureType(allMemberTypes)
+
+    sourceString ++= llvmir.UserDefinedType(cellClass.names.llvmName) + " = type " + cellClassLlvmType + "\n" 
+    
+    // Define our TBAA nodes
+    for(tbaaNode <- cellClass.fieldTbaaNodes.values) {
+      sourceString ++= tbaaNode.toIr + "\n"
+    }
+
+    sourceString.toString
+  }
+
   def apply(processedTypes : ProcessedTypes) : Map[String, String] = {
     val sourceString = new collection.mutable.StringBuilder
 
@@ -15,39 +54,7 @@ object WriteLlvmCellTypes extends writer.OutputWriter {
 
     for(cellClass <- processedTypes.cellClasses.values) {
       sourceString ++= "\n"
-
-      // Build the description chunks for our comment
-      val fieldDescriptions = cellClass.fields map { field =>
-        field.fieldType match {
-          case PrimitiveFieldType(_, _, "bool")      => s"bool ${field.name}"
-          case PrimitiveFieldType(Some(false), _, _) => s"unsigned ${field.name}"
-          case PrimitiveFieldType(Some(true), _, _)  => s"signed ${field.name}"
-          case _ => field.name
-        }
-      }
-
-      sourceString ++= "; {" + ("supertype" :: fieldDescriptions).mkString(", ") + "}\n" 
-    
-      // Find the LLVM types for our fields
-      val fieldLlvmTypes = cellClass.fields map { field =>
-        FieldTypeToLlvm(field.fieldType)
-      }
-
-      // Find the LLVM type pointer to your supertype
-      val superLlvmType = cellClass.parentOption.map { parent =>
-        llvmir.UserDefinedType(parent.names.llvmName)
-      }
-
-      // Define our type
-      val allMemberTypes = superLlvmType.toList ++ fieldLlvmTypes
-      val cellClassLlvmType = llvmir.StructureType(allMemberTypes)
-
-      sourceString ++= llvmir.UserDefinedType(cellClass.names.llvmName) + " = type " + cellClassLlvmType.toString + "\n" 
-
-      // Define our TBAA nodes
-      for(tbaaNode <- cellClass.fieldTbaaNodes.values) {
-        sourceString ++= tbaaNode.toIr + "\n"
-      }
+      sourceString ++= defineCellClass(cellClass)
     }
     
     Map("compiler/src/main/resources/generated/cellTypes.ll" -> sourceString.toString)

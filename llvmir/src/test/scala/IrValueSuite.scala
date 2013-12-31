@@ -88,31 +88,31 @@ class IrValueSuite extends FunSuite {
   }
 
   test("ASCII string constant") {
-    val testConstant = StringConstant("Hello, world!")
+    val testConstant = StringConstant.fromUtf8String("Hello, world!")
 
     assert(testConstant.irType === ArrayType(14, IntegerType(8)))
     assert(testConstant.toIr === "c\"Hello, world!\\00\"")
   }
   
   test("ASCII string with quote") {
-    val testConstant = StringConstant("Hello\"world")
+    val testConstant = StringConstant.fromUtf8String("Hello\"world")
     assert(testConstant.toIr === "c\"Hello\\\"world\\00\"")
   }
   
   test("ASCII string with newline") {
-    val testConstant = StringConstant("Hello\nworld")
+    val testConstant = StringConstant.fromUtf8String("Hello\nworld")
     assert(testConstant.toIr === "c\"Hello\\0Aworld\\00\"")
   }
   
   test("UTF-8 string") {
-    val testConstant = StringConstant("๛")
+    val testConstant = StringConstant.fromUtf8String("๛")
     assert(testConstant.toIr === "c\"\\E0\\B9\\9B\\00\"")
   }
 
   test("element pointer constant") {
     val globalVarDef = IrGlobalVariableDef(
       name="helloString",
-      initializer=StringConstant("Hello"),
+      initializer=StringConstant.fromUtf8String("Hello"),
       constant=true
     )
 

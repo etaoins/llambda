@@ -53,7 +53,7 @@ class IrGlobalVariableDefSuite extends FunSuite {
   test("hidden def") {
     val globalVarDef = IrGlobalVariableDef(
       name="twelveString",
-      initializer=StringConstant("twelve"),
+      initializer=StringConstant.fromUtf8String("twelve"),
       visibility=Visibility.Hidden
     )
 

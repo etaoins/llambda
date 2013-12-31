@@ -163,12 +163,20 @@ StringCell* StringCell::createUninitialized(std::uint32_t byteLength)
 	// We need 1 extra byte for the NULL terminator
 	std::int32_t minimumSize = byteLength + 1;
 
-	// Figure how much slack we should have
-	std::int16_t allocSlackBytes = suggestAllocSlackBytes(minimumSize);
+	if (minimumSize <= inlineDataSize())
+	{
+		// We can fit this string inline
+		return new InlineStringCell(byteLength, 0);
+	}
+	else
+	{
+		// Figure how much slack we should have
+		std::int16_t allocSlackBytes = suggestAllocSlackBytes(minimumSize);
 
-	auto utf8Data = new std::uint8_t[minimumSize + allocSlackBytes];
-	
-	return new StringCell(utf8Data, byteLength, 0, allocSlackBytes);
+		auto utf8Data = new std::uint8_t[minimumSize + allocSlackBytes];
+		
+		return new HeapStringCell(utf8Data, byteLength, 0, allocSlackBytes);
+	}
 }
 
 StringCell* StringCell::fromUtf8CString(const char *signedStr)
@@ -342,6 +350,29 @@ StringCell* StringCell::fromSymbol(const SymbolCell *symbol)
 
 	return newString;
 }
+
+size_t StringCell::inlineDataSize()
+{
+	return sizeof(InlineStringCell::m_inlineData);
+}
+	
+bool StringCell::dataIsInline() const
+{
+	// Need to have 1 byte for the NULL terminator
+	return byteLength() <= (inlineDataSize() - 1);
+}
+	
+std::uint8_t* StringCell::utf8Data() const
+{
+	if (dataIsInline())
+	{
+		return const_cast<std::uint8_t*>(static_cast<const InlineStringCell*>(this)->inlineData());
+	}
+	else
+	{
+		return const_cast<std::uint8_t*>(static_cast<const HeapStringCell*>(this)->heapData());
+	}
+}
 	
 std::uint8_t* StringCell::charPointer(std::uint32_t charOffset) const
 {
@@ -488,13 +519,34 @@ bool StringCell::replaceBytes(const CharRange &range, std::uint8_t *pattern, uns
 		// Figure out how much slack our allocation would have after this	
 		const std::int64_t newAllocSlackBytes = static_cast<std::int64_t>(byteLength()) - newByteLength + allocSlackBytes();
 
+		const bool wasInline = dataIsInline();
+		const bool nowInline = (newByteLength + 1) <= inlineDataSize();
+
+		std::uint8_t *oldHeapPointer = nullptr;
+
 		// Make sure we have enough space and we don't exceed our maximum allocation size
-		const bool needRealloc = (newAllocSlackBytes < 0) ||
-			                      (newAllocSlackBytes > MaximumAllocationSlack);
+		// If we are converting from an inline string to a heap string this will also
+		// trigger because our alloc alack bytes will be exhausted
+		const bool needHeapRealloc = (((newAllocSlackBytes < 0) ||
+			                           (newAllocSlackBytes > MaximumAllocationSlack)) &&
+												!nowInline);
 
 		std::uint8_t* destString;
 		
-		if (needRealloc)
+		if (!wasInline && nowInline)
+		{
+			// We're converting to an inline string
+			setAllocSlackBytes(inlineDataSize() - newByteLength - 1);
+			destString = static_cast<InlineStringCell*>(this)->inlineData();
+			
+			// Store our old heap pointer so we can delete it later
+			// The code below will overwrite it with our new inline string
+			oldHeapPointer = utf8Data();
+			
+			// Fill the initial chunk of the string
+			memcpy(destString, utf8Data(), initialBytes); 
+		}
+		else if (needHeapRealloc)
 		{
 			std::uint32_t newSlackBytes = suggestAllocSlackBytes(newByteLength);
 
@@ -506,6 +558,12 @@ bool StringCell::replaceBytes(const CharRange &range, std::uint8_t *pattern, uns
 
 			// Fill the initial chunk of the string
 			memcpy(destString, utf8Data(), initialBytes); 
+
+			if (!wasInline)
+			{
+				// Store our old heap pointer so we can delete it later
+				oldHeapPointer = utf8Data();
+			}
 		}
 		else
 		{
@@ -533,10 +591,15 @@ bool StringCell::replaceBytes(const CharRange &range, std::uint8_t *pattern, uns
 		// Update ourselves with our new string
 		setByteLength(newByteLength);
 
-		if (needRealloc)
+		if (needHeapRealloc)
 		{
-			delete[] utf8Data();
-			setUtf8Data(destString);
+			static_cast<HeapStringCell*>(this)->setHeapData(destString);
+		}
+
+		if (oldHeapPointer != nullptr)
+		{
+			// We can delete this now
+			delete[] oldHeapPointer;
 		}
 	}
 	
@@ -747,10 +810,7 @@ int StringCell::compare(const StringCell *other, CaseSensitivity cs) const
 SymbolCell* StringCell::toSymbol() const
 {
 	// This is easy, just copy our UTF-8 data
-	auto newString = new std::uint8_t[byteLength() + 1];
-	memcpy(newString, utf8Data(), byteLength() + 1);
-
-	return new SymbolCell(newString, byteLength(), charLength());
+	return SymbolCell::fromRawData(utf8Data(), byteLength(), charLength());
 }
 	
 BytevectorCell* StringCell::toUtf8Bytevector(std::int64_t start, std::int64_t end) const
@@ -799,12 +859,16 @@ StringCell *StringCell::toConvertedString(UnicodeChar (UnicodeChar::* converter)
 	
 	const std::uint32_t totalByteLength = convertedData.size();
 
-	auto newString = new std::uint8_t[totalByteLength + 1];
-	memcpy(newString, convertedData.data(), totalByteLength);
+	auto newString = StringCell::createUninitialized(totalByteLength);
 
-	newString[totalByteLength] = 0;
+	// Initialize the string from the std::vector contents
+	newString->setCharLength(charLength());
+	memcpy(newString->utf8Data(), convertedData.data(), totalByteLength);
 
-	return new StringCell(newString, totalByteLength, charLength());
+	// NULL terminate
+	newString->utf8Data()[totalByteLength] = 0;
+
+	return newString;
 }
 
 StringCell* StringCell::toUppercaseString() const

@@ -89,15 +89,12 @@ case class ArrayConstant(innerType : FirstClassType , members : Seq[IrConstant])
   def toIr = "[" + members.map(_.toIrWithType).mkString(", ") + "]"
 }
 
-case class StringConstant(str : String) extends ArrayLikeConstant {
-  // Always NULL terminate when passing to NFI
-  private val utf8Bytes = Codec.toUTF8(str) :+ 0.toByte
-
+case class StringConstant(stringBytes : Seq[Byte]) extends ArrayLikeConstant {
   val innerType = IntegerType(8) 
-  val length = utf8Bytes.length
+  val length = stringBytes.length
 
   // String without "
-  private def innerString : String = (utf8Bytes flatMap {
+  private def innerString : String = (stringBytes flatMap {
     case backslash if backslash == 92 =>
       """\\"""
     case doubleQuote if doubleQuote == 34 =>
@@ -109,6 +106,13 @@ case class StringConstant(str : String) extends ArrayLikeConstant {
   }).mkString
 
   def toIr = "c\"" + innerString + "\"" 
+}
+
+object StringConstant {
+  def fromUtf8String(str : String) : StringConstant = {
+    // Convert to NULL terminated UTF-8
+    StringConstant(Codec.toUTF8(str) :+ 0.toByte)
+  }
 }
 
 case class ElementPointerConstant(elementType : FirstClassType, basePointer : IrConstant, indices : Seq[Integer], inbounds : Boolean = false) extends IrConstant {

@@ -30,8 +30,14 @@ class DuplicateFieldNameException(val parsedCellField : ParsedCellField) extends
 class InitializingNonIntegralFieldException(val parsedDef : ParsedCellField) extends
   PositionedSemanticException(parsedDef, s"Initializers must be for fields with integral types")
 
-class InheritingNonAbstractCellClassException(val parsedChildClass : ParsedChildClassDefinition) extends
-  PositionedSemanticException(parsedChildClass, s"Inheriting from non-abstract cell class: ${parsedChildClass.parent}")
+class InheritingVariantCellClassException(val parsedCellClass : ParsedCellClassDefinition) extends
+  PositionedSemanticException(parsedCellClass, s"Inheriting cell class from a variant cell class: ${parsedCellClass.parentOption.get}")
+
+class InheritingNonAbstractCellClassException(val parsedTaggedClass : ParsedTaggedClassDefinition) extends
+  PositionedSemanticException(parsedTaggedClass, s"Inheriting child cell class from non-abstract cell class: ${parsedTaggedClass.parent}")
+
+class InheritingAbstractCellClassException(val parsedVariantClass : ParsedVariantClassDefinition) extends
+  PositionedSemanticException(parsedVariantClass, s"Inheriting variant cell class from abstract cell class: ${parsedVariantClass.parent}")
 
 class ChildlessAbstractCellClassException(val cellClass : CellClass) extends
   PositionedSemanticException(cellClass, s"""Abstract cell class "${cellClass.name}" has no children""")

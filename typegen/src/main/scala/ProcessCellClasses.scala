@@ -1,12 +1,12 @@
 package io.llambda.typegen
 
-import io.llambda.llvmir
-
 import collection.immutable.ListMap
+
+import io.llambda.llvmir
 
 object ProcessCellClasses {
   /** Simple class encapsulting an incrementing integer counter */
-  private class IntCounter {
+  private class IntCounter extends Function0[Int] {
     var nextValue : Int = 0
 
     def apply() : Int = {
@@ -17,10 +17,19 @@ object ProcessCellClasses {
     }
   }
 
+  private def createSelfTbaaNodes(selfName : String, selfFields : List[CellField], indexCounter : () => Int) : ListMap[CellField, llvmir.IrTbaaNode] = 
+    // Create parentless TBAA nodes for the new fields we introduce
+    ListMap(selfFields.map { cellField =>
+      val identity = s"${selfName}::${cellField.name}"
+      val tbaaIndex = indexCounter()
+
+      (cellField -> llvmir.IrTbaaNode(tbaaIndex, identity, None))
+    } : _*)
+
   /** Creates TBAA nodes for our fields and the fields we inherit from our superclasses */
-  private def createTbaaNodes(selfName : String, selfFields : List[CellField], parentClass : Option[CellClass], indexCounter : () => Int) : ListMap[CellField, llvmir.IrTbaaNode] = {
+  private def createTbaaNodes(selfName : String, selfFields : List[CellField], parentTbaaNodes : ListMap[CellField, llvmir.IrTbaaNode], indexCounter : () => Int) : ListMap[CellField, llvmir.IrTbaaNode] = {
     // Inherit the TBAA nodes from our parents
-    val inheritsNodes = parentClass.map(_.fieldTbaaNodes).getOrElse(ListMap.empty).map { case (cellField, parentTbaaNode) =>
+    val inheritsNodes = parentTbaaNodes.map { case (cellField, parentTbaaNode) =>
       val identity = s"${parentTbaaNode.identity}->${selfName}"
       val tbaaIndex = indexCounter()
 
@@ -28,41 +37,35 @@ object ProcessCellClasses {
     }
 
     // Create parentless TBAA nodes for the new fields we introduce
-    val selfNodes = (selfFields.map {cellField =>
-      val identity = s"${selfName}::${cellField.name}"
-      val tbaaIndex = indexCounter()
-
-      (cellField -> llvmir.IrTbaaNode(tbaaIndex, identity, None))
-    })
-
-    inheritsNodes ++ selfNodes
+    inheritsNodes ++ createSelfTbaaNodes(selfName, selfFields, indexCounter)
   }
 
-  /** Converts a list of parsed fields in to CellField instances by resolving their types */ 
-  private def processFields(fieldTypes : Map[String, FieldType])(parsedFields : List[ParsedCellField]) : List[CellField] = {
-    // Make sure all field names are unique
-    parsedFields.foldLeft(Set[String]()) { (seenFields, parsedField) =>
-      if (seenFields.contains(parsedField.name)) {
-        throw new DuplicateFieldNameException(parsedField)
-      }
+  private def processField(fieldTypes : Map[String, FieldType])(parsedField : ParsedCellField) : CellField = {
+    val resolvedType = ResolveParsedType(fieldTypes)(parsedField.fieldType)
 
-      seenFields + parsedField.name
+    if (parsedField.initializer.isDefined) {
+      // We only support integer intiializers
+      FieldTypeToLlvm(resolvedType) match {
+        case llvmir.IntegerType(_) => // Good
+        case _ =>
+          throw new InitializingNonIntegralFieldException(parsedField)
+      }
     }
 
-    parsedFields.map { parsedField =>
-      val resolvedType = ResolveParsedType(fieldTypes)(parsedField.fieldType)
+    val cellField = new CellField(parsedField.name, resolvedType, parsedField.initializer)
+    cellField.setPos(parsedField.pos)
+  }
 
-      if (parsedField.initializer.isDefined) {
-        // We only support integer intiializers
-        FieldTypeToLlvm(resolvedType) match {
-          case llvmir.IntegerType(_) => // Good
-          case _ =>
-            throw new InitializingNonIntegralFieldException(parsedField)
-        }
-      }
+  private def collectFieldNames(cellClass : CellClass) : Set[String] = {
+    val fieldNames = cellClass.fields.map(_.name).toSet
 
-      val cellField = new CellField(parsedField.name, resolvedType, parsedField.initializer)
-      cellField.setPos(parsedField.pos)
+    cellClass.parentOption match {
+      case None =>
+        // We're at the top!
+        fieldNames
+
+      case Some(parentCellClass) =>
+        fieldNames ++ collectFieldNames(parentCellClass)
     }
   }
 
@@ -73,62 +76,107 @@ object ProcessCellClasses {
     }
 
     val typeIdGenerator = new IntCounter
-    val tbbaIndexGenerator = new IntCounter
+    val tbaaIndexGenerator = new IntCounter
 
     val cellClasses = parsedCellDefs.foldLeft(ListMap[String, CellClass]()) { case (cellClasses, parsedCellDef) =>
-      // Process our fields
-      val cellFields = processFields(fieldTypes)(parsedCellDef.fields)
-
-      // Assign us a type ID if one is needed
-      val typeId = if (parsedCellDef.instanceType == CellClass.Abstract) {
-        None
-      }
-      else {
-        Some(typeIdGenerator())
-      }
-      
       // Find our parent class
-      val parentCellClassOpt = parsedCellDef.optionalParent map { parentName =>
-        cellClasses.getOrElse(parentName, {
+      val parentCellClassOpt = parsedCellDef.parentOption map { parentName =>
+        val parentClass = cellClasses.getOrElse(parentName, {
           // Our parent hasn't been declared yet
           throw new UndefinedCellClassException(parsedCellDef, parentName)
         })
+
+        // It's not possible to inherit from variants at the moment
+        if (parentClass.instanceType == CellClass.Variant) {
+          throw new InheritingVariantCellClassException(parsedCellDef)
+        }
+
+        parentClass
       }
 
-      // Assign our TBAA nodes
-      val fieldTbaaNodes = createTbaaNodes(parsedCellDef.name, cellFields, parentCellClassOpt, tbbaIndexGenerator.apply)
+      // Make sure all field names are unique
+      val inheritedFieldNames = parentCellClassOpt.map(collectFieldNames).getOrElse(Set[String]())
 
-      // Turn each cell definition in to a cell class
+      // First check our fields
+      val fieldNames = parsedCellDef.fields.foldLeft(inheritedFieldNames) { (seenFields, parsedField) =>
+        if (seenFields.contains(parsedField.name)) {
+          throw new DuplicateFieldNameException(parsedField)
+        }
+
+        seenFields + parsedField.name
+      }
+
+      // Process our fields
+      val processedFields = parsedCellDef.fields.map(processField(fieldTypes)(_))
+
+      // Assign our TBAA nodes
+      val parentTbaaNodes = parentCellClassOpt.map(_.fieldTbaaNodes).getOrElse(ListMap())
+
+      val fieldTbaaNodes = parsedCellDef match {
+        case _ : ParsedVariantClassDefinition =>
+          // Don't redefine parent nodes
+          // We use our parent nodes directly because we can switch between variants
+          // of a cell at runtime so it's possible for them to alias
+          createSelfTbaaNodes(parsedCellDef.name, processedFields, tbaaIndexGenerator)
+
+        case _ =>
+          createTbaaNodes(parsedCellDef.name, processedFields, parentTbaaNodes, tbaaIndexGenerator)
+      }
+
+      // Assign us a type ID if one is needed
+      val typeId = if (List(CellClass.Concrete, CellClass.Preconstructed).contains(parsedCellDef.instanceType)) {
+        Some(typeIdGenerator())
+      }
+      else {
+        None
+      }
+
+      // Turn the cell definition in to a cell class
       val cellClass = parsedCellDef match {
         case rootClass : ParsedRootClassDefinition =>
           // Find our type ID tag field
-          val typeTagField = cellFields.find(rootClass.typeTagField == _.name).getOrElse({
+          val typeTagField = processedFields.find(rootClass.typeTagField == _.name).getOrElse({
             throw new UndefinedTypeTagFieldException(rootClass)
           })
 
           RootCellClass(
             name=rootClass.name,
             typeTagField=typeTagField,
-            fields=cellFields,
+            fields=processedFields,
             internal=rootClass.internal,
             fieldTbaaNodes=fieldTbaaNodes
           )
 
-        case childClass : ParsedChildClassDefinition =>
+        case taggedClass : ParsedTaggedClassDefinition =>
           val parentCellClass = parentCellClassOpt.get
 
           // It doesn't make sense to inherit from non-abstract cell classes
           if (parentCellClass.instanceType != CellClass.Abstract) {
-            throw new InheritingNonAbstractCellClassException(childClass)
+            throw new InheritingNonAbstractCellClassException(taggedClass)
           }
 
-          ChildCellClass(
-            name=childClass.name,
-            instanceType=childClass.instanceType,
+          TaggedCellClass(
+            name=taggedClass.name,
+            instanceType=taggedClass.instanceType,
             parent=parentCellClass,
-            fields=cellFields,
-            internal=childClass.internal,
+            fields=processedFields,
+            internal=taggedClass.internal,
             typeId=typeId,
+            fieldTbaaNodes=fieldTbaaNodes
+          )
+
+        case variantClass : ParsedVariantClassDefinition =>
+          val parentCellClass = parentCellClassOpt.get
+
+          // It doesn't make sense to inherit from abstract cell classes
+          if (parentCellClass.instanceType == CellClass.Abstract) {
+            throw new InheritingAbstractCellClassException(variantClass)
+          }
+
+          VariantCellClass(
+            name=variantClass.name,
+            parent=parentCellClass,
+            fields=processedFields,
             fieldTbaaNodes=fieldTbaaNodes
           )
       }
@@ -159,16 +207,16 @@ object ProcessCellClasses {
 
     // Calculate this once so it's easy to navigate the cell class
     // hierarchy downwards
-    val cellClassesByParent = cellClasses.values.toList.collect({
-      case childClass : ChildCellClass => childClass
+    val taggedCellClassesByParent = cellClasses.values.toList.collect({
+      case taggedClass : TaggedCellClass => taggedClass
     }).groupBy(_.parent)
 
     ProcessedTypes(
-      nextTbaaIndex=tbbaIndexGenerator(),
+      nextTbaaIndex=tbaaIndexGenerator(),
       fieldTypes=fieldTypes,
       cellClasses=cellClasses,
       rootCellClass=rootCellClass,
-      cellClassesByParent=cellClassesByParent
+      taggedCellClassesByParent=taggedCellClassesByParent
     )
   }
 }

@@ -72,6 +72,20 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
     }
   }
   
+  test("duplicate field names from parent fails") {
+    intercept[DuplicateFieldNameException] {
+      processString("""
+        root cell FirstRoot typetag typeId {
+          int32 typeId;
+        };
+
+        concrete cell Procedure : FirstRoot {
+          int64 typeId;
+        };
+      """)
+    }
+  }
+  
   test("initializing non-integer field fails") {
     intercept[InitializingNonIntegralFieldException] {
       processString("""
@@ -161,7 +175,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
     }
   }
   
-  test("abstract child class with fields of root class with fields") {
+  test("abstract tagged class with fields of root class with fields") {
     val processedTypes = processString("""
       root cell Datum typetag typeId {
         int32 typeId;
@@ -180,7 +194,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
 
     val datumClass = classes("Datum")
 
-    inside(classes("StringLike")) { case (stringLikeClass : ChildCellClass) =>
+    inside(classes("StringLike")) { case (stringLikeClass : TaggedCellClass) =>
       assert(stringLikeClass.name === "StringLike")
       assert(stringLikeClass.internal === false)
       assert(stringLikeClass.typeId === None)
@@ -237,7 +251,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
     }
   }
   
-  test("concrete and preconstructed child classes") {
+  test("concrete and preconstructed tagged classes") {
     val processedTypes = processString("""
       root cell Datum typetag typeId {
         int32 typeId;
@@ -255,7 +269,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
 
     val datumClass = classes("Datum")
 
-    inside(classes("Boolean")) { case (booleanClass : ChildCellClass) =>
+    inside(classes("Boolean")) { case (booleanClass : TaggedCellClass) =>
       assert(booleanClass.name === "Boolean")
       assert(booleanClass.internal === false)
       assert(booleanClass.typeId === Some(0))
@@ -263,7 +277,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       assert(booleanClass.parent === datumClass) 
     }
 
-    inside(classes("Character")) { case (characterClass : ChildCellClass) =>
+    inside(classes("Character")) { case (characterClass : TaggedCellClass) =>
       assert(characterClass.name === "Character")
       assert(characterClass.internal === false)
       assert(characterClass.typeId === Some(1))
@@ -272,7 +286,58 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
     }
   }
   
-  test("inheriting from non-abstract cell class fails") {
+  test("tagged classes with variants") {
+    val processedTypes = processString("""
+      root cell Datum typetag typeId {
+        int32 typeId;
+      };
+
+      concrete cell String : Datum {
+        uint32 byteLength;
+      };
+        
+      variant cell InlineString : String {
+        uint8 inlineData[8];
+      };
+
+      variant cell HeapString : String {
+        uint8 *heapData;
+      };
+    """)
+
+    val classes = processedTypes.cellClasses
+    assert(processedTypes.nextTbaaIndex === 5)
+
+    val datumClass = classes("Datum")
+
+    inside((classes("String"), classes("InlineString"), classes("HeapString"))) {
+      case (stringClass : TaggedCellClass, inlineVariant : VariantCellClass, heapVariant : VariantCellClass) =>
+        assert(stringClass.name === "String")
+        assert(stringClass.internal === false)
+        assert(stringClass.typeId === Some(0))
+        assert(stringClass.instanceType === CellClass.Concrete)
+        assert(stringClass.parent === datumClass) 
+
+        val List(byteLengthField) = stringClass.fields 
+        assert(byteLengthField.name === "byteLength")
+
+        assert(inlineVariant.name === "InlineString")
+        assert(inlineVariant.instanceType === CellClass.Variant)
+        assert(inlineVariant.parent === stringClass)
+
+        val List(inlineDataField) = inlineVariant.fields
+        assert(inlineDataField.name === "inlineData")
+
+        assert(heapVariant.name === "HeapString")
+        assert(heapVariant.instanceType === CellClass.Variant)
+        assert(heapVariant.parent === stringClass)
+
+        val List(heapDataField) = heapVariant.fields
+        assert(heapDataField.name === "heapData")
+    }
+  }
+  
+  test("inheriting from non-abstract tagged cell class fails") {
     intercept[InheritingNonAbstractCellClassException] {
       processString("""
         root cell Datum typetag typeId {
@@ -283,6 +348,38 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
         };
         
         concrete cell Character : Boolean {
+        };
+      """)
+    }
+  }
+  
+  test("variant inheriting from abstact cell class fails") {
+    intercept[InheritingAbstractCellClassException] {
+      processString("""
+        root cell Datum typetag typeId {
+          int32 typeId;
+        };
+
+        variant cell Character : Datum {
+        };
+      """)
+    }
+  }
+  
+  test("inheriting from variant cell class fails") {
+    intercept[InheritingVariantCellClassException] {
+      processString("""
+        root cell Datum typetag typeId {
+          int32 typeId;
+        };
+
+        concrete cell Character : Datum {
+        };
+        
+        variant cell InlineCharacter : Character {
+        };
+
+        concrete cell EmojiCharacter : InlineCharacter {
         };
       """)
     }

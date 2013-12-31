@@ -1,5 +1,12 @@
-(define-test "string" (expect "Hello, world!"
-	"Hello, world!"))
+; Inline strings are 11 bytes or less
+; They have their UTF-8 data stored inline in their cell
+(define-test "inline string" (expect "Hi there!"
+	"Hi there!"))
+
+; Heap strings are 12 bytes or more
+; They have their UTF-8 data stored externally to their cell
+(define-test "heap string" (expect "Greetings dear neighbour!!"
+	"Greetings dear neighbour!!"))
 
 (define-test "exact integer" (expect 31337
 	31337))
@@ -22,8 +29,11 @@
 (define-test "boolean false" (expect #f
 	#f))
 
-(define-test "symbol" (expect symbol
+(define-test "inline symbol" (expect symbol
 	'symbol))
+
+(define-test "heap symbol" (expect definitely-heap-symbol
+	'definitely-heap-symbol))
 
 (define-test "unspecific" (expect #!unspecific
 	'#!unspecific))

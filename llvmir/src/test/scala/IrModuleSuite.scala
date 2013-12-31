@@ -7,7 +7,7 @@ class IrModuleSuite extends FunSuite {
   test("hello world module") {
     val helloWorldDef = IrGlobalVariableDef(
       name="helloWorldString",
-      initializer=StringConstant("Hello, world!"),
+      initializer=StringConstant.fromUtf8String("Hello, world!"),
       constant=true,
       unnamedAddr=true)
     

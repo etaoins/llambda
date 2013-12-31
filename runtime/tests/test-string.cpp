@@ -84,11 +84,11 @@ void testFromUtf8Data()
 void testCompare()
 {
 	const StringCell *hello1 = StringCell::fromUtf8CString("Hello");
-	const StringCell *hello2 = new StringCell(utf8Bytes("Hello"), 5, 5);
+	const StringCell *hello2 = StringCell::fromUtf8Data(utf8Bytes("Hello"), 5);
 	const StringCell *HELLO = StringCell::fromUtf8CString("HELLO");
 	const StringCell *world = StringCell::fromUtf8CString("world");
-	const StringCell *nulledHello1 = new StringCell(utf8Bytes("Hell\0o"), 6, 6);
-	const StringCell *nulledHello2 = new StringCell(utf8Bytes("Hell\0o"), 6, 6);
+	const StringCell *nulledHello1 = StringCell::fromUtf8Data(utf8Bytes("Hell\0o"), 6);
+	const StringCell *nulledHello2 = StringCell::fromUtf8Data(utf8Bytes("Hell\0o"), 6);
 	const StringCell *hell = StringCell::fromUtf8CString("Hell");
 	const StringCell *unicodeValue = StringCell::fromUtf8CString(u8"☃🐉");
 	const StringCell *lowercaseUnicode = StringCell::fromUtf8CString(u8"сфmmциist gязэtiйgs!");
@@ -494,6 +494,7 @@ void testFill()
 	}
 	
 	{
+		// This also converts an inline string to a heap string
 		StringCell *helloValue = StringCell::fromUtf8CString(u8"Hello");
 
 		ASSERT_EQUAL(helloValue->fill(UnicodeChar(0x2603), 1), true);
@@ -554,11 +555,13 @@ void testFill()
 	}
 	
 	{
+		// This also converts a heap string to an inline string
 		StringCell *helloValue = StringCell::fromUtf8CString(u8"☃☃☃☃☃");
 		
 		ASSERT_EQUAL(helloValue->fill(UnicodeChar('Y'), 1), true);
 
 		ASSERT_EQUAL(helloValue->byteLength(), 7);
+		ASSERT_EQUAL(helloValue->allocSlackBytes(), 4);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
 		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"☃YYYY", 8), 0);
 	}

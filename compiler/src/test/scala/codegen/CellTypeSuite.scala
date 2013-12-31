@@ -27,7 +27,7 @@ class CellTypeSuite extends FunSuite {
   }
   
   test("create constant with incorrect type") {
-    val innerValue = llvmir.StringConstant("Hello, world!")
+    val innerValue = llvmir.StringConstant.fromUtf8String("Hello, world!")
     
     intercept[InternalCompilerErrorException] {
       ct.InexactRationalCell.createConstant(innerValue)

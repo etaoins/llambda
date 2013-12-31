@@ -27,6 +27,11 @@ object WriteScalaObjects extends writer.OutputWriter {
     val paramScalaType = None
     val valueExpr = s"IntegerConstant(${field.name}IrType, ${initializer})"
   }
+  
+  private class KnownTypeIdConstructorValue(val field : CellField) extends ConstructorValue {
+    val paramScalaType = Some("Long")
+    val valueExpr = field.name
+  }
 
   private case class ConstructorValues(
     selfValues : List[ConstructorValue],
@@ -39,13 +44,13 @@ object WriteScalaObjects extends writer.OutputWriter {
   }
 
   private def writeFieldTrait(scalaBuilder : ScalaBuilder, cellClass : CellClass) {
-    // Unlike the cell class objects the fields classes have an inheritence
-    // tree matching the cell classes themselves
+    val traitName = cellClass.names.scalaFieldsTraitName
+
     val extendsClause = cellClass.parentOption.map({ parent =>
       s" extends ${parent.names.scalaFieldsTraitName}"
     }).getOrElse("") 
-
-    scalaBuilder += "sealed trait " + cellClass.names.scalaFieldsTraitName + extendsClause
+    
+    scalaBuilder += "sealed trait " + traitName + extendsClause
 
     // Output our field information
     scalaBuilder.blockSep {
@@ -112,7 +117,10 @@ object WriteScalaObjects extends writer.OutputWriter {
     }
   }
 
-  private def collectConstructorValues(cellClass : CellClass) : ConstructorValues = {
+  private def collectConstructorValues(typeTagField : CellField, cellClass : CellClass) : ConstructorValues = {
+    // Does this cell class like have a defined type ID field?
+    val hasTypeId = cellClass.instanceType != CellClass.Abstract
+
     val selfValues = cellClass.fields map { field =>
       val llvmType = FieldTypeToLlvm(field.fieldType)
 
@@ -131,9 +139,21 @@ object WriteScalaObjects extends writer.OutputWriter {
     cellClass.parentOption match {
       case Some(parentCellClass) =>
         // Call ourselves recursively
-        val parentValuesResult = collectConstructorValues(parentCellClass)
+        val parentValuesResult = collectConstructorValues(typeTagField, parentCellClass)
 
-        val allParentValues = (parentValuesResult.selfValues ++ parentValuesResult.superValues)
+        val allParentValues = (parentValuesResult.selfValues ++ parentValuesResult.superValues) flatMap { parentValue =>
+          if (parentValue.isInstanceOf[KnownTypeIdConstructorValue]) {
+            // This has already been supplied; we can forget about it completely
+            None
+          }
+          else if ((parentValue.field == typeTagField) && hasTypeId) {
+            // We can fill this in without requesting it from the caller
+            Some(new KnownTypeIdConstructorValue(parentValue.field))
+          }
+          else {
+            Some(parentValue)
+          }
+        }
 
         // Our parents self values become our super values
         ConstructorValues(selfValues, allParentValues)
@@ -144,17 +164,13 @@ object WriteScalaObjects extends writer.OutputWriter {
   }
 
   private def writeConstructor(scalaBuilder : ScalaBuilder, typeTagField : CellField, cellClass : CellClass) {
-    val constructorValues = collectConstructorValues(cellClass)
+    val constructorValues = collectConstructorValues(typeTagField, cellClass)
     val allValues = constructorValues.selfValues ++ constructorValues.superValues
 
     val methodParams = allValues.filter({ value =>
       // If paramScalaType is None then that value doesn't need a parameter
-      value.paramScalaType.isDefined 
-    }).filterNot({ value =>
-      // If it's for typeId and we have one then remove it and it will be 
-      // provided by our member variable
-      (value.field == typeTagField) && (cellClass.typeId.isDefined)
-    })map({ paramValue =>
+      value.paramScalaType.isDefined && !value.isInstanceOf[KnownTypeIdConstructorValue]
+    }).map({ paramValue =>
       s"${paramValue.field.name} : ${paramValue.paramScalaType.get}"
     })
 
@@ -173,7 +189,7 @@ object WriteScalaObjects extends writer.OutputWriter {
         val superConstructorFields = for(superValue <- constructorValues.superValues if superValue.paramScalaType.isDefined) yield
           s"${superValue.field.name}=${superValue.field.name}"
 
-        "supertype.get.createConstant(" + superConstructorFields.mkString(", ") + ")"
+        parent.names.scalaObjectName + ".createConstant(" + superConstructorFields.mkString(", ") + ")"
       }
 
       // Calculate our selffields fields
@@ -196,7 +212,7 @@ object WriteScalaObjects extends writer.OutputWriter {
       writeGepIndices(scalaBuilder, parent, depth + 1)
     }
     
-    // If we have a parent that takes the position ofV the first field
+    // If we have a parent that takes the position of the first field
     val fieldBaseIndex = if (cellClass.parentOption.isDefined) {
       1
     }
@@ -214,13 +230,18 @@ object WriteScalaObjects extends writer.OutputWriter {
   private def writeCellObject(scalaBuilder : ScalaBuilder, processedTypes : ProcessedTypes, cellClass : CellClass) = {
     val names  = cellClass.names
 
-    val scalaSuperclass = if (cellClass.instanceType == CellClass.Abstract) {
-      // This is an abstract class
-      "CellType"
-    }
-    else {
-      // This is concrete
-      "ConcreteCellType"
+    val scalaSuperclass = cellClass.instanceType match {
+      case CellClass.Abstract =>
+        // This is an abstract class
+        "CellType"
+
+      case CellClass.Variant =>
+        // This a variant
+        "CellTypeVariant"
+
+      case _ =>
+        // This is concrete
+        "ConcreteCellType"
     }
 
     scalaBuilder += s"object ${names.scalaObjectName} extends ${scalaSuperclass} with ${names.scalaFieldsTraitName}"
@@ -230,27 +251,33 @@ object WriteScalaObjects extends writer.OutputWriter {
       val scalaConstructor = LlvmTypeToScalaConstructor(irType)
 
       scalaBuilder += "val llvmName = \"" + names.llvmName + "\"" 
-      scalaBuilder += "val schemeName = \"" + names.schemeName + "\"" 
       scalaBuilder += s"val irType = ${scalaConstructor}"
-      scalaBuilder += "val supertype = " + (cellClass.parentOption match {
-        case None => "None"
-        case Some(parent) => s"Some(${parent.names.scalaObjectName})"
-      })
+      
+      // Variants aren't properly part of the Scheme type tree
+      // This is because our automatic type determination machinery cannot
+      // distinguish them from the tagged cell class they inherit
+      if (cellClass.instanceType != CellClass.Variant) { 
+        scalaBuilder += "val schemeName = \"" + names.schemeName + "\"" 
+        scalaBuilder += "val supertype = " + (cellClass.parentOption match {
+          case None => "None"
+          case Some(parent) => s"Some(${parent.names.scalaObjectName})"
+        })
 
-      // Get all of our subclasses
-      val subtypeParts = processedTypes.cellClassesByParent.getOrElse(cellClass, Nil) map { childClass =>
-        childClass.names.scalaObjectName
+        // Get all of our subclasses
+        val subtypeParts = processedTypes.taggedCellClassesByParent.getOrElse(cellClass, Nil) map { taggedClass =>
+          taggedClass.names.scalaObjectName
+        }
+
+        scalaBuilder += s"""val directSubtypes = Set[CellType](${subtypeParts.mkString(", ")})"""
+        
+        scalaBuilder.sep()
+
+        for(typeId <- cellClass.typeId) {
+          val typeTagFieldName = processedTypes.rootCellClass.typeTagField.name
+          scalaBuilder += s"val ${typeTagFieldName} = ${typeId}L"
+        }
       }
-
-      scalaBuilder += s"""val directSubtypes = Set[CellType](${subtypeParts.mkString(", ")})"""
-
-      scalaBuilder.sep()
-
-      for(typeId <- cellClass.typeId) {
-        val typeTagFieldName = processedTypes.rootCellClass.typeTagField.name
-        scalaBuilder += s"val ${typeTagFieldName} = ${typeId}L"
-      }
-
+        
       scalaBuilder.sep()
 
       // Create our GEP indices
@@ -261,6 +288,18 @@ object WriteScalaObjects extends writer.OutputWriter {
       // Add our TBAA indexes
       for((field, tbaaNode) <- cellClass.fieldTbaaNodes) {
         scalaBuilder += s"val ${field.name}TbaaIndex = ${tbaaNode.index}L" 
+      }
+
+      // Cell classes don't repeat their parent TBAA nodes because they use the 
+      // same values as their parent. However, they need to be in the Scala 
+      // object for our accessors to work
+      cellClass match {
+        case variantCellClass : VariantCellClass =>
+          for((field, tbaaNode) <- variantCellClass.parent.fieldTbaaNodes) {
+            scalaBuilder += s"val ${field.name}TbaaIndex = ${tbaaNode.index}L" 
+          }
+
+        case _ =>
       }
 
       // Add our constructor if we're not preconstructed

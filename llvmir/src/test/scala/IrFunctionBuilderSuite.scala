@@ -44,7 +44,7 @@ class IrFunctionBuilderSuite extends FunSuite {
   test("hello world def") {
     val helloWorldDef = IrGlobalVariableDef(
       name="helloWorldString",
-      initializer=StringConstant("Hello, world!"),
+      initializer=StringConstant.fromUtf8String("Hello, world!"),
       constant=true,
       unnamedAddr=true)
     

@@ -47,13 +47,27 @@ concrete cell String : Datum {
 	uint16 allocSlackBytes;
 	uint32 charLength;
 	uint32 byteLength;
-	uint8* utf8Data;
+};
+
+variant cell InlineString : String {
+	uint8 inlineData[12];
+};
+
+variant cell HeapString : String {
+	uint8* heapData;
 };
 
 concrete cell Symbol : Datum { 
 	uint32 charLength;
 	uint32 byteLength;
-	uint8* utf8Data;
+};
+
+variant cell InlineSymbol : Symbol {
+	uint8 inlineData[12];
+};
+
+variant cell HeapSymbol : Symbol {
+	uint8* heapData;
 };
 
 preconstructed cell Boolean : Datum {

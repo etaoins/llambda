@@ -5,5 +5,5 @@ case class ProcessedTypes(
   fieldTypes : Map[String, FieldType],
   cellClasses : Map[String, CellClass],
   rootCellClass : RootCellClass,
-  cellClassesByParent : Map[CellClass, List[ChildCellClass]]
+  taggedCellClassesByParent : Map[CellClass, List[TaggedCellClass]]
 )

@@ -3,7 +3,6 @@ package io.llambda.typegen
 import scala.util.parsing.combinator._
 import java.io.File
 import scala.io.Source
-import collection.immutable.ListMap
 import scala.util.parsing.input.Positional
 
 class ParseErrorException(message : String) extends Exception(message)
@@ -38,7 +37,7 @@ trait CommonParsers extends RegexParsers {
 trait FieldTypeAliasParser extends CommonParsers {
   def fieldTypeAlias = positioned("fieldtype" ~> (identifier ~ typeInheritence ~ opt(fieldTypeBody)) <~ ";" ^^ {
     case typeName ~ inherits ~ cTypeNameOptOpt =>
-      new ParsedFieldTypeAlias(typeName, inherits, cTypeNameOptOpt getOrElse None)
+      ParsedFieldTypeAlias(typeName, inherits, cTypeNameOptOpt getOrElse None)
   })
 
   def typeInheritence = ":" ~> fieldSuperType
@@ -61,27 +60,31 @@ trait FieldTypeAliasParser extends CommonParsers {
 trait CellDeclarationParser extends CommonParsers {
   def cellDeclaration = positioned("cell" ~ identifier ~ ";" ^^ {
     case _ ~ typeName ~ _ =>
-      new ParsedCellClassDeclaration(typeName)
+      ParsedCellClassDeclaration(typeName)
   })
 }
 
 trait CellDefinitionParser extends CommonParsers {
-  def cellDefinition = rootCellDefinition | childCellDefinition
+  def cellDefinition = positioned(rootCellDefinition | taggedCellDefinition | variantCellDefinition)
 
-  def rootCellDefinition = positioned("root" ~ internal ~ "cell" ~ identifier ~ "typetag" ~ identifier ~ fields ~ ";" ^^ {
-    case _ ~ internal ~ _ ~ typeName ~ _ ~  typeTagField  ~ fields ~ _ =>
-      new ParsedRootClassDefinition(typeName, typeTagField, fields, internal)
-  })
+  def rootCellDefinition = "root" ~ internal ~ "cell" ~ identifier ~ "typetag" ~ identifier ~ fields ~ ";" ^^ {
+    case _ ~ internal ~ _ ~ typeName ~ _ ~  typeTagField  ~ commonFields ~ _ =>
+      ParsedRootClassDefinition(typeName, typeTagField, commonFields, internal)
+  }
 
-  def childCellDefinition = positioned(instanceType ~ internal ~ ("cell" ~> identifier) ~ cellInheritence ~ fields <~ ";" ^^ {
+  def taggedCellDefinition = instanceType ~ internal ~ ("cell" ~> identifier) ~ cellInheritence ~ fields <~ ";" ^^ {
     case instanceType ~ internal ~ typeName ~ inherits ~ fields =>
-      new ParsedChildClassDefinition(typeName, instanceType, inherits, fields, internal)
-  })
+      ParsedTaggedClassDefinition(typeName, instanceType, inherits, fields, internal)
+  }
+ 
+  def variantCellDefinition = "variant" ~ "cell" ~> identifier ~ cellInheritence ~ fields <~ ";" ^^ { case typeName ~ inherits ~ fields =>
+    ParsedVariantClassDefinition(typeName, inherits, fields)
+  }
 
-  def instanceType = concreteSpecifier | abstractSpecifier | preconstructedSpecifier
+  def instanceType = abstractSpecifier | concreteSpecifier | preconstructedSpecifier
 
-  def concreteSpecifier = "concrete"             ^^^ CellClass.Concrete
   def abstractSpecifier = "abstract"             ^^^ CellClass.Abstract
+  def concreteSpecifier = "concrete"             ^^^ CellClass.Concrete
   def preconstructedSpecifier = "preconstructed" ^^^ CellClass.Preconstructed
 
   // Cells can only inherit from other cells, not field types
@@ -104,18 +107,18 @@ trait CellDefinitionParser extends CommonParsers {
   }
 
   def arrayField = valueType ~ identifier ~ arrayDimensions ^^ { case elementType ~ fieldName ~ dimensions =>
-    new ParsedCellField(fieldName, ParsedArrayType(dimensions, elementType), None)
+    ParsedCellField(fieldName, ParsedArrayType(dimensions, elementType), None)
   }
   
   def functionPointerField = returnType ~ "(" ~ "*" ~ identifier ~ ")" ~ "(" ~ repsep(valueType, ",") ~ ")" ^^ {
     case retType ~ _  ~ _ ~ fieldName ~ _ ~ _ ~ argTypes ~ _ =>
-      new ParsedCellField(fieldName, ParsedFunctionPointerType(retType, argTypes), None)
+      ParsedCellField(fieldName, ParsedFunctionPointerType(retType, argTypes), None)
   }
 }
 
 class DefinitionParser extends CellDeclarationParser with CellDefinitionParser with FieldTypeAliasParser {
   def typeDefinitions : Parser[List[ParsedDefinition]] =
-      rep1(typeDefinition)
+    rep1(typeDefinition)
 
   def typeDefinition = cellDeclaration | cellDefinition | fieldTypeAlias
 

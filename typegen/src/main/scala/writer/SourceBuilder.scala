@@ -76,9 +76,7 @@ abstract class SourceBuilder {
     indentLevel = indentLevel - 1
 
     // We don't need a sep at the end of the block
-    if (sourceString.endsWith("\n\n")) {
-      sourceString = sourceString.dropRight(1)
-    }
+    trimExtraTerminalSep()
 
     buildBlockEnd()
     result
@@ -102,6 +100,12 @@ abstract class SourceBuilder {
     if (shouldSep) {
       sourceString ++= "\n"
       shouldSep = false
+    }
+  }
+
+  protected def trimExtraTerminalSep() {
+    if (sourceString.endsWith("\n\n")) {
+      sourceString = sourceString.dropRight(1)
     }
   }
 

@@ -8,7 +8,7 @@ package io.llambda.typegen
 object CheckChildlessAbstractCellClasses {
   def apply(processedTypes : ProcessedTypes) : Unit = {
     for(cellClass <- processedTypes.cellClasses.values if cellClass.instanceType == CellClass.Abstract) {
-      if (!processedTypes.cellClassesByParent.contains(cellClass)) {
+      if (!processedTypes.taggedCellClassesByParent.contains(cellClass)) {
         throw new ChildlessAbstractCellClassException(cellClass)
       }
     }

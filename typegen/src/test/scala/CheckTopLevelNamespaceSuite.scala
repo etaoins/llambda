@@ -38,7 +38,7 @@ class CheckTopLevelNamespaceSuite extends FunSuite {
     }
   }
   
-  test("conflicting field type and cell class name") {
+  test("conflicting field type and cell class name fails") {
     intercept[DuplicateTypeNameException] {
       checkString("""
         root cell myint typetag typeId{

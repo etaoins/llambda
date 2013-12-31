@@ -4,10 +4,21 @@ import io.llambda
 import llambda.llvmir._
 import llambda.compiler.InternalCompilerErrorException
 
-sealed abstract class CellType extends ${ROOT_CLASS_FIELDS_TRAIT} {
-  val llvmName : String
-  val schemeName : String
+sealed abstract class CastableValue {
   val irType : FirstClassType
+  val llvmName : String
+  
+  def genPointerBitcast(block : IrBlockBuilder)(uncastValue : IrValue) : IrValue =
+    if (uncastValue.irType == PointerType(irType)) {
+      uncastValue
+    }
+    else {
+      block.bitcastTo(llvmName + "Cast")(uncastValue, PointerType(irType))
+    }
+}
+
+sealed abstract class CellType extends CastableValue with ${ROOT_CLASS_FIELDS_TRAIT} {
+  val schemeName : String
   val supertype : Option[CellType]
   val directSubtypes : Set[CellType]
 
@@ -32,14 +43,6 @@ sealed abstract class CellType extends ${ROOT_CLASS_FIELDS_TRAIT} {
     case abstractType => directSubtypes.flatMap(_.concreteTypes)
   }
 
-  def genPointerBitcast(block : IrBlockBuilder)(uncastValue : IrValue) : IrValue =
-    if (uncastValue.irType == PointerType(irType)) {
-      uncastValue
-    }
-    else {
-      block.bitcastTo(llvmName + "Cast")(uncastValue, PointerType(irType))
-    }
-  
   def genTypeCheck(startBlock : IrBlockBuilder)(valueCell : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
     val datumValue = DatumCell.genPointerBitcast(startBlock)(valueCell)
     val typeId = DatumCell.genLoadFromTypeId(startBlock)(datumValue)
@@ -56,6 +59,8 @@ sealed abstract class CellType extends ${ROOT_CLASS_FIELDS_TRAIT} {
 sealed abstract class ConcreteCellType extends CellType {
   val ${TYPE_TAG_FIELD_NAME} : Long
 }
+
+sealed abstract class CellTypeVariant extends CastableValue
 
 object CellType {
   val nextTbaaIndex = ${NEXT_TBAA_INDEX}L

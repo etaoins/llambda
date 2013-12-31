@@ -18,11 +18,6 @@ public:
 		return m_byteLength;
 	}
 
-	std::uint8_t* utf8Data() const
-	{
-		return m_utf8Data;
-	}
-
 public:
 	static bool isInstance(const DatumCell *datum)
 	{
@@ -53,4 +48,3 @@ private:
 	std::uint16_t m_allocSlackBytes;
 	std::uint32_t m_charLength;
 	std::uint32_t m_byteLength;
-	std::uint8_t* m_utf8Data;

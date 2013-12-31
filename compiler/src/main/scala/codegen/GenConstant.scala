@@ -1,6 +1,8 @@
 package io.llambda.compiler.codegen
 import io.llambda
 
+import scala.io.Codec
+
 import llambda.compiler.InternalCompilerErrorException
 
 import llambda.compiler.planner.{step => ps}
@@ -9,8 +11,14 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 
 object GenConstant {
-  protected case class Utf8Constant(irValue : IrConstant, byteLength : Int)
-  
+  private def arrayElementsForIrType(irType : IrType) : Int= irType match {
+    case ArrayType(elements, _) =>
+      elements
+
+    case _ =>
+      throw new InternalCompilerErrorException("Expected cell member to be array")
+  }
+
   protected def defineConstantData(module : IrModuleBuilder)(name : String, initializer  : IrConstant) : GlobalVariable = {
     val constantDataDef = IrGlobalVariableDef(
       name=name,
@@ -24,17 +32,23 @@ object GenConstant {
     constantDataDef.variable
   }
 
-  private def genUtf8Constant(module : IrModuleBuilder)(baseName : String, value : String) : Utf8Constant = {
+  private def genHeapUtf8Constant(module : IrModuleBuilder)(baseName : String, utf8Data : Array[Byte]) : IrConstant = {
     val innerConstantName = baseName + ".str"
-    val innerConstantInitializer = StringConstant(value)
+    // Add a single NULL terminator
+    val innerConstantInitializer = StringConstant(utf8Data :+ 0.toByte)
 
     val innerConstant = defineConstantData(module)(innerConstantName, innerConstantInitializer)
+    ElementPointerConstant(IntegerType(8), innerConstant, List(0, 0))
+  }
+  
+  private def genInlineUtf8Constant(module : IrModuleBuilder)(utf8Data : Array[Byte], constantLength : Int) : IrConstant = {
+    val padByteCount = constantLength - utf8Data.length
 
-    Utf8Constant(
-      irValue=ElementPointerConstant(IntegerType(8), innerConstant, List(0, 0)),
-      // Don't include the NULL terminator
-      byteLength=innerConstantInitializer.length - 1
-    )
+    // Pad this string with 0s
+    val terminatedUtf8Data = utf8Data ++ Array.fill(padByteCount)(0.toByte)
+
+    // Return a direct constant
+    StringConstant(terminatedUtf8Data)
   }
 
   def genBytevectorCell(module : IrModuleBuilder)(elements : Seq[Short]) : IrConstant = {
@@ -92,32 +106,84 @@ object GenConstant {
     defineConstantData(module)(procCellName, procCell)
   }
 
-  def apply(state : GenerationState, typeGenerator : TypeGenerator)(storeStep : ps.StoreConstant) : IrConstant = storeStep match {
-    case ps.StoreStringCell(_, value) =>
-      val baseName = state.module.nameSource.allocate("schemeString")
-      val utf8Constant = genUtf8Constant(state.module)(baseName, value)
-      val stringCellName = baseName + ".cell"
+  def genStringCell(module : IrModuleBuilder)(value : String) : IrConstant = {
+    val baseName = module.nameSource.allocate("schemeString")
+    val stringCellName = baseName + ".cell"
 
-      val stringCell = ct.StringCell.createConstant(
+    val utf8Data = Codec.toUTF8(value)
+    val inlineUtf8Bytes = arrayElementsForIrType(ct.InlineStringCell.inlineDataIrType)
+
+    val stringCell = if (utf8Data.length < inlineUtf8Bytes) {
+      // We can do this inline
+      val utf8Constant = genInlineUtf8Constant(module)(utf8Data, inlineUtf8Bytes)
+
+      ct.InlineStringCell.createConstant(
+        inlineData=utf8Constant,
         allocSlackBytes=0,
         charLength=value.length,
-        // Don't include the NULL terminatoruuu
-        byteLength=utf8Constant.byteLength,
-        utf8Data=utf8Constant.irValue)
+        byteLength=utf8Data.length
+      )
+    }
+    else {
+      // We have to put this on the heap
+      val utf8Constant = genHeapUtf8Constant(module)(baseName, utf8Data)
 
-      defineConstantData(state.module)(stringCellName, stringCell)
+      ct.HeapStringCell.createConstant(
+        heapData=utf8Constant,
+        allocSlackBytes=0,
+        charLength=value.length,
+        byteLength=utf8Data.length
+      )
+    }
+
+    // The rest of the compiler assumes this is just a %string*
+    BitcastToConstant(
+      defineConstantData(module)(stringCellName, stringCell),
+      PointerType(ct.StringCell.irType)
+    )
+  }
+  
+  def genSymbolCell(module : IrModuleBuilder)(value : String) : IrConstant = {
+    val baseName = module.nameSource.allocate("schemeSymbol")
+    val symbolCellName = baseName + ".cell"
+
+    val utf8Data = Codec.toUTF8(value)
+    val inlineUtf8Bytes = arrayElementsForIrType(ct.InlineSymbolCell.inlineDataIrType)
+
+    val symbolCell = if (utf8Data.length < inlineUtf8Bytes) {
+      // We can do this inline
+      val utf8Constant = genInlineUtf8Constant(module)(utf8Data, inlineUtf8Bytes)
+
+      ct.InlineSymbolCell.createConstant(
+        inlineData=utf8Constant,
+        charLength=value.length,
+        byteLength=utf8Data.length
+      )
+    }
+    else {
+      // We have to put this on the heap
+      val utf8Constant = genHeapUtf8Constant(module)(baseName, utf8Data)
+
+      ct.HeapSymbolCell.createConstant(
+        heapData=utf8Constant,
+        charLength=value.length,
+        byteLength=utf8Data.length
+      )
+    }
+
+    // The rest of the compiler assumes this is just a %symbol*
+    BitcastToConstant(
+      defineConstantData(module)(symbolCellName, symbolCell),
+      PointerType(ct.SymbolCell.irType)
+    )
+  }
+
+  def apply(state : GenerationState, typeGenerator : TypeGenerator)(storeStep : ps.StoreConstant) : IrConstant = storeStep match {
+    case ps.StoreStringCell(_, value) =>
+      genStringCell(state.module)(value)
 
     case ps.StoreSymbolCell(_, value) =>
-      val baseName = state.module.nameSource.allocate("schemeSymbol")
-      val utf8Constant = genUtf8Constant(state.module)(baseName, value)
-      val symbolCellName = baseName + ".cell"
-
-      val symbolCell = ct.SymbolCell.createConstant(
-        charLength=value.length,
-        byteLength=utf8Constant.byteLength,
-        utf8Data=utf8Constant.irValue)
-
-      defineConstantData(state.module)(symbolCellName, symbolCell)
+      genSymbolCell(state.module)(value)
 
     case ps.StoreExactIntegerCell(_, value) =>
       val intCellName = state.module.nameSource.allocate("schemeExactInteger")
