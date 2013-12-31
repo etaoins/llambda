@@ -38,12 +38,12 @@ object WriteCellMembers extends writer.OutputWriter {
     if (!cellClass.fields.isEmpty) {
       cppBuilder += "public:"
       cppBuilder.indented {
-        for((fieldName, field) <- cellClass.fields) {
+        for(field <- cellClass.fields) {
           val cppReturnType = FieldTypeToCpp(field.fieldType, None)
 
-          cppBuilder += s"${cppReturnType} ${fieldName}() const"
+          cppBuilder += s"${cppReturnType} ${field.name}() const"
           cppBuilder.blockSep {
-            cppBuilder += s"return m_${fieldName};"
+            cppBuilder += s"return m_${field.name};"
           }
         }
       }
@@ -78,8 +78,8 @@ object WriteCellMembers extends writer.OutputWriter {
       // Define each field member variable
       cppBuilder += "private:"
       cppBuilder.indented {
-        for((fieldName, field) <- cellClass.fields) {
-          cppBuilder += FieldTypeToCpp(field.fieldType, Some("m_" + fieldName)) + ";"
+        for(field <- cellClass.fields) {
+          cppBuilder += FieldTypeToCpp(field.fieldType, Some("m_" + field.name)) + ";"
         }
       }
     }

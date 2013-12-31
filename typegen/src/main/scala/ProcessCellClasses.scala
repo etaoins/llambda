@@ -18,7 +18,7 @@ object ProcessCellClasses {
   }
 
   /** Creates TBAA nodes for our fields and the fields we inherit from our superclasses */
-  private def createTbaaNodes(selfName : String, selfFields : ListMap[String, CellField], parentClass : Option[CellClass], indexCounter : () => Int) : ListMap[CellField, llvmir.IrTbaaNode] = {
+  private def createTbaaNodes(selfName : String, selfFields : List[CellField], parentClass : Option[CellClass], indexCounter : () => Int) : ListMap[CellField, llvmir.IrTbaaNode] = {
     // Inherit the TBAA nodes from our parents
     val inheritsNodes = parentClass.map(_.fieldTbaaNodes).getOrElse(ListMap.empty).map { case (cellField, parentTbaaNode) =>
       val identity = s"${parentTbaaNode.identity}->${selfName}"
@@ -28,8 +28,8 @@ object ProcessCellClasses {
     }
 
     // Create parentless TBAA nodes for the new fields we introduce
-    val selfNodes = (selfFields.map { case (fieldName, cellField) =>
-      val identity = s"${selfName}::${fieldName}"
+    val selfNodes = (selfFields.map {cellField =>
+      val identity = s"${selfName}::${cellField.name}"
       val tbaaIndex = indexCounter()
 
       (cellField -> llvmir.IrTbaaNode(tbaaIndex, identity, None))
@@ -39,12 +39,17 @@ object ProcessCellClasses {
   }
 
   /** Converts a list of parsed fields in to CellField instances by resolving their types */ 
-  private def processFields(fieldTypes : Map[String, FieldType])(parsedFields : List[ParsedCellField]) : ListMap[String, CellField] = {
-    parsedFields.foldLeft(ListMap[String, CellField]()) { (seenFields, parsedField) =>
+  private def processFields(fieldTypes : Map[String, FieldType])(parsedFields : List[ParsedCellField]) : List[CellField] = {
+    // Make sure all field names are unique
+    parsedFields.foldLeft(Set[String]()) { (seenFields, parsedField) =>
       if (seenFields.contains(parsedField.name)) {
         throw new DuplicateFieldNameException(parsedField)
       }
 
+      seenFields + parsedField.name
+    }
+
+    parsedFields.map { parsedField =>
       val resolvedType = ResolveParsedType(fieldTypes)(parsedField.fieldType)
 
       if (parsedField.initializer.isDefined) {
@@ -57,9 +62,7 @@ object ProcessCellClasses {
       }
 
       val cellField = new CellField(parsedField.name, resolvedType, parsedField.initializer)
-      val positionedCellField = cellField.setPos(parsedField.pos)
-
-      seenFields + (parsedField.name -> positionedCellField)
+      cellField.setPos(parsedField.pos)
     }
   }
 
@@ -99,7 +102,7 @@ object ProcessCellClasses {
       val cellClass = parsedCellDef match {
         case rootClass : ParsedRootClassDefinition =>
           // Find our type ID tag field
-          val typeTagField = cellFields.getOrElse(rootClass.typeTagField, {
+          val typeTagField = cellFields.find(rootClass.typeTagField == _.name).getOrElse({
             throw new UndefinedTypeTagFieldException(rootClass)
           })
 

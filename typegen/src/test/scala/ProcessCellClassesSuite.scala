@@ -135,7 +135,8 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       assert(datumClass.internal === false)
       assert(datumClass.typeId === None)
 
-      val typeIdField = datumClass.fields("typeId")
+      val List(typeIdField, gcStateField) = datumClass.fields
+
       assert(typeIdField.fieldType === PrimitiveFieldType(
         Some(true),
         llvmir.IntegerType(32),
@@ -143,7 +144,6 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       ))
       assert(typeIdField.initializer === None)
 
-      val gcStateField = datumClass.fields("gcState")
       assert(gcStateField.fieldType === PrimitiveFieldType(
         Some(true),
         llvmir.IntegerType(8),
@@ -187,21 +187,20 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       assert(stringLikeClass.instanceType === CellClass.Abstract)
       assert(stringLikeClass.parent === datumClass) 
 
-      val charCountField = stringLikeClass.fields("charCount")
+      val List(charCountField, byteCountField, dataField) = stringLikeClass.fields
+
       assert(charCountField.fieldType === PrimitiveFieldType(
         Some(false),
         llvmir.IntegerType(32),
         "std::uint32_t"
       ))
       
-      val byteCountField = stringLikeClass.fields("byteCount")
       assert(byteCountField.fieldType === PrimitiveFieldType(
         Some(false),
         llvmir.IntegerType(32),
         "std::uint32_t"
       ))
 
-      val dataField = stringLikeClass.fields("data")
       assert(dataField.fieldType === PointerFieldType(
         PrimitiveFieldType(
           Some(false),
@@ -211,8 +210,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       ))
 
       // Get our inherited fields
-      val typeIdField = datumClass.fields("typeId")
-      val gcStateField = datumClass.fields("gcState")
+      val List(typeIdField, gcStateField) = datumClass.fields
 
       // Check our parents TBAA nodes
       val parentTypeIdTbaaNode = datumClass.fieldTbaaNodes(typeIdField)

@@ -48,11 +48,11 @@ sealed abstract class CellClass extends Positional {
 
   val instanceType : CellClass.InstanceType
 
-  /** Ordered map of cell class fields indexed by the field name
+  /** Cell class fields indexed by the field name
     *
     * This does not include fields inherited from the parent class
     */
-  val fields : ListMap[String, CellField]
+  val fields : List[CellField]
 
   /** Indicates if this cell class should be hidden from Scheme
     *
@@ -80,13 +80,13 @@ sealed abstract class CellClass extends Positional {
   * 
   * There is only one root cell class for any set of cell class definitions
   */
-case class RootCellClass(name : String, typeTagField : CellField, fields : ListMap[String, CellField], internal : Boolean, fieldTbaaNodes : ListMap[CellField, llvmir.IrTbaaNode]) extends CellClass {
+case class RootCellClass(name : String, typeTagField : CellField, fields : List[CellField], internal : Boolean, fieldTbaaNodes : ListMap[CellField, llvmir.IrTbaaNode]) extends CellClass {
   val instanceType = CellClass.Abstract
   val typeId = None
   val parentOption = None
 }
 
 /** Non-root cell class */
-case class ChildCellClass(name : String, instanceType : CellClass.InstanceType, parent : CellClass, fields : ListMap[String, CellField], internal : Boolean, typeId : Option[Int], fieldTbaaNodes : ListMap[CellField, llvmir.IrTbaaNode]) extends CellClass {
+case class ChildCellClass(name : String, instanceType : CellClass.InstanceType, parent : CellClass, fields : List[CellField], internal : Boolean, typeId : Option[Int], fieldTbaaNodes : ListMap[CellField, llvmir.IrTbaaNode]) extends CellClass {
   val parentOption = Some(parent)
 }

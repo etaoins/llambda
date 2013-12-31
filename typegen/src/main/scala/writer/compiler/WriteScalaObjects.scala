@@ -53,13 +53,13 @@ object WriteScalaObjects extends writer.OutputWriter {
       scalaBuilder.sep()
 
       // Output our field types
-      for((name, field) <- cellClass.fields) {
+      for(field <- cellClass.fields) {
         // Find the field's LLVM type
         val llvmType = FieldTypeToLlvm(field.fieldType)
         // Build a Scala constructor for it
         val scalaConstructor = LlvmTypeToScalaConstructor(llvmType)
 
-        scalaBuilder += s"val ${name}IrType = ${scalaConstructor}"
+        scalaBuilder += s"val ${field.name}IrType = ${scalaConstructor}"
         scalaBuilder += s"val ${field.name}TbaaIndex : Long" 
         scalaBuilder += s"val ${field.name}GepIndices : List[Int]"
         scalaBuilder.sep()
@@ -68,10 +68,10 @@ object WriteScalaObjects extends writer.OutputWriter {
       scalaBuilder.sep()
 
       // Output our abstract field accessors 
-      for((fieldName, field) <- cellClass.fields) {
+      for(field <- cellClass.fields) {
         // These are reused by every method
-        val capitalizedName = fieldName.capitalize
-        val pointerVarName = fieldName + "Ptr"
+        val capitalizedName = field.name.capitalize
+        val pointerVarName = field.name + "Ptr"
 
         // This generates a pointer to the field
         scalaBuilder += s"def genPointerTo${capitalizedName}(block : IrBlockBuilder)(valueCell : IrValue) : IrValue ="
@@ -88,9 +88,9 @@ object WriteScalaObjects extends writer.OutputWriter {
 
           scalaBuilder += s"""block.getelementptr("${pointerVarName}")("""
           scalaBuilder.indented {
-            scalaBuilder += s"elementType=${fieldName}IrType,"
+            scalaBuilder += s"elementType=${field.name}IrType,"
             scalaBuilder +=  "basePointer=valueCell,"
-            scalaBuilder += s"indices=${fieldName}GepIndices.map(IntegerConstant(IntegerType(32), _)),"
+            scalaBuilder += s"indices=${field.name}GepIndices.map(IntegerConstant(IntegerType(32), _)),"
             scalaBuilder += "inbounds=true"
           }
           scalaBuilder += ")"
@@ -100,20 +100,20 @@ object WriteScalaObjects extends writer.OutputWriter {
         scalaBuilder += s"def genStoreTo${capitalizedName}(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue) "
         scalaBuilder.blockSep {
           scalaBuilder += s"val ${pointerVarName} = genPointerTo${capitalizedName}(block)(valueCell)"
-          scalaBuilder += s"block.store(toStore, ${pointerVarName}, tbaaIndex=Some(${fieldName}TbaaIndex))"
+          scalaBuilder += s"block.store(toStore, ${pointerVarName}, tbaaIndex=Some(${field.name}TbaaIndex))"
         }
   
         scalaBuilder += s"def genLoadFrom${capitalizedName}(block : IrBlockBuilder)(valueCell : IrValue) : IrValue ="
         scalaBuilder.blockSep {
           scalaBuilder += s"val ${pointerVarName} = genPointerTo${capitalizedName}(block)(valueCell)"
-          scalaBuilder += s"""block.load("${fieldName}")(${pointerVarName}, tbaaIndex=Some(${fieldName}TbaaIndex))"""
+          scalaBuilder += s"""block.load("${field.name}")(${pointerVarName}, tbaaIndex=Some(${field.name}TbaaIndex))"""
         }
       }
     }
   }
 
   private def collectConstructorValues(cellClass : CellClass) : ConstructorValues = {
-    val selfValues = cellClass.fields.values.toList.map { field =>
+    val selfValues = cellClass.fields map { field =>
       val llvmType = FieldTypeToLlvm(field.fieldType)
 
       if (field.initializer.isDefined) {
@@ -204,10 +204,10 @@ object WriteScalaObjects extends writer.OutputWriter {
       0
     }
 
-    for(((fieldName, field), fieldIndex) <- cellClass.fields.zipWithIndex) {
+    for((field, fieldIndex) <- cellClass.fields.zipWithIndex) {
       val gepIndices = List.fill(depth)(0) :+ (fieldBaseIndex + fieldIndex) 
 
-      scalaBuilder += s"""val ${fieldName}GepIndices = List(${gepIndices.mkString(", ")})"""
+      scalaBuilder += s"""val ${field.name}GepIndices = List(${gepIndices.mkString(", ")})"""
     }
   }
 

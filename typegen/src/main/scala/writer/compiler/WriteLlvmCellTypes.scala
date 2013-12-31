@@ -17,19 +17,19 @@ object WriteLlvmCellTypes extends writer.OutputWriter {
       sourceString ++= "\n"
 
       // Build the description chunks for our comment
-      val fieldDescriptions = cellClass.fields.toList map { case (name, field) =>
+      val fieldDescriptions = cellClass.fields map { field =>
         field.fieldType match {
-          case PrimitiveFieldType(_, _, "bool")      => s"bool ${name}"
-          case PrimitiveFieldType(Some(false), _, _) => s"unsigned ${name}"
-          case PrimitiveFieldType(Some(true), _, _)  => s"signed ${name}"
-          case _ => name
+          case PrimitiveFieldType(_, _, "bool")      => s"bool ${field.name}"
+          case PrimitiveFieldType(Some(false), _, _) => s"unsigned ${field.name}"
+          case PrimitiveFieldType(Some(true), _, _)  => s"signed ${field.name}"
+          case _ => field.name
         }
       }
 
       sourceString ++= "; {" + ("supertype" :: fieldDescriptions).mkString(", ") + "}\n" 
     
       // Find the LLVM types for our fields
-      val fieldLlvmTypes = cellClass.fields.values.toList map { field =>
+      val fieldLlvmTypes = cellClass.fields map { field =>
         FieldTypeToLlvm(field.fieldType)
       }
 
