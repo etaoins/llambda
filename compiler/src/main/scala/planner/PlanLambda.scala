@@ -130,7 +130,7 @@ private[planner] object PlanLambda {
     
     // Import the immutabes that don't need to be captured
     val importedImmutables = processedImmutables.collect({ case Left(importedTuple) =>
-        importedTuple
+      importedTuple
     }).toMap
 
     // Make a list of all the captured variables

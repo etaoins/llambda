@@ -11,7 +11,7 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 
 private[planner] object PlanExpression {
   // These objects know how to implement certain report procedure directly
-  //with plan steps
+  // with plan steps
   private val reportProcPlanners = List(
     reportproc.CadrProcPlanner
   )
@@ -107,8 +107,8 @@ private[planner] object PlanExpression {
               case (knownProc : iv.KnownProcedure, reportProc : ReportProcedure) =>
                 // Annotate with our report name so we can optimize when we try
                 // to apply this
-                // Note this is agnostic to if the implementation is a  native
-                // function versus a Scheme  procedures
+                // Note this is agnostic to if the implementation is a native
+                // function versus a Scheme procedure
                 knownProc.withReportName(reportProc.reportName)
 
               case (otherValue, _) =>
