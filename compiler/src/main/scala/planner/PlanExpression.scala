@@ -16,11 +16,16 @@ private[planner] object PlanExpression {
     reportproc.CadrProcPlanner
   )
 
-  private def storePlannedFunction(suggestedName : String, plannedFunction : PlannedFunction)(implicit plan : PlanWriter) : iv.IntermediateValue = {
-    val nativeSymbol = plan.allocProcedureSymbol(suggestedName)
-    plan.plannedFunctions += (nativeSymbol -> plannedFunction)
+  private def lazyPlannedFunction(suggestedName : String, plannedFunction : PlannedFunction)(implicit plan : PlanWriter) : iv.IntermediateValue = {
+    // Don't emit this function until its referenced
+    val symbolBlock = () => {
+      val nativeSymbol = plan.allocProcedureSymbol(suggestedName)
+      plan.plannedFunctions += (nativeSymbol -> plannedFunction)
 
-    new iv.KnownProcedure(plannedFunction.signature, nativeSymbol, None)
+      nativeSymbol
+    }
+
+    new iv.KnownProcedure(plannedFunction.signature, symbolBlock, None)
   }
 
   def apply(initialState : PlannerState)(expr : et.Expression, sourceNameHint : Option[String] = None)(implicit planConfig : PlanConfig, plan : PlanWriter) : PlanResult = LocateExceptionsWith(expr) {
@@ -203,7 +208,7 @@ private[planner] object PlanExpression {
       case nativeFunc : et.NativeFunction =>
         PlanResult(
           state=initialState,
-          value=new iv.KnownProcedure(nativeFunc, nativeFunc.nativeSymbol, None)
+          value=new iv.KnownProcedure(nativeFunc, () => nativeFunc.nativeSymbol, None)
         )
 
       case recordConstructor : et.RecordTypeConstructor =>
@@ -216,7 +221,7 @@ private[planner] object PlanExpression {
 
         PlanResult(
           state=initialState,
-          value=storePlannedFunction(
+          value=lazyPlannedFunction(
             procName,
             PlanRecordTypeConstructor(recordConstructor)
           )
@@ -232,7 +237,7 @@ private[planner] object PlanExpression {
 
         PlanResult(
           state=initialState,
-          value=storePlannedFunction(
+          value=lazyPlannedFunction(
             procName,
             PlanRecordTypePredicate(recordPredicate)
           )
@@ -249,7 +254,7 @@ private[planner] object PlanExpression {
 
         PlanResult(
           state=initialState,
-          value=storePlannedFunction(
+          value=lazyPlannedFunction(
             procName, 
             PlanRecordTypeAccessor(recordAccessor)
           )
@@ -268,7 +273,7 @@ private[planner] object PlanExpression {
 
         PlanResult(
           state=initialState,
-          value=storePlannedFunction(
+          value=lazyPlannedFunction(
             procName,
             PlanRecordTypeMutator(recordMutator)
           )

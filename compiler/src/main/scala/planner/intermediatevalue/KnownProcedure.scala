@@ -20,7 +20,8 @@ import llambda.compiler.RuntimeErrorMessage
   * represented by InvokableProcedureCell
   *
   * @param signature     Signature of the procedure
-  * @param nativeSymbol  Native symbol of the direct entry point to the procedure
+  * @param symbolBlock   Function returning the native symbol of the direct
+                         entry point to the procedure
   * @param selfTempOpt   For procedures with closures a procedure cell
   *                      containing the procedure's closure. The entry point
   *                      does not have to be initialized; it will be set
@@ -30,8 +31,11 @@ import llambda.compiler.RuntimeErrorMessage
   *                      to implemented certain optimizations elsewhere in the
   *                      planner. It is not directly used by this class
   */
-class KnownProcedure(val signature : ProcedureSignature, nativeSymbol : String, selfTempOpt : Option[ps.TempValue], val reportName : Option[String] = None) extends IntermediateValue with InvokableProcedure with NonRecordValue {
+class KnownProcedure(val signature : ProcedureSignature, symbolBlock : () => String, selfTempOpt : Option[ps.TempValue], val reportName : Option[String] = None) extends IntermediateValue with InvokableProcedure with NonRecordValue {
   val possibleTypes = Set[ct.ConcreteCellType](ct.ProcedureCell) 
+
+  // Only ask for this once
+  lazy val nativeSymbol = symbolBlock()
   
   def toInvokableProcedure()(implicit plan : PlanWriter) : Option[InvokableProcedure] = 
     Some(this)
@@ -96,7 +100,7 @@ class KnownProcedure(val signature : ProcedureSignature, nativeSymbol : String, 
     impossibleConversion(s"Cannot convert procedure to requested type ${nativeType.schemeName} or any other native type")
 
   def withReportName(newReportName : String) : KnownProcedure = {
-    new KnownProcedure(signature, nativeSymbol, selfTempOpt, Some(newReportName))
+    new KnownProcedure(signature, symbolBlock, selfTempOpt, Some(newReportName))
   }
   
   def planEntryPoint()(implicit plan : PlanWriter) : ps.TempValue = {

@@ -263,7 +263,7 @@ private[planner] object PlanLambda {
       cellTemp
     }
 
-    val procValue = new iv.KnownProcedure(plannedFunction.signature, nativeSymbol, procCell)
+    val procValue = new iv.KnownProcedure(plannedFunction.signature, () => nativeSymbol, procCell)
 
     PlanResult(
       state=parentState,
