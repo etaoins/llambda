@@ -1,18 +1,18 @@
 #ifndef _LLIBY_BINDING_BOOLEANCELL_H
 #define _LLIBY_BINDING_BOOLEANCELL_H
 
-#include "SingletonValue.h"
+#include "PreconstructedValue.h"
 #include "core/constinstances.h"
 
 namespace lliby
 {
 
-class BooleanCell : public SingletonValue<DatumCell>
+class BooleanCell : public PreconstructedValue<DatumCell>
 {
 #include "generated/BooleanCellMembers.h"
 public:
 	explicit BooleanCell(bool value) :
-		SingletonValue(CellTypeId::Boolean),
+		PreconstructedValue(CellTypeId::Boolean),
 		m_value(value)
 	{
 	}

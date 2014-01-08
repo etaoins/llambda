@@ -7,8 +7,8 @@
 extern "C"
 {
 
-// These are constant values that must be referenced through these singleton
-// instances. This provides two benefits:
+// These are constant values that must be referenced through these
+// preconstructed instances. This provides two benefits:
 // 1) They can be tested for equality without deferencing their poointer.
 //    Dereferencing still works as expected but this can be used as an
 //    optimization 
