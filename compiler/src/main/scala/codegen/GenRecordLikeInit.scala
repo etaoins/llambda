@@ -12,23 +12,9 @@ object GenRecordLikeInit {
   def apply(state : GenerationState, typeGenerator : TypeGenerator)(initStep : ps.RecordLikeInit) : InitializedRecordLike  = { 
     val cellType = initStep.recordLikeType.cellType
 
-    // Declare _lliby_record_data_alloc
-    val llibyRecordDataAlloc = IrFunctionDecl(
-      result=IrFunction.Result(PointerType(IntegerType(8))),
-      name="_lliby_record_data_alloc",
-      arguments=List(
-        IrFunction.Argument(IntegerType(64))
-      ),
-      attributes=Set(IrFunction.NoUnwind)
-    )
-    
     val block = state.currentBlock
     val module = state.module
 
-    module.unlessDeclared(llibyRecordDataAlloc) {
-      module.declareFunction(llibyRecordDataAlloc)
-    }
-    
     // Get a pointer to the new cell
     val allocation = state.liveAllocations(initStep.allocation)
     val recordCell = allocation.genTypedPointer(block)(initStep.allocIndex, cellType) 
@@ -53,6 +39,20 @@ object GenRecordLikeInit {
         cellType.genPointerToRecordData(block)(recordCell)
 
       case TypeDataStorage.OutOfLine =>
+        // Declare _lliby_record_data_alloc
+        val llibyRecordDataAlloc = IrFunctionDecl(
+          result=IrFunction.Result(PointerType(IntegerType(8))),
+          name="_lliby_record_data_alloc",
+          arguments=List(
+            IrFunction.Argument(IntegerType(64))
+          ),
+          attributes=Set(IrFunction.NoUnwind)
+        )
+    
+        module.unlessDeclared(llibyRecordDataAlloc) {
+          module.declareFunction(llibyRecordDataAlloc)
+        }
+    
         // Find the size of the record data
         val irSize = GenSizeOf(block)(recordDataIrType)
     
