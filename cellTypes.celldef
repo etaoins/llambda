@@ -27,9 +27,7 @@ root cell Datum typetag typeId {
 	GarbageState gcState = 0;
 };
 
-// "unspecific" values in Scheme
-// This is similar to the unit type
-preconstructed cell Unspecific : Datum {
+preconstructed cell Unit : Datum {
 };
 
 abstract cell ListElement : Datum {

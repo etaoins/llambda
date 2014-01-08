@@ -12,7 +12,7 @@ namespace lliby
 
 enum class CellTypeId : std::uint8_t
 {
-	Unspecific = 0,
+	Unit = 0,
 	Pair = 1,
 	EmptyList = 2,
 	String = 3,

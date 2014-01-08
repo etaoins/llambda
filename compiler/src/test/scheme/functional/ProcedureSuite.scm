@@ -33,7 +33,7 @@
 
 	((typeless-cell exact?))))
 
-(define-test "procedure returning nothing" (expect #!unspecific
+(define-test "procedure returning nothing" (expect #!unit
 	(define (return-nothing))
 	(return-nothing)))
 

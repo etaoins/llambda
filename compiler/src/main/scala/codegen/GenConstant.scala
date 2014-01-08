@@ -253,8 +253,8 @@ object GenConstant {
 
       defineConstantData(state.module)(pairCellName, pairCell)
 
-    case ps.StoreUnspecificCell(_) =>
-      GlobalDefines.unspecificIrValue
+    case ps.StoreUnitCell(_) =>
+      GlobalDefines.unitIrValue
 
     case ps.StoreEmptyListCell(_) =>
       GlobalDefines.emptyListIrValue

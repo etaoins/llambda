@@ -5,24 +5,24 @@
 public:
 	static bool isInstance(const DatumCell *datum)
 	{
-		return datum->typeId() == CellTypeId::Unspecific;
+		return datum->typeId() == CellTypeId::Unit;
 	}
 
-	static UnspecificCell* fromDatum(DatumCell *datum)
+	static UnitCell* fromDatum(DatumCell *datum)
 	{
 		if (isInstance(datum))
 		{
-			return static_cast<UnspecificCell*>(datum);
+			return static_cast<UnitCell*>(datum);
 		}
 
 		return nullptr;
 	}
 
-	static const UnspecificCell* fromDatum(const DatumCell *datum)
+	static const UnitCell* fromDatum(const DatumCell *datum)
 	{
 		if (isInstance(datum))
 		{
-			return static_cast<const UnspecificCell*>(datum);
+			return static_cast<const UnitCell*>(datum);
 		}
 
 		return nullptr;

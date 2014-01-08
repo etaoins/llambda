@@ -92,7 +92,7 @@ case class StoreBooleanCell(result : TempValue, value : Boolean) extends StoreCo
 case class StoreBytevectorCell(result : TempValue, elements : Vector[Short]) extends StoreConstantCell
 case class StorePairCell(result : TempValue, car : TempValue, cdr : TempValue) extends StoreConstantCell
 case class StoreVectorCell(result : TempValue, elements : Vector[TempValue]) extends StoreConstantCell
-case class StoreUnspecificCell(result : TempValue) extends StoreConstantCell
+case class StoreUnitCell(result : TempValue) extends StoreConstantCell
 case class StoreEmptyListCell(result : TempValue) extends StoreConstantCell
 
 /** Stores a procedure with an empty closure 

@@ -3,7 +3,7 @@
  ************************************************************/
 
 #include "binding/DatumCell.h"
-#include "binding/UnspecificCell.h"
+#include "binding/UnitCell.h"
 #include "binding/ListElementCell.h"
 #include "binding/PairCell.h"
 #include "binding/EmptyListCell.h"
@@ -28,9 +28,9 @@ bool lliby_is_datum(const DatumCell *value)
 	return DatumCell::isInstance(value);
 }
 
-bool lliby_is_unspecific(const DatumCell *value)
+bool lliby_is_unit(const DatumCell *value)
 {
-	return UnspecificCell::isInstance(value);
+	return UnitCell::isInstance(value);
 }
 
 bool lliby_is_list_element(const DatumCell *value)

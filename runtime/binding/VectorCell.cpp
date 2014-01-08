@@ -1,5 +1,5 @@
 #include "VectorCell.h"
-#include "UnspecificCell.h"
+#include "UnitCell.h"
 
 #include <limits>
 #include <string.h>
@@ -52,7 +52,7 @@ VectorCell* VectorCell::fromFill(std::uint32_t length, DatumCell *fill)
 
 	if (fill == nullptr)
 	{
-		fill = const_cast<UnspecificCell*>(UnspecificCell::instance());
+		fill = const_cast<UnitCell*>(UnitCell::instance());
 	}
 
 	newVector->fill(fill, 0, -1);

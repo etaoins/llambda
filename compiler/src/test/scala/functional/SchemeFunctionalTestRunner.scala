@@ -145,7 +145,7 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
         ExecutionResult(success=true, output=output, errorString=errorString)
       }
       else {
-        ExecutionResult(success=false, output=ast.UnspecificValue(), errorString=errorString)
+        ExecutionResult(success=false, output=ast.UnitValue(), errorString=errorString)
       }
     }
     finally {

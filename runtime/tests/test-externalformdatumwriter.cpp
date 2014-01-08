@@ -2,7 +2,7 @@
 #include <sstream>
 
 #include "writer/ExternalFormDatumWriter.h"
-#include "binding/UnspecificCell.h"
+#include "binding/UnitCell.h"
 #include "binding/EmptyListCell.h"
 #include "binding/BooleanCell.h"
 #include "binding/ExactIntegerCell.h"
@@ -43,9 +43,9 @@ StringCell *stringFor(const char *utf8String)
 	return StringCell::fromUtf8CString(utf8String);
 }
 
-void testUnspecific()
+void testUnit()
 {
-	assertForm(UnspecificCell::instance(), "#!unspecific");
+	assertForm(UnitCell::instance(), "#!unit");
 }
 
 void testEmptyList()
@@ -194,7 +194,7 @@ int main(int argc, char *argv[])
 
 	lliby_init();
 
-	testUnspecific();
+	testUnit();
 	testEmptyList();
 	testBoolean();
 	testExactInteger();

@@ -138,7 +138,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     assert(expressionFor("(if #f 'yes)") === et.Cond(
       et.Literal(ast.BooleanLiteral(false)),
       et.Literal(ast.Symbol("yes")),
-      et.Literal(ast.UnspecificValue())
+      et.Literal(ast.UnitValue())
     ))
   }
 
@@ -264,7 +264,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
             (barLoc, et.Lambda(aLoc :: bLoc :: Nil, None, barExpr)) :: Nil) =>
 
           assert(fooExpr === et.Apply(et.VarRef(barLoc), et.VarRef(xLoc) :: et.VarRef(yLoc) :: Nil))
-          assert(barExpr === et.Cond(et.VarRef(aLoc), et.VarRef(bLoc), et.Literal(ast.UnspecificValue())))
+          assert(barExpr === et.Cond(et.VarRef(aLoc), et.VarRef(bLoc), et.Literal(ast.UnitValue())))
 
           assert(bodyExpr === et.Apply(et.VarRef(fooLoc), et.Literal(ast.BooleanLiteral(true)) :: Nil))
         }

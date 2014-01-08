@@ -57,7 +57,7 @@ class FindMutableVarsSuite extends FunSuite {
       et.Cond(
         et.Literal(ast.BooleanLiteral(false)),
         et.MutateVar(testLocA, et.Literal(ast.EmptyList())),
-        et.Literal(ast.UnspecificValue())
+        et.Literal(ast.UnitValue())
       ))
 
     val mutables = testExprs.flatMap(FindMutableVars.apply).toSet

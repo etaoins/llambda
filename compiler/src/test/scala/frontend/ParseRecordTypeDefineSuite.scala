@@ -273,7 +273,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelper
     val scope = new Scope(collection.mutable.Map(), Some(baseScope))
 
     intercept[BadSpecialFormException] {
-      // Everything but datum-cell and unspecific-cell have no default value
+      // Everything but datum-cell and unit-cell have no default value
       bodyFor("""(define-record-type <new-type>
                  (new-type)
                  new-type?

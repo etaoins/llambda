@@ -170,14 +170,14 @@ object EmptyListValue extends ConstantValue(ct.EmptyListCell) {
     impossibleConversion(s"Cannot convert constant empty list to requested type ${nativeType.schemeName} or any other native type")
 }
 
-object UnspecificValue extends ConstantValue(ct.UnspecificCell) {
+object UnitValue extends ConstantValue(ct.UnitCell) {
   def toConstantCellTempValue()(implicit plan : PlanWriter) : ps.TempValue = {
     val constantTemp = new ps.TempValue
-    plan.steps += ps.StoreUnspecificCell(constantTemp)
+    plan.steps += ps.StoreUnitCell(constantTemp)
     constantTemp
   }
 
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue =
-    impossibleConversion(s"Cannot convert constant unspecific to requested type ${nativeType.schemeName} or any other native type")
+    impossibleConversion(s"Cannot convert constant unit value to requested type ${nativeType.schemeName} or any other native type")
 }
 

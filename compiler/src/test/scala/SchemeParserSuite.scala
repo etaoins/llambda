@@ -240,8 +240,8 @@ newline""", "Bare\nnewline")
     assertReflexiveParse(raw"#\1moretime", List(ast.CharLiteral('1'), ast.Symbol("moretime")))
   }
 
-  test("unspecific") {
-    assertReflexiveParse("#!unspecific", List(ast.UnspecificValue()))
+  test("unit") {
+    assertReflexiveParse("#!unit", List(ast.UnitValue()))
   }
 
   test("comments") {

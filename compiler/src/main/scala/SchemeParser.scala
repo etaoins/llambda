@@ -111,7 +111,7 @@ class SchemeParser(filename : Option[String]) extends RegexParsers {
     ast.ProperList(List(syntheticSymbol, innerDatum))
   }
 
-  def atom : Parser[ast.Datum] = string | number | boolean | symbol | vector | bytevector | character | unspecific 
+  def atom : Parser[ast.Datum] = string | number | boolean | symbol | vector | bytevector | character | unit
 
   def boolean = trueLiteral | falseLiteral
   def trueLiteral = """#t(rue)?""".r ^^^ ast.BooleanLiteral(true)
@@ -205,7 +205,7 @@ class SchemeParser(filename : Option[String]) extends RegexParsers {
     ast.CharLiteral(literalStr.charAt(0)) 
   }
 
-  def unspecific = "#!unspecific" ^^^ ast.UnspecificValue()
+  def unit = "#!unit" ^^^ ast.UnitValue()
 
   // Space, ; comments and #| |# comments are whitespace. Datum comments are handled by commentedDatum
   override protected val whiteSpace = """(\s|;.*(\n|$)|#\|(.|\n)*?\|#)+""".r

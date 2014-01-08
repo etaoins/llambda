@@ -10,7 +10,7 @@ import llambda.compiler.{celltype => ct}
 object IntrinsicCellTypes {
   def apply() : Map[String, ct.CellType] = Map(
     (ct.DatumCell.schemeName -> ct.DatumCell),
-    (ct.UnspecificCell.schemeName -> ct.UnspecificCell),
+    (ct.UnitCell.schemeName -> ct.UnitCell),
     (ct.ListElementCell.schemeName -> ct.ListElementCell),
     (ct.PairCell.schemeName -> ct.PairCell),
     (ct.EmptyListCell.schemeName -> ct.EmptyListCell),

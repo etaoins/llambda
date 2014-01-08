@@ -133,7 +133,7 @@ object DatumCell extends CellType with DatumFields {
   val irType = UserDefinedType("datum")
   val schemeName = "<datum-cell>"
   val supertype = None
-  val directSubtypes = Set[CellType](UnspecificCell, ListElementCell, StringCell, SymbolCell, BooleanCell, NumericCell, CharacterCell, VectorCell, BytevectorCell, RecordLikeCell)
+  val directSubtypes = Set[CellType](UnitCell, ListElementCell, StringCell, SymbolCell, BooleanCell, NumericCell, CharacterCell, VectorCell, BytevectorCell, RecordLikeCell)
 
   val typeIdGepIndices = List(0, 0)
   val gcStateGepIndices = List(0, 1)
@@ -149,14 +149,14 @@ object DatumCell extends CellType with DatumFields {
   }
 }
 
-sealed trait UnspecificFields extends DatumFields {
+sealed trait UnitFields extends DatumFields {
   val irType : FirstClassType
 }
 
-object UnspecificCell extends ConcreteCellType with UnspecificFields {
-  val llvmName = "unspecific"
-  val irType = UserDefinedType("unspecific")
-  val schemeName = "<unspecific-cell>"
+object UnitCell extends ConcreteCellType with UnitFields {
+  val llvmName = "unit"
+  val irType = UserDefinedType("unit")
+  val schemeName = "<unit-cell>"
   val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType]()
 

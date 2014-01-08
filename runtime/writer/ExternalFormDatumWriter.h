@@ -19,7 +19,7 @@ public:
 	virtual void render(const DatumCell *datum);
 
 protected:
-	virtual void renderUnspecific(const UnspecificCell *value);
+	virtual void renderUnit(const UnitCell *value);
 	virtual void renderEmptyList(const EmptyListCell *value);
 	virtual void renderBoolean(const BooleanCell *value);
 	virtual void renderExactInteger(const ExactIntegerCell *value);

@@ -1,6 +1,6 @@
 #include "constinstances.h"
 
-#include "binding/UnspecificCell.h"
+#include "binding/UnitCell.h"
 #include "binding/BooleanCell.h"
 #include "binding/EmptyListCell.h"
 
@@ -14,7 +14,7 @@ extern "C"
 //    optimization 
 // 2) These values can be used without an allocation and the associated stress
 //    on the garbage collector
-const lliby::UnspecificCell lliby_unspecific_value;
+const lliby::UnitCell lliby_unit_value;
 const lliby::BooleanCell lliby_false_value(false);
 const lliby::BooleanCell lliby_true_value(true);
 const lliby::EmptyListCell lliby_empty_list_value;

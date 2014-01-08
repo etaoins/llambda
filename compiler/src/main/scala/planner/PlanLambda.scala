@@ -205,8 +205,8 @@ private[planner] object PlanLambda {
     val planResult = PlanExpression(postClosureState)(body)(planConfig, procPlan)
 
     // Are we returning anything?
-    val unspecificType = vt.IntrinsicCellType(ct.UnspecificCell)
-    val returnTypeOpt = if (planResult.value.possibleTypes == Set(unspecificType)) {
+    val unitType = vt.IntrinsicCellType(ct.UnitCell)
+    val returnTypeOpt = if (planResult.value.possibleTypes == Set(unitType)) {
       None
     }
     else {

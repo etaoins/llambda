@@ -104,7 +104,7 @@ private[intermediatevalue] object PlanProcedureTrampoline {
     val returnValue = resultTempOpt map { resultTemp =>
       TempValueToIntermediate(signature.returnType.get, resultTemp)
     } getOrElse {
-      DatumToConstantValue(ast.UnspecificValue())
+      DatumToConstantValue(ast.UnitValue())
     }
 
     val returnTemp = returnValue.toTempValue(vt.IntrinsicCellType(ct.DatumCell))(plan)

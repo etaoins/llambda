@@ -1,6 +1,6 @@
 #include "binding/VectorCell.h"
 #include "binding/StringCell.h"
-#include "binding/UnspecificCell.h"
+#include "binding/UnitCell.h"
 
 #include "core/init.h"
 #include "assertions.h"
@@ -18,12 +18,12 @@ void testFromFill()
 	}
 	
 	{
-		VectorCell *unspecificVector  = VectorCell::fromFill(5);
+		VectorCell *unitVector  = VectorCell::fromFill(5);
 
-		ASSERT_EQUAL(unspecificVector->length(), 5);
-		ASSERT_EQUAL(unspecificVector->elementAt(0), UnspecificCell::instance());
-		ASSERT_EQUAL(unspecificVector->elementAt(4), UnspecificCell::instance());
-		ASSERT_EQUAL(unspecificVector->elementAt(5), 0);
+		ASSERT_EQUAL(unitVector->length(), 5);
+		ASSERT_EQUAL(unitVector->elementAt(0), UnitCell::instance());
+		ASSERT_EQUAL(unitVector->elementAt(4), UnitCell::instance());
+		ASSERT_EQUAL(unitVector->elementAt(5), 0);
 	}
 	
 	{
@@ -80,11 +80,11 @@ void testSetElement()
 	StringCell *testString = StringCell::fromUtf8CString(u8"Test");
 	VectorCell *testVector  = VectorCell::fromFill(5);
 
-	ASSERT_EQUAL(testVector->elementAt(0), UnspecificCell::instance());
+	ASSERT_EQUAL(testVector->elementAt(0), UnitCell::instance());
 	ASSERT_EQUAL(testVector->setElementAt(0, testString), true);
 	ASSERT_EQUAL(testVector->elementAt(0), testString);
 	
-	ASSERT_EQUAL(testVector->elementAt(4), UnspecificCell::instance());
+	ASSERT_EQUAL(testVector->elementAt(4), UnitCell::instance());
 	ASSERT_EQUAL(testVector->setElementAt(4, testString), true);
 	ASSERT_EQUAL(testVector->elementAt(4), testString);
 	

@@ -8,9 +8,9 @@
 !1 = metadata !{ metadata !"Datum::gcState" }
 
 ; {supertype}
-%unspecific = type {%datum}
-!2 = metadata !{ metadata !"Datum::typeId->Unspecific", metadata !0 }
-!3 = metadata !{ metadata !"Datum::gcState->Unspecific", metadata !1 }
+%unit = type {%datum}
+!2 = metadata !{ metadata !"Datum::typeId->Unit", metadata !0 }
+!3 = metadata !{ metadata !"Datum::gcState->Unit", metadata !1 }
 
 ; {supertype}
 %listElement = type {%datum}

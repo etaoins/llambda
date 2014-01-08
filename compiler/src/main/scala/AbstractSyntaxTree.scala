@@ -10,8 +10,8 @@ sealed abstract class Datum extends SourceLocated
 // or contain datums with scope
 sealed abstract class NonSymbolLeaf extends Datum
 
-case class UnspecificValue() extends NonSymbolLeaf {
-  override def toString = "#!unspecific"
+case class UnitValue() extends NonSymbolLeaf {
+  override def toString = "#!unit"
 }
 
 case class StringLiteral(content : String) extends NonSymbolLeaf {

@@ -34,7 +34,7 @@
 	(define instance (single-value 1))
 	(single-value-field (typeless-cell instance))))
 
-(define-test "constructing record type with one typeless uninitialized immutable field" (expect #!unspecific
+(define-test "constructing record type with one typeless uninitialized immutable field" (expect #!unit
 	(define-record-type <single-value> (single-value) single-value?
 		(field single-value-field))
 	

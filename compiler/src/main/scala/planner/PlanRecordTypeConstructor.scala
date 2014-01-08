@@ -49,7 +49,7 @@ object PlanRecordTypeConstructor {
             fieldToTempValue(field)
           }
           else {
-            iv.UnspecificValue.toTempValue(field.fieldType)(plan)
+            iv.UnitValue.toTempValue(field.fieldType)(plan)
           }
             
           plan.steps += ps.RecordDataFieldSet(dataTemp, recordType, field, fieldTemp)

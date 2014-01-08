@@ -35,8 +35,8 @@
 (define-test "heap symbol" (expect definitely-heap-symbol
 	'definitely-heap-symbol))
 
-(define-test "unspecific" (expect #!unspecific
-	'#!unspecific))
+(define-test "unit" (expect #!unit
+	'#!unit))
 
 (define-test "empty list" (expect ()
 	'()))

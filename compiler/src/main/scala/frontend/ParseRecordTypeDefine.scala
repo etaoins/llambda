@@ -89,9 +89,9 @@ private[frontend] object ParseRecordTypeDefine {
 
         for((fieldSymbol, field) <- symbolToField) {
           if (!initializedFields.contains(field)) {
-            // Make sure this can be initialized to #!unspecific
+            // Make sure this can be initialized to #!unit
             field.fieldType match {
-              case vt.IntrinsicCellType(cellType) if cellType.isTypeOrSupertypeOf(ct.UnspecificCell) =>
+              case vt.IntrinsicCellType(cellType) if cellType.isTypeOrSupertypeOf(ct.UnitCell) =>
                 // This is okay
 
               case _ =>

@@ -34,8 +34,8 @@ object DatumToConstantValue {
       case ast.Bytevector(elements) =>
         new iv.ConstantBytevectorValue(elements)
 
-      case ast.UnspecificValue() =>
-        iv.UnspecificValue
+      case ast.UnitValue() =>
+        iv.UnitValue
       
       case ast.EmptyList() =>
         iv.EmptyListValue

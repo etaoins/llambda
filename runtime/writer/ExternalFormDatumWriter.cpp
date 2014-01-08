@@ -6,7 +6,7 @@
 #include <unordered_map>
 
 #include "binding/DatumCell.h"
-#include "binding/UnspecificCell.h"
+#include "binding/UnitCell.h"
 #include "binding/BooleanCell.h"
 #include "binding/ExactIntegerCell.h"
 #include "binding/InexactRationalCell.h"
@@ -25,9 +25,9 @@ namespace lliby
 
 void ExternalFormDatumWriter::render(const DatumCell *datum)
 {
-	if (auto value = datum_cast<UnspecificCell>(datum))
+	if (auto value = datum_cast<UnitCell>(datum))
 	{
-		renderUnspecific(value);
+		renderUnit(value);
 	}
 	else if (auto value = datum_cast<EmptyListCell>(datum))
 	{
@@ -83,9 +83,9 @@ void ExternalFormDatumWriter::render(const DatumCell *datum)
 	}
 }
 
-void ExternalFormDatumWriter::renderUnspecific(const UnspecificCell *)
+void ExternalFormDatumWriter::renderUnit(const UnitCell *)
 {
-	m_outStream << "#!unspecific";
+	m_outStream << "#!unit";
 }
 
 void ExternalFormDatumWriter::renderEmptyList(const EmptyListCell *)

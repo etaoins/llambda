@@ -9,7 +9,7 @@ namespace lliby
 {
 
 class DatumCell;
-class UnspecificCell;
+class UnitCell;
 class ListElementCell;
 class PairCell;
 class EmptyListCell;

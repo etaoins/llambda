@@ -177,7 +177,7 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, includePath : IncludePa
         et.Cond(
           extractExpression(test), 
           extractExpression(trueExpr), 
-          et.Literal(ast.UnspecificValue()))
+          et.Literal(ast.UnitValue()))
 
       case (PrimitiveExpressions.Set, (mutatingSymbol : sst.ScopedSymbol) :: value :: Nil) =>
         mutatingSymbol.resolve match {

@@ -31,7 +31,7 @@ private[planner] object PlanExpression {
   def apply(initialState : PlannerState)(expr : et.Expression, sourceNameHint : Option[String] = None)(implicit planConfig : PlanConfig, plan : PlanWriter) : PlanResult = LocateExceptionsWith(expr) {
     expr match {
       case et.Begin(exprs) =>
-        var finalValue : iv.IntermediateValue = iv.UnspecificValue 
+        var finalValue : iv.IntermediateValue = iv.UnitValue
 
         val finalState = exprs.foldLeft(initialState) { case (state, expr) =>
           val result = apply(state)(expr)
@@ -81,7 +81,7 @@ private[planner] object PlanExpression {
 
         PlanResult(
           state=finalState,
-          value=applyValueOpt.getOrElse(iv.UnspecificValue))
+          value=applyValueOpt.getOrElse(iv.UnitValue))
 
       case et.Bind(bindings) =>
         val finalState = bindings.foldLeft(initialState) { case (state, (storageLoc, initialValue)) =>
@@ -127,7 +127,7 @@ private[planner] object PlanExpression {
 
         PlanResult(
           state=finalState,
-          value=iv.UnspecificValue
+          value=iv.UnitValue
         )
 
       case et.VarRef(storageLoc : StorageLocation) if !planConfig.analysis.mutableVars.contains(storageLoc) =>
@@ -172,7 +172,7 @@ private[planner] object PlanExpression {
 
         PlanResult(
           state=newValueResult.state,
-          value=iv.UnspecificValue
+          value=iv.UnitValue
         )
 
       case et.Literal(value) =>
