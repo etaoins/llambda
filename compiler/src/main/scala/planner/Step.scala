@@ -23,6 +23,15 @@ sealed trait Step
   */
 sealed trait GcBarrier extends Step
 
+/** Step requiring a cell from a temporary allocation */
+sealed trait CellConsumer extends Step {
+  val allocation : TempAllocation
+  val allocIndex : Int
+  val allocSize : Int
+
+  def withNewAllocation(allocation : TempAllocation, allocIndex : Int) : Step
+}
+
 /** Invokes an entry point with the given arguments
   *
   * Entry points can be loaded with StoreNamedEntryPoint */
@@ -67,7 +76,12 @@ case class ConvertNativeIntegerToFloat(result : TempValue, fromValue : TempValue
   * @param allocIndex  offset in the allocation to allocate from
   * @param listValues  DatumCell values to add to the list
   */
-case class BuildProperList(result : TempValue, allocation : TempAllocation, allocIndex : Int, listValues : List[TempValue]) extends Step
+case class BuildProperList(result : TempValue, allocation : TempAllocation, allocIndex : Int, listValues : List[TempValue]) extends Step with CellConsumer {
+  val allocSize = listValues.length
+
+  def withNewAllocation(allocation : TempAllocation, allocIndex : Int) =
+    BuildProperList(result, allocation, allocIndex, listValues)
+}
 
 /** Indicates a step that stores a constant value */
 sealed trait StoreConstant extends Step {
@@ -139,9 +153,27 @@ sealed trait BoxValue extends Step {
 
 /** Boxes an i8 that's either 0 or 1 as a boolean */
 case class BoxBoolean(result : TempValue, unboxed : TempValue) extends BoxValue
-case class BoxExactInteger(result : TempValue, allocation : TempAllocation, allocIndex : Int, unboxed : TempValue) extends BoxValue
-case class BoxInexactRational(result : TempValue, allocation : TempAllocation, allocIndex : Int, unboxed : TempValue) extends BoxValue
-case class BoxCharacter(result : TempValue, allocation : TempAllocation, allocIndex : Int, unboxed : TempValue) extends BoxValue
+
+case class BoxExactInteger(result : TempValue, allocation : TempAllocation, allocIndex : Int, unboxed : TempValue) extends BoxValue with CellConsumer {
+  val allocSize = 1
+
+  def withNewAllocation(allocation : TempAllocation, allocIndex : Int) =
+    BoxExactInteger(result, allocation, allocIndex, unboxed)
+}
+
+case class BoxInexactRational(result : TempValue, allocation : TempAllocation, allocIndex : Int, unboxed : TempValue) extends BoxValue with CellConsumer {
+  val allocSize = 1
+  
+  def withNewAllocation(allocation : TempAllocation, allocIndex : Int) =
+    BoxInexactRational(result, allocation, allocIndex, unboxed)
+}
+
+case class BoxCharacter(result : TempValue, allocation : TempAllocation, allocIndex : Int, unboxed : TempValue) extends BoxValue with CellConsumer {
+  val allocSize = 1
+  
+  def withNewAllocation(allocation : TempAllocation, allocIndex : Int) =
+    BoxCharacter(result, allocation, allocIndex, unboxed)
+}
 
 /** Returns from the current function */
 case class Return(returnValue : Option[TempValue]) extends Step
@@ -154,7 +186,12 @@ case class Return(returnValue : Option[TempValue]) extends Step
  * @param allocIndex  offset in the allocation to allocate from
  * @param recordType  type of record to create
  */
-case class RecordLikeInit(cellResult : TempValue, dataResult : TempValue, allocation : TempAllocation, allocIndex : Int, recordLikeType : vt.RecordLikeType) extends Step
+case class RecordLikeInit(cellResult : TempValue, dataResult : TempValue, allocation : TempAllocation, allocIndex : Int, recordLikeType : vt.RecordLikeType) extends Step with CellConsumer {
+  val allocSize = 1
+  
+  def withNewAllocation(allocation : TempAllocation, allocIndex : Int) =
+    RecordLikeInit(cellResult, dataResult, allocation, allocIndex, recordLikeType)
+}
 
 /** Sets a record field. The value must match the type of record field */
 case class RecordDataFieldSet(recordData : TempValue, recordLikeType : vt.RecordLikeType, recordField : vt.RecordField, newValue : TempValue) extends Step

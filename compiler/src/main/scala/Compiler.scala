@@ -9,6 +9,10 @@ import scala.sys.process._
 class ExternalCompilerException extends Exception
 
 object Compiler {
+  private val conniverPasses = List(
+    conniver.MergeCellAllocations
+  )
+
   private def compileLlvmIr(llvmIr : String, output : File, optimizeLevel : Int) {
     val optimizeArg = s"-O${optimizeLevel}"
 
@@ -73,8 +77,17 @@ object Compiler {
 
     val functions = planner.PlanProgram(optimizedExpressions)(planConfig)
 
+    val optimizedFunctions = if (config.optimizeLevel > 1) {
+      conniverPasses.foldLeft(functions) { case (functions, conniverPass) =>
+        conniverPass(functions)
+      }
+    }
+    else {
+      functions
+    }
+
     // Generate the LLVM IR
-    val llvmIr = codegen.GenProgram(functions, config.targetPlatform)
+    val llvmIr = codegen.GenProgram(optimizedFunctions, config.targetPlatform)
 
     if (config.emitLlvm) {
       // Write the IR directly to disk
