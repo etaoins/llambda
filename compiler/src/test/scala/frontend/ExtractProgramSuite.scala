@@ -7,7 +7,12 @@ import llambda.compiler._
 class ExtractProgramSuite extends FunSuite with Inside {
   def programFor(scheme : String) : List[et.Expression] = {
     val data = SchemeParser.parseStringAsData(scheme)
-    frontend.ExtractProgram(data)(new LibraryLoader(platform.Posix64LE), IncludePath())
+    val frontendConfig = FrontendConfig(
+      includePath=IncludePath(),
+      featureIdentifiers=Set()
+    )
+
+    frontend.ExtractProgram(data)(new LibraryLoader(platform.Posix64LE), frontendConfig)
   }
 
   test("initial environment has no bindings") {

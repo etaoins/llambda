@@ -6,7 +6,7 @@ import llambda.compiler.{valuetype => vt}
 
 import collection.mutable.ListBuffer
 
-class ModuleBodyExtractor(libraryLoader : LibraryLoader, includePath : IncludePath) {
+class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) {
   private def uniqueScopes(datum : sst.ScopedDatum) : Set[Scope] = {
     datum match {
       case sst.ScopedPair(car, cdr) => uniqueScopes(car) ++ uniqueScopes(cdr)
@@ -148,14 +148,18 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, includePath : IncludePa
   }
 
   private def extractInclude(scope : Scope, includeNameData : List[sst.ScopedDatum], includeLocation : SourceLocated) : et.Expression = {
-    val includeResults = ResolveIncludeList(includeNameData.map(_.unscope), includeLocation)(includePath)
+    val includeResults = ResolveIncludeList(includeNameData.map(_.unscope), includeLocation)(frontendConfig.includePath)
 
     val includeExprs = includeResults flatMap { result =>
       // XXX: Should we disallow body defines here in a non-body context?
       // R7RS says (include) should act like a (begin) with the contents of the
       // files. Its example definition of (begin) uses a self-executing lambda
       // which would create a body context. This seems to imply this is allowed.
-      val includeBodyExtractor = new ModuleBodyExtractor(libraryLoader, result.innerIncludePath)
+      val innerConfig = frontendConfig.copy(
+        includePath=result.innerIncludePath
+      )
+
+      val includeBodyExtractor = new ModuleBodyExtractor(libraryLoader, innerConfig)
       includeBodyExtractor(result.data, scope)
     }
 
@@ -208,10 +212,12 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, includePath : IncludePa
         ExtractNativeFunction(operands, appliedSymbol)
 
       case (PrimitiveExpressions.Quasiquote, sst.ScopedProperList(listData) :: Nil) => 
-        (new ListQuasiquotationExpander(extractExpression, libraryLoader))(listData)
+        val schemeBase = libraryLoader.loadSchemeBase(frontendConfig)
+        (new ListQuasiquotationExpander(extractExpression, schemeBase))(listData)
       
       case (PrimitiveExpressions.Quasiquote, sst.ScopedVectorLiteral(elements) :: Nil) => 
-        (new VectorQuasiquotationExpander(extractExpression, libraryLoader))(elements.toList)
+        val schemeBase = libraryLoader.loadSchemeBase(frontendConfig)
+        (new VectorQuasiquotationExpander(extractExpression, schemeBase))(elements.toList)
       
       case (PrimitiveExpressions.Unquote, _) =>
         throw new BadSpecialFormException(appliedSymbol, "Attempted (unquote) outside of quasiquotation") 

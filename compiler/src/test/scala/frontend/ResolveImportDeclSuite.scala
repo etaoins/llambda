@@ -6,8 +6,14 @@ import llambda.compiler._
 
 class ResolveImportDeclSuite extends FunSuite { 
   def bindingFor(scheme : String) = {
+    val frontendConfig = FrontendConfig(
+      includePath=IncludePath(),
+      featureIdentifiers=Set()
+    )
+
     val datum :: Nil = SchemeParser.parseStringAsData(scheme)
-    ResolveImportDecl(datum)(new LibraryLoader(platform.Posix64LE), IncludePath())
+
+    ResolveImportDecl(datum)(new LibraryLoader(platform.Posix64LE), frontendConfig)
   }
   
   test("import all primitives") {

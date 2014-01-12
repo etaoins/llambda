@@ -5,9 +5,7 @@ import org.scalatest.FunSuite
 import llambda.compiler._
 
 class QuasiquoteSuite extends FunSuite with testutil.ExpressionHelpers {
-  // We need (scheme base) to look for (list) and (vector)
-  // which aren't primitives
-  val schemeBaseBindings = libraryLoader.loadSchemeBase
+  val schemeBaseBindings = libraryLoader.loadSchemeBase(frontendConfig)
   implicit val baseScope = new ImmutableScope(collection.mutable.Map(schemeBaseBindings.toSeq : _*))
 
   def schemeBaseProcedure(name : String) : et.Expression =  

@@ -56,7 +56,14 @@ object Compiler {
   def compileData(data : List[ast.Datum], output : File, config : CompileConfig) : Unit = {
     // Parse the program
     val loader = new frontend.LibraryLoader(config.targetPlatform)
-    val expressions = frontend.ExtractProgram(data)(loader, config.includePath)
+
+    // Extract expressions
+    val frontendConfig = frontend.FrontendConfig(
+      includePath=config.includePath,
+      featureIdentifiers=FeatureIdentifiers(config.targetPlatform, config.extraFeatureIdents) 
+    )
+
+    val expressions = frontend.ExtractProgram(data)(loader, frontendConfig)
 
     // Optimize
     val optimizedExpressions = if (config.optimizeLevel > 1) {

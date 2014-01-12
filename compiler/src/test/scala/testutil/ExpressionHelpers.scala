@@ -18,6 +18,11 @@ trait ExpressionHelpers extends FunSuite with OptionValues {
     packageRootDir=Some(resourceBaseUrl)
   )
 
+  val frontendConfig = frontend.FrontendConfig(
+    includePath=includePath,
+    featureIdentifiers=Set()
+  )
+
   def expressionFor(scheme : String)(implicit scope : Scope) = {
     val (expr :: Nil) = bodyFor(scheme)(scope)
     expr
@@ -31,7 +36,7 @@ trait ExpressionHelpers extends FunSuite with OptionValues {
   def bodyFor(scheme : String)(scope : Scope) = {
     val data = SchemeParser.parseStringAsData(scheme)
 
-    val bodyExtractor = new frontend.ModuleBodyExtractor(libraryLoader, includePath)
+    val bodyExtractor = new frontend.ModuleBodyExtractor(libraryLoader, frontendConfig)
     bodyExtractor(data, scope)
   }
 }

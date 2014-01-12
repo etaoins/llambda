@@ -37,13 +37,11 @@ import llambda.compiler._
 // case simply converts every segment to a list, appends them to a final list,
 // and then calls createFromList
 //
-abstract class QuasiquotationExpander(extractExpression : sst.ScopedDatum => et.Expression, libraryLoader : LibraryLoader) {
+abstract class QuasiquotationExpander(extractExpression : sst.ScopedDatum => et.Expression, schemeBase : Map[String, BoundValue]) {
   protected sealed abstract class QuasiquoteSegment
   protected case class ConstantSegment(data : List[ast.Datum]) extends QuasiquoteSegment
   protected case class DynamicSegment(expressions : List[et.Expression]) extends QuasiquoteSegment
   protected case class SplicedSegment(generator : et.Expression) extends QuasiquoteSegment
- 
-  private val schemeBase = libraryLoader.loadSchemeBase
     
   protected def schemeBaseProcedure(name : String) = schemeBase(name) match {
     case storageLoc : StorageLocation => et.VarRef(storageLoc)
@@ -147,7 +145,7 @@ abstract class QuasiquotationExpander(extractExpression : sst.ScopedDatum => et.
   }
 }
 
-class ListQuasiquotationExpander(extractExpression : sst.ScopedDatum => et.Expression, libraryLoader : LibraryLoader) extends QuasiquotationExpander(extractExpression, libraryLoader) {
+class ListQuasiquotationExpander(extractExpression : sst.ScopedDatum => et.Expression, schemeBase : Map[String, BoundValue]) extends QuasiquotationExpander(extractExpression, schemeBase) {
   protected def createConstantLiteral(elements : List[ast.Datum]) : ast.Datum = 
     ast.ProperList(elements)
   
@@ -159,7 +157,7 @@ class ListQuasiquotationExpander(extractExpression : sst.ScopedDatum => et.Expre
     et.Apply(listProc, elements)
 }
 
-class VectorQuasiquotationExpander(extractExpression : sst.ScopedDatum => et.Expression, libraryLoader : LibraryLoader) extends QuasiquotationExpander(extractExpression, libraryLoader) {
+class VectorQuasiquotationExpander(extractExpression : sst.ScopedDatum => et.Expression, schemeBase : Map[String, BoundValue]) extends QuasiquotationExpander(extractExpression, schemeBase) {
   private val listToVectorProc = schemeBaseProcedure("list->vector")
   private val vectorProc = schemeBaseProcedure("vector")
 

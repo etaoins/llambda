@@ -5,7 +5,8 @@ import llambda.compiler.frontend.{IncludePath, IncludeLoader}
 
 case class CompileConfig(
   includePath : IncludePath,
+  targetPlatform : platform.TargetPlatform,
   optimizeLevel : Int = 0,
   emitLlvm : Boolean = false,
-  targetPlatform : platform.TargetPlatform
+  extraFeatureIdents : Set[String] = Set()
 )

@@ -112,9 +112,11 @@ object CompilerApp extends App {
         // Create our compiler config
         val compileConfig = CompileConfig(
           includePath=includePath,
+          targetPlatform=targetPlatform,
           emitLlvm=config.emitLlvm,
           optimizeLevel=config.optimizeLevel,
-          targetPlatform=targetPlatform)
+          extraFeatureIdents=config.extraFeatureIdents
+        )
 
         Compiler.compileFile(input, output, compileConfig)
 

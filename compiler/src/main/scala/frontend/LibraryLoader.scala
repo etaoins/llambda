@@ -7,12 +7,13 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
   private val exprBuffer = collection.mutable.ListBuffer[et.Expression]()
   private val loadedFiles = collection.mutable.Map.empty[String, Map[String, BoundValue]]
 
-  private def loadLibraryFile(filename : String, libraryName : Seq[LibraryNameComponent], loadLocation : SourceLocated)(implicit includePath : IncludePath) : Map[String, BoundValue] = {
+  private def loadLibraryFile(filename : String, libraryName : Seq[LibraryNameComponent], loadLocation : SourceLocated)(implicit frontendConfig : FrontendConfig) : Map[String, BoundValue] = {
+    implicit val includePath = frontendConfig.includePath
     val searchRoots = includePath.librarySearchRoots
 
     val library = IncludeLoader(searchRoots, filename) match {
       case Some(IncludeLoadResult(libraryIncludePath, datum :: Nil)) =>
-        ExtractLibrary(datum, Some(libraryName))(this, libraryIncludePath)
+        ExtractLibrary(datum, Some(libraryName))(this, frontendConfig)
 
       case Some(IncludeLoadResult(_, data)) =>
         throw new BadSpecialFormException(loadLocation, "Multiple top-level data in library file: " + filename)
@@ -26,7 +27,7 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
     library.exports
   }
 
-  private def loadLibraryFileOnce(filename : String, libraryName : Seq[LibraryNameComponent], loadLocation : SourceLocated)(implicit includePath : IncludePath) : Map[String, BoundValue] = {
+  private def loadLibraryFileOnce(filename : String, libraryName : Seq[LibraryNameComponent], loadLocation : SourceLocated)(implicit frontendConfig : FrontendConfig) : Map[String, BoundValue] = {
     loadedFiles.getOrElse(filename, {
       val newBindings = loadLibraryFile(filename, libraryName, loadLocation)
       loadedFiles += (filename -> newBindings)
@@ -58,7 +59,7 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
         int.toString
     }).mkString("/") + ".scm"
 
-  def load(libraryName : Seq[LibraryNameComponent], loadLocation : SourceLocated = NoSourceLocation)(implicit includePath : IncludePath) : Map[String, BoundValue] =
+  def load(libraryName : Seq[LibraryNameComponent], loadLocation : SourceLocated = NoSourceLocation)(implicit frontendConfig : FrontendConfig) : Map[String, BoundValue] =
     if (builtinLibraryBindings.isDefinedAt(libraryName)) { 
       // This is an builtin library
       // Return the bindings directly
@@ -70,7 +71,9 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
       loadLibraryFileOnce(filename, libraryName, loadLocation)
     }
 
-  def exists(libraryName : Seq[LibraryNameComponent], loadLocation : SourceLocated = NoSourceLocation)(implicit includePath : IncludePath) : Boolean = {
+  def exists(libraryName : Seq[LibraryNameComponent], loadLocation : SourceLocated = NoSourceLocation)(implicit frontendConfig : FrontendConfig) : Boolean = {
+    implicit val includePath = frontendConfig.includePath
+
     if (builtinLibraryBindings.isDefinedAt(libraryName)) {
       // This is a builtin
       true
@@ -93,8 +96,8 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
     }
   }
 
-  def loadSchemeBase =
-    load(List("scheme", "base").map(StringComponent(_)), NoSourceLocation)(IncludePath())
+  def loadSchemeBase(implicit frontendConfig : FrontendConfig) =
+    load(List("scheme", "base").map(StringComponent(_)), NoSourceLocation)
 
   def libraryExpressions : List[et.Expression] = 
     exprBuffer.toList

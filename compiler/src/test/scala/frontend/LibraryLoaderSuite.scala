@@ -5,7 +5,11 @@ import org.scalatest.FunSuite
 import llambda.compiler._
 
 class LibraryLoaderSuite extends FunSuite { 
-  implicit val defaultIncludePath = IncludePath()
+  implicit val defaultFrontendConfig = 
+    FrontendConfig(
+      includePath=IncludePath(),
+      featureIdentifiers=Set()
+    )
 
   test("load non-existant library") {
     val loader = new LibraryLoader(platform.Posix64LE)
@@ -97,12 +101,15 @@ class LibraryLoaderSuite extends FunSuite {
   test("load single expression library with non-default include path") {
     val loader = new LibraryLoader(platform.Posix64LE)
 
-    val includePath = IncludePath(
-      userConfiguredPaths=getClass.getClassLoader.getResource("libraries/test/") :: Nil
+    val frontendConfig = FrontendConfig(
+      includePath=IncludePath(
+        userConfiguredPaths=List(getClass.getClassLoader.getResource("libraries/test/"))
+      ),
+      featureIdentifiers=Set()
     )
 
     // We should be able to load without the "text" prefix
-    loader.load(StringComponent("pathedsingleexpr") :: Nil)(includePath)
+    loader.load(List(StringComponent("pathedsingleexpr")))(frontendConfig)
 
     assert(loader.libraryExpressions.length === 1)
   }
@@ -110,11 +117,14 @@ class LibraryLoaderSuite extends FunSuite {
   test("single expression library with non-default include path exists") {
     val loader = new LibraryLoader(platform.Posix64LE)
 
-    val includePath = IncludePath(
-      userConfiguredPaths=getClass.getClassLoader.getResource("libraries/test/") :: Nil
+    val frontendConfig = FrontendConfig(
+      includePath=IncludePath(
+        userConfiguredPaths=List(getClass.getClassLoader.getResource("libraries/test/"))
+      ),
+      featureIdentifiers=Set()
     )
 
-    assert(loader.exists(List(StringComponent("pathedsingleexpr")))(includePath) === true)
+    assert(loader.exists(List(StringComponent("pathedsingleexpr")))(frontendConfig) === true)
   }
 
   test("multiple loads don't introduce duplicate expressions") {

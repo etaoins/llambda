@@ -8,16 +8,21 @@ class ExtractLibrarySuite extends FunSuite with Inside {
   val resourceBaseUrl = getClass.getClassLoader.getResource("")
   val includeBaseUrl = getClass.getClassLoader.getResource("includes/")
   
-  val includePath = frontend.IncludePath(
+  val includePath = IncludePath(
     fileParentDir=Some(resourceBaseUrl),
     packageRootDir=Some(resourceBaseUrl)
+  )
+
+  val frontendConfig = FrontendConfig(
+    includePath=includePath,
+    featureIdentifiers=Set()
   )
 
   val exampleName = List(StringComponent("example"), StringComponent("lib"))
 
   def libraryFor(scheme : String) : Library = {
     val datum :: Nil = SchemeParser.parseStringAsData(scheme)
-    ExtractLibrary(datum)(new LibraryLoader(platform.Posix64LE), includePath)
+    ExtractLibrary(datum)(new LibraryLoader(platform.Posix64LE), frontendConfig)
   }
   
   test("empty datum is invalid") {

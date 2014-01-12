@@ -39,14 +39,18 @@ abstract class SchemeParsingMode(name : String) extends ReplMode(name) {
   }
 }
 
-/** Provides an include path with the current directory */
-object ReplIncludePath {
-  def apply() : frontend.IncludePath =  {
+private object ReplFrontendConfig {
+  def apply(targetPlatform : platform.TargetPlatform) : frontend.FrontendConfig =  {
     val currentDirUrl = (new File(System.getProperty("user.dir"))).toURI.toURL
 
-    frontend.IncludePath(
+    val includePath = frontend.IncludePath(
       fileParentDir=Some(currentDirUrl),
       packageRootDir=Some(currentDirUrl)
+    )
+
+    frontend.FrontendConfig(
+      includePath=includePath,
+      featureIdentifiers=FeatureIdentifiers(targetPlatform)
     )
   }
 }
@@ -60,17 +64,16 @@ class ParseOnlyMode extends SchemeParsingMode("parse") {
 /** Extract expressions allowed in a library, program or lambda body */
 class BodyExpressionMode(targetPlatform : platform.TargetPlatform) extends SchemeParsingMode("expr") {
   private val loader = new frontend.LibraryLoader(targetPlatform)
-  private val schemeBaseBindings = loader.loadSchemeBase
+  private val frontendConfig = ReplFrontendConfig(targetPlatform)
+  private val schemeBaseBindings = loader.loadSchemeBase(frontendConfig)
 
   val scope = new Scope(collection.mutable.Map(schemeBaseBindings.toSeq : _*))
-  val includePath = ReplIncludePath()
-
-  val bodyExtractor = new frontend.ModuleBodyExtractor(loader, includePath)
+  val bodyExtractor = new frontend.ModuleBodyExtractor(loader, frontendConfig)
 
   def evalDatum(datum : ast.Datum) : String = datum match {
     case ast.ProperList(ast.Symbol("import") :: _) =>
       // This is an import decl - import our new bindings
-      val newBindings = frontend.ResolveImportDecl(datum)(loader, includePath)
+      val newBindings = frontend.ResolveImportDecl(datum)(loader, frontendConfig)
 
       scope ++= newBindings
 
@@ -83,11 +86,12 @@ class BodyExpressionMode(targetPlatform : platform.TargetPlatform) extends Schem
 
 /** Compiles expressions as a standalone program and executes them */
 class CompileMode(targetPlatform : platform.TargetPlatform) extends SchemeParsingMode("compile") {
-  private val includePath = ReplIncludePath()
+  private val frontendConfig = ReplFrontendConfig(targetPlatform)
   private val compileConfig = CompileConfig(
-    includePath=includePath,
+    includePath=frontendConfig.includePath,
     optimizeLevel=2,
-    targetPlatform=targetPlatform)
+    targetPlatform=targetPlatform
+  )
 
   private val loader = new frontend.LibraryLoader(targetPlatform)
   private val importDecls = new ListBuffer[ast.Datum]
@@ -108,7 +112,7 @@ class CompileMode(targetPlatform : platform.TargetPlatform) extends SchemeParsin
   def evalDatum(userDatum : ast.Datum) : String = userDatum match {
     case importDecl @ ast.ProperList(ast.Symbol("import") :: _) =>
       // Make sure this exists up front
-      frontend.ResolveImportDecl(importDecl)(loader, includePath)
+      frontend.ResolveImportDecl(importDecl)(loader, frontendConfig)
 
       importDecls += importDecl
       "loaded"

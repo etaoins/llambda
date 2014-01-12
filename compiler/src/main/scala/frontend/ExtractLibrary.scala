@@ -29,7 +29,7 @@ private[frontend] object ExtractLibrary {
       List((includePath, nonInclude))
   }
 
-  def apply(datum : ast.Datum, expectedName : Option[Seq[LibraryNameComponent]] = None)(implicit libraryLoader : LibraryLoader, includePath : IncludePath) : Library = datum match {
+  def apply(datum : ast.Datum, expectedName : Option[Seq[LibraryNameComponent]] = None)(implicit libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : Library = datum match {
     case ast.ProperList(ast.Symbol("define-library") :: libraryNameData :: decls) =>
       // Parse the library name
       val libraryName = ParseLibraryName(libraryNameData)
@@ -43,7 +43,7 @@ private[frontend] object ExtractLibrary {
       // Expand both types of includes in our first pass
       // Construct the proper include path at the same time so second-order
       // includes from these includes are pathed properly
-      val expandedDecls = decls.flatMap(expandIncludeDecls)
+      val expandedDecls = decls.flatMap(expandIncludeDecls(_)(frontendConfig.includePath))
 
       // Library bodies seems to be mostly order-indepenent. This is annoying
       object DeclType extends Enumeration {
@@ -76,7 +76,11 @@ private[frontend] object ExtractLibrary {
 
       val expressions = beginDeclData flatMap {
         case (beginIncludePath, ast.ProperList(ast.Symbol("begin") :: exprs)) =>
-          val bodyExtractor = new ModuleBodyExtractor(libraryLoader, beginIncludePath)
+          val beginConfig = frontendConfig.copy(
+            includePath=beginIncludePath
+          )
+
+          val bodyExtractor = new ModuleBodyExtractor(libraryLoader, beginConfig)
           bodyExtractor(exprs, scope)
 
         case (_, other) =>

@@ -14,6 +14,11 @@ class InferArgumentTypesSuite  extends FunSuite {
       fileParentDir=None,
       packageRootDir=None
     )
+
+    val frontendConfig = frontend.FrontendConfig(
+      includePath=includePath,
+      featureIdentifiers=Set()
+    )
     
     val compileConfig = CompileConfig(
       includePath=includePath,
@@ -28,7 +33,7 @@ class InferArgumentTypesSuite  extends FunSuite {
     val data = importDecl :: procedureData
 
     val loader = new frontend.LibraryLoader(compileConfig.targetPlatform)
-    val expressions = frontend.ExtractProgram(data)(loader, compileConfig.includePath)
+    val expressions = frontend.ExtractProgram(data)(loader, frontendConfig)
     val analysis = analyzer.Analyize(expressions)
 
     val planConfig = planner.PlanConfig(
