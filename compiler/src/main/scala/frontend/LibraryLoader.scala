@@ -34,31 +34,62 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
     })
   }
 
-  def load(libraryName : Seq[LibraryNameComponent], loadLocation : SourceLocated = NoSourceLocation)(implicit includePath : IncludePath) : Map[String, BoundValue] = {
-    libraryName match {
-      case StringComponent("llambda") :: StringComponent("internal") :: StringComponent("primitives") :: Nil =>
-        PrimitiveExpressions.bindings
-      
-      case StringComponent("llambda") :: StringComponent("nfi") :: Nil =>
-        // Our NFI types depend on our target platform
-        IntrinsicTypes(targetPlatform).mapValues(BoundType.apply) +
-          ("native-function" -> PrimitiveExpressions.NativeFunction)
+  private def builtinLibraryBindings : PartialFunction[Seq[LibraryNameComponent], Map[String, BoundValue]] = {
+    case List(StringComponent("llambda"), StringComponent("internal"), StringComponent("primitives")) =>
+      PrimitiveExpressions.bindings
+    
+    case List(StringComponent("llambda"), StringComponent("nfi")) =>
+      // Our NFI types depend on our target platform
+      IntrinsicTypes(targetPlatform).mapValues(BoundType.apply) +
+        ("native-function" -> PrimitiveExpressions.NativeFunction)
+  }
 
-      case fileComponents =>
-        val filename = (libraryName map {
-          case StringComponent(str) => 
-            // These are reserved characters for POSIX paths
-            if (str.contains('\0') || str.contains('/')) {
-              throw new DubiousLibraryNameComponentException(loadLocation, str)
-            }
-            else {
-              str
-            }
-          case IntegerComponent(int) => 
-            int.toString
-        }).mkString("/") + ".scm"
+  private def filenameForLibrary(libraryName : Seq[LibraryNameComponent], loadLocation : SourceLocated) : String = 
+    (libraryName map {
+      case StringComponent(str) => 
+        // These are reserved characters for POSIX paths
+        if (str.contains('\0') || str.contains('/')) {
+          throw new DubiousLibraryNameComponentException(loadLocation, str)
+        }
+        else {
+          str
+        }
+      case IntegerComponent(int) => 
+        int.toString
+    }).mkString("/") + ".scm"
 
-        loadLibraryFileOnce(filename, libraryName, loadLocation)
+  def load(libraryName : Seq[LibraryNameComponent], loadLocation : SourceLocated = NoSourceLocation)(implicit includePath : IncludePath) : Map[String, BoundValue] =
+    if (builtinLibraryBindings.isDefinedAt(libraryName)) { 
+      // This is an builtin library
+      // Return the bindings directly
+      builtinLibraryBindings(libraryName)
+    }
+    else {
+      // Load this as a file
+      val filename = filenameForLibrary(libraryName, loadLocation)
+      loadLibraryFileOnce(filename, libraryName, loadLocation)
+    }
+
+  def exists(libraryName : Seq[LibraryNameComponent], loadLocation : SourceLocated = NoSourceLocation)(implicit includePath : IncludePath) : Boolean = {
+    if (builtinLibraryBindings.isDefinedAt(libraryName)) {
+      // This is a builtin
+      true
+    }
+    else {
+      val filename = filenameForLibrary(libraryName, loadLocation)
+
+      if (loadedFiles.contains(filename)) {
+        // We've already loaded this; don't bother searching
+        true
+      }
+      else {
+        // Don't attempt to parse the result for two reasons:
+        // 1) This is potentially slow and we'll need to do it again at include
+        //    time
+        // 2) It seems more natural for any parse etc. error to be reported at
+        //    (import) time than (cond-expand) time
+        IncludeLoader(includePath.librarySearchRoots, filename).isDefined
+      }
     }
   }
 
