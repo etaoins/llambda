@@ -9,6 +9,7 @@ object CompilerApp extends App {
     outputFile : Option[File] = None,
     emitLlvm : Boolean = false,
     optimizeLevel : Int = 0,
+    extraFeatureIdents : Set[String] = Set(),
     targetPlatformOpt : Option[platform.TargetPlatform] = None)
   
   private val stringToPlatform = Map(
@@ -57,7 +58,11 @@ object CompilerApp extends App {
       else {
         success
       }
-    } text("target platform")
+    } text("target platform") 
+
+    opt[String]("with-feature-ident") unbounded() action { (featureIdent, c) =>
+      c.copy(extraFeatureIdents=c.extraFeatureIdents + featureIdent)
+    } text("additional feature identifier to provide for (cond-expand)")
 
     help("help")
   }
