@@ -239,11 +239,19 @@ private[planner] object PlanLambda {
       (storageLoc.sourceName -> tempValue)
     })
 
-    val plannedFunction = PlannedFunction(
+    val uninferredFunction = PlannedFunction(
       signature=procSignature,
       namedArguments=namedArguments,
       steps=procPlan.steps.toList
     )
+
+    val plannedFunction = if (planConfig.optimize) {
+      // Attempt to infer our argument types
+      InferArgumentTypes(uninferredFunction)
+    }
+    else {
+      uninferredFunction
+    }
 
     val nativeSymbol = parentPlan.allocProcedureSymbol(sourceName)
     parentPlan.plannedFunctions += (nativeSymbol -> plannedFunction)
