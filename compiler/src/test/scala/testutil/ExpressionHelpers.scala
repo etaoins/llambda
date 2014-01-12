@@ -11,7 +11,7 @@ trait ExpressionHelpers extends FunSuite with OptionValues {
   // This corresponds to src/test/scheme in our source
   val resourceBaseUrl = getClass.getClassLoader.getResource("")
 
-  val libraryLoader = new LibraryLoader(platform.Posix64)
+  val libraryLoader = new LibraryLoader(platform.Posix64LE)
   
   val includePath = frontend.IncludePath(
     fileParentDir=Some(resourceBaseUrl),

@@ -8,7 +8,7 @@ class LibraryLoaderSuite extends FunSuite {
   implicit val defaultIncludePath = IncludePath()
 
   test("load non-existant library") {
-    val loader = new LibraryLoader(platform.Posix64)
+    val loader = new LibraryLoader(platform.Posix64LE)
     val nonExistantName = List(StringComponent("not"), StringComponent("a"), StringComponent("library"))
 
     intercept[LibraryNotFoundException] {
@@ -19,7 +19,7 @@ class LibraryLoaderSuite extends FunSuite {
   }
   
   test("dubious library names") {
-    val loader = new LibraryLoader(platform.Posix64)
+    val loader = new LibraryLoader(platform.Posix64LE)
 
     intercept[DubiousLibraryNameComponentException] {
       loader.load(StringComponent("foo/bar") :: Nil)
@@ -39,33 +39,33 @@ class LibraryLoaderSuite extends FunSuite {
   }
 
   test("load scheme base") {
-    val loader = new LibraryLoader(platform.Posix64)
+    val loader = new LibraryLoader(platform.Posix64LE)
     val bindings = loader.loadSchemeBase
 
     assert(bindings.contains("set!"))
   }
 
   test("load llambda primitives") {
-    val loader = new LibraryLoader(platform.Posix64)
+    val loader = new LibraryLoader(platform.Posix64LE)
     val bindings = loader.load(List("llambda", "internal", "primitives").map(StringComponent(_)))
 
     assert(bindings.contains("set!"))
   }
   test("llambda primitives exists") {
-    val loader = new LibraryLoader(platform.Posix64)
+    val loader = new LibraryLoader(platform.Posix64LE)
 
     assert(loader.exists(List("llambda", "internal", "primitives").map(StringComponent(_))) === true)
   }
   
   test("load llambda nfi") {
-    val loader = new LibraryLoader(platform.Posix64)
+    val loader = new LibraryLoader(platform.Posix64LE)
     val bindings = loader.load(StringComponent("llambda") :: StringComponent("nfi") :: Nil)
 
     assert(bindings.contains("native-function"))
   }
 
   test("unmatched library name fails") {
-    val loader = new LibraryLoader(platform.Posix64)
+    val loader = new LibraryLoader(platform.Posix64LE)
 
     intercept[LibraryNameMismatchException] {
       loader.load(List(StringComponent("test"), StringComponent("unmatchedname")))
@@ -73,7 +73,7 @@ class LibraryLoaderSuite extends FunSuite {
   }
   
   test("unmatched library name exists") {
-    val loader = new LibraryLoader(platform.Posix64)
+    val loader = new LibraryLoader(platform.Posix64LE)
 
     // This is testing we don't attempt to parse in exists()
     assert(loader.exists(List(StringComponent("test"), StringComponent("unmatchedname"))) === true)
@@ -81,7 +81,7 @@ class LibraryLoaderSuite extends FunSuite {
 
 
   test("load single expression library") {
-    val loader = new LibraryLoader(platform.Posix64)
+    val loader = new LibraryLoader(platform.Posix64LE)
 
     loader.load(StringComponent("test") :: StringComponent("singleexpr") :: Nil)
 
@@ -89,13 +89,13 @@ class LibraryLoaderSuite extends FunSuite {
   }
   
   test("single expression library exists") {
-    val loader = new LibraryLoader(platform.Posix64)
+    val loader = new LibraryLoader(platform.Posix64LE)
 
     assert(loader.exists(List(StringComponent("test"), StringComponent("singleexpr"))) === true)
   }
   
   test("load single expression library with non-default include path") {
-    val loader = new LibraryLoader(platform.Posix64)
+    val loader = new LibraryLoader(platform.Posix64LE)
 
     val includePath = IncludePath(
       userConfiguredPaths=getClass.getClassLoader.getResource("libraries/test/") :: Nil
@@ -108,7 +108,7 @@ class LibraryLoaderSuite extends FunSuite {
   }
   
   test("single expression library with non-default include path exists") {
-    val loader = new LibraryLoader(platform.Posix64)
+    val loader = new LibraryLoader(platform.Posix64LE)
 
     val includePath = IncludePath(
       userConfiguredPaths=getClass.getClassLoader.getResource("libraries/test/") :: Nil
@@ -118,7 +118,7 @@ class LibraryLoaderSuite extends FunSuite {
   }
 
   test("multiple loads don't introduce duplicate expressions") {
-    val loader = new LibraryLoader(platform.Posix64)
+    val loader = new LibraryLoader(platform.Posix64LE)
 
     loader.load(StringComponent("test") :: StringComponent("singleexpr") :: Nil)
     loader.load(StringComponent("test") :: StringComponent("singleexpr") :: Nil)
@@ -127,7 +127,7 @@ class LibraryLoaderSuite extends FunSuite {
   }
   
   test("multiple top-level data library") {
-    val loader = new LibraryLoader(platform.Posix64)
+    val loader = new LibraryLoader(platform.Posix64LE)
 
     intercept[BadSpecialFormException] {
       loader.load(StringComponent("test") :: StringComponent("multipledatum") :: Nil)

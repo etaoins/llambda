@@ -12,10 +12,12 @@ object CompilerApp extends App {
     targetPlatformOpt : Option[platform.TargetPlatform] = None)
   
   private val stringToPlatform = Map(
-    ("posix64" -> platform.Posix64),
-    ("posix32" -> platform.Posix32),
-    ("win32"   -> platform.Win32),
-    ("win64"   -> platform.Win64)
+    ("posix64be" -> platform.Posix64BE),
+    ("posix64le" -> platform.Posix64LE),
+    ("posix32be" -> platform.Posix32BE),
+    ("posix32le" -> platform.Posix32LE),
+    ("win32"     -> platform.Win32),
+    ("win64"     -> platform.Win64)
   )
 
 

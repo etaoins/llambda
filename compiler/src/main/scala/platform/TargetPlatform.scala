@@ -1,6 +1,8 @@
 package io.llambda.compiler.platform
 import io.llambda
 
+import java.nio.ByteOrder
+
 import llambda.compiler.{valuetype => vt}
 
 /** Describes a target platform for code generation 
@@ -29,9 +31,10 @@ trait TargetPlatform {
 
   protected val dataModelFeature : String
   protected val osFamilyFeature : String
+  protected val endianFeature : String
 
   def platformFeatures : Set[String] =
-    Set(dataModelFeature, osFamilyFeature)
+    Set(dataModelFeature, osFamilyFeature, endianFeature)
 
   def bytesForType(valueType : vt.ValueType) = valueType match {
     case intLikeType : vt.IntLikeType => intLikeType.bits / 8
@@ -110,12 +113,29 @@ trait AbstractWindows extends TargetPlatform {
   protected val osFamilyFeature = "windows"
 }
 
-/** Modern 64bit POSIX platform */
-object Posix64 extends AbstractPosix with AbstractLP64
-/** Modern 32bit POSIX platform */
-object Posix32 extends AbstractPosix with AbstractILP32
+/** Abstract big-endian platform */
+trait AbstractBigEndian extends TargetPlatform {
+  val endianFeature = "big-endian"
+}
+
+/** Abstract little-endian platform */
+trait AbstractLittleEndian extends TargetPlatform {
+  val endianFeature = "little-endian"
+}
+
+/** Modern big-endian 64bit POSIX platform */
+object Posix64BE extends AbstractPosix with AbstractLP64 with AbstractBigEndian
+
+/** Modern little-endian 64bit POSIX platform */
+object Posix64LE extends AbstractPosix with AbstractLP64 with AbstractLittleEndian
+
+/** Modern big-endian 32bit POSIX platform */
+object Posix32BE extends AbstractPosix with AbstractILP32 with AbstractBigEndian
+
+/** Modern little-endian 32bit POSIX platform */
+object Posix32LE extends AbstractPosix with AbstractILP32 with AbstractLittleEndian
 
 /** Microsoft's Win64 platform */
-object Win64 extends AbstractWindows with AbstractLLP64
+object Win64 extends AbstractWindows with AbstractLLP64 with AbstractLittleEndian
 /** Microsoft's Win32 platform */
-object Win32 extends AbstractWindows with AbstractILP32
+object Win32 extends AbstractWindows with AbstractILP32 with AbstractLittleEndian
