@@ -231,6 +231,11 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
       case (PrimitiveExpressions.AnnotateType, valueExpr :: typeDatum :: Nil) =>
         et.Cast(extractExpression(valueExpr), DatumToValueType(typeDatum))
 
+      case (PrimitiveExpressions.CondExpand, firstClause :: restClauses) =>
+        val expandedData = CondExpander(firstClause :: restClauses)(libraryLoader, frontendConfig)
+
+        et.Begin(expandedData.map(extractExpression))
+
       case otherPrimitive =>
         throw new BadSpecialFormException(appliedSymbol, "Invalid primitive syntax")
     }

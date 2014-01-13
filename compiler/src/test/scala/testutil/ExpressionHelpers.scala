@@ -20,7 +20,7 @@ trait ExpressionHelpers extends FunSuite with OptionValues {
 
   val frontendConfig = frontend.FrontendConfig(
     includePath=includePath,
-    featureIdentifiers=Set()
+    featureIdentifiers=FeatureIdentifiers(platform.Posix64LE)
   )
 
   def expressionFor(scheme : String)(implicit scope : Scope) = {

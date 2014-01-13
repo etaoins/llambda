@@ -474,4 +474,38 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
       expressionFor("(ann #t <not-a-type>)")(nfiScope)
     }
   }
+  
+  test("cond-expand with no clauses fails") {
+    // We would normally expand this to an empty et.Begin but it's disallowed by R7RS
+    intercept[BadSpecialFormException] {
+      expressionFor("""(cond-expand)""") 
+    }
+  }
+  
+  test("cond-expand with one true clause") {
+    // We would normally expand this to an empty et.Begin but it's disallowed by R7RS
+    assert(expressionFor("""(cond-expand ((library (scheme base)) 1 2 3))""") ===
+      et.Begin(List(
+        et.Literal(ast.IntegerLiteral(1)),
+        et.Literal(ast.IntegerLiteral(2)),
+        et.Literal(ast.IntegerLiteral(3))
+      ))
+    )
+  }
+  
+  test("cond-expand with one false clause") {
+    // ModuleBodyExtractor removes the empty et.Begin
+    assert(bodyFor("""(cond-expand (not-a-feature 1 2 3))""")(primitiveScope) === Nil)
+  }
+  
+  test("cond-expand with one false with else") {
+    // We would normally expand this to an empty et.Begin but it's disallowed by R7RS
+    assert(expressionFor("""(cond-expand ((not r7rs) 1 2 3) (else 4 5 6))""") ===
+      et.Begin(List(
+        et.Literal(ast.IntegerLiteral(4)),
+        et.Literal(ast.IntegerLiteral(5)),
+        et.Literal(ast.IntegerLiteral(6))
+      ))
+    )
+  }
 }

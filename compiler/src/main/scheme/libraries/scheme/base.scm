@@ -4,7 +4,9 @@
 
 	; Export (lambda primitives) that occur in (scheme base)
 	; These are virtual definitions provided by the compiler
-	(export lambda quote if set! syntax-error include quasiquote unquote unquote-splicing define define-syntax define-record-type)
+	(export lambda quote if set! syntax-error include quasiquote unquote
+			  unquote-splicing define define-syntax define-record-type
+			  cond-expand)
 
 	(export begin)
 	(begin
