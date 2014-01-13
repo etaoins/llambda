@@ -233,7 +233,7 @@ object GenConstant {
       genVectorCell(state.module)(elementIrs)
 
     case ps.StorePairCell(_, carTemp, cdrTemp) =>
-      val pairCellName = state.module.nameSource.allocate("schemeInexactPair")
+      val pairCellName = state.module.nameSource.allocate("schemePair")
       val carIrConstant = state.liveTemps(carTemp) match {
         case constant : IrConstant => constant
         case other =>
