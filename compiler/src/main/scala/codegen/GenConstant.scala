@@ -19,7 +19,7 @@ object GenConstant {
       throw new InternalCompilerErrorException("Expected cell member to be array")
   }
 
-  protected def defineConstantData(module : IrModuleBuilder)(name : String, initializer  : IrConstant) : GlobalVariable = {
+  def defineConstantData(module : IrModuleBuilder)(name : String, initializer : IrConstant) : GlobalVariable = {
     val constantDataDef = IrGlobalVariableDef(
       name=name,
       initializer=initializer,

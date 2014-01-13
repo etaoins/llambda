@@ -56,11 +56,13 @@ object Compiler {
   def compileData(data : List[ast.Datum], output : File, config : CompileConfig) : Unit = {
     // Parse the program
     val loader = new frontend.LibraryLoader(config.targetPlatform)
+    val featureIdentifiers = FeatureIdentifiers(config.targetPlatform, config.extraFeatureIdents) 
+
 
     // Extract expressions
     val frontendConfig = frontend.FrontendConfig(
       includePath=config.includePath,
-      featureIdentifiers=FeatureIdentifiers(config.targetPlatform, config.extraFeatureIdents) 
+      featureIdentifiers=featureIdentifiers 
     )
 
     val expressions = frontend.ExtractProgram(data)(loader, frontendConfig)
@@ -94,7 +96,7 @@ object Compiler {
     }
 
     // Generate the LLVM IR
-    val llvmIr = codegen.GenProgram(optimizedFunctions, config.targetPlatform)
+    val llvmIr = codegen.GenProgram(optimizedFunctions, config.targetPlatform, featureIdentifiers)
 
     if (config.emitLlvm) {
       // Write the IR directly to disk

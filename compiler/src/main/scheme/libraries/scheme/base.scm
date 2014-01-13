@@ -145,4 +145,9 @@
 	(begin
 	  (define-r7rs procedure? (native-function "lliby_is_procedure" (<datum-cell>) <bool>))
 	  (define-r7rs apply (native-function "lliby_apply" (<procedure-cell> . <list-element-cell>) <datum-cell>)))
+
+	(export features)
+	(begin
+	  ; Note this is produced by codegen; it's not part of the standard library
+	  (define-r7rs features (native-function "__llambda_features" () <list-element-cell>)))
 )

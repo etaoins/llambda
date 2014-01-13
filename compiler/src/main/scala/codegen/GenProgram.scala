@@ -31,12 +31,15 @@ object GenProgram {
     ) mkString "\n"
   }
 
-  def apply(functions : Map[String, planner.PlannedFunction], targetPlatform : TargetPlatform) : String = {
+  def apply(functions : Map[String, planner.PlannedFunction], targetPlatform : TargetPlatform, featureIdentifiers : Set[String]) : String = {
     val module = new IrModuleBuilder
     val plannedSymbols = functions.keySet
 
     val nextTbaaIndex = ct.CellType.nextTbaaIndex
     val typeGenerator = new TypeGenerator(module, targetPlatform, nextTbaaIndex)
+    
+    // Build our list of feature identifiers
+    GenFeatureIdentifiers(module)(featureIdentifiers)
 
     // Build each program-supplied function
     for((nativeSymbol, plannedFunction) <- functions) {
