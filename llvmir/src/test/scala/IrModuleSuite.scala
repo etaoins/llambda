@@ -51,6 +51,13 @@ class IrModuleSuite extends FunSuite {
     module.declareFunction(putsDecl)
     module.defineFunction(mainFunction)
 
+    val aliasDef = IrAliasDef(
+      name="mainAlias",
+      aliasee=mainFunction.irValue
+    )
+
+    module.defineAlias(aliasDef)
+
     // Make sure unlessDeclared works
     module.unlessDeclared(putsDecl) {
       assert(false)
@@ -74,7 +81,8 @@ class IrModuleSuite extends FunSuite {
       "\t%helloPtr1 = getelementptr [14 x i8]* @helloWorldString, i32 0, i32 0\n" +
       "\tcall i32 @\"Put String\"(i8* %helloPtr1) nounwind\n" +
       "\tret i32 0\n" +
-      "}"
+      "}\n" +
+      "@mainAlias = alias i32 (i32, i8**) * @main"
     )
   }
 }

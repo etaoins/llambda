@@ -69,7 +69,7 @@ sealed abstract trait IrFunctionDeclLike extends Irable with IrSignatureLike wit
     declParts.mkString(" ")
   }
 
-  def irValue : IrValue = {
+  def irValue : GlobalVariable = {
     GlobalVariable(name, PointerType(irType))
   }
 }

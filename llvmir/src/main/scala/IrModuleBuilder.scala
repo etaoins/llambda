@@ -12,6 +12,7 @@ class IrModuleBuilder extends Irable {
   private val globalVariableDefs = new ListBuffer[IrGlobalVariableDef]
   private val functionDecls = new ListBuffer[IrFunctionDecl]
   private val functionDefs = new ListBuffer[IrFunctionBuilder]
+  private val aliasDefs = new ListBuffer[IrAliasDef]
   private val namedTypes = new ListBuffer[NamedType]
   private val tbaaNodes = new ListBuffer[IrTbaaNode]
 
@@ -33,6 +34,11 @@ class IrModuleBuilder extends Irable {
   def defineFunction(function : IrFunctionBuilder) {
     functionDefs.append(function)
     declaredNames += function.name
+  }
+
+  def defineAlias(aliasDef : IrAliasDef) {
+    aliasDefs.append(aliasDef)
+    declaredNames += aliasDef.name
   }
 
   def nameType(name : String, irType : IrType) : UserDefinedType = {
@@ -67,7 +73,8 @@ class IrModuleBuilder extends Irable {
       tbaaNodes.toList ++
       globalVariableDefs.toList ++
       functionDecls.toList ++
-      functionDefs.toList
+      functionDefs.toList ++
+      aliasDefs.toList
     
     allIr.map(_.toIr).mkString("\n")
   }
