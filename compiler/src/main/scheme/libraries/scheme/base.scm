@@ -78,7 +78,8 @@
 	  (define-r7rs not (native-function "lliby_not" (<bool>) <bool>))
 	  (define-r7rs boolean=? (native-function "lliby_boolean_equal" (<boolean-cell> <boolean-cell> . <list-element-cell>) <bool>)))
 
-	(export pair? null? cons car cdr set-car! set-cdr! length list-copy make-list list append)
+	(export pair? null? cons car cdr set-car! set-cdr! length list-copy
+			make-list list append memv memq member)
 	(begin 
 	  (define-r7rs pair? (native-function "lliby_is_pair" (<datum-cell>) <bool>))
 	  (define-r7rs null? (native-function "lliby_is_empty_list" (<datum-cell>) <bool>))
@@ -91,7 +92,11 @@
 	  (define-r7rs list-copy (native-function "lliby_list_copy" (<list-element-cell>) <list-element-cell>))
 	  (define-r7rs make-list (native-function "lliby_make_list" (<uint32> <datum-cell>) <list-element-cell>))
 	  (define-r7rs list (native-function "lliby_list" <list-element-cell> <list-element-cell>))
-	  (define-r7rs append (native-function "lliby_append" <list-element-cell> <datum-cell>)))
+	  (define-r7rs append (native-function "lliby_append" <list-element-cell> <datum-cell>))
+	  (define-r7rs memv (native-function "lliby_memv" (<datum-cell> <list-element-cell>) <datum-cell>))
+	  ; (eq?) is defined as (eqv?) so define (memq) as (memv)
+	  (define-r7rs memq memv)
+	  (define-r7rs member (native-function "lliby_member" (<datum-cell> <list-element-cell>) <datum-cell>)))
 
 	(export symbol? symbol=? symbol->string string->symbol)
 	(begin 

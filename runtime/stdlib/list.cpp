@@ -1,11 +1,42 @@
 #include "binding/PairCell.h"
 #include "binding/EmptyListCell.h"
+#include "binding/BooleanCell.h"
 #include "binding/ProperList.h"
 #include "core/fatal.h"
 #include "alloc/allocator.h"
 #include "alloc/RangeAlloc.h"
 
 using namespace lliby;
+
+namespace 
+{
+	// This is used to implement memq, memv and member without a callback
+	const DatumCell* list_search(const DatumCell *obj, const ListElementCell *listHead, bool (DatumCell::*equalityCheck)(const DatumCell*) const)
+	{
+		const DatumCell *datum = listHead;
+
+		// Do this in a single pass for efficiency
+		// ProperList doesn't give us much here
+		while(auto pair = datum_cast<PairCell>(datum))
+		{
+			if ((pair->car()->*equalityCheck)(obj))
+			{
+				return pair;
+			}
+
+			datum = pair->cdr();
+		}
+
+		if (datum == EmptyListCell::instance())
+		{
+			return BooleanCell::falseInstance();
+		}
+		else
+		{
+			_lliby_fatal("Attempted to search non-list", listHead);
+		}
+	}
+}
 
 extern "C"
 {
@@ -170,6 +201,16 @@ DatumCell* lliby_append(ListElementCell *argHead)
 	// Use createList to append the last list on sharing its structure.
 	// This is required by R7RS
 	return ListElementCell::createList(appenedElements, *(argIt++));
+}
+
+const DatumCell* lliby_memv(const DatumCell *obj, const ListElementCell *listHead)
+{
+	return list_search(obj, listHead, &DatumCell::isEqv);
+}
+
+const DatumCell* lliby_member(const DatumCell *obj, const ListElementCell *listHead)
+{
+	return list_search(obj, listHead, &DatumCell::isEqual);
 }
 
 }

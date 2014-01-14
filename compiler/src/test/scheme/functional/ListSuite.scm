@@ -95,3 +95,22 @@
 (define-test "(append) empty list with symbol" (expect a
 	(append '() 'a)))
 
+(define-test "(memq) on the first list member" (expect (a b c)
+	(memq 'a '(a b c))))
+
+(define-test "(memq) on the second list member" (expect (b c)
+	(memq 'b '(a b c))))
+
+(define-test "(memq) on non-existent member" (expect #f
+	(memq 'a '(b c d))))
+
+(define-test "(memq) isn't recursive" (expect #f
+	(memq (list 'a) '(b (a) c))))
+
+(define-test "(member) is recursive" (expect ((a) c)
+	(member (list 'a) '(b (a) c))))
+
+; This is technically unspecified for memq because integer comparison is
+; unspecified for eq?
+(define-test "(memv) on number list" (expect (101 102)
+	(memv 101 '(100 101 102))))
