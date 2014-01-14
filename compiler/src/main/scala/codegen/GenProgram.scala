@@ -56,7 +56,8 @@ object GenProgram {
         namedArguments=namedIrArguments,
         name=nativeSymbol,
         linkage=Linkage.Internal,
-        attributes=Set(IrFunction.NoUnwind)) 
+        attributes=Set(IrFunction.NoUnwind),
+        gc=Some("shadow-stack")) 
 
       // Create a blank generation state with just our args
       val argTemps = (plannedFunction.namedArguments map { case (name, tempValue) =>
