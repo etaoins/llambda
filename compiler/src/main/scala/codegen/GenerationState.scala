@@ -7,9 +7,11 @@ import llambda.compiler.planner.{step => ps}
 
 case class GenerationState(
   module : IrModuleBuilder,
+  gcSlots : Map[ps.TempValue, IrValue],
   currentBlock : IrBlockBuilder,
   liveAllocations : Map[ps.TempAllocation, GenCellAllocation.CellAllocation] = Map(),
-  liveTemps : Map[ps.TempValue, IrValue] = Map()
+  liveTemps : Map[ps.TempValue, IrValue] = Map(),
+  gcRootedTemps : Set[ps.TempValue] = Set()
 ) {
   def withAllocation(allocation : (ps.TempAllocation, GenCellAllocation.CellAllocation)) =
     this.copy(liveAllocations=(liveAllocations + allocation))

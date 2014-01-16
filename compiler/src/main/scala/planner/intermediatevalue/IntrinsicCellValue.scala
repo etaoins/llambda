@@ -112,7 +112,7 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
         val falseDynamicValue = new IntrinsicCellValue(possibleTypes - ct.ExactIntegerCell, cellType, tempValue)
         val falseTempValue = falseDynamicValue.toTempValue(fpType)(falseWriter)
       
-        val phiTemp = ps.GcManagedValue()
+        val phiTemp = ps.GcUnmanagedValue()
 
         plan.steps += ps.CondBranch(phiTemp, isExactIntPred, 
           trueWriter.steps.toList, trueTempValue,

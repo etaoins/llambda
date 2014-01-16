@@ -200,7 +200,8 @@ private[planner] object PlanLambda {
 
         val state = loadClosureData(postMutableState)(closureDataTemp, closureType, capturedVariables)(procPlan)
 
-        // Dispose of our closure data pointer
+        // Dispose of our closure cell and data pointer
+        procPlan.steps += ps.DisposeValue(procSelf)
         procPlan.steps += ps.DisposeValue(closureDataTemp)
 
         state

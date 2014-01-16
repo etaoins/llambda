@@ -28,6 +28,7 @@ final class TempAllocation {
 
 sealed trait Step {
   val inputValues : Set[TempValue]
+  val outputValues : Set[TempValue]
 }
 
 /** Indicates a step that can trigger a GC allocation
@@ -51,11 +52,13 @@ sealed trait CellConsumer extends Step {
   * Entry points can be loaded with StoreNamedEntryPoint */
 case class Invoke(result : Option[TempValue], signature : ProcedureSignature, entryPoint : TempValue, arguments : List[TempValue]) extends Step with GcBarrier {
   lazy val inputValues = arguments.toSet + entryPoint
+  lazy val outputValues = result.toSet
 }
 
 /** Allocates a given number of cells at runtime */
 case class AllocateCells(result : TempAllocation, count : Int) extends Step with GcBarrier {
   val inputValues = Set[TempValue]()
+  val outputValues = Set[TempValue]()
 }
 
 /** Permanently forgets about a temp value
@@ -65,7 +68,8 @@ case class AllocateCells(result : TempAllocation, count : Int) extends Step with
   * collected at the next GcBarrier if there are no other references to it
   */
 case class DisposeValue(value : TempValue) extends Step {
-  val inputValues = Set[TempValue](value)
+  lazy val inputValues = Set[TempValue](value)
+  val outputValues = Set[TempValue]()
 }
 
 /** Conditionally branches based on a value 
@@ -80,36 +84,43 @@ case class DisposeValue(value : TempValue) extends Step {
   */
 case class CondBranch(result : TempValue, test : TempValue, trueSteps : List[Step], trueValue : TempValue, falseSteps : List[Step], falseValue : TempValue) extends Step {
   lazy val inputValues = Set(test, trueValue, falseValue) ++ trueSteps.flatMap(_.inputValues) ++ falseSteps.flatMap(_.inputValues)
+  lazy val outputValues = Set(result)
 }
 
 /** Tests if a cell is of a given type */
 case class TestCellType(result : TempValue, value : TempValue, testType : ct.ConcreteCellType) extends Step {
   lazy val inputValues = Set(value)
+  lazy val outputValues = Set(result)
 }
 
 /** Casts a cell to a subtype aborting if the cast is impossible */
 case class CastCellToSubtypeChecked(result : TempValue, value : TempValue, toType : ct.CellType, errorMessage : RuntimeErrorMessage) extends Step {
   lazy val inputValues = Set(value)
+  lazy val outputValues = Set(result)
 }
 
 /** Casts a cell to another type without checking the validity of the cast */
 case class CastCellToTypeUnchecked(result : TempValue, value : TempValue, toType : ct.CellType) extends Step {
   lazy val inputValues = Set(value)
+  lazy val outputValues = Set(result)
 }
 
 /** Converts an native integer to another width and/or signedness */
 case class ConvertNativeInteger(result : TempValue, fromValue : TempValue, toBits : Int, signed : Boolean) extends Step {
   lazy val inputValues = Set(fromValue)
+  lazy val outputValues = Set(result)
 }
 
 /** Converts an native float to another type */
 case class ConvertNativeFloat(result : TempValue, fromValue : TempValue, toType : vt.FpType) extends Step {
   lazy val inputValues = Set(fromValue)
+  lazy val outputValues = Set(result)
 }
 
 /** Converts an native integer to a float */
 case class ConvertNativeIntegerToFloat(result : TempValue, fromValue : TempValue, fromSigned: Boolean, toType : vt.FpType) extends Step {
   lazy val inputValues = Set(fromValue)
+  lazy val outputValues = Set(result)
 }
       
 /** Builds a proper list at runtime
@@ -121,6 +132,7 @@ case class ConvertNativeIntegerToFloat(result : TempValue, fromValue : TempValue
   */
 case class BuildProperList(result : TempValue, allocation : TempAllocation, allocIndex : Int, listValues : List[TempValue]) extends Step with CellConsumer {
   lazy val inputValues = listValues.toSet
+  lazy val outputValues = Set(result)
 
   val allocSize = listValues.length
 
@@ -131,6 +143,7 @@ case class BuildProperList(result : TempValue, allocation : TempAllocation, allo
 /** Indicates a step that stores a constant value */
 sealed trait StoreConstant extends Step {
   val result : TempValue
+  lazy val outputValues = Set(result)
 }
 
 /** Stores an entry point with the given signature and native symbol
@@ -138,7 +151,8 @@ sealed trait StoreConstant extends Step {
   * This can be called with Invoke
   */
 case class StoreNamedEntryPoint(result : TempValue, signature : ProcedureSignature, nativeSymbol : String) extends Step {
-  lazy val inputValues = Set[TempValue]()
+  val inputValues = Set[TempValue]()
+  lazy val outputValues = Set(result)
 }
 
 /** Indicates a step that stores a constant cell */
@@ -212,6 +226,7 @@ sealed trait UnboxValue extends Step {
   val boxed : TempValue
 
   lazy val inputValues = Set(boxed)
+  lazy val outputValues = Set(result)
 }
 
 /** Stores if a cell is "truthy". All values except false are truthy. */
@@ -225,22 +240,27 @@ case class UnboxCharacter(result : TempValue, boxed : TempValue) extends UnboxVa
 /** Stores the car of the passed PairCell as a DatumCell */
 case class StorePairCar(result : TempValue, boxed : TempValue) extends Step {
   lazy val inputValues = Set(boxed)
+  lazy val outputValues = Set(result)
 }
 
 /** Stores the cdr of the passed PairCell as a DatumCell */
 case class StorePairCdr(result : TempValue, boxed : TempValue) extends Step {
   lazy val inputValues = Set(boxed)
+  lazy val outputValues = Set(result)
 }
 
 /** Store the entry point of a procedure */
 case class StoreProcedureEntryPoint(result : TempValue, boxed : TempValue) extends Step {
   lazy val inputValues = Set(boxed)
+  lazy val outputValues = Set(result)
 }
 
 /** Indicates a step that boxes a native value */
 sealed trait BoxValue extends Step {
   val result : TempValue
   val unboxed : TempValue
+  
+  lazy val outputValues = Set(result)
 }
 
 /** Boxes an i8 that's either 0 or 1 as a boolean */
@@ -278,6 +298,7 @@ case class BoxCharacter(result : TempValue, allocation : TempAllocation, allocIn
 /** Returns from the current function */
 case class Return(returnValue : Option[TempValue]) extends Step {
   lazy val inputValues = returnValue.toSet
+  val outputValues = Set[TempValue]()
 }
 
 /** Allocates data for a given record a given type 
@@ -295,21 +316,25 @@ case class RecordLikeInit(cellResult : TempValue, dataResult : TempValue, alloca
     RecordLikeInit(cellResult, dataResult, allocation, allocIndex, recordLikeType)
 
   val inputValues = Set[TempValue]()
+  val outputValues = Set(cellResult, dataResult)
 }
 
 /** Sets a record field. The value must match the type of record field */
 case class RecordDataFieldSet(recordData : TempValue, recordLikeType : vt.RecordLikeType, recordField : vt.RecordField, newValue : TempValue) extends Step {
   lazy val inputValues = Set(recordData, newValue)
+  val outputValues = Set[TempValue]()
 }
 
 /** Reads a record field. The value must match the type of record field */
 case class RecordDataFieldRef(result : TempValue, recordData : TempValue, recordLikeType : vt.RecordLikeType, recordField : vt.RecordField) extends Step {
   lazy val inputValues = Set(recordData)
+  lazy val outputValues = Set(result)
 }
 
 /** Tests to see if a record is of a given class */
 case class TestRecordLikeClass(result : TempValue, recordCell : TempValue, recordLikeType : vt.RecordLikeType) extends Step {
   lazy val inputValues = Set(recordCell)
+  lazy val outputValues = Set(result)
 }
 
 /** Asserts that a record is of a given class 
@@ -318,11 +343,13 @@ case class TestRecordLikeClass(result : TempValue, recordCell : TempValue, recor
   */
 case class AssertRecordLikeClass(recordCell : TempValue, recordLikeType : vt.RecordLikeType, errorMessage : RuntimeErrorMessage) extends Step {
   lazy val inputValues = Set(recordCell)
+  val outputValues = Set[TempValue]()
 }
 
 /** Stores the data of a record */
 case class StoreRecordLikeData(result : TempValue, recordCell : TempValue, recordLikeType : vt.RecordLikeType) extends Step {
   lazy val inputValues = Set(recordCell)
+  lazy val outputValues = Set(result)
 }
 
 /** Sets the entry point of a procedure
@@ -331,4 +358,5 @@ case class StoreRecordLikeData(result : TempValue, recordCell : TempValue, recor
   */
 case class SetProcedureEntryPoint(procedureCell : TempValue, entryPoint : TempValue) extends Step {
   lazy val inputValues = Set(procedureCell, entryPoint)
+  val outputValues = Set[TempValue]()
 }

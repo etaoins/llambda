@@ -42,37 +42,10 @@ object GenProgram {
     GenFeatureIdentifiers(module)(featureIdentifiers)
 
     // Build each program-supplied function
+    val functionGenerator = GenFunction(module, plannedSymbols, typeGenerator)_ 
+
     for((nativeSymbol, plannedFunction) <- functions) {
-      val irSignature = ProcedureSignatureToIr(plannedFunction.signature)
-
-      val argumentNames = plannedFunction.namedArguments.map(_._1)
-      val namedIrArguments = argumentNames.zip(irSignature.arguments)
-      
-      // This function does not need to be externally accessible
-      // This allows LLVM to more aggressively optimize and reduces the chance
-      // of symbol conflicts with other objects
-      val generatedFunction = new IrFunctionBuilder(
-        result=irSignature.result,
-        namedArguments=namedIrArguments,
-        name=nativeSymbol,
-        linkage=Linkage.Internal,
-        attributes=Set(IrFunction.NoUnwind),
-        gc=Some("shadow-stack")) 
-
-      // Create a blank generation state with just our args
-      val argTemps = (plannedFunction.namedArguments map { case (name, tempValue) =>
-        (tempValue, generatedFunction.argumentValues(name))
-      }).toMap
-
-      val startState = GenerationState(
-        module=module,
-        currentBlock=generatedFunction.entryBlock,
-        liveTemps=argTemps)
-
-      // Generate our steps
-      GenPlanSteps(startState, plannedSymbols, typeGenerator)(plannedFunction.steps)
-
-      module.defineFunction(generatedFunction)
+      functionGenerator(nativeSymbol, plannedFunction)
     }
     
     // Build our main() glue to init the runtime and call our program

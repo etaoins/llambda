@@ -135,14 +135,16 @@ object GenPlanStep {
       val irFuncPtr = state.liveTemps(funcPtrTemp)
       val irArguments = argumentTemps.map(state.liveTemps.apply)
 
-      val irRetOpt = state.currentBlock.call(Some("ret"))(irSignature, irFuncPtr, irArguments)
+      val (postBarrierState, irRetOpt) = GenGcBarrier(state) {
+        state.currentBlock.call(Some("ret"))(irSignature, irFuncPtr, irArguments)
+      }
 
       resultOpt match {
         case Some(resultTemp) =>
-          state.withTempValue(resultTemp -> irRetOpt.get)
+          postBarrierState.withTempValue(resultTemp -> irRetOpt.get)
 
         case None =>
-          state
+          postBarrierState
       }
 
     case ps.Return(None) =>
