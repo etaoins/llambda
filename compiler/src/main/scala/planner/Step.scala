@@ -47,11 +47,24 @@ sealed trait CellConsumer extends Step {
   def withNewAllocation(allocation : TempAllocation, allocIndex : Int) : Step
 }
 
+/** Argument passed to invoke
+  *
+  * @param  tempValue  Value to pass as the argument
+  * @param  dispose    If true the value is disposed after being passed to the
+  *                    procedure. This effectively transfers ownership of the
+  *                    value to the procedure and avoids the overhead of GC 
+  *                    rooting the value by the caller.
+  */
+case class InvokeArgument(
+  tempValue : TempValue,
+  dispose : Boolean = false
+)
+
 /** Invokes an entry point with the given arguments
   *
   * Entry points can be loaded with StoreNamedEntryPoint */
-case class Invoke(result : Option[TempValue], signature : ProcedureSignature, entryPoint : TempValue, arguments : List[TempValue]) extends Step with GcBarrier {
-  lazy val inputValues = arguments.toSet + entryPoint
+case class Invoke(result : Option[TempValue], signature : ProcedureSignature, entryPoint : TempValue, arguments : List[InvokeArgument]) extends Step with GcBarrier {
+  lazy val inputValues = arguments.map(_.tempValue).toSet + entryPoint
   lazy val outputValues = result.toSet
 }
 

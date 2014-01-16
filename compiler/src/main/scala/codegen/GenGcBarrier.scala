@@ -7,6 +7,7 @@ import llambda.llvmir._
 
 object GenGcBarrier {
   case class CalculatedBarrier(
+    unrootTemps : Set[ps.TempValue],
     saveTemps : List[(ps.TempValue, IrValue)],
     restoreTemps : List[(ps.TempValue, IrValue)],
     finalGcRootedTemps : Set[ps.TempValue]
@@ -14,26 +15,38 @@ object GenGcBarrier {
 
   def calculateGcBarrier(state: GenerationState) : CalculatedBarrier = {
     // All GC managed values from the initial state need to be restored
-    val toRestoreValues = state.liveTemps.filter(_._1.isGcManaged)
+    val liveGcManagedValues = state.liveTemps.filter(_._1.isGcManaged)
     
     // Values that haven't already been rooted need to be saved
-    val toSaveValues = (toRestoreValues.filter { case (tempValue, _) =>
+    val toSaveValues = (liveGcManagedValues.filter { case (tempValue, _) =>
       !state.gcRootedTemps.contains(tempValue)
     })
+    
+    // Any values that we were rooted but are not longer liver should be unrooted
+    val unrootTemps = state.gcRootedTemps -- liveGcManagedValues.keySet
 
     CalculatedBarrier(
+      unrootTemps=unrootTemps,
       saveTemps=toSaveValues.toList,
-      restoreTemps=toRestoreValues.toList,
-      finalGcRootedTemps=toRestoreValues.keySet
+      restoreTemps=liveGcManagedValues.toList,
+      finalGcRootedTemps=liveGcManagedValues.keySet
     )
   }
 
   def genSaveGcRoots(state : GenerationState)(calcedBarrier : CalculatedBarrier) {
     val block = state.currentBlock
 
+    if (!calcedBarrier.unrootTemps.isEmpty) {
+      block.comment("Unrooting dead values before GC barrier")
+    }
+
+    for(tempValue <- calcedBarrier.unrootTemps) {
+      block.store(NullPointerConstant(PointerType(ct.DatumCell.irType)), state.gcSlots(tempValue))
+    }
+
     // Save all values
     if (!calcedBarrier.saveTemps.isEmpty) {
-      block.comment("Saving GC roots before GC barrier")
+      block.comment("Saving live GC roots before GC barrier")
     }
 
     for((tempValue, irValue) <- calcedBarrier.saveTemps) {

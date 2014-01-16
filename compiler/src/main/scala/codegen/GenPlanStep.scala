@@ -134,13 +134,23 @@ object GenPlanStep {
         gcRootedTemps=(trueEndState.gcRootedTemps & falseEndState.gcRootedTemps)
       ).withTempValue(resultTemp -> phiValueIr) 
 
-    case ps.Invoke(resultOpt, signature, funcPtrTemp, argumentTemps) =>
+    case ps.Invoke(resultOpt, signature, funcPtrTemp, arguments) =>
       val irSignature = ProcedureSignatureToIr(signature)
       val irFuncPtr = state.liveTemps(funcPtrTemp)
-      val irArguments = argumentTemps.map(state.liveTemps.apply)
+      val irArguments = arguments.map { argument =>
+        state.liveTemps(argument.tempValue)
+      }
 
-      val (postBarrierState, irRetOpt) = GenGcBarrier(state) {
-        state.currentBlock.call(Some("ret"))(irSignature, irFuncPtr, irArguments)
+      // Dispose of arguments before our barrier
+      // This prevents us from GC rooting them needlessly
+      val disposedArgTemps = arguments.filter(_.dispose).map(_.tempValue)
+
+      val preBarrierState = state.copy(
+        liveTemps=state.liveTemps -- disposedArgTemps
+      )
+
+      val (postBarrierState, irRetOpt) = GenGcBarrier(preBarrierState) {
+        preBarrierState.currentBlock.call(Some("ret"))(irSignature, irFuncPtr, irArguments)
       }
 
       resultOpt match {

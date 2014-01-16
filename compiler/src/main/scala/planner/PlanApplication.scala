@@ -81,7 +81,8 @@ object PlanApplication {
       new ps.TempValue(returnType.isGcManaged)
     }
 
-    plan.steps += ps.Invoke(resultTemp, signature, entryPointTemp, argTemps)
+    val invokeArgs = argTemps.toList.map(ps.InvokeArgument(_))
+    plan.steps += ps.Invoke(resultTemp, signature, entryPointTemp, invokeArgs)
 
     resultTemp.map { tempValue =>
       TempValueToIntermediate(signature.returnType.get, tempValue)

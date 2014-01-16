@@ -97,7 +97,8 @@ private[intermediatevalue] object PlanProcedureTrampoline {
     }
 
     // Invoke!
-    plan.steps += ps.Invoke(resultTempOpt, signature, entryPointTemp, argTemps.toList)
+    val invokeArgs = argTemps.toList.map(ps.InvokeArgument(_))
+    plan.steps += ps.Invoke(resultTempOpt, signature, entryPointTemp, invokeArgs)
 
     val returnValue = resultTempOpt map { resultTemp =>
       TempValueToIntermediate(signature.returnType.get, resultTemp)
