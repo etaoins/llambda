@@ -83,7 +83,7 @@ case class DisposeValue(value : TempValue) extends Step {
   * @param falseValue  value to place in result after performing falseSteps
   */
 case class CondBranch(result : TempValue, test : TempValue, trueSteps : List[Step], trueValue : TempValue, falseSteps : List[Step], falseValue : TempValue) extends Step {
-  lazy val inputValues = Set(test, trueValue, falseValue) ++ trueSteps.flatMap(_.inputValues) ++ falseSteps.flatMap(_.inputValues)
+  lazy val inputValues = Set(test) ++ trueSteps.flatMap(_.inputValues) ++ falseSteps.flatMap(_.inputValues)
   lazy val outputValues = Set(result)
 }
 

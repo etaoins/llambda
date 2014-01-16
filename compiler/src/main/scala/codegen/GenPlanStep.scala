@@ -128,7 +128,11 @@ object GenPlanStep {
       // Make the phi
       val phiValueIr = phiBlock.phi("condPhiResult")(PhiSource(trueIrValue, trueEndBlock), PhiSource(falseIrValue, falseEndBlock))
 
-      state.copy(currentBlock=phiBlock).withTempValue(resultTemp -> phiValueIr) 
+      state.copy(
+        currentBlock=phiBlock,
+        // A value is only considered rooted if it was rooted in both branches:
+        gcRootedTemps=(trueEndState.gcRootedTemps & falseEndState.gcRootedTemps)
+      ).withTempValue(resultTemp -> phiValueIr) 
 
     case ps.Invoke(resultOpt, signature, funcPtrTemp, argumentTemps) =>
       val irSignature = ProcedureSignatureToIr(signature)

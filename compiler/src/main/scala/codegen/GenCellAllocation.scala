@@ -88,17 +88,42 @@ object GenCellAllocation {
     directSuccessBlock.store(newAllocStartValue, llibyAllocStart)
     directSuccessBlock.uncondBranch(allocFinishedBlock)
 
-    // In the garage collection block call out to the runtime
+    // In the garage collection block first save our GC roots
+    val collectGarbageState = initialState.copy(currentBlock=collectGarbageBlock) 
+
+    val calcedBarrier = GenGcBarrier.calculateGcBarrier(collectGarbageState)
+    GenGcBarrier.genSaveGcRoots(collectGarbageState)(calcedBarrier)
+
+    // Now call the runtime
     val Some(runtimeAllocValue) = collectGarbageBlock.callDecl(Some("runtimeAlloc"))(llibyAllocCells, List(allocCountValue))
+
+    // Now restore the GC roots
+    val newIrValues = GenGcBarrier.genRestoreGcRoots(collectGarbageState)(calcedBarrier)  
+
     collectGarbageBlock.uncondBranch(allocFinishedBlock)
 
-    // Phi the two values together
+    // Phi the two result together
     val allocResultValue = allocFinishedBlock.phi("allocResult")(
       PhiSource(directAllocValue, directSuccessBlock),
       PhiSource(runtimeAllocValue, collectGarbageBlock)
     )
 
+    // Now phi every restored GC root (ugh)
+    val liveTempsUpdate = calcedBarrier.restoreTemps.zip(newIrValues).map { case ((tempValue, directIrValue), gcIrValue) =>
+      val phiedGcRoot = allocFinishedBlock.phi("phiedGcRoot")(
+        PhiSource(directIrValue, directSuccessBlock),
+        PhiSource(gcIrValue, collectGarbageBlock)
+      )
+
+      (tempValue -> (phiedGcRoot : IrValue))
+    }
+
     val allocation = new CellAllocation(allocResultValue, count)
-    (initialState.copy(currentBlock=allocFinishedBlock), allocation)
+
+    // Note we don't update gcRootedTemps here because it happens in a branch
+    (initialState.copy(
+      currentBlock=allocFinishedBlock,
+      liveTemps=initialState.liveTemps ++ liveTempsUpdate
+    ), allocation)
   }
 }
