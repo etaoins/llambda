@@ -34,13 +34,17 @@ class PlanWriter(val steps : mutable.ListBuffer[ps.Step], val plannedFunctions :
     new PlanWriter(new mutable.ListBuffer[ps.Step], plannedFunctions)
 
   def buildCondBranch(test : ps.TempValue, trueBuilder : (PlanWriter) => ps.TempValue, falseBuilder : (PlanWriter) => ps.TempValue) : ps.TempValue = {
-    val phiTemp = new ps.TempValue
-
     val truePlan = forkPlan()
     val trueValue = trueBuilder(truePlan) 
 
     val falsePlan = forkPlan()
     val falseValue = falseBuilder(falsePlan)
+
+    if (trueValue.isGcManaged != falseValue.isGcManaged) {
+      throw new InternalCompilerErrorException("phi branches returning GC incompatible values")
+    }
+
+    val phiTemp = new ps.TempValue(trueValue.isGcManaged)
 
     this.steps += ps.CondBranch(phiTemp, test, truePlan.steps.toList, trueValue, falsePlan.steps.toList, falseValue)
 

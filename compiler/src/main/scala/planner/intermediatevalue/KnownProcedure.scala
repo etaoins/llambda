@@ -46,7 +46,7 @@ class KnownProcedure(val signature : ProcedureSignature, symbolBlock : () => Str
       val entryPointTemp = if (signature == AdaptedProcedureSignature) {
         // The procedure already has the correct signature
         // This is unlikely but worth checking
-        val entryPointTemp = new ps.TempValue
+        val entryPointTemp = ps.GcUnmanagedValue()
         plan.steps += ps.StoreNamedEntryPoint(entryPointTemp, signature, nativeSymbol)
 
         entryPointTemp
@@ -62,7 +62,7 @@ class KnownProcedure(val signature : ProcedureSignature, symbolBlock : () => Str
         }
 
         // Load the trampoline's entry point
-        val trampEntryPointTemp = new ps.TempValue
+        val trampEntryPointTemp = ps.GcUnmanagedValue()
         plan.steps += ps.StoreNamedEntryPoint(trampEntryPointTemp, AdaptedProcedureSignature, trampolineSymbol) 
 
         trampEntryPointTemp
@@ -81,7 +81,7 @@ class KnownProcedure(val signature : ProcedureSignature, symbolBlock : () => Str
           // If we had a closure selfTempOpt would have been defined to contain it
           // This means we have to create a new closureless procedure cell to
           // contain the entry point
-          val cellTemp = new ps.TempValue
+          val cellTemp = ps.GcUnmanagedValue()
 
           plan.steps += ps.StoreEmptyClosure(cellTemp, entryPointTemp)
 
@@ -104,7 +104,7 @@ class KnownProcedure(val signature : ProcedureSignature, symbolBlock : () => Str
   }
   
   def planEntryPoint()(implicit plan : PlanWriter) : ps.TempValue = {
-    val entryPointTemp = new ps.TempValue
+    val entryPointTemp = ps.GcUnmanagedValue()
     plan.steps += ps.StoreNamedEntryPoint(entryPointTemp, signature, nativeSymbol)
 
     entryPointTemp

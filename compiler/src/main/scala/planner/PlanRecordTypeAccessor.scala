@@ -19,17 +19,20 @@ object PlanRecordTypeAccessor {
           val returnType : Option[vt.ValueType] = Some(field.fieldType)
         }
 
-        val recordCellTemp = new ps.TempValue
+        val recordCellTemp = ps.GcManagedValue()
         
         val plan = parentPlan.forkPlan()
 
         // Extract the record data
-        val recordDataTemp = new ps.TempValue
+        val recordDataTemp = ps.GcUnmanagedValue()
         plan.steps += ps.StoreRecordLikeData(recordDataTemp, recordCellTemp, recordType) 
         
         // Read the field
-        val fieldValueTemp = new ps.TempValue
+        val fieldValueTemp = new ps.TempValue(field.fieldType.isGcManaged)
         plan.steps += ps.RecordDataFieldRef(fieldValueTemp, recordDataTemp, recordType, field) 
+
+        // Dispose of the record data pointer
+        plan.steps += ps.DisposeValue(recordDataTemp)
 
         plan.steps += ps.Return(Some(fieldValueTemp))
 

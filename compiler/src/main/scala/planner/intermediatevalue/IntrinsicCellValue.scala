@@ -10,7 +10,7 @@ import llambda.compiler.RuntimeErrorMessage
 
 class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellType : ct.CellType, val tempValue : ps.TempValue) extends IntermediateCellValue {
   override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
-    val truthyTemp = new ps.TempValue
+    val truthyTemp = ps.GcUnmanagedValue()
 
     if (possibleTypes.contains(ct.BooleanCell)) {
       plan.steps += ps.UnboxAsTruthy(truthyTemp, tempValue) 
@@ -37,14 +37,14 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue = nativeType match {
     case vt.UnicodeChar =>
       val boxedChar = toTempValue(vt.IntrinsicCellType(ct.CharacterCell))
-      val unboxedTemp = new ps.TempValue
+      val unboxedTemp = ps.GcUnmanagedValue()
       plan.steps += ps.UnboxCharacter(unboxedTemp, boxedChar)
 
       unboxedTemp
       
     case intType : vt.IntType =>
       val boxedExactInt = toTempValue(vt.IntrinsicCellType(ct.ExactIntegerCell))
-      val unboxedTemp = new ps.TempValue
+      val unboxedTemp = ps.GcUnmanagedValue()
       plan.steps += ps.UnboxExactInteger(unboxedTemp, boxedExactInt)
 
       if (intType.bits == 64) {
@@ -52,7 +52,7 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
         unboxedTemp
       }
       else {
-        val convTemp = new ps.TempValue
+        val convTemp = ps.GcUnmanagedValue()
 
         // Convert to the right width
         plan.steps += ps.ConvertNativeInteger(convTemp, unboxedTemp, intType.bits, intType.signed) 
@@ -70,11 +70,11 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
       else if (possiblyExactInt & !possiblyInexactRational) {
         // Unbox as exact int
         val boxedExactInt = toTempValue(vt.IntrinsicCellType(ct.ExactIntegerCell)) 
-        val unboxedTemp = new ps.TempValue
+        val unboxedTemp = ps.GcUnmanagedValue()
         plan.steps += ps.UnboxExactInteger(unboxedTemp, boxedExactInt)
 
         // Convert to the wanted type
-        val convTemp = new ps.TempValue
+        val convTemp = ps.GcUnmanagedValue()
         plan.steps += ps.ConvertNativeIntegerToFloat(convTemp, unboxedTemp, true, fpType)
 
         convTemp
@@ -82,7 +82,7 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
       else if (!possiblyExactInt && possiblyInexactRational) {
         // Unbox as inexact rational
         val boxedInexactRational = toTempValue(vt.IntrinsicCellType(ct.InexactRationalCell)) 
-        val unboxedTemp = new ps.TempValue
+        val unboxedTemp = ps.GcUnmanagedValue()
         plan.steps += ps.UnboxInexactRational(unboxedTemp, boxedInexactRational)
 
         if (fpType == vt.Double) {
@@ -90,7 +90,7 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
           unboxedTemp
         }
         else {
-          val convTemp = new ps.TempValue
+          val convTemp = ps.GcUnmanagedValue()
 
           plan.steps += ps.ConvertNativeFloat(convTemp, unboxedTemp, fpType)
           convTemp
@@ -98,7 +98,7 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
       }
       else {
         // We have to check types here and branch on the result
-        val isExactIntPred = new ps.TempValue
+        val isExactIntPred = ps.GcUnmanagedValue()
 
         plan.steps += ps.TestCellType(isExactIntPred, tempValue, ct.ExactIntegerCell)
 
@@ -112,7 +112,7 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
         val falseDynamicValue = new IntrinsicCellValue(possibleTypes - ct.ExactIntegerCell, cellType, tempValue)
         val falseTempValue = falseDynamicValue.toTempValue(fpType)(falseWriter)
       
-        val phiTemp = new ps.TempValue
+        val phiTemp = ps.GcManagedValue()
 
         plan.steps += ps.CondBranch(phiTemp, isExactIntPred, 
           trueWriter.steps.toList, trueTempValue,

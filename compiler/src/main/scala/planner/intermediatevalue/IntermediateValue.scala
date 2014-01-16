@@ -20,7 +20,10 @@ trait IntermediateValueHelpers {
   protected def cellTempToSupertype(cellTemp : ps.TempValue, actualType : ct.CellType, supertype : ct.CellType)(implicit plan : PlanWriter) : ps.TempValue = 
     if (actualType != supertype) {
       // Cast this to super
-      val castTemp = new ps.TempValue
+
+      // This only needs to be GC managed if the original is GC managed
+      // This prevents us from rooting super casts of constant cells
+      val castTemp = new ps.TempValue(cellTemp.isGcManaged)
       plan.steps += ps.CastCellToTypeUnchecked(castTemp, cellTemp, supertype)
 
       castTemp
@@ -45,7 +48,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
   protected def toRecordTempValue(recordType : vt.RecordType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue
 
   def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
-    val trueTemp = new ps.TempValue
+    val trueTemp = ps.GcUnmanagedValue()
     plan.steps += ps.StoreNativeInteger(trueTemp, 1, 1) 
 
     trueTemp
@@ -57,7 +60,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     case vt.CBool =>
       val truthyPredTemp = toTruthyPredicate()
 
-      val intConvTemp = new ps.TempValue
+      val intConvTemp = ps.GcUnmanagedValue()
       plan.steps += ps.ConvertNativeInteger(intConvTemp, truthyPredTemp, vt.CBool.bits, false)
 
       intConvTemp
@@ -83,7 +86,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     val ourTempValue = this.toTempValue(vt.IntrinsicCellType(ct.DatumCell))(ourPlan)
     val theirTempValue = theirValue.toTempValue(vt.IntrinsicCellType(ct.DatumCell))(theirPlan)
 
-    val phiResultTemp = new ps.TempValue
+    val phiResultTemp = ps.GcManagedValue()
     val phiPossibleTypes = possibleTypes ++ theirValue.possibleTypes
 
     PlanPhiResult(

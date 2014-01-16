@@ -22,8 +22,8 @@ import llambda.compiler.RuntimeErrorMessage
   */
 private[intermediatevalue] object PlanProcedureTrampoline {
   def apply(signature : ProcedureSignature, nativeSymbol : String)(implicit parentPlan : PlanWriter) : PlannedFunction = {
-    val selfTemp = new ps.TempValue
-    val argListHeadTemp = new ps.TempValue
+    val selfTemp = ps.GcManagedValue()
+    val argListHeadTemp = ps.GcManagedValue()
 
     implicit val plan = parentPlan.forkPlan()
 
@@ -56,7 +56,7 @@ private[intermediatevalue] object PlanProcedureTrampoline {
       val argPairTemp = argListElementValue.toTempValue(vt.IntrinsicCellType(ct.PairCell), Some(insufficientArgsMessage))(plan)
 
       // Get the car of the pair as the arg's value 
-      val argDatumTemp = new ps.TempValue
+      val argDatumTemp = ps.GcManagedValue()
       plan.steps += ps.StorePairCar(argDatumTemp, argPairTemp)
 
       // Convert it to the expected type
@@ -66,7 +66,7 @@ private[intermediatevalue] object PlanProcedureTrampoline {
       argTemps += argTemp
 
       // Now load the cdr
-      val argCdrTemp = new ps.TempValue
+      val argCdrTemp = ps.GcManagedValue()
       plan.steps += ps.StorePairCdr(argCdrTemp, argPairTemp)
 
       // We know this is a list element but its type will be DatumCell
@@ -78,8 +78,6 @@ private[intermediatevalue] object PlanProcedureTrampoline {
       argTemps += restArgValue.toTempValue(vt.IntrinsicCellType(ct.ListElementCell))(plan)
     }
     else {
-      val unusedTemp = new ps.TempValue
-
       val tooManyArgsMessage = RuntimeErrorMessage(
         name=s"tooManyArgsFor${nativeSymbol}",
         text=s"Called ${nativeSymbol} with too many arguments; requires exactly ${signature.fixedArgs.length} arguments."
@@ -90,12 +88,12 @@ private[intermediatevalue] object PlanProcedureTrampoline {
     }
 
     // Load the entry point for the function we're jumping to
-    val entryPointTemp = new ps.TempValue
+    val entryPointTemp = ps.GcUnmanagedValue()
     plan.steps += ps.StoreNamedEntryPoint(entryPointTemp, signature, nativeSymbol)
 
     // Create our result temp value if any
-    val resultTempOpt = signature.returnType map { _ =>
-      new ps.TempValue
+    val resultTempOpt = signature.returnType map { returnType =>
+      new ps.TempValue(returnType.isGcManaged)
     }
 
     // Invoke!

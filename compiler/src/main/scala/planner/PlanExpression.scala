@@ -87,8 +87,7 @@ private[planner] object PlanExpression {
         val finalState = bindings.foldLeft(initialState) { case (state, (storageLoc, initialValue)) =>
           if (planConfig.analysis.mutableVars.contains(storageLoc)) {
             val allocTemp = new ps.TempAllocation
-            val mutableTemp = new ps.TempValue
-            val variableTemp = new ps.TempValue
+            val mutableTemp = ps.GcManagedValue()
             
             val initialValueResult = apply(state)(initialValue)
             val initialValueTemp = initialValueResult.value.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
@@ -96,7 +95,7 @@ private[planner] object PlanExpression {
             plan.steps += ps.AllocateCells(allocTemp, 1)
 
             // Create a new mutable
-            val recordDataTemp = new ps.TempValue
+            val recordDataTemp = ps.GcManagedValue()
             plan.steps += ps.RecordLikeInit(mutableTemp, recordDataTemp, allocTemp, 0, vt.MutableType)
 
             // Set the value
@@ -141,12 +140,15 @@ private[planner] object PlanExpression {
         val mutableTemp = initialState.mutables(storageLoc)
         
         // Load our data pointer
-        val recordDataTemp = new ps.TempValue
+        val recordDataTemp = ps.GcUnmanagedValue()
         plan.steps += ps.StoreRecordLikeData(recordDataTemp, mutableTemp, vt.MutableType)
         
         // Load the data
-        val resultTemp = new ps.TempValue
+        val resultTemp = ps.GcManagedValue()
         plan.steps += ps.RecordDataFieldRef(resultTemp, recordDataTemp, vt.MutableType, vt.MutableField)
+
+        // Dispose of our data pointer
+        plan.steps += ps.DisposeValue(recordDataTemp)
         
         // We can be anything here
         val possibleTypes = ct.DatumCell.concreteTypes
@@ -163,12 +165,14 @@ private[planner] object PlanExpression {
         val newValueTemp = newValueResult.value.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
 
         // Load our data pointer
-        val recordDataTemp = new ps.TempValue
+        val recordDataTemp = ps.GcUnmanagedValue()
         plan.steps += ps.StoreRecordLikeData(recordDataTemp, mutableTemp, vt.MutableType)
         
         // Store the data
-        val resultTemp = new ps.TempValue
         plan.steps += ps.RecordDataFieldSet(recordDataTemp, vt.MutableType, vt.MutableField, newValueTemp)
+
+        // Dispose of the data pointer
+        plan.steps += ps.DisposeValue(recordDataTemp)
 
         PlanResult(
           state=newValueResult.state,

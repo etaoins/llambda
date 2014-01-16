@@ -239,5 +239,9 @@ object GenPlanStep {
       ct.ProcedureCell.genStoreToEntryPoint(state.currentBlock)(entryPointIr, procedureCellIr)
 
       state
+
+    case ps.DisposeValue(disposedTemp) =>
+      state.copy(liveTemps=state.liveTemps - disposedTemp)
+
  }
 }

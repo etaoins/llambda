@@ -32,7 +32,9 @@ sealed abstract class ConstantValue(cellType : ct.ConcreteCellType) extends Inte
 
 sealed abstract class TrivialConstantValue[T, U <: ps.StoreConstantCell](cellType : ct.ConcreteCellType, value : T, stepConstructor : (ps.TempValue, T) => U) extends ConstantValue(cellType) {
   def toConstantCellTempValue()(implicit plan : PlanWriter) : ps.TempValue = {
-    val constantTemp = new ps.TempValue
+    // Constant cell values aren't GC managed
+    // Using them as GC roots is harmless but adds overhead
+    val constantTemp = ps.GcUnmanagedValue()
     plan.steps += stepConstructor(constantTemp, value)
     constantTemp
   }
@@ -51,12 +53,12 @@ class ConstantSymbolValue(value : String) extends TrivialConstantValue(ct.Symbol
 class ConstantExactIntegerValue(value : Long) extends TrivialConstantValue(ct.ExactIntegerCell, value, ps.StoreExactIntegerCell.apply) {
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue = nativeType match {
     case intType : vt.IntType =>
-      val constantTemp = new ps.TempValue
+      val constantTemp = ps.GcUnmanagedValue()
       plan.steps += ps.StoreNativeInteger(constantTemp, value, intType.bits)
       constantTemp
 
     case fpType : vt.FpType =>
-      val constantTemp = new ps.TempValue
+      val constantTemp = ps.GcUnmanagedValue()
       plan.steps += ps.StoreNativeFloat(constantTemp, value.toDouble, fpType)
       constantTemp
 
@@ -71,7 +73,7 @@ class ConstantExactIntegerValue(value : Long) extends TrivialConstantValue(ct.Ex
 class ConstantInexactRationalValue(value : Double) extends TrivialConstantValue(ct.InexactRationalCell, value, ps.StoreInexactRationalCell.apply) {
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue = nativeType match {
     case fpType : vt.FpType =>
-      val constantTemp = new ps.TempValue
+      val constantTemp = ps.GcUnmanagedValue()
       plan.steps += ps.StoreNativeFloat(constantTemp, value, fpType)
       constantTemp
 
@@ -86,7 +88,7 @@ class ConstantInexactRationalValue(value : Double) extends TrivialConstantValue(
 class ConstantCharacterValue(value : Char) extends TrivialConstantValue(ct.CharacterCell, value, ps.StoreCharacterCell.apply) {
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue = nativeType match {
     case vt.UnicodeChar =>
-      val constantTemp = new ps.TempValue
+      val constantTemp = ps.GcUnmanagedValue()
       plan.steps += ps.StoreNativeInteger(constantTemp, value, vt.UnicodeChar.bits)
       constantTemp
 
@@ -102,7 +104,7 @@ class ConstantBooleanValue(value : Boolean) extends TrivialConstantValue(ct.Bool
   private val intValue = if (value) 1 else 0
 
   override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
-    val predTemp = new ps.TempValue
+    val predTemp = ps.GcUnmanagedValue()
     plan.steps += ps.StoreNativeInteger(predTemp, intValue, 1) 
 
     predTemp
@@ -124,7 +126,7 @@ class ConstantBytevectorValue(value : Vector[Short]) extends TrivialConstantValu
 
 class ConstantPairValue(car : ConstantValue, cdr : ConstantValue) extends ConstantValue(ct.PairCell) {
   def toConstantCellTempValue()(implicit plan : PlanWriter) : ps.TempValue = {
-    val constantTemp = new ps.TempValue
+    val constantTemp = ps.GcUnmanagedValue()
 
     // Box our car/cdr first
     val carTemp = car.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
@@ -142,7 +144,7 @@ class ConstantPairValue(car : ConstantValue, cdr : ConstantValue) extends Consta
 
 class ConstantVectorValue(elements : Vector[ConstantValue]) extends ConstantValue(ct.VectorCell) {
   def toConstantCellTempValue()(implicit plan : PlanWriter) : ps.TempValue = {
-    val constantTemp = new ps.TempValue
+    val constantTemp = ps.GcUnmanagedValue()
 
     // Box our elements
     val elementTemps = elements.map {
@@ -161,7 +163,7 @@ class ConstantVectorValue(elements : Vector[ConstantValue]) extends ConstantValu
 
 object EmptyListValue extends ConstantValue(ct.EmptyListCell) {
   def toConstantCellTempValue()(implicit plan : PlanWriter) : ps.TempValue = {
-    val constantTemp = new ps.TempValue
+    val constantTemp = ps.GcUnmanagedValue()
     plan.steps += ps.StoreEmptyListCell(constantTemp)
     constantTemp
   }
@@ -172,7 +174,7 @@ object EmptyListValue extends ConstantValue(ct.EmptyListCell) {
 
 object UnitValue extends ConstantValue(ct.UnitCell) {
   def toConstantCellTempValue()(implicit plan : PlanWriter) : ps.TempValue = {
-    val constantTemp = new ps.TempValue
+    val constantTemp = ps.GcUnmanagedValue()
     plan.steps += ps.StoreUnitCell(constantTemp)
     constantTemp
   }

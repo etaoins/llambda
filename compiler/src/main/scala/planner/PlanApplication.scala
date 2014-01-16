@@ -13,17 +13,19 @@ object PlanApplication {
 
     if (restArgCount == 0) {
       // Avoid a cell allocation here so our plan optimizer knows we don't need GC
-      val emptyListTemp = new ps.TempValue
+
+      // This is unmanaged because the empty list is a constant value
+      val emptyListTemp = ps.GcUnmanagedValue()
       plan.steps += ps.StoreEmptyListCell(emptyListTemp)
 
-      val listElemCast = new ps.TempValue
+      val listElemCast = ps.GcUnmanagedValue()
       plan.steps += ps.CastCellToTypeUnchecked(listElemCast, emptyListTemp, ct.ListElementCell)
 
       listElemCast
     }
     else {
       val allocTemp = new ps.TempAllocation
-      val restArgTemp = new ps.TempValue
+      val restArgTemp = ps.GcManagedValue()
 
       val argTemps = restArgs.map {
         _.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
@@ -75,8 +77,8 @@ object PlanApplication {
 
     val argTemps = selfTemps ++ fixedTemps ++ restTemps
 
-    val resultTemp = signature.returnType.map { _ =>
-      new ps.TempValue
+    val resultTemp = signature.returnType.map { returnType =>
+      new ps.TempValue(returnType.isGcManaged)
     }
 
     plan.steps += ps.Invoke(resultTemp, signature, entryPointTemp, argTemps)

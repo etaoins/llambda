@@ -56,8 +56,8 @@ private[planner] object PlanLambda {
 
       mutableArgs.zipWithIndex.foldLeft(initialState) { case (state, (Argument(storageLoc, tempValue, _), index)) =>
         // Init the mutable
-        val mutableTemp = new ps.TempValue
-        val recordDataTemp = new ps.TempValue
+        val mutableTemp = ps.GcManagedValue()
+        val recordDataTemp = ps.GcUnmanagedValue()
 
         plan.steps += ps.RecordLikeInit(mutableTemp, recordDataTemp, allocTemp, index, vt.MutableType)
 
@@ -71,7 +71,7 @@ private[planner] object PlanLambda {
   private def loadClosureData(initialState : PlannerState)(closureDataTemp : ps.TempValue, closureType : vt.ClosureType, capturedVariables : List[CapturedVariable])(implicit plan : PlanWriter) : PlannerState = 
     capturedVariables.foldLeft(initialState) { case (state, capturedVar) =>
       // Load the variable
-      val varTemp = new ps.TempValue
+      val varTemp = new ps.TempValue(capturedVar.recordField.fieldType.isGcManaged)
       plan.steps += ps.RecordDataFieldRef(varTemp, closureDataTemp, closureType, capturedVar.recordField) 
 
       // Add it to our state
@@ -151,7 +151,7 @@ private[planner] object PlanLambda {
       None
     }
     else {
-      Some(new ps.TempValue)
+      Some(ps.GcManagedValue())
     }
 
     // Make our closure type
@@ -164,10 +164,10 @@ private[planner] object PlanLambda {
     }
 
     val allArgs = fixedArgLocs.map({ storageLoc =>
-      Argument(storageLoc, new ps.TempValue, vt.IntrinsicCellType(ct.DatumCell))
+      Argument(storageLoc, ps.GcManagedValue(), vt.IntrinsicCellType(ct.DatumCell))
     }) ++
     restArgLoc.map({ storageLoc =>
-      Argument(storageLoc, new ps.TempValue, vt.IntrinsicCellType(ct.ListElementCell))
+      Argument(storageLoc, ps.GcManagedValue(), vt.IntrinsicCellType(ct.ListElementCell))
     })
 
     // Split our args in to mutable and immutable
@@ -186,7 +186,7 @@ private[planner] object PlanLambda {
 
     val procPlan = parentPlan.forkPlan() 
 
-    // Initialize aoll of our mutable parameters
+    // Initialize all of our mutable parameters
     val postMutableState = initializeMutableArgs(preMutableState)(mutableArgs)(procPlan) 
     
     // Load all of our captured variables
@@ -195,10 +195,15 @@ private[planner] object PlanLambda {
         postMutableState
 
       case Some(procSelf) => 
-        val closureDataTemp = new ps.TempValue
+        val closureDataTemp = ps.GcUnmanagedValue()
         procPlan.steps += ps.StoreRecordLikeData(closureDataTemp, procSelf, closureType)
 
-        loadClosureData(postMutableState)(closureDataTemp, closureType, capturedVariables)(procPlan)
+        val state = loadClosureData(postMutableState)(closureDataTemp, closureType, capturedVariables)(procPlan)
+
+        // Dispose of our closure data pointer
+        procPlan.steps += ps.DisposeValue(closureDataTemp)
+
+        state
     }
 
     // Plan the body
@@ -261,8 +266,8 @@ private[planner] object PlanLambda {
       val tempAllocation = new ps.TempAllocation
       parentPlan.steps += ps.AllocateCells(tempAllocation, 1)
 
-      val cellTemp = new ps.TempValue
-      val dataTemp = new ps.TempValue
+      val cellTemp = ps.GcManagedValue()
+      val dataTemp = ps.GcUnmanagedValue()
 
       parentPlan.steps += ps.RecordLikeInit(cellTemp, dataTemp, tempAllocation, 0, closureType)
 

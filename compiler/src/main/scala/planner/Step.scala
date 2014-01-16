@@ -6,8 +6,20 @@ import llambda.compiler.ast
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 
-final class TempValue {
+class TempValue(val isGcManaged : Boolean) {
   override def toString = s"%${this.hashCode.toHexString}" 
+}
+
+object GcManagedValue {
+  /** Creates a new GC managed temp value */
+  def apply() : TempValue = 
+    new TempValue(true)
+}
+
+object GcUnmanagedValue {
+  /** Creates a unmanaged temp value */
+  def apply() : TempValue =
+    new TempValue(false)
 }
 
 final class TempAllocation {
@@ -44,6 +56,16 @@ case class Invoke(result : Option[TempValue], signature : ProcedureSignature, en
 /** Allocates a given number of cells at runtime */
 case class AllocateCells(result : TempAllocation, count : Int) extends Step with GcBarrier {
   val inputValues = Set[TempValue]()
+}
+
+/** Permanently forgets about a temp value
+  *
+  * Referencing a TempValue after DisposeValue has been called will fail at
+  * compile time. Disposing a GC managed value will allow it to be garbage
+  * collected at the next GcBarrier if there are no other references to it
+  */
+case class DisposeValue(value : TempValue) extends Step {
+  val inputValues = Set[TempValue](value)
 }
 
 /** Conditionally branches based on a value 

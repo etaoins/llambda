@@ -15,7 +15,7 @@ object CadrProcPlanner {
         singleOperand._2.toTempValue(vt.IntrinsicCellType(ct.PairCell))
       }
 
-      val resultTemp = new ps.TempValue
+      val resultTemp = ps.GcManagedValue()
 
       if (reportName == "car") {
         plan.steps += ps.StorePairCar(resultTemp, pairTemp)

@@ -24,7 +24,7 @@ object PlanRecordTypeConstructor {
         val plan = parentPlan.forkPlan()
 
         val fieldToTempValue = (recordType.fields.map { field =>
-          (field, new ps.TempValue)
+          (field, new ps.TempValue(field.fieldType.isGcManaged))
         }).toMap
 
         // Get unique argument names
@@ -38,8 +38,8 @@ object PlanRecordTypeConstructor {
         plan.steps += ps.AllocateCells(allocation, 1)
 
         // Initialize the record
-        val cellTemp = new ps.TempValue 
-        val dataTemp = new ps.TempValue 
+        val cellTemp = ps.GcManagedValue()
+        val dataTemp = ps.GcUnmanagedValue()
 
         plan.steps += ps.RecordLikeInit(cellTemp, dataTemp, allocation, 0, recordType)
         

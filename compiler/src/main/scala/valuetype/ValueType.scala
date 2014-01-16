@@ -13,13 +13,16 @@ import llambda.compiler.{celltype => ct}
   */
 sealed abstract class ValueType {
   val schemeName : String
+  val isGcManaged : Boolean
 }
 
 /** Type represented by a native pointer */
 sealed abstract trait PointerType extends ValueType
 
 /** Pointer to a garbage collected value cell */
-sealed abstract trait CellValueType extends PointerType
+sealed abstract trait CellValueType extends PointerType {
+  val isGcManaged = true
+}
 
 /** Intrinsic types known by the compiler backend
   *
@@ -31,7 +34,9 @@ sealed abstract trait CellValueType extends PointerType
 sealed abstract trait IntrinsicType extends ValueType
 
 /** Primitive types shared with C */
-sealed abstract class NativeType extends IntrinsicType
+sealed abstract class NativeType extends IntrinsicType {
+  val isGcManaged = false
+}
 
 /** Type reperesented by a native integer */
 sealed abstract class IntLikeType(val bits : Int, val signed : Boolean) extends NativeType
