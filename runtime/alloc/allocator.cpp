@@ -78,9 +78,5 @@ RangeAlloc allocateRange(size_t count)
 	return RangeAlloc(start, end);
 }
 
-void preallocCells(size_t count)
-{
-}
-
 }
 }

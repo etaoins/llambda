@@ -18,8 +18,6 @@ void init();
 void *allocateCells(size_t count = 1);
 RangeAlloc allocateRange(size_t count);
 
-void preallocCells(size_t count);
-	
 }
 }
 
