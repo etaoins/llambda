@@ -7,7 +7,7 @@ import llambda.compiler.planner.{step => ps}
 
 case class GenerationState(
   module : IrModuleBuilder,
-  gcSlots : Map[ps.TempValue, IrValue],
+  gcSlots : GcSlotGenerator,
   currentBlock : IrBlockBuilder,
   liveAllocations : Map[ps.TempAllocation, GenCellAllocation.CellAllocation] = Map(),
   liveTemps : Map[ps.TempValue, IrValue] = Map(),

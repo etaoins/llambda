@@ -3,6 +3,7 @@ import io.llambda
 
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{celltype => ct}
+import llambda.compiler.InternalCompilerErrorException
 import llambda.llvmir._
 
 object GenGcBarrier {
@@ -41,7 +42,17 @@ object GenGcBarrier {
     }
 
     for(tempValue <- calcedBarrier.unrootTemps) {
-      block.store(NullPointerConstant(PointerType(ct.DatumCell.irType)), state.gcSlots(tempValue))
+      val gcSlot = state.gcSlots(tempValue)
+
+      gcSlot.irType match {
+        case PointerType(innerPointer : PointerType) =>
+          block.store(NullPointerConstant(innerPointer), gcSlot)
+
+        case _ =>
+          // Someone rooted something they weren't supposed to
+          // All cell types are handled as pointer references
+          throw new InternalCompilerErrorException("Attempted to unroot non-pointer value")
+      }
     }
 
     // Save all values
@@ -50,9 +61,8 @@ object GenGcBarrier {
     }
 
     for((tempValue, irValue) <- calcedBarrier.saveTemps) {
-      // Cast the value to a generic pointer
-      val castIrValue = block.bitcastTo("gcRootCast")(irValue, PointerType(ct.DatumCell.irType))
-      block.store(castIrValue, state.gcSlots(tempValue))
+      val gcSlot = state.gcSlots.getOrElseCreate(tempValue, irValue.irType)
+      block.store(irValue, gcSlot)
     }
   }
 
@@ -65,13 +75,8 @@ object GenGcBarrier {
     }
     
     (calcedBarrier.restoreTemps.map { case (tempValue, prevIrValue) =>
-      val newIrValue = block.load("restoredGcRoot")(state.gcSlots(tempValue))
-
-      // Cast to the original value
-      val castIrValue = block.bitcastTo("gcRootCast")(newIrValue, prevIrValue.irType)
-
-      // Return the new value for this temp
-      castIrValue
+      val gcSlot = state.gcSlots(tempValue)
+      block.load("restoredGcRoot")(gcSlot)
     })
   }
 

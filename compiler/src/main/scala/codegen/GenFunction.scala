@@ -8,25 +8,6 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.platform.TargetPlatform
 
 private[codegen] object GenFunction {
-  private def stepsGcManagedTemps(steps : List[ps.Step]) : Set[ps.TempValue] = 
-    (steps.flatMap { step =>
-      step.outputValues.filter(_.isGcManaged) ++
-        (step match {
-          case branch @ ps.CondBranch(_, _, trueSteps, _, falseSteps, _) =>
-            stepsGcManagedTemps(trueSteps) ++ stepsGcManagedTemps(falseSteps)
-
-          case _ =>
-            Set()
-        })
-    }).toSet
-
-  private def functionGcManagedTemps(plannedFunction : planner.PlannedFunction) : Set[ps.TempValue] = {
-    val gcManagedArgs = plannedFunction.namedArguments.map(_._2).filter(_.isGcManaged).toSet
-    val gcManagedBodyTemps = stepsGcManagedTemps(plannedFunction.steps)
-
-    gcManagedArgs ++ gcManagedBodyTemps
-  }
-
   def apply(module : IrModuleBuilder, plannedSymbols : Set[String], typeGenerator : TypeGenerator)(nativeSymbol : String, plannedFunction : planner.PlannedFunction) {
     val irSignature = ProcedureSignatureToIr(plannedFunction.signature)
 
@@ -49,18 +30,22 @@ private[codegen] object GenFunction {
       (tempValue, generatedFunction.argumentValues(name))
     }).toMap
     
-    // Allocate rooted GC slots for our values
-    val gcManagedTemps = functionGcManagedTemps(plannedFunction)
-    val gcSlots = GenGcSlots(module, generatedFunction.entryBlock)(gcManagedTemps)
+    // Create a GC slot generator and have it own the entry block
+    val gcSlots = new GcSlotGenerator(module, generatedFunction.entryBlock)
+
+    val procStartBlock = generatedFunction.entryBlock.startChildBlock("procStart")
 
     val startState = GenerationState(
       module=module,
       gcSlots=gcSlots,
-      currentBlock=generatedFunction.entryBlock,
+      currentBlock=procStartBlock,
       liveTemps=argTemps)
 
     // Generate our steps
     GenPlanSteps(startState, plannedSymbols, typeGenerator)(plannedFunction.steps)
+
+    // Finalize the GC slot generator so it jumps to the proc start
+    gcSlots.finalize(procStartBlock)
       
     // Define the function
     module.defineFunction(generatedFunction)
