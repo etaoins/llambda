@@ -166,7 +166,9 @@ DatumCell* lliby_append(ListElementCell *argHead)
 	}
 
 	// XXX: This is not very efficient
-	std::list<DatumCell*> appenedElements;
+	std::vector<DatumCell*> appenedElements;
+	size_t appendIndex = 0;
+
 	auto argIt = argList.begin();
 
 	while(--argCount)
@@ -180,6 +182,9 @@ DatumCell* lliby_append(ListElementCell *argHead)
 
 		// Get the passed list
 		ProperList<DatumCell> properList(listHead);
+	
+		// Reserve the size of the vector
+		appenedElements.resize(appendIndex + properList.length());
 
 		if (!properList.isValid())
 		{
@@ -188,7 +193,7 @@ DatumCell* lliby_append(ListElementCell *argHead)
 
 		for(auto element : properList)
 		{
-			appenedElements.push_back(element);
+			appenedElements[appendIndex++] = element;
 		}
 	}
 

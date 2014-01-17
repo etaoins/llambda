@@ -3,7 +3,7 @@
 
 #include "DatumCell.h"
 
-#include <list>
+#include <vector>
 
 namespace lliby
 {
@@ -12,8 +12,8 @@ class ListElementCell : public DatumCell
 {
 #include "generated/ListElementCellMembers.h"
 public:
-	static ListElementCell *createProperList(const std::list<DatumCell*> &elements);
-	static DatumCell *createList(const std::list<DatumCell*> &elements, DatumCell *tail);
+	static ListElementCell *createProperList(const std::vector<DatumCell*> &elements);
+	static DatumCell *createList(const std::vector<DatumCell*> &elements, DatumCell *tail);
 
 protected:
 	explicit ListElementCell(CellTypeId typeId) :

@@ -30,12 +30,12 @@ DatumCell *lliby_apply(ProcedureCell *procedure, ListElementCell *argHead)
 	auto applyArgIt = applyArgList.begin();
 	
 	// Standalone args are zero or more args that appear before the final final proper list
-	std::list<DatumCell*> standaloneArgList;
 	auto standaloneArgCount = applyArgList.length() - 1;
+	std::vector<DatumCell*> standaloneArgs(standaloneArgCount);
 
-	while(standaloneArgCount--)
+	for(auto i = 0; i < standaloneArgCount; i++)
 	{
-		standaloneArgList.push_back(*(applyArgIt++));
+		standaloneArgs[i] = *(applyArgIt++);
 	}
 
 	// Ensure the final argument is a proper list
@@ -48,7 +48,7 @@ DatumCell *lliby_apply(ProcedureCell *procedure, ListElementCell *argHead)
 	}
 
 	// We verified the final arg is a proper list so this must also be a proper list
-	auto procArgHead = static_cast<ListElementCell*>(ListElementCell::createList(standaloneArgList, finalListHead));
+	auto procArgHead = static_cast<ListElementCell*>(ListElementCell::createList(standaloneArgs, finalListHead));
 
 	return procedure->apply(procArgHead);
 }
