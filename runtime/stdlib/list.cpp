@@ -94,10 +94,10 @@ ListElementCell* lliby_make_list(std::uint32_t count, DatumCell *fill)
 	return cdr;
 }
 
-ListElementCell* lliby_list_copy(const ListElementCell *sourceHead)
+DatumCell* lliby_list_copy(DatumCell *sourceHead)
 {
 	// Find the number of pairs in the list
-	// We can't use ProperList because we need to work with improper lists
+	// We can't use ProperList because we need to work with improper lists and non-list objects
 	std::uint32_t pairCount = 0;
 
 	for(auto pair = datum_cast<PairCell>(sourceHead);
@@ -109,40 +109,34 @@ ListElementCell* lliby_list_copy(const ListElementCell *sourceHead)
 
 	if (pairCount == 0)
 	{
-		return const_cast<EmptyListCell*>(EmptyListCell::instance());
+		return sourceHead;
 	}
 
-	PairCell *destHead = static_cast<PairCell*>(alloc::allocateCells(pairCount));
+	auto destHead = static_cast<PairCell*>(alloc::allocateCells(pairCount));
 	PairCell *destPair = destHead;
 
-	// Because we're a proper list this has to be a pair
-	const PairCell *sourcePair = static_cast<const PairCell*>(sourceHead);
+	// We've counted our pairs so this has to be a pair
+	auto sourcePair = static_cast<const PairCell*>(sourceHead);
 
-	while(true)
+	// This is predecrement because the last pair is handled specially below this loop
+	while(--pairCount)
 	{
-		DatumCell *sourceCdr = sourcePair->cdr();
+		// Create the new pair cdr'ed to the next pair
+		new (destPair) PairCell(sourcePair->car(), destPair + 1);
 
-		if (PairCell::isInstance(sourceCdr))
-		{
-			// Create the new pair cdr'ed to the next pair
-			new (destPair) PairCell(sourcePair->car(), destPair + 1);
+		destPair++;
 
-			destPair++;
-
-			// Move to the next pair
-			sourcePair = static_cast<PairCell*>(sourceCdr);
-		}
-		else
-		{
-			// Place our last pair cdr'ed to the last cdr
-			// For proper lists this is the empty list
-			// For improper list this is another type of non-pair datum
-			new (destPair) PairCell(sourcePair->car(), sourceCdr);
-
-			// All done!
-			return destHead;
-		}
+		// Move to the next pair
+		sourcePair = static_cast<PairCell*>(sourcePair->cdr());
 	}
+	
+	// Place our last pair cdr'ed to the last cdr
+	// For proper lists this is the empty list
+	// For improper list this is another type of non-pair datum
+	new (destPair) PairCell(sourcePair->car(), sourcePair->cdr());
+
+	// All done!
+	return destHead;
 }
 
 ListElementCell* lliby_list(ListElementCell *head)

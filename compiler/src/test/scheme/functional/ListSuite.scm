@@ -71,6 +71,12 @@
 (define-test "copy improper list" (expect (1 2 . 3)
 	(list-copy '(1 2 . 3))))
 
+; This is required by R7RS
+; Single objects can also be considered degenerate forms of improper lists so
+; this makes some sense
+(define-test "copy of non-list" (expect a
+	(list-copy 'a)))
+
 (define-test "empty (list)" (expect ()
 	(list)))
 
