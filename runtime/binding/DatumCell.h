@@ -41,6 +41,11 @@ public:
 	 */
 	bool isEqual(const DatumCell *other) const;
 
+	void setGcState(GarbageState gcState)
+	{
+		m_gcState = gcState;
+	}
+
 protected:
 	// Used for normal allocations
 	// alloc::allocateCons already returns the correct garbage state

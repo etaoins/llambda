@@ -9,6 +9,8 @@ import llambda.llvmir.IrFunction._
 object GenCellAllocation {
   private val cellType = UserDefinedType("cell")
   private val cellPointerType = PointerType(cellType)
+  // Defined in GarbageState.h in the runtime
+  private val allocatedGcState = 1
   
   // Note these are pointers-to-pointers
   private val llibyAllocStart = GlobalVariable("_lliby_alloc_start", PointerType(cellPointerType))
@@ -34,6 +36,10 @@ object GenCellAllocation {
       // Cast to the destination type
       val pointerName = s"cell${index}${asType.llvmName.capitalize}Ptr"
       val typedPointer = block.bitcastTo(pointerName)(cellPointer, PointerType(asType.irType))
+
+      // Mark it as allocated
+      val gcState = IntegerConstant(ct.DatumCell.gcStateIrType, allocatedGcState)
+      asType.genStoreToGcState(block)(gcState, typedPointer)
       
       // Set its type
       val typeId = IntegerConstant(ct.DatumCell.typeIdIrType, asType.typeId)

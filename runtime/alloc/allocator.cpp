@@ -61,6 +61,12 @@ void *allocateCells(size_t count)
 		exit(-2);
 	}
 
+	// Mark the cells as allocated
+	for(size_t i = 0; i < count; i++)
+	{
+		allocation[i].setGcState(GarbageState::AllocatedCell);
+	}
+
 	return allocation;
 }
 
