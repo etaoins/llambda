@@ -88,6 +88,9 @@ object MergeCellAllocations extends FunctionConniver {
       Nil
   }
 
-  def conniveFunction(steps : List[ps.Step]) =
-    findNextAllocation(steps)
+  def conniveFunction(function : PlannedFunction) : PlannedFunction = {
+    function.copy(
+      steps=findNextAllocation(function.steps)
+    )
+  }
 }

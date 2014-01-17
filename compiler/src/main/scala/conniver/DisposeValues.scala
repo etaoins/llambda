@@ -11,7 +11,7 @@ import io.llambda.compiler.planner.{step => ps}
   * non-GC managed values.
   */
 object DisposeValues extends FunctionConniver {
-  private def discardUnusedValues(reverseSteps : List[ps.Step], usedValues : Set[ps.TempValue]) : List[ps.Step] = reverseSteps match {
+  private def discardUnusedValues(argValues : Set[ps.TempValue], reverseSteps : List[ps.Step], usedValues : Set[ps.TempValue]) : List[ps.Step] = reverseSteps match {
     case (condBranch @ ps.CondBranch(result, test, trueSteps, trueValue, falseSteps, falseValue)) :: reverseTail =>
       // Step to dispose the test if it's no longer used
       // This will be placed at the beginning of both branches
@@ -32,15 +32,20 @@ object DisposeValues extends FunctionConniver {
       }
 
       // Recurse down the branches
-      val newTrueSteps = disposeTestOption.toList ++ discardUnusedValues(trueSteps.reverse, usedValues + trueValue).reverse
-      val newFalseSteps = disposeTestOption.toList ++ discardUnusedValues(falseSteps.reverse, usedValues + falseValue).reverse
+      // Remove the argValues or else we'll "helpfully" try to dispose at
+      // them at the top of the branches
+      val newTrueSteps = disposeTestOption.toList ++
+        discardUnusedValues(Set(), trueSteps.reverse, usedValues + trueValue).reverse
+
+      val newFalseSteps = disposeTestOption.toList ++
+        discardUnusedValues(Set(), falseSteps.reverse, usedValues + falseValue).reverse
 
       val newUsedValues = condBranch.inputValues ++ usedValues 
 
       // NB this is is reverse order
       disposeResultOption.toList ++
         List(ps.CondBranch(result, test, newTrueSteps, trueValue, newFalseSteps, falseValue)) ++
-        discardUnusedValues(reverseTail, newUsedValues)
+        discardUnusedValues(argValues, reverseTail, newUsedValues)
 
     case (invoke @ ps.Invoke(resultOption, signature, entryPoint, arguments)) :: reverseTail =>
       val disposeResultOption = resultOption match { 
@@ -64,7 +69,7 @@ object DisposeValues extends FunctionConniver {
       // NB this is in reverse order
       disposeResultOption.toList ++
         List(ps.Invoke(resultOption, signature, entryPoint, newArguments)) ++
-        discardUnusedValues(reverseTail, newUsedValues) 
+        discardUnusedValues(argValues, reverseTail, newUsedValues) 
 
     case nonBranching :: reverseTail =>
       // If this is the last use of any of the input or output values they
@@ -79,14 +84,27 @@ object DisposeValues extends FunctionConniver {
       val newUsedValues = usedValues ++ nonBranching.inputValues
 
       // NB this is reverse order
-      disposeList ++ List(nonBranching) ++ discardUnusedValues(reverseTail, newUsedValues)
+      disposeList ++ List(nonBranching) ++ discardUnusedValues(argValues, reverseTail, newUsedValues)
 
     case Nil =>
-      // XXX: We should probably discard arguments
-      Nil
+      // Dispose all unused args
+      // In conditional branches argValues will be empty
+      val disposeList = (argValues -- usedValues).toList.map { value =>
+        ps.DisposeValue(value) 
+      }
+
+      disposeList
   }
 
-  def conniveFunction(steps : List[ps.Step]) : List[ps.Step] = {
-    discardUnusedValues(steps.reverse, Set[ps.TempValue]()).reverse
+  def conniveFunction(function : PlannedFunction) : PlannedFunction = {
+    val argValues = function.namedArguments.map(_._2).toSet
+
+    val newSteps = discardUnusedValues(
+      argValues,
+      function.steps.reverse, 
+      Set()
+    ).reverse
+
+    function.copy(steps=newSteps)
   }
 }
