@@ -1,5 +1,5 @@
 #include "alloc/allocator.h"
-#include "alloc/Cell.h"
+#include "alloc/AllocCell.h"
 #include "alloc/RangeAlloc.h"
 
 #include <stdlib.h>
@@ -13,11 +13,11 @@
 extern "C"
 {
 
-using lliby::alloc::Cell;
+using lliby::alloc::AllocCell;
 
 // These are used directly by generated code to avoid function call overhead
-Cell *_lliby_alloc_start = nullptr;
-Cell *_lliby_alloc_end = nullptr;
+AllocCell *_lliby_alloc_start = nullptr;
+AllocCell *_lliby_alloc_end = nullptr;
 
 auto _lliby_alloc_cells = lliby::alloc::allocateCells;
 
@@ -45,13 +45,13 @@ void init()
 		exit(-2);
 	}
 
-	_lliby_alloc_start = static_cast<Cell*>(mmappedMemory);
-	_lliby_alloc_end = reinterpret_cast<Cell*>(static_cast<char*>(mmappedMemory) + SemiSpaceSize);
+	_lliby_alloc_start = static_cast<AllocCell*>(mmappedMemory);
+	_lliby_alloc_end = reinterpret_cast<AllocCell*>(static_cast<char*>(mmappedMemory) + SemiSpaceSize);
 }
     
 void *allocateCells(size_t count)
 {
-	Cell *allocation = _lliby_alloc_start;
+	AllocCell *allocation = _lliby_alloc_start;
 
 	_lliby_alloc_start += count;
 
@@ -72,7 +72,7 @@ void *allocateCells(size_t count)
 
 RangeAlloc allocateRange(size_t count)
 {
-	auto start = static_cast<Cell*>(allocateCells(count));
+	auto start = static_cast<AllocCell*>(allocateCells(count));
 	auto end = start + count;
 
 	return RangeAlloc(start, end);

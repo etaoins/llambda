@@ -16,20 +16,22 @@
 #include "binding/ProcedureCell.h"
 #include "binding/RecordCell.h"
 
-static_assert(sizeof(lliby::UnitCell) <= sizeof(lliby::alloc::Cell), "UnitCell does not fit in to a cell");
-static_assert(sizeof(lliby::PairCell) <= sizeof(lliby::alloc::Cell), "PairCell does not fit in to a cell");
-static_assert(sizeof(lliby::EmptyListCell) <= sizeof(lliby::alloc::Cell), "EmptyListCell does not fit in to a cell");
-static_assert(sizeof(lliby::StringCell) <= sizeof(lliby::alloc::Cell), "StringCell does not fit in to a cell");
-static_assert(sizeof(lliby::InlineStringCell) <= sizeof(lliby::alloc::Cell), "InlineStringCell does not fit in to a cell");
-static_assert(sizeof(lliby::HeapStringCell) <= sizeof(lliby::alloc::Cell), "HeapStringCell does not fit in to a cell");
-static_assert(sizeof(lliby::SymbolCell) <= sizeof(lliby::alloc::Cell), "SymbolCell does not fit in to a cell");
-static_assert(sizeof(lliby::InlineSymbolCell) <= sizeof(lliby::alloc::Cell), "InlineSymbolCell does not fit in to a cell");
-static_assert(sizeof(lliby::HeapSymbolCell) <= sizeof(lliby::alloc::Cell), "HeapSymbolCell does not fit in to a cell");
-static_assert(sizeof(lliby::BooleanCell) <= sizeof(lliby::alloc::Cell), "BooleanCell does not fit in to a cell");
-static_assert(sizeof(lliby::ExactIntegerCell) <= sizeof(lliby::alloc::Cell), "ExactIntegerCell does not fit in to a cell");
-static_assert(sizeof(lliby::InexactRationalCell) <= sizeof(lliby::alloc::Cell), "InexactRationalCell does not fit in to a cell");
-static_assert(sizeof(lliby::CharacterCell) <= sizeof(lliby::alloc::Cell), "CharacterCell does not fit in to a cell");
-static_assert(sizeof(lliby::VectorCell) <= sizeof(lliby::alloc::Cell), "VectorCell does not fit in to a cell");
-static_assert(sizeof(lliby::BytevectorCell) <= sizeof(lliby::alloc::Cell), "BytevectorCell does not fit in to a cell");
-static_assert(sizeof(lliby::ProcedureCell) <= sizeof(lliby::alloc::Cell), "ProcedureCell does not fit in to a cell");
-static_assert(sizeof(lliby::RecordCell) <= sizeof(lliby::alloc::Cell), "RecordCell does not fit in to a cell");
+using lliby::alloc::AllocCell;
+
+static_assert(sizeof(lliby::UnitCell) <= sizeof(AllocCell), "UnitCell does not fit in to a cell");
+static_assert(sizeof(lliby::PairCell) <= sizeof(AllocCell), "PairCell does not fit in to a cell");
+static_assert(sizeof(lliby::EmptyListCell) <= sizeof(AllocCell), "EmptyListCell does not fit in to a cell");
+static_assert(sizeof(lliby::StringCell) <= sizeof(AllocCell), "StringCell does not fit in to a cell");
+static_assert(sizeof(lliby::InlineStringCell) <= sizeof(AllocCell), "InlineStringCell does not fit in to a cell");
+static_assert(sizeof(lliby::HeapStringCell) <= sizeof(AllocCell), "HeapStringCell does not fit in to a cell");
+static_assert(sizeof(lliby::SymbolCell) <= sizeof(AllocCell), "SymbolCell does not fit in to a cell");
+static_assert(sizeof(lliby::InlineSymbolCell) <= sizeof(AllocCell), "InlineSymbolCell does not fit in to a cell");
+static_assert(sizeof(lliby::HeapSymbolCell) <= sizeof(AllocCell), "HeapSymbolCell does not fit in to a cell");
+static_assert(sizeof(lliby::BooleanCell) <= sizeof(AllocCell), "BooleanCell does not fit in to a cell");
+static_assert(sizeof(lliby::ExactIntegerCell) <= sizeof(AllocCell), "ExactIntegerCell does not fit in to a cell");
+static_assert(sizeof(lliby::InexactRationalCell) <= sizeof(AllocCell), "InexactRationalCell does not fit in to a cell");
+static_assert(sizeof(lliby::CharacterCell) <= sizeof(AllocCell), "CharacterCell does not fit in to a cell");
+static_assert(sizeof(lliby::VectorCell) <= sizeof(AllocCell), "VectorCell does not fit in to a cell");
+static_assert(sizeof(lliby::BytevectorCell) <= sizeof(AllocCell), "BytevectorCell does not fit in to a cell");
+static_assert(sizeof(lliby::ProcedureCell) <= sizeof(AllocCell), "ProcedureCell does not fit in to a cell");
+static_assert(sizeof(lliby::RecordCell) <= sizeof(AllocCell), "RecordCell does not fit in to a cell");

@@ -4,7 +4,7 @@
 #include <iterator>
 #include <assert.h>
 
-#include "Cell.h"
+#include "alloc/AllocCell.h"
 
 namespace lliby
 {
@@ -63,20 +63,20 @@ public:
 		}
 
 	private:
-		Iterator(Cell *startPointer, Cell *currentCell, Cell *endPointer) :
+		Iterator(AllocCell *startPointer, AllocCell *currentCell, AllocCell *endPointer) :
 			m_startPointer(startPointer),
 			m_currentCell(currentCell),
 			m_endPointer(endPointer)
 		{
 		}
 
-		Cell *m_startPointer;
-		Cell *m_currentCell;
-		Cell *m_endPointer;
+		AllocCell *m_startPointer;
+		AllocCell *m_currentCell;
+		AllocCell *m_endPointer;
 	};
 
 public:
-	RangeAlloc(Cell *startPointer, Cell *endPointer) :
+	RangeAlloc(AllocCell *startPointer, AllocCell *endPointer) :
 		m_startPointer(startPointer),
 		m_endPointer(endPointer)
 	{
@@ -98,8 +98,8 @@ public:
 	}
 
 private:
-	Cell *m_startPointer;
-	Cell *m_endPointer;
+	AllocCell *m_startPointer;
+	AllocCell *m_endPointer;
 };
 
 }

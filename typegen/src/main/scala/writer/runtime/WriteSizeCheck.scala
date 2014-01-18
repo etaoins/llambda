@@ -8,7 +8,7 @@ object WriteSizeCheck extends writer.OutputWriter {
     val assertString = "\"" + s"${cppName} does not fit in to a cell" + "\""
 
     // static_assert(sizeof(lliby::RecordCell) <= sizeof(lliby::alloc::Cell), "RecordCell does not fit in to a cell");
-    cppBuilder += s"static_assert(sizeof(lliby::${cppName}) <= sizeof(lliby::alloc::Cell), ${assertString});"
+    cppBuilder += s"static_assert(sizeof(lliby::${cppName}) <= sizeof(AllocCell), ${assertString});"
   }
   
   def apply(processedTypes : ProcessedTypes) : Map[String, String] = {
@@ -27,6 +27,8 @@ object WriteSizeCheck extends writer.OutputWriter {
       cppBuilder += "#include \"binding/" + cellClass.names.cppClassName + ".h\""
     }
 
+    cppBuilder.sep()
+    cppBuilder += "using lliby::alloc::AllocCell;"
     cppBuilder.sep()
 
     for(cellClass <- nonAbstractCellClasses) {
