@@ -4,7 +4,11 @@ cmake_minimum_required (VERSION 2.8)
 
 project (lliby)
 add_library(lliby
+	alloc/StrongRef.cpp
+	alloc/WeakRef.cpp
 	alloc/allocator.cpp
+	alloc/cellvisitor.cpp
+	alloc/collector.cpp
 	binding/BytevectorCell.cpp
 	binding/DatumCell.cpp
 	binding/ListElementCell.cpp
@@ -72,6 +76,7 @@ endif()
 enable_testing()
 
 set(ALL_TEST_NAMES
+	allocator
 	bytevector
 	constinstances
 	inexactrational

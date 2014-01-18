@@ -18,6 +18,11 @@ void init();
 void *allocateCells(size_t count = 1);
 RangeAlloc allocateRange(size_t count);
 
+/**
+ * Forces a major GC collection
+ */
+bool forceCollection(size_t reserveCount = 0);
+
 }
 }
 

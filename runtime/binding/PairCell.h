@@ -26,6 +26,18 @@ public:
 	{
 		m_cdr = obj;
 	}
+	
+	// These are used by the garbage collector to update the car and cdr pointers during compaction
+	
+	DatumCell** carRef()
+	{
+		return &m_car;
+	}
+
+	DatumCell** cdrRef()
+	{
+		return &m_cdr;
+	}
 };
 
 }
