@@ -20,7 +20,7 @@ using lliby::alloc::AllocCell;
 // These are used directly by generated code to avoid function call overhead
 
 // Pointer to the next cell to be allocated
-AllocCell *_lliby_alloc_start = nullptr;
+AllocCell *_lliby_alloc_next = nullptr;
 // Pointer to the end of the last available allocation cell
 AllocCell *_lliby_alloc_end = nullptr;
 
@@ -49,10 +49,10 @@ void init()
     
 void *allocateCells(size_t count)
 {
-	AllocCell *allocation = _lliby_alloc_start;
-	_lliby_alloc_start += count;
+	AllocCell *allocation = _lliby_alloc_next;
+	_lliby_alloc_next += count;
 
-	if (_lliby_alloc_start > _lliby_alloc_end)
+	if (_lliby_alloc_next > _lliby_alloc_end)
 	{
 		if (!forceCollection(count))
 		{
@@ -61,8 +61,8 @@ void *allocateCells(size_t count)
 		}
 	
 		// If forceCollection() returned true this must succeed
-		allocation = _lliby_alloc_start;
-		_lliby_alloc_start += count;
+		allocation = _lliby_alloc_next;
+		_lliby_alloc_next += count;
 	}
 
 	// Mark the cells as allocated
@@ -98,7 +98,7 @@ bool forceCollection(size_t reserveCount)
 	if (oldSemiSpaceStart != nullptr)
 	{
 		// Garbage collect if this isn't our first allocation
-		_lliby_alloc_start = static_cast<AllocCell*>(alloc::collect(oldSemiSpaceStart, _lliby_alloc_end, newSemiSpaceStart));
+		_lliby_alloc_next = static_cast<AllocCell*>(alloc::collect(oldSemiSpaceStart, _lliby_alloc_end, newSemiSpaceStart));
 
 		// Free the old semispace
 		munmap(oldSemiSpaceStart, SemiSpaceSize);
@@ -106,7 +106,7 @@ bool forceCollection(size_t reserveCount)
 	else 
 	{
 		// No previous allocation; we can start at the beginning of the semispace
-		_lliby_alloc_start = static_cast<AllocCell*>(newSemiSpaceStart);
+		_lliby_alloc_next = static_cast<AllocCell*>(newSemiSpaceStart);
 	}
 
 	// Set up the new pointers
@@ -116,14 +116,14 @@ bool forceCollection(size_t reserveCount)
 #ifdef _LLIBY_ALWAYS_GC
 	// This will trigger the GC again on the next allocation. This will break GC unsafe code at every allocation point
 	// which is useful for shaking out bugs.
-	_lliby_alloc_end = _lliby_alloc_start + reserveCount;
+	_lliby_alloc_end = _lliby_alloc_next + reserveCount;
 
 	return _lliby_alloc_end <= semiSpaceEnd;
 #else	
 	_lliby_alloc_end = semiSpaceEnd;
 	
 	// Make sure the reserved space will fit 
-	return (_lliby_alloc_start + reserveCount) <= _lliby_alloc_end;
+	return (_lliby_alloc_next + reserveCount) <= _lliby_alloc_end;
 #endif
 	
 

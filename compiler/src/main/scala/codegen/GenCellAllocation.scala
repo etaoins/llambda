@@ -13,7 +13,7 @@ object GenCellAllocation {
   private val allocatedGcState = 1
   
   // Note these are pointers-to-pointers
-  private val llibyAllocStart = GlobalVariable("_lliby_alloc_start", PointerType(cellPointerType))
+  private val llibyAllocNext = GlobalVariable("_lliby_alloc_next", PointerType(cellPointerType))
   private val llibyAllocEnd = GlobalVariable("_lliby_alloc_end", PointerType(cellPointerType))
 
   private val llibyAllocCells = IrFunctionDecl(
@@ -69,13 +69,13 @@ object GenCellAllocation {
 
     // Load the pointer to our allocation start
     // This is our allocation unless we run out of memory
-    val directAllocValue = startBlock.load("directAlloc")(llibyAllocStart)
+    val directAllocValue = startBlock.load("directAlloc")(llibyAllocNext)
     
     // Load the pointer to our allocation end value
     val allocEndValue = startBlock.load("allocEnd")(llibyAllocEnd)
 
     // Add our allocation count on to our allocation
-    val newAllocStartValue = startBlock.getelementptr("newAllocStart")(cellType, directAllocValue, List(allocCountValue))
+    val newAllocNextValue = startBlock.getelementptr("newAllocNext")(cellType, directAllocValue, List(allocCountValue))
 
     // Create our child blocks for the upcoming branch
     val directSuccessBlock = startBlock.startChildBlock("directSuccess")
@@ -83,7 +83,7 @@ object GenCellAllocation {
     val allocFinishedBlock = startBlock.startChildBlock("allocFinished")
 
     // See if we ran out of space
-    val directSucceededPred = startBlock.icmp("directSucceeded")(ComparisonCond.LessThanEqual, Some(false), newAllocStartValue, allocEndValue)
+    val directSucceededPred = startBlock.icmp("directSucceeded")(ComparisonCond.LessThanEqual, Some(false), newAllocNextValue, allocEndValue)
 
     // This should almost always be true
     val expectedPred = GenLlvmExpect(startBlock)(directSucceededPred, IntegerConstant(IntegerType(1), 1))
@@ -91,7 +91,7 @@ object GenCellAllocation {
     startBlock.condBranch(expectedPred, directSuccessBlock, collectGarbageBlock)
 
     // In the direct alloc block store our new start pointer
-    directSuccessBlock.store(newAllocStartValue, llibyAllocStart)
+    directSuccessBlock.store(newAllocNextValue, llibyAllocNext)
     directSuccessBlock.uncondBranch(allocFinishedBlock)
 
     // In the garage collection block first save our GC roots

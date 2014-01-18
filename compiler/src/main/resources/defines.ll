@@ -8,7 +8,7 @@
 ; They define the interface to our memory allocator
 %cell = type {%pair}
 
-@_lliby_alloc_start = external global %cell*
+@_lliby_alloc_next = external global %cell*
 @_lliby_alloc_end = external global %cell*
 
 ; LLVM intrinsics
