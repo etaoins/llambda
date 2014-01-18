@@ -2,7 +2,7 @@
 #define _LLIBY_BINDING_VECTORCELL_H
 
 #include "DatumCell.h"
-#include <list>
+#include <vector>
 
 namespace lliby
 {
@@ -42,7 +42,7 @@ public:
 		return true;
 	}
 	static VectorCell* fromFill(std::uint32_t length, DatumCell *fill = nullptr);
-	static VectorCell* fromAppended(const std::list<const VectorCell*> &vectors);
+	static VectorCell* fromAppended(const std::vector<const VectorCell*> &vectors);
 	
 	VectorCell* copy(std::int64_t start = 0, std::int64_t end = -1); 
 	bool replace(std::uint32_t offset, const VectorCell *from, std::int64_t fromStart = 0, std::int64_t fromEnd = -1);

@@ -3,6 +3,7 @@
 
 #include "DatumCell.h"
 #include <list>
+#include <vector>
 
 #include "unicode/UnicodeChar.h"
 
@@ -16,9 +17,15 @@ public:
 	static StringCell* fromUtf8CString(const char *str);
 	static StringCell* fromUtf8Data(const std::uint8_t *data, std::uint32_t byteLength);
 	static StringCell* fromFill(std::uint32_t length, UnicodeChar fill);
-	static StringCell* fromAppended(const std::list<const StringCell*> &strings);
-	static StringCell* fromUnicodeChars(const std::list<UnicodeChar> &unicodeChars);
+	static StringCell* fromUnicodeChars(const std::vector<UnicodeChar> &unicodeChars);
 	static StringCell* fromSymbol(const SymbolCell *symbol);
+	
+	static StringCell* fromAppended(std::vector<StringCell*> &strings);
+	static StringCell* fromAppended(const std::vector<StringCell*> &strings)
+	{
+		std::vector<StringCell*> stringsCopy(strings);
+		return fromAppended(stringsCopy);
+	}
 
 	StringCell* copy(std::int64_t start = 0, std::int64_t end = -1) const; 
 
@@ -28,7 +35,7 @@ public:
 	bool fill(UnicodeChar unicodeChar, std::int64_t start = 0, std::int64_t end = -1);
 	bool replace(std::uint32_t offset, const StringCell *from, std::int64_t fromStart = 0, std::int64_t fromEnd = -1);
 
-	std::list<UnicodeChar> unicodeChars(std::int64_t start = 0, std::int64_t end = -1) const;
+	std::vector<UnicodeChar> unicodeChars(std::int64_t start = 0, std::int64_t end = -1) const;
 	
 	bool operator==(const StringCell &other) const;
 	
@@ -86,6 +93,12 @@ protected:
 		unsigned int byteCount() const
 		{
 			return endPointer - startPointer;
+		}
+
+		void relocate(ptrdiff_t byteDelta)
+		{
+			startPointer += byteDelta;
+			endPointer += byteDelta;
 		}
 	};
 

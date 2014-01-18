@@ -6,6 +6,8 @@
 #include "core/init.h"
 #include "assertions.h"
 
+#include "alloc/StrongRef.h"
+
 namespace
 {
 using namespace lliby;
@@ -38,13 +40,13 @@ void testFromFill()
 void testFromAppended()
 {
 	uint8_t vector1Data[3] = { 100, 101, 102 };
-	auto vector1 = new BytevectorCell(vector1Data, sizeof(vector1Data));
+	alloc::StrongRef<BytevectorCell> vector1 = new BytevectorCell(vector1Data, sizeof(vector1Data));
 
 	uint8_t vector2Data[1] = { 0 };
-	auto vector2 = new BytevectorCell(vector2Data, sizeof(vector2Data));
+	alloc::StrongRef<BytevectorCell> vector2 = new BytevectorCell(vector2Data, sizeof(vector2Data));
 
 	uint8_t vector3Data[3] = { 200, 201, 202 };
-	auto vector3 = new BytevectorCell(vector3Data, sizeof(vector3Data));
+	alloc::StrongRef<BytevectorCell> vector3 = new BytevectorCell(vector3Data, sizeof(vector3Data));
 
 	{
 		BytevectorCell *emptyVector = BytevectorCell::fromAppended({});
@@ -94,7 +96,7 @@ void testCopy()
 {
 	uint8_t vectorData[5] = { 0, 1, 2, 3, 4 };
 
-	auto *testVector = new BytevectorCell(vectorData, sizeof(vectorData));
+	alloc::StrongRef<BytevectorCell> testVector = new BytevectorCell(vectorData, sizeof(vectorData));
 
 	{
 		BytevectorCell *wholeCopy = testVector->copy();
@@ -137,7 +139,7 @@ void testCopy()
 void testReplace()
 {
 	uint8_t fromData[5] = { 200, 201, 202, 203, 204 };
-	const auto *fromVector = new BytevectorCell(fromData, 5); 
+	alloc::StrongRef<BytevectorCell> fromVector = new BytevectorCell(fromData, 5); 
 
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
@@ -230,7 +232,7 @@ void testReplace()
 void testUtf8ToString()
 {
 	auto stringData = reinterpret_cast<std::uint8_t*>(strdup(u8"Hello ☃!"));
-	auto sourceVector = new BytevectorCell(stringData, 10);
+	alloc::StrongRef<BytevectorCell> sourceVector = new BytevectorCell(stringData, 10);
 
 	{
 		StringCell *fullString = sourceVector->utf8ToString();

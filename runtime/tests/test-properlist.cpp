@@ -5,15 +5,17 @@
 #include "core/init.h"
 #include "assertions.h"
 
+#include "alloc/StrongRef.h"
+
 int main(int argc, char *argv[])
 {
 	using namespace lliby;
 
 	lliby_init();
 	
-	StringCell *valueA = StringCell::fromUtf8CString("A");
-	StringCell *valueB = StringCell::fromUtf8CString("B");
-	StringCell *valueC = StringCell::fromUtf8CString("C");
+	alloc::StrongRef<StringCell> valueA = StringCell::fromUtf8CString("A");
+	alloc::StrongRef<StringCell> valueB = StringCell::fromUtf8CString("B");
+	alloc::StrongRef<StringCell> valueC = StringCell::fromUtf8CString("C");
 	
 	{
 		ListElementCell *emptyListHead = ListElementCell::createProperList({});
@@ -38,11 +40,11 @@ int main(int argc, char *argv[])
 
 		auto it = properList.begin();
 		// Be tricky with the increment operators
-		ASSERT_EQUAL(*(it++), valueA);
+		ASSERT_EQUAL(*(it++), valueA.data());
 
-		ASSERT_EQUAL(*it, valueB);
+		ASSERT_EQUAL(*it, valueB.data());
 		
-		ASSERT_EQUAL(*(++it), valueC);
+		ASSERT_EQUAL(*(++it), valueC.data());
 
 		it++;
 		ASSERT_TRUE(it == properList.end());

@@ -17,6 +17,7 @@
 #include "binding/RecordCell.h"
 
 #include "core/init.h"
+#include "alloc/StrongRef.h"
 #include "assertions.h"
 
 namespace
@@ -106,9 +107,9 @@ void testString()
 
 void testPair()
 {
-	SymbolCell *valueA = symbolFor("A");
-	SymbolCell *valueB = symbolFor("B");
-	SymbolCell *valueC = symbolFor("C");
+	alloc::StrongRef<SymbolCell> valueA = symbolFor("A");
+	alloc::StrongRef<SymbolCell> valueB = symbolFor("B");
+	alloc::StrongRef<SymbolCell> valueC = symbolFor("C");
 
 	assertForm(PairCell::createProperList({}), "()");
 	assertForm(PairCell::createProperList({valueA}), "(A)");
@@ -147,11 +148,12 @@ void testVector()
 	}
 
 	{
-		VectorCell *fillVector = VectorCell::fromFill(5);
+		alloc::StrongRef<VectorCell> fillVector = VectorCell::fromFill(5);
 
 		for(unsigned int i = 0; i < 5; i++)
 		{
-			fillVector->setElementAt(i, new ExactIntegerCell(i));
+			auto newExactInt = new ExactIntegerCell(i);
+			fillVector->setElementAt(i, newExactInt);
 		}
 
 		assertForm(fillVector, "#(0 1 2 3 4)");

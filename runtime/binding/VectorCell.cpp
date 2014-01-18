@@ -4,6 +4,8 @@
 #include <limits>
 #include <string.h>
 
+#include "alloc/StrongRef.h"
+
 namespace
 {
 	bool adjustRange(std::int64_t start, std::int64_t &end, std::uint32_t length)
@@ -31,6 +33,7 @@ namespace lliby
 
 bool VectorCell::fill(DatumCell *fill, std::int64_t start, std::int64_t end)
 {
+	// Fill doesn't need to be rooted because we have no allocations
 	if (!adjustRange(start, end, length()))
 	{
 		return false;
@@ -46,21 +49,22 @@ bool VectorCell::fill(DatumCell *fill, std::int64_t start, std::int64_t end)
 	
 VectorCell* VectorCell::fromFill(std::uint32_t length, DatumCell *fill)
 {
+	alloc::StrongRef<DatumCell> fillRef(fill);
 	auto newElements = new DatumCell*[length];
 
 	auto newVector = new VectorCell(newElements, length);
 
-	if (fill == nullptr)
+	if (fillRef.isNull())
 	{
-		fill = const_cast<UnitCell*>(UnitCell::instance());
+		fillRef = const_cast<UnitCell*>(UnitCell::instance());
 	}
 
-	newVector->fill(fill, 0, -1);
+	newVector->fill(fillRef, 0, -1);
 
 	return newVector;
 }
 
-VectorCell* VectorCell::fromAppended(const std::list<const VectorCell*> &vectors)
+VectorCell* VectorCell::fromAppended(const std::vector<const VectorCell*> &vectors)
 {
 	std::uint64_t totalLength = 0;
 
@@ -85,6 +89,8 @@ VectorCell* VectorCell::fromAppended(const std::list<const VectorCell*> &vectors
 		copyPtr += vector->length();
 	}
 
+	// Root our elements in case allocating the vector cell triggers GC
+	alloc::StrongRefRange<DatumCell> newElementsRoot(newElements, totalLength);
 	return new VectorCell(newElements, totalLength);
 }
 
@@ -100,6 +106,7 @@ VectorCell* VectorCell::copy(std::int64_t start, std::int64_t end)
 
 	memcpy(newElements, &elements()[start], newLength * sizeof(DatumCell*));
 
+	alloc::StrongRefRange<DatumCell> newElementsRoot(newElements, newLength);
 	return new VectorCell(newElements, newLength);
 }
 

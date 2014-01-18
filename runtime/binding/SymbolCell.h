@@ -6,11 +6,13 @@
 namespace lliby
 {
 
+class StringCell;
+
 class SymbolCell : public DatumCell
 {
 #include "generated/SymbolCellMembers.h"
 public:
-	static SymbolCell* fromRawData(std::uint8_t *utf8Data, std::uint32_t byteLength, std::uint32_t charLength);
+	static SymbolCell* fromString(StringCell *string);
 
 	const std::uint8_t* utf8Data() const;
 
@@ -28,6 +30,8 @@ protected:
 		m_byteLength(byteLength)
 	{
 	}
+	
+	static SymbolCell* createUninitialized(std::uint32_t byteLength, std::uint32_t charLength);
 
 	static size_t inlineDataSize();
 };
@@ -45,7 +49,7 @@ class InlineSymbolCell : public SymbolCell
 	friend class SymbolCell;
 #include "generated/InlineSymbolCellMembers.h"
 private:
-	InlineSymbolCell(std::uint8_t *utf8Data, std::uint32_t byteLength, std::uint32_t charLength);
+	InlineSymbolCell(std::uint32_t byteLength, std::uint32_t charLength);
 };
 
 }

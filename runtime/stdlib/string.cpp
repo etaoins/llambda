@@ -23,7 +23,8 @@ StringCell *lliby_string(const ListElementCell *argHead)
 		_lliby_fatal("Non-character passed to (string)", argHead); 
 	}
 
-	std::list<UnicodeChar> unicodeCharList;
+	std::vector<UnicodeChar> unicodeCharList;
+	unicodeCharList.reserve(charProperList.length());
 
 	for(auto charCell : charProperList)
 	{
@@ -67,8 +68,8 @@ StringCell* lliby_string_append(ListElementCell *argHead)
 		_lliby_fatal("Non-string passed to (string-append)", argHead);
 	}
 
-	// Use the std::list range constructor 
-	std::list<const StringCell*> stringList(properList.begin(), properList.end()); 
+	// Use the std::vector range constructor 
+	std::vector<StringCell*> stringList(properList.begin(), properList.end()); 
 
 	return StringCell::fromAppended(stringList);
 }

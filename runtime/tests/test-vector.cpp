@@ -5,6 +5,8 @@
 #include "core/init.h"
 #include "assertions.h"
 
+#include "alloc/StrongRef.h"
+
 namespace
 {
 using namespace lliby;
@@ -27,26 +29,26 @@ void testFromFill()
 	}
 	
 	{
-		StringCell *testString = StringCell::fromUtf8CString(u8"Hello!");
+		alloc::StrongRef<StringCell> testString = StringCell::fromUtf8CString(u8"Hello!");
 		VectorCell *stringVector  = VectorCell::fromFill(4, testString);
 
 		ASSERT_EQUAL(stringVector->length(), 4);
-		ASSERT_EQUAL(stringVector->elementAt(0), testString);
-		ASSERT_EQUAL(stringVector->elementAt(3), testString);
+		ASSERT_EQUAL(stringVector->elementAt(0), testString.data());
+		ASSERT_EQUAL(stringVector->elementAt(3), testString.data());
 		ASSERT_EQUAL(stringVector->elementAt(4), 0);
 	}
 }
 
 void testFromAppended()
 {
-	StringCell *string1 = StringCell::fromUtf8CString(u8"One");
-	VectorCell *vector1 = VectorCell::fromFill(3, string1);
+	alloc::StrongRef<StringCell> string1 = StringCell::fromUtf8CString(u8"One");
+	alloc::StrongRef<VectorCell> vector1 = VectorCell::fromFill(3, string1);
 
-	StringCell *string2 = StringCell::fromUtf8CString(u8"Two");
-	VectorCell *vector2 = VectorCell::fromFill(1, string2);
+	alloc::StrongRef<StringCell> string2 = StringCell::fromUtf8CString(u8"Two");
+	alloc::StrongRef<VectorCell> vector2 = VectorCell::fromFill(1, string2);
 
-	StringCell *string3 = StringCell::fromUtf8CString(u8"Three");
-	VectorCell *vector3 = VectorCell::fromFill(3, string3);
+	alloc::StrongRef<StringCell> string3 = StringCell::fromUtf8CString(u8"Three");
+	alloc::StrongRef<VectorCell> vector3 = VectorCell::fromFill(3, string3);
 
 	{
 		VectorCell *emptyVector = VectorCell::fromAppended({});
@@ -58,8 +60,8 @@ void testFromAppended()
 		VectorCell *appendedVector = VectorCell::fromAppended({vector1});
 
 		ASSERT_EQUAL(appendedVector->length(), 3);
-		ASSERT_EQUAL(appendedVector->elementAt(0), string1);
-		ASSERT_EQUAL(appendedVector->elementAt(2), string1);
+		ASSERT_EQUAL(appendedVector->elementAt(0), string1.data());
+		ASSERT_EQUAL(appendedVector->elementAt(2), string1.data());
 		ASSERT_EQUAL(appendedVector->elementAt(3), 0);
 	}
 	
@@ -67,11 +69,11 @@ void testFromAppended()
 		VectorCell *appendedVector = VectorCell::fromAppended({vector1, vector2, vector3});
 
 		ASSERT_EQUAL(appendedVector->length(), 7);
-		ASSERT_EQUAL(appendedVector->elementAt(0), string1);
-		ASSERT_EQUAL(appendedVector->elementAt(2), string1);
-		ASSERT_EQUAL(appendedVector->elementAt(3), string2);
-		ASSERT_EQUAL(appendedVector->elementAt(4), string3);
-		ASSERT_EQUAL(appendedVector->elementAt(6), string3);
+		ASSERT_EQUAL(appendedVector->elementAt(0), string1.data());
+		ASSERT_EQUAL(appendedVector->elementAt(2), string1.data());
+		ASSERT_EQUAL(appendedVector->elementAt(3), string2.data());
+		ASSERT_EQUAL(appendedVector->elementAt(4), string3.data());
+		ASSERT_EQUAL(appendedVector->elementAt(6), string3.data());
 	}
 }
 
@@ -93,11 +95,12 @@ void testSetElement()
 
 void testCopy()
 {
-	auto testVector = VectorCell::fromFill(5);
+	alloc::StrongRef<VectorCell> testVector = VectorCell::fromFill(5);
 
 	for(unsigned int i = 0; i < 5; i++)
 	{
-		testVector->setElementAt(i, StringCell::fromUtf8CString("TEST"));
+		StringCell *newString = StringCell::fromUtf8CString("TEST");
+		testVector->setElementAt(i, newString);
 	}
 
 	{
@@ -140,23 +143,29 @@ void testCopy()
 
 void testReplace()
 {
-	auto *fromVector = VectorCell::fromFill(5); 
+	alloc::StrongRef<VectorCell> fromVector = VectorCell::fromFill(5); 
+
 	for(unsigned int i = 0; i < 5; i++)
 	{
-		fromVector->setElementAt(i, StringCell::fromUtf8CString("TEST"));
+		StringCell *newString = StringCell::fromUtf8CString("TEST");
+		fromVector->setElementAt(i, newString);
 	}
 	
-	DatumCell *destElements[5];
+	DatumCell *destElements[5] = {nullptr};
+	// We have to make sure these are rooted while we build them
+	alloc::StrongRefRange<DatumCell> destRoot(destElements, 5);
+
 	for(unsigned int i = 0; i < 5; i++)
 	{
 		destElements[i] = StringCell::fromUtf8CString("TEST");
 	}
 
 	{
-		VectorCell *toVector = VectorCell::fromFill(5); 
+		alloc::StrongRef<VectorCell> toVector = VectorCell::fromFill(5); 
 		for(unsigned int i = 0; i < 5; i++)
 		{
-			toVector->setElementAt(i, StringCell::fromUtf8CString("TEST"));
+			StringCell *newString = StringCell::fromUtf8CString("TEST");
+			toVector->setElementAt(i, newString);
 		}
 
 		ASSERT_EQUAL(toVector->replace(0, fromVector), true);
@@ -169,10 +178,11 @@ void testReplace()
 	}
 	
 	{
-		VectorCell *toVector = VectorCell::fromFill(5); 
+		alloc::StrongRef<VectorCell> toVector = VectorCell::fromFill(5); 
 		for(unsigned int i = 0; i < 5; i++)
 		{
-			toVector->setElementAt(i, StringCell::fromUtf8CString("TEST"));
+			StringCell *newString = StringCell::fromUtf8CString("TEST");
+			toVector->setElementAt(i, newString);
 		}
 
 		ASSERT_EQUAL(toVector->replace(0, fromVector, 0, 5), true);
@@ -185,7 +195,7 @@ void testReplace()
 	}
 	
 	{
-		VectorCell *toVector = VectorCell::fromFill(5); 
+		alloc::StrongRef<VectorCell> toVector = VectorCell::fromFill(5); 
 		for(unsigned int i = 0; i < 5; i++)
 		{
 			toVector->setElementAt(i, destElements[i]);
@@ -283,8 +293,8 @@ void testReplace()
 
 void testFill()
 {
-	StringCell *originalElement = StringCell::fromUtf8CString("One");
-	StringCell *fillElement = StringCell::fromUtf8CString("Two");
+	alloc::StrongRef<StringCell> originalElement = StringCell::fromUtf8CString("One");
+	alloc::StrongRef<StringCell> fillElement = StringCell::fromUtf8CString("Two");
 
 	{
 		VectorCell *testVector = VectorCell::fromFill(5, originalElement);
@@ -293,7 +303,7 @@ void testFill()
 
 		for(unsigned int i = 0; i < 5; i++)
 		{
-			ASSERT_EQUAL(testVector->elementAt(i), fillElement);
+			ASSERT_EQUAL(testVector->elementAt(i), fillElement.data());
 		}
 	}
 	
@@ -304,7 +314,7 @@ void testFill()
 
 		for(unsigned int i = 0; i < 5; i++)
 		{
-			ASSERT_EQUAL(testVector->elementAt(i), fillElement);
+			ASSERT_EQUAL(testVector->elementAt(i), fillElement.data());
 		}
 	}
 	
@@ -315,7 +325,7 @@ void testFill()
 
 		for(unsigned int i = 0; i < 5; i++)
 		{
-			ASSERT_EQUAL(testVector->elementAt(i), originalElement);
+			ASSERT_EQUAL(testVector->elementAt(i), originalElement.data());
 		}
 	}
 	
@@ -326,7 +336,7 @@ void testFill()
 
 		for(unsigned int i = 0; i < 5; i++)
 		{
-			ASSERT_EQUAL(testVector->elementAt(i), originalElement);
+			ASSERT_EQUAL(testVector->elementAt(i), originalElement.data());
 		}
 	}
 	
@@ -335,11 +345,11 @@ void testFill()
 
 		ASSERT_EQUAL(testVector->fill(fillElement, 4), true);
 
-		ASSERT_EQUAL(testVector->elementAt(0), originalElement);
-		ASSERT_EQUAL(testVector->elementAt(1), originalElement);
-		ASSERT_EQUAL(testVector->elementAt(2), originalElement);
-		ASSERT_EQUAL(testVector->elementAt(3), originalElement);
-		ASSERT_EQUAL(testVector->elementAt(4), fillElement);
+		ASSERT_EQUAL(testVector->elementAt(0), originalElement.data());
+		ASSERT_EQUAL(testVector->elementAt(1), originalElement.data());
+		ASSERT_EQUAL(testVector->elementAt(2), originalElement.data());
+		ASSERT_EQUAL(testVector->elementAt(3), originalElement.data());
+		ASSERT_EQUAL(testVector->elementAt(4), fillElement.data());
 	}
 	
 	{
@@ -347,11 +357,11 @@ void testFill()
 
 		ASSERT_EQUAL(true, testVector->fill(fillElement, 4));
 
-		ASSERT_EQUAL(testVector->elementAt(0), originalElement);
-		ASSERT_EQUAL(testVector->elementAt(1), originalElement);
-		ASSERT_EQUAL(testVector->elementAt(2), originalElement);
-		ASSERT_EQUAL(testVector->elementAt(3), originalElement);
-		ASSERT_EQUAL(testVector->elementAt(4), fillElement);
+		ASSERT_EQUAL(testVector->elementAt(0), originalElement.data());
+		ASSERT_EQUAL(testVector->elementAt(1), originalElement.data());
+		ASSERT_EQUAL(testVector->elementAt(2), originalElement.data());
+		ASSERT_EQUAL(testVector->elementAt(3), originalElement.data());
+		ASSERT_EQUAL(testVector->elementAt(4), fillElement.data());
 	}
 	
 	{
@@ -359,11 +369,11 @@ void testFill()
 
 		ASSERT_EQUAL(testVector->fill(fillElement, 0, 1), true);
 
-		ASSERT_EQUAL(testVector->elementAt(0), fillElement);
-		ASSERT_EQUAL(testVector->elementAt(1), originalElement);
-		ASSERT_EQUAL(testVector->elementAt(2), originalElement);
-		ASSERT_EQUAL(testVector->elementAt(3), originalElement);
-		ASSERT_EQUAL(testVector->elementAt(4), originalElement);
+		ASSERT_EQUAL(testVector->elementAt(0), fillElement.data());
+		ASSERT_EQUAL(testVector->elementAt(1), originalElement.data());
+		ASSERT_EQUAL(testVector->elementAt(2), originalElement.data());
+		ASSERT_EQUAL(testVector->elementAt(3), originalElement.data());
+		ASSERT_EQUAL(testVector->elementAt(4), originalElement.data());
 	}
 	
 	{

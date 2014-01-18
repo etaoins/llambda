@@ -1,11 +1,12 @@
 #include "StringCell.h"
 
 #include <string.h>
-#include <vector>
 #include <algorithm>
 
 #include "SymbolCell.h"
 #include "BytevectorCell.h"
+
+#include "alloc/StrongRef.h"
 
 namespace
 {
@@ -271,7 +272,7 @@ StringCell* StringCell::fromFill(std::uint32_t length, UnicodeChar fill)
 	return newString;
 }
 	
-StringCell* StringCell::fromAppended(const std::list<const StringCell*> &strings)
+StringCell* StringCell::fromAppended(std::vector<StringCell*> &strings)
 {
 	std::uint64_t totalByteLength = 0;
 	std::uint32_t totalCharLength = 0;
@@ -287,6 +288,9 @@ StringCell* StringCell::fromAppended(const std::list<const StringCell*> &strings
 	{
 		return nullptr;
 	}
+
+	// Mark our input strings as GC roots
+	alloc::StrongRefRange<StringCell> inputRoots(strings);
 
 	// Allocate the new string and null terminate it
 	auto newString = StringCell::createUninitialized(totalByteLength);
@@ -306,7 +310,7 @@ StringCell* StringCell::fromAppended(const std::list<const StringCell*> &strings
 	return newString;
 }
 	
-StringCell* StringCell::fromUnicodeChars(const std::list<UnicodeChar> &unicodeChars)
+StringCell* StringCell::fromUnicodeChars(const std::vector<UnicodeChar> &unicodeChars)
 {
 	std::vector<std::uint8_t> encodedData;
 	std::uint32_t charLength = 0;
@@ -654,6 +658,11 @@ bool StringCell::setCharAt(std::uint32_t offset, UnicodeChar unicodeChar)
 	
 StringCell* StringCell::copy(std::int64_t start, std::int64_t end) const
 {
+	// Allocating a string below can actually change "this"
+	// That is super annoying
+	StringCell *oldThis = const_cast<StringCell*>(this);
+	alloc::StrongRef<StringCell> thisRef(oldThis);
+
 	CharRange range = charRange(start, end);
 
 	if (range.isNull())
@@ -667,6 +676,16 @@ StringCell* StringCell::copy(std::int64_t start, std::int64_t end) const
 	// Create the new string
 	auto newString = StringCell::createUninitialized(newByteLength);
 	newString->setCharLength(range.charCount);
+	
+	if (thisRef->dataIsInline() && (oldThis != thisRef.data()))
+	{
+		// The allocator ran and moved us along with our inline data
+		// We have to update our range
+		ptrdiff_t byteDelta = reinterpret_cast<std::uint8_t*>(thisRef.data()) -
+			                   reinterpret_cast<std::uint8_t*>(oldThis);
+
+		range.relocate(byteDelta);
+	}
 
 	std::uint8_t *newUtf8Data = newString->utf8Data();
 
@@ -676,12 +695,12 @@ StringCell* StringCell::copy(std::int64_t start, std::int64_t end) const
 	return newString;
 }
 	
-std::list<UnicodeChar> StringCell::unicodeChars(std::int64_t start, std::int64_t end) const
+std::vector<UnicodeChar> StringCell::unicodeChars(std::int64_t start, std::int64_t end) const
 {
 	if ((end != -1) && (end < start))
 	{
 		// Doesn't make sense
-		return std::list<UnicodeChar>();
+		return std::vector<UnicodeChar>();
 	}
 
 	std::uint8_t *scanPtr = charPointer(start);
@@ -689,12 +708,15 @@ std::list<UnicodeChar> StringCell::unicodeChars(std::int64_t start, std::int64_t
 
 	if (scanPtr == nullptr)
 	{
-		return std::list<UnicodeChar>();
+		return std::vector<UnicodeChar>();
 	}
 
-	// It doesn't look like std::list::size() is O(1)
-	unsigned int addedChars = 0;
-	std::list<UnicodeChar> ret;
+	std::vector<UnicodeChar> ret;
+
+	if (end != -1)
+	{
+		ret.reserve(end - start);
+	}
 
 	while(scanPtr < endPtr)
 	{
@@ -702,14 +724,12 @@ std::list<UnicodeChar> StringCell::unicodeChars(std::int64_t start, std::int64_t
 
 		if (!unicodeChar.isValid())
 		{
-			return std::list<UnicodeChar>();
+			return std::vector<UnicodeChar>();
 		}
 
 		ret.push_back(unicodeChar);
 
-		addedChars++;
-
-		if ((end != -1) && (addedChars == (end - start)))
+		if ((end != -1) && (ret.size() == (end - start)))
 		{
 			// We have enough characters
 			return ret;
@@ -719,7 +739,7 @@ std::list<UnicodeChar> StringCell::unicodeChars(std::int64_t start, std::int64_t
 	if (end != -1)
 	{
 		// We fell off the end
-		return std::list<UnicodeChar>();
+		return std::vector<UnicodeChar>();
 	}
 
 	return ret;
@@ -809,8 +829,7 @@ int StringCell::compare(const StringCell *other, CaseSensitivity cs) const
 	
 SymbolCell* StringCell::toSymbol() const
 {
-	// This is easy, just copy our UTF-8 data
-	return SymbolCell::fromRawData(utf8Data(), byteLength(), charLength());
+	return SymbolCell::fromString(const_cast<StringCell*>(this));
 }
 	
 BytevectorCell* StringCell::toUtf8Bytevector(std::int64_t start, std::int64_t end) const
@@ -858,11 +877,13 @@ StringCell *StringCell::toConvertedString(UnicodeChar (UnicodeChar::* converter)
 	}
 	
 	const std::uint32_t totalByteLength = convertedData.size();
+	// The GC can invalidate our "this" pointer so save this before calling createUninitialized
+	const std::uint32_t newCharLength(charLength());
 
 	auto newString = StringCell::createUninitialized(totalByteLength);
 
 	// Initialize the string from the std::vector contents
-	newString->setCharLength(charLength());
+	newString->setCharLength(newCharLength);
 	memcpy(newString->utf8Data(), convertedData.data(), totalByteLength);
 
 	// NULL terminate

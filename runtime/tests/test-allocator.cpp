@@ -65,19 +65,29 @@ void testPairGc()
 		return new PairCell(EmptyList, EmptyList);
 	});
 
+	// These need to be strong while allocated so value A/B don't disappear when later values are allocated 
+	// However, they need to be weak after to test how strong references affect their collection
+	alloc::StrongRef<StringCell> valueAStrong(StringCell::fromUtf8CString(""));
+	alloc::StrongRef<StringCell> valueBStrong(StringCell::fromUtf8CString(""));
+	alloc::StrongRef<StringCell> valueCStrong(StringCell::fromUtf8CString(""));
+	
 	alloc::RangeAlloc allocation(alloc::allocateRange(3)); 
-
-	// Make some values for testing
-	alloc::WeakRef<StringCell> valueA(StringCell::fromUtf8CString(""));
-	alloc::WeakRef<StringCell> valueB(StringCell::fromUtf8CString(""));
-	alloc::WeakRef<StringCell> valueC(StringCell::fromUtf8CString(""));
-
 	auto allocIt = allocation.begin();
 
 	// Make a simple proper list manually
-	alloc::WeakRef<PairCell> pairC(new (*allocIt++) PairCell(valueC, EmptyList));
-	alloc::WeakRef<PairCell> pairB(new (*allocIt++) PairCell(valueB, pairC));
-	alloc::WeakRef<PairCell> pairA(new (*allocIt++) PairCell(valueA, pairB));
+	alloc::WeakRef<PairCell> pairC(new (*allocIt++) PairCell(valueCStrong, EmptyList));
+	alloc::WeakRef<PairCell> pairB(new (*allocIt++) PairCell(valueBStrong, pairC));
+	alloc::WeakRef<PairCell> pairA(new (*allocIt++) PairCell(valueAStrong, pairB));
+	
+	// Demote these to weak references
+	alloc::WeakRef<StringCell> valueA = valueAStrong.data();
+	valueAStrong = nullptr;
+
+	alloc::WeakRef<StringCell> valueB = valueBStrong.data();
+	valueBStrong = nullptr;
+
+	alloc::WeakRef<StringCell> valueC = valueCStrong.data();
+	valueCStrong = nullptr;
 
 	{
 		// Root the head of the list
@@ -150,11 +160,20 @@ void testVectorGc()
 		return new VectorCell(nullptr, 0);
 	});
 	
+	alloc::StrongRef<StringCell> value0Strong(StringCell::fromUtf8CString(""));
+	alloc::StrongRef<StringCell> value1Strong(StringCell::fromUtf8CString(""));
+	alloc::StrongRef<StringCell> value2Strong(StringCell::fromUtf8CString(""));
+	
 	alloc::StrongRef<VectorCell> testVec(VectorCell::fromFill(3));
 	
-	alloc::WeakRef<StringCell> value0(StringCell::fromUtf8CString(""));
-	alloc::WeakRef<StringCell> value1(StringCell::fromUtf8CString(""));
-	alloc::WeakRef<StringCell> value2(StringCell::fromUtf8CString(""));
+	alloc::WeakRef<StringCell> value0(value0Strong.data());
+	value0Strong = nullptr;
+
+	alloc::WeakRef<StringCell> value1(value1Strong.data());
+	value1Strong = nullptr;
+
+	alloc::WeakRef<StringCell> value2(value2Strong.data());
+	value2Strong = nullptr;
 
 	testVec->setElementAt(0, value0);
 	testVec->setElementAt(1, value1);

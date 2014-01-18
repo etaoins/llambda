@@ -71,11 +71,11 @@ VectorCell *lliby_vector_append(ListElementCell *argHead)
 		_lliby_fatal("Non-vector passed to (vector-append)", argHead); 
 	}
 
-	// Create a std::list
-	auto vectorList = std::list<const VectorCell*>(argList.begin(), argList.end());
+	// Create a std::vector
+	auto vectorElements = std::vector<const VectorCell*>(argList.begin(), argList.end());
 
 	// Append the vectors
-	return VectorCell::fromAppended(vectorList);
+	return VectorCell::fromAppended(vectorElements);
 }
 
 }

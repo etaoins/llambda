@@ -4,6 +4,9 @@
 #include "binding/StringCell.h"
 #include "binding/ProperList.h"
 
+#include "alloc/StrongRef.h"
+#include "alloc/WeakRef.h"
+
 #include "core/init.h"
 #include "assertions.h"
 
@@ -28,9 +31,9 @@ int main(int argc, char *argv[])
 
 	lliby_init();
 
-	StringCell *valueA = StringCell::fromUtf8CString("A");
-	StringCell *valueB = StringCell::fromUtf8CString("B");
-	StringCell *valueC = StringCell::fromUtf8CString("C");
+	alloc::StrongRef<StringCell> valueA(StringCell::fromUtf8CString("A"));
+	alloc::StrongRef<StringCell> valueB(StringCell::fromUtf8CString("B"));
+	alloc::StrongRef<StringCell> valueC(StringCell::fromUtf8CString("C"));
 	
 	{
 		ListElementCell *properList = ListElementCell::createProperList({});
@@ -47,7 +50,7 @@ int main(int argc, char *argv[])
 		PairCell *onlyPair = datum_cast<PairCell>(properList);
 
 		ASSERT_TRUE(onlyPair != nullptr);
-		ASSERT_EQUAL(onlyPair->car(), valueA);
+		ASSERT_EQUAL(onlyPair->car(), valueA.data());
 		ASSERT_EQUAL(onlyPair->cdr(), EmptyListCell::instance());
 		ASSERT_EQUAL(listLength(onlyPair), 1);
 	}
@@ -62,17 +65,17 @@ int main(int argc, char *argv[])
 		PairCell *firstPair = datum_cast<PairCell>(properList);
 
 		ASSERT_TRUE(firstPair != nullptr);
-		ASSERT_EQUAL(firstPair->car(), valueA);
+		ASSERT_EQUAL(firstPair->car(), valueA.data());
 		ASSERT_EQUAL(listLength(firstPair), 3);
 
 		PairCell *secondPair = datum_cast<PairCell>(firstPair->cdr());
 		ASSERT_TRUE(secondPair != nullptr);
-		ASSERT_EQUAL(secondPair->car(), valueB);
+		ASSERT_EQUAL(secondPair->car(), valueB.data());
 		ASSERT_EQUAL(listLength(secondPair), 2);
 		
 		PairCell *thirdPair = datum_cast<PairCell>(secondPair->cdr());
 		ASSERT_TRUE(thirdPair != nullptr);
-		ASSERT_EQUAL(thirdPair->car(), valueC);
+		ASSERT_EQUAL(thirdPair->car(), valueC.data());
 		ASSERT_EQUAL(thirdPair->cdr(), EmptyListCell::instance());
 		ASSERT_EQUAL(listLength(thirdPair), 1);
 	}
@@ -80,7 +83,7 @@ int main(int argc, char *argv[])
 	{
 		DatumCell *improperList = ListElementCell::createList({}, valueA);
 
-		ASSERT_TRUE(improperList == valueA);
+		ASSERT_TRUE(improperList == valueA.data());
 	}
 	
 	{
@@ -89,8 +92,8 @@ int main(int argc, char *argv[])
 		auto *onlyPair = datum_cast<PairCell>(improperList);
 		ASSERT_TRUE(onlyPair != nullptr);
 
-		ASSERT_EQUAL(onlyPair->car(), valueA);
-		ASSERT_EQUAL(onlyPair->cdr(), valueB);
+		ASSERT_EQUAL(onlyPair->car(), valueA.data());
+		ASSERT_EQUAL(onlyPair->cdr(), valueB.data());
 		ASSERT_FALSE(isProperList(onlyPair));
 	}
 	
@@ -103,14 +106,14 @@ int main(int argc, char *argv[])
 		auto *firstPair = datum_cast<PairCell>(improperList);
 		ASSERT_TRUE(firstPair != nullptr);
 
-		ASSERT_EQUAL(firstPair->car(), valueA);
+		ASSERT_EQUAL(firstPair->car(), valueA.data());
 		ASSERT_FALSE(isProperList(firstPair));
 
 		auto secondPair = datum_cast<PairCell>(firstPair->cdr());
 		ASSERT_TRUE(secondPair != nullptr);
 		
-		ASSERT_EQUAL(secondPair->car(), valueB);
-		ASSERT_EQUAL(secondPair->cdr(), valueC);
+		ASSERT_EQUAL(secondPair->car(), valueB.data());
+		ASSERT_EQUAL(secondPair->cdr(), valueC.data());
 		ASSERT_FALSE(isProperList(secondPair));
 	}
 }
