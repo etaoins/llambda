@@ -13,10 +13,9 @@ class InexactRationalCell : public NumericCell
 {
 #include "generated/InexactRationalCellMembers.h"
 public:
-	InexactRationalCell(double value) :
-		NumericCell(CellTypeId::InexactRational),
-		m_value(value)
+	static InexactRationalCell* fromValue(double value)
 	{
+		return new InexactRationalCell(value);
 	}
 	
 	static InexactRationalCell *NaN()
@@ -58,6 +57,13 @@ public:
 	{
 		double unused;
 		return std::modf(value(), &unused) == 0.0;
+	}
+	
+private:
+	InexactRationalCell(double value) :
+		NumericCell(CellTypeId::InexactRational),
+		m_value(value)
+	{
 	}
 };
 

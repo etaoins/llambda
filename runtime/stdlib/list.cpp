@@ -3,8 +3,10 @@
 #include "binding/BooleanCell.h"
 #include "binding/ProperList.h"
 #include "core/fatal.h"
+
 #include "alloc/allocator.h"
 #include "alloc/RangeAlloc.h"
+#include "alloc/StrongRef.h"
 
 using namespace lliby;
 
@@ -43,7 +45,15 @@ extern "C"
 
 PairCell *lliby_cons(DatumCell *car, DatumCell *cdr)
 {
-	return new PairCell(car, cdr);
+	// Root the car and cdr for the next allocation
+	alloc::StrongRef<DatumCell> carRef(car);
+	alloc::StrongRef<DatumCell> cdrRef(cdr);
+	
+	// Explicitly allocate first so there's no ambiguity about what order the
+	// allocation and reference updates are done
+	alloc::RangeAlloc allocation(alloc::allocateRange(1));
+
+	return new (*allocation.begin()) PairCell(carRef, cdrRef);
 }
 
 DatumCell *lliby_car(PairCell *pair)
@@ -112,11 +122,14 @@ DatumCell* lliby_list_copy(DatumCell *sourceHead)
 		return sourceHead;
 	}
 
+	// Make sure we take a reference to this across the next allocation in case the GC runs
+	alloc::StrongRef<DatumCell> sourceHeadRef(sourceHead);	
+
 	auto destHead = static_cast<PairCell*>(alloc::allocateCells(pairCount));
 	PairCell *destPair = destHead;
 
 	// We've counted our pairs so this has to be a pair
-	auto sourcePair = static_cast<const PairCell*>(sourceHead);
+	auto sourcePair = static_cast<const PairCell*>(sourceHeadRef.data());
 
 	// This is predecrement because the last pair is handled specially below this loop
 	while(--pairCount)

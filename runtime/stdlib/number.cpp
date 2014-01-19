@@ -83,11 +83,11 @@ NumericCell *lliby_add(ListElementCell *argHead)
 
 	if (resultInexact)
 	{
-		return new InexactRationalCell(exactSum + inexactSum);
+		return InexactRationalCell::fromValue(exactSum + inexactSum);
 	}
 	else
 	{
-		return new ExactIntegerCell(exactSum);
+		return ExactIntegerCell::fromValue(exactSum);
 	}
 }
 
@@ -121,11 +121,11 @@ NumericCell *lliby_mul(ListElementCell *argHead)
 
 	if (resultInexact)
 	{
-		return new InexactRationalCell(exactProduct * inexactProduct);
+		return InexactRationalCell::fromValue(exactProduct * inexactProduct);
 	}
 	else
 	{
-		return new ExactIntegerCell(exactProduct);
+		return ExactIntegerCell::fromValue(exactProduct);
 	}
 }
 
@@ -147,7 +147,7 @@ NumericCell *lliby_sub(NumericCell *startValue, ListElementCell *argHead)
 		if (argList.isEmpty())
 		{
 			// Return the inverse
-			return new ExactIntegerCell(-exactInteger->value());
+			return ExactIntegerCell::fromValue(-exactInteger->value());
 		}
 
 		exactDifference = exactInteger->value();
@@ -161,7 +161,7 @@ NumericCell *lliby_sub(NumericCell *startValue, ListElementCell *argHead)
 		if (argList.isEmpty())
 		{
 			// Return the inverse
-			return new InexactRationalCell(-inexactRational->value());
+			return InexactRationalCell::fromValue(-inexactRational->value());
 		}
 
 		exactDifference = 0;
@@ -186,11 +186,11 @@ NumericCell *lliby_sub(NumericCell *startValue, ListElementCell *argHead)
 	
 	if (resultInexact)
 	{
-		return new InexactRationalCell(exactDifference + inexactDifference);
+		return InexactRationalCell::fromValue(exactDifference + inexactDifference);
 	}
 	else
 	{
-		return new ExactIntegerCell(exactDifference);
+		return ExactIntegerCell::fromValue(exactDifference);
 	}
 }
 

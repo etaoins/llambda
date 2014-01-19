@@ -18,7 +18,7 @@ const DatumCell *lliby_digit_value(UnicodeChar character)
 		return BooleanCell::falseInstance();
 	}
 
-	return new ExactIntegerCell(digitValue);
+	return ExactIntegerCell::fromValue(digitValue);
 }
 
 std::int32_t lliby_char_to_integer(UnicodeChar character)

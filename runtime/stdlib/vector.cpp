@@ -3,6 +3,7 @@
 #include "binding/ProperList.h"
 
 #include "core/fatal.h"
+#include "alloc/StrongRef.h"
 
 using namespace lliby;
 
@@ -57,6 +58,9 @@ VectorCell *lliby_vector(ListElementCell *argHead)
 	{
 		newElements[elementIndex++] = element;
 	}
+
+	// Make sure our elements array is GC rooted for the next allocation
+	alloc::StrongRefRange<DatumCell> newElementsRoot(newElements, length);
 
 	// Return the new vector
 	return new VectorCell(newElements, length);

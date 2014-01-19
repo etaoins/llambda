@@ -230,13 +230,13 @@ int main(int argc, char *argv[])
 	// Test exact integers
 	testNonRecursiveGc<ExactIntegerCell>([] ()
 	{
-		return new ExactIntegerCell(5);
+		return ExactIntegerCell::fromValue(5);
 	});
 	
 	// Test inexact rationals
 	testNonRecursiveGc<InexactRationalCell>([] ()
 	{
-		return new InexactRationalCell(5.0);
+		return InexactRationalCell::fromValue(5.0);
 	});
 	
 	// Test inline symbols

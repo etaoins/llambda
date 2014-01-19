@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 	lliby_init();
 
 	{
-		InexactRationalCell *value = new InexactRationalCell(0.0);
+		InexactRationalCell *value = InexactRationalCell::fromValue(0.0);
 		ASSERT_EQUAL(value->value(), 0.0);
 
 		ASSERT_TRUE(value->isInteger());
@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 	}
 	
 	{
-		InexactRationalCell *value = new InexactRationalCell(256.5);
+		InexactRationalCell *value = InexactRationalCell::fromValue(256.5);
 		ASSERT_EQUAL(value->value(), 256.5);
 		
 		ASSERT_FALSE(value->isInteger());
@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 	}
 	
 	{
-		InexactRationalCell *value = new InexactRationalCell(-500);
+		InexactRationalCell *value = InexactRationalCell::fromValue(-500);
 		ASSERT_EQUAL(value->value(), -500);
 		
 		ASSERT_TRUE(value->isInteger());

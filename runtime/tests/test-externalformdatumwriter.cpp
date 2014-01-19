@@ -62,20 +62,20 @@ void testBoolean()
 
 void testExactInteger()
 {
-	assertForm(new ExactIntegerCell(25), "25");
-	assertForm(new ExactIntegerCell(0), "0");
-	assertForm(new ExactIntegerCell(-31337), "-31337");
+	assertForm(ExactIntegerCell::fromValue(25), "25");
+	assertForm(ExactIntegerCell::fromValue(0), "0");
+	assertForm(ExactIntegerCell::fromValue(-31337), "-31337");
 }
 
 void testInexactRational()
 {
-	assertForm(new InexactRationalCell(0.0), "0.0");
+	assertForm(InexactRationalCell::fromValue(0.0), "0.0");
 
-	assertForm(new InexactRationalCell(12.5), "12.5");
-	assertForm(new InexactRationalCell(-4.55), "-4.55");
+	assertForm(InexactRationalCell::fromValue(12.5), "12.5");
+	assertForm(InexactRationalCell::fromValue(-4.55), "-4.55");
 
-	assertForm(new InexactRationalCell(100.0), "100.0");
-	assertForm(new InexactRationalCell(-500.0), "-500.0");
+	assertForm(InexactRationalCell::fromValue(100.0), "100.0");
+	assertForm(InexactRationalCell::fromValue(-500.0), "-500.0");
 
 	assertForm(InexactRationalCell::NaN(), "+nan.0");
 	assertForm(InexactRationalCell::positiveInfinity(), "+inf.0");
@@ -152,7 +152,7 @@ void testVector()
 
 		for(unsigned int i = 0; i < 5; i++)
 		{
-			auto newExactInt = new ExactIntegerCell(i);
+			auto newExactInt = ExactIntegerCell::fromValue(i);
 			fillVector->setElementAt(i, newExactInt);
 		}
 

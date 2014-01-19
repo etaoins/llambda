@@ -2,8 +2,10 @@
 #include "binding/ListElementCell.h"
 #include "binding/ProperList.h"
 #include "core/fatal.h"
+
 #include "alloc/allocator.h"
 #include "alloc/RangeAlloc.h"
+#include "alloc/StrongRef.h"
 
 using namespace lliby;
 
@@ -47,10 +49,13 @@ DatumCell *lliby_apply(ProcedureCell *procedure, ListElementCell *argHead)
 		_lliby_fatal("Final argument to (apply) must be a proper list", finalListHead);
 	}
 
+	// Reference the procedure before allocating the argument list
+	alloc::StrongRef<ProcedureCell> procedureRef(procedure);	
+
 	// We verified the final arg is a proper list so this must also be a proper list
 	auto procArgHead = static_cast<ListElementCell*>(ListElementCell::createList(standaloneArgs, finalListHead));
 
-	return procedure->apply(procArgHead);
+	return procedureRef->apply(procArgHead);
 }
 
 }
