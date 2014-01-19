@@ -162,7 +162,7 @@ void testVector()
 
 void testProcedure()
 {
-	assertForm(new ProcedureCell(0, nullptr, nullptr), "#!procedure");
+	assertForm(new ProcedureCell(0, nullptr, nullptr), "#!procedure(0x0)");
 }
 
 void testCharacter()

@@ -280,9 +280,17 @@ void ExternalFormDatumWriter::renderVector(const VectorCell *value)
 	m_outStream << ")";
 }
 
-void ExternalFormDatumWriter::renderProcedure(const ProcedureCell *)
+void ExternalFormDatumWriter::renderProcedure(const ProcedureCell *proc)
 {
-	m_outStream << "#!procedure";
+	if (proc->capturesVariables())
+	{
+		m_outStream << "#!closure(" << reinterpret_cast<void*>(proc->entryPoint()) << ")";
+	}
+	else
+	{
+		m_outStream << "#!procedure(" << reinterpret_cast<void*>(proc->entryPoint()) << ")";
+	}
+
 }
 
 void ExternalFormDatumWriter::renderCharacter(const CharacterCell *value)
