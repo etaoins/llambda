@@ -9,6 +9,26 @@
 #include "alloc/cellvisitor.h"
 #include "binding/DatumCell.h"
 
+extern "C"
+{
+	struct FrameMap 
+	{
+		std::int32_t NumRoots;    //< Number of roots in stack frame.
+		std::int32_t NumMeta;     //< Number of metadata entries.  May be < NumRoots.
+		const void *Meta[0]; //< Metadata for each root.
+	};
+
+	struct StackEntry
+	{
+		StackEntry *Next;    //< Link to next stack entry (the caller's).
+		const FrameMap *Map; //< Pointer to constant FrameMap.
+		void *Roots[0];      //< Stack roots (in-place array).
+	};
+
+	// This is provided by LLVM's shadowstack GC plugin
+	StackEntry *llvm_gc_root_chain;
+}
+
 namespace lliby
 {
 namespace alloc
@@ -39,7 +59,7 @@ namespace
 		DatumCell *m_newLocation;
 	};
 
-	// Vists every non-null cell in a cell ref list
+	// Visit every non-null cell in a cell ref list
 	void visitCellRefList(const CellRefList &cellRefList, std::function<bool (DatumCell**)> &visitor)
 	{
 		for(auto cellRefRange : cellRefList)
@@ -119,6 +139,22 @@ void* collect(void *fromBase, void *fromEnd, void *toBase)
 
 	// Visit each runtime GC root
 	visitCellRefList(RuntimeStrongRefList, rootVisitor);
+
+	// Visit each compiler GC root
+	for(StackEntry *stackEntry = llvm_gc_root_chain;
+		 stackEntry != nullptr;
+		 stackEntry = stackEntry->Next)
+	{
+		for(std::int32_t i = 0; i < stackEntry->Map->NumRoots; i++)
+		{
+			auto datumCellRef = reinterpret_cast<DatumCell**>(&stackEntry->Roots[i]);
+
+			if (*datumCellRef != nullptr)
+			{
+				visitCell(datumCellRef, rootVisitor);
+			}
+		}
+	}
 
 	// Visit each runtime weak ref
 	std::function<bool (DatumCell**)> weakRefFunction = weakRefVisitor;
