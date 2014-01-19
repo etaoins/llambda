@@ -24,7 +24,10 @@ AllocCell *_lliby_alloc_next = nullptr;
 // Pointer to the end of the last available allocation cell
 AllocCell *_lliby_alloc_end = nullptr;
 
-auto _lliby_alloc_cells = lliby::alloc::allocateCells;
+void *_lliby_alloc_cells(std::uint64_t count)
+{
+	return lliby::alloc::allocateCells(count);
+}
 
 }
 
