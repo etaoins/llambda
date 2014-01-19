@@ -103,8 +103,14 @@ bool forceCollection(size_t reserveCount)
 		// Garbage collect if this isn't our first allocation
 		_lliby_alloc_next = static_cast<AllocCell*>(alloc::collect(oldSemiSpaceStart, _lliby_alloc_end, newSemiSpaceStart));
 
+#ifndef _LLIBY_NO_ADDR_REUSE
 		// Free the old semispace
 		munmap(oldSemiSpaceStart, SemiSpaceSize);
+#else
+		// Mark the old semispace as unreadable but keep the address space allocated
+		madvise(oldSemiSpaceStart, SemiSpaceSize, MADV_DONTNEED);
+		mprotect(oldSemiSpaceStart, SemiSpaceSize, PROT_NONE);
+#endif
 	}
 	else 
 	{
@@ -116,20 +122,18 @@ bool forceCollection(size_t reserveCount)
 	auto semiSpaceEnd = reinterpret_cast<AllocCell*>(static_cast<char*>(newSemiSpaceStart) + SemiSpaceSize); 
 	semiSpaceStart = newSemiSpaceStart;
 
-#ifdef _LLIBY_ALWAYS_GC
+#ifndef _LLIBY_ALWAYS_GC
+	_lliby_alloc_end = semiSpaceEnd;
+	
+	// Make sure the reserved space will fit 
+	return (_lliby_alloc_next + reserveCount) <= _lliby_alloc_end;
+#else	
 	// This will trigger the GC again on the next allocation. This will break GC unsafe code at every allocation point
 	// which is useful for shaking out bugs.
 	_lliby_alloc_end = _lliby_alloc_next + reserveCount;
 
 	return _lliby_alloc_end <= semiSpaceEnd;
-#else	
-	_lliby_alloc_end = semiSpaceEnd;
-	
-	// Make sure the reserved space will fit 
-	return (_lliby_alloc_next + reserveCount) <= _lliby_alloc_end;
 #endif
-	
-
 }
 
 }
