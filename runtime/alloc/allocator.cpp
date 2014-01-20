@@ -5,6 +5,7 @@
 
 #include "alloc/AllocCell.h"
 #include "alloc/RangeAlloc.h"
+#include "alloc/Finalizer.h"
 #include "alloc/MemoryBlock.h"
 #include "alloc/collector.h"
 
@@ -41,12 +42,15 @@ namespace
 
 	// Pointer to the start of the semi-space
 	MemoryBlock *activeBlock = nullptr;
+	Finalizer *finalizer = nullptr;
 }
 
 void init()
 {
 	// This will create our initial semispace
 	forceCollection();
+
+	finalizer = new Finalizer();
 }
     
 void *allocateCells(size_t count)
@@ -99,8 +103,15 @@ bool forceCollection(size_t reserveCount)
 	if (oldBlock != nullptr)
 	{
 		// Garbage collect if this isn't our first allocation
-		_lliby_alloc_next = static_cast<AllocCell*>(alloc::collect(oldBlock->startPointer(), _lliby_alloc_end, newBlock->startPointer()));
-		delete oldBlock;
+		_lliby_alloc_next = static_cast<AllocCell*>(alloc::collect(oldBlock->startPointer(), _lliby_alloc_next, newBlock->startPointer()));
+
+#ifndef _LLIBY_NO_ADDR_REUSE
+		// Finalize the block asynchronously
+		finalizer->finalizeBlockAsync(oldBlock, _lliby_alloc_end);
+#else
+		// Finalize the block immediately to invalidate the old addresses
+		finalizer->finalizeBlockSync(oldBlock, _lliby_alloc_end);
+#endif
 	}
 	else 
 	{

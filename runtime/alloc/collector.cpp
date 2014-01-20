@@ -98,21 +98,6 @@ namespace
 		*cellRef = nullptr;
 		return false;
 	};
-
-	// Finalizes any values inside the old semi-space
-	void finalizeSemiSpace(void *fromBase, void *fromEnd)
-	{
-		for(auto nextOldCell = static_cast<AllocCell*>(fromBase);
-			 nextOldCell < fromEnd;
-			 nextOldCell++)
-		{
-			if (nextOldCell->gcState() != GarbageState::ForwardingCell)
-			{
-				// This value is no longer referenced
-				nextOldCell->finalize();
-			}
-		}
-	}
 }
 
 void* collect(void *fromBase, void *fromEnd, void *toBase)
@@ -174,9 +159,6 @@ void* collect(void *fromBase, void *fromEnd, void *toBase)
 	// Visit each runtime weak ref
 	std::function<bool (DatumCell**)> weakRefFunction = weakRefVisitor;
 	visitCellRefList(RuntimeWeakRefList, weakRefFunction);
-
-	// Finalize the old semi-space
-	finalizeSemiSpace(fromBase, fromEnd);
 
 	// This is where new allocations should start from
 	return nextNewCell;
