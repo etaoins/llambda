@@ -1,6 +1,8 @@
 #include "alloc/cellvisitor.h"
 
 #include <iostream>
+#include <cstdint>
+#include <set>
 
 #include "core/fatal.h"
 
@@ -62,14 +64,30 @@ void visitCell(DatumCell **rootCellRef, std::function<bool(DatumCell **)> &visit
 	}
 }
 
-void dumpReachableFrom(DatumCell *rootCell)
+void dumpReachableFrom(DatumCell *rootCell, bool dumpGlobalConstants)
 {
+	std::set<DatumCell*> showCells;
 	ExternalFormDatumWriter writer(std::cout);
 
 	std::function<bool(DatumCell**)> visitor = [&] (DatumCell **cellRef) 
 	{
-		writer.render(*cellRef);
+		DatumCell *cell = *cellRef;
+
+		if (!dumpGlobalConstants && (cell->gcState() == GarbageState::GlobalConstant))
+		{
+			return false;
+		}
+
+		if (showCells.count(cell) > 0)
+		{
+			return false;
+		}
+
+		std::cout << reinterpret_cast<void*>(cell) << ": ";
+		writer.render(cell);
 		std::cout << std::endl;
+
+		showCells.insert(cell);
 		return true;
 	};
 

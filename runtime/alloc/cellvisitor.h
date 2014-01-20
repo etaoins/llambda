@@ -25,7 +25,7 @@ void visitCell(DatumCell **rootCellRef, std::function<bool(DatumCell **)> &visit
  *
  * This is for debug purposes only
  */
-void dumpReachableFrom(DatumCell *rootCell);
+void dumpReachableFrom(DatumCell *rootCell, bool dumpGlobalConstants = true);
 
 }
 }
