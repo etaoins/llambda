@@ -3,8 +3,20 @@
 
 #include "DatumCell.h"
 
+extern "C"
+{
+	struct RecordClassOffsetMap;
+}
+
 namespace lliby
 {
+
+enum class RecordLikeDataStorage
+{
+	Empty,
+	Inline,
+	OutOfLne
+};
 
 class RecordLikeCell : public DatumCell
 {
@@ -18,6 +30,11 @@ public:
 		return &m_recordData;
 	}
 
+	const RecordClassOffsetMap* offsetMap() const;
+	RecordLikeDataStorage dataStorage() const;
+	
+	void finalizeRecordLike();
+
 protected:
 	RecordLikeCell(CellTypeId typeId, std::uint32_t recordClassId, void *recordData) :
 		DatumCell(typeId),
@@ -25,7 +42,7 @@ protected:
 		m_recordData(recordData)
 	{
 	}
-
+	
 	// TypeGenerator.scala always allocates this first
 	static const std::uint32_t EmptyClosureRecordClassId = 0;
 };

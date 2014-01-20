@@ -9,7 +9,7 @@
 #include "PairCell.h"
 #include "VectorCell.h"
 #include "BytevectorCell.h"
-
+#include "StringCell.h"
 
 namespace lliby
 {
@@ -115,6 +115,30 @@ bool DatumCell::isEqual(const DatumCell *other) const
 	}
 
 	return false;
+}
+	
+void DatumCell::finalize()
+{
+	if (auto thisString = datum_cast<StringCell>(this))
+	{
+		thisString->finalizeString();
+	}
+	else if (auto thisSymbol = datum_cast<SymbolCell>(this))
+	{
+		thisSymbol->finalizeSymbol();
+	}
+	else if (auto thisVector = datum_cast<VectorCell>(this))
+	{
+		thisVector->finalizeVector();
+	}
+	else if (auto thisBytevector = datum_cast<BytevectorCell>(this))
+	{
+		thisBytevector->finalizeBytevector();
+	}
+	else if (auto thisRecordLike = datum_cast<RecordLikeCell>(this))
+	{
+		thisRecordLike->finalizeRecordLike();
+	}
 }
 
 }

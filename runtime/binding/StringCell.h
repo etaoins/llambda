@@ -62,6 +62,8 @@ public:
 	
 	std::uint8_t* utf8Data() const;
 
+	void finalizeString();
+
 protected:
 	StringCell(std::uint32_t byteLength, std::uint32_t charLength, std::int16_t allocSlackBytes) :
 		DatumCell(CellTypeId::String),

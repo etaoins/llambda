@@ -103,25 +103,28 @@
 !45 = metadata !{ metadata !"Bytevector::length" }
 !46 = metadata !{ metadata !"Bytevector::data" }
 
-; {supertype, unsigned recordClassId, recordData}
-%recordLike = type {%datum, i32, i8*}
+; {supertype, bool dataIsInline, unsigned recordClassId, recordData}
+%recordLike = type {%datum, i8, i32, i8*}
 !47 = metadata !{ metadata !"Datum::typeId->RecordLike", metadata !0 }
 !48 = metadata !{ metadata !"Datum::gcState->RecordLike", metadata !1 }
-!49 = metadata !{ metadata !"RecordLike::recordClassId" }
-!50 = metadata !{ metadata !"RecordLike::recordData" }
+!49 = metadata !{ metadata !"RecordLike::dataIsInline" }
+!50 = metadata !{ metadata !"RecordLike::recordClassId" }
+!51 = metadata !{ metadata !"RecordLike::recordData" }
 
 ; {supertype, entryPoint}
 %procedure = type {%recordLike, %datum* (%procedure*, %listElement*) *}
-!51 = metadata !{ metadata !"Datum::typeId->RecordLike->Procedure", metadata !47 }
-!52 = metadata !{ metadata !"Datum::gcState->RecordLike->Procedure", metadata !48 }
-!53 = metadata !{ metadata !"RecordLike::recordClassId->Procedure", metadata !49 }
-!54 = metadata !{ metadata !"RecordLike::recordData->Procedure", metadata !50 }
-!55 = metadata !{ metadata !"Procedure::entryPoint" }
+!52 = metadata !{ metadata !"Datum::typeId->RecordLike->Procedure", metadata !47 }
+!53 = metadata !{ metadata !"Datum::gcState->RecordLike->Procedure", metadata !48 }
+!54 = metadata !{ metadata !"RecordLike::dataIsInline->Procedure", metadata !49 }
+!55 = metadata !{ metadata !"RecordLike::recordClassId->Procedure", metadata !50 }
+!56 = metadata !{ metadata !"RecordLike::recordData->Procedure", metadata !51 }
+!57 = metadata !{ metadata !"Procedure::entryPoint" }
 
 ; {supertype, extraData}
 %record = type {%recordLike, i8*}
-!56 = metadata !{ metadata !"Datum::typeId->RecordLike->Record", metadata !47 }
-!57 = metadata !{ metadata !"Datum::gcState->RecordLike->Record", metadata !48 }
-!58 = metadata !{ metadata !"RecordLike::recordClassId->Record", metadata !49 }
-!59 = metadata !{ metadata !"RecordLike::recordData->Record", metadata !50 }
-!60 = metadata !{ metadata !"Record::extraData" }
+!58 = metadata !{ metadata !"Datum::typeId->RecordLike->Record", metadata !47 }
+!59 = metadata !{ metadata !"Datum::gcState->RecordLike->Record", metadata !48 }
+!60 = metadata !{ metadata !"RecordLike::dataIsInline->Record", metadata !49 }
+!61 = metadata !{ metadata !"RecordLike::recordClassId->Record", metadata !50 }
+!62 = metadata !{ metadata !"RecordLike::recordData->Record", metadata !51 }
+!63 = metadata !{ metadata !"Record::extraData" }

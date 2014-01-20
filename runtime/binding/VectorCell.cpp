@@ -129,7 +129,7 @@ bool VectorCell::replace(std::uint32_t offset, const VectorCell *from, std::int6
 	return true;
 }
 
-void VectorCell::finalize()
+void VectorCell::finalizeVector()
 {
 	delete[] m_elements;
 }

@@ -67,7 +67,7 @@ sealed abstract class ConcreteCellType extends CellType {
 sealed abstract class CellTypeVariant extends CastableValue
 
 object CellType {
-  val nextTbaaIndex = 61L
+  val nextTbaaIndex = 64L
 }
 
 sealed trait DatumFields {
@@ -1177,6 +1177,10 @@ object BytevectorCell extends ConcreteCellType with BytevectorFields {
 sealed trait RecordLikeFields extends DatumFields {
   val irType : FirstClassType
 
+  val dataIsInlineIrType = IntegerType(8)
+  val dataIsInlineTbaaIndex : Long
+  val dataIsInlineGepIndices : List[Int]
+
   val recordClassIdIrType = IntegerType(32)
   val recordClassIdTbaaIndex : Long
   val recordClassIdGepIndices : List[Int]
@@ -1184,6 +1188,29 @@ sealed trait RecordLikeFields extends DatumFields {
   val recordDataIrType = PointerType(IntegerType(8))
   val recordDataTbaaIndex : Long
   val recordDataGepIndices : List[Int]
+
+  def genPointerToDataIsInline(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+    if (valueCell.irType != PointerType(irType)) {
+      throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
+    }
+
+    block.getelementptr("dataIsInlinePtr")(
+      elementType=dataIsInlineIrType,
+      basePointer=valueCell,
+      indices=dataIsInlineGepIndices.map(IntegerConstant(IntegerType(32), _)),
+      inbounds=true
+    )
+  }
+
+  def genStoreToDataIsInline(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue)  {
+    val dataIsInlinePtr = genPointerToDataIsInline(block)(valueCell)
+    block.store(toStore, dataIsInlinePtr, tbaaIndex=Some(dataIsInlineTbaaIndex))
+  }
+
+  def genLoadFromDataIsInline(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+    val dataIsInlinePtr = genPointerToDataIsInline(block)(valueCell)
+    block.load("dataIsInline")(dataIsInlinePtr, tbaaIndex=Some(dataIsInlineTbaaIndex))
+  }
 
   def genPointerToRecordClassId(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
     if (valueCell.irType != PointerType(irType)) {
@@ -1241,21 +1268,24 @@ object RecordLikeCell extends CellType with RecordLikeFields {
 
   val typeIdGepIndices = List(0, 0, 0)
   val gcStateGepIndices = List(0, 0, 1)
-  val recordClassIdGepIndices = List(0, 1)
-  val recordDataGepIndices = List(0, 2)
+  val dataIsInlineGepIndices = List(0, 1)
+  val recordClassIdGepIndices = List(0, 2)
+  val recordDataGepIndices = List(0, 3)
 
   val typeIdTbaaIndex = 47L
   val gcStateTbaaIndex = 48L
-  val recordClassIdTbaaIndex = 49L
-  val recordDataTbaaIndex = 50L
+  val dataIsInlineTbaaIndex = 49L
+  val recordClassIdTbaaIndex = 50L
+  val recordDataTbaaIndex = 51L
 
-  def createConstant(recordClassId : Long, recordData : IrConstant, typeId : Long) : StructureConstant = {
+  def createConstant(dataIsInline : Long, recordClassId : Long, recordData : IrConstant, typeId : Long) : StructureConstant = {
     if (recordData.irType != recordDataIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field recordData")
     }
 
     StructureConstant(List(
       DatumCell.createConstant(typeId=typeId),
+      IntegerConstant(dataIsInlineIrType, dataIsInline),
       IntegerConstant(recordClassIdIrType, recordClassId),
       recordData
     ), userDefinedType=Some(irType))
@@ -1304,23 +1334,25 @@ object ProcedureCell extends ConcreteCellType with ProcedureFields {
 
   val typeIdGepIndices = List(0, 0, 0, 0)
   val gcStateGepIndices = List(0, 0, 0, 1)
-  val recordClassIdGepIndices = List(0, 0, 1)
-  val recordDataGepIndices = List(0, 0, 2)
+  val dataIsInlineGepIndices = List(0, 0, 1)
+  val recordClassIdGepIndices = List(0, 0, 2)
+  val recordDataGepIndices = List(0, 0, 3)
   val entryPointGepIndices = List(0, 1)
 
-  val typeIdTbaaIndex = 51L
-  val gcStateTbaaIndex = 52L
-  val recordClassIdTbaaIndex = 53L
-  val recordDataTbaaIndex = 54L
-  val entryPointTbaaIndex = 55L
+  val typeIdTbaaIndex = 52L
+  val gcStateTbaaIndex = 53L
+  val dataIsInlineTbaaIndex = 54L
+  val recordClassIdTbaaIndex = 55L
+  val recordDataTbaaIndex = 56L
+  val entryPointTbaaIndex = 57L
 
-  def createConstant(entryPoint : IrConstant, recordClassId : Long, recordData : IrConstant) : StructureConstant = {
+  def createConstant(entryPoint : IrConstant, dataIsInline : Long, recordClassId : Long, recordData : IrConstant) : StructureConstant = {
     if (entryPoint.irType != entryPointIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field entryPoint")
     }
 
     StructureConstant(List(
-      RecordLikeCell.createConstant(recordClassId=recordClassId, recordData=recordData, typeId=typeId),
+      RecordLikeCell.createConstant(dataIsInline=dataIsInline, recordClassId=recordClassId, recordData=recordData, typeId=typeId),
       entryPoint
     ), userDefinedType=Some(irType))
   }
@@ -1368,23 +1400,25 @@ object RecordCell extends ConcreteCellType with RecordFields {
 
   val typeIdGepIndices = List(0, 0, 0, 0)
   val gcStateGepIndices = List(0, 0, 0, 1)
-  val recordClassIdGepIndices = List(0, 0, 1)
-  val recordDataGepIndices = List(0, 0, 2)
+  val dataIsInlineGepIndices = List(0, 0, 1)
+  val recordClassIdGepIndices = List(0, 0, 2)
+  val recordDataGepIndices = List(0, 0, 3)
   val extraDataGepIndices = List(0, 1)
 
-  val typeIdTbaaIndex = 56L
-  val gcStateTbaaIndex = 57L
-  val recordClassIdTbaaIndex = 58L
-  val recordDataTbaaIndex = 59L
-  val extraDataTbaaIndex = 60L
+  val typeIdTbaaIndex = 58L
+  val gcStateTbaaIndex = 59L
+  val dataIsInlineTbaaIndex = 60L
+  val recordClassIdTbaaIndex = 61L
+  val recordDataTbaaIndex = 62L
+  val extraDataTbaaIndex = 63L
 
-  def createConstant(extraData : IrConstant, recordClassId : Long, recordData : IrConstant) : StructureConstant = {
+  def createConstant(extraData : IrConstant, dataIsInline : Long, recordClassId : Long, recordData : IrConstant) : StructureConstant = {
     if (extraData.irType != extraDataIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field extraData")
     }
 
     StructureConstant(List(
-      RecordLikeCell.createConstant(recordClassId=recordClassId, recordData=recordData, typeId=typeId),
+      RecordLikeCell.createConstant(dataIsInline=dataIsInline, recordClassId=recordClassId, recordData=recordData, typeId=typeId),
       extraData
     ), userDefinedType=Some(irType))
   }

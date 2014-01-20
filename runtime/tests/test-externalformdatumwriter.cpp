@@ -135,7 +135,7 @@ void testBytevector()
 
 	{
 		uint8_t testData[5] = { 100, 101, 202, 203, 204 };
-		auto *testVector = new BytevectorCell(testData, 5); 
+		auto *testVector = BytevectorCell::fromUnownedData(testData, 5); 
 
 		assertForm(testVector, "#u8(100 101 202 203 204)");
 	}

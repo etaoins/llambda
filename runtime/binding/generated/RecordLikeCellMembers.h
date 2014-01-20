@@ -3,6 +3,11 @@
  ************************************************************/
 
 public:
+	bool dataIsInline() const
+	{
+		return m_dataIsInline;
+	}
+
 	std::uint32_t recordClassId() const
 	{
 		return m_recordClassId;
@@ -40,5 +45,6 @@ public:
 	}
 
 private:
+	bool m_dataIsInline;
 	std::uint32_t m_recordClassId;
 	void* m_recordData;

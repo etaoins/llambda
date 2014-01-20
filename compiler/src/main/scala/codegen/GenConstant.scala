@@ -100,7 +100,8 @@ object GenConstant {
       // This can be anything as it's unused. Dynamic record cells leave this
       // uninitialized to be instruction thrifty but we have to supply a value
       // here
-      recordData=NullPointerConstant(ct.ProcedureCell.recordDataIrType)
+      recordData=NullPointerConstant(ct.ProcedureCell.recordDataIrType),
+      dataIsInline=1
     )
 
     defineConstantData(module)(procCellName, procCell)

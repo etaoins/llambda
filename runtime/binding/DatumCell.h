@@ -46,6 +46,8 @@ public:
 		m_gcState = gcState;
 	}
 
+	void finalize();
+
 protected:
 	// Used for normal allocations
 	// alloc::allocateCons already returns the correct garbage state

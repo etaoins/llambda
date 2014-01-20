@@ -11,16 +11,28 @@ class BytevectorCell : public DatumCell
 {
 #include "generated/BytevectorCellMembers.h"
 public:
+	/**
+	 * Creates a new BytevectorCell owning the passed data
+	 *
+	 * @param  data    Byte data to initialize the bytevector with. This must be allocated using new[]
+	 * @param  length  Length of the data in bytes
+	 */
 	BytevectorCell(std::uint8_t *data, std::uint32_t length) :
 		DatumCell(CellTypeId::Bytevector),
 		m_length(length),
 		m_data(data)
 	{
 	}
+	
+	/**
+	 * Creates a new BytevectorCell from a copy of the passed data
+	 *
+	 * @param  data    Byte data to copy in to the new bytevector
+	 * @param  length  Length of the data in bytes
+	 */
+	static BytevectorCell* fromUnownedData(const std::uint8_t *data, std::uint32_t length);
 
 	static const std::int16_t InvalidByte = -1;
-
-	void finalize();
 
 	static BytevectorCell* fromFill(std::uint32_t length, std::uint8_t fill = 0);
 	static BytevectorCell* fromAppended(const std::list<const BytevectorCell*> &byteVectors);
@@ -51,6 +63,8 @@ public:
 
 		return true;
 	}
+	
+	void finalizeBytevector();
 };
 
 }

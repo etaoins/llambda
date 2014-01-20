@@ -54,10 +54,16 @@ SymbolCell* SymbolCell::fromString(StringCell *string)
 
 	return newSymbol;
 }
+
+bool SymbolCell::dataIsInline() const
+{
+	// Need to have 1 byte for the NULL terminator
+	return byteLength() <= (inlineDataSize() - 1);
+}
 	
 const std::uint8_t* SymbolCell::utf8Data() const
 {
-	if (byteLength() <= (inlineDataSize() - 1)) 
+	if (dataIsInline())
 	{
 		return static_cast<const InlineSymbolCell*>(this)->inlineData();
 	}
@@ -75,6 +81,14 @@ bool SymbolCell::operator==(const SymbolCell &other) const
 	}
 	
 	return memcmp(utf8Data(), other.utf8Data(), byteLength()) == 0;
+}
+
+void SymbolCell::finalizeSymbol() 
+{
+	if (!dataIsInline())
+	{
+		delete[] static_cast<HeapSymbolCell*>(this)->heapData();
+	}
 }
 
 }

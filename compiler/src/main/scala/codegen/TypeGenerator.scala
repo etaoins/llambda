@@ -131,12 +131,7 @@ class TypeGenerator(module : IrModuleBuilder, targetPlatform : TargetPlatform, v
           case TypeDataStorage.Empty =>
             throw new InternalCompilerErrorException("Attempted to generate type map for type with no data")              
 
-          case TypeDataStorage.Inline =>
-            // Flag this data as inline 
-            cellOffsets.length | 0x80000000
-            
-          case TypeDataStorage.OutOfLine =>
-            // No flag indicates this is out-of-line
+          case _ =>
             cellOffsets.length 
         })
 

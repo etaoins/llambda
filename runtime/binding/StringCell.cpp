@@ -907,4 +907,12 @@ StringCell* StringCell::toCaseFoldedString() const
 	return toConvertedString(&UnicodeChar::toCaseFolded);
 }
 
+void StringCell::finalizeString()
+{
+	if (!dataIsInline())
+	{
+		delete[] static_cast<HeapStringCell*>(this)->heapData();
+	}
+}
+
 }

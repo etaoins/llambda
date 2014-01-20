@@ -41,13 +41,13 @@ void testFromFill()
 void testFromAppended()
 {
 	uint8_t vector1Data[3] = { 100, 101, 102 };
-	alloc::StrongRef<BytevectorCell> vector1 = new BytevectorCell(vector1Data, sizeof(vector1Data));
+	alloc::StrongRef<BytevectorCell> vector1 = BytevectorCell::fromUnownedData(vector1Data, sizeof(vector1Data));
 
 	uint8_t vector2Data[1] = { 0 };
-	alloc::StrongRef<BytevectorCell> vector2 = new BytevectorCell(vector2Data, sizeof(vector2Data));
+	alloc::StrongRef<BytevectorCell> vector2 = BytevectorCell::fromUnownedData(vector2Data, sizeof(vector2Data));
 
 	uint8_t vector3Data[3] = { 200, 201, 202 };
-	alloc::StrongRef<BytevectorCell> vector3 = new BytevectorCell(vector3Data, sizeof(vector3Data));
+	alloc::StrongRef<BytevectorCell> vector3 = BytevectorCell::fromUnownedData(vector3Data, sizeof(vector3Data));
 
 	{
 		BytevectorCell *emptyVector = BytevectorCell::fromAppended({});
@@ -78,7 +78,7 @@ void testByteAccess()
 {
 	uint8_t vectorData[5] = { 0, 1, 2, 3, 4 };
 
-	auto *testVector = new BytevectorCell(vectorData, sizeof(vectorData));
+	auto *testVector = BytevectorCell::fromUnownedData(vectorData, sizeof(vectorData));
 
 	ASSERT_EQUAL(testVector->byteAt(0), 0);
 	ASSERT_EQUAL(testVector->byteAt(4), 4);
@@ -97,7 +97,7 @@ void testCopy()
 {
 	uint8_t vectorData[5] = { 0, 1, 2, 3, 4 };
 
-	alloc::StrongRef<BytevectorCell> testVector = new BytevectorCell(vectorData, sizeof(vectorData));
+	alloc::StrongRef<BytevectorCell> testVector = BytevectorCell::fromUnownedData(vectorData, sizeof(vectorData));
 
 	{
 		BytevectorCell *wholeCopy = testVector->copy();
@@ -140,11 +140,11 @@ void testCopy()
 void testReplace()
 {
 	uint8_t fromData[5] = { 200, 201, 202, 203, 204 };
-	alloc::StrongRef<BytevectorCell> fromVector = new BytevectorCell(fromData, 5); 
+	alloc::StrongRef<BytevectorCell> fromVector = BytevectorCell::fromUnownedData(fromData, 5); 
 
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = new BytevectorCell(toData, 5); 
+		auto *toVector = BytevectorCell::fromUnownedData(toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(0, fromVector), true);
 		ASSERT_EQUAL(toVector->length(), 5);
@@ -153,7 +153,7 @@ void testReplace()
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = new BytevectorCell(toData, 5); 
+		auto *toVector = BytevectorCell::fromUnownedData(toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(0, fromVector, 0, 5), true);
 		ASSERT_EQUAL(toVector->length(), 5);
@@ -162,7 +162,7 @@ void testReplace()
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = new BytevectorCell(toData, 5); 
+		auto *toVector = BytevectorCell::fromUnownedData(toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(0, fromVector, 2, 2), true);
 		ASSERT_EQUAL(toVector->length(), 5);
@@ -173,7 +173,7 @@ void testReplace()
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = new BytevectorCell(toData, 5); 
+		auto *toVector = BytevectorCell::fromUnownedData(toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(0, fromVector, 0, 2), true);
 		ASSERT_EQUAL(toVector->length(), 5);
@@ -184,7 +184,7 @@ void testReplace()
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = new BytevectorCell(toData, 5); 
+		auto *toVector = BytevectorCell::fromUnownedData(toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(0, fromVector, 3), true);
 		ASSERT_EQUAL(toVector->length(), 5);
@@ -195,7 +195,7 @@ void testReplace()
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = new BytevectorCell(toData, 5); 
+		auto *toVector = BytevectorCell::fromUnownedData(toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(0, fromVector, 3, 5), true);
 		ASSERT_EQUAL(toVector->length(), 5);
@@ -206,7 +206,7 @@ void testReplace()
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = new BytevectorCell(toData, 5); 
+		auto *toVector = BytevectorCell::fromUnownedData(toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(3, fromVector, 3, 5), true);
 		ASSERT_EQUAL(toVector->length(), 5);
@@ -217,14 +217,14 @@ void testReplace()
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = new BytevectorCell(toData, 5); 
+		auto *toVector = BytevectorCell::fromUnownedData(toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(4, fromVector, 3, 5), false);
 	}
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = new BytevectorCell(toData, 5); 
+		auto *toVector = BytevectorCell::fromUnownedData(toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(4, fromVector, 5, 3), false);
 	}
@@ -233,7 +233,7 @@ void testReplace()
 void testUtf8ToString()
 {
 	auto stringData = reinterpret_cast<std::uint8_t*>(strdup(u8"Hello ☃!"));
-	alloc::StrongRef<BytevectorCell> sourceVector = new BytevectorCell(stringData, 10);
+	alloc::StrongRef<BytevectorCell> sourceVector = BytevectorCell::fromUnownedData(stringData, 10);
 
 	{
 		StringCell *fullString = sourceVector->utf8ToString();

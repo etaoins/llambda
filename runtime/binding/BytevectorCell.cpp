@@ -29,6 +29,14 @@ namespace
 namespace lliby
 {
 	
+BytevectorCell* BytevectorCell::fromUnownedData(const std::uint8_t *data, std::uint32_t length)
+{
+	auto newData = new std::uint8_t[length];
+	memcpy(newData, data, length);
+
+	return new BytevectorCell(newData, length);
+}
+	
 BytevectorCell* BytevectorCell::fromFill(std::uint32_t length, std::uint8_t fill)
 {
 	auto newData = new std::uint8_t[length];
@@ -107,7 +115,7 @@ StringCell* BytevectorCell::utf8ToString(std::int64_t start, std::int64_t end)
 	return StringCell::fromUtf8Data(&data()[start], end - start);
 }
 
-void BytevectorCell::finalize()
+void BytevectorCell::finalizeBytevector()
 {
 	delete[] m_data;
 }

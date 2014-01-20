@@ -18,8 +18,6 @@ public:
 	{
 	}
 	
-	void finalize();
-	
 	DatumCell* elementAt(std::uint32_t offset) const
 	{
 		if (offset >= length())
@@ -48,6 +46,8 @@ public:
 	bool replace(std::uint32_t offset, const VectorCell *from, std::int64_t fromStart = 0, std::int64_t fromEnd = -1);
 
 	bool fill(DatumCell *fill, std::int64_t start = 0, std::int64_t end = -1);
+	
+	void finalizeVector();
 };
 
 }

@@ -2,12 +2,22 @@
 
 #include <stdlib.h>
 
+#include "classmap/RecordClassMap.h"
+
 namespace lliby
 {
 	
-void RecordLikeCell::finalize()
+void RecordLikeCell::finalizeRecordLike()
 {
-	free(m_recordData);
+	if (!dataIsInline())
+	{
+		free(m_recordData);
+	}
+}
+	
+const RecordClassOffsetMap* RecordLikeCell::offsetMap() const
+{
+	return _llambda_class_map[recordClassId()];
 }
 
 }

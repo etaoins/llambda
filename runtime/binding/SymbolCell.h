@@ -22,6 +22,8 @@ public:
 	{
 		return !(*this == other);
 	}
+	
+	void finalizeSymbol();
 
 protected:
 	SymbolCell(std::uint32_t byteLength, std::uint32_t charLength) :
@@ -34,6 +36,7 @@ protected:
 	static SymbolCell* createUninitialized(std::uint32_t byteLength, std::uint32_t charLength);
 
 	static size_t inlineDataSize();
+	bool dataIsInline() const;
 };
 
 class HeapSymbolCell : public SymbolCell

@@ -30,15 +30,21 @@ object GenRecordLikeInit {
 
     val uncastRecordData = generatedType.storageType match {
       case TypeDataStorage.Empty =>
+        cellType.genStoreToDataIsInline(block)(IntegerConstant(cellType.dataIsInlineIrType, 1), recordCell)
+
         // No fields; don't bother allocating or setting the recordData pointer
         NullPointerConstant(PointerType(IntegerType(8)))
 
       case TypeDataStorage.Inline =>
+        cellType.genStoreToDataIsInline(block)(IntegerConstant(cellType.dataIsInlineIrType, 1), recordCell)
+
         // Store the value inline in the cell on top of the recordData field
         // instead of going through another level of indirection
         cellType.genPointerToRecordData(block)(recordCell)
 
       case TypeDataStorage.OutOfLine =>
+        cellType.genStoreToDataIsInline(block)(IntegerConstant(cellType.dataIsInlineIrType, 0), recordCell)
+
         // Declare _lliby_record_data_alloc
         val llibyRecordDataAlloc = IrFunctionDecl(
           result=IrFunction.Result(PointerType(IntegerType(8))),
