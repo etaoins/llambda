@@ -54,12 +54,10 @@ protected:
 	AbstractRefRange(T** cellRef, size_t cellCount)
 	{
 		// Order doesn't matter here
-		const AllocCellRefRange cellRange {
+		mRefListIt = refList.insert(refList.begin(), AllocCellRefRange {
 			.basePointer = reinterpret_cast<AllocCell**>(cellRef),
 			.cellCount = cellCount
-		};
-
-		mRefListIt = refList.insert(refList.begin(), cellRange);
+		});
 	}
 
 	/**
