@@ -19,6 +19,7 @@
 #include "core/init.h"
 #include "alloc/StrongRef.h"
 #include "assertions.h"
+#include "stubdefinitions.h"
 
 namespace
 {

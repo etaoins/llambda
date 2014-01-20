@@ -17,8 +17,35 @@
 #include "binding/CharacterCell.h"
 #include "binding/PairCell.h"
 #include "binding/VectorCell.h"
+#include "binding/RecordLikeCell.h"
 
 #include "writer/ExternalFormDatumWriter.h"
+
+extern "C" 
+{
+	struct RecordClassOffsetMap
+	{
+	private:
+		static const std::uint32_t InlineFlagMask = 0x80000000;
+		std::uint32_t header;
+
+	public:
+		std::uint32_t offsets[];
+			
+		// Do this manually instead of bitfields so it's endian independent
+		bool inlineStorage() const 
+		{
+			return header & InlineFlagMask;
+		}
+
+		std::uint32_t offsetCount() const 
+		{
+			return header & (~InlineFlagMask);
+		}
+	};
+
+	extern RecordClassOffsetMap *_llambda_class_map[];
+}
 
 namespace lliby
 {
@@ -56,6 +83,34 @@ void visitCell(DatumCell **rootCellRef, std::function<bool(DatumCell **)> &visit
 		{
 			// Use elements instead of elementsAt to skip the range check
 			visitCell(&vectorCell->elements()[i], visitor);
+		}
+	}
+	else if (auto recordLikeCell = datum_cast<RecordLikeCell>(*rootCellRef))
+	{
+		RecordClassOffsetMap *offsetMap = _llambda_class_map[recordLikeCell->recordClassId()];
+
+		// Does this have any child cells
+		if (offsetMap != nullptr)
+		{
+			// Yes, iterator over them
+			for(std::uint32_t i = 0; i < offsetMap->offsetCount(); i++)
+			{
+				const std::uint32_t byteOffset = offsetMap->offsets[i]; 
+				std::uint8_t *datumRef;
+
+				if (offsetMap->inlineStorage())
+				{
+					// The data is stored inline inside the cell 
+					datumRef = reinterpret_cast<std::uint8_t*>(recordLikeCell->recordDataRef()) + byteOffset;
+				}
+				else
+				{
+					datumRef = reinterpret_cast<std::uint8_t*>(recordLikeCell->recordData()) + byteOffset;
+				}
+
+			
+				visitCell(reinterpret_cast<DatumCell**>(datumRef), visitor);
+			}
 		}
 	}
 	else

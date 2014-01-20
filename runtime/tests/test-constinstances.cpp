@@ -4,6 +4,7 @@
 
 #include "core/init.h"
 #include "assertions.h"
+#include "stubdefinitions.h"
 
 int main(int argc, char *argv[])
 {

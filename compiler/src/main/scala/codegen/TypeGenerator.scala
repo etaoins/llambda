@@ -133,7 +133,7 @@ class TypeGenerator(module : IrModuleBuilder, targetPlatform : TargetPlatform, v
 
           case TypeDataStorage.Inline =>
             // Flag this data as inline 
-            cellOffsets.length | 0x800000
+            cellOffsets.length | 0x80000000
             
           case TypeDataStorage.OutOfLine =>
             // No flag indicates this is out-of-line

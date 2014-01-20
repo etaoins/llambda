@@ -12,6 +12,12 @@ class RecordLikeCell : public DatumCell
 public:
 	void finalize();
 
+	// Used by the garbage collector to update any references to record data stored inline
+	void** recordDataRef()
+	{
+		return &m_recordData;
+	}
+
 protected:
 	RecordLikeCell(CellTypeId typeId, std::uint32_t recordClassId, void *recordData) :
 		DatumCell(typeId),

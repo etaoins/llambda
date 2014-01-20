@@ -2,6 +2,7 @@
 
 #include "core/init.h"
 #include "assertions.h"
+#include "stubdefinitions.h"
 
 namespace
 {
