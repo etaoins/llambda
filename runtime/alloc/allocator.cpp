@@ -2,11 +2,10 @@
 
 #include <stdlib.h>
 #include <iostream>
-#include <stdio.h>
-#include <sys/mman.h>
 
 #include "alloc/AllocCell.h"
 #include "alloc/RangeAlloc.h"
+#include "alloc/MemoryBlock.h"
 #include "alloc/collector.h"
 
 // Statically check that everything can fit in to a cell
@@ -31,18 +30,18 @@ void *_lliby_alloc_cells(std::uint64_t count)
 
 }
 
+namespace lliby
+{
+namespace alloc
+{
+
 namespace
 {
 	const size_t SemiSpaceSize = 4 * 1024 * 1024; 
 
 	// Pointer to the start of the semi-space
-	void *semiSpaceStart = nullptr;
+	MemoryBlock *activeBlock = nullptr;
 }
-
-namespace lliby
-{
-namespace alloc
-{
 
 void init()
 {
@@ -88,39 +87,30 @@ RangeAlloc allocateRange(size_t count)
 bool forceCollection(size_t reserveCount)
 {
 	// Directly allocate memory from the kernel
-	void *oldSemiSpaceStart = semiSpaceStart;
-	void *newSemiSpaceStart = mmap(NULL, SemiSpaceSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+	MemoryBlock *oldBlock = activeBlock;
+	MemoryBlock *newBlock = new MemoryBlock(SemiSpaceSize);
 
-	if (newSemiSpaceStart == MAP_FAILED)
+	if (!newBlock->isValid())
 	{
-		perror("mmap");
 		std::cerr << "Unable to allocate " << SemiSpaceSize << " bytes" << std::endl;
 		exit(-2);
 	}
 
-	if (oldSemiSpaceStart != nullptr)
+	if (oldBlock != nullptr)
 	{
 		// Garbage collect if this isn't our first allocation
-		_lliby_alloc_next = static_cast<AllocCell*>(alloc::collect(oldSemiSpaceStart, _lliby_alloc_end, newSemiSpaceStart));
-
-#ifndef _LLIBY_NO_ADDR_REUSE
-		// Free the old semispace
-		munmap(oldSemiSpaceStart, SemiSpaceSize);
-#else
-		// Mark the old semispace as unreadable but keep the address space allocated
-		madvise(oldSemiSpaceStart, SemiSpaceSize, MADV_DONTNEED);
-		mprotect(oldSemiSpaceStart, SemiSpaceSize, PROT_NONE);
-#endif
+		_lliby_alloc_next = static_cast<AllocCell*>(alloc::collect(oldBlock->startPointer(), _lliby_alloc_end, newBlock->startPointer()));
+		delete oldBlock;
 	}
 	else 
 	{
-		// No previous allocation; we can start at the beginning of the semispace
-		_lliby_alloc_next = static_cast<AllocCell*>(newSemiSpaceStart);
+		// No previous allocation; we can start at the beginning of the block
+		_lliby_alloc_next = static_cast<AllocCell*>(newBlock->startPointer());
 	}
 
 	// Set up the new pointers
-	auto semiSpaceEnd = reinterpret_cast<AllocCell*>(static_cast<char*>(newSemiSpaceStart) + SemiSpaceSize); 
-	semiSpaceStart = newSemiSpaceStart;
+	auto semiSpaceEnd = reinterpret_cast<AllocCell*>(newBlock->endPointer());
+	activeBlock = newBlock;
 
 #ifndef _LLIBY_ALWAYS_GC
 	_lliby_alloc_end = semiSpaceEnd;
