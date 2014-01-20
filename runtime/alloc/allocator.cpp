@@ -56,10 +56,11 @@ void init()
 void *allocateCells(size_t count)
 {
 	AllocCell *allocation = _lliby_alloc_next;
-	_lliby_alloc_next += count;
+	AllocCell *newAllocNext = allocation + count;
 
-	if (_lliby_alloc_next > _lliby_alloc_end)
+	if (newAllocNext > _lliby_alloc_end)
 	{
+		// Our allocation goes past the end - collect garbage
 		if (!forceCollection(count))
 		{
 			std::cerr << "GC space exhausted" << std::endl;
@@ -68,7 +69,7 @@ void *allocateCells(size_t count)
 	
 		// If forceCollection() returned true this must succeed
 		allocation = _lliby_alloc_next;
-		_lliby_alloc_next += count;
+		newAllocNext = allocation + count;
 	}
 
 	// Mark the cells as allocated
@@ -76,6 +77,9 @@ void *allocateCells(size_t count)
 	{
 		allocation[i].setGcState(GarbageState::AllocatedCell);
 	}
+
+	// Start allocating past the end of this allocation
+	_lliby_alloc_next = newAllocNext;
 
 	return allocation;
 }
@@ -102,15 +106,18 @@ bool forceCollection(size_t reserveCount)
 
 	if (oldBlock != nullptr)
 	{
+		// This indicates the end of the allocated cell range
+		auto oldAllocNext = _lliby_alloc_next;
+
 		// Garbage collect if this isn't our first allocation
-		_lliby_alloc_next = static_cast<AllocCell*>(alloc::collect(oldBlock->startPointer(), _lliby_alloc_next, newBlock->startPointer()));
+		_lliby_alloc_next = static_cast<AllocCell*>(alloc::collect(oldBlock->startPointer(), oldAllocNext, newBlock->startPointer()));
 
 #ifndef _LLIBY_NO_ADDR_REUSE
 		// Finalize the block asynchronously
-		finalizer->finalizeBlockAsync(oldBlock, _lliby_alloc_end);
+		finalizer->finalizeBlockAsync(oldBlock, oldAllocNext);
 #else
 		// Finalize the block immediately to invalidate the old addresses
-		finalizer->finalizeBlockSync(oldBlock, _lliby_alloc_end);
+		finalizer->finalizeBlockSync(oldBlock, oldAllocNext);
 #endif
 	}
 	else 
