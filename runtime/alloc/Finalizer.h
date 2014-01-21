@@ -16,8 +16,6 @@ class MemoryBlock;
 class Finalizer
 {
 public:
-	Finalizer();
-
 	void finalizeBlockAsync(MemoryBlock *block, void *endPointer);
 	static void finalizeBlockSync(MemoryBlock *block, void *endPointer);
 
@@ -31,6 +29,7 @@ private:
 	};
 
 	std::thread mWorkerThread;
+	std::once_flag mWorkerStartFlag;
 
 	std::mutex mWorkQueueMutex;
 	std::condition_variable mWorkQueueCond;

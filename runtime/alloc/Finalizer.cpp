@@ -10,13 +10,13 @@ namespace lliby
 namespace alloc
 {
 
-Finalizer::Finalizer() :
-	mWorkerThread(&Finalizer::workerThread, this)
-{
-}
-
 void Finalizer::finalizeBlockAsync(MemoryBlock *block, void *endPointer)
 {
+	std::call_once(mWorkerStartFlag, [=]() {
+		// Start the worker thread
+		mWorkerThread = std::thread(&Finalizer::workerThread, this);
+	});
+
 	// Add to the work queue
 	{
 		std::lock_guard<std::mutex> guard(mWorkQueueMutex);
