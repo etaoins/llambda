@@ -7,22 +7,12 @@
 
 #include "binding/DatumCell.h"
 #include "alloc/AllocCell.h"
+#include "alloc/CellRefList.h"
 
 namespace lliby
 {
 namespace alloc
 {
-
-/**
- * Represents a reference to a range of allocated cells
- */
-struct AllocCellRefRange
-{
-	AllocCell **basePointer;
-	size_t cellCount;
-};
-
-typedef std::list<AllocCellRefRange> CellRefList;
 
 /**
  * Abstract reference to a range of GC managed values
@@ -40,8 +30,8 @@ protected:
 	 *
 	 * This is only intended for use by move constructors
 	 */
-	AbstractRefRange(CellRefList::iterator refListIt) :
-		mRefListIt(refListIt)
+	AbstractRefRange(CellRefRange *refRange) :
+		mRefRange(refRange)
 	{
 	}
 
@@ -53,11 +43,10 @@ protected:
 	 */
 	AbstractRefRange(T** cellRef, size_t cellCount)
 	{
-		// Order doesn't matter here
-		mRefListIt = refList.insert(refList.begin(), AllocCellRefRange {
-			.basePointer = reinterpret_cast<AllocCell**>(cellRef),
-			.cellCount = cellCount
-		});
+		mRefRange = refList.addRange(
+				reinterpret_cast<AllocCell**>(cellRef),
+				cellCount
+		);
 	}
 
 	/**
@@ -79,13 +68,13 @@ protected:
 	 */
 	~AbstractRefRange()
 	{
-		if (mRefListIt != refList.end())
+		if (mRefRange != nullptr)
 		{
-			refList.erase(mRefListIt);
+			refList.removeRange(mRefRange);
 		}
 	}
 
-	CellRefList::iterator mRefListIt;
+	CellRefRange *mRefRange;
 };
 
 /**
@@ -101,14 +90,14 @@ public:
 	 * This avoids list operations on the target CellRefList by using the existing value's list element
 	 */
 	AbstractRef(AbstractRef &&other) : 
-		AbstractRefRange<T, refList>(other.mRefListIt),
+		AbstractRefRange<T, refList>(other.mRefRange),
 		mCell(other.mCell)
 	{
 		// Update the base pointer to point to our member variable
-		this->mRefListIt->basePointer = reinterpret_cast<AllocCell**>(&mCell);
+		this->mRefRange->basePointer = reinterpret_cast<AllocCell**>(&mCell);
 
 		// Make sure the original value doesn't try to remove itself
-		other.mRefListIt = refList.end();
+		other.mRefRange = nullptr;
 	}
 
 	operator T*() const

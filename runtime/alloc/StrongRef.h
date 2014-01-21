@@ -2,13 +2,14 @@
 #define _LLIBY_ALLOC_STRONGREF_H
 
 #include "alloc/AbstractRef.h"
+#include "alloc/CellRefList.h"
 
 namespace lliby
 {
 namespace alloc
 {
 
-extern std::list<AllocCellRefRange> RuntimeStrongRefList;
+extern CellRefList RuntimeStrongRefList;
 
 /**
  * Holds a strong reference to a GC managed cell

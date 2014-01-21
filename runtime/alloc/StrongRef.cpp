@@ -5,7 +5,7 @@ namespace lliby
 namespace alloc
 {
 
-std::list<AllocCellRefRange> RuntimeStrongRefList;
+CellRefList RuntimeStrongRefList;
 
 }
 }

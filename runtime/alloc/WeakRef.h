@@ -8,7 +8,7 @@ namespace lliby
 namespace alloc
 {
 
-extern std::list<AllocCellRefRange> RuntimeWeakRefList;
+extern CellRefList RuntimeWeakRefList;
 
 /**
  * Holds a weaks reference to a GC managed cell

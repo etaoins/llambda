@@ -62,12 +62,14 @@ namespace
 	// Visit every non-null cell in a cell ref list
 	void visitCellRefList(const CellRefList &cellRefList, std::function<bool (DatumCell**)> &visitor)
 	{
-		for(auto cellRefRange : cellRefList)
+		for(auto cellRefRange = cellRefList.activeHead();
+		    cellRefRange != nullptr;
+		    cellRefRange = cellRefRange->next)
 		{
 			// Visit each cell in this range
-			for(size_t i = 0; i < cellRefRange.cellCount; i++)
+			for(size_t i = 0; i < cellRefRange->cellCount; i++)
 			{
-				auto datumCellRef = reinterpret_cast<DatumCell**>(&cellRefRange.basePointer[i]);
+				auto datumCellRef = reinterpret_cast<DatumCell**>(&cellRefRange->basePointer[i]);
 
 				if (*datumCellRef != nullptr)
 				{
