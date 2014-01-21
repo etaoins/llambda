@@ -75,6 +75,12 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 endif()
 
+# GC debugging mode
+set(ENABLE_GC_DEBUGGING "no" CACHE STRING "Enable extra garbage collector sanity checks at a severe performance penalty")
+if (${ENABLE_GC_DEBUGGING} STREQUAL "yes")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_LLIBY_ALWAYS_COLLECT -D_LLIBY_NO_ADDR_REUSE")
+endif()
+
 # Add tests
 enable_testing()
 
