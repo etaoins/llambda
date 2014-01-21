@@ -57,6 +57,11 @@ ADD_DEFINITIONS(
 	-fno-exceptions
 	)
 
+# Force colour output so Clang++ prints pretty errors in Ninja
+if (${CMAKE_GENERATOR} STREQUAL "Ninja")
+	ADD_DEFINITIONS(-fcolor-diagnostics)
+endif()
+
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	# Mac OS X's libstdc++ is too old for C++11 support
 	# Explicitly use libc++

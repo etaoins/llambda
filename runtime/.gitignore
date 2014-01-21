@@ -1,8 +1,16 @@
 /CMakeCache.txt
 /CMakeFiles/
-/Makefile
 /cmake_install.cmake
 /liblliby.a
 /compile_commands.json
 /CTestTestfile.cmake
 /Testing/
+
+# Makefile generator
+/Makefile
+
+# Ninja generator
+/.ninja_deps
+/.ninja_log
+/build.ninja
+/rules.ninja
