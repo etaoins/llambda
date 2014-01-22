@@ -25,14 +25,19 @@ namespace
 {
 using namespace lliby;
 
-void assertForm(const DatumCell *datum, std::string expected)
+std::string externalFormFor(const DatumCell *datum)
 {
 	std::ostringstream outputStream;
 
 	ExternalFormDatumWriter writer(outputStream);
 	writer.render(datum);
 
-	ASSERT_EQUAL(outputStream.str(), expected);
+	return outputStream.str();
+}
+
+void assertForm(const DatumCell *datum, std::string expected)
+{
+	ASSERT_EQUAL(externalFormFor(datum), expected);
 }
 
 SymbolCell *symbolFor(const char *utf8String)
@@ -163,7 +168,15 @@ void testVector()
 
 void testProcedure()
 {
-	assertForm(new ProcedureCell(0, nullptr, nullptr), "#!procedure(0x0)");
+	// Outputting of pointers isn't consistent across C++ standard libraries
+	// This means our null entry point might be output differently on different 
+	// platforms. The entry point output is just for debugging so there's not 
+	// point checking it.
+	std::string procedureForm = externalFormFor(new ProcedureCell(0, nullptr, nullptr));
+	const std::string expectedPrefix("#!procedure(");
+
+	ASSERT_TRUE(procedureForm.compare(0, expectedPrefix.length(), expectedPrefix) == 0);
+
 }
 
 void testCharacter()
