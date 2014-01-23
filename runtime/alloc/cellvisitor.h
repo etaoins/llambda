@@ -20,12 +20,14 @@ namespace alloc
  */
 void visitCell(DatumCell **rootCellRef, std::function<bool(DatumCell **)> &visitor);
 
+#ifndef NDEBUG
 /**
  * Dumps all reachable cells to std::cout
  *
  * This is for debug purposes only
  */
 void dumpReachableFrom(DatumCell *rootCell, bool dumpGlobalConstants = true);
+#endif
 
 }
 }

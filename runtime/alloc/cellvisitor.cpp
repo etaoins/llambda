@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <cstdint>
-#include <set>
+#include <unordered_set>
 
 #include "core/fatal.h"
 
@@ -96,9 +96,10 @@ void visitCell(DatumCell **rootCellRef, std::function<bool(DatumCell **)> &visit
 	}
 }
 
+#ifndef _NDEBUG
 void dumpReachableFrom(DatumCell *rootCell, bool dumpGlobalConstants)
 {
-	std::set<DatumCell*> showCells;
+	std::unordered_set<DatumCell*> shownCells;
 	ExternalFormDatumWriter writer(std::cout);
 
 	std::function<bool(DatumCell**)> visitor = [&] (DatumCell **cellRef) 
@@ -110,7 +111,7 @@ void dumpReachableFrom(DatumCell *rootCell, bool dumpGlobalConstants)
 			return false;
 		}
 
-		if (showCells.count(cell) > 0)
+		if (shownCells.count(cell) > 0)
 		{
 			return false;
 		}
@@ -119,12 +120,13 @@ void dumpReachableFrom(DatumCell *rootCell, bool dumpGlobalConstants)
 		writer.render(cell);
 		std::cout << std::endl;
 
-		showCells.insert(cell);
+		shownCells.insert(cell);
 		return true;
 	};
 
 	visitCell(&rootCell, visitor);
 }
+#endif
 
 }
 }
