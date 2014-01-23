@@ -172,7 +172,7 @@ void testProcedure()
 	// This means our null entry point might be output differently on different 
 	// platforms. The entry point output is just for debugging so there's not 
 	// point checking it.
-	std::string procedureForm = externalFormFor(new ProcedureCell(0, nullptr, nullptr));
+	std::string procedureForm = externalFormFor(new ProcedureCell(0, true, nullptr, nullptr));
 	const std::string expectedPrefix("#!procedure(");
 
 	ASSERT_TRUE(procedureForm.compare(0, expectedPrefix.length(), expectedPrefix) == 0);
@@ -199,7 +199,7 @@ void testCharacter()
 
 void testRecord()
 {
-    assertForm(new RecordCell(0, nullptr), "#!record");
+    assertForm(new RecordCell(0, true, nullptr), "#!record");
 }
 
 }

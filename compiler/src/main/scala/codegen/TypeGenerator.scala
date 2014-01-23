@@ -173,7 +173,7 @@ class TypeGenerator(module : IrModuleBuilder, targetPlatform : TargetPlatform, v
 
     // This needs to be externally visible for our stdlib
     val classMapDef = IrGlobalVariableDef(
-      name="_llambda_class_map",
+      name="_llambda_compiler_class_map",
       initializer=classMapConstant,
       linkage=Linkage.External,
       unnamedAddr=true,

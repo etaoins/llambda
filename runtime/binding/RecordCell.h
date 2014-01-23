@@ -10,8 +10,8 @@ class RecordCell : public RecordLikeCell
 {
 #include "generated/RecordCellMembers.h"
 public:
-	RecordCell(std::uint32_t recordClassId, void *recordData) :
-		RecordLikeCell(CellTypeId::Record, recordClassId, recordData)
+	RecordCell(std::uint32_t recordClassId, bool dataIsInline, void *recordData) :
+		RecordLikeCell(CellTypeId::Record, recordClassId, dataIsInline, recordData)
 	{
 	}
 };

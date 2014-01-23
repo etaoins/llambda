@@ -13,6 +13,7 @@
 #include "binding/PairCell.h"
 #include "binding/EmptyListCell.h"
 #include "binding/VectorCell.h"
+#include "binding/RecordCell.h"
 
 #include "unicode/UnicodeChar.h"
 
@@ -222,6 +223,67 @@ void testVectorGc()
 	}
 }
 
+void testRecordLikeGc()
+{
+	struct CustomRecordLikeData
+	{
+		DatumCell *cell0;
+		std::uint32_t native;
+		DatumCell *cell1;
+	};
+
+	// Register the record class
+	const std::uint32_t testClass = RecordLikeCell::registerRuntimeRecordClass({
+			offsetof(CustomRecordLikeData, cell0),
+			offsetof(CustomRecordLikeData, cell1)});
+
+	// Make some test values
+	alloc::StrongRef<StringCell> value0Strong(StringCell::fromUtf8CString(""));
+	alloc::StrongRef<StringCell> value1Strong(StringCell::fromUtf8CString(""));
+	
+	// Create the record-like
+	alloc::StrongRef<RecordCell> testRecord = new RecordCell(testClass, false, nullptr);
+
+	// Set the data
+	auto data = static_cast<CustomRecordLikeData*>(RecordLikeCell::allocateRecordData(sizeof(CustomRecordLikeData)));
+	data->cell0 = value0Strong.data();
+	data->cell1 = value1Strong.data();
+
+	testRecord->setRecordData(data);
+	
+	alloc::WeakRef<StringCell> value0(value0Strong.data());
+	value0Strong = nullptr;
+
+	alloc::WeakRef<StringCell> value1(value1Strong.data());
+	value1Strong = nullptr;
+
+	{
+		// Make sure the data stay after GC
+		alloc::forceCollection();
+
+		ASSERT_FALSE(value0.isNull());
+		ASSERT_FALSE(value1.isNull());
+	}
+	
+	{
+		// Unset the first value
+		data->cell0 = const_cast<EmptyListCell*>(EmptyListCell::instance());
+		alloc::forceCollection();
+
+		ASSERT_TRUE(value0.isNull());
+		ASSERT_FALSE(value1.isNull());
+	}
+	
+	{
+		// Unset the second value
+		data->cell1 = const_cast<EmptyListCell*>(EmptyListCell::instance());
+		alloc::forceCollection();
+
+		ASSERT_TRUE(value0.isNull());
+		ASSERT_TRUE(value1.isNull());
+	}
+}
+
 }
 
 int main(int argc, char *argv[])
@@ -281,6 +343,9 @@ int main(int argc, char *argv[])
 
 	// Test vectors
 	testVectorGc();
+
+	// Test record-likes
+	testRecordLikeGc();
 
 	return 0;
 }

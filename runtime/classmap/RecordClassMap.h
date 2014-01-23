@@ -10,7 +10,7 @@ struct RecordClassOffsetMap
 	std::uint32_t offsets[];
 };
 
-extern const RecordClassOffsetMap *_llambda_class_map[];
+extern const RecordClassOffsetMap *_llambda_compiler_class_map[];
 
 }
 

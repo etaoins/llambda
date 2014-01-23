@@ -10,8 +10,8 @@ class ProcedureCell : public RecordLikeCell
 {
 #include "generated/ProcedureCellMembers.h"
 public:
-	ProcedureCell(std::uint32_t recordClassId, void *recordData, ProcedureEntryPoint entryPoint) :
-		RecordLikeCell(CellTypeId::Procedure, recordClassId, recordData),
+	ProcedureCell(std::uint32_t recordClassId, bool dataIsInline, void *recordData, ProcedureEntryPoint entryPoint) :
+		RecordLikeCell(CellTypeId::Procedure, recordClassId, dataIsInline, recordData),
 		m_entryPoint(entryPoint)
 	{
 	}
