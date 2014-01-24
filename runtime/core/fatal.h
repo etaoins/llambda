@@ -1,5 +1,5 @@
-#ifndef _CORE_FATAL_H
-#define _CORE_FATAL_H
+#ifndef _LLIBY_CORE_FATAL_H
+#define _LLIBY_CORE_FATAL_H
 
 namespace lliby
 {
