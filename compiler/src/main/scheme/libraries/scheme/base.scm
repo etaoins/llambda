@@ -151,6 +151,12 @@
 	  (define-r7rs procedure? (native-function "lliby_is_procedure" (<datum-cell>) <bool>))
 	  (define-r7rs apply (native-function "lliby_apply" (<procedure-cell> . <list-element-cell>) <datum-cell>)))
 
+	(export make-parameter dynamic-wind)
+	(begin
+	  ; XXX: This should accept a procedure once (case-lambda) is implemented
+	  (define-r7rs make-parameter (native-function "lliby_make_parameter" (<datum-cell>) <procedure-cell>))
+	  (define-r7rs dynamic-wind (native-function "lliby_dynamic_wind" (<procedure-cell> <procedure-cell> <procedure-cell>) <datum-cell>)))
+
 	(export features)
 	(begin
 	  ; Note this is produced by codegen; it's not part of the standard library

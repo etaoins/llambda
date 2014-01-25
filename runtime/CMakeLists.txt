@@ -21,14 +21,19 @@ add_library(lliby
 	binding/SymbolCell.cpp
 	binding/VectorCell.cpp
 	core/constinstances.cpp
+	core/dynamic.cpp
 	core/fatal.cpp
 	core/init.cpp
 	core/recorddata.cpp
+	dynamic/State.cpp
+	dynamic/ParameterProcedureCell.cpp
+	dynamic/init.cpp
 	stdlib/generated/predicates.cpp
 	stdlib/boolean.cpp
 	stdlib/bytevector.cpp
 	stdlib/character.cpp
 	stdlib/control.cpp
+	stdlib/dynamic.cpp
 	stdlib/eqv.cpp
 	stdlib/list.cpp
 	stdlib/number.cpp

@@ -1,6 +1,7 @@
 #include <clocale>
 
 #include "alloc/allocator.h"
+#include "dynamic/init.h"
 
 extern "C"
 {
@@ -15,6 +16,7 @@ void lliby_init()
 	std::setlocale(LC_ALL, "");
 
 	alloc::init();
+	dynamic::init();
 }
 
 }

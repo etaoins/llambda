@@ -7,6 +7,12 @@
 
 namespace lliby
 {
+
+namespace dynamic
+{
+	class State;
+}
+
 namespace alloc
 {
 
@@ -19,6 +25,13 @@ namespace alloc
  *                     next.
  */
 void visitCell(DatumCell **rootCellRef, std::function<bool(DatumCell **)> &visitor);
+
+/**
+ * Visits all the cells referenced by a dynamic state
+ *
+ * This presumes the caller is updating the state's parameters
+ */
+void visitDynamicState(dynamic::State *state, std::function<bool(DatumCell **)> &visitor);
 
 #ifndef NDEBUG
 /**

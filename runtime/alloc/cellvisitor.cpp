@@ -21,6 +21,8 @@
 
 #include "classmap/RecordClassMap.h"
 
+#include "dynamic/State.h"
+
 #include "writer/ExternalFormDatumWriter.h"
 
 
@@ -93,6 +95,50 @@ void visitCell(DatumCell **rootCellRef, std::function<bool(DatumCell **)> &visit
 	else
 	{
 		_lliby_fatal("Unknown cell type encountered attempting to visit children", *rootCellRef);
+	}
+}
+
+void visitDynamicState(dynamic::State *state, std::function<bool(DatumCell **)> &visitor)
+{
+	dynamic::State::ParameterValueMap rebuiltMap;
+	const size_t valueCount = state->selfValues().size();
+
+	// Visit the before and after procedures
+	if (state->beforeProcedure())
+	{
+		visitCell(reinterpret_cast<DatumCell**>(state->beforeProcedureRef()), visitor);
+	}
+	
+	if (state->afterProcedure())
+	{
+		visitCell(reinterpret_cast<DatumCell**>(state->afterProcedureRef()), visitor);
+	}
+
+	if (valueCount == 0)
+	{
+		// Nothing more to do - this is probably a state created by (dynamic-wind)
+		return;
+	}
+
+	// The new map will be the exact size of the old map
+	rebuiltMap.reserve(valueCount);
+
+	for(auto valueItem : state->selfValues())
+	{
+		dynamic::ParameterProcedureCell *paramProc = valueItem.first;
+		DatumCell *value = valueItem.second;
+
+		visitCell(reinterpret_cast<DatumCell**>(&paramProc), visitor);
+		visitCell(reinterpret_cast<DatumCell**>(&value), visitor);
+
+		rebuiltMap[paramProc] = value;
+	}
+
+	state->setSelfValues(rebuiltMap);
+
+	if (state->parent() != nullptr)
+	{
+		visitDynamicState(state->parent(), visitor);
 	}
 }
 

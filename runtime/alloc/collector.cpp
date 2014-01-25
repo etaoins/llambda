@@ -7,7 +7,10 @@
 #include "alloc/GarbageState.h"
 #include "alloc/AllocCell.h"
 #include "alloc/cellvisitor.h"
+
 #include "binding/DatumCell.h"
+
+#include "dynamic/State.h"
 
 extern "C"
 {
@@ -157,6 +160,12 @@ void* collect(void *fromBase, void *fromEnd, void *toBase)
 			}
 		}
 	}
+
+	// Visit the dynamic state
+	// XXX: In theory if a parameter function isn't referenced it's safe to remove it from all states. However, because
+	// parameter values can themselves reference other parameter functions this gets extremely tricky.  Parameterization
+	// of an unreachable parameter seems like too much of a corner case to justify the additional code complexity.
+	visitDynamicState(dynamic::State::activeState(), rootVisitor);
 
 	// Visit each runtime weak ref
 	std::function<bool (DatumCell**)> weakRefFunction = weakRefVisitor;

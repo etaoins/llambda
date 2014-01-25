@@ -27,7 +27,7 @@ namespace
 {
 using namespace lliby;
 	
-EmptyListCell *EmptyList = const_cast<EmptyListCell*>(EmptyListCell::instance());
+EmptyListCell *EmptyList = EmptyListCell::instance();
 
 template<class T>
 void testNonRecursiveGc(T* (*constructor)())
@@ -267,7 +267,7 @@ void testRecordLikeGc()
 	
 	{
 		// Unset the first value
-		data->cell0 = const_cast<EmptyListCell*>(EmptyListCell::instance());
+		data->cell0 = EmptyList;
 		alloc::forceCollection();
 
 		ASSERT_TRUE(value0.isNull());
@@ -276,7 +276,7 @@ void testRecordLikeGc()
 	
 	{
 		// Unset the second value
-		data->cell1 = const_cast<EmptyListCell*>(EmptyListCell::instance());
+		data->cell1 = EmptyList;
 		alloc::forceCollection();
 
 		ASSERT_TRUE(value0.isNull());

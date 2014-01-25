@@ -17,9 +17,12 @@ public:
 	{
 	}
 	
-	static const EmptyListCell* instance()
+	static EmptyListCell* instance()
 	{
-		return &lliby_empty_list_value;
+		// There is nothing inside EmptyListCell which is modifiable so const doesn't mean anything
+		// Be friendly and allow functions expecting non-const to work with the empty list singleton without sprinkling
+		// const casts throughout the code
+		return const_cast<EmptyListCell*>(&lliby_empty_list_value);
 	}
 };
 

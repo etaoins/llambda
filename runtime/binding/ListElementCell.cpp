@@ -11,7 +11,7 @@ namespace lliby
 
 ListElementCell* ListElementCell::createProperList(std::vector<DatumCell*> &elements)
 {
-	auto list = createList(elements, const_cast<EmptyListCell*>(EmptyListCell::instance()));
+	auto list = createList(elements, EmptyListCell::instance());
 
 	return static_cast<ListElementCell*>(list);
 }

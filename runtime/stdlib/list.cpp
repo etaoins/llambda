@@ -90,7 +90,7 @@ std::uint32_t lliby_length(const ListElementCell *head)
 
 ListElementCell* lliby_make_list(std::uint32_t count, DatumCell *fill)
 {
-	ListElementCell *cdr = const_cast<EmptyListCell*>(EmptyListCell::instance());
+	ListElementCell *cdr = EmptyListCell::instance();
 
 	// Allocate all the new pairs at once
 	alloc::RangeAlloc allocation(alloc::allocateRange(count));
@@ -175,7 +175,7 @@ DatumCell* lliby_append(ListElementCell *argHead)
 	if (argCount == 0)
 	{
 		// Nothing to append
-		return const_cast<EmptyListCell*>(EmptyListCell::instance());
+		return EmptyListCell::instance();
 	}
 
 	// XXX: This is not very efficient
