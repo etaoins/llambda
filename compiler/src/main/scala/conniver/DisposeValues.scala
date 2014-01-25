@@ -12,39 +12,33 @@ import io.llambda.compiler.planner.{step => ps}
   */
 object DisposeValues extends FunctionConniver {
   private def discardUnusedValues(argValues : Set[ps.TempValue], reverseSteps : List[ps.Step], usedValues : Set[ps.TempValue]) : List[ps.Step] = reverseSteps match {
-    case (condBranch @ ps.CondBranch(result, test, trueSteps, trueValue, falseSteps, falseValue)) :: reverseTail =>
-      // Step to dispose the test if it's no longer used
-      // This will be placed at the beginning of both branches
-      val disposeTestOption = if (!usedValues.contains(test)) {
-        Some(ps.DisposeValue(test))
-      }
-      else {
-        None
+    case (nestingStep : ps.NestingStep) :: reverseTail =>
+      // Dispose of the outer input values if they're not longer user
+      // These will be placed at the beginning of all branches
+      val unusedInputValues = nestingStep.outerInputValues.filter(!usedValues.contains(_))
+      val disposeInputSteps = unusedInputValues.toList.map { unusedValue =>
+        ps.DisposeValue(unusedValue)
       }
 
-      // Step to dispose the result if it's unused
-      // This will be placed after the CondBranch
-      val disposeResultOption = if (!usedValues.contains(result)) {
-        Some(ps.DisposeValue(result))
-      }
-      else {
-        None
+      // Step to dispose the result outputs if they're unused
+      // This will be placed after the step itself
+      val unusedOutputValues = nestingStep.outputValues.filter(!usedValues.contains(_))
+      val disposeOutputSteps = unusedOutputValues.toList.map { unusedValue =>
+        ps.DisposeValue(unusedValue)
       }
 
       // Recurse down the branches
-      // Remove the argValues or else we'll "helpfully" try to dispose at
-      // them at the top of the branches
-      val newTrueSteps = disposeTestOption.toList ++
-        discardUnusedValues(Set(), trueSteps.reverse, usedValues + trueValue).reverse
+      val newStep = nestingStep.mapInnerBranches { (branchSteps, outputValue) =>
+        // Pass the unused input values as argument values
+        // If they're not used within the branch they'll be disposed at the top of it
+        discardUnusedValues(unusedInputValues, branchSteps.reverse, usedValues + outputValue).reverse
+      }
 
-      val newFalseSteps = disposeTestOption.toList ++
-        discardUnusedValues(Set(), falseSteps.reverse, usedValues + falseValue).reverse
-
-      val newUsedValues = condBranch.inputValues ++ usedValues 
+      val newUsedValues = nestingStep.inputValues ++ usedValues 
 
       // NB this is is reverse order
-      disposeResultOption.toList ++
-        List(ps.CondBranch(result, test, newTrueSteps, trueValue, newFalseSteps, falseValue)) ++
+      disposeOutputSteps ++
+        List(newStep) ++
         discardUnusedValues(argValues, reverseTail, newUsedValues)
 
     case (invoke @ ps.Invoke(resultOption, signature, entryPoint, arguments)) :: reverseTail =>

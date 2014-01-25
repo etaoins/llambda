@@ -508,4 +508,59 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
       ))
     )
   }
+  
+  test("parameterize with no arguments fails") {
+    intercept[BadSpecialFormException] {
+      expressionFor("""(parameterize)""")
+    }
+  }
+  
+  test("parameterize with three valued parameter fails") {
+    intercept[BadSpecialFormException] {
+      expressionFor("""(parameterize (('param 'value 'extra)) #t)""")
+    }
+  }
+
+  test("parameterize with no parameters") {
+    assert(expressionFor("""(parameterize () #t)""") ===
+      et.Parameterize(
+        Nil,
+        et.Literal(ast.BooleanLiteral(true))
+      )
+    )
+  }
+  
+  test("parameterize with two parameters") {
+    assert(expressionFor("""(parameterize (('param1 'value1) ('param2 'value2)) #t)""") ===
+      et.Parameterize(
+        List(
+          (et.Literal(ast.Symbol("param1")), et.Literal(ast.Symbol("value1"))),
+          (et.Literal(ast.Symbol("param2")), et.Literal(ast.Symbol("value2")))
+        ),
+        et.Literal(ast.BooleanLiteral(true))
+      )
+    )
+  }
+  
+  test("parameterize with multiple body expressions") {
+    assert(expressionFor("""(parameterize (('param1 'value1)) 1 2 3)""") ===
+      et.Parameterize(
+        List(
+          (et.Literal(ast.Symbol("param1")), et.Literal(ast.Symbol("value1")))
+        ),
+        et.Begin(List(
+          et.Literal(ast.IntegerLiteral(1)),
+          et.Literal(ast.IntegerLiteral(2)),
+          et.Literal(ast.IntegerLiteral(3))
+        ))
+      )
+    )
+  }
+  
+  test("parameterize introduces a body content") {
+    inside(expressionFor("""(parameterize () (define a 1))""")) { 
+      case et.Parameterize(Nil, et.Bind(_)) =>
+        // Checks out
+    }
+  }
 }

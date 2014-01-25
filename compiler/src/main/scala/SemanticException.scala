@@ -75,3 +75,5 @@ trait IncompatibleArityExceptionLike extends SemanticException {
   val semanticErrorType = "incompatible arity"
 }
 class IncompatibleArityException(located : SourceLocated, message : String) extends LocatedSemanticException(located, message) with IncompatibleArityExceptionLike 
+
+class DefinitionOutsideTopLevelException(located : SourceLocated) extends BadSpecialFormException(located, "Definitions can only be introduced in at the outermost level or at the beginning of a body") 

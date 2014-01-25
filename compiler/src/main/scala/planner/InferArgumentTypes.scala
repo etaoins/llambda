@@ -17,8 +17,10 @@ object InferArgumentTypes {
   )
 
   private def stepCanTerminate(step : ps.Step) : Boolean = step match {
-    case ps.CondBranch(_, _, trueSteps, _, falseSteps, _) =>
-      trueSteps.exists(stepCanTerminate(_)) || falseSteps.exists(stepCanTerminate(_))
+    case nestingStep : ps.NestingStep =>
+      nestingStep.innerBranches.exists { branch =>
+        branch.exists(stepCanTerminate(_))
+      }
 
     case _ : ps.Return =>
       // This the only actual terminating instruction
@@ -52,9 +54,13 @@ object InferArgumentTypes {
           steps=supercastStep :: tailSteps 
         )
 
-      case (branchStep : ps.CondBranch) :: tailSteps if stepCanTerminate(branchStep) =>
+      case (nestingStep : ps.NestingStep) :: tailSteps if stepCanTerminate(nestingStep) =>
         // If one side of the branch terminates then we can't be sure the cast
         // to subtype will be unconditionally executed.
+
+        // If the nesting step in an exception control structure all some of the
+        // steps may not be executed even if they're only one branch
+
         abortRetyping
 
       case userStep :: tailSteps if userStep.inputValues.contains(argValue) =>

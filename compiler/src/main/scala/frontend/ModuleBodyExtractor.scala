@@ -7,6 +7,8 @@ import llambda.compiler.{valuetype => vt}
 import collection.mutable.ListBuffer
 
 class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) {
+  private case class ScopedArgument(symbol : sst.ScopedSymbol, boundValue : StorageLocation)
+
   private def uniqueScopes(datum : sst.ScopedDatum) : Set[Scope] = {
     datum match {
       case sst.ScopedPair(car, cdr) => uniqueScopes(car) ++ uniqueScopes(cdr)
@@ -36,31 +38,23 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
     }).assignLocationFrom(datum)
   }
 
-  private def createLambda(fixedArgData : List[sst.ScopedDatum], restArgDatum : Option[sst.ScopedSymbol], definition : List[sst.ScopedDatum]) : et.Lambda = {
-    // Create our actual procedure arguments
-    // These unique identify the argument independently of its binding at a
-    // given time
-    case class ScopedArgument(symbol : sst.ScopedSymbol, boundValue : StorageLocation)
+  private def sequenceExpressions(exprs : List[et.Expression]) : et.Expression = exprs match {
+    // Wrap our expressions in an et.Begin unless there's exactly one
+    // This isn't required but produces more readable ETs and unit tests
+    case singleValue :: Nil => 
+      singleValue
+    case otherValues =>
+      et.Begin(otherValues)
+  }
 
-    // Determine our arguments
-    val fixedArgs = fixedArgData.map {
-      case symbol : sst.ScopedSymbol => ScopedArgument(symbol, new StorageLocation(symbol.name))
-      case datum => throw new BadSpecialFormException(datum, "Symbol expected")
-    }
-
-    val restArg = restArgDatum.map { scopedSymbol  =>
-      ScopedArgument(scopedSymbol, new StorageLocation(scopedSymbol.name))
-    }
-    
-    val allArgs = fixedArgs ++ restArg.toList
-
+  private def extractBodyDefinition(arguments : List[ScopedArgument], definition : List[sst.ScopedDatum]) : et.Expression = {
     // Find all the scopes in the definition
     val definitionScopes = definition.foldLeft(Set[Scope]()) { (scopes, datum) =>
       scopes ++ uniqueScopes(datum)
     }
 
     // Introduce new scopes with our arguments injected in to them
-    val argsForScope = allArgs groupBy(_.symbol.scope)
+    val argsForScope = arguments groupBy(_.symbol.scope)
       
     val scopeMapping = (definitionScopes map { outerScope => 
       val scopeArgs = argsForScope.getOrElse(outerScope, List())
@@ -87,10 +81,10 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
 
     // Rescope our definition
     val scopedDefinition = definition.map(rescope(_, scopeMapping))
-
+    
+    // Split our definition is to (define)s and a body
     val defineBuilder = new ListBuffer[ParsedDefine]
 
-    // Split our definition is to (define)s and a body
     val bodyData = scopedDefinition.dropWhile { datum =>
       parseDefineDatum(datum) match {
         case Some(define) =>
@@ -135,15 +129,30 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
       case _ => et.Bind(bindings) :: bodyExprs
     }
 
-    // Wrap our expressions in an et.Begin unless there's exactly one
-    // This isn't required but produces more readable ETs and unit tests
-    val bodyExpression = boundExprs match {
-      case singleValue :: Nil => 
-        singleValue
-      case otherValues =>
-        et.Begin(boundExprs)
+    // Collect our expression list in to a single expression
+    sequenceExpressions(boundExprs)
+  }
+
+  private def createLambda(fixedArgData : List[sst.ScopedDatum], restArgDatum : Option[sst.ScopedSymbol], definition : List[sst.ScopedDatum]) : et.Lambda = {
+    // Create our actual procedure arguments
+    // These unique identify the argument independently of its binding at a
+    // given time
+
+    // Determine our arguments
+    val fixedArgs = fixedArgData.map {
+      case symbol : sst.ScopedSymbol => ScopedArgument(symbol, new StorageLocation(symbol.name))
+      case datum => throw new BadSpecialFormException(datum, "Symbol expected")
     }
-      
+
+    val restArg = restArgDatum.map { scopedSymbol  =>
+      ScopedArgument(scopedSymbol, new StorageLocation(scopedSymbol.name))
+    }
+    
+    val allArgs = fixedArgs ++ restArg.toList
+
+    // Extract the body 
+    val bodyExpression = extractBodyDefinition(allArgs, definition)
+
     et.Lambda(fixedArgs.map(_.boundValue), restArg.map(_.boundValue), bodyExpression)
   }
 
@@ -236,6 +245,22 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
 
         et.Begin(expandedData.map(extractExpression))
 
+      case (PrimitiveExpressions.Parameterize, sst.ScopedProperList(parameterData) :: bodyData) =>
+        val parameters = parameterData map { parameterDatum =>
+          parameterDatum match {
+            case sst.ScopedProperList(List(parameter, value)) =>
+              (extractExpression(parameter), extractExpression(value))
+
+            case _ =>
+              throw new BadSpecialFormException(parameterDatum, "Parameters must be defined as (parameter value)")
+          }
+        }
+
+        et.Parameterize(
+          parameterValues=parameters,
+          extractBodyDefinition(Nil, bodyData)
+        )
+
       case otherPrimitive =>
         throw new BadSpecialFormException(appliedSymbol, "Invalid primitive syntax")
     }
@@ -304,7 +329,7 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
           // Try to parse this as a type of definition
           parseDefine(otherBoundValue, scopedSymbol, operands) match {
             case Some(_) if !atOutermostLevel=>
-              throw new BadSpecialFormException(scopedSymbol, "Definitions can only be introduced in at the outermost level or at the beginning of a body")
+              throw new DefinitionOutsideTopLevelException(scopedSymbol)
 
             case Some(ParsedVarDefine(symbol, boundValue, exprBlock)) =>
               // There's a wart in Scheme that allows a top-level (define) to become

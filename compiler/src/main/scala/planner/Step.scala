@@ -47,6 +47,19 @@ sealed trait CellConsumer extends Step {
   def withNewAllocation(allocation : TempAllocation, allocIndex : Int) : Step
 }
 
+/** Step containing inner steps 
+ *
+ * These are typically used for steps that need to be aware of exceptions or
+ * continuations or for conditionals
+ */
+sealed trait NestingStep extends Step {
+  val outerInputValues : Set[TempValue]
+  val innerBranches : List[List[Step]]
+
+  def mapInnerBranches(mapper : (List[Step], TempValue) => List[Step]) : NestingStep 
+}
+
+
 /** Argument passed to invoke
   *
   * @param  tempValue  Value to pass as the argument
@@ -95,9 +108,15 @@ case class DisposeValue(value : TempValue) extends Step {
   * @param falseSteps  steps to perform if the condition is false
   * @param falseValue  value to place in result after performing falseSteps
   */
-case class CondBranch(result : TempValue, test : TempValue, trueSteps : List[Step], trueValue : TempValue, falseSteps : List[Step], falseValue : TempValue) extends Step {
+case class CondBranch(result : TempValue, test : TempValue, trueSteps : List[Step], trueValue : TempValue, falseSteps : List[Step], falseValue : TempValue) extends NestingStep {
   lazy val inputValues = Set(test) ++ trueSteps.flatMap(_.inputValues) ++ falseSteps.flatMap(_.inputValues)
   lazy val outputValues = Set(result)
+
+  lazy val outerInputValues = Set(test)
+  lazy val innerBranches = List(trueSteps, falseSteps)
+
+  def mapInnerBranches(mapper : (List[Step], TempValue) => List[Step]) =
+    CondBranch(result, test, mapper(trueSteps, trueValue), trueValue, mapper(falseSteps, falseValue), falseValue)
 }
 
 /** Tests if a cell is of a given type */
@@ -372,4 +391,19 @@ case class StoreRecordLikeData(result : TempValue, recordCell : TempValue, recor
 case class SetProcedureEntryPoint(procedureCell : TempValue, entryPoint : TempValue) extends Step {
   lazy val inputValues = Set(procedureCell, entryPoint)
   val outputValues = Set[TempValue]()
+}
+
+/** Executes the inner steps with a new dynamic environment containing the passed parameter values */
+case class Parameterize(result : TempValue, parameterValues : List[(TempValue, TempValue)], steps : List[Step], innerResult : TempValue) extends NestingStep {
+  lazy val inputValues = steps.flatMap(_.inputValues).toSet ++ outerInputValues
+  lazy val outputValues = Set(result)  
+  
+  lazy val outerInputValues = (parameterValues.flatMap { case (parameter, value) =>
+    List(parameter, value)
+  }).toSet
+
+  lazy val innerBranches = List(steps)
+
+  def mapInnerBranches(mapper : (List[Step], TempValue) => List[Step]) =
+    Parameterize(result, parameterValues, mapper(steps, innerResult), innerResult)
 }

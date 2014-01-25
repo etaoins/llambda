@@ -259,5 +259,8 @@ object GenPlanStep {
     case ps.DisposeValue(disposedTemp) =>
       state.copy(liveTemps=state.liveTemps - disposedTemp)
 
+    case parameterize : ps.Parameterize =>
+      GenParameterize(state, plannedSymbols, typeGenerator)(parameterize) 
+
  }
 }

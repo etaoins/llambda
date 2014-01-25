@@ -102,3 +102,17 @@ case class Cast(valueExpr : Expression, targetType : vt.ValueType) extends Expre
   def map(f : Expression => Expression) : et.Cast =
     et.Cast(f(valueExpr), targetType).assignLocationFrom(this)
 }
+
+case class Parameterize(parameterValues : List[(Expression, Expression)], body : Expression) extends Expression {
+  lazy val subexpressions = body :: parameterValues.flatMap { case (parameter, value) =>
+    List(parameter, value)
+  }
+
+  def map(f : Expression => Expression) : et.Parameterize = {
+    val newParams = parameterValues map { case (parameter, value) =>
+      (f(parameter), f(value))
+    }
+
+    et.Parameterize(newParams, f(body))
+  }
+}

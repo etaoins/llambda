@@ -293,6 +293,36 @@ private[planner] object PlanExpression {
 
       case et.Lambda(fixedArgs, restArg, body) =>
         PlanLambda(initialState, plan)(fixedArgs, restArg, body, sourceNameHint)
+
+      case et.Parameterize(parameterValues, innerExpr) => 
+        val parameterValueTemps = new mutable.ListBuffer[(ps.TempValue, ps.TempValue)]
+
+        val postValueState = parameterValues.foldLeft(initialState) { case (state, (parameterExpr, valueExpr)) =>
+          val parameterResult = apply(state)(parameterExpr)
+          val valueResult = apply(parameterResult.state)(valueExpr)
+
+          val parameterTemp = parameterResult.value.toTempValue(vt.IntrinsicCellType(ct.ProcedureCell))
+          val valueTemp = valueResult.value.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
+
+          parameterValueTemps += ((parameterTemp, valueTemp))
+
+          valueResult.state
+        }
+
+        val innerWriter = plan.forkPlan() 
+        val innerValue = apply(postValueState)(innerExpr)(planConfig, innerWriter).value
+
+        // XXX: It'd be nice if we could defer this
+        val innerTempType = innerValue.preferredRepresentation
+        val innerTemp = innerValue.toTempValue(innerTempType)
+
+        val outerTemp = new ps.TempValue(innerTempType.isGcManaged)
+        plan.steps += ps.Parameterize(outerTemp, parameterValueTemps.toList, innerWriter.steps.toList, innerTemp)
+
+        PlanResult(
+          state=postValueState,
+          value=TempValueToIntermediate(innerTempType, outerTemp)
+        )
     }  
   }
 }

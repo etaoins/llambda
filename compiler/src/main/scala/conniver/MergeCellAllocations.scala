@@ -26,7 +26,7 @@ object MergeCellAllocations extends FunctionConniver {
       // Kill this step completely; it's being merged in to the above allocation
       mergeAllAllocationsTo(tailSteps, allocation, allocOffset)
 
-    case ps.CondBranch(result, test, trueSteps, trueValue, falseSteps, falseValue) :: tailSteps =>
+    case (nestingStep : ps.NestingStep) :: tailSteps =>
       // It would only be possible to merge allocations across branches if they
       // both allocate the exact same number of cells. Otherwise one branch
       // would have extra uninitialized cells which would confuse our GC.
@@ -37,8 +37,11 @@ object MergeCellAllocations extends FunctionConniver {
       // Both of these seem to have high complexity for the benefit they'd create
 
       // Abort and switch back to searching both branches and the remaining steps
-      val steps = ps.CondBranch(result, test, findNextAllocation(trueSteps), trueValue, findNextAllocation(falseSteps), falseValue) ::
-        findNextAllocation(tailSteps)
+      val newStep = nestingStep.mapInnerBranches { (steps, _) =>
+        findNextAllocation(steps)
+      }
+
+      val steps = newStep :: findNextAllocation(tailSteps)
 
       MergeAllResult(
         requiredSize=allocOffset,
@@ -77,9 +80,12 @@ object MergeCellAllocations extends FunctionConniver {
 
       ps.AllocateCells(allocation, mergeResult.requiredSize) :: mergeResult.steps
 
-    case ps.CondBranch(result, test, trueSteps, trueValue, falseSteps, falseValue) :: tailSteps =>
-      ps.CondBranch(result, test, findNextAllocation(trueSteps), trueValue, findNextAllocation(falseSteps), falseValue) ::
-        findNextAllocation(tailSteps)
+    case (nestingStep : ps.NestingStep) :: tailSteps =>
+      val newStep = nestingStep.mapInnerBranches { (steps, _) =>
+        findNextAllocation(steps)
+      }
+
+      newStep :: findNextAllocation(tailSteps)
 
     case other :: tailSteps =>
       other :: findNextAllocation(tailSteps)
