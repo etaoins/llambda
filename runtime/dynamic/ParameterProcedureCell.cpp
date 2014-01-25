@@ -48,7 +48,7 @@ ParameterProcedureCell::ParameterProcedureCell(DatumCell *initialValue, Procedur
 	setRecordData(closure);
 }
 
-bool ParameterProcedureCell::isInstance(ProcedureCell *proc)
+bool ParameterProcedureCell::isInstance(const ProcedureCell *proc)
 {
 	return proc->recordClassId() == registeredClassId;
 }

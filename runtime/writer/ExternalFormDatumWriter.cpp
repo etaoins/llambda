@@ -20,6 +20,8 @@
 #include "binding/ProcedureCell.h"
 #include "binding/RecordCell.h"
 
+#include "dynamic/ParameterProcedureCell.h"
+
 namespace lliby
 {
 
@@ -284,11 +286,18 @@ void ExternalFormDatumWriter::renderProcedure(const ProcedureCell *proc)
 {
 	if (proc->capturesVariables())
 	{
-		m_outStream << "#!closure(" << reinterpret_cast<void*>(proc->entryPoint()) << ")";
+		if (dynamic::ParameterProcedureCell::isInstance(proc))
+		{
+			m_outStream << "#!procedure(parameter:" << proc << ")";
+		}
+		else
+		{
+			m_outStream << "#!procedure(closure:" << proc << "/" << reinterpret_cast<void*>(proc->entryPoint()) << ")";
+		}
 	}
 	else
 	{
-		m_outStream << "#!procedure(" << reinterpret_cast<void*>(proc->entryPoint()) << ")";
+		m_outStream << "#!procedure(emptyclosure/" << reinterpret_cast<void*>(proc->entryPoint()) << ")";
 	}
 
 }

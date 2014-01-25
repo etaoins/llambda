@@ -55,7 +55,7 @@ public:
 	/**
 	 * Returns true if the passed procedure cell is a ParameterProcedureCell
 	 */
-	static bool isInstance(ProcedureCell *);
+	static bool isInstance(const ProcedureCell *);
 
 	/**
 	 * Registers the record class for the parameter procedure's closure
