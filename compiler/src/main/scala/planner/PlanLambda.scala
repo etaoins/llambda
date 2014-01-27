@@ -40,6 +40,9 @@ private[planner] object PlanLambda {
     case et.VarRef(variable) =>
       Set(variable)
 
+    case et.MutateVar(variable, expr) =>
+      Set(variable) ++ findRefedVariables(expr)
+
     case otherExpr =>
       otherExpr.subexpressions.flatMap(findRefedVariables).toSet
   }

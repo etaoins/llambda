@@ -92,6 +92,15 @@
 
 	(list first-value second-value third-value fourth-value fifth-value sixth-value)))
 
+(define-test "setting mutable variable to procedure argument" (expect 10
+	(define outer-value 0)
+	(apply 
+	  (lambda (value-to-set)
+		 (set! outer-value value-to-set))
+	  '(10))
+
+	outer-value))
+
 (define-test "capturing another lambda" (expect (2 4 6)
 	(define (create-multiplier factor)
 	  (lambda (value)
