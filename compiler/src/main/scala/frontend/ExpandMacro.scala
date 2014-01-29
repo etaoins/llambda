@@ -178,6 +178,7 @@ private[frontend] object ExpandMacro {
 
       case sst.ScopedPair(car, cdr) =>
         sst.ScopedPair(expandTemplate(car, rewrites), expandTemplate(cdr, rewrites))
+          .assignLocationFrom(template)
 
       case _ =>
         template
