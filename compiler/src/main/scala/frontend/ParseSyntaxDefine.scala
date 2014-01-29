@@ -2,7 +2,7 @@ package io.llambda.compiler.frontend
 import io.llambda
 
 import llambda.compiler.sst
-import llambda.compiler.{SyntaxRule, BoundSyntax} 
+import llambda.compiler.{SyntaxRule, BoundSyntax, BoundSyntaxLiteral, UnboundSyntaxLiteral} 
 import llambda.compiler.BadSpecialFormException
 
 private[frontend] object ParseSyntaxDefine {
@@ -12,7 +12,15 @@ private[frontend] object ParseSyntaxDefine {
                sst.ScopedSymbol(_, "syntax-rules") :: sst.ScopedProperList(literals) :: rules
              ) :: Nil =>
       val literalNames = literals.map { 
-        case sst.ScopedSymbol(_, name) => name
+        case symbol @ sst.ScopedSymbol(_, identifier) => 
+          symbol.resolveOpt match {
+            case Some(boundValue) =>
+              BoundSyntaxLiteral(boundValue)
+
+            case None =>
+              UnboundSyntaxLiteral(identifier)
+          }
+
         case nonSymbol => throw new BadSpecialFormException(nonSymbol, "Symbol expected in literal list")
       }
       

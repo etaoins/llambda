@@ -107,6 +107,37 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
            (for 1 foo 2)""")
     }
   }
+
+  test("literal operand identifiers don't match non-literal pattern identifiers") {
+    intercept[NoSyntaxRuleException] {
+      // "literal" should not "first-capture" 
+      expressionFor(
+        """(define-syntax literal-test
+           (syntax-rules (literal)
+             ((literal-test (first-capture literal))
+               first-capture)))
+           (literal-test (literal literal))""")
+    }
+  }
+  
+  test("operands bound to a value don't match unbound literals") {
+    val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
+    bodyFor(
+      """(define-syntax literal-test
+         (syntax-rules (literal)
+           ((literal-test (literal)) 
+             1)))"""
+    )(syntaxScope)
+
+    val expandScope = new Scope(collection.mutable.Map("literal-test" -> syntaxScope.get("literal-test").value), Some(primitiveScope))
+    intercept[NoSyntaxRuleException] {
+      bodyFor(
+        """(define literal 1)
+           (literal-test (literal))"""
+      )(expandScope)
+    }
+  }
   
   test("ellipsis can be a literal") {
     intercept[NoSyntaxRuleException] {

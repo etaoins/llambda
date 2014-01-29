@@ -21,23 +21,44 @@ private[frontend] object ExpandMacro {
     case sst.ScopedVectorLiteral(elements) => elements.toList.flatMap(findAllSymbols(_))
     case _ : sst.NonSymbolLeaf => Nil
   }
-  
-  private def matchNonRepeatingRule(literals : List[String], pattern : sst.ScopedDatum, operand : sst.ScopedDatum) : List[Rewrite] = {
+
+  private def literalMatchesDatum(literal : SyntaxLiteral, datum : sst.ScopedDatum) = datum match {
+    case scopedSymbol : sst.ScopedSymbol =>
+      (literal, scopedSymbol.resolveOpt) match {
+        case (BoundSyntaxLiteral(literalValue), Some(symbolValue)) =>
+          // They must resolve to the same value
+          literalValue == symbolValue
+
+        case (UnboundSyntaxLiteral(identifier), None) =>
+          // If they're both unbound they must have the same identifier
+          scopedSymbol.name == identifier
+        
+        case _ =>
+          false
+      }
+
+    case _ =>
+      // Non-symbols can't match literals
+      false
+  }
+
+  private def matchNonRepeatingRule(literals : List[SyntaxLiteral], pattern : sst.ScopedDatum, operand : sst.ScopedDatum) : List[Rewrite] = {
+    val patternLiteralOpt = literals.find(literalMatchesDatum(_, pattern))
+    val operandLiteralOpt = literals.find(literalMatchesDatum(_, operand))
+
+    if (patternLiteralOpt != operandLiteralOpt) {
+      // Either a pattern included a literal where the operand didn't or vice versa
+      throw new MatchFailedException
+    }
+    else if (patternLiteralOpt.isDefined) {
+      // Literals don't cause any rewrite rules
+      return Nil
+    }
+
     (pattern, operand) match {
       case (sst.ScopedSymbol(_, "_"), _) =>
         // They used a wildcard - ignore this
         Nil
-
-      case (sst.ScopedSymbol(_, patternIdent), 
-            sst.ScopedSymbol(_, operandIdent)) if literals.contains(patternIdent) =>
-        if (patternIdent == operandIdent) {
-          // The literal doesn't cause any rewrites. We just ignore it
-          Nil
-        }
-        else {
-          // They misused a literal - no match
-          throw new MatchFailedException
-        }
 
       case (sst.ScopedSymbol(patternScope, patternIdent), operand) =>
         List(SubstituteRewrite(patternScope, patternIdent, operand))
@@ -63,10 +84,10 @@ private[frontend] object ExpandMacro {
     }
   }
 
-  private def matchRule(literals : List[String], patterns : List[sst.ScopedDatum], operands : List[sst.ScopedDatum]) : List[Rewrite] = {
+  private def matchRule(literals : List[SyntaxLiteral], patterns : List[sst.ScopedDatum], operands : List[sst.ScopedDatum]) : List[Rewrite] = {
     (patterns, operands) match {
       case (subpattern :: sst.ScopedSymbol(_, "...") :: restPattern,
-            allOperands) if (!literals.contains("...")) =>
+            allOperands) if (!literals.contains(UnboundSyntaxLiteral("..."))) =>
 
         if (allOperands.length == restPattern.length) {
           val allSymbols = findAllSymbols(subpattern)
