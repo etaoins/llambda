@@ -19,7 +19,7 @@ object InferArgumentTypes {
   private def stepCanTerminate(step : ps.Step) : Boolean = step match {
     case nestingStep : ps.NestingStep =>
       nestingStep.innerBranches.exists { branch =>
-        branch.exists(stepCanTerminate(_))
+        branch._1.exists(stepCanTerminate(_))
       }
 
     case _ : ps.Return =>

@@ -54,7 +54,12 @@ sealed trait CellConsumer extends Step {
  */
 sealed trait NestingStep extends Step {
   val outerInputValues : Set[TempValue]
-  val innerBranches : List[List[Step]]
+  val innerBranches : List[(List[Step], TempValue)]
+  
+  lazy val inputValues =
+    outerInputValues ++
+    innerBranches.flatMap(_._1).flatMap(_.inputValues) ++
+    innerBranches.map(_._2)
 
   def mapInnerBranches(mapper : (List[Step], TempValue) => List[Step]) : NestingStep 
 }
@@ -109,11 +114,10 @@ case class DisposeValue(value : TempValue) extends Step {
   * @param falseValue  value to place in result after performing falseSteps
   */
 case class CondBranch(result : TempValue, test : TempValue, trueSteps : List[Step], trueValue : TempValue, falseSteps : List[Step], falseValue : TempValue) extends NestingStep {
-  lazy val inputValues = Set(test) ++ trueSteps.flatMap(_.inputValues) ++ falseSteps.flatMap(_.inputValues)
   lazy val outputValues = Set(result)
 
   lazy val outerInputValues = Set(test)
-  lazy val innerBranches = List(trueSteps, falseSteps)
+  lazy val innerBranches = List((trueSteps, trueValue), (falseSteps, falseValue))
 
   def mapInnerBranches(mapper : (List[Step], TempValue) => List[Step]) =
     CondBranch(result, test, mapper(trueSteps, trueValue), trueValue, mapper(falseSteps, falseValue), falseValue)
@@ -395,14 +399,13 @@ case class SetProcedureEntryPoint(procedureCell : TempValue, entryPoint : TempVa
 
 /** Executes the inner steps with a new dynamic environment containing the passed parameter values */
 case class Parameterize(result : TempValue, parameterValues : List[(TempValue, TempValue)], steps : List[Step], innerResult : TempValue) extends NestingStep {
-  lazy val inputValues = steps.flatMap(_.inputValues).toSet ++ outerInputValues
   lazy val outputValues = Set(result)  
   
   lazy val outerInputValues = (parameterValues.flatMap { case (parameter, value) =>
     List(parameter, value)
   }).toSet
 
-  lazy val innerBranches = List(steps)
+  lazy val innerBranches = List((steps, innerResult))
 
   def mapInnerBranches(mapper : (List[Step], TempValue) => List[Step]) =
     Parameterize(result, parameterValues, mapper(steps, innerResult), innerResult)
