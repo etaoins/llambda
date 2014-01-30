@@ -1,7 +1,7 @@
 package io.llambda.compiler
 import io.llambda
 
-import java.io.{File,FileOutputStream,ByteArrayInputStream}
+import java.io._
 import scala.io.Source
 import scala.language.postfixOps
 import scala.sys.process._
@@ -14,7 +14,7 @@ object Compiler {
     conniver.MergeCellAllocations
   )
 
-  private def compileLlvmIr(llvmIr : String, output : File, optimizeLevel : Int) {
+  private def startLlvmCompiler(llvmIrStream : InputStream, output : File, optimizeLevel : Int) : () => Int = {
     val optimizeArg = s"-O${optimizeLevel}"
 
     val stdlibArg = if (scala.util.Properties.isMac) {
@@ -33,18 +33,21 @@ object Compiler {
       List("-x", "none", "runtime/liblliby.a") ++
       List("-o", output.getAbsolutePath)
 
-    val llvmIrStream = new ByteArrayInputStream(llvmIr.getBytes("UTF-8"))
-
     val compilePipeline = if (optimizeLevel > 1) { 
       val optCmd = List("opt", optimizeArg)
+
       optCmd #< llvmIrStream #| llcCmd #| clangCmd
     }
     else {
       llcCmd #< llvmIrStream #| clangCmd
     }
 
-    if (compilePipeline.! != 0) {
-      throw new ExternalCompilerException
+    // Run the compiler pipeline in the background
+    val runningProcess = compilePipeline.run
+
+    // Return a function that will wait for the result of the compiler
+    () => {
+      runningProcess.exitValue()
     }
   }
   
@@ -55,10 +58,24 @@ object Compiler {
     compileData(SchemeParser.parseStringAsData(inputString), output, config)
 
   def compileData(data : List[ast.Datum], output : File, config : CompileConfig) : Unit = {
-    // Parse the program
+    // Create our output stream
+    val (outputStream, waitFunction) = if (config.emitLlvm) {
+      // Write the IR directly to disk
+      (new FileOutputStream(output), () => 0)
+    }
+    else {
+      val inputStream = new PipedInputStream
+      val outputStream = new PipedOutputStream(inputStream)
+
+      // Start the compiler in the background (threading!)
+      val waiter = startLlvmCompiler(inputStream, output, config.optimizeLevel)
+
+      (outputStream, waiter) 
+    }
+
+    // Prepare to extract
     val loader = new frontend.LibraryLoader(config.targetPlatform)
     val featureIdentifiers = FeatureIdentifiers(config.targetPlatform, config.extraFeatureIdents) 
-
 
     // Extract expressions
     val frontendConfig = frontend.FrontendConfig(
@@ -98,15 +115,14 @@ object Compiler {
 
     // Generate the LLVM IR
     val llvmIr = codegen.GenProgram(optimizedFunctions, config.targetPlatform, featureIdentifiers)
+    
+    // Write to the output stream
+    outputStream.write(llvmIr.getBytes("UTF-8"))
+    outputStream.close()
 
-    if (config.emitLlvm) {
-      // Write the IR directly to disk
-      val llvmIrOutStream = new FileOutputStream(output)
-      llvmIrOutStream.write(llvmIr.getBytes("UTF-8"))
-    }
-    else {
-      // Compile the IR using llc and clang++
-      compileLlvmIr(llvmIr, output, config.optimizeLevel)
+    // Wait for the compiler to finish
+    if (waitFunction() != 0) {
+      throw new ExternalCompilerException
     }
   }
 }
