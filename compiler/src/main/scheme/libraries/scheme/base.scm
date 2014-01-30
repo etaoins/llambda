@@ -111,7 +111,7 @@
 	  (define-r7rs equal? (native-function "lliby_is_equal" (<datum-cell> <datum-cell>) <bool>)))
 
 	(export number? complex? real? rational? exact? exact-integer? inexact? 
-	        finite? infinite? nan? exact inexact + - / *)
+	        finite? infinite? nan? exact inexact + - / * = < > <= >=)
 	(begin
 	  (define-r7rs number? (native-function "lliby_is_numeric" (<datum-cell>) <bool>))
 	  ; We only support real and rational numbers
@@ -133,7 +133,13 @@
 	  (define-r7rs + (native-function "lliby_add" <list-element-cell> <numeric-cell>))
 	  (define-r7rs - (native-function "lliby_sub" (<numeric-cell> . <list-element-cell>) <numeric-cell>))
 	  (define-r7rs * (native-function "lliby_mul" <list-element-cell> <numeric-cell>))
-	  (define-r7rs / (native-function "lliby_div" (<numeric-cell> . <list-element-cell>) <double>)))
+	  (define-r7rs / (native-function "lliby_div" (<numeric-cell> . <list-element-cell>) <double>))
+
+	  (define-r7rs = (native-function "lliby_numeric_equal" (<numeric-cell> <numeric-cell> . <list-element-cell>) <bool>))
+	  (define-r7rs < (native-function "lliby_numeric_lt" (<numeric-cell> <numeric-cell> . <list-element-cell>) <bool>))
+	  (define-r7rs > (native-function "lliby_numeric_gt" (<numeric-cell> <numeric-cell> . <list-element-cell>) <bool>))
+	  (define-r7rs <= (native-function "lliby_numeric_lte" (<numeric-cell> <numeric-cell> . <list-element-cell>) <bool>))
+	  (define-r7rs >= (native-function "lliby_numeric_gte" (<numeric-cell> <numeric-cell> . <list-element-cell>) <bool>)))
 
 	(export boolean? not boolean=?)
 	(begin

@@ -9,6 +9,90 @@
 
 using namespace lliby;
 
+namespace
+{
+	template<class ExactCompare, class InexactCompare>
+	bool numericCompare(NumericCell *value1, NumericCell *value2, ListElementCell *argHead, ExactCompare exactCompare, InexactCompare inexactCompare)
+	{
+		const ProperList<NumericCell> argList(argHead);
+
+		auto compareCells = [&] (NumericCell *number1, NumericCell *number2) -> bool
+		{
+			auto exactNumber1 = datum_cast<ExactIntegerCell>(number1);
+			auto exactNumber2 = datum_cast<ExactIntegerCell>(number2);
+
+			if (exactNumber1 && exactNumber2)
+			{
+				// Both cells are exact
+				return exactCompare(exactNumber1->value(), exactNumber2->value());
+			}
+			else if (!exactNumber1 && !exactNumber2)
+			{
+				// Both cells are inexact
+				auto inexactNumber1 = static_cast<InexactRationalCell*>(number1);
+				auto inexactNumber2 = static_cast<InexactRationalCell*>(number2);
+
+				return inexactCompare(inexactNumber1->value(), inexactNumber2->value());
+			}
+			else if (!exactNumber1 && exactNumber2)
+			{
+				auto inexactNumber1 = static_cast<InexactRationalCell*>(number1);
+
+				// Try to convert to exact
+				auto inexactNumber1AsExact = static_cast<std::int64_t>(inexactNumber1->value());
+				if (inexactNumber1->value() == inexactNumber1AsExact)
+				{
+					// Compare as exact
+					return exactCompare(inexactNumber1AsExact, exactNumber2->value());
+				}
+
+				// Compare as inexact
+				return inexactCompare(inexactNumber1->value(), exactNumber2->value());
+			}
+			else // if (exactNumber1 && !exactNumber2)
+			{
+				auto inexactNumber2 = static_cast<InexactRationalCell*>(number2);
+				
+				// Try to convert to exact
+				auto inexactNumber2AsExact = static_cast<std::int64_t>(inexactNumber2->value());
+				
+				if (inexactNumber2->value() == inexactNumber2AsExact)
+				{
+					// Compare as exact
+					return exactCompare(exactNumber1->value(), inexactNumber2AsExact);
+				}
+
+				// Compare as inexact
+				return inexactCompare(exactNumber1->value(), inexactNumber2->value());
+			}
+		};
+
+		if (!argList.isValid())
+		{
+			_lliby_fatal("Non-numeric passed to comparison function", argHead);
+		}
+
+		if (!compareCells(value1, value2))
+		{
+			return false;
+		}
+
+		NumericCell *prevValue = value2;
+
+		for(auto argListValue : argList)
+		{
+			if (!compareCells(prevValue, argListValue))
+			{
+				return false;
+			}
+
+			prevValue = argListValue;
+		}
+
+		return true;
+	}
+}
+
 extern "C"
 {
 
@@ -278,6 +362,41 @@ bool lliby_is_nan(NumericCell *value)
 		// Exact integers cannot be NaN
 		return false;
 	}
+}
+
+bool lliby_numeric_equal(NumericCell *value1, NumericCell *value2, ListElementCell *argHead)
+{
+	return numericCompare(value1, value2, argHead, 
+			[] (std::int64_t value1, int64_t value2) { return value1 == value2; },
+			[] (double value1, double value2) { return value1 == value2; });
+}
+
+bool lliby_numeric_lt(NumericCell *value1, NumericCell *value2, ListElementCell *argHead)
+{
+	return numericCompare(value1, value2, argHead, 
+			[] (std::int64_t value1, int64_t value2) { return value1 < value2; },
+			[] (double value1, double value2) { return value1 < value2; });
+}
+
+bool lliby_numeric_gt(NumericCell *value1, NumericCell *value2, ListElementCell *argHead)
+{
+	return numericCompare(value1, value2, argHead, 
+			[] (std::int64_t value1, int64_t value2) { return value1 > value2; },
+			[] (double value1, double value2) { return value1 > value2; });
+}
+
+bool lliby_numeric_lte(NumericCell *value1, NumericCell *value2, ListElementCell *argHead)
+{
+	return numericCompare(value1, value2, argHead, 
+			[] (std::int64_t value1, int64_t value2) { return value1 <= value2; },
+			[] (double value1, double value2) { return value1 <= value2; });
+}
+
+bool lliby_numeric_gte(NumericCell *value1, NumericCell *value2, ListElementCell *argHead)
+{
+	return numericCompare(value1, value2, argHead, 
+			[] (std::int64_t value1, int64_t value2) { return value1 >= value2; },
+			[] (double value1, double value2) { return value1 >= value2; });
 }
 
 }

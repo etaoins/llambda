@@ -210,3 +210,106 @@
 
 (define-test "dividing two exact numbers and one inexact number is inexact" (expect -64.0
 	(/ 128.0 -0.25 8)))
+
+(define-test "equality of two equal numbers is true" (expect #t
+	(= 4.0 4)))
+
+(define-test "equality of 0.0 and -0.0 is true" (expect #t
+	(= 0.0 -0.0)))
+
+(define-test "equality of three equal numbers is true" (expect #t
+	(= 4.0 4 4.0)))
+
+(define-test "equality of two numbers and boolean false is an error" (expect-failure
+	(= 4.0 4 #f)))
+
+(define-test "equality of two inequal numbers is false" (expect #f
+	(= 4.0 5.6)))
+
+(define-test "equality of three inequal numbers is false" (expect #f
+	(= 4.0 4 5.6)))
+
+(define-test "lesser than of two equal numbers is false" (expect #f
+	(< 4.0 4)))
+
+(define-test "lesser than of 0.0 and -0.0 is false" (expect #f
+	(< -0.0 0.0)))
+
+(define-test "lesser than of three equal numbers is false" (expect #f
+	(< 4.0 4 4.0)))
+
+(define-test "lesser than of two decreasing numbers is false" (expect #f
+	(< 5.6 4.0)))
+
+(define-test "lesser than of three decreasing numbers is false" (expect #f
+	(< 5.6 0 -4.5)))
+
+(define-test "lesser than of two increasing numbers is true" (expect #t
+	(< 4.0 5.6)))
+
+(define-test "lesser than of three increasing numbers is true" (expect #t
+	(< 4.0 4.5 5.6)))
+
+(define-test "greater than of two equal numbers is false" (expect #f
+	(> 4.0 4)))
+
+(define-test "greater than of 0.0 and -0.0 is false" (expect #f
+	(> -0.0 0.0)))
+
+(define-test "greater than of three equal numbers is false" (expect #f
+	(> 4.0 4 4.0)))
+
+(define-test "greater than of two decreasing numbers is true" (expect #t
+	(> 5.6 4.0)))
+
+(define-test "greater than of three decreasing numbers is true" (expect #t
+	(> 5.6 0 -4.5)))
+
+(define-test "greater than of two increasing numbers is false" (expect #f
+	(> 4.0 5.6)))
+
+(define-test "greater than of three increasing numbers is false" (expect #f
+	(> 4.0 4.5 5.6)))
+
+(define-test "lesser than or equal of two equal numbers is true" (expect #t
+	(<= 4.0 4)))
+
+(define-test "lesser than or equal of 0.0 and -0.0 is true" (expect #t
+	(<= -0.0 0.0)))
+
+(define-test "lesser than or equal of three equal numbers is true" (expect #t
+	(<= 4.0 4 4.0)))
+
+(define-test "lesser than or equal of two decreasing numbers is false" (expect #f
+	(<= 5.6 4.0)))
+
+(define-test "lesser than or equal of three decreasing numbers is false" (expect #f
+	(<= 5.6 0 -4.5)))
+
+(define-test "lesser than or equal of two increasing numbers is true" (expect #t
+	(<= 4.0 5.6)))
+
+(define-test "lesser than or equal of three increasing numbers is true" (expect #t
+	(<= 4.0 4.5 5.6)))
+
+(define-test "greater than or equal of two equal numbers is true" (expect #t
+	(>= 4.0 4)))
+
+(define-test "greater than or equal of 0.0 and -0.0 is true" (expect #t
+	(>= -0.0 0.0)))
+
+(define-test "greater than or equal of three equal numbers is true" (expect #t
+	(>= 4.0 4 4.0)))
+
+(define-test "greater than or equal of two decreasing numbers is true" (expect #t
+	(>= 5.6 4.0)))
+
+(define-test "greater than or equal of three decreasing numbers is true" (expect #t
+	(>= 5.6 0 -4.5)))
+
+(define-test "greater than or equal of two increasing numbers is false" (expect #f
+	(>= 4.0 5.6)))
+
+(define-test "greater than or equal of three increasing numbers is false" (expect #f
+	(>= 4.0 4.5 5.6)))
+
