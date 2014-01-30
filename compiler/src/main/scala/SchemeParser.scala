@@ -28,12 +28,14 @@ object SchemeParserDefinitions {
                               hexEscapePattern + "|" + 
                               lineContinuationPattern + 
                             ")"
+    
+  // Only build these once
+  private val HexEscape = hexEscapePattern.r
+  private val LineContinuation = lineContinuationPattern.r
+  private val EscapedQuote = "\\" + "\""
+  private val HexCharPattern = """#\\(?i)x([0-9a-z]+)"""r
 
   def unescapeString(rawString : String) : String = stringEscapePattern.r.replaceAllIn(rawString, { matchData =>
-    val HexEscape = hexEscapePattern.r
-    val LineContinuation = lineContinuationPattern.r
-    val EscapedQuote = "\\" + "\""
-
     matchData.matched match {
       case LineContinuation() => ""
       case other =>
@@ -57,6 +59,24 @@ object SchemeParserDefinitions {
     // Scheme allows trailing dots on exact integers
     val withoutTrailingDot = """\.$""".r.replaceFirstIn(literalStr, "")
     ast.IntegerLiteral(java.lang.Long.parseLong(withoutTrailingDot, base))
+  }
+
+  val parseCharacterLiteral : PartialFunction[String, ast.CharLiteral] = {
+    case """#\alarm"""     => ast.CharLiteral(0x07)
+    case """#\backspace""" => ast.CharLiteral(0x08)
+    case """#\delete"""    => ast.CharLiteral(0x7f)
+    case """#\escape"""    => ast.CharLiteral(0x1b)
+    case """#\newline"""   => ast.CharLiteral('\n')
+    case """#\null"""      => ast.CharLiteral(0x00)
+    case """#\return"""    => ast.CharLiteral(0x0d)
+    case """#\space"""     => ast.CharLiteral(' ')
+    case """#\tab"""       => ast.CharLiteral(0x09)
+
+    case HexCharPattern(hexits) =>
+      ast.CharLiteral(Integer.parseInt(hexits, 16).toChar)
+
+    case literalChar if literalChar.length == 3 =>
+      ast.CharLiteral(literalChar.charAt(2))
   }
 }
 
@@ -165,45 +185,7 @@ class SchemeParser(filename : Option[String]) extends RegexParsers {
     ast.Bytevector(byteStrs.map(Integer.parseInt(_).toShort).toVector) 
   }
 
-  def character = symbolicCharacter | hexNativeCharacter | literalCharacter
-
-  def symbolicCharacter = symbolicAlarm | symbolicBackspace | symbolicDelete |
-                          symbolicEscape | symbolicNewline | symbolicNull |
-                          symbolicReturn | symbolicSpace | symbolicTab
-
-  def symbolicAlarm =     """#\alarm"""     ^^^ ast.CharLiteral(0x07)
-  def symbolicBackspace = """#\backspace""" ^^^ ast.CharLiteral(0x08)
-  def symbolicDelete =    """#\delete"""    ^^^ ast.CharLiteral(0x7f)
-  def symbolicEscape =    """#\escape"""    ^^^ ast.CharLiteral(0x1b)
-  def symbolicNewline =   """#\newline"""   ^^^ ast.CharLiteral('\n')
-  def symbolicNull =      """#\null"""      ^^^ ast.CharLiteral(0x00)
-  def symbolicReturn =    """#\return"""    ^^^ ast.CharLiteral(0x0d)
-  def symbolicSpace =     """#\space"""     ^^^ ast.CharLiteral(' ')
-  def symbolicTab =       """#\tab"""       ^^^ ast.CharLiteral(0x09)
-
-  def hexNativeCharacter = """(?i)#\\x[0-9a-z]+""".r ^^ { literalStr =>
-    ast.CharLiteral(Integer.parseInt(literalStr.drop(3), 16).toChar)
-  }
-
-  def literalCharacter = literalSpace | literalAlphabeticCharacter | literalNonAlphabeticCharacter
-
-  // We need this explicitly so the parser doesn't treat it as whitespace
-  def literalSpace = """#\ """ ^^^ ast.CharLiteral(' ')
-
-  // Alphabetic literals cannot be followed by a character allowed in an
-  // identifier. This is to prevent unrecognized symbolic characters being
-  // treated as their first character followed by a symbol composed of the
-  // rest of their characters. For example, #\lambda would be treated as 
-  // #\l ambda without this rule.
-  def literalAlphabeticCharacter = """#\""" ~> ("""\p{IsAlphabetic}(?!""" + identifierCharacterPattern + ")").r ^^ { literalStr => 
-    ast.CharLiteral(literalStr.charAt(0)) 
-  }
-
-  // Non-alphabetic literals can be immediately followed by another token
-  // without whitespace
-  def literalNonAlphabeticCharacter = """#\""" ~> """[^\p{IsAlphabetic}]""".r ^^ { literalStr => 
-    ast.CharLiteral(literalStr.charAt(0)) 
-  }
+  def character = ("""#\\(""" + identifierPattern + """|.?)""").r ^? parseCharacterLiteral 
 
   def unit = "#!unit" ^^^ ast.UnitValue()
 
