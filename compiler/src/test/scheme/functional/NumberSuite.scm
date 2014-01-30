@@ -25,11 +25,56 @@
 (define-test "empty list is not rational" (expect #f
 	(rational? '())))
 
+(define-test "exact integer is complex" (expect #t
+	(complex? 4)))
+
+(define-test "inexact complex is complex" (expect #t
+	(complex? -5.0)))
+
+(define-test "empty list is not complex" (expect #f
+	(complex? '())))
+
 (define-test "3.0 is not exact" (expect #f
 	(exact? 3.0)))
 
 (define-test "3. is not inexact" (expect #f
 	(inexact? 3.)))
+
+(define-test "3 is finite" (expect #t
+	(finite? 3)))
+
+(define-test "4.5 is finite" (expect #t
+	(finite? 4.5)))
+
+(define-test "+inf.0 is not finite" (expect #f
+	(finite? +inf.0)))
+
+(define-test "+nan.0 is not finite" (expect #f
+	(finite? +nan.0)))
+
+(define-test "3 is not infinite" (expect #f
+	(infinite? 3)))
+
+(define-test "4.5 is not infinite" (expect #f
+	(infinite? 4.5)))
+
+(define-test "+inf.0 is infinite" (expect #t
+	(infinite? +inf.0)))
+
+(define-test "+nan.0 is not infinite" (expect #f
+	(infinite? +nan.0)))
+
+(define-test "3 is not NaN" (expect #f
+	(nan? 3)))
+
+(define-test "4.5 is not NaN" (expect #f
+	(nan? 4.5)))
+
+(define-test "+inf.0 is not NaN" (expect #f
+	(nan? +inf.0)))
+
+(define-test "+nan.0 is NaN" (expect #t
+	(nan? +nan.0)))
 
 (define-test "32 is an exact integer" (expect #t
 	(exact-integer? 32)))

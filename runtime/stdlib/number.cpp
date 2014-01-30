@@ -3,6 +3,8 @@
 #include "binding/InexactRationalCell.h"
 #include "binding/ProperList.h"
 
+#include <cmath>
+
 #include "core/fatal.h"
 
 using namespace lliby;
@@ -237,6 +239,45 @@ double lliby_div(NumericCell *startValue, ListElementCell *argHead)
 	}
 	
 	return currentValue;
+}
+
+bool lliby_is_finite(NumericCell *value)
+{
+	if (auto inexactRational = datum_cast<InexactRationalCell>(value))
+	{
+		return isfinite(inexactRational->value());
+	}
+	else
+	{
+		// Exact integers must be finite
+		return true;
+	}
+}
+
+bool lliby_is_infinite(NumericCell *value)
+{
+	if (auto inexactRational = datum_cast<InexactRationalCell>(value))
+	{
+		return isinf(inexactRational->value());
+	}
+	else
+	{
+		// Exact integers cannot be infinite
+		return false;
+	}
+}
+
+bool lliby_is_nan(NumericCell *value)
+{
+	if (auto inexactRational = datum_cast<InexactRationalCell>(value))
+	{
+		return isnan(inexactRational->value());
+	}
+	else
+	{
+		// Exact integers cannot be NaN
+		return false;
+	}
 }
 
 }

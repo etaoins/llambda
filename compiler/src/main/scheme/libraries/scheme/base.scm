@@ -110,16 +110,22 @@
 	  (define-r7rs eq? eqv?)
 	  (define-r7rs equal? (native-function "lliby_is_equal" (<datum-cell> <datum-cell>) <bool>)))
 
-	(export number? real? rational? exact? exact-integer? inexact? exact inexact + - / *)
+	(export number? complex? real? rational? exact? exact-integer? inexact? 
+	        finite? infinite? nan? exact inexact + - / *)
 	(begin
 	  (define-r7rs number? (native-function "lliby_is_numeric" (<datum-cell>) <bool>))
 	  ; We only support real and rational numbers
+	  (define-r7rs complex? number?)
 	  (define-r7rs real? number?)
 	  (define-r7rs rational? number?)
 	  
 	  (define-r7rs exact? (native-function "lliby_is_exact_integer" (<datum-cell>) <bool>))
 	  (define-r7rs exact-integer? exact?)
 	  (define-r7rs inexact? (native-function "lliby_is_inexact_rational" (<datum-cell>) <bool>))
+	  
+	  (define-r7rs finite? (native-function "lliby_is_finite" (<numeric-cell>) <bool>))
+	  (define-r7rs infinite? (native-function "lliby_is_infinite" (<numeric-cell>) <bool>))
+	  (define-r7rs nan? (native-function "lliby_is_nan" (<numeric-cell>) <bool>))
 	  
 	  (define-r7rs exact (native-function "lliby_exact" (<numeric-cell>) <int64>))
 	  (define-r7rs inexact (native-function "lliby_inexact" (<numeric-cell>) <double>))
