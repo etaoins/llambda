@@ -11,8 +11,7 @@ object GenParameterize {
   private val llibyDynamicenvPush = IrFunctionDecl(
     result=Result(VoidType),
     name="_lliby_dynamicenv_push",
-    arguments=Nil,
-    attributes=Set(NoUnwind)
+    arguments=Nil
   )
 
   private val llibyDynamicenvSetValue = IrFunctionDecl(
@@ -28,8 +27,7 @@ object GenParameterize {
 private val llibyDynamicenvPop = IrFunctionDecl(
     result=Result(VoidType),
     name="_lliby_dynamicenv_pop",
-    arguments=Nil,
-    attributes=Set(NoUnwind)
+    arguments=Nil
   )
 
   def apply(initialState : GenerationState, plannedSymbols : Set[String], typeGenerator : TypeGenerator)(step : ps.Parameterize) : GenerationState = step match {

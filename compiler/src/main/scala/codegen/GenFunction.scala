@@ -22,7 +22,6 @@ private[codegen] object GenFunction {
       namedArguments=namedIrArguments,
       name=nativeSymbol,
       linkage=Linkage.Internal,
-      attributes=Set(IrFunction.NoUnwind),
       gc=Some("shadow-stack")) 
 
     // Create a blank generation state with just our args

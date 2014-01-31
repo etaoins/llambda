@@ -11,8 +11,7 @@ object GenBoxing {
   private val llibyStringFromUtf8Decl = IrFunctionDecl(
     result=IrFunction.Result(PointerType(ct.StringCell.irType)),
     name="_lliby_string_from_utf8",
-    arguments=List(IrFunction.Argument(PointerType(IntegerType(8)))),
-    attributes=Set(IrFunction.NoUnwind)
+    arguments=List(IrFunction.Argument(PointerType(IntegerType(8))))
   )
 
   def apply(state : GenerationState)(boxStep : ps.BoxValue, nativeValue : IrValue) : IrValue = boxStep match {
