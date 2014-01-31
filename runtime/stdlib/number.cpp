@@ -29,14 +29,14 @@ namespace
 			else if (!exactNumber1 && !exactNumber2)
 			{
 				// Both cells are inexact
-				auto inexactNumber1 = static_cast<InexactRationalCell*>(number1);
-				auto inexactNumber2 = static_cast<InexactRationalCell*>(number2);
+				auto inexactNumber1 = datum_unchecked_cast<InexactRationalCell>(number1);
+				auto inexactNumber2 = datum_unchecked_cast<InexactRationalCell>(number2);
 
 				return inexactCompare(inexactNumber1->value(), inexactNumber2->value());
 			}
 			else if (!exactNumber1 && exactNumber2)
 			{
-				auto inexactNumber1 = static_cast<InexactRationalCell*>(number1);
+				auto inexactNumber1 = datum_unchecked_cast<InexactRationalCell>(number1);
 
 				// Try to convert to exact
 				auto inexactNumber1AsExact = static_cast<std::int64_t>(inexactNumber1->value());
@@ -51,7 +51,7 @@ namespace
 			}
 			else // if (exactNumber1 && !exactNumber2)
 			{
-				auto inexactNumber2 = static_cast<InexactRationalCell*>(number2);
+				auto inexactNumber2 = datum_unchecked_cast<InexactRationalCell>(number2);
 				
 				// Try to convert to exact
 				auto inexactNumber2AsExact = static_cast<std::int64_t>(inexactNumber2->value());
@@ -105,7 +105,7 @@ std::int64_t lliby_exact(NumericCell *numeric)
 	}
 
 	// This must be rational; we don't need a type check
-	auto inexactRational = static_cast<InexactRationalCell*>(numeric);
+	auto inexactRational = datum_unchecked_cast<InexactRationalCell>(numeric);
 
 	if (!inexactRational->isInteger())
 	{
@@ -124,7 +124,7 @@ double lliby_inexact(NumericCell *numeric)
 	}
 
 	// This must be an exact int; we don't need a type check
-	auto exactInt = static_cast<ExactIntegerCell*>(numeric);
+	auto exactInt = datum_unchecked_cast<ExactIntegerCell>(numeric);
 
 	// Cast to a double
 	double inexactValue = static_cast<double>(exactInt->value());
@@ -160,7 +160,7 @@ NumericCell *lliby_add(ListElementCell *argHead)
 		}
 		else
 		{
-			auto inexactRational = static_cast<InexactRationalCell*>(numeric);
+			auto inexactRational = datum_unchecked_cast<InexactRationalCell>(numeric);
 
 			inexactSum += inexactRational->value();
 			resultInexact = true;
@@ -198,7 +198,7 @@ NumericCell *lliby_mul(ListElementCell *argHead)
 		}
 		else
 		{
-			auto inexactRational = static_cast<InexactRationalCell*>(numeric);
+			auto inexactRational = datum_unchecked_cast<InexactRationalCell>(numeric);
 
 			inexactProduct *= inexactRational->value();
 			resultInexact = true;
@@ -242,7 +242,7 @@ NumericCell *lliby_sub(NumericCell *startValue, ListElementCell *argHead)
 	}
 	else
 	{
-		auto inexactRational = static_cast<InexactRationalCell*>(startValue);
+		auto inexactRational = datum_unchecked_cast<InexactRationalCell>(startValue);
 
 		if (argList.isEmpty())
 		{
@@ -263,7 +263,7 @@ NumericCell *lliby_sub(NumericCell *startValue, ListElementCell *argHead)
 		}
 		else
 		{
-			auto inexactRational = static_cast<InexactRationalCell*>(numeric);
+			auto inexactRational = datum_unchecked_cast<InexactRationalCell>(numeric);
 
 			inexactDifference -= inexactRational->value();
 			resultInexact = true;
@@ -297,7 +297,7 @@ double lliby_div(NumericCell *startValue, ListElementCell *argHead)
 	}
 	else
 	{
-		auto inexactRational = static_cast<InexactRationalCell*>(startValue);
+		auto inexactRational = datum_unchecked_cast<InexactRationalCell>(startValue);
 
 		currentValue = inexactRational->value();
 	}
@@ -316,7 +316,7 @@ double lliby_div(NumericCell *startValue, ListElementCell *argHead)
 		}
 		else
 		{
-			auto inexactRational = static_cast<InexactRationalCell*>(numeric);
+			auto inexactRational = datum_unchecked_cast<InexactRationalCell>(numeric);
 
 			currentValue /= inexactRational->value();
 		}

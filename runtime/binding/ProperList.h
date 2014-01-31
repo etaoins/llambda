@@ -21,7 +21,8 @@ public:
 		T* operator*() const
 		{
 			// ProperList verifies all the cars are of type T in its constructor
-			return reinterpret_cast<T*>(m_head->car());
+			auto pairHead = datum_unchecked_cast<const PairCell>(m_head);
+			return datum_unchecked_cast<T>(pairHead->car());
 		}
 
 		bool operator==(const ConstIterator &other) const
@@ -36,7 +37,9 @@ public:
 
 		ConstIterator& operator++()
 		{
-			m_head = static_cast<const PairCell*>(m_head->cdr());
+			auto pairHead = datum_unchecked_cast<const PairCell>(m_head);
+			m_head = datum_unchecked_cast<const ListElementCell>(pairHead->cdr());
+
 			return *this;
 		}
 		
@@ -49,11 +52,11 @@ public:
 
 	private:
 		explicit ConstIterator(const ListElementCell *head) :
-			m_head(static_cast<const PairCell*>(head))
+			m_head(head)
 		{
 		}
 		
-		const PairCell *m_head;
+		const ListElementCell *m_head;
 	};
 
 	explicit ProperList(const ListElementCell *head) :

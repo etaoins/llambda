@@ -59,7 +59,7 @@ DatumCell *lliby_apply(ProcedureCell *procedure, ListElementCell *argHead)
 			alloc::StrongRefRange<ProcedureCell> procedureRef(&procedure, 1);	
 
 			// We verified the final arg is a proper list so this must also be a proper list
-			procArgHead = static_cast<ListElementCell*>(ListElementCell::createList(standaloneArgs, finalListHead));
+			procArgHead = datum_unchecked_cast<ListElementCell>(ListElementCell::createList(standaloneArgs, finalListHead));
 		}
 	}
 

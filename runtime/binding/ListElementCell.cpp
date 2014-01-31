@@ -13,7 +13,7 @@ ListElementCell* ListElementCell::createProperList(std::vector<DatumCell*> &elem
 {
 	auto list = createList(elements, EmptyListCell::instance());
 
-	return static_cast<ListElementCell*>(list);
+	return datum_unchecked_cast<ListElementCell>(list);
 }
 
 DatumCell* ListElementCell::createList(std::vector<DatumCell*> &elements, DatumCell *tail)

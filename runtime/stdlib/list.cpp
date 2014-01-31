@@ -129,7 +129,7 @@ DatumCell* lliby_list_copy(DatumCell *sourceHead)
 	PairCell *destPair = destHead;
 
 	// We've counted our pairs so this has to be a pair
-	auto sourcePair = static_cast<const PairCell*>(sourceHeadRef.data());
+	auto sourcePair = datum_unchecked_cast<const PairCell>(sourceHeadRef.data());
 
 	// This is predecrement because the last pair is handled specially below this loop
 	while(--pairCount)
@@ -140,7 +140,7 @@ DatumCell* lliby_list_copy(DatumCell *sourceHead)
 		destPair++;
 
 		// Move to the next pair
-		sourcePair = static_cast<PairCell*>(sourcePair->cdr());
+		sourcePair = datum_unchecked_cast<PairCell>(sourcePair->cdr());
 	}
 	
 	// Place our last pair cdr'ed to the last cdr

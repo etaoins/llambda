@@ -2,6 +2,7 @@
 #define _LLIBY_BINDING_DATUMCELL_H
 
 #include <cstddef>
+#include <cassert>
 
 #include "alloc/GarbageState.h"
 #include "alloc/allocator.h"
@@ -83,6 +84,34 @@ inline DatumCell* datum_cast<DatumCell>(DatumCell *datumValue)
 
 template <>
 inline const DatumCell* datum_cast<DatumCell>(const DatumCell *datumValue)
+{
+	return datumValue;
+}
+
+template <class T>
+T* datum_unchecked_cast(DatumCell *datumValue)
+{
+	// In debug builds make sure this is of the correct type
+	assert(T::fromDatum(datumValue));
+	return static_cast<T*>(datumValue);
+}
+
+template <class T>
+const T* datum_unchecked_cast(const DatumCell *datumValue)
+{
+	// In debug builds make sure this is of the correct type
+	assert(T::fromDatum(datumValue));
+	return static_cast<T*>(datumValue);
+}
+
+template <>
+inline DatumCell* datum_unchecked_cast<DatumCell>(DatumCell *datumValue)
+{
+	return datumValue;
+}
+
+template <>
+inline const DatumCell* datum_unchecked_cast<DatumCell>(const DatumCell *datumValue)
 {
 	return datumValue;
 }
