@@ -59,14 +59,8 @@ endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall")
 
 # Enable C++11 and disable exceptions
-# Exceptions have two issues:
-# - C++ exceptions will not propagate correctly through Scheme code 
-# - When operator new is used Clang will generate unwind code referencing 
-#   operator delete. This has been explicitly removed from DatumCell so it
-#   causes link errors whenever operator new is used on a DatumCell subclass
 ADD_DEFINITIONS(
 	-std=c++11 
-	-fno-exceptions
 	)
 
 # Force colour output so Clang++ prints pretty errors in Ninja

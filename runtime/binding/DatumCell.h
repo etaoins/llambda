@@ -27,8 +27,12 @@ public:
 		return placement;
 	}
 
-	// We're garbage collected; don't allow delete
-	void operator delete(void *value) = delete;
+	void operator delete(void *value)
+	{
+		// Since exceptions are enabled the compiler will wants to implicitly
+		// call delete in some unwind paths. This isn't actually harmful as we'll
+		// eventually garbage collect the cell.
+	}
 
 	/**
 	 * Returns true if the other datum is equivalent to this one in the sense of
