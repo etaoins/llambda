@@ -8,23 +8,3 @@ public:
 		return (datum->typeId() == CellTypeId::ExactInteger) || (datum->typeId() == CellTypeId::InexactRational);
 	}
 
-	static NumericCell* fromDatum(DatumCell *datum)
-	{
-		if (isInstance(datum))
-		{
-			return static_cast<NumericCell*>(datum);
-		}
-
-		return nullptr;
-	}
-
-	static const NumericCell* fromDatum(const DatumCell *datum)
-	{
-		if (isInstance(datum))
-		{
-			return static_cast<const NumericCell*>(datum);
-		}
-
-		return nullptr;
-	}
-

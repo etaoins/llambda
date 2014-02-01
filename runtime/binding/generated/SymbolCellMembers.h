@@ -19,26 +19,6 @@ public:
 		return datum->typeId() == CellTypeId::Symbol;
 	}
 
-	static SymbolCell* fromDatum(DatumCell *datum)
-	{
-		if (isInstance(datum))
-		{
-			return static_cast<SymbolCell*>(datum);
-		}
-
-		return nullptr;
-	}
-
-	static const SymbolCell* fromDatum(const DatumCell *datum)
-	{
-		if (isInstance(datum))
-		{
-			return static_cast<const SymbolCell*>(datum);
-		}
-
-		return nullptr;
-	}
-
 private:
 	std::uint32_t m_charLength;
 	std::uint32_t m_byteLength;

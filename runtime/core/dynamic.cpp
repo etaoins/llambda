@@ -20,12 +20,13 @@ void _lliby_dynamicenv_push()
 
 void _lliby_dynamicenv_set_value(ProcedureCell *procCell, DatumCell *value)
 {
-	if (!ParameterProcedureCell::isInstance(procCell))
+	auto paramCell = datum_cast<ParameterProcedureCell>(procCell);
+
+	if (paramCell == nullptr)
 	{
 		_lliby_fatal("Attempted to parameterize non-parameter", procCell);
 	}
 
-	auto paramCell = static_cast<ParameterProcedureCell*>(procCell);
 	dynamic::State::activeState()->setValueForParameter(paramCell, value);
 }
 

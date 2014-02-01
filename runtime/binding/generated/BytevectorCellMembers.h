@@ -19,26 +19,6 @@ public:
 		return datum->typeId() == CellTypeId::Bytevector;
 	}
 
-	static BytevectorCell* fromDatum(DatumCell *datum)
-	{
-		if (isInstance(datum))
-		{
-			return static_cast<BytevectorCell*>(datum);
-		}
-
-		return nullptr;
-	}
-
-	static const BytevectorCell* fromDatum(const DatumCell *datum)
-	{
-		if (isInstance(datum))
-		{
-			return static_cast<const BytevectorCell*>(datum);
-		}
-
-		return nullptr;
-	}
-
 private:
 	std::uint32_t m_length;
 	std::uint8_t* m_data;

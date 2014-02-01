@@ -14,25 +14,5 @@ public:
 		return datum->typeId() == CellTypeId::InexactRational;
 	}
 
-	static InexactRationalCell* fromDatum(DatumCell *datum)
-	{
-		if (isInstance(datum))
-		{
-			return static_cast<InexactRationalCell*>(datum);
-		}
-
-		return nullptr;
-	}
-
-	static const InexactRationalCell* fromDatum(const DatumCell *datum)
-	{
-		if (isInstance(datum))
-		{
-			return static_cast<const InexactRationalCell*>(datum);
-		}
-
-		return nullptr;
-	}
-
 private:
 	double m_value;

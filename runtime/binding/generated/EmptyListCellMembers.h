@@ -8,23 +8,3 @@ public:
 		return datum->typeId() == CellTypeId::EmptyList;
 	}
 
-	static EmptyListCell* fromDatum(DatumCell *datum)
-	{
-		if (isInstance(datum))
-		{
-			return static_cast<EmptyListCell*>(datum);
-		}
-
-		return nullptr;
-	}
-
-	static const EmptyListCell* fromDatum(const DatumCell *datum)
-	{
-		if (isInstance(datum))
-		{
-			return static_cast<const EmptyListCell*>(datum);
-		}
-
-		return nullptr;
-	}
-

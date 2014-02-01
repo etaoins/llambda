@@ -14,25 +14,5 @@ public:
 		return datum->typeId() == CellTypeId::Boolean;
 	}
 
-	static BooleanCell* fromDatum(DatumCell *datum)
-	{
-		if (isInstance(datum))
-		{
-			return static_cast<BooleanCell*>(datum);
-		}
-
-		return nullptr;
-	}
-
-	static const BooleanCell* fromDatum(const DatumCell *datum)
-	{
-		if (isInstance(datum))
-		{
-			return static_cast<const BooleanCell*>(datum);
-		}
-
-		return nullptr;
-	}
-
 private:
 	bool m_value;

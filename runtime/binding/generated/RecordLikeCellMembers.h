@@ -24,26 +24,6 @@ public:
 		return (datum->typeId() == CellTypeId::Procedure) || (datum->typeId() == CellTypeId::Record);
 	}
 
-	static RecordLikeCell* fromDatum(DatumCell *datum)
-	{
-		if (isInstance(datum))
-		{
-			return static_cast<RecordLikeCell*>(datum);
-		}
-
-		return nullptr;
-	}
-
-	static const RecordLikeCell* fromDatum(const DatumCell *datum)
-	{
-		if (isInstance(datum))
-		{
-			return static_cast<const RecordLikeCell*>(datum);
-		}
-
-		return nullptr;
-	}
-
 private:
 	bool m_dataIsInline;
 	std::uint32_t m_recordClassId;

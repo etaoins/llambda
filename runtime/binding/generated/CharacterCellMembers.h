@@ -14,25 +14,5 @@ public:
 		return datum->typeId() == CellTypeId::Character;
 	}
 
-	static CharacterCell* fromDatum(DatumCell *datum)
-	{
-		if (isInstance(datum))
-		{
-			return static_cast<CharacterCell*>(datum);
-		}
-
-		return nullptr;
-	}
-
-	static const CharacterCell* fromDatum(const DatumCell *datum)
-	{
-		if (isInstance(datum))
-		{
-			return static_cast<const CharacterCell*>(datum);
-		}
-
-		return nullptr;
-	}
-
 private:
 	UnicodeChar m_unicodeChar;

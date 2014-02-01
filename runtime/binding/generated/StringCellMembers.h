@@ -24,26 +24,6 @@ public:
 		return datum->typeId() == CellTypeId::String;
 	}
 
-	static StringCell* fromDatum(DatumCell *datum)
-	{
-		if (isInstance(datum))
-		{
-			return static_cast<StringCell*>(datum);
-		}
-
-		return nullptr;
-	}
-
-	static const StringCell* fromDatum(const DatumCell *datum)
-	{
-		if (isInstance(datum))
-		{
-			return static_cast<const StringCell*>(datum);
-		}
-
-		return nullptr;
-	}
-
 private:
 	std::uint16_t m_allocSlackBytes;
 	std::uint32_t m_charLength;

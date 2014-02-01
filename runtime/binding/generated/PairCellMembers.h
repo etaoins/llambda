@@ -19,26 +19,6 @@ public:
 		return datum->typeId() == CellTypeId::Pair;
 	}
 
-	static PairCell* fromDatum(DatumCell *datum)
-	{
-		if (isInstance(datum))
-		{
-			return static_cast<PairCell*>(datum);
-		}
-
-		return nullptr;
-	}
-
-	static const PairCell* fromDatum(const DatumCell *datum)
-	{
-		if (isInstance(datum))
-		{
-			return static_cast<const PairCell*>(datum);
-		}
-
-		return nullptr;
-	}
-
 private:
 	DatumCell* m_car;
 	DatumCell* m_cdr;

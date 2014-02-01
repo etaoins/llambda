@@ -79,21 +79,6 @@ object WriteCellMembers extends writer.OutputWriter {
           cppBuilder.blockSep {
             cppBuilder += "return " + cppTypePredicate(processedTypes, cellClass) + ";"
           }
-      
-          if (cellClass != processedTypes.rootCellClass) {
-            // Make our type casters 
-            for(constPrefix <- List("", "const ")) {
-              cppBuilder += s"static ${constPrefix}${cppName}* fromDatum(${constPrefix}${rootCellCppName} *datum)"
-              cppBuilder.blockSep {
-                cppBuilder += "if (isInstance(datum))"
-                cppBuilder.blockSep {
-                  cppBuilder += s"return static_cast<${constPrefix}${cppName}*>(datum);"
-                }
-              
-                cppBuilder += s"return nullptr;"
-              }
-            }
-          }
         }
     }
 

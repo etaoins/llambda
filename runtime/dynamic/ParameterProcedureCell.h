@@ -51,6 +51,15 @@ public:
 	{
 		return datum_cast<ProcedureCell>(static_cast<ParameterProcedureClosure*>(recordData())->converter);
 	}
+	
+	/**
+	 * Returns true if the passed datum is a ParameterProcedureCell
+	 */
+	static bool isInstance(const DatumCell *datum)
+	{
+		auto procedureCell = datum_cast<ProcedureCell>(datum);
+		return procedureCell && isInstance(procedureCell);
+	}
 
 	/**
 	 * Returns true if the passed procedure cell is a ParameterProcedureCell

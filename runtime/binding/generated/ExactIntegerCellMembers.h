@@ -14,25 +14,5 @@ public:
 		return datum->typeId() == CellTypeId::ExactInteger;
 	}
 
-	static ExactIntegerCell* fromDatum(DatumCell *datum)
-	{
-		if (isInstance(datum))
-		{
-			return static_cast<ExactIntegerCell*>(datum);
-		}
-
-		return nullptr;
-	}
-
-	static const ExactIntegerCell* fromDatum(const DatumCell *datum)
-	{
-		if (isInstance(datum))
-		{
-			return static_cast<const ExactIntegerCell*>(datum);
-		}
-
-		return nullptr;
-	}
-
 private:
 	std::int64_t m_value;

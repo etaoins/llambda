@@ -14,25 +14,5 @@ public:
 		return datum->typeId() == CellTypeId::Record;
 	}
 
-	static RecordCell* fromDatum(DatumCell *datum)
-	{
-		if (isInstance(datum))
-		{
-			return static_cast<RecordCell*>(datum);
-		}
-
-		return nullptr;
-	}
-
-	static const RecordCell* fromDatum(const DatumCell *datum)
-	{
-		if (isInstance(datum))
-		{
-			return static_cast<const RecordCell*>(datum);
-		}
-
-		return nullptr;
-	}
-
 private:
 	void* m_extraData;
