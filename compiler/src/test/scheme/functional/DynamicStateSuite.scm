@@ -2,8 +2,12 @@
 	(define param (make-parameter 18))
 	(procedure? param)))
 
-(define-test "parameters return initial value if not parameterized" (expect 18
+(define-test "parameters return constant initial value if not parameterized" (expect 18
 	(define param (make-parameter 18))
+	(param)))
+
+(define-test "parameters return non-constant initial value if not parameterized" (expect (1 2 3)
+	(define param (make-parameter (list 1 2 3)))
 	(param)))
 
 (define-test "trivial parameterize" (expect 50

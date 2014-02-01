@@ -15,7 +15,7 @@ extern "C"
 
 ProcedureCell *lliby_make_parameter(DatumCell *initialValue)
 {
-	return new dynamic::ParameterProcedureCell(initialValue, nullptr);
+	return dynamic::ParameterProcedureCell::createInstance(initialValue, nullptr);
 }
 
 DatumCell *lliby_dynamic_wind(ProcedureCell *before, ProcedureCell *thunk, ProcedureCell *after)

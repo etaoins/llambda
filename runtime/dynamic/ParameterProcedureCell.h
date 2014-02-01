@@ -32,7 +32,7 @@ public:
 	 *                            identity function should be used nullptr can be passed to avoid the overhead of
 	 *                            re-entering Scheme,
 	 */
-	ParameterProcedureCell(DatumCell *initialValue, ProcedureCell *converterProcedure = nullptr);
+	static ParameterProcedureCell *createInstance(DatumCell *initialValue, ProcedureCell *converterProcedure = nullptr);
  
 	/**
 	 * Returns the initial value for this parameter

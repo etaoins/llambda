@@ -3,6 +3,7 @@
 #include "dynamic/State.h"
 #include "binding/EmptyListCell.h"
 #include "core/fatal.h"
+#include "alloc/StrongRef.h"
 
 namespace lliby
 {
@@ -28,10 +29,14 @@ namespace
 	}
 }
 	
-ParameterProcedureCell::ParameterProcedureCell(DatumCell *initialValue, ProcedureCell *converterProcedure) :
-	ProcedureCell(registeredClassId, false, nullptr, &procedureBody) 
+ParameterProcedureCell* ParameterProcedureCell::createInstance(DatumCell *initialValueRaw, ProcedureCell *converterProcedureRaw)
 {
+	// Root these across the allocation of the actual procedure cell
+	alloc::StrongRef<DatumCell> initialValue(initialValueRaw);
+	alloc::StrongRef<ProcedureCell> converterProcedure(converterProcedureRaw);
+
 	auto closure = static_cast<ParameterProcedureClosure*>(allocateRecordData(sizeof(ParameterProcedureClosure)));
+	auto procedureCell = new ProcedureCell(registeredClassId, false, closure, &procedureBody);
 
 	closure->initialValue = initialValue;
 
@@ -45,7 +50,7 @@ ParameterProcedureCell::ParameterProcedureCell(DatumCell *initialValue, Procedur
 		closure->converter = converterProcedure;
 	}
 
-	setRecordData(closure);
+	return static_cast<ParameterProcedureCell*>(procedureCell);
 }
 
 bool ParameterProcedureCell::isInstance(const ProcedureCell *proc)
