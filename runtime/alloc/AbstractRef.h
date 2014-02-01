@@ -146,6 +146,11 @@ protected:
 	{
 	}
 
+	AbstractRef(const AbstractRef &other) :
+		AbstractRef(other.data())
+	{
+	}
+
 private:
 	T *mCell;
 };

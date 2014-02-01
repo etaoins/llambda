@@ -78,6 +78,14 @@ void State::popActiveState()
 		oldActiveState->afterProcedure()->apply(EmptyListCell::instance());
 	}
 }
+	
+void State::switchState(State *state)
+{
+	while(currentActiveState != state)
+	{
+		popActiveState();
+	}
+}
 
 }
 }

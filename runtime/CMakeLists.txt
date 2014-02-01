@@ -35,6 +35,7 @@ add_library(lliby
 	stdlib/control.cpp
 	stdlib/dynamic.cpp
 	stdlib/eqv.cpp
+	stdlib/exception.cpp
 	stdlib/list.cpp
 	stdlib/number.cpp
 	stdlib/output.cpp

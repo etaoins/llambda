@@ -13,16 +13,17 @@ extern "C"
 
 void _lliby_fatal(const char *message, const DatumCell *evidence)
 {
+	std::cerr << message << std::endl;
+
 	if (evidence) 
 	{
 		ExternalFormDatumWriter writer(std::cerr);
 
-		std::cerr << "Datum: ";
+		std::cerr << "Evidence: ";
 		writer.render(evidence);
 		std::cerr << std::endl;
 	}
 
-	std::cerr << message << std::endl;
 	exit(-1);
 	__builtin_unreachable();
 }

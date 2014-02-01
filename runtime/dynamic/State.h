@@ -138,6 +138,13 @@ public:
 	 */
 	static void popActiveState();
 
+	/**
+	 * Switches to the specified state
+	 *
+	 * Without continuations this will just pop until the state matches the passed argument
+	 */
+	static void switchState(State *);
+
 private:
 	ProcedureCell *mBefore;
 	ProcedureCell *mAfter;

@@ -1,15 +1,16 @@
 #include <clocale>
 
 #include "alloc/allocator.h"
+#include "core/fatal.h"
 #include "dynamic/init.h"
+#include "dynamic/SchemeException.h"
 
 extern "C"
 {
+using namespace lliby;
 
 void lliby_init()
 {
-	using namespace lliby;
-
 	// Use the user preferred locale
 	// We assume a UTF-8 locale but don't explicitly set "UTF-8" so we still
 	// get user-defined string sorting etc.
@@ -21,7 +22,14 @@ void lliby_init()
 
 void _lliby_launch_world(void (*entryPoint)())
 {
-	entryPoint();
+	try
+	{
+		entryPoint();
+	}
+	catch (dynamic::SchemeException &except)
+	{
+		_lliby_fatal("Unhandled exception", except.object());
+	}
 }
 
 }
