@@ -14,7 +14,15 @@ object Compiler {
     conniver.MergeCellAllocations
   )
 
-  private def startLlvmCompiler(llvmIrStream : InputStream, output : File, optimizeLevel : Int) : () => Int = {
+  abstract class RunningCompiler {
+    def sendLlvmIr(irBytes : Array[Byte]) : Boolean
+    def finish() : Unit
+  }
+
+  private def startLlvmCompiler(output : File, optimizeLevel : Int) : RunningCompiler = {
+    val inputStream = new PipedInputStream
+    val outputStream = new PipedOutputStream(inputStream)
+
     val optimizeArg = s"-O${optimizeLevel}"
 
     val stdlibArg = if (scala.util.Properties.isMac) {
@@ -36,20 +44,43 @@ object Compiler {
     val compilePipeline = if (optimizeLevel > 1) { 
       val optCmd = List("opt", optimizeArg)
 
-      optCmd #< llvmIrStream #| llcCmd #| clangCmd
+      optCmd #< inputStream #| llcCmd #| clangCmd
     }
     else {
-      llcCmd #< llvmIrStream #| clangCmd
+      llcCmd #< inputStream #| clangCmd
     }
 
     // Run the compiler pipeline in the background
     val runningProcess = compilePipeline.run
 
-    // Return a function that will wait for the result of the compiler
-    () => {
-      runningProcess.exitValue()
+    // Return an object to control the compiler with
+    new RunningCompiler {
+      def sendLlvmIr(irBytes : Array[Byte]) : Boolean = {
+        outputStream.write(irBytes)
+        outputStream.close()
+        runningProcess.exitValue() == 0 
+      }
+
+      def finish() {
+        outputStream.close()
+      }
     }
   }
+
+  def startFileSinkCompiler(output : File) : RunningCompiler = 
+    new RunningCompiler {
+      def sendLlvmIr(irBytes : Array[Byte]) : Boolean  = {
+        // Write the IR directly to disk
+        val outputStream = new FileOutputStream(output)
+        outputStream.write(irBytes)
+        
+        true
+      }
+
+      def finish() {
+        // Nothing to do
+      }
+    }
   
   def compileFile(input : File, output : File, config : CompileConfig) : Unit =
     compileData(SchemeParser.parseFileAsData(input), output, config)
@@ -58,71 +89,65 @@ object Compiler {
     compileData(SchemeParser.parseStringAsData(inputString), output, config)
 
   def compileData(data : List[ast.Datum], output : File, config : CompileConfig) : Unit = {
-    // Create our output stream
-    val (outputStream, waitFunction) = if (config.emitLlvm) {
-      // Write the IR directly to disk
-      (new FileOutputStream(output), () => 0)
+    // Start our compiler and get a control objct
+    val runningCompiler = if (!config.emitLlvm) {
+      startLlvmCompiler(output, config.optimizeLevel)
     }
     else {
-      val inputStream = new PipedInputStream
-      val outputStream = new PipedOutputStream(inputStream)
-
-      // Start the compiler in the background (threading!)
-      val waiter = startLlvmCompiler(inputStream, output, config.optimizeLevel)
-
-      (outputStream, waiter) 
+      startFileSinkCompiler(output)
     }
 
-    // Prepare to extract
-    val loader = new frontend.LibraryLoader(config.targetPlatform)
-    val featureIdentifiers = FeatureIdentifiers(config.targetPlatform, config.extraFeatureIdents) 
+    try {
+      // Prepare to extract
+      val loader = new frontend.LibraryLoader(config.targetPlatform)
+      val featureIdentifiers = FeatureIdentifiers(config.targetPlatform, config.extraFeatureIdents) 
 
-    // Extract expressions
-    val frontendConfig = frontend.FrontendConfig(
-      includePath=config.includePath,
-      featureIdentifiers=featureIdentifiers 
-    )
+      // Extract expressions
+      val frontendConfig = frontend.FrontendConfig(
+        includePath=config.includePath,
+        featureIdentifiers=featureIdentifiers 
+      )
 
-    val expressions = frontend.ExtractProgram(data)(loader, frontendConfig)
+      val expressions = frontend.ExtractProgram(data)(loader, frontendConfig)
 
-    // Optimize
-    val optimizedExpressions = if (config.optimizeLevel > 1) {
-      expressions.map(optimize.FlattenSelfExecutingLambdas.apply)
-    }
-    else {
-      expressions
-    }
+      // Optimize
+      val optimizedExpressions = if (config.optimizeLevel > 1) {
+        expressions.map(optimize.FlattenSelfExecutingLambdas.apply)
+      }
+      else {
+        expressions
+      }
 
-    // Analyize
-    val analysis = analyzer.Analyize(optimizedExpressions)
+      // Analyize
+      val analysis = analyzer.Analyize(optimizedExpressions)
 
-    // Plan execution
-    val planConfig = planner.PlanConfig(
-      optimize=config.optimizeLevel > 1,
-      analysis=analysis
-    )
+      // Plan execution
+      val planConfig = planner.PlanConfig(
+        optimize=config.optimizeLevel > 1,
+        analysis=analysis
+      )
 
-    val functions = planner.PlanProgram(optimizedExpressions)(planConfig)
+      val functions = planner.PlanProgram(optimizedExpressions)(planConfig)
 
-    val optimizedFunctions = if (config.optimizeLevel > 1) {
-      conniverPasses.foldLeft(functions) { case (functions, conniverPass) =>
-        conniverPass(functions)
+      val optimizedFunctions = if (config.optimizeLevel > 1) {
+        conniverPasses.foldLeft(functions) { case (functions, conniverPass) =>
+          conniverPass(functions)
+        }
+      }
+      else {
+        functions
+      }
+
+      // Generate the LLVM IR
+      val llvmIr = codegen.GenProgram(optimizedFunctions, config.targetPlatform, featureIdentifiers)
+      
+      // Send the IR to our running compiler
+      if (!runningCompiler.sendLlvmIr(llvmIr.getBytes("UTF-8"))) {
+        throw new ExternalCompilerException
       }
     }
-    else {
-      functions
-    }
-
-    // Generate the LLVM IR
-    val llvmIr = codegen.GenProgram(optimizedFunctions, config.targetPlatform, featureIdentifiers)
-    
-    // Write to the output stream
-    outputStream.write(llvmIr.getBytes("UTF-8"))
-    outputStream.close()
-
-    // Wait for the compiler to finish
-    if (waitFunction() != 0) {
-      throw new ExternalCompilerException
+    finally {
+      runningCompiler.finish()
     }
   }
 }
