@@ -226,6 +226,10 @@
 	  (define-r7rs make-parameter (native-function "lliby_make_parameter" (<datum-cell>) <procedure-cell>))
 	  (define-r7rs dynamic-wind (native-function "lliby_dynamic_wind" (<procedure-cell> <procedure-cell> <procedure-cell>) <datum-cell>)))
 
+	(export newline)
+	(begin
+	  (define-r7rs newline (native-function "lliby_newline" ())))
+
 	(export features)
 	(begin
 	  ; Note this is produced by codegen; it's not part of the standard library

@@ -12,7 +12,7 @@ import llambda.compiler.SchemeStringImplicits._
 import llambda.compiler.{celltype => ct}
 
 abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite with Inside {
-  private case class ExecutionResult(success : Boolean, output : ast.Datum, errorString : String)
+  private case class ExecutionResult(success : Boolean, output : List[ast.Datum], errorString : String)
 
   val resourceBaseDir = "functional/"
   val resourceBaseUrl = getClass.getClassLoader.getResource(resourceBaseDir)
@@ -52,8 +52,8 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
 
   private def runSingleCondition(condition : ast.Datum) {
     condition match {
-      case ast.ProperList(ast.Symbol("expect") :: expectation :: program) if !program.isEmpty =>
-        val result = executeProgram(program)
+      case ast.ProperList(ast.Symbol("expect") :: expectedValue :: program) if !program.isEmpty =>
+        val result = executeProgram(program, true)
 
         if (!result.success) {
           if (result.errorString.isEmpty) {
@@ -65,11 +65,26 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
           }
         }
 
-        assert(result.output === expectation)
+        assert(result.output === List(expectedValue))
+      
+      case ast.ProperList(ast.Symbol("expect-output") :: ast.ProperList(expectedOutput) :: program) if !program.isEmpty =>
+        val result = executeProgram(program, false)
+
+        if (!result.success) {
+          if (result.errorString.isEmpty) {
+            fail("Execution unexpectedly failed with no output")
+          }
+          else {
+            // Use the error string the program provided
+            fail(result.errorString)
+          }
+        }
+
+        assert(result.output === expectedOutput)
       
       case ast.ProperList(ast.Symbol("expect-failure") :: program) if !program.isEmpty =>
         try {
-          val result = executeProgram(program)
+          val result = executeProgram(program, false)
 
           // If we compiled make sure we fail at runtime
           assert(result.success === false, "Execution unexpectedly succeeded")
@@ -87,22 +102,31 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
   private def utf8InputStreamToString(stream : InputStream) : String =
     Source.fromInputStream(stream, "UTF-8").mkString
 
-  private def executeProgram(program : List[ast.Datum]) : ExecutionResult = {
+  private def executeProgram(program : List[ast.Datum], printLastValue : Boolean) : ExecutionResult = {
     // Import (llambda nfi) and (scheme base)
-    val importDecl = datum"(import (llambda nfi) (scheme base))"
 
-    // Modify the last expression to print using lliby_write
-    val valueDatum = program.last
+    val finalProgram = if (printLastValue) {
+      val importDecl = datum"(import (llambda nfi) (scheme base))"
 
-    val printValueDatum = ast.ProperList(List(
-      ast.ProperList(List(
-        ast.Symbol("native-function"),
-        ast.StringLiteral("lliby_write"),
-        ast.ProperList(List(ast.Symbol("<datum-cell>"))))),
-      valueDatum))
+      // Modify the last expression to print using lliby_write
+      val valueDatum = program.last
 
-    // Rebuild the program with the import and value printing
-    val printingProgram = (importDecl :: program.dropRight(1)) :+ printValueDatum
+      val printValueDatum = ast.ProperList(List(
+        ast.ProperList(List(
+          ast.Symbol("native-function"),
+          ast.StringLiteral("lliby_write"),
+          ast.ProperList(List(ast.Symbol("<datum-cell>"))))),
+        valueDatum))
+
+      // Rebuild the program with the import and value printing
+      (importDecl :: program.dropRight(1)) :+ printValueDatum
+    }
+    else {
+      // Just import (scheme base)
+      val importDecl = datum"(import (scheme base))"
+
+      importDecl :: program
+    }
 
     // Compile the program
     val outputFile = File.createTempFile("llambdafunc", null, null)
@@ -115,7 +139,7 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
         optimizeLevel=2,
         targetPlatform=platform.DetectJvmPlatform())
 
-      Compiler.compileData(printingProgram, outputFile, compileConfig)
+      Compiler.compileData(finalProgram, outputFile, compileConfig)
 
       // Create our output logger
       var stdout : Option[InputStream] = None
@@ -140,12 +164,12 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
       
       if (exitValue == 0) {
         val outputString = utf8InputStreamToString(stdout.get)
-        val output :: Nil = SchemeParser.parseStringAsData(outputString)
+        val output = SchemeParser.parseStringAsData(outputString)
 
         ExecutionResult(success=true, output=output, errorString=errorString)
       }
       else {
-        ExecutionResult(success=false, output=ast.UnitValue(), errorString=errorString)
+        ExecutionResult(success=false, output=Nil, errorString=errorString)
       }
     }
     finally {

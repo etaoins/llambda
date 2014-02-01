@@ -13,7 +13,10 @@ void lliby_write(DatumCell *datum)
 	// XXX: Use the current port
 	auto writer = new ExternalFormDatumWriter(std::cout);
 	writer->render(datum);
+}
 
+void lliby_newline(DatumCell *datum)
+{
 	std::cout << std::endl;
 }
 

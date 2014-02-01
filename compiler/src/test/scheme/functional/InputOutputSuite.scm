@@ -1,0 +1,17 @@
+(define-test "Written strings can be read" (expect-output ("Hello!")
+	(import (scheme write))
+	(write "Hello!")))
+
+(define-test "Writing consecutive numbers does not introduce whitespace" (expect-output (123)
+	(import (scheme write))
+	(write 1)
+	(write 2)
+	(write 3)))
+
+(define-test "Writing consecutive numbers with newlines introduces whitespace" (expect-output (1 2 3)
+	(import (scheme write))
+	(write 1)
+	(newline)
+	(write 2)
+	(newline)
+	(write 3)))
