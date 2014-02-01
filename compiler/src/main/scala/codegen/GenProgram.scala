@@ -18,6 +18,14 @@ object GenProgram {
       attributes=Set(IrFunction.NoUnwind)
     )
   }
+  
+  private val llibyLaunchWorldDecl = {
+    IrFunctionDecl(
+      result=IrFunction.Result(VoidType),
+      name="_lliby_launch_world",
+      arguments=List(IrFunction.Argument(PointerType(FunctionType(VoidType, Nil))))
+    )
+  }
 
   def resourceAsString(resourcePath : String) : String = {
     val stream = getClass.getClassLoader.getResourceAsStream(resourcePath)
@@ -64,14 +72,15 @@ object GenProgram {
 
     // Initialize our runtime
     module.declareFunction(llibyInitDecl) 
+    module.declareFunction(llibyLaunchWorldDecl)
     entryBlock.callDecl(None)(llibyInitDecl, Nil)
     
-    // Call __llambda_exec
-    // This must be defined by the planner
+    // Call __llambda_exec through _lliby_launch_world
+    // __llambda_exec must be defined by the planner
     val execIrSignature = ProcedureSignatureToIr(LlambdaExecSignature)
     val execValue = GenNamedEntryPoint(module)(LlambdaExecSignature, LlambdaExecSignature.nativeSymbol, plannedSymbols) 
 
-    entryBlock.call(None)(execIrSignature, execValue, Nil, false)
+    entryBlock.callDecl(None)(llibyLaunchWorldDecl, List(execValue), false)
 
     // Return 0
     // Scheme can only return non-zero exit codes using (exit)

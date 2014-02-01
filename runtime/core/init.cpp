@@ -19,4 +19,9 @@ void lliby_init()
 	dynamic::init();
 }
 
+void _lliby_launch_world(void (*entryPoint)())
+{
+	entryPoint();
+}
+
 }
