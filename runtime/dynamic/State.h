@@ -139,6 +139,13 @@ public:
 	static void popActiveState();
 
 	/**
+	 * Pops all active states
+	 *
+	 * This should be used when cleanly exiting from the world
+	 */
+	static void popAllStates();
+
+	/**
 	 * Switches to the specified state
 	 *
 	 * Without continuations this will just pop until the state matches the passed argument

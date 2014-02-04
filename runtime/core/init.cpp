@@ -38,10 +38,7 @@ void _lliby_launch_world(void (*entryPoint)())
 
 void _lliby_shutdown_world()
 {
-	while (dynamic::State::activeState() != nullptr)
-	{
-		dynamic::State::popActiveState();
-	}
+	dynamic::State::popAllStates();
 }
 
 }

@@ -39,6 +39,7 @@ add_library(lliby
 	stdlib/list.cpp
 	stdlib/number.cpp
 	stdlib/output.cpp
+	stdlib/process.cpp
 	stdlib/string.cpp
 	stdlib/symbol.cpp
 	stdlib/vector.cpp

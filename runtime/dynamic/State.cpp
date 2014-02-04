@@ -79,6 +79,14 @@ void State::popActiveState()
 	}
 }
 	
+void State::popAllStates()
+{
+	while(currentActiveState->parent() != nullptr)
+	{
+		popActiveState();
+	}
+}
+	
 void State::switchState(State *state)
 {
 	while(currentActiveState != state)
