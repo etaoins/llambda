@@ -151,7 +151,7 @@ class NativeInexactRationalValue(tempValue : ps.TempValue, nativeType : vt.FpTyp
     val allocTemp = new ps.TempAllocation
     plan.steps += ps.AllocateCells(allocTemp, 1)
 
-    // We can only box 64bit signed ints
+    // We can only box doubles
     val boxedTemp = ps.GcManagedValue()
     plan.steps += ps.BoxInexactRational(boxedTemp, allocTemp, 0, toTempValue(vt.Double))
 
@@ -167,7 +167,6 @@ class NativeCharacterValue(tempValue : ps.TempValue) extends NativeValue(vt.Unic
     val allocTemp = new ps.TempAllocation
     plan.steps += ps.AllocateCells(allocTemp, 1)
 
-    // We can only box 64bit signed ints
     val boxedTemp = ps.GcManagedValue()
     plan.steps += ps.BoxCharacter(boxedTemp, allocTemp, 0, tempValue)
 
