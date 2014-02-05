@@ -88,7 +88,39 @@ object Compiler {
     compileData(SchemeParser.parseStringAsData(inputString), output, config)
 
   def compileData(data : List[ast.Datum], output : File, config : CompileConfig) : Unit = {
-    // Start our compiler and get a control objct
+    // Prepare to extract
+    val loader = new frontend.LibraryLoader(config.targetPlatform)
+    val featureIdentifiers = FeatureIdentifiers(config.targetPlatform, config.extraFeatureIdents) 
+
+    // Extract expressions
+    val frontendConfig = frontend.FrontendConfig(
+      includePath=config.includePath,
+      featureIdentifiers=featureIdentifiers 
+    )
+
+    val expressions = frontend.ExtractProgram(data)(loader, frontendConfig)
+
+    // Optimize
+    val optimizedExpressions = if (config.optimizeLevel > 1) {
+      expressions.map(optimize.FlattenSelfExecutingLambdas.apply)
+    }
+    else {
+      expressions
+    }
+
+    // Analyize
+    val analysis = analyzer.Analyize(optimizedExpressions)
+
+    // Plan execution
+    val planConfig = planner.PlanConfig(
+      optimize=config.optimizeLevel > 1,
+      analysis=analysis
+    )
+
+    val functions = planner.PlanProgram(optimizedExpressions)(planConfig)
+    
+    // We're reasonably sure the input program is sane at this point
+    // Start our backend compiler and get a control object
     val runningCompiler = if (!config.emitLlvm) {
       startLlvmCompiler(output, config.optimizeLevel)
     }
@@ -97,37 +129,6 @@ object Compiler {
     }
 
     try {
-      // Prepare to extract
-      val loader = new frontend.LibraryLoader(config.targetPlatform)
-      val featureIdentifiers = FeatureIdentifiers(config.targetPlatform, config.extraFeatureIdents) 
-
-      // Extract expressions
-      val frontendConfig = frontend.FrontendConfig(
-        includePath=config.includePath,
-        featureIdentifiers=featureIdentifiers 
-      )
-
-      val expressions = frontend.ExtractProgram(data)(loader, frontendConfig)
-
-      // Optimize
-      val optimizedExpressions = if (config.optimizeLevel > 1) {
-        expressions.map(optimize.FlattenSelfExecutingLambdas.apply)
-      }
-      else {
-        expressions
-      }
-
-      // Analyize
-      val analysis = analyzer.Analyize(optimizedExpressions)
-
-      // Plan execution
-      val planConfig = planner.PlanConfig(
-        optimize=config.optimizeLevel > 1,
-        analysis=analysis
-      )
-
-      val functions = planner.PlanProgram(optimizedExpressions)(planConfig)
-
       val optimizedFunctions = if (config.optimizeLevel > 1) {
         conniverPasses.foldLeft(functions) { case (functions, conniverPass) =>
           conniverPass(functions)
