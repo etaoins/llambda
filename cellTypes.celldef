@@ -112,3 +112,8 @@ concrete cell Procedure : RecordLike {
 concrete internal cell Record : RecordLike {
 	untypedptr extraData;
 };
+
+concrete cell ErrorObject : Datum {
+	String* message;
+	ListElement* irritants;
+};

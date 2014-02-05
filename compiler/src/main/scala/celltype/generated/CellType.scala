@@ -67,7 +67,7 @@ sealed abstract class ConcreteCellType extends CellType {
 sealed abstract class CellTypeVariant extends CastableValue
 
 object CellType {
-  val nextTbaaIndex = 64L
+  val nextTbaaIndex = 68L
 }
 
 sealed trait DatumFields {
@@ -133,7 +133,7 @@ object DatumCell extends CellType with DatumFields {
   val irType = UserDefinedType("datum")
   val schemeName = "<datum-cell>"
   val supertype = None
-  val directSubtypes = Set[CellType](UnitCell, ListElementCell, StringCell, SymbolCell, BooleanCell, NumericCell, CharacterCell, VectorCell, BytevectorCell, RecordLikeCell)
+  val directSubtypes = Set[CellType](UnitCell, ListElementCell, StringCell, SymbolCell, BooleanCell, NumericCell, CharacterCell, VectorCell, BytevectorCell, RecordLikeCell, ErrorObjectCell)
 
   val typeIdGepIndices = List(0, 0)
   val gcStateGepIndices = List(0, 1)
@@ -1420,6 +1420,100 @@ object RecordCell extends ConcreteCellType with RecordFields {
     StructureConstant(List(
       RecordLikeCell.createConstant(dataIsInline=dataIsInline, recordClassId=recordClassId, recordData=recordData, typeId=typeId),
       extraData
+    ), userDefinedType=Some(irType))
+  }
+}
+
+sealed trait ErrorObjectFields extends DatumFields {
+  val irType : FirstClassType
+
+  val messageIrType = PointerType(UserDefinedType("string"))
+  val messageTbaaIndex : Long
+  val messageGepIndices : List[Int]
+
+  val irritantsIrType = PointerType(UserDefinedType("listElement"))
+  val irritantsTbaaIndex : Long
+  val irritantsGepIndices : List[Int]
+
+  def genPointerToMessage(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+    if (valueCell.irType != PointerType(irType)) {
+      throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
+    }
+
+    block.getelementptr("messagePtr")(
+      elementType=messageIrType,
+      basePointer=valueCell,
+      indices=messageGepIndices.map(IntegerConstant(IntegerType(32), _)),
+      inbounds=true
+    )
+  }
+
+  def genStoreToMessage(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue)  {
+    val messagePtr = genPointerToMessage(block)(valueCell)
+    block.store(toStore, messagePtr, tbaaIndex=Some(messageTbaaIndex))
+  }
+
+  def genLoadFromMessage(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+    val messagePtr = genPointerToMessage(block)(valueCell)
+    block.load("message")(messagePtr, tbaaIndex=Some(messageTbaaIndex))
+  }
+
+  def genPointerToIrritants(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+    if (valueCell.irType != PointerType(irType)) {
+      throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
+    }
+
+    block.getelementptr("irritantsPtr")(
+      elementType=irritantsIrType,
+      basePointer=valueCell,
+      indices=irritantsGepIndices.map(IntegerConstant(IntegerType(32), _)),
+      inbounds=true
+    )
+  }
+
+  def genStoreToIrritants(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue)  {
+    val irritantsPtr = genPointerToIrritants(block)(valueCell)
+    block.store(toStore, irritantsPtr, tbaaIndex=Some(irritantsTbaaIndex))
+  }
+
+  def genLoadFromIrritants(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+    val irritantsPtr = genPointerToIrritants(block)(valueCell)
+    block.load("irritants")(irritantsPtr, tbaaIndex=Some(irritantsTbaaIndex))
+  }
+}
+
+object ErrorObjectCell extends ConcreteCellType with ErrorObjectFields {
+  val llvmName = "errorObject"
+  val irType = UserDefinedType("errorObject")
+  val schemeName = "<error-object-cell>"
+  val supertype = Some(DatumCell)
+  val directSubtypes = Set[CellType]()
+
+  val typeId = 13L
+
+  val typeIdGepIndices = List(0, 0, 0)
+  val gcStateGepIndices = List(0, 0, 1)
+  val messageGepIndices = List(0, 1)
+  val irritantsGepIndices = List(0, 2)
+
+  val typeIdTbaaIndex = 64L
+  val gcStateTbaaIndex = 65L
+  val messageTbaaIndex = 66L
+  val irritantsTbaaIndex = 67L
+
+  def createConstant(message : IrConstant, irritants : IrConstant) : StructureConstant = {
+    if (message.irType != messageIrType) {
+      throw new InternalCompilerErrorException("Unexpected type for field message")
+    }
+
+    if (irritants.irType != irritantsIrType) {
+      throw new InternalCompilerErrorException("Unexpected type for field irritants")
+    }
+
+    StructureConstant(List(
+      DatumCell.createConstant(typeId=typeId),
+      message,
+      irritants
     ), userDefinedType=Some(irType))
   }
 }

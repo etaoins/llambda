@@ -17,6 +17,7 @@
 #include "binding/VectorCell.h"
 #include "binding/BytevectorCell.h"
 #include "binding/ProcedureCell.h"
+#include "binding/ErrorObjectCell.h"
 
 using namespace lliby;
 
@@ -96,6 +97,11 @@ bool lliby_is_bytevector(const DatumCell *value)
 bool lliby_is_procedure(const DatumCell *value)
 {
 	return ProcedureCell::isInstance(value);
+}
+
+bool lliby_is_error_object(const DatumCell *value)
+{
+	return ErrorObjectCell::isInstance(value);
 }
 
 }

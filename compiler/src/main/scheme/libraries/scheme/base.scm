@@ -235,9 +235,12 @@
 	  ; Note this is produced by codegen; it's not part of the standard library
 	  (define-r7rs features (native-function "__llambda_features" () <list-element-cell>)))
 
-	(export with-exception-handler raise)
+	(export with-exception-handler raise error error-object? error-object-message error-object-irritants)
 	(begin
 	  (define-r7rs with-exception-handler (native-function "lliby_with_exception_handler" (<procedure-cell> <procedure-cell>) <datum-cell>))
-	  (define-r7rs raise (native-function "lliby_raise" (<datum-cell>))))
-
+	  (define-r7rs raise (native-function "lliby_raise" (<datum-cell>)))
+	  (define-r7rs error (native-function "lliby_error" (<string-cell> . <list-element-cell>)))
+	  (define-r7rs error-object? (native-function "lliby_is_error_object" (<datum-cell>) <bool>))
+	  (define-r7rs error-object-message (native-function "lliby_error_object_message" (<error-object-cell>) <string-cell>))
+	  (define-r7rs error-object-irritants (native-function "lliby_error_object_irritants" (<error-object-cell>) <list-element-cell>)))
 )

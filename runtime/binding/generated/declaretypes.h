@@ -29,6 +29,7 @@ class BytevectorCell;
 class RecordLikeCell;
 class ProcedureCell;
 class RecordCell;
+class ErrorObjectCell;
 
 typedef DatumCell* (*ProcedureEntryPoint)(ProcedureCell*, ListElementCell*);
 

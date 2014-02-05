@@ -2,7 +2,9 @@
 #include "binding/ProcedureCell.h"
 #include "binding/EmptyListCell.h"
 #include "binding/ListElementCell.h"
+#include "binding/ErrorObjectCell.h"
 
+#include "core/fatal.h"
 #include "alloc/StrongRef.h"
 #include "dynamic/State.h"
 #include "dynamic/SchemeException.h"
@@ -44,6 +46,21 @@ DatumCell* lliby_with_exception_handler(ProcedureCell *handlerRaw, ProcedureCell
 void lliby_raise(DatumCell *obj)
 {
 	throw dynamic::SchemeException(obj);
+}
+
+void lliby_error(StringCell *message, ListElementCell *irritants)
+{
+	lliby_raise(ErrorObjectCell::createInstance(message, irritants));
+}
+
+StringCell* lliby_error_object_message(ErrorObjectCell *errorObject)
+{
+	return errorObject->message();
+}
+
+ListElementCell* lliby_error_object_irritants(ErrorObjectCell *errorObject)
+{
+	return errorObject->irritants();
 }
 
 }

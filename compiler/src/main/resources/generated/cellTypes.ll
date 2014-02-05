@@ -128,3 +128,10 @@
 !61 = metadata !{ metadata !"RecordLike::recordClassId->Record", metadata !50 }
 !62 = metadata !{ metadata !"RecordLike::recordData->Record", metadata !51 }
 !63 = metadata !{ metadata !"Record::extraData" }
+
+; {supertype, message, irritants}
+%errorObject = type {%datum, %string*, %listElement*}
+!64 = metadata !{ metadata !"Datum::typeId->ErrorObject", metadata !0 }
+!65 = metadata !{ metadata !"Datum::gcState->ErrorObject", metadata !1 }
+!66 = metadata !{ metadata !"ErrorObject::message" }
+!67 = metadata !{ metadata !"ErrorObject::irritants" }

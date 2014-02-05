@@ -30,6 +30,7 @@ void _lliby_launch_world(void (*entryPoint)())
 	}
 	catch (dynamic::SchemeException &except)
 	{
+		_lliby_shutdown_world();	
 		_lliby_fatal("Unhandled exception", except.object());
 	}
 	

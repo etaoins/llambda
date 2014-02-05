@@ -31,6 +31,7 @@ protected:
 	virtual void renderProcedure(const ProcedureCell *value);
 	virtual void renderCharacter(const CharacterCell *value);
 	virtual void renderRecord(const RecordCell *value);
+	virtual void renderErrorObject(const ErrorObjectCell *value);
 
 	std::ostream &m_outStream;
 };

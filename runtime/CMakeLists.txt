@@ -14,6 +14,7 @@ add_library(lliby
 	alloc/collector.cpp
 	binding/BytevectorCell.cpp
 	binding/DatumCell.cpp
+	binding/ErrorObjectCell.cpp
 	binding/ListElementCell.cpp
 	binding/ProcedureCell.cpp
 	binding/RecordLikeCell.cpp

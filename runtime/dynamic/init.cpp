@@ -8,7 +8,7 @@ namespace dynamic
 
 void init()
 {
-	// Register our closure record classes
+	// Register our record classes
 	ParameterProcedureCell::registerRecordClass();
 }
 

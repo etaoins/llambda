@@ -18,6 +18,7 @@
 #include "binding/PairCell.h"
 #include "binding/VectorCell.h"
 #include "binding/RecordLikeCell.h"
+#include "binding/ErrorObjectCell.h"
 
 #include "classmap/RecordClassMap.h"
 
@@ -91,6 +92,11 @@ void visitCell(DatumCell **rootCellRef, std::function<bool(DatumCell **)> &visit
 				visitCell(reinterpret_cast<DatumCell**>(datumRef), visitor);
 			}
 		}
+	}
+	else if (auto errorObjectCell = datum_cast<ErrorObjectCell>(*rootCellRef))
+	{
+		visitCell(reinterpret_cast<DatumCell**>(errorObjectCell->messageRef()), visitor);
+		visitCell(reinterpret_cast<DatumCell**>(errorObjectCell->irritantsRef()), visitor);
 	}
 	else
 	{

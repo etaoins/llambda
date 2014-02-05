@@ -25,6 +25,7 @@ enum class CellTypeId : std::uint8_t
 	Bytevector = 10,
 	Procedure = 11,
 	Record = 12,
+	ErrorObject = 13,
 };
 
 }

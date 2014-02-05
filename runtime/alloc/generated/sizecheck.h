@@ -15,6 +15,7 @@
 #include "binding/BytevectorCell.h"
 #include "binding/ProcedureCell.h"
 #include "binding/RecordCell.h"
+#include "binding/ErrorObjectCell.h"
 
 using lliby::alloc::AllocCell;
 
@@ -35,3 +36,4 @@ static_assert(sizeof(lliby::VectorCell) <= sizeof(AllocCell), "VectorCell does n
 static_assert(sizeof(lliby::BytevectorCell) <= sizeof(AllocCell), "BytevectorCell does not fit in to a cell");
 static_assert(sizeof(lliby::ProcedureCell) <= sizeof(AllocCell), "ProcedureCell does not fit in to a cell");
 static_assert(sizeof(lliby::RecordCell) <= sizeof(AllocCell), "RecordCell does not fit in to a cell");
+static_assert(sizeof(lliby::ErrorObjectCell) <= sizeof(AllocCell), "ErrorObjectCell does not fit in to a cell");

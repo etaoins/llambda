@@ -19,6 +19,7 @@
 #include "binding/EmptyListCell.h"
 #include "binding/ProcedureCell.h"
 #include "binding/RecordCell.h"
+#include "binding/ErrorObjectCell.h"
 
 #include "dynamic/ParameterProcedureCell.h"
 
@@ -78,6 +79,10 @@ void ExternalFormDatumWriter::render(const DatumCell *datum)
 	else if (auto value = datum_cast<RecordCell>(datum))
 	{
 		renderRecord(value);
+	}
+	else if (auto errorObj = datum_cast<ErrorObjectCell>(datum))
+	{
+		renderErrorObject(errorObj);
 	}
 	else
 	{
@@ -339,8 +344,13 @@ void ExternalFormDatumWriter::renderCharacter(const CharacterCell *value)
 
 void ExternalFormDatumWriter::renderRecord(const RecordCell *)
 {
-    // XXX: Can codegen give us enough type information to render record contents?
+	// XXX: Can codegen give us enough type information to render record contents?
 	m_outStream << "#!record";
+}
+
+void ExternalFormDatumWriter::renderErrorObject(const ErrorObjectCell *errObj)
+{
+	m_outStream << "#!error(" << errObj->message()->utf8Data() << ")";
 }
 
 }

@@ -15,6 +15,7 @@
 #include "binding/ProcedureCell.h"
 #include "binding/CharacterCell.h"
 #include "binding/RecordCell.h"
+#include "binding/ErrorObjectCell.h"
 
 #include "core/init.h"
 #include "alloc/StrongRef.h"
@@ -202,6 +203,14 @@ void testRecord()
     assertForm(new RecordCell(0, true, nullptr), "#!record");
 }
 
+void testErrorObject()
+{
+	alloc::StrongRef<StringCell> errorString = StringCell::fromUtf8CString(u8"Test error");
+	auto errorObj = ErrorObjectCell::createInstance(errorString, EmptyListCell::instance());
+
+	assertForm(errorObj, "#!error(Test error)");
+}
+
 }
 
 int main(int argc, char *argv[])
@@ -222,5 +231,6 @@ int main(int argc, char *argv[])
 	testVector();
 	testProcedure();
 	testCharacter();
-    testRecord();
+	testRecord();
+	testErrorObject();
 }

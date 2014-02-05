@@ -23,6 +23,7 @@ object IntrinsicCellTypes {
     (ct.CharacterCell.schemeName -> ct.CharacterCell),
     (ct.VectorCell.schemeName -> ct.VectorCell),
     (ct.BytevectorCell.schemeName -> ct.BytevectorCell),
-    (ct.ProcedureCell.schemeName -> ct.ProcedureCell)
+    (ct.ProcedureCell.schemeName -> ct.ProcedureCell),
+    (ct.ErrorObjectCell.schemeName -> ct.ErrorObjectCell)
   )
 }
