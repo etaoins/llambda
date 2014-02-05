@@ -1,7 +1,8 @@
-#include "core/fatal.h"
 #include "binding/ProperList.h"
 #include "binding/StringCell.h"
 #include "binding/SymbolCell.h"
+
+#include "core/error.h"
 
 extern "C"
 {
@@ -19,7 +20,7 @@ bool lliby_symbol_equal(SymbolCell *value1, SymbolCell *value2, ListElementCell 
 
 	if (!properList.isValid())
 	{
-		_lliby_fatal("Non-symbol passed to (symbol=?)", argHead);
+		signalError("Non-symbol passed to (symbol=?)", {argHead});
 	}
 
 	for(auto symbolCell : properList)

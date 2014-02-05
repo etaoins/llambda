@@ -3,7 +3,7 @@
 #include "binding/ExactIntegerCell.h"
 #include "binding/ProperList.h"
 
-#include "core/fatal.h"
+#include "core/error.h"
 
 using namespace lliby;
 
@@ -20,13 +20,13 @@ std::uint32_t lliby_bytevector_length(BytevectorCell *bytevector)
 	return bytevector->length();
 }
 
-std::uint8_t lliby_bytevector_u8_ref(const BytevectorCell *bytevector, std::uint32_t index)
+std::uint8_t lliby_bytevector_u8_ref(BytevectorCell *bytevector, std::uint32_t index)
 {
 	auto byte = bytevector->byteAt(index);
 
 	if (byte == BytevectorCell::InvalidByte)
 	{
-		_lliby_fatal("Bytevector index out of bounds", bytevector);	
+		signalError("Bytevector index out of bounds", {bytevector});	
 	}
 
 	return byte;
@@ -36,7 +36,7 @@ void lliby_bytevector_u8_set(BytevectorCell *bytevector, std::uint32_t index, st
 {
 	if (!bytevector->setByteAt(index, value))
 	{
-		_lliby_fatal("Bytevector index out of bounds", bytevector);	
+		signalError("Bytevector index out of bounds", {bytevector});	
 	}
 }
 
@@ -46,7 +46,7 @@ BytevectorCell *lliby_bytevector(ListElementCell *argHead)
 	
 	if (!properList.isValid())
 	{
-		_lliby_fatal("Non-exact integer passed to (bytevector)", argHead); 
+		signalError("Non-exact integer passed to (bytevector)", {argHead}); 
 	}
 
 	auto length = properList.length();
@@ -69,7 +69,7 @@ BytevectorCell *lliby_bytevector_append(ListElementCell *argHead)
 	
 	if (!argList.isValid())
 	{
-		_lliby_fatal("Non-bytevector passed to (bytevector-append)", argHead); 
+		signalError("Non-bytevector passed to (bytevector-append)", {argHead}); 
 	}
 
 	// Create a std::list

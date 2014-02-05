@@ -1,22 +1,51 @@
-#include "fatal.h"
+#include "core/error.h"
 
-#include <iostream>
+#include "alloc/StrongRef.h"
+
 #include <unistd.h>
+#include <iostream>
 
-#include "core/init.h"
-
-#include "binding/DatumCell.h"
-#include "binding/ProperList.h"
 #include "binding/StringCell.h"
+#include "binding/ListElementCell.h"
 #include "binding/ErrorObjectCell.h"
-#include "writer/ExternalFormDatumWriter.h"
+#include "binding/ProperList.h"
 
-using namespace lliby;
+#include "dynamic/SchemeException.h"
+
+#include "writer/ExternalFormDatumWriter.h"
 
 extern "C"
 {
 
+using namespace lliby;
+
 void _lliby_fatal(const char *message, const DatumCell *evidence)
+{
+	fatalError(message, evidence);
+}
+
+void _lliby_signal_error(const char *message, DatumCell *irritant)
+{
+	signalError(message, {irritant});
+}
+
+}
+
+namespace lliby
+{
+
+void signalError(const char *message, const std::vector<DatumCell*> &irritants)
+{
+	// Convert our C++ data type to Scheme cells
+	alloc::StrongRef<ListElementCell> irritantsCell = ListElementCell::createProperList(irritants);
+	alloc::StrongRef<StringCell> messageCell = StringCell::fromUtf8CString(message);
+
+	// Throw a new exception
+	auto errorObj = ErrorObjectCell::createInstance(messageCell, irritantsCell);
+	throw dynamic::SchemeException(errorObj);
+}
+
+void fatalError(const char *message, const DatumCell *evidence)
 {
 	std::cerr << message << std::endl;
 

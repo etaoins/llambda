@@ -23,7 +23,7 @@ add_library(lliby
 	binding/VectorCell.cpp
 	core/constinstances.cpp
 	core/dynamic.cpp
-	core/fatal.cpp
+	core/error.cpp
 	core/init.cpp
 	core/recorddata.cpp
 	dynamic/State.cpp

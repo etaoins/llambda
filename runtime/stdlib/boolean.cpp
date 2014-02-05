@@ -1,7 +1,8 @@
 #include "binding/ListElementCell.h"
 #include "binding/BooleanCell.h"
 #include "binding/ProperList.h"
-#include "core/fatal.h"
+
+#include "core/error.h"
 
 extern "C"
 {
@@ -24,8 +25,7 @@ bool lliby_boolean_equal(BooleanCell *value1, BooleanCell *value2, ListElementCe
 
 	if (!properList.isValid())
 	{
-		_lliby_fatal("Non-boolean passed to (boolean=?)", argHead);
-		return false;
+		signalError("Non-boolean passed to (boolean=?)", {argHead});
 	}
 
 	for(auto boolCell : properList)

@@ -2,8 +2,9 @@
 #include "binding/VectorCell.h"
 #include "binding/ProperList.h"
 
-#include "core/fatal.h"
 #include "alloc/StrongRef.h"
+
+#include "core/error.h"
 
 using namespace lliby;
 
@@ -20,13 +21,13 @@ std::uint32_t lliby_vector_length(VectorCell *vector)
 	return vector->length();
 }
 
-DatumCell* lliby_vector_ref(const VectorCell *vector, std::uint32_t index)
+DatumCell* lliby_vector_ref(VectorCell *vector, std::uint32_t index)
 {
 	DatumCell* element = vector->elementAt(index);
 
 	if (element == nullptr)
 	{
-		_lliby_fatal("Vector index out of bounds", vector);	
+		signalError("Vector index out of bounds", {vector});	
 	}
 
 	return element;
@@ -36,7 +37,7 @@ void lliby_vector_set(VectorCell *vector, std::uint32_t index, DatumCell *obj)
 {
 	if (!vector->setElementAt(index, obj))
 	{
-		_lliby_fatal("Vector index out of bounds", vector);	
+		signalError("Vector index out of bounds", {vector});	
 	}
 }
 
@@ -46,7 +47,7 @@ VectorCell *lliby_vector(ListElementCell *argHead)
 	
 	if (!properList.isValid())
 	{
-		_lliby_fatal("Non-list passed to (list->vector)", argHead); 
+		signalError("Non-list passed to (list->vector)", {argHead}); 
 	}
 
 	auto length = properList.length();
@@ -72,7 +73,7 @@ VectorCell *lliby_vector_append(ListElementCell *argHead)
 	
 	if (!argList.isValid())
 	{
-		_lliby_fatal("Non-vector passed to (vector-append)", argHead); 
+		signalError("Non-vector passed to (vector-append)", {argHead}); 
 	}
 
 	// Create a std::vector

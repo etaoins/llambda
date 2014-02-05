@@ -1,11 +1,12 @@
 #include "binding/ProcedureCell.h"
 #include "binding/ListElementCell.h"
 #include "binding/ProperList.h"
-#include "core/fatal.h"
 
 #include "alloc/allocator.h"
 #include "alloc/RangeAlloc.h"
 #include "alloc/StrongRef.h"
+
+#include "core/error.h"
 
 using namespace lliby;
 
@@ -25,7 +26,7 @@ DatumCell *lliby_apply(ProcedureCell *procedure, ListElementCell *argHead)
 
 		if (!applyArgList.isValid())
 		{
-			_lliby_fatal("Non-list passed to (apply)", argHead);
+			signalError("Non-list passed to (apply)", {argHead});
 		}
 		else if (applyArgList.length() == 0)
 		{
@@ -52,7 +53,7 @@ DatumCell *lliby_apply(ProcedureCell *procedure, ListElementCell *argHead)
 
 			if (!(finalListHead && ProperList<DatumCell>(finalListHead).isValid()))
 			{
-				_lliby_fatal("Final argument to (apply) must be a proper list", finalListHead);
+				signalError("Final argument to (apply) must be a proper list", {finalListHead});
 			}
 
 			// Reference the procedure cell before allocating the argument list

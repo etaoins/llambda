@@ -2,18 +2,19 @@
 #include "binding/EmptyListCell.h"
 #include "binding/BooleanCell.h"
 #include "binding/ProperList.h"
-#include "core/fatal.h"
 
 #include "alloc/allocator.h"
 #include "alloc/RangeAlloc.h"
 #include "alloc/StrongRef.h"
+
+#include "core/error.h"
 
 using namespace lliby;
 
 namespace 
 {
 	// This is used to implement memq, memv and member without a callback
-	const DatumCell* list_search(const DatumCell *obj, const ListElementCell *listHead, bool (DatumCell::*equalityCheck)(const DatumCell*) const)
+	const DatumCell* list_search(const DatumCell *obj, ListElementCell *listHead, bool (DatumCell::*equalityCheck)(const DatumCell*) const)
 	{
 		const DatumCell *datum = listHead;
 
@@ -35,7 +36,7 @@ namespace
 		}
 		else
 		{
-			_lliby_fatal("Attempted to search non-list", listHead);
+			signalError("Attempted to search non-list", {listHead});
 		}
 	}
 }
@@ -53,7 +54,7 @@ PairCell *lliby_cons(DatumCell *car, DatumCell *cdr)
 	// allocation and reference updates are done
 	alloc::RangeAlloc allocation(alloc::allocateRange(1));
 
-	return new (*allocation.begin()) PairCell(carRef, cdrRef);
+	return new (*allocation.begin()) PairCell(carRef, {cdrRef});
 }
 
 DatumCell *lliby_car(PairCell *pair)
@@ -76,13 +77,13 @@ void lliby_set_cdr(PairCell *pair, DatumCell *obj)
 	return pair->setCdr(obj);
 }
 
-std::uint32_t lliby_length(const ListElementCell *head) 
+std::uint32_t lliby_length(ListElementCell *head) 
 {
 	ProperList<DatumCell> properList(head);
 
 	if (!properList.isValid())
 	{
-		_lliby_fatal("Non-list passed to list-length", head);
+		signalError("Non-list passed to list-length", {head});
 	}
 
 	return properList.length();
@@ -167,7 +168,7 @@ DatumCell* lliby_append(ListElementCell *argHead)
 
 	if (!argList.isValid())
 	{
-		_lliby_fatal("Invalid argument list passed to (append)", argHead);
+		signalError("Invalid argument list passed to (append)", {argHead});
 	}
 
 	auto argCount = argList.length();
@@ -186,11 +187,12 @@ DatumCell* lliby_append(ListElementCell *argHead)
 
 	while(--argCount)
 	{
-		auto listHead = datum_cast<ListElementCell>(*(argIt++));
+		auto argDatum = *(argIt++);
+		auto listHead = datum_cast<ListElementCell>(argDatum);
 
 		if (listHead == nullptr)
 		{
-			_lliby_fatal("Non-list passed to (append) in non-terminal position", listHead);
+			signalError("Non-list passed to (append) in non-terminal position", {argDatum});
 		}
 
 		// Get the passed list
@@ -201,7 +203,7 @@ DatumCell* lliby_append(ListElementCell *argHead)
 
 		if (!properList.isValid())
 		{
-			_lliby_fatal("Improper list passed to (append) in non-terminal position", listHead);
+			signalError("Improper list passed to (append) in non-terminal position", {listHead});
 		}
 
 		for(auto element : properList)
@@ -215,12 +217,12 @@ DatumCell* lliby_append(ListElementCell *argHead)
 	return ListElementCell::createList(appenedElements, *(argIt++));
 }
 
-const DatumCell* lliby_memv(const DatumCell *obj, const ListElementCell *listHead)
+const DatumCell* lliby_memv(const DatumCell *obj, ListElementCell *listHead)
 {
 	return list_search(obj, listHead, &DatumCell::isEqv);
 }
 
-const DatumCell* lliby_member(const DatumCell *obj, const ListElementCell *listHead)
+const DatumCell* lliby_member(const DatumCell *obj, ListElementCell *listHead)
 {
 	return list_search(obj, listHead, &DatumCell::isEqual);
 }

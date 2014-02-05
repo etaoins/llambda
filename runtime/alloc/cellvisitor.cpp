@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <unordered_set>
 
-#include "core/fatal.h"
+#include "core/error.h"
 
 #include "binding/UnitCell.h"
 #include "binding/EmptyListCell.h"
@@ -100,7 +100,7 @@ void visitCell(DatumCell **rootCellRef, std::function<bool(DatumCell **)> &visit
 	}
 	else
 	{
-		_lliby_fatal("Unknown cell type encountered attempting to visit children", *rootCellRef);
+		fatalError("Unknown cell type encountered attempting to visit children", *rootCellRef);
 	}
 }
 

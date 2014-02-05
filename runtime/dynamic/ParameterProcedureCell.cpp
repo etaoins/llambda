@@ -2,8 +2,9 @@
 
 #include "dynamic/State.h"
 #include "binding/EmptyListCell.h"
-#include "core/fatal.h"
 #include "alloc/StrongRef.h"
+
+#include "core/error.h"
 
 namespace lliby
 {
@@ -20,7 +21,7 @@ namespace
 	{
 		if (argHead != EmptyListCell::instance())
 		{
-			_lliby_fatal("Parameter procedures don't accept arguments", argHead);
+			signalError("Parameter procedures don't accept arguments", {argHead});
 		}
 
 		// We know we're a parameter procedure because only parameter procedures have us as an entry point

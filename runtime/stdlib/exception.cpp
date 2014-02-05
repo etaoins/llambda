@@ -4,7 +4,6 @@
 #include "binding/ListElementCell.h"
 #include "binding/ErrorObjectCell.h"
 
-#include "core/fatal.h"
 #include "alloc/StrongRef.h"
 #include "dynamic/State.h"
 #include "dynamic/SchemeException.h"

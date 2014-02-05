@@ -5,7 +5,7 @@
 
 #include <cmath>
 
-#include "core/fatal.h"
+#include "core/error.h"
 
 using namespace lliby;
 
@@ -69,7 +69,7 @@ namespace
 
 		if (!argList.isValid())
 		{
-			_lliby_fatal("Non-numeric passed to comparison function", argHead);
+			signalError("Non-numeric passed to comparison function", {argHead});
 		}
 
 		if (!compareCells(value1, value2))
@@ -109,7 +109,7 @@ std::int64_t lliby_exact(NumericCell *numeric)
 
 	if (!inexactRational->isInteger())
 	{
-		_lliby_fatal("Attempted to convert non-integral inexact rational to exact value", numeric);
+		signalError("Attempted to convert non-integral inexact rational to exact value", {numeric});
 	}
 
 	return static_cast<std::int64_t>(inexactRational->value());
@@ -133,7 +133,7 @@ double lliby_inexact(NumericCell *numeric)
 	// representations
 	if (static_cast<std::int64_t>(inexactValue) != exactInt->value())
 	{
-		_lliby_fatal("Attempted to convert exact integer with a value that cannot be represented by an inexact rational", numeric);
+		signalError("Attempted to convert exact integer with a value that cannot be represented by an inexact rational", {numeric});
 	}
 
 	return inexactValue;
@@ -145,7 +145,7 @@ NumericCell *lliby_add(ListElementCell *argHead)
 
 	if (!argList.isValid())
 	{
-		_lliby_fatal("Non-numeric passed to (+)", argHead);
+		signalError("Non-numeric passed to (+)", {argHead});
 	}
 
 	std::int64_t exactSum = 0;
@@ -183,7 +183,7 @@ NumericCell *lliby_mul(ListElementCell *argHead)
 
 	if (!argList.isValid())
 	{
-		_lliby_fatal("Non-numeric passed to (*)", argHead);
+		signalError("Non-numeric passed to (*)", {argHead});
 	}
 
 	std::int64_t exactProduct = 1;
@@ -221,7 +221,7 @@ NumericCell *lliby_sub(NumericCell *startValue, ListElementCell *argHead)
 
 	if (!argList.isValid())
 	{
-		_lliby_fatal("Non-numeric passed to (*)", argHead);
+		signalError("Non-numeric passed to (*)", {argHead});
 	}
 
 	std::int64_t exactDifference;
@@ -286,7 +286,7 @@ double lliby_div(NumericCell *startValue, ListElementCell *argHead)
 
 	if (!argList.isValid())
 	{
-		_lliby_fatal("Non-numeric passed to (/)", argHead);
+		signalError("Non-numeric passed to (/)", {argHead});
 	}
 
 	double currentValue;

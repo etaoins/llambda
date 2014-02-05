@@ -1,11 +1,11 @@
 #include "core/dynamic.h"
 
-#include "core/fatal.h"
-
 #include "binding/ProcedureCell.h"
 #include "binding/DatumCell.h"
 #include "dynamic/State.h"
 #include "dynamic/ParameterProcedureCell.h"
+
+#include "core/error.h"
 
 using namespace lliby;
 using lliby::dynamic::ParameterProcedureCell;
@@ -24,7 +24,7 @@ void _lliby_dynamicenv_set_value(ProcedureCell *procCell, DatumCell *value)
 
 	if (paramCell == nullptr)
 	{
-		_lliby_fatal("Attempted to parameterize non-parameter", procCell);
+		signalError("Attempted to parameterize non-parameter", {procCell});
 	}
 
 	dynamic::State::activeState()->setValueForParameter(paramCell, value);

@@ -1,7 +1,7 @@
 #include <clocale>
 
 #include "alloc/allocator.h"
-#include "core/fatal.h"
+#include "core/error.h"
 #include "core/init.h"
 #include "dynamic/init.h"
 #include "dynamic/SchemeException.h"
@@ -31,7 +31,7 @@ void _lliby_launch_world(void (*entryPoint)())
 	catch (dynamic::SchemeException &except)
 	{
 		_lliby_shutdown_world();	
-		_lliby_fatal("Unhandled exception", except.object());
+		fatalError("Unhandled exception", except.object());
 	}
 	
 	_lliby_shutdown_world();	
