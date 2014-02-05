@@ -33,15 +33,11 @@ object PlanRecordTypeConstructor {
           (argumentUniquer(field.sourceName) -> fieldToTempValue(field))
         }).toList
         
-        // Allocate the cell
-        val allocation = new ps.TempAllocation
-        plan.steps += ps.AllocateCells(allocation, 1)
-
         // Initialize the record
         val cellTemp = ps.GcManagedValue()
         val dataTemp = ps.GcUnmanagedValue()
 
-        plan.steps += ps.RecordLikeInit(cellTemp, dataTemp, allocation, 0, recordType)
+        plan.steps += ps.RecordLikeInit(cellTemp, dataTemp, recordType)
         
         // Set all our fields
         for(field <- recordType.fields) {

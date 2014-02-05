@@ -104,14 +104,10 @@ class NativeExactIntegerValue(tempValue : ps.TempValue, nativeType : vt.IntType)
   
   override def planCastToCellTempValue(cellType : ct.CellType)(implicit plan : PlanWriter) : ps.TempValue = cellType match {
     case ct.InexactRationalCell =>
-      // Allocate space for the int
-      val allocTemp = new ps.TempAllocation
-      plan.steps += ps.AllocateCells(allocTemp, 1)
-
       // Convert us to double and box
       val boxedTemp = ps.GcManagedValue()
       
-      plan.steps += ps.BoxInexactRational(boxedTemp, allocTemp, 0, toTempValue(vt.Double))
+      plan.steps += ps.BoxInexactRational(boxedTemp, toTempValue(vt.Double))
 
       boxedTemp
     
@@ -120,13 +116,9 @@ class NativeExactIntegerValue(tempValue : ps.TempValue, nativeType : vt.IntType)
   }
 
   def planCellTempValue()(implicit plan : PlanWriter) : ps.TempValue =  {
-    // Allocate space for the int
-    val allocTemp = new ps.TempAllocation
-    plan.steps += ps.AllocateCells(allocTemp, 1)
-
     // We can only box 64bit signed ints
     val boxedTemp = ps.GcManagedValue()
-    plan.steps += ps.BoxExactInteger(boxedTemp, allocTemp, 0, toTempValue(vt.Int64))
+    plan.steps += ps.BoxExactInteger(boxedTemp, toTempValue(vt.Int64))
 
     boxedTemp
   }
@@ -147,13 +139,9 @@ class NativeInexactRationalValue(tempValue : ps.TempValue, nativeType : vt.FpTyp
   }
   
   def planCellTempValue()(implicit plan : PlanWriter) : ps.TempValue =  {
-    // Allocate space for the int
-    val allocTemp = new ps.TempAllocation
-    plan.steps += ps.AllocateCells(allocTemp, 1)
-
     // We can only box doubles
     val boxedTemp = ps.GcManagedValue()
-    plan.steps += ps.BoxInexactRational(boxedTemp, allocTemp, 0, toTempValue(vt.Double))
+    plan.steps += ps.BoxInexactRational(boxedTemp, toTempValue(vt.Double))
 
     boxedTemp
   }
@@ -163,12 +151,8 @@ class NativeCharacterValue(tempValue : ps.TempValue) extends NativeValue(vt.Unic
   def withNewTempValue(tempValue : ps.TempValue) = new NativeCharacterValue(tempValue)
 
   def planCellTempValue()(implicit plan : PlanWriter) : ps.TempValue =  {
-    // Allocate space for the int
-    val allocTemp = new ps.TempAllocation
-    plan.steps += ps.AllocateCells(allocTemp, 1)
-
     val boxedTemp = ps.GcManagedValue()
-    plan.steps += ps.BoxCharacter(boxedTemp, allocTemp, 0, tempValue)
+    plan.steps += ps.BoxCharacter(boxedTemp, tempValue)
 
     boxedTemp
   }

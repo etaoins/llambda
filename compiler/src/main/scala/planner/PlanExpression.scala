@@ -86,17 +86,14 @@ private[planner] object PlanExpression {
       case et.Bind(bindings) =>
         val finalState = bindings.foldLeft(initialState) { case (state, (storageLoc, initialValue)) =>
           if (planConfig.analysis.mutableVars.contains(storageLoc)) {
-            val allocTemp = new ps.TempAllocation
             val mutableTemp = ps.GcManagedValue()
             
             val initialValueResult = apply(state)(initialValue)
             val initialValueTemp = initialValueResult.value.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
 
-            plan.steps += ps.AllocateCells(allocTemp, 1)
-
             // Create a new mutable
             val recordDataTemp = ps.GcManagedValue()
-            plan.steps += ps.RecordLikeInit(mutableTemp, recordDataTemp, allocTemp, 0, vt.MutableType)
+            plan.steps += ps.RecordLikeInit(mutableTemp, recordDataTemp, vt.MutableType)
 
             // Set the value
             plan.steps += ps.RecordDataFieldSet(recordDataTemp, vt.MutableType, vt.MutableField, initialValueTemp)

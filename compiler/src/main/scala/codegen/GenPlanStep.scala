@@ -8,9 +8,15 @@ import llambda.compiler.{celltype => ct}
 
 object GenPlanStep {
   def apply(state : GenerationState, plannedSymbols : Set[String], typeGenerator : TypeGenerator)(step : ps.Step) : GenerationState = step match {
-    case ps.AllocateCells(tempAlloc, count) =>
+    case ps.AllocateCells(count) =>
+      if (!state.currentAllocation.isEmpty) {
+        // This is not only wasteful but dangerous as the previous allocation
+        // won't be fully initialized
+        throw new InternalCompilerErrorException("Attempted cell allocation without fully consuming previous allocation")
+      }
+
       val (allocState, allocation) = GenCellAllocation(state)(count)
-      allocState.withAllocation(tempAlloc -> allocation)
+      allocState.copy(currentAllocation=allocation)
 
     case storeConstantStep : ps.StoreConstant =>
       val irResult = GenConstant(state, typeGenerator)(storeConstantStep)
@@ -25,9 +31,9 @@ object GenPlanStep {
     
     case boxValueStep : ps.BoxValue =>
       val irUnboxed = state.liveTemps(boxValueStep.unboxed)
-      val irResult = GenBoxing(state)(boxValueStep, irUnboxed)
+      val (boxState, irResult) = GenBoxing(state)(boxValueStep, irUnboxed)
 
-      state.withTempValue(boxValueStep.result -> irResult)
+      boxState.withTempValue(boxValueStep.result -> irResult)
 
     case ps.StoreNamedEntryPoint(resultTemp, signature, nativeSymbol) =>
       val irValue = GenNamedEntryPoint(state.module)(signature, nativeSymbol, plannedSymbols)
@@ -76,13 +82,12 @@ object GenPlanStep {
 
       state.withTempValue(resultTemp -> resultIr)
 
-    case ps.BuildProperList(resultTemp, allocTemp, allocBase, valueTemps) =>
-      val allocation = state.liveAllocations(allocTemp)
+    case ps.BuildProperList(resultTemp, valueTemps) =>
       val valueIrs = valueTemps.map(state.liveTemps.apply)
 
-      val properListIr = GenProperList(state.currentBlock)(allocation, allocBase, valueIrs)
+      val (listState, properListIr) = GenProperList(state)(valueIrs)
 
-      state.withTempValue(resultTemp -> properListIr)
+      listState.withTempValue(resultTemp -> properListIr)
 
     case ps.TestCellType(resultTemp, cellTemp, cellType) =>
       val cellIr = state.liveTemps(cellTemp)
@@ -190,9 +195,9 @@ object GenPlanStep {
       state.withTempValue(resultTemp -> entryPoint)
 
     case initStep : ps.RecordLikeInit  =>
-      val initedRecordLike = GenRecordLikeInit(state, typeGenerator)(initStep)
+      val (initedState, initedRecordLike) = GenRecordLikeInit(state, typeGenerator)(initStep)
 
-      state
+      initedState
         .withTempValue(initStep.cellResult -> initedRecordLike.recordCell)
         .withTempValue(initStep.dataResult -> initedRecordLike.recordData)
     

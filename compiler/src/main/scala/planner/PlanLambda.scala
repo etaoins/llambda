@@ -53,16 +53,12 @@ private[planner] object PlanLambda {
       initialState
 
     case argCount =>
-      // Allocate all of our space
-      val allocTemp = new ps.TempAllocation
-      plan.steps += ps.AllocateCells(allocTemp, argCount)
-
-      mutableArgs.zipWithIndex.foldLeft(initialState) { case (state, (Argument(storageLoc, tempValue, _), index)) =>
+      mutableArgs.foldLeft(initialState) { case (state, Argument(storageLoc, tempValue, _)) =>
         // Init the mutable
         val mutableTemp = ps.GcManagedValue()
         val recordDataTemp = ps.GcUnmanagedValue()
 
-        plan.steps += ps.RecordLikeInit(mutableTemp, recordDataTemp, allocTemp, index, vt.MutableType)
+        plan.steps += ps.RecordLikeInit(mutableTemp, recordDataTemp, vt.MutableType)
 
         // Set the value
         plan.steps += ps.RecordDataFieldSet(recordDataTemp, vt.MutableType, vt.MutableField, tempValue)
@@ -267,13 +263,10 @@ private[planner] object PlanLambda {
 
     val procCell = procSelfOpt map { _ => 
       // Save the closure values from the parent's scope
-      val tempAllocation = new ps.TempAllocation
-      parentPlan.steps += ps.AllocateCells(tempAllocation, 1)
-
       val cellTemp = ps.GcManagedValue()
       val dataTemp = ps.GcUnmanagedValue()
 
-      parentPlan.steps += ps.RecordLikeInit(cellTemp, dataTemp, tempAllocation, 0, closureType)
+      parentPlan.steps += ps.RecordLikeInit(cellTemp, dataTemp, closureType)
 
       storeClosureData(dataTemp, closureType, capturedVariables)(parentPlan)
 

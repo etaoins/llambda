@@ -9,15 +9,15 @@ import llambda.compiler.{valuetype => vt}
 object GenRecordLikeInit {
   case class InitializedRecordLike(recordCell : IrValue, recordData : IrValue)
 
-  def apply(state : GenerationState, typeGenerator : TypeGenerator)(initStep : ps.RecordLikeInit) : InitializedRecordLike  = { 
+  def apply(state : GenerationState, typeGenerator : TypeGenerator)(initStep : ps.RecordLikeInit) : (GenerationState, InitializedRecordLike)  = { 
     val cellType = initStep.recordLikeType.cellType
 
     val block = state.currentBlock
     val module = state.module
 
     // Get a pointer to the new cell
-    val allocation = state.liveAllocations(initStep.allocation)
-    val recordCell = allocation.genTypedPointer(block)(initStep.allocIndex, cellType) 
+    val allocation = state.currentAllocation
+    val (newAllocation, recordCell) = allocation.consumeCells(block)(1, cellType) 
     
     // Get our record type information
     val recordLikeType = initStep.recordLikeType
@@ -73,9 +73,15 @@ object GenRecordLikeInit {
 
     val castRecordData = block.bitcastTo("castRecordData")(uncastRecordData, PointerType(recordDataIrType))
 
-    InitializedRecordLike(
+    val newState = state.copy(
+      currentAllocation=newAllocation
+    )
+
+    val recordLike = InitializedRecordLike(
       recordCell=recordCell,
       recordData=castRecordData
     )
+
+    (newState, recordLike)
   }
 }

@@ -10,8 +10,7 @@ class ExternalCompilerException extends Exception
 
 object Compiler {
   private val conniverPasses = List(
-    conniver.DisposeValues,
-    conniver.MergeCellAllocations
+    conniver.DisposeValues
   )
 
   abstract class RunningCompiler {
@@ -138,8 +137,11 @@ object Compiler {
         functions
       }
 
+      // Plan our cell allocations after all optimizatins have been done
+      val allocatedFunctions = optimizedFunctions.mapValues(planner.PlanCellAllocations(_))
+
       // Generate the LLVM IR
-      val llvmIr = codegen.GenProgram(optimizedFunctions, config.targetPlatform, featureIdentifiers)
+      val llvmIr = codegen.GenProgram(allocatedFunctions, config.targetPlatform, featureIdentifiers)
       
       // Send the IR to our running compiler
       if (!runningCompiler.sendLlvmIr(llvmIr.getBytes("UTF-8"))) {

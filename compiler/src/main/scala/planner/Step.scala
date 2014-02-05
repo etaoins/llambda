@@ -22,10 +22,6 @@ object GcUnmanagedValue {
     new TempValue(false)
 }
 
-final class TempAllocation {
-  override def toString = s"%alloc-${this.hashCode.toHexString}" 
-}
-
 sealed trait Step {
   val inputValues : Set[TempValue]
   val outputValues : Set[TempValue]
@@ -40,11 +36,7 @@ sealed trait GcBarrier extends Step
 
 /** Step requiring a cell from a temporary allocation */
 sealed trait CellConsumer extends Step {
-  val allocation : TempAllocation
-  val allocIndex : Int
   val allocSize : Int
-
-  def withNewAllocation(allocation : TempAllocation, allocIndex : Int) : Step
 }
 
 /** Step containing inner steps 
@@ -86,8 +78,11 @@ case class Invoke(result : Option[TempValue], signature : ProcedureSignature, en
   lazy val outputValues = result.toSet
 }
 
-/** Allocates a given number of cells at runtime */
-case class AllocateCells(result : TempAllocation, count : Int) extends Step with GcBarrier {
+/** Allocates a given number of cells at runtime 
+ *
+ * This should only be inserted in to the plan by PlanCellAllocations
+ */
+case class AllocateCells(count : Int) extends Step with GcBarrier {
   val inputValues = Set[TempValue]()
   val outputValues = Set[TempValue]()
 }
@@ -162,18 +157,13 @@ case class ConvertNativeIntegerToFloat(result : TempValue, fromValue : TempValue
 /** Builds a proper list at runtime
   *
   * @param result      location to store the head of the proper list
-  * @param allocation  allocation to allocate from
-  * @param allocIndex  offset in the allocation to allocate from
   * @param listValues  DatumCell values to add to the list
   */
-case class BuildProperList(result : TempValue, allocation : TempAllocation, allocIndex : Int, listValues : List[TempValue]) extends Step with CellConsumer {
+case class BuildProperList(result : TempValue, listValues : List[TempValue]) extends Step with CellConsumer {
   lazy val inputValues = listValues.toSet
   lazy val outputValues = Set(result)
 
   val allocSize = listValues.length
-
-  def withNewAllocation(allocation : TempAllocation, allocIndex : Int) =
-    BuildProperList(result, allocation, allocIndex, listValues)
 }
 
 /** Indicates a step that stores a constant value */
@@ -304,29 +294,20 @@ case class BoxBoolean(result : TempValue, unboxed : TempValue) extends BoxValue 
   lazy val inputValues = Set(unboxed)
 }
 
-case class BoxExactInteger(result : TempValue, allocation : TempAllocation, allocIndex : Int, unboxed : TempValue) extends BoxValue with CellConsumer {
+case class BoxExactInteger(result : TempValue, unboxed : TempValue) extends BoxValue with CellConsumer {
   val allocSize = 1
-
-  def withNewAllocation(allocation : TempAllocation, allocIndex : Int) =
-    BoxExactInteger(result, allocation, allocIndex, unboxed)
 
   lazy val inputValues = Set(unboxed)
 }
 
-case class BoxInexactRational(result : TempValue, allocation : TempAllocation, allocIndex : Int, unboxed : TempValue) extends BoxValue with CellConsumer {
+case class BoxInexactRational(result : TempValue, unboxed : TempValue) extends BoxValue with CellConsumer {
   val allocSize = 1
-  
-  def withNewAllocation(allocation : TempAllocation, allocIndex : Int) =
-    BoxInexactRational(result, allocation, allocIndex, unboxed)
   
   lazy val inputValues = Set(unboxed)
 }
 
-case class BoxCharacter(result : TempValue, allocation : TempAllocation, allocIndex : Int, unboxed : TempValue) extends BoxValue with CellConsumer {
+case class BoxCharacter(result : TempValue, unboxed : TempValue) extends BoxValue with CellConsumer {
   val allocSize = 1
-  
-  def withNewAllocation(allocation : TempAllocation, allocIndex : Int) =
-    BoxCharacter(result, allocation, allocIndex, unboxed)
   
   lazy val inputValues = Set(unboxed)
 }
@@ -341,15 +322,10 @@ case class Return(returnValue : Option[TempValue]) extends Step {
  *
  * @param cellResult  location to store the record cell 
  * @param dataResult  location to store the uninitialized record data 
- * @param allocation  allocation to allocate the cell from
- * @param allocIndex  offset in the allocation to allocate from
  * @param recordType  type of record to create
  */
-case class RecordLikeInit(cellResult : TempValue, dataResult : TempValue, allocation : TempAllocation, allocIndex : Int, recordLikeType : vt.RecordLikeType) extends Step with CellConsumer {
+case class RecordLikeInit(cellResult : TempValue, dataResult : TempValue, recordLikeType : vt.RecordLikeType) extends Step with CellConsumer {
   val allocSize = 1
-  
-  def withNewAllocation(allocation : TempAllocation, allocIndex : Int) =
-    RecordLikeInit(cellResult, dataResult, allocation, allocIndex, recordLikeType)
 
   val inputValues = Set[TempValue]()
   val outputValues = Set(cellResult, dataResult)

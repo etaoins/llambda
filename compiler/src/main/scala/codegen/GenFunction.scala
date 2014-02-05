@@ -38,6 +38,7 @@ private[codegen] object GenFunction {
       module=module,
       gcSlots=gcSlots,
       currentBlock=procStartBlock,
+      currentAllocation=EmptyCellAllocation(),
       liveTemps=argTemps)
 
     // Generate our steps

@@ -8,16 +8,18 @@ import llambda.llvmir.IrFunction._
 
 object GenProperList {
   // irDatumCell must be of type %datum*
-  def apply(block : IrBlockBuilder)(allocation : GenCellAllocation.CellAllocation, allocBase : Int, irDataCells : Seq[IrValue]) : IrValue ={
+  def apply(initialState : GenerationState)(irDataCells : Seq[IrValue]) : (GenerationState, IrValue) = {
+    val block = initialState.currentBlock
     val listLength = irDataCells.length
     val emptyList = GlobalDefines.emptyListIrValue
 
     val bitcastEmptyList = block.bitcastTo("emptyListCast")(emptyList, PointerType(ct.DatumCell.irType))
 
-    val head = irDataCells.zipWithIndex.foldRight(bitcastEmptyList) { case ((irDatumCell, index), nextElement) =>
-      block.comment(s"initializing list element ${index}")
+    val (finalState, head) = irDataCells.foldRight((initialState, bitcastEmptyList)) { case (irDatumCell, (state, nextElement)) =>
+      val allocation = state.currentAllocation
 
-      val pairPointer = allocation.genTypedPointer(block)(allocBase + index, ct.PairCell)
+      block.comment(s"initializing list element")
+      val (newAllocation, pairPointer) = allocation.consumeCells(block)(1, ct.PairCell)
 
       // Set the car
       ct.PairCell.genStoreToCar(block)(irDatumCell, pairPointer)
@@ -26,9 +28,17 @@ object GenProperList {
       ct.PairCell.genStoreToCdr(block)(nextElement, pairPointer)
 
       // Pass value to the element before us
-      block.bitcastTo(s"element${index}DatumCast")(pairPointer, PointerType(ct.DatumCell.irType))
+      val elementIr = block.bitcastTo(s"elementDatumCast")(pairPointer, PointerType(ct.DatumCell.irType))
+
+      val newState = state.copy(
+        currentAllocation=newAllocation
+      )
+
+      (newState, elementIr)
     }
 
-    block.bitcastTo("headListElementCast")(head, PointerType(ct.ListElementCell.irType))
+    val headCast = block.bitcastTo("headListElementCast")(head, PointerType(ct.ListElementCell.irType))
+
+    (finalState, headCast)
   }
 }

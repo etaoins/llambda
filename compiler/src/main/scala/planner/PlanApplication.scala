@@ -24,15 +24,13 @@ object PlanApplication {
       listElemCast
     }
     else {
-      val allocTemp = new ps.TempAllocation
       val restArgTemp = ps.GcManagedValue()
 
       val argTemps = restArgs.map {
         _.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
       }
 
-      plan.steps += ps.AllocateCells(allocTemp, restArgCount)
-      plan.steps += ps.BuildProperList(restArgTemp, allocTemp, 0, argTemps)
+      plan.steps += ps.BuildProperList(restArgTemp, argTemps)
 
       restArgTemp
     }

@@ -1,16 +1,12 @@
 package io.llambda.compiler.codegen
 import io.llambda
 
-import llambda.compiler.InternalCompilerErrorException
-import llambda.compiler.{celltype => ct}
 import llambda.llvmir._
 import llambda.llvmir.IrFunction._
 
 object GenCellAllocation {
   private val cellType = UserDefinedType("cell")
   private val cellPointerType = PointerType(cellType)
-  // Defined in GarbageState.h in the runtime
-  private val allocatedGcState = 1
   
   // Note these are pointers-to-pointers
   private val llibyAllocNext = GlobalVariable("_lliby_alloc_next", PointerType(cellPointerType))
@@ -23,38 +19,11 @@ object GenCellAllocation {
     attributes=Set(NoUnwind)
   )
 
-  class CellAllocation(basePointer : IrValue, count : Int) {
-    def genTypedPointer(block : IrBlockBuilder)(index : Int, asType : ct.ConcreteCellType) : IrValue = {
-      if (index >= count) {
-        throw new InternalCompilerErrorException("Attempted to access cell past end of allocation")
-      }
-
-      // We have to do this on %cell because the target type might be the wrong size
-      val indexValue = IntegerConstant(IntegerType(32), index)
-      val cellPointer = block.getelementptr(s"cell${index}Ptr")(cellType, basePointer, List(indexValue))
-
-      // Cast to the destination type
-      val pointerName = s"cell${index}${asType.llvmName.capitalize}Ptr"
-      val typedPointer = block.bitcastTo(pointerName)(cellPointer, PointerType(asType.irType))
-
-      // Mark it as allocated
-      val gcState = IntegerConstant(ct.DatumCell.gcStateIrType, allocatedGcState)
-      asType.genStoreToGcState(block)(gcState, typedPointer)
-      
-      // Set its type
-      val typeId = IntegerConstant(ct.DatumCell.typeIdIrType, asType.typeId)
-      asType.genStoreToTypeId(block)(typeId, typedPointer)
-
-      // Return the typed pointer
-      typedPointer
-    }
-  }
-
   def apply(initialState : GenerationState)(count : Int) : (GenerationState, CellAllocation)  = {
     val startBlock = initialState.currentBlock
 
     if (count == 0) {
-      val allocation = new CellAllocation(NullPointerConstant(cellPointerType), 0)
+      val allocation = EmptyCellAllocation()
       return (initialState, allocation)
     }
 
@@ -124,7 +93,7 @@ object GenCellAllocation {
       (tempValue -> (phiedGcRoot : IrValue))
     }
 
-    val allocation = new CellAllocation(allocResultValue, count)
+    val allocation = new CellAllocation(allocResultValue, 0, count)
 
     // Note we don't update gcRootedTemps here because it happens in a branch
     (initialState.copy(

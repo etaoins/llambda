@@ -14,36 +14,54 @@ object GenBoxing {
     arguments=List(IrFunction.Argument(PointerType(IntegerType(8))))
   )
 
-  def apply(state : GenerationState)(boxStep : ps.BoxValue, nativeValue : IrValue) : IrValue = boxStep match {
+  def apply(state : GenerationState)(boxStep : ps.BoxValue, nativeValue : IrValue) : (GenerationState, IrValue) = boxStep match {
     case _ : ps.BoxBoolean =>
-      state.currentBlock.select("boxedBool")(nativeValue, GlobalDefines.trueIrValue, GlobalDefines.falseIrValue)
+      val irValue = state.currentBlock.select("boxedBool")(
+        nativeValue,
+        GlobalDefines.trueIrValue,
+        GlobalDefines.falseIrValue
+      )
 
-    case ps.BoxExactInteger(_, allocTemp, allocIndex, _) =>
+      (state, irValue)
+
+    case _ : ps.BoxExactInteger =>
       val block = state.currentBlock
-      val allocation = state.liveAllocations(allocTemp)
+      val allocation = state.currentAllocation
 
-      val boxedIntCons = allocation.genTypedPointer(block)(allocIndex, ct.ExactIntegerCell) 
+      val (newAllocation, boxedIntCons) = allocation.consumeCells(block)(1, ct.ExactIntegerCell) 
       ct.ExactIntegerCell.genStoreToValue(block)(nativeValue, boxedIntCons)
 
-      boxedIntCons
-    
-    case ps.BoxInexactRational(_, allocTemp, allocIndex, _) =>
-      val block = state.currentBlock
-      val allocation = state.liveAllocations(allocTemp)
+      val newState = state.copy(
+        currentAllocation=newAllocation
+      )
 
-      val boxedRationalCons = allocation.genTypedPointer(block)(allocIndex, ct.InexactRationalCell) 
+      (newState, boxedIntCons)
+    
+    case _ : ps.BoxInexactRational =>
+      val block = state.currentBlock
+      val allocation = state.currentAllocation
+
+      val (newAllocation, boxedRationalCons) = allocation.consumeCells(block)(1, ct.InexactRationalCell) 
       ct.InexactRationalCell.genStoreToValue(block)(nativeValue, boxedRationalCons)
 
-      boxedRationalCons
+      val newState = state.copy(
+        currentAllocation=newAllocation
+      )
 
-    case ps.BoxCharacter(_, allocTemp, allocIndex, _) =>
+      (newState, boxedRationalCons)
+
+    case _ : ps.BoxCharacter =>
       val block = state.currentBlock
-      val allocation = state.liveAllocations(allocTemp)
+      val allocation = state.currentAllocation
 
-      val boxedCharCons = allocation.genTypedPointer(block)(allocIndex, ct.CharacterCell) 
+      val (newAllocation, boxedCharCons) = allocation.consumeCells(block)(1, ct.CharacterCell) 
       ct.CharacterCell.genStoreToUnicodeChar(block)(nativeValue, boxedCharCons)
+      
+      val newState = state.copy(
+        currentAllocation=newAllocation
+      )
 
-      boxedCharCons
+      (newState, boxedCharCons)
   }
 }
 
