@@ -19,9 +19,7 @@ bool lliby_symbol_equal(SymbolCell *value1, SymbolCell *value2, ListElementCell 
 
 	if (!properList.isValid())
 	{
-		// We're not supposed to abort here, just return false
-		_lliby_fatal("Non-Symbol passed to (boolean=?)", argHead);
-		return false;
+		_lliby_fatal("Non-symbol passed to (symbol=?)", argHead);
 	}
 
 	for(auto symbolCell : properList)
