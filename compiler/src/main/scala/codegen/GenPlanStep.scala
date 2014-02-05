@@ -15,7 +15,7 @@ object GenPlanStep {
         throw new InternalCompilerErrorException("Attempted cell allocation without fully consuming previous allocation")
       }
 
-      val (allocState, allocation) = GenCellAllocation(state)(count)
+      val (allocState, allocation) = GenCellAllocation.genAllocation(state)(count)
       allocState.copy(currentAllocation=allocation)
 
     case storeConstantStep : ps.StoreConstant =>
@@ -216,7 +216,7 @@ object GenPlanStep {
       val fatalBlock = state.currentBlock.startChildBlock("wrongRecordClass")
       val successBlock = state.currentBlock.startChildBlock("correctRecordClass")
 
-      GenFatalError(state.module, fatalBlock)(errorMessage)
+      GenErrorSignal(state.copy(currentBlock=fatalBlock))(errorMessage)
 
       // Branch if we're not of the right class
       val recordCellIr = state.liveTemps(recordCellTemp)

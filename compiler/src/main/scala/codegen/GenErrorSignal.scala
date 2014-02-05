@@ -5,8 +5,11 @@ import llambda.llvmir._
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.RuntimeErrorMessage
 
-object GenFatalError {
-  def apply(module : IrModuleBuilder, block : IrBlockBuilder)(errorMessage : RuntimeErrorMessage, evidence : Option[IrValue] = None) = {
+object GenErrorSignal {
+  def apply(state : GenerationState)(errorMessage : RuntimeErrorMessage, evidence : Option[IrValue] = None) = {
+    val module = state.module
+    val block = state.currentBlock
+
     // Define the error string
     val stringConstantName = s"${errorMessage.name}ErrorString"
     val stringConstantVar = IrGlobalVariableDef(
@@ -20,20 +23,22 @@ object GenFatalError {
       module.defineGlobalVariable(stringConstantVar)
     }
 
-    // Define _lliby_fatal
-    val llibyFatalDecl = IrFunctionDecl(
+    // Define _lliby_signal_error
+    val llibySignalErrorDecl = IrFunctionDecl(
       result=IrFunction.Result(VoidType),
-      name="_lliby_fatal",
+      name="_lliby_signal_error",
       arguments=List(
         IrFunction.Argument(PointerType(IntegerType(8)), Set(IrFunction.NoCapture)),
-        IrFunction.Argument(PointerType(ct.DatumCell.irType), Set(IrFunction.NoCapture))
-      ),
-      attributes=Set(IrFunction.NoReturn, IrFunction.ReadOnly, IrFunction.NoUnwind)
+        IrFunction.Argument(PointerType(ct.DatumCell.irType))
+      )
     )
 
-    module.unlessDeclared(llibyFatalDecl) {
-      module.declareFunction(llibyFatalDecl)
+    module.unlessDeclared(llibySignalErrorDecl) {
+      module.declareFunction(llibySignalErrorDecl)
     }
+
+    // Unwind any partial allocations we have
+    GenCellAllocation.genDeallocation(state)
 
     // Build our evidence - assume it's a datum cell
     val evidencePtr = evidence.map(
@@ -50,7 +55,7 @@ object GenFatalError {
       inbounds=true)
 
     // Call _lliby_fatal
-    block.callDecl(None)(llibyFatalDecl, List(stringStartPtr, evidencePtr))
+    block.callDecl(None)(llibySignalErrorDecl, List(stringStartPtr, evidencePtr))
 
     // Terminate the failure block
     block.unreachable

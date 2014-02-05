@@ -26,7 +26,14 @@ void _lliby_fatal(const char *message, const DatumCell *evidence)
 
 void _lliby_signal_error(const char *message, DatumCell *irritant)
 {
-	signalError(message, {irritant});
+	if (irritant != nullptr)
+	{
+		signalError(message, {irritant});
+	}
+	else
+	{
+		signalError(message, {});
+	}
 }
 
 }

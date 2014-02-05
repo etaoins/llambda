@@ -12,7 +12,10 @@ class CellAllocation(basePointer : IrValue, currentOffset : Int, totalSize : Int
 
   // Returns true if this allocation is empty
   def isEmpty : Boolean = 
-    currentOffset == totalSize
+    remainingCells == 0
+
+  def remainingCells : Int = 
+    totalSize - currentOffset
 
   def consumeCells(block : IrBlockBuilder)(count : Int, asType : ct.ConcreteCellType) : (CellAllocation, IrValue) = {
     if ((currentOffset + count) > totalSize) {

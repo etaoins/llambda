@@ -14,7 +14,12 @@ object GenCastCellToSubtype {
     targetType.genTypeCheck(state.currentBlock)(supertypeValue, successBlock, failBlock)
   
     // Generate the fail branch
-    GenFatalError(state.module, failBlock)(errorMessage)
+    {
+      val failState = state.copy(currentBlock=failBlock)
+
+      val irritant = ct.DatumCell.genPointerBitcast(failBlock)(supertypeValue)
+      GenErrorSignal(failState)(errorMessage, Some(irritant))
+    }
 
     // Continue building on the success block
     val subtypeValue = targetType.genPointerBitcast(successBlock)(supertypeValue)

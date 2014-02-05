@@ -19,7 +19,7 @@ object GenCellAllocation {
     attributes=Set(NoUnwind)
   )
 
-  def apply(initialState : GenerationState)(count : Int) : (GenerationState, CellAllocation)  = {
+  def genAllocation(initialState : GenerationState)(count : Int) : (GenerationState, CellAllocation)  = {
     val startBlock = initialState.currentBlock
 
     if (count == 0) {
@@ -100,5 +100,25 @@ object GenCellAllocation {
       currentBlock=allocFinishedBlock,
       liveTemps=initialState.liveTemps ++ liveTempsUpdate
     ), allocation)
+  }
+  
+  def genDeallocation(state : GenerationState) {
+    // How many cells were left in the allocation?
+    val remainingCells = state.currentAllocation.remainingCells
+
+    if (remainingCells != 0) {
+      val block = state.currentBlock
+      block.comment(s"Rolling back allocation of ${remainingCells} cells")
+
+      // Load the pointer to our allocation end value
+      val allocNextValue = block.load("prevAllocNext")(llibyAllocNext)
+
+      // Subtract the cells we haven't used
+      val allocationDeltaIr = IntegerConstant(IntegerType(64), -remainingCells)
+      val newAllocNextValue = block.getelementptr("newAllocNext")(cellType, allocNextValue, List(allocationDeltaIr))
+      
+      // Store the new next pointer
+      block.store(newAllocNextValue, llibyAllocNext)
+    }
   }
 }
