@@ -63,9 +63,7 @@ void fatalError(const char *message, const DatumCell *evidence)
 		if (auto errorCell = datum_cast<ErrorObjectCell>(evidence))
 		{
 			// Handle error objects specially
-			std::cerr << "Message: ";
-			writer.render(errorCell->message());
-			std::cerr << std::endl;
+			std::cerr << "Message: " << errorCell->message()->utf8Data() << std::endl;
 
 			ProperList<DatumCell> irritantList(errorCell->irritants());
 
