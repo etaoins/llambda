@@ -52,6 +52,20 @@ void init()
 
 	finalizer = new Finalizer();
 }
+
+void shutdown()
+{
+#ifdef _LLIBY_ALWAYS_GC
+	// Do one last collection at shutdown
+	forceCollection();
+
+	if (static_cast<void*>(_lliby_alloc_next) != activeBlock->startPointer())
+	{
+		std::cerr << "Cells leaked on exit!" << std::endl;
+		exit(-1);
+	}
+#endif
+}
     
 void *allocateCells(size_t count)
 {

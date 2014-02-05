@@ -11,6 +11,7 @@ namespace alloc
 class RangeAlloc;
 
 void init();
+void shutdown();
 
 /**
  * Allocator for DatumCells
