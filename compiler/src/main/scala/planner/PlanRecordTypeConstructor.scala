@@ -14,8 +14,9 @@ object PlanRecordTypeConstructor {
       case et.RecordTypeConstructor(recordType, initializedFields) =>
         // Determine our signature
         val constructorSignature = ProcedureSignature(
-          hasSelfArg =false,
-          hasRestArg =false,
+          hasWorldArg=false,
+          hasSelfArg=false,
+          hasRestArg=false,
           fixedArgs=initializedFields.map(_.fieldType),
           returnType=Some(recordType)
         )

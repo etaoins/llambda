@@ -226,6 +226,7 @@ private[planner] object PlanLambda {
     
     // Determine our signature
     val procSignature = ProcedureSignature(
+      hasWorldArg=false,
       hasSelfArg=procSelfOpt.isDefined,
       hasRestArg=restArgLoc.isDefined,
       fixedArgs=fixedArgLocs.map { _ =>

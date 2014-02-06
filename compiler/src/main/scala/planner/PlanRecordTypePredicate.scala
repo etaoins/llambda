@@ -14,6 +14,7 @@ object PlanRecordTypePredicate {
       case et.RecordTypePredicate(recordType) =>
         // Determine our signature
         val predicateSignature = ProcedureSignature(
+          hasWorldArg=false,
           hasSelfArg=false,
           hasRestArg=false,
           // We must be able to take any data type without erroring out

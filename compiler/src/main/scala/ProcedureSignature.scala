@@ -8,6 +8,7 @@ import llambda.compiler.{valuetype => vt}
   * This includes both native functions and generated lambdas 
   */
 case class ProcedureSignature(
+  hasWorldArg : Boolean,
   hasSelfArg : Boolean,
   fixedArgs : List[vt.ValueType],
   hasRestArg : Boolean,

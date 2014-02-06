@@ -12,6 +12,7 @@ object PlanRecordTypeAccessor {
       case et.RecordTypeAccessor(recordType, field) =>
         // Determine our signature
         val accessorSignature = ProcedureSignature(
+          hasWorldArg=false,
           hasSelfArg=false,
           hasRestArg=false,
           fixedArgs=List(recordType),

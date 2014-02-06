@@ -12,6 +12,7 @@ object PlanRecordTypeMutator {
       case et.RecordTypeMutator(recordType, field) =>
         // Determine our signature
         val mutatorSignature = ProcedureSignature(
+          hasWorldArg=false,
           hasSelfArg=false,
           hasRestArg=false,
           fixedArgs=List(recordType, field.fieldType),

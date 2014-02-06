@@ -15,6 +15,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   test("void native function") {
     val expectedFunction = et.NativeFunction(
       ProcedureSignature(
+        hasWorldArg=false,
         hasSelfArg=false,
         fixedArgs=Nil,
         hasRestArg=false,
@@ -31,6 +32,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   test("function returning int8") {
     val expectedFunction = et.NativeFunction(
       ProcedureSignature(
+        hasWorldArg=false,
         hasSelfArg=false,
         fixedArgs=Nil,
         hasRestArg=false,
@@ -47,6 +49,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   test("function taking int16 and returning int32") {
     val expectedFunction = et.NativeFunction(
       ProcedureSignature(
+        hasWorldArg=false,
         hasSelfArg=false,
         fixedArgs=List(vt.Int16),
         hasRestArg=false,
@@ -63,6 +66,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   test("function taking int64, float and returning double") {
     val expectedFunction = et.NativeFunction(
       ProcedureSignature(
+        hasWorldArg=false,
         hasSelfArg=false,
         fixedArgs=List(vt.Int64, vt.Float),
         hasRestArg=false,
@@ -79,6 +83,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   test("function taking uint16 and returning uint32") {
     val expectedFunction = et.NativeFunction(
       ProcedureSignature(
+        hasWorldArg=false,
         hasSelfArg=false,
         fixedArgs=List(vt.UInt16),
         hasRestArg=false,
@@ -95,6 +100,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   test("function taking bool and returning bool") {
     val expectedFunction = et.NativeFunction(
       ProcedureSignature(
+        hasWorldArg=false,
         hasSelfArg=false,
         fixedArgs=List(vt.CBool),
         hasRestArg=false,
@@ -111,6 +117,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   test("function taking int8 and returning unicode char") {
     val expectedFunction = et.NativeFunction(
       ProcedureSignature(
+        hasWorldArg=false,
         hasSelfArg=false,
         fixedArgs=List(vt.Int8),
         hasRestArg=false,
@@ -127,6 +134,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   test("function taking a integer cell and returning a rational cell") {
     val expectedFunction = et.NativeFunction(
       ProcedureSignature(
+        hasWorldArg=false,
         hasSelfArg=false,
         fixedArgs=List(vt.IntrinsicCellType(ct.ExactIntegerCell)),
         hasRestArg=false,
@@ -143,6 +151,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   test("function with only rest arg") {
     val expectedFunction = et.NativeFunction(
       ProcedureSignature(
+        hasWorldArg=false,
         hasSelfArg=false,
         fixedArgs=Nil,
         hasRestArg=true,
@@ -159,6 +168,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   test("function with fixed and rest args") {
     val expectedFunction = et.NativeFunction(
       ProcedureSignature(
+        hasWorldArg=false,
         hasSelfArg=false,
         fixedArgs=List(vt.CBool),
         hasRestArg=true,

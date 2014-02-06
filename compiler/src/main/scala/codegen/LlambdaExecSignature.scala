@@ -6,6 +6,7 @@ import llambda.compiler.{celltype => ct}
 
 // This is the signature of llambda_exec
 object LlambdaExecSignature extends ProcedureSignature(
+  hasWorldArg=false,
   hasSelfArg=false,
   fixedArgs=Nil,
   hasRestArg=false,

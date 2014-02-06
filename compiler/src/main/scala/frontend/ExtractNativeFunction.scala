@@ -23,6 +23,7 @@ object ExtractNativeFunction {
     val returnType = returnTypeDatum map DatumToValueType.apply
 
     val signature = ProcedureSignature(
+      hasWorldArg=false,
       hasSelfArg=false,
       fixedArgs=fixedArgTypes,
       hasRestArg=hasRestArg,
