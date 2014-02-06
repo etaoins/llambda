@@ -6,8 +6,8 @@ import io.llambda.llvmir
 
 object ProcessCellClasses {
   /** Simple class encapsulting an incrementing integer counter */
-  private class IntCounter extends Function0[Int] {
-    var nextValue : Int = 0
+  private class IntCounter(initialValue : Int = 0) extends Function0[Int] {
+    var nextValue : Int = initialValue
 
     def apply() : Int = {
       val currentValue = nextValue
@@ -76,7 +76,9 @@ object ProcessCellClasses {
     }
 
     val typeIdGenerator = new IntCounter
-    val tbaaIndexGenerator = new IntCounter
+
+    // Reserve 10 TBAA nodes for the %world* fields
+    val tbaaIndexGenerator = new IntCounter(10)
 
     val cellClasses = parsedCellDefs.foldLeft(ListMap[String, CellClass]()) { case (cellClasses, parsedCellDef) =>
       // Find our parent class

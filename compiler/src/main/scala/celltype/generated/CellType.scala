@@ -67,7 +67,7 @@ sealed abstract class ConcreteCellType extends CellType {
 sealed abstract class CellTypeVariant extends CastableValue
 
 object CellType {
-  val nextTbaaIndex = 68L
+  val nextTbaaIndex = 78L
 }
 
 sealed trait DatumFields {
@@ -138,8 +138,8 @@ object DatumCell extends CellType with DatumFields {
   val typeIdGepIndices = List(0, 0)
   val gcStateGepIndices = List(0, 1)
 
-  val typeIdTbaaIndex = 0L
-  val gcStateTbaaIndex = 1L
+  val typeIdTbaaIndex = 10L
+  val gcStateTbaaIndex = 11L
 
   def createConstant(typeId : Long) : StructureConstant = {
     StructureConstant(List(
@@ -165,8 +165,8 @@ object UnitCell extends ConcreteCellType with UnitFields {
   val typeIdGepIndices = List(0, 0, 0)
   val gcStateGepIndices = List(0, 0, 1)
 
-  val typeIdTbaaIndex = 2L
-  val gcStateTbaaIndex = 3L
+  val typeIdTbaaIndex = 12L
+  val gcStateTbaaIndex = 13L
 }
 
 sealed trait ListElementFields extends DatumFields {
@@ -183,8 +183,8 @@ object ListElementCell extends CellType with ListElementFields {
   val typeIdGepIndices = List(0, 0, 0)
   val gcStateGepIndices = List(0, 0, 1)
 
-  val typeIdTbaaIndex = 4L
-  val gcStateTbaaIndex = 5L
+  val typeIdTbaaIndex = 14L
+  val gcStateTbaaIndex = 15L
 
   def createConstant(typeId : Long) : StructureConstant = {
     StructureConstant(List(
@@ -265,10 +265,10 @@ object PairCell extends ConcreteCellType with PairFields {
   val carGepIndices = List(0, 1)
   val cdrGepIndices = List(0, 2)
 
-  val typeIdTbaaIndex = 6L
-  val gcStateTbaaIndex = 7L
-  val carTbaaIndex = 8L
-  val cdrTbaaIndex = 9L
+  val typeIdTbaaIndex = 16L
+  val gcStateTbaaIndex = 17L
+  val carTbaaIndex = 18L
+  val cdrTbaaIndex = 19L
 
   def createConstant(car : IrConstant, cdr : IrConstant) : StructureConstant = {
     if (car.irType != carIrType) {
@@ -303,8 +303,8 @@ object EmptyListCell extends ConcreteCellType with EmptyListFields {
   val typeIdGepIndices = List(0, 0, 0, 0)
   val gcStateGepIndices = List(0, 0, 0, 1)
 
-  val typeIdTbaaIndex = 10L
-  val gcStateTbaaIndex = 11L
+  val typeIdTbaaIndex = 20L
+  val gcStateTbaaIndex = 21L
 }
 
 sealed trait StringFields extends DatumFields {
@@ -407,11 +407,11 @@ object StringCell extends ConcreteCellType with StringFields {
   val charLengthGepIndices = List(0, 2)
   val byteLengthGepIndices = List(0, 3)
 
-  val typeIdTbaaIndex = 12L
-  val gcStateTbaaIndex = 13L
-  val allocSlackBytesTbaaIndex = 14L
-  val charLengthTbaaIndex = 15L
-  val byteLengthTbaaIndex = 16L
+  val typeIdTbaaIndex = 22L
+  val gcStateTbaaIndex = 23L
+  val allocSlackBytesTbaaIndex = 24L
+  val charLengthTbaaIndex = 25L
+  val byteLengthTbaaIndex = 26L
 
   def createConstant(allocSlackBytes : Long, charLength : Long, byteLength : Long) : StructureConstant = {
     StructureConstant(List(
@@ -465,12 +465,12 @@ object InlineStringCell extends CellTypeVariant with InlineStringFields {
   val byteLengthGepIndices = List(0, 0, 3)
   val inlineDataGepIndices = List(0, 1)
 
-  val inlineDataTbaaIndex = 17L
-  val typeIdTbaaIndex = 12L
-  val gcStateTbaaIndex = 13L
-  val allocSlackBytesTbaaIndex = 14L
-  val charLengthTbaaIndex = 15L
-  val byteLengthTbaaIndex = 16L
+  val inlineDataTbaaIndex = 27L
+  val typeIdTbaaIndex = 22L
+  val gcStateTbaaIndex = 23L
+  val allocSlackBytesTbaaIndex = 24L
+  val charLengthTbaaIndex = 25L
+  val byteLengthTbaaIndex = 26L
 
   def createConstant(inlineData : IrConstant, allocSlackBytes : Long, charLength : Long, byteLength : Long) : StructureConstant = {
     if (inlineData.irType != inlineDataIrType) {
@@ -526,12 +526,12 @@ object HeapStringCell extends CellTypeVariant with HeapStringFields {
   val byteLengthGepIndices = List(0, 0, 3)
   val heapDataGepIndices = List(0, 1)
 
-  val heapDataTbaaIndex = 18L
-  val typeIdTbaaIndex = 12L
-  val gcStateTbaaIndex = 13L
-  val allocSlackBytesTbaaIndex = 14L
-  val charLengthTbaaIndex = 15L
-  val byteLengthTbaaIndex = 16L
+  val heapDataTbaaIndex = 28L
+  val typeIdTbaaIndex = 22L
+  val gcStateTbaaIndex = 23L
+  val allocSlackBytesTbaaIndex = 24L
+  val charLengthTbaaIndex = 25L
+  val byteLengthTbaaIndex = 26L
 
   def createConstant(heapData : IrConstant, allocSlackBytes : Long, charLength : Long, byteLength : Long) : StructureConstant = {
     if (heapData.irType != heapDataIrType) {
@@ -617,10 +617,10 @@ object SymbolCell extends ConcreteCellType with SymbolFields {
   val charLengthGepIndices = List(0, 1)
   val byteLengthGepIndices = List(0, 2)
 
-  val typeIdTbaaIndex = 19L
-  val gcStateTbaaIndex = 20L
-  val charLengthTbaaIndex = 21L
-  val byteLengthTbaaIndex = 22L
+  val typeIdTbaaIndex = 29L
+  val gcStateTbaaIndex = 30L
+  val charLengthTbaaIndex = 31L
+  val byteLengthTbaaIndex = 32L
 
   def createConstant(charLength : Long, byteLength : Long) : StructureConstant = {
     StructureConstant(List(
@@ -672,11 +672,11 @@ object InlineSymbolCell extends CellTypeVariant with InlineSymbolFields {
   val byteLengthGepIndices = List(0, 0, 2)
   val inlineDataGepIndices = List(0, 1)
 
-  val inlineDataTbaaIndex = 23L
-  val typeIdTbaaIndex = 19L
-  val gcStateTbaaIndex = 20L
-  val charLengthTbaaIndex = 21L
-  val byteLengthTbaaIndex = 22L
+  val inlineDataTbaaIndex = 33L
+  val typeIdTbaaIndex = 29L
+  val gcStateTbaaIndex = 30L
+  val charLengthTbaaIndex = 31L
+  val byteLengthTbaaIndex = 32L
 
   def createConstant(inlineData : IrConstant, charLength : Long, byteLength : Long) : StructureConstant = {
     if (inlineData.irType != inlineDataIrType) {
@@ -731,11 +731,11 @@ object HeapSymbolCell extends CellTypeVariant with HeapSymbolFields {
   val byteLengthGepIndices = List(0, 0, 2)
   val heapDataGepIndices = List(0, 1)
 
-  val heapDataTbaaIndex = 24L
-  val typeIdTbaaIndex = 19L
-  val gcStateTbaaIndex = 20L
-  val charLengthTbaaIndex = 21L
-  val byteLengthTbaaIndex = 22L
+  val heapDataTbaaIndex = 34L
+  val typeIdTbaaIndex = 29L
+  val gcStateTbaaIndex = 30L
+  val charLengthTbaaIndex = 31L
+  val byteLengthTbaaIndex = 32L
 
   def createConstant(heapData : IrConstant, charLength : Long, byteLength : Long) : StructureConstant = {
     if (heapData.irType != heapDataIrType) {
@@ -793,9 +793,9 @@ object BooleanCell extends ConcreteCellType with BooleanFields {
   val gcStateGepIndices = List(0, 0, 1)
   val valueGepIndices = List(0, 1)
 
-  val typeIdTbaaIndex = 25L
-  val gcStateTbaaIndex = 26L
-  val valueTbaaIndex = 27L
+  val typeIdTbaaIndex = 35L
+  val gcStateTbaaIndex = 36L
+  val valueTbaaIndex = 37L
 }
 
 sealed trait NumericFields extends DatumFields {
@@ -812,8 +812,8 @@ object NumericCell extends CellType with NumericFields {
   val typeIdGepIndices = List(0, 0, 0)
   val gcStateGepIndices = List(0, 0, 1)
 
-  val typeIdTbaaIndex = 28L
-  val gcStateTbaaIndex = 29L
+  val typeIdTbaaIndex = 38L
+  val gcStateTbaaIndex = 39L
 
   def createConstant(typeId : Long) : StructureConstant = {
     StructureConstant(List(
@@ -866,9 +866,9 @@ object ExactIntegerCell extends ConcreteCellType with ExactIntegerFields {
   val gcStateGepIndices = List(0, 0, 0, 1)
   val valueGepIndices = List(0, 1)
 
-  val typeIdTbaaIndex = 30L
-  val gcStateTbaaIndex = 31L
-  val valueTbaaIndex = 32L
+  val typeIdTbaaIndex = 40L
+  val gcStateTbaaIndex = 41L
+  val valueTbaaIndex = 42L
 
   def createConstant(value : Long) : StructureConstant = {
     StructureConstant(List(
@@ -922,9 +922,9 @@ object InexactRationalCell extends ConcreteCellType with InexactRationalFields {
   val gcStateGepIndices = List(0, 0, 0, 1)
   val valueGepIndices = List(0, 1)
 
-  val typeIdTbaaIndex = 33L
-  val gcStateTbaaIndex = 34L
-  val valueTbaaIndex = 35L
+  val typeIdTbaaIndex = 43L
+  val gcStateTbaaIndex = 44L
+  val valueTbaaIndex = 45L
 
   def createConstant(value : IrConstant) : StructureConstant = {
     if (value.irType != valueIrType) {
@@ -982,9 +982,9 @@ object CharacterCell extends ConcreteCellType with CharacterFields {
   val gcStateGepIndices = List(0, 0, 1)
   val unicodeCharGepIndices = List(0, 1)
 
-  val typeIdTbaaIndex = 36L
-  val gcStateTbaaIndex = 37L
-  val unicodeCharTbaaIndex = 38L
+  val typeIdTbaaIndex = 46L
+  val gcStateTbaaIndex = 47L
+  val unicodeCharTbaaIndex = 48L
 
   def createConstant(unicodeChar : Long) : StructureConstant = {
     StructureConstant(List(
@@ -1066,10 +1066,10 @@ object VectorCell extends ConcreteCellType with VectorFields {
   val lengthGepIndices = List(0, 1)
   val elementsGepIndices = List(0, 2)
 
-  val typeIdTbaaIndex = 39L
-  val gcStateTbaaIndex = 40L
-  val lengthTbaaIndex = 41L
-  val elementsTbaaIndex = 42L
+  val typeIdTbaaIndex = 49L
+  val gcStateTbaaIndex = 50L
+  val lengthTbaaIndex = 51L
+  val elementsTbaaIndex = 52L
 
   def createConstant(length : Long, elements : IrConstant) : StructureConstant = {
     if (elements.irType != elementsIrType) {
@@ -1156,10 +1156,10 @@ object BytevectorCell extends ConcreteCellType with BytevectorFields {
   val lengthGepIndices = List(0, 1)
   val dataGepIndices = List(0, 2)
 
-  val typeIdTbaaIndex = 43L
-  val gcStateTbaaIndex = 44L
-  val lengthTbaaIndex = 45L
-  val dataTbaaIndex = 46L
+  val typeIdTbaaIndex = 53L
+  val gcStateTbaaIndex = 54L
+  val lengthTbaaIndex = 55L
+  val dataTbaaIndex = 56L
 
   def createConstant(length : Long, data : IrConstant) : StructureConstant = {
     if (data.irType != dataIrType) {
@@ -1272,11 +1272,11 @@ object RecordLikeCell extends CellType with RecordLikeFields {
   val recordClassIdGepIndices = List(0, 2)
   val recordDataGepIndices = List(0, 3)
 
-  val typeIdTbaaIndex = 47L
-  val gcStateTbaaIndex = 48L
-  val dataIsInlineTbaaIndex = 49L
-  val recordClassIdTbaaIndex = 50L
-  val recordDataTbaaIndex = 51L
+  val typeIdTbaaIndex = 57L
+  val gcStateTbaaIndex = 58L
+  val dataIsInlineTbaaIndex = 59L
+  val recordClassIdTbaaIndex = 60L
+  val recordDataTbaaIndex = 61L
 
   def createConstant(dataIsInline : Long, recordClassId : Long, recordData : IrConstant, typeId : Long) : StructureConstant = {
     if (recordData.irType != recordDataIrType) {
@@ -1339,12 +1339,12 @@ object ProcedureCell extends ConcreteCellType with ProcedureFields {
   val recordDataGepIndices = List(0, 0, 3)
   val entryPointGepIndices = List(0, 1)
 
-  val typeIdTbaaIndex = 52L
-  val gcStateTbaaIndex = 53L
-  val dataIsInlineTbaaIndex = 54L
-  val recordClassIdTbaaIndex = 55L
-  val recordDataTbaaIndex = 56L
-  val entryPointTbaaIndex = 57L
+  val typeIdTbaaIndex = 62L
+  val gcStateTbaaIndex = 63L
+  val dataIsInlineTbaaIndex = 64L
+  val recordClassIdTbaaIndex = 65L
+  val recordDataTbaaIndex = 66L
+  val entryPointTbaaIndex = 67L
 
   def createConstant(entryPoint : IrConstant, dataIsInline : Long, recordClassId : Long, recordData : IrConstant) : StructureConstant = {
     if (entryPoint.irType != entryPointIrType) {
@@ -1405,12 +1405,12 @@ object RecordCell extends ConcreteCellType with RecordFields {
   val recordDataGepIndices = List(0, 0, 3)
   val extraDataGepIndices = List(0, 1)
 
-  val typeIdTbaaIndex = 58L
-  val gcStateTbaaIndex = 59L
-  val dataIsInlineTbaaIndex = 60L
-  val recordClassIdTbaaIndex = 61L
-  val recordDataTbaaIndex = 62L
-  val extraDataTbaaIndex = 63L
+  val typeIdTbaaIndex = 68L
+  val gcStateTbaaIndex = 69L
+  val dataIsInlineTbaaIndex = 70L
+  val recordClassIdTbaaIndex = 71L
+  val recordDataTbaaIndex = 72L
+  val extraDataTbaaIndex = 73L
 
   def createConstant(extraData : IrConstant, dataIsInline : Long, recordClassId : Long, recordData : IrConstant) : StructureConstant = {
     if (extraData.irType != extraDataIrType) {
@@ -1496,10 +1496,10 @@ object ErrorObjectCell extends ConcreteCellType with ErrorObjectFields {
   val messageGepIndices = List(0, 1)
   val irritantsGepIndices = List(0, 2)
 
-  val typeIdTbaaIndex = 64L
-  val gcStateTbaaIndex = 65L
-  val messageTbaaIndex = 66L
-  val irritantsTbaaIndex = 67L
+  val typeIdTbaaIndex = 74L
+  val gcStateTbaaIndex = 75L
+  val messageTbaaIndex = 76L
+  val irritantsTbaaIndex = 77L
 
   def createConstant(message : IrConstant, irritants : IrConstant) : StructureConstant = {
     if (message.irType != messageIrType) {
