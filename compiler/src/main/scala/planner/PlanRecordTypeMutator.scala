@@ -11,7 +11,7 @@ object PlanRecordTypeMutator {
     expr match {
       case et.RecordTypeMutator(recordType, field) =>
         // Determine our signature
-        val constructorSignature = ProcedureSignature(
+        val mutatorSignature = ProcedureSignature(
           hasSelfArg=false,
           hasRestArg=false,
           fixedArgs=List(recordType, field.fieldType),
@@ -42,7 +42,7 @@ object PlanRecordTypeMutator {
         plan.steps += ps.Return(None)
 
         PlannedFunction(
-          signature=constructorSignature,
+          signature=mutatorSignature,
           namedArguments=namedArguments,
           steps=plan.steps.toList
         )

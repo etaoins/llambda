@@ -11,7 +11,7 @@ object PlanRecordTypeAccessor {
     expr match {
       case et.RecordTypeAccessor(recordType, field) =>
         // Determine our signature
-        val constructorSignature = ProcedureSignature(
+        val accessorSignature = ProcedureSignature(
           hasSelfArg=false,
           hasRestArg=false,
           fixedArgs=List(recordType),
@@ -36,7 +36,7 @@ object PlanRecordTypeAccessor {
         plan.steps += ps.Return(Some(fieldValueTemp))
 
         PlannedFunction(
-          signature=constructorSignature,
+          signature=accessorSignature,
           namedArguments=List(("recordCell" -> recordCellTemp)),
           steps=plan.steps.toList
         )
