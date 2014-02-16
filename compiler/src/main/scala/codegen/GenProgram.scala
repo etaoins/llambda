@@ -23,7 +23,10 @@ object GenProgram {
     IrFunctionDecl(
       result=IrFunction.Result(VoidType),
       name="_lliby_launch_world",
-      arguments=List(IrFunction.Argument(PointerType(FunctionType(VoidType, Nil))))
+      arguments=List(IrFunction.Argument(
+        // void (*entryPoint)(World *)
+        PointerType(FunctionType(VoidType, List(PointerType(WorldValue.irType))))
+      ))
     )
   }
 

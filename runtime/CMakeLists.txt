@@ -21,6 +21,7 @@ add_library(lliby
 	binding/StringCell.cpp
 	binding/SymbolCell.cpp
 	binding/VectorCell.cpp
+	core/World.cpp
 	core/constinstances.cpp
 	core/dynamic.cpp
 	core/error.cpp

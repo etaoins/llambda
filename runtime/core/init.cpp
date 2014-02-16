@@ -1,11 +1,9 @@
 #include <clocale>
 
 #include "alloc/allocator.h"
-#include "core/error.h"
+
 #include "core/init.h"
 #include "dynamic/init.h"
-#include "dynamic/SchemeException.h"
-#include "dynamic/State.h"
 
 extern "C"
 {
@@ -20,28 +18,6 @@ void lliby_init()
 
 	alloc::init();
 	dynamic::init();
-}
-
-void _lliby_launch_world(void (*entryPoint)())
-{
-	try
-	{
-		entryPoint();
-	}
-	catch (dynamic::SchemeException &except)
-	{
-		// Call all unwind handlers
-		dynamic::State::popAllStates();
-		fatalError("Unhandled exception", except.object());
-	}
-	
-	_lliby_shutdown_world();	
-}
-
-void _lliby_shutdown_world()
-{
-	dynamic::State::popAllStates();
-	alloc::shutdown();
 }
 
 }

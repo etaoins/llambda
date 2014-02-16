@@ -13,3 +13,5 @@
 
 ; LLVM intrinsics
 declare i1 @llvm.expect.i1(i1, i1)
+
+%world = type {}

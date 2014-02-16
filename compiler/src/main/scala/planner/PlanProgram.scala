@@ -13,12 +13,14 @@ object PlanProgram {
       
     PlanExpression(emptyState)(et.Begin(exprs))(planConfig, plan)
 
+    val worldTemp = ps.GcUnmanagedValue()
+
     // __llambda_exec is a void function
     plan.steps += ps.Return(None)
 
     (plan.plannedFunctions + (LlambdaExecSignature.nativeSymbol -> PlannedFunction(
       signature=LlambdaExecSignature,
-      namedArguments=Nil,
+      namedArguments=List("world" -> worldTemp),
       steps = plan.steps.toList 
     ))).toMap
   }
