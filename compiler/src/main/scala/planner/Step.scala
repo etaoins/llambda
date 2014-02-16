@@ -72,7 +72,8 @@ case class InvokeArgument(
 
 /** Invokes an entry point with the given arguments
   *
-  * Entry points can be loaded with StoreNamedEntryPoint */
+  * Entry points can be loaded with StoreNamedEntryPoint
+  */
 case class Invoke(result : Option[TempValue], signature : ProcedureSignature, entryPoint : TempValue, arguments : List[InvokeArgument]) extends Step with GcBarrier {
   lazy val inputValues = arguments.map(_.tempValue).toSet + entryPoint
   lazy val outputValues = result.toSet

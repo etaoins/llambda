@@ -3,7 +3,6 @@ import io.llambda
 
 import collection.mutable
 
-import llambda.compiler.ProcedureSignature
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
@@ -90,12 +89,9 @@ object InferArgumentTypes {
 
         val result = retypeArgument(argValue, function.steps)
 
-        val newSignature = new ProcedureSignature {
-          val hasSelfArg = signature.hasSelfArg
-          val hasRestArg = signature.hasRestArg
-          val fixedArgs = signature.fixedArgs.updated(argIndex, result.replaceArgType)
-          val returnType = signature.returnType
-        }
+        val newSignature = signature.copy(
+          fixedArgs=signature.fixedArgs.updated(argIndex, result.replaceArgType)
+        )
 
         PlannedFunction(
           signature=newSignature,

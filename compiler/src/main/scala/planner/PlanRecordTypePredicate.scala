@@ -13,14 +13,13 @@ object PlanRecordTypePredicate {
     expr match {
       case et.RecordTypePredicate(recordType) =>
         // Determine our signature
-        val predicateSignature = new ProcedureSignature {
-          val hasSelfArg : Boolean = false
-          val hasRestArg : Boolean = false
-
+        val predicateSignature = ProcedureSignature(
+          hasSelfArg=false,
+          hasRestArg=false,
           // We must be able to take any data type without erroring out
-          val fixedArgs : List[vt.ValueType] = List(vt.IntrinsicCellType(ct.DatumCell))
-          val returnType : Option[vt.ValueType] = Some(vt.CBool)
-        }
+          fixedArgs=List(vt.IntrinsicCellType(ct.DatumCell)),
+          returnType=Some(vt.CBool)
+        )
         
         // We only have a single argument
         val argumentTemp = ps.GcManagedValue()

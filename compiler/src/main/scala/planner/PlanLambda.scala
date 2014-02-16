@@ -225,16 +225,14 @@ private[planner] object PlanLambda {
     })
     
     // Determine our signature
-    val procSignature = new ProcedureSignature {
-      val hasSelfArg = procSelfOpt.isDefined
-      val hasRestArg = restArgLoc.isDefined
-
-      val fixedArgs =fixedArgLocs.map { _ =>
+    val procSignature = ProcedureSignature(
+      hasSelfArg=procSelfOpt.isDefined,
+      hasRestArg=restArgLoc.isDefined,
+      fixedArgs=fixedArgLocs.map { _ =>
         vt.IntrinsicCellType(ct.DatumCell)
-      }
-
-      val returnType = returnTypeOpt
-    }
+      },
+      returnType=returnTypeOpt
+    )
 
     // Name our function arguments
     val namedArguments = procSelfOpt.toList.map({ procSelf =>

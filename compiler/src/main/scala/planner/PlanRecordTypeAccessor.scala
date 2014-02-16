@@ -11,13 +11,12 @@ object PlanRecordTypeAccessor {
     expr match {
       case et.RecordTypeAccessor(recordType, field) =>
         // Determine our signature
-        val constructorSignature = new ProcedureSignature {
-          val hasSelfArg : Boolean = false
-          val hasRestArg : Boolean = false
-
-          val fixedArgs : List[vt.ValueType] = List(recordType)
-          val returnType : Option[vt.ValueType] = Some(field.fieldType)
-        }
+        val constructorSignature = ProcedureSignature(
+          hasSelfArg=false,
+          hasRestArg=false,
+          fixedArgs=List(recordType),
+          returnType=Some(field.fieldType)
+        )
 
         val recordCellTemp = ps.GcManagedValue()
         

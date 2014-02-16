@@ -3,22 +3,22 @@ import io.llambda
 
 import org.scalatest.FunSuite
 
-import llambda.compiler.et.NativeFunction
-
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.ProcedureSignature
 import llambda.llvmir._
 import llambda.llvmir.IrFunction._
 
 class ProcedureSignatureToIrSuite extends FunSuite {
   test("argless void function") {
-    val testNativeFunc = NativeFunction(
-      fixedArgs=Nil,
-      hasRestArg=false,
-      returnType=None,
-      nativeSymbol="lliby_test")
+    val procSignature = ProcedureSignature(
+      hasSelfArg = false,
+      fixedArgs = Nil,
+      hasRestArg = false,
+      returnType = None
+    )
 
-    val irSignature = ProcedureSignatureToIr(testNativeFunc)
+    val irSignature = ProcedureSignatureToIr(procSignature)
 
     assert(irSignature === IrSignature(
       result=Result(VoidType),
@@ -27,28 +27,30 @@ class ProcedureSignatureToIrSuite extends FunSuite {
   }
   
   test("function taking boolean, unsigned int returning signed int") {
-    val testNativeFunc = NativeFunction(
-      fixedArgs=vt.CBool :: vt.UInt16 :: Nil,
-      hasRestArg=false,
-      returnType=Some(vt.Int32),
-      nativeSymbol="lliby_test")
+    val procSignature = ProcedureSignature(
+      hasSelfArg = false,
+      fixedArgs = List(vt.CBool, vt.UInt16),
+      hasRestArg = false,
+      returnType = Some(vt.Int32)
+    )
 
-    val irSignature = ProcedureSignatureToIr(testNativeFunc)
+    val irSignature = ProcedureSignatureToIr(procSignature)
 
     assert(irSignature === IrSignature(
       result=Result(IntegerType(32), Set(SignExt)),
       arguments=Argument(IntegerType(8), Set(ZeroExt)) :: Argument(IntegerType(16), Set(ZeroExt)) :: Nil
     ))
   }
-  
-  test("function taking only rest args returning unsigned int") {
-    val testNativeFunc = NativeFunction(
-      fixedArgs=Nil,
-      hasRestArg=true,
-      returnType=Some(vt.UInt32),
-      nativeSymbol="lliby_test")
 
-    val irSignature = ProcedureSignatureToIr(testNativeFunc)
+  test("function taking only rest args returning unsigned int") {
+    val procSignature = ProcedureSignature(
+      hasSelfArg = false,
+      fixedArgs = Nil,
+      hasRestArg = true,
+      returnType = Some(vt.UInt32)
+    )
+
+    val irSignature = ProcedureSignatureToIr(procSignature)
 
     assert(irSignature === IrSignature(
       result=Result(IntegerType(32), Set(ZeroExt)),
@@ -57,13 +59,14 @@ class ProcedureSignatureToIrSuite extends FunSuite {
   }
   
   test("function taking two numerics, rest arg returning rational") {
-    val testNativeFunc = NativeFunction(
-      fixedArgs=vt.IntrinsicCellType(ct.NumericCell) :: vt.IntrinsicCellType(ct.NumericCell) :: Nil,
+    val procSignature = ProcedureSignature(
+      hasSelfArg=false,
+      fixedArgs=List(vt.IntrinsicCellType(ct.NumericCell), vt.IntrinsicCellType(ct.NumericCell)),
       hasRestArg=true,
-      returnType=Some(vt.IntrinsicCellType(ct.InexactRationalCell)),
-      nativeSymbol="lliby_test")
+      returnType=Some(vt.IntrinsicCellType(ct.InexactRationalCell))
+    )
 
-    val irSignature = ProcedureSignatureToIr(testNativeFunc)
+    val irSignature = ProcedureSignatureToIr(procSignature)
 
     assert(irSignature === IrSignature(
       result=Result(PointerType(ct.InexactRationalCell.irType)),

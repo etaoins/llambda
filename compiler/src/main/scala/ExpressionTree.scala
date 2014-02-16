@@ -73,13 +73,9 @@ case class Bind(bindings : List[(StorageLocation, Expression)]) extends Expressi
 }
 
 case class NativeFunction(
-  fixedArgs : List[vt.ValueType],
-  hasRestArg : Boolean,
-  returnType : Option[vt.ValueType],
+  signature : ProcedureSignature,
   nativeSymbol : String
-) extends Expression with ProcedureSignature {
-  val hasSelfArg = false
-
+) extends Expression {
   val subexpressions = Nil
   def map(f : Expression => Expression) : et.NativeFunction = this
 }

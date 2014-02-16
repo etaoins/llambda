@@ -11,13 +11,12 @@ object PlanRecordTypeMutator {
     expr match {
       case et.RecordTypeMutator(recordType, field) =>
         // Determine our signature
-        val constructorSignature = new ProcedureSignature {
-          val hasSelfArg : Boolean = false
-          val hasRestArg : Boolean = false
-
-          val fixedArgs : List[vt.ValueType] = List(recordType, field.fieldType)
-          val returnType : Option[vt.ValueType] = None
-        }
+        val constructorSignature = ProcedureSignature(
+          hasSelfArg=false,
+          hasRestArg=false,
+          fixedArgs=List(recordType, field.fieldType),
+          returnType=None
+        )
 
         // Set up our arguments
         val recordCellTemp = ps.GcManagedValue()

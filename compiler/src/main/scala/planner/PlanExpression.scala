@@ -209,7 +209,7 @@ private[planner] object PlanExpression {
       case nativeFunc : et.NativeFunction =>
         PlanResult(
           state=initialState,
-          value=new iv.KnownProcedure(nativeFunc, () => nativeFunc.nativeSymbol, None)
+          value=new iv.KnownProcedure(nativeFunc.signature, () => nativeFunc.nativeSymbol, None)
         )
 
       case recordConstructor : et.RecordTypeConstructor =>

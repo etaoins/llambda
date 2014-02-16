@@ -8,9 +8,9 @@ import llambda.compiler.{celltype => ct}
 // All boxed procedures have this signature
 // If they are wrapping a procedure with a different signature a thunk must
 // be generated with this signature
-object AdaptedProcedureSignature extends ProcedureSignature {
-  val hasSelfArg = true 
-  val fixedArgs = Nil
-  val hasRestArg = true
-  val returnType = Some(vt.IntrinsicCellType(ct.DatumCell))
-}
+object AdaptedProcedureSignature extends ProcedureSignature(
+  hasSelfArg=true,
+  fixedArgs=Nil,
+  hasRestArg=true,
+  returnType=Some(vt.IntrinsicCellType(ct.DatumCell))
+)

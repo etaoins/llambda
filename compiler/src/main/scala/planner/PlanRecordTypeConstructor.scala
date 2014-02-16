@@ -13,13 +13,12 @@ object PlanRecordTypeConstructor {
     expr match {
       case et.RecordTypeConstructor(recordType, initializedFields) =>
         // Determine our signature
-        val constructorSignature = new ProcedureSignature {
-          val hasSelfArg : Boolean = false
-          val hasRestArg : Boolean = false
-
-          val fixedArgs : List[vt.ValueType] = initializedFields.map(_.fieldType)
-          val returnType : Option[vt.ValueType] = Some(recordType)
-        }
+        val constructorSignature = ProcedureSignature(
+          hasSelfArg =false,
+          hasRestArg =false,
+          fixedArgs=initializedFields.map(_.fieldType),
+          returnType=Some(recordType)
+        )
         
         val plan = parentPlan.forkPlan()
 

@@ -3,9 +3,13 @@ import io.llambda
 
 import llambda.compiler.{valuetype => vt}
 
-trait ProcedureSignature {
-  val hasSelfArg : Boolean
-  val fixedArgs : List[vt.ValueType]
-  val hasRestArg : Boolean
-  val returnType : Option[vt.ValueType]
-}
+/** Describes the signature of an invokable function
+  *
+  * This includes both native functions and generated lambdas 
+  */
+case class ProcedureSignature(
+  hasSelfArg : Boolean,
+  fixedArgs : List[vt.ValueType],
+  hasRestArg : Boolean,
+  returnType : Option[vt.ValueType]
+)

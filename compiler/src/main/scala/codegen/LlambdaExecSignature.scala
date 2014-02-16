@@ -5,12 +5,11 @@ import llambda.compiler.ProcedureSignature
 import llambda.compiler.{celltype => ct}
 
 // This is the signature of llambda_exec
-object LlambdaExecSignature extends ProcedureSignature {
-  val hasSelfArg = false
-  val fixedArgs = Nil
-  val hasRestArg = false
-  val returnType = None
-
+object LlambdaExecSignature extends ProcedureSignature(
+  hasSelfArg=false,
+  fixedArgs=Nil,
+  hasRestArg=false,
+  returnType=None
+) {
   val nativeSymbol = "__llambda_exec"
 }
-

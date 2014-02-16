@@ -13,61 +13,161 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   }
   
   test("void native function") {
-    assertResult(et.NativeFunction(Nil, false, None, "lliby_newline")) {
+    val expectedFunction = et.NativeFunction(
+      ProcedureSignature(
+        hasSelfArg=false,
+        fixedArgs=Nil,
+        hasRestArg=false,
+        returnType=None
+      ),
+      "lliby_newline"
+    )
+
+    assertResult(expectedFunction) {
       expressionFor("""(native-function "lliby_newline" ())""")
     }
   }
   
   test("function returning int8") {
-    assertResult(et.NativeFunction(Nil, false, Some(vt.Int8), "lliby_newline")) {
+    val expectedFunction = et.NativeFunction(
+      ProcedureSignature(
+        hasSelfArg=false,
+        fixedArgs=Nil,
+        hasRestArg=false,
+        returnType=Some(vt.Int8)
+      ),
+      "lliby_newline"
+    )
+
+    assertResult(expectedFunction) {
       expressionFor("""(native-function "lliby_newline" () <int8>)""")
     }
   }
   
   test("function taking int16 and returning int32") {
-    assertResult(et.NativeFunction(vt.Int16 :: Nil, false, Some(vt.Int32), "lliby_newline")) {
+    val expectedFunction = et.NativeFunction(
+      ProcedureSignature(
+        hasSelfArg=false,
+        fixedArgs=List(vt.Int16),
+        hasRestArg=false,
+        returnType=Some(vt.Int32)
+      ),
+      "lliby_newline"
+    )
+
+    assertResult(expectedFunction) {
       expressionFor("""(native-function "lliby_newline" (<int16>) <int32>)""")
     }
   }
   
   test("function taking int64, float and returning double") {
-    assertResult(et.NativeFunction(vt.Int64 :: vt.Float :: Nil, false, Some(vt.Double), "lliby_newline")) {
+    val expectedFunction = et.NativeFunction(
+      ProcedureSignature(
+        hasSelfArg=false,
+        fixedArgs=List(vt.Int64, vt.Float),
+        hasRestArg=false,
+        returnType=Some(vt.Double)
+      ),
+      "lliby_newline"
+    )
+
+    assertResult(expectedFunction) {
       expressionFor("""(native-function "lliby_newline" (<int64> <float>) <double>)""")
     }
   }
   
   test("function taking uint16 and returning uint32") {
-    assertResult(et.NativeFunction(vt.UInt16 :: Nil, false, Some(vt.UInt32), "lliby_newline")) {
+    val expectedFunction = et.NativeFunction(
+      ProcedureSignature(
+        hasSelfArg=false,
+        fixedArgs=List(vt.UInt16),
+        hasRestArg=false,
+        returnType=Some(vt.UInt32)
+      ),
+      "lliby_newline"
+    )
+
+    assertResult(expectedFunction) {
       expressionFor("""(native-function "lliby_newline" (<uint16>) <uint32>)""")
     }
   }
   
   test("function taking bool and returning bool") {
-    assertResult(et.NativeFunction(vt.CBool :: Nil, false, Some(vt.CBool), "lliby_newline")) {
+    val expectedFunction = et.NativeFunction(
+      ProcedureSignature(
+        hasSelfArg=false,
+        fixedArgs=List(vt.CBool),
+        hasRestArg=false,
+        returnType=Some(vt.CBool)
+      ),
+      "lliby_newline"
+    )
+
+    assertResult(expectedFunction) {
       expressionFor("""(native-function "lliby_newline" (<bool>) <bool>)""")
     }
   }
   
-  test("function taking uint8 and returning unicode char") {
-    assertResult(et.NativeFunction(vt.Int8 :: Nil, false, Some(vt.UnicodeChar), "lliby_newline")) {
+  test("function taking int8 and returning unicode char") {
+    val expectedFunction = et.NativeFunction(
+      ProcedureSignature(
+        hasSelfArg=false,
+        fixedArgs=List(vt.Int8),
+        hasRestArg=false,
+        returnType=Some(vt.UnicodeChar)
+      ),
+      "lliby_newline"
+    )
+
+    assertResult(expectedFunction) {
       expressionFor("""(native-function "lliby_newline" (<int8>) <unicode-char>)""")
     }
   }
   
   test("function taking a integer cell and returning a rational cell") {
-    assertResult(et.NativeFunction(vt.IntrinsicCellType(ct.ExactIntegerCell) :: Nil, false, Some(vt.IntrinsicCellType(ct.InexactRationalCell)), "lliby_newline")) {
+    val expectedFunction = et.NativeFunction(
+      ProcedureSignature(
+        hasSelfArg=false,
+        fixedArgs=List(vt.IntrinsicCellType(ct.ExactIntegerCell)),
+        hasRestArg=false,
+        returnType=Some(vt.IntrinsicCellType(ct.InexactRationalCell))
+      ),
+      "lliby_newline"
+    )
+
+    assertResult(expectedFunction) {
       expressionFor("""(native-function "lliby_newline" (<exact-integer-cell>) <inexact-rational-cell>)""")
     }
   }
 
   test("function with only rest arg") {
-    assertResult(et.NativeFunction(Nil, true, Some(vt.IntrinsicCellType(ct.DatumCell)), "lliby_vector")) {
+    val expectedFunction = et.NativeFunction(
+      ProcedureSignature(
+        hasSelfArg=false,
+        fixedArgs=Nil,
+        hasRestArg=true,
+        returnType=Some(vt.IntrinsicCellType(ct.DatumCell))
+      ),
+      "lliby_vector"
+    )
+
+    assertResult(expectedFunction) {
       expressionFor("""(native-function "lliby_vector" <list-element-cell> <datum-cell>)""")
     }
   }
   
   test("function with fixed and rest args") {
-    assertResult(et.NativeFunction(vt.CBool :: Nil, true, Some(vt.Int32), "lliby_misc")) {
+    val expectedFunction = et.NativeFunction(
+      ProcedureSignature(
+        hasSelfArg=false,
+        fixedArgs=List(vt.CBool),
+        hasRestArg=true,
+        returnType=Some(vt.Int32)
+      ),
+      "lliby_misc"
+    )
+
+    assertResult(expectedFunction) {
       expressionFor("""(native-function "lliby_misc" (<bool> . <list-element-cell>) <int>)""")
     }
   }
