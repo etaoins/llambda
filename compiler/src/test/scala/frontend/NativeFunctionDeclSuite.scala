@@ -29,6 +29,23 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
     }
   }
   
+  test("function taking world pointer") {
+    val expectedFunction = et.NativeFunction(
+      ProcedureSignature(
+        hasWorldArg=true,
+        hasSelfArg=false,
+        fixedArgs=Nil,
+        hasRestArg=false,
+        returnType=None
+      ),
+      "lliby_newline"
+    )
+
+    assertResult(expectedFunction) {
+      expressionFor("""(native-function "lliby_newline" (world-pointer))""")
+    }
+  }
+  
   test("function returning int8") {
     val expectedFunction = et.NativeFunction(
       ProcedureSignature(
@@ -63,10 +80,10 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
     }
   }
   
-  test("function taking int64, float and returning double") {
+  test("function taking world pointer, int64, float and returning double") {
     val expectedFunction = et.NativeFunction(
       ProcedureSignature(
-        hasWorldArg=false,
+        hasWorldArg=true,
         hasSelfArg=false,
         fixedArgs=List(vt.Int64, vt.Float),
         hasRestArg=false,
@@ -76,7 +93,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
     )
 
     assertResult(expectedFunction) {
-      expressionFor("""(native-function "lliby_newline" (<int64> <float>) <double>)""")
+      expressionFor("""(native-function "lliby_newline" (world-pointer <int64> <float>) <double>)""")
     }
   }
   
@@ -191,6 +208,18 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   test("function returning unknown type") {
     intercept[UnboundVariableException] {
       expressionFor("""(native-function "lliby_newline" () <not-a-type>)""")
+    }
+  }
+  
+  test("function returning world pointer fails") {
+    intercept[BadSpecialFormException] {
+      expressionFor("""(native-function "lliby_newline" () world-pointer)""")
+    }
+  }
+
+  test("function taking world pointer in non-initial position fails") {
+    intercept[BadSpecialFormException] {
+      expressionFor("""(native-function "lliby_newline" (<bool> world-pointer))""")
     }
   }
   

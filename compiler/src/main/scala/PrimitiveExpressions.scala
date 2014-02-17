@@ -21,6 +21,7 @@ object PrimitiveExpressions {
   object AnnotateType extends PrimitiveExpression
   object CondExpand extends PrimitiveExpression
   object Parameterize extends PrimitiveExpression
+  object WorldPointer extends PrimitiveExpression
 
   val bindings = {
     Map[String, BoundValue](

@@ -6,7 +6,24 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 
 object ExtractNativeFunction {
-  private def createNativeFunction(fixedArgData : List[sst.ScopedDatum], restArgDatum : Option[sst.ScopedSymbol], returnTypeDatum : Option[sst.ScopedSymbol], nativeSymbol : String) : et.NativeFunction = {
+  private def createNativeFunction(initialArgData : List[sst.ScopedDatum], restArgDatum : Option[sst.ScopedSymbol], returnTypeDatum : Option[sst.ScopedSymbol], nativeSymbol : String) : et.NativeFunction = {
+    val (hasWorldArg, fixedArgData)  = initialArgData match {
+      case (headSymbol : sst.ScopedSymbol) :: tailArgs =>
+        headSymbol.resolve match {
+          case PrimitiveExpressions.WorldPointer =>
+            // This is a world-pointer
+            (true, tailArgs)
+
+          case _ =>
+            // Something else
+            (false, headSymbol :: tailArgs)
+        }
+
+      case other =>
+        // No args
+        (false, other)
+    }
+
     var fixedArgTypes = fixedArgData map DatumToValueType.apply
 
     val hasRestArg = restArgDatum match {
@@ -23,7 +40,7 @@ object ExtractNativeFunction {
     val returnType = returnTypeDatum map DatumToValueType.apply
 
     val signature = ProcedureSignature(
-      hasWorldArg=false,
+      hasWorldArg=hasWorldArg,
       hasSelfArg=false,
       fixedArgs=fixedArgTypes,
       hasRestArg=hasRestArg,
