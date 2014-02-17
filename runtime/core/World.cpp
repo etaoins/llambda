@@ -22,11 +22,11 @@ void _lliby_launch_world(void (*entryPoint)(World *))
 	catch (dynamic::SchemeException &except)
 	{
 		// Call all unwind handlers
-		dynamic::State::popAllStates();
+		dynamic::State::popAllStates(world);
 		fatalError("Unhandled exception", except.object());
 	}
 	
-	dynamic::State::popAllStates();
+	dynamic::State::popAllStates(world);
 	alloc::shutdown();
 
 	delete world;

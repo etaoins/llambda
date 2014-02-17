@@ -218,13 +218,13 @@
 	(export procedure? apply)
 	(begin
 	  (define-r7rs procedure? (native-function "lliby_is_procedure" (<datum-cell>) <bool>))
-	  (define-r7rs apply (native-function "lliby_apply" (<procedure-cell> . <list-element-cell>) <datum-cell>)))
+	  (define-r7rs apply (native-function "lliby_apply" (world-pointer <procedure-cell> . <list-element-cell>) <datum-cell>)))
 
 	(export make-parameter dynamic-wind)
 	(begin
 	  ; XXX: This should accept a procedure once (case-lambda) is implemented
 	  (define-r7rs make-parameter (native-function "lliby_make_parameter" (<datum-cell>) <procedure-cell>))
-	  (define-r7rs dynamic-wind (native-function "lliby_dynamic_wind" (<procedure-cell> <procedure-cell> <procedure-cell>) <datum-cell>)))
+	  (define-r7rs dynamic-wind (native-function "lliby_dynamic_wind" (world-pointer <procedure-cell> <procedure-cell> <procedure-cell>) <datum-cell>)))
 
 	(export newline)
 	(begin
@@ -237,7 +237,7 @@
 
 	(export with-exception-handler raise error error-object? error-object-message error-object-irritants)
 	(begin
-	  (define-r7rs with-exception-handler (native-function "lliby_with_exception_handler" (<procedure-cell> <procedure-cell>) <datum-cell>))
+	  (define-r7rs with-exception-handler (native-function "lliby_with_exception_handler" (world-pointer <procedure-cell> <procedure-cell>) <datum-cell>))
 	  (define-r7rs raise (native-function "lliby_raise" (<datum-cell>)))
 	  (define-r7rs error (native-function "lliby_error" (<string-cell> . <list-element-cell>)))
 	  (define-r7rs error-object? (native-function "lliby_is_error_object" (<datum-cell>) <bool>))

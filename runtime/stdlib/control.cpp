@@ -13,7 +13,7 @@ using namespace lliby;
 extern "C"
 {
 
-DatumCell *lliby_apply(ProcedureCell *procedure, ListElementCell *argHead)
+DatumCell *lliby_apply(World *world, ProcedureCell *procedure, ListElementCell *argHead)
 {
 	ListElementCell *procArgHead;
 
@@ -64,7 +64,7 @@ DatumCell *lliby_apply(ProcedureCell *procedure, ListElementCell *argHead)
 		}
 	}
 
-	return procedure->apply(procArgHead);
+	return procedure->apply(world, procArgHead);
 }
 
 }

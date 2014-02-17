@@ -15,7 +15,7 @@ using namespace lliby;
 extern "C"
 {
 
-DatumCell* lliby_with_exception_handler(ProcedureCell *handlerRaw, ProcedureCell *thunk)
+DatumCell* lliby_with_exception_handler(World *world, ProcedureCell *handlerRaw, ProcedureCell *thunk)
 {
 	// Root our exception handler
 	alloc::StrongRef<ProcedureCell> handler(handlerRaw);
@@ -25,7 +25,7 @@ DatumCell* lliby_with_exception_handler(ProcedureCell *handlerRaw, ProcedureCell
 
 	try
 	{
-		return thunk->apply(EmptyListCell::instance());
+		return thunk->apply(world, EmptyListCell::instance());
 	}
 	catch (dynamic::SchemeException &except)
 	{
@@ -33,10 +33,10 @@ DatumCell* lliby_with_exception_handler(ProcedureCell *handlerRaw, ProcedureCell
 
 		// Call the handler in the dynamic environment (raise) was in
 		// This is required by R7RS for reasons mysterious to me
-		handler->apply(argHead);
+		handler->apply(world, argHead);
 		
 		// Now switch to the state we were in before re-raising the exception
-		dynamic::State::switchState(expectedState);
+		dynamic::State::switchState(world, expectedState);
 
 		throw except;
 	}

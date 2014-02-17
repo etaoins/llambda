@@ -3,9 +3,9 @@
 namespace lliby
 {
 
-DatumCell* ProcedureCell::apply(ListElementCell *arguments)
-{
-	return m_entryPoint(this, arguments);
+DatumCell* ProcedureCell::apply(World *world, ListElementCell *arguments)
+{ 
+	return m_entryPoint(world, this, arguments);
 }
 
 }

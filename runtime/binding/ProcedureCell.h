@@ -2,6 +2,7 @@
 #define _LLIBY_BINDING_PROCEDURECELL_H
 
 #include "RecordLikeCell.h"
+#include "core/World.h"
 
 namespace lliby
 {
@@ -16,7 +17,7 @@ public:
 	{
 	}
 
-	DatumCell* apply(ListElementCell *arguments);
+	DatumCell* apply(World *world, ListElementCell *arguments);
 
 	/**
 	 * Indicates if this procedure captures variables from its enclosing scope

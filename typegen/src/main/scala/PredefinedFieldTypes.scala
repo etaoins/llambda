@@ -54,6 +54,13 @@ object PredefinedFieldTypes {
           llvmType=llvmir.PointerType(llvmir.IntegerType(8)),
           cppTypeName="void*"
         )
+      ) +
+      ("World" ->
+        PrimitiveFieldType(
+          signed=None,
+          llvmType=llvmir.UserDefinedType("world"),
+          cppTypeName="World"
+        )
       )
     )
 }

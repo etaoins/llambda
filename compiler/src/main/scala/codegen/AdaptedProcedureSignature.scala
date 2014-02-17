@@ -9,7 +9,7 @@ import llambda.compiler.{celltype => ct}
 // If they are wrapping a procedure with a different signature a thunk must
 // be generated with this signature
 object AdaptedProcedureSignature extends ProcedureSignature(
-  hasWorldArg=false,
+  hasWorldArg=true,
   hasSelfArg=true,
   fixedArgs=Nil,
   hasRestArg=true,

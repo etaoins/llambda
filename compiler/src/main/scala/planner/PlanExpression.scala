@@ -314,7 +314,7 @@ private[planner] object PlanExpression {
         val innerTemp = innerValue.toTempValue(innerTempType)
 
         val outerTemp = new ps.TempValue(innerTempType.isGcManaged)
-        plan.steps += ps.Parameterize(outerTemp, parameterValueTemps.toList, innerWriter.steps.toList, innerTemp)
+        plan.steps += ps.Parameterize(outerTemp, postValueState.worldPtr,  parameterValueTemps.toList, innerWriter.steps.toList, innerTemp)
 
         PlanResult(
           state=postValueState,

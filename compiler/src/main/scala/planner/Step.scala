@@ -375,15 +375,15 @@ case class SetProcedureEntryPoint(procedureCell : TempValue, entryPoint : TempVa
 }
 
 /** Executes the inner steps with a new dynamic environment containing the passed parameter values */
-case class Parameterize(result : TempValue, parameterValues : List[(TempValue, TempValue)], steps : List[Step], innerResult : TempValue) extends NestingStep {
+case class Parameterize(result : TempValue, worldPtr : TempValue, parameterValues : List[(TempValue, TempValue)], steps : List[Step], innerResult : TempValue) extends NestingStep {
   lazy val outputValues = Set(result)  
   
   lazy val outerInputValues = (parameterValues.flatMap { case (parameter, value) =>
     List(parameter, value)
-  }).toSet
+  }).toSet + worldPtr
 
   lazy val innerBranches = List((steps, innerResult))
 
   def mapInnerBranches(mapper : (List[Step], TempValue) => List[Step]) =
-    Parameterize(result, parameterValues, mapper(steps, innerResult), innerResult)
+    Parameterize(result, worldPtr, parameterValues, mapper(steps, innerResult), innerResult)
 }

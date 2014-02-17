@@ -18,19 +18,19 @@ ProcedureCell *lliby_make_parameter(DatumCell *initialValue)
 	return dynamic::ParameterProcedureCell::createInstance(initialValue, nullptr);
 }
 
-DatumCell *lliby_dynamic_wind(ProcedureCell *before, ProcedureCell *thunk, ProcedureCell *after)
+DatumCell *lliby_dynamic_wind(World *world, ProcedureCell *before, ProcedureCell *thunk, ProcedureCell *after)
 {
 	{
 		// pushActiveState() can call before which can GC
 		// Make sure we root thunk 
 		alloc::StrongRefRange<ProcedureCell> thunkRoot(&thunk, 1);
 
-		dynamic::State::pushActiveState(before, after);
+		dynamic::State::pushActiveState(world, before, after);
 	}
 	
-	alloc::StrongRef<DatumCell> thunkResult = thunk->apply(EmptyListCell::instance());
+	alloc::StrongRef<DatumCell> thunkResult = thunk->apply(world, EmptyListCell::instance());
 
-	dynamic::State::popActiveState();
+	dynamic::State::popActiveState(world);
 
 	return thunkResult;
 }

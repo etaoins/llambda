@@ -4,7 +4,7 @@
 namespace lliby
 {
 
-struct World
+class World
 {
 };
 

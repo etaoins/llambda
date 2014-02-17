@@ -12,6 +12,9 @@ object WriteDeclaretypes extends writer.OutputWriter {
     incBuilder += "{"
     incBuilder.sep()
 
+    // Forward declare World
+    incBuilder += "class World;"
+
     // Forward declare each cell class
     for(cellClass <- processedTypes.cellClasses.values) {
       val cppName = cellClass.names.cppClassName

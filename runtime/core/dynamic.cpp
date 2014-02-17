@@ -11,12 +11,12 @@ using lliby::dynamic::ParameterProcedureCell;
 extern "C"
 {
 
-void _lliby_dynamicenv_push()
+void _lliby_dynamicenv_push(World *world)
 {
-	dynamic::State::pushActiveState(nullptr, nullptr);
+	dynamic::State::pushActiveState(world, nullptr, nullptr);
 }
 
-void _lliby_dynamicenv_set_value(ProcedureCell *procCell, DatumCell *value)
+void _lliby_dynamicenv_set_value(World *, ProcedureCell *procCell, DatumCell *value)
 {
 	auto paramCell = datum_cast<ParameterProcedureCell>(procCell);
 
@@ -28,9 +28,9 @@ void _lliby_dynamicenv_set_value(ProcedureCell *procCell, DatumCell *value)
 	dynamic::State::activeState()->setValueForParameter(paramCell, value);
 }
 
-void _lliby_dynamicenv_pop()
+void _lliby_dynamicenv_pop(World *world)
 {
-	dynamic::State::popActiveState();
+	dynamic::State::popActiveState(world);
 }
 
 }

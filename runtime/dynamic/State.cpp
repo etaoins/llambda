@@ -49,7 +49,7 @@ State* State::activeState()
 	return currentActiveState;
 }
 
-void State::pushActiveState(ProcedureCell *before, ProcedureCell *after)
+void State::pushActiveState(World *world, ProcedureCell *before, ProcedureCell *after)
 {
 	if (before != nullptr)
 	{
@@ -58,13 +58,13 @@ void State::pushActiveState(ProcedureCell *before, ProcedureCell *after)
 		alloc::StrongRefRange<ProcedureCell> afterRoot(&after, 1);
 
 		// Invoke the before procedure 
-		before->apply(EmptyListCell::instance());
+		before->apply(world, EmptyListCell::instance());
 	}
 	
 	currentActiveState = new State(before, after, currentActiveState);
 }
 
-void State::popActiveState()
+void State::popActiveState(World *world)
 {
 	State *oldActiveState = currentActiveState;
 
@@ -75,23 +75,23 @@ void State::popActiveState()
 
 	if (oldActiveState->afterProcedure())
 	{
-		oldActiveState->afterProcedure()->apply(EmptyListCell::instance());
+		oldActiveState->afterProcedure()->apply(world, EmptyListCell::instance());
 	}
 }
 	
-void State::popAllStates()
+void State::popAllStates(World *world)
 {
 	while(currentActiveState->parent() != nullptr)
 	{
-		popActiveState();
+		popActiveState(world);
 	}
 }
 	
-void State::switchState(State *state)
+void State::switchState(World *world, State *state)
 {
 	while(currentActiveState != state)
 	{
-		popActiveState();
+		popActiveState(world);
 	}
 }
 

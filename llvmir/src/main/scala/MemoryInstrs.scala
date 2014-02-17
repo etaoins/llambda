@@ -70,7 +70,9 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
     val storedType = pointeeTypeForAccess(to.irType)
 
     if (storedType != value.irType) {
-      throw new InconsistentIrException("Attempted to store value to pointer of incompatible type")
+      throw new InconsistentIrException(s"Attempted to store value to pointer of incompatible type\n" +
+                                        s"Value type: ${value.irType}\n" +
+                                        s"Pointer type: ${storedType}")
     }
     
     val volatileIr = if (volatile) {

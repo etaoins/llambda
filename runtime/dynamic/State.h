@@ -122,6 +122,7 @@ public:
 	/**
 	 * Creates a child active of the currently active state and makes it active
 	 *
+	 * @param  world   World the state is being pushed in to
 	 * @param  before  Procedure to invoke before activating this state or its children. nullptr will disable this 
 	 *                 functionality.
 	 * @param  after   Procedure to invoke after deactivating this state or children. nullptr will disable this 
@@ -129,28 +130,32 @@ public:
 	 *
 	 * This may re-enter Scheme and invoke the garbage collector if before is not null
 	 */
-	static void pushActiveState(ProcedureCell *before, ProcedureCell *after);
+	static void pushActiveState(World *world, ProcedureCell *before, ProcedureCell *after);
 
 	/**
 	 * Makes the parent of the currently active state active
+	 * 
+	 * @param  world   World the state is being popped from
 	 *
 	 * This may re-enter Scheme and invoke the garbage collector
 	 */
-	static void popActiveState();
+	static void popActiveState(World *world);
 
 	/**
 	 * Pops all active states
+	 * 
+	 * @param  world   World the states are being popped from
 	 *
 	 * This should be used when cleanly exiting from the world
 	 */
-	static void popAllStates();
+	static void popAllStates(World *world);
 
 	/**
 	 * Switches to the specified state
 	 *
 	 * Without continuations this will just pop until the state matches the passed argument
 	 */
-	static void switchState(State *);
+	static void switchState(World *world, State *);
 
 private:
 	ProcedureCell *mBefore;

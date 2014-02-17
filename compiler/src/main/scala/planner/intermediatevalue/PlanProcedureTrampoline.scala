@@ -22,6 +22,7 @@ import llambda.compiler.RuntimeErrorMessage
   */
 private[intermediatevalue] object PlanProcedureTrampoline {
   def apply(signature : ProcedureSignature, nativeSymbol : String)(implicit parentPlan : PlanWriter) : PlannedFunction = {
+    val worldPtrTemp = ps.GcUnmanagedValue()
     val selfTemp = ps.GcManagedValue()
     val argListHeadTemp = ps.GcManagedValue()
 
@@ -31,6 +32,10 @@ private[intermediatevalue] object PlanProcedureTrampoline {
     val argListHeadValue = TempValueToIntermediate(vt.IntrinsicCellType(ct.ListElementCell), argListHeadTemp)
 
     val argTemps = new mutable.ListBuffer[ps.TempValue]
+
+    if (signature.hasWorldArg) {
+      argTemps += worldPtrTemp
+    }
 
     if (signature.hasSelfArg) {
       // Pass the closure through directly
@@ -112,6 +117,7 @@ private[intermediatevalue] object PlanProcedureTrampoline {
     PlannedFunction(
       signature=AdaptedProcedureSignature,
       namedArguments=List(
+        ("world"   -> worldPtrTemp),
         ("closure" -> selfTemp),
         ("argList" -> argListHeadTemp)
       ),

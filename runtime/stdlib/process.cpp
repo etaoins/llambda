@@ -38,9 +38,9 @@ namespace
 extern "C"
 {
 
-void lliby_exit(DatumCell *exitValue)
+void lliby_exit(World *world, DatumCell *exitValue)
 {
-	dynamic::State::popAllStates();
+	dynamic::State::popAllStates(world);
 	exit(datumToStatusCode(exitValue));
 }
 
