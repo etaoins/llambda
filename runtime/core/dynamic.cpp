@@ -1,5 +1,3 @@
-#include "core/dynamic.h"
-
 #include "binding/ProcedureCell.h"
 #include "binding/DatumCell.h"
 #include "dynamic/State.h"
