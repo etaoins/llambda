@@ -77,9 +77,30 @@ object InferArgumentTypes {
   }
 
   def apply(initialFunction : PlannedFunction) : PlannedFunction = {
-    val fixedArgCount = initialFunction.signature.fixedArgs.length
+    val worldPtrProcessedFunction = if (initialFunction.signature.hasWorldArg) {
+      // Find the world ptr temp value
+      val worldPtrTemp = initialFunction.namedArguments.head._2
+      val worldPtrUsed = initialFunction.steps.exists(_.inputValues.contains(worldPtrTemp))
 
-    (0 until fixedArgCount).foldLeft(initialFunction) { case (function, argIndex) =>
+      if (worldPtrUsed) {
+        initialFunction
+      }
+      else {
+        initialFunction.copy(
+          signature=initialFunction.signature.copy(
+            hasWorldArg=false
+          ),
+          namedArguments=initialFunction.namedArguments.tail
+        )
+      }
+    }
+    else {
+      initialFunction
+    }
+
+    val fixedArgCount = worldPtrProcessedFunction.signature.fixedArgs.length
+
+    (0 until fixedArgCount).foldLeft(worldPtrProcessedFunction) { case (function, argIndex) =>
       val signature = function.signature
       
       if (signature.fixedArgs(argIndex) == vt.IntrinsicCellType(ct.DatumCell)) {

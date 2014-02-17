@@ -145,6 +145,9 @@ private[planner] object PlanLambda {
 
     val capturedVariables = capturedImmutables ++ capturedMutables
 
+    // Make a temp for the world pointer
+    val worldPtr = ps.GcUnmanagedValue()
+
     // Determine if we have a closure
     val procSelfOpt = if (capturedVariables.isEmpty) {
       None
@@ -226,7 +229,7 @@ private[planner] object PlanLambda {
     
     // Determine our signature
     val procSignature = ProcedureSignature(
-      hasWorldArg=false,
+      hasWorldArg=true,
       hasSelfArg=procSelfOpt.isDefined,
       hasRestArg=restArgLoc.isDefined,
       fixedArgs=fixedArgLocs.map { _ =>
@@ -236,12 +239,14 @@ private[planner] object PlanLambda {
     )
 
     // Name our function arguments
-    val namedArguments = procSelfOpt.toList.map({ procSelf =>
-      ("self" -> procSelf)
-    }) ++
-    (allArgs.map { case Argument(storageLoc, tempValue, _) =>
-      (storageLoc.sourceName -> tempValue)
-    })
+    val namedArguments =
+      ("world" -> worldPtr) ::
+      procSelfOpt.toList.map({ procSelf =>
+        ("self" -> procSelf)
+      }) ++
+      (allArgs.map { case Argument(storageLoc, tempValue, _) =>
+        (storageLoc.sourceName -> tempValue)
+      })
 
     val uninferredFunction = PlannedFunction(
       signature=procSignature,
