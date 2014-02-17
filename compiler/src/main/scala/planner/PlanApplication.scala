@@ -36,7 +36,7 @@ object PlanApplication {
     }
   }
 
-  def apply(invokableProc : InvokableProcedure, operands : List[(SourceLocated, iv.IntermediateValue)])(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
+  def apply(invokableProc : InvokableProcedure, worldPtr : ps.TempValue, operands : List[(SourceLocated, iv.IntermediateValue)])(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
     val entryPointTemp = invokableProc.planEntryPoint()
     val signature = invokableProc.signature
 
@@ -50,6 +50,13 @@ object PlanApplication {
       if (signature.fixedArgs.length != operands.length) {
         throw new UnlocatedIncompatibleArityException(s"Called procedure with ${operands.length} arguments; requires exactly ${signature.fixedArgs.length} arguments")
       }
+    }
+
+    val worldTemps = if (signature.hasWorldArg) {
+      worldPtr :: Nil
+    }
+    else {
+      Nil
     }
 
     val selfTemps = if (signature.hasSelfArg) {
@@ -73,7 +80,7 @@ object PlanApplication {
       Nil
     }
 
-    val argTemps = selfTemps ++ fixedTemps ++ restTemps
+    val argTemps = worldTemps ++ selfTemps ++ fixedTemps ++ restTemps
 
     val resultTemp = signature.returnType.map { returnType =>
       new ps.TempValue(returnType.isGcManaged)

@@ -77,7 +77,7 @@ private[planner] object PlanExpression {
         }
 
         // Perform a function call
-        val applyValueOpt = PlanApplication(invokableProc, operands) 
+        val applyValueOpt = PlanApplication(invokableProc, finalState.worldPtr, operands) 
 
         PlanResult(
           state=finalState,

@@ -184,7 +184,10 @@ private[planner] object PlanLambda {
 
     // Start a new state for the procedure
     val initialImmutables = argImmutables ++ importedImmutables
-    val preMutableState = PlannerState(immutables=initialImmutables) 
+    val preMutableState = PlannerState(
+      immutables=initialImmutables,
+      worldPtr=worldPtr
+    )
 
     val procPlan = parentPlan.forkPlan() 
 

@@ -8,12 +8,15 @@ import llambda.compiler.codegen.LlambdaExecSignature
 
 object PlanProgram {
   def apply(exprs : List[et.Expression])(planConfig : PlanConfig) : Map[String, PlannedFunction] = {
-    val emptyState = PlannerState() 
+    val worldTemp = ps.GcUnmanagedValue()
+
+    val emptyState = PlannerState(
+      worldPtr=worldTemp
+    ) 
+
     val plan = PlanWriter()
       
     PlanExpression(emptyState)(et.Begin(exprs))(planConfig, plan)
-
-    val worldTemp = ps.GcUnmanagedValue()
 
     // __llambda_exec is a void function
     plan.steps += ps.Return(None)
