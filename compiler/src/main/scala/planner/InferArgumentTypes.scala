@@ -29,7 +29,6 @@ object InferArgumentTypes {
       false
   }
 
-
   private def retypeArgument(argValue : ps.TempValue, steps : List[ps.Step]) : RetypingResult = {
     def abortRetyping =
       RetypingResult(
