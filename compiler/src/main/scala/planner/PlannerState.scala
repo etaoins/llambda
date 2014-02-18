@@ -8,7 +8,7 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 case class PlannerState(
   immutables : Map[StorageLocation, iv.IntermediateValue] = Map(),
   mutables : Map[StorageLocation, ps.TempValue] = Map(),
-  worldPtr : ps.TempValue
+  worldPtr : ps.WorldPtrValue
 ) {
   def withImmutable(immutable : (StorageLocation, iv.IntermediateValue)) =
     this.copy(immutables=immutables + immutable)

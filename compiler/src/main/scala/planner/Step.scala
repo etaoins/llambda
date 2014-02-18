@@ -10,6 +10,8 @@ class TempValue(val isGcManaged : Boolean) {
   override def toString = s"%${this.hashCode.toHexString}" 
 }
 
+class WorldPtrValue extends TempValue(false)
+
 object GcManagedValue {
   /** Creates a new GC managed temp value */
   def apply() : TempValue = 
@@ -375,7 +377,7 @@ case class SetProcedureEntryPoint(procedureCell : TempValue, entryPoint : TempVa
 }
 
 /** Executes the inner steps with a new dynamic environment containing the passed parameter values */
-case class Parameterize(result : TempValue, worldPtr : TempValue, parameterValues : List[(TempValue, TempValue)], steps : List[Step], innerResult : TempValue) extends NestingStep {
+case class Parameterize(result : TempValue, worldPtr : WorldPtrValue, parameterValues : List[(TempValue, TempValue)], steps : List[Step], innerResult : TempValue) extends NestingStep {
   lazy val outputValues = Set(result)  
   
   lazy val outerInputValues = (parameterValues.flatMap { case (parameter, value) =>

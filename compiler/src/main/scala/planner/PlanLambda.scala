@@ -146,7 +146,7 @@ private[planner] object PlanLambda {
     val capturedVariables = capturedImmutables ++ capturedMutables
 
     // Make a temp for the world pointer
-    val worldPtr = ps.GcUnmanagedValue()
+    val worldPtr = new ps.WorldPtrValue()
 
     // Determine if we have a closure
     val procSelfOpt = if (capturedVariables.isEmpty) {

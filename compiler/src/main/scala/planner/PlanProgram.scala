@@ -8,7 +8,7 @@ import llambda.compiler.codegen.LlambdaExecSignature
 
 object PlanProgram {
   def apply(exprs : List[et.Expression])(planConfig : PlanConfig) : Map[String, PlannedFunction] = {
-    val worldTemp = ps.GcUnmanagedValue()
+    val worldTemp = new ps.WorldPtrValue
 
     val emptyState = PlannerState(
       worldPtr=worldTemp
