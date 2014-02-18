@@ -17,11 +17,11 @@ object PrimitiveExpressions {
   object DefineRecordType extends PrimitiveExpression
   object DefineType extends PrimitiveExpression
   object NativeFunction extends PrimitiveExpression
+  object WorldFunction extends PrimitiveExpression
   object DefineReportProcedure extends PrimitiveExpression
   object AnnotateType extends PrimitiveExpression
   object CondExpand extends PrimitiveExpression
   object Parameterize extends PrimitiveExpression
-  object WorldPointer extends PrimitiveExpression
 
   val bindings = {
     Map[String, BoundValue](
@@ -39,6 +39,7 @@ object PrimitiveExpressions {
       "define-record-type" -> DefineRecordType,
       "define-type" -> DefineType,
       "native-function" -> NativeFunction,
+      "world-function" -> WorldFunction,
       "define-report-procedure" -> DefineReportProcedure,
       "ann" -> AnnotateType,
       "cond-expand" -> CondExpand,

@@ -6,24 +6,7 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 
 object ExtractNativeFunction {
-  private def createNativeFunction(initialArgData : List[sst.ScopedDatum], restArgDatum : Option[sst.ScopedSymbol], returnTypeDatum : Option[sst.ScopedSymbol], nativeSymbol : String) : et.NativeFunction = {
-    val (hasWorldArg, fixedArgData)  = initialArgData match {
-      case (headSymbol : sst.ScopedSymbol) :: tailArgs =>
-        headSymbol.resolve match {
-          case PrimitiveExpressions.WorldPointer =>
-            // This is a world-pointer
-            (true, tailArgs)
-
-          case _ =>
-            // Something else
-            (false, headSymbol :: tailArgs)
-        }
-
-      case other =>
-        // No args
-        (false, other)
-    }
-
+  private def createNativeFunction(hasWorldArg : Boolean, fixedArgData : List[sst.ScopedDatum], restArgDatum : Option[sst.ScopedSymbol], returnTypeDatum : Option[sst.ScopedSymbol], nativeSymbol : String) : et.NativeFunction = {
     var fixedArgTypes = fixedArgData map DatumToValueType.apply
 
     val hasRestArg = restArgDatum match {
@@ -52,25 +35,25 @@ object ExtractNativeFunction {
       nativeSymbol = nativeSymbol)
   }
 
-  def apply(operands : List[sst.ScopedDatum], defineLocation : SourceLocated) : et.NativeFunction = operands match {
+  def apply(hasWorldArg : Boolean, operands : List[sst.ScopedDatum], defineLocation : SourceLocated) : et.NativeFunction = operands match {
     // These mirror the lambda forms
     case sst.NonSymbolLeaf(ast.StringLiteral(nativeSymbol)) :: sst.ScopedProperList(fixedArgs) :: Nil =>
-      createNativeFunction(fixedArgs, None, None, nativeSymbol)
+      createNativeFunction(hasWorldArg, fixedArgs, None, None, nativeSymbol)
 
     case sst.NonSymbolLeaf(ast.StringLiteral(nativeSymbol)) :: sst.ScopedProperList(fixedArgs) :: (returnTypeDatum : sst.ScopedSymbol) :: Nil =>
-      createNativeFunction(fixedArgs, None, Some(returnTypeDatum), nativeSymbol)
+      createNativeFunction(hasWorldArg, fixedArgs, None, Some(returnTypeDatum), nativeSymbol)
     
     case sst.NonSymbolLeaf(ast.StringLiteral(nativeSymbol)) :: (restArgDatum : sst.ScopedSymbol) :: Nil =>
-      createNativeFunction(Nil, Some(restArgDatum), None, nativeSymbol)
+      createNativeFunction(hasWorldArg, Nil, Some(restArgDatum), None, nativeSymbol)
     
     case sst.NonSymbolLeaf(ast.StringLiteral(nativeSymbol)) :: (restArgDatum : sst.ScopedSymbol) :: (returnTypeDatum : sst.ScopedSymbol) :: Nil =>
-      createNativeFunction(Nil, Some(restArgDatum), Some(returnTypeDatum), nativeSymbol)
+      createNativeFunction(hasWorldArg, Nil, Some(restArgDatum), Some(returnTypeDatum), nativeSymbol)
     
     case sst.NonSymbolLeaf(ast.StringLiteral(nativeSymbol)) :: sst.ScopedImproperList(fixedArgs, (restArgDatum : sst.ScopedSymbol)) :: Nil =>
-      createNativeFunction(fixedArgs, Some(restArgDatum), None, nativeSymbol)
+      createNativeFunction(hasWorldArg, fixedArgs, Some(restArgDatum), None, nativeSymbol)
     
     case sst.NonSymbolLeaf(ast.StringLiteral(nativeSymbol)) :: sst.ScopedImproperList(fixedArgs, (restArgDatum : sst.ScopedSymbol)) :: (returnTypeDatum : sst.ScopedSymbol) :: Nil =>
-      createNativeFunction(fixedArgs, Some(restArgDatum), Some(returnTypeDatum), nativeSymbol)
+      createNativeFunction(hasWorldArg, fixedArgs, Some(restArgDatum), Some(returnTypeDatum), nativeSymbol)
 
     case _ =>
       throw new BadSpecialFormException(defineLocation, "Bad native-function operands")

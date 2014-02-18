@@ -12,9 +12,6 @@ object DatumToValueType {
       symbol.resolve match {
         case BoundType(schemeType) => schemeType
 
-        case PrimitiveExpressions.WorldPointer =>
-          throw new BadSpecialFormException(symbol, "world-pointer can only be used in the initial position of a (native-function) argument list")
-
         case _ =>
           throw new BadSpecialFormException(symbol, "Non-type value used as type")
       }

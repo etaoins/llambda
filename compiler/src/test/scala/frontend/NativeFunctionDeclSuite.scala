@@ -42,7 +42,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
     )
 
     assertResult(expectedFunction) {
-      expressionFor("""(native-function "lliby_newline" (world-pointer))""")
+      expressionFor("""(world-function "lliby_newline" ())""")
     }
   }
   
@@ -93,7 +93,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
     )
 
     assertResult(expectedFunction) {
-      expressionFor("""(native-function "lliby_newline" (world-pointer <int64> <float>) <double>)""")
+      expressionFor("""(world-function "lliby_newline" (<int64> <float>) <double>)""")
     }
   }
   
@@ -208,18 +208,6 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
   test("function returning unknown type") {
     intercept[UnboundVariableException] {
       expressionFor("""(native-function "lliby_newline" () <not-a-type>)""")
-    }
-  }
-  
-  test("function returning world pointer fails") {
-    intercept[BadSpecialFormException] {
-      expressionFor("""(native-function "lliby_newline" () world-pointer)""")
-    }
-  }
-
-  test("function taking world pointer in non-initial position fails") {
-    intercept[BadSpecialFormException] {
-      expressionFor("""(native-function "lliby_newline" (<bool> world-pointer))""")
     }
   }
   

@@ -42,7 +42,7 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
     case List(StringComponent("llambda"), StringComponent("nfi")) =>
       // Our NFI types depend on our target platform
       IntrinsicTypes(targetPlatform).mapValues(BoundType.apply) +
-        ("world-pointer" -> PrimitiveExpressions.WorldPointer) +
+        ("world-function" -> PrimitiveExpressions.WorldFunction) +
         ("native-function" -> PrimitiveExpressions.NativeFunction)
   }
 

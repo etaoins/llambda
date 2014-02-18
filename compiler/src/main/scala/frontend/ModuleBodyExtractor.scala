@@ -218,7 +218,10 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
         extractInclude(scope, includeNames, appliedSymbol)
 
       case (PrimitiveExpressions.NativeFunction, _) =>
-        ExtractNativeFunction(operands, appliedSymbol)
+        ExtractNativeFunction(false, operands, appliedSymbol)
+      
+      case (PrimitiveExpressions.WorldFunction, _) =>
+        ExtractNativeFunction(true, operands, appliedSymbol)
 
       case (PrimitiveExpressions.Quasiquote, sst.ScopedProperList(listData) :: Nil) => 
         val schemeBase = libraryLoader.loadSchemeBase(frontendConfig)
