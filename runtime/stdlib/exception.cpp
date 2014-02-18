@@ -21,7 +21,7 @@ DatumCell* lliby_with_exception_handler(World *world, ProcedureCell *handlerRaw,
 	alloc::StrongRef<ProcedureCell> handler(handlerRaw);
 
 	// Keep track of our dynamic state
-	dynamic::State *expectedState = dynamic::State::activeState();
+	dynamic::State *expectedState = dynamic::State::activeState(world);
 
 	try
 	{

@@ -16,7 +16,7 @@ void _lliby_dynamicenv_push(World *world)
 	dynamic::State::pushActiveState(world, nullptr, nullptr);
 }
 
-void _lliby_dynamicenv_set_value(World *, ProcedureCell *procCell, DatumCell *value)
+void _lliby_dynamicenv_set_value(World *world, ProcedureCell *procCell, DatumCell *value)
 {
 	auto paramCell = datum_cast<ParameterProcedureCell>(procCell);
 
@@ -25,7 +25,7 @@ void _lliby_dynamicenv_set_value(World *, ProcedureCell *procCell, DatumCell *va
 		signalError("Attempted to parameterize non-parameter", {procCell});
 	}
 
-	dynamic::State::activeState()->setValueForParameter(paramCell, value);
+	dynamic::State::activeState(world)->setValueForParameter(paramCell, value);
 }
 
 void _lliby_dynamicenv_pop(World *world)

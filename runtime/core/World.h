@@ -4,8 +4,28 @@
 namespace lliby
 {
 
+namespace dynamic
+{
+
+class State;
+
+}
+
 class World
 {
+public:
+	World();
+	~World();
+
+	// This is the public section of World
+	// Generated code can access these fields directly
+	// Any changes to the content, size or order of these fields will require codegen changes
+	
+	// This is the private section of World
+	// This is only used internally by the runtime
+	dynamic::State *activeState;
+
+	static World* activeWorld();
 };
 
 }

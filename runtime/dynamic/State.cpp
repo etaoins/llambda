@@ -1,5 +1,6 @@
 #include "dynamic/State.h"
 
+#include "core/World.h"
 #include "dynamic/ParameterProcedureCell.h"
 #include "alloc/StrongRef.h"
 #include "binding/EmptyListCell.h"
@@ -8,11 +9,6 @@ namespace lliby
 {
 namespace dynamic
 {
-
-namespace
-{
-	State *currentActiveState = new State(nullptr, nullptr);
-}
 	
 State::State(ProcedureCell *before, ProcedureCell *after, State *parent) : 
 	mBefore(before),
@@ -44,9 +40,9 @@ void State::setValueForParameter(ParameterProcedureCell *param, DatumCell *value
 	mSelfValues[param] = value;
 }
 
-State* State::activeState()
+State* State::activeState(World *world)
 {
-	return currentActiveState;
+	return world->activeState;
 }
 
 void State::pushActiveState(World *world, ProcedureCell *before, ProcedureCell *after)
@@ -61,15 +57,15 @@ void State::pushActiveState(World *world, ProcedureCell *before, ProcedureCell *
 		before->apply(world, EmptyListCell::instance());
 	}
 	
-	currentActiveState = new State(before, after, currentActiveState);
+	world->activeState = new State(before, after, world->activeState);
 }
 
 void State::popActiveState(World *world)
 {
-	State *oldActiveState = currentActiveState;
+	State *oldActiveState = world->activeState;
 
 	// Make the old state active and reference it
-	currentActiveState = currentActiveState->parent();
+	world->activeState = world->activeState->parent();
 
 	delete oldActiveState;
 
@@ -81,7 +77,7 @@ void State::popActiveState(World *world)
 	
 void State::popAllStates(World *world)
 {
-	while(currentActiveState->parent() != nullptr)
+	while(world->activeState->parent() != nullptr)
 	{
 		popActiveState(world);
 	}
@@ -89,7 +85,7 @@ void State::popAllStates(World *world)
 	
 void State::switchState(World *world, State *state)
 {
-	while(currentActiveState != state)
+	while(world->activeState != state)
 	{
 		popActiveState(world);
 	}

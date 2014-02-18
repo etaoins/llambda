@@ -17,7 +17,7 @@ namespace
 	// startup
 	std::uint32_t registeredClassId = ~0;
 
-	DatumCell *procedureBody(World *, ProcedureCell *self, ListElementCell *argHead)
+	DatumCell *procedureBody(World *world, ProcedureCell *self, ListElementCell *argHead)
 	{
 		if (argHead != EmptyListCell::instance())
 		{
@@ -26,7 +26,7 @@ namespace
 
 		// We know we're a parameter procedure because only parameter procedures have us as an entry point
 		auto parameterProc = static_cast<ParameterProcedureCell*>(self);
-		return State::activeState()->valueForParameter(parameterProc);
+		return State::activeState(world)->valueForParameter(parameterProc);
 	}
 }
 	

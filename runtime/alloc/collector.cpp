@@ -165,7 +165,7 @@ void* collect(void *fromBase, void *fromEnd, void *toBase)
 	// XXX: In theory if a parameter function isn't referenced it's safe to remove it from all states. However, because
 	// parameter values can themselves reference other parameter functions this gets extremely tricky.  Parameterization
 	// of an unreachable parameter seems like too much of a corner case to justify the additional code complexity.
-	visitDynamicState(dynamic::State::activeState(), rootVisitor);
+	visitDynamicState(dynamic::State::activeState(World::activeWorld()), rootVisitor);
 
 	// Visit each runtime weak ref
 	std::function<bool (DatumCell**)> weakRefFunction = weakRefVisitor;

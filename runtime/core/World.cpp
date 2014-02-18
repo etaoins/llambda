@@ -8,12 +8,37 @@
 
 using namespace lliby;
 
+namespace
+{
+
+World *currentActiveWorld = nullptr;
+
+}
+
 extern "C"
 {
+
+World::World() :
+	activeState(new dynamic::State(nullptr, nullptr))
+{
+}
+
+World::~World()
+{
+	delete activeState;
+}
+
+World* World::activeWorld()
+{
+	return currentActiveWorld;
+}
 
 void _lliby_launch_world(void (*entryPoint)(World *))
 {
 	World *world = new World;
+
+	// XXX: Remove me
+	currentActiveWorld = world;
 
 	try
 	{
@@ -30,6 +55,9 @@ void _lliby_launch_world(void (*entryPoint)(World *))
 	alloc::shutdown();
 
 	delete world;
+
+	// XXX: Remove me
+	currentActiveWorld = nullptr;
 }
 
 }

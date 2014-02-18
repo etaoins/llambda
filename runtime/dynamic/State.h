@@ -115,9 +115,9 @@ public:
 	}	
 
 	/**
-	 * Returns the currently active state for this thread
+	 * Returns the currently active state for this world
 	 */
-	static State* activeState();
+	static State* activeState(World *);
 
 	/**
 	 * Creates a child active of the currently active state and makes it active
