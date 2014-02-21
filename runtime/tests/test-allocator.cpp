@@ -1,6 +1,8 @@
 #include <functional>
 
 #include "core/init.h"
+#include "core/World.h"
+
 #include "assertions.h"
 #include "stubdefinitions.h"
 
@@ -29,11 +31,11 @@ using namespace lliby;
 	
 EmptyListCell *EmptyList = EmptyListCell::instance();
 
-template<class T>
-void testNonRecursiveGc(T* (*constructor)())
+template<class T, class Function>
+void testNonRecursiveGc(World &world, Function &&constructor)
 {
 	{
-		alloc::WeakRef<T> weakCell((*constructor)());
+		alloc::WeakRef<T> weakCell(world, constructor());
 
 		// This should be allocated now
 		ASSERT_FALSE(weakCell.isNull());
@@ -46,8 +48,8 @@ void testNonRecursiveGc(T* (*constructor)())
 	
 	{
 		// Use the WeakRef as a safe way to test if the strong ref worked
-		alloc::WeakRef<T> weakCell((*constructor)());
-		alloc::StrongRef<T> strongCell(weakCell);
+		alloc::WeakRef<T> weakCell(world, constructor());
+		alloc::StrongRef<T> strongCell(world, weakCell);
 
 		// This should be allocated now
 		ASSERT_FALSE(weakCell.isNull());
@@ -59,41 +61,41 @@ void testNonRecursiveGc(T* (*constructor)())
 	}
 }
 
-void testPairGc()
+void testPairGc(World &world)
 {
 	// Make sure non-recursive GC works at a minimum
-	testNonRecursiveGc<PairCell>([] ()
+	testNonRecursiveGc<PairCell>(world, [] ()
 	{
 		return new PairCell(EmptyList, EmptyList);
 	});
 
 	// These need to be strong while allocated so value A/B don't disappear when later values are allocated 
 	// However, they need to be weak after to test how strong references affect their collection
-	alloc::StrongRef<StringCell> valueAStrong(StringCell::fromUtf8CString(""));
-	alloc::StrongRef<StringCell> valueBStrong(StringCell::fromUtf8CString(""));
-	alloc::StrongRef<StringCell> valueCStrong(StringCell::fromUtf8CString(""));
+	alloc::StrongRef<StringCell> valueAStrong(world, StringCell::fromUtf8CString(""));
+	alloc::StrongRef<StringCell> valueBStrong(world, StringCell::fromUtf8CString(""));
+	alloc::StrongRef<StringCell> valueCStrong(world, StringCell::fromUtf8CString(""));
 	
 	alloc::RangeAlloc allocation(alloc::allocateRange(3)); 
 	auto allocIt = allocation.begin();
 
 	// Make a simple proper list manually
-	alloc::WeakRef<PairCell> pairC(new (*allocIt++) PairCell(valueCStrong, EmptyList));
-	alloc::WeakRef<PairCell> pairB(new (*allocIt++) PairCell(valueBStrong, pairC));
-	alloc::WeakRef<PairCell> pairA(new (*allocIt++) PairCell(valueAStrong, pairB));
+	alloc::WeakRef<PairCell> pairC(world, new (*allocIt++) PairCell(valueCStrong, EmptyList));
+	alloc::WeakRef<PairCell> pairB(world, new (*allocIt++) PairCell(valueBStrong, pairC));
+	alloc::WeakRef<PairCell> pairA(world, new (*allocIt++) PairCell(valueAStrong, pairB));
 	
 	// Demote these to weak references
-	alloc::WeakRef<StringCell> valueA = valueAStrong.data();
+	alloc::WeakRef<StringCell> valueA(world, valueAStrong.data());
 	valueAStrong = nullptr;
 
-	alloc::WeakRef<StringCell> valueB = valueBStrong.data();
+	alloc::WeakRef<StringCell> valueB(world, valueBStrong.data());
 	valueBStrong = nullptr;
 
-	alloc::WeakRef<StringCell> valueC = valueCStrong.data();
+	alloc::WeakRef<StringCell> valueC(world,  valueCStrong.data());
 	valueCStrong = nullptr;
 
 	{
 		// Root the head of the list
-		alloc::StrongRef<PairCell> rootingRef(pairA);
+		alloc::StrongRef<PairCell> rootingRef(world, pairA);
 
 		alloc::forceCollection();
 
@@ -109,7 +111,7 @@ void testPairGc()
 	
 	{
 		// Root the middle of the list
-		alloc::StrongRef<PairCell> rootingRef(pairB);
+		alloc::StrongRef<PairCell> rootingRef(world, pairB);
 
 		alloc::forceCollection();
 
@@ -125,7 +127,7 @@ void testPairGc()
 
 	{
 		// Root the end of the list
-		alloc::StrongRef<PairCell> rootingRef(pairC);
+		alloc::StrongRef<PairCell> rootingRef(world, pairC);
 
 		alloc::forceCollection();
 
@@ -154,27 +156,27 @@ void testPairGc()
 	}
 }
 
-void testVectorGc()
+void testVectorGc(World &world)
 {
 	// Make sure non-recursive GC works at a minimum
-	testNonRecursiveGc<VectorCell>([] ()
+	testNonRecursiveGc<VectorCell>(world, [] ()
 	{
 		return new VectorCell(nullptr, 0);
 	});
 	
-	alloc::StrongRef<StringCell> value0Strong(StringCell::fromUtf8CString(""));
-	alloc::StrongRef<StringCell> value1Strong(StringCell::fromUtf8CString(""));
-	alloc::StrongRef<StringCell> value2Strong(StringCell::fromUtf8CString(""));
+	alloc::StrongRef<StringCell> value0Strong(world, StringCell::fromUtf8CString(""));
+	alloc::StrongRef<StringCell> value1Strong(world, StringCell::fromUtf8CString(""));
+	alloc::StrongRef<StringCell> value2Strong(world, StringCell::fromUtf8CString(""));
 	
-	alloc::StrongRef<VectorCell> testVec(VectorCell::fromFill(3));
+	alloc::StrongRef<VectorCell> testVec(world, VectorCell::fromFill(world, 3));
 	
-	alloc::WeakRef<StringCell> value0(value0Strong.data());
+	alloc::WeakRef<StringCell> value0(world, value0Strong.data());
 	value0Strong = nullptr;
 
-	alloc::WeakRef<StringCell> value1(value1Strong.data());
+	alloc::WeakRef<StringCell> value1(world, value1Strong.data());
 	value1Strong = nullptr;
 
-	alloc::WeakRef<StringCell> value2(value2Strong.data());
+	alloc::WeakRef<StringCell> value2(world, value2Strong.data());
 	value2Strong = nullptr;
 
 	testVec->setElementAt(0, value0);
@@ -223,7 +225,7 @@ void testVectorGc()
 	}
 }
 
-void testRecordLikeGc()
+void testRecordLikeGc(World &world)
 {
 	struct CustomRecordLikeData
 	{
@@ -238,11 +240,11 @@ void testRecordLikeGc()
 			offsetof(CustomRecordLikeData, cell1)});
 
 	// Make some test values
-	alloc::StrongRef<StringCell> value0Strong(StringCell::fromUtf8CString(""));
-	alloc::StrongRef<StringCell> value1Strong(StringCell::fromUtf8CString(""));
+	alloc::StrongRef<StringCell> value0Strong(world, StringCell::fromUtf8CString(""));
+	alloc::StrongRef<StringCell> value1Strong(world, StringCell::fromUtf8CString(""));
 	
 	// Create the record-like
-	alloc::StrongRef<RecordCell> testRecord = new RecordCell(testClass, false, nullptr);
+	alloc::StrongRef<RecordCell> testRecord(world, new RecordCell(testClass, false, nullptr));
 
 	// Set the data
 	auto data = static_cast<CustomRecordLikeData*>(RecordLikeCell::allocateRecordData(sizeof(CustomRecordLikeData)));
@@ -251,10 +253,10 @@ void testRecordLikeGc()
 
 	testRecord->setRecordData(data);
 	
-	alloc::WeakRef<StringCell> value0(value0Strong.data());
+	alloc::WeakRef<StringCell> value0(world, value0Strong.data());
 	value0Strong = nullptr;
 
-	alloc::WeakRef<StringCell> value1(value1Strong.data());
+	alloc::WeakRef<StringCell> value1(world, value1Strong.data());
 	value1Strong = nullptr;
 
 	{
@@ -284,68 +286,73 @@ void testRecordLikeGc()
 	}
 }
 
+void testAll(World &world)
+{
+	// Test exact integers
+	testNonRecursiveGc<ExactIntegerCell>(world, [] ()
+	{
+		return ExactIntegerCell::fromValue(5);
+	});
+	
+	// Test inexact rationals
+	testNonRecursiveGc<InexactRationalCell>(world, [] ()
+	{
+		return InexactRationalCell::fromValue(5.0);
+	});
+	
+	// Test inline symbols
+	testNonRecursiveGc<SymbolCell>(world, [&world] ()
+	{
+		return StringCell::fromUtf8CString(u8"")->toSymbol(world);
+	});
+	
+	// Test heap symbols
+	testNonRecursiveGc<SymbolCell>(world, [&world] ()
+	{
+		return StringCell::fromUtf8CString(u8"This is more than twelve bytes long")->toSymbol(world);
+	});
+
+	// Test inline strings
+	testNonRecursiveGc<StringCell>(world, [] ()
+	{
+		return StringCell::fromUtf8CString(u8"");
+	});
+	
+	// Test heap strings
+	testNonRecursiveGc<StringCell>(world, [] ()
+	{
+		return StringCell::fromUtf8CString(u8"This is more than twelve bytes long");
+	});
+	
+	// Test bytevectors
+	testNonRecursiveGc<BytevectorCell>(world, [] ()
+	{
+		return new BytevectorCell(nullptr, 0);
+	});
+	
+	// Test characters
+	testNonRecursiveGc<CharacterCell>(world, [] ()
+	{
+		return new CharacterCell(UnicodeChar(0x61));
+	});
+	
+	// Test pairs
+	testPairGc(world);
+
+	// Test vectors
+	testVectorGc(world);
+
+	// Test record-likes
+	testRecordLikeGc(world);
+}
+
 }
 
 int main(int argc, char *argv[])
 {
 	lliby_init();
 
-	// Test exact integers
-	testNonRecursiveGc<ExactIntegerCell>([] ()
-	{
-		return ExactIntegerCell::fromValue(5);
-	});
-	
-	// Test inexact rationals
-	testNonRecursiveGc<InexactRationalCell>([] ()
-	{
-		return InexactRationalCell::fromValue(5.0);
-	});
-	
-	// Test inline symbols
-	testNonRecursiveGc<SymbolCell>([] ()
-	{
-		return StringCell::fromUtf8CString(u8"")->toSymbol();
-	});
-	
-	// Test heap symbols
-	testNonRecursiveGc<SymbolCell>([] ()
-	{
-		return StringCell::fromUtf8CString(u8"This is more than twelve bytes long")->toSymbol();
-	});
-
-	// Test inline strings
-	testNonRecursiveGc<StringCell>([] ()
-	{
-		return StringCell::fromUtf8CString(u8"");
-	});
-	
-	// Test heap strings
-	testNonRecursiveGc<StringCell>([] ()
-	{
-		return StringCell::fromUtf8CString(u8"This is more than twelve bytes long");
-	});
-	
-	// Test bytevectors
-	testNonRecursiveGc<BytevectorCell>([] ()
-	{
-		return new BytevectorCell(nullptr, 0);
-	});
-	
-	// Test characters
-	testNonRecursiveGc<CharacterCell>([] ()
-	{
-		return new CharacterCell(UnicodeChar(0x61));
-	});
-	
-	// Test pairs
-	testPairGc();
-
-	// Test vectors
-	testVectorGc();
-
-	// Test record-likes
-	testRecordLikeGc();
+	lliby::World::launchWorld(&testAll);
 
 	return 0;
 }

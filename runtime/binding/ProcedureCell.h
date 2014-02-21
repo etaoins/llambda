@@ -17,7 +17,7 @@ public:
 	{
 	}
 
-	DatumCell* apply(World *world, ListElementCell *arguments);
+	DatumCell* apply(World &world, ListElementCell *arguments);
 
 	/**
 	 * Indicates if this procedure captures variables from its enclosing scope

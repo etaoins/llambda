@@ -272,7 +272,7 @@ StringCell* StringCell::fromFill(std::uint32_t length, UnicodeChar fill)
 	return newString;
 }
 	
-StringCell* StringCell::fromAppended(std::vector<StringCell*> &strings)
+StringCell* StringCell::fromAppended(World &world, std::vector<StringCell*> &strings)
 {
 	std::uint64_t totalByteLength = 0;
 	std::uint32_t totalCharLength = 0;
@@ -290,7 +290,7 @@ StringCell* StringCell::fromAppended(std::vector<StringCell*> &strings)
 	}
 
 	// Mark our input strings as GC roots
-	alloc::StrongRefRange<StringCell> inputRoots(strings);
+	alloc::StrongRefRange<StringCell> inputRoots(world, strings);
 
 	// Allocate the new string and null terminate it
 	auto newString = StringCell::createUninitialized(totalByteLength);
@@ -656,12 +656,12 @@ bool StringCell::setCharAt(std::uint32_t offset, UnicodeChar unicodeChar)
 	return fill(unicodeChar, offset, offset + 1);
 }
 	
-StringCell* StringCell::copy(std::int64_t start, std::int64_t end) const
+StringCell* StringCell::copy(World &world, std::int64_t start, std::int64_t end) const
 {
 	// Allocating a string below can actually change "this"
 	// That is super annoying
 	StringCell *oldThis = const_cast<StringCell*>(this);
-	alloc::StrongRef<StringCell> thisRef(oldThis);
+	alloc::StrongRef<StringCell> thisRef(world, oldThis);
 
 	CharRange range = charRange(start, end);
 
@@ -827,9 +827,9 @@ int StringCell::compare(const StringCell *other, CaseSensitivity cs) const
 	}
 }
 	
-SymbolCell* StringCell::toSymbol() const
+SymbolCell* StringCell::toSymbol(World &world) const
 {
-	return SymbolCell::fromString(const_cast<StringCell*>(this));
+	return SymbolCell::fromString(world, const_cast<StringCell*>(this));
 }
 	
 BytevectorCell* StringCell::toUtf8Bytevector(std::int64_t start, std::int64_t end) const

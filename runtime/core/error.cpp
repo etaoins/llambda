@@ -1,4 +1,5 @@
 #include "core/error.h"
+#include "core/World.h"
 
 #include "alloc/StrongRef.h"
 
@@ -24,15 +25,15 @@ void _lliby_fatal(const char *message, const DatumCell *evidence)
 	fatalError(message, evidence);
 }
 
-void _lliby_signal_error(const char *message, DatumCell *irritant)
+void _lliby_signal_error(World &world, const char *message, DatumCell *irritant)
 {
 	if (irritant != nullptr)
 	{
-		signalError(message, {irritant});
+		signalError(world, message, {irritant});
 	}
 	else
 	{
-		signalError(message, {});
+		signalError(world, message, {});
 	}
 }
 
@@ -41,15 +42,15 @@ void _lliby_signal_error(const char *message, DatumCell *irritant)
 namespace lliby
 {
 
-void signalError(const char *message, const std::vector<DatumCell*> &irritants)
+void signalError(World &world, const char *message, const std::vector<DatumCell*> &irritants)
 {
 	// Convert our C++ data type to Scheme cells
-	alloc::StrongRef<ListElementCell> irritantsCell = ListElementCell::createProperList(irritants);
-	alloc::StrongRef<StringCell> messageCell = StringCell::fromUtf8CString(message);
+	alloc::StrongRef<ListElementCell> irritantsCell(world, ListElementCell::createProperList(world, irritants));
+	alloc::StrongRef<StringCell> messageCell(world, StringCell::fromUtf8CString(message));
 
 	// Throw a new exception
-	auto errorObj = ErrorObjectCell::createInstance(messageCell, irritantsCell);
-	throw dynamic::SchemeException(errorObj);
+	auto errorObj = ErrorObjectCell::createInstance(world, messageCell, irritantsCell);
+	throw dynamic::SchemeException(world, errorObj);
 }
 
 void fatalError(const char *message, const DatumCell *evidence)

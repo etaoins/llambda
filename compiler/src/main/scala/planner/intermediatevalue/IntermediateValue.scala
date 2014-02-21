@@ -43,9 +43,9 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     resultIntermediate : IntermediateValue
   )
 
-  protected def toCellTempValue(cellType : ct.CellType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue
-  protected def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue
-  protected def toRecordTempValue(recordType : vt.RecordType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue
+  protected def toCellTempValue(cellType : ct.CellType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
+  protected def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
+  protected def toRecordTempValue(recordType : vt.RecordType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
 
   def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     val trueTemp = ps.GcUnmanagedValue()
@@ -54,9 +54,9 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     trueTemp
   }
   
-  def toInvokableProcedure()(implicit plan : PlanWriter) : Option[InvokableProcedure]
+  def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[InvokableProcedure]
 
-  def toTempValue(targetType : vt.ValueType, errorMessageOpt : Option[RuntimeErrorMessage] = None)(implicit plan : PlanWriter) : ps.TempValue = targetType match {
+  def toTempValue(targetType : vt.ValueType, errorMessageOpt : Option[RuntimeErrorMessage] = None)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = targetType match {
     case vt.CBool =>
       val truthyPredTemp = toTruthyPredicate()
 
@@ -80,11 +80,11 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
       throw new InternalCompilerErrorException("Attempt to convert value to a closure type")
   }
   
-  def planPhiWith(theirValue : IntermediateValue)(ourPlan : PlanWriter, theirPlan : PlanWriter) : PlanPhiResult = {
+  def planPhiWith(theirValue : IntermediateValue)(ourPlan : PlanWriter, theirPlan : PlanWriter)(implicit worldPtr : ps.WorldPtrValue) : PlanPhiResult = {
     // This is extremely inefficient for compatible native types
     // This should be overridden where possible
-    val ourTempValue = this.toTempValue(vt.IntrinsicCellType(ct.DatumCell))(ourPlan)
-    val theirTempValue = theirValue.toTempValue(vt.IntrinsicCellType(ct.DatumCell))(theirPlan)
+    val ourTempValue = this.toTempValue(vt.IntrinsicCellType(ct.DatumCell))(ourPlan, worldPtr)
+    val theirTempValue = theirValue.toTempValue(vt.IntrinsicCellType(ct.DatumCell))(theirPlan, worldPtr)
 
     val phiResultTemp = ps.GcManagedValue()
     val phiPossibleTypes = possibleTypes ++ theirValue.possibleTypes

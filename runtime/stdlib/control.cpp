@@ -13,7 +13,7 @@ using namespace lliby;
 extern "C"
 {
 
-DatumCell *lliby_apply(World *world, ProcedureCell *procedure, ListElementCell *argHead)
+DatumCell *lliby_apply(World &world, ProcedureCell *procedure, ListElementCell *argHead)
 {
 	ListElementCell *procArgHead;
 
@@ -26,7 +26,7 @@ DatumCell *lliby_apply(World *world, ProcedureCell *procedure, ListElementCell *
 
 		if (!applyArgList.isValid())
 		{
-			signalError("Non-list passed to (apply)", {argHead});
+			signalError(world, "Non-list passed to (apply)", {argHead});
 		}
 		else if (applyArgList.length() == 0)
 		{
@@ -53,14 +53,14 @@ DatumCell *lliby_apply(World *world, ProcedureCell *procedure, ListElementCell *
 
 			if (!(finalListHead && ProperList<DatumCell>(finalListHead).isValid()))
 			{
-				signalError("Final argument to (apply) must be a proper list", {finalListHead});
+				signalError(world, "Final argument to (apply) must be a proper list", {finalListHead});
 			}
 
 			// Reference the procedure cell before allocating the argument list
-			alloc::StrongRefRange<ProcedureCell> procedureRef(&procedure, 1);	
+			alloc::StrongRefRange<ProcedureCell> procedureRef(world, &procedure, 1);	
 
 			// We verified the final arg is a proper list so this must also be a proper list
-			procArgHead = datum_unchecked_cast<ListElementCell>(ListElementCell::createList(standaloneArgs, finalListHead));
+			procArgHead = datum_unchecked_cast<ListElementCell>(ListElementCell::createList(world, standaloneArgs, finalListHead));
 		}
 	}
 

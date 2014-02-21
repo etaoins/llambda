@@ -14,7 +14,7 @@ bool lliby_not(bool value)
 	return !value;
 }
 
-bool lliby_boolean_equal(BooleanCell *value1, BooleanCell *value2, ListElementCell *argHead)
+bool lliby_boolean_equal(World &world, BooleanCell *value1, BooleanCell *value2, ListElementCell *argHead)
 {
 	if (value1 != value2)
 	{
@@ -25,7 +25,7 @@ bool lliby_boolean_equal(BooleanCell *value1, BooleanCell *value2, ListElementCe
 
 	if (!properList.isValid())
 	{
-		signalError("Non-boolean passed to (boolean=?)", {argHead});
+		signalError(world, "Non-boolean passed to (boolean=?)", {argHead});
 	}
 
 	for(auto boolCell : properList)

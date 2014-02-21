@@ -8,7 +8,7 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 
 object PlanApplication {
-  private def boxRestArgs(restArgs : List[iv.IntermediateValue])(implicit plan : PlanWriter) : ps.TempValue = {
+  private def boxRestArgs(restArgs : List[iv.IntermediateValue])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
     val restArgCount = restArgs.length
 
     if (restArgCount == 0) {
@@ -36,7 +36,7 @@ object PlanApplication {
     }
   }
 
-  def apply(invokableProc : InvokableProcedure, worldPtr : ps.TempValue, operands : List[(SourceLocated, iv.IntermediateValue)])(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
+  def apply(invokableProc : InvokableProcedure, operands : List[(SourceLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
     val entryPointTemp = invokableProc.planEntryPoint()
     val signature = invokableProc.signature
 

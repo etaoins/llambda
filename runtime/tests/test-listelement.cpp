@@ -13,38 +13,34 @@
 
 namespace
 {
-	using namespace lliby;
 
-	bool isProperList(const ListElementCell *head)
-	{
-		return ProperList<DatumCell>(head).isValid();
-	}
+using namespace lliby;
 
-	std::uint32_t listLength(const ListElementCell *head)
-	{
-		return ProperList<DatumCell>(head).length();
-	}
+bool isProperList(const ListElementCell *head)
+{
+	return ProperList<DatumCell>(head).isValid();
 }
 
-int main(int argc, char *argv[])
+std::uint32_t listLength(const ListElementCell *head)
 {
-	using namespace lliby;
+	return ProperList<DatumCell>(head).length();
+}
 
-	lliby_init();
-
-	alloc::StrongRef<StringCell> valueA(StringCell::fromUtf8CString("A"));
-	alloc::StrongRef<StringCell> valueB(StringCell::fromUtf8CString("B"));
-	alloc::StrongRef<StringCell> valueC(StringCell::fromUtf8CString("C"));
+void testAll(World &world)
+{
+	alloc::StrongRef<StringCell> valueA(world, StringCell::fromUtf8CString("A"));
+	alloc::StrongRef<StringCell> valueB(world, StringCell::fromUtf8CString("B"));
+	alloc::StrongRef<StringCell> valueC(world, StringCell::fromUtf8CString("C"));
 	
 	{
-		ListElementCell *properList = ListElementCell::createProperList({});
+		ListElementCell *properList = ListElementCell::createProperList(world, {});
 
 		ASSERT_EQUAL(properList, EmptyListCell::instance());
 		ASSERT_EQUAL(listLength(properList), 0);
 	}
 	
 	{
-		ListElementCell *properList = ListElementCell::createProperList({
+		ListElementCell *properList = ListElementCell::createProperList(world, {
 			valueA
 		});
 
@@ -57,7 +53,7 @@ int main(int argc, char *argv[])
 	}
 	
 	{
-		ListElementCell *properList = ListElementCell::createProperList({
+		ListElementCell *properList = ListElementCell::createProperList(world, {
 			valueA,
 			valueB,
 			valueC
@@ -82,13 +78,13 @@ int main(int argc, char *argv[])
 	}
 
 	{
-		DatumCell *improperList = ListElementCell::createList({}, valueA);
+		DatumCell *improperList = ListElementCell::createList(world, {}, valueA);
 
 		ASSERT_TRUE(improperList == valueA.data());
 	}
 	
 	{
-		DatumCell *improperList = ListElementCell::createList({valueA}, valueB);
+		DatumCell *improperList = ListElementCell::createList(world, {valueA}, valueB);
 
 		auto *onlyPair = datum_cast<PairCell>(improperList);
 		ASSERT_TRUE(onlyPair != nullptr);
@@ -99,7 +95,7 @@ int main(int argc, char *argv[])
 	}
 	
 	{
-		DatumCell *improperList = ListElementCell::createList({
+		DatumCell *improperList = ListElementCell::createList(world, {
 			valueA,
 			valueB
 		}, valueC);
@@ -117,4 +113,13 @@ int main(int argc, char *argv[])
 		ASSERT_EQUAL(secondPair->cdr(), valueC.data());
 		ASSERT_FALSE(isProperList(secondPair));
 	}
+}
+
+}
+
+int main(int argc, char *argv[])
+{
+	lliby_init();
+
+	lliby::World::launchWorld(&testAll);
 }

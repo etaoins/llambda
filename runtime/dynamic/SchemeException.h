@@ -3,6 +3,7 @@
 
 #include "binding/DatumCell.h"
 #include "alloc/StrongRef.h"
+#include "core/World.h"
 
 namespace lliby
 {
@@ -12,8 +13,8 @@ namespace dynamic
 class SchemeException
 {
 public:
-	SchemeException(DatumCell *object) :
-		m_object(object)
+	SchemeException(World &world, DatumCell *object) :
+		m_object(world, object)
 	{
 	}
 

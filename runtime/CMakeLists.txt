@@ -4,11 +4,9 @@ cmake_minimum_required (VERSION 2.8)
 
 project (lliby)
 add_library(lliby
-	alloc/CellRefList.cpp
+	alloc/CellRefRangeList.cpp
 	alloc/Finalizer.cpp
 	alloc/MemoryBlock.cpp
-	alloc/StrongRef.cpp
-	alloc/WeakRef.cpp
 	alloc/allocator.cpp
 	alloc/cellvisitor.cpp
 	alloc/collector.cpp

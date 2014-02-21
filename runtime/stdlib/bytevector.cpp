@@ -20,33 +20,33 @@ std::uint32_t lliby_bytevector_length(BytevectorCell *bytevector)
 	return bytevector->length();
 }
 
-std::uint8_t lliby_bytevector_u8_ref(BytevectorCell *bytevector, std::uint32_t index)
+std::uint8_t lliby_bytevector_u8_ref(World &world, BytevectorCell *bytevector, std::uint32_t index)
 {
 	auto byte = bytevector->byteAt(index);
 
 	if (byte == BytevectorCell::InvalidByte)
 	{
-		signalError("Bytevector index out of bounds", {bytevector});	
+		signalError(world, "Bytevector index out of bounds", {bytevector});	
 	}
 
 	return byte;
 }
 
-void lliby_bytevector_u8_set(BytevectorCell *bytevector, std::uint32_t index, std::uint8_t value)
+void lliby_bytevector_u8_set(World &world, BytevectorCell *bytevector, std::uint32_t index, std::uint8_t value)
 {
 	if (!bytevector->setByteAt(index, value))
 	{
-		signalError("Bytevector index out of bounds", {bytevector});	
+		signalError(world, "Bytevector index out of bounds", {bytevector});	
 	}
 }
 
-BytevectorCell *lliby_bytevector(ListElementCell *argHead)
+BytevectorCell *lliby_bytevector(World &world, ListElementCell *argHead)
 {
 	ProperList<ExactIntegerCell> properList(argHead);
 	
 	if (!properList.isValid())
 	{
-		signalError("Non-exact integer passed to (bytevector)", {argHead}); 
+		signalError(world, "Non-exact integer passed to (bytevector)", {argHead}); 
 	}
 
 	auto length = properList.length();
@@ -63,13 +63,13 @@ BytevectorCell *lliby_bytevector(ListElementCell *argHead)
 	return new BytevectorCell(newBytes, length);
 }
 
-BytevectorCell *lliby_bytevector_append(ListElementCell *argHead)
+BytevectorCell *lliby_bytevector_append(World &world, ListElementCell *argHead)
 {
 	ProperList<BytevectorCell> argList(argHead);
 	
 	if (!argList.isValid())
 	{
-		signalError("Non-bytevector passed to (bytevector-append)", {argHead}); 
+		signalError(world, "Non-bytevector passed to (bytevector-append)", {argHead}); 
 	}
 
 	// Create a std::list

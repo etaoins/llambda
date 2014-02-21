@@ -6,7 +6,7 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.RuntimeErrorMessage
 
 object GenErrorSignal {
-  def apply(state : GenerationState)(errorMessage : RuntimeErrorMessage, evidence : Option[IrValue] = None) = {
+  def apply(state : GenerationState)(worldPtr : IrValue, errorMessage : RuntimeErrorMessage, evidence : Option[IrValue] = None) = {
     val module = state.module
     val block = state.currentBlock
 
@@ -28,6 +28,7 @@ object GenErrorSignal {
       result=IrFunction.Result(VoidType),
       name="_lliby_signal_error",
       arguments=List(
+        IrFunction.Argument(PointerType(WorldValue.irType)),
         IrFunction.Argument(PointerType(IntegerType(8)), Set(IrFunction.NoCapture)),
         IrFunction.Argument(PointerType(ct.DatumCell.irType))
       )
@@ -55,7 +56,7 @@ object GenErrorSignal {
       inbounds=true)
 
     // Call _lliby_fatal
-    block.callDecl(None)(llibySignalErrorDecl, List(stringStartPtr, evidencePtr))
+    block.callDecl(None)(llibySignalErrorDecl, List(worldPtr, stringStartPtr, evidencePtr))
 
     // Terminate the failure block
     block.unreachable

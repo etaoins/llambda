@@ -1,5 +1,5 @@
-#ifndef _LLIBY_ALLOC_CELLREFLIST_H
-#define _LLIBY_ALLOC_CELLREFLIST_H
+#ifndef _LLIBY_ALLOC_CELLREFRANGELIST_H
+#define _LLIBY_ALLOC_CELLREFRANGELIST_H
 
 #include "alloc/AllocCell.h"
 
@@ -29,11 +29,11 @@ struct CellRefRange
  * This was measured to provide a 10x speedup versus using std::list<{AllocCell **, size_t}>. One drawback is only 
  * 128 ranges are supported on 64bit (256 on 32bit). If that becomes an issue this code can be re-evaluated.
  */
-class CellRefList
+class CellRefRangeList
 {
 public:
-	explicit CellRefList();
-	~CellRefList();
+	explicit CellRefRangeList();
+	~CellRefRangeList();
 
 	CellRefRange *activeHead() const
 	{

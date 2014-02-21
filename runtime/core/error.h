@@ -7,8 +7,10 @@
 namespace lliby
 {
 
+class World;
+
 [[noreturn]]
-void signalError(const char *message, const std::vector<DatumCell*> &irritants = std::vector<DatumCell*>());
+void signalError(World &world, const char *message, const std::vector<DatumCell*> &irritants = std::vector<DatumCell*>());
 
 [[noreturn]]
 void fatalError(const char *message, const lliby::DatumCell *evidence = nullptr);

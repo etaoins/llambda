@@ -11,11 +11,17 @@ class State;
 
 }
 
+namespace alloc
+{
+
+class CellRefRangeList;
+
+}
+
 class World
 {
 public:
-	World();
-	~World();
+	static void launchWorld(void (*entryPoint)(World &));
 
 	// This is the public section of World
 	// Generated code can access these fields directly
@@ -25,7 +31,15 @@ public:
 	// This is only used internally by the runtime
 	dynamic::State *activeState;
 
-	static World* activeWorld();
+	// These are lists of strong and weak refs in the current world
+	alloc::CellRefRangeList *strongRefs;
+	alloc::CellRefRangeList *weakRefs;
+
+	static World& activeWorld();
+
+private:
+	World();
+	~World();
 };
 
 }
@@ -33,7 +47,7 @@ public:
 extern "C"
 {
 
-void _lliby_launch_world(void (*entryPoint)(lliby::World *));
+void _lliby_launch_world(void (*entryPoint)(lliby::World &));
 
 }
 

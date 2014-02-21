@@ -18,7 +18,7 @@ trait IntermediateCellValue extends IntermediateValue {
       "cell with possible types {" + multiple.map(_.schemeName).mkString(", ") + "}" 
   }
 
-  def toCellTempValue(targetType : ct.CellType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue = {
+  def toCellTempValue(targetType : ct.CellType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
     val targetConcreteTypes = targetType.concreteTypes
 
     // Are our possible concrete types a subset of the target types?
@@ -38,7 +38,7 @@ trait IntermediateCellValue extends IntermediateValue {
 
       // This is possible but not guaranteed. Verify the type at runtime.
       val castTemp = ps.GcManagedValue()
-      plan.steps += ps.CastCellToSubtypeChecked(castTemp, tempValue, targetType, errorMessage)
+      plan.steps += ps.CastCellToSubtypeChecked(castTemp, worldPtr, tempValue, targetType, errorMessage)
       castTemp
     }
     else {

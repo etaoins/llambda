@@ -1,14 +1,18 @@
-#include "binding/InexactRationalCell.h"
 #include "core/init.h"
+#include "core/World.h"
+
+#include "binding/InexactRationalCell.h"
+
 #include "assertions.h"
 #include "stubdefinitions.h"
 
-int main(int argc, char *argv[])
+namespace
 {
-	using namespace lliby;
+using namespace lliby;
 
-	lliby_init();
 
+void testAll(World &world)
+{
 	{
 		InexactRationalCell *value = InexactRationalCell::fromValue(0.0);
 		ASSERT_EQUAL(value->value(), 0.0);
@@ -68,6 +72,15 @@ int main(int argc, char *argv[])
 		ASSERT_FALSE(value->isPositiveInfinity());
 		ASSERT_TRUE(value->isNegativeInfinity());
 	}
+}
+
+}
+
+int main(int argc, char *argv[])
+{
+	lliby_init();
+
+	lliby::World::launchWorld(&testAll);
 
 	return 0;
 }

@@ -6,13 +6,14 @@
 namespace lliby
 {
 
+class World;
 class StringCell;
 
 class SymbolCell : public DatumCell
 {
 #include "generated/SymbolCellMembers.h"
 public:
-	static SymbolCell* fromString(StringCell *string);
+	static SymbolCell* fromString(World &world, StringCell *string);
 
 	const std::uint8_t* utf8Data() const;
 

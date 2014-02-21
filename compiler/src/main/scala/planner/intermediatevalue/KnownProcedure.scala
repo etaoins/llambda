@@ -37,10 +37,10 @@ class KnownProcedure(val signature : ProcedureSignature, symbolBlock : () => Str
   // Only ask for this once
   lazy val nativeSymbol = symbolBlock()
   
-  def toInvokableProcedure()(implicit plan : PlanWriter) : Option[InvokableProcedure] = 
+  def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[InvokableProcedure] = 
     Some(this)
 
-  def toCellTempValue(targetType : ct.CellType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue = {
+  def toCellTempValue(targetType : ct.CellType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
     if (targetType.isTypeOrSupertypeOf(ct.ProcedureCell)) {
       // Store an entry point with an adapted signature
       val entryPointTemp = if (signature == AdaptedProcedureSignature) {
@@ -95,7 +95,7 @@ class KnownProcedure(val signature : ProcedureSignature, symbolBlock : () => Str
     }
   }
   
-  def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue =
+  def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue =
     // Procedures have no unboxed representation
     impossibleConversion(s"Cannot convert procedure to requested type ${nativeType.schemeName} or any other native type")
 

@@ -17,11 +17,11 @@ namespace
 	// startup
 	std::uint32_t registeredClassId = ~0;
 
-	DatumCell *procedureBody(World *world, ProcedureCell *self, ListElementCell *argHead)
+	DatumCell *procedureBody(World &world, ProcedureCell *self, ListElementCell *argHead)
 	{
 		if (argHead != EmptyListCell::instance())
 		{
-			signalError("Parameter procedures don't accept arguments", {argHead});
+			signalError(world, "Parameter procedures don't accept arguments", {argHead});
 		}
 
 		// We know we're a parameter procedure because only parameter procedures have us as an entry point
@@ -30,11 +30,11 @@ namespace
 	}
 }
 	
-ParameterProcedureCell* ParameterProcedureCell::createInstance(DatumCell *initialValueRaw, ProcedureCell *converterProcedureRaw)
+ParameterProcedureCell* ParameterProcedureCell::createInstance(World &world, DatumCell *initialValueRaw, ProcedureCell *converterProcedureRaw)
 {
 	// Root these across the allocation of the actual procedure cell
-	alloc::StrongRef<DatumCell> initialValue(initialValueRaw);
-	alloc::StrongRef<ProcedureCell> converterProcedure(converterProcedureRaw);
+	alloc::StrongRef<DatumCell> initialValue(world, initialValueRaw);
+	alloc::StrongRef<ProcedureCell> converterProcedure(world, converterProcedureRaw);
 
 	auto closure = static_cast<ParameterProcedureClosure*>(allocateRecordData(sizeof(ParameterProcedureClosure)));
 	auto procedureCell = new ProcedureCell(registeredClassId, false, closure, &procedureBody);

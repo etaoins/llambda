@@ -1,4 +1,4 @@
-#include "CellRefList.h"
+#include "CellRefRangeList.h"
 
 #include <iostream>
 
@@ -45,7 +45,7 @@ namespace
 	}
 }
 
-CellRefList::CellRefList() : mActiveHead(nullptr)
+CellRefRangeList::CellRefRangeList() : mActiveHead(nullptr)
 {
 	mBackingBlock = new MemoryBlock(MemoryBlockSize);
 
@@ -68,12 +68,12 @@ CellRefList::CellRefList() : mActiveHead(nullptr)
 	mFreeHead = backingRanges;
 }
 
-CellRefList::~CellRefList()
+CellRefRangeList::~CellRefRangeList()
 {
 	delete mBackingBlock;
 }
 
-CellRefRange* CellRefList::addRange(AllocCell **basePointer, size_t cellCount)
+CellRefRange* CellRefRangeList::addRange(AllocCell **basePointer, size_t cellCount)
 {
 	if (mFreeHead == nullptr)
 	{
@@ -95,7 +95,7 @@ CellRefRange* CellRefList::addRange(AllocCell **basePointer, size_t cellCount)
 	return newRange;
 }
 
-void CellRefList::removeRange(CellRefRange *range)
+void CellRefRangeList::removeRange(CellRefRange *range)
 {
 	removeRangeNode(range, mActiveHead);
 	addRangeNode(range, mFreeHead);

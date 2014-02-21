@@ -29,6 +29,8 @@ private[planner] object PlanExpression {
   }
 
   def apply(initialState : PlannerState)(expr : et.Expression, sourceNameHint : Option[String] = None)(implicit planConfig : PlanConfig, plan : PlanWriter) : PlanResult = LocateExceptionsWith(expr) {
+    implicit val worldPtr = initialState.worldPtr
+
     expr match {
       case et.Begin(exprs) =>
         var finalValue : iv.IntermediateValue = iv.UnitValue
@@ -77,7 +79,7 @@ private[planner] object PlanExpression {
         }
 
         // Perform a function call
-        val applyValueOpt = PlanApplication(invokableProc, finalState.worldPtr, operands) 
+        val applyValueOpt = PlanApplication(invokableProc, operands) 
 
         PlanResult(
           state=finalState,

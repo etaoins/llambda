@@ -2,6 +2,8 @@
 
 #include "core/error.h"
 
+#include "alloc/CellRefRangeList.h"
+
 #include "dynamic/State.h"
 #include "dynamic/SchemeException.h"
 #include "dynamic/State.h"
@@ -15,30 +17,34 @@ World *currentActiveWorld = nullptr;
 
 }
 
-extern "C"
+namespace lliby
 {
 
 World::World() :
-	activeState(new dynamic::State(nullptr, nullptr))
+	activeState(new dynamic::State(nullptr, nullptr)),
+	strongRefs(new alloc::CellRefRangeList),
+	weakRefs(new alloc::CellRefRangeList)
 {
 }
 
 World::~World()
 {
 	delete activeState;
+	delete strongRefs;
+	delete weakRefs;
 }
 
-World* World::activeWorld()
+World& World::activeWorld()
 {
-	return currentActiveWorld;
+	return *currentActiveWorld;
 }
 
-void _lliby_launch_world(void (*entryPoint)(World *))
+void World::launchWorld(void (*entryPoint)(World &))
 {
-	World *world = new World;
+	World world;
 
 	// XXX: Remove me
-	currentActiveWorld = world;
+	currentActiveWorld = &world;
 
 	try
 	{
@@ -54,10 +60,18 @@ void _lliby_launch_world(void (*entryPoint)(World *))
 	dynamic::State::popAllStates(world);
 	alloc::shutdown();
 
-	delete world;
-
 	// XXX: Remove me
 	currentActiveWorld = nullptr;
+}
+
+}
+
+extern "C"
+{
+
+void _lliby_launch_world(void (*entryPoint)(World &))
+{
+	World::launchWorld(entryPoint);
 }
 
 }

@@ -63,9 +63,9 @@ namespace
 	};
 
 	// Visit every non-null cell in a cell ref list
-	void visitCellRefList(const CellRefList &cellRefList, std::function<bool (DatumCell**)> &visitor)
+	void visitCellRefList(const CellRefRangeList *cellRefList, std::function<bool (DatumCell**)> &visitor)
 	{
-		for(auto cellRefRange = cellRefList.activeHead();
+		for(auto cellRefRange = cellRefList->activeHead();
 		    cellRefRange != nullptr;
 		    cellRefRange = cellRefRange->next)
 		{
@@ -107,6 +107,10 @@ namespace
 
 void* collect(void *fromBase, void *fromEnd, void *toBase)
 {
+	// XXX: Eventually this will have the current world pointer passed in to
+	// allow multithreading etc. For now hack it so it works
+	World &world = World::activeWorld();
+
 	// This needs to be an AllocCell so ++ works correctly
 	auto nextNewCell = static_cast<AllocCell*>(toBase);
 
@@ -143,7 +147,7 @@ void* collect(void *fromBase, void *fromEnd, void *toBase)
 	};
 
 	// Visit each runtime GC root
-	visitCellRefList(RuntimeStrongRefList, rootVisitor);
+	visitCellRefList(world.strongRefs, rootVisitor);
 
 	// Visit each compiler GC root
 	for(StackEntry *stackEntry = llvm_gc_root_chain;
@@ -165,11 +169,11 @@ void* collect(void *fromBase, void *fromEnd, void *toBase)
 	// XXX: In theory if a parameter function isn't referenced it's safe to remove it from all states. However, because
 	// parameter values can themselves reference other parameter functions this gets extremely tricky.  Parameterization
 	// of an unreachable parameter seems like too much of a corner case to justify the additional code complexity.
-	visitDynamicState(dynamic::State::activeState(World::activeWorld()), rootVisitor);
+	visitDynamicState(dynamic::State::activeState(world), rootVisitor);
 
 	// Visit each runtime weak ref
 	std::function<bool (DatumCell**)> weakRefFunction = weakRefVisitor;
-	visitCellRefList(RuntimeWeakRefList, weakRefFunction);
+	visitCellRefList(world.weakRefs, weakRefFunction);
 
 	// This is where new allocations should start from
 	return nextNewCell;

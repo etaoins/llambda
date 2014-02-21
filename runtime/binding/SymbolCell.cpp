@@ -42,9 +42,9 @@ SymbolCell* SymbolCell::createUninitialized(std::uint32_t byteLength, std::uint3
 	}
 }
 	
-SymbolCell* SymbolCell::fromString(StringCell *string)
+SymbolCell* SymbolCell::fromString(World &world, StringCell *string)
 {
-	alloc::StrongRef<StringCell> stringRef(string);
+	alloc::StrongRef<StringCell> stringRef(world, string);
 
 	// Allocate a new destination symbol
 	SymbolCell *newSymbol = SymbolCell::createUninitialized(stringRef->byteLength(), stringRef->charLength());

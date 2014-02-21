@@ -40,32 +40,32 @@ void State::setValueForParameter(ParameterProcedureCell *param, DatumCell *value
 	mSelfValues[param] = value;
 }
 
-State* State::activeState(World *world)
+State* State::activeState(World &world)
 {
-	return world->activeState;
+	return world.activeState;
 }
 
-void State::pushActiveState(World *world, ProcedureCell *before, ProcedureCell *after)
+void State::pushActiveState(World &world, ProcedureCell *before, ProcedureCell *after)
 {
 	if (before != nullptr)
 	{
 		// Avoid rooting these if we don't have to
-		alloc::StrongRefRange<ProcedureCell> beforeRoot(&before, 1);
-		alloc::StrongRefRange<ProcedureCell> afterRoot(&after, 1);
+		alloc::StrongRefRange<ProcedureCell> beforeRoot(world, &before, 1);
+		alloc::StrongRefRange<ProcedureCell> afterRoot(world, &after, 1);
 
 		// Invoke the before procedure 
 		before->apply(world, EmptyListCell::instance());
 	}
 	
-	world->activeState = new State(before, after, world->activeState);
+	world.activeState = new State(before, after, world.activeState);
 }
 
-void State::popActiveState(World *world)
+void State::popActiveState(World &world)
 {
-	State *oldActiveState = world->activeState;
+	State *oldActiveState = world.activeState;
 
 	// Make the old state active and reference it
-	world->activeState = world->activeState->parent();
+	world.activeState = world.activeState->parent();
 
 	delete oldActiveState;
 
@@ -75,17 +75,17 @@ void State::popActiveState(World *world)
 	}
 }
 	
-void State::popAllStates(World *world)
+void State::popAllStates(World &world)
 {
-	while(world->activeState->parent() != nullptr)
+	while(world.activeState->parent() != nullptr)
 	{
 		popActiveState(world);
 	}
 }
 	
-void State::switchState(World *world, State *state)
+void State::switchState(World &world, State *state)
 {
-	while(world->activeState != state)
+	while(world.activeState != state)
 	{
 		popActiveState(world);
 	}

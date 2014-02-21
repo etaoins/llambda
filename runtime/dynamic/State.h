@@ -117,7 +117,7 @@ public:
 	/**
 	 * Returns the currently active state for this world
 	 */
-	static State* activeState(World *);
+	static State* activeState(World &);
 
 	/**
 	 * Creates a child active of the currently active state and makes it active
@@ -130,7 +130,7 @@ public:
 	 *
 	 * This may re-enter Scheme and invoke the garbage collector if before is not null
 	 */
-	static void pushActiveState(World *world, ProcedureCell *before, ProcedureCell *after);
+	static void pushActiveState(World &world, ProcedureCell *before, ProcedureCell *after);
 
 	/**
 	 * Makes the parent of the currently active state active
@@ -139,7 +139,7 @@ public:
 	 *
 	 * This may re-enter Scheme and invoke the garbage collector
 	 */
-	static void popActiveState(World *world);
+	static void popActiveState(World &world);
 
 	/**
 	 * Pops all active states
@@ -148,14 +148,14 @@ public:
 	 *
 	 * This should be used when cleanly exiting from the world
 	 */
-	static void popAllStates(World *world);
+	static void popAllStates(World &world);
 
 	/**
 	 * Switches to the specified state
 	 *
 	 * Without continuations this will just pop until the state matches the passed argument
 	 */
-	static void switchState(World *world, State *);
+	static void switchState(World &world, State *);
 
 private:
 	ProcedureCell *mBefore;

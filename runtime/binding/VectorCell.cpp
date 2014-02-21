@@ -47,9 +47,9 @@ bool VectorCell::fill(DatumCell *fill, std::int64_t start, std::int64_t end)
 	return true;
 }
 	
-VectorCell* VectorCell::fromFill(std::uint32_t length, DatumCell *fill)
+VectorCell* VectorCell::fromFill(World &world, std::uint32_t length, DatumCell *fill)
 {
-	alloc::StrongRef<DatumCell> fillRef(fill);
+	alloc::StrongRef<DatumCell> fillRef(world, fill);
 	auto newElements = new DatumCell*[length];
 
 	auto newVector = new VectorCell(newElements, length);
@@ -64,7 +64,7 @@ VectorCell* VectorCell::fromFill(std::uint32_t length, DatumCell *fill)
 	return newVector;
 }
 
-VectorCell* VectorCell::fromAppended(const std::vector<const VectorCell*> &vectors)
+VectorCell* VectorCell::fromAppended(World &world, const std::vector<const VectorCell*> &vectors)
 {
 	std::uint64_t totalLength = 0;
 
@@ -90,11 +90,11 @@ VectorCell* VectorCell::fromAppended(const std::vector<const VectorCell*> &vecto
 	}
 
 	// Root our elements in case allocating the vector cell triggers GC
-	alloc::StrongRefRange<DatumCell> newElementsRoot(newElements, totalLength);
+	alloc::StrongRefRange<DatumCell> newElementsRoot(world, newElements, totalLength);
 	return new VectorCell(newElements, totalLength);
 }
 
-VectorCell* VectorCell::copy(std::int64_t start, std::int64_t end)
+VectorCell* VectorCell::copy(World &world, std::int64_t start, std::int64_t end)
 {
 	if (!adjustRange(start, end, length()))
 	{
@@ -106,7 +106,7 @@ VectorCell* VectorCell::copy(std::int64_t start, std::int64_t end)
 
 	memcpy(newElements, &elements()[start], newLength * sizeof(DatumCell*));
 
-	alloc::StrongRefRange<DatumCell> newElementsRoot(newElements, newLength);
+	alloc::StrongRefRange<DatumCell> newElementsRoot(world, newElements, newLength);
 	return new VectorCell(newElements, newLength);
 }
 

@@ -5,6 +5,9 @@
 
 namespace lliby
 {
+
+class World;
+
 namespace dynamic
 {
 
@@ -25,6 +28,7 @@ public:
 	 *
 	 * This will enter the allocator and can potentially trigger GC
 	 *
+	 * @param world               Current world pointer
 	 * @param initialValue        Initial value for the parameter. This should be pre-convertered using
 	 *                            converterProcedure by the caller.
 	 *               
@@ -32,7 +36,7 @@ public:
 	 *                            identity function should be used nullptr can be passed to avoid the overhead of
 	 *                            re-entering Scheme,
 	 */
-	static ParameterProcedureCell *createInstance(DatumCell *initialValue, ProcedureCell *converterProcedure = nullptr);
+	static ParameterProcedureCell *createInstance(World &world, DatumCell *initialValue, ProcedureCell *converterProcedure = nullptr);
  
 	/**
 	 * Returns the initial value for this parameter

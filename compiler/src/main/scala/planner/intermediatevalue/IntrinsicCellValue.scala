@@ -22,7 +22,7 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
     truthyTemp
   }
   
-  def toInvokableProcedure()(implicit plan : PlanWriter) : Option[InvokableProcedure] =  {
+  def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[InvokableProcedure] =  {
     if (possibleTypes.contains(ct.ProcedureCell)) {
       // Cast to a procedure
       val boxedProcTemp = toTempValue(vt.IntrinsicCellType(ct.ProcedureCell))
@@ -34,7 +34,7 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
     }
   }
 
-  def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue = nativeType match {
+  def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = nativeType match {
     case vt.UnicodeChar =>
       val boxedChar = toTempValue(vt.IntrinsicCellType(ct.CharacterCell))
       val unboxedTemp = ps.GcUnmanagedValue()
@@ -106,11 +106,11 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
         // This will hit the branches above us
         val trueWriter = plan.forkPlan()
         val trueDynamicValue = new IntrinsicCellValue(Set(ct.ExactIntegerCell), cellType, tempValue)
-        val trueTempValue = trueDynamicValue.toTempValue(fpType)(trueWriter)
+        val trueTempValue = trueDynamicValue.toTempValue(fpType)(trueWriter, worldPtr)
 
         val falseWriter = plan.forkPlan()
         val falseDynamicValue = new IntrinsicCellValue(possibleTypes - ct.ExactIntegerCell, cellType, tempValue)
-        val falseTempValue = falseDynamicValue.toTempValue(fpType)(falseWriter)
+        val falseTempValue = falseDynamicValue.toTempValue(fpType)(falseWriter, worldPtr)
       
         val phiTemp = ps.GcUnmanagedValue()
 
@@ -125,7 +125,7 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
       throw new InternalCompilerErrorException("Attempt to directly convert to CBool. Should be caught by toTruthyPredicate.")
   }
   
-  protected def toRecordTempValue(recordType : vt.RecordType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue = {
+  protected def toRecordTempValue(recordType : vt.RecordType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
     // Convert ourselves to a record
     val recordTemp = toTempValue(vt.IntrinsicCellType(ct.RecordCell))
 
@@ -137,7 +137,7 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
       )
     }
 
-    plan.steps += ps.AssertRecordLikeClass(recordTemp, recordType, errorMessage)
+    plan.steps += ps.AssertRecordLikeClass(worldPtr, recordTemp, recordType, errorMessage)
 
     recordTemp
   }

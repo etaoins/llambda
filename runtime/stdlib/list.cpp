@@ -14,7 +14,7 @@ using namespace lliby;
 namespace 
 {
 	// This is used to implement memq, memv and member without a callback
-	const DatumCell* list_search(const DatumCell *obj, ListElementCell *listHead, bool (DatumCell::*equalityCheck)(const DatumCell*) const)
+	const DatumCell* list_search(World &world, const DatumCell *obj, ListElementCell *listHead, bool (DatumCell::*equalityCheck)(const DatumCell*) const)
 	{
 		const DatumCell *datum = listHead;
 
@@ -36,7 +36,7 @@ namespace
 		}
 		else
 		{
-			signalError("Attempted to search non-list", {listHead});
+			signalError(world, "Attempted to search non-list", {listHead});
 		}
 	}
 }
@@ -44,11 +44,11 @@ namespace
 extern "C"
 {
 
-PairCell *lliby_cons(DatumCell *car, DatumCell *cdr)
+PairCell *lliby_cons(World &world, DatumCell *car, DatumCell *cdr)
 {
 	// Root the car and cdr for the next allocation
-	alloc::StrongRef<DatumCell> carRef(car);
-	alloc::StrongRef<DatumCell> cdrRef(cdr);
+	alloc::StrongRef<DatumCell> carRef(world, car);
+	alloc::StrongRef<DatumCell> cdrRef(world, cdr);
 	
 	// Explicitly allocate first so there's no ambiguity about what order the
 	// allocation and reference updates are done
@@ -77,13 +77,13 @@ void lliby_set_cdr(PairCell *pair, DatumCell *obj)
 	return pair->setCdr(obj);
 }
 
-std::uint32_t lliby_length(ListElementCell *head) 
+std::uint32_t lliby_length(World &world, ListElementCell *head) 
 {
 	ProperList<DatumCell> properList(head);
 
 	if (!properList.isValid())
 	{
-		signalError("Non-list passed to list-length", {head});
+		signalError(world, "Non-list passed to list-length", {head});
 	}
 
 	return properList.length();
@@ -105,7 +105,7 @@ ListElementCell* lliby_make_list(std::uint32_t count, DatumCell *fill)
 	return cdr;
 }
 
-DatumCell* lliby_list_copy(DatumCell *sourceHead)
+DatumCell* lliby_list_copy(World &world, DatumCell *sourceHead)
 {
 	// Find the number of pairs in the list
 	// We can't use ProperList because we need to work with improper lists and non-list objects
@@ -124,7 +124,7 @@ DatumCell* lliby_list_copy(DatumCell *sourceHead)
 	}
 
 	// Make sure we take a reference to this across the next allocation in case the GC runs
-	alloc::StrongRef<DatumCell> sourceHeadRef(sourceHead);	
+	alloc::StrongRef<DatumCell> sourceHeadRef(world, sourceHead);	
 
 	auto destHead = static_cast<PairCell*>(alloc::allocateCells(pairCount));
 	PairCell *destPair = destHead;
@@ -162,13 +162,13 @@ ListElementCell* lliby_list(ListElementCell *head)
 	return head;
 }
 
-DatumCell* lliby_append(ListElementCell *argHead)
+DatumCell* lliby_append(World &world, ListElementCell *argHead)
 {
 	ProperList<DatumCell> argList(argHead);
 
 	if (!argList.isValid())
 	{
-		signalError("Invalid argument list passed to (append)", {argHead});
+		signalError(world, "Invalid argument list passed to (append)", {argHead});
 	}
 
 	auto argCount = argList.length();
@@ -192,7 +192,7 @@ DatumCell* lliby_append(ListElementCell *argHead)
 
 		if (listHead == nullptr)
 		{
-			signalError("Non-list passed to (append) in non-terminal position", {argDatum});
+			signalError(world, "Non-list passed to (append) in non-terminal position", {argDatum});
 		}
 
 		// Get the passed list
@@ -203,7 +203,7 @@ DatumCell* lliby_append(ListElementCell *argHead)
 
 		if (!properList.isValid())
 		{
-			signalError("Improper list passed to (append) in non-terminal position", {listHead});
+			signalError(world, "Improper list passed to (append) in non-terminal position", {listHead});
 		}
 
 		for(auto element : properList)
@@ -214,17 +214,17 @@ DatumCell* lliby_append(ListElementCell *argHead)
 
 	// Use createList to append the last list on sharing its structure.
 	// This is required by R7RS
-	return ListElementCell::createList(appenedElements, *(argIt++));
+	return ListElementCell::createList(world, appenedElements, *(argIt++));
 }
 
-const DatumCell* lliby_memv(const DatumCell *obj, ListElementCell *listHead)
+const DatumCell* lliby_memv(World &world, const DatumCell *obj, ListElementCell *listHead)
 {
-	return list_search(obj, listHead, &DatumCell::isEqv);
+	return list_search(world, obj, listHead, &DatumCell::isEqv);
 }
 
-const DatumCell* lliby_member(const DatumCell *obj, ListElementCell *listHead)
+const DatumCell* lliby_member(World &world, const DatumCell *obj, ListElementCell *listHead)
 {
-	return list_search(obj, listHead, &DatumCell::isEqual);
+	return list_search(world, obj, listHead, &DatumCell::isEqual);
 }
 
 }

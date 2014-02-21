@@ -54,10 +54,11 @@ object GenPlanStep {
       
       state.withTempValue((resultTemp -> irValue))
 
-    case ps.CastCellToSubtypeChecked(resultTemp, supervalueTemp, targetType, errorMessage) =>
+    case ps.CastCellToSubtypeChecked(resultTemp, worldPtrTemp, supervalueTemp, targetType, errorMessage) =>
+      val worldPtrIr = state.liveTemps(worldPtrTemp)
       val supervalueIr = state.liveTemps(supervalueTemp)
 
-      val (successBlock, subvalueIr) = GenCastCellToSubtype(state)(supervalueIr, targetType, errorMessage)
+      val (successBlock, subvalueIr) = GenCastCellToSubtype(state)(worldPtrIr, supervalueIr, targetType, errorMessage)
 
       state.withTempValue(resultTemp -> subvalueIr).copy(currentBlock=successBlock)
 
@@ -209,14 +210,15 @@ object GenPlanStep {
 
       state.withTempValue(resultTemp -> irResult)
     
-    case ps.AssertRecordLikeClass(recordCellTemp, recordLikeType, errorMessage) => 
+    case ps.AssertRecordLikeClass(worldPtrTemp, recordCellTemp, recordLikeType, errorMessage) => 
+      val worldPtrIr = state.liveTemps(worldPtrTemp)
       val generatedType = typeGenerator(recordLikeType)
       
       // Start our branches
       val fatalBlock = state.currentBlock.startChildBlock("wrongRecordClass")
       val successBlock = state.currentBlock.startChildBlock("correctRecordClass")
 
-      GenErrorSignal(state.copy(currentBlock=fatalBlock))(errorMessage)
+      GenErrorSignal(state.copy(currentBlock=fatalBlock))(worldPtrIr, errorMessage)
 
       // Branch if we're not of the right class
       val recordCellIr = state.liveTemps(recordCellTemp)

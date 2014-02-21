@@ -14,7 +14,7 @@ object PlanRecordTypeConstructor {
       case et.RecordTypeConstructor(recordType, initializedFields) =>
         // Determine our signature
         val constructorSignature = ProcedureSignature(
-          hasWorldArg=false,
+          hasWorldArg=true,
           hasSelfArg=false,
           hasRestArg=false,
           fixedArgs=initializedFields.map(_.fieldType),
@@ -22,6 +22,7 @@ object PlanRecordTypeConstructor {
         )
         
         val plan = parentPlan.forkPlan()
+        val worldPtrTemp = new ps.WorldPtrValue
 
         val fieldToTempValue = (recordType.fields.map { field =>
           (field, new ps.TempValue(field.fieldType.isGcManaged))
@@ -29,9 +30,11 @@ object PlanRecordTypeConstructor {
 
         // Get unique argument names
         val argumentUniquer = new SourceNameUniquer
-        val namedArguments = (initializedFields.map { case field =>
-          (argumentUniquer(field.sourceName) -> fieldToTempValue(field))
-        }).toList
+
+        val namedArguments = ("world" -> worldPtrTemp) ::
+          (initializedFields.map { case field =>
+            (argumentUniquer(field.sourceName) -> fieldToTempValue(field))
+          }).toList
         
         // Initialize the record
         val cellTemp = ps.GcManagedValue()
@@ -45,7 +48,7 @@ object PlanRecordTypeConstructor {
             fieldToTempValue(field)
           }
           else {
-            iv.UnitValue.toTempValue(field.fieldType)(plan)
+            iv.UnitValue.toTempValue(field.fieldType)(plan, worldPtrTemp)
           }
             
           plan.steps += ps.RecordDataFieldSet(dataTemp, recordType, field, fieldTemp)

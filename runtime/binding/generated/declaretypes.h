@@ -32,7 +32,7 @@ class ProcedureCell;
 class RecordCell;
 class ErrorObjectCell;
 
-typedef DatumCell* (*ProcedureEntryPoint)(World*, ProcedureCell*, ListElementCell*);
+typedef DatumCell* (*ProcedureEntryPoint)(World&, ProcedureCell*, ListElementCell*);
 
 }
 #endif

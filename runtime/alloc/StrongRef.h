@@ -2,14 +2,12 @@
 #define _LLIBY_ALLOC_STRONGREF_H
 
 #include "alloc/AbstractRef.h"
-#include "alloc/CellRefList.h"
+#include "core/World.h"
 
 namespace lliby
 {
 namespace alloc
 {
-
-extern CellRefList RuntimeStrongRefList;
 
 /**
  * Holds a strong reference to a GC managed cell
@@ -18,16 +16,16 @@ extern CellRefList RuntimeStrongRefList;
  * pointer values will be updated if the garbage collector moves the cell.
  */
 template<class T>
-class StrongRef : public AbstractRef<T, RuntimeStrongRefList>
+class StrongRef : public AbstractRef<T>
 {
 public:
-	StrongRef() :
-		AbstractRef<T, RuntimeStrongRefList>()
+	StrongRef(World &world) :
+		AbstractRef<T>(world.strongRefs)
 	{
 	}
 	
-	StrongRef(T* cell) :
-		AbstractRef<T, RuntimeStrongRefList>(cell)
+	StrongRef(World &world, T* cell) :
+		AbstractRef<T>(world.strongRefs, cell)
 	{
 	}
 	
@@ -45,16 +43,16 @@ public:
  * StrongRefRange instance
  */
 template<class T>
-class StrongRefRange : public AbstractRefRange<T, RuntimeStrongRefList>
+class StrongRefRange : public AbstractRefRange<T>
 {
 public:
-	explicit StrongRefRange(T** cellRef, size_t cellCount) :
-		AbstractRefRange<T, RuntimeStrongRefList>(cellRef, cellCount)
+	explicit StrongRefRange(World &world, T** cellRef, size_t cellCount) :
+		AbstractRefRange<T>(world.strongRefs, cellRef, cellCount)
 	{
 	}
 	
-	explicit StrongRefRange(std::vector<T*> &cellVector) :
-		AbstractRefRange<T, RuntimeStrongRefList>(cellVector)
+	explicit StrongRefRange(World &world, std::vector<T*> &cellVector) :
+		AbstractRefRange<T>(world.strongRefs, cellVector)
 	{
 	}
 };

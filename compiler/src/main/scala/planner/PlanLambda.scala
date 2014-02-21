@@ -84,7 +84,7 @@ private[planner] object PlanLambda {
       }
     }
   
-  private def storeClosureData(closureDataTemp : ps.TempValue, closureType : vt.ClosureType, capturedVariables : List[CapturedVariable])(implicit plan : PlanWriter) : Unit = {
+  private def storeClosureData(closureDataTemp : ps.TempValue, closureType : vt.ClosureType, capturedVariables : List[CapturedVariable])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Unit = {
     for(capturedVar <- capturedVariables) {
       val varTemp = capturedVar match {
         case immutable : CapturedImmutatable =>
@@ -146,6 +146,7 @@ private[planner] object PlanLambda {
     val capturedVariables = capturedImmutables ++ capturedMutables
 
     // Make a temp for the world pointer
+    // Don't implicit this because we also need our parent's world ptr for storing closure data
     val worldPtr = new ps.WorldPtrValue()
 
     // Determine if we have a closure
@@ -227,7 +228,7 @@ private[planner] object PlanLambda {
 
     // Return from the function
     procPlan.steps += ps.Return(returnTypeOpt map { returnType =>
-      planResult.value.toTempValue(returnType)(procPlan)
+      planResult.value.toTempValue(returnType)(procPlan, worldPtr)
     })
     
     // Determine our signature
@@ -275,7 +276,7 @@ private[planner] object PlanLambda {
 
       parentPlan.steps += ps.RecordLikeInit(cellTemp, dataTemp, closureType)
 
-      storeClosureData(dataTemp, closureType, capturedVariables)(parentPlan)
+      storeClosureData(dataTemp, closureType, capturedVariables)(parentPlan, parentState.worldPtr)
 
       cellTemp
     }

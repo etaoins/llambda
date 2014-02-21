@@ -12,7 +12,7 @@ using namespace lliby;
 namespace
 {
 	template<class ExactCompare, class InexactCompare>
-	bool numericCompare(NumericCell *value1, NumericCell *value2, ListElementCell *argHead, ExactCompare exactCompare, InexactCompare inexactCompare)
+	bool numericCompare(World &world, NumericCell *value1, NumericCell *value2, ListElementCell *argHead, ExactCompare exactCompare, InexactCompare inexactCompare)
 	{
 		const ProperList<NumericCell> argList(argHead);
 
@@ -69,7 +69,7 @@ namespace
 
 		if (!argList.isValid())
 		{
-			signalError("Non-numeric passed to comparison function", {argHead});
+			signalError(world, "Non-numeric passed to comparison function", {argHead});
 		}
 
 		if (!compareCells(value1, value2))
@@ -96,7 +96,7 @@ namespace
 extern "C"
 {
 
-std::int64_t lliby_exact(NumericCell *numeric)
+std::int64_t lliby_exact(World &world, NumericCell *numeric)
 {
 	if (auto exactInt = datum_cast<ExactIntegerCell>(numeric))
 	{
@@ -109,13 +109,13 @@ std::int64_t lliby_exact(NumericCell *numeric)
 
 	if (!inexactRational->isInteger())
 	{
-		signalError("Attempted to convert non-integral inexact rational to exact value", {numeric});
+		signalError(world, "Attempted to convert non-integral inexact rational to exact value", {numeric});
 	}
 
 	return static_cast<std::int64_t>(inexactRational->value());
 }
 
-double lliby_inexact(NumericCell *numeric)
+double lliby_inexact(World &world, NumericCell *numeric)
 {
 	if (auto inexactRational = datum_cast<InexactRationalCell>(numeric))
 	{
@@ -133,19 +133,19 @@ double lliby_inexact(NumericCell *numeric)
 	// representations
 	if (static_cast<std::int64_t>(inexactValue) != exactInt->value())
 	{
-		signalError("Attempted to convert exact integer with a value that cannot be represented by an inexact rational", {numeric});
+		signalError(world, "Attempted to convert exact integer with a value that cannot be represented by an inexact rational", {numeric});
 	}
 
 	return inexactValue;
 }
 
-NumericCell *lliby_add(ListElementCell *argHead)
+NumericCell *lliby_add(World &world, ListElementCell *argHead)
 {
 	const ProperList<NumericCell> argList(argHead);
 
 	if (!argList.isValid())
 	{
-		signalError("Non-numeric passed to (+)", {argHead});
+		signalError(world, "Non-numeric passed to (+)", {argHead});
 	}
 
 	std::int64_t exactSum = 0;
@@ -177,13 +177,13 @@ NumericCell *lliby_add(ListElementCell *argHead)
 	}
 }
 
-NumericCell *lliby_mul(ListElementCell *argHead)
+NumericCell *lliby_mul(World &world, ListElementCell *argHead)
 {
 	const ProperList<NumericCell> argList(argHead);
 
 	if (!argList.isValid())
 	{
-		signalError("Non-numeric passed to (*)", {argHead});
+		signalError(world, "Non-numeric passed to (*)", {argHead});
 	}
 
 	std::int64_t exactProduct = 1;
@@ -215,13 +215,13 @@ NumericCell *lliby_mul(ListElementCell *argHead)
 	}
 }
 
-NumericCell *lliby_sub(NumericCell *startValue, ListElementCell *argHead)
+NumericCell *lliby_sub(World &world, NumericCell *startValue, ListElementCell *argHead)
 {
 	const ProperList<NumericCell> argList(argHead);
 
 	if (!argList.isValid())
 	{
-		signalError("Non-numeric passed to (*)", {argHead});
+		signalError(world, "Non-numeric passed to (*)", {argHead});
 	}
 
 	std::int64_t exactDifference;
@@ -280,13 +280,13 @@ NumericCell *lliby_sub(NumericCell *startValue, ListElementCell *argHead)
 	}
 }
 
-double lliby_div(NumericCell *startValue, ListElementCell *argHead)
+double lliby_div(World &world, NumericCell *startValue, ListElementCell *argHead)
 {
 	const ProperList<NumericCell> argList(argHead);
 
 	if (!argList.isValid())
 	{
-		signalError("Non-numeric passed to (/)", {argHead});
+		signalError(world, "Non-numeric passed to (/)", {argHead});
 	}
 
 	double currentValue;
@@ -364,37 +364,37 @@ bool lliby_is_nan(NumericCell *value)
 	}
 }
 
-bool lliby_numeric_equal(NumericCell *value1, NumericCell *value2, ListElementCell *argHead)
+bool lliby_numeric_equal(World &world, NumericCell *value1, NumericCell *value2, ListElementCell *argHead)
 {
-	return numericCompare(value1, value2, argHead, 
+	return numericCompare(world, value1, value2, argHead, 
 			[] (std::int64_t value1, int64_t value2) { return value1 == value2; },
 			[] (double value1, double value2) { return value1 == value2; });
 }
 
-bool lliby_numeric_lt(NumericCell *value1, NumericCell *value2, ListElementCell *argHead)
+bool lliby_numeric_lt(World &world, NumericCell *value1, NumericCell *value2, ListElementCell *argHead)
 {
-	return numericCompare(value1, value2, argHead, 
+	return numericCompare(world, value1, value2, argHead, 
 			[] (std::int64_t value1, int64_t value2) { return value1 < value2; },
 			[] (double value1, double value2) { return value1 < value2; });
 }
 
-bool lliby_numeric_gt(NumericCell *value1, NumericCell *value2, ListElementCell *argHead)
+bool lliby_numeric_gt(World &world, NumericCell *value1, NumericCell *value2, ListElementCell *argHead)
 {
-	return numericCompare(value1, value2, argHead, 
+	return numericCompare(world, value1, value2, argHead, 
 			[] (std::int64_t value1, int64_t value2) { return value1 > value2; },
 			[] (double value1, double value2) { return value1 > value2; });
 }
 
-bool lliby_numeric_lte(NumericCell *value1, NumericCell *value2, ListElementCell *argHead)
+bool lliby_numeric_lte(World &world, NumericCell *value1, NumericCell *value2, ListElementCell *argHead)
 {
-	return numericCompare(value1, value2, argHead, 
+	return numericCompare(world, value1, value2, argHead, 
 			[] (std::int64_t value1, int64_t value2) { return value1 <= value2; },
 			[] (double value1, double value2) { return value1 <= value2; });
 }
 
-bool lliby_numeric_gte(NumericCell *value1, NumericCell *value2, ListElementCell *argHead)
+bool lliby_numeric_gte(World &world, NumericCell *value1, NumericCell *value2, ListElementCell *argHead)
 {
-	return numericCompare(value1, value2, argHead, 
+	return numericCompare(world, value1, value2, argHead, 
 			[] (std::int64_t value1, int64_t value2) { return value1 >= value2; },
 			[] (double value1, double value2) { return value1 >= value2; });
 }

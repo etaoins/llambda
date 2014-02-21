@@ -3,23 +3,26 @@
 #include "binding/ProperList.h"
 
 #include "core/init.h"
+#include "core/World.h"
+
 #include "assertions.h"
 #include "stubdefinitions.h"
 
 #include "alloc/StrongRef.h"
 
-int main(int argc, char *argv[])
+namespace
 {
-	using namespace lliby;
 
-	lliby_init();
-	
-	alloc::StrongRef<StringCell> valueA = StringCell::fromUtf8CString("A");
-	alloc::StrongRef<StringCell> valueB = StringCell::fromUtf8CString("B");
-	alloc::StrongRef<StringCell> valueC = StringCell::fromUtf8CString("C");
+using namespace lliby;
+
+void testAll(World &world)
+{
+	alloc::StrongRef<StringCell> valueA(world, StringCell::fromUtf8CString("A"));
+	alloc::StrongRef<StringCell> valueB(world, StringCell::fromUtf8CString("B"));
+	alloc::StrongRef<StringCell> valueC(world, StringCell::fromUtf8CString("C"));
 	
 	{
-		ListElementCell *emptyListHead = ListElementCell::createProperList({});
+		ListElementCell *emptyListHead = ListElementCell::createProperList(world, {});
 
 		ProperList<DatumCell> properList(emptyListHead);
 
@@ -30,7 +33,7 @@ int main(int argc, char *argv[])
 	}
 	
 	{
-		ListElementCell *stringListHead = ListElementCell::createProperList({valueA, valueB, valueC});
+		ListElementCell *stringListHead = ListElementCell::createProperList(world, {valueA, valueB, valueC});
 
 		ProperList<DatumCell> properList(stringListHead);
 
@@ -52,7 +55,7 @@ int main(int argc, char *argv[])
 	}
 	
 	{
-		DatumCell *improperList = ListElementCell::createList({valueA, valueB}, valueC);
+		DatumCell *improperList = ListElementCell::createList(world, {valueA, valueB}, valueC);
 		
 		auto stringImproperHead = datum_cast<ListElementCell>(improperList);
 		ASSERT_TRUE(stringImproperHead != nullptr);
@@ -65,5 +68,13 @@ int main(int argc, char *argv[])
 		ASSERT_EQUAL(properList.length(), 0);
 		ASSERT_TRUE(properList.isEmpty());
 	}
+}
 
+}
+
+int main(int argc, char *argv[])
+{
+	lliby_init();
+
+	lliby::World::launchWorld(&testAll);
 }

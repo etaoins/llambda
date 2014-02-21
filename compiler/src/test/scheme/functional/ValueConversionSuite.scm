@@ -71,7 +71,7 @@
 	(vector-ref #(a b c) (exact 1))))
 
 (define-test "native i64 can be boxed as an inexact rational" (expect -53.0
-	(define inexact->inexact (native-function "lliby_inexact" (<inexact-rational-cell>) <double>))
+	(define inexact->inexact (world-function "lliby_inexact" (<inexact-rational-cell>) <double>))
 	; This assumes (exact) returns an native i64
 	(inexact->inexact (exact -53))))
 

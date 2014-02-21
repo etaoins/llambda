@@ -6,6 +6,7 @@
 namespace lliby
 {
 
+class World;
 class StringCell;
 class ListElementCell;
 
@@ -13,7 +14,7 @@ class ErrorObjectCell : public DatumCell
 {
 #include "generated/ErrorObjectCellMembers.h"
 public:
-	static ErrorObjectCell *createInstance(StringCell *message, ListElementCell *irritants);
+	static ErrorObjectCell *createInstance(World &world, StringCell *message, ListElementCell *irritants);
 	
 	// These are used by the garbage collector to update the datum pointers during compaction
 	StringCell** messageRef()

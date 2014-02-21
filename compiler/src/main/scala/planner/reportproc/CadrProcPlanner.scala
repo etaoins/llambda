@@ -9,7 +9,7 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
 
 object CadrProcPlanner {
-  def apply(initialState : PlannerState)(reportName : String, operands : List[(SourceLocated, iv.IntermediateValue)])(implicit plan : PlanWriter) : Option[PlanResult] = (reportName, operands) match {
+  def apply(initialState : PlannerState)(reportName : String, operands : List[(SourceLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = (reportName, operands) match {
     case ("car" | "cdr", singleOperand :: Nil) =>
       val pairTemp = LocateExceptionsWith(singleOperand._1) {
         singleOperand._2.toTempValue(vt.IntrinsicCellType(ct.PairCell))

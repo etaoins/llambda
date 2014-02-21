@@ -15,10 +15,10 @@ using namespace lliby;
 extern "C"
 {
 
-DatumCell* lliby_with_exception_handler(World *world, ProcedureCell *handlerRaw, ProcedureCell *thunk)
+DatumCell* lliby_with_exception_handler(World &world, ProcedureCell *handlerRaw, ProcedureCell *thunk)
 {
 	// Root our exception handler
-	alloc::StrongRef<ProcedureCell> handler(handlerRaw);
+	alloc::StrongRef<ProcedureCell> handler(world, handlerRaw);
 
 	// Keep track of our dynamic state
 	dynamic::State *expectedState = dynamic::State::activeState(world);
@@ -29,7 +29,7 @@ DatumCell* lliby_with_exception_handler(World *world, ProcedureCell *handlerRaw,
 	}
 	catch (dynamic::SchemeException &except)
 	{
-		ListElementCell *argHead = ListElementCell::createProperList({except.object()});
+		ListElementCell *argHead = ListElementCell::createProperList(world, {except.object()});
 
 		// Call the handler in the dynamic environment (raise) was in
 		// This is required by R7RS for reasons mysterious to me
@@ -42,14 +42,14 @@ DatumCell* lliby_with_exception_handler(World *world, ProcedureCell *handlerRaw,
 	}
 }
 
-void lliby_raise(DatumCell *obj)
+void lliby_raise(World &world, DatumCell *obj)
 {
-	throw dynamic::SchemeException(obj);
+	throw dynamic::SchemeException(world, obj);
 }
 
-void lliby_error(StringCell *message, ListElementCell *irritants)
+void lliby_error(World &world, StringCell *message, ListElementCell *irritants)
 {
-	lliby_raise(ErrorObjectCell::createInstance(message, irritants));
+	lliby_raise(world, ErrorObjectCell::createInstance(world, message, irritants));
 }
 
 StringCell* lliby_error_object_message(ErrorObjectCell *errorObject)

@@ -7,7 +7,7 @@
 
 #include "binding/DatumCell.h"
 #include "alloc/AllocCell.h"
-#include "alloc/CellRefList.h"
+#include "alloc/CellRefRangeList.h"
 
 namespace lliby
 {
@@ -19,31 +19,34 @@ namespace alloc
  *
  * \sa StrongRefRange
  */
-template<class T, CellRefList& refList>
+template<class T>
 class AbstractRefRange
 {
 protected:
 	static_assert(std::is_base_of<DatumCell, T>(), "Only DatumCell subclasses can be GC roots");
 
 	/**
-	 * Creates an cell ref with an existing ref list iterator
+	 * Creates an cell ref with an existing ref range
 	 *
 	 * This is only intended for use by move constructors
 	 */
-	AbstractRefRange(CellRefRange *refRange) :
-		mRefRange(refRange)
+	AbstractRefRange(CellRefRangeList *refList, CellRefRange *refRange) :
+		m_refList(refList),
+		m_refRange(refRange)
 	{
 	}
 
 	/**
 	 * Creates a new instance rooting a cell or cell array
 	 *
+	 * @param refList    List to add the ref range to
 	 * @param cellRef    Reference to the cell or cell array
 	 * @param cellCount  Number of cells in the cell array
 	 */
-	AbstractRefRange(T** cellRef, size_t cellCount)
+	AbstractRefRange(CellRefRangeList *refList, T** cellRef, size_t cellCount) :
+		m_refList(refList)
 	{
-		mRefRange = refList.addRange(
+		m_refRange = m_refList->addRange(
 				reinterpret_cast<AllocCell**>(cellRef),
 				cellCount
 		);
@@ -52,12 +55,13 @@ protected:
 	/**
 	 * Creates a new instance rooting a cell vector
 	 *
+	 * @param refList     List to add the ref range to
 	 * @param cellVector  Vector of cells to root. The original vector will be referenced and possibly modified if
 	 *                    the garbage collector runs. Therefore it is unsafe to destroy or resize the vector while
 	 *                    it is rooted.
 	 */ 
-	AbstractRefRange(std::vector<T*> &cellVector) :
-		AbstractRefRange(cellVector.data(), cellVector.size())
+	AbstractRefRange(CellRefRangeList *refList, std::vector<T*> &cellVector) :
+		AbstractRefRange(refList, cellVector.data(), cellVector.size())
 	{
 	}
 
@@ -68,20 +72,21 @@ protected:
 	 */
 	~AbstractRefRange()
 	{
-		if (mRefRange != nullptr)
+		if (m_refRange != nullptr)
 		{
-			refList.removeRange(mRefRange);
+			m_refList->removeRange(m_refRange);
 		}
 	}
 
-	CellRefRange *mRefRange;
+	CellRefRangeList *m_refList;
+	CellRefRange *m_refRange;
 };
 
 /**
  * Abstract reference to a single GC managed value
  */
-template<class T, CellRefList& refList>
-class AbstractRef : public AbstractRefRange<T, refList>
+template<class T>
+class AbstractRef : public AbstractRefRange<T>
 {
 public:
 	/**
@@ -89,40 +94,40 @@ public:
 	 *
 	 * This avoids list operations on the target CellRefList by using the existing value's list element
 	 */
-	AbstractRef(AbstractRef &&other) : 
-		AbstractRefRange<T, refList>(other.mRefRange),
-		mCell(other.mCell)
+	AbstractRef(alloc::CellRefRangeList *refList, AbstractRef &&other) : 
+		AbstractRefRange<T>(refList, other.m_refRange),
+		m_cell(other.m_cell)
 	{
 		// Update the base pointer to point to our member variable
-		this->mRefRange->basePointer = reinterpret_cast<AllocCell**>(&mCell);
+		this->m_refRange->basePointer = reinterpret_cast<AllocCell**>(&m_cell);
 
 		// Make sure the original value doesn't try to remove itself
-		other.mRefRange = nullptr;
+		other.m_refRange = nullptr;
 	}
 
 	operator T*() const
 	{
-		return mCell;
+		return m_cell;
 	}
 	
 	T* data() const
 	{
-		return mCell;
+		return m_cell;
 	}
 
 	void setData(T* newCell)
 	{
-		mCell = newCell;
+		m_cell = newCell;
 	}
 
 	T* operator->() const
 	{
-		return mCell;
+		return m_cell;
 	}
 
 	bool isNull() const
 	{
-		return mCell == nullptr;
+		return m_cell == nullptr;
 	}
 	
 	bool operator!() const
@@ -140,19 +145,19 @@ protected:
 	{
 	}
 
-	AbstractRef(T* cell) :
-		AbstractRefRange<T, refList>(&mCell, 1),
-		mCell(cell)
+	AbstractRef(CellRefRangeList *refList, T* cell) :
+		AbstractRefRange<T>(refList, &m_cell, 1),
+		m_cell(cell)
 	{
 	}
 
 	AbstractRef(const AbstractRef &other) :
-		AbstractRef(other.data())
+		AbstractRef(other.m_refList, other.data())
 	{
 	}
 
 private:
-	T *mCell;
+	T *m_cell;
 };
 
 }

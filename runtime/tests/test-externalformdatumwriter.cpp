@@ -1,6 +1,9 @@
 #include <string>
 #include <sstream>
 
+#include "core/init.h"
+#include "core/World.h"
+
 #include "writer/ExternalFormDatumWriter.h"
 #include "binding/UnitCell.h"
 #include "binding/EmptyListCell.h"
@@ -17,7 +20,6 @@
 #include "binding/RecordCell.h"
 #include "binding/ErrorObjectCell.h"
 
-#include "core/init.h"
 #include "alloc/StrongRef.h"
 #include "assertions.h"
 #include "stubdefinitions.h"
@@ -41,9 +43,9 @@ void assertForm(const DatumCell *datum, std::string expected)
 	ASSERT_EQUAL(externalFormFor(datum), expected);
 }
 
-SymbolCell *symbolFor(const char *utf8String)
+SymbolCell *symbolFor(World &world, const char *utf8String)
 {
-	return StringCell::fromUtf8CString(utf8String)->toSymbol();
+	return StringCell::fromUtf8CString(utf8String)->toSymbol(world);
 }
 
 StringCell *stringFor(const char *utf8String)
@@ -89,16 +91,16 @@ void testInexactRational()
 	assertForm(InexactRationalCell::negativeInfinity(), "-inf.0");
 }
 
-void testSymbol()
+void testSymbol(World &world)
 {
-	assertForm(symbolFor(u8"Hello"), u8"Hello");
-	assertForm(symbolFor(u8"HelloWorldThisRequiresHeapAllocation"), u8"HelloWorldThisRequiresHeapAllocation");
-	assertForm(symbolFor(u8"λ"), u8"|λ|");
-	assertForm(symbolFor(u8"Hello, world"), u8"|Hello, world|");
-	assertForm(symbolFor(u8"Back\\slash"), u8"|Back\\\\slash|");
-	assertForm(symbolFor(u8"P|pe"), u8"|P\\|pe|");
-	assertForm(symbolFor(u8"Quo\"te"), u8"|Quo\"te|");
-	assertForm(symbolFor(u8""), u8"||");
+	assertForm(symbolFor(world, u8"Hello"), u8"Hello");
+	assertForm(symbolFor(world, u8"HelloWorldThisRequiresHeapAllocation"), u8"HelloWorldThisRequiresHeapAllocation");
+	assertForm(symbolFor(world, u8"λ"), u8"|λ|");
+	assertForm(symbolFor(world, u8"Hello, world"), u8"|Hello, world|");
+	assertForm(symbolFor(world, u8"Back\\slash"), u8"|Back\\\\slash|");
+	assertForm(symbolFor(world, u8"P|pe"), u8"|P\\|pe|");
+	assertForm(symbolFor(world, u8"Quo\"te"), u8"|Quo\"te|");
+	assertForm(symbolFor(world, u8""), u8"||");
 }
 
 void testString()
@@ -112,23 +114,23 @@ void testString()
 	assertForm(stringFor(u8""), u8"\"\"");
 }
 
-void testPair()
+void testPair(World &world)
 {
-	alloc::StrongRef<SymbolCell> valueA = symbolFor("A");
-	alloc::StrongRef<SymbolCell> valueB = symbolFor("B");
-	alloc::StrongRef<SymbolCell> valueC = symbolFor("C");
+	alloc::StrongRef<SymbolCell> valueA(world, symbolFor(world, "A"));
+	alloc::StrongRef<SymbolCell> valueB(world, symbolFor(world, "B"));
+	alloc::StrongRef<SymbolCell> valueC(world, symbolFor(world, "C"));
 
-	assertForm(PairCell::createProperList({}), "()");
-	assertForm(PairCell::createProperList({valueA}), "(A)");
-	assertForm(PairCell::createProperList({valueA, valueB}), "(A B)");
-	assertForm(PairCell::createProperList({valueA, valueB, valueC}), "(A B C)");
+	assertForm(PairCell::createProperList(world, {}), "()");
+	assertForm(PairCell::createProperList(world, {valueA}), "(A)");
+	assertForm(PairCell::createProperList(world, {valueA, valueB}), "(A B)");
+	assertForm(PairCell::createProperList(world, {valueA, valueB, valueC}), "(A B C)");
 
-	assertForm(PairCell::createList({valueA}, valueB), "(A . B)");
-	assertForm(PairCell::createList({valueA, valueB}, valueC), "(A B . C)");
+	assertForm(PairCell::createList(world, {valueA}, valueB), "(A . B)");
+	assertForm(PairCell::createList(world, {valueA, valueB}, valueC), "(A B . C)");
 
 	// Create a  nested list
-	DatumCell *innerList = PairCell::createList({valueA, valueB}, valueC);
-	DatumCell *outerList = PairCell::createProperList({valueA, valueB, valueC, innerList});
+	DatumCell *innerList = PairCell::createList(world, {valueA, valueB}, valueC);
+	DatumCell *outerList = PairCell::createProperList(world, {valueA, valueB, valueC, innerList});
 	assertForm(outerList, "(A B C (A B . C))");
 }
 
@@ -147,15 +149,15 @@ void testBytevector()
 	}
 }
 
-void testVector()
+void testVector(World &world)
 {
 	{
-		VectorCell *emptyVector = VectorCell::fromFill(0);
+		VectorCell *emptyVector = VectorCell::fromFill(world, 0);
 		assertForm(emptyVector, "#()");
 	}
 
 	{
-		alloc::StrongRef<VectorCell> fillVector = VectorCell::fromFill(5);
+		alloc::StrongRef<VectorCell> fillVector(world, VectorCell::fromFill(world, 5));
 
 		for(unsigned int i = 0; i < 5; i++)
 		{
@@ -203,34 +205,37 @@ void testRecord()
     assertForm(new RecordCell(0, true, nullptr), "#!record");
 }
 
-void testErrorObject()
+void testErrorObject(World &world)
 {
-	alloc::StrongRef<StringCell> errorString = StringCell::fromUtf8CString(u8"Test error");
-	auto errorObj = ErrorObjectCell::createInstance(errorString, EmptyListCell::instance());
+	alloc::StrongRef<StringCell> errorString(world, StringCell::fromUtf8CString(u8"Test error"));
+	auto errorObj = ErrorObjectCell::createInstance(world, errorString, EmptyListCell::instance());
 
 	assertForm(errorObj, "#!error(Test error)");
+}
+
+void testAll(World &world)
+{
+	testUnit();
+	testEmptyList();
+	testBoolean();
+	testExactInteger();
+	testInexactRational();
+	testSymbol(world);
+	testString();
+	testPair(world);
+	testBytevector();
+	testVector(world);
+	testProcedure();
+	testCharacter();
+	testRecord();
+	testErrorObject(world);
 }
 
 }
 
 int main(int argc, char *argv[])
 {
-	using namespace lliby;
-
 	lliby_init();
-
-	testUnit();
-	testEmptyList();
-	testBoolean();
-	testExactInteger();
-	testInexactRational();
-	testSymbol();
-	testString();
-	testPair();
-	testBytevector();
-	testVector();
-	testProcedure();
-	testCharacter();
-	testRecord();
-	testErrorObject();
+	
+	lliby::World::launchWorld(&testAll);
 }

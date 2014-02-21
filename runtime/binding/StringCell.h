@@ -10,6 +10,8 @@
 namespace lliby
 {
 
+class World;
+
 class StringCell : public DatumCell
 {
 #include "generated/StringCellMembers.h"
@@ -20,14 +22,14 @@ public:
 	static StringCell* fromUnicodeChars(const std::vector<UnicodeChar> &unicodeChars);
 	static StringCell* fromSymbol(const SymbolCell *symbol);
 	
-	static StringCell* fromAppended(std::vector<StringCell*> &strings);
-	static StringCell* fromAppended(const std::vector<StringCell*> &strings)
+	static StringCell* fromAppended(World &world, std::vector<StringCell*> &strings);
+	static StringCell* fromAppended(World &world, const std::vector<StringCell*> &strings)
 	{
 		std::vector<StringCell*> stringsCopy(strings);
-		return fromAppended(stringsCopy);
+		return fromAppended(world, stringsCopy);
 	}
 
-	StringCell* copy(std::int64_t start = 0, std::int64_t end = -1) const; 
+	StringCell* copy(World &world, std::int64_t start = 0, std::int64_t end = -1) const; 
 
 	UnicodeChar charAt(std::uint32_t offset) const;
 	bool setCharAt(std::uint32_t offset, UnicodeChar unicodeChar);
@@ -53,7 +55,7 @@ public:
 		return byteLength() == charLength();
 	}
 
-	SymbolCell *toSymbol() const;
+	SymbolCell *toSymbol(World &world) const;
 	BytevectorCell *toUtf8Bytevector(std::int64_t start = 0, std::int64_t end = -1) const;
 	
 	StringCell *toUppercaseString() const;

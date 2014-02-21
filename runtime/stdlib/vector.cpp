@@ -5,15 +5,16 @@
 #include "alloc/StrongRef.h"
 
 #include "core/error.h"
+#include "core/World.h"
 
 using namespace lliby;
 
 extern "C"
 {
 
-VectorCell *lliby_make_vector(std::uint32_t length, DatumCell *fill)
+VectorCell *lliby_make_vector(World &world, std::uint32_t length, DatumCell *fill)
 {
-	return VectorCell::fromFill(length, fill);
+	return VectorCell::fromFill(world, length, fill);
 }
 
 std::uint32_t lliby_vector_length(VectorCell *vector)
@@ -21,33 +22,33 @@ std::uint32_t lliby_vector_length(VectorCell *vector)
 	return vector->length();
 }
 
-DatumCell* lliby_vector_ref(VectorCell *vector, std::uint32_t index)
+DatumCell* lliby_vector_ref(World &world, VectorCell *vector, std::uint32_t index)
 {
 	DatumCell* element = vector->elementAt(index);
 
 	if (element == nullptr)
 	{
-		signalError("Vector index out of bounds", {vector});	
+		signalError(world, "Vector index out of bounds", {vector});	
 	}
 
 	return element;
 }
 
-void lliby_vector_set(VectorCell *vector, std::uint32_t index, DatumCell *obj)
+void lliby_vector_set(World &world, VectorCell *vector, std::uint32_t index, DatumCell *obj)
 {
 	if (!vector->setElementAt(index, obj))
 	{
-		signalError("Vector index out of bounds", {vector});	
+		signalError(world, "Vector index out of bounds", {vector});	
 	}
 }
 
-VectorCell *lliby_vector(ListElementCell *argHead)
+VectorCell *lliby_vector(World &world, ListElementCell *argHead)
 {
 	ProperList<DatumCell> properList(argHead);
 	
 	if (!properList.isValid())
 	{
-		signalError("Non-list passed to (list->vector)", {argHead}); 
+		signalError(world, "Non-list passed to (list->vector)", {argHead}); 
 	}
 
 	auto length = properList.length();
@@ -61,26 +62,26 @@ VectorCell *lliby_vector(ListElementCell *argHead)
 	}
 
 	// Make sure our elements array is GC rooted for the next allocation
-	alloc::StrongRefRange<DatumCell> newElementsRoot(newElements, length);
+	alloc::StrongRefRange<DatumCell> newElementsRoot(world, newElements, length);
 
 	// Return the new vector
 	return new VectorCell(newElements, length);
 }
 
-VectorCell *lliby_vector_append(ListElementCell *argHead)
+VectorCell *lliby_vector_append(World &world, ListElementCell *argHead)
 {
 	ProperList<VectorCell> argList(argHead);
 	
 	if (!argList.isValid())
 	{
-		signalError("Non-vector passed to (vector-append)", {argHead}); 
+		signalError(world, "Non-vector passed to (vector-append)", {argHead}); 
 	}
 
 	// Create a std::vector
 	auto vectorElements = std::vector<const VectorCell*>(argList.begin(), argList.end());
 
 	// Append the vectors
-	return VectorCell::fromAppended(vectorElements);
+	return VectorCell::fromAppended(world, vectorElements);
 }
 
 }

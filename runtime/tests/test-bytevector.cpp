@@ -4,6 +4,8 @@
 #include "binding/StringCell.h"
 
 #include "core/init.h"
+#include "core/World.h"
+
 #include "assertions.h"
 #include "stubdefinitions.h"
 
@@ -38,16 +40,16 @@ void testFromFill()
 	}
 }
 
-void testFromAppended()
+void testFromAppended(World &world)
 {
 	uint8_t vector1Data[3] = { 100, 101, 102 };
-	alloc::StrongRef<BytevectorCell> vector1 = BytevectorCell::fromUnownedData(vector1Data, sizeof(vector1Data));
+	alloc::StrongRef<BytevectorCell> vector1(world, BytevectorCell::fromUnownedData(vector1Data, sizeof(vector1Data)));
 
 	uint8_t vector2Data[1] = { 0 };
-	alloc::StrongRef<BytevectorCell> vector2 = BytevectorCell::fromUnownedData(vector2Data, sizeof(vector2Data));
+	alloc::StrongRef<BytevectorCell> vector2(world, BytevectorCell::fromUnownedData(vector2Data, sizeof(vector2Data)));
 
 	uint8_t vector3Data[3] = { 200, 201, 202 };
-	alloc::StrongRef<BytevectorCell> vector3 = BytevectorCell::fromUnownedData(vector3Data, sizeof(vector3Data));
+	alloc::StrongRef<BytevectorCell> vector3(world, BytevectorCell::fromUnownedData(vector3Data, sizeof(vector3Data)));
 
 	{
 		BytevectorCell *emptyVector = BytevectorCell::fromAppended({});
@@ -93,11 +95,11 @@ void testByteAccess()
 	ASSERT_EQUAL(testVector->setByteAt(5, 255), false);
 }
 
-void testCopy()
+void testCopy(World &world)
 {
 	uint8_t vectorData[5] = { 0, 1, 2, 3, 4 };
 
-	alloc::StrongRef<BytevectorCell> testVector = BytevectorCell::fromUnownedData(vectorData, sizeof(vectorData));
+	alloc::StrongRef<BytevectorCell> testVector(world, BytevectorCell::fromUnownedData(vectorData, sizeof(vectorData)));
 
 	{
 		BytevectorCell *wholeCopy = testVector->copy();
@@ -137,10 +139,10 @@ void testCopy()
 	}
 }
 
-void testReplace()
+void testReplace(World &world)
 {
 	uint8_t fromData[5] = { 200, 201, 202, 203, 204 };
-	alloc::StrongRef<BytevectorCell> fromVector = BytevectorCell::fromUnownedData(fromData, 5); 
+	alloc::StrongRef<BytevectorCell> fromVector(world, BytevectorCell::fromUnownedData(fromData, 5)); 
 
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
@@ -230,10 +232,10 @@ void testReplace()
 	}
 }
 
-void testUtf8ToString()
+void testUtf8ToString(World &world)
 {
 	auto stringData = reinterpret_cast<std::uint8_t*>(strdup(u8"Hello ☃!"));
-	alloc::StrongRef<BytevectorCell> sourceVector = BytevectorCell::fromUnownedData(stringData, 10);
+	alloc::StrongRef<BytevectorCell> sourceVector(world, BytevectorCell::fromUnownedData(stringData, 10));
 
 	{
 		StringCell *fullString = sourceVector->utf8ToString();
@@ -294,18 +296,23 @@ void testUtf8ToString()
 	free(stringData);
 }
 
+void testAll(World &world)
+{
+	testFromFill();
+	testFromAppended(world);
+	testByteAccess();
+	testCopy(world);
+	testReplace(world);
+	testUtf8ToString(world);
+}
+
 }
 
 int main(int argc, char *argv[])
 {
 	lliby_init();
 
-	testFromFill();
-	testFromAppended();
-	testByteAccess();
-	testCopy();
-	testReplace();
-	testUtf8ToString();
+	lliby::World::launchWorld(&testAll);
 
 	return 0;
 }

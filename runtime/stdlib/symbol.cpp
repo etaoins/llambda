@@ -9,7 +9,7 @@ extern "C"
 
 using namespace lliby;
 
-bool lliby_symbol_equal(SymbolCell *value1, SymbolCell *value2, ListElementCell *argHead)
+bool lliby_symbol_equal(World &world, SymbolCell *value1, SymbolCell *value2, ListElementCell *argHead)
 {
 	if (*value1 != *value2)
 	{
@@ -20,7 +20,7 @@ bool lliby_symbol_equal(SymbolCell *value1, SymbolCell *value2, ListElementCell 
 
 	if (!properList.isValid())
 	{
-		signalError("Non-symbol passed to (symbol=?)", {argHead});
+		signalError(world, "Non-symbol passed to (symbol=?)", {argHead});
 	}
 
 	for(auto symbolCell : properList)
@@ -39,9 +39,9 @@ StringCell *lliby_symbol_to_string(const SymbolCell *symbol)
 	return StringCell::fromSymbol(symbol);
 }
 
-SymbolCell *lliby_string_to_symbol(const StringCell *string)
+SymbolCell *lliby_string_to_symbol(World &world, const StringCell *string)
 {
-	return string->toSymbol();
+	return string->toSymbol(world);
 }
 
 }

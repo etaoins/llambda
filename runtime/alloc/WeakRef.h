@@ -2,13 +2,12 @@
 #define _LLIBY_ALLOC_WEAKREF_H
 
 #include "alloc/AbstractRef.h"
+#include "core/World.h"
 
 namespace lliby
 {
 namespace alloc
 {
-
-extern CellRefList RuntimeWeakRefList;
 
 /**
  * Holds a weaks reference to a GC managed cell
@@ -18,16 +17,16 @@ extern CellRefList RuntimeWeakRefList;
  * collector.
  */
 template<class T>
-class WeakRef : public AbstractRef<T, RuntimeWeakRefList>
+class WeakRef : public AbstractRef<T>
 {
 public:
-	WeakRef() :
-		AbstractRef<T, RuntimeWeakRefList>()
+	WeakRef(World &world) :
+		AbstractRef<T>(world.weakRefs)
 	{
 	}
 
-	WeakRef(T* cell) :
-		AbstractRef<T, RuntimeWeakRefList>(cell)
+	WeakRef(World &world, T* cell) :
+		AbstractRef<T>(world.weakRefs, cell)
 	{
 	}
 	

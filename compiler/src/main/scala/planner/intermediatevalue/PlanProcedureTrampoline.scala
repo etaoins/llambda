@@ -22,7 +22,7 @@ import llambda.compiler.RuntimeErrorMessage
   */
 private[intermediatevalue] object PlanProcedureTrampoline {
   def apply(signature : ProcedureSignature, nativeSymbol : String)(implicit parentPlan : PlanWriter) : PlannedFunction = {
-    val worldPtrTemp = ps.GcUnmanagedValue()
+    val worldPtrTemp = new ps.WorldPtrValue
     val selfTemp = ps.GcManagedValue()
     val argListHeadTemp = ps.GcManagedValue()
 
@@ -58,7 +58,7 @@ private[intermediatevalue] object PlanProcedureTrampoline {
     // Convert our arg list in to the arguments our procedure is expecting
     val restArgValue = signature.fixedArgs.foldLeft(argListHeadValue) { case (argListElementValue, nativeType) =>
       // Make sure this is a pair
-      val argPairTemp = argListElementValue.toTempValue(vt.IntrinsicCellType(ct.PairCell), Some(insufficientArgsMessage))(plan)
+      val argPairTemp = argListElementValue.toTempValue(vt.IntrinsicCellType(ct.PairCell), Some(insufficientArgsMessage))(plan, worldPtrTemp)
 
       // Get the car of the pair as the arg's value 
       val argDatumTemp = ps.GcManagedValue()
@@ -66,7 +66,7 @@ private[intermediatevalue] object PlanProcedureTrampoline {
 
       // Convert it to the expected type
       val argValue = TempValueToIntermediate(vt.IntrinsicCellType(ct.DatumCell), argDatumTemp)
-      val argTemp = argValue.toTempValue(nativeType)(plan)
+      val argTemp = argValue.toTempValue(nativeType)(plan, worldPtrTemp)
 
       argTemps += argTemp
 
@@ -80,7 +80,7 @@ private[intermediatevalue] object PlanProcedureTrampoline {
 
     if (signature.hasRestArg) {
       // This is already a ListElementCell
-      argTemps += restArgValue.toTempValue(vt.IntrinsicCellType(ct.ListElementCell))(plan)
+      argTemps += restArgValue.toTempValue(vt.IntrinsicCellType(ct.ListElementCell))(plan, worldPtrTemp)
     }
     else {
       val tooManyArgsMessage = RuntimeErrorMessage(
@@ -89,7 +89,7 @@ private[intermediatevalue] object PlanProcedureTrampoline {
       )
       
       // Make sure we're out of args by doing a check cast to an empty list
-      restArgValue.toTempValue(vt.IntrinsicCellType(ct.EmptyListCell), Some(tooManyArgsMessage))(plan)
+      restArgValue.toTempValue(vt.IntrinsicCellType(ct.EmptyListCell), Some(tooManyArgsMessage))(plan, worldPtrTemp)
     }
 
     // Load the entry point for the function we're jumping to
@@ -111,7 +111,7 @@ private[intermediatevalue] object PlanProcedureTrampoline {
       DatumToConstantValue(ast.UnitValue())
     }
 
-    val returnTemp = returnValue.toTempValue(vt.IntrinsicCellType(ct.DatumCell))(plan)
+    val returnTemp = returnValue.toTempValue(vt.IntrinsicCellType(ct.DatumCell))(plan, worldPtrTemp)
     plan.steps += ps.Return(Some(returnTemp))
 
     PlannedFunction(

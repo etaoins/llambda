@@ -128,8 +128,8 @@ case class TestCellType(result : TempValue, value : TempValue, testType : ct.Con
 }
 
 /** Casts a cell to a subtype aborting if the cast is impossible */
-case class CastCellToSubtypeChecked(result : TempValue, value : TempValue, toType : ct.CellType, errorMessage : RuntimeErrorMessage) extends Step {
-  lazy val inputValues = Set(value)
+case class CastCellToSubtypeChecked(result : TempValue, worldPtr : WorldPtrValue, value : TempValue, toType : ct.CellType, errorMessage : RuntimeErrorMessage) extends Step {
+  lazy val inputValues = Set(worldPtr, value)
   lazy val outputValues = Set(result)
 }
 
@@ -356,8 +356,8 @@ case class TestRecordLikeClass(result : TempValue, recordCell : TempValue, recor
   *
   * A runtime error will occur if the record isn't of the passed class
   */
-case class AssertRecordLikeClass(recordCell : TempValue, recordLikeType : vt.RecordLikeType, errorMessage : RuntimeErrorMessage) extends Step {
-  lazy val inputValues = Set(recordCell)
+case class AssertRecordLikeClass(worldPtr : WorldPtrValue, recordCell : TempValue, recordLikeType : vt.RecordLikeType, errorMessage : RuntimeErrorMessage) extends Step {
+  lazy val inputValues = Set(worldPtr, recordCell)
   val outputValues = Set[TempValue]()
 }
 

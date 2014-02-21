@@ -38,7 +38,7 @@ object InferArgumentTypes {
       )
 
     steps match {
-      case ps.CastCellToSubtypeChecked(result, value, toType, _) :: tailSteps if value == argValue =>
+      case ps.CastCellToSubtypeChecked(result, _, value, toType, _) :: tailSteps if value == argValue =>
         // we found an unconditional checked subtype cast!
 
         // It's valid for future steps to use the original <datum-cell> value
@@ -98,24 +98,31 @@ object InferArgumentTypes {
       initialFunction
     }
 
-    val fixedArgCount = worldPtrProcessedFunction.signature.fixedArgs.length
+    val processedSig = worldPtrProcessedFunction.signature
 
-    (0 until fixedArgCount).foldLeft(worldPtrProcessedFunction) { case (function, argIndex) =>
+    val fixedArgCount = processedSig.fixedArgs.length
+    val prefixArgCount = 
+      (if (processedSig.hasWorldArg) 1 else 0) +
+      (if (processedSig.hasSelfArg) 1 else 0)
+
+    (0 until fixedArgCount).foldLeft(worldPtrProcessedFunction) { case (function, fixedArgIndex) =>
+      // The named arguments include world and self
+      val namedArgIndex = fixedArgIndex + prefixArgCount
       val signature = function.signature
       
-      if (signature.fixedArgs(argIndex) == vt.IntrinsicCellType(ct.DatumCell)) {
+      if (signature.fixedArgs(fixedArgIndex) == vt.IntrinsicCellType(ct.DatumCell)) {
         // Try to rewrite this to something more specific
-        val (argName, argValue) = function.namedArguments(argIndex)
+        val (argName, argValue) = function.namedArguments(namedArgIndex)
 
         val result = retypeArgument(argValue, function.steps)
 
         val newSignature = signature.copy(
-          fixedArgs=signature.fixedArgs.updated(argIndex, result.replaceArgType)
+          fixedArgs=signature.fixedArgs.updated(fixedArgIndex, result.replaceArgType)
         )
 
         PlannedFunction(
           signature=newSignature,
-          namedArguments=function.namedArguments.updated(argIndex, (argName, result.replaceArgTempValue)),
+          namedArguments=function.namedArguments.updated(namedArgIndex, (argName, result.replaceArgTempValue)),
           steps=result.steps
         )
       }
