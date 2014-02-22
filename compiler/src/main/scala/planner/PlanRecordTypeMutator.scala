@@ -45,7 +45,8 @@ object PlanRecordTypeMutator {
         PlannedFunction(
           signature=mutatorSignature,
           namedArguments=namedArguments,
-          steps=plan.steps.toList
+          steps=plan.steps.toList,
+          worldPtrOption=None
         )
     }
 }

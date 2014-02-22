@@ -76,13 +76,36 @@ object InferArgumentTypes {
     }
   }
 
+  private def worldPtrUsedByStep(worldPtrTemp : ps.TempValue, step : ps.Step) : Boolean = step match {
+    case consumer : ps.CellConsumer =>
+      // This sucks - there are no explicit allocation steps until 
+      // PlanCellAllocations runs which is the last phase of planning. We have
+      // to implicitly know CellConsumers will generate steps requiring the 
+      // world pointer
+      true
+
+    case nestingStep : ps.NestingStep =>
+      // Recurse down each side
+      nestingStep.outerInputValues.contains(worldPtrTemp) || 
+        nestingStep.innerBranches.flatMap(_._1).exists({ branchStep =>
+          worldPtrUsedByStep(worldPtrTemp, branchStep)
+        })
+
+    case otherStep =>
+      otherStep.inputValues.contains(worldPtrTemp)
+  }
+
+  private def worldPtrUsedByFunction(function : PlannedFunction) : Boolean = {
+    // Find the world ptr temp value
+    val worldPtrTemp = function.namedArguments.head._2
+
+    function.steps.exists(worldPtrUsedByStep(worldPtrTemp, _))
+  }
+
   def apply(initialFunction : PlannedFunction) : PlannedFunction = {
     val worldPtrProcessedFunction = if (initialFunction.signature.hasWorldArg) {
-      // Find the world ptr temp value
-      val worldPtrTemp = initialFunction.namedArguments.head._2
-      val worldPtrUsed = initialFunction.steps.exists(_.inputValues.contains(worldPtrTemp))
 
-      if (worldPtrUsed) {
+      if (worldPtrUsedByFunction(initialFunction)) {
         initialFunction
       }
       else {
@@ -90,7 +113,8 @@ object InferArgumentTypes {
           signature=initialFunction.signature.copy(
             hasWorldArg=false
           ),
-          namedArguments=initialFunction.namedArguments.tail
+          namedArguments=initialFunction.namedArguments.tail,
+          worldPtrOption=None
         )
       }
     }
@@ -123,7 +147,8 @@ object InferArgumentTypes {
         PlannedFunction(
           signature=newSignature,
           namedArguments=function.namedArguments.updated(namedArgIndex, (argName, result.replaceArgTempValue)),
-          steps=result.steps
+          steps=result.steps,
+          worldPtrOption=function.worldPtrOption
         )
       }
       else {

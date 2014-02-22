@@ -13,10 +13,10 @@ object PlanCellAllocations {
     steps : List[ps.Step]
   )
 
-  private def mergeAllAllocationsTo(steps : List[ps.Step], consumedCells : Int) : MergeAllResult = steps match {
+  private def mergeAllAllocationsTo(worldPtr : ps.WorldPtrValue, steps : List[ps.Step], consumedCells : Int) : MergeAllResult = steps match {
     case (consumer : ps.CellConsumer) :: tailSteps =>
       // Track the number of cells this consumer requires
-      val tailResult = mergeAllAllocationsTo(tailSteps, consumedCells + consumer.allocSize)
+      val tailResult = mergeAllAllocationsTo(worldPtr, tailSteps, consumedCells + consumer.allocSize)
       
       tailResult.copy(
         steps=consumer :: tailResult.steps
@@ -34,10 +34,10 @@ object PlanCellAllocations {
 
       // Abort and switch back to searching both branches and the remaining steps
       val newStep = nestingStep.mapInnerBranches { (steps, _) =>
-        findNextConsumer(steps)
+        findNextConsumer(worldPtr, steps)
       }
 
-      val steps = newStep :: findNextConsumer(tailSteps)
+      val steps = newStep :: findNextConsumer(worldPtr, tailSteps)
 
       MergeAllResult(
         requiredSize=consumedCells,
@@ -47,7 +47,7 @@ object PlanCellAllocations {
     case (barrier : ps.GcBarrier) :: tailSteps =>
       // We can't keep uninitialized cells across a GC barrier
       // Abort and switch back to searching
-      val steps = findNextConsumer(barrier :: tailSteps)
+      val steps = findNextConsumer(worldPtr, barrier :: tailSteps)
       
       MergeAllResult(
         requiredSize=consumedCells,
@@ -56,7 +56,7 @@ object PlanCellAllocations {
 
     case other :: tailSteps =>
       // Pass this step through unmodified
-      val tailResult = mergeAllAllocationsTo(tailSteps, consumedCells)
+      val tailResult = mergeAllAllocationsTo(worldPtr, tailSteps, consumedCells)
       
       tailResult.copy(
         steps=other :: tailResult.steps
@@ -69,29 +69,33 @@ object PlanCellAllocations {
       )
   }
 
-  private def findNextConsumer(steps : List[ps.Step]) : List[ps.Step] = steps match {
+  private def findNextConsumer(worldPtr : ps.WorldPtrValue, steps : List[ps.Step]) : List[ps.Step] = steps match {
     case (consumer : ps.CellConsumer) :: _ =>
       // Found the next consumer - count the cells we need until the next GC step
-      val mergeResult = mergeAllAllocationsTo(steps, 0)
-      ps.AllocateCells(mergeResult.requiredSize) :: mergeResult.steps
+      val mergeResult = mergeAllAllocationsTo(worldPtr, steps, 0)
+      ps.AllocateCells(worldPtr, mergeResult.requiredSize) :: mergeResult.steps
 
     case (nestingStep : ps.NestingStep) :: tailSteps =>
       val newStep = nestingStep.mapInnerBranches { (steps, _) =>
-        findNextConsumer(steps)
+        findNextConsumer(worldPtr, steps)
       }
 
-      newStep :: findNextConsumer(tailSteps)
+      newStep :: findNextConsumer(worldPtr, tailSteps)
 
     case other :: tailSteps =>
-      other :: findNextConsumer(tailSteps)
+      other :: findNextConsumer(worldPtr, tailSteps)
 
     case Nil =>
       Nil
   }
 
-  def apply(function : PlannedFunction) : PlannedFunction = {
-    function.copy(
-      steps=findNextConsumer(function.steps)
-    )
+  def apply(function : PlannedFunction) : PlannedFunction = function.worldPtrOption match {
+    case Some(worldPtr) =>
+      function.copy(
+        steps=findNextConsumer(worldPtr, function.steps)
+      )
+    case None =>
+      // No world pointer, no allocations
+      function
   }
 }

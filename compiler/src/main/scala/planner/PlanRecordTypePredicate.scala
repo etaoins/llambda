@@ -58,7 +58,8 @@ object PlanRecordTypePredicate {
         PlannedFunction(
           signature=predicateSignature,
           namedArguments=List(("value" -> argumentTemp)),
-          steps=plan.steps.toList
+          steps=plan.steps.toList,
+          worldPtrOption=None
         )
     }
 }

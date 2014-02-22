@@ -39,7 +39,8 @@ object PlanRecordTypeAccessor {
         PlannedFunction(
           signature=accessorSignature,
           namedArguments=List(("recordCell" -> recordCellTemp)),
-          steps=plan.steps.toList
+          steps=plan.steps.toList,
+          None
         )
     }
 }

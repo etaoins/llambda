@@ -85,8 +85,8 @@ case class Invoke(result : Option[TempValue], signature : ProcedureSignature, en
  *
  * This should only be inserted in to the plan by PlanCellAllocations
  */
-case class AllocateCells(count : Int) extends Step with GcBarrier {
-  val inputValues = Set[TempValue]()
+case class AllocateCells(worldPtr : WorldPtrValue, count : Int) extends Step with GcBarrier {
+  val inputValues = Set[TempValue](worldPtr)
   val outputValues = Set[TempValue]()
 }
 

@@ -15,11 +15,14 @@ object GenCellAllocation {
   private val llibyAllocCells = IrFunctionDecl(
     result=Result(cellPointerType),
     name="_lliby_alloc_cells",
-    arguments=List(Argument(IntegerType(64))),
+    arguments=List(
+      Argument(PointerType(WorldValue.irType)),
+      Argument(IntegerType(64))
+    ),
     attributes=Set(NoUnwind)
   )
 
-  def genAllocation(initialState : GenerationState)(count : Int) : (GenerationState, CellAllocation)  = {
+  def genAllocation(initialState : GenerationState)(worldPtrIr : IrValue, count : Int) : (GenerationState, CellAllocation)  = {
     val startBlock = initialState.currentBlock
 
     if (count == 0) {
@@ -70,7 +73,7 @@ object GenCellAllocation {
     GenGcBarrier.genSaveGcRoots(collectGarbageState)(calcedBarrier)
 
     // Now call the runtime
-    val Some(runtimeAllocValue) = collectGarbageBlock.callDecl(Some("runtimeAlloc"))(llibyAllocCells, List(allocCountValue))
+    val Some(runtimeAllocValue) = collectGarbageBlock.callDecl(Some("runtimeAlloc"))(llibyAllocCells, List(worldPtrIr, allocCountValue))
 
     // Now restore the GC roots
     val newIrValues = GenGcBarrier.genRestoreGcRoots(collectGarbageState)(calcedBarrier)  

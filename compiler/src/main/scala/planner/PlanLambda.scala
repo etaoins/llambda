@@ -255,7 +255,8 @@ private[planner] object PlanLambda {
     val uninferredFunction = PlannedFunction(
       signature=procSignature,
       namedArguments=namedArguments,
-      steps=procPlan.steps.toList
+      steps=procPlan.steps.toList,
+      worldPtrOption=Some(worldPtr)
     )
 
     val plannedFunction = if (planConfig.optimize) {

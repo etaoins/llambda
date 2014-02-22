@@ -60,7 +60,8 @@ object PlanRecordTypeConstructor {
         PlannedFunction(
           signature=constructorSignature,
           namedArguments=namedArguments,
-          steps=plan.steps.toList
+          steps=plan.steps.toList,
+          Some(worldPtrTemp)
         )
     }
 }

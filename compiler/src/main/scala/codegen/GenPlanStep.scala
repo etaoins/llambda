@@ -8,14 +8,16 @@ import llambda.compiler.{celltype => ct}
 
 object GenPlanStep {
   def apply(state : GenerationState, plannedSymbols : Set[String], typeGenerator : TypeGenerator)(step : ps.Step) : GenerationState = step match {
-    case ps.AllocateCells(count) =>
+    case ps.AllocateCells(worldPtrTemp, count) =>
       if (!state.currentAllocation.isEmpty) {
         // This is not only wasteful but dangerous as the previous allocation
         // won't be fully initialized
         throw new InternalCompilerErrorException("Attempted cell allocation without fully consuming previous allocation")
       }
 
-      val (allocState, allocation) = GenCellAllocation.genAllocation(state)(count)
+      val worldPtrIr = state.liveTemps(worldPtrTemp)
+
+      val (allocState, allocation) = GenCellAllocation.genAllocation(state)(worldPtrIr, count)
       allocState.copy(currentAllocation=allocation)
 
     case storeConstantStep : ps.StoreConstant =>

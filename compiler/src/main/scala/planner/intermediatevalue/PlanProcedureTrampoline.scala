@@ -121,7 +121,8 @@ private[intermediatevalue] object PlanProcedureTrampoline {
         ("closure" -> selfTemp),
         ("argList" -> argListHeadTemp)
       ),
-      steps=plan.steps.toList
+      steps=plan.steps.toList,
+      worldPtrOption=Some(worldPtrTemp)
     ) 
   }
 }
