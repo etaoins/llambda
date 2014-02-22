@@ -75,7 +75,7 @@ void testPairGc(World &world)
 	alloc::StrongRef<StringCell> valueBStrong(world, StringCell::fromUtf8CString(""));
 	alloc::StrongRef<StringCell> valueCStrong(world, StringCell::fromUtf8CString(""));
 	
-	alloc::RangeAlloc allocation(alloc::allocateRange(3)); 
+	alloc::RangeAlloc allocation(alloc::allocateRange(world, 3)); 
 	auto allocIt = allocation.begin();
 
 	// Make a simple proper list manually

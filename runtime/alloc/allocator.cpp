@@ -26,7 +26,7 @@ AllocCell *_lliby_alloc_next = nullptr;
 // Pointer to the end of the last available allocation cell
 AllocCell *_lliby_alloc_end = nullptr;
 
-void *_lliby_alloc_cells(lliby::World *, std::uint64_t count)
+void *_lliby_alloc_cells(lliby::World , std::uint64_t count)
 {
 	return lliby::alloc::allocateCells(count);
 }
@@ -100,7 +100,7 @@ void *allocateCells(size_t count)
 	return allocation;
 }
 
-RangeAlloc allocateRange(size_t count)
+RangeAlloc allocateRange(World &, size_t count)
 {
 	auto start = static_cast<AllocCell*>(allocateCells(count));
 	auto end = start + count;

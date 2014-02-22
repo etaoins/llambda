@@ -22,7 +22,7 @@ DatumCell* ListElementCell::createList(World &world, std::vector<DatumCell*> &el
 	alloc::StrongRefRange<DatumCell> elementsRoot(world, elements);
 	alloc::StrongRef<DatumCell> tailRef(world, tail);
 
-	alloc::RangeAlloc allocation = alloc::allocateRange(elements.size());
+	alloc::RangeAlloc allocation = alloc::allocateRange(world, elements.size());
 	auto allocIt = allocation.end();
 	
 	auto it = elements.rbegin();

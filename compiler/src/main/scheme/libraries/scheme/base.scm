@@ -159,7 +159,7 @@
 	  (define-r7rs set-cdr! (native-function "lliby_set_cdr" (<pair-cell> <datum-cell>)))
 	  (define-r7rs length (world-function "lliby_length" (<list-element-cell>) <uint32>))
 	  (define-r7rs list-copy (world-function "lliby_list_copy" (<datum-cell>) <datum-cell>))
-	  (define-r7rs make-list (native-function "lliby_make_list" (<uint32> <datum-cell>) <list-element-cell>))
+	  (define-r7rs make-list (world-function "lliby_make_list" (<uint32> <datum-cell>) <list-element-cell>))
 	  (define-r7rs list (native-function "lliby_list" <list-element-cell> <list-element-cell>))
 	  (define-r7rs append (world-function "lliby_append" <list-element-cell> <datum-cell>))
 	  (define-r7rs memv (world-function "lliby_memv" (<datum-cell> <list-element-cell>) <datum-cell>))

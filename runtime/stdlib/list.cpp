@@ -52,7 +52,7 @@ PairCell *lliby_cons(World &world, DatumCell *car, DatumCell *cdr)
 	
 	// Explicitly allocate first so there's no ambiguity about what order the
 	// allocation and reference updates are done
-	alloc::RangeAlloc allocation(alloc::allocateRange(1));
+	alloc::RangeAlloc allocation(alloc::allocateRange(world, 1));
 
 	return new (*allocation.begin()) PairCell(carRef, {cdrRef});
 }
@@ -89,12 +89,12 @@ std::uint32_t lliby_length(World &world, ListElementCell *head)
 	return properList.length();
 }
 
-ListElementCell* lliby_make_list(std::uint32_t count, DatumCell *fill)
+ListElementCell* lliby_make_list(World &world, std::uint32_t count, DatumCell *fill)
 {
 	ListElementCell *cdr = EmptyListCell::instance();
 
 	// Allocate all the new pairs at once
-	alloc::RangeAlloc allocation(alloc::allocateRange(count));
+	alloc::RangeAlloc allocation(alloc::allocateRange(world, count));
 	auto allocIt = allocation.end();
 
 	while(allocIt != allocation.begin())

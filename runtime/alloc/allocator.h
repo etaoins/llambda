@@ -5,6 +5,8 @@
 
 namespace lliby
 {
+class World;
+
 namespace alloc
 {
 
@@ -17,7 +19,7 @@ void shutdown();
  * Allocator for DatumCells
  */
 void *allocateCells(size_t count = 1);
-RangeAlloc allocateRange(size_t count);
+RangeAlloc allocateRange(World &, size_t count);
 
 /**
  * Forces a major GC collection
