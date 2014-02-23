@@ -18,24 +18,30 @@ object Compiler {
     def finish() : Unit
   }
 
+  private lazy val platformClangFlags : List[String] =
+    if (scala.util.Properties.isMac) {
+      // Force use of libc++ on Mac OS X
+      // This matches the logic of runtime/CMakeLists.txt
+      List("-stdlib=libc++")
+    }
+    else {
+      scala.util.Properties.osName match {
+        case "Linux" =>   List("-lpthread")
+        case "FreeBSD" => List("-pthread")
+        case _ =>         Nil
+      }
+    }
+
   private def startLlvmCompiler(output : File, optimizeLevel : Int) : RunningCompiler = {
     val inputStream = new PipedInputStream
     val outputStream = new PipedOutputStream(inputStream)
 
     val optimizeArg = s"-O${optimizeLevel}"
 
-    val stdlibArg = if (scala.util.Properties.isMac) {
-      // Force use of libc++ on Mac OS X
-      // This matches the logic of runtime/CMakeLists.txt
-      List("-stdlib=libc++")
-    }
-    else {
-      Nil
-    }
 
     val llcCmd = List("llc", optimizeArg)
     val clangCmd = List("clang++", optimizeArg) ++
-      stdlibArg ++
+      platformClangFlags ++
       List("-x", "assembler", "-") ++ 
       List("-x", "none", "runtime/liblliby.a") ++
       List("-o", output.getAbsolutePath)

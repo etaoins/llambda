@@ -52,6 +52,9 @@ add_library(lliby
 
 include_directories(${lliby_SOURCE_DIR})
 
+# FreeBSD and Linux need special threading flags
+find_package (Threads)
+
 # Create compile_commands.json. Clang tools like this
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
@@ -102,7 +105,7 @@ set(ALL_TEST_NAMES
 
 foreach( test_name ${ALL_TEST_NAMES} )
 	add_executable(tests/bin/test-${test_name} tests/test-${test_name}.cpp)
-	target_link_libraries(tests/bin/test-${test_name} lliby)
+	target_link_libraries(tests/bin/test-${test_name} lliby ${CMAKE_THREAD_LIBS_INIT})
 
 	add_test(${test_name} tests/bin/test-${test_name})
 endforeach()
