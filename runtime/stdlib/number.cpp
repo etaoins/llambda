@@ -329,7 +329,7 @@ bool lliby_is_finite(NumericCell *value)
 {
 	if (auto inexactRational = datum_cast<InexactRationalCell>(value))
 	{
-		return isfinite(inexactRational->value());
+		return std::isfinite(inexactRational->value());
 	}
 	else
 	{
@@ -342,7 +342,7 @@ bool lliby_is_infinite(NumericCell *value)
 {
 	if (auto inexactRational = datum_cast<InexactRationalCell>(value))
 	{
-		return isinf(inexactRational->value());
+		return std::isinf(inexactRational->value());
 	}
 	else
 	{
@@ -355,7 +355,7 @@ bool lliby_is_nan(NumericCell *value)
 {
 	if (auto inexactRational = datum_cast<InexactRationalCell>(value))
 	{
-		return isnan(inexactRational->value());
+		return std::isnan(inexactRational->value());
 	}
 	else
 	{
