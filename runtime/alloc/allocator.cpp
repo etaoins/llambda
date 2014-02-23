@@ -41,9 +41,6 @@ namespace alloc
 namespace
 {
 	const size_t SemiSpaceSize = 4 * 1024 * 1024; 
-
-	// Pointer to the start of the semi-space
-	MemoryBlock *activeBlock = nullptr;
 	Finalizer *finalizer = nullptr;
 }
 
@@ -64,7 +61,7 @@ void shutdownWorld(World &world)
 	// Do one last collection at shutdown
 	forceCollection(world);
 
-	if (static_cast<void*>(_lliby_alloc_next) != activeBlock->startPointer())
+	if (static_cast<void*>(_lliby_alloc_next) != world.activeAllocBlock->startPointer())
 	{
 		std::cerr << "Cells leaked on exit!" << std::endl;
 		exit(-1);
@@ -114,7 +111,7 @@ RangeAlloc allocateRange(World &world, size_t count)
 bool forceCollection(World &world, size_t reserveCount)
 {
 	// Directly allocate memory from the kernel
-	MemoryBlock *oldBlock = activeBlock;
+	MemoryBlock *oldBlock = world.activeAllocBlock;
 	MemoryBlock *newBlock = new MemoryBlock(SemiSpaceSize);
 
 	if (!newBlock->isValid())
@@ -147,7 +144,7 @@ bool forceCollection(World &world, size_t reserveCount)
 
 	// Set up the new pointers
 	auto semiSpaceEnd = reinterpret_cast<AllocCell*>(newBlock->endPointer());
-	activeBlock = newBlock;
+	world.activeAllocBlock = newBlock;
 
 #ifndef _LLIBY_ALWAYS_GC
 	_lliby_alloc_end = semiSpaceEnd;

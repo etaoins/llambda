@@ -17,7 +17,8 @@ namespace lliby
 World::World() :
 	activeState(new dynamic::State(nullptr, nullptr)),
 	strongRefs(new alloc::CellRefRangeList),
-	weakRefs(new alloc::CellRefRangeList)
+	weakRefs(new alloc::CellRefRangeList),
+	activeAllocBlock(nullptr)
 {
 }
 

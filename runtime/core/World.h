@@ -14,6 +14,7 @@ class State;
 namespace alloc
 {
 
+class MemoryBlock;
 class CellRefRangeList;
 
 }
@@ -34,6 +35,9 @@ public:
 	// These are lists of strong and weak refs in the current world
 	alloc::CellRefRangeList *strongRefs;
 	alloc::CellRefRangeList *weakRefs;
+	
+	// Pointer to the start of the allocator semi-space
+	alloc::MemoryBlock *activeAllocBlock = nullptr;
 
 private:
 	World();
