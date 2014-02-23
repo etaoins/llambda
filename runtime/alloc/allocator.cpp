@@ -47,15 +47,18 @@ namespace
 	Finalizer *finalizer = nullptr;
 }
 
-void init(World &world)
+void initGlobal()
 {
-	// This will create our initial semispace
-	forceCollection(world);
-
 	finalizer = new Finalizer();
 }
 
-void shutdown(World &world)
+void initWorld(World &world)
+{
+	// This will create our initial semispace
+	forceCollection(world);
+}
+
+void shutdownWorld(World &world)
 {
 #ifdef _LLIBY_ALWAYS_GC
 	// Do one last collection at shutdown

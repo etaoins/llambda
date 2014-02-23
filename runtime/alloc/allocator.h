@@ -12,8 +12,10 @@ namespace alloc
 
 class RangeAlloc;
 
-void init(World &world);
-void shutdown(World &world);
+void initGlobal();
+
+void initWorld(World &world);
+void shutdownWorld(World &world);
 
 /**
  * Allocator for DatumCells

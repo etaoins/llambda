@@ -3,6 +3,8 @@
 #include "core/init.h"
 #include "dynamic/init.h"
 
+#include "alloc/allocator.h"
+
 extern "C"
 {
 using namespace lliby;
@@ -14,6 +16,9 @@ void lliby_init()
 	// get user-defined string sorting etc.
 	std::setlocale(LC_ALL, "");
 	dynamic::init();
+
+	// Start the allocator
+	alloc::initGlobal();
 }
 
 }

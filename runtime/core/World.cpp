@@ -32,7 +32,7 @@ void World::launchWorld(void (*entryPoint)(World &))
 {
 	World world;
 
-	alloc::init(world);
+	alloc::initWorld(world);
 
 	try
 	{
@@ -46,7 +46,7 @@ void World::launchWorld(void (*entryPoint)(World &))
 	}
 	
 	dynamic::State::popAllStates(world);
-	alloc::shutdown(world);
+	alloc::shutdownWorld(world);
 }
 
 }
