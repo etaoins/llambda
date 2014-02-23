@@ -10,9 +10,9 @@ using namespace lliby;
 extern "C"
 {
 
-BytevectorCell *lliby_make_bytevector(std::uint32_t length, std::uint8_t fill)
+BytevectorCell *lliby_make_bytevector(World &world, std::uint32_t length, std::uint8_t fill)
 {
-	return BytevectorCell::fromFill(length, fill);
+	return BytevectorCell::fromFill(world, length, fill);
 }
 
 std::uint32_t lliby_bytevector_length(BytevectorCell *bytevector)
@@ -60,7 +60,7 @@ BytevectorCell *lliby_bytevector(World &world, ListElementCell *argHead)
 	}
 
 	// Return the new vector
-	return new BytevectorCell(newBytes, length);
+	return BytevectorCell::fromOwnedData(world, newBytes, length);
 }
 
 BytevectorCell *lliby_bytevector_append(World &world, ListElementCell *argHead)
@@ -76,7 +76,7 @@ BytevectorCell *lliby_bytevector_append(World &world, ListElementCell *argHead)
 	auto bytevectorList = std::list<const BytevectorCell*>(argList.begin(), argList.end());
 
 	// Append the vectors
-	return BytevectorCell::fromAppended(bytevectorList);
+	return BytevectorCell::fromAppended(world, bytevectorList);
 }
 
 }

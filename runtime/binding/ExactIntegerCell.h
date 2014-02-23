@@ -3,6 +3,8 @@
 
 #include "NumericCell.h"
 
+#include "alloc/allocator.h"
+
 namespace lliby
 {
 
@@ -10,9 +12,10 @@ class ExactIntegerCell : public NumericCell
 {
 #include "generated/ExactIntegerCellMembers.h"
 public:
-	static ExactIntegerCell* fromValue(std::int64_t value)
+	static ExactIntegerCell* fromValue(World &world, std::int64_t value)
 	{
-		return new ExactIntegerCell(value);
+		void *cellLocation = alloc::allocateCells(world);
+		return new (cellLocation) ExactIntegerCell(value);
 	}
 
 private:

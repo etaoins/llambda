@@ -28,9 +28,9 @@ std::uint32_t listLength(const ListElementCell *head)
 
 void testAll(World &world)
 {
-	alloc::StrongRef<StringCell> valueA(world, StringCell::fromUtf8CString("A"));
-	alloc::StrongRef<StringCell> valueB(world, StringCell::fromUtf8CString("B"));
-	alloc::StrongRef<StringCell> valueC(world, StringCell::fromUtf8CString("C"));
+	alloc::StrongRef<StringCell> valueA(world, StringCell::fromUtf8CString(world, "A"));
+	alloc::StrongRef<StringCell> valueB(world, StringCell::fromUtf8CString(world, "B"));
+	alloc::StrongRef<StringCell> valueC(world, StringCell::fromUtf8CString(world, "C"));
 	
 	{
 		ListElementCell *properList = ListElementCell::createProperList(world, {});

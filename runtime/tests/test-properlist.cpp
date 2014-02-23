@@ -17,9 +17,9 @@ using namespace lliby;
 
 void testAll(World &world)
 {
-	alloc::StrongRef<StringCell> valueA(world, StringCell::fromUtf8CString("A"));
-	alloc::StrongRef<StringCell> valueB(world, StringCell::fromUtf8CString("B"));
-	alloc::StrongRef<StringCell> valueC(world, StringCell::fromUtf8CString("C"));
+	alloc::StrongRef<StringCell> valueA(world, StringCell::fromUtf8CString(world, "A"));
+	alloc::StrongRef<StringCell> valueB(world, StringCell::fromUtf8CString(world, "B"));
+	alloc::StrongRef<StringCell> valueC(world, StringCell::fromUtf8CString(world, "C"));
 	
 	{
 		ListElementCell *emptyListHead = ListElementCell::createProperList(world, {});

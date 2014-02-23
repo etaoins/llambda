@@ -61,11 +61,8 @@ VectorCell *lliby_vector(World &world, ListElementCell *argHead)
 		newElements[elementIndex++] = element;
 	}
 
-	// Make sure our elements array is GC rooted for the next allocation
-	alloc::StrongRefRange<DatumCell> newElementsRoot(world, newElements, length);
-
 	// Return the new vector
-	return new VectorCell(newElements, length);
+	return VectorCell::fromElements(world, newElements, length);
 }
 
 VectorCell *lliby_vector_append(World &world, ListElementCell *argHead)

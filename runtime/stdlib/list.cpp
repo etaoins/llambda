@@ -46,15 +46,7 @@ extern "C"
 
 PairCell *lliby_cons(World &world, DatumCell *car, DatumCell *cdr)
 {
-	// Root the car and cdr for the next allocation
-	alloc::StrongRef<DatumCell> carRef(world, car);
-	alloc::StrongRef<DatumCell> cdrRef(world, cdr);
-	
-	// Explicitly allocate first so there's no ambiguity about what order the
-	// allocation and reference updates are done
-	alloc::RangeAlloc allocation(alloc::allocateRange(world, 1));
-
-	return new (*allocation.begin()) PairCell(carRef, {cdrRef});
+	return PairCell::createInstance(world, car, cdr);
 }
 
 DatumCell *lliby_car(PairCell *pair)
@@ -126,7 +118,7 @@ DatumCell* lliby_list_copy(World &world, DatumCell *sourceHead)
 	// Make sure we take a reference to this across the next allocation in case the GC runs
 	alloc::StrongRef<DatumCell> sourceHeadRef(world, sourceHead);	
 
-	auto destHead = static_cast<PairCell*>(alloc::allocateCells(pairCount));
+	auto destHead = static_cast<PairCell*>(alloc::allocateCells(world, pairCount));
 	PairCell *destPair = destHead;
 
 	// We've counted our pairs so this has to be a pair

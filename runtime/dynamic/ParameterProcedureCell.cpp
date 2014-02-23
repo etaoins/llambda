@@ -37,7 +37,7 @@ ParameterProcedureCell* ParameterProcedureCell::createInstance(World &world, Dat
 	alloc::StrongRef<ProcedureCell> converterProcedure(world, converterProcedureRaw);
 
 	auto closure = static_cast<ParameterProcedureClosure*>(allocateRecordData(sizeof(ParameterProcedureClosure)));
-	auto procedureCell = new ProcedureCell(registeredClassId, false, closure, &procedureBody);
+	ProcedureCell *procedureCell = ProcedureCell::createInstance(world, registeredClassId, false, closure, &procedureBody);
 
 	closure->initialValue = initialValue;
 

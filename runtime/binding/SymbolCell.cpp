@@ -4,6 +4,7 @@
 
 #include "binding/StringCell.h"
 #include "alloc/StrongRef.h"
+#include "alloc/allocator.h"
 
 namespace lliby
 {
@@ -24,21 +25,23 @@ size_t SymbolCell::inlineDataSize()
 	return sizeof(InlineSymbolCell::m_inlineData);
 }
 
-SymbolCell* SymbolCell::createUninitialized(std::uint32_t byteLength, std::uint32_t charLength)
+SymbolCell* SymbolCell::createUninitialized(World &world, std::uint32_t byteLength, std::uint32_t charLength)
 {
 	// We need 1 extra byte for the NULL terminator
 	const std::int32_t minimumSize = byteLength + 1;
 
+	void *cellPlacement = alloc::allocateCells(world);
+
 	if (minimumSize <= inlineDataSize())
 	{
 		// We can fit this symbol inline
-		return new InlineSymbolCell(byteLength, charLength);
+		return new (cellPlacement) InlineSymbolCell(byteLength, charLength);
 	}
 	else
 	{
 		// Allocate new space for our heap data
 		auto utf8Data = new std::uint8_t[byteLength + 1];
-		return new HeapSymbolCell(utf8Data, byteLength, charLength);
+		return new (cellPlacement) HeapSymbolCell(utf8Data, byteLength, charLength);
 	}
 }
 	
@@ -47,7 +50,7 @@ SymbolCell* SymbolCell::fromString(World &world, StringCell *string)
 	alloc::StrongRef<StringCell> stringRef(world, string);
 
 	// Allocate a new destination symbol
-	SymbolCell *newSymbol = SymbolCell::createUninitialized(stringRef->byteLength(), stringRef->charLength());
+	SymbolCell *newSymbol = SymbolCell::createUninitialized(world, stringRef->byteLength(), stringRef->charLength());
 
 	// Copy the data over
 	memcpy(const_cast<std::uint8_t*>(newSymbol->utf8Data()), stringRef->utf8Data(), stringRef->byteLength() + 1);

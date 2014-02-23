@@ -5,9 +5,11 @@
 
 namespace lliby
 {
+class World;
 
 class PairCell : public ListElementCell
 {
+	friend class ListElementCell;
 #include "generated/PairCellMembers.h"
 public:
 	PairCell(DatumCell *car, DatumCell *cdr) :
@@ -16,6 +18,15 @@ public:
 		m_cdr(cdr)
 	{
 	}
+
+	/**
+	 * Creates a new instance of PairCell 
+	 *
+	 * @param  world  World to allocate the pair in
+	 * @param  car    car value of the new pair. This will be GC rooted internally.
+	 * @param  cdr    cdr value of the new pair. This will be GC rooted internally.
+	 */
+	static PairCell* createInstance(World &world, DatumCell *car, DatumCell *cdr);
 
 	void setCar(DatumCell *obj)
 	{

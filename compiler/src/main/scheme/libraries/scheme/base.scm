@@ -171,13 +171,13 @@
 	(begin 
 	  (define-r7rs symbol? (native-function "lliby_is_symbol" (<datum-cell>) <bool>))
 	  (define-r7rs symbol=? (world-function "lliby_symbol_equal" (<symbol-cell> <symbol-cell> . <list-element-cell>) <bool>))
-	  (define-r7rs symbol->string (native-function "lliby_symbol_to_string" (<symbol-cell>) <string-cell>))
+	  (define-r7rs symbol->string (world-function "lliby_symbol_to_string" (<symbol-cell>) <string-cell>))
 	  (define-r7rs string->symbol (world-function "lliby_string_to_symbol" (<string-cell>) <symbol-cell>)))
 
 	(export char? digit-value char->integer integer->char)
 	(begin
 	  (define-r7rs char? (native-function "lliby_is_character" (<datum-cell>) <bool>))
-	  (define-r7rs digit-value (native-function "lliby_digit_value" (<unicode-char>) <datum-cell>))
+	  (define-r7rs digit-value (world-function "lliby_digit_value" (<unicode-char>) <datum-cell>))
 	  (define-r7rs char->integer (native-function "lliby_char_to_integer" (<unicode-char>) <int32>))
 	  (define-r7rs integer->char (native-function "lliby_integer_to_char" (<int32>) <unicode-char>)))
 	
@@ -196,7 +196,7 @@
 	(export bytevector? make-bytevector bytevector bytevector-length bytevector-u8-ref bytevector-u8-set! bytevector-append)
 	(begin
 	  (define-r7rs bytevector? (native-function "lliby_is_bytevector" (<datum-cell>) <bool>))
-	  (define-r7rs make-bytevector (native-function "lliby_make_bytevector" (<uint32> <uint8>) <bytevector-cell>))
+	  (define-r7rs make-bytevector (world-function "lliby_make_bytevector" (<uint32> <uint8>) <bytevector-cell>))
 	  (define-r7rs bytevector (world-function "lliby_bytevector" <list-element-cell> <bytevector-cell>))
 	  (define-r7rs bytevector-length (native-function "lliby_bytevector_length" (<bytevector-cell>) <uint32>))
 	  (define-r7rs bytevector-u8-ref (world-function "lliby_bytevector_u8_ref" (<bytevector-cell> <uint32>) <uint8>))
@@ -206,7 +206,7 @@
 	(export string? make-string string string-length string-ref string-set! string-append list->string)
 	(begin
 	  (define-r7rs string? (native-function "lliby_is_string" (<datum-cell>) <bool>))
-	  (define-r7rs make-string (native-function "lliby_make_string" (<uint32> <unicode-char>) <string-cell>))
+	  (define-r7rs make-string (world-function "lliby_make_string" (<uint32> <unicode-char>) <string-cell>))
 	  (define-r7rs string (world-function "lliby_string" <list-element-cell> <string-cell>))
 	  ; This is the same runtime function but instead of using a rest arg explicitly pass in the list
 	  (define-r7rs list->string (world-function "lliby_string" (<list-element-cell>) <string-cell>))

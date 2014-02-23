@@ -11,10 +11,13 @@ add_library(lliby
 	alloc/cellvisitor.cpp
 	alloc/collector.cpp
 	binding/BytevectorCell.cpp
+	binding/CharacterCell.cpp
 	binding/DatumCell.cpp
 	binding/ErrorObjectCell.cpp
 	binding/ListElementCell.cpp
+	binding/PairCell.cpp
 	binding/ProcedureCell.cpp
+	binding/RecordCell.cpp
 	binding/RecordLikeCell.cpp
 	binding/StringCell.cpp
 	binding/SymbolCell.cpp

@@ -14,7 +14,7 @@ using namespace lliby;
 void testAll(World &world)
 {
 	{
-		InexactRationalCell *value = InexactRationalCell::fromValue(0.0);
+		InexactRationalCell *value = InexactRationalCell::fromValue(world, 0.0);
 		ASSERT_EQUAL(value->value(), 0.0);
 
 		ASSERT_TRUE(value->isInteger());
@@ -25,7 +25,7 @@ void testAll(World &world)
 	}
 	
 	{
-		InexactRationalCell *value = InexactRationalCell::fromValue(256.5);
+		InexactRationalCell *value = InexactRationalCell::fromValue(world, 256.5);
 		ASSERT_EQUAL(value->value(), 256.5);
 		
 		ASSERT_FALSE(value->isInteger());
@@ -36,7 +36,7 @@ void testAll(World &world)
 	}
 	
 	{
-		InexactRationalCell *value = InexactRationalCell::fromValue(-500);
+		InexactRationalCell *value = InexactRationalCell::fromValue(world, -500);
 		ASSERT_EQUAL(value->value(), -500);
 		
 		ASSERT_TRUE(value->isInteger());
@@ -47,7 +47,7 @@ void testAll(World &world)
 	}
 	
 	{
-		InexactRationalCell *value = InexactRationalCell::NaN();
+		InexactRationalCell *value = InexactRationalCell::NaN(world);
 
 		ASSERT_TRUE(value->isNaN());
 		ASSERT_FALSE(value->isInfinite());
@@ -56,7 +56,7 @@ void testAll(World &world)
 	}
 	
 	{
-		InexactRationalCell *value = InexactRationalCell::positiveInfinity();
+		InexactRationalCell *value = InexactRationalCell::positiveInfinity(world);
 
 		ASSERT_FALSE(value->isNaN());
 		ASSERT_TRUE(value->isInfinite());
@@ -65,7 +65,7 @@ void testAll(World &world)
 	}
 	
 	{
-		InexactRationalCell *value = InexactRationalCell::negativeInfinity();
+		InexactRationalCell *value = InexactRationalCell::negativeInfinity(world);
 
 		ASSERT_FALSE(value->isNaN());
 		ASSERT_TRUE(value->isInfinite());

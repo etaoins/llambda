@@ -6,11 +6,15 @@
 
 namespace lliby
 {
+class World;
 
 class CharacterCell : public DatumCell
 {
 #include "generated/CharacterCellMembers.h"
 public:
+	static CharacterCell* createInstance(World &world, UnicodeChar unicodeChar);
+
+protected:
 	CharacterCell(UnicodeChar unicodeChar) :
 		DatumCell(CellTypeId::Character),
 		m_unicodeChar(unicodeChar)

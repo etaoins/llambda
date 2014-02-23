@@ -11,13 +11,6 @@ class VectorCell : public DatumCell
 {
 #include "generated/VectorCellMembers.h"
 public:
-	VectorCell(DatumCell **elements, std::uint32_t length) :
-		DatumCell(CellTypeId::Vector),
-		m_length(length),
-		m_elements(elements)
-	{
-	}
-	
 	DatumCell* elementAt(std::uint32_t offset) const
 	{
 		if (offset >= length())
@@ -39,6 +32,8 @@ public:
 
 		return true;
 	}
+
+	static VectorCell* fromElements(World &world, DatumCell **elements, std::uint32_t length);
 	static VectorCell* fromFill(World &world, std::uint32_t length, DatumCell *fill = nullptr);
 	static VectorCell* fromAppended(World &world, const std::vector<const VectorCell*> &vectors);
 	
@@ -48,6 +43,14 @@ public:
 	bool fill(DatumCell *fill, std::int64_t start = 0, std::int64_t end = -1);
 	
 	void finalizeVector();
+
+protected:
+	VectorCell(DatumCell **elements, std::uint32_t length) :
+		DatumCell(CellTypeId::Vector),
+		m_length(length),
+		m_elements(elements)
+	{
+	}
 };
 
 }

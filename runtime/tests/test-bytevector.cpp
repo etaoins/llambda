@@ -15,16 +15,16 @@ namespace
 {
 using namespace lliby;
 
-void testFromFill()
+void testFromFill(World &world)
 {
 	{
-		BytevectorCell *emptyVector  = BytevectorCell::fromFill(0);
+		BytevectorCell *emptyVector  = BytevectorCell::fromFill(world, 0);
 
 		ASSERT_EQUAL(emptyVector->length(), 0);
 	}
 	
 	{
-		BytevectorCell *zeroFillVector  = BytevectorCell::fromFill(8);
+		BytevectorCell *zeroFillVector  = BytevectorCell::fromFill(world, 8);
 		const uint8_t expectedData[8] = { 0 };
 
 		ASSERT_EQUAL(zeroFillVector->length(), 8);
@@ -32,7 +32,7 @@ void testFromFill()
 	}
 	
 	{
-		BytevectorCell *sevenFillVector  = BytevectorCell::fromFill(4, 7);
+		BytevectorCell *sevenFillVector  = BytevectorCell::fromFill(world, 4, 7);
 		const uint8_t expectedData[4] = { 7, 7, 7, 7 };
 
 		ASSERT_EQUAL(sevenFillVector->length(), 4);
@@ -43,22 +43,22 @@ void testFromFill()
 void testFromAppended(World &world)
 {
 	uint8_t vector1Data[3] = { 100, 101, 102 };
-	alloc::StrongRef<BytevectorCell> vector1(world, BytevectorCell::fromUnownedData(vector1Data, sizeof(vector1Data)));
+	alloc::StrongRef<BytevectorCell> vector1(world, BytevectorCell::fromUnownedData(world, vector1Data, sizeof(vector1Data)));
 
 	uint8_t vector2Data[1] = { 0 };
-	alloc::StrongRef<BytevectorCell> vector2(world, BytevectorCell::fromUnownedData(vector2Data, sizeof(vector2Data)));
+	alloc::StrongRef<BytevectorCell> vector2(world, BytevectorCell::fromUnownedData(world, vector2Data, sizeof(vector2Data)));
 
 	uint8_t vector3Data[3] = { 200, 201, 202 };
-	alloc::StrongRef<BytevectorCell> vector3(world, BytevectorCell::fromUnownedData(vector3Data, sizeof(vector3Data)));
+	alloc::StrongRef<BytevectorCell> vector3(world, BytevectorCell::fromUnownedData(world, vector3Data, sizeof(vector3Data)));
 
 	{
-		BytevectorCell *emptyVector = BytevectorCell::fromAppended({});
+		BytevectorCell *emptyVector = BytevectorCell::fromAppended(world, {});
 
 		ASSERT_EQUAL(emptyVector->length(), 0);
 	}
 	
 	{
-		BytevectorCell *appendedVector = BytevectorCell::fromAppended({vector1});
+		BytevectorCell *appendedVector = BytevectorCell::fromAppended(world, {vector1});
 
 		ASSERT_EQUAL(appendedVector->length(), 3);
 		
@@ -67,7 +67,7 @@ void testFromAppended(World &world)
 	}
 	
 	{
-		BytevectorCell *appendedVector = BytevectorCell::fromAppended({vector1, vector2, vector3});
+		BytevectorCell *appendedVector = BytevectorCell::fromAppended(world, {vector1, vector2, vector3});
 
 		ASSERT_EQUAL(appendedVector->length(), 7);
 		
@@ -76,11 +76,11 @@ void testFromAppended(World &world)
 	}
 }
 
-void testByteAccess()
+void testByteAccess(World &world)
 {
 	uint8_t vectorData[5] = { 0, 1, 2, 3, 4 };
 
-	auto *testVector = BytevectorCell::fromUnownedData(vectorData, sizeof(vectorData));
+	auto *testVector = BytevectorCell::fromUnownedData(world, vectorData, sizeof(vectorData));
 
 	ASSERT_EQUAL(testVector->byteAt(0), 0);
 	ASSERT_EQUAL(testVector->byteAt(4), 4);
@@ -99,10 +99,10 @@ void testCopy(World &world)
 {
 	uint8_t vectorData[5] = { 0, 1, 2, 3, 4 };
 
-	alloc::StrongRef<BytevectorCell> testVector(world, BytevectorCell::fromUnownedData(vectorData, sizeof(vectorData)));
+	alloc::StrongRef<BytevectorCell> testVector(world, BytevectorCell::fromUnownedData(world, vectorData, sizeof(vectorData)));
 
 	{
-		BytevectorCell *wholeCopy = testVector->copy();
+		BytevectorCell *wholeCopy = testVector->copy(world);
 
 		ASSERT_EQUAL(wholeCopy->length(), 5);
 
@@ -110,14 +110,14 @@ void testCopy(World &world)
 	}
 	
 	{
-		BytevectorCell *explicitWholeCopy = testVector->copy(0, 5);
+		BytevectorCell *explicitWholeCopy = testVector->copy(world, 0, 5);
 
 		ASSERT_EQUAL(explicitWholeCopy->length(), 5);
 		ASSERT_EQUAL(memcmp(explicitWholeCopy->data(), vectorData, 5), 0);
 	}
 	
 	{
-		BytevectorCell *firstTwoCopy = testVector->copy(0, 2);
+		BytevectorCell *firstTwoCopy = testVector->copy(world, 0, 2);
 
 		ASSERT_EQUAL(firstTwoCopy->length(), 2);
 		ASSERT_EQUAL(firstTwoCopy->byteAt(0), 0);
@@ -125,7 +125,7 @@ void testCopy(World &world)
 	}
 	
 	{
-		BytevectorCell *lastTwoCopy = testVector->copy(3, 5);
+		BytevectorCell *lastTwoCopy = testVector->copy(world, 3, 5);
 
 		ASSERT_EQUAL(lastTwoCopy->length(), 2);
 		ASSERT_EQUAL(lastTwoCopy->byteAt(0), 3);
@@ -133,7 +133,7 @@ void testCopy(World &world)
 	}
 	
 	{
-		BytevectorCell *emptyCopy = testVector->copy(3, 3);
+		BytevectorCell *emptyCopy = testVector->copy(world, 3, 3);
 
 		ASSERT_EQUAL(emptyCopy->length(), 0);
 	}
@@ -142,11 +142,11 @@ void testCopy(World &world)
 void testReplace(World &world)
 {
 	uint8_t fromData[5] = { 200, 201, 202, 203, 204 };
-	alloc::StrongRef<BytevectorCell> fromVector(world, BytevectorCell::fromUnownedData(fromData, 5)); 
+	alloc::StrongRef<BytevectorCell> fromVector(world, BytevectorCell::fromUnownedData(world, fromData, 5)); 
 
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = BytevectorCell::fromUnownedData(toData, 5); 
+		auto *toVector = BytevectorCell::fromUnownedData(world, toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(0, fromVector), true);
 		ASSERT_EQUAL(toVector->length(), 5);
@@ -155,7 +155,7 @@ void testReplace(World &world)
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = BytevectorCell::fromUnownedData(toData, 5); 
+		auto *toVector = BytevectorCell::fromUnownedData(world, toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(0, fromVector, 0, 5), true);
 		ASSERT_EQUAL(toVector->length(), 5);
@@ -164,7 +164,7 @@ void testReplace(World &world)
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = BytevectorCell::fromUnownedData(toData, 5); 
+		auto *toVector = BytevectorCell::fromUnownedData(world, toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(0, fromVector, 2, 2), true);
 		ASSERT_EQUAL(toVector->length(), 5);
@@ -175,7 +175,7 @@ void testReplace(World &world)
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = BytevectorCell::fromUnownedData(toData, 5); 
+		auto *toVector = BytevectorCell::fromUnownedData(world, toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(0, fromVector, 0, 2), true);
 		ASSERT_EQUAL(toVector->length(), 5);
@@ -186,7 +186,7 @@ void testReplace(World &world)
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = BytevectorCell::fromUnownedData(toData, 5); 
+		auto *toVector = BytevectorCell::fromUnownedData(world, toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(0, fromVector, 3), true);
 		ASSERT_EQUAL(toVector->length(), 5);
@@ -197,7 +197,7 @@ void testReplace(World &world)
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = BytevectorCell::fromUnownedData(toData, 5); 
+		auto *toVector = BytevectorCell::fromUnownedData(world, toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(0, fromVector, 3, 5), true);
 		ASSERT_EQUAL(toVector->length(), 5);
@@ -208,7 +208,7 @@ void testReplace(World &world)
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = BytevectorCell::fromUnownedData(toData, 5); 
+		auto *toVector = BytevectorCell::fromUnownedData(world, toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(3, fromVector, 3, 5), true);
 		ASSERT_EQUAL(toVector->length(), 5);
@@ -219,14 +219,14 @@ void testReplace(World &world)
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = BytevectorCell::fromUnownedData(toData, 5); 
+		auto *toVector = BytevectorCell::fromUnownedData(world, toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(4, fromVector, 3, 5), false);
 	}
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = BytevectorCell::fromUnownedData(toData, 5); 
+		auto *toVector = BytevectorCell::fromUnownedData(world, toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(4, fromVector, 5, 3), false);
 	}
@@ -235,10 +235,10 @@ void testReplace(World &world)
 void testUtf8ToString(World &world)
 {
 	auto stringData = reinterpret_cast<std::uint8_t*>(strdup(u8"Hello ☃!"));
-	alloc::StrongRef<BytevectorCell> sourceVector(world, BytevectorCell::fromUnownedData(stringData, 10));
+	alloc::StrongRef<BytevectorCell> sourceVector(world, BytevectorCell::fromUnownedData(world, stringData, 10));
 
 	{
-		StringCell *fullString = sourceVector->utf8ToString();
+		StringCell *fullString = sourceVector->utf8ToString(world);
 
 		ASSERT_EQUAL(fullString->byteLength(), 10);
 		ASSERT_EQUAL(fullString->charLength(), 8);
@@ -247,7 +247,7 @@ void testUtf8ToString(World &world)
 	}
 	
 	{
-		StringCell *fullString = sourceVector->utf8ToString(0, 10);
+		StringCell *fullString = sourceVector->utf8ToString(world, 0, 10);
 
 		ASSERT_EQUAL(fullString->byteLength(), 10);
 		ASSERT_EQUAL(fullString->charLength(), 8);
@@ -255,7 +255,7 @@ void testUtf8ToString(World &world)
 	}
 	
 	{
-		StringCell *emptyString = sourceVector->utf8ToString(7, 7);
+		StringCell *emptyString = sourceVector->utf8ToString(world, 7, 7);
 
 		ASSERT_EQUAL(emptyString->byteLength(), 0);
 		ASSERT_EQUAL(emptyString->charLength(), 0);
@@ -263,7 +263,7 @@ void testUtf8ToString(World &world)
 	}
 	
 	{
-		StringCell *helloString = sourceVector->utf8ToString(0, 5);
+		StringCell *helloString = sourceVector->utf8ToString(world, 0, 5);
 
 		ASSERT_EQUAL(helloString->byteLength(), 5);
 		ASSERT_EQUAL(helloString->charLength(), 5);
@@ -271,7 +271,7 @@ void testUtf8ToString(World &world)
 	}
 	
 	{
-		StringCell *endString = sourceVector->utf8ToString(6, 10);
+		StringCell *endString = sourceVector->utf8ToString(world, 6, 10);
 
 		ASSERT_EQUAL(endString->byteLength(), 4);
 		ASSERT_EQUAL(endString->charLength(), 2);
@@ -279,17 +279,17 @@ void testUtf8ToString(World &world)
 	}
 	
 	{
-		StringCell *invalidString = sourceVector->utf8ToString(7, 12);
+		StringCell *invalidString = sourceVector->utf8ToString(world, 7, 12);
 		ASSERT_EQUAL(invalidString, 0);
 	}
 	
 	{
-		StringCell *invalidString = sourceVector->utf8ToString(6, 4);
+		StringCell *invalidString = sourceVector->utf8ToString(world, 6, 4);
 		ASSERT_EQUAL(invalidString, 0);
 	}
 	
 	{
-		StringCell *invalidString = sourceVector->utf8ToString(11);
+		StringCell *invalidString = sourceVector->utf8ToString(world, 11);
 		ASSERT_EQUAL(invalidString, 0);
 	}
 
@@ -298,9 +298,9 @@ void testUtf8ToString(World &world)
 
 void testAll(World &world)
 {
-	testFromFill();
+	testFromFill(world);
 	testFromAppended(world);
-	testByteAccess();
+	testByteAccess(world);
 	testCopy(world);
 	testReplace(world);
 	testUtf8ToString(world);

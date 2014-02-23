@@ -169,11 +169,11 @@ NumericCell *lliby_add(World &world, ListElementCell *argHead)
 
 	if (resultInexact)
 	{
-		return InexactRationalCell::fromValue(exactSum + inexactSum);
+		return InexactRationalCell::fromValue(world, exactSum + inexactSum);
 	}
 	else
 	{
-		return ExactIntegerCell::fromValue(exactSum);
+		return ExactIntegerCell::fromValue(world, exactSum);
 	}
 }
 
@@ -207,11 +207,11 @@ NumericCell *lliby_mul(World &world, ListElementCell *argHead)
 
 	if (resultInexact)
 	{
-		return InexactRationalCell::fromValue(exactProduct * inexactProduct);
+		return InexactRationalCell::fromValue(world, exactProduct * inexactProduct);
 	}
 	else
 	{
-		return ExactIntegerCell::fromValue(exactProduct);
+		return ExactIntegerCell::fromValue(world, exactProduct);
 	}
 }
 
@@ -233,7 +233,7 @@ NumericCell *lliby_sub(World &world, NumericCell *startValue, ListElementCell *a
 		if (argList.isEmpty())
 		{
 			// Return the inverse
-			return ExactIntegerCell::fromValue(-exactInteger->value());
+			return ExactIntegerCell::fromValue(world, -exactInteger->value());
 		}
 
 		exactDifference = exactInteger->value();
@@ -247,7 +247,7 @@ NumericCell *lliby_sub(World &world, NumericCell *startValue, ListElementCell *a
 		if (argList.isEmpty())
 		{
 			// Return the inverse
-			return InexactRationalCell::fromValue(-inexactRational->value());
+			return InexactRationalCell::fromValue(world, -inexactRational->value());
 		}
 
 		exactDifference = 0;
@@ -272,11 +272,11 @@ NumericCell *lliby_sub(World &world, NumericCell *startValue, ListElementCell *a
 	
 	if (resultInexact)
 	{
-		return InexactRationalCell::fromValue(exactDifference + inexactDifference);
+		return InexactRationalCell::fromValue(world, exactDifference + inexactDifference);
 	}
 	else
 	{
-		return ExactIntegerCell::fromValue(exactDifference);
+		return ExactIntegerCell::fromValue(world, exactDifference);
 	}
 }
 

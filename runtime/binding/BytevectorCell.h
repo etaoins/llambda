@@ -14,33 +14,30 @@ public:
 	/**
 	 * Creates a new BytevectorCell owning the passed data
 	 *
+	 * @param  world   World to create the bytevector cell in
 	 * @param  data    Byte data to initialize the bytevector with. This must be allocated using new[]
 	 * @param  length  Length of the data in bytes
 	 */
-	BytevectorCell(std::uint8_t *data, std::uint32_t length) :
-		DatumCell(CellTypeId::Bytevector),
-		m_length(length),
-		m_data(data)
-	{
-	}
+	static BytevectorCell* fromOwnedData(World &world, std::uint8_t *data, std::uint32_t length);
 	
 	/**
 	 * Creates a new BytevectorCell from a copy of the passed data
 	 *
+	 * @param  world   World to create the bytevector cell in
 	 * @param  data    Byte data to copy in to the new bytevector
 	 * @param  length  Length of the data in bytes
 	 */
-	static BytevectorCell* fromUnownedData(const std::uint8_t *data, std::uint32_t length);
+	static BytevectorCell* fromUnownedData(World &world, const std::uint8_t *data, std::uint32_t length);
 
 	static const std::int16_t InvalidByte = -1;
 
-	static BytevectorCell* fromFill(std::uint32_t length, std::uint8_t fill = 0);
-	static BytevectorCell* fromAppended(const std::list<const BytevectorCell*> &byteVectors);
+	static BytevectorCell* fromFill(World &world, std::uint32_t length, std::uint8_t fill = 0);
+	static BytevectorCell* fromAppended(World &world, const std::list<const BytevectorCell*> &byteVectors);
 
-	BytevectorCell* copy(std::int64_t start = 0, std::int64_t end = -1); 
+	BytevectorCell* copy(World &world, std::int64_t start = 0, std::int64_t end = -1); 
 	bool replace(std::uint32_t offset, const BytevectorCell *from, std::int64_t fromStart = 0, std::int64_t fromEnd = -1);
 
-	StringCell* utf8ToString(std::int64_t start = 0, std::int64_t end = -1);
+	StringCell* utf8ToString(World &world, std::int64_t start = 0, std::int64_t end = -1);
 
 	std::int16_t byteAt(std::uint32_t offset) const
 	{
@@ -65,6 +62,14 @@ public:
 	}
 	
 	void finalizeBytevector();
+
+protected:
+	BytevectorCell(std::uint8_t *data, std::uint32_t length) :
+		DatumCell(CellTypeId::Bytevector),
+		m_length(length),
+		m_data(data)
+	{
+	}
 };
 
 }

@@ -2,20 +2,16 @@
 #define _LLIBY_BINDING_PROCEDURECELL_H
 
 #include "RecordLikeCell.h"
-#include "core/World.h"
 
 namespace lliby
 {
+class World;
 
 class ProcedureCell : public RecordLikeCell
 {
 #include "generated/ProcedureCellMembers.h"
 public:
-	ProcedureCell(std::uint32_t recordClassId, bool dataIsInline, void *recordData, ProcedureEntryPoint entryPoint) :
-		RecordLikeCell(CellTypeId::Procedure, recordClassId, dataIsInline, recordData),
-		m_entryPoint(entryPoint)
-	{
-	}
+	static ProcedureCell* createInstance(World &World, std::uint32_t recordClassId, bool dataIsInline, void *recordData, ProcedureEntryPoint entryPoint);
 
 	DatumCell* apply(World &world, ListElementCell *arguments);
 
@@ -25,6 +21,13 @@ public:
 	bool capturesVariables() const
 	{
 		return recordClassId() != EmptyClosureRecordClassId;
+	}
+
+protected:
+	ProcedureCell(std::uint32_t recordClassId, bool dataIsInline, void *recordData, ProcedureEntryPoint entryPoint) :
+		RecordLikeCell(CellTypeId::Procedure, recordClassId, dataIsInline, recordData),
+		m_entryPoint(entryPoint)
+	{
 	}
 };
 

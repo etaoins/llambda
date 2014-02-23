@@ -16,11 +16,11 @@ class StringCell : public DatumCell
 {
 #include "generated/StringCellMembers.h"
 public:
-	static StringCell* fromUtf8CString(const char *str);
-	static StringCell* fromUtf8Data(const std::uint8_t *data, std::uint32_t byteLength);
-	static StringCell* fromFill(std::uint32_t length, UnicodeChar fill);
-	static StringCell* fromUnicodeChars(const std::vector<UnicodeChar> &unicodeChars);
-	static StringCell* fromSymbol(const SymbolCell *symbol);
+	static StringCell* fromUtf8CString(World &world, const char *str);
+	static StringCell* fromUtf8Data(World &world, const std::uint8_t *data, std::uint32_t byteLength);
+	static StringCell* fromFill(World &world, std::uint32_t length, UnicodeChar fill);
+	static StringCell* fromUnicodeChars(World &world, const std::vector<UnicodeChar> &unicodeChars);
+	static StringCell* fromSymbol(World &world, const SymbolCell *symbol);
 	
 	static StringCell* fromAppended(World &world, std::vector<StringCell*> &strings);
 	static StringCell* fromAppended(World &world, const std::vector<StringCell*> &strings)
@@ -56,11 +56,11 @@ public:
 	}
 
 	SymbolCell *toSymbol(World &world) const;
-	BytevectorCell *toUtf8Bytevector(std::int64_t start = 0, std::int64_t end = -1) const;
+	BytevectorCell *toUtf8Bytevector(World &world, std::int64_t start = 0, std::int64_t end = -1) const;
 	
-	StringCell *toUppercaseString() const;
-	StringCell *toLowercaseString() const;
-	StringCell *toCaseFoldedString() const;
+	StringCell *toUppercaseString(World &world) const;
+	StringCell *toLowercaseString(World &world) const;
+	StringCell *toCaseFoldedString(World &world) const;
 	
 	std::uint8_t* utf8Data() const;
 
@@ -78,7 +78,7 @@ protected:
 	static const std::uint32_t InlineDataSize = 12;
 
 	// Creates an uninitialized cell with the given size
-	static StringCell* createUninitialized(std::uint32_t byteLength);
+	static StringCell* createUninitialized(World &world, std::uint32_t byteLength);
 
 	std::uint8_t *charPointer(std::uint8_t *scanFrom, std::uint32_t bytesLeft, uint32_t charOffset) const;
 	std::uint8_t *charPointer(std::uint32_t charOffset) const;
@@ -112,7 +112,7 @@ protected:
 	int compareCaseSensitive(const StringCell *other) const;
 	int compareCaseInsensitive(const StringCell *other) const;
 
-	StringCell *toConvertedString(UnicodeChar (UnicodeChar::* converter)() const) const;
+	StringCell *toConvertedString(World &world, UnicodeChar (UnicodeChar::* converter)() const) const;
 	
 	static size_t inlineDataSize();
 	bool dataIsInline() const;

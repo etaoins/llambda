@@ -34,7 +34,7 @@ protected:
 	{
 	}
 	
-	static SymbolCell* createUninitialized(std::uint32_t byteLength, std::uint32_t charLength);
+	static SymbolCell* createUninitialized(World &world, std::uint32_t byteLength, std::uint32_t charLength);
 
 	static size_t inlineDataSize();
 	bool dataIsInline() const;

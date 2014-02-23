@@ -8,7 +8,7 @@ using namespace lliby;
 extern "C"
 {
 
-const DatumCell *lliby_digit_value(UnicodeChar character)
+const DatumCell *lliby_digit_value(World &world, UnicodeChar character)
 {
 	UnicodeChar::DigitValue digitValue = character.digitValue();
 
@@ -18,7 +18,7 @@ const DatumCell *lliby_digit_value(UnicodeChar character)
 		return BooleanCell::falseInstance();
 	}
 
-	return ExactIntegerCell::fromValue(digitValue);
+	return ExactIntegerCell::fromValue(world, digitValue);
 }
 
 std::int32_t lliby_char_to_integer(UnicodeChar character)

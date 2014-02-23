@@ -34,9 +34,9 @@ bool lliby_symbol_equal(World &world, SymbolCell *value1, SymbolCell *value2, Li
 	return true;
 }
 
-StringCell *lliby_symbol_to_string(const SymbolCell *symbol)
+StringCell *lliby_symbol_to_string(World &world, const SymbolCell *symbol)
 {
-	return StringCell::fromSymbol(symbol);
+	return StringCell::fromSymbol(world, symbol);
 }
 
 SymbolCell *lliby_string_to_symbol(World &world, const StringCell *string)

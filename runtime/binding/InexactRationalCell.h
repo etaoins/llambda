@@ -3,6 +3,8 @@
 
 #include "NumericCell.h"
 
+#include "alloc/allocator.h"
+
 #include <cmath>
 #include <limits>
 
@@ -13,24 +15,28 @@ class InexactRationalCell : public NumericCell
 {
 #include "generated/InexactRationalCellMembers.h"
 public:
-	static InexactRationalCell* fromValue(double value)
+	static InexactRationalCell* fromValue(World &world, double value)
 	{
-		return new InexactRationalCell(value);
+		void *cellPlacement = alloc::allocateCells(world);
+		return new (cellPlacement) InexactRationalCell(value);
 	}
 	
-	static InexactRationalCell *NaN()
+	static InexactRationalCell *NaN(World &world)
 	{
-		return new InexactRationalCell(std::numeric_limits<double>::quiet_NaN());
+		void *cellPlacement = alloc::allocateCells(world);
+		return new (cellPlacement) InexactRationalCell(std::numeric_limits<double>::quiet_NaN());
 	}
 
-	static InexactRationalCell *positiveInfinity()
+	static InexactRationalCell *positiveInfinity(World &world)
 	{
-		return new InexactRationalCell(std::numeric_limits<double>::infinity());
+		void *cellPlacement = alloc::allocateCells(world);
+		return new (cellPlacement) InexactRationalCell(std::numeric_limits<double>::infinity());
 	}
 	
-	static InexactRationalCell *negativeInfinity()
+	static InexactRationalCell *negativeInfinity(World &world)
 	{
-		return new InexactRationalCell(-std::numeric_limits<double>::infinity());
+		void *cellPlacement = alloc::allocateCells(world);
+		return new (cellPlacement) InexactRationalCell(-std::numeric_limits<double>::infinity());
 	}
 
 	bool isNaN() const

@@ -6,6 +6,7 @@
 #include "SymbolCell.h"
 #include "BytevectorCell.h"
 
+#include "alloc/allocator.h"
 #include "alloc/StrongRef.h"
 
 namespace
@@ -159,15 +160,17 @@ namespace
 namespace lliby
 {
 	
-StringCell* StringCell::createUninitialized(std::uint32_t byteLength)
+StringCell* StringCell::createUninitialized(World &world, std::uint32_t byteLength)
 {
 	// We need 1 extra byte for the NULL terminator
 	std::int32_t minimumSize = byteLength + 1;
 
+	void *cellPlacement = alloc::allocateCells(world);
+
 	if (minimumSize <= inlineDataSize())
 	{
 		// We can fit this string inline
-		return new InlineStringCell(byteLength, 0);
+		return new (cellPlacement) InlineStringCell(byteLength, 0);
 	}
 	else
 	{
@@ -176,11 +179,11 @@ StringCell* StringCell::createUninitialized(std::uint32_t byteLength)
 
 		auto utf8Data = new std::uint8_t[minimumSize + allocSlackBytes];
 		
-		return new HeapStringCell(utf8Data, byteLength, 0, allocSlackBytes);
+		return new (cellPlacement) HeapStringCell(utf8Data, byteLength, 0, allocSlackBytes);
 	}
 }
 
-StringCell* StringCell::fromUtf8CString(const char *signedStr)
+StringCell* StringCell::fromUtf8CString(World &world, const char *signedStr)
 {
 	std::uint64_t byteLength = 0;
 	std::uint32_t charLength = 0;
@@ -210,7 +213,7 @@ StringCell* StringCell::fromUtf8CString(const char *signedStr)
 	}
 
 	// Allocate the new string
-	auto *newString = StringCell::createUninitialized(byteLength);
+	auto *newString = StringCell::createUninitialized(world, byteLength);
 
 	// Initialize it
 	newString->setCharLength(charLength);
@@ -219,10 +222,10 @@ StringCell* StringCell::fromUtf8CString(const char *signedStr)
 	return newString;
 }
 	
-StringCell* StringCell::fromUtf8Data(const std::uint8_t *data, std::uint32_t byteLength)
+StringCell* StringCell::fromUtf8Data(World &world, const std::uint8_t *data, std::uint32_t byteLength)
 {
 	std::uint32_t charLength = 0;
-	auto newString = StringCell::createUninitialized(byteLength);
+	auto newString = StringCell::createUninitialized(world, byteLength);
 
 	std::uint8_t *utf8Data = newString->utf8Data();
 
@@ -246,7 +249,7 @@ StringCell* StringCell::fromUtf8Data(const std::uint8_t *data, std::uint32_t byt
 	return newString;
 }
 	
-StringCell* StringCell::fromFill(std::uint32_t length, UnicodeChar fill)
+StringCell* StringCell::fromFill(World &world, std::uint32_t length, UnicodeChar fill)
 {
 	// Figure out how many bytes we'll need
 	std::vector<std::uint8_t> encoded = encodeUtf8Char(fill);
@@ -255,7 +258,7 @@ StringCell* StringCell::fromFill(std::uint32_t length, UnicodeChar fill)
 	const std::uint32_t byteLength = encodedCharSize * length;
 
 	// Allocate the string
-	auto newString = StringCell::createUninitialized(byteLength);
+	auto newString = StringCell::createUninitialized(world, byteLength);
 	newString->setCharLength(length);
 
 	std::uint8_t *utf8Data = newString->utf8Data();
@@ -293,7 +296,7 @@ StringCell* StringCell::fromAppended(World &world, std::vector<StringCell*> &str
 	alloc::StrongRefRange<StringCell> inputRoots(world, strings);
 
 	// Allocate the new string and null terminate it
-	auto newString = StringCell::createUninitialized(totalByteLength);
+	auto newString = StringCell::createUninitialized(world, totalByteLength);
 	newString->setCharLength(totalCharLength);
 
 	std::uint8_t *copyPtr = newString->utf8Data();
@@ -310,7 +313,7 @@ StringCell* StringCell::fromAppended(World &world, std::vector<StringCell*> &str
 	return newString;
 }
 	
-StringCell* StringCell::fromUnicodeChars(const std::vector<UnicodeChar> &unicodeChars)
+StringCell* StringCell::fromUnicodeChars(World &world, const std::vector<UnicodeChar> &unicodeChars)
 {
 	std::vector<std::uint8_t> encodedData;
 	std::uint32_t charLength = 0;
@@ -329,7 +332,7 @@ StringCell* StringCell::fromUnicodeChars(const std::vector<UnicodeChar> &unicode
 	const std::uint32_t totalByteLength = encodedData.size();
 
 	// Create a new string to write in to
-	auto newString = StringCell::createUninitialized(totalByteLength);
+	auto newString = StringCell::createUninitialized(world, totalByteLength);
 	newString->setCharLength(charLength);
 
 	std::uint8_t *utf8Data = newString->utf8Data();
@@ -341,10 +344,10 @@ StringCell* StringCell::fromUnicodeChars(const std::vector<UnicodeChar> &unicode
 	return newString;
 }
 
-StringCell* StringCell::fromSymbol(const SymbolCell *symbol)
+StringCell* StringCell::fromSymbol(World &world, const SymbolCell *symbol)
 {
 	// Create the new string
-	auto newString = StringCell::createUninitialized(symbol->byteLength());
+	auto newString = StringCell::createUninitialized(world, symbol->byteLength());
 	newString->setCharLength(symbol->charLength());
 
 	std::uint8_t *newUtf8Data = newString->utf8Data();
@@ -674,7 +677,7 @@ StringCell* StringCell::copy(World &world, std::int64_t start, std::int64_t end)
 	const std::uint32_t newByteLength = range.byteCount();
 
 	// Create the new string
-	auto newString = StringCell::createUninitialized(newByteLength);
+	auto newString = StringCell::createUninitialized(world, newByteLength);
 	newString->setCharLength(range.charCount);
 	
 	if (thisRef->dataIsInline() && (oldThis != thisRef.data()))
@@ -832,7 +835,7 @@ SymbolCell* StringCell::toSymbol(World &world) const
 	return SymbolCell::fromString(world, const_cast<StringCell*>(this));
 }
 	
-BytevectorCell* StringCell::toUtf8Bytevector(std::int64_t start, std::int64_t end) const
+BytevectorCell* StringCell::toUtf8Bytevector(World &world, std::int64_t start, std::int64_t end) const
 {
 	CharRange range = charRange(start, end);
 
@@ -845,10 +848,10 @@ BytevectorCell* StringCell::toUtf8Bytevector(std::int64_t start, std::int64_t en
 	auto *newData = new std::uint8_t[newLength];
 
 	memcpy(newData, range.startPointer, newLength);
-	return new BytevectorCell(newData, newLength);
+	return BytevectorCell::fromOwnedData(world, newData, newLength);
 }
 	
-StringCell *StringCell::toConvertedString(UnicodeChar (UnicodeChar::* converter)() const) const
+StringCell *StringCell::toConvertedString(World &world, UnicodeChar (UnicodeChar::* converter)() const) const
 {
 	std::vector<std::uint8_t> convertedData;
 
@@ -880,7 +883,7 @@ StringCell *StringCell::toConvertedString(UnicodeChar (UnicodeChar::* converter)
 	// The GC can invalidate our "this" pointer so save this before calling createUninitialized
 	const std::uint32_t newCharLength(charLength());
 
-	auto newString = StringCell::createUninitialized(totalByteLength);
+	auto newString = StringCell::createUninitialized(world, totalByteLength);
 
 	// Initialize the string from the std::vector contents
 	newString->setCharLength(newCharLength);
@@ -892,19 +895,19 @@ StringCell *StringCell::toConvertedString(UnicodeChar (UnicodeChar::* converter)
 	return newString;
 }
 
-StringCell* StringCell::toUppercaseString() const
+StringCell* StringCell::toUppercaseString(World &world) const
 {
-	return toConvertedString(&UnicodeChar::toUppercase);
+	return toConvertedString(world, &UnicodeChar::toUppercase);
 }
 
-StringCell* StringCell::toLowercaseString() const
+StringCell* StringCell::toLowercaseString(World &world) const
 {
-	return toConvertedString(&UnicodeChar::toLowercase);
+	return toConvertedString(world, &UnicodeChar::toLowercase);
 }
 
-StringCell* StringCell::toCaseFoldedString() const
+StringCell* StringCell::toCaseFoldedString(World &world) const
 {
-	return toConvertedString(&UnicodeChar::toCaseFolded);
+	return toConvertedString(world, &UnicodeChar::toCaseFolded);
 }
 
 void StringCell::finalizeString()

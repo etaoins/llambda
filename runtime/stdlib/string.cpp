@@ -10,9 +10,9 @@ using namespace lliby;
 extern "C"
 {
 
-StringCell *lliby_make_string(std::uint32_t length, UnicodeChar fill)
+StringCell *lliby_make_string(World &world, std::uint32_t length, UnicodeChar fill)
 {
-	return StringCell::fromFill(length, fill);
+	return StringCell::fromFill(world, length, fill);
 }
 
 StringCell *lliby_string(World &world, ListElementCell *argHead)
@@ -32,7 +32,7 @@ StringCell *lliby_string(World &world, ListElementCell *argHead)
 		unicodeCharList.push_back(charCell->unicodeChar());
 	}
 
-	return StringCell::fromUnicodeChars(unicodeCharList);
+	return StringCell::fromUnicodeChars(world, unicodeCharList);
 }
 
 std::uint32_t lliby_string_length(const StringCell *string)

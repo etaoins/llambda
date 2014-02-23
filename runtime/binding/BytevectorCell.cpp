@@ -1,6 +1,8 @@
 #include "BytevectorCell.h"
 #include "StringCell.h"
 
+#include "alloc/allocator.h"
+
 #include <limits>
 #include <string.h>
 
@@ -28,24 +30,30 @@ namespace
 
 namespace lliby
 {
+
+BytevectorCell* BytevectorCell::fromOwnedData(World &world, std::uint8_t *data, std::uint32_t length)
+{
+	void *cellPlacement = alloc::allocateCells(world);
+	return new (cellPlacement) BytevectorCell(data, length);
+}
 	
-BytevectorCell* BytevectorCell::fromUnownedData(const std::uint8_t *data, std::uint32_t length)
+BytevectorCell* BytevectorCell::fromUnownedData(World &world, const std::uint8_t *data, std::uint32_t length)
 {
 	auto newData = new std::uint8_t[length];
 	memcpy(newData, data, length);
 
-	return new BytevectorCell(newData, length);
+	return BytevectorCell::fromOwnedData(world, newData, length);
 }
 	
-BytevectorCell* BytevectorCell::fromFill(std::uint32_t length, std::uint8_t fill)
+BytevectorCell* BytevectorCell::fromFill(World &world, std::uint32_t length, std::uint8_t fill)
 {
 	auto newData = new std::uint8_t[length];
 	memset(newData, fill, length);
 
-	return new BytevectorCell(newData, length);
+	return BytevectorCell::fromOwnedData(world, newData, length);
 }
 	
-BytevectorCell* BytevectorCell::fromAppended(const std::list<const BytevectorCell*> &byteVectors)
+BytevectorCell* BytevectorCell::fromAppended(World &world, const std::list<const BytevectorCell*> &byteVectors)
 {
 	std::uint64_t totalLength = 0;
 
@@ -68,10 +76,10 @@ BytevectorCell* BytevectorCell::fromAppended(const std::list<const BytevectorCel
 		copyPtr += byteVector->length();
 	}
 
-	return new BytevectorCell(newData, totalLength);
+	return BytevectorCell::fromOwnedData(world, newData, totalLength);
 }
 	
-BytevectorCell* BytevectorCell::copy(std::int64_t start, std::int64_t end)
+BytevectorCell* BytevectorCell::copy(World &world, std::int64_t start, std::int64_t end)
 {
 	if (!adjustRange(start, end, length()))
 	{
@@ -83,7 +91,7 @@ BytevectorCell* BytevectorCell::copy(std::int64_t start, std::int64_t end)
 
 	memcpy(newData, &data()[start], newLength);
 
-	return new BytevectorCell(newData, newLength);
+	return BytevectorCell::fromOwnedData(world, newData, newLength);
 }
 	
 bool BytevectorCell::replace(std::uint32_t offset, const BytevectorCell *from, std::int64_t fromStart, std::int64_t fromEnd)
@@ -105,14 +113,14 @@ bool BytevectorCell::replace(std::uint32_t offset, const BytevectorCell *from, s
 	return true;
 }
 	
-StringCell* BytevectorCell::utf8ToString(std::int64_t start, std::int64_t end)
+StringCell* BytevectorCell::utf8ToString(World &world, std::int64_t start, std::int64_t end)
 {
 	if (!adjustRange(start, end, length()))
 	{
 		return nullptr;
 	}
 
-	return StringCell::fromUtf8Data(&data()[start], end - start);
+	return StringCell::fromUtf8Data(world, &data()[start], end - start);
 }
 
 void BytevectorCell::finalizeBytevector()

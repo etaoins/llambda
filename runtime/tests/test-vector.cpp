@@ -32,7 +32,7 @@ void testFromFill(World &world)
 	}
 	
 	{
-		alloc::StrongRef<StringCell> testString(world, StringCell::fromUtf8CString(u8"Hello!"));
+		alloc::StrongRef<StringCell> testString(world, StringCell::fromUtf8CString(world, u8"Hello!"));
 		VectorCell *stringVector  = VectorCell::fromFill(world, 4, testString);
 
 		ASSERT_EQUAL(stringVector->length(), 4);
@@ -44,13 +44,13 @@ void testFromFill(World &world)
 
 void testFromAppended(World &world)
 {
-	alloc::StrongRef<StringCell> string1(world, StringCell::fromUtf8CString(u8"One"));
+	alloc::StrongRef<StringCell> string1(world, StringCell::fromUtf8CString(world, u8"One"));
 	alloc::StrongRef<VectorCell> vector1(world, VectorCell::fromFill(world, 3, string1));
 
-	alloc::StrongRef<StringCell> string2(world, StringCell::fromUtf8CString(u8"Two"));
+	alloc::StrongRef<StringCell> string2(world, StringCell::fromUtf8CString(world, u8"Two"));
 	alloc::StrongRef<VectorCell> vector2(world, VectorCell::fromFill(world, 1, string2));
 
-	alloc::StrongRef<StringCell> string3(world, StringCell::fromUtf8CString(u8"Three"));
+	alloc::StrongRef<StringCell> string3(world, StringCell::fromUtf8CString(world, u8"Three"));
 	alloc::StrongRef<VectorCell> vector3(world, VectorCell::fromFill(world, 3, string3));
 
 	{
@@ -82,7 +82,7 @@ void testFromAppended(World &world)
 
 void testSetElement(World &world)
 {
-	StringCell *testString = StringCell::fromUtf8CString(u8"Test");
+	StringCell *testString = StringCell::fromUtf8CString(world, u8"Test");
 	VectorCell *testVector  = VectorCell::fromFill(world, 5);
 
 	ASSERT_EQUAL(testVector->elementAt(0), UnitCell::instance());
@@ -102,7 +102,7 @@ void testCopy(World &world)
 
 	for(unsigned int i = 0; i < 5; i++)
 	{
-		StringCell *newString = StringCell::fromUtf8CString("TEST");
+		StringCell *newString = StringCell::fromUtf8CString(world, "TEST");
 		testVector->setElementAt(i, newString);
 	}
 
@@ -150,7 +150,7 @@ void testReplace(World &world)
 
 	for(unsigned int i = 0; i < 5; i++)
 	{
-		StringCell *newString = StringCell::fromUtf8CString("TEST");
+		StringCell *newString = StringCell::fromUtf8CString(world, "TEST");
 		fromVector->setElementAt(i, newString);
 	}
 	
@@ -160,14 +160,14 @@ void testReplace(World &world)
 
 	for(unsigned int i = 0; i < 5; i++)
 	{
-		destElements[i] = StringCell::fromUtf8CString("TEST");
+		destElements[i] = StringCell::fromUtf8CString(world, "TEST");
 	}
 
 	{
 		alloc::StrongRef<VectorCell> toVector(world, VectorCell::fromFill(world, 5)); 
 		for(unsigned int i = 0; i < 5; i++)
 		{
-			StringCell *newString = StringCell::fromUtf8CString("TEST");
+			StringCell *newString = StringCell::fromUtf8CString(world, "TEST");
 			toVector->setElementAt(i, newString);
 		}
 
@@ -184,7 +184,7 @@ void testReplace(World &world)
 		alloc::StrongRef<VectorCell> toVector(world, VectorCell::fromFill(world, 5)); 
 		for(unsigned int i = 0; i < 5; i++)
 		{
-			StringCell *newString = StringCell::fromUtf8CString("TEST");
+			StringCell *newString = StringCell::fromUtf8CString(world, "TEST");
 			toVector->setElementAt(i, newString);
 		}
 
@@ -296,8 +296,8 @@ void testReplace(World &world)
 
 void testFill(World &world)
 {
-	alloc::StrongRef<StringCell> originalElement(world, StringCell::fromUtf8CString("One"));
-	alloc::StrongRef<StringCell> fillElement(world, StringCell::fromUtf8CString("Two"));
+	alloc::StrongRef<StringCell> originalElement(world, StringCell::fromUtf8CString(world, "One"));
+	alloc::StrongRef<StringCell> fillElement(world, StringCell::fromUtf8CString(world, "Two"));
 
 	{
 		VectorCell *testVector = VectorCell::fromFill(world, 5, originalElement);

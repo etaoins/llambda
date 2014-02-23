@@ -17,11 +17,6 @@ class DatumCell
 {
 #include "generated/DatumCellMembers.h"
 public:
-	void *operator new(std::size_t size)
-	{
-		return alloc::allocateCells(1);
-	}
-
 	void *operator new(size_t s, void *placement)
 	{
 		return placement;

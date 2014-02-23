@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "alloc/StrongRef.h"
+#include "alloc/allocator.h"
 
 namespace
 {
@@ -47,12 +48,22 @@ bool VectorCell::fill(DatumCell *fill, std::int64_t start, std::int64_t end)
 	return true;
 }
 	
+VectorCell* VectorCell::fromElements(World &world, DatumCell **elements, std::uint32_t length)
+{
+	// Make sure our elements array is GC rooted for the next allocation
+	alloc::StrongRefRange<DatumCell> newElementsRoot(world, elements, length);
+
+	void *cellPlacement = alloc::allocateCells(world);
+	return new (cellPlacement) VectorCell(elements, length);
+}
+	
 VectorCell* VectorCell::fromFill(World &world, std::uint32_t length, DatumCell *fill)
 {
 	alloc::StrongRef<DatumCell> fillRef(world, fill);
 	auto newElements = new DatumCell*[length];
 
-	auto newVector = new VectorCell(newElements, length);
+	void *cellPlacement = alloc::allocateCells(world);
+	auto newVector = new (cellPlacement) VectorCell(newElements, length);
 
 	if (fillRef.isNull())
 	{
@@ -91,7 +102,9 @@ VectorCell* VectorCell::fromAppended(World &world, const std::vector<const Vecto
 
 	// Root our elements in case allocating the vector cell triggers GC
 	alloc::StrongRefRange<DatumCell> newElementsRoot(world, newElements, totalLength);
-	return new VectorCell(newElements, totalLength);
+	
+	void *cellPlacement = alloc::allocateCells(world);
+	return new (cellPlacement) VectorCell(newElements, totalLength);
 }
 
 VectorCell* VectorCell::copy(World &world, std::int64_t start, std::int64_t end)
@@ -107,7 +120,9 @@ VectorCell* VectorCell::copy(World &world, std::int64_t start, std::int64_t end)
 	memcpy(newElements, &elements()[start], newLength * sizeof(DatumCell*));
 
 	alloc::StrongRefRange<DatumCell> newElementsRoot(world, newElements, newLength);
-	return new VectorCell(newElements, newLength);
+	
+	void *cellPlacement = alloc::allocateCells(world);
+	return new (cellPlacement) VectorCell(newElements, newLength);
 }
 
 bool VectorCell::replace(std::uint32_t offset, const VectorCell *from, std::int64_t fromStart, std::int64_t fromEnd)
