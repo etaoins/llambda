@@ -4,14 +4,12 @@
 @lliby_true_value = external constant %boolean
 @lliby_empty_list_value = external constant %emptyList
 
-; These are defined in alloc/allocator.cpp in our runtime
-; They define the interface to our memory allocator
 %cell = type {%pair}
-
-@_lliby_alloc_next = external global %cell*
-@_lliby_alloc_end = external global %cell*
 
 ; LLVM intrinsics
 declare i1 @llvm.expect.i1(i1, i1)
 
-%world = type {}
+!0 = metadata !{ metadata !"World::allocNext" }
+!1 = metadata !{ metadata !"World::allocEnd" }
+; {allocNext, allocEnd}
+%world = type {%cell*, %cell*}

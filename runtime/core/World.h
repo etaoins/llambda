@@ -15,6 +15,7 @@ namespace alloc
 {
 
 class MemoryBlock;
+class AllocCell;
 class CellRefRangeList;
 
 }
@@ -24,12 +25,20 @@ class World
 public:
 	static void launchWorld(void (*entryPoint)(World &));
 
+	//
 	// This is the public section of World
 	// Generated code can access these fields directly
 	// Any changes to the content, size or order of these fields will require codegen changes
+	//
 	
+	alloc::AllocCell *allocNext;
+	alloc::AllocCell *allocEnd;
+
+	//
 	// This is the private section of World
 	// This is only used internally by the runtime
+	//
+	
 	dynamic::State *activeState;
 
 	// These are lists of strong and weak refs in the current world

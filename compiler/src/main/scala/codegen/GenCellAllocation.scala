@@ -8,10 +8,6 @@ object GenCellAllocation {
   private val cellType = UserDefinedType("cell")
   private val cellPointerType = PointerType(cellType)
   
-  // Note these are pointers-to-pointers
-  private val llibyAllocNext = GlobalVariable("_lliby_alloc_next", PointerType(cellPointerType))
-  private val llibyAllocEnd = GlobalVariable("_lliby_alloc_end", PointerType(cellPointerType))
-
   private val llibyAllocCells = IrFunctionDecl(
     result=Result(cellPointerType),
     name="_lliby_alloc_cells",
@@ -41,10 +37,10 @@ object GenCellAllocation {
 
     // Load the pointer to our allocation start
     // This is our allocation unless we run out of memory
-    val directAllocValue = startBlock.load("directAlloc")(llibyAllocNext)
+    val directAllocValue = WorldValue.genLoadFromAllocNext(startBlock)(worldPtrIr)
     
     // Load the pointer to our allocation end value
-    val allocEndValue = startBlock.load("allocEnd")(llibyAllocEnd)
+    val allocEndValue = WorldValue.genLoadFromAllocEnd(startBlock)(worldPtrIr)
 
     // Add our allocation count on to our allocation
     val newAllocNextValue = startBlock.getelementptr("newAllocNext")(cellType, directAllocValue, List(allocCountValue))
@@ -63,7 +59,7 @@ object GenCellAllocation {
     startBlock.condBranch(expectedPred, directSuccessBlock, collectGarbageBlock)
 
     // In the direct alloc block store our new start pointer
-    directSuccessBlock.store(newAllocNextValue, llibyAllocNext)
+    WorldValue.genStoreToAllocNext(directSuccessBlock)(newAllocNextValue, worldPtrIr)
     directSuccessBlock.uncondBranch(allocFinishedBlock)
 
     // In the garage collection block first save our GC roots
@@ -105,7 +101,7 @@ object GenCellAllocation {
     ), allocation)
   }
   
-  def genDeallocation(state : GenerationState) {
+  def genDeallocation(state : GenerationState)(worldPtrIr : IrValue) {
     // How many cells were left in the allocation?
     val remainingCells = state.currentAllocation.remainingCells
 
@@ -114,14 +110,14 @@ object GenCellAllocation {
       block.comment(s"Rolling back allocation of ${remainingCells} cells")
 
       // Load the pointer to our allocation end value
-      val allocNextValue = block.load("prevAllocNext")(llibyAllocNext)
+      val allocNextValue = WorldValue.genLoadFromAllocNext(block)(worldPtrIr)
 
       // Subtract the cells we haven't used
       val allocationDeltaIr = IntegerConstant(IntegerType(64), -remainingCells)
       val newAllocNextValue = block.getelementptr("newAllocNext")(cellType, allocNextValue, List(allocationDeltaIr))
       
       // Store the new next pointer
-      block.store(newAllocNextValue, llibyAllocNext)
+      WorldValue.genStoreToAllocNext(block)(newAllocNextValue, worldPtrIr)
     }
   }
 }

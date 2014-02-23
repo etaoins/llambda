@@ -21,11 +21,6 @@ using lliby::alloc::AllocCell;
 
 // These are used directly by generated code to avoid function call overhead
 
-// Pointer to the next cell to be allocated
-AllocCell *_lliby_alloc_next = nullptr;
-// Pointer to the end of the last available allocation cell
-AllocCell *_lliby_alloc_end = nullptr;
-
 void *_lliby_alloc_cells(lliby::World &world, std::uint64_t count)
 {
 	return lliby::alloc::allocateCells(world, count);
@@ -61,7 +56,7 @@ void shutdownWorld(World &world)
 	// Do one last collection at shutdown
 	forceCollection(world);
 
-	if (static_cast<void*>(_lliby_alloc_next) != world.activeAllocBlock->startPointer())
+	if (static_cast<void*>(world.allocNext) != world.activeAllocBlock->startPointer())
 	{
 		std::cerr << "Cells leaked on exit!" << std::endl;
 		exit(-1);
@@ -71,10 +66,10 @@ void shutdownWorld(World &world)
     
 void *allocateCells(World &world, size_t count)
 {
-	AllocCell *allocation = _lliby_alloc_next;
+	AllocCell *allocation = world.allocNext;
 	AllocCell *newAllocNext = allocation + count;
 
-	if (newAllocNext > _lliby_alloc_end)
+	if (newAllocNext > world.allocEnd)
 	{
 		// Our allocation goes past the end - collect garbage
 		if (!forceCollection(world, count))
@@ -84,7 +79,7 @@ void *allocateCells(World &world, size_t count)
 		}
 	
 		// If forceCollection() returned true this must succeed
-		allocation = _lliby_alloc_next;
+		allocation = world.allocNext;
 		newAllocNext = allocation + count;
 	}
 
@@ -95,7 +90,7 @@ void *allocateCells(World &world, size_t count)
 	}
 
 	// Start allocating past the end of this allocation
-	_lliby_alloc_next = newAllocNext;
+	world.allocNext = newAllocNext;
 
 	return allocation;
 }
@@ -123,10 +118,10 @@ bool forceCollection(World &world, size_t reserveCount)
 	if (oldBlock != nullptr)
 	{
 		// This indicates the end of the allocated cell range
-		auto oldAllocNext = _lliby_alloc_next;
+		auto oldAllocNext = world.allocNext;
 
 		// Garbage collect if this isn't our first allocation
-		_lliby_alloc_next = static_cast<AllocCell*>(alloc::collect(world, oldBlock->startPointer(), oldAllocNext, newBlock->startPointer()));
+		world.allocNext = static_cast<AllocCell*>(alloc::collect(world, oldBlock->startPointer(), oldAllocNext, newBlock->startPointer()));
 
 #ifndef _LLIBY_NO_ADDR_REUSE
 		// Finalize the block asynchronously
@@ -139,7 +134,7 @@ bool forceCollection(World &world, size_t reserveCount)
 	else 
 	{
 		// No previous allocation; we can start at the beginning of the block
-		_lliby_alloc_next = static_cast<AllocCell*>(newBlock->startPointer());
+		world.allocNext = static_cast<AllocCell*>(newBlock->startPointer());
 	}
 
 	// Set up the new pointers
@@ -147,16 +142,16 @@ bool forceCollection(World &world, size_t reserveCount)
 	world.activeAllocBlock = newBlock;
 
 #ifndef _LLIBY_ALWAYS_GC
-	_lliby_alloc_end = semiSpaceEnd;
+	world.allocEnd = semiSpaceEnd;
 	
 	// Make sure the reserved space will fit 
-	return (_lliby_alloc_next + reserveCount) <= _lliby_alloc_end;
+	return (world.allocNext + reserveCount) <= world.allocEnd;
 #else	
 	// This will trigger the GC again on the next allocation. This will break GC unsafe code at every allocation point
 	// which is useful for shaking out bugs.
-	_lliby_alloc_end = _lliby_alloc_next + reserveCount;
+	world.allocEnd = world.allocNext + reserveCount;
 
-	return _lliby_alloc_end <= semiSpaceEnd;
+	return world.allocEnd <= semiSpaceEnd;
 #endif
 }
 

@@ -39,7 +39,7 @@ object GenErrorSignal {
     }
 
     // Unwind any partial allocations we have
-    GenCellAllocation.genDeallocation(state)
+    GenCellAllocation.genDeallocation(state)(worldPtr)
 
     // Build our evidence - assume it's a datum cell
     val evidencePtr = evidence.map(
