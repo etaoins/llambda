@@ -44,10 +44,10 @@ object PlanCellAllocations {
         steps=steps
       )
 
-    case (barrier : ps.GcBarrier) :: tailSteps =>
-      // We can't keep uninitialized cells across a GC barrier
+    case allocatingStep :: tailSteps if allocatingStep.canAllocate =>
+      // We can't keep uninitialized cells across an allocation
       // Abort and switch back to searching
-      val steps = findNextConsumer(worldPtr, barrier :: tailSteps)
+      val steps = findNextConsumer(worldPtr, allocatingStep :: tailSteps)
       
       MergeAllResult(
         requiredSize=consumedCells,

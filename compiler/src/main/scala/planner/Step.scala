@@ -27,14 +27,14 @@ object GcUnmanagedValue {
 sealed trait Step {
   val inputValues : Set[TempValue]
   val outputValues : Set[TempValue]
-}
 
-/** Indicates a step that can trigger a GC allocation
-  *
-  * This means the heap state has to be fully in sync - we can have no
-  * allocated but uninitialized conses, etc.
-  */
-sealed trait GcBarrier extends Step
+  /** Indicates a step that can trigger a GC allocation
+   *
+   * This means the heap state has to be fully in sync - we can have no
+   * allocated but uninitialized conses, etc.
+   */
+  def canAllocate : Boolean = false
+}
 
 /** Step requiring a cell from a temporary allocation */
 sealed trait CellConsumer extends Step {
@@ -76,25 +76,30 @@ case class InvokeArgument(
   *
   * Entry points can be loaded with StoreNamedEntryPoint
   */
-case class Invoke(result : Option[TempValue], signature : ProcedureSignature, entryPoint : TempValue, arguments : List[InvokeArgument]) extends Step with GcBarrier {
+case class Invoke(result : Option[TempValue], signature : ProcedureSignature, entryPoint : TempValue, arguments : List[InvokeArgument]) extends Step {
   lazy val inputValues = arguments.map(_.tempValue).toSet + entryPoint
   lazy val outputValues = result.toSet
+
+  // The world arg is required for allocations
+  override def canAllocate = signature.hasWorldArg
 }
 
 /** Allocates a given number of cells at runtime 
  *
  * This should only be inserted in to the plan by PlanCellAllocations
  */
-case class AllocateCells(worldPtr : WorldPtrValue, count : Int) extends Step with GcBarrier {
+case class AllocateCells(worldPtr : WorldPtrValue, count : Int) extends Step {
   val inputValues = Set[TempValue](worldPtr)
   val outputValues = Set[TempValue]()
+
+  override def canAllocate = true
 }
 
 /** Permanently forgets about a temp value
   *
   * Referencing a TempValue after DisposeValue has been called will fail at
   * compile time. Disposing a GC managed value will allow it to be garbage
-  * collected at the next GcBarrier if there are no other references to it
+  * collected at the next allocaion if there are no other references to it
   */
 case class DisposeValue(value : TempValue) extends Step {
   lazy val inputValues = Set[TempValue](value)
