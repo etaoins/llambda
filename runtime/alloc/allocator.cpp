@@ -47,19 +47,19 @@ namespace
 	Finalizer *finalizer = nullptr;
 }
 
-void init()
+void init(World &world)
 {
 	// This will create our initial semispace
-	forceCollection();
+	forceCollection(world);
 
 	finalizer = new Finalizer();
 }
 
-void shutdown()
+void shutdown(World &world)
 {
 #ifdef _LLIBY_ALWAYS_GC
 	// Do one last collection at shutdown
-	forceCollection();
+	forceCollection(world);
 
 	if (static_cast<void*>(_lliby_alloc_next) != activeBlock->startPointer())
 	{
@@ -69,7 +69,7 @@ void shutdown()
 #endif
 }
     
-void *allocateCells(World &, size_t count)
+void *allocateCells(World &world, size_t count)
 {
 	AllocCell *allocation = _lliby_alloc_next;
 	AllocCell *newAllocNext = allocation + count;
@@ -77,7 +77,7 @@ void *allocateCells(World &, size_t count)
 	if (newAllocNext > _lliby_alloc_end)
 	{
 		// Our allocation goes past the end - collect garbage
-		if (!forceCollection(count))
+		if (!forceCollection(world, count))
 		{
 			std::cerr << "GC space exhausted" << std::endl;
 			exit(-2);
@@ -108,7 +108,7 @@ RangeAlloc allocateRange(World &world, size_t count)
 	return RangeAlloc(start, end);
 }
 
-bool forceCollection(size_t reserveCount)
+bool forceCollection(World &world, size_t reserveCount)
 {
 	// Directly allocate memory from the kernel
 	MemoryBlock *oldBlock = activeBlock;
@@ -126,7 +126,7 @@ bool forceCollection(size_t reserveCount)
 		auto oldAllocNext = _lliby_alloc_next;
 
 		// Garbage collect if this isn't our first allocation
-		_lliby_alloc_next = static_cast<AllocCell*>(alloc::collect(oldBlock->startPointer(), oldAllocNext, newBlock->startPointer()));
+		_lliby_alloc_next = static_cast<AllocCell*>(alloc::collect(world, oldBlock->startPointer(), oldAllocNext, newBlock->startPointer()));
 
 #ifndef _LLIBY_NO_ADDR_REUSE
 		// Finalize the block asynchronously

@@ -105,12 +105,8 @@ namespace
 	};
 }
 
-void* collect(void *fromBase, void *fromEnd, void *toBase)
+void* collect(World &world, void *fromBase, void *fromEnd, void *toBase)
 {
-	// XXX: Eventually this will have the current world pointer passed in to
-	// allow multithreading etc. For now hack it so it works
-	World &world = World::activeWorld();
-
 	// This needs to be an AllocCell so ++ works correctly
 	auto nextNewCell = static_cast<AllocCell*>(toBase);
 

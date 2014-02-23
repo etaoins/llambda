@@ -3,10 +3,12 @@
 
 namespace lliby
 {
+class World;
+
 namespace alloc
 {
 
-void* collect(void *fromBase, void *fromEnd, void *toBase);
+void* collect(World &world, void *fromBase, void *fromEnd, void *toBase);
 
 }
 }

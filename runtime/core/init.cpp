@@ -1,7 +1,5 @@
 #include <clocale>
 
-#include "alloc/allocator.h"
-
 #include "core/init.h"
 #include "dynamic/init.h"
 
@@ -15,8 +13,6 @@ void lliby_init()
 	// We assume a UTF-8 locale but don't explicitly set "UTF-8" so we still
 	// get user-defined string sorting etc.
 	std::setlocale(LC_ALL, "");
-
-	alloc::init();
 	dynamic::init();
 }
 

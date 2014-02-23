@@ -35,8 +35,6 @@ public:
 	alloc::CellRefRangeList *strongRefs;
 	alloc::CellRefRangeList *weakRefs;
 
-	static World& activeWorld();
-
 private:
 	World();
 	~World();

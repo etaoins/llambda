@@ -3,19 +3,13 @@
 #include "core/error.h"
 
 #include "alloc/CellRefRangeList.h"
+#include "alloc/allocator.h"
 
 #include "dynamic/State.h"
 #include "dynamic/SchemeException.h"
 #include "dynamic/State.h"
 
 using namespace lliby;
-
-namespace
-{
-
-World *currentActiveWorld = nullptr;
-
-}
 
 namespace lliby
 {
@@ -34,17 +28,11 @@ World::~World()
 	delete weakRefs;
 }
 
-World& World::activeWorld()
-{
-	return *currentActiveWorld;
-}
-
 void World::launchWorld(void (*entryPoint)(World &))
 {
 	World world;
 
-	// XXX: Remove me
-	currentActiveWorld = &world;
+	alloc::init(world);
 
 	try
 	{
@@ -58,10 +46,7 @@ void World::launchWorld(void (*entryPoint)(World &))
 	}
 	
 	dynamic::State::popAllStates(world);
-	alloc::shutdown();
-
-	// XXX: Remove me
-	currentActiveWorld = nullptr;
+	alloc::shutdown(world);
 }
 
 }

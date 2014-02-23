@@ -12,8 +12,8 @@ namespace alloc
 
 class RangeAlloc;
 
-void init();
-void shutdown();
+void init(World &world);
+void shutdown(World &world);
 
 /**
  * Allocator for DatumCells
@@ -24,7 +24,7 @@ RangeAlloc allocateRange(World &, size_t count);
 /**
  * Forces a major GC collection
  */
-bool forceCollection(size_t reserveCount = 0);
+bool forceCollection(World &world, size_t reserveCount = 0);
 
 }
 }

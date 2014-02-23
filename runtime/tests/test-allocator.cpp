@@ -40,7 +40,7 @@ void testNonRecursiveGc(World &world, Function &&constructor)
 		// This should be allocated now
 		ASSERT_FALSE(weakCell.isNull());
 
-		alloc::forceCollection();
+		alloc::forceCollection(world);
 
 		// Now it should be unallocated
 		ASSERT_TRUE(weakCell.isNull());
@@ -54,7 +54,7 @@ void testNonRecursiveGc(World &world, Function &&constructor)
 		// This should be allocated now
 		ASSERT_FALSE(weakCell.isNull());
 		
-		alloc::forceCollection();
+		alloc::forceCollection(world);
 
 		// This should still be allocated
 		ASSERT_FALSE(weakCell.isNull());
@@ -97,7 +97,7 @@ void testPairGc(World &world)
 		// Root the head of the list
 		alloc::StrongRef<PairCell> rootingRef(world, pairA);
 
-		alloc::forceCollection();
+		alloc::forceCollection(world);
 
 		ASSERT_FALSE(pairA.isNull());
 		ASSERT_FALSE(valueA.isNull());
@@ -113,7 +113,7 @@ void testPairGc(World &world)
 		// Root the middle of the list
 		alloc::StrongRef<PairCell> rootingRef(world, pairB);
 
-		alloc::forceCollection();
+		alloc::forceCollection(world);
 
 		ASSERT_TRUE(pairA.isNull());
 		ASSERT_TRUE(valueA.isNull());
@@ -129,7 +129,7 @@ void testPairGc(World &world)
 		// Root the end of the list
 		alloc::StrongRef<PairCell> rootingRef(world, pairC);
 
-		alloc::forceCollection();
+		alloc::forceCollection(world);
 
 		ASSERT_TRUE(pairA.isNull());
 		ASSERT_TRUE(valueA.isNull());
@@ -143,7 +143,7 @@ void testPairGc(World &world)
 
 	{
 		// Root nothihg
-		alloc::forceCollection();
+		alloc::forceCollection(world);
 		
 		ASSERT_TRUE(pairA.isNull());
 		ASSERT_TRUE(valueA.isNull());
@@ -184,7 +184,7 @@ void testVectorGc(World &world)
 	testVec->setElementAt(2, value2);
 
 	{
-		alloc::forceCollection();
+		alloc::forceCollection(world);
 
 		ASSERT_FALSE(value0.isNull());
 		ASSERT_FALSE(value1.isNull());
@@ -195,7 +195,7 @@ void testVectorGc(World &world)
 		// Remove value0
 		testVec->setElementAt(0, EmptyList);
 
-		alloc::forceCollection();
+		alloc::forceCollection(world);
 
 		ASSERT_TRUE(value0.isNull());
 		ASSERT_FALSE(value1.isNull());
@@ -206,7 +206,7 @@ void testVectorGc(World &world)
 		// Remove value1
 		testVec->setElementAt(1, EmptyList);
 
-		alloc::forceCollection();
+		alloc::forceCollection(world);
 
 		ASSERT_TRUE(value0.isNull());
 		ASSERT_TRUE(value1.isNull());
@@ -217,7 +217,7 @@ void testVectorGc(World &world)
 		// Remove value2
 		testVec->setElementAt(2, EmptyList);
 
-		alloc::forceCollection();
+		alloc::forceCollection(world);
 
 		ASSERT_TRUE(value0.isNull());
 		ASSERT_TRUE(value1.isNull());
@@ -261,7 +261,7 @@ void testRecordLikeGc(World &world)
 
 	{
 		// Make sure the data stay after GC
-		alloc::forceCollection();
+		alloc::forceCollection(world);
 
 		ASSERT_FALSE(value0.isNull());
 		ASSERT_FALSE(value1.isNull());
@@ -270,7 +270,7 @@ void testRecordLikeGc(World &world)
 	{
 		// Unset the first value
 		data->cell0 = EmptyList;
-		alloc::forceCollection();
+		alloc::forceCollection(world);
 
 		ASSERT_TRUE(value0.isNull());
 		ASSERT_FALSE(value1.isNull());
@@ -279,7 +279,7 @@ void testRecordLikeGc(World &world)
 	{
 		// Unset the second value
 		data->cell1 = EmptyList;
-		alloc::forceCollection();
+		alloc::forceCollection(world);
 
 		ASSERT_TRUE(value0.isNull());
 		ASSERT_TRUE(value1.isNull());
