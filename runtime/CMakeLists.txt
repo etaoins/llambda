@@ -31,6 +31,7 @@ add_library(lliby
 	dynamic/State.cpp
 	dynamic/ParameterProcedureCell.cpp
 	dynamic/init.cpp
+	platform/memory.cpp
 	stdlib/generated/predicates.cpp
 	stdlib/boolean.cpp
 	stdlib/bytevector.cpp

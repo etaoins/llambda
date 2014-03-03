@@ -2,9 +2,12 @@
 
 #include <string.h>
 #include <algorithm>
+#include <limits>
 
 #include "SymbolCell.h"
 #include "BytevectorCell.h"
+
+#include "platform/memory.h"
 
 #include "alloc/allocator.h"
 #include "alloc/StrongRef.h"
@@ -15,31 +18,7 @@ namespace
 
 	// We will shrink our allocation if we would create more slack than this
 	// Note this must fit in to StringCell::m_allocSlackBytes
-	const std::uint32_t MaximumAllocationSlack = 16 * 1024;
-
-	// We round up allocations to this boundary
-	// 
-	// - Mac OS X 10.9/amd64 does small allocations in 16 byte multiples starting
-	//   at 16 bytes
-	//
-	// - glibc 2.17/amd64 does small allocations in 16 byte multiples starting at
-	//   24 bytes
-	//
-	// Rounding up to the next 8 byte binary will conservatively cover the above
-	// two strategies without adding platform-specific logic 
-	const std::uint32_t AllocationGranularity = 8;
-
-	std::uint16_t suggestAllocSlackBytes(std::uint32_t minimumSize) 
-	{
-		std::uint32_t allocationOverrun = minimumSize % AllocationGranularity;
-
-		if (allocationOverrun == 0)
-		{
-			return 0;
-		}
-
-		return AllocationGranularity - allocationOverrun;
-	}
+	const std::uint32_t MaximumAllocationSlack = 32 * 1024;
 
 	const std::uint8_t ContinuationHeaderMask  = 0xC0;
 	const std::uint8_t ContinuationHeaderValue = 0x80;
@@ -155,6 +134,21 @@ namespace
 
 		return encoded;
 	}
+
+	std::uint16_t slackBytesToRecord(size_t entireSlack)
+	{
+		if (entireSlack < (MaximumAllocationSlack / 2))
+		{
+			// Our entire slack is sufficiently small
+			return entireSlack;
+		}
+		else
+		{
+			// The OS gave us lots of slack - this is probably a large allocation
+			// Don't record it all or else we'll trigger the MaximumAllocationSlack and reallocate it on the next shrink
+			return MaximumAllocationSlack / 2;
+		}
+	}
 }
 
 namespace lliby
@@ -174,12 +168,15 @@ StringCell* StringCell::createUninitialized(World &world, std::uint32_t byteLeng
 	}
 	else
 	{
-		// Figure how much slack we should have
-		std::int16_t allocSlackBytes = suggestAllocSlackBytes(minimumSize);
+		// Allocate and track how much extra space the OS gave us
+		platform::SizedMallocResult allocation = platform::sizedMalloc(minimumSize);
 
-		auto utf8Data = new std::uint8_t[minimumSize + allocSlackBytes];
-		
-		return new (cellPlacement) HeapStringCell(utf8Data, byteLength, 0, allocSlackBytes);
+		return new (cellPlacement) HeapStringCell(
+				static_cast<std::uint8_t*>(allocation.basePointer), 
+				byteLength,
+				0, // Character length has to be initialized later
+				slackBytesToRecord(allocation.actualSize - minimumSize)
+		);
 	}
 }
 
@@ -555,20 +552,20 @@ bool StringCell::replaceBytes(const CharRange &range, std::uint8_t *pattern, uns
 		}
 		else if (needHeapRealloc)
 		{
-			std::uint32_t newSlackBytes = suggestAllocSlackBytes(newByteLength);
+			const size_t minimumSize = newByteLength + 1;
+			platform::SizedMallocResult allocation = platform::sizedMalloc(minimumSize);
 
-			// Create our new destination string
-			destString = new std::uint8_t[newByteLength + 1 + newSlackBytes];
+			destString = static_cast<std::uint8_t*>(allocation.basePointer);
 
 			// Update our slack byte count
-			setAllocSlackBytes(newSlackBytes);
+			setAllocSlackBytes(slackBytesToRecord(allocation.actualSize - minimumSize));
 
 			// Fill the initial chunk of the string
 			memcpy(destString, utf8Data(), initialBytes); 
 
 			if (!wasInline)
 			{
-				// Store our old heap pointer so we can delete it later
+				// Store our old heap pointer so we can free it later
 				oldHeapPointer = utf8Data();
 			}
 		}
@@ -605,8 +602,8 @@ bool StringCell::replaceBytes(const CharRange &range, std::uint8_t *pattern, uns
 
 		if (oldHeapPointer != nullptr)
 		{
-			// We can delete this now
-			delete[] oldHeapPointer;
+			// We can free this now
+			free(oldHeapPointer);
 		}
 	}
 	
@@ -914,7 +911,7 @@ void StringCell::finalizeString()
 {
 	if (!dataIsInline())
 	{
-		delete[] static_cast<HeapStringCell*>(this)->heapData();
+		free(static_cast<HeapStringCell*>(this)->heapData());
 	}
 }
 
