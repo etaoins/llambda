@@ -6,6 +6,8 @@
 #include <malloc/malloc.h>
 #elif defined(__GNU_LIBRARY__)
 #include <malloc.h>
+#elif defined(__FreeBSD__)
+#include <malloc_np.h>
 #endif
 
 namespace lliby
@@ -22,7 +24,7 @@ SizedMallocResult sizedMalloc(size_t minimumSize)
 		.basePointer = basePointer,
 		.actualSize = malloc_size(basePointer)
 	};
-#elif defined(__GNU_LIBRARY__)
+#elif defined(__GNU_LIBRARY__) || defined(__FreeBSD__)
 	return SizedMallocResult {
 		.basePointer = basePointer,
 		.actualSize = malloc_usable_size(basePointer)
@@ -30,7 +32,7 @@ SizedMallocResult sizedMalloc(size_t minimumSize)
 #else
 	return SizedMallocResult {
 		.basePointer = basePointer,
-		.actualSize = minimumSize:w
+		.actualSize = minimumSize
 
 	};
 #endif
