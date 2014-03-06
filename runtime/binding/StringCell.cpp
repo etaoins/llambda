@@ -492,7 +492,7 @@ UnicodeChar StringCell::charAt(std::uint32_t offset) const
 	return decodeUtf8Char(&charPtr);
 }
 	
-bool StringCell::replaceBytes(const CharRange &range, std::uint8_t *pattern, unsigned int patternBytes, unsigned int count)
+bool StringCell::replaceBytes(const CharRange &range, std::uint8_t *pattern, unsigned int patternBytes, unsigned int count, bool sameString)
 {
 	const unsigned int requiredBytes = patternBytes * count;
 	const unsigned int replacedBytes = range.byteCount();
@@ -502,7 +502,7 @@ bool StringCell::replaceBytes(const CharRange &range, std::uint8_t *pattern, uns
 		std::uint8_t *copyDest = range.startPointer;
 		while(count--)
 		{
-			memcpy(copyDest, pattern, patternBytes);
+			memmove(copyDest, pattern, patternBytes);
 			copyDest += patternBytes;
 		}
 	}
@@ -531,9 +531,11 @@ bool StringCell::replaceBytes(const CharRange &range, std::uint8_t *pattern, uns
 		// Make sure we have enough space and we don't exceed our maximum allocation size
 		// If we are converting from an inline string to a heap string this will also
 		// trigger because our alloc alack bytes will be exhausted
-		const bool needHeapRealloc = (((newAllocSlackBytes < 0) ||
-			                           (newAllocSlackBytes > MaximumAllocationSlack)) &&
-												!nowInline);
+		// Always reallocate if we're replacing from within the same string - the logic to
+		// do the replacement correctly is too complex
+		const bool needHeapRealloc = (newAllocSlackBytes < 0) ||
+			                          ((newAllocSlackBytes > MaximumAllocationSlack) && !nowInline) ||
+											  sameString;
 
 		std::uint8_t* destString;
 		
@@ -581,14 +583,13 @@ bool StringCell::replaceBytes(const CharRange &range, std::uint8_t *pattern, uns
 		// We need to do this now because if the pattern bytes are longer than the
 		// byte we're replacing then we might overwrite the beginning of the
 		// unchanged chunk 
-		memmove(destString + initialBytes + requiredBytes, range.startPointer + replacedBytes, finalBytes);
+		memcpy(destString + initialBytes + requiredBytes, range.startPointer + replacedBytes, finalBytes);
 		
 		std::uint8_t* copyDest = destString + initialBytes;
 
 		while(count--)
 		{
-			// memmove because ::replace() can copy a substring to itself
-			memmove(copyDest, pattern, patternBytes);
+			memcpy(copyDest, pattern, patternBytes);
 			copyDest += patternBytes;
 		}
 
@@ -629,7 +630,7 @@ bool StringCell::fill(UnicodeChar unicodeChar, std::int64_t start, std::int64_t 
 		return false;
 	}
 
-	return replaceBytes(range, encoded.data(), encoded.size(), range.charCount);
+	return replaceBytes(range, encoded.data(), encoded.size(), range.charCount, false);
 }
 	
 bool StringCell::replace(std::uint32_t offset, const StringCell *from, std::int64_t fromStart, std::int64_t fromEnd)
@@ -648,7 +649,8 @@ bool StringCell::replace(std::uint32_t offset, const StringCell *from, std::int6
 		return false;
 	}
 	
-	return replaceBytes(toRange, fromRange.startPointer, fromRange.byteCount());
+	const bool sameString = utf8Data() == from->utf8Data();
+	return replaceBytes(toRange, fromRange.startPointer, fromRange.byteCount(), 1, sameString);
 }
 	
 bool StringCell::setCharAt(std::uint32_t offset, UnicodeChar unicodeChar)
