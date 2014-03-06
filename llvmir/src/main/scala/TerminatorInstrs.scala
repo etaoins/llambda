@@ -36,7 +36,7 @@ private[llvmir] trait TerminatorInstrs extends IrInstrBuilder {
 
     entries.foldLeft(Set[Long]()) { case (seenValues, (compareConstant, _)) =>
       if (seenValues.contains(compareConstant)) {
-        throw new InconsistentIrException("Attempted switch with duplicate comparison constant of ${compareConstant}")
+        throw new InconsistentIrException(s"Attempted switch with duplicate comparison constant of ${compareConstant}")
       }
 
       seenValues + compareConstant
