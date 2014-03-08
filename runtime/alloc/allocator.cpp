@@ -8,7 +8,7 @@
 #include "alloc/AllocCell.h"
 #include "alloc/RangeAlloc.h"
 #include "alloc/Finalizer.h"
-#include "alloc/MemoryBlock.h"
+#include "alloc/DynamicMemoryBlock.h"
 #include "alloc/collector.h"
 
 // Statically check that everything can fit in to a cell
@@ -107,7 +107,7 @@ bool forceCollection(World &world, size_t reserveCount)
 {
 	// Directly allocate memory from the kernel
 	MemoryBlock *oldBlock = world.activeAllocBlock;
-	MemoryBlock *newBlock = new MemoryBlock(SemiSpaceSize);
+	auto newBlock = new DynamicMemoryBlock(SemiSpaceSize);
 
 	if (!newBlock->isValid())
 	{

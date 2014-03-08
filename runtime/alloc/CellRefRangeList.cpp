@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include "MemoryBlock.h"
+#include "DynamicMemoryBlock.h"
 
 namespace lliby
 {
@@ -47,7 +47,7 @@ namespace
 
 CellRefRangeList::CellRefRangeList() : mActiveHead(nullptr)
 {
-	mBackingBlock = new MemoryBlock(MemoryBlockSize);
+	mBackingBlock = new DynamicMemoryBlock(MemoryBlockSize);
 
 	const size_t rangeCount = MemoryBlockSize / sizeof(CellRefRange); 
 	auto backingRanges = reinterpret_cast<CellRefRange*>(mBackingBlock->startPointer());

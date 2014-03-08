@@ -6,7 +6,7 @@ project (lliby)
 add_library(lliby
 	alloc/CellRefRangeList.cpp
 	alloc/Finalizer.cpp
-	alloc/MemoryBlock.cpp
+	alloc/DynamicMemoryBlock.cpp
 	alloc/allocator.cpp
 	alloc/cellvisitor.cpp
 	alloc/collector.cpp
