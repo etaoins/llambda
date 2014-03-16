@@ -16,6 +16,8 @@
 #include "binding/EmptyListCell.h"
 #include "binding/VectorCell.h"
 #include "binding/RecordCell.h"
+#include "binding/BooleanCell.h"
+#include "binding/ProperList.h"
 
 #include "unicode/UnicodeChar.h"
 
@@ -286,6 +288,27 @@ void testRecordLikeGc(World &world)
 	}
 }
 
+void testHugeRangeAlloc(World &world)
+{
+	// This ensures we can allocate large chunks of GCed memory at once
+	const size_t cellCount = 1024 * 1024;
+
+	std::vector<DatumCell*> falseCells;
+	falseCells.resize(cellCount);
+
+	for(size_t i = 0; i < cellCount; i++)
+	{
+		falseCells[i] = const_cast<BooleanCell*>(BooleanCell::falseInstance());
+	}
+
+	ListElementCell *listHead = ListElementCell::createProperList(world, falseCells);
+
+	// This iterates over the whole list so this should make sure the allocation succeeded
+	ProperList<BooleanCell> properList(listHead);
+	ASSERT_TRUE(properList.isValid());
+	ASSERT_EQUAL(properList.length(), cellCount);
+}
+
 void testAll(World &world)
 {
 	// Test exact integers
@@ -344,6 +367,9 @@ void testAll(World &world)
 
 	// Test record-likes
 	testRecordLikeGc(world);
+
+	// Test large allocations
+	testHugeRangeAlloc(world);
 }
 
 }
