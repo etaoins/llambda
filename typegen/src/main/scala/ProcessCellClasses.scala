@@ -75,7 +75,7 @@ object ProcessCellClasses {
         parsedCellDef
     }
 
-    val typeIdGenerator = new IntCounter
+    val typeIdGenerator = new IntCounter(1)
 
     // Reserve 10 TBAA nodes for the %world* fields
     val tbaaIndexGenerator = new IntCounter(10)

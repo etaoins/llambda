@@ -35,6 +35,7 @@ object WriteTypeid extends writer.OutputWriter {
     incBuilder += s"enum class ${typeTagCppName} : ${typeTagSupertype}"
     incBuilder += "{"
     incBuilder.indented {
+      incBuilder += "Invalid = 0,"
       for(cellClass <- processedTypes.cellClasses.values; typeId <- cellClass.typeId) {
         incBuilder += s"${cellClass.name} = ${typeId},"
       }
@@ -45,7 +46,7 @@ object WriteTypeid extends writer.OutputWriter {
     incBuilder += "}"
     incBuilder.sep()
 
-    Map("runtime/binding/generated/typeid.h" -> incBuilder.toString)
+    Map("runtime/binding/generated/CellTypeId.h" -> incBuilder.toString)
   }
 }
 

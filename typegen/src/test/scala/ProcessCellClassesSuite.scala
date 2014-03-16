@@ -272,7 +272,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
     inside(classes("Boolean")) { case (booleanClass : TaggedCellClass) =>
       assert(booleanClass.name === "Boolean")
       assert(booleanClass.internal === false)
-      assert(booleanClass.typeId === Some(0))
+      assert(booleanClass.typeId === Some(1))
       assert(booleanClass.instanceType === CellClass.Preconstructed)
       assert(booleanClass.parent === datumClass) 
     }
@@ -280,7 +280,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
     inside(classes("Character")) { case (characterClass : TaggedCellClass) =>
       assert(characterClass.name === "Character")
       assert(characterClass.internal === false)
-      assert(characterClass.typeId === Some(1))
+      assert(characterClass.typeId === Some(2))
       assert(characterClass.instanceType === CellClass.Concrete)
       assert(characterClass.parent === datumClass) 
     }
@@ -314,7 +314,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       case (stringClass : TaggedCellClass, inlineVariant : VariantCellClass, heapVariant : VariantCellClass) =>
         assert(stringClass.name === "String")
         assert(stringClass.internal === false)
-        assert(stringClass.typeId === Some(0))
+        assert(stringClass.typeId === Some(1))
         assert(stringClass.instanceType === CellClass.Concrete)
         assert(stringClass.parent === datumClass) 
 

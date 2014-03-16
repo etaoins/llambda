@@ -160,7 +160,7 @@ object UnitCell extends ConcreteCellType with UnitFields {
   val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType]()
 
-  val typeId = 0L
+  val typeId = 1L
 
   val typeIdGepIndices = List(0, 0, 0)
   val gcStateGepIndices = List(0, 0, 1)
@@ -258,7 +258,7 @@ object PairCell extends ConcreteCellType with PairFields {
   val supertype = Some(ListElementCell)
   val directSubtypes = Set[CellType]()
 
-  val typeId = 1L
+  val typeId = 2L
 
   val typeIdGepIndices = List(0, 0, 0, 0)
   val gcStateGepIndices = List(0, 0, 0, 1)
@@ -298,7 +298,7 @@ object EmptyListCell extends ConcreteCellType with EmptyListFields {
   val supertype = Some(ListElementCell)
   val directSubtypes = Set[CellType]()
 
-  val typeId = 2L
+  val typeId = 3L
 
   val typeIdGepIndices = List(0, 0, 0, 0)
   val gcStateGepIndices = List(0, 0, 0, 1)
@@ -399,7 +399,7 @@ object StringCell extends ConcreteCellType with StringFields {
   val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType]()
 
-  val typeId = 3L
+  val typeId = 4L
 
   val typeIdGepIndices = List(0, 0, 0)
   val gcStateGepIndices = List(0, 0, 1)
@@ -610,7 +610,7 @@ object SymbolCell extends ConcreteCellType with SymbolFields {
   val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType]()
 
-  val typeId = 4L
+  val typeId = 5L
 
   val typeIdGepIndices = List(0, 0, 0)
   val gcStateGepIndices = List(0, 0, 1)
@@ -787,7 +787,7 @@ object BooleanCell extends ConcreteCellType with BooleanFields {
   val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType]()
 
-  val typeId = 5L
+  val typeId = 6L
 
   val typeIdGepIndices = List(0, 0, 0)
   val gcStateGepIndices = List(0, 0, 1)
@@ -860,7 +860,7 @@ object ExactIntegerCell extends ConcreteCellType with ExactIntegerFields {
   val supertype = Some(NumericCell)
   val directSubtypes = Set[CellType]()
 
-  val typeId = 6L
+  val typeId = 7L
 
   val typeIdGepIndices = List(0, 0, 0, 0)
   val gcStateGepIndices = List(0, 0, 0, 1)
@@ -916,7 +916,7 @@ object InexactRationalCell extends ConcreteCellType with InexactRationalFields {
   val supertype = Some(NumericCell)
   val directSubtypes = Set[CellType]()
 
-  val typeId = 7L
+  val typeId = 8L
 
   val typeIdGepIndices = List(0, 0, 0, 0)
   val gcStateGepIndices = List(0, 0, 0, 1)
@@ -976,7 +976,7 @@ object CharacterCell extends ConcreteCellType with CharacterFields {
   val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType]()
 
-  val typeId = 8L
+  val typeId = 9L
 
   val typeIdGepIndices = List(0, 0, 0)
   val gcStateGepIndices = List(0, 0, 1)
@@ -1059,7 +1059,7 @@ object VectorCell extends ConcreteCellType with VectorFields {
   val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType]()
 
-  val typeId = 9L
+  val typeId = 10L
 
   val typeIdGepIndices = List(0, 0, 0)
   val gcStateGepIndices = List(0, 0, 1)
@@ -1149,7 +1149,7 @@ object BytevectorCell extends ConcreteCellType with BytevectorFields {
   val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType]()
 
-  val typeId = 10L
+  val typeId = 11L
 
   val typeIdGepIndices = List(0, 0, 0)
   val gcStateGepIndices = List(0, 0, 1)
@@ -1330,7 +1330,7 @@ object ProcedureCell extends ConcreteCellType with ProcedureFields {
   val supertype = Some(RecordLikeCell)
   val directSubtypes = Set[CellType]()
 
-  val typeId = 11L
+  val typeId = 12L
 
   val typeIdGepIndices = List(0, 0, 0, 0)
   val gcStateGepIndices = List(0, 0, 0, 1)
@@ -1396,7 +1396,7 @@ object RecordCell extends ConcreteCellType with RecordFields {
   val supertype = Some(RecordLikeCell)
   val directSubtypes = Set[CellType]()
 
-  val typeId = 12L
+  val typeId = 13L
 
   val typeIdGepIndices = List(0, 0, 0, 0)
   val gcStateGepIndices = List(0, 0, 0, 1)
@@ -1489,7 +1489,7 @@ object ErrorObjectCell extends ConcreteCellType with ErrorObjectFields {
   val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType]()
 
-  val typeId = 13L
+  val typeId = 14L
 
   val typeIdGepIndices = List(0, 0, 0)
   val gcStateGepIndices = List(0, 0, 1)
