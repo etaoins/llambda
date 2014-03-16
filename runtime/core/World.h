@@ -1,6 +1,8 @@
 #ifndef _LLIBY_CORE_WORLD_H
 #define _LLIBY_CORE_WORLD_H
 
+#include "alloc/Heap.h"
+
 namespace lliby
 {
 
@@ -31,8 +33,7 @@ public:
 	// Any changes to the content, size or order of these fields will require codegen changes
 	//
 	
-	alloc::AllocCell *allocNext;
-	alloc::AllocCell *allocEnd;
+	alloc::Heap cellHeap;
 
 	//
 	// This is the private section of World
@@ -45,9 +46,6 @@ public:
 	alloc::CellRefRangeList *strongRefs;
 	alloc::CellRefRangeList *weakRefs;
 	
-	// Pointer to the start of the allocator semi-space
-	alloc::MemoryBlock *activeAllocBlock = nullptr;
-
 private:
 	World();
 	~World();

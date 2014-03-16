@@ -4,11 +4,12 @@
 namespace lliby
 {
 class World;
+class Heap;
 
 namespace alloc
 {
 
-void* collect(World &world, void *fromBase, void *fromEnd, void *toBase);
+void collect(World &world, Heap &newHeap);
 
 }
 }

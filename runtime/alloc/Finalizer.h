@@ -16,24 +16,18 @@ class MemoryBlock;
 class Finalizer
 {
 public:
-	void finalizeBlockAsync(MemoryBlock *block, void *endPointer);
-	static void finalizeBlockSync(MemoryBlock *block, void *endPointer);
+	void finalizeHeapAsync(MemoryBlock *rootSegment);
+	static void finalizeHeapSync(MemoryBlock *rootSegment);
 
 private:
 	void workerThread();
-
-	struct WorkEntry
-	{
-		MemoryBlock *block;
-		void* endPointer;
-	};
 
 	std::thread mWorkerThread;
 	std::once_flag mWorkerStartFlag;
 
 	std::mutex mWorkQueueMutex;
 	std::condition_variable mWorkQueueCond;
-	std::queue<WorkEntry> mWorkQueue;
+	std::queue<MemoryBlock*> mWorkQueue;
 };
 
 }

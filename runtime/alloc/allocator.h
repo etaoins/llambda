@@ -26,7 +26,7 @@ RangeAlloc allocateRange(World &, size_t count);
 /**
  * Forces a major GC collection
  */
-bool forceCollection(World &world, size_t reserveCount = 0);
+void forceCollection(World &world);
 
 }
 }

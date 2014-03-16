@@ -105,11 +105,8 @@ namespace
 	};
 }
 
-void* collect(World &world, void *fromBase, void *fromEnd, void *toBase)
+void collect(World &world, Heap &newHeap)
 {
-	// This needs to be an AllocCell so ++ works correctly
-	auto nextNewCell = static_cast<AllocCell*>(toBase);
-
 	std::function<bool (DatumCell**)> rootVisitor = [&] (DatumCell **cellRef) -> bool
 	{
 		DatumCell *oldCellLocation = *cellRef;
@@ -129,7 +126,7 @@ void* collect(World &world, void *fromBase, void *fromEnd, void *toBase)
 		}
 
 		// Move the cell to the new location
-		DatumCell *newCellLocation = nextNewCell++;
+		DatumCell *newCellLocation = static_cast<DatumCell*>(newHeap.allocateCells(1));
 		memcpy(newCellLocation, oldCellLocation, sizeof(AllocCell));
 
 		// Update the reference to it
@@ -170,9 +167,6 @@ void* collect(World &world, void *fromBase, void *fromEnd, void *toBase)
 	// Visit each runtime weak ref
 	std::function<bool (DatumCell**)> weakRefFunction = weakRefVisitor;
 	visitCellRefList(world.weakRefs, weakRefFunction);
-
-	// This is where new allocations should start from
-	return nextNewCell;
 }
 
 }

@@ -10,7 +10,7 @@ namespace lliby
 namespace alloc
 {
 
-void Finalizer::finalizeBlockAsync(MemoryBlock *block, void *endPointer)
+void Finalizer::finalizeHeapAsync(MemoryBlock *rootSegment)
 {
 	std::call_once(mWorkerStartFlag, [=]() {
 		// Start the worker thread
@@ -20,28 +20,43 @@ void Finalizer::finalizeBlockAsync(MemoryBlock *block, void *endPointer)
 	// Add to the work queue
 	{
 		std::lock_guard<std::mutex> guard(mWorkQueueMutex);
-		mWorkQueue.push(WorkEntry { block, endPointer});
+		mWorkQueue.push(rootSegment);
 	}
 
 	// Notify
 	mWorkQueueCond.notify_one();
 }
 
-void Finalizer::finalizeBlockSync(MemoryBlock *block, void *endPointer)
+void Finalizer::finalizeHeapSync(MemoryBlock *rootSegment)
 {
-	for(auto nextCell = static_cast<AllocCell*>(block->startPointer());
-		 nextCell < endPointer;
-		 nextCell++)
+	auto nextCell = static_cast<AllocCell*>(rootSegment->startPointer());
+
+	while((nextCell->gcState() != GarbageState::HeapTerminator) &&
+			(nextCell->gcState() != GarbageState::SegmentTerminator))
 	{
 		if (nextCell->gcState() != GarbageState::ForwardingCell)
 		{
 			// This value is no longer referenced
 			nextCell->finalize();
 		}
+		
+		nextCell++;
+	}
+
+	MemoryBlock *nextSegment = nullptr;
+
+	if (nextCell->gcState() == GarbageState::SegmentTerminator)
+	{
+		nextSegment = reinterpret_cast<SegmentTerminatorCell*>(nextCell)->nextSegment();
 	}
 
 	// Actually free the block
-	delete block;
+	delete rootSegment;
+
+	if (nextSegment != nullptr)
+	{
+		finalizeHeapSync(nextSegment);
+	}
 }
 
 void Finalizer::workerThread()
@@ -54,13 +69,13 @@ void Finalizer::workerThread()
 		mWorkQueueCond.wait(lock, [=]{return !mWorkQueue.empty();});
 
 		// Get the entry
-		WorkEntry work = mWorkQueue.front();
+		MemoryBlock *rootSegment = mWorkQueue.front();
 		mWorkQueue.pop();
 
 		// Release the lock
 		lock.unlock();
 		
-		finalizeBlockSync(work.block, work.endPointer);
+		finalizeHeapSync(rootSegment);
 	}
 }
 
