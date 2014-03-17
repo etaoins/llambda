@@ -21,6 +21,10 @@ object InferArgumentTypes {
         branch._1.exists(stepCanTerminate(_))
       }
 
+    case invoke : ps.Invoke =>
+      // If the procedure takes a world arg it may throw an exception
+      invoke.signature.hasWorldArg
+
     case _ : ps.Return =>
       // This the only actual terminating instruction
       true 
@@ -63,6 +67,10 @@ object InferArgumentTypes {
 
       case userStep :: tailSteps if userStep.inputValues.contains(argValue) =>
         // We hit a user before we found an unchecked cast
+        abortRetyping
+
+      case terminatingStep :: tailSteps if stepCanTerminate(terminatingStep) =>
+        // We hit a terminating step
         abortRetyping
 
       case nonUserStep :: tailSteps =>
