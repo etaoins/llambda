@@ -1,4 +1,4 @@
-package io.llambda.planner
+package io.llambda.compiler.planner
 import io.llambda
 
 import llambda.compiler.{valuetype => vt}
