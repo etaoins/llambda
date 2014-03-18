@@ -34,6 +34,12 @@ class FieldTypeToLlvmSuite extends FunSuite {
     assert(FieldTypeToLlvm(testType) === llvmir.PointerType(llvmir.DoubleType))
   }
   
+  test("reference to double") {
+    val testType = ReferenceFieldType(doubleType)
+
+    assert(FieldTypeToLlvm(testType) === llvmir.PointerType(llvmir.DoubleType))
+  }
+  
   test("array of doubles") {
     val testType = ArrayFieldType(List(10), doubleType)
 

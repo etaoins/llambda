@@ -36,6 +36,13 @@ class FieldTypeToCppSuite extends FunSuite {
     assert(FieldTypeToCpp(testType, Some("member")) === "double* member")
   }
   
+  test("reference to double") {
+    val testType = ReferenceFieldType(doubleType)
+
+    assert(FieldTypeToCpp(testType, None) === "double&")
+    assert(FieldTypeToCpp(testType, Some("member")) === "double& member")
+  }
+  
   test("array of doubles") {
     val testType = ArrayFieldType(List(10), doubleType)
 

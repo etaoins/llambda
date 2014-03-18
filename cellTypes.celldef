@@ -8,7 +8,7 @@ fieldtype UnicodeChar : uint32 {
 cell Datum;
 cell Procedure;
 cell ListElement;
-fieldtype ProcedureEntryPoint : Datum* (*)(World*, Procedure*, ListElement*) {
+fieldtype ProcedureEntryPoint : Datum* (*)(World&, Procedure*, ListElement*) {
 	cppname = ProcedureEntryPoint;
 };
 

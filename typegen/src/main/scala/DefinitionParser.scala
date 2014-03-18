@@ -18,9 +18,12 @@ trait CommonParsers extends RegexParsers {
   def arrayDimensions = rep1("[" ~> """\d+""".r <~ "]") ^^ { _.map(Integer.parseInt(_)) }
 
   // Types are identifiers plus zero or more pointer indirections
-  def nonArrayType = identifier ~ rep("*") ^^ { case typeName ~ indirections =>
-    indirections.foldRight(ParsedTypeName(typeName) : ParsedType) { case (indirection, innerType) =>
-      ParsedPointerType(innerType)
+  def nonArrayType = identifier ~ rep("""(\*|&)""".r) ^^ { case typeName ~ indirections =>
+    indirections.foldLeft(ParsedTypeName(typeName) : ParsedType) { case (innerType, indirection) =>
+      indirection match {
+        case "*" => ParsedPointerType(innerType)
+        case "&" => ParsedReferenceType(innerType)
+      }
     }
   }
 

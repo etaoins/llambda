@@ -4,9 +4,9 @@ import scala.util.parsing.input.{Position, Positional}
 
 sealed abstract class ParsedType extends Positional
 
-case class ParsedPointerType(pointeeType : ParsedType) extends ParsedType {
-  override def toString = pointeeType + "*"
-
+sealed abstract class ParsedIndirectionType extends ParsedType {
+  val pointeeType : ParsedType
+  
   // Only the outermost pointer is positioned by the parser
   // This is hack to make the pos propagate to the inner types
   override def setPos(newPos : Position) : this.type = {
@@ -15,6 +15,14 @@ case class ParsedPointerType(pointeeType : ParsedType) extends ParsedType {
 
     this
   }
+}
+
+case class ParsedPointerType(pointeeType : ParsedType) extends ParsedIndirectionType {
+  override def toString = pointeeType + "*"
+}
+
+case class ParsedReferenceType(pointeeType : ParsedType) extends ParsedIndirectionType {
+  override def toString = pointeeType + "&"
 }
 
 case class ParsedArrayType(dimensions : List[Int], elementType : ParsedType) extends ParsedType {
