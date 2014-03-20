@@ -45,7 +45,19 @@ namespace
 	}
 }
 
-CellRefRangeList::CellRefRangeList() : mActiveHead(nullptr)
+CellRefRangeList::CellRefRangeList() : 
+	mBackingBlock(nullptr),
+	mActiveHead(nullptr),
+	mFreeHead(nullptr)
+{
+}
+
+CellRefRangeList::~CellRefRangeList()
+{
+	delete mBackingBlock;
+}
+
+void CellRefRangeList::initialize()
 {
 	mBackingBlock = new DynamicMemoryBlock(MemoryBlockSize);
 
@@ -68,13 +80,14 @@ CellRefRangeList::CellRefRangeList() : mActiveHead(nullptr)
 	mFreeHead = backingRanges;
 }
 
-CellRefRangeList::~CellRefRangeList()
-{
-	delete mBackingBlock;
-}
-
 CellRefRange* CellRefRangeList::addRange(AllocCell **basePointer, size_t cellCount)
 {
+	if (mBackingBlock == nullptr)
+	{
+		// Lazily initialize
+		initialize();
+	}
+
 	if (mFreeHead == nullptr)
 	{
 		std::cerr << "Ran out of space for GC roots" << std::endl;
