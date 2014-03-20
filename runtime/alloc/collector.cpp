@@ -105,8 +105,10 @@ namespace
 	};
 }
 
-void collect(World &world, Heap &newHeap)
+size_t collect(World &world, Heap &newHeap)
 {
+	size_t reachableCells = 0;
+
 	std::function<bool (DatumCell**)> rootVisitor = [&] (DatumCell **cellRef) -> bool
 	{
 		DatumCell *oldCellLocation = *cellRef;
@@ -126,7 +128,7 @@ void collect(World &world, Heap &newHeap)
 		}
 
 		// Move the cell to the new location
-		DatumCell *newCellLocation = static_cast<DatumCell*>(newHeap.allocateCells(1));
+		DatumCell *newCellLocation = static_cast<DatumCell*>(newHeap.allocate(1));
 		memcpy(newCellLocation, oldCellLocation, sizeof(AllocCell));
 
 		// Update the reference to it
@@ -134,6 +136,9 @@ void collect(World &world, Heap &newHeap)
 
 		// Make the old cell a forwarding cell
 		new (oldCellLocation) ForwardingCell(newCellLocation);
+
+		// Track this as reachable
+		reachableCells++;
 
 		// Visit the cell's children
 		return true;
@@ -167,6 +172,8 @@ void collect(World &world, Heap &newHeap)
 	// Visit each runtime weak ref
 	std::function<bool (DatumCell**)> weakRefFunction = weakRefVisitor;
 	visitCellRefList(world.weakRefs, weakRefFunction);
+
+	return reachableCells;
 }
 
 }

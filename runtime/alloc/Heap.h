@@ -35,7 +35,7 @@ public:
 	 *
 	 * This cannot fail. The program will be aborted if more memory cannot be allocated
 	 */
-	void *allocateCells(size_t count = 1)
+	void *allocate(size_t count = 1)
 	{
 		AllocCell *allocation = m_allocNext;
 		AllocCell *newAllocNext = allocation + count;
@@ -60,11 +60,21 @@ public:
 	}
 
 	/**
-	 * Returns the total number of allocated cells in the heap
+	 * Returns the number of allocated cells in the heap since the last call to resetAllocationCounter()
 	 */
-	size_t totalAllocations() const
+	size_t allocationCounter() const
 	{
-		return (m_allocNext - m_currentSegmentStart) + m_previousAllocations;
+		return currentSegmentAllocations() + m_allocationCounterBase;
+	}
+
+	/**
+	 * Resets the allocation counter
+	 *
+	 * \sa allocationCounter
+	 */
+	void resetAllocationCounter()
+	{
+		m_allocationCounterBase = -currentSegmentAllocations();
 	}
 
 	/**
@@ -85,6 +95,11 @@ public:
 	}
 
 private:
+	ptrdiff_t currentSegmentAllocations() const
+	{
+		return m_allocNext - m_currentSegmentStart;
+	}
+
 	AllocCell* addNewSegment(size_t reserveCount);
 
 	alloc::AllocCell *m_allocNext = nullptr;
@@ -96,7 +111,7 @@ private:
 	MemoryBlock *m_rootSegment = nullptr;
 
 	alloc::AllocCell *m_currentSegmentStart = nullptr;
-	std::uint64_t m_previousAllocations = 0;
+	std::int64_t m_allocationCounterBase = 0;
 };
 
 }

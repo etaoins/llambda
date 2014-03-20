@@ -26,9 +26,12 @@ Heap::Heap() :
 	
 void Heap::terminate()
 {
-	new (m_allocNext) HeapTerminatorCell();
+	if (m_allocNext != nullptr)
+	{
+		new (m_allocNext) HeapTerminatorCell();
+	}
 }
-
+	
 AllocCell* Heap::addNewSegment(size_t reserveCount)
 {
 	// We ran out of space
@@ -69,13 +72,18 @@ AllocCell* Heap::addNewSegment(size_t reserveCount)
 		new (m_allocNext) SegmentTerminatorCell(newSegment);
 
 		// Track the number of allocations made in the previous segment
-		m_previousAllocations += m_allocNext - m_currentSegmentStart;
+		m_allocationCounterBase += currentSegmentAllocations();
 	}
 
 	m_currentSegmentStart = static_cast<AllocCell*>(newSegment->startPointer());
 
 	m_allocNext = m_currentSegmentStart + reserveCount;
 	m_allocEnd = reinterpret_cast<AllocCell*>(static_cast<char*>(newSegment->endPointer()) - sizeof(SegmentTerminatorCell)); 
+
+#ifdef _LLIBY_ALWAYS_GC
+	// Make the next allocation have to enter the allocator slow path
+	m_allocNext = m_allocEnd;
+#endif
 
 	return m_currentSegmentStart;
 }

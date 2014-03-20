@@ -36,6 +36,12 @@ namespace alloc
 namespace
 {
 	Finalizer *finalizer = nullptr;
+
+#ifndef _LLIBY_ALWAYS_GC
+	const size_t MaxAllocBeforeForceGc = 1024 * 1024;
+#else
+	const size_t MaxAllocBeforeForceGc = 1;
+#endif
 }
 
 void initGlobal()
@@ -50,23 +56,24 @@ void initWorld(World &world)
 
 void shutdownWorld(World &world)
 {
-/*
 #ifdef _LLIBY_ALWAYS_GC
 	// Do one last collection at shutdown
-	forceCollection(world);
-
-	if (static_cast<void*>(world.allocNext) != world.activeAllocBlock->startPointer())
+	if (forceCollection(world) > 0)
 	{
 		std::cerr << "Cells leaked on exit!" << std::endl;
 		exit(-1);
 	}
 #endif
-*/
 }
     
 void *allocateCells(World &world, size_t count)
 {
-	return world.cellHeap.allocateCells(count);
+	if (world.cellHeap.allocationCounter() > MaxAllocBeforeForceGc)
+	{
+		forceCollection(world);
+	}
+
+	return world.cellHeap.allocate(count);
 }
 
 RangeAlloc allocateRange(World &world, size_t count)
@@ -77,7 +84,7 @@ RangeAlloc allocateRange(World &world, size_t count)
 	return RangeAlloc(start, end);
 }
 
-void forceCollection(World &world)
+size_t forceCollection(World &world)
 {
 	// Terminate the old cell heap
 	world.cellHeap.terminate();
@@ -86,7 +93,7 @@ void forceCollection(World &world)
 	Heap nextCellHeap;
 
 	// Collect in to the new world
-	collect(world, nextCellHeap);
+	const size_t reachableCells = collect(world, nextCellHeap);
 
 	// Finalize the heap asynchronously
 	MemoryBlock *rootSegment = world.cellHeap.rootSegment();
@@ -96,8 +103,13 @@ void forceCollection(World &world)
 		finalizer->finalizeHeapSync(rootSegment);
 	}
 
+	// Don't count the cells we just moved towards the next GC
+	nextCellHeap.resetAllocationCounter();
+
 	// Make this the new heap
 	world.cellHeap = nextCellHeap;
+
+	return reachableCells;
 }
 
 }
