@@ -50,11 +50,7 @@ public:
 			m_allocNext = newAllocNext;
 		}
 
-		// Mark the cells as allocated
-		for(size_t i = 0; i < count; i++)
-		{
-			allocation[i].setGcState(GarbageState::AllocatedCell);
-		}
+		// GarbageState::AllocatedCell is 0 so we don't need to set it explicitly
 
 		return allocation;
 	}
