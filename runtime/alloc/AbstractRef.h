@@ -26,17 +26,6 @@ protected:
 	static_assert(std::is_base_of<DatumCell, T>(), "Only DatumCell subclasses can be GC roots");
 
 	/**
-	 * Creates an cell ref with an existing ref range
-	 *
-	 * This is only intended for use by move constructors
-	 */
-	AbstractRefRange(CellRefRangeList *refList, CellRefRange *refRange) :
-		m_refList(refList),
-		m_refRange(refRange)
-	{
-	}
-
-	/**
 	 * Creates a new instance rooting a cell or cell array
 	 *
 	 * @param refList    List to add the ref range to
@@ -72,10 +61,7 @@ protected:
 	 */
 	~AbstractRefRange()
 	{
-		if (m_refRange != nullptr)
-		{
-			m_refList->removeRange(m_refRange);
-		}
+		m_refList->removeRange(m_refRange);
 	}
 
 	CellRefRangeList *m_refList;
@@ -89,22 +75,6 @@ template<class T>
 class AbstractRef : public AbstractRefRange<T>
 {
 public:
-	/**
-	 * Moves an existing AbstractRef value to this one
-	 *
-	 * This avoids list operations on the target CellRefList by using the existing value's list element
-	 */
-	AbstractRef(alloc::CellRefRangeList *refList, AbstractRef &&other) : 
-		AbstractRefRange<T>(refList, other.m_refRange),
-		m_cell(other.m_cell)
-	{
-		// Update the base pointer to point to our member variable
-		this->m_refRange->basePointer = reinterpret_cast<AllocCell**>(&m_cell);
-
-		// Make sure the original value doesn't try to remove itself
-		other.m_refRange = nullptr;
-	}
-
 	operator T*() const
 	{
 		return m_cell;
