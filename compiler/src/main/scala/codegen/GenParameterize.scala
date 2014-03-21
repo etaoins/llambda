@@ -35,7 +35,7 @@ private val llibyDynamicenvPop = IrFunctionDecl(
     )
   )
 
-  def apply(initialState : GenerationState, plannedSymbols : Set[String], typeGenerator : TypeGenerator)(step : ps.Parameterize) : GenerationState = step match {
+  def apply(initialState : GenerationState, plannedSymbols : Set[String], typeGenerator : TypeGenerator)(step : ps.Parameterize) : GenResult = step match {
     case ps.Parameterize(result, worldPtrTemp, parameterValues, steps, innerResult) =>
       // Declare all support functions
       for(supportFunc <- List(llibyDynamicenvPush, llibyDynamicenvSetValue, llibyDynamicenvPop)) {
@@ -60,12 +60,18 @@ private val llibyDynamicenvPop = IrFunctionDecl(
         initialBlock.callDecl(None)(llibyDynamicenvSetValue, List(worldPtrIr, parameterIr, valueIr))
       }
 
-      val finalState = GenPlanSteps(initialState, plannedSymbols, typeGenerator)(step.steps)
-      val finalBlock = finalState.currentBlock
+      val finalResult = GenPlanSteps(initialState, plannedSymbols, typeGenerator)(step.steps)
 
-      // Pop the environment
-      finalBlock.callDecl(None)(llibyDynamicenvPop, List(worldPtrIr))
+      finalResult match {
+        case finalState : GenerationState =>
+          val finalBlock = finalState.currentBlock
 
-      finalState.withTempValue(step.result -> finalState.liveTemps(step.innerResult)) 
+          // Pop the environment
+          finalBlock.callDecl(None)(llibyDynamicenvPop, List(worldPtrIr))
+
+          finalState.withTempValue(step.result -> finalState.liveTemps(step.innerResult)) 
+
+        case BlockTerminated => BlockTerminated
+      }
   }
 }

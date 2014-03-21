@@ -3,7 +3,7 @@ import io.llambda
 
 import llambda.compiler.et
 
-object FlattenSelfExecutingLambdas {
+object FlattenSelfExecutingLambdas extends Optimizer {
   def apply(expr : et.Expression) : et.Expression = expr match {
     // Can't handle rest args for now - probably not worth it
     case et.Apply(et.Lambda(fixedArgs, None, body), operands) if fixedArgs.length == operands.length =>

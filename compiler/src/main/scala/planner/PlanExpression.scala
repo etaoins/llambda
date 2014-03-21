@@ -322,6 +322,18 @@ private[planner] object PlanExpression {
           state=postValueState,
           value=TempValueToIntermediate(innerTempType, outerTemp)
         )
+
+      case et.Return(returnedExpr) =>
+        val returnValueResult = apply(initialState)(returnedExpr)
+        // If there's a return the return type is always DatumCell
+        val returnValueTemp = returnValueResult.value.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
+
+        plan.steps += ps.Return(Some(returnValueTemp))
+
+        PlanResult(
+          state=returnValueResult.state,
+          value=iv.UnitValue // et.Return does not have a value - execution stops
+        )
     }  
   }
 }

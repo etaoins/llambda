@@ -101,6 +101,18 @@ private[planner] object PlanLambda {
     }
   }
 
+  private def containsImmediateReturn(expr : et.Expression) : Boolean = expr match {
+    case _ : et.Return =>
+      true
+
+    case lambda :  et.Lambda  =>
+      // If the return exists in tbe body of a nested lambda it's not immediate
+      false
+
+    case _ =>
+      expr.subexpressions.exists(containsImmediateReturn)
+  }
+
   def apply(parentState : PlannerState, parentPlan : PlanWriter)(fixedArgLocs : List[StorageLocation], restArgLoc : Option[StorageLocation], body : et.Expression, sourceNameHint : Option[String])(implicit planConfig : PlanConfig) : PlanResult = {
     // Give ourselves a name. This will be made unique if it collides
     val sourceName = sourceNameHint.getOrElse("anonymous-procedure")
@@ -218,7 +230,14 @@ private[planner] object PlanLambda {
 
     // Are we returning anything?
     val unitType = vt.IntrinsicCellType(ct.UnitCell)
-    val returnTypeOpt = if (planResult.value.possibleTypes == Set(unitType)) {
+
+    val returnTypeOpt = if (containsImmediateReturn(body)) {
+      // Return a DatumCell
+      // XXX: We can be more clever here and try to find a common return type across all returns
+      Some(vt.IntrinsicCellType(ct.DatumCell))
+    }
+    else if (planResult.value.possibleTypes == Set(unitType)) {
+      // Instead of returning a unit cell just return void
       None
     }
     else {

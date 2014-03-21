@@ -215,10 +215,12 @@
 	  (define-r7rs string-set! (world-function "lliby_string_set" (<string-cell> <uint32> <unicode-char>)))
 	  (define-r7rs string-append (world-function "lliby_string_append" <list-element-cell> <string-cell>)))
 
-	(export procedure? apply)
+	(export procedure? apply call-with-current-continuation call/cc)
 	(begin
 	  (define-r7rs procedure? (native-function "lliby_is_procedure" (<datum-cell>) <bool>))
-	  (define-r7rs apply (world-function "lliby_apply" (<procedure-cell> . <list-element-cell>) <datum-cell>)))
+	  (define-r7rs apply (world-function "lliby_apply" (<procedure-cell> . <list-element-cell>) <datum-cell>))
+	  (define-r7rs call-with-current-continuation (native-function "general_callcc_unimplemented" ()))
+	  (define-r7rs call/cc call-with-current-continuation))
 
 	(export make-parameter dynamic-wind)
 	(begin

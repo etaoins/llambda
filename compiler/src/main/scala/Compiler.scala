@@ -9,6 +9,11 @@ import scala.sys.process._
 class ExternalCompilerException extends Exception
 
 object Compiler {
+  private val optimizerPasses = List(
+    optimize.FlattenSelfExecutingLambdas,
+    optimize.TrivialCallCcToReturn
+  )
+
   private val conniverPasses = List(
     conniver.DisposeValues
   )
@@ -108,7 +113,9 @@ object Compiler {
 
     // Optimize
     val optimizedExpressions = if (config.optimizeLevel > 1) {
-      expressions.map(optimize.FlattenSelfExecutingLambdas.apply)
+      optimizerPasses.foldLeft(expressions) { case (expressions, optimizerPass) =>
+        expressions.map(optimizerPass)
+      }
     }
     else {
       expressions

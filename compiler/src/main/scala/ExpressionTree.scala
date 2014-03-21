@@ -112,3 +112,13 @@ case class Parameterize(parameterValues : List[(Expression, Expression)], body :
     et.Parameterize(newParams, f(body))
   }
 }
+
+/**
+ * Returns from the current lambda
+ */
+case class Return(value : Expression) extends Expression {
+  lazy val subexpressions = List(value)
+
+  def map(f : Expression => Expression) : et.Return = 
+    et.Return(f(value))
+}

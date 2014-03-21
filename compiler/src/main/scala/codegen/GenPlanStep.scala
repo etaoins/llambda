@@ -7,7 +7,7 @@ import llambda.llvmir._
 import llambda.compiler.{celltype => ct}
 
 object GenPlanStep {
-  def apply(state : GenerationState, plannedSymbols : Set[String], typeGenerator : TypeGenerator)(step : ps.Step) : GenerationState = step match {
+  def apply(state : GenerationState, plannedSymbols : Set[String], typeGenerator : TypeGenerator)(step : ps.Step) : GenResult = step match {
     case ps.AllocateCells(worldPtrTemp, count) =>
       if (!state.currentAllocation.isEmpty) {
         // This is not only wasteful but dangerous as the previous allocation
@@ -118,30 +118,54 @@ object GenPlanStep {
       val trueStartState = state.copy(currentBlock=trueStartBlock)
       val falseStartState = state.copy(currentBlock=falseStartBlock)
 
-      val trueEndState = GenPlanSteps(trueStartState, plannedSymbols, typeGenerator)(trueSteps)
-      val trueEndBlock = trueEndState.currentBlock
+      val trueResult = GenPlanSteps(trueStartState, plannedSymbols, typeGenerator)(trueSteps)
+      val falseResult = GenPlanSteps(falseStartState, plannedSymbols, typeGenerator)(falseSteps)
 
-      val falseEndState = GenPlanSteps(falseStartState, plannedSymbols, typeGenerator)(falseSteps)
-      val falseEndBlock = falseEndState.currentBlock
+      // This is tricky because branches can return
+      val nonTerminatedResults = List(trueResult, falseResult).collect {
+        // We haven't terminated!
+        case state : GenerationState => 
+          state
+      }
+
+      (trueResult, falseResult) match {
+        case (BlockTerminated, BlockTerminated) =>
+          // Both branches terminated
+          BlockTerminated
+
+        case (trueEndState : GenerationState, BlockTerminated) =>
+          // Only true terminated
+          trueEndState.withTempValue(resultTemp -> trueEndState.liveTemps(trueTemp))
+        
+        case (BlockTerminated, falseEndState : GenerationState) =>
+          // Only false terminated
+          falseEndState.withTempValue(resultTemp -> falseEndState.liveTemps(falseTemp))
+
+        case (trueEndState : GenerationState, falseEndState : GenerationState) =>
+          // Neither branch terminated - we need to phi
+
+          // Get the IR values from either side
+          val trueEndBlock = trueEndState.currentBlock
+          val trueIrValue = trueEndState.liveTemps(trueTemp)
+
+          val falseEndBlock = falseEndState.currentBlock
+          val falseIrValue = falseEndState.liveTemps(falseTemp)
+
+          // Make a final block
+          val phiBlock = state.currentBlock.startChildBlock("condPhi")
+          trueEndBlock.uncondBranch(phiBlock)
+          falseEndBlock.uncondBranch(phiBlock)
+
+          // Make the phi
+          val phiValueIr = phiBlock.phi("condPhiResult")(PhiSource(trueIrValue, trueEndBlock), PhiSource(falseIrValue, falseEndBlock))
+
+          state.copy(
+            currentBlock=phiBlock,
+            // A value is only considered rooted if it was rooted in both branches:
+            gcRootedTemps=(trueEndState.gcRootedTemps & falseEndState.gcRootedTemps)
+          ).withTempValue(resultTemp -> phiValueIr) 
+      }
       
-      // Get the IR values from either side
-      val trueIrValue = trueEndState.liveTemps(trueTemp)
-      val falseIrValue = falseEndState.liveTemps(falseTemp)
-
-      // Make a final block
-      val phiBlock = state.currentBlock.startChildBlock("condPhi")
-      trueEndBlock.uncondBranch(phiBlock)
-      falseEndBlock.uncondBranch(phiBlock)
-
-      // Make the phi
-      val phiValueIr = phiBlock.phi("condPhiResult")(PhiSource(trueIrValue, trueEndBlock), PhiSource(falseIrValue, falseEndBlock))
-
-      state.copy(
-        currentBlock=phiBlock,
-        // A value is only considered rooted if it was rooted in both branches:
-        gcRootedTemps=(trueEndState.gcRootedTemps & falseEndState.gcRootedTemps)
-      ).withTempValue(resultTemp -> phiValueIr) 
-
     case invokeStep @ ps.Invoke(resultOpt, signature, funcPtrTemp, arguments) =>
       val irSignature = ProcedureSignatureToIr(signature)
       val irFuncPtr = state.liveTemps(funcPtrTemp)
@@ -182,13 +206,17 @@ object GenPlanStep {
 
     case ps.Return(None) =>
       state.currentBlock.retVoid()
-      state
+
+      // We returned - no more state
+      BlockTerminated
     
     case ps.Return(Some(returnValueTemp)) =>
       val irRetValue = state.liveTemps(returnValueTemp)
 
       state.currentBlock.ret(irRetValue)
-      state
+
+      // We returned - no more state
+      BlockTerminated
 
     case ps.StorePairCar(resultTemp, pairTemp) =>
       val pairIr = state.liveTemps(pairTemp)
