@@ -44,6 +44,8 @@ public:
 	void removeRange(CellRefRange *range);
 
 private:
+	void initialize();
+
 	MemoryBlock *mBackingBlock;
 	CellRefRange *mActiveHead;
 	CellRefRange *mFreeHead;

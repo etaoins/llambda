@@ -105,10 +105,9 @@ namespace
 	};
 }
 
-void* collect(World &world, void *fromBase, void *fromEnd, void *toBase)
+size_t collect(World &world, Heap &newHeap)
 {
-	// This needs to be an AllocCell so ++ works correctly
-	auto nextNewCell = static_cast<AllocCell*>(toBase);
+	size_t reachableCells = 0;
 
 	std::function<bool (DatumCell**)> rootVisitor = [&] (DatumCell **cellRef) -> bool
 	{
@@ -129,7 +128,7 @@ void* collect(World &world, void *fromBase, void *fromEnd, void *toBase)
 		}
 
 		// Move the cell to the new location
-		DatumCell *newCellLocation = nextNewCell++;
+		DatumCell *newCellLocation = static_cast<DatumCell*>(newHeap.allocate(1));
 		memcpy(newCellLocation, oldCellLocation, sizeof(AllocCell));
 
 		// Update the reference to it
@@ -137,6 +136,9 @@ void* collect(World &world, void *fromBase, void *fromEnd, void *toBase)
 
 		// Make the old cell a forwarding cell
 		new (oldCellLocation) ForwardingCell(newCellLocation);
+
+		// Track this as reachable
+		reachableCells++;
 
 		// Visit the cell's children
 		return true;
@@ -171,8 +173,7 @@ void* collect(World &world, void *fromBase, void *fromEnd, void *toBase)
 	std::function<bool (DatumCell**)> weakRefFunction = weakRefVisitor;
 	visitCellRefList(world.weakRefs, weakRefFunction);
 
-	// This is where new allocations should start from
-	return nextNewCell;
+	return reachableCells;
 }
 
 }

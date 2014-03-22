@@ -7,8 +7,6 @@ import llambda.llvmir._
 
 class CellAllocation(basePointer : IrValue, currentOffset : Int, totalSize : Int) {
   private val cellType = UserDefinedType("cell")
-  // Defined in GarbageState.h in the runtime
-  private val allocatedGcState = 1
 
   // Returns true if this allocation is empty
   def isEmpty : Boolean = 
@@ -30,10 +28,8 @@ class CellAllocation(basePointer : IrValue, currentOffset : Int, totalSize : Int
     val pointerName = s"cell${currentOffset}${asType.llvmName.capitalize}Ptr"
     val typedPointer = block.bitcastTo(pointerName)(cellPointer, PointerType(asType.irType))
 
-    // Mark it as allocated
-    val gcState = IntegerConstant(ct.DatumCell.gcStateIrType, allocatedGcState)
-    asType.genStoreToGcState(block)(gcState, typedPointer)
-    
+    // We will already have our state set to Allocated when it comes off the heap 
+
     // Set its type
     val typeId = IntegerConstant(ct.DatumCell.typeIdIrType, asType.typeId)
     asType.genStoreToTypeId(block)(typeId, typedPointer)

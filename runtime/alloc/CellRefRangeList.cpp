@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include "MemoryBlock.h"
+#include "DynamicMemoryBlock.h"
 
 namespace lliby
 {
@@ -45,9 +45,21 @@ namespace
 	}
 }
 
-CellRefRangeList::CellRefRangeList() : mActiveHead(nullptr)
+CellRefRangeList::CellRefRangeList() : 
+	mBackingBlock(nullptr),
+	mActiveHead(nullptr),
+	mFreeHead(nullptr)
 {
-	mBackingBlock = new MemoryBlock(MemoryBlockSize);
+}
+
+CellRefRangeList::~CellRefRangeList()
+{
+	delete mBackingBlock;
+}
+
+void CellRefRangeList::initialize()
+{
+	mBackingBlock = new DynamicMemoryBlock(MemoryBlockSize);
 
 	const size_t rangeCount = MemoryBlockSize / sizeof(CellRefRange); 
 	auto backingRanges = reinterpret_cast<CellRefRange*>(mBackingBlock->startPointer());
@@ -68,13 +80,14 @@ CellRefRangeList::CellRefRangeList() : mActiveHead(nullptr)
 	mFreeHead = backingRanges;
 }
 
-CellRefRangeList::~CellRefRangeList()
-{
-	delete mBackingBlock;
-}
-
 CellRefRange* CellRefRangeList::addRange(AllocCell **basePointer, size_t cellCount)
 {
+	if (mBackingBlock == nullptr)
+	{
+		// Lazily initialize
+		initialize();
+	}
+
 	if (mFreeHead == nullptr)
 	{
 		std::cerr << "Ran out of space for GC roots" << std::endl;

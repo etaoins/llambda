@@ -1,7 +1,7 @@
 #ifndef _LLIBY_ALLOC_ALLOCATOR_H
 #define _LLIBY_ALLOC_ALLOCATOR_H
 
-#include <stddef.h>
+#include <cstddef>
 
 namespace lliby
 {
@@ -24,9 +24,9 @@ void *allocateCells(World &, size_t count = 1);
 RangeAlloc allocateRange(World &, size_t count);
 
 /**
- * Forces a major GC collection
+ * Forces a major GC collection returning the number of reachable cells
  */
-bool forceCollection(World &world, size_t reserveCount = 0);
+size_t forceCollection(World &world);
 
 }
 }

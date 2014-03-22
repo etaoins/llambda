@@ -8,7 +8,7 @@
 #include "alloc/allocator.h"
 
 #include "generated/declaretypes.h"
-#include "generated/typeid.h"
+#include "generated/CellTypeId.h"
 
 namespace lliby
 {

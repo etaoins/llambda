@@ -12,20 +12,21 @@ namespace lliby
 
 enum class CellTypeId : std::uint8_t
 {
-	Unit = 0,
-	Pair = 1,
-	EmptyList = 2,
-	String = 3,
-	Symbol = 4,
-	Boolean = 5,
-	ExactInteger = 6,
-	InexactRational = 7,
-	Character = 8,
-	Vector = 9,
-	Bytevector = 10,
-	Procedure = 11,
-	Record = 12,
-	ErrorObject = 13,
+	Invalid = 0,
+	Unit = 1,
+	Pair = 2,
+	EmptyList = 3,
+	String = 4,
+	Symbol = 5,
+	Boolean = 6,
+	ExactInteger = 7,
+	InexactRational = 8,
+	Character = 9,
+	Vector = 10,
+	Bytevector = 11,
+	Procedure = 12,
+	Record = 13,
+	ErrorObject = 14,
 };
 
 }
