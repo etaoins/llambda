@@ -1,3 +1,6 @@
+(define-test "(call/cc) exit procedure is a procedure" (expect #t
+	(call/cc procedure?)))
+
 (define-test "trivial (call/cc)" (expect 5
 	(call/cc (lambda (return)
 		(return 5)))))

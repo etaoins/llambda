@@ -6,6 +6,8 @@
 #include "alloc/RangeAlloc.h"
 #include "alloc/StrongRef.h"
 
+#include "dynamic/EscapeProcedureCell.h"
+
 #include "core/error.h"
 
 using namespace lliby;
@@ -65,6 +67,24 @@ DatumCell *lliby_apply(World &world, ProcedureCell *procedure, ListElementCell *
 	}
 
 	return procedure->apply(world, procArgHead);
+}
+
+DatumCell *lliby_call_with_current_continuation(World &world, ProcedureCell *proc)
+{
+	dynamic::EscapeProcedureCell *escapeProc;
+	ListElementCell *argHead;
+
+	{
+		// Create the escape procedure
+		escapeProc = dynamic::EscapeProcedureCell::createInstance(world); 
+
+		// Create a proper list with the escape procedure
+		alloc::StrongRefRange<dynamic::EscapeProcedureCell> escapeProcRef(world, &escapeProc, 1);
+		argHead = ListElementCell::createProperList(world, {escapeProc});
+	}
+
+	// Invoke the procedure passing in the escape proc
+	return proc->apply(world, argHead);
 }
 
 }

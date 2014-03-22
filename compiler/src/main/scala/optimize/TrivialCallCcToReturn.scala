@@ -5,7 +5,11 @@ import llambda.compiler._
 
 object TrivialCallCcToReturn extends Optimizer {
   private val callCcNames = List("call-with-current-continuation", "call/cc")
-  private class ReplacementFailed extends Exception
+
+  private case class ReplacementResult(
+    newExpression : et.Expression,
+    requiresCallCc : Boolean
+  )
 
   private def storageLocReferencedByExpr(storageLoc : StorageLocation, expr : et.Expression) : Boolean = expr match {
     case et.VarRef(refedLoc) =>
@@ -15,33 +19,48 @@ object TrivialCallCcToReturn extends Optimizer {
       nonRef.subexpressions.exists(storageLocReferencedByExpr(storageLoc, _))
   }
 
-  private def replaceExitProcWithReturn(expr : et.Expression, exitProc : StorageLocation) : et.Expression = expr match {
+  private def replaceExitProcWithReturn(expr : et.Expression, exitProc : StorageLocation) : ReplacementResult = expr match {
     case applyExpr @ et.Apply(et.VarRef(appliedVar), List(returnedExpr)) if appliedVar == exitProc =>
-      if (storageLocReferencedByExpr(exitProc, returnedExpr)) {
-        // Tricky - we tried to return something depending on ourselves
-        throw new ReplacementFailed
-      }
-      else {
-        // This is a trivial call/cc usage
-        et.Return(returnedExpr)
-      }
+      // Perform replacement in the expression we're returning
+      val replaceReturnedExprResult = replaceExitProcWithReturn(returnedExpr, exitProc)
+
+      ReplacementResult(
+        newExpression=et.Return(replaceReturnedExprResult.newExpression),
+        // The returned expression itself may reference the exit proc
+        requiresCallCc=replaceReturnedExprResult.requiresCallCc
+      )
 
     case lambdaExpr @ et.Lambda(_, _, bodyExpr) =>
-      if (storageLocReferencedByExpr(exitProc, bodyExpr)) {
-        // This lambda captures the exit proc
-        // That is bad
-        throw new ReplacementFailed
-      }
-
-      lambdaExpr
+      ReplacementResult(
+        newExpression=lambdaExpr,
+        // Check if the lambda captures the exit proc
+        requiresCallCc=storageLocReferencedByExpr(exitProc, bodyExpr)
+      )
 
     case et.VarRef(refedLoc) if refedLoc == exitProc=>
-      // The variable was referenced somehow - abort!
-      throw new ReplacementFailed
+      ReplacementResult(
+        newExpression=expr,
+        // Our exit procedure was referenced besides an application 
+        requiresCallCc=true
+      )
 
     case _ =>
-      // Replace any uses of the exit proc in our subexppresions
-      expr.map(replaceExitProcWithReturn(_, exitProc))
+      var requiresCallCc = false
+
+      // Replace any uses of the exit proc in our subexpressions
+      val newExpr = expr.map { subexpression =>
+        val result = replaceExitProcWithReturn(subexpression, exitProc)
+
+        // If any of our subexpressions require a call/cc then we do
+        requiresCallCc = requiresCallCc || result.requiresCallCc
+
+        result.newExpression
+      }
+
+      ReplacementResult(
+        newExpression=newExpr,
+        requiresCallCc=requiresCallCc
+      )
   }
 
   def apply(expr : et.Expression) : et.Expression = expr match {
@@ -52,20 +71,20 @@ object TrivialCallCcToReturn extends Optimizer {
       // This is a call/cc!
 
       // Try to convert all uses of the exit proc in to a return
-      // If that succeeds we can remove the call/cc application completely
-      // If the exit proc used for anything but an application a ReplacementFailed exception will be thrown
-      val replacedExpr = try {
-        val replacedBody = replaceExitProcWithReturn(bodyExpr, exitProc)
+      val replacementResult = replaceExitProcWithReturn(bodyExpr, exitProc)
 
-        et.Apply(et.Lambda(Nil, None, replacedBody), Nil)
-      }
-      catch {
-        case _ : ReplacementFailed =>
-          expr
-      }
+      // Recursively replace any other (call/cc) users inside the body
+      val newBody = replacementResult.newExpression.map(apply)
 
-      // Now look for replacements to make in our subexpressions
-      replacedExpr.map(apply)
+      if (replacementResult.requiresCallCc) {
+        // We still need to invoke (call/cc)
+        et.Apply(et.VarRef(reportProc), List(et.Lambda(List(exitProc), None, newBody)))
+      }
+      else {
+        // We can strip out the (call/cc) completely
+        // This can be a big efficiency wine
+        et.Apply(et.Lambda(Nil, None, newBody), Nil)
+      }
 
     case _ =>
       expr.map(apply)

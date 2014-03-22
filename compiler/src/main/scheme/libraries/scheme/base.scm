@@ -219,7 +219,7 @@
 	(begin
 	  (define-r7rs procedure? (native-function "lliby_is_procedure" (<datum-cell>) <bool>))
 	  (define-r7rs apply (world-function "lliby_apply" (<procedure-cell> . <list-element-cell>) <datum-cell>))
-	  (define-r7rs call-with-current-continuation (native-function "general_callcc_unimplemented" ()))
+	  (define-r7rs call-with-current-continuation (world-function "lliby_call_with_current_continuation" (<datum-cell>) <datum-cell>))
 	  (define-r7rs call/cc call-with-current-continuation))
 
 	(export make-parameter dynamic-wind)

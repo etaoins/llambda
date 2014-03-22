@@ -29,6 +29,7 @@ add_library(lliby
 	core/init.cpp
 	core/recorddata.cpp
 	dynamic/State.cpp
+	dynamic/EscapeProcedureCell.cpp
 	dynamic/ParameterProcedureCell.cpp
 	dynamic/init.cpp
 	platform/memory.cpp

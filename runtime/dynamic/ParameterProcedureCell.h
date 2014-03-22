@@ -24,7 +24,7 @@ private:
 
 public:
 	/**
-	 * Creates a new procedure cell instance
+	 * Creates a new parameter procedure cell instance
 	 *
 	 * This will enter the allocator and can potentially trigger GC
 	 *
