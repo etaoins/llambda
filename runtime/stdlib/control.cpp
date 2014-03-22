@@ -53,7 +53,7 @@ DatumCell *lliby_apply(World &world, ProcedureCell *procedure, ListElementCell *
 
 			if (!(finalListHead && ProperList<DatumCell>(finalListHead).isValid()))
 			{
-				signalError(world, "Final argument to (apply) must be a proper list", {finalListHead});
+				signalError(world, "Final argument to (apply) must be a proper list", {*applyArgIt});
 			}
 
 			// Reference the procedure cell before allocating the argument list

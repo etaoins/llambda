@@ -12,6 +12,17 @@ import llambda.compiler.SchemeStringImplicits._
 import llambda.compiler.{celltype => ct}
 
 abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite with Inside {
+  private val AbnormalExitCodes = List(
+    // SIGILL
+    128 + 4,
+    // SIGABRT
+    128 + 6,
+    // SIGBUS
+    128 + 10,
+    // SIGSEGV
+    128 + 11
+  )
+
   private case class ExecutionResult(success : Boolean, output : List[ast.Datum], errorString : String)
 
   val resourceBaseDir = "functional/"
@@ -161,8 +172,11 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
       outputFile.delete()
         
       val errorString = utf8InputStreamToString(stderr.get)
-      
-      if (exitValue == 0) {
+
+      if (AbnormalExitCodes.contains(exitValue)) {
+        fail("Execution abnormally terminated with signal " + (exitValue - 128))
+      }
+      else if (exitValue == 0) {
         val outputString = utf8InputStreamToString(stdout.get)
         val output = SchemeParser.parseStringAsData(outputString)
 
