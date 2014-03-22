@@ -39,8 +39,6 @@ namespace
 
 #ifndef _LLIBY_ALWAYS_GC
 	const size_t MaxAllocBeforeForceGc = 1024 * 1024;
-#else
-	const size_t MaxAllocBeforeForceGc = 1;
 #endif
 }
 
@@ -68,10 +66,14 @@ void shutdownWorld(World &world)
     
 void *allocateCells(World &world, size_t count)
 {
+#ifndef _LLIBY_ALWAYS_GC
 	if (world.cellHeap.allocationCounter() > MaxAllocBeforeForceGc)
 	{
+#endif
 		forceCollection(world);
+#ifndef _LLIBY_ALWAYS_GC
 	}
+#endif
 
 	return world.cellHeap.allocate(count);
 }

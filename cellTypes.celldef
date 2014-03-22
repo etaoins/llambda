@@ -24,7 +24,8 @@ fieldtype GarbageState : uint8 {
 
 root cell Datum typetag typeId {
 	TypeId typeId;
-	GarbageState gcState = 0;
+	// This is GarbageState::GlobalConstant
+	GarbageState gcState = 1;
 };
 
 preconstructed cell Unit : Datum {

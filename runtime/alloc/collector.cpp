@@ -48,7 +48,7 @@ namespace
 	{
 	public:
 		ForwardingCell(DatumCell *newLocation) :
-			DatumCell(CellTypeId::Unit, GarbageState::ForwardingCell),
+			DatumCell(CellTypeId::Invalid, GarbageState::ForwardingCell),
 			m_newLocation(newLocation)
 		{
 		}

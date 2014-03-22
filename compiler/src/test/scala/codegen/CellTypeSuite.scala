@@ -22,7 +22,7 @@ class CellTypeSuite extends FunSuite {
     val expectedTypeId = ct.InexactRationalCell.typeId.toString
 
     assert(constant.toIr === 
-      s"{%numeric {%datum {i8 ${expectedTypeId}, i8 0}}, double 31.5}"
+      s"{%numeric {%datum {i8 ${expectedTypeId}, i8 1}}, double 31.5}"
     )
   }
   

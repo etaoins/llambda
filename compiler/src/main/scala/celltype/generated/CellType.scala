@@ -144,7 +144,7 @@ object DatumCell extends CellType with DatumFields {
   def createConstant(typeId : Long) : StructureConstant = {
     StructureConstant(List(
       IntegerConstant(typeIdIrType, typeId),
-      IntegerConstant(gcStateIrType, 0)
+      IntegerConstant(gcStateIrType, 1)
     ), userDefinedType=Some(irType))
   }
 }
