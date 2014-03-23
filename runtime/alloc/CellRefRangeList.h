@@ -10,17 +10,25 @@ namespace lliby
 namespace alloc
 {
 
-class MemoryBlock;
+class CellRefRangeList;
 
 /**
  * Represents a reference to a range of allocated cells
  */
-struct CellRefRange
+class CellRefRange
 {
-	CellRefRange *prev;
+	friend class CellRefRangeList;
+
+public:
 	CellRefRange *next;
 	AllocCell **basePointer;
 	size_t cellCount;
+	
+private:
+	// This is used internally by CellRefRangeList to allow AbstractRefs to be destructed out of order
+	// codegen produces singly linked ranges bacause its ranges are always added and removed in stack order
+	// Make prev private to make sure it's not used outside of CellRefRangeList
+	CellRefRange *prev;
 };
 
 /**
@@ -32,23 +40,16 @@ struct CellRefRange
 class CellRefRangeList
 {
 public:
-	explicit CellRefRangeList();
-	~CellRefRangeList();
-
-	CellRefRange *activeHead() const
+	CellRefRange *head() const
 	{
-		return mActiveHead;
+		return mHead;
 	}
 
-	CellRefRange *addRange(AllocCell **basePointer, size_t cellCount);
-	void removeRange(CellRefRange *range);
+	void addRange(CellRefRange &range);
+	void removeRange(CellRefRange &range);
 
 private:
-	void initialize();
-
-	MemoryBlock *mBackingBlock;
-	CellRefRange *mActiveHead;
-	CellRefRange *mFreeHead;
+	CellRefRange *mHead = nullptr;
 };
 
 }

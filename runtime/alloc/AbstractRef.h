@@ -35,10 +35,10 @@ protected:
 	AbstractRefRange(CellRefRangeList *refList, T** cellRef, size_t cellCount) :
 		m_refList(refList)
 	{
-		m_refRange = m_refList->addRange(
-				reinterpret_cast<AllocCell**>(cellRef),
-				cellCount
-		);
+		m_refRange.basePointer = reinterpret_cast<AllocCell**>(cellRef);
+		m_refRange.cellCount = cellCount;
+
+		m_refList->addRange(m_refRange);
 	}
 
 	/**
@@ -65,7 +65,7 @@ protected:
 	}
 
 	CellRefRangeList *m_refList;
-	CellRefRange *m_refRange;
+	CellRefRange m_refRange;
 };
 
 /**

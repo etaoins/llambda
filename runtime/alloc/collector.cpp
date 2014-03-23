@@ -65,7 +65,7 @@ namespace
 	// Visit every non-null cell in a cell ref list
 	void visitCellRefList(const CellRefRangeList *cellRefList, std::function<bool (DatumCell**)> &visitor)
 	{
-		for(auto cellRefRange = cellRefList->activeHead();
+		for(auto cellRefRange = cellRefList->head();
 		    cellRefRange != nullptr;
 		    cellRefRange = cellRefRange->next)
 		{
