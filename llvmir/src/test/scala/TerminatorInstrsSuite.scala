@@ -111,4 +111,171 @@ class TerminatorInstrsSuite extends IrTestSuite {
       )
     }
   }
+  
+  test("trivial invoke") {
+    val declResult = IrFunction.Result(VoidType, Set())
+    val declArgs = List()
+    val decl = IrFunctionDecl(
+      result=declResult,
+      name="doNothing",
+      arguments=declArgs)
+
+    val normalBlock = createTestBlock("success")
+    val exceptionBlock = createTestBlock("exception")
+
+    val block = createTestBlock()
+    val resultVar = block.invokeDecl(None)(
+      decl=decl,
+      arguments=List(),
+      normalBlock=normalBlock,
+      exceptionBlock=exceptionBlock
+    )
+
+    assert(resultVar === None)
+    assertInstr(block, "invoke void @doNothing() to label %success unwind label %exception")
+  }
+  
+  test("invoke returning value") {
+    val declResult = IrFunction.Result(IntegerType(8), Set(IrFunction.ZeroExt))
+    val declArgs = List()
+    val decl = IrFunctionDecl(
+      result=declResult,
+      name="returnSomething",
+      arguments=declArgs)
+    
+    val normalBlock = createTestBlock("success")
+    val exceptionBlock = createTestBlock("exception")
+
+    val block = createTestBlock()
+    val resultVar = block.invokeDecl(Some("ret"))(
+      decl=decl,
+      arguments=List(),
+      normalBlock=normalBlock,
+      exceptionBlock=exceptionBlock
+    )
+
+    assert(resultVar.isDefined)
+    assertInstr(block, "%ret1 = invoke zeroext i8 @returnSomething() to label %success unwind label %exception")
+  }
+  
+  test("invoke discarding value") {
+    val declResult = IrFunction.Result(IntegerType(8), Set(IrFunction.ZeroExt))
+    val declArgs = List()
+    val decl = IrFunctionDecl(
+      result=declResult,
+      name="returnSomething",
+      arguments=declArgs)
+    
+    val normalBlock = createTestBlock("success")
+    val exceptionBlock = createTestBlock("exception")
+
+    val block = createTestBlock()
+    val resultVar = block.invokeDecl(None)(
+      decl=decl,
+      arguments=List(),
+      normalBlock,
+      exceptionBlock
+    )
+
+    assert(resultVar === None)
+    assertInstr(block, "invoke zeroext i8 @returnSomething() to label %success unwind label %exception")
+  }
+  
+  test("fastcc invoke") {
+    val declResult = IrFunction.Result(VoidType, Set())
+    val declArgs = List()
+    val decl = IrFunctionDecl(
+      result=declResult,
+      name="fastCc",
+      arguments=declArgs,
+      callingConv=CallingConv.FastCC)
+
+    val normalBlock = createTestBlock("success")
+    val exceptionBlock = createTestBlock("exception")
+
+    val block = createTestBlock()
+    val resultVar = block.invokeDecl(None)(
+      decl=decl,
+      arguments=List(),
+      normalBlock,
+      exceptionBlock
+    )
+
+    assert(resultVar === None)
+    assertInstr(block, "invoke fastcc void @fastCc() to label %success unwind label %exception")
+  }
+
+  test("invoke with insufficent args") {
+    val declResult = IrFunction.Result(VoidType, Set())
+    val declArgs = List(IrFunction.Argument(PointerType(IntegerType(8)), Set(IrFunction.NoCapture)))
+    val decl = IrFunctionDecl(
+      result=declResult,
+      name="notEnoughArgs",
+      arguments=declArgs)
+    
+    val normalBlock = createTestBlock("success")
+    val exceptionBlock = createTestBlock("exception")
+    
+    val block = createTestBlock()
+
+    intercept[InconsistentIrException] {
+      block.invokeDecl(None)(decl=decl, arguments=List(), normalBlock, exceptionBlock)
+    }
+  }
+
+  test("invoke with unmatched args") {
+    val declResult = IrFunction.Result(VoidType, Set())
+    val declArgs = List(IrFunction.Argument(IntegerType(8), Set(IrFunction.NoCapture)))
+    val decl = IrFunctionDecl(
+      result=declResult,
+      name="mismatchedArgs",
+      arguments=declArgs)
+    
+    val normalBlock = createTestBlock("success")
+    val exceptionBlock = createTestBlock("exception")
+    
+    val block = createTestBlock()
+    val mismatchedValue = IntegerConstant(IntegerType(16), 5)
+
+    intercept[InconsistentIrException] {
+      block.invokeDecl(None)(
+        decl=decl,
+        arguments=List(mismatchedValue),
+        normalBlock,
+        exceptionBlock
+      )
+    }
+  }
+  
+  test("christmas tree invoke") {
+    val declResult = IrFunction.Result(IntegerType(8), Set(IrFunction.ZeroExt))
+    val declArgs = List(
+      IrFunction.Argument(FloatType, Set(IrFunction.NoCapture, IrFunction.NoAlias)),
+      IrFunction.Argument(PointerType(DoubleType), Set())
+    )
+    val decl = IrFunctionDecl(
+      result=declResult,
+      name="uberCall",
+      arguments=declArgs,
+      attributes=Set(IrFunction.NoUnwind, IrFunction.NoReturn),
+      callingConv=CallingConv.ColdCC
+    )
+    
+    val normalBlock = createTestBlock("success")
+    val exceptionBlock = createTestBlock("exception")
+    
+    val block = createTestBlock()
+    val resultVar = block.invokeDecl(Some("ret"))(
+      decl=decl,
+      arguments=List(
+        FloatConstant(2.0f),
+        LocalVariable("local", PointerType(DoubleType))
+      ),
+      normalBlock=normalBlock,
+      exceptionBlock=exceptionBlock
+    )
+
+    assert(resultVar.isDefined)
+    assertInstr(block, "%ret1 = invoke coldcc zeroext i8 @uberCall(float 2.0, double* %local) noreturn nounwind to label %success unwind label %exception")
+  }
 }

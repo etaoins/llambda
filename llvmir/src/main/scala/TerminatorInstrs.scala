@@ -51,6 +51,37 @@ private[llvmir] trait TerminatorInstrs extends IrInstrBuilder {
 
     instructions += s"switch ${testValue.toIrWithType}, label %${defaultBlock.label} [ ${entriesIr} ]"
   }
+  
+  def invokeDecl(resultName : Option[String])(decl : IrFunctionDeclLike, arguments : Seq[IrValue], normalBlock : IrBranchTarget, exceptionBlock : IrBranchTarget) : Option[LocalVariable] = {
+    invoke(resultName)(decl, decl.irValue, arguments, normalBlock, exceptionBlock)
+  }
+  
+  def invoke(resultName : Option[String])(signature : IrSignatureLike, functionPtr : IrValue, arguments : Seq[IrValue], normalBlock : IrBranchTarget, exceptionBlock : IrBranchTarget) : Option[LocalVariable] = {
+    // We only return a result for non-void result types if they specify a result name
+    val resultVarOpt = signature.result.irType match {
+      case VoidType =>
+        None
+      case otherType : FirstClassType =>
+        resultName.map(allocateLocalVar(otherType, _))
+    }
+
+    // If we're non-void we return a value
+    val assignmentIrOpt = resultVarOpt.map(_.toIr + " =")
+
+    // Build our target blocks
+    val targetBlocksIr = List(
+      s"to label %${normalBlock.label}",
+      s"unwind label %${exceptionBlock.label}"
+    )
+
+    // Start string building
+    val callBody = CallLikeInstructionBody(signature, functionPtr, arguments)
+    val callParts = assignmentIrOpt.toList ++ List("invoke") ++ List(callBody) ++ targetBlocksIr
+
+    instructions += callParts.mkString(" ")
+
+    resultVarOpt
+  }
 
   def resume(resumeValue : IrValue) {
     instructions += s"resume ${resumeValue.toIrWithType}"
