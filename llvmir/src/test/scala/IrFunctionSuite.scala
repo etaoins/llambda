@@ -17,6 +17,20 @@ class IrFunctionSuite extends FunSuite {
     assert(IrFunctionDecl(result, "puts", arguments).toIr === "declare i32 @puts(i8* nocapture)")
   }
   
+  test("printf function decl") {
+    val result = IrFunction.Result(IntegerType(32), Set())
+    val arguments = List(IrFunction.Argument(PointerType(IntegerType(8)), Set(NoAlias, NoCapture)))
+
+    val irValue = IrFunctionDecl(
+      result=result,
+      name="printf",
+      arguments=arguments,
+      hasVararg=true
+    )
+
+    assert(irValue.toIr === "declare i32 @printf(i8* noalias nocapture, ...)")
+  }
+  
   test("puts function decl to type") {
     val result = IrFunction.Result(IntegerType(32), Set())
     val arguments = List(IrFunction.Argument(PointerType(IntegerType(8)), Set(NoCapture)))
@@ -114,12 +128,13 @@ class IrFunctionSuite extends FunSuite {
         result=result,
         name="superfunc",
         arguments=arguments,
+        hasVararg=true,
         gc=Some("shadow"),
         callingConv=CallingConv.ColdCC,
         visibility=Visibility.Protected,
         unnamedAddr=true,
         attributes=Set(IrFunction.Cold, IrFunction.NoUnwind, IrFunction.ReadNone, IrFunction.ReadOnly),
         linkage=Linkage.ExternallyAvailable
-      ).toIr === "declare externally_available protected coldcc zeroext i32 @superfunc(i8* noalias nocapture, [40 x i32] zeroext) unnamed_addr cold nounwind readnone readonly gc \"shadow\"")
+      ).toIr === "declare externally_available protected coldcc zeroext i32 @superfunc(i8* noalias nocapture, [40 x i32] zeroext, ...) unnamed_addr cold nounwind readnone readonly gc \"shadow\"")
   }
 }

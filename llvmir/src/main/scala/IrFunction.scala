@@ -33,6 +33,7 @@ sealed abstract trait IrSignatureLike {
   val callingConv : CallingConv.CallingConv
   val result : IrFunction.Result
   val arguments : List[IrFunction.Argument]
+  val hasVararg : Boolean
   val attributes : Set[IrFunction.FunctionAttribute]
   
   def irType = FunctionType(result.irType, arguments.map(_.irType))
@@ -41,6 +42,7 @@ sealed abstract trait IrSignatureLike {
 case class IrSignature(
   result : IrFunction.Result,
   arguments : List[IrFunction.Argument],
+  hasVararg : Boolean = false,
   attributes : Set[IrFunction.FunctionAttribute] = Set(),
   callingConv : CallingConv.CallingConv = CallingConv.Default
 ) extends IrSignatureLike
@@ -56,9 +58,15 @@ sealed abstract trait IrFunctionDeclLike extends Irable with IrSignatureLike wit
 
   protected def irDecl : String = {
     val escapedName = EscapeIdentifier(name)
+    val varargString = if (hasVararg) {
+      ", ..."
+    }
+    else {
+      ""
+    }
 
     val declParts = List(linkage, visibility, callingConv).flatMap(_.toOptIr) ++
-                    List(s"${result.toIr} @${escapedName}(${irArgList})") ++
+                    List(s"${result.toIr} @${escapedName}(${irArgList}${varargString})") ++
                     (unnamedAddr match {
                       case true => List("unnamed_addr")
                       case false => Nil
@@ -78,6 +86,7 @@ case class IrFunctionDecl(
   result : IrFunction.Result,
   name : String,
   arguments : List[IrFunction.Argument],
+  hasVararg : Boolean = false,
   attributes : Set[IrFunction.FunctionAttribute] = Set(),
   linkage : Linkage.Linkage = Linkage.Default,
   visibility : Visibility.Visibility = Visibility.Default,
@@ -94,6 +103,7 @@ class IrFunctionBuilder(
   val result : IrFunction.Result,
   val name : String,
   val namedArguments : List[(String, IrFunction.Argument)],
+  val hasVararg : Boolean = false,
   val attributes : Set[IrFunction.FunctionAttribute] = Set(), 
   val linkage : Linkage.Linkage = Linkage.Default,
   val visibility : Visibility.Visibility = Visibility.Default,

@@ -29,13 +29,15 @@ class IrFunctionBuilderSuite extends FunSuite {
     val function = new IrFunctionBuilder(
       result=result,
       name="retArg",
-      namedArguments=namedArguments)
+      namedArguments=namedArguments,
+      hasVararg=true
+    )
 
     val entryBlock = function.entryBlock
     entryBlock.ret(function.argumentValues("testArg"))
 
     assert(function.toIr ===
-      "define i32 @retArg(i32 %testArg) {\n" +
+      "define i32 @retArg(i32 %testArg, ...) {\n" +
       "entry:\n" +
       "\tret i32 %testArg\n" +
       "}")

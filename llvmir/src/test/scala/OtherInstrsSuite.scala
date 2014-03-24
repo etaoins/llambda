@@ -234,7 +234,6 @@ class OtherInstrsSuite extends IrTestSuite {
       arguments=declArgs)
     
     val block = createTestBlock()
-    val mismatchedValue = IntegerConstant(IntegerType(16), 5)
 
     val resultVar = block.callDecl(None)(
       decl=decl,
@@ -246,6 +245,62 @@ class OtherInstrsSuite extends IrTestSuite {
   
     assert(resultVar === None)
     assertInstr(block, "call void @withArgs(i8 1, i1* %local)")
+  }
+  
+  test("call with varargs") {
+    val declResult = IrFunction.Result(VoidType, Set())
+    val declArgs = List(
+      IrFunction.Argument(IntegerType(8), Set(IrFunction.NoCapture)),
+      IrFunction.Argument(PointerType(IntegerType(1)), Set())
+    )
+
+    val decl = IrFunctionDecl(
+      result=declResult,
+      name="withArgs",
+      arguments=declArgs,
+      hasVararg=true
+    )
+    
+    val block = createTestBlock()
+
+    val resultVar = block.callDecl(None)(
+      decl=decl,
+      arguments=List(
+        IntegerConstant(IntegerType(8), 1),
+        LocalVariable("local", PointerType(IntegerType(1))),
+        DoubleConstant(5.0)
+      )
+    )
+  
+    assert(resultVar === None)
+    assertInstr(block, "call void @withArgs(i8 1, i1* %local, double 5.0)")
+  }
+  
+  test("call with too many args") {
+    val declResult = IrFunction.Result(VoidType, Set())
+    val declArgs = List(
+      IrFunction.Argument(IntegerType(8), Set(IrFunction.NoCapture)),
+      IrFunction.Argument(PointerType(IntegerType(1)), Set())
+    )
+
+    val decl = IrFunctionDecl(
+      result=declResult,
+      name="withArgs",
+      arguments=declArgs
+    )
+    
+    val block = createTestBlock()
+
+    intercept[InconsistentIrException] {
+      block.callDecl(None)(
+        decl=decl,
+        arguments=List(
+          IntegerConstant(IntegerType(8), 1),
+          LocalVariable("local", PointerType(IntegerType(1))),
+          DoubleConstant(5.0)
+        )
+      )
+    }
   }
   
   test("call with attrs") {

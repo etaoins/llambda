@@ -14,18 +14,25 @@ private[llvmir] object CallLikeInstructionBody {
 
     val functionPtrIr = functionPtr.toIr
 
-    if (arguments.length != signature.arguments.length) {
-      throw new InconsistentIrException("Passed argument count didn't match signature argument count")
+    if (signature.hasVararg) {
+      if (arguments.length < signature.arguments.length) {
+        throw new InconsistentIrException(s"Passed ${arguments.length} arguments; expected at least ${signature.arguments.length}")
+      }
+    }
+    else {
+      if (arguments.length != signature.arguments.length) {
+        throw new InconsistentIrException(s"Passed ${arguments.length} arguments; expected exactly ${signature.arguments.length}")
+      }
     }
 
     // Make sure the argument types match the ones expected by the signature
-    val argIr = (arguments zip (signature.arguments)) map { case (arg, argDecl) =>
+    (arguments zip (signature.arguments)) map { case (arg, argDecl) =>
       if (arg.irType != argDecl.irType) {
         throw new InconsistentIrException(s"Argument passed with ${arg.irType}, signature as ${argDecl.irType}")
       }
-
-      arg.toIrWithType
-    } mkString(", ")
+    }
+    
+    val argIr = arguments.map(_.toIrWithType).mkString(", ")
 
     // Only noreturn, nounwind, readnone, and readonly are allowed here
     val filteredFuncAttrs = signature.attributes.intersect(Set(IrFunction.NoReturn, IrFunction.NoUnwind, IrFunction.ReadNone, IrFunction.ReadOnly))
