@@ -331,5 +331,12 @@ class OtherInstrsSuite extends IrTestSuite {
       block.select("incompattypes")(condValue, trueValue, falseValue)
     }
   }
+
+  test("resume with i32 5") {
+    val block = createTestBlock()
+    block.resume(IntegerConstant(IntegerType(32), 5))
+
+    assertInstr(block, "resume i32 5")
+  }
 }
 

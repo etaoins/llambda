@@ -51,5 +51,9 @@ private[llvmir] trait TerminatorInstrs extends IrInstrBuilder {
 
     instructions += s"switch ${testValue.toIrWithType}, label %${defaultBlock.label} [ ${entriesIr} ]"
   }
+
+  def resume(resumeValue : IrValue) {
+    instructions += s"resume ${resumeValue.toIrWithType}"
+  }
 }
 
