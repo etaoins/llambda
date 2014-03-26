@@ -4,7 +4,7 @@ version := "0.0.1"
 
 organization := "io.llambda"
 
-scalaVersion := "2.10.3"
+scalaVersion := "2.10.4"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.0" % "test"
 
