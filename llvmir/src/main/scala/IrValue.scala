@@ -83,7 +83,7 @@ case class StructureConstant(members : Seq[IrConstant], userDefinedType : Option
   def toIr = "{" + members.map(_.toIrWithType).mkString(", ") + "}"
 }
 
-case class ArrayConstant(innerType : FirstClassType , members : Seq[IrConstant]) extends ArrayLikeConstant {
+case class ArrayConstant(innerType : FirstClassType, members : Seq[IrConstant]) extends ArrayLikeConstant {
   val length = members.length
 
   def toIr = "[" + members.map(_.toIrWithType).mkString(", ") + "]"

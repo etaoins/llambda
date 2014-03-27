@@ -78,6 +78,5 @@ private[llvmir] trait OtherInstrs extends IrInstrBuilder {
     instructions += s"${resultVar.toIr} = select ${cond.toIrWithType}, ${trueValue.toIrWithType}, ${falseValue.toIrWithType}"
 
     resultVar
-
   }
 }
