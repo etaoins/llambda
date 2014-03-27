@@ -27,10 +27,11 @@ object LlvmTypeToScalaConstructor {
           .replaceAllLiterally("\"", "\\\""))
 
         s"""UserDefinedType("${quotedName}")"""
-      case llvmir.FunctionType(retType, args) =>
+      case llvmir.FunctionType(retType, args, hasVararg) =>
         "FunctionType(" + 
           apply(retType) + ", " + 
-          "List(" + args.map(apply).mkString(", ") + ")" +
+          "List(" + args.map(apply).mkString(", ") + "), " +
+          (if (hasVararg) { "true" } else { "false" }) +
         ")"
     }
   }

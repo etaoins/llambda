@@ -67,7 +67,7 @@ class LlvmTypeToScalaConstructorSuite extends FunSuite {
           )
         )
       )) === 
-      """PointerType(FunctionType(IntegerType(8), List(IntegerType(64), PointerType(DoubleType))))"""
+      """PointerType(FunctionType(IntegerType(8), List(IntegerType(64), PointerType(DoubleType)), false))"""
     )
   }
 }

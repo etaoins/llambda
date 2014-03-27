@@ -33,13 +33,14 @@ class IrTypeSuite extends FunSuite {
 
   test("function type") {
     assert(FunctionType(i32, List(i32)).toIr === "i32 (i32)")
-    assert(PointerType(FunctionType(FloatType, List(i16, PointerType(i32)))).toIr === "float (i16, i32*) *")
-    assert(FunctionType(StructureType(List(i32, i32)), List(i32)).toIr === "{i32, i32} (i32)")
+    assert(PointerType(FunctionType(FloatType, List(i16, PointerType(i32)))).toIr === "float (i16, i32*)*")
+    assert(FunctionType(StructureType(List(i32, i32)), List(i32), true).toIr === "{i32, i32} (i32, ...)")
+    assert(FunctionType(i32, Nil, true).toIr === "i32 (...)")
   }
 
   test("structure type") {
     assert(StructureType(List(i32, i32, i32)).toIr === "{i32, i32, i32}")
-    assert(StructureType(List(FloatType, PointerType(FunctionType(i32, List(i32))))).toIr === "{float, i32 (i32) *}")
+    assert(StructureType(List(FloatType, PointerType(FunctionType(i32, List(i32))))).toIr === "{float, i32 (i32)*}")
   }
 
   test("pointer type") {

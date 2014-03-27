@@ -36,7 +36,7 @@ sealed abstract trait IrSignatureLike {
   val hasVararg : Boolean
   val attributes : Set[IrFunction.FunctionAttribute]
   
-  def irType = FunctionType(result.irType, arguments.map(_.irType))
+  def irType = FunctionType(result.irType, arguments.map(_.irType), hasVararg)
 }
 
 case class IrSignature(
@@ -54,19 +54,23 @@ sealed abstract trait IrFunctionDeclLike extends Irable with IrSignatureLike wit
   val unnamedAddr : Boolean
   val gc : Option[String]
 
-  protected def irArgList : String
+  protected def fixedArgIr : List[String]
 
   protected def irDecl : String = {
     val escapedName = EscapeIdentifier(name)
-    val varargString = if (hasVararg) {
-      ", ..."
+    
+    val irArgParts = fixedArgIr ++ (if (hasVararg) {
+      // Add ... at the end of the arg list to indicate varargs
+      List("...")
     }
     else {
-      ""
-    }
+      Nil
+    })
 
+    val irArgList = irArgParts.mkString(", ")
+    
     val declParts = List(linkage, visibility, callingConv).flatMap(_.toOptIr) ++
-                    List(s"${result.toIr} @${escapedName}(${irArgList}${varargString})") ++
+                    List(s"${result.toIr} @${escapedName}(${irArgList})") ++
                     (unnamedAddr match {
                       case true => List("unnamed_addr")
                       case false => Nil
@@ -94,7 +98,8 @@ case class IrFunctionDecl(
   unnamedAddr : Boolean = false,
   gc : Option[String] = None
 ) extends IrFunctionDeclLike {
-  protected def irArgList : String = arguments.map(_.toIr).mkString(", ")
+  protected def fixedArgIr : List[String] =
+    arguments.map(_.toIr)
 
   def toIr = "declare " + irDecl
 }
@@ -123,10 +128,10 @@ class IrFunctionBuilder(
 
   val entryBlock = new IrEntryBlockBuilder(nameSource)
 
-  protected def irArgList : String = {
+  protected def fixedArgIr : List[String] = {
     namedArguments map { case(argName, argument) =>
       argument.toIr + " %" + EscapeIdentifier(argName)
-    } mkString(", ")
+    }
   }
 
   def toIr : String = {

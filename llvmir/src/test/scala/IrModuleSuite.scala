@@ -82,7 +82,7 @@ class IrModuleSuite extends FunSuite {
       "\tcall i32 @\"Put String\"(i8* %helloPtr1) nounwind\n" +
       "\tret i32 0\n" +
       "}\n" +
-      "@mainAlias = alias i32 (i32, i8**) * @main"
+      "@mainAlias = alias i32 (i32, i8**)* @main"
     )
   }
 }

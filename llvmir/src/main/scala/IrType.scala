@@ -35,8 +35,17 @@ case class ArrayType(elements : Int, innerType : FirstClassType) extends FirstCl
   def toIr = s"[$elements x $innerType]"
 }
 
-case class FunctionType(returnType : ReturnableType, parameterTypes : Seq[FirstClassType]) extends IrType {
-  def toIr = returnType + " (" + parameterTypes.map(_.toIr).mkString(", ") + ")"
+case class FunctionType(returnType : ReturnableType, parameterTypes : Seq[FirstClassType], hasVararg : Boolean = false) extends IrType {
+  def toIr : String = {
+    val parameterIrParts = parameterTypes.map(_.toIr) ++ (if (hasVararg) {
+      List("...")
+    }
+    else {
+      Nil
+    })
+
+    returnType + " (" + parameterIrParts.mkString(", ") + ")"
+  }
 }
 
 case class StructureType(memberTypes : Seq[FirstClassType]) extends FirstClassType {
@@ -44,9 +53,5 @@ case class StructureType(memberTypes : Seq[FirstClassType]) extends FirstClassTy
 }
 
 case class PointerType(pointeeType : IrType) extends FirstClassType {
-  def toIr = pointeeType match {
-    // Leaving the space after the parameter list looks nicer
-    case _ : FunctionType => pointeeType.toIr + " *"
-    case _ => pointeeType.toIr + "*"
-  }
+  def toIr = pointeeType.toIr + "*"
 }

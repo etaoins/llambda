@@ -38,6 +38,24 @@ class IrFunctionSuite extends FunSuite {
     assert(IrFunctionDecl(result, "puts", arguments).irType === FunctionType(IntegerType(32), List(PointerType(IntegerType(8)))))
   }
   
+  test("printf function decl to type") {
+    val result = IrFunction.Result(IntegerType(32), Set())
+    val arguments = List(IrFunction.Argument(PointerType(IntegerType(8)), Set(NoAlias, NoCapture)))
+
+    val irValue = IrFunctionDecl(
+      result=result,
+      name="printf",
+      arguments=arguments,
+      hasVararg=true
+    )
+
+    assert(irValue.irType == FunctionType(
+      returnType=IntegerType(32),
+      parameterTypes=List(PointerType(IntegerType(8))),
+      hasVararg=true
+    ))
+  }
+  
   test("puts function decl to value") {
     val result = IrFunction.Result(IntegerType(32), Set())
     val arguments = List(IrFunction.Argument(PointerType(IntegerType(8)), Set(NoCapture)))
@@ -52,6 +70,15 @@ class IrFunctionSuite extends FunSuite {
     val result = IrFunction.Result(IntegerType(8), Set(SignExt))
     
     assert(IrFunctionDecl(result, "returns_signed_char", Nil).toIr === "declare signext i8 @returns_signed_char()") 
+  }
+  
+  test("vararg only decl") {
+    assert(IrFunctionDecl(
+        result=IrFunction.Result(VoidType, Set()), 
+        name="funcname",
+        arguments=Nil,
+        hasVararg=true
+      ).toIr === "declare void @funcname(...)")
   }
   
   test("attribute decl") {
