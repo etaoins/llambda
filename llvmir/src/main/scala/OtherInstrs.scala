@@ -79,4 +79,23 @@ private[llvmir] trait OtherInstrs extends IrInstrBuilder {
 
     resultVar
   }
+  
+  def landingpad(resultName : String)(resultType : FirstClassType,  personalityFunction : IrValue, clauses : Seq[LandingpadClause], cleanup : Boolean = false) : LocalVariable = {
+    if (clauses.isEmpty && !cleanup) {
+      throw new InconsistentIrException("Attempted non-cleanup landingpad with no clauses")
+    }
+
+    val cleanupClauseOpt = if (cleanup) {
+      Some("cleanup")
+    }
+    else {
+      None
+    }
+
+    val clausesIr = cleanupClauseOpt.toList ++ clauses.map(_.toIr)
+
+    val resultVar = allocateLocalVar(resultType, resultName)
+    instructions += s"${resultVar.toIr} = landingpad ${resultType.toIr} personality ${personalityFunction.toIrWithType} " + clausesIr.mkString(" ")
+    resultVar
+  }
 }

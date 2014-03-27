@@ -1,6 +1,22 @@
 package io.llambda.llvmir
 
 class OtherInstrsSuite extends IrTestSuite {
+  // This is effectively the only exception personality on mainstream Unix-likes
+  // Use this for the landingpad tests
+  private val gxxPersonalityV0 = GlobalVariable(
+    name="__gxx_personality_v0",
+    irType=PointerType(FunctionType(
+      returnType=IntegerType(32),
+      parameterTypes=Nil,
+      hasVararg=true
+    ))
+  )
+
+  private val gxxResultType = StructureType(List(
+    PointerType(IntegerType(8)),
+    IntegerType(32)
+  ))
+
   test("integer equality") {
     val var1 = IntegerConstant(IntegerType(32), 20)
     val var2 = IntegerConstant(IntegerType(32), 30)
@@ -392,6 +408,65 @@ class OtherInstrsSuite extends IrTestSuite {
     block.resume(IntegerConstant(IntegerType(32), 5))
 
     assertInstr(block, "resume i32 5")
+  }
+
+  test("non-cleanup landingpad with no clauses fails") {
+    val block = createTestBlock()
+
+    intercept[InconsistentIrException] {
+      block.landingpad("nocleanup")(gxxResultType, gxxPersonalityV0, Nil)
+    }
+  }
+  
+  test("cleanup landingpad with no clauses") {
+    val block = createTestBlock()
+
+    val resultVal = block.landingpad("cleanup")(gxxResultType, gxxPersonalityV0, Nil, true)
+
+    assert(resultVal.irType === gxxResultType)
+    assertInstr(block, "%cleanup1 = landingpad {i8*, i32} personality i32 (...)* @__gxx_personality_v0 cleanup")
+  }
+  
+  test("non-cleanup landingpad with two catches") {
+    val exceptionClass1 = GlobalVariable("class1", PointerType(PointerType(IntegerType(8))))
+    val exceptionClass2 = GlobalVariable("class2", PointerType(PointerType(IntegerType(8))))
+
+    val block = createTestBlock()
+
+    val clauses = List(
+      CatchClause(exceptionClass1),
+      CatchClause(exceptionClass2)
+    )
+
+    val resultVal = block.landingpad("landresult")(gxxResultType, gxxPersonalityV0, clauses, false)
+
+    assert(resultVal.irType === gxxResultType)
+    assertInstr(block, 
+      "%landresult1 = landingpad {i8*, i32} personality i32 (...)* @__gxx_personality_v0 catch i8** @class1 catch i8** @class2"
+    )
+  }
+  
+  test("cleanup landingpad with catch and filter") {
+    val exceptionClass1 = GlobalVariable("class1", PointerType(PointerType(IntegerType(8))))
+    val exceptionClass2 = GlobalVariable("class2", PointerType(PointerType(IntegerType(8))))
+    val exceptionClass3 = GlobalVariable("class3", PointerType(PointerType(IntegerType(8))))
+
+    val block = createTestBlock()
+
+    val clauses = List(
+      CatchClause(exceptionClass1),
+      FilterClause(
+        PointerType(PointerType(IntegerType(8))),
+        List(exceptionClass2, exceptionClass3)
+      )
+    )
+
+    val resultVal = block.landingpad("landresult")(gxxResultType, gxxPersonalityV0, clauses, true)
+
+    assert(resultVal.irType === gxxResultType)
+    assertInstr(block, 
+      "%landresult1 = landingpad {i8*, i32} personality i32 (...)* @__gxx_personality_v0 cleanup catch i8** @class1 filter [2 x i8**] [i8** @class2, i8** @class3]"
+    )
   }
 }
 
