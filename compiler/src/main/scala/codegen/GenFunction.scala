@@ -22,7 +22,8 @@ private[codegen] object GenFunction {
       namedArguments=namedIrArguments,
       name=nativeSymbol,
       linkage=Linkage.Internal,
-      gc=Some("shadow-stack")) 
+      gc=Some("shadow-stack")
+    ) 
 
     // Create a blank generation state with just our args
     val argTemps = (plannedFunction.namedArguments map { case (name, tempValue) =>
@@ -34,12 +35,21 @@ private[codegen] object GenFunction {
 
     val procStartBlock = generatedFunction.entryBlock.startChildBlock("procStart")
 
+    // Create our landingpad if we need one
+    val gcCleanUpBlockOpt = plannedFunction.worldPtrOption map { _ =>
+      val block = generatedFunction.entryBlock.startChildBlock("gcCleanUp")
+      GenGcCleanUpBlock(module, block)
+      block
+    }
+
     val startState = GenerationState(
       module=module,
       gcSlots=gcSlots,
       currentBlock=procStartBlock,
       currentAllocation=EmptyCellAllocation(),
-      liveTemps=argTemps)
+      liveTemps=argTemps,
+      gcCleanUpBlockOpt=gcCleanUpBlockOpt
+    )
 
     // Generate our steps
     GenPlanSteps(startState, plannedSymbols, typeGenerator)(plannedFunction.steps)

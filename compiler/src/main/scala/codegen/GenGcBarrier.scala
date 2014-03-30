@@ -80,21 +80,25 @@ object GenGcBarrier {
     })
   }
 
-  def apply[T](initialState : GenerationState)(innerBlock : => T) : (GenerationState, T) = {
+  def apply[T](initialState : GenerationState)(innerBlock : => (IrBlockBuilder, T)) : (GenerationState, T) = {
     val calcedBarrier = calculateGcBarrier(initialState)
     val block = initialState.currentBlock
     
     genSaveGcRoots(initialState)(calcedBarrier)
 
     // Call the inner block
-    val innerBlockResult = innerBlock
+    val (successBlock, innerBlockResult) = innerBlock
+
+    val postInnerBlockState = initialState.copy(
+      currentBlock=successBlock
+    )
 
     // Restore all values
-    val newTempValues = genRestoreGcRoots(initialState)(calcedBarrier)
+    val newTempValues = genRestoreGcRoots(postInnerBlockState)(calcedBarrier)
 
     val liveTempsUpdate = calcedBarrier.restoreTemps.map(_._1).zip(newTempValues)
 
-    val finalState = initialState.copy(
+    val finalState = postInnerBlockState.copy(
       liveTemps=initialState.liveTemps ++ liveTempsUpdate,
       gcRootedTemps=calcedBarrier.finalGcRootedTemps
     )

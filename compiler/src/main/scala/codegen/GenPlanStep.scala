@@ -182,18 +182,31 @@ object GenPlanStep {
       )
 
       val callBlock = () => {  
-        preBarrierState.currentBlock.call(Some("ret"))(irSignature, irFuncPtr, irArguments)
+        val irValue = preBarrierState.currentBlock.call(Some("ret"))(irSignature, irFuncPtr, irArguments)
+        (preBarrierState.currentBlock, irValue)
       }
 
       val (finalState, irRetOpt) = if (invokeStep.canAllocate) {
         // We need a GC barrier
         GenGcBarrier(preBarrierState) {
-          callBlock()
+          val invokeBlock = preBarrierState.currentBlock
+          val successBlock = invokeBlock.startChildBlock("invokeSuccess") 
+
+          val irValue = invokeBlock.invoke(Some("invokeRet"))(
+            signature=irSignature,
+            functionPtr=irFuncPtr,
+            arguments=irArguments,
+            normalBlock=successBlock,
+            exceptionBlock=preBarrierState.gcCleanUpBlockOpt.get
+          )
+
+          (successBlock, irValue)
         }
       }
       else {
-        // This call can't allocate - skip the barrier
-        (preBarrierState, callBlock())
+        // This call can't allocate or throw exceptions - skip the barrier and invoke 
+        val irValue = preBarrierState.currentBlock.call(Some("ret"))(irSignature, irFuncPtr, irArguments)
+        (preBarrierState, irValue)
       }
 
       resultOpt match {
