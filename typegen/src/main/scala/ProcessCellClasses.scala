@@ -100,7 +100,7 @@ object ProcessCellClasses {
       val inheritedFieldNames = parentCellClassOpt.map(collectFieldNames).getOrElse(Set[String]())
 
       // First check our fields
-      val fieldNames = parsedCellDef.fields.foldLeft(inheritedFieldNames) { (seenFields, parsedField) =>
+      parsedCellDef.fields.foldLeft(inheritedFieldNames) { (seenFields, parsedField) =>
         if (seenFields.contains(parsedField.name)) {
           throw new DuplicateFieldNameException(parsedField)
         }

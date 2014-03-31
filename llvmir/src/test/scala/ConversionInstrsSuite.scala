@@ -239,7 +239,7 @@ class ConversionInstrsSuite extends IrTestSuite {
     val block = createTestBlock()
     
     intercept[InconsistentIrException] {
-      val resultVar = block.uitofp("trivial")(sourceValue, FloatType)
+      block.uitofp("trivial")(sourceValue, FloatType)
     }
   }
  
@@ -259,7 +259,7 @@ class ConversionInstrsSuite extends IrTestSuite {
     val block = createTestBlock()
     
     intercept[InconsistentIrException] {
-      val resultVar = block.sitofp("trivial")(sourceValue, FloatType)
+      block.sitofp("trivial")(sourceValue, FloatType)
     }
   }
 

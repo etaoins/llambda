@@ -1,6 +1,6 @@
 package io.llambda.llvmir
 
-protected[llvmir] case class PhiSource(value : IrValue, block : IrBlockBuilder)
+case class PhiSource(value : IrValue, block : IrBlockBuilder)
 
 private[llvmir] trait PhiInstr extends IrInstrBuilder {
   def phi(resultName : String)(sources : PhiSource*) : LocalVariable = {

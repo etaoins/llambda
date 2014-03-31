@@ -80,7 +80,6 @@ object GenProgram {
     
     // Call __llambda_exec through _lliby_launch_world
     // __llambda_exec must be defined by the planner
-    val execIrSignature = ProcedureSignatureToIr(LlambdaExecSignature)
     val execValue = GenNamedEntryPoint(module)(LlambdaExecSignature, LlambdaExecSignature.nativeSymbol, plannedSymbols) 
 
     entryBlock.callDecl(None)(llibyLaunchWorldDecl, List(execValue), false)

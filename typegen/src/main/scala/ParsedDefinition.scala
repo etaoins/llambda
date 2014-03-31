@@ -1,6 +1,5 @@
 package io.llambda.typegen
 
-import collection.immutable.ListMap
 import scala.util.parsing.input.Positional
 
 sealed abstract class ParsedDefinition extends Positional {

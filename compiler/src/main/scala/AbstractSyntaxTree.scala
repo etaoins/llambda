@@ -141,7 +141,7 @@ case class Bytevector(elements : Vector[Short]) extends NonSymbolLeaf {
 
 case class CharLiteral(value : Char) extends NonSymbolLeaf {
   override def toString = value match {
-    case '\0' => """#\null"""
+    case 0    => """#\null"""
     case ' '  => """#\space"""
     case '\n' => """#\newline"""
     case '\r' => """#\return"""

@@ -1,7 +1,5 @@
 package io.llambda.typegen
 
-import java.io.File
-
 package object writer {
   type OutputWriter = (ProcessedTypes) => Map[String, String]
 

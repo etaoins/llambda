@@ -7,7 +7,7 @@ import llambda.compiler.{valuetype => vt}
 
 object ExtractNativeFunction {
   private def createNativeFunction(hasWorldArg : Boolean, fixedArgData : List[sst.ScopedDatum], restArgDatum : Option[sst.ScopedSymbol], returnTypeDatum : Option[sst.ScopedSymbol], nativeSymbol : String) : et.NativeFunction = {
-    var fixedArgTypes = fixedArgData map DatumToValueType.apply
+    val fixedArgTypes = fixedArgData map DatumToValueType.apply
 
     val hasRestArg = restArgDatum match {
       case Some(datum) =>

@@ -82,7 +82,6 @@ object GenGcBarrier {
 
   def apply[T](initialState : GenerationState)(innerBlock : => (IrBlockBuilder, T)) : (GenerationState, T) = {
     val calcedBarrier = calculateGcBarrier(initialState)
-    val block = initialState.currentBlock
     
     genSaveGcRoots(initialState)(calcedBarrier)
 

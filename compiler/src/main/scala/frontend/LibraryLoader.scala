@@ -50,7 +50,7 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
     (libraryName map {
       case StringComponent(str) => 
         // These are reserved characters for POSIX paths
-        if (str.contains('\0') || str.contains('/')) {
+        if (str.contains(0) || str.contains('/')) {
           throw new DubiousLibraryNameComponentException(loadLocation, str)
         }
         else {

@@ -1,16 +1,13 @@
 package io.llambda.compiler.codegen
 import io.llambda
 
-import llambda.compiler.InternalCompilerErrorException
 import llambda.compiler.{celltype => ct}
 import llambda.llvmir._
-import llambda.llvmir.IrFunction._
 
 object GenProperList {
   // irDatumCell must be of type %datum*
   def apply(initialState : GenerationState)(irDataCells : Seq[IrValue]) : (GenerationState, IrValue) = {
     val block = initialState.currentBlock
-    val listLength = irDataCells.length
     val emptyList = GlobalDefines.emptyListIrValue
 
     val bitcastEmptyList = block.bitcastTo("emptyListCast")(emptyList, PointerType(ct.DatumCell.irType))

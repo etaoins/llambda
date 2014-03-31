@@ -34,7 +34,7 @@ object CheckTopLevelNamespace {
     }
 
     // Make sure all definition names are unique and collect their names
-    val allTypeNames = (parsedCellDefs ++ parsedUserFieldTypes).foldLeft(predefinedTypeNames) {
+    (parsedCellDefs ++ parsedUserFieldTypes).foldLeft(predefinedTypeNames) {
       case (seenNames, definition) =>
         if (seenNames.contains(definition.name)) {
           throw new DuplicateTypeNameException(definition)

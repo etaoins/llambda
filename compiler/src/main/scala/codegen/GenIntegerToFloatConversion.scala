@@ -4,8 +4,6 @@ import io.llambda
 import llambda.llvmir._
 import llambda.compiler.{valuetype => vt}
 
-import llambda.compiler.InternalCompilerErrorException
-
 object GenIntegerToFloatConversion {
   def apply(block : IrBlockBuilder)(fromValue : IrValue, fromSigned : Boolean, fpType : vt.FpType) : IrValue = {
     val convFunction = if (fromSigned) {

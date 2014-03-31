@@ -1,7 +1,6 @@
 package io.llambda.compiler.frontend
 import io.llambda
 
-import llambda.compiler.PrimitiveExpressions
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.sst
 import llambda.compiler.{BoundType, BadSpecialFormException}

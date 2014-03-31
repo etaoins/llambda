@@ -12,8 +12,6 @@ private[llvmir] object CallLikeInstructionBody {
 
     val resultTypeIr = signature.result.irType.toIr
 
-    val functionPtrIr = functionPtr.toIr
-
     if (signature.hasVararg) {
       if (arguments.length < signature.arguments.length) {
         throw new InconsistentIrException(s"Passed ${arguments.length} arguments; expected at least ${signature.arguments.length}")

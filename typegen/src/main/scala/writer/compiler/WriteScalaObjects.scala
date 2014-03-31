@@ -85,7 +85,7 @@ object WriteScalaObjects extends writer.OutputWriter {
           scalaBuilder.block {
             // This is tricky because our generated code is using string interpolation
             // Note this is evaluated in the generated code, not at generation time
-            val exceptionMessage = "Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}"
+            val exceptionMessage = "Unexpected type for cell value. Passed " + "$" + "{valueCell.irType}, expected " + "$" + "{PointerType(irType)}"
             scalaBuilder += s"""throw new InternalCompilerErrorException(s"${exceptionMessage}")"""
           }
 

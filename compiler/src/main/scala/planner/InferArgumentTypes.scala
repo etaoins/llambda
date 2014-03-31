@@ -6,7 +6,6 @@ import collection.mutable
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
-import llambda.compiler.InternalCompilerErrorException
 
 object InferArgumentTypes {
   private case class RetypingResult(

@@ -198,7 +198,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   
   test("define type") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
-    val expressions = bodyFor("(define-type <custom-type> <int32>)")(scope)
+    bodyFor("(define-type <custom-type> <int32>)")(scope)
 
     assert(scope("<custom-type>") === BoundType(vt.Int32))
 
@@ -278,7 +278,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-true").value
 
     inside(expr) {
-      case et.Bind((procLoc, et.Lambda(Nil, None, bodyExpr)) :: Nil) =>
+      case et.Bind((storageLoc, et.Lambda(Nil, None, bodyExpr)) :: Nil) if procLoc == storageLoc =>
         assert(bodyExpr === et.Literal(ast.BooleanLiteral(true)))
     }
 
@@ -295,7 +295,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-true").value
 
     inside(expr) {
-      case et.Bind((procLoc, et.Lambda(_ :: Nil, None, bodyExpr)) :: Nil) =>
+      case et.Bind((storageLoc, et.Lambda(_ :: Nil, None, bodyExpr)) :: Nil) if procLoc == storageLoc =>
         assert(bodyExpr === et.Literal(ast.BooleanLiteral(true)))
     }
 
@@ -312,7 +312,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-false").value
 
     inside(expr) {
-      case et.Bind((procLoc, et.Lambda(_ :: Nil, Some(_), bodyExpr)) :: Nil) =>
+      case et.Bind((storageLoc, et.Lambda(_ :: Nil, Some(_), bodyExpr)) :: Nil) if procLoc == storageLoc =>
         assert(bodyExpr === et.Literal(ast.BooleanLiteral(false)))
     }
 
@@ -328,7 +328,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val expr = expressionFor("(define (return-six . rest) 6)")(scope)
     val procLoc = scope.get("return-six").value
     inside(expr) {
-      case et.Bind((procLoc, et.Lambda(Nil, Some(_), bodyExpr)) :: Nil) =>
+      case et.Bind((storageLoc, et.Lambda(Nil, Some(_), bodyExpr)) :: Nil) if procLoc == storageLoc =>
         assert(bodyExpr === et.Literal(ast.IntegerLiteral(6)))
     }
     
@@ -344,8 +344,8 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val expr = expressionFor("(define (return-self) return-self)")(scope)
     val procLoc = scope.get("return-self").value
     inside(expr) {
-      case et.Bind((procLoc, et.Lambda(Nil, None, bodyExpr)) :: Nil) =>
-        assert(bodyExpr === et.VarRef(procLoc))
+      case et.Bind((storageLoc, et.Lambda(Nil, None, bodyExpr)) :: Nil) if procLoc == storageLoc =>
+        assert(bodyExpr === et.VarRef(storageLoc))
     }
   }
   

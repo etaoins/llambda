@@ -1,7 +1,7 @@
 package io.llambda.compiler
 import io.llambda
 
-import llambda.compiler.frontend.{IncludePath, IncludeLoader}
+import llambda.compiler.frontend.IncludePath
 
 case class CompileConfig(
   includePath : IncludePath,

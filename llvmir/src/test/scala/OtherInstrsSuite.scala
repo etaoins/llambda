@@ -24,6 +24,7 @@ class OtherInstrsSuite extends IrTestSuite {
     val block = createTestBlock()
     val resultVal = block.icmp("equal")(ComparisonCond.Equal, None, var1, var2)
 
+    assert(resultVal.irType === IntegerType(1))
     assertInstr(block, "%equal1 = icmp eq i32 20, 30")
   }
   
@@ -34,6 +35,7 @@ class OtherInstrsSuite extends IrTestSuite {
     val block = createTestBlock()
     val resultVal = block.icmp("inequal")(ComparisonCond.NotEqual, None, var1, var2)
 
+    assert(resultVal.irType === IntegerType(1))
     assertInstr(block, "%inequal1 = icmp ne i32 20, 30")
   }
   
@@ -44,6 +46,7 @@ class OtherInstrsSuite extends IrTestSuite {
     val block = createTestBlock()
     val resultVal = block.icmp("greaterthan")(ComparisonCond.GreaterThan, Some(true), var1, var2)
 
+    assert(resultVal.irType === IntegerType(1))
     assertInstr(block, "%greaterthan1 = icmp sgt i32 20, 30")
   }
   
@@ -54,6 +57,7 @@ class OtherInstrsSuite extends IrTestSuite {
     val block = createTestBlock()
     val resultVal = block.icmp("lessthanequals")(ComparisonCond.LessThanEqual, Some(false), var1, var2)
 
+    assert(resultVal.irType === IntegerType(1))
     assertInstr(block, "%lessthanequals1 = icmp ule i32 20, 30")
   }
   
@@ -86,6 +90,7 @@ class OtherInstrsSuite extends IrTestSuite {
     val block = createTestBlock()
     val resultVal = block.icmp("pointer")(ComparisonCond.Equal, None, fakePointer1, fakePointer2)
 
+    assert(resultVal.irType === IntegerType(1))
     assertInstr(block, "%pointer1 = icmp eq i64* %fake1, %fake2")
   }
   
@@ -376,6 +381,7 @@ class OtherInstrsSuite extends IrTestSuite {
     val block = createTestBlock()
     val resultVal = block.select("trivial")(condValue, trueValue, falseValue)
 
+    assert(resultVal.irType === IntegerType(32))
     assertInstr(block, "%trivial1 = select i1 1, i32 20, i32 30")
   }
 

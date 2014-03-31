@@ -3,7 +3,6 @@ import io.llambda
 
 import llambda.llvmir
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.{celltype => ct}
 
 case class SignedFirstClassType(
   irType : llvmir.FirstClassType,

@@ -8,35 +8,37 @@ import java.net.URL
 import java.io.FileNotFoundException
 import annotation.tailrec
 
-import scala.collection.mutable.{HashMap,SynchronizedMap}
+import scala.collection.mutable.HashMap
 
 private[frontend] object IncludeLoader {
   // This is a hack to prevent us from constantly re-parsing the same file during unit tests. This was especially
-  // becoming a problem as (scheme base) grew in size. The ends up halving the time the unit tests took
+  // becoming a problem as (scheme base) grew in size. This ends up halving the time the unit tests took
+
+  val parsedCache = new HashMap[URL, Option[List[ast.Datum]]]
 
   // Some() indicates the file was found while None indicates it wasn't
-  val parsedCache = new HashMap[URL, Option[List[ast.Datum]]] with SynchronizedMap[URL, Option[List[ast.Datum]]]
-
   private def cachedLoadAndParse(includeUrl : URL) : Option[List[ast.Datum]] = 
-    parsedCache.getOrElseUpdate(includeUrl, {
-      try {
-        val stream = includeUrl.openStream()
-      
-        val libraryString = Source.fromInputStream(stream, "UTF-8").mkString
+    parsedCache.synchronized {
+      parsedCache.getOrElseUpdate(includeUrl, {
+        try {
+          val stream = includeUrl.openStream()
+        
+          val libraryString = Source.fromInputStream(stream, "UTF-8").mkString
 
-        // Find our filename
-        val filename = includeUrl.getProtocol match {
-          case "file" => includeUrl.getPath
-          case _ => includeUrl.toString
+          // Find our filename
+          val filename = includeUrl.getProtocol match {
+            case "file" => includeUrl.getPath
+            case _ => includeUrl.toString
+          }
+        
+          // Success
+          Some(SchemeParser.parseStringAsData(libraryString, Some(filename)))
         }
-      
-        // Success
-        Some(SchemeParser.parseStringAsData(libraryString, Some(filename)))
-      }
-      catch {
-        case _ : FileNotFoundException => None
-      }
+        catch {
+          case _ : FileNotFoundException => None
+        }
     })
+  }
 
   private def attemptLoad(rootDir : URL, includeName : String)(implicit includePath : IncludePath) : Option[IncludeLoadResult] = {
     // Parse the include name relative to our root

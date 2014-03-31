@@ -27,7 +27,6 @@ object WriteCellMembers extends writer.OutputWriter {
 
 
   private def writeMemberFile(processedTypes : ProcessedTypes, cellClass : CellClass) : String = {
-    val cppName = cellClass.names.cppClassName
     val rootCellCppName = processedTypes.rootCellClass.names.cppClassName
 
     val cppBuilder = new CppBuilder

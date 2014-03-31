@@ -1,7 +1,6 @@
 package io.llambda.compiler.conniver
 
 import io.llambda.compiler.planner._
-import io.llambda.compiler.planner.{step => ps}
 
 /** Connivers are optimizers working on planned programs
   *

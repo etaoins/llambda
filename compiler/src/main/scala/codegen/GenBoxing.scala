@@ -1,19 +1,11 @@
 package io.llambda.compiler.codegen
 import io.llambda
 
-import llambda.compiler.InternalCompilerErrorException
-
 import llambda.compiler.planner.{step => ps}
 import llambda.llvmir._
 import llambda.compiler.{celltype => ct}
 
 object GenBoxing {
-  private val llibyStringFromUtf8Decl = IrFunctionDecl(
-    result=IrFunction.Result(PointerType(ct.StringCell.irType)),
-    name="_lliby_string_from_utf8",
-    arguments=List(IrFunction.Argument(PointerType(IntegerType(8))))
-  )
-
   def apply(state : GenerationState)(boxStep : ps.BoxValue, nativeValue : IrValue) : (GenerationState, IrValue) = boxStep match {
     case _ : ps.BoxBoolean =>
       val irValue = state.currentBlock.select("boxedBool")(

@@ -130,7 +130,6 @@ class DefinitionParser extends CellDeclarationParser with CellDefinitionParser w
 
 object DefinitionParser {
   def parseFile(input : File) : List[ParsedDefinition] = {
-    val filename = input.getAbsolutePath 
     val inputString = Source.fromFile(input, "UTF-8").mkString
 
     parseString(inputString)

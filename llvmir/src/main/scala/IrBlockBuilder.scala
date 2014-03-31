@@ -15,7 +15,7 @@ private[llvmir] abstract class IrInstrBuilder(nameSource : LocalNameSource) {
   }
 }
 
-abstract protected class IrBlockBuilder(nameSource : LocalNameSource, val label : String) extends IrInstrBuilder(nameSource) with Irable with TerminatorInstrs with MemoryInstrs with BitwiseInstrs with ConversionInstrs with OtherInstrs {
+abstract class IrBlockBuilder(nameSource : LocalNameSource, val label : String) extends IrInstrBuilder(nameSource) with Irable with TerminatorInstrs with MemoryInstrs with BitwiseInstrs with ConversionInstrs with OtherInstrs {
   private val childBlocks = new collection.mutable.ListBuffer[IrChildBlockBuilder]
 
   def comment(text : String) {
@@ -43,6 +43,6 @@ abstract protected class IrBlockBuilder(nameSource : LocalNameSource, val label 
   }
 }
 
-protected class IrEntryBlockBuilder(nameSource : LocalNameSource) extends IrBlockBuilder(nameSource, "entry")
+class IrEntryBlockBuilder(nameSource : LocalNameSource) extends IrBlockBuilder(nameSource, "entry")
 
-protected class IrChildBlockBuilder(nameSource : LocalNameSource, label : String) extends IrBlockBuilder(nameSource, label) with IrBranchTarget with PhiInstr
+class IrChildBlockBuilder(nameSource : LocalNameSource, label : String) extends IrBlockBuilder(nameSource, label) with IrBranchTarget with PhiInstr

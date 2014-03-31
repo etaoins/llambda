@@ -79,8 +79,6 @@ object GenPlanStep {
     
     case ps.ConvertNativeFloat(resultTemp, fromValueTemp, fpType) =>
       val fromValueIr = state.liveTemps(fromValueTemp)
-      val block = state.currentBlock
-      
       val resultIr = GenFloatConversion(state.currentBlock)(fromValueIr, fpType)
 
       state.withTempValue(resultTemp -> resultIr)
@@ -120,13 +118,6 @@ object GenPlanStep {
 
       val trueResult = GenPlanSteps(trueStartState, plannedSymbols, typeGenerator)(trueSteps)
       val falseResult = GenPlanSteps(falseStartState, plannedSymbols, typeGenerator)(falseSteps)
-
-      // This is tricky because branches can return
-      val nonTerminatedResults = List(trueResult, falseResult).collect {
-        // We haven't terminated!
-        case state : GenerationState => 
-          state
-      }
 
       (trueResult, falseResult) match {
         case (BlockTerminated, BlockTerminated) =>

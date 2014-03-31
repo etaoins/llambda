@@ -1,8 +1,6 @@
 package io.llambda.compiler.platform
 import io.llambda
 
-import java.nio.ByteOrder
-
 import llambda.compiler.{valuetype => vt}
 
 /** Describes a target platform for code generation 

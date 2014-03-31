@@ -2,7 +2,6 @@ package io.llambda.compiler.codegen
 import io.llambda
 
 import llambda.compiler.ProcedureSignature
-import llambda.compiler.planner.{step => ps}
 import llambda.llvmir._
 
 object GenNamedEntryPoint {

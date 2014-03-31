@@ -1,7 +1,6 @@
 package io.llambda.compiler.valuetype
 import io.llambda
 
-import llambda.compiler.sst
 import llambda.compiler.{celltype => ct}
 
 /** Type of any value known to the compiler

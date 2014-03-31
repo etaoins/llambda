@@ -5,7 +5,6 @@ import llambda.compiler._
 import llambda.llvmir._
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{celltype => ct}
-import llambda.compiler.platform.TargetPlatform
 
 private[codegen] object GenFunction {
   def apply(module : IrModuleBuilder, plannedSymbols : Set[String], typeGenerator : TypeGenerator)(nativeSymbol : String, plannedFunction : planner.PlannedFunction) {

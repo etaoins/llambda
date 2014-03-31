@@ -13,12 +13,8 @@ import io.llambda.compiler.planner.{step => ps}
 object DisposeValues extends FunctionConniver {
   private def discardUnusedValues(argValues : Set[ps.TempValue], reverseSteps : List[ps.Step], usedValues : Set[ps.TempValue]) : List[ps.Step] = reverseSteps match {
     case (nestingStep : ps.NestingStep) :: reverseTail =>
-      // Dispose of the outer input values if they're not longer user
-      // These will be placed at the beginning of all branches
+      // Determine which input values are no longer used
       val unusedInputValues = nestingStep.outerInputValues.filter(!usedValues.contains(_))
-      val disposeInputSteps = unusedInputValues.toList.map { unusedValue =>
-        ps.DisposeValue(unusedValue)
-      }
 
       // Step to dispose the result outputs if they're unused
       // This will be placed after the step itself

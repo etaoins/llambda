@@ -1,8 +1,6 @@
 package io.llambda.compiler
 import io.llambda
 
-import llambda.compiler._
-
 abstract class SemanticException(message : String) extends Exception(message) {
   val semanticErrorType : String
 }

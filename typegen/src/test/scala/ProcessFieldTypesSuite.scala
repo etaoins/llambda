@@ -117,16 +117,6 @@ class ProcessFieldTypesSuite extends FunSuite {
 
     val customType = fieldTypes("ProcedureEntryPoint")
 
-    val llvmType = llvmir.PointerType(
-      llvmir.FunctionType(
-        llvmir.PointerType(llvmir.UserDefinedType("datum")),
-        List(
-          llvmir.PointerType(llvmir.UserDefinedType("procedure")),
-          llvmir.PointerType(llvmir.UserDefinedType("listElement"))
-        )
-      )
-    )
-
     assert(customType.aliasedType === FunctionPointerFieldType(
       Some(
         PointerFieldType(

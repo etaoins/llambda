@@ -2,7 +2,6 @@ package io.llambda.compiler.planner.intermediatevalue
 import io.llambda
 
 import llambda.compiler.planner.{step => ps}
-import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{PlanWriter, InvokableProcedure}
 import llambda.compiler.codegen.AdaptedProcedureSignature
 

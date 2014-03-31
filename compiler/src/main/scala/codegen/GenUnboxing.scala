@@ -1,8 +1,6 @@
 package io.llambda.compiler.codegen
 import io.llambda
 
-import llambda.compiler.InternalCompilerErrorException
-
 import llambda.compiler.planner.{step => ps}
 import llambda.llvmir._
 import llambda.compiler.{celltype => ct}

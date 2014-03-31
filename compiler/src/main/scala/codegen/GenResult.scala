@@ -1,7 +1,6 @@
 package io.llambda.compiler.codegen
 import io.llambda
 
-import llambda.compiler.{StorageLocation, InternalCompilerErrorException}
 import llambda.llvmir._
 import llambda.compiler.planner.{step => ps}
 

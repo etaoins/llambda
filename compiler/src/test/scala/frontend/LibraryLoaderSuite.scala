@@ -34,11 +34,11 @@ class LibraryLoaderSuite extends FunSuite {
     }
     
     intercept[DubiousLibraryNameComponentException] {
-      loader.load(StringComponent("bar\0baz") :: Nil)
+      loader.load(StringComponent("bar\u0000baz") :: Nil)
     }
     
     intercept[DubiousLibraryNameComponentException] {
-      loader.exists(StringComponent("bar\0baz") :: Nil)
+      loader.exists(StringComponent("bar\u0000baz") :: Nil)
     }
   }
 
