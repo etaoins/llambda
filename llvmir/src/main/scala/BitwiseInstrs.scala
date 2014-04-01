@@ -1,7 +1,7 @@
 package io.llambda.llvmir
 
 private[llvmir] trait BitwiseInstrs extends IrInstrBuilder {
-  private def simpleBitwiseInstr(instruction : String)(resultName : String)(op1 : IrValue, op2 : IrValue) : IrValue = {
+  private def simpleBitwiseInstr(instruction : String)(resultDest : ResultDestination)(op1 : IrValue, op2 : IrValue) : IrValue = {
     if (op1.irType != op2.irType) {
       throw new InconsistentIrException("Attempted bitwise operation with non-identical types")
     }
@@ -14,7 +14,7 @@ private[llvmir] trait BitwiseInstrs extends IrInstrBuilder {
         throw new InconsistentIrException("Attempted bitwise operation of non-integer")
     }
 
-    val resultVar = allocateLocalVar(resultType, resultName)
+    val resultVar = resultDest.asLocalVariable(nameSource, resultType)
     instructions += s"${resultVar.toIr} = ${instruction} ${resultType.toIr} ${op1.toIr}, ${op2.toIr}" 
 
     resultVar

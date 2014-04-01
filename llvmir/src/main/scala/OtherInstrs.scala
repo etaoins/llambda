@@ -1,7 +1,7 @@
 package io.llambda.llvmir
 
 private[llvmir] trait OtherInstrs extends IrInstrBuilder {
-  def icmp(resultName : String)(compareCond : ComparisonCond.ComparisonCond, signed : Option[Boolean], val1 : IrValue, val2 : IrValue) = {
+  def icmp(resultDest : ResultDestination)(compareCond : ComparisonCond.ComparisonCond, signed : Option[Boolean], val1 : IrValue, val2 : IrValue) = {
     if (val1.irType != val2.irType) {
       throw new InconsistentIrException("Attempted icmp with incompatible types")
     }
@@ -23,24 +23,24 @@ private[llvmir] trait OtherInstrs extends IrInstrBuilder {
       case (false, Some(_)) => throw new InconsistentIrException("Attempted sign independent icmp with signed flag") 
     }) + compareCond.mnemonic
     
-    val resultVar = allocateLocalVar(IntegerType(1), resultName)
+    val resultVar = resultDest.asLocalVariable(nameSource, IntegerType(1))
 
     instructions += s"${resultVar.toIr} = icmp ${conditionIr} ${comparedType.toIr} ${val1.toIr}, ${val2.toIr}"
 
     resultVar
   }
 
-  def callDecl(resultName : Option[String])(decl : IrFunctionDeclLike, arguments : Seq[IrValue], tailCall : Boolean = false) : Option[LocalVariable] = {
-    call(resultName)(decl, decl.irValue, arguments, tailCall)
+  def callDecl(resultDestOpt : Option[ResultDestination])(decl : IrFunctionDeclLike, arguments : Seq[IrValue], tailCall : Boolean = false) : Option[LocalVariable] = {
+    call(resultDestOpt)(decl, decl.irValue, arguments, tailCall)
   }
 
-  def call(resultName : Option[String])(signature : IrSignatureLike, functionPtr : IrValue, arguments : Seq[IrValue], tailCall : Boolean = false) : Option[LocalVariable] = {
+  def call(resultDestOpt : Option[ResultDestination])(signature : IrSignatureLike, functionPtr : IrValue, arguments : Seq[IrValue], tailCall : Boolean = false) : Option[LocalVariable] = {
     // We only return a result for non-void result types if they specify a result name
     val resultVarOpt = signature.result.irType match {
       case VoidType =>
         None
       case otherType : FirstClassType =>
-        resultName.map(allocateLocalVar(otherType, _))
+        resultDestOpt.map(_.asLocalVariable(nameSource, otherType))
     }
 
     // If we're non-void we return a value
@@ -63,7 +63,7 @@ private[llvmir] trait OtherInstrs extends IrInstrBuilder {
     resultVarOpt
   }
 
-  def select(resultName : String)(cond : IrValue, trueValue : IrValue, falseValue : IrValue) = {
+  def select(resultDest : ResultDestination)(cond : IrValue, trueValue : IrValue, falseValue : IrValue) = {
     if (cond.irType != IntegerType(1)) {
       throw new InconsistentIrException("Attempted to select using non-i1")
     }
@@ -73,14 +73,14 @@ private[llvmir] trait OtherInstrs extends IrInstrBuilder {
     }
     
     val resultType = trueValue.irType
-    val resultVar = allocateLocalVar(resultType, resultName)
+    val resultVar = resultDest.asLocalVariable(nameSource, resultType)
 
     instructions += s"${resultVar.toIr} = select ${cond.toIrWithType}, ${trueValue.toIrWithType}, ${falseValue.toIrWithType}"
 
     resultVar
   }
   
-  def landingpad(resultName : String)(resultType : FirstClassType,  personalityFunction : IrValue, clauses : Seq[LandingpadClause], cleanup : Boolean = false) : LocalVariable = {
+  def landingpad(resultDest : ResultDestination)(resultType : FirstClassType,  personalityFunction : IrValue, clauses : Seq[LandingpadClause], cleanup : Boolean = false) : LocalVariable = {
     if (clauses.isEmpty && !cleanup) {
       throw new InconsistentIrException("Attempted non-cleanup landingpad with no clauses")
     }
@@ -94,7 +94,7 @@ private[llvmir] trait OtherInstrs extends IrInstrBuilder {
 
     val clausesIr = cleanupClauseOpt.toList ++ clauses.map(_.toIr)
 
-    val resultVar = allocateLocalVar(resultType, resultName)
+    val resultVar = resultDest.asLocalVariable(nameSource, resultType)
     instructions += s"${resultVar.toIr} = landingpad ${resultType.toIr} personality ${personalityFunction.toIrWithType} " + clausesIr.mkString(" ")
     resultVar
   }

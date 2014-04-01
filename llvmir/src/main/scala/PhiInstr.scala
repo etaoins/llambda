@@ -3,7 +3,7 @@ package io.llambda.llvmir
 case class PhiSource(value : IrValue, block : IrBlockBuilder)
 
 private[llvmir] trait PhiInstr extends IrInstrBuilder {
-  def phi(resultName : String)(sources : PhiSource*) : LocalVariable = {
+  def phi(resultDest : ResultDestination)(sources : PhiSource*) : LocalVariable = {
     if (sources.isEmpty) {
       throw new InconsistentIrException("Attempted phi with no sources")
     }
@@ -16,7 +16,7 @@ private[llvmir] trait PhiInstr extends IrInstrBuilder {
       newType
     }
 
-    val resultVar = allocateLocalVar(resultType, resultName)
+    val resultVar = resultDest.asLocalVariable(nameSource, resultType)
 
     val sourceIr = (sources map { source =>
       s"[ ${source.value.toIr}, %${source.block.label} ]"

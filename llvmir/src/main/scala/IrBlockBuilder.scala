@@ -6,13 +6,9 @@ trait IrBranchTarget {
   val label : String
 }
 
-private[llvmir] abstract class IrInstrBuilder(nameSource : LocalNameSource) {
+private[llvmir] abstract class IrInstrBuilder(protected val nameSource : LocalNameSource) {
   // This contains our instructions as they're built
   private[llvmir] val instructions = new ListBuffer[String]
-
-  private[llvmir] def allocateLocalVar(irType : FirstClassType, name : String) : LocalVariable = {
-    LocalVariable(nameSource.allocate(name), irType)
-  }
 }
 
 abstract class IrBlockBuilder(nameSource : LocalNameSource, val label : String) extends IrInstrBuilder(nameSource) with Irable with TerminatorInstrs with MemoryInstrs with BitwiseInstrs with ConversionInstrs with OtherInstrs {

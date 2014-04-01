@@ -1,8 +1,8 @@
 package io.llambda.llvmir
 
 private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
-  def alloca(resultName : String)(irType : IrType, numElements : Int = 1, alignment : Int = 0) : LocalVariable = {
-    val resultVar = allocateLocalVar(PointerType(irType), resultName)
+  def alloca(resultDest : ResultDestination)(irType : IrType, numElements : Int = 1, alignment : Int = 0) : LocalVariable = {
+    val resultVar = resultDest.asLocalVariable(nameSource, PointerType(irType))
 
     val baseAlloc = s"${resultVar.toIr} = alloca ${irType.toIr}"
 
@@ -37,9 +37,9 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
       throw new InconsistentIrException("Attempted memory access from a non-pointer")
   }
 
-  def load(resultName : String)(from : IrValue, alignment : Int = 0, volatile : Boolean = false, tbaaIndex : Option[Long] = None) : LocalVariable = {
+  def load(resultDest : ResultDestination)(from : IrValue, alignment : Int = 0, volatile : Boolean = false, tbaaIndex : Option[Long] = None) : LocalVariable = {
     val resultType = pointeeTypeForAccess(from.irType)
-    val resultVar = allocateLocalVar(resultType, resultName)
+    val resultVar = resultDest.asLocalVariable(nameSource, resultType)
 
     val volatileIr = if (volatile) {
       " volatile"
@@ -98,8 +98,8 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
     instructions += s"store${volatileIr} ${value.toIrWithType}, ${to.toIrWithType}${alignIr}${tbaaIr}"
   }
 
-  def getelementptr(resultName : String)(elementType : FirstClassType, basePointer : IrValue, indices : Seq[IrValue], inbounds : Boolean = false) : LocalVariable = {
-    val resultVar = allocateLocalVar(PointerType(elementType), resultName)
+  def getelementptr(resultDest : ResultDestination)(elementType : FirstClassType, basePointer : IrValue, indices : Seq[IrValue], inbounds : Boolean = false) : LocalVariable = {
+    val resultVar = resultDest.asLocalVariable(nameSource, PointerType(elementType))
 
     basePointer.irType match {
       case pointerType : PointerType =>
