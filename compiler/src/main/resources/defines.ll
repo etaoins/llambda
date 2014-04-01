@@ -9,7 +9,17 @@
 ; LLVM intrinsics
 declare i1 @llvm.expect.i1(i1, i1)
 
-!0 = metadata !{ metadata !"World::allocNext" }
-!1 = metadata !{ metadata !"World::allocEnd" }
-; {allocNext, allocEnd}
-%world = type {%cell*, %cell*}
+!0 = metadata !{ metadata !"World::shadowStackHead" }
+!1 = metadata !{ metadata !"World::allocNext" }
+!2 = metadata !{ metadata !"World::allocEnd" }
+
+; {shadowStackHead, allocNext, allocEnd}
+%world = type {%shadowStackEntry*, %cell*, %cell*}
+
+!3 = metadata !{ metadata !"ShadowStackEntry::next" }
+!4 = metadata !{ metadata !"ShadowStackEntry::cellCount" }
+!5 = metadata !{ metadata !"ShadowStackEntry::roots" }
+
+; {next, cellCount, roots}
+%shadowStackEntry = type {%shadowStackEntry*, i64, [0 x %datum*]}   
+

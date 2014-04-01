@@ -8,7 +8,7 @@ sealed abstract class GenResult
 
 case class GenerationState(
   module : IrModuleBuilder,
-  gcSlots : GcSlotGenerator,
+  gcSlotsOpt : Option[GcSlotGenerator],
   currentBlock : IrBlockBuilder,
   currentAllocation : CellAllocation,
   gcCleanUpBlockOpt : Option[IrBranchTarget],
@@ -17,6 +17,21 @@ case class GenerationState(
 ) extends GenResult {
   def withTempValue(tempValue : (ps.TempValue, IrValue)) =
     this.copy(liveTemps=(liveTemps + tempValue))
+
+  def terminateFunction(terminatorProc : () => Unit) = {
+    gcSlotsOpt match {
+      case Some(gcSlots) =>
+        // Make sure to clean up our GC state
+        // terminatorProc will be called by our GC code at the end of codegen for this function
+        gcSlots.unrootAllAndTerminate(currentBlock)(terminatorProc)
+
+      case None =>
+        // Just terminate
+        terminatorProc()
+    }
+
+    BlockTerminated
+  }
 }
 
 case object BlockTerminated extends GenResult

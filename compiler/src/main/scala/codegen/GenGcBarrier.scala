@@ -37,12 +37,16 @@ object GenGcBarrier {
   def genSaveGcRoots(state : GenerationState)(calcedBarrier : CalculatedBarrier) {
     val block = state.currentBlock
 
+    val gcSlots = state.gcSlotsOpt.getOrElse {
+      throw new InternalCompilerErrorException("Attempted to save GC roots in function without GC enabled")
+    }
+
     if (!calcedBarrier.unrootTemps.isEmpty) {
       block.comment("Unrooting dead values before GC barrier")
     }
 
     for(tempValue <- calcedBarrier.unrootTemps) {
-      val gcSlot = state.gcSlots(tempValue)
+      val gcSlot = gcSlots(tempValue)
 
       gcSlot.irType match {
         case PointerType(innerPointer : PointerType) =>
@@ -61,7 +65,7 @@ object GenGcBarrier {
     }
 
     for((tempValue, irValue) <- calcedBarrier.saveTemps) {
-      val gcSlot = state.gcSlots.getOrElseCreate(tempValue, irValue.irType)
+      val gcSlot = gcSlots.getOrElseCreate(tempValue, irValue.irType)
       block.store(irValue, gcSlot)
     }
   }
@@ -69,13 +73,17 @@ object GenGcBarrier {
   // Returns a list of new IR values in the same order as calcedBarrier.restoreTemps
   def genRestoreGcRoots(state : GenerationState)(calcedBarrier : CalculatedBarrier) : List[IrValue] = {
     val block = state.currentBlock
+    
+    val gcSlots = state.gcSlotsOpt.getOrElse {
+      throw new InternalCompilerErrorException("Attempted to restore GC roots in function without GC enabled")
+    }
 
     if (!calcedBarrier.restoreTemps.isEmpty) {
       block.comment("Restoring GC roots after GC barrier")
     }
     
     (calcedBarrier.restoreTemps.map { case (tempValue, prevIrValue) =>
-      val gcSlot = state.gcSlots(tempValue)
+      val gcSlot = gcSlots(tempValue)
       block.load("restoredGcRoot")(gcSlot)
     })
   }

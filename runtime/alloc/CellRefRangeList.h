@@ -5,6 +5,7 @@
 
 #include <cstdint>
 
+
 namespace lliby
 {
 namespace alloc
@@ -20,15 +21,10 @@ class CellRefRange
 	friend class CellRefRangeList;
 
 public:
+	CellRefRange *prev;
 	CellRefRange *next;
 	AllocCell **basePointer;
 	size_t cellCount;
-	
-private:
-	// This is used internally by CellRefRangeList to allow AbstractRefs to be destructed out of order
-	// codegen produces singly linked ranges bacause its ranges are always added and removed in stack order
-	// Make prev private to make sure it's not used outside of CellRefRangeList
-	CellRefRange *prev;
 };
 
 /**

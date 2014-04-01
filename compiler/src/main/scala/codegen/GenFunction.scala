@@ -20,8 +20,7 @@ private[codegen] object GenFunction {
       result=irSignature.result,
       namedArguments=namedIrArguments,
       name=nativeSymbol,
-      linkage=Linkage.Internal,
-      gc=Some("shadow-stack")
+      linkage=Linkage.Internal
     ) 
 
     // Create a blank generation state with just our args
@@ -29,21 +28,34 @@ private[codegen] object GenFunction {
       (tempValue, generatedFunction.argumentValues(name))
     }).toMap
     
-    // Create a GC slot generator and have it own the entry block
-    val gcSlots = new GcSlotGenerator(module, generatedFunction.entryBlock)
+    // Do we need to set up GC for this function?
+    val (procStartBlock, gcSlotsOpt, gcCleanUpBlockOpt) = plannedFunction.worldPtrOption match {
+      case Some(worldPtrTemp) =>
+        val worldPtrIr = argTemps(worldPtrTemp)
 
-    val procStartBlock = generatedFunction.entryBlock.startChildBlock("procStart")
+        // Create the start block the GC code invokes after the entry block
+        val procStartBlock = generatedFunction.entryBlock.startChildBlock("procStart")
+        
+        // Create our GC slot allocator
+        val gcSlots = new GcSlotGenerator(module, generatedFunction.entryBlock)(worldPtrIr, procStartBlock)
 
-    // Create our landingpad if we need one
-    val gcCleanUpBlockOpt = plannedFunction.worldPtrOption map { _ =>
-      val block = generatedFunction.entryBlock.startChildBlock("gcCleanUp")
-      GenGcCleanUpBlock(module, block)
-      block
+        // Create our landingpad
+        val gcCleanUpBlock = {
+          val block = generatedFunction.entryBlock.startChildBlock("gcCleanUp")
+          GenGcCleanUpBlock(module, block, gcSlots)
+          block
+        }
+
+        (procStartBlock, Some(gcSlots), Some(gcCleanUpBlock))
+
+      case None =>
+        // No GC support
+        (generatedFunction.entryBlock, None, None)
     }
 
     val startState = GenerationState(
       module=module,
-      gcSlots=gcSlots,
+      gcSlotsOpt=gcSlotsOpt,
       currentBlock=procStartBlock,
       currentAllocation=EmptyCellAllocation(),
       liveTemps=argTemps,
@@ -53,8 +65,9 @@ private[codegen] object GenFunction {
     // Generate our steps
     GenPlanSteps(startState, plannedSymbols, typeGenerator)(plannedFunction.steps)
 
-    // Finalize the GC slot generator so it jumps to the proc start
-    gcSlots.finalize(procStartBlock)
+    for(gcSlots <- gcSlotsOpt) {
+      gcSlots.finish()
+    }
       
     // Define the function
     module.defineFunction(generatedFunction)

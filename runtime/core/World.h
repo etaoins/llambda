@@ -2,6 +2,9 @@
 #define _LLIBY_CORE_WORLD_H
 
 #include "alloc/Heap.h"
+#include "alloc/ShadowStackEntry.h"
+
+#include "core/World.h"
 
 namespace lliby
 {
@@ -33,6 +36,7 @@ public:
 	// Any changes to the content, size or order of these fields will require codegen changes
 	//
 	
+	alloc::ShadowStackEntry *shadowStackHead = nullptr;
 	alloc::Heap cellHeap;
 
 	//

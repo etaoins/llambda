@@ -12,26 +12,6 @@
 
 #include "dynamic/State.h"
 
-extern "C"
-{
-	struct FrameMap 
-	{
-		std::int32_t NumRoots;    //< Number of roots in stack frame.
-		std::int32_t NumMeta;     //< Number of metadata entries.  May be < NumRoots.
-		const void *Meta[0]; //< Metadata for each root.
-	};
-
-	struct StackEntry
-	{
-		StackEntry *Next;    //< Link to next stack entry (the caller's).
-		const FrameMap *Map; //< Pointer to constant FrameMap.
-		void *Roots[0];      //< Stack roots (in-place array).
-	};
-
-	// This is provided by LLVM's shadowstack GC plugin
-	StackEntry *llvm_gc_root_chain;
-}
-
 namespace lliby
 {
 namespace alloc
@@ -148,13 +128,13 @@ size_t collect(World &world, Heap &newHeap)
 	visitCellRefList(world.strongRefs, rootVisitor);
 
 	// Visit each compiler GC root
-	for(StackEntry *stackEntry = llvm_gc_root_chain;
+	for(ShadowStackEntry *stackEntry = world.shadowStackHead;
 		 stackEntry != nullptr;
-		 stackEntry = stackEntry->Next)
+		 stackEntry = stackEntry->next)
 	{
-		for(std::int32_t i = 0; i < stackEntry->Map->NumRoots; i++)
+		for(std::int32_t i = 0; i < stackEntry->cellCount; i++)
 		{
-			auto datumCellRef = reinterpret_cast<DatumCell**>(&stackEntry->Roots[i]);
+			auto datumCellRef = &stackEntry->roots[i];
 
 			if (*datumCellRef != nullptr)
 			{

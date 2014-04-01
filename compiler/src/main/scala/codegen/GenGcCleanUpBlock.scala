@@ -15,7 +15,7 @@ object GenGcCleanUpBlock {
     hasVararg=true
   )
 
-  def apply(module : IrModuleBuilder, block : IrBlockBuilder) {
+  def apply(module : IrModuleBuilder, block : IrBlockBuilder, gcSlots : GcSlotGenerator) {
     module.unlessDeclared(personalityFunctionDecl) {
       module.declareFunction(personalityFunctionDecl)
     }
@@ -27,6 +27,8 @@ object GenGcCleanUpBlock {
       cleanup=true
     )
 
-    block.resume(exceptionResultIr)
+    gcSlots.unrootAllAndTerminate(block)(() => {
+      block.resume(exceptionResultIr)
+    })
   }
 }

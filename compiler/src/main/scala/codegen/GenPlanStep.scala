@@ -209,18 +209,16 @@ object GenPlanStep {
       }
 
     case ps.Return(None) =>
-      state.currentBlock.retVoid()
-
-      // We returned - no more state
-      BlockTerminated
+      state.terminateFunction(() => {
+        state.currentBlock.retVoid()
+      })
     
     case ps.Return(Some(returnValueTemp)) =>
       val irRetValue = state.liveTemps(returnValueTemp)
 
-      state.currentBlock.ret(irRetValue)
-
-      // We returned - no more state
-      BlockTerminated
+      state.terminateFunction(() => {
+        state.currentBlock.ret(irRetValue)
+      })
 
     case ps.StorePairCar(resultTemp, pairTemp) =>
       val pairIr = state.liveTemps(pairTemp)
