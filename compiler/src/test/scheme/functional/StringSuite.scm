@@ -45,6 +45,9 @@
 	(string-set! test-string 1 #\!)
 	test-string))
 
+(define-test "string-set! on string literal fails" (expect-failure
+	(string-set! "I'm constant" 1 #\!)))
+
 (define-test "string-set! of Unicode character" (expect "**☃"
 	(define test-string (make-string 3 #\*))
 	(string-set! test-string 2 #\x2603)
@@ -55,7 +58,7 @@
 	(string-set! test-string 0 #\x2603)
 	test-string))
 
-(define-test "string-set! past end of string" (expect-failure
+(define-test "string-set! past end of string fails" (expect-failure
 	(define test-string (make-string 3 #\*))
 	(string-set! test-string 4 #\x2603)
 	test-string))

@@ -3,6 +3,7 @@
 #include <string.h>
 #include <algorithm>
 #include <limits>
+#include <cassert>
 
 #include "SymbolCell.h"
 #include "BytevectorCell.h"
@@ -494,6 +495,8 @@ UnicodeChar StringCell::charAt(std::uint32_t offset) const
 	
 bool StringCell::replaceBytes(const CharRange &range, std::uint8_t *pattern, unsigned int patternBytes, unsigned int count, bool sameString)
 {
+	assert(!isGlobalConstant());
+
 	const unsigned int requiredBytes = patternBytes * count;
 	const unsigned int replacedBytes = range.byteCount();
 	

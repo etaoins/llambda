@@ -40,6 +40,7 @@ bool VectorCell::fill(DatumCell *fill, std::int64_t start, std::int64_t end)
 		return false;
 	}
 	
+	assert(!isGlobalConstant());
 	for(std::uint32_t i = start; i < end; i++)
 	{
 		elements()[i] = fill;
@@ -139,6 +140,7 @@ bool VectorCell::replace(std::uint32_t offset, const VectorCell *from, std::int6
 		return false;
 	}
 
+	assert(!isGlobalConstant());
 	memmove(&elements()[offset], &from->elements()[fromStart], replacedLength * sizeof(DatumCell*));
 
 	return true;

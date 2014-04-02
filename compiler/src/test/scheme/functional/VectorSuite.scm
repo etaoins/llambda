@@ -58,6 +58,10 @@
 	(vector-set! test-vector 2 2)
 	test-vector))
 
+(define-test "vector-set! on vector literal fails" (expect-failure
+	; Need to make a new vector because vector literals are immutable
+	(vector-set! #(1 2 3 4 5) 2 2)))
+
 (define-test "(vector-append) with no arguments" (expect #()
 	(vector-append)))
 

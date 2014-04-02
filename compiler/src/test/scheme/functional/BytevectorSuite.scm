@@ -49,6 +49,10 @@
 	(bytevector-u8-set! test-bytevector 2 2)
 	test-bytevector))
 
+(define-test "bytevector-u8-set! on bytevector literal fails" (expect-failure
+	; We should fail gracefully from this - i.e. no segfault, no silent success
+	(bytevector-u8-set! #u8(1 1 1 1 1 1) 2 2)))
+
 (define-test "(bytevector-append) with no arguments" (expect #u8()
 	(bytevector-append)))
 

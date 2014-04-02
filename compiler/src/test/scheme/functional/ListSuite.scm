@@ -120,3 +120,19 @@
 ; unspecified for eq?
 (define-test "(memv) on number list" (expect (101 102)
 	(memv 101 '(100 101 102))))
+
+(define-test "(set-car!) of cons" (expect (new-car . old-cdr)
+	(define test-cons (cons 'old-car 'old-cdr))
+	(set-car! test-cons 'new-car)
+	test-cons))
+
+(define-test "(set-car!) on literal fails" (expect-failure
+	(set-car! '(old-car . old-cdr) 'new-car)))
+
+(define-test "(set-cdr!) of cons" (expect (old-car . new-cdr)
+	(define test-cons (cons 'old-car 'old-cdr))
+	(set-cdr! test-cons 'new-cdr)
+	test-cons))
+
+(define-test "(set-cdr!) on literal fails" (expect-failure
+	(set-cdr! '(old-car . old-cdr) 'new-cdr)))

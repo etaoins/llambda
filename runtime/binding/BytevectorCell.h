@@ -3,6 +3,7 @@
 
 #include "DatumCell.h"
 #include <list>
+#include <cassert>
 
 namespace lliby
 {
@@ -51,6 +52,8 @@ public:
 
 	bool setByteAt(std::uint32_t offset, std::uint8_t value)
 	{
+		assert(!isGlobalConstant());
+
 		if (offset >= length())
 		{
 			return false;

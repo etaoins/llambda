@@ -3,6 +3,7 @@
 
 #include "DatumCell.h"
 #include <vector>
+#include <cassert>
 
 namespace lliby
 {
@@ -28,6 +29,7 @@ public:
 			return false;
 		}
 
+		assert(!isGlobalConstant());
 		elements()[offset] = value;
 
 		return true;

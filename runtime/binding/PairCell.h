@@ -2,6 +2,7 @@
 #define _LLIBY_BINDING_PAIRCELL_H
 
 #include "ListElementCell.h"
+#include <cassert>
 
 namespace lliby
 {
@@ -30,11 +31,13 @@ public:
 
 	void setCar(DatumCell *obj)
 	{
+		assert(!isGlobalConstant());
 		m_car = obj;
 	}
 	
 	void setCdr(DatumCell *obj)
 	{
+		assert(!isGlobalConstant());
 		m_cdr = obj;
 	}
 	

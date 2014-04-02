@@ -34,6 +34,11 @@ std::uint8_t lliby_bytevector_u8_ref(World &world, BytevectorCell *bytevector, s
 
 void lliby_bytevector_u8_set(World &world, BytevectorCell *bytevector, std::uint32_t index, std::uint8_t value)
 {
+	if (bytevector->isGlobalConstant())
+	{
+		signalError(world, "(bytevector-set!) on bytevector literal", {bytevector});	
+	}
+
 	if (!bytevector->setByteAt(index, value))
 	{
 		signalError(world, "Bytevector index out of bounds", {bytevector});	

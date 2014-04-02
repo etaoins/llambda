@@ -59,13 +59,23 @@ DatumCell *lliby_cdr(PairCell *pair)
 	return pair->cdr();
 }
 
-void lliby_set_car(PairCell *pair, DatumCell *obj)
+void lliby_set_car(World &world, PairCell *pair, DatumCell *obj)
 {
+	if (pair->isGlobalConstant())
+	{
+		signalError(world, "(set-car!) on pair literal", {pair});	
+	}
+
 	return pair->setCar(obj);
 }
 
-void lliby_set_cdr(PairCell *pair, DatumCell *obj)
+void lliby_set_cdr(World &world, PairCell *pair, DatumCell *obj)
 {
+	if (pair->isGlobalConstant())
+	{
+		signalError(world, "(set-cdr!) on pair literal", {pair});	
+	}
+
 	return pair->setCdr(obj);
 }
 

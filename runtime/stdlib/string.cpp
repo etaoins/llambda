@@ -54,6 +54,11 @@ std::int32_t lliby_string_ref(World &world, StringCell *string, std::uint32_t in
 
 void lliby_string_set(World &world, StringCell *string, std::uint32_t index, UnicodeChar unicodeChar)
 {
+	if (string->isGlobalConstant())
+	{
+		signalError(world, "(string-set!) on a string literal", {string});
+	}
+
 	if (!string->setCharAt(index, unicodeChar))
 	{
 		signalError(world, "(string-set!) past end of string", {string});

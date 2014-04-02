@@ -36,6 +36,11 @@ DatumCell* lliby_vector_ref(World &world, VectorCell *vector, std::uint32_t inde
 
 void lliby_vector_set(World &world, VectorCell *vector, std::uint32_t index, DatumCell *obj)
 {
+	if (vector->isGlobalConstant())
+	{
+		signalError(world, "(vector-set!) on vector literal", {vector});	
+	}
+	
 	if (!vector->setElementAt(index, obj))
 	{
 		signalError(world, "Vector index out of bounds", {vector});	
