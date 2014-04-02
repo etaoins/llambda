@@ -100,6 +100,7 @@ set(ALL_TEST_NAMES
 	constinstances
 	inexactrational
 	listelement
+	sharedbytearray
 	string
 	unicodechar
 	vector
