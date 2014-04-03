@@ -28,7 +28,7 @@ void testFromFill(World &world)
 		const uint8_t expectedData[8] = { 0 };
 
 		ASSERT_EQUAL(zeroFillVector->length(), 8);
-		ASSERT_EQUAL(memcmp(zeroFillVector->data(), expectedData, 8), 0);
+		ASSERT_EQUAL(memcmp(zeroFillVector->byteArray()->data(), expectedData, 8), 0);
 	}
 	
 	{
@@ -36,20 +36,20 @@ void testFromFill(World &world)
 		const uint8_t expectedData[4] = { 7, 7, 7, 7 };
 
 		ASSERT_EQUAL(sevenFillVector->length(), 4);
-		ASSERT_EQUAL(memcmp(sevenFillVector->data(), expectedData, 4), 0);
+		ASSERT_EQUAL(memcmp(sevenFillVector->byteArray()->data(), expectedData, 4), 0);
 	}
 }
 
 void testFromAppended(World &world)
 {
 	uint8_t vector1Data[3] = { 100, 101, 102 };
-	alloc::StrongRef<BytevectorCell> vector1(world, BytevectorCell::fromUnownedData(world, vector1Data, sizeof(vector1Data)));
+	alloc::StrongRef<BytevectorCell> vector1(world, BytevectorCell::fromData(world, vector1Data, sizeof(vector1Data)));
 
 	uint8_t vector2Data[1] = { 0 };
-	alloc::StrongRef<BytevectorCell> vector2(world, BytevectorCell::fromUnownedData(world, vector2Data, sizeof(vector2Data)));
+	alloc::StrongRef<BytevectorCell> vector2(world, BytevectorCell::fromData(world, vector2Data, sizeof(vector2Data)));
 
 	uint8_t vector3Data[3] = { 200, 201, 202 };
-	alloc::StrongRef<BytevectorCell> vector3(world, BytevectorCell::fromUnownedData(world, vector3Data, sizeof(vector3Data)));
+	alloc::StrongRef<BytevectorCell> vector3(world, BytevectorCell::fromData(world, vector3Data, sizeof(vector3Data)));
 
 	{
 		BytevectorCell *emptyVector = BytevectorCell::fromAppended(world, {});
@@ -63,7 +63,7 @@ void testFromAppended(World &world)
 		ASSERT_EQUAL(appendedVector->length(), 3);
 		
 		const uint8_t expectedData[3] = {100, 101, 102};
-		ASSERT_EQUAL(memcmp(appendedVector->data(), expectedData, 3), 0);
+		ASSERT_EQUAL(memcmp(appendedVector->byteArray()->data(), expectedData, 3), 0);
 	}
 	
 	{
@@ -72,7 +72,7 @@ void testFromAppended(World &world)
 		ASSERT_EQUAL(appendedVector->length(), 7);
 		
 		const uint8_t expectedData[7] = {100, 101, 102, 0, 200, 201, 202};
-		ASSERT_EQUAL(memcmp(appendedVector->data(), expectedData, 7), 0);
+		ASSERT_EQUAL(memcmp(appendedVector->byteArray()->data(), expectedData, 7), 0);
 	}
 }
 
@@ -80,7 +80,7 @@ void testByteAccess(World &world)
 {
 	uint8_t vectorData[5] = { 0, 1, 2, 3, 4 };
 
-	auto *testVector = BytevectorCell::fromUnownedData(world, vectorData, sizeof(vectorData));
+	auto *testVector = BytevectorCell::fromData(world, vectorData, sizeof(vectorData));
 
 	ASSERT_EQUAL(testVector->byteAt(0), 0);
 	ASSERT_EQUAL(testVector->byteAt(4), 4);
@@ -99,21 +99,21 @@ void testCopy(World &world)
 {
 	uint8_t vectorData[5] = { 0, 1, 2, 3, 4 };
 
-	alloc::StrongRef<BytevectorCell> testVector(world, BytevectorCell::fromUnownedData(world, vectorData, sizeof(vectorData)));
+	alloc::StrongRef<BytevectorCell> testVector(world, BytevectorCell::fromData(world, vectorData, sizeof(vectorData)));
 
 	{
 		BytevectorCell *wholeCopy = testVector->copy(world);
 
 		ASSERT_EQUAL(wholeCopy->length(), 5);
 
-		ASSERT_EQUAL(memcmp(wholeCopy->data(), vectorData, 5), 0);
+		ASSERT_EQUAL(memcmp(wholeCopy->byteArray()->data(), vectorData, 5), 0);
 	}
 	
 	{
 		BytevectorCell *explicitWholeCopy = testVector->copy(world, 0, 5);
 
 		ASSERT_EQUAL(explicitWholeCopy->length(), 5);
-		ASSERT_EQUAL(memcmp(explicitWholeCopy->data(), vectorData, 5), 0);
+		ASSERT_EQUAL(memcmp(explicitWholeCopy->byteArray()->data(), vectorData, 5), 0);
 	}
 	
 	{
@@ -142,91 +142,91 @@ void testCopy(World &world)
 void testReplace(World &world)
 {
 	uint8_t fromData[5] = { 200, 201, 202, 203, 204 };
-	alloc::StrongRef<BytevectorCell> fromVector(world, BytevectorCell::fromUnownedData(world, fromData, 5)); 
+	alloc::StrongRef<BytevectorCell> fromVector(world, BytevectorCell::fromData(world, fromData, 5)); 
 
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = BytevectorCell::fromUnownedData(world, toData, 5); 
+		auto *toVector = BytevectorCell::fromData(world, toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(0, fromVector), true);
 		ASSERT_EQUAL(toVector->length(), 5);
-		ASSERT_EQUAL(memcmp(toVector->data(), fromVector->data(), 5), 0);
+		ASSERT_EQUAL(memcmp(toVector->byteArray()->data(), fromVector->byteArray()->data(), 5), 0);
 	}
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = BytevectorCell::fromUnownedData(world, toData, 5); 
+		auto *toVector = BytevectorCell::fromData(world, toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(0, fromVector, 0, 5), true);
 		ASSERT_EQUAL(toVector->length(), 5);
-		ASSERT_EQUAL(memcmp(toVector->data(), fromVector->data(), 5), 0);
+		ASSERT_EQUAL(memcmp(toVector->byteArray()->data(), fromVector->byteArray()->data(), 5), 0);
 	}
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = BytevectorCell::fromUnownedData(world, toData, 5); 
+		auto *toVector = BytevectorCell::fromData(world, toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(0, fromVector, 2, 2), true);
 		ASSERT_EQUAL(toVector->length(), 5);
 
 		const uint8_t expectedData[5] = {100, 101, 102, 103, 104 };
-		ASSERT_EQUAL(memcmp(toVector->data(), expectedData, 5), 0);
+		ASSERT_EQUAL(memcmp(toVector->byteArray()->data(), expectedData, 5), 0);
 	}
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = BytevectorCell::fromUnownedData(world, toData, 5); 
+		auto *toVector = BytevectorCell::fromData(world, toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(0, fromVector, 0, 2), true);
 		ASSERT_EQUAL(toVector->length(), 5);
 
 		const uint8_t expectedData[5] = {200, 201, 102, 103, 104 };
-		ASSERT_EQUAL(memcmp(toVector->data(), expectedData, 5), 0);
+		ASSERT_EQUAL(memcmp(toVector->byteArray()->data(), expectedData, 5), 0);
 	}
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = BytevectorCell::fromUnownedData(world, toData, 5); 
+		auto *toVector = BytevectorCell::fromData(world, toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(0, fromVector, 3), true);
 		ASSERT_EQUAL(toVector->length(), 5);
 
 		const uint8_t expectedData[5] = {203, 204, 102, 103, 104 };
-		ASSERT_EQUAL(memcmp(toVector->data(), expectedData, 5), 0);
+		ASSERT_EQUAL(memcmp(toVector->byteArray()->data(), expectedData, 5), 0);
 	}
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = BytevectorCell::fromUnownedData(world, toData, 5); 
+		auto *toVector = BytevectorCell::fromData(world, toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(0, fromVector, 3, 5), true);
 		ASSERT_EQUAL(toVector->length(), 5);
 
 		const uint8_t expectedData[5] = {203, 204, 102, 103, 104 };
-		ASSERT_EQUAL(memcmp(toVector->data(), expectedData, 5), 0);
+		ASSERT_EQUAL(memcmp(toVector->byteArray()->data(), expectedData, 5), 0);
 	}
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = BytevectorCell::fromUnownedData(world, toData, 5); 
+		auto *toVector = BytevectorCell::fromData(world, toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(3, fromVector, 3, 5), true);
 		ASSERT_EQUAL(toVector->length(), 5);
 
 		const uint8_t expectedData[5] = {100, 101, 102, 203, 204 };
-		ASSERT_EQUAL(memcmp(toVector->data(), expectedData, 5), 0);
+		ASSERT_EQUAL(memcmp(toVector->byteArray()->data(), expectedData, 5), 0);
 	}
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = BytevectorCell::fromUnownedData(world, toData, 5); 
+		auto *toVector = BytevectorCell::fromData(world, toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(4, fromVector, 3, 5), false);
 	}
 	
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
-		auto *toVector = BytevectorCell::fromUnownedData(world, toData, 5); 
+		auto *toVector = BytevectorCell::fromData(world, toData, 5); 
 
 		ASSERT_EQUAL(toVector->replace(4, fromVector, 5, 3), false);
 	}
@@ -235,14 +235,14 @@ void testReplace(World &world)
 void testUtf8ToString(World &world)
 {
 	auto stringData = reinterpret_cast<std::uint8_t*>(strdup(u8"Hello ☃!"));
-	alloc::StrongRef<BytevectorCell> sourceVector(world, BytevectorCell::fromUnownedData(world, stringData, 10));
+	alloc::StrongRef<BytevectorCell> sourceVector(world, BytevectorCell::fromData(world, stringData, 10));
 
 	{
 		StringCell *fullString = sourceVector->utf8ToString(world);
 
 		ASSERT_EQUAL(fullString->byteLength(), 10);
 		ASSERT_EQUAL(fullString->charLength(), 8);
-		ASSERT_EQUAL(memcmp(fullString->utf8Data(), u8"Hello ☃!", 11), 0);
+		ASSERT_EQUAL(memcmp(fullString->constUtf8Data(), u8"Hello ☃!", 11), 0);
 
 	}
 	
@@ -251,7 +251,7 @@ void testUtf8ToString(World &world)
 
 		ASSERT_EQUAL(fullString->byteLength(), 10);
 		ASSERT_EQUAL(fullString->charLength(), 8);
-		ASSERT_EQUAL(memcmp(fullString->utf8Data(), u8"Hello ☃!", 11), 0);
+		ASSERT_EQUAL(memcmp(fullString->constUtf8Data(), u8"Hello ☃!", 11), 0);
 	}
 	
 	{
@@ -259,7 +259,7 @@ void testUtf8ToString(World &world)
 
 		ASSERT_EQUAL(emptyString->byteLength(), 0);
 		ASSERT_EQUAL(emptyString->charLength(), 0);
-		ASSERT_EQUAL(memcmp(emptyString->utf8Data(), u8"", 1), 0);
+		ASSERT_EQUAL(memcmp(emptyString->constUtf8Data(), u8"", 1), 0);
 	}
 	
 	{
@@ -267,7 +267,7 @@ void testUtf8ToString(World &world)
 
 		ASSERT_EQUAL(helloString->byteLength(), 5);
 		ASSERT_EQUAL(helloString->charLength(), 5);
-		ASSERT_EQUAL(memcmp(helloString->utf8Data(), u8"Hello", 6), 0);
+		ASSERT_EQUAL(memcmp(helloString->constUtf8Data(), u8"Hello", 6), 0);
 	}
 	
 	{
@@ -275,7 +275,7 @@ void testUtf8ToString(World &world)
 
 		ASSERT_EQUAL(endString->byteLength(), 4);
 		ASSERT_EQUAL(endString->charLength(), 2);
-		ASSERT_EQUAL(memcmp(endString->utf8Data(), u8"☃!", 5), 0);
+		ASSERT_EQUAL(memcmp(endString->constUtf8Data(), u8"☃!", 5), 0);
 	}
 	
 	{

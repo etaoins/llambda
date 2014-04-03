@@ -4,6 +4,7 @@
 #include "DatumCell.h"
 #include <list>
 #include <vector>
+#include <ostream>
 
 #include "unicode/UnicodeChar.h"
 
@@ -11,16 +12,21 @@ namespace lliby
 {
 
 class World;
+class ImplicitSharingTest;
 
 class StringCell : public DatumCell
 {
+	friend class SymbolCell;
+	friend class ImplicitSharingTest;
 #include "generated/StringCellMembers.h"
 public:
 	static StringCell* fromUtf8CString(World &world, const char *str);
 	static StringCell* fromUtf8Data(World &world, const std::uint8_t *data, std::uint32_t byteLength);
+	static StringCell* withUtf8ByteArray(World &world, SharedByteArray *byteArray, std::uint32_t byteLength);
+
 	static StringCell* fromFill(World &world, std::uint32_t length, UnicodeChar fill);
 	static StringCell* fromUnicodeChars(World &world, const std::vector<UnicodeChar> &unicodeChars);
-	static StringCell* fromSymbol(World &world, const SymbolCell *symbol);
+	static StringCell* fromSymbol(World &world, SymbolCell *symbol);
 	
 	static StringCell* fromAppended(World &world, std::vector<StringCell*> &strings);
 	static StringCell* fromAppended(World &world, const std::vector<StringCell*> &strings)
@@ -29,7 +35,7 @@ public:
 		return fromAppended(world, stringsCopy);
 	}
 
-	StringCell* copy(World &world, std::int64_t start = 0, std::int64_t end = -1) const; 
+	StringCell* copy(World &world, std::int64_t start = 0, std::int64_t end = -1); 
 
 	UnicodeChar charAt(std::uint32_t offset) const;
 	bool setCharAt(std::uint32_t offset, UnicodeChar unicodeChar);
@@ -55,14 +61,13 @@ public:
 		return byteLength() == charLength();
 	}
 
-	SymbolCell *toSymbol(World &world) const;
-	BytevectorCell *toUtf8Bytevector(World &world, std::int64_t start = 0, std::int64_t end = -1) const;
+	BytevectorCell *toUtf8Bytevector(World &world, std::int64_t start = 0, std::int64_t end = -1);
 	
-	StringCell *toUppercaseString(World &world) const;
-	StringCell *toLowercaseString(World &world) const;
-	StringCell *toCaseFoldedString(World &world) const;
+	StringCell *toUppercaseString(World &world);
+	StringCell *toLowercaseString(World &world);
+	StringCell *toCaseFoldedString(World &world);
 	
-	std::uint8_t* utf8Data() const;
+	const std::uint8_t* constUtf8Data() const;
 
 	void finalizeString();
 
@@ -75,13 +80,15 @@ protected:
 	{
 	}
 	
+	std::uint8_t* utf8Data();
+
 	static const std::uint32_t InlineDataSize = 12;
 
 	// Creates an uninitialized cell with the given size
 	static StringCell* createUninitialized(World &world, std::uint32_t byteLength);
 
-	std::uint8_t *charPointer(std::uint8_t *scanFrom, std::uint32_t bytesLeft, uint32_t charOffset) const;
-	std::uint8_t *charPointer(std::uint32_t charOffset) const;
+	std::uint8_t *charPointer(std::uint8_t *scanFrom, std::uint32_t bytesLeft, uint32_t charOffset);
+	std::uint8_t *charPointer(std::uint32_t charOffset);
 
 	struct CharRange
 	{
@@ -106,13 +113,13 @@ protected:
 		}
 	};
 
-	CharRange charRange(std::int64_t start, std::int64_t end = -1) const; 
+	CharRange charRange(std::int64_t start, std::int64_t end = -1); 
 	bool replaceBytes(const CharRange &range, std::uint8_t *pattern, unsigned int patternBytes, unsigned int count, bool sameString);
 	
 	int compareCaseSensitive(const StringCell *other) const;
 	int compareCaseInsensitive(const StringCell *other) const;
 
-	StringCell *toConvertedString(World &world, UnicodeChar (UnicodeChar::* converter)() const) const;
+	StringCell *toConvertedString(World &world, UnicodeChar (UnicodeChar::* converter)() const); 
 	
 	static size_t inlineDataSize();
 	bool dataIsInline() const;
@@ -136,23 +143,25 @@ protected:
 class HeapStringCell : public StringCell
 {
 	friend class StringCell;
+	friend class SymbolCell;
 #include "generated/HeapStringCellMembers.h"
 private:
-	HeapStringCell(std::uint8_t *heapData, std::uint32_t byteLength, std::uint32_t charLength, std::uint16_t allocSlackBytes) :
+	HeapStringCell(SharedByteArray *byteArray, std::uint32_t byteLength, std::uint32_t charLength, std::uint16_t allocSlackBytes) :
 		StringCell(byteLength, charLength, allocSlackBytes),
-		m_heapData(heapData)
+		m_heapByteArray(byteArray)
 	{
 	}
 	
-	void setHeapData(std::uint8_t* newHeapData)
+	void setHeapByteArray(SharedByteArray* newHeapByteArray)
 	{
-		m_heapData = newHeapData;
+		m_heapByteArray = newHeapByteArray;
 	}
 };
 
 class InlineStringCell : public StringCell
 {
 	friend class StringCell;
+	friend class SymbolCell;
 #include "generated/InlineStringCellMembers.h"
 private:
 	InlineStringCell(std::uint32_t byteLength, std::uint32_t charLength) :
@@ -160,6 +169,13 @@ private:
 	{
 	}
 };
+
+inline std::ostream & operator<<(std::ostream &os, const StringCell* stringCell)
+{
+	// We are not NULL terminated by default
+	os.write(reinterpret_cast<const char*>(stringCell->constUtf8Data()), stringCell->byteLength());
+	return os;
+}
 
 }
 

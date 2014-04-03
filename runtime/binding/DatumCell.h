@@ -7,6 +7,7 @@
 #include "alloc/GarbageState.h"
 #include "alloc/allocator.h"
 
+#include "util/SharedByteArray.h"
 #include "generated/declaretypes.h"
 #include "generated/CellTypeId.h"
 

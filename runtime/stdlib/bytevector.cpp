@@ -55,17 +55,17 @@ BytevectorCell *lliby_bytevector(World &world, ListElementCell *argHead)
 	}
 
 	auto length = properList.length();
-	auto newBytes = new std::uint8_t[length];
+	SharedByteArray *byteArray = SharedByteArray::createInstance(length);
 	unsigned int byteIndex = 0;
 
 	// Fill out the new elements from the list
 	for(auto element : properList)
 	{
-		newBytes[byteIndex++] = element->value();
+		byteArray->data()[byteIndex++] = element->value();
 	}
 
 	// Return the new vector
-	return BytevectorCell::fromOwnedData(world, newBytes, length);
+	return BytevectorCell::withByteArray(world, byteArray, length);
 }
 
 BytevectorCell *lliby_bytevector_append(World &world, ListElementCell *argHead)

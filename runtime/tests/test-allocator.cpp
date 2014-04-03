@@ -349,13 +349,13 @@ void testAll(World &world)
 	// Test inline symbols
 	testNonRecursiveGc<SymbolCell>(world, [&world] ()
 	{
-		return StringCell::fromUtf8CString(world, u8"")->toSymbol(world);
+		return SymbolCell::fromString(world, StringCell::fromUtf8CString(world, u8""));
 	});
 	
 	// Test heap symbols
 	testNonRecursiveGc<SymbolCell>(world, [&world] ()
 	{
-		return StringCell::fromUtf8CString(world, u8"This is more than twelve bytes long")->toSymbol(world);
+		return SymbolCell::fromString(world, StringCell::fromUtf8CString(world, u8"This is more than twelve bytes long"));
 	});
 
 	// Test inline strings
@@ -373,7 +373,7 @@ void testAll(World &world)
 	// Test bytevectors
 	testNonRecursiveGc<BytevectorCell>(world, [&world] ()
 	{
-		return BytevectorCell::fromUnownedData(world, nullptr, 0);
+		return BytevectorCell::fromData(world, nullptr, 0);
 	});
 	
 	// Test characters

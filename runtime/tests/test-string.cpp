@@ -31,7 +31,6 @@ void testFromUtf8CString(World &world)
 		StringCell *emptyValue = StringCell::fromUtf8CString(world, u8"");
 
 		ASSERT_EQUAL(emptyValue->byteLength(), 0);
-		ASSERT_EQUAL(emptyValue->utf8Data()[0], 0);
 		ASSERT_EQUAL(emptyValue->charLength(), 0);
 	}
 
@@ -39,8 +38,7 @@ void testFromUtf8CString(World &world)
 		StringCell *helloValue = StringCell::fromUtf8CString(world, u8"Hello");
 
 		ASSERT_EQUAL(helloValue->byteLength(), 5);
-		ASSERT_EQUAL(helloValue->utf8Data()[0], 'H');
-		ASSERT_EQUAL(helloValue->utf8Data()[5], 0);
+		ASSERT_EQUAL(helloValue->constUtf8Data()[0], 'H');
 		ASSERT_EQUAL(helloValue->charLength(), 5);
 	}
 	
@@ -48,7 +46,6 @@ void testFromUtf8CString(World &world)
 		StringCell *highUnicodeValue = StringCell::fromUtf8CString(world, u8"☃🐉");
 
 		ASSERT_EQUAL(highUnicodeValue->byteLength(), 7);
-		ASSERT_EQUAL(highUnicodeValue->utf8Data()[7], 0);
 		ASSERT_EQUAL(highUnicodeValue->charLength(), 2);
 	}
 }
@@ -59,7 +56,6 @@ void testFromUtf8Data(World &world)
 		StringCell *emptyValue = StringCell::fromUtf8Data(world, nullptr, 0);
 
 		ASSERT_EQUAL(emptyValue->byteLength(), 0);
-		ASSERT_EQUAL(emptyValue->utf8Data()[0], 0);
 		ASSERT_EQUAL(emptyValue->charLength(), 0);
 	}
 
@@ -69,9 +65,8 @@ void testFromUtf8Data(World &world)
 		StringCell *helloValue = StringCell::fromUtf8Data(world, helloBytes, 6);
 
 		ASSERT_EQUAL(helloValue->byteLength(), 6);
-		ASSERT_EQUAL(helloValue->utf8Data()[0], 'H');
-		ASSERT_EQUAL(helloValue->utf8Data()[5], 0);
-		ASSERT_EQUAL(helloValue->utf8Data()[6], 0);
+		ASSERT_EQUAL(helloValue->constUtf8Data()[0], 'H');
+		ASSERT_EQUAL(helloValue->constUtf8Data()[5], 0);
 		ASSERT_EQUAL(helloValue->charLength(), 6);;
 	}
 	
@@ -80,7 +75,6 @@ void testFromUtf8Data(World &world)
 		StringCell *highUnicodeValue = StringCell::fromUtf8Data(world, highUnicodeBytes, 7);
 
 		ASSERT_EQUAL(highUnicodeValue->byteLength(), 7);
-		ASSERT_EQUAL(highUnicodeValue->utf8Data()[7], 0);
 		ASSERT_EQUAL(highUnicodeValue->charLength(), 2);
 	}
 }
@@ -175,7 +169,6 @@ void testFromFill(World &world)
 		StringCell *emptyAsciiValue = StringCell::fromFill(world, 0, UnicodeChar(0));
 
 		ASSERT_EQUAL(emptyAsciiValue->byteLength(), 0);
-		ASSERT_EQUAL(emptyAsciiValue->utf8Data()[0], 0);
 		ASSERT_EQUAL(emptyAsciiValue->charLength(), 0);
 	}
 	
@@ -183,7 +176,6 @@ void testFromFill(World &world)
 		StringCell *emptyUnicodeValue = StringCell::fromFill(world, 0, UnicodeChar(0x02603));
 
 		ASSERT_EQUAL(emptyUnicodeValue->byteLength(), 0);
-		ASSERT_EQUAL(emptyUnicodeValue->utf8Data()[0], 0);
 		ASSERT_EQUAL(emptyUnicodeValue->charLength(), 0);
 	}
 	
@@ -191,7 +183,6 @@ void testFromFill(World &world)
 		StringCell *asciiValue = StringCell::fromFill(world, 5, UnicodeChar('H'));
 
 		ASSERT_EQUAL(asciiValue->byteLength(), 5);
-		ASSERT_EQUAL(asciiValue->utf8Data()[5], 0);
 		ASSERT_EQUAL(asciiValue->charLength(), 5);
 		ASSERT_EQUAL(asciiValue->charAt(0), UnicodeChar('H'));
 		ASSERT_EQUAL(asciiValue->charAt(4), UnicodeChar('H'));
@@ -202,7 +193,6 @@ void testFromFill(World &world)
 		StringCell *unicodeValue = StringCell::fromFill(world, 5, UnicodeChar(0x02603));
 
 		ASSERT_EQUAL(unicodeValue->byteLength(), 15);
-		ASSERT_EQUAL(unicodeValue->utf8Data()[15], 0);
 		ASSERT_EQUAL(unicodeValue->charLength(), 5);
 		ASSERT_EQUAL(unicodeValue->charAt(0), UnicodeChar(0x02603));
 		ASSERT_EQUAL(unicodeValue->charAt(4), UnicodeChar(0x02603));
@@ -215,7 +205,6 @@ void testFromAppended(World &world)
 	{
 		StringCell *emptyValue = StringCell::fromAppended(world, std::vector<StringCell*>());
 		ASSERT_EQUAL(emptyValue->byteLength(), 0);
-		ASSERT_EQUAL(emptyValue->utf8Data()[0], 0);
 		ASSERT_EQUAL(emptyValue->charLength(), 0);
 	}
 	
@@ -229,9 +218,8 @@ void testFromAppended(World &world)
 		StringCell *asciiValue = StringCell::fromAppended(world, appendParts);
 		
 		ASSERT_EQUAL(asciiValue->byteLength(), 12);
-		ASSERT_EQUAL(asciiValue->utf8Data()[12], 0);
 		ASSERT_EQUAL(asciiValue->charLength(), 12);
-		ASSERT_EQUAL(memcmp(asciiValue->utf8Data(), u8"Hello world!", 12), 0);
+		ASSERT_EQUAL(memcmp(asciiValue->constUtf8Data(), u8"Hello world!", 12), 0);
 	}
 	
 	{
@@ -243,9 +231,8 @@ void testFromAppended(World &world)
 		StringCell *unicodeValue = StringCell::fromAppended(world, appendParts);
 		
 		ASSERT_EQUAL(unicodeValue->byteLength(), 9);
-		ASSERT_EQUAL(unicodeValue->utf8Data()[9], 0);
 		ASSERT_EQUAL(unicodeValue->charLength(), 7);
-		ASSERT_EQUAL(memcmp(unicodeValue->utf8Data(), "Hello ☃", 9), 0);
+		ASSERT_EQUAL(memcmp(unicodeValue->constUtf8Data(), "Hello ☃", 9), 0);
 	}
 }
 
@@ -254,7 +241,6 @@ void testFromUnicodeChars(World &world)
 	{
 		StringCell *emptyValue = StringCell::fromUnicodeChars(world, std::vector<UnicodeChar>());
 		ASSERT_EQUAL(emptyValue->byteLength(), 0);
-		ASSERT_EQUAL(emptyValue->utf8Data()[0], 0);
 		ASSERT_EQUAL(emptyValue->charLength(), 0);
 	}
 
@@ -270,9 +256,8 @@ void testFromUnicodeChars(World &world)
 		StringCell *helloValue = StringCell::fromUnicodeChars(world, helloPoints);
 		
 		ASSERT_EQUAL(helloValue->byteLength(), 5);
-		ASSERT_EQUAL(helloValue->utf8Data()[5], 0);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
-		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"Hello", 6), 0);
+		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"Hello", 5), 0);
 	}
 	
 	{
@@ -286,7 +271,7 @@ void testFromUnicodeChars(World &world)
 		
 		ASSERT_EQUAL(unicodeValue->byteLength(), 8);
 		ASSERT_EQUAL(unicodeValue->charLength(), 3);
-		ASSERT_EQUAL(memcmp(unicodeValue->utf8Data(), u8"🐉☃!", 9), 0);
+		ASSERT_EQUAL(memcmp(unicodeValue->constUtf8Data(), u8"🐉☃!", 8), 0);
 	}
 }
 
@@ -298,7 +283,7 @@ void testStringCopy(World &world)
 
 		ASSERT_EQUAL(helloCopy->byteLength(), 5);
 		ASSERT_EQUAL(helloCopy->charLength(), 5);
-		ASSERT_EQUAL(memcmp(helloCopy->utf8Data(), u8"Hello", 6), 0);
+		ASSERT_EQUAL(memcmp(helloCopy->constUtf8Data(), u8"Hello", 5), 0);
 	}
 	
 	{
@@ -307,7 +292,7 @@ void testStringCopy(World &world)
 
 		ASSERT_EQUAL(elloCopy->byteLength(), 4);
 		ASSERT_EQUAL(elloCopy->charLength(), 4);
-		ASSERT_EQUAL(memcmp(elloCopy->utf8Data(), u8"ello", 5), 0);
+		ASSERT_EQUAL(memcmp(elloCopy->constUtf8Data(), u8"ello", 4), 0);
 	}
 	
 	{
@@ -317,7 +302,7 @@ void testStringCopy(World &world)
 
 		ASSERT_EQUAL(elloCopy->byteLength(), 4);
 		ASSERT_EQUAL(elloCopy->charLength(), 4);
-		ASSERT_EQUAL(memcmp(elloCopy->utf8Data(), u8"ello", 5), 0);
+		ASSERT_EQUAL(memcmp(elloCopy->constUtf8Data(), u8"ello", 4), 0);
 	}
 	
 	{
@@ -344,7 +329,7 @@ void testStringCopy(World &world)
 
 		ASSERT_EQUAL(ellCopy->byteLength(), 3);
 		ASSERT_EQUAL(ellCopy->charLength(), 3);
-		ASSERT_EQUAL(memcmp(ellCopy->utf8Data(), u8"ell", 4), 0);
+		ASSERT_EQUAL(memcmp(ellCopy->constUtf8Data(), u8"ell", 3), 0);
 	}
 	
 	{
@@ -369,7 +354,7 @@ void testStringCopy(World &world)
 
 		ASSERT_EQUAL(japanCopy->byteLength(), 9);
 		ASSERT_EQUAL(japanCopy->charLength(), 3);
-		ASSERT_EQUAL(memcmp(japanCopy->utf8Data(), u8"日本国", 10), 0);
+		ASSERT_EQUAL(memcmp(japanCopy->constUtf8Data(), u8"日本国", 9), 0);
 	}
 	
 	{
@@ -378,7 +363,7 @@ void testStringCopy(World &world)
 
 		ASSERT_EQUAL(japanCopy->byteLength(), 6);
 		ASSERT_EQUAL(japanCopy->charLength(), 2);
-		ASSERT_EQUAL(memcmp(japanCopy->utf8Data(), u8"本国", 7), 0);
+		ASSERT_EQUAL(memcmp(japanCopy->constUtf8Data(), u8"本国", 6), 0);
 	}
 	
 	{
@@ -388,7 +373,7 @@ void testStringCopy(World &world)
 
 		ASSERT_EQUAL(japanCopy->byteLength(), 6);
 		ASSERT_EQUAL(japanCopy->charLength(), 2);
-		ASSERT_EQUAL(memcmp(japanCopy->utf8Data(), u8"本国", 7), 0);
+		ASSERT_EQUAL(memcmp(japanCopy->constUtf8Data(), u8"本国", 6), 0);
 	}
 	
 	{
@@ -397,7 +382,7 @@ void testStringCopy(World &world)
 
 		ASSERT_EQUAL(japanCopy->byteLength(), 3);
 		ASSERT_EQUAL(japanCopy->charLength(), 1);
-		ASSERT_EQUAL(memcmp(japanCopy->utf8Data(), u8"本", 4), 0);
+		ASSERT_EQUAL(memcmp(japanCopy->constUtf8Data(), u8"本", 3), 0);
 	}
 	
 	{
@@ -406,7 +391,7 @@ void testStringCopy(World &world)
 
 		ASSERT_EQUAL(helloCopy->byteLength(), 5);
 		ASSERT_EQUAL(helloCopy->charLength(), 5);
-		ASSERT_EQUAL(memcmp(helloCopy->utf8Data(), u8"Hello", 6), 0);
+		ASSERT_EQUAL(memcmp(helloCopy->constUtf8Data(), u8"Hello", 5), 0);
 	}
 }
 
@@ -419,7 +404,7 @@ void testSetCharAt(World &world)
 
 		ASSERT_EQUAL(helloValue->byteLength(), 5);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
-		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"Yello", 6), 0);
+		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"Yello", 5), 0);
 		
 		// Going off the end of the string should fail
 		ASSERT_EQUAL(helloValue->setCharAt(5, UnicodeChar('Y')), false);
@@ -442,7 +427,7 @@ void testSetCharAt(World &world)
 
 		ASSERT_EQUAL(helloValue->byteLength(), 8);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
-		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"Hel🐉o", 9), 0);
+		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"Hel🐉o", 8), 0);
 		
 		ASSERT_EQUAL(helloValue->setCharAt(5, UnicodeChar('Y')), false);
 	}
@@ -454,7 +439,7 @@ void testSetCharAt(World &world)
 
 		ASSERT_EQUAL(helloValue->byteLength(), 7);
 		ASSERT_EQUAL(helloValue->charLength(), 3);
-		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"日O国", 8), 0);
+		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"日O国", 7), 0);
 		
 		ASSERT_EQUAL(helloValue->setCharAt(4, UnicodeChar('Y')), false);
 	}
@@ -469,7 +454,7 @@ void testFill(World &world)
 
 		ASSERT_EQUAL(helloValue->byteLength(), 5);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
-		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"YYYYY", 6), 0);
+		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"YYYYY", 5), 0);
 	}
 	
 	{
@@ -479,7 +464,7 @@ void testFill(World &world)
 
 		ASSERT_EQUAL(helloValue->byteLength(), 5);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
-		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"YYYYY", 6), 0);
+		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"YYYYY", 5), 0);
 	}
 	
 	{
@@ -494,7 +479,7 @@ void testFill(World &world)
 
 		ASSERT_EQUAL(helloValue->byteLength(), 15);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
-		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"☃☃☃☃☃", 16), 0);
+		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"☃☃☃☃☃", 15), 0);
 	}
 	
 	{
@@ -505,7 +490,7 @@ void testFill(World &world)
 
 		ASSERT_EQUAL(helloValue->byteLength(), 13);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
-		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"H☃☃☃☃", 14), 0);
+		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"H☃☃☃☃", 13), 0);
 	}
 	
 	{
@@ -515,7 +500,7 @@ void testFill(World &world)
 
 		ASSERT_EQUAL(helloValue->byteLength(), 11);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
-		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"H☃☃☃o", 12), 0);
+		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"H☃☃☃o", 11), 0);
 	}
 	
 	{
@@ -525,7 +510,7 @@ void testFill(World &world)
 
 		ASSERT_EQUAL(helloValue->byteLength(), 5);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
-		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"Hello", 6), 0);
+		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"Hello", 5), 0);
 	}
 	
 	{
@@ -535,7 +520,7 @@ void testFill(World &world)
 
 		ASSERT_EQUAL(helloValue->byteLength(), 5);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
-		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"YYYYY", 6), 0);
+		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"YYYYY", 5), 0);
 	}
 	
 	{
@@ -545,7 +530,7 @@ void testFill(World &world)
 
 		ASSERT_EQUAL(helloValue->byteLength(), 5);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
-		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"YYYYY", 6), 0);
+		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"YYYYY", 5), 0);
 	}
 	
 	{
@@ -555,7 +540,7 @@ void testFill(World &world)
 
 		ASSERT_EQUAL(helloValue->byteLength(), 5);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
-		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"YYYYY", 6), 0);
+		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"YYYYY", 5), 0);
 	}
 	
 	{
@@ -565,9 +550,9 @@ void testFill(World &world)
 		ASSERT_EQUAL(helloValue->fill(UnicodeChar('Y'), 1), true);
 
 		ASSERT_EQUAL(helloValue->byteLength(), 7);
-		ASSERT_EQUAL(helloValue->allocSlackBytes(), 4);
+		ASSERT_EQUAL(helloValue->allocSlackBytes(), 5);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
-		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"☃YYYY", 8), 0);
+		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"☃YYYY", 7), 0);
 	}
 }
 
@@ -585,7 +570,7 @@ void testReplace(World &world)
 
 		ASSERT_EQUAL(letters->byteLength(), 5);
 		ASSERT_EQUAL(letters->charLength(), 5);
-		ASSERT_EQUAL(memcmp(letters->utf8Data(), u8"a12de", 6), 0);
+		ASSERT_EQUAL(memcmp(letters->constUtf8Data(), u8"a12de", 5), 0);
 	}
 
 	{
@@ -595,7 +580,7 @@ void testReplace(World &world)
 
 		ASSERT_EQUAL(helloValue->byteLength(), 5);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
-		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"world", 6), 0);
+		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"world", 5), 0);
 	}
 	
 	{
@@ -605,7 +590,7 @@ void testReplace(World &world)
 
 		ASSERT_EQUAL(helloValue->byteLength(), 11);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
-		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"日本国lo", 12), 0);
+		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"日本国lo", 11), 0);
 	}
 	
 	{
@@ -615,7 +600,7 @@ void testReplace(World &world)
 
 		ASSERT_EQUAL(japanValue->byteLength(), 3);
 		ASSERT_EQUAL(japanValue->charLength(), 3);
-		ASSERT_EQUAL(memcmp(japanValue->utf8Data(), u8"wor", 4), 0);
+		ASSERT_EQUAL(memcmp(japanValue->constUtf8Data(), u8"wor", 3), 0);
 	}
 	
 	{
@@ -632,7 +617,7 @@ void testReplace(World &world)
 
 		ASSERT_EQUAL(helloValue->byteLength(), 11);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
-		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"He日本国", 12), 0);
+		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"He日本国", 11), 0);
 	}
 
 	{
@@ -649,7 +634,7 @@ void testReplace(World &world)
 
 		ASSERT_EQUAL(helloValue->byteLength(), 9);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
-		ASSERT_EQUAL(memcmp(helloValue->utf8Data(), u8"He本国o", 10), 0);
+		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"He本国o", 9), 0);
 	}
 	
 	{
@@ -660,7 +645,7 @@ void testReplace(World &world)
 
 		ASSERT_EQUAL(complexValue->byteLength(), 21);
 		ASSERT_EQUAL(complexValue->charLength(), 9);
-		ASSERT_EQUAL(memcmp(complexValue->utf8Data(), u8"日本国lo 日本国", 22), 0);
+		ASSERT_EQUAL(memcmp(complexValue->constUtf8Data(), u8"日本国lo 日本国", 21), 0);
 	}
 }
 
@@ -751,28 +736,28 @@ void testToUtf8Bytevector(World &world)
 		BytevectorCell *byteVectorCell = helloValue->toUtf8Bytevector(world);
 
 		ASSERT_EQUAL(byteVectorCell->length(), 10);
-		ASSERT_EQUAL(memcmp(byteVectorCell->data(), "Hello ☃!", 10), 0);
+		ASSERT_EQUAL(memcmp(byteVectorCell->byteArray()->data(), "Hello ☃!", 10), 0);
 	}
 	
 	{
 		BytevectorCell *byteVectorCell = helloValue->toUtf8Bytevector(world, 0, 8);
 		
 		ASSERT_EQUAL(byteVectorCell->length(), 10);
-		ASSERT_EQUAL(memcmp(byteVectorCell->data(), "Hello ☃!", 10), 0);
+		ASSERT_EQUAL(memcmp(byteVectorCell->byteArray()->data(), "Hello ☃!", 10), 0);
 	}
 	
 	{
 		BytevectorCell *byteVectorCell = helloValue->toUtf8Bytevector(world, 2);
 		
 		ASSERT_EQUAL(byteVectorCell->length(), 8);
-		ASSERT_EQUAL(memcmp(byteVectorCell->data(), "llo ☃!", 8), 0);
+		ASSERT_EQUAL(memcmp(byteVectorCell->byteArray()->data(), "llo ☃!", 8), 0);
 	}
 	
 	{
 		BytevectorCell *byteVectorCell = helloValue->toUtf8Bytevector(world, 2, 5);
 
 		ASSERT_EQUAL(byteVectorCell->length(), 3);
-		ASSERT_EQUAL(memcmp(byteVectorCell->data(), "llo", 3), 0);
+		ASSERT_EQUAL(memcmp(byteVectorCell->byteArray()->data(), "llo", 3), 0);
 	}
 	
 	{
@@ -800,9 +785,9 @@ void testCaseConversion(World &world)
 		alloc::StrongRef<StringCell> uppercaseAsciiString(world, mixedCaseAsciiString->toUppercaseString(world));
 		alloc::StrongRef<StringCell> caseFoldedAsciiString(world, mixedCaseAsciiString->toCaseFoldedString(world));
 
-		ASSERT_UTF8_EQUAL(lowercaseAsciiString->utf8Data(), u8"hello, world!");
-		ASSERT_UTF8_EQUAL(uppercaseAsciiString->utf8Data(), u8"HELLO, WORLD!");
-		ASSERT_UTF8_EQUAL(caseFoldedAsciiString->utf8Data(), u8"hello, world!");
+		ASSERT_UTF8_EQUAL(lowercaseAsciiString.data(), u8"hello, world!");
+		ASSERT_UTF8_EQUAL(uppercaseAsciiString.data(), u8"HELLO, WORLD!");
+		ASSERT_UTF8_EQUAL(caseFoldedAsciiString.data(), u8"hello, world!");
 	}
 
 	{
@@ -812,10 +797,10 @@ void testCaseConversion(World &world)
 		alloc::StrongRef<StringCell> uppercaseUnicodeString(world, mixedCaseUnicodeString->toUppercaseString(world));
 		alloc::StrongRef<StringCell> caseFoldedUnicodeString(world, mixedCaseUnicodeString->toCaseFoldedString(world));
 		
-		ASSERT_UTF8_EQUAL(lowercaseUnicodeString->utf8Data(), u8"γεια σας παγκόσμιο!");
-		ASSERT_UTF8_EQUAL(uppercaseUnicodeString->utf8Data(), u8"ΓΕΙΑ ΣΑΣ ΠΑΓΚΌΣΜΙΟ!");
+		ASSERT_UTF8_EQUAL(lowercaseUnicodeString.data(), u8"γεια σας παγκόσμιο!");
+		ASSERT_UTF8_EQUAL(uppercaseUnicodeString.data(), u8"ΓΕΙΑ ΣΑΣ ΠΑΓΚΌΣΜΙΟ!");
 		// Note that the final sigma folds to a normal sigma here
-		ASSERT_UTF8_EQUAL(caseFoldedUnicodeString->utf8Data(), u8"γεια σασ παγκόσμιο!");
+		ASSERT_UTF8_EQUAL(caseFoldedUnicodeString.data(), u8"γεια σασ παγκόσμιο!");
 	}
 	
 	{
@@ -825,9 +810,9 @@ void testCaseConversion(World &world)
 		alloc::StrongRef<StringCell> uppercaseHanString(world, hanString->toUppercaseString(world));
 		alloc::StrongRef<StringCell> caseFoldedHanString(world, hanString->toCaseFoldedString(world));
 		
-		ASSERT_UTF8_EQUAL(lowercaseHanString->utf8Data(), u8"蒮 駓駗鴀 螒螝螜 咍垀 漊 犨");
-		ASSERT_UTF8_EQUAL(uppercaseHanString->utf8Data(), u8"蒮 駓駗鴀 螒螝螜 咍垀 漊 犨");
-		ASSERT_UTF8_EQUAL(caseFoldedHanString->utf8Data(), u8"蒮 駓駗鴀 螒螝螜 咍垀 漊 犨");
+		ASSERT_UTF8_EQUAL(lowercaseHanString.data(), u8"蒮 駓駗鴀 螒螝螜 咍垀 漊 犨");
+		ASSERT_UTF8_EQUAL(uppercaseHanString.data(), u8"蒮 駓駗鴀 螒螝螜 咍垀 漊 犨");
+		ASSERT_UTF8_EQUAL(caseFoldedHanString.data(), u8"蒮 駓駗鴀 螒螝螜 咍垀 漊 犨");
 	}
 	
 	{
@@ -837,9 +822,9 @@ void testCaseConversion(World &world)
 		alloc::StrongRef<StringCell> uppercaseSymbolString(world, symbolString->toUppercaseString(world));
 		alloc::StrongRef<StringCell> caseFoldedSymbolString(world, symbolString->toCaseFoldedString(world));
 		
-		ASSERT_UTF8_EQUAL(lowercaseSymbolString->utf8Data(), u8"🐉☃☙");
-		ASSERT_UTF8_EQUAL(uppercaseSymbolString->utf8Data(), u8"🐉☃☙");
-		ASSERT_UTF8_EQUAL(caseFoldedSymbolString->utf8Data(), u8"🐉☃☙");
+		ASSERT_UTF8_EQUAL(lowercaseSymbolString.data(), u8"🐉☃☙");
+		ASSERT_UTF8_EQUAL(uppercaseSymbolString.data(), u8"🐉☃☙");
+		ASSERT_UTF8_EQUAL(caseFoldedSymbolString.data(), u8"🐉☃☙");
 	}
 
 	{
@@ -849,9 +834,9 @@ void testCaseConversion(World &world)
 		alloc::StrongRef<StringCell> uppercaseFoldingString(world, unusualFoldingString->toUppercaseString(world));
 		alloc::StrongRef<StringCell> caseFoldedFoldingString(world, unusualFoldingString->toCaseFoldedString(world));
 
-		ASSERT_UTF8_EQUAL(lowercaseFoldingString->utf8Data(), u8"µϵẛ");
-		ASSERT_UTF8_EQUAL(uppercaseFoldingString->utf8Data(), u8"ΜΕṠ");
-		ASSERT_UTF8_EQUAL(caseFoldedFoldingString->utf8Data(), u8"μεṡ");
+		ASSERT_UTF8_EQUAL(lowercaseFoldingString.data(), u8"µϵẛ");
+		ASSERT_UTF8_EQUAL(uppercaseFoldingString.data(), u8"ΜΕṠ");
+		ASSERT_UTF8_EQUAL(caseFoldedFoldingString.data(), u8"μεṡ");
 	}
 }
 

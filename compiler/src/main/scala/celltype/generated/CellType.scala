@@ -487,31 +487,31 @@ object InlineStringCell extends CellTypeVariant with InlineStringFields {
 sealed trait HeapStringFields extends StringFields {
   val irType : FirstClassType
 
-  val heapDataIrType = PointerType(IntegerType(8))
-  val heapDataTbaaIndex : Long
-  val heapDataGepIndices : List[Int]
+  val heapByteArrayIrType = PointerType(IntegerType(8))
+  val heapByteArrayTbaaIndex : Long
+  val heapByteArrayGepIndices : List[Int]
 
-  def genPointerToHeapData(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToHeapByteArray(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
 
-    block.getelementptr("heapDataPtr")(
-      elementType=heapDataIrType,
+    block.getelementptr("heapByteArrayPtr")(
+      elementType=heapByteArrayIrType,
       basePointer=valueCell,
-      indices=heapDataGepIndices.map(IntegerConstant(IntegerType(32), _)),
+      indices=heapByteArrayGepIndices.map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
     )
   }
 
-  def genStoreToHeapData(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue)  {
-    val heapDataPtr = genPointerToHeapData(block)(valueCell)
-    block.store(toStore, heapDataPtr, tbaaIndex=Some(heapDataTbaaIndex))
+  def genStoreToHeapByteArray(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue)  {
+    val heapByteArrayPtr = genPointerToHeapByteArray(block)(valueCell)
+    block.store(toStore, heapByteArrayPtr, tbaaIndex=Some(heapByteArrayTbaaIndex))
   }
 
-  def genLoadFromHeapData(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
-    val heapDataPtr = genPointerToHeapData(block)(valueCell)
-    block.load("heapData")(heapDataPtr, tbaaIndex=Some(heapDataTbaaIndex))
+  def genLoadFromHeapByteArray(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+    val heapByteArrayPtr = genPointerToHeapByteArray(block)(valueCell)
+    block.load("heapByteArray")(heapByteArrayPtr, tbaaIndex=Some(heapByteArrayTbaaIndex))
   }
 }
 
@@ -524,23 +524,23 @@ object HeapStringCell extends CellTypeVariant with HeapStringFields {
   val allocSlackBytesGepIndices = List(0, 0, 1)
   val charLengthGepIndices = List(0, 0, 2)
   val byteLengthGepIndices = List(0, 0, 3)
-  val heapDataGepIndices = List(0, 1)
+  val heapByteArrayGepIndices = List(0, 1)
 
-  val heapDataTbaaIndex = 28L
+  val heapByteArrayTbaaIndex = 28L
   val typeIdTbaaIndex = 22L
   val gcStateTbaaIndex = 23L
   val allocSlackBytesTbaaIndex = 24L
   val charLengthTbaaIndex = 25L
   val byteLengthTbaaIndex = 26L
 
-  def createConstant(heapData : IrConstant, allocSlackBytes : Long, charLength : Long, byteLength : Long) : StructureConstant = {
-    if (heapData.irType != heapDataIrType) {
-      throw new InternalCompilerErrorException("Unexpected type for field heapData")
+  def createConstant(heapByteArray : IrConstant, allocSlackBytes : Long, charLength : Long, byteLength : Long) : StructureConstant = {
+    if (heapByteArray.irType != heapByteArrayIrType) {
+      throw new InternalCompilerErrorException("Unexpected type for field heapByteArray")
     }
 
     StructureConstant(List(
       StringCell.createConstant(allocSlackBytes=allocSlackBytes, charLength=charLength, byteLength=byteLength),
-      heapData
+      heapByteArray
     ), userDefinedType=Some(irType))
   }
 }
@@ -693,31 +693,31 @@ object InlineSymbolCell extends CellTypeVariant with InlineSymbolFields {
 sealed trait HeapSymbolFields extends SymbolFields {
   val irType : FirstClassType
 
-  val heapDataIrType = PointerType(IntegerType(8))
-  val heapDataTbaaIndex : Long
-  val heapDataGepIndices : List[Int]
+  val heapByteArrayIrType = PointerType(IntegerType(8))
+  val heapByteArrayTbaaIndex : Long
+  val heapByteArrayGepIndices : List[Int]
 
-  def genPointerToHeapData(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToHeapByteArray(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
 
-    block.getelementptr("heapDataPtr")(
-      elementType=heapDataIrType,
+    block.getelementptr("heapByteArrayPtr")(
+      elementType=heapByteArrayIrType,
       basePointer=valueCell,
-      indices=heapDataGepIndices.map(IntegerConstant(IntegerType(32), _)),
+      indices=heapByteArrayGepIndices.map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
     )
   }
 
-  def genStoreToHeapData(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue)  {
-    val heapDataPtr = genPointerToHeapData(block)(valueCell)
-    block.store(toStore, heapDataPtr, tbaaIndex=Some(heapDataTbaaIndex))
+  def genStoreToHeapByteArray(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue)  {
+    val heapByteArrayPtr = genPointerToHeapByteArray(block)(valueCell)
+    block.store(toStore, heapByteArrayPtr, tbaaIndex=Some(heapByteArrayTbaaIndex))
   }
 
-  def genLoadFromHeapData(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
-    val heapDataPtr = genPointerToHeapData(block)(valueCell)
-    block.load("heapData")(heapDataPtr, tbaaIndex=Some(heapDataTbaaIndex))
+  def genLoadFromHeapByteArray(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+    val heapByteArrayPtr = genPointerToHeapByteArray(block)(valueCell)
+    block.load("heapByteArray")(heapByteArrayPtr, tbaaIndex=Some(heapByteArrayTbaaIndex))
   }
 }
 
@@ -729,22 +729,22 @@ object HeapSymbolCell extends CellTypeVariant with HeapSymbolFields {
   val gcStateGepIndices = List(0, 0, 0, 1)
   val charLengthGepIndices = List(0, 0, 1)
   val byteLengthGepIndices = List(0, 0, 2)
-  val heapDataGepIndices = List(0, 1)
+  val heapByteArrayGepIndices = List(0, 1)
 
-  val heapDataTbaaIndex = 34L
+  val heapByteArrayTbaaIndex = 34L
   val typeIdTbaaIndex = 29L
   val gcStateTbaaIndex = 30L
   val charLengthTbaaIndex = 31L
   val byteLengthTbaaIndex = 32L
 
-  def createConstant(heapData : IrConstant, charLength : Long, byteLength : Long) : StructureConstant = {
-    if (heapData.irType != heapDataIrType) {
-      throw new InternalCompilerErrorException("Unexpected type for field heapData")
+  def createConstant(heapByteArray : IrConstant, charLength : Long, byteLength : Long) : StructureConstant = {
+    if (heapByteArray.irType != heapByteArrayIrType) {
+      throw new InternalCompilerErrorException("Unexpected type for field heapByteArray")
     }
 
     StructureConstant(List(
       SymbolCell.createConstant(charLength=charLength, byteLength=byteLength),
-      heapData
+      heapByteArray
     ), userDefinedType=Some(irType))
   }
 }
@@ -1091,9 +1091,9 @@ sealed trait BytevectorFields extends DatumFields {
   val lengthTbaaIndex : Long
   val lengthGepIndices : List[Int]
 
-  val dataIrType = PointerType(IntegerType(8))
-  val dataTbaaIndex : Long
-  val dataGepIndices : List[Int]
+  val byteArrayIrType = PointerType(IntegerType(8))
+  val byteArrayTbaaIndex : Long
+  val byteArrayGepIndices : List[Int]
 
   def genPointerToLength(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
     if (valueCell.irType != PointerType(irType)) {
@@ -1118,27 +1118,27 @@ sealed trait BytevectorFields extends DatumFields {
     block.load("length")(lengthPtr, tbaaIndex=Some(lengthTbaaIndex))
   }
 
-  def genPointerToData(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToByteArray(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
 
-    block.getelementptr("dataPtr")(
-      elementType=dataIrType,
+    block.getelementptr("byteArrayPtr")(
+      elementType=byteArrayIrType,
       basePointer=valueCell,
-      indices=dataGepIndices.map(IntegerConstant(IntegerType(32), _)),
+      indices=byteArrayGepIndices.map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
     )
   }
 
-  def genStoreToData(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue)  {
-    val dataPtr = genPointerToData(block)(valueCell)
-    block.store(toStore, dataPtr, tbaaIndex=Some(dataTbaaIndex))
+  def genStoreToByteArray(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue)  {
+    val byteArrayPtr = genPointerToByteArray(block)(valueCell)
+    block.store(toStore, byteArrayPtr, tbaaIndex=Some(byteArrayTbaaIndex))
   }
 
-  def genLoadFromData(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
-    val dataPtr = genPointerToData(block)(valueCell)
-    block.load("data")(dataPtr, tbaaIndex=Some(dataTbaaIndex))
+  def genLoadFromByteArray(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+    val byteArrayPtr = genPointerToByteArray(block)(valueCell)
+    block.load("byteArray")(byteArrayPtr, tbaaIndex=Some(byteArrayTbaaIndex))
   }
 }
 
@@ -1154,22 +1154,22 @@ object BytevectorCell extends ConcreteCellType with BytevectorFields {
   val typeIdGepIndices = List(0, 0, 0)
   val gcStateGepIndices = List(0, 0, 1)
   val lengthGepIndices = List(0, 1)
-  val dataGepIndices = List(0, 2)
+  val byteArrayGepIndices = List(0, 2)
 
   val typeIdTbaaIndex = 53L
   val gcStateTbaaIndex = 54L
   val lengthTbaaIndex = 55L
-  val dataTbaaIndex = 56L
+  val byteArrayTbaaIndex = 56L
 
-  def createConstant(length : Long, data : IrConstant) : StructureConstant = {
-    if (data.irType != dataIrType) {
-      throw new InternalCompilerErrorException("Unexpected type for field data")
+  def createConstant(length : Long, byteArray : IrConstant) : StructureConstant = {
+    if (byteArray.irType != byteArrayIrType) {
+      throw new InternalCompilerErrorException("Unexpected type for field byteArray")
     }
 
     StructureConstant(List(
       DatumCell.createConstant(typeId=typeId),
       IntegerConstant(lengthIrType, length),
-      data
+      byteArray
     ), userDefinedType=Some(irType))
   }
 }
@@ -1295,7 +1295,7 @@ object RecordLikeCell extends CellType with RecordLikeFields {
 sealed trait ProcedureFields extends RecordLikeFields {
   val irType : FirstClassType
 
-  val entryPointIrType = PointerType(FunctionType(PointerType(UserDefinedType("datum")), List(PointerType(UserDefinedType("world")), PointerType(UserDefinedType("procedure")), PointerType(UserDefinedType("listElement")))))
+  val entryPointIrType = PointerType(FunctionType(PointerType(UserDefinedType("datum")), List(PointerType(UserDefinedType("world")), PointerType(UserDefinedType("procedure")), PointerType(UserDefinedType("listElement"))), false))
   val entryPointTbaaIndex : Long
   val entryPointGepIndices : List[Int]
 

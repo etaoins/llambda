@@ -9,9 +9,9 @@
 namespace lliby
 {
 
-HeapSymbolCell::HeapSymbolCell(std::uint8_t *utf8Data, std::uint32_t byteLength, std::uint32_t charLength) :
+HeapSymbolCell::HeapSymbolCell(SharedByteArray *byteArray, std::uint32_t byteLength, std::uint32_t charLength) :
 	SymbolCell(byteLength, charLength),
-	m_heapData(utf8Data)
+	m_heapByteArray(byteArray)
 {
 }
 
@@ -24,47 +24,54 @@ size_t SymbolCell::inlineDataSize()
 {
 	return sizeof(InlineSymbolCell::m_inlineData);
 }
-
-SymbolCell* SymbolCell::createUninitialized(World &world, std::uint32_t byteLength, std::uint32_t charLength)
-{
-	// We need 1 extra byte for the NULL terminator
-	const std::int32_t minimumSize = byteLength + 1;
-
-	void *cellPlacement = alloc::allocateCells(world);
-
-	if (minimumSize <= inlineDataSize())
-	{
-		// We can fit this symbol inline
-		return new (cellPlacement) InlineSymbolCell(byteLength, charLength);
-	}
-	else
-	{
-		// Allocate new space for our heap data
-		auto utf8Data = new std::uint8_t[byteLength + 1];
-		return new (cellPlacement) HeapSymbolCell(utf8Data, byteLength, charLength);
-	}
-}
 	
 SymbolCell* SymbolCell::fromString(World &world, StringCell *string)
 {
 	alloc::StrongRef<StringCell> stringRef(world, string);
+	void *cellPlacement = alloc::allocateCells(world);
 
-	// Allocate a new destination symbol
-	SymbolCell *newSymbol = SymbolCell::createUninitialized(world, stringRef->byteLength(), stringRef->charLength());
+	// Strings and symbols must have an identical inline/heap threshold for the below to work
+	static_assert(
+			sizeof(InlineSymbolCell::m_inlineData) == sizeof(InlineStringCell::m_inlineData), 
+			"Symbols and strings must have the same inlining threshold"
+	);
 
-	// Copy the data over
-	memcpy(const_cast<std::uint8_t*>(newSymbol->utf8Data()), stringRef->utf8Data(), stringRef->byteLength() + 1);
+	if (stringRef->dataIsInline())
+	{
+		auto inlineString = static_cast<InlineStringCell*>(stringRef.data());
 
-	return newSymbol;
+		// Create an inline symbol
+		auto newInlineSymbol = new (cellPlacement) InlineSymbolCell(
+				inlineString->byteLength(),
+				inlineString->charLength()
+		);
+
+		// Copy the inline data over
+		const void *srcData = inlineString->inlineData();
+		const size_t srcSize = inlineString->byteLength(); 
+		memcpy(newInlineSymbol->inlineData(), srcData, srcSize); 
+
+		return newInlineSymbol;
+	}
+	else
+	{
+		auto heapString = static_cast<HeapStringCell*>(stringRef.data());
+
+		// Share the heap string's byte array
+		return new (cellPlacement) HeapSymbolCell(
+				heapString->heapByteArray()->ref(),
+				heapString->byteLength(),
+				heapString->charLength()
+		);
+	}
 }
 
 bool SymbolCell::dataIsInline() const
 {
-	// Need to have 1 byte for the NULL terminator
-	return byteLength() <= (inlineDataSize() - 1);
+	return byteLength() <= inlineDataSize();
 }
 	
-const std::uint8_t* SymbolCell::utf8Data() const
+const std::uint8_t* SymbolCell::constUtf8Data() const
 {
 	if (dataIsInline())
 	{
@@ -72,7 +79,7 @@ const std::uint8_t* SymbolCell::utf8Data() const
 	}
 	else
 	{
-		return static_cast<const HeapSymbolCell*>(this)->heapData();
+		return static_cast<const HeapSymbolCell*>(this)->heapByteArray()->data();
 	}
 }
 
@@ -83,14 +90,14 @@ bool SymbolCell::operator==(const SymbolCell &other) const
 		return false;
 	}
 	
-	return memcmp(utf8Data(), other.utf8Data(), byteLength()) == 0;
+	return memcmp(constUtf8Data(), other.constUtf8Data(), byteLength()) == 0;
 }
 
 void SymbolCell::finalizeSymbol() 
 {
 	if (!dataIsInline())
 	{
-		delete[] static_cast<HeapSymbolCell*>(this)->heapData();
+		static_cast<HeapSymbolCell*>(this)->heapByteArray()->unref();
 	}
 }
 

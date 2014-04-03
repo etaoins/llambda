@@ -8,14 +8,17 @@ namespace lliby
 
 class World;
 class StringCell;
+class ImplicitSharingTest;
 
 class SymbolCell : public DatumCell
 {
 #include "generated/SymbolCellMembers.h"
+	friend class StringCell;
+	friend class ImplicitSharingTest;
 public:
 	static SymbolCell* fromString(World &world, StringCell *string);
 
-	const std::uint8_t* utf8Data() const;
+	const std::uint8_t* constUtf8Data() const;
 
 	bool operator==(const SymbolCell &other) const;
 
@@ -34,8 +37,6 @@ protected:
 	{
 	}
 	
-	static SymbolCell* createUninitialized(World &world, std::uint32_t byteLength, std::uint32_t charLength);
-
 	static size_t inlineDataSize();
 	bool dataIsInline() const;
 };
@@ -43,14 +44,16 @@ protected:
 class HeapSymbolCell : public SymbolCell
 {
 	friend class SymbolCell;
+	friend class StringCell;
 #include "generated/HeapSymbolCellMembers.h"
 private:
-	HeapSymbolCell(std::uint8_t *utf8Data, std::uint32_t byteLength, std::uint32_t charLength);
+	HeapSymbolCell(SharedByteArray *byteArray, std::uint32_t byteLength, std::uint32_t charLength);
 };
 
 class InlineSymbolCell : public SymbolCell
 {
 	friend class SymbolCell;
+	friend class StringCell;
 #include "generated/InlineSymbolCellMembers.h"
 private:
 	InlineSymbolCell(std::uint32_t byteLength, std::uint32_t charLength);

@@ -78,11 +78,9 @@ namespace
 		{
 			(*charPtr)++;
 
-			// This will also catch running off the end via NULL
-			if (!isContinuationByte(*(*charPtr)))
-			{
-				return UnicodeChar();
-			}
+			// decodeUtf8Char() should only be called on pre-verified UTF-8 input
+			// This shouldn't happen but it's an easy sanity check to make
+			assert(isContinuationByte(*(*charPtr)));
 
 			codePoint = (codePoint << 6) | (*(*charPtr) & ~ContinuationHeaderMask);
 		}
@@ -157,26 +155,43 @@ namespace lliby
 	
 StringCell* StringCell::createUninitialized(World &world, std::uint32_t byteLength)
 {
-	// We need 1 extra byte for the NULL terminator
-	std::int32_t minimumSize = byteLength + 1;
-
 	void *cellPlacement = alloc::allocateCells(world);
 
-	if (minimumSize <= inlineDataSize())
+	if (byteLength <= inlineDataSize())
 	{
 		// We can fit this string inline
-		return new (cellPlacement) InlineStringCell(byteLength, 0);
+		auto newString = new (cellPlacement) InlineStringCell(byteLength, 0);
+
+#ifndef NDEBUG
+		if (byteLength < inlineDataSize())
+		{
+			// Explicitly terminate with non-NULL to catch users that assume we're NULL terminated internally
+			newString->inlineData()[byteLength] = 0xff;
+		}
+#endif
+
+		return newString;
 	}
 	else
 	{
-		// Allocate and track how much extra space the OS gave us
-		platform::SizedMallocResult allocation = platform::sizedMalloc(minimumSize);
+		// Allocate a new shared byte array
+		size_t byteArraySize = byteLength;
+		SharedByteArray *newByteArray = SharedByteArray::createMinimumSizedInstance(byteArraySize);
+
+		const auto slackBytes = byteArraySize - byteLength;
+
+#ifndef NDEBUG
+		if (slackBytes > 0)
+		{
+			newByteArray->data()[byteLength] = 0xff;
+		}
+#endif
 
 		return new (cellPlacement) HeapStringCell(
-				static_cast<std::uint8_t*>(allocation.basePointer), 
+				newByteArray, 
 				byteLength,
 				0, // Character length has to be initialized later
-				slackBytesToRecord(allocation.actualSize - minimumSize)
+				slackBytesToRecord(slackBytes)
 		);
 	}
 }
@@ -215,9 +230,40 @@ StringCell* StringCell::fromUtf8CString(World &world, const char *signedStr)
 
 	// Initialize it
 	newString->setCharLength(charLength);
-	memcpy(newString->utf8Data(), str, byteLength + 1);
+	memcpy(newString->utf8Data(), str, byteLength);
 
 	return newString;
+}
+
+StringCell* StringCell::withUtf8ByteArray(World &world, SharedByteArray *byteArray, std::uint32_t byteLength)
+{
+	if (byteLength <= inlineDataSize())
+	{
+		// We can't use the byte array directly
+		StringCell *newString = fromUtf8Data(world, byteArray->data(), byteLength);
+		byteArray->unref();
+
+		return newString;
+	}
+
+	// Calculate the character length
+	std::uint32_t charLength = 0;
+	for(std::uint32_t i = 0; i < byteLength; i++)
+	{
+		if (!isContinuationByte(byteArray->data()[i]))
+		{
+			charLength++;
+		}
+	}
+
+	// Create a new heap cell sharing the byte array
+	void *cellPlacement = alloc::allocateCells(world);
+	return new (cellPlacement) HeapStringCell(
+			byteArray,
+			byteLength,
+			charLength,
+			0
+	);
 }
 	
 StringCell* StringCell::fromUtf8Data(World &world, const std::uint8_t *data, std::uint32_t byteLength)
@@ -267,14 +313,17 @@ StringCell* StringCell::fromFill(World &world, std::uint32_t length, UnicodeChar
 		memcpy(&utf8Data[i * encodedCharSize], encoded.data(), encodedCharSize);
 	}
 
-	// NULL terminate
-	utf8Data[encodedCharSize * length] = 0;
-
 	return newString;
 }
 	
 StringCell* StringCell::fromAppended(World &world, std::vector<StringCell*> &strings)
 {
+	if (strings.size() == 1)
+	{
+		// This allows implicit data sharing while the below always allocates
+		return strings.front()->copy(world);
+	}
+	
 	std::uint64_t totalByteLength = 0;
 	std::uint32_t totalCharLength = 0;
 
@@ -293,7 +342,7 @@ StringCell* StringCell::fromAppended(World &world, std::vector<StringCell*> &str
 	// Mark our input strings as GC roots
 	alloc::StrongRefRange<StringCell> inputRoots(world, strings);
 
-	// Allocate the new string and null terminate it
+	// Allocate the new string
 	auto newString = StringCell::createUninitialized(world, totalByteLength);
 	newString->setCharLength(totalCharLength);
 
@@ -305,8 +354,6 @@ StringCell* StringCell::fromAppended(World &world, std::vector<StringCell*> &str
 		memcpy(copyPtr, stringPart->utf8Data(), stringPart->byteLength());
 		copyPtr += stringPart->byteLength();
 	}
-	
-	copyPtr[0] = 0;
 
 	return newString;
 }
@@ -342,18 +389,40 @@ StringCell* StringCell::fromUnicodeChars(World &world, const std::vector<Unicode
 	return newString;
 }
 
-StringCell* StringCell::fromSymbol(World &world, const SymbolCell *symbol)
+StringCell* StringCell::fromSymbol(World &world, SymbolCell *symbol)
 {
-	// Create the new string
-	auto newString = StringCell::createUninitialized(world, symbol->byteLength());
-	newString->setCharLength(symbol->charLength());
+	alloc::StrongRef<SymbolCell> symbolRef(world, symbol);
+	void *cellPlacement = alloc::allocateCells(world);
 
-	std::uint8_t *newUtf8Data = newString->utf8Data();
+	if (symbolRef->dataIsInline())
+	{
+		auto inlineSymbol = static_cast<InlineSymbolCell*>(symbolRef.data());
 
-	// Copy the symbol data plus NULL terminator
-	memcpy(newUtf8Data, symbol->utf8Data(), symbol->byteLength() + 1);
+		// Create an inline string
+		auto newInlineString = new (cellPlacement) InlineStringCell(
+				inlineSymbol->byteLength(),
+				inlineSymbol->charLength()
+		);
 
-	return newString;
+		// Copy the inline data over
+		const void *srcData = inlineSymbol->inlineData();
+		const size_t srcSize = inlineSymbol->byteLength(); 
+		memcpy(newInlineString->inlineData(), srcData, srcSize); 
+
+		return newInlineString;
+	}
+	else
+	{
+		auto heapSymbol = static_cast<HeapSymbolCell*>(symbolRef.data());
+
+		// Share the heap string's byte array
+		return new (cellPlacement) HeapStringCell(
+				heapSymbol->heapByteArray()->ref(),
+				heapSymbol->byteLength(),
+				heapSymbol->charLength(),
+				0 // Symbols don't preserve slack information
+		);
+	}
 }
 
 size_t StringCell::inlineDataSize()
@@ -363,28 +432,32 @@ size_t StringCell::inlineDataSize()
 	
 bool StringCell::dataIsInline() const
 {
-	// Need to have 1 byte for the NULL terminator
-	return byteLength() <= (inlineDataSize() - 1);
+	return byteLength() <= inlineDataSize();
 }
 	
-std::uint8_t* StringCell::utf8Data() const
+std::uint8_t* StringCell::utf8Data()
 {
 	if (dataIsInline())
 	{
-		return const_cast<std::uint8_t*>(static_cast<const InlineStringCell*>(this)->inlineData());
+		return static_cast<InlineStringCell*>(this)->inlineData();
 	}
 	else
 	{
-		return const_cast<std::uint8_t*>(static_cast<const HeapStringCell*>(this)->heapData());
+		return static_cast<HeapStringCell*>(this)->heapByteArray()->data();
 	}
 }
+
+const std::uint8_t* StringCell::constUtf8Data() const
+{
+	return const_cast<StringCell*>(this)->utf8Data();
+}
 	
-std::uint8_t* StringCell::charPointer(std::uint32_t charOffset) const
+std::uint8_t* StringCell::charPointer(std::uint32_t charOffset)
 {
 	return charPointer(utf8Data(), byteLength(), charOffset);
 }
 
-std::uint8_t* StringCell::charPointer(std::uint8_t *scanFrom, std::uint32_t bytesLeft, uint32_t charOffset) const
+std::uint8_t* StringCell::charPointer(std::uint8_t *scanFrom, std::uint32_t bytesLeft, uint32_t charOffset)
 {
 	if (asciiOnly())
 	{
@@ -415,7 +488,7 @@ std::uint8_t* StringCell::charPointer(std::uint8_t *scanFrom, std::uint32_t byte
 	return nullptr;
 }
 	
-StringCell::CharRange StringCell::charRange(std::int64_t start, std::int64_t end) const
+StringCell::CharRange StringCell::charRange(std::int64_t start, std::int64_t end)
 {
 	if (end == -1)
 	{
@@ -483,7 +556,7 @@ StringCell::CharRange StringCell::charRange(std::int64_t start, std::int64_t end
 	
 UnicodeChar StringCell::charAt(std::uint32_t offset) const
 {
-	std::uint8_t* charPtr = charPointer(offset);
+	std::uint8_t* charPtr = const_cast<StringCell*>(this)->charPointer(offset);
 
 	if (charPtr == nullptr)
 	{
@@ -500,7 +573,9 @@ bool StringCell::replaceBytes(const CharRange &range, std::uint8_t *pattern, uns
 	const unsigned int requiredBytes = patternBytes * count;
 	const unsigned int replacedBytes = range.byteCount();
 	
-	if (requiredBytes == replacedBytes)
+	// If we have exclusive access to our data and we're not resizing the string we can use the fast path
+	if ((dataIsInline() || static_cast<HeapStringCell*>(this)->heapByteArray()->isExclusive()) &&
+	    (requiredBytes == replacedBytes))
 	{
 		std::uint8_t *copyDest = range.startPointer;
 		while(count--)
@@ -520,16 +595,20 @@ bool StringCell::replaceBytes(const CharRange &range, std::uint8_t *pattern, uns
 		}
 
 		const std::uint32_t initialBytes = range.startPointer - utf8Data(); 
-		// Include the NULL terminator
-		const std::uint32_t finalBytes = newByteLength + 1 - initialBytes - requiredBytes;
+		const std::uint32_t finalBytes = newByteLength - initialBytes - requiredBytes;
 		
 		// Figure out how much slack our allocation would have after this	
 		const std::int64_t newAllocSlackBytes = static_cast<std::int64_t>(byteLength()) - newByteLength + allocSlackBytes();
 
 		const bool wasInline = dataIsInline();
-		const bool nowInline = (newByteLength + 1) <= inlineDataSize();
+		const bool nowInline = newByteLength <= inlineDataSize();
 
-		std::uint8_t *oldHeapPointer = nullptr;
+		SharedByteArray *oldByteArray = nullptr;
+		SharedByteArray *newByteArray = nullptr;
+
+		// Does this require a COW due to sharing our byte array?
+		const bool needsCow = (!wasInline && !nowInline) &&
+			                   !static_cast<HeapStringCell*>(this)->heapByteArray()->isExclusive(); 
 
 		// Make sure we have enough space and we don't exceed our maximum allocation size
 		// If we are converting from an inline string to a heap string this will also
@@ -538,40 +617,41 @@ bool StringCell::replaceBytes(const CharRange &range, std::uint8_t *pattern, uns
 		// do the replacement correctly is too complex
 		const bool needHeapRealloc = (newAllocSlackBytes < 0) ||
 			                          ((newAllocSlackBytes > MaximumAllocationSlack) && !nowInline) ||
-											  sameString;
+											  sameString ||
+											  needsCow;
 
 		std::uint8_t* destString;
 		
 		if (!wasInline && nowInline)
 		{
 			// We're converting to an inline string
-			setAllocSlackBytes(inlineDataSize() - newByteLength - 1);
+			setAllocSlackBytes(inlineDataSize() - newByteLength);
 			destString = static_cast<InlineStringCell*>(this)->inlineData();
 			
-			// Store our old heap pointer so we can delete it later
+			// Store our old byte array so we can unref it later
 			// The code below will overwrite it with our new inline string
-			oldHeapPointer = utf8Data();
+			oldByteArray = static_cast<HeapStringCell*>(this)->heapByteArray();
 			
 			// Fill the initial chunk of the string
 			memcpy(destString, utf8Data(), initialBytes); 
 		}
 		else if (needHeapRealloc)
 		{
-			const size_t minimumSize = newByteLength + 1;
-			platform::SizedMallocResult allocation = platform::sizedMalloc(minimumSize);
+			size_t byteArraySize = newByteLength;
 
-			destString = static_cast<std::uint8_t*>(allocation.basePointer);
+			newByteArray = SharedByteArray::createMinimumSizedInstance(byteArraySize);
+			destString = newByteArray->data();
 
 			// Update our slack byte count
-			setAllocSlackBytes(slackBytesToRecord(allocation.actualSize - minimumSize));
+			setAllocSlackBytes(slackBytesToRecord(byteArraySize - newByteLength));
 
 			// Fill the initial chunk of the string
 			memcpy(destString, utf8Data(), initialBytes); 
 
 			if (!wasInline)
 			{
-				// Store our old heap pointer so we can free it later
-				oldHeapPointer = utf8Data();
+				// Store our old byte array so we can unref it later
+				oldByteArray = static_cast<HeapStringCell*>(this)->heapByteArray();
 			}
 		}
 		else
@@ -599,15 +679,15 @@ bool StringCell::replaceBytes(const CharRange &range, std::uint8_t *pattern, uns
 		// Update ourselves with our new string
 		setByteLength(newByteLength);
 
-		if (needHeapRealloc)
+		if (newByteArray)
 		{
-			static_cast<HeapStringCell*>(this)->setHeapData(destString);
+			static_cast<HeapStringCell*>(this)->setHeapByteArray(newByteArray);
 		}
 
-		if (oldHeapPointer != nullptr)
+		if (oldByteArray != nullptr)
 		{
-			// We can free this now
-			free(oldHeapPointer);
+			// We can unref this now
+			oldByteArray->unref();
 		}
 	}
 	
@@ -638,7 +718,7 @@ bool StringCell::fill(UnicodeChar unicodeChar, std::int64_t start, std::int64_t 
 	
 bool StringCell::replace(std::uint32_t offset, const StringCell *from, std::int64_t fromStart, std::int64_t fromEnd)
 {
-	CharRange fromRange = from->charRange(fromStart, fromEnd);
+	CharRange fromRange = const_cast<StringCell*>(from)->charRange(fromStart, fromEnd);
 
 	if (fromRange.isNull())
 	{
@@ -652,7 +732,7 @@ bool StringCell::replace(std::uint32_t offset, const StringCell *from, std::int6
 		return false;
 	}
 	
-	const bool sameString = utf8Data() == from->utf8Data();
+	const bool sameString = constUtf8Data() == from->constUtf8Data();
 	return replaceBytes(toRange, fromRange.startPointer, fromRange.byteCount(), 1, sameString);
 }
 	
@@ -661,7 +741,7 @@ bool StringCell::setCharAt(std::uint32_t offset, UnicodeChar unicodeChar)
 	return fill(unicodeChar, offset, offset + 1);
 }
 	
-StringCell* StringCell::copy(World &world, std::int64_t start, std::int64_t end) const
+StringCell* StringCell::copy(World &world, std::int64_t start, std::int64_t end)
 {
 	// Allocating a string below can actually change "this"
 	// That is super annoying
@@ -674,6 +754,21 @@ StringCell* StringCell::copy(World &world, std::int64_t start, std::int64_t end)
 	{
 		// Invalid range
 		return nullptr;
+	}
+
+	if ((range.charCount == charLength()) && !dataIsInline())
+	{
+		// We're copying the whole string
+		// Share our byte array
+		void *cellPlacement = alloc::allocateCells(world);
+		HeapStringCell *heapThis = static_cast<HeapStringCell*>(thisRef.data());
+
+		return new (cellPlacement) HeapStringCell(
+				heapThis->heapByteArray()->ref(),
+				heapThis->byteLength(),
+				heapThis->charLength(),
+				heapThis->allocSlackBytes()
+		);
 	}
 
 	const std::uint32_t newByteLength = range.byteCount();
@@ -708,8 +803,8 @@ std::vector<UnicodeChar> StringCell::unicodeChars(std::int64_t start, std::int64
 		return std::vector<UnicodeChar>();
 	}
 
-	std::uint8_t *scanPtr = charPointer(start);
-	std::uint8_t *endPtr = &utf8Data()[byteLength()];
+	std::uint8_t *scanPtr = const_cast<StringCell*>(this)->charPointer(start);
+	const std::uint8_t *endPtr = &constUtf8Data()[byteLength()];
 
 	if (scanPtr == nullptr)
 	{
@@ -757,7 +852,7 @@ bool StringCell::operator==(const StringCell &other) const
 		return false;
 	}
 	
-	return memcmp(utf8Data(), other.utf8Data(), byteLength()) == 0;
+	return memcmp(constUtf8Data(), other.constUtf8Data(), byteLength()) == 0;
 }
 
 int StringCell::compareCaseSensitive(const StringCell *other) const
@@ -765,7 +860,7 @@ int StringCell::compareCaseSensitive(const StringCell *other) const
 	std::uint32_t compareBytes = std::min(byteLength(), other->byteLength());
 
 	// Bytewise comparisons in UTF-8 sort Unicode code points correctly
-	int result = memcmp(utf8Data(), other->utf8Data(), compareBytes);
+	int result = memcmp(constUtf8Data(), other->constUtf8Data(), compareBytes);
 
 	if (result != 0)
 	{
@@ -779,11 +874,11 @@ int StringCell::compareCaseSensitive(const StringCell *other) const
 
 int StringCell::compareCaseInsensitive(const StringCell *other) const
 {
-	std::uint8_t *ourScanPtr = utf8Data();
-	std::uint8_t *ourEndPtr = &utf8Data()[byteLength()];
+	std::uint8_t *ourScanPtr = const_cast<StringCell*>(this)->utf8Data();
+	const std::uint8_t *ourEndPtr = &constUtf8Data()[byteLength()];
 
-	std::uint8_t *theirScanPtr = other->utf8Data();
-	std::uint8_t *theirEndPtr = &other->utf8Data()[other->byteLength()];
+	std::uint8_t *theirScanPtr = const_cast<StringCell*>(other)->utf8Data();
+	const std::uint8_t *theirEndPtr = &other->constUtf8Data()[other->byteLength()];
 	
 	while(true)
 	{
@@ -832,12 +927,7 @@ int StringCell::compare(const StringCell *other, CaseSensitivity cs) const
 	}
 }
 	
-SymbolCell* StringCell::toSymbol(World &world) const
-{
-	return SymbolCell::fromString(world, const_cast<StringCell*>(this));
-}
-	
-BytevectorCell* StringCell::toUtf8Bytevector(World &world, std::int64_t start, std::int64_t end) const
+BytevectorCell* StringCell::toUtf8Bytevector(World &world, std::int64_t start, std::int64_t end) 
 {
 	CharRange range = charRange(start, end);
 
@@ -847,13 +937,24 @@ BytevectorCell* StringCell::toUtf8Bytevector(World &world, std::int64_t start, s
 	}
 
 	std::uint32_t newLength = range.endPointer - range.startPointer;
-	auto *newData = new std::uint8_t[newLength];
+	SharedByteArray *byteArray;
 
-	memcpy(newData, range.startPointer, newLength);
-	return BytevectorCell::fromOwnedData(world, newData, newLength);
+	if ((newLength == byteLength()) && !dataIsInline())
+	{
+		// Reuse our existing byte array
+		byteArray = static_cast<HeapStringCell*>(this)->heapByteArray()->ref();
+	}
+	else
+	{
+		// Create a new byte array and initialize it
+		byteArray = SharedByteArray::createInstance(newLength);
+		memcpy(byteArray->data(), range.startPointer, newLength);
+	}
+
+	return BytevectorCell::withByteArray(world, byteArray, newLength);
 }
 	
-StringCell *StringCell::toConvertedString(World &world, UnicodeChar (UnicodeChar::* converter)() const) const
+StringCell *StringCell::toConvertedString(World &world, UnicodeChar (UnicodeChar::* converter)() const) 
 {
 	std::vector<std::uint8_t> convertedData;
 
@@ -863,7 +964,7 @@ StringCell *StringCell::toConvertedString(World &world, UnicodeChar (UnicodeChar
 	convertedData.reserve(byteLength());
 
 	std::uint8_t *scanPtr = utf8Data();
-	const std::uint8_t *endPtr = &utf8Data()[byteLength()];
+	const std::uint8_t *endPtr = &constUtf8Data()[byteLength()];
 
 	while(scanPtr < endPtr)
 	{
@@ -891,23 +992,20 @@ StringCell *StringCell::toConvertedString(World &world, UnicodeChar (UnicodeChar
 	newString->setCharLength(newCharLength);
 	memcpy(newString->utf8Data(), convertedData.data(), totalByteLength);
 
-	// NULL terminate
-	newString->utf8Data()[totalByteLength] = 0;
-
 	return newString;
 }
 
-StringCell* StringCell::toUppercaseString(World &world) const
+StringCell* StringCell::toUppercaseString(World &world) 
 {
 	return toConvertedString(world, &UnicodeChar::toUppercase);
 }
 
-StringCell* StringCell::toLowercaseString(World &world) const
+StringCell* StringCell::toLowercaseString(World &world) 
 {
 	return toConvertedString(world, &UnicodeChar::toLowercase);
 }
 
-StringCell* StringCell::toCaseFoldedString(World &world) const
+StringCell* StringCell::toCaseFoldedString(World &world) 
 {
 	return toConvertedString(world, &UnicodeChar::toCaseFolded);
 }
@@ -916,7 +1014,7 @@ void StringCell::finalizeString()
 {
 	if (!dataIsInline())
 	{
-		free(static_cast<HeapStringCell*>(this)->heapData());
+		static_cast<HeapStringCell*>(this)->heapByteArray()->unref();
 	}
 }
 
