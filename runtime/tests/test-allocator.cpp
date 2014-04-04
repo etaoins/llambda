@@ -23,8 +23,7 @@
 
 #include "alloc/allocator.h"
 #include "alloc/cellvisitor.h"
-#include "alloc/StrongRef.h"
-#include "alloc/WeakRef.h"
+#include "alloc/cellref.h"
 #include "alloc/RangeAlloc.h"
 
 namespace
@@ -73,9 +72,9 @@ void testPairGc(World &world)
 
 	// These need to be strong while allocated so value A/B don't disappear when later values are allocated 
 	// However, they need to be weak after to test how strong references affect their collection
-	alloc::StrongRef<StringCell> valueAStrong(world, StringCell::fromUtf8CString(world, ""));
-	alloc::StrongRef<StringCell> valueBStrong(world, StringCell::fromUtf8CString(world, ""));
-	alloc::StrongRef<StringCell> valueCStrong(world, StringCell::fromUtf8CString(world, ""));
+	alloc::StringRef valueAStrong(world, StringCell::fromUtf8CString(world, ""));
+	alloc::StringRef valueBStrong(world, StringCell::fromUtf8CString(world, ""));
+	alloc::StringRef valueCStrong(world, StringCell::fromUtf8CString(world, ""));
 	
 	alloc::RangeAlloc allocation(alloc::allocateRange(world, 3)); 
 	auto allocIt = allocation.begin();
@@ -97,7 +96,7 @@ void testPairGc(World &world)
 
 	{
 		// Root the head of the list
-		alloc::StrongRef<PairCell> rootingRef(world, pairA);
+		alloc::PairRef rootingRef(world, pairA);
 
 		alloc::forceCollection(world);
 
@@ -113,7 +112,7 @@ void testPairGc(World &world)
 	
 	{
 		// Root the middle of the list
-		alloc::StrongRef<PairCell> rootingRef(world, pairB);
+		alloc::PairRef rootingRef(world, pairB);
 
 		alloc::forceCollection(world);
 
@@ -129,7 +128,7 @@ void testPairGc(World &world)
 
 	{
 		// Root the end of the list
-		alloc::StrongRef<PairCell> rootingRef(world, pairC);
+		alloc::PairRef rootingRef(world, pairC);
 
 		alloc::forceCollection(world);
 
@@ -166,11 +165,11 @@ void testVectorGc(World &world)
 		return VectorCell::fromElements(world, nullptr, 0);
 	});
 	
-	alloc::StrongRef<StringCell> value0Strong(world, StringCell::fromUtf8CString(world, ""));
-	alloc::StrongRef<StringCell> value1Strong(world, StringCell::fromUtf8CString(world, ""));
-	alloc::StrongRef<StringCell> value2Strong(world, StringCell::fromUtf8CString(world, ""));
+	alloc::StringRef value0Strong(world, StringCell::fromUtf8CString(world, ""));
+	alloc::StringRef value1Strong(world, StringCell::fromUtf8CString(world, ""));
+	alloc::StringRef value2Strong(world, StringCell::fromUtf8CString(world, ""));
 	
-	alloc::StrongRef<VectorCell> testVec(world, VectorCell::fromFill(world, 3));
+	alloc::VectorRef testVec(world, VectorCell::fromFill(world, 3));
 	
 	alloc::WeakRef<StringCell> value0(world, value0Strong.data());
 	value0Strong = nullptr;
@@ -242,11 +241,11 @@ void testRecordLikeGc(World &world)
 			offsetof(CustomRecordLikeData, cell1)});
 
 	// Make some test values
-	alloc::StrongRef<StringCell> value0Strong(world, StringCell::fromUtf8CString(world, ""));
-	alloc::StrongRef<StringCell> value1Strong(world, StringCell::fromUtf8CString(world, ""));
+	alloc::StringRef value0Strong(world, StringCell::fromUtf8CString(world, ""));
+	alloc::StringRef value1Strong(world, StringCell::fromUtf8CString(world, ""));
 	
 	// Create the record-like
-	alloc::StrongRef<RecordCell> testRecord(world, RecordCell::createInstance(world, testClass, false, nullptr));
+	alloc::RecordRef testRecord(world, RecordCell::createInstance(world, testClass, false, nullptr));
 
 	// Set the data
 	auto data = static_cast<CustomRecordLikeData*>(RecordLikeCell::allocateRecordData(sizeof(CustomRecordLikeData)));

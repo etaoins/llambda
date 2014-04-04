@@ -11,7 +11,7 @@
 #include "platform/memory.h"
 
 #include "alloc/allocator.h"
-#include "alloc/StrongRef.h"
+#include "alloc/cellref.h"
 
 namespace
 {
@@ -340,7 +340,7 @@ StringCell* StringCell::fromAppended(World &world, std::vector<StringCell*> &str
 	}
 
 	// Mark our input strings as GC roots
-	alloc::StrongRefRange<StringCell> inputRoots(world, strings);
+	alloc::StringRefRange inputRoots(world, strings);
 
 	// Allocate the new string
 	auto newString = StringCell::createUninitialized(world, totalByteLength);
@@ -391,7 +391,7 @@ StringCell* StringCell::fromUnicodeChars(World &world, const std::vector<Unicode
 
 StringCell* StringCell::fromSymbol(World &world, SymbolCell *symbol)
 {
-	alloc::StrongRef<SymbolCell> symbolRef(world, symbol);
+	alloc::SymbolRef symbolRef(world, symbol);
 	void *cellPlacement = alloc::allocateCells(world);
 
 	if (symbolRef->dataIsInline())
@@ -745,7 +745,7 @@ StringCell* StringCell::copy(World &world, std::int64_t start, std::int64_t end)
 	// Allocating a string below can actually change "this"
 	// That is super annoying
 	StringCell *oldThis = const_cast<StringCell*>(this);
-	alloc::StrongRef<StringCell> thisRef(world, oldThis);
+	alloc::StringRef thisRef(world, oldThis);
 
 	CharRange range = charRange(start, end);
 

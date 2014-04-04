@@ -2,8 +2,6 @@
 #include "binding/VectorCell.h"
 #include "binding/ProperList.h"
 
-#include "alloc/StrongRef.h"
-
 #include "core/error.h"
 #include "core/World.h"
 

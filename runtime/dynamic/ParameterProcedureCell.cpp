@@ -2,7 +2,7 @@
 
 #include "dynamic/State.h"
 #include "binding/EmptyListCell.h"
-#include "alloc/StrongRef.h"
+#include "alloc/cellref.h"
 
 #include "core/error.h"
 
@@ -33,8 +33,8 @@ namespace
 ParameterProcedureCell* ParameterProcedureCell::createInstance(World &world, DatumCell *initialValueRaw, ProcedureCell *converterProcedureRaw)
 {
 	// Root these across the allocation of the actual procedure cell
-	alloc::StrongRef<DatumCell> initialValue(world, initialValueRaw);
-	alloc::StrongRef<ProcedureCell> converterProcedure(world, converterProcedureRaw);
+	alloc::DatumRef initialValue(world, initialValueRaw);
+	alloc::ProcedureRef converterProcedure(world, converterProcedureRaw);
 
 	auto closure = static_cast<ParameterProcedureClosure*>(allocateRecordData(sizeof(ParameterProcedureClosure)));
 	ProcedureCell *procedureCell = ProcedureCell::createInstance(world, registeredClassId, false, closure, &procedureBody);

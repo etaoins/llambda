@@ -8,7 +8,7 @@
 #include "assertions.h"
 #include "stubdefinitions.h"
 
-#include "alloc/StrongRef.h"
+#include "alloc/cellref.h"
 
 namespace
 {
@@ -17,9 +17,9 @@ using namespace lliby;
 
 void testAll(World &world)
 {
-	alloc::StrongRef<StringCell> valueA(world, StringCell::fromUtf8CString(world, "A"));
-	alloc::StrongRef<StringCell> valueB(world, StringCell::fromUtf8CString(world, "B"));
-	alloc::StrongRef<StringCell> valueC(world, StringCell::fromUtf8CString(world, "C"));
+	alloc::StringRef valueA(world, StringCell::fromUtf8CString(world, "A"));
+	alloc::StringRef valueB(world, StringCell::fromUtf8CString(world, "B"));
+	alloc::StringRef valueC(world, StringCell::fromUtf8CString(world, "C"));
 	
 	{
 		ListElementCell *emptyListHead = ListElementCell::createProperList(world, {});

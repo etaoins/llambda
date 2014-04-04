@@ -20,7 +20,7 @@
 #include "binding/RecordCell.h"
 #include "binding/ErrorObjectCell.h"
 
-#include "alloc/StrongRef.h"
+#include "alloc/cellref.h"
 #include "assertions.h"
 #include "stubdefinitions.h"
 
@@ -116,9 +116,9 @@ void testString(World &world)
 
 void testPair(World &world)
 {
-	alloc::StrongRef<SymbolCell> valueA(world, symbolFor(world, "A"));
-	alloc::StrongRef<SymbolCell> valueB(world, symbolFor(world, "B"));
-	alloc::StrongRef<SymbolCell> valueC(world, symbolFor(world, "C"));
+	alloc::SymbolRef valueA(world, symbolFor(world, "A"));
+	alloc::SymbolRef valueB(world, symbolFor(world, "B"));
+	alloc::SymbolRef valueC(world, symbolFor(world, "C"));
 
 	assertForm(PairCell::createProperList(world, {}), "()");
 	assertForm(PairCell::createProperList(world, {valueA}), "(A)");
@@ -157,7 +157,7 @@ void testVector(World &world)
 	}
 
 	{
-		alloc::StrongRef<VectorCell> fillVector(world, VectorCell::fromFill(world, 5));
+		alloc::VectorRef fillVector(world, VectorCell::fromFill(world, 5));
 
 		for(unsigned int i = 0; i < 5; i++)
 		{
@@ -207,7 +207,7 @@ void testRecord(World &world)
 
 void testErrorObject(World &world)
 {
-	alloc::StrongRef<StringCell> errorString(world, StringCell::fromUtf8CString(world, u8"Test error"));
+	alloc::StringRef errorString(world, StringCell::fromUtf8CString(world, u8"Test error"));
 	auto errorObj = ErrorObjectCell::createInstance(world, errorString, EmptyListCell::instance());
 
 	assertForm(errorObj, "#!error(Test error)");

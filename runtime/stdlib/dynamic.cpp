@@ -1,8 +1,7 @@
 #include "binding/ProcedureCell.h"
 
 #include "alloc/allocator.h"
-#include "alloc/RangeAlloc.h"
-#include "alloc/StrongRef.h"
+#include "alloc/cellref.h"
 #include "binding/EmptyListCell.h"
 
 #include "dynamic/State.h"
@@ -23,12 +22,12 @@ DatumCell *lliby_dynamic_wind(World &world, ProcedureCell *before, ProcedureCell
 	{
 		// pushActiveState() can call before which can GC
 		// Make sure we root thunk 
-		alloc::StrongRefRange<ProcedureCell> thunkRoot(world, &thunk, 1);
+		alloc::ProcedureRefRange thunkRoot(world, &thunk, 1);
 
 		dynamic::State::pushActiveState(world, before, after);
 	}
 	
-	alloc::StrongRef<DatumCell> thunkResult(world, thunk->apply(world, EmptyListCell::instance()));
+	alloc::DatumRef thunkResult(world, thunk->apply(world, EmptyListCell::instance()));
 
 	dynamic::State::popActiveState(world);
 

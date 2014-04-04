@@ -4,8 +4,7 @@
 #include "binding/StringCell.h"
 #include "binding/ProperList.h"
 
-#include "alloc/StrongRef.h"
-#include "alloc/WeakRef.h"
+#include "alloc/cellref.h"
 
 #include "core/init.h"
 #include "assertions.h"
@@ -28,9 +27,9 @@ std::uint32_t listLength(const ListElementCell *head)
 
 void testAll(World &world)
 {
-	alloc::StrongRef<StringCell> valueA(world, StringCell::fromUtf8CString(world, "A"));
-	alloc::StrongRef<StringCell> valueB(world, StringCell::fromUtf8CString(world, "B"));
-	alloc::StrongRef<StringCell> valueC(world, StringCell::fromUtf8CString(world, "C"));
+	alloc::StringRef valueA(world, StringCell::fromUtf8CString(world, "A"));
+	alloc::StringRef valueB(world, StringCell::fromUtf8CString(world, "B"));
+	alloc::StringRef valueC(world, StringCell::fromUtf8CString(world, "C"));
 	
 	{
 		ListElementCell *properList = ListElementCell::createProperList(world, {});

@@ -4,7 +4,7 @@
 #include "binding/ListElementCell.h"
 #include "binding/ErrorObjectCell.h"
 
-#include "alloc/StrongRef.h"
+#include "alloc/cellref.h"
 #include "dynamic/State.h"
 #include "dynamic/SchemeException.h"
 
@@ -18,7 +18,7 @@ extern "C"
 DatumCell* lliby_with_exception_handler(World &world, ProcedureCell *handlerRaw, ProcedureCell *thunk)
 {
 	// Root our exception handler
-	alloc::StrongRef<ProcedureCell> handler(world, handlerRaw);
+	alloc::ProcedureRef handler(world, handlerRaw);
 
 	// Keep track of our dynamic state
 	dynamic::State *expectedState = dynamic::State::activeState(world);

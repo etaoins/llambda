@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "binding/StringCell.h"
-#include "alloc/StrongRef.h"
+#include "alloc/cellref.h"
 #include "alloc/allocator.h"
 
 namespace lliby
@@ -27,7 +27,7 @@ size_t SymbolCell::inlineDataSize()
 	
 SymbolCell* SymbolCell::fromString(World &world, StringCell *string)
 {
-	alloc::StrongRef<StringCell> stringRef(world, string);
+	alloc::StringRef stringRef(world, string);
 	void *cellPlacement = alloc::allocateCells(world);
 
 	// Strings and symbols must have an identical inline/heap threshold for the below to work

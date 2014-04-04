@@ -4,7 +4,7 @@
 #include "EmptyListCell.h"
 
 #include "alloc/RangeAlloc.h"
-#include "alloc/StrongRef.h"
+#include "alloc/cellref.h"
 
 namespace lliby
 {
@@ -19,8 +19,8 @@ ListElementCell* ListElementCell::createProperList(World &world, std::vector<Dat
 DatumCell* ListElementCell::createList(World &world, std::vector<DatumCell*> &elements, DatumCell *tail)
 {
 	// We allocate space for our pairs below. Make sure we GC root the new elements first.
-	alloc::StrongRefRange<DatumCell> elementsRoot(world, elements);
-	alloc::StrongRef<DatumCell> tailRef(world, tail);
+	alloc::DatumRefRange elementsRoot(world, elements);
+	alloc::DatumRef tailRef(world, tail);
 
 	alloc::RangeAlloc allocation = alloc::allocateRange(world, elements.size());
 	auto allocIt = allocation.end();

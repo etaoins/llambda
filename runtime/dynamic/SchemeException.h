@@ -2,7 +2,7 @@
 #define _LLIBY_DYNAMIC_SCHEMEEXCEPTION_H
 
 #include "binding/DatumCell.h"
-#include "alloc/StrongRef.h"
+#include "alloc/cellref.h"
 #include "core/World.h"
 
 namespace lliby
@@ -24,7 +24,7 @@ public:
 	}
 
 private:
-	alloc::StrongRef<DatumCell> m_object;
+	alloc::DatumRef m_object;
 };
 
 }

@@ -1,7 +1,7 @@
 #include "core/error.h"
 #include "core/World.h"
 
-#include "alloc/StrongRef.h"
+#include "alloc/cellref.h"
 
 #include <unistd.h>
 #include <iostream>
@@ -45,8 +45,8 @@ namespace lliby
 void signalError(World &world, const char *message, const std::vector<DatumCell*> &irritants)
 {
 	// Convert our C++ data type to Scheme cells
-	alloc::StrongRef<ListElementCell> irritantsCell(world, ListElementCell::createProperList(world, irritants));
-	alloc::StrongRef<StringCell> messageCell(world, StringCell::fromUtf8CString(world, message));
+	alloc::ListElementRef irritantsCell(world, ListElementCell::createProperList(world, irritants));
+	alloc::StringRef messageCell(world, StringCell::fromUtf8CString(world, message));
 
 	// Throw a new exception
 	auto errorObj = ErrorObjectCell::createInstance(world, messageCell, irritantsCell);

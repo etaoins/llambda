@@ -9,7 +9,7 @@
 #include "assertions.h"
 #include "stubdefinitions.h"
 
-#include "alloc/StrongRef.h"
+#include "alloc/cellref.h"
 
 namespace
 {
@@ -43,13 +43,13 @@ void testFromFill(World &world)
 void testFromAppended(World &world)
 {
 	uint8_t vector1Data[3] = { 100, 101, 102 };
-	alloc::StrongRef<BytevectorCell> vector1(world, BytevectorCell::fromData(world, vector1Data, sizeof(vector1Data)));
+	alloc::BytevectorRef vector1(world, BytevectorCell::fromData(world, vector1Data, sizeof(vector1Data)));
 
 	uint8_t vector2Data[1] = { 0 };
-	alloc::StrongRef<BytevectorCell> vector2(world, BytevectorCell::fromData(world, vector2Data, sizeof(vector2Data)));
+	alloc::BytevectorRef vector2(world, BytevectorCell::fromData(world, vector2Data, sizeof(vector2Data)));
 
 	uint8_t vector3Data[3] = { 200, 201, 202 };
-	alloc::StrongRef<BytevectorCell> vector3(world, BytevectorCell::fromData(world, vector3Data, sizeof(vector3Data)));
+	alloc::BytevectorRef vector3(world, BytevectorCell::fromData(world, vector3Data, sizeof(vector3Data)));
 
 	{
 		BytevectorCell *emptyVector = BytevectorCell::fromAppended(world, {});
@@ -99,7 +99,7 @@ void testCopy(World &world)
 {
 	uint8_t vectorData[5] = { 0, 1, 2, 3, 4 };
 
-	alloc::StrongRef<BytevectorCell> testVector(world, BytevectorCell::fromData(world, vectorData, sizeof(vectorData)));
+	alloc::BytevectorRef testVector(world, BytevectorCell::fromData(world, vectorData, sizeof(vectorData)));
 
 	{
 		BytevectorCell *wholeCopy = testVector->copy(world);
@@ -142,7 +142,7 @@ void testCopy(World &world)
 void testReplace(World &world)
 {
 	uint8_t fromData[5] = { 200, 201, 202, 203, 204 };
-	alloc::StrongRef<BytevectorCell> fromVector(world, BytevectorCell::fromData(world, fromData, 5)); 
+	alloc::BytevectorRef fromVector(world, BytevectorCell::fromData(world, fromData, 5)); 
 
 	{
 		uint8_t toData[5] = { 100, 101, 102, 103, 104 };
@@ -235,7 +235,7 @@ void testReplace(World &world)
 void testUtf8ToString(World &world)
 {
 	auto stringData = reinterpret_cast<std::uint8_t*>(strdup(u8"Hello ☃!"));
-	alloc::StrongRef<BytevectorCell> sourceVector(world, BytevectorCell::fromData(world, stringData, 10));
+	alloc::BytevectorRef sourceVector(world, BytevectorCell::fromData(world, stringData, 10));
 
 	{
 		StringCell *fullString = sourceVector->utf8ToString(world);

@@ -5,7 +5,7 @@
 
 #include "alloc/allocator.h"
 #include "alloc/RangeAlloc.h"
-#include "alloc/StrongRef.h"
+#include "alloc/cellref.h"
 
 #include "core/error.h"
 
@@ -126,7 +126,7 @@ DatumCell* lliby_list_copy(World &world, DatumCell *sourceHead)
 	}
 
 	// Make sure we take a reference to this across the next allocation in case the GC runs
-	alloc::StrongRef<DatumCell> sourceHeadRef(world, sourceHead);	
+	alloc::DatumRef sourceHeadRef(world, sourceHead);	
 
 	auto destHead = static_cast<PairCell*>(alloc::allocateCells(world, pairCount));
 	PairCell *destPair = destHead;

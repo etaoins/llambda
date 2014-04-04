@@ -2,7 +2,7 @@
 
 #include "core/World.h"
 #include "dynamic/ParameterProcedureCell.h"
-#include "alloc/StrongRef.h"
+#include "alloc/cellref.h"
 #include "binding/EmptyListCell.h"
 
 namespace lliby
@@ -50,8 +50,8 @@ void State::pushActiveState(World &world, ProcedureCell *before, ProcedureCell *
 	if (before != nullptr)
 	{
 		// Avoid rooting these if we don't have to
-		alloc::StrongRefRange<ProcedureCell> beforeRoot(world, &before, 1);
-		alloc::StrongRefRange<ProcedureCell> afterRoot(world, &after, 1);
+		alloc::ProcedureRefRange beforeRoot(world, &before, 1);
+		alloc::ProcedureRefRange afterRoot(world, &after, 1);
 
 		// Invoke the before procedure 
 		before->apply(world, EmptyListCell::instance());

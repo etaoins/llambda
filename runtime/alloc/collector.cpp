@@ -2,11 +2,13 @@
 
 #include <cstring>
 
-#include "alloc/StrongRef.h"
-#include "alloc/WeakRef.h"
+#include "core/World.h"
+
 #include "alloc/GarbageState.h"
 #include "alloc/AllocCell.h"
 #include "alloc/cellvisitor.h"
+#include "alloc/CellRefRangeList.h"
+#include "alloc/Heap.h"
 
 #include "binding/DatumCell.h"
 

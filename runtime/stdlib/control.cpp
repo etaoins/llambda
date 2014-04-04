@@ -4,7 +4,7 @@
 
 #include "alloc/allocator.h"
 #include "alloc/RangeAlloc.h"
-#include "alloc/StrongRef.h"
+#include "alloc/cellref.h"
 
 #include "dynamic/EscapeProcedureCell.h"
 
@@ -59,7 +59,7 @@ DatumCell *lliby_apply(World &world, ProcedureCell *procedure, ListElementCell *
 			}
 
 			// Reference the procedure cell before allocating the argument list
-			alloc::StrongRefRange<ProcedureCell> procedureRef(world, &procedure, 1);	
+			alloc::ProcedureRefRange procedureRef(world, &procedure, 1);	
 
 			// We verified the final arg is a proper list so this must also be a proper list
 			procArgHead = datum_unchecked_cast<ListElementCell>(ListElementCell::createList(world, standaloneArgs, finalListHead));
