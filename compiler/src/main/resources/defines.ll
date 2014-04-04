@@ -23,3 +23,5 @@ declare i1 @llvm.expect.i1(i1, i1)
 ; {next, cellCount, roots}
 %shadowStackEntry = type {%shadowStackEntry*, i64, [0 x %datum*]}   
 
+; {refcount, data}
+%sharedByteArray = type {i32, [0 x i8*]}

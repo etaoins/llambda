@@ -42,7 +42,7 @@
 !27 = metadata !{ metadata !"InlineString::inlineData" }
 
 ; {supertype, heapByteArray}
-%heapString = type {%string, i8*}
+%heapString = type {%string, %sharedByteArray*}
 !28 = metadata !{ metadata !"HeapString::heapByteArray" }
 
 ; {supertype, unsigned charLength, unsigned byteLength}
@@ -57,7 +57,7 @@
 !33 = metadata !{ metadata !"InlineSymbol::inlineData" }
 
 ; {supertype, heapByteArray}
-%heapSymbol = type {%symbol, i8*}
+%heapSymbol = type {%symbol, %sharedByteArray*}
 !34 = metadata !{ metadata !"HeapSymbol::heapByteArray" }
 
 ; {supertype, bool value}
@@ -97,7 +97,7 @@
 !52 = metadata !{ metadata !"Vector::elements" }
 
 ; {supertype, unsigned length, byteArray}
-%bytevector = type {%datum, i32, i8*}
+%bytevector = type {%datum, i32, %sharedByteArray*}
 !53 = metadata !{ metadata !"Datum::typeId->Bytevector", metadata !10 }
 !54 = metadata !{ metadata !"Datum::gcState->Bytevector", metadata !11 }
 !55 = metadata !{ metadata !"Bytevector::length" }

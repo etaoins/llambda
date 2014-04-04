@@ -487,7 +487,7 @@ object InlineStringCell extends CellTypeVariant with InlineStringFields {
 sealed trait HeapStringFields extends StringFields {
   val irType : FirstClassType
 
-  val heapByteArrayIrType = PointerType(IntegerType(8))
+  val heapByteArrayIrType = PointerType(UserDefinedType("sharedByteArray"))
   val heapByteArrayTbaaIndex : Long
   val heapByteArrayGepIndices : List[Int]
 
@@ -693,7 +693,7 @@ object InlineSymbolCell extends CellTypeVariant with InlineSymbolFields {
 sealed trait HeapSymbolFields extends SymbolFields {
   val irType : FirstClassType
 
-  val heapByteArrayIrType = PointerType(IntegerType(8))
+  val heapByteArrayIrType = PointerType(UserDefinedType("sharedByteArray"))
   val heapByteArrayTbaaIndex : Long
   val heapByteArrayGepIndices : List[Int]
 
@@ -1091,7 +1091,7 @@ sealed trait BytevectorFields extends DatumFields {
   val lengthTbaaIndex : Long
   val lengthGepIndices : List[Int]
 
-  val byteArrayIrType = PointerType(IntegerType(8))
+  val byteArrayIrType = PointerType(UserDefinedType("sharedByteArray"))
   val byteArrayTbaaIndex : Long
   val byteArrayGepIndices : List[Int]
 

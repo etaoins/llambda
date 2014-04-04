@@ -4,10 +4,6 @@ fieldtype UnicodeChar : uint32 {
 	extern cppname = UnicodeChar;
 };
 
-fieldtype SharedByteArray : uint8 {
-	extern cppname = SharedByteArray;
-};
-
 // Entry point for adapted procedures
 cell Datum;
 cell Procedure;
