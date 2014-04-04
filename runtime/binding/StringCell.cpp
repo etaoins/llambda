@@ -583,10 +583,9 @@ bool StringCell::replaceBytes(const CharRange &range, std::uint8_t *pattern, uns
 		}
 		
 		// Move the unchanged chunk at the end
-		// We need to do this now because if the pattern bytes are longer than the
-		// byte we're replacing then we might overwrite the beginning of the
-		// unchanged chunk 
-		memcpy(destString + initialBytes + requiredBytes, range.startPointer + replacedBytes, finalBytes);
+		// We need to do this now because if the pattern bytes are longer than the byte we're replacing then we might
+		// overwrite the beginning of the unchanged chunk 
+		memmove(destString + initialBytes + requiredBytes, range.startPointer + replacedBytes, finalBytes);
 		
 		std::uint8_t* copyDest = destString + initialBytes;
 
