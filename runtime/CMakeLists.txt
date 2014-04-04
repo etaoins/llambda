@@ -91,7 +91,7 @@ endif()
 # GC debugging mode
 set(ENABLE_GC_DEBUGGING "no" CACHE STRING "Enable extra garbage collector sanity checks at a severe performance penalty")
 if (${ENABLE_GC_DEBUGGING} STREQUAL "yes")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_LLIBY_ALWAYS_GC -D_LLIBY_NO_ADDR_REUSE")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_LLIBY_ALWAYS_GC -D_LLIBY_NO_ADDR_REUSE -D_LLIBY_CHECK_LEAKS")
 endif()
 
 # Add tests
