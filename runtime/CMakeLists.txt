@@ -66,23 +66,26 @@ if (NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Release)
 endif()
 
-# Be strict about warnings
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall")
+# Be verbose with warnings
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
-# Enable C++11 and disable exceptions
-ADD_DEFINITIONS(
-	-std=c++11 
-	)
+# In debug builds additionally error out on warnings
+# This isn't enabled for release as different compiler versions and configurations can cause unexpected warnings
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Werror")
+
+# Enable C++11
+ADD_DEFINITIONS(-std=c++11)
+
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+	# Mac OS X < 10.9 used an old version of libstdc++ as the default C++ stdlib. It did not support C++11.
+	# Explicitly use libc++ to enable full C++11 support
+	# This workaround and the matching one in codegen can be removed once Mac OS X 10.8 is unsupported.
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+endif()
 
 # Force colour output so Clang++ prints pretty errors in Ninja
 if (${CMAKE_GENERATOR} STREQUAL "Ninja")
 	ADD_DEFINITIONS(-fcolor-diagnostics)
-endif()
-
-if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-	# Mac OS X's libstdc++ is too old for C++11 support
-	# Explicitly use libc++
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 endif()
 
 # GC debugging mode
