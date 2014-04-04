@@ -92,7 +92,8 @@ if (${ENABLE_GC_DEBUGGING} STREQUAL "yes")
 endif()
 
 # Add tests
-enable_testing()
+include(CTest)
+set(CTEST_MEMCHECK_COMMAND "valgrind")
 
 set(ALL_TEST_NAMES
 	allocator

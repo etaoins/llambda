@@ -5,6 +5,7 @@
 /compile_commands.json
 /CTestTestfile.cmake
 /Testing/
+/DartConfiguration.tcl
 
 # Makefile generator
 /Makefile
