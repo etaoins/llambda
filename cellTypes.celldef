@@ -53,7 +53,7 @@ variant cell InlineString : String {
 };
 
 variant cell HeapString : String {
-	uint8* heapData;
+	SharedByteArray* heapByteArray;
 };
 
 concrete cell Symbol : Datum { 
@@ -66,7 +66,7 @@ variant cell InlineSymbol : Symbol {
 };
 
 variant cell HeapSymbol : Symbol {
-	uint8* heapData;
+	SharedByteArray* heapByteArray;
 };
 
 preconstructed cell Boolean : Datum {
@@ -95,7 +95,7 @@ concrete cell Vector : Datum {
 
 concrete cell Bytevector : Datum {
 	uint32 length;
-	uint8* data;
+	SharedByteArray* byteArray;
 };
 
 abstract internal cell RecordLike : Datum {

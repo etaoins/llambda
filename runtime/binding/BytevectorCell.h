@@ -13,13 +13,15 @@ class BytevectorCell : public DatumCell
 #include "generated/BytevectorCellMembers.h"
 public:
 	/**
-	 * Creates a new BytevectorCell owning the passed data
+	 * Creates a new BytevectorCell backed by the passed SharedByteArray
 	 *
-	 * @param  world   World to create the bytevector cell in
-	 * @param  data    Byte data to initialize the bytevector with. This must be allocated using new[]
-	 * @param  length  Length of the data in bytes
+	 * The SharedByteArray must already have a reference taken for the bytevector cell
+	 *
+	 * @param  world      World to create the bytevector cell in
+	 * @param  byteArray  Byte array to back the bytevector cell
+	 * @param  length     Length of the data in bytes
 	 */
-	static BytevectorCell* fromOwnedData(World &world, std::uint8_t *data, std::uint32_t length);
+	static BytevectorCell* withByteArray(World &world, SharedByteArray *byteArray, std::uint32_t length);
 	
 	/**
 	 * Creates a new BytevectorCell from a copy of the passed data
@@ -28,14 +30,14 @@ public:
 	 * @param  data    Byte data to copy in to the new bytevector
 	 * @param  length  Length of the data in bytes
 	 */
-	static BytevectorCell* fromUnownedData(World &world, const std::uint8_t *data, std::uint32_t length);
+	static BytevectorCell* fromData(World &world, const std::uint8_t *data, std::uint32_t length);
 
 	static const std::int16_t InvalidByte = -1;
 
 	static BytevectorCell* fromFill(World &world, std::uint32_t length, std::uint8_t fill = 0);
 	static BytevectorCell* fromAppended(World &world, const std::list<const BytevectorCell*> &byteVectors);
 
-	BytevectorCell* copy(World &world, std::int64_t start = 0, std::int64_t end = -1); 
+	BytevectorCell* copy(World &world, std::int64_t start = 0, std::int64_t end = -1) const; 
 	bool replace(std::uint32_t offset, const BytevectorCell *from, std::int64_t fromStart = 0, std::int64_t fromEnd = -1);
 
 	StringCell* utf8ToString(World &world, std::int64_t start = 0, std::int64_t end = -1);
@@ -47,19 +49,22 @@ public:
 			return -1;
 		}
 		
-		return data()[offset];
+		return byteArray()->data()[offset];
 	}
 
 	bool setByteAt(std::uint32_t offset, std::uint8_t value)
 	{
 		assert(!isGlobalConstant());
-
+		
 		if (offset >= length())
 		{
 			return false;
 		}
 
-		data()[offset] = value;
+		// Break any sharing
+		m_byteArray = m_byteArray->asWritable(length());
+
+		byteArray()->data()[offset] = value;
 
 		return true;
 	}
@@ -67,10 +72,10 @@ public:
 	void finalizeBytevector();
 
 protected:
-	BytevectorCell(std::uint8_t *data, std::uint32_t length) :
+	BytevectorCell(SharedByteArray *byteArray, std::uint32_t length) :
 		DatumCell(CellTypeId::Bytevector),
 		m_length(length),
-		m_data(data)
+		m_byteArray(byteArray)
 	{
 	}
 };

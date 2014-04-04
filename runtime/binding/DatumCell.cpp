@@ -110,7 +110,11 @@ bool DatumCell::isEqual(const DatumCell *other) const
 			}
 
 			// Compare the data byte for byte
-			return memcmp(thisBytevector->data(), otherBytevector->data(), thisBytevector->length()) == 0;
+			return memcmp(
+					thisBytevector->byteArray()->data(),
+					otherBytevector->byteArray()->data(),
+					thisBytevector->length()
+				) == 0;
 		}
 	}
 

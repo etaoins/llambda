@@ -41,9 +41,9 @@
 %inlineString = type {%string, [12 x i8]}
 !27 = metadata !{ metadata !"InlineString::inlineData" }
 
-; {supertype, heapData}
-%heapString = type {%string, i8*}
-!28 = metadata !{ metadata !"HeapString::heapData" }
+; {supertype, heapByteArray}
+%heapString = type {%string, %sharedByteArray*}
+!28 = metadata !{ metadata !"HeapString::heapByteArray" }
 
 ; {supertype, unsigned charLength, unsigned byteLength}
 %symbol = type {%datum, i32, i32}
@@ -56,9 +56,9 @@
 %inlineSymbol = type {%symbol, [12 x i8]}
 !33 = metadata !{ metadata !"InlineSymbol::inlineData" }
 
-; {supertype, heapData}
-%heapSymbol = type {%symbol, i8*}
-!34 = metadata !{ metadata !"HeapSymbol::heapData" }
+; {supertype, heapByteArray}
+%heapSymbol = type {%symbol, %sharedByteArray*}
+!34 = metadata !{ metadata !"HeapSymbol::heapByteArray" }
 
 ; {supertype, bool value}
 %boolean = type {%datum, i8}
@@ -96,12 +96,12 @@
 !51 = metadata !{ metadata !"Vector::length" }
 !52 = metadata !{ metadata !"Vector::elements" }
 
-; {supertype, unsigned length, data}
-%bytevector = type {%datum, i32, i8*}
+; {supertype, unsigned length, byteArray}
+%bytevector = type {%datum, i32, %sharedByteArray*}
 !53 = metadata !{ metadata !"Datum::typeId->Bytevector", metadata !10 }
 !54 = metadata !{ metadata !"Datum::gcState->Bytevector", metadata !11 }
 !55 = metadata !{ metadata !"Bytevector::length" }
-!56 = metadata !{ metadata !"Bytevector::data" }
+!56 = metadata !{ metadata !"Bytevector::byteArray" }
 
 ; {supertype, bool dataIsInline, unsigned recordClassId, recordData}
 %recordLike = type {%datum, i8, i32, i8*}
@@ -112,7 +112,7 @@
 !61 = metadata !{ metadata !"RecordLike::recordData" }
 
 ; {supertype, entryPoint}
-%procedure = type {%recordLike, %datum* (%world*, %procedure*, %listElement*) *}
+%procedure = type {%recordLike, %datum* (%world*, %procedure*, %listElement*)*}
 !62 = metadata !{ metadata !"Datum::typeId->RecordLike->Procedure", metadata !57 }
 !63 = metadata !{ metadata !"Datum::gcState->RecordLike->Procedure", metadata !58 }
 !64 = metadata !{ metadata !"RecordLike::dataIsInline->Procedure", metadata !59 }

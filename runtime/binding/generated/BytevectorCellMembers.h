@@ -8,9 +8,9 @@ public:
 		return m_length;
 	}
 
-	std::uint8_t* data() const
+	SharedByteArray* byteArray() const
 	{
-		return m_data;
+		return m_byteArray;
 	}
 
 public:
@@ -21,4 +21,4 @@ public:
 
 private:
 	std::uint32_t m_length;
-	std::uint8_t* m_data;
+	SharedByteArray* m_byteArray;

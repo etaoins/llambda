@@ -102,8 +102,10 @@ set(ALL_TEST_NAMES
 	allocator
 	bytevector
 	constinstances
+	implicitsharing
 	inexactrational
 	listelement
+	sharedbytearray
 	string
 	unicodechar
 	vector

@@ -50,11 +50,11 @@ void ExternalFormDatumWriter::render(const DatumCell *datum)
 	}
 	else if (auto value = datum_cast<SymbolCell>(datum))
 	{
-		renderStringLike(value->utf8Data(), value->byteLength(), static_cast<std::uint8_t>('|'), false);
+		renderStringLike(value->constUtf8Data(), value->byteLength(), static_cast<std::uint8_t>('|'), false);
 	}
 	else if (auto value = datum_cast<StringCell>(datum))
 	{
-		renderStringLike(value->utf8Data(), value->byteLength(), static_cast<std::uint8_t>('"'), true);
+		renderStringLike(value->constUtf8Data(), value->byteLength(), static_cast<std::uint8_t>('"'), true);
 	}
 	else if (auto value = datum_cast<PairCell>(datum))
 	{
@@ -350,7 +350,7 @@ void ExternalFormDatumWriter::renderRecord(const RecordCell *)
 
 void ExternalFormDatumWriter::renderErrorObject(const ErrorObjectCell *errObj)
 {
-	m_outStream << "#!error(" << errObj->message()->utf8Data() << ")";
+	m_outStream << "#!error(" << errObj->message() << ")";
 }
 
 }

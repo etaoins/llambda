@@ -11,6 +11,9 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 
 object GenConstant {
+  // Maximum value of a 32bit unsigned integer
+  private val sharedConstantRefCount = (math.pow(2, 32) - 1).toLong
+
   private def arrayElementsForIrType(irType : IrType) : Int= irType match {
     case ArrayType(elements, _) =>
       elements
@@ -33,19 +36,22 @@ object GenConstant {
   }
 
   private def genHeapUtf8Constant(module : IrModuleBuilder)(baseName : String, utf8Data : Array[Byte]) : IrConstant = {
-    val innerConstantName = baseName + ".str"
-    // Add a single NULL terminator
-    val innerConstantInitializer = StringConstant(utf8Data :+ 0.toByte)
+    val innerConstantName = baseName + ".strByteArray"
+    val innerConstantInitializer = StructureConstant(List(
+      IntegerConstant(IntegerType(32), sharedConstantRefCount),
+      StringConstant(utf8Data)
+    ))
 
     val innerConstant = defineConstantData(module)(innerConstantName, innerConstantInitializer)
-    ElementPointerConstant(IntegerType(8), innerConstant, List(0, 0))
+    BitcastToConstant(innerConstant, PointerType(UserDefinedType("sharedByteArray")))
   }
   
   private def genInlineUtf8Constant(module : IrModuleBuilder)(utf8Data : Array[Byte], constantLength : Int) : IrConstant = {
     val padByteCount = constantLength - utf8Data.length
 
-    // Pad this string with 0s
-    val terminatedUtf8Data = utf8Data ++ Array.fill(padByteCount)(0.toByte)
+    // Pad this string with 0xff
+    // This helps test that nobody is relying on these being NULL terminated
+    val terminatedUtf8Data = utf8Data ++ Array.fill(padByteCount)(255.toByte)
 
     // Return a direct constant
     StringConstant(terminatedUtf8Data)
@@ -57,15 +63,19 @@ object GenConstant {
 
     val elementIrs = elements.map(IntegerConstant(IntegerType(8), _))
 
-    val elementsName = baseName + ".elements"
-    val elementsInitializer = ArrayConstant(IntegerType(8), elementIrs)
+    val elementsName = baseName + ".elementsByteArray"
+    val elementsInitializer = StructureConstant(List(
+      IntegerConstant(IntegerType(32), sharedConstantRefCount), 
+      ArrayConstant(IntegerType(8), elementIrs)
+    ))
     
     val elementsValue = defineConstantData(module)(elementsName, elementsInitializer)
 
     val bytevectorCellName = baseName + ".cell"
     val bytevectorCell = ct.BytevectorCell.createConstant(
       length=elements.length,
-      data=ElementPointerConstant(IntegerType(8), elementsValue, List(0, 0)))
+      byteArray=BitcastToConstant(elementsValue, PointerType(UserDefinedType("sharedByteArray")))
+    )
 
     defineConstantData(module)(bytevectorCellName, bytevectorCell)
   }
@@ -114,7 +124,7 @@ object GenConstant {
     val utf8Data = Codec.toUTF8(value)
     val inlineUtf8Bytes = arrayElementsForIrType(ct.InlineStringCell.inlineDataIrType)
 
-    val stringCell = if (utf8Data.length < inlineUtf8Bytes) {
+    val stringCell = if (utf8Data.length <= inlineUtf8Bytes) {
       // We can do this inline
       val utf8Constant = genInlineUtf8Constant(module)(utf8Data, inlineUtf8Bytes)
 
@@ -130,7 +140,7 @@ object GenConstant {
       val utf8Constant = genHeapUtf8Constant(module)(baseName, utf8Data)
 
       ct.HeapStringCell.createConstant(
-        heapData=utf8Constant,
+        heapByteArray=utf8Constant,
         allocSlackBytes=0,
         charLength=value.length,
         byteLength=utf8Data.length
@@ -166,7 +176,7 @@ object GenConstant {
       val utf8Constant = genHeapUtf8Constant(module)(baseName, utf8Data)
 
       ct.HeapSymbolCell.createConstant(
-        heapData=utf8Constant,
+        heapByteArray=utf8Constant,
         charLength=value.length,
         byteLength=utf8Data.length
       )

@@ -61,6 +61,13 @@ object PredefinedFieldTypes {
           llvmType=llvmir.UserDefinedType("world"),
           cppTypeName="World"
         )
+      ) +
+      ("SharedByteArray" ->
+        PrimitiveFieldType(
+          signed=None,
+          llvmType=llvmir.UserDefinedType("sharedByteArray"),
+          cppTypeName="SharedByteArray"
+        )
       )
     )
 }

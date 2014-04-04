@@ -18,13 +18,16 @@ namespace
 	} \
 }
 
-#define ASSERT_UTF8_EQUAL(actual, expected) \
+#define ASSERT_UTF8_EQUAL(actualStringCell, expected) \
 { \
-	if (strcmp(reinterpret_cast<const char *>(actual), reinterpret_cast<const char *>(expected)) != 0) \
+	auto length = sizeof(expected) - 1;\
+	ASSERT_EQUAL(actualStringCell->byteLength(), length); \
+	if (memcmp(reinterpret_cast<const char *>(actualStringCell->constUtf8Data()), reinterpret_cast<const char *>(expected), length) != 0) \
 	{ \
-		std::cerr << "\"" << reinterpret_cast<const char *>(actual) \
+		std::cerr << "\"" \
+		          << actualStringCell \
 		          << "\" does not match expected value \"" << reinterpret_cast<const char *>(expected) << "\"" \
-			      << " at line " << __LINE__ << std::endl; \
+			       << " at line " << __LINE__ << std::endl; \
 		exit(-1); \
 	} \
 }

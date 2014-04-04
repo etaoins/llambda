@@ -45,7 +45,7 @@ void assertForm(const DatumCell *datum, std::string expected)
 
 SymbolCell *symbolFor(World &world, const char *utf8String)
 {
-	return StringCell::fromUtf8CString(world, utf8String)->toSymbol(world);
+	return SymbolCell::fromString(world, StringCell::fromUtf8CString(world, utf8String));
 }
 
 StringCell *stringFor(World &world, const char *utf8String)
@@ -137,13 +137,13 @@ void testPair(World &world)
 void testBytevector(World &world)
 {
 	{
-		auto *emptyVector = BytevectorCell::fromUnownedData(world, nullptr, 0);
+		auto *emptyVector = BytevectorCell::fromData(world, nullptr, 0);
 		assertForm(emptyVector, "#u8()");
 	}
 
 	{
 		uint8_t testData[5] = { 100, 101, 202, 203, 204 };
-		auto *testVector = BytevectorCell::fromUnownedData(world, testData, 5); 
+		auto *testVector = BytevectorCell::fromData(world, testData, 5); 
 
 		assertForm(testVector, "#u8(100 101 202 203 204)");
 	}

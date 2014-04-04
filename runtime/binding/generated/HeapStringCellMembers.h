@@ -3,10 +3,10 @@
  ************************************************************/
 
 public:
-	std::uint8_t* heapData() const
+	SharedByteArray* heapByteArray() const
 	{
-		return m_heapData;
+		return m_heapByteArray;
 	}
 
 private:
-	std::uint8_t* m_heapData;
+	SharedByteArray* m_heapByteArray;
