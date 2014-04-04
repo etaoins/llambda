@@ -121,8 +121,8 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
     // Find the expressions in our body 
     val bodyExprs = bodyData.map(extractExpression) : List[et.Expression]
 
-    // Wrap the bodyExprs in an et.Let if we're introducing bindings
-    // We could easily unconditionally wrap in a possibly empty et.Let but
+    // Wrap the bodyExprs in an et.Bind if we're introducing bindings
+    // We could easily unconditionally wrap in a possibly empty et.Bind but
     // that makes the unit tests a bit unwieldly
     val boundExprs = bindings match {
       case Nil => bodyExprs
@@ -347,7 +347,7 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
 
                 case None  =>
                   // This is a fresh binding
-                  // Place the rest of the body inside an et.Let
+                  // Place the rest of the body inside an et.Bind
                   symbol.scope += (symbol.name -> boundValue)
                   et.Bind(List(boundValue -> exprBlock()))
               }
