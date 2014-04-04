@@ -364,6 +364,19 @@ bool lliby_is_nan(NumericCell *value)
 	}
 }
 
+bool lliby_is_zero(NumericCell *value)
+{
+	if (auto exactInteger = datum_cast<ExactIntegerCell>(value))
+	{
+		return exactInteger->value() == 0;
+	}
+	else
+	{
+		auto inexactRational = datum_unchecked_cast<InexactRationalCell>(value);
+		return inexactRational->value() == 0.0;
+	}
+}
+
 bool lliby_numeric_equal(World &world, NumericCell *value1, NumericCell *value2, ListElementCell *argHead)
 {
 	return numericCompare(world, value1, value2, argHead, 

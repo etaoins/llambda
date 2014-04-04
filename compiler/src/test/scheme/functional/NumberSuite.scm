@@ -313,3 +313,23 @@
 (define-test "greater than or equal of three increasing numbers is false" (expect #f
 	(>= 4.0 4.5 5.6)))
 
+(define-test "0 is zero" (expect #t
+	(zero? 0)))
+
+(define-test "0.0 is zero" (expect #t
+	(zero? 0.0)))
+
+(define-test "34 is not zero" (expect #f
+	(zero? 34)))
+
+(define-test "-134.5 is not zero" (expect #f
+	(zero? -134.5)))
+
+(define-test "+inf.0 is not zero" (expect #f
+	(zero? +inf.0)))
+
+(define-test "-inf.0 is not zero" (expect #f
+	(zero? -inf.0)))
+
+(define-test "+nan.0 is not zero" (expect #f
+	(zero? +nan.0)))
