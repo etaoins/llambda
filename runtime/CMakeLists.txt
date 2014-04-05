@@ -50,6 +50,7 @@ add_library(lliby
 	stdlib/symbol.cpp
 	stdlib/vector.cpp
 	unicode/UnicodeChar.cpp
+	util/SharedByteArray.cpp
 	writer/ExternalFormDatumWriter.cpp
 	)
 

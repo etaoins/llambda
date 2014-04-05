@@ -10,6 +10,7 @@
 #include "alloc/Finalizer.h"
 #include "alloc/DynamicMemoryBlock.h"
 #include "alloc/collector.h"
+#include "util/SharedByteArray.h"
 
 // Statically check that everything can fit in to a cell
 #include "generated/sizecheck.h"
@@ -59,6 +60,12 @@ void shutdownWorld(World &world)
 	if (forceCollection(world) > 0)
 	{
 		std::cerr << "Cells leaked on exit!" << std::endl;
+		exit(-1);
+	}
+
+	if (SharedByteArray::instanceCount() != 0)
+	{
+		std::cerr << "SharedByteArray instances leaked on exit!" << std::endl;
 		exit(-1);
 	}
 #endif
