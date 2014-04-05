@@ -27,7 +27,7 @@ private[frontend] object ParseSyntaxDefine {
       val parsedRules = rules map {
         case sst.ScopedProperList(sst.ScopedProperList(_ :: pattern) :: template :: Nil) =>
           SyntaxRule(pattern, template)
-        case noMatch => throw new BadSpecialFormException(appliedSymbol, "Unable to parse syntax rule")
+        case noMatch => throw new BadSpecialFormException(noMatch, "Unable to parse syntax rule")
       }
 
       ParsedSimpleDefine(symbol, new BoundSyntax(literalNames, parsedRules))
