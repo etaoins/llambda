@@ -11,8 +11,6 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   val plusScope = new Scope(collection.mutable.Map("+" -> plusLoc), Some(primitiveScope))
 
   test("multiple template is error") {
-    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
-
     intercept[BadSpecialFormException] {
       bodyFor(
         """(define-syntax six
@@ -20,8 +18,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
              ((six)
                5
                6
-           )))""")(scope)
-
+           )))""")(primitiveScope)
     }
   }
 
@@ -110,7 +107,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
 
   test("literal operand identifiers don't match non-literal pattern identifiers") {
     intercept[NoSyntaxRuleException] {
-      // "literal" should not "first-capture" 
+      // "literal" should not match "first-capture" 
       expressionFor(
         """(define-syntax literal-test
            (syntax-rules (literal)
@@ -270,6 +267,17 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
          (return-second 'a 'b)"""
     ) === et.Literal(ast.Symbol("b")))
   }
+
+  test("duplicate pattern variables fail at define time") {
+    intercept[BadSpecialFormException] {
+      bodyFor(
+        """(define-syntax test-expand
+             (syntax-rules ()
+                   ((test-expand expr expr ...)
+                    ((lambda () expr ...)))))"""
+      )(primitiveScope)
+    }
+  }
   
   test("first rule matches") {
     assert(expressionFor(
@@ -347,6 +355,43 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
          (append-improper-false 1 2)"""
     ) === et.Literal(ast.ImproperList(List(ast.IntegerLiteral(1), ast.IntegerLiteral(2)), ast.BooleanLiteral(false))))
   }
+  
+  test("splice to middle of vector") {
+    assert(expressionFor(
+      """(define-syntax append-vector-false
+           (syntax-rules ()
+             ((append-improper-false values ...)
+               #(values ... #f)
+         )))
+         (append-vector-false 1 2)"""
+    ) === et.Literal(ast.VectorLiteral(Vector(ast.IntegerLiteral(1), ast.IntegerLiteral(2), ast.BooleanLiteral(false)))))
+  }
+  
+  test("custom ellipsis identifier") {
+    assert(expressionFor(
+      """(define-syntax append-vector-false
+           (syntax-rules my-ellipsis ()
+             ((append-improper-false values my-ellipsis)
+               #(values my-ellipsis #f)
+         )))
+         (append-vector-false 1 2 3)"""
+    ) === et.Literal(ast.VectorLiteral(Vector(
+      ast.IntegerLiteral(1), ast.IntegerLiteral(2), ast.IntegerLiteral(3), ast.BooleanLiteral(false)
+    ))))
+  }
+
+  test("zero or more template without pattern variables fails") {
+    // We don't have a termination condition here
+    intercept[BadSpecialFormException] {
+      bodyFor(
+        """(define-syntax test-expand
+             (syntax-rules ()
+                   ((test-expand expr ...)
+                    (5 ... ))))
+           (test-expand #f)"""
+      )(primitiveScope)
+    }
+  }
 
   test("body expressions allowed in body context") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
@@ -366,8 +411,44 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
         ))
     }
   }
+  
+  test("non-restructuring repeating subpattern with replacement") {
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 
-  test("restructuring expansion") {
+	 val expr = expressionFor(
+		 """(define-syntax repeating-pair
+			  (syntax-rules ()
+								 ((repeating-pair (left right) ...)
+								  '((left right) ...))))
+           
+        (repeating-pair (left1 right1) (left2 right2))"""
+    )(scope)
+
+    assert(expr === et.Literal(ast.ProperList(List(
+      ast.ProperList(List(ast.Symbol("left1"), ast.Symbol("right1"))),
+      ast.ProperList(List(ast.Symbol("left2"), ast.Symbol("right2")))
+    ))))
+  }
+
+  test("non-restructuring repeating subpattern with no replacement") {
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
+	 val expr = expressionFor(
+		 """(define-syntax repeating-pair
+			  (syntax-rules ()
+								 ((repeating-pair (left1 right1) (left2 right2) ...)
+								  '((left1 right1)
+									 (left2 right2) ...))))
+           
+        (repeating-pair (left1 right1))"""
+    )(scope)
+
+    assert(expr === et.Literal(ast.ProperList(List(
+      ast.ProperList(List(ast.Symbol("left1"), ast.Symbol("right1")))
+    ))))
+  }
+
+  test("restructuring subpattern") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 
     val expr :: Nil = bodyFor(

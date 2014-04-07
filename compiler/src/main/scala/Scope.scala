@@ -21,12 +21,21 @@ class ReportProcedure(val reportName : String) extends StorageLocation(reportNam
 abstract class PrimitiveExpression extends BoundValue
 
 // These are what (define-syntax) creates
-sealed abstract class SyntaxLiteral
-case class BoundSyntaxLiteral(boundValue : BoundValue) extends SyntaxLiteral
-case class UnboundSyntaxLiteral(identifier : String) extends SyntaxLiteral
+sealed abstract class SyntaxVariable
+case class BoundSyntaxVariable(boundValue : BoundValue) extends SyntaxVariable
+case class UnboundSyntaxVariable(identifier : String) extends SyntaxVariable
 
 case class SyntaxRule(pattern : List[sst.ScopedDatum], template : sst.ScopedDatum)
-case class BoundSyntax(literals : List[SyntaxLiteral], rules : List[SyntaxRule])  extends BoundValue
+case class BoundSyntax(ellipsisIdentifier : String, literals : Set[SyntaxVariable], rules : List[SyntaxRule])  extends BoundValue
+
+object SyntaxVariable {
+  def fromSymbol(scopedSymbol : sst.ScopedSymbol) : SyntaxVariable = {
+    scopedSymbol.resolveOpt match {
+      case Some(boundValue) => BoundSyntaxVariable(boundValue)
+      case None => UnboundSyntaxVariable(scopedSymbol.name)
+    }
+  }
+}
 
 // These are either intrinsic types or ones introduced by (define-record-type)
 // or (define-native-type)

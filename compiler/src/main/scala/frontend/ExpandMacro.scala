@@ -1,198 +1,256 @@
 package io.llambda.compiler.frontend
 import io.llambda
 
-import util.control.Exception._
 import llambda.compiler._
+import util.control.Exception._
+
+import annotation.tailrec
 
 private[frontend] object ExpandMacro {
-  sealed abstract class Rewrite
-  case class SubstituteRewrite(scope : Scope, identifier : String, expansion : sst.ScopedDatum) extends Rewrite
-  case class SpliceRewrite(scope : Scope, identifier : String, expansion : List[sst.ScopedDatum]) extends Rewrite
+  private case class MatchConfig(
+    ellipsisIdentifier : String,
+    literals : Set[SyntaxVariable]
+  ) {
+    /** Indicates if "..." matches should be allowed */
+    val zeroOrMoreAllowed = 
+      !literals.contains(UnboundSyntaxVariable(ellipsisIdentifier))
 
-  case class Expandable(template : sst.ScopedDatum, rewrites : List[Rewrite])
+    /** Indicates if _ matches should be allowed */
+    val wildcardAllowed = 
+      !literals.contains(UnboundSyntaxVariable("_"))
+  }
 
-  // This is used for flow control which is a bit icky
-  // We will continue on trying to match the next syntax rule if this is thrown
+  private case class Expandable(template : sst.ScopedDatum, matchedPattern : MatchedPattern)
+  
   private class MatchFailedException extends Exception
+  private class PatternVariablesExhaustedException extends Exception
 
-  private def findAllSymbols(datum : sst.ScopedDatum) : List[sst.ScopedSymbol] = datum match {
-    case symbol : sst.ScopedSymbol => symbol :: Nil
-    case sst.ScopedPair(car, cdr) => findAllSymbols(car) ++ findAllSymbols(cdr)
-    case sst.ScopedVectorLiteral(elements) => elements.toList.flatMap(findAllSymbols(_))
-    case _ : sst.NonSymbolLeaf => Nil
-  }
+  private type MatchedPattern = Map[MacroPatternVariable, Vector[sst.ScopedDatum]]
 
-  private def literalMatchesDatum(literal : SyntaxLiteral, datum : sst.ScopedDatum) = datum match {
-    case scopedSymbol : sst.ScopedSymbol =>
-      (literal, scopedSymbol.resolveOpt) match {
-        case (BoundSyntaxLiteral(literalValue), Some(symbolValue)) =>
-          // They must resolve to the same value
-          literalValue == symbolValue
+  private def matchExactlyOnce(matchConfig : MatchConfig, patternDatum : sst.ScopedDatum, operandDatum : sst.ScopedDatum) : MatchedPattern = 
+    (patternDatum, operandDatum) match {
+      case (sst.ScopedSymbol(_, "_"), anything) if matchConfig.wildcardAllowed =>
+        // Consume the wildcard without producing any data
+        Map()
 
-        case (UnboundSyntaxLiteral(identifier), None) =>
-          // If they're both unbound they must have the same identifier
-          scopedSymbol.name == identifier
-        
-        case _ =>
-          false
-      }
+      case ((patternSymbol : sst.ScopedSymbol), (operandDatum : sst.ScopedDatum)) =>
+        val literals = matchConfig.literals
+        val patternSyntaxVariable = SyntaxVariable.fromSymbol(patternSymbol)
 
-    case _ =>
-      // Non-symbols can't match literals
-      false
-  }
+        val operandSyntaxVariableOpt = operandDatum match {
+          case operandSymbol : sst.ScopedSymbol =>
+            Some(SyntaxVariable.fromSymbol(operandSymbol))
 
-  private def matchNonRepeatingRule(literals : List[SyntaxLiteral], pattern : sst.ScopedDatum, operand : sst.ScopedDatum) : List[Rewrite] = {
-    val patternLiteralOpt = literals.find(literalMatchesDatum(_, pattern))
-    val operandLiteralOpt = literals.find(literalMatchesDatum(_, operand))
-
-    if (patternLiteralOpt != operandLiteralOpt) {
-      // Either a pattern included a literal where the operand didn't or vice versa
-      throw new MatchFailedException
-    }
-    else if (patternLiteralOpt.isDefined) {
-      // Literals don't cause any rewrite rules
-      return Nil
-    }
-
-    (pattern, operand) match {
-      case (sst.ScopedSymbol(_, "_"), _) =>
-        // They used a wildcard - ignore this
-        Nil
-
-      case (sst.ScopedSymbol(patternScope, patternIdent), operand) =>
-        List(SubstituteRewrite(patternScope, patternIdent, operand))
-
-      case (sst.ScopedProperList(subpattern), sst.ScopedProperList(suboperands)) =>
-        // Recurse inside the proper list
-        matchRule(literals, subpattern, suboperands)
-      
-      case (sst.ScopedVectorLiteral(subpattern), sst.ScopedVectorLiteral(suboperands)) =>
-        // Recurse inside the vector and the rest of our pattern
-        matchRule(literals, subpattern.toList, suboperands.toList)
-      
-      case (sst.ScopedImproperList(subpattern, termPattern), sst.ScopedImproperList(suboperands, termOperand)) =>
-        // This is essentially the same as the proper list except with terminator matching
-        matchRule(literals, subpattern, suboperands) ++ matchRule(literals, List(termPattern), List(termOperand))
-
-      case ((patternAtom : sst.NonSymbolLeaf), (operandAtom : sst.NonSymbolLeaf)) if patternAtom == operandAtom => 
-        Nil
-
-      case _ =>
-        // No match!
-        throw new MatchFailedException
-    }
-  }
-
-  private def matchRule(literals : List[SyntaxLiteral], patterns : List[sst.ScopedDatum], operands : List[sst.ScopedDatum]) : List[Rewrite] = {
-    (patterns, operands) match {
-      case (subpattern :: sst.ScopedSymbol(_, "...") :: restPattern,
-            allOperands) if (!literals.contains(UnboundSyntaxLiteral("..."))) =>
-
-        if (allOperands.length == restPattern.length) {
-          val allSymbols = findAllSymbols(subpattern)
-
-          // Super gross
-          // We work by incrementally matching our pattern against our input and creating rewrites as we go
-          // However, in the case of a zero or more match we have to generate the rewrites without any input to match
-          // against. Just look for all the identifiers in the subpattern and filter out the literals
-          allSymbols filterNot { symbol =>
-            literals.contains(symbol.name)
-          } map { symbol =>
-            SpliceRewrite(symbol.scope, symbol.name, Nil)
-          }
+          case _ =>
+            None
         }
-        else if (allOperands.length >= restPattern.length) {
-          val (repeatingOperands, restOperands) = allOperands.splitAt(allOperands.length - restPattern.length)
 
-          val repeatingRewrites = (repeatingOperands map { repeatingOperand =>
-            matchNonRepeatingRule(literals, subpattern, repeatingOperand) 
-          }).flatten : List[Rewrite]
+        val patternIsLiteral = literals.contains(patternSyntaxVariable)
+        val operandIsLiteral = operandSyntaxVariableOpt.map(literals.contains(_)).getOrElse(false)
 
-          // Fail if there are any splice rewrites inside the list
-          // Not sure how that would be handled
-          val repeatingSubstitutions = repeatingRewrites.map { 
-            case substitution : SubstituteRewrite => substitution
-            case _ => throw new MatchFailedException
-          } : List[SubstituteRewrite]
-          
-          val groupedSubstitutions = repeatingSubstitutions.groupBy { substitution =>
-            (substitution.scope, substitution.identifier)
-          }
-            
-          // Convert the substitution rewrite list in to splice rewrites
-          (groupedSubstitutions.toList map {
-            case ((scope, identifier), rewrites) =>
-              SpliceRewrite(scope, identifier, rewrites.map(_.expansion))
-          }) ++ matchRule(literals, restPattern, restOperands)
-        }
-        else {
-          // Not enough values left
+        if (patternIsLiteral != operandIsLiteral) {
+          // Either both or neither have to be literals
           throw new MatchFailedException
         }
 
-      case (pattern :: restPatterns, operand :: restOperands) =>
-        matchNonRepeatingRule(literals, pattern, operand) ++ matchRule(literals, restPatterns, restOperands)
+        if (patternIsLiteral) {
+          if (patternSyntaxVariable != operandSyntaxVariableOpt.get) {
+            // They were both literals but different literals
+            throw new MatchFailedException
+          }
 
-      case (Nil, Nil) =>
-        // We both ended at the same time - this is expected
-        Nil
+          // No data to contribute
+          Map()
+        }
+        else {
+          // We have a new value!
+          val newMacroPatternVariable = MacroPatternVariable(0, patternSyntaxVariable) 
+          Map(newMacroPatternVariable -> Vector(operandDatum))
+        }
+
+      case (sst.ScopedProperList(innerPattern), sst.ScopedProperList(innerOperands)) =>
+        matchPattern(matchConfig, innerPattern, innerOperands)
+
+      case (sst.ScopedImproperList(innerPattern, termPattern), sst.ScopedImproperList(innerOperands, termOperand)) =>
+        // Match the terminator separately
+        val innerVariables = matchPattern(matchConfig, innerPattern, innerOperands)
+        val termVariables = matchPattern(matchConfig, List(termPattern), List(termOperand))
+        
+        innerVariables ++ termVariables
+      
+      case (sst.ScopedVectorLiteral(innerPattern), sst.ScopedVectorLiteral(innerOperands)) =>
+        matchPattern(matchConfig, innerPattern.toList, innerOperands.toList)
+
+      case ((patternLeaf : sst.NonSymbolLeaf), (operandLeaf : sst.NonSymbolLeaf)) =>
+        if (patternLeaf != operandLeaf) {
+          throw new MatchFailedException
+        }
+
+        // No data to produce
+        Map()
 
       case _ =>
         throw new MatchFailedException
     }
+  
+  private def matchPattern(matchConfig : MatchConfig, patternData : List[sst.ScopedDatum], operandData : List[sst.ScopedDatum]) : MatchedPattern = {
+    (patternData, operandData) match {
+      case (subpatternDatum :: sst.ScopedSymbol(_, matchConfig.ellipsisIdentifier) :: patternTail,
+            _
+           ) if matchConfig.zeroOrMoreAllowed =>
+        // Find all the pattern variables
+        // This is so we can remove the corresponding repeating templates if there are no matches
+        val subpatternVariables = ParseSyntaxDefine.findPatternVariables(matchConfig.ellipsisIdentifier, matchConfig.literals, List(subpatternDatum), 0)
+
+        // Take in to account any fixed patterns after us
+        val (subpatternOperands, restOperands) = operandData.splitAt(operandData.length - patternTail.length)
+
+        // Go over each operand and match
+        val submatches = subpatternOperands.map(matchExactlyOnce(matchConfig, subpatternDatum, _)) 
+
+        // Flatten the submatch data together
+        val submatchVariables = (subpatternVariables.map { patternVariable =>
+          // Get the value from each submatch
+          val mergedData = submatches.flatMap(_.apply(patternVariable)).toVector
+
+          // Increment the ellipsis count
+          val ellipsisDepth = patternVariable.ellipsisDepth + 1
+
+          // Put the merged data back
+          (MacroPatternVariable(ellipsisDepth, patternVariable.variable) -> mergedData)
+        }).toMap
+
+        // Run on the rest of our operands
+        submatchVariables ++ matchPattern(matchConfig, patternTail, restOperands)
+
+      case (patternDatum :: patternTail, operandDatum :: operandTail) => 
+        val newVariables = matchExactlyOnce(matchConfig, patternDatum, operandDatum)
+        newVariables ++ matchPattern(matchConfig, patternTail, operandTail)
+
+      case (Nil, Nil) => 
+        // We terminated at the same time - this is expected
+        Map()
+
+      case _ =>
+        // Something weird happened
+        throw new MatchFailedException
+    }
   }
 
-  def expandTemplate(template : sst.ScopedDatum, rewrites : List[Rewrite]) : sst.ScopedDatum = {
-    for(rewrite <- rewrites) {
-      rewrite match {
-        case SpliceRewrite(scope, identifier, expansion) =>
-          template match {
-            case sst.ScopedPair(sst.ScopedSymbol(symScope, symIdentifier), sst.ScopedPair(sst.ScopedSymbol(_, "..."), cdr)) =>
-              if ((symScope == scope) && (symIdentifier == identifier)) {
-                val expandedCdr = expandTemplate(cdr, rewrites)
-
-                return expansion.foldRight(expandedCdr) { (car, cdr) =>
-                  sst.ScopedPair(car, cdr) 
-                }
-              }
-
-            case _ =>
-              // Nothing
+  private def expandRepeatingTemplate(ellipsisDepth : Int, valueIndex : Int, template : sst.ScopedDatum)(implicit matchConfig : MatchConfig, matchedPattern : MatchedPattern) : List[sst.ScopedDatum] = {
+    @tailrec
+    def expandRepeatingTemplateAcc(ellipsisDepth : Int, valueIndex : Int, template : sst.ScopedDatum, acc : List[sst.ScopedDatum] = Nil) : List[sst.ScopedDatum] = {
+      catching(classOf[PatternVariablesExhaustedException]) opt expandTemplateWithIndices(ellipsisDepth, valueIndex, template) match {
+        case Some((usedVariable, currentExpansion)) =>
+          if (!usedVariable) {
+            throw new BadSpecialFormException(template, "Repeating template does not contain pattern variables")
           }
 
-        case SubstituteRewrite(scope, identifier, expansion) =>
-          if (template == sst.ScopedSymbol(scope, identifier)) {
-            // The expansion should be already fully expanded - we don't need to recurse
-            return expansion
-          }
+          expandRepeatingTemplateAcc(ellipsisDepth, valueIndex + 1, template, currentExpansion :: acc)
+
+        case None =>
+          acc
       }
     }
 
-    template match {
-      // Escaped ellipsis
-      case sst.ScopedProperList(sst.ScopedSymbol(scope, "...") :: datum :: Nil) =>
-        // Remove all the splice rewrite rules
-        val nonSpliceRewrites = rewrites.filterNot(_.isInstanceOf[SpliceRewrite])
-        expandTemplate(datum, nonSpliceRewrites)
+    expandRepeatingTemplateAcc(ellipsisDepth, valueIndex, template).reverse
+  }
 
-      case sst.ScopedPair(car, cdr) =>
-        sst.ScopedPair(expandTemplate(car, rewrites), expandTemplate(cdr, rewrites))
-          .assignLocationFrom(template)
+  private def expandVectorElements(ellipsisDepth : Int, valueIndex : Int, elements : List[sst.ScopedDatum])(implicit matchConfig : MatchConfig, matchedPattern : MatchedPattern) : (Boolean, List[sst.ScopedDatum]) = {
+    elements match {
+      case subtemplate :: sst.ScopedSymbol(_, matchConfig.ellipsisIdentifier) :: tailTemplate if matchConfig.zeroOrMoreAllowed =>
+        val replacements = expandRepeatingTemplate(ellipsisDepth + 1, 0, subtemplate)
 
-      case _ =>
-        template
+        // Splice in the replacements
+        // This had to have used a variale or expandRepeatingTemplate would've thrown an exception
+        (true, replacements ++ expandVectorElements(ellipsisDepth, valueIndex, tailTemplate)._2)
+
+      case templateDatum :: tailTemplate =>
+        val (usedVariable, replacement) = expandTemplateWithIndices(ellipsisDepth + 1, 0, templateDatum)
+
+        // Replace this element only
+        val (restUsedVariable, restReplacements) = expandVectorElements(ellipsisDepth, valueIndex, tailTemplate)
+
+        (usedVariable || restUsedVariable, replacement :: restReplacements)
+
+      case Nil =>
+        (false, Nil)
     }
   }
 
+  private def expandTemplateWithIndices(ellipsisDepth : Int, valueIndex : Int, template : sst.ScopedDatum)(implicit matchConfig : MatchConfig, matchedPattern : MatchedPattern) : (Boolean, sst.ScopedDatum) = {
+    // This is "mostly" tail recursive except for when branching for car/cdr
+    template match {
+      // Avoid sst.ScopedProperList here so we can fail early in the match as an optimization
+      case sst.ScopedPair(sst.ScopedSymbol(_, matchConfig.ellipsisIdentifier), sst.ScopedPair(subtemplate, sst.NonSymbolLeaf(ast.EmptyList()))) if matchConfig.zeroOrMoreAllowed =>
+        // Treat ... as literal inside the subtemplate
+        val zeroOrMoreDisabledConfig = matchConfig.copy(literals=matchConfig.literals + UnboundSyntaxVariable(matchConfig.ellipsisIdentifier))
+
+        expandTemplateWithIndices(ellipsisDepth, valueIndex, subtemplate)(zeroOrMoreDisabledConfig, matchedPattern)
+
+      case symbol : sst.ScopedSymbol =>
+        val patternVariable = MacroPatternVariable(ellipsisDepth, SyntaxVariable.fromSymbol(symbol))
+
+        matchedPattern.get(patternVariable) match {
+          case None =>
+            (false, symbol)
+
+          case Some(replacementVector) =>
+            if (valueIndex >= replacementVector.length) {
+              // Our of pattern variables
+              throw new PatternVariablesExhaustedException
+            }
+
+            (true, replacementVector(valueIndex))
+        }
+      
+      case sst.ScopedPair(subtemplate, sst.ScopedPair(sst.ScopedSymbol(_, matchConfig.ellipsisIdentifier), cdr)) if matchConfig.zeroOrMoreAllowed =>
+        val replacements = expandRepeatingTemplate(ellipsisDepth + 1, 0, subtemplate)
+        val (_, expandedCdr) = expandTemplateWithIndices(ellipsisDepth, valueIndex, cdr)
+
+        // Splice the replacements in to the list
+        val splicedList = replacements.foldRight(expandedCdr) { (car, cdr) =>
+           sst.ScopedPair(car, cdr).assignLocationFrom(template) 
+        }
+
+        // This had to have used a variable or expandRepeatingTemplate would've thrown an exception
+        (true, splicedList)
+
+      case sst.ScopedPair(car, cdr) =>
+        val (carUsedVariable, expandedCar) = expandTemplateWithIndices(ellipsisDepth, valueIndex, car)
+        val (cdrUsedVariable, expandedCdr) = expandTemplateWithIndices(ellipsisDepth, valueIndex, cdr)
+
+        val expandedPair = sst.ScopedPair(expandedCar, expandedCdr).assignLocationFrom(template)
+
+        (carUsedVariable || cdrUsedVariable, expandedPair)
+
+      case sst.ScopedVectorLiteral(elements) =>
+        val (usedVariable, expandedElements) = expandVectorElements(ellipsisDepth, valueIndex, elements.toList)
+
+        (usedVariable, sst.ScopedVectorLiteral(expandedElements.toVector).assignLocationFrom(template))
+
+      case leaf : sst.NonSymbolLeaf =>
+        // There are no symbols here - don't recurse and don't consume any of the pattern
+        (false, leaf)
+    }
+  }
+
+  private def expandTemplate(matchConfig : MatchConfig, template : sst.ScopedDatum, matchedPattern : MatchedPattern) : sst.ScopedDatum = 
+    expandTemplateWithIndices(0, 0, template)(matchConfig, matchedPattern)._2
+
   def apply(syntax : BoundSyntax, operands : List[sst.ScopedDatum], located : SourceLocated) : sst.ScopedDatum = {
+    val matchConfig = MatchConfig(
+      ellipsisIdentifier=syntax.ellipsisIdentifier,
+      literals=syntax.literals
+    )
+
     val expandable = syntax.rules.flatMap { rule =>
-      catching(classOf[MatchFailedException]) opt Expandable(rule.template, matchRule(syntax.literals, rule.pattern, operands))
-    }.headOption.getOrElse {
-      throw new NoSyntaxRuleException(located, operands.map(_.unscope.toString).mkString(" "))
+      catching(classOf[MatchFailedException]) opt Expandable(rule.template, matchPattern(matchConfig, rule.pattern, operands))
+      }.headOption.getOrElse {
+        throw new NoSyntaxRuleException(located, operands.map(_.unscope.toString).mkString(" "))
     }
 
-    expandTemplate(expandable.template, expandable.rewrites)
+    expandTemplate(matchConfig, expandable.template, expandable.matchedPattern)
   }
 }
 
