@@ -94,11 +94,13 @@ private[planner] object PlanExpression {
             val initialValueTemp = initialValueResult.value.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
 
             // Create a new mutable
-            val recordDataTemp = ps.GcManagedValue()
+            val recordDataTemp = ps.GcUnmanagedValue()
             plan.steps += ps.RecordLikeInit(mutableTemp, recordDataTemp, vt.MutableType)
 
             // Set the value
             plan.steps += ps.RecordDataFieldSet(recordDataTemp, vt.MutableType, vt.MutableField, initialValueTemp)
+        
+            plan.steps += ps.DisposeValue(recordDataTemp)
             
             initialValueResult.state.withMutable(storageLoc -> mutableTemp)
           }
