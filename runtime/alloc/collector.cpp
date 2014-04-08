@@ -73,8 +73,7 @@ namespace
 		{
 			return false;
 		}
-
-		if (oldCellLocation->gcState() == GarbageState::ForwardingCell)
+		else if (oldCellLocation->gcState() == GarbageState::ForwardingCell)
 		{
 			// This was moved; updated the reference
 			*cellRef = static_cast<ForwardingCell*>(oldCellLocation)->newLocation(); 
@@ -100,13 +99,17 @@ size_t collect(World &world, Heap &newHeap)
 			// This is a constant; don't visit it or its children
 			return false;
 		}
-
-		if (oldCellLocation->gcState() == GarbageState::ForwardingCell)
+		else if (oldCellLocation->gcState() == GarbageState::ForwardingCell)
 		{
 			// This has already been moved to the new semi-space
 			// Update the reference and stop visiting
 			*cellRef = static_cast<ForwardingCell*>(oldCellLocation)->newLocation(); 
 			return false;
+		}
+		else
+		{
+			// It must be AllocatedCell otherwise we have memory corruption
+			assert(oldCellLocation->gcState() == GarbageState::AllocatedCell);
 		}
 
 		// Move the cell to the new location
