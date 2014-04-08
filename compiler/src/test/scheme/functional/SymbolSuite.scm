@@ -1,6 +1,9 @@
-; This test assumes the inline -> heap transition happens after 11 characters
+; This test assumes the inline -> heap transition happens after 12 bytes
 (define-test "symbol constant is a symbol" (expect #t
 	(symbol? 'test)))
+
+(define-test "symbol constant of maximum inline size" (expect crash-length
+	'crash-length))
 
 (define-test "empty list is not a symbol" (expect #f
 	(string? '())))

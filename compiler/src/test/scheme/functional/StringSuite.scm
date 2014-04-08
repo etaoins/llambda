@@ -1,5 +1,9 @@
+; This test assumes the inline -> heap transition happens after 12 bytes
 (define-test "string constant is string" (expect #t
 	(string? "Hello, world!")))
+
+(define-test "string constant of maximum inline size" (expect "crash-length"
+	"crash-length"))
 
 (define-test "empty list is not string" (expect #f
 	(string? '())))
@@ -53,8 +57,8 @@
 	(string-set! test-string 2 #\x2603)
 	test-string))
 
-(define-test "string-set! on an inline string creating a heap string" (expect "☃**********"
-	(define test-string (make-string 11 #\*))
+(define-test "string-set! on an inline string creating a heap string" (expect "☃***********"
+	(define test-string (make-string 12 #\*))
 	(string-set! test-string 0 #\x2603)
 	test-string))
 

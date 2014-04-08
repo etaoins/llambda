@@ -161,7 +161,7 @@ object GenConstant {
     val utf8Data = Codec.toUTF8(value)
     val inlineUtf8Bytes = arrayElementsForIrType(ct.InlineSymbolCell.inlineDataIrType)
 
-    val symbolCell = if (utf8Data.length < inlineUtf8Bytes) {
+    val symbolCell = if (utf8Data.length <= inlineUtf8Bytes) {
       // We can do this inline
       val utf8Constant = genInlineUtf8Constant(module)(utf8Data, inlineUtf8Bytes)
 
