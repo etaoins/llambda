@@ -850,6 +850,12 @@ bool StringCell::operator==(const StringCell &other) const
 	{
 		return false;
 	}
+
+	if (constUtf8Data() == other.constUtf8Data())
+	{
+		// We're either the same cell or implicitly sharing the same data
+		return true;
+	}
 	
 	return memcmp(constUtf8Data(), other.constUtf8Data(), byteLength()) == 0;
 }
