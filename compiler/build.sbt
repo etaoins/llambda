@@ -10,7 +10,7 @@ scalacOptions ++= Seq("-deprecation", "-feature", "-Xlint")
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.3" % "test"
 
-libraryDependencies += "org.scala-lang" % "jline" % "2.10.4"
+libraryDependencies += "jline" % "jline" % "2.11"
 
 libraryDependencies += "com.github.scopt" %% "scopt" % "3.2.0"
 

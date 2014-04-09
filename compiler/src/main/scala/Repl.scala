@@ -1,7 +1,7 @@
 package io.llambda.compiler
 import io.llambda
 
-import scala.tools.jline.console.{ConsoleReader, history}
+import jline.console.{ConsoleReader, history}
 import scala.sys.process._
 import scala.collection.mutable.ListBuffer
 import annotation.tailrec
