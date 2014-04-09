@@ -6,7 +6,7 @@ organization := "io.llambda"
 
 scalaVersion := "2.10.4"
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.0" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.3" % "test"
 
 libraryDependencies += "com.github.scopt" %% "scopt" % "3.2.0"
 
