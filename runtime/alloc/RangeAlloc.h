@@ -30,8 +30,10 @@ public:
 
 		void* operator*()
 		{
+#ifndef NDEBUG
 			// Make sure we're dereferencing in range
 			assert((m_currentCell >= m_startPointer) && (m_currentCell < m_endPointer));
+#endif
 
 			return m_currentCell;
 		}
@@ -64,15 +66,20 @@ public:
 
 	private:
 		Iterator(AllocCell *startPointer, AllocCell *currentCell, AllocCell *endPointer) :
+#ifndef NDEBUG
 			m_startPointer(startPointer),
-			m_currentCell(currentCell),
-			m_endPointer(endPointer)
+			m_endPointer(endPointer),
+#endif
+			m_currentCell(currentCell)
 		{
 		}
 
+#ifndef NDEBUG
 		AllocCell *m_startPointer;
-		AllocCell *m_currentCell;
 		AllocCell *m_endPointer;
+#endif
+
+		AllocCell *m_currentCell;
 	};
 
 public:
