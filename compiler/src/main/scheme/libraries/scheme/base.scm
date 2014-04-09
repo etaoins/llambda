@@ -34,7 +34,7 @@
 						 (let* ((name2 val2) ...)
 						   body1 body2 ...))))))
 
-	(export cond case and or when)
+	(export cond case and or when unless)
 	(begin
 	  (define-syntax cond
 		 (syntax-rules (else =>)
@@ -112,7 +112,13 @@
 		 (syntax-rules ()
 							((when test result1 result2 ...)
 							 (if test
-								(begin result1 result2 ...))))))
+								(begin result1 result2 ... #!unit)))))
+	  
+	   (define-syntax unless
+		 (syntax-rules ()
+							((unless test result1 result2 ...)
+							 (if (not test)
+								(begin result1 result2 ... #!unit))))))
 	
 	(export eqv? eq? equal?)
 	(begin

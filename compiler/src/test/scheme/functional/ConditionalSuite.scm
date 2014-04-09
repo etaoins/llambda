@@ -50,3 +50,27 @@
 
 (define-test "(or) returns the last evaluated datum" (expect (b c)
 	(or #f '(b c) #t)))
+
+(define-test "(when) with true condition" (expect executed
+	(define result 'not-executed)
+	(when (= 1 1.0)
+	  (set! result 'executed))
+	result))
+
+(define-test "(when) with false condition" (expect not-executed
+	(define result 'not-executed)
+	(when (= 1 6)
+	  (set! result 'executed))
+	result))
+
+(define-test "(unless) with true condition" (expect not-executed
+	(define result 'not-executed)
+	(unless (= 1 1.0)
+	  (set! result 'executed))
+	result))
+
+(define-test "(unless) with false condition" (expect executed
+	(define result 'not-executed)
+	(unless (= 1 6)
+	  (set! result 'executed))
+	result))
