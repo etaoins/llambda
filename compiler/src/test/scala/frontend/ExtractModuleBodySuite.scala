@@ -82,6 +82,10 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     assert(expressionFor("#t") === et.Literal(
       ast.BooleanLiteral(true)
     ))
+    
+    assert(expressionFor("#!unit") === et.Literal(
+      ast.UnitValue()
+    ))
   }
 
   test("application") {

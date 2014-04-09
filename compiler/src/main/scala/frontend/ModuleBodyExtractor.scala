@@ -424,6 +424,10 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
     case sst.NonSymbolLeaf(literal : ast.BooleanLiteral) =>
       et.Literal(literal)
 
+    // Additionally treat #!unit as self-evaluating
+    case sst.NonSymbolLeaf(literal : ast.UnitValue) =>
+      et.Literal(literal)
+
     case malformed =>
       throw new MalformedExpressionException(malformed, malformed.toString)
   }).assignLocationFrom(datum)
