@@ -23,7 +23,8 @@ class ProcedureSignatureToIrSuite extends FunSuite {
 
     assert(irSignature === IrSignature(
       result=Result(VoidType),
-      arguments=Nil
+      arguments=Nil,
+      attributes=Set(NoUnwind)
     ))
   }
   
@@ -40,7 +41,8 @@ class ProcedureSignatureToIrSuite extends FunSuite {
 
     assert(irSignature === IrSignature(
       result=Result(IntegerType(32), Set(SignExt)),
-      arguments=Argument(IntegerType(8), Set(ZeroExt)) :: Argument(IntegerType(16), Set(ZeroExt)) :: Nil
+      arguments=List(Argument(IntegerType(8), Set(ZeroExt)), Argument(IntegerType(16), Set(ZeroExt))),
+      attributes=Set(NoUnwind)
     ))
   }
   
@@ -77,7 +79,8 @@ class ProcedureSignatureToIrSuite extends FunSuite {
 
     assert(irSignature === IrSignature(
       result=Result(IntegerType(32), Set(ZeroExt)),
-      arguments=Argument(PointerType(ct.ListElementCell.irType)) :: Nil
+      arguments=List(Argument(PointerType(ct.ListElementCell.irType))),
+      attributes=Set(NoUnwind)
     ))
   }
   

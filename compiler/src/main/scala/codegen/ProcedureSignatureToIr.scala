@@ -51,6 +51,16 @@ object ProcedureSignatureToIr {
         Result(irType, paramSignednessToAttribs(signedness))
     }
 
-    IrSignature(result=result, arguments=allArgs)
+    val attributes = if (signature.hasWorldArg) {
+      // World functions can throw exceptions
+      Set[FunctionAttribute]()
+    }
+    else {
+      // Non-world ative functions must not throw exceptions
+      // We don't generate a GC safe point for them
+      Set[FunctionAttribute](NoUnwind)
+    }
+
+    IrSignature(result=result, arguments=allArgs, attributes=attributes)
   }
 }
