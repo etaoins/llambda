@@ -38,7 +38,8 @@ private[planner] object PlanLambda {
   private case class CapturedMutable(
     storageLoc : StorageLocation,
     tempValue : ps.TempValue,
-    recordField : vt.RecordField
+    recordField : vt.RecordField,
+    needsUndefCheck : Boolean
   ) extends CapturedVariable {
     val valueType = vt.MutableType
   }
@@ -70,7 +71,7 @@ private[planner] object PlanLambda {
         // Set the value
         plan.steps += ps.RecordDataFieldSet(recordDataTemp, vt.MutableType, vt.MutableField, tempValue)
         
-        state.withValue(storageLoc -> MutableValue(mutableTemp))
+        state.withValue(storageLoc -> MutableValue(mutableTemp, false))
       }
   }
 
@@ -86,8 +87,8 @@ private[planner] object PlanLambda {
           val varValue = TempValueToIntermediate(capturedVar.valueType, varTemp) 
           state.withValue(capturedVar.storageLoc -> ImmutableValue(varValue))
 
-        case _ : CapturedMutable => 
-          state.withValue(capturedVar.storageLoc -> MutableValue(varTemp))
+        case capturedMutable : CapturedMutable => 
+          state.withValue(capturedVar.storageLoc -> MutableValue(varTemp, capturedMutable.needsUndefCheck))
       }
     }
   
@@ -143,9 +144,9 @@ private[planner] object PlanLambda {
               ImportedImmutable(storageLoc, parentIntermediate)
           }
 
-      case MutableValue(mutableTemp) =>
+      case MutableValue(mutableTemp, needsUndefCheck) =>
         val recordField = new vt.RecordField(storageLoc.sourceName, vt.MutableType)
-        CapturedMutable(storageLoc, mutableTemp, recordField)
+        CapturedMutable(storageLoc, mutableTemp, recordField, needsUndefCheck)
       }
     })
     

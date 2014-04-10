@@ -277,7 +277,15 @@ object GenPlanStep {
       val newValueIr = state.liveTemps(newValueTemp)
       val generatedType = typeGenerator(recordType)
   
-      GenRecordDataFieldSet(state.currentBlock)(recordDataIr, generatedType, recordField,newValueIr)
+      GenRecordDataFieldSet(state.currentBlock)(recordDataIr, generatedType, recordField, Some(newValueIr))
+
+      state
+    
+    case ps.RecordDataFieldSetUndefined(recordDataTemp, recordType, recordField) =>
+      val recordDataIr = state.liveTemps(recordDataTemp)
+      val generatedType = typeGenerator(recordType)
+  
+      GenRecordDataFieldSet(state.currentBlock)(recordDataIr, generatedType, recordField, None)
 
       state
     
@@ -288,6 +296,32 @@ object GenPlanStep {
       val resultIr = GenRecordDataFieldRef(state.currentBlock)(recordDataIr, generatedType, recordField)
 
       state.withTempValue(resultTemp -> resultIr)
+
+    case ps.AssertRecordDataFieldDefined(worldPtrTemp, fieldValue, recordField, errorMessage) => 
+      val worldPtrIr = state.liveTemps(worldPtrTemp)
+      val fieldValueIr = state.liveTemps(fieldValue)
+      
+      // Start our branches
+      val fatalBlock = state.currentBlock.startChildBlock("fieldIsDefined")
+      val successBlock = state.currentBlock.startChildBlock("fieldIsUndefined")
+
+      GenErrorSignal(state.copy(currentBlock=fatalBlock))(worldPtrIr, errorMessage)
+
+      // Check to make sure the value isn't null
+      // Branch if we're not of the right class
+      val pointerFieldIrType = ValueTypeToIr(recordField.fieldType).irType match {
+        case pointerType : PointerType =>
+         pointerType
+
+        case _ =>
+          throw new InternalCompilerErrorException("Attempted to assert non-pointer field is undefined")
+      }
+
+      val irResult = state.currentBlock.icmp("isDefined")(ComparisonCond.NotEqual, None, fieldValueIr, NullPointerConstant(pointerFieldIrType)) 
+      state.currentBlock.condBranch(irResult, successBlock, fatalBlock)
+
+      // Continue with the successful block
+      state.copy(currentBlock=successBlock)
 
     case ps.StoreRecordLikeData(resultTemp, recordCellTemp, recordLikeType) =>
       val recordCellIr = state.liveTemps(recordCellTemp)

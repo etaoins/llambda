@@ -345,10 +345,28 @@ case class RecordDataFieldSet(recordData : TempValue, recordLikeType : vt.Record
   val outputValues = Set[TempValue]()
 }
 
+/** Sets a record field as undefined
+  *
+  * If RecordDataFieldRef is later called it will raise a runtime error if checkUndef is true
+  */
+case class RecordDataFieldSetUndefined(recordData : TempValue, recordLikeType : vt.RecordLikeType, recordField : vt.RecordField) extends Step {
+  lazy val inputValues = Set(recordData)
+  val outputValues = Set[TempValue]()
+}
+
 /** Reads a record field. The value must match the type of record field */
 case class RecordDataFieldRef(result : TempValue, recordData : TempValue, recordLikeType : vt.RecordLikeType, recordField : vt.RecordField) extends Step {
   lazy val inputValues = Set(recordData)
   lazy val outputValues = Set(result)
+}
+
+/** Asserts that field value is defined 
+  *
+  * The field must have previously been loaded with RecordDataFieldRef
+  **/
+case class AssertRecordDataFieldDefined(worldPtr : WorldPtrValue, fieldValue : TempValue, recordField : vt.RecordField, errorMessage : RuntimeErrorMessage) extends Step {
+  lazy val inputValues = Set(worldPtr, fieldValue)
+  val outputValues = Set[TempValue]()
 }
 
 /** Tests to see if a record is of a given class */

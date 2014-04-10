@@ -3,7 +3,7 @@ import io.llambda
 
 import collection.mutable
 
-import llambda.compiler.{et, StorageLocation, SourceLocated}
+import llambda.compiler.{et, StorageLocation, SourceLocated, RuntimeErrorMessage}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
@@ -101,7 +101,7 @@ private[planner] object PlanExpression {
               value=value
             )
 
-          case MutableValue(mutableTemp) =>
+          case MutableValue(mutableTemp, needsUndefCheck) =>
             // Load our data pointer
             val recordDataTemp = ps.GcUnmanagedValue()
             plan.steps += ps.StoreRecordLikeData(recordDataTemp, mutableTemp, vt.MutableType)
@@ -109,6 +109,11 @@ private[planner] object PlanExpression {
             // Load the data
             val resultTemp = ps.GcManagedValue()
             plan.steps += ps.RecordDataFieldRef(resultTemp, recordDataTemp, vt.MutableType, vt.MutableField)
+
+            if (needsUndefCheck) {
+              val errorMessage = RuntimeErrorMessage("accessUndefined", "Recursively defined value referenced before its initialization") 
+              plan.steps += ps.AssertRecordDataFieldDefined(worldPtr, resultTemp, vt.MutableField, errorMessage)
+            }
 
             // Dispose of our data pointer
             plan.steps += ps.DisposeValue(recordDataTemp)
@@ -124,7 +129,7 @@ private[planner] object PlanExpression {
       
       case et.MutateVar(storageLoc, valueExpr) =>
         val mutableTemp = initialState.values(storageLoc) match {
-          case MutableValue(mutableTemp) =>
+          case MutableValue(mutableTemp, _) =>
             mutableTemp
 
           case _ =>
