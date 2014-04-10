@@ -3,7 +3,7 @@ import io.llambda
 
 import collection.mutable
 
-import llambda.compiler.{et, StorageLocation, ReportProcedure, SourceLocated}
+import llambda.compiler.{et, StorageLocation, SourceLocated}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
@@ -87,47 +87,8 @@ private[planner] object PlanExpression {
           value=applyValueOpt.getOrElse(iv.UnitValue))
 
       case et.Bind(bindings) =>
-        val finalState = bindings.foldLeft(initialState) { case (state, (storageLoc, initialValue)) =>
-          if (planConfig.analysis.mutableVars.contains(storageLoc)) {
-            val mutableTemp = ps.GcManagedValue()
-            
-            val initialValueResult = apply(state)(initialValue)
-            val initialValueTemp = initialValueResult.value.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
-
-            // Create a new mutable
-            val recordDataTemp = ps.GcUnmanagedValue()
-            plan.steps += ps.RecordLikeInit(mutableTemp, recordDataTemp, vt.MutableType)
-
-            // Set the value
-            plan.steps += ps.RecordDataFieldSet(recordDataTemp, vt.MutableType, vt.MutableField, initialValueTemp)
-        
-            plan.steps += ps.DisposeValue(recordDataTemp)
-            
-            initialValueResult.state.withValue(storageLoc -> MutableValue(mutableTemp))
-          }
-          else {
-            // Send a hint about our name
-            val initialValueResult = apply(state)(initialValue, Some(storageLoc.sourceName))
-
-            val reportNamedValue = (initialValueResult.value, storageLoc) match {
-              case (knownProc : iv.KnownProcedure, reportProc : ReportProcedure) =>
-                // Annotate with our report name so we can optimize when we try
-                // to apply this
-                // Note this is agnostic to if the implementation is a native
-                // function versus a Scheme procedure
-                knownProc.withReportName(reportProc.reportName)
-
-              case (otherValue, _) =>
-                otherValue
-            }
-
-            // No planning, just remember this intermediate value
-            initialValueResult.state.withValue(storageLoc -> ImmutableValue(reportNamedValue))
-          }
-        }
-
         PlanResult(
-          state=finalState,
+          state=PlanBind(initialState)(bindings),
           value=iv.UnitValue
         )
 
