@@ -15,7 +15,14 @@ private[planner] object PlanLambda {
     valueType : vt.ValueType
   )
 
-  private sealed abstract class CapturedVariable {
+  private sealed abstract class ClosedVariable
+
+  private case class ImportedImmutable(
+    storageLoc : StorageLocation,
+    parentIntermediate : iv.IntermediateValue
+  ) extends ClosedVariable
+
+  private sealed abstract class CapturedVariable extends ClosedVariable {
     val storageLoc : StorageLocation
     val valueType : vt.ValueType
     val recordField : vt.RecordField
@@ -63,7 +70,7 @@ private[planner] object PlanLambda {
         // Set the value
         plan.steps += ps.RecordDataFieldSet(recordDataTemp, vt.MutableType, vt.MutableField, tempValue)
         
-        state.withMutable(storageLoc -> mutableTemp)
+        state.withValue(storageLoc -> MutableValue(mutableTemp))
       }
   }
 
@@ -77,10 +84,10 @@ private[planner] object PlanLambda {
       capturedVar match {
         case _ : CapturedImmutable =>
           val varValue = TempValueToIntermediate(capturedVar.valueType, varTemp) 
-          state.withImmutable(capturedVar.storageLoc -> varValue)
+          state.withValue(capturedVar.storageLoc -> ImmutableValue(varValue))
 
         case _ : CapturedMutable => 
-          state.withMutable(capturedVar.storageLoc -> varTemp)
+          state.withValue(capturedVar.storageLoc -> MutableValue(varTemp))
       }
     }
   
@@ -120,42 +127,32 @@ private[planner] object PlanLambda {
     // Find the variables that are closed by the parent scope
     val refedVars = findRefedVariables(body)
 
-    val closedByImmutables = refedVars intersect parentState.immutables.keySet
-
     // Figure out if the immutables need to be captured
-    val processedImmutables = (closedByImmutables map { storageLoc =>
-      val parentIntermediate = parentState.immutables(storageLoc)
+    val closedVariables = (refedVars flatMap { storageLoc =>
+      parentState.values.get(storageLoc) map {
+        case ImmutableValue(parentIntermediate) =>
+          parentIntermediate.closureRepresentation match {
+            case Some(valueType) =>
+              val recordField = new vt.RecordField(storageLoc.sourceName, valueType)
 
-      parentIntermediate.closureRepresentation match {
-        case Some(valueType) =>
-          val recordField = new vt.RecordField(storageLoc.sourceName, valueType)
+              // We have to capture this
+              CapturedImmutable(storageLoc, parentIntermediate, valueType, recordField)
 
-          // We have to capture this
-          Right(CapturedImmutable(storageLoc, parentIntermediate, valueType, recordField))
+            case None =>
+              // No need for capturing - import the intermediate value directly
+              ImportedImmutable(storageLoc, parentIntermediate)
+          }
 
-        case None =>
-          // No need for capturing
-          Left((storageLoc -> parentIntermediate))
+      case MutableValue(mutableTemp) =>
+        val recordField = new vt.RecordField(storageLoc.sourceName, vt.MutableType)
+        CapturedMutable(storageLoc, mutableTemp, recordField)
       }
     })
     
-    // Import the immutabes that don't need to be captured
-    val importedImmutables = processedImmutables.collect({ case Left(importedTuple) =>
-      importedTuple
-    }).toMap
-
-    // Make a list of all the captured variables
-    val capturedImmutables = processedImmutables.collect({ case Right(capturedVariable) =>
-      capturedVariable
-    }).toList : List[CapturedVariable] 
-
-    val capturedMutables = ((refedVars intersect parentState.mutables.keySet) map { storageLoc =>
-      val recordField = new vt.RecordField(storageLoc.sourceName, vt.MutableType)
-
-      CapturedMutable(storageLoc, parentState.mutables(storageLoc), recordField)
-    }).toList : List[CapturedVariable]
-
-    val capturedVariables = capturedImmutables ++ capturedMutables
+    // Collect only the capture variables
+    val capturedVariables = (closedVariables collect {
+      case captured : CapturedVariable => captured
+    }).toList
 
     // Make a temp for the world pointer
     // Don't implicit this because we also need our parent's world ptr for storing closure data
@@ -191,14 +188,20 @@ private[planner] object PlanLambda {
     }
 
     // Immutable vars can be used immediately
+    val importedImmutables = (closedVariables.collect {
+      case imported : ImportedImmutable => 
+        (imported.storageLoc, ImmutableValue(imported.parentIntermediate))
+    }).toMap
+
     val argImmutables = (immutableArgs.map { case Argument(storageLoc, tempValue, valueType) =>
-      (storageLoc, TempValueToIntermediate(valueType, tempValue))
+      (storageLoc, ImmutableValue(TempValueToIntermediate(valueType, tempValue)))
     }).toMap
 
     // Start a new state for the procedure
     val initialImmutables = argImmutables ++ importedImmutables
+
     val preMutableState = PlannerState(
-      immutables=initialImmutables,
+      values=initialImmutables,
       worldPtr=worldPtr
     )
 

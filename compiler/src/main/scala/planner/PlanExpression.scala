@@ -3,11 +3,12 @@ import io.llambda
 
 import collection.mutable
 
-import llambda.compiler.{et, StorageLocation, ValueNotApplicableException, ReportProcedure, SourceLocated}
+import llambda.compiler.{et, StorageLocation, ReportProcedure, SourceLocated}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
+import llambda.compiler.{InternalCompilerErrorException, ValueNotApplicableException}
 
 private[planner] object PlanExpression {
   // These objects know how to implement certain report procedure directly
@@ -102,7 +103,7 @@ private[planner] object PlanExpression {
         
             plan.steps += ps.DisposeValue(recordDataTemp)
             
-            initialValueResult.state.withMutable(storageLoc -> mutableTemp)
+            initialValueResult.state.withValue(storageLoc -> MutableValue(mutableTemp))
           }
           else {
             // Send a hint about our name
@@ -121,7 +122,7 @@ private[planner] object PlanExpression {
             }
 
             // No planning, just remember this intermediate value
-            initialValueResult.state.withImmutable(storageLoc -> reportNamedValue)
+            initialValueResult.state.withValue(storageLoc -> ImmutableValue(reportNamedValue))
           }
         }
 
@@ -130,37 +131,44 @@ private[planner] object PlanExpression {
           value=iv.UnitValue
         )
 
-      case et.VarRef(storageLoc : StorageLocation) if !planConfig.analysis.mutableVars.contains(storageLoc) =>
-        // Return the value directly 
-        PlanResult(
-          state=initialState,
-          value=initialState.immutables(storageLoc)
-        )
-      
-      case et.VarRef(storageLoc) =>
-        val mutableTemp = initialState.mutables(storageLoc)
-        
-        // Load our data pointer
-        val recordDataTemp = ps.GcUnmanagedValue()
-        plan.steps += ps.StoreRecordLikeData(recordDataTemp, mutableTemp, vt.MutableType)
-        
-        // Load the data
-        val resultTemp = ps.GcManagedValue()
-        plan.steps += ps.RecordDataFieldRef(resultTemp, recordDataTemp, vt.MutableType, vt.MutableField)
+      case et.VarRef(storageLoc : StorageLocation) => 
+        initialState.values(storageLoc) match {
+          case ImmutableValue(value) =>
+            // Return the value directly 
+            PlanResult(
+              state=initialState,
+              value=value
+            )
 
-        // Dispose of our data pointer
-        plan.steps += ps.DisposeValue(recordDataTemp)
-        
-        // We can be anything here
-        val possibleTypes = ct.DatumCell.concreteTypes
+          case MutableValue(mutableTemp) =>
+            // Load our data pointer
+            val recordDataTemp = ps.GcUnmanagedValue()
+            plan.steps += ps.StoreRecordLikeData(recordDataTemp, mutableTemp, vt.MutableType)
+            
+            // Load the data
+            val resultTemp = ps.GcManagedValue()
+            plan.steps += ps.RecordDataFieldRef(resultTemp, recordDataTemp, vt.MutableType, vt.MutableField)
 
-        PlanResult(
-          state=initialState,
-          value=new iv.IntrinsicCellValue(possibleTypes, ct.DatumCell, resultTemp)
-        )
+            // Dispose of our data pointer
+            plan.steps += ps.DisposeValue(recordDataTemp)
+            
+            // We can be anything here
+            val possibleTypes = ct.DatumCell.concreteTypes
+
+            PlanResult(
+              state=initialState,
+              value=new iv.IntrinsicCellValue(possibleTypes, ct.DatumCell, resultTemp)
+            )
+        }
       
       case et.MutateVar(storageLoc, valueExpr) =>
-        val mutableTemp = initialState.mutables(storageLoc)
+        val mutableTemp = initialState.values(storageLoc) match {
+          case MutableValue(mutableTemp) =>
+            mutableTemp
+
+          case _ =>
+            throw new InternalCompilerErrorException(s"Attempted to mutate non-mutable: ${storageLoc}")
+        }
         
         val newValueResult = apply(initialState)(valueExpr)
         val newValueTemp = newValueResult.value.toTempValue(vt.IntrinsicCellType(ct.DatumCell))

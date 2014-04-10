@@ -5,14 +5,14 @@ import llambda.compiler.StorageLocation
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 
+sealed trait LocationValue
+case class ImmutableValue(intermediateValue : iv.IntermediateValue) extends LocationValue
+case class MutableValue(mutableTemp : ps.TempValue) extends LocationValue
+
 case class PlannerState(
-  immutables : Map[StorageLocation, iv.IntermediateValue] = Map(),
-  mutables : Map[StorageLocation, ps.TempValue] = Map(),
+  values : Map[StorageLocation, LocationValue] = Map(),
   worldPtr : ps.WorldPtrValue
 ) {
-  def withImmutable(immutable : (StorageLocation, iv.IntermediateValue)) =
-    this.copy(immutables=immutables + immutable)
-  
-  def withMutable(mutable : (StorageLocation, ps.TempValue)) =
-    this.copy(mutables=mutables + mutable)
+  def withValue(newValue : (StorageLocation, LocationValue)) =
+    this.copy(values=values + newValue)
 }
