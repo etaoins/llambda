@@ -21,7 +21,7 @@ private[planner] object PlanLambda {
     val recordField : vt.RecordField
   }
 
-  private case class CapturedImmutatable(
+  private case class CapturedImmutable(
     storageLoc : StorageLocation,
     parentIntermediate : iv.IntermediateValue,
     valueType : vt.ValueType,
@@ -75,7 +75,7 @@ private[planner] object PlanLambda {
 
       // Add it to our state
       capturedVar match {
-        case _ : CapturedImmutatable =>
+        case _ : CapturedImmutable =>
           val varValue = TempValueToIntermediate(capturedVar.valueType, varTemp) 
           state.withImmutable(capturedVar.storageLoc -> varValue)
 
@@ -87,7 +87,7 @@ private[planner] object PlanLambda {
   private def storeClosureData(closureDataTemp : ps.TempValue, closureType : vt.ClosureType, capturedVariables : List[CapturedVariable])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Unit = {
     for(capturedVar <- capturedVariables) {
       val varTemp = capturedVar match {
-        case immutable : CapturedImmutatable =>
+        case immutable : CapturedImmutable =>
           // Cast the value to its preferred type
           immutable.parentIntermediate.toTempValue(capturedVar.valueType)
 
@@ -105,7 +105,7 @@ private[planner] object PlanLambda {
     case _ : et.Return =>
       true
 
-    case lambda :  et.Lambda  =>
+    case lambda : et.Lambda  =>
       // If the return exists in tbe body of a nested lambda it's not immediate
       false
 
@@ -131,7 +131,7 @@ private[planner] object PlanLambda {
           val recordField = new vt.RecordField(storageLoc.sourceName, valueType)
 
           // We have to capture this
-          Right(CapturedImmutatable(storageLoc, parentIntermediate, valueType, recordField))
+          Right(CapturedImmutable(storageLoc, parentIntermediate, valueType, recordField))
 
         case None =>
           // No need for capturing
