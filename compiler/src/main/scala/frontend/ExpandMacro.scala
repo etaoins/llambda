@@ -149,11 +149,11 @@ private[frontend] object ExpandMacro {
           expandRepeatingTemplateAcc(ellipsisDepth, valueIndex + 1, template, currentExpansion :: acc)
 
         case None =>
-          acc
+          acc.reverse
       }
     }
 
-    expandRepeatingTemplateAcc(ellipsisDepth, valueIndex, template).reverse
+    expandRepeatingTemplateAcc(ellipsisDepth, valueIndex, template)
   }
 
   private def expandVectorElements(ellipsisDepth : Int, valueIndex : Int, elements : List[sst.ScopedDatum])(implicit matchConfig : MatchConfig, matchedPattern : MatchedPattern) : (Boolean, List[sst.ScopedDatum]) = {
