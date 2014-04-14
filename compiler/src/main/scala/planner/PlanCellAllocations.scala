@@ -8,91 +8,68 @@ import io.llambda.compiler.planner.{step => ps}
  * This should be the very final pass after planning and conniving
  */ 
 object PlanCellAllocations {
-  private case class MergeAllResult(
-    requiredSize : Int,
-    steps : List[ps.Step]
-  )
-
-  private def mergeAllAllocationsTo(worldPtr : ps.WorldPtrValue, steps : List[ps.Step], consumedCells : Int) : MergeAllResult = steps match {
-    case (consumer : ps.CellConsumer) :: tailSteps =>
-      // Track the number of cells this consumer requires
-      val tailResult = mergeAllAllocationsTo(worldPtr, tailSteps, consumedCells + consumer.allocSize)
-      
-      tailResult.copy(
-        steps=consumer :: tailResult.steps
-      )
-
-    case (nestingStep : ps.NestingStep) :: tailSteps =>
-      // It would only be possible to merge allocations across branches if they
-      // both allocate the exact same number of cells. Otherwise one branch
-      // would have extra uninitialized cells which would confuse our GC.
-
-      // Another option would be to allocate the minimum number of allocations
-      // and have the larger branch allocate the difference
-
-      // Both of these seem to have high complexity for the benefit they'd create
-
-      // Abort and switch back to searching both branches and the remaining steps
-      val newStep = nestingStep.mapInnerBranches { (steps, _) =>
-        findNextConsumer(worldPtr, steps)
-      }
-
-      val steps = newStep :: findNextConsumer(worldPtr, tailSteps)
-
-      MergeAllResult(
-        requiredSize=consumedCells,
-        steps=steps
-      )
-
-    case allocatingStep :: tailSteps if allocatingStep.canAllocate =>
-      // We can't keep uninitialized cells across an allocation
-      // Abort and switch back to searching
-      val steps = findNextConsumer(worldPtr, allocatingStep :: tailSteps)
-      
-      MergeAllResult(
-        requiredSize=consumedCells,
-        steps=steps
-      )
-
-    case other :: tailSteps =>
-      // Pass this step through unmodified
-      val tailResult = mergeAllAllocationsTo(worldPtr, tailSteps, consumedCells)
-      
-      tailResult.copy(
-        steps=other :: tailResult.steps
-      )
-
-    case Nil =>
-      MergeAllResult(
-        requiredSize=consumedCells,
-        steps=Nil
-      )
+  // Only returns an allocation step if we require more than zero cells
+  // Allocating zero cells is actually handled properly by codegen but it's nice to omit them in case a human is
+  // examining raw planner output
+  private def allocCellSteps(requiredCells : Int)(implicit worldPtr : ps.WorldPtrValue) = if (requiredCells > 0) {
+    List(ps.AllocateCells(worldPtr, requiredCells))
+  }
+  else {
+    Nil
   }
 
-  private def findNextConsumer(worldPtr : ps.WorldPtrValue, steps : List[ps.Step]) : List[ps.Step] = steps match {
-    case (consumer : ps.CellConsumer) :: _ =>
-      // Found the next consumer - count the cells we need until the next GC step
-      val mergeResult = mergeAllAllocationsTo(worldPtr, steps, 0)
-      ps.AllocateCells(worldPtr, mergeResult.requiredSize) :: mergeResult.steps
+  /** Returns true if a step can either consume or allocate cells
+    *
+    * This is used for ignoring branches that don't use GC when aggregating cell allocations
+    */
+  private def stepConsumesOrAllocates(step : ps.Step) : Boolean = step match {
+    case consumer : ps.CellConsumer => 
+      true
+    case nestingStep : ps.NestingStep =>
+      nestingStep.innerBranches.exists { case (steps, _) =>
+        steps.exists(stepConsumesOrAllocates)
+      }
+    case otherStep => 
+      otherStep.canAllocate
+  }
 
-    case (nestingStep : ps.NestingStep) :: tailSteps =>
-      val newStep = nestingStep.mapInnerBranches { (steps, _) =>
-        findNextConsumer(worldPtr, steps)
+  private def placeCellAllocations(reverseSteps : List[ps.Step], requiredCells : Int, acc : List[ps.Step])(implicit worldPtr : ps.WorldPtrValue) : List[ps.Step] = reverseSteps match {
+    case (consumer : ps.CellConsumer) :: reverseTail =>
+      // Add the consumer's cell count to our required cells and keep processing
+      val newAcc = consumer :: acc
+      placeCellAllocations(reverseTail, requiredCells + consumer.allocSize, newAcc)
+
+    case allocatingStep :: reverseTail if allocatingStep.canAllocate =>
+      // This is a GC barrier - allocations can't cross this
+      // Make our allocation step and then keep processing after resetting our required cell count accumulator
+      val newAcc = allocatingStep :: (allocCellSteps(requiredCells) ++ acc)
+      placeCellAllocations(reverseTail, 0, newAcc) 
+
+    case (nestingStep : ps.NestingStep) :: reverseTail if stepConsumesOrAllocates(nestingStep) =>
+      // Recurse down each of the step's branches
+      val newNestingStep = nestingStep.mapInnerBranches { (branchSteps, _) =>
+        placeCellAllocations(branchSteps.reverse, 0, Nil)
       }
 
-      newStep :: findNextConsumer(worldPtr, tailSteps)
+      // Treat this as a GC barrier for now
+      val newAcc = newNestingStep :: (allocCellSteps(requiredCells) ++  acc)
+      placeCellAllocations(reverseTail, 0, newAcc) 
 
-    case other :: tailSteps =>
-      other :: findNextConsumer(worldPtr, tailSteps)
+    case otherStep :: reverseTail =>
+     // This step is neither a GC barrier nor consume cells
+     // Just tail recurse
+     val newAcc = otherStep :: acc
+     placeCellAllocations(reverseTail, requiredCells, newAcc) 
 
     case Nil =>
-      Nil
+      // We've reached the top of the branch - allocate any cells we need and terminate
+      allocCellSteps(requiredCells) ++ acc
   }
 
   def apply(function : PlannedFunction) : PlannedFunction = function.worldPtrOption match {
     case Some(worldPtr) =>
       function.copy(
-        steps=findNextConsumer(worldPtr, function.steps)
+        steps=placeCellAllocations(function.steps.reverse, 0, Nil)(worldPtr)
       )
     case None =>
       // No world pointer, no allocations
