@@ -116,5 +116,9 @@ class KnownProcedure(val signature : ProcedureSignature, symbolBlock : () => Str
     selfTempOpt map { _ =>
       preferredRepresentation
     }
+  
+  override def restoreFromClosure(valueType : vt.ValueType, varTemp : ps.TempValue) : IntermediateValue = {
+    new KnownProcedure(signature, symbolBlock, Some(varTemp), reportName)
+  }
 }
 

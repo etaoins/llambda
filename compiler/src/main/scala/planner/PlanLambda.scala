@@ -83,8 +83,8 @@ private[planner] object PlanLambda {
 
       // Add it to our state
       capturedVar match {
-        case _ : CapturedImmutable =>
-          val varValue = TempValueToIntermediate(capturedVar.valueType, varTemp) 
+        case immutable : CapturedImmutable =>
+          val varValue = immutable.parentIntermediate.restoreFromClosure(capturedVar.valueType, varTemp)
           state.withValue(capturedVar.storageLoc -> ImmutableValue(varValue))
 
         case capturedMutable : CapturedMutable => 

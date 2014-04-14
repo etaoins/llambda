@@ -5,7 +5,8 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.RuntimeErrorMessage
 import llambda.compiler.planner.{step => ps}
-import llambda.compiler.planner.{PlanWriter, UnlocatedImpossibleTypeConversionException, InvokableProcedure}
+import llambda.compiler.planner.{PlanWriter, TempValueToIntermediate, InvokableProcedure}
+import llambda.compiler.planner.UnlocatedImpossibleTypeConversionException
 import llambda.compiler.InternalCompilerErrorException
 
 trait IntermediateValueHelpers {
@@ -113,5 +114,14 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     * be used directly without storing any data in the closure.
     */
   def closureRepresentation : Option[vt.ValueType]
+
+  /** Returns a function that can be used to restore this value from a closure's ps.TempValue
+    *
+    * This can be overriden to carry value-specific metadata that isn't contained in the value's type alone. This can
+    * include things like procedure signature, value ranges, etc.
+    */
+  def restoreFromClosure(valueType : vt.ValueType, varTemp : ps.TempValue) : IntermediateValue = {
+    TempValueToIntermediate(valueType, varTemp) 
+  }
 }
 
