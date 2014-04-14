@@ -12,24 +12,18 @@ import llambda.compiler.RuntimeErrorMessage
 
 /** Represents a procedure with a known signature and direct entry point
   *
-  * These procedures can be called directly without going through a costly 
-  * trampoline. If this is converted to a ct.ProcedureCell a trampoline will 
-  * be dynamically built to give it an adapated signature. Adapted signatures
-  * are the same for all procedures so they can be called without specific 
-  * knowledge of the backing procedure. These adapated procedure values are
-  * represented by InvokableProcedureCell
+  * These procedures can be called directly without going through a costly trampoline. If this is converted to a
+  * ct.ProcedureCell a trampoline will be dynamically built to give it an adapted signature. Adapted signatures are the
+  * same for all procedures so they can be called without specific knowledge of the backing procedure. These adapted
+  * procedure values are represented by InvokableProcedureCell
   *
   * @param signature     Signature of the procedure
-  * @param symbolBlock   Function returning the native symbol of the direct
-                         entry point to the procedure
-  * @param selfTempOpt   For procedures with closures a procedure cell
-  *                      containing the procedure's closure. The entry point
-  *                      does not have to be initialized; it will be set
-  *                      dynamically to a generated trampofile if this value is
-  *                      explicitly converted to a ct.ProcedureCell
-  * @param reportName    Name of this procedure in R7RS. This is used as a tag 
-  *                      to implemented certain optimizations elsewhere in the
-  *                      planner. It is not directly used by this class
+  * @param symbolBlock   Function returning the native symbol of the direct entry point to the procedure
+  * @param selfTempOpt   For procedures with closures a procedure cell containing the procedure's closure. The entry
+  *                      point does not have to be initialized; it will be set dynamically to a generated trampoline
+  *                      if this value is explicitly converted to a ct.ProcedureCell
+  * @param reportName    Name of this procedure in R7RS. This is used as a tag to implement certain optimizations
+  *                      elsewhere in the planner. It is not directly used by this class
   */
 class KnownProcedure(val signature : ProcedureSignature, symbolBlock : () => String, selfTempOpt : Option[ps.TempValue], val reportName : Option[String] = None) extends IntermediateValue with InvokableProcedure with NonRecordValue {
   val possibleTypes = Set[ct.ConcreteCellType](ct.ProcedureCell) 
