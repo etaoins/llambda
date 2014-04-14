@@ -151,7 +151,7 @@ object Compiler {
         functions
       }
 
-      // Plan our cell allocations after all optimizatins have been done
+      // Plan our cell allocations after all optimizations have been done
       val allocatedFunctions = optimizedFunctions.mapValues(planner.PlanCellAllocations(_))
 
       // Generate the LLVM IR
