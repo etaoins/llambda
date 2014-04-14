@@ -6,12 +6,23 @@ import io.llambda.compiler.planner.{step => ps}
 
 /** Disposes values after their last use
   *
-  * This reduces both the computational and memory overhead of garbage 
-  * collection by discarding values. It has no effect on generated code for
-  * non-GC managed values.
+  * This reduces both the computational and memory overhead of garbage collection by discarding values. It has no effect
+  * on generated code for non-GC managed values.
   */
 object DisposeValues extends FunctionConniver {
-  private def discardUnusedValues(argValues : Set[ps.TempValue], reverseSteps : List[ps.Step], usedValues : Set[ps.TempValue]) : List[ps.Step] = reverseSteps match {
+
+  /**  Iterates over a branch in reverse order discarding values on their last use
+    *
+    * @param  branchInputValues  Input values to the branch. For a procedure these are the procedure's arguments.
+    *                            For conditional branches these will be the values in the test. These are discarded at
+    *                            the top of the branch if they're unused.
+    * @param  branchSteps        Branch steps in reverse order
+    * @param  usedValues         Values used at this point in the branch. This set grows as the branch is scanned in
+    *                            reverse order
+    * @param  acc                Result accumulator for tail call optmization
+    * @return  List of new branch steps in forward order
+    */
+  private def discardUnusedValues(branchInputValues : Set[ps.TempValue], reverseSteps : List[ps.Step], usedValues : Set[ps.TempValue], acc : List[ps.Step]) : List[ps.Step] = reverseSteps match {
     case (nestingStep : ps.NestingStep) :: reverseTail =>
       // Determine which input values are no longer used
       val unusedInputValues = nestingStep.outerInputValues.filter(!usedValues.contains(_))
@@ -27,15 +38,13 @@ object DisposeValues extends FunctionConniver {
       val newStep = nestingStep.mapInnerBranches { (branchSteps, outputValue) =>
         // Pass the unused input values as argument values
         // If they're not used within the branch they'll be disposed at the top of it
-        discardUnusedValues(unusedInputValues, branchSteps.reverse, usedValues + outputValue).reverse
+        discardUnusedValues(unusedInputValues, branchSteps.reverse, usedValues + outputValue, Nil)
       }
 
       val newUsedValues = nestingStep.inputValues ++ usedValues 
 
-      // NB this is is reverse order
-      disposeOutputSteps ++
-        List(newStep) ++
-        discardUnusedValues(argValues, reverseTail, newUsedValues)
+      val newAcc = newStep :: (disposeOutputSteps ++ acc)
+      discardUnusedValues(branchInputValues, reverseTail, newUsedValues, newAcc)
 
     case (invoke @ ps.Invoke(resultOption, signature, entryPoint, arguments)) :: reverseTail =>
       val disposeResultOption = resultOption match { 
@@ -56,14 +65,11 @@ object DisposeValues extends FunctionConniver {
 
       val newUsedValues = invoke.inputValues ++ usedValues
 
-      // NB this is in reverse order
-      disposeResultOption.toList ++
-        List(ps.Invoke(resultOption, signature, entryPoint, newArguments)) ++
-        discardUnusedValues(argValues, reverseTail, newUsedValues) 
+      val newAcc = ps.Invoke(resultOption, signature, entryPoint, newArguments) :: (disposeResultOption.toList ++ acc)
+      discardUnusedValues(branchInputValues, reverseTail, newUsedValues, newAcc) 
 
     case nonBranching :: reverseTail =>
-      // If this is the last use of any of the input or output values they
-      // should be discarded
+      // If this is the last use of any of the input or output values they should be discarded
       val allStepValues = nonBranching.inputValues ++ nonBranching.outputValues
 
       val disposeList = (allStepValues -- usedValues).toList.map { value =>
@@ -73,30 +79,30 @@ object DisposeValues extends FunctionConniver {
       // All the input values are now used
       val newUsedValues = usedValues ++ nonBranching.inputValues
 
-      // NB this is reverse order
-      disposeList ++ List(nonBranching) ++ discardUnusedValues(argValues, reverseTail, newUsedValues)
+      val newAcc = nonBranching :: (disposeList ++ acc)
+      discardUnusedValues(branchInputValues, reverseTail, newUsedValues, newAcc)
 
     case Nil =>
-      // Dispose all unused args
-      // In conditional branches argValues will be empty
-      val disposeList = (argValues -- usedValues).toList.map { value =>
+      // We've reached the top of the branch
+      // Dispose all unused branch input values
+      val disposeList = (branchInputValues -- usedValues).toList.map { value =>
         ps.DisposeValue(value) 
       }
 
-      disposeList
+      disposeList ++ acc
   }
 
   def conniveFunction(function : PlannedFunction) : PlannedFunction = {
-    val argValues = function.namedArguments.map(_._2).toSet
+    val branchInputValues = function.namedArguments.map(_._2).toSet
 
     val newSteps = discardUnusedValues(
-      argValues,
+      branchInputValues,
       function.steps.reverse, 
       // Nothing directly uses the world ptr until PlanCellAllocations runs
-      // Artifically set it as used - it's not GC managed so there's no real
-      // gain in disposing it. 
-      function.worldPtrOption.toSet
-    ).reverse
+      // Artifically set it as used - it's not GC managed so there's no real gain in disposing it. 
+      function.worldPtrOption.toSet,
+      Nil
+    )
 
     function.copy(steps=newSteps)
   }
