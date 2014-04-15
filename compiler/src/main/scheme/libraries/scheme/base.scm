@@ -15,7 +15,7 @@
                       ((begin exp ...)
                        ((lambda () exp ...))))))
 
-    (export let let*)
+    (export let let* letrec*)
     (begin
       ; This isn't the full definition - tagged let isn't supported
       (define-syntax let
@@ -32,7 +32,19 @@
                          body1 body2 ...)
                        (let ((name1 val1))
                          (let* ((name2 val2) ...)
-                           body1 body2 ...))))))
+                           body1 body2 ...)))))
+
+      ; R7RS has a macro definition for (letrec*) that assigns locations a special "uninitialized" value and then
+      ; implements multiple body (define)s in terms of (letrec*)
+      ; Llambda takes the opposite approach of handling multiple body (define)s in the compiler frontend and then uses
+      ; the macro below to implement (letrec*) in terms of body defines. The result should be equivalent.
+      (define-syntax letrec*
+        (syntax-rules ()
+                      ((letrec* ((name val) ...) body1 body2 ...)
+                       ((lambda ()
+                          (define name val) ...
+                          body1 body2 ...))))))
+
 
     (export cond case and or when unless)
     (begin
