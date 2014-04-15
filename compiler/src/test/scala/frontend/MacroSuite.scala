@@ -22,7 +22,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
     }
   }
 
-  test("trivial replacement") {
+  test("trivial replacement using (define-syntax)") {
     assert(expressionFor(
       """(define-syntax false-literal
            (syntax-rules ()
@@ -30,6 +30,17 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                #f
          )))
          (false-literal)"""
+    ) === et.Literal(ast.BooleanLiteral(false)))
+  }
+  
+  test("trivial replacement using (let-syntax)") {
+    assert(expressionFor(
+      """(let-syntax ((false-literal
+             (syntax-rules ()
+               ((false-literal)
+                 #f
+           ))))
+           (false-literal))"""
     ) === et.Literal(ast.BooleanLiteral(false)))
   }
   
