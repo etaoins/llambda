@@ -15,7 +15,7 @@
                       ((begin exp ...)
                        ((lambda () exp ...))))))
 
-    (export let let* letrec*)
+    (export let let* letrec* letrec)
     (begin
       ; This isn't the full definition - tagged let isn't supported
       (define-syntax let
@@ -43,8 +43,16 @@
                       ((letrec* ((name val) ...) body1 body2 ...)
                        ((lambda ()
                           (define name val) ...
-                          body1 body2 ...))))))
-
+                          body1 body2 ...)))))
+      
+      ; XXX: This isn't quite right
+      ; It's legal to refer to values earlier in the initializer list in (letrec*) but not in (letrec)
+      ; This means all valid (letrec) initializers are valid (letrec*) initializers but not the converse. 
+      ; We should be more strict with invalid (letrec) uses in the future
+      (define-syntax letrec
+        (syntax-rules ()
+                      ((letrec ((name val) ...) body1 body2 ...)
+                       (letrec* ((name val) ...) body1 body2 ...)))))
 
     (export cond case and or when unless)
     (begin
