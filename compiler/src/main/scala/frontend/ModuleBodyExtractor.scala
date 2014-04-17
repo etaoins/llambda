@@ -3,6 +3,7 @@ import io.llambda
 
 import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.frontend.syntax.{ParseSyntaxDefine, ExpandMacro}
 
 import collection.mutable.ListBuffer
 
@@ -321,66 +322,51 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
       case _ => None
   } 
 
-  private def extractApplicationLike(procedure : sst.ScopedDatum, operands : List[sst.ScopedDatum], atOutermostLevel : Boolean) : et.Expression = procedure match {
-    case scopedSymbol : sst.ScopedSymbol =>
-      scopedSymbol.resolve match {
-        case syntax : BoundSyntax =>
-          // This is a macro - expand it and call extractGenericExpression again
-          extractGenericExpression(ExpandMacro(syntax, operands, scopedSymbol), atOutermostLevel)
+  private def extractApplicationLike(boundValue : BoundValue, appliedSymbol : sst.ScopedSymbol, operands : List[sst.ScopedDatum], atOutermostLevel : Boolean) : et.Expression = {
+    // Try to parse this as a type of definition
+    parseDefine(boundValue, appliedSymbol, operands) match {
+      case Some(_) if !atOutermostLevel=>
+        throw new DefinitionOutsideTopLevelException(appliedSymbol)
 
-        case otherBoundValue =>
-          // Try to parse this as a type of definition
-          parseDefine(otherBoundValue, scopedSymbol, operands) match {
-            case Some(_) if !atOutermostLevel=>
-              throw new DefinitionOutsideTopLevelException(scopedSymbol)
+      case Some(ParsedVarDefine(symbol, boundValue, exprBlock)) =>
+        // There's a wart in Scheme that allows a top-level (define) to become
+        // a (set!) if the value is already defined as a storage location
+        symbol.resolveOpt match {
+          case Some(storageLoc : StorageLocation) =>
+            // Convert this to a (set!)
+            et.MutateVar(storageLoc, exprBlock())
 
-            case Some(ParsedVarDefine(symbol, boundValue, exprBlock)) =>
-              // There's a wart in Scheme that allows a top-level (define) to become
-              // a (set!) if the value is already defined as a storage location
-              return symbol.resolveOpt match {
-                case Some(storageLoc : StorageLocation) =>
-                  // Convert this to a (set!)
-                  et.MutateVar(storageLoc, exprBlock())
+          case Some(_) =>
+            throw new BadSpecialFormException(symbol, s"Attempted mutating (define) non-variable ${symbol.name}") 
 
-                case Some(_) =>
-                  throw new BadSpecialFormException(symbol, s"Attempted mutating (define) non-variable ${symbol.name}") 
-
-                case None  =>
-                  // This is a fresh binding
-                  // Place the rest of the body inside an et.Bind
-                  symbol.scope += (symbol.name -> boundValue)
-                  et.Bind(List(boundValue -> exprBlock()))
-              }
-
-            case Some(ParsedSimpleDefine(symbol, boundValue)) =>
-              // This doesn't create any expression tree nodes 
-              symbol.scope += (symbol.name -> boundValue)
-              return et.Begin(Nil)
-
-            case Some(ParsedRecordTypeDefine(typeSymbol, recordType, procedures)) =>
-              typeSymbol.scope += (typeSymbol.name -> BoundType(recordType))
-
-              return et.Bind((procedures.map { case (procedureSymbol, expr) =>
-                val storageLoc = new StorageLocation(procedureSymbol.name)
-
-                procedureSymbol.scope += (procedureSymbol.name -> storageLoc)
-                (storageLoc, expr) 
-              }).toList)
-
-            case None =>
-              // Continue below
-          }
-
-          // Apply the symbol
-          // This is the only way to "apply" syntax and primitives
-          // They cannot appear as normal expression values
-          extractSymbolApplication(otherBoundValue, scopedSymbol, operands)
+          case None  =>
+            // This is a fresh binding
+            // Place the rest of the body inside an et.Bind
+            symbol.scope += (symbol.name -> boundValue)
+            et.Bind(List(boundValue -> exprBlock()))
         }
-        
-    case _ =>
-      // Apply the result of the inner expression
-      val procedureExpr = extractExpression(procedure)
-      et.Apply(procedureExpr, operands.map(extractExpression))
+
+      case Some(ParsedSimpleDefine(symbol, boundValue)) =>
+        // This doesn't create any expression tree nodes 
+        symbol.scope += (symbol.name -> boundValue)
+        et.Begin(Nil)
+
+      case Some(ParsedRecordTypeDefine(typeSymbol, recordType, procedures)) =>
+        typeSymbol.scope += (typeSymbol.name -> BoundType(recordType))
+
+        et.Bind((procedures.map { case (procedureSymbol, expr) =>
+          val storageLoc = new StorageLocation(procedureSymbol.name)
+
+          procedureSymbol.scope += (procedureSymbol.name -> storageLoc)
+          (storageLoc, expr) 
+        }).toList)
+
+      case None =>
+        // Apply the symbol
+        // This is the only way to "apply" syntax and primitives
+        // They cannot appear as normal expression values
+        extractSymbolApplication(boundValue, appliedSymbol, operands)
+    }
   }
 
   private def extractOutermostLevelExpression(datum : sst.ScopedDatum) : et.Expression =
@@ -391,9 +377,28 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
     extractGenericExpression(datum, false)
   
   private def extractGenericExpression(datum : sst.ScopedDatum, atOutermostLevel : Boolean) : et.Expression = (datum match {
+    case sst.ScopedPair(appliedSymbol : sst.ScopedSymbol, cdr) =>
+      appliedSymbol.resolve match {
+        case syntax : BoundSyntax =>
+          // This is a macro - expand it and call extractGenericExpression again
+          extractGenericExpression(ExpandMacro(syntax, cdr, datum), atOutermostLevel)
+        
+        case otherBoundValue =>
+          // Make sure the operands a proper list
+          // XXX: Does R7RS only allow macros to be applied as an improper list?
+          cdr match {
+            case sst.ScopedProperList(operands) =>
+              extractApplicationLike(otherBoundValue, appliedSymbol, operands, atOutermostLevel)
+
+            case improperList =>
+              throw new MalformedExpressionException(improperList, "Non-syntax cannot be applied as an improper list")
+          }
+      }
+
     case sst.ScopedProperList(procedure :: operands) =>
-      // This looks like an application
-      extractApplicationLike(procedure, operands, atOutermostLevel)
+      // Apply the result of the inner expression
+      val procedureExpr = extractExpression(procedure)
+      et.Apply(procedureExpr, operands.map(extractExpression))
 
     case scopedSymbol : sst.ScopedSymbol =>
       scopedSymbol.resolve match {

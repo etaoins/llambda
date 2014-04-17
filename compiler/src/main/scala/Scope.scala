@@ -21,18 +21,31 @@ class ReportProcedure(val reportName : String) extends StorageLocation(reportNam
 abstract class PrimitiveExpression extends BoundValue
 
 // These are what (define-syntax) creates
-sealed abstract class SyntaxVariable
+sealed abstract class SyntaxVariable extends SourceLocated
 case class BoundSyntaxVariable(boundValue : BoundValue) extends SyntaxVariable
 case class UnboundSyntaxVariable(identifier : String) extends SyntaxVariable
 
-case class SyntaxRule(pattern : List[sst.ScopedDatum], template : sst.ScopedDatum)
-case class BoundSyntax(ellipsisIdentifier : String, literals : Set[SyntaxVariable], rules : List[SyntaxRule])  extends BoundValue
+case class PatternVariables(
+  variables : List[SyntaxVariable] = Nil,
+  subpatterns : Vector[PatternVariables] = Vector()
+) {
+  def ++(other : PatternVariables) : PatternVariables = 
+    PatternVariables(
+      variables=(variables ++ other.variables),
+      subpatterns=(subpatterns ++ other.subpatterns)
+    )
+}
+
+case class Transformer(pattern : sst.ScopedDatum, patternVariables : PatternVariables, template : sst.ScopedDatum)
+case class BoundSyntax(ellipsisIdentifier : String, literals : Set[SyntaxVariable], transformers : List[Transformer])  extends BoundValue
 
 object SyntaxVariable {
   def fromSymbol(scopedSymbol : sst.ScopedSymbol) : SyntaxVariable = {
     scopedSymbol.resolveOpt match {
-      case Some(boundValue) => BoundSyntaxVariable(boundValue)
-      case None => UnboundSyntaxVariable(scopedSymbol.name)
+      case Some(boundValue) =>
+        BoundSyntaxVariable(boundValue).assignLocationFrom(scopedSymbol)
+      case None =>
+        UnboundSyntaxVariable(scopedSymbol.name).assignLocationFrom(scopedSymbol)
     }
   }
 }

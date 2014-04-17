@@ -1,4 +1,4 @@
-package io.llambda.compiler.frontend
+package io.llambda.compiler.frontend.syntax
 import io.llambda
 
 import org.scalatest.{FunSuite,Inside,OptionValues}
@@ -183,7 +183,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
     ) === et.Literal(ast.Pair(ast.Symbol("b"), ast.IntegerLiteral(4))))
   }
   
-  test("improper list matching") {
+  test("exact improper list matching") {
     assert(expressionFor(
       """(define-syntax improper-mix
            (syntax-rules ()
@@ -192,6 +192,75 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
          ))
          (improper-mix (a b c . d))"""
     ) === et.Literal(ast.ProperList(List(ast.Symbol("b"), ast.Symbol("c"), ast.Symbol("g"), ast.Symbol("d")))))
+  }
+  
+  test("improper list can match larger proper list") {
+    assert(expressionFor(
+      """(define-syntax improper-match
+           (syntax-rules ()
+             ((improper-match (var1 var2 . rest)) 
+               '(var2 rest var1))
+         ))
+         (improper-match (a b c d))"""
+    ) === et.Literal(ast.ProperList(List(
+      ast.Symbol("b"),
+      ast.ProperList(List(
+        ast.Symbol("c"),
+        ast.Symbol("d")
+      )),
+      ast.Symbol("a")
+    ))))
+  }
+  
+  test("improper list can match larger improper list") {
+    assert(expressionFor(
+      """(define-syntax improper-match
+           (syntax-rules ()
+             ((improper-match (var1 var2 . rest)) 
+               '(var2 rest var1))
+         ))
+         (improper-match (a b c . d))"""
+    ) === et.Literal(ast.ProperList(List(
+      ast.Symbol("b"),
+      ast.Pair(
+        ast.Symbol("c"),
+        ast.Symbol("d")
+      ),
+      ast.Symbol("a")
+    ))))
+  }
+  
+  test("pattern can be an improper list") {
+    assert(expressionFor(
+      """(define-syntax improper-match
+           (syntax-rules ()
+             ((improper-match var1 var2 . rest) 
+               '(var2 rest var1))
+         ))
+         (improper-match a b c d)"""
+    ) === et.Literal(ast.ProperList(List(
+      ast.Symbol("b"),
+      ast.ProperList(List(
+        ast.Symbol("c"),
+        ast.Symbol("d")
+      )),
+      ast.Symbol("a")
+    ))))
+  }
+  
+  test("macro can be applied as an improper list") {
+    assert(expressionFor(
+      """(define-syntax improper-match
+           (syntax-rules ()
+             ((improper-match var1 var2 . rest) 
+               '(var2 rest var1))
+         ))
+         (improper-match a b . c)"""
+    ) === et.Literal(ast.ProperList(List(
+      ast.Symbol("b"),
+      ast.Symbol("c"),
+      ast.Symbol("a")
+    ))))
   }
   
   test("vector matching") {
@@ -392,6 +461,18 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
       )(primitiveScope)
     }
   }
+  
+  test("zero or more template with pattern variables from separate subpatterns fails") {
+    intercept[BadSpecialFormException] {
+      bodyFor(
+        """(define-syntax test-expand
+             (syntax-rules ()
+                   ((test-expand (list1 ...) (list2 ...))
+                     ((list1 list2) ...))))
+           (test-expand (a b c) (1 2 3))"""
+      )(primitiveScope)
+    }
+  }
 
   test("body expressions allowed in body context") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
@@ -466,6 +547,22 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
         assert(argVal1 === et.Literal(ast.IntegerLiteral(1)))
         assert(argVal2 === et.Literal(ast.IntegerLiteral(2)))
     }
+  }
+
+  test("nested subpatterns") {
+    assert(expressionFor(
+      """(define-syntax nested-subpatterns
+            (syntax-rules ()
+                     ((nested-subpatterns (first second rest ...) ...)
+                      #((rest ... second first) ...))))
+
+          (nested-subpatterns (1 2 3 4) (5 6 7) (8 9))"""
+    ) === et.Literal(ast.VectorLiteral(Vector(
+        ast.ProperList(List(3, 4, 2, 1).map(ast.IntegerLiteral(_))),
+        ast.ProperList(List(7, 6, 5).map(ast.IntegerLiteral(_))),
+        ast.ProperList(List(9, 8).map(ast.IntegerLiteral(_)))
+      )))
+    )
   }
   
   test("dependent macros") {
