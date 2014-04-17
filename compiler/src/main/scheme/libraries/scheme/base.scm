@@ -160,6 +160,31 @@
                        (if (not test)
                          (begin result1 result2 ... #!unit))))))
 
+    (export do)
+    (begin
+      (define-syntax do
+        (syntax-rules ()
+                      ((do ((var init step ...) ...)
+                         (test expr ...)
+                         command ...)
+                       (letrec
+                         ((loop
+                            (lambda (var ...)
+                              (if test
+                                (begin
+                                  (if #f #f)
+                                  expr ...)
+                                (begin
+                                  command
+                                  ...
+                                  (loop (do "step" var step ...)
+                                        ...))))))
+                         (loop init ...)))
+                      ((do "step" x)
+                       x)
+                      ((do "step" x y)
+                       y))))
+
     (export eqv? eq? equal?)
     (begin
       (define-r7rs eqv? (native-function "lliby_is_eqv" (<datum-cell> <datum-cell>) <bool>))
