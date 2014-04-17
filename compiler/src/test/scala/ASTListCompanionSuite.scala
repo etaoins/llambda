@@ -19,12 +19,12 @@ class ASTListCompanionSuite extends FunSuite {
     )
   }
   
-  test("improper list creation") {
-    assert(ast.ImproperList(List(ast.Symbol("a")), ast.Symbol("b")) === 
+  test("any list creation") {
+    assert(ast.AnyList(List(ast.Symbol("a")), ast.Symbol("b")) === 
       ast.Pair(ast.Symbol("a"), ast.Symbol("b"))
     )
     
-    assert(ast.ImproperList(List(ast.Symbol("a"), ast.Symbol("b")), ast.Symbol("c")) === 
+    assert(ast.AnyList(List(ast.Symbol("a"), ast.Symbol("b")), ast.Symbol("c")) === 
       ast.Pair(ast.Symbol("a"), 
         ast.Pair(ast.Symbol("b"), ast.Symbol("c")))
     )
@@ -87,6 +87,37 @@ class ASTListCompanionSuite extends FunSuite {
     
     assertResult(None) {
       ast.ImproperList.unapply(
+        ast.Pair(ast.Symbol("a"), ast.EmptyList())
+      )
+    }
+  }
+  
+  test("any list extraction") {
+    assertResult(Some((List(ast.Symbol("a")), ast.Symbol("b")))) {
+      ast.AnyList.unapply(
+        ast.Pair(
+          ast.Symbol("a"), ast.Symbol("b")
+        )
+      )
+    }
+    
+    assertResult(Some((List(ast.Symbol("a"), ast.Symbol("b")), ast.Symbol("c")))) {
+      ast.AnyList.unapply(
+        ast.Pair(
+          ast.Symbol("a"), ast.Pair(
+            ast.Symbol("b"), ast.Symbol("c")
+          )
+        )
+      )
+    }
+    
+    assertResult(None) {
+      ast.AnyList.unapply(ast.Symbol("a"))
+    }
+    
+
+    assertResult(Some((List(ast.Symbol("a")), ast.EmptyList()))) {
+      ast.AnyList.unapply(
         ast.Pair(ast.Symbol("a"), ast.EmptyList())
       )
     }

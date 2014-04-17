@@ -353,7 +353,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                '(values ... . #f)
          )))
          (append-improper-false 1 2)"""
-    ) === et.Literal(ast.ImproperList(List(ast.IntegerLiteral(1), ast.IntegerLiteral(2)), ast.BooleanLiteral(false))))
+    ) === et.Literal(ast.AnyList(List(ast.IntegerLiteral(1), ast.IntegerLiteral(2)), ast.BooleanLiteral(false))))
   }
   
   test("splice to middle of vector") {

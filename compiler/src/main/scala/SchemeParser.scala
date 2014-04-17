@@ -174,7 +174,7 @@ class SchemeParser(filename : Option[String]) extends RegexParsers {
   }
 
   def improperList = "(" ~> rep1(datum) ~ "." ~ datum <~ ")" ^^ { case head ~ _  ~ terminator =>
-    ast.ImproperList(head, terminator)
+    ast.AnyList(head, terminator)
   }
 
   def vector = "#(" ~> rep(datum) <~ ")" ^^ { data =>

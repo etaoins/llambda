@@ -44,6 +44,23 @@ case class ScopedSymbol(scope : Scope, name : String) extends ScopedDatum {
 
 // The following two objects are essential copied from AbstractSyntaxTree
 // TODO: Find a way to share code that actually creates less code
+object ScopedAnyList {
+  def unapply(datum : ScopedDatum) : Option[(List[ScopedDatum], ScopedDatum)] = datum match {
+    case ScopedPair(car, tail : ScopedPair)  => 
+      ScopedAnyList.unapply(tail).map { case (head, terminator) =>
+        (car :: head, terminator)
+      }
+    case ScopedPair(car, cdr) => Some((List(car), cdr))
+    case _ => None
+  }
+  
+  def apply(head : List[ScopedDatum], terminator : ScopedDatum) = {
+    head.foldRight(terminator : ScopedDatum) { (car, cdr) => 
+      ScopedPair(car, cdr) 
+    }
+  }
+}
+
 object ScopedImproperList {
   def unapply(datum : ScopedDatum) : Option[(List[ScopedDatum], ScopedDatum)] = datum match {
     case ScopedPair(_, NonSymbolLeaf(ast.EmptyList())) => None // This is a proper list
@@ -57,6 +74,11 @@ object ScopedImproperList {
 }
 
 object ScopedProperList {
+  def apply(data : List[ScopedDatum]) : ScopedDatum = 
+    data.foldRight(NonSymbolLeaf(ast.EmptyList()) : sst.ScopedDatum) { (car, cdr) => 
+      ScopedPair(car, cdr) 
+    }
+
   def unapply(datum : ScopedDatum) : Option[List[ScopedDatum]] = datum match {
     case NonSymbolLeaf(ast.EmptyList()) => Some(Nil)
     case ScopedPair(car, cdr) => ScopedProperList.unapply(cdr).map(car :: _)

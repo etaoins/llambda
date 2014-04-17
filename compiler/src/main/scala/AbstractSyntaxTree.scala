@@ -100,6 +100,23 @@ case class Pair(car : Datum, cdr : Datum) extends Datum {
   }
 }
 
+object AnyList {
+  def unapply(datum : Datum) : Option[(List[Datum], Datum)] = datum match {
+    case Pair(car, tail : Pair)  => 
+      AnyList.unapply(tail).map { case (head, terminator) =>
+        (car :: head, terminator)
+      }
+    case Pair(car, cdr) =>
+      // This is the end of an improper list
+      Some((List(car), cdr))
+    case _ => None
+  }
+
+  def apply(head : List[Datum], terminator : Datum) = {
+    head.foldRight(terminator : Datum) { (car, cdr) => Pair(car, cdr) }
+  }
+}
+
 object ImproperList {
   def unapply(datum : Datum) : Option[(List[Datum], Datum)] = datum match {
     case Pair(_, EmptyList()) => None // This is a proper list
@@ -111,10 +128,6 @@ object ImproperList {
       // This is the end of an improper list
       Some((List(car), cdr))
     case _ => None
-  }
-
-  def apply(head : List[Datum], terminator : Datum) = {
-    head.foldRight(terminator : Datum) { (car, cdr) => Pair(car, cdr) }
   }
 }
 
