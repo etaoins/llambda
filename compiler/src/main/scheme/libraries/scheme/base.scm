@@ -6,7 +6,7 @@
     ; These are virtual definitions provided by the compiler
     (export lambda quote if set! syntax-error include quasiquote unquote
             unquote-splicing define define-syntax define-record-type
-            let-syntax cond-expand parameterize)
+            cond-expand parameterize)
 
     (export begin)
     (begin
@@ -15,7 +15,7 @@
                       ((begin exp ...)
                        ((lambda () exp ...))))))
 
-    (export let let* letrec* letrec)
+    (export let let* letrec* letrec let-syntax letrec-syntax)
     (begin
       ; This isn't the full definition - tagged let isn't supported
       (define-syntax let
@@ -52,7 +52,26 @@
       (define-syntax letrec
         (syntax-rules ()
                       ((letrec ((name val) ...) body1 body2 ...)
-                       (letrec* ((name val) ...) body1 body2 ...)))))
+                       (letrec* ((name val) ...) body1 body2 ...))))
+      
+      (define-syntax let
+        (syntax-rules ()
+                      ((let ((name val) ...) body1 body2 ...)
+                       ((lambda (name ...) body1 body2 ...)
+                        val ...))))
+
+      (define-syntax letrec-syntax
+        (syntax-rules ()
+                      ((let-syntax ((name val) ...) body1 body2 ...)
+                       ((lambda ()
+                          (define-syntax name val) ...
+                          body1 body2 ...)))))
+      
+      ; XXX: let-syntax is more restrictive than letrec-syntax
+      (define-syntax let-syntax
+        (syntax-rules ()
+                      ((let-syntax ((name val) ...) body1 body2 ...)
+                       (letrec-syntax ((name val) ...) body1 body2 ...)))))
 
     (export cond case and or when unless)
     (begin

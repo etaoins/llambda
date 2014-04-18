@@ -16,7 +16,6 @@ object PrimitiveExpressions {
   object DefineSyntax extends PrimitiveExpression
   object DefineRecordType extends PrimitiveExpression
   object DefineType extends PrimitiveExpression
-  object LetSyntax extends PrimitiveExpression
   object NativeFunction extends PrimitiveExpression
   object WorldFunction extends PrimitiveExpression
   object DefineReportProcedure extends PrimitiveExpression
@@ -39,7 +38,6 @@ object PrimitiveExpressions {
       "define-syntax" -> DefineSyntax,
       "define-record-type" -> DefineRecordType,
       "define-type" -> DefineType,
-      "let-syntax" -> LetSyntax,
       "native-function" -> NativeFunction,
       "world-function" -> WorldFunction,
       "define-report-procedure" -> DefineReportProcedure,

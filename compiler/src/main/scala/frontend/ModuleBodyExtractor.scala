@@ -264,34 +264,6 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
           extractBodyDefinition(Nil, bodyData)
         )
       
-      case (PrimitiveExpressions.LetSyntax, sst.ScopedProperList(syntaxBindings) :: body) =>
-        val parsedDefines = syntaxBindings.map {
-          case sst.ScopedProperList(bindingOperands) =>
-            ParseSyntaxDefine(appliedSymbol, bindingOperands) 
-
-          case other =>
-            throw new BadSpecialFormException(other, "(let-syntax) bindings must be proper lists")
-        }
-
-        // Collect all of the bindings by their scope
-        val bindingsByScope = parsedDefines.groupBy(_.definedSymbol.scope)
-
-        val scopeMapping = bindingsByScope.map({ case (oldScope, parsedDefines) =>
-          val binding = collection.mutable.Map(
-            (parsedDefines.map { case ParsedSimpleDefine(definedSymbol, boundSyntax) =>
-              definedSymbol.name -> boundSyntax
-            }) : _*
-          )
-
-          val newScope = new Scope(binding, Some(oldScope))
-
-          (oldScope -> newScope)
-        }).toMap
-
-        // Rescope the body and extract its expressions
-        val rescopedBody = body.map(rescope(_, scopeMapping))
-        sequenceExpressions(rescopedBody.map(extractExpression))
-
       case otherPrimitive =>
         throw new BadSpecialFormException(appliedSymbol, "Invalid primitive syntax")
     }
