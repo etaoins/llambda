@@ -333,3 +333,33 @@
 
 (define-test "+nan.0 is not zero" (expect #f
 	(zero? +nan.0)))
+
+(define-test "1024 is even" (expect #t
+	(even? 1024)))
+
+(define-test "1024 is not odd" (expect #f
+	(odd? 1024)))
+
+(define-test "777 is not even" (expect #f
+	(even? 777)))
+
+(define-test "777 is odd" (expect #t
+	(odd? 777)))
+
+(define-test "0 is even" (expect #t
+	(even? 0)))
+
+(define-test "0 is not odd" (expect #f
+	(odd? 0)))
+
+(define-test "-1024 is even" (expect #t
+	(even? -1024)))
+
+(define-test "-1024 is not odd" (expect #f
+	(odd? -1024)))
+
+(define-test "-777 is not even" (expect #f
+	(even? -777)))
+
+(define-test "-777 is odd" (expect #t
+	(odd? -777)))

@@ -377,6 +377,18 @@ bool lliby_is_zero(NumericCell *value)
 	}
 }
 
+bool lliby_is_odd(std::int64_t value)
+{
+	// Since C++11 the remainder of a negative number mod a positive is negative
+	// Before it was implementation-defined
+	return (value % 2) != 0;
+}
+
+bool lliby_is_even(std::int64_t value)
+{
+	return (value % 2) == 0;
+}
+
 bool lliby_numeric_equal(World &world, NumericCell *value1, NumericCell *value2, ListElementCell *argHead)
 {
 	return numericCompare(world, value1, value2, argHead, 
