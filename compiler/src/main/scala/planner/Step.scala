@@ -220,7 +220,7 @@ case class StoreBytevectorCell(result : TempValue, elements : Vector[Short]) ext
   val inputValues = Set[TempValue]()
 }
 
-case class StorePairCell(result : TempValue, car : TempValue, cdr : TempValue) extends StoreConstantCell {
+case class StorePairCell(result : TempValue, car : TempValue, cdr : TempValue, listLengthOpt : Option[Long], memberTypeOpt : Option[ct.ConcreteCellType]) extends StoreConstantCell {
   lazy val inputValues = Set(car, cdr)
 }
 

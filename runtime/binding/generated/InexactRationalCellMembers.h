@@ -9,9 +9,14 @@ public:
 	}
 
 public:
+	static bool typeIdIsTypeOrSubtype(CellTypeId typeId)
+	{
+		return typeId == CellTypeId::InexactRational;
+	}
+
 	static bool isInstance(const DatumCell *datum)
 	{
-		return datum->typeId() == CellTypeId::InexactRational;
+		return typeIdIsTypeOrSubtype(datum->typeId());
 	}
 
 private:

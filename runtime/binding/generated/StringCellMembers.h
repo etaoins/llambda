@@ -19,9 +19,14 @@ public:
 	}
 
 public:
+	static bool typeIdIsTypeOrSubtype(CellTypeId typeId)
+	{
+		return typeId == CellTypeId::String;
+	}
+
 	static bool isInstance(const DatumCell *datum)
 	{
-		return datum->typeId() == CellTypeId::String;
+		return typeIdIsTypeOrSubtype(datum->typeId());
 	}
 
 private:

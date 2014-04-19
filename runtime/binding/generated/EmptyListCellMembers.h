@@ -3,8 +3,13 @@
  ************************************************************/
 
 public:
+	static bool typeIdIsTypeOrSubtype(CellTypeId typeId)
+	{
+		return typeId == CellTypeId::EmptyList;
+	}
+
 	static bool isInstance(const DatumCell *datum)
 	{
-		return datum->typeId() == CellTypeId::EmptyList;
+		return typeIdIsTypeOrSubtype(datum->typeId());
 	}
 

@@ -12,10 +12,12 @@ object GenFeatureIdentifiers {
     // Sort so the output of (features) looks cleaner
     val sortedIdentifiers = featureIdentifiers.toList.sorted
 
-    val listHeadUncast = sortedIdentifiers.foldRight(emptyList) { case (featureIdent, nextListElement) =>
+    val listHeadUncast = sortedIdentifiers.zipWithIndex.foldRight(emptyList) { case ((featureIdent, index), nextListElement) =>
       val symbolIrConstant = GenConstant.genSymbolCell(module)(featureIdent)
 
       val pairCell = ct.PairCell.createConstant(
+        memberTypeId=ct.SymbolCell.typeId,
+        listLength=featureIdentifiers.size - index,
         car=BitcastToConstant(symbolIrConstant, PointerType(ct.DatumCell.irType)),
         cdr=BitcastToConstant(nextListElement, PointerType(ct.DatumCell.irType))
       )

@@ -14,9 +14,14 @@ public:
 	}
 
 public:
-	static bool isInstance(const DatumCell *datum)
+	static bool typeIdIsTypeOrSubtype(CellTypeId typeId)
 	{
 		return true;
+	}
+
+	static bool isInstance(const DatumCell *datum)
+	{
+		return typeIdIsTypeOrSubtype(datum->typeId());
 	}
 
 private:

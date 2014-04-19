@@ -3,6 +3,16 @@
  ************************************************************/
 
 public:
+	CellTypeId memberTypeId() const
+	{
+		return m_memberTypeId;
+	}
+
+	std::uint32_t listLength() const
+	{
+		return m_listLength;
+	}
+
 	DatumCell* car() const
 	{
 		return m_car;
@@ -14,11 +24,18 @@ public:
 	}
 
 public:
+	static bool typeIdIsTypeOrSubtype(CellTypeId typeId)
+	{
+		return typeId == CellTypeId::Pair;
+	}
+
 	static bool isInstance(const DatumCell *datum)
 	{
-		return datum->typeId() == CellTypeId::Pair;
+		return typeIdIsTypeOrSubtype(datum->typeId());
 	}
 
 private:
+	CellTypeId m_memberTypeId;
+	std::uint32_t m_listLength;
 	DatumCell* m_car;
 	DatumCell* m_cdr;

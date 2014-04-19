@@ -7,7 +7,12 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.PlanWriter
 import llambda.compiler.RuntimeErrorMessage
 
-sealed abstract class ConstantValue(cellType : ct.ConcreteCellType) extends IntermediateValue with UninvokableValue with NonRecordValue {
+case class ConstantListMetrics(
+  length : Long,
+  memberType : Option[ct.ConcreteCellType]
+)
+
+sealed abstract class ConstantValue(val cellType : ct.ConcreteCellType) extends IntermediateValue with UninvokableValue with NonRecordValue {
   val possibleTypes = Set(cellType)
     
   def toConstantCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
@@ -124,7 +129,7 @@ class ConstantBytevectorValue(value : Vector[Short]) extends TrivialConstantValu
     impossibleConversion(s"Cannot convert constant bytevector to requested type ${nativeType.schemeName} or any other native type")
 }
 
-class ConstantPairValue(car : ConstantValue, cdr : ConstantValue) extends ConstantValue(ct.PairCell) {
+class ConstantPairValue(car : ConstantValue, cdr : ConstantValue, val listMetricsOpt : Option[ConstantListMetrics]) extends ConstantValue(ct.PairCell) {
   def toConstantCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
     val constantTemp = ps.GcUnmanagedValue()
 
@@ -132,7 +137,7 @@ class ConstantPairValue(car : ConstantValue, cdr : ConstantValue) extends Consta
     val carTemp = car.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
     val cdrTemp = cdr.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
 
-    plan.steps += ps.StorePairCell(constantTemp, carTemp, cdrTemp)
+    plan.steps += ps.StorePairCell(constantTemp, carTemp, cdrTemp, listMetricsOpt.map(_.length), listMetricsOpt.flatMap(_.memberType))
 
     constantTemp
   }

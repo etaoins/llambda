@@ -2,6 +2,7 @@
 #define _LLIBY_BINDING_PROPERLIST_H
 
 #include <iterator>
+#include <cassert>
 
 #include "ListElementCell.h"
 #include "PairCell.h"
@@ -64,9 +65,31 @@ public:
 		m_valid(false),
 		m_length(0)
 	{
+		if (auto pair = datum_cast<PairCell>(head))
+		{
+			// Do we have a constant list hint?
+			// codegen creates these for the literal lists it generates
+			// The type ID test is a bit tricky. If the list has mixed types the type ID will be CellTypeId::Invalid
+			// However, DatumCell::typeIdIsTypeOrSubtype() always returns true so that works as expected
+			if ((pair->listLength() != 0) && (T::typeIdIsTypeOrSubtype(pair->memberTypeId())))
+			{
+				// Only constants should be hinted
+				// Otherwise the hints will get out of sync when the list is mutated
+				assert(pair->isGlobalConstant());
+
+				// Yup, we can skip the rest of the list
+				m_head = head;
+				m_valid = true;
+				m_length = pair->listLength();
+
+				return;
+			}
+		}
+
+		// Manually verify the list
 		const DatumCell *datum = head;
 		std::uint32_t length = 0;
-
+			
 		while(auto pair = datum_cast<PairCell>(datum))
 		{
 			length++;

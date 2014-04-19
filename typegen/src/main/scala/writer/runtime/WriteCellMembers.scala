@@ -3,31 +3,29 @@ package io.llambda.typegen.writer.runtime
 import io.llambda.typegen._
 
 object WriteCellMembers extends writer.OutputWriter {
-  private def cppTypePredicate(processedTypes : ProcessedTypes, cellClass : CellClass) : String = cellClass match {
-    case _ : RootCellClass =>
-      // We're always an instance of the root classes
-      "true"
-
-    case _ if cellClass.instanceType == CellClass.Abstract =>
-      // Our type check is the union of the type checks for our child classes
-      val allChildren = processedTypes.taggedCellClassesByParent(cellClass)
-
-      val childTypeChecks = allChildren map { childCellClass =>
-        "(" + cppTypePredicate(processedTypes, childCellClass) + ")"
-      }
-
-      childTypeChecks.mkString(" || ")
-
-    case _ =>
-      val typeTagField = processedTypes.rootCellClass.typeTagField
-      val typeTagEnumName = FieldTypeToCpp(typeTagField.fieldType, None)
-
-      s"datum->${typeTagField.name}() == ${typeTagEnumName}::${cellClass.name}" 
-  }
-
-
   private def writeMemberFile(processedTypes : ProcessedTypes, cellClass : CellClass) : String = {
     val rootCellCppName = processedTypes.rootCellClass.names.cppClassName
+    val typeTagField = processedTypes.rootCellClass.typeTagField
+    val typeTagEnumName = FieldTypeToCpp(typeTagField.fieldType, None)
+
+    def cppTypePredicate(processedTypes : ProcessedTypes, cellClass : CellClass) : String = cellClass match {
+      case _ : RootCellClass =>
+        // We're always an instance of the root classes
+        "true"
+
+      case _ if cellClass.instanceType == CellClass.Abstract =>
+        // Our type check is the union of the type checks for our child classes
+        val allChildren = processedTypes.taggedCellClassesByParent(cellClass)
+
+        val childTypeChecks = allChildren map { childCellClass =>
+          "(" + cppTypePredicate(processedTypes, childCellClass) + ")"
+        }
+
+        childTypeChecks.mkString(" || ")
+
+      case _ =>
+        s"typeId == ${typeTagEnumName}::${cellClass.name}" 
+    }
 
     val cppBuilder = new CppBuilder
 
@@ -74,9 +72,14 @@ object WriteCellMembers extends writer.OutputWriter {
         cppBuilder += "public:"
         cppBuilder.indented {
           // Make our type check
-          cppBuilder += s"static bool isInstance(const ${rootCellCppName} *datum)"
+          cppBuilder += s"static bool typeIdIsTypeOrSubtype(${typeTagEnumName} typeId)"
           cppBuilder.blockSep {
             cppBuilder += "return " + cppTypePredicate(processedTypes, cellClass) + ";"
+          }
+
+          cppBuilder += s"static bool isInstance(const ${rootCellCppName} *datum)"
+          cppBuilder.blockSep {
+            cppBuilder += s"return typeIdIsTypeOrSubtype(datum->${typeTagField.name}());"
           }
         }
     }

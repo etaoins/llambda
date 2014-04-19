@@ -243,7 +243,7 @@ object GenConstant {
 
       genVectorCell(state.module)(elementIrs)
 
-    case ps.StorePairCell(_, carTemp, cdrTemp) =>
+    case ps.StorePairCell(_, carTemp, cdrTemp, listLengthOpt, memberTypeOpt) =>
       val pairCellName = state.module.nameSource.allocate("schemePair")
       val carIrConstant = state.liveTemps(carTemp) match {
         case constant : IrConstant => constant
@@ -257,7 +257,15 @@ object GenConstant {
           throw new InternalCompilerErrorException(s"Attempted to create constant pair with non-constant cdr: ${other}")
       }
 
+      // 0 is InvalidTypeId
+      val memberTypeId = memberTypeOpt.map(_.typeId).getOrElse(0L)
+
+      // It's not possible for pairs to have a length of zero - only EmptyLists are zero length
+      val listLength = listLengthOpt.getOrElse(0L)
+
       val pairCell = ct.PairCell.createConstant(
+        memberTypeId=memberTypeId,
+        listLength=listLength,
         car=carIrConstant,
         cdr=cdrIrConstant
       )

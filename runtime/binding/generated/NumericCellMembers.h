@@ -3,8 +3,13 @@
  ************************************************************/
 
 public:
+	static bool typeIdIsTypeOrSubtype(CellTypeId typeId)
+	{
+		return (typeId == CellTypeId::ExactInteger) || (typeId == CellTypeId::InexactRational);
+	}
+
 	static bool isInstance(const DatumCell *datum)
 	{
-		return (datum->typeId() == CellTypeId::ExactInteger) || (datum->typeId() == CellTypeId::InexactRational);
+		return typeIdIsTypeOrSubtype(datum->typeId());
 	}
 
