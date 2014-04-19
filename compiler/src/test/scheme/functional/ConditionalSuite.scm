@@ -74,3 +74,16 @@
 	(unless (= 1 6)
 	  (set! result 'executed))
 	result))
+
+(define-test "conditional with garbage collection in only one branch" (expect true
+	(import (llambda test-util))
+   (define result 'not-executed)
+
+   (if undecided-true
+     (begin
+       (cons 1 2)
+       (set! result 'true))
+     (begin 
+       (set! result 'false)))
+
+   result))

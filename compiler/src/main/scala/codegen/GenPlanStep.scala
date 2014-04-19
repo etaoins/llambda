@@ -137,24 +137,41 @@ object GenPlanStep {
 
           // Get the IR values from either side
           val trueEndBlock = trueEndState.currentBlock
-          val trueIrValue = trueEndState.liveTemps(trueTemp)
+          val trueResultIrValue = trueEndState.liveTemps(trueTemp)
 
           val falseEndBlock = falseEndState.currentBlock
-          val falseIrValue = falseEndState.liveTemps(falseTemp)
+          val falseResultIrValue = falseEndState.liveTemps(falseTemp)
 
           // Make a final block
           val phiBlock = state.currentBlock.startChildBlock("condPhi")
           trueEndBlock.uncondBranch(phiBlock)
           falseEndBlock.uncondBranch(phiBlock)
 
-          // Make the phi
-          val phiValueIr = phiBlock.phi("condPhiResult")(PhiSource(trueIrValue, trueEndBlock), PhiSource(falseIrValue, falseEndBlock))
+          // Make the result phi
+          val phiResultIr = phiBlock.phi("condPhiResult")(PhiSource(trueResultIrValue, trueEndBlock), PhiSource(falseResultIrValue, falseEndBlock))
+
+          // Phi any values that have diverged across branches
+          val phiedLiveTemps = ((trueEndState.liveTemps.keySet & falseEndState.liveTemps.keySet) map { liveTemp =>
+            val trueValueIrValue = trueEndState.liveTemps(liveTemp)
+            val falseValueIrValue = falseEndState.liveTemps(liveTemp)
+              
+            if (trueValueIrValue == falseValueIrValue) {
+              // This is the same in both branches which means it came from our original state
+              (liveTemp -> trueValueIrValue)
+            }
+            else {
+              // This has diverged due to e.g. GC having happened in one branch
+              val phiValueIr = phiBlock.phi("condPhiValue")(PhiSource(trueValueIrValue, trueEndBlock), PhiSource(falseValueIrValue, falseEndBlock))
+              (liveTemp -> phiValueIr)
+            }
+          }).toMap + (resultTemp -> phiResultIr)
 
           state.copy(
             currentBlock=phiBlock,
             // A value is only considered rooted if it was rooted in both branches:
-            gcRootedTemps=(trueEndState.gcRootedTemps & falseEndState.gcRootedTemps)
-          ).withTempValue(resultTemp -> phiValueIr) 
+            gcRootedTemps=(trueEndState.gcRootedTemps & falseEndState.gcRootedTemps),
+            liveTemps=phiedLiveTemps
+          )
       }
       
     case invokeStep @ ps.Invoke(resultOpt, signature, funcPtrTemp, arguments) =>
