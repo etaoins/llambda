@@ -51,8 +51,10 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
       singleTest match {
         case ast.ProperList(ast.Symbol("define-test") :: ast.StringLiteral(name) :: condition :: Nil) =>
           // Start a nested test
-          test(name) {
-            runSingleCondition(condition)
+          for(optimizeLevel <- List(0, 2)) {
+            test(s"$name (-O $optimizeLevel)") {
+              runSingleCondition(condition, optimizeLevel)
+            }
           }
 
         case other =>
@@ -61,10 +63,10 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
     }
   }
 
-  private def runSingleCondition(condition : ast.Datum) {
+  private def runSingleCondition(condition : ast.Datum, optimizeLevel : Int) {
     condition match {
       case ast.ProperList(ast.Symbol("expect") :: expectedValue :: program) if !program.isEmpty =>
-        val result = executeProgram(program, true)
+        val result = executeProgram(program, optimizeLevel, true)
 
         if (!result.success) {
           if (result.errorString.isEmpty) {
@@ -79,7 +81,7 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
         assert(result.output === List(expectedValue))
       
       case ast.ProperList(ast.Symbol("expect-output") :: ast.ProperList(expectedOutput) :: program) if !program.isEmpty =>
-        val result = executeProgram(program, false)
+        val result = executeProgram(program, optimizeLevel, false)
 
         if (!result.success) {
           if (result.errorString.isEmpty) {
@@ -95,7 +97,7 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
       
       case ast.ProperList(ast.Symbol("expect-failure") :: program) if !program.isEmpty =>
         try {
-          val result = executeProgram(program, false)
+          val result = executeProgram(program, optimizeLevel, false)
 
           // If we compiled make sure we fail at runtime
           assert(result.success === false, "Execution unexpectedly succeeded")
@@ -113,7 +115,7 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
   private def utf8InputStreamToString(stream : InputStream) : String =
     Source.fromInputStream(stream, "UTF-8").mkString
 
-  private def executeProgram(program : List[ast.Datum], printLastValue : Boolean) : ExecutionResult = {
+  private def executeProgram(program : List[ast.Datum], optimizeLevel : Int, printLastValue : Boolean) : ExecutionResult = {
     // Import (llambda nfi) and (scheme base)
 
     val finalProgram = if (printLastValue) {
@@ -146,8 +148,7 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
     try {
       val compileConfig = CompileConfig(
         includePath=includePath,
-        // Optimize to catch more miscompilations
-        optimizeLevel=2,
+        optimizeLevel=optimizeLevel,
         targetPlatform=platform.DetectJvmPlatform())
 
       Compiler.compileData(finalProgram, outputFile, compileConfig)
