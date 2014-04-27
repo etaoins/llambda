@@ -1,7 +1,6 @@
-package io.llambda.compiler.conniver
+package io.llambda.compiler.planner
 import io.llambda
 
-import io.llambda.compiler.planner._
 import io.llambda.compiler.planner.{step => ps}
 
 /** Disposes values after their last use
@@ -9,8 +8,7 @@ import io.llambda.compiler.planner.{step => ps}
   * This reduces both the computational and memory overhead of garbage collection by discarding values. It has no effect
   * on generated code for non-GC managed values.
   */
-object DisposeValues extends FunctionConniver {
-
+object DisposeValues {
   /**  Iterates over a branch in reverse order discarding values on their last use
     *
     * @param  branchInputValues  Input values to the branch. For a procedure these are the procedure's arguments.
@@ -92,7 +90,7 @@ object DisposeValues extends FunctionConniver {
       disposeList ++ acc
   }
 
-  def conniveFunction(function : PlannedFunction) : PlannedFunction = {
+  def apply(function : PlannedFunction) : PlannedFunction = {
     val branchInputValues = function.namedArguments.map(_._2).toSet
 
     val newSteps = discardUnusedValues(

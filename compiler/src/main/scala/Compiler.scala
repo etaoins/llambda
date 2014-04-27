@@ -14,8 +14,7 @@ object Compiler {
     optimize.TrivialCallCcToReturn
   )
 
-  private val conniverPasses = List(
-    conniver.DisposeValues
+  private val conniverPasses = List[conniver.Conniver](
   )
 
   abstract class RunningCompiler {
@@ -151,8 +150,11 @@ object Compiler {
         functions
       }
 
+      // Dispose any unused values
+      val disposedFunctions = optimizedFunctions.mapValues(planner.DisposeValues(_))
+
       // Plan our cell allocations after all optimizations have been done
-      val allocatedFunctions = optimizedFunctions.mapValues(planner.PlanCellAllocations(_))
+      val allocatedFunctions = disposedFunctions.mapValues(planner.PlanCellAllocations(_))
 
       // Generate the LLVM IR
       val llvmIr = codegen.GenProgram(allocatedFunctions, config.targetPlatform, featureIdentifiers)
