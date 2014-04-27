@@ -3,6 +3,7 @@
 #include "binding/ProperList.h"
 
 #include "alloc/allocator.h"
+#include "alloc/WeakRef.h"
 #include "alloc/RangeAlloc.h"
 #include "alloc/cellref.h"
 
@@ -71,20 +72,53 @@ DatumCell *lliby_apply(World &world, ProcedureCell *procedure, ListElementCell *
 
 DatumCell *lliby_call_with_current_continuation(World &world, ProcedureCell *proc)
 {
-	dynamic::EscapeProcedureCell *escapeProc;
+	// This is the procedure we're calling and it's argument head	
+	alloc::ProcedureRef procRef(world, proc);
 	ListElementCell *argHead;
+	
+	// This is the escape procedure we're passing it
+	alloc::WeakRef<dynamic::EscapeProcedureCell> escapeProcRef(world);
 
 	{
 		// Create the escape procedure
-		escapeProc = dynamic::EscapeProcedureCell::createInstance(world); 
+		escapeProcRef.setData(
+				dynamic::EscapeProcedureCell::createInstance(world)
+		); 
 
 		// Create a proper list with the escape procedure
-		alloc::StrongRefRange<dynamic::EscapeProcedureCell> escapeProcRef(world, &escapeProc, 1);
-		argHead = ListElementCell::createProperList(world, {escapeProc});
+		argHead = ListElementCell::createProperList(world, {escapeProcRef.data()});
 	}
 
-	// Invoke the procedure passing in the escape proc
-	return proc->apply(world, argHead);
+	DatumCell *returnValue = nullptr;
+
+	try
+	{
+		// Invoke the procedure passing in the escape proc
+		// If it returns without invoking the escape proc we'll return through here
+		returnValue = procRef->apply(world, argHead);
+	}
+	catch (dynamic::EscapeProcedureInvokedException &e)
+	{
+		if (e.escapeProcedure() == escapeProcRef.data())
+		{
+			// The escape procedure was invoked
+			returnValue = e.passedValue();
+		}
+		else
+		{
+			// This was another call/cc; invalidate ourselves and rethrow
+			escapeProcRef->invalidate();
+			throw;
+		}
+	}
+
+	if (escapeProcRef)
+	{
+		// The escape procedure can no longer be used
+		escapeProcRef->invalidate();
+	}
+
+	return returnValue;
 }
 
 }

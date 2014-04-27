@@ -111,7 +111,7 @@ public:
 	}
 
 protected:
-	AbstractRef() : AbstractRef(nullptr)
+	AbstractRef(CellRefRangeList *refList) : AbstractRef(refList, nullptr)
 	{
 	}
 

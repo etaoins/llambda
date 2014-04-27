@@ -1,14 +1,38 @@
-(define-test "(call/cc) exit procedure is a procedure" (expect #t
+(define-test "(call/cc) escape procedure is a procedure" (expect #t
 	(call/cc procedure?)))
 
-(define-test "trivial (call/cc)" (expect 5
+(define-test "captured (call/cc) escape procedure is a procedure" (expect #t
+   (define captured-proc #f)
+   (call/cc (lambda (escape-proc)
+      (set! captured-proc escape-proc)))
+   (procedure? captured-proc)))
+
+(define-test "trivial (call/cc) invoking escape procedure" (expect 5
 	(call/cc (lambda (return)
 		(return 5)))))
 
-(define-test "nested (call/cc)" (expect 15
+(define-test "trivial (call/cc) note invoking escape procedure" (expect 5
+	(call/cc (lambda (return)
+		5))))
+
+(define-test "nested (call/cc) invoking both escape procedures" (expect 15
 	(call/cc (lambda (outer-return)
 		(outer-return (call/cc (lambda (inner-return)
 			(inner-return 15)
+		)))
+	))))
+
+(define-test "nested (call/cc) invoking only inner escape procedure" (expect -15
+	(call/cc (lambda (outer-return)
+		(- (call/cc (lambda (inner-return)
+			(inner-return 15)
+		)))
+	))))
+
+(define-test "nested (call/cc) invoking only outer escape procedure" (expect 15
+	(call/cc (lambda (outer-return)
+		(- (call/cc (lambda (inner-return)
+			(outer-return 15)
 		)))
 	))))
 
