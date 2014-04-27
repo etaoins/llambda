@@ -58,6 +58,16 @@ bool DatumCell::isEqv(const DatumCell *other) const
 			}
 		}
 	}
+	else if (auto thisString = datum_cast<StringCell>(this))
+	{
+		// R7RS doesn't require us to compare string contents so this isn't strictly required
+		// However, we're already required to do this with symbols which have the exact same comparison logic. This also
+		// makes eqv? on constant strings consistent between -O2 (which folds constants) and -O0 (which doesn't)
+		if (auto otherString = datum_cast<StringCell>(other))
+		{
+			return *thisString == *otherString;
+		}
+	}
 
 	return false;
 }
