@@ -11,7 +11,7 @@
 	(call/cc (lambda (return)
 		(return 5)))))
 
-(define-test "trivial (call/cc) note invoking escape procedure" (expect 5
+(define-test "trivial (call/cc) not invoking escape procedure" (expect 5
 	(call/cc (lambda (return)
 		5))))
 
