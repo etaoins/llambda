@@ -7,3 +7,12 @@
                    (e (- e 1) (- e 1)))
                 ((< e b) r)))))
    (cons (range 3) (range 3 5))))
+
+(define-test "(case-lambda) with rest args" (expect (2 3 4)
+    (import (scheme case-lambda))
+    (define rest-lambda
+      (case-lambda
+        ((first) 'first)
+        ((first second) 'second)
+        ((first second . rest) rest)))
+    (rest-lambda 0 1 2 3 4)))
