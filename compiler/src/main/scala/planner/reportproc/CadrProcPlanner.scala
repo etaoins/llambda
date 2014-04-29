@@ -8,7 +8,7 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
 
-object CadrProcPlanner {
+object CadrProcPlanner extends ReportProcPlanner {
   def apply(initialState : PlannerState)(reportName : String, operands : List[(SourceLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = (reportName, operands) match {
     case ("car" | "cdr", singleOperand :: Nil) =>
       val pairTemp = LocateExceptionsWith(singleOperand._1) {
