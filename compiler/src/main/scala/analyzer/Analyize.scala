@@ -6,10 +6,14 @@ import llambda.compiler.et
 object Analyize {
   def apply(exprs : List[et.Expression]) : AnalysisResult = {
     // Find all mutables vars
-    val mutableVars = exprs.flatMap(FindMutableVars.apply).toSet
+    val foundVars = FindVars(et.Begin(exprs))
+
+    // We don't care about the initializers of mutable variables
+    val constantVars = foundVars.initializers -- foundVars.mutableVars
 
     AnalysisResult(
-      mutableVars=mutableVars
+      mutableVars=foundVars.mutableVars,
+      constantVars=constantVars
     )
   }
 }

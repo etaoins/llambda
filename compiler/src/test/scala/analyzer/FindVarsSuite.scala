@@ -4,14 +4,14 @@ import io.llambda
 import llambda.compiler.{et, ast, StorageLocation}
 import org.scalatest.FunSuite
 
-class FindMutableVarsSuite extends FunSuite {
-  test("literals have no mutable vars") {
+class FindVarsSuite extends FunSuite {
+  test("literals have no vars") {
     val testExpr = et.Literal(ast.StringLiteral("Hello, world"))
 
-    assert(FindMutableVars(testExpr) === Set())
+    assert(FindVars(testExpr) === FoundVars())
   }
 
-  test("let doesn't make a var mutable") {
+  test("immutable let") {
     val testLocA = new StorageLocation("testLocA")
     val testLocB = new StorageLocation("testLocB")
 
@@ -22,7 +22,13 @@ class FindMutableVarsSuite extends FunSuite {
       )
     )
     
-    assert(FindMutableVars(testExpr) === Set())
+    assert(FindVars(testExpr) === FoundVars(
+      mutableVars=Set(),
+      initializers=Map(
+        testLocA -> et.Literal(ast.BooleanLiteral(true)),
+        testLocB -> et.Literal(ast.BooleanLiteral(false))
+      )
+    ))
   }
   
   test("direct mutate var makes a var mutable") {
@@ -39,8 +45,15 @@ class FindMutableVarsSuite extends FunSuite {
       et.MutateVar(testLocA, et.Literal(ast.EmptyList()))
     )
 
-    val mutables = testExprs.flatMap(FindMutableVars.apply).toSet
-    assert(mutables === Set(testLocA))
+    val foundVars = FindVars(et.Begin(testExprs))
+
+    assert(foundVars === FoundVars(
+      mutableVars=Set(testLocA),
+      initializers=Map(
+        testLocA -> et.Literal(ast.BooleanLiteral(true)),
+        testLocB -> et.Literal(ast.BooleanLiteral(false))
+      )
+    ))
   }
   
   test("mutate var in one side of conditional makes a var mutable") {
@@ -60,8 +73,15 @@ class FindMutableVarsSuite extends FunSuite {
         et.Literal(ast.UnitValue())
       ))
 
-    val mutables = testExprs.flatMap(FindMutableVars.apply).toSet
-    assert(mutables === Set(testLocA))
+    val foundVars = FindVars(et.Begin(testExprs))
+
+    assert(foundVars === FoundVars(
+      mutableVars=Set(testLocA),
+      initializers=Map(
+        testLocA -> et.Literal(ast.BooleanLiteral(true)),
+        testLocB -> et.Literal(ast.BooleanLiteral(false))
+      )
+    ))
   }
   
   test("mutate var inside lambda parameters make a var mutable") {
@@ -87,8 +107,15 @@ class FindMutableVarsSuite extends FunSuite {
       )
     )
     
-    val mutables = testExprs.flatMap(FindMutableVars.apply).toSet
-    assert(mutables === Set(testLocA))
+    val foundVars = FindVars(et.Begin(testExprs))
+
+    assert(foundVars === FoundVars(
+      mutableVars=Set(testLocA),
+      initializers=Map(
+        testLocA -> et.Literal(ast.BooleanLiteral(true)),
+        testLocB -> et.Literal(ast.BooleanLiteral(false))
+      )
+    ))
   }
   
   test("mutate var inside self-executing lambda makes a var mutable") {
@@ -112,8 +139,15 @@ class FindMutableVarsSuite extends FunSuite {
       )
     )
     
-    val mutables = testExprs.flatMap(FindMutableVars.apply).toSet
-    assert(mutables === Set(testLocA))
+    val foundVars = FindVars(et.Begin(testExprs))
+
+    assert(foundVars === FoundVars(
+      mutableVars=Set(testLocA),
+      initializers=Map(
+        testLocA -> et.Literal(ast.BooleanLiteral(true)),
+        testLocB -> et.Literal(ast.BooleanLiteral(false))
+      )
+    ))
   }
   
   test("mutate var captured inside lambda makes a var mutable") {
@@ -134,8 +168,15 @@ class FindMutableVarsSuite extends FunSuite {
       )
     )
     
-    val mutables = testExprs.flatMap(FindMutableVars.apply).toSet
-    assert(mutables === Set(testLocA))
+    val foundVars = FindVars(et.Begin(testExprs))
+
+    assert(foundVars === FoundVars(
+      mutableVars=Set(testLocA),
+      initializers=Map(
+        testLocA -> et.Literal(ast.BooleanLiteral(true)),
+        testLocB -> et.Literal(ast.BooleanLiteral(false))
+      )
+    ))
   }
 
   test("mutate var inside other let makes a var mutable") {
@@ -157,8 +198,16 @@ class FindMutableVarsSuite extends FunSuite {
       )
     )
     
-    val mutables = testExprs.flatMap(FindMutableVars.apply).toSet
-    assert(mutables === Set(testLocA))
+    val foundVars = FindVars(et.Begin(testExprs))
+
+    assert(foundVars === FoundVars(
+      mutableVars=Set(testLocA),
+      initializers=Map(
+        testLocA -> et.Literal(ast.BooleanLiteral(true)),
+        testLocB -> et.Literal(ast.BooleanLiteral(false)),
+        testLocC -> et.MutateVar(testLocA, et.Literal(ast.EmptyList()))
+      )
+    ))
   }
 
   test("mutate var inside other mutate var RHS makes a var mutable") {
@@ -175,7 +224,14 @@ class FindMutableVarsSuite extends FunSuite {
       et.MutateVar(testLocA, et.MutateVar(testLocB, et.Literal(ast.BooleanLiteral(true))))
     )
     
-    val mutables = testExprs.flatMap(FindMutableVars.apply).toSet
-    assert(mutables === Set(testLocA, testLocB))
+    val foundVars = FindVars(et.Begin(testExprs))
+    
+    assert(foundVars === FoundVars(
+      mutableVars=Set(testLocA, testLocB),
+      initializers=Map(
+        testLocA -> et.Literal(ast.BooleanLiteral(true)),
+        testLocB -> et.Literal(ast.BooleanLiteral(false))
+      )
+    ))
   }
 }
