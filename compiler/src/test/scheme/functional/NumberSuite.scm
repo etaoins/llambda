@@ -34,11 +34,32 @@
 (define-test "empty list is not complex" (expect #f
 	(complex? '())))
 
+(define-test "exact integer is integer" (expect #t
+	(integer? 4)))
+
+(define-test "inexact integer is not integer" (expect #f
+	(integer? -5.0)))
+
+(define-test "empty list is not integer" (expect #f
+	(integer? '())))
+
 (define-test "3.0 is not exact" (expect #f
 	(exact? 3.0)))
 
+(define-test "3. is exact" (expect #t
+	(exact? 3.)))
+
+(define-test "exact? fails with non-numbers" (expect-failure
+	(exact? 'notanumber)))
+
+(define-test "3.0 is inexact" (expect #t
+	(inexact? 3.0)))
+
 (define-test "3. is not inexact" (expect #f
 	(inexact? 3.)))
+
+(define-test "inexact? fails with non-numbers" (expect-failure
+	(inexact? 'notanumber)))
 
 (define-test "3 is finite" (expect #t
 	(finite? 3)))
