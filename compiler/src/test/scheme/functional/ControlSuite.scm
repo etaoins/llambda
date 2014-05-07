@@ -31,9 +31,10 @@
 
 (define-test "nested (call/cc) invoking only outer escape procedure" (expect 15
 	(call/cc (lambda (outer-return)
-		(- (call/cc (lambda (inner-return)
+		(call/cc (lambda (inner-return)
 			(outer-return 15)
-		)))
+		))
+        'shouldntreach
 	))))
 
 (define-test "(call/cc) exiting from both branch sides" (expect one

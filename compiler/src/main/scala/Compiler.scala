@@ -9,11 +9,6 @@ import scala.sys.process._
 class ExternalCompilerException extends Exception
 
 object Compiler {
-  private val optimizerPasses = List(
-    optimize.FlattenSelfExecutingLambdas,
-    optimize.TrivialCallCcToReturn
-  )
-
   private val conniverPasses = List[conniver.Conniver](
   )
 
@@ -110,18 +105,16 @@ object Compiler {
 
     val expressions = frontend.ExtractProgram(data)(loader, frontendConfig)
 
-    // Optimize
-    val optimizedExpressions = if (config.optimizeLevel > 1) {
-      optimizerPasses.foldLeft(expressions) { case (expressions, optimizerPass) =>
-        expressions.map(optimizerPass)
-      }
+    // Analyize
+    val analysis = analyzer.Analyize(expressions)
+
+    // Reduce the expressions
+    val reducedExpressions = if (config.optimizeLevel > 1) {
+      List(reducer.ReduceExpressions(expressions)(analysis))
     }
     else {
       expressions
     }
-
-    // Analyize
-    val analysis = analyzer.Analyize(optimizedExpressions)
 
     // Plan execution
     val planConfig = planner.PlanConfig(
@@ -129,7 +122,7 @@ object Compiler {
       analysis=analysis
     )
 
-    val functions = planner.PlanProgram(optimizedExpressions)(planConfig)
+    val functions = planner.PlanProgram(reducedExpressions)(planConfig)
     
     // We're reasonably sure the input program is sane at this point
     // Start our backend compiler and get a control object

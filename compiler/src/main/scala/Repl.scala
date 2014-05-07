@@ -39,6 +39,30 @@ abstract class SchemeParsingMode(name : String) extends ReplMode(name) {
   }
 }
 
+abstract class ExpressionParsingMode(targetPlatform : platform.TargetPlatform, name : String) extends SchemeParsingMode(name) {
+  protected val loader = new frontend.LibraryLoader(targetPlatform)
+  private val frontendConfig = ReplFrontendConfig(targetPlatform)
+  private val schemeBaseBindings = loader.loadSchemeBase(frontendConfig)
+
+  val scope = new Scope(collection.mutable.Map(schemeBaseBindings.toSeq : _*))
+  val bodyExtractor = new frontend.ModuleBodyExtractor(loader, frontendConfig)
+
+  def evalDatum(datum : ast.Datum) : String = datum match {
+    case ast.ProperList(ast.Symbol("import") :: _) =>
+      // This is an import decl - import our new bindings
+      val newBindings = frontend.ResolveImportDecl(datum)(loader, frontendConfig)
+
+      scope ++= newBindings
+
+      "loaded"
+    case _ =>
+      // Treat this like a body expression
+      evalExprs(bodyExtractor(List(datum), scope))
+  }
+
+  protected def evalExprs(exprs : List[et.Expression]) : String
+}
+
 private object ReplFrontendConfig {
   def apply(targetPlatform : platform.TargetPlatform) : frontend.FrontendConfig =  {
     val currentDirUrl = (new File(System.getProperty("user.dir"))).toURI.toURL
@@ -62,25 +86,22 @@ class ParseOnlyMode extends SchemeParsingMode("parse") {
 }
 
 /** Extract expressions allowed in a library, program or lambda body */
-class BodyExpressionMode(targetPlatform : platform.TargetPlatform) extends SchemeParsingMode("expr") {
-  private val loader = new frontend.LibraryLoader(targetPlatform)
-  private val frontendConfig = ReplFrontendConfig(targetPlatform)
-  private val schemeBaseBindings = loader.loadSchemeBase(frontendConfig)
+class BodyExpressionMode(targetPlatform : platform.TargetPlatform) extends ExpressionParsingMode(targetPlatform, "expr") {
+  def evalExprs(exprs : List[et.Expression]) =
+    exprs.mkString(" ")
+}
 
-  val scope = new Scope(collection.mutable.Map(schemeBaseBindings.toSeq : _*))
-  val bodyExtractor = new frontend.ModuleBodyExtractor(loader, frontendConfig)
+/** Reduces expressions using the compile-time reducer */
+class ReduceMode(targetPlatform : platform.TargetPlatform) extends ExpressionParsingMode(targetPlatform, "reduce") {
+  private val userExprs = new collection.mutable.ListBuffer[et.Expression]
 
-  def evalDatum(datum : ast.Datum) : String = datum match {
-    case ast.ProperList(ast.Symbol("import") :: _) =>
-      // This is an import decl - import our new bindings
-      val newBindings = frontend.ResolveImportDecl(datum)(loader, frontendConfig)
+  def evalExprs(exprs : List[et.Expression]) = {
+    userExprs ++= exprs
 
-      scope ++= newBindings
+    val allExprs = loader.libraryExpressions ++ userExprs
+    val analysis = analyzer.Analyize(allExprs)
 
-      "loaded"
-    case _ =>
-      // Treat this like a body expression
-      bodyExtractor(datum :: Nil, scope).map(_.toString).mkString(" ")
+    reducer.ReduceExpressions(exprs)(analysis).toString
   }
 }
 
@@ -172,6 +193,9 @@ class Repl(targetPlatform : platform.TargetPlatform) {
       
       case ":expr" =>
         acceptInput(new BodyExpressionMode(targetPlatform))
+      
+      case ":reduce" =>
+        acceptInput(new ReduceMode(targetPlatform))
       
       case ":compile" =>
         acceptInput(new CompileMode(targetPlatform))

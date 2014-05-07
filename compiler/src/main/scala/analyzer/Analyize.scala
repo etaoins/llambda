@@ -13,7 +13,8 @@ object Analyize {
 
     AnalysisResult(
       mutableVars=foundVars.mutableVars,
-      constantVars=constantVars
+      constantVars=constantVars,
+      usedVars=foundVars.usedVars
     )
   }
 }

@@ -39,5 +39,15 @@ trait ExpressionHelpers extends FunSuite with OptionValues {
     val bodyExtractor = new frontend.ModuleBodyExtractor(libraryLoader, frontendConfig)
     bodyExtractor(data, scope)
   }
+
+  def reductionFor(scheme : String)(implicit scope : Scope) = {
+    val userExprs = bodyFor(scheme)(scope)
+
+    // Analyize libraries + user exprs
+    val allExprs = libraryLoader.libraryExpressions ++ userExprs
+    val analysis = analyzer.Analyize(allExprs)
+
+    reducer.ReduceExpressions(userExprs)(analysis)
+  }
 }
 

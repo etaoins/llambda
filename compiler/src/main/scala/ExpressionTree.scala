@@ -8,6 +8,21 @@ sealed abstract trait Expression extends SourceLocated {
   val subexpressions : List[Expression]
 
   def map(f : Expression => Expression) : Expression
+
+  def toSequence : List[Expression] = {
+    List(this)
+  }
+}
+
+object Expression {
+  def fromSequence(exprs : List[et.Expression]) : et.Expression = exprs match {
+    // Wrap our expressions in an et.Begin unless there's exactly one
+    // This isn't required but produces more readable ETs and unit tests
+    case singleValue :: Nil => 
+      singleValue
+    case otherValues =>
+      et.Begin(otherValues)
+  }
 }
 
 case class Begin(expressions : List[Expression]) extends Expression {
@@ -15,6 +30,9 @@ case class Begin(expressions : List[Expression]) extends Expression {
 
   def map(f : Expression => Expression) : et.Begin =
     et.Begin(expressions.map(f)).assignLocationFrom(this)
+
+  override def toSequence : List[Expression] = 
+    subexpressions.flatMap(_.toSequence)
 }
 
 case class Apply(procedure : Expression, operands : List[Expression]) extends Expression {

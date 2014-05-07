@@ -5,5 +5,6 @@ import llambda.compiler.{StorageLocation, et}
 
 case class AnalysisResult(
   mutableVars : Set[StorageLocation],
-  constantVars : Map[StorageLocation, et.Expression]
+  constantVars : Map[StorageLocation, et.Expression],
+  usedVars : Set[StorageLocation]
 )

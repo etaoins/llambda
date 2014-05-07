@@ -39,15 +39,6 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
     }).assignLocationFrom(datum)
   }
 
-  private def sequenceExpressions(exprs : List[et.Expression]) : et.Expression = exprs match {
-    // Wrap our expressions in an et.Begin unless there's exactly one
-    // This isn't required but produces more readable ETs and unit tests
-    case singleValue :: Nil => 
-      singleValue
-    case otherValues =>
-      et.Begin(otherValues)
-  }
-
   private def extractBodyDefinition(arguments : List[ScopedArgument], definition : List[sst.ScopedDatum]) : et.Expression = {
     // Find all the scopes in the definition
     val definitionScopes = definition.foldLeft(Set[Scope]()) { (scopes, datum) =>
@@ -131,7 +122,7 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
     }
 
     // Collect our expression list in to a single expression
-    sequenceExpressions(boundExprs)
+    et.Expression.fromSequence(boundExprs)
   }
 
   private def createLambda(fixedArgData : List[sst.ScopedDatum], restArgDatum : Option[sst.ScopedSymbol], definition : List[sst.ScopedDatum]) : et.Lambda = {
