@@ -115,7 +115,7 @@ object Compiler {
     else {
       expressions
     }
-
+    
     // Plan execution
     val planConfig = planner.PlanConfig(
       optimize=config.optimizeLevel > 1,

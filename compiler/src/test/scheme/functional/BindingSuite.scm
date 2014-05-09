@@ -49,7 +49,8 @@
        #t
        (odd? (- n 1)))))
 
-     (define five-is-odd (odd? 5))
+     ; This used to be five-is-odd but the inliner would actually resolve this successfuly at compile time at -O 2 
+     (define eleven-is-odd (odd? 11))
      
      (define odd?
      (lambda (n)

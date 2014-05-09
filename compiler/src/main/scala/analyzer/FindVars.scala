@@ -30,8 +30,12 @@ private[analyzer] object FindVars {
         )
 
       case et.Bind(bindings) =>
+        val bindingsToOpt = (bindings.map { case (storageLoc, initializer) =>
+          storageLoc -> initializer
+        }).toMap
+
         subexprFoundVars.copy(
-          initializers=subexprFoundVars.initializers ++ bindings
+          initializers=subexprFoundVars.initializers ++ bindingsToOpt
         )
 
       case et.VarRef(storageLoc) =>

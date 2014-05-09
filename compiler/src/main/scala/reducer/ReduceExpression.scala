@@ -30,14 +30,6 @@ private[reducer] object ReduceExpression {
       et.Expression.fromSequence(newExprs)
   }
 
-  private def findUsedVars(expr : et.Expression) : Set[StorageLocation] = expr match {
-    case et.VarRef(storageLoc) => 
-      Set(storageLoc)
-
-    case other =>
-      other.subexpressions.flatMap(findUsedVars(_)).toSet
-  }
-
   /**
    * Reduces an expression to the simplest form possible while preserving meaning
    */
@@ -46,7 +38,7 @@ private[reducer] object ReduceExpression {
       val mappedExprs = begin.toSequence.map(apply)
       unflattenExprs(mappedExprs)
 
-    case et.Apply(et.VarRef(reportProc : ReportProcedure), operands) =>
+    case et.Apply(appliedExpr @ et.VarRef(reportProc : ReportProcedure), operands) =>
       val reducedOperands = operands.map(ReduceExpression(_))
 
       for(reportProcReducer <- reportProcReducers) {
@@ -55,8 +47,11 @@ private[reducer] object ReduceExpression {
         }
       }
 
-      // Nothing we can do
-      et.Apply(et.VarRef(reportProc), reducedOperands)
+      ReduceApplication(appliedExpr, reducedOperands)
+
+    case et.Apply(appliedExpr, operands) =>
+      val reducedOperands = operands.map(ReduceExpression(_))
+      ReduceApplication(appliedExpr, reducedOperands)
 
     case et.Bind(bindings) =>
       val newBindings = (bindings.map { case (storageLoc, initializer) =>
@@ -75,52 +70,6 @@ private[reducer] object ReduceExpression {
           et.Bind(newBindings)
       }
 
-    // Simplify self-executing lambdas without explicit returns
-    case et.Apply(et.Lambda(fixedArgs, None, bodyExpr), operandExprs) if (fixedArgs.length == operandExprs.length) =>
-      val reducedOperandExprs = operandExprs.map(apply)
-
-      // We now have known values for any non-mutable args
-      val knownArguments = (fixedArgs.zip(reducedOperandExprs) flatMap { case (argLoc, operandExpr) =>
-        if (reduceConfig.analysis.mutableVars.contains(argLoc)) {
-          None
-        }
-        else {
-          Some(argLoc -> operandExpr)
-        }
-      }).toMap
-
-      val bodyConfig = reduceConfig.copy(
-        knownConstants=(reduceConfig.knownConstants ++ knownArguments)
-      )
-
-      // Reduce the body
-      val reducedBodyExpr = apply(bodyExpr)(bodyConfig)
-
-      // Now that we've reduced the body does it have any early returns?
-      if (ExpressionCanReturn(reducedBodyExpr)) {
-        // Yes - we can't flatten the lambda but we can reuse the work we just did
-        et.Apply(et.Lambda(fixedArgs, None, reducedBodyExpr), reducedOperandExprs)
-      }
-      else {
-        val bodyUsedVars = findUsedVars(reducedBodyExpr)
-
-        // Assign any used operands to new storage locations
-        // This is required to keep the semantics of the lambda receiving copies of its arguments
-        val bindingsExprs = fixedArgs.zip(reducedOperandExprs) flatMap { case (argLoc, operandExpr) =>
-          if (!bodyUsedVars.contains(argLoc) && IsPureExpression(operandExpr)) {
-            // Drop this entirely
-            // This is useful because things like (or) leave lots of Bind()s around otherwise and Bind() is impure
-            // This prevents further reductions on the expression
-            None
-          }
-          else {
-            Some(et.Bind(List(argLoc -> operandExpr)).assignLocationFrom(expr))
-          }
-        }
-
-        // We can flatten!
-        et.Expression.fromSequence(bindingsExprs :+ reducedBodyExpr)
-      }
 
     case et.Cond(testExpr, trueExpr, falseExpr) =>
       val reducedTest = apply(testExpr)

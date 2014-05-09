@@ -5,10 +5,12 @@ import llambda.compiler.SchemeParserDefinitions
 import llambda.compiler.SourceLocated
 
 sealed abstract class Datum extends SourceLocated
+ 
+sealed abstract class Leaf extends Datum
 
 // This helps out ScopedSyntaxTree by grouping all the types that have scope
 // or contain datums with scope
-sealed abstract class NonSymbolLeaf extends Datum
+sealed abstract class NonSymbolLeaf extends Leaf
 
 case class UnitValue() extends NonSymbolLeaf {
   override def toString = "#!unit"
@@ -73,7 +75,7 @@ object NaNLiteral {
   def apply() =  RationalLiteral(Double.NaN)
 }
 
-case class Symbol(name : String) extends Datum {
+case class Symbol(name : String) extends Leaf {
   override def toString = if (name.matches(SchemeParserDefinitions.identifierPattern)) {
     name
   }
