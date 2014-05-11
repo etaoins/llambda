@@ -1,8 +1,8 @@
 package io.llambda.compiler.reducer
 import io.llambda
 
-import io.llambda.compiler.reducer.{partialvalue => pv}
 import io.llambda.compiler._
+import io.llambda.compiler.reducer.{partialvalue => pv}
 
 private[reducer] object PartialValueForExpression {
   /**
@@ -49,7 +49,6 @@ private[reducer] object PartialValueForExpression {
       reduceConfig.knownValues.get(storageLoc) orElse {
         // No, check if it has an initialiser
         val initializerOpt = reduceConfig.analysis.constantInitializers.get(storageLoc)
-
         initializerOpt.flatMap({ initializer =>
           // Allow impure expressions because there's no risk of the caller optimizing the initializer out
           PartialValueForExpression(

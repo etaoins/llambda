@@ -5,7 +5,6 @@ import org.scalatest.FunSuite
 import llambda.compiler._
 
 class QuasiquoteSuite extends FunSuite with testutil.ExpressionHelpers {
-  val schemeBaseBindings = libraryLoader.loadSchemeBase(frontendConfig)
   implicit val baseScope = new ImmutableScope(collection.mutable.Map(schemeBaseBindings.toSeq : _*))
 
   def schemeBaseProcedure(name : String) : et.Expression =  

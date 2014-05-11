@@ -5,8 +5,7 @@ import llambda.compiler._
 import org.scalatest.{FunSuite, Inside}
 
 class CallCcProcReducerSuite extends FunSuite with Inside with testutil.ExpressionHelpers {
-  val schemeBaseBindings = libraryLoader.loadSchemeBase(frontendConfig)
-  implicit val scope = new Scope(collection.mutable.Map(schemeBaseBindings.toSeq : _*))
+  implicit val scope = schemeBaseScope
   
   test("trivial (call/cc)") {
     // This can be turned in to a literal value

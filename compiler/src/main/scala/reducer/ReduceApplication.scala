@@ -5,6 +5,18 @@ import io.llambda.compiler._
 import io.llambda.compiler.reducer.{partialvalue => pv}
 
 private[reducer] object ReduceApplication {
+  private val reportProcReducers = List[reportproc.ReportProcReducer](
+    reportproc.ApplyProcReducer,
+    reportproc.BooleanProcReducer,
+    reportproc.CallCcProcReducer,
+    reportproc.EquivalenceProcReducer,
+    reportproc.NumberProcReducer,
+    reportproc.ListProcReducer,
+    reportproc.StringProcReducer,
+    reportproc.SymbolProcReducer,
+    reportproc.VectorProcReducer
+  )
+
   /** Remaps constant storage locations in an expression and its subexpressions
     *
     * @param  expr               Expression to perform the renames on
@@ -27,9 +39,18 @@ private[reducer] object ReduceApplication {
     * (leaf data).
     */
   private def expressionIsTrivial(expr : et.Expression) : Boolean = expr match {
-    case et.Literal(_ : ast.Leaf) => true
-    case et.VarRef(_) =>             true
-    case _ =>                        false
+    case et.Literal(_ : ast.Leaf) =>
+      true
+
+    case et.VarRef(_) => 
+      true
+
+    case et.Bind(bindings) =>
+      // Bindings don't generate code directly - allow them as long as they're binding trivial values
+      bindings.map(_._2).forall(expressionIsTrivial)
+
+    case _ =>
+      false
   }
   
   /** Returns true if we should inline an inlineable expression
@@ -37,12 +58,20 @@ private[reducer] object ReduceApplication {
     * This currently is either a trivial expression or an application involving only trivial expressions. Note that
     * this definition is non-recursive - i.e. applications of applications of trivial expressions are disallowed.
     */
-  private def shouldInlineExpr(expr : et.Expression) : Boolean = expr match {
-    case application : et.Apply  =>
-      application.subexpressions.forall(expressionIsTrivial)
+  private def shouldInlineExpr(candidateExpr : et.Expression) : Boolean = {
+    val (applications, nonApplications) = candidateExpr.toSequence.partition(_.isInstanceOf[et.Apply])
 
-    case otherExpr =>
-      expressionIsTrivial(otherExpr)
+    // We only allow one application
+    nonApplications.forall(expressionIsTrivial) && (applications match {
+      case List(singleApply) =>
+        singleApply.subexpressions.forall(expressionIsTrivial)
+
+      case Nil =>
+        true
+
+      case multiexpr =>
+        false
+    })
   }
 
   /** Finds all variables used by an expression and its subexpressions */ 
@@ -168,7 +197,7 @@ private[reducer] object ReduceApplication {
 
   /** Reduces a procedure application via optional inlining 
     *
-    * @param  appliedExpr      Expression being applied
+    * @param  appliedExpr      Expression being applied. This must not be previously reduced.
     * @param  reducedOperands  Reduced expressions of the operands of the application in application order
     * @return Expression to replace the original application with
     */
@@ -177,13 +206,26 @@ private[reducer] object ReduceApplication {
       lambdaExpr : et.Lambda,
       forceInline : Boolean
     )
-
+    
     val appliedExprDataOpt = appliedExpr match {
       case varRef : et.VarRef =>
+        varRef.variable match {
+          case reportProc : ReportProcedure =>
+            // Run this through the report procedure reducers
+            for(reportProcReducer <- reportProcReducers) {
+              for(expr <- reportProcReducer(reportProc, reducedOperands)) {
+                // This was recognized and reduced - perform no further action
+                return expr
+              }
+            }
+
+          case _ =>
+        }
+            
         // Does this point to a lambda?
         // We can't inline other types of functions
-        PartialValueForExpression(varRef).collect { 
-          case pv.ReducedExpression(lambdaExpr : et.Lambda) => 
+        reduceConfig.analysis.constantInitializers.get(varRef.variable).collect { 
+          case lambdaExpr : et.Lambda => 
             // Don't inline this - that could cause unbounded code growth
             AppliedExpressionData(lambdaExpr, false)
         }

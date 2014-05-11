@@ -4,37 +4,20 @@ import io.llambda
 import llambda.compiler._
 import org.scalatest.{FunSuite, Inside}
 
-class ReduceApplicationSuite extends FunSuite with Inside with testutil.ExpressionHelpers {
-  // Use (scheme base) by default
-  val schemeBaseBindings = libraryLoader.loadSchemeBase(frontendConfig)
-
-  private def bindlessReductionFor(schemeString : String) = {
-    implicit val freshScope = new Scope(collection.mutable.Map(schemeBaseBindings.toSeq : _*))
-
-    // This removes any top-level Bind()s for lambdas
-    // Just one pass of the reducer will leave the un-inlined versions of procedures behind. This is because it doesn't
-    // know they're unused until all the callers are inlined. One solution would be to run the reducer twice but we 
-    // want to ensure that the full inlining operation can happen in one pass.
-    et.Expression.fromSequence(
-      reductionFor(schemeString).toSequence.flatMap {
-        case et.Bind(_) =>
-          None
-
-        case other =>
-          Some(other)
-      }
-    )
-  }
-
+class ReduceApplicationSuite extends FunSuite with Inside with testutil.ExpressionHelpers { 
   test("inlining without arguments") {
+    implicit val scope = schemeBaseScope
+
     assert(bindlessReductionFor("""
       (define (trivial-return) 1)
       (trivial-return)
       """) === et.Literal(ast.IntegerLiteral(1))
     )
   }
-  
+   
   test("inlining one arg compile time evaluable") {
+    implicit val scope = schemeBaseScope
+
     assert(bindlessReductionFor("""
       (define (add-two n) (+ 2 n))
       (add-two 4)
@@ -43,6 +26,8 @@ class ReduceApplicationSuite extends FunSuite with Inside with testutil.Expressi
   }
   
   test("inlining with empty rest arguments") {
+    implicit val scope = schemeBaseScope
+
     assert(bindlessReductionFor("""
       (define (all-rest . rest-arg) (null? rest-arg))
       (all-rest)
@@ -51,6 +36,8 @@ class ReduceApplicationSuite extends FunSuite with Inside with testutil.Expressi
   }
   
   test("counting the number of rest arguments") {
+    implicit val scope = schemeBaseScope
+
     assert(bindlessReductionFor("""
       (define (length-rest first . rest) (+ first (length rest)))
       (length-rest 4 2 3 4 5)
@@ -59,6 +46,8 @@ class ReduceApplicationSuite extends FunSuite with Inside with testutil.Expressi
   }
   
   test("inlining with two arguments") {
+    implicit val scope = schemeBaseScope
+
     assert(bindlessReductionFor("""
       (define (right-types should-bool should-null)
         (and (boolean? should-bool) (null? should-null)))
@@ -68,6 +57,8 @@ class ReduceApplicationSuite extends FunSuite with Inside with testutil.Expressi
   }
 
   test("recursive inlining") {
+    implicit val scope = schemeBaseScope
+
     assert(bindlessReductionFor("""
       (define (add-two n)
         (+ 2 n))

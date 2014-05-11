@@ -6,8 +6,7 @@ import org.scalatest.{FunSuite, Inside}
 
 class ReduceExpressionsSuite extends FunSuite with Inside with testutil.ExpressionHelpers {
   // Use (scheme base) by default
-  val schemeBaseBindings = libraryLoader.loadSchemeBase(frontendConfig)
-  implicit val scope = new Scope(collection.mutable.Map(schemeBaseBindings.toSeq : _*))
+  implicit val scope = schemeBaseScope
 
   test("reducing basic constants") {
     assert(reductionFor("'test-symbol") === 
@@ -75,6 +74,22 @@ class ReduceExpressionsSuite extends FunSuite with Inside with testutil.Expressi
       """) === et.Literal(ast.IntegerLiteral(25))
     )
   }
+
+  test("reducing (case-lambda)") {
+    val caseLambdaName = List("scheme", "case-lambda").map(StringComponent(_))
+    val caseLambdaBindings = libraryLoader.load(caseLambdaName)(frontendConfig)
+    val allBindings = schemeBaseBindings.toSeq ++ caseLambdaBindings.toSeq
+
+    val testScope = new Scope(collection.mutable.Map(allBindings : _*))
+
+    assert(bindlessReductionFor("""
+      (define case-function
+        (case-lambda
+          ((first) (- first))
+          ((first second) (* first second))))
+
+      (+ (case-function 4 5) (case-function 1))
+      """)(testScope) === et.Literal(ast.IntegerLiteral(19))
+    )
+  }
 }
-
-

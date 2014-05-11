@@ -4,17 +4,6 @@ import io.llambda
 import io.llambda.compiler._
 
 private[reducer] object ReduceExpression {
-  private val reportProcReducers = List[reportproc.ReportProcReducer](
-    reportproc.BooleanProcReducer,
-    reportproc.CallCcProcReducer,
-    reportproc.EquivalenceProcReducer,
-    reportproc.NumberProcReducer,
-    reportproc.ListProcReducer,
-    reportproc.StringProcReducer,
-    reportproc.SymbolProcReducer,
-    reportproc.VectorProcReducer
-  )
-
   private def unflattenExprs(exprs : List[et.Expression])(implicit reduceConfig : ReduceConfig) : et.Expression = exprs match {
     case Nil =>
       et.Begin(Nil)
@@ -37,17 +26,6 @@ private[reducer] object ReduceExpression {
     case begin : et.Begin =>
       val mappedExprs = begin.toSequence.map(apply)
       unflattenExprs(mappedExprs)
-
-    case et.Apply(appliedExpr @ et.VarRef(reportProc : ReportProcedure), operands) =>
-      val reducedOperands = operands.map(ReduceExpression(_))
-
-      for(reportProcReducer <- reportProcReducers) {
-        for(expr <- reportProcReducer(reportProc, reducedOperands)) {
-          return expr
-        }
-      }
-
-      ReduceApplication(appliedExpr, reducedOperands)
 
     case et.Apply(appliedExpr, operands) =>
       val reducedOperands = operands.map(ReduceExpression(_))

@@ -5,8 +5,7 @@ import llambda.compiler._
 import org.scalatest.{FunSuite, Inside}
 
 class EquivalenceProcReducerSuite extends FunSuite with testutil.ExpressionHelpers {
-  val schemeBaseBindings = libraryLoader.loadSchemeBase(frontendConfig)
-  implicit val scope = new Scope(collection.mutable.Map(schemeBaseBindings.toSeq : _*))
+  implicit val scope = schemeBaseScope
 
   test("boolean (eqv?)") {
     assert(reductionFor("(eqv? #t #t)") ===  
