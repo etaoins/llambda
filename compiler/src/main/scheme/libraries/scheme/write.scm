@@ -3,7 +3,8 @@
     (import (scheme base))
     (import (rename (llambda internal primitives) (define-report-procedure define-r7rs)))
 
-    (export write)
+    (export write display)
     (begin
-      (define-r7rs write (native-function "lliby_write" (<datum-cell>))))
+      (define-r7rs write (native-function "lliby_write" (<datum-cell>)))
+      (define-r7rs display (native-function "lliby_display" (<datum-cell>))))
 )

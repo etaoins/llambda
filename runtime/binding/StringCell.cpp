@@ -9,6 +9,7 @@
 #include "BytevectorCell.h"
 
 #include "platform/memory.h"
+#include "unicode/utf8.h"
 
 #include "alloc/allocator.h"
 #include "alloc/cellref.h"
@@ -20,119 +21,6 @@ namespace
 	// We will shrink our allocation if we would create more slack than this
 	// Note this must fit in to StringCell::m_allocSlackBytes
 	const std::uint32_t MaximumAllocationSlack = 32 * 1024;
-
-	const std::uint8_t ContinuationHeaderMask  = 0xC0;
-	const std::uint8_t ContinuationHeaderValue = 0x80;
-
-	const std::uint8_t TwoByteHeaderMask  = 0xE0;
-	const std::uint8_t TwoByteHeaderValue = 0xC0;
-	
-	const std::uint8_t ThreeByteHeaderMask  = 0xF0;
-	const std::uint8_t ThreeByteHeaderValue = 0xE0;
-	
-	const std::uint8_t FourByteHeaderMask  = 0xF8;
-	const std::uint8_t FourByteHeaderValue = 0xF0;
-	
-	bool isContinuationByte(std::uint8_t byte)
-	{
-		// Any UTF-8 byte in the form 10xxxxxx is a continuation byte
-		return (byte & ContinuationHeaderMask) == ContinuationHeaderValue;
-	}
-
-	UnicodeChar decodeUtf8Char(std::uint8_t **charPtr)
-	{
-		unsigned int continuationBytes;
-		std::int32_t codePoint;
-
-		std::uint8_t firstByte = *(*charPtr);
-
-		if (firstByte <= 0x7f)
-		{
-			// This is ASCII, it's easy
-			(*charPtr)++;
-
-			return UnicodeChar(firstByte);
-		}
-
-		if ((firstByte & TwoByteHeaderMask) == TwoByteHeaderValue)
-		{
-			continuationBytes = 1;
-			codePoint = firstByte & ~TwoByteHeaderMask;
-		}
-		else if ((firstByte & ThreeByteHeaderMask) == ThreeByteHeaderValue)
-		{
-			continuationBytes = 2;
-			codePoint = firstByte & ~ThreeByteHeaderMask;
-		}
-		else if ((firstByte & FourByteHeaderMask) == FourByteHeaderValue)
-		{
-			continuationBytes = 3;
-			codePoint = firstByte & ~FourByteHeaderMask;
-		}
-		else
-		{
-			return UnicodeChar();
-		}
-
-		while(continuationBytes--)
-		{
-			(*charPtr)++;
-
-			// decodeUtf8Char() should only be called on pre-verified UTF-8 input
-			// This shouldn't happen but it's an easy sanity check to make
-			assert(isContinuationByte(*(*charPtr)));
-
-			codePoint = (codePoint << 6) | (*(*charPtr) & ~ContinuationHeaderMask);
-		}
-			
-		(*charPtr)++;
-		return UnicodeChar(codePoint);
-	}
-
-	std::vector<std::uint8_t> encodeUtf8Char(UnicodeChar unicodeChar)
-	{
-		unsigned int continuationBytes;
-		std::uint8_t firstByteHeader;
-		std::int32_t codePoint = unicodeChar.codePoint();
-
-		if (codePoint > 0x10FFFF)
-		{
-			// Not valid - see RFC-3629
-			return std::vector<std::uint8_t>();
-		}
-		else if (codePoint >= 0x10000)
-		{
-			continuationBytes = 3;
-			firstByteHeader = FourByteHeaderValue;
-		}
-		else if (codePoint >= 0x800)
-		{
-			continuationBytes = 2;
-			firstByteHeader = ThreeByteHeaderValue;
-		}
-		else if (codePoint >= 0x80)
-		{
-			continuationBytes = 1;
-			firstByteHeader = TwoByteHeaderValue;
-		}
-		else
-		{
-			// Pure ASCII
-			return std::vector<std::uint8_t>{static_cast<std::uint8_t>(codePoint)};
-		}
-
-		std::vector<std::uint8_t> encoded(continuationBytes + 1);
-
-		for(unsigned int i = continuationBytes; i; i--)
-		{
-			encoded[i] = ContinuationHeaderValue | (~ContinuationHeaderMask & codePoint);
-			codePoint = codePoint >> 6;
-		}
-
-		encoded[0] = firstByteHeader | codePoint;
-
-		return encoded;
-	}
 
 	std::uint16_t slackBytesToRecord(size_t entireSlack)
 	{
@@ -212,7 +100,7 @@ StringCell* StringCell::fromUtf8CString(World &world, const char *signedStr)
 			break;
 		}
 
-		if (!isContinuationByte(*scanPtr))
+		if (!utf8::isContinuationByte(*scanPtr))
 		{
 			charLength++;
 		}
@@ -250,7 +138,7 @@ StringCell* StringCell::withUtf8ByteArray(World &world, SharedByteArray *byteArr
 	std::uint32_t charLength = 0;
 	for(std::uint32_t i = 0; i < byteLength; i++)
 	{
-		if (!isContinuationByte(byteArray->data()[i]))
+		if (!utf8::isContinuationByte(byteArray->data()[i]))
 		{
 			charLength++;
 		}
@@ -277,7 +165,7 @@ StringCell* StringCell::fromUtf8Data(World &world, const std::uint8_t *data, std
 	// outweighs the faster copy we'd get from doing memcpy() at the end
 	for(std::uint32_t i = 0; i < byteLength; i++)
 	{
-		if (!isContinuationByte(data[i]))
+		if (!utf8::isContinuationByte(data[i]))
 		{
 			charLength++;
 		}
@@ -296,7 +184,7 @@ StringCell* StringCell::fromUtf8Data(World &world, const std::uint8_t *data, std
 StringCell* StringCell::fromFill(World &world, std::uint32_t length, UnicodeChar fill)
 {
 	// Figure out how many bytes we'll need
-	std::vector<std::uint8_t> encoded = encodeUtf8Char(fill);
+	std::vector<std::uint8_t> encoded = utf8::encodeUtf8Char(fill);
 	const size_t encodedCharSize = encoded.size();
 
 	const std::uint32_t byteLength = encodedCharSize * length;
@@ -368,7 +256,7 @@ StringCell* StringCell::fromUnicodeChars(World &world, const std::vector<Unicode
 
 	for(auto unicodeChar : unicodeChars)
 	{
-		const std::vector<std::uint8_t> encodedChar = encodeUtf8Char(unicodeChar);
+		const std::vector<std::uint8_t> encodedChar = utf8::encodeUtf8Char(unicodeChar);
 		encodedData.insert(encodedData.end(), encodedChar.begin(), encodedChar.end());
 
 		charLength++;
@@ -471,7 +359,7 @@ std::uint8_t* StringCell::charPointer(std::uint8_t *scanFrom, std::uint32_t byte
 
 	while(bytesLeft > 0)
 	{
-		if (!isContinuationByte(*scanFrom))
+		if (!utf8::isContinuationByte(*scanFrom))
 		{
 			if (charOffset == 0)
 			{
@@ -563,7 +451,7 @@ UnicodeChar StringCell::charAt(std::uint32_t offset) const
 		return UnicodeChar();
 	}
 
-	return decodeUtf8Char(&charPtr);
+	return utf8::decodeUtf8Char(&charPtr);
 }
 	
 bool StringCell::replaceBytes(const CharRange &range, std::uint8_t *pattern, unsigned int patternBytes, unsigned int count, bool sameString)
@@ -704,7 +592,7 @@ bool StringCell::fill(UnicodeChar unicodeChar, std::int64_t start, std::int64_t 
 	}
 
 	// Encode the new character
-	std::vector<std::uint8_t> encoded = encodeUtf8Char(unicodeChar);
+	std::vector<std::uint8_t> encoded = utf8::encodeUtf8Char(unicodeChar);
 
 	if (encoded.size() == 0)
 	{
@@ -819,7 +707,7 @@ std::vector<UnicodeChar> StringCell::unicodeChars(std::int64_t start, std::int64
 
 	while(scanPtr < endPtr)
 	{
-		const UnicodeChar unicodeChar = decodeUtf8Char(&scanPtr);
+		const UnicodeChar unicodeChar = utf8::decodeUtf8Char(&scanPtr);
 
 		if (!unicodeChar.isValid())
 		{
@@ -895,14 +783,14 @@ int StringCell::compareCaseInsensitive(const StringCell *other) const
 			return theirEnd - ourEnd;
 		}
 
-		const UnicodeChar ourChar = decodeUtf8Char(&ourScanPtr);
+		const UnicodeChar ourChar = utf8::decodeUtf8Char(&ourScanPtr);
 		if (!ourChar.isValid())
 		{
 			// Pretend we ended early
 			return -1;
 		}
 		
-		const UnicodeChar theirChar = decodeUtf8Char(&theirScanPtr);
+		const UnicodeChar theirChar = utf8::decodeUtf8Char(&theirScanPtr);
 		if (!theirChar.isValid())
 		{
 			// Pretend they ended early
@@ -973,7 +861,7 @@ StringCell *StringCell::toConvertedString(World &world, UnicodeChar (UnicodeChar
 
 	while(scanPtr < endPtr)
 	{
-		const UnicodeChar originalChar = decodeUtf8Char(&scanPtr);
+		const UnicodeChar originalChar = utf8::decodeUtf8Char(&scanPtr);
 
 		if (!originalChar.isValid())
 		{
@@ -983,7 +871,7 @@ StringCell *StringCell::toConvertedString(World &world, UnicodeChar (UnicodeChar
 
 		const UnicodeChar convertedChar = (originalChar.*converter)();
 
-		const std::vector<std::uint8_t> encodedChar = encodeUtf8Char(convertedChar);
+		const std::vector<std::uint8_t> encodedChar = utf8::encodeUtf8Char(convertedChar);
 		convertedData.insert(convertedData.end(), encodedChar.begin(), encodedChar.end());
 	}
 	

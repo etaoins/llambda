@@ -51,6 +51,7 @@ add_library(lliby
 	stdlib/vector.cpp
 	unicode/UnicodeChar.cpp
 	util/SharedByteArray.cpp
+	writer/DisplayDatumWriter.cpp
 	writer/ExternalFormDatumWriter.cpp
 	)
 
@@ -103,15 +104,16 @@ set(ALL_TEST_NAMES
 	allocator
 	bytevector
 	constinstances
+	displaydatumwriter
+	externalformdatumwriter
 	implicitsharing
 	inexactrational
 	listelement
+	properlist
 	sharedbytearray
 	string
 	unicodechar
-	vector
-	externalformdatumwriter
-	properlist)
+	vector)
 
 foreach( test_name ${ALL_TEST_NAMES} )
 	add_executable(tests/bin/test-${test_name} tests/test-${test_name}.cpp)

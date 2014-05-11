@@ -15,3 +15,15 @@
 	(write 2)
 	(newline)
 	(write 3)))
+
+(define-test "(display) does not quote strings or characters" (expect-output ("Hello!")
+	(import (scheme write))
+   (display #\")
+	(display "Hello!")
+   (display #\")))
+
+ (define-test "(display) does not quote symbols" (expect-output ("Hello!")
+	(import (scheme write))
+   (display #\")
+	(display '|Hello!|)
+   (display #\")))
