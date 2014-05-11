@@ -12,7 +12,7 @@ object SymbolProcReducer extends ReportProcReducer {
       })
     
     case ("symbol=?", _) if operands.length >= 2 =>
-      val literalSymbolOperands = operands.map(LiteralValue(_)).collect {
+      val literalSymbolOperands = operands.map(LiteralForExpression(_)).collect {
         case Some(ast.Symbol(symbol)) =>
           symbol
       }

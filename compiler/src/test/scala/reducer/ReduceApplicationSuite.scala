@@ -42,6 +42,22 @@ class ReduceApplicationSuite extends FunSuite with Inside with testutil.Expressi
     )
   }
   
+  test("inlining with empty rest arguments") {
+    assert(bindlessReductionFor("""
+      (define (all-rest . rest-arg) (null? rest-arg))
+      (all-rest)
+      """) === et.Literal(ast.BooleanLiteral(true))
+    )
+  }
+  
+  test("counting the number of rest arguments") {
+    assert(bindlessReductionFor("""
+      (define (length-rest first . rest) (+ first (length rest)))
+      (length-rest 4 2 3 4 5)
+      """) === et.Literal(ast.IntegerLiteral(8))
+    )
+  }
+  
   test("inlining with two arguments") {
     assert(bindlessReductionFor("""
       (define (right-types should-bool should-null)

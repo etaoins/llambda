@@ -6,7 +6,7 @@ import io.llambda.compiler.reducer._
 
 trait ReportProcReducer {
   protected def literalPredicate(expr : et.Expression, predicate : (ast.Datum) => Boolean)(implicit reduceConfig : ReduceConfig) : Option[et.Expression] = {
-    LiteralValue(expr).map { exprLiteral =>
+    LiteralForExpression(expr).map { exprLiteral =>
       val predicateValue = predicate(exprLiteral)
       et.Literal(ast.BooleanLiteral(predicateValue))
     }

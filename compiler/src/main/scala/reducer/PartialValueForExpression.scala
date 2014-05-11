@@ -1,11 +1,12 @@
 package io.llambda.compiler.reducer
 import io.llambda
 
+import io.llambda.compiler.reducer.{partialvalue => pv}
 import io.llambda.compiler._
 
-private[reducer] object LiteralValue {
+private[reducer] object PartialValueForExpression {
   /**
-   * Attempts to find the literal value of a given expression
+   * Attempts to find the literal value of a given reduced expression
    *
    * @param expr              Expression to examine
    * @param allowImpureExprs  Attempt to find the value of an impure expression. If this is set to true callers must
@@ -15,17 +16,17 @@ private[reducer] object LiteralValue {
    * This works by following references to constant variables and reducing the expression until a constant or
    * unreducable expression is encountered.
    */
-  def apply(expr : et.Expression, allowImpureExprs : Boolean = false)(implicit reduceConfig : ReduceConfig) : Option[ast.Datum] = expr match {
+  def apply(expr : et.Expression, allowImpureExprs : Boolean = false)(implicit reduceConfig : ReduceConfig) : Option[pv.PartialValue] = expr match {
     case et.Begin(Nil) =>
-      Some(ast.UnitValue())
+      Some(pv.PartialValue.fromDatum(ast.UnitValue()))
     
     case et.Begin(List(singleExpr)) =>
-      LiteralValue(singleExpr, allowImpureExprs)
+      PartialValueForExpression(singleExpr, allowImpureExprs)
 
     case et.Begin(multipleExprs) =>
       if (allowImpureExprs || IsPureExpression(expr)) {
         // Only the last value is meaningful
-        LiteralValue(multipleExprs.last, allowImpureExprs)
+        PartialValueForExpression(multipleExprs.last, allowImpureExprs)
       }
       else {
         None
@@ -33,24 +34,32 @@ private[reducer] object LiteralValue {
 
     case et.Literal(datum) =>
       // This is already literal
-      Some(datum)
+      Some(pv.PartialValue.fromDatum(datum))
 
     case et.VarRef(storageLoc) if !reduceConfig.resolvingInitializers.contains(storageLoc) =>
       // Return the initializer
       // Use a blank state here because we have no idea which context the original initializer was in
       // Also flag we're already resolving this to avoid recursion
       val initializerConfig = reduceConfig.copy(
-        knownConstants=Map(),
+        knownValues=Map(),
         resolvingInitializers=reduceConfig.resolvingInitializers + storageLoc
       )
   
-      reduceConfig.constantExprForStorageLoc(storageLoc) flatMap { initializer =>
-        // Allow impure expressions because there's no risk of the caller optimizing the initializer out
-        LiteralValue(ReduceExpression(initializer)(initializerConfig), true)(initializerConfig)
+      // Do we already know this partial value?
+      reduceConfig.knownValues.get(storageLoc) orElse {
+        // No, check if it has an initialiser
+        val initializerOpt = reduceConfig.analysis.constantInitializers.get(storageLoc)
+
+        initializerOpt.flatMap({ initializer =>
+          // Allow impure expressions because there's no risk of the caller optimizing the initializer out
+          PartialValueForExpression(
+            ReduceExpression(initializer)(initializerConfig), true
+          )(initializerConfig)
+        })
       }
 
-    case _ =>
-      None
+    case expr =>
+      Some(pv.PartialValue.fromReducedExpression(expr))
   }
 
 }

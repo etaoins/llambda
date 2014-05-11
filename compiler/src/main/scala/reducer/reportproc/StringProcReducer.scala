@@ -12,7 +12,7 @@ object StringProcReducer extends ReportProcReducer {
       })
 
     case ("string-length", List(singleExpr)) =>
-      LiteralValue(singleExpr) match {
+      LiteralForExpression(singleExpr) match {
         case Some(ast.StringLiteral(stringValue)) =>
           Some(et.Literal(ast.IntegerLiteral(
             stringValue.length

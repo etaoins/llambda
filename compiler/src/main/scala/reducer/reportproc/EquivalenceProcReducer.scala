@@ -76,8 +76,8 @@ object EquivalenceProcReducer extends ReportProcReducer {
 
   def apply(appliedVar : ReportProcedure, operands : List[et.Expression])(implicit reduceConfig : ReduceConfig) : Option[et.Expression] = (appliedVar.reportName, operands) match {
     case (reportName, List(val1Expr, val2Expr)) if List("eqv?", "eq?").contains(reportName) =>
-      for(val1 <- LiteralValue(val1Expr);
-          val2 <- LiteralValue(val2Expr)) {
+      for(val1 <- LiteralForExpression(val1Expr);
+          val2 <- LiteralForExpression(val2Expr)) {
         return literalsAreEqv(val1, val2).map { isEqv =>
           et.Literal(ast.BooleanLiteral(isEqv))
         }
@@ -86,8 +86,8 @@ object EquivalenceProcReducer extends ReportProcReducer {
       None
     
     case ("equal?", List(val1Expr, val2Expr)) =>
-      for(val1 <- LiteralValue(val1Expr);
-          val2 <- LiteralValue(val2Expr)) {
+      for(val1 <- LiteralForExpression(val1Expr);
+          val2 <- LiteralForExpression(val2Expr)) {
         return literalsAreEqual(val1, val2).map { isEqv =>
           et.Literal(ast.BooleanLiteral(isEqv))
         }

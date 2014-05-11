@@ -77,7 +77,7 @@ private[reducer] object ReduceExpression {
       
       // Try to optimize out the branch
       // We specially handle impure tests below
-      LiteralValue(reducedTest, allowImpureExprs=true) match {
+      LiteralForExpression(reducedTest, allowImpureExprs=true) match {
         case Some(literal) =>
           val branchExpr = if (literal == ast.BooleanLiteral(false)) {
             apply(falseExpr)

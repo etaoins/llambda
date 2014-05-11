@@ -12,7 +12,7 @@ object BooleanProcReducer extends ReportProcReducer {
       })
 
     case ("not", List(singleExpr)) =>
-      LiteralValue(singleExpr) map {
+      LiteralForExpression(singleExpr) map {
         // Everything but false is truth-y
         case ast.BooleanLiteral(false) =>
           et.Literal(ast.BooleanLiteral(true))
@@ -22,7 +22,7 @@ object BooleanProcReducer extends ReportProcReducer {
       }
 
     case ("boolean=?", _) if operands.length >= 2 =>
-      val literalBoolOperands = operands.map(LiteralValue(_)).collect {
+      val literalBoolOperands = operands.map(LiteralForExpression(_)).collect {
         case Some(ast.BooleanLiteral(boolValue)) =>
           boolValue
       }

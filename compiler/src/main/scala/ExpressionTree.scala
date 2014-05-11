@@ -14,6 +14,13 @@ sealed abstract trait Expression extends SourceLocated {
   }
 }
 
+/**
+ * Represents any expression except for et.Literal
+ *
+ * This is used by PartialValue in the reducer
+ */
+sealed abstract trait NonLiteralExpression extends Expression
+
 object Expression {
   def fromSequence(exprs : List[et.Expression]) : et.Expression = exprs match {
     // Wrap our expressions in an et.Begin unless there's exactly one
@@ -25,7 +32,7 @@ object Expression {
   }
 }
 
-case class Begin(expressions : List[Expression]) extends Expression {
+case class Begin(expressions : List[Expression]) extends NonLiteralExpression {
   val subexpressions = expressions
 
   def map(f : Expression => Expression) : et.Begin =
@@ -35,7 +42,7 @@ case class Begin(expressions : List[Expression]) extends Expression {
     subexpressions.flatMap(_.toSequence)
 }
 
-case class Apply(procedure : Expression, operands : List[Expression]) extends Expression {
+case class Apply(procedure : Expression, operands : List[Expression]) extends NonLiteralExpression {
   val subexpressions = procedure :: operands
 
   def map(f : Expression => Expression) : et.Apply =
@@ -46,13 +53,13 @@ case class Apply(procedure : Expression, operands : List[Expression]) extends Ex
     "Apply(" + (procedure :: operands).mkString(", ") + ")"
 }
 
-case class VarRef(variable : StorageLocation) extends Expression {
+case class VarRef(variable : StorageLocation) extends NonLiteralExpression {
   val subexpressions = Nil
 
   def map(f : Expression => Expression) : et.VarRef = this
 }
 
-case class MutateVar(variable : StorageLocation, value : Expression) extends Expression {
+case class MutateVar(variable : StorageLocation, value : Expression) extends NonLiteralExpression {
   val subexpressions = value :: Nil
 
   def map(f : Expression => Expression) : et.MutateVar =
@@ -67,21 +74,21 @@ case class Literal(value : ast.Datum) extends Expression {
   override def toString = "'" + value.toString
 }
 
-case class Cond(test : Expression, trueExpr : Expression, falseExpr : Expression) extends Expression {
+case class Cond(test : Expression, trueExpr : Expression, falseExpr : Expression) extends NonLiteralExpression {
   val subexpressions = test :: trueExpr :: falseExpr :: Nil
 
   def map(f : Expression => Expression) : et.Cond =
     et.Cond(f(test), f(trueExpr), f(falseExpr)).assignLocationFrom(this)
 }
 
-case class Lambda(fixedArgs : List[StorageLocation], restArg : Option[StorageLocation], body : Expression) extends Expression {
+case class Lambda(fixedArgs : List[StorageLocation], restArg : Option[StorageLocation], body : Expression) extends NonLiteralExpression {
   val subexpressions = body :: Nil
 
   def map(f : Expression => Expression) : et.Lambda =
     et.Lambda(fixedArgs, restArg, f(body)).assignLocationFrom(this)
 }
 
-case class Bind(bindings : List[(StorageLocation, Expression)]) extends Expression {
+case class Bind(bindings : List[(StorageLocation, Expression)]) extends NonLiteralExpression {
   val subexpressions = bindings.map(_._2)
 
   def map(f : Expression => Expression) : et.Bind =
@@ -93,12 +100,12 @@ case class Bind(bindings : List[(StorageLocation, Expression)]) extends Expressi
 case class NativeFunction(
   signature : ProcedureSignature,
   nativeSymbol : String
-) extends Expression {
+) extends NonLiteralExpression {
   val subexpressions = Nil
   def map(f : Expression => Expression) : et.NativeFunction = this
 }
 
-sealed abstract class RecordTypeProcedure extends Expression {
+sealed abstract class RecordTypeProcedure extends NonLiteralExpression {
   val recordType : vt.RecordType
 
   val subexpressions = Nil
@@ -110,14 +117,14 @@ case class RecordTypePredicate(recordType : vt.RecordType) extends RecordTypePro
 case class RecordTypeAccessor(recordType : vt.RecordType, field : vt.RecordField) extends RecordTypeProcedure
 case class RecordTypeMutator(recordType : vt.RecordType, field : vt.RecordField) extends RecordTypeProcedure
 
-case class Cast(valueExpr : Expression, targetType : vt.ValueType) extends Expression {
+case class Cast(valueExpr : Expression, targetType : vt.ValueType) extends NonLiteralExpression {
   val subexpressions = valueExpr :: Nil
 
   def map(f : Expression => Expression) : et.Cast =
     et.Cast(f(valueExpr), targetType).assignLocationFrom(this)
 }
 
-case class Parameterize(parameterValues : List[(Expression, Expression)], body : Expression) extends Expression {
+case class Parameterize(parameterValues : List[(Expression, Expression)], body : Expression) extends NonLiteralExpression {
   lazy val subexpressions = body :: parameterValues.flatMap { case (parameter, value) =>
     List(parameter, value)
   }
@@ -134,7 +141,7 @@ case class Parameterize(parameterValues : List[(Expression, Expression)], body :
 /**
  * Returns from the current lambda
  */
-case class Return(value : Expression) extends Expression {
+case class Return(value : Expression) extends NonLiteralExpression {
   lazy val subexpressions = List(value)
 
   def map(f : Expression => Expression) : et.Return = 

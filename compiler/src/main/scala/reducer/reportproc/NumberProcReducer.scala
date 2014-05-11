@@ -23,7 +23,7 @@ object NumberProcReducer extends ReportProcReducer {
       )
 
       val finalAcc = operands.foldLeft(initialAcc) { case (acc, operandExpr) =>
-        LiteralValue(operandExpr) match {
+        LiteralForExpression(operandExpr) match {
           case Some(ast.IntegerLiteral(exactValue)) =>
             acc.copy(
               exactValue=accumulateExact(acc.exactValue, exactValue)
@@ -75,7 +75,7 @@ object NumberProcReducer extends ReportProcReducer {
     def compareInexact(left : Double, right : Double) : Boolean
     
     def apply(operands : List[et.Expression])(implicit reduceConfig : ReduceConfig) : Option[et.Expression] = {
-      val literalOperands = operands.map(LiteralValue(_))
+      val literalOperands = operands.map(LiteralForExpression(_))
 
       val exactOperandValues = literalOperands.collect { 
         case Some(ast.IntegerLiteral(exactValue)) =>
@@ -113,7 +113,7 @@ object NumberProcReducer extends ReportProcReducer {
   }
 
   private def numericValueOfExpr(expr : et.Expression)(implicit reduceConfig : ReduceConfig) : Option[Double] = {
-    LiteralValue(expr) match {
+    LiteralForExpression(expr) match {
       case Some(ast.IntegerLiteral(exactValue)) =>
         Some(exactValue.toLong)
 
@@ -137,7 +137,7 @@ object NumberProcReducer extends ReportProcReducer {
       })
     
     case ("zero?", List(singleExpr)) =>
-      LiteralValue(singleExpr) match {
+      LiteralForExpression(singleExpr) match {
         case Some(ast.IntegerLiteral(exactValue)) =>
           Some(et.Literal(
             ast.BooleanLiteral(exactValue == 0)
@@ -180,7 +180,7 @@ object NumberProcReducer extends ReportProcReducer {
       None
 
     case ("-", List(singleOperand)) =>
-      LiteralValue(singleOperand) match {
+      LiteralForExpression(singleOperand) match {
         case Some(ast.IntegerLiteral(exactValue)) =>
           Some(et.Literal(ast.IntegerLiteral(-exactValue)))
         
@@ -203,7 +203,7 @@ object NumberProcReducer extends ReportProcReducer {
           val1 + val2
       }
       
-      LiteralValue(startValue) match {
+      LiteralForExpression(startValue) match {
         case Some(ast.IntegerLiteral(exactValue)) =>
           Some((new SubtractOperandProcessor(exactValue, None))(appliedVar, restOperands))
 

@@ -2,6 +2,7 @@ package io.llambda.compiler.reducer
 import io.llambda
 
 import io.llambda.compiler._
+import io.llambda.compiler.reducer.{partialvalue => pv}
 
 private[reducer] object ReduceApplication {
   /** Remaps constant storage locations in an expression and its subexpressions
@@ -63,9 +64,13 @@ private[reducer] object ReduceApplication {
     *         performed
     */
   private def reduceLambdaApplication(lambdaExpr : et.Lambda, reducedOperands : List[et.Expression], forceInline : Boolean)(reduceConfig : ReduceConfig) : Option[et.Expression] = {
-    if (lambdaExpr.restArg.isDefined ||
-        (lambdaExpr.fixedArgs.length != reducedOperands.length)) {
-      // Not implemented
+    // Make sure we have the right airty
+    if (lambdaExpr.restArg.isDefined) {
+      if (reducedOperands.length < lambdaExpr.fixedArgs.length) {
+        return None
+      }
+    }
+    else if (reducedOperands.length != lambdaExpr.fixedArgs.length) {
       return None
     }
 
@@ -80,28 +85,46 @@ private[reducer] object ReduceApplication {
     }
 
     // Rename all of the arguments to new storage locations
-    val argLocRenames = (lambdaExpr.fixedArgs.map { argLocation =>
+    val fixedArgLocRenames = (lambdaExpr.fixedArgs.map { argLocation =>
       argLocation -> new StorageLocation(argLocation.sourceName)
     }).toMap
 
-    val renamedBody = renameVariables(lambdaExpr.body, argLocRenames)
+    val renamedBody = renameVariables(lambdaExpr.body, fixedArgLocRenames)
 
-    // Make new bindings for the arguments
+    // Make new bindings for the fixed arguments
+    // We can't create a full binding for the rest argument (yet) - we only set a known value
     val newBindings = (lambdaExpr.fixedArgs.zip(reducedOperands) map { case (argLocation, operandExpr) =>
-      argLocRenames(argLocation) -> operandExpr
+      fixedArgLocRenames(argLocation) -> operandExpr
     }) : List[(StorageLocation, et.Expression)]
 
+    // Create partial values for all values we know
+    val newFixedKnownValues = newBindings.map { case (storageLoc, operandExpr) =>
+      storageLoc -> pv.PartialValue.fromReducedExpression(operandExpr)
+    }
+
+    val newRestKnownValues = (lambdaExpr.restArg map { restArgLoc =>
+      // Find our rest arguments (if any)
+      val restReducedOperands = reducedOperands.drop(lambdaExpr.fixedArgs.length)
+      val restPartialValues = restReducedOperands.map(pv.PartialValue.fromReducedExpression(_))
+
+      // Make a partial proper list for the rest arg
+      // This allows things like (length) on the rest args, allow it to be re-packed for (apply) etc.
+      val restArgPartialList = pv.ProperList(restPartialValues)
+
+      restArgLoc -> restArgPartialList
+    }).toList
+    
     // Make the analysis for the inner variables
     val analysis = reduceConfig.analysis
 
     val innerReduceConfig = reduceConfig.copy(
-      knownConstants=reduceConfig.knownConstants ++ newBindings,
+      knownValues=reduceConfig.knownValues ++ newFixedKnownValues ++ newRestKnownValues,
       inlineDepth=reduceConfig.inlineDepth + 1
     )
 
     // Reduce the expression
     val reducedBodyExpr = ReduceExpression(renamedBody)(innerReduceConfig)
-      
+
     // Can we return?
     if (ExpressionCanReturn(reducedBodyExpr)) {
       // We can't safely inline this
@@ -109,8 +132,16 @@ private[reducer] object ReduceApplication {
     }
 
     val bodyUsedVars = findUsedVars(reducedBodyExpr)
+    
+    // Is the rest arg itself still referenced?
+    // We refuse to manually build a rest arg at the moment so we fall back to the planner to do so
+    for(restArgStorageLoc <- lambdaExpr.restArg) {
+      if (bodyUsedVars.contains(restArgStorageLoc)) {
+        return None
+      }
+    }
 
-    // Assign any used operands to new storage locations
+    // Assign any used operands to their new storage locations
     // This is required to keep the semantics of the lambda receiving copies of its arguments
     val bindingsExprs = newBindings flatMap { case (argLoc, operandExpr) =>
       if (!bodyUsedVars.contains(argLoc) && IsPureExpression(operandExpr)(reduceConfig)) {
@@ -148,14 +179,14 @@ private[reducer] object ReduceApplication {
     )
 
     val appliedExprDataOpt = appliedExpr match {
-      case et.VarRef(storageLoc) =>
+      case varRef : et.VarRef =>
         // Does this point to a lambda?
         // We can't inline other types of functions
-        (reduceConfig.constantExprForStorageLoc(storageLoc).collect {
-          case lambdaExpr : et.Lambda => 
+        PartialValueForExpression(varRef).collect { 
+          case pv.ReducedExpression(lambdaExpr : et.Lambda) => 
             // Don't inline this - that could cause unbounded code growth
             AppliedExpressionData(lambdaExpr, false)
-        })
+        }
 
       case lambdaExpr : et.Lambda =>
         // This is a self-executing lambda
