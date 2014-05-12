@@ -93,7 +93,7 @@ private[reducer] object ReduceApplication {
     *         performed
     */
   private def reduceLambdaApplication(lambdaExpr : et.Lambda, reducedOperands : List[et.Expression], forceInline : Boolean)(reduceConfig : ReduceConfig) : Option[et.Expression] = {
-    // Make sure we have the right airty
+    // Make sure we have the right arity
     if (lambdaExpr.restArg.isDefined) {
       if (reducedOperands.length < lambdaExpr.fixedArgs.length) {
         return None
