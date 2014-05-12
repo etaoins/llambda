@@ -75,6 +75,24 @@ class ReduceExpressionsSuite extends FunSuite with Inside with testutil.Expressi
     )
   }
 
+  test("reducing (case)") {
+    assert(reductionFor("""
+      (case 'a
+        ((a e i o u) 'vowel)
+        ((w y) 'semivowel)
+        (else => (lambda (x) x)))
+      """) === et.Literal(ast.Symbol("vowel"))
+    )
+    
+    assert(reductionFor("""
+      (case 'c
+        ((a e i o u) 'vowel)
+        ((w y) 'semivowel)
+        (else => (lambda (x) x)))
+      """) === et.Literal(ast.Symbol("c"))
+    )
+  }
+
   test("reducing (case-lambda)") {
     val caseLambdaName = List("scheme", "case-lambda").map(StringComponent(_))
     val caseLambdaBindings = libraryLoader.load(caseLambdaName)(frontendConfig)

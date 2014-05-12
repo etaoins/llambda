@@ -38,4 +38,36 @@ class ListProcReducerSuite extends FunSuite with Inside with testutil.Expression
       et.Literal(ast.IntegerLiteral(3))
     )
   }
+
+  test("static (memq)") {
+    assert(reductionFor("(memq 'a '(a b c))") ===
+      et.Literal(ast.ProperList(List(
+        ast.Symbol("a"),
+        ast.Symbol("b"),
+        ast.Symbol("c")
+      )))
+    )
+    
+    assert(reductionFor("(memq 'b '(a b c))") ===
+      et.Literal(ast.ProperList(List(
+        ast.Symbol("b"),
+        ast.Symbol("c")
+      )))
+    )
+    
+    assert(reductionFor("(memq 'a '(b c d))") ===
+      et.Literal(ast.BooleanLiteral(false))
+    )
+  }
+
+  test("static (member)") {
+    assert(reductionFor("(member '(a) '(b (a) c))") ===
+      et.Literal(ast.ProperList(List(
+        ast.ProperList(List(
+          ast.Symbol("a")
+        )),
+        ast.Symbol("c")
+      )))
+    )
+  }
 }

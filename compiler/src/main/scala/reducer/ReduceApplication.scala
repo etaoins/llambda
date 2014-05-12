@@ -154,6 +154,19 @@ private[reducer] object ReduceApplication {
     // Reduce the expression
     val reducedBodyExpr = ReduceExpression(renamedBody)(innerReduceConfig)
 
+    // Does this collapse to a single argument reference?
+    reducedBodyExpr match {
+      case et.VarRef(storageLoc) =>
+        for((argLoc, operandExpr) <- newBindings) {
+          if (storageLoc == argLoc) {
+            // This is trivial - return the original expression to prevent useless Begin()s
+            return Some(operandExpr)
+          }
+        }
+
+      case _ =>
+    }
+
     // Can we return?
     if (ExpressionCanReturn(reducedBodyExpr)) {
       // We can't safely inline this
