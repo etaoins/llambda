@@ -1,12 +1,13 @@
 (define-library (scheme base)
     (import (rename (llambda internal primitives) (define-report-procedure define-r7rs)))
+    (import (llambda internal features))
     (import (llambda nfi))
 
     ; Export (lambda primitives) that occur in (scheme base)
     ; These are virtual definitions provided by the compiler
     (export lambda quote if set! syntax-error include quasiquote unquote
             unquote-splicing define define-syntax define-record-type
-            cond-expand parameterize)
+            cond-expand parameterize features)
 
     (export begin)
     (begin
@@ -318,11 +319,6 @@
     (export newline)
     (begin
       (define-r7rs newline (native-function "lliby_newline" ())))
-
-    (export features)
-    (begin
-      ; Note this is produced by codegen; it's not part of the standard library
-      (define-r7rs features (native-function "__llambda_features" () <list-element-cell>)))
 
     (export with-exception-handler raise error error-object? error-object-message error-object-irritants)
     (begin

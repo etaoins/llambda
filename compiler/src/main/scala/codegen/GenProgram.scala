@@ -48,9 +48,6 @@ object GenProgram {
 
     val nextTbaaIndex = ct.CellType.nextTbaaIndex
     val typeGenerator = new TypeGenerator(module, targetPlatform, nextTbaaIndex)
-    
-    // Build our list of feature identifiers
-    GenFeatureIdentifiers(module)(featureIdentifiers)
 
     // Build each program-supplied function
     val functionGenerator = GenFunction(module, plannedSymbols, typeGenerator)_ 
