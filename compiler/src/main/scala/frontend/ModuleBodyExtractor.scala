@@ -111,15 +111,14 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
     } : List[(StorageLocation, et.Expression)]
 
     // Find the expressions in our body 
-    val bodyExprs = bodyData.map(extractExpression) : List[et.Expression]
+    val bodyExpr = et.Expression.fromSequence(
+      bodyData.map(extractExpression)
+    )
 
-    val boundExprs = bindings match {
-      case Nil => bodyExprs
-      case _ => et.Bind(bindings) :: bodyExprs
+    bindings match {
+      case Nil => bodyExpr
+      case _ => et.InternalDefinition(bindings, bodyExpr)
     }
-
-    // Collect our expression list in to a single expression
-    et.Expression.fromSequence(boundExprs)
   }
 
   private def createLambda(fixedArgData : List[sst.ScopedDatum], restArgDatum : Option[sst.ScopedSymbol], definition : List[sst.ScopedDatum]) : et.Lambda = {
@@ -330,7 +329,7 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
           case None  =>
             // This is a fresh binding
             symbol.scope += (symbol.name -> boundValue)
-            et.Bind(List(boundValue -> exprBlock()))
+            et.TopLevelDefinition(List(boundValue -> exprBlock()))
         }
 
       case Some(ParsedSimpleDefine(symbol, boundValue)) =>
@@ -341,7 +340,7 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
       case Some(ParsedRecordTypeDefine(typeSymbol, recordType, procedures)) =>
         typeSymbol.scope += (typeSymbol.name -> BoundType(recordType))
 
-        et.Bind((procedures.map { case (procedureSymbol, expr) =>
+        et.TopLevelDefinition((procedures.map { case (procedureSymbol, expr) =>
           val storageLoc = new StorageLocation(procedureSymbol.name)
 
           procedureSymbol.scope += (procedureSymbol.name -> storageLoc)

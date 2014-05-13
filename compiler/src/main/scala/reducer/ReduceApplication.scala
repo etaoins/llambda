@@ -16,21 +16,18 @@ private[reducer] object ReduceApplication {
     reportproc.SymbolProcReducer,
     reportproc.VectorProcReducer
   )
+  
+  private sealed abstract class ResolvedAppliedExpr {
+    def toOutOfLine : ResolvedAppliedExpr
+  }
 
-  /** Remaps constant storage locations in an expression and its subexpressions
-    *
-    * @param  expr               Expression to perform the renames on
-    * @param  storageLocRenames  Map of original storage locations to their renamed equivalents. If a storage location
-    *                            is not found in the map its identity is preserved
-    * @return Renamed expression
-    */
-  private def renameVariables(expr : et.Expression, storageLocRenames : Map[StorageLocation, StorageLocation]) : et.Expression = (expr match {
-    case et.VarRef(storageLoc) =>
-      et.VarRef(storageLocRenames.get(storageLoc).getOrElse(storageLoc))
+  private case class ResolvedLambda(lambdaExpr : et.Lambda, inlineDefinition : Boolean) extends ResolvedAppliedExpr {
+    def toOutOfLine = this.copy(inlineDefinition=false)
+  }
 
-    case otherExpr =>
-      otherExpr.map(renameVariables(_, storageLocRenames))
-  }).assignLocationFrom(expr)
+  private case class ResolvedReportProcedure(reportProc : ReportProcedure) extends ResolvedAppliedExpr {
+    def toOutOfLine = this
+  }
 
   /** Returns if an expression is trivial
     *
@@ -39,15 +36,8 @@ private[reducer] object ReduceApplication {
     * (leaf data).
     */
   private def expressionIsTrivial(expr : et.Expression) : Boolean = expr match {
-    case et.Literal(_ : ast.Leaf) =>
+    case et.Literal(_ : ast.Leaf) | et.VarRef(_) =>
       true
-
-    case et.VarRef(_) => 
-      true
-
-    case et.Bind(bindings) =>
-      // Bindings don't generate code directly - allow them as long as they're binding trivial values
-      bindings.map(_._2).forall(expressionIsTrivial)
 
     case _ =>
       false
@@ -58,29 +48,21 @@ private[reducer] object ReduceApplication {
     * This currently is either a trivial expression or an application involving only trivial expressions. Note that
     * this definition is non-recursive - i.e. applications of applications of trivial expressions are disallowed.
     */
-  private def shouldInlineExpr(candidateExpr : et.Expression) : Boolean = {
-    val (applications, nonApplications) = candidateExpr.toSequence.partition(_.isInstanceOf[et.Apply])
-
-    // We only allow one application
-    nonApplications.forall(expressionIsTrivial) && (applications match {
-      case List(singleApply) =>
-        singleApply.subexpressions.forall(expressionIsTrivial)
-
-      case Nil =>
-        true
-
-      case multiexpr =>
+  private def shouldInlineExpr(candidateExpr : et.Expression) : Boolean = candidateExpr match {
+    case et.InternalDefinition(bindings, bodyExpr) =>
+      if (bindings.map(_._2).forall(expressionIsTrivial)) {
+        // Unwrap the internal definition
+        shouldInlineExpr(bodyExpr)
+      }
+      else {
         false
-    })
-  }
+      }
 
-  /** Finds all variables used by an expression and its subexpressions */ 
-  private def findUsedVars(expr : et.Expression) : Set[StorageLocation] = expr match {
-    case et.VarRef(storageLoc) => 
-      Set(storageLoc)
+    case applyExpr : et.Apply =>
+      applyExpr.subexpressions.forall(expressionIsTrivial)
 
-    case other =>
-      other.subexpressions.flatMap(findUsedVars(_)).toSet
+    case otherExpr =>
+      expressionIsTrivial(otherExpr)
   }
 
   /** Reduces a lambda application via optional inlining 
@@ -113,18 +95,9 @@ private[reducer] object ReduceApplication {
       return None
     }
 
-    // Rename all of the arguments to new storage locations
-    val fixedArgLocRenames = (lambdaExpr.fixedArgs.map { argLocation =>
-      argLocation -> new StorageLocation(argLocation.sourceName)
-    }).toMap
-
-    val renamedBody = renameVariables(lambdaExpr.body, fixedArgLocRenames)
-
     // Make new bindings for the fixed arguments
     // We can't create a full binding for the rest argument (yet) - we only set a known value
-    val newBindings = (lambdaExpr.fixedArgs.zip(reducedOperands) map { case (argLocation, operandExpr) =>
-      fixedArgLocRenames(argLocation) -> operandExpr
-    }) : List[(StorageLocation, et.Expression)]
+    val newBindings = lambdaExpr.fixedArgs.zip(reducedOperands)
 
     // Create partial values for all values we know
     val newFixedKnownValues = newBindings.map { case (storageLoc, operandExpr) =>
@@ -152,20 +125,7 @@ private[reducer] object ReduceApplication {
     )
 
     // Reduce the expression
-    val reducedBodyExpr = ReduceExpression(renamedBody)(innerReduceConfig)
-
-    // Does this collapse to a single argument reference?
-    reducedBodyExpr match {
-      case et.VarRef(storageLoc) =>
-        for((argLoc, operandExpr) <- newBindings) {
-          if (storageLoc == argLoc) {
-            // This is trivial - return the original expression to prevent useless Begin()s
-            return Some(operandExpr)
-          }
-        }
-
-      case _ =>
-    }
+    val reducedBodyExpr = ReduceExpression(lambdaExpr.body)(innerReduceConfig)
 
     // Can we return?
     if (ExpressionCanReturn(reducedBodyExpr)) {
@@ -173,7 +133,20 @@ private[reducer] object ReduceApplication {
       return None
     }
 
-    val bodyUsedVars = findUsedVars(reducedBodyExpr)
+    // Do we reduce to a single variable reference?
+    // This is technically a type of eta conversion and makes our ouput cleaner
+    reducedBodyExpr match {
+      case et.VarRef(storageLoc) =>
+        for((bindingLoc, initializer) <- newBindings) {
+          if (bindingLoc == storageLoc) {
+            return Some(initializer)
+          }
+        }
+
+      case _ =>
+    }
+
+    val bodyUsedVars = ReferencedVariables(reducedBodyExpr)
     
     // Is the rest arg itself still referenced?
     // We refuse to manually build a rest arg at the moment so we fall back to the planner to do so
@@ -183,24 +156,20 @@ private[reducer] object ReduceApplication {
       }
     }
 
-    // Assign any used operands to their new storage locations
-    // This is required to keep the semantics of the lambda receiving copies of its arguments
-    val bindingsExprs = newBindings flatMap { case (argLoc, operandExpr) =>
-      if (!bodyUsedVars.contains(argLoc) && IsPureExpression(operandExpr)(reduceConfig)) {
-        // Drop this entirely
-        // This is useful because things like (or) leave lots of Bind()s around otherwise and Bind() is impure
-        // This prevents further reductions on the expression
-        None
+    if (forceInline || shouldInlineExpr(reducedBodyExpr)) {
+      // Figure out which bindings are still required
+      val usedBindings = newBindings filter { case (argLoc, operandExpr) =>
+        bodyUsedVars.contains(argLoc) || !IsPureExpression(operandExpr)(reduceConfig)
+      }
+
+      Some(if (usedBindings.isEmpty) {
+        // No bindings, just the return the reduced body
+        reducedBodyExpr
       }
       else {
-        Some(et.Bind(List(argLoc -> operandExpr)).assignLocationFrom(lambdaExpr))
-      }
-    }
-
-    if (forceInline || shouldInlineExpr(reducedBodyExpr)) {
-      Some(
-        et.Expression.fromSequence(bindingsExprs :+ reducedBodyExpr)
-      )
+        // Wrap in a binding expression
+        et.InternalDefinition(usedBindings, reducedBodyExpr)
+      })
     }
     else {
       // Inlining is possible but determined not to be beneficial 
@@ -208,58 +177,54 @@ private[reducer] object ReduceApplication {
     }
   }
 
+
+  /** Resolves an applied expression attempting to find a report procedure or lambda */
+  private def resolveAppliedExpr(expr : et.Expression, ignoreReportProcs : Set[ReportProcedure])(implicit reduceConfig : ReduceConfig) : Option[ResolvedAppliedExpr] = expr match {
+    case et.VarRef(reportProcedure : ReportProcedure) if !ignoreReportProcs.contains(reportProcedure) =>
+      Some(ResolvedReportProcedure(reportProcedure))
+
+    case et.VarRef(storageLoc) =>
+      // Dereference the variable
+      val storageLocExprOpt = (reduceConfig.knownValues.get(storageLoc).flatMap(_.toExpressionOpt) orElse
+        reduceConfig.analysis.constantTopLevelBindings.get(storageLoc)
+      )
+          
+      storageLocExprOpt.flatMap { derefedExpr =>
+        // This is no longer an inline definition
+        resolveAppliedExpr(derefedExpr, ignoreReportProcs).map(_.toOutOfLine)
+      }
+
+    case lambdaExpr : et.Lambda =>
+      Some(ResolvedLambda(lambdaExpr, true))
+
+    case other => 
+      None
+  }
+
   /** Reduces a procedure application via optional inlining 
     *
-    * @param  appliedExpr      Expression being applied. This must not be previously reduced.
-    * @param  reducedOperands  Reduced expressions of the operands of the application in application order
-    * @return Expression to replace the original application with
+    * @param  appliedExpr        Expression being applied
+    * @param  reducedOperands    Reduced expressions of the operands of the application in application order
+    * @param  ignoreReportProcs  Set of report procedures to treat as normal values. This is used internally to retry
+    *                            reduction after failing to do report procedure specific reduction.
+    * @return Expression to replace the original application with or None to use the original expression
     */
-  def apply(appliedExpr : et.Expression, reducedOperands : List[et.Expression])(implicit reduceConfig : ReduceConfig) : et.Expression = {
-    case class AppliedExpressionData(
-      lambdaExpr : et.Lambda,
-      forceInline : Boolean
-    )
-    
-    val appliedExprDataOpt = appliedExpr match {
-      case varRef : et.VarRef =>
-        varRef.variable match {
-          case reportProc : ReportProcedure =>
-            // Run this through the report procedure reducers
-            for(reportProcReducer <- reportProcReducers) {
-              for(expr <- reportProcReducer(reportProc, reducedOperands)) {
-                // This was recognized and reduced - perform no further action
-                return expr
-              }
-            }
-
-          case _ =>
-        }
-            
-        // Does this point to a lambda?
-        // We can't inline other types of functions
-        reduceConfig.analysis.constantInitializers.get(varRef.variable).collect { 
-          case lambdaExpr : et.Lambda => 
-            // Don't inline this - that could cause unbounded code growth
-            AppliedExpressionData(lambdaExpr, false)
+  def apply(appliedExpr : et.Expression, reducedOperands : List[et.Expression], ignoreReportProcs : Set[ReportProcedure] = Set())(implicit reduceConfig : ReduceConfig) : Option[et.Expression] = {
+    resolveAppliedExpr(appliedExpr, ignoreReportProcs) flatMap {
+      case ResolvedReportProcedure(reportProc) =>
+        // Run this through the report procedure reducers
+        for(reportProcReducer <- reportProcReducers) {
+          for(expr <- reportProcReducer(reportProc, reducedOperands)) {
+            // This was recognized and reduced - perform no further action
+            return Some(expr)
+          }
         }
 
-      case lambdaExpr : et.Lambda =>
-        // This is a self-executing lambda
-        // Do whatever we can to inline - this is the only use
-        Some(AppliedExpressionData(lambdaExpr, true))
+        // Couldn't reduce as a report procedure; retry as a normal expression
+        apply(appliedExpr, reducedOperands, ignoreReportProcs + reportProc)
 
-      case _ =>
-        None
-    }
-      
-    val reducedLambdaOpt = appliedExprDataOpt.flatMap {
-      case AppliedExpressionData(lambdaExpr, forceInline) =>
-        reduceLambdaApplication(lambdaExpr, reducedOperands, forceInline)(reduceConfig)
-    }
-
-    reducedLambdaOpt.getOrElse {
-      // Use the original apply with our reduced operands
-      et.Apply(appliedExpr, reducedOperands)
+      case ResolvedLambda(lambdaExpr, inlineDefinition) =>
+        reduceLambdaApplication(lambdaExpr, reducedOperands, inlineDefinition)(reduceConfig)
     }
   }
 }

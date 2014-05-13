@@ -86,10 +86,20 @@ private[planner] object PlanExpression {
           state=finalState,
           value=applyValueOpt.getOrElse(iv.UnitValue))
 
-      case et.Bind(bindings) =>
+      case et.TopLevelDefinition(bindings) =>
         PlanResult(
           state=PlanBind(initialState)(bindings),
           value=iv.UnitValue
+        )
+
+      case et.InternalDefinition(bindings, bodyExpr) =>
+        val bodyState = PlanBind(initialState)(bindings)
+
+        // Return to our initial state
+        // InternalDefinitions can re-bind existing variables and they must be restored after its body is planned
+        PlanResult(
+          state=initialState,
+          value=apply(bodyState)(bodyExpr).value
         )
 
       case et.VarRef(storageLoc : StorageLocation) => 

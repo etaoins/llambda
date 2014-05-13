@@ -44,11 +44,11 @@ class StringProcReducerSuite extends FunSuite with Inside with testutil.Expressi
     )
 
     // We shouldn't do this as it could cause duplicate data
-    inside(reductionFor("""
+    inside(bindlessReductionFor("""
       (define test-string "Hello")
       (string->symbol test-string)
     """)) {
-      case et.Begin(List(et.Bind(_), et.Apply(_, _))) =>
+      case et.Apply(_, _) =>
         Unit
     }
     

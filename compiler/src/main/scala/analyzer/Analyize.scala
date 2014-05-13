@@ -9,11 +9,11 @@ object Analyize {
     val foundVars = FindVars(et.Begin(exprs))
 
     // We don't care about the initializers of mutable variables
-    val constantInitializers = foundVars.initializers -- foundVars.mutableVars
+    val constantTopLevelBindings = foundVars.topLevelBindings -- foundVars.mutableVars
 
     AnalysisResult(
       mutableVars=foundVars.mutableVars,
-      constantInitializers=constantInitializers,
+      constantTopLevelBindings=constantTopLevelBindings,
       usedVars=foundVars.usedVars
     )
   }

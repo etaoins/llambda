@@ -32,6 +32,9 @@ private[reducer] object PartialValueForExpression {
         None
       }
 
+    case et.InternalDefinition(_, expr) =>
+      PartialValueForExpression(expr, allowImpureExprs)
+
     case et.Literal(datum) =>
       // This is already literal
       Some(pv.PartialValue.fromDatum(datum))
@@ -48,7 +51,8 @@ private[reducer] object PartialValueForExpression {
       // Do we already know this partial value?
       reduceConfig.knownValues.get(storageLoc) orElse {
         // No, check if it has an initialiser
-        val initializerOpt = reduceConfig.analysis.constantInitializers.get(storageLoc)
+        // This will only succeed if we're doing our pre-reduction pass on top level bindings
+        val initializerOpt = reduceConfig.analysis.constantTopLevelBindings.get(storageLoc)
         initializerOpt.flatMap({ initializer =>
           // Allow impure expressions because there's no risk of the caller optimizing the initializer out
           PartialValueForExpression(

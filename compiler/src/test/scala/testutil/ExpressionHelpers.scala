@@ -60,7 +60,7 @@ trait ExpressionHelpers extends FunSuite with OptionValues {
     // want to ensure that the full inlining operation can happen in one pass.
     et.Expression.fromSequence(
       reductionFor(schemeString).toSequence.flatMap {
-        case et.Bind(_) =>
+        case et.TopLevelDefinition(_) =>
           None
 
         case other =>

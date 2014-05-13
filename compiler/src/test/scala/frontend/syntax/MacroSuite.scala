@@ -488,7 +488,9 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
     inside(scope.get("a").value) {
       case storageLoc : StorageLocation =>
         assert(exprs == List(
-          et.Bind((storageLoc, et.Literal(ast.IntegerLiteral(2))) :: Nil)
+          et.TopLevelDefinition(List(
+            (storageLoc, et.Literal(ast.IntegerLiteral(2))) 
+          ))
         ))
     }
   }

@@ -5,13 +5,13 @@ import llambda.compiler.{StorageLocation, et}
 
 private[analyzer] case class FoundVars(
   mutableVars : Set[StorageLocation] = Set(),
-  initializers : Map[StorageLocation, et.Expression] = Map(),
+  topLevelBindings : Map[StorageLocation, et.Expression] = Map(),
   usedVars : Set[StorageLocation] = Set()
 ) {
   def ++(other : FoundVars) : FoundVars =
     FoundVars(
       mutableVars=mutableVars ++ other.mutableVars,
-      initializers=initializers ++ other.initializers,
+      topLevelBindings=topLevelBindings ++ other.topLevelBindings,
       usedVars=usedVars ++ other.usedVars
     )
 }
@@ -29,13 +29,9 @@ private[analyzer] object FindVars {
           mutableVars=subexprFoundVars.mutableVars + storageLoc
         )
 
-      case et.Bind(bindings) =>
-        val bindingsToOpt = (bindings.map { case (storageLoc, initializer) =>
-          storageLoc -> initializer
-        }).toMap
-
+      case et.TopLevelDefinition(bindings) =>
         subexprFoundVars.copy(
-          initializers=subexprFoundVars.initializers ++ bindingsToOpt
+          topLevelBindings=subexprFoundVars.topLevelBindings ++ bindings
         )
 
       case et.VarRef(storageLoc) =>

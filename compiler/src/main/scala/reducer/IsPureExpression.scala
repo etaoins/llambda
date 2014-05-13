@@ -25,10 +25,14 @@ private[reducer] object IsPureExpression {
     case _ : et.MutateVar =>
       false
 
-    case et.Bind(bindings) =>
-      // Binds have the side of effect of making storage locations live
+    case et.TopLevelDefinition(bindings) =>
+      // Top level definitions have the side effect of making values live for the rest of the program
       // We try to remove unused bindings so any remaining ones are likely legitimate
       bindings.isEmpty
+
+    case internalDefine : et.InternalDefinition =>
+      // Internal definitions are pure as long as all the bound values and body expressions are pure
+      internalDefine.subexpressions.forall(IsPureExpression(_))
 
     case _ : et.Return =>
       // Returns have the side effect of causing control flow

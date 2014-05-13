@@ -15,7 +15,7 @@ class FindVarsSuite extends FunSuite {
     val testLocA = new StorageLocation("testLocA")
     val testLocB = new StorageLocation("testLocB")
 
-    val testExpr = et.Bind(
+    val testExpr = et.TopLevelDefinition(
       List(
         testLocA -> et.Literal(ast.BooleanLiteral(true)),
         testLocB -> et.Literal(ast.BooleanLiteral(false))
@@ -24,7 +24,7 @@ class FindVarsSuite extends FunSuite {
     
     assert(FindVars(testExpr) === FoundVars(
       mutableVars=Set(),
-      initializers=Map(
+      topLevelBindings=Map(
         testLocA -> et.Literal(ast.BooleanLiteral(true)),
         testLocB -> et.Literal(ast.BooleanLiteral(false))
       )
@@ -36,7 +36,7 @@ class FindVarsSuite extends FunSuite {
     val testLocB = new StorageLocation("testLocB")
 
     val testExprs = List(
-      et.Bind(
+      et.TopLevelDefinition(
         List(
           testLocA -> et.Literal(ast.BooleanLiteral(true)),
           testLocB -> et.Literal(ast.BooleanLiteral(false))
@@ -49,7 +49,7 @@ class FindVarsSuite extends FunSuite {
 
     assert(foundVars === FoundVars(
       mutableVars=Set(testLocA),
-      initializers=Map(
+      topLevelBindings=Map(
         testLocA -> et.Literal(ast.BooleanLiteral(true)),
         testLocB -> et.Literal(ast.BooleanLiteral(false))
       )
@@ -61,7 +61,7 @@ class FindVarsSuite extends FunSuite {
     val testLocB = new StorageLocation("testLocB")
 
     val testExprs = List(
-      et.Bind(
+      et.TopLevelDefinition(
         List(
           testLocA -> et.Literal(ast.BooleanLiteral(true)),
           testLocB -> et.Literal(ast.BooleanLiteral(false))
@@ -77,7 +77,7 @@ class FindVarsSuite extends FunSuite {
 
     assert(foundVars === FoundVars(
       mutableVars=Set(testLocA),
-      initializers=Map(
+      topLevelBindings=Map(
         testLocA -> et.Literal(ast.BooleanLiteral(true)),
         testLocB -> et.Literal(ast.BooleanLiteral(false))
       )
@@ -89,7 +89,7 @@ class FindVarsSuite extends FunSuite {
     val testLocB = new StorageLocation("testLocB")
 
     val testExprs = List( 
-      et.Bind(
+      et.TopLevelDefinition(
         List(
           testLocA -> et.Literal(ast.BooleanLiteral(true)),
           testLocB -> et.Literal(ast.BooleanLiteral(false))
@@ -111,7 +111,7 @@ class FindVarsSuite extends FunSuite {
 
     assert(foundVars === FoundVars(
       mutableVars=Set(testLocA),
-      initializers=Map(
+      topLevelBindings=Map(
         testLocA -> et.Literal(ast.BooleanLiteral(true)),
         testLocB -> et.Literal(ast.BooleanLiteral(false))
       )
@@ -123,7 +123,7 @@ class FindVarsSuite extends FunSuite {
     val testLocB = new StorageLocation("testLocB")
 
     val testExprs = List(
-      et.Bind(
+      et.TopLevelDefinition(
         List(
           testLocA -> et.Literal(ast.BooleanLiteral(true)),
           testLocB -> et.Literal(ast.BooleanLiteral(false))
@@ -143,7 +143,7 @@ class FindVarsSuite extends FunSuite {
 
     assert(foundVars === FoundVars(
       mutableVars=Set(testLocA),
-      initializers=Map(
+      topLevelBindings=Map(
         testLocA -> et.Literal(ast.BooleanLiteral(true)),
         testLocB -> et.Literal(ast.BooleanLiteral(false))
       )
@@ -155,7 +155,7 @@ class FindVarsSuite extends FunSuite {
     val testLocB = new StorageLocation("testLocB")
 
     val testExprs = List(
-      et.Bind(
+      et.TopLevelDefinition(
         List(
           testLocA -> et.Literal(ast.BooleanLiteral(true)),
           testLocB -> et.Literal(ast.BooleanLiteral(false))
@@ -172,7 +172,7 @@ class FindVarsSuite extends FunSuite {
 
     assert(foundVars === FoundVars(
       mutableVars=Set(testLocA),
-      initializers=Map(
+      topLevelBindings=Map(
         testLocA -> et.Literal(ast.BooleanLiteral(true)),
         testLocB -> et.Literal(ast.BooleanLiteral(false))
       )
@@ -185,13 +185,13 @@ class FindVarsSuite extends FunSuite {
     val testLocC = new StorageLocation("testLocC")
 
     val testExprs = List(
-      et.Bind(
+      et.TopLevelDefinition(
         List(
           testLocA -> et.Literal(ast.BooleanLiteral(true)),
           testLocB -> et.Literal(ast.BooleanLiteral(false))
         )
       ),
-      et.Bind(
+      et.TopLevelDefinition(
         List(
           testLocC -> et.MutateVar(testLocA, et.Literal(ast.EmptyList()))
         )
@@ -202,7 +202,7 @@ class FindVarsSuite extends FunSuite {
 
     assert(foundVars === FoundVars(
       mutableVars=Set(testLocA),
-      initializers=Map(
+      topLevelBindings=Map(
         testLocA -> et.Literal(ast.BooleanLiteral(true)),
         testLocB -> et.Literal(ast.BooleanLiteral(false)),
         testLocC -> et.MutateVar(testLocA, et.Literal(ast.EmptyList()))
@@ -215,7 +215,7 @@ class FindVarsSuite extends FunSuite {
     val testLocB = new StorageLocation("testLocB")
 
     val testExprs = List(
-      et.Bind(
+      et.TopLevelDefinition(
         List(
           testLocA -> et.Literal(ast.BooleanLiteral(true)),
           testLocB -> et.Literal(ast.BooleanLiteral(false))
@@ -228,7 +228,7 @@ class FindVarsSuite extends FunSuite {
     
     assert(foundVars === FoundVars(
       mutableVars=Set(testLocA, testLocB),
-      initializers=Map(
+      topLevelBindings=Map(
         testLocA -> et.Literal(ast.BooleanLiteral(true)),
         testLocB -> et.Literal(ast.BooleanLiteral(false))
       )

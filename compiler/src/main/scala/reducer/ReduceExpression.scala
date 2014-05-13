@@ -2,6 +2,7 @@ package io.llambda.compiler.reducer
 import io.llambda
 
 import io.llambda.compiler._
+import io.llambda.compiler.reducer.{partialvalue => pv}
 
 private[reducer] object ReduceExpression {
   private def unflattenExprs(exprs : List[et.Expression])(implicit reduceConfig : ReduceConfig) : et.Expression = exprs match {
@@ -29,25 +30,69 @@ private[reducer] object ReduceExpression {
 
     case et.Apply(appliedExpr, operands) =>
       val reducedOperands = operands.map(ReduceExpression(_))
-      ReduceApplication(appliedExpr, reducedOperands)
 
-    case et.Bind(bindings) =>
-      val newBindings = (bindings.map { case (storageLoc, initializer) =>
-        // Reduce the initializers first to make them pure
+      ReduceApplication(appliedExpr, reducedOperands) getOrElse {
+        // We declined reducing this application
+        et.Apply(apply(appliedExpr), reducedOperands)  
+      }
+
+    case et.TopLevelDefinition(bindings) =>
+      // Reduce our bindings and drop unused pure bindings
+      val usedBindings = (bindings.map { case (storageLoc, initializer) =>
         storageLoc -> ReduceExpression(initializer)
       }).filter { case (storageLoc, reducedInitializer) =>
         // Drop any bindings of unused variables to pure expressions
         reduceConfig.analysis.usedVars.contains(storageLoc) || !IsPureExpression(reducedInitializer)
       }
 
-      newBindings match {
+      usedBindings match {
         case Nil =>
           et.Literal(ast.UnitValue())
 
-        case other =>
-          et.Bind(newBindings)
+        case nonEmptyBindings =>
+          et.TopLevelDefinition(nonEmptyBindings)
       }
 
+    case et.InternalDefinition(bindings, bodyExpr) =>
+      // Just reduce our bindings first
+      val reducedBindings = bindings.map { case (storageLoc, initializer) =>
+        storageLoc -> ReduceExpression(initializer)
+      }
+      
+      // We now have known values for the body expression
+      val newKnownValues = reducedBindings.filter({ case (storageLoc, reducedInitializer) =>
+        !reduceConfig.analysis.mutableVars.contains(storageLoc)
+      }).map { case (storageLoc, reducedInitializer) =>
+        storageLoc -> pv.PartialValue.fromReducedExpression(reducedInitializer)
+      }
+      
+      val bodyConfig = reduceConfig.copy(
+        knownValues=(reduceConfig.knownValues ++ newKnownValues)
+      )
+
+      // Reduce the body
+      val reducedBody = ReduceExpression(bodyExpr)(bodyConfig)
+
+      // Strip unused bindings
+      // Note that unlike lambdas we need to handle recursively defined values in our bindings
+      val bodyUsedVars = ReferencedVariables(reducedBody)    
+      val recursiveBindingUsedVars = (reducedBindings.flatMap { case (_, initializer) =>
+        ReferencedVariables(initializer)
+      }).toSet
+
+      val allUsedVars = bodyUsedVars ++ recursiveBindingUsedVars 
+
+      val usedBindings = reducedBindings.filter { case (storageLoc, initializer) =>
+        allUsedVars.contains(storageLoc) || !IsPureExpression(initializer)
+      }
+       
+      if (usedBindings.isEmpty) {
+        // We can drop the InternalDefinition entirely and use the unwrapped body
+        reducedBody
+      }
+      else {
+        et.InternalDefinition(usedBindings, reducedBody)
+      }
 
     case et.Cond(testExpr, trueExpr, falseExpr) =>
       val reducedTest = apply(testExpr)

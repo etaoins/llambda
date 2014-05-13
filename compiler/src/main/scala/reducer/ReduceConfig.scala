@@ -9,6 +9,5 @@ case class ReduceConfig(
   knownValues : Map[StorageLocation, pv.PartialValue] = Map(),
   // This is used by LiteralValue() to prevent infinite recursion with (letrec)ed variables
   resolvingInitializers : Set[StorageLocation] = Set(),
-  inlineDepth : Int = 0,
-  inliningLambdas : Set[et.Lambda] = Set()
+  inlineDepth : Int = 0
 )

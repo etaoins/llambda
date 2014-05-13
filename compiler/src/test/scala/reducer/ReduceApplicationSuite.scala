@@ -56,6 +56,47 @@ class ReduceApplicationSuite extends FunSuite with Inside with testutil.Expressi
     )
   }
 
+  test("inlining procedures passed as values") {
+    implicit val scope = schemeBaseScope
+
+    assert(bindlessReductionFor("""
+      (define addr +)
+      (define (combine-arg-length combiner initial-value . rest)
+        (combiner initial-value (length rest)))
+
+      (combine-arg-length addr 5 1 2 3 4 5)
+      """) === et.Literal(ast.IntegerLiteral(10))
+    )
+  }
+
+  test("inlining procedures returned from other expressions") {
+    implicit val scope = schemeBaseScope
+
+    // This seems stupid but it's useful for binding common values for a (case-lambda)
+    assert(bindlessReductionFor("""
+      (define proc-from-let (let ((mutliplier 2))
+        (lambda (to-multiply)
+          (* mutliplier to-multiply))))
+
+      (proc-from-let -5)
+      """) === et.Literal(ast.IntegerLiteral(-10))
+    )
+  }
+  
+  test("reducing procedures decided by a conditional") {
+    implicit val scope = schemeBaseScope
+
+    // This seems stupid but it's useful for binding common values for a (case-lambda)
+    assert(bindlessReductionFor("""
+      (define (multi-op val1 val2 use-minus)
+        (define operator (if use-minus - +))
+        (operator val1 val2))
+
+      (multi-op 4 10 #f)
+      """) === et.Literal(ast.IntegerLiteral(14))
+    )
+  }
+
   test("recursive inlining") {
     implicit val scope = schemeBaseScope
 

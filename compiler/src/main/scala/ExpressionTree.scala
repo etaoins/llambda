@@ -88,13 +88,26 @@ case class Lambda(fixedArgs : List[StorageLocation], restArg : Option[StorageLoc
     Lambda(fixedArgs, restArg, f(body)).assignLocationFrom(this)
 }
 
-case class Bind(bindings : List[(StorageLocation, Expression)]) extends NonLiteralExpression {
+sealed abstract trait BindingExpression extends NonLiteralExpression {
+  val bindings : List[(StorageLocation, Expression)]
+}
+
+case class TopLevelDefinition(bindings : List[(StorageLocation, Expression)]) extends BindingExpression {
   val subexpressions = bindings.map(_._2)
 
-  def map(f : Expression => Expression) : Bind =
-    Bind(bindings.map { case (storageLoc, expr) =>
+  def map(f : Expression => Expression) : TopLevelDefinition =
+    TopLevelDefinition(bindings.map { case (storageLoc, expr) =>
       (storageLoc, f(expr))
     }).assignLocationFrom(this)
+}
+
+case class InternalDefinition(bindings : List[(StorageLocation, Expression)], body : Expression) extends BindingExpression {
+  val subexpressions = body :: bindings.map(_._2)
+
+  def map(f : Expression => Expression) : InternalDefinition =
+    InternalDefinition(bindings.map { case (storageLoc, expr) =>
+      (storageLoc, f(expr))
+    }, f(body)).assignLocationFrom(this)
 }
 
 case class NativeFunction(
