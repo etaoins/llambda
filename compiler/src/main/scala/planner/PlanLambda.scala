@@ -55,13 +55,17 @@ private[planner] object PlanLambda {
       otherExpr.subexpressions.flatMap(findRefedVariables).toSet
   }
 
-  private def initializeMutableArgs(initialState : PlannerState)(mutableArgs : List[Argument])(implicit plan : PlanWriter) : PlannerState = mutableArgs.length match {
+  private def initializeMutableArgs(initialState : PlannerState)(mutableArgs : List[Argument])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : PlannerState = mutableArgs.length match {
     case 0 =>
       // Nothing to do
       initialState
 
     case argCount =>
-      mutableArgs.foldLeft(initialState) { case (state, Argument(storageLoc, tempValue, _)) =>
+      mutableArgs.foldLeft(initialState) { case (state, Argument(storageLoc, tempValue, valueType)) =>
+        // Cast the argument to a datum cell to fit inside a mutable record
+        val argValue = TempValueToIntermediate(valueType, tempValue)
+        val datumTempValue = argValue.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
+
         // Init the mutable
         val mutableTemp = ps.GcManagedValue()
         val recordDataTemp = ps.GcUnmanagedValue()
@@ -69,7 +73,7 @@ private[planner] object PlanLambda {
         plan.steps += ps.RecordLikeInit(mutableTemp, recordDataTemp, vt.MutableType)
 
         // Set the value
-        plan.steps += ps.RecordDataFieldSet(recordDataTemp, vt.MutableType, vt.MutableField, tempValue)
+        plan.steps += ps.RecordDataFieldSet(recordDataTemp, vt.MutableType, vt.MutableField, datumTempValue)
         
         state.withValue(storageLoc -> MutableValue(mutableTemp, false))
       }
@@ -209,7 +213,7 @@ private[planner] object PlanLambda {
     val procPlan = parentPlan.forkPlan() 
 
     // Initialize all of our mutable parameters
-    val postMutableState = initializeMutableArgs(preMutableState)(mutableArgs)(procPlan) 
+    val postMutableState = initializeMutableArgs(preMutableState)(mutableArgs)(procPlan, worldPtr) 
     
     // Load all of our captured variables
     val postClosureState = procSelfOpt match {
