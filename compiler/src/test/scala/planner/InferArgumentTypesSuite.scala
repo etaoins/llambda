@@ -9,6 +9,8 @@ import llambda.compiler._
 import org.scalatest.FunSuite
 
 class InferArgumentTypesSuite  extends FunSuite {
+  private def inferringProcedureName = "inferring-procedure"
+
   private def signatureFor(scheme : String) : ProcedureSignature = {
     val includePath = frontend.IncludePath(
       fileParentDir=None,
@@ -22,15 +24,28 @@ class InferArgumentTypesSuite  extends FunSuite {
     
     val compileConfig = CompileConfig(
       includePath=includePath,
-      // Don't optimize in case earlier passes transform the lambda body in
-      // ways we don't expect
+      // Don't optimize in case earlier passes transform the lambda body in ways we don't expect
       optimizeLevel=0,
       targetPlatform=platform.DetectJvmPlatform()
     )
   
-    val importDecl = datum"(import (llambda nfi) (scheme base))"
-    val procedureData = SchemeParser.parseStringAsData(scheme, None)
-    val data = importDecl :: procedureData
+    val importDecl = datum"(import (scheme base))"
+
+    // Give the procedure a distinctive name so we can find it later
+    val procedureDatum = ast.ProperList(List(
+      ast.Symbol("define"),
+      ast.Symbol(inferringProcedureName),
+      SchemeParser.parseStringAsData(scheme, None).head
+    ))
+    
+    // Reference the procedure to force it to be planned
+    // Higher optimization levels would see right through this but this works on -O 0
+    val referenceDatum = ast.ProperList(List(
+      ast.Symbol("procedure?"),
+      ast.Symbol(inferringProcedureName)
+    ))
+
+    val data = List(importDecl, procedureDatum, referenceDatum)
 
     val loader = new frontend.LibraryLoader(compileConfig.targetPlatform)
     val expressions = frontend.ExtractProgram(data)(loader, frontendConfig)
@@ -42,12 +57,7 @@ class InferArgumentTypesSuite  extends FunSuite {
     )
 
     val functions = planner.PlanProgram(expressions)(planConfig)
-
-    // Remove our entry point
-    val entryPointSymbol = codegen.LlambdaExecSignature.nativeSymbol
-    val (userDefinedFunction :: Nil) = (functions - entryPointSymbol).values.toList
-
-    userDefinedFunction.signature
+    functions(inferringProcedureName).signature
   }
 
   test("argless procedure returning integer constant") {

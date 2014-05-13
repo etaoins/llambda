@@ -294,10 +294,7 @@ private[planner] object PlanLambda {
       uninferredFunction
     }
 
-    val nativeSymbol = parentPlan.allocProcedureSymbol(sourceName)
-    parentPlan.plannedFunctions += (nativeSymbol -> plannedFunction)
-
-    val procCell = procSelfOpt map { _ => 
+    val procCellOpt = procSelfOpt map { _ => 
       // Save the closure values from the parent's scope
       val cellTemp = ps.GcManagedValue()
       val dataTemp = ps.GcUnmanagedValue()
@@ -309,7 +306,11 @@ private[planner] object PlanLambda {
       cellTemp
     }
 
-    val procValue = new iv.KnownProcedure(plannedFunction.signature, () => nativeSymbol, procCell)
+    val procValue = LazyPlannedFunction(
+      suggestedName=sourceName,
+      plannedFunction=plannedFunction,
+      selfTempOpt=procCellOpt
+    )(parentPlan)
 
     PlanResult(
       state=parentState,
