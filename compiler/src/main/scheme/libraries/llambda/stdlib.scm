@@ -1,9 +1,12 @@
 (define-library (llambda stdlib)
   (import (llambda nfi))
   (import (rename (llambda internal primitives) (define-report-procedure define-r7rs)))
+  (import (llambda internal features))
 
   ; base library
   (include-library-declarations "../../interfaces/scheme/base.scm")
+  ; case-lambda library 
+  (include-library-declarations "../../interfaces/scheme/case-lambda.scm")
   (begin
     (define-syntax begin
       (syntax-rules ()
@@ -173,6 +176,39 @@
                      x)
                     ((do "step" x y)
                      y)))
+    
+    ; Bootstrap definitions for case-lambda
+    (define-r7rs apply (world-function "lliby_apply" (<procedure-cell> . <list-element-cell>) <datum-cell>))
+    (define-r7rs length (world-function "lliby_length" (<list-element-cell>) <uint32>))
+    (define-r7rs error (world-function "lliby_error" (<string-cell> . <list-element-cell>)))
+    (define-r7rs = (world-function "lliby_numeric_equal" (<numeric-cell> <numeric-cell> . <list-element-cell>) <bool>))
+    (define-r7rs < (world-function "lliby_numeric_lt" (<numeric-cell> <numeric-cell> . <list-element-cell>) <bool>))
+    (define-r7rs > (world-function "lliby_numeric_gt" (<numeric-cell> <numeric-cell> . <list-element-cell>) <bool>))
+    (define-r7rs <= (world-function "lliby_numeric_lte" (<numeric-cell> <numeric-cell> . <list-element-cell>) <bool>))
+    (define-r7rs >= (world-function "lliby_numeric_gte" (<numeric-cell> <numeric-cell> . <list-element-cell>) <bool>))
+    
+    (define-syntax case-lambda
+      (syntax-rules ()
+                    ((case-lambda (params body0 ...) ...)
+                     (lambda args
+                       (let ((len (length args)))
+                         (let-syntax
+                           ((cl (syntax-rules ::: ()
+                                              ((cl)
+                                               (error "no matching clause"))
+                                              ((cl ((p :::) . body) . rest)
+                                               (if (= len (length '(p :::)))
+                                                 (apply (lambda (p :::)
+                                                          . body) args)
+                                                 (cl . rest)))
+                                              ((cl ((p ::: . tail) . body)
+                                                   . rest)
+                                               (if (>= len (length '(p :::)))
+                                                 (apply
+                                                   (lambda (p ::: . tail)
+                                                     . body) args)
+                                                 (cl . rest))))))
+                           (cl (params body0 ...) ...)))))))
 
     (define-r7rs eqv? (native-function "lliby_is_eqv" (<datum-cell> <datum-cell>) <bool>))
     (define-r7rs eq? eqv?)
@@ -206,12 +242,6 @@
     (define-r7rs * (world-function "lliby_mul" <list-element-cell> <numeric-cell>))
     (define-r7rs / (world-function "lliby_div" (<numeric-cell> . <list-element-cell>) <double>))
 
-    (define-r7rs = (world-function "lliby_numeric_equal" (<numeric-cell> <numeric-cell> . <list-element-cell>) <bool>))
-    (define-r7rs < (world-function "lliby_numeric_lt" (<numeric-cell> <numeric-cell> . <list-element-cell>) <bool>))
-    (define-r7rs > (world-function "lliby_numeric_gt" (<numeric-cell> <numeric-cell> . <list-element-cell>) <bool>))
-    (define-r7rs <= (world-function "lliby_numeric_lte" (<numeric-cell> <numeric-cell> . <list-element-cell>) <bool>))
-    (define-r7rs >= (world-function "lliby_numeric_gte" (<numeric-cell> <numeric-cell> . <list-element-cell>) <bool>))
-
     (define-r7rs boolean? (native-function "lliby_is_boolean" (<datum-cell>) <bool>))
     (define-r7rs not (native-function "lliby_not" (<bool>) <bool>))
     (define-r7rs boolean=? (world-function "lliby_boolean_equal" (<boolean-cell> <boolean-cell> . <list-element-cell>) <bool>))
@@ -223,15 +253,18 @@
     (define-r7rs cdr (native-function "lliby_cdr" (<pair-cell>) <datum-cell>))
     (define-r7rs set-car! (world-function "lliby_set_car" (<pair-cell> <datum-cell>)))
     (define-r7rs set-cdr! (world-function "lliby_set_cdr" (<pair-cell> <datum-cell>)))
-    (define-r7rs length (world-function "lliby_length" (<list-element-cell>) <uint32>))
     (define-r7rs list-copy (world-function "lliby_list_copy" (<datum-cell>) <datum-cell>))
-    (define-r7rs make-list (world-function "lliby_make_list" (<uint32> <datum-cell>) <list-element-cell>))
     (define-r7rs list (native-function "lliby_list" <list-element-cell> <list-element-cell>))
     (define-r7rs append (world-function "lliby_append" <list-element-cell> <datum-cell>))
     (define-r7rs memv (world-function "lliby_memv" (<datum-cell> <list-element-cell>) <datum-cell>))
     ; (eq?) is defined as (eqv?) so define (memq) as (memv)
     (define-r7rs memq memv)
     (define-r7rs member (world-function "lliby_member" (<datum-cell> <list-element-cell>) <datum-cell>))
+    
+    (define native-make-list (world-function "lliby_make_list" (<uint32> <datum-cell>) <list-element-cell>))
+    (define-r7rs make-list (case-lambda
+      ((len) (native-make-list len #!unit))
+      ((len fill) (native-make-list len fill))))
 
     (define-r7rs symbol? (native-function "lliby_is_symbol" (<datum-cell>) <bool>))
     (define-r7rs symbol=? (world-function "lliby_symbol_equal" (<symbol-cell> <symbol-cell> . <list-element-cell>) <bool>))
@@ -244,7 +277,6 @@
     (define-r7rs integer->char (native-function "lliby_integer_to_char" (<int32>) <unicode-char>))
 
     (define-r7rs vector? (native-function "lliby_is_vector" (<datum-cell>) <bool>))
-    (define-r7rs make-vector (world-function "lliby_make_vector" (<uint32> <datum-cell>) <vector-cell>))
     (define-r7rs vector (world-function "lliby_vector" <list-element-cell> <vector-cell>))
     ; This is the same runtime function but instead of using a rest arg explicitly pass in the list
     (define-r7rs list->vector (world-function "lliby_vector" (<list-element-cell>) <vector-cell>))
@@ -252,14 +284,23 @@
     (define-r7rs vector-ref (world-function "lliby_vector_ref" (<vector-cell> <uint32>) <datum-cell>))
     (define-r7rs vector-set! (world-function "lliby_vector_set" (<vector-cell> <uint32> <datum-cell>)))
     (define-r7rs vector-append (world-function "lliby_vector_append" <list-element-cell> <vector-cell>))
+    
+    (define native-make-vector (world-function "lliby_make_vector" (<uint32> <datum-cell>) <vector-cell>))
+    (define-r7rs make-vector (case-lambda
+      ((len) (native-make-vector len #!unit))
+      ((len fill) (native-make-vector len fill))))
 
     (define-r7rs bytevector? (native-function "lliby_is_bytevector" (<datum-cell>) <bool>))
-    (define-r7rs make-bytevector (world-function "lliby_make_bytevector" (<uint32> <uint8>) <bytevector-cell>))
     (define-r7rs bytevector (world-function "lliby_bytevector" <list-element-cell> <bytevector-cell>))
     (define-r7rs bytevector-length (native-function "lliby_bytevector_length" (<bytevector-cell>) <uint32>))
     (define-r7rs bytevector-u8-ref (world-function "lliby_bytevector_u8_ref" (<bytevector-cell> <uint32>) <uint8>))
     (define-r7rs bytevector-u8-set! (world-function "lliby_bytevector_u8_set" (<bytevector-cell> <uint32> <uint8>)))
     (define-r7rs bytevector-append (world-function "lliby_bytevector_append" <list-element-cell> <bytevector-cell>))
+    
+    (define native-make-bytevector (world-function "lliby_make_bytevector" (<uint32> <uint8>) <bytevector-cell>))
+    (define-r7rs make-bytevector (case-lambda
+      ((len) (native-make-bytevector len 0))
+      ((len fill) (native-make-bytevector len fill))))
 
     (define-r7rs string? (native-function "lliby_is_string" (<datum-cell>) <bool>))
     (define-r7rs make-string (world-function "lliby_make_string" (<uint32> <unicode-char>) <string-cell>))
@@ -272,7 +313,6 @@
     (define-r7rs string-append (world-function "lliby_string_append" <list-element-cell> <string-cell>))
 
     (define-r7rs procedure? (native-function "lliby_is_procedure" (<datum-cell>) <bool>))
-    (define-r7rs apply (world-function "lliby_apply" (<procedure-cell> . <list-element-cell>) <datum-cell>))
     (define-r7rs call-with-current-continuation (world-function "lliby_call_with_current_continuation" (<datum-cell>) <datum-cell>))
     (define-r7rs call/cc call-with-current-continuation)
 
@@ -282,12 +322,8 @@
 
     (define-r7rs newline (native-function "lliby_newline" ()))
 
-    ; Note this is produced by codegen; it's not part of the standard library
-    (define-r7rs features (native-function "__llambda_features" () <list-element-cell>))
-
     (define-r7rs with-exception-handler (world-function "lliby_with_exception_handler" (<procedure-cell> <procedure-cell>) <datum-cell>))
     (define-r7rs raise (world-function "lliby_raise" (<datum-cell>)))
-    (define-r7rs error (world-function "lliby_error" (<string-cell> . <list-element-cell>)))
     (define-r7rs error-object? (native-function "lliby_is_error_object" (<datum-cell>) <bool>))
     (define-r7rs error-object-message (native-function "lliby_error_object_message" (<error-object-cell>) <string-cell>))
     (define-r7rs error-object-irritants (native-function "lliby_error_object_irritants" (<error-object-cell>) <list-element-cell>)))
@@ -297,32 +333,6 @@
   (begin
     (define-r7rs exit (world-function "lliby_exit" (<datum-cell>)))
     (define-r7rs emergency-exit (native-function "lliby_emergency_exit" (<datum-cell>))))
-
-  ; case-lambda library 
-  (include-library-declarations "../../interfaces/scheme/case-lambda.scm")
-  (begin
-    (define-syntax case-lambda
-      (syntax-rules ()
-                    ((case-lambda (params body0 ...) ...)
-                     (lambda args
-                       (let ((len (length args)))
-                         (let-syntax
-                           ((cl (syntax-rules ::: ()
-                                              ((cl)
-                                               (error "no matching clause"))
-                                              ((cl ((p :::) . body) . rest)
-                                               (if (= len (length '(p :::)))
-                                                 (apply (lambda (p :::)
-                                                          . body) args)
-                                                 (cl . rest)))
-                                              ((cl ((p ::: . tail) . body)
-                                                   . rest)
-                                               (if (>= len (length '(p :::)))
-                                                 (apply
-                                                   (lambda (p ::: . tail)
-                                                     . body) args)
-                                                 (cl . rest))))))
-                           (cl (params body0 ...) ...))))))))
 
   ; inexact library
   (include-library-declarations "../../interfaces/scheme/inexact.scm")

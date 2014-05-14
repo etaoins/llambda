@@ -7,10 +7,16 @@
 (define-test "exact integer is not a vector" (expect #f
 	(vector? 4)))
 
-(define-test "(make-vector) an empty vector" (expect #()
-	(make-vector 0 #f)))
+(define-test "(make-vector) an uninitialized empty vector" (expect #()
+	(make-vector 0)))
 
-(define-test "(make-vector) a filled vector" (expect #(5.0 5.0 5.0)
+(define-test "(make-vector) an filled empty vector" (expect #()
+	(make-vector 0 5.0)))
+
+(define-test "(make-vector) an unintialized non-empty vector" (expect #(#!unit #!unit #!unit)
+	(make-vector 3)))
+
+(define-test "(make-vector) a filled non-empty vector" (expect #(5.0 5.0 5.0)
 	(make-vector 3 5.0)))
 
 (define-test "(vector) an empty vector" (expect #()

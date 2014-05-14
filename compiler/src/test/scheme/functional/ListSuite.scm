@@ -52,10 +52,16 @@
 (define-test "length of improper list fails" (expect-failure
 	(length '(1 . 2))))
 
-(define-test "make empty list" (expect ()
+(define-test "make uninitialized empty list" (expect ()
+	(make-list 0)))
+
+(define-test "make filled empty list" (expect ()
 	(make-list 0 4.0)))
 
-(define-test "make non-empty list" (expect (4.0 4.0 4.0 4.0)
+(define-test "make uninitialized non-empty list" (expect (#!unit #!unit #!unit #!unit)
+	(make-list 4)))
+
+(define-test "make filled non-empty list" (expect (4.0 4.0 4.0 4.0)
 	(make-list 4 4.0)))
 
 (define-test "copy empty list" (expect ()

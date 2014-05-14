@@ -7,10 +7,16 @@
 (define-test "exact integer is not a bytevector" (expect #f
 	(bytevector? 4)))
 
-(define-test "(make-byyevector) an empty bytevector" (expect #u8()
+(define-test "(make-byyevector) an uninitialized empty bytevector" (expect #u8()
+	(make-bytevector 0)))
+
+(define-test "(make-byyevector) a filled empty bytevector" (expect #u8()
 	(make-bytevector 0 0)))
 
-(define-test "(make-bytevector) a filled bytevector" (expect #u8(5 5 5)
+(define-test "(make-bytevector) an uninitialized non-empty bytevector" (expect #u8(0 0 0)
+	(make-bytevector 3)))
+
+(define-test "(make-bytevector) a filled non-empty bytevector" (expect #u8(5 5 5)
 	(make-bytevector 3 5)))
 
 (define-test "(make-bytevector) a inexact rational fails" (expect-failure
