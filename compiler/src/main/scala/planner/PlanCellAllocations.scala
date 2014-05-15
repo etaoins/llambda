@@ -47,8 +47,8 @@ object PlanCellAllocations {
 
     case (nestingStep : ps.NestingStep) :: reverseTail if stepConsumesOrAllocates(nestingStep) =>
       // Recurse down each of the step's branches
-      val newNestingStep = nestingStep.mapInnerBranches { (branchSteps, _) =>
-        placeCellAllocations(branchSteps.reverse, 0, Nil)
+      val newNestingStep = nestingStep.mapInnerBranches { (branchSteps, resultTemp) =>
+        (placeCellAllocations(branchSteps.reverse, 0, Nil), resultTemp)
       }
 
       // Treat this as a GC barrier for now

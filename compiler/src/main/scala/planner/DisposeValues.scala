@@ -36,7 +36,7 @@ object DisposeValues {
       val newStep = nestingStep.mapInnerBranches { (branchSteps, outputValue) =>
         // Pass the unused input values as argument values
         // If they're not used within the branch they'll be disposed at the top of it
-        discardUnusedValues(unusedInputValues, branchSteps.reverse, usedValues + outputValue, Nil)
+        (discardUnusedValues(unusedInputValues, branchSteps.reverse, usedValues + outputValue, Nil), outputValue)
       }
 
       val newUsedValues = nestingStep.inputValues ++ usedValues 

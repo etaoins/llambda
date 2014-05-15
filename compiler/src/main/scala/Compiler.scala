@@ -10,6 +10,7 @@ class ExternalCompilerException extends Exception
 
 object Compiler {
   private val conniverPasses = List[conniver.Conniver](
+    conniver.MergeIdenticalSteps
   )
 
   abstract class RunningCompiler {
