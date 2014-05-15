@@ -70,7 +70,8 @@ private val llibyDynamicenvPop = IrFunctionDecl(
 
           finalState.withTempValue(step.result -> finalState.liveTemps(step.innerResult)) 
 
-        case BlockTerminated => BlockTerminated
+        case terminated : BlockTerminated =>
+          terminated
       }
   }
 }

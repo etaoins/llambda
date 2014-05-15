@@ -9,32 +9,17 @@ import llambda.compiler.{celltype => ct}
 import llambda.llvmir._
 
 class GcSlotGenerator(module : IrModuleBuilder, entryBlock : IrEntryBlockBuilder)(worldPtrIr : IrValue, nextBlock : IrChildBlockBuilder) extends {
-  private val allocatedSlots = new mutable.HashMap[ps.TempValue, LocalVariable]
-  private def needsShadowStackEntry = allocatedSlots.size > 0
-
   private val blockTerminators = new mutable.ListBuffer[(IrBlockBuilder, () => Unit)]
-
-  def apply(tempValue : ps.TempValue) : IrValue = 
-    allocatedSlots(tempValue)
-
-  def getOrElseCreate(tempValue : ps.TempValue, irType : FirstClassType) : IrValue = {
-    allocatedSlots.getOrElseUpdate(tempValue, {
-      val slotName = s"gcSlot${allocatedSlots.size + 1}"
-
-      // This will be created in the entry block so it will be availble in all child blocks
-      LocalVariable(slotName, PointerType(irType))
-    })
-  }
-
+ 
   def unrootAllAndTerminate(block : IrBlockBuilder)(terminatingProc : () => Unit) {
     blockTerminators.append((block, terminatingProc))
   }
 
-  def finish() {
+  def finish(finalGcState : GcState) {
     // Allocate all the GC slots we need
-    val slotCount = allocatedSlots.size
+    val slotCount = finalGcState.nextUnallocatedSlot 
 
-    if (!needsShadowStackEntry) {
+    if (slotCount == 0) {
       entryBlock.comment("No shadow stack entry required")
       entryBlock.uncondBranch(nextBlock)
 
@@ -77,33 +62,15 @@ class GcSlotGenerator(module : IrModuleBuilder, entryBlock : IrEntryBlockBuilder
 
     // Initialize all the variables
     entryBlock.comment("Initializing root cells")
-    val slotVariables = allocatedSlots.values.toList.sortBy(_.name) 
+    val slotVariables = (0 until slotCount).map(GcSlotGenerator.irValueForSlot)
 
-    for((variable, index) <- slotVariables.zipWithIndex) {
-      val rawSlotType = PointerType(PointerType(ct.DatumCell.irType))
-      val targetType = variable.irType
-        
+    for((variable, index) <- slotVariables.zipWithIndex) { 
       // Calculate our slot's index
       val gepIndices = List(0, index).map(IntegerConstant(IntegerType(64), _))
-
-      if (targetType != rawSlotType) {
-        val uncastSlot = entryBlock.getelementptr("uncastSlot")(PointerType(ct.DatumCell.irType), rootsArray, gepIndices, inbounds=true)
-
-        entryBlock.bitcastTo(variable)(uncastSlot, targetType)
-      }
-      else {
-        // No bitcast needed
-        entryBlock.getelementptr(variable)(PointerType(ct.DatumCell.irType), rootsArray, gepIndices, inbounds=true)
-      }
+      val slotPtr = entryBlock.getelementptr(variable)(PointerType(ct.DatumCell.irType), rootsArray, gepIndices, inbounds=true)
       
       // Initialize the field to null
-      targetType match {
-        case PointerType(innerPointerType : PointerType) =>
-          entryBlock.store(NullPointerConstant(innerPointerType), variable)
-
-        case _ =>
-          throw new InternalCompilerErrorException("GC slots must be pointers to cells")
-      }
+      entryBlock.store(NullPointerConstant(GcSlotGenerator.slotValueType), slotPtr)
     }
 
     for((block, terminatingProc) <- blockTerminators.toList) {
@@ -116,4 +83,17 @@ class GcSlotGenerator(module : IrModuleBuilder, entryBlock : IrEntryBlockBuilder
       
     entryBlock.uncondBranch(nextBlock)
   }
+}
+
+object GcSlotGenerator {
+  val slotValueType = PointerType(ct.DatumCell.irType)
+  val slotPointerType = PointerType(slotValueType)
+
+  def irValueForSlot(slot : Int) = {
+    val slotName = s"gcSlot${slot}"
+
+    // This will be created in the entry block so it will be availble in all child blocks
+    LocalVariable(slotName, slotPointerType)
+  }
+
 }

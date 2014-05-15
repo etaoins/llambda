@@ -7,6 +7,19 @@ import llambda.llvmir._
 import llambda.compiler.{celltype => ct}
 
 object GenPlanStep {
+  private def containsAllocatingStep(step : ps.Step) : Boolean = {
+    step match {
+      case allocating if step.canAllocate => true
+
+      case nesting : ps.NestingStep =>
+        nesting.innerBranches.flatMap(_._1).exists(containsAllocatingStep)
+
+      case _ =>
+        false
+    }
+  }
+
+
   def apply(state : GenerationState, plannedSymbols : Set[String], typeGenerator : TypeGenerator)(step : ps.Step) : GenResult = step match {
     case ps.AllocateCells(worldPtrTemp, count) =>
       if (!state.currentAllocation.isEmpty) {
@@ -54,7 +67,9 @@ object GenPlanStep {
           targetType.genPointerBitcast(state.currentBlock)(subvalueIr)
       }
       
-      state.withTempValue((resultTemp -> irValue))
+      state.copy(
+        liveTemps=state.liveTemps.withAliasedTempValue(subvalueTemp, (resultTemp -> irValue))
+      )
 
     case ps.CastCellToSubtypeChecked(resultTemp, worldPtrTemp, supervalueTemp, targetType, errorMessage) =>
       val worldPtrIr = state.liveTemps(worldPtrTemp)
@@ -62,7 +77,10 @@ object GenPlanStep {
 
       val (successBlock, subvalueIr) = GenCastCellToSubtype(state)(worldPtrIr, supervalueIr, targetType, errorMessage)
 
-      state.withTempValue(resultTemp -> subvalueIr).copy(currentBlock=successBlock)
+      state.copy(
+        currentBlock=successBlock,
+        liveTemps=state.liveTemps.withAliasedTempValue(supervalueTemp, (resultTemp -> subvalueIr))
+      )
 
     case ps.ConvertNativeInteger(resultTemp, fromValueTemp, toBits, signed) =>
       val fromValueIr = state.liveTemps(fromValueTemp)
@@ -109,28 +127,57 @@ object GenPlanStep {
       val trueStartBlock = state.currentBlock.startChildBlock("condTrue")
       val falseStartBlock = state.currentBlock.startChildBlock("condFalse")
 
+      val (postFlushState, branchFromState) = if (containsAllocatingStep(step)) {
+        // Flush our GC roots out
+        // This is half a barrier - we write out any pending roots
+        // This has two purposes:
+        // 1) It prevents unflushed roots from building up in the main execution path while being repeatedly flushed in
+        //    branches
+        // 2) It's significantly easier to reason about and merge the GC states of the branches if the parent roots are
+        //    all flushed
+        val postFlushState = GenGcBarrier.flushGcRoots(state)
+
+        (postFlushState, postFlushState)
+      }
+      else {
+        // Explicitly disable GC as a sanity check that containsAllocatingStep is telling the truth
+        (state, state.withoutGcSupport)
+      }
+
       // Branch!
       state.currentBlock.condBranch(testIr, trueStartBlock, falseStartBlock)
 
       // Continue generation down both branches after splitting our state
-      val trueStartState = state.copy(currentBlock=trueStartBlock)
-      val falseStartState = state.copy(currentBlock=falseStartBlock)
+      val trueStartState = branchFromState.copy(
+        currentBlock=trueStartBlock
+      )
+
+      val falseStartState = branchFromState.copy(
+        currentBlock=falseStartBlock
+      )
 
       val trueResult = GenPlanSteps(trueStartState, plannedSymbols, typeGenerator)(trueSteps)
       val falseResult = GenPlanSteps(falseStartState, plannedSymbols, typeGenerator)(falseSteps)
 
       (trueResult, falseResult) match {
-        case (BlockTerminated, BlockTerminated) =>
+        case (BlockTerminated(_), BlockTerminated(_)) =>
           // Both branches terminated
-          BlockTerminated
+          BlockTerminated(
+            // Even terminated blocks need a GC state so we can know which slots they allocated
+            GcState.fromBranches(postFlushState.gcState, List(trueResult.gcState, falseResult.gcState))
+          )
 
-        case (trueEndState : GenerationState, BlockTerminated) =>
+        case (trueEndState : GenerationState, BlockTerminated(_)) =>
           // Only true terminated
-          trueEndState.withTempValue(resultTemp -> trueEndState.liveTemps(trueTemp))
+          trueEndState.copy(
+            gcState=GcState.fromBranches(trueResult.gcState, List(falseResult.gcState))
+          ).withTempValue(resultTemp -> trueEndState.liveTemps(trueTemp))
         
-        case (BlockTerminated, falseEndState : GenerationState) =>
+        case (BlockTerminated(_), falseEndState : GenerationState) =>
           // Only false terminated
-          falseEndState.withTempValue(resultTemp -> falseEndState.liveTemps(falseTemp))
+          falseEndState.copy(
+            gcState=GcState.fromBranches(falseResult.gcState, List(trueResult.gcState))
+          ).withTempValue(resultTemp -> falseEndState.liveTemps(falseTemp))
 
         case (trueEndState : GenerationState, falseEndState : GenerationState) =>
           // Neither branch terminated - we need to phi
@@ -143,7 +190,7 @@ object GenPlanStep {
           val falseResultIrValue = falseEndState.liveTemps(falseTemp)
 
           // Make a final block
-          val phiBlock = state.currentBlock.startChildBlock("condPhi")
+          val phiBlock = postFlushState.currentBlock.startChildBlock("condPhi")
           trueEndBlock.uncondBranch(phiBlock)
           falseEndBlock.uncondBranch(phiBlock)
 
@@ -151,7 +198,7 @@ object GenPlanStep {
           val phiResultIr = phiBlock.phi("condPhiResult")(PhiSource(trueResultIrValue, trueEndBlock), PhiSource(falseResultIrValue, falseEndBlock))
 
           // Phi any values that have diverged across branches
-          val phiedLiveTemps = ((trueEndState.liveTemps.keySet & falseEndState.liveTemps.keySet) map { liveTemp =>
+          val tempValueToIrUpdate = ((trueEndState.liveTemps.keySet & falseEndState.liveTemps.keySet) map { liveTemp =>
             val trueValueIrValue = trueEndState.liveTemps(liveTemp)
             val falseValueIrValue = falseEndState.liveTemps(liveTemp)
               
@@ -164,14 +211,14 @@ object GenPlanStep {
               val phiValueIr = phiBlock.phi("condPhiValue")(PhiSource(trueValueIrValue, trueEndBlock), PhiSource(falseValueIrValue, falseEndBlock))
               (liveTemp -> phiValueIr)
             }
-          }).toMap + (resultTemp -> phiResultIr)
+          })
 
-          state.copy(
+          // Make sure we preserve pointer identities or else the identity count will explode
+          postFlushState.copy(
             currentBlock=phiBlock,
-            // A value is only considered rooted if it was rooted in both branches:
-            gcRootedTemps=(trueEndState.gcRootedTemps & falseEndState.gcRootedTemps),
-            liveTemps=phiedLiveTemps
-          )
+            liveTemps=state.liveTemps.withUpdatedIrValues(tempValueToIrUpdate),
+            gcState=GcState.fromBranches(postFlushState.gcState, List(trueEndState.gcState, falseEndState.gcState))
+          ).withTempValue(resultTemp -> phiResultIr)
       }
       
     case invokeStep @ ps.Invoke(resultOpt, signature, funcPtrTemp, arguments) =>
@@ -183,7 +230,7 @@ object GenPlanStep {
 
       // Dispose of arguments before our barrier
       // This prevents us from GC rooting them needlessly
-      val disposedArgTemps = arguments.filter(_.dispose).map(_.tempValue)
+      val disposedArgTemps = arguments.filter(_.dispose).map(_.tempValue).toSet
 
       val preBarrierState = state.copy(
         liveTemps=state.liveTemps -- disposedArgTemps
@@ -358,10 +405,11 @@ object GenPlanStep {
       state
 
     case ps.DisposeValue(disposedTemp) =>
-      state.copy(liveTemps=state.liveTemps - disposedTemp)
+      state.copy(
+        liveTemps=state.liveTemps - disposedTemp
+      )
 
     case parameterize : ps.Parameterize =>
       GenParameterize(state, plannedSymbols, typeGenerator)(parameterize) 
-
- }
+  }
 }

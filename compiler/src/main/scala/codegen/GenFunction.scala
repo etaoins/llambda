@@ -24,10 +24,10 @@ private[codegen] object GenFunction {
     ) 
 
     // Create a blank generation state with just our args
-    val argTemps = (plannedFunction.namedArguments map { case (name, tempValue) =>
-      (tempValue, generatedFunction.argumentValues(name))
-    }).toMap
-    
+    val argTemps = plannedFunction.namedArguments.foldLeft(LiveTemps()) { case (liveTemps, (name, tempValue)) =>
+      liveTemps + (tempValue -> generatedFunction.argumentValues(name))
+    }
+
     // Do we need to set up GC for this function?
     val (procStartBlock, gcSlotsOpt, gcCleanUpBlockOpt) = plannedFunction.worldPtrOption match {
       case Some(worldPtrTemp) =>
@@ -58,15 +58,16 @@ private[codegen] object GenFunction {
       gcSlotsOpt=gcSlotsOpt,
       currentBlock=procStartBlock,
       currentAllocation=EmptyCellAllocation(),
+      gcCleanUpBlockOpt=gcCleanUpBlockOpt,
       liveTemps=argTemps,
-      gcCleanUpBlockOpt=gcCleanUpBlockOpt
+      gcState=GcState()
     )
 
     // Generate our steps
-    GenPlanSteps(startState, plannedSymbols, typeGenerator)(plannedFunction.steps)
+    val finalResult = GenPlanSteps(startState, plannedSymbols, typeGenerator)(plannedFunction.steps)
 
     for(gcSlots <- gcSlotsOpt) {
-      gcSlots.finish()
+      gcSlots.finish(finalResult.gcState)
     }
       
     // Define the function

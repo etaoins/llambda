@@ -83,13 +83,14 @@ object GenCellAllocation {
     )
 
     // Now phi every restored GC root (ugh)
-    val liveTempsUpdate = calcedBarrier.restoreTemps.zip(newIrValues).map { case ((tempValue, directIrValue), gcIrValue) =>
-      val phiedGcRoot = allocFinishedBlock.phi("phiedGcRoot")(
-        PhiSource(directIrValue, directSuccessBlock),
-        PhiSource(gcIrValue, collectGarbageBlock)
-      )
+    val liveTempsUpdate = calcedBarrier.restoreTemps.zip(newIrValues).map {
+      case (GenGcBarrier.RestoreData(_, directIrValue, restoreToTemp), gcIrValue) =>
+        val phiedGcRoot = allocFinishedBlock.phi("phiedGcRoot")(
+          PhiSource(directIrValue, directSuccessBlock),
+          PhiSource(gcIrValue, collectGarbageBlock)
+        )
 
-      (tempValue -> (phiedGcRoot : IrValue))
+        (restoreToTemp -> (phiedGcRoot : IrValue))
     }
 
     val allocation = new CellAllocation(allocResultValue, 0, count)
@@ -97,7 +98,8 @@ object GenCellAllocation {
     // Note we don't update gcRootedTemps here because it happens in a branch
     (initialState.copy(
       currentBlock=allocFinishedBlock,
-      liveTemps=initialState.liveTemps ++ liveTempsUpdate
+      liveTemps=initialState.liveTemps.withUpdatedIrValues(liveTempsUpdate),
+      gcState=GcState.fromBranches(initialState.gcState, List(calcedBarrier.finalGcState))
     ), allocation)
   }
   

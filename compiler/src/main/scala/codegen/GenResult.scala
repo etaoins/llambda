@@ -4,7 +4,9 @@ import io.llambda
 import llambda.llvmir._
 import llambda.compiler.planner.{step => ps}
 
-sealed abstract class GenResult 
+sealed abstract class GenResult {
+  val gcState : GcState
+}
 
 case class GenerationState(
   module : IrModuleBuilder,
@@ -12,12 +14,9 @@ case class GenerationState(
   currentBlock : IrBlockBuilder,
   currentAllocation : CellAllocation,
   gcCleanUpBlockOpt : Option[IrBranchTarget],
-  liveTemps : Map[ps.TempValue, IrValue] = Map(),
-  gcRootedTemps : Set[ps.TempValue] = Set()
+  liveTemps : LiveTemps,
+  gcState : GcState
 ) extends GenResult {
-  def withTempValue(tempValue : (ps.TempValue, IrValue)) =
-    this.copy(liveTemps=(liveTemps + tempValue))
-
   def terminateFunction(terminatorProc : () => Unit) = {
     gcSlotsOpt match {
       case Some(gcSlots) =>
@@ -30,8 +29,21 @@ case class GenerationState(
         terminatorProc()
     }
 
-    BlockTerminated
+    BlockTerminated(gcState)
+  }
+
+  def withTempValue(tempTuple : (ps.TempValue, IrValue)) = {
+    this.copy(
+      liveTemps=liveTemps + tempTuple
+    )
+  }
+
+  def withoutGcSupport = {
+    this.copy(
+      gcSlotsOpt=None,
+      gcCleanUpBlockOpt=None
+    )
   }
 }
 
-case object BlockTerminated extends GenResult
+case class BlockTerminated(gcState : GcState) extends GenResult

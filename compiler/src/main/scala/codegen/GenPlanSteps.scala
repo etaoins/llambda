@@ -11,9 +11,9 @@ object GenPlanSteps {
           case newState : GenerationState =>
             apply(newState, plannedSymbols, typeGenerator)(stepsTail)
 
-          case BlockTerminated =>
+          case terminated : BlockTerminated =>
             // We've terminated - don't go bother with the rest of the steps
-            BlockTerminated
+            terminated
         }
 
       case Nil => 
