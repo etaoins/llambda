@@ -50,7 +50,7 @@ object GenProgram {
     val typeGenerator = new TypeGenerator(module, targetPlatform, nextTbaaIndex)
 
     // Build each program-supplied function
-    val functionGenerator = GenFunction(module, plannedSymbols, typeGenerator)_ 
+    val functionGenerator = GenFunction(module, plannedSymbols, typeGenerator, targetPlatform)_ 
 
     for((nativeSymbol, plannedFunction) <- functions) {
       functionGenerator(nativeSymbol, plannedFunction)

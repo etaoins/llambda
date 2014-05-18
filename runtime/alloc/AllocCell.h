@@ -13,8 +13,10 @@ class MemoryBlock;
 // This is a placeholder for size purposes
 // We assume a PairCell is the largest allocation with two pointers
 // If this isn't true then sizecheck.h will assert at compile time
-class AllocCell : public PairCell
+class AllocCell : public DatumCell
 {
+protected:
+	std::uint8_t padding[22]; 
 };
 
 // This is a special cell that terminates a heap segment

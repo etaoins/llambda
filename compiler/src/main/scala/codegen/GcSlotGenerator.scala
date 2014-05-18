@@ -6,9 +6,10 @@ import collection.mutable
 import llambda.compiler.InternalCompilerErrorException
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{celltype => ct}
+import llambda.compiler.platform.TargetPlatform
 import llambda.llvmir._
 
-class GcSlotGenerator(module : IrModuleBuilder, entryBlock : IrEntryBlockBuilder)(worldPtrIr : IrValue, nextBlock : IrChildBlockBuilder) extends {
+class GcSlotGenerator(module : IrModuleBuilder, entryBlock : IrEntryBlockBuilder)(worldPtrIr : IrValue, nextBlock : IrChildBlockBuilder, targetPlatform : TargetPlatform) extends {
   private val blockTerminators = new mutable.ListBuffer[(IrBlockBuilder, () => Unit)]
  
   def unrootAllAndTerminate(block : IrBlockBuilder)(terminatingProc : () => Unit) {
@@ -30,11 +31,15 @@ class GcSlotGenerator(module : IrModuleBuilder, entryBlock : IrEntryBlockBuilder
 
       return
     }
+    
+    // The stack shadow stack header is {next*, i64} 
+    // On 32bit we need 3 pointer widths for this, while 64bit is 2 pointers
+    val headerPointerCount = 1 + (64 / targetPlatform.pointerBits)
 
     // Get the raw space for the shadow stack entry
     val shadowStackSpace = entryBlock.alloca("shadowStackSpace")(
       irType=PointerType(IntegerType(8)),
-      numElements=slotCount + 2
+      numElements=headerPointerCount + slotCount
     )
 
     // Cast this to a shadow stack entry

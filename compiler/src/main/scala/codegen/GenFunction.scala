@@ -3,11 +3,12 @@ import io.llambda
 
 import llambda.compiler._
 import llambda.llvmir._
+import llambda.compiler.platform.TargetPlatform
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{celltype => ct}
 
 private[codegen] object GenFunction {
-  def apply(module : IrModuleBuilder, plannedSymbols : Set[String], typeGenerator : TypeGenerator)(nativeSymbol : String, plannedFunction : planner.PlannedFunction) {
+  def apply(module : IrModuleBuilder, plannedSymbols : Set[String], typeGenerator : TypeGenerator, targetPlatform : TargetPlatform)(nativeSymbol : String, plannedFunction : planner.PlannedFunction) {
     val irSignature = ProcedureSignatureToIr(plannedFunction.signature)
 
     val argumentNames = plannedFunction.namedArguments.map(_._1)
@@ -37,7 +38,7 @@ private[codegen] object GenFunction {
         val procStartBlock = generatedFunction.entryBlock.startChildBlock("procStart")
         
         // Create our GC slot allocator
-        val gcSlots = new GcSlotGenerator(module, generatedFunction.entryBlock)(worldPtrIr, procStartBlock)
+        val gcSlots = new GcSlotGenerator(module, generatedFunction.entryBlock)(worldPtrIr, procStartBlock, targetPlatform)
 
         // Create our landingpad
         val gcCleanUpBlock = {
