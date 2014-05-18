@@ -36,13 +36,6 @@ case class GenerationState(
       liveTemps=liveTemps + tempTuple
     )
   }
-
-  def withoutGcSupport = {
-    this.copy(
-      gcSlotsOpt=None,
-      gcCleanUpBlockOpt=None
-    )
-  }
 }
 
 case class BlockTerminated(gcState : GcState) extends GenResult

@@ -19,7 +19,6 @@ object GenPlanStep {
     }
   }
 
-
   def apply(state : GenerationState, plannedSymbols : Set[String], typeGenerator : TypeGenerator)(step : ps.Step) : GenResult = step match {
     case ps.AllocateCells(worldPtrTemp, count) =>
       if (!state.currentAllocation.isEmpty) {
@@ -129,7 +128,7 @@ object GenPlanStep {
       val trueStartBlock = irFunction.startChildBlock("condTrue")
       val falseStartBlock = irFunction.startChildBlock("condFalse")
 
-      val (postFlushState, branchFromState) = if (containsAllocatingStep(step)) {
+      val postFlushState  = if (containsAllocatingStep(step)) {
         // Flush our GC roots out
         // This is half a barrier - we write out any pending roots
         // This has two purposes:
@@ -137,24 +136,21 @@ object GenPlanStep {
         //    branches
         // 2) It's significantly easier to reason about and merge the GC states of the branches if the parent roots are
         //    all flushed
-        val postFlushState = GenGcBarrier.flushGcRoots(state)
-
-        (postFlushState, postFlushState)
+        GenGcBarrier.flushGcRoots(state)
       }
       else {
-        // Explicitly disable GC as a sanity check that containsAllocatingStep is telling the truth
-        (state, state.withoutGcSupport)
+        state
       }
 
       // Branch!
       state.currentBlock.condBranch(testIr, trueStartBlock, falseStartBlock)
 
       // Continue generation down both branches after splitting our state
-      val trueStartState = branchFromState.copy(
+      val trueStartState = postFlushState.copy(
         currentBlock=trueStartBlock
       )
 
-      val falseStartState = branchFromState.copy(
+      val falseStartState = postFlushState.copy(
         currentBlock=falseStartBlock
       )
 
