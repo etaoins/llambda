@@ -10,6 +10,7 @@ import org.scalatest.FunSuite
 class CellTypeSuite extends FunSuite {
   private def createTestBlock() =
     (new llvmir.IrFunctionBuilder(
+      new llvmir.IrModuleBuilder,
       llvmir.IrFunction.Result(llvmir.VoidType), 
       "dontcare", 
       Nil)

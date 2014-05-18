@@ -9,7 +9,7 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.platform.TargetPlatform
 import llambda.llvmir._
 
-class GcSlotGenerator(module : IrModuleBuilder, entryBlock : IrEntryBlockBuilder)(worldPtrIr : IrValue, nextBlock : IrChildBlockBuilder, targetPlatform : TargetPlatform) extends {
+class GcSlotGenerator(entryBlock : IrEntryBlockBuilder)(worldPtrIr : IrValue, nextBlock : IrChildBlockBuilder, targetPlatform : TargetPlatform) extends {
   private val blockTerminators = new mutable.ListBuffer[(IrBlockBuilder, () => Unit)]
  
   def unrootAllAndTerminate(block : IrBlockBuilder)(terminatingProc : () => Unit) {

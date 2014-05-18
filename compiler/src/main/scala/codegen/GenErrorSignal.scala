@@ -7,8 +7,8 @@ import llambda.compiler.RuntimeErrorMessage
 
 object GenErrorSignal {
   def apply(state : GenerationState)(worldPtr : IrValue, errorMessage : RuntimeErrorMessage, evidence : Option[IrValue] = None) = {
-    val module = state.module
     val block = state.currentBlock
+    val module = block.function.module
 
     // Define the error string
     val stringConstantName = s"${errorMessage.name}ErrorString"

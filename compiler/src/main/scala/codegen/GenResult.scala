@@ -9,7 +9,6 @@ sealed abstract class GenResult {
 }
 
 case class GenerationState(
-  module : IrModuleBuilder,
   gcSlotsOpt : Option[GcSlotGenerator],
   currentBlock : IrBlockBuilder,
   currentAllocation : CellAllocation,

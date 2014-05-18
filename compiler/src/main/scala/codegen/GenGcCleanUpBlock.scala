@@ -15,7 +15,9 @@ object GenGcCleanUpBlock {
     hasVararg=true
   )
 
-  def apply(module : IrModuleBuilder, block : IrBlockBuilder, gcSlots : GcSlotGenerator) {
+  def apply(block : IrBlockBuilder, gcSlots : GcSlotGenerator) {
+    val module = block.function.module
+
     module.unlessDeclared(personalityFunctionDecl) {
       module.declareFunction(personalityFunctionDecl)
     }

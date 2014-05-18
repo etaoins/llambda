@@ -51,7 +51,8 @@ object GenPlanStep {
       boxState.withTempValue(boxValueStep.result -> irResult)
 
     case ps.StoreNamedEntryPoint(resultTemp, signature, nativeSymbol) =>
-      val irValue = GenNamedEntryPoint(state.module)(signature, nativeSymbol, plannedSymbols)
+      val irModule = state.currentBlock.function.module
+      val irValue = GenNamedEntryPoint(irModule)(signature, nativeSymbol, plannedSymbols)
 
       state.withTempValue((resultTemp -> irValue))
 
@@ -124,8 +125,9 @@ object GenPlanStep {
       val testIr = state.liveTemps(testTemp)
       
       // Make two blocks
-      val trueStartBlock = state.currentBlock.startChildBlock("condTrue")
-      val falseStartBlock = state.currentBlock.startChildBlock("condFalse")
+      val irFunction = state.currentBlock.function
+      val trueStartBlock = irFunction.startChildBlock("condTrue")
+      val falseStartBlock = irFunction.startChildBlock("condFalse")
 
       val (postFlushState, branchFromState) = if (containsAllocatingStep(step)) {
         // Flush our GC roots out
@@ -190,7 +192,9 @@ object GenPlanStep {
           val falseResultIrValue = falseEndState.liveTemps(falseTemp)
 
           // Make a final block
-          val phiBlock = postFlushState.currentBlock.startChildBlock("condPhi")
+          val irFunction = postFlushState.currentBlock.function
+
+          val phiBlock = irFunction.startChildBlock("condPhi")
           trueEndBlock.uncondBranch(phiBlock)
           falseEndBlock.uncondBranch(phiBlock)
 
@@ -245,7 +249,7 @@ object GenPlanStep {
         // We need a GC barrier
         GenGcBarrier(preBarrierState) {
           val invokeBlock = preBarrierState.currentBlock
-          val successBlock = invokeBlock.startChildBlock("invokeSuccess") 
+          val successBlock = invokeBlock.function.startChildBlock("invokeSuccess") 
 
           val irValue = invokeBlock.invoke(Some("invokeRet"))(
             signature=irSignature,
@@ -322,8 +326,9 @@ object GenPlanStep {
       val generatedType = typeGenerator(recordLikeType)
       
       // Start our branches
-      val fatalBlock = state.currentBlock.startChildBlock("wrongRecordClass")
-      val successBlock = state.currentBlock.startChildBlock("correctRecordClass")
+      val irFunction = state.currentBlock.function
+      val fatalBlock = irFunction.startChildBlock("wrongRecordClass")
+      val successBlock = irFunction.startChildBlock("correctRecordClass")
 
       GenErrorSignal(state.copy(currentBlock=fatalBlock))(worldPtrIr, errorMessage)
 
@@ -366,8 +371,9 @@ object GenPlanStep {
       val fieldValueIr = state.liveTemps(fieldValue)
       
       // Start our branches
-      val fatalBlock = state.currentBlock.startChildBlock("fieldIsDefined")
-      val successBlock = state.currentBlock.startChildBlock("fieldIsUndefined")
+      val irFunction = state.currentBlock.function
+      val fatalBlock = irFunction.startChildBlock("fieldIsDefined")
+      val successBlock = irFunction.startChildBlock("fieldIsUndefined")
 
       GenErrorSignal(state.copy(currentBlock=fatalBlock))(worldPtrIr, errorMessage)
 

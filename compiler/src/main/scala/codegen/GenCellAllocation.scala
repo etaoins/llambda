@@ -26,8 +26,11 @@ object GenCellAllocation {
       return (initialState, allocation)
     }
 
-    initialState.module.unlessDeclared(llibyAllocCells) {
-      initialState.module.declareFunction(llibyAllocCells)
+    val irFunction = initialState.currentBlock.function
+    val module = irFunction.module
+
+    module.unlessDeclared(llibyAllocCells) {
+      module.declareFunction(llibyAllocCells)
     }
 
     startBlock.comment(s"allocating ${count} cells")
@@ -46,9 +49,9 @@ object GenCellAllocation {
     val newAllocNextValue = startBlock.getelementptr("newAllocNext")(cellType, directAllocValue, List(allocCountValue))
 
     // Create our child blocks for the upcoming branch
-    val directSuccessBlock = startBlock.startChildBlock("directSuccess")
-    val collectGarbageBlock = startBlock.startChildBlock("collectGarbage")
-    val allocFinishedBlock = startBlock.startChildBlock("allocFinished")
+    val directSuccessBlock = irFunction.startChildBlock("directSuccess")
+    val collectGarbageBlock = irFunction.startChildBlock("collectGarbage")
+    val allocFinishedBlock = irFunction.startChildBlock("allocFinished")
 
     // See if we ran out of space
     val directSucceededPred = startBlock.icmp("directSucceeded")(ComparisonCond.LessThanEqual, Some(false), newAllocNextValue, allocEndValue)

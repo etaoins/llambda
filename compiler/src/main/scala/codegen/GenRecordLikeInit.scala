@@ -11,7 +11,7 @@ object GenRecordLikeInit {
     val cellType = initStep.recordLikeType.cellType
 
     val block = state.currentBlock
-    val module = state.module
+    val module = block.function.module
 
     // Get a pointer to the new cell
     val allocation = state.currentAllocation

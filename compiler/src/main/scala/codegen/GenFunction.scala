@@ -18,6 +18,7 @@ private[codegen] object GenFunction {
     // This allows LLVM to more aggressively optimize and reduces the chance
     // of symbol conflicts with other objects
     val generatedFunction = new IrFunctionBuilder(
+      module=module,
       result=irSignature.result,
       namedArguments=namedIrArguments,
       name=nativeSymbol,
@@ -35,15 +36,15 @@ private[codegen] object GenFunction {
         val worldPtrIr = argTemps(worldPtrTemp)
 
         // Create the start block the GC code invokes after the entry block
-        val procStartBlock = generatedFunction.entryBlock.startChildBlock("procStart")
+        val procStartBlock = generatedFunction.startChildBlock("procStart")
         
         // Create our GC slot allocator
-        val gcSlots = new GcSlotGenerator(module, generatedFunction.entryBlock)(worldPtrIr, procStartBlock, targetPlatform)
+        val gcSlots = new GcSlotGenerator(generatedFunction.entryBlock)(worldPtrIr, procStartBlock, targetPlatform)
 
         // Create our landingpad
         val gcCleanUpBlock = {
-          val block = generatedFunction.entryBlock.startChildBlock("gcCleanUp")
-          GenGcCleanUpBlock(module, block, gcSlots)
+          val block = generatedFunction.startChildBlock("gcCleanUp")
+          GenGcCleanUpBlock(block, gcSlots)
           block
         }
 
@@ -55,7 +56,6 @@ private[codegen] object GenFunction {
     }
 
     val startState = GenerationState(
-      module=module,
       gcSlotsOpt=gcSlotsOpt,
       currentBlock=procStartBlock,
       currentAllocation=EmptyCellAllocation(),

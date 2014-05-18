@@ -4,7 +4,7 @@ import org.scalatest.FunSuite
 
 class IrBlockSuite extends IrTestSuite {
   test("comment") {
-    val block = new IrChildBlockBuilder(new LocalNameSource, "testLabel")
+    val block = new IrChildBlockBuilder(createTestFunction(), new LocalNameSource, "testLabel")
     
     block.comment("This is a test comment")
 

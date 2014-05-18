@@ -64,9 +64,11 @@ object GenProgram {
     )
 
     val mainFunction = new IrFunctionBuilder(
+      module=module,
       result=result,
       namedArguments=namedArguments,
-      name="main") 
+      name="main"
+    )
 
     val entryBlock = mainFunction.entryBlock
 

@@ -5,6 +5,8 @@ import IrFunction._
 
 class IrModuleSuite extends FunSuite {
   test("hello world module") {
+    val module = new IrModuleBuilder
+
     val helloWorldDef = IrGlobalVariableDef(
       name="helloWorldString",
       initializer=StringConstant.fromUtf8String("Hello, world!"),
@@ -26,9 +28,11 @@ class IrModuleSuite extends FunSuite {
       "escaped argv" -> IrFunction.Argument(PointerType(PointerType(IntegerType(8)))))
 
     val mainFunction = new IrFunctionBuilder(
+      module=module,
       result=result,
       namedArguments=namedArguments,
-      name="main")
+      name="main"
+    )
       
     val entryBlock = mainFunction.entryBlock
     val helloPointer = entryBlock.getelementptr("helloPtr")(
@@ -39,8 +43,6 @@ class IrModuleSuite extends FunSuite {
       
     entryBlock.callDecl(None)(putsDecl, helloPointer :: Nil)
     entryBlock.ret(IntegerConstant(IntegerType(32), 0))
-
-    val module = new IrModuleBuilder
 
     module.nameType("myInt64", IntegerType(64))
     module.nameType("needs-escape-64", IntegerType(64))

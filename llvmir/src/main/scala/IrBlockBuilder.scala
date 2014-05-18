@@ -12,7 +12,7 @@ private[llvmir] abstract class IrInstrBuilder(protected val nameSource : LocalNa
 }
 
 abstract class IrBlockBuilder(nameSource : LocalNameSource, val label : String) extends IrInstrBuilder(nameSource) with Irable with TerminatorInstrs with MemoryInstrs with BitwiseInstrs with ConversionInstrs with OtherInstrs {
-  private val childBlocks = new collection.mutable.ListBuffer[IrChildBlockBuilder]
+  val function : IrFunctionBuilder
 
   def comment(text : String) {
     instructions += s"; ${text}"
@@ -22,23 +22,8 @@ abstract class IrBlockBuilder(nameSource : LocalNameSource, val label : String) 
     // Tab indent and join with newlines
     s"${label}:\n" + instructions.map("\t" + _).mkString("\n")
   }
-  
-  def startChildBlock(baseName : String) : IrChildBlockBuilder = {
-    val label = nameSource.allocate(baseName)
-    val block = new IrChildBlockBuilder(nameSource, label)
-
-    childBlocks += block
-
-    block
-  }
-
-  def allChildren : List[IrChildBlockBuilder] = {
-    childBlocks.toList flatMap { block =>
-      block :: block.allChildren
-    }
-  }
 }
 
-class IrEntryBlockBuilder(nameSource : LocalNameSource) extends IrBlockBuilder(nameSource, "entry")
+class IrEntryBlockBuilder(val function : IrFunctionBuilder, nameSource : LocalNameSource) extends IrBlockBuilder(nameSource, "entry")
 
-class IrChildBlockBuilder(nameSource : LocalNameSource, label : String) extends IrBlockBuilder(nameSource, label) with IrBranchTarget with PhiInstr
+class IrChildBlockBuilder(val function : IrFunctionBuilder, nameSource : LocalNameSource, label : String) extends IrBlockBuilder(nameSource, label) with IrBranchTarget with PhiInstr

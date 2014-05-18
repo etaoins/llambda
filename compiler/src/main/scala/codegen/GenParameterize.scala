@@ -36,10 +36,12 @@ private val llibyDynamicenvPop = IrFunctionDecl(
 
   def apply(initialState : GenerationState, plannedSymbols : Set[String], typeGenerator : TypeGenerator)(step : ps.Parameterize) : GenResult = step match {
     case ps.Parameterize(result, worldPtrTemp, parameterValues, steps, innerResult) =>
+      val module = initialState.currentBlock.function.module
+
       // Declare all support functions
       for(supportFunc <- List(llibyDynamicenvPush, llibyDynamicenvSetValue, llibyDynamicenvPop)) {
-        initialState.module.unlessDeclared(supportFunc) {
-          initialState.module.declareFunction(supportFunc)
+        module.unlessDeclared(supportFunc) {
+          module.declareFunction(supportFunc)
         }
       }
 

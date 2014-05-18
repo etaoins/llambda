@@ -3,14 +3,16 @@ package io.llambda.llvmir
 import org.scalatest.FunSuite
 import IrFunction._
 
-class IrFunctionBuilderSuite extends FunSuite {
+class IrFunctionBuilderSuite extends IrTestSuite {
   test("empty function def") {
     val result = IrFunction.Result(VoidType, Set())
    
     val function = new IrFunctionBuilder(
+      module=createTestModule(),
       result=result,
       name="donothing",
-      namedArguments=Nil)
+      namedArguments=Nil
+    )
 
     function.entryBlock.retVoid()
 
@@ -27,6 +29,7 @@ class IrFunctionBuilderSuite extends FunSuite {
     val namedArguments = List("testArg" -> Argument(IntegerType(32)))
    
     val function = new IrFunctionBuilder(
+      module=createTestModule(),
       result=result,
       name="retArg",
       namedArguments=namedArguments,
@@ -65,6 +68,7 @@ class IrFunctionBuilderSuite extends FunSuite {
       "argv" -> IrFunction.Argument(PointerType(PointerType(IntegerType(8)))))
 
     val function = new IrFunctionBuilder(
+      module=createTestModule(),
       result=result,
       namedArguments=namedArguments,
       name="main")
@@ -93,12 +97,13 @@ class IrFunctionBuilderSuite extends FunSuite {
     val result = IrFunction.Result(VoidType, Set())
    
     val function = new IrFunctionBuilder(
+      module=createTestModule(),
       result=result,
       name="donothing",
       namedArguments=Nil)
     
     val entryBlock = function.entryBlock
-    val continueBlock = entryBlock.startChildBlock("continue")
+    val continueBlock = function.startChildBlock("continue")
 
     entryBlock. uncondBranch(continueBlock)
 

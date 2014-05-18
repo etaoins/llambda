@@ -189,112 +189,116 @@ object GenConstant {
     )
   }
 
-  def apply(state : GenerationState, typeGenerator : TypeGenerator)(storeStep : ps.StoreConstant) : IrConstant = storeStep match {
-    case ps.StoreStringCell(_, value) =>
-      genStringCell(state.module)(value)
+  def apply(state : GenerationState, typeGenerator : TypeGenerator)(storeStep : ps.StoreConstant) : IrConstant = {
+    val module = state.currentBlock.function.module
 
-    case ps.StoreSymbolCell(_, value) =>
-      genSymbolCell(state.module)(value)
+    storeStep match {
+      case ps.StoreStringCell(_, value) =>
+        genStringCell(module)(value)
 
-    case ps.StoreExactIntegerCell(_, value) =>
-      val intCellName = state.module.nameSource.allocate("schemeExactInteger")
+      case ps.StoreSymbolCell(_, value) =>
+        genSymbolCell(module)(value)
 
-      val intCell = ct.ExactIntegerCell.createConstant(
-        value=value
-      )
+      case ps.StoreExactIntegerCell(_, value) =>
+        val intCellName = module.nameSource.allocate("schemeExactInteger")
 
-      defineConstantData(state.module)(intCellName, intCell)
-    
-    case ps.StoreInexactRationalCell(_, value) =>
-      val rationalCellName = state.module.nameSource.allocate("schemeInexactRational")
+        val intCell = ct.ExactIntegerCell.createConstant(
+          value=value
+        )
 
-      val rationalCell = ct.InexactRationalCell.createConstant(
-        value=DoubleConstant(value)
-      )
+        defineConstantData(module)(intCellName, intCell)
+      
+      case ps.StoreInexactRationalCell(_, value) =>
+        val rationalCellName = module.nameSource.allocate("schemeInexactRational")
 
-      defineConstantData(state.module)(rationalCellName, rationalCell)
+        val rationalCell = ct.InexactRationalCell.createConstant(
+          value=DoubleConstant(value)
+        )
 
-    case ps.StoreBooleanCell(_, true) =>
-      GlobalDefines.trueIrValue
+        defineConstantData(module)(rationalCellName, rationalCell)
 
-    case ps.StoreBooleanCell(_, false) =>
-      GlobalDefines.falseIrValue
-    
-    case ps.StoreCharacterCell(_, value) =>
-      val charCellName = state.module.nameSource.allocate("schemeCharacter")
+      case ps.StoreBooleanCell(_, true) =>
+        GlobalDefines.trueIrValue
 
-      val charCell = ct.CharacterCell.createConstant(
-        unicodeChar=value
-      )
+      case ps.StoreBooleanCell(_, false) =>
+        GlobalDefines.falseIrValue
+      
+      case ps.StoreCharacterCell(_, value) =>
+        val charCellName = module.nameSource.allocate("schemeCharacter")
 
-      defineConstantData(state.module)(charCellName, charCell)
-    
-    case ps.StoreBytevectorCell(_, elements) =>
-      genBytevectorCell(state.module)(elements)
-    
-    case ps.StoreVectorCell(_, elementTemps) =>
-      val elementIrs = elementTemps.map { elementTemp =>
-        state.liveTemps(elementTemp) match {
+        val charCell = ct.CharacterCell.createConstant(
+          unicodeChar=value
+        )
+
+        defineConstantData(module)(charCellName, charCell)
+      
+      case ps.StoreBytevectorCell(_, elements) =>
+        genBytevectorCell(module)(elements)
+      
+      case ps.StoreVectorCell(_, elementTemps) =>
+        val elementIrs = elementTemps.map { elementTemp =>
+          state.liveTemps(elementTemp) match {
+            case constant : IrConstant => constant
+            case other =>
+              throw new InternalCompilerErrorException(s"Attempted to create constant pair with non-constant car: ${other}")
+          }
+        }
+
+        genVectorCell(module)(elementIrs)
+
+      case ps.StorePairCell(_, carTemp, cdrTemp, listLengthOpt, memberTypeOpt) =>
+        val pairCellName = module.nameSource.allocate("schemePair")
+        val carIrConstant = state.liveTemps(carTemp) match {
           case constant : IrConstant => constant
           case other =>
             throw new InternalCompilerErrorException(s"Attempted to create constant pair with non-constant car: ${other}")
         }
-      }
 
-      genVectorCell(state.module)(elementIrs)
+        val cdrIrConstant = state.liveTemps(cdrTemp) match {
+          case constant : IrConstant => constant
+          case other =>
+            throw new InternalCompilerErrorException(s"Attempted to create constant pair with non-constant cdr: ${other}")
+        }
 
-    case ps.StorePairCell(_, carTemp, cdrTemp, listLengthOpt, memberTypeOpt) =>
-      val pairCellName = state.module.nameSource.allocate("schemePair")
-      val carIrConstant = state.liveTemps(carTemp) match {
-        case constant : IrConstant => constant
-        case other =>
-          throw new InternalCompilerErrorException(s"Attempted to create constant pair with non-constant car: ${other}")
-      }
+        // 0 is InvalidTypeId
+        val memberTypeId = memberTypeOpt.map(_.typeId).getOrElse(0L)
 
-      val cdrIrConstant = state.liveTemps(cdrTemp) match {
-        case constant : IrConstant => constant
-        case other =>
-          throw new InternalCompilerErrorException(s"Attempted to create constant pair with non-constant cdr: ${other}")
-      }
+        // It's not possible for pairs to have a length of zero - only EmptyLists are zero length
+        val listLength = listLengthOpt.getOrElse(0L)
 
-      // 0 is InvalidTypeId
-      val memberTypeId = memberTypeOpt.map(_.typeId).getOrElse(0L)
+        val pairCell = ct.PairCell.createConstant(
+          memberTypeId=memberTypeId,
+          listLength=listLength,
+          car=carIrConstant,
+          cdr=cdrIrConstant
+        )
 
-      // It's not possible for pairs to have a length of zero - only EmptyLists are zero length
-      val listLength = listLengthOpt.getOrElse(0L)
+        defineConstantData(module)(pairCellName, pairCell)
 
-      val pairCell = ct.PairCell.createConstant(
-        memberTypeId=memberTypeId,
-        listLength=listLength,
-        car=carIrConstant,
-        cdr=cdrIrConstant
-      )
+      case ps.StoreUnitCell(_) =>
+        GlobalDefines.unitIrValue
 
-      defineConstantData(state.module)(pairCellName, pairCell)
+      case ps.StoreEmptyListCell(_) =>
+        GlobalDefines.emptyListIrValue
 
-    case ps.StoreUnitCell(_) =>
-      GlobalDefines.unitIrValue
+      case ps.StoreEmptyClosure(_, entryPointTemp) =>
+        val entryPointConstant = state.liveTemps(entryPointTemp) match {
+          case constant : IrConstant => constant
+          case other =>
+            throw new InternalCompilerErrorException(s"Attempted to create constant closure with non-constant entry point: ${other}")
+        }
 
-    case ps.StoreEmptyListCell(_) =>
-      GlobalDefines.emptyListIrValue
+        genEmptyClosure(module, typeGenerator)(entryPointConstant)
 
-    case ps.StoreEmptyClosure(_, entryPointTemp) =>
-      val entryPointConstant = state.liveTemps(entryPointTemp) match {
-        case constant : IrConstant => constant
-        case other =>
-          throw new InternalCompilerErrorException(s"Attempted to create constant closure with non-constant entry point: ${other}")
-      }
+      case ps.StoreNativeInteger(_, value, bits) =>
+        IntegerConstant(IntegerType(bits), value)
+      
+      case ps.StoreNativeFloat(_, value, fpType) if fpType == vt.Double =>
+        DoubleConstant(value)
 
-      genEmptyClosure(state.module, typeGenerator)(entryPointConstant)
-
-    case ps.StoreNativeInteger(_, value, bits) =>
-      IntegerConstant(IntegerType(bits), value)
-    
-    case ps.StoreNativeFloat(_, value, fpType) if fpType == vt.Double =>
-      DoubleConstant(value)
-
-    case ps.StoreNativeFloat(_, value, fpType) if fpType == vt.Float =>
-      FloatConstant(value.toFloat)
+      case ps.StoreNativeFloat(_, value, fpType) if fpType == vt.Float =>
+        FloatConstant(value.toFloat)
+    }
   }
 }
 

@@ -7,8 +7,9 @@ import llambda.compiler.{celltype => ct}
 
 object GenCastCellToSubtype {
   def apply(state : GenerationState)(worldPtr : IrValue, supertypeValue : IrValue, targetType : ct.CellType, errorMessage : RuntimeErrorMessage) : (IrBlockBuilder, IrValue) = {
-    val successBlock = state.currentBlock.startChildBlock(targetType.llvmName + "SubcastSuccess") 
-    val failBlock = state.currentBlock.startChildBlock(targetType.llvmName + "SubcastFail") 
+    val irFunction = state.currentBlock.function 
+    val successBlock = irFunction.startChildBlock(targetType.llvmName + "SubcastSuccess") 
+    val failBlock = irFunction.startChildBlock(targetType.llvmName + "SubcastFail") 
 
     // Do the actual check
     targetType.genTypeCheck(state.currentBlock)(supertypeValue, successBlock, failBlock)
