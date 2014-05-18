@@ -49,7 +49,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
   protected def toRecordTempValue(recordType : vt.RecordType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
 
   def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
-    val trueTemp = ps.GcUnmanagedValue()
+    val trueTemp = ps.PredicateTemp()
     plan.steps += ps.StoreNativeInteger(trueTemp, 1, 1) 
 
     trueTemp
@@ -61,7 +61,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     case vt.CBool =>
       val truthyPredTemp = toTruthyPredicate()
 
-      val intConvTemp = ps.GcUnmanagedValue()
+      val intConvTemp = ps.Temp(vt.CBool)
       plan.steps += ps.ConvertNativeInteger(intConvTemp, truthyPredTemp, vt.CBool.bits, false)
 
       intConvTemp

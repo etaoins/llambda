@@ -12,15 +12,40 @@ class TempValue(val isGcManaged : Boolean) {
 
 class WorldPtrValue extends TempValue(false)
 
-object GcManagedValue {
-  /** Creates a new GC managed temp value */
-  def apply() : TempValue = 
+object Temp {
+  def apply(valueType : vt.ValueType, knownConstant : Boolean = false) =
+    new TempValue(!knownConstant && valueType.isGcManaged)
+}
+
+object CellTemp {
+  def apply(cellType : ct.CellType, knownConstant : Boolean = false) =
+    Temp(vt.IntrinsicCellType(cellType), knownConstant)
+}
+
+object RecordTemp {
+  def apply() =
+    // Records are always GC managed
     new TempValue(true)
 }
 
-object GcUnmanagedValue {
-  /** Creates a unmanaged temp value */
-  def apply() : TempValue =
+object ClosureTemp {
+  def apply() =
+    // Closures are always GC managed
+    new TempValue(true)
+}
+
+object RecordLikeDataTemp {
+  def apply() =
+    new TempValue(false)
+}
+
+object PredicateTemp {
+  def apply() =
+    new TempValue(false)
+}
+
+object EntryPointTemp {
+  def apply() =
     new TempValue(false)
 }
 

@@ -37,8 +37,8 @@ object PlanRecordTypeConstructor {
           }).toList
         
         // Initialize the record
-        val cellTemp = ps.GcManagedValue()
-        val dataTemp = ps.GcUnmanagedValue()
+        val cellTemp = ps.RecordTemp()
+        val dataTemp = ps.RecordLikeDataTemp()
 
         plan.steps += ps.RecordLikeInit(cellTemp, dataTemp, recordType)
         

@@ -67,8 +67,8 @@ private[planner] object PlanLambda {
         val datumTempValue = argValue.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
 
         // Init the mutable
-        val mutableTemp = ps.GcManagedValue()
-        val recordDataTemp = ps.GcUnmanagedValue()
+        val mutableTemp = ps.RecordTemp()
+        val recordDataTemp = ps.RecordLikeDataTemp()
 
         plan.steps += ps.RecordLikeInit(mutableTemp, recordDataTemp, vt.MutableType)
 
@@ -168,7 +168,7 @@ private[planner] object PlanLambda {
       None
     }
     else {
-      Some(ps.GcManagedValue())
+      Some(ps.CellTemp(ct.ProcedureCell))
     }
 
     // Make our closure type
@@ -181,10 +181,10 @@ private[planner] object PlanLambda {
     }
 
     val allArgs = fixedArgLocs.map({ storageLoc =>
-      Argument(storageLoc, ps.GcManagedValue(), vt.IntrinsicCellType(ct.DatumCell))
+      Argument(storageLoc, ps.CellTemp(ct.DatumCell), vt.IntrinsicCellType(ct.DatumCell))
     }) ++
     restArgLoc.map({ storageLoc =>
-      Argument(storageLoc, ps.GcManagedValue(), vt.IntrinsicCellType(ct.ListElementCell))
+      Argument(storageLoc, ps.CellTemp(ct.ListElementCell), vt.IntrinsicCellType(ct.ListElementCell))
     })
 
     // Split our args in to mutable and immutable
@@ -221,7 +221,7 @@ private[planner] object PlanLambda {
         postMutableState
 
       case Some(procSelf) => 
-        val closureDataTemp = ps.GcUnmanagedValue()
+        val closureDataTemp = ps.RecordLikeDataTemp()
         procPlan.steps += ps.StoreRecordLikeData(closureDataTemp, procSelf, closureType)
 
         val state = loadClosureData(postMutableState)(closureDataTemp, closureType, capturedVariables)(procPlan)
@@ -296,8 +296,8 @@ private[planner] object PlanLambda {
 
     val procCellOpt = procSelfOpt map { _ => 
       // Save the closure values from the parent's scope
-      val cellTemp = ps.GcManagedValue()
-      val dataTemp = ps.GcUnmanagedValue()
+      val cellTemp = ps.RecordTemp()
+      val dataTemp = ps.RecordLikeDataTemp()
 
       parentPlan.steps += ps.RecordLikeInit(cellTemp, dataTemp, closureType)
 

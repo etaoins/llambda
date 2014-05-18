@@ -23,30 +23,30 @@ object PlanRecordTypePredicate {
         )
         
         // We only have a single argument
-        val argumentTemp = ps.GcManagedValue()
+        val argumentTemp = ps.CellTemp(ct.DatumCell)
         
         val plan = parentPlan.forkPlan()
 
         // Try to cast to a generic record type first
-        val isRecordPred = ps.GcUnmanagedValue()
+        val isRecordPred = ps.PredicateTemp()
         plan.steps += ps.TestCellType(isRecordPred, argumentTemp, ct.RecordCell) 
 
         val retValueTemp = plan.buildCondBranch(isRecordPred, 
           {isRecordPlan =>
             // Cast the boxed type to a boxed record
-            val recordCellTemp = ps.GcManagedValue()
+            val recordCellTemp = ps.RecordTemp()
             isRecordPlan.steps += ps.CastCellToTypeUnchecked(recordCellTemp, argumentTemp, ct.RecordCell)
 
-            val classMatchedPred = ps.GcUnmanagedValue()
+            val classMatchedPred = ps.PredicateTemp()
             isRecordPlan.steps += ps.TestRecordLikeClass(classMatchedPred, recordCellTemp, recordType) 
 
-            val classMatchedBool = ps.GcUnmanagedValue()
+            val classMatchedBool = ps.Temp(vt.CBool)
             isRecordPlan.steps += ps.ConvertNativeInteger(classMatchedBool, classMatchedPred, vt.CBool.bits, false)
 
             classMatchedBool
           },
           {isNotRecordPlan =>
-            val falseBool = ps.GcUnmanagedValue()
+            val falseBool = ps.Temp(vt.CBool)
             isNotRecordPlan.steps += ps.StoreNativeInteger(falseBool, 0, vt.CBool.bits)
 
             falseBool

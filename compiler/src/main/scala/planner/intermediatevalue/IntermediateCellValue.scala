@@ -37,7 +37,7 @@ trait IntermediateCellValue extends IntermediateValue {
       }
 
       // This is possible but not guaranteed. Verify the type at runtime.
-      val castTemp = ps.GcManagedValue()
+      val castTemp = new ps.TempValue(tempValue.isGcManaged)
       plan.steps += ps.CastCellToSubtypeChecked(castTemp, worldPtr, tempValue, targetType, errorMessage)
       castTemp
     }

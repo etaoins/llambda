@@ -20,8 +20,8 @@ object PlanRecordTypeMutator {
         )
 
         // Set up our arguments
-        val recordCellTemp = ps.GcManagedValue()
-        val newValueTemp = new ps.TempValue(field.fieldType.isGcManaged)
+        val recordCellTemp = ps.RecordTemp()
+        val newValueTemp = ps.Temp(field.fieldType)
 
         val namedArguments = List(
           ("recordCell" -> recordCellTemp),
@@ -31,7 +31,7 @@ object PlanRecordTypeMutator {
         val plan = parentPlan.forkPlan()
         
         // Extract the record data
-        val recordDataTemp = ps.GcUnmanagedValue()
+        val recordDataTemp = ps.RecordLikeDataTemp()
         plan.steps += ps.StoreRecordLikeData(recordDataTemp, recordCellTemp, recordType) 
 
         // Store the new value

@@ -23,8 +23,8 @@ import llambda.compiler.RuntimeErrorMessage
 private[intermediatevalue] object PlanProcedureTrampoline {
   def apply(signature : ProcedureSignature, nativeSymbol : String)(implicit parentPlan : PlanWriter) : PlannedFunction = {
     val worldPtrTemp = new ps.WorldPtrValue
-    val selfTemp = ps.GcManagedValue()
-    val argListHeadTemp = ps.GcManagedValue()
+    val selfTemp = ps.CellTemp(ct.ProcedureCell)
+    val argListHeadTemp = ps.CellTemp(ct.ListElementCell)
 
     implicit val plan = parentPlan.forkPlan()
 
@@ -61,7 +61,7 @@ private[intermediatevalue] object PlanProcedureTrampoline {
       val argPairTemp = argListElementValue.toTempValue(vt.IntrinsicCellType(ct.PairCell), Some(insufficientArgsMessage))(plan, worldPtrTemp)
 
       // Get the car of the pair as the arg's value 
-      val argDatumTemp = ps.GcManagedValue()
+      val argDatumTemp = ps.CellTemp(ct.DatumCell)
       plan.steps += ps.StorePairCar(argDatumTemp, argPairTemp)
 
       // Convert it to the expected type
@@ -71,7 +71,7 @@ private[intermediatevalue] object PlanProcedureTrampoline {
       argTemps += argTemp
 
       // Now load the cdr
-      val argCdrTemp = ps.GcManagedValue()
+      val argCdrTemp = ps.CellTemp(ct.ListElementCell)
       plan.steps += ps.StorePairCdr(argCdrTemp, argPairTemp)
 
       // We know this is a list element but its type will be DatumCell
@@ -93,7 +93,7 @@ private[intermediatevalue] object PlanProcedureTrampoline {
     }
 
     // Load the entry point for the function we're jumping to
-    val entryPointTemp = ps.GcUnmanagedValue()
+    val entryPointTemp = ps.EntryPointTemp()
     plan.steps += ps.StoreNamedEntryPoint(entryPointTemp, signature, nativeSymbol)
 
     // Create our result temp value if any

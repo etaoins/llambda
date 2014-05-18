@@ -43,7 +43,7 @@ sealed abstract class NativeValue(val nativeType : vt.NativeType, val cellType :
   override def planPhiWith(theirValue : IntermediateValue)(ourPlan : PlanWriter, theirPlan : PlanWriter)(implicit worldPtr : ps.WorldPtrValue) : PlanPhiResult = theirValue match {
     case theirUnboxed : NativeValue if nativeType == theirUnboxed.nativeType =>
       // Our types exactly match - no conversion needed!
-      val phiResultTemp = ps.GcUnmanagedValue()
+      val phiResultTemp = ps.Temp(nativeType)
 
       PlanPhiResult(
         ourTempValue=tempValue,
@@ -68,14 +68,14 @@ class NativeBooleanValue(tempValue : ps.TempValue) extends NativeValue(vt.CBool,
   def withNewTempValue(tempValue : ps.TempValue) = new NativeBooleanValue(tempValue)
 
   override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
-    val predTemp = ps.GcUnmanagedValue()
+    val predTemp = ps.Temp(nativeType)
     plan.steps += ps.ConvertNativeInteger(predTemp, tempValue, 1, false) 
 
     predTemp
   }
   
   def planCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue =  {
-    val boxedTemp = ps.GcManagedValue()
+    val boxedTemp = ps.CellTemp(ct.BooleanCell)
     plan.steps += ps.BoxBoolean(boxedTemp, toTruthyPredicate())
 
     boxedTemp
@@ -87,13 +87,13 @@ class NativeExactIntegerValue(tempValue : ps.TempValue, nativeType : vt.IntType)
 
   override def planCastToNativeTempValue(targetType : vt.NativeType)(implicit plan : PlanWriter) : ps.TempValue = targetType match {
     case intType : vt.IntType =>
-      val convTemp = ps.GcUnmanagedValue()
+      val convTemp = ps.Temp(nativeType)
       plan.steps += ps.ConvertNativeInteger(convTemp, tempValue, intType.bits, intType.signed)
 
       convTemp
 
     case fpType : vt.FpType =>
-      val convTemp = ps.GcUnmanagedValue()
+      val convTemp = ps.Temp(nativeType)
       plan.steps += ps.ConvertNativeIntegerToFloat(convTemp, tempValue, nativeType.signed, fpType)
 
       convTemp
@@ -105,7 +105,7 @@ class NativeExactIntegerValue(tempValue : ps.TempValue, nativeType : vt.IntType)
   override def planCastToCellTempValue(cellType : ct.CellType)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = cellType match {
     case ct.InexactRationalCell =>
       // Convert us to double and box
-      val boxedTemp = ps.GcManagedValue()
+      val boxedTemp = ps.CellTemp(cellType)
       
       plan.steps += ps.BoxInexactRational(boxedTemp, toTempValue(vt.Double))
 
@@ -117,7 +117,7 @@ class NativeExactIntegerValue(tempValue : ps.TempValue, nativeType : vt.IntType)
 
   def planCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue =  {
     // We can only box 64bit signed ints
-    val boxedTemp = ps.GcManagedValue()
+    val boxedTemp = ps.CellTemp(ct.ExactIntegerCell)
     plan.steps += ps.BoxExactInteger(boxedTemp, toTempValue(vt.Int64))
 
     boxedTemp
@@ -129,7 +129,7 @@ class NativeInexactRationalValue(tempValue : ps.TempValue, nativeType : vt.FpTyp
 
   override def planCastToNativeTempValue(targetType : vt.NativeType)(implicit plan : PlanWriter) : ps.TempValue = targetType match {
     case fpType : vt.FpType =>
-      val convTemp = ps.GcUnmanagedValue()
+      val convTemp = ps.Temp(fpType)
       plan.steps += ps.ConvertNativeFloat(convTemp, tempValue, fpType)
 
       convTemp
@@ -140,7 +140,7 @@ class NativeInexactRationalValue(tempValue : ps.TempValue, nativeType : vt.FpTyp
   
   def planCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue =  {
     // We can only box doubles
-    val boxedTemp = ps.GcManagedValue()
+    val boxedTemp = ps.CellTemp(ct.InexactRationalCell)
     plan.steps += ps.BoxInexactRational(boxedTemp, toTempValue(vt.Double))
 
     boxedTemp
@@ -151,7 +151,7 @@ class NativeCharacterValue(tempValue : ps.TempValue) extends NativeValue(vt.Unic
   def withNewTempValue(tempValue : ps.TempValue) = new NativeCharacterValue(tempValue)
 
   def planCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue =  {
-    val boxedTemp = ps.GcManagedValue()
+    val boxedTemp = ps.CellTemp(cellType)
     plan.steps += ps.BoxCharacter(boxedTemp, tempValue)
 
     boxedTemp

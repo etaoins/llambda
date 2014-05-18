@@ -101,11 +101,11 @@ private[planner] object PlanExpression {
 
           case MutableValue(mutableTemp, needsUndefCheck) =>
             // Load our data pointer
-            val recordDataTemp = ps.GcUnmanagedValue()
+            val recordDataTemp = ps.RecordLikeDataTemp()
             plan.steps += ps.StoreRecordLikeData(recordDataTemp, mutableTemp, vt.MutableType)
             
             // Load the data
-            val resultTemp = ps.GcManagedValue()
+            val resultTemp = ps.CellTemp(ct.DatumCell)
             plan.steps += ps.RecordDataFieldRef(resultTemp, recordDataTemp, vt.MutableType, vt.MutableField)
 
             if (needsUndefCheck) {
@@ -138,7 +138,7 @@ private[planner] object PlanExpression {
         val newValueTemp = newValueResult.value.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
 
         // Load our data pointer
-        val recordDataTemp = ps.GcUnmanagedValue()
+        val recordDataTemp = ps.RecordLikeDataTemp()
         plan.steps += ps.StoreRecordLikeData(recordDataTemp, mutableTemp, vt.MutableType)
         
         // Store the data

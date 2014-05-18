@@ -12,7 +12,7 @@ class InvokableProcedureCell(tempValue : ps.TempValue) extends InvokableProcedur
     tempValue
   
   def planEntryPoint()(implicit plan : PlanWriter) : ps.TempValue = {
-    val entryPointTemp = ps.GcUnmanagedValue()
+    val entryPointTemp = ps.EntryPointTemp()
     plan.steps += ps.StoreProcedureEntryPoint(entryPointTemp, tempValue)
 
     entryPointTemp

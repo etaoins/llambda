@@ -239,9 +239,11 @@ object WriteScalaObjects extends writer.OutputWriter {
         // This a variant
         "CellTypeVariant"
 
-      case _ =>
-        // This is concrete
+      case CellClass.Concrete =>
         "ConcreteCellType"
+      
+      case CellClass.Preconstructed =>
+        "PreconstructedCellType"
     }
 
     scalaBuilder += s"object ${names.scalaObjectName} extends ${scalaSuperclass} with ${names.scalaFieldsTraitName}"

@@ -60,6 +60,8 @@ sealed abstract class ConcreteCellType extends CellType {
   val ${TYPE_TAG_FIELD_NAME} : Long
 }
 
+sealed abstract class PreconstructedCellType extends ConcreteCellType
+
 sealed abstract class CellTypeVariant extends CastableValue
 
 object CellType {

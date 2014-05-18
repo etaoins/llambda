@@ -19,12 +19,12 @@ object PlanRecordTypeAccessor {
           returnType=Some(field.fieldType)
         )
 
-        val recordCellTemp = ps.GcManagedValue()
+        val recordCellTemp = ps.RecordTemp()
         
         val plan = parentPlan.forkPlan()
 
         // Extract the record data
-        val recordDataTemp = ps.GcUnmanagedValue()
+        val recordDataTemp = ps.RecordLikeDataTemp()
         plan.steps += ps.StoreRecordLikeData(recordDataTemp, recordCellTemp, recordType) 
         
         // Read the field

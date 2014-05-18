@@ -64,6 +64,8 @@ sealed abstract class ConcreteCellType extends CellType {
   val typeId : Long
 }
 
+sealed abstract class PreconstructedCellType extends ConcreteCellType
+
 sealed abstract class CellTypeVariant extends CastableValue
 
 object CellType {
@@ -153,7 +155,7 @@ sealed trait UnitFields extends DatumFields {
   val irType : FirstClassType
 }
 
-object UnitCell extends ConcreteCellType with UnitFields {
+object UnitCell extends PreconstructedCellType with UnitFields {
   val llvmName = "unit"
   val irType = UserDefinedType("unit")
   val schemeName = "<unit-cell>"
@@ -351,7 +353,7 @@ sealed trait EmptyListFields extends ListElementFields {
   val irType : FirstClassType
 }
 
-object EmptyListCell extends ConcreteCellType with EmptyListFields {
+object EmptyListCell extends PreconstructedCellType with EmptyListFields {
   val llvmName = "emptyList"
   val irType = UserDefinedType("emptyList")
   val schemeName = "<empty-list-cell>"
@@ -840,7 +842,7 @@ sealed trait BooleanFields extends DatumFields {
   }
 }
 
-object BooleanCell extends ConcreteCellType with BooleanFields {
+object BooleanCell extends PreconstructedCellType with BooleanFields {
   val llvmName = "boolean"
   val irType = UserDefinedType("boolean")
   val schemeName = "<boolean-cell>"

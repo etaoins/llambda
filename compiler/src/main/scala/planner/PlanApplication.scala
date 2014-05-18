@@ -15,16 +15,17 @@ object PlanApplication {
       // Avoid a cell allocation here so our plan optimizer knows we don't need GC
 
       // This is unmanaged because the empty list is a constant value
-      val emptyListTemp = ps.GcUnmanagedValue()
+      val emptyListTemp = ps.CellTemp(ct.EmptyListCell, knownConstant=true)
       plan.steps += ps.StoreEmptyListCell(emptyListTemp)
 
-      val listElemCast = ps.GcUnmanagedValue()
+      // We know this is constant because the empty list is constant
+      val listElemCast = ps.CellTemp(ct.ListElementCell, knownConstant=true)
       plan.steps += ps.CastCellToTypeUnchecked(listElemCast, emptyListTemp, ct.ListElementCell)
 
       listElemCast
     }
     else {
-      val restArgTemp = ps.GcManagedValue()
+      val restArgTemp = ps.CellTemp(ct.ListElementCell)
 
       val argTemps = restArgs.map {
         _.toTempValue(vt.IntrinsicCellType(ct.DatumCell))

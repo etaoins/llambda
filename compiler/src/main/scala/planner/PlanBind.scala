@@ -28,9 +28,9 @@ private[planner] object PlanBind {
         .filter(storageLocRefedByExpr(_, initialValue))
 
       val postrecursiveState = neededRecursives.foldLeft(prerecursiveState) { case (state, storageLoc) =>
-        val recursiveTemp = ps.GcManagedValue()
+        val recursiveTemp = ps.RecordTemp()
 
-        val recordDataTemp = ps.GcUnmanagedValue()
+        val recordDataTemp = ps.RecordLikeDataTemp()
 
         plan.steps += ps.RecordLikeInit(recursiveTemp, recordDataTemp, vt.MutableType)
         // Mark this value as undefined so a runtime error will be raised if it is accessed
@@ -50,7 +50,7 @@ private[planner] object PlanBind {
           val initialValueTemp = initialValueResult.value.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
 
           // Update the recursive to point to our new value
-          val recordDataTemp = ps.GcUnmanagedValue()
+          val recordDataTemp = ps.RecordLikeDataTemp()
 
           plan.steps += ps.StoreRecordLikeData(recordDataTemp, recursiveTemp, vt.MutableType)
           plan.steps += ps.RecordDataFieldSet(recordDataTemp, vt.MutableType, vt.MutableField, initialValueTemp)
@@ -65,12 +65,12 @@ private[planner] object PlanBind {
       if (planConfig.analysis.mutableVars.contains(storageLoc)) {
         // If we used to be a recursive value we can reuse that record
         val mutableTemp = prevRecursiveOpt.getOrElse {
-          val mutableTemp = ps.GcManagedValue()
+          val mutableTemp = ps.RecordTemp()
           
           val initialValueTemp = initialValueResult.value.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
 
           // Create a new mutable
-          val recordDataTemp = ps.GcUnmanagedValue()
+          val recordDataTemp = ps.RecordLikeDataTemp()
           plan.steps += ps.RecordLikeInit(mutableTemp, recordDataTemp, vt.MutableType)
 
           // Set the value

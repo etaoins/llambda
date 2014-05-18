@@ -19,9 +19,7 @@ sealed abstract class ValueType {
 sealed abstract trait PointerType extends ValueType
 
 /** Pointer to a garbage collected value cell */
-sealed abstract trait CellValueType extends PointerType {
-  val isGcManaged = true
-}
+sealed abstract trait CellValueType extends PointerType
 
 /** Intrinsic types known by the compiler backend
   *
@@ -84,6 +82,15 @@ case object UnicodeChar extends IntLikeType(32, true) {
 /** Pointer to a garbage collected value cell containing an intrinsic type */
 case class IntrinsicCellType(cellType : ct.CellType) extends IntrinsicType with CellValueType {
   val schemeName = cellType.schemeName
+
+  val isGcManaged = cellType match {
+    case preconstruct : ct.PreconstructedCellType =>
+      // Only constant instances of this exist
+      false
+
+    case _ =>
+      true
+  }
 }
 
 /** Identifies a record field
@@ -100,6 +107,7 @@ sealed abstract class RecordLikeType extends CellValueType {
   val sourceName : String
   val fields : List[RecordField]
   val cellType : ct.ConcreteCellType with ct.RecordLikeFields
+  val isGcManaged = true
 }
 
 /** Pointer to a garabge collected value cell containing a user-defined record type
