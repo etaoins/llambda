@@ -87,7 +87,10 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     val ourTempValue = this.toTempValue(vt.IntrinsicCellType(ct.DatumCell))(ourPlan, worldPtr)
     val theirTempValue = theirValue.toTempValue(vt.IntrinsicCellType(ct.DatumCell))(theirPlan, worldPtr)
 
-    val phiResultTemp = ps.GcManagedValue()
+    // If we're constants on both sides we don't need to be GC managed
+    val isGcManaged = ourTempValue.isGcManaged || theirTempValue.isGcManaged
+
+    val phiResultTemp = new ps.TempValue(isGcManaged)
     val phiPossibleTypes = possibleTypes ++ theirValue.possibleTypes
 
     PlanPhiResult(
