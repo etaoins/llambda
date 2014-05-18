@@ -57,6 +57,25 @@ object ListProcReducer extends ReportProcReducer {
           None
       }
     
+    case ("list?", List(singleExpr)) =>
+      PartialValueForExpression(singleExpr) flatMap {
+        case pv.ProperList(_) =>
+          Some(et.Literal(ast.BooleanLiteral(true)))
+        
+        case _ : pv.PartialPair => 
+          // Improper list
+          Some(et.Literal(ast.BooleanLiteral(false)))
+        
+        case _ : pv.PartialVector => 
+          Some(et.Literal(ast.BooleanLiteral(false)))
+        
+        case _ : pv.LiteralLeaf => 
+          Some(et.Literal(ast.BooleanLiteral(false)))
+
+        case _ =>
+          None
+      }
+    
     case ("length", List(singleExpr)) =>
       PartialValueForExpression(singleExpr) flatMap {
         case pv.ProperList(elements) =>

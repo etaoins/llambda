@@ -248,6 +248,7 @@
 
     (define-r7rs pair? (native-function "lliby_is_pair" (<datum-cell>) <bool>))
     (define-r7rs null? (native-function "lliby_is_empty_list" (<datum-cell>) <bool>))
+    (define-r7rs list? (native-function "lliby_is_list" (<datum-cell>) <bool>))
     (define-r7rs cons (world-function "lliby_cons" (<datum-cell> <datum-cell>) <pair-cell>))
     (define-r7rs car (native-function "lliby_car" (<pair-cell>) <datum-cell>))
     (define-r7rs cdr (native-function "lliby_cdr" (<pair-cell>) <datum-cell>))

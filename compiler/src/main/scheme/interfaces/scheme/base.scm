@@ -12,7 +12,7 @@
 (export number? complex? real? rational? exact? integer? exact-integer? inexact? finite? infinite? nan? zero? even? odd?
         exact inexact + - / * = < > <= >=)
 (export boolean? not boolean=?)
-(export pair? null? cons car cdr set-car! set-cdr! length list-copy make-list list append memv memq member)
+(export pair? null? list? cons car cdr set-car! set-cdr! length list-copy make-list list append memv memq member)
 (export symbol? symbol=? symbol->string string->symbol)
 (export char? digit-value char->integer integer->char)
 (export vector? make-vector vector vector-length vector-ref vector-set! list->vector vector-append)

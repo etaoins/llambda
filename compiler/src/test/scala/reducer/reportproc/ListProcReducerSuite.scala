@@ -23,6 +23,22 @@ class ListProcReducerSuite extends FunSuite with Inside with testutil.Expression
     assert(reductionFor("(pair? '(1 2 3))") ===
       et.Literal(ast.BooleanLiteral(true))
     )
+    
+    assert(reductionFor("(list? '())") ===
+      et.Literal(ast.BooleanLiteral(true))
+    )
+    
+    assert(reductionFor("(list? '(1 2 3))") ===
+      et.Literal(ast.BooleanLiteral(true))
+    )
+    
+    assert(reductionFor("(list? #f)") ===
+      et.Literal(ast.BooleanLiteral(false))
+    )
+    
+    assert(reductionFor("(list? '(1 . 2))") ===
+      et.Literal(ast.BooleanLiteral(false))
+    )
   }
   
   test("static (length)") {

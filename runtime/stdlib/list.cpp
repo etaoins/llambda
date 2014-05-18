@@ -229,4 +229,16 @@ const DatumCell* lliby_member(World &world, const DatumCell *obj, ListElementCel
 	return list_search(world, obj, listHead, &DatumCell::isEqual);
 }
 
+bool lliby_is_list(const DatumCell *obj) 
+{
+	if (auto listHead = datum_cast<ListElementCell>(obj)) 
+	{
+		return ProperList<DatumCell>(listHead).isValid();
+	}
+	else
+	{
+		return false;
+	}
+}
+
 }

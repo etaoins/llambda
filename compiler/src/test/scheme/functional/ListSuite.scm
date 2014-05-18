@@ -142,3 +142,12 @@
 
 (define-test "(set-cdr!) on literal fails" (expect-failure
 	(set-cdr! '(old-car . old-cdr) 'new-cdr)))
+
+(define-test "(list?) of constant list" (expect #t
+   (list? '(a b c))))
+
+(define-test "(list?) of empty list" (expect #t
+   (list? '())))
+
+(define-test "(list?) of improper list" (expect #f
+   (list? '(a . b))))
