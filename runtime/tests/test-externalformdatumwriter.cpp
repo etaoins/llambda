@@ -81,7 +81,7 @@ void testInexactRational(World &world)
 	assertForm(InexactRationalCell::fromValue(world, 0.0), "0.0");
 
 	assertForm(InexactRationalCell::fromValue(world, 12.5), "12.5");
-	assertForm(InexactRationalCell::fromValue(world, -4.55), "-4.55");
+	assertForm(InexactRationalCell::fromValue(world, -4.5), "-4.5");
 
 	assertForm(InexactRationalCell::fromValue(world, 100.0), "100.0");
 	assertForm(InexactRationalCell::fromValue(world, -500.0), "-500.0");

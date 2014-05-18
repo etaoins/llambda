@@ -14,6 +14,9 @@
 (define-test "exact integer greater than 32bits" (expect 9007199254740993
 	9007199254740993))
 
+(define-test "very large inexact rational" (expect 9007199254740992.0
+  9007199254740992.0))
+
 (define-test "inexact rational" (expect -12.0
 	-12.0))
 

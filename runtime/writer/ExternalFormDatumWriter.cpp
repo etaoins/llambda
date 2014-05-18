@@ -133,7 +133,7 @@ void ExternalFormDatumWriter::renderInexactRational(const InexactRationalCell *v
 	}
 	else
 	{
-		m_outStream << value->value();
+		m_outStream << std::defaultfloat << std::setprecision(256) << value->value();
 
 		if (value->isInteger())
 		{
