@@ -44,11 +44,8 @@ private[reducer] object ReduceApplication {
   }
   
   /** Returns true if we should inline an inlineable expression
-    *
-    * This currently is either a trivial expression or an application involving only trivial expressions. Note that
-    * this definition is non-recursive - i.e. applications of applications of trivial expressions are disallowed.
     */
-  private def shouldInlineExpr(candidateExpr : et.Expression) : Boolean = candidateExpr match {
+  private def shouldInlineExpr(candidateExpr : et.Expression, allowNesting : Boolean = true) : Boolean = candidateExpr match {
     case et.InternalDefinition(bindings, bodyExpr) =>
       if (bindings.map(_._2).forall(expressionIsTrivial)) {
         // Unwrap the internal definition
@@ -57,6 +54,13 @@ private[reducer] object ReduceApplication {
       else {
         false
       }
+
+    case et.Cond(testExpr, trueExpr, falseExpr) if allowNesting  =>
+      // This catches (if (simple-application) trivial trivial)
+      // Prevent nesting so we don't do this recursively 
+      shouldInlineExpr(testExpr, allowNesting=false) && 
+        expressionIsTrivial(trueExpr) && 
+        expressionIsTrivial(falseExpr)
 
     case applyExpr : et.Apply =>
       applyExpr.subexpressions.forall(expressionIsTrivial)
