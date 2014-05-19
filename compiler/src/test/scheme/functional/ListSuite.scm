@@ -1,123 +1,92 @@
-(define-test "improper is pair" (expect #t
-	(pair? '(a . b))))
+(define-test "(pair?)" (expect-success
+	(assert-true  (pair? '(a . b)))
+	(assert-true  (pair? '(a  b c)))
+  (assert-false (pair? '()))
+  (assert-false (pair? #(a b)))))
 
-(define-test "proper is pair" (expect #t
-	(pair? '(a  b c))))
+(define-test "(null?)" (expect-success
+	(assert-true  (null? '()))
+  (assert-false (null? '(a b c)))
+  (assert-false (null? #(a b c))))) 
 
-(define-test "empty list isn't pair" (expect #f
-	(pair? '())))
+(define-test "(list?)" (expect-success
+   (assert-true  (list? '(a b c)))
+   (assert-true  (list? '()))
+   (assert-false (list? '(a . b)))))
 
-(define-test "empty list is null" (expect #t
-	(null? '())))
+(define-test "(cons)" (expect-success
+	(assert-equal '(a)
+                (cons 'a '()))
 
-(define-test "proper isn't null" (expect #f
-	(null? '(a  b c))))
+  (assert-equal '((a) b c d)
+                (cons '(a) '(b c d)))
 
-(define-test "vector isn't pair" (expect #f
-	(pair? '#(a b))))
+  (assert-equal '("a" b c)
+                (cons "a" '(b c)))
 
-(define-test "cons simple proper list" (expect (a)
-	(cons 'a '())))
+  (assert-equal '(a . 3)
+                (cons 'a 3))
 
-(define-test "cons nested proper list" (expect ((a) b c d)
-	(cons '(a) '(b c d))))
+  (assert-equal '((a b) . c)
+                (cons '(a b) 'c))))
 
-(define-test "cons proper list with string head" (expect ("a" b c)
-	(cons "a" '(b c))))
 
-(define-test "cons simple improper list" (expect (a . 3)
-	(cons 'a 3)))
+(define-test "(car)" (expect-success
+  (assert-equal 'a (car '(a b c)))
+  (assert-equal '(a) (car '((a) b c)))
+	(assert-equal 1 (car '(1 . 2)))))
 
-(define-test "cons simple improper list with nested proper list" (expect ((a b) . c)
-	(cons '(a b) 'c)))
-
-(define-test "car of proper list" (expect a
-	(car '(a b c))))
-
-(define-test "car of nested list" (expect (a)
-	(car '((a) b c d))))
-
-(define-test "car of improper list" (expect 1
-	(car '(1 . 2))))
-
-(define-test "length of proper list" (expect 3
-	(length '(a b c))))
-
-(define-test "length of nested list" (expect 3
-	(length '(a (b) (c d e)))))
-
-(define-test "length of empty list" (expect 0
-	(length '())))
+(define-test "(length)" (expect-success
+  (assert-equal 3 (length '(a b c)))
+	(assert-equal 3 (length '(a (b) (c d e))))
+	(assert-equal 0 (length '()))))
 
 (define-test "length of improper list fails" (expect-failure
 	(length '(1 . 2))))
 
-(define-test "make uninitialized empty list" (expect ()
-	(make-list 0)))
+(define-test "make-list" (expect-success 
+	(assert-equal '() (make-list 0))
+  (assert-equal '() (make-list 0 4.0))
+  (assert-equal '(#!unit #!unit #!unit #!unit) (make-list 4))
+  (assert-equal '(4.0 4.0 4.0 4.0) (make-list 4 4.0))))
 
-(define-test "make filled empty list" (expect ()
-	(make-list 0 4.0)))
+(define-test "(list-copy) of degenerate lists" (expect-success
+  (assert-equal '() (list-copy '()))
+	(assert-equal '(1 2 . 3) (list-copy '(1 2 . 3)))
+  ; This is allowrequired by R7RS
+  ; Single objects can also be considered degenerate forms of improper lists so
+  ; this makes some sense
+  (assert-equal 'a (list-copy 'a))))
 
-(define-test "make uninitialized non-empty list" (expect (#!unit #!unit #!unit #!unit)
-	(make-list 4)))
-
-(define-test "make filled non-empty list" (expect (4.0 4.0 4.0 4.0)
-	(make-list 4 4.0)))
-
-(define-test "copy empty list" (expect ()
-	(list-copy '())))
-
-(define-test "copy non-empty list" (expect ((1.0 2.0 3.0) . (-1.0 2.0 3.0))
+(define-test "(list-copy) of non-empty proper list" (expect-success
 	(define immutable-list '(1.0 2.0 3.0))
 	(define copied-list (list-copy immutable-list))
 	; This shouldn't effect the immutable list
 	(set-car! copied-list -1.0)
-	(cons immutable-list copied-list)))
 
-(define-test "copy improper list" (expect (1 2 . 3)
-	(list-copy '(1 2 . 3))))
+  (assert-equal '(1.0 2.0 3.0) immutable-list)
+  (assert-equal '(-1.0 2.0 3.0) copied-list)))
 
-; This is required by R7RS
-; Single objects can also be considered degenerate forms of improper lists so
-; this makes some sense
-(define-test "copy of non-list" (expect a
-	(list-copy 'a)))
+(define-test "(list)" (expect-success
+	(assert-equal '() (list))
+	(assert-equal '(1 2 3) (list 1 2 3))))
 
-(define-test "empty (list)" (expect ()
-	(list)))
-
-(define-test "non-empty (list)" (expect (1 2 3)
-	(list 1 2 3)))
-
-(define-test "(append) with no arguments" (expect ()
-	(append)))
-
-(define-test "(append) with single argument returns it" (expect a
-	(append 'a)))
-
-(define-test "(append) three proper lists" (expect (1 2 3 4 5 6)
-	(append '(1 2) '(3 4) '(5 6))))
-
-(define-test "(append) three empty lists" (expect ()
-	(append '() '() '())))
+(define-test "(append)" (expect-success
+	(assert-equal '() (append))
+	(assert-equal 'a (append 'a))
+	(assert-equal '(1 2 3 4 5 6) (append '(1 2) '(3 4) '(5 6)))
+  (assert-equal '() (append '() '() '()))
+  (assert-equal 'a (append '() 'a))))
 
 (define-test "(append) with non-terminal non-list fails" (expect-failure
 	(append '(1 2) 3 '(4 5))))
 
-(define-test "(append) empty list with symbol" (expect a
-	(append '() 'a)))
-
-(define-test "(memq) on the first list member" (expect (a b c)
-	(memq 'a '(a b c))))
-
-(define-test "(memq) on the second list member" (expect (b c)
-	(memq 'b '(a b c))))
-
-(define-test "(memq) on non-existent member" (expect #f
-	(memq 'a '(b c d))))
-
-(define-test "(memq) isn't recursive" (expect #f
-	(memq (list 'a) '(b (a) c))))
+(define-test "(memq)" (expect-success
+	(assert-equal '(a b c) (memq 'a '(a b c)))
+  (assert-equal '(b c) (memq 'b '(a b c)))
+  (assert-false (memq 'a '(b c d)))
+  ; memq isn't recurive
+	(assert-false (memq (list 'a) '(b (a) c)))))
 
 (define-test "(member) is recursive" (expect ((a) c)
 	(member (list 'a) '(b (a) c))))
@@ -142,12 +111,3 @@
 
 (define-test "(set-cdr!) on literal fails" (expect-failure
 	(set-cdr! '(old-car . old-cdr) 'new-cdr)))
-
-(define-test "(list?) of constant list" (expect #t
-   (list? '(a b c))))
-
-(define-test "(list?) of empty list" (expect #t
-   (list? '())))
-
-(define-test "(list?) of improper list" (expect #f
-   (list? '(a . b))))

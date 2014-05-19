@@ -95,6 +95,25 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
 
         assert(result.output === expectedOutput)
       
+      case ast.ProperList(ast.Symbol("expect-success") :: program) if !program.isEmpty =>
+        // Make sure the program outputs this at the end
+        val canaryValue = ast.Symbol("test-completed")
+        val programWithCanary = program :+ ast.ProperList(List(ast.Symbol("quote"), canaryValue)) 
+
+        val result = executeProgram(programWithCanary, optimizeLevel, true)
+
+        if (!result.success) {
+          if (result.errorString.isEmpty) {
+            fail("Execution unexpectedly failed with no output")
+          }
+          else {
+            // Use the error string the program provided
+            fail(result.errorString)
+          }
+        }
+
+        assert(result.output === List(canaryValue), "Execution did not reach end of test")
+      
       case ast.ProperList(ast.Symbol("expect-failure") :: program) if !program.isEmpty =>
         try {
           val result = executeProgram(program, optimizeLevel, false)
@@ -119,7 +138,7 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
     // Import (llambda nfi) and (scheme base)
 
     val finalProgram = if (printLastValue) {
-      val importDecl = datum"(import (llambda nfi) (scheme base) (scheme write))"
+      val importDecl = datum"(import (llambda nfi) (scheme base) (scheme write) (llambda test-util))"
 
       // Modify the last expression to print using lliby_write
       val valueDatum = program.last
@@ -133,8 +152,7 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
       (importDecl :: program.dropRight(1)) :+ printValueDatum
     }
     else {
-      // Just import (scheme base)
-      val importDecl = datum"(import (scheme base))"
+      val importDecl = datum"(import (scheme base) (llambda test-util))"
 
       importDecl :: program
     }
