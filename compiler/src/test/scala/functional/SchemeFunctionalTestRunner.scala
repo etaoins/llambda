@@ -119,17 +119,15 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
     // Import (llambda nfi) and (scheme base)
 
     val finalProgram = if (printLastValue) {
-      val importDecl = datum"(import (llambda nfi) (scheme base))"
+      val importDecl = datum"(import (llambda nfi) (scheme base) (scheme write))"
 
       // Modify the last expression to print using lliby_write
       val valueDatum = program.last
 
       val printValueDatum = ast.ProperList(List(
-        ast.ProperList(List(
-          ast.Symbol("native-function"),
-          ast.StringLiteral("lliby_write"),
-          ast.ProperList(List(ast.Symbol("<datum-cell>"))))),
-        valueDatum))
+        ast.Symbol("write"),
+        valueDatum
+      ))
 
       // Rebuild the program with the import and value printing
       (importDecl :: program.dropRight(1)) :+ printValueDatum

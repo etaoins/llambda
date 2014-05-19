@@ -19,6 +19,7 @@
 #include "binding/CharacterCell.h"
 #include "binding/RecordCell.h"
 #include "binding/ErrorObjectCell.h"
+#include "binding/PortCell.h"
 
 #include "alloc/cellref.h"
 #include "assertions.h"
@@ -213,6 +214,12 @@ void testErrorObject(World &world)
 	assertForm(errorObj, "#!error(Test error)");
 }
 
+void testPort(World &world)
+{
+	auto port = PortCell::createInstance(world, &std::cout);
+	assertForm(port, "#!port");
+}
+
 void testAll(World &world)
 {
 	testUnit();
@@ -229,6 +236,7 @@ void testAll(World &world)
 	testCharacter(world);
 	testRecord(world);
 	testErrorObject(world);
+	testPort(world);
 }
 
 }

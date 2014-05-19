@@ -57,6 +57,8 @@ typedef StrongRef<RecordCell> RecordRef;
 typedef StrongRefRange<RecordCell> RecordRefRange;
 typedef StrongRef<ErrorObjectCell> ErrorObjectRef;
 typedef StrongRefRange<ErrorObjectCell> ErrorObjectRefRange;
+typedef StrongRef<PortCell> PortRef;
+typedef StrongRefRange<PortCell> PortRefRange;
 
 }
 }

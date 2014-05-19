@@ -4,6 +4,10 @@ fieldtype UnicodeChar : uint32 {
 	extern cppname = UnicodeChar;
 };
 
+fieldtype ios : uint8 {
+	extern cppname = std::ios;
+};
+
 // Entry point for adapted procedures
 cell Datum;
 cell Procedure;
@@ -119,4 +123,9 @@ concrete internal cell Record : RecordLike {
 concrete cell ErrorObject : Datum {
 	String* message;
 	ListElement* irritants;
+};
+
+concrete cell Port : Datum {
+	bool isOwned;
+	ios *stream;
 };

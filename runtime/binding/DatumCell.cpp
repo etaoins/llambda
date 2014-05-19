@@ -10,6 +10,7 @@
 #include "VectorCell.h"
 #include "BytevectorCell.h"
 #include "StringCell.h"
+#include "PortCell.h"
 
 namespace lliby
 {
@@ -150,6 +151,10 @@ void DatumCell::finalize()
 	else if (auto thisRecordLike = datum_cast<RecordLikeCell>(this))
 	{
 		thisRecordLike->finalizeRecordLike();
+	}
+	else if (auto thisPort = datum_cast<PortCell>(this))
+	{
+		thisPort->finalizePort();
 	}
 }
 

@@ -31,6 +31,7 @@ class RecordLikeCell;
 class ProcedureCell;
 class RecordCell;
 class ErrorObjectCell;
+class PortCell;
 
 typedef DatumCell* (*ProcedureEntryPoint)(World&, ProcedureCell*, ListElementCell*);
 

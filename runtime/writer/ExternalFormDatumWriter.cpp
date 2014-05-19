@@ -20,6 +20,7 @@
 #include "binding/ProcedureCell.h"
 #include "binding/RecordCell.h"
 #include "binding/ErrorObjectCell.h"
+#include "binding/PortCell.h"
 
 #include "dynamic/ParameterProcedureCell.h"
 
@@ -83,6 +84,10 @@ void ExternalFormDatumWriter::render(const DatumCell *datum)
 	else if (auto errorObj = datum_cast<ErrorObjectCell>(datum))
 	{
 		renderErrorObject(errorObj);
+	}
+	else if (auto port = datum_cast<PortCell>(datum))
+	{
+		renderPort(port);
 	}
 	else
 	{
@@ -351,6 +356,11 @@ void ExternalFormDatumWriter::renderRecord(const RecordCell *)
 void ExternalFormDatumWriter::renderErrorObject(const ErrorObjectCell *errObj)
 {
 	m_outStream << "#!error(" << errObj->message() << ")";
+}
+	
+void ExternalFormDatumWriter::renderPort(const PortCell *value)
+{
+	m_outStream << "#!port";
 }
 
 }

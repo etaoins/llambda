@@ -70,7 +70,14 @@ private val llibyDynamicenvPop = IrFunctionDecl(
           // Pop the environment
           finalBlock.callDecl(None)(llibyDynamicenvPop, List(worldPtrIr))
 
-          finalState.withTempValue(step.result -> finalState.liveTemps(step.innerResult)) 
+          val updatedLiveTemps = finalState.liveTemps.withAliasedTempValue(
+            step.innerResult,
+            (step.result -> finalState.liveTemps(step.innerResult))
+          )
+            
+          finalState.copy(
+            liveTemps=updatedLiveTemps
+          )
 
         case terminated : BlockTerminated =>
           terminated

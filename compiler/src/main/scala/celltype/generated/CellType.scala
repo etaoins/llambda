@@ -69,7 +69,7 @@ sealed abstract class PreconstructedCellType extends ConcreteCellType
 sealed abstract class CellTypeVariant extends CastableValue
 
 object CellType {
-  val nextTbaaIndex = 80L
+  val nextTbaaIndex = 84L
 }
 
 sealed trait DatumFields {
@@ -135,7 +135,7 @@ object DatumCell extends CellType with DatumFields {
   val irType = UserDefinedType("datum")
   val schemeName = "<datum-cell>"
   val supertype = None
-  val directSubtypes = Set[CellType](UnitCell, ListElementCell, StringCell, SymbolCell, BooleanCell, NumericCell, CharacterCell, VectorCell, BytevectorCell, RecordLikeCell, ErrorObjectCell)
+  val directSubtypes = Set[CellType](UnitCell, ListElementCell, StringCell, SymbolCell, BooleanCell, NumericCell, CharacterCell, VectorCell, BytevectorCell, RecordLikeCell, ErrorObjectCell, PortCell)
 
   val typeIdGepIndices = List(0, 0)
   val gcStateGepIndices = List(0, 1)
@@ -1576,6 +1576,96 @@ object ErrorObjectCell extends ConcreteCellType with ErrorObjectFields {
       DatumCell.createConstant(typeId=typeId),
       message,
       irritants
+    ), userDefinedType=Some(irType))
+  }
+}
+
+sealed trait PortFields extends DatumFields {
+  val irType : FirstClassType
+
+  val isOwnedIrType = IntegerType(8)
+  val isOwnedTbaaIndex : Long
+  val isOwnedGepIndices : List[Int]
+
+  val streamIrType = PointerType(IntegerType(8))
+  val streamTbaaIndex : Long
+  val streamGepIndices : List[Int]
+
+  def genPointerToIsOwned(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+    if (valueCell.irType != PointerType(irType)) {
+      throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
+    }
+
+    block.getelementptr("isOwnedPtr")(
+      elementType=isOwnedIrType,
+      basePointer=valueCell,
+      indices=isOwnedGepIndices.map(IntegerConstant(IntegerType(32), _)),
+      inbounds=true
+    )
+  }
+
+  def genStoreToIsOwned(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue)  {
+    val isOwnedPtr = genPointerToIsOwned(block)(valueCell)
+    block.store(toStore, isOwnedPtr, tbaaIndex=Some(isOwnedTbaaIndex))
+  }
+
+  def genLoadFromIsOwned(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+    val isOwnedPtr = genPointerToIsOwned(block)(valueCell)
+    block.load("isOwned")(isOwnedPtr, tbaaIndex=Some(isOwnedTbaaIndex))
+  }
+
+  def genPointerToStream(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+    if (valueCell.irType != PointerType(irType)) {
+      throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
+    }
+
+    block.getelementptr("streamPtr")(
+      elementType=streamIrType,
+      basePointer=valueCell,
+      indices=streamGepIndices.map(IntegerConstant(IntegerType(32), _)),
+      inbounds=true
+    )
+  }
+
+  def genStoreToStream(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue)  {
+    val streamPtr = genPointerToStream(block)(valueCell)
+    block.store(toStore, streamPtr, tbaaIndex=Some(streamTbaaIndex))
+  }
+
+  def genLoadFromStream(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+    val streamPtr = genPointerToStream(block)(valueCell)
+    block.load("stream")(streamPtr, tbaaIndex=Some(streamTbaaIndex))
+  }
+}
+
+object PortCell extends ConcreteCellType with PortFields {
+  val llvmName = "port"
+  val irType = UserDefinedType("port")
+  val schemeName = "<port-cell>"
+  val supertype = Some(DatumCell)
+  val directSubtypes = Set[CellType]()
+
+  val typeId = 15L
+
+  val typeIdGepIndices = List(0, 0, 0)
+  val gcStateGepIndices = List(0, 0, 1)
+  val isOwnedGepIndices = List(0, 1)
+  val streamGepIndices = List(0, 2)
+
+  val typeIdTbaaIndex = 80L
+  val gcStateTbaaIndex = 81L
+  val isOwnedTbaaIndex = 82L
+  val streamTbaaIndex = 83L
+
+  def createConstant(isOwned : Long, stream : IrConstant) : StructureConstant = {
+    if (stream.irType != streamIrType) {
+      throw new InternalCompilerErrorException("Unexpected type for field stream")
+    }
+
+    StructureConstant(List(
+      DatumCell.createConstant(typeId=typeId),
+      IntegerConstant(isOwnedIrType, isOwned),
+      stream
     ), userDefinedType=Some(irType))
   }
 }

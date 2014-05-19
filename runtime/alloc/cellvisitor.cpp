@@ -19,6 +19,7 @@
 #include "binding/VectorCell.h"
 #include "binding/RecordLikeCell.h"
 #include "binding/ErrorObjectCell.h"
+#include "binding/PortCell.h"
 
 #include "classmap/RecordClassMap.h"
 
@@ -48,7 +49,8 @@ void visitCell(DatumCell **rootCellRef, std::function<bool(DatumCell **)> &visit
 	    datum_cast<StringCell>(*rootCellRef) ||
 	    datum_cast<SymbolCell>(*rootCellRef) ||
 	    datum_cast<BytevectorCell>(*rootCellRef) ||
-	    datum_cast<CharacterCell>(*rootCellRef))
+	    datum_cast<CharacterCell>(*rootCellRef) ||
+	    datum_cast<PortCell>(*rootCellRef))
 	{
 		// No children
 	}
@@ -126,27 +128,24 @@ void visitDynamicState(dynamic::State *state, std::function<bool(DatumCell **)> 
 		visitCell(reinterpret_cast<DatumCell**>(state->afterProcedureRef()), visitor);
 	}
 
-	if (valueCount == 0)
+	if (valueCount > 0)
 	{
-		// Nothing more to do - this is probably a state created by (dynamic-wind)
-		return;
+		// The new map will be the exact size of the old map
+		rebuiltMap.reserve(valueCount);
+
+		for(auto valueItem : state->selfValues())
+		{
+			dynamic::ParameterProcedureCell *paramProc = valueItem.first;
+			DatumCell *value = valueItem.second;
+
+			visitCell(reinterpret_cast<DatumCell**>(&paramProc), visitor);
+			visitCell(reinterpret_cast<DatumCell**>(&value), visitor);
+
+			rebuiltMap[paramProc] = value;
+		}
+
+		state->setSelfValues(rebuiltMap);
 	}
-
-	// The new map will be the exact size of the old map
-	rebuiltMap.reserve(valueCount);
-
-	for(auto valueItem : state->selfValues())
-	{
-		dynamic::ParameterProcedureCell *paramProc = valueItem.first;
-		DatumCell *value = valueItem.second;
-
-		visitCell(reinterpret_cast<DatumCell**>(&paramProc), visitor);
-		visitCell(reinterpret_cast<DatumCell**>(&value), visitor);
-
-		rebuiltMap[paramProc] = value;
-	}
-
-	state->setSelfValues(rebuiltMap);
 
 	if (state->parent() != nullptr)
 	{

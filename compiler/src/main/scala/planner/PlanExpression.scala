@@ -291,7 +291,7 @@ private[planner] object PlanExpression {
 
         // XXX: It'd be nice if we could defer this
         val innerTempType = innerValue.preferredRepresentation
-        val innerTemp = innerValue.toTempValue(innerTempType)
+        val innerTemp = innerValue.toTempValue(innerTempType)(innerWriter, postValueState.worldPtr)
 
         val outerTemp = new ps.TempValue(innerTempType.isGcManaged)
         plan.steps += ps.Parameterize(outerTemp, postValueState.worldPtr,  parameterValueTemps.toList, innerWriter.steps.toList, innerTemp)

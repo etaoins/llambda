@@ -32,6 +32,7 @@ protected:
 	virtual void renderCharacter(const CharacterCell *value);
 	virtual void renderRecord(const RecordCell *value);
 	virtual void renderErrorObject(const ErrorObjectCell *value);
+	virtual void renderPort(const PortCell *value);
 
 	std::ostream &m_outStream;
 };

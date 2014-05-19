@@ -137,3 +137,10 @@
 !77 = metadata !{ metadata !"Datum::gcState->ErrorObject", metadata !11 }
 !78 = metadata !{ metadata !"ErrorObject::message" }
 !79 = metadata !{ metadata !"ErrorObject::irritants" }
+
+; {supertype, bool isOwned, stream}
+%port = type {%datum, i8, i8*}
+!80 = metadata !{ metadata !"Datum::typeId->Port", metadata !10 }
+!81 = metadata !{ metadata !"Datum::gcState->Port", metadata !11 }
+!82 = metadata !{ metadata !"Port::isOwned" }
+!83 = metadata !{ metadata !"Port::stream" }

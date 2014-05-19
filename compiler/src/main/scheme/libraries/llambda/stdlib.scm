@@ -321,7 +321,19 @@
     (define-r7rs make-parameter (world-function "lliby_make_parameter" (<datum-cell>) <procedure-cell>))
     (define-r7rs dynamic-wind (world-function "lliby_dynamic_wind" (<procedure-cell> <procedure-cell> <procedure-cell>) <datum-cell>))
 
-    (define-r7rs newline (native-function "lliby_newline" ()))
+    ; Port support
+    (define-r7rs port? (native-function "lliby_is_port" (<datum-cell>) <bool>))
+    (define-r7rs input-port? (native-function "lliby_is_input_port" (<datum-cell>) <bool>))
+    (define-r7rs output-port? (native-function "lliby_is_output_port" (<datum-cell>) <bool>))
+
+    (define-r7rs current-input-port (make-parameter ((world-function "_lliby_stdin_port" () <port-cell>))))
+    (define-r7rs current-output-port (make-parameter ((world-function "_lliby_stdout_port" () <port-cell>))))
+    (define-r7rs current-error-port (make-parameter ((world-function "_lliby_stderr_port" () <port-cell>))))
+
+    (define native-newline (world-function "lliby_newline" (<port-cell>)))
+    (define-r7rs newline (case-lambda
+      (() (native-newline (current-output-port)))
+      ((port) (native-newline port))))
 
     (define-r7rs with-exception-handler (world-function "lliby_with_exception_handler" (<procedure-cell> <procedure-cell>) <datum-cell>))
     (define-r7rs raise (world-function "lliby_raise" (<datum-cell>)))
@@ -347,6 +359,13 @@
   ; write library
   (include-library-declarations "../../interfaces/scheme/write.scm")
   (begin
-    (define-r7rs write (native-function "lliby_write" (<datum-cell>)))
-    (define-r7rs display (native-function "lliby_display" (<datum-cell>))))
+    (define native-write (world-function "lliby_write" (<datum-cell> <port-cell>)))
+    (define-r7rs write (case-lambda
+      ((datum) (native-write datum (current-output-port)))
+      ((datum port) (native-write datum port))))
+
+    (define native-display (world-function "lliby_display" (<datum-cell> <port-cell>)))
+    (define-r7rs display (case-lambda
+      ((datum) (native-display datum (current-output-port)))
+      ((datum port) (native-display datum port)))))
   )

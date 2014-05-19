@@ -67,12 +67,12 @@ void State::popActiveState(World &world)
 	// Make the old state active and reference it
 	world.activeState = world.activeState->parent();
 
-	delete oldActiveState;
-
 	if (oldActiveState->afterProcedure())
 	{
 		oldActiveState->afterProcedure()->apply(world, EmptyListCell::instance());
 	}
+	
+	delete oldActiveState;
 }
 	
 void State::popAllStates(World &world)

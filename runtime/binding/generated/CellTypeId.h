@@ -27,6 +27,7 @@ enum class CellTypeId : std::uint8_t
 	Procedure = 12,
 	Record = 13,
 	ErrorObject = 14,
+	Port = 15,
 };
 
 }

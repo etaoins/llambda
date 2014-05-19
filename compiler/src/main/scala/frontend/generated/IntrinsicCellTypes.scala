@@ -24,6 +24,7 @@ object IntrinsicCellTypes {
     (ct.VectorCell.schemeName -> ct.VectorCell),
     (ct.BytevectorCell.schemeName -> ct.BytevectorCell),
     (ct.ProcedureCell.schemeName -> ct.ProcedureCell),
-    (ct.ErrorObjectCell.schemeName -> ct.ErrorObjectCell)
+    (ct.ErrorObjectCell.schemeName -> ct.ErrorObjectCell),
+    (ct.PortCell.schemeName -> ct.PortCell)
   )
 }

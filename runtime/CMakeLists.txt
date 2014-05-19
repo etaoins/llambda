@@ -17,6 +17,7 @@ add_library(lliby
 	binding/ErrorObjectCell.cpp
 	binding/ListElementCell.cpp
 	binding/PairCell.cpp
+	binding/PortCell.cpp
 	binding/ProcedureCell.cpp
 	binding/RecordCell.cpp
 	binding/RecordLikeCell.cpp
@@ -44,6 +45,7 @@ add_library(lliby
 	stdlib/exception.cpp
 	stdlib/list.cpp
 	stdlib/number.cpp
+	stdlib/port.cpp
 	stdlib/output.cpp
 	stdlib/process.cpp
 	stdlib/string.cpp
