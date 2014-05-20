@@ -25,8 +25,8 @@ object PlanCellAllocations {
   private def stepConsumesOrAllocates(step : ps.Step) : Boolean = step match {
     case consumer : ps.CellConsumer => 
       true
-    case nestingStep : ps.NestingStep =>
-      nestingStep.innerBranches.exists { case (steps, _) =>
+    case condStep : ps.CondBranch =>
+      condStep.innerBranches.exists { case (steps, _) =>
         steps.exists(stepConsumesOrAllocates)
       }
     case otherStep => 
@@ -45,14 +45,14 @@ object PlanCellAllocations {
       val newAcc = allocatingStep :: (allocCellSteps(requiredCells) ++ acc)
       placeCellAllocations(reverseTail, 0, newAcc) 
 
-    case (nestingStep : ps.NestingStep) :: reverseTail if stepConsumesOrAllocates(nestingStep) =>
+    case (condStep : ps.CondBranch) :: reverseTail if stepConsumesOrAllocates(condStep) =>
       // Recurse down each of the step's branches
-      val newNestingStep = nestingStep.mapInnerBranches { (branchSteps, resultTemp) =>
+      val newCondStep = condStep.mapInnerBranches { (branchSteps, resultTemp) =>
         (placeCellAllocations(branchSteps.reverse, 0, Nil), resultTemp)
       }
 
       // Treat this as a GC barrier for now
-      val newAcc = newNestingStep :: (allocCellSteps(requiredCells) ++  acc)
+      val newAcc = newCondStep :: (allocCellSteps(requiredCells) ++  acc)
       placeCellAllocations(reverseTail, 0, newAcc) 
 
     case otherStep :: reverseTail =>

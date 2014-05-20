@@ -26,7 +26,7 @@ object GenParameterize {
     attributes=Set(NoUnwind)
   )
   
-private val llibyDynamicenvPop = IrFunctionDecl(
+  private val llibyDynamicenvPop = IrFunctionDecl(
     result=Result(VoidType),
     name="_lliby_dynamicenv_pop",
     arguments=List(
@@ -34,53 +34,42 @@ private val llibyDynamicenvPop = IrFunctionDecl(
     )
   )
 
-  def apply(initialState : GenerationState, plannedSymbols : Set[String], typeGenerator : TypeGenerator)(step : ps.Parameterize) : GenResult = step match {
-    case ps.Parameterize(result, worldPtrTemp, parameterValues, steps, innerResult) =>
-      val module = initialState.currentBlock.function.module
-
+  private def declareSupportFunctions(state : GenerationState) {
+      val module = state.currentBlock.function.module
+      
       // Declare all support functions
       for(supportFunc <- List(llibyDynamicenvPush, llibyDynamicenvSetValue, llibyDynamicenvPop)) {
         module.unlessDeclared(supportFunc) {
           module.declareFunction(supportFunc)
         }
       }
+  }
 
-      // Get our world pointer IR value
-      val worldPtrIr = initialState.liveTemps(worldPtrTemp)
+  def genPush(state : GenerationState)(step : ps.PushDynamicState) {
+    declareSupportFunctions(state)
 
-      val initialBlock = initialState.currentBlock
-      
-      // Push the new environment
-      initialBlock.callDecl(None)(llibyDynamicenvPush, List(worldPtrIr))
+    // Get our world pointer IR value
+    val worldPtrIr = state.liveTemps(step.worldPtr)
 
-      // Set each value
-      for((parameterTemp, valueTemp) <- step.parameterValues) {
-        val parameterIr = initialState.liveTemps(parameterTemp) 
-        val valueIr = initialState.liveTemps(valueTemp) 
+    val block = state.currentBlock
+    
+    // Push the new environment
+    block.callDecl(None)(llibyDynamicenvPush, List(worldPtrIr))
 
-        initialBlock.callDecl(None)(llibyDynamicenvSetValue, List(worldPtrIr, parameterIr, valueIr))
-      }
+    // Set each value
+    for((parameterTemp, valueTemp) <- step.parameterValues) {
+      val parameterIr = state.liveTemps(parameterTemp) 
+      val valueIr = state.liveTemps(valueTemp) 
 
-      val finalResult = GenPlanSteps(initialState, plannedSymbols, typeGenerator)(step.steps)
-
-      finalResult match {
-        case finalState : GenerationState =>
-          val finalBlock = finalState.currentBlock
-
-          // Pop the environment
-          finalBlock.callDecl(None)(llibyDynamicenvPop, List(worldPtrIr))
-
-          val updatedLiveTemps = finalState.liveTemps.withAliasedTempValue(
-            step.innerResult,
-            (step.result -> finalState.liveTemps(step.innerResult))
-          )
-            
-          finalState.copy(
-            liveTemps=updatedLiveTemps
-          )
-
-        case terminated : BlockTerminated =>
-          terminated
-      }
+      block.callDecl(None)(llibyDynamicenvSetValue, List(worldPtrIr, parameterIr, valueIr))
+    }
+  }
+  
+  def genPop(state : GenerationState)(step : ps.PopDynamicState) {
+    declareSupportFunctions(state)
+          
+    // Pop the environment
+    val worldPtrIr = state.liveTemps(step.worldPtr)
+    state.currentBlock.callDecl(None)(llibyDynamicenvPop, List(worldPtrIr))
   }
 }

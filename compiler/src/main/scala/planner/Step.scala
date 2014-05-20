@@ -87,24 +87,6 @@ sealed trait MergeableStep extends Step {
   def renamed(f : (TempValue) => TempValue) : MergeableStep
 }
 
-/** Step containing inner steps 
- *
- * These are typically used for steps that need to be aware of exceptions or
- * continuations or for conditionals
- */
-sealed trait NestingStep extends Step {
-  val outerInputValues : Set[TempValue]
-  val innerBranches : List[(List[Step], TempValue)]
-  
-  lazy val inputValues =
-    outerInputValues ++
-    innerBranches.flatMap(_._1).flatMap(_.inputValues) ++
-    innerBranches.map(_._2)
-
-  def mapInnerBranches(mapper : (List[Step], TempValue) => (List[Step], TempValue)) : NestingStep 
-}
-
-
 /** Argument passed to invoke
   *
   * @param  tempValue  Value to pass as the argument
@@ -178,11 +160,15 @@ case class DisposeValue(value : TempValue) extends Step {
   * @param falseSteps  steps to perform if the condition is false
   * @param falseValue  value to place in result after performing falseSteps
   */
-case class CondBranch(result : TempValue, test : TempValue, trueSteps : List[Step], trueValue : TempValue, falseSteps : List[Step], falseValue : TempValue) extends NestingStep {
-  lazy val outputValues = Set(result)
-
+case class CondBranch(result : TempValue, test : TempValue, trueSteps : List[Step], trueValue : TempValue, falseSteps : List[Step], falseValue : TempValue) extends Step {
   lazy val outerInputValues = Set(test)
   lazy val innerBranches = List((trueSteps, trueValue), (falseSteps, falseValue))
+  
+  lazy val outputValues = Set(result)
+  lazy val inputValues =
+    outerInputValues ++ 
+    innerBranches.flatMap(_._1).flatMap(_.inputValues) ++
+    innerBranches.map(_._2)
 
   def mapInnerBranches(mapper : (List[Step], TempValue) => (List[Step], TempValue)) = {
     val (mappedTrueSteps, mappedTrueValue) = mapper(trueSteps, trueValue)
@@ -617,32 +603,22 @@ case class SetProcedureEntryPoint(procedureCell : TempValue, entryPoint : TempVa
     SetProcedureEntryPoint(f(procedureCell), f(entryPoint))
 }
 
-/** Executes the inner steps with a new dynamic environment containing the passed parameter values */
-case class Parameterize(result : TempValue, worldPtr : WorldPtrValue, parameterValues : List[(TempValue, TempValue)], steps : List[Step], innerResult : TempValue) extends NestingStep {
-  lazy val outputValues = Set(result)  
-  
-  lazy val outerInputValues = (parameterValues.flatMap { case (parameter, value) =>
+case class PushDynamicState(worldPtr : WorldPtrValue, parameterValues : List[(TempValue, TempValue)]) extends Step {
+  lazy val inputValues = (parameterValues.flatMap { case (parameter, value) =>
     List(parameter, value)
   }).toSet + worldPtr
+  val outputValues = Set[TempValue]()
 
-  lazy val innerBranches = List((steps, innerResult))
+  def renamed(f : (TempValue) => TempValue) = 
+    PushDynamicState(worldPtr, parameterValues.map { case (parameter, value) =>
+      f(parameter) -> f(value)
+    })
+}
 
-  def mapInnerBranches(mapper : (List[Step], TempValue) => (List[Step], TempValue)) = {
-    val (mappedSteps, mappedResult) = mapper(steps, innerResult)
-    Parameterize(result, worldPtr, parameterValues, mappedSteps, mappedResult)
-  }
-  
-  def renamed(f : (TempValue) => TempValue) = {
-    val renamedParameterValues = parameterValues.map { case (param, value) =>
-      (f(param), f(value))
-    }
+case class PopDynamicState(worldPtr : WorldPtrValue) extends Step {
+  lazy val inputValues = Set[TempValue](worldPtr)
+  val outputValues = Set[TempValue]()
 
-    Parameterize(
-      result=f(result),
-      worldPtr=worldPtr,
-      parameterValues=renamedParameterValues,
-      steps=steps.map(_.renamed(f)),
-      innerResult=f(innerResult)
-    )
-  }
+  def renamed(f : (TempValue) => TempValue) = 
+    this
 }

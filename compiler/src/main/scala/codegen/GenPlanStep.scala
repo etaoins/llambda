@@ -11,8 +11,8 @@ object GenPlanStep {
     step match {
       case allocating if step.canAllocate => true
 
-      case nesting : ps.NestingStep =>
-        nesting.innerBranches.flatMap(_._1).exists(containsAllocatingStep)
+      case cond : ps.CondBranch =>
+        cond.innerBranches.flatMap(_._1).exists(containsAllocatingStep)
 
       case _ =>
         false
@@ -411,7 +411,12 @@ object GenPlanStep {
         liveTemps=state.liveTemps - disposedTemp
       )
 
-    case parameterize : ps.Parameterize =>
-      GenParameterize(state, plannedSymbols, typeGenerator)(parameterize) 
+    case pushDynamic : ps.PushDynamicState =>
+      GenParameterize.genPush(state)(pushDynamic)
+      state
+    
+    case popDynamic : ps.PopDynamicState =>
+      GenParameterize.genPop(state)(popDynamic)
+      state
   }
 }

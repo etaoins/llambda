@@ -286,20 +286,11 @@ private[planner] object PlanExpression {
           valueResult.state
         }
 
-        val innerWriter = plan.forkPlan() 
-        val innerValue = apply(postValueState)(innerExpr)(planConfig, innerWriter).value
+        plan.steps += ps.PushDynamicState(worldPtr, parameterValueTemps.toList)
+        val postInnerResult = PlanExpression(postValueState)(innerExpr)
+        plan.steps += ps.PopDynamicState(worldPtr)
 
-        // XXX: It'd be nice if we could defer this
-        val innerTempType = innerValue.preferredRepresentation
-        val innerTemp = innerValue.toTempValue(innerTempType)(innerWriter, postValueState.worldPtr)
-
-        val outerTemp = new ps.TempValue(innerTempType.isGcManaged)
-        plan.steps += ps.Parameterize(outerTemp, postValueState.worldPtr,  parameterValueTemps.toList, innerWriter.steps.toList, innerTemp)
-
-        PlanResult(
-          state=postValueState,
-          value=TempValueToIntermediate(innerTempType, outerTemp)
-        )
+        postInnerResult
 
       case et.Return(returnedExpr) =>
         val returnValueResult = apply(initialState)(returnedExpr)

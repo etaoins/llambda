@@ -15,8 +15,8 @@ object InferArgumentTypes {
   )
 
   private def stepCanTerminate(step : ps.Step) : Boolean = step match {
-    case nestingStep : ps.NestingStep =>
-      nestingStep.innerBranches.exists { branch =>
+    case condStep : ps.CondBranch =>
+      condStep.innerBranches.exists { branch =>
         branch._1.exists(stepCanTerminate(_))
       }
 
@@ -55,13 +55,9 @@ object InferArgumentTypes {
           steps=supercastStep :: tailSteps 
         )
 
-      case (nestingStep : ps.NestingStep) :: tailSteps if stepCanTerminate(nestingStep) =>
+      case (condStep : ps.CondBranch) :: tailSteps if stepCanTerminate(condStep) =>
         // If one side of the branch terminates then we can't be sure the cast
         // to subtype will be unconditionally executed.
-
-        // If the nesting step in an exception control structure all some of the
-        // steps may not be executed even if they're only one branch
-
         abortRetyping
 
       case userStep :: tailSteps if userStep.inputValues.contains(argValue) =>
@@ -91,10 +87,10 @@ object InferArgumentTypes {
       // world pointer
       true
 
-    case nestingStep : ps.NestingStep =>
+    case condStep : ps.CondBranch =>
       // Recurse down each side
-      nestingStep.outerInputValues.contains(worldPtrTemp) || 
-        nestingStep.innerBranches.flatMap(_._1).exists({ branchStep =>
+      condStep.outerInputValues.contains(worldPtrTemp) || 
+        condStep.innerBranches.flatMap(_._1).exists({ branchStep =>
           worldPtrUsedByStep(worldPtrTemp, branchStep)
         })
 
