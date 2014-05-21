@@ -24,7 +24,7 @@ private[reducer] object PartialValueForExpression {
       PartialValueForExpression(singleExpr, allowImpureExprs)
 
     case et.Begin(multipleExprs) =>
-      if (allowImpureExprs || IsPureExpression(expr)) {
+      if (allowImpureExprs || !ExprHasSideEffects(expr)) {
         // Only the last value is meaningful
         PartialValueForExpression(multipleExprs.last, allowImpureExprs)
       }

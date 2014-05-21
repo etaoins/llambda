@@ -14,8 +14,7 @@ private[reducer] object ReduceExpression {
       val nonValueExprs = nonEmptyExprs.dropRight(1)
       val valueExpr = nonEmptyExprs.last
 
-      val impureNonValueExprs = nonValueExprs.filterNot(IsPureExpression(_))
-      val newExprs = impureNonValueExprs :+ valueExpr
+      val newExprs = nonValueExprs.filter(ExprHasSideEffects) :+ valueExpr
       
       et.Expression.fromSequence(newExprs)
   }
@@ -41,8 +40,8 @@ private[reducer] object ReduceExpression {
       val usedBindings = (bindings.map { case (storageLoc, initializer) =>
         storageLoc -> ReduceExpression(initializer)
       }).filter { case (storageLoc, reducedInitializer) =>
-        // Drop any bindings of unused variables to pure expressions
-        reduceConfig.analysis.usedVars.contains(storageLoc) || !IsPureExpression(reducedInitializer)
+        // Drop any bindings of unused variables to expressions without side effects
+        reduceConfig.analysis.usedVars.contains(storageLoc) || ExprHasSideEffects(reducedInitializer)
       }
 
       usedBindings match {
@@ -83,7 +82,7 @@ private[reducer] object ReduceExpression {
       val allUsedVars = bodyUsedVars ++ recursiveBindingUsedVars 
 
       val usedBindings = reducedBindings.filter { case (storageLoc, initializer) =>
-        allUsedVars.contains(storageLoc) || !IsPureExpression(initializer)
+        allUsedVars.contains(storageLoc) || ExprHasSideEffects(initializer)
       }
        
       if (usedBindings.isEmpty) {
@@ -96,7 +95,7 @@ private[reducer] object ReduceExpression {
 
     case et.Cond(testExpr, trueExpr, falseExpr) =>
       val reducedTest = apply(testExpr)
-      val testIsPure = IsPureExpression(reducedTest)
+      val testHasEffects = ExprHasSideEffects(reducedTest)
       
       // Try to optimize out the branch
       // We specially handle impure tests below
@@ -109,15 +108,15 @@ private[reducer] object ReduceExpression {
             apply(trueExpr)
           }
 
-          if (testIsPure) {
-            // Just need the branch expression
-            branchExpr
-          }
-          else {
+          if (testHasEffects) {
             // Need the test and the branch expression
             unflattenExprs(
               reducedTest.toSequence ++ branchExpr.toSequence
             )
+          }
+          else {
+            // Just need the branch expression
+            branchExpr
           }
 
         case _ =>

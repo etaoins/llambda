@@ -163,7 +163,7 @@ private[reducer] object ReduceApplication {
     if (forceInline || shouldInlineExpr(reducedBodyExpr)) {
       // Figure out which bindings are still required
       val usedBindings = newBindings filter { case (argLoc, operandExpr) =>
-        bodyUsedVars.contains(argLoc) || !IsPureExpression(operandExpr)(reduceConfig)
+        bodyUsedVars.contains(argLoc) || ExprHasSideEffects(operandExpr)
       }
 
       Some(if (usedBindings.isEmpty) {

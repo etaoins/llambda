@@ -3,55 +3,55 @@ import io.llambda
 
 import io.llambda.compiler._
 
-private[reducer] object IsPureExpression {
-  def apply(expr : et.Expression)(implicit reduceConfig : ReduceConfig) : Boolean = expr match {
-    case et.VarRef(storageLoc) =>
-      // The value of a mutable var can change depending on when it's referenced
-      // This has no side effects but is not referentially transparent
-      !reduceConfig.analysis.mutableVars.contains(storageLoc)
+private[reducer] object ExprHasSideEffects extends ((et.Expression) => Boolean) {
+  def apply(expr : et.Expression) : Boolean = expr match {
+    case _ : et.VarRef =>
+      false
 
     case _ : et.Literal =>
-      true
+      false
 
     case _ : et.Lambda | _ : et.NativeFunction | _ : et.RecordTypeProcedure =>
       // Procedure definitions themselves are always pure
-      true
+      false
 
     case _ : et.Apply =>
       // XXX: Report procs and lambdas can be pure
       // It may be worth investigating if their purity can be significantly useful for reduction
-      false
+      true
 
     case _ : et.MutateVar =>
-      false
+      true
 
     case et.TopLevelDefinition(bindings) =>
       // Top level definitions have the side effect of making values live for the rest of the program
       // We try to remove unused bindings so any remaining ones are likely legitimate
-      bindings.isEmpty
+      !bindings.isEmpty
 
     case internalDefine : et.InternalDefinition =>
       // Internal definitions are pure as long as all the bound values and body expressions are pure
-      internalDefine.subexpressions.forall(IsPureExpression(_))
+      internalDefine.subexpressions.exists(ExprHasSideEffects)
 
     case _ : et.Return =>
       // Returns have the side effect of causing control flow
       // We try to avoid producing them whenever possible so if there's one in the ET it's probably required
-      false
+      true
 
     case _ : et.Parameterize =>
       // Parameterize can call converter procedures implicitly
       // For that reason it's very difficult to determine if they're pure
-      false
+      true
 
     case _ : et.Cast =>
       // Cast can cause runtime errors
-      false
+      true
 
     case et.Cond(testExpr, trueExpr, falseExpr) =>
-      apply(testExpr) && apply(trueExpr) && apply(falseExpr)
+      ExprHasSideEffects(testExpr) ||
+        ExprHasSideEffects(trueExpr) ||
+        ExprHasSideEffects(falseExpr)
 
     case et.Begin(subexprs) =>
-      subexprs.forall(apply(_))
+      subexprs.exists(ExprHasSideEffects)
   }
 }
