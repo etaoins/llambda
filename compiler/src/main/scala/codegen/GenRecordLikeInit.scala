@@ -41,27 +41,20 @@ object GenRecordLikeInit {
         cellType.genPointerToRecordData(block)(recordCell)
 
       case TypeDataStorage.OutOfLine =>
+        val recordDataAllocDecl = RuntimeFunctions.recordDataAlloc
+
         cellType.genStoreToDataIsInline(block)(IntegerConstant(cellType.dataIsInlineIrType, 0), recordCell)
 
-        // Declare _lliby_record_data_alloc
-        val llibyRecordDataAlloc = IrFunctionDecl(
-          result=IrFunction.Result(PointerType(IntegerType(8))),
-          name="_lliby_record_data_alloc",
-          arguments=List(
-            IrFunction.Argument(IntegerType(64))
-          ),
-          attributes=Set(IrFunction.NoUnwind)
-        )
-    
-        module.unlessDeclared(llibyRecordDataAlloc) {
-          module.declareFunction(llibyRecordDataAlloc)
+        // Declare _lliby_record_data_alloc 
+        module.unlessDeclared(recordDataAllocDecl) {
+          module.declareFunction(recordDataAllocDecl)
         }
     
         // Find the size of the record data
         val irSize = GenSizeOf(block)(recordDataIrType)
     
         // Allocate it using _lliby_record_data_alloc
-        val voidRecordData = block.callDecl(Some("rawRecordData"))(llibyRecordDataAlloc, List(irSize)).get
+        val voidRecordData = block.callDecl(Some("rawRecordData"))(recordDataAllocDecl, List(irSize)).get
 
         // Store the record data pointer in the new cell
         cellType.genStoreToRecordData(block)(voidRecordData, recordCell)

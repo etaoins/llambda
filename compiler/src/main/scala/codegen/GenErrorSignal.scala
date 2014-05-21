@@ -9,6 +9,7 @@ object GenErrorSignal {
   def apply(state : GenerationState)(worldPtr : IrValue, errorMessage : RuntimeErrorMessage, evidence : Option[IrValue] = None) = {
     val block = state.currentBlock
     val module = block.function.module
+    val signalErrorDecl = RuntimeFunctions.signalError
 
     // Define the error string
     val stringConstantName = s"${errorMessage.name}ErrorString"
@@ -23,19 +24,8 @@ object GenErrorSignal {
       module.defineGlobalVariable(stringConstantVar)
     }
 
-    // Define _lliby_signal_error
-    val llibySignalErrorDecl = IrFunctionDecl(
-      result=IrFunction.Result(VoidType),
-      name="_lliby_signal_error",
-      arguments=List(
-        IrFunction.Argument(PointerType(WorldValue.irType)),
-        IrFunction.Argument(PointerType(IntegerType(8)), Set(IrFunction.NoCapture)),
-        IrFunction.Argument(PointerType(ct.DatumCell.irType))
-      )
-    )
-
-    module.unlessDeclared(llibySignalErrorDecl) {
-      module.declareFunction(llibySignalErrorDecl)
+    module.unlessDeclared(signalErrorDecl) {
+      module.declareFunction(signalErrorDecl)
     }
 
     // Unwind any partial allocations we have
@@ -56,7 +46,7 @@ object GenErrorSignal {
       inbounds=true)
 
     // Call _lliby_fatal
-    block.callDecl(None)(llibySignalErrorDecl, List(worldPtr, stringStartPtr, evidencePtr))
+    block.callDecl(None)(signalErrorDecl, List(worldPtr, stringStartPtr, evidencePtr))
 
     // Terminate the failure block
     block.unreachable

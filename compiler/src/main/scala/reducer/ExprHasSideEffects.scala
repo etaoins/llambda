@@ -2,6 +2,7 @@ package io.llambda.compiler.reducer
 import io.llambda
 
 import io.llambda.compiler._
+import reportproc.{ProcHasSideEffects => ReportProcHasSideEffects}
 
 private[reducer] object ExprHasSideEffects extends ((et.Expression) => Boolean) {
   def apply(expr : et.Expression) : Boolean = expr match {
@@ -14,10 +15,16 @@ private[reducer] object ExprHasSideEffects extends ((et.Expression) => Boolean) 
     case _ : et.Lambda | _ : et.NativeFunction | _ : et.RecordTypeProcedure =>
       // Procedure definitions themselves are always pure
       false
+    
+    case et.Apply(et.VarRef(reportProc : ReportProcedure), operands) =>
+      operands.exists(ExprHasSideEffects) ||
+        ReportProcHasSideEffects(reportProc.reportName, operands.length)
 
-    case _ : et.Apply =>
-      // XXX: Report procs and lambdas can be pure
-      // It may be worth investigating if their purity can be significantly useful for reduction
+    case et.Apply(nativeFunc : et.NativeFunction, operands) =>
+      operands.exists(ExprHasSideEffects) ||
+        codegen.RuntimeFunctions.hasSideEffects(nativeFunc.nativeSymbol, operands.length)
+
+    case apply : et.Apply =>
       true
 
     case _ : et.MutateVar =>

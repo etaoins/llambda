@@ -10,26 +10,6 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{celltype => ct}
 
 object GenProgram {
-  private val llibyInitDecl = {
-    IrFunctionDecl(
-      result=IrFunction.Result(VoidType),
-      name="lliby_init",
-      arguments=Nil,
-      attributes=Set(IrFunction.NoUnwind)
-    )
-  }
-  
-  private val llibyLaunchWorldDecl = {
-    IrFunctionDecl(
-      result=IrFunction.Result(VoidType),
-      name="_lliby_launch_world",
-      arguments=List(IrFunction.Argument(
-        // void (*entryPoint)(World *)
-        PointerType(FunctionType(VoidType, List(PointerType(WorldValue.irType))))
-      ))
-    )
-  }
-
   def resourceAsString(resourcePath : String) : String = {
     val stream = getClass.getClassLoader.getResourceAsStream(resourcePath)
     Source.fromInputStream(stream).mkString
@@ -73,15 +53,18 @@ object GenProgram {
     val entryBlock = mainFunction.entryBlock
 
     // Initialize our runtime
-    module.declareFunction(llibyInitDecl) 
-    module.declareFunction(llibyLaunchWorldDecl)
-    entryBlock.callDecl(None)(llibyInitDecl, Nil)
+    val initDecl = RuntimeFunctions.init
+    val launchWorldDecl = RuntimeFunctions.launchWorld
+
+    module.declareFunction(initDecl) 
+    module.declareFunction(launchWorldDecl)
+    entryBlock.callDecl(None)(initDecl, Nil)
     
     // Call __llambda_exec through _lliby_launch_world
     // __llambda_exec must be defined by the planner
     val execValue = GenNamedEntryPoint(module)(LlambdaExecSignature, LlambdaExecSignature.nativeSymbol, plannedSymbols) 
 
-    entryBlock.callDecl(None)(llibyLaunchWorldDecl, List(execValue), false)
+    entryBlock.callDecl(None)(launchWorldDecl, List(execValue), false)
 
     // Return 0
     // Scheme can only return non-zero exit codes using (exit)

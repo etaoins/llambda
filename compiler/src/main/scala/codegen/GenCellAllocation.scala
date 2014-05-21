@@ -6,18 +6,7 @@ import llambda.llvmir.IrFunction._
 
 object GenCellAllocation {
   private val cellType = UserDefinedType("cell")
-  private val cellPointerType = PointerType(cellType)
   
-  private val llibyAllocCells = IrFunctionDecl(
-    result=Result(cellPointerType),
-    name="_lliby_alloc_cells",
-    arguments=List(
-      Argument(PointerType(WorldValue.irType)),
-      Argument(IntegerType(64))
-    ),
-    attributes=Set(NoUnwind)
-  )
-
   def genAllocation(initialState : GenerationState)(worldPtrIr : IrValue, count : Int) : (GenerationState, CellAllocation)  = {
     val startBlock = initialState.currentBlock
 
@@ -28,9 +17,10 @@ object GenCellAllocation {
 
     val irFunction = initialState.currentBlock.function
     val module = irFunction.module
+    val allocCellsDecl = RuntimeFunctions.allocCells
 
-    module.unlessDeclared(llibyAllocCells) {
-      module.declareFunction(llibyAllocCells)
+    module.unlessDeclared(allocCellsDecl) {
+      module.declareFunction(allocCellsDecl)
     }
 
     startBlock.comment(s"allocating ${count} cells")
@@ -72,7 +62,7 @@ object GenCellAllocation {
     GenGcBarrier.genSaveGcRoots(collectGarbageState)(calcedBarrier)
 
     // Now call the runtime
-    val Some(runtimeAllocValue) = collectGarbageBlock.callDecl(Some("runtimeAlloc"))(llibyAllocCells, List(worldPtrIr, allocCountValue))
+    val Some(runtimeAllocValue) = collectGarbageBlock.callDecl(Some("runtimeAlloc"))(allocCellsDecl, List(worldPtrIr, allocCountValue))
 
     // Now restore the GC roots
     val newIrValues = GenGcBarrier.genRestoreGcRoots(collectGarbageState)(calcedBarrier)  
