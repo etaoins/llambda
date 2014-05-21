@@ -216,7 +216,7 @@ void testErrorObject(World &world)
 
 void testPort(World &world)
 {
-	auto port = PortCell::createInstance(world, &std::cout);
+	auto port = PortCell::createInstance(world, &std::cout, false);
 	assertForm(port, "#!port");
 }
 
