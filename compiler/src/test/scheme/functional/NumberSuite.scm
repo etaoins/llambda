@@ -1,386 +1,228 @@
-(define-test "exact integer is number" (expect #t
-	(number? 4)))
+(define-test "(number?)" (expect-success
+  (assert-true  (number? 4))
+  (assert-true  (number? -5.0))
+  (assert-false (number? '()))))
 
-(define-test "inexact rational is number" (expect #t
-	(number? -5.0)))
+(define-test "(real?)" (expect-success
+  (assert-true  (real? 4))
+  (assert-true  (real? -5.0))
+  (assert-false (real? '()))))
 
-(define-test "empty list is not number" (expect #f
-	(number? '())))
+(define-test "(rational?)" (expect-success
+  (assert-true  (rational? 4))
+  (assert-true  (rational? -5.0))
+  (assert-false (rational? '()))))
 
-(define-test "exact integer is real" (expect #t
-	(real? 4)))
+(define-test "(complex?)" (expect-success
+  (assert-true  (complex? 4))
+  (assert-true  (complex? -5.0))
+  (assert-false (complex? '()))))
 
-(define-test "inexact rational is real" (expect #t
-	(real? -5.0)))
+(define-test "(integer?)" (expect-success
+  (assert-true  (integer? 4))
+  (assert-false (integer? -5.0))
+  (assert-false (integer? '()))))
 
-(define-test "empty list is not real" (expect #f
-	(real? '())))
-
-(define-test "exact integer is rational" (expect #t
-	(rational? 4)))
-
-(define-test "inexact rational is rational" (expect #t
-	(rational? -5.0)))
-
-(define-test "empty list is not rational" (expect #f
-	(rational? '())))
-
-(define-test "exact integer is complex" (expect #t
-	(complex? 4)))
-
-(define-test "inexact complex is complex" (expect #t
-	(complex? -5.0)))
-
-(define-test "empty list is not complex" (expect #f
-	(complex? '())))
-
-(define-test "exact integer is integer" (expect #t
-	(integer? 4)))
-
-(define-test "inexact integer is not integer" (expect #f
-	(integer? -5.0)))
-
-(define-test "empty list is not integer" (expect #f
-	(integer? '())))
-
-(define-test "3.0 is not exact" (expect #f
-	(exact? 3.0)))
-
-(define-test "3. is exact" (expect #t
-	(exact? 3.)))
+(define-test "(exact?)" (expect-success
+  (assert-false (exact? 3.0))
+  (assert-true  (exact? 3.))))
 
 (define-test "exact? fails with non-numbers" (expect-failure
-	(exact? 'notanumber)))
+  (exact? 'notanumber)))
 
-(define-test "3.0 is inexact" (expect #t
-	(inexact? 3.0)))
+(define-test "(inexact?)" (expect-success
+  (assert-true  (inexact? 3.0))
+  (assert-false (inexact? 3.))))
 
-(define-test "3. is not inexact" (expect #f
-	(inexact? 3.)))
+(define-test "(inexact?) fails with non-numbers" (expect-failure
+  (inexact? 'notanumber)))
 
-(define-test "inexact? fails with non-numbers" (expect-failure
-	(inexact? 'notanumber)))
+(define-test "(finite?)" (expect-success
+  (assert-true  (finite? 3))
+  (assert-true  (finite? 4.5))
+  (assert-false (finite? +inf.0))
+  (assert-false (finite? +nan.0))))
 
-(define-test "3 is finite" (expect #t
-	(finite? 3)))
+(define-test "(infinite?)" (expect-success
+  (assert-false (infinite? 3))
+  (assert-false (infinite? 4.5))
+  (assert-true  (infinite? +inf.0))
+  (assert-false (infinite? +nan.0))))
 
-(define-test "4.5 is finite" (expect #t
-	(finite? 4.5)))
+(define-test "(nan?)" (expect-success
+  (assert-false (nan? 3))
+  (assert-false (nan? 4.5))
+  (assert-false (nan? +inf.0))
+  (assert-true  (nan? +nan.0))))
 
-(define-test "+inf.0 is not finite" (expect #f
-	(finite? +inf.0)))
+(define-test "(exact-integer?)" (expect-success
+  (assert-true (exact-integer? 32))
+  (assert-false (exact-integer? 32.0))))
 
-(define-test "+nan.0 is not finite" (expect #f
-	(finite? +nan.0)))
+(define-test "(exact)" (expect-success
+  (assert-equal -32 (exact -32.0))
+  (assert-equal 64 (exact 64))))
 
-(define-test "3 is not infinite" (expect #f
-	(infinite? 3)))
+(define-test "(exact 112.5) fails" (expect-failure
+  (exact 112.5)))
 
-(define-test "4.5 is not infinite" (expect #f
-	(infinite? 4.5)))
-
-(define-test "+inf.0 is infinite" (expect #t
-	(infinite? +inf.0)))
-
-(define-test "+nan.0 is not infinite" (expect #f
-	(infinite? +nan.0)))
-
-(define-test "3 is not NaN" (expect #f
-	(nan? 3)))
-
-(define-test "4.5 is not NaN" (expect #f
-	(nan? 4.5)))
-
-(define-test "+inf.0 is not NaN" (expect #f
-	(nan? +inf.0)))
-
-(define-test "+nan.0 is NaN" (expect #t
-	(nan? +nan.0)))
-
-(define-test "32 is an exact integer" (expect #t
-	(exact-integer? 32)))
-
-(define-test "32.0 is not an exact integer" (expect #f
-	(exact-integer? 32.0)))
-
-(define-test "Exact -32.0 is -32" (expect -32
-	(exact -32.0)))
-
-(define-test "Exact 64 is 64" (expect 64
-	(exact 64)))
-
-(define-test "Exact 112.5 fails" (expect-failure
-	(exact 112.5)))
-
-(define-test "Inexact 567 is 567.0" (expect 567.0
-	(inexact 567)))
-
-(define-test "Inexact -3289.5 is -3289.5" (expect -3289.5
-	(inexact -3289.5)))
+(define-test "Inexact 567 is 567.0" (expect-success
+  (assert-equal 567.0 (inexact 567))
+  (assert-equal -3289.5 (inexact -3289.5))))
 
 ; This can't be exactly represented by a double
-(define-test "Inexact 9007199254740993 fails" (expect-failure
-	(inexact 9007199254740993)))
+(define-test "(inexact 9007199254740993) fails" (expect-failure
+  (inexact 9007199254740993)))
 
 ; Super ghetto but anything else depends too much on floating point
 ; representations
-(define-test "inexact sin 0 is 0" (expect 0.0
-	(import (scheme inexact))
-	(sin 0.0)))
+(define-test "inexact trigonometric procedures" (expect-success
+  (import (scheme inexact))
+  (assert-equal 0.0 (sin 0.0))
+  (assert-equal 1.0 (cos 0.0))
+  (assert-equal 0.0 (tan 0.0))))
 
-(define-test "inexact cos 0 is 1" (expect 1.0
-	(import (scheme inexact))
-	(cos 0.0)))
+(define-test "exact trigonometric procedures" (expect-success
+  (import (scheme inexact))
+  (assert-equal 0.0 (sin 0))
+  (assert-equal 1.0 (cos 0))
+  (assert-equal 0.0 (tan 0))))
 
-(define-test "inexact tan 0 is 0" (expect 0.0
-	(import (scheme inexact))
-	(tan 0.0)))
-
-(define-test "exact sin 0 is 0" (expect 0.0
-	(import (scheme inexact))
-	(sin 0)))
-
-(define-test "exact cos 0 is 1" (expect 1.0
-	(import (scheme inexact))
-	(cos 0)))
-
-(define-test "exact tan 0 is 0" (expect 0.0
-	(import (scheme inexact))
-	(tan 0)))
-
-(define-test "adding no numbers is exact 0" (expect 0
-	(+)))
-
-(define-test "adding single exact number is that exact number" (expect 12
-	(+ 12)))
-
-(define-test "adding single inexact number is that inexact number" (expect -450.5
-	(+ -450.5)))
+(define-test "(+)" (expect-success
+  (assert-equal 0 (+))
+  (assert-equal 12 (+ 12))
+  (assert-equal -450.5 (+ -450.5))
+  (assert-equal -435065 (+ 70 -1024589 589454))
+  (assert-equal 300.0 (+ 100.5 -0.5 200.0))
+  (assert-equal 300.0 (+ 100.5 -0.5 200))))
 
 (define-test "adding single string fails" (expect-failure
-	(+ "Hello!")))
+  (+ "Hello!")))
 
-(define-test "adding three exact numbers is their exact sum" (expect -435065
-	(+ 70 -1024589 589454)))
-
-(define-test "adding three inexact numbers is their inexact sum" (expect 300.0
-	(+ 100.5 -0.5 200.0)))
-
-(define-test "adding two exact numbers and one inexact number their inexact sum" (expect 300.0
-	(+ 100.5 -0.5 200)))
-
-(define-test "multiplying no numbers is exact 1" (expect 1
-	(*)))
-
-(define-test "multiplying single exact number is that exact number" (expect 12
-	(* 12)))
-
-(define-test "multiplying single inexact number is that inexact number" (expect -450.5
-	(* -450.5)))
+(define-test "(*)" (expect-success
+  (assert-equal 1 (*))
+  (assert-equal 12 (* 12))
+  (assert-equal -450.5 (* -450.5))
+  (assert-equal -499332738025 (* 4135 -3547 34045))
+  (assert-equal -10050.0 (* 100.5 -0.5 200.0))
+  (assert-equal 10050.0 (* 100.5 0.5 200))))
 
 (define-test "multiplying single string fails" (expect-failure
-	(* "Hello!")))
+  (* "Hello!")))
 
-(define-test "multiplying three exact numbers is their exact product" (expect -499332738025
-	(* 4135 -3547 34045)))
-
-(define-test "multiplying three inexact numbers is their inexact product" (expect -10050.0
-	(* 100.5 -0.5 200.0)))
-
-(define-test "multiplying two exact numbers and one inexact number their inexact product" (expect 10050.0
-	(* 100.5 0.5 200)))
+(define-test "(-)" (expect-success
+  (assert-equal -12 (- 12))
+  (assert-equal 450.5 (- -450.5))
+  (assert-equal -26363 (- 4135 -3547 34045))
+  (assert-equal -99.0 (- 100.5 -0.5 200.0))
+  (assert-equal -100.0 (- 100.5 0.5 200))))
 
 (define-test "subtracting no numbers fails" (expect-failure
-	(-)))
-
-(define-test "subtracting single exact number is the exact inverse of that number" (expect -12
-	(- 12)))
-
-(define-test "subtracting single inexact number is the inexact inverse of that number" (expect 450.5
-	(- -450.5)))
+  (-)))
 
 (define-test "subtracting single string fails" (expect-failure
-	(- "Hello!")))
+  (- "Hello!")))
 
-(define-test "subtracting three exact numbers is their exact difference" (expect -26363
-	(- 4135 -3547 34045)))
-
-(define-test "subtracting three inexact numbers is their inexact difference" (expect -99.0
-	(- 100.5 -0.5 200.0)))
-
-(define-test "subtracting two exact numbers and one inexact number their inexact difference" (expect -100.0
-	(- 100.5 0.5 200)))
-
-(define-test "dividing no numbers fails" (expect-failure
-	(-)))
-
-(define-test "dividing single exact number is the inexact reciprocal of that exact number" (expect 0.125
-	(/ 8)))
-
-(define-test "dividing single inexact number is the reciprocal of that inexact number" (expect -4.0
-	(/ -0.25)))
+(define-test "(/)" (expect-success
+  (assert-equal 0.125 (/ 8))
+  (assert-equal -4.0 (/ -0.25))
+  (assert-equal 0.15 (/ 3 4 5))
+  (assert-equal 64.0 (/ 128.0 0.25 8))
+  (assert-equal -64.0 (/ 128.0 -0.25 8))))
 
 (define-test "dividing single string fails" (expect-failure
-	(/ "Hello!")))
+  (/ "Hello!")))
 
-(define-test "dividing three exact numbers is inexact" (expect 0.15
-	(/ 3 4 5)))
+(define-test "dividing no numbers fails" (expect-failure
+  (/)))
 
-(define-test "dividing three inexact numbers is inexact" (expect 64.0
-	(/ 128.0 0.25 8)))
-
-(define-test "dividing two exact numbers and one inexact number is inexact" (expect -64.0
-	(/ 128.0 -0.25 8)))
-
-(define-test "equality of two equal numbers is true" (expect #t
-	(= 4.0 4)))
-
-(define-test "equality of 0.0 and -0.0 is true" (expect #t
-	(= 0.0 -0.0)))
-
-(define-test "equality of three equal numbers is true" (expect #t
-	(= 4.0 4 4.0)))
+(define-test "(=)" (expect-success
+  (assert-true  (= 4.0 4))
+  (assert-true  (= 0.0 -0.0))
+  (assert-true  (= 4.0 4 4.0))
+  (assert-false (= 4.0 5.6))
+  (assert-false (= 4.0 4 5.6))))
 
 (define-test "equality of two numbers and boolean false is an error" (expect-failure
-	(= 4.0 4 #f)))
+  (= 4.0 4 #f)))
 
-(define-test "equality of two inequal numbers is false" (expect #f
-	(= 4.0 5.6)))
+(define-test "(<)" (expect-success
+  (assert-false (< 4.0 4))
+  (assert-false (< -0.0 0.0))
+  (assert-false (< 4.0 4 4.0))
+  (assert-false (< 5.6 4.0))
+  (assert-false (< 5.6 0 -4.5))
+  (assert-true  (< 4.0 5.6))
+  (assert-true  (< 4.0 4.5 5.6))))
 
-(define-test "equality of three inequal numbers is false" (expect #f
-	(= 4.0 4 5.6)))
+(define-test "(>)" (expect-success
+  (assert-false (> 4.0 4))
+  (assert-false (> -0.0 0.0))
+  (assert-false (> 4.0 4 4.0))
+  (assert-true  (> 5.6 4.0))
+  (assert-true  (> 5.6 0 -4.5))
+  (assert-false (> 4.0 5.6))
+  (assert-false (> 4.0 4.5 5.6))))
 
-(define-test "lesser than of two equal numbers is false" (expect #f
-	(< 4.0 4)))
+(define-test "(<=)" (expect-success
+  (assert-true  (<= 4.0 4))
+  (assert-true  (<= -0.0 0.0))
+  (assert-true  (<= 4.0 4 4.0))
+  (assert-false (<= 5.6 4.0))
+  (assert-false (<= 5.6 0 -4.5))
+  (assert-true  (<= 4.0 5.6))
+  (assert-true  (<= 4.0 4.5 5.6))))
 
-(define-test "lesser than of 0.0 and -0.0 is false" (expect #f
-	(< -0.0 0.0)))
+(define-test "(>=)" (expect-success
+  (assert-true  (>= 4.0 4))
+  (assert-true  (>= -0.0 0.0))
+  (assert-true  (>= 4.0 4 4.0))
+  (assert-true  (>= 5.6 4.0))
+  (assert-true  (>= 5.6 0 -4.5))
+  (assert-false (>= 4.0 5.6))
+  (assert-false (>= 4.0 4.5 5.6))))
 
-(define-test "lesser than of three equal numbers is false" (expect #f
-	(< 4.0 4 4.0)))
+(define-test "(zero?)" (expect-success
+  (assert-true  (zero? 0))
+  (assert-true  (zero? 0.0))
+  (assert-false (zero? 34))
+  (assert-false (zero? -134.5))
+  (assert-false (zero? +inf.0))
+  (assert-false (zero? -inf.0))
+  (assert-false (zero? +nan.0))))
 
-(define-test "lesser than of two decreasing numbers is false" (expect #f
-	(< 5.6 4.0)))
+(define-test "(even?)" (expect-success
+  (assert-true  (even? 1024))
+  (assert-false (even? 777))
+  (assert-true  (even? 0))
+  (assert-true  (even? -1024))
+  (assert-false (even? -777))))
 
-(define-test "lesser than of three decreasing numbers is false" (expect #f
-	(< 5.6 0 -4.5)))
+(define-test "(odd?)" (expect-success
+  (assert-false (odd? 1024))
+  (assert-true  (odd? 777))
+  (assert-false (odd? 0))
+  (assert-false (odd? -1024))
+  (assert-true  (odd? -777))))
 
-(define-test "lesser than of two increasing numbers is true" (expect #t
-	(< 4.0 5.6)))
+(define-test "(positive?)" (expect-success
+  (assert-false (positive? +nan.0))
+  (assert-false (positive? 0))
+  (assert-false (positive? 0.0))
+  (assert-true  (positive? +inf.0))
+  (assert-false (positive? -inf.0))
+  (assert-true  (positive? 35))
+  (assert-true  (positive? 456.7))
+  (assert-false (positive? -35))
+  (assert-false (positive? -456.7))))
 
-(define-test "lesser than of three increasing numbers is true" (expect #t
-	(< 4.0 4.5 5.6)))
-
-(define-test "greater than of two equal numbers is false" (expect #f
-	(> 4.0 4)))
-
-(define-test "greater than of 0.0 and -0.0 is false" (expect #f
-	(> -0.0 0.0)))
-
-(define-test "greater than of three equal numbers is false" (expect #f
-	(> 4.0 4 4.0)))
-
-(define-test "greater than of two decreasing numbers is true" (expect #t
-	(> 5.6 4.0)))
-
-(define-test "greater than of three decreasing numbers is true" (expect #t
-	(> 5.6 0 -4.5)))
-
-(define-test "greater than of two increasing numbers is false" (expect #f
-	(> 4.0 5.6)))
-
-(define-test "greater than of three increasing numbers is false" (expect #f
-	(> 4.0 4.5 5.6)))
-
-(define-test "lesser than or equal of two equal numbers is true" (expect #t
-	(<= 4.0 4)))
-
-(define-test "lesser than or equal of 0.0 and -0.0 is true" (expect #t
-	(<= -0.0 0.0)))
-
-(define-test "lesser than or equal of three equal numbers is true" (expect #t
-	(<= 4.0 4 4.0)))
-
-(define-test "lesser than or equal of two decreasing numbers is false" (expect #f
-	(<= 5.6 4.0)))
-
-(define-test "lesser than or equal of three decreasing numbers is false" (expect #f
-	(<= 5.6 0 -4.5)))
-
-(define-test "lesser than or equal of two increasing numbers is true" (expect #t
-	(<= 4.0 5.6)))
-
-(define-test "lesser than or equal of three increasing numbers is true" (expect #t
-	(<= 4.0 4.5 5.6)))
-
-(define-test "greater than or equal of two equal numbers is true" (expect #t
-	(>= 4.0 4)))
-
-(define-test "greater than or equal of 0.0 and -0.0 is true" (expect #t
-	(>= -0.0 0.0)))
-
-(define-test "greater than or equal of three equal numbers is true" (expect #t
-	(>= 4.0 4 4.0)))
-
-(define-test "greater than or equal of two decreasing numbers is true" (expect #t
-	(>= 5.6 4.0)))
-
-(define-test "greater than or equal of three decreasing numbers is true" (expect #t
-	(>= 5.6 0 -4.5)))
-
-(define-test "greater than or equal of two increasing numbers is false" (expect #f
-	(>= 4.0 5.6)))
-
-(define-test "greater than or equal of three increasing numbers is false" (expect #f
-	(>= 4.0 4.5 5.6)))
-
-(define-test "0 is zero" (expect #t
-	(zero? 0)))
-
-(define-test "0.0 is zero" (expect #t
-	(zero? 0.0)))
-
-(define-test "34 is not zero" (expect #f
-	(zero? 34)))
-
-(define-test "-134.5 is not zero" (expect #f
-	(zero? -134.5)))
-
-(define-test "+inf.0 is not zero" (expect #f
-	(zero? +inf.0)))
-
-(define-test "-inf.0 is not zero" (expect #f
-	(zero? -inf.0)))
-
-(define-test "+nan.0 is not zero" (expect #f
-	(zero? +nan.0)))
-
-(define-test "1024 is even" (expect #t
-	(even? 1024)))
-
-(define-test "1024 is not odd" (expect #f
-	(odd? 1024)))
-
-(define-test "777 is not even" (expect #f
-	(even? 777)))
-
-(define-test "777 is odd" (expect #t
-	(odd? 777)))
-
-(define-test "0 is even" (expect #t
-	(even? 0)))
-
-(define-test "0 is not odd" (expect #f
-	(odd? 0)))
-
-(define-test "-1024 is even" (expect #t
-	(even? -1024)))
-
-(define-test "-1024 is not odd" (expect #f
-	(odd? -1024)))
-
-(define-test "-777 is not even" (expect #f
-	(even? -777)))
-
-(define-test "-777 is odd" (expect #t
-	(odd? -777)))
+(define-test "(negative?)" (expect-success
+  (assert-false (negative? +nan.0))
+  (assert-false (negative? 0))
+  (assert-false (negative? 0.0))
+  (assert-false (negative? +inf.0))
+  (assert-true  (negative? -inf.0))
+  (assert-false (negative? 35))
+  (assert-false (negative? 456.7))
+  (assert-true  (negative? -35))
+  (assert-true  (negative? -456.7))))

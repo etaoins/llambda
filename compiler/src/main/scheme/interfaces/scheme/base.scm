@@ -10,7 +10,7 @@
 (export do)
 (export eqv? eq? equal?)
 (export number? complex? real? rational? exact? integer? exact-integer? inexact? finite? infinite? nan? zero? even? odd?
-        exact inexact + - / * = < > <= >=)
+        exact inexact + - / * = < > <= >= positive? negative?)
 (export boolean? not boolean=?)
 (export pair? null? list? cons car cdr set-car! set-cdr! length list-copy make-list list append memv memq member)
 (export symbol? symbol=? symbol->string string->symbol)

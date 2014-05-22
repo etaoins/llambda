@@ -186,6 +186,8 @@
     (define-r7rs > (world-function "lliby_numeric_gt" (<numeric-cell> <numeric-cell> . <list-element-cell>) <bool>))
     (define-r7rs <= (world-function "lliby_numeric_lte" (<numeric-cell> <numeric-cell> . <list-element-cell>) <bool>))
     (define-r7rs >= (world-function "lliby_numeric_gte" (<numeric-cell> <numeric-cell> . <list-element-cell>) <bool>))
+    (define-r7rs positive? (native-function "lliby_is_positive" (<numeric-cell>) <bool>))
+    (define-r7rs negative? (native-function "lliby_is_negative" (<numeric-cell>) <bool>))
     
     (define-syntax case-lambda
       (syntax-rules ()

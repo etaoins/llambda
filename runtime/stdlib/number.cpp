@@ -11,6 +11,19 @@ using namespace lliby;
 
 namespace
 {
+	double doubleValueFor(NumericCell *value)
+	{
+		if (auto exactInteger = datum_cast<ExactIntegerCell>(value))
+		{
+			return exactInteger->value();
+		}
+		else
+		{
+			auto inexactRational = datum_unchecked_cast<InexactRationalCell>(value);
+			return inexactRational->value();
+		}
+	}
+
 	template<class ExactCompare, class InexactCompare>
 	bool numericCompare(World &world, NumericCell *value1, NumericCell *value2, ListElementCell *argHead, ExactCompare exactCompare, InexactCompare inexactCompare)
 	{
@@ -289,18 +302,7 @@ double lliby_div(World &world, NumericCell *startValue, ListElementCell *argHead
 		signalError(world, "Non-numeric passed to (/)", {argHead});
 	}
 
-	double currentValue;
-
-	if (auto exactInteger = datum_cast<ExactIntegerCell>(startValue))
-	{
-		currentValue = exactInteger->value();
-	}
-	else
-	{
-		auto inexactRational = datum_unchecked_cast<InexactRationalCell>(startValue);
-
-		currentValue = inexactRational->value();
-	}
+	double currentValue = doubleValueFor(startValue);
 
 	if (argList.isEmpty())
 	{
@@ -310,16 +312,7 @@ double lliby_div(World &world, NumericCell *startValue, ListElementCell *argHead
 	
 	for (auto numeric : argList)
 	{
-		if (auto exactInteger = datum_cast<ExactIntegerCell>(numeric))
-		{
-			currentValue /= exactInteger->value();
-		}
-		else
-		{
-			auto inexactRational = datum_unchecked_cast<InexactRationalCell>(numeric);
-
-			currentValue /= inexactRational->value();
-		}
+		currentValue /= doubleValueFor(numeric);
 	}
 	
 	return currentValue;
@@ -387,6 +380,16 @@ bool lliby_is_odd(std::int64_t value)
 bool lliby_is_even(std::int64_t value)
 {
 	return (value % 2) == 0;
+}
+
+bool lliby_is_positive(NumericCell *value)
+{
+	return doubleValueFor(value) > 0.0;
+}
+
+bool lliby_is_negative(NumericCell *value)
+{
+	return doubleValueFor(value) < 0.0;
 }
 
 bool lliby_numeric_equal(World &world, NumericCell *value1, NumericCell *value2, ListElementCell *argHead)
