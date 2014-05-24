@@ -29,6 +29,7 @@ add_library(lliby
 	core/dynamic.cpp
 	core/error.cpp
 	core/init.cpp
+	core/io.cpp
 	core/recorddata.cpp
 	dynamic/State.cpp
 	dynamic/EscapeProcedureCell.cpp

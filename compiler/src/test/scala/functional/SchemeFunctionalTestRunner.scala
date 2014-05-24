@@ -12,6 +12,12 @@ import llambda.compiler.SchemeStringImplicits._
 import llambda.compiler.{celltype => ct}
 
 abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite with Inside {
+  // Implicit import decl every test gets
+  private val testImportDecl = datum"(import (llambda nfi) (scheme base) (llambda test-util))"
+
+  // Our special version of (write) that generates less code
+  private val lastValueWriter = datum"""(native-function "_lliby_write_stdout" (<datum-cell>))"""
+
   private val AbnormalExitCodes = List(
     // SIGILL
     128 + 4,
@@ -138,23 +144,19 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
     // Import (llambda nfi) and (scheme base)
 
     val finalProgram = if (printLastValue) {
-      val importDecl = datum"(import (llambda nfi) (scheme base) (scheme write) (llambda test-util))"
-
       // Modify the last expression to print using lliby_write
       val valueDatum = program.last
 
       val printValueDatum = ast.ProperList(List(
-        ast.Symbol("write"),
+        lastValueWriter,
         valueDatum
       ))
 
       // Rebuild the program with the import and value printing
-      (importDecl :: program.dropRight(1)) :+ printValueDatum
+      (testImportDecl :: program.dropRight(1)) :+ printValueDatum
     }
     else {
-      val importDecl = datum"(import (scheme base) (llambda test-util))"
-
-      importDecl :: program
+      testImportDecl :: program
     }
 
     // Compile the program
