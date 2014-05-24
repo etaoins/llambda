@@ -114,7 +114,7 @@ object AnyList {
     case _ => None
   }
 
-  def apply(head : List[Datum], terminator : Datum) = {
+  def apply(head : Seq[Datum], terminator : Datum) = {
     head.foldRight(terminator : Datum) { (car, cdr) => Pair(car, cdr) }
   }
 }
@@ -140,7 +140,7 @@ object ProperList {
     case _ => None
   }
 
-  def apply(data : List[Datum]) : Datum = 
+  def apply(data : Seq[Datum]) : Datum = 
     data.foldRight(EmptyList() : Datum) { (car, cdr) => Pair(car, cdr) }
 }
 

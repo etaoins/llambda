@@ -162,6 +162,10 @@ newline""", "Bare\nnewline")
           ast.Pair(ast.RationalLiteral(2.0), ast.PositiveInfinityLiteral()
     )))))
   }
+  
+  test("no expressions") {
+    assert(scm"" === Nil)
+  }
 
   test("multiple expression") {
     assert(scm"(define x 4) (add x 1)" === List(

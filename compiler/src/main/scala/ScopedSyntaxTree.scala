@@ -54,7 +54,7 @@ object ScopedAnyList {
     case _ => None
   }
   
-  def apply(head : List[ScopedDatum], terminator : ScopedDatum) = {
+  def apply(head : Seq[ScopedDatum], terminator : ScopedDatum) = {
     head.foldRight(terminator : ScopedDatum) { (car, cdr) => 
       ScopedPair(car, cdr) 
     }
@@ -74,7 +74,7 @@ object ScopedImproperList {
 }
 
 object ScopedProperList {
-  def apply(data : List[ScopedDatum]) : ScopedDatum = 
+  def apply(data : Seq[ScopedDatum]) : ScopedDatum = 
     data.foldRight(NonSymbolLeaf(ast.EmptyList()) : sst.ScopedDatum) { (car, cdr) => 
       ScopedPair(car, cdr) 
     }

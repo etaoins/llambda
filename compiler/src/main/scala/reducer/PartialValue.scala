@@ -62,7 +62,7 @@ object ProperList {
     case _ => None
   }
 
-  def apply(data : List[PartialValue]) : PartialValue = 
+  def apply(data : Seq[PartialValue]) : PartialValue = 
     data.foldRight(LiteralLeaf(ast.EmptyList()) : PartialValue) { (car, cdr) => 
       PartialPair(car, cdr) 
     }
