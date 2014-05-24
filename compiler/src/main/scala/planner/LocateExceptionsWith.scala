@@ -2,7 +2,6 @@ package io.llambda.compiler.planner
 import io.llambda
 
 import llambda.compiler.SourceLocated
-import scala.util.parsing.input.NoPosition
 
 /** Catches any UnlocatedSemanticExceptions and rethrows them with a location
   *
@@ -12,7 +11,7 @@ import scala.util.parsing.input.NoPosition
   */
 object LocateExceptionsWith {
   def apply[T](sourceLocated : SourceLocated)(block : => T) = {
-    if (sourceLocated.pos eq NoPosition) {
+    if (!sourceLocated.locationOpt.isDefined) {
       // We don't have a position, just pass through
       block
     }

@@ -1,39 +1,83 @@
 package io.llambda.compiler
 import io.llambda
 
-import scala.util.parsing.input.{Positional, NoPosition}
+import scala.annotation.tailrec
 
-abstract trait SourceLocated extends Positional {
-  var filename : Option[String] = None
+case class SourceLocation(
+  filenameOpt : Option[String],
+  sourceString : String,
+  offset : Int
+) {
+  private lazy val lineColumn : (Int, Int) = {
+    @tailrec
+    def findLineColumn(cursor : Int = 0, line : Int = 1, column : Int = 1) : (Int, Int) =
+      if (cursor == offset) {
+        // We're done
+        (line, column)
+      }
+      else if (sourceString.charAt(cursor) == '\n') {
+        // New line
+        findLineColumn(cursor + 1, line + 1, 1)
+      }
+      else {
+        // New column
+        findLineColumn(cursor + 1, line, column + 1)
+      }
 
-  def setFilename(newFilename : Option[String]) : SourceLocated.this.type = {
-    filename = newFilename
-    this
+      findLineColumn()
   }
 
+  def line =
+    lineColumn._1
+  
+  def column =
+    lineColumn._2
+}
+
+abstract trait SourceLocated {
+  var locationOpt : Option[SourceLocation] = None
+
   def assignLocationTo(other : SourceLocated) {
-    other.setPos(pos)
-    other.setFilename(filename)
+    other.locationOpt = this.locationOpt
   }
   
   def assignLocationFrom(other : SourceLocated) : SourceLocated.this.type = {
-    setPos(other.pos)
-    setFilename(other.filename)
-
+    this.locationOpt = other.locationOpt
     this
   }
 
+  private def positionString : String = {
+    locationOpt match {
+      case Some(location) =>
+        location.filenameOpt.getOrElse("(unknown)") + ":"
+          location.line + ":" +
+          location.column
+
+      case None =>
+        "(unknown):(unknown)"
+    }
+  }
+
+  private def sourceSnippet(location : SourceLocation) : String = {
+    val sourceLines = location.sourceString.split('\n')
+    val lineOfInterest = sourceLines(location.line - 1)
+
+    // Happy ASCII arrow
+    val columnArrow = (" " * (location.column - 1)) + "^"
+
+    lineOfInterest + "\n" + columnArrow
+  }
+
   def locationString : String = {
-    val filenameString = filename getOrElse "(unknown)"
+    locationOpt match {
+      case Some(location) =>
+        location.filenameOpt.getOrElse("(unknown)") + ":" +
+          location.line + ":\n" +
+          sourceSnippet(location)
 
-    val positionString = if (pos eq NoPosition) {
-      "(unknown)"
+      case None =>
+        ""
     }
-    else {
-      s"${pos.toString}:\n${pos.longString}"
-    }
-
-    s"${filenameString}:${positionString}"
   }
 }
 

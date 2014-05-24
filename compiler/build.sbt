@@ -8,13 +8,15 @@ scalaVersion := "2.11.1"
 
 scalacOptions ++= Seq("-deprecation", "-feature", "-Xlint")
 
+libraryDependencies += "org.scala-lang" % "scala-reflect" % "2.11.1"
+
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.6" % "test"
 
 libraryDependencies += "com.github.scopt" %% "scopt" % "3.2.0"
 
-libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.1"
-
 libraryDependencies += "jline" % "jline" % "2.11"
+
+libraryDependencies += "org.parboiled" %% "parboiled" % "2.0.0-RC1"
 
 val schemeSourceDir = new File("compiler/src/main/scheme")
 

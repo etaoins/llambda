@@ -13,7 +13,7 @@ class ExpressionLocatingSuite extends FunSuite with testutil.ExpressionHelpers {
   implicit val plusScope = new Scope(collection.mutable.Map("+" -> plusLoc), Some(primitiveScope))
 
   private def assertLocated(expr : et.Expression) {
-    assert(expr.pos ne NoPosition, "Expression is unlocated")
+    assert(expr.locationOpt.isDefined, "Expression is unlocated")
   }
 
   test("variable references are located") {

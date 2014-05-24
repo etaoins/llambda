@@ -2,47 +2,46 @@ package io.llambda.compiler
 import io.llambda
 
 import org.scalatest.FunSuite
-import util.parsing.input.Position
 import collection.mutable
 
 class ScopedSyntaxTreeSuite  extends FunSuite {
-  private object TestPosition extends Position {
-    def line : Int = 42
-    def column : Int = 23
-    def lineContents = "NOPE"
-  }
+  private object TestLocation extends SourceLocation (
+    filenameOpt=None,
+    sourceString="NOPE",
+    offset=3
+  )
 
   test("scoping and unscoping a non-symbol leaf") {
     val testScope = new Scope(mutable.Map.empty)
 
     val initialBoolean = ast.BooleanLiteral(false)
-    initialBoolean.setPos(TestPosition)
+    initialBoolean.locationOpt = Some(TestLocation)
 
     val scopedBoolean = sst.ScopedDatum(testScope, initialBoolean)
     assert(scopedBoolean === sst.NonSymbolLeaf(initialBoolean))
     
     // Make sure the position is preserved
-    assert(scopedBoolean.pos === TestPosition)
+    assert(scopedBoolean.locationOpt === Some(TestLocation))
 
     val unscopedBoolean = scopedBoolean.unscope
     assert(unscopedBoolean === initialBoolean)
-    assert(unscopedBoolean.pos === TestPosition)
+    assert(unscopedBoolean.locationOpt === Some(TestLocation))
   }
 
   test("scoping and unscoping a symbol") {
     val testScope = new Scope(mutable.Map.empty)
 
     val initialSymbol = ast.Symbol("Hello, world!")
-    initialSymbol.setPos(TestPosition)
+    initialSymbol.locationOpt = Some(TestLocation)
 
     val scopedSymbol = sst.ScopedDatum(testScope, initialSymbol)
 
     assert(scopedSymbol === sst.ScopedSymbol(testScope, "Hello, world!"))
-    assert(scopedSymbol.pos === TestPosition)
+    assert(scopedSymbol.locationOpt === Some(TestLocation))
     
     val unscopedSymbol = scopedSymbol.unscope
     assert(unscopedSymbol === initialSymbol)
-    assert(unscopedSymbol.pos === TestPosition)
+    assert(unscopedSymbol.locationOpt === Some(TestLocation))
   }
   
   test("scoping and unscoping a pair") {
@@ -53,7 +52,7 @@ class ScopedSyntaxTreeSuite  extends FunSuite {
       ast.Symbol("Hello!")
     )
 
-    initialPair.setPos(TestPosition)
+    initialPair.locationOpt = Some(TestLocation)
 
     val scopedPair = sst.ScopedDatum(testScope, initialPair)
 
@@ -62,11 +61,11 @@ class ScopedSyntaxTreeSuite  extends FunSuite {
       sst.ScopedSymbol(testScope, "Hello!") 
     ))
 
-    assert(scopedPair.pos === TestPosition)
+    assert(scopedPair.locationOpt === Some(TestLocation))
     
     val unscopedPair = scopedPair.unscope
     assert(unscopedPair === initialPair)
-    assert(unscopedPair.pos === TestPosition)
+    assert(unscopedPair.locationOpt === Some(TestLocation))
   }
   
   test("scoping and unscoping a vector") {
@@ -77,7 +76,7 @@ class ScopedSyntaxTreeSuite  extends FunSuite {
       ast.Symbol("Hello!")
     ))
 
-    initialVector.setPos(TestPosition)
+    initialVector.locationOpt = Some(TestLocation)
 
     val scopedVector = sst.ScopedDatum(testScope, initialVector)
 
@@ -86,11 +85,11 @@ class ScopedSyntaxTreeSuite  extends FunSuite {
       sst.ScopedSymbol(testScope, "Hello!") 
     )))
 
-    assert(scopedVector.pos === TestPosition)
+    assert(scopedVector.locationOpt === Some(TestLocation))
     
     val unscopedVector = scopedVector.unscope
     assert(unscopedVector === initialVector)
-    assert(unscopedVector.pos === TestPosition)
+    assert(unscopedVector.locationOpt === Some(TestLocation))
   }
 
   test("resolving a scoped symbol") {

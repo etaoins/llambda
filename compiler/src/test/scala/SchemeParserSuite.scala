@@ -92,12 +92,12 @@ class SchemeParserSuite extends FunSuite with Inside {
     assertReflexiveParse("3.", List(ast.IntegerLiteral(3)))
     
     assertReflexiveParse("#b111", List(ast.IntegerLiteral(7)))
-    assertReflexiveParse("#b-1000", List(ast.IntegerLiteral(-8)))
+    assertReflexiveParse("#B-1000", List(ast.IntegerLiteral(-8)))
 
-    assertReflexiveParse("#o1234", List(ast.IntegerLiteral(668)))
+    assertReflexiveParse("#O1234", List(ast.IntegerLiteral(668)))
     assertReflexiveParse("#o-010", List(ast.IntegerLiteral(-8)))
     
-    assertReflexiveParse("#xdead", List(ast.IntegerLiteral(57005)))
+    assertReflexiveParse("#Xdead", List(ast.IntegerLiteral(57005)))
     assertReflexiveParse("#x-b00b5", List(ast.IntegerLiteral(-721077)))
     
     // This is too large to be parsed as a 32bit integer or a double
@@ -141,6 +141,10 @@ newline""", "Bare\nnewline")
 
     assertStringParsesAs("""Here's text \
                             containing just one line""", """Here's text containing just one line""")
+
+    intercept[ParseErrorException] {
+      scm"""open "string"""
+    }
   }
 
   test("proper lists") {
@@ -153,6 +157,10 @@ newline""", "Bare\nnewline")
         ast.RationalLiteral(2.0)
       ))
     ))
+    
+    intercept[ParseErrorException] {
+      scm"""open (list"""
+    }
   }
 
   test("improper lists") {
@@ -208,8 +216,8 @@ newline""", "Bare\nnewline")
   }
 
   test("bytevectors") {
-    assertReflexiveParse("#u8(0 10 5)", List(
-      ast.Bytevector(Vector(0, 10, 5))
+    assertReflexiveParse("#u8(+0 10. 5 #xff #d0)", List(
+      ast.Bytevector(Vector(0, 10, 5, 255, 0))
     ))
 
     assertReflexiveParse("#u8()", List(ast.Bytevector(Vector())))
@@ -254,7 +262,8 @@ newline""", "Bare\nnewline")
 
     val multilineTest = """
       #| This is a block comment
-         This can be as many lines as it wants |#
+         This can be as many lines as it wants
+         It can also contain # and | |#
       (display "LOL")
       #| Make sure we treat this as a separate comment |#
       """;
