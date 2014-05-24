@@ -13,11 +13,6 @@ object Compiler {
     conniver.MergeIdenticalSteps
   )
 
-  abstract class RunningCompiler {
-    def sendLlvmIr(irBytes : Array[Byte]) : Boolean
-    def finish() : Unit
-  }
-
   private lazy val platformClangFlags : List[String] =
     if (scala.util.Properties.isMac) {
       // Force use of libc++ on Mac OS X
@@ -32,12 +27,8 @@ object Compiler {
       }
     }
 
-  private def startLlvmCompiler(output : File, optimizeLevel : Int) : RunningCompiler = {
-    val inputStream = new PipedInputStream
-    val outputStream = new PipedOutputStream(inputStream)
-
+  private def invokeLlvmCompiler(irBytes : Array[Byte], output : File, optimizeLevel : Int) : Boolean = {
     val optimizeArg = s"-O${optimizeLevel}"
-
 
     val llcCmd = List("llc", optimizeArg)
     val clangCmd = List("clang++", optimizeArg) ++
@@ -49,43 +40,28 @@ object Compiler {
     val compilePipeline = if (optimizeLevel > 1) { 
       val optCmd = List("opt", optimizeArg)
 
-      optCmd #< inputStream #| llcCmd #| clangCmd
+      optCmd #| llcCmd #| clangCmd
     }
     else {
-      llcCmd #< inputStream #| clangCmd
+      llcCmd #| clangCmd
+    }
+
+    def dumpIrToStdin(stdinStream : OutputStream) {
+      stdinStream.write(irBytes)
+      stdinStream.close()
     }
 
     // Run the compiler pipeline in the background
-    val runningProcess = compilePipeline.run
+    val runningProcess = compilePipeline.run(new ProcessIO(dumpIrToStdin, _.close, BasicIO.toStdErr))
 
-    // Return an object to control the compiler with
-    new RunningCompiler {
-      def sendLlvmIr(irBytes : Array[Byte]) : Boolean = {
-        outputStream.write(irBytes)
-        outputStream.close()
-        runningProcess.exitValue() == 0 
-      }
-
-      def finish() {
-        outputStream.close()
-      }
-    }
+    runningProcess.exitValue() == 0 
   }
 
-  def startFileSinkCompiler(output : File) : RunningCompiler = 
-    new RunningCompiler {
-      def sendLlvmIr(irBytes : Array[Byte]) : Boolean  = {
-        // Write the IR directly to disk
-        val outputStream = new FileOutputStream(output)
-        outputStream.write(irBytes)
-        
-        true
-      }
-
-      def finish() {
-        // Nothing to do
-      }
-    }
+  def invokeFileSinkCompiler(irBytes : Array[Byte], output : File) { 
+    // Write the IR directly to disk
+    val outputStream = new FileOutputStream(output)
+    outputStream.write(irBytes)
+  }
   
   def compileFile(input : File, output : File, config : CompileConfig) : Unit =
     compileData(SchemeParser.parseFileAsData(input), output, config)
@@ -134,41 +110,32 @@ object Compiler {
 
     val functions = planner.PlanProgram(reducedExpressions)(planConfig)
     
-    // We're reasonably sure the input program is sane at this point
-    // Start our backend compiler and get a control object
-    val runningCompiler = if (!config.emitLlvm) {
-      startLlvmCompiler(output, config.optimizeLevel)
+    val optimizedFunctions = if (config.optimizeLevel > 1) {
+      conniverPasses.foldLeft(functions) { case (functions, conniverPass) =>
+        conniverPass(functions)
+      }
     }
     else {
-      startFileSinkCompiler(output)
+      functions
     }
 
-    try {
-      val optimizedFunctions = if (config.optimizeLevel > 1) {
-        conniverPasses.foldLeft(functions) { case (functions, conniverPass) =>
-          conniverPass(functions)
-        }
-      }
-      else {
-        functions
-      }
+    // Dispose any unused values
+    val disposedFunctions = optimizedFunctions.mapValues(planner.DisposeValues(_))
 
-      // Dispose any unused values
-      val disposedFunctions = optimizedFunctions.mapValues(planner.DisposeValues(_))
+    // Plan our cell allocations after all optimizations have been done
+    val allocatedFunctions = disposedFunctions.mapValues(planner.PlanCellAllocations(_))
 
-      // Plan our cell allocations after all optimizations have been done
-      val allocatedFunctions = disposedFunctions.mapValues(planner.PlanCellAllocations(_))
-
-      // Generate the LLVM IR
-      val llvmIr = codegen.GenProgram(allocatedFunctions, config.targetPlatform, featureIdentifiers)
-      
-      // Send the IR to our running compiler
-      if (!runningCompiler.sendLlvmIr(llvmIr.getBytes("UTF-8"))) {
+    // Generate the LLVM IR
+    val llvmIr = codegen.GenProgram(allocatedFunctions, config.targetPlatform, featureIdentifiers)
+    val irBytes = llvmIr.getBytes("UTF-8")
+    
+    if (!config.emitLlvm) {
+      if (!invokeLlvmCompiler(irBytes, output, config.optimizeLevel)) {
         throw new ExternalCompilerException
       }
     }
-    finally {
-      runningCompiler.finish()
+    else {
+      invokeFileSinkCompiler(irBytes, output)
     }
   }
 }
