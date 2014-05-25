@@ -107,7 +107,7 @@ class ConstantBooleanValue(value : Boolean) extends TrivialConstantValue(ct.Bool
   private val intValue = if (value) 1 else 0
 
   override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
-    val predTemp = ps.PredicateTemp()
+    val predTemp = ps.Temp(vt.Predicate)
     plan.steps += ps.StoreNativeInteger(predTemp, intValue, 1) 
 
     predTemp

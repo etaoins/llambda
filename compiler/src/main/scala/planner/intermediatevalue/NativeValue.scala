@@ -64,6 +64,21 @@ sealed abstract class NativeValue(val nativeType : vt.NativeType, val cellType :
     Some(nativeType)
 }
 
+class NativePredicateValue(tempValue : ps.TempValue) extends NativeValue(vt.Predicate, ct.BooleanCell, tempValue) {
+  def withNewTempValue(tempValue : ps.TempValue) = new NativePredicateValue(tempValue)
+
+  override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
+    tempValue
+  }
+  
+  def planCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue =  {
+    val boxedTemp = ps.CellTemp(ct.BooleanCell)
+    plan.steps += ps.BoxBoolean(boxedTemp, tempValue)
+
+    boxedTemp
+  }
+}
+
 class NativeBooleanValue(tempValue : ps.TempValue) extends NativeValue(vt.CBool, ct.BooleanCell, tempValue) {
   def withNewTempValue(tempValue : ps.TempValue) = new NativeBooleanValue(tempValue)
 

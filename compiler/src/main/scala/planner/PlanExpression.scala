@@ -14,7 +14,9 @@ private[planner] object PlanExpression {
   // These objects know how to implement certain report procedure directly
   // with plan steps
   private val reportProcPlanners = List[reportproc.ReportProcPlanner](
-    reportproc.CadrProcPlanner
+    reportproc.BooleanProcPlanner,
+    reportproc.CadrProcPlanner,
+    reportproc.EquivalenceProcPlanner
   )
 
   def apply(initialState : PlannerState)(expr : et.Expression, sourceNameHint : Option[String] = None)(implicit planConfig : PlanConfig, plan : PlanWriter) : PlanResult = LocateExceptionsWith(expr) {

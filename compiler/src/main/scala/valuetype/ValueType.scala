@@ -53,6 +53,8 @@ sealed abstract class IntType(bits : Int, signed : Boolean) extends IntLikeType(
   }
 }
 
+case object Predicate extends IntType(1, false)
+
 case object Int8 extends IntType(8, true)
 case object Int16 extends IntType(16, true)
 case object Int32 extends IntType(32, true)

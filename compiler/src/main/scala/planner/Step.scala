@@ -39,11 +39,6 @@ object RecordLikeDataTemp {
     new TempValue(false)
 }
 
-object PredicateTemp {
-  def apply() =
-    new TempValue(false)
-}
-
 object EntryPointTemp {
   def apply() =
     new TempValue(false)
@@ -629,4 +624,16 @@ case class PopDynamicState(worldPtr : WorldPtrValue) extends Step {
 
   def renamed(f : (TempValue) => TempValue) = 
     this
+}
+
+/** Compares two integers and stores a predicate with the result
+  *
+  * This can also be used to compare two pointers of the same type, GC managed or otherwise.
+  **/
+case class IntegerCompare(result : TempValue, val1 : TempValue, val2 : TempValue) extends Step with MergeableStep {
+  lazy val inputValues = Set[TempValue](val1, val2)
+  lazy val outputValues = Set[TempValue](result)
+  
+  def renamed(f : (TempValue) => TempValue) = 
+    IntegerCompare(f(result), f(val1), f(val2))
 }

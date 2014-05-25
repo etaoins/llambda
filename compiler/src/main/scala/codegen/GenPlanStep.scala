@@ -418,5 +418,13 @@ object GenPlanStep {
     case popDynamic : ps.PopDynamicState =>
       GenParameterize.genPop(state)(popDynamic)
       state
+
+    case ps.IntegerCompare(resultTemp, val1Temp, val2Temp) =>
+      val val1Ir = state.liveTemps(val1Temp)
+      val val2Ir = state.liveTemps(val2Temp)
+
+      val resultIr = state.currentBlock.icmp("compResult")(ComparisonCond.Equal, None, val1Ir, val2Ir)
+
+      state.withTempValue(resultTemp -> resultIr)
   }
 }

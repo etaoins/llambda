@@ -10,7 +10,7 @@ import llambda.compiler.RuntimeErrorMessage
 
 class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellType : ct.CellType, val tempValue : ps.TempValue) extends IntermediateCellValue {
   override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
-    val truthyTemp = ps.PredicateTemp()
+    val truthyTemp = ps.Temp(vt.Predicate)
 
     if (possibleTypes.contains(ct.BooleanCell)) {
       plan.steps += ps.UnboxAsTruthy(truthyTemp, tempValue) 
@@ -98,7 +98,7 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
       }
       else {
         // We have to check types here and branch on the result
-        val isExactIntPred = ps.PredicateTemp()
+        val isExactIntPred = ps.Temp(vt.Predicate)
 
         plan.steps += ps.TestCellType(isExactIntPred, tempValue, ct.ExactIntegerCell)
 

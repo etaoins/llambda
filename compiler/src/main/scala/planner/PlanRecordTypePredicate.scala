@@ -28,7 +28,7 @@ object PlanRecordTypePredicate {
         val plan = parentPlan.forkPlan()
 
         // Try to cast to a generic record type first
-        val isRecordPred = ps.PredicateTemp()
+        val isRecordPred = ps.Temp(vt.Predicate)
         plan.steps += ps.TestCellType(isRecordPred, argumentTemp, ct.RecordCell) 
 
         val retValueTemp = plan.buildCondBranch(isRecordPred, 
@@ -37,7 +37,7 @@ object PlanRecordTypePredicate {
             val recordCellTemp = ps.RecordTemp()
             isRecordPlan.steps += ps.CastCellToTypeUnchecked(recordCellTemp, argumentTemp, ct.RecordCell)
 
-            val classMatchedPred = ps.PredicateTemp()
+            val classMatchedPred = ps.Temp(vt.Predicate)
             isRecordPlan.steps += ps.TestRecordLikeClass(classMatchedPred, recordCellTemp, recordType) 
 
             val classMatchedBool = ps.Temp(vt.CBool)

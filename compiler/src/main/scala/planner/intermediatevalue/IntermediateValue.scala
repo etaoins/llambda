@@ -49,7 +49,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
   protected def toRecordTempValue(recordType : vt.RecordType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
 
   def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
-    val trueTemp = ps.PredicateTemp()
+    val trueTemp = ps.Temp(vt.Predicate)
     plan.steps += ps.StoreNativeInteger(trueTemp, 1, 1) 
 
     trueTemp
