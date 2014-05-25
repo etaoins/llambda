@@ -11,7 +11,7 @@ private[llvmir] abstract class IrInstrBuilder(protected val nameSource : LocalNa
   private[llvmir] val instructions = new ListBuffer[String]
 }
 
-abstract class IrBlockBuilder(nameSource : LocalNameSource, val label : String) extends IrInstrBuilder(nameSource) with Irable with TerminatorInstrs with MemoryInstrs with BitwiseInstrs with ConversionInstrs with OtherInstrs {
+abstract class IrBlockBuilder(nameSource : LocalNameSource, val label : String) extends IrInstrBuilder(nameSource) with Irable with TerminatorInstrs with MemoryInstrs with BitwiseInstrs with ConversionInstrs with OtherInstrs with BinaryInstrs {
   val function : IrFunctionBuilder
 
   def comment(text : String) {
