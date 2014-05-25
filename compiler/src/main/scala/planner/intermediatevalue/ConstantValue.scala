@@ -128,6 +128,8 @@ class ConstantBytevectorValue(value : Vector[Short]) extends TrivialConstantValu
 }
 
 class ConstantPairValue(car : ConstantValue, cdr : ConstantValue, val listMetricsOpt : Option[ConstantListMetrics]) extends ConstantValue(ct.PairCell) {
+  override val isDefiniteProperList = listMetricsOpt.isDefined
+  
   def toConstantCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
     val constantTemp = ps.CellTemp(cellType, knownConstant=true)
 

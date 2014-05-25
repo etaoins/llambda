@@ -9,11 +9,24 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.{StorageLocation, ProcedureSignature}
 
 private[planner] object PlanLambda {
-  private case class Argument(
+  private sealed abstract class Argument {
+    val storageLoc : StorageLocation
+    val tempValue : ps.TempValue
+    val valueType : vt.ValueType
+  }
+
+  private case class FixedArgument(
     storageLoc : StorageLocation,
     tempValue : ps.TempValue,
     valueType : vt.ValueType
-  )
+  ) extends Argument
+  
+  private case class RestArgument(
+    storageLoc : StorageLocation,
+    tempValue : ps.TempValue
+  ) extends Argument {
+    val valueType = vt.IntrinsicCellType(ct.ListElementCell)
+  }
 
   private sealed abstract class ClosedVariable
 
@@ -61,9 +74,9 @@ private[planner] object PlanLambda {
       initialState
 
     case argCount =>
-      mutableArgs.foldLeft(initialState) { case (state, Argument(storageLoc, tempValue, valueType)) =>
+      mutableArgs.foldLeft(initialState) { case (state, argument) =>
         // Cast the argument to a datum cell to fit inside a mutable record
-        val argValue = TempValueToIntermediate(valueType, tempValue)
+        val argValue = TempValueToIntermediate(argument.valueType, argument.tempValue)
         val datumTempValue = argValue.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
 
         // Init the mutable
@@ -75,7 +88,7 @@ private[planner] object PlanLambda {
         // Set the value
         plan.steps += ps.RecordDataFieldSet(recordDataTemp, vt.MutableType, vt.MutableField, datumTempValue)
         
-        state.withValue(storageLoc -> MutableValue(mutableTemp, false))
+        state.withValue(argument.storageLoc -> MutableValue(mutableTemp, false))
       }
   }
 
@@ -181,15 +194,15 @@ private[planner] object PlanLambda {
     }
 
     val allArgs = fixedArgLocs.map({ storageLoc =>
-      Argument(storageLoc, ps.CellTemp(ct.DatumCell), vt.IntrinsicCellType(ct.DatumCell))
+      FixedArgument(storageLoc, ps.CellTemp(ct.DatumCell), vt.IntrinsicCellType(ct.DatumCell))
     }) ++
     restArgLoc.map({ storageLoc =>
-      Argument(storageLoc, ps.CellTemp(ct.ListElementCell), vt.IntrinsicCellType(ct.ListElementCell))
+      RestArgument(storageLoc, ps.CellTemp(ct.ListElementCell))
     })
 
     // Split our args in to mutable and immutable
-    val (mutableArgs, immutableArgs) = allArgs.partition { case Argument(storageLoc, _, _) =>
-      planConfig.analysis.mutableVars.contains(storageLoc)
+    val (mutableArgs, immutableArgs) = allArgs.partition { argument =>
+      planConfig.analysis.mutableVars.contains(argument.storageLoc)
     }
 
     // Immutable vars can be used immediately
@@ -198,8 +211,19 @@ private[planner] object PlanLambda {
         (imported.storageLoc, ImmutableValue(imported.parentIntermediate))
     }).toMap
 
-    val argImmutables = (immutableArgs.map { case Argument(storageLoc, tempValue, valueType) =>
-      (storageLoc, ImmutableValue(TempValueToIntermediate(valueType, tempValue)))
+    val argImmutables = (immutableArgs.map {
+      case FixedArgument(storageLoc, tempValue, valueType) =>
+        (storageLoc, ImmutableValue(TempValueToIntermediate(valueType, tempValue)))
+
+      case RestArgument(storageLoc, tempValue) =>
+        val restValue = new iv.IntrinsicCellValue(
+          possibleTypes=ct.ListElementCell.concreteTypes,
+          cellType=ct.ListElementCell,
+          tempValue=tempValue,
+          properListCell=true // Our ABI guarantees that this is a proper list
+        )
+
+        (storageLoc, ImmutableValue(restValue))
     }).toMap
 
     // Start a new state for the procedure
@@ -275,8 +299,8 @@ private[planner] object PlanLambda {
       procSelfOpt.toList.map({ procSelf =>
         ("self" -> procSelf)
       }) ++
-      (allArgs.map { case Argument(storageLoc, tempValue, _) =>
-        (storageLoc.sourceName -> tempValue)
+      (allArgs.map { argument =>
+        (argument.storageLoc.sourceName -> argument.tempValue)
       })
 
     val uninferredFunction = PlannedFunction(

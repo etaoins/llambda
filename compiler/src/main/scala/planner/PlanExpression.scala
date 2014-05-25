@@ -14,6 +14,7 @@ private[planner] object PlanExpression {
   // These objects know how to implement certain report procedure directly
   // with plan steps
   private val reportProcPlanners = List[reportproc.ReportProcPlanner](
+    reportproc.ApplyProcPlanner,
     reportproc.BooleanProcPlanner,
     reportproc.CadrProcPlanner,
     reportproc.EquivalenceProcPlanner,

@@ -37,6 +37,9 @@ trait IntermediateValueHelpers {
 abstract class IntermediateValue extends IntermediateValueHelpers {
   val possibleTypes : Set[ct.ConcreteCellType]
 
+  val isDefiniteProperList : Boolean =
+    possibleTypes == Set(ct.EmptyListCell)
+
   case class PlanPhiResult(
     ourTempValue : ps.TempValue,
     theirTempValue : ps.TempValue,

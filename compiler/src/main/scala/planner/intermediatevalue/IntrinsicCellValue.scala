@@ -8,7 +8,9 @@ import llambda.compiler.planner.{PlanWriter, InvokableProcedure}
 import llambda.compiler.InternalCompilerErrorException
 import llambda.compiler.RuntimeErrorMessage
 
-class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellType : ct.CellType, val tempValue : ps.TempValue) extends IntermediateCellValue {
+class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellType : ct.CellType, val tempValue : ps.TempValue, val properListCell : Boolean = false) extends IntermediateCellValue {
+  override val isDefiniteProperList = properListCell || (possibleTypes == Set(ct.EmptyListCell))
+
   override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     val truthyTemp = ps.Temp(vt.Predicate)
 
