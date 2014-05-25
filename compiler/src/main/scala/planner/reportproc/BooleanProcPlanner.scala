@@ -18,7 +18,7 @@ object BooleanProcPlanner extends ReportProcPlanner {
       plan.steps += ps.StoreNativeInteger(zeroTemp, 0, 1)
 
       val negatedTemp = ps.Temp(vt.Predicate)
-      plan.steps += ps.IntegerCompare(negatedTemp, truthyPredTemp, zeroTemp)
+      plan.steps += ps.IntegerCompare(negatedTemp, ps.CompareCond.Equal, None, truthyPredTemp, zeroTemp)
 
       Some(PlanResult(
         state=state,

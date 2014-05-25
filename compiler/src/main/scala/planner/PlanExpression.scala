@@ -16,7 +16,8 @@ private[planner] object PlanExpression {
   private val reportProcPlanners = List[reportproc.ReportProcPlanner](
     reportproc.BooleanProcPlanner,
     reportproc.CadrProcPlanner,
-    reportproc.EquivalenceProcPlanner
+    reportproc.EquivalenceProcPlanner,
+    reportproc.NumberProcPlanner
   )
 
   def apply(initialState : PlannerState)(expr : et.Expression, sourceNameHint : Option[String] = None)(implicit planConfig : PlanConfig, plan : PlanWriter) : PlanResult = LocateExceptionsWith(expr) {

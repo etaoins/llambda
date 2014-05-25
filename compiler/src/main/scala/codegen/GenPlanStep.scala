@@ -19,6 +19,15 @@ object GenPlanStep {
     }
   }
 
+  private def stepCompareCondToIr(stepCond : ps.CompareCond.CompareCond) : ComparisonCond.ComparisonCond = stepCond match {
+    case ps.CompareCond.Equal => ComparisonCond.Equal
+    case ps.CompareCond.NotEqual => ComparisonCond.NotEqual
+    case ps.CompareCond.GreaterThan => ComparisonCond.GreaterThan
+    case ps.CompareCond.GreaterThanEqual => ComparisonCond.GreaterThanEqual
+    case ps.CompareCond.LessThan => ComparisonCond.LessThan
+    case ps.CompareCond.LessThanEqual => ComparisonCond.LessThanEqual
+  }
+
   def apply(state : GenerationState, plannedSymbols : Set[String], typeGenerator : TypeGenerator)(step : ps.Step) : GenResult = step match {
     case ps.AllocateCells(worldPtrTemp, count) =>
       if (!state.currentAllocation.isEmpty) {
@@ -419,11 +428,12 @@ object GenPlanStep {
       GenParameterize.genPop(state)(popDynamic)
       state
 
-    case ps.IntegerCompare(resultTemp, val1Temp, val2Temp) =>
+    case ps.IntegerCompare(resultTemp, compareCond, signed, val1Temp, val2Temp) =>
       val val1Ir = state.liveTemps(val1Temp)
       val val2Ir = state.liveTemps(val2Temp)
 
-      val resultIr = state.currentBlock.icmp("compResult")(ComparisonCond.Equal, None, val1Ir, val2Ir)
+      val condIr = stepCompareCondToIr(compareCond)
+      val resultIr = state.currentBlock.icmp("compResult")(condIr, signed, val1Ir, val2Ir)
 
       state.withTempValue(resultTemp -> resultIr)
   }

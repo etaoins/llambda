@@ -38,7 +38,7 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
     val predicateTemp = ps.Temp(vt.Predicate)
 
     // Do a direct integer compare
-    plan.steps += ps.IntegerCompare(predicateTemp, val1Temp, val2Temp)
+    plan.steps += ps.IntegerCompare(predicateTemp, ps.CompareCond.Equal, None, val1Temp, val2Temp)
 
     Some(PlanResult(
       state=state,
