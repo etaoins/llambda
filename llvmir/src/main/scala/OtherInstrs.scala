@@ -1,5 +1,20 @@
 package io.llambda.llvmir
 
+object ComparisonCond {
+  // This doesn't extend Irable because the mnemonic needs to be combined with
+  // an instruction-specific prefix to be valid IR
+  sealed abstract class ComparisonCond(val mnemonic : String, val signedDependent : Boolean)
+
+  case object Equal extends ComparisonCond("eq", false)
+  case object NotEqual extends ComparisonCond("ne", false)
+  
+  case object GreaterThan extends ComparisonCond("gt", true)
+  case object GreaterThanEqual extends ComparisonCond("ge", true)
+  
+  case object LessThan extends ComparisonCond("lt", true)
+  case object LessThanEqual extends ComparisonCond("le", true)
+}
+
 private[llvmir] trait OtherInstrs extends IrInstrBuilder {
   def icmp(resultDest : ResultDestination)(compareCond : ComparisonCond.ComparisonCond, signed : Option[Boolean], val1 : IrValue, val2 : IrValue) = {
     if (val1.irType != val2.irType) {
