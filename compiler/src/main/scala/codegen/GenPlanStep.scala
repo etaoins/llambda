@@ -377,8 +377,8 @@ object GenPlanStep {
       
       // Start our branches
       val irFunction = state.currentBlock.function
-      val fatalBlock = irFunction.startChildBlock("fieldIsDefined")
-      val successBlock = irFunction.startChildBlock("fieldIsUndefined")
+      val fatalBlock = irFunction.startChildBlock("fieldIsUndefined")
+      val successBlock = irFunction.startChildBlock("fieldIsDefined")
 
       GenErrorSignal(state.copy(currentBlock=fatalBlock))(worldPtrIr, errorMessage)
 
