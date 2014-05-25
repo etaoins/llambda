@@ -443,6 +443,15 @@ case class StoreProcedureEntryPoint(result : TempValue, boxed : TempValue) exten
     StoreProcedureEntryPoint(f(result), f(boxed))
 }
 
+/** Stores the length of a vector as an Int32 */
+case class StoreVectorLength(result : TempValue, boxed : TempValue) extends Step with MergeableStep {
+  lazy val inputValues = Set(boxed)
+  lazy val outputValues = Set(result)
+  
+  def renamed(f : (TempValue) => TempValue) =
+    StoreVectorLength(f(result), f(boxed))
+}
+
 /** Indicates a step that boxes a native value
   *
   * These are mergeable because SSA guarantees native values can't change at runtime

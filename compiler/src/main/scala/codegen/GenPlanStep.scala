@@ -304,6 +304,12 @@ object GenPlanStep {
       val cdrIr = ct.PairCell.genLoadFromCdr(state.currentBlock)(pairIr)
 
       state.withTempValue(resultTemp -> cdrIr)
+    
+    case ps.StoreVectorLength(resultTemp, vectorTemp) =>
+      val vectorIr = state.liveTemps(vectorTemp)
+      val carIr = ct.VectorCell.genLoadFromLength(state.currentBlock)(vectorIr)
+
+      state.withTempValue(resultTemp -> carIr)
 
     case ps.StoreProcedureEntryPoint(resultTemp, procTemp) =>
       val procIr = state.liveTemps(procTemp)
