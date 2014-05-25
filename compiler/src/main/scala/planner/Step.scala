@@ -603,6 +603,10 @@ case class SetProcedureEntryPoint(procedureCell : TempValue, entryPoint : TempVa
     SetProcedureEntryPoint(f(procedureCell), f(entryPoint))
 }
 
+/** Pushes a new dynamic state with the given parameter values
+  * 
+  * @param parameterValues  Map of parameter procedure IR values to the new value the paramer should take
+  */
 case class PushDynamicState(worldPtr : WorldPtrValue, parameterValues : List[(TempValue, TempValue)]) extends Step {
   lazy val inputValues = (parameterValues.flatMap { case (parameter, value) =>
     List(parameter, value)
@@ -615,6 +619,10 @@ case class PushDynamicState(worldPtr : WorldPtrValue, parameterValues : List[(Te
     })
 }
 
+/** Pops the last dynamic state 
+  * 
+  * This must be a state pushed with PushDynamicState, not through stdlib functions such as dynamic-wind
+  */
 case class PopDynamicState(worldPtr : WorldPtrValue) extends Step {
   lazy val inputValues = Set[TempValue](worldPtr)
   val outputValues = Set[TempValue]()
