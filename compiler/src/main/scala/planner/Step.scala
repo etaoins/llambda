@@ -252,6 +252,18 @@ case class BuildProperList(result : TempValue, listValues : List[TempValue]) ext
     BuildProperList(f(result), listValues.map(f))
 }
 
+/** Calculates the length of a proper list as a uint32
+  *
+  * The passed list must be a proper list or the result is undefined
+  */
+case class CalcProperListLength(result : TempValue, listHead : TempValue) extends Step with MergeableStep {
+  lazy val inputValues = Set(listHead)
+  lazy val outputValues = Set(result)
+
+  def renamed(f : (TempValue) => TempValue) =
+    CalcProperListLength(f(result), f(listHead))
+}
+
 /** Indicates a step that stores a constant value */
 sealed trait StoreConstant extends Step with MergeableStep {
   val result : TempValue

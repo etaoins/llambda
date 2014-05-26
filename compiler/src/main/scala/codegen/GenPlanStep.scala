@@ -122,6 +122,12 @@ object GenPlanStep {
       val (listState, properListIr) = GenProperList(state)(valueIrs)
 
       listState.withTempValue(resultTemp -> properListIr)
+    
+    case ps.CalcProperListLength(resultTemp, listHeadTemp) =>
+      val listHeadIr = state.liveTemps(listHeadTemp)
+      val (listState, lengthIr) = GenCalcProperListLength(state)(listHeadIr)
+
+      listState.withTempValue(resultTemp -> lengthIr)
 
     case ps.TestCellType(resultTemp, cellTemp, cellType) =>
       val cellIr = state.liveTemps(cellTemp)

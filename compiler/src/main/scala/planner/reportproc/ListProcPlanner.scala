@@ -29,6 +29,38 @@ object ListProcPlanner extends ReportProcPlanner {
         value=listValue
       ))
 
+    case ("length", List((_, singleOperand))) =>
+      // Do we know the length at compile time?
+      singleOperand match {
+        case constantPair : iv.ConstantPairValue =>
+          for(listMetrics <- constantPair.listMetricsOpt) {
+            // Yes, return it directly
+            return Some(PlanResult(
+              state=initialState,
+              value=new iv.ConstantExactIntegerValue(listMetrics.length)
+            ))
+          }
+
+        case _ =>
+      }
+
+      if (singleOperand.isDefiniteProperList) {
+        val listElementTemp = singleOperand.toTempValue(vt.IntrinsicCellType(ct.ListElementCell))
+        val resultTemp = ps.Temp(vt.UInt32)
+
+        // This is a guaranteed proper list - we can quickly calculate the length inline
+        plan.steps += ps.CalcProperListLength(resultTemp, listElementTemp)
+
+        return Some(PlanResult(
+          state=initialState,
+          value=TempValueToIntermediate(vt.UInt32, resultTemp)
+        ))
+      }
+      else {
+        // This can error out at runtime - let the stdlib deal with it
+        None
+      }
+
     case _ =>
       None
   }

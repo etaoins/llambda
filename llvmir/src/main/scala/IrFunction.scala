@@ -118,7 +118,7 @@ class IrFunctionBuilder(
   val gc : Option[String] = None
 ) extends IrFunctionDeclLike {
   // This generates names for the function body
-  private val nameSource = new LocalNameSource
+  val nameSource = new LocalNameSource
   private val childBlocks = new collection.mutable.ListBuffer[IrChildBlockBuilder]
 
   // This is needed for IrSignatureLike
