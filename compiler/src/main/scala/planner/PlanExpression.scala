@@ -18,6 +18,7 @@ private[planner] object PlanExpression {
     reportproc.BooleanProcPlanner,
     reportproc.CadrProcPlanner,
     reportproc.EquivalenceProcPlanner,
+    reportproc.ListProcPlanner,
     reportproc.NumberProcPlanner,
     reportproc.VectorProcPlanner
   )
