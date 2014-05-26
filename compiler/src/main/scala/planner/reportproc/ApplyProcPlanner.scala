@@ -12,9 +12,11 @@ import llambda.compiler.codegen.AdaptedProcedureSignature
 
 object ApplyProcPlanner extends ReportProcPlanner {
   def apply(state : PlannerState)(reportName : String, operands : List[(SourceLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = (reportName, operands) match {
-    case ("apply", List((_, procValue), (_, argListValue))) if argListValue.isDefiniteProperList =>
+    case ("apply", List((procSourceLoc, procValue), (_, argListValue))) if argListValue.isDefiniteProperList =>
       // Convert to a procedure cell so we can use its trampoline
-      val procTemp = procValue.toTempValue(vt.IntrinsicCellType(ct.ProcedureCell))
+      val procTemp = LocateExceptionsWith(procSourceLoc) {
+        procValue.toTempValue(vt.IntrinsicCellType(ct.ProcedureCell))
+      }
 
       // Load the entry point
       val entryPointTemp = ps.EntryPointTemp()
