@@ -45,10 +45,12 @@ object GenErrorSignal {
       indices=List(0, 0),
       inbounds=true)
 
-    // Call _lliby_fatal
-    block.callDecl(None)(signalErrorDecl, List(worldPtr, stringStartPtr, evidencePtr))
+    state.terminateFunction(() => {
+      // Call _lliby_fatal
+      block.callDecl(None)(signalErrorDecl, List(worldPtr, stringStartPtr, evidencePtr))
 
-    // Terminate the failure block
-    block.unreachable
+      // Terminate the failure block
+      block.unreachable
+    })
   }
 }

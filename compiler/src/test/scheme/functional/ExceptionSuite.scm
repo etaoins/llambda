@@ -105,3 +105,14 @@
 			  (raise 'test)))))
 
 ))
+
+(define-test "runtime errors leave the garbage collector in a consistent state" (expect (outer . (one . two))
+  (cons 'outer 
+    (call/cc (lambda (normal-exit)
+      (with-exception-handler
+        (lambda (obj)
+          (normal-exit (cons 'one 'two)))
+        (lambda ()
+          ; This will blow up at runtime
+          (vector-ref #(1 2 3) (car (cons #f #t))))))))
+))
