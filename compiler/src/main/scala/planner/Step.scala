@@ -635,6 +635,33 @@ case class PopDynamicState(worldPtr : WorldPtrValue) extends Step {
     this
 }
 
+/** Adds two integers of the same type */
+case class IntegerAdd(result : TempValue, val1 : TempValue, val2 : TempValue) extends Step with MergeableStep {
+  lazy val inputValues = Set[TempValue](val1, val2)
+  lazy val outputValues = Set[TempValue](result)
+  
+  def renamed(f : (TempValue) => TempValue) = 
+    IntegerAdd(f(result), f(val1), f(val2))
+}
+
+/** Subtracts two integers of the same type */
+case class IntegerSub(result : TempValue, val1 : TempValue, val2 : TempValue) extends Step with MergeableStep {
+  lazy val inputValues = Set[TempValue](val1, val2)
+  lazy val outputValues = Set[TempValue](result)
+  
+  def renamed(f : (TempValue) => TempValue) = 
+    IntegerSub(f(result), f(val1), f(val2))
+}
+
+/** Multiplies two integers of the same type */
+case class IntegerMul(result : TempValue, val1 : TempValue, val2 : TempValue) extends Step with MergeableStep {
+  lazy val inputValues = Set[TempValue](val1, val2)
+  lazy val outputValues = Set[TempValue](result)
+  
+  def renamed(f : (TempValue) => TempValue) = 
+    IntegerMul(f(result), f(val1), f(val2))
+}
+
 object CompareCond {
   sealed abstract class CompareCond
 

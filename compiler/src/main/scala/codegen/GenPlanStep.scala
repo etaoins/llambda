@@ -7,6 +7,12 @@ import llambda.llvmir._
 import llambda.compiler.{celltype => ct}
 
 object GenPlanStep {
+  // Our runtime doesn't have defined wrap behaviour so we don't either
+  private val integerWrapBehaviour = Set(
+    WrapBehaviour.NoSignedWrap,
+    WrapBehaviour.NoUnsignedWrap
+  ) : Set[WrapBehaviour]
+
   private def containsAllocatingStep(step : ps.Step) : Boolean = {
     step match {
       case allocating if step.canAllocate => true
@@ -433,6 +439,30 @@ object GenPlanStep {
     case popDynamic : ps.PopDynamicState =>
       GenParameterize.genPop(state)(popDynamic)
       state
+    
+    case ps.IntegerAdd(resultTemp, val1Temp, val2Temp) =>
+      val val1Ir = state.liveTemps(val1Temp)
+      val val2Ir = state.liveTemps(val2Temp)
+
+      val resultIr = state.currentBlock.add("addResult")(integerWrapBehaviour, val1Ir, val2Ir)
+
+      state.withTempValue(resultTemp -> resultIr)
+    
+    case ps.IntegerSub(resultTemp, val1Temp, val2Temp) =>
+      val val1Ir = state.liveTemps(val1Temp)
+      val val2Ir = state.liveTemps(val2Temp)
+
+      val resultIr = state.currentBlock.sub("subResult")(integerWrapBehaviour, val1Ir, val2Ir)
+
+      state.withTempValue(resultTemp -> resultIr)
+    
+    case ps.IntegerMul(resultTemp, val1Temp, val2Temp) =>
+      val val1Ir = state.liveTemps(val1Temp)
+      val val2Ir = state.liveTemps(val2Temp)
+
+      val resultIr = state.currentBlock.mul("mulResult")(integerWrapBehaviour, val1Ir, val2Ir)
+
+      state.withTempValue(resultTemp -> resultIr)
 
     case ps.IntegerCompare(resultTemp, compareCond, signed, val1Temp, val2Temp) =>
       val val1Ir = state.liveTemps(val1Temp)
