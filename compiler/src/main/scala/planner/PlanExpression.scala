@@ -118,9 +118,6 @@ private[planner] object PlanExpression {
               val errorMessage = RuntimeErrorMessage("accessUndefined", "Recursively defined value referenced before its initialization") 
               plan.steps += ps.AssertRecordDataFieldDefined(worldPtr, resultTemp, vt.MutableField, errorMessage)
             }
-
-            // Dispose of our data pointer
-            plan.steps += ps.DisposeValue(recordDataTemp)
             
             // We can be anything here
             val possibleTypes = ct.DatumCell.concreteTypes
@@ -149,9 +146,6 @@ private[planner] object PlanExpression {
         
         // Store the data
         plan.steps += ps.RecordDataFieldSet(recordDataTemp, vt.MutableType, vt.MutableField, newValueTemp)
-
-        // Dispose of the data pointer
-        plan.steps += ps.DisposeValue(recordDataTemp)
 
         PlanResult(
           state=newValueResult.state,

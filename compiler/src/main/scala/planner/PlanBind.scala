@@ -35,7 +35,6 @@ private[planner] object PlanBind {
         plan.steps += ps.RecordLikeInit(recursiveTemp, recordDataTemp, vt.MutableType)
         // Mark this value as undefined so a runtime error will be raised if it is accessed
         plan.steps += ps.RecordDataFieldSetUndefined(recordDataTemp, vt.MutableType, vt.MutableField)
-        plan.steps += ps.DisposeValue(recordDataTemp)
 
         state.withValue(storageLoc -> MutableValue(recursiveTemp, true))
       }
@@ -54,7 +53,6 @@ private[planner] object PlanBind {
 
           plan.steps += ps.StoreRecordLikeData(recordDataTemp, recursiveTemp, vt.MutableType)
           plan.steps += ps.RecordDataFieldSet(recordDataTemp, vt.MutableType, vt.MutableField, initialValueTemp)
-          plan.steps += ps.DisposeValue(recordDataTemp)
 
           Some(recursiveTemp)
 
@@ -75,7 +73,6 @@ private[planner] object PlanBind {
 
           // Set the value
           plan.steps += ps.RecordDataFieldSet(recordDataTemp, vt.MutableType, vt.MutableField, initialValueTemp)
-          plan.steps += ps.DisposeValue(recordDataTemp)
 
           mutableTemp
         }

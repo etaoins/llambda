@@ -31,10 +31,6 @@ object PlanRecordTypeAccessor {
         // Read the field
         val fieldValueTemp = new ps.TempValue(field.fieldType.isGcManaged)
         plan.steps += ps.RecordDataFieldRef(fieldValueTemp, recordDataTemp, recordType, field) 
-
-        // Dispose of the record data pointer
-        plan.steps += ps.DisposeValue(recordDataTemp)
-
         plan.steps += ps.Return(Some(fieldValueTemp))
 
         PlannedFunction(

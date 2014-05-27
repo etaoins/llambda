@@ -248,13 +248,7 @@ private[planner] object PlanLambda {
         val closureDataTemp = ps.RecordLikeDataTemp()
         procPlan.steps += ps.StoreRecordLikeData(closureDataTemp, procSelf, closureType)
 
-        val state = loadClosureData(postMutableState)(closureDataTemp, closureType, capturedVariables)(procPlan)
-
-        // Dispose of our closure cell and data pointer
-        procPlan.steps += ps.DisposeValue(procSelf)
-        procPlan.steps += ps.DisposeValue(closureDataTemp)
-
-        state
+        loadClosureData(postMutableState)(closureDataTemp, closureType, capturedVariables)(procPlan)
     }
 
     // Plan the body

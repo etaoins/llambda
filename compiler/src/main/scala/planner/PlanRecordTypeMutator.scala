@@ -37,10 +37,6 @@ object PlanRecordTypeMutator {
 
         // Store the new value
         plan.steps += ps.RecordDataFieldSet(recordDataTemp, recordType, field, newValueTemp) 
-
-        // Dispose of the record data pointer
-        plan.steps += ps.DisposeValue(recordDataTemp)
-
         plan.steps += ps.Return(None)
 
         PlannedFunction(
