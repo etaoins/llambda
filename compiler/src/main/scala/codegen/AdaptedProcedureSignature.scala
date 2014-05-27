@@ -13,5 +13,6 @@ object AdaptedProcedureSignature extends ProcedureSignature(
   hasSelfArg=true,
   fixedArgs=Nil,
   hasRestArg=true,
-  returnType=Some(vt.IntrinsicCellType(ct.DatumCell))
+  returnType=Some(vt.IntrinsicCellType(ct.DatumCell)),
+  attributes=Set()
 )

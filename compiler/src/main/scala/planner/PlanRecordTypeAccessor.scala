@@ -16,7 +16,8 @@ object PlanRecordTypeAccessor {
           hasSelfArg=false,
           hasRestArg=false,
           fixedArgs=List(recordType),
-          returnType=Some(field.fieldType)
+          returnType=Some(field.fieldType),
+          attributes=Set()
         )
 
         val recordCellTemp = ps.RecordTemp()

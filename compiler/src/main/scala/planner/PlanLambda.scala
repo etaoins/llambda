@@ -290,7 +290,8 @@ private[planner] object PlanLambda {
       fixedArgs=fixedArgLocs.map { _ =>
         vt.IntrinsicCellType(ct.DatumCell)
       },
-      returnType=returnTypeOpt
+      returnType=returnTypeOpt,
+      attributes=Set()
     )
 
     // Name our function arguments

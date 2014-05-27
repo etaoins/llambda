@@ -16,7 +16,8 @@ object PlanRecordTypeMutator {
           hasSelfArg=false,
           hasRestArg=false,
           fixedArgs=List(recordType, field.fieldType),
-          returnType=None
+          returnType=None,
+          attributes=Set()
         )
 
         // Set up our arguments

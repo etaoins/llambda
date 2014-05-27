@@ -180,7 +180,7 @@
     ; Bootstrap definitions for case-lambda
     (define-r7rs apply (world-function "lliby_apply" (<procedure-cell> . <list-element-cell>) -> <datum-cell>))
     (define-r7rs length (world-function "lliby_length" (<list-element-cell>) -> <uint32>))
-    (define-r7rs error (world-function "lliby_error" (<string-cell> . <list-element-cell>)))
+    (define-r7rs error (world-function "lliby_error" (<string-cell> . <list-element-cell>) noreturn))
     (define-r7rs = (world-function "lliby_numeric_equal" (<numeric-cell> <numeric-cell> . <list-element-cell>) -> <bool>))
     (define-r7rs < (world-function "lliby_numeric_lt" (<numeric-cell> <numeric-cell> . <list-element-cell>) -> <bool>))
     (define-r7rs > (world-function "lliby_numeric_gt" (<numeric-cell> <numeric-cell> . <list-element-cell>) -> <bool>))
@@ -338,7 +338,7 @@
       ((port) (native-newline port))))
 
     (define-r7rs with-exception-handler (world-function "lliby_with_exception_handler" (<procedure-cell> <procedure-cell>) -> <datum-cell>))
-    (define-r7rs raise (world-function "lliby_raise" (<datum-cell>)))
+    (define-r7rs raise (world-function "lliby_raise" (<datum-cell>) noreturn))
     (define-r7rs error-object? (native-function "lliby_is_error_object" (<datum-cell>) -> <bool>))
     (define-r7rs error-object-message (native-function "lliby_error_object_message" (<error-object-cell>) -> <string-cell>))
     (define-r7rs error-object-irritants (native-function "lliby_error_object_irritants" (<error-object-cell>) -> <list-element-cell>)))
@@ -346,8 +346,8 @@
   ; process-context library
   (include-library-declarations "../../interfaces/scheme/process-context.scm")
   (begin
-    (define-r7rs exit (world-function "lliby_exit" (<datum-cell>)))
-    (define-r7rs emergency-exit (native-function "lliby_emergency_exit" (<datum-cell>))))
+    (define-r7rs exit (world-function "lliby_exit" (<datum-cell>) noreturn))
+    (define-r7rs emergency-exit (native-function "lliby_emergency_exit" (<datum-cell>) noreturn)))
 
   ; inexact library
   (include-library-declarations "../../interfaces/scheme/inexact.scm")

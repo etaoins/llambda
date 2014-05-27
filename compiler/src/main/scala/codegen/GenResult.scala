@@ -16,7 +16,7 @@ case class GenerationState(
   liveTemps : LiveTemps,
   gcState : GcState
 ) extends GenResult {
-  def terminateFunction(terminatorProc : () => Unit) = {
+  def terminateFunction(terminatorProc : () => Unit) : BlockTerminated = {
     gcSlotsOpt match {
       case Some(gcSlots) =>
         // Make sure to clean up our GC state

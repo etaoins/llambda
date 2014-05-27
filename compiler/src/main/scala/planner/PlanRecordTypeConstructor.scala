@@ -18,7 +18,8 @@ object PlanRecordTypeConstructor {
           hasSelfArg=false,
           hasRestArg=false,
           fixedArgs=initializedFields.map(_.fieldType),
-          returnType=Some(recordType)
+          returnType=Some(recordType),
+          attributes=Set()
         )
         
         val plan = parentPlan.forkPlan()

@@ -19,7 +19,8 @@ object PlanRecordTypePredicate {
           hasRestArg=false,
           // We must be able to take any data type without erroring out
           fixedArgs=List(vt.IntrinsicCellType(ct.DatumCell)),
-          returnType=Some(vt.CBool)
+          returnType=Some(vt.CBool),
+          attributes=Set()
         )
         
         // We only have a single argument

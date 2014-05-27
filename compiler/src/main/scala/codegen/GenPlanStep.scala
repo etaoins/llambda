@@ -2,6 +2,7 @@ package io.llambda.compiler.codegen
 import io.llambda
 
 import llambda.compiler.InternalCompilerErrorException
+import llambda.compiler.ProcedureAttribute
 import llambda.compiler.planner.{step => ps}
 import llambda.llvmir._
 import llambda.compiler.{celltype => ct}
@@ -263,20 +264,29 @@ object GenPlanStep {
       }
 
       val (finalState, irRetOpt) = if (invokeStep.canAllocate) {
-        // We need a GC barrier
-        GenGcBarrier(preBarrierState) {
-          val invokeBlock = preBarrierState.currentBlock
-          val successBlock = invokeBlock.function.startChildBlock("invokeSuccess") 
+        if (signature.attributes.contains(ProcedureAttribute.NoReturn)) {
+          // This can't return - unroot all of our values and terminate the function
+          return state.terminateFunction(() => {
+            preBarrierState.currentBlock.call(None)(irSignature, irFuncPtr, irArguments)
+            preBarrierState.currentBlock.unreachable
+          })
+        }
+        else {
+          // We need a GC barrier
+          GenGcBarrier(preBarrierState) {
+            val invokeBlock = preBarrierState.currentBlock
+            val successBlock = invokeBlock.function.startChildBlock("invokeSuccess") 
 
-          val irValue = invokeBlock.invoke(Some("invokeRet"))(
-            signature=irSignature,
-            functionPtr=irFuncPtr,
-            arguments=irArguments,
-            normalBlock=successBlock,
-            exceptionBlock=preBarrierState.gcCleanUpBlockOpt.get
-          )
+            val irValue = invokeBlock.invoke(Some("invokeRet"))(
+              signature=irSignature,
+              functionPtr=irFuncPtr,
+              arguments=irArguments,
+              normalBlock=successBlock,
+              exceptionBlock=preBarrierState.gcCleanUpBlockOpt.get
+            )
 
-          (successBlock, irValue)
+            (successBlock, irValue)
+          }
         }
       }
       else {

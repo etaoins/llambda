@@ -1,7 +1,7 @@
 package io.llambda.compiler.codegen
 import io.llambda
 
-import llambda.compiler.ProcedureSignature
+import llambda.compiler.{ProcedureSignature, ProcedureAttribute}
 import llambda.compiler.{celltype => ct}
 import llambda.llvmir.{IrSignature, PointerType, VoidType, IntegerType}
 import llambda.llvmir.IrFunction._
@@ -51,14 +51,20 @@ object ProcedureSignatureToIr {
         Result(irType, paramSignednessToAttribs(signedness))
     }
 
+    // Convert our internal attributes to LLVM IR ones if applicable
+    val explicitAttributes = signature.attributes.collect {
+      case ProcedureAttribute.NoReturn =>
+        NoReturn
+    } : Set[FunctionAttribute]
+
     val attributes = if (signature.hasWorldArg) {
       // World functions can throw exceptions
-      Set[FunctionAttribute]()
+      explicitAttributes
     }
     else {
       // Non-world ative functions must not throw exceptions
       // We don't generate a GC safe point for them
-      Set[FunctionAttribute](NoUnwind)
+      explicitAttributes + NoUnwind
     }
 
     IrSignature(result=result, arguments=allArgs, attributes=attributes)

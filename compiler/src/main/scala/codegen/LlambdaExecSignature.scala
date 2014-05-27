@@ -9,7 +9,8 @@ object LlambdaExecSignature extends ProcedureSignature(
   hasSelfArg=false,
   fixedArgs=Nil,
   hasRestArg=false,
-  returnType=None
+  returnType=None,
+  attributes=Set()
 ) {
   val nativeSymbol = "__llambda_exec"
 }

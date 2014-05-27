@@ -19,13 +19,32 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
         hasSelfArg=false,
         fixedArgs=Nil,
         hasRestArg=false,
-        returnType=None
+        returnType=None,
+        attributes=Set()
       ),
       "lliby_newline"
     )
 
     assertResult(expectedFunction) {
       expressionFor("""(native-function "lliby_newline" ())""")
+    }
+  }
+  
+  test("void native functioni with noreturn attribute") {
+    val expectedFunction = et.NativeFunction(
+      ProcedureSignature(
+        hasWorldArg=false,
+        hasSelfArg=false,
+        fixedArgs=Nil,
+        hasRestArg=false,
+        returnType=None,
+        attributes=Set(ProcedureAttribute.NoReturn)
+      ),
+      "lliby_newline"
+    )
+
+    assertResult(expectedFunction) {
+      expressionFor("""(native-function "lliby_newline" () noreturn)""")
     }
   }
   
@@ -36,7 +55,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
         hasSelfArg=false,
         fixedArgs=Nil,
         hasRestArg=false,
-        returnType=None
+        returnType=None,
+        attributes=Set()
       ),
       "lliby_newline"
     )
@@ -53,7 +73,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
         hasSelfArg=false,
         fixedArgs=Nil,
         hasRestArg=false,
-        returnType=Some(vt.Int8)
+        returnType=Some(vt.Int8),
+        attributes=Set()
       ),
       "lliby_newline"
     )
@@ -70,7 +91,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
         hasSelfArg=false,
         fixedArgs=List(vt.Int16),
         hasRestArg=false,
-        returnType=Some(vt.Int32)
+        returnType=Some(vt.Int32),
+        attributes=Set()
       ),
       "lliby_newline"
     )
@@ -87,7 +109,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
         hasSelfArg=false,
         fixedArgs=List(vt.Int64, vt.Float),
         hasRestArg=false,
-        returnType=Some(vt.Double)
+        returnType=Some(vt.Double),
+        attributes=Set()
       ),
       "lliby_newline"
     )
@@ -104,7 +127,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
         hasSelfArg=false,
         fixedArgs=List(vt.UInt16),
         hasRestArg=false,
-        returnType=Some(vt.UInt32)
+        returnType=Some(vt.UInt32),
+        attributes=Set()
       ),
       "lliby_newline"
     )
@@ -121,7 +145,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
         hasSelfArg=false,
         fixedArgs=List(vt.CBool),
         hasRestArg=false,
-        returnType=Some(vt.CBool)
+        returnType=Some(vt.CBool),
+        attributes=Set()
       ),
       "lliby_newline"
     )
@@ -138,7 +163,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
         hasSelfArg=false,
         fixedArgs=List(vt.Int8),
         hasRestArg=false,
-        returnType=Some(vt.UnicodeChar)
+        returnType=Some(vt.UnicodeChar),
+        attributes=Set()
       ),
       "lliby_newline"
     )
@@ -155,7 +181,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
         hasSelfArg=false,
         fixedArgs=List(vt.IntrinsicCellType(ct.ExactIntegerCell)),
         hasRestArg=false,
-        returnType=Some(vt.IntrinsicCellType(ct.InexactRationalCell))
+        returnType=Some(vt.IntrinsicCellType(ct.InexactRationalCell)),
+        attributes=Set()
       ),
       "lliby_newline"
     )
@@ -172,7 +199,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
         hasSelfArg=false,
         fixedArgs=Nil,
         hasRestArg=true,
-        returnType=Some(vt.IntrinsicCellType(ct.DatumCell))
+        returnType=Some(vt.IntrinsicCellType(ct.DatumCell)),
+        attributes=Set()
       ),
       "lliby_vector"
     )
@@ -189,7 +217,8 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExpressionHelpers {
         hasSelfArg=false,
         fixedArgs=List(vt.CBool),
         hasRestArg=true,
-        returnType=Some(vt.Int32)
+        returnType=Some(vt.Int32),
+        attributes=Set()
       ),
       "lliby_misc"
     )

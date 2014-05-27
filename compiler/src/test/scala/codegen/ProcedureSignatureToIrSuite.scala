@@ -5,7 +5,7 @@ import org.scalatest.FunSuite
 
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.ProcedureSignature
+import llambda.compiler.{ProcedureSignature, ProcedureAttribute}
 import llambda.llvmir._
 import llambda.llvmir.IrFunction._
 
@@ -16,7 +16,8 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       hasSelfArg=false,
       fixedArgs=Nil,
       hasRestArg=false,
-      returnType=None
+      returnType=None,
+      attributes=Set()
     )
 
     val irSignature = ProcedureSignatureToIr(procSignature)
@@ -34,7 +35,8 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       hasSelfArg=false,
       fixedArgs=List(vt.CBool, vt.UInt16),
       hasRestArg=false,
-      returnType=Some(vt.Int32)
+      returnType=Some(vt.Int32),
+      attributes=Set()
     )
 
     val irSignature = ProcedureSignatureToIr(procSignature)
@@ -46,13 +48,14 @@ class ProcedureSignatureToIrSuite extends FunSuite {
     ))
   }
   
-  test("function taking only world and self args returning void") {
+  test("function taking only world and self args with noreturn attribute") {
     val procSignature = new ProcedureSignature(
       hasWorldArg=true,
       hasSelfArg=true,
       fixedArgs=Nil,
       hasRestArg=false,
-      returnType=None
+      returnType=None,
+      attributes=Set(ProcedureAttribute.NoReturn)
     )
 
     val irSignature = ProcedureSignatureToIr(procSignature)
@@ -62,7 +65,8 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       arguments=List(
         Argument(PointerType(WorldValue.irType)),
         Argument(PointerType(ct.ProcedureCell.irType))
-      )
+      ),
+      attributes=Set(IrFunction.NoReturn)
     ))
   }
   
@@ -72,7 +76,8 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       hasSelfArg=false,
       fixedArgs=Nil,
       hasRestArg=true,
-      returnType=Some(vt.UInt32)
+      returnType=Some(vt.UInt32),
+      attributes=Set()
     )
 
     val irSignature = ProcedureSignatureToIr(procSignature)
@@ -90,7 +95,8 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       hasSelfArg=true,
       fixedArgs=List(vt.IntrinsicCellType(ct.NumericCell), vt.IntrinsicCellType(ct.NumericCell)),
       hasRestArg=true,
-      returnType=Some(vt.IntrinsicCellType(ct.InexactRationalCell))
+      returnType=Some(vt.IntrinsicCellType(ct.InexactRationalCell)),
+      attributes=Set()
     )
 
     val irSignature = ProcedureSignatureToIr(procSignature)
