@@ -50,7 +50,7 @@
 (define-test "inexact rational can be unboxed as float" (expect 10.0
 	(import (llambda test-util))
 	; Nothing in the stdlib takes float
-	(define fabsf (native-function "fabsf" (<float>) <float>))
+	(define fabsf (native-function "fabsf" (<float>) -> <float>))
 	(fabsf (typeless-cell -10.0))))
 
 (define-test "exact integer can be unboxed as double" (expect 1.0
@@ -62,7 +62,7 @@
 (define-test "exact integer can be unboxed as float" (expect 10.0
 	(import (llambda test-util))
 	; Nothing in the stdlib takes float
-	(define fabsf (native-function "fabsf" (<float>) <float>))
+	(define fabsf (native-function "fabsf" (<float>) -> <float>))
 	(fabsf (typeless-cell -10))))
 
 (define-test "native i64 can be passed as an native i32" (expect b
@@ -71,7 +71,7 @@
 	(vector-ref #(a b c) (exact 1))))
 
 (define-test "native i64 can be boxed as an inexact rational" (expect -53.0
-	(define inexact->inexact (world-function "lliby_inexact" (<inexact-rational-cell>) <double>))
+	(define inexact->inexact (world-function "lliby_inexact" (<inexact-rational-cell>) -> <double>))
 	; This assumes (exact) returns an native i64
 	(inexact->inexact (exact -53))))
 
@@ -95,7 +95,7 @@
 
 (define-test "exact integer can be passed to a procedure as float" (expect 10.0
 	; Nothing in the stdlib takes float
-	(define fabsf (native-function "fabsf" (<float>) <float>))
+	(define fabsf (native-function "fabsf" (<float>) -> <float>))
 	(fabsf -10)))
 
 ; Make sure if we use type analysis to short circuit bool evaluation do it right
