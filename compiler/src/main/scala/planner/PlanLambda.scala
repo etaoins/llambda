@@ -138,9 +138,16 @@ private[planner] object PlanLambda {
       expr.subexpressions.exists(containsImmediateReturn)
   }
 
-  def apply(parentState : PlannerState, parentPlan : PlanWriter)(fixedArgLocs : List[StorageLocation], restArgLoc : Option[StorageLocation], body : et.Expression, sourceNameHint : Option[String])(implicit planConfig : PlanConfig) : PlanResult = {
+  def apply(parentState : PlannerState, parentPlan : PlanWriter)(
+      fixedArgLocs : List[StorageLocation],
+      restArgLoc : Option[StorageLocation],
+      body : et.Expression,
+      sourceNameHint : Option[String],
+      recursiveSelfLoc : Option[StorageLocation]
+  )(implicit planConfig : PlanConfig) : PlanResult = {
     // Give ourselves a name. This will be made unique if it collides
     val sourceName = sourceNameHint.getOrElse("anonymous-procedure")
+    val nativeSymbol = parentPlan.allocProcedureSymbol(sourceName)
 
     // Find the variables that are closed by the parent scope
     val refedVars = findRefedVariables(body)
@@ -177,7 +184,7 @@ private[planner] object PlanLambda {
     val worldPtr = new ps.WorldPtrValue()
 
     // Determine if we have a closure
-    val procSelfOpt = if (capturedVariables.isEmpty) {
+    val innerSelfTempOpt = if (capturedVariables.isEmpty) {
       None
     }
     else {
@@ -185,7 +192,7 @@ private[planner] object PlanLambda {
     }
 
     // Make our closure type
-    val closureType = if (procSelfOpt.isDefined) {
+    val closureType = if (innerSelfTempOpt.isDefined) {
       val closureSourceName = sourceName + "-closure"
       new vt.ClosureType(closureSourceName, capturedVariables.map(_.recordField))
     }
@@ -225,9 +232,35 @@ private[planner] object PlanLambda {
 
         (storageLoc, ImmutableValue(restValue))
     }).toMap
+    
+    // Determine our initial signature
+    val initialSignature = ProcedureSignature(
+      hasWorldArg=true,
+      hasSelfArg=innerSelfTempOpt.isDefined,
+      hasRestArg=restArgLoc.isDefined,
+      fixedArgs=fixedArgLocs.map { _ =>
+        vt.IntrinsicCellType(ct.DatumCell)
+      },
+      returnType=Some(vt.IntrinsicCellType(ct.DatumCell)),
+      attributes=Set()
+    )
+
+    // If we're recursive we can't deviate from our initial signature
+    val canRefineSignature = !recursiveSelfLoc.isDefined
+
+    // Create a value to reference ourselves recursively if required
+    val recursiveSelfImmutables = recursiveSelfLoc map { storageLoc =>
+      storageLoc -> ImmutableValue(
+        new iv.KnownProcedure(
+          signature=initialSignature,
+          symbolBlock={() => nativeSymbol},
+          selfTempOpt=innerSelfTempOpt
+        )
+      )
+    }
 
     // Start a new state for the procedure
-    val initialImmutables = argImmutables ++ importedImmutables
+    val initialImmutables = argImmutables ++ importedImmutables ++ recursiveSelfImmutables
 
     val preMutableState = PlannerState(
       values=initialImmutables,
@@ -240,7 +273,7 @@ private[planner] object PlanLambda {
     val postMutableState = initializeMutableArgs(preMutableState)(mutableArgs)(procPlan, worldPtr) 
     
     // Load all of our captured variables
-    val postClosureState = procSelfOpt match {
+    val postClosureState = innerSelfTempOpt match {
       case None =>
         postMutableState
 
@@ -257,41 +290,36 @@ private[planner] object PlanLambda {
     // Are we returning anything?
     val unitType = vt.IntrinsicCellType(ct.UnitCell)
 
-    val returnTypeOpt = if (containsImmediateReturn(body)) {
-      // Return a DatumCell
-      // XXX: We can be more clever here and try to find a common return type across all returns
-      Some(vt.IntrinsicCellType(ct.DatumCell))
-    }
-    else if (planResult.value.possibleTypes == Set(unitType)) {
-      // Instead of returning a unit cell just return void
-      None
+    val procSignature = if (!canRefineSignature) {
+      initialSignature
     }
     else {
-      // Find the preferred representation of our return value
-      Some(planResult.value.preferredRepresentation)
+      val returnTypeOpt = if (containsImmediateReturn(body)) {
+        // Return a DatumCell
+        // XXX: We can be more clever here and try to find a common return type across all returns
+        Some(vt.IntrinsicCellType(ct.DatumCell))
+      }
+      else if (planResult.value.possibleTypes == Set(unitType)) {
+        // Instead of returning a unit cell just return void
+        None
+      }
+      else {
+        // Find the preferred representation of our return value
+        Some(planResult.value.preferredRepresentation)
+      }
+
+      initialSignature.copy(returnType=returnTypeOpt)
     }
 
     // Return from the function
-    procPlan.steps += ps.Return(returnTypeOpt map { returnType =>
+    procPlan.steps += ps.Return(procSignature.returnType map { returnType =>
       planResult.value.toTempValue(returnType)(procPlan, worldPtr)
     })
     
-    // Determine our signature
-    val procSignature = ProcedureSignature(
-      hasWorldArg=true,
-      hasSelfArg=procSelfOpt.isDefined,
-      hasRestArg=restArgLoc.isDefined,
-      fixedArgs=fixedArgLocs.map { _ =>
-        vt.IntrinsicCellType(ct.DatumCell)
-      },
-      returnType=returnTypeOpt,
-      attributes=Set()
-    )
-
     // Name our function arguments
     val namedArguments =
       ("world" -> worldPtr) ::
-      procSelfOpt.toList.map({ procSelf =>
+      innerSelfTempOpt.toList.map({ procSelf =>
         ("self" -> procSelf)
       }) ++
       (allArgs.map { argument =>
@@ -305,7 +333,7 @@ private[planner] object PlanLambda {
       worldPtrOption=Some(worldPtr)
     )
 
-    val plannedFunction = if (planConfig.optimize) {
+    val plannedFunction = if (canRefineSignature && planConfig.optimize) {
       // Attempt to infer our argument types
       InferArgumentTypes(uninferredFunction)
     }
@@ -313,7 +341,7 @@ private[planner] object PlanLambda {
       uninferredFunction
     }
 
-    val procCellOpt = procSelfOpt map { _ => 
+    val outerSelfTempOpt = innerSelfTempOpt map { _ => 
       // Save the closure values from the parent's scope
       val cellTemp = ps.RecordTemp()
       val dataTemp = ps.RecordLikeDataTemp()
@@ -325,11 +353,13 @@ private[planner] object PlanLambda {
       cellTemp
     }
 
-    val procValue = LazyPlannedFunction(
-      suggestedName=sourceName,
-      plannedFunction=plannedFunction,
-      selfTempOpt=procCellOpt
-    )(parentPlan)
+    parentPlan.plannedFunctions += (nativeSymbol -> plannedFunction) 
+
+    val procValue = new iv.KnownProcedure(
+      signature=plannedFunction.signature,
+      symbolBlock={() => nativeSymbol},
+      selfTempOpt=outerSelfTempOpt
+    )
 
     PlanResult(
       state=parentState,

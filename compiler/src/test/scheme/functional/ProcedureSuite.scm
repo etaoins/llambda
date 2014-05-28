@@ -138,3 +138,13 @@
 	(define third-value (counter))
 	
 	(list first-value second-value third-value)))
+
+(define-test "recursive lambda mutating itself" (expect 15
+  (letrec ((false-loop
+             (lambda (val)
+               ; Overwrite ourselves
+               (set! false-loop *)
+               ; This should invoke *
+               (false-loop val 5))))
+    (false-loop 3))))
+

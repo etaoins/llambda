@@ -23,11 +23,22 @@ private[planner] object PlanBind {
 
     bindings.foldLeft(initialState) { case (prerecursiveState, (storageLoc, initialValue)) =>
       // Check for any recursive values we may have to introduce
-      val neededRecursives = bindingLocs
+      val neededRecursives = (bindingLocs
         .filter(!prerecursiveState.values.contains(_))
         .filter(storageLocRefedByExpr(_, initialValue))
+      )
 
-      val postrecursiveState = neededRecursives.foldLeft(prerecursiveState) { case (state, storageLoc) =>
+      // Does this refer to itself recursively and is not a mutable value?
+      val isSelfRecursive = neededRecursives.contains(storageLoc) && !planConfig.analysis.mutableVars.contains(storageLoc)
+
+      val neededNonSelfRecursives = if (isSelfRecursive) {
+        neededRecursives - storageLoc
+      }
+      else {
+        neededRecursives
+      }
+
+      val postrecursiveState = neededNonSelfRecursives.foldLeft(prerecursiveState) { case (state, storageLoc) =>
         val recursiveTemp = ps.RecordTemp()
 
         val recordDataTemp = ps.RecordLikeDataTemp()
@@ -39,7 +50,20 @@ private[planner] object PlanBind {
         state.withValue(storageLoc -> MutableValue(recursiveTemp, true))
       }
       
-      val initialValueResult = PlanExpression(postrecursiveState)(initialValue, Some(storageLoc.sourceName))
+      val initialValueResult = initialValue match {
+        case et.Lambda(fixedArgs, restArg, body) if isSelfRecursive =>
+          PlanLambda(initialState, plan)(
+            fixedArgLocs=fixedArgs,
+            restArgLoc=restArg,
+            body=body,
+            sourceNameHint=Some(storageLoc.sourceName),
+            recursiveSelfLoc=Some(storageLoc)
+          )
+
+        case otherExpr =>
+          PlanExpression(postrecursiveState)(otherExpr, Some(storageLoc.sourceName))
+      }
+        
 
       // Was this previously a recursive value?
       val prevRecursiveOpt = postrecursiveState.values.get(storageLoc) match {

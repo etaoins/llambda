@@ -269,7 +269,13 @@ private[planner] object PlanExpression {
         PlanResult(state=valueResult.state, value=castValue)
 
       case et.Lambda(fixedArgs, restArg, body) =>
-        PlanLambda(initialState, plan)(fixedArgs, restArg, body, sourceNameHint)
+        PlanLambda(initialState, plan)(
+          fixedArgLocs=fixedArgs,
+          restArgLoc=restArg,
+          body=body,
+          sourceNameHint=sourceNameHint,
+          recursiveSelfLoc=None
+        )
 
       case et.Parameterize(parameterValues, innerExpr) => 
         val parameterValueTemps = new mutable.ListBuffer[(ps.TempValue, ps.TempValue)]
