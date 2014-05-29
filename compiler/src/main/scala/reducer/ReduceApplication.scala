@@ -187,15 +187,20 @@ private[reducer] object ReduceApplication {
     case et.VarRef(reportProcedure : ReportProcedure) if !ignoreReportProcs.contains(reportProcedure) =>
       Some(ResolvedReportProcedure(reportProcedure))
 
-    case et.VarRef(storageLoc) =>
+    case et.VarRef(storageLoc) if reduceConfig.inlineDepth < 6 =>
       // Dereference the variable
       val storageLocExprOpt = (reduceConfig.knownValues.get(storageLoc).flatMap(_.toExpressionOpt) orElse
         reduceConfig.analysis.constantTopLevelBindings.get(storageLoc)
       )
+
+      // Increase our inline depth in case we're dealing with an argument initialised with itself
+      val innerReduceConfig = reduceConfig.copy(
+        inlineDepth=reduceConfig.inlineDepth + 1
+      )
           
       storageLocExprOpt.flatMap { derefedExpr =>
         // This is no longer an inline definition
-        resolveAppliedExpr(derefedExpr, ignoreReportProcs).map(_.toOutOfLine)
+        resolveAppliedExpr(derefedExpr, ignoreReportProcs)(innerReduceConfig).map(_.toOutOfLine)
       }
 
     case lambdaExpr : et.Lambda =>

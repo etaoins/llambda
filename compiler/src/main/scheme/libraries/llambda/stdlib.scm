@@ -370,4 +370,46 @@
     (define-r7rs display (case-lambda
       ((datum) (native-display datum (current-output-port)))
       ((datum port) (native-display datum port)))))
-  )
+
+  ; lazy library 
+  (include-library-declarations "../../interfaces/scheme/lazy.scm")
+  (begin
+     (define make-promise-internal
+       (lambda (done? proc)
+         (list (cons done? proc))))
+     
+     (define-syntax delay-force
+       (syntax-rules ()
+                     ((delay-force expression)
+                      (make-promise-internal #f (lambda () expression)))))
+
+     (define-syntax delay
+       (syntax-rules ()
+                     ((delay expression)
+                      (delay-force (make-promise-internal #t expression)))))
+
+     (define-r7rs promise? pair?)
+
+     (define-r7rs make-promise (lambda (value)
+       (make-promise-internal #t value)))
+
+     (define promise-done?
+       (lambda (x) (car (car x))))
+
+     (define promise-value
+       (lambda (x) (cdr (car x))))
+
+     (define promise-update!
+       (lambda (new old)
+         (set-car! (car old) (promise-done? new))
+         (set-cdr! (car old) (promise-value new))
+         (set-car! new (car old))))
+
+     (define-r7rs force (lambda (promise)
+       (if (promise-done? promise)
+         (promise-value promise)
+         (let ((promise* ((promise-value promise))))
+           (unless (promise-done? promise)
+             (promise-update! promise* promise))
+           (force promise))))))
+)
