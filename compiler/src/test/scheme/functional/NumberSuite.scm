@@ -1,7 +1,12 @@
 (define-test "(number?)" (expect-success
   (assert-true  (number? 4))
+  (assert-true  (number? (typeless-cell 4)))
+
   (assert-true  (number? -5.0))
-  (assert-false (number? '()))))
+  (assert-true  (number? (typeless-cell -5.0)))
+
+  (assert-false (number? '()))
+  (assert-false (number? (typeless-cell '())))))
 
 (define-test "(real?)" (expect-success
   (assert-true  (real? 4))

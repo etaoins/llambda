@@ -1,11 +1,15 @@
-(define-test "false is boolean" (expect #t
-	(boolean? #f)))
+(define-test "(boolean?)" (expect-success
+  (assert-true  (boolean? #f))
+  (assert-true  (boolean? (typeless-cell #f)))
 
-(define-test "0 is not boolean" (expect #f
-	(boolean? 0)))
+  (assert-true  (boolean? #t))
+  (assert-true  (boolean? (typeless-cell #t)))
 
-(define-test "empty list is not boolean" (expect #f
-	(boolean? '())))
+  (assert-false (boolean? 0))
+  (assert-false (boolean? (typeless-cell 0)))
+  
+  (assert-false (boolean? '()))
+  (assert-false (boolean? (typeless-cell '())))))
 
 (define-test "not true is false" (expect #f
 	(not #t)))

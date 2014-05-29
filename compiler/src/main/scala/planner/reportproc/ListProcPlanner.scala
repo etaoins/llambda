@@ -10,6 +10,19 @@ import llambda.compiler.planner._
 
 object ListProcPlanner extends ReportProcPlanner {
   def apply(initialState : PlannerState)(reportName : String, operands : List[(SourceLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = (reportName, operands) match {
+    case ("null?", List((_, singleOperand))) =>
+      predicatePlanner(initialState)(singleOperand, ct.EmptyListCell)
+    
+    case ("pair?", List((_, singleOperand))) =>
+      predicatePlanner(initialState)(singleOperand, ct.PairCell)
+    
+    case ("list?", List((_, singleOperand))) if singleOperand.isDefiniteProperList =>
+      // Definitely a proper list
+      Some(PlanResult(
+        state=initialState,
+        value=new iv.ConstantBooleanValue(true)
+      ))
+
     case ("list", operands) =>
       // Build a proper list directly
       val resultTemp = ps.CellTemp(ct.ListElementCell)

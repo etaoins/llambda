@@ -1,11 +1,12 @@
-(define-test "non-empty vector is a vector" (expect #t
-	(vector? #(1 2 3))))
+(define-test "(vector?)" (expect-success
+	(assert-true  (vector? #(1 2 3)))
+	(assert-true  (vector? (typeless-cell #(1 2 3))))
 
-(define-test "empty vector is a vector" (expect #t
-	(vector? #())))
+	(assert-true  (vector? #()))
+	(assert-true  (vector? (typeless-cell #())))
 
-(define-test "exact integer is not a vector" (expect #f
-	(vector? 4)))
+	(assert-false (vector? 4))
+	(assert-false (vector? (typeless-cell 4)))))
 
 (define-test "(make-vector) an uninitialized empty vector" (expect #()
 	(make-vector 0)))

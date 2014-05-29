@@ -1,13 +1,25 @@
 (define-test "(pair?)" (expect-success
 	(assert-true  (pair? '(a . b)))
+	(assert-true  (pair? (typeless-cell '(a . b))))
+
 	(assert-true  (pair? '(a  b c)))
+	(assert-true  (pair? (typeless-cell '(a  b c))))
+
   (assert-false (pair? '()))
-  (assert-false (pair? #(a b)))))
+  (assert-false (pair? (typeless-cell '())))
+
+  (assert-false (pair? #(a b)))
+  (assert-false (pair? (typeless-cell '())))))
 
 (define-test "(null?)" (expect-success
 	(assert-true  (null? '()))
+	(assert-true  (null? (typeless-cell '())))
+
   (assert-false (null? '(a b c)))
-  (assert-false (null? #(a b c))))) 
+  (assert-false (null? (typeless-cell '(a b c))))
+
+  (assert-false (null? #(a b c)))
+  (assert-false (null? (typeless-cell #(a b c)))))) 
 
 (define-test "(list?)" (expect-success
    (assert-true  (list? '(a b c)))

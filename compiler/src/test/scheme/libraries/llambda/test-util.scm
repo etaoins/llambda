@@ -12,7 +12,7 @@
 	  ; This is enough to foil the compiler for now
      (define-syntax typeless-cell
        (syntax-rules ()
-		  ((typeless-datum x) (car (cons x #f)))))
+		  ((typeless-cell x) (car (cons x #f)))))
 
     (define-syntax assert-equal
       (syntax-rules ()

@@ -10,6 +10,9 @@ import llambda.compiler.planner._
 
 object VectorProcPlanner extends ReportProcPlanner {
   def apply(state : PlannerState)(reportName : String, operands : List[(SourceLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = (reportName, operands) match {
+    case ("vector?", List((_, singleOperand))) =>
+      predicatePlanner(state)(singleOperand, ct.VectorCell)
+
     case ("vector-length", List((_, vectorValue))) =>
       val vectorTemp = vectorValue.toTempValue(vt.IntrinsicCellType(ct.VectorCell))
 

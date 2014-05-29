@@ -10,6 +10,9 @@ import llambda.compiler.planner._
 
 object BooleanProcPlanner extends ReportProcPlanner {
   def apply(state : PlannerState)(reportName : String, operands : List[(SourceLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = (reportName, operands) match {
+    case ("boolean?", List((_, singleOperand))) =>
+      predicatePlanner(state)(singleOperand, ct.BooleanCell)
+    
     case ("not", List((_, value)))  =>
       val truthyPredTemp = value.toTruthyPredicate()
 
