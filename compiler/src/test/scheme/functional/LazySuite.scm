@@ -51,16 +51,15 @@
             (stream-filter p? t))))))
   (assert-equal 5 (head (tail (tail (stream-filter odd? integers)))))))
   
-; XXX: This is very broken due to our incorrect handling of top-level defines
-#;(define-test "(force) only computes a value once" (expect-success
+(define-test "(force) only computes a value once" (expect-success
   (import (scheme lazy))
   (define count 0)
+  (define x 5)
   (define p
     (delay (begin (set! count (+ count 1))
                   (if (> count x)
                     count
                     (force p)))))
-  (define x 5)
   (assert-true (promise? p))
   (assert-equal 6 (force p))
   (assert-true (promise? p))

@@ -124,3 +124,7 @@
                  #f
                  (even? (- n 1))))))
     (even? 8))))
+
+(define-test "recursive non-lambda definition" (expect #t
+  (define self-param (cons #f (lambda () self-param)))
+  (eqv? self-param ((cdr self-param)))))

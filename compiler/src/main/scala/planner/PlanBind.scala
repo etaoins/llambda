@@ -28,10 +28,12 @@ private[planner] object PlanBind {
         .filter(storageLocRefedByExpr(_, initialValue))
       )
 
-      // Does this refer to itself recursively and is not a mutable value?
-      val isSelfRecursive = neededRecursives.contains(storageLoc) && !planConfig.analysis.mutableVars.contains(storageLoc)
+      // Is this a lambda referring to itself recursively and is not a mutable value?
+      val isSelfRecursiveLambda = neededRecursives.contains(storageLoc) &&
+        !planConfig.analysis.mutableVars.contains(storageLoc) &&
+        initialValue.isInstanceOf[et.Lambda]
 
-      val neededNonSelfRecursives = if (isSelfRecursive) {
+      val neededNonSelfRecursives = if (isSelfRecursiveLambda) {
         neededRecursives - storageLoc
       }
       else {
@@ -51,7 +53,7 @@ private[planner] object PlanBind {
       }
       
       val initialValueResult = initialValue match {
-        case et.Lambda(fixedArgs, restArg, body) if isSelfRecursive =>
+        case et.Lambda(fixedArgs, restArg, body) if isSelfRecursiveLambda =>
           PlanLambda(initialState, plan)(
             fixedArgLocs=fixedArgs,
             restArgLoc=restArg,
