@@ -8,7 +8,7 @@ class ApplyProcReducerSuite extends FunSuite with testutil.ExpressionHelpers {
   test("inlining without arguments using (apply)") {
     implicit val scope = schemeBaseScope
 
-    assert(bindlessReductionFor("""
+    assert(reductionFor("""
       (define (trivial-return) 1)
       (apply trivial-return '())
       """) === et.Literal(ast.IntegerLiteral(1))
@@ -18,7 +18,7 @@ class ApplyProcReducerSuite extends FunSuite with testutil.ExpressionHelpers {
   test("inlining report procedure using (apply)") {
     implicit val scope = schemeBaseScope
 
-    assert(bindlessReductionFor("""
+    assert(reductionFor("""
       (apply * '(2 3 10))
       """) === et.Literal(ast.IntegerLiteral(60))
     )
@@ -28,7 +28,7 @@ class ApplyProcReducerSuite extends FunSuite with testutil.ExpressionHelpers {
     implicit val scope = schemeBaseScope
 
     // This is intentionally similar to the basic structure of (case-lambda)
-    assert(bindlessReductionFor("""
+    assert(reductionFor("""
       ((lambda rest-args
         (apply (lambda (a b c)
           (+ a b c)) rest-args)
@@ -42,7 +42,7 @@ class ApplyProcReducerSuite extends FunSuite with testutil.ExpressionHelpers {
     implicit val scope = schemeBaseScope
 
     // This is intentionally similar to the basic structure of (case-lambda)
-    assert(bindlessReductionFor("""
+    assert(reductionFor("""
       ((lambda rest-args
         (if (= (length rest-args) 3)
           (apply (lambda (a b c)

@@ -41,7 +41,9 @@ private[reducer] object ReduceExpression {
         storageLoc -> ReduceExpression(initializer)
       }).filter { case (storageLoc, reducedInitializer) =>
         // Drop any bindings of unused variables to expressions without side effects
-        reduceConfig.analysis.usedVars.contains(storageLoc) || ExprHasSideEffects(reducedInitializer)
+        reduceConfig.analysis.usedVars.contains(storageLoc) ||
+          reduceConfig.analysis.mutableVars.contains(storageLoc) ||
+          ExprHasSideEffects(reducedInitializer)
       }
 
       usedBindings match {

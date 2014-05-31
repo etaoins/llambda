@@ -44,7 +44,7 @@ class StringProcReducerSuite extends FunSuite with Inside with testutil.Expressi
     )
 
     // We shouldn't do this as it could cause duplicate data
-    inside(bindlessReductionFor("""
+    inside(reductionFor("""
       (define test-string "Hello")
       (string->symbol test-string)
     """)) {

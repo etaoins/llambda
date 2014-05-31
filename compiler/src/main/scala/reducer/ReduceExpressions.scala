@@ -5,7 +5,9 @@ import io.llambda.compiler._
 import io.llambda.compiler.reducer.{partialvalue => pv}
 
 object ReduceExpressions {
-  def apply(exprs : List[et.Expression])(analysis : analyzer.AnalysisResult) : et.Expression = {
+  def apply(analysis : AnalysedExpressions) : et.Expression = {
+    val exprs = analysis.usedTopLevelExpressions
+
     val topLevelReduceConfig = ReduceConfig(
       analysis=analysis
     )

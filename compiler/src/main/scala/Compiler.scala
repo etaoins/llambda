@@ -82,21 +82,16 @@ object Compiler {
 
     val expressions = frontend.ExtractProgram(data)(loader, frontendConfig)
 
-    // Analyize first to determine unused variables
-    val initialAnalysis = analyzer.Analyize(expressions)
+    // Analyse and drop unused top-level defines
+    val analysis = reducer.AnalyseExpressions(expressions)
 
     // Drop unused top-level bindings
     // Otherwise we produce a lot of unused LLVM IR on -O 0
-    val droppedExpressions = expressions.flatMap { expr =>
-      reducer.DropUnusedDefines(expr, initialAnalysis.usedVars)
-    }
+    val droppedExpressions = analysis.usedTopLevelExpressions
 
-    // Re-analyize
-    val analysis = analyzer.Analyize(droppedExpressions)
-
-    // Reduce the expressions
     val reducedExpressions = if (config.optimizeLevel > 1) {
-      List(reducer.ReduceExpressions(droppedExpressions)(analysis))
+      // Reduce the expressions
+      List(reducer.ReduceExpressions(analysis))
     }
     else {
       droppedExpressions

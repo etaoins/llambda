@@ -51,7 +51,7 @@ class ReduceExpressionsSuite extends FunSuite with Inside with testutil.Expressi
 
   test("unused pure bindings") {
     assert(reductionFor("(define unused 1)") ===
-      et.Literal(ast.UnitValue())
+      et.Begin(Nil)
     )
   }
 
@@ -100,7 +100,7 @@ class ReduceExpressionsSuite extends FunSuite with Inside with testutil.Expressi
 
     val testScope = new Scope(collection.mutable.Map(allBindings : _*))
 
-    assert(bindlessReductionFor("""
+    assert(reductionFor("""
       (define case-function
         (case-lambda
           ((first) (- first))

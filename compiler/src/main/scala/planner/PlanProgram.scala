@@ -3,7 +3,6 @@ import io.llambda
 
 import llambda.compiler.et
 import llambda.compiler.planner.{step => ps}
-import llambda.compiler.analyzer.AnalysisResult
 import llambda.compiler.codegen.LlambdaExecSignature
 
 object PlanProgram {

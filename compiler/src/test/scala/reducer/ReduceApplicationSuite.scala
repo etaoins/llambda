@@ -8,7 +8,7 @@ class ReduceApplicationSuite extends FunSuite with Inside with testutil.Expressi
   test("inlining without arguments") {
     implicit val scope = schemeBaseScope
 
-    assert(bindlessReductionFor("""
+    assert(reductionFor("""
       (define (trivial-return) 1)
       (trivial-return)
       """) === et.Literal(ast.IntegerLiteral(1))
@@ -18,7 +18,7 @@ class ReduceApplicationSuite extends FunSuite with Inside with testutil.Expressi
   test("inlining one arg compile time evaluable") {
     implicit val scope = schemeBaseScope
 
-    assert(bindlessReductionFor("""
+    assert(reductionFor("""
       (define (add-two n) (+ 2 n))
       (add-two 4)
       """) === et.Literal(ast.IntegerLiteral(6))
@@ -28,7 +28,7 @@ class ReduceApplicationSuite extends FunSuite with Inside with testutil.Expressi
   test("inlining with empty rest arguments") {
     implicit val scope = schemeBaseScope
 
-    assert(bindlessReductionFor("""
+    assert(reductionFor("""
       (define (all-rest . rest-arg) (null? rest-arg))
       (all-rest)
       """) === et.Literal(ast.BooleanLiteral(true))
@@ -38,7 +38,7 @@ class ReduceApplicationSuite extends FunSuite with Inside with testutil.Expressi
   test("counting the number of rest arguments") {
     implicit val scope = schemeBaseScope
 
-    assert(bindlessReductionFor("""
+    assert(reductionFor("""
       (define (length-rest first . rest) (+ first (length rest)))
       (length-rest 4 2 3 4 5)
       """) === et.Literal(ast.IntegerLiteral(8))
@@ -48,7 +48,7 @@ class ReduceApplicationSuite extends FunSuite with Inside with testutil.Expressi
   test("inlining with two arguments") {
     implicit val scope = schemeBaseScope
 
-    assert(bindlessReductionFor("""
+    assert(reductionFor("""
       (define (right-types should-bool should-null)
         (and (boolean? should-bool) (null? should-null)))
       (right-types #t '())
@@ -59,7 +59,7 @@ class ReduceApplicationSuite extends FunSuite with Inside with testutil.Expressi
   test("inlining procedures passed as values") {
     implicit val scope = schemeBaseScope
 
-    assert(bindlessReductionFor("""
+    assert(reductionFor("""
       (define addr +)
       (define (combine-arg-length combiner initial-value . rest)
         (combiner initial-value (length rest)))
@@ -73,7 +73,7 @@ class ReduceApplicationSuite extends FunSuite with Inside with testutil.Expressi
     implicit val scope = schemeBaseScope
 
     // This seems stupid but it's useful for binding common values for a (case-lambda)
-    assert(bindlessReductionFor("""
+    assert(reductionFor("""
       (define proc-from-let (let ((mutliplier 2))
         (lambda (to-multiply)
           (* mutliplier to-multiply))))
@@ -87,7 +87,7 @@ class ReduceApplicationSuite extends FunSuite with Inside with testutil.Expressi
     implicit val scope = schemeBaseScope
 
     // This seems stupid but it's useful for binding common values for a (case-lambda)
-    assert(bindlessReductionFor("""
+    assert(reductionFor("""
       (define (multi-op val1 val2 use-minus)
         (define operator (if use-minus - +))
         (operator val1 val2))
@@ -100,7 +100,7 @@ class ReduceApplicationSuite extends FunSuite with Inside with testutil.Expressi
   test("recursive inlining") {
     implicit val scope = schemeBaseScope
 
-    assert(bindlessReductionFor("""
+    assert(reductionFor("""
       (define (add-two n)
         (+ 2 n))
       (define (times-four n)

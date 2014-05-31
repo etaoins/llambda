@@ -99,9 +99,9 @@ class ReduceMode(targetPlatform : platform.TargetPlatform) extends ExpressionPar
     userExprs ++= exprs
 
     val allExprs = loader.libraryExpressions ++ userExprs
-    val analysis = analyzer.Analyize(allExprs)
+    val analysis = reducer.AnalyseExpressions(allExprs)
 
-    reducer.ReduceExpressions(exprs)(analysis).toString
+    reducer.ReduceExpressions(analysis).toString
   }
 }
 

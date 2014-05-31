@@ -46,20 +46,13 @@ trait ExpressionHelpers extends FunSuite with OptionValues {
   def reductionFor(scheme : String)(implicit scope : Scope) = {
     val userExprs = bodyFor(scheme)(scope)
 
-    // Analyize libraries + user exprs
+    // Analyse libraries + user exprs
     val allExprs = libraryLoader.libraryExpressions ++ userExprs
-    val analysis = analyzer.Analyize(allExprs)
+    val analysis = reducer.AnalyseExpressions(allExprs)
 
-    reducer.ReduceExpressions(userExprs)(analysis)
-  }
-
-  def bindlessReductionFor(schemeString : String)(implicit scope : Scope) = {
-    // This removes any top-level Bind()s for lambdas
-    // Just one pass of the reducer will leave the un-inlined versions of procedures behind. This is because it doesn't
-    // know they're unused until all the callers are inlined. One solution would be to run the reducer twice but we 
-    // want to ensure that the full inlining operation can happen in one pass.
     et.Expression.fromSequence(
-      reductionFor(schemeString).toSequence.flatMap {
+      // Remove all top level defines
+      reducer.ReduceExpressions(analysis).toSequence.flatMap {
         case et.TopLevelDefinition(_) =>
           None
 
@@ -68,6 +61,5 @@ trait ExpressionHelpers extends FunSuite with OptionValues {
       }
     )
   }
-
 }
 

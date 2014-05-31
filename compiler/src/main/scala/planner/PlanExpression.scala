@@ -23,6 +23,21 @@ private[planner] object PlanExpression {
     reportproc.VectorProcPlanner
   )
 
+  private def resultWithFunction(state : PlannerState)(suggestedName : String, plannedFunction : PlannedFunction)(implicit plan : PlanWriter) : PlanResult = {
+    val nativeSymbol = plan.allocProcedureSymbol(suggestedName)
+
+    plan.plannedFunctions += (nativeSymbol -> plannedFunction)
+
+    PlanResult(
+      state=state,
+      value=new iv.KnownProcedure(
+        signature=plannedFunction.signature,
+        nativeSymbol=nativeSymbol,
+        selfTempOpt=None
+      )
+    )
+  }
+
   def apply(initialState : PlannerState)(expr : et.Expression, sourceNameHint : Option[String] = None)(implicit planConfig : PlanConfig, plan : PlanWriter) : PlanResult = LocateExceptionsWith(expr) {
     implicit val worldPtr = initialState.worldPtr
 
@@ -185,10 +200,12 @@ private[planner] object PlanExpression {
       case nativeFunc : et.NativeFunction =>
         PlanResult(
           state=initialState,
-          value=new iv.KnownProcedure(nativeFunc.signature, () => nativeFunc.nativeSymbol, None)
+          value=new iv.KnownProcedure(nativeFunc.signature, nativeFunc.nativeSymbol, None)
         )
 
       case recordConstructor : et.RecordTypeConstructor =>
+        val plannedFunction = PlanRecordTypeConstructor(recordConstructor)
+
         val procName = sourceNameHint.getOrElse {
           // By convention the constructor name is the type name without <>
           recordConstructor.recordType.sourceName
@@ -196,16 +213,11 @@ private[planner] object PlanExpression {
             .replaceAllLiterally(">", "")
         }
 
-        PlanResult(
-          state=initialState,
-          value=LazyPlannedFunction(
-            suggestedName=procName,
-            plannedFunction=PlanRecordTypeConstructor(recordConstructor),
-            selfTempOpt=None
-          )
-        )
+        resultWithFunction(initialState)(procName, plannedFunction)
       
       case recordPredicate : et.RecordTypePredicate =>
+        val plannedFunction = PlanRecordTypePredicate(recordPredicate)
+
         val procName = sourceNameHint.getOrElse {
           // By convention the predicate name is the type name without <> followed by ?
           recordPredicate.recordType.sourceName
@@ -213,16 +225,11 @@ private[planner] object PlanExpression {
             .replaceAllLiterally(">", "") + "?"
         }
 
-        PlanResult(
-          state=initialState,
-          value=LazyPlannedFunction(
-            suggestedName=procName,
-            plannedFunction=PlanRecordTypePredicate(recordPredicate),
-            selfTempOpt=None
-          )
-        )
+        resultWithFunction(initialState)(procName, plannedFunction)
       
       case recordAccessor : et.RecordTypeAccessor =>
+        val plannedFunction = PlanRecordTypeAccessor(recordAccessor)
+
         val procName = sourceNameHint.getOrElse {
           // By convention the accessor name is "{constructorName}-{fieldName}"
           recordAccessor.recordType.sourceName
@@ -230,17 +237,12 @@ private[planner] object PlanExpression {
             .replaceAllLiterally(">", "") + 
             "-" + recordAccessor.field.sourceName
         }
-
-        PlanResult(
-          state=initialState,
-          value=LazyPlannedFunction(
-            suggestedName=procName, 
-            plannedFunction=PlanRecordTypeAccessor(recordAccessor),
-            selfTempOpt=None
-          )
-        )
+        
+        resultWithFunction(initialState)(procName, plannedFunction)
       
       case recordMutator : et.RecordTypeMutator =>
+        val plannedFunction = PlanRecordTypeMutator(recordMutator)
+
         val procName = sourceNameHint.getOrElse {
           // By convention the mutatorName name is "set-{constructorName}-{fieldName}!"
           "set-" +
@@ -251,14 +253,7 @@ private[planner] object PlanExpression {
             "!"
         }
 
-        PlanResult(
-          state=initialState,
-          value=LazyPlannedFunction(
-            suggestedName=procName,
-            plannedFunction=PlanRecordTypeMutator(recordMutator),
-            selfTempOpt=None
-          )
-        )
+        resultWithFunction(initialState)(procName, plannedFunction)
 
       case et.Cast(valueExpr, targetType) =>
         val valueResult = apply(initialState)(valueExpr)

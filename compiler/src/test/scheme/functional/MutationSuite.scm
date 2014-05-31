@@ -11,3 +11,7 @@
 	  (set! x 3))
 	x))
 
+(define-test "mutating unused top-level binding" (expect #!unit
+	(define x 1)
+	(set! x 2)
+))

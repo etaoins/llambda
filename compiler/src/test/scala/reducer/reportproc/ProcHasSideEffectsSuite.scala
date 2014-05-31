@@ -8,7 +8,7 @@ class ProcHasSideEffectsSuite extends FunSuite with Inside with testutil.Express
   test("(list) does not have side effects") {
     implicit val scope = schemeBaseScope
 
-    assert(bindlessReductionFor("""
+    assert(reductionFor("""
       (list 1 2 3)
       4
       """) === et.Literal(ast.IntegerLiteral(4))
@@ -18,7 +18,7 @@ class ProcHasSideEffectsSuite extends FunSuite with Inside with testutil.Express
   test("(vector) does not have side effects") {
     implicit val scope = schemeBaseScope
 
-    assert(bindlessReductionFor("""
+    assert(reductionFor("""
       (vector 1 2 3)
       4
       """) === et.Literal(ast.IntegerLiteral(4))
@@ -29,7 +29,7 @@ class ProcHasSideEffectsSuite extends FunSuite with Inside with testutil.Express
     implicit val scope = schemeBaseScope
 
     // XXX: We should be able to strip the (vector) away completely here
-    inside(bindlessReductionFor("""(vector 1 (set-cdr! vector 1) 3) 4""")) {
+    inside(reductionFor("""(vector 1 (set-cdr! vector 1) 3) 4""")) {
       case et.Begin(List(et.Apply(_, _), et.Literal(ast.IntegerLiteral(4)))) =>
         Unit
     }
@@ -38,7 +38,7 @@ class ProcHasSideEffectsSuite extends FunSuite with Inside with testutil.Express
   test("(input-port?) does not have side effects with correct arity") {
     implicit val scope = schemeBaseScope
 
-    assert(bindlessReductionFor("""
+    assert(reductionFor("""
       (input-port? #t)
       4
       """) === et.Literal(ast.IntegerLiteral(4))
@@ -48,7 +48,7 @@ class ProcHasSideEffectsSuite extends FunSuite with Inside with testutil.Express
   test("(input-port?) does has side effects with incorrect arity") {
     implicit val scope = schemeBaseScope
 
-    inside(bindlessReductionFor("""(input-port? #t #t) 4""")) {
+    inside(reductionFor("""(input-port? #t #t) 4""")) {
       case et.Begin(List(et.Apply(_, _), et.Literal(ast.IntegerLiteral(4)))) =>
         Unit
     }
