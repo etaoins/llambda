@@ -13,7 +13,7 @@ object RuntimeFunctions {
       Argument(PointerType(WorldValue.irType)),
       Argument(IntegerType(64))
     ),
-    attributes=Set(NoUnwind)
+    attributes=Set(NoUnwind, Cold)
   )
     
   val signalError = IrFunctionDecl(
@@ -23,7 +23,8 @@ object RuntimeFunctions {
       IrFunction.Argument(PointerType(WorldValue.irType)),
       IrFunction.Argument(PointerType(IntegerType(8)), Set(IrFunction.NoCapture)),
       IrFunction.Argument(PointerType(ct.DatumCell.irType))
-    )
+    ),
+    attributes=Set(NoReturn, Cold)
   )
   
   val dynamicenvPush = IrFunctionDecl(

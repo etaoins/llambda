@@ -46,10 +46,7 @@ object GenCellAllocation {
     // See if we ran out of space
     val directSucceededPred = startBlock.icmp("directSucceeded")(ComparisonCond.LessThanEqual, Some(false), newAllocNextValue, allocEndValue)
 
-    // This should almost always be true
-    val expectedPred = GenLlvmExpect(startBlock)(directSucceededPred, IntegerConstant(IntegerType(1), 1))
-
-    startBlock.condBranch(expectedPred, directSuccessBlock, collectGarbageBlock)
+    startBlock.condBranch(directSucceededPred, directSuccessBlock, collectGarbageBlock)
 
     // In the direct alloc block store our new start pointer
     WorldValue.genStoreToAllocNext(directSuccessBlock)(newAllocNextValue, worldPtrIr)

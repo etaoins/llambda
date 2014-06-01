@@ -6,9 +6,6 @@
 
 %cell = type {%pair}
 
-; LLVM intrinsics
-declare i1 @llvm.expect.i1(i1, i1)
-
 !0 = metadata !{ metadata !"World::shadowStackHead" }
 !1 = metadata !{ metadata !"World::allocNext" }
 !2 = metadata !{ metadata !"World::allocEnd" }
