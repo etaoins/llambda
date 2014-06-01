@@ -487,5 +487,49 @@ object GenPlanStep {
       val resultIr = state.currentBlock.icmp("compResult")(condIr, signed, val1Ir, val2Ir)
 
       state.withTempValue(resultTemp -> resultIr)
+
+    case ps.InitPair(resultTemp) =>
+      val block = state.currentBlock
+      val allocation = state.currentAllocation
+      
+      val (newAllocation, resultIr) = allocation.consumeCells(block)(1, ct.PairCell)
+      
+      state.copy(
+        currentAllocation=newAllocation
+      ).withTempValue(resultTemp -> resultIr)
+    
+    case ps.AssertPairMutable(worldPtrTemp, pairTemp, errorMessage) => 
+      val worldPtrIr = state.liveTemps(worldPtrTemp)
+      val pairIr = state.liveTemps(pairTemp)
+      
+      // Start our branches
+      val irFunction = state.currentBlock.function
+      val fatalBlock = irFunction.startChildBlock("pairIsImmutable")
+      val successBlock = irFunction.startChildBlock("pairIsMutable")
+
+      GenErrorSignal(state.copy(currentBlock=fatalBlock))(worldPtrIr, errorMessage)
+
+      val globalConstantGcState = IntegerConstant(ct.DatumCell.gcStateIrType, 1)
+      val gcStateIr = ct.PairCell.genLoadFromGcState(state.currentBlock)(pairIr)
+      val irResult = state.currentBlock.icmp("isMutable")(ComparisonCond.NotEqual, None, globalConstantGcState, gcStateIr) 
+
+      state.currentBlock.condBranch(irResult, successBlock, fatalBlock)
+
+      // Continue with the successful block
+      state.copy(currentBlock=successBlock)
+
+    case ps.SetPairCar(pairTemp, newValueTemp) =>
+      val pairIr = state.liveTemps(pairTemp)
+      val newValueIr = state.liveTemps(newValueTemp)
+      
+      ct.PairCell.genStoreToCar(state.currentBlock)(newValueIr, pairIr)
+      state
+
+    case ps.SetPairCdr(pairTemp, newValueTemp) =>
+      val pairIr = state.liveTemps(pairTemp)
+      val newValueIr = state.liveTemps(newValueTemp)
+      
+      ct.PairCell.genStoreToCdr(state.currentBlock)(newValueIr, pairIr)
+      state
   }
 }

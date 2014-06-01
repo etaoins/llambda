@@ -3,7 +3,7 @@ import io.llambda
 
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.SourceLocated
+import llambda.compiler.{RuntimeErrorMessage, SourceLocated}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
@@ -73,6 +73,61 @@ object ListProcPlanner extends ReportProcPlanner {
         // This can error out at runtime - let the stdlib deal with it
         None
       }
+
+    case ("set-car!", List((pairLoc, pairValue), (_, newValue))) =>
+      val pairTemp = LocateExceptionsWith(pairLoc) {
+        pairValue.toTempValue(vt.IntrinsicCellType(ct.PairCell))
+      }
+
+      val newValueTemp = newValue.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
+
+      val errorMessage = RuntimeErrorMessage(
+        name="setCarImmutable",
+        text="(set-car!) attempted on pair literal"
+      )
+
+      plan.steps += ps.AssertPairMutable(worldPtr, pairTemp, errorMessage)
+      plan.steps += ps.SetPairCar(pairTemp, newValueTemp)
+
+      Some(PlanResult(
+        state=initialState,
+        value=iv.UnitValue
+      ))
+    
+    case ("set-cdr!", List((pairLoc, pairValue), (_, newValue))) =>
+      val pairTemp = LocateExceptionsWith(pairLoc) {
+        pairValue.toTempValue(vt.IntrinsicCellType(ct.PairCell))
+      }
+
+      val newValueTemp = newValue.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
+
+      val errorMessage = RuntimeErrorMessage(
+        name="setCdrImmutable",
+        text="(set-cdr!) attempted on pair literal"
+      )
+
+      plan.steps += ps.AssertPairMutable(worldPtr, pairTemp, errorMessage)
+      plan.steps += ps.SetPairCdr(pairTemp, newValueTemp)
+
+      Some(PlanResult(
+        state=initialState,
+        value=iv.UnitValue
+      ))
+
+    case ("cons", List((_, carValue), (_, cdrValue))) =>
+      val pairTemp = ps.CellTemp(ct.PairCell)
+
+      val carTemp = carValue.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
+      val cdrTemp = cdrValue.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
+
+      plan.steps += ps.InitPair(pairTemp)
+      plan.steps += ps.SetPairCar(pairTemp, carTemp)
+      plan.steps += ps.SetPairCdr(pairTemp, cdrTemp)
+
+      Some(PlanResult(
+        state=initialState,
+        value=TempValueToIntermediate(vt.IntrinsicCellType(ct.PairCell), pairTemp)
+      ))
 
     case _ =>
       None

@@ -514,6 +514,48 @@ case class Return(returnValue : Option[TempValue]) extends Step {
     Return(returnValue.map(f))
 }
 
+/** Initialises a new pair with an undefined car and cdr
+  *
+  * SetPairCar and SetPairCdr must be called on the new pair before it is accessed or the next GC barrier
+  */
+case class InitPair(result : TempValue) extends Step with CellConsumer {
+  val allocSize = 1
+
+  val inputValues = Set[TempValue]()
+  lazy val outputValues = Set(result)
+
+  def renamed(f : (TempValue) => TempValue) =
+    InitPair(f(result))
+}
+
+/** Asserts that a pair is mutable
+  *
+  * It is illegal to attempt SetPairCar or SetPairCdr on an immutable pair
+  */
+case class AssertPairMutable(worldPtr : WorldPtrValue, pairValue : TempValue, errorMessage : RuntimeErrorMessage) extends Step {
+  lazy val inputValues = Set[TempValue](worldPtr, pairValue)
+  val outputValues = Set[TempValue]()
+
+  def renamed(f: (TempValue) => TempValue) =
+    AssertPairMutable(worldPtr, f(pairValue), errorMessage)
+}
+
+case class SetPairCar(pairValue : TempValue, newValue : TempValue) extends Step {
+  lazy val inputValues = Set[TempValue](pairValue, newValue)
+  val outputValues = Set[TempValue]()
+  
+  def renamed(f : (TempValue) => TempValue) =
+    SetPairCar(f(pairValue), f(newValue))
+}
+
+case class SetPairCdr(pairValue : TempValue, newValue : TempValue) extends Step {
+  lazy val inputValues = Set[TempValue](pairValue, newValue)
+  val outputValues = Set[TempValue]()
+  
+  def renamed(f : (TempValue) => TempValue) =
+    SetPairCdr(f(pairValue), f(newValue))
+}
+
 /** Allocates data for a given record a given type 
  *
  * @param cellResult  location to store the record cell 
