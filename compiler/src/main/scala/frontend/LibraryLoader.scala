@@ -106,10 +106,8 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
       }
       else {
         // Don't attempt to parse the result for two reasons:
-        // 1) This is potentially slow and we'll need to do it again at include
-        //    time
-        // 2) It seems more natural for any parse etc. error to be reported at
-        //    (import) time than (cond-expand) time
+        // 1) This is potentially slow and we'll need to do it again at include time
+        // 2) It seems more natural for any parse etc. error to be reported at (import) time than (cond-expand) time
         IncludeLoader(includePath.librarySearchRoots, filename).isDefined
       }
     }

@@ -5,9 +5,8 @@ import llambda.compiler.SourceLocated
 
 /** Catches any UnlocatedSemanticExceptions and rethrows them with a location
   *
-  * This allows us to wrap code working with a single Expr in a large
-  * block without having to pass the Expr to every method that may throw
-  * a SemanticException
+  * This allows us to wrap code working with a single Expr in a large block without having to pass the Expr to every
+  * method that may throw a SemanticException
   */
 object LocateExceptionsWith {
   def apply[T](sourceLocated : SourceLocated)(block : => T) = {

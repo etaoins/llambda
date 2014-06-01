@@ -146,18 +146,16 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
   
   def preferredRepresentation : vt.ValueType = possibleTypes.toList match {
     case singleType :: Nil =>
-      // Even if our temp value is currently a supertype we know the cell
-      // itself has a more specific type
+      // Even if our temp value is currently a supertype we know the cell itself has a more specific type
       vt.IntrinsicCellType(singleType)
 
     case _ =>
       vt.IntrinsicCellType(cellType)
   }
   
-  // Store unboxed where possible to save GC overhead and potentially pack
-  // more values in the closure
-  // The lifetime of any cells we reference will be at least as long as the
-  // procedure cell itself so there's not much point storing them unboxed.
+  // Store unboxed where possible to save GC overhead and potentially pack more values in the closure
+  // The lifetime of any cells we reference will be at least as long as the procedure cell itself so there's not much
+  // point storing them unboxed.
   def closureRepresentation : Option[vt.ValueType] = Some(possibleTypes.toList match {
     case ct.ExactIntegerCell :: Nil => vt.Int64
     case ct.InexactRationalCell :: Nil => vt.Double

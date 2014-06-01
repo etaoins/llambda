@@ -5,8 +5,7 @@ import platform.TargetPlatform
 
 object FeatureIdentifiers {
   private def commonFeatures = Set(
-    // XXX: We aren't a full R7RS implementation but that's what we're
-    // targeting 
+    // XXX: We aren't a full R7RS implementation but that's what we're targeting 
     "r7rs",
 
     // We only support exact integers so don't define this
@@ -27,9 +26,8 @@ object FeatureIdentifiers {
     // We only target LLVM at the moment
     "llvm",
 
-    // XXX: It would be nice to run clang++ or llc to extract more CPU-specific
-    // feature identifiers from the target triple. It might not be worth the
-    // overhead without a specific use-case, however.
+    // XXX: It would be nice to run clang++ or llc to extract more CPU-specific feature identifiers from the target
+    // triple. It might not be worth the overhead without a specific use-case, however.
 
     "llambda",
     "llambda-0.0"

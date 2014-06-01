@@ -5,37 +5,30 @@ import llambda.compiler._
 
 // This handles quasiquotion based on a few premises:
 //
-// - Only (scheme base) procedures can be used. It would be nice to have both a
-//   (lists->vector) and a version of (list) that can return a constant list.
-//   However, it seems overkill to micro-optimize quasiquotion by introducing 
-//   custom runtime procedures at this point
+// - Only (scheme base) procedures can be used. It would be nice to have both a (lists->vector) and a version of (list)
+//   that can return a constant list. However, it seems overkill to micro-optimize quasiquotion by introducing custom 
+//   runtime procedures at this point
 //
-// - Quasiquoted lists and vectors without unquoting should be represented
-//   "for free" as literals
+// - Quasiquoted lists and vectors without unquoting should be represented "for free" as literals
 // 
 // - The number of procedure applications should be minimized
 // 
-// To implement this the expander first does a pass to build "segments". A 
-// segment is either completely constant (ConstantSegment), composed of 
-// expressions (DynamicSegment) or a procedure returning a list
-// (SplicedSegment, used to implement splicing). The only thing that can create 
-// a new segment is splicing which will terminate the previous segment and start
-// building a new one.
+// To implement this the expander first does a pass to build "segments". A segment is either completely constant
+// (ConstantSegment), composed of expressions (DynamicSegment) or a procedure returning a list (SplicedSegment, used
+// to implement splicing). The only thing that can create a new segment is splicing which will terminate the previous
+// segment and start building a new one.
 //
-// If an unquoted expression is encountered while building a ConstantSegment it
-// will be converted to a DynamicSegment where the previous constants are 
-// represented with et.Literal. If a quoted datum is encountered while building
-// a DynamicSegment it will be added directly as an et.Literal
+// If an unquoted expression is encountered while building a ConstantSegment it will be converted to a DynamicSegment
+// where the previous constants are represented with et.Literal. If a quoted datum is encountered while building a
+// DynamicSegment it will be added directly as an et.Literal
 //
-// After building the segments they are converted to the target collection type
-// using the abstract helper methods createConstantLiteral, createFromList and 
-// createFromElements. These are implemented in the concrete subclasses
+// After building the segments they are converted to the target collection type using the abstract helper methods
+// createConstantLiteral, createFromList and createFromElements. These are implemented in the concrete subclasses
 // ListQuasiquotationExpander and VectorQuasiquotationExpander. 
 //
-// There are a number of special cases that try to minimize the number of 
-// procedure applications required to expand the quasiquotation. The fallback
-// case simply converts every segment to a list, appends them to a final list,
-// and then calls createFromList
+// There are a number of special cases that try to minimize the number of procedure applications required to expand the
+// quasiquotation. The fallback case simply converts every segment to a list, appends them to a final list, and then
+// calls createFromList
 //
 abstract class QuasiquotationExpander(extractExpr : sst.ScopedDatum => et.Expr, schemeBase : Map[String, BoundValue]) {
   protected sealed abstract class QuasiquoteSegment

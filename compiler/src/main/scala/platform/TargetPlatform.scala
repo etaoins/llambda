@@ -21,9 +21,8 @@ trait TargetPlatform {
 
   /** Indicates if the platform uses natural alignment
     *
-    * If true, native types be aligned to a multiple of their sizes. If a more
-    * complex alignment is used this should be set to false to allow LLVM to
-    * handle data alignment.
+    * If true, native types be aligned to a multiple of their sizes. If a more complex alignment is used this should be
+    * set to false to allow LLVM to handle data alignment.
     */
   val usesNaturalAlignment : Boolean
 

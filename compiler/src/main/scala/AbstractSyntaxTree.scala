@@ -8,8 +8,7 @@ sealed abstract class Datum extends SourceLocated
  
 sealed abstract class Leaf extends Datum
 
-// This helps out ScopedSyntaxTree by grouping all the types that have scope
-// or contain datums with scope
+// This helps out ScopedSyntaxTree by grouping all the types that have scope or contain datums with scope
 sealed abstract class NonSymbolLeaf extends Leaf
 
 case class UnitValue() extends NonSymbolLeaf {
@@ -40,8 +39,7 @@ case class IntegerLiteral(value : Long) extends NumberLiteral {
 
 case class RationalLiteral(value : Double) extends NumberLiteral {
   // Consider all NaN literals to be equal
-  // This is different from numeric equality which indeed doesn't make sense
-  // for NaNs
+  // This is different from numeric equality which indeed doesn't make sense for NaNs
   override def equals(other : Any) : Boolean = other match {
     case RationalLiteral(otherValue) =>
       if (otherValue.isNaN) {

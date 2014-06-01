@@ -43,8 +43,7 @@ private[reducer] object ReduceApplication {
       false
   }
   
-  /** Returns true if we should inline an inlineable expression
-    */
+  /** Returns true if we should inline an inlineable expression */
   private def shouldInlineExpr(candidateExpr : et.Expr, allowNesting : Boolean = true) : Boolean = candidateExpr match {
     case et.InternalDefinition(bindings, bodyExpr) =>
       if (bindings.map(_._2).forall(exprIsTrivial)) {

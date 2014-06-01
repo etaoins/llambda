@@ -55,10 +55,9 @@ sealed trait Step {
   def renamed(f : (TempValue) => TempValue) : Step
 
   /** Indicates a step that can trigger a GC allocation
-   *
-   * This means the heap state has to be fully in sync - we can have no
-   * allocated but uninitialized conses, etc.
-   */
+    *
+    * This means the heap state has to be fully in sync - we can have no allocated but uninitialized conses, etc.
+    */
   def canAllocate : Boolean = false
 }
 
@@ -85,10 +84,9 @@ sealed trait MergeableStep extends Step {
 /** Argument passed to invoke
   *
   * @param  tempValue  Value to pass as the argument
-  * @param  dispose    If true the value is disposed after being passed to the
-  *                    procedure. This effectively transfers ownership of the
-  *                    value to the procedure and avoids the overhead of GC 
-  *                    rooting the value by the caller.
+  * @param  dispose    If true the value is disposed after being passed to the procedure. This effectively transfers
+  *                    ownership of the value to the procedure and avoids the overhead of GC rooting the value by the
+  *                    caller.
   */
 case class InvokeArgument(
   tempValue : TempValue,
@@ -133,9 +131,8 @@ case class AllocateCells(worldPtr : WorldPtrValue, count : Int) extends Step {
 
 /** Permanently forgets about a temp value
   *
-  * Referencing a TempValue after DisposeValue has been called will fail at
-  * compile time. Disposing a GC managed value will allow it to be garbage
-  * collected at the next allocaion if there are no other references to it
+  * Referencing a TempValue after DisposeValue has been called will fail at compile time. Disposing a GC managed value
+  * will allow it to be garbage collected at the next allocaion if there are no other references to it
   */
 case class DisposeValue(value : TempValue) extends Step {
   lazy val inputValues = Set[TempValue](value)
@@ -364,9 +361,8 @@ case class StoreEmptyListCell(result : TempValue) extends StoreConstantCell {
 
 /** Stores a procedure with an empty closure 
   *
-  * This is equalivent to RecordLikeInit(vt.EmptyClosureType] followed by
-  * StoreProcedureEntryPoint except it uses a compile time constani cell and 
-  * is considerably more efficient
+  * This is equalivent to RecordLikeInit(vt.EmptyClosureType] followed by StoreProcedureEntryPoint except it uses a
+  * compile time constant cell and is considerably more efficient
   **/
 case class StoreEmptyClosure(result : TempValue, entryPoint : TempValue) extends StoreConstantCell {
   lazy val inputValues = Set(entryPoint)
@@ -688,7 +684,7 @@ object CompareCond {
 /** Compares two integers and stores a predicate with the result
   *
   * This can also be used to compare two pointers of the same type, GC managed or otherwise.
-  **/
+  */
 case class IntegerCompare(result : TempValue, cond : CompareCond.CompareCond, signed : Option[Boolean], val1 : TempValue, val2 : TempValue) extends Step with MergeableStep {
   lazy val inputValues = Set[TempValue](val1, val2)
   lazy val outputValues = Set[TempValue](result)

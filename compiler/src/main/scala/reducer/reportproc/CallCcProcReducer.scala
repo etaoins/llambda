@@ -17,11 +17,10 @@ object CallCcProcReducer extends ReportProcReducer {
       nonRef.subexprs.exists(storageLocReferencedByExpr(storageLoc, _))
   }
   
-  /**
-   * Replaces any top-level et.Return() expressions with the returned expression and drops the rest of the body 
-   *
-   * This is important as et.Return() is difficult for the reducer and later passes to statically reason about
-   */
+  /** Replaces any top-level et.Return() expressions with the returned expression and drops the rest of the body 
+    *
+    * This is important as et.Return() is difficult for the reducer and later passes to statically reason about
+    */
   @tailrec
   private def convertUnconditionalReturn(bodyExprs : List[et.Expr], acc : List[et.Expr] = List()) : List[et.Expr] = bodyExprs match {
     case et.Return(returnedExpr) :: discaredTail =>

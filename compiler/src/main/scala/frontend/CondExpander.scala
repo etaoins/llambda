@@ -36,8 +36,8 @@ private[frontend] object CondExpander {
   def apply(clauseList : List[sst.ScopedDatum])(implicit libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : List[sst.ScopedDatum] = clauseList match {
     case Nil => 
       // No clauses left; expand to nothing. 
-      // The behaviour here is left open by R7RS but expanding to nothing will
-      // evalute to #!unit after being wrapped in an et.Begin which seems sane.
+      // The behaviour here is left open by R7RS but expanding to nothing will  evalute to #!unit after being wrapped
+      // in an et.Begin which seems sane.
       Nil
 
     case sst.ScopedProperList((elseSymbol @ sst.ScopedSymbol(_, "else")) :: expandData) :: tailClauses =>

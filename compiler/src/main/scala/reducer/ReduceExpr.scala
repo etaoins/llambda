@@ -19,9 +19,11 @@ private[reducer] object ReduceExpr {
       et.Expr.fromSequence(newExprs)
   }
 
-  /**
-   * Reduces an expression to the simplest form possible while preserving meaning
-   */
+  /** Reduces an expression to a simpler form while preserving meaning
+    *
+    * This works by recursively performing partial evaluation on expressions in an attempt to reduce the amount of
+    * work that needs to be done at runtime.
+    */
   def apply(expr : et.Expr)(implicit reduceConfig : ReduceConfig) : et.Expr = (expr match {
     case begin : et.Begin =>
       val mappedExprs = begin.toSequence.map(apply)

@@ -38,8 +38,7 @@ object GenPlanStep {
   def apply(state : GenerationState, plannedSymbols : Set[String], typeGenerator : TypeGenerator)(step : ps.Step) : GenResult = step match {
     case ps.AllocateCells(worldPtrTemp, count) =>
       if (!state.currentAllocation.isEmpty) {
-        // This is not only wasteful but dangerous as the previous allocation
-        // won't be fully initialized
+        // This is not only wasteful but dangerous as the previous allocation won't be fully initialized
         throw new InternalCompilerErrorException("Attempted cell allocation without fully consuming previous allocation")
       }
 

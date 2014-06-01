@@ -14,11 +14,9 @@ import llambda.compiler.RuntimeErrorMessage
 
 /** Plans a trampoline for the passed procedure 
   * 
-  * All trampolines have AdaptedProcedureSignature which means they can be
-  * called without knowing the signature of the underlying procedure. It is 
-  * assumed the argument list a proper list; it is inappropriate to pass user
-  * provided arguments lists to a trampoline without confirming the list is
-  * proper beforehand.
+  * All trampolines have AdaptedProcedureSignature which means they can be called without knowing the signature of the
+  * underlying procedure. It is assumed the argument list a proper list; it is inappropriate to pass user provided
+  * arguments lists to a trampoline without confirming the list is proper beforehand.
   */
 private[intermediatevalue] object PlanProcedureTrampoline {
   def apply(signature : ProcedureSignature, nativeSymbol : String)(implicit parentPlan : PlanWriter) : PlannedFunction = {

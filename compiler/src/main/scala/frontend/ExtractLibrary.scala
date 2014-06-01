@@ -41,8 +41,8 @@ private[frontend] object ExtractLibrary {
       }
 
       // Expand both types of includes in our first pass
-      // Construct the proper include path at the same time so second-order
-      // includes from these includes are pathed properly
+      // Construct the proper include path at the same time so second-order  includes from these includes are pathed
+      // properly
       val expandedDecls = decls.flatMap(expandIncludeDecls(_)(frontendConfig.includePath))
 
       // Library bodies seems to be mostly order-indepenent. This is annoying

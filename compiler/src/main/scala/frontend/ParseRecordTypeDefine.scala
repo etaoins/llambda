@@ -20,8 +20,7 @@ private[frontend] object ParseRecordTypeDefine {
   private def parseFields(typeSymbol : sst.ScopedSymbol, fieldData : List[sst.ScopedDatum]) : ListMap[sst.ScopedSymbol, ParsedField] =
     fieldData.foldLeft(ListMap[sst.ScopedSymbol, ParsedField]()) {
       case (parsedFields, fieldDatum @ sst.ScopedProperList(fieldDefDatum :: procedureData)) =>
-        // We can either be just a symbol and have no type or we can be a
-        // Scala/Racket style (symbol : <type>)
+        // We can either be just a symbol and have no type or we can be a Scala/Racket style (symbol : <type>)
         // This is a compatible extension to R7RS
         val (fieldNameSymbol, fieldType) = fieldDefDatum match {
           case nameSymbol : sst.ScopedSymbol => 
@@ -131,8 +130,8 @@ private[frontend] object ParseRecordTypeDefine {
       }).toList
       
       // Check for duplicate accessor or mutator procedures
-      // R7RS only specifies that accessor and mutators must be unique. We
-      // intentionally ignore the predicate and constructor procedure here.
+      // R7RS only specifies that accessor and mutators must be unique. We intentionally ignore the predicate and
+      // constructor procedure here.
       (accessorProcedures ++ mutatorProcedures).map(_._1).foldLeft(Set[sst.ScopedSymbol]()) { (seenSymbols, procSymbol) =>
         if (seenSymbols.contains(procSymbol)) {
           throw new BadSpecialFormException(procSymbol, "Duplicate record type procedure")

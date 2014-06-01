@@ -14,11 +14,10 @@ case class IncludePath(
   def librarySearchRoots : Seq[URL] = 
     (packageRootDir.toSeq ++ userConfiguredPaths ++ IncludePath.systemLibraryPaths).distinct
 
-  // Only allow (include)s relative to the current file and the user configured 
-  // paths. To include from the program root dir either relative paths or
-  // proper libraries can be used.
-  // Don't allow includes from the system library path. Any include files are
-  // intended for internal use only and will be relative to the including file.
+  // Only allow (include)s relative to the current file and the user configured  paths. To include from the program
+  // root dir either relative paths or proper libraries can be used.
+  // Don't allow includes from the system library path. Any include files are  intended for internal use only and will
+  // be relative to the including file.
   def includeSearchRoots : Seq[URL] =
     (fileParentDir.toSeq ++ userConfiguredPaths).distinct
 }

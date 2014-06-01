@@ -14,11 +14,10 @@ sealed abstract trait Expr extends SourceLocated {
   }
 }
 
-/**
- * Represents any expression except for Literal
- *
- * This is used by PartialValue in the reducer
- */
+/** Represents any expression except for Literal
+  *
+  * This is used by reducer.PartialValue to define ReducedExpr
+  */
 sealed abstract trait NonLiteralExpr extends Expr
 
 object Expr {
@@ -151,9 +150,7 @@ case class Parameterize(parameterValues : List[(Expr, Expr)], body : Expr) exten
   }
 }
 
-/**
- * Returns from the current lambda
- */
+/** Returns from the current lambda with the given value */
 case class Return(value : Expr) extends NonLiteralExpr {
   lazy val subexprs = List(value)
 

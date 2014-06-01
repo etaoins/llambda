@@ -123,8 +123,7 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
 
   private def createLambda(fixedArgData : List[sst.ScopedDatum], restArgDatum : Option[sst.ScopedSymbol], definition : List[sst.ScopedDatum]) : et.Lambda = {
     // Create our actual procedure arguments
-    // These unique identify the argument independently of its binding at a
-    // given time
+    // These unique identify the argument independently of its binding at a given time
 
     // Determine our arguments
     val fixedArgs = fixedArgData.map {
@@ -149,9 +148,8 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
 
     val includeExprs = includeResults flatMap { result =>
       // XXX: Should we disallow body defines here in a non-body context?
-      // R7RS says (include) should act like a (begin) with the contents of the
-      // files. Its example definition of (begin) uses a self-executing lambda
-      // which would create a body context. This seems to imply this is allowed.
+      // R7RS says (include) should act like a (begin) with the contents of the files. Its example definition of (begin)
+      // uses a self-executing lambda which would create a body context. This seems to imply this is allowed.
       val innerConfig = frontendConfig.copy(
         includePath=result.innerIncludePath
       )
@@ -260,8 +258,7 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
   private def parseDefineDatum(datum : sst.ScopedDatum) : Option[ParsedDefine] = datum match {
     // Could this be define-y?
     case sst.ScopedProperList((appliedSymbol : sst.ScopedSymbol) :: operands) =>
-      // Don't do a hard resolve here in case we're referencing something
-      // we haven't defined yet
+      // Don't do a hard resolve here in case we're referencing something we haven't defined yet
       appliedSymbol.resolveOpt flatMap { boundValue =>
         parseDefine(boundValue, appliedSymbol, operands)
       }
@@ -316,8 +313,8 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
         throw new DefinitionOutsideTopLevelException(appliedSymbol)
 
       case Some(ParsedVarDefine(symbol, boundValue, exprBlock)) =>
-        // There's a wart in Scheme that allows a top-level (define) to become
-        // a (set!) if the value is already defined as a storage location
+        // There's a wart in Scheme that allows a top-level (define) to become a (set!) if the value is already defined
+        // as a storage location
         symbol.resolveOpt match {
           case Some(storageLoc : StorageLocation) =>
             // Convert this to a (set!)

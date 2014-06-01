@@ -3,9 +3,7 @@ import io.llambda
 
 import llambda.llvmir._
 
-/**
- * Helper functions related to the World object
- */
+/** Helper functions related to the World object */
 object WorldValue extends StructureValue("world") {
   val cellPointerIrType = PointerType(UserDefinedType("cell"))
 

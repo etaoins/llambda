@@ -25,8 +25,7 @@ class TypeGenerator(module : IrModuleBuilder, targetPlatform : TargetPlatform, v
   private var nextClassId : Long = 0
 
   // Ensure empty closures always have class ID 0
-  // This is to implement eqv? properly for closureless procedures boxed in
-  // different locations 
+  // This is to implement eqv? properly for closureless procedures boxed in different locations 
   apply(vt.EmptyClosureType)
 
   def apply(recordLikeType : vt.RecordLikeType) : GeneratedType = {
@@ -41,8 +40,7 @@ class TypeGenerator(module : IrModuleBuilder, targetPlatform : TargetPlatform, v
             // Records have two pointer sized fields for inline data storage
             2
           case _ : vt.ClosureType =>
-            // Procedures have one pointer for inline storage. The second
-            // pointer points to the procedure's entry point
+            // Procedures have one pointer for inline storage. The second pointer points to the procedure's entry point
             1
         }) * (targetPlatform.pointerBits / 8) 
 
@@ -76,8 +74,7 @@ class TypeGenerator(module : IrModuleBuilder, targetPlatform : TargetPlatform, v
         nextTbaaIndex = nextTbaaIndex + 1
 
         // Each field cannot be aliased with any other fields
-        // If we allow toll-free briding with C structs we'll need to loosen
-        // this at least for them
+        // If we allow toll-free briding with C structs we'll need to loosen this at least for them
         val nodeName = s"${recordTypeName}::${field.sourceName}"
         module.defineTbaaNode(IrTbaaNode(tbaaIndex, nodeName))
 
@@ -106,8 +103,7 @@ class TypeGenerator(module : IrModuleBuilder, targetPlatform : TargetPlatform, v
       val recordLikeType = generatedType.recordLikeType
       val recordCellNullPointer = NullPointerConstant(PointerType(generatedType.irType))
 
-      // Generate an expression for the offset of each field that points to a
-      // cell
+      // Generate an expression for the offset of each field that points to a cell
       val cellOffsets = recordLikeType.fields.zipWithIndex.filter({ case (field, _) =>
         // We only want value cell types
         field.fieldType.isInstanceOf[vt.CellValueType]
@@ -141,8 +137,8 @@ class TypeGenerator(module : IrModuleBuilder, targetPlatform : TargetPlatform, v
         // Define it
         val typeMapName = module.nameSource.allocate(recordLikeType.sourceName + "Map")
 
-        // XXX: Clang 3.3 doesn't actually merge these constants. We should
-        // investigate doing merging of obviously identical maps ourselves
+        // XXX: Clang 3.3 doesn't actually merge these constants. We should investigate doing merging of obviously
+        // identical maps ourselves
         val typeMapDef = IrGlobalVariableDef(
           name=typeMapName,
           initializer=cellOffsetsConstant,

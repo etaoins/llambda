@@ -106,18 +106,16 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
 
   /** Returns the preferred type to represent this value
     * 
-    * For realized values this will be the type of the TempValue. For unrealized
-    * values such as constants and known procedures this will be the type
-    * that can specifically represent the value with the minimum of boxing
-    * and conversion.
+    * For realized values this will be the type of the TempValue. For unrealized values such as constants and known
+    * procedures this will be the type that can specifically represent the value with the minimum of boxing and
+    * conversion.
     */
   def preferredRepresentation : vt.ValueType
 
-  /** Returns the type that should be used to capture this value inside a 
-    * closure
+  /** Returns the type that should be used to capture this value inside a closure
     *
-    * If None is returned the value does not need to be captured and can instead 
-    * be used directly without storing any data in the closure.
+    * If None is returned the value does not need to be captured and can instead be used directly without storing any
+    * data in the closure.
     */
   def closureRepresentation : Option[vt.ValueType]
 

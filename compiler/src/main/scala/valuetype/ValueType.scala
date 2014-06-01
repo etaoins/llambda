@@ -5,9 +5,8 @@ import llambda.compiler.{celltype => ct}
 
 /** Type of any value known to the compiler
   * 
-  * These are more specific than the types defined in R7RS in that they define
-  * both the semantic type and the runtime representation. For example, Int32
-  * and IntrinsicCellType(ct.ExactIntegerCell) are both exact integers but have
+  * These are more specific than the types defined in R7RS in that they define both the semantic type and the runtime
+  * representation. For example, Int32 and IntrinsicCellType(ct.ExactIntegerCell) are both exact integers but have
   * different native representations.
   */
 sealed abstract class ValueType {
@@ -23,9 +22,8 @@ sealed abstract trait CellValueType extends PointerType
 
 /** Intrinsic types known by the compiler backend
   *
-  * Note that some types that seem builtin might in fact be based off other
-  * types in the frontend, typically using records. For example, the SRFI 111
-  * "box" type is implemented as a single field record. These are not consider
+  * Note that some types that seem builtin might in fact be based off other types in the frontend, typically using
+  * records. For example, the SRFI 111 "box" type is implemented as a single field record. These are not considered
   * intrinsic as the backend does not distinguish them from user-defined types.
   */
 sealed abstract trait IntrinsicType extends ValueType
@@ -97,9 +95,8 @@ case class IntrinsicCellType(cellType : ct.CellType) extends IntrinsicType with 
 
 /** Identifies a record field
   *
-  * This is not a case class because a field with the same source name and type 
-  * can be distinct if it's declared in another record type. It's even possible
-  * for one type to have fields with the same source name if they come from
+  * This is not a case class because a field with the same source name and type can be distinct if it's declared in
+  * another record type. It's even possible for one type to have fields with the same source name if they come from
   * different scopes.
   */
 class RecordField(val sourceName : String, val fieldType : ValueType)
@@ -114,8 +111,7 @@ sealed abstract class RecordLikeType extends CellValueType {
 
 /** Pointer to a garabge collected value cell containing a user-defined record type
   * 
-  * This uniquely identifies a record type even if has the same name and internal
-  * structure as another type 
+  * This uniquely identifies a record type even if has the same name and internal structure as another type 
   */
 class RecordType(val sourceName : String, val fields : List[RecordField]) extends RecordLikeType {
   val cellType = ct.RecordCell
@@ -124,10 +120,9 @@ class RecordType(val sourceName : String, val fields : List[RecordField]) extend
 
 /** Pointer to a closure type
   *
-  * Closure types store the data needed for a procedure from its parent
-  * lexical scope. The storage is internally implemented identically to 
-  * user-defined record types.
-  **/
+  * Closure types store the data needed for a procedure from its parent lexical scope. The storage is internally
+  * implemented identically to user-defined record types.
+  */
 class ClosureType(val sourceName : String, val fields : List[RecordField]) extends RecordLikeType {
   val cellType = ct.ProcedureCell
   val schemeName = "<internal-closure-type>"

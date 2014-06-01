@@ -70,8 +70,8 @@ object PackRecordLikeInline {
     // See the comments below
     if (fieldsWithSizes.map(_._2).forall(isPowerOfTwo(_))) {
       // Sort the fields by size in descending order
-      // If every field is naturally aligned and its size is a power of two then
-      // this will pack the values in to an optimal size
+      // If every field is naturally aligned and its size is a power of two then this will pack the values in to an
+      // optimal size
       val candidateOrder = recordFields.sortBy { field =>
         -targetPlatform.bytesForType(field.fieldType)
       }

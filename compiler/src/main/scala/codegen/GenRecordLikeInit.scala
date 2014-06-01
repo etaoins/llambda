@@ -36,8 +36,8 @@ object GenRecordLikeInit {
       case TypeDataStorage.Inline =>
         cellType.genStoreToDataIsInline(block)(IntegerConstant(cellType.dataIsInlineIrType, 1), recordCell)
 
-        // Store the value inline in the cell on top of the recordData field
-        // instead of going through another level of indirection
+        // Store the value inline in the cell on top of the recordData field instead of going through another level of
+        // indirection
         cellType.genPointerToRecordData(block)(recordCell)
 
       case TypeDataStorage.OutOfLine =>

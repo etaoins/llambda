@@ -109,10 +109,8 @@ private[planner] object PlanBind {
         // Send a hint about our name
         val reportNamedValue = (initialValueResult.value, storageLoc) match {
           case (knownProc : iv.KnownProcedure, reportProc : ReportProcedure) =>
-            // Annotate with our report name so we can optimize when we try
-            // to apply this
-            // Note this is agnostic to if the implementation is a native
-            // function versus a Scheme procedure
+            // Annotate with our report name so we can optimize when we try to apply this
+            // Note this is agnostic to if the implementation is a native function versus a Scheme procedure
             knownProc.withReportName(reportProc.reportName)
 
           case (otherValue, _) =>

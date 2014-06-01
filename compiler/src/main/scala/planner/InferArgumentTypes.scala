@@ -45,8 +45,7 @@ object InferArgumentTypes {
         // we found an unconditional checked subtype cast!
 
         // It's valid for future steps to use the original <datum-cell> value
-        // Casting to the supertype is free so make a <datum-cell> available under
-        // the original TempValue
+        // Casting to the supertype is free so make a <datum-cell> available under the original TempValue
         val supercastStep = ps.CastCellToTypeUnchecked(value, result, ct.DatumCell)
 
         RetypingResult(
@@ -56,8 +55,8 @@ object InferArgumentTypes {
         )
 
       case (condStep : ps.CondBranch) :: tailSteps if stepCanTerminate(condStep) =>
-        // If one side of the branch terminates then we can't be sure the cast
-        // to subtype will be unconditionally executed.
+        // If one side of the branch terminates then we can't be sure the cast to subtype will be unconditionally
+        // executed.
         abortRetyping
 
       case userStep :: tailSteps if userStep.inputValues.contains(argValue) =>
@@ -81,10 +80,8 @@ object InferArgumentTypes {
 
   private def worldPtrUsedByStep(worldPtrTemp : ps.TempValue, step : ps.Step) : Boolean = step match {
     case consumer : ps.CellConsumer =>
-      // This sucks - there are no explicit allocation steps until 
-      // PlanCellAllocations runs which is the last phase of planning. We have
-      // to implicitly know CellConsumers will generate steps requiring the 
-      // world pointer
+      // This sucks - there are no explicit allocation steps until PlanCellAllocations runs which is the last phase of
+      // planning. We have to implicitly know CellConsumers will generate steps requiring the world pointer
       true
 
     case condStep : ps.CondBranch =>

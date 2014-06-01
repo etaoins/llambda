@@ -24,8 +24,8 @@ trait IntermediateCellValue extends IntermediateValue {
     // Are our possible concrete types a subset of the target types?
     if (possibleTypes.subsetOf(targetConcreteTypes)) {
       // Need to cast to the right type
-      // We've confirmed that no checking is needed because all of our 
-      // possible types are equal to or supertypes of the target type
+      // We've confirmed that no checking is needed because all of our possible types are equal to or supertypes of the
+      // target type
       cellTempToSupertype(tempValue, cellType, targetType) 
     }
     else if (!possibleTypes.intersect(targetConcreteTypes).isEmpty) {
