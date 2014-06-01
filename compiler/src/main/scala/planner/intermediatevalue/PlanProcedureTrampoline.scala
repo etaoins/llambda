@@ -69,7 +69,7 @@ private[intermediatevalue] object PlanProcedureTrampoline {
       argTemps += argTemp
 
       // Now load the cdr
-      val argCdrTemp = ps.CellTemp(ct.ListElementCell)
+      val argCdrTemp = ps.CellTemp(ct.DatumCell)
       plan.steps += ps.StorePairCdr(argCdrTemp, argPairTemp)
 
       // We know this is a list element but its type will be DatumCell
