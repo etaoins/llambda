@@ -10,11 +10,11 @@ object NumberProcReducer extends ReportProcReducer {
     def accumulateInexact(acc : Double, newValue : Double) : Double
     def reduceExactAndInexact(exact : Long, inexact : Double) : Double
 
-    def apply(appliedVar : ReportProcedure, operands : List[et.Expression])(implicit reduceConfig : ReduceConfig) : et.Expression = {
+    def apply(appliedVar : ReportProcedure, operands : List[et.Expr])(implicit reduceConfig : ReduceConfig) : et.Expr = {
       case class MathAcc(
         exactValue : Long,
         inexactValueOpt : Option[Double] = initialInexactValueOpt,
-        nonLiterals : List[et.Expression] = Nil
+        nonLiterals : List[et.Expr] = Nil
       )
 
       val initialAcc = MathAcc(
@@ -23,7 +23,7 @@ object NumberProcReducer extends ReportProcReducer {
       )
 
       val finalAcc = operands.foldLeft(initialAcc) { case (acc, operandExpr) =>
-        LiteralForExpression(operandExpr) match {
+        LiteralForExpr(operandExpr) match {
           case Some(ast.IntegerLiteral(exactValue)) =>
             acc.copy(
               exactValue=accumulateExact(acc.exactValue, exactValue)
@@ -74,8 +74,8 @@ object NumberProcReducer extends ReportProcReducer {
     def compareExact(left : Long, right : Long) : Boolean
     def compareInexact(left : Double, right : Double) : Boolean
     
-    def apply(operands : List[et.Expression])(implicit reduceConfig : ReduceConfig) : Option[et.Expression] = {
-      val literalOperands = operands.map(LiteralForExpression(_))
+    def apply(operands : List[et.Expr])(implicit reduceConfig : ReduceConfig) : Option[et.Expr] = {
+      val literalOperands = operands.map(LiteralForExpr(_))
 
       val exactOperandValues = literalOperands.collect { 
         case Some(ast.IntegerLiteral(exactValue)) =>
@@ -112,8 +112,8 @@ object NumberProcReducer extends ReportProcReducer {
     }
   }
 
-  private def numericValueOfExpr(expr : et.Expression)(implicit reduceConfig : ReduceConfig) : Option[Double] = {
-    LiteralForExpression(expr) match {
+  private def numericValueOfExpr(expr : et.Expr)(implicit reduceConfig : ReduceConfig) : Option[Double] = {
+    LiteralForExpr(expr) match {
       case Some(ast.IntegerLiteral(exactValue)) =>
         Some(exactValue.toLong)
 
@@ -125,7 +125,7 @@ object NumberProcReducer extends ReportProcReducer {
     }
   }
 
-  def apply(appliedVar : ReportProcedure, operands : List[et.Expression])(implicit reduceConfig : ReduceConfig) : Option[et.Expression] = (appliedVar.reportName, operands) match {
+  def apply(appliedVar : ReportProcedure, operands : List[et.Expr])(implicit reduceConfig : ReduceConfig) : Option[et.Expr] = (appliedVar.reportName, operands) match {
     case ("number?", List(singleExpr)) =>
       literalPredicate(singleExpr, { literal =>
         literal.isInstanceOf[ast.IntegerLiteral] || literal.isInstanceOf[ast.RationalLiteral]
@@ -137,7 +137,7 @@ object NumberProcReducer extends ReportProcReducer {
       })
     
     case ("zero?", List(singleExpr)) =>
-      LiteralForExpression(singleExpr) match {
+      LiteralForExpr(singleExpr) match {
         case Some(ast.IntegerLiteral(exactValue)) =>
           Some(et.Literal(
             ast.BooleanLiteral(exactValue == 0)
@@ -180,7 +180,7 @@ object NumberProcReducer extends ReportProcReducer {
       None
 
     case ("-", List(singleOperand)) =>
-      LiteralForExpression(singleOperand) match {
+      LiteralForExpr(singleOperand) match {
         case Some(ast.IntegerLiteral(exactValue)) =>
           Some(et.Literal(ast.IntegerLiteral(-exactValue)))
         
@@ -203,7 +203,7 @@ object NumberProcReducer extends ReportProcReducer {
           val1 + val2
       }
       
-      LiteralForExpression(startValue) match {
+      LiteralForExpr(startValue) match {
         case Some(ast.IntegerLiteral(exactValue)) =>
           Some((new SubtractOperandProcessor(exactValue, None))(appliedVar, restOperands))
 

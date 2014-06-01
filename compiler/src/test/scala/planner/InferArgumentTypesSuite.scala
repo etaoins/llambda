@@ -49,7 +49,7 @@ class InferArgumentTypesSuite  extends FunSuite {
 
     val loader = new frontend.LibraryLoader(compileConfig.targetPlatform)
     val expressions = frontend.ExtractProgram(data)(loader, frontendConfig)
-    val analysis = reducer.AnalyseExpressions(expressions)
+    val analysis = reducer.AnalyseExprs(expressions)
 
     val planConfig = planner.PlanConfig(
       optimize=true,

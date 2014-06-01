@@ -6,10 +6,10 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler._
 
-class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExpressionHelpers with Inside {
+class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with Inside {
   // We need NFI for types and SchemePrimitives for (define-record-type)
   val baseScope = {
-    val allBindings = testutil.NfiExports() ++ PrimitiveExpressions.bindings
+    val allBindings = testutil.NfiExports() ++ PrimitiveExprs.bindings
     new Scope(collection.mutable.Map(allBindings.toSeq : _*))
   }
 

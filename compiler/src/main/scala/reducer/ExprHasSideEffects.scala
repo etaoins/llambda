@@ -4,8 +4,8 @@ import io.llambda
 import io.llambda.compiler._
 import reportproc.{ProcHasSideEffects => ReportProcHasSideEffects}
 
-private[reducer] object ExprHasSideEffects extends ((et.Expression) => Boolean) {
-  def apply(expr : et.Expression) : Boolean = expr match {
+private[reducer] object ExprHasSideEffects extends ((et.Expr) => Boolean) {
+  def apply(expr : et.Expr) : Boolean = expr match {
     case _ : et.VarRef =>
       false
 
@@ -37,7 +37,7 @@ private[reducer] object ExprHasSideEffects extends ((et.Expression) => Boolean) 
 
     case internalDefine : et.InternalDefinition =>
       // Internal definitions are pure as long as all the bound values and body expressions are pure
-      internalDefine.subexpressions.exists(ExprHasSideEffects)
+      internalDefine.subexprs.exists(ExprHasSideEffects)
 
     case _ : et.Return =>
       // Returns have the side effect of causing control flow

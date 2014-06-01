@@ -4,7 +4,7 @@ import io.llambda
 import llambda.compiler._
 
 object DropUnusedDefines {
-  def apply(expr : et.Expression, usedStorageLocs : Set[StorageLocation]) : Option[et.Expression] = expr match {
+  def apply(expr : et.Expr, usedStorageLocs : Set[StorageLocation]) : Option[et.Expr] = expr match {
     case et.TopLevelDefinition(bindings) =>
       val usedBindings = bindings.filter { case (storageLoc, initializer) =>
         usedStorageLocs.contains(storageLoc) || ExprHasSideEffects(initializer)

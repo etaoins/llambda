@@ -4,9 +4,9 @@ import io.llambda
 import io.llambda.compiler._
 import io.llambda.compiler.reducer.{partialvalue => pv}
 
-object ReduceExpressions {
-  def apply(analysis : AnalysedExpressions) : et.Expression = {
-    val exprs = analysis.usedTopLevelExpressions
+object ReduceExprs {
+  def apply(analysis : AnalysedExprs) : et.Expr = {
+    val exprs = analysis.usedTopLevelExprs
 
     val topLevelReduceConfig = ReduceConfig(
       analysis=analysis
@@ -19,8 +19,8 @@ object ReduceExpressions {
     }
 
     val initialKnownValues = usedTopLevelBindings.mapValues { initializer =>
-      pv.PartialValue.fromReducedExpression(
-        ReduceExpression(initializer)(topLevelReduceConfig)
+      pv.PartialValue.fromReducedExpr(
+        ReduceExpr(initializer)(topLevelReduceConfig)
       )
     }
 
@@ -28,6 +28,6 @@ object ReduceExpressions {
       knownValues=initialKnownValues
     )
 
-    ReduceExpression(et.Begin(exprs))(reduceConfig)
+    ReduceExpr(et.Begin(exprs))(reduceConfig)
   }
 }

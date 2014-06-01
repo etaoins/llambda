@@ -6,21 +6,21 @@ import llambda.compiler.SourceLocated
 
 sealed abstract class PartialValue extends SourceLocated {
   def toDatumOpt : Option[ast.Datum]
-  def toExpressionOpt : Option[et.Expression]
+  def toExprOpt : Option[et.Expr]
 }
 
-case class ReducedExpression(expr : et.NonLiteralExpression) extends PartialValue {
+case class ReducedExpr(expr : et.NonLiteralExpr) extends PartialValue {
   // This is a non-literal
   // By definition it has no known datum value
   def toDatumOpt : Option[ast.Datum] = None
-  def toExpressionOpt = Some(expr)
+  def toExprOpt = Some(expr)
 }
 
 case class LiteralLeaf(literal : ast.Leaf) extends PartialValue {
   def toDatumOpt : Option[ast.Datum] =
     Some(literal)
 
-  def toExpressionOpt =
+  def toExprOpt =
     Some(et.Literal(literal))
 }
 
@@ -31,7 +31,7 @@ case class PartialPair(partialCar : PartialValue, partialCdr : PartialValue) ext
   }
 
   // We refuse to call (car) to construct a pair
-  def toExpressionOpt =
+  def toExprOpt =
     toDatumOpt.map(et.Literal(_))
 }
 
@@ -51,7 +51,7 @@ case class PartialVector(partialElements : Vector[PartialValue]) extends Partial
   }
   
   // We refuse to call (vector) to construct a vector
-  def toExpressionOpt =
+  def toExprOpt =
     toDatumOpt.map(et.Literal(_))
 }
 
@@ -80,9 +80,9 @@ object PartialValue {
       PartialVector(elements.map(fromDatum))
   })
 
-  def fromReducedExpression(expr : et.Expression) = expr match {
-    case nonLiteralExpr : et.NonLiteralExpression =>
-      ReducedExpression(nonLiteralExpr)
+  def fromReducedExpr(expr : et.Expr) = expr match {
+    case nonLiteralExpr : et.NonLiteralExpr =>
+      ReducedExpr(nonLiteralExpr)
 
     case et.Literal(literalDatum) =>
       PartialValue.fromDatum(literalDatum)

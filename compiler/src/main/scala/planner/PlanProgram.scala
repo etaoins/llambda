@@ -6,7 +6,7 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.codegen.LlambdaExecSignature
 
 object PlanProgram {
-  def apply(exprs : List[et.Expression])(planConfig : PlanConfig) : Map[String, PlannedFunction] = {
+  def apply(exprs : List[et.Expr])(planConfig : PlanConfig) : Map[String, PlannedFunction] = {
     val worldTemp = new ps.WorldPtrValue
 
     val emptyState = PlannerState(
@@ -15,7 +15,7 @@ object PlanProgram {
 
     val plan = PlanWriter()
       
-    PlanExpression(emptyState)(et.Begin(exprs))(planConfig, plan)
+    PlanExpr(emptyState)(et.Begin(exprs))(planConfig, plan)
 
     // __llambda_exec is a void function
     plan.steps += ps.Return(None)

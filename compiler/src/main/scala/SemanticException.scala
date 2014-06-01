@@ -36,7 +36,7 @@ class NoSyntaxRuleException(located : SourceLocated, message : String) extends L
   val semanticErrorType = "no syntax rule"
 }
 
-class MalformedExpressionException(located : SourceLocated, message : String) extends LocatedSemanticException(located, message) {
+class MalformedExprException(located : SourceLocated, message : String) extends LocatedSemanticException(located, message) {
   val semanticErrorType = "malformed expression"
 }
 

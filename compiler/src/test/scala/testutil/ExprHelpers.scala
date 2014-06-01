@@ -6,7 +6,7 @@ import org.scalatest.{FunSuite,OptionValues}
 import llambda.compiler._
 import llambda.compiler.frontend.{LibraryLoader, IncludePath}
 
-trait ExpressionHelpers extends FunSuite with OptionValues {
+trait ExprHelpers extends FunSuite with OptionValues {
   // Resolve imports relative to /
   // This corresponds to src/test/scheme in our source
   val resourceBaseUrl = getClass.getClassLoader.getResource("")
@@ -26,7 +26,7 @@ trait ExpressionHelpers extends FunSuite with OptionValues {
   val schemeBaseBindings = libraryLoader.loadSchemeBase(frontendConfig)
   def schemeBaseScope = new Scope(collection.mutable.Map(schemeBaseBindings.toSeq : _*))
 
-  def expressionFor(scheme : String)(implicit scope : Scope) = {
+  def exprFor(scheme : String)(implicit scope : Scope) = {
     val (expr :: Nil) = bodyFor(scheme)(scope)
     expr
   }
@@ -47,12 +47,12 @@ trait ExpressionHelpers extends FunSuite with OptionValues {
     val userExprs = bodyFor(scheme)(scope)
 
     // Analyse libraries + user exprs
-    val allExprs = libraryLoader.libraryExpressions ++ userExprs
-    val analysis = reducer.AnalyseExpressions(allExprs)
+    val allExprs = libraryLoader.libraryExprs ++ userExprs
+    val analysis = reducer.AnalyseExprs(allExprs)
 
-    et.Expression.fromSequence(
+    et.Expr.fromSequence(
       // Remove all top level defines
-      reducer.ReduceExpressions(analysis).toSequence.flatMap {
+      reducer.ReduceExprs(analysis).toSequence.flatMap {
         case et.TopLevelDefinition(_) =>
           None
 

@@ -5,14 +5,14 @@ import io.llambda.compiler._
 import io.llambda.compiler.reducer._
 
 object SymbolProcReducer extends ReportProcReducer {
-  def apply(appliedVar : ReportProcedure, operands : List[et.Expression])(implicit reduceConfig : ReduceConfig) : Option[et.Expression] = (appliedVar.reportName, operands) match {
+  def apply(appliedVar : ReportProcedure, operands : List[et.Expr])(implicit reduceConfig : ReduceConfig) : Option[et.Expr] = (appliedVar.reportName, operands) match {
     case ("symbol?", List(singleExpr)) =>
       literalPredicate(singleExpr, { literal =>
         literal.isInstanceOf[ast.Symbol]
       })
     
     case ("symbol=?", _) if operands.length >= 2 =>
-      val literalSymbolOperands = operands.map(LiteralForExpression(_)).collect {
+      val literalSymbolOperands = operands.map(LiteralForExpr(_)).collect {
         case Some(ast.Symbol(symbol)) =>
           symbol
       }

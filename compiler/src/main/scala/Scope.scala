@@ -18,7 +18,7 @@ class ReportProcedure(val reportName : String) extends StorageLocation(reportNam
 }
 
 // These are primitive expressions treated specially by the frontend
-abstract class PrimitiveExpression extends BoundValue
+abstract class PrimitiveExpr extends BoundValue
 
 // These are what (define-syntax) creates
 sealed abstract class SyntaxVariable extends SourceLocated

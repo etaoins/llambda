@@ -35,14 +35,14 @@ object ListProcReducer extends ReportProcReducer {
       None
   }
 
-  def apply(appliedVar : ReportProcedure, operands : List[et.Expression])(implicit reduceConfig : ReduceConfig) : Option[et.Expression] = (appliedVar.reportName, operands) match {
+  def apply(appliedVar : ReportProcedure, operands : List[et.Expr])(implicit reduceConfig : ReduceConfig) : Option[et.Expr] = (appliedVar.reportName, operands) match {
     case ("null?", List(singleExpr)) =>
       literalPredicate(singleExpr, { literal =>
         literal.isInstanceOf[ast.EmptyList]
       })
     
     case ("pair?", List(singleExpr)) =>
-      PartialValueForExpression(singleExpr).flatMap {
+      PartialValueForExpr(singleExpr).flatMap {
         case _ : pv.PartialPair => 
           Some(et.Literal(ast.BooleanLiteral(true)))
 
@@ -52,13 +52,13 @@ object ListProcReducer extends ReportProcReducer {
         case _ : pv.LiteralLeaf => 
           Some(et.Literal(ast.BooleanLiteral(false)))
 
-        case _ : pv.ReducedExpression =>
+        case _ : pv.ReducedExpr =>
           // This could be anything
           None
       }
     
     case ("list?", List(singleExpr)) =>
-      PartialValueForExpression(singleExpr) flatMap {
+      PartialValueForExpr(singleExpr) flatMap {
         case pv.ProperList(_) =>
           Some(et.Literal(ast.BooleanLiteral(true)))
         
@@ -77,7 +77,7 @@ object ListProcReducer extends ReportProcReducer {
       }
     
     case ("length", List(singleExpr)) =>
-      PartialValueForExpression(singleExpr) flatMap {
+      PartialValueForExpr(singleExpr) flatMap {
         case pv.ProperList(elements) =>
           Some(et.Literal(ast.IntegerLiteral(elements.length)))
 
@@ -88,12 +88,12 @@ object ListProcReducer extends ReportProcReducer {
     // Make sure we only include literal lists and don't deref variables
     // Otherwise we could duplicate the tail of the list which would make them falsely not eqv?
     case (reportName, List(needle, et.Literal(listHead))) if List("memq", "memv").contains(reportName) =>
-      LiteralForExpression(needle) flatMap { datum =>
+      LiteralForExpr(needle) flatMap { datum =>
         findMember(datum, listHead, LiteralEqv.literalsAreEqv)
       }
     
     case ("member", List(needle, et.Literal(listHead))) =>
-      LiteralForExpression(needle) flatMap { datum =>
+      LiteralForExpr(needle) flatMap { datum =>
         findMember(datum, listHead, LiteralEqv.literalsAreEqual)
       }
     

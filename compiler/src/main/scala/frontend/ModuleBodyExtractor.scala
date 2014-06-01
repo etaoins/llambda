@@ -39,7 +39,7 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
     }).assignLocationFrom(datum)
   }
 
-  private def extractBodyDefinition(arguments : List[ScopedArgument], definition : List[sst.ScopedDatum]) : et.Expression = {
+  private def extractBodyDefinition(arguments : List[ScopedArgument], definition : List[sst.ScopedDatum]) : et.Expr = {
     // Find all the scopes in the definition
     val definitionScopes = definition.foldLeft(Set[Scope]()) { (scopes, datum) =>
       scopes ++ uniqueScopes(datum)
@@ -108,11 +108,11 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
     // Execute the expression blocks now that the scopes are prepared
     val bindings = bindingBlocks map {
       case (boundValue, exprBlock) => (boundValue -> exprBlock())
-    } : List[(StorageLocation, et.Expression)]
+    } : List[(StorageLocation, et.Expr)]
 
     // Find the expressions in our body 
-    val bodyExpr = et.Expression.fromSequence(
-      bodyData.map(extractExpression)
+    val bodyExpr = et.Expr.fromSequence(
+      bodyData.map(extractExpr)
     )
 
     bindings match {
@@ -139,12 +139,12 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
     val allArgs = fixedArgs ++ restArg.toList
 
     // Extract the body 
-    val bodyExpression = extractBodyDefinition(allArgs, definition)
+    val bodyExpr = extractBodyDefinition(allArgs, definition)
 
-    et.Lambda(fixedArgs.map(_.boundValue), restArg.map(_.boundValue), bodyExpression)
+    et.Lambda(fixedArgs.map(_.boundValue), restArg.map(_.boundValue), bodyExpr)
   }
 
-  private def extractInclude(scope : Scope, includeNameData : List[sst.ScopedDatum], includeLocation : SourceLocated) : et.Expression = {
+  private def extractInclude(scope : Scope, includeNameData : List[sst.ScopedDatum], includeLocation : SourceLocated) : et.Expr = {
     val includeResults = ResolveIncludeList(includeNameData.map(_.unscope), includeLocation)(frontendConfig.includePath)
 
     val includeExprs = includeResults flatMap { result =>
@@ -163,84 +163,84 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
     et.Begin(includeExprs)
   }
 
-  private def extractSymbolApplication(boundValue : BoundValue, appliedSymbol : sst.ScopedSymbol, operands : List[sst.ScopedDatum]) : et.Expression = {
+  private def extractSymbolApplication(boundValue : BoundValue, appliedSymbol : sst.ScopedSymbol, operands : List[sst.ScopedDatum]) : et.Expr = {
     (boundValue, operands) match {
-      case (PrimitiveExpressions.Quote, innerDatum :: Nil) =>
+      case (PrimitiveExprs.Quote, innerDatum :: Nil) =>
         et.Literal(innerDatum.unscope)
 
-      case (PrimitiveExpressions.If, test :: trueExpr :: falseExpr :: Nil) =>
+      case (PrimitiveExprs.If, test :: trueExpr :: falseExpr :: Nil) =>
         et.Cond(
-          extractExpression(test), 
-          extractExpression(trueExpr), 
-          extractExpression(falseExpr))
+          extractExpr(test), 
+          extractExpr(trueExpr), 
+          extractExpr(falseExpr))
       
-      case (PrimitiveExpressions.If, test :: trueExpr :: Nil) =>
+      case (PrimitiveExprs.If, test :: trueExpr :: Nil) =>
         et.Cond(
-          extractExpression(test), 
-          extractExpression(trueExpr), 
+          extractExpr(test), 
+          extractExpr(trueExpr), 
           et.Literal(ast.UnitValue()))
 
-      case (PrimitiveExpressions.Set, (mutatingSymbol : sst.ScopedSymbol) :: value :: Nil) =>
+      case (PrimitiveExprs.Set, (mutatingSymbol : sst.ScopedSymbol) :: value :: Nil) =>
         mutatingSymbol.resolve match {
           case storageLoc : StorageLocation =>
-            et.MutateVar(storageLoc, extractExpression(value))
+            et.MutateVar(storageLoc, extractExpr(value))
           case _ =>
             throw new BadSpecialFormException(mutatingSymbol, s"Attempted (set!) non-variable ${mutatingSymbol.name}") 
         }
 
-      case (PrimitiveExpressions.Lambda, (restArgDatum : sst.ScopedSymbol) :: definition) =>
+      case (PrimitiveExprs.Lambda, (restArgDatum : sst.ScopedSymbol) :: definition) =>
         createLambda(List(), Some(restArgDatum), definition)
 
-      case (PrimitiveExpressions.Lambda, sst.ScopedProperList(fixedArgData) :: definition) =>
+      case (PrimitiveExprs.Lambda, sst.ScopedProperList(fixedArgData) :: definition) =>
         createLambda(fixedArgData, None, definition)
 
-      case (PrimitiveExpressions.Lambda, sst.ScopedImproperList(fixedArgData, (restArgDatum : sst.ScopedSymbol)) :: definition) =>
+      case (PrimitiveExprs.Lambda, sst.ScopedImproperList(fixedArgData, (restArgDatum : sst.ScopedSymbol)) :: definition) =>
         createLambda(fixedArgData, Some(restArgDatum), definition)
 
-      case (PrimitiveExpressions.SyntaxError, (errorDatum @ sst.NonSymbolLeaf(ast.StringLiteral(errorString))) :: data) =>
+      case (PrimitiveExprs.SyntaxError, (errorDatum @ sst.NonSymbolLeaf(ast.StringLiteral(errorString))) :: data) =>
         throw new UserDefinedSyntaxError(errorDatum, errorString, data.map(_.unscope))
 
-      case (PrimitiveExpressions.Include, includeNames) =>
+      case (PrimitiveExprs.Include, includeNames) =>
         // We need the scope from the (include) to rescope the included file
         val scope = appliedSymbol.scope
         extractInclude(scope, includeNames, appliedSymbol)
 
-      case (PrimitiveExpressions.NativeFunction, _) =>
+      case (PrimitiveExprs.NativeFunction, _) =>
         ExtractNativeFunction(false, operands, appliedSymbol)
       
-      case (PrimitiveExpressions.WorldFunction, _) =>
+      case (PrimitiveExprs.WorldFunction, _) =>
         ExtractNativeFunction(true, operands, appliedSymbol)
 
-      case (PrimitiveExpressions.Quasiquote, sst.ScopedProperList(listData) :: Nil) => 
+      case (PrimitiveExprs.Quasiquote, sst.ScopedProperList(listData) :: Nil) => 
         val schemeBase = libraryLoader.loadSchemeBase(frontendConfig)
-        (new ListQuasiquotationExpander(extractExpression, schemeBase))(listData)
+        (new ListQuasiquotationExpander(extractExpr, schemeBase))(listData)
       
-      case (PrimitiveExpressions.Quasiquote, sst.ScopedVectorLiteral(elements) :: Nil) => 
+      case (PrimitiveExprs.Quasiquote, sst.ScopedVectorLiteral(elements) :: Nil) => 
         val schemeBase = libraryLoader.loadSchemeBase(frontendConfig)
-        (new VectorQuasiquotationExpander(extractExpression, schemeBase))(elements.toList)
+        (new VectorQuasiquotationExpander(extractExpr, schemeBase))(elements.toList)
       
-      case (PrimitiveExpressions.Unquote, _) =>
+      case (PrimitiveExprs.Unquote, _) =>
         throw new BadSpecialFormException(appliedSymbol, "Attempted (unquote) outside of quasiquotation") 
       
-      case (PrimitiveExpressions.UnquoteSplicing, _) =>
+      case (PrimitiveExprs.UnquoteSplicing, _) =>
         throw new BadSpecialFormException(appliedSymbol, "Attempted (unquote-splicing) outside of quasiquotation") 
 
       case (storagLoc : StorageLocation, operands) =>
-        et.Apply(et.VarRef(storagLoc), operands.map(extractExpression))
+        et.Apply(et.VarRef(storagLoc), operands.map(extractExpr))
 
-      case (PrimitiveExpressions.AnnotateType, valueExpr :: typeDatum :: Nil) =>
-        et.Cast(extractExpression(valueExpr), DatumToValueType(typeDatum))
+      case (PrimitiveExprs.AnnotateType, valueExpr :: typeDatum :: Nil) =>
+        et.Cast(extractExpr(valueExpr), DatumToValueType(typeDatum))
 
-      case (PrimitiveExpressions.CondExpand, firstClause :: restClauses) =>
+      case (PrimitiveExprs.CondExpand, firstClause :: restClauses) =>
         val expandedData = CondExpander(firstClause :: restClauses)(libraryLoader, frontendConfig)
 
-        et.Begin(expandedData.map(extractExpression))
+        et.Begin(expandedData.map(extractExpr))
 
-      case (PrimitiveExpressions.Parameterize, sst.ScopedProperList(parameterData) :: bodyData) =>
+      case (PrimitiveExprs.Parameterize, sst.ScopedProperList(parameterData) :: bodyData) =>
         val parameters = parameterData map { parameterDatum =>
           parameterDatum match {
             case sst.ScopedProperList(List(parameter, value)) =>
-              (extractExpression(parameter), extractExpression(value))
+              (extractExpr(parameter), extractExpr(value))
 
             case _ =>
               throw new BadSpecialFormException(parameterDatum, "Parameters must be defined as (parameter value)")
@@ -271,35 +271,35 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
 
   private def parseDefine(boundValue : BoundValue, appliedSymbol : sst.ScopedSymbol, operands : List[sst.ScopedDatum]) : Option[ParsedDefine] =
     (boundValue, operands) match {
-      case (PrimitiveExpressions.Define, (symbol : sst.ScopedSymbol) :: value :: Nil) =>
+      case (PrimitiveExprs.Define, (symbol : sst.ScopedSymbol) :: value :: Nil) =>
         Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name), () => {
-          extractExpression(value)
+          extractExpr(value)
         }))
 
-      case (PrimitiveExpressions.Define, sst.ScopedProperList((symbol : sst.ScopedSymbol) :: fixedArgs) :: body) =>
+      case (PrimitiveExprs.Define, sst.ScopedProperList((symbol : sst.ScopedSymbol) :: fixedArgs) :: body) =>
         Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name), () => {
           createLambda(fixedArgs, None, body)
         }))
       
-      case (PrimitiveExpressions.Define, sst.ScopedImproperList((symbol : sst.ScopedSymbol) :: fixedArgs, (restArgDatum : sst.ScopedSymbol)) :: body) =>
+      case (PrimitiveExprs.Define, sst.ScopedImproperList((symbol : sst.ScopedSymbol) :: fixedArgs, (restArgDatum : sst.ScopedSymbol)) :: body) =>
         Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name), () => {
           createLambda(fixedArgs, Some(restArgDatum), body)
         }))
 
-      case (PrimitiveExpressions.DefineSyntax, _) =>
+      case (PrimitiveExprs.DefineSyntax, _) =>
         Some(ParseSyntaxDefine(appliedSymbol, operands))
 
-      case (PrimitiveExpressions.DefineRecordType, _) =>
+      case (PrimitiveExprs.DefineRecordType, _) =>
         Some(ParseRecordTypeDefine(appliedSymbol, operands))
 
-      case (PrimitiveExpressions.DefineType, (typeAlias : sst.ScopedSymbol) :: existingTypeDatum :: Nil) =>
+      case (PrimitiveExprs.DefineType, (typeAlias : sst.ScopedSymbol) :: existingTypeDatum :: Nil) =>
         Some(ParsedSimpleDefine(typeAlias, BoundType(DatumToValueType(existingTypeDatum)))) 
 
-      case (PrimitiveExpressions.DefineReportProcedure, _) =>
+      case (PrimitiveExprs.DefineReportProcedure, _) =>
         operands match {
           case (symbol : sst.ScopedSymbol) :: definitionData :: Nil =>
             Some(ParsedVarDefine(symbol, new ReportProcedure(symbol.name), () => {
-              extractExpression(definitionData)
+              extractExpr(definitionData)
             }))
 
           case _ =>
@@ -309,7 +309,7 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
       case _ => None
   } 
 
-  private def extractApplicationLike(boundValue : BoundValue, appliedSymbol : sst.ScopedSymbol, operands : List[sst.ScopedDatum], atOutermostLevel : Boolean) : et.Expression = {
+  private def extractApplicationLike(boundValue : BoundValue, appliedSymbol : sst.ScopedSymbol, operands : List[sst.ScopedDatum], atOutermostLevel : Boolean) : et.Expr = {
     // Try to parse this as a type of definition
     parseDefine(boundValue, appliedSymbol, operands) match {
       case Some(_) if !atOutermostLevel=>
@@ -355,19 +355,19 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
     }
   }
 
-  private def extractOutermostLevelExpression(datum : sst.ScopedDatum) : et.Expression =
-    extractGenericExpression(datum, true)
+  private def extractOutermostLevelExpr(datum : sst.ScopedDatum) : et.Expr =
+    extractGenericExpr(datum, true)
 
-  private def extractExpression(datum : sst.ScopedDatum) : et.Expression =
+  private def extractExpr(datum : sst.ScopedDatum) : et.Expr =
     // Non-body datums must either result in an expression or an exception
-    extractGenericExpression(datum, false)
+    extractGenericExpr(datum, false)
   
-  private def extractGenericExpression(datum : sst.ScopedDatum, atOutermostLevel : Boolean) : et.Expression = (datum match {
+  private def extractGenericExpr(datum : sst.ScopedDatum, atOutermostLevel : Boolean) : et.Expr = (datum match {
     case sst.ScopedPair(appliedSymbol : sst.ScopedSymbol, cdr) =>
       appliedSymbol.resolve match {
         case syntax : BoundSyntax =>
-          // This is a macro - expand it and call extractGenericExpression again
-          extractGenericExpression(ExpandMacro(syntax, cdr, datum), atOutermostLevel)
+          // This is a macro - expand it and call extractGenericExpr again
+          extractGenericExpr(ExpandMacro(syntax, cdr, datum), atOutermostLevel)
         
         case otherBoundValue =>
           // Make sure the operands a proper list
@@ -377,14 +377,14 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
               extractApplicationLike(otherBoundValue, appliedSymbol, operands, atOutermostLevel)
 
             case improperList =>
-              throw new MalformedExpressionException(improperList, "Non-syntax cannot be applied as an improper list")
+              throw new MalformedExprException(improperList, "Non-syntax cannot be applied as an improper list")
           }
       }
 
     case sst.ScopedProperList(procedure :: operands) =>
       // Apply the result of the inner expression
-      val procedureExpr = extractExpression(procedure)
-      et.Apply(procedureExpr, operands.map(extractExpression))
+      val procedureExpr = extractExpr(procedure)
+      et.Apply(procedureExpr, operands.map(extractExpr))
 
     case scopedSymbol : sst.ScopedSymbol =>
       scopedSymbol.resolve match {
@@ -392,13 +392,13 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
           et.VarRef(storageLoc)
 
         case syntax : BoundSyntax =>
-          throw new MalformedExpressionException(scopedSymbol, "Syntax cannot be used as an expression")
+          throw new MalformedExprException(scopedSymbol, "Syntax cannot be used as an expression")
 
-        case primitive : PrimitiveExpression =>
-          throw new MalformedExpressionException(scopedSymbol, "Primitive cannot be used as an expression")
+        case primitive : PrimitiveExpr =>
+          throw new MalformedExprException(scopedSymbol, "Primitive cannot be used as an expression")
 
         case boundType : BoundType =>
-          throw new MalformedExpressionException(scopedSymbol, "Type cannot be used as an expression")
+          throw new MalformedExprException(scopedSymbol, "Type cannot be used as an expression")
       }
 
     // These all evaluate to themselves. See R7RS section 4.1.2
@@ -420,14 +420,14 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
       et.Literal(literal)
 
     case malformed =>
-      throw new MalformedExpressionException(malformed, malformed.toString)
+      throw new MalformedExprException(malformed, malformed.toString)
   }).assignLocationFrom(datum)
 
-  def apply(data : List[ast.Datum], evalScope : Scope) : List[et.Expression] = data flatMap { datum => 
+  def apply(data : List[ast.Datum], evalScope : Scope) : List[et.Expr] = data flatMap { datum => 
     // Annotate our symbols with our current scope
     val scopedDatum = sst.ScopedDatum(evalScope, datum)
 
-    extractOutermostLevelExpression(scopedDatum) match {
+    extractOutermostLevelExpr(scopedDatum) match {
       case et.Begin(Nil) => None
       case other => Some(other)
     }

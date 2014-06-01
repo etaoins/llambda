@@ -80,21 +80,21 @@ object Compiler {
       featureIdentifiers=featureIdentifiers 
     )
 
-    val expressions = frontend.ExtractProgram(data)(loader, frontendConfig)
+    val exprs = frontend.ExtractProgram(data)(loader, frontendConfig)
 
     // Analyse and drop unused top-level defines
-    val analysis = reducer.AnalyseExpressions(expressions)
+    val analysis = reducer.AnalyseExprs(exprs)
 
     // Drop unused top-level bindings
     // Otherwise we produce a lot of unused LLVM IR on -O 0
-    val droppedExpressions = analysis.usedTopLevelExpressions
+    val droppedExprs = analysis.usedTopLevelExprs
 
-    val reducedExpressions = if (config.optimizeLevel > 1) {
+    val reducedExprs = if (config.optimizeLevel > 1) {
       // Reduce the expressions
-      List(reducer.ReduceExpressions(analysis))
+      List(reducer.ReduceExprs(analysis))
     }
     else {
-      droppedExpressions
+      droppedExprs
     }
     
     // Plan execution
@@ -103,7 +103,7 @@ object Compiler {
       analysis=analysis
     )
 
-    val functions = planner.PlanProgram(reducedExpressions)(planConfig)
+    val functions = planner.PlanProgram(reducedExprs)(planConfig)
     
     val optimizedFunctions = if (config.optimizeLevel > 1) {
       conniverPasses.foldLeft(functions) { case (functions, conniverPass) =>

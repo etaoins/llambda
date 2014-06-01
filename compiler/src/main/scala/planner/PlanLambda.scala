@@ -57,7 +57,7 @@ private[planner] object PlanLambda {
     val valueType = vt.MutableType
   }
 
-  private def findRefedVariables(expr : et.Expression) : Set[StorageLocation] = expr match {
+  private def findRefedVariables(expr : et.Expr) : Set[StorageLocation] = expr match {
     case et.VarRef(variable) =>
       Set(variable)
 
@@ -65,7 +65,7 @@ private[planner] object PlanLambda {
       Set(variable) ++ findRefedVariables(expr)
 
     case otherExpr =>
-      otherExpr.subexpressions.flatMap(findRefedVariables).toSet
+      otherExpr.subexprs.flatMap(findRefedVariables).toSet
   }
 
   private def initializeMutableArgs(initialState : PlannerState)(mutableArgs : List[Argument])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : PlannerState = mutableArgs.length match {
@@ -126,7 +126,7 @@ private[planner] object PlanLambda {
     }
   }
 
-  private def containsImmediateReturn(expr : et.Expression) : Boolean = expr match {
+  private def containsImmediateReturn(expr : et.Expr) : Boolean = expr match {
     case _ : et.Return =>
       true
 
@@ -135,13 +135,13 @@ private[planner] object PlanLambda {
       false
 
     case _ =>
-      expr.subexpressions.exists(containsImmediateReturn)
+      expr.subexprs.exists(containsImmediateReturn)
   }
 
   def apply(parentState : PlannerState, parentPlan : PlanWriter)(
       fixedArgLocs : List[StorageLocation],
       restArgLoc : Option[StorageLocation],
-      body : et.Expression,
+      body : et.Expr,
       sourceNameHint : Option[String],
       recursiveSelfLoc : Option[StorageLocation]
   )(implicit planConfig : PlanConfig) : PlanResult = {
@@ -285,7 +285,7 @@ private[planner] object PlanLambda {
     }
 
     // Plan the body
-    val planResult = PlanExpression(postClosureState)(body)(planConfig, procPlan)
+    val planResult = PlanExpr(postClosureState)(body)(planConfig, procPlan)
 
     // Are we returning anything?
     val unitType = vt.IntrinsicCellType(ct.UnitCell)

@@ -89,7 +89,7 @@ class LibraryLoaderSuite extends FunSuite {
 
     loader.load(StringComponent("test") :: StringComponent("singleexpr") :: Nil)
 
-    assert(loader.libraryExpressions.length === 1)
+    assert(loader.libraryExprs.length === 1)
   }
   
   test("single expression library exists") {
@@ -111,7 +111,7 @@ class LibraryLoaderSuite extends FunSuite {
     // We should be able to load without the "text" prefix
     loader.load(List(StringComponent("pathedsingleexpr")))(frontendConfig)
 
-    assert(loader.libraryExpressions.length === 1)
+    assert(loader.libraryExprs.length === 1)
   }
   
   test("single expression library with non-default include path exists") {
@@ -133,7 +133,7 @@ class LibraryLoaderSuite extends FunSuite {
     loader.load(StringComponent("test") :: StringComponent("singleexpr") :: Nil)
     loader.load(StringComponent("test") :: StringComponent("singleexpr") :: Nil)
 
-    assert(loader.libraryExpressions.length === 1)
+    assert(loader.libraryExprs.length === 1)
   }
   
   test("multiple top-level data library") {

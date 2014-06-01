@@ -4,14 +4,14 @@ import io.llambda
 import llambda.compiler.{et, ast, StorageLocation}
 import org.scalatest.FunSuite
 
-class AnalyseExpressionsSuite extends FunSuite {
+class AnalyseExprsSuite extends FunSuite {
   test("literals have no vars") {
     val testExprs = List(
       et.Literal(ast.StringLiteral("Hello, world"))
     )
 
-    assert(AnalyseExpressions(testExprs) === AnalysedExpressions(
-      usedTopLevelExpressions=testExprs
+    assert(AnalyseExprs(testExprs) === AnalysedExprs(
+      usedTopLevelExprs=testExprs
     ))
   }
 
@@ -30,8 +30,8 @@ class AnalyseExpressionsSuite extends FunSuite {
       et.VarRef(testLocB)
     )
     
-    assert(AnalyseExpressions(testExprs) === AnalysedExpressions(
-      usedTopLevelExpressions=testExprs,
+    assert(AnalyseExprs(testExprs) === AnalysedExprs(
+      usedTopLevelExprs=testExprs,
       mutableVars=Set(),
       constantTopLevelBindings=Map(
         testLocA -> et.Literal(ast.BooleanLiteral(true)),
@@ -56,7 +56,7 @@ class AnalyseExpressionsSuite extends FunSuite {
       et.VarRef(testLocA)
     )
 
-    val analysedExprs = AnalyseExpressions(testExprs)
+    val analysedExprs = AnalyseExprs(testExprs)
 
     // We should have dropped testLocB completely
     val expectedUsedExprs = testExprs match {
@@ -68,8 +68,8 @@ class AnalyseExpressionsSuite extends FunSuite {
         throw new Exception("Couldn't parse our own test expressions")
     }
 
-    assert(analysedExprs === AnalysedExpressions(
-      usedTopLevelExpressions=expectedUsedExprs,
+    assert(analysedExprs === AnalysedExprs(
+      usedTopLevelExprs=expectedUsedExprs,
       mutableVars=Set(testLocA),
       constantTopLevelBindings=Map(),
       usedVars=Set(testLocA)
@@ -89,9 +89,9 @@ class AnalyseExpressionsSuite extends FunSuite {
       )
     )
 
-    val analysedExprs = AnalyseExpressions(testExprs)
+    val analysedExprs = AnalyseExprs(testExprs)
 
-    assert(analysedExprs === AnalysedExpressions())
+    assert(analysedExprs === AnalysedExprs())
   }
   
   test("mutate var in one side of conditional makes a var mutable") {
@@ -112,10 +112,10 @@ class AnalyseExpressionsSuite extends FunSuite {
       et.VarRef(testLocA)
     )
 
-    val analysedExprs = AnalyseExpressions(testExprs)
+    val analysedExprs = AnalyseExprs(testExprs)
 
-    assert(analysedExprs === AnalysedExpressions(
-      usedTopLevelExpressions=testExprs,
+    assert(analysedExprs === AnalysedExprs(
+      usedTopLevelExprs=testExprs,
       mutableVars=Set(testLocA),
       constantTopLevelBindings=Map(),
       usedVars=Set(testLocA)
@@ -145,10 +145,10 @@ class AnalyseExpressionsSuite extends FunSuite {
       et.VarRef(testLocA)
     )
     
-    val analysedExprs = AnalyseExpressions(testExprs)
+    val analysedExprs = AnalyseExprs(testExprs)
 
-    assert(analysedExprs === AnalysedExpressions(
-      usedTopLevelExpressions=testExprs,
+    assert(analysedExprs === AnalysedExprs(
+      usedTopLevelExprs=testExprs,
       mutableVars=Set(testLocA),
       constantTopLevelBindings=Map(),
       usedVars=Set(testLocA)
@@ -175,10 +175,10 @@ class AnalyseExpressionsSuite extends FunSuite {
       et.VarRef(testLocA)
     )
     
-    val analysedExprs = AnalyseExpressions(testExprs)
+    val analysedExprs = AnalyseExprs(testExprs)
 
-    assert(analysedExprs === AnalysedExpressions(
-      usedTopLevelExpressions=testExprs,
+    assert(analysedExprs === AnalysedExprs(
+      usedTopLevelExprs=testExprs,
       mutableVars=Set(testLocA),
       constantTopLevelBindings=Map(),
       usedVars=Set(testLocA)
@@ -202,10 +202,10 @@ class AnalyseExpressionsSuite extends FunSuite {
       et.VarRef(testLocA)
     )
     
-    val analysedExprs = AnalyseExpressions(testExprs)
+    val analysedExprs = AnalyseExprs(testExprs)
 
-    assert(analysedExprs === AnalysedExpressions(
-      usedTopLevelExpressions=testExprs,
+    assert(analysedExprs === AnalysedExprs(
+      usedTopLevelExprs=testExprs,
       mutableVars=Set(testLocA),
       constantTopLevelBindings=Map(),
       usedVars=Set(testLocA)
@@ -231,10 +231,10 @@ class AnalyseExpressionsSuite extends FunSuite {
       et.VarRef(testLocB)
     )
     
-    val analysedExprs = AnalyseExpressions(testExprs)
+    val analysedExprs = AnalyseExprs(testExprs)
 
-    assert(analysedExprs === AnalysedExpressions(
-      usedTopLevelExpressions=testExprs,
+    assert(analysedExprs === AnalysedExprs(
+      usedTopLevelExprs=testExprs,
       mutableVars=Set(testLocA),
       constantTopLevelBindings=Map(
         testLocB -> et.MutateVar(testLocA, et.Literal(ast.EmptyList()))
@@ -257,10 +257,10 @@ class AnalyseExpressionsSuite extends FunSuite {
       et.MutateVar(testLocA, et.MutateVar(testLocB, et.Literal(ast.BooleanLiteral(true))))
     )
     
-    val analysedExprs = AnalyseExpressions(testExprs)
+    val analysedExprs = AnalyseExprs(testExprs)
     
-    assert(analysedExprs === AnalysedExpressions(
-      usedTopLevelExpressions=testExprs,
+    assert(analysedExprs === AnalysedExprs(
+      usedTopLevelExprs=testExprs,
       mutableVars=Set(testLocA, testLocB),
       constantTopLevelBindings=Map()
     ))

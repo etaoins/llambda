@@ -4,7 +4,7 @@ import io.llambda
 import llambda.compiler._
 
 class LibraryLoader(targetPlatform : platform.TargetPlatform) {
-  private val exprBuffer = collection.mutable.ListBuffer[et.Expression]()
+  private val exprBuffer = collection.mutable.ListBuffer[et.Expr]()
   private val loadedFiles = collection.mutable.Map.empty[String, Map[String, BoundValue]]
   private var featuresStorageLoc : Option[StorageLocation] = None
 
@@ -27,7 +27,7 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
         throw new LibraryNotFoundException(loadLocation, filename)
     }
 
-    exprBuffer ++= library.expressions
+    exprBuffer ++= library.exprs
 
     library.exports
   }
@@ -42,7 +42,7 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
 
   private def builtinLibraryBindings(libraryName : Seq[LibraryNameComponent])(implicit frontendConfig : FrontendConfig) : Option[Map[String, BoundValue]] = libraryName match {
     case List(StringComponent("llambda"), StringComponent("internal"), StringComponent("primitives")) =>
-      Some(PrimitiveExpressions.bindings)
+      Some(PrimitiveExprs.bindings)
     
     case List(StringComponent("llambda"), StringComponent("internal"), StringComponent("features")) =>
       if (!featuresStorageLoc.isDefined) {
@@ -61,8 +61,8 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
       // Our NFI types depend on our target platform
       Some(
         IntrinsicTypes(targetPlatform).mapValues(BoundType.apply) +
-          ("world-function" -> PrimitiveExpressions.WorldFunction) +
-          ("native-function" -> PrimitiveExpressions.NativeFunction)
+          ("world-function" -> PrimitiveExprs.WorldFunction) +
+          ("native-function" -> PrimitiveExprs.NativeFunction)
       )
 
     case _ =>
@@ -118,6 +118,6 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
   def loadSchemeBase(implicit frontendConfig : FrontendConfig) =
     load(List("scheme", "base").map(StringComponent(_)), NoSourceLocation)
 
-  def libraryExpressions : List[et.Expression] = 
+  def libraryExprs : List[et.Expr] = 
     exprBuffer.toList
 }

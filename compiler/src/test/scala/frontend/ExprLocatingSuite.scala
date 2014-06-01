@@ -6,30 +6,30 @@ import scala.util.parsing.input.NoPosition
 
 import llambda.compiler._
 
-class ExpressionLocatingSuite extends FunSuite with testutil.ExpressionHelpers {
-  val primitiveScope = new ImmutableScope(collection.mutable.Map(PrimitiveExpressions.bindings.toSeq : _*))
+class ExprLocatingSuite extends FunSuite with testutil.ExprHelpers {
+  val primitiveScope = new ImmutableScope(collection.mutable.Map(PrimitiveExprs.bindings.toSeq : _*))
   
   val plusLoc = new StorageLocation("+")
   implicit val plusScope = new Scope(collection.mutable.Map("+" -> plusLoc), Some(primitiveScope))
 
-  private def assertLocated(expr : et.Expression) {
-    assert(expr.locationOpt.isDefined, "Expression is unlocated")
+  private def assertLocated(expr : et.Expr) {
+    assert(expr.locationOpt.isDefined, "Expr is unlocated")
   }
 
   test("variable references are located") {
-    assertLocated(expressionFor("+"))
+    assertLocated(exprFor("+"))
   }
   
   test("applications are located") {
-    assertLocated(expressionFor("(+ 1 2)"))
+    assertLocated(exprFor("(+ 1 2)"))
   }
 
   test("literals are located") {
-    assertLocated(expressionFor("#t"))
+    assertLocated(exprFor("#t"))
   }
 
   test("conditions are located") {
-    assertLocated(expressionFor("(if #t 1 2)"))
+    assertLocated(exprFor("(if #t 1 2)"))
   }
 }
 

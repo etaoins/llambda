@@ -11,4 +11,4 @@ case class IntegerComponent(value : Long) extends LibraryNameComponent {
   override def toString = value.toString
 }
 
-case class Library(name : List[LibraryNameComponent], exports : Map[String, BoundValue], expressions : List[et.Expression])
+case class Library(name : List[LibraryNameComponent], exports : Map[String, BoundValue], exprs : List[et.Expr])

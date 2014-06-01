@@ -6,8 +6,8 @@ import org.scalatest.{FunSuite,Inside,OptionValues}
 import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
 
-class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with testutil.ExpressionHelpers {
-  implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(PrimitiveExpressions.bindings.toSeq : _*))
+class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with testutil.ExprHelpers {
+  implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(PrimitiveExprs.bindings.toSeq : _*))
   
   val plusLoc = new StorageLocation("+")
   val plusScope = new Scope(collection.mutable.Map("+" -> plusLoc), Some(primitiveScope))
@@ -16,80 +16,80 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   test("variable reference") {
     // "a" isn't a binding in the primitive expressions
     intercept[UnboundVariableException] {
-      expressionFor("a")
+      exprFor("a")
     }
 
-    assert(expressionFor("+")(plusScope) === et.VarRef(plusLoc))
+    assert(exprFor("+")(plusScope) === et.VarRef(plusLoc))
   }
 
   test("literals") {
-    assert(expressionFor("'a") === et.Literal(ast.Symbol("a")))
+    assert(exprFor("'a") === et.Literal(ast.Symbol("a")))
 
-    assert(expressionFor("'#(a b c)") === et.Literal(
+    assert(exprFor("'#(a b c)") === et.Literal(
       ast.VectorLiteral(Vector(ast.Symbol("a"), ast.Symbol("b"), ast.Symbol("c")))
     ))
     
-    assert(expressionFor("'()") === et.Literal(ast.EmptyList()))
+    assert(exprFor("'()") === et.Literal(ast.EmptyList()))
     
-    assert(expressionFor("'(+ 1 2)") === et.Literal(
+    assert(exprFor("'(+ 1 2)") === et.Literal(
       ast.ProperList(List(ast.Symbol("+"), ast.IntegerLiteral(1), ast.IntegerLiteral(2)))
     ))
     
-    assert(expressionFor("'(quote a)") === et.Literal(
+    assert(exprFor("'(quote a)") === et.Literal(
       ast.ProperList(List(ast.Symbol("quote"), ast.Symbol("a")))
     ))
     
-    assert(expressionFor("''a") === et.Literal(
+    assert(exprFor("''a") === et.Literal(
       ast.ProperList(List(ast.Symbol("quote"), ast.Symbol("a")))
     ))
 
-    assert(expressionFor("'145932") === et.Literal(
+    assert(exprFor("'145932") === et.Literal(
       ast.IntegerLiteral(145932)
     ))
     
-    assert(expressionFor("145932") === et.Literal(
+    assert(exprFor("145932") === et.Literal(
       ast.IntegerLiteral(145932)
     ))
     
-    assert(expressionFor("'\"" + "abc" + "\"") === et.Literal(
+    assert(exprFor("'\"" + "abc" + "\"") === et.Literal(
       ast.StringLiteral("abc")
     ))
     
-    assert(expressionFor("\"" + "abc" + "\"") === et.Literal(
+    assert(exprFor("\"" + "abc" + "\"") === et.Literal(
       ast.StringLiteral("abc")
     ))
     
-    assert(expressionFor("'#(a 10)") === et.Literal(
+    assert(exprFor("'#(a 10)") === et.Literal(
       ast.VectorLiteral(Vector(ast.Symbol("a"), ast.IntegerLiteral(10)))
     ))
     
-    assert(expressionFor("#(a 10)") === et.Literal(
+    assert(exprFor("#(a 10)") === et.Literal(
       ast.VectorLiteral(Vector(ast.Symbol("a"), ast.IntegerLiteral(10)))
     ))
     
-    assert(expressionFor("'#u8(64 65)") === et.Literal(
+    assert(exprFor("'#u8(64 65)") === et.Literal(
       ast.Bytevector(Vector(64, 65))
     ))
     
-    assert(expressionFor("#u8(64 65)") === et.Literal(
+    assert(exprFor("#u8(64 65)") === et.Literal(
       ast.Bytevector(Vector(64, 65))
     ))
     
-    assert(expressionFor("'#t") === et.Literal(
+    assert(exprFor("'#t") === et.Literal(
       ast.BooleanLiteral(true)
     ))
     
-    assert(expressionFor("#t") === et.Literal(
+    assert(exprFor("#t") === et.Literal(
       ast.BooleanLiteral(true)
     ))
     
-    assert(expressionFor("#!unit") === et.Literal(
+    assert(exprFor("#!unit") === et.Literal(
       ast.UnitValue()
     ))
   }
 
   test("application") {
-    assert(expressionFor("(+ 3 4)")(plusScope) === et.Apply(
+    assert(exprFor("(+ 3 4)")(plusScope) === et.Apply(
       et.VarRef(plusLoc),
       List(
         et.Literal(ast.IntegerLiteral(3)),
@@ -98,18 +98,18 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     ))
 
     intercept[UnboundVariableException] {
-      expressionFor("(/ 1 2)")
+      exprFor("(/ 1 2)")
     }
 
     // R7RS explicitly calls this an error
-    intercept[MalformedExpressionException] {
-      expressionFor("()")
+    intercept[MalformedExprException] {
+      exprFor("()")
     }
   }
 
   test("primtivies cannot be expressions") {
-    intercept[MalformedExpressionException] {
-      expressionFor("include")
+    intercept[MalformedExprException] {
+      exprFor("include")
     }
   }
 
@@ -118,28 +118,28 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val storageLoc = new StorageLocation("a")
     val varScope = new Scope(collection.mutable.Map("a" -> storageLoc), Some(primitiveScope))
 
-    assert(expressionFor("(set! a 1)")(varScope) === et.MutateVar(
+    assert(exprFor("(set! a 1)")(varScope) === et.MutateVar(
       storageLoc,
       et.Literal(ast.IntegerLiteral(1))
     ))
 
     intercept[UnboundVariableException] {
-      expressionFor("(set! b 1)")
+      exprFor("(set! b 1)")
     }
     
     intercept[BadSpecialFormException] {
-      expressionFor("(set! set! 1)")
+      exprFor("(set! set! 1)")
     }
   }
 
   test("conditionals") {
-    assert(expressionFor("(if #t 'yes 'no)") === et.Cond(
+    assert(exprFor("(if #t 'yes 'no)") === et.Cond(
       et.Literal(ast.BooleanLiteral(true)),
       et.Literal(ast.Symbol("yes")),
       et.Literal(ast.Symbol("no"))
     ))
     
-    assert(expressionFor("(if #f 'yes)") === et.Cond(
+    assert(exprFor("(if #f 'yes)") === et.Cond(
       et.Literal(ast.BooleanLiteral(false)),
       et.Literal(ast.Symbol("yes")),
       et.Literal(ast.UnitValue())
@@ -222,22 +222,22 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   }
 
   test("lambdas") {
-    inside(expressionFor("(lambda () #t)")) {
+    inside(exprFor("(lambda () #t)")) {
       case et.Lambda(Nil, None, body) =>
         assert(body === et.Literal(ast.BooleanLiteral(true)))
     }
 
-    inside(expressionFor("(lambda (x) x)")) {
+    inside(exprFor("(lambda (x) x)")) {
       case et.Lambda(argX :: Nil, None, body) =>
         assert(body === et.VarRef(argX))
     }
     
-    inside(expressionFor("(lambda x x)")) {
+    inside(exprFor("(lambda x x)")) {
       case et.Lambda(Nil, Some(restArg), body) =>
         assert(body === et.VarRef(restArg))
     }
 
-    inside(expressionFor("(lambda (x y . z) x y z)")) {
+    inside(exprFor("(lambda (x y . z) x y z)")) {
       case et.Lambda(argX :: argY :: Nil, Some(restArg), body) =>
         assert(body === et.Begin(List(
           et.VarRef(argX),
@@ -248,7 +248,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   }
   
   test("self-executing lambdas") {
-    inside(expressionFor("((lambda (x) x) 1)")) {
+    inside(exprFor("((lambda (x) x) 1)")) {
       case et.Apply(et.Lambda(argX :: Nil, None, body), value :: Nil) =>
         assert(body === et.VarRef(argX))
         assert(value === et.Literal(ast.IntegerLiteral(1)))
@@ -256,7 +256,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   }
 
   test("recursive lambda define") {
-    inside(expressionFor("""
+    inside(exprFor("""
       (lambda (x)
         (define foo (lambda (y) (bar x y)))
         (define bar (lambda (a b) (if a b)))
@@ -276,7 +276,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   test("argless lambda shorthand") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 
-    val expr = expressionFor("(define (return-true) #t)")(scope)
+    val expr = exprFor("(define (return-true) #t)")(scope)
     val procLoc = scope.get("return-true").value
 
     inside(expr) {
@@ -293,7 +293,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   test("one arg lambda shorthand") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 
-    val expr = expressionFor("(define (return-true unused-param) #t)")(scope)
+    val expr = exprFor("(define (return-true unused-param) #t)")(scope)
     val procLoc = scope.get("return-true").value
 
     inside(expr) {
@@ -310,7 +310,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   test("fixed and rest arg lambda shorthand") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
     
-    val expr = expressionFor("(define (return-false some . rest) #f)")(scope)
+    val expr = exprFor("(define (return-false some . rest) #f)")(scope)
     val procLoc = scope.get("return-false").value
 
     inside(expr) {
@@ -327,7 +327,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   test("rest only arg lambda shorthand") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
     
-    val expr = expressionFor("(define (return-six . rest) 6)")(scope)
+    val expr = exprFor("(define (return-six . rest) 6)")(scope)
     val procLoc = scope.get("return-six").value
     inside(expr) {
       case et.TopLevelDefinition((storageLoc, et.Lambda(Nil, Some(_), bodyExpr)) :: Nil) if procLoc == storageLoc =>
@@ -343,7 +343,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   test("recursive lambda") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 
-    val expr = expressionFor("(define (return-self) return-self)")(scope)
+    val expr = exprFor("(define (return-self) return-self)")(scope)
     val procLoc = scope.get("return-self").value
     inside(expr) {
       case et.TopLevelDefinition((storageLoc, et.Lambda(Nil, None, bodyExpr)) :: Nil) if procLoc == storageLoc =>
@@ -353,7 +353,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   
   test("duplicate formals failure") {
     intercept[BadSpecialFormException] {
-      expressionFor("(lambda (x x) x)")
+      exprFor("(lambda (x x) x)")
     }
   }
 
@@ -394,7 +394,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   test("define report procedure") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 
-    val expr = expressionFor("(define-report-procedure list (lambda () #f))")(scope)
+    val expr = exprFor("(define-report-procedure list (lambda () #f))")(scope)
     val listBinding = scope.get("list").value
 
     inside(listBinding) {
@@ -410,7 +410,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
   test("trivial include") {
     // Simple include should return an et.Begin with the contents of the ifle
-    assert(expressionFor("""(include "includes/include1.scm")""") ===
+    assert(exprFor("""(include "includes/include1.scm")""") ===
       et.Begin(List(
         et.Literal(ast.StringLiteral("include1-line1")), 
         et.Literal(ast.StringLiteral("include1-line2"))
@@ -421,7 +421,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   test("include multiple files in order") {
     // (include) with multiple files should read them in order and wrap them
     // in a single et.Begin
-    assert(expressionFor("""(include "includes/include1.scm" "includes/include2.scm")""") ===
+    assert(exprFor("""(include "includes/include1.scm" "includes/include2.scm")""") ===
       et.Begin(List(
         et.Literal(ast.StringLiteral("include1-line1")), 
         et.Literal(ast.StringLiteral("include1-line2")),
@@ -434,7 +434,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   test("include handles relative includes and scope correctly") {
     // This tests both relative (include)s and that scoping works correctly
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
-    val expression = expressionFor("""(include "includes/definea.scm")""")(scope)
+    val expression = exprFor("""(include "includes/definea.scm")""")(scope)
 
     inside(scope("a")) {
       case storageLocA : StorageLocation =>
@@ -457,36 +457,36 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   }
   
   test("annotate expression types") {
-    assert(expressionFor("(ann #t <bool>)")(nfiScope) === 
+    assert(exprFor("(ann #t <bool>)")(nfiScope) === 
       et.Cast(et.Literal(ast.BooleanLiteral(true)), vt.CBool)
     )
   
     intercept[BadSpecialFormException] {
       // No args
-      expressionFor("(ann #t)")(nfiScope)
+      exprFor("(ann #t)")(nfiScope)
     }
     
     intercept[BadSpecialFormException] {
       // Too many args
-      expressionFor("(ann #t <bool> <int32>)")(nfiScope)
+      exprFor("(ann #t <bool> <int32>)")(nfiScope)
     }
     
     intercept[UnboundVariableException] {
       // Not a type
-      expressionFor("(ann #t <not-a-type>)")(nfiScope)
+      exprFor("(ann #t <not-a-type>)")(nfiScope)
     }
   }
   
   test("cond-expand with no clauses fails") {
     // We would normally expand this to an empty et.Begin but it's disallowed by R7RS
     intercept[BadSpecialFormException] {
-      expressionFor("""(cond-expand)""") 
+      exprFor("""(cond-expand)""") 
     }
   }
   
   test("cond-expand with one true clause") {
     // We would normally expand this to an empty et.Begin but it's disallowed by R7RS
-    assert(expressionFor("""(cond-expand ((library (scheme base)) 1 2 3))""") ===
+    assert(exprFor("""(cond-expand ((library (scheme base)) 1 2 3))""") ===
       et.Begin(List(
         et.Literal(ast.IntegerLiteral(1)),
         et.Literal(ast.IntegerLiteral(2)),
@@ -502,7 +502,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   
   test("cond-expand with one false with else") {
     // We would normally expand this to an empty et.Begin but it's disallowed by R7RS
-    assert(expressionFor("""(cond-expand ((not r7rs) 1 2 3) (else 4 5 6))""") ===
+    assert(exprFor("""(cond-expand ((not r7rs) 1 2 3) (else 4 5 6))""") ===
       et.Begin(List(
         et.Literal(ast.IntegerLiteral(4)),
         et.Literal(ast.IntegerLiteral(5)),
@@ -513,18 +513,18 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   
   test("parameterize with no arguments fails") {
     intercept[BadSpecialFormException] {
-      expressionFor("""(parameterize)""")
+      exprFor("""(parameterize)""")
     }
   }
   
   test("parameterize with three valued parameter fails") {
     intercept[BadSpecialFormException] {
-      expressionFor("""(parameterize (('param 'value 'extra)) #t)""")
+      exprFor("""(parameterize (('param 'value 'extra)) #t)""")
     }
   }
 
   test("parameterize with no parameters") {
-    assert(expressionFor("""(parameterize () #t)""") ===
+    assert(exprFor("""(parameterize () #t)""") ===
       et.Parameterize(
         Nil,
         et.Literal(ast.BooleanLiteral(true))
@@ -533,7 +533,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   }
   
   test("parameterize with two parameters") {
-    assert(expressionFor("""(parameterize (('param1 'value1) ('param2 'value2)) #t)""") ===
+    assert(exprFor("""(parameterize (('param1 'value1) ('param2 'value2)) #t)""") ===
       et.Parameterize(
         List(
           (et.Literal(ast.Symbol("param1")), et.Literal(ast.Symbol("value1"))),
@@ -545,7 +545,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   }
   
   test("parameterize with multiple body expressions") {
-    assert(expressionFor("""(parameterize (('param1 'value1)) 1 2 3)""") ===
+    assert(exprFor("""(parameterize (('param1 'value1)) 1 2 3)""") ===
       et.Parameterize(
         List(
           (et.Literal(ast.Symbol("param1")), et.Literal(ast.Symbol("value1")))
@@ -560,7 +560,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   }
   
   test("parameterize introduces a body context") {
-    inside(expressionFor("""(parameterize () (define a 1))""")) { 
+    inside(exprFor("""(parameterize () (define a 1))""")) { 
       case et.Parameterize(Nil, et.InternalDefinition(_, _)) =>
         // Checks out
     }

@@ -4,8 +4,8 @@ import io.llambda
 import org.scalatest.{FunSuite,Inside,OptionValues}
 import llambda.compiler._
 
-class MacroSuite extends FunSuite with Inside with OptionValues with testutil.ExpressionHelpers {
-  implicit val primitiveScope = new Scope(collection.mutable.Map(PrimitiveExpressions.bindings.toSeq : _*))
+class MacroSuite extends FunSuite with Inside with OptionValues with testutil.ExprHelpers {
+  implicit val primitiveScope = new Scope(collection.mutable.Map(PrimitiveExprs.bindings.toSeq : _*))
   
   val plusLoc = new StorageLocation("+")
   val plusScope = new Scope(collection.mutable.Map("+" -> plusLoc), Some(primitiveScope))
@@ -23,7 +23,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
 
   test("trivial replacement") {
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax false-literal
            (syntax-rules ()
              ((false-literal)
@@ -34,8 +34,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("syntax cannot be used as expression") {
-    intercept[MalformedExpressionException] {
-      expressionFor(
+    intercept[MalformedExprException] {
+      exprFor(
         """(define-syntax false-literal
              (syntax-rules ()
                ((false-literal)
@@ -46,7 +46,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("first pattern symbol is ignored") {
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax false-literal
            (syntax-rules ()
              ((SOMETHING-COMPLETELY-DIFFERENT)
@@ -57,7 +57,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("simple expansion") {
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax return-single
            (syntax-rules ()
              ((return-single foo)
@@ -71,7 +71,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
     // This expands a macro containing a lambda inside a lambda
     // We had a bug with rescoping and became confused while rescoping a lambda
     // body that contained symbols from a different scope. This triggered it.
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax func-returning
            (syntax-rules ()
              ((func-returning value)
@@ -83,7 +83,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("two value expansion") {
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax return-two
            (syntax-rules ()
              ((return-two a b)
@@ -95,7 +95,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   
   test("literals must exactly match") {
     intercept[NoSyntaxRuleException] {
-      expressionFor(
+      exprFor(
         """(define-syntax for
              (syntax-rules (in)
                ((for a in b)
@@ -108,7 +108,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   test("literal operand identifiers don't match non-literal pattern identifiers") {
     intercept[NoSyntaxRuleException] {
       // "literal" should not match "first-capture" 
-      expressionFor(
+      exprFor(
         """(define-syntax literal-test
            (syntax-rules (literal)
              ((literal-test (first-capture literal))
@@ -139,7 +139,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   test("ellipsis can be a literal") {
     intercept[NoSyntaxRuleException] {
       // If ellipsis wasn't a literal the middle of the list would match "b ..."
-      expressionFor(
+      exprFor(
         """(define-syntax ellipsis-literal
              (syntax-rules (...)
                ((ellipsis-literal a b ... c)
@@ -150,7 +150,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("multiple rules") {
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax arg-count
            (syntax-rules ()
              ((arg-count) 0)
@@ -162,7 +162,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("recursive expansion") {
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax recurse
            (syntax-rules ()
              ((recurse) 7)
@@ -173,7 +173,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("proper list matching") {
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax second-element
            (syntax-rules ()
              ((second-element (first second third) after) 
@@ -184,7 +184,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("exact improper list matching") {
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax improper-mix
            (syntax-rules ()
              ((improper-mix (var1 var2 ... . varn)) 
@@ -195,7 +195,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("improper list can match larger proper list") {
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax improper-match
            (syntax-rules ()
              ((improper-match (var1 var2 . rest)) 
@@ -213,7 +213,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("improper list can match larger improper list") {
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax improper-match
            (syntax-rules ()
              ((improper-match (var1 var2 . rest)) 
@@ -231,7 +231,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("pattern can be an improper list") {
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax improper-match
            (syntax-rules ()
              ((improper-match var1 var2 . rest) 
@@ -249,7 +249,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("macro can be applied as an improper list") {
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax improper-match
            (syntax-rules ()
              ((improper-match var1 var2 . rest) 
@@ -264,7 +264,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("vector matching") {
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax vector-mid
            (syntax-rules ()
              ((ivector-mid #(var1 var2 ... last)) 
@@ -275,7 +275,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("constant matching") {
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax truth-symbol
            (syntax-rules ()
              ((truth-symbol #t) 'true) 
@@ -284,7 +284,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
          (truth-symbol #t)"""
     ) === et.Literal(ast.Symbol("true")))
     
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax truth-symbol
            (syntax-rules ()
              ((truth-symbol #t) 'true) 
@@ -294,7 +294,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
     ) === et.Literal(ast.Symbol("false")))
 
     intercept[NoSyntaxRuleException] {
-      expressionFor(
+      exprFor(
         """(define-syntax truth-symbol
              (syntax-rules ()
                ((truth-symbol #t) 'true) 
@@ -306,7 +306,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("deeply nested matching") {
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax deep-extract
            (syntax-rules ()
              ((deep-extract (1 #(first #t (_ . second)))) 
@@ -316,7 +316,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
     ) === et.Literal(ast.Pair(ast.Symbol("y"), ast.Symbol("z"))))
 
     intercept[NoSyntaxRuleException] {
-      expressionFor(
+      exprFor(
         """(define-syntax deep-extract
              (syntax-rules ()
                ((deep-extract (1 #(first #t (_ . second)))) 
@@ -327,7 +327,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("wildcards") {
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax return-second
            (syntax-rules ()
              ((return-second _ foo)
@@ -349,7 +349,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("first rule matches") {
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax return-one
            (syntax-rules ()
              ((return-one foo bar) 0)
@@ -360,7 +360,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
 
   test("terminal zero or more match") {
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax return-all
            (syntax-rules ()
              ((return-all values ...)
@@ -371,7 +371,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("zero or more match with zero matches") {
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax return-all
            (syntax-rules ()
              ((return-all values ...)
@@ -382,7 +382,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("middle zero or more match") {
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax return-all-but-first-last
            (syntax-rules ()
              ((return-all-but-first-last first values ... last)
@@ -393,7 +393,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
     
     // This requires at least two datums
     intercept[NoSyntaxRuleException] {
-      expressionFor(
+      exprFor(
         """(define-syntax return-all-but-first-last
              (syntax-rules ()
                ((return-all-but-first-last first values ... last)
@@ -404,7 +404,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("splice to middle of proper list") {
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax append-false
            (syntax-rules ()
              ((append-false values ...)
@@ -415,7 +415,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("splice to middle of improper list") {
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax append-improper-false
            (syntax-rules ()
              ((append-improper-false values ...)
@@ -426,7 +426,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("splice to middle of vector") {
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax append-vector-false
            (syntax-rules ()
              ((append-improper-false values ...)
@@ -437,7 +437,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("custom ellipsis identifier") {
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax append-vector-false
            (syntax-rules my-ellipsis ()
              ((append-improper-false values my-ellipsis)
@@ -498,7 +498,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   test("non-restructuring repeating subpattern with replacement") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 
-	 val expr = expressionFor(
+	 val expr = exprFor(
 		 """(define-syntax repeating-pair
 			  (syntax-rules ()
 								 ((repeating-pair (left right) ...)
@@ -516,7 +516,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   test("non-restructuring repeating subpattern with no replacement") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 
-	 val expr = expressionFor(
+	 val expr = exprFor(
 		 """(define-syntax repeating-pair
 			  (syntax-rules ()
 								 ((repeating-pair (left1 right1) (left2 right2) ...)
@@ -552,7 +552,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
 
   test("nested subpatterns") {
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax nested-subpatterns
             (syntax-rules ()
                      ((nested-subpatterns (first second rest ...) ...)
@@ -570,7 +570,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   test("dependent macros") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 
-    val expr = expressionFor(
+    val expr = exprFor(
       """(define-syntax let
            (syntax-rules ()
              ((let ((name val) ...) body1 body2 ...)
@@ -613,7 +613,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
     )(syntaxScope)
 
     val expandScope = new Scope(collection.mutable.Map("or" -> syntaxScope.get("or").value))
-    val expr = expressionFor("(or 1 2)")(expandScope) 
+    val expr = exprFor("(or 1 2)")(expandScope) 
 
     inside(expr) {
       case et.Apply(et.Lambda(arg :: Nil, None, bodyExpr), argVal :: Nil) =>
@@ -624,7 +624,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
 
   test("syntax-error") {
     intercept[UserDefinedSyntaxError] {
-      expressionFor(
+      exprFor(
         """(define-syntax error-if-pair
              (syntax-rules ()
                ((error-if-pair (a . b))
@@ -634,7 +634,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("escape ellipsis") {
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax literal-ellipsis
            (syntax-rules ()
              ((literal-ellipsis values ...)
@@ -643,7 +643,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
          (literal-ellipsis 1 2 3)"""
     ) === et.Literal(ast.Symbol("...")))
     
-    assert(expressionFor(
+    assert(exprFor(
       """(define-syntax ignore-ellipsis
            (syntax-rules ()
              ((ignore-ellipsis first values ...)

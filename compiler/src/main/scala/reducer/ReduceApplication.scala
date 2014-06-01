@@ -35,7 +35,7 @@ private[reducer] object ReduceApplication {
     * expression. At the moment that's either variable references or constant data that cannot reference other data
     * (leaf data).
     */
-  private def expressionIsTrivial(expr : et.Expression) : Boolean = expr match {
+  private def exprIsTrivial(expr : et.Expr) : Boolean = expr match {
     case et.Literal(_ : ast.Leaf) | et.VarRef(_) =>
       true
 
@@ -45,9 +45,9 @@ private[reducer] object ReduceApplication {
   
   /** Returns true if we should inline an inlineable expression
     */
-  private def shouldInlineExpr(candidateExpr : et.Expression, allowNesting : Boolean = true) : Boolean = candidateExpr match {
+  private def shouldInlineExpr(candidateExpr : et.Expr, allowNesting : Boolean = true) : Boolean = candidateExpr match {
     case et.InternalDefinition(bindings, bodyExpr) =>
-      if (bindings.map(_._2).forall(expressionIsTrivial)) {
+      if (bindings.map(_._2).forall(exprIsTrivial)) {
         // Unwrap the internal definition
         shouldInlineExpr(bodyExpr)
       }
@@ -59,14 +59,14 @@ private[reducer] object ReduceApplication {
       // This catches (if (simple-application) trivial trivial)
       // Prevent nesting so we don't do this recursively 
       shouldInlineExpr(testExpr, allowNesting=false) && 
-        expressionIsTrivial(trueExpr) && 
-        expressionIsTrivial(falseExpr)
+        exprIsTrivial(trueExpr) && 
+        exprIsTrivial(falseExpr)
 
     case applyExpr : et.Apply =>
-      applyExpr.subexpressions.forall(expressionIsTrivial)
+      applyExpr.subexprs.forall(exprIsTrivial)
 
     case otherExpr =>
-      expressionIsTrivial(otherExpr)
+      exprIsTrivial(otherExpr)
   }
 
   /** Reduces a lambda application via optional inlining 
@@ -78,7 +78,7 @@ private[reducer] object ReduceApplication {
     * @return Defined option for the expression to replace the application with or None if inlining should not be 
     *         performed
     */
-  private def reduceLambdaApplication(lambdaExpr : et.Lambda, reducedOperands : List[et.Expression], forceInline : Boolean)(reduceConfig : ReduceConfig) : Option[et.Expression] = {
+  private def reduceLambdaApplication(lambdaExpr : et.Lambda, reducedOperands : List[et.Expr], forceInline : Boolean)(reduceConfig : ReduceConfig) : Option[et.Expr] = {
     // Make sure we have the right arity
     if (lambdaExpr.restArg.isDefined) {
       if (reducedOperands.length < lambdaExpr.fixedArgs.length) {
@@ -105,13 +105,13 @@ private[reducer] object ReduceApplication {
 
     // Create partial values for all values we know
     val newFixedKnownValues = newBindings.map { case (storageLoc, operandExpr) =>
-      storageLoc -> pv.PartialValue.fromReducedExpression(operandExpr)
+      storageLoc -> pv.PartialValue.fromReducedExpr(operandExpr)
     }
 
     val newRestKnownValues = (lambdaExpr.restArg map { restArgLoc =>
       // Find our rest arguments (if any)
       val restReducedOperands = reducedOperands.drop(lambdaExpr.fixedArgs.length)
-      val restPartialValues = restReducedOperands.map(pv.PartialValue.fromReducedExpression(_))
+      val restPartialValues = restReducedOperands.map(pv.PartialValue.fromReducedExpr(_))
 
       // Make a partial proper list for the rest arg
       // This allows things like (length) on the rest args, allow it to be re-packed for (apply) etc.
@@ -129,10 +129,10 @@ private[reducer] object ReduceApplication {
     )
 
     // Reduce the expression
-    val reducedBodyExpr = ReduceExpression(lambdaExpr.body)(innerReduceConfig)
+    val reducedBodyExpr = ReduceExpr(lambdaExpr.body)(innerReduceConfig)
 
     // Can we return?
-    if (ExpressionCanReturn(reducedBodyExpr)) {
+    if (ExprCanReturn(reducedBodyExpr)) {
       // We can't safely inline this
       return None
     }
@@ -183,13 +183,13 @@ private[reducer] object ReduceApplication {
 
 
   /** Resolves an applied expression attempting to find a report procedure or lambda */
-  private def resolveAppliedExpr(expr : et.Expression, ignoreReportProcs : Set[ReportProcedure])(implicit reduceConfig : ReduceConfig) : Option[ResolvedAppliedExpr] = expr match {
+  private def resolveAppliedExpr(expr : et.Expr, ignoreReportProcs : Set[ReportProcedure])(implicit reduceConfig : ReduceConfig) : Option[ResolvedAppliedExpr] = expr match {
     case et.VarRef(reportProcedure : ReportProcedure) if !ignoreReportProcs.contains(reportProcedure) =>
       Some(ResolvedReportProcedure(reportProcedure))
 
     case et.VarRef(storageLoc) if reduceConfig.inlineDepth < 6 =>
       // Dereference the variable
-      val storageLocExprOpt = (reduceConfig.knownValues.get(storageLoc).flatMap(_.toExpressionOpt) orElse
+      val storageLocExprOpt = (reduceConfig.knownValues.get(storageLoc).flatMap(_.toExprOpt) orElse
         reduceConfig.analysis.constantTopLevelBindings.get(storageLoc)
       )
 
@@ -212,13 +212,13 @@ private[reducer] object ReduceApplication {
 
   /** Reduces a procedure application via optional inlining 
     *
-    * @param  appliedExpr        Expression being applied
+    * @param  appliedExpr        Expr being applied
     * @param  reducedOperands    Reduced expressions of the operands of the application in application order
     * @param  ignoreReportProcs  Set of report procedures to treat as normal values. This is used internally to retry
     *                            reduction after failing to do report procedure specific reduction.
-    * @return Expression to replace the original application with or None to use the original expression
+    * @return Expr to replace the original application with or None to use the original expression
     */
-  def apply(appliedExpr : et.Expression, reducedOperands : List[et.Expression], ignoreReportProcs : Set[ReportProcedure] = Set())(implicit reduceConfig : ReduceConfig) : Option[et.Expression] = {
+  def apply(appliedExpr : et.Expr, reducedOperands : List[et.Expr], ignoreReportProcs : Set[ReportProcedure] = Set())(implicit reduceConfig : ReduceConfig) : Option[et.Expr] = {
     resolveAppliedExpr(appliedExpr, ignoreReportProcs) flatMap {
       case ResolvedReportProcedure(reportProc) =>
         // Run this through the report procedure reducers

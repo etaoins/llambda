@@ -4,7 +4,7 @@ import io.llambda
 import llambda.compiler._
 import org.scalatest.FunSuite
 
-class ApplyProcReducerSuite extends FunSuite with testutil.ExpressionHelpers {
+class ApplyProcReducerSuite extends FunSuite with testutil.ExprHelpers {
   test("inlining without arguments using (apply)") {
     implicit val scope = schemeBaseScope
 

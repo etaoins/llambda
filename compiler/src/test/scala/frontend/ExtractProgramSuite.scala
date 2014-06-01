@@ -5,7 +5,7 @@ import org.scalatest.{FunSuite,Inside}
 import llambda.compiler._
 
 class ExtractProgramSuite extends FunSuite with Inside {
-  def programFor(scheme : String) : List[et.Expression] = {
+  def programFor(scheme : String) : List[et.Expr] = {
     val data = SchemeParser.parseStringAsData(scheme)
     val frontendConfig = FrontendConfig(
       includePath=IncludePath(),

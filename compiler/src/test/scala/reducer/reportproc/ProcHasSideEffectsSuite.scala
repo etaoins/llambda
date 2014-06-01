@@ -4,7 +4,7 @@ import io.llambda
 import llambda.compiler._
 import org.scalatest.{FunSuite, Inside}
 
-class ProcHasSideEffectsSuite extends FunSuite with Inside with testutil.ExpressionHelpers {
+class ProcHasSideEffectsSuite extends FunSuite with Inside with testutil.ExprHelpers {
   test("(list) does not have side effects") {
     implicit val scope = schemeBaseScope
 

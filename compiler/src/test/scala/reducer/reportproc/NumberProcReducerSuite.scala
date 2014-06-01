@@ -4,7 +4,7 @@ import io.llambda
 import llambda.compiler._
 import org.scalatest.{FunSuite, Inside}
 
-class NumberProcReducerSuite extends FunSuite with Inside with testutil.ExpressionHelpers {
+class NumberProcReducerSuite extends FunSuite with Inside with testutil.ExprHelpers {
   implicit val scope = schemeBaseScope
 
   test("predicates") {

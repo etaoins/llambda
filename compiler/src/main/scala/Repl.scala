@@ -39,7 +39,7 @@ abstract class SchemeParsingMode(name : String) extends ReplMode(name) {
   }
 }
 
-abstract class ExpressionParsingMode(targetPlatform : platform.TargetPlatform, name : String) extends SchemeParsingMode(name) {
+abstract class ExprParsingMode(targetPlatform : platform.TargetPlatform, name : String) extends SchemeParsingMode(name) {
   protected val loader = new frontend.LibraryLoader(targetPlatform)
   private val frontendConfig = ReplFrontendConfig(targetPlatform)
   private val schemeBaseBindings = loader.loadSchemeBase(frontendConfig)
@@ -60,7 +60,7 @@ abstract class ExpressionParsingMode(targetPlatform : platform.TargetPlatform, n
       evalExprs(bodyExtractor(List(datum), scope))
   }
 
-  protected def evalExprs(exprs : List[et.Expression]) : String
+  protected def evalExprs(exprs : List[et.Expr]) : String
 }
 
 private object ReplFrontendConfig {
@@ -86,22 +86,22 @@ class ParseOnlyMode extends SchemeParsingMode("parse") {
 }
 
 /** Extract expressions allowed in a library, program or lambda body */
-class BodyExpressionMode(targetPlatform : platform.TargetPlatform) extends ExpressionParsingMode(targetPlatform, "expr") {
-  def evalExprs(exprs : List[et.Expression]) =
+class BodyExprMode(targetPlatform : platform.TargetPlatform) extends ExprParsingMode(targetPlatform, "expr") {
+  def evalExprs(exprs : List[et.Expr]) =
     exprs.mkString(" ")
 }
 
 /** Reduces expressions using the compile-time reducer */
-class ReduceMode(targetPlatform : platform.TargetPlatform) extends ExpressionParsingMode(targetPlatform, "reduce") {
-  private val userExprs = new collection.mutable.ListBuffer[et.Expression]
+class ReduceMode(targetPlatform : platform.TargetPlatform) extends ExprParsingMode(targetPlatform, "reduce") {
+  private val userExprs = new collection.mutable.ListBuffer[et.Expr]
 
-  def evalExprs(exprs : List[et.Expression]) = {
+  def evalExprs(exprs : List[et.Expr]) = {
     userExprs ++= exprs
 
-    val allExprs = loader.libraryExpressions ++ userExprs
-    val analysis = reducer.AnalyseExpressions(allExprs)
+    val allExprs = loader.libraryExprs ++ userExprs
+    val analysis = reducer.AnalyseExprs(allExprs)
 
-    reducer.ReduceExpressions(analysis).toString
+    reducer.ReduceExprs(analysis).toString
   }
 }
 
@@ -192,7 +192,7 @@ class Repl(targetPlatform : platform.TargetPlatform) {
         acceptInput(new ParseOnlyMode)
       
       case ":expr" =>
-        acceptInput(new BodyExpressionMode(targetPlatform))
+        acceptInput(new BodyExprMode(targetPlatform))
       
       case ":reduce" =>
         acceptInput(new ReduceMode(targetPlatform))

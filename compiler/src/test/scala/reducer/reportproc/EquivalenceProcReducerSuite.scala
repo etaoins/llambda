@@ -4,7 +4,7 @@ import io.llambda
 import llambda.compiler._
 import org.scalatest.{FunSuite, Inside}
 
-class EquivalenceProcReducerSuite extends FunSuite with testutil.ExpressionHelpers {
+class EquivalenceProcReducerSuite extends FunSuite with testutil.ExprHelpers {
   implicit val scope = schemeBaseScope
 
   test("boolean (eqv?)") {

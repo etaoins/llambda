@@ -4,8 +4,8 @@ import io.llambda
 import io.llambda.compiler._
 import io.llambda.compiler.reducer.{partialvalue => pv}
 
-private[reducer] object ReduceExpression {
-  private def unflattenExprs(exprs : List[et.Expression])(implicit reduceConfig : ReduceConfig) : et.Expression = exprs match {
+private[reducer] object ReduceExpr {
+  private def unflattenExprs(exprs : List[et.Expr])(implicit reduceConfig : ReduceConfig) : et.Expr = exprs match {
     case Nil =>
       et.Begin(Nil)
 
@@ -16,19 +16,19 @@ private[reducer] object ReduceExpression {
 
       val newExprs = nonValueExprs.filter(ExprHasSideEffects) :+ valueExpr
       
-      et.Expression.fromSequence(newExprs)
+      et.Expr.fromSequence(newExprs)
   }
 
   /**
    * Reduces an expression to the simplest form possible while preserving meaning
    */
-  def apply(expr : et.Expression)(implicit reduceConfig : ReduceConfig) : et.Expression = (expr match {
+  def apply(expr : et.Expr)(implicit reduceConfig : ReduceConfig) : et.Expr = (expr match {
     case begin : et.Begin =>
       val mappedExprs = begin.toSequence.map(apply)
       unflattenExprs(mappedExprs)
 
     case et.Apply(appliedExpr, operands) =>
-      val reducedOperands = operands.map(ReduceExpression(_))
+      val reducedOperands = operands.map(ReduceExpr(_))
 
       ReduceApplication(appliedExpr, reducedOperands) getOrElse {
         // We declined reducing this application
@@ -38,7 +38,7 @@ private[reducer] object ReduceExpression {
     case et.TopLevelDefinition(bindings) =>
       // Reduce our bindings and drop unused pure bindings
       val usedBindings = (bindings.map { case (storageLoc, initializer) =>
-        storageLoc -> ReduceExpression(initializer)
+        storageLoc -> ReduceExpr(initializer)
       }).filter { case (storageLoc, reducedInitializer) =>
         // Drop any bindings of unused variables to expressions without side effects
         reduceConfig.analysis.usedVars.contains(storageLoc) ||
@@ -57,14 +57,14 @@ private[reducer] object ReduceExpression {
     case et.InternalDefinition(bindings, bodyExpr) =>
       // Just reduce our bindings first
       val reducedBindings = bindings.map { case (storageLoc, initializer) =>
-        storageLoc -> ReduceExpression(initializer)
+        storageLoc -> ReduceExpr(initializer)
       }
       
       // We now have known values for the body expression
       val newKnownValues = reducedBindings.filter({ case (storageLoc, reducedInitializer) =>
         !reduceConfig.analysis.mutableVars.contains(storageLoc)
       }).map { case (storageLoc, reducedInitializer) =>
-        storageLoc -> pv.PartialValue.fromReducedExpression(reducedInitializer)
+        storageLoc -> pv.PartialValue.fromReducedExpr(reducedInitializer)
       }
       
       val bodyConfig = reduceConfig.copy(
@@ -72,7 +72,7 @@ private[reducer] object ReduceExpression {
       )
 
       // Reduce the body
-      val reducedBody = ReduceExpression(bodyExpr)(bodyConfig)
+      val reducedBody = ReduceExpr(bodyExpr)(bodyConfig)
 
       // Strip unused bindings
       // Note that unlike lambdas we need to handle recursively defined values in our bindings
@@ -101,7 +101,7 @@ private[reducer] object ReduceExpression {
       
       // Try to optimize out the branch
       // We specially handle impure tests below
-      LiteralForExpression(reducedTest, allowImpureExprs=true) match {
+      LiteralForExpr(reducedTest, allowImpureExprs=true) match {
         case Some(literal) =>
           val branchExpr = if (literal == ast.BooleanLiteral(false)) {
             apply(falseExpr)

@@ -10,7 +10,7 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.{InternalCompilerErrorException, ValueNotApplicableException}
 
-private[planner] object PlanExpression {
+private[planner] object PlanExpr {
   // These objects know how to implement certain report procedure directly
   // with plan steps
   private val reportProcPlanners = List[reportproc.ReportProcPlanner](
@@ -38,7 +38,7 @@ private[planner] object PlanExpression {
     )
   }
 
-  def apply(initialState : PlannerState)(expr : et.Expression, sourceNameHint : Option[String] = None)(implicit planConfig : PlanConfig, plan : PlanWriter) : PlanResult = LocateExceptionsWith(expr) {
+  def apply(initialState : PlannerState)(expr : et.Expr, sourceNameHint : Option[String] = None)(implicit planConfig : PlanConfig, plan : PlanWriter) : PlanResult = LocateExceptionsWith(expr) {
     implicit val worldPtr = initialState.worldPtr
 
     expr match {
@@ -288,7 +288,7 @@ private[planner] object PlanExpression {
         }
 
         plan.steps += ps.PushDynamicState(worldPtr, parameterValueTemps.toList)
-        val postInnerResult = PlanExpression(postValueState)(innerExpr)
+        val postInnerResult = PlanExpr(postValueState)(innerExpr)
         plan.steps += ps.PopDynamicState(worldPtr)
 
         postInnerResult

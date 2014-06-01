@@ -4,10 +4,10 @@ import io.llambda
 import org.scalatest.FunSuite
 import llambda.compiler._
 
-class QuasiquoteSuite extends FunSuite with testutil.ExpressionHelpers {
+class QuasiquoteSuite extends FunSuite with testutil.ExprHelpers {
   implicit val baseScope = new ImmutableScope(collection.mutable.Map(schemeBaseBindings.toSeq : _*))
 
-  def schemeBaseProcedure(name : String) : et.Expression =  
+  def schemeBaseProcedure(name : String) : et.Expr =  
     schemeBaseBindings(name) match {
       case storageLoc : StorageLocation =>
         et.VarRef(storageLoc)
@@ -26,24 +26,24 @@ class QuasiquoteSuite extends FunSuite with testutil.ExpressionHelpers {
 
   test("unquoting outside of a quasiquote fails") {
     intercept[BadSpecialFormException] {
-      expressionFor(",4")
+      exprFor(",4")
     }
   }
   
   test("splicing unquoting outside of a quasiquote fails") {
     intercept[BadSpecialFormException] {
-      expressionFor(",@4")
+      exprFor(",@4")
     }
   }
   
   test("empty quasiquote list") {
-    assert(expressionFor("`()") === 
+    assert(exprFor("`()") === 
       et.Literal(ast.ProperList(Nil))
     )
   }
 
   test("quasiquote list without unquoting") {
-    assert(expressionFor("`(1 2 3)") === 
+    assert(exprFor("`(1 2 3)") === 
       et.Literal(
         ast.ProperList(List(
           ast.IntegerLiteral(1),
@@ -55,7 +55,7 @@ class QuasiquoteSuite extends FunSuite with testutil.ExpressionHelpers {
   }
   
   test("quasiquote list with non-splicing unquoting") {
-    assert(expressionFor("`(1 ,(+ 2 3) 4)") === 
+    assert(exprFor("`(1 ,(+ 2 3) 4)") === 
       et.Apply(listProc, List(
         et.Literal(ast.IntegerLiteral(1)),
         et.Apply(plusProc, List(
@@ -68,7 +68,7 @@ class QuasiquoteSuite extends FunSuite with testutil.ExpressionHelpers {
   }
   
   test("quasiquote list with splicing unquoting mid-list") {
-    assert(expressionFor("`(1 ,@(list 2 3) 4)") === 
+    assert(exprFor("`(1 ,@(list 2 3) 4)") === 
       et.Apply(appendProc, List(
         et.Literal(ast.ProperList(List(
           ast.IntegerLiteral(1)
@@ -85,7 +85,7 @@ class QuasiquoteSuite extends FunSuite with testutil.ExpressionHelpers {
   }
   
   test("quasiquote list with splicing unquoting at end") {
-    assert(expressionFor("`(1 ,@(list 2 3))") === 
+    assert(exprFor("`(1 ,@(list 2 3))") === 
       et.Apply(appendProc, List(
         et.Literal(ast.ProperList(List(
           ast.IntegerLiteral(1)
@@ -99,7 +99,7 @@ class QuasiquoteSuite extends FunSuite with testutil.ExpressionHelpers {
   }
   
   test("complex quasiquote list") {
-    assert(expressionFor("`(1 2 ,@(list 3 4) ,(+ 2 3) 6)") === 
+    assert(exprFor("`(1 2 ,@(list 3 4) ,(+ 2 3) 6)") === 
       et.Apply(appendProc, List(
         et.Literal(ast.ProperList(List(
           ast.IntegerLiteral(1),
@@ -121,13 +121,13 @@ class QuasiquoteSuite extends FunSuite with testutil.ExpressionHelpers {
   }
   
   test("empty quasiquote vector") {
-    assert(expressionFor("`#()") === 
+    assert(exprFor("`#()") === 
       et.Literal(ast.VectorLiteral(Vector()))
     )
   }
   
   test("quasiquote vector without unquoting") {
-    assert(expressionFor("`#(1 2 3)") === 
+    assert(exprFor("`#(1 2 3)") === 
       et.Literal(ast.VectorLiteral(Vector(
         ast.IntegerLiteral(1),
         ast.IntegerLiteral(2),
@@ -137,7 +137,7 @@ class QuasiquoteSuite extends FunSuite with testutil.ExpressionHelpers {
   }
   
   test("quasiquote vector with non-splicing unquoting") {
-    assert(expressionFor("`#(1 ,(+ 2 3) 4)") === 
+    assert(exprFor("`#(1 ,(+ 2 3) 4)") === 
       et.Apply(vectorProc, List(
         et.Literal(ast.IntegerLiteral(1)),
         et.Apply(plusProc, List(
@@ -150,7 +150,7 @@ class QuasiquoteSuite extends FunSuite with testutil.ExpressionHelpers {
   }
   
   test("quasiquote vector with splicing unquoting mid-vector") {
-    assert(expressionFor("`#(1 ,@(list 2 3) 4)") === 
+    assert(exprFor("`#(1 ,@(list 2 3) 4)") === 
       et.Apply(listToVectorProc, List(
         et.Apply(appendProc, List(
           et.Literal(ast.ProperList(List(
@@ -169,7 +169,7 @@ class QuasiquoteSuite extends FunSuite with testutil.ExpressionHelpers {
   }
   
   test("quasiquote vector with splicing unquoting at end") {
-    assert(expressionFor("`#(1 ,@(list 2 3))") === 
+    assert(exprFor("`#(1 ,@(list 2 3))") === 
       et.Apply(listToVectorProc, List(
         et.Apply(appendProc, List(
           et.Literal(ast.ProperList(List(
@@ -185,7 +185,7 @@ class QuasiquoteSuite extends FunSuite with testutil.ExpressionHelpers {
   }
   
   test("complex quasiquote vector") {
-    assert(expressionFor("`#(1 2 ,@(list 3 4) ,(+ 2 3) 6)") === 
+    assert(exprFor("`#(1 2 ,@(list 3 4) ,(+ 2 3) 6)") === 
       et.Apply(listToVectorProc, List(
         et.Apply(appendProc, List(
           et.Literal(ast.ProperList(List(

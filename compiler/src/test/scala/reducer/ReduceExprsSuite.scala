@@ -4,7 +4,7 @@ import io.llambda
 import llambda.compiler._
 import org.scalatest.{FunSuite, Inside}
 
-class ReduceExpressionsSuite extends FunSuite with Inside with testutil.ExpressionHelpers {
+class ReduceExprsSuite extends FunSuite with Inside with testutil.ExprHelpers {
   // Use (scheme base) by default
   implicit val scope = schemeBaseScope
 

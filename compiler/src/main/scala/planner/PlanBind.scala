@@ -8,15 +8,15 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{intermediatevalue => iv}
 
 private[planner] object PlanBind {
-  private def storageLocRefedByExpr(storageLoc : StorageLocation, expr : et.Expression) : Boolean = expr match {
+  private def storageLocRefedByExpr(storageLoc : StorageLocation, expr : et.Expr) : Boolean = expr match {
     case et.VarRef(`storageLoc`) =>
       true
 
     case nonVarRef => 
-      nonVarRef.subexpressions.exists(storageLocRefedByExpr(storageLoc, _))
+      nonVarRef.subexprs.exists(storageLocRefedByExpr(storageLoc, _))
   }
 
-  def apply(initialState : PlannerState)(bindings : List[(StorageLocation, et.Expression)])(implicit planConfig : PlanConfig, plan : PlanWriter) : PlannerState = {
+  def apply(initialState : PlannerState)(bindings : List[(StorageLocation, et.Expr)])(implicit planConfig : PlanConfig, plan : PlanWriter) : PlannerState = {
     implicit val worldPtr = initialState.worldPtr
 
     val bindingLocs = bindings.map(_._1).toSet
@@ -63,7 +63,7 @@ private[planner] object PlanBind {
           )
 
         case otherExpr =>
-          PlanExpression(postrecursiveState)(otherExpr, Some(storageLoc.sourceName))
+          PlanExpr(postrecursiveState)(otherExpr, Some(storageLoc.sourceName))
       }
         
 

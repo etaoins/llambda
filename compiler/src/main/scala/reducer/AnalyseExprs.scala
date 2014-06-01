@@ -4,22 +4,22 @@ import io.llambda
 import llambda.compiler.{StorageLocation, et}
 import llambda.compiler.InternalCompilerErrorException
 
-case class AnalysedExpressions(
-  usedTopLevelExpressions : List[et.Expression] = List(),
+case class AnalysedExprs(
+  usedTopLevelExprs : List[et.Expr] = List(),
   mutableVars : Set[StorageLocation] = Set(),
-  constantTopLevelBindings : Map[StorageLocation, et.Expression] = Map(),
+  constantTopLevelBindings : Map[StorageLocation, et.Expr] = Map(),
   usedVars : Set[StorageLocation] = Set()
 )
 
-object AnalyseExpressions  {
-  private def handleNestedExpression(expr : et.Expression, acc : AnalysedExpressions) : AnalysedExpressions = expr match {
+object AnalyseExprs  {
+  private def handleNestedExpr(expr : et.Expr, acc : AnalysedExprs) : AnalysedExprs = expr match {
     case _ : et.TopLevelDefinition =>
       // This voids our warranty
       throw new InternalCompilerErrorException("Top-level definition found nested in other expression")
 
     case et.MutateVar(storageLoc, valueExpr) =>
       // Recurse down our initialiser
-      val withValueAcc = handleNestedExpression(valueExpr, acc)
+      val withValueAcc = handleNestedExpr(valueExpr, acc)
 
       // Record our mutableness
       withValueAcc.copy(
@@ -33,13 +33,13 @@ object AnalyseExpressions  {
       )
 
     case other =>
-      // Iterate over our subexpressions
-      other.subexpressions.foldLeft(acc) { case (previousAcc, expr) =>
-        handleNestedExpression(expr, previousAcc)
+      // Iterate over our subexprs
+      other.subexprs.foldLeft(acc) { case (previousAcc, expr) =>
+        handleNestedExpr(expr, previousAcc)
       }
   }
 
-  private def handleTopLevelExpression(expr : et.Expression, acc : AnalysedExpressions) : AnalysedExpressions = expr match {
+  private def handleTopLevelExpr(expr : et.Expr, acc : AnalysedExprs) : AnalysedExprs = expr match {
     case et.TopLevelDefinition(bindings) =>
       // Filter out the bindings that are unused
       val usedBindings = bindings.filter { case (storageLoc, initialiser) =>
@@ -62,7 +62,7 @@ object AnalyseExpressions  {
 
         // Add it to the list of used expressions
         val accWithOnlyUsedDefine = acc.copy(
-          usedTopLevelExpressions=onlyUsedDefine :: acc.usedTopLevelExpressions
+          usedTopLevelExprs=onlyUsedDefine :: acc.usedTopLevelExprs
         )
 
         // Deal with our initialisers
@@ -80,25 +80,25 @@ object AnalyseExpressions  {
           }
           
           // Recurse down our initialiser
-          handleNestedExpression(initialiser, accWithBinding)
+          handleNestedExpr(initialiser, accWithBinding)
         }
       }
 
     case _ =>
-      val withExprAcc = handleNestedExpression(expr, acc)
+      val withExprAcc = handleNestedExpr(expr, acc)
 
       // This is a non-(define)
       // Leave it in the used expression list
       withExprAcc.copy(
-        usedTopLevelExpressions=expr :: withExprAcc.usedTopLevelExpressions
+        usedTopLevelExprs=expr :: withExprAcc.usedTopLevelExprs
       )
   }
 
-  def apply(expressions : List[et.Expression]) = {
+  def apply(exprs : List[et.Expr]) = {
     // Fold right because we want to know if a binding is used by the time we encounter it
     // This means we must visit them in reverse order
-    expressions.foldRight(AnalysedExpressions()) { case (expr, previousAcc) =>
-      handleTopLevelExpression(expr, previousAcc)
+    exprs.foldRight(AnalysedExprs()) { case (expr, previousAcc) =>
+      handleTopLevelExpr(expr, previousAcc)
     }
   }
 }

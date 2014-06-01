@@ -42,7 +42,7 @@ class ExtractLibrarySuite extends FunSuite with Inside {
       """(define-library (example lib)
            (import (llambda internal primitives))
            (export set! lambda))"""
-      ) === Library(exampleName, Map("set!" -> PrimitiveExpressions.Set, "lambda" -> PrimitiveExpressions.Lambda), Nil)) 
+      ) === Library(exampleName, Map("set!" -> PrimitiveExprs.Set, "lambda" -> PrimitiveExprs.Lambda), Nil)) 
   }
   
   test("exporting internal symbol") {
@@ -74,7 +74,7 @@ class ExtractLibrarySuite extends FunSuite with Inside {
       """(define-library (example lib)
            (import (llambda internal primitives))
            (export set! (rename lambda new-lambda)))"""
-      ) === Library(exampleName, Map("set!" -> PrimitiveExpressions.Set, "new-lambda" -> PrimitiveExpressions.Lambda), Nil)) 
+      ) === Library(exampleName, Map("set!" -> PrimitiveExprs.Set, "new-lambda" -> PrimitiveExprs.Lambda), Nil)) 
   }
 
   test("single body include") {

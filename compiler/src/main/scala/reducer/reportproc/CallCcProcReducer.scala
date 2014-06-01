@@ -9,12 +9,12 @@ import annotation.tailrec
 object CallCcProcReducer extends ReportProcReducer {
   private val callCcNames = Set("call-with-current-continuation", "call/cc")
   
-  private def storageLocReferencedByExpr(storageLoc : StorageLocation, expr : et.Expression) : Boolean = expr match {
+  private def storageLocReferencedByExpr(storageLoc : StorageLocation, expr : et.Expr) : Boolean = expr match {
     case et.VarRef(refedLoc) =>
       refedLoc == storageLoc
 
     case nonRef =>
-      nonRef.subexpressions.exists(storageLocReferencedByExpr(storageLoc, _))
+      nonRef.subexprs.exists(storageLocReferencedByExpr(storageLoc, _))
   }
   
   /**
@@ -23,7 +23,7 @@ object CallCcProcReducer extends ReportProcReducer {
    * This is important as et.Return() is difficult for the reducer and later passes to statically reason about
    */
   @tailrec
-  private def convertUnconditionalReturn(bodyExprs : List[et.Expression], acc : List[et.Expression] = List()) : List[et.Expression] = bodyExprs match {
+  private def convertUnconditionalReturn(bodyExprs : List[et.Expr], acc : List[et.Expr] = List()) : List[et.Expr] = bodyExprs match {
     case et.Return(returnedExpr) :: discaredTail =>
       // We exited!
       // Discard our tail and change from an et.Return to a normal body
@@ -36,7 +36,7 @@ object CallCcProcReducer extends ReportProcReducer {
       acc.reverse
   } 
 
-  private def replaceExitProcWithReturn(expr : et.Expression, exitProc : StorageLocation) : et.Expression = expr match {
+  private def replaceExitProcWithReturn(expr : et.Expr, exitProc : StorageLocation) : et.Expr = expr match {
     case applyExpr @ et.Apply(et.VarRef(appliedVar), List(returnedExpr)) if appliedVar == exitProc =>
       // Perform replacement in the expression we're returning
       val replacedReturnedExpr = replaceExitProcWithReturn(returnedExpr, exitProc)
@@ -50,18 +50,18 @@ object CallCcProcReducer extends ReportProcReducer {
       lambdaExpr
 
     case _ =>
-      // Replace any uses of the exit proc in our subexpressions
+      // Replace any uses of the exit proc in our subexprs
       expr.map(replaceExitProcWithReturn(_, exitProc))
   }
 
-  def apply(appliedVar : ReportProcedure, operands : List[et.Expression])(implicit reduceConfig : ReduceConfig) : Option[et.Expression] = (appliedVar.reportName, operands) match {
+  def apply(appliedVar : ReportProcedure, operands : List[et.Expr])(implicit reduceConfig : ReduceConfig) : Option[et.Expr] = (appliedVar.reportName, operands) match {
     case (reportName, List(et.Lambda(List(exitProc), None, bodyExpr))) if callCcNames.contains(reportName) => 
       // Try to convert all uses of the exit proc in to a return
       val replacedBodyExpr = replaceExitProcWithReturn(bodyExpr, exitProc)
 
       // Convert any returns in the tail position back to normal Scheme last value returns
       // This is easier for the reducer and planner to reason about
-      val dereturnedBodyExpr = et.Expression.fromSequence(
+      val dereturnedBodyExpr = et.Expr.fromSequence(
         convertUnconditionalReturn(replacedBodyExpr.toSequence)
       )
 
@@ -69,7 +69,7 @@ object CallCcProcReducer extends ReportProcReducer {
         // We still need to invoke (call/cc) to get an exit proc value
         et.Apply(et.VarRef(appliedVar), List(et.Lambda(List(exitProc), None, dereturnedBodyExpr)))
       }
-      else if (ExpressionCanReturn(dereturnedBodyExpr)) {
+      else if (ExprCanReturn(dereturnedBodyExpr)) {
         // We converted all uses of the exit proc to et.Return. We can strip out the (call/cc) completely
         // This can be a big efficiency win
         et.Apply(et.Lambda(Nil, None, dereturnedBodyExpr), Nil)
