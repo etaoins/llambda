@@ -45,9 +45,9 @@ private[planner] object PlanBind {
 
         val recordDataTemp = ps.RecordLikeDataTemp()
 
-        plan.steps += ps.RecordLikeInit(recursiveTemp, recordDataTemp, vt.MutableType)
+        plan.steps += ps.InitRecordLike(recursiveTemp, recordDataTemp, vt.MutableType)
         // Mark this value as undefined so a runtime error will be raised if it is accessed
-        plan.steps += ps.RecordDataFieldSetUndefined(recordDataTemp, vt.MutableType, vt.MutableField)
+        plan.steps += ps.SetRecordDataFieldUndefined(recordDataTemp, vt.MutableType, vt.MutableField)
 
         state.withValue(storageLoc -> MutableValue(recursiveTemp, true))
       }
@@ -77,8 +77,8 @@ private[planner] object PlanBind {
           // Update the recursive to point to our new value
           val recordDataTemp = ps.RecordLikeDataTemp()
 
-          plan.steps += ps.StoreRecordLikeData(recordDataTemp, recursiveTemp, vt.MutableType)
-          plan.steps += ps.RecordDataFieldSet(recordDataTemp, vt.MutableType, vt.MutableField, initialValueTemp)
+          plan.steps += ps.LoadRecordLikeData(recordDataTemp, recursiveTemp, vt.MutableType)
+          plan.steps += ps.SetRecordDataField(recordDataTemp, vt.MutableType, vt.MutableField, initialValueTemp)
 
           Some(recursiveTemp)
 
@@ -95,10 +95,10 @@ private[planner] object PlanBind {
 
           // Create a new mutable
           val recordDataTemp = ps.RecordLikeDataTemp()
-          plan.steps += ps.RecordLikeInit(mutableTemp, recordDataTemp, vt.MutableType)
+          plan.steps += ps.InitRecordLike(mutableTemp, recordDataTemp, vt.MutableType)
 
           // Set the value
-          plan.steps += ps.RecordDataFieldSet(recordDataTemp, vt.MutableType, vt.MutableField, initialValueTemp)
+          plan.steps += ps.SetRecordDataField(recordDataTemp, vt.MutableType, vt.MutableField, initialValueTemp)
 
           mutableTemp
         }

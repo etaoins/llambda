@@ -98,7 +98,7 @@ case class InvokeArgument(
 
 /** Invokes an entry point with the given arguments
   *
-  * Entry points can be loaded with StoreNamedEntryPoint
+  * Entry points can be loaded with CreateNamedEntryPoint
   */
 case class Invoke(result : Option[TempValue], signature : ProcedureSignature, entryPoint : TempValue, arguments : List[InvokeArgument]) extends Step {
   lazy val inputValues = arguments.map(_.tempValue).toSet + entryPoint
@@ -144,8 +144,7 @@ case class DisposeValue(value : TempValue) extends Step {
 
 /** Conditionally branches based on a value 
   *
-  * @param result      location to store trueValue or falseValue when the branch
-  *                    completes
+  * @param result      location to store trueValue or falseValue when the branch completes
   * @param test        i1 value to conditionally branch on
   * @param trueSteps   steps to perform if the condition is true
   * @param trueValue   value to place in result after performing trueSteps
@@ -261,129 +260,129 @@ case class CalcProperListLength(result : TempValue, listHead : TempValue) extend
     CalcProperListLength(f(result), f(listHead))
 }
 
-/** Indicates a step that stores a constant value */
-sealed trait StoreConstant extends Step with MergeableStep {
+/** Indicates a step that creates a constant value */
+sealed trait CreateConstant extends Step with MergeableStep {
   val result : TempValue
   lazy val outputValues = Set(result)
 }
 
-/** Stores an entry point with the given signature and native symbol
+/** Creates an entry point with the given signature and native symbol
   *
   * This can be called with Invoke
   */
-case class StoreNamedEntryPoint(result : TempValue, signature : ProcedureSignature, nativeSymbol : String) extends Step with MergeableStep {
+case class CreateNamedEntryPoint(result : TempValue, signature : ProcedureSignature, nativeSymbol : String) extends Step with MergeableStep {
   val inputValues = Set[TempValue]()
   lazy val outputValues = Set(result)
   
   def renamed(f : (TempValue) => TempValue) =
-    StoreNamedEntryPoint(f(result), signature, nativeSymbol)
+    CreateNamedEntryPoint(f(result), signature, nativeSymbol)
 }
 
-/** Indicates a step that stores a constant cell */
-sealed trait StoreConstantCell extends StoreConstant 
+/** Indicates a step that creates a constant cell */
+sealed trait CreateConstantCell extends CreateConstant 
 
-case class StoreStringCell(result : TempValue, value : String) extends StoreConstantCell {
+case class CreateStringCell(result : TempValue, value : String) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    StoreStringCell(f(result), value)
+    CreateStringCell(f(result), value)
 }
 
-case class StoreSymbolCell(result : TempValue, value : String) extends StoreConstantCell {
+case class CreateSymbolCell(result : TempValue, value : String) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    StoreSymbolCell(f(result), value)
+    CreateSymbolCell(f(result), value)
 }
 
-case class StoreExactIntegerCell(result : TempValue, value : Long) extends StoreConstantCell {
+case class CreateExactIntegerCell(result : TempValue, value : Long) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    StoreExactIntegerCell(f(result), value)
+    CreateExactIntegerCell(f(result), value)
 }
 
-case class StoreInexactRationalCell(result : TempValue, value : Double) extends StoreConstantCell {
+case class CreateInexactRationalCell(result : TempValue, value : Double) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    StoreInexactRationalCell(f(result), value)
+    CreateInexactRationalCell(f(result), value)
 }
 
-case class StoreCharacterCell(result : TempValue, value : Char) extends StoreConstantCell {
+case class CreateCharacterCell(result : TempValue, value : Char) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    StoreCharacterCell(f(result), value)
+    CreateCharacterCell(f(result), value)
 }
 
-case class StoreBooleanCell(result : TempValue, value : Boolean) extends StoreConstantCell {
+case class CreateBooleanCell(result : TempValue, value : Boolean) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    StoreBooleanCell(f(result), value)
+    CreateBooleanCell(f(result), value)
 }
 
-case class StoreBytevectorCell(result : TempValue, elements : Vector[Short]) extends StoreConstantCell {
+case class CreateBytevectorCell(result : TempValue, elements : Vector[Short]) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    StoreBytevectorCell(f(result), elements)
+    CreateBytevectorCell(f(result), elements)
 }
 
-case class StorePairCell(result : TempValue, car : TempValue, cdr : TempValue, listLengthOpt : Option[Long], memberTypeOpt : Option[ct.ConcreteCellType]) extends StoreConstantCell {
+case class CreatePairCell(result : TempValue, car : TempValue, cdr : TempValue, listLengthOpt : Option[Long], memberTypeOpt : Option[ct.ConcreteCellType]) extends CreateConstantCell {
   lazy val inputValues = Set(car, cdr)
   
   def renamed(f : (TempValue) => TempValue) =
-    StorePairCell(f(result), f(car), f(cdr), listLengthOpt, memberTypeOpt)
+    CreatePairCell(f(result), f(car), f(cdr), listLengthOpt, memberTypeOpt)
 }
 
-case class StoreVectorCell(result : TempValue, elements : Vector[TempValue]) extends StoreConstantCell {
+case class CreateVectorCell(result : TempValue, elements : Vector[TempValue]) extends CreateConstantCell {
   lazy val inputValues = elements.toSet
   
   def renamed(f : (TempValue) => TempValue) =
-    StoreVectorCell(f(result), elements.map(f))
+    CreateVectorCell(f(result), elements.map(f))
 }
 
-case class StoreUnitCell(result : TempValue) extends StoreConstantCell {
+case class CreateUnitCell(result : TempValue) extends CreateConstantCell {
   val inputValues = Set[TempValue]()  
   
   def renamed(f : (TempValue) => TempValue) =
-    StoreUnitCell(f(result))
+    CreateUnitCell(f(result))
 }
 
-case class StoreEmptyListCell(result : TempValue) extends StoreConstantCell {
+case class CreateEmptyListCell(result : TempValue) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    StoreEmptyListCell(f(result))
+    CreateEmptyListCell(f(result))
 }
 
-/** Stores a procedure with an empty closure 
+/** Creates a procedure with an empty closure 
   *
-  * This is equalivent to RecordLikeInit(vt.EmptyClosureType] followed by StoreProcedureEntryPoint except it uses a
+  * This is equalivent to RecordLikeInit(vt.EmptyClosureType] followed by LoadProcedureEntryPoint except it uses a
   * compile time constant cell and is considerably more efficient
   **/
-case class StoreEmptyClosure(result : TempValue, entryPoint : TempValue) extends StoreConstantCell {
+case class CreateEmptyClosure(result : TempValue, entryPoint : TempValue) extends CreateConstantCell {
   lazy val inputValues = Set(entryPoint)
   
   def renamed(f : (TempValue) => TempValue) =
-    StoreEmptyClosure(f(result), f(entryPoint))
+    CreateEmptyClosure(f(result), f(entryPoint))
 }
 
-/** Indicates a step that stores a native constant */
-sealed trait StoreNativeConstant extends StoreConstant {
+/** Indicates a step that creates a native constant */
+sealed trait CreateNativeConstant extends CreateConstant {
   val inputValues = Set[TempValue]()
 }
 
-case class StoreNativeInteger(result : TempValue, value : Long, bits : Int) extends StoreNativeConstant {
+case class CreateNativeInteger(result : TempValue, value : Long, bits : Int) extends CreateNativeConstant {
   def renamed(f : (TempValue) => TempValue) =
-    StoreNativeInteger(f(result), value, bits)
+    CreateNativeInteger(f(result), value, bits)
 }
 
-case class StoreNativeFloat(result : TempValue, value : Double, fpType : vt.FpType) extends StoreNativeConstant {
+case class CreateNativeFloat(result : TempValue, value : Double, fpType : vt.FpType) extends CreateNativeConstant {
   def renamed(f : (TempValue) => TempValue) =
-    StoreNativeFloat(f(result), value, fpType)
+    CreateNativeFloat(f(result), value, fpType)
 }
 
 /** Indicates a step that unboxes a cell */
@@ -421,43 +420,43 @@ case class UnboxCharacter(result : TempValue, boxed : TempValue) extends UnboxVa
 
 // These aren't quite an unboxing because there's two values per boxed value
 
-/** Stores the car of the passed PairCell as a DatumCell */
-case class StorePairCar(result : TempValue, boxed : TempValue) extends Step {
+/** Loads the car of the passed PairCell as a DatumCell */
+case class LoadPairCar(result : TempValue, boxed : TempValue) extends Step {
   lazy val inputValues = Set(boxed)
   lazy val outputValues = Set(result)
   
   def renamed(f : (TempValue) => TempValue) =
-    StorePairCar(f(result), f(boxed))
+    LoadPairCar(f(result), f(boxed))
 }
 
-/** Stores the cdr of the passed PairCell as a DatumCell */
-case class StorePairCdr(result : TempValue, boxed : TempValue) extends Step {
+/** Loads the cdr of the passed PairCell as a DatumCell */
+case class LoadPairCdr(result : TempValue, boxed : TempValue) extends Step {
   lazy val inputValues = Set(boxed)
   lazy val outputValues = Set(result)
   
   def renamed(f : (TempValue) => TempValue) =
-    StorePairCdr(f(result), f(boxed))
+    LoadPairCdr(f(result), f(boxed))
 }
 
-/** Store the entry point of a procedure
+/** Loads the entry point of a procedure
   *
   * This is not mergeable to allow procedures to dynamically change entry points
   */
-case class StoreProcedureEntryPoint(result : TempValue, boxed : TempValue) extends Step {
+case class LoadProcedureEntryPoint(result : TempValue, boxed : TempValue) extends Step {
   lazy val inputValues = Set(boxed)
   lazy val outputValues = Set(result)
   
   def renamed(f : (TempValue) => TempValue) =
-    StoreProcedureEntryPoint(f(result), f(boxed))
+    LoadProcedureEntryPoint(f(result), f(boxed))
 }
 
-/** Stores the length of a vector as an Int32 */
-case class StoreVectorLength(result : TempValue, boxed : TempValue) extends Step with MergeableStep {
+/** Loads the length of a vector as an Int32 */
+case class LoadVectorLength(result : TempValue, boxed : TempValue) extends Step with MergeableStep {
   lazy val inputValues = Set(boxed)
   lazy val outputValues = Set(result)
   
   def renamed(f : (TempValue) => TempValue) =
-    StoreVectorLength(f(result), f(boxed))
+    LoadVectorLength(f(result), f(boxed))
 }
 
 /** Indicates a step that boxes a native value
@@ -521,44 +520,44 @@ case class Return(returnValue : Option[TempValue]) extends Step {
  * @param dataResult  location to store the uninitialized record data 
  * @param recordType  type of record to create
  */
-case class RecordLikeInit(cellResult : TempValue, dataResult : TempValue, recordLikeType : vt.RecordLikeType) extends Step with CellConsumer {
+case class InitRecordLike(cellResult : TempValue, dataResult : TempValue, recordLikeType : vt.RecordLikeType) extends Step with CellConsumer {
   val allocSize = 1
 
   val inputValues = Set[TempValue]()
   val outputValues = Set(cellResult, dataResult)
   
   def renamed(f : (TempValue) => TempValue) =
-    RecordLikeInit(f(cellResult), f(dataResult), recordLikeType)
+    InitRecordLike(f(cellResult), f(dataResult), recordLikeType)
 }
 
 /** Sets a record field. The value must match the type of record field */
-case class RecordDataFieldSet(recordData : TempValue, recordLikeType : vt.RecordLikeType, recordField : vt.RecordField, newValue : TempValue) extends Step {
+case class SetRecordDataField(recordData : TempValue, recordLikeType : vt.RecordLikeType, recordField : vt.RecordField, newValue : TempValue) extends Step {
   lazy val inputValues = Set(recordData, newValue)
   val outputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    RecordDataFieldSet(f(recordData), recordLikeType, recordField, f(newValue))
+    SetRecordDataField(f(recordData), recordLikeType, recordField, f(newValue))
 }
 
 /** Sets a record field as undefined
   *
   * If RecordDataFieldRef is later called it will raise a runtime error if checkUndef is true
   */
-case class RecordDataFieldSetUndefined(recordData : TempValue, recordLikeType : vt.RecordLikeType, recordField : vt.RecordField) extends Step {
+case class SetRecordDataFieldUndefined(recordData : TempValue, recordLikeType : vt.RecordLikeType, recordField : vt.RecordField) extends Step {
   lazy val inputValues = Set(recordData)
   val outputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    RecordDataFieldSetUndefined(f(recordData), recordLikeType, recordField)
+    SetRecordDataFieldUndefined(f(recordData), recordLikeType, recordField)
 }
 
 /** Reads a record field. The value must match the type of record field */
-case class RecordDataFieldRef(result : TempValue, recordData : TempValue, recordLikeType : vt.RecordLikeType, recordField : vt.RecordField) extends Step {
+case class LoadRecordDataField(result : TempValue, recordData : TempValue, recordLikeType : vt.RecordLikeType, recordField : vt.RecordField) extends Step {
   lazy val inputValues = Set(recordData)
   lazy val outputValues = Set(result)
   
   def renamed(f : (TempValue) => TempValue) =
-    RecordDataFieldRef(f(result), f(recordData), recordLikeType, recordField)
+    LoadRecordDataField(f(result), f(recordData), recordLikeType, recordField)
 }
 
 /** Asserts that field value is defined 
@@ -594,13 +593,13 @@ case class AssertRecordLikeClass(worldPtr : WorldPtrValue, recordCell : TempValu
     AssertRecordLikeClass(worldPtr, f(recordCell), recordLikeType, errorMessage) 
 }
 
-/** Stores the data of a record */
-case class StoreRecordLikeData(result : TempValue, recordCell : TempValue, recordLikeType : vt.RecordLikeType) extends Step {
+/** Loads the data of a record */
+case class LoadRecordLikeData(result : TempValue, recordCell : TempValue, recordLikeType : vt.RecordLikeType) extends Step {
   lazy val inputValues = Set(recordCell)
   lazy val outputValues = Set(result)
   
   def renamed(f : (TempValue) => TempValue) =
-    StoreRecordLikeData(f(result), f(recordCell), recordLikeType)
+    LoadRecordLikeData(f(result), f(recordCell), recordLikeType)
 }
 
 /** Sets the entry point of a procedure

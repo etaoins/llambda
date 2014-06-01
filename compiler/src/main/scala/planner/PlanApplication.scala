@@ -16,7 +16,7 @@ object PlanApplication {
 
       // This is unmanaged because the empty list is a constant value
       val emptyListTemp = ps.CellTemp(ct.EmptyListCell, knownConstant=true)
-      plan.steps += ps.StoreEmptyListCell(emptyListTemp)
+      plan.steps += ps.CreateEmptyListCell(emptyListTemp)
 
       // We know this is constant because the empty list is constant
       val listElemCast = ps.CellTemp(ct.ListElementCell, knownConstant=true)

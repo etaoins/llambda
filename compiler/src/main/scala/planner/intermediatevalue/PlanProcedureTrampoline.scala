@@ -60,7 +60,7 @@ private[intermediatevalue] object PlanProcedureTrampoline {
 
       // Get the car of the pair as the arg's value 
       val argDatumTemp = ps.CellTemp(ct.DatumCell)
-      plan.steps += ps.StorePairCar(argDatumTemp, argPairTemp)
+      plan.steps += ps.LoadPairCar(argDatumTemp, argPairTemp)
 
       // Convert it to the expected type
       val argValue = TempValueToIntermediate(vt.IntrinsicCellType(ct.DatumCell), argDatumTemp)
@@ -70,7 +70,7 @@ private[intermediatevalue] object PlanProcedureTrampoline {
 
       // Now load the cdr
       val argCdrTemp = ps.CellTemp(ct.DatumCell)
-      plan.steps += ps.StorePairCdr(argCdrTemp, argPairTemp)
+      plan.steps += ps.LoadPairCdr(argCdrTemp, argPairTemp)
 
       // We know this is a list element but its type will be DatumCell
       new IntrinsicCellValue(ct.ListElementCell.concreteTypes, ct.DatumCell, argCdrTemp)
@@ -92,7 +92,7 @@ private[intermediatevalue] object PlanProcedureTrampoline {
 
     // Load the entry point for the function we're jumping to
     val entryPointTemp = ps.EntryPointTemp()
-    plan.steps += ps.StoreNamedEntryPoint(entryPointTemp, signature, nativeSymbol)
+    plan.steps += ps.CreateNamedEntryPoint(entryPointTemp, signature, nativeSymbol)
 
     // Create our result temp value if any
     val resultTempOpt = signature.returnType map { returnType =>

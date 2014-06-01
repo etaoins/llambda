@@ -35,7 +35,7 @@ sealed abstract class ConstantValue(val cellType : ct.ConcreteCellType) extends 
     None
 }
 
-sealed abstract class TrivialConstantValue[T, U <: ps.StoreConstantCell](cellType : ct.ConcreteCellType, value : T, stepConstructor : (ps.TempValue, T) => U) extends ConstantValue(cellType) {
+sealed abstract class TrivialConstantValue[T, U <: ps.CreateConstantCell](cellType : ct.ConcreteCellType, value : T, stepConstructor : (ps.TempValue, T) => U) extends ConstantValue(cellType) {
   def toConstantCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
     val constantTemp = ps.CellTemp(cellType, knownConstant=true)
     plan.steps += stepConstructor(constantTemp, value)
@@ -43,26 +43,26 @@ sealed abstract class TrivialConstantValue[T, U <: ps.StoreConstantCell](cellTyp
   }
 }
 
-class ConstantStringValue(value : String) extends TrivialConstantValue(ct.StringCell, value, ps.StoreStringCell.apply) {
+class ConstantStringValue(value : String) extends TrivialConstantValue(ct.StringCell, value, ps.CreateStringCell.apply) {
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = 
     impossibleConversion(s"Cannot convert constant string to requested type ${nativeType.schemeName} or any other native type")
 }
 
-class ConstantSymbolValue(value : String) extends TrivialConstantValue(ct.SymbolCell, value, ps.StoreSymbolCell.apply) {
+class ConstantSymbolValue(value : String) extends TrivialConstantValue(ct.SymbolCell, value, ps.CreateSymbolCell.apply) {
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue =
     impossibleConversion(s"Cannot convert constant symbol to requested type ${nativeType.schemeName} or any other native type")
 }
 
-class ConstantExactIntegerValue(value : Long) extends TrivialConstantValue(ct.ExactIntegerCell, value, ps.StoreExactIntegerCell.apply) {
+class ConstantExactIntegerValue(value : Long) extends TrivialConstantValue(ct.ExactIntegerCell, value, ps.CreateExactIntegerCell.apply) {
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = nativeType match {
     case intType : vt.IntType =>
       val constantTemp = ps.Temp(intType)
-      plan.steps += ps.StoreNativeInteger(constantTemp, value, intType.bits)
+      plan.steps += ps.CreateNativeInteger(constantTemp, value, intType.bits)
       constantTemp
 
     case fpType : vt.FpType =>
       val constantTemp = ps.Temp(fpType)
-      plan.steps += ps.StoreNativeFloat(constantTemp, value.toDouble, fpType)
+      plan.steps += ps.CreateNativeFloat(constantTemp, value.toDouble, fpType)
       constantTemp
 
     case _ =>
@@ -73,11 +73,11 @@ class ConstantExactIntegerValue(value : Long) extends TrivialConstantValue(ct.Ex
     vt.Int64
 }
 
-class ConstantInexactRationalValue(value : Double) extends TrivialConstantValue(ct.InexactRationalCell, value, ps.StoreInexactRationalCell.apply) {
+class ConstantInexactRationalValue(value : Double) extends TrivialConstantValue(ct.InexactRationalCell, value, ps.CreateInexactRationalCell.apply) {
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = nativeType match {
     case fpType : vt.FpType =>
       val constantTemp = ps.Temp(fpType)
-      plan.steps += ps.StoreNativeFloat(constantTemp, value, fpType)
+      plan.steps += ps.CreateNativeFloat(constantTemp, value, fpType)
       constantTemp
 
     case _ => 
@@ -88,11 +88,11 @@ class ConstantInexactRationalValue(value : Double) extends TrivialConstantValue(
     vt.Double
 }
 
-class ConstantCharacterValue(value : Char) extends TrivialConstantValue(ct.CharacterCell, value, ps.StoreCharacterCell.apply) {
+class ConstantCharacterValue(value : Char) extends TrivialConstantValue(ct.CharacterCell, value, ps.CreateCharacterCell.apply) {
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = nativeType match {
     case vt.UnicodeChar =>
       val constantTemp = ps.Temp(vt.UnicodeChar)
-      plan.steps += ps.StoreNativeInteger(constantTemp, value, vt.UnicodeChar.bits)
+      plan.steps += ps.CreateNativeInteger(constantTemp, value, vt.UnicodeChar.bits)
       constantTemp
 
     case _ =>
@@ -103,12 +103,12 @@ class ConstantCharacterValue(value : Char) extends TrivialConstantValue(ct.Chara
     vt.UnicodeChar
 }
 
-class ConstantBooleanValue(value : Boolean) extends TrivialConstantValue(ct.BooleanCell, value, ps.StoreBooleanCell.apply) {
+class ConstantBooleanValue(value : Boolean) extends TrivialConstantValue(ct.BooleanCell, value, ps.CreateBooleanCell.apply) {
   private val intValue = if (value) 1 else 0
 
   override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     val predTemp = ps.Temp(vt.Predicate)
-    plan.steps += ps.StoreNativeInteger(predTemp, intValue, 1) 
+    plan.steps += ps.CreateNativeInteger(predTemp, intValue, 1) 
 
     predTemp
   }
@@ -121,7 +121,7 @@ class ConstantBooleanValue(value : Boolean) extends TrivialConstantValue(ct.Bool
     vt.CBool
 }
 
-class ConstantBytevectorValue(value : Vector[Short]) extends TrivialConstantValue(ct.BytevectorCell, value, ps.StoreBytevectorCell.apply) {
+class ConstantBytevectorValue(value : Vector[Short]) extends TrivialConstantValue(ct.BytevectorCell, value, ps.CreateBytevectorCell.apply) {
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue =
     // Bytevectors can't be unboxed
     impossibleConversion(s"Cannot convert constant bytevector to requested type ${nativeType.schemeName} or any other native type")
@@ -137,7 +137,7 @@ class ConstantPairValue(car : ConstantValue, cdr : ConstantValue, val listMetric
     val carTemp = car.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
     val cdrTemp = cdr.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
 
-    plan.steps += ps.StorePairCell(constantTemp, carTemp, cdrTemp, listMetricsOpt.map(_.length), listMetricsOpt.flatMap(_.memberType))
+    plan.steps += ps.CreatePairCell(constantTemp, carTemp, cdrTemp, listMetricsOpt.map(_.length), listMetricsOpt.flatMap(_.memberType))
 
     constantTemp
   }
@@ -156,7 +156,7 @@ class ConstantVectorValue(elements : Vector[ConstantValue]) extends ConstantValu
       _.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
     }
 
-    plan.steps += ps.StoreVectorCell(constantTemp, elementTemps)
+    plan.steps += ps.CreateVectorCell(constantTemp, elementTemps)
 
     constantTemp
   }
@@ -169,7 +169,7 @@ class ConstantVectorValue(elements : Vector[ConstantValue]) extends ConstantValu
 object EmptyListValue extends ConstantValue(ct.EmptyListCell) {
   def toConstantCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
     val constantTemp = ps.CellTemp(cellType, knownConstant=true)
-    plan.steps += ps.StoreEmptyListCell(constantTemp)
+    plan.steps += ps.CreateEmptyListCell(constantTemp)
     constantTemp
   }
 
@@ -180,7 +180,7 @@ object EmptyListValue extends ConstantValue(ct.EmptyListCell) {
 object UnitValue extends ConstantValue(ct.UnitCell) {
   def toConstantCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
     val constantTemp = ps.CellTemp(cellType, knownConstant=true)
-    plan.steps += ps.StoreUnitCell(constantTemp)
+    plan.steps += ps.CreateUnitCell(constantTemp)
     constantTemp
   }
 

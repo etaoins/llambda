@@ -26,11 +26,11 @@ object PlanRecordTypeAccessor {
 
         // Extract the record data
         val recordDataTemp = ps.RecordLikeDataTemp()
-        plan.steps += ps.StoreRecordLikeData(recordDataTemp, recordCellTemp, recordType) 
+        plan.steps += ps.LoadRecordLikeData(recordDataTemp, recordCellTemp, recordType) 
         
         // Read the field
         val fieldValueTemp = new ps.TempValue(field.fieldType.isGcManaged)
-        plan.steps += ps.RecordDataFieldRef(fieldValueTemp, recordDataTemp, recordType, field) 
+        plan.steps += ps.LoadRecordDataField(fieldValueTemp, recordDataTemp, recordType, field) 
         plan.steps += ps.Return(Some(fieldValueTemp))
 
         PlannedFunction(

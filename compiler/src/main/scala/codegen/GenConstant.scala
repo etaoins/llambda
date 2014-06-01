@@ -189,17 +189,17 @@ object GenConstant {
     )
   }
 
-  def apply(state : GenerationState, typeGenerator : TypeGenerator)(storeStep : ps.StoreConstant) : IrConstant = {
+  def apply(state : GenerationState, typeGenerator : TypeGenerator)(createStep : ps.CreateConstant) : IrConstant = {
     val module = state.currentBlock.function.module
 
-    storeStep match {
-      case ps.StoreStringCell(_, value) =>
+    createStep match {
+      case ps.CreateStringCell(_, value) =>
         genStringCell(module)(value)
 
-      case ps.StoreSymbolCell(_, value) =>
+      case ps.CreateSymbolCell(_, value) =>
         genSymbolCell(module)(value)
 
-      case ps.StoreExactIntegerCell(_, value) =>
+      case ps.CreateExactIntegerCell(_, value) =>
         val intCellName = module.nameSource.allocate("schemeExactInteger")
 
         val intCell = ct.ExactIntegerCell.createConstant(
@@ -208,7 +208,7 @@ object GenConstant {
 
         defineConstantData(module)(intCellName, intCell)
       
-      case ps.StoreInexactRationalCell(_, value) =>
+      case ps.CreateInexactRationalCell(_, value) =>
         val rationalCellName = module.nameSource.allocate("schemeInexactRational")
 
         val rationalCell = ct.InexactRationalCell.createConstant(
@@ -217,13 +217,13 @@ object GenConstant {
 
         defineConstantData(module)(rationalCellName, rationalCell)
 
-      case ps.StoreBooleanCell(_, true) =>
+      case ps.CreateBooleanCell(_, true) =>
         GlobalDefines.trueIrValue
 
-      case ps.StoreBooleanCell(_, false) =>
+      case ps.CreateBooleanCell(_, false) =>
         GlobalDefines.falseIrValue
       
-      case ps.StoreCharacterCell(_, value) =>
+      case ps.CreateCharacterCell(_, value) =>
         val charCellName = module.nameSource.allocate("schemeCharacter")
 
         val charCell = ct.CharacterCell.createConstant(
@@ -232,10 +232,10 @@ object GenConstant {
 
         defineConstantData(module)(charCellName, charCell)
       
-      case ps.StoreBytevectorCell(_, elements) =>
+      case ps.CreateBytevectorCell(_, elements) =>
         genBytevectorCell(module)(elements)
       
-      case ps.StoreVectorCell(_, elementTemps) =>
+      case ps.CreateVectorCell(_, elementTemps) =>
         val elementIrs = elementTemps.map { elementTemp =>
           state.liveTemps(elementTemp) match {
             case constant : IrConstant => constant
@@ -246,7 +246,7 @@ object GenConstant {
 
         genVectorCell(module)(elementIrs)
 
-      case ps.StorePairCell(_, carTemp, cdrTemp, listLengthOpt, memberTypeOpt) =>
+      case ps.CreatePairCell(_, carTemp, cdrTemp, listLengthOpt, memberTypeOpt) =>
         val pairCellName = module.nameSource.allocate("schemePair")
         val carIrConstant = state.liveTemps(carTemp) match {
           case constant : IrConstant => constant
@@ -275,13 +275,13 @@ object GenConstant {
 
         defineConstantData(module)(pairCellName, pairCell)
 
-      case ps.StoreUnitCell(_) =>
+      case ps.CreateUnitCell(_) =>
         GlobalDefines.unitIrValue
 
-      case ps.StoreEmptyListCell(_) =>
+      case ps.CreateEmptyListCell(_) =>
         GlobalDefines.emptyListIrValue
 
-      case ps.StoreEmptyClosure(_, entryPointTemp) =>
+      case ps.CreateEmptyClosure(_, entryPointTemp) =>
         val entryPointConstant = state.liveTemps(entryPointTemp) match {
           case constant : IrConstant => constant
           case other =>
@@ -290,13 +290,13 @@ object GenConstant {
 
         genEmptyClosure(module, typeGenerator)(entryPointConstant)
 
-      case ps.StoreNativeInteger(_, value, bits) =>
+      case ps.CreateNativeInteger(_, value, bits) =>
         IntegerConstant(IntegerType(bits), value)
       
-      case ps.StoreNativeFloat(_, value, fpType) if fpType == vt.Double =>
+      case ps.CreateNativeFloat(_, value, fpType) if fpType == vt.Double =>
         DoubleConstant(value)
 
-      case ps.StoreNativeFloat(_, value, fpType) if fpType == vt.Float =>
+      case ps.CreateNativeFloat(_, value, fpType) if fpType == vt.Float =>
         FloatConstant(value.toFloat)
     }
   }

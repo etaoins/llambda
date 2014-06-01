@@ -4,10 +4,10 @@ import io.llambda
 import llambda.llvmir._
 import llambda.compiler.planner.{step => ps}
 
-object GenRecordLikeInit {
+object GenInitRecordLike {
   case class InitializedRecordLike(recordCell : IrValue, recordData : IrValue)
 
-  def apply(state : GenerationState, typeGenerator : TypeGenerator)(initStep : ps.RecordLikeInit) : (GenerationState, InitializedRecordLike)  = { 
+  def apply(state : GenerationState, typeGenerator : TypeGenerator)(initStep : ps.InitRecordLike) : (GenerationState, InitializedRecordLike)  = { 
     val cellType = initStep.recordLikeType.cellType
 
     val block = state.currentBlock

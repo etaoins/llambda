@@ -83,10 +83,10 @@ private[planner] object PlanLambda {
         val mutableTemp = ps.RecordTemp()
         val recordDataTemp = ps.RecordLikeDataTemp()
 
-        plan.steps += ps.RecordLikeInit(mutableTemp, recordDataTemp, vt.MutableType)
+        plan.steps += ps.InitRecordLike(mutableTemp, recordDataTemp, vt.MutableType)
 
         // Set the value
-        plan.steps += ps.RecordDataFieldSet(recordDataTemp, vt.MutableType, vt.MutableField, datumTempValue)
+        plan.steps += ps.SetRecordDataField(recordDataTemp, vt.MutableType, vt.MutableField, datumTempValue)
         
         state.withValue(argument.storageLoc -> MutableValue(mutableTemp, false))
       }
@@ -96,7 +96,7 @@ private[planner] object PlanLambda {
     capturedVariables.foldLeft(initialState) { case (state, capturedVar) =>
       // Load the variable
       val varTemp = new ps.TempValue(capturedVar.recordField.fieldType.isGcManaged)
-      plan.steps += ps.RecordDataFieldRef(varTemp, closureDataTemp, closureType, capturedVar.recordField) 
+      plan.steps += ps.LoadRecordDataField(varTemp, closureDataTemp, closureType, capturedVar.recordField) 
 
       // Add it to our state
       capturedVar match {
@@ -122,7 +122,7 @@ private[planner] object PlanLambda {
       }
         
       // Store to the field
-      plan.steps += ps.RecordDataFieldSet(closureDataTemp, closureType, capturedVar.recordField, varTemp)
+      plan.steps += ps.SetRecordDataField(closureDataTemp, closureType, capturedVar.recordField, varTemp)
     }
   }
 
@@ -279,7 +279,7 @@ private[planner] object PlanLambda {
 
       case Some(procSelf) => 
         val closureDataTemp = ps.RecordLikeDataTemp()
-        procPlan.steps += ps.StoreRecordLikeData(closureDataTemp, procSelf, closureType)
+        procPlan.steps += ps.LoadRecordLikeData(closureDataTemp, procSelf, closureType)
 
         loadClosureData(postMutableState)(closureDataTemp, closureType, capturedVariables)(procPlan)
     }
@@ -346,7 +346,7 @@ private[planner] object PlanLambda {
       val cellTemp = ps.RecordTemp()
       val dataTemp = ps.RecordLikeDataTemp()
 
-      parentPlan.steps += ps.RecordLikeInit(cellTemp, dataTemp, closureType)
+      parentPlan.steps += ps.InitRecordLike(cellTemp, dataTemp, closureType)
 
       storeClosureData(dataTemp, closureType, capturedVariables)(parentPlan, parentState.worldPtr)
 

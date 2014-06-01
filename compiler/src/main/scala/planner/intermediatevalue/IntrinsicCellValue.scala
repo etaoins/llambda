@@ -18,7 +18,7 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
       plan.steps += ps.UnboxAsTruthy(truthyTemp, tempValue) 
     }
     else {
-      plan.steps += ps.StoreNativeInteger(truthyTemp, 1, 1) 
+      plan.steps += ps.CreateNativeInteger(truthyTemp, 1, 1) 
     }
 
     truthyTemp

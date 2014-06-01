@@ -20,7 +20,7 @@ object ApplyProcPlanner extends ReportProcPlanner {
 
       // Load the entry point
       val entryPointTemp = ps.EntryPointTemp()
-      plan.steps += ps.StoreProcedureEntryPoint(entryPointTemp, procTemp)
+      plan.steps += ps.LoadProcedureEntryPoint(entryPointTemp, procTemp)
 
       // Prepare the arguments
       val restArgTemp = argListValue.toTempValue(vt.IntrinsicCellType(ct.ListElementCell))

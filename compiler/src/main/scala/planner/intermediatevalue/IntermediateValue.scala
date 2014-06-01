@@ -53,7 +53,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
 
   def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     val trueTemp = ps.Temp(vt.Predicate)
-    plan.steps += ps.StoreNativeInteger(trueTemp, 1, 1) 
+    plan.steps += ps.CreateNativeInteger(trueTemp, 1, 1) 
 
     trueTemp
   }

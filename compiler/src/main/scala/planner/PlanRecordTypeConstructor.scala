@@ -41,7 +41,7 @@ object PlanRecordTypeConstructor {
         val cellTemp = ps.RecordTemp()
         val dataTemp = ps.RecordLikeDataTemp()
 
-        plan.steps += ps.RecordLikeInit(cellTemp, dataTemp, recordType)
+        plan.steps += ps.InitRecordLike(cellTemp, dataTemp, recordType)
         
         // Set all our fields
         for(field <- recordType.fields) {
@@ -52,7 +52,7 @@ object PlanRecordTypeConstructor {
             iv.UnitValue.toTempValue(field.fieldType)(plan, worldPtrTemp)
           }
             
-          plan.steps += ps.RecordDataFieldSet(dataTemp, recordType, field, fieldTemp)
+          plan.steps += ps.SetRecordDataField(dataTemp, recordType, field, fieldTemp)
         }
 
         // Return the record

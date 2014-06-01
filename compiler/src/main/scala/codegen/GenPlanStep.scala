@@ -47,10 +47,10 @@ object GenPlanStep {
       val (allocState, allocation) = GenCellAllocation.genAllocation(state)(worldPtrIr, count)
       allocState.copy(currentAllocation=allocation)
 
-    case storeConstantStep : ps.StoreConstant =>
-      val irResult = GenConstant(state, typeGenerator)(storeConstantStep)
+    case createConstantStep : ps.CreateConstant =>
+      val irResult = GenConstant(state, typeGenerator)(createConstantStep)
 
-      state.withTempValue(storeConstantStep.result -> irResult)
+      state.withTempValue(createConstantStep.result -> irResult)
 
     case unboxValueStep : ps.UnboxValue =>
       val irBoxed = state.liveTemps(unboxValueStep.boxed)
@@ -64,7 +64,7 @@ object GenPlanStep {
 
       boxState.withTempValue(boxValueStep.result -> irResult)
 
-    case ps.StoreNamedEntryPoint(resultTemp, signature, nativeSymbol) =>
+    case ps.CreateNamedEntryPoint(resultTemp, signature, nativeSymbol) =>
       val irModule = state.currentBlock.function.module
       val irValue = GenNamedEntryPoint(irModule)(signature, nativeSymbol, plannedSymbols)
 
@@ -314,32 +314,32 @@ object GenPlanStep {
         state.currentBlock.ret(irRetValue)
       })
 
-    case ps.StorePairCar(resultTemp, pairTemp) =>
+    case ps.LoadPairCar(resultTemp, pairTemp) =>
       val pairIr = state.liveTemps(pairTemp)
       val carIr = ct.PairCell.genLoadFromCar(state.currentBlock)(pairIr)
 
       state.withTempValue(resultTemp -> carIr)
     
-    case ps.StorePairCdr(resultTemp, pairTemp) =>
+    case ps.LoadPairCdr(resultTemp, pairTemp) =>
       val pairIr = state.liveTemps(pairTemp)
       val cdrIr = ct.PairCell.genLoadFromCdr(state.currentBlock)(pairIr)
 
       state.withTempValue(resultTemp -> cdrIr)
     
-    case ps.StoreVectorLength(resultTemp, vectorTemp) =>
+    case ps.LoadVectorLength(resultTemp, vectorTemp) =>
       val vectorIr = state.liveTemps(vectorTemp)
       val carIr = ct.VectorCell.genLoadFromLength(state.currentBlock)(vectorIr)
 
       state.withTempValue(resultTemp -> carIr)
 
-    case ps.StoreProcedureEntryPoint(resultTemp, procTemp) =>
+    case ps.LoadProcedureEntryPoint(resultTemp, procTemp) =>
       val procIr = state.liveTemps(procTemp)
       val entryPoint = ct.ProcedureCell.genLoadFromEntryPoint(state.currentBlock)(procIr)
 
       state.withTempValue(resultTemp -> entryPoint)
 
-    case initStep : ps.RecordLikeInit  =>
-      val (initedState, initedRecordLike) = GenRecordLikeInit(state, typeGenerator)(initStep)
+    case initStep : ps.InitRecordLike  =>
+      val (initedState, initedRecordLike) = GenInitRecordLike(state, typeGenerator)(initStep)
 
       initedState
         .withTempValue(initStep.cellResult -> initedRecordLike.recordCell)
@@ -373,28 +373,28 @@ object GenPlanStep {
       // Continue with the successful block
       state.copy(currentBlock=successBlock)
   
-    case ps.RecordDataFieldSet(recordDataTemp, recordType, recordField, newValueTemp) =>
+    case ps.SetRecordDataField(recordDataTemp, recordType, recordField, newValueTemp) =>
       val recordDataIr = state.liveTemps(recordDataTemp)
       val newValueIr = state.liveTemps(newValueTemp)
       val generatedType = typeGenerator(recordType)
   
-      GenRecordDataFieldSet(state.currentBlock)(recordDataIr, generatedType, recordField, Some(newValueIr))
+      GenSetRecordDataField(state.currentBlock)(recordDataIr, generatedType, recordField, Some(newValueIr))
 
       state
     
-    case ps.RecordDataFieldSetUndefined(recordDataTemp, recordType, recordField) =>
+    case ps.SetRecordDataFieldUndefined(recordDataTemp, recordType, recordField) =>
       val recordDataIr = state.liveTemps(recordDataTemp)
       val generatedType = typeGenerator(recordType)
   
-      GenRecordDataFieldSet(state.currentBlock)(recordDataIr, generatedType, recordField, None)
+      GenSetRecordDataField(state.currentBlock)(recordDataIr, generatedType, recordField, None)
 
       state
     
-    case ps.RecordDataFieldRef(resultTemp, recordDataTemp, recordLikeType, recordField) =>
+    case ps.LoadRecordDataField(resultTemp, recordDataTemp, recordLikeType, recordField) =>
       val recordDataIr = state.liveTemps(recordDataTemp)
       val generatedType = typeGenerator(recordLikeType)
   
-      val resultIr = GenRecordDataFieldRef(state.currentBlock)(recordDataIr, generatedType, recordField)
+      val resultIr = GenLoadRecordDataField(state.currentBlock)(recordDataIr, generatedType, recordField)
 
       state.withTempValue(resultTemp -> resultIr)
 
@@ -425,11 +425,11 @@ object GenPlanStep {
       // Continue with the successful block
       state.copy(currentBlock=successBlock)
 
-    case ps.StoreRecordLikeData(resultTemp, recordCellTemp, recordLikeType) =>
+    case ps.LoadRecordLikeData(resultTemp, recordCellTemp, recordLikeType) =>
       val recordCellIr = state.liveTemps(recordCellTemp)
       val generatedType = typeGenerator(recordLikeType)
 
-      val resultIr = GenStoreRecordLikeData(state.currentBlock)(recordCellIr, generatedType)
+      val resultIr = GenLoadRecordLikeData(state.currentBlock)(recordCellIr, generatedType)
 
       state.withTempValue(resultTemp -> resultIr)
       

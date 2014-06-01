@@ -38,7 +38,7 @@ class KnownProcedure(val signature : ProcedureSignature, nativeSymbol : String, 
         // The procedure already has the correct signature
         // This is unlikely but worth checking
         val entryPointTemp = ps.EntryPointTemp()
-        plan.steps += ps.StoreNamedEntryPoint(entryPointTemp, signature, nativeSymbol)
+        plan.steps += ps.CreateNamedEntryPoint(entryPointTemp, signature, nativeSymbol)
 
         entryPointTemp
       }
@@ -54,7 +54,7 @@ class KnownProcedure(val signature : ProcedureSignature, nativeSymbol : String, 
 
         // Load the trampoline's entry point
         val trampEntryPointTemp = ps.EntryPointTemp()
-        plan.steps += ps.StoreNamedEntryPoint(trampEntryPointTemp, AdaptedProcedureSignature, trampolineSymbol) 
+        plan.steps += ps.CreateNamedEntryPoint(trampEntryPointTemp, AdaptedProcedureSignature, trampolineSymbol) 
 
         trampEntryPointTemp
       }
@@ -74,7 +74,7 @@ class KnownProcedure(val signature : ProcedureSignature, nativeSymbol : String, 
           // contain the entry point
           val cellTemp = ps.CellTemp(ct.ProcedureCell)
 
-          plan.steps += ps.StoreEmptyClosure(cellTemp, entryPointTemp)
+          plan.steps += ps.CreateEmptyClosure(cellTemp, entryPointTemp)
 
           cellTemp
       }
@@ -96,7 +96,7 @@ class KnownProcedure(val signature : ProcedureSignature, nativeSymbol : String, 
   
   def planEntryPoint()(implicit plan : PlanWriter) : ps.TempValue = {
     val entryPointTemp = ps.EntryPointTemp()
-    plan.steps += ps.StoreNamedEntryPoint(entryPointTemp, signature, nativeSymbol)
+    plan.steps += ps.CreateNamedEntryPoint(entryPointTemp, signature, nativeSymbol)
 
     entryPointTemp
   }

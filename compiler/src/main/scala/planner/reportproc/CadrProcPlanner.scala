@@ -18,10 +18,10 @@ object CadrProcPlanner extends ReportProcPlanner {
       val resultTemp = ps.CellTemp(ct.DatumCell)
 
       if (reportName == "car") {
-        plan.steps += ps.StorePairCar(resultTemp, pairTemp)
+        plan.steps += ps.LoadPairCar(resultTemp, pairTemp)
       }
       else {
-        plan.steps += ps.StorePairCdr(resultTemp, pairTemp)
+        plan.steps += ps.LoadPairCdr(resultTemp, pairTemp)
       }
 
       val possibleTypes = ct.DatumCell.concreteTypes

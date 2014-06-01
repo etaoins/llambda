@@ -48,7 +48,7 @@ object PlanRecordTypePredicate {
           },
           {isNotRecordPlan =>
             val falseBool = ps.Temp(vt.CBool)
-            isNotRecordPlan.steps += ps.StoreNativeInteger(falseBool, 0, vt.CBool.bits)
+            isNotRecordPlan.steps += ps.CreateNativeInteger(falseBool, 0, vt.CBool.bits)
 
             falseBool
           })

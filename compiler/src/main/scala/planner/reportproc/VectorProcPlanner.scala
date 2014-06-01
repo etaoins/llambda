@@ -17,7 +17,7 @@ object VectorProcPlanner extends ReportProcPlanner {
       val vectorTemp = vectorValue.toTempValue(vt.IntrinsicCellType(ct.VectorCell))
 
       val resultTemp = ps.Temp(vt.UInt32)
-      plan.steps += ps.StoreVectorLength(resultTemp, vectorTemp)
+      plan.steps += ps.LoadVectorLength(resultTemp, vectorTemp)
 
       Some(PlanResult(
         state=state,

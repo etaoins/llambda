@@ -33,10 +33,10 @@ object PlanRecordTypeMutator {
         
         // Extract the record data
         val recordDataTemp = ps.RecordLikeDataTemp()
-        plan.steps += ps.StoreRecordLikeData(recordDataTemp, recordCellTemp, recordType) 
+        plan.steps += ps.LoadRecordLikeData(recordDataTemp, recordCellTemp, recordType) 
 
         // Store the new value
-        plan.steps += ps.RecordDataFieldSet(recordDataTemp, recordType, field, newValueTemp) 
+        plan.steps += ps.SetRecordDataField(recordDataTemp, recordType, field, newValueTemp) 
         plan.steps += ps.Return(None)
 
         PlannedFunction(

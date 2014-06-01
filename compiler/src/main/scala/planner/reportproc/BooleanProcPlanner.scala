@@ -16,9 +16,9 @@ object BooleanProcPlanner extends ReportProcPlanner {
     case ("not", List((_, value)))  =>
       val truthyPredTemp = value.toTruthyPredicate()
 
-      // Store literal 0
+      // Create a literal 0
       val zeroTemp = ps.Temp(vt.Predicate)
-      plan.steps += ps.StoreNativeInteger(zeroTemp, 0, 1)
+      plan.steps += ps.CreateNativeInteger(zeroTemp, 0, 1)
 
       val negatedTemp = ps.Temp(vt.Predicate)
       plan.steps += ps.IntegerCompare(negatedTemp, ps.CompareCond.Equal, None, truthyPredTemp, zeroTemp)
