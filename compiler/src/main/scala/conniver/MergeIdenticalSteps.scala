@@ -6,7 +6,8 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{celltype => ct}
 
 object MergeIdenticalSteps extends FunctionConniver {
-  type AvailableMerges = Map[ps.MergeableStep, ps.TempValue]
+  /** Mapping of step merge keys to the result value of that step */
+  type AvailableMerges = Map[Any, ps.TempValue]
 
   // This is used when comparing mergeable steps
   // They're equal for our purposes regardless if their result is equal
@@ -33,17 +34,10 @@ object MergeIdenticalSteps extends FunctionConniver {
 
         case mergeableStep : ps.MergeableStep => 
           // Rename the result temp for comparison purposes
-          val genericMergeable = mergeableStep.renamed({ tempValue =>
-            if (tempValue == mergeableStep.result) {
-              PlaceholderResultTemp
-            }
-            else {
-              tempValue
-            }
-          })
+          val mergeKey = mergeableStep.mergeKey
 
           // Available merge for this?
-          availableMerges.get(genericMergeable) match {
+          availableMerges.get(mergeKey) match {
             case Some(existingTemp) =>
               // We can replace this mergable step with a rename
               val newRenames = renames + (mergeableStep.result -> existingTemp)
@@ -51,7 +45,7 @@ object MergeIdenticalSteps extends FunctionConniver {
 
             case None =>
               // We have a new conversion available
-              val newAvailableMerges =  availableMerges + (genericMergeable -> mergeableStep.result)
+              val newAvailableMerges =  availableMerges + (mergeKey -> mergeableStep.result)
               dropAndRename(tailSteps, renames, newAvailableMerges, renamedStep :: acc)
           }
 

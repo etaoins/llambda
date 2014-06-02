@@ -78,7 +78,33 @@ sealed trait CellConsumer extends Step {
 sealed trait MergeableStep extends Step {
   val result : TempValue
   
-  def renamed(f : (TempValue) => TempValue) : MergeableStep
+  /** Key used to compare if two mergeable steps are the same
+    * 
+    * The default key is just the original mergeable step with the result renamed to a constant value. Other steps may
+    * want to override this return a tuple of fields to exclusive things like error messages.
+    */
+   def mergeKey : Any = {
+     this.renamed({ tempValue =>
+       if (tempValue == result) {
+         MergeableStep.PlaceholderResultTemp
+       }
+       else {
+         tempValue
+       }
+     })
+   }
+}
+
+object MergeableStep {
+  object PlaceholderResultTemp extends TempValue(false)
+}
+
+/** Mergeable step thse is used entirely for its side effects
+  *
+  * These are typically assertions about immutable properties of values
+  */
+sealed trait MergeableSideEffect extends MergeableStep {
+  val result = MergeableStep.PlaceholderResultTemp
 }
 
 /** Argument passed to invoke
@@ -195,6 +221,10 @@ case class CastCellToSubtypeChecked(result : TempValue, worldPtr : WorldPtrValue
 
   def renamed(f : (TempValue) => TempValue) =
     CastCellToSubtypeChecked(f(result), worldPtr, f(value), toType, errorMessage)
+
+  override def mergeKey = 
+    // Allow subcasts with different error messages to be merged
+    (worldPtr, value, toType)
 }
 
 /** Casts a cell to another type without checking the validity of the cast */
@@ -532,12 +562,15 @@ case class InitPair(result : TempValue) extends Step with CellConsumer {
   *
   * It is illegal to attempt SetPairCar or SetPairCdr on an immutable pair
   */
-case class AssertPairMutable(worldPtr : WorldPtrValue, pairValue : TempValue, errorMessage : RuntimeErrorMessage) extends Step {
+case class AssertPairMutable(worldPtr : WorldPtrValue, pairValue : TempValue, errorMessage : RuntimeErrorMessage) extends MergeableSideEffect {
   lazy val inputValues = Set[TempValue](worldPtr, pairValue)
   val outputValues = Set[TempValue]()
 
   def renamed(f: (TempValue) => TempValue) =
     AssertPairMutable(worldPtr, f(pairValue), errorMessage)
+
+  override def mergeKey = 
+    (worldPtr, pairValue)
 }
 
 case class SetPairCar(pairValue : TempValue, newValue : TempValue) extends Step {
@@ -627,12 +660,15 @@ case class TestRecordLikeClass(result : TempValue, recordCell : TempValue, recor
   *
   * A runtime error will occur if the record isn't of the passed class
   */
-case class AssertRecordLikeClass(worldPtr : WorldPtrValue, recordCell : TempValue, recordLikeType : vt.RecordLikeType, errorMessage : RuntimeErrorMessage) extends Step {
+case class AssertRecordLikeClass(worldPtr : WorldPtrValue, recordCell : TempValue, recordLikeType : vt.RecordLikeType, errorMessage : RuntimeErrorMessage) extends MergeableSideEffect {
   lazy val inputValues = Set(worldPtr, recordCell)
   val outputValues = Set[TempValue]()
 
   def renamed(f : (TempValue) => TempValue) =
     AssertRecordLikeClass(worldPtr, f(recordCell), recordLikeType, errorMessage) 
+  
+  override def mergeKey = 
+    (worldPtr, recordCell, recordLikeType)
 }
 
 /** Loads the data of a record */
