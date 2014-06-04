@@ -38,8 +38,8 @@ object WriteLlvmCellTypes extends writer.OutputWriter {
     sourceString ++= llvmir.UserDefinedType(cellClass.names.llvmName) + " = type " + cellClassLlvmType + "\n" 
     
     // Define our TBAA nodes
-    for(tbaaNode <- cellClass.fieldTbaaNodes.values) {
-      sourceString ++= tbaaNode.toIr + "\n"
+    for(metadataDef <- cellClass.fieldTbaaNodes.values) {
+      sourceString ++= metadataDef.toIr + "\n"
     }
 
     sourceString.toString

@@ -1,7 +1,7 @@
 package io.llambda.typegen
 
 case class ProcessedTypes(
-  nextTbaaIndex : Int,
+  nextMetadataIndex : Int,
   fieldTypes : Map[String, FieldType],
   cellClasses : Map[String, CellClass],
   rootCellClass : RootCellClass,

@@ -47,7 +47,10 @@ class IrModuleSuite extends FunSuite {
     module.nameType("myInt64", IntegerType(64))
     module.nameType("needs-escape-64", IntegerType(64))
 
-    module.defineTbaaNode(IrTbaaNode(0, "root type"))
+    module.defineMetadata(MetadataDef(
+      index=0,
+      metadataNode=TbaaMetadata("root type")
+    ))
 
     module.defineGlobalVariable(helloWorldDef)
     module.declareFunction(putsDecl)
@@ -75,7 +78,7 @@ class IrModuleSuite extends FunSuite {
     assert(module.toIr ===
       "%myInt64 = type i64\n" +
       "%\"needs-escape-64\" = type i64\n" +
-      "!0 = metadata !{ metadata !\"root type\" }\n" +
+      "!0 = metadata !{metadata !\"root type\"}\n" +
       "@helloWorldString = unnamed_addr constant [14 x i8] c\"Hello, world!\\00\"\n" + 
       "declare i32 @\"Put String\"(i8* nocapture) nounwind\n" +
       "define i32 @main(i32 %argc, i8** %\"escaped argv\") {\n" +

@@ -24,10 +24,10 @@ object GenProgram {
 
   def apply(functions : Map[String, planner.PlannedFunction], targetPlatform : TargetPlatform, featureIdentifiers : Set[String]) : String = {
     val module = new IrModuleBuilder
-    val plannedSymbols = functions.keySet
+    module.metadataNameSource.nextIndex = ct.CellType.nextMetadataIndex
 
-    val nextTbaaIndex = ct.CellType.nextTbaaIndex
-    val typeGenerator = new TypeGenerator(module, targetPlatform, nextTbaaIndex)
+    val plannedSymbols = functions.keySet
+    val typeGenerator = new TypeGenerator(module, targetPlatform)
 
     // Build each program-supplied function
     val functionGenerator = GenFunction(module, plannedSymbols, typeGenerator, targetPlatform)_ 

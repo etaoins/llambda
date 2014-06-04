@@ -51,7 +51,7 @@ sealed abstract class CellClass extends Positional {
   val fields : List[CellField]
 
   /** TBAA nodes for the cell's fields, including inherited fields */
-  val fieldTbaaNodes : ListMap[CellField, llvmir.IrTbaaNode]
+  val fieldTbaaNodes : ListMap[CellField, llvmir.MetadataDef]
 
   /** Alternative names for the cell class in multiple output formats */
   lazy val names = CellClassNames(name)
@@ -93,7 +93,7 @@ case class RootCellClass(
     typeTagField : CellField,
     fields : List[CellField],
     internal : Boolean,
-    fieldTbaaNodes : ListMap[CellField, llvmir.IrTbaaNode]
+    fieldTbaaNodes : ListMap[CellField, llvmir.MetadataDef]
   ) extends CellClass {
   val instanceType = CellClass.Abstract
   val typeId = None
@@ -108,7 +108,7 @@ case class TaggedCellClass(
     fields : List[CellField],
     internal : Boolean,
     typeId : Option[Int],
-    fieldTbaaNodes : ListMap[CellField, llvmir.IrTbaaNode]
+    fieldTbaaNodes : ListMap[CellField, llvmir.MetadataDef]
   ) extends ParentedCellClass
 
 /** Variant of a type tagged cell class 
@@ -120,7 +120,7 @@ case class VariantCellClass(
     name : String,
     parent : CellClass,
     fields : List[CellField],
-    fieldTbaaNodes : ListMap[CellField, llvmir.IrTbaaNode]
+    fieldTbaaNodes : ListMap[CellField, llvmir.MetadataDef]
   ) extends ParentedCellClass {
   val instanceType = CellClass.Variant
   val internal = true

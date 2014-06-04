@@ -16,11 +16,11 @@ case class GeneratedType(
   irType : UserDefinedType,
   classId : Long,
   fieldToStructIndex : Map[vt.RecordField, Int],
-  fieldToTbaaIndex : Map[vt.RecordField, Long],
+  fieldToTbaaNode : Map[vt.RecordField, Metadata],
   storageType : TypeDataStorage.Value
 )
 
-class TypeGenerator(module : IrModuleBuilder, targetPlatform : TargetPlatform, var nextTbaaIndex : Long) {
+class TypeGenerator(module : IrModuleBuilder, targetPlatform : TargetPlatform) {
   private val generatedTypes = collection.mutable.Map[vt.RecordLikeType, GeneratedType]()
   private var nextClassId : Long = 0
 
@@ -69,16 +69,15 @@ class TypeGenerator(module : IrModuleBuilder, targetPlatform : TargetPlatform, v
       val userDefinedType = module.nameType(recordTypeName, irType)
 
       // Make TBAA nodes for each field
-      val fieldToTbaaIndex = (recordLikeType.fields map { field =>
-        val tbaaIndex = nextTbaaIndex
-        nextTbaaIndex = nextTbaaIndex + 1
-
+      val fieldToTbaaNode = (recordLikeType.fields map { field =>
         // Each field cannot be aliased with any other fields
         // If we allow toll-free briding with C structs we'll need to loosen this at least for them
         val nodeName = s"${recordTypeName}::${field.sourceName}"
-        module.defineTbaaNode(IrTbaaNode(tbaaIndex, nodeName))
+        val namedTbaaMetadata = module.nameMetadataNode(
+          TbaaMetadata(nodeName)
+        )
 
-        (field, tbaaIndex)
+        (field, namedTbaaMetadata)
       }).toMap
 
       // Allocate it a class ID
@@ -90,7 +89,7 @@ class TypeGenerator(module : IrModuleBuilder, targetPlatform : TargetPlatform, v
         irType=userDefinedType,
         classId=classId,
         fieldToStructIndex=fieldOrder.zipWithIndex.toMap,
-        fieldToTbaaIndex=fieldToTbaaIndex,
+        fieldToTbaaNode=fieldToTbaaNode,
         storageType=storageType)
     })
   }

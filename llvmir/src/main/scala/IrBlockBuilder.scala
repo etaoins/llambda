@@ -9,6 +9,10 @@ trait IrBranchTarget {
 private[llvmir] abstract class IrInstrBuilder(protected val nameSource : LocalNameSource) {
   // This contains our instructions as they're built
   private[llvmir] val instructions = new ListBuffer[String]
+  
+  protected def metadataMapToIr(metadataMap : Map[String, Metadata]) = metadataMap.map({ case (tagName, metadata) =>
+    s", !${tagName} ${metadata.toIr}"
+  }).mkString("")
 }
 
 abstract class IrBlockBuilder(nameSource : LocalNameSource, val label : String) extends IrInstrBuilder(nameSource) with Irable with TerminatorInstrs with MemoryInstrs with BitwiseInstrs with ConversionInstrs with OtherInstrs with BinaryInstrs {

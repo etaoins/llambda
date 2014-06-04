@@ -10,8 +10,9 @@ object GenSetRecordDataField {
     val fieldIndex = generatedType.fieldToStructIndex(recordField)
     val fieldIrType = ValueTypeToIr(recordField.fieldType).irType
     
-    // Find the TBAA index
-    val tbaaIndex = generatedType.fieldToTbaaIndex(recordField)
+    // Find the TBAA node
+    val tbaaNode = generatedType.fieldToTbaaNode(recordField)
+    val storeMetadata = Map("tbaa" -> tbaaNode)
 
     // Get the element pointer
     val fieldPtr = block.getelementptr("fieldPtr")(fieldIrType, recordDataIr, List(0, fieldIndex).map(IntegerConstant(IntegerType(32), _)))
@@ -19,7 +20,7 @@ object GenSetRecordDataField {
     newValueIrOpt match {
       case Some(newValueIr) =>
         // Perform the store
-        block.store(newValueIr, fieldPtr, tbaaIndex=Some(tbaaIndex))
+        block.store(newValueIr, fieldPtr, metadata=storeMetadata)
 
       case None =>
         val pointerFieldIrType = fieldIrType match {
@@ -30,7 +31,7 @@ object GenSetRecordDataField {
             throw new InternalCompilerErrorException("Attempted to set non-pointer field as undefined")
         }
 
-        block.store(NullPointerConstant(pointerFieldIrType), fieldPtr, tbaaIndex=Some(tbaaIndex))
+        block.store(NullPointerConstant(pointerFieldIrType), fieldPtr, metadata=storeMetadata)
     }
   }
 }

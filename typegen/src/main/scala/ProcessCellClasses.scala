@@ -17,23 +17,26 @@ object ProcessCellClasses {
     }
   }
 
-  private def createSelfTbaaNodes(selfName : String, selfFields : List[CellField], indexCounter : () => Int) : ListMap[CellField, llvmir.IrTbaaNode] = 
+  private def createSelfTbaaNodes(selfName : String, selfFields : List[CellField], indexCounter : () => Int) : ListMap[CellField, llvmir.MetadataDef] = 
     // Create parentless TBAA nodes for the new fields we introduce
     ListMap(selfFields.map { cellField =>
       val identity = s"${selfName}::${cellField.name}"
-      val tbaaIndex = indexCounter()
+      val tbaaNode = llvmir.TbaaMetadata(identity, None)
 
-      (cellField -> llvmir.IrTbaaNode(tbaaIndex, identity, None))
+      val tbaaIndex = indexCounter()
+      (cellField -> llvmir.MetadataDef(tbaaIndex, tbaaNode))
     } : _*)
 
   /** Creates TBAA nodes for our fields and the fields we inherit from our superclasses */
-  private def createTbaaNodes(selfName : String, selfFields : List[CellField], parentTbaaNodes : ListMap[CellField, llvmir.IrTbaaNode], indexCounter : () => Int) : ListMap[CellField, llvmir.IrTbaaNode] = {
+  private def createTbaaNodes(selfName : String, selfFields : List[CellField], parentTbaaNodes : ListMap[CellField, llvmir.MetadataDef], indexCounter : () => Int) : ListMap[CellField, llvmir.MetadataDef] = {
     // Inherit the TBAA nodes from our parents
-    val inheritsNodes = parentTbaaNodes.map { case (cellField, parentTbaaNode) =>
-      val identity = s"${parentTbaaNode.identity}->${selfName}"
-      val tbaaIndex = indexCounter()
+    val inheritsNodes = parentTbaaNodes.map {
+      case (cellField, parentMetadataDef @ llvmir.MetadataDef(_, parentTbaaNode : llvmir.TbaaMetadata)) =>
+        val identity = s"${parentTbaaNode.identity}->${selfName}"
+        val tbaaNode = llvmir.TbaaMetadata(identity, Some(parentMetadataDef.namedMetadata))
 
-      (cellField -> llvmir.IrTbaaNode(tbaaIndex, identity, Some(parentTbaaNode.index)))
+        val tbaaIndex = indexCounter()
+        (cellField -> llvmir.MetadataDef(tbaaIndex, tbaaNode))
     }
 
     // Create parentless TBAA nodes for the new fields we introduce
@@ -214,7 +217,7 @@ object ProcessCellClasses {
     }).groupBy(_.parent)
 
     ProcessedTypes(
-      nextTbaaIndex=tbaaIndexGenerator(),
+      nextMetadataIndex=tbaaIndexGenerator(),
       fieldTypes=fieldTypes,
       cellClasses=cellClasses,
       rootCellClass=rootCellClass,

@@ -105,7 +105,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
     """)
 
     val classes = processedTypes.cellClasses
-    assert(processedTypes.nextTbaaIndex === 11)
+    assert(processedTypes.nextMetadataIndex === 11)
 
     inside(classes("Datum")) { case (datumClass : RootCellClass) =>
       assert(datumClass.name === "Datum")
@@ -141,7 +141,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
     """)
     
     val classes = processedTypes.cellClasses
-    assert(processedTypes.nextTbaaIndex === 12)
+    assert(processedTypes.nextMetadataIndex === 12)
 
     inside(classes("Datum")) { case (datumClass : RootCellClass) =>
       assert(datumClass.name === "Datum")
@@ -167,11 +167,17 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
 
       val typeIdTbaaNode = datumClass.fieldTbaaNodes(typeIdField)
       assert(typeIdTbaaNode.index === 10)
-      assert(typeIdTbaaNode.parentIndex === None)
+      inside(typeIdTbaaNode.metadataNode) {
+        case tbaaMetadata : llvmir.TbaaMetadata =>
+          assert(tbaaMetadata.parentOpt === None)
+      }
 
       val gcStateTbaaNode = datumClass.fieldTbaaNodes(gcStateField)
       assert(gcStateTbaaNode.index === 11)
-      assert(gcStateTbaaNode.parentIndex === None)
+      inside(gcStateTbaaNode.metadataNode) {
+        case tbaaMetadata : llvmir.TbaaMetadata =>
+          assert(tbaaMetadata.parentOpt === None)
+      }
     }
   }
   
@@ -190,7 +196,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
     """)
     
     val classes = processedTypes.cellClasses
-    assert(processedTypes.nextTbaaIndex === 17)
+    assert(processedTypes.nextMetadataIndex === 17)
 
     val datumClass = classes("Datum")
 
@@ -229,25 +235,40 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       // Check our parents TBAA nodes
       val parentTypeIdTbaaNode = datumClass.fieldTbaaNodes(typeIdField)
       assert(parentTypeIdTbaaNode.index === 10)
-      assert(parentTypeIdTbaaNode.parentIndex === None)
+      inside(parentTypeIdTbaaNode.metadataNode) {
+        case tbaaMetadata : llvmir.TbaaMetadata =>
+          assert(tbaaMetadata.parentOpt === None)
+      }
       
       val parentGcStateTbaaNode = datumClass.fieldTbaaNodes(gcStateField)
       assert(parentGcStateTbaaNode.index === 11)
-      assert(parentGcStateTbaaNode.parentIndex === None)
+      inside(parentGcStateTbaaNode.metadataNode) {
+        case tbaaMetadata : llvmir.TbaaMetadata =>
+          assert(tbaaMetadata.parentOpt === None)
+      }
 
       // Now our inherited nodes
       val childTypeIdTbaaNode = stringLikeClass.fieldTbaaNodes(typeIdField)
       assert(childTypeIdTbaaNode.index === 12)
-      assert(childTypeIdTbaaNode.parentIndex === Some(parentTypeIdTbaaNode.index))
+      inside(childTypeIdTbaaNode.metadataNode) {
+        case tbaaMetadata : llvmir.TbaaMetadata =>
+          assert(tbaaMetadata.parentOpt === Some(parentTypeIdTbaaNode.namedMetadata))
+      }
       
       val childGcStateTbaaNode = stringLikeClass.fieldTbaaNodes(gcStateField)
       assert(childGcStateTbaaNode.index === 13)
-      assert(childGcStateTbaaNode.parentIndex === Some(parentGcStateTbaaNode.index))
+      inside(childGcStateTbaaNode.metadataNode) {
+        case tbaaMetadata : llvmir.TbaaMetadata =>
+          assert(tbaaMetadata.parentOpt === Some(parentGcStateTbaaNode.namedMetadata))
+      }
 
       // And finally a new nodes
       val charCountNode = stringLikeClass.fieldTbaaNodes(charCountField)
       assert(charCountNode.index === 14)
-      assert(charCountNode.parentIndex === None)
+      inside(charCountNode.metadataNode) {
+        case tbaaMetadata : llvmir.TbaaMetadata =>
+          assert(tbaaMetadata.parentOpt === None)
+      }
     }
   }
   
@@ -265,7 +286,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
     """)
 
     val classes = processedTypes.cellClasses
-    assert(processedTypes.nextTbaaIndex === 13)
+    assert(processedTypes.nextMetadataIndex === 13)
 
     val datumClass = classes("Datum")
 
@@ -306,7 +327,7 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
     """)
 
     val classes = processedTypes.cellClasses
-    assert(processedTypes.nextTbaaIndex === 15)
+    assert(processedTypes.nextMetadataIndex === 15)
 
     val datumClass = classes("Datum")
 

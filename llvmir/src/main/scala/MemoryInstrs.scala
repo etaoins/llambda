@@ -37,7 +37,7 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
       throw new InconsistentIrException("Attempted memory access from a non-pointer")
   }
 
-  def load(resultDest : ResultDestination)(from : IrValue, alignment : Int = 0, volatile : Boolean = false, tbaaIndex : Option[Long] = None) : LocalVariable = {
+  def load(resultDest : ResultDestination)(from : IrValue, alignment : Int = 0, volatile : Boolean = false, metadata : Map[String, Metadata] = Map()) : LocalVariable = {
     val resultType = pointeeTypeForAccess(from.irType)
     val resultVar = resultDest.asLocalVariable(nameSource, resultType)
 
@@ -55,18 +55,13 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
       ""
     }
     
-    val tbaaIr = tbaaIndex.map({ index =>
-      s", !tbaa !${index.toString}"
-    }).getOrElse(
-      ""
-    )
-
-    instructions += s"${resultVar.toIr} = load${volatileIr} ${from.toIrWithType}${alignIr}${tbaaIr}"
+    val metadataIr = metadataMapToIr(metadata)
+    instructions += s"${resultVar.toIr} = load${volatileIr} ${from.toIrWithType}${alignIr}${metadataIr}"
 
     resultVar
   }
 
-  def store(value : IrValue, to : IrValue, alignment : Int = 0, volatile : Boolean = false, tbaaIndex : Option[Long] = None) : Unit = {
+  def store(value : IrValue, to : IrValue, alignment : Int = 0, volatile : Boolean = false, metadata : Map[String, Metadata] = Map()) : Unit = {
     val storedType = pointeeTypeForAccess(to.irType)
 
     if (storedType != value.irType) {
@@ -89,13 +84,8 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
       ""
     }
     
-    val tbaaIr = tbaaIndex.map({ index =>
-      s", !tbaa !${index.toString}"
-    }).getOrElse(
-      ""
-    )
-
-    instructions += s"store${volatileIr} ${value.toIrWithType}, ${to.toIrWithType}${alignIr}${tbaaIr}"
+    val metadataIr = metadataMapToIr(metadata)
+    instructions += s"store${volatileIr} ${value.toIrWithType}, ${to.toIrWithType}${alignIr}${metadataIr}"
   }
 
   def getelementptr(resultDest : ResultDestination)(elementType : FirstClassType, basePointer : IrValue, indices : Seq[IrValue], inbounds : Boolean = false) : LocalVariable = {

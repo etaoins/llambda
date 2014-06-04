@@ -55,3 +55,7 @@ case class StructureType(memberTypes : Seq[FirstClassType]) extends FirstClassTy
 case class PointerType(pointeeType : IrType) extends FirstClassType {
   def toIr = pointeeType.toIr + "*"
 }
+
+case object MetadataType extends FirstClassType {
+  def toIr = "metadata"
+}

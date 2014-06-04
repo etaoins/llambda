@@ -65,7 +65,7 @@ object WriteScalaObjects extends writer.OutputWriter {
         val scalaConstructor = LlvmTypeToScalaConstructor(llvmType)
 
         scalaBuilder += s"val ${field.name}IrType = ${scalaConstructor}"
-        scalaBuilder += s"val ${field.name}TbaaIndex : Long" 
+        scalaBuilder += s"val ${field.name}TbaaNode : NamedMetadata" 
         scalaBuilder += s"val ${field.name}GepIndices : List[Int]"
         scalaBuilder.sep()
       }
@@ -105,13 +105,15 @@ object WriteScalaObjects extends writer.OutputWriter {
         scalaBuilder += s"def genStoreTo${capitalizedName}(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue) "
         scalaBuilder.blockSep {
           scalaBuilder += s"val ${pointerVarName} = genPointerTo${capitalizedName}(block)(valueCell)"
-          scalaBuilder += s"block.store(toStore, ${pointerVarName}, tbaaIndex=Some(${field.name}TbaaIndex))"
+          scalaBuilder += s"""val metadata = Map("tbaa" -> ${field.name}TbaaNode)"""
+          scalaBuilder += s"block.store(toStore, ${pointerVarName}, metadata=metadata)"
         }
   
         scalaBuilder += s"def genLoadFrom${capitalizedName}(block : IrBlockBuilder)(valueCell : IrValue) : IrValue ="
         scalaBuilder.blockSep {
           scalaBuilder += s"val ${pointerVarName} = genPointerTo${capitalizedName}(block)(valueCell)"
-          scalaBuilder += s"""block.load("${field.name}")(${pointerVarName}, tbaaIndex=Some(${field.name}TbaaIndex))"""
+          scalaBuilder += s"""val metadata = Map("tbaa" -> ${field.name}TbaaNode)"""
+          scalaBuilder += s"""block.load("${field.name}")(${pointerVarName}, metadata=metadata)"""
         }
       }
     }
@@ -288,8 +290,8 @@ object WriteScalaObjects extends writer.OutputWriter {
       scalaBuilder.sep()
 
       // Add our TBAA indexes
-      for((field, tbaaNode) <- cellClass.fieldTbaaNodes) {
-        scalaBuilder += s"val ${field.name}TbaaIndex = ${tbaaNode.index}L" 
+      for((field, metadataDef) <- cellClass.fieldTbaaNodes) {
+        scalaBuilder += s"val ${field.name}TbaaNode = NamedMetadata(${metadataDef.index}L)"
       }
 
       // Cell classes don't repeat their parent TBAA nodes because they use the 
@@ -298,7 +300,7 @@ object WriteScalaObjects extends writer.OutputWriter {
       cellClass match {
         case variantCellClass : VariantCellClass =>
           for((field, tbaaNode) <- variantCellClass.parent.fieldTbaaNodes) {
-            scalaBuilder += s"val ${field.name}TbaaIndex = ${tbaaNode.index}L" 
+            scalaBuilder += s"val ${field.name}TbaaNode = NamedMetadata(${tbaaNode.index}L)" 
           }
 
         case _ =>
@@ -319,7 +321,7 @@ object WriteScalaObjects extends writer.OutputWriter {
     val rootClassFieldsTrait = processedTypes.rootCellClass.names.scalaFieldsTraitName
     val expandedTemplate = (initialTemplate
       .replaceAllLiterally("${ROOT_CLASS_FIELDS_TRAIT}", rootClassFieldsTrait)
-      .replaceAllLiterally("${NEXT_TBAA_INDEX}", processedTypes.nextTbaaIndex.toString)
+      .replaceAllLiterally("${NEXT_METADATA_INDEX}", processedTypes.nextMetadataIndex.toString)
       .replaceAllLiterally("${TYPE_TAG_FIELD_NAME}", processedTypes.rootCellClass.typeTagField.name)
     )
 

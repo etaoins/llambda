@@ -14,12 +14,14 @@ class IrModuleBuilder extends Irable {
   private val functionDefs = new ListBuffer[IrFunctionBuilder]
   private val aliasDefs = new ListBuffer[IrAliasDef]
   private val namedTypes = new ListBuffer[NamedType]
-  private val tbaaNodes = new ListBuffer[IrTbaaNode]
+  private val metadataDefs = new ListBuffer[MetadataDef]
 
   private val declaredNames = collection.mutable.Set[String]()
 
   // This generates global names
   val nameSource = new GlobalNameSource
+
+  val metadataNameSource = new MetadataNameSource
 
   def defineGlobalVariable(variableDef : IrGlobalVariableDef) {
     globalVariableDefs.append(variableDef)
@@ -48,8 +50,18 @@ class IrModuleBuilder extends Irable {
     UserDefinedType(name)
   }
 
-  def defineTbaaNode(tbaaNode : IrTbaaNode) {
-    tbaaNodes += tbaaNode
+  def defineMetadata(metadataDef : MetadataDef) {
+    metadataDefs += metadataDef
+  }
+
+  /** Assigns metadata a new name and returns the NamedMetadata referencing it */
+  def nameMetadataNode(metadataNode : MetadataNode) : NamedMetadata = {
+    val newIndex = metadataNameSource.allocate()
+    val metadataDef = MetadataDef(newIndex, metadataNode)
+
+    defineMetadata(metadataDef)
+
+    metadataDef.namedMetadata
   }
 
   def isDeclared(name : String) : Boolean = 
@@ -70,7 +82,7 @@ class IrModuleBuilder extends Irable {
   def toIr : String = {
     val allIr : List[Irable] =
       namedTypes.toList ++
-      tbaaNodes.toList ++
+      metadataDefs.toList ++
       globalVariableDefs.toList ++
       functionDecls.toList ++
       functionDefs.toList ++

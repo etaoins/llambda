@@ -1,6 +1,6 @@
 package io.llambda.llvmir
 
-private sealed abstract class IrNameSource {
+private sealed abstract class VariableNameSource {
   private val nextNumberForBaseName = new collection.mutable.HashMap[String, Int]()
 
   def allocate(baseName : String) : String = {
@@ -14,5 +14,5 @@ private sealed abstract class IrNameSource {
 }
 
 // These are different just so the type system can distinguish them
-private[llvmir] class GlobalNameSource extends IrNameSource
-private[llvmir] class LocalNameSource extends IrNameSource
+private[llvmir] class GlobalNameSource extends VariableNameSource
+private[llvmir] class LocalNameSource extends VariableNameSource

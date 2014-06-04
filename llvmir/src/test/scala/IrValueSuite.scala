@@ -166,4 +166,27 @@ class IrValueSuite extends FunSuite {
       IntToPtrConstant(DoubleConstant(50.0), PointerType(FloatType))
     }
   }
+
+  test("metadata string") {
+    val testMetadata = MetadataString.fromUtf8String("Hello\nworld")
+    assert(testMetadata.toIr === "!\"Hello\\0Aworld\"")
+    assert(testMetadata.toIrWithType === "metadata !\"Hello\\0Aworld\"")
+  }
+
+  test("user defined metadata node") {
+    val testMetadata = UserDefinedMetadataNode(List(
+      Some(MetadataString.fromUtf8String("teststr")),
+      Some(IntegerConstant(IntegerType(32), 5)),
+      None,
+      Some(UserDefinedMetadataNode(Nil))
+    ))
+
+    assert(testMetadata.toIrWithType === """metadata !{metadata !"teststr", i32 5, null, metadata !{}}""")
+  }
+
+  test("named metadata") {
+    val testMetadata = NamedMetadata(55)
+
+    assert(testMetadata.toIrWithType === "metadata !55")
+  }
 }

@@ -52,4 +52,8 @@ class IrTypeSuite extends FunSuite {
     
     assert(UserDefinedType("needs escape").toIr === "%\"needs escape\"")
   }
+
+  test("metadata type") {
+    assert(MetadataType.toIr === "metadata")
+  }
 }

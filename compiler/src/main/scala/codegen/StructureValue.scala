@@ -11,7 +11,7 @@ import llambda.llvmir._
 abstract class StructureValue(typeName : String) {
   val irType = UserDefinedType(typeName)
   
-  protected case class StructureField(name : String, index : Int, irType : FirstClassType, tbaaIndex : Option[Long] = None)
+  protected case class StructureField(name : String, index : Int, irType : FirstClassType, tbaaNode : Metadata)
 
   protected def genPointerToField(field : StructureField)(block : IrBlockBuilder)(structureValue : IrValue) : IrValue = {
     if (structureValue.irType != PointerType(irType)) {
@@ -28,12 +28,12 @@ abstract class StructureValue(typeName : String) {
   
   protected def genStoreToField(field : StructureField)(block : IrBlockBuilder)(toStore : IrValue, structureValue : IrValue)  {
     val pointer = genPointerToField(field)(block)(structureValue)
-    block.store(toStore, pointer, tbaaIndex=field.tbaaIndex)
+    block.store(toStore, pointer, metadata=Map("tbaa" -> field.tbaaNode))
   }
 
   protected def genLoadFromField(field : StructureField)(block : IrBlockBuilder)(structureValue : IrValue) : IrValue = {
     val pointer = genPointerToField(field)(block)(structureValue)
-    block.load(field.name)(pointer, tbaaIndex=field.tbaaIndex)
+    block.load(field.name)(pointer, metadata=Map("tbaa" -> field.tbaaNode))
   }
 }
 

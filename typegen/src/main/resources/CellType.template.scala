@@ -65,5 +65,5 @@ sealed abstract class PreconstructedCellType extends ConcreteCellType
 sealed abstract class CellTypeVariant extends CastableValue
 
 object CellType {
-  val nextTbaaIndex = ${NEXT_TBAA_INDEX}L
+  val nextMetadataIndex = ${NEXT_METADATA_INDEX}L
 }

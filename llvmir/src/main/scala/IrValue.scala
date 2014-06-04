@@ -93,19 +93,7 @@ case class StringConstant(stringBytes : Seq[Byte]) extends ArrayLikeConstant {
   val innerType = IntegerType(8) 
   val length = stringBytes.length
 
-  // String without "
-  private def innerString : String = (stringBytes flatMap {
-    case backslash if backslash == 92 =>
-      """\\"""
-    case doubleQuote if doubleQuote == 34 =>
-      "\\\""
-    case printable if ((printable >= 32) && (printable <= 126)) =>
-      printable.toChar.toString
-    case unprintable =>
-      f"\\$unprintable%02X"
-  }).mkString
-
-  def toIr = "c\"" + innerString + "\"" 
+  def toIr = "c" + BytesToIrString(stringBytes) + "" 
 }
 
 object StringConstant {
@@ -167,4 +155,41 @@ case class IntToPtrConstant(value : IrConstant, toType : PointerType) extends Ir
   def toIr : String = {
     s"inttoptr (${value.toIrWithType} to ${toType.toIr})"
   }
+}
+
+/** Represents a metadata value
+  *
+  * These are used to annotate LLVM IR with arbitrary metadata. They do not represent a concrete value at runtim 
+  */
+sealed abstract class Metadata extends IrConstant {
+  val irType = MetadataType
+}
+
+case class MetadataString(stringBytes : Seq[Byte]) extends Metadata {
+  def toIr : String = {
+    "!" + BytesToIrString(stringBytes)
+  }
+}
+
+object MetadataString {
+  def fromUtf8String(str : String) : MetadataString = {
+    MetadataString(Codec.toUTF8(str))
+  }
+}
+
+abstract class MetadataNode extends Metadata {
+  val memberOpts : Seq[Option[IrConstant]]
+
+  private def memberOptToIrWithType(memberOpt : Option[IrConstant]) =
+    memberOpt.map(_.toIrWithType).getOrElse("null")
+
+  def toIr : String = {
+    "!{" + memberOpts.map(memberOptToIrWithType).mkString(", ") + "}"
+  }
+}
+
+case class UserDefinedMetadataNode(memberOpts : Seq[Option[IrConstant]]) extends MetadataNode
+
+case class NamedMetadata(index : Long) extends Metadata {
+  def toIr = "!" + index.toString
 }
