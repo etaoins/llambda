@@ -33,7 +33,7 @@ trait ReportProcPlanner {
           val datumCellTemp = value.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
           val testPredicate = ps.Temp(vt.Predicate) 
 
-          plan.steps += ps.TestCellType(testPredicate, datumCellTemp, singleType)
+          plan.steps += ps.TestCellType(testPredicate, datumCellTemp, singleType, value.possibleTypes)
 
           Some(PlanResult(
             state=initialState,

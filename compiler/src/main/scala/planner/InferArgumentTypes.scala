@@ -41,7 +41,7 @@ object InferArgumentTypes {
       )
 
     steps match {
-      case ps.CastCellToSubtypeChecked(result, _, value, toType, _) :: tailSteps if value == argValue =>
+      case ps.CastCellToSubtypeChecked(result, _, value, toType, _, _) :: tailSteps if value == argValue =>
         // we found an unconditional checked subtype cast!
 
         // It's valid for future steps to use the original <datum-cell> value

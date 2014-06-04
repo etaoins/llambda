@@ -6,13 +6,26 @@ import llambda.compiler.RuntimeErrorMessage
 import llambda.compiler.{celltype => ct}
 
 object GenCastCellToSubtype {
-  def apply(state : GenerationState)(worldPtr : IrValue, supertypeValue : IrValue, targetType : ct.CellType, errorMessage : RuntimeErrorMessage) : (IrBlockBuilder, IrValue) = {
+  def apply(state : GenerationState)(
+      worldPtr : IrValue,
+      supertypeValue : IrValue,
+      targetType : ct.CellType,
+      errorMessage : RuntimeErrorMessage,
+      possibleTypes : Set[ct.ConcreteCellType]
+  ) : (IrBlockBuilder, IrValue) = {
     val irFunction = state.currentBlock.function 
     val successBlock = irFunction.startChildBlock(targetType.llvmName + "SubcastSuccess") 
     val failBlock = irFunction.startChildBlock(targetType.llvmName + "SubcastFail") 
 
+    // Build range metadata from our possible types
+    val rangeMetadata = RangeMetadata.fromPossibleValues(
+      integerType=ct.DatumCell.typeIdIrType,
+      possibleTypes.map(_.typeId)
+    )
+    val loadMetadata = Map("range" -> rangeMetadata)
+
     // Do the actual check
-    targetType.genTypeCheck(state.currentBlock)(supertypeValue, successBlock, failBlock)
+    targetType.genTypeCheck(state.currentBlock)(supertypeValue, successBlock, failBlock, loadMetadata)
   
     // Generate the fail branch
     {

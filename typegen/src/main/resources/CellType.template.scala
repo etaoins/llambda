@@ -43,9 +43,9 @@ sealed abstract class CellType extends CastableValue with ${ROOT_CLASS_FIELDS_TR
     case abstractType => directSubtypes.flatMap(_.concreteTypes)
   }
 
-  def genTypeCheck(startBlock : IrBlockBuilder)(valueCell : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget) {
+  def genTypeCheck(startBlock : IrBlockBuilder)(valueCell : IrValue, successBlock : IrBranchTarget, failBlock : IrBranchTarget, loadMetadata : Map[String, Metadata] = Map()) {
     val datumValue = DatumCell.genPointerBitcast(startBlock)(valueCell)
-    val typeId = DatumCell.genLoadFromTypeId(startBlock)(datumValue)
+    val typeId = DatumCell.genLoadFromTypeId(startBlock)(datumValue, metadata=loadMetadata)
 
     // For every possible type ID jump to the success block
     val successEntries = concreteTypes.map { concreteType =>

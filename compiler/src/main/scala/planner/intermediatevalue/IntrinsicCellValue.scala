@@ -102,7 +102,7 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
         // We have to check types here and branch on the result
         val isExactIntPred = ps.Temp(vt.Predicate)
 
-        plan.steps += ps.TestCellType(isExactIntPred, tempValue, ct.ExactIntegerCell)
+        plan.steps += ps.TestCellType(isExactIntPred, tempValue, ct.ExactIntegerCell, possibleTypes)
 
         // Try again with constrained types
         // This will hit the branches above us

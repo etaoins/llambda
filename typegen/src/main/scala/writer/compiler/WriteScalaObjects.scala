@@ -102,18 +102,18 @@ object WriteScalaObjects extends writer.OutputWriter {
         }
   
         // This generates a TBAA-annotated store to the field
-        scalaBuilder += s"def genStoreTo${capitalizedName}(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue) "
+        scalaBuilder += s"def genStoreTo${capitalizedName}(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map()) "
         scalaBuilder.blockSep {
           scalaBuilder += s"val ${pointerVarName} = genPointerTo${capitalizedName}(block)(valueCell)"
-          scalaBuilder += s"""val metadata = Map("tbaa" -> ${field.name}TbaaNode)"""
-          scalaBuilder += s"block.store(toStore, ${pointerVarName}, metadata=metadata)"
+          scalaBuilder += s"""val allMetadata = metadata ++ Map("tbaa" -> ${field.name}TbaaNode)"""
+          scalaBuilder += s"block.store(toStore, ${pointerVarName}, metadata=allMetadata)"
         }
   
-        scalaBuilder += s"def genLoadFrom${capitalizedName}(block : IrBlockBuilder)(valueCell : IrValue) : IrValue ="
+        scalaBuilder += s"def genLoadFrom${capitalizedName}(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue ="
         scalaBuilder.blockSep {
           scalaBuilder += s"val ${pointerVarName} = genPointerTo${capitalizedName}(block)(valueCell)"
-          scalaBuilder += s"""val metadata = Map("tbaa" -> ${field.name}TbaaNode)"""
-          scalaBuilder += s"""block.load("${field.name}")(${pointerVarName}, metadata=metadata)"""
+          scalaBuilder += s"""val allMetadata = Map("tbaa" -> ${field.name}TbaaNode) ++ metadata"""
+          scalaBuilder += s"""block.load("${field.name}")(${pointerVarName}, metadata=allMetadata)"""
         }
       }
     }

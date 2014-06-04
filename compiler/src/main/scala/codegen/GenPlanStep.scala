@@ -86,11 +86,12 @@ object GenPlanStep {
         liveTemps=state.liveTemps.withAliasedTempValue(subvalueTemp, (resultTemp -> irValue))
       )
 
-    case ps.CastCellToSubtypeChecked(resultTemp, worldPtrTemp, supervalueTemp, targetType, errorMessage) =>
+    case ps.CastCellToSubtypeChecked(resultTemp, worldPtrTemp, supervalueTemp, targetType, errorMessage, possibleTypes) =>
       val worldPtrIr = state.liveTemps(worldPtrTemp)
       val supervalueIr = state.liveTemps(supervalueTemp)
 
-      val (successBlock, subvalueIr) = GenCastCellToSubtype(state)(worldPtrIr, supervalueIr, targetType, errorMessage)
+      val (successBlock, subvalueIr) =
+        GenCastCellToSubtype(state)(worldPtrIr, supervalueIr, targetType, errorMessage, possibleTypes)
 
       state.copy(
         currentBlock=successBlock,
@@ -129,13 +130,20 @@ object GenPlanStep {
 
       listState.withTempValue(resultTemp -> lengthIr)
 
-    case ps.TestCellType(resultTemp, cellTemp, cellType) =>
+    case ps.TestCellType(resultTemp, cellTemp, cellType, possibleTypes) =>
       val cellIr = state.liveTemps(cellTemp)
+
+      // Build range metadata from our possible types
+      val rangeMetadata = RangeMetadata.fromPossibleValues(
+        integerType=ct.DatumCell.typeIdIrType,
+        possibleTypes.map(_.typeId)
+      )
+      val loadMetadata = Map("range" -> rangeMetadata)
 
       // Load the type ID
       val block = state.currentBlock
       val datumIr = ct.DatumCell.genPointerBitcast(block)(cellIr)
-      val typeIdIr = ct.DatumCell.genLoadFromTypeId(block)(datumIr)
+      val typeIdIr = ct.DatumCell.genLoadFromTypeId(block)(datumIr, metadata=loadMetadata)
 
       val resultIr = block.icmp(cellType.llvmName + "Check")(ComparisonCond.Equal, None, typeIdIr, IntegerConstant(ct.DatumCell.typeIdIrType, cellType.typeId))
 
@@ -509,8 +517,12 @@ object GenPlanStep {
 
       GenErrorSignal(state.copy(currentBlock=fatalBlock))(worldPtrIr, errorMessage)
 
+      // The GC state can only be 0 (GC allocated) or 1 (global constant)
+      // There are other GC states temporarily used during GC but they should never be reachable by program code
+      val rangeMetadata = RangeMetadata(ct.DatumCell.gcStateIrType, (0, 2))
+
       val globalConstantGcState = IntegerConstant(ct.DatumCell.gcStateIrType, 1)
-      val gcStateIr = ct.PairCell.genLoadFromGcState(state.currentBlock)(pairIr)
+      val gcStateIr = ct.PairCell.genLoadFromGcState(state.currentBlock)(pairIr, metadata=Map("range" -> rangeMetadata))
       val irResult = state.currentBlock.icmp("isMutable")(ComparisonCond.NotEqual, None, globalConstantGcState, gcStateIr) 
 
       state.currentBlock.condBranch(irResult, successBlock, fatalBlock)

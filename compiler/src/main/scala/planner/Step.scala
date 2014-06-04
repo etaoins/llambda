@@ -206,21 +206,45 @@ case class CondBranch(result : TempValue, test : TempValue, trueSteps : List[Ste
 }
 
 /** Tests if a cell is of a given type */
-case class TestCellType(result : TempValue, value : TempValue, testType : ct.ConcreteCellType) extends Step with MergeableStep {
+case class TestCellType(
+    result : TempValue,
+    value : TempValue,
+    testType : ct.ConcreteCellType,
+    possibleTypes : Set[ct.ConcreteCellType] = ct.DatumCell.concreteTypes
+) extends Step with MergeableStep {
   lazy val inputValues = Set(value)
   lazy val outputValues = Set(result)
   
   def renamed(f : (TempValue) => TempValue) =
-    TestCellType(f(result), f(value), testType)
+    TestCellType(f(result), f(value), testType, possibleTypes)
+  
+  override def mergeKey = 
+    // Merge steps with different possibleTypes - it's just an optimisation hint
+    (value, testType)
 }
 
-/** Casts a cell to a subtype aborting if the cast is impossible */
-case class CastCellToSubtypeChecked(result : TempValue, worldPtr : WorldPtrValue, value : TempValue, toType : ct.CellType, errorMessage : RuntimeErrorMessage) extends Step with MergeableStep {
+/** Casts a cell to a subtype aborting if the cast is impossible
+  *
+  * @param result        temp value to store resulting cast value in
+  * @param worldPtr      current world pointer for the function
+  * @param value         value to cast
+  * @param toType        cell type to cast to
+  * @param errorMessage  error message to raise if cast fails
+  * @param possibleTypes possible types of the uncast value. This is used for optimisation of the generated code
+  */
+case class CastCellToSubtypeChecked(
+    result : TempValue,
+    worldPtr : WorldPtrValue,
+    value : TempValue,
+    toType : ct.CellType,
+    errorMessage : RuntimeErrorMessage,
+    possibleTypes : Set[ct.ConcreteCellType] = ct.DatumCell.concreteTypes
+) extends Step with MergeableStep {
   lazy val inputValues = Set(worldPtr, value)
   lazy val outputValues = Set(result)
 
   def renamed(f : (TempValue) => TempValue) =
-    CastCellToSubtypeChecked(f(result), worldPtr, f(value), toType, errorMessage)
+    CastCellToSubtypeChecked(f(result), worldPtr, f(value), toType, errorMessage, possibleTypes)
 
   override def mergeKey = 
     // Allow subcasts with different error messages to be merged
