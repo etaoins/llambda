@@ -1,6 +1,8 @@
 package io.llambda.compiler.codegen
 import io.llambda
 
+import collection.immutable.ListMap
+
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.InternalCompilerErrorException
@@ -14,8 +16,8 @@ object GenGcBarrier {
   )
 
   case class CalculatedBarrier(
-    nullSlots : Set[Int],
-    saveSlots : Map[IrValue, Int],
+    nullSlots : List[Int],
+    saveSlots : List[(IrValue, Int)],
     restoreTemps : List[RestoreData],
     finalGcState : GcState
   )
@@ -25,13 +27,14 @@ object GenGcBarrier {
     val gcState = state.gcState
 
     // We only care about GC managed values
-    val liveGcManagedValues = liveTemps.tempValueToIr.filter(_._1.isGcManaged)
+    // Sort them by their IR representation to ensure we generate stable IR between runs
+    val liveGcManagedValues = liveTemps.tempValueToIr.toSeq.filter(_._1.isGcManaged).sortBy(_._2.toIr)
 
     // If multiple values with the same identity need to be saved we should only save one
-    val liveIdentities = liveGcManagedValues.map({ case (tempValue, irValue) =>
+    val liveIdentities = ListMap(liveGcManagedValues.map({ case (tempValue, irValue) =>
       // Find their identities and pick an arbitrary one to save
       liveTemps.pointerIdentities(tempValue) -> irValue
-    }).toMap
+    }) : _*)
       
     // Find the set of values that need to be flushed to memory
     val unflushedIdentities = liveIdentities.filter({ case (pointerIdentity, irValue) => 
@@ -48,7 +51,7 @@ object GenGcBarrier {
 
     // Figure out if we can steal any slots
     // Prefer the newly derooted slots because then we can skip nulling them entirely
-    val availableSlots = newlyDerootedSlots.toList ++ idleSlots.toList
+    val availableSlots = newlyDerootedSlots.toList.sorted ++ idleSlots.toList.sorted
 
     // Now calculate how many slots we can steal
     val stealSlotCount = unflushedIdentities.size.min(availableSlots.size)
@@ -66,17 +69,18 @@ object GenGcBarrier {
     // Assign the unstolen roots 
     val unstolenIdentitiesToSlot = newSlotFlushes.map(_._1).zip(newSlotRange).toMap : Map[GcPointerIdentity, Int]
 
-    // Build our save list
-    val saveSlots = (stolenIdentitiesToSlot ++ unstolenIdentitiesToSlot) map { case (pointerIdentity, slot) =>
+    // Build our save list in numeric slot order
+    val saveSlots = ((stolenIdentitiesToSlot ++ unstolenIdentitiesToSlot) map { case (pointerIdentity, slot) =>
       unflushedIdentities(pointerIdentity) -> slot
-    }
+    }).toList.sortBy(_._2)
 
     // Any derooted identites we didn't steal need to be zeroed before they're put in the availabe slot pool
-    val nullSlots = newlyDerootedSlots -- stolenIdentitiesToSlot.values
+    val nullSlots = (newlyDerootedSlots -- stolenIdentitiesToSlot.values).toList.sorted
 
     // Now find all of rooted identities, including previously flushed ones 
     val rootedIdentities = (gcState.rootedIdentities -- newlyDerootedIdentities) ++ stolenIdentitiesToSlot ++ unstolenIdentitiesToSlot
 
+    // Generate restore information for them in slot order
     val restoreTemps = (liveGcManagedValues.map { case (tempValue, previousIrValue) =>
       val loadFromSlot = rootedIdentities(liveTemps.pointerIdentities(tempValue))
 
@@ -85,7 +89,7 @@ object GenGcBarrier {
         previousIrValue=previousIrValue,
         restoreToTemp=tempValue
       )
-    }).toList
+    }).toList.sortBy(_.loadFromSlot)
     
     CalculatedBarrier(
       nullSlots=nullSlots,

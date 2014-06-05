@@ -70,6 +70,19 @@ object Compiler {
     compileData(SchemeParser.parseStringAsData(inputString), output, config)
 
   def compileData(data : List[ast.Datum], output : File, config : CompileConfig) : Unit = {
+    val irBytes = compileDataToIr(data, config).getBytes("UTF-8")
+
+    if (!config.emitLlvm) {
+      if (!invokeLlvmCompiler(irBytes, output, config.optimizeLevel)) {
+        throw new ExternalCompilerException
+      }
+    }
+    else {
+      invokeFileSinkCompiler(irBytes, output)
+    }
+  }
+
+  def compileDataToIr(data : List[ast.Datum], config : CompileConfig) : String = {
     // Prepare to extract
     val loader = new frontend.LibraryLoader(config.targetPlatform)
     val featureIdentifiers = FeatureIdentifiers(config.targetPlatform, config.extraFeatureIdents) 
@@ -121,17 +134,7 @@ object Compiler {
     val allocatedFunctions = disposedFunctions.mapValues(planner.PlanCellAllocations(_))
 
     // Generate the LLVM IR
-    val llvmIr = codegen.GenProgram(allocatedFunctions, config.targetPlatform, featureIdentifiers)
-    val irBytes = llvmIr.getBytes("UTF-8")
-    
-    if (!config.emitLlvm) {
-      if (!invokeLlvmCompiler(irBytes, output, config.optimizeLevel)) {
-        throw new ExternalCompilerException
-      }
-    }
-    else {
-      invokeFileSinkCompiler(irBytes, output)
-    }
+    codegen.GenProgram(allocatedFunctions, config.targetPlatform, featureIdentifiers)
   }
 }
 

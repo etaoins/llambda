@@ -226,8 +226,12 @@ object GenPlanStep {
           // Make the result phi
           val phiResultIr = phiBlock.phi("condPhiResult")(PhiSource(trueResultIrValue, trueEndBlock), PhiSource(falseResultIrValue, falseEndBlock))
 
+          // Find our common temp values in sorted order to ensure we generate stable IR
+          val sortedTrueLiveTemps = trueEndState.liveTemps.tempValueToIr.toSeq.sortBy(_._2.toIr).map(_._1)
+          val sortedCommonLiveTemps = sortedTrueLiveTemps.filter(falseEndState.liveTemps.tempValueToIr.contains)
+
           // Phi any values that have diverged across branches
-          val tempValueToIrUpdate = ((trueEndState.liveTemps.keySet & falseEndState.liveTemps.keySet) map { liveTemp =>
+          val tempValueToIrUpdate = sortedCommonLiveTemps map { liveTemp =>
             val trueValueIrValue = trueEndState.liveTemps(liveTemp)
             val falseValueIrValue = falseEndState.liveTemps(liveTemp)
               
@@ -240,7 +244,7 @@ object GenPlanStep {
               val phiValueIr = phiBlock.phi("condPhiValue")(PhiSource(trueValueIrValue, trueEndBlock), PhiSource(falseValueIrValue, falseEndBlock))
               (liveTemp -> phiValueIr)
             }
-          })
+          }
 
           // Make sure we preserve pointer identities or else the identity count will explode
           postFlushState.copy(
