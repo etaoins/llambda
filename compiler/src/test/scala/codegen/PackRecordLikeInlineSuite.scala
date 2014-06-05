@@ -85,12 +85,17 @@ class PackRecordLikeInlineSuite extends FunSuite {
     val firstField = new vt.RecordField("first", vt.Int32) 
     val secondField = new vt.RecordField("second", vt.Int64) 
     val thirdField = new vt.RecordField("third", vt.Int8) 
+    // Have these extra fields to ensure their relative order is preserved
+    // This is important to generate stable LLVM IR
+    val fourthField = new vt.RecordField("fourth", vt.Int8) 
+    val fifthField = new vt.RecordField("fifth", vt.Int8) 
+    val sixthField = new vt.RecordField("sixth", vt.Int8) 
 
-    val packedRecord = PackRecordLikeInline(List(firstField, secondField, thirdField), 16, platform.Posix64LE)
+    val packedRecord = PackRecordLikeInline(List(firstField, secondField, thirdField, fourthField, fifthField, sixthField), 16, platform.Posix64LE)
     
     // This assumes that we repack for space minimization
     assert(packedRecord === PackRecordLikeInline.PackedRecordLike(
-      fieldOrder=List(secondField, firstField, thirdField),
+      fieldOrder=List(secondField, firstField, thirdField, fourthField, fifthField, sixthField),
       inline=true
     ))
   }

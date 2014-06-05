@@ -1,6 +1,8 @@
 package io.llambda.compiler.planner
 import io.llambda
 
+import collection.immutable.ListSet
+
 import llambda.compiler.et
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
@@ -57,15 +59,16 @@ private[planner] object PlanLambda {
     val valueType = vt.MutableType
   }
 
-  private def findRefedVariables(expr : et.Expr) : Set[StorageLocation] = expr match {
+  /** Finds all referenced variables in an expression and returns them in a stable order */
+  private def findRefedVariables(expr : et.Expr) : List[StorageLocation] = expr match {
     case et.VarRef(variable) =>
-      Set(variable)
+      List(variable)
 
     case et.MutateVar(variable, expr) =>
-      Set(variable) ++ findRefedVariables(expr)
+      variable :: findRefedVariables(expr)
 
     case otherExpr =>
-      otherExpr.subexprs.flatMap(findRefedVariables).toSet
+      otherExpr.subexprs.flatMap(findRefedVariables)
   }
 
   private def initializeMutableArgs(initialState : PlannerState)(mutableArgs : List[Argument])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : PlannerState = mutableArgs.length match {
@@ -150,10 +153,10 @@ private[planner] object PlanLambda {
     val nativeSymbol = parentPlan.allocProcedureSymbol(sourceName)
 
     // Find the variables that are closed by the parent scope
-    val refedVars = findRefedVariables(body)
+    val refedVarsList = findRefedVariables(body)
 
     // Figure out if the immutables need to be captured
-    val closedVariables = (refedVars flatMap { storageLoc =>
+    val closedVariables = (refedVarsList.distinct flatMap { storageLoc =>
       parentState.values.get(storageLoc) map {
         case ImmutableValue(parentIntermediate) =>
           parentIntermediate.closureRepresentation match {
