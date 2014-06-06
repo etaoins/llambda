@@ -2,9 +2,9 @@ package io.llambda.llvmir
 
 import org.scalatest.FunSuite
 
-class MetadataDefSuite extends FunSuite {
+class NumberedMetadataDefSuite extends FunSuite {
   test("trivial def") {
-    val metadataDef = MetadataDef(
+    val metadataDef = NumberedMetadataDef(
       index=12,
       metadataNode=UserDefinedMetadataNode(List(
         Some(IntegerConstant(IntegerType(32), 5)),

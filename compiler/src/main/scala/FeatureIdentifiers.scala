@@ -4,6 +4,12 @@ import io.llambda
 import platform.TargetPlatform
 
 object FeatureIdentifiers {
+  /** Feature identifier for the specific version of the compiler
+    *
+    * This is reused by codegen to identify ourselves in the final binary
+    */
+  val compilerVersionIdentifier = "llambda-0.0"
+
   private def commonFeatures = Set(
     // XXX: We aren't a full R7RS implementation but that's what we're targeting 
     "r7rs",
@@ -30,7 +36,7 @@ object FeatureIdentifiers {
     // triple. It might not be worth the overhead without a specific use-case, however.
 
     "llambda",
-    "llambda-0.0"
+    compilerVersionIdentifier
   )
 
   def apply(platform : TargetPlatform, extraIdents : Set[String] = Set()) =

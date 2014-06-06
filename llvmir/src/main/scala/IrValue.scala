@@ -190,6 +190,6 @@ abstract class MetadataNode extends Metadata {
 
 case class UserDefinedMetadataNode(memberOpts : Seq[Option[IrConstant]]) extends MetadataNode
 
-case class NamedMetadata(index : Long) extends Metadata {
+case class NumberedMetadata(index : Long) extends Metadata {
   def toIr = "!" + index.toString
 }

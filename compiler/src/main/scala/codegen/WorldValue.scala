@@ -11,21 +11,21 @@ object WorldValue extends StructureValue("world") {
     name="shadowStackHead",
     index=0,
     irType=PointerType(UserDefinedType("shadowStackEntry")),
-    tbaaNode=NamedMetadata(0)
+    tbaaNode=NumberedMetadata(0)
   )
 
   val allocNextField = StructureField(
     name="allocNext",
     index=1,
     irType=cellPointerIrType,
-    tbaaNode=NamedMetadata(1)
+    tbaaNode=NumberedMetadata(1)
   )
 
   val allocEndField = StructureField(
     name="allocEnd",
     index=2,
     irType=cellPointerIrType,
-    tbaaNode=NamedMetadata(2)
+    tbaaNode=NumberedMetadata(2)
   )
   
   def genPointerToShadowStackHead = genPointerToField(shadowStackHeadField)_

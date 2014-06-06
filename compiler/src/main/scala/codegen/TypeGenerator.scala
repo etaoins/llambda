@@ -73,11 +73,11 @@ class TypeGenerator(module : IrModuleBuilder, targetPlatform : TargetPlatform) {
         // Each field cannot be aliased with any other fields
         // If we allow toll-free briding with C structs we'll need to loosen this at least for them
         val nodeName = s"${recordTypeName}::${field.sourceName}"
-        val namedTbaaMetadata = module.nameMetadataNode(
+        val numberedTbaaMetadata = module.numberMetadataNode(
           TbaaMetadata(nodeName)
         )
 
-        (field, namedTbaaMetadata)
+        (field, numberedTbaaMetadata)
       }).toMap
 
       // Allocate it a class ID

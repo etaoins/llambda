@@ -17,26 +17,26 @@ object ProcessCellClasses {
     }
   }
 
-  private def createSelfTbaaNodes(selfName : String, selfFields : List[CellField], indexCounter : () => Int) : ListMap[CellField, llvmir.MetadataDef] = 
+  private def createSelfTbaaNodes(selfName : String, selfFields : List[CellField], indexCounter : () => Int) : ListMap[CellField, llvmir.NumberedMetadataDef] = 
     // Create parentless TBAA nodes for the new fields we introduce
     ListMap(selfFields.map { cellField =>
       val identity = s"${selfName}::${cellField.name}"
       val tbaaNode = llvmir.TbaaMetadata(identity, None)
 
       val tbaaIndex = indexCounter()
-      (cellField -> llvmir.MetadataDef(tbaaIndex, tbaaNode))
+      (cellField -> llvmir.NumberedMetadataDef(tbaaIndex, tbaaNode))
     } : _*)
 
   /** Creates TBAA nodes for our fields and the fields we inherit from our superclasses */
-  private def createTbaaNodes(selfName : String, selfFields : List[CellField], parentTbaaNodes : ListMap[CellField, llvmir.MetadataDef], indexCounter : () => Int) : ListMap[CellField, llvmir.MetadataDef] = {
+  private def createTbaaNodes(selfName : String, selfFields : List[CellField], parentTbaaNodes : ListMap[CellField, llvmir.NumberedMetadataDef], indexCounter : () => Int) : ListMap[CellField, llvmir.NumberedMetadataDef] = {
     // Inherit the TBAA nodes from our parents
     val inheritsNodes = parentTbaaNodes.map {
-      case (cellField, parentMetadataDef @ llvmir.MetadataDef(_, parentTbaaNode : llvmir.TbaaMetadata)) =>
+      case (cellField, parentNumberedMetadataDef @ llvmir.NumberedMetadataDef(_, parentTbaaNode : llvmir.TbaaMetadata)) =>
         val identity = s"${parentTbaaNode.identity}->${selfName}"
-        val tbaaNode = llvmir.TbaaMetadata(identity, Some(parentMetadataDef.namedMetadata))
+        val tbaaNode = llvmir.TbaaMetadata(identity, Some(parentNumberedMetadataDef.numberedMetadata))
 
         val tbaaIndex = indexCounter()
-        (cellField -> llvmir.MetadataDef(tbaaIndex, tbaaNode))
+        (cellField -> llvmir.NumberedMetadataDef(tbaaIndex, tbaaNode))
     }
 
     // Create parentless TBAA nodes for the new fields we introduce

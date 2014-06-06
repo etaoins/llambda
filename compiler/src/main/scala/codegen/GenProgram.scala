@@ -24,7 +24,9 @@ object GenProgram {
 
   def apply(functions : Map[String, planner.PlannedFunction], targetPlatform : TargetPlatform, featureIdentifiers : Set[String]) : String = {
     val module = new IrModuleBuilder
-    module.metadataNameSource.nextIndex = ct.CellType.nextMetadataIndex
+    module.metadataIndexSource.nextIndex = ct.CellType.nextMetadataIndex
+
+    module.identifyCompiler(FeatureIdentifiers.compilerVersionIdentifier + " (based on LLVM)")
 
     val plannedSymbols = functions.keySet
     val typeGenerator = new TypeGenerator(module, targetPlatform)

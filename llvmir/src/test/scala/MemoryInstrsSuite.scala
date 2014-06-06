@@ -95,7 +95,7 @@ class MemoryInstrsSuite extends IrTestSuite {
   
   test("tbaa load") {
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(32)))
-    val tbaaNode = NamedMetadata(5)
+    val tbaaNode = NumberedMetadata(5)
     
     val block = createTestBlock()
     val resultVar = block.load("align")(
@@ -109,7 +109,7 @@ class MemoryInstrsSuite extends IrTestSuite {
   
   test("aligned volatile tbaa load") {
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(32)))
-    val tbaaNode = NamedMetadata(10)
+    val tbaaNode = NumberedMetadata(10)
     
     val block = createTestBlock()
     val resultVar = block.load("alignvol")(
@@ -172,7 +172,7 @@ class MemoryInstrsSuite extends IrTestSuite {
   
   test("tbaa store") {
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(32)))
-    val tbaaNode = NamedMetadata(0)
+    val tbaaNode = NumberedMetadata(0)
     
     val block = createTestBlock()
     block.store(
@@ -186,7 +186,7 @@ class MemoryInstrsSuite extends IrTestSuite {
   
   test("aligned volatile tbaa store") {
     val fakePointer = LocalVariable("fake", PointerType(IntegerType(64)))
-    val tbaaNode = NamedMetadata(45)
+    val tbaaNode = NumberedMetadata(45)
     
     val block = createTestBlock()
     block.store(

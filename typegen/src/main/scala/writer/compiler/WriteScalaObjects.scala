@@ -65,7 +65,7 @@ object WriteScalaObjects extends writer.OutputWriter {
         val scalaConstructor = LlvmTypeToScalaConstructor(llvmType)
 
         scalaBuilder += s"val ${field.name}IrType = ${scalaConstructor}"
-        scalaBuilder += s"val ${field.name}TbaaNode : NamedMetadata" 
+        scalaBuilder += s"val ${field.name}TbaaNode : Metadata" 
         scalaBuilder += s"val ${field.name}GepIndices : List[Int]"
         scalaBuilder.sep()
       }
@@ -291,7 +291,7 @@ object WriteScalaObjects extends writer.OutputWriter {
 
       // Add our TBAA indexes
       for((field, metadataDef) <- cellClass.fieldTbaaNodes) {
-        scalaBuilder += s"val ${field.name}TbaaNode = NamedMetadata(${metadataDef.index}L)"
+        scalaBuilder += s"val ${field.name}TbaaNode = NumberedMetadata(${metadataDef.index}L)"
       }
 
       // Cell classes don't repeat their parent TBAA nodes because they use the 
@@ -300,7 +300,7 @@ object WriteScalaObjects extends writer.OutputWriter {
       cellClass match {
         case variantCellClass : VariantCellClass =>
           for((field, tbaaNode) <- variantCellClass.parent.fieldTbaaNodes) {
-            scalaBuilder += s"val ${field.name}TbaaNode = NamedMetadata(${tbaaNode.index}L)" 
+            scalaBuilder += s"val ${field.name}TbaaNode = NumberedMetadata(${tbaaNode.index}L)" 
           }
 
         case _ =>

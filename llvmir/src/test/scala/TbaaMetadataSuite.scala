@@ -3,10 +3,7 @@ package io.llambda.llvmir
 import org.scalatest.FunSuite
 
 class TbaaMetadataSuite extends FunSuite {
-  private val testTbaaParent = MetadataDef(
-    0,
-    TbaaMetadata("root node")
-  ).namedMetadata
+  private val testTbaaParent = NumberedMetadata(0)
 
   test("trivial root node") {
     val tbaaNode = TbaaMetadata("test node")

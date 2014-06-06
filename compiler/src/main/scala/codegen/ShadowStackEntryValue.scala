@@ -9,21 +9,21 @@ object ShadowStackEntryValue extends StructureValue("shadowStackEntry") {
     name="next",
     index=0,
     irType=PointerType(UserDefinedType("shadowStackEntry")),
-    tbaaNode=NamedMetadata(3)
+    tbaaNode=NumberedMetadata(3)
   )
 
   val cellCountField = StructureField(
     name="cellCount",
     index=1,
     irType=IntegerType(64),
-    tbaaNode=NamedMetadata(4)
+    tbaaNode=NumberedMetadata(4)
   )
 
   val rootsField = StructureField(
     name="roots",
     index=2,
     irType=ArrayType(0, PointerType(ct.DatumCell.irType)),
-    tbaaNode=NamedMetadata(5)
+    tbaaNode=NumberedMetadata(5)
   )
   
   def genPointerToNext = genPointerToField(nextField)_

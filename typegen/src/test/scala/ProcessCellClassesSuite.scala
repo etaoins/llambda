@@ -252,14 +252,14 @@ class ProcessCellClassesSuite extends FunSuite with Inside {
       assert(childTypeIdTbaaNode.index === 12)
       inside(childTypeIdTbaaNode.metadataNode) {
         case tbaaMetadata : llvmir.TbaaMetadata =>
-          assert(tbaaMetadata.parentOpt === Some(parentTypeIdTbaaNode.namedMetadata))
+          assert(tbaaMetadata.parentOpt === Some(parentTypeIdTbaaNode.numberedMetadata))
       }
       
       val childGcStateTbaaNode = stringLikeClass.fieldTbaaNodes(gcStateField)
       assert(childGcStateTbaaNode.index === 13)
       inside(childGcStateTbaaNode.metadataNode) {
         case tbaaMetadata : llvmir.TbaaMetadata =>
-          assert(tbaaMetadata.parentOpt === Some(parentGcStateTbaaNode.namedMetadata))
+          assert(tbaaMetadata.parentOpt === Some(parentGcStateTbaaNode.numberedMetadata))
       }
 
       // And finally a new nodes

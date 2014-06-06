@@ -184,8 +184,8 @@ class IrValueSuite extends FunSuite {
     assert(testMetadata.toIrWithType === """metadata !{metadata !"teststr", i32 5, null, metadata !{}}""")
   }
 
-  test("named metadata") {
-    val testMetadata = NamedMetadata(55)
+  test("numbered metadata") {
+    val testMetadata = NumberedMetadata(55)
 
     assert(testMetadata.toIrWithType === "metadata !55")
   }

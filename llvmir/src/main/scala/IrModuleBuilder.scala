@@ -9,19 +9,26 @@ class IrModuleBuilder extends Irable {
     def toIr = s"%${escapedName} = type ${irType.toIr}"
   }
 
+  private case class NamedMetadata(name : String, members : Seq[Metadata]) extends Irable {
+    // Note the lack of types here - named metadata can only refer to other metadata
+    def toIr =
+      s"!${name} = !{" + members.map(_.toIr).mkString(", ") + "}" 
+  }
+
   private val globalVariableDefs = new ListBuffer[IrGlobalVariableDef]
   private val functionDecls = new ListBuffer[IrFunctionDecl]
   private val functionDefs = new ListBuffer[IrFunctionBuilder]
   private val aliasDefs = new ListBuffer[IrAliasDef]
   private val namedTypes = new ListBuffer[NamedType]
-  private val metadataDefs = new ListBuffer[MetadataDef]
+  private val numberedMetadataDefs = new ListBuffer[NumberedMetadataDef]
+  private val namedMetadata = new ListBuffer[NamedMetadata]
 
   private val declaredNames = collection.mutable.Set[String]()
 
   // This generates global names
   val nameSource = new GlobalNameSource
 
-  val metadataNameSource = new MetadataNameSource
+  val metadataIndexSource = new MetadataIndexSource
 
   def defineGlobalVariable(variableDef : IrGlobalVariableDef) {
     globalVariableDefs.append(variableDef)
@@ -50,18 +57,36 @@ class IrModuleBuilder extends Irable {
     UserDefinedType(name)
   }
 
-  def defineMetadata(metadataDef : MetadataDef) {
-    metadataDefs += metadataDef
+  def defineNumberedMetadata(numberedMetadataDef : NumberedMetadataDef) {
+    numberedMetadataDefs += numberedMetadataDef
   }
 
-  /** Assigns metadata a new name and returns the NamedMetadata referencing it */
-  def nameMetadataNode(metadataNode : MetadataNode) : NamedMetadata = {
-    val newIndex = metadataNameSource.allocate()
-    val metadataDef = MetadataDef(newIndex, metadataNode)
+  /** Assigns metadata a number and returns the NumberedMetadata referencing it */
+  def numberMetadataNode(metadataNode : MetadataNode) : NumberedMetadata = {
+    val newIndex = metadataIndexSource.allocate()
+    val metadataDef = NumberedMetadataDef(newIndex, metadataNode)
 
-    defineMetadata(metadataDef)
+    defineNumberedMetadata(metadataDef)
 
-    metadataDef.namedMetadata
+    metadataDef.numberedMetadata
+  }
+
+  def nameMetadata(name : String, members : Seq[Metadata]) {
+    namedMetadata += NamedMetadata(name, members)
+  }
+
+  /** Constructs metadata to identify the compiler
+    *
+    * @param  identifier  Human readable identifier string for the compiler
+    */
+  def identifyCompiler(identifier : String) {
+    val numberedMetadata = numberMetadataNode(
+      UserDefinedMetadataNode(List(Some(
+        MetadataString.fromUtf8String(identifier)
+     )))
+    )
+
+    nameMetadata("llvm.ident", List(numberedMetadata))
   }
 
   def isDeclared(name : String) : Boolean = 
@@ -82,7 +107,8 @@ class IrModuleBuilder extends Irable {
   def toIr : String = {
     val allIr : List[Irable] =
       namedTypes.toList ++
-      metadataDefs.toList ++
+      numberedMetadataDefs.toList ++
+      namedMetadata.toList ++
       globalVariableDefs.toList ++
       functionDecls.toList ++
       functionDefs.toList ++
