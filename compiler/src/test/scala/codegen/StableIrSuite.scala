@@ -1,4 +1,4 @@
-package io.llambda.compiler.functional
+package io.llambda.compiler.codegen
 import io.llambda
 
 import org.scalatest.FunSuite
