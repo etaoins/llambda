@@ -9,6 +9,8 @@ trait IrBranchTarget {
 private[llvmir] abstract class IrInstrBuilder(protected val nameSource : LocalNameSource) {
   val function : IrFunctionBuilder
 
+  private var terminated : Boolean = false
+
   // This contains our instructions as they're built
   private[llvmir] val irLines = new ListBuffer[String]
   
@@ -18,9 +20,17 @@ private[llvmir] abstract class IrInstrBuilder(protected val nameSource : LocalNa
     }).mkString("")
 
   protected def addInstruction(instruction : String, metadata : Map[String, Metadata] = Map()) {
+    if (terminated) {
+      throw new InconsistentIrException("Attempted to add instruction to terminated block")
+    }
+
     // Include any metadata currently active from a withMetadata call
     val allMetadata = function.activeMetadata ++ metadata
     irLines += instruction + metadataMapToIr(allMetadata)
+  }
+
+  protected def terminateBlock() {
+    terminated = true
   }
 }
 

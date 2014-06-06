@@ -3,10 +3,12 @@ package io.llambda.llvmir
 private[llvmir] trait TerminatorInstrs extends IrInstrBuilder {
   def ret(value : IrValue) {
     addInstruction(s"ret ${value.toIrWithType}")
+    terminateBlock()
   }
 
   def retVoid() {
     addInstruction("ret void")
+    terminateBlock()
   }
 
   def condBranch(cond : IrValue, trueBlock : IrBranchTarget, falseBlock : IrBranchTarget) {
@@ -15,14 +17,17 @@ private[llvmir] trait TerminatorInstrs extends IrInstrBuilder {
     }
 
     addInstruction(s"br ${cond.toIrWithType}, label %${trueBlock.label}, label %${falseBlock.label}")
+    terminateBlock()
   }
 
   def uncondBranch(block : IrBranchTarget) {
     addInstruction(s"br label %${block.label}")
+    terminateBlock()
   }
 
   def unreachable() {
     addInstruction("unreachable")
+    terminateBlock()
   }
 
   def switch(testValue : IrValue, defaultBlock : IrBranchTarget, entries : (Long, IrBranchTarget)*) {
@@ -50,6 +55,7 @@ private[llvmir] trait TerminatorInstrs extends IrInstrBuilder {
     }).mkString("  ")
 
     addInstruction(s"switch ${testValue.toIrWithType}, label %${defaultBlock.label} [ ${entriesIr} ]")
+    terminateBlock()
   }
   
   def invokeDecl(resultDestOpt : Option[ResultDestination])(decl : IrFunctionDeclLike, arguments : Seq[IrValue], normalBlock : IrBranchTarget, exceptionBlock : IrBranchTarget) : Option[LocalVariable] = {
@@ -79,12 +85,14 @@ private[llvmir] trait TerminatorInstrs extends IrInstrBuilder {
     val callParts = assignmentIrOpt.toList ++ List("invoke") ++ List(callBody) ++ targetBlocksIr
 
     addInstruction(callParts.mkString(" "))
+    terminateBlock()
 
     resultVarOpt
   }
 
   def resume(resumeValue : IrValue) {
     addInstruction(s"resume ${resumeValue.toIrWithType}")
+    terminateBlock()
   }
 }
 

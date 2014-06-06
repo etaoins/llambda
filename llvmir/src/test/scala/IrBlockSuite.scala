@@ -63,6 +63,16 @@ class IrBlockSuite extends IrTestSuite {
     ))
   }
 
+  test("adding instructions to terminated block fails") {
+    val block = new IrChildBlockBuilder(createTestFunction(), new LocalNameSource, "testLabel")
+
+    block.unreachable()
+
+    intercept[InconsistentIrException] {
+      block.retVoid()
+    }
+  }
+
   test("instr result in to predefined variable of same type") {
     val var1 = IntegerConstant(IntegerType(32), 20)
     val var2 = IntegerConstant(IntegerType(32), 30)
