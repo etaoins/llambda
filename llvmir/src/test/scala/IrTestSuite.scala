@@ -17,7 +17,7 @@ class IrTestSuite extends FunSuite  {
     new IrChildBlockBuilder(createTestFunction(), new LocalNameSource, label)
   
   def assertInstrs(block : IrBlockBuilder, instrs : List[String]) {
-    assert(block.instructions.toList === instrs)
+    assert(block.irLines.toList === instrs)
   }
 
   def assertInstr(block : IrBlockBuilder, instr : String) {

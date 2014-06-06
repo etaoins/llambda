@@ -24,7 +24,7 @@ private[llvmir] trait BinaryInstrs extends IrInstrBuilder {
     val resultVar = resultDest.asLocalVariable(nameSource, resultType)
 
     val wrapIr = wrapBehavior.map(_.mnemonic + " ").toList.sorted.mkString("")
-    instructions += s"${resultVar.toIr} = ${instruction} ${wrapIr}${resultType.toIr} ${op1.toIr}, ${op2.toIr}" 
+    addInstruction(s"${resultVar.toIr} = ${instruction} ${wrapIr}${resultType.toIr} ${op1.toIr}, ${op2.toIr}")
 
     resultVar
   }

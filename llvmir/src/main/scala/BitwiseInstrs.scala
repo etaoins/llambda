@@ -15,7 +15,7 @@ private[llvmir] trait BitwiseInstrs extends IrInstrBuilder {
     }
 
     val resultVar = resultDest.asLocalVariable(nameSource, resultType)
-    instructions += s"${resultVar.toIr} = ${instruction} ${resultType.toIr} ${op1.toIr}, ${op2.toIr}" 
+    addInstruction(s"${resultVar.toIr} = ${instruction} ${resultType.toIr} ${op1.toIr}, ${op2.toIr}")
 
     resultVar
   }

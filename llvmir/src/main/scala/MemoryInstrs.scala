@@ -20,7 +20,7 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
       Some(s"align ${alignment}")
     }
 
-    instructions += (List(baseAlloc) ++ numElementsOptIr.toList ++ alignOptIr.toList).mkString(", ")
+    addInstruction((List(baseAlloc) ++ numElementsOptIr.toList ++ alignOptIr.toList).mkString(", "))
 
     resultVar
   }
@@ -55,8 +55,7 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
       ""
     }
     
-    val metadataIr = metadataMapToIr(metadata)
-    instructions += s"${resultVar.toIr} = load${volatileIr} ${from.toIrWithType}${alignIr}${metadataIr}"
+    addInstruction(s"${resultVar.toIr} = load${volatileIr} ${from.toIrWithType}${alignIr}", metadata)
 
     resultVar
   }
@@ -84,8 +83,7 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
       ""
     }
     
-    val metadataIr = metadataMapToIr(metadata)
-    instructions += s"store${volatileIr} ${value.toIrWithType}, ${to.toIrWithType}${alignIr}${metadataIr}"
+    addInstruction(s"store${volatileIr} ${value.toIrWithType}, ${to.toIrWithType}${alignIr}", metadata)
   }
 
   def getelementptr(resultDest : ResultDestination)(elementType : FirstClassType, basePointer : IrValue, indices : Seq[IrValue], inbounds : Boolean = false) : LocalVariable = {
@@ -120,7 +118,7 @@ private[llvmir] trait MemoryInstrs extends IrInstrBuilder {
     val baseIr = s"${resultVar.toIr} = getelementptr${inboundsIr} ${basePointer.toIrWithType}"
 
     val irParts = baseIr :: indices.toList.map(_.toIrWithType)
-    instructions += irParts.mkString(", ")
+    addInstruction(irParts.mkString(", "))
 
     resultVar
   }

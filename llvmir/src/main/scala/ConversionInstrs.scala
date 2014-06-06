@@ -12,7 +12,7 @@ private[llvmir] trait ConversionInstrs extends IrInstrBuilder {
     }
 
     val resultVar = resultDest.asLocalVariable(nameSource, toType)
-    instructions += s"${resultVar.toIr} = trunc ${value.toIrWithType} to ${toType.toIr}"
+    addInstruction(s"${resultVar.toIr} = trunc ${value.toIrWithType} to ${toType.toIr}")
     
     resultVar
   }
@@ -28,7 +28,7 @@ private[llvmir] trait ConversionInstrs extends IrInstrBuilder {
     }
 
     val resultVar = resultDest.asLocalVariable(nameSource, toType)
-    instructions += s"${resultVar.toIr} = ${instruction} ${value.toIrWithType} to ${toType.toIr}"
+    addInstruction(s"${resultVar.toIr} = ${instruction} ${value.toIrWithType} to ${toType.toIr}")
 
     resultVar
   }
@@ -38,7 +38,7 @@ private[llvmir] trait ConversionInstrs extends IrInstrBuilder {
   
   def bitcastTo(resultDest : ResultDestination)(value : IrValue, toType : FirstClassType) : IrValue = {
     val resultVar = resultDest.asLocalVariable(nameSource, toType)
-    instructions += s"${resultVar.toIr} = bitcast ${value.toIrWithType} to ${toType.toIr}"
+    addInstruction(s"${resultVar.toIr} = bitcast ${value.toIrWithType} to ${toType.toIr}")
 
     resultVar
   }
@@ -54,7 +54,7 @@ private[llvmir] trait ConversionInstrs extends IrInstrBuilder {
     }
 
     val resultVar = resultDest.asLocalVariable(nameSource, toType)
-    instructions += s"${resultVar.toIr} = fptrunc ${value.toIrWithType} to ${toType.toIr}"
+    addInstruction(s"${resultVar.toIr} = fptrunc ${value.toIrWithType} to ${toType.toIr}")
     
     resultVar
   }
@@ -70,7 +70,7 @@ private[llvmir] trait ConversionInstrs extends IrInstrBuilder {
     }
 
     val resultVar = resultDest.asLocalVariable(nameSource, toType)
-    instructions += s"${resultVar.toIr} = fpext ${value.toIrWithType} to ${toType.toIr}"
+    addInstruction(s"${resultVar.toIr} = fpext ${value.toIrWithType} to ${toType.toIr}")
 
     resultVar
   }
@@ -81,7 +81,7 @@ private[llvmir] trait ConversionInstrs extends IrInstrBuilder {
     }
 
     val resultVar = resultDest.asLocalVariable(nameSource, toType)
-    instructions += s"${resultVar.toIr} = ptrtoint ${value.toIrWithType} to ${toType.toIr}"
+    addInstruction(s"${resultVar.toIr} = ptrtoint ${value.toIrWithType} to ${toType.toIr}")
 
     resultVar
   }
@@ -92,7 +92,7 @@ private[llvmir] trait ConversionInstrs extends IrInstrBuilder {
     }
 
     val resultVar = resultDest.asLocalVariable(nameSource, toType)
-    instructions += s"${resultVar.toIr} = inttoptr ${value.toIrWithType} to ${toType.toIr}"
+    addInstruction(s"${resultVar.toIr} = inttoptr ${value.toIrWithType} to ${toType.toIr}")
 
     resultVar
   }
@@ -104,7 +104,7 @@ private[llvmir] trait ConversionInstrs extends IrInstrBuilder {
     }
     
     val resultVar = resultDest.asLocalVariable(nameSource, toType)
-    instructions += s"${resultVar.toIr} = ${instruction} ${value.toIrWithType} to ${toType.toIr}"
+    addInstruction(s"${resultVar.toIr} = ${instruction} ${value.toIrWithType} to ${toType.toIr}")
 
     resultVar
   }

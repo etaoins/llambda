@@ -2,11 +2,11 @@ package io.llambda.llvmir
  
 private[llvmir] trait TerminatorInstrs extends IrInstrBuilder {
   def ret(value : IrValue) {
-    instructions += s"ret ${value.toIrWithType}"
+    addInstruction(s"ret ${value.toIrWithType}")
   }
 
   def retVoid() {
-    instructions += "ret void"
+    addInstruction("ret void")
   }
 
   def condBranch(cond : IrValue, trueBlock : IrBranchTarget, falseBlock : IrBranchTarget) {
@@ -14,15 +14,15 @@ private[llvmir] trait TerminatorInstrs extends IrInstrBuilder {
       throw new InconsistentIrException("Attempted to branch using non-i1")
     }
 
-    instructions += s"br ${cond.toIrWithType}, label %${trueBlock.label}, label %${falseBlock.label}"
+    addInstruction(s"br ${cond.toIrWithType}, label %${trueBlock.label}, label %${falseBlock.label}")
   }
 
   def uncondBranch(block : IrBranchTarget) {
-    instructions += s"br label %${block.label}"
+    addInstruction(s"br label %${block.label}")
   }
 
   def unreachable() {
-    instructions += "unreachable"
+    addInstruction("unreachable")
   }
 
   def switch(testValue : IrValue, defaultBlock : IrBranchTarget, entries : (Long, IrBranchTarget)*) {
@@ -49,7 +49,7 @@ private[llvmir] trait TerminatorInstrs extends IrInstrBuilder {
       s"${irConstant.toIrWithType}, label %${targetBlock.label}"
     }).mkString("  ")
 
-    instructions += s"switch ${testValue.toIrWithType}, label %${defaultBlock.label} [ ${entriesIr} ]"
+    addInstruction(s"switch ${testValue.toIrWithType}, label %${defaultBlock.label} [ ${entriesIr} ]")
   }
   
   def invokeDecl(resultDestOpt : Option[ResultDestination])(decl : IrFunctionDeclLike, arguments : Seq[IrValue], normalBlock : IrBranchTarget, exceptionBlock : IrBranchTarget) : Option[LocalVariable] = {
@@ -78,13 +78,13 @@ private[llvmir] trait TerminatorInstrs extends IrInstrBuilder {
     val callBody = CallLikeInstructionBody(signature, functionPtr, arguments)
     val callParts = assignmentIrOpt.toList ++ List("invoke") ++ List(callBody) ++ targetBlocksIr
 
-    instructions += callParts.mkString(" ")
+    addInstruction(callParts.mkString(" "))
 
     resultVarOpt
   }
 
   def resume(resumeValue : IrValue) {
-    instructions += s"resume ${resumeValue.toIrWithType}"
+    addInstruction(s"resume ${resumeValue.toIrWithType}")
   }
 }
 

@@ -119,7 +119,15 @@ class IrFunctionBuilder(
 ) extends IrFunctionDeclLike {
   // This generates names for the function body
   val nameSource = new LocalNameSource
+
   private val childBlocks = new collection.mutable.ListBuffer[IrChildBlockBuilder]
+  private val metadataStack = new collection.mutable.Stack[Map[String, Metadata ]]
+
+  private[llvmir] def activeMetadata : Map[String, Metadata] = {
+    metadataStack.toList.reverse.foldLeft(Map[String, Metadata]()) { (prevMetadata, newMetadata) =>
+      prevMetadata ++ newMetadata
+    }
+  }
 
   // This is needed for IrSignatureLike
   val arguments = namedArguments.map(_._2)
@@ -152,5 +160,23 @@ class IrFunctionBuilder(
     childBlocks += block
 
     block
+  }
+
+  /** Pushes metadata on the active metadata stack and executes the passed block
+    *
+    * This will implicitly attach the passed metadata to every instruction emitted in this function for the duration of
+    * the block. This is useful for emitting source location debug metadata that may have to span many instructions. If
+    * any metadata of the same name was already passed to an outer withMetadata() invokation it will be overridden for
+    * the duration of the block and restored once the block completes 
+    */
+  def withMetadata[T](metadata : Map[String, Metadata])(block : => T) : T = {
+    metadataStack.push(metadata)
+
+    try {
+      block
+    }
+    finally {
+      metadataStack.pop()
+    }
   }
 }

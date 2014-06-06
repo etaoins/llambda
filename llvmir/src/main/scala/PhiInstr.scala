@@ -22,7 +22,7 @@ private[llvmir] trait PhiInstr extends IrInstrBuilder {
       s"[ ${source.value.toIr}, %${source.block.label} ]"
     }).mkString(", ")
 
-    instructions += s"${resultVar.toIr} = phi ${resultType.toIr} $sourceIr"
+    addInstruction(s"${resultVar.toIr} = phi ${resultType.toIr} $sourceIr")
 
     resultVar
   }

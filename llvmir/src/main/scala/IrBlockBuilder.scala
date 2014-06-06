@@ -7,24 +7,31 @@ trait IrBranchTarget {
 }
 
 private[llvmir] abstract class IrInstrBuilder(protected val nameSource : LocalNameSource) {
+  val function : IrFunctionBuilder
+
   // This contains our instructions as they're built
-  private[llvmir] val instructions = new ListBuffer[String]
+  private[llvmir] val irLines = new ListBuffer[String]
   
-  protected def metadataMapToIr(metadataMap : Map[String, Metadata]) = metadataMap.map({ case (tagName, metadata) =>
-    s", !${tagName} ${metadata.toIr}"
-  }).mkString("")
+  private def metadataMapToIr(metadataMap : Map[String, Metadata]) =
+    metadataMap.toSeq.sortBy(_._1).map({ case (tagName, metadata) =>
+      s", !${tagName} ${metadata.toIr}"
+    }).mkString("")
+
+  protected def addInstruction(instruction : String, metadata : Map[String, Metadata] = Map()) {
+    // Include any metadata currently active from a withMetadata call
+    val allMetadata = function.activeMetadata ++ metadata
+    irLines += instruction + metadataMapToIr(allMetadata)
+  }
 }
 
 abstract class IrBlockBuilder(nameSource : LocalNameSource, val label : String) extends IrInstrBuilder(nameSource) with Irable with TerminatorInstrs with MemoryInstrs with BitwiseInstrs with ConversionInstrs with OtherInstrs with BinaryInstrs {
-  val function : IrFunctionBuilder
-
   def comment(text : String) {
-    instructions += s"; ${text}"
+    irLines += s"; ${text}"
   }
 
   def toIr : String = {
     // Tab indent and join with newlines
-    s"${label}:\n" + instructions.map("\t" + _).mkString("\n")
+    s"${label}:\n" + irLines.map("\t" + _).mkString("\n")
   }
 }
 

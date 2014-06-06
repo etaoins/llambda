@@ -40,7 +40,7 @@ private[llvmir] trait OtherInstrs extends IrInstrBuilder {
     
     val resultVar = resultDest.asLocalVariable(nameSource, IntegerType(1))
 
-    instructions += s"${resultVar.toIr} = icmp ${conditionIr} ${comparedType.toIr} ${val1.toIr}, ${val2.toIr}"
+    addInstruction(s"${resultVar.toIr} = icmp ${conditionIr} ${comparedType.toIr} ${val1.toIr}, ${val2.toIr}")
 
     resultVar
   }
@@ -73,7 +73,7 @@ private[llvmir] trait OtherInstrs extends IrInstrBuilder {
     val callBody = CallLikeInstructionBody(signature, functionPtr, arguments)
     val callParts = assignmentIrOpt.toList ++ tailCallIrOpt.toList ++ List("call", callBody)
 
-    instructions += callParts.mkString(" ")
+    addInstruction(callParts.mkString(" "))
 
     resultVarOpt
   }
@@ -90,7 +90,7 @@ private[llvmir] trait OtherInstrs extends IrInstrBuilder {
     val resultType = trueValue.irType
     val resultVar = resultDest.asLocalVariable(nameSource, resultType)
 
-    instructions += s"${resultVar.toIr} = select ${cond.toIrWithType}, ${trueValue.toIrWithType}, ${falseValue.toIrWithType}"
+    addInstruction(s"${resultVar.toIr} = select ${cond.toIrWithType}, ${trueValue.toIrWithType}, ${falseValue.toIrWithType}")
 
     resultVar
   }
@@ -110,7 +110,7 @@ private[llvmir] trait OtherInstrs extends IrInstrBuilder {
     val clausesIr = cleanupClauseOpt.toList ++ clauses.map(_.toIr)
 
     val resultVar = resultDest.asLocalVariable(nameSource, resultType)
-    instructions += s"${resultVar.toIr} = landingpad ${resultType.toIr} personality ${personalityFunction.toIrWithType} " + clausesIr.mkString(" ")
+    addInstruction(s"${resultVar.toIr} = landingpad ${resultType.toIr} personality ${personalityFunction.toIrWithType} " + clausesIr.mkString(" "))
     resultVar
   }
 }
