@@ -53,8 +53,8 @@ object CallCcProcReducer extends ReportProcReducer {
       expr.map(replaceExitProcWithReturn(_, exitProc))
   }
 
-  def apply(appliedVar : ReportProcedure, operands : List[et.Expr])(implicit reduceConfig : ReduceConfig) : Option[et.Expr] = (appliedVar.reportName, operands) match {
-    case (reportName, List(et.Lambda(List(exitProc), None, bodyExpr))) if callCcNames.contains(reportName) => 
+  def apply(appliedVar : et.VarRef, reportName : String, operands : List[et.Expr])(implicit reduceConfig : ReduceConfig) : Option[et.Expr] = (reportName, operands) match {
+    case (reportName, List(originalLambdaExpr @ et.Lambda(List(exitProc), None, bodyExpr))) if callCcNames.contains(reportName) => 
       // Try to convert all uses of the exit proc in to a return
       val replacedBodyExpr = replaceExitProcWithReturn(bodyExpr, exitProc)
 
@@ -66,12 +66,18 @@ object CallCcProcReducer extends ReportProcReducer {
 
       val finalExpr = if (storageLocReferencedByExpr(exitProc, dereturnedBodyExpr)) {
         // We still need to invoke (call/cc) to get an exit proc value
-        et.Apply(et.VarRef(appliedVar), List(et.Lambda(List(exitProc), None, dereturnedBodyExpr)))
+        val dereturnedLambdaExpr = originalLambdaExpr.copy(body=dereturnedBodyExpr)
+        dereturnedLambdaExpr.assignLocationFrom(originalLambdaExpr)
+
+        et.Apply(appliedVar, List(dereturnedLambdaExpr))
       }
       else if (ExprCanReturn(dereturnedBodyExpr)) {
         // We converted all uses of the exit proc to et.Return. We can strip out the (call/cc) completely
         // This can be a big efficiency win
-        et.Apply(et.Lambda(Nil, None, dereturnedBodyExpr), Nil)
+        et.Apply(
+          et.Lambda(Nil, None, dereturnedBodyExpr).assignLocationFrom(originalLambdaExpr),
+          Nil
+        )
       }
       else {
         // The (call/cc) collapsed in to a completely normal Scheme expression with no returns

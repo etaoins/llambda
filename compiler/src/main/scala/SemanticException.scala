@@ -62,16 +62,12 @@ class ValueNotApplicableException(located : SourceLocated) extends LocatedSemant
   val semanticErrorType = "not applicable"
 }
 
-// This has an unlocated version in planner
-trait ImpossibleTypeConversionExceptionLike extends SemanticException {
+class ImpossibleTypeConversionException(located : SourceLocated, message : String) extends LocatedSemanticException(located, message) {
   val semanticErrorType = "impossible type conversion"
 }
-class ImpossibleTypeConversionException(located : SourceLocated, message : String) extends LocatedSemanticException(located, message) with ImpossibleTypeConversionExceptionLike 
 
-// This has an unlocated version in planner
-trait IncompatibleArityExceptionLike extends SemanticException {
+class IncompatibleArityException(located : SourceLocated, message : String) extends LocatedSemanticException(located, message) { 
   val semanticErrorType = "incompatible arity"
 }
-class IncompatibleArityException(located : SourceLocated, message : String) extends LocatedSemanticException(located, message) with IncompatibleArityExceptionLike 
 
 class DefinitionOutsideTopLevelException(located : SourceLocated) extends BadSpecialFormException(located, "Definitions can only be introduced in at the outermost level or at the beginning of a body") 

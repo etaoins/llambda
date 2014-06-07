@@ -10,7 +10,7 @@ object NumberProcReducer extends ReportProcReducer {
     def accumulateInexact(acc : Double, newValue : Double) : Double
     def reduceExactAndInexact(exact : Long, inexact : Double) : Double
 
-    def apply(appliedVar : ReportProcedure, operands : List[et.Expr])(implicit reduceConfig : ReduceConfig) : et.Expr = {
+    def apply(appliedVar : et.VarRef, operands : List[et.Expr])(implicit reduceConfig : ReduceConfig) : et.Expr = {
       case class MathAcc(
         exactValue : Long,
         inexactValueOpt : Option[Double] = initialInexactValueOpt,
@@ -63,8 +63,8 @@ object NumberProcReducer extends ReportProcReducer {
       else {
         // We partially reduced but still have non-literal operands
         et.Apply(
-          et.VarRef(appliedVar),
-          constantValueOpt.map(et.Literal(_)).toList ++ finalAcc.nonLiterals
+          appliedVar,
+          constantValueOpt.map(et.Literal(_).assignLocationFrom(appliedVar)).toList ++ finalAcc.nonLiterals
         )
       }
     }
@@ -125,7 +125,7 @@ object NumberProcReducer extends ReportProcReducer {
     }
   }
 
-  def apply(appliedVar : ReportProcedure, operands : List[et.Expr])(implicit reduceConfig : ReduceConfig) : Option[et.Expr] = (appliedVar.reportName, operands) match {
+  def apply(appliedVar : et.VarRef, reportName : String, operands : List[et.Expr])(implicit reduceConfig : ReduceConfig) : Option[et.Expr] = (reportName, operands) match {
     case ("number?", List(singleExpr)) =>
       literalPredicate(singleExpr, { literal =>
         literal.isInstanceOf[ast.IntegerLiteral] || literal.isInstanceOf[ast.RationalLiteral]

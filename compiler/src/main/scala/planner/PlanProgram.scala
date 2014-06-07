@@ -23,8 +23,10 @@ object PlanProgram {
     (plan.plannedFunctions + (LlambdaExecSignature.nativeSymbol -> PlannedFunction(
       signature=LlambdaExecSignature,
       namedArguments=List("world" -> worldTemp),
-      steps = plan.steps.toList,
-      Some(worldTemp)
+      steps=plan.steps.toList,
+      worldPtrOption=Some(worldTemp),
+      sourceNameOption=None,
+      isArtificial=true
     ))).toMap
   }
 }

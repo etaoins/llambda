@@ -4,6 +4,7 @@ import io.llambda
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.SourceLocated
+import llambda.compiler.IncompatibleArityException
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 
@@ -44,12 +45,18 @@ object PlanApplication {
     // Ensure our arity is sane
     if (signature.hasRestArg) {
       if (operands.length < signature.fixedArgs.length) {
-        throw new UnlocatedIncompatibleArityException(s"Called procedure with ${operands.length} arguments; requires at least ${signature.fixedArgs.length} arguments")
+        throw new IncompatibleArityException(
+          located=plan.activeSourceLocated,
+          message=s"Called procedure with ${operands.length} arguments; requires at least ${signature.fixedArgs.length} arguments"
+        )
       }
     }
     else {
       if (signature.fixedArgs.length != operands.length) {
-        throw new UnlocatedIncompatibleArityException(s"Called procedure with ${operands.length} arguments; requires exactly ${signature.fixedArgs.length} arguments")
+        throw new IncompatibleArityException(
+          located=plan.activeSourceLocated,
+          message=s"Called procedure with ${operands.length} arguments; requires exactly ${signature.fixedArgs.length} arguments"
+        )
       }
     }
 
@@ -69,7 +76,7 @@ object PlanApplication {
 
     // Convert all the operands
     val fixedTemps = operands.zip(signature.fixedArgs) map { case ((sourceLocated, operand), nativeType) =>
-      LocateExceptionsWith(sourceLocated) {
+      plan.withSourceLocation(sourceLocated) {
         operand.toTempValue(nativeType)
       }
     }

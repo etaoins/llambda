@@ -2,6 +2,7 @@ package io.llambda.compiler.planner
 import io.llambda
 
 import collection.immutable.ListSet
+import annotation.tailrec
 
 import llambda.compiler.et
 import llambda.compiler.{valuetype => vt}
@@ -69,6 +70,25 @@ private[planner] object PlanLambda {
 
     case otherExpr =>
       otherExpr.subexprs.flatMap(findRefedVariables)
+  }
+
+  /** Finds the last expression in a body that corresponds a user-produced expression
+    *
+    * This is used to source locate our return value-related steps
+    */
+  @tailrec
+  private def lastNonStructuralExpr(expr : et.Expr) : Option[et.Expr] = expr match {
+    case et.Begin(Nil) =>
+      None
+
+    case et.Begin(subexprs) =>
+      lastNonStructuralExpr(subexprs.last)
+
+    case et.InternalDefinition(_, bodyExpr) =>
+      lastNonStructuralExpr(bodyExpr)
+
+    case other =>
+      Some(other)
   }
 
   private def initializeMutableArgs(initialState : PlannerState)(mutableArgs : List[Argument])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : PlannerState = mutableArgs.length match {
@@ -142,15 +162,17 @@ private[planner] object PlanLambda {
   }
 
   def apply(parentState : PlannerState, parentPlan : PlanWriter)(
-      fixedArgLocs : List[StorageLocation],
-      restArgLoc : Option[StorageLocation],
-      body : et.Expr,
+      lambdaExpr : et.Lambda,
       sourceNameHint : Option[String],
       recursiveSelfLoc : Option[StorageLocation]
   )(implicit planConfig : PlanConfig) : PlanResult = {
     // Give ourselves a name. This will be made unique if it collides
     val sourceName = sourceNameHint.getOrElse("anonymous-procedure")
     val nativeSymbol = parentPlan.allocProcedureSymbol(sourceName)
+      
+    val fixedArgLocs = lambdaExpr.fixedArgs
+    val restArgLoc = lambdaExpr.restArg
+    val body = lambdaExpr.body
 
     // Find the variables that are closed by the parent scope
     val refedVarsList = findRefedVariables(body)
@@ -311,10 +333,14 @@ private[planner] object PlanLambda {
       initialSignature.copy(returnType=returnTypeOpt)
     }
 
+    val lastExprOpt = lastNonStructuralExpr(body)
+
     // Return from the function
-    procPlan.steps += ps.Return(procSignature.returnType map { returnType =>
-      planResult.value.toTempValue(returnType)(procPlan, worldPtr)
-    })
+    procPlan.withSourceLocationOpt(lastExprOpt) {
+      procPlan.steps += ps.Return(procSignature.returnType map { returnType =>
+        planResult.value.toTempValue(returnType)(procPlan, worldPtr)
+      })
+    }
     
     // Name our function arguments
     val namedArguments =
@@ -330,8 +356,10 @@ private[planner] object PlanLambda {
       signature=procSignature,
       namedArguments=namedArguments,
       steps=procPlan.steps.toList,
-      worldPtrOption=Some(worldPtr)
-    )
+      worldPtrOption=Some(worldPtr),
+      sourceNameOption=sourceNameHint,
+      isArtificial=lambdaExpr.isArtificial
+    ).assignLocationFrom(lambdaExpr)
 
     val plannedFunction = if (canRefineSignature && planConfig.optimize) {
       // Attempt to infer our argument types

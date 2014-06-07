@@ -115,7 +115,7 @@ object InferArgumentTypes {
           ),
           namedArguments=initialFunction.namedArguments.tail,
           worldPtrOption=None
-        )
+        ).assignLocationFrom(initialFunction)
       }
     }
     else {
@@ -144,12 +144,12 @@ object InferArgumentTypes {
           fixedArgs=signature.fixedArgs.updated(fixedArgIndex, result.replaceArgType)
         )
 
-        PlannedFunction(
+        function.copy(
           signature=newSignature,
           namedArguments=function.namedArguments.updated(namedArgIndex, (argName, result.replaceArgTempValue)),
           steps=result.steps,
           worldPtrOption=function.worldPtrOption
-        )
+        ).assignLocationFrom(function)
       }
       else {
         // Skip this arg

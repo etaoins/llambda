@@ -30,7 +30,7 @@ case class LiteralLeaf(literal : ast.Leaf) extends PartialValue {
     Some(literal)
 
   def toExprOpt =
-    Some(et.Literal(literal))
+    Some(et.Literal(literal).assignLocationFrom(this))
 }
 
 /** Represents a Pair of two partial values */
@@ -82,14 +82,14 @@ object ProperList {
 object PartialValue {
   def fromDatum(datum : ast.Datum) : PartialValue = (datum match {
     case leafDatum : ast.Leaf =>
-      LiteralLeaf(leafDatum).assignLocationFrom(leafDatum)
+      LiteralLeaf(leafDatum)
 
     case ast.Pair(car, cdr) =>
       PartialPair(fromDatum(car), fromDatum(cdr))
 
     case ast.VectorLiteral(elements) =>
       PartialVector(elements.map(fromDatum))
-  })
+  }).assignLocationFrom(datum)
 
   def fromReducedExpr(expr : et.Expr) = expr match {
     case nonLiteralExpr : et.NonLiteralExpr =>

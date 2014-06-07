@@ -37,8 +37,8 @@ private[planner] object PlanExpr {
       )
     )
   }
-
-  def apply(initialState : PlannerState)(expr : et.Expr, sourceNameHint : Option[String] = None)(implicit planConfig : PlanConfig, plan : PlanWriter) : PlanResult = LocateExceptionsWith(expr) {
+  
+  def apply(initialState : PlannerState)(expr : et.Expr, sourceNameHint : Option[String] = None)(implicit planConfig : PlanConfig, plan : PlanWriter) : PlanResult = plan.withSourceLocation(expr) {
     implicit val worldPtr = initialState.worldPtr
 
     expr match {
@@ -263,11 +263,9 @@ private[planner] object PlanExpr {
           
         PlanResult(state=valueResult.state, value=castValue)
 
-      case et.Lambda(fixedArgs, restArg, body) =>
+      case lambdaExpr : et.Lambda =>
         PlanLambda(initialState, plan)(
-          fixedArgLocs=fixedArgs,
-          restArgLoc=restArg,
-          body=body,
+          lambdaExpr=lambdaExpr,
           sourceNameHint=sourceNameHint,
           recursiveSelfLoc=None
         )

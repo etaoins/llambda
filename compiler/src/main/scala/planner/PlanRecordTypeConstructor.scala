@@ -62,7 +62,9 @@ object PlanRecordTypeConstructor {
           signature=constructorSignature,
           namedArguments=namedArguments,
           steps=plan.steps.toList,
-          Some(worldPtrTemp)
+          worldPtrOption=Some(worldPtrTemp),
+          sourceNameOption=None,
+          isArtificial=true
         )
     }
 }

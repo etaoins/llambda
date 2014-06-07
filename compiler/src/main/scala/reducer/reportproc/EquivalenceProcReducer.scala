@@ -5,7 +5,7 @@ import io.llambda.compiler._
 import io.llambda.compiler.reducer._
 
 object EquivalenceProcReducer extends ReportProcReducer {
-  def apply(appliedVar : ReportProcedure, operands : List[et.Expr])(implicit reduceConfig : ReduceConfig) : Option[et.Expr] = (appliedVar.reportName, operands) match {
+  def apply(appliedVar : et.VarRef, reportName : String, operands : List[et.Expr])(implicit reduceConfig : ReduceConfig) : Option[et.Expr] = (reportName, operands) match {
     case (reportName, List(val1Expr, val2Expr)) if List("eqv?", "eq?").contains(reportName) =>
       for(val1 <- LiteralForExpr(val1Expr);
           val2 <- LiteralForExpr(val2Expr)) {

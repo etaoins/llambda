@@ -12,24 +12,38 @@ class ExprLocatingSuite extends FunSuite with testutil.ExprHelpers {
   val plusLoc = new StorageLocation("+")
   implicit val plusScope = new Scope(collection.mutable.Map("+" -> plusLoc), Some(primitiveScope))
 
-  private def assertLocated(expr : et.Expr) {
-    assert(expr.locationOpt.isDefined, "Expr is unlocated")
-  }
-
   test("variable references are located") {
-    assertLocated(exprFor("+"))
+    assertExprLocated(exprFor("+"))
   }
   
   test("applications are located") {
-    assertLocated(exprFor("(+ 1 2)"))
+    assertExprLocated(exprFor("(+ 1 2)"))
   }
 
   test("literals are located") {
-    assertLocated(exprFor("#t"))
+    assertExprLocated(exprFor("#t"))
   }
 
   test("conditions are located") {
-    assertLocated(exprFor("(if #t 1 2)"))
+    assertExprLocated(exprFor("(if #t 1 2)"))
+  }
+
+  test("non-trivial program is fully located") {
+    val frontendConfig = frontend.FrontendConfig(
+      includePath=testutil.NonTrivialProgram.includePath,
+      featureIdentifiers=Set()
+    )
+    
+    val compileConfig = CompileConfig(
+      includePath=includePath,
+      optimizeLevel=0,
+      targetPlatform=platform.DetectJvmPlatform()
+    )
+  
+    val loader = new frontend.LibraryLoader(compileConfig.targetPlatform)
+    val expressions = frontend.ExtractProgram(testutil.NonTrivialProgram.data)(loader, frontendConfig)
+
+    expressions.map(assertExprLocated)
   }
 }
 

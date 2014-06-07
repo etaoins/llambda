@@ -83,6 +83,9 @@ case class Cond(test : Expr, trueExpr : Expr, falseExpr : Expr) extends NonLiter
 case class Lambda(fixedArgs : List[StorageLocation], restArg : Option[StorageLocation], body : Expr) extends NonLiteralExpr {
   val subexprs = body :: Nil
 
+  /** Hint that this in an artificially generated function for debugging information */
+  var isArtificial : Boolean = false
+
   def map(f : Expr => Expr) : Lambda =
     Lambda(fixedArgs, restArg, f(body)).assignLocationFrom(this)
 }
@@ -146,7 +149,7 @@ case class Parameterize(parameterValues : List[(Expr, Expr)], body : Expr) exten
       (f(parameter), f(value))
     }
 
-    Parameterize(newParams, f(body))
+    Parameterize(newParams, f(body)).assignLocationFrom(this)
   }
 }
 
@@ -155,5 +158,5 @@ case class Return(value : Expr) extends NonLiteralExpr {
   lazy val subexprs = List(value)
 
   def map(f : Expr => Expr) : Return = 
-    Return(f(value))
+    Return(f(value)).assignLocationFrom(this)
 }

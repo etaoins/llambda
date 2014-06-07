@@ -37,12 +37,18 @@ case class SourceLocation(
 abstract trait SourceLocated {
   var locationOpt : Option[SourceLocation] = None
 
+  def hasLocation = locationOpt.isDefined
+
   def assignLocationTo(other : SourceLocated) {
-    other.locationOpt = this.locationOpt
+    if (this.locationOpt.isDefined) {
+      other.locationOpt = this.locationOpt
+    }
   }
   
   def assignLocationFrom(other : SourceLocated) : SourceLocated.this.type = {
-    this.locationOpt = other.locationOpt
+    if (other.locationOpt.isDefined) {
+      this.locationOpt = other.locationOpt
+    }
     this
   }
 

@@ -6,7 +6,7 @@ import io.llambda.compiler.reducer._
 import io.llambda.compiler.reducer.{partialvalue => pv}
 
 object ApplyProcReducer extends ReportProcReducer {
-  def apply(appliedVar : ReportProcedure, operands : List[et.Expr])(implicit reduceConfig : ReduceConfig) : Option[et.Expr] = (appliedVar.reportName, operands) match {
+  def apply(appliedVar : et.VarRef, reportName : String, operands : List[et.Expr])(implicit reduceConfig : ReduceConfig) : Option[et.Expr] = (reportName, operands) match {
     // This doesn't handle apply with > 2 arguments
     case ("apply", List(appliedExpr, operandListExpr)) => 
       PartialValueForExpr(operandListExpr) match {

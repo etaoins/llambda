@@ -1,7 +1,7 @@
 package io.llambda.compiler.planner.step
 import io.llambda
 
-import llambda.compiler.{ProcedureSignature, RuntimeErrorMessage}
+import llambda.compiler.{ProcedureSignature, SourceLocated, RuntimeErrorMessage}
 import llambda.compiler.ast
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
@@ -44,7 +44,7 @@ object EntryPointTemp {
     new TempValue(false)
 }
 
-sealed trait Step {
+sealed trait Step extends SourceLocated {
   val inputValues : Set[TempValue]
   val outputValues : Set[TempValue]
 
@@ -139,7 +139,7 @@ case class Invoke(result : Option[TempValue], signature : ProcedureSignature, en
       signature=signature,
       entryPoint=f(entryPoint),
       arguments=arguments.map(_.renamed(f))
-    )
+    ).assignLocationFrom(this)
 }
 
 /** Allocates a given number of cells at runtime 
@@ -165,7 +165,7 @@ case class DisposeValue(value : TempValue) extends Step {
   val outputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    DisposeValue(f(value))
+    DisposeValue(f(value)).assignLocationFrom(this)
 }
 
 /** Conditionally branches based on a value 
@@ -202,7 +202,7 @@ case class CondBranch(result : TempValue, test : TempValue, trueSteps : List[Ste
       trueValue=f(trueValue),
       falseSteps=falseSteps.map(_.renamed(f)),
       falseValue=f(falseValue)
-    )
+    ).assignLocationFrom(this)
 }
 
 /** Tests if a cell is of a given type */
@@ -216,7 +216,7 @@ case class TestCellType(
   lazy val outputValues = Set(result)
   
   def renamed(f : (TempValue) => TempValue) =
-    TestCellType(f(result), f(value), testType, possibleTypes)
+    TestCellType(f(result), f(value), testType, possibleTypes).assignLocationFrom(this)
   
   override def mergeKey = 
     // Merge steps with different possibleTypes - it's just an optimisation hint
@@ -244,7 +244,14 @@ case class CastCellToSubtypeChecked(
   lazy val outputValues = Set(result)
 
   def renamed(f : (TempValue) => TempValue) =
-    CastCellToSubtypeChecked(f(result), worldPtr, f(value), toType, errorMessage, possibleTypes)
+    CastCellToSubtypeChecked(
+      f(result),
+      worldPtr,
+      f(value),
+      toType,
+      errorMessage,
+      possibleTypes
+    ).assignLocationFrom(this)
 
   override def mergeKey = 
     // Allow subcasts with different error messages to be merged
@@ -257,7 +264,7 @@ case class CastCellToTypeUnchecked(result : TempValue, value : TempValue, toType
   lazy val outputValues = Set(result)
   
   def renamed(f : (TempValue) => TempValue) =
-    CastCellToTypeUnchecked(f(result), f(value), toType)
+    CastCellToTypeUnchecked(f(result), f(value), toType).assignLocationFrom(this)
 }
 
 /** Converts an native integer to another width and/or signedness */
@@ -266,7 +273,7 @@ case class ConvertNativeInteger(result : TempValue, fromValue : TempValue, toBit
   lazy val outputValues = Set(result)
   
   def renamed(f : (TempValue) => TempValue) =
-    ConvertNativeInteger(f(result), f(fromValue), toBits, signed)
+    ConvertNativeInteger(f(result), f(fromValue), toBits, signed).assignLocationFrom(this)
 }
 
 /** Converts an native float to another type */
@@ -275,7 +282,7 @@ case class ConvertNativeFloat(result : TempValue, fromValue : TempValue, toType 
   lazy val outputValues = Set(result)
   
   def renamed(f : (TempValue) => TempValue) =
-    ConvertNativeFloat(f(result), f(fromValue), toType)
+    ConvertNativeFloat(f(result), f(fromValue), toType).assignLocationFrom(this)
 }
 
 /** Converts an native integer to a float */
@@ -284,7 +291,7 @@ case class ConvertNativeIntegerToFloat(result : TempValue, fromValue : TempValue
   lazy val outputValues = Set(result)
   
   def renamed(f : (TempValue) => TempValue) =
-    ConvertNativeIntegerToFloat(f(result), f(fromValue), fromSigned, toType)
+    ConvertNativeIntegerToFloat(f(result), f(fromValue), fromSigned, toType).assignLocationFrom(this)
 }
       
 /** Builds a proper list at runtime
@@ -299,7 +306,7 @@ case class BuildProperList(result : TempValue, listValues : List[TempValue]) ext
   val allocSize = listValues.length
   
   def renamed(f : (TempValue) => TempValue) =
-    BuildProperList(f(result), listValues.map(f))
+    BuildProperList(f(result), listValues.map(f)).assignLocationFrom(this)
 }
 
 /** Calculates the length of a proper list as a uint32
@@ -311,7 +318,7 @@ case class CalcProperListLength(result : TempValue, listHead : TempValue) extend
   lazy val outputValues = Set(result)
 
   def renamed(f : (TempValue) => TempValue) =
-    CalcProperListLength(f(result), f(listHead))
+    CalcProperListLength(f(result), f(listHead)).assignLocationFrom(this)
 }
 
 /** Indicates a step that creates a constant value */
@@ -329,7 +336,7 @@ case class CreateNamedEntryPoint(result : TempValue, signature : ProcedureSignat
   lazy val outputValues = Set(result)
   
   def renamed(f : (TempValue) => TempValue) =
-    CreateNamedEntryPoint(f(result), signature, nativeSymbol)
+    CreateNamedEntryPoint(f(result), signature, nativeSymbol).assignLocationFrom(this)
 }
 
 /** Indicates a step that creates a constant cell */
@@ -339,77 +346,77 @@ case class CreateStringCell(result : TempValue, value : String) extends CreateCo
   val inputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    CreateStringCell(f(result), value)
+    CreateStringCell(f(result), value).assignLocationFrom(this)
 }
 
 case class CreateSymbolCell(result : TempValue, value : String) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    CreateSymbolCell(f(result), value)
+    CreateSymbolCell(f(result), value).assignLocationFrom(this)
 }
 
 case class CreateExactIntegerCell(result : TempValue, value : Long) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    CreateExactIntegerCell(f(result), value)
+    CreateExactIntegerCell(f(result), value).assignLocationFrom(this)
 }
 
 case class CreateInexactRationalCell(result : TempValue, value : Double) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    CreateInexactRationalCell(f(result), value)
+    CreateInexactRationalCell(f(result), value).assignLocationFrom(this)
 }
 
 case class CreateCharacterCell(result : TempValue, value : Char) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    CreateCharacterCell(f(result), value)
+    CreateCharacterCell(f(result), value).assignLocationFrom(this)
 }
 
 case class CreateBooleanCell(result : TempValue, value : Boolean) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    CreateBooleanCell(f(result), value)
+    CreateBooleanCell(f(result), value).assignLocationFrom(this)
 }
 
 case class CreateBytevectorCell(result : TempValue, elements : Vector[Short]) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    CreateBytevectorCell(f(result), elements)
+    CreateBytevectorCell(f(result), elements).assignLocationFrom(this)
 }
 
 case class CreatePairCell(result : TempValue, car : TempValue, cdr : TempValue, listLengthOpt : Option[Long], memberTypeOpt : Option[ct.ConcreteCellType]) extends CreateConstantCell {
   lazy val inputValues = Set(car, cdr)
   
   def renamed(f : (TempValue) => TempValue) =
-    CreatePairCell(f(result), f(car), f(cdr), listLengthOpt, memberTypeOpt)
+    CreatePairCell(f(result), f(car), f(cdr), listLengthOpt, memberTypeOpt).assignLocationFrom(this)
 }
 
 case class CreateVectorCell(result : TempValue, elements : Vector[TempValue]) extends CreateConstantCell {
   lazy val inputValues = elements.toSet
   
   def renamed(f : (TempValue) => TempValue) =
-    CreateVectorCell(f(result), elements.map(f))
+    CreateVectorCell(f(result), elements.map(f)).assignLocationFrom(this)
 }
 
 case class CreateUnitCell(result : TempValue) extends CreateConstantCell {
   val inputValues = Set[TempValue]()  
   
   def renamed(f : (TempValue) => TempValue) =
-    CreateUnitCell(f(result))
+    CreateUnitCell(f(result)).assignLocationFrom(this)
 }
 
 case class CreateEmptyListCell(result : TempValue) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    CreateEmptyListCell(f(result))
+    CreateEmptyListCell(f(result)).assignLocationFrom(this)
 }
 
 /** Creates a procedure with an empty closure 
@@ -421,7 +428,7 @@ case class CreateEmptyClosure(result : TempValue, entryPoint : TempValue) extend
   lazy val inputValues = Set(entryPoint)
   
   def renamed(f : (TempValue) => TempValue) =
-    CreateEmptyClosure(f(result), f(entryPoint))
+    CreateEmptyClosure(f(result), f(entryPoint)).assignLocationFrom(this)
 }
 
 /** Indicates a step that creates a native constant */
@@ -431,12 +438,12 @@ sealed trait CreateNativeConstant extends CreateConstant {
 
 case class CreateNativeInteger(result : TempValue, value : Long, bits : Int) extends CreateNativeConstant {
   def renamed(f : (TempValue) => TempValue) =
-    CreateNativeInteger(f(result), value, bits)
+    CreateNativeInteger(f(result), value, bits).assignLocationFrom(this)
 }
 
 case class CreateNativeFloat(result : TempValue, value : Double, fpType : vt.FpType) extends CreateNativeConstant {
   def renamed(f : (TempValue) => TempValue) =
-    CreateNativeFloat(f(result), value, fpType)
+    CreateNativeFloat(f(result), value, fpType).assignLocationFrom(this)
 }
 
 /** Indicates a step that unboxes a cell */
@@ -454,22 +461,22 @@ sealed trait UnboxValue extends Step {
   */
 case class UnboxAsTruthy(result : TempValue, boxed : TempValue) extends UnboxValue with MergeableStep {
   def renamed(f : (TempValue) => TempValue) =
-    UnboxAsTruthy(f(result), f(boxed))
+    UnboxAsTruthy(f(result), f(boxed)).assignLocationFrom(this)
 }
 
 case class UnboxExactInteger(result : TempValue, boxed : TempValue) extends UnboxValue with MergeableStep {
   def renamed(f : (TempValue) => TempValue) =
-    UnboxExactInteger(f(result), f(boxed))
+    UnboxExactInteger(f(result), f(boxed)).assignLocationFrom(this)
 }
 
 case class UnboxInexactRational(result : TempValue, boxed : TempValue) extends UnboxValue with MergeableStep {
   def renamed(f : (TempValue) => TempValue) =
-    UnboxInexactRational(f(result), f(boxed))
+    UnboxInexactRational(f(result), f(boxed)).assignLocationFrom(this)
 }
 
 case class UnboxCharacter(result : TempValue, boxed : TempValue) extends UnboxValue with MergeableStep {
   def renamed(f : (TempValue) => TempValue) =
-    UnboxCharacter(f(result), f(boxed))
+    UnboxCharacter(f(result), f(boxed)).assignLocationFrom(this)
 }
 
 // These aren't quite an unboxing because there's two values per boxed value
@@ -480,7 +487,7 @@ case class LoadPairCar(result : TempValue, boxed : TempValue) extends Step {
   lazy val outputValues = Set(result)
   
   def renamed(f : (TempValue) => TempValue) =
-    LoadPairCar(f(result), f(boxed))
+    LoadPairCar(f(result), f(boxed)).assignLocationFrom(this)
 }
 
 /** Loads the cdr of the passed PairCell as a DatumCell */
@@ -489,7 +496,7 @@ case class LoadPairCdr(result : TempValue, boxed : TempValue) extends Step {
   lazy val outputValues = Set(result)
   
   def renamed(f : (TempValue) => TempValue) =
-    LoadPairCdr(f(result), f(boxed))
+    LoadPairCdr(f(result), f(boxed)).assignLocationFrom(this)
 }
 
 /** Loads the entry point of a procedure
@@ -501,7 +508,7 @@ case class LoadProcedureEntryPoint(result : TempValue, boxed : TempValue) extend
   lazy val outputValues = Set(result)
   
   def renamed(f : (TempValue) => TempValue) =
-    LoadProcedureEntryPoint(f(result), f(boxed))
+    LoadProcedureEntryPoint(f(result), f(boxed)).assignLocationFrom(this)
 }
 
 /** Loads the length of a vector as an Int32 */
@@ -510,7 +517,7 @@ case class LoadVectorLength(result : TempValue, boxed : TempValue) extends Step 
   lazy val outputValues = Set(result)
   
   def renamed(f : (TempValue) => TempValue) =
-    LoadVectorLength(f(result), f(boxed))
+    LoadVectorLength(f(result), f(boxed)).assignLocationFrom(this)
 }
 
 /** Indicates a step that boxes a native value
@@ -529,7 +536,7 @@ case class BoxBoolean(result : TempValue, unboxed : TempValue) extends BoxValue 
   lazy val inputValues = Set(unboxed)
   
   def renamed(f : (TempValue) => TempValue) =
-    BoxBoolean(f(result), f(unboxed))
+    BoxBoolean(f(result), f(unboxed)).assignLocationFrom(this)
 }
 
 case class BoxExactInteger(result : TempValue, unboxed : TempValue) extends BoxValue with CellConsumer {
@@ -538,7 +545,7 @@ case class BoxExactInteger(result : TempValue, unboxed : TempValue) extends BoxV
   lazy val inputValues = Set(unboxed)
   
   def renamed(f : (TempValue) => TempValue) =
-    BoxExactInteger(f(result), f(unboxed))
+    BoxExactInteger(f(result), f(unboxed)).assignLocationFrom(this)
 }
 
 case class BoxInexactRational(result : TempValue, unboxed : TempValue) extends BoxValue with CellConsumer {
@@ -547,7 +554,7 @@ case class BoxInexactRational(result : TempValue, unboxed : TempValue) extends B
   lazy val inputValues = Set(unboxed)
   
   def renamed(f : (TempValue) => TempValue) =
-    BoxInexactRational(f(result), f(unboxed))
+    BoxInexactRational(f(result), f(unboxed)).assignLocationFrom(this)
 }
 
 case class BoxCharacter(result : TempValue, unboxed : TempValue) extends BoxValue with CellConsumer {
@@ -556,7 +563,7 @@ case class BoxCharacter(result : TempValue, unboxed : TempValue) extends BoxValu
   lazy val inputValues = Set(unboxed)
   
   def renamed(f : (TempValue) => TempValue) =
-    BoxCharacter(f(result), f(unboxed))
+    BoxCharacter(f(result), f(unboxed)).assignLocationFrom(this)
 }
 
 /** Returns from the current function */
@@ -565,7 +572,7 @@ case class Return(returnValue : Option[TempValue]) extends Step {
   val outputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    Return(returnValue.map(f))
+    Return(returnValue.map(f)).assignLocationFrom(this)
 }
 
 /** Initialises a new pair with an undefined car and cdr
@@ -579,7 +586,7 @@ case class InitPair(result : TempValue) extends Step with CellConsumer {
   lazy val outputValues = Set(result)
 
   def renamed(f : (TempValue) => TempValue) =
-    InitPair(f(result))
+    InitPair(f(result)).assignLocationFrom(this)
 }
 
 /** Asserts that a pair is mutable
@@ -591,7 +598,7 @@ case class AssertPairMutable(worldPtr : WorldPtrValue, pairValue : TempValue, er
   val outputValues = Set[TempValue]()
 
   def renamed(f: (TempValue) => TempValue) =
-    AssertPairMutable(worldPtr, f(pairValue), errorMessage)
+    AssertPairMutable(worldPtr, f(pairValue), errorMessage).assignLocationFrom(this)
 
   override def mergeKey = 
     (worldPtr, pairValue)
@@ -602,7 +609,7 @@ case class SetPairCar(pairValue : TempValue, newValue : TempValue) extends Step 
   val outputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    SetPairCar(f(pairValue), f(newValue))
+    SetPairCar(f(pairValue), f(newValue)).assignLocationFrom(this)
 }
 
 case class SetPairCdr(pairValue : TempValue, newValue : TempValue) extends Step {
@@ -610,7 +617,7 @@ case class SetPairCdr(pairValue : TempValue, newValue : TempValue) extends Step 
   val outputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    SetPairCdr(f(pairValue), f(newValue))
+    SetPairCdr(f(pairValue), f(newValue)).assignLocationFrom(this)
 }
 
 /** Allocates data for a given record a given type 
@@ -626,7 +633,7 @@ case class InitRecordLike(cellResult : TempValue, dataResult : TempValue, record
   val outputValues = Set(cellResult, dataResult)
   
   def renamed(f : (TempValue) => TempValue) =
-    InitRecordLike(f(cellResult), f(dataResult), recordLikeType)
+    InitRecordLike(f(cellResult), f(dataResult), recordLikeType).assignLocationFrom(this)
 }
 
 /** Sets a record field. The value must match the type of record field */
@@ -635,7 +642,7 @@ case class SetRecordDataField(recordData : TempValue, recordLikeType : vt.Record
   val outputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    SetRecordDataField(f(recordData), recordLikeType, recordField, f(newValue))
+    SetRecordDataField(f(recordData), recordLikeType, recordField, f(newValue)).assignLocationFrom(this)
 }
 
 /** Sets a record field as undefined
@@ -647,7 +654,7 @@ case class SetRecordDataFieldUndefined(recordData : TempValue, recordLikeType : 
   val outputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    SetRecordDataFieldUndefined(f(recordData), recordLikeType, recordField)
+    SetRecordDataFieldUndefined(f(recordData), recordLikeType, recordField).assignLocationFrom(this)
 }
 
 /** Reads a record field. The value must match the type of record field */
@@ -656,7 +663,7 @@ case class LoadRecordDataField(result : TempValue, recordData : TempValue, recor
   lazy val outputValues = Set(result)
   
   def renamed(f : (TempValue) => TempValue) =
-    LoadRecordDataField(f(result), f(recordData), recordLikeType, recordField)
+    LoadRecordDataField(f(result), f(recordData), recordLikeType, recordField).assignLocationFrom(this)
 }
 
 /** Asserts that field value is defined 
@@ -668,7 +675,7 @@ case class AssertRecordDataFieldDefined(worldPtr : WorldPtrValue, fieldValue : T
   val outputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    AssertRecordDataFieldDefined(worldPtr, f(fieldValue), recordField, errorMessage)
+    AssertRecordDataFieldDefined(worldPtr, f(fieldValue), recordField, errorMessage).assignLocationFrom(this)
 }
 
 /** Tests to see if a record is of a given class */
@@ -677,7 +684,7 @@ case class TestRecordLikeClass(result : TempValue, recordCell : TempValue, recor
   lazy val outputValues = Set(result)
   
   def renamed(f : (TempValue) => TempValue) =
-    TestRecordLikeClass(result, f(recordCell), recordLikeType)
+    TestRecordLikeClass(result, f(recordCell), recordLikeType).assignLocationFrom(this)
 }
 
 /** Asserts that a record is of a given class 
@@ -689,7 +696,7 @@ case class AssertRecordLikeClass(worldPtr : WorldPtrValue, recordCell : TempValu
   val outputValues = Set[TempValue]()
 
   def renamed(f : (TempValue) => TempValue) =
-    AssertRecordLikeClass(worldPtr, f(recordCell), recordLikeType, errorMessage) 
+    AssertRecordLikeClass(worldPtr, f(recordCell), recordLikeType, errorMessage).assignLocationFrom(this)
   
   override def mergeKey = 
     (worldPtr, recordCell, recordLikeType)
@@ -701,7 +708,7 @@ case class LoadRecordLikeData(result : TempValue, recordCell : TempValue, record
   lazy val outputValues = Set(result)
   
   def renamed(f : (TempValue) => TempValue) =
-    LoadRecordLikeData(f(result), f(recordCell), recordLikeType)
+    LoadRecordLikeData(f(result), f(recordCell), recordLikeType).assignLocationFrom(this)
 }
 
 /** Sets the entry point of a procedure
@@ -713,7 +720,7 @@ case class SetProcedureEntryPoint(procedureCell : TempValue, entryPoint : TempVa
   val outputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    SetProcedureEntryPoint(f(procedureCell), f(entryPoint))
+    SetProcedureEntryPoint(f(procedureCell), f(entryPoint)).assignLocationFrom(this)
 }
 
 /** Pushes a new dynamic state with the given parameter values
@@ -729,7 +736,7 @@ case class PushDynamicState(worldPtr : WorldPtrValue, parameterValues : List[(Te
   def renamed(f : (TempValue) => TempValue) = 
     PushDynamicState(worldPtr, parameterValues.map { case (parameter, value) =>
       f(parameter) -> f(value)
-    })
+    }).assignLocationFrom(this)
 }
 
 /** Pops the last dynamic state 
@@ -750,7 +757,7 @@ case class IntegerAdd(result : TempValue, val1 : TempValue, val2 : TempValue) ex
   lazy val outputValues = Set[TempValue](result)
   
   def renamed(f : (TempValue) => TempValue) = 
-    IntegerAdd(f(result), f(val1), f(val2))
+    IntegerAdd(f(result), f(val1), f(val2)).assignLocationFrom(this)
 }
 
 /** Subtracts two integers of the same type */
@@ -759,7 +766,7 @@ case class IntegerSub(result : TempValue, val1 : TempValue, val2 : TempValue) ex
   lazy val outputValues = Set[TempValue](result)
   
   def renamed(f : (TempValue) => TempValue) = 
-    IntegerSub(f(result), f(val1), f(val2))
+    IntegerSub(f(result), f(val1), f(val2)).assignLocationFrom(this)
 }
 
 /** Multiplies two integers of the same type */
@@ -768,7 +775,7 @@ case class IntegerMul(result : TempValue, val1 : TempValue, val2 : TempValue) ex
   lazy val outputValues = Set[TempValue](result)
   
   def renamed(f : (TempValue) => TempValue) = 
-    IntegerMul(f(result), f(val1), f(val2))
+    IntegerMul(f(result), f(val1), f(val2)).assignLocationFrom(this)
 }
 
 object CompareCond {
@@ -791,5 +798,5 @@ case class IntegerCompare(result : TempValue, cond : CompareCond.CompareCond, si
   lazy val outputValues = Set[TempValue](result)
   
   def renamed(f : (TempValue) => TempValue) = 
-    IntegerCompare(f(result), cond, signed, f(val1), f(val2))
+    IntegerCompare(f(result), cond, signed, f(val1), f(val2)).assignLocationFrom(this)
 }

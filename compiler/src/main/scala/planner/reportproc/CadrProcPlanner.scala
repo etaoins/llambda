@@ -11,7 +11,7 @@ import llambda.compiler.planner._
 object CadrProcPlanner extends ReportProcPlanner {
   def apply(initialState : PlannerState)(reportName : String, operands : List[(SourceLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = (reportName, operands) match {
     case ("car" | "cdr", singleOperand :: Nil) =>
-      val pairTemp = LocateExceptionsWith(singleOperand._1) {
+      val pairTemp = plan.withSourceLocation(singleOperand._1) {
         singleOperand._2.toTempValue(vt.IntrinsicCellType(ct.PairCell))
       }
 

@@ -105,7 +105,7 @@ object NumberProcPlanner extends ReportProcPlanner {
     
     case (reportName, List((operandSourceLoc, singleOperand))) if List("+", "*").contains(reportName) =>
       // Make sure the operand is numeric
-      val numericTemp = LocateExceptionsWith(operandSourceLoc) {
+      val numericTemp = plan.withSourceLocation(operandSourceLoc) {
         singleOperand.toTempValue(numericType)
       }
       

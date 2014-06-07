@@ -9,10 +9,15 @@ private[frontend] object FeaturesProcedure {
     // This prevents us from having to duplicate features between the frontend and stdlib
     val featuresList = frontendConfig.featureIdentifiers.toList.sorted
 
-    et.Lambda(
+    var featuresProc = et.Lambda(
       Nil,
       None,
       et.Literal(ast.ProperList(featuresList.map(ast.Symbol(_))))
     )
+
+    // Hint that this is an artificial procedure
+    featuresProc.isArtificial = true
+
+    featuresProc
   }
 }

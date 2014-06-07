@@ -8,27 +8,10 @@ import llambda.compiler.SchemeStringImplicits._
 import llambda.compiler._
 import org.scalatest.FunSuite
 
-class InferArgumentTypesSuite  extends FunSuite {
+class InferArgumentTypesSuite extends FunSuite with PlanHelpers{
   private def inferringProcedureName = "inferring-procedure"
 
   private def signatureFor(scheme : String) : ProcedureSignature = {
-    val includePath = frontend.IncludePath(
-      fileParentDir=None,
-      packageRootDir=None
-    )
-
-    val frontendConfig = frontend.FrontendConfig(
-      includePath=includePath,
-      featureIdentifiers=Set()
-    )
-    
-    val compileConfig = CompileConfig(
-      includePath=includePath,
-      // Don't optimize in case earlier passes transform the lambda body in ways we don't expect
-      optimizeLevel=0,
-      targetPlatform=platform.DetectJvmPlatform()
-    )
-  
     val importDecl = datum"(import (scheme base))"
 
     // Give the procedure a distinctive name so we can find it later
@@ -47,16 +30,7 @@ class InferArgumentTypesSuite  extends FunSuite {
 
     val data = List(importDecl, procedureDatum, referenceDatum)
 
-    val loader = new frontend.LibraryLoader(compileConfig.targetPlatform)
-    val expressions = frontend.ExtractProgram(data)(loader, frontendConfig)
-    val analysis = reducer.AnalyseExprs(expressions)
-
-    val planConfig = planner.PlanConfig(
-      optimize=true,
-      analysis=analysis
-    )
-
-    val functions = planner.PlanProgram(expressions)(planConfig)
+    val functions = planForData(data, optimise=true, reduce=false)
     functions(inferringProcedureName).signature
   }
 

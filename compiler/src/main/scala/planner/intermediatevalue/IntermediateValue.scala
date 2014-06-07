@@ -6,13 +6,14 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.RuntimeErrorMessage
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{PlanWriter, TempValueToIntermediate, InvokableProcedure}
-import llambda.compiler.planner.UnlocatedImpossibleTypeConversionException
+import llambda.compiler.ImpossibleTypeConversionException
 import llambda.compiler.InternalCompilerErrorException
 
 trait IntermediateValueHelpers {
   /** Helper for signalling impossible conversions */
-  protected def impossibleConversion(message : String) = 
-    throw new UnlocatedImpossibleTypeConversionException(message)
+  protected def impossibleConversion(message : String)(implicit plan : PlanWriter) = { 
+    throw new ImpossibleTypeConversionException(plan.activeSourceLocated, message)
+  }
 
   /** Converts the temp value of the given actual type to the passed super type
     *

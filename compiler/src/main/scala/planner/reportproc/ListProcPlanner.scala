@@ -75,7 +75,7 @@ object ListProcPlanner extends ReportProcPlanner {
       }
 
     case ("set-car!", List((pairLoc, pairValue), (_, newValue))) =>
-      val pairTemp = LocateExceptionsWith(pairLoc) {
+      val pairTemp = plan.withSourceLocation(pairLoc) {
         pairValue.toTempValue(vt.IntrinsicCellType(ct.PairCell))
       }
 
@@ -95,7 +95,7 @@ object ListProcPlanner extends ReportProcPlanner {
       ))
     
     case ("set-cdr!", List((pairLoc, pairValue), (_, newValue))) =>
-      val pairTemp = LocateExceptionsWith(pairLoc) {
+      val pairTemp = plan.withSourceLocation(pairLoc) {
         pairValue.toTempValue(vt.IntrinsicCellType(ct.PairCell))
       }
 

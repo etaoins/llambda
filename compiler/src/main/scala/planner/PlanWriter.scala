@@ -4,9 +4,60 @@ import io.llambda
 import collection.mutable
 
 import llambda.compiler.planner.{step => ps}
+import llambda.compiler.{SourceLocated, NoSourceLocation}
 import llambda.compiler.InternalCompilerErrorException
+import llambda.compiler.et
 
-class PlanWriter(val steps : mutable.ListBuffer[ps.Step], val plannedFunctions : mutable.Map[String, PlannedFunction], val allocedProcSymbols : mutable.HashSet[String]) {
+class PlanWriter(val plannedFunctions : mutable.Map[String, PlannedFunction], val allocedProcSymbols : mutable.HashSet[String]) {
+  private val sourceLocStack = new mutable.Stack[SourceLocated] 
+
+  class StepBuilder {
+    private val stepBuffer = new mutable.ListBuffer[ps.Step] 
+
+    def +=(step : ps.Step) {
+      for(sourceLoc <- sourceLocStack.headOption) {
+        // Source locate this step
+        step.assignLocationFrom(sourceLoc)
+      }
+
+      stepBuffer += step
+    }
+
+    def toList : List[ps.Step] = 
+      stepBuffer.toList
+  }
+
+  val steps = new StepBuilder
+
+  /** Pushes a new source location on to the location stack for the duration of block
+    *
+    * This will implicitly locate any plan steps added while the block is being executed
+    */
+  def withSourceLocation[T](sourceLocated : SourceLocated)(block : => T) : T = {
+    sourceLocStack.push(sourceLocated)
+
+    try {
+      block
+    }
+    finally {
+      sourceLocStack.pop
+    }
+  }
+
+  /** Returns the active source location or NoSourceLocation if the location is not available */
+  def activeSourceLocated =
+    sourceLocStack.headOption.getOrElse(NoSourceLocation)
+
+  def withSourceLocationOpt[T](sourceLocatedOpt : Option[SourceLocated])(block : => T) : T = {
+    sourceLocatedOpt match {
+      case Some(sourceLocated) =>
+        withSourceLocation(sourceLocated)(block)
+
+      case _ =>
+        block
+    }
+  }
+
   private def findNextFreeSymbol(sourceName : String) : String = {
     val allKnownSymbols = plannedFunctions.keySet ++ allocedProcSymbols
 
@@ -25,7 +76,6 @@ class PlanWriter(val steps : mutable.ListBuffer[ps.Step], val plannedFunctions :
       throw new InternalCompilerErrorException("Ran out of natural numbers")
     }
   }
-  
 
   /** Allocates a unique name for a procedure
     *
@@ -40,7 +90,7 @@ class PlanWriter(val steps : mutable.ListBuffer[ps.Step], val plannedFunctions :
 
   def forkPlan() : PlanWriter = 
     // All forks share plannedFunctions
-    new PlanWriter(new mutable.ListBuffer[ps.Step], plannedFunctions, allocedProcSymbols)
+    new PlanWriter(plannedFunctions, allocedProcSymbols)
 
   def buildCondBranch(test : ps.TempValue, trueBuilder : (PlanWriter) => ps.TempValue, falseBuilder : (PlanWriter) => ps.TempValue) : ps.TempValue = {
     val truePlan = forkPlan()
@@ -64,5 +114,5 @@ class PlanWriter(val steps : mutable.ListBuffer[ps.Step], val plannedFunctions :
 
 object PlanWriter {
   def apply() =
-    new PlanWriter(new mutable.ListBuffer[ps.Step], new mutable.HashMap[String, PlannedFunction], new mutable.HashSet[String])
+    new PlanWriter(new mutable.HashMap[String, PlannedFunction], new mutable.HashSet[String])
 }

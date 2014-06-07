@@ -35,7 +35,7 @@ object ListProcReducer extends ReportProcReducer {
       None
   }
 
-  def apply(appliedVar : ReportProcedure, operands : List[et.Expr])(implicit reduceConfig : ReduceConfig) : Option[et.Expr] = (appliedVar.reportName, operands) match {
+  def apply(appliedVar : et.VarRef, reportName : String, operands : List[et.Expr])(implicit reduceConfig : ReduceConfig) : Option[et.Expr] = (reportName, operands) match {
     case ("null?", List(singleExpr)) =>
       literalPredicate(singleExpr, { literal =>
         literal.isInstanceOf[ast.EmptyList]

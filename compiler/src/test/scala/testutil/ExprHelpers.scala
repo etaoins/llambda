@@ -57,9 +57,27 @@ trait ExprHelpers extends FunSuite with OptionValues {
           None
 
         case other =>
+          // Make sure this is located
+          assertExprLocated(other)
           Some(other)
       }
     )
+  }
+
+  def assertExprLocated(expr : et.Expr) {
+    expr match {
+      case _ : et.Begin =>
+      case _ : et.InternalDefinition =>
+      case _ : et.TopLevelDefinition =>
+      case lambdaExpr : et.Lambda if lambdaExpr.isArtificial =>
+        // Don't check subexpressions
+        return
+
+      case other =>
+        assert(other.hasLocation, s"Expression is unlocated: ${other.toString}")
+    }
+
+    expr.subexprs.map(assertExprLocated)
   }
 }
 

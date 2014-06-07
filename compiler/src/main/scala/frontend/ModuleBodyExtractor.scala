@@ -176,7 +176,8 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
         et.Cond(
           extractExpr(test), 
           extractExpr(trueExpr), 
-          et.Literal(ast.UnitValue()))
+          et.Literal(ast.UnitValue()).assignLocationFrom(appliedSymbol)
+        )
 
       case (PrimitiveExprs.Set, (mutatingSymbol : sst.ScopedSymbol) :: value :: Nil) =>
         mutatingSymbol.resolve match {
@@ -223,8 +224,11 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
       case (PrimitiveExprs.UnquoteSplicing, _) =>
         throw new BadSpecialFormException(appliedSymbol, "Attempted (unquote-splicing) outside of quasiquotation") 
 
-      case (storagLoc : StorageLocation, operands) =>
-        et.Apply(et.VarRef(storagLoc), operands.map(extractExpr))
+      case (storageLoc : StorageLocation, operands) =>
+        et.Apply(
+          et.VarRef(storageLoc).assignLocationFrom(appliedSymbol),
+          operands.map(extractExpr)
+        )
 
       case (PrimitiveExprs.AnnotateType, valueExpr :: typeDatum :: Nil) =>
         et.Cast(extractExpr(valueExpr), DatumToValueType(typeDatum))
@@ -275,12 +279,12 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
 
       case (PrimitiveExprs.Define, sst.ScopedProperList((symbol : sst.ScopedSymbol) :: fixedArgs) :: body) =>
         Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name), () => {
-          createLambda(fixedArgs, None, body)
+          createLambda(fixedArgs, None, body).assignLocationFrom(appliedSymbol)
         }))
       
       case (PrimitiveExprs.Define, sst.ScopedImproperList((symbol : sst.ScopedSymbol) :: fixedArgs, (restArgDatum : sst.ScopedSymbol)) :: body) =>
         Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name), () => {
-          createLambda(fixedArgs, Some(restArgDatum), body)
+          createLambda(fixedArgs, Some(restArgDatum), body).assignLocationFrom(appliedSymbol)
         }))
 
       case (PrimitiveExprs.DefineSyntax, _) =>

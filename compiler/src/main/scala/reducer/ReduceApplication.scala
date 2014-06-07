@@ -25,7 +25,7 @@ private[reducer] object ReduceApplication {
     def toOutOfLine = this.copy(inlineDefinition=false)
   }
 
-  private case class ResolvedReportProcedure(reportProc : ReportProcedure) extends ResolvedAppliedExpr {
+  private case class ResolvedReportProcedure(appliedVar : et.VarRef, reportProc : ReportProcedure) extends ResolvedAppliedExpr {
     def toOutOfLine = this
   }
 
@@ -183,8 +183,8 @@ private[reducer] object ReduceApplication {
 
   /** Resolves an applied expression attempting to find a report procedure or lambda */
   private def resolveAppliedExpr(expr : et.Expr, ignoreReportProcs : Set[ReportProcedure])(implicit reduceConfig : ReduceConfig) : Option[ResolvedAppliedExpr] = expr match {
-    case et.VarRef(reportProcedure : ReportProcedure) if !ignoreReportProcs.contains(reportProcedure) =>
-      Some(ResolvedReportProcedure(reportProcedure))
+    case appliedVar @ et.VarRef(reportProcedure : ReportProcedure) if !ignoreReportProcs.contains(reportProcedure) =>
+      Some(ResolvedReportProcedure(appliedVar, reportProcedure))
 
     case et.VarRef(storageLoc) if reduceConfig.inlineDepth < 6 =>
       // Dereference the variable
@@ -219,10 +219,10 @@ private[reducer] object ReduceApplication {
     */
   def apply(appliedExpr : et.Expr, reducedOperands : List[et.Expr], ignoreReportProcs : Set[ReportProcedure] = Set())(implicit reduceConfig : ReduceConfig) : Option[et.Expr] = {
     resolveAppliedExpr(appliedExpr, ignoreReportProcs) flatMap {
-      case ResolvedReportProcedure(reportProc) =>
+      case ResolvedReportProcedure(appliedVar, reportProc) =>
         // Run this through the report procedure reducers
         for(reportProcReducer <- reportProcReducers) {
-          for(expr <- reportProcReducer(reportProc, reducedOperands)) {
+          for(expr <- reportProcReducer(appliedVar, reportProc.reportName, reducedOperands)) {
             // This was recognized and reduced - perform no further action
             return Some(expr)
           }
