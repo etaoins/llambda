@@ -290,9 +290,6 @@ private[planner] object PlanLambda {
     // Plan the body
     val planResult = PlanExpr(postClosureState)(body)(planConfig, procPlan)
 
-    // Are we returning anything?
-    val unitType = vt.IntrinsicCellType(ct.UnitCell)
-
     val procSignature = if (!canRefineSignature) {
       initialSignature
     }
@@ -302,7 +299,7 @@ private[planner] object PlanLambda {
         // XXX: We can be more clever here and try to find a common return type across all returns
         Some(vt.IntrinsicCellType(ct.DatumCell))
       }
-      else if (planResult.value.possibleTypes == Set(unitType)) {
+      else if (planResult.value.possibleTypes == Set(ct.UnitCell)) {
         // Instead of returning a unit cell just return void
         None
       }

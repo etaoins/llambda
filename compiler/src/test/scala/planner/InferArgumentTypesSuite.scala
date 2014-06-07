@@ -84,6 +84,13 @@ class InferArgumentTypesSuite  extends FunSuite {
     assert(signature.returnType === Some(vt.IntrinsicCellType(ct.DatumCell)))
   }
   
+  test("procedure proxying (vector-set!)") {
+    val signature = signatureFor("""(lambda (vec index) (vector-set! vec index #f))""")
+
+    assert(signature.fixedArgs === List(vt.IntrinsicCellType(ct.VectorCell), vt.IntrinsicCellType(ct.ExactIntegerCell)))
+    assert(signature.returnType === None)
+  }
+  
   test("procedure proxying (vector-ref) past a conditional") {
     val signature = signatureFor("""
       (lambda (vec index) 
