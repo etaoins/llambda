@@ -52,18 +52,6 @@ abstract trait SourceLocated {
     this
   }
 
-  private def positionString : String = {
-    locationOpt match {
-      case Some(location) =>
-        location.filenameOpt.getOrElse("(unknown)") + ":"
-          location.line + ":" +
-          location.column
-
-      case None =>
-        "(unknown):(unknown)"
-    }
-  }
-
   private def sourceSnippet(location : SourceLocation) : String = {
     val sourceLines = location.sourceString.split('\n')
     val lineOfInterest = sourceLines(location.line - 1)

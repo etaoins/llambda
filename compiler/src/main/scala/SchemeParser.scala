@@ -45,18 +45,6 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
     }
   }
 
-  private def located(datum : ast.Datum) : ast.Datum = {
-    datum.locationOpt = Some(
-      SourceLocation(
-        filenameOpt=filenameOpt,
-        sourceString=sourceString,
-        offset=cursor
-      )
-    )
-
-    datum
-  }
-
   private val NonPeriodExtendedIdentifierChar = CharPredicate("!$%&*+-/:<=>?@^_~")
   private val ExtendedIdentifierChar = NonPeriodExtendedIdentifierChar ++ CharPredicate('.')
   private val IdentifierChar = Alpha ++ Digit ++ ExtendedIdentifierChar
