@@ -29,19 +29,13 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
 
   val input : ParserInput = sourceString
 
-  // Used to datum location tracking
-  private var currentLocationOpt : Option[SourceLocation] = None
-
-  private def updateLocation : Rule0 = rule {
-    run {
-      currentLocationOpt = Some(
-        SourceLocation(
-          filenameOpt=filenameOpt,
-          sourceString=sourceString,
-          offset=cursor
-        )
+  private def fetchLocation : Rule1[SourceLocation] = rule {
+    push {
+      SourceLocation(
+        filenameOpt=filenameOpt,
+        sourceString=sourceString,
+        offset=cursor
       )
-      ()
     }
   }
 
@@ -89,10 +83,9 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
     Whitespace ~ zeroOrMore(Datum) ~ EOI 
   }
 
-  // Split datums in to ones starting with '#', '(' and everything else
-  // This is to speed up the parser
+  // Split data based on its initial character to speed up parsing
   def Datum : Rule1[ast.Datum] = rule {
-    updateLocation ~ (run {
+    fetchLocation ~ run {
       (cursorChar : @switch) match {
         case '#' => 
           OctoDatum
@@ -123,8 +116,8 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
         case _ =>
           OtherDatum
       }
-    } ~> { unlocatedDatum =>
-      unlocatedDatum.locationOpt = currentLocationOpt
+    } ~> ({ (location : SourceLocation, unlocatedDatum : ast.Datum) =>
+      unlocatedDatum.locationOpt = Some(location)
       unlocatedDatum
     })
   }
