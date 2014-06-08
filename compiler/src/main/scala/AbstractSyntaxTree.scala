@@ -1,7 +1,7 @@
 package io.llambda.compiler.ast
 import io.llambda
 
-import llambda.compiler.SchemeParserDefinitions
+import llambda.compiler.SchemeParser
 import llambda.compiler.SourceLocated
 
 sealed abstract class Datum extends SourceLocated
@@ -74,7 +74,7 @@ object NaNLiteral {
 }
 
 case class Symbol(name : String) extends Leaf {
-  override def toString = if (name.matches(SchemeParserDefinitions.identifierPattern)) {
+  override def toString = if (SchemeParser.isValidIdentifier(name)) {
     name
   }
   else {

@@ -13,17 +13,6 @@ import org.parboiled2._
 class ParseErrorException(val filename : Option[String], val message : String) extends
   Exception(filename.getOrElse("(unknown)") + ": " + message)
 
-object SchemeParserDefinitions {
-  // These are the characters that can appear in an identifier
-  val identifierCharacterPattern= """[a-zA-Z0-9\!\$\%\&\*\+\-\/\:\<\=\>\?\@\^\_\.]"""
-
-  // This is monsterous to exclude a single "." and starting with numbers
-  val identifierPattern = """(([a-zA-Z\!\$\%\&\*\+\-\/\:\<\=\>\?\@\^\_\.])""" +
-                           identifierCharacterPattern + "+" +
-                              "|" +
-                           """([a-zA-Z\!\$\%\&\*\+\-\/\:\<\=\>\?\@\^\_]))"""
-}
-
 class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends Parser with StringBuilding {
   import CharPredicate._
 
@@ -375,6 +364,18 @@ object SchemeParser {
 
       case Failure(throwable)=>
         throw throwable
+    }
+  }
+
+  def isValidIdentifier(string : String) : Boolean = {
+    val parser = new SchemeParser(string, None)
+
+    parser.Data.run() match {
+      case Success(Vector(ast.Symbol(`string`))) =>
+        true
+
+      case _ =>
+        false
     }
   }
 }
