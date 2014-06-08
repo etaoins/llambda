@@ -19,15 +19,10 @@ sealed abstract class CastableValue {
 
 sealed abstract class CellType extends CastableValue with ${ROOT_CLASS_FIELDS_TRAIT} {
   val schemeName : String
-  val supertype : Option[CellType]
   val directSubtypes : Set[CellType]
 
   def isTypeOrSubtypeOf(otherType : CellType) : Boolean = {
-    if (otherType == this) {
-      return true
-    }
-
-    supertype map (_.isTypeOrSubtypeOf(otherType)) getOrElse false
+    otherType.isTypeOrSupertypeOf(this)
   }
 
   def isTypeOrSupertypeOf(otherType : CellType) : Boolean = {

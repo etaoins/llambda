@@ -23,15 +23,10 @@ sealed abstract class CastableValue {
 
 sealed abstract class CellType extends CastableValue with DatumFields {
   val schemeName : String
-  val supertype : Option[CellType]
   val directSubtypes : Set[CellType]
 
   def isTypeOrSubtypeOf(otherType : CellType) : Boolean = {
-    if (otherType == this) {
-      return true
-    }
-
-    supertype map (_.isTypeOrSubtypeOf(otherType)) getOrElse false
+    otherType.isTypeOrSupertypeOf(this)
   }
 
   def isTypeOrSupertypeOf(otherType : CellType) : Boolean = {
@@ -138,7 +133,6 @@ object DatumCell extends CellType with DatumFields {
   val llvmName = "datum"
   val irType = UserDefinedType("datum")
   val schemeName = "<datum-cell>"
-  val supertype = None
   val directSubtypes = Set[CellType](UnitCell, ListElementCell, StringCell, SymbolCell, BooleanCell, NumericCell, CharacterCell, VectorCell, BytevectorCell, RecordLikeCell, ErrorObjectCell, PortCell)
 
   val typeIdGepIndices = List(0, 0)
@@ -163,7 +157,6 @@ object UnitCell extends PreconstructedCellType with UnitFields {
   val llvmName = "unit"
   val irType = UserDefinedType("unit")
   val schemeName = "<unit-cell>"
-  val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType]()
 
   val typeId = 1L
@@ -183,7 +176,6 @@ object ListElementCell extends CellType with ListElementFields {
   val llvmName = "listElement"
   val irType = UserDefinedType("listElement")
   val schemeName = "<list-element-cell>"
-  val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType](PairCell, EmptyListCell)
 
   val typeIdGepIndices = List(0, 0, 0)
@@ -323,7 +315,6 @@ object PairCell extends ConcreteCellType with PairFields {
   val llvmName = "pair"
   val irType = UserDefinedType("pair")
   val schemeName = "<pair-cell>"
-  val supertype = Some(ListElementCell)
   val directSubtypes = Set[CellType]()
 
   val typeId = 2L
@@ -369,7 +360,6 @@ object EmptyListCell extends PreconstructedCellType with EmptyListFields {
   val llvmName = "emptyList"
   val irType = UserDefinedType("emptyList")
   val schemeName = "<empty-list-cell>"
-  val supertype = Some(ListElementCell)
   val directSubtypes = Set[CellType]()
 
   val typeId = 3L
@@ -476,7 +466,6 @@ object StringCell extends ConcreteCellType with StringFields {
   val llvmName = "string"
   val irType = UserDefinedType("string")
   val schemeName = "<string-cell>"
-  val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType]()
 
   val typeId = 4L
@@ -695,7 +684,6 @@ object SymbolCell extends ConcreteCellType with SymbolFields {
   val llvmName = "symbol"
   val irType = UserDefinedType("symbol")
   val schemeName = "<symbol-cell>"
-  val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType]()
 
   val typeId = 5L
@@ -878,7 +866,6 @@ object BooleanCell extends PreconstructedCellType with BooleanFields {
   val llvmName = "boolean"
   val irType = UserDefinedType("boolean")
   val schemeName = "<boolean-cell>"
-  val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType]()
 
   val typeId = 6L
@@ -900,7 +887,6 @@ object NumericCell extends CellType with NumericFields {
   val llvmName = "numeric"
   val irType = UserDefinedType("numeric")
   val schemeName = "<numeric-cell>"
-  val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType](ExactIntegerCell, InexactRationalCell)
 
   val typeIdGepIndices = List(0, 0, 0)
@@ -953,7 +939,6 @@ object ExactIntegerCell extends ConcreteCellType with ExactIntegerFields {
   val llvmName = "exactInteger"
   val irType = UserDefinedType("exactInteger")
   val schemeName = "<exact-integer-cell>"
-  val supertype = Some(NumericCell)
   val directSubtypes = Set[CellType]()
 
   val typeId = 7L
@@ -1011,7 +996,6 @@ object InexactRationalCell extends ConcreteCellType with InexactRationalFields {
   val llvmName = "inexactRational"
   val irType = UserDefinedType("inexactRational")
   val schemeName = "<inexact-rational-cell>"
-  val supertype = Some(NumericCell)
   val directSubtypes = Set[CellType]()
 
   val typeId = 8L
@@ -1073,7 +1057,6 @@ object CharacterCell extends ConcreteCellType with CharacterFields {
   val llvmName = "character"
   val irType = UserDefinedType("character")
   val schemeName = "<character-cell>"
-  val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType]()
 
   val typeId = 9L
@@ -1160,7 +1143,6 @@ object VectorCell extends ConcreteCellType with VectorFields {
   val llvmName = "vector"
   val irType = UserDefinedType("vector")
   val schemeName = "<vector-cell>"
-  val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType]()
 
   val typeId = 10L
@@ -1254,7 +1236,6 @@ object BytevectorCell extends ConcreteCellType with BytevectorFields {
   val llvmName = "bytevector"
   val irType = UserDefinedType("bytevector")
   val schemeName = "<bytevector-cell>"
-  val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType]()
 
   val typeId = 11L
@@ -1377,7 +1358,6 @@ object RecordLikeCell extends CellType with RecordLikeFields {
   val llvmName = "recordLike"
   val irType = UserDefinedType("recordLike")
   val schemeName = "<record-like-cell>"
-  val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType](ProcedureCell, RecordCell)
 
   val typeIdGepIndices = List(0, 0, 0)
@@ -1443,7 +1423,6 @@ object ProcedureCell extends ConcreteCellType with ProcedureFields {
   val llvmName = "procedure"
   val irType = UserDefinedType("procedure")
   val schemeName = "<procedure-cell>"
-  val supertype = Some(RecordLikeCell)
   val directSubtypes = Set[CellType]()
 
   val typeId = 12L
@@ -1511,7 +1490,6 @@ object RecordCell extends ConcreteCellType with RecordFields {
   val llvmName = "record"
   val irType = UserDefinedType("record")
   val schemeName = "<record-cell>"
-  val supertype = Some(RecordLikeCell)
   val directSubtypes = Set[CellType]()
 
   val typeId = 13L
@@ -1608,7 +1586,6 @@ object ErrorObjectCell extends ConcreteCellType with ErrorObjectFields {
   val llvmName = "errorObject"
   val irType = UserDefinedType("errorObject")
   val schemeName = "<error-object-cell>"
-  val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType]()
 
   val typeId = 14L
@@ -1706,7 +1683,6 @@ object PortCell extends ConcreteCellType with PortFields {
   val llvmName = "port"
   val irType = UserDefinedType("port")
   val schemeName = "<port-cell>"
-  val supertype = Some(DatumCell)
   val directSubtypes = Set[CellType]()
 
   val typeId = 15L

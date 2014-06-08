@@ -262,11 +262,7 @@ object WriteScalaObjects extends writer.OutputWriter {
       // distinguish them from the tagged cell class they inherit
       if (cellClass.instanceType != CellClass.Variant) { 
         scalaBuilder += "val schemeName = \"" + names.schemeName + "\"" 
-        scalaBuilder += "val supertype = " + (cellClass.parentOption match {
-          case None => "None"
-          case Some(parent) => s"Some(${parent.names.scalaObjectName})"
-        })
-
+        
         // Get all of our subclasses
         val subtypeParts = processedTypes.taggedCellClassesByParent.getOrElse(cellClass, Nil) map { taggedClass =>
           taggedClass.names.scalaObjectName
