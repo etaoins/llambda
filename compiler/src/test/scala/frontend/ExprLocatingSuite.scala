@@ -2,7 +2,6 @@ package io.llambda.compiler.frontend
 import io.llambda
 
 import org.scalatest.FunSuite
-import scala.util.parsing.input.NoPosition
 
 import llambda.compiler._
 

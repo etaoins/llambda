@@ -8,4 +8,4 @@ scalaVersion := "2.11.1"
 
 scalacOptions ++= Seq("-deprecation", "-feature", "-Xlint")
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.6" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.0" % "test"
