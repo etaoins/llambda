@@ -14,6 +14,9 @@ trait IntermediateValueHelpers {
   protected def impossibleConversion(message : String)(implicit plan : PlanWriter) = { 
     throw new ImpossibleTypeConversionException(plan.activeSourceLocated, message)
   }
+  
+  /** Provides a human-readable description of the value's type */
+  def typeDescription : String
 
   /** Converts the temp value of the given actual type to the passed super type
     *

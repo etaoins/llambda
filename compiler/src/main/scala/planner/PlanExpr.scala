@@ -69,7 +69,7 @@ private[planner] object PlanExpr {
         val operands = operandBuffer.toList
 
         val invokableProc = procResult.value.toInvokableProcedure() getOrElse {
-          throw new ValueNotApplicableException(expr)
+          throw new ValueNotApplicableException(expr, procResult.value.typeDescription)
         }
 
         procResult.value match {

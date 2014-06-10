@@ -10,7 +10,7 @@ trait IntermediateCellValue extends IntermediateValue {
   val cellType : ct.CellType   
   val tempValue : ps.TempValue
 
-  protected lazy val typeDescription = possibleTypes.toList match {
+  lazy val typeDescription = possibleTypes.toList match {
     case single :: Nil =>
       s"cell of type ${single.schemeName}"
 

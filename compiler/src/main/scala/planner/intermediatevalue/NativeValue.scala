@@ -10,14 +10,17 @@ import llambda.compiler.RuntimeErrorMessage
 sealed abstract class NativeValue(val nativeType : vt.NativeType, val cellType : ct.ConcreteCellType, val tempValue : ps.TempValue) extends IntermediateValue with UninvokableValue with NonRecordValue {
   val possibleTypes = Set(cellType)
 
+  lazy val typeDescription = 
+    s"native value of type ${nativeType.schemeName}"
+
   // This is used for our shortcut in planPhiWith to build a new phi'ed intermediate
   protected def withNewTempValue(tempValue : ps.TempValue) : NativeValue
 
   protected def planCastToNativeTempValue(targetType : vt.NativeType)(implicit plan : PlanWriter) : ps.TempValue = 
-    impossibleConversion(s"Cannot convert native value of type ${nativeType.schemeName} to requested type ${targetType.schemeName} or any other native type")
+    impossibleConversion(s"Cannot convert ${typeDescription} to requested type ${targetType.schemeName} or any other native type")
   
   protected def planCastToCellTempValue(targetType : ct.CellType)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue  = 
-    impossibleConversion(s"Cannot convert native value of type ${nativeType.schemeName} to requested type ${targetType.schemeName} or any other cell type except ${cellType.schemeName}")
+    impossibleConversion(s"Cannot convert ${typeDescription} to requested type ${targetType.schemeName} or any other cell type except ${cellType.schemeName}")
   
   protected def planCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
 
@@ -114,7 +117,7 @@ class NativeExactIntegerValue(tempValue : ps.TempValue, nativeType : vt.IntType)
       convTemp
 
     case _ => 
-      impossibleConversion(s"Cannot convert native value of type ${nativeType.schemeName} to non-numeric native type ${targetType.schemeName}") 
+      impossibleConversion(s"Cannot convert ${typeDescription} to non-numeric native type ${targetType.schemeName}") 
   }
   
   override def planCastToCellTempValue(cellType : ct.CellType)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = cellType match {
@@ -127,7 +130,7 @@ class NativeExactIntegerValue(tempValue : ps.TempValue, nativeType : vt.IntType)
       boxedTemp
     
     case _ =>
-      impossibleConversion(s"Cannot convert native value of type ${nativeType.schemeName} to non-numeric cell type ${cellType.schemeName}") 
+      impossibleConversion(s"Cannot convert ${typeDescription} to non-numeric cell type ${cellType.schemeName}") 
   }
 
   def planCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue =  {

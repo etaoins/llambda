@@ -58,7 +58,7 @@ class ImportedIdentifierNotFoundException(located : SourceLocated, val identifie
   val semanticErrorType = "imported identifier not found"
 }
 
-class ValueNotApplicableException(located : SourceLocated) extends LocatedSemanticException(located, "Value not applicable") {
+class ValueNotApplicableException(located : SourceLocated, typeDescription : String) extends LocatedSemanticException(located, s"${typeDescription.capitalize} not applicable") {
   val semanticErrorType = "not applicable"
 }
 
