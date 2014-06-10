@@ -6,7 +6,8 @@ import scala.annotation.tailrec
 case class SourceLocation(
   filenameOpt : Option[String],
   sourceString : String,
-  offset : Int
+  offset : Int,
+  expandedFromOpt : Option[SourceLocated] = None
 ) {
   private lazy val lineColumn : (Int, Int) = {
     @tailrec
@@ -65,9 +66,17 @@ abstract trait SourceLocated {
   def locationString : String = {
     locationOpt match {
       case Some(location) =>
-        location.filenameOpt.getOrElse("(unknown)") + ":" +
+        val selfString = location.filenameOpt.getOrElse("(unknown)") + ":" +
           location.line + ":\n" +
           sourceSnippet(location)
+
+        location.expandedFromOpt match {
+          case Some(expandedFrom) =>
+            selfString + "\nExpanded from:\n" + expandedFrom.locationString
+
+          case None =>
+            selfString
+        }
 
       case None =>
         ""

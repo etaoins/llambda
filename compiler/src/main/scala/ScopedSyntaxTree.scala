@@ -13,22 +13,40 @@ sealed abstract class ScopedDatum extends SourceLocated {
 
     unlocated
   }
+
+  protected def unlocatedShallowClone : sst.ScopedDatum
+
+  def asExpandedFrom(expandedFrom : SourceLocated) : sst.ScopedDatum = {
+    val cloned = this.unlocatedShallowClone
+
+    cloned.locationOpt = this.locationOpt.map(_.copy(expandedFromOpt=Some(expandedFrom)))
+    cloned
+  }
 }
 
 case class ScopedPair(car : ScopedDatum, cdr : ScopedDatum) extends ScopedDatum {
   def unlocatedUnscope : ast.Pair = ast.Pair(car.unscope, cdr.unscope)
   override def toString = "(" + car + " . " + cdr + ")"
+  
+  def unlocatedShallowClone =
+    this.copy()
 }
 
 case class ScopedVectorLiteral(elements : Vector[ScopedDatum]) extends ScopedDatum {
   def unlocatedUnscope = ast.VectorLiteral(elements.map(_.unscope))
   override def toString = 
     "#(" + elements.map(_.toString).mkString(" ") + ")"
+  
+  def unlocatedShallowClone =
+    this.copy()
 }
 
 case class NonSymbolLeaf(atom : ast.NonSymbolLeaf) extends ScopedDatum {
   def unlocatedUnscope = atom
   override def toString = atom.toString
+  
+  def unlocatedShallowClone =
+    this.copy()
 }
 
 case class ScopedSymbol(scope : Scope, name : String) extends ScopedDatum {
@@ -40,6 +58,9 @@ case class ScopedSymbol(scope : Scope, name : String) extends ScopedDatum {
   def resolve : BoundValue = resolveOpt getOrElse {
     throw new UnboundVariableException(this, name)
   }
+  
+  def unlocatedShallowClone =
+    this.copy()
 }
 
 // The following two objects are essential copied from AbstractSyntaxTree
