@@ -11,8 +11,6 @@ import llambda.compiler.planner.{step => ps}
 class PlanLocatingSuite extends FunSuite with PlanHelpers {
   private def assertPlanLocated(plannedFunctions : Map[String, planner.PlannedFunction], description : String) {
     for((symbol, function) <- plannedFunctions if !function.isArtificial) {
-      assert(function.hasLocation, s"Function '${symbol}' has no function-level source location")
-
       for(step <- function.steps) {
         step match {
           case _ : ps.CastCellToTypeUnchecked =>

@@ -9,7 +9,7 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
-import llambda.compiler.{StorageLocation, ProcedureSignature}
+import llambda.compiler.{StorageLocation, ProcedureSignature, SourceProcedure}
 
 private[planner] object PlanLambda {
   private sealed abstract class Argument {
@@ -352,14 +352,22 @@ private[planner] object PlanLambda {
         (argument.storageLoc.sourceName -> argument.tempValue)
       })
 
+    // Determine our procedure
+    val sourceProcedureOpt = lambdaExpr.locationOpt.map { location =>
+      SourceProcedure(
+        filenameOpt=location.filenameOpt,
+        startLine=location.line,
+        sourceNameOpt=sourceNameHint
+      ) 
+    }
+
     val uninferredFunction = PlannedFunction(
       signature=procSignature,
       namedArguments=namedArguments,
       steps=procPlan.steps.toList,
       worldPtrOpt=Some(worldPtr),
-      sourceNameOpt=sourceNameHint,
-      isArtificial=lambdaExpr.isArtificial
-    ).assignLocationFrom(lambdaExpr)
+      sourceProcedureOpt=sourceProcedureOpt
+    )
 
     val plannedFunction = if (canRefineSignature && planConfig.optimize) {
       // Attempt to infer our argument types

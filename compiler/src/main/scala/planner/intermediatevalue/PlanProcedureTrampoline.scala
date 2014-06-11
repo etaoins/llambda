@@ -121,8 +121,7 @@ private[intermediatevalue] object PlanProcedureTrampoline {
       ),
       steps=plan.steps.toList,
       worldPtrOpt=Some(worldPtrTemp),
-      sourceNameOpt=None,
-      isArtificial=true
+      sourceProcedureOpt=None
     ) 
   }
 }

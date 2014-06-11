@@ -115,7 +115,7 @@ object InferArgumentTypes {
           ),
           namedArguments=initialFunction.namedArguments.tail,
           worldPtrOpt=None
-        ).assignLocationFrom(initialFunction)
+        )
       }
     }
     else {
@@ -149,7 +149,7 @@ object InferArgumentTypes {
           namedArguments=function.namedArguments.updated(namedArgIndex, (argName, result.replaceArgTempValue)),
           steps=result.steps,
           worldPtrOpt=function.worldPtrOpt
-        ).assignLocationFrom(function)
+        )
       }
       else {
         // Skip this arg

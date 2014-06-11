@@ -38,8 +38,7 @@ object PlanRecordTypeAccessor {
           namedArguments=List(("recordCell" -> recordCellTemp)),
           steps=plan.steps.toList,
           worldPtrOpt=None,
-          sourceNameOpt=None,
-          isArtificial=true
+          sourceProcedureOpt=None
         )
     }
 }

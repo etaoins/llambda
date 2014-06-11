@@ -83,9 +83,6 @@ case class Cond(test : Expr, trueExpr : Expr, falseExpr : Expr) extends NonLiter
 case class Lambda(fixedArgs : List[StorageLocation], restArg : Option[StorageLocation], body : Expr) extends NonLiteralExpr {
   val subexprs = body :: Nil
 
-  /** Hint that this in an artificially generated function for debugging information */
-  var isArtificial : Boolean = false
-
   def map(f : Expr => Expr) : Lambda =
     Lambda(fixedArgs, restArg, f(body)).assignLocationFrom(this)
 }

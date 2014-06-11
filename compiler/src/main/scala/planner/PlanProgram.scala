@@ -25,8 +25,7 @@ object PlanProgram {
       namedArguments=List("world" -> worldTemp),
       steps=plan.steps.toList,
       worldPtrOpt=Some(worldTemp),
-      sourceNameOpt=None,
-      isArtificial=true
+      sourceProcedureOpt=None
     ))).toMap
   }
 }

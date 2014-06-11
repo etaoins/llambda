@@ -15,9 +15,6 @@ private[frontend] object FeaturesProcedure {
       et.Literal(ast.ProperList(featuresList.map(ast.Symbol(_))))
     )
 
-    // Hint that this is an artificial procedure
-    featuresProc.isArtificial = true
-
     featuresProc
   }
 }
