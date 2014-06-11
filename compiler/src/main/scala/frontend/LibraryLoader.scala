@@ -47,7 +47,7 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
     case List(StringComponent("llambda"), StringComponent("internal"), StringComponent("features")) =>
       if (!featuresStorageLoc.isDefined) {
         // Create this on demand
-        val storageLoc = new StorageLocation("features")
+        val storageLoc = new ReportProcedure("features")
         exprBuffer += et.TopLevelDefinition(List(storageLoc -> FeaturesProcedure()))
 
         featuresStorageLoc = Some(storageLoc)
