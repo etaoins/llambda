@@ -98,7 +98,7 @@ object DisposeValues {
       function.steps.reverse, 
       // Nothing directly uses the world ptr until PlanCellAllocations runs
       // Artifically set it as used - it's not GC managed so there's no real gain in disposing it. 
-      function.worldPtrOption.toSet,
+      function.worldPtrOpt.toSet,
       Nil
     )
 

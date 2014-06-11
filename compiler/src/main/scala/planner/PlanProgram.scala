@@ -24,8 +24,8 @@ object PlanProgram {
       signature=LlambdaTopLevelSignature,
       namedArguments=List("world" -> worldTemp),
       steps=plan.steps.toList,
-      worldPtrOption=Some(worldTemp),
-      sourceNameOption=None,
+      worldPtrOpt=Some(worldTemp),
+      sourceNameOpt=None,
       isArtificial=true
     ))).toMap
   }

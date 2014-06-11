@@ -37,8 +37,8 @@ object PlanRecordTypeAccessor {
           signature=accessorSignature,
           namedArguments=List(("recordCell" -> recordCellTemp)),
           steps=plan.steps.toList,
-          worldPtrOption=None,
-          sourceNameOption=None,
+          worldPtrOpt=None,
+          sourceNameOpt=None,
           isArtificial=true
         )
     }

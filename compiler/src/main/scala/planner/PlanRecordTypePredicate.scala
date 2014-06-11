@@ -60,8 +60,8 @@ object PlanRecordTypePredicate {
           signature=predicateSignature,
           namedArguments=List(("value" -> argumentTemp)),
           steps=plan.steps.toList,
-          worldPtrOption=None,
-          sourceNameOption=None,
+          worldPtrOpt=None,
+          sourceNameOpt=None,
           isArtificial=true
         )
     }

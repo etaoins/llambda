@@ -66,7 +66,7 @@ object PlanCellAllocations {
       allocCellSteps(requiredCells) ++ acc
   }
 
-  def apply(function : PlannedFunction) : PlannedFunction = function.worldPtrOption match {
+  def apply(function : PlannedFunction) : PlannedFunction = function.worldPtrOpt match {
     case Some(worldPtr) =>
       function.copy(
         steps=placeCellAllocations(function.steps.reverse, 0, Nil)(worldPtr)

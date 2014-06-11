@@ -120,8 +120,8 @@ private[intermediatevalue] object PlanProcedureTrampoline {
         ("argList" -> argListHeadTemp)
       ),
       steps=plan.steps.toList,
-      worldPtrOption=Some(worldPtrTemp),
-      sourceNameOption=None,
+      worldPtrOpt=Some(worldPtrTemp),
+      sourceNameOpt=None,
       isArtificial=true
     ) 
   }

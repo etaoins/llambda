@@ -8,7 +8,7 @@ case class PlannedFunction(
   signature : ProcedureSignature,
   namedArguments : List[(String,  ps.TempValue)],
   steps : List[ps.Step],
-  worldPtrOption : Option[ps.WorldPtrValue],
-  sourceNameOption : Option[String],
+  worldPtrOpt : Option[ps.WorldPtrValue],
+  sourceNameOpt : Option[String],
   isArtificial : Boolean
 ) extends SourceLocated

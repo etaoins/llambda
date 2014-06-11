@@ -356,8 +356,8 @@ private[planner] object PlanLambda {
       signature=procSignature,
       namedArguments=namedArguments,
       steps=procPlan.steps.toList,
-      worldPtrOption=Some(worldPtr),
-      sourceNameOption=sourceNameHint,
+      worldPtrOpt=Some(worldPtr),
+      sourceNameOpt=sourceNameHint,
       isArtificial=lambdaExpr.isArtificial
     ).assignLocationFrom(lambdaExpr)
 

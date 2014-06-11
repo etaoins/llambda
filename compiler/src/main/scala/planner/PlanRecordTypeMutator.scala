@@ -43,8 +43,8 @@ object PlanRecordTypeMutator {
           signature=mutatorSignature,
           namedArguments=namedArguments,
           steps=plan.steps.toList,
-          worldPtrOption=None,
-          sourceNameOption=None,
+          worldPtrOpt=None,
+          sourceNameOpt=None,
           isArtificial=true
         )
     }

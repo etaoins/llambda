@@ -30,7 +30,7 @@ private[codegen] object GenFunction {
     }
 
     // Do we need to set up GC for this function?
-    val (procStartBlock, gcSlotsOpt, gcCleanUpBlockOpt) = plannedFunction.worldPtrOption match {
+    val (procStartBlock, gcSlotsOpt, gcCleanUpBlockOpt) = plannedFunction.worldPtrOpt match {
       case Some(worldPtrTemp) =>
         val worldPtrIr = argTemps(worldPtrTemp)
 

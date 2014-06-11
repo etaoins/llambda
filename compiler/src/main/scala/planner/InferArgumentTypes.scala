@@ -114,7 +114,7 @@ object InferArgumentTypes {
             hasWorldArg=false
           ),
           namedArguments=initialFunction.namedArguments.tail,
-          worldPtrOption=None
+          worldPtrOpt=None
         ).assignLocationFrom(initialFunction)
       }
     }
@@ -148,7 +148,7 @@ object InferArgumentTypes {
           signature=newSignature,
           namedArguments=function.namedArguments.updated(namedArgIndex, (argName, result.replaceArgTempValue)),
           steps=result.steps,
-          worldPtrOption=function.worldPtrOption
+          worldPtrOpt=function.worldPtrOpt
         ).assignLocationFrom(function)
       }
       else {
