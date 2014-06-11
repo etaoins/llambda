@@ -62,9 +62,9 @@ object GenProgram {
     module.declareFunction(launchWorldDecl)
     entryBlock.callDecl(None)(initDecl, Nil)
     
-    // Call __llambda_exec through _lliby_launch_world
-    // __llambda_exec must be defined by the planner
-    val execValue = GenNamedEntryPoint(module)(LlambdaExecSignature, LlambdaExecSignature.nativeSymbol, plannedSymbols) 
+    // Call __llambda_top_level through _lliby_launch_world
+    // __llambda_top_level must be defined by the planner
+    val execValue = GenNamedEntryPoint(module)(LlambdaTopLevelSignature, LlambdaTopLevelSignature.nativeSymbol, plannedSymbols) 
 
     entryBlock.callDecl(None)(launchWorldDecl, List(execValue), false)
 

@@ -3,7 +3,7 @@ import io.llambda
 
 import llambda.compiler.et
 import llambda.compiler.planner.{step => ps}
-import llambda.compiler.codegen.LlambdaExecSignature
+import llambda.compiler.codegen.LlambdaTopLevelSignature
 
 object PlanProgram {
   def apply(exprs : List[et.Expr])(planConfig : PlanConfig) : Map[String, PlannedFunction] = {
@@ -17,11 +17,11 @@ object PlanProgram {
       
     PlanExpr(emptyState)(et.Begin(exprs))(planConfig, plan)
 
-    // __llambda_exec is a void function
+    // __llambda_top_level is a void function
     plan.steps += ps.Return(None)
 
-    (plan.plannedFunctions + (LlambdaExecSignature.nativeSymbol -> PlannedFunction(
-      signature=LlambdaExecSignature,
+    (plan.plannedFunctions + (LlambdaTopLevelSignature.nativeSymbol -> PlannedFunction(
+      signature=LlambdaTopLevelSignature,
       namedArguments=List("world" -> worldTemp),
       steps=plan.steps.toList,
       worldPtrOption=Some(worldTemp),

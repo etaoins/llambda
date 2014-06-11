@@ -26,7 +26,7 @@ class PlanLocatingSuite extends FunSuite with PlanHelpers {
                ps.LoadRecordDataField(_, _, _ : vt.ClosureType, _) =>
             // This is loading from a closure in a lambda prologue
 
-          case ps.Return(None) if symbol == codegen.LlambdaExecSignature.nativeSymbol =>
+          case ps.Return(None) if symbol == codegen.LlambdaTopLevelSignature.nativeSymbol =>
             // This is produced entirely by codegen
 
           case _ =>
