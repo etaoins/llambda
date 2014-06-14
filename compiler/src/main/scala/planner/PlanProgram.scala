@@ -25,7 +25,7 @@ object PlanProgram {
       namedArguments=List("world" -> worldTemp),
       steps=plan.steps.toList,
       worldPtrOpt=Some(worldTemp),
-      sourceProcedureOpt=None
+      debugContextOpt=None
     ))).toMap
   }
 }

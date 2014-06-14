@@ -106,7 +106,7 @@ object Compiler {
       featureIdentifiers=featureIdentifiers 
     )
 
-    val exprs = frontend.ExtractProgram(data)(loader, frontendConfig)
+    val exprs = frontend.ExtractProgram(entryFilenameOpt, data)(loader, frontendConfig)
 
     // Analyse and drop unused top-level defines
     val analysis = reducer.AnalyseExprs(exprs)

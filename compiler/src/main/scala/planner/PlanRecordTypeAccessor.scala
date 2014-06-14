@@ -38,7 +38,7 @@ object PlanRecordTypeAccessor {
           namedArguments=List(("recordCell" -> recordCellTemp)),
           steps=plan.steps.toList,
           worldPtrOpt=None,
-          sourceProcedureOpt=None
+          debugContextOpt=None
         )
     }
 }

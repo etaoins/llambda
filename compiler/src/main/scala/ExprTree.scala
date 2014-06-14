@@ -4,7 +4,7 @@ import io.llambda
 import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
 
-sealed abstract trait Expr extends SourceLocated {
+sealed abstract trait Expr extends ContextLocated {
   val subexprs : List[Expr]
 
   def map(f : Expr => Expr) : Expr
@@ -80,11 +80,11 @@ case class Cond(test : Expr, trueExpr : Expr, falseExpr : Expr) extends NonLiter
     Cond(f(test), f(trueExpr), f(falseExpr)).assignLocationFrom(this)
 }
 
-case class Lambda(fixedArgs : List[StorageLocation], restArg : Option[StorageLocation], body : Expr) extends NonLiteralExpr {
+case class Lambda(fixedArgs : List[StorageLocation], restArg : Option[StorageLocation], body : Expr, debugContextOpt : Option[debug.SubprogramContext] = None) extends NonLiteralExpr {
   val subexprs = body :: Nil
 
   def map(f : Expr => Expr) : Lambda =
-    Lambda(fixedArgs, restArg, f(body)).assignLocationFrom(this)
+    Lambda(fixedArgs, restArg, f(body), debugContextOpt).assignLocationFrom(this)
 }
 
 sealed abstract trait BindingExpr extends NonLiteralExpr {

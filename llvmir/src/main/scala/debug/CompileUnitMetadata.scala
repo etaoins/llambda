@@ -16,18 +16,6 @@ case class CompileUnitMetadata(
     importedEntities : List[Metadata] = Nil,
     splitDebugFilename : String = ""
 ) extends MetadataNode {
-  def listToMetadata(metadataList : List[Metadata]) : Metadata = {
-    if (metadataList.isEmpty) {
-      // Not sure why this is a thing
-      UserDefinedMetadataNode(List(
-        Some(IntegerConstant(IntegerType(32), 0))
-      ))
-    }
-    else {
-      UserDefinedMetadataNode(metadataList.map(Some(_)))
-    }
-  }
-
   val memberOpts = List(
     IntegerConstant(IntegerType(32), 786449), // DW_TAG_compile_unit
     sourcePath,
@@ -36,11 +24,11 @@ case class CompileUnitMetadata(
     IntegerConstant(IntegerType(1), if (optimised) 1 else 0),
     MetadataString.fromUtf8String(flags),
     IntegerConstant(IntegerType(32), runtimeVersion),
-    listToMetadata(enums),
-    listToMetadata(retainedTypes),
-    listToMetadata(subprograms),
-    listToMetadata(globalVariables),
-    listToMetadata(importedEntities),
+    listToNotNullMetadata(enums),
+    listToNotNullMetadata(retainedTypes),
+    listToNotNullMetadata(subprograms),
+    listToNotNullMetadata(globalVariables),
+    listToNotNullMetadata(importedEntities),
     MetadataString.fromUtf8String(splitDebugFilename)
   ).map(Some(_))
 }

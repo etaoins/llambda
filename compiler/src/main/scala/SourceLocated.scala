@@ -84,4 +84,43 @@ abstract trait SourceLocated {
   }
 }
 
+abstract trait ContextLocated extends SourceLocated {
+  var contextOpt : Option[debug.SourceContext] = None
+  
+  override def assignLocationTo(other : SourceLocated) {
+    super.assignLocationTo(other)
+
+    other match {
+      case otherSpLocated : ContextLocated =>
+        if (this.contextOpt.isDefined) {
+          otherSpLocated.contextOpt = this.contextOpt
+        }
+
+      case _ =>
+    }
+  }
+
+  def assignLocationAndContextFrom(other : SourceLocated, context : debug.SourceContext) : ContextLocated.this.type = {
+    assignLocationFrom(other)
+    this.contextOpt = Some(context)
+
+    this
+  }
+  
+  override def assignLocationFrom(other : SourceLocated) : ContextLocated.this.type = {
+    super.assignLocationFrom(other)
+
+    other match {
+      case otherSpLocated : ContextLocated =>
+        if (otherSpLocated.contextOpt.isDefined) {
+          this.contextOpt = otherSpLocated.contextOpt
+        }
+
+      case _ =>
+    }
+
+    this
+  }
+}
+
 object NoSourceLocation extends SourceLocated

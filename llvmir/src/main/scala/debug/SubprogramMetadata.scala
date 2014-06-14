@@ -7,7 +7,7 @@ case class SubprogramMetadata(
     contextDescriptor : Metadata,
     name : String,
     displayName : String,
-    mipsLinkageName : String,
+    mipsLinkageName : String = "",
     definitionLine : Int,
     typeDescriptor : Metadata,
     compileUnitLocal : Boolean,

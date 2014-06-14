@@ -13,14 +13,14 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
     val searchRoots = includePath.librarySearchRoots
 
     val library = IncludeLoader(searchRoots, filename) match {
-      case Some(IncludeLoadResult(libraryIncludePath, datum :: Nil)) =>
+      case Some(IncludeLoadResult(filename, libraryIncludePath, List(datum))) =>
         val libraryFrontendConfig = frontendConfig.copy(
           includePath=libraryIncludePath
         )
 
-        ExtractLibrary(datum, Some(libraryName))(this, libraryFrontendConfig)
+        ExtractLibrary(Some(filename), datum, Some(libraryName))(this, libraryFrontendConfig)
 
-      case Some(IncludeLoadResult(_, data)) =>
+      case Some(IncludeLoadResult(_, _, data)) =>
         throw new BadSpecialFormException(loadLocation, "Multiple top-level data in library file: " + filename)
 
       case None =>

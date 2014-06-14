@@ -40,8 +40,16 @@ object GenProgram {
     val plannedSymbols = functions.keySet
     val typeGenerator = new TypeGenerator(module, compileConfig.targetPlatform)
 
+    // Package up our global generator state
+    val genGlobals = GenGlobals(
+      plannedSymbols=plannedSymbols,
+      typeGenerator=typeGenerator,
+      debugInfoGeneratorOpt=debugInfoGeneratorOpt,
+      targetPlatform=compileConfig.targetPlatform
+    )
+
     // Build each program-supplied function
-    val functionGenerator = GenFunction(module, plannedSymbols, typeGenerator, compileConfig.targetPlatform)_ 
+    val functionGenerator = GenFunction(module, genGlobals)_ 
 
     for((nativeSymbol, plannedFunction) <- functions) {
       functionGenerator(nativeSymbol, plannedFunction)

@@ -3,11 +3,17 @@ import io.llambda
 
 import java.io.File
 
-import llambda.compiler.CompileConfig
+import llambda.compiler.debug
+import llambda.compiler.{ContextLocated, CompileConfig}
 import llambda.llvmir
 
 class DebugInfoGenerator(module : llvmir.IrModuleBuilder, compileConfig : CompileConfig, compilerIdentifier : String, entryFilenameOpt : Option[String]) {
-  val definedFilePathMetadata = new collection.mutable.HashMap[String, llvmir.NumberedMetadata]
+  private val definedFilePathMetadata = new collection.mutable.HashMap[String, llvmir.NumberedMetadata]
+  private val sourceContextMetadata = new collection.mutable.HashMap[debug.SourceContext, Option[llvmir.NumberedMetadata]]
+  private lazy val subroutineTypeMetadata : llvmir.NumberedMetadata = {
+    val subroutineTypeNode = llvmir.debug.SubroutineTypeMetadata
+    module.numberMetadataNode(subroutineTypeNode)
+  }
 
   def metadataForFilePath(filePath : String) : llvmir.NumberedMetadata =
     // Re-use an existing metadata node if we've already defined one
@@ -17,6 +23,50 @@ class DebugInfoGenerator(module : llvmir.IrModuleBuilder, compileConfig : Compil
         llvmir.debug.FilePathMetadata.fromFile(new File(filePath))
       )
     })
+
+  private def contextMetadataForSourceContext(sourceContext : debug.SourceContext) : Option[llvmir.NumberedMetadata] = 
+    sourceContextMetadata.getOrElseUpdate(sourceContext, {
+      sourceContext match {
+        case debug.FileContext(filename) =>
+          val fileContextNode = llvmir.debug.FileContextMetadata(
+            metadataForFilePath(filename)
+          )
+
+          Some(module.numberMetadataNode(fileContextNode))
+          
+        case subprogram : debug.SubprogramContext => 
+          val subprogramNodeOpt =
+            for(parentMetadata <- contextMetadataForSourceContext(subprogram.parentContext);
+                filename <- subprogram.filenameOpt)
+            yield llvmir.debug.SubprogramMetadata(
+              sourcePath=metadataForFilePath(filename),
+              contextDescriptor=parentMetadata,
+              name=subprogram.sourceNameOpt.getOrElse(""),
+              displayName=subprogram.sourceNameOpt.getOrElse(""),
+              definitionLine=subprogram.startLine,
+              typeDescriptor=subroutineTypeMetadata,
+              compileUnitLocal=true,
+              definedInCompileUnit=true,
+              optimised=(compileConfig.optimizeLevel > 0),
+              scopeStartLine=subprogram.startLine
+            )
+        
+          subprogramNodeOpt.map(module.numberMetadataNode)
+
+        case debug.UnknownContext =>
+          None
+      }
+    })
+
+  def metadataForContextLocated(located : ContextLocated) = {
+    val locationMetadataOpt = 
+      for(location <- located.locationOpt;
+          sourceContext <- located.contextOpt;
+          contextMetadata <- contextMetadataForSourceContext(sourceContext))
+      yield llvmir.debug.LocationMetadata(location.line, location.column, contextMetadata, None)
+
+    Map(locationMetadataOpt.toSeq.map("dbg" -> _) : _*)
+  }
 
   def finish() {
     // Add our module flags

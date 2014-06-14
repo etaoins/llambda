@@ -54,7 +54,7 @@ object CallCcProcReducer extends ReportProcReducer {
   }
 
   def apply(appliedVar : et.VarRef, reportName : String, operands : List[et.Expr])(implicit reduceConfig : ReduceConfig) : Option[et.Expr] = (reportName, operands) match {
-    case (reportName, List(originalLambdaExpr @ et.Lambda(List(exitProc), None, bodyExpr))) if callCcNames.contains(reportName) => 
+    case (reportName, List(originalLambdaExpr @ et.Lambda(List(exitProc), None, bodyExpr, _))) if callCcNames.contains(reportName) => 
       // Try to convert all uses of the exit proc in to a return
       val replacedBodyExpr = replaceExitProcWithReturn(bodyExpr, exitProc)
 

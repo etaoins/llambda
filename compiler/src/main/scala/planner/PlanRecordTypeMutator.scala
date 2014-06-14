@@ -44,7 +44,7 @@ object PlanRecordTypeMutator {
           namedArguments=namedArguments,
           steps=plan.steps.toList,
           worldPtrOpt=None,
-          sourceProcedureOpt=None
+          debugContextOpt=None
         )
     }
 }

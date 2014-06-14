@@ -186,6 +186,19 @@ abstract class MetadataNode extends Metadata {
   def toIr : String = {
     "!{" + memberOpts.map(memberOptToIrWithType).mkString(", ") + "}"
   }
+  
+  protected def listToNotNullMetadata(metadataList : List[Metadata]) : Metadata = {
+    if (metadataList.isEmpty) {
+      // Not sure why this is a thing
+      UserDefinedMetadataNode(List(
+        Some(IntegerConstant(IntegerType(32), 0))
+      ))
+    }
+    else {
+      UserDefinedMetadataNode(metadataList.map(Some(_)))
+    }
+  }
+
 }
 
 case class UserDefinedMetadataNode(memberOpts : Seq[Option[IrConstant]]) extends MetadataNode

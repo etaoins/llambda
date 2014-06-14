@@ -18,7 +18,7 @@ class ReducerLocatingSuite extends FunSuite with testutil.ExprHelpers {
     )
   
     val loader = new frontend.LibraryLoader(compileConfig.targetPlatform)
-    val expressions = frontend.ExtractProgram(testutil.NonTrivialProgram.data)(loader, frontendConfig)
+    val expressions = frontend.ExtractProgram(None, testutil.NonTrivialProgram.data)(loader, frontendConfig)
 
     val analysis = reducer.AnalyseExprs(expressions)
     assertExprLocated(reducer.ReduceExprs(analysis))

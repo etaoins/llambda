@@ -61,7 +61,7 @@ object PlanRecordTypePredicate {
           namedArguments=List(("value" -> argumentTemp)),
           steps=plan.steps.toList,
           worldPtrOpt=None,
-          sourceProcedureOpt=None
+          debugContextOpt=None
         )
     }
 }

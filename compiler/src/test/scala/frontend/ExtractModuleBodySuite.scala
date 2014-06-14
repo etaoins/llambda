@@ -223,22 +223,22 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
   test("lambdas") {
     inside(exprFor("(lambda () #t)")) {
-      case et.Lambda(Nil, None, body) =>
+      case et.Lambda(Nil, None, body, _) =>
         assert(body === et.Literal(ast.BooleanLiteral(true)))
     }
 
     inside(exprFor("(lambda (x) x)")) {
-      case et.Lambda(argX :: Nil, None, body) =>
+      case et.Lambda(List(argX), None, body, _) =>
         assert(body === et.VarRef(argX))
     }
     
     inside(exprFor("(lambda x x)")) {
-      case et.Lambda(Nil, Some(restArg), body) =>
+      case et.Lambda(Nil, Some(restArg), body, _) =>
         assert(body === et.VarRef(restArg))
     }
 
     inside(exprFor("(lambda (x y . z) x y z)")) {
-      case et.Lambda(argX :: argY :: Nil, Some(restArg), body) =>
+      case et.Lambda(List(argX, argY), Some(restArg), body, _) =>
         assert(body === et.Begin(List(
           et.VarRef(argX),
           et.VarRef(argY),
@@ -249,7 +249,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   
   test("self-executing lambdas") {
     inside(exprFor("((lambda (x) x) 1)")) {
-      case et.Apply(et.Lambda(argX :: Nil, None, body), value :: Nil) =>
+      case et.Apply(et.Lambda(List(argX), None, body, _), List(value)) =>
         assert(body === et.VarRef(argX))
         assert(value === et.Literal(ast.IntegerLiteral(1)))
     }
@@ -261,11 +261,11 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
         (define foo (lambda (y) (bar x y)))
         (define bar (lambda (a b) (if a b)))
         (foo #t))""")) {
-      case et.Lambda(xLoc :: Nil, None, et.InternalDefinition(
+      case et.Lambda(List(xLoc), None, et.InternalDefinition(
         List(
-          (fooLoc, et.Lambda(List(yLoc), None, fooExpr)),
-          (barLoc, et.Lambda(List(aLoc, bLoc), None, barExpr))
-        ), bodyExpr)) =>
+          (fooLoc, et.Lambda(List(yLoc), None, fooExpr, _)),
+          (barLoc, et.Lambda(List(aLoc, bLoc), None, barExpr, _))
+        ), bodyExpr), _) =>
           assert(fooExpr === et.Apply(et.VarRef(barLoc), et.VarRef(xLoc) :: et.VarRef(yLoc) :: Nil))
           assert(barExpr === et.Cond(et.VarRef(aLoc), et.VarRef(bLoc), et.Literal(ast.UnitValue())))
 
@@ -280,7 +280,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-true").value
 
     inside(expr) {
-      case et.TopLevelDefinition((storageLoc, et.Lambda(Nil, None, bodyExpr)) :: Nil) if procLoc == storageLoc =>
+      case et.TopLevelDefinition(List((storageLoc, et.Lambda(Nil, None, bodyExpr, _)))) if procLoc == storageLoc =>
         assert(bodyExpr === et.Literal(ast.BooleanLiteral(true)))
     }
 
@@ -297,7 +297,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-true").value
 
     inside(expr) {
-      case et.TopLevelDefinition((storageLoc, et.Lambda(_ :: Nil, None, bodyExpr)) :: Nil) if procLoc == storageLoc =>
+      case et.TopLevelDefinition(List((storageLoc, et.Lambda(List(_), None, bodyExpr, _)))) if procLoc == storageLoc =>
         assert(bodyExpr === et.Literal(ast.BooleanLiteral(true)))
     }
 
@@ -314,7 +314,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-false").value
 
     inside(expr) {
-      case et.TopLevelDefinition((storageLoc, et.Lambda(_ :: Nil, Some(_), bodyExpr)) :: Nil) if procLoc == storageLoc =>
+      case et.TopLevelDefinition(List((storageLoc, et.Lambda(List(_), Some(_), bodyExpr, _)))) if procLoc == storageLoc =>
         assert(bodyExpr === et.Literal(ast.BooleanLiteral(false)))
     }
 
@@ -330,7 +330,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val expr = exprFor("(define (return-six . rest) 6)")(scope)
     val procLoc = scope.get("return-six").value
     inside(expr) {
-      case et.TopLevelDefinition((storageLoc, et.Lambda(Nil, Some(_), bodyExpr)) :: Nil) if procLoc == storageLoc =>
+      case et.TopLevelDefinition(List((storageLoc, et.Lambda(Nil, Some(_), bodyExpr, _)))) if procLoc == storageLoc =>
         assert(bodyExpr === et.Literal(ast.IntegerLiteral(6)))
     }
     
@@ -346,7 +346,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val expr = exprFor("(define (return-self) return-self)")(scope)
     val procLoc = scope.get("return-self").value
     inside(expr) {
-      case et.TopLevelDefinition((storageLoc, et.Lambda(Nil, None, bodyExpr)) :: Nil) if procLoc == storageLoc =>
+      case et.TopLevelDefinition(List((storageLoc, et.Lambda(Nil, None, bodyExpr, _)))) if procLoc == storageLoc =>
         assert(bodyExpr === et.VarRef(storageLoc))
     }
   }
@@ -362,7 +362,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     val expressions = bodyFor("(define x 1)(lambda (x) x)")(scope)
     inside(expressions) {
-      case et.TopLevelDefinition((shadowed, _) :: Nil) :: et.Lambda(argX :: Nil, None, et.VarRef(inner)) :: Nil =>
+      case List(et.TopLevelDefinition(List((shadowed, _))), et.Lambda(List(argX), None, et.VarRef(inner), _)) =>
         assert(inner != shadowed)
     }
   }
@@ -376,7 +376,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     )(scope) 
 
     inside(expressions) {
-      case List(et.TopLevelDefinition(List((shadowed, _))), et.Lambda(Nil, None, et.InternalDefinition(List((inner, _)), _))) =>
+      case List(et.TopLevelDefinition(List((shadowed, _))), et.Lambda(Nil, None, et.InternalDefinition(List((inner, _)), _), _)) =>
         assert(inner != shadowed)
     }
   }
@@ -386,7 +386,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val expressions = bodyFor("(define y 1)(lambda (x) y)")(scope)
 
     inside(expressions) {
-      case et.TopLevelDefinition((outer, _) :: Nil) :: et.Lambda(argX :: Nil, None, et.VarRef(inner)) :: Nil =>
+      case List(et.TopLevelDefinition(List((outer, _))), et.Lambda(List(argX), None, et.VarRef(inner), _)) =>
         assert(outer === inner)
     }
   }
@@ -403,7 +403,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     }
 
     inside(expr) {
-      case et.TopLevelDefinition((loc, et.Lambda(Nil, None, et.Literal(ast.BooleanLiteral(false)))) :: Nil) =>
+      case et.TopLevelDefinition(List((loc, et.Lambda(Nil, None, et.Literal(ast.BooleanLiteral(false)), _)))) =>
         assert(loc === listBinding)
     }
   }

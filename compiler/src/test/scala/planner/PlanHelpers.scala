@@ -20,7 +20,7 @@ trait PlanHelpers extends FunSuite {
     )
   
     val loader = new frontend.LibraryLoader(compileConfig.targetPlatform)
-    val expressions = frontend.ExtractProgram(data)(loader, frontendConfig)
+    val expressions = frontend.ExtractProgram(None, data)(loader, frontendConfig)
     val analysis = reducer.AnalyseExprs(expressions)
 
     val reducedExprs = if (reduce) {

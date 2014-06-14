@@ -6,10 +6,10 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.frontend.syntax.{ParseSyntaxDefine, ExpandMacro}
 
 import collection.mutable.ListBuffer
+  
+private[frontend] case class ScopedArgument(symbol : sst.ScopedSymbol, boundValue : StorageLocation)
 
-class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) {
-  private case class ScopedArgument(symbol : sst.ScopedSymbol, boundValue : StorageLocation)
-
+class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) {
   private def uniqueScopes(datum : sst.ScopedDatum) : Set[Scope] = {
     datum match {
       case sst.ScopedPair(car, cdr) => uniqueScopes(car) ++ uniqueScopes(cdr)
@@ -121,7 +121,7 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
     }
   }
 
-  private def createLambda(fixedArgData : List[sst.ScopedDatum], restArgDatum : Option[sst.ScopedSymbol], definition : List[sst.ScopedDatum]) : et.Lambda = {
+  private def createLambda(fixedArgData : List[sst.ScopedDatum], restArgDatum : Option[sst.ScopedSymbol], definition : List[sst.ScopedDatum], sourceNameHint : Option[String]) : et.Lambda = {
     // Create our actual procedure arguments
     // These unique identify the argument independently of its binding at a given time
 
@@ -137,10 +137,28 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
     
     val allArgs = fixedArgs ++ restArg.toList
 
-    // Extract the body 
-    val bodyExpr = extractBodyDefinition(allArgs, definition)
+    // Create a subprogram for debug info purposes
+    val subprogramDebugContextOpt = definition.headOption.flatMap(_.locationOpt).map { location =>
+      new debug.SubprogramContext(
+        parentContext=debugContext,
+        filenameOpt=location.filenameOpt,
+        startLine=location.line,
+        sourceNameOpt=sourceNameHint
+      )
+    }
 
-    et.Lambda(fixedArgs.map(_.boundValue), restArg.map(_.boundValue), bodyExpr)
+    val bodyDebugContext = subprogramDebugContextOpt.getOrElse(debug.UnknownContext)
+
+    // Extract the body 
+    val extractor = new ModuleBodyExtractor(bodyDebugContext, libraryLoader, frontendConfig)
+    val bodyExpr = extractor.extractBodyDefinition(allArgs, definition)
+
+    et.Lambda(
+      fixedArgs=fixedArgs.map(_.boundValue),
+      restArg=restArg.map(_.boundValue),
+      body=bodyExpr,
+      debugContextOpt=subprogramDebugContextOpt
+    )
   }
 
   private def extractInclude(scope : Scope, includeNameData : List[sst.ScopedDatum], includeLocation : SourceLocated) : et.Expr = {
@@ -154,7 +172,13 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
         includePath=result.innerIncludePath
       )
 
-      val includeBodyExtractor = new ModuleBodyExtractor(libraryLoader, innerConfig)
+      // XXX: What should we use for a subprogram here if we're including inside a lambda?
+      // Clang appears to create synthetic lexical block entries just so it can attach a new filename to the source 
+      // lines. This likely requires a more in-depth study of the DWARF specification. For now assume we're being 
+      // included at the top level
+      val includeSubprogram = debug.FileContext(result.filename)
+
+      val includeBodyExtractor = new ModuleBodyExtractor(includeSubprogram, libraryLoader, innerConfig)
       includeBodyExtractor(result.data, scope)
     }
 
@@ -176,7 +200,7 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
         et.Cond(
           extractExpr(test), 
           extractExpr(trueExpr), 
-          et.Literal(ast.UnitValue()).assignLocationFrom(appliedSymbol)
+          et.Literal(ast.UnitValue()).assignLocationAndContextFrom(appliedSymbol, debugContext)
         )
 
       case (PrimitiveExprs.Set, (mutatingSymbol : sst.ScopedSymbol) :: value :: Nil) =>
@@ -188,13 +212,13 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
         }
 
       case (PrimitiveExprs.Lambda, (restArgDatum : sst.ScopedSymbol) :: definition) =>
-        createLambda(List(), Some(restArgDatum), definition)
+        createLambda(List(), Some(restArgDatum), definition, None)
 
       case (PrimitiveExprs.Lambda, sst.ScopedProperList(fixedArgData) :: definition) =>
-        createLambda(fixedArgData, None, definition)
+        createLambda(fixedArgData, None, definition, None)
 
       case (PrimitiveExprs.Lambda, sst.ScopedImproperList(fixedArgData, (restArgDatum : sst.ScopedSymbol)) :: definition) =>
-        createLambda(fixedArgData, Some(restArgDatum), definition)
+        createLambda(fixedArgData, Some(restArgDatum), definition, None)
 
       case (PrimitiveExprs.SyntaxError, (errorDatum @ sst.NonSymbolLeaf(ast.StringLiteral(errorString))) :: data) =>
         throw new UserDefinedSyntaxError(errorDatum, errorString, data.map(_.unscope))
@@ -226,7 +250,7 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
 
       case (storageLoc : StorageLocation, operands) =>
         et.Apply(
-          et.VarRef(storageLoc).assignLocationFrom(appliedSymbol),
+          et.VarRef(storageLoc).assignLocationAndContextFrom(appliedSymbol, debugContext),
           operands.map(extractExpr)
         )
 
@@ -279,12 +303,12 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
 
       case (PrimitiveExprs.Define, sst.ScopedProperList((symbol : sst.ScopedSymbol) :: fixedArgs) :: body) =>
         Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name), () => {
-          createLambda(fixedArgs, None, body).assignLocationFrom(appliedSymbol)
+          createLambda(fixedArgs, None, body, Some(symbol.name)).assignLocationAndContextFrom(appliedSymbol, debugContext)
         }))
       
       case (PrimitiveExprs.Define, sst.ScopedImproperList((symbol : sst.ScopedSymbol) :: fixedArgs, (restArgDatum : sst.ScopedSymbol)) :: body) =>
         Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name), () => {
-          createLambda(fixedArgs, Some(restArgDatum), body).assignLocationFrom(appliedSymbol)
+          createLambda(fixedArgs, Some(restArgDatum), body, Some(symbol.name)).assignLocationAndContextFrom(appliedSymbol, debugContext)
         }))
 
       case (PrimitiveExprs.DefineSyntax, _) =>
@@ -422,7 +446,7 @@ class ModuleBodyExtractor(libraryLoader : LibraryLoader, frontendConfig : Fronte
 
     case malformed =>
       throw new MalformedExprException(malformed, malformed.toString)
-  }).assignLocationFrom(datum)
+  }).assignLocationAndContextFrom(datum, debugContext)
 
   def apply(data : List[ast.Datum], evalScope : Scope) : List[et.Expr] = data flatMap { datum => 
     // Annotate our symbols with our current scope

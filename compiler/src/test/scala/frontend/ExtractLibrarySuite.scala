@@ -22,7 +22,7 @@ class ExtractLibrarySuite extends FunSuite with Inside {
 
   def libraryFor(scheme : String) : Library = {
     val datum :: Nil = SchemeParser.parseStringAsData(scheme)
-    ExtractLibrary(datum)(new LibraryLoader(platform.Posix64LE), frontendConfig)
+    ExtractLibrary(None, datum)(new LibraryLoader(platform.Posix64LE), frontendConfig)
   }
   
   test("empty datum is invalid") {

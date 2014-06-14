@@ -34,8 +34,23 @@ object GenPlanStep {
     case ps.CompareCond.LessThan => ComparisonCond.LessThan
     case ps.CompareCond.LessThanEqual => ComparisonCond.LessThanEqual
   }
+  
+  def apply(state : GenerationState, genGlobals : GenGlobals)(step : ps.Step) : GenResult = {
+    genGlobals.debugInfoGeneratorOpt match {
+      case Some(debugInfoGenerator) =>
+        // Add our line numbering debug info if possible
+        val debugMetadata = debugInfoGenerator.metadataForContextLocated(step)
 
-  def apply(state : GenerationState, plannedSymbols : Set[String], typeGenerator : TypeGenerator)(step : ps.Step) : GenResult = step match {
+        state.currentBlock.function.withMetadata(debugMetadata) {
+          genStep(state, genGlobals)(step)
+        }
+
+      case None =>
+        genStep(state, genGlobals)(step)
+    }
+  }
+
+  private def genStep(state : GenerationState, genGlobals : GenGlobals)(step : ps.Step) : GenResult = step match {
     case ps.AllocateCells(worldPtrTemp, count) =>
       if (!state.currentAllocation.isEmpty) {
         // This is not only wasteful but dangerous as the previous allocation won't be fully initialized
@@ -48,7 +63,7 @@ object GenPlanStep {
       allocState.copy(currentAllocation=allocation)
 
     case createConstantStep : ps.CreateConstant =>
-      val irResult = GenConstant(state, typeGenerator)(createConstantStep)
+      val irResult = GenConstant(state, genGlobals.typeGenerator)(createConstantStep)
 
       state.withTempValue(createConstantStep.result -> irResult)
 
@@ -66,7 +81,7 @@ object GenPlanStep {
 
     case ps.CreateNamedEntryPoint(resultTemp, signature, nativeSymbol) =>
       val irModule = state.currentBlock.function.module
-      val irValue = GenNamedEntryPoint(irModule)(signature, nativeSymbol, plannedSymbols)
+      val irValue = GenNamedEntryPoint(irModule)(signature, nativeSymbol, genGlobals.plannedSymbols)
 
       state.withTempValue((resultTemp -> irValue))
 
@@ -183,8 +198,8 @@ object GenPlanStep {
         currentBlock=falseStartBlock
       )
 
-      val trueResult = GenPlanSteps(trueStartState, plannedSymbols, typeGenerator)(trueSteps)
-      val falseResult = GenPlanSteps(falseStartState, plannedSymbols, typeGenerator)(falseSteps)
+      val trueResult = GenPlanSteps(trueStartState, genGlobals)(trueSteps)
+      val falseResult = GenPlanSteps(falseStartState, genGlobals)(falseSteps)
 
       (trueResult, falseResult) match {
         case (BlockTerminated(_), BlockTerminated(_)) =>
@@ -351,14 +366,14 @@ object GenPlanStep {
       state.withTempValue(resultTemp -> entryPoint)
 
     case initStep : ps.InitRecordLike  =>
-      val (initedState, initedRecordLike) = GenInitRecordLike(state, typeGenerator)(initStep)
+      val (initedState, initedRecordLike) = GenInitRecordLike(state, genGlobals.typeGenerator)(initStep)
 
       initedState
         .withTempValue(initStep.cellResult -> initedRecordLike.recordCell)
         .withTempValue(initStep.dataResult -> initedRecordLike.recordData)
     
     case ps.TestRecordLikeClass(resultTemp, recordCellTemp, recordLikeType) => 
-      val generatedType = typeGenerator(recordLikeType)
+      val generatedType = genGlobals.typeGenerator(recordLikeType)
 
       val recordCellIr = state.liveTemps(recordCellTemp)
       val irResult = GenTestRecordLikeClass(state.currentBlock)(recordCellIr, generatedType)
@@ -367,7 +382,7 @@ object GenPlanStep {
     
     case ps.AssertRecordLikeClass(worldPtrTemp, recordCellTemp, recordLikeType, errorMessage) => 
       val worldPtrIr = state.liveTemps(worldPtrTemp)
-      val generatedType = typeGenerator(recordLikeType)
+      val generatedType = genGlobals.typeGenerator(recordLikeType)
       
       // Start our branches
       val irFunction = state.currentBlock.function
@@ -388,7 +403,7 @@ object GenPlanStep {
     case ps.SetRecordDataField(recordDataTemp, recordType, recordField, newValueTemp) =>
       val recordDataIr = state.liveTemps(recordDataTemp)
       val newValueIr = state.liveTemps(newValueTemp)
-      val generatedType = typeGenerator(recordType)
+      val generatedType = genGlobals.typeGenerator(recordType)
   
       GenSetRecordDataField(state.currentBlock)(recordDataIr, generatedType, recordField, Some(newValueIr))
 
@@ -396,7 +411,7 @@ object GenPlanStep {
     
     case ps.SetRecordDataFieldUndefined(recordDataTemp, recordType, recordField) =>
       val recordDataIr = state.liveTemps(recordDataTemp)
-      val generatedType = typeGenerator(recordType)
+      val generatedType = genGlobals.typeGenerator(recordType)
   
       GenSetRecordDataField(state.currentBlock)(recordDataIr, generatedType, recordField, None)
 
@@ -404,7 +419,7 @@ object GenPlanStep {
     
     case ps.LoadRecordDataField(resultTemp, recordDataTemp, recordLikeType, recordField) =>
       val recordDataIr = state.liveTemps(recordDataTemp)
-      val generatedType = typeGenerator(recordLikeType)
+      val generatedType = genGlobals.typeGenerator(recordLikeType)
   
       val resultIr = GenLoadRecordDataField(state.currentBlock)(recordDataIr, generatedType, recordField)
 
@@ -439,7 +454,7 @@ object GenPlanStep {
 
     case ps.LoadRecordLikeData(resultTemp, recordCellTemp, recordLikeType) =>
       val recordCellIr = state.liveTemps(recordCellTemp)
-      val generatedType = typeGenerator(recordLikeType)
+      val generatedType = genGlobals.typeGenerator(recordLikeType)
 
       val resultIr = GenLoadRecordLikeData(state.currentBlock)(recordCellIr, generatedType)
 

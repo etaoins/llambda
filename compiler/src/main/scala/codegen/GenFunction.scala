@@ -8,7 +8,7 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{celltype => ct}
 
 private[codegen] object GenFunction {
-  def apply(module : IrModuleBuilder, plannedSymbols : Set[String], typeGenerator : TypeGenerator, targetPlatform : TargetPlatform)(nativeSymbol : String, plannedFunction : planner.PlannedFunction) {
+  def apply(module : IrModuleBuilder, genGlobals : GenGlobals)(nativeSymbol : String, plannedFunction : planner.PlannedFunction) {
     val irSignature = ProcedureSignatureToIr(plannedFunction.signature)
 
     val argumentNames = plannedFunction.namedArguments.map(_._1)
@@ -38,7 +38,7 @@ private[codegen] object GenFunction {
         val procStartBlock = generatedFunction.startChildBlock("procStart")
         
         // Create our GC slot allocator
-        val gcSlots = new GcSlotGenerator(generatedFunction.entryBlock)(worldPtrIr, procStartBlock, targetPlatform)
+        val gcSlots = new GcSlotGenerator(generatedFunction.entryBlock)(worldPtrIr, procStartBlock, genGlobals.targetPlatform)
 
         // Create our landingpad
         val gcCleanUpBlock = {
@@ -64,7 +64,7 @@ private[codegen] object GenFunction {
     )
 
     // Generate our steps
-    val finalResult = GenPlanSteps(startState, plannedSymbols, typeGenerator)(plannedFunction.steps)
+    val finalResult = GenPlanSteps(startState, genGlobals)(plannedFunction.steps)
 
     for(gcSlots <- gcSlotsOpt) {
       gcSlots.finish(finalResult.gcState)

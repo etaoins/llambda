@@ -71,7 +71,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
     // This expands a macro containing a lambda inside a lambda
     // We had a bug with rescoping and became confused while rescoping a lambda
     // body that contained symbols from a different scope. This triggered it.
-    assert(exprFor(
+    inside(exprFor(
       """(define-syntax func-returning
            (syntax-rules ()
              ((func-returning value)
@@ -79,7 +79,9 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
          )))
          (lambda () 
            (func-returning +))"""
-    )(plusScope) === et.Lambda(Nil, None, et.Lambda(Nil, None, et.VarRef(plusLoc))) )
+    )(plusScope)) {
+      case et.Lambda(Nil, None, et.Lambda(Nil, None, et.VarRef(`plusLoc`), Some(_)), Some(_)) =>
+    }
   }
   
   test("two value expansion") {
@@ -544,7 +546,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
     )(scope) 
 
     inside(expr) {
-      case et.Apply(et.Lambda(arg1 :: arg2 :: Nil, None, body), argVal1 :: argVal2 :: Nil) =>
+      case et.Apply(et.Lambda(List(arg1, arg2), None, body, _), List(argVal1, argVal2)) =>
         assert(body === et.Begin(List(et.VarRef(arg1), et.VarRef(arg2))))
         assert(argVal1 === et.Literal(ast.IntegerLiteral(1)))
         assert(argVal2 === et.Literal(ast.IntegerLiteral(2)))
@@ -588,7 +590,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
     )(scope)
 
     inside(expr) {
-      case et.Apply(et.Lambda(arg :: Nil, None, bodyExpr), argVal :: Nil) =>
+      case et.Apply(et.Lambda(List(arg), None, bodyExpr, _), List(argVal)) =>
         assert(bodyExpr === et.Cond(et.VarRef(arg), et.VarRef(arg), et.Literal(ast.IntegerLiteral(2))))
         assert(argVal === et.Literal(ast.IntegerLiteral(1)))
     }
@@ -616,7 +618,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
     val expr = exprFor("(or 1 2)")(expandScope) 
 
     inside(expr) {
-      case et.Apply(et.Lambda(arg :: Nil, None, bodyExpr), argVal :: Nil) =>
+      case et.Apply(et.Lambda(List(arg), None, bodyExpr, _), List(argVal)) =>
         assert(bodyExpr === et.Cond(et.VarRef(arg), et.VarRef(arg), et.Literal(ast.IntegerLiteral(2))))
         assert(argVal === et.Literal(ast.IntegerLiteral(1)))
     }

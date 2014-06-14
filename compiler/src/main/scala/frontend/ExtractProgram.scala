@@ -4,7 +4,7 @@ import io.llambda
 import llambda.compiler._
 
 object ExtractProgram {
-  def apply(data : List[ast.Datum])(implicit libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : List[et.Expr] = {
+  def apply(filenameOpt : Option[String], data : List[ast.Datum])(implicit libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : List[et.Expr] = {
     // Split out our imports from our expressions
     val (importData, exprData) = data.span {
       case ast.ProperList(ast.Symbol("import") :: _) => true
@@ -18,7 +18,8 @@ object ExtractProgram {
     val scope = new Scope(collection.mutable.Map(initialBindingList : _*), None)
 
     // Extract the program's body expressions
-    val bodyExtractor = new ModuleBodyExtractor(libraryLoader, frontendConfig)
+    val debugContext = debug.SourceContext.fromFilenameOpt(filenameOpt)
+    val bodyExtractor = new ModuleBodyExtractor(debugContext, libraryLoader, frontendConfig)
     val programExprs = bodyExtractor(exprData, scope)
 
     libraryLoader.libraryExprs ++ programExprs

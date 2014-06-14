@@ -29,7 +29,7 @@ private[frontend] object ExtractLibrary {
       List((includePath, nonInclude))
   }
 
-  def apply(datum : ast.Datum, expectedName : Option[Seq[LibraryNameComponent]] = None)(implicit libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : Library = datum match {
+  def apply(filenameOpt : Option[String], datum : ast.Datum, expectedName : Option[Seq[LibraryNameComponent]] = None)(implicit libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : Library = datum match {
     case ast.ProperList(ast.Symbol("define-library") :: libraryNameData :: decls) =>
       // Parse the library name
       val libraryName = ParseLibraryName(libraryNameData)
@@ -80,7 +80,9 @@ private[frontend] object ExtractLibrary {
             includePath=beginIncludePath
           )
 
-          val bodyExtractor = new ModuleBodyExtractor(libraryLoader, beginConfig)
+          val debugContext = debug.SourceContext.fromFilenameOpt(filenameOpt)
+          val bodyExtractor = new ModuleBodyExtractor(debugContext, libraryLoader, beginConfig)
+
           bodyExtractor(exprs, scope)
 
         case (_, other) =>

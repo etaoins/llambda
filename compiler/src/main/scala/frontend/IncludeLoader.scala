@@ -5,7 +5,7 @@ import scala.io.Source
 
 import llambda.compiler._
 import java.net.URL
-import java.io.FileNotFoundException
+import java.io.{File, FileNotFoundException}
 import annotation.tailrec
 
 import scala.collection.mutable.HashMap
@@ -13,23 +13,15 @@ import scala.collection.mutable.HashMap
 private[frontend] object IncludeLoader {
   // This is a hack to prevent us from constantly re-parsing the same file during unit tests. This was especially
   // becoming a problem as (scheme base) grew in size. This ends up halving the time the unit tests take
-  val parsedCache = new HashMap[URL, Option[List[ast.Datum]]]
+  val parsedCache = new HashMap[String, Option[List[ast.Datum]]]
 
   // Some() indicates the file was found while None indicates it wasn't
-  private def cachedLoadAndParse(includeUrl : URL) : Option[List[ast.Datum]] = 
+  private def cachedLoadAndParse(filename : String) : Option[List[ast.Datum]] = 
     parsedCache.synchronized {
-      parsedCache.getOrElseUpdate(includeUrl, {
+      parsedCache.getOrElseUpdate(filename, {
         try {
-          val stream = includeUrl.openStream()
-        
-          val libraryString = Source.fromInputStream(stream, "UTF-8").mkString
+          val libraryString = Source.fromFile(new File(filename), "UTF-8").mkString
 
-          // Find our filename
-          val filename = includeUrl.getProtocol match {
-            case "file" => includeUrl.getPath
-            case _ => includeUrl.toString
-          }
-        
           // Success
           Some(SchemeParser.parseStringAsData(libraryString, Some(filename)))
         }
@@ -43,7 +35,13 @@ private[frontend] object IncludeLoader {
     // Parse the include name relative to our root
     val includeUrl = new URL(rootDir, includeName)
 
-    cachedLoadAndParse(includeUrl) map { data =>
+    // Get our filename
+    val includeFilename = includeUrl.getProtocol match {
+      case "file" => includeUrl.getPath
+      case _ => includeUrl.toString
+    }
+
+    cachedLoadAndParse(includeFilename) map { data =>
       // Make a new IncludePath
       // This makes includes and libraries prefer loading other libraries from  their own root directory and allows
       // relative (include)s to work correctly
@@ -53,6 +51,7 @@ private[frontend] object IncludeLoader {
       )
 
       IncludeLoadResult(
+        filename=includeFilename,
         innerIncludePath=innerIncludePath,
         data=data
       )

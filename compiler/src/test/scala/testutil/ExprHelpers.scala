@@ -11,6 +11,7 @@ trait ExprHelpers extends FunSuite with OptionValues {
   // This corresponds to src/test/scheme in our source
   val resourceBaseUrl = getClass.getClassLoader.getResource("")
 
+  val debugContext = debug.UnknownContext
   val libraryLoader = new LibraryLoader(platform.Posix64LE)
   
   val includePath = frontend.IncludePath(
@@ -39,7 +40,7 @@ trait ExprHelpers extends FunSuite with OptionValues {
   def bodyFor(scheme : String)(scope : Scope) = {
     val data = SchemeParser.parseStringAsData(scheme)
 
-    val bodyExtractor = new frontend.ModuleBodyExtractor(libraryLoader, frontendConfig)
+    val bodyExtractor = new frontend.ModuleBodyExtractor(debugContext, libraryLoader, frontendConfig)
     bodyExtractor(data, scope)
   }
 

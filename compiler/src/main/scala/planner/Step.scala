@@ -1,7 +1,7 @@
 package io.llambda.compiler.planner.step
 import io.llambda
 
-import llambda.compiler.{ProcedureSignature, SourceLocated, RuntimeErrorMessage}
+import llambda.compiler.{ProcedureSignature, ContextLocated, RuntimeErrorMessage}
 import llambda.compiler.ast
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
@@ -44,7 +44,7 @@ object EntryPointTemp {
     new TempValue(false)
 }
 
-sealed trait Step extends SourceLocated {
+sealed trait Step extends ContextLocated {
   val inputValues : Set[TempValue]
   val outputValues : Set[TempValue]
 

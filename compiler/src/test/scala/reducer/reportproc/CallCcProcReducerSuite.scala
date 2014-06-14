@@ -38,7 +38,7 @@ class CallCcProcReducerSuite extends FunSuite with Inside with testutil.ExprHelp
           et.Cond(_,
             et.Return(et.Literal(ast.IntegerLiteral(5))),
             et.Return(et.Literal(ast.IntegerLiteral(6)))
-          )
+          ), _
         ), List()
       ) =>
         Unit

@@ -45,7 +45,8 @@ abstract class ExprParsingMode(targetPlatform : platform.TargetPlatform, name : 
   private val schemeBaseBindings = loader.loadSchemeBase(frontendConfig)
 
   val scope = new Scope(collection.mutable.Map(schemeBaseBindings.toSeq : _*))
-  val bodyExtractor = new frontend.ModuleBodyExtractor(loader, frontendConfig)
+  val debugContext = debug.UnknownContext
+  val bodyExtractor = new frontend.ModuleBodyExtractor(debugContext, loader, frontendConfig)
 
   def evalDatum(datum : ast.Datum) : String = datum match {
     case ast.ProperList(ast.Symbol("import") :: _) =>
