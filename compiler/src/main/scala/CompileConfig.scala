@@ -8,5 +8,6 @@ case class CompileConfig(
   targetPlatform : platform.TargetPlatform,
   optimizeLevel : Int = 0,
   emitLlvm : Boolean = false,
-  extraFeatureIdents : Set[String] = Set()
+  extraFeatureIdents : Set[String] = Set(),
+  genDebugInfo : Boolean = false
 )

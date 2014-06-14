@@ -9,7 +9,7 @@ class IrModuleBuilder extends Irable {
     def toIr = s"%${escapedName} = type ${irType.toIr}"
   }
 
-  private case class NamedMetadata(name : String, members : Seq[Metadata]) extends Irable {
+  private case class NamedMetadata(name : String, members : Seq[NumberedMetadata]) extends Irable {
     // Note the lack of types here - named metadata can only refer to other metadata
     def toIr =
       s"!${name} = !{" + members.map(_.toIr).mkString(", ") + "}" 
@@ -71,7 +71,7 @@ class IrModuleBuilder extends Irable {
     metadataDef.numberedMetadata
   }
 
-  def nameMetadata(name : String, members : Seq[Metadata]) {
+  def nameMetadata(name : String, members : Seq[NumberedMetadata]) {
     namedMetadata += NamedMetadata(name, members)
   }
 

@@ -10,7 +10,9 @@ object CompilerApp extends App {
     emitLlvm : Boolean = false,
     optimizeLevel : Int = 0,
     extraFeatureIdents : Set[String] = Set(),
-    targetPlatformOpt : Option[platform.TargetPlatform] = None)
+    genDebugInfo : Boolean = false,
+    targetPlatformOpt : Option[platform.TargetPlatform] = None
+  )
   
   private val stringToPlatform = Map(
     ("posix64be" -> platform.Posix64BE),
@@ -64,6 +66,10 @@ object CompilerApp extends App {
       c.copy(extraFeatureIdents=c.extraFeatureIdents + featureIdent)
     } text("additional feature identifier to provide for (cond-expand)")
 
+    opt[Unit]('g', "generate-debug-info") action { (_, c) =>
+      c.copy(genDebugInfo=true)
+    } text("generate debugging information")
+
     help("help")
   }
 
@@ -115,7 +121,8 @@ object CompilerApp extends App {
           targetPlatform=targetPlatform,
           emitLlvm=config.emitLlvm,
           optimizeLevel=config.optimizeLevel,
-          extraFeatureIdents=config.extraFeatureIdents
+          extraFeatureIdents=config.extraFeatureIdents,
+          genDebugInfo=config.genDebugInfo
         )
 
         Compiler.compileFile(input, output, compileConfig)

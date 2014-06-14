@@ -22,17 +22,26 @@ object GenProgram {
     ) mkString "\n"
   }
 
-  def apply(functions : Map[String, planner.PlannedFunction], targetPlatform : TargetPlatform, featureIdentifiers : Set[String]) : String = {
+  def apply(functions : Map[String, planner.PlannedFunction], compileConfig : CompileConfig, featureIdentifiers : Set[String], entryFilenameOpt : Option[String]) : String = {
     val module = new IrModuleBuilder
     module.metadataIndexSource.nextIndex = ct.CellType.nextMetadataIndex
 
-    module.identifyCompiler(FeatureIdentifiers.compilerVersionIdentifier + " (based on LLVM)")
+    // Identify ourselves in our generated IR
+    val compilerIdentifier = FeatureIdentifiers.compilerVersionIdentifier + " (based on LLVM)"
+    module.identifyCompiler(compilerIdentifier)
+
+    val debugInfoGeneratorOpt = if (compileConfig.genDebugInfo) {
+      Some(new DebugInfoGenerator(module, compileConfig, compilerIdentifier, entryFilenameOpt))
+    }
+    else {
+      None
+    }
 
     val plannedSymbols = functions.keySet
-    val typeGenerator = new TypeGenerator(module, targetPlatform)
+    val typeGenerator = new TypeGenerator(module, compileConfig.targetPlatform)
 
     // Build each program-supplied function
-    val functionGenerator = GenFunction(module, plannedSymbols, typeGenerator, targetPlatform)_ 
+    val functionGenerator = GenFunction(module, plannedSymbols, typeGenerator, compileConfig.targetPlatform)_ 
 
     for((nativeSymbol, plannedFunction) <- functions) {
       functionGenerator(nativeSymbol, plannedFunction)
@@ -76,6 +85,11 @@ object GenProgram {
 
     // Dump our type map
     typeGenerator.emitTypeMaps()
+
+    // Generate any final debug info
+    for(debugInfoGenerator <- debugInfoGeneratorOpt) {
+      debugInfoGenerator.finish()
+    }
 
     // Convert our IR to one big string
     preludeIr + "\n" + module.toIr + "\n"

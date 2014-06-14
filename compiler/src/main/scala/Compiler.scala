@@ -64,13 +64,26 @@ object Compiler {
   }
   
   def compileFile(input : File, output : File, config : CompileConfig) : Unit =
-    compileData(SchemeParser.parseFileAsData(input), output, config)
+    compileData(
+      data=SchemeParser.parseFileAsData(input),
+      output=output,
+      config=config,
+      entryFilenameOpt=Some(input.getPath)
+    )
   
   def compileString(inputString : String, output : File, config : CompileConfig) : Unit =
-    compileData(SchemeParser.parseStringAsData(inputString), output, config)
+    compileData(
+      data=SchemeParser.parseStringAsData(inputString),
+      output=output,
+      config=config
+    )
 
-  def compileData(data : List[ast.Datum], output : File, config : CompileConfig) : Unit = {
-    val irBytes = compileDataToIr(data, config).getBytes("UTF-8")
+  def compileData(data : List[ast.Datum], output : File, config : CompileConfig, entryFilenameOpt : Option[String] = None) : Unit = {
+    val irBytes = compileDataToIr(
+      data=data,
+      config=config,
+      entryFilenameOpt=entryFilenameOpt
+    ).getBytes("UTF-8")
 
     if (!config.emitLlvm) {
       if (!invokeLlvmCompiler(irBytes, output, config.optimizeLevel)) {
@@ -82,7 +95,7 @@ object Compiler {
     }
   }
 
-  def compileDataToIr(data : List[ast.Datum], config : CompileConfig) : String = {
+  def compileDataToIr(data : List[ast.Datum], config : CompileConfig, entryFilenameOpt : Option[String] = None) : String = {
     // Prepare to extract
     val loader = new frontend.LibraryLoader(config.targetPlatform)
     val featureIdentifiers = FeatureIdentifiers(config.targetPlatform, config.extraFeatureIdents) 
@@ -134,7 +147,12 @@ object Compiler {
     val allocatedFunctions = disposedFunctions.mapValues(planner.PlanCellAllocations(_))
 
     // Generate the LLVM IR
-    codegen.GenProgram(allocatedFunctions, config.targetPlatform, featureIdentifiers)
+    codegen.GenProgram(
+      functions=allocatedFunctions,
+      compileConfig=config,
+      featureIdentifiers=featureIdentifiers,
+      entryFilenameOpt=entryFilenameOpt
+    )
   }
 }
 
