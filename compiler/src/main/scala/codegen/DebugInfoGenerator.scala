@@ -81,13 +81,23 @@ class DebugInfoGenerator(module : llvmir.IrModuleBuilder, compileConfig : Compil
 
     module.nameMetadata("llvm.module.flags", moduleFlags)
 
+    // Make a list of subprograms
+    val allSubprograms = (sourceContextMetadata.flatMap {
+      case (_ : debug.SubprogramContext, Some(numberedMetadata)) =>
+        Some(numberedMetadata)
+
+      case _ =>
+        None
+    }).toList
+
     // Add the CU metadata
     val numberedCuMetadata = module.numberMetadataNode(
       llvmir.debug.CompileUnitMetadata(
         sourcePath=metadataForFilePath(entryFilenameOpt.getOrElse("(unnamed)")),
         dwarfLanguage=0x9393, // This is in the DWARF user range. It's ~'ll'
         producer=compilerIdentifier,
-        optimised=(compileConfig.optimizeLevel > 0)
+        optimised=(compileConfig.optimizeLevel > 0),
+        subprograms=allSubprograms
       )
     )
 
