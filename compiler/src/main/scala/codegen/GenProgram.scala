@@ -31,7 +31,7 @@ object GenProgram {
     module.identifyCompiler(compilerIdentifier)
 
     val debugInfoGeneratorOpt = if (compileConfig.genDebugInfo) {
-      Some(new DebugInfoGenerator(module, compileConfig, compilerIdentifier, entryFilenameOpt))
+      Some(new DebugInfoGenerator(module, functions, compileConfig, compilerIdentifier, entryFilenameOpt))
     }
     else {
       None

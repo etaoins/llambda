@@ -4,16 +4,28 @@ import io.llambda
 import java.io.File
 
 import llambda.compiler.debug
+import llambda.compiler.planner
 import llambda.compiler.{ContextLocated, CompileConfig}
 import llambda.llvmir
 
-class DebugInfoGenerator(module : llvmir.IrModuleBuilder, compileConfig : CompileConfig, compilerIdentifier : String, entryFilenameOpt : Option[String]) {
+class DebugInfoGenerator(module : llvmir.IrModuleBuilder, functions : Map[String, planner.PlannedFunction], compileConfig : CompileConfig, compilerIdentifier : String, entryFilenameOpt : Option[String]) {
   private val definedFilePathMetadata = new collection.mutable.HashMap[String, llvmir.NumberedMetadata]
   private val sourceContextMetadata = new collection.mutable.HashMap[debug.SourceContext, Option[llvmir.NumberedMetadata]]
   private lazy val subroutineTypeMetadata : llvmir.NumberedMetadata = {
     val subroutineTypeNode = llvmir.debug.SubroutineTypeMetadata
     module.numberMetadataNode(subroutineTypeNode)
   }
+
+  // Build a map of SubprogramContexts to their LLVM values
+  val subprogramToLlvmFunction = (functions.flatMap { case (symbol, plannedFunction) =>
+    // Find the IR type of the procedure
+    val irType = ProcedureSignatureToIr(plannedFunction.signature).irType
+
+    // Turn it in to a global variable
+    val globalVariable = llvmir.GlobalVariable(symbol, llvmir.PointerType(irType))
+
+    plannedFunction.debugContextOpt.map(_ -> globalVariable)
+  }) : Map[debug.SubprogramContext, llvmir.GlobalVariable]
 
   def metadataForFilePath(filePath : String) : llvmir.NumberedMetadata =
     // Re-use an existing metadata node if we've already defined one
@@ -48,6 +60,7 @@ class DebugInfoGenerator(module : llvmir.IrModuleBuilder, compileConfig : Compil
               compileUnitLocal=true,
               definedInCompileUnit=true,
               optimised=(compileConfig.optimizeLevel > 0),
+              llvmFunctionOpt=subprogramToLlvmFunction.get(subprogram),
               scopeStartLine=subprogram.startLine
             )
         
