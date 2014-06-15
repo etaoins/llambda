@@ -5,7 +5,7 @@ import java.io.File
 
 import llambda.compiler.debug
 import llambda.compiler.planner
-import llambda.compiler.{ContextLocated, CompileConfig}
+import llambda.compiler.{ContextLocated, InlinePathEntry, SourceLocation, CompileConfig}
 import llambda.llvmir
 
 class DebugInfoGenerator(module : llvmir.IrModuleBuilder, functions : Map[String, planner.PlannedFunction], compileConfig : CompileConfig, compilerIdentifier : String, entryFilenameOpt : Option[String]) {
@@ -72,22 +72,41 @@ class DebugInfoGenerator(module : llvmir.IrModuleBuilder, functions : Map[String
           None
       }
     })
-  
-  def dbgMetadataForContextLocated(located : ContextLocated) : Option[llvmir.Metadata] = {
-    val contextMetadataOpt = 
-      for(location <- located.locationOpt;
-          sourceContext <- located.contextOpt;
-          contextMetadata <- contextMetadataForSourceContext(sourceContext))
-      yield llvmir.debug.LocationMetadata(location.line, location.column, contextMetadata, None)
 
-    contextMetadataOpt map { contextMetadata =>
+  private def dbgMetadataWithInlinePath(locationOpt : Option[SourceLocation], contextOpt : Option[debug.SourceContext], inlinePath : List[InlinePathEntry]) : Option[llvmir.Metadata] = {
+    val originalScopeOpt = inlinePath match {
+      case pathEntry :: tail =>
+        // Recursively build our inline path metadata
+        dbgMetadataWithInlinePath(pathEntry.locationOpt, pathEntry.contextOpt, tail)
+
+      case _ =>
+        // No more inline path
+        None
+    }
+
+    val metadataNodeOpt = 
+      for(location <- locationOpt;
+          sourceContext <- contextOpt;
+          metadataNode <- contextMetadataForSourceContext(sourceContext))
+      yield llvmir.debug.LocationMetadata(
+        line=location.line,
+        column=location.column,
+        scope=metadataNode,
+        originalScopeOpt=originalScopeOpt
+      )
+
+    metadataNodeOpt map { metadataNode =>
       // Cache the numbered metadata node for this
       // This is especially helpful to reduce the duplication during inlining where many expressions can be inlined
       // from the same location
-      locationMetadata.getOrElseUpdate(contextMetadata, {
-        module.numberMetadataNode(contextMetadata)
+      locationMetadata.getOrElseUpdate(metadataNode, {
+        module.numberMetadataNode(metadataNode)
       })
     }
+  }
+  
+  private def dbgMetadataForContextLocated(located : ContextLocated) : Option[llvmir.Metadata] = {
+    dbgMetadataWithInlinePath(located.locationOpt, located.contextOpt, located.inlinePath)
   }
 
   def metadataForContextLocated(located : ContextLocated) : Map[String, llvmir.Metadata] = {

@@ -231,11 +231,10 @@ private[frontend] object ExpandMacro {
         matchedData.variableData.get(syntaxVariable) match {
           case None =>
             // Pass the pattern symbol through literally
-            symbol.asExpandedFrom(expandedFrom)
+            symbol
 
           case Some(replacement) =>
             // Replace the variable with the matched data
-            // This doesn't need to be as as "expanded from" because it's already located at the syntax application
             replacement
         }
       
@@ -249,7 +248,6 @@ private[frontend] object ExpandMacro {
         replacements.foldRight(expandedCdr) { (car, cdr) =>
           sst.ScopedPair(car, cdr)
             .assignLocationFrom(template) 
-            .asExpandedFrom(expandedFrom)
         }
 
       case sst.ScopedPair(car, cdr) =>
@@ -258,7 +256,6 @@ private[frontend] object ExpandMacro {
 
         sst.ScopedPair(expandedCar, expandedCdr)
           .assignLocationFrom(template)
-          .asExpandedFrom(expandedFrom)
 
       case sst.ScopedVectorLiteral(elements) =>
         val expandedElements = expandVectorElements(elements.toList, patternVariables, matchedData)
@@ -267,7 +264,7 @@ private[frontend] object ExpandMacro {
 
       case leaf : sst.NonSymbolLeaf =>
         // There are no symbols here - don't recurse and don't consume any of the pattern
-        leaf.asExpandedFrom(expandedFrom)
+        leaf
     }
   }
 

@@ -6,8 +6,7 @@ import scala.annotation.tailrec
 case class SourceLocation(
   filenameOpt : Option[String],
   sourceString : String,
-  offset : Int,
-  expandedFromOpt : Option[SourceLocated] = None
+  offset : Int
 ) {
   private lazy val lineColumn : (Int, Int) = {
     @tailrec
@@ -33,6 +32,21 @@ case class SourceLocation(
   
   def column =
     lineColumn._2
+  
+  private def sourceSnippet : String = {
+    val sourceLines = sourceString.split('\n')
+    val lineOfInterest = sourceLines(line - 1)
+
+    // Happy ASCII arrow
+    val columnArrow = (" " * (column - 1)) + "^"
+
+    lineOfInterest + "\n" + columnArrow
+  }
+
+  override def toString = 
+    filenameOpt.getOrElse("(unknown)") + ":" +
+      line + ":\n" +
+      sourceSnippet
 }
 
 abstract trait SourceLocated {
@@ -53,41 +67,28 @@ abstract trait SourceLocated {
     this
   }
 
-  private def sourceSnippet(location : SourceLocation) : String = {
-    val sourceLines = location.sourceString.split('\n')
-    val lineOfInterest = sourceLines(location.line - 1)
-
-    // Happy ASCII arrow
-    val columnArrow = (" " * (location.column - 1)) + "^"
-
-    lineOfInterest + "\n" + columnArrow
-  }
-
   def locationString : String = {
-    locationOpt match {
-      case Some(location) =>
-        val selfString = location.filenameOpt.getOrElse("(unknown)") + ":" +
-          location.line + ":\n" +
-          sourceSnippet(location)
-
-        location.expandedFromOpt match {
-          case Some(expandedFrom) =>
-            selfString + "\nExpanded from:\n" + expandedFrom.locationString
-
-          case None =>
-            selfString
-        }
-
-      case None =>
-        ""
-    }
+    locationOpt.map(_.toString).getOrElse("")
   }
 }
 
 object NoSourceLocation extends SourceLocated
 
+object InlineReason {
+  sealed abstract class InlineReason
+  case object MacroExpansion extends InlineReason 
+  case object LambdaInline extends InlineReason
+}
+
+case class InlinePathEntry(
+  contextOpt : Option[debug.SourceContext],
+  locationOpt : Option[SourceLocation],
+  inlineReason : InlineReason.InlineReason
+)
+
 abstract trait ContextLocated extends SourceLocated {
   var contextOpt : Option[debug.SourceContext] = None
+  var inlinePath : List[InlinePathEntry] = Nil
   
   override def assignLocationTo(other : SourceLocated) {
     super.assignLocationTo(other)
@@ -96,6 +97,7 @@ abstract trait ContextLocated extends SourceLocated {
       case otherSpLocated : ContextLocated =>
         if (this.contextOpt.isDefined) {
           otherSpLocated.contextOpt = this.contextOpt
+          otherSpLocated.inlinePath = this.inlinePath
         }
 
       case _ =>
@@ -116,12 +118,25 @@ abstract trait ContextLocated extends SourceLocated {
       case otherSpLocated : ContextLocated =>
         if (otherSpLocated.contextOpt.isDefined) {
           this.contextOpt = otherSpLocated.contextOpt
+          this.inlinePath = otherSpLocated.inlinePath
         }
 
       case _ =>
     }
 
     this
+  }
+  
+  override def locationString : String = {
+    val locationPathParts = super.locationString :: inlinePath.collect {
+      case InlinePathEntry(_, Some(location), InlineReason.MacroExpansion) =>
+        "Expanded from:\n" + location.toString
+      
+      case InlinePathEntry(_, Some(location), InlineReason.LambdaInline) =>
+        "Inlined from:\n" + location.toString
+    }
+
+    locationPathParts.mkString("\n")
   }
 }
 

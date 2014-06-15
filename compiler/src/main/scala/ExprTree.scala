@@ -8,9 +8,27 @@ sealed abstract trait Expr extends ContextLocated {
   val subexprs : List[Expr]
 
   def map(f : Expr => Expr) : Expr
-
+  
   def toSequence : List[Expr] = {
     List(this)
+  }
+  
+  /** Version of map() that's guaranteed to clone the expr
+    *
+    * This is needed to support asInlinedFrom
+    */
+  protected def cloningMap(f : Expr => Expr) : Expr =
+    map(f)
+
+  /** Creates a copy of the expression tree annotated with the passed inline path entry
+    *
+    * This is used to generate accurate debugging information for macros and inlined lambdas
+    */
+  def asInlined(pathEntry : InlinePathEntry) : et.Expr = {
+    val recursedExpr = this.cloningMap(_.asInlined(pathEntry))
+
+    recursedExpr.inlinePath = recursedExpr.inlinePath :+ pathEntry
+    recursedExpr
   }
 }
 
@@ -56,6 +74,9 @@ case class VarRef(variable : StorageLocation) extends NonLiteralExpr {
   val subexprs = Nil
 
   def map(f : Expr => Expr) : VarRef = this
+
+  override def cloningMap(f : Expr => Expr) : Expr =
+    VarRef(variable).assignLocationFrom(this)
 }
 
 case class MutateVar(variable : StorageLocation, value : Expr) extends NonLiteralExpr {
@@ -69,6 +90,9 @@ case class Literal(value : ast.Datum) extends Expr {
   val subexprs = Nil
 
   def map(f : Expr => Expr) : Literal = this
+  
+  override def cloningMap(f : Expr => Expr) : Expr =
+    Literal(value).assignLocationFrom(this)
 
   override def toString = "'" + value.toString
 }
@@ -114,7 +138,11 @@ case class NativeFunction(
   nativeSymbol : String
 ) extends NonLiteralExpr {
   val subexprs = Nil
+
   def map(f : Expr => Expr) : NativeFunction = this
+
+  override def cloningMap(f : Expr => Expr) : Expr =
+    NativeFunction(signature, nativeSymbol).assignLocationFrom(this)
 }
 
 sealed abstract class RecordTypeProcedure extends NonLiteralExpr {
@@ -124,10 +152,25 @@ sealed abstract class RecordTypeProcedure extends NonLiteralExpr {
   def map(f : Expr => Expr) : this.type = this
 }
 
-case class RecordTypeConstructor(recordType : vt.RecordType, initializedFields : List[vt.RecordField]) extends RecordTypeProcedure
-case class RecordTypePredicate(recordType : vt.RecordType) extends RecordTypeProcedure
-case class RecordTypeAccessor(recordType : vt.RecordType, field : vt.RecordField) extends RecordTypeProcedure
-case class RecordTypeMutator(recordType : vt.RecordType, field : vt.RecordField) extends RecordTypeProcedure
+case class RecordTypeConstructor(recordType : vt.RecordType, initializedFields : List[vt.RecordField]) extends RecordTypeProcedure {
+  override def cloningMap(f : Expr => Expr) : Expr =
+    RecordTypeConstructor(recordType, initializedFields).assignLocationFrom(this)
+}
+
+case class RecordTypePredicate(recordType : vt.RecordType) extends RecordTypeProcedure {
+  override def cloningMap(f : Expr => Expr) : Expr =
+    RecordTypePredicate(recordType).assignLocationFrom(this)
+}
+
+case class RecordTypeAccessor(recordType : vt.RecordType, field : vt.RecordField) extends RecordTypeProcedure {
+  override def cloningMap(f : Expr => Expr) : Expr =
+    RecordTypeAccessor(recordType, field).assignLocationFrom(this)
+}
+
+case class RecordTypeMutator(recordType : vt.RecordType, field : vt.RecordField) extends RecordTypeProcedure {
+  override def cloningMap(f : Expr => Expr) : Expr =
+    RecordTypeMutator(recordType, field).assignLocationFrom(this)
+}
 
 case class Cast(valueExpr : Expr, targetType : vt.ValueType) extends NonLiteralExpr {
   val subexprs = valueExpr :: Nil

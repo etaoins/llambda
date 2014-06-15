@@ -19,7 +19,7 @@ object ApplyProcReducer extends ReportProcReducer {
             None
           }
           else {
-            ReduceApplication(appliedExpr, reducedOperands) orElse {
+            ReduceApplication(appliedVar, appliedExpr, reducedOperands) orElse {
               // We can at least turn this to a normal application
               Some(et.Apply(appliedExpr, reducedOperands))
             }

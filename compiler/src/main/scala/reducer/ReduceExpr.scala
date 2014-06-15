@@ -32,7 +32,7 @@ private[reducer] object ReduceExpr {
     case et.Apply(appliedExpr, operands) =>
       val reducedOperands = operands.map(ReduceExpr(_))
 
-      ReduceApplication(appliedExpr, reducedOperands) getOrElse {
+      ReduceApplication(expr, appliedExpr, reducedOperands) getOrElse {
         // We declined reducing this application
         et.Apply(apply(appliedExpr), reducedOperands)  
       }

@@ -70,6 +70,7 @@ private[reducer] object ReduceApplication {
 
   /** Reduces a lambda application via optional inlining 
     *
+    * @param  located          Location of the application. This is used to generate accurate debug info.
     * @param  lambdaExpr       Lambda expression of the procedure being applied
     * @param  reducedOperands  Reduced expressions of the operands of the application in application order
     * @param  forceInline      If true inlining will always be performed if possible. This is intended to force
@@ -77,7 +78,7 @@ private[reducer] object ReduceApplication {
     * @return Defined option for the expression to replace the application with or None if inlining should not be 
     *         performed
     */
-  private def reduceLambdaApplication(lambdaExpr : et.Lambda, reducedOperands : List[et.Expr], forceInline : Boolean)(reduceConfig : ReduceConfig) : Option[et.Expr] = {
+  private def reduceLambdaApplication(located : ContextLocated, lambdaExpr : et.Lambda, reducedOperands : List[et.Expr], forceInline : Boolean)(reduceConfig : ReduceConfig) : Option[et.Expr] = {
     // Make sure we have the right arity
     if (lambdaExpr.restArg.isDefined) {
       if (reducedOperands.length < lambdaExpr.fixedArgs.length) {
@@ -160,6 +161,14 @@ private[reducer] object ReduceApplication {
     }
 
     if (forceInline || shouldInlineExpr(reducedBodyExpr)) {
+      // Annotate ourselves as inlined for debug info purposes
+      val inlinePathEntry = InlinePathEntry(
+        locationOpt=located.locationOpt,
+        contextOpt=located.contextOpt,
+        inlineReason=InlineReason.LambdaInline
+      )
+      val inlinedBodyExpr = reducedBodyExpr.asInlined(inlinePathEntry)
+
       // Figure out which bindings are still required
       val usedBindings = newBindings filter { case (argLoc, operandExpr) =>
         bodyUsedVars.contains(argLoc) || ExprHasSideEffects(operandExpr)
@@ -167,11 +176,11 @@ private[reducer] object ReduceApplication {
 
       Some(if (usedBindings.isEmpty) {
         // No bindings, just the return the reduced body
-        reducedBodyExpr
+        inlinedBodyExpr
       }
       else {
         // Wrap in a binding expression
-        et.InternalDefinition(usedBindings, reducedBodyExpr)
+        et.InternalDefinition(usedBindings, inlinedBodyExpr)
       })
     }
     else {
@@ -211,13 +220,14 @@ private[reducer] object ReduceApplication {
 
   /** Reduces a procedure application via optional inlining 
     *
+    * @param  located            Location of the application. This is used to generate accurate debug info.
     * @param  appliedExpr        Expr being applied
     * @param  reducedOperands    Reduced expressions of the operands of the application in application order
     * @param  ignoreReportProcs  Set of report procedures to treat as normal values. This is used internally to retry
     *                            reduction after failing to do report procedure specific reduction.
     * @return Expr to replace the original application with or None to use the original expression
     */
-  def apply(appliedExpr : et.Expr, reducedOperands : List[et.Expr], ignoreReportProcs : Set[ReportProcedure] = Set())(implicit reduceConfig : ReduceConfig) : Option[et.Expr] = {
+  def apply(located : ContextLocated, appliedExpr : et.Expr, reducedOperands : List[et.Expr], ignoreReportProcs : Set[ReportProcedure] = Set())(implicit reduceConfig : ReduceConfig) : Option[et.Expr] = {
     resolveAppliedExpr(appliedExpr, ignoreReportProcs) flatMap {
       case ResolvedReportProcedure(appliedVar, reportProc) =>
         // Run this through the report procedure reducers
@@ -229,10 +239,10 @@ private[reducer] object ReduceApplication {
         }
 
         // Couldn't reduce as a report procedure; retry as a normal expression
-        apply(appliedExpr, reducedOperands, ignoreReportProcs + reportProc)
+        apply(located, appliedExpr, reducedOperands, ignoreReportProcs + reportProc)
 
       case ResolvedLambda(lambdaExpr, inlineDefinition) =>
-        reduceLambdaApplication(lambdaExpr, reducedOperands, inlineDefinition)(reduceConfig)
+        reduceLambdaApplication(located, lambdaExpr, reducedOperands, inlineDefinition)(reduceConfig)
     }
   }
 }

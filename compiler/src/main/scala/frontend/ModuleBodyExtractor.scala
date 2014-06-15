@@ -312,7 +312,7 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
         }))
 
       case (PrimitiveExprs.DefineSyntax, _) =>
-        Some(ParseSyntaxDefine(appliedSymbol, operands))
+        Some(ParseSyntaxDefine(appliedSymbol, operands, debugContext))
 
       case (PrimitiveExprs.DefineRecordType, _) =>
         Some(ParseRecordTypeDefine(appliedSymbol, operands))
@@ -391,8 +391,22 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
     case sst.ScopedPair(appliedSymbol : sst.ScopedSymbol, cdr) =>
       appliedSymbol.resolve match {
         case syntax : BoundSyntax =>
-          // This is a macro - expand it and call extractGenericExpr again
-          extractGenericExpr(ExpandMacro(syntax, cdr, datum), atOutermostLevel)
+          // This is a macro - expand it
+          val expandedDatum = ExpandMacro(syntax, cdr, datum)
+          
+          // Get the expanded expression 
+          val extractor = new ModuleBodyExtractor(syntax.debugContext, libraryLoader, frontendConfig)
+          val expandedExpr = extractor.extractGenericExpr(expandedDatum, atOutermostLevel)
+
+          // Mark our expansion in the inline path
+          // This is used for debug info and error reporting
+          val inlinePathEntry = InlinePathEntry(
+            locationOpt=appliedSymbol.locationOpt,
+            contextOpt=Some(debugContext),
+            inlineReason=InlineReason.MacroExpansion
+          )
+
+          expandedExpr.asInlined(inlinePathEntry)
         
         case otherBoundValue =>
           // Make sure the operands a proper list

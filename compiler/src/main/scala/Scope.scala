@@ -62,7 +62,8 @@ case class Transformer(pattern : sst.ScopedDatum, patternVariables : PatternVari
 case class BoundSyntax(
     ellipsisIdentifier : String,
     literals : Set[SyntaxVariable],
-    transformers : List[Transformer]
+    transformers : List[Transformer],
+    debugContext : debug.SubprogramContext
 ) extends BoundValue
 
 object SyntaxVariable {
