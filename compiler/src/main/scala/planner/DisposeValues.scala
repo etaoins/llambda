@@ -62,8 +62,9 @@ object DisposeValues {
       }
 
       val newUsedValues = invoke.inputValues ++ usedValues
+      val newInvoke = ps.Invoke(resultOption, signature, entryPoint, newArguments).assignLocationFrom(invoke)
 
-      val newAcc = ps.Invoke(resultOption, signature, entryPoint, newArguments) :: (disposeResultOption.toList ++ acc)
+      val newAcc = newInvoke :: (disposeResultOption.toList ++ acc)
       discardUnusedValues(branchInputValues, reverseTail, newUsedValues, newAcc) 
 
     case nonBranching :: reverseTail =>
