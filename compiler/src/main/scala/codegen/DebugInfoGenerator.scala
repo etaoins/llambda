@@ -11,6 +11,8 @@ import llambda.llvmir
 class DebugInfoGenerator(module : llvmir.IrModuleBuilder, functions : Map[String, planner.PlannedFunction], compileConfig : CompileConfig, compilerIdentifier : String, entryFilenameOpt : Option[String]) {
   private val definedFilePathMetadata = new collection.mutable.HashMap[String, llvmir.NumberedMetadata]
   private val sourceContextMetadata = new collection.mutable.HashMap[debug.SourceContext, Option[llvmir.NumberedMetadata]]
+  private val locationMetadata = new collection.mutable.HashMap[llvmir.debug.LocationMetadata, llvmir.NumberedMetadata]
+
   private lazy val subroutineTypeMetadata : llvmir.NumberedMetadata = {
     val subroutineTypeNode = llvmir.debug.SubroutineTypeMetadata
     module.numberMetadataNode(subroutineTypeNode)
@@ -70,15 +72,28 @@ class DebugInfoGenerator(module : llvmir.IrModuleBuilder, functions : Map[String
           None
       }
     })
-
-  def metadataForContextLocated(located : ContextLocated) = {
-    val locationMetadataOpt = 
+  
+  def dbgMetadataForContextLocated(located : ContextLocated) : Option[llvmir.Metadata] = {
+    val contextMetadataOpt = 
       for(location <- located.locationOpt;
           sourceContext <- located.contextOpt;
           contextMetadata <- contextMetadataForSourceContext(sourceContext))
       yield llvmir.debug.LocationMetadata(location.line, location.column, contextMetadata, None)
 
-    Map(locationMetadataOpt.toSeq.map("dbg" -> _) : _*)
+    contextMetadataOpt map { contextMetadata =>
+      // Cache the numbered metadata node for this
+      // This is especially helpful to reduce the duplication during inlining where many expressions can be inlined
+      // from the same location
+      locationMetadata.getOrElseUpdate(contextMetadata, {
+        module.numberMetadataNode(contextMetadata)
+      })
+    }
+  }
+
+  def metadataForContextLocated(located : ContextLocated) : Map[String, llvmir.Metadata] = {
+    val contextMetdataOpt = dbgMetadataForContextLocated(located)
+
+    Map(contextMetdataOpt.toSeq.map("dbg" -> _) : _*)
   }
 
   def finish() {
