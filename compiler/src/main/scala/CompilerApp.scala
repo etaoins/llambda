@@ -11,7 +11,8 @@ object CompilerApp extends App {
     optimizeLevel : Int = 0,
     extraFeatureIdents : Set[String] = Set(),
     genDebugInfo : Boolean = false,
-    targetPlatformOpt : Option[platform.TargetPlatform] = None
+    targetPlatformOpt : Option[platform.TargetPlatform] = None,
+    saveTempObj : Boolean = false
   )
   
   private val stringToPlatform = Map(
@@ -70,7 +71,18 @@ object CompilerApp extends App {
       c.copy(genDebugInfo=true)
     } text("generate debugging information")
 
+    opt[Unit]("save-temp-obj") action { (_, c) =>
+      c.copy(saveTempObj=true)
+    } text ("save intermediate .o file during compilation")
+
     help("help")
+
+    checkConfig { c =>
+      if (c.emitLlvm && c.saveTempObj)
+        failure("--save-temp-obj does not make sense with --emit-llvm; no objects will be created")
+      else
+        success
+    }
   }
 
   parser.parse(args, Config()) map { config =>
@@ -122,7 +134,8 @@ object CompilerApp extends App {
           emitLlvm=config.emitLlvm,
           optimizeLevel=config.optimizeLevel,
           extraFeatureIdents=config.extraFeatureIdents,
-          genDebugInfo=config.genDebugInfo
+          genDebugInfo=config.genDebugInfo,
+          saveTempObj=config.saveTempObj
         )
 
         Compiler.compileFile(input, output, compileConfig)

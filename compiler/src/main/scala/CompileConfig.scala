@@ -9,5 +9,6 @@ case class CompileConfig(
   optimizeLevel : Int = 0,
   emitLlvm : Boolean = false,
   extraFeatureIdents : Set[String] = Set(),
-  genDebugInfo : Boolean = false
+  genDebugInfo : Boolean = false,
+  saveTempObj : Boolean = false
 )

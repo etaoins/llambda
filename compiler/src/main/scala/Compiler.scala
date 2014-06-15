@@ -9,6 +9,8 @@ import scala.sys.process._
 class ExternalCompilerException extends Exception
 
 object Compiler {
+  private val runtimeObjPath = "runtime/liblliby.a"
+
   private val conniverPasses = List[conniver.Conniver](
     conniver.MergeIdenticalSteps
   )
@@ -27,14 +29,18 @@ object Compiler {
       }
     }
 
-  private def invokeLlvmCompiler(irBytes : Array[Byte], output : File, optimizeLevel : Int) : Boolean = {
+  /** Invokes the LLVM compiler pipeline without creating intermediate files
+    *
+    * This is the most efficient way to invoke LLVM if intermediates aren't required
+    */
+  private def invokeDirectLlvmCompiler(irBytes : Array[Byte], output : File, optimizeLevel : Int) : Boolean = {
     val optimizeArg = s"-O${optimizeLevel}"
 
     val llcCmd = List("llc", optimizeArg)
     val clangCmd = List("clang++", optimizeArg) ++
       platformClangFlags ++
       List("-x", "assembler", "-") ++ 
-      List("-x", "none", "runtime/liblliby.a") ++
+      List("-x", "none", runtimeObjPath) ++
       List("-o", output.getAbsolutePath)
 
     val compilePipeline = if (optimizeLevel > 1) { 
@@ -55,6 +61,49 @@ object Compiler {
     val runningProcess = compilePipeline.run(new ProcessIO(dumpIrToStdin, _.close, BasicIO.toStdErr))
 
     runningProcess.exitValue() == 0 
+  }
+  
+  /** Invokes the LLVM compiler pipeline while saving the intermediate object file
+    *
+    * This requires two compilation stages - use invokeDirectLlvmCompiler where possible
+    */
+  private def invokeTempSavingLlvmCompiler(irBytes : Array[Byte], output : File, optimizeLevel : Int) : Boolean = {
+    val objOutputPath = output.getAbsolutePath + ".o"
+    val optimizeArg = s"-O${optimizeLevel}"
+
+    val llcCmd = List("llc", optimizeArg) ++
+      List("-filetype=obj") ++
+      List("-o", objOutputPath)
+
+    // Build a pipeline for our object file
+    val objFilePipeline = (if (optimizeLevel > 1) { 
+      val optCmd = List("opt", optimizeArg)
+      optCmd #| llcCmd
+    }
+    else {
+      llcCmd
+    }) : ProcessBuilder
+    
+    def dumpIrToStdin(stdinStream : OutputStream) {
+      stdinStream.write(irBytes)
+      stdinStream.close()
+    }
+
+    val runningObjFileProc = objFilePipeline.run(new ProcessIO(dumpIrToStdin, _.close, BasicIO.toStdErr))
+
+    if (runningObjFileProc.exitValue() != 0) {
+      // Failed!
+      return false
+    }
+    
+    val clangCmd = List("clang++", optimizeArg) ++
+      platformClangFlags ++
+      List(objOutputPath) ++
+      List(runtimeObjPath) ++
+      List("-o", output.getAbsolutePath)
+
+
+    clangCmd.run().exitValue() == 0
   }
 
   def invokeFileSinkCompiler(irBytes : Array[Byte], output : File) { 
@@ -86,7 +135,14 @@ object Compiler {
     ).getBytes("UTF-8")
 
     if (!config.emitLlvm) {
-      if (!invokeLlvmCompiler(irBytes, output, config.optimizeLevel)) {
+      val result = if (config.saveTempObj) {
+        invokeTempSavingLlvmCompiler(irBytes, output, config.optimizeLevel)
+      }
+      else {
+        invokeDirectLlvmCompiler(irBytes, output, config.optimizeLevel)
+      }
+
+      if (!result) {
         throw new ExternalCompilerException
       }
     }
