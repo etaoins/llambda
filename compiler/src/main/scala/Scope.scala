@@ -20,13 +20,30 @@ class ReportProcedure(val reportName : String) extends StorageLocation(reportNam
 abstract class PrimitiveExpr extends BoundValue
 
 // These are what (define-syntax) creates
+
+/** Represents a placeholder in a macro pattern */
 sealed abstract class SyntaxVariable extends SourceLocated
+
+/** Represents a placeholder in a macro pattern that resolved to a bound symbol
+  *
+  * This will only match other symbols bound to the same value regardless of the symbol's name
+  */
 case class BoundSyntaxVariable(boundValue : BoundValue) extends SyntaxVariable
+
+/** Represents a placeholder in a macro pattern that resolved to an unbound symbol
+  *
+  * This will only match other unbound symbols with the same name
+  */
 case class UnboundSyntaxVariable(identifier : String) extends SyntaxVariable
 
+/** Encapsulates information about pattern variables in a transformer
+  *
+  * This is kept only to prevent repeatedly re-parsing the pattern. It does not contain any information that could not
+  * be regenerated from the Transformer alone
+  */
 case class PatternVariables(
-  variables : List[SyntaxVariable] = Nil,
-  subpatterns : Vector[PatternVariables] = Vector()
+    variables : List[SyntaxVariable] = Nil,
+    subpatterns : Vector[PatternVariables] = Vector()
 ) {
   def ++(other : PatternVariables) : PatternVariables = 
     PatternVariables(
@@ -35,8 +52,18 @@ case class PatternVariables(
     )
 }
 
+/** Represents a macro transformer
+  *
+  * Transformers are a pattern and an  associated expansion template. A macro is made of one or more transformers that
+  * are sequentially tried until a matching transformer is found.
+  */
 case class Transformer(pattern : sst.ScopedDatum, patternVariables : PatternVariables, template : sst.ScopedDatum)
-case class BoundSyntax(ellipsisIdentifier : String, literals : Set[SyntaxVariable], transformers : List[Transformer])  extends BoundValue
+
+case class BoundSyntax(
+    ellipsisIdentifier : String,
+    literals : Set[SyntaxVariable],
+    transformers : List[Transformer]
+) extends BoundValue
 
 object SyntaxVariable {
   def fromSymbol(scopedSymbol : sst.ScopedSymbol) : SyntaxVariable = {
