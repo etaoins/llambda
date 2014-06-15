@@ -12,7 +12,7 @@ import llambda.compiler.InternalCompilerErrorException
 trait IntermediateValueHelpers {
   /** Helper for signalling impossible conversions */
   protected def impossibleConversion(message : String)(implicit plan : PlanWriter) = { 
-    throw new ImpossibleTypeConversionException(plan.activeSourceLocated, message)
+    throw new ImpossibleTypeConversionException(plan.activeContextLocated, message)
   }
   
   /** Provides a human-readable description of the value's type */

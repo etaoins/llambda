@@ -336,7 +336,7 @@ private[planner] object PlanLambda {
     val lastExprOpt = lastNonStructuralExpr(body)
 
     // Return from the function
-    procPlan.withSourceLocationOpt(lastExprOpt) {
+    procPlan.withContextLocationOpt(lastExprOpt) {
       procPlan.steps += ps.Return(procSignature.returnType map { returnType =>
         planResult.value.toTempValue(returnType)(procPlan, worldPtr)
       })

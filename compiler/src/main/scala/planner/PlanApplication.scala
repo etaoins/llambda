@@ -3,7 +3,7 @@ import io.llambda
 
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
-import llambda.compiler.SourceLocated
+import llambda.compiler.ContextLocated
 import llambda.compiler.IncompatibleArityException
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
@@ -38,7 +38,7 @@ object PlanApplication {
     }
   }
 
-  def apply(invokableProc : InvokableProcedure, operands : List[(SourceLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
+  def apply(invokableProc : InvokableProcedure, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
     val entryPointTemp = invokableProc.planEntryPoint()
     val signature = invokableProc.signature
 
@@ -46,7 +46,7 @@ object PlanApplication {
     if (signature.hasRestArg) {
       if (operands.length < signature.fixedArgs.length) {
         throw new IncompatibleArityException(
-          located=plan.activeSourceLocated,
+          located=plan.activeContextLocated,
           message=s"Called procedure with ${operands.length} arguments; requires at least ${signature.fixedArgs.length} arguments"
         )
       }
@@ -54,7 +54,7 @@ object PlanApplication {
     else {
       if (signature.fixedArgs.length != operands.length) {
         throw new IncompatibleArityException(
-          located=plan.activeSourceLocated,
+          located=plan.activeContextLocated,
           message=s"Called procedure with ${operands.length} arguments; requires exactly ${signature.fixedArgs.length} arguments"
         )
       }
@@ -75,8 +75,8 @@ object PlanApplication {
     }
 
     // Convert all the operands
-    val fixedTemps = operands.zip(signature.fixedArgs) map { case ((sourceLocated, operand), nativeType) =>
-      plan.withSourceLocation(sourceLocated) {
+    val fixedTemps = operands.zip(signature.fixedArgs) map { case ((contextLocated, operand), nativeType) =>
+      plan.withContextLocation(contextLocated) {
         operand.toTempValue(nativeType)
       }
     }

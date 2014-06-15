@@ -84,6 +84,8 @@ abstract trait SourceLocated {
   }
 }
 
+object NoSourceLocation extends SourceLocated
+
 abstract trait ContextLocated extends SourceLocated {
   var contextOpt : Option[debug.SourceContext] = None
   
@@ -123,4 +125,4 @@ abstract trait ContextLocated extends SourceLocated {
   }
 }
 
-object NoSourceLocation extends SourceLocated
+object NoContextLocation extends ContextLocated

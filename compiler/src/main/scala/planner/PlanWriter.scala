@@ -4,20 +4,20 @@ import io.llambda
 import collection.mutable
 
 import llambda.compiler.planner.{step => ps}
-import llambda.compiler.{SourceLocated, NoSourceLocation}
+import llambda.compiler.{ContextLocated, NoContextLocation}
 import llambda.compiler.InternalCompilerErrorException
 import llambda.compiler.et
 
 class PlanWriter(val plannedFunctions : mutable.Map[String, PlannedFunction], val allocedProcSymbols : mutable.HashSet[String]) {
-  private val sourceLocStack = new mutable.Stack[SourceLocated] 
+  private val contextLocStack = new mutable.Stack[ContextLocated] 
 
   class StepBuilder {
     private val stepBuffer = new mutable.ListBuffer[ps.Step] 
 
     def +=(step : ps.Step) {
-      for(sourceLoc <- sourceLocStack.headOption) {
-        // Source locate this step
-        step.assignLocationFrom(sourceLoc)
+      for(contextLoc <- contextLocStack.headOption) {
+        // Context locate this step
+        step.assignLocationFrom(contextLoc)
       }
 
       stepBuffer += step
@@ -33,25 +33,25 @@ class PlanWriter(val plannedFunctions : mutable.Map[String, PlannedFunction], va
     *
     * This will implicitly locate any plan steps added while the block is being executed
     */
-  def withSourceLocation[T](sourceLocated : SourceLocated)(block : => T) : T = {
-    sourceLocStack.push(sourceLocated)
+  def withContextLocation[T](contextLocated : ContextLocated)(block : => T) : T = {
+    contextLocStack.push(contextLocated)
 
     try {
       block
     }
     finally {
-      sourceLocStack.pop
+      contextLocStack.pop
     }
   }
 
-  /** Returns the active source location or NoSourceLocation if the location is not available */
-  def activeSourceLocated =
-    sourceLocStack.headOption.getOrElse(NoSourceLocation)
+  /** Returns the active source location or NoContextLocation if the location is not available */
+  def activeContextLocated =
+    contextLocStack.headOption.getOrElse(NoContextLocation)
 
-  def withSourceLocationOpt[T](sourceLocatedOpt : Option[SourceLocated])(block : => T) : T = {
-    sourceLocatedOpt match {
-      case Some(sourceLocated) =>
-        withSourceLocation(sourceLocated)(block)
+  def withContextLocationOpt[T](contextLocatedOpt : Option[ContextLocated])(block : => T) : T = {
+    contextLocatedOpt match {
+      case Some(contextLocated) =>
+        withContextLocation(contextLocated)(block)
 
       case _ =>
         block

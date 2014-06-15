@@ -1,7 +1,7 @@
 package io.llambda.compiler.planner
 import io.llambda
 
-import llambda.compiler.{et, StorageLocation, ReportProcedure, SourceLocated}
+import llambda.compiler.{et, StorageLocation, ReportProcedure, ContextLocated}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
@@ -54,7 +54,7 @@ private[planner] object PlanBind {
       
       val initialValueResult = initialValue match {
         case lambdaExpr : et.Lambda if isSelfRecursiveLambda =>
-          plan.withSourceLocation(initialValue) {
+          plan.withContextLocation(initialValue) {
             PlanLambda(initialState, plan)(
               lambdaExpr=lambdaExpr,
               sourceNameHint=Some(storageLoc.sourceName),

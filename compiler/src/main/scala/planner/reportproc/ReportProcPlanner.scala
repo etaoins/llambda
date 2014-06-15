@@ -1,7 +1,7 @@
 package io.llambda.compiler.planner.reportproc
 import io.llambda
 
-import llambda.compiler.SourceLocated
+import llambda.compiler.ContextLocated
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{intermediatevalue => iv}
@@ -47,5 +47,5 @@ trait ReportProcPlanner {
     }
   }
 
-  def apply(initialState : PlannerState)(reportName : String, operands : List[(SourceLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult]  
+  def apply(initialState : PlannerState)(reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult]  
 }

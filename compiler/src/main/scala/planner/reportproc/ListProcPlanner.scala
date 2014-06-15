@@ -3,13 +3,13 @@ import io.llambda
 
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.{RuntimeErrorMessage, SourceLocated}
+import llambda.compiler.{RuntimeErrorMessage, ContextLocated}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
 
 object ListProcPlanner extends ReportProcPlanner {
-  def apply(initialState : PlannerState)(reportName : String, operands : List[(SourceLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = (reportName, operands) match {
+  def apply(initialState : PlannerState)(reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = (reportName, operands) match {
     case ("null?", List((_, singleOperand))) =>
       predicatePlanner(initialState)(singleOperand, ct.EmptyListCell)
     
@@ -75,7 +75,7 @@ object ListProcPlanner extends ReportProcPlanner {
       }
 
     case ("set-car!", List((pairLoc, pairValue), (_, newValue))) =>
-      val pairTemp = plan.withSourceLocation(pairLoc) {
+      val pairTemp = plan.withContextLocation(pairLoc) {
         pairValue.toTempValue(vt.IntrinsicCellType(ct.PairCell))
       }
 
@@ -95,7 +95,7 @@ object ListProcPlanner extends ReportProcPlanner {
       ))
     
     case ("set-cdr!", List((pairLoc, pairValue), (_, newValue))) =>
-      val pairTemp = plan.withSourceLocation(pairLoc) {
+      val pairTemp = plan.withContextLocation(pairLoc) {
         pairValue.toTempValue(vt.IntrinsicCellType(ct.PairCell))
       }
 

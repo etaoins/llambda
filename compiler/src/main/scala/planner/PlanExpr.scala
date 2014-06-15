@@ -3,7 +3,7 @@ import io.llambda
 
 import collection.mutable
 
-import llambda.compiler.{et, StorageLocation, SourceLocated, RuntimeErrorMessage}
+import llambda.compiler.{et, StorageLocation, ContextLocated, RuntimeErrorMessage}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
@@ -38,7 +38,7 @@ private[planner] object PlanExpr {
     )
   }
   
-  def apply(initialState : PlannerState)(expr : et.Expr, sourceNameHint : Option[String] = None)(implicit planConfig : PlanConfig, plan : PlanWriter) : PlanResult = plan.withSourceLocation(expr) {
+  def apply(initialState : PlannerState)(expr : et.Expr, sourceNameHint : Option[String] = None)(implicit planConfig : PlanConfig, plan : PlanWriter) : PlanResult = plan.withContextLocation(expr) {
     implicit val worldPtr = initialState.worldPtr
 
     expr match {
@@ -57,7 +57,7 @@ private[planner] object PlanExpr {
       case et.Apply(procExpr, operandExprs) =>
         val procResult = apply(initialState)(procExpr)
 
-        val operandBuffer = new mutable.ListBuffer[(SourceLocated, iv.IntermediateValue)]
+        val operandBuffer = new mutable.ListBuffer[(ContextLocated, iv.IntermediateValue)]
 
         val finalState = operandExprs.foldLeft(procResult.state) { case (state, operandExpr) =>
           val operandResult = apply(state)(operandExpr)
