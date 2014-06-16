@@ -63,8 +63,8 @@ sealed abstract class NativeValue(val nativeType : vt.NativeType, val cellType :
   def preferredRepresentation : vt.ValueType =
     nativeType
   
-  def closureRepresentation : Option[vt.ValueType] = 
-    Some(nativeType)
+  def needsClosureRepresentation =
+    true
 }
 
 class NativePredicateValue(tempValue : ps.TempValue) extends NativeValue(vt.Predicate, ct.BooleanCell, tempValue) {

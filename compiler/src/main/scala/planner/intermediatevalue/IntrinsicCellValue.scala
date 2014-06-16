@@ -153,15 +153,7 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
       vt.IntrinsicCellType(cellType)
   }
   
-  // Store unboxed where possible to save GC overhead and potentially pack more values in the closure
-  // The lifetime of any cells we reference will be at least as long as the procedure cell itself so there's not much
-  // point storing them unboxed.
-  def closureRepresentation : Option[vt.ValueType] = Some(possibleTypes.toList match {
-    case ct.ExactIntegerCell :: Nil => vt.Int64
-    case ct.InexactRationalCell :: Nil => vt.Double
-    case ct.BooleanCell :: Nil => vt.CBool
-    case ct.CharacterCell :: Nil => vt.UnicodeChar
-    case _ => preferredRepresentation
-  })
+  def needsClosureRepresentation =
+    true
 }
 

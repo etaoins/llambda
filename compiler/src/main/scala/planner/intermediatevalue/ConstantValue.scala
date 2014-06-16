@@ -30,9 +30,8 @@ sealed abstract class ConstantValue(val cellType : ct.ConcreteCellType) extends 
   def preferredRepresentation : vt.ValueType =
     vt.IntrinsicCellType(cellType)
   
-  def closureRepresentation : Option[vt.ValueType] = 
-    // Constants don't need to be captured
-    None
+  def needsClosureRepresentation : Boolean =
+    false
 }
 
 sealed abstract class TrivialConstantValue[T, U <: ps.CreateConstantCell](cellType : ct.ConcreteCellType, value : T, stepConstructor : (ps.TempValue, T) => U) extends ConstantValue(cellType) {

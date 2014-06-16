@@ -139,12 +139,12 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     */
   def preferredRepresentation : vt.ValueType
 
-  /** Returns the type that should be used to capture this value inside a closure
+  /** Indicates if this values need to be stored inside a closure
     *
-    * If None is returned the value does not need to be captured and can instead be used directly without storing any
+    * If false is returned the value does not need to be captured and can instead be used directly without storing any
     * data in the closure.
     */
-  def closureRepresentation : Option[vt.ValueType]
+  def needsClosureRepresentation : Boolean
 
   /** Restores this value from a closure's ps.TempValue
     *

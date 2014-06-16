@@ -10,6 +10,7 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.{StorageLocation, ProcedureSignature}
+import llambda.compiler.codegen.CompactRepresentationForType
 
 private[planner] object PlanLambda {
   private sealed abstract class Argument {
@@ -181,16 +182,16 @@ private[planner] object PlanLambda {
     val closedVariables = (refedVarsList.distinct flatMap { storageLoc =>
       parentState.values.get(storageLoc) map {
         case ImmutableValue(parentIntermediate) =>
-          parentIntermediate.closureRepresentation match {
-            case Some(valueType) =>
-              val recordField = new vt.RecordField(storageLoc.sourceName, valueType)
+          if (parentIntermediate.needsClosureRepresentation) {
+            val compactType = CompactRepresentationForType(parentIntermediate.preferredRepresentation)
+            val recordField = new vt.RecordField(storageLoc.sourceName, compactType)
 
-              // We have to capture this
-              CapturedImmutable(storageLoc, parentIntermediate, valueType, recordField)
-
-            case None =>
-              // No need for capturing - import the intermediate value directly
-              ImportedImmutable(storageLoc, parentIntermediate)
+            // We have to capture this
+            CapturedImmutable(storageLoc, parentIntermediate, compactType, recordField)
+          }
+          else {
+            // No need for capturing - import the intermediate value directly
+            ImportedImmutable(storageLoc, parentIntermediate)
           }
 
       case MutableValue(mutableTemp, needsUndefCheck) =>

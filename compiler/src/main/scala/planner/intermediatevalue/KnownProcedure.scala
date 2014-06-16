@@ -105,11 +105,9 @@ class KnownProcedure(val signature : ProcedureSignature, nativeSymbol : String, 
   def preferredRepresentation : vt.ValueType =
     vt.IntrinsicCellType(ct.ProcedureCell)
 
-  def closureRepresentation : Option[vt.ValueType] = 
+  def needsClosureRepresentation  = 
     // We only need a closure if we have a closure ourselves (i.e. a self temp)
-    selfTempOpt map { _ =>
-      preferredRepresentation
-    }
+    selfTempOpt.isDefined
   
   override def restoreFromClosure(valueType : vt.ValueType, varTemp : ps.TempValue) : IntermediateValue = {
     new KnownProcedure(signature, nativeSymbol, Some(varTemp), reportName)
