@@ -54,11 +54,10 @@ private[planner] object PlanLambda {
   
   private case class CapturedMutable(
     storageLoc : StorageLocation,
-    tempValue : ps.TempValue,
-    recordField : vt.RecordField,
-    needsUndefCheck : Boolean
+    parentMutable : MutableValue,
+    recordField : vt.RecordField
   ) extends CapturedVariable {
-    val valueType = vt.MutableType
+    val valueType = parentMutable.mutableType
   }
 
   /** Finds all referenced variables in an expression and returns them in a stable order */
@@ -99,20 +98,23 @@ private[planner] object PlanLambda {
 
     case argCount =>
       mutableArgs.foldLeft(initialState) { case (state, argument) =>
-        // Cast the argument to a datum cell to fit inside a mutable record
         val argValue = TempValueToIntermediate(argument.valueType, argument.tempValue)
-        val datumTempValue = argValue.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
 
         // Init the mutable
         val mutableTemp = ps.RecordTemp()
         val recordDataTemp = ps.RecordLikeDataTemp()
 
-        plan.steps += ps.InitRecordLike(mutableTemp, recordDataTemp, vt.MutableType, isUndefined=false)
+        // Determine our type and convert the argument to it
+        val compactInnerType = CompactRepresentationForType(argument.valueType)
+        val mutableType = MutableType(compactInnerType)
+        val tempValue = argValue.toTempValue(compactInnerType)
+
+        plan.steps += ps.InitRecordLike(mutableTemp, recordDataTemp, mutableType, isUndefined=false)
 
         // Set the value
-        plan.steps += ps.SetRecordDataField(recordDataTemp, vt.MutableType, vt.MutableField, datumTempValue)
+        plan.steps += ps.SetRecordDataField(recordDataTemp, mutableType, mutableType.recordField, tempValue)
         
-        state.withValue(argument.storageLoc -> MutableValue(mutableTemp, false))
+        state.withValue(argument.storageLoc -> MutableValue(mutableType, mutableTemp, false))
       }
   }
 
@@ -129,7 +131,7 @@ private[planner] object PlanLambda {
           state.withValue(capturedVar.storageLoc -> ImmutableValue(varValue))
 
         case capturedMutable : CapturedMutable => 
-          state.withValue(capturedVar.storageLoc -> MutableValue(varTemp, capturedMutable.needsUndefCheck))
+          state.withValue(capturedVar.storageLoc -> capturedMutable.parentMutable.copy(mutableTemp=varTemp))
       }
     }
   
@@ -142,7 +144,7 @@ private[planner] object PlanLambda {
 
         case mutable : CapturedMutable =>
           // Store the pointer to the mutable directly
-          mutable.tempValue
+          mutable.parentMutable.mutableTemp
       }
         
       // Store to the field
@@ -194,9 +196,9 @@ private[planner] object PlanLambda {
             ImportedImmutable(storageLoc, parentIntermediate)
           }
 
-      case MutableValue(mutableTemp, needsUndefCheck) =>
-        val recordField = new vt.RecordField(storageLoc.sourceName, vt.MutableType)
-        CapturedMutable(storageLoc, mutableTemp, recordField, needsUndefCheck)
+      case parentMutable : MutableValue =>
+        val recordField = new vt.RecordField(storageLoc.sourceName, parentMutable.mutableType)
+        CapturedMutable(storageLoc, parentMutable, recordField)
       }
     })
     

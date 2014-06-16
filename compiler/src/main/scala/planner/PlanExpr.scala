@@ -120,49 +120,48 @@ private[planner] object PlanExpr {
               value=value
             )
 
-          case MutableValue(mutableTemp, needsUndefCheck) =>
+          case MutableValue(mutableType, mutableTemp, needsUndefCheck) =>
             if (needsUndefCheck) {
               val errorMessage = RuntimeErrorMessage("accessUndefined", "Recursively defined value referenced before its initialization") 
-              plan.steps += ps.AssertRecordLikeDefined(worldPtr, mutableTemp, vt.MutableType, errorMessage)
+              plan.steps += ps.AssertRecordLikeDefined(worldPtr, mutableTemp, mutableType, errorMessage)
             }
             
             // Load our data pointer
             val recordDataTemp = ps.RecordLikeDataTemp()
-            plan.steps += ps.LoadRecordLikeData(recordDataTemp, mutableTemp, vt.MutableType)
+            plan.steps += ps.LoadRecordLikeData(recordDataTemp, mutableTemp, mutableType)
             
             // Load the data
-            val resultTemp = ps.CellTemp(ct.DatumCell)
-            plan.steps += ps.LoadRecordDataField(resultTemp, recordDataTemp, vt.MutableType, vt.MutableField)
-
-            // We can be anything here
-            val possibleTypes = ct.DatumCell.concreteTypes
+            val resultTemp = ps.Temp(mutableType.innerType)
+            plan.steps += ps.LoadRecordDataField(resultTemp, recordDataTemp, mutableType, mutableType.recordField)
 
             PlanResult(
               state=initialState,
-              value=new iv.IntrinsicCellValue(possibleTypes, ct.DatumCell, resultTemp)
+              value=TempValueToIntermediate(mutableType.innerType, resultTemp)
             )
         }
       
       case et.MutateVar(storageLoc, valueExpr) =>
-        val mutableTemp = initialState.values(storageLoc) match {
-          case MutableValue(mutableTemp, _) =>
-            mutableTemp
+        val mutableValue = initialState.values(storageLoc) match {
+          case mutable : MutableValue  =>
+            mutable
 
           case _ =>
             throw new InternalCompilerErrorException(s"Attempted to mutate non-mutable: ${storageLoc}")
         }
         
-        val newValueResult = apply(initialState)(valueExpr)
-        val castNewValue = newValueResult.value.castToSchemeType(storageLoc.schemeType)
+        val mutableTemp = mutableValue.mutableTemp
+        val mutableType = mutableValue.mutableType
 
-        val newValueTemp = castNewValue.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
+        // Evaluate at convert to the correct type for the mutable
+        val newValueResult = apply(initialState)(valueExpr)
+        val newValueTemp = newValueResult.value.toTempValue(mutableType.innerType)
 
         // Load our data pointer
         val recordDataTemp = ps.RecordLikeDataTemp()
-        plan.steps += ps.LoadRecordLikeData(recordDataTemp, mutableTemp, vt.MutableType)
+        plan.steps += ps.LoadRecordLikeData(recordDataTemp, mutableTemp, mutableType)
         
         // Store the data
-        plan.steps += ps.SetRecordDataField(recordDataTemp, vt.MutableType, vt.MutableField, newValueTemp)
+        plan.steps += ps.SetRecordDataField(recordDataTemp, mutableType, mutableType.recordField, newValueTemp)
 
         PlanResult(
           state=newValueResult.state,

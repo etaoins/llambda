@@ -698,7 +698,10 @@ case class AssertRecordLikeClass(worldPtr : WorldPtrValue, recordCell : TempValu
     (worldPtr, recordCell, recordLikeType)
 }
 
-/** Loads the data of a record */
+/** Loads the data of a record 
+  *
+  * Note this cannot be safely merged as this may point to inside a movable GC managed value
+  */
 case class LoadRecordLikeData(result : TempValue, recordCell : TempValue, recordLikeType : vt.RecordLikeType) extends Step {
   lazy val inputValues = Set(recordCell)
   lazy val outputValues = Set(result)

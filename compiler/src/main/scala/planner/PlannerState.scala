@@ -7,7 +7,7 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 
 sealed trait LocationValue
 case class ImmutableValue(intermediateValue : iv.IntermediateValue) extends LocationValue
-case class MutableValue(mutableTemp : ps.TempValue, needsUndefCheck : Boolean) extends LocationValue
+case class MutableValue(mutableType : MutableType, mutableTemp : ps.TempValue, needsUndefCheck : Boolean) extends LocationValue
 
 case class PlannerState(
   values : Map[StorageLocation, LocationValue] = Map(),

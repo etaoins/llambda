@@ -6,6 +6,7 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{intermediatevalue => iv}
+import llambda.compiler.codegen.CompactRepresentationForType
 
 private[planner] object PlanBind {
   private def storageLocRefedByExpr(storageLoc : StorageLocation, expr : et.Expr) : Boolean = expr match {
@@ -46,9 +47,12 @@ private[planner] object PlanBind {
         val recordDataTemp = ps.RecordLikeDataTemp()
 
         // Mark this value as undefined so a runtime error will be raised if it is accessed
-        plan.steps += ps.InitRecordLike(recursiveTemp, recordDataTemp, vt.MutableType, isUndefined=true)
+        val compactInnerType = CompactRepresentationForType(storageLoc.schemeType)
+        val mutableType = MutableType(compactInnerType)
 
-        state.withValue(storageLoc -> MutableValue(recursiveTemp, true))
+        plan.steps += ps.InitRecordLike(recursiveTemp, recordDataTemp, mutableType, isUndefined=true)
+
+        state.withValue(storageLoc -> MutableValue(mutableType, recursiveTemp, true))
       }
       
       val initialValueResult = initialValue match {
@@ -69,7 +73,7 @@ private[planner] object PlanBind {
 
       // Was this previously a recursive value?
       val prevRecursiveOpt = postrecursiveState.values.get(storageLoc) match {
-        case Some(MutableValue(recursiveTemp, true)) =>
+        case Some(mutableValue @ MutableValue(mutableType, recursiveTemp, true)) =>
           // This was previously a recursive value
 
           val initialValueTemp = initialIntermediate.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
@@ -77,13 +81,14 @@ private[planner] object PlanBind {
           // Update the recursive to point to our new value
           val recordDataTemp = ps.RecordLikeDataTemp()
 
-          plan.steps += ps.LoadRecordLikeData(recordDataTemp, recursiveTemp, vt.MutableType)
-          plan.steps += ps.SetRecordDataField(recordDataTemp, vt.MutableType, vt.MutableField, initialValueTemp)
+          plan.steps += ps.LoadRecordLikeData(recordDataTemp, recursiveTemp, mutableType)
+          plan.steps += ps.SetRecordDataField(recordDataTemp, mutableType, mutableType.recordField, initialValueTemp)
 
           // Mark us as defined
-          plan.steps += ps.SetRecordLikeDefined(recursiveTemp, vt.MutableType)
+          plan.steps += ps.SetRecordLikeDefined(recursiveTemp, mutableType)
 
-          Some(recursiveTemp)
+          // We no longer need an undef chaeck 
+          Some(mutableValue.copy(needsUndefCheck=false))
 
         case _ =>
           None
@@ -91,22 +96,25 @@ private[planner] object PlanBind {
 
       if (planConfig.analysis.mutableVars.contains(storageLoc)) {
         // If we used to be a recursive value we can reuse that record
-        val mutableTemp = prevRecursiveOpt.getOrElse {
+        val mutableValue = prevRecursiveOpt.getOrElse {
           val mutableTemp = ps.RecordTemp()
           
-          val initialValueTemp = initialIntermediate.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
+          val compactInnerType = CompactRepresentationForType(storageLoc.schemeType)
+          val mutableType = MutableType(compactInnerType)
+          
+          val initialValueTemp = initialIntermediate.toTempValue(compactInnerType)
 
           // Create a new mutable
           val recordDataTemp = ps.RecordLikeDataTemp()
-          plan.steps += ps.InitRecordLike(mutableTemp, recordDataTemp, vt.MutableType, isUndefined=false)
+          plan.steps += ps.InitRecordLike(mutableTemp, recordDataTemp, mutableType, isUndefined=false)
 
           // Set the value
-          plan.steps += ps.SetRecordDataField(recordDataTemp, vt.MutableType, vt.MutableField, initialValueTemp)
+          plan.steps += ps.SetRecordDataField(recordDataTemp, mutableType, mutableType.recordField, initialValueTemp)
 
-          mutableTemp
+          MutableValue(mutableType, mutableTemp, false)
         }
         
-        initialValueResult.state.withValue(storageLoc -> MutableValue(mutableTemp, false))
+        initialValueResult.state.withValue(storageLoc -> mutableValue)
       }
       else {
         // Send a hint about our name

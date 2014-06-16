@@ -89,8 +89,10 @@
 	(add-five 2)))
 
 (define-test "capturing mutable variables" (expect (1 2 1 3 2 3)
+  (import (llambda typed))
+
 	(define (create-counter)
-	  (define value 0)
+	  (define: value : <integer> 0)
 	  (lambda ()
 		 (set! value (+ value 1))
 		 value))
