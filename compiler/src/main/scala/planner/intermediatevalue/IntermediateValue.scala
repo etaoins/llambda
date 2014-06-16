@@ -123,7 +123,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     */
   def closureRepresentation : Option[vt.ValueType]
 
-  /** Returns a function that can be used to restore this value from a closure's ps.TempValue
+  /** Restores this value from a closure's ps.TempValue
     *
     * This can be overriden to carry value-specific metadata that isn't contained in the value's type alone. This can
     * include things like procedure signature, value ranges, etc.
