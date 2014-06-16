@@ -62,6 +62,10 @@ object GenInitRecordLike {
         voidRecordData
     }
 
+    if (initStep.isUndefined) {
+      cellType.genStoreToIsUndefined(block)(IntegerConstant(cellType.isUndefinedIrType, 1), recordCell)
+    }
+
     val castRecordData = block.bitcastTo("castRecordData")(uncastRecordData, PointerType(recordDataIrType))
 
     val newState = state.copy(

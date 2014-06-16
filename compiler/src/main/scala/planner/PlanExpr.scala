@@ -121,6 +121,11 @@ private[planner] object PlanExpr {
             )
 
           case MutableValue(mutableTemp, needsUndefCheck) =>
+            if (needsUndefCheck) {
+              val errorMessage = RuntimeErrorMessage("accessUndefined", "Recursively defined value referenced before its initialization") 
+              plan.steps += ps.AssertRecordLikeDefined(worldPtr, mutableTemp, vt.MutableType, errorMessage)
+            }
+            
             // Load our data pointer
             val recordDataTemp = ps.RecordLikeDataTemp()
             plan.steps += ps.LoadRecordLikeData(recordDataTemp, mutableTemp, vt.MutableType)
@@ -129,11 +134,6 @@ private[planner] object PlanExpr {
             val resultTemp = ps.CellTemp(ct.DatumCell)
             plan.steps += ps.LoadRecordDataField(resultTemp, recordDataTemp, vt.MutableType, vt.MutableField)
 
-            if (needsUndefCheck) {
-              val errorMessage = RuntimeErrorMessage("accessUndefined", "Recursively defined value referenced before its initialization") 
-              plan.steps += ps.AssertRecordDataFieldDefined(worldPtr, resultTemp, vt.MutableField, errorMessage)
-            }
-            
             // We can be anything here
             val possibleTypes = ct.DatumCell.concreteTypes
 

@@ -105,42 +105,45 @@
 !57 = metadata !{metadata !"Bytevector::length"}
 !58 = metadata !{metadata !"Bytevector::byteArray"}
 
-; {supertype, bool dataIsInline, unsigned recordClassId, recordData}
-%recordLike = type {%datum, i8, i32, i8*}
+; {supertype, bool dataIsInline, bool isUndefined, unsigned recordClassId, recordData}
+%recordLike = type {%datum, i8, i8, i32, i8*}
 !59 = metadata !{metadata !"Datum::typeId->RecordLike", metadata !10}
 !60 = metadata !{metadata !"Datum::gcState->RecordLike", metadata !11}
 !61 = metadata !{metadata !"RecordLike::dataIsInline"}
-!62 = metadata !{metadata !"RecordLike::recordClassId"}
-!63 = metadata !{metadata !"RecordLike::recordData"}
+!62 = metadata !{metadata !"RecordLike::isUndefined"}
+!63 = metadata !{metadata !"RecordLike::recordClassId"}
+!64 = metadata !{metadata !"RecordLike::recordData"}
 
 ; {supertype, entryPoint}
 %procedure = type {%recordLike, %datum* (%world*, %procedure*, %listElement*)*}
-!64 = metadata !{metadata !"Datum::typeId->RecordLike->Procedure", metadata !59}
-!65 = metadata !{metadata !"Datum::gcState->RecordLike->Procedure", metadata !60}
-!66 = metadata !{metadata !"RecordLike::dataIsInline->Procedure", metadata !61}
-!67 = metadata !{metadata !"RecordLike::recordClassId->Procedure", metadata !62}
-!68 = metadata !{metadata !"RecordLike::recordData->Procedure", metadata !63}
-!69 = metadata !{metadata !"Procedure::entryPoint"}
+!65 = metadata !{metadata !"Datum::typeId->RecordLike->Procedure", metadata !59}
+!66 = metadata !{metadata !"Datum::gcState->RecordLike->Procedure", metadata !60}
+!67 = metadata !{metadata !"RecordLike::dataIsInline->Procedure", metadata !61}
+!68 = metadata !{metadata !"RecordLike::isUndefined->Procedure", metadata !62}
+!69 = metadata !{metadata !"RecordLike::recordClassId->Procedure", metadata !63}
+!70 = metadata !{metadata !"RecordLike::recordData->Procedure", metadata !64}
+!71 = metadata !{metadata !"Procedure::entryPoint"}
 
 ; {supertype, extraData}
 %record = type {%recordLike, i8*}
-!70 = metadata !{metadata !"Datum::typeId->RecordLike->Record", metadata !59}
-!71 = metadata !{metadata !"Datum::gcState->RecordLike->Record", metadata !60}
-!72 = metadata !{metadata !"RecordLike::dataIsInline->Record", metadata !61}
-!73 = metadata !{metadata !"RecordLike::recordClassId->Record", metadata !62}
-!74 = metadata !{metadata !"RecordLike::recordData->Record", metadata !63}
-!75 = metadata !{metadata !"Record::extraData"}
+!72 = metadata !{metadata !"Datum::typeId->RecordLike->Record", metadata !59}
+!73 = metadata !{metadata !"Datum::gcState->RecordLike->Record", metadata !60}
+!74 = metadata !{metadata !"RecordLike::dataIsInline->Record", metadata !61}
+!75 = metadata !{metadata !"RecordLike::isUndefined->Record", metadata !62}
+!76 = metadata !{metadata !"RecordLike::recordClassId->Record", metadata !63}
+!77 = metadata !{metadata !"RecordLike::recordData->Record", metadata !64}
+!78 = metadata !{metadata !"Record::extraData"}
 
 ; {supertype, message, irritants}
 %errorObject = type {%datum, %string*, %listElement*}
-!76 = metadata !{metadata !"Datum::typeId->ErrorObject", metadata !10}
-!77 = metadata !{metadata !"Datum::gcState->ErrorObject", metadata !11}
-!78 = metadata !{metadata !"ErrorObject::message"}
-!79 = metadata !{metadata !"ErrorObject::irritants"}
+!79 = metadata !{metadata !"Datum::typeId->ErrorObject", metadata !10}
+!80 = metadata !{metadata !"Datum::gcState->ErrorObject", metadata !11}
+!81 = metadata !{metadata !"ErrorObject::message"}
+!82 = metadata !{metadata !"ErrorObject::irritants"}
 
 ; {supertype, bool isOwned, stream}
 %port = type {%datum, i8, i8*}
-!80 = metadata !{metadata !"Datum::typeId->Port", metadata !10}
-!81 = metadata !{metadata !"Datum::gcState->Port", metadata !11}
-!82 = metadata !{metadata !"Port::isOwned"}
-!83 = metadata !{metadata !"Port::stream"}
+!83 = metadata !{metadata !"Datum::typeId->Port", metadata !10}
+!84 = metadata !{metadata !"Datum::gcState->Port", metadata !11}
+!85 = metadata !{metadata !"Port::isOwned"}
+!86 = metadata !{metadata !"Port::stream"}

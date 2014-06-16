@@ -55,6 +55,7 @@ protected:
 	RecordLikeCell(CellTypeId typeId, std::uint32_t recordClassId, bool dataIsInline, void *recordData) :
 		DatumCell(typeId),
 		m_dataIsInline(dataIsInline),
+		m_isUndefined(false),
 		m_recordClassId(recordClassId),
 		m_recordData(recordData)
 	{

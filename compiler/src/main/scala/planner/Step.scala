@@ -620,20 +620,40 @@ case class SetPairCdr(pairValue : TempValue, newValue : TempValue) extends Step 
     SetPairCdr(f(pairValue), f(newValue)).assignLocationFrom(this)
 }
 
-/** Allocates data for a given record a given type 
+/** Allocates a cell for a record of a given type 
  *
- * @param cellResult  location to store the record cell 
- * @param dataResult  location to store the uninitialized record data 
- * @param recordType  type of record to create
+ * @param cellResult   location to store the record cell 
+ * @param dataResult   location to store the uninitialized record data 
+ * @param recordType   type of record to create
+ * @param isUndefined  flag indicating if this value should be initially marked undefined. This can be tested with 
+ *                     AssertRecordLikeDefined. This is used in the implementation of recursive values
  */
-case class InitRecordLike(cellResult : TempValue, dataResult : TempValue, recordLikeType : vt.RecordLikeType) extends Step with CellConsumer {
+case class InitRecordLike(cellResult : TempValue, dataResult : TempValue, recordLikeType : vt.RecordLikeType, isUndefined : Boolean) extends Step with CellConsumer {
   val allocSize = 1
 
   val inputValues = Set[TempValue]()
   val outputValues = Set(cellResult, dataResult)
   
   def renamed(f : (TempValue) => TempValue) =
-    InitRecordLike(f(cellResult), f(dataResult), recordLikeType).assignLocationFrom(this)
+    InitRecordLike(f(cellResult), f(dataResult), recordLikeType, isUndefined).assignLocationFrom(this)
+}
+
+/** Sets a record as defined */
+case class SetRecordLikeDefined(record : TempValue, recordLikeType : vt.RecordLikeType) extends Step with MergeableSideEffect {
+  lazy val inputValues = Set(record)
+  val outputValues = Set[TempValue]()
+  
+  def renamed(f : (TempValue) => TempValue) =
+    SetRecordLikeDefined(f(record), recordLikeType).assignLocationFrom(this)
+}
+
+/** Asserts that a record is defined */
+case class AssertRecordLikeDefined(worldPtr : WorldPtrValue, record : TempValue, recordLikeType : vt.RecordLikeType, errorMessage : RuntimeErrorMessage) extends Step with MergeableSideEffect {
+  lazy val inputValues = Set(worldPtr, record)
+  val outputValues = Set[TempValue]()
+  
+  def renamed(f : (TempValue) => TempValue) =
+    AssertRecordLikeDefined(worldPtr, f(record), recordLikeType, errorMessage).assignLocationFrom(this)
 }
 
 /** Sets a record field. The value must match the type of record field */
@@ -645,18 +665,6 @@ case class SetRecordDataField(recordData : TempValue, recordLikeType : vt.Record
     SetRecordDataField(f(recordData), recordLikeType, recordField, f(newValue)).assignLocationFrom(this)
 }
 
-/** Sets a record field as undefined
-  *
-  * If RecordDataFieldRef is later called it will raise a runtime error if checkUndef is true
-  */
-case class SetRecordDataFieldUndefined(recordData : TempValue, recordLikeType : vt.RecordLikeType, recordField : vt.RecordField) extends Step {
-  lazy val inputValues = Set(recordData)
-  val outputValues = Set[TempValue]()
-  
-  def renamed(f : (TempValue) => TempValue) =
-    SetRecordDataFieldUndefined(f(recordData), recordLikeType, recordField).assignLocationFrom(this)
-}
-
 /** Reads a record field. The value must match the type of record field */
 case class LoadRecordDataField(result : TempValue, recordData : TempValue, recordLikeType : vt.RecordLikeType, recordField : vt.RecordField) extends Step {
   lazy val inputValues = Set(recordData)
@@ -664,18 +672,6 @@ case class LoadRecordDataField(result : TempValue, recordData : TempValue, recor
   
   def renamed(f : (TempValue) => TempValue) =
     LoadRecordDataField(f(result), f(recordData), recordLikeType, recordField).assignLocationFrom(this)
-}
-
-/** Asserts that field value is defined 
-  *
-  * The field must have previously been loaded with RecordDataFieldRef
-  **/
-case class AssertRecordDataFieldDefined(worldPtr : WorldPtrValue, fieldValue : TempValue, recordField : vt.RecordField, errorMessage : RuntimeErrorMessage) extends Step {
-  lazy val inputValues = Set(worldPtr, fieldValue)
-  val outputValues = Set[TempValue]()
-  
-  def renamed(f : (TempValue) => TempValue) =
-    AssertRecordDataFieldDefined(worldPtr, f(fieldValue), recordField, errorMessage).assignLocationFrom(this)
 }
 
 /** Tests to see if a record is of a given class */

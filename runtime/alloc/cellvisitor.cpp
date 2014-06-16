@@ -71,33 +71,26 @@ void visitCell(DatumCell **rootCellRef, std::function<bool(DatumCell **)> &visit
 	{
 		const RecordClassOffsetMap *offsetMap = recordLikeCell->offsetMap();
 
-		// Does this have any child cells
-		if (offsetMap != nullptr)
+		// Does this have any child cells and is it not undefined?
+		if ((offsetMap != nullptr) && !recordLikeCell->isUndefined())
 		{
 			// Yes, iterator over them
 			for(std::uint32_t i = 0; i < offsetMap->offsetCount; i++)
 			{
 				const std::uint32_t byteOffset = offsetMap->offsets[i]; 
-				std::uint8_t *datumRefLocation;
+				std::uint8_t *datumRef;
 
 				if (recordLikeCell->dataIsInline())
 				{
 					// The data is stored inline inside the cell 
-					datumRefLocation = reinterpret_cast<std::uint8_t*>(recordLikeCell->recordDataRef()) + byteOffset;
+					datumRef = reinterpret_cast<std::uint8_t*>(recordLikeCell->recordDataRef()) + byteOffset;
 				}
 				else
 				{
-					datumRefLocation = reinterpret_cast<std::uint8_t*>(recordLikeCell->recordData()) + byteOffset;
+					datumRef = reinterpret_cast<std::uint8_t*>(recordLikeCell->recordData()) + byteOffset;
 				}
 
-				auto datumRef = reinterpret_cast<DatumCell**>(datumRefLocation);
-
-				// codegen can create null pointers as placeholder for undefined values
-				// This is used to implement recursive values
-				if (*datumRef != nullptr)
-				{
-					visitCell(datumRef, visitor);
-				}
+				visitCell(reinterpret_cast<DatumCell**>(datumRef), visitor);
 			}
 		}
 	}

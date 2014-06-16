@@ -106,7 +106,7 @@ private[planner] object PlanLambda {
         val mutableTemp = ps.RecordTemp()
         val recordDataTemp = ps.RecordLikeDataTemp()
 
-        plan.steps += ps.InitRecordLike(mutableTemp, recordDataTemp, vt.MutableType)
+        plan.steps += ps.InitRecordLike(mutableTemp, recordDataTemp, vt.MutableType, isUndefined=false)
 
         // Set the value
         plan.steps += ps.SetRecordDataField(recordDataTemp, vt.MutableType, vt.MutableField, datumTempValue)
@@ -374,7 +374,7 @@ private[planner] object PlanLambda {
       val cellTemp = ps.RecordTemp()
       val dataTemp = ps.RecordLikeDataTemp()
 
-      parentPlan.steps += ps.InitRecordLike(cellTemp, dataTemp, closureType)
+      parentPlan.steps += ps.InitRecordLike(cellTemp, dataTemp, closureType, isUndefined=false)
 
       storeClosureData(dataTemp, closureType, capturedVariables)(parentPlan, parentState.worldPtr)
 

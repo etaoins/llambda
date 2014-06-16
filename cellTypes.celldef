@@ -106,6 +106,7 @@ concrete cell Bytevector : Datum {
 
 abstract internal cell RecordLike : Datum {
 	bool dataIsInline;
+	bool isUndefined;
 	uint32 recordClassId;
 	untypedptr recordData;
 };

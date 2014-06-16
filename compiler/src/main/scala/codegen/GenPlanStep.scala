@@ -400,20 +400,45 @@ object GenPlanStep {
       // Continue with the successful block
       state.copy(currentBlock=successBlock)
   
+    case ps.SetRecordLikeDefined(recordCellTemp, recordLikeType) => 
+      val generatedType = genGlobals.typeGenerator(recordLikeType)
+      
+      // Mark ourselves as defined
+      val recordCellIr = state.liveTemps(recordCellTemp)
+      val cellType = generatedType.recordLikeType.cellType
+      val irResult = cellType.genStoreToIsUndefined(state.currentBlock)(IntegerConstant(cellType.isUndefinedIrType, 0), recordCellIr)
+
+      state
+
+    case ps.AssertRecordLikeDefined(worldPtrTemp, recordCellTemp, recordLikeType, errorMessage) => 
+      val worldPtrIr = state.liveTemps(worldPtrTemp)
+      val generatedType = genGlobals.typeGenerator(recordLikeType)
+      
+      // Start our branches
+      val irFunction = state.currentBlock.function
+      val fatalBlock = irFunction.startChildBlock("recordIsUndefined")
+      val successBlock = irFunction.startChildBlock("recordIsDefined")
+
+      GenErrorSignal(state.copy(currentBlock=fatalBlock))(worldPtrIr, errorMessage)
+
+      // Branch if we're defined
+      val recordCellIr = state.liveTemps(recordCellTemp)
+      val cellType = generatedType.recordLikeType.cellType
+
+      val isUndefinedBool = cellType.genLoadFromIsUndefined(state.currentBlock)(recordCellIr)
+      val isUndefinedPred = state.currentBlock.truncTo("undefinedPred")(isUndefinedBool, IntegerType(1))
+
+      state.currentBlock.condBranch(isUndefinedPred, fatalBlock, successBlock)
+
+      // Continue with the successful block
+      state.copy(currentBlock=successBlock)
+
     case ps.SetRecordDataField(recordDataTemp, recordType, recordField, newValueTemp) =>
       val recordDataIr = state.liveTemps(recordDataTemp)
       val newValueIr = state.liveTemps(newValueTemp)
       val generatedType = genGlobals.typeGenerator(recordType)
   
-      GenSetRecordDataField(state.currentBlock)(recordDataIr, generatedType, recordField, Some(newValueIr))
-
-      state
-    
-    case ps.SetRecordDataFieldUndefined(recordDataTemp, recordType, recordField) =>
-      val recordDataIr = state.liveTemps(recordDataTemp)
-      val generatedType = genGlobals.typeGenerator(recordType)
-  
-      GenSetRecordDataField(state.currentBlock)(recordDataIr, generatedType, recordField, None)
+      GenSetRecordDataField(state.currentBlock)(recordDataIr, generatedType, recordField, newValueIr)
 
       state
     
@@ -424,33 +449,6 @@ object GenPlanStep {
       val resultIr = GenLoadRecordDataField(state.currentBlock)(recordDataIr, generatedType, recordField)
 
       state.withTempValue(resultTemp -> resultIr)
-
-    case ps.AssertRecordDataFieldDefined(worldPtrTemp, fieldValue, recordField, errorMessage) => 
-      val worldPtrIr = state.liveTemps(worldPtrTemp)
-      val fieldValueIr = state.liveTemps(fieldValue)
-      
-      // Start our branches
-      val irFunction = state.currentBlock.function
-      val fatalBlock = irFunction.startChildBlock("fieldIsUndefined")
-      val successBlock = irFunction.startChildBlock("fieldIsDefined")
-
-      GenErrorSignal(state.copy(currentBlock=fatalBlock))(worldPtrIr, errorMessage)
-
-      // Check to make sure the value isn't null
-      // Branch if we're not of the right class
-      val pointerFieldIrType = ValueTypeToIr(recordField.fieldType).irType match {
-        case pointerType : PointerType =>
-         pointerType
-
-        case _ =>
-          throw new InternalCompilerErrorException("Attempted to assert non-pointer field is undefined")
-      }
-
-      val irResult = state.currentBlock.icmp("isDefined")(ComparisonCond.NotEqual, None, fieldValueIr, NullPointerConstant(pointerFieldIrType)) 
-      state.currentBlock.condBranch(irResult, successBlock, fatalBlock)
-
-      // Continue with the successful block
-      state.copy(currentBlock=successBlock)
 
     case ps.LoadRecordLikeData(resultTemp, recordCellTemp, recordLikeType) =>
       val recordCellIr = state.liveTemps(recordCellTemp)

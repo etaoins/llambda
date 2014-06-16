@@ -64,7 +64,7 @@ sealed abstract class PreconstructedCellType extends ConcreteCellType
 sealed abstract class CellTypeVariant extends CastableValue
 
 object CellType {
-  val nextMetadataIndex = 84L
+  val nextMetadataIndex = 87L
 }
 
 sealed trait DatumFields {
@@ -1270,6 +1270,10 @@ sealed trait RecordLikeFields extends DatumFields {
   val dataIsInlineTbaaNode : Metadata
   val dataIsInlineGepIndices : List[Int]
 
+  val isUndefinedIrType = IntegerType(8)
+  val isUndefinedTbaaNode : Metadata
+  val isUndefinedGepIndices : List[Int]
+
   val recordClassIdIrType = IntegerType(32)
   val recordClassIdTbaaNode : Metadata
   val recordClassIdGepIndices : List[Int]
@@ -1301,6 +1305,31 @@ sealed trait RecordLikeFields extends DatumFields {
     val dataIsInlinePtr = genPointerToDataIsInline(block)(valueCell)
     val allMetadata = Map("tbaa" -> dataIsInlineTbaaNode) ++ metadata
     block.load("dataIsInline")(dataIsInlinePtr, metadata=allMetadata)
+  }
+
+  def genPointerToIsUndefined(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+    if (valueCell.irType != PointerType(irType)) {
+      throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
+    }
+
+    block.getelementptr("isUndefinedPtr")(
+      elementType=isUndefinedIrType,
+      basePointer=valueCell,
+      indices=isUndefinedGepIndices.map(IntegerConstant(IntegerType(32), _)),
+      inbounds=true
+    )
+  }
+
+  def genStoreToIsUndefined(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+    val isUndefinedPtr = genPointerToIsUndefined(block)(valueCell)
+    val allMetadata = metadata ++ Map("tbaa" -> isUndefinedTbaaNode)
+    block.store(toStore, isUndefinedPtr, metadata=allMetadata)
+  }
+
+  def genLoadFromIsUndefined(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+    val isUndefinedPtr = genPointerToIsUndefined(block)(valueCell)
+    val allMetadata = Map("tbaa" -> isUndefinedTbaaNode) ++ metadata
+    block.load("isUndefined")(isUndefinedPtr, metadata=allMetadata)
   }
 
   def genPointerToRecordClassId(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
@@ -1363,16 +1392,18 @@ object RecordLikeCell extends CellType with RecordLikeFields {
   val typeIdGepIndices = List(0, 0, 0)
   val gcStateGepIndices = List(0, 0, 1)
   val dataIsInlineGepIndices = List(0, 1)
-  val recordClassIdGepIndices = List(0, 2)
-  val recordDataGepIndices = List(0, 3)
+  val isUndefinedGepIndices = List(0, 2)
+  val recordClassIdGepIndices = List(0, 3)
+  val recordDataGepIndices = List(0, 4)
 
   val typeIdTbaaNode = NumberedMetadata(59L)
   val gcStateTbaaNode = NumberedMetadata(60L)
   val dataIsInlineTbaaNode = NumberedMetadata(61L)
-  val recordClassIdTbaaNode = NumberedMetadata(62L)
-  val recordDataTbaaNode = NumberedMetadata(63L)
+  val isUndefinedTbaaNode = NumberedMetadata(62L)
+  val recordClassIdTbaaNode = NumberedMetadata(63L)
+  val recordDataTbaaNode = NumberedMetadata(64L)
 
-  def createConstant(dataIsInline : Long, recordClassId : Long, recordData : IrConstant, typeId : Long) : StructureConstant = {
+  def createConstant(dataIsInline : Long, isUndefined : Long, recordClassId : Long, recordData : IrConstant, typeId : Long) : StructureConstant = {
     if (recordData.irType != recordDataIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field recordData")
     }
@@ -1380,6 +1411,7 @@ object RecordLikeCell extends CellType with RecordLikeFields {
     StructureConstant(List(
       DatumCell.createConstant(typeId=typeId),
       IntegerConstant(dataIsInlineIrType, dataIsInline),
+      IntegerConstant(isUndefinedIrType, isUndefined),
       IntegerConstant(recordClassIdIrType, recordClassId),
       recordData
     ), userDefinedType=Some(irType))
@@ -1430,24 +1462,26 @@ object ProcedureCell extends ConcreteCellType with ProcedureFields {
   val typeIdGepIndices = List(0, 0, 0, 0)
   val gcStateGepIndices = List(0, 0, 0, 1)
   val dataIsInlineGepIndices = List(0, 0, 1)
-  val recordClassIdGepIndices = List(0, 0, 2)
-  val recordDataGepIndices = List(0, 0, 3)
+  val isUndefinedGepIndices = List(0, 0, 2)
+  val recordClassIdGepIndices = List(0, 0, 3)
+  val recordDataGepIndices = List(0, 0, 4)
   val entryPointGepIndices = List(0, 1)
 
-  val typeIdTbaaNode = NumberedMetadata(64L)
-  val gcStateTbaaNode = NumberedMetadata(65L)
-  val dataIsInlineTbaaNode = NumberedMetadata(66L)
-  val recordClassIdTbaaNode = NumberedMetadata(67L)
-  val recordDataTbaaNode = NumberedMetadata(68L)
-  val entryPointTbaaNode = NumberedMetadata(69L)
+  val typeIdTbaaNode = NumberedMetadata(65L)
+  val gcStateTbaaNode = NumberedMetadata(66L)
+  val dataIsInlineTbaaNode = NumberedMetadata(67L)
+  val isUndefinedTbaaNode = NumberedMetadata(68L)
+  val recordClassIdTbaaNode = NumberedMetadata(69L)
+  val recordDataTbaaNode = NumberedMetadata(70L)
+  val entryPointTbaaNode = NumberedMetadata(71L)
 
-  def createConstant(entryPoint : IrConstant, dataIsInline : Long, recordClassId : Long, recordData : IrConstant) : StructureConstant = {
+  def createConstant(entryPoint : IrConstant, dataIsInline : Long, isUndefined : Long, recordClassId : Long, recordData : IrConstant) : StructureConstant = {
     if (entryPoint.irType != entryPointIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field entryPoint")
     }
 
     StructureConstant(List(
-      RecordLikeCell.createConstant(dataIsInline=dataIsInline, recordClassId=recordClassId, recordData=recordData, typeId=typeId),
+      RecordLikeCell.createConstant(dataIsInline=dataIsInline, isUndefined=isUndefined, recordClassId=recordClassId, recordData=recordData, typeId=typeId),
       entryPoint
     ), userDefinedType=Some(irType))
   }
@@ -1497,24 +1531,26 @@ object RecordCell extends ConcreteCellType with RecordFields {
   val typeIdGepIndices = List(0, 0, 0, 0)
   val gcStateGepIndices = List(0, 0, 0, 1)
   val dataIsInlineGepIndices = List(0, 0, 1)
-  val recordClassIdGepIndices = List(0, 0, 2)
-  val recordDataGepIndices = List(0, 0, 3)
+  val isUndefinedGepIndices = List(0, 0, 2)
+  val recordClassIdGepIndices = List(0, 0, 3)
+  val recordDataGepIndices = List(0, 0, 4)
   val extraDataGepIndices = List(0, 1)
 
-  val typeIdTbaaNode = NumberedMetadata(70L)
-  val gcStateTbaaNode = NumberedMetadata(71L)
-  val dataIsInlineTbaaNode = NumberedMetadata(72L)
-  val recordClassIdTbaaNode = NumberedMetadata(73L)
-  val recordDataTbaaNode = NumberedMetadata(74L)
-  val extraDataTbaaNode = NumberedMetadata(75L)
+  val typeIdTbaaNode = NumberedMetadata(72L)
+  val gcStateTbaaNode = NumberedMetadata(73L)
+  val dataIsInlineTbaaNode = NumberedMetadata(74L)
+  val isUndefinedTbaaNode = NumberedMetadata(75L)
+  val recordClassIdTbaaNode = NumberedMetadata(76L)
+  val recordDataTbaaNode = NumberedMetadata(77L)
+  val extraDataTbaaNode = NumberedMetadata(78L)
 
-  def createConstant(extraData : IrConstant, dataIsInline : Long, recordClassId : Long, recordData : IrConstant) : StructureConstant = {
+  def createConstant(extraData : IrConstant, dataIsInline : Long, isUndefined : Long, recordClassId : Long, recordData : IrConstant) : StructureConstant = {
     if (extraData.irType != extraDataIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field extraData")
     }
 
     StructureConstant(List(
-      RecordLikeCell.createConstant(dataIsInline=dataIsInline, recordClassId=recordClassId, recordData=recordData, typeId=typeId),
+      RecordLikeCell.createConstant(dataIsInline=dataIsInline, isUndefined=isUndefined, recordClassId=recordClassId, recordData=recordData, typeId=typeId),
       extraData
     ), userDefinedType=Some(irType))
   }
@@ -1595,10 +1631,10 @@ object ErrorObjectCell extends ConcreteCellType with ErrorObjectFields {
   val messageGepIndices = List(0, 1)
   val irritantsGepIndices = List(0, 2)
 
-  val typeIdTbaaNode = NumberedMetadata(76L)
-  val gcStateTbaaNode = NumberedMetadata(77L)
-  val messageTbaaNode = NumberedMetadata(78L)
-  val irritantsTbaaNode = NumberedMetadata(79L)
+  val typeIdTbaaNode = NumberedMetadata(79L)
+  val gcStateTbaaNode = NumberedMetadata(80L)
+  val messageTbaaNode = NumberedMetadata(81L)
+  val irritantsTbaaNode = NumberedMetadata(82L)
 
   def createConstant(message : IrConstant, irritants : IrConstant) : StructureConstant = {
     if (message.irType != messageIrType) {
@@ -1692,10 +1728,10 @@ object PortCell extends ConcreteCellType with PortFields {
   val isOwnedGepIndices = List(0, 1)
   val streamGepIndices = List(0, 2)
 
-  val typeIdTbaaNode = NumberedMetadata(80L)
-  val gcStateTbaaNode = NumberedMetadata(81L)
-  val isOwnedTbaaNode = NumberedMetadata(82L)
-  val streamTbaaNode = NumberedMetadata(83L)
+  val typeIdTbaaNode = NumberedMetadata(83L)
+  val gcStateTbaaNode = NumberedMetadata(84L)
+  val isOwnedTbaaNode = NumberedMetadata(85L)
+  val streamTbaaNode = NumberedMetadata(86L)
 
   def createConstant(isOwned : Long, stream : IrConstant) : StructureConstant = {
     if (stream.irType != streamIrType) {

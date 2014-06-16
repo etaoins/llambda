@@ -8,6 +8,11 @@ public:
 		return m_dataIsInline;
 	}
 
+	bool isUndefined() const
+	{
+		return m_isUndefined;
+	}
+
 	std::uint32_t recordClassId() const
 	{
 		return m_recordClassId;
@@ -31,5 +36,6 @@ public:
 
 private:
 	bool m_dataIsInline;
+	bool m_isUndefined;
 	std::uint32_t m_recordClassId;
 	void* m_recordData;

@@ -45,9 +45,8 @@ private[planner] object PlanBind {
 
         val recordDataTemp = ps.RecordLikeDataTemp()
 
-        plan.steps += ps.InitRecordLike(recursiveTemp, recordDataTemp, vt.MutableType)
         // Mark this value as undefined so a runtime error will be raised if it is accessed
-        plan.steps += ps.SetRecordDataFieldUndefined(recordDataTemp, vt.MutableType, vt.MutableField)
+        plan.steps += ps.InitRecordLike(recursiveTemp, recordDataTemp, vt.MutableType, isUndefined=true)
 
         state.withValue(storageLoc -> MutableValue(recursiveTemp, true))
       }
@@ -81,6 +80,9 @@ private[planner] object PlanBind {
           plan.steps += ps.LoadRecordLikeData(recordDataTemp, recursiveTemp, vt.MutableType)
           plan.steps += ps.SetRecordDataField(recordDataTemp, vt.MutableType, vt.MutableField, initialValueTemp)
 
+          // Mark us as defined
+          plan.steps += ps.SetRecordLikeDefined(recursiveTemp, vt.MutableType)
+
           Some(recursiveTemp)
 
         case _ =>
@@ -96,7 +98,7 @@ private[planner] object PlanBind {
 
           // Create a new mutable
           val recordDataTemp = ps.RecordLikeDataTemp()
-          plan.steps += ps.InitRecordLike(mutableTemp, recordDataTemp, vt.MutableType)
+          plan.steps += ps.InitRecordLike(mutableTemp, recordDataTemp, vt.MutableType, isUndefined=false)
 
           // Set the value
           plan.steps += ps.SetRecordDataField(recordDataTemp, vt.MutableType, vt.MutableField, initialValueTemp)

@@ -111,7 +111,8 @@ object GenConstant {
       // uninitialized to be instruction thrifty but we have to supply a value
       // here
       recordData=NullPointerConstant(ct.ProcedureCell.recordDataIrType),
-      dataIsInline=1
+      dataIsInline=1,
+      isUndefined=0
     )
 
     defineConstantData(module)(procCellName, procCell)
