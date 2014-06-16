@@ -22,6 +22,7 @@ object PrimitiveExprs {
   object AnnotateType extends PrimitiveExpr
   object CondExpand extends PrimitiveExpr
   object Parameterize extends PrimitiveExpr
+  object TypedDefine extends PrimitiveExpr
 
   val bindings = {
     Map[String, BoundValue](
@@ -43,7 +44,8 @@ object PrimitiveExprs {
       "define-report-procedure" -> DefineReportProcedure,
       "ann" -> AnnotateType,
       "cond-expand" -> CondExpand,
-      "parameterize" -> Parameterize
+      "parameterize" -> Parameterize,
+      "define:" -> TypedDefine
     )
   }
 }

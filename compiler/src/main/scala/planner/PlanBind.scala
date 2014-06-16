@@ -65,14 +65,15 @@ private[planner] object PlanBind {
         case otherExpr =>
           PlanExpr(postrecursiveState)(otherExpr, Some(storageLoc.sourceName))
       }
-        
+
+      val initialIntermediate = initialValueResult.value.castToSchemeType(storageLoc.schemeType) 
 
       // Was this previously a recursive value?
       val prevRecursiveOpt = postrecursiveState.values.get(storageLoc) match {
         case Some(MutableValue(recursiveTemp, true)) =>
           // This was previously a recursive value
 
-          val initialValueTemp = initialValueResult.value.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
+          val initialValueTemp = initialIntermediate.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
 
           // Update the recursive to point to our new value
           val recordDataTemp = ps.RecordLikeDataTemp()
@@ -91,7 +92,7 @@ private[planner] object PlanBind {
         val mutableTemp = prevRecursiveOpt.getOrElse {
           val mutableTemp = ps.RecordTemp()
           
-          val initialValueTemp = initialValueResult.value.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
+          val initialValueTemp = initialIntermediate.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
 
           // Create a new mutable
           val recordDataTemp = ps.RecordLikeDataTemp()
@@ -107,7 +108,7 @@ private[planner] object PlanBind {
       }
       else {
         // Send a hint about our name
-        val reportNamedValue = (initialValueResult.value, storageLoc) match {
+        val reportNamedValue = (initialIntermediate, storageLoc) match {
           case (knownProc : iv.KnownProcedure, reportProc : ReportProcedure) =>
             // Annotate with our report name so we can optimize when we try to apply this
             // Note this is agnostic to if the implementation is a native function versus a Scheme procedure

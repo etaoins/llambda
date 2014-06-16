@@ -147,18 +147,35 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     ))
   }
 
-  test("define variable") {
+  test("define untyped variable") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
     val expressions = bodyFor("(define a 2)")(scope)
 
-    // Make sure we preserved our source name for debugging purposes
     inside(scope.get("a").value) {
       case storageLoc : StorageLocation =>
         assert(expressions === List(
           et.TopLevelDefinition(List(storageLoc -> et.Literal(ast.IntegerLiteral(2))))
         ))
 
+        // Make sure we preserved our source name for debugging purposes
         assert(storageLoc.sourceName === "a")
+        assert(!storageLoc.hasTypeConstraints)
+    }
+  }
+  
+  test("define typed variable") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+    val expressions = bodyFor("(define: a : <exact-integer-cell> 2)")(scope)
+
+    inside(scope.get("a").value) {
+      case storageLoc : StorageLocation =>
+        assert(expressions === List(
+          et.TopLevelDefinition(List(storageLoc -> et.Literal(ast.IntegerLiteral(2))))
+        ))
+
+        // Make sure we preserved our source name for debugging purposes
+        assert(storageLoc.sourceName === "a")
+        assert(storageLoc.schemeType === vt.IntrinsicCellType(ct.ExactIntegerCell))
     }
   }
 

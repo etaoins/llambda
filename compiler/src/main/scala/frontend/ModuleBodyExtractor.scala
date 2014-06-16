@@ -296,8 +296,15 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
 
   private def parseDefine(boundValue : BoundValue, appliedSymbol : sst.ScopedSymbol, operands : List[sst.ScopedDatum]) : Option[ParsedDefine] =
     (boundValue, operands) match {
-      case (PrimitiveExprs.Define, (symbol : sst.ScopedSymbol) :: value :: Nil) =>
+      case (PrimitiveExprs.Define, List(symbol : sst.ScopedSymbol, value)) =>
         Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name), () => {
+          extractExpr(value)
+        }))
+      
+      case (PrimitiveExprs.TypedDefine, List(symbol : sst.ScopedSymbol, sst.ScopedSymbol(_, ":"), typeDatum, value)) =>
+        val valueType = DatumToValueType.toSchemeType(typeDatum)
+
+        Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name, valueType), () => {
           extractExpr(value)
         }))
 

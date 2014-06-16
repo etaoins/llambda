@@ -3,9 +3,9 @@
     (import (llambda nfi))
 
     ; Re-export from (llambda primitives) 
-    (export define-type ann)
+    (export define-type ann define:)
 
-    (export <any> <list-element> <pair> <empty-list> <string> <symbol> <boolean> <integer> <flonum> <char> <vector> <bytevector> <procedure>)
+    (export <any> <list-element> <pair> <empty-list> <string> <symbol> <boolean> <numeric> <integer> <flonum> <char> <vector> <bytevector> <procedure>)
     (begin 
       (define-type <any> <datum-cell>)
       (define-type <list-element> <list-element-cell>)

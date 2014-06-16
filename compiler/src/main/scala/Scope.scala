@@ -2,12 +2,25 @@ package io.llambda.compiler
 import io.llambda
 
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.{celltype => ct}
 
 sealed abstract class BoundValue
 
-// These are normal bindings
-class StorageLocation(val sourceName : String) extends BoundValue {
+/** Normal Scheme binding of a value
+  *
+  * @param  sourceName   Name of the variable in the Scheme source. This is used for error reporting and chosing
+  *                      names in the generated IR
+  * @param  schemeType   Type of the storage location. Normal Scheme values are untyped which is represented by
+  *                      DatumCell. Typed Scheme may explicitly restrict values further. 
+  */
+class StorageLocation(
+    val sourceName : String,
+    val schemeType : vt.CellValueType = vt.IntrinsicCellType(ct.DatumCell)
+) extends BoundValue {
   override def toString = "$" + sourceName
+
+  def hasTypeConstraints =
+    schemeType != vt.IntrinsicCellType(ct.DatumCell)
 }
 
 // These are procedure with the semantics of the same procedure defined in R7RS

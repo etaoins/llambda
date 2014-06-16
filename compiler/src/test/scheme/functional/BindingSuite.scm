@@ -128,3 +128,25 @@
 (define-test "recursive non-lambda definition" (expect #t
   (define self-param (cons #f (lambda () self-param)))
   (eqv? self-param ((cdr self-param)))))
+
+(define-test "simple typed define" (expect 5
+  (import (llambda typed))
+  (define: num : <numeric> 5)
+  num))
+
+(define-test "mutating typed define" (expect 15.0
+  (import (llambda typed))
+  (define: num : <numeric> 5)
+  (set! num 15.0)
+  num))
+
+(define-test "typed define with incompatible initialiser fails" (expect-failure
+  (import (llambda typed))
+  (define: num : <numeric> "not a number")
+  num))
+
+(define-test "mutating typed defined with incompatible initialiser fails" (expect-failure
+  (import (llambda typed))
+  (define: num : <numeric> 5)
+  (set! num "not a string")
+  num))

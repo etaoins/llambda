@@ -153,7 +153,9 @@ private[planner] object PlanExpr {
         }
         
         val newValueResult = apply(initialState)(valueExpr)
-        val newValueTemp = newValueResult.value.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
+        val castNewValue = newValueResult.value.castToSchemeType(storageLoc.schemeType)
+
+        val newValueTemp = castNewValue.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
 
         // Load our data pointer
         val recordDataTemp = ps.RecordLikeDataTemp()

@@ -42,10 +42,7 @@ private[reducer] object ReduceExpr {
       val usedBindings = (bindings.map { case (storageLoc, initializer) =>
         storageLoc -> ReduceExpr(initializer)
       }).filter { case (storageLoc, reducedInitializer) =>
-        // Drop any bindings of unused variables to expressions without side effects
-        reduceConfig.analysis.usedVars.contains(storageLoc) ||
-          reduceConfig.analysis.mutableVars.contains(storageLoc) ||
-          ExprHasSideEffects(reducedInitializer)
+        TopLevelDefinitionRequired(storageLoc, reducedInitializer, reduceConfig.analysis)
       }
 
       usedBindings match {

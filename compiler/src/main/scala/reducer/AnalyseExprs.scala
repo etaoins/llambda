@@ -43,12 +43,7 @@ object AnalyseExprs  {
     case et.TopLevelDefinition(bindings) =>
       // Filter out the bindings that are unused
       val usedBindings = bindings.filter { case (storageLoc, initialiser) =>
-        // Is this value directly used?
-        acc.usedVars.contains(storageLoc) ||
-          // Or does it need to be initialised for a later mutation?
-          acc.mutableVars.contains(storageLoc) ||
-          // Or does the initialiser have side effects?
-          ExprHasSideEffects(initialiser)
+        TopLevelDefinitionRequired(storageLoc, initialiser, acc)
       }
 
       if (usedBindings.isEmpty) {
