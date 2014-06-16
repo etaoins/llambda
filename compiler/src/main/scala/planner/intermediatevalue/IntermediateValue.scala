@@ -15,9 +15,6 @@ trait IntermediateValueHelpers {
     throw new ImpossibleTypeConversionException(plan.activeContextLocated, message)
   }
   
-  /** Provides a human-readable description of the value's type */
-  def typeDescription : String
-
   /** Converts the temp value of the given actual type to the passed super type
     *
     * This is a noop if the actual type matches the supertype
@@ -40,6 +37,9 @@ trait IntermediateValueHelpers {
 
 abstract class IntermediateValue extends IntermediateValueHelpers {
   val possibleTypes : Set[ct.ConcreteCellType]
+  
+  /** Provides a human-readable description of the value's type */
+  def typeDescription : String
 
   val isDefiniteProperList : Boolean =
     possibleTypes == Set(ct.EmptyListCell)
