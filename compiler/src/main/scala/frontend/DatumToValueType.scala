@@ -6,6 +6,14 @@ import llambda.compiler.sst
 import llambda.compiler.{BoundType, BadSpecialFormException}
 
 object DatumToValueType {
+  def toSchemeType(datum : sst.ScopedDatum) : vt.CellValueType = apply(datum) match {
+    case cellValue : vt.CellValueType =>
+      cellValue
+
+    case nonCellValue =>
+      throw new BadSpecialFormException(datum, "Scheme values cannot be annotated with native types")
+  }
+
   def apply(datum : sst.ScopedDatum) : vt.ValueType = datum match { 
     case symbol : sst.ScopedSymbol =>
       symbol.resolve match {

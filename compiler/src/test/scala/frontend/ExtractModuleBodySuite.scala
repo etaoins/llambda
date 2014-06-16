@@ -5,6 +5,7 @@ import org.scalatest.{FunSuite,Inside,OptionValues}
 
 import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.{celltype => ct}
 
 class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with testutil.ExprHelpers {
   implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(PrimitiveExprs.bindings.toSeq : _*))
@@ -457,8 +458,8 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   }
   
   test("annotate expression types") {
-    assert(exprFor("(ann #t <bool>)")(nfiScope) === 
-      et.Cast(et.Literal(ast.BooleanLiteral(true)), vt.CBool)
+    assert(exprFor("(ann #t <boolean-cell>)")(nfiScope) === 
+      et.Cast(et.Literal(ast.BooleanLiteral(true)), vt.IntrinsicCellType(ct.BooleanCell))
     )
   
     intercept[BadSpecialFormException] {
@@ -468,12 +469,17 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     
     intercept[BadSpecialFormException] {
       // Too many args
-      exprFor("(ann #t <bool> <int32>)")(nfiScope)
+      exprFor("(ann #t <datum-cell> <string-cell>)")(nfiScope)
     }
     
     intercept[UnboundVariableException] {
       // Not a type
       exprFor("(ann #t <not-a-type>)")(nfiScope)
+    }
+    
+    intercept[BadSpecialFormException] {
+      // Native type
+      exprFor("(ann #t <int64>)")(nfiScope)
     }
   }
   

@@ -108,6 +108,29 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     )
   }
 
+  /** Casts this value to the specified cell value type
+    *
+    * The result may not be of represented by the specified cell value type (e.g. it may be unboxed) but it is 
+    * guaranteed to be convertable to that type. toTempValue should be used when a particular representation is 
+    * explicitly required
+    */
+  def castToSchemeType(targetType : vt.CellValueType)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : IntermediateValue= {
+    targetType match {
+      case vt.IntrinsicCellType(cellType) =>
+        val targetConcreteTypes = cellType.concreteTypes
+
+        if (possibleTypes.subsetOf(targetConcreteTypes)) {
+          // We don't need to do anything 
+          return this
+        }
+
+      case _ =>
+    }
+
+    val castTemp = toTempValue(targetType)
+    TempValueToIntermediate(targetType, castTemp)
+  }
+
   /** Returns the preferred type to represent this value
     * 
     * For realized values this will be the type of the TempValue. For unrealized values such as constants and known

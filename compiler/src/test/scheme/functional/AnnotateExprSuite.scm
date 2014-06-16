@@ -14,7 +14,7 @@
 (define-test "annotation can convert typeless datums" (expect #t
 	(import (llambda typed))
 	(import (llambda test-util))
-	(ann (typeless-cell #t) <bool>)))
+	(ann (typeless-cell #t) <boolean>)))
 
 (define-test "expressions can be annotated as record types" (expect #t
 	(import (llambda typed))

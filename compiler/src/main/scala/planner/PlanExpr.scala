@@ -257,9 +257,7 @@ private[planner] object PlanExpr {
 
       case et.Cast(valueExpr, targetType) =>
         val valueResult = apply(initialState)(valueExpr)
-
-        val castTemp = valueResult.value.toTempValue(targetType)
-        val castValue = TempValueToIntermediate(targetType, castTemp)
+        val castValue = valueResult.value.castToSchemeType(targetType)
           
         PlanResult(state=valueResult.state, value=castValue)
 

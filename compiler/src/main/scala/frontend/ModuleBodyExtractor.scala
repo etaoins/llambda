@@ -255,7 +255,7 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
         )
 
       case (PrimitiveExprs.AnnotateType, valueExpr :: typeDatum :: Nil) =>
-        et.Cast(extractExpr(valueExpr), DatumToValueType(typeDatum))
+        et.Cast(extractExpr(valueExpr), DatumToValueType.toSchemeType(typeDatum))
 
       case (PrimitiveExprs.CondExpand, firstClause :: restClauses) =>
         val expandedData = CondExpander(firstClause :: restClauses)(libraryLoader, frontendConfig)

@@ -172,7 +172,7 @@ case class RecordTypeMutator(recordType : vt.RecordType, field : vt.RecordField)
     RecordTypeMutator(recordType, field).assignLocationFrom(this)
 }
 
-case class Cast(valueExpr : Expr, targetType : vt.ValueType) extends NonLiteralExpr {
+case class Cast(valueExpr : Expr, targetType : vt.CellValueType) extends NonLiteralExpr {
   val subexprs = valueExpr :: Nil
 
   def map(f : Expr => Expr) : Cast =
