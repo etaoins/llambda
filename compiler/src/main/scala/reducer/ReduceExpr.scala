@@ -1,8 +1,8 @@
 package io.llambda.compiler.reducer
 import io.llambda
 
-import io.llambda.compiler._
-import io.llambda.compiler.reducer.{partialvalue => pv}
+import llambda.compiler._
+import llambda.compiler.reducer.{partialvalue => pv}
 
 private[reducer] object ReduceExpr {
   private def unflattenExprs(exprs : List[et.Expr])(implicit reduceConfig : ReduceConfig) : et.Expr = exprs match {
