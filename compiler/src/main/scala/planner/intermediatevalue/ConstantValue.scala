@@ -53,6 +53,17 @@ class ConstantSymbolValue(value : String) extends TrivialConstantValue(ct.Symbol
 
 class ConstantExactIntegerValue(value : Long) extends TrivialConstantValue(ct.ExactIntegerCell, value, ps.CreateExactIntegerCell.apply) {
   val typeDescription = "constant exact integer"
+  
+  override def toCellTempValue(targetType : ct.CellType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
+    if (targetType == ct.InexactRationalCell) {
+      val constantTemp = ps.CellTemp(ct.InexactRationalCell, knownConstant=true)
+      plan.steps += ps.CreateInexactRationalCell(constantTemp, value.toDouble)
+      constantTemp
+    }
+    else {
+      super.toCellTempValue(targetType, errorMessageOpt)
+    }
+  }
 
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = nativeType match {
     case intType : vt.IntType =>
