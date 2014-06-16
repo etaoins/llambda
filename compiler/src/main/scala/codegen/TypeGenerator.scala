@@ -104,8 +104,8 @@ class TypeGenerator(module : IrModuleBuilder, targetPlatform : TargetPlatform) {
 
       // Generate an expression for the offset of each field that points to a cell
       val cellOffsets = recordLikeType.fields.zipWithIndex.filter({ case (field, _) =>
-        // We only want value cell types
-        field.fieldType.isInstanceOf[vt.CellValueType]
+        // We only want GC managed types
+        field.fieldType.isGcManaged
       }).map({ case (field, fieldIndex) =>
         val fieldIrType = ValueTypeToIr(field.fieldType).irType
 
