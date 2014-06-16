@@ -3,7 +3,7 @@
     (import (llambda nfi))
 
     ; Re-export from (llambda primitives) 
-    (export define-type ann define:)
+    (export define-type ann define: define-record-type:)
 
     (export <any> <list-element> <pair> <empty-list> <string> <symbol> <boolean> <numeric> <integer> <flonum> <char> <vector> <bytevector> <procedure>)
     (begin 
@@ -17,7 +17,7 @@
       (define-type <numeric> <numeric-cell>)
       (define-type <integer> <exact-integer-cell>)
       (define-type <flonum> <inexact-rational-cell>)
-      (define-type <char> <unicode-char>)
+      (define-type <char> <character-cell>)
       (define-type <vector> <vector-cell>)
       (define-type <bytevector> <bytevector-cell>)
       (define-type <procedure> <procedure-cell>))

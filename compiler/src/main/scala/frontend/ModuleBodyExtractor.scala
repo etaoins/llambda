@@ -322,7 +322,10 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
         Some(ParseSyntaxDefine(appliedSymbol, operands, debugContext))
 
       case (PrimitiveExprs.DefineRecordType, _) =>
-        Some(ParseRecordTypeDefine(appliedSymbol, operands))
+        Some(ParseRecordTypeDefine(appliedSymbol, operands, allowTypes=false))
+      
+      case (PrimitiveExprs.TypedDefineRecordType, _) =>
+        Some(ParseRecordTypeDefine(appliedSymbol, operands, allowTypes=true))
 
       case (PrimitiveExprs.DefineType, (typeAlias : sst.ScopedSymbol) :: existingTypeDatum :: Nil) =>
         Some(ParsedSimpleDefine(typeAlias, BoundType(DatumToValueType(existingTypeDatum)))) 

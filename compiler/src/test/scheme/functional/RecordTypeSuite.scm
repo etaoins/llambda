@@ -42,18 +42,18 @@
 	(single-value-field instance)))
 
 (define-test "constructing record type with one typed immutable field" (expect "Test string"
-	(import (llambda nfi))
+	(import (llambda typed))
 
-	(define-record-type <single-value> (single-value field) single-value?
-		((field : <string-cell>) single-value-field))
+	(define-record-type: <single-value> (single-value field) single-value?
+		((field : <string>) single-value-field))
 	
 	(single-value-field (single-value "Test string"))))
 
 (define-test "constructing record type with wrong type fails" (expect-failure
-	(import (llambda nfi))
+	(import (llambda typed))
 
 	(define-record-type <single-value> (single-value field) single-value?
-		((field : <string-cell>) single-value-field))
+		((field : <string>) single-value-field))
 	
 	(single-value 50.5)))
 
@@ -66,31 +66,31 @@
 	(mutable-value-field instance)))
 
 (define-test "constructing record type with typed mutable field" (expect -20
-	(import (llambda nfi))
+	(import (llambda typed))
 
-	(define-record-type <mutable-value> (mutable-value field) mutable-value?
-		((field : <int64>) mutable-value-field set-mutable-value-field!))
+	(define-record-type: <mutable-value> (mutable-value field) mutable-value?
+		((field : <integer>) mutable-value-field set-mutable-value-field!))
 	
 	(define instance (mutable-value 50))
 	(set-mutable-value-field! instance -20)
 	(mutable-value-field instance)))
 
 (define-test "mutating field with wrong type fails" (expect-failure
-	(import (llambda nfi))
+	(import (llambda typed))
 
-	(define-record-type <mutable-value> (mutable-value field) mutable-value?
-		((field : <int64>) mutable-value-field set-mutable-value-field!))
+	(define-record-type: <mutable-value> (mutable-value field) mutable-value?
+		((field : <integer>) mutable-value-field set-mutable-value-field!))
 	
 	(set-mutable-value-field! (mutable-value 50) #t)))
 
 (define-test "constructing record type with multiple fields" (expect (20 40 50.0)
-	(import (llambda nfi))
+	(import (llambda typed))
 
 	; Use at least three 64bit fields to force out-of-line storage
-	(define-record-type <three-value> (three-value field1 field2 field3) three-value?
-		((field1 : <int64>) three-value-field1)
+	(define-record-type: <three-value> (three-value field1 field2 field3) three-value?
+		((field1 : <integer>) three-value-field1)
 		(field2 three-value-field2 set-three-value-field2!)
-		((field3 : <double>) three-value-field3 set-three-value-field3!))
+		((field3 : <flonum>) three-value-field3 set-three-value-field3!))
 	
 	(define instance (three-value 20 30 50))
 	(set-three-value-field2! instance 40)
@@ -98,11 +98,11 @@
 	(list (three-value-field1 instance) (three-value-field2 instance) (three-value-field3 instance))))
 
 (define-test "constructors, accessors and mutators be boxed and invoked" (expect (20 40)
-	(import (llambda nfi))
+	(import (llambda typed))
 	(import (llambda test-util))
 
-	(define-record-type <two-value> (two-value field1 field2) two-value?
-		((field1 : <int64>) two-value-field1)
+	(define-record-type: <two-value> (two-value field1 field2) two-value?
+		((field1 : <integer>) two-value-field1)
 		(field2 two-value-field2 set-two-value-field2!))
 	
 	(define instance ((typeless-cell two-value) 20 30))
@@ -111,21 +111,25 @@
 	(list ((typeless-cell two-value-field1) instance) ((typeless-cell two-value-field2) instance))))
 
 ; On 64bit we'll reorder these fields to fit inside the record's cell
-(define-test "possibly repacked record type" (expect (1 2 3.0)
-	(define-record-type <single-value> (single-value field1 field2 field3) single-value?
-		((field1 : <int32>) single-value-field1)
-		((field2 : <int64>) single-value-field2)
-		((field3 : <float>) single-value-field3))
+(define-test "possibly repacked record type" (expect (#\a 2 #\c)
+  (import (llambda typed))
 
-	(define instance (single-value 1 2 3.0))
+	(define-record-type: <single-value> (single-value field1 field2 field3) single-value?
+		((field1 : <char>) single-value-field1)
+		((field2 : <integer>) single-value-field2)
+		((field3 : <char>) single-value-field3))
+
+	(define instance (single-value #\a 2 #\c))
 
 	(list (single-value-field1 instance) (single-value-field2 instance) (single-value-field3 instance))))
 
 (define-test "nested record types" (expect it-actually-worked
+  (import (llambda typed))
+
 	(define-record-type <inner-type> (inner-type field) inner-type?
 		(field inner-type-field))
 	
-	(define-record-type <outer-type> (outer-type inner-instance) outer-type?
+	(define-record-type: <outer-type> (outer-type inner-instance) outer-type?
 		((inner-instance : <inner-type>) outer-type-inner-instance))
 
 	(define instance (outer-type (inner-type 'it-actually-worked)))

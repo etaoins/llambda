@@ -107,13 +107,24 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
     }
   }
   
-  test("single read-only typeled field") {
+  test("specifying types in untyped form fails") {
     val scope = new Scope(collection.mutable.Map(), Some(baseScope))
 
-    val exprs = bodyFor("""(define-record-type <new-type>
+    intercept[BadSpecialFormException] {
+      bodyFor("""(define-record-type <new-type>
+                 (new-type const-int)
+                 new-type?
+                 ((const-int : <exact-integer-cell>) new-type-const-int))""")(scope)
+    }
+  }
+  
+  test("single read-only typed field") {
+    val scope = new Scope(collection.mutable.Map(), Some(baseScope))
+
+    val exprs = bodyFor("""(define-record-type: <new-type>
                            (new-type const-int)
                            new-type?
-                           ((const-int : <int64>) new-type-const-int))""")(scope)
+                           ((const-int : <exact-integer-cell>) new-type-const-int))""")(scope)
 
     inside(scope("<new-type>")) {
       case BoundType(recordType : vt.RecordType) =>
@@ -140,7 +151,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
   test("read-only and mutable field") {
     val scope = new Scope(collection.mutable.Map(), Some(baseScope))
 
-    val exprs = bodyFor("""(define-record-type <new-type>
+    val exprs = bodyFor("""(define-record-type: <new-type>
                            (new-type mutable-int const-datum)
                            new-type?
                            (const-datum new-type-const-datum)
@@ -160,7 +171,8 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         val mutableIntField = recordType.fieldForSourceName("mutable-int")
           
         assert(constDatumField.fieldType === vt.IntrinsicCellType(ct.DatumCell))
-        assert(mutableIntField.fieldType === vt.IntrinsicCellType(ct.ExactIntegerCell))
+        // <exact-integer-cell> should be implicitly converted to int64 for storage
+        assert(mutableIntField.fieldType === vt.Int64)
 
         inside(exprs) {
           case et.TopLevelDefinition(bindings) :: Nil =>
@@ -198,7 +210,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
             ))
         }
     
-        val outerExprs = bodyFor("""(define-record-type <outer-type>
+        val outerExprs = bodyFor("""(define-record-type: <outer-type>
                                     (outer-type inner-field)
                                     outer-type?
                                     ((inner-field : <inner-type>) outer-type-inner-field))""")(scope)
@@ -251,7 +263,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
     val scope = new Scope(collection.mutable.Map(), Some(baseScope))
 
     intercept[UnboundVariableException] {
-      bodyFor("""(define-record-type <new-type>
+      bodyFor("""(define-record-type: <new-type>
                  (new-type const-int)
                  new-type?
                  ((const-int : <not-a-type>) new-type-const-int))""")(scope)
