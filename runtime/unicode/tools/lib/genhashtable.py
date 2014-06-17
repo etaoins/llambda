@@ -1,60 +1,103 @@
-def _primes_less_than(n):
-    composite_array = bytearray(n)
+class SharedHashChains:
+    def __init__(self):
+        self.next_chain_index = 0
+        self.index_for_chain = dict()
+        self.source_lines = []
 
-    step = 2
-    primes = []
+    def has_chain_entry(self, chain_values):
+        chain_key = str(chain_values) 
+        return chain_key in self.index_for_chain
 
-    while True:
-        # Mark all muliples composite
-        for composite in range(step, n, step):
-            composite_array[composite] = 1
+    def add_unique_chain_entry(self, chain_values):
+        # Does this chain already exists?
+        chain_key = str(chain_values) 
 
-        # Find the next step
-        for candidate_prime in range(step, n):
-            if composite_array[candidate_prime] == 0:
-                primes.append(candidate_prime)
-                step = candidate_prime
-                break
-        else:
-            break
+        try:
+            return self.index_for_chain[chain_key]
+        except KeyError:
+            pass
 
-    return primes
+        chain_entries = []
+        for (index, (key, value)) in enumerate(chain_values):
+            if index == len(chain_values) - 1:
+                last_value = "1"
+            else:
+                last_value = "0"
 
-_prime_cache = None
+            # Build this C++ chain entry
+            chain_entry = "{" + last_value + ", " + hex(key) + ", " + hex(value) + "}"
+            chain_entries.append(chain_entry)
+
+        # Add this line to our source code
+        self.source_lines.append("\t" + ", ".join(chain_entries) + ",\n")
+        
+        # Move the next chain index forward
+        new_chain_index = self.next_chain_index
+        self.next_chain_index += len(chain_values)
+
+        # Record this chain key so we can share this hash chain if we see it
+        # later
+        self.index_for_chain[chain_key] = new_chain_index
+
+        return new_chain_index
+
+    def gen(self):
+        output  = "const NonAsciiHashChain NonAsciiHashChains[] = {\n"
+        output += "".join(self.source_lines)
+        output += "};\n\n"
+
+        return output
 
 def _hash_function(code_point, nonascii_hash_size):
-    return (code_point * 2654435761) % nonascii_hash_size
+    return ((code_point * 2654435761) & 0xFFFFFFFF) % nonascii_hash_size
 
-def gen_hashtable_cpp(base_name, input_dict):
-    global _prime_cache
+def _cost_for_candidate_hash(candidate_hash, shared_chains):
+    # The bucket itself costs 1 if it's filled, empty or spilt
+    hash_cost = len(candidate_hash)
 
-    # Build some prime numbers for our hash table size
-    if _prime_cache is None:
-        _prime_cache = _primes_less_than(100000)
+    for bucket_index in range(len(candidate_hash)):
+        # Every spilt value costs 1
+        chain_values = candidate_hash[bucket_index]
+        entry_count = len(chain_values)
 
-    # Find the first prime > our input size
-    # Note that ASCII goes in to its own table so we're underestimating the
-    # size slightly. This should help reduce collisions a bit
-    for nonascii_hash_size in _prime_cache:
-        if nonascii_hash_size > len(input_dict):
-            break
-    else:
-        raise Exception("Need more prime numbers!")
+        if entry_count > 1 and not shared_chains.has_chain_entry(chain_values):
+            hash_cost = hash_cost + entry_count
+    return hash_cost
+
+def _find_optimal_hash(input_dict, shared_chains):
+    best_cost = None
+    best_hash = None
+    input_size = len(input_dict)
+
+    for candidate_hash_size in range(input_size, int(input_size * 1.5) + 2):
+        # Build a candidate hash
+        candidate_hash = [[] for _ in range(candidate_hash_size)] 
+    
+        for (code_point, value) in input_dict.items():
+            if code_point >= 128:
+                hash_index = _hash_function(code_point, candidate_hash_size)
+                candidate_hash[hash_index].append((code_point, value))
+
+        cost = _cost_for_candidate_hash(candidate_hash, shared_chains)
+
+        if best_cost is None or (cost <= best_cost):
+            best_cost = cost
+            best_hash = candidate_hash
+
+    return best_hash
+
+def gen_hashtable(base_name, input_dict, shared_chains):
+    nonascii_hash = _find_optimal_hash(input_dict, shared_chains)
+    nonascii_hash_size = len(nonascii_hash)
 
     ascii_table_name = base_name + "AsciiTable"
-    nonascii_chains_name = base_name + "NonAsciiHashChains"
     nonascii_hash_name = base_name + "NonAsciiHash"
 
     # The ASCII table is direct mapped
     ascii_table = [None for _ in range(128)]
-    nonascii_hash = [[] for _ in range(nonascii_hash_size)] 
-
     for (code_point, value) in input_dict.items():
         if code_point < 128:
             ascii_table[code_point] = value
-        else:
-            hash_index = _hash_function(code_point, nonascii_hash_size)
-            nonascii_hash[hash_index].append((code_point, value))
 
     output = ""
     
@@ -72,36 +115,6 @@ def gen_hashtable_cpp(base_name, input_dict):
             output += "\n"
 
     output += "};\n\n"
-
-    # Build the hash chains for any values that have spilt their buckets
-    bucket_to_chain_mapping = {}
-    chain_index  = 0
-
-    output += "const NonAsciiHashChain " + nonascii_chains_name + "[] = {\n"
-    for bucket_index in range(nonascii_hash_size):
-        chain_values = nonascii_hash[bucket_index]
-
-        if (len(chain_values) < 2):
-            # Nothing to do
-            continue
-
-        output += "\t"
-
-        chain_entries = []
-        for (index, (key, value)) in enumerate(chain_values):
-            if index == len(chain_values) - 1:
-                last_value = "1"
-            else:
-                last_value = "0"
-
-            chain_entries.append("{" + last_value + ", " + hex(key) + ", " + hex(value) + "}")
-        
-        output += ", ".join(chain_entries) + ",\n"
-        
-        # Keep track of what bucket this chain belongs to
-        bucket_to_chain_mapping[bucket_index] = chain_index
-        chain_index += len(chain_values)
-    output += "};\n\n"
  
     # Build the hash buckets
     output += "const NonAsciiHashBucket " + nonascii_hash_name + "[" + str(nonascii_hash_size) + "] = {\n"
@@ -116,8 +129,8 @@ def gen_hashtable_cpp(base_name, input_dict):
             output += "\t{.codePoint = " + hex(only_key) + ", .value = " + hex(only_value) + ", .isInline = 1},\n"
 
         else:
-            chain_index = bucket_to_chain_mapping[bucket_index]
-            output += "\t{.chain = &" + nonascii_chains_name + "[" + str(chain_index) + "]},\n"
+            chain_index = shared_chains.add_unique_chain_entry(chain_values)
+            output += "\t{.chain = &NonAsciiHashChains[" + str(chain_index) + "]},\n"
     output += "};\n\n"
 
     output += "const UnicodeHash " + base_name + "Hash = {\n"

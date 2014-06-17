@@ -66,7 +66,8 @@ namespace
 			return value;
 		}
 
-		unsigned int targetBucket = (std::uint64_t(codePoint) * 2654435761ULL) % hash.nonAsciiHashSize; 
+		// Note this unsigned overflow in both intentional and defined in C++
+		unsigned int targetBucket = std::uint32_t(codePoint * 2654435761) % hash.nonAsciiHashSize; 
 		const NonAsciiHashBucket &bucket = hash.nonAsciiHash[targetBucket];
 
 		if (bucket.chain == nullptr)

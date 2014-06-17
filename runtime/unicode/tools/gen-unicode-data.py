@@ -3,8 +3,8 @@
 import sys
 from os import path
 from lib.parseucd import *
-from lib.genhashtable import gen_hashtable_cpp
-from lib.genrangelist import gen_rangelist_cpp
+from lib.genhashtable import gen_hashtable, SharedHashChains
+from lib.genrangelist import gen_rangelist
 
 if len(sys.argv) != 2:
     sys.stderr.write("Usage: " + sys.argv[0] + " ucd_directory\n")
@@ -105,12 +105,30 @@ with open(path.join(ucd_directory, 'CaseFolding.txt'), 'r') as f:
             folded_code_point = parse_code_point(fields[2])
             set_dict_range(tofolded_dict, code_range, folded_code_point)
 
-print(gen_rangelist_cpp("Uppercase", uppercase_ranges))
-print(gen_rangelist_cpp("Lowercase", lowercase_ranges))
-print(gen_rangelist_cpp("Alphabetic", alphabetic_ranges))
-print(gen_rangelist_cpp("Whitespace", whitespace_ranges))
 
-print(gen_hashtable_cpp("ToUpper", toupper_dict))
-print(gen_hashtable_cpp("ToLower", tolower_dict))
-print(gen_hashtable_cpp("ToFolded", tofolded_dict))
-print(gen_hashtable_cpp("ToNumericValue", numeric_value_dict))
+print(gen_rangelist("Uppercase", uppercase_ranges))
+print(gen_rangelist("Lowercase", lowercase_ranges))
+print(gen_rangelist("Alphabetic", alphabetic_ranges))
+print(gen_rangelist("Whitespace", whitespace_ranges))
+
+shared_chains = SharedHashChains()
+
+toupper_source = gen_hashtable("ToUpper", toupper_dict, shared_chains)
+
+# tofolded and tolower are largely the same
+# Make the larger one go first so the smaller one will notice the shared chains
+# when costing a size for its hash table and hopefully pick the same size
+if len(tofolded_dict) > len(tolower_dict):
+    tofolded_source = gen_hashtable("ToFolded", tofolded_dict, shared_chains)
+    tolower_source = gen_hashtable("ToLower", tolower_dict, shared_chains)
+else:
+    tolower_source = gen_hashtable("ToLower", tolower_dict, shared_chains)
+    tofolded_source = gen_hashtable("ToFolded", tofolded_dict, shared_chains)
+
+tonumeric_source = gen_hashtable("ToNumericValue", numeric_value_dict, shared_chains)
+
+print(shared_chains.gen())
+print(toupper_source)
+print(tofolded_source)
+print(tolower_source)
+print(tonumeric_source)

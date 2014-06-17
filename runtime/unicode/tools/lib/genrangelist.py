@@ -27,7 +27,7 @@ def _merge_rangelist(unsorted_ranges):
 
     return merged_ranges
 
-def gen_rangelist_cpp(base_name, rangelist):
+def gen_rangelist(base_name, rangelist):
     rangelist = _merge_rangelist(rangelist)
    
     output  = ""
