@@ -211,7 +211,7 @@ UnicodeChar UnicodeChar::toCaseFolded() const
 
 UnicodeChar::DigitValue UnicodeChar::digitValue() const
 {
-	return lookupHashedValue(codePoint(), ToNumericCellHash);
+	return lookupHashedValue(codePoint(), ToNumericValueHash);
 }
 
 
