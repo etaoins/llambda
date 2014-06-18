@@ -24,6 +24,7 @@ object PrimitiveExprs {
   object Parameterize extends PrimitiveExpr
   object TypedDefine extends PrimitiveExpr
   object TypedDefineRecordType extends PrimitiveExpr
+  object TypedLambda extends PrimitiveExpr
 
   val bindings = {
     Map[String, BoundValue](
@@ -47,7 +48,8 @@ object PrimitiveExprs {
       "cond-expand" -> CondExpand,
       "parameterize" -> Parameterize,
       "define:" -> TypedDefine,
-      "define-record-type:" -> TypedDefineRecordType
+      "define-record-type:" -> TypedDefineRecordType,
+      "lambda:" -> TypedLambda
     )
   }
 }

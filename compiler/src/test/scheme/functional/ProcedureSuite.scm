@@ -41,12 +41,27 @@
 	(define (return-7) 7)
 	(return-7)))
 
-(define-test "procedure returning its only argument" (expect 7
+(define-test "untyped procedure returning its only argument" (expect 7
 	(define (return-value value) value)
 	(return-value 7)))
 
-(define-test "procedure adding its arguments" (expect 7
+(define-test "typed procedure returning its only argument" (expect 7
+  (import (llambda typed))
+	(define: (return-value (value : <integer>)) value)
+	(return-value 7)))
+
+(define-test "typed procedure invoked with wrong type fails" (expect-failure
+  (import (llambda typed))
+	(define: (return-value (value : <integer>)) value)
+	(return-value 'symbol)))
+
+(define-test "untyped procedure adding its arguments" (expect 7
 	(define (add-two-values a b) (+ a b))
+	(add-two-values 4 3)))
+
+(define-test "typed procedure adding its arguments" (expect 7
+  (import (llambda typed))
+	(define: (add-two-values (a : <integer>) (b : <integer>)) (+ a b))
 	(add-two-values 4 3)))
 
 (define-test "procedure mutating args does not affect caller" (expect 7

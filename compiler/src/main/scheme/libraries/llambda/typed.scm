@@ -3,7 +3,7 @@
     (import (llambda nfi))
 
     ; Re-export from (llambda primitives) 
-    (export define-type ann define: define-record-type:)
+    (export define-type ann define: define-record-type: lambda:)
 
     (export <any> <list-element> <pair> <empty-list> <string> <symbol> <boolean> <number> <integer> <flonum> <char> <vector> <bytevector> <procedure>)
     (begin 

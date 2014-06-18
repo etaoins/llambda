@@ -12,7 +12,7 @@ class InferArgumentTypesSuite extends FunSuite with PlanHelpers{
   private def inferringProcedureName = "inferring-procedure"
 
   private def signatureFor(scheme : String) : ProcedureSignature = {
-    val importDecl = datum"(import (scheme base))"
+    val importDecl = datum"(import (scheme base) (llambda typed))"
 
     // Give the procedure a distinctive name so we can find it later
     val procedureDatum = ast.ProperList(List(
@@ -47,6 +47,13 @@ class InferArgumentTypesSuite extends FunSuite with PlanHelpers{
     // This can be passed anything so it can return anything
     assert(signature.fixedArgs === List(vt.IntrinsicCellType(ct.DatumCell)))
     assert(signature.returnType === Some(vt.IntrinsicCellType(ct.DatumCell)))
+  }
+  
+  test("explicitly typed procedure returning its argument") {
+    val signature = signatureFor("""(lambda: ((x : <integer>)) x)""")
+
+    assert(signature.fixedArgs === List(vt.IntrinsicCellType(ct.ExactIntegerCell)))
+    assert(signature.returnType === Some(vt.IntrinsicCellType(ct.ExactIntegerCell)))
   }
   
   test("procedure proxying (vector-ref)") {

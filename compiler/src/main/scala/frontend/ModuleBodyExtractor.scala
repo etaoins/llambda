@@ -121,14 +121,26 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
     }
   }
 
-  private def createLambda(fixedArgData : List[sst.ScopedDatum], restArgDatum : sst.ScopedDatum, definition : List[sst.ScopedDatum], sourceNameHint : Option[String]) : et.Lambda = {
+  private def createLambda(typed : Boolean, fixedArgData : List[sst.ScopedDatum], restArgDatum : sst.ScopedDatum, definition : List[sst.ScopedDatum], sourceNameHint : Option[String]) : et.Lambda = {
     // Create our actual procedure arguments
     // These unique identify the argument independently of its binding at a given time
 
     // Determine our arguments
-    val fixedArgs = fixedArgData.map {
-      case symbol : sst.ScopedSymbol => ScopedArgument(symbol, new StorageLocation(symbol.name))
-      case datum => throw new BadSpecialFormException(datum, "Symbol expected")
+    val fixedArgs = if (typed) {
+      fixedArgData.map {
+        case sst.ScopedProperList(List(scopedSymbol : sst.ScopedSymbol, sst.ScopedSymbol(_, ":"), typeDatum)) =>
+          val schemeType = DatumToValueType.toSchemeType(typeDatum)
+          ScopedArgument(scopedSymbol, new StorageLocation(scopedSymbol.name, schemeType))
+
+        case other =>
+          throw new BadSpecialFormException(other, "Expected (symbol : <type>)")
+      }
+    }
+    else {
+      fixedArgData.map {
+        case symbol : sst.ScopedSymbol => ScopedArgument(symbol, new StorageLocation(symbol.name))
+        case datum => throw new BadSpecialFormException(datum, "Symbol expected")
+      }
     }
 
     val restArgOpt = restArgDatum match {
@@ -219,7 +231,10 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
         }
 
       case (PrimitiveExprs.Lambda, sst.ScopedListOrDatum(fixedArgData, restArgDatum) :: definition) =>
-        createLambda(fixedArgData, restArgDatum, definition, None)
+        createLambda(false, fixedArgData, restArgDatum, definition, None)
+      
+      case (PrimitiveExprs.TypedLambda, sst.ScopedListOrDatum(fixedArgData, restArgDatum) :: definition) =>
+        createLambda(true, fixedArgData, restArgDatum, definition, None)
 
       case (PrimitiveExprs.SyntaxError, (errorDatum @ sst.NonSymbolLeaf(ast.StringLiteral(errorString))) :: data) =>
         throw new UserDefinedSyntaxError(errorDatum, errorString, data.map(_.unscope))
@@ -311,7 +326,12 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
 
       case (PrimitiveExprs.Define, sst.ScopedAnyList((symbol : sst.ScopedSymbol) :: fixedArgs, restArgDatum) :: body) =>
         Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name), () => {
-          createLambda(fixedArgs, restArgDatum, body, Some(symbol.name)).assignLocationAndContextFrom(appliedSymbol, debugContext)
+          createLambda(false, fixedArgs, restArgDatum, body, Some(symbol.name)).assignLocationAndContextFrom(appliedSymbol, debugContext)
+        }))
+      
+      case (PrimitiveExprs.TypedDefine, sst.ScopedAnyList((symbol : sst.ScopedSymbol) :: fixedArgs, restArgDatum) :: body) =>
+        Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name), () => {
+          createLambda(true, fixedArgs, restArgDatum, body, Some(symbol.name)).assignLocationAndContextFrom(appliedSymbol, debugContext)
         }))
 
       case (PrimitiveExprs.DefineSyntax, _) =>

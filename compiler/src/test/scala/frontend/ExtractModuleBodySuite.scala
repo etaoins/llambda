@@ -239,7 +239,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     }
   }
 
-  test("lambdas") {
+  test("untyped lambdas") {
     inside(exprFor("(lambda () #t)")) {
       case et.Lambda(Nil, None, body, _) =>
         assert(body === et.Literal(ast.BooleanLiteral(true)))
@@ -247,16 +247,54 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     inside(exprFor("(lambda (x) x)")) {
       case et.Lambda(List(argX), None, body, _) =>
+        assert(argX.hasTypeConstraints === false)
         assert(body === et.VarRef(argX))
     }
     
     inside(exprFor("(lambda x x)")) {
       case et.Lambda(Nil, Some(restArg), body, _) =>
+        assert(restArg.hasTypeConstraints === false)
         assert(body === et.VarRef(restArg))
     }
 
     inside(exprFor("(lambda (x y . z) x y z)")) {
       case et.Lambda(List(argX, argY), Some(restArg), body, _) =>
+        assert(argX.hasTypeConstraints === false)
+        assert(argY.hasTypeConstraints === false)
+        assert(restArg.hasTypeConstraints === false)
+
+        assert(body === et.Begin(List(
+          et.VarRef(argX),
+          et.VarRef(argY),
+          et.VarRef(restArg)
+        )))
+    }
+  }
+  
+  test("typed lambdas") {
+    inside(exprFor("(lambda: () #t)")(nfiScope)) {
+      case et.Lambda(Nil, None, body, _) =>
+        assert(body === et.Literal(ast.BooleanLiteral(true)))
+    }
+
+    inside(exprFor("(lambda: ((x : <numeric-cell>)) x)")(nfiScope)) {
+      case et.Lambda(List(argX), None, body, _) =>
+        assert(argX.schemeType === vt.IntrinsicCellType(ct.NumericCell))
+        assert(body === et.VarRef(argX))
+    }
+    
+    inside(exprFor("(lambda: x x)")(nfiScope)) {
+      case et.Lambda(Nil, Some(restArg), body, _) =>
+        assert(restArg.hasTypeConstraints === false)
+        assert(body === et.VarRef(restArg))
+    }
+
+    inside(exprFor("(lambda: ((x : <exact-integer-cell>) (y : <string-cell>) . z) x y z)")(nfiScope)) {
+      case et.Lambda(List(argX, argY), Some(restArg), body, _) =>
+        assert(argX.schemeType === vt.IntrinsicCellType(ct.ExactIntegerCell))
+        assert(argY.schemeType === vt.IntrinsicCellType(ct.StringCell))
+        assert(restArg.hasTypeConstraints === false)
+
         assert(body === et.Begin(List(
           et.VarRef(argX),
           et.VarRef(argY),
@@ -308,14 +346,15 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     }
   }
   
-  test("one arg lambda shorthand") {
+  test("untyped one arg lambda shorthand") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 
     val expr = exprFor("(define (return-true unused-param) #t)")(scope)
     val procLoc = scope.get("return-true").value
 
     inside(expr) {
-      case et.TopLevelDefinition(List((storageLoc, et.Lambda(List(_), None, bodyExpr, _)))) if procLoc == storageLoc =>
+      case et.TopLevelDefinition(List((storageLoc, et.Lambda(List(fixedArg), None, bodyExpr, _)))) if procLoc == storageLoc =>
+        assert(fixedArg.hasTypeConstraints === false)
         assert(bodyExpr === et.Literal(ast.BooleanLiteral(true)))
     }
 
@@ -324,15 +363,30 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
         assert(storageLoc.sourceName === "return-true")
     }
   }
+  
+  test("typed one arg lambda shorthand") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
-  test("fixed and rest arg lambda shorthand") {
+    val expr = exprFor("(define: (return-true (unused-param : <symbol-cell>)) #t)")(scope)
+    val procLoc = scope.get("return-true").value
+
+    inside(expr) {
+      case et.TopLevelDefinition(List((storageLoc, et.Lambda(List(fixedArg), None, _, _)))) if procLoc == storageLoc =>
+        assert(fixedArg.schemeType === vt.IntrinsicCellType(ct.SymbolCell))
+    }
+  }
+
+  test("untyped fixed and rest arg lambda shorthand") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
     
     val expr = exprFor("(define (return-false some . rest) #f)")(scope)
     val procLoc = scope.get("return-false").value
 
     inside(expr) {
-      case et.TopLevelDefinition(List((storageLoc, et.Lambda(List(_), Some(_), bodyExpr, _)))) if procLoc == storageLoc =>
+      case et.TopLevelDefinition(List((storageLoc, et.Lambda(List(fixedArg), Some(restArg), bodyExpr, _)))) if procLoc == storageLoc =>
+        assert(fixedArg.hasTypeConstraints === false)
+        assert(restArg.hasTypeConstraints === false)
+
         assert(bodyExpr === et.Literal(ast.BooleanLiteral(false)))
     }
 
@@ -341,20 +395,45 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
         assert(storageLoc.sourceName === "return-false")
     }
   }
+  
+  test("typed fixed and rest arg lambda shorthand") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
     
-  test("rest only arg lambda shorthand") {
+    val expr = exprFor("(define: (return-false (some : <boolean-cell>) . rest) #f)")(scope)
+    val procLoc = scope.get("return-false").value
+
+    inside(expr) {
+      case et.TopLevelDefinition(List((storageLoc, et.Lambda(List(fixedArg), Some(restArg), _, _)))) if procLoc == storageLoc =>
+        assert(fixedArg.schemeType === vt.IntrinsicCellType(ct.BooleanCell))
+        assert(restArg.hasTypeConstraints === false)
+    }
+  }
+    
+  test("untyped rest only arg lambda shorthand") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
     
     val expr = exprFor("(define (return-six . rest) 6)")(scope)
     val procLoc = scope.get("return-six").value
     inside(expr) {
-      case et.TopLevelDefinition(List((storageLoc, et.Lambda(Nil, Some(_), bodyExpr, _)))) if procLoc == storageLoc =>
+      case et.TopLevelDefinition(List((storageLoc, et.Lambda(Nil, Some(restArg), bodyExpr, _)))) if procLoc == storageLoc =>
+        assert(restArg.hasTypeConstraints === false)
         assert(bodyExpr === et.Literal(ast.IntegerLiteral(6)))
     }
     
     inside(scope.get("return-six").value) {
       case storageLoc : StorageLocation =>
         assert(storageLoc.sourceName === "return-six")
+    }
+  }
+    
+  test("typed rest only arg lambda shorthand") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+    
+    val expr = exprFor("(define: (return-six . rest) 6)")(scope)
+    val procLoc = scope.get("return-six").value
+    inside(expr) {
+      case et.TopLevelDefinition(List((storageLoc, et.Lambda(Nil, Some(restArg), _, _)))) if procLoc == storageLoc =>
+        assert(restArg.hasTypeConstraints === false)
     }
   }
 

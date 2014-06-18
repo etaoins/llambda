@@ -13,7 +13,7 @@ class ReduceExprsSuite extends FunSuite with Inside with testutil.ExprHelpers {
       et.Literal(ast.Symbol("test-symbol"))
     )
   }
-  
+
   test("collapsing static branches") {
     assert(reductionFor("(if #t 'true 'false)") ===
       et.Literal(ast.Symbol("true"))

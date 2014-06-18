@@ -229,7 +229,7 @@ private[planner] object PlanLambda {
     }
 
     val allArgs = fixedArgLocs.map({ storageLoc =>
-      FixedArgument(storageLoc, ps.CellTemp(ct.DatumCell), vt.IntrinsicCellType(ct.DatumCell))
+      FixedArgument(storageLoc, ps.Temp(storageLoc.schemeType), storageLoc.schemeType)
     }) ++
     restArgLoc.map({ storageLoc =>
       RestArgument(storageLoc, ps.CellTemp(ct.ListElementCell))
@@ -266,9 +266,7 @@ private[planner] object PlanLambda {
       hasWorldArg=true,
       hasSelfArg=innerSelfTempOpt.isDefined,
       hasRestArg=restArgLoc.isDefined,
-      fixedArgs=fixedArgLocs.map { _ =>
-        vt.IntrinsicCellType(ct.DatumCell)
-      },
+      fixedArgs=fixedArgLocs.map(_.schemeType),
       returnType=Some(vt.IntrinsicCellType(ct.DatumCell)),
       attributes=Set()
     )

@@ -15,7 +15,7 @@ class ReduceApplicationSuite extends FunSuite with Inside with testutil.ExprHelp
     )
   }
    
-  test("inlining one arg compile time evaluable") {
+  test("inlining untyped one arg compile time evaluable") {
     implicit val scope = schemeBaseScope
 
     assert(reductionFor("""
@@ -23,6 +23,28 @@ class ReduceApplicationSuite extends FunSuite with Inside with testutil.ExprHelp
       (add-two 4)
       """) === et.Literal(ast.IntegerLiteral(6))
     )
+  }
+  
+  test("inlining correctly typed one arg compile time evaluable") {
+    implicit val scope = typedLambdaScope
+
+    assert(reductionFor("""
+      (define: (add-two (n : <integer>)) (+ 2 n))
+      (add-two 4)
+      """) === et.Literal(ast.IntegerLiteral(6))
+    )
+  }
+  
+  test("refusing to inline incorrectly typed one arg compile time evaluable") {
+    implicit val scope = typedLambdaScope
+
+    inside(reductionFor("""
+      (define: (add-two (n : <string>)) (+ 2 n))
+      (add-two 4)
+    """)) {
+      case et.Apply(_, _) =>
+        Unit
+    }
   }
   
   test("inlining with empty rest arguments") {
