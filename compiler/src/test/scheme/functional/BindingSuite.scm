@@ -131,22 +131,22 @@
 
 (define-test "simple typed define" (expect 5
   (import (llambda typed))
-  (define: num : <numeric> 5)
+  (define: num : <number> 5)
   num))
 
 (define-test "mutating typed define" (expect 15.0
   (import (llambda typed))
-  (define: num : <numeric> 5)
+  (define: num : <number> 5)
   (set! num 15.0)
   num))
 
 (define-test "typed define with incompatible initialiser fails" (expect-failure
   (import (llambda typed))
-  (define: num : <numeric> "not a number")
+  (define: num : <number> "not a number")
   num))
 
 (define-test "mutating typed defined with incompatible initialiser fails" (expect-failure
   (import (llambda typed))
-  (define: num : <numeric> 5)
+  (define: num : <number> 5)
   (set! num "not a string")
   num))

@@ -5,7 +5,7 @@
     ; Re-export from (llambda primitives) 
     (export define-type ann define: define-record-type:)
 
-    (export <any> <list-element> <pair> <empty-list> <string> <symbol> <boolean> <numeric> <integer> <flonum> <char> <vector> <bytevector> <procedure>)
+    (export <any> <list-element> <pair> <empty-list> <string> <symbol> <boolean> <number> <integer> <flonum> <char> <vector> <bytevector> <procedure>)
     (begin 
       (define-type <any> <datum-cell>)
       (define-type <list-element> <list-element-cell>)
@@ -14,7 +14,7 @@
       (define-type <string> <string-cell>)
       (define-type <symbol> <symbol-cell>)
       (define-type <boolean> <boolean-cell>)
-      (define-type <numeric> <numeric-cell>)
+      (define-type <number> <numeric-cell>)
       (define-type <integer> <exact-integer-cell>)
       (define-type <flonum> <inexact-rational-cell>)
       (define-type <char> <character-cell>)
