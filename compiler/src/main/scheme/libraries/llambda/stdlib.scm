@@ -50,12 +50,6 @@
                     ((letrec ((name val) ...) body1 body2 ...)
                      (letrec* ((name val) ...) body1 body2 ...))))
 
-    (define-syntax let
-      (syntax-rules ()
-                    ((let ((name val) ...) body1 body2 ...)
-                     ((lambda (name ...) body1 body2 ...)
-                      val ...))))
-
     (define-syntax letrec-syntax
       (syntax-rules ()
                     ((let-syntax ((name val) ...) body1 body2 ...)
