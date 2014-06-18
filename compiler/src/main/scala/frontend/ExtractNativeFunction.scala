@@ -6,17 +6,6 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 
 object ExtractNativeFunction {
-  // This is similar to sst.AnyList but it will match a single datum as an empty list with a terminator
-  private object ListOrDatum {
-    def unapply(datum : sst.ScopedDatum) : Option[(List[sst.ScopedDatum], sst.ScopedDatum)] = datum match {
-      case sst.ScopedPair(car, tail)  => 
-        ListOrDatum.unapply(tail).map { case (head, terminator) =>
-          (car :: head, terminator)
-        }
-      case nonPair => Some((Nil, nonPair))
-    }
-  }
-
   private def createNativeFunction(
       hasWorldArg : Boolean,
       fixedArgData : List[sst.ScopedDatum],
@@ -59,13 +48,13 @@ object ExtractNativeFunction {
     case sst.NonSymbolLeaf(ast.StringLiteral(nativeSymbol)) :: functionTypeData =>
         functionTypeData match {
           // These mirror the lambda forms
-          case List(ListOrDatum(fixedArgs, restArgDatum)) =>
+          case List(sst.ScopedListOrDatum(fixedArgs, restArgDatum)) =>
             createNativeFunction(hasWorldArg, fixedArgs, restArgDatum, None, nativeSymbol, Set())
           
-          case List(ListOrDatum(fixedArgs, restArgDatum), sst.ScopedSymbol(_, "->"), (returnTypeDatum : sst.ScopedSymbol)) =>
+          case List(sst.ScopedListOrDatum(fixedArgs, restArgDatum), sst.ScopedSymbol(_, "->"), (returnTypeDatum : sst.ScopedSymbol)) =>
             createNativeFunction(hasWorldArg, fixedArgs, restArgDatum, Some(returnTypeDatum), nativeSymbol, Set())
           
-          case List(ListOrDatum(fixedArgs, restArgDatum), sst.ScopedSymbol(_, "noreturn")) =>
+          case List(sst.ScopedListOrDatum(fixedArgs, restArgDatum), sst.ScopedSymbol(_, "noreturn")) =>
             createNativeFunction(hasWorldArg, fixedArgs, restArgDatum, None, nativeSymbol, Set(ProcedureAttribute.NoReturn))
 
           case _ =>

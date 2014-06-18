@@ -101,3 +101,18 @@ object ScopedDatum {
     scopedDatum
   }
 }
+  
+/** Matches either a list or a single datum
+  *
+  * A single datum is treated as the terminator of an otherwise empty improper list
+  */
+object ScopedListOrDatum {
+  def unapply(datum : ScopedDatum) : Option[(List[ScopedDatum], ScopedDatum)] = datum match {
+    case ScopedPair(car, tail)  => 
+      ScopedListOrDatum.unapply(tail).map { case (head, terminator) =>
+        (car :: head, terminator)
+      }
+    case nonPair => Some((Nil, nonPair))
+  }
+}
+

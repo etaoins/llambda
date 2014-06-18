@@ -121,7 +121,7 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
     }
   }
 
-  private def createLambda(fixedArgData : List[sst.ScopedDatum], restArgDatum : Option[sst.ScopedSymbol], definition : List[sst.ScopedDatum], sourceNameHint : Option[String]) : et.Lambda = {
+  private def createLambda(fixedArgData : List[sst.ScopedDatum], restArgDatum : sst.ScopedDatum, definition : List[sst.ScopedDatum], sourceNameHint : Option[String]) : et.Lambda = {
     // Create our actual procedure arguments
     // These unique identify the argument independently of its binding at a given time
 
@@ -131,11 +131,18 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
       case datum => throw new BadSpecialFormException(datum, "Symbol expected")
     }
 
-    val restArg = restArgDatum.map { scopedSymbol  =>
-      ScopedArgument(scopedSymbol, new StorageLocation(scopedSymbol.name))
+    val restArgOpt = restArgDatum match {
+      case scopedSymbol : sst.ScopedSymbol =>
+        Some(ScopedArgument(scopedSymbol, new StorageLocation(scopedSymbol.name)))
+
+      case sst.NonSymbolLeaf(ast.EmptyList()) =>
+        None
+
+      case datum =>
+        throw new BadSpecialFormException(datum, "Symbol expected")
     }
     
-    val allArgs = fixedArgs ++ restArg.toList
+    val allArgs = fixedArgs ++ restArgOpt.toList
 
     // Create a subprogram for debug info purposes
     val subprogramDebugContextOpt = definition.headOption.flatMap(_.locationOpt).map { location =>
@@ -155,7 +162,7 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
 
     et.Lambda(
       fixedArgs=fixedArgs.map(_.boundValue),
-      restArg=restArg.map(_.boundValue),
+      restArg=restArgOpt.map(_.boundValue),
       body=bodyExpr,
       debugContextOpt=subprogramDebugContextOpt
     )
@@ -211,14 +218,8 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
             throw new BadSpecialFormException(mutatingSymbol, s"Attempted (set!) non-variable ${mutatingSymbol.name}") 
         }
 
-      case (PrimitiveExprs.Lambda, (restArgDatum : sst.ScopedSymbol) :: definition) =>
-        createLambda(List(), Some(restArgDatum), definition, None)
-
-      case (PrimitiveExprs.Lambda, sst.ScopedProperList(fixedArgData) :: definition) =>
-        createLambda(fixedArgData, None, definition, None)
-
-      case (PrimitiveExprs.Lambda, sst.ScopedImproperList(fixedArgData, (restArgDatum : sst.ScopedSymbol)) :: definition) =>
-        createLambda(fixedArgData, Some(restArgDatum), definition, None)
+      case (PrimitiveExprs.Lambda, sst.ScopedListOrDatum(fixedArgData, restArgDatum) :: definition) =>
+        createLambda(fixedArgData, restArgDatum, definition, None)
 
       case (PrimitiveExprs.SyntaxError, (errorDatum @ sst.NonSymbolLeaf(ast.StringLiteral(errorString))) :: data) =>
         throw new UserDefinedSyntaxError(errorDatum, errorString, data.map(_.unscope))
@@ -308,14 +309,9 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
           extractExpr(value)
         }))
 
-      case (PrimitiveExprs.Define, sst.ScopedProperList((symbol : sst.ScopedSymbol) :: fixedArgs) :: body) =>
+      case (PrimitiveExprs.Define, sst.ScopedAnyList((symbol : sst.ScopedSymbol) :: fixedArgs, restArgDatum) :: body) =>
         Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name), () => {
-          createLambda(fixedArgs, None, body, Some(symbol.name)).assignLocationAndContextFrom(appliedSymbol, debugContext)
-        }))
-      
-      case (PrimitiveExprs.Define, sst.ScopedImproperList((symbol : sst.ScopedSymbol) :: fixedArgs, (restArgDatum : sst.ScopedSymbol)) :: body) =>
-        Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name), () => {
-          createLambda(fixedArgs, Some(restArgDatum), body, Some(symbol.name)).assignLocationAndContextFrom(appliedSymbol, debugContext)
+          createLambda(fixedArgs, restArgDatum, body, Some(symbol.name)).assignLocationAndContextFrom(appliedSymbol, debugContext)
         }))
 
       case (PrimitiveExprs.DefineSyntax, _) =>
