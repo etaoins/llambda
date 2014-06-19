@@ -117,7 +117,7 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
 
     bindings match {
       case Nil => bodyExpr
-      case _ => et.InternalDefinition(bindings, bodyExpr)
+      case _ => et.InternalDefine(bindings, bodyExpr)
     }
   }
 
@@ -380,7 +380,7 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
           case None  =>
             // This is a fresh binding
             symbol.scope += (symbol.name -> boundValue)
-            et.TopLevelDefinition(List(boundValue -> exprBlock()))
+            et.TopLevelDefine(List(boundValue -> exprBlock()))
         }
 
       case Some(ParsedSimpleDefine(symbol, boundValue)) =>
@@ -391,7 +391,7 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
       case Some(ParsedRecordTypeDefine(typeSymbol, recordType, procedures)) =>
         typeSymbol.scope += (typeSymbol.name -> BoundType(recordType))
 
-        et.TopLevelDefinition((procedures.map { case (procedureSymbol, expr) =>
+        et.TopLevelDefine((procedures.map { case (procedureSymbol, expr) =>
           val storageLoc = new StorageLocation(procedureSymbol.name)
 
           procedureSymbol.scope += (procedureSymbol.name -> storageLoc)

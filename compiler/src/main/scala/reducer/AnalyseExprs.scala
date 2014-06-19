@@ -13,7 +13,7 @@ case class AnalysedExprs(
 
 object AnalyseExprs  {
   private def handleNestedExpr(expr : et.Expr, acc : AnalysedExprs) : AnalysedExprs = expr match {
-    case _ : et.TopLevelDefinition =>
+    case _ : et.TopLevelDefine =>
       // This voids our warranty
       throw new InternalCompilerErrorException("Top-level definition found nested in other expression")
 
@@ -40,10 +40,10 @@ object AnalyseExprs  {
   }
 
   private def handleTopLevelExpr(expr : et.Expr, acc : AnalysedExprs) : AnalysedExprs = expr match {
-    case et.TopLevelDefinition(bindings) =>
+    case et.TopLevelDefine(bindings) =>
       // Filter out the bindings that are unused
       val usedBindings = bindings.filter { case (storageLoc, initialiser) =>
-        TopLevelDefinitionRequired(storageLoc, initialiser, acc)
+        TopLevelDefineRequired(storageLoc, initialiser, acc)
       }
 
       if (usedBindings.isEmpty) {
@@ -53,7 +53,7 @@ object AnalyseExprs  {
       }
       else {
         // Create a new top-level define with just the used bindings
-        val onlyUsedDefine = et.TopLevelDefinition(usedBindings).assignLocationFrom(expr)
+        val onlyUsedDefine = et.TopLevelDefine(usedBindings).assignLocationFrom(expr)
 
         // Add it to the list of used expressions
         val accWithOnlyUsedDefine = acc.copy(

@@ -84,7 +84,7 @@ private[planner] object PlanLambda {
     case et.Begin(subexprs) =>
       lastNonStructuralExpr(subexprs.last)
 
-    case et.InternalDefinition(_, bodyExpr) =>
+    case et.InternalDefine(_, bodyExpr) =>
       lastNonStructuralExpr(bodyExpr)
 
     case other =>

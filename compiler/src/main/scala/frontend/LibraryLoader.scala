@@ -48,7 +48,7 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
       if (!featuresStorageLoc.isDefined) {
         // Create this on demand
         val storageLoc = new ReportProcedure("features")
-        exprBuffer += et.TopLevelDefinition(List(storageLoc -> FeaturesProcedure()))
+        exprBuffer += et.TopLevelDefine(List(storageLoc -> FeaturesProcedure()))
 
         featuresStorageLoc = Some(storageLoc)
       }

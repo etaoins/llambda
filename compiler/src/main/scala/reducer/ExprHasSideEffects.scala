@@ -30,12 +30,12 @@ private[reducer] object ExprHasSideEffects extends ((et.Expr) => Boolean) {
     case _ : et.MutateVar =>
       true
 
-    case et.TopLevelDefinition(bindings) =>
+    case et.TopLevelDefine(bindings) =>
       // Top level definitions have the side effect of making values live for the rest of the program
       // We try to remove unused bindings so any remaining ones are likely legitimate
       !bindings.isEmpty
 
-    case internalDefine : et.InternalDefinition =>
+    case internalDefine : et.InternalDefine =>
       // Internal definitions are pure as long as all the bound values and body expressions are pure
       internalDefine.subexprs.exists(ExprHasSideEffects)
 

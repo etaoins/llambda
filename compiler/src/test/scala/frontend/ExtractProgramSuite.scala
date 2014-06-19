@@ -35,7 +35,7 @@ class ExtractProgramSuite extends FunSuite with Inside {
          a
          b"""
     )) {
-      case et.TopLevelDefinition((ref1, _) :: Nil) :: et.VarRef(ref2) :: et.VarRef(ref3) :: Nil =>
+      case et.TopLevelDefine((ref1, _) :: Nil) :: et.VarRef(ref2) :: et.VarRef(ref3) :: Nil =>
         assert(ref1 === ref2)
         assert(ref2 === ref3)
     }
@@ -47,7 +47,7 @@ class ExtractProgramSuite extends FunSuite with Inside {
          (import (llambda internal primitives))
          (define b a)"""
     )) {
-      case et.TopLevelDefinition((storageLoc1, _) :: Nil) :: et.TopLevelDefinition((storageLoc2, expression) :: Nil) :: Nil =>
+      case et.TopLevelDefine((storageLoc1, _) :: Nil) :: et.TopLevelDefine((storageLoc2, expression) :: Nil) :: Nil =>
         assert(expression === et.VarRef(storageLoc1))
     }
   }

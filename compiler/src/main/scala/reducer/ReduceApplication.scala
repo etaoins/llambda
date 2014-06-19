@@ -45,7 +45,7 @@ private[reducer] object ReduceApplication {
   
   /** Returns true if we should inline an inlineable expression */
   private def shouldInlineExpr(candidateExpr : et.Expr, allowNesting : Boolean = true) : Boolean = candidateExpr match {
-    case et.InternalDefinition(bindings, bodyExpr) =>
+    case et.InternalDefine(bindings, bodyExpr) =>
       if (bindings.map(_._2).forall(exprIsTrivial)) {
         // Unwrap the internal definition
         shouldInlineExpr(bodyExpr)
@@ -187,7 +187,7 @@ private[reducer] object ReduceApplication {
       }
       else {
         // Wrap in a binding expression
-        et.InternalDefinition(usedBindings, inlinedBodyExpr)
+        et.InternalDefine(usedBindings, inlinedBodyExpr)
       })
     }
     else {

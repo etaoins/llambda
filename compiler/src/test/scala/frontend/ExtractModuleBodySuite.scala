@@ -154,7 +154,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     inside(scope.get("a").value) {
       case storageLoc : StorageLocation =>
         assert(expressions === List(
-          et.TopLevelDefinition(List(storageLoc -> et.Literal(ast.IntegerLiteral(2))))
+          et.TopLevelDefine(List(storageLoc -> et.Literal(ast.IntegerLiteral(2))))
         ))
 
         // Make sure we preserved our source name for debugging purposes
@@ -170,7 +170,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     inside(scope.get("a").value) {
       case storageLoc : StorageLocation =>
         assert(expressions === List(
-          et.TopLevelDefinition(List(storageLoc -> et.Literal(ast.IntegerLiteral(2))))
+          et.TopLevelDefine(List(storageLoc -> et.Literal(ast.IntegerLiteral(2))))
         ))
 
         // Make sure we preserved our source name for debugging purposes
@@ -186,7 +186,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     inside(scope.get("a").value) {
       case storageLoc : StorageLocation =>
         assert(expressions === List(
-          et.TopLevelDefinition(List(storageLoc -> et.Literal(ast.IntegerLiteral(2)))),
+          et.TopLevelDefine(List(storageLoc -> et.Literal(ast.IntegerLiteral(2)))),
           et.MutateVar(storageLoc, et.Literal(ast.IntegerLiteral(3)))
         ))
     }
@@ -199,8 +199,8 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     inside((scope.get("a").value, scope.get("b").value)) {
       case (storageLocA : StorageLocation, storageLocB : StorageLocation) =>
         assert(expressions === List(
-          et.TopLevelDefinition(List(storageLocA -> et.Literal(ast.IntegerLiteral(2)))),
-          et.TopLevelDefinition(List(storageLocB -> et.VarRef(storageLocA)))
+          et.TopLevelDefine(List(storageLocA -> et.Literal(ast.IntegerLiteral(2)))),
+          et.TopLevelDefine(List(storageLocB -> et.VarRef(storageLocA)))
         ))
     }
   }
@@ -212,7 +212,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     inside(scope.get("a").value) {
       case storageLoc : StorageLocation =>
         assert(expressions === List(
-          et.TopLevelDefinition(List(storageLoc -> et.Literal(ast.IntegerLiteral(2)))),
+          et.TopLevelDefine(List(storageLoc -> et.Literal(ast.IntegerLiteral(2)))),
           et.VarRef(storageLoc)
         ))
     }
@@ -317,7 +317,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
         (define foo (lambda (y) (bar x y)))
         (define bar (lambda (a b) (if a b)))
         (foo #t))""")) {
-      case et.Lambda(List(xLoc), None, et.InternalDefinition(
+      case et.Lambda(List(xLoc), None, et.InternalDefine(
         List(
           (fooLoc, et.Lambda(List(yLoc), None, fooExpr, _)),
           (barLoc, et.Lambda(List(aLoc, bLoc), None, barExpr, _))
@@ -336,7 +336,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-true").value
 
     inside(expr) {
-      case et.TopLevelDefinition(List((storageLoc, et.Lambda(Nil, None, bodyExpr, _)))) if procLoc == storageLoc =>
+      case et.TopLevelDefine(List((storageLoc, et.Lambda(Nil, None, bodyExpr, _)))) if procLoc == storageLoc =>
         assert(bodyExpr === et.Literal(ast.BooleanLiteral(true)))
     }
 
@@ -353,7 +353,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-true").value
 
     inside(expr) {
-      case et.TopLevelDefinition(List((storageLoc, et.Lambda(List(fixedArg), None, bodyExpr, _)))) if procLoc == storageLoc =>
+      case et.TopLevelDefine(List((storageLoc, et.Lambda(List(fixedArg), None, bodyExpr, _)))) if procLoc == storageLoc =>
         assert(fixedArg.hasTypeConstraints === false)
         assert(bodyExpr === et.Literal(ast.BooleanLiteral(true)))
     }
@@ -371,7 +371,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-true").value
 
     inside(expr) {
-      case et.TopLevelDefinition(List((storageLoc, et.Lambda(List(fixedArg), None, _, _)))) if procLoc == storageLoc =>
+      case et.TopLevelDefine(List((storageLoc, et.Lambda(List(fixedArg), None, _, _)))) if procLoc == storageLoc =>
         assert(fixedArg.schemeType === vt.IntrinsicCellType(ct.SymbolCell))
     }
   }
@@ -383,7 +383,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-false").value
 
     inside(expr) {
-      case et.TopLevelDefinition(List((storageLoc, et.Lambda(List(fixedArg), Some(restArg), bodyExpr, _)))) if procLoc == storageLoc =>
+      case et.TopLevelDefine(List((storageLoc, et.Lambda(List(fixedArg), Some(restArg), bodyExpr, _)))) if procLoc == storageLoc =>
         assert(fixedArg.hasTypeConstraints === false)
         assert(restArg.hasTypeConstraints === false)
 
@@ -403,7 +403,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-false").value
 
     inside(expr) {
-      case et.TopLevelDefinition(List((storageLoc, et.Lambda(List(fixedArg), Some(restArg), _, _)))) if procLoc == storageLoc =>
+      case et.TopLevelDefine(List((storageLoc, et.Lambda(List(fixedArg), Some(restArg), _, _)))) if procLoc == storageLoc =>
         assert(fixedArg.schemeType === vt.IntrinsicCellType(ct.BooleanCell))
         assert(restArg.hasTypeConstraints === false)
     }
@@ -415,7 +415,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val expr = exprFor("(define (return-six . rest) 6)")(scope)
     val procLoc = scope.get("return-six").value
     inside(expr) {
-      case et.TopLevelDefinition(List((storageLoc, et.Lambda(Nil, Some(restArg), bodyExpr, _)))) if procLoc == storageLoc =>
+      case et.TopLevelDefine(List((storageLoc, et.Lambda(Nil, Some(restArg), bodyExpr, _)))) if procLoc == storageLoc =>
         assert(restArg.hasTypeConstraints === false)
         assert(bodyExpr === et.Literal(ast.IntegerLiteral(6)))
     }
@@ -432,7 +432,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val expr = exprFor("(define: (return-six . rest) 6)")(scope)
     val procLoc = scope.get("return-six").value
     inside(expr) {
-      case et.TopLevelDefinition(List((storageLoc, et.Lambda(Nil, Some(restArg), _, _)))) if procLoc == storageLoc =>
+      case et.TopLevelDefine(List((storageLoc, et.Lambda(Nil, Some(restArg), _, _)))) if procLoc == storageLoc =>
         assert(restArg.hasTypeConstraints === false)
     }
   }
@@ -443,7 +443,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val expr = exprFor("(define (return-self) return-self)")(scope)
     val procLoc = scope.get("return-self").value
     inside(expr) {
-      case et.TopLevelDefinition(List((storageLoc, et.Lambda(Nil, None, bodyExpr, _)))) if procLoc == storageLoc =>
+      case et.TopLevelDefine(List((storageLoc, et.Lambda(Nil, None, bodyExpr, _)))) if procLoc == storageLoc =>
         assert(bodyExpr === et.VarRef(storageLoc))
     }
   }
@@ -459,7 +459,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     val expressions = bodyFor("(define x 1)(lambda (x) x)")(scope)
     inside(expressions) {
-      case List(et.TopLevelDefinition(List((shadowed, _))), et.Lambda(List(argX), None, et.VarRef(inner), _)) =>
+      case List(et.TopLevelDefine(List((shadowed, _))), et.Lambda(List(argX), None, et.VarRef(inner), _)) =>
         assert(inner != shadowed)
     }
   }
@@ -473,7 +473,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     )(scope) 
 
     inside(expressions) {
-      case List(et.TopLevelDefinition(List((shadowed, _))), et.Lambda(Nil, None, et.InternalDefinition(List((inner, _)), _), _)) =>
+      case List(et.TopLevelDefine(List((shadowed, _))), et.Lambda(Nil, None, et.InternalDefine(List((inner, _)), _), _)) =>
         assert(inner != shadowed)
     }
   }
@@ -483,7 +483,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val expressions = bodyFor("(define y 1)(lambda (x) y)")(scope)
 
     inside(expressions) {
-      case List(et.TopLevelDefinition(List((outer, _))), et.Lambda(List(argX), None, et.VarRef(inner), _)) =>
+      case List(et.TopLevelDefine(List((outer, _))), et.Lambda(List(argX), None, et.VarRef(inner), _)) =>
         assert(outer === inner)
     }
   }
@@ -500,7 +500,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     }
 
     inside(expr) {
-      case et.TopLevelDefinition(List((loc, et.Lambda(Nil, None, et.Literal(ast.BooleanLiteral(false)), _)))) =>
+      case et.TopLevelDefine(List((loc, et.Lambda(Nil, None, et.Literal(ast.BooleanLiteral(false)), _)))) =>
         assert(loc === listBinding)
     }
   }
@@ -539,9 +539,9 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
           case storageLocB : StorageLocation =>
             assert(expression === 
               et.Begin(List(
-                et.TopLevelDefinition(List(storageLocA -> et.Literal(ast.IntegerLiteral(1)))),
+                et.TopLevelDefine(List(storageLocA -> et.Literal(ast.IntegerLiteral(1)))),
                 et.Begin(List(
-                  et.TopLevelDefinition(List(storageLocB -> et.Literal(ast.IntegerLiteral(2)))),
+                  et.TopLevelDefine(List(storageLocB -> et.Literal(ast.IntegerLiteral(2)))),
                   et.Begin(List(
                     et.VarRef(storageLocA),
                     et.VarRef(storageLocB)
@@ -663,7 +663,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   
   test("parameterize introduces a body context") {
     inside(exprFor("""(parameterize () (define a 1))""")) { 
-      case et.Parameterize(Nil, et.InternalDefinition(_, _)) =>
+      case et.Parameterize(Nil, et.InternalDefine(_, _)) =>
         // Checks out
     }
   }

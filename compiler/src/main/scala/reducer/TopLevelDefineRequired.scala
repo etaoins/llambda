@@ -4,7 +4,7 @@ import io.llambda
 import llambda.compiler.StorageLocation
 import llambda.compiler.et
 
-object TopLevelDefinitionRequired {
+object TopLevelDefineRequired {
   def apply(storageLoc : StorageLocation, initialiser : et.Expr, analysis : AnalysedExprs) : Boolean =
     // Is this value used anywhere?
     analysis.usedVars.contains(storageLoc) ||

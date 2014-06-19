@@ -67,7 +67,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         assert(recordType.fields === Nil)
 
         inside(exprs) {
-          case et.TopLevelDefinition(bindings) :: Nil =>
+          case et.TopLevelDefine(bindings) :: Nil =>
             assert(bindings.toSet === Set( 
               (consLoc -> et.RecordTypeConstructor(recordType, Nil)),
               (predLoc -> et.RecordTypePredicate(recordType))
@@ -97,7 +97,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         assert(constDatumField.fieldType === vt.IntrinsicCellType(ct.DatumCell))
 
         inside(exprs) {
-          case et.TopLevelDefinition(bindings) :: Nil =>
+          case et.TopLevelDefine(bindings) :: Nil =>
             assert(bindings.toSet === Set( 
               (consLoc -> et.RecordTypeConstructor(recordType, List(constDatumField))),
               (predLoc -> et.RecordTypePredicate(recordType)),
@@ -138,7 +138,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         assert(constIntField.fieldType === vt.Int64)
 
         inside(exprs) {
-          case et.TopLevelDefinition(bindings) :: Nil =>
+          case et.TopLevelDefine(bindings) :: Nil =>
             assert(bindings.toSet === Set( 
               (consLoc -> et.RecordTypeConstructor(recordType, List(constIntField))),
               (predLoc -> et.RecordTypePredicate(recordType)),
@@ -175,7 +175,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         assert(mutableIntField.fieldType === vt.Int64)
 
         inside(exprs) {
-          case et.TopLevelDefinition(bindings) :: Nil =>
+          case et.TopLevelDefine(bindings) :: Nil =>
             assert(bindings.toSet === Set(
               (consLoc -> et.RecordTypeConstructor(recordType, List(mutableIntField, constDatumField))),
               (predLoc -> et.RecordTypePredicate(recordType)),
@@ -203,7 +203,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         assert(innerType.fields === Nil)
 
         inside(innerExprs) {
-          case et.TopLevelDefinition(bindings) :: Nil =>
+          case et.TopLevelDefine(bindings) :: Nil =>
             assert(bindings.toSet === Set( 
               (innerConsLoc -> et.RecordTypeConstructor(innerType, List())),
               (innerPredLoc -> et.RecordTypePredicate(innerType))
@@ -225,7 +225,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
             assert(innerField.fieldType === innerType)
 
             inside(outerExprs) {
-              case et.TopLevelDefinition(bindings) :: Nil =>
+              case et.TopLevelDefine(bindings) :: Nil =>
                 assert(bindings.toSet === Set( 
                   (outerConsLoc -> et.RecordTypeConstructor(outerType, List(innerField))),
                   (outerPredLoc -> et.RecordTypePredicate(outerType)),

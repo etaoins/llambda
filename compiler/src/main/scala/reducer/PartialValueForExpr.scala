@@ -32,7 +32,7 @@ private[reducer] object PartialValueForExpr {
         None
       }
 
-    case et.InternalDefinition(_, expr) =>
+    case et.InternalDefine(_, expr) =>
       PartialValueForExpr(expr, allowImpureExprs)
 
     case et.Literal(datum) =>

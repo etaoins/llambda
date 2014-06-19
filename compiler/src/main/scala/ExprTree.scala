@@ -115,20 +115,20 @@ sealed abstract trait BindingExpr extends NonLiteralExpr {
   val bindings : List[(StorageLocation, Expr)]
 }
 
-case class TopLevelDefinition(bindings : List[(StorageLocation, Expr)]) extends BindingExpr {
+case class TopLevelDefine(bindings : List[(StorageLocation, Expr)]) extends BindingExpr {
   val subexprs = bindings.map(_._2)
 
-  def map(f : Expr => Expr) : TopLevelDefinition =
-    TopLevelDefinition(bindings.map { case (storageLoc, expr) =>
+  def map(f : Expr => Expr) : TopLevelDefine =
+    TopLevelDefine(bindings.map { case (storageLoc, expr) =>
       (storageLoc, f(expr))
     }).assignLocationFrom(this)
 }
 
-case class InternalDefinition(bindings : List[(StorageLocation, Expr)], body : Expr) extends BindingExpr {
+case class InternalDefine(bindings : List[(StorageLocation, Expr)], body : Expr) extends BindingExpr {
   val subexprs = body :: bindings.map(_._2)
 
-  def map(f : Expr => Expr) : InternalDefinition =
-    InternalDefinition(bindings.map { case (storageLoc, expr) =>
+  def map(f : Expr => Expr) : InternalDefine =
+    InternalDefine(bindings.map { case (storageLoc, expr) =>
       (storageLoc, f(expr))
     }, f(body)).assignLocationFrom(this)
 }

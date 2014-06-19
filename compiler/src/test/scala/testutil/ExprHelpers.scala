@@ -57,7 +57,7 @@ trait ExprHelpers extends FunSuite with OptionValues {
     et.Expr.fromSequence(
       // Remove all top level defines
       reducer.ReduceExprs(analysis).toSequence.flatMap {
-        case et.TopLevelDefinition(_) =>
+        case et.TopLevelDefine(_) =>
           None
 
         case other =>
@@ -70,13 +70,13 @@ trait ExprHelpers extends FunSuite with OptionValues {
 
   def assertExprLocated(expr : et.Expr) {
     expr match {
-      case et.TopLevelDefinition(List((reportProc : ReportProcedure, _))) if reportProc.reportName == "features" =>
+      case et.TopLevelDefine(List((reportProc : ReportProcedure, _))) if reportProc.reportName == "features" =>
         // This is an artificial procedure - don't check subexpressions
         return
 
       case _ : et.Begin =>
-      case _ : et.InternalDefinition =>
-      case _ : et.TopLevelDefinition =>
+      case _ : et.InternalDefine =>
+      case _ : et.TopLevelDefine =>
         // These are structural - can be unlocated
 
       case other =>

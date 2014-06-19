@@ -20,7 +20,7 @@ class AnalyseExprsSuite extends FunSuite {
     val testLocB = new StorageLocation("testLocB")
 
     val testExprs = List(
-      et.TopLevelDefinition(
+      et.TopLevelDefine(
         List(
           testLocA -> et.Literal(ast.BooleanLiteral(true)),
           testLocB -> et.Literal(ast.BooleanLiteral(false))
@@ -46,7 +46,7 @@ class AnalyseExprsSuite extends FunSuite {
     val testLocB = new StorageLocation("testLocB")
 
     val testExprs = List(
-      et.TopLevelDefinition(
+      et.TopLevelDefine(
         List(
           testLocA -> et.Literal(ast.BooleanLiteral(true)),
           testLocB -> et.Literal(ast.BooleanLiteral(false))
@@ -60,9 +60,9 @@ class AnalyseExprsSuite extends FunSuite {
 
     // We should have dropped testLocB completely
     val expectedUsedExprs = testExprs match {
-      case et.TopLevelDefinition(bindings) :: tail =>
+      case et.TopLevelDefine(bindings) :: tail =>
         val usedBindings = bindings.filter(_._1 == testLocA)
-        et.TopLevelDefinition(usedBindings) :: tail
+        et.TopLevelDefine(usedBindings) :: tail
 
       case _ =>
         throw new Exception("Couldn't parse our own test expressions")
@@ -81,7 +81,7 @@ class AnalyseExprsSuite extends FunSuite {
     val testLocB = new StorageLocation("testLocB")
 
     val testExprs = List(
-      et.TopLevelDefinition(
+      et.TopLevelDefine(
         List(
           testLocA -> et.VarRef(testLocB),
           testLocB -> et.VarRef(testLocA)
@@ -99,7 +99,7 @@ class AnalyseExprsSuite extends FunSuite {
     val testLocB = new StorageLocation("testLocB")
 
     val testExprs = List(
-      et.TopLevelDefinition(
+      et.TopLevelDefine(
         List(
           testLocA -> et.Literal(ast.BooleanLiteral(true))
         )
@@ -127,7 +127,7 @@ class AnalyseExprsSuite extends FunSuite {
     val testLocB = new StorageLocation("testLocB")
 
     val testExprs = List( 
-      et.TopLevelDefinition(
+      et.TopLevelDefine(
         List(
           testLocA -> et.Literal(ast.BooleanLiteral(true))
         )
@@ -159,7 +159,7 @@ class AnalyseExprsSuite extends FunSuite {
     val testLocA = new StorageLocation("testLocA")
 
     val testExprs = List(
-      et.TopLevelDefinition(
+      et.TopLevelDefine(
         List(
           testLocA -> et.Literal(ast.BooleanLiteral(true))
         )
@@ -189,7 +189,7 @@ class AnalyseExprsSuite extends FunSuite {
     val testLocA = new StorageLocation("testLocA")
 
     val testExprs = List(
-      et.TopLevelDefinition(
+      et.TopLevelDefine(
         List(
           testLocA -> et.Literal(ast.BooleanLiteral(true))
         )
@@ -217,12 +217,12 @@ class AnalyseExprsSuite extends FunSuite {
     val testLocB = new StorageLocation("testLocB")
 
     val testExprs = List(
-      et.TopLevelDefinition(
+      et.TopLevelDefine(
         List(
           testLocA -> et.Literal(ast.BooleanLiteral(true))
         )
       ),
-      et.TopLevelDefinition(
+      et.TopLevelDefine(
         List(
           testLocB -> et.MutateVar(testLocA, et.Literal(ast.EmptyList()))
         )
@@ -248,7 +248,7 @@ class AnalyseExprsSuite extends FunSuite {
     val testLocB = new StorageLocation("testLocB")
 
     val testExprs = List(
-      et.TopLevelDefinition(
+      et.TopLevelDefine(
         List(
           testLocA -> et.Literal(ast.BooleanLiteral(true)),
           testLocB -> et.Literal(ast.BooleanLiteral(false))

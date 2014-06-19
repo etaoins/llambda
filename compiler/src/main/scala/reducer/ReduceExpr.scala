@@ -39,12 +39,12 @@ private[reducer] object ReduceExpr {
         et.Apply(apply(appliedExpr), reducedOperands)  
       }
 
-    case et.TopLevelDefinition(bindings) =>
+    case et.TopLevelDefine(bindings) =>
       // Reduce our bindings and drop unused pure bindings
       val usedBindings = (bindings.map { case (storageLoc, initializer) =>
         storageLoc -> ReduceExpr(initializer)
       }).filter { case (storageLoc, reducedInitializer) =>
-        TopLevelDefinitionRequired(storageLoc, reducedInitializer, reduceConfig.analysis)
+        TopLevelDefineRequired(storageLoc, reducedInitializer, reduceConfig.analysis)
       }
 
       usedBindings match {
@@ -52,10 +52,10 @@ private[reducer] object ReduceExpr {
           et.Literal(ast.UnitValue())
 
         case nonEmptyBindings =>
-          et.TopLevelDefinition(nonEmptyBindings)
+          et.TopLevelDefine(nonEmptyBindings)
       }
 
-    case et.InternalDefinition(bindings, bodyExpr) =>
+    case et.InternalDefine(bindings, bodyExpr) =>
       // Just reduce our bindings first
       val reducedBindings = bindings.map { case (storageLoc, initializer) =>
         storageLoc -> ReduceExpr(initializer)
@@ -95,11 +95,11 @@ private[reducer] object ReduceExpr {
       }
        
       if (usedBindings.isEmpty) {
-        // We can drop the InternalDefinition entirely and use the unwrapped body
+        // We can drop the InternalDefine entirely and use the unwrapped body
         reducedBody
       }
       else {
-        et.InternalDefinition(usedBindings, reducedBody)
+        et.InternalDefine(usedBindings, reducedBody)
       }
 
     case et.Cond(testExpr, trueExpr, falseExpr) =>
