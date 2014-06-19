@@ -1,6 +1,8 @@
 package io.llambda.compiler.reducer
 import io.llambda
 
+import scala.collection.breakOut
+
 import llambda.compiler._
 import llambda.compiler.reducer.{partialvalue => pv}
 
@@ -58,13 +60,16 @@ private[reducer] object ReduceExpr {
       val reducedBindings = bindings.map { case (storageLoc, initializer) =>
         storageLoc -> ReduceExpr(initializer)
       }
-      
-      // We now have known values for the body expression
-      val newKnownValues = reducedBindings.filter({ case (storageLoc, reducedInitializer) =>
-        !reduceConfig.analysis.mutableVars.contains(storageLoc)
-      }).map { case (storageLoc, reducedInitializer) =>
+
+      // Now convert them to partial values
+      val bindingPartialValues = reducedBindings.map({ case(storageLoc, reducedInitializer) =>
         storageLoc -> pv.PartialValue.fromReducedExpr(reducedInitializer)
-      }
+      })(breakOut) : Map[StorageLocation, pv.PartialValue]
+      
+      // We can use any non-mutable partial values as known values for the body
+      val newKnownValues = bindingPartialValues.filter({ case (storageLoc, _) =>
+        !reduceConfig.analysis.mutableVars.contains(storageLoc)
+      })
       
       val bodyConfig = reduceConfig.copy(
         knownValues=(reduceConfig.knownValues ++ newKnownValues)
@@ -83,7 +88,10 @@ private[reducer] object ReduceExpr {
       val allUsedVars = bodyUsedVars ++ recursiveBindingUsedVars 
 
       val usedBindings = reducedBindings.filter { case (storageLoc, initializer) =>
-        allUsedVars.contains(storageLoc) || ExprHasSideEffects(initializer)
+        allUsedVars.contains(storageLoc) ||
+          reduceConfig.analysis.mutableVars.contains(storageLoc) ||
+          ExprHasSideEffects(initializer) ||
+          !PartialValueSatisfiesType(bindingPartialValues(storageLoc), storageLoc.schemeType)
       }
        
       if (usedBindings.isEmpty) {

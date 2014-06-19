@@ -129,24 +129,48 @@
   (define self-param (cons #f (lambda () self-param)))
   (eqv? self-param ((cdr self-param)))))
 
-(define-test "simple typed define" (expect 5
+(define-test "simple typed top-level define" (expect 5
   (import (llambda typed))
   (define: num : <number> 5)
   num))
 
-(define-test "mutating typed define" (expect 15.0
+(define-test "mutating typed top-level define" (expect 15.0
   (import (llambda typed))
   (define: num : <number> 5)
   (set! num 15.0)
   num))
 
-(define-test "typed define with incompatible initialiser fails" (expect-failure
+(define-test "typed top-level define with incompatible initialiser fails" (expect-failure
   (import (llambda typed))
-  (define: num : <number> "not a number")
-  num))
+  (define: num : <number> "not a number")))
 
-(define-test "mutating typed defined with incompatible initialiser fails" (expect-failure
+(define-test "mutating typed top-level define with incompatible value fails" (expect-failure
   (import (llambda typed))
   (define: num : <number> 5)
-  (set! num "not a string")
-  num))
+  (set! num "not a string")))
+
+(define-test "simple typed inner define" (expect 5
+  (import (llambda typed))
+  ((lambda ()
+    (define: num : <number> 5)
+    num))))
+
+(define-test "mutating typed inner define" (expect 15.0
+  (import (llambda typed))
+  ((lambda ()
+    (define: num : <number> 5)
+    (set! num 15.0)
+    num))))
+
+(define-test "typed inner define with incompatible initialiser fails" (expect-failure
+  (import (llambda typed))
+  ((lambda ()
+    (define: num : <number> "not a number")
+  ))))
+
+(define-test "mutating typed inner define with incompatible value fails" (expect-failure
+  (import (llambda typed))
+  ((lambda ()
+    (define: num : <number> 5)
+    (set! num "not a string")
+  ))))
