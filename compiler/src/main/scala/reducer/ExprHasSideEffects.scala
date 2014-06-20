@@ -12,7 +12,7 @@ private[reducer] object ExprHasSideEffects extends ((et.Expr) => Boolean) {
     case _ : et.Literal =>
       false
 
-    case _ : et.Lambda | _ : et.NativeFunction | _ : et.RecordTypeProcedure =>
+    case _ : et.Lambda | _ : et.NativeFunction | _ : et.ArtificialProcedure =>
       // Procedure definitions themselves are always pure
       false
     

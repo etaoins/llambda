@@ -7,8 +7,14 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{ContextLocated, NoContextLocation}
 import llambda.compiler.InternalCompilerErrorException
 import llambda.compiler.et
+import llambda.compiler.{valuetype => vt}
+import llambda.compiler.planner.{intermediatevalue => iv}
 
-class PlanWriter(val plannedFunctions : mutable.Map[String, PlannedFunction], val allocedProcSymbols : mutable.HashSet[String]) {
+class PlanWriter(
+    val plannedFunctions : mutable.Map[String, PlannedFunction],
+    val allocedProcSymbols : mutable.HashSet[String],
+    val plannedTypePredicates : mutable.Map[vt.CellValueType, iv.KnownProcedure]
+) {
   private val contextLocStack = new mutable.Stack[ContextLocated] 
 
   class StepBuilder {
@@ -90,7 +96,7 @@ class PlanWriter(val plannedFunctions : mutable.Map[String, PlannedFunction], va
 
   def forkPlan() : PlanWriter = 
     // All forks share plannedFunctions
-    new PlanWriter(plannedFunctions, allocedProcSymbols)
+    new PlanWriter(plannedFunctions, allocedProcSymbols, plannedTypePredicates)
 
   def buildCondBranch(test : ps.TempValue, trueBuilder : (PlanWriter) => ps.TempValue, falseBuilder : (PlanWriter) => ps.TempValue) : ps.TempValue = {
     val truePlan = forkPlan()
@@ -114,5 +120,5 @@ class PlanWriter(val plannedFunctions : mutable.Map[String, PlannedFunction], va
 
 object PlanWriter {
   def apply() =
-    new PlanWriter(new mutable.HashMap[String, PlannedFunction], new mutable.HashSet[String])
+    new PlanWriter(new mutable.HashMap[String, PlannedFunction], new mutable.HashSet[String], new mutable.HashMap[vt.CellValueType, iv.KnownProcedure])
 }

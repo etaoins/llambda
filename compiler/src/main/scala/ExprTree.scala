@@ -145,21 +145,22 @@ case class NativeFunction(
     NativeFunction(signature, nativeSymbol).assignLocationFrom(this)
 }
 
-sealed abstract class RecordTypeProcedure extends NonLiteralExpr {
-  val recordType : vt.RecordType
-
+/** Artificial procedures are created internally by the compiler
+  *
+  * They do not correspond to a defined procedure in the Scheme source
+  */
+sealed abstract class ArtificialProcedure extends NonLiteralExpr {
   val subexprs = Nil
   def map(f : Expr => Expr) : this.type = this
+}
+
+sealed abstract class RecordTypeProcedure extends ArtificialProcedure {
+  val recordType : vt.RecordType
 }
 
 case class RecordTypeConstructor(recordType : vt.RecordType, initializedFields : List[vt.RecordField]) extends RecordTypeProcedure {
   override def cloningMap(f : Expr => Expr) : Expr =
     RecordTypeConstructor(recordType, initializedFields).assignLocationFrom(this)
-}
-
-case class RecordTypePredicate(recordType : vt.RecordType) extends RecordTypeProcedure {
-  override def cloningMap(f : Expr => Expr) : Expr =
-    RecordTypePredicate(recordType).assignLocationFrom(this)
 }
 
 case class RecordTypeAccessor(recordType : vt.RecordType, field : vt.RecordField) extends RecordTypeProcedure {
@@ -170,6 +171,11 @@ case class RecordTypeAccessor(recordType : vt.RecordType, field : vt.RecordField
 case class RecordTypeMutator(recordType : vt.RecordType, field : vt.RecordField) extends RecordTypeProcedure {
   override def cloningMap(f : Expr => Expr) : Expr =
     RecordTypeMutator(recordType, field).assignLocationFrom(this)
+}
+
+case class TypePredicate(schemeType : vt.CellValueType) extends ArtificialProcedure {
+  override def cloningMap(f : Expr => Expr) : Expr =
+    TypePredicate(schemeType).assignLocationFrom(this)
 }
 
 case class Cast(valueExpr : Expr, targetType : vt.CellValueType) extends NonLiteralExpr {

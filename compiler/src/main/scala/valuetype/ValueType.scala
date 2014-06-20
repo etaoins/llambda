@@ -18,7 +18,9 @@ sealed abstract class ValueType {
 sealed abstract trait PointerType extends ValueType
 
 /** Pointer to a garbage collected value cell */
-sealed abstract trait CellValueType extends PointerType
+sealed abstract trait CellValueType extends PointerType {
+  val cellType : ct.CellType
+}
 
 /** Intrinsic types known by the compiler backend
   *

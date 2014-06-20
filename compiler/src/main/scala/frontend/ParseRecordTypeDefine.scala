@@ -134,7 +134,7 @@ private[frontend] object ParseRecordTypeDefine {
 
       // Create our constructor and predicate procedures
       val constructorProcedure = parseConstructor(recordType, symbolToParsedField.mapValues(_.field), constructorDatum)
-      val predicateProcedure = (predicateSymbol -> et.RecordTypePredicate(recordType).assignLocationFrom(predicateSymbol))
+      val predicateProcedure = (predicateSymbol -> et.TypePredicate(recordType).assignLocationFrom(predicateSymbol))
 
       // Collect all of our accessors and mutators
       val accessorProcedures = (symbolToParsedField.values.map { parsedField => 

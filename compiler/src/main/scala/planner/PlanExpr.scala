@@ -216,18 +216,6 @@ private[planner] object PlanExpr {
 
         resultWithFunction(initialState)(procName, plannedFunction)
       
-      case recordPredicate : et.RecordTypePredicate =>
-        val plannedFunction = PlanRecordTypePredicate(recordPredicate)
-
-        val procName = sourceNameHint.getOrElse {
-          // By convention the predicate name is the type name without <> followed by ?
-          recordPredicate.recordType.sourceName
-            .replaceAllLiterally("<", "")
-            .replaceAllLiterally(">", "") + "?"
-        }
-
-        resultWithFunction(initialState)(procName, plannedFunction)
-      
       case recordAccessor : et.RecordTypeAccessor =>
         val plannedFunction = PlanRecordTypeAccessor(recordAccessor)
 
@@ -255,6 +243,32 @@ private[planner] object PlanExpr {
         }
 
         resultWithFunction(initialState)(procName, plannedFunction)
+      
+      case typePredicate @ et.TypePredicate(schemeType) =>
+        val knownProcedure = plan.plannedTypePredicates.getOrElseUpdate(schemeType, {
+          val plannedFunction = PlanTypePredicate(schemeType)
+
+          val procName = sourceNameHint.getOrElse {
+            // By convention the predicate name is the type name without <> followed by ?
+            schemeType.schemeName
+              .replaceAllLiterally("<", "")
+              .replaceAllLiterally(">", "") + "?"
+          }
+        
+          val nativeSymbol = plan.allocProcedureSymbol(procName)
+          plan.plannedFunctions += (nativeSymbol -> plannedFunction)
+
+          new iv.KnownProcedure(
+            signature=plannedFunction.signature,
+            nativeSymbol=nativeSymbol,
+            selfTempOpt=None
+          )
+        })
+
+        PlanResult(
+          state=initialState,
+          value=knownProcedure
+        )
 
       case et.Cast(valueExpr, targetType) =>
         val valueResult = apply(initialState)(valueExpr)
