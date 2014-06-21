@@ -7,7 +7,6 @@ import java.io._
 
 object GenerateTypes {
   private val writers = List(
-    writer.runtime.WritePredicates,
     writer.runtime.WriteSizeCheck,
     writer.runtime.WriteDeclaretypes,
     writer.runtime.WriteTypeid,

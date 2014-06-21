@@ -210,17 +210,21 @@
     (define-r7rs eq? eqv?)
     (define-r7rs equal? (native-function "lliby_is_equal" (<datum-cell> <datum-cell>) -> <bool>))
 
-    (define-r7rs number? (native-function "lliby_is_numeric" (<datum-cell>) -> <bool>))
+    (define-r7rs number? (make-predicate <numeric-cell>))
     ; We only support real and rational numbers
     (define-r7rs complex? number?)
     (define-r7rs real? number?)
     (define-r7rs rational? number?)
 
-    (define-r7rs integer? (native-function "lliby_is_exact_integer" (<datum-cell>) -> <bool>))
+    (define-r7rs integer? (make-predicate <exact-integer-cell>))
 
-    (define-r7rs inexact? (native-function "lliby_is_inexact_rational" (<numeric-cell>) -> <bool>))
-    ; This is the same as integer? with a different argument type
-    (define-r7rs exact? (native-function "lliby_is_exact_integer" (<numeric-cell>) -> <bool>))
+    ; These aren't quite normal predicates as they only take numbers
+    (define-r7rs inexact? (lambda: ((val : <numeric-cell>))
+      ((make-predicate <inexact-rational-cell>) val)))
+
+    (define-r7rs exact? (lambda: ((val : <numeric-cell>))
+      (integer? val)))
+
     (define-r7rs exact-integer? exact?)
 
     (define-r7rs finite? (native-function "lliby_is_finite" (<numeric-cell>) -> <bool>))
@@ -238,12 +242,12 @@
     (define-r7rs * (world-function "lliby_mul" <list-element-cell> -> <numeric-cell>))
     (define-r7rs / (world-function "lliby_div" (<numeric-cell> . <list-element-cell>) -> <double>))
 
-    (define-r7rs boolean? (native-function "lliby_is_boolean" (<datum-cell>) -> <bool>))
+    (define-r7rs boolean? (make-predicate <boolean-cell>))
     (define-r7rs not (native-function "lliby_not" (<bool>) -> <bool>))
     (define-r7rs boolean=? (world-function "lliby_boolean_equal" (<boolean-cell> <boolean-cell> . <list-element-cell>) -> <bool>))
 
-    (define-r7rs pair? (native-function "lliby_is_pair" (<datum-cell>) -> <bool>))
-    (define-r7rs null? (native-function "lliby_is_empty_list" (<datum-cell>) -> <bool>))
+    (define-r7rs pair? (make-predicate <pair-cell>))
+    (define-r7rs null? (make-predicate <empty-list-cell>))
     (define-r7rs list? (native-function "lliby_is_list" (<datum-cell>) -> <bool>))
     (define-r7rs cons (world-function "lliby_cons" (<datum-cell> <datum-cell>) -> <pair-cell>))
     (define-r7rs car (native-function "lliby_car" (<pair-cell>) -> <datum-cell>))
@@ -263,17 +267,17 @@
       ((len) (native-make-list len #!unit))
       ((len fill) (native-make-list len fill))))
 
-    (define-r7rs symbol? (native-function "lliby_is_symbol" (<datum-cell>) -> <bool>))
+    (define-r7rs symbol? (make-predicate <symbol-cell>))
     (define-r7rs symbol=? (world-function "lliby_symbol_equal" (<symbol-cell> <symbol-cell> . <list-element-cell>) -> <bool>))
     (define-r7rs symbol->string (world-function "lliby_symbol_to_string" (<symbol-cell>) -> <string-cell>))
     (define-r7rs string->symbol (world-function "lliby_string_to_symbol" (<string-cell>) -> <symbol-cell>))
 
-    (define-r7rs char? (native-function "lliby_is_character" (<datum-cell>) -> <bool>))
+    (define-r7rs char? (make-predicate <character-cell>))
     (define-r7rs digit-value (world-function "lliby_digit_value" (<unicode-char>) -> <datum-cell>))
     (define-r7rs char->integer (native-function "lliby_char_to_integer" (<unicode-char>) -> <int32>))
     (define-r7rs integer->char (native-function "lliby_integer_to_char" (<int32>) -> <unicode-char>))
 
-    (define-r7rs vector? (native-function "lliby_is_vector" (<datum-cell>) -> <bool>))
+    (define-r7rs vector? (make-predicate <vector-cell>))
     (define-r7rs vector (world-function "lliby_vector" <list-element-cell> -> <vector-cell>))
     ; This is the same runtime function but instead of using a rest arg explicitly pass in the list
     (define-r7rs list->vector (world-function "lliby_vector" (<list-element-cell>) -> <vector-cell>))
@@ -287,7 +291,7 @@
       ((len) (native-make-vector len #!unit))
       ((len fill) (native-make-vector len fill))))
 
-    (define-r7rs bytevector? (native-function "lliby_is_bytevector" (<datum-cell>) -> <bool>))
+    (define-r7rs bytevector? (make-predicate <bytevector-cell>))
     (define-r7rs bytevector (world-function "lliby_bytevector" <list-element-cell> -> <bytevector-cell>))
     (define-r7rs bytevector-length (native-function "lliby_bytevector_length" (<bytevector-cell>) -> <uint32>))
     (define-r7rs bytevector-u8-ref (world-function "lliby_bytevector_u8_ref" (<bytevector-cell> <uint32>) -> <uint8>))
@@ -299,7 +303,7 @@
       ((len) (native-make-bytevector len 0))
       ((len fill) (native-make-bytevector len fill))))
 
-    (define-r7rs string? (native-function "lliby_is_string" (<datum-cell>) -> <bool>))
+    (define-r7rs string? (make-predicate <string-cell>))
     (define-r7rs make-string (world-function "lliby_make_string" (<uint32> <unicode-char>) -> <string-cell>))
     (define-r7rs string (world-function "lliby_string" <list-element-cell> -> <string-cell>))
     ; This is the same runtime function but instead of using a rest arg explicitly pass in the list
@@ -309,7 +313,7 @@
     (define-r7rs string-set! (world-function "lliby_string_set" (<string-cell> <uint32> <unicode-char>)))
     (define-r7rs string-append (world-function "lliby_string_append" <list-element-cell> -> <string-cell>))
 
-    (define-r7rs procedure? (native-function "lliby_is_procedure" (<datum-cell>) -> <bool>))
+    (define-r7rs procedure? (make-predicate <procedure-cell>))
     (define-r7rs call-with-current-continuation (world-function "lliby_call_with_current_continuation" (<datum-cell>) -> <datum-cell>))
     (define-r7rs call/cc call-with-current-continuation)
 
@@ -318,7 +322,7 @@
     (define-r7rs dynamic-wind (world-function "lliby_dynamic_wind" (<procedure-cell> <procedure-cell> <procedure-cell>) -> <datum-cell>))
 
     ; Port support
-    (define-r7rs port? (native-function "lliby_is_port" (<datum-cell>) -> <bool>))
+    (define-r7rs port? (make-predicate <port-cell>))
     (define-r7rs input-port? (native-function "lliby_is_input_port" (<datum-cell>) -> <bool>))
     (define-r7rs output-port? (native-function "lliby_is_output_port" (<datum-cell>) -> <bool>))
 
@@ -333,7 +337,7 @@
 
     (define-r7rs with-exception-handler (world-function "lliby_with_exception_handler" (<procedure-cell> <procedure-cell>) -> <datum-cell>))
     (define-r7rs raise (world-function "lliby_raise" (<datum-cell>) noreturn))
-    (define-r7rs error-object? (native-function "lliby_is_error_object" (<datum-cell>) -> <bool>))
+    (define-r7rs error-object? (make-predicate <error-object-cell>))
     (define-r7rs error-object-message (native-function "lliby_error_object_message" (<error-object-cell>) -> <string-cell>))
     (define-r7rs error-object-irritants (native-function "lliby_error_object_irritants" (<error-object-cell>) -> <list-element-cell>)))
 

@@ -6,11 +6,6 @@ import io.llambda.compiler.reducer._
 
 object BooleanProcReducer extends ReportProcReducer {
   def apply(appliedVar : et.VarRef, reportName : String, operands : List[et.Expr])(implicit reduceConfig : ReduceConfig) : Option[et.Expr] = (reportName, operands) match {
-    case ("boolean?", List(singleExpr)) =>
-      literalPredicate(singleExpr, { literal =>
-        literal.isInstanceOf[ast.BooleanLiteral]
-      })
-
     case ("not", List(singleExpr)) =>
       LiteralForExpr(singleExpr) map {
         // Everything but false is truth-y

@@ -13,7 +13,6 @@ class CellNamesSuite extends FunSuite {
     assert(names.cppRefRangeName === "DatumRefRange")
     assert(names.scalaObjectName === "DatumCell")
     assert(names.scalaFieldsTraitName === "DatumFields")
-    assert(names.predicateFunctionName === "lliby_is_datum")
     assert(names.schemeName === "<datum-cell>")
   }
   
@@ -27,7 +26,6 @@ class CellNamesSuite extends FunSuite {
     assert(names.cppRefRangeName === "StringLikeRefRange")
     assert(names.scalaObjectName === "StringLikeCell")
     assert(names.scalaFieldsTraitName === "StringLikeFields")
-    assert(names.predicateFunctionName === "lliby_is_string_like")
     assert(names.schemeName === "<string-like-cell>")
   }
 }

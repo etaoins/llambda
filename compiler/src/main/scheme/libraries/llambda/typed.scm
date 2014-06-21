@@ -3,7 +3,7 @@
     (import (llambda nfi))
 
     ; Re-export from (llambda primitives) 
-    (export define-type ann define: define-record-type: lambda:)
+    (export define-type ann define: define-record-type: lambda: make-predicate define-predicate)
 
     (export <any> <list-element> <pair> <empty-list> <string> <symbol> <boolean> <number> <integer> <flonum> <char> <vector> <bytevector> <procedure>)
     (begin 
@@ -20,5 +20,10 @@
       (define-type <char> <character-cell>)
       (define-type <vector> <vector-cell>)
       (define-type <bytevector> <bytevector-cell>)
-      (define-type <procedure> <procedure-cell>))
+      (define-type <procedure> <procedure-cell>)
+
+      (define-syntax define-predicate
+        (syntax-rules ()
+                      ((define-predicate name type)
+                       (define name (make-predicate type))))))
 )

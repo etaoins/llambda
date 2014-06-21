@@ -126,16 +126,6 @@ object NumberProcReducer extends ReportProcReducer {
   }
 
   def apply(appliedVar : et.VarRef, reportName : String, operands : List[et.Expr])(implicit reduceConfig : ReduceConfig) : Option[et.Expr] = (reportName, operands) match {
-    case ("number?", List(singleExpr)) =>
-      literalPredicate(singleExpr, { literal =>
-        literal.isInstanceOf[ast.IntegerLiteral] || literal.isInstanceOf[ast.RationalLiteral]
-      })
-    
-    case ("integer?", List(singleExpr)) =>
-      literalPredicate(singleExpr, { literal =>
-        literal.isInstanceOf[ast.IntegerLiteral]
-      })
-    
     case ("zero?", List(singleExpr)) =>
       LiteralForExpr(singleExpr) match {
         case Some(ast.IntegerLiteral(exactValue)) =>

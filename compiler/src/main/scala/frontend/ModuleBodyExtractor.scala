@@ -293,6 +293,10 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
           parameterValues=parameters,
           extractBodyDefinition(Nil, bodyData)
         )
+
+      case (PrimitiveExprs.MakePredicate, List(typeName : sst.ScopedSymbol)) =>
+        val schemeType = DatumToValueType.toSchemeType(typeName)
+        et.TypePredicate(schemeType)
       
       case otherPrimitive =>
         throw new BadSpecialFormException(appliedSymbol, "Invalid primitive syntax")

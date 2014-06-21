@@ -667,4 +667,22 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
         // Checks out
     }
   }
+
+  test("creating type predicates without a type name fails") {
+    intercept[BadSpecialFormException] {
+      exprFor("(make-predicate)")(nfiScope)
+    }
+  }
+  
+  test("creating type predicates with non-type fails ") {
+    intercept[BadSpecialFormException] {
+      exprFor("(make-predicate 5)")(nfiScope)
+    }
+  }
+
+  test("creating type predicate from a Scheme type") {
+    assert(exprFor("(make-predicate <symbol-cell>)")(nfiScope) === 
+      et.TypePredicate(vt.IntrinsicCellType(ct.SymbolCell))
+    )
+  }
 }

@@ -22,6 +22,12 @@ sealed abstract trait CellValueType extends PointerType {
   val cellType : ct.CellType
 }
 
+/** Types visible to Scheme programs without using the NFI 
+  *
+  * These are the intrinsic cell types and user-defined record types
+  */
+sealed abstract trait SchemeType extends CellValueType
+
 /** Intrinsic types known by the compiler backend
   *
   * Note that some types that seem builtin might in fact be based off other types in the frontend, typically using
@@ -82,7 +88,7 @@ case object UnicodeChar extends IntLikeType(32, true) {
 }
 
 /** Pointer to a garbage collected value cell containing an intrinsic type */
-case class IntrinsicCellType(cellType : ct.CellType) extends IntrinsicType with CellValueType {
+case class IntrinsicCellType(cellType : ct.CellType) extends IntrinsicType with SchemeType {
   val schemeName = cellType.schemeName
 
   val isGcManaged = cellType match {
@@ -115,7 +121,7 @@ sealed abstract class RecordLikeType extends CellValueType {
   * 
   * This uniquely identifies a record type even if has the same name and internal structure as another type 
   */
-class RecordType(val sourceName : String, val fields : List[RecordField]) extends RecordLikeType {
+class RecordType(val sourceName : String, val fields : List[RecordField]) extends RecordLikeType with SchemeType {
   val cellType = ct.RecordCell
   val schemeName = sourceName
 }

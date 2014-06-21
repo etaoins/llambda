@@ -143,6 +143,16 @@ class IntrinsicCellValue(val possibleTypes : Set[ct.ConcreteCellType], val cellT
 
     recordTemp
   }
+
+  protected def hasRecordType(recordType : vt.RecordType) = 
+    if (possibleTypes.contains(ct.RecordCell)) {
+      // Possibly a record type
+      None
+    }
+    else {
+      // Definitely not a record type
+      Some(false)
+    }
   
   def preferredRepresentation : vt.ValueType = possibleTypes.toList match {
     case singleType :: Nil =>

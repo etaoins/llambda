@@ -70,12 +70,6 @@ object NumberProcPlanner extends ReportProcPlanner {
   }
 
   def apply(state : PlannerState)(reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = (reportName, operands) match {
-    case ("number?", List((_, singleOperand))) =>
-      predicatePlanner(state)(singleOperand, ct.NumericCell)
-
-    case ("integer?", List((_, singleOperand))) =>
-      predicatePlanner(state)(singleOperand, ct.ExactIntegerCell)
-    
     case ("=", List((_, val1), (_, val2))) =>
       compareOperands(state)(ps.CompareCond.Equal, val1, val2)
     

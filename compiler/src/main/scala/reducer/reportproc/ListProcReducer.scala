@@ -36,27 +36,6 @@ object ListProcReducer extends ReportProcReducer {
   }
 
   def apply(appliedVar : et.VarRef, reportName : String, operands : List[et.Expr])(implicit reduceConfig : ReduceConfig) : Option[et.Expr] = (reportName, operands) match {
-    case ("null?", List(singleExpr)) =>
-      literalPredicate(singleExpr, { literal =>
-        literal.isInstanceOf[ast.EmptyList]
-      })
-    
-    case ("pair?", List(singleExpr)) =>
-      PartialValueForExpr(singleExpr).flatMap {
-        case _ : pv.PartialPair => 
-          Some(et.Literal(ast.BooleanLiteral(true)))
-
-        case _ : pv.PartialVector => 
-          Some(et.Literal(ast.BooleanLiteral(false)))
-        
-        case _ : pv.LiteralLeaf => 
-          Some(et.Literal(ast.BooleanLiteral(false)))
-
-        case _ : pv.ReducedExpr =>
-          // This could be anything
-          None
-      }
-    
     case ("list?", List(singleExpr)) =>
       PartialValueForExpr(singleExpr) flatMap {
         case pv.ProperList(_) =>

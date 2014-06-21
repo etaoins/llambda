@@ -6,11 +6,6 @@ import io.llambda.compiler.reducer._
 
 object StringProcReducer extends ReportProcReducer {
   def apply(appliedVar : et.VarRef, reportName : String, operands : List[et.Expr])(implicit reduceConfig : ReduceConfig) : Option[et.Expr] = (reportName, operands) match {
-    case ("string?", List(singleExpr)) =>
-      literalPredicate(singleExpr, { literal =>
-        literal.isInstanceOf[ast.StringLiteral]
-      })
-
     case ("string-length", List(singleExpr)) =>
       LiteralForExpr(singleExpr) match {
         case Some(ast.StringLiteral(stringValue)) =>

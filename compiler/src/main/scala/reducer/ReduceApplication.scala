@@ -3,6 +3,7 @@ import io.llambda
 
 import llambda.compiler._
 import llambda.compiler.reducer.{partialvalue => pv}
+import llambda.compiler.{valuetype => vt}
 
 private[reducer] object ReduceApplication {
   private val reportProcReducers = List[reportproc.ReportProcReducer](
@@ -23,6 +24,10 @@ private[reducer] object ReduceApplication {
 
   private case class ResolvedLambda(lambdaExpr : et.Lambda, inlineDefinition : Boolean) extends ResolvedAppliedExpr {
     def toOutOfLine = this.copy(inlineDefinition=false)
+  }
+
+  private case class ResolvedTypePredicate(schemeType : vt.CellValueType) extends ResolvedAppliedExpr {
+    def toOutOfLine = this
   }
 
   private case class ResolvedReportProcedure(appliedVar : et.VarRef, reportProc : ReportProcedure) extends ResolvedAppliedExpr {
@@ -107,8 +112,8 @@ private[reducer] object ReduceApplication {
     val newFixedKnownValues = newBindings.map { case (storageLoc, operandExpr) =>
       val partialValue = pv.PartialValue.fromReducedExpr(operandExpr)
 
-      if (!PartialValueSatisfiesType(partialValue, storageLoc.schemeType)) {
-        // We don't meet the type constraints
+      if (PartialValueHasType(partialValue, storageLoc.schemeType) != Some(true)) {
+        // We don't meet the type constraints or the partial value's type can't be determined
         return None
       }
 
@@ -221,6 +226,9 @@ private[reducer] object ReduceApplication {
     case lambdaExpr : et.Lambda =>
       Some(ResolvedLambda(lambdaExpr, true))
 
+    case et.TypePredicate(schemeType) =>
+      Some(ResolvedTypePredicate(schemeType))
+
     case other => 
       None
   }
@@ -247,6 +255,19 @@ private[reducer] object ReduceApplication {
 
         // Couldn't reduce as a report procedure; retry as a normal expression
         apply(located, appliedExpr, reducedOperands, ignoreReportProcs + reportProc)
+
+      case ResolvedTypePredicate(schemeType) =>
+        reducedOperands match {
+          case List(testedExpr) =>
+            for(testedValue <- PartialValueForExpr(testedExpr);
+                hasType <- PartialValueHasType(testedValue, schemeType))
+            yield
+              et.Literal(ast.BooleanLiteral(hasType))
+
+          case _ =>
+            // Weird arity
+            None
+        }
 
       case ResolvedLambda(lambdaExpr, inlineDefinition) =>
         reduceLambdaApplication(located, lambdaExpr, reducedOperands, inlineDefinition)(reduceConfig)

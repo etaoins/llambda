@@ -73,6 +73,24 @@ private[planner] object PlanExpr {
         }
 
         procResult.value match {
+          case knownPredicate : iv.KnownTypePredicateProcedure =>
+            // This is a type predicate
+            operands match {
+              case List((_, singleValue)) =>
+                singleValue.hasSchemeType(knownPredicate.schemeType) match {
+                  case Some(knownResult) =>
+                    // We can satisfy this at plan time
+                    return PlanResult(
+                      state=initialState,
+                      value=new iv.ConstantBooleanValue(knownResult)
+                    )
+
+                  case _ =>
+                }
+
+              case _ =>
+            }
+
           case knownProc : iv.KnownProcedure if knownProc.reportName.isDefined && planConfig.optimize =>
             val reportName = knownProc.reportName.get
 
@@ -84,8 +102,8 @@ private[planner] object PlanExpr {
                 return planResult
               }
             }
-          
-          case other => other
+
+          case other => 
         }
 
         // Perform a function call
@@ -258,10 +276,10 @@ private[planner] object PlanExpr {
           val nativeSymbol = plan.allocProcedureSymbol(procName)
           plan.plannedFunctions += (nativeSymbol -> plannedFunction)
 
-          new iv.KnownProcedure(
+          new iv.KnownTypePredicateProcedure(
             signature=plannedFunction.signature,
             nativeSymbol=nativeSymbol,
-            selfTempOpt=None
+            schemeType=schemeType
           )
         })
 

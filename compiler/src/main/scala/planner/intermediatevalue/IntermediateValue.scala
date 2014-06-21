@@ -114,7 +114,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     * guaranteed to be convertable to that type. toTempValue should be used when a particular representation is 
     * explicitly required
     */
-  def castToSchemeType(targetType : vt.CellValueType)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : IntermediateValue= {
+  def castToSchemeType(targetType : vt.SchemeType)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : IntermediateValue= {
     targetType match {
       case vt.IntrinsicCellType(cellType) =>
         val targetConcreteTypes = cellType.concreteTypes
@@ -129,6 +129,41 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
 
     val castTemp = toTempValue(targetType)
     TempValueToIntermediate(targetType, castTemp)
+  }
+
+  protected def hasCellType(intrinsicType : vt.IntrinsicCellType) : Option[Boolean] = {
+    val concreteTypes = intrinsicType.cellType.concreteTypes
+
+    if (possibleTypes.subsetOf(concreteTypes)) {
+      // Must be this type
+      Some(true)
+    }
+    else if (possibleTypes.intersect(concreteTypes).isEmpty) {
+      // Cannot be of this type
+      Some(false)
+    }
+    else {
+      // Not statically known
+      None
+    }
+  }
+
+  protected def hasRecordType(recordType : vt.RecordType) : Option[Boolean]
+  
+  /** Returns if this value can has the specified cell value type
+    *
+    * If Some(true) is returned then the value is statically known to have the specified type. If Some(false) is
+    * returned the value is statically known to not have the specified type. If None is returned then the type
+    * condition cannot be statically evaluated
+    */
+  def hasSchemeType(targetType : vt.SchemeType) : Option[Boolean] = {
+    targetType match {
+      case intrinsicType : vt.IntrinsicCellType =>
+        hasCellType(intrinsicType)
+
+      case recordType : vt.RecordType =>
+        hasRecordType(recordType)
+    }
   }
 
   /** Returns the preferred type to represent this value

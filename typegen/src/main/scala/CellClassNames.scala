@@ -29,9 +29,6 @@ case class CellClassNames(definitionName : String) {
 
   /** Name for the Scala fields trait in celltype package */
   lazy val scalaFieldsTraitName = definitionName + "Fields"
-
-  /** Name for the runtime predicate function */
-  lazy val predicateFunctionName = "lliby_is_" + definitionName.replaceAll("""(?<!^)([A-Z]+)""", """_$1""").toLowerCase
   
   /** Name for the Scheme type */
   lazy val schemeName = "<" + definitionName.replaceAll("""(?<!^)([A-Z]+)""", """-$1""").toLowerCase + "-cell>"

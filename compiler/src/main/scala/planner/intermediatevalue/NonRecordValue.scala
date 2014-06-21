@@ -10,5 +10,8 @@ import llambda.compiler.RuntimeErrorMessage
 trait NonRecordValue extends IntermediateValue {
   protected def toRecordTempValue(recordType : vt.RecordType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = 
     impossibleConversion(s"Cannot convert ${typeDescription} to record type ${recordType.schemeName}")
+  
+  protected def hasRecordType(recordType : vt.RecordType) : Option[Boolean] =
+    Some(false)
 }
 

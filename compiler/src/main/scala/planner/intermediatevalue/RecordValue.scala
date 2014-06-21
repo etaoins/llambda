@@ -23,6 +23,9 @@ class RecordValue(val recordType : vt.RecordType, val tempValue : ps.TempValue) 
       impossibleConversion(s"Cannot convert ${typeDescription} to record of distinct type ${targetRecordType.sourceName}")
     }
   
+  protected def hasRecordType(testingType : vt.RecordType) =
+    Some(testingType == recordType)
+  
   def preferredRepresentation : vt.ValueType =
     recordType
   

@@ -15,7 +15,7 @@ sealed abstract class BoundValue
   */
 class StorageLocation(
     val sourceName : String,
-    val schemeType : vt.CellValueType = vt.IntrinsicCellType(ct.DatumCell)
+    val schemeType : vt.SchemeType = vt.IntrinsicCellType(ct.DatumCell)
 ) extends BoundValue {
   override def toString = "$" + sourceName
 
