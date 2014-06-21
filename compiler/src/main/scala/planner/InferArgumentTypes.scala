@@ -32,11 +32,11 @@ object InferArgumentTypes {
       false
   }
 
-  private def retypeArgument(argValue : ps.TempValue, steps : List[ps.Step]) : RetypingResult = {
+  private def retypeArgument(argValue : ps.TempValue, originalType : vt.IntrinsicCellType, steps : List[ps.Step]) : RetypingResult = {
     def abortRetyping =
       RetypingResult(
         replaceArgTempValue=argValue,
-        replaceArgType=vt.IntrinsicCellType(ct.DatumCell),
+        replaceArgType=originalType,
         steps=steps
       )
 
@@ -44,9 +44,9 @@ object InferArgumentTypes {
       case ps.CastCellToSubtypeChecked(result, _, value, toType, _, _) :: tailSteps if value == argValue =>
         // we found an unconditional checked subtype cast!
 
-        // It's valid for future steps to use the original <datum-cell> value
-        // Casting to the supertype is free so make a <datum-cell> available under the original TempValue
-        val supercastStep = ps.CastCellToTypeUnchecked(value, result, ct.DatumCell)
+        // It's valid for future steps to use the original value
+        // Casting to the supertype is free so make the original type available under the original TempValue
+        val supercastStep = ps.CastCellToTypeUnchecked(value, result, originalType.cellType)
 
         RetypingResult(
           replaceArgTempValue=result,
@@ -69,7 +69,7 @@ object InferArgumentTypes {
 
       case nonUserStep :: tailSteps =>
         // Keep looking for a cast
-        val innerResult = retypeArgument(argValue, tailSteps)
+        val innerResult = retypeArgument(argValue, originalType, tailSteps)
 
         innerResult.copy(steps=nonUserStep :: innerResult.steps)
 
@@ -133,27 +133,29 @@ object InferArgumentTypes {
       // The named arguments include world and self
       val namedArgIndex = fixedArgIndex + prefixArgCount
       val signature = function.signature
+      val argType = signature.fixedArgs(fixedArgIndex)
       
-      if (signature.fixedArgs(fixedArgIndex) == vt.IntrinsicCellType(ct.DatumCell)) {
-        // Try to rewrite this to something more specific
-        val (argName, argValue) = function.namedArguments(namedArgIndex)
+      argType match {
+        case intrinsicCellType : vt.IntrinsicCellType =>
+          // Try to rewrite this to something more specific
+          val (argName, argValue) = function.namedArguments(namedArgIndex)
 
-        val result = retypeArgument(argValue, function.steps)
+          val result = retypeArgument(argValue, intrinsicCellType, function.steps)
 
-        val newSignature = signature.copy(
-          fixedArgs=signature.fixedArgs.updated(fixedArgIndex, result.replaceArgType)
-        )
+          val newSignature = signature.copy(
+            fixedArgs=signature.fixedArgs.updated(fixedArgIndex, result.replaceArgType)
+          )
 
-        function.copy(
-          signature=newSignature,
-          namedArguments=function.namedArguments.updated(namedArgIndex, (argName, result.replaceArgTempValue)),
-          steps=result.steps,
-          worldPtrOpt=function.worldPtrOpt
-        )
-      }
-      else {
-        // Skip this arg
-        function
+          function.copy(
+            signature=newSignature,
+            namedArguments=function.namedArguments.updated(namedArgIndex, (argName, result.replaceArgTempValue)),
+            steps=result.steps,
+            worldPtrOpt=function.worldPtrOpt
+          )
+
+        case _ =>
+          // Skip this arg
+          function
       }
     }
   }

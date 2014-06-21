@@ -65,6 +65,14 @@ class InferArgumentTypesSuite extends FunSuite with PlanHelpers{
     assert(signature.returnType === Some(vt.IntrinsicCellType(ct.DatumCell)))
   }
   
+  test("typed procedure proxying (vector-ref)") {
+    val signature = signatureFor("""(lambda: ((vec : <vector>) (index : <number>)) (vector-ref vec index))""")
+
+    // We should refine <number> in to <integer>
+    assert(signature.fixedArgs === List(vt.IntrinsicCellType(ct.VectorCell), vt.IntrinsicCellType(ct.ExactIntegerCell)))
+    assert(signature.returnType === Some(vt.IntrinsicCellType(ct.DatumCell)))
+  }
+  
   test("procedure proxying (vector-set!)") {
     val signature = signatureFor("""(lambda (vec index) (vector-set! vec index #f))""")
 
@@ -91,10 +99,21 @@ class InferArgumentTypesSuite extends FunSuite with PlanHelpers{
         (vector-ref vec index))""")
 
     // (+) can can throw an exception
-    // This mean (vector-ref) may no be executed
+    // This mean (vector-ref) may not be executed
     assert(signature.fixedArgs === List(vt.IntrinsicCellType(ct.DatumCell), vt.IntrinsicCellType(ct.DatumCell)))
     assert(signature.returnType === Some(vt.IntrinsicCellType(ct.DatumCell)))
   }
+  
+  test("aborted retyping preserves original argument types") {
+    val signature = signatureFor("""
+      (lambda: ((vec : <vector>) (index : <number>)) 
+        (+ 1 2 3 'not-a-number)
+        (vector-ref vec index))""")
+
+    assert(signature.fixedArgs === List(vt.IntrinsicCellType(ct.VectorCell), vt.IntrinsicCellType(ct.NumericCell)))
+    assert(signature.returnType === Some(vt.IntrinsicCellType(ct.DatumCell)))
+  }
+  
   
   test("procedure proxying (vector-ref) inside a conditional") {
     val signature = signatureFor("""
