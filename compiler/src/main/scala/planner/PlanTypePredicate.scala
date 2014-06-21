@@ -33,7 +33,7 @@ object PlanTypePredicate {
       falsePred
   }
 
-  def apply(schemeType : vt.CellValueType)(implicit parentPlan : PlanWriter) : PlannedFunction =  {
+  def apply(schemeType : vt.SchemeType)(implicit parentPlan : PlanWriter) : PlannedFunction =  {
     // Determine our signature
     val predicateSignature = ProcedureSignature(
       hasWorldArg=false,

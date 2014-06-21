@@ -11,7 +11,7 @@ object PartialValueHasType {
     * If the value definitely satifies the type then Some(true) is returned. If the value definitely does not satisfy
     * the type then Some(false) is returned. If static determination cannot be made then None is returned
     */
-  def apply(partialValue : pv.PartialValue, schemeType : vt.CellValueType) : Option[Boolean] = schemeType match {
+  def apply(partialValue : pv.PartialValue, schemeType : vt.SchemeType) : Option[Boolean] = schemeType match {
     case vt.IntrinsicCellType(ct.DatumCell) =>
       // Everything matches this
       Some(true)

@@ -26,7 +26,7 @@ private[reducer] object ReduceApplication {
     def toOutOfLine = this.copy(inlineDefinition=false)
   }
 
-  private case class ResolvedTypePredicate(schemeType : vt.CellValueType) extends ResolvedAppliedExpr {
+  private case class ResolvedTypePredicate(schemeType : vt.SchemeType) extends ResolvedAppliedExpr {
     def toOutOfLine = this
   }
 
