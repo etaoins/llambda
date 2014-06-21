@@ -8,8 +8,8 @@ import llambda.compiler.SchemeStringImplicits._
 import llambda.compiler._
 import org.scalatest.FunSuite
 
-class InferArgumentTypesSuite extends FunSuite with PlanHelpers{
-  private def inferringProcedureName = "inferring-procedure"
+class RefineArgumentTypesSuite extends FunSuite with PlanHelpers{
+  private def refiningProcedureName = "refining-procedure"
 
   private def signatureFor(scheme : String) : ProcedureSignature = {
     val importDecl = datum"(import (scheme base) (llambda typed))"
@@ -17,7 +17,7 @@ class InferArgumentTypesSuite extends FunSuite with PlanHelpers{
     // Give the procedure a distinctive name so we can find it later
     val procedureDatum = ast.ProperList(List(
       ast.Symbol("define"),
-      ast.Symbol(inferringProcedureName),
+      ast.Symbol(refiningProcedureName),
       SchemeParser.parseStringAsData(scheme, None).head
     ))
     
@@ -25,13 +25,13 @@ class InferArgumentTypesSuite extends FunSuite with PlanHelpers{
     // Higher optimization levels would see right through this but this works on -O 0
     val referenceDatum = ast.ProperList(List(
       ast.Symbol("procedure?"),
-      ast.Symbol(inferringProcedureName)
+      ast.Symbol(refiningProcedureName)
     ))
 
     val data = List(importDecl, procedureDatum, referenceDatum)
 
     val functions = planForData(data, optimise=true, reduce=false)
-    functions(inferringProcedureName).signature
+    functions(refiningProcedureName).signature
   }
 
   test("argless procedure returning integer constant") {

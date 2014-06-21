@@ -7,7 +7,7 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 
-object InferArgumentTypes {
+object RefineArgumentTypes {
   private case class RetypingResult(
     replaceArgTempValue : ps.TempValue,
     replaceArgType : vt.ValueType,

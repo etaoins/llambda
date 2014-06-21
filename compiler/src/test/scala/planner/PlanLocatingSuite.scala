@@ -15,7 +15,7 @@ class PlanLocatingSuite extends FunSuite with PlanHelpers {
         step match {
           case _ : ps.CastCellToTypeUnchecked =>
             // This doesn't generate any assembler code - allow this to be unlocated
-            // Otherwise we'll blow up on the InferArgumentTypes' magic to keep the original untyped argument temp alive
+            // Otherwise we'll blow up on the RefineArgumentTypes' magic to keep the original untyped argument temp alive
 
           case _ : ps.AllocateCells =>
             // This doesn't come from a particular source line - these are inserted by PlanCellAllocations:w

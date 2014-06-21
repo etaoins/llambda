@@ -354,7 +354,7 @@ private[planner] object PlanLambda {
       })
 
     // Determine our procedure
-    val uninferredFunction = PlannedFunction(
+    val unrefinedFunction = PlannedFunction(
       signature=procSignature,
       namedArguments=namedArguments,
       steps=procPlan.steps.toList,
@@ -363,11 +363,11 @@ private[planner] object PlanLambda {
     )
 
     val plannedFunction = if (canRefineSignature && planConfig.optimize) {
-      // Attempt to infer our argument types
-      InferArgumentTypes(uninferredFunction)
+      // Attempt to refine our argument types in to more specific ones
+      RefineArgumentTypes(unrefinedFunction)
     }
     else {
-      uninferredFunction
+      unrefinedFunction
     }
 
     val outerSelfTempOpt = innerSelfTempOpt map { _ => 
