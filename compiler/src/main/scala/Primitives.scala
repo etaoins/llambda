@@ -1,8 +1,8 @@
 package io.llambda.compiler
 import io.llambda
 
-/** Bindings for the primitive expressions */
-object PrimitiveExprs {
+/** Bindings for the primitive expressions and type constructors */
+object Primitives {
   object Lambda extends PrimitiveExpr
   object Quote extends PrimitiveExpr
   object If extends PrimitiveExpr
@@ -26,6 +26,8 @@ object PrimitiveExprs {
   object TypedDefineRecordType extends PrimitiveExpr
   object TypedLambda extends PrimitiveExpr
   object MakePredicate extends PrimitiveExpr
+
+  object TypeUnion extends PrimitiveTypeConstructor
 
   val bindings = {
     Map[String, BoundValue](
@@ -51,7 +53,8 @@ object PrimitiveExprs {
       "define:" -> TypedDefine,
       "define-record-type:" -> TypedDefineRecordType,
       "lambda:" -> TypedLambda,
-      "make-predicate" -> MakePredicate
+      "make-predicate" -> MakePredicate,
+      "U" -> TypeUnion
     )
   }
 }

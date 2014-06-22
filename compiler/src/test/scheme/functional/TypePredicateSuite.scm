@@ -22,7 +22,7 @@
   ; This should be identical to the one (define-record-type) created
   (assert-true ((make-predicate <single-value>) instance)) 
   (assert-false ((make-predicate <single-value>) 4))))
-  
+
 (define-test "(define-predicate)" (expect-success
   (import (llambda typed))
 
@@ -31,5 +31,28 @@
   (assert-true (my-string? "Hello, world!"))
   (assert-false (my-string? 'symbol))))
 
+(define-test "(define-predicate) for custom unions" (expect-success
+  (import (llambda typed))
 
+  (define-predicate string-or-number? (U <string> <number>))
 
+  (assert-true (string-or-number? "Hello"))
+  (assert-true (string-or-number? (typeless-cell "Hello")))
+  (assert-true (string-or-number? 5))
+  (assert-true (string-or-number? 12.0))
+  (assert-false (string-or-number? #f))))
+
+(define-test "(define-predicate) for unions of record types" (expect-success
+  (import (llambda typed))
+	
+  (define-record-type <record1> (record1) record1?)
+  (define-record-type <record2> (record2) record2?)
+  (define-record-type <record3> (record3) record3?)
+
+  (define-type <custom-union> (U <record1> <record2>))
+  (define-predicate custom-union? <custom-union>)
+
+  (assert-true (custom-union? (typeless-cell (record1))))
+  (assert-true (custom-union? (typeless-cell (record2))))
+  (assert-false (custom-union? (typeless-cell (record3))))
+  (assert-false (custom-union? #f))))

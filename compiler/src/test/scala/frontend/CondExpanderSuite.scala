@@ -6,7 +6,7 @@ import org.scalatest.FunSuite
 import llambda.compiler._
 
 class CondExpanderSuite extends FunSuite {
-  private val primitiveScope = new Scope(collection.mutable.Map(PrimitiveExprs.bindings.toSeq : _*))
+  private val primitiveScope = new Scope(collection.mutable.Map(Primitives.bindings.toSeq : _*))
   private val libraryLoader = new LibraryLoader(platform.Posix64LE)
 
   private def expansionFor(clauseList : List[String], featureIdentifiers : Set[String]) : List[ast.Datum] = {

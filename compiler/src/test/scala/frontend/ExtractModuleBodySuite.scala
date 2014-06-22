@@ -7,7 +7,7 @@ import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
 
 class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with testutil.ExprHelpers {
-  implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(PrimitiveExprs.bindings.toSeq : _*))
+  implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(Primitives.bindings.toSeq : _*))
   
   val plusLoc = new StorageLocation("+")
   val plusScope = new Scope(collection.mutable.Map("+" -> plusLoc), Some(primitiveScope))
@@ -217,27 +217,6 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     }
   }
   
-  test("define type") {
-    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
-    bodyFor("(define-type <custom-type> <int32>)")(scope)
-
-    assert(scope("<custom-type>") === BoundType(vt.Int32))
-
-    intercept[UnboundVariableException] {
-      bodyFor("(define-type <another-type> <doesnt-exist>)")(scope)
-    }
-    
-    intercept[BadSpecialFormException] {
-      // Not enough args
-      bodyFor("(define-type <another-type>)")(scope)
-    }
-    
-    intercept[BadSpecialFormException] {
-      // Too many args
-      bodyFor("(define-type <another-type> <int32> <unicode-char>)")(scope)
-    }
-  }
-
   test("untyped lambdas") {
     inside(exprFor("(lambda () #t)")) {
       case et.Lambda(Nil, None, body, _) =>

@@ -13,21 +13,21 @@ object ExtractNativeFunction {
       nativeSymbol : String,
       attributes : Set[ProcedureAttribute]
   ) : et.NativeFunction = {
-    val fixedArgTypes = fixedArgData map DatumToValueType.apply
+    val fixedArgTypes = fixedArgData map ExtractType.extractValueType
 
     val hasRestArg = restArgDatum match {
       case sst.NonSymbolLeaf(ast.EmptyList()) =>
         false
 
       case datum =>
-        DatumToValueType(datum) match {
+        ExtractType.extractValueType(datum) match {
           case vt.ListElementType => true
           case _ =>
             throw new BadSpecialFormException(datum, "Only <list-element-cell> can be used as a rest argument")
         }
     }
 
-    val returnType = returnTypeDatum map DatumToValueType.apply
+    val returnType = returnTypeDatum map ExtractType.extractValueType
 
     val signature = ProcedureSignature(
       hasWorldArg=hasWorldArg,

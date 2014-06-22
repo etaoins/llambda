@@ -31,6 +31,9 @@ class ReportProcedure(val reportName : String) extends StorageLocation(reportNam
 // These are primitive expressions treated specially by the frontend
 abstract class PrimitiveExpr extends BoundValue
 
+// These are similar to primitive expressions but they can only appear when creating types
+abstract class PrimitiveTypeConstructor extends BoundValue
+
 // These are what (define-syntax) creates
 
 /** Represents a placeholder in a macro pattern */

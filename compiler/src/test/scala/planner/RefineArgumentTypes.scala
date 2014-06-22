@@ -73,6 +73,14 @@ class RefineArgumentTypesSuite extends FunSuite with PlanHelpers{
     assert(signature.returnType === Some(vt.AnySchemeType))
   }
   
+  test("custom union typed procedure proxying (vector-ref)") {
+    val signature = signatureFor("""(lambda: ((vec : (U <vector> <char>)) (index : <number>)) (vector-ref vec index))""")
+
+    // We should refine <number> in to <integer>
+    assert(signature.fixedArgs === List(vt.VectorType, vt.ExactIntegerType))
+    assert(signature.returnType === Some(vt.AnySchemeType))
+  }
+  
   test("procedure proxying (vector-set!)") {
     val signature = signatureFor("""(lambda (vec index) (vector-set! vec index #f))""")
 

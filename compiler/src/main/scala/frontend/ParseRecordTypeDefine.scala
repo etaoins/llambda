@@ -27,13 +27,13 @@ private[frontend] object ParseRecordTypeDefine {
             // Just a bare symbol - implicitly we're of type <any>
             (nameSymbol, vt.AnySchemeType)
 
-          case sst.ScopedProperList((nameSymbol : sst.ScopedSymbol) :: sst.ScopedSymbol(_, ":") :: (fieldTypeSymbol : sst.ScopedSymbol) :: Nil) =>
+          case sst.ScopedProperList((nameSymbol : sst.ScopedSymbol) :: sst.ScopedSymbol(_, ":") :: fieldTypeDatum :: Nil) =>
             if (!allowTypes) {
               throw new BadSpecialFormException(fieldDatum, "Field type annotations are only allowed with define-record-type:")
             }
 
             // Resolve the field's Scheme type
-            val schemeType = DatumToValueType.toSchemeType(fieldTypeSymbol)
+            val schemeType = ExtractType.extractSchemeType(fieldTypeDatum)
 
             // Rewrite this to a compact native type
             val compactType = CompactRepresentationForType(schemeType) 

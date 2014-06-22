@@ -6,7 +6,7 @@ import org.scalatest.FunSuite
 import llambda.compiler._
 
 class ExprLocatingSuite extends FunSuite with testutil.ExprHelpers {
-  val primitiveScope = new ImmutableScope(collection.mutable.Map(PrimitiveExprs.bindings.toSeq : _*))
+  val primitiveScope = new ImmutableScope(collection.mutable.Map(Primitives.bindings.toSeq : _*))
   
   val plusLoc = new StorageLocation("+")
   implicit val plusScope = new Scope(collection.mutable.Map("+" -> plusLoc), Some(primitiveScope))

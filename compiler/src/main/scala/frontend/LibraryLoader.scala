@@ -42,7 +42,7 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
 
   private def builtinLibraryBindings(libraryName : Seq[LibraryNameComponent])(implicit frontendConfig : FrontendConfig) : Option[Map[String, BoundValue]] = libraryName match {
     case List(StringComponent("llambda"), StringComponent("internal"), StringComponent("primitives")) =>
-      Some(PrimitiveExprs.bindings)
+      Some(Primitives.bindings)
     
     case List(StringComponent("llambda"), StringComponent("internal"), StringComponent("features")) =>
       if (!featuresStorageLoc.isDefined) {
@@ -61,8 +61,8 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
       // Our NFI types depend on our target platform
       Some(
         IntrinsicTypes(targetPlatform).mapValues(BoundType.apply) +
-          ("world-function" -> PrimitiveExprs.WorldFunction) +
-          ("native-function" -> PrimitiveExprs.NativeFunction)
+          ("world-function" -> Primitives.WorldFunction) +
+          ("native-function" -> Primitives.NativeFunction)
       )
 
     case _ =>
