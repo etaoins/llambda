@@ -5,7 +5,7 @@
     ; Re-export from (llambda primitives) 
     (export define-type ann define: define-record-type: lambda: make-predicate define-predicate U)
 
-    (export <any> <list-element> <pair> <empty-list> <string> <symbol> <boolean> <number> <integer> <flonum> <char> <vector> <bytevector> <procedure>)
+    (export <any> <list-element> <pair> <empty-list> <string> <symbol> <boolean> <number> <integer> <flonum> <char> <vector> <bytevector> <procedure> <port>)
     (begin 
       (define-type <any> <datum-cell>)
       (define-type <list-element> <list-element-cell>)
@@ -21,6 +21,7 @@
       (define-type <vector> <vector-cell>)
       (define-type <bytevector> <bytevector-cell>)
       (define-type <procedure> <procedure-cell>)
+      (define-type <port> <port-cell>)
 
       (define-syntax define-predicate
         (syntax-rules ()
