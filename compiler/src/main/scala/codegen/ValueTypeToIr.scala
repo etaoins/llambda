@@ -19,12 +19,7 @@ object ValueTypeToIr {
     case vt.Double =>
       SignedFirstClassType(llvmir.DoubleType, None)
 
-    case vt.IntrinsicCellType(cellType) =>
-      SignedFirstClassType(llvmir.PointerType(cellType.irType), None)
-
-    case recordLike : vt.RecordLikeType =>
-      // Record-likes have the same IR type as their underlying cell. Their data pointer is cast to the correct type
-      // on demand
-      apply(vt.IntrinsicCellType(recordLike.cellType))
+    case cellValueType : vt.CellValueType =>
+      SignedFirstClassType(llvmir.PointerType(cellValueType.cellType.irType), None)
   }
 }

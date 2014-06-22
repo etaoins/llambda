@@ -26,7 +26,7 @@ private[reducer] object ReduceApplication {
     def toOutOfLine = this.copy(inlineDefinition=false)
   }
 
-  private case class ResolvedTypePredicate(schemeType : vt.SchemeType) extends ResolvedAppliedExpr {
+  private case class ResolvedTypePredicate(testingType : vt.SchemeType) extends ResolvedAppliedExpr {
     def toOutOfLine = this
   }
 
@@ -112,7 +112,7 @@ private[reducer] object ReduceApplication {
     val newFixedKnownValues = newBindings.map { case (storageLoc, operandExpr) =>
       val partialValue = pv.PartialValue.fromReducedExpr(operandExpr)
 
-      if (PartialValueHasType(partialValue, storageLoc.schemeType) != Some(true)) {
+      if (partialValue.schemeType.satisfiesType(storageLoc.schemeType) != Some(true)) {
         // We don't meet the type constraints or the partial value's type can't be determined
         return None
       }
@@ -226,8 +226,8 @@ private[reducer] object ReduceApplication {
     case lambdaExpr : et.Lambda =>
       Some(ResolvedLambda(lambdaExpr, true))
 
-    case et.TypePredicate(schemeType) =>
-      Some(ResolvedTypePredicate(schemeType))
+    case et.TypePredicate(testingType) =>
+      Some(ResolvedTypePredicate(testingType))
 
     case other => 
       None
@@ -256,11 +256,11 @@ private[reducer] object ReduceApplication {
         // Couldn't reduce as a report procedure; retry as a normal expression
         apply(located, appliedExpr, reducedOperands, ignoreReportProcs + reportProc)
 
-      case ResolvedTypePredicate(schemeType) =>
+      case ResolvedTypePredicate(testingType) =>
         reducedOperands match {
           case List(testedExpr) =>
             for(testedValue <- PartialValueForExpr(testedExpr);
-                hasType <- PartialValueHasType(testedValue, schemeType))
+                hasType <-testedValue.schemeType.satisfiesType(testingType))
             yield
               et.Literal(ast.BooleanLiteral(hasType))
 

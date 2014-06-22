@@ -4,7 +4,6 @@ import io.llambda
 import org.scalatest.FunSuite
 
 import llambda.compiler._
-import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 
 class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
@@ -179,9 +178,9 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgs=List(vt.IntrinsicCellType(ct.ExactIntegerCell)),
+        fixedArgs=List(vt.ExactIntegerType),
         hasRestArg=false,
-        returnType=Some(vt.IntrinsicCellType(ct.InexactRationalCell)),
+        returnType=Some(vt.InexactRationalType),
         attributes=Set()
       ),
       "lliby_newline"
@@ -199,7 +198,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         hasSelfArg=false,
         fixedArgs=Nil,
         hasRestArg=true,
-        returnType=Some(vt.IntrinsicCellType(ct.DatumCell)),
+        returnType=Some(vt.AnySchemeType),
         attributes=Set()
       ),
       "lliby_vector"

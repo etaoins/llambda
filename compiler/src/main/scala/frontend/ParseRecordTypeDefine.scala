@@ -8,7 +8,6 @@ import llambda.compiler.sst
 import llambda.compiler.et
 import llambda.compiler.codegen.CompactRepresentationForType
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.{celltype => ct}
 import llambda.compiler.BadSpecialFormException
 
 private[frontend] object ParseRecordTypeDefine {
@@ -25,9 +24,8 @@ private[frontend] object ParseRecordTypeDefine {
         // This is a compatible extension to R7RS
         val (fieldNameSymbol, fieldType) = fieldDefDatum match {
           case nameSymbol : sst.ScopedSymbol => 
-            // Just a bare symbol - implicitly we're of type <datum-cell>
-            // This is our root type
-            (nameSymbol, vt.IntrinsicCellType(ct.DatumCell))
+            // Just a bare symbol - implicitly we're of type <any>
+            (nameSymbol, vt.AnySchemeType)
 
           case sst.ScopedProperList((nameSymbol : sst.ScopedSymbol) :: sst.ScopedSymbol(_, ":") :: (fieldTypeSymbol : sst.ScopedSymbol) :: Nil) =>
             if (!allowTypes) {
@@ -108,7 +106,7 @@ private[frontend] object ParseRecordTypeDefine {
           if (!initializedFields.contains(field)) {
             // Make sure this can be initialized to #!unit
             field.fieldType match {
-              case vt.IntrinsicCellType(cellType) if cellType.isTypeOrSupertypeOf(ct.UnitCell) =>
+              case schemeType : vt.SchemeType if vt.UnitType.satisfiesType(schemeType).get =>
                 // This is okay
 
               case _ =>

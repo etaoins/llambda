@@ -7,8 +7,8 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.PlanWriter
 import llambda.compiler.RuntimeErrorMessage
 
-sealed abstract class NativeValue(val nativeType : vt.NativeType, val cellType : ct.ConcreteCellType, val tempValue : ps.TempValue) extends IntermediateValue with UninvokableValue with NonRecordValue {
-  val possibleTypes = Set(cellType)
+sealed abstract class NativeValue(val nativeType : vt.NativeType, val cellType : ct.ConcreteCellType, val tempValue : ps.TempValue) extends IntermediateValue with UninvokableValue {
+  val schemeType = vt.SchemeTypeAtom(cellType)
 
   lazy val typeDescription = 
     s"native value of type ${nativeType.schemeName}"
@@ -19,8 +19,8 @@ sealed abstract class NativeValue(val nativeType : vt.NativeType, val cellType :
   protected def planCastToNativeTempValue(targetType : vt.NativeType)(implicit plan : PlanWriter) : ps.TempValue = 
     impossibleConversion(s"Cannot convert ${typeDescription} to requested type ${targetType.schemeName} or any other native type")
   
-  protected def planCastToCellTempValue(targetType : ct.CellType)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue  = 
-    impossibleConversion(s"Cannot convert ${typeDescription} to requested type ${targetType.schemeName} or any other cell type except ${cellType.schemeName}")
+  protected def planCastToSchemeTempValue(targetType : vt.SchemeType)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue  = 
+    impossibleConversion(s"Cannot convert ${typeDescription} to requested type ${targetType.schemeName} or any other Scheme type except ${cellType.schemeName}")
   
   protected def planCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
 
@@ -32,14 +32,14 @@ sealed abstract class NativeValue(val nativeType : vt.NativeType, val cellType :
       planCastToNativeTempValue(targetType)
     }
   
-  def toCellTempValue(targetType : ct.CellType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
-    if (targetType.isTypeOrSupertypeOf(cellType)) {
+  def toSchemeTempValue(targetType : vt.SchemeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
+    if (schemeType.satisfiesType(targetType) == Some(true)) {
       val boxedTemp = planCellTempValue()
 
-      cellTempToSupertype(boxedTemp, cellType, targetType)
+      cellTempToSupertype(boxedTemp, cellType, targetType.cellType)
     }
     else {
-      planCastToCellTempValue(targetType)
+      planCastToSchemeTempValue(targetType)
     }
   }
   
@@ -120,17 +120,19 @@ class NativeExactIntegerValue(tempValue : ps.TempValue, nativeType : vt.IntType)
       impossibleConversion(s"Cannot convert ${typeDescription} to non-numeric native type ${targetType.schemeName}") 
   }
   
-  override def planCastToCellTempValue(cellType : ct.CellType)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = cellType match {
-    case ct.InexactRationalCell =>
+  override def planCastToSchemeTempValue(targetType : vt.SchemeType)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
+    // Will an inexact rational make this conversion happy?
+    if (vt.InexactRationalType.satisfiesType(targetType) == Some(true)) {
       // Convert us to double and box
       val boxedTemp = ps.CellTemp(cellType)
       
       plan.steps += ps.BoxInexactRational(boxedTemp, toTempValue(vt.Double))
 
-      boxedTemp
-    
-    case _ =>
+      cellTempToSupertype(boxedTemp, ct.InexactRationalCell, targetType.cellType)
+    }
+    else {
       impossibleConversion(s"Cannot convert ${typeDescription} to non-numeric cell type ${cellType.schemeName}") 
+    }
   }
 
   def planCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue =  {

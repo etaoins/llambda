@@ -3,7 +3,6 @@ import io.llambda
 
 import llambda.compiler.planner._
 import llambda.compiler.planner.{step => ps}
-import llambda.compiler.{celltype => ct}
 
 object MergeIdenticalSteps extends FunctionConniver {
   /** Mapping of step merge keys to the result value of that step */

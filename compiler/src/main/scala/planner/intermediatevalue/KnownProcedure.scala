@@ -25,15 +25,15 @@ import llambda.compiler.RuntimeErrorMessage
   * @param reportName    Name of this procedure in R7RS. This is used as a tag to implement certain optimizations
   *                      elsewhere in the planner. It is not directly used by this class
   */
-class KnownProcedure(val signature : ProcedureSignature, nativeSymbol : String, selfTempOpt : Option[ps.TempValue], val reportName : Option[String] = None) extends IntermediateValue with InvokableProcedure with NonRecordValue with BoxedOnlyValue {
-  val possibleTypes = Set[ct.ConcreteCellType](ct.ProcedureCell) 
+class KnownProcedure(val signature : ProcedureSignature, nativeSymbol : String, selfTempOpt : Option[ps.TempValue], val reportName : Option[String] = None) extends IntermediateValue with InvokableProcedure with BoxedOnlyValue {
+  val schemeType = vt.ProcedureType
   val typeDescription = "procedure"
   
   def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[InvokableProcedure] = 
     Some(this)
 
-  def toCellTempValue(targetType : ct.CellType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
-    if (targetType.isTypeOrSupertypeOf(ct.ProcedureCell)) {
+  def toSchemeTempValue(targetType : vt.SchemeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
+    if (schemeType.satisfiesType(targetType).get == true) {
       // Store an entry point with an adapted signature
       val entryPointTemp = if (signature == AdaptedProcedureSignature) {
         // The procedure already has the correct signature
@@ -80,7 +80,7 @@ class KnownProcedure(val signature : ProcedureSignature, nativeSymbol : String, 
           cellTemp
       }
     
-      cellTempToSupertype(cellTemp, ct.ProcedureCell, targetType)
+      cellTempToSupertype(cellTemp, ct.ProcedureCell, targetType.cellType)
     }
     else {
       impossibleConversion(s"Cannot convert ${typeDescription} to non-procedure type ${targetType.schemeName}")
@@ -103,7 +103,7 @@ class KnownProcedure(val signature : ProcedureSignature, nativeSymbol : String, 
   }
   
   def preferredRepresentation : vt.ValueType =
-    vt.IntrinsicCellType(ct.ProcedureCell)
+    vt.ProcedureType
 
   def needsClosureRepresentation  = 
     // We only need a closure if we have a closure ourselves (i.e. a self temp)

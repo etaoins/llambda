@@ -91,7 +91,7 @@ private[reducer] object ReduceExpr {
         allUsedVars.contains(storageLoc) ||
           reduceConfig.analysis.mutableVars.contains(storageLoc) ||
           ExprHasSideEffects(initializer) ||
-          PartialValueHasType(bindingPartialValues(storageLoc), storageLoc.schemeType) != Some(true)
+          bindingPartialValues(storageLoc).schemeType.satisfiesType(storageLoc.schemeType) != Some(true)
       }
        
       if (usedBindings.isEmpty) {

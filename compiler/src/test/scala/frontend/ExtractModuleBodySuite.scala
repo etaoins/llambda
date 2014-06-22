@@ -5,7 +5,6 @@ import org.scalatest.{FunSuite,Inside,OptionValues}
 
 import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.{celltype => ct}
 
 class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with testutil.ExprHelpers {
   implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(PrimitiveExprs.bindings.toSeq : _*))
@@ -175,7 +174,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
         // Make sure we preserved our source name for debugging purposes
         assert(storageLoc.sourceName === "a")
-        assert(storageLoc.schemeType === vt.IntrinsicCellType(ct.ExactIntegerCell))
+        assert(storageLoc.schemeType === vt.ExactIntegerType)
     }
   }
 
@@ -279,7 +278,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     inside(exprFor("(lambda: ((x : <numeric-cell>)) x)")(nfiScope)) {
       case et.Lambda(List(argX), None, body, _) =>
-        assert(argX.schemeType === vt.IntrinsicCellType(ct.NumericCell))
+        assert(argX.schemeType === vt.NumericType)
         assert(body === et.VarRef(argX))
     }
     
@@ -291,8 +290,8 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     inside(exprFor("(lambda: ((x : <exact-integer-cell>) (y : <string-cell>) . z) x y z)")(nfiScope)) {
       case et.Lambda(List(argX, argY), Some(restArg), body, _) =>
-        assert(argX.schemeType === vt.IntrinsicCellType(ct.ExactIntegerCell))
-        assert(argY.schemeType === vt.IntrinsicCellType(ct.StringCell))
+        assert(argX.schemeType === vt.ExactIntegerType)
+        assert(argY.schemeType === vt.StringType)
         assert(restArg.hasTypeConstraints === false)
 
         assert(body === et.Begin(List(
@@ -372,7 +371,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     inside(expr) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(List(fixedArg), None, _, _)))) if procLoc == storageLoc =>
-        assert(fixedArg.schemeType === vt.IntrinsicCellType(ct.SymbolCell))
+        assert(fixedArg.schemeType === vt.SymbolType)
     }
   }
 
@@ -404,7 +403,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     inside(expr) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(List(fixedArg), Some(restArg), _, _)))) if procLoc == storageLoc =>
-        assert(fixedArg.schemeType === vt.IntrinsicCellType(ct.BooleanCell))
+        assert(fixedArg.schemeType === vt.BooleanType)
         assert(restArg.hasTypeConstraints === false)
     }
   }
@@ -555,7 +554,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   
   test("annotate expression types") {
     assert(exprFor("(ann #t <boolean-cell>)")(nfiScope) === 
-      et.Cast(et.Literal(ast.BooleanLiteral(true)), vt.IntrinsicCellType(ct.BooleanCell))
+      et.Cast(et.Literal(ast.BooleanLiteral(true)), vt.BooleanType)
     )
   
     intercept[BadSpecialFormException] {
@@ -682,7 +681,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
   test("creating type predicate from a Scheme type") {
     assert(exprFor("(make-predicate <symbol-cell>)")(nfiScope) === 
-      et.TypePredicate(vt.IntrinsicCellType(ct.SymbolCell))
+      et.TypePredicate(vt.SymbolType)
     )
   }
 }

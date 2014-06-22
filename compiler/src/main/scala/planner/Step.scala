@@ -19,7 +19,8 @@ object Temp {
 
 object CellTemp {
   def apply(cellType : ct.CellType, knownConstant : Boolean = false) =
-    Temp(vt.IntrinsicCellType(cellType), knownConstant)
+    // Open code this so we don't need to create a temporary vt.SchemeType which can be expensive
+    new TempValue(!knownConstant && !cellType.isInstanceOf[ct.PreconstructedCellType])
 }
 
 object RecordTemp {
@@ -798,4 +799,23 @@ case class IntegerCompare(result : TempValue, cond : CompareCond.CompareCond, si
   
   def renamed(f : (TempValue) => TempValue) = 
     IntegerCompare(f(result), cond, signed, f(val1), f(val2)).assignLocationFrom(this)
+}
+
+case class AssertPredicate(
+    worldPtr : WorldPtrValue,
+    predicate : TempValue,
+    errorMessage : RuntimeErrorMessage
+) extends Step with MergeableSideEffect {
+  lazy val inputValues = Set(worldPtr, predicate)
+  val outputValues = Set[TempValue]()
+
+  def renamed(f : (TempValue) => TempValue) =
+    AssertPredicate(
+      worldPtr,
+      f(predicate),
+      errorMessage
+    ).assignLocationFrom(this)
+
+  override def mergeKey = 
+    (worldPtr)
 }

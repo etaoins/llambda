@@ -2,7 +2,6 @@ package io.llambda.compiler.frontend
 import io.llambda
 
 import llambda.compiler._
-import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 
 object ExtractNativeFunction {
@@ -22,9 +21,9 @@ object ExtractNativeFunction {
 
       case datum =>
         DatumToValueType(datum) match {
-          case vt.IntrinsicCellType(ct.ListElementCell) => true
+          case vt.ListElementType => true
           case _ =>
-            throw new BadSpecialFormException(datum, "Only list-element-cell can be used as a rest argument")
+            throw new BadSpecialFormException(datum, "Only <list-element-cell> can be used as a rest argument")
         }
     }
 

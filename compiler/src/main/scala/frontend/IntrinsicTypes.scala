@@ -5,9 +5,7 @@ import llambda.compiler.platform.TargetPlatform
 import llambda.compiler.{valuetype => vt}
 
 object IntrinsicTypes {
-  private val cellTypes = IntrinsicCellTypes().mapValues(vt.IntrinsicCellType.apply)
-
-  def apply(targetPlatform : TargetPlatform) : Map[String, vt.IntrinsicType] = 
+  def apply(targetPlatform : TargetPlatform) : Map[String, vt.ValueType] = 
     // Intrinsic native types
     List(
       vt.CBool,
@@ -32,5 +30,6 @@ object IntrinsicTypes {
       ("<uint>"    -> targetPlatform.uintType),
       ("<size_t>"  -> targetPlatform.sizeType),
       ("<wchar_t>" -> targetPlatform.wcharType)
-    ) ++ cellTypes
+    ) ++ vt.IntrinsicSchemeTypes() +
+    ("<datum-cell>" -> vt.AnySchemeType)
 }

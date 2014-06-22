@@ -4,7 +4,6 @@ import io.llambda
 import collection.mutable
 
 import llambda.compiler.{et, StorageLocation, ContextLocated, RuntimeErrorMessage}
-import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
@@ -77,7 +76,7 @@ private[planner] object PlanExpr {
             // This is a type predicate
             operands match {
               case List((_, singleValue)) =>
-                singleValue.hasSchemeType(knownPredicate.schemeType) match {
+                singleValue.schemeType.satisfiesType(knownPredicate.testingType) match {
                   case Some(knownResult) =>
                     // We can satisfy this at plan time
                     return PlanResult(
@@ -279,7 +278,7 @@ private[planner] object PlanExpr {
           new iv.KnownTypePredicateProcedure(
             signature=plannedFunction.signature,
             nativeSymbol=nativeSymbol,
-            schemeType=schemeType
+            testingType=schemeType
           )
         })
 
@@ -308,8 +307,8 @@ private[planner] object PlanExpr {
           val parameterResult = apply(state)(parameterExpr)
           val valueResult = apply(parameterResult.state)(valueExpr)
 
-          val parameterTemp = parameterResult.value.toTempValue(vt.IntrinsicCellType(ct.ProcedureCell))
-          val valueTemp = valueResult.value.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
+          val parameterTemp = parameterResult.value.toTempValue(vt.ProcedureType)
+          val valueTemp = valueResult.value.toTempValue(vt.AnySchemeType)
 
           parameterValueTemps += ((parameterTemp, valueTemp))
 
@@ -325,7 +324,7 @@ private[planner] object PlanExpr {
       case et.Return(returnedExpr) =>
         val returnValueResult = apply(initialState)(returnedExpr)
         // If there's a return the return type is always DatumCell
-        val returnValueTemp = returnValueResult.value.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
+        val returnValueTemp = returnValueResult.value.toTempValue(vt.AnySchemeType)
 
         plan.steps += ps.Return(Some(returnValueTemp))
 

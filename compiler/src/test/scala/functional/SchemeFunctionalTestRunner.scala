@@ -9,7 +9,6 @@ import org.scalatest.{FunSuite, Inside}
 
 import llambda.compiler._
 import llambda.compiler.SchemeStringImplicits._
-import llambda.compiler.{celltype => ct}
 
 abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite with Inside {
   // Implicit import decl every test gets

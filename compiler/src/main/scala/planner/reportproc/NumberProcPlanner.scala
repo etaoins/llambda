@@ -10,12 +10,9 @@ import llambda.compiler.planner._
 
 object NumberProcPlanner extends ReportProcPlanner {
   private type IntegerOperation = (ps.TempValue, ps.TempValue, ps.TempValue) => ps.Step
-  private val numericType = vt.IntrinsicCellType(ct.NumericCell)
-
   private def compareOperands(state : PlannerState)(compareCond : ps.CompareCond.CompareCond, val1 : iv.IntermediateValue, val2 : iv.IntermediateValue)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = {
-    if ((val1.possibleTypes == Set(ct.ExactIntegerCell)) &&
-        (val2.possibleTypes == Set(ct.ExactIntegerCell)))
-    {
+    if (val1.hasDefiniteCellType(ct.ExactIntegerCell) &&
+        val2.hasDefiniteCellType(ct.ExactIntegerCell)) {
       // Do a direct integer comparison
       val val1Temp = val1.toTempValue(vt.Int64)
       val val2Temp = val2.toTempValue(vt.Int64)
@@ -43,7 +40,7 @@ object NumberProcPlanner extends ReportProcPlanner {
   }
 
   private def performBinaryIntegerOp(state : PlannerState)(operation : IntegerOperation, operands : List[iv.IntermediateValue])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = {
-    if (!operands.forall(_.possibleTypes == Set(ct.ExactIntegerCell))) {
+    if (!operands.forall(_.hasDefiniteCellType(ct.ExactIntegerCell))) {
       // Can't fast path this
       None
     }
@@ -100,13 +97,13 @@ object NumberProcPlanner extends ReportProcPlanner {
     case (reportName, List((operandSourceLoc, singleOperand))) if List("+", "*").contains(reportName) =>
       // Make sure the operand is numeric
       val numericTemp = plan.withContextLocation(operandSourceLoc) {
-        singleOperand.toTempValue(numericType)
+        singleOperand.toTempValue(vt.NumericType)
       }
       
       // Return it directly
       Some(PlanResult(
         state=state,
-        value=TempValueToIntermediate(numericType, numericTemp)
+        value=TempValueToIntermediate(vt.NumericType, numericTemp)
       ))
 
     case ("-", Nil) =>

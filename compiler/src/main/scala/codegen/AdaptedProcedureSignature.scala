@@ -3,7 +3,6 @@ import io.llambda
 
 import llambda.compiler.ProcedureSignature
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.{celltype => ct}
 
 /** Signature for all boxed procedure values
   *
@@ -15,6 +14,6 @@ object AdaptedProcedureSignature extends ProcedureSignature(
   hasSelfArg=true,
   fixedArgs=Nil,
   hasRestArg=true,
-  returnType=Some(vt.IntrinsicCellType(ct.DatumCell)),
+  returnType=Some(vt.AnySchemeType),
   attributes=Set()
 )

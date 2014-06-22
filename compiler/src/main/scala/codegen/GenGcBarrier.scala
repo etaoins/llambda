@@ -4,7 +4,6 @@ import io.llambda
 import collection.immutable.ListMap
 
 import llambda.compiler.planner.{step => ps}
-import llambda.compiler.{celltype => ct}
 import llambda.compiler.InternalCompilerErrorException
 import llambda.llvmir._
 

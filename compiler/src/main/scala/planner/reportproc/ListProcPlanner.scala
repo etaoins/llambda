@@ -9,6 +9,8 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
 
 object ListProcPlanner extends ReportProcPlanner {
+  private val listElementType = vt.SchemeType.fromCellType(ct.ListElementCell)
+
   def apply(initialState : PlannerState)(reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = (reportName, operands) match {
     case ("list?", List((_, singleOperand))) if singleOperand.isDefiniteProperList =>
       // Definitely a proper list
@@ -20,13 +22,13 @@ object ListProcPlanner extends ReportProcPlanner {
     case ("list", operands) =>
       // Build a proper list directly
       val resultTemp = ps.CellTemp(ct.ListElementCell)
-      val operandTemps = operands.map(_._2).map(_.toTempValue(vt.IntrinsicCellType(ct.DatumCell)))
+      val operandTemps = operands.map(_._2).map(_.toTempValue(vt.AnySchemeType))
 
       plan.steps += ps.BuildProperList(resultTemp, operandTemps) 
       
-      val listValue = new iv.IntrinsicCellValue(
-        possibleTypes=ct.ListElementCell.concreteTypes,
-        cellType=ct.ListElementCell,
+      val listValue = new iv.CellValue(
+        schemeType=listElementType,
+        tempType=ct.ListElementCell,
         tempValue=resultTemp,
         properListCell=true 
       )
@@ -52,7 +54,7 @@ object ListProcPlanner extends ReportProcPlanner {
       }
 
       if (singleOperand.isDefiniteProperList) {
-        val listElementTemp = singleOperand.toTempValue(vt.IntrinsicCellType(ct.ListElementCell))
+        val listElementTemp = singleOperand.toTempValue(listElementType)
         val resultTemp = ps.Temp(vt.UInt32)
 
         // This is a guaranteed proper list - we can quickly calculate the length inline
@@ -70,10 +72,10 @@ object ListProcPlanner extends ReportProcPlanner {
 
     case ("set-car!", List((pairLoc, pairValue), (_, newValue))) =>
       val pairTemp = plan.withContextLocation(pairLoc) {
-        pairValue.toTempValue(vt.IntrinsicCellType(ct.PairCell))
+        pairValue.toTempValue(vt.PairType)
       }
 
-      val newValueTemp = newValue.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
+      val newValueTemp = newValue.toTempValue(vt.AnySchemeType)
 
       val errorMessage = RuntimeErrorMessage(
         name="setCarImmutable",
@@ -90,10 +92,10 @@ object ListProcPlanner extends ReportProcPlanner {
     
     case ("set-cdr!", List((pairLoc, pairValue), (_, newValue))) =>
       val pairTemp = plan.withContextLocation(pairLoc) {
-        pairValue.toTempValue(vt.IntrinsicCellType(ct.PairCell))
+        pairValue.toTempValue(vt.PairType)
       }
 
-      val newValueTemp = newValue.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
+      val newValueTemp = newValue.toTempValue(vt.AnySchemeType)
 
       val errorMessage = RuntimeErrorMessage(
         name="setCdrImmutable",
@@ -111,8 +113,8 @@ object ListProcPlanner extends ReportProcPlanner {
     case ("cons", List((_, carValue), (_, cdrValue))) =>
       val pairTemp = ps.CellTemp(ct.PairCell)
 
-      val carTemp = carValue.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
-      val cdrTemp = cdrValue.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
+      val carTemp = carValue.toTempValue(vt.AnySchemeType)
+      val cdrTemp = cdrValue.toTempValue(vt.AnySchemeType)
 
       plan.steps += ps.InitPair(pairTemp)
       plan.steps += ps.SetPairCar(pairTemp, carTemp)
@@ -120,7 +122,7 @@ object ListProcPlanner extends ReportProcPlanner {
 
       Some(PlanResult(
         state=initialState,
-        value=TempValueToIntermediate(vt.IntrinsicCellType(ct.PairCell), pairTemp)
+        value=TempValueToIntermediate(vt.PairType, pairTemp)
       ))
 
     case _ =>

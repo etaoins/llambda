@@ -4,7 +4,6 @@ import io.llambda
 import org.scalatest.FunSuite
 
 import llambda.compiler.platform
-import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 
 class PackRecordLikeInlineSuite extends FunSuite {

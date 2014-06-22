@@ -15,21 +15,21 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
   private lazy val preconstructedTypes =
     allSubtypes(ct.DatumCell).collect {
       case precons : ct.PreconstructedCellType =>
-        precons
-    } : Set[ct.ConcreteCellType]
+        vt.SchemeTypeAtom(precons)
+    } : Set[vt.NonUnionSchemeType]
 
   // These can be tested for (equals?) with a simple pointer compare
   private lazy val ptrCompareEqualsTypes = (preconstructedTypes ++ Set(
-    ct.ErrorObjectCell,
-    ct.PortCell
-  )) : Set[ct.ConcreteCellType]
+    vt.ErrorObjectType,
+    vt.PortType
+  )) : Set[vt.NonUnionSchemeType]
 
   // These can be tested for (eqv?) with a simple pointer compare
   private lazy val ptrCompareEqvTypes = (ptrCompareEqualsTypes ++ Set(
-    ct.PairCell,
-    ct.VectorCell,
-    ct.BytevectorCell
-  )) : Set[ct.ConcreteCellType]
+    vt.PairType,
+    vt.VectorType,
+    vt.BytevectorType
+  )) : Set[vt.NonUnionSchemeType]
 
   private def directCompareAsType(state : PlannerState)(valueType : vt.ValueType, val1 : iv.IntermediateValue, val2 : iv.IntermediateValue)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = {
     val val1Temp = val1.toTempValue(valueType)
@@ -45,28 +45,30 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
       value=new iv.NativePredicateValue(predicateTemp)
     ))
   }
+  
+  private def planEquivalenceProc(state : PlannerState)(ptrCompareTypes : Set[vt.NonUnionSchemeType], val1 : iv.IntermediateValue, val2 : iv.IntermediateValue)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = {
+    val ptrCompareUnionType = vt.UnionType(ptrCompareTypes)
 
-  private def planEquivalenceProc(state : PlannerState)(ptrCompareTypes : Set[ct.ConcreteCellType], val1 : iv.IntermediateValue, val2 : iv.IntermediateValue)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = {
-    if ((val1.possibleTypes & val2.possibleTypes).isEmpty) {
+    if (val1.schemeType.satisfiesType(val2.schemeType) == Some(false)) {
       // Types are completely disjoint - they can't be equivalent
       Some(PlanResult(
         state=state,
         value=new iv.ConstantBooleanValue(false)
       ))
     }
-    else if ((val1.possibleTypes -- ptrCompareTypes).isEmpty ||
-             (val2.possibleTypes -- ptrCompareTypes).isEmpty) {
+    else if ((val1.schemeType.satisfiesType(ptrCompareUnionType) == Some(true)) ||
+             (val2.schemeType.satisfiesType(ptrCompareUnionType) == Some(true))) {
       // We can fast path this?
       // If the pssible types for either value consists entirely of fast path types
-      directCompareAsType(state)(vt.IntrinsicCellType(ct.DatumCell), val1, val2)
+      directCompareAsType(state)(vt.AnySchemeType, val1, val2)
 
     }
-    else if ((val1.possibleTypes == Set(ct.ExactIntegerCell)) &&
-             (val2.possibleTypes == Set(ct.ExactIntegerCell))) {
+    else if (val1.hasDefiniteCellType(ct.ExactIntegerCell) && 
+             val2.hasDefiniteCellType(ct.ExactIntegerCell)) {
       directCompareAsType(state)(vt.Int64, val1, val2)
     }
-    else if ((val1.possibleTypes == Set(ct.CharacterCell)) &&
-             (val2.possibleTypes == Set(ct.CharacterCell))) {
+    else if (val1.hasDefiniteCellType(ct.CharacterCell) && 
+             val2.hasDefiniteCellType(ct.CharacterCell)) {
       directCompareAsType(state)(vt.UnicodeChar, val1, val2)
     }
     else {

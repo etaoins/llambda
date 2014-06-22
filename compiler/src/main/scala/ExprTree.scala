@@ -173,9 +173,9 @@ case class RecordTypeMutator(recordType : vt.RecordType, field : vt.RecordField)
     RecordTypeMutator(recordType, field).assignLocationFrom(this)
 }
 
-case class TypePredicate(schemeType : vt.SchemeType) extends ArtificialProcedure {
+case class TypePredicate(testingType : vt.SchemeType) extends ArtificialProcedure {
   override def cloningMap(f : Expr => Expr) : Expr =
-    TypePredicate(schemeType).assignLocationFrom(this)
+    TypePredicate(testingType).assignLocationFrom(this)
 }
 
 case class Cast(valueExpr : Expr, targetType : vt.SchemeType) extends NonLiteralExpr {

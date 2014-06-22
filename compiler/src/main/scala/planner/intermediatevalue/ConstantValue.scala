@@ -12,23 +12,23 @@ case class ConstantListMetrics(
   memberType : Option[ct.ConcreteCellType]
 )
 
-sealed abstract class ConstantValue(val cellType : ct.ConcreteCellType) extends IntermediateValue with UninvokableValue with NonRecordValue {
-  val possibleTypes = Set(cellType)
+sealed abstract class ConstantValue(val cellType : ct.ConcreteCellType) extends IntermediateValue with UninvokableValue {
+  val schemeType = vt.SchemeTypeAtom(cellType)
     
   def toConstantCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
 
-  def toCellTempValue(targetType : ct.CellType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
-    if (!targetType.isTypeOrSupertypeOf(cellType)) {
+  def toSchemeTempValue(targetType : vt.SchemeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
+    if (schemeType.satisfiesType(targetType) != Some(true)) {
       impossibleConversion(s"Cannot convert ${typeDescription} to incompatible type ${targetType.schemeName}")
     }
 
     val boxedTempValue = toConstantCellTempValue()
     
-    cellTempToSupertype(boxedTempValue, cellType, targetType)
+    cellTempToSupertype(boxedTempValue, cellType, targetType.cellType)
   }
   
   def preferredRepresentation : vt.ValueType =
-    vt.IntrinsicCellType(cellType)
+    schemeType
   
   def needsClosureRepresentation : Boolean =
     false
@@ -53,14 +53,17 @@ class ConstantSymbolValue(value : String) extends TrivialConstantValue(ct.Symbol
 class ConstantExactIntegerValue(value : Long) extends TrivialConstantValue(ct.ExactIntegerCell, value, ps.CreateExactIntegerCell.apply) {
   val typeDescription = "constant exact integer"
   
-  override def toCellTempValue(targetType : ct.CellType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
-    if (targetType == ct.InexactRationalCell) {
+  override def toSchemeTempValue(targetType : vt.SchemeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
+    if ((vt.ExactIntegerType.satisfiesType(targetType).get == false) &&
+        (vt.InexactRationalType.satisfiesType(targetType).get == true)) {
+      // Do a special implicit cast to an inexact cell
       val constantTemp = ps.CellTemp(ct.InexactRationalCell, knownConstant=true)
       plan.steps += ps.CreateInexactRationalCell(constantTemp, value.toDouble)
-      constantTemp
+    
+      cellTempToSupertype(constantTemp, ct.InexactRationalCell, targetType.cellType)
     }
     else {
-      super.toCellTempValue(targetType, errorMessageOpt)
+      super.toSchemeTempValue(targetType, errorMessageOpt)
     }
   }
 
@@ -144,14 +147,14 @@ class ConstantBytevectorValue(value : Vector[Short]) extends TrivialConstantValu
 class ConstantPairValue(car : ConstantValue, cdr : ConstantValue, val listMetricsOpt : Option[ConstantListMetrics]) extends ConstantValue(ct.PairCell) with BoxedOnlyValue {
   val typeDescription = "constant pair"
 
-  override val isDefiniteProperList = listMetricsOpt.isDefined
+  override lazy val isDefiniteProperList = listMetricsOpt.isDefined
   
   def toConstantCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
     val constantTemp = ps.CellTemp(cellType, knownConstant=true)
 
     // Box our car/cdr first
-    val carTemp = car.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
-    val cdrTemp = cdr.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
+    val carTemp = car.toTempValue(vt.AnySchemeType)
+    val cdrTemp = cdr.toTempValue(vt.AnySchemeType)
 
     plan.steps += ps.CreatePairCell(constantTemp, carTemp, cdrTemp, listMetricsOpt.map(_.length), listMetricsOpt.flatMap(_.memberType))
 
@@ -167,7 +170,7 @@ class ConstantVectorValue(elements : Vector[ConstantValue]) extends ConstantValu
 
     // Box our elements
     val elementTemps = elements.map {
-      _.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
+      _.toTempValue(vt.AnySchemeType)
     }
 
     plan.steps += ps.CreateVectorCell(constantTemp, elementTemps)

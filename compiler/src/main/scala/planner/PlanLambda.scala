@@ -29,7 +29,7 @@ private[planner] object PlanLambda {
     storageLoc : StorageLocation,
     tempValue : ps.TempValue
   ) extends Argument {
-    val valueType = vt.IntrinsicCellType(ct.ListElementCell)
+    val valueType = vt.ListElementType
   }
 
   private sealed abstract class ClosedVariable
@@ -251,9 +251,9 @@ private[planner] object PlanLambda {
         (storageLoc, ImmutableValue(TempValueToIntermediate(valueType, tempValue)))
 
       case RestArgument(storageLoc, tempValue) =>
-        val restValue = new iv.IntrinsicCellValue(
-          possibleTypes=ct.ListElementCell.concreteTypes,
-          cellType=ct.ListElementCell,
+        val restValue = new iv.CellValue(
+          schemeType=vt.ListElementType,
+          tempType=ct.ListElementCell,
           tempValue=tempValue,
           properListCell=true // Our ABI guarantees that this is a proper list
         )
@@ -267,7 +267,7 @@ private[planner] object PlanLambda {
       hasSelfArg=innerSelfTempOpt.isDefined,
       hasRestArg=restArgLoc.isDefined,
       fixedArgs=fixedArgLocs.map(_.schemeType),
-      returnType=Some(vt.IntrinsicCellType(ct.DatumCell)),
+      returnType=Some(vt.AnySchemeType),
       attributes=Set()
     )
 
@@ -320,9 +320,9 @@ private[planner] object PlanLambda {
       val returnTypeOpt = if (containsImmediateReturn(body)) {
         // Return a DatumCell
         // XXX: We can be more clever here and try to find a common return type across all returns
-        Some(vt.IntrinsicCellType(ct.DatumCell))
+        Some(vt.AnySchemeType)
       }
-      else if (planResult.value.possibleTypes == Set(ct.UnitCell)) {
+      else if (planResult.value.hasDefiniteCellType(ct.UnitCell)) {
         // Instead of returning a unit cell just return void
         None
       }

@@ -12,7 +12,7 @@ object CadrProcPlanner extends ReportProcPlanner {
   def apply(initialState : PlannerState)(reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = (reportName, operands) match {
     case ("car" | "cdr", singleOperand :: Nil) =>
       val pairTemp = plan.withContextLocation(singleOperand._1) {
-        singleOperand._2.toTempValue(vt.IntrinsicCellType(ct.PairCell))
+        singleOperand._2.toTempValue(vt.PairType)
       }
 
       val resultTemp = ps.CellTemp(ct.DatumCell)
@@ -24,8 +24,7 @@ object CadrProcPlanner extends ReportProcPlanner {
         plan.steps += ps.LoadPairCdr(resultTemp, pairTemp)
       }
 
-      val possibleTypes = ct.DatumCell.concreteTypes
-      val resultValue = new iv.IntrinsicCellValue(possibleTypes, ct.DatumCell, resultTemp)
+      val resultValue = new iv.CellValue(vt.AnySchemeType, ct.DatumCell, resultTemp)
 
       Some(PlanResult(
         state=initialState,

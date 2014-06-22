@@ -1,7 +1,6 @@
 package io.llambda.compiler.codegen
 import io.llambda
 
-import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 
 object CompactRepresentationForType {
@@ -11,10 +10,10 @@ object CompactRepresentationForType {
     * unboxed value for types that have unboxed representations
     */
   def apply(valueType : vt.ValueType) : vt.ValueType = valueType match {
-    case vt.IntrinsicCellType(ct.ExactIntegerCell) => vt.Int64
-    case vt.IntrinsicCellType(ct.InexactRationalCell) => vt.Double
-    case vt.IntrinsicCellType(ct.BooleanCell) => vt.CBool
-    case vt.IntrinsicCellType(ct.CharacterCell) => vt.UnicodeChar
+    case vt.ExactIntegerType => vt.Int64
+    case vt.InexactRationalType => vt.Double
+    case vt.BooleanType => vt.CBool
+    case vt.CharacterType => vt.UnicodeChar
     case other => other
   }
 }

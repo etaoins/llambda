@@ -45,15 +45,15 @@ class RefineArgumentTypesSuite extends FunSuite with PlanHelpers{
     val signature = signatureFor("""(lambda (x) x)""")
 
     // This can be passed anything so it can return anything
-    assert(signature.fixedArgs === List(vt.IntrinsicCellType(ct.DatumCell)))
-    assert(signature.returnType === Some(vt.IntrinsicCellType(ct.DatumCell)))
+    assert(signature.fixedArgs === List(vt.AnySchemeType))
+    assert(signature.returnType === Some(vt.AnySchemeType))
   }
   
   test("explicitly typed procedure returning its argument") {
     val signature = signatureFor("""(lambda: ((x : <integer>)) x)""")
 
-    assert(signature.fixedArgs === List(vt.IntrinsicCellType(ct.ExactIntegerCell)))
-    assert(signature.returnType === Some(vt.IntrinsicCellType(ct.ExactIntegerCell)))
+    assert(signature.fixedArgs === List(vt.ExactIntegerType))
+    assert(signature.returnType === Some(vt.ExactIntegerType))
   }
   
   test("procedure proxying (vector-ref)") {
@@ -61,22 +61,22 @@ class RefineArgumentTypesSuite extends FunSuite with PlanHelpers{
 
     // This can be passed anything so it can return anything
     // Note that this could really be ct.UInt32 but we're not smart enough to figure that out
-    assert(signature.fixedArgs === List(vt.IntrinsicCellType(ct.VectorCell), vt.IntrinsicCellType(ct.ExactIntegerCell)))
-    assert(signature.returnType === Some(vt.IntrinsicCellType(ct.DatumCell)))
+    assert(signature.fixedArgs === List(vt.VectorType, vt.ExactIntegerType))
+    assert(signature.returnType === Some(vt.AnySchemeType))
   }
   
   test("typed procedure proxying (vector-ref)") {
     val signature = signatureFor("""(lambda: ((vec : <vector>) (index : <number>)) (vector-ref vec index))""")
 
     // We should refine <number> in to <integer>
-    assert(signature.fixedArgs === List(vt.IntrinsicCellType(ct.VectorCell), vt.IntrinsicCellType(ct.ExactIntegerCell)))
-    assert(signature.returnType === Some(vt.IntrinsicCellType(ct.DatumCell)))
+    assert(signature.fixedArgs === List(vt.VectorType, vt.ExactIntegerType))
+    assert(signature.returnType === Some(vt.AnySchemeType))
   }
   
   test("procedure proxying (vector-set!)") {
     val signature = signatureFor("""(lambda (vec index) (vector-set! vec index #f))""")
 
-    assert(signature.fixedArgs === List(vt.IntrinsicCellType(ct.VectorCell), vt.IntrinsicCellType(ct.ExactIntegerCell)))
+    assert(signature.fixedArgs === List(vt.VectorType, vt.ExactIntegerType))
     assert(signature.returnType === None)
   }
   
@@ -88,8 +88,8 @@ class RefineArgumentTypesSuite extends FunSuite with PlanHelpers{
 
     // Because the (vector-ref) is unconditionally executed the condition
     // should change the conditional
-    assert(signature.fixedArgs === List(vt.IntrinsicCellType(ct.VectorCell), vt.IntrinsicCellType(ct.ExactIntegerCell)))
-    assert(signature.returnType === Some(vt.IntrinsicCellType(ct.DatumCell)))
+    assert(signature.fixedArgs === List(vt.VectorType, vt.ExactIntegerType))
+    assert(signature.returnType === Some(vt.AnySchemeType))
   }
   
   test("procedure proxying (vector-ref) past possible exception point") {
@@ -100,8 +100,8 @@ class RefineArgumentTypesSuite extends FunSuite with PlanHelpers{
 
     // (+) can can throw an exception
     // This mean (vector-ref) may not be executed
-    assert(signature.fixedArgs === List(vt.IntrinsicCellType(ct.DatumCell), vt.IntrinsicCellType(ct.DatumCell)))
-    assert(signature.returnType === Some(vt.IntrinsicCellType(ct.DatumCell)))
+    assert(signature.fixedArgs === List(vt.AnySchemeType, vt.AnySchemeType))
+    assert(signature.returnType === Some(vt.AnySchemeType))
   }
   
   test("aborted retyping preserves original argument types") {
@@ -110,8 +110,8 @@ class RefineArgumentTypesSuite extends FunSuite with PlanHelpers{
         (+ 1 2 3 'not-a-number)
         (vector-ref vec index))""")
 
-    assert(signature.fixedArgs === List(vt.IntrinsicCellType(ct.VectorCell), vt.IntrinsicCellType(ct.NumericCell)))
-    assert(signature.returnType === Some(vt.IntrinsicCellType(ct.DatumCell)))
+    assert(signature.fixedArgs === List(vt.VectorType, vt.NumericType))
+    assert(signature.returnType === Some(vt.AnySchemeType))
   }
   
   
@@ -122,7 +122,7 @@ class RefineArgumentTypesSuite extends FunSuite with PlanHelpers{
           (vector-ref vec index)))""")
 
     // The (vector-ref) is conditionally executed, we can't assert anything about our parameters
-    assert(signature.fixedArgs === List(vt.IntrinsicCellType(ct.DatumCell), vt.IntrinsicCellType(ct.DatumCell)))
-    assert(signature.returnType === Some(vt.IntrinsicCellType(ct.DatumCell)))
+    assert(signature.fixedArgs === List(vt.AnySchemeType, vt.AnySchemeType))
+    assert(signature.returnType === Some(vt.AnySchemeType))
   }
 }

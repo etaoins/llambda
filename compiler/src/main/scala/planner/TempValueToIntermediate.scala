@@ -20,11 +20,8 @@ object TempValueToIntermediate {
     case vt.UnicodeChar =>
       new iv.NativeCharacterValue(tempValue)
 
-    case vt.IntrinsicCellType(cellType) =>
-      new iv.IntrinsicCellValue(cellType.concreteTypes, cellType, tempValue)
-
-    case recordType : vt.RecordType =>
-      new iv.RecordValue(recordType, tempValue)
+    case schemeType : vt.SchemeType =>
+      new iv.CellValue(schemeType, schemeType.cellType, tempValue)
 
     case _ : vt.ClosureType =>
       // "Closures" are mostly a fiction to re-use the machinery of records.

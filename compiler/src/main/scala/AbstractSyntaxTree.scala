@@ -3,10 +3,11 @@ import io.llambda
 
 import llambda.compiler.SchemeParser
 import llambda.compiler.SourceLocated
-import llambda.compiler.{celltype => ct}
+import llambda.compiler.{valuetype => vt}
 
 sealed abstract class Datum extends SourceLocated {
-  val cellType : ct.ConcreteCellType
+  /** Scheme type for this datum */
+  val schemeType : vt.SchemeTypeAtom
 }
  
 sealed abstract class Leaf extends Datum
@@ -15,12 +16,12 @@ sealed abstract class Leaf extends Datum
 sealed abstract class NonSymbolLeaf extends Leaf
 
 case class UnitValue() extends NonSymbolLeaf {
-  val cellType = ct.UnitCell
+  val schemeType = vt.UnitType
   override def toString = "#!unit"
 }
 
 case class StringLiteral(content : String) extends NonSymbolLeaf {
-  val cellType = ct.StringCell
+  val schemeType = vt.StringType
 
   private def escapedContent = 
     content.replaceAllLiterally("\\", "\\" + "\\")
@@ -31,7 +32,7 @@ case class StringLiteral(content : String) extends NonSymbolLeaf {
 }
 
 case class BooleanLiteral(value : Boolean) extends NonSymbolLeaf {
-  val cellType = ct.BooleanCell
+  val schemeType = vt.BooleanType
 
   override def toString = value match {
     case true => "#t"
@@ -42,13 +43,13 @@ case class BooleanLiteral(value : Boolean) extends NonSymbolLeaf {
 sealed abstract class NumberLiteral extends NonSymbolLeaf 
 
 case class IntegerLiteral(value : Long) extends NumberLiteral {
-  val cellType = ct.ExactIntegerCell
+  val schemeType = vt.ExactIntegerType
 
   override def toString = value.toString
 }
 
 case class RationalLiteral(value : Double) extends NumberLiteral {
-  val cellType = ct.InexactRationalCell
+  val schemeType = vt.InexactRationalType
   
   // Consider all NaN literals to be equal
   // This is different from numeric equality which indeed doesn't make sense for NaNs
@@ -86,7 +87,7 @@ object NaNLiteral {
 }
 
 case class Symbol(name : String) extends Leaf {
-  val cellType = ct.SymbolCell
+  val schemeType = vt.SymbolType
 
   override def toString = if (SchemeParser.isValidIdentifier(name)) {
     name
@@ -97,13 +98,13 @@ case class Symbol(name : String) extends Leaf {
 }
 
 case class EmptyList() extends NonSymbolLeaf {
-  val cellType = ct.EmptyListCell
+  val schemeType = vt.EmptyListType
 
   override def toString = "()"
 }
 
 case class Pair(car : Datum, cdr : Datum) extends Datum {
-  val cellType = ct.PairCell
+  val schemeType = vt.PairType
 
   override def toString = this match {
     case ProperList(data) =>
@@ -161,21 +162,21 @@ object ProperList {
 }
 
 case class VectorLiteral(elements : Vector[Datum]) extends Datum {
-  val cellType = ct.VectorCell
+  val schemeType = vt.VectorType
 
   override def toString = 
     "#(" + elements.map(_.toString).mkString(" ") + ")"
 }
 
 case class Bytevector(elements : Vector[Short]) extends NonSymbolLeaf {
-  val cellType = ct.BytevectorCell
+  val schemeType = vt.BytevectorType
 
   override def toString = 
     "#u8(" + elements.map(_.toString).mkString(" ") + ")"
 }
 
 case class CharLiteral(value : Char) extends NonSymbolLeaf {
-  val cellType = ct.CharacterCell
+  val schemeType = vt.CharacterType
 
   override def toString = value match {
     case 0    => """#\null"""

@@ -3,7 +3,6 @@ import io.llambda
 
 import org.scalatest.FunSuite
 
-import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 
 class TargetPlatformSuite extends FunSuite {
@@ -67,10 +66,10 @@ class TargetPlatformSuite extends FunSuite {
   }
   
   test("bytesForType for pointers") {
-    assert(Posix64LE.bytesForType(vt.IntrinsicCellType(ct.StringCell)) === 8)
-    assert(Posix32LE.bytesForType(vt.IntrinsicCellType(ct.StringCell)) === 4)
-    assert(Win64.bytesForType(vt.IntrinsicCellType(ct.StringCell)) === 8)
-    assert(Win32.bytesForType(vt.IntrinsicCellType(ct.StringCell)) === 4)
+    assert(Posix64LE.bytesForType(vt.StringType) === 8)
+    assert(Posix32LE.bytesForType(vt.StringType) === 4)
+    assert(Win64.bytesForType(vt.StringType) === 8)
+    assert(Win32.bytesForType(vt.StringType) === 4)
   }
   
   test("platform feature identifiers") {

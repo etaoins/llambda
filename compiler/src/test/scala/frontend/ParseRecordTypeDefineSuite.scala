@@ -2,7 +2,6 @@ package io.llambda.compiler.frontend
 import io.llambda
 
 import org.scalatest.{FunSuite,Inside}
-import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler._
 
@@ -94,7 +93,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
 
         val constDatumField = recordType.fieldForSourceName("const-datum")
         // No type defaults to <datum-cell>, the most permissive type
-        assert(constDatumField.fieldType === vt.IntrinsicCellType(ct.DatumCell))
+        assert(constDatumField.fieldType === vt.AnySchemeType)
 
         inside(exprs) {
           case et.TopLevelDefine(bindings) :: Nil =>
@@ -170,7 +169,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         val constDatumField = recordType.fieldForSourceName("const-datum")
         val mutableIntField = recordType.fieldForSourceName("mutable-int")
           
-        assert(constDatumField.fieldType === vt.IntrinsicCellType(ct.DatumCell))
+        assert(constDatumField.fieldType === vt.AnySchemeType)
         // <exact-integer-cell> should be implicitly converted to int64 for storage
         assert(mutableIntField.fieldType === vt.Int64)
 

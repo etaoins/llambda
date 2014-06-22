@@ -25,10 +25,13 @@ case class CellClassNames(definitionName : String) {
   lazy val cppRefRangeName = definitionName + "RefRange"
 
   /** Name for the Scala object in the celltype package */
-  lazy val scalaObjectName = cppClassName
+  lazy val scalaCellTypeName = cppClassName
 
   /** Name for the Scala fields trait in celltype package */
   lazy val scalaFieldsTraitName = definitionName + "Fields"
+
+  /** Name for the value type in the valuetype package */
+  lazy val scalaValueTypeName = definitionName + "Type"
   
   /** Name for the Scheme type */
   lazy val schemeName = "<" + definitionName.replaceAll("""(?<!^)([A-Z]+)""", """-$1""").toLowerCase + "-cell>"

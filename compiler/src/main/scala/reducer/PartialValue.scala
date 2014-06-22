@@ -3,6 +3,7 @@ import io.llambda
 
 import io.llambda.compiler._
 import llambda.compiler.SourceLocated
+import llambda.compiler.{valuetype => vt}
 
 /** Represents a partially evaluated value */
 sealed abstract class PartialValue extends SourceLocated {
@@ -14,6 +15,12 @@ sealed abstract class PartialValue extends SourceLocated {
     * Some structural partial values such as partial pairs may have neither a datum or expression represenation.
     */
   def toExprOpt : Option[et.Expr]
+
+  /** Returns the Scheme type for this partial value
+    *
+    * This will be vt.AnyType if the type cannot be statically determined
+    */
+  def schemeType : vt.SchemeType
 }
 
 /** Represents a partial value produced by a reduced expression */
@@ -22,6 +29,9 @@ case class ReducedExpr(expr : et.NonLiteralExpr) extends PartialValue {
   // By definition it has no known datum value
   def toDatumOpt : Option[ast.Datum] = None
   def toExprOpt = Some(expr)
+
+  // We can't determine this type
+  def schemeType = vt.AnySchemeType
 }
 
 /** Represents a partial value produced by constant data */
@@ -31,6 +41,8 @@ case class LiteralLeaf(literal : ast.Leaf) extends PartialValue {
 
   def toExprOpt =
     Some(et.Literal(literal).assignLocationFrom(this))
+
+  def schemeType = literal.schemeType
 }
 
 /** Represents a Pair of two partial values */
@@ -43,6 +55,8 @@ case class PartialPair(partialCar : PartialValue, partialCdr : PartialValue) ext
   // We refuse to call (cons) to construct a pair
   def toExprOpt =
     toDatumOpt.map(et.Literal(_))
+
+  def schemeType = vt.PairType
 }
 
 /** Represents a vector of known length of partial values */
@@ -64,6 +78,8 @@ case class PartialVector(partialElements : Vector[PartialValue]) extends Partial
   // We refuse to call (vector) to construct a vector
   def toExprOpt =
     toDatumOpt.map(et.Literal(_))
+
+  def schemeType = vt.VectorType
 }
 
 object ProperList {

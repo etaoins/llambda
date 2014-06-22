@@ -29,7 +29,7 @@ object PlanApplication {
       val restArgTemp = ps.CellTemp(ct.ListElementCell)
 
       val argTemps = restArgs.map {
-        _.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
+        _.toTempValue(vt.AnySchemeType)
       }
 
       plan.steps += ps.BuildProperList(restArgTemp, argTemps)

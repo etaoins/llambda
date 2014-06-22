@@ -5,7 +5,7 @@ import scala.io.Source
 
 import io.llambda.llvmir
 
-object WriteScalaObjects extends writer.OutputWriter {
+object WriteScalaCellTypes extends writer.OutputWriter {
   private sealed abstract class ConstructorValue {
     val field : CellField
     // If this is None we don't need a parameter
@@ -191,7 +191,7 @@ object WriteScalaObjects extends writer.OutputWriter {
         val superConstructorFields = for(superValue <- constructorValues.superValues if superValue.paramScalaType.isDefined) yield
           s"${superValue.field.name}=${superValue.field.name}"
 
-        parent.names.scalaObjectName + ".createConstant(" + superConstructorFields.mkString(", ") + ")"
+        parent.names.scalaCellTypeName + ".createConstant(" + superConstructorFields.mkString(", ") + ")"
       }
 
       // Calculate our selffields fields
@@ -248,7 +248,7 @@ object WriteScalaObjects extends writer.OutputWriter {
         "PreconstructedCellType"
     }
 
-    scalaBuilder += s"object ${names.scalaObjectName} extends ${scalaSuperclass} with ${names.scalaFieldsTraitName}"
+    scalaBuilder += s"object ${names.scalaCellTypeName} extends ${scalaSuperclass} with ${names.scalaFieldsTraitName}"
 
     scalaBuilder.blockSep {
       val irType = llvmir.UserDefinedType(names.llvmName)
@@ -265,7 +265,7 @@ object WriteScalaObjects extends writer.OutputWriter {
         
         // Get all of our subclasses
         val subtypeParts = processedTypes.taggedCellClassesByParent.getOrElse(cellClass, Nil) map { taggedClass =>
-          taggedClass.names.scalaObjectName
+          taggedClass.names.scalaCellTypeName
         }
 
         scalaBuilder += s"""val directSubtypes = Set[CellType](${subtypeParts.mkString(", ")})"""

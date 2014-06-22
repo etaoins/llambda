@@ -93,9 +93,9 @@ class ProcedureSignatureToIrSuite extends FunSuite {
     val procSignature = ProcedureSignature(
       hasWorldArg=true,
       hasSelfArg=true,
-      fixedArgs=List(vt.IntrinsicCellType(ct.NumericCell), vt.IntrinsicCellType(ct.NumericCell)),
+      fixedArgs=List(vt.NumericType, vt.NumericType),
       hasRestArg=true,
-      returnType=Some(vt.IntrinsicCellType(ct.InexactRationalCell)),
+      returnType=Some(vt.InexactRationalType),
       attributes=Set()
     )
 

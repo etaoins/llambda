@@ -11,8 +11,9 @@ class CellNamesSuite extends FunSuite {
     assert(names.cppClassName === "DatumCell")
     assert(names.cppRefName === "DatumRef")
     assert(names.cppRefRangeName === "DatumRefRange")
-    assert(names.scalaObjectName === "DatumCell")
+    assert(names.scalaCellTypeName === "DatumCell")
     assert(names.scalaFieldsTraitName === "DatumFields")
+    assert(names.scalaValueTypeName === "DatumType")
     assert(names.schemeName === "<datum-cell>")
   }
   
@@ -24,8 +25,9 @@ class CellNamesSuite extends FunSuite {
     assert(names.cppClassName === "StringLikeCell")
     assert(names.cppRefName === "StringLikeRef")
     assert(names.cppRefRangeName === "StringLikeRefRange")
-    assert(names.scalaObjectName === "StringLikeCell")
+    assert(names.scalaCellTypeName === "StringLikeCell")
     assert(names.scalaFieldsTraitName === "StringLikeFields")
+    assert(names.scalaValueTypeName === "StringLikeType")
     assert(names.schemeName === "<string-like-cell>")
   }
 }

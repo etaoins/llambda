@@ -36,13 +36,17 @@ trait IntermediateValueHelpers {
 }
 
 abstract class IntermediateValue extends IntermediateValueHelpers {
-  val possibleTypes : Set[ct.ConcreteCellType]
+  val schemeType : vt.SchemeType
   
   /** Provides a human-readable description of the value's type */
   def typeDescription : String
 
-  val isDefiniteProperList : Boolean =
-    possibleTypes == Set(ct.EmptyListCell)
+  /** Returns true is this value definitely has the type of passed cell */
+  def hasDefiniteCellType(cellType : ct.ConcreteCellType) : Boolean =
+    schemeType.satisfiesType(vt.SchemeTypeAtom(cellType)) == Some(true)
+
+  lazy val isDefiniteProperList : Boolean =
+    hasDefiniteCellType(ct.EmptyListCell)
 
   case class PlanPhiResult(
     ourTempValue : ps.TempValue,
@@ -51,9 +55,8 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     resultIntermediate : IntermediateValue
   )
 
-  protected def toCellTempValue(cellType : ct.CellType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
+  protected def toSchemeTempValue(schemeType : vt.SchemeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
   protected def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
-  protected def toRecordTempValue(recordType : vt.RecordType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
 
   def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     val trueTemp = ps.Temp(vt.Predicate)
@@ -76,11 +79,8 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     case nativeType : vt.NativeType =>
       toNativeTempValue(nativeType, errorMessageOpt)
 
-    case vt.IntrinsicCellType(cellType) =>
-      toCellTempValue(cellType, errorMessageOpt)
-
-    case recordType : vt.RecordType =>
-      toRecordTempValue(recordType, errorMessageOpt)
+    case schemeType : vt.SchemeType =>
+      toSchemeTempValue(schemeType, errorMessageOpt)
 
     case closureType : vt.ClosureType =>
       // Closure types are an internal implementation detail.
@@ -91,20 +91,20 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
   def planPhiWith(theirValue : IntermediateValue)(ourPlan : PlanWriter, theirPlan : PlanWriter)(implicit worldPtr : ps.WorldPtrValue) : PlanPhiResult = {
     // This is extremely inefficient for compatible native types
     // This should be overridden where possible
-    val ourTempValue = this.toTempValue(vt.IntrinsicCellType(ct.DatumCell))(ourPlan, worldPtr)
-    val theirTempValue = theirValue.toTempValue(vt.IntrinsicCellType(ct.DatumCell))(theirPlan, worldPtr)
+    val ourTempValue = this.toTempValue(vt.AnySchemeType)(ourPlan, worldPtr)
+    val theirTempValue = theirValue.toTempValue(vt.AnySchemeType)(theirPlan, worldPtr)
 
     // If we're constants on both sides we don't need to be GC managed
     val isGcManaged = ourTempValue.isGcManaged || theirTempValue.isGcManaged
 
     val phiResultTemp = new ps.TempValue(isGcManaged)
-    val phiPossibleTypes = possibleTypes ++ theirValue.possibleTypes
+    val phiSchemeType = schemeType + theirValue.schemeType
 
     PlanPhiResult(
       ourTempValue=ourTempValue,
       theirTempValue=theirTempValue,
       resultTemp=phiResultTemp,
-      resultIntermediate=new IntrinsicCellValue(phiPossibleTypes, ct.DatumCell, phiResultTemp)
+      resultIntermediate=new CellValue(phiSchemeType, ct.DatumCell, phiResultTemp)
     )
   }
 
@@ -115,57 +115,15 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     * explicitly required
     */
   def castToSchemeType(targetType : vt.SchemeType)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : IntermediateValue= {
-    targetType match {
-      case vt.IntrinsicCellType(cellType) =>
-        val targetConcreteTypes = cellType.concreteTypes
-
-        if (possibleTypes.subsetOf(targetConcreteTypes)) {
-          // We don't need to do anything 
-          return this
-        }
-
-      case _ =>
+    if (schemeType.satisfiesType(targetType) == Some(true)) {
+      // We don't need to do anything 
+      return this
     }
 
     val castTemp = toTempValue(targetType)
     TempValueToIntermediate(targetType, castTemp)
   }
-
-  protected def hasCellType(intrinsicType : vt.IntrinsicCellType) : Option[Boolean] = {
-    val concreteTypes = intrinsicType.cellType.concreteTypes
-
-    if (possibleTypes.subsetOf(concreteTypes)) {
-      // Must be this type
-      Some(true)
-    }
-    else if (possibleTypes.intersect(concreteTypes).isEmpty) {
-      // Cannot be of this type
-      Some(false)
-    }
-    else {
-      // Not statically known
-      None
-    }
-  }
-
-  protected def hasRecordType(recordType : vt.RecordType) : Option[Boolean]
   
-  /** Returns if this value can has the specified cell value type
-    *
-    * If Some(true) is returned then the value is statically known to have the specified type. If Some(false) is
-    * returned the value is statically known to not have the specified type. If None is returned then the type
-    * condition cannot be statically evaluated
-    */
-  def hasSchemeType(targetType : vt.SchemeType) : Option[Boolean] = {
-    targetType match {
-      case intrinsicType : vt.IntrinsicCellType =>
-        hasCellType(intrinsicType)
-
-      case recordType : vt.RecordType =>
-        hasRecordType(recordType)
-    }
-  }
-
   /** Returns the preferred type to represent this value
     * 
     * For realized values this will be the type of the TempValue. For unrealized values such as constants and known

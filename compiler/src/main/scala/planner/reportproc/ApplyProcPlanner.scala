@@ -15,7 +15,7 @@ object ApplyProcPlanner extends ReportProcPlanner {
     case ("apply", List((procContextLoc, procValue), (_, argListValue))) if argListValue.isDefiniteProperList =>
       // Convert to a procedure cell so we can use its trampoline
       val procTemp = plan.withContextLocation(procContextLoc) {
-        procValue.toTempValue(vt.IntrinsicCellType(ct.ProcedureCell))
+        procValue.toTempValue(vt.ProcedureType)
       }
 
       // Load the entry point
@@ -23,7 +23,7 @@ object ApplyProcPlanner extends ReportProcPlanner {
       plan.steps += ps.LoadProcedureEntryPoint(entryPointTemp, procTemp)
 
       // Prepare the arguments
-      val restArgTemp = argListValue.toTempValue(vt.IntrinsicCellType(ct.ListElementCell))
+      val restArgTemp = argListValue.toTempValue(vt.ListElementType)
       val allArgs = List(worldPtr, procTemp, restArgTemp).map(ps.InvokeArgument(_))
 
       // Prepare the result

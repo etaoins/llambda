@@ -4,7 +4,6 @@ import io.llambda
 import llambda.compiler.{et, StorageLocation, ReportProcedure, ContextLocated}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.codegen.CompactRepresentationForType
 
@@ -76,7 +75,7 @@ private[planner] object PlanBind {
         case Some(mutableValue @ MutableValue(mutableType, recursiveTemp, true)) =>
           // This was previously a recursive value
 
-          val initialValueTemp = initialIntermediate.toTempValue(vt.IntrinsicCellType(ct.DatumCell))
+          val initialValueTemp = initialIntermediate.toTempValue(vt.AnySchemeType)
 
           // Update the recursive to point to our new value
           val recordDataTemp = ps.RecordLikeDataTemp()

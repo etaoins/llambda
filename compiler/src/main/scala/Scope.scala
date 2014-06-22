@@ -2,7 +2,6 @@ package io.llambda.compiler
 import io.llambda
 
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.{celltype => ct}
 
 sealed abstract class BoundValue
 
@@ -15,12 +14,12 @@ sealed abstract class BoundValue
   */
 class StorageLocation(
     val sourceName : String,
-    val schemeType : vt.SchemeType = vt.IntrinsicCellType(ct.DatumCell)
+    val schemeType : vt.SchemeType = vt.AnySchemeType
 ) extends BoundValue {
   override def toString = "$" + sourceName
 
   def hasTypeConstraints =
-    schemeType != vt.IntrinsicCellType(ct.DatumCell)
+    schemeType != vt.AnySchemeType
 }
 
 // These are procedure with the semantics of the same procedure defined in R7RS
@@ -90,8 +89,6 @@ object SyntaxVariable {
   }
 }
 
-// These are either intrinsic types or ones introduced by (define-record-type)
-// or (define-native-type)
 case class BoundType(valueType : vt.ValueType) extends BoundValue
 
 /** Scope can look up bindings by name and return a list of all identifiers  */

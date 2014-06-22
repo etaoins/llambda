@@ -5,7 +5,6 @@ import collection.mutable
 
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.{celltype => ct}
 
 object RefineArgumentTypes {
   private case class RetypingResult(
@@ -32,7 +31,7 @@ object RefineArgumentTypes {
       false
   }
 
-  private def retypeArgument(argValue : ps.TempValue, originalType : vt.IntrinsicCellType, steps : List[ps.Step]) : RetypingResult = {
+  private def retypeArgument(argValue : ps.TempValue, originalType : vt.SchemeType, steps : List[ps.Step]) : RetypingResult = {
     def abortRetyping =
       RetypingResult(
         replaceArgTempValue=argValue,
@@ -50,7 +49,7 @@ object RefineArgumentTypes {
 
         RetypingResult(
           replaceArgTempValue=result,
-          replaceArgType=vt.IntrinsicCellType(toType),
+          replaceArgType=vt.SchemeType.fromCellType(toType),
           steps=supercastStep :: tailSteps 
         )
 
@@ -136,11 +135,11 @@ object RefineArgumentTypes {
       val argType = signature.fixedArgs(fixedArgIndex)
       
       argType match {
-        case intrinsicCellType : vt.IntrinsicCellType =>
+        case schemeType : vt.SchemeType =>
           // Try to rewrite this to something more specific
           val (argName, argValue) = function.namedArguments(namedArgIndex)
 
-          val result = retypeArgument(argValue, intrinsicCellType, function.steps)
+          val result = retypeArgument(argValue, schemeType, function.steps)
 
           val newSignature = signature.copy(
             fixedArgs=signature.fixedArgs.updated(fixedArgIndex, result.replaceArgType)
