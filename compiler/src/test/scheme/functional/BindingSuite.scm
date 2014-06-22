@@ -174,3 +174,62 @@
     (define: num : <number> 5)
     (set! num "not a string")
   ))))
+
+(define-test "simple typed let:" (expect 12
+  (import (llambda typed))
+
+  (let: ((x : <number> 7) (y : <integer> 5))
+    (+ y x))))
+
+(define-test "typed let: with incorrect type fails" (expect-failure
+  (import (llambda typed))
+
+  (let: ((x : <integer> 7.5))
+    (+ 1 x))))
+
+(define-test "simple typed let*:" (expect 70
+  (import (llambda typed))
+                                          
+	(let: ((x : <any> 2) (y : <number> 3))
+	  (let*: ((x : <integer> 7)
+			 (z : <integer> (+ x y)))
+		(* z x)))))
+
+(define-test "typed let*: with incorrect type fails" (expect-failure
+  (import (llambda typed))
+                                          
+	(let: ((x : <any> 2) (y : <number> 3))
+	  (let*: ((x : <integer> 7)
+			 (z : <string> (+ x y)))
+		(* z x)))))
+
+(define-test "typed simple letrec*:" (expect 5
+  (import (llambda typed))
+
+  (letrec*: ((p : <procedure>
+              (lambda (x)
+                (+ 1 (q (- x 1)))))
+            (q : <procedure>
+              (lambda (y)
+                (if (zero? y)
+                  0
+                  (+ 1 (p (- y 1))))))
+            (x : <integer> (p 5))
+            (y : <integer> x))
+           y)))
+
+(define-test "typed simple letrec:" (expect #t
+  (import (llambda typed))
+
+  (letrec: ((even? : <procedure>
+             (lambda (n)
+               (if (zero? n)
+                 #t
+                 (odd? (- n 1)))))
+           (odd? : <procedure>
+             (lambda (n)
+               (if (zero? n)
+                 #f
+                 (even? (- n 1))))))
+    (even? 8))))
+

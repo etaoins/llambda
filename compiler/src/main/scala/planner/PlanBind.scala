@@ -75,7 +75,7 @@ private[planner] object PlanBind {
         case Some(mutableValue @ MutableValue(mutableType, recursiveTemp, true)) =>
           // This was previously a recursive value
 
-          val initialValueTemp = initialIntermediate.toTempValue(vt.AnySchemeType)
+          val initialValueTemp = initialIntermediate.toTempValue(mutableType.innerType)
 
           // Update the recursive to point to our new value
           val recordDataTemp = ps.RecordLikeDataTemp()
