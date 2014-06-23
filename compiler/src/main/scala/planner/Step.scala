@@ -817,5 +817,5 @@ case class AssertPredicate(
     ).assignLocationFrom(this)
 
   override def mergeKey = 
-    (worldPtr)
+    (worldPtr, predicate)
 }
