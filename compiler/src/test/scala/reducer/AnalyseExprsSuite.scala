@@ -33,7 +33,7 @@ class AnalyseExprsSuite extends FunSuite {
     assert(AnalyseExprs(testExprs) === AnalysedExprs(
       usedTopLevelExprs=testExprs,
       mutableVars=Set(),
-      constantTopLevelBindings=Map(
+      constantTopLevelBindings=List(
         testLocA -> et.Literal(ast.BooleanLiteral(true)),
         testLocB -> et.Literal(ast.BooleanLiteral(false))
       ),
@@ -71,7 +71,7 @@ class AnalyseExprsSuite extends FunSuite {
     assert(analysedExprs === AnalysedExprs(
       usedTopLevelExprs=expectedUsedExprs,
       mutableVars=Set(testLocA),
-      constantTopLevelBindings=Map(),
+      constantTopLevelBindings=Nil,
       usedVars=Set(testLocA)
     ))
   }
@@ -117,7 +117,7 @@ class AnalyseExprsSuite extends FunSuite {
     assert(analysedExprs === AnalysedExprs(
       usedTopLevelExprs=testExprs,
       mutableVars=Set(testLocA),
-      constantTopLevelBindings=Map(),
+      constantTopLevelBindings=Nil,
       usedVars=Set(testLocA)
     ))
   }
@@ -150,7 +150,7 @@ class AnalyseExprsSuite extends FunSuite {
     assert(analysedExprs === AnalysedExprs(
       usedTopLevelExprs=testExprs,
       mutableVars=Set(testLocA),
-      constantTopLevelBindings=Map(),
+      constantTopLevelBindings=Nil,
       usedVars=Set(testLocA)
     ))
   }
@@ -180,7 +180,7 @@ class AnalyseExprsSuite extends FunSuite {
     assert(analysedExprs === AnalysedExprs(
       usedTopLevelExprs=testExprs,
       mutableVars=Set(testLocA),
-      constantTopLevelBindings=Map(),
+      constantTopLevelBindings=Nil,
       usedVars=Set(testLocA)
     ))
   }
@@ -207,7 +207,7 @@ class AnalyseExprsSuite extends FunSuite {
     assert(analysedExprs === AnalysedExprs(
       usedTopLevelExprs=testExprs,
       mutableVars=Set(testLocA),
-      constantTopLevelBindings=Map(),
+      constantTopLevelBindings=Nil,
       usedVars=Set(testLocA)
     ))
   }
@@ -236,7 +236,7 @@ class AnalyseExprsSuite extends FunSuite {
     assert(analysedExprs === AnalysedExprs(
       usedTopLevelExprs=testExprs,
       mutableVars=Set(testLocA),
-      constantTopLevelBindings=Map(
+      constantTopLevelBindings=List(
         testLocB -> et.MutateVar(testLocA, et.Literal(ast.EmptyList()))
       ),
       usedVars=Set(testLocB)
@@ -262,7 +262,7 @@ class AnalyseExprsSuite extends FunSuite {
     assert(analysedExprs === AnalysedExprs(
       usedTopLevelExprs=testExprs,
       mutableVars=Set(testLocA, testLocB),
-      constantTopLevelBindings=Map()
+      constantTopLevelBindings=Nil
     ))
   }
 }

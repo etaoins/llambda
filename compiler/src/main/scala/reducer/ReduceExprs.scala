@@ -12,21 +12,25 @@ object ReduceExprs {
       analysis=analysis
     )
 
-    // Pre-reduce our top level definitions to make them known valeus
-    // This prevents constant re-evaluation of top-level defines
     val usedTopLevelBindings = analysis.constantTopLevelBindings.filter { case (storageLoc, _) =>
       analysis.usedVars.contains(storageLoc)
     }
 
-    val initialKnownValues = usedTopLevelBindings.mapValues { initializer =>
-      pv.PartialValue.fromReducedExpr(
-        ReduceExpr(initializer)(topLevelReduceConfig)
-      )
-    }
-
-    val reduceConfig = topLevelReduceConfig.copy(
-      knownValues=initialKnownValues
+    // Evaluate our top-level bindings in order and store them as known values
+    val initialReduceConfig = ReduceConfig(
+      analysis=analysis
     )
+
+    val reduceConfig = usedTopLevelBindings.foldLeft(initialReduceConfig) { 
+      case (reduceConfig, (storageLoc, initialiser)) =>
+        val initialiserPartialValue = pv.PartialValue.fromReducedExpr(
+          ReduceExpr(initialiser)(reduceConfig)
+        )
+
+        reduceConfig.copy(
+          knownValues=reduceConfig.knownValues + (storageLoc -> initialiserPartialValue)
+        )
+    }
 
     ReduceExpr(et.Begin(exprs))(reduceConfig)
   }

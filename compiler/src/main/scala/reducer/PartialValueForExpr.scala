@@ -39,27 +39,9 @@ private[reducer] object PartialValueForExpr {
       // This is already literal
       Some(pv.PartialValue.fromDatum(datum))
 
-    case et.VarRef(storageLoc) if !reduceConfig.resolvingInitializers.contains(storageLoc) =>
-      // Return the initializer
-      // Use a blank state here because we have no idea which context the original initializer was in
-      // Also flag we're already resolving this to avoid recursion
-      val initializerConfig = reduceConfig.copy(
-        knownValues=Map(),
-        resolvingInitializers=reduceConfig.resolvingInitializers + storageLoc
-      )
-  
-      // Do we already know this partial value?
-      reduceConfig.knownValues.get(storageLoc) orElse {
-        // No, check if it has an initialiser
-        // This will only succeed if we're doing our pre-reduction pass on top level bindings
-        val initializerOpt = reduceConfig.analysis.constantTopLevelBindings.get(storageLoc)
-        initializerOpt.flatMap({ initializer =>
-          // Allow impure expressions because there's no risk of the caller optimizing the initializer out
-          PartialValueForExpr(
-            ReduceExpr(initializer)(initializerConfig), true
-          )(initializerConfig)
-        })
-      }
+    case et.VarRef(storageLoc) =>
+      // We should know this already unless it's recursive or mutable
+      reduceConfig.knownValues.get(storageLoc)
 
     case expr =>
       Some(pv.PartialValue.fromReducedExpr(expr))

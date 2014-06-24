@@ -41,8 +41,14 @@ private[reducer] object ReduceExpr {
 
     case et.TopLevelDefine(bindings) =>
       // Reduce our bindings and drop unused pure bindings
-      val usedBindings = (bindings.map { case (storageLoc, initializer) =>
-        storageLoc -> ReduceExpr(initializer)
+      val usedBindings = (bindings.map { case (storageLoc, initialiser) =>
+        // We have already pre-reduced this in AnalyseExprs unless its an expression with side-effects or
+        // initialisation of a mutable
+        val reducedInitialiser = reduceConfig.knownValues.get(storageLoc).flatMap(_.toExprOpt).getOrElse {
+          ReduceExpr(initialiser)
+        }
+
+        storageLoc -> reducedInitialiser
       }).filter { case (storageLoc, reducedInitializer) =>
         TopLevelDefineRequired(storageLoc, reducedInitializer, reduceConfig.analysis)
       }

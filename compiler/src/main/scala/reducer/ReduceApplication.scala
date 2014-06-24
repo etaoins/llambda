@@ -209,9 +209,7 @@ private[reducer] object ReduceApplication {
 
     case et.VarRef(storageLoc) if reduceConfig.inlineDepth < 6 =>
       // Dereference the variable
-      val storageLocExprOpt = (reduceConfig.knownValues.get(storageLoc).flatMap(_.toExprOpt) orElse
-        reduceConfig.analysis.constantTopLevelBindings.get(storageLoc)
-      )
+      val storageLocExprOpt = reduceConfig.knownValues.get(storageLoc).flatMap(_.toExprOpt)
 
       // Increase our inline depth in case we're dealing with an argument initialised with itself
       val innerReduceConfig = reduceConfig.copy(

@@ -7,7 +7,7 @@ import llambda.compiler.InternalCompilerErrorException
 case class AnalysedExprs(
   usedTopLevelExprs : List[et.Expr] = List(),
   mutableVars : Set[StorageLocation] = Set(),
-  constantTopLevelBindings : Map[StorageLocation, et.Expr] = Map(),
+  constantTopLevelBindings : List[(StorageLocation, et.Expr)] = Nil,
   usedVars : Set[StorageLocation] = Set()
 )
 
@@ -61,7 +61,8 @@ object AnalyseExprs  {
         )
 
         // Deal with our initialisers
-        usedBindings.foldLeft(accWithOnlyUsedDefine) { case (previousAcc, (storageLoc, initialiser)) =>
+        // Use foldRight because our exprs are being processed in reverse order
+        usedBindings.foldRight(accWithOnlyUsedDefine) { case ((storageLoc, initialiser), previousAcc) =>
           val accWithBinding = if (previousAcc.mutableVars.contains(storageLoc)) {
             // Don't record the initialisers for mutable top-level bindings
             // They provide no actionable information on the value of the storage location
@@ -70,7 +71,7 @@ object AnalyseExprs  {
           else {
             // Record our initialiser
             previousAcc.copy(
-              constantTopLevelBindings=previousAcc.constantTopLevelBindings + (storageLoc -> initialiser)
+              constantTopLevelBindings=previousAcc.constantTopLevelBindings :+ (storageLoc -> initialiser)
             )
           }
           
