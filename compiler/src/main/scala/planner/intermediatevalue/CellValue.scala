@@ -205,23 +205,6 @@ class CellValue(val schemeType : vt.SchemeType, val tempType : ct.CellType, val 
       throw new InternalCompilerErrorException("Attempt to directly convert to native boolean. Should be caught by toTruthyPredicate.")
   }
   
-  protected def toRecordTempValue(recordType : vt.RecordType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
-    // Convert ourselves to a record
-    val recordTemp = toTempValue(vt.SchemeTypeAtom(ct.RecordCell))
-
-    // Make sure we we're of the right class
-    val errorMessage = errorMessageOpt getOrElse {
-      RuntimeErrorMessage(
-        name=s"recordClassIsNot${recordType.schemeName}",
-        text=s"Runtime cast to record type '${recordType.schemeName}' failed"
-      )
-    }
-
-    plan.steps += ps.AssertRecordLikeClass(worldPtr, recordTemp, recordType, errorMessage)
-
-    recordTemp
-  }
-
   def preferredRepresentation : vt.ValueType =
     schemeType
   
