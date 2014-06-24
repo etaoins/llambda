@@ -201,8 +201,8 @@ class CellValue(val schemeType : vt.SchemeType, val tempType : ct.CellType, val 
         phiTemp
       }
 
-    case vt.CBool =>
-      throw new InternalCompilerErrorException("Attempt to directly convert to CBool. Should be caught by toTruthyPredicate.")
+    case _ : vt.BoolLikeType =>
+      throw new InternalCompilerErrorException("Attempt to directly convert to native boolean. Should be caught by toTruthyPredicate.")
   }
   
   protected def toRecordTempValue(recordType : vt.RecordType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {

@@ -8,6 +8,9 @@ import llambda.compiler.InternalCompilerErrorException
 
 object TempValueToIntermediate {
   def apply(valueType : vt.ValueType, tempValue : ps.TempValue) : iv.IntermediateValue = valueType match {
+    case vt.Predicate =>
+      new iv.NativePredicateValue(tempValue)
+
     case vt.CBool =>
       new iv.NativeBooleanValue(tempValue)
 
