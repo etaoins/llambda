@@ -30,6 +30,13 @@ sealed abstract trait Expr extends ContextLocated {
     recursedExpr.inlinePath = recursedExpr.inlinePath :+ pathEntry
     recursedExpr
   }
+
+  /** Returns the Scheme result type of this expression
+    *
+    * This does no recursive analysis like the reducer or planner would. For example, all appplications have the result
+    * of AnySchemeType. This is just used as a rough first pass of typing by the reducer
+    */
+  def schemeType : vt.SchemeType = vt.AnySchemeType
 }
 
 /** Represents any expression except for Literal
@@ -77,6 +84,8 @@ case class VarRef(variable : StorageLocation) extends NonLiteralExpr {
 
   override def cloningMap(f : Expr => Expr) : Expr =
     VarRef(variable).assignLocationFrom(this)
+  
+  override def schemeType = variable.schemeType
 }
 
 case class MutateVar(variable : StorageLocation, value : Expr) extends NonLiteralExpr {
@@ -95,6 +104,8 @@ case class Literal(value : ast.Datum) extends Expr {
     Literal(value).assignLocationFrom(this)
 
   override def toString = "'" + value.toString
+  
+  override def schemeType = value.schemeType
 }
 
 case class Cond(test : Expr, trueExpr : Expr, falseExpr : Expr) extends NonLiteralExpr {
@@ -102,6 +113,8 @@ case class Cond(test : Expr, trueExpr : Expr, falseExpr : Expr) extends NonLiter
 
   def map(f : Expr => Expr) : Cond =
     Cond(f(test), f(trueExpr), f(falseExpr)).assignLocationFrom(this)
+
+  override def schemeType = trueExpr.schemeType + falseExpr.schemeType
 }
 
 case class Lambda(fixedArgs : List[StorageLocation], restArg : Option[StorageLocation], body : Expr, debugContextOpt : Option[debug.SubprogramContext] = None) extends NonLiteralExpr {
@@ -109,6 +122,8 @@ case class Lambda(fixedArgs : List[StorageLocation], restArg : Option[StorageLoc
 
   def map(f : Expr => Expr) : Lambda =
     Lambda(fixedArgs, restArg, f(body), debugContextOpt).assignLocationFrom(this)
+
+  override def schemeType = vt.ProcedureType
 }
 
 sealed abstract trait BindingExpr extends NonLiteralExpr {
@@ -143,6 +158,8 @@ case class NativeFunction(
 
   override def cloningMap(f : Expr => Expr) : Expr =
     NativeFunction(signature, nativeSymbol).assignLocationFrom(this)
+
+  override def schemeType = vt.ProcedureType
 }
 
 /** Artificial procedures are created internally by the compiler
@@ -152,6 +169,8 @@ case class NativeFunction(
 sealed abstract class ArtificialProcedure extends NonLiteralExpr {
   val subexprs = Nil
   def map(f : Expr => Expr) : this.type = this
+
+  override def schemeType = vt.ProcedureType
 }
 
 sealed abstract class RecordTypeProcedure extends ArtificialProcedure {
@@ -183,6 +202,8 @@ case class Cast(valueExpr : Expr, targetType : vt.SchemeType) extends NonLiteral
 
   def map(f : Expr => Expr) : Cast =
     Cast(f(valueExpr), targetType).assignLocationFrom(this)
+
+  override def schemeType = targetType
 }
 
 case class Parameterize(parameterValues : List[(Expr, Expr)], body : Expr) extends NonLiteralExpr {

@@ -31,7 +31,7 @@ case class ReducedExpr(expr : et.NonLiteralExpr) extends PartialValue {
   def toExprOpt = Some(expr)
 
   // We can't determine this type
-  def schemeType = vt.AnySchemeType
+  def schemeType = expr.schemeType
 }
 
 /** Represents a partial value produced by constant data */

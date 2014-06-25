@@ -158,7 +158,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
         // Make sure we preserved our source name for debugging purposes
         assert(storageLoc.sourceName === "a")
-        assert(!storageLoc.hasTypeConstraints)
+        assert(storageLoc.schemeType == vt.AnySchemeType)
     }
   }
   
@@ -225,21 +225,21 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     inside(exprFor("(lambda (x) x)")) {
       case et.Lambda(List(argX), None, body, _) =>
-        assert(argX.hasTypeConstraints === false)
+        assert(argX.schemeType === vt.AnySchemeType)
         assert(body === et.VarRef(argX))
     }
     
     inside(exprFor("(lambda x x)")) {
       case et.Lambda(Nil, Some(restArg), body, _) =>
-        assert(restArg.hasTypeConstraints === false)
+        assert(restArg.schemeType === vt.AnySchemeType)
         assert(body === et.VarRef(restArg))
     }
 
     inside(exprFor("(lambda (x y . z) x y z)")) {
       case et.Lambda(List(argX, argY), Some(restArg), body, _) =>
-        assert(argX.hasTypeConstraints === false)
-        assert(argY.hasTypeConstraints === false)
-        assert(restArg.hasTypeConstraints === false)
+        assert(argX.schemeType === vt.AnySchemeType)
+        assert(argY.schemeType === vt.AnySchemeType)
+        assert(restArg.schemeType === vt.AnySchemeType)
 
         assert(body === et.Begin(List(
           et.VarRef(argX),
@@ -263,7 +263,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     
     inside(exprFor("(lambda: x x)")(nfiScope)) {
       case et.Lambda(Nil, Some(restArg), body, _) =>
-        assert(restArg.hasTypeConstraints === false)
+        assert(restArg.schemeType === vt.AnySchemeType)
         assert(body === et.VarRef(restArg))
     }
 
@@ -271,7 +271,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
       case et.Lambda(List(argX, argY), Some(restArg), body, _) =>
         assert(argX.schemeType === vt.ExactIntegerType)
         assert(argY.schemeType === vt.StringType)
-        assert(restArg.hasTypeConstraints === false)
+        assert(restArg.schemeType === vt.AnySchemeType)
 
         assert(body === et.Begin(List(
           et.VarRef(argX),
@@ -332,7 +332,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     inside(expr) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(List(fixedArg), None, bodyExpr, _)))) if procLoc == storageLoc =>
-        assert(fixedArg.hasTypeConstraints === false)
+        assert(fixedArg.schemeType === vt.AnySchemeType)
         assert(bodyExpr === et.Literal(ast.BooleanLiteral(true)))
     }
 
@@ -362,8 +362,8 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     inside(expr) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(List(fixedArg), Some(restArg), bodyExpr, _)))) if procLoc == storageLoc =>
-        assert(fixedArg.hasTypeConstraints === false)
-        assert(restArg.hasTypeConstraints === false)
+        assert(fixedArg.schemeType === vt.AnySchemeType)
+        assert(restArg.schemeType === vt.AnySchemeType)
 
         assert(bodyExpr === et.Literal(ast.BooleanLiteral(false)))
     }
@@ -383,7 +383,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     inside(expr) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(List(fixedArg), Some(restArg), _, _)))) if procLoc == storageLoc =>
         assert(fixedArg.schemeType === vt.BooleanType)
-        assert(restArg.hasTypeConstraints === false)
+        assert(restArg.schemeType === vt.AnySchemeType)
     }
   }
     
@@ -394,7 +394,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-six").value
     inside(expr) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(Nil, Some(restArg), bodyExpr, _)))) if procLoc == storageLoc =>
-        assert(restArg.hasTypeConstraints === false)
+        assert(restArg.schemeType === vt.AnySchemeType)
         assert(bodyExpr === et.Literal(ast.IntegerLiteral(6)))
     }
     
@@ -411,7 +411,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-six").value
     inside(expr) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(Nil, Some(restArg), _, _)))) if procLoc == storageLoc =>
-        assert(restArg.hasTypeConstraints === false)
+        assert(restArg.schemeType === vt.AnySchemeType)
     }
   }
 

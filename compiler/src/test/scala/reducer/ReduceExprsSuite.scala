@@ -6,7 +6,7 @@ import org.scalatest.{FunSuite, Inside}
 
 class ReduceExprsSuite extends FunSuite with Inside with testutil.ExprHelpers {
   // Use (scheme base) by default
-  implicit val scope = schemeBaseScope
+  implicit val scope = typedLambdaScope
 
   test("reducing basic constants") {
     assert(reductionFor("'test-symbol") === 
@@ -49,8 +49,25 @@ class ReduceExprsSuite extends FunSuite with Inside with testutil.ExprHelpers {
     )
   }
 
-  test("unused pure bindings") {
-    assert(reductionFor("(define unused 1)") ===
+  test("unused untyped pure bindings") {
+    assert(reductionFor("(define unused 1)", preserveTopLevelDefines=true) ===
+      et.Begin(Nil)
+    )
+  }
+  
+  test("unused typed pure bindings") {
+    assert(reductionFor("(define: unused-int : <integer> 1)", preserveTopLevelDefines=true) ===
+      et.Begin(Nil)
+    )
+    
+    assert(reductionFor("(define: unused-proc : <procedure> (lambda ()))", preserveTopLevelDefines=true) ===
+      et.Begin(Nil)
+    )
+    
+    assert(reductionFor("""
+      (define: first-int : <integer> 1)
+      (define: second-int : <integer> first-int)
+    """, preserveTopLevelDefines=true) ===
       et.Begin(Nil)
     )
   }

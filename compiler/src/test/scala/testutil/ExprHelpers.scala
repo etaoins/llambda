@@ -47,25 +47,32 @@ trait ExprHelpers extends FunSuite with OptionValues {
     bodyExtractor(data, scope)
   }
 
-  def reductionFor(scheme : String)(implicit scope : Scope) = {
+  def reductionFor(scheme : String, preserveTopLevelDefines : Boolean = false)(implicit scope : Scope) = {
     val userExprs = bodyFor(scheme)(scope)
 
     // Analyse libraries + user exprs
     val allExprs = libraryLoader.libraryExprs ++ userExprs
     val analysis = reducer.AnalyseExprs(allExprs)
 
-    et.Expr.fromSequence(
-      // Remove all top level defines
-      reducer.ReduceExprs(analysis).toSequence.flatMap {
-        case et.TopLevelDefine(_) =>
-          None
+    val reducedExpr = reducer.ReduceExprs(analysis)
 
-        case other =>
-          // Make sure this is located
-          assertExprLocated(other)
-          Some(other)
-      }
-    )
+    if (preserveTopLevelDefines) {
+      reducedExpr
+    }
+    else {
+      et.Expr.fromSequence(
+        // Remove all top level defines
+        reducedExpr.toSequence.flatMap {
+          case et.TopLevelDefine(_) =>
+            None
+
+          case other =>
+            // Make sure this is located
+            assertExprLocated(other)
+            Some(other)
+        }
+      )
+    }
   }
 
   def assertExprLocated(expr : et.Expr) {

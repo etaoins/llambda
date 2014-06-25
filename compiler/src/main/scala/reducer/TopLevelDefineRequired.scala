@@ -10,8 +10,8 @@ object TopLevelDefineRequired {
     analysis.usedVars.contains(storageLoc) ||
       // Do we need to keep ths around for a later mutable set operation?
       analysis.mutableVars.contains(storageLoc) ||
-      // Does this need an explicit type check?
-      storageLoc.hasTypeConstraints ||
+      // Is it not known if the initialiser satifies the type for the storage loc
+      (initialiser.schemeType.satisfiesType(storageLoc.schemeType) != Some(true)) ||
       // Does the initialiser have side effects
       ExprHasSideEffects(initialiser)
 }

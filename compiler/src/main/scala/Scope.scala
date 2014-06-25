@@ -17,9 +17,6 @@ class StorageLocation(
     val schemeType : vt.SchemeType = vt.AnySchemeType
 ) extends BoundValue {
   override def toString = "$" + sourceName
-
-  def hasTypeConstraints =
-    schemeType != vt.AnySchemeType
 }
 
 // These are procedure with the semantics of the same procedure defined in R7RS
