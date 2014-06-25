@@ -71,7 +71,7 @@ object AnalyseExprs  {
           else {
             // Record our initialiser
             previousAcc.copy(
-              constantTopLevelBindings=previousAcc.constantTopLevelBindings :+ (storageLoc -> initialiser)
+              constantTopLevelBindings=(storageLoc -> initialiser) :: previousAcc.constantTopLevelBindings
             )
           }
           
