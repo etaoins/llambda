@@ -61,17 +61,7 @@ class CellValue(val schemeType : vt.SchemeType, val tempType : ct.CellType, val 
         val isTypePred = PlanTypeCheck(
           valueTemp=tempValue,
           valueType=schemeType,
-          testingType=targetType,
-          isTypeBuilder={ isTypePlan =>
-            val truePredTemp = new ps.TempValue(tempValue.isGcManaged)
-            isTypePlan.steps += ps.CreateNativeInteger(truePredTemp, 1, vt.Predicate.bits)
-            truePredTemp
-          },
-          isNotTypeBuilder={ isNotTypePlan =>
-            val falsePredTemp = new ps.TempValue(tempValue.isGcManaged)
-            isNotTypePlan.steps += ps.CreateNativeInteger(falsePredTemp, 0, vt.Predicate.bits)
-            falsePredTemp
-          }
+          testingType=targetType
         )
             
         plan.steps += ps.AssertPredicate(worldPtr, isTypePred, errorMessage)

@@ -555,8 +555,8 @@ object GenPlanStep {
       
       // Start our branches
       val irFunction = state.currentBlock.function
-      val fatalBlock = irFunction.startChildBlock("predTrue")
-      val successBlock = irFunction.startChildBlock("predFalse")
+      val fatalBlock = irFunction.startChildBlock("predFalse")
+      val successBlock = irFunction.startChildBlock("predTrue")
 
       GenErrorSignal(state.copy(currentBlock=fatalBlock))(worldPtrIr, errorMessage)
 

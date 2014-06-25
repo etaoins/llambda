@@ -25,21 +25,10 @@ object PlanTypePredicate {
     val plan = parentPlan.forkPlan()
 
     // Perform an inner type check returning a boolean result
-    val retValueTemp = PlanTypeCheck(argumentTemp, vt.AnySchemeType, testingType, 
-      isTypeBuilder={ isTypePlan =>
-        val trueBool = ps.Temp(vt.CBool)
-        isTypePlan.steps += ps.CreateNativeInteger(trueBool, 1, vt.CBool.bits)
+    val isTypePred = PlanTypeCheck(argumentTemp, vt.AnySchemeType, testingType)(plan)
 
-        trueBool
-      },
-      isNotTypeBuilder={ isNotTypePlan =>
-        val falseBool = ps.Temp(vt.CBool)
-        isNotTypePlan.steps += ps.CreateNativeInteger(falseBool, 0, vt.CBool.bits)
-
-        falseBool
-      }
-    )(plan)
-
+    val retValueTemp = ps.Temp(vt.CBool)
+    plan.steps += ps.ConvertNativeInteger(retValueTemp, isTypePred, vt.CBool.bits, false)
     plan.steps += ps.Return(Some(retValueTemp))
 
     PlannedFunction(
