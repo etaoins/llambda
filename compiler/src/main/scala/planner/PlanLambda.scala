@@ -2,6 +2,7 @@ package io.llambda.compiler.planner
 import io.llambda
 
 import collection.immutable.ListSet
+import collection.breakOut
 import annotation.tailrec
 
 import llambda.compiler.et
@@ -227,10 +228,17 @@ private[planner] object PlanLambda {
     else {
       vt.EmptyClosureType
     }
+    
+    // See if we can retype some of our args
+    val argTypeMapping = RetypeLambdaArgs(lambdaExpr)(parentState, planConfig)
+    val retypedFixedArgs = fixedArgLocs.map({ argLoc =>
+      (argLoc -> argTypeMapping.getOrElse(argLoc, argLoc.schemeType))
+    })
 
-    val allArgs = fixedArgLocs.map({ storageLoc =>
-      FixedArgument(storageLoc, ps.Temp(storageLoc.schemeType), storageLoc.schemeType)
-    }) ++
+    // Build as list of all of our args
+    val allArgs = retypedFixedArgs.map({ case (storageLoc, schemeType) =>
+      FixedArgument(storageLoc, ps.Temp(schemeType), schemeType)
+    }).toList ++
     restArgLoc.map({ storageLoc =>
       RestArgument(storageLoc, ps.CellTemp(ct.ListElementCell))
     })
@@ -259,14 +267,14 @@ private[planner] object PlanLambda {
         )
 
         (storageLoc, ImmutableValue(restValue))
-    }).toMap
-    
+    }).toMap 
+
     // Determine our initial signature
     val initialSignature = ProcedureSignature(
       hasWorldArg=true,
       hasSelfArg=innerSelfTempOpt.isDefined,
       hasRestArg=restArgLoc.isDefined,
-      fixedArgs=fixedArgLocs.map(_.schemeType),
+      fixedArgs=retypedFixedArgs.map(_._2),
       returnType=Some(vt.AnySchemeType),
       attributes=Set()
     )
@@ -353,22 +361,17 @@ private[planner] object PlanLambda {
         (argument.storageLoc.sourceName -> argument.tempValue)
       })
 
+    val steps = procPlan.steps.toList
+    val worldPtrRequired = WorldPtrUsedBySteps(steps, worldPtr)
+
     // Determine our procedure
-    val unrefinedFunction = PlannedFunction(
+    val plannedFunction = PlannedFunction(
       signature=procSignature,
       namedArguments=namedArguments,
-      steps=procPlan.steps.toList,
-      worldPtrOpt=Some(worldPtr),
+      steps=steps,
+      worldPtrOpt=if (worldPtrRequired) Some(worldPtr) else None,
       debugContextOpt=lambdaExpr.debugContextOpt
     )
-
-    val plannedFunction = if (canRefineSignature && planConfig.optimize) {
-      // Attempt to refine our argument types in to more specific ones
-      RefineArgumentTypes(unrefinedFunction)
-    }
-    else {
-      unrefinedFunction
-    }
 
     val outerSelfTempOpt = innerSelfTempOpt map { _ => 
       // Save the closure values from the parent's scope

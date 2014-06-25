@@ -57,54 +57,28 @@ class CellValue(val schemeType : vt.SchemeType, val tempType : ct.CellType, val 
           )
         }
 
-        val targetCellType = targetType.cellType
+        // We have further type checking to do
+        val isTypePred = PlanTypeCheck(
+          valueTemp=tempValue,
+          valueType=schemeType,
+          testingType=targetType,
+          isTypeBuilder={ isTypePlan =>
+            val truePredTemp = new ps.TempValue(tempValue.isGcManaged)
+            isTypePlan.steps += ps.CreateNativeInteger(truePredTemp, 1, vt.Predicate.bits)
+            truePredTemp
+          },
+          isNotTypeBuilder={ isNotTypePlan =>
+            val falsePredTemp = new ps.TempValue(tempValue.isGcManaged)
+            isNotTypePlan.steps += ps.CreateNativeInteger(falsePredTemp, 0, vt.Predicate.bits)
+            falsePredTemp
+          }
+        )
+            
+        plan.steps += ps.AssertPredicate(worldPtr, isTypePred, errorMessage)
 
-        // Cast to the most specific cell type we can
-        // RefineArgumentTypes will look for these steps when determining our argument type
-        val castToCellTemp = if (targetCellType == tempType) {
-          // Already of the correct cell type - we have work to do below
-          tempValue
-        }
-        else {
-          // We can cast to a more specific cell type
-          val castTemp = new ps.TempValue(tempValue.isGcManaged)
-          val possibleCellTypes = schemeType.possibleCellRepresentations
-          plan.steps += ps.CastCellToSubtypeChecked(castTemp, worldPtr, tempValue, targetCellType, errorMessage, possibleCellTypes)
-
-          castTemp
-        }
-
-        // Find the type after the cell cast
-        val castToCellType = schemeType & vt.SchemeType.fromCellType(targetCellType)
-
-        if (castToCellType.satisfiesType(targetType) == Some(true)) {
-          // Our cell cast completely satisfied our type
-          castToCellTemp
-        }
-        else {
-          // We have further type checking to do
-          val isTypePred = PlanTypeCheck(
-            valueTemp=tempValue,
-            valueType=castToCellType,
-            testingType=targetType,
-            isTypeBuilder={ isTypePlan =>
-              val truePredTemp = new ps.TempValue(tempValue.isGcManaged)
-              isTypePlan.steps += ps.CreateNativeInteger(truePredTemp, 1, vt.Predicate.bits)
-              truePredTemp
-            },
-            isNotTypeBuilder={ isNotTypePlan =>
-              val falsePredTemp = new ps.TempValue(tempValue.isGcManaged)
-              isNotTypePlan.steps += ps.CreateNativeInteger(falsePredTemp, 0, vt.Predicate.bits)
-              falsePredTemp
-            }
-          )
-              
-          plan.steps += ps.AssertPredicate(worldPtr, isTypePred, errorMessage)
-
-          val castTemp = new ps.TempValue(tempValue.isGcManaged)
-          plan.steps += ps.CastCellToTypeUnchecked(castTemp, tempValue, targetType.cellType)
-          castTemp
-        }
+        val castTemp = new ps.TempValue(tempValue.isGcManaged)
+        plan.steps += ps.CastCellToTypeUnchecked(castTemp, tempValue, targetType.cellType)
+        castTemp
 
       case Some(false) =>
         // Not possible

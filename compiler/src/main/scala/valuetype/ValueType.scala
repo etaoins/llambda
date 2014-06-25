@@ -11,6 +11,7 @@ import llambda.compiler.{celltype => ct}
   */
 sealed abstract class ValueType {
   val schemeName : String
+  val schemeType : SchemeType
   val isGcManaged : Boolean
 
   override def toString = schemeName
@@ -33,7 +34,9 @@ sealed abstract class NativeType extends ValueType {
 sealed abstract class IntLikeType(val bits : Int, val signed : Boolean) extends NativeType
 
 /** Native integer type representing a Scheme boolean */
-sealed abstract class BoolLikeType(bits : Int) extends IntLikeType(bits, false)
+sealed abstract class BoolLikeType(bits : Int) extends IntLikeType(bits, false) {
+  val schemeType = BooleanType
+}
 
 /** LLVM single bit predicates */
 case object Predicate extends BoolLikeType(1) {
@@ -53,6 +56,8 @@ sealed abstract class IntType(bits : Int, signed : Boolean) extends IntLikeType(
   else {
     s"<uint${bits}>"
   }
+
+  val schemeType = ExactIntegerType
 }
 
 case object Int8 extends IntType(8, true)
@@ -66,7 +71,9 @@ case object UInt32 extends IntType(32, false)
 // UInt64 is outside the range we can represent
 
 /** Native floating point type representing a Scheme inexact rational */
-sealed abstract class FpType extends NativeType
+sealed abstract class FpType extends NativeType {
+  val schemeType = InexactRationalType
+}
 
 case object Float extends FpType {
   val schemeName = "<float>"
@@ -79,6 +86,7 @@ case object Double extends FpType {
 /** Native integer representing a Unicode code point */
 case object UnicodeChar extends IntLikeType(32, true) {
   val schemeName = "<unicode-char>"
+  val schemeType = CharacterType
 }
 
 /** Identifies a record field
@@ -105,10 +113,13 @@ sealed abstract class RecordLikeType extends CellValueType {
 class ClosureType(val sourceName : String, val fields : List[RecordField]) extends RecordLikeType {
   val cellType = ct.ProcedureCell
   val schemeName = "<internal-closure-type>"
+  val schemeType = ProcedureType
 }
 
 /** Types visible to Scheme programs without using the NFI */ 
 sealed abstract trait SchemeType extends CellValueType {
+  val schemeType = this
+
   /** Returns a set of all possible cell representations for this type */
   val possibleCellRepresentations : Set[ct.ConcreteCellType]
   

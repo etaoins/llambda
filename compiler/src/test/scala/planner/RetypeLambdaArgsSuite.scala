@@ -8,8 +8,8 @@ import llambda.compiler.SchemeStringImplicits._
 import llambda.compiler._
 import org.scalatest.FunSuite
 
-class RefineArgumentTypesSuite extends FunSuite with PlanHelpers{
-  private def refiningProcedureName = "refining-procedure"
+class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
+  private def retypingProcedureName = "retyping-procedure"
 
   private def signatureFor(scheme : String) : ProcedureSignature = {
     val importDecl = datum"(import (scheme base) (llambda typed))"
@@ -17,7 +17,7 @@ class RefineArgumentTypesSuite extends FunSuite with PlanHelpers{
     // Give the procedure a distinctive name so we can find it later
     val procedureDatum = ast.ProperList(List(
       ast.Symbol("define"),
-      ast.Symbol(refiningProcedureName),
+      ast.Symbol(retypingProcedureName),
       SchemeParser.parseStringAsData(scheme, None).head
     ))
     
@@ -25,13 +25,13 @@ class RefineArgumentTypesSuite extends FunSuite with PlanHelpers{
     // Higher optimization levels would see right through this but this works on -O 0
     val referenceDatum = ast.ProperList(List(
       ast.Symbol("procedure?"),
-      ast.Symbol(refiningProcedureName)
+      ast.Symbol(retypingProcedureName)
     ))
 
     val data = List(importDecl, procedureDatum, referenceDatum)
 
     val functions = planForData(data, optimise=true, reduce=false)
-    functions(refiningProcedureName).signature
+    functions(retypingProcedureName).signature
   }
 
   test("argless procedure returning integer constant") {
@@ -54,6 +54,35 @@ class RefineArgumentTypesSuite extends FunSuite with PlanHelpers{
 
     assert(signature.fixedArgs === List(vt.ExactIntegerType))
     assert(signature.returnType === Some(vt.ExactIntegerType))
+  }
+
+  test("explicitly casting procedure argument to type") {
+    val signature = signatureFor("""(lambda (x) (ann x <char>))""")
+
+    assert(signature.fixedArgs === List(vt.CharacterType))
+    assert(signature.returnType === Some(vt.CharacterType))
+  }
+
+  test("assigning procedure argument to typed immutable") {
+    val signature = signatureFor("""
+      (lambda (x)
+        (define: y : <flonum> x)
+        y)"""
+    )
+
+    assert(signature.fixedArgs === List(vt.InexactRationalType))
+    assert(signature.returnType === Some(vt.InexactRationalType))
+  }
+  
+  test("assigning procedure argument to typed mutable") {
+    val signature = signatureFor("""
+      (lambda (x)
+        (define: y : <flonum> x)
+        (set! y 5.0)
+        y)"""
+    )
+
+    assert(signature.fixedArgs === List(vt.InexactRationalType))
   }
   
   test("procedure proxying (vector-ref)") {
@@ -86,6 +115,17 @@ class RefineArgumentTypesSuite extends FunSuite with PlanHelpers{
 
     assert(signature.fixedArgs === List(vt.VectorType, vt.ExactIntegerType))
     assert(signature.returnType === None)
+  }
+
+  test("types used across (if) branches are unioned together") {
+    val signature = signatureFor("""
+      (lambda (value)
+        (if car
+          (ann value <string>)
+          (ann value <symbol>)))""")
+
+    assert(signature.fixedArgs === List(vt.UnionType(Set(vt.StringType, vt.SymbolType))))
+    assert(signature.returnType === Some(vt.UnionType(Set(vt.StringType, vt.SymbolType))))
   }
   
   test("procedure proxying (vector-ref) past a conditional") {

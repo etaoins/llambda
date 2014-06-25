@@ -101,18 +101,6 @@ object GenPlanStep {
         liveTemps=state.liveTemps.withAliasedTempValue(subvalueTemp, (resultTemp -> irValue))
       )
 
-    case ps.CastCellToSubtypeChecked(resultTemp, worldPtrTemp, supervalueTemp, targetType, errorMessage, possibleTypes) =>
-      val worldPtrIr = state.liveTemps(worldPtrTemp)
-      val supervalueIr = state.liveTemps(supervalueTemp)
-
-      val (successBlock, subvalueIr) =
-        GenCastCellToSubtype(state)(worldPtrIr, supervalueIr, targetType, errorMessage, possibleTypes)
-
-      state.copy(
-        currentBlock=successBlock,
-        liveTemps=state.liveTemps.withAliasedTempValue(supervalueTemp, (resultTemp -> subvalueIr))
-      )
-
     case ps.ConvertNativeInteger(resultTemp, fromValueTemp, toBits, signed) =>
       val fromValueIr = state.liveTemps(fromValueTemp)
 

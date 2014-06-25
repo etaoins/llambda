@@ -224,41 +224,6 @@ case class TestCellType(
     (value, testType)
 }
 
-/** Casts a cell to a subtype aborting if the cast is impossible
-  *
-  * @param result        temp value to store resulting cast value in
-  * @param worldPtr      current world pointer for the function
-  * @param value         value to cast
-  * @param toType        cell type to cast to
-  * @param errorMessage  error message to raise if cast fails
-  * @param possibleTypes possible types of the uncast value. This is used for optimisation of the generated code
-  */
-case class CastCellToSubtypeChecked(
-    result : TempValue,
-    worldPtr : WorldPtrValue,
-    value : TempValue,
-    toType : ct.CellType,
-    errorMessage : RuntimeErrorMessage,
-    possibleTypes : Set[ct.ConcreteCellType] = ct.DatumCell.concreteTypes
-) extends Step with MergeableStep {
-  lazy val inputValues = Set(worldPtr, value)
-  lazy val outputValues = Set(result)
-
-  def renamed(f : (TempValue) => TempValue) =
-    CastCellToSubtypeChecked(
-      f(result),
-      worldPtr,
-      f(value),
-      toType,
-      errorMessage,
-      possibleTypes
-    ).assignLocationFrom(this)
-
-  override def mergeKey = 
-    // Allow subcasts with different error messages to be merged
-    (worldPtr, value, toType)
-}
-
 /** Casts a cell to another type without checking the validity of the cast */
 case class CastCellToTypeUnchecked(result : TempValue, value : TempValue, toType : ct.CellType) extends Step with MergeableStep {
   lazy val inputValues = Set(value)
