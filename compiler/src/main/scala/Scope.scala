@@ -95,19 +95,8 @@ case class BoundType(valueType : vt.ValueType) extends BoundValue
 sealed class Scope(val bindings : collection.mutable.Map[String, BoundValue], parent : Option[Scope] = None) {
   def get(name : String) : Option[BoundValue] = 
     bindings.get(name).orElse {
-      parent match {
-        case Some(resolver) => resolver.get(name)
-        case None => None
-      }
+      parent.flatMap(_.get(name))
     }
-
-  def +(kv : (String, BoundValue)) : Scope = {
-    new Scope(bindings + kv, parent)
-  }
-
-  def ++(values : Map[String, BoundValue]) : Scope = {
-    new Scope(bindings ++ values, parent)
-  }
 
   def ++=(values : Map[String, BoundValue]) = {
     bindings ++= values
