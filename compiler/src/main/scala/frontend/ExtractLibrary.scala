@@ -89,6 +89,9 @@ private[frontend] object ExtractLibrary {
           throw new BadSpecialFormException(other, "Bad begin declaration")
       }
 
+      // Finish our Scope
+      FinishScope(scope)
+
       // Evaluate exports to determine our exported bindings
       val exportDecls = groupedDecls.getOrElse(DeclType.Export, List())
 
@@ -116,7 +119,7 @@ private[frontend] object ExtractLibrary {
         case other =>
           throw new BadSpecialFormException(other, "Bad export specification")
       }).toMap
-      
+
       Library(libraryName, exportedBinding, expressions)
 
     case other =>

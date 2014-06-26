@@ -3,7 +3,7 @@
     (import (llambda nfi))
 
     ; Re-export from (llambda primitives) 
-    (export define-type ann define: define-record-type: lambda: make-predicate U)
+    (export define-type ann : define: define-record-type: lambda: make-predicate U)
 
     ; Export our type names
     (export <any> <list-element> <pair> <empty-list> <string> <symbol> <boolean> <number> <integer> <flonum> <char>

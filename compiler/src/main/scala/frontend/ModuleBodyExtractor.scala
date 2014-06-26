@@ -38,6 +38,25 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
         leaf
     }).assignLocationFrom(datum)
   }
+  
+  private def declaredSymbolType(symbol : sst.ScopedSymbol, providedTypeOpt : Option[vt.SchemeType] = None) : vt.SchemeType = {
+    symbol.scope.typeDeclarations.get(symbol) match {
+      case Some(declaredType) =>
+        // Does the declared type match the provided type exactly?
+        providedTypeOpt match {
+          case Some(incompatibleType) if incompatibleType != declaredType =>
+            throw new BadSpecialFormException(symbol, s"Symbol previously declared with type ${declaredType.schemeName}")
+
+          case _ =>
+        }
+
+        declaredType
+
+      case None =>
+        // No type declaration
+        providedTypeOpt.getOrElse(vt.AnySchemeType)
+    }
+  }
 
   private def extractBodyDefinition(arguments : List[ScopedArgument], definition : List[sst.ScopedDatum]) : et.Expr = {
     // Find all the scopes in the definition
@@ -88,8 +107,12 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
 
     // Expand our scopes with all of the defines
     val bindingBlocks = defineBuilder.toList flatMap {
-      case ParsedVarDefine(symbol, boundValue, exprBlock) =>
+      case ParsedVarDefine(symbol, providedTypeOpt, exprBlock, storageLocConstructor) =>
+        val schemeType = declaredSymbolType(symbol, providedTypeOpt) 
+        val boundValue = storageLocConstructor(symbol.name, schemeType)
+
         symbol.scope += (symbol.name -> boundValue)
+
         (boundValue, exprBlock) :: Nil
       case ParsedSimpleDefine(symbol, boundValue) =>
         symbol.scope += (symbol.name -> boundValue)
@@ -98,11 +121,14 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
         typeSymbol.scope += (typeSymbol.name -> BoundType(recordType))
 
         procedures.map { case (procedureSymbol, expr) =>
-          val storageLoc = new StorageLocation(procedureSymbol.name)
+          val schemeType = declaredSymbolType(procedureSymbol)
+          val storageLoc = new StorageLocation(procedureSymbol.name, schemeType)
 
           procedureSymbol.scope += (procedureSymbol.name -> storageLoc)
           (storageLoc, () => expr) 
         }
+      case ParsedTypeAnnotation =>
+        Nil
     }
 
     // Execute the expression blocks now that the scopes are prepared
@@ -114,6 +140,11 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
     val bodyExpr = et.Expr.fromSequence(
       bodyData.map(extractExpr)
     )
+    
+    // Finish the inner scopes
+    for((_, innerScope) <- scopeMapping) {
+      FinishScope(innerScope)
+    }
 
     bindings match {
       case Nil => bodyExpr
@@ -270,7 +301,7 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
           operands.map(extractExpr)
         )
 
-      case (Primitives.AnnotateType, valueExpr :: typeDatum :: Nil) =>
+      case (Primitives.AnnotateExprType, valueExpr :: typeDatum :: Nil) =>
         et.Cast(extractExpr(valueExpr), ExtractType.extractSchemeType(typeDatum))
 
       case (Primitives.CondExpand, firstClause :: restClauses) =>
@@ -317,24 +348,24 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
   private def parseDefine(boundValue : BoundValue, appliedSymbol : sst.ScopedSymbol, operands : List[sst.ScopedDatum]) : Option[ParsedDefine] =
     (boundValue, operands) match {
       case (Primitives.Define, List(symbol : sst.ScopedSymbol, value)) =>
-        Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name), () => {
+        Some(ParsedVarDefine(symbol, None, () => {
           extractExpr(value)
         }))
       
       case (Primitives.TypedDefine, List(symbol : sst.ScopedSymbol, sst.ScopedSymbol(_, ":"), typeDatum, value)) =>
-        val valueType = ExtractType.extractSchemeType(typeDatum)
-
-        Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name, valueType), () => {
+        val providedType = ExtractType.extractSchemeType(typeDatum)
+        Some(ParsedVarDefine(symbol, Some(providedType), () => {
           extractExpr(value)
         }))
 
       case (Primitives.Define, sst.ScopedAnyList((symbol : sst.ScopedSymbol) :: fixedArgs, restArgDatum) :: body) =>
-        Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name), () => {
+        Some(ParsedVarDefine(symbol, None, () => {
           createLambda(false, fixedArgs, restArgDatum, body, Some(symbol.name)).assignLocationAndContextFrom(appliedSymbol, debugContext)
         }))
       
       case (Primitives.TypedDefine, sst.ScopedAnyList((symbol : sst.ScopedSymbol) :: fixedArgs, restArgDatum) :: body) =>
-        Some(ParsedVarDefine(symbol, new StorageLocation(symbol.name), () => {
+
+        Some(ParsedVarDefine(symbol, None, () => {
           createLambda(true, fixedArgs, restArgDatum, body, Some(symbol.name)).assignLocationAndContextFrom(appliedSymbol, debugContext)
         }))
 
@@ -353,13 +384,39 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
       case (Primitives.DefineReportProcedure, _) =>
         operands match {
           case (symbol : sst.ScopedSymbol) :: definitionData :: Nil =>
-            Some(ParsedVarDefine(symbol, new ReportProcedure(symbol.name), () => {
-              extractExpr(definitionData)
-            }))
+            Some(ParsedVarDefine(
+              definedSymbol=symbol,
+              providedType=None,
+              expr=() => {
+                extractExpr(definitionData)
+              },
+              storageLocConstructor=(new ReportProcedure(_, _))
+            ))
 
           case _ =>
             throw new BadSpecialFormException(appliedSymbol, "(define-report-procedure) requires exactly two arguments")
         }
+
+      case (Primitives.AnnotateStorageLocType, List(declaredSymbol : sst.ScopedSymbol, typeDatum)) =>
+        val declarationType = ExtractType.extractSchemeType(typeDatum)
+
+        declaredSymbol.scope.bindings.get(declaredSymbol.name) match {
+          case None =>
+            // No previous binding
+          case Some(compatibleLoc : StorageLocation) if compatibleLoc.schemeType == declarationType =>
+            // Previous binding with compatible type
+          case _ =>
+            throw new BadSpecialFormException(declaredSymbol, "Symbol previously defined with incompatible value")
+            
+        }
+        
+        // Make sure there have been no incompatible declarations before
+        val schemeType = declaredSymbolType(declaredSymbol, Some(declarationType))
+
+        // Record this declaration 
+        declaredSymbol.scope.typeDeclarations += (declaredSymbol -> schemeType)
+
+        Some(ParsedTypeAnnotation)
 
       case _ => None
   } 
@@ -370,7 +427,7 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
       case Some(_) if !atOutermostLevel=>
         throw new DefinitionOutsideTopLevelException(appliedSymbol)
 
-      case Some(ParsedVarDefine(symbol, boundValue, exprBlock)) =>
+      case Some(ParsedVarDefine(symbol, providedTypeOpt, exprBlock, storageLocConstructor)) =>
         // There's a wart in Scheme that allows a top-level (define) to become a (set!) if the value is already defined
         // as a storage location
         symbol.resolveOpt match {
@@ -383,6 +440,9 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
 
           case None  =>
             // This is a fresh binding
+            val schemeType = declaredSymbolType(symbol, providedTypeOpt)
+            val boundValue = storageLocConstructor(symbol.name, schemeType)
+
             symbol.scope += (symbol.name -> boundValue)
             et.TopLevelDefine(List(boundValue -> exprBlock()))
         }
@@ -396,11 +456,15 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
         typeSymbol.scope += (typeSymbol.name -> BoundType(recordType))
 
         et.TopLevelDefine((procedures.map { case (procedureSymbol, expr) =>
-          val storageLoc = new StorageLocation(procedureSymbol.name)
+          val schemeType = declaredSymbolType(procedureSymbol)
+          val storageLoc = new StorageLocation(procedureSymbol.name, schemeType)
 
           procedureSymbol.scope += (procedureSymbol.name -> storageLoc)
           (storageLoc, expr) 
         }).toList)
+      
+      case Some(ParsedTypeAnnotation) =>
+        et.Begin(Nil)
 
       case None =>
         // Apply the symbol

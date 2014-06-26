@@ -19,7 +19,8 @@ object Primitives {
   object NativeFunction extends PrimitiveExpr
   object WorldFunction extends PrimitiveExpr
   object DefineReportProcedure extends PrimitiveExpr
-  object AnnotateType extends PrimitiveExpr
+  object AnnotateExprType extends PrimitiveExpr
+  object AnnotateStorageLocType extends PrimitiveExpr
   object CondExpand extends PrimitiveExpr
   object Parameterize extends PrimitiveExpr
   object TypedDefine extends PrimitiveExpr
@@ -47,7 +48,8 @@ object Primitives {
       "native-function" -> NativeFunction,
       "world-function" -> WorldFunction,
       "define-report-procedure" -> DefineReportProcedure,
-      "ann" -> AnnotateType,
+      "ann" -> AnnotateExprType,
+      ":" -> AnnotateStorageLocType,
       "cond-expand" -> CondExpand,
       "parameterize" -> Parameterize,
       "define:" -> TypedDefine,

@@ -44,7 +44,11 @@ trait ExprHelpers extends FunSuite with OptionValues {
     val data = SchemeParser.parseStringAsData(scheme)
 
     val bodyExtractor = new frontend.ModuleBodyExtractor(debugContext, libraryLoader, frontendConfig)
-    bodyExtractor(data, scope)
+    val exprs = bodyExtractor(data, scope)
+
+    frontend.FinishScope(scope)
+
+    exprs
   }
 
   def reductionFor(scheme : String, preserveTopLevelDefines : Boolean = false)(implicit scope : Scope) = {

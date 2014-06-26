@@ -21,7 +21,10 @@ class StorageLocation(
 
 // These are procedure with the semantics of the same procedure defined in R7RS
 // This allows the compiler to optimize or REPL emulate them based on their documented semantics
-class ReportProcedure(val reportName : String) extends StorageLocation(reportName) {
+class ReportProcedure(
+    val reportName : String,
+    schemeType : vt.SchemeType = vt.AnySchemeType
+) extends StorageLocation(reportName, schemeType) {
   override def toString = "&" + reportName
 }
 
@@ -93,6 +96,8 @@ case class BoundType(valueType : vt.ValueType) extends BoundValue
 
 /** Scope can look up bindings by name and return a list of all identifiers  */
 sealed class Scope(val bindings : collection.mutable.Map[String, BoundValue], parent : Option[Scope] = None) {
+  val typeDeclarations = new collection.mutable.HashMap[sst.ScopedSymbol, vt.SchemeType]
+
   def get(name : String) : Option[BoundValue] = 
     bindings.get(name).orElse {
       parent.flatMap(_.get(name))

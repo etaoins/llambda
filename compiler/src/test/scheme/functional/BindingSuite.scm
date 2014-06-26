@@ -134,6 +134,12 @@
   (define: num : <number> 5)
   num))
 
+(define-test "simple typed declared top-level define" (expect "Hello!"
+  (import (llambda typed))
+  (: str <string>)
+  (define str "Hello!")
+  str))
+
 (define-test "mutating typed top-level define" (expect 15.0
   (import (llambda typed))
   (define: num : <number> 5)
@@ -143,6 +149,11 @@
 (define-test "typed top-level define with incompatible initialiser fails" (expect-failure
   (import (llambda typed))
   (define: num : <number> "not a number")))
+
+(define-test "typed declaration with incompatible definition fails" (expect-failure
+  (import (llambda typed))
+  (: num <number>)
+  (define num "not a number")))
 
 (define-test "mutating typed top-level define with incompatible value fails" (expect-failure
   (import (llambda typed))

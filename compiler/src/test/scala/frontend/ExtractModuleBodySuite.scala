@@ -177,6 +177,67 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
         assert(storageLoc.schemeType === vt.ExactIntegerType)
     }
   }
+  
+  test("define type declared variable") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+    val expressions = bodyFor(
+      """(: a <exact-integer-cell>)
+         (define a 2)""")(scope)
+
+    inside(scope.get("a").value) {
+      case storageLoc : StorageLocation =>
+        assert(expressions === List(
+          et.TopLevelDefine(List(storageLoc -> et.Literal(ast.IntegerLiteral(2))))
+        ))
+
+        assert(storageLoc.schemeType === vt.ExactIntegerType)
+    }
+  }
+  
+  test("multiple compatible type declarations are allowed") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+    val expressions = bodyFor(
+      """(: a <exact-integer-cell>)
+         (: a <exact-integer-cell>)
+         (define a 2)""")(scope)
+
+    inside(scope.get("a").value) {
+      case storageLoc : StorageLocation =>
+        assert(expressions === List(
+          et.TopLevelDefine(List(storageLoc -> et.Literal(ast.IntegerLiteral(2))))
+        ))
+
+        assert(storageLoc.schemeType === vt.ExactIntegerType)
+    }
+  }
+  
+  test("type declaration without define fails") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    intercept[UnboundVariableException] {
+      bodyFor("""(: a <exact-integer-cell>)""")(scope)
+    }
+  }
+
+  test("type declaration for already bound value fails") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    intercept[BadSpecialFormException] {
+      bodyFor(
+        """(define a 1)
+           (: a <exact-integer-cell>)""")(scope)
+    }
+  }
+  
+  test("type declaration with unbound type fails") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    intercept[UnboundVariableException] {
+      bodyFor(
+        """(: a <not-a-type>)
+           (define a 1)""")(scope)
+    }
+  }
 
   test("redefine variable") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
@@ -455,6 +516,103 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
         assert(inner != shadowed)
     }
   }
+  
+  test("type declaration can shadow") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    val expressions = bodyFor(
+      """(define x 'foo)
+         (lambda ()
+           (: x <exact-integer-cell>)
+           (define x 2))"""
+    )(scope) 
+
+    inside(expressions) {
+      case List(et.TopLevelDefine(List((shadowed, _))), et.Lambda(Nil, None, et.InternalDefine(List((inner, _)), _), _)) =>
+        assert(inner != shadowed)
+
+        assert(shadowed.schemeType === vt.AnySchemeType)
+        assert(inner.schemeType === vt.ExactIntegerType)
+    }
+  }
+  
+  test("type declaration of internal definition") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    val expressions = bodyFor(
+      """(lambda ()
+         (: x <exact-integer-cell>)
+         (define x 2))"""
+    )(scope) 
+
+    inside(expressions) {
+      case List( et.Lambda(Nil, None, et.InternalDefine(List((inner, _)), _), _)) =>
+        assert(inner.schemeType === vt.ExactIntegerType)
+    }
+  }
+  
+  test("type declaration of internal definition with incompatible type fails") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    intercept[BadSpecialFormException] {
+      bodyFor(
+        """(lambda ()
+           (define: x : <inexact-rational-cell> 4.0)
+           (: x <exact-integer-cell>))"""
+      )(scope) 
+    }
+  }
+  
+  test("type declaring compatible typed define:") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    val expressions = bodyFor(
+      """(lambda ()
+         (: x <exact-integer-cell>)
+         (define: x : <exact-integer-cell> 2))"""
+    )(scope) 
+
+    inside(expressions) {
+      case List( et.Lambda(Nil, None, et.InternalDefine(List((inner, _)), _), _)) =>
+        assert(inner.schemeType === vt.ExactIntegerType)
+    }
+  }
+  
+  test("type declaring incompatible typed define: fails") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    intercept[BadSpecialFormException] {
+      bodyFor(
+        """(lambda ()
+           (: x <exact-integer-cell>)
+           (define: x : <inexact-rational-cell> 2))"""
+      )(scope) 
+    }
+  }
+  
+  test("type declaration wihout internal define fails") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    intercept[UnboundVariableException] {
+      bodyFor(
+        """(lambda ()
+           (: x <exact-integer-cell>))"""
+      )(scope) 
+    }
+  }
+  
+  test("type declaration from outer scope fails") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    intercept[UnboundVariableException] {
+      bodyFor(
+        """(: x <exact-integer-cell>)
+           (lambda ()
+           (define x 2))"""
+      )(scope) 
+    }
+  }
+  
   
   test("capturing") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))

@@ -21,6 +21,9 @@ object ExtractProgram {
     val debugContext = debug.SourceContext.fromFilenameOpt(filenameOpt)
     val bodyExtractor = new ModuleBodyExtractor(debugContext, libraryLoader, frontendConfig)
     val programExprs = bodyExtractor(exprData, scope)
+      
+    // Finish our scope
+    FinishScope(scope)
 
     libraryLoader.libraryExprs ++ programExprs
   }
