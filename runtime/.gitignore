@@ -1,17 +1,1 @@
-/CMakeCache.txt
-/CMakeFiles/
-/cmake_install.cmake
-/liblliby.a
 /compile_commands.json
-/CTestTestfile.cmake
-/Testing/
-/DartConfiguration.tcl
-
-# Makefile generator
-/Makefile
-
-# Ninja generator
-/.ninja_deps
-/.ninja_log
-/build.ninja
-/rules.ninja

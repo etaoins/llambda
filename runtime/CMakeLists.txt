@@ -118,8 +118,8 @@ set(ALL_TEST_NAMES
 	vector)
 
 foreach( test_name ${ALL_TEST_NAMES} )
-	add_executable(tests/bin/test-${test_name} tests/test-${test_name}.cpp)
-	target_link_libraries(tests/bin/test-${test_name} lliby ${CMAKE_THREAD_LIBS_INIT})
+	add_executable(test-${test_name} tests/test-${test_name}.cpp)
+	target_link_libraries(test-${test_name} lliby ${CMAKE_THREAD_LIBS_INIT})
 
-	add_test(${test_name} tests/bin/test-${test_name})
+	add_test(${test_name} test-${test_name})
 endforeach()

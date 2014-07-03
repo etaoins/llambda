@@ -9,7 +9,7 @@ import scala.sys.process._
 class ExternalCompilerException extends Exception
 
 object Compiler {
-  private val runtimeObjPath = "runtime/liblliby.a"
+  private val runtimeObjPath = "build/liblliby.a"
 
   private val conniverPasses = List[conniver.Conniver](
     conniver.MergeIdenticalSteps
