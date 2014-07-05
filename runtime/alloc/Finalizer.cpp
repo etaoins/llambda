@@ -1,5 +1,7 @@
 #include "Finalizer.h"
 
+#include <cassert>
+
 #include "binding/DatumCell.h"
 
 #include "alloc/AllocCell.h"
@@ -34,6 +36,10 @@ void Finalizer::finalizeHeapSync(MemoryBlock *rootSegment)
 	while((nextCell->gcState() != GarbageState::HeapTerminator) &&
 			(nextCell->gcState() != GarbageState::SegmentTerminator))
 	{
+		// Make sure our garbage state is valid
+		// If a cell is written past its end it can corrupt the garbage state of the next cell
+		assert(nextCell->gcState() <= GarbageState::MaximumGarbageState);
+
 		if (nextCell->gcState() != GarbageState::ForwardingCell)
 		{
 			// This value is no longer referenced

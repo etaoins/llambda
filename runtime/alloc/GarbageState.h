@@ -48,7 +48,9 @@ enum class GarbageState : std::uint8_t
 	 *
 	 * These aren't actual datum cells; they're only used internally by the allocator
 	 */
-	HeapTerminator = 4
+	HeapTerminator = 4,
+
+	MaximumGarbageState = HeapTerminator
 };
 
 }
