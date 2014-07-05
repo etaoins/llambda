@@ -15,6 +15,8 @@ template<class T>
 class ProperList
 {
 public:
+	typedef std::uint32_t size_type;
+
 	class ConstIterator : public std::iterator<std::forward_iterator_tag, T*>
 	{
 		friend class ProperList;
@@ -88,7 +90,7 @@ public:
 
 		// Manually verify the list
 		const DatumCell *datum = head;
-		std::uint32_t length = 0;
+		size_type length = 0;
 			
 		while(auto pair = datum_cast<PairCell>(datum))
 		{
@@ -124,7 +126,7 @@ public:
 		return m_length == 0;
 	}
 
-	std::uint32_t length() const
+	size_type length() const
 	{
 		return m_length;
 	}
@@ -142,7 +144,7 @@ public:
 private:
 	const ListElementCell *m_head;
 	bool m_valid;
-	std::uint32_t m_length;
+	size_type m_length;
 };
 
 

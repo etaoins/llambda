@@ -34,7 +34,7 @@ namespace
 
 #define ASSERT_TRUE(value) \
 { \
-	if (value != true) \
+	if ((value) != true) \
 	{ \
 		std::cerr << "Value unexpectedly false" \
 			      << " at line " << __LINE__ << std::endl; \
@@ -44,7 +44,7 @@ namespace
 
 #define ASSERT_FALSE(value) \
 { \
-	if (value != false) \
+	if ((value) != false) \
 	{ \
 		std::cerr << "Value unexpectedly true" \
 			      << " at line " << __LINE__ << std::endl; \
@@ -54,7 +54,7 @@ namespace
 
 #define ASSERT_NULL(value) \
 { \
-	if (value != nullptr) \
+	if ((value) != nullptr) \
 	{ \
 		std::cerr << "Value unexpectedly non-null" \
 			      << " at line " << __LINE__ << std::endl; \

@@ -137,7 +137,7 @@ size_t collect(World &world, Heap &newHeap)
 		 stackEntry != nullptr;
 		 stackEntry = stackEntry->next)
 	{
-		for(std::int32_t i = 0; i < stackEntry->cellCount; i++)
+		for(std::uint64_t i = 0; i < stackEntry->cellCount; i++)
 		{
 			auto datumCellRef = &stackEntry->roots[i];
 

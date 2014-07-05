@@ -126,7 +126,7 @@ def gen_hashtable(base_name, input_dict, shared_chains):
         elif (len(chain_values) == 1):
             (only_key, only_value) = chain_values[0]
 
-            output += "\t{.codePoint = " + hex(only_key) + ", .value = " + hex(only_value) + ", .isInline = 1},\n"
+            output += "\t{.inlineBucket = {.codePoint = " + hex(only_key) + ", .value = " + hex(only_value) + ", .isInline = 1}},\n"
 
         else:
             chain_index = shared_chains.add_unique_chain_entry(chain_values)

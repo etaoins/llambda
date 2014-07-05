@@ -45,7 +45,7 @@ DatumCell *lliby_apply(World &world, ProcedureCell *procedure, ListElementCell *
 			auto standaloneArgCount = applyArgList.length() - 1;
 			std::vector<DatumCell*> standaloneArgs(standaloneArgCount);
 
-			for(auto i = 0; i < standaloneArgCount; i++)
+			for(ProperList<DatumCell>::size_type i = 0; i < standaloneArgCount; i++)
 			{
 				standaloneArgs[i] = *(applyArgIt++);
 			}

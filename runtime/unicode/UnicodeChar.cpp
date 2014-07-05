@@ -39,7 +39,7 @@ namespace
 			std::uint32_t codePoint;
 			std::uint32_t value : 31;
 			std::uint32_t isInline : 1;
-		};
+		} inlineBucket;
 	};
 
 	struct UnicodeHash
@@ -75,12 +75,12 @@ namespace
 			// Nothing here
 			return defaultValue;
 		}
-		else if (bucket.isInline)
+		else if (bucket.inlineBucket.isInline)
 		{
 			// The value is inline in the hash table
-			if (bucket.codePoint == codePoint)
+			if (bucket.inlineBucket.codePoint == codePoint)
 			{
-				return bucket.value;
+				return bucket.inlineBucket.value;
 			}
 			
 			return defaultValue;
