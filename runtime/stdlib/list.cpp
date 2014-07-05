@@ -128,8 +128,8 @@ DatumCell* lliby_list_copy(World &world, DatumCell *sourceHead)
 	// Make sure we take a reference to this across the next allocation in case the GC runs
 	alloc::DatumRef sourceHeadRef(world, sourceHead);	
 
-	auto destHead = static_cast<PairCell*>(alloc::allocateCells(world, pairCount));
-	PairCell *destPair = destHead;
+	alloc::AllocCell *destHead = alloc::allocateCells(world, pairCount);
+	alloc::AllocCell *destPair = destHead;
 
 	// We've counted our pairs so this has to be a pair
 	auto sourcePair = datum_unchecked_cast<const PairCell>(sourceHeadRef.data());

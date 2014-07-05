@@ -10,6 +10,7 @@ class World;
 namespace alloc
 {
 
+class AllocCell;
 class RangeAlloc;
 
 void initGlobal();
@@ -20,7 +21,7 @@ void shutdownWorld(World &world);
 /**
  * Allocator for DatumCells
  */
-void *allocateCells(World &, size_t count = 1);
+AllocCell *allocateCells(World &, size_t count = 1);
 RangeAlloc allocateRange(World &, size_t count);
 
 /**

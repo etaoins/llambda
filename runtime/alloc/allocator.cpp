@@ -71,7 +71,7 @@ void shutdownWorld(World &world)
 #endif
 }
     
-void *allocateCells(World &world, size_t count)
+AllocCell *allocateCells(World &world, size_t count)
 {
 #ifndef _LLIBY_ALWAYS_GC
 	if (world.cellHeap.allocationCounter() > MaxAllocBeforeForceGc)
@@ -82,7 +82,7 @@ void *allocateCells(World &world, size_t count)
 	}
 #endif
 
-	return world.cellHeap.allocate(count);
+	return static_cast<AllocCell*>(world.cellHeap.allocate(count));
 }
 
 RangeAlloc allocateRange(World &world, size_t count)
