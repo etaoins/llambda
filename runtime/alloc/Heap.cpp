@@ -78,12 +78,16 @@ AllocCell* Heap::addNewSegment(size_t reserveCount)
 	m_currentSegmentStart = static_cast<AllocCell*>(newSegment->startPointer());
 
 	m_allocNext = m_currentSegmentStart + reserveCount;
-	m_allocEnd = reinterpret_cast<AllocCell*>(static_cast<char*>(newSegment->endPointer()) - sizeof(SegmentTerminatorCell)); 
 
 #ifdef _LLIBY_ALWAYS_GC
 	// Make the next allocation have to enter the allocator slow path
-	m_allocNext = m_allocEnd;
+	const size_t usableCellCount = reserveCount;
+#else
+	// Find the number of cells we can fit in the segment with room for a segment terminator
+	const size_t usableCellCount = (newSegment->size() - sizeof(SegmentTerminatorCell)) / sizeof(AllocCell);
 #endif
+
+	m_allocEnd = reinterpret_cast<AllocCell*>(newSegment->startPointer()) + usableCellCount;
 
 	return m_currentSegmentStart;
 }
