@@ -4,7 +4,7 @@
 @lliby_true_value = external constant %boolean
 @lliby_empty_list_value = external constant %emptyList
 
-%cell = type {%pair}
+%cell = type {[24 x i8]}
 
 !0 = metadata !{ metadata !"World::shadowStackHead" }
 !1 = metadata !{ metadata !"World::allocNext" }
