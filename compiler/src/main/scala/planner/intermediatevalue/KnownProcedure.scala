@@ -5,7 +5,7 @@ import llambda.compiler.ProcedureSignature
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
-import llambda.compiler.planner.{PlanWriter, InvokableProcedure}
+import llambda.compiler.planner.{PlanWriter, InvokableProcedure, PlanProcedureTrampoline}
 import llambda.compiler.codegen.AdaptedProcedureSignature
 import llambda.compiler.InternalCompilerErrorException
 import llambda.compiler.RuntimeErrorMessage

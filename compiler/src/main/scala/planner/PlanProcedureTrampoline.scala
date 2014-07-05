@@ -1,12 +1,12 @@
-package io.llambda.compiler.planner.intermediatevalue
+package io.llambda.compiler.planner
 import io.llambda
 
 import collection.mutable
 
 import llambda.compiler.ProcedureSignature
 import llambda.compiler.ast
-import llambda.compiler.planner._
 import llambda.compiler.planner.{step => ps}
+import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.codegen.AdaptedProcedureSignature
@@ -18,7 +18,7 @@ import llambda.compiler.RuntimeErrorMessage
   * underlying procedure. It is assumed the argument list a proper list; it is inappropriate to pass user provided
   * arguments lists to a trampoline without confirming the list is proper beforehand.
   */
-private[intermediatevalue] object PlanProcedureTrampoline {
+private[planner] object PlanProcedureTrampoline {
   def apply(signature : ProcedureSignature, nativeSymbol : String)(implicit parentPlan : PlanWriter) : PlannedFunction = {
     val worldPtrTemp = new ps.WorldPtrValue
     val selfTemp = ps.CellTemp(ct.ProcedureCell)
@@ -73,7 +73,7 @@ private[intermediatevalue] object PlanProcedureTrampoline {
       plan.steps += ps.LoadPairCdr(argCdrTemp, argPairTemp)
 
       // We know this is a list element but its type will be DatumCell
-      new CellValue(vt.ListElementType, ct.DatumCell, argCdrTemp)
+      new iv.CellValue(vt.ListElementType, ct.DatumCell, argCdrTemp)
     }
 
     if (signature.hasRestArg) {
