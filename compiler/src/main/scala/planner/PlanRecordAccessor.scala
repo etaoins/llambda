@@ -6,47 +6,40 @@ import llambda.compiler.ProcedureSignature
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 
-object PlanRecordTypeMutator {
-  def apply(expr : et.RecordTypeMutator)(implicit parentPlan : PlanWriter) : PlannedFunction = 
+object PlanRecordAccessor {
+  def apply(expr : et.RecordAccessor)(implicit parentPlan : PlanWriter) : PlannedFunction = 
     expr match {
-      case et.RecordTypeMutator(recordType, field) =>
+      case et.RecordAccessor(recordType, field) =>
         // Determine our signature
-        val mutatorSignature = ProcedureSignature(
+        val accessorSignature = ProcedureSignature(
           hasWorldArg=false,
           hasSelfArg=false,
           hasRestArg=false,
-          fixedArgs=List(recordType, field.fieldType),
-          returnType=None,
+          fixedArgs=List(recordType),
+          returnType=Some(field.fieldType),
           attributes=Set()
         )
 
-        // Set up our arguments
         val recordCellTemp = ps.RecordTemp()
-        val newValueTemp = ps.Temp(field.fieldType)
-
-        val namedArguments = List(
-          ("recordCell" -> recordCellTemp),
-          ("newValue" -> newValueTemp)
-        )
         
         val plan = parentPlan.forkPlan()
-        
+
         // Extract the record data
         val recordDataTemp = ps.RecordLikeDataTemp()
         plan.steps += ps.LoadRecordLikeData(recordDataTemp, recordCellTemp, recordType) 
-
-        // Store the new value
-        plan.steps += ps.SetRecordDataField(recordDataTemp, recordType, field, newValueTemp) 
-        plan.steps += ps.Return(None)
+        
+        // Read the field
+        val fieldValueTemp = new ps.TempValue(field.fieldType.isGcManaged)
+        plan.steps += ps.LoadRecordDataField(fieldValueTemp, recordDataTemp, recordType, field) 
+        plan.steps += ps.Return(Some(fieldValueTemp))
 
         PlannedFunction(
-          signature=mutatorSignature,
-          namedArguments=namedArguments,
+          signature=accessorSignature,
+          namedArguments=List(("recordCell" -> recordCellTemp)),
           steps=plan.steps.toList,
           worldPtrOpt=None,
           debugContextOpt=None
         )
     }
 }
-
 

@@ -7,10 +7,10 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 
-object PlanRecordTypeConstructor {
-  def apply(expr : et.RecordTypeConstructor)(implicit parentPlan : PlanWriter) : PlannedFunction = 
+object PlanRecordConstructor {
+  def apply(expr : et.RecordConstructor)(implicit parentPlan : PlanWriter) : PlannedFunction = 
     expr match {
-      case et.RecordTypeConstructor(recordType, initializedFields) =>
+      case et.RecordConstructor(recordType, initializedFields) =>
         // Determine our signature
         val constructorSignature = ProcedureSignature(
           hasWorldArg=true,

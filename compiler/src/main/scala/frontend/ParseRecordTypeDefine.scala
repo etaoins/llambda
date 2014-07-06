@@ -81,7 +81,7 @@ private[frontend] object ParseRecordTypeDefine {
         throw new BadSpecialFormException(other, "Unrecognized record field definition")
     }
 
-  private def parseConstructor(recordType : vt.RecordType, symbolToField : Map[sst.ScopedSymbol, vt.RecordField], constructorDatum : sst.ScopedDatum) : (sst.ScopedSymbol, et.RecordTypeConstructor) =
+  private def parseConstructor(recordType : vt.RecordType, symbolToField : Map[sst.ScopedSymbol, vt.RecordField], constructorDatum : sst.ScopedDatum) : (sst.ScopedSymbol, et.RecordConstructor) =
     constructorDatum match {
       case sst.ScopedProperList((constructorSymbol : sst.ScopedSymbol) :: initializerData) =>
         val initializedFields = initializerData.foldLeft(List[vt.RecordField]()) {
@@ -115,7 +115,7 @@ private[frontend] object ParseRecordTypeDefine {
           }
         }
 
-        (constructorSymbol -> et.RecordTypeConstructor(recordType, initializedFields).assignLocationFrom(constructorSymbol))
+        (constructorSymbol -> et.RecordConstructor(recordType, initializedFields).assignLocationFrom(constructorSymbol))
 
       case other =>
         throw new BadSpecialFormException(other, "Unrecognized record type constructor form")
@@ -136,12 +136,12 @@ private[frontend] object ParseRecordTypeDefine {
 
       // Collect all of our accessors and mutators
       val accessorProcedures = (symbolToParsedField.values.map { parsedField => 
-        (parsedField.accessorSymbol -> et.RecordTypeAccessor(recordType, parsedField.field).assignLocationFrom(parsedField.accessorSymbol))
+        (parsedField.accessorSymbol -> et.RecordAccessor(recordType, parsedField.field).assignLocationFrom(parsedField.accessorSymbol))
       }).toList
       
       val mutatorProcedures = (symbolToParsedField.values.flatMap { parsedField => 
         parsedField.mutatorSymbol map { mutator =>
-          (mutator -> et.RecordTypeMutator(recordType, parsedField.field).assignLocationFrom(mutator))
+          (mutator -> et.RecordMutator(recordType, parsedField.field).assignLocationFrom(mutator))
         }
       }).toList
       

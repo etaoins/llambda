@@ -173,23 +173,23 @@ sealed abstract class ArtificialProcedure extends NonLiteralExpr {
   override def schemeType = vt.ProcedureType
 }
 
-sealed abstract class RecordTypeProcedure extends ArtificialProcedure {
+sealed abstract class RecordProcedure extends ArtificialProcedure {
   val recordType : vt.RecordType
 }
 
-case class RecordTypeConstructor(recordType : vt.RecordType, initializedFields : List[vt.RecordField]) extends RecordTypeProcedure {
+case class RecordConstructor(recordType : vt.RecordType, initializedFields : List[vt.RecordField]) extends RecordProcedure {
   override def cloningMap(f : Expr => Expr) : Expr =
-    RecordTypeConstructor(recordType, initializedFields).assignLocationFrom(this)
+    RecordConstructor(recordType, initializedFields).assignLocationFrom(this)
 }
 
-case class RecordTypeAccessor(recordType : vt.RecordType, field : vt.RecordField) extends RecordTypeProcedure {
+case class RecordAccessor(recordType : vt.RecordType, field : vt.RecordField) extends RecordProcedure {
   override def cloningMap(f : Expr => Expr) : Expr =
-    RecordTypeAccessor(recordType, field).assignLocationFrom(this)
+    RecordAccessor(recordType, field).assignLocationFrom(this)
 }
 
-case class RecordTypeMutator(recordType : vt.RecordType, field : vt.RecordField) extends RecordTypeProcedure {
+case class RecordMutator(recordType : vt.RecordType, field : vt.RecordField) extends RecordProcedure {
   override def cloningMap(f : Expr => Expr) : Expr =
-    RecordTypeMutator(recordType, field).assignLocationFrom(this)
+    RecordMutator(recordType, field).assignLocationFrom(this)
 }
 
 case class TypePredicate(testingType : vt.SchemeType) extends ArtificialProcedure {

@@ -185,8 +185,8 @@ private[planner] object PlanExpr {
           value=new iv.KnownUserProc(nativeFunc.signature, nativeFunc.nativeSymbol, None)
         )
 
-      case recordConstructor : et.RecordTypeConstructor =>
-        val plannedFunction = PlanRecordTypeConstructor(recordConstructor)
+      case recordConstructor : et.RecordConstructor =>
+        val plannedFunction = PlanRecordConstructor(recordConstructor)
 
         val procName = sourceNameHint.getOrElse {
           // By convention the constructor name is the type name without <>
@@ -197,8 +197,8 @@ private[planner] object PlanExpr {
 
         resultWithUserProc(initialState)(procName, plannedFunction)
       
-      case recordAccessor : et.RecordTypeAccessor =>
-        val plannedFunction = PlanRecordTypeAccessor(recordAccessor)
+      case recordAccessor : et.RecordAccessor =>
+        val plannedFunction = PlanRecordAccessor(recordAccessor)
 
         val procName = sourceNameHint.getOrElse {
           // By convention the accessor name is "{constructorName}-{fieldName}"
@@ -210,8 +210,8 @@ private[planner] object PlanExpr {
         
         resultWithUserProc(initialState)(procName, plannedFunction)
       
-      case recordMutator : et.RecordTypeMutator =>
-        val plannedFunction = PlanRecordTypeMutator(recordMutator)
+      case recordMutator : et.RecordMutator =>
+        val plannedFunction = PlanRecordMutator(recordMutator)
 
         val procName = sourceNameHint.getOrElse {
           // By convention the mutatorName name is "set-{constructorName}-{fieldName}!"
