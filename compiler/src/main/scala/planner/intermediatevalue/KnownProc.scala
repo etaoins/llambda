@@ -1,11 +1,11 @@
 package io.llambda.compiler.planner.intermediatevalue
 import io.llambda
 
-import llambda.compiler.ProcedureSignature
+import llambda.compiler.{ProcedureSignature, ContextLocated}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
-import llambda.compiler.planner.{PlanWriter, InvokableProcedure, PlanProcedureTrampoline}
+import llambda.compiler.planner._
 import llambda.compiler.codegen.AdaptedProcedureSignature
 import llambda.compiler.InternalCompilerErrorException
 import llambda.compiler.RuntimeErrorMessage
@@ -22,10 +22,8 @@ import llambda.compiler.RuntimeErrorMessage
   * @param selfTempOpt   For procedures with closures a procedure cell containing the procedure's closure. The entry
   *                      point does not have to be initialized; it will be set dynamically to a generated trampoline
   *                      if this value is explicitly converted to a ct.ProcedureCell
-  * @param reportName    Name of this procedure in R7RS. This is used as a tag to implement certain optimizations
-  *                      elsewhere in the planner. It is not directly used by this class
   */
-class KnownProcedure(val signature : ProcedureSignature, nativeSymbol : String, selfTempOpt : Option[ps.TempValue], val reportName : Option[String] = None) extends IntermediateValue with InvokableProcedure with BoxedOnlyValue {
+abstract class KnownProc(val signature : ProcedureSignature, nativeSymbol : String, selfTempOpt : Option[ps.TempValue], val reportName : Option[String] = None) extends IntermediateValue with InvokableProcedure with BoxedOnlyValue {
   val schemeType = vt.ProcedureType
   val typeDescription = "procedure"
   
@@ -87,10 +85,6 @@ class KnownProcedure(val signature : ProcedureSignature, nativeSymbol : String, 
     }
   }
   
-  def withReportName(newReportName : String) : KnownProcedure = {
-    new KnownProcedure(signature, nativeSymbol, selfTempOpt, Some(newReportName))
-  }
-  
   def planEntryPoint()(implicit plan : PlanWriter) : ps.TempValue = {
     val entryPointTemp = ps.EntryPointTemp()
     plan.steps += ps.CreateNamedEntryPoint(entryPointTemp, signature, nativeSymbol)
@@ -109,8 +103,7 @@ class KnownProcedure(val signature : ProcedureSignature, nativeSymbol : String, 
     // We only need a closure if we have a closure ourselves (i.e. a self temp)
     selfTempOpt.isDefined
   
-  override def restoreFromClosure(valueType : vt.ValueType, varTemp : ps.TempValue) : IntermediateValue = {
-    new KnownProcedure(signature, nativeSymbol, Some(varTemp), reportName)
-  }
+  /** Optionally plans an application of this procedure inline at the call site */
+  def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] =
+    None
 }
-

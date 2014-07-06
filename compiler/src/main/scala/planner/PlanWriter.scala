@@ -13,7 +13,7 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 class PlanWriter(
     val plannedFunctions : mutable.Map[String, PlannedFunction],
     val allocedProcSymbols : mutable.HashSet[String],
-    val plannedTypePredicates : mutable.Map[vt.SchemeType, iv.KnownProcedure]
+    val plannedTypePredicates : mutable.Map[vt.SchemeType, iv.KnownTypePredicateProc]
 ) {
   private val contextLocStack = new mutable.Stack[ContextLocated] 
 
@@ -120,5 +120,5 @@ class PlanWriter(
 
 object PlanWriter {
   def apply() =
-    new PlanWriter(new mutable.HashMap[String, PlannedFunction], new mutable.HashSet[String], new mutable.HashMap[vt.SchemeType, iv.KnownProcedure])
+    new PlanWriter(new mutable.HashMap[String, PlannedFunction], new mutable.HashSet[String], new mutable.HashMap[vt.SchemeType, iv.KnownTypePredicateProc])
 }

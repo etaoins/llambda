@@ -76,7 +76,7 @@ private[planner] object RetypeLambdaArgs {
     case et.Apply(et.VarRef(procLoc), operandExprs) =>
       // Do the proc first
       val knownProcOpt = state.values.get(procLoc) match {
-        case Some(ImmutableValue(knownProc : iv.KnownProcedure)) =>
+        case Some(ImmutableValue(knownProc : iv.KnownProc)) =>
           Some(knownProc)
 
         case _ =>

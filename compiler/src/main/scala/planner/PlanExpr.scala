@@ -10,26 +10,14 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.{InternalCompilerErrorException, ValueNotApplicableException}
 
 private[planner] object PlanExpr {
-  // These objects know how to implement certain report procedure directly
-  // with plan steps
-  private val reportProcPlanners = List[reportproc.ReportProcPlanner](
-    reportproc.ApplyProcPlanner,
-    reportproc.BooleanProcPlanner,
-    reportproc.CadrProcPlanner,
-    reportproc.EquivalenceProcPlanner,
-    reportproc.ListProcPlanner,
-    reportproc.NumberProcPlanner,
-    reportproc.VectorProcPlanner
-  )
-
-  private def resultWithFunction(state : PlannerState)(suggestedName : String, plannedFunction : PlannedFunction)(implicit plan : PlanWriter) : PlanResult = {
+  private def resultWithUserProc(state : PlannerState)(suggestedName : String, plannedFunction : PlannedFunction)(implicit plan : PlanWriter) : PlanResult = {
     val nativeSymbol = plan.allocProcedureSymbol(suggestedName)
 
     plan.plannedFunctions += (nativeSymbol -> plannedFunction)
 
     PlanResult(
       state=state,
-      value=new iv.KnownProcedure(
+      value=new iv.KnownUserProc(
         signature=plannedFunction.signature,
         nativeSymbol=nativeSymbol,
         selfTempOpt=None
@@ -71,38 +59,14 @@ private[planner] object PlanExpr {
           throw new ValueNotApplicableException(expr, procResult.value.typeDescription)
         }
 
+        // Does this procedure support planning its application inline?
         procResult.value match {
-          case knownPredicate : iv.KnownTypePredicateProcedure =>
-            // This is a type predicate
-            operands match {
-              case List((_, singleValue)) =>
-                singleValue.schemeType.satisfiesType(knownPredicate.testingType) match {
-                  case Some(knownResult) =>
-                    // We can satisfy this at plan time
-                    return PlanResult(
-                      state=initialState,
-                      value=new iv.ConstantBooleanValue(knownResult)
-                    )
-
-                  case _ =>
-                }
-
-              case _ =>
+          case knownProc : iv.KnownProc if planConfig.optimize =>
+            for(inlineResult <- knownProc.attemptInlineApplication(finalState)(operands)) {
+              return inlineResult
             }
 
-          case knownProc : iv.KnownProcedure if knownProc.reportName.isDefined && planConfig.optimize =>
-            val reportName = knownProc.reportName.get
-
-            // Give our reportProcPlanners a chance to plan this more
-            // efficiently than a function call
-            for(reportProcPlanner <- reportProcPlanners) {
-              for(planResult <- reportProcPlanner(finalState)(reportName, operands)) {
-                // We created an alternative plan; we're done
-                return planResult
-              }
-            }
-
-          case other => 
+          case _ => 
         }
 
         // Perform a function call
@@ -218,7 +182,7 @@ private[planner] object PlanExpr {
       case nativeFunc : et.NativeFunction =>
         PlanResult(
           state=initialState,
-          value=new iv.KnownProcedure(nativeFunc.signature, nativeFunc.nativeSymbol, None)
+          value=new iv.KnownUserProc(nativeFunc.signature, nativeFunc.nativeSymbol, None)
         )
 
       case recordConstructor : et.RecordTypeConstructor =>
@@ -231,7 +195,7 @@ private[planner] object PlanExpr {
             .replaceAllLiterally(">", "")
         }
 
-        resultWithFunction(initialState)(procName, plannedFunction)
+        resultWithUserProc(initialState)(procName, plannedFunction)
       
       case recordAccessor : et.RecordTypeAccessor =>
         val plannedFunction = PlanRecordTypeAccessor(recordAccessor)
@@ -244,7 +208,7 @@ private[planner] object PlanExpr {
             "-" + recordAccessor.field.sourceName
         }
         
-        resultWithFunction(initialState)(procName, plannedFunction)
+        resultWithUserProc(initialState)(procName, plannedFunction)
       
       case recordMutator : et.RecordTypeMutator =>
         val plannedFunction = PlanRecordTypeMutator(recordMutator)
@@ -259,7 +223,7 @@ private[planner] object PlanExpr {
             "!"
         }
 
-        resultWithFunction(initialState)(procName, plannedFunction)
+        resultWithUserProc(initialState)(procName, plannedFunction)
       
       case typePredicate @ et.TypePredicate(schemeType) =>
         val knownProcedure = plan.plannedTypePredicates.getOrElseUpdate(schemeType, {
@@ -275,7 +239,7 @@ private[planner] object PlanExpr {
           val nativeSymbol = plan.allocProcedureSymbol(procName)
           plan.plannedFunctions += (nativeSymbol -> plannedFunction)
 
-          new iv.KnownTypePredicateProcedure(
+          new iv.KnownTypePredicateProc(
             signature=plannedFunction.signature,
             nativeSymbol=nativeSymbol,
             testingType=schemeType

@@ -285,7 +285,7 @@ private[planner] object PlanLambda {
     // Create a value to reference ourselves recursively if required
     val recursiveSelfImmutables = recursiveSelfLoc map { storageLoc =>
       storageLoc -> ImmutableValue(
-        new iv.KnownProcedure(
+        new iv.KnownUserProc(
           signature=initialSignature,
           nativeSymbol=nativeSymbol,
           selfTempOpt=innerSelfTempOpt
@@ -387,7 +387,7 @@ private[planner] object PlanLambda {
 
     parentPlan.plannedFunctions += (nativeSymbol -> plannedFunction) 
 
-    val procValue = new iv.KnownProcedure(
+    val procValue = new iv.KnownUserProc(
       signature=plannedFunction.signature,
       nativeSymbol=nativeSymbol,
       selfTempOpt=outerSelfTempOpt
