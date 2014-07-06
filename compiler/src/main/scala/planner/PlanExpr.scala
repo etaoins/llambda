@@ -185,7 +185,7 @@ private[planner] object PlanExpr {
           value=new iv.KnownUserProc(nativeFunc.signature, nativeFunc.nativeSymbol, None)
         )
 
-      case recordConstructor : et.RecordConstructor =>
+      case recordConstructor @ et.RecordConstructor(recordType, initializedFields) =>
         val plannedFunction = PlanRecordConstructor(recordConstructor)
 
         val procName = sourceNameHint.getOrElse {
@@ -195,9 +195,20 @@ private[planner] object PlanExpr {
             .replaceAllLiterally(">", "")
         }
 
-        resultWithUserProc(initialState)(procName, plannedFunction)
+        val nativeSymbol = plan.allocProcedureSymbol(procName)
+        plan.plannedFunctions += (nativeSymbol -> plannedFunction)
+
+        PlanResult(
+          state=initialState,
+          value=new iv.KnownRecordConstructorProc(
+            signature=plannedFunction.signature,
+            nativeSymbol=nativeSymbol,
+            recordType=recordType,
+            initializedFields=initializedFields
+          )
+        )
       
-      case recordAccessor : et.RecordAccessor =>
+      case recordAccessor @ et.RecordAccessor(recordType, field) =>
         val plannedFunction = PlanRecordAccessor(recordAccessor)
 
         val procName = sourceNameHint.getOrElse {
@@ -208,9 +219,20 @@ private[planner] object PlanExpr {
             "-" + recordAccessor.field.sourceName
         }
         
-        resultWithUserProc(initialState)(procName, plannedFunction)
+        val nativeSymbol = plan.allocProcedureSymbol(procName)
+        plan.plannedFunctions += (nativeSymbol -> plannedFunction)
+
+        PlanResult(
+          state=initialState,
+          value=new iv.KnownRecordAccessorProc(
+            signature=plannedFunction.signature,
+            nativeSymbol=nativeSymbol,
+            recordType=recordType,
+            field=field
+          )
+        )
       
-      case recordMutator : et.RecordMutator =>
+      case recordMutator @ et.RecordMutator(recordType, field) =>
         val plannedFunction = PlanRecordMutator(recordMutator)
 
         val procName = sourceNameHint.getOrElse {
@@ -223,7 +245,18 @@ private[planner] object PlanExpr {
             "!"
         }
 
-        resultWithUserProc(initialState)(procName, plannedFunction)
+        val nativeSymbol = plan.allocProcedureSymbol(procName)
+        plan.plannedFunctions += (nativeSymbol -> plannedFunction)
+
+        PlanResult(
+          state=initialState,
+          value=new iv.KnownRecordMutatorProc(
+            signature=plannedFunction.signature,
+            nativeSymbol=nativeSymbol,
+            recordType=recordType,
+            field=field
+          )
+        )
       
       case typePredicate @ et.TypePredicate(schemeType) =>
         val knownProcedure = plan.plannedTypePredicates.getOrElseUpdate(schemeType, {

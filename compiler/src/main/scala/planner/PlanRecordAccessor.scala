@@ -29,7 +29,7 @@ object PlanRecordAccessor {
         plan.steps += ps.LoadRecordLikeData(recordDataTemp, recordCellTemp, recordType) 
         
         // Read the field
-        val fieldValueTemp = new ps.TempValue(field.fieldType.isGcManaged)
+        val fieldValueTemp = ps.Temp(field.fieldType)
         plan.steps += ps.LoadRecordDataField(fieldValueTemp, recordDataTemp, recordType, field) 
         plan.steps += ps.Return(Some(fieldValueTemp))
 
