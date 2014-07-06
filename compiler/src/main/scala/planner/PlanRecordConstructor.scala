@@ -24,8 +24,8 @@ object PlanRecordConstructor {
         val plan = parentPlan.forkPlan()
         val worldPtrTemp = new ps.WorldPtrValue
 
-        val fieldToTempValue = (recordType.fields.map { field =>
-          (field, new ps.TempValue(field.fieldType.isGcManaged))
+        val fieldToTempValue = (initializedFields.map { field =>
+          (field, ps.Temp(field.fieldType))
         }).toMap
 
         // Get unique argument names
@@ -44,12 +44,9 @@ object PlanRecordConstructor {
         
         // Set all our fields
         for(field <- recordType.fields) {
-          val fieldTemp = if (initializedFields.contains(field)) {
-            fieldToTempValue(field)
-          }
-          else {
+          val fieldTemp = fieldToTempValue.getOrElse(field, {
             iv.UnitValue.toTempValue(field.fieldType)(plan, worldPtrTemp)
-          }
+          })
             
           plan.steps += ps.SetRecordDataField(dataTemp, recordType, field, fieldTemp)
         }
