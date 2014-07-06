@@ -357,11 +357,11 @@ case class CreateBytevectorCell(result : TempValue, elements : Vector[Short]) ex
     CreateBytevectorCell(f(result), elements).assignLocationFrom(this)
 }
 
-case class CreatePairCell(result : TempValue, car : TempValue, cdr : TempValue, listLengthOpt : Option[Long], memberTypeOpt : Option[ct.ConcreteCellType]) extends CreateConstantCell {
+case class CreatePairCell(result : TempValue, car : TempValue, cdr : TempValue, listLengthOpt : Option[Long]) extends CreateConstantCell {
   lazy val inputValues = Set(car, cdr)
   
   def renamed(f : (TempValue) => TempValue) =
-    CreatePairCell(f(result), f(car), f(cdr), listLengthOpt, memberTypeOpt).assignLocationFrom(this)
+    CreatePairCell(f(result), f(car), f(cdr), listLengthOpt).assignLocationFrom(this)
 }
 
 case class CreateVectorCell(result : TempValue, elements : Vector[TempValue]) extends CreateConstantCell {

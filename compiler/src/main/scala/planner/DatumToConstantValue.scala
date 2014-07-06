@@ -30,32 +30,19 @@ object DatumToConstantValue {
         val carConstant = apply(car)
         val cdrConstant = apply(cdr)
 
-        val listMetricsOpt = cdrConstant match {
+        val listLengthOpt = cdrConstant match {
           case pairValue : iv.ConstantPairValue =>
-            pairValue.listMetricsOpt.map { cdrListMetrics =>
-              // Only keep our member type hint if we have the same type as the tail of the list
-              val newMemberType = cdrListMetrics.memberType.filter(_ == carConstant.cellType)
-
-              iv.ConstantListMetrics(
-                length=cdrListMetrics.length + 1,
-                memberType=newMemberType
-              )
-            }
+            pairValue.listLengthOpt.map(_ + 1)
 
           case iv.EmptyListValue =>
-            Some(
-              iv.ConstantListMetrics(
-                length=1,
-                memberType=Some(carConstant.cellType)
-              )
-            )
+            Some(1L)
 
           case _ =>
             // Not a proper list
             None
         }
 
-        new iv.ConstantPairValue(carConstant, cdrConstant, listMetricsOpt)
+        new iv.ConstantPairValue(carConstant, cdrConstant, listLengthOpt)
 
       case ast.VectorLiteral(elements) =>
         new iv.ConstantVectorValue(elements.map(apply))

@@ -39,7 +39,6 @@ abstract cell ListElement : Datum {
 };
 
 concrete cell Pair : ListElement {
-	TypeId memberTypeId;
 	uint32 listLength;
 	Datum* car;
 	Datum* cdr;

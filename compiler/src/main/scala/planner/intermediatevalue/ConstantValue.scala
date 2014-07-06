@@ -7,11 +7,6 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.PlanWriter
 import llambda.compiler.RuntimeErrorMessage
 
-case class ConstantListMetrics(
-  length : Long,
-  memberType : Option[ct.ConcreteCellType]
-)
-
 sealed abstract class ConstantValue(val cellType : ct.ConcreteCellType) extends IntermediateValue with UninvokableValue {
   val schemeType = vt.SchemeTypeAtom(cellType)
     
@@ -144,10 +139,10 @@ class ConstantBytevectorValue(value : Vector[Short]) extends TrivialConstantValu
   val typeDescription = "constant bytevector"
 }
 
-class ConstantPairValue(car : ConstantValue, cdr : ConstantValue, val listMetricsOpt : Option[ConstantListMetrics]) extends ConstantValue(ct.PairCell) with BoxedOnlyValue {
+class ConstantPairValue(car : ConstantValue, cdr : ConstantValue, val listLengthOpt : Option[Long]) extends ConstantValue(ct.PairCell) with BoxedOnlyValue {
   val typeDescription = "constant pair"
 
-  override lazy val isDefiniteProperList = listMetricsOpt.isDefined
+  override lazy val isDefiniteProperList = listLengthOpt.isDefined
   
   def toConstantCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
     val constantTemp = ps.CellTemp(cellType, knownConstant=true)
@@ -156,7 +151,7 @@ class ConstantPairValue(car : ConstantValue, cdr : ConstantValue, val listMetric
     val carTemp = car.toTempValue(vt.AnySchemeType)
     val cdrTemp = cdr.toTempValue(vt.AnySchemeType)
 
-    plan.steps += ps.CreatePairCell(constantTemp, carTemp, cdrTemp, listMetricsOpt.map(_.length), listMetricsOpt.flatMap(_.memberType))
+    plan.steps += ps.CreatePairCell(constantTemp, carTemp, cdrTemp, listLengthOpt)
 
     constantTemp
   }

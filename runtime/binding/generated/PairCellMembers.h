@@ -3,11 +3,6 @@
  ************************************************************/
 
 public:
-	CellTypeId memberTypeId() const
-	{
-		return m_memberTypeId;
-	}
-
 	std::uint32_t listLength() const
 	{
 		return m_listLength;
@@ -35,7 +30,6 @@ public:
 	}
 
 private:
-	CellTypeId m_memberTypeId;
 	std::uint32_t m_listLength;
 	DatumCell* m_car;
 	DatumCell* m_cdr;

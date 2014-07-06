@@ -42,11 +42,11 @@ object ListProcPlanner extends ReportProcPlanner {
       // Do we know the length at compile time?
       singleOperand match {
         case constantPair : iv.ConstantPairValue =>
-          for(listMetrics <- constantPair.listMetricsOpt) {
+          for(listLength <- constantPair.listLengthOpt) {
             // Yes, return it directly
             return Some(PlanResult(
               state=initialState,
-              value=new iv.ConstantExactIntegerValue(listMetrics.length)
+              value=new iv.ConstantExactIntegerValue(listLength)
             ))
           }
 
