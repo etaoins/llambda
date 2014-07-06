@@ -66,3 +66,10 @@
   (assert-equal 6
     (begin (set! x 10)
            (force p)))))
+
+(define-test "(llambda lazy) provides <promise> type" (expect-success
+  (import (llambda lazy))
+  (import (llambda typed))
+
+  (define p (delay (+ 1 2)))
+  (assert-true ((make-predicate <promise>) p))))
