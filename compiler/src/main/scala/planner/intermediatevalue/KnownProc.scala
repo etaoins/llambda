@@ -23,7 +23,7 @@ import llambda.compiler.RuntimeErrorMessage
   *                      point does not have to be initialized; it will be set dynamically to a generated trampoline
   *                      if this value is explicitly converted to a ct.ProcedureCell
   */
-abstract class KnownProc(val signature : ProcedureSignature, nativeSymbol : String, selfTempOpt : Option[ps.TempValue], val reportName : Option[String] = None) extends IntermediateValue with InvokableProcedure with BoxedOnlyValue {
+abstract class KnownProc(val signature : ProcedureSignature, nativeSymbol : String, selfTempOpt : Option[ps.TempValue]) extends IntermediateValue with InvokableProcedure with BoxedOnlyValue {
   val schemeType = vt.ProcedureType
   val typeDescription = "procedure"
   
@@ -36,20 +36,17 @@ abstract class KnownProc(val signature : ProcedureSignature, nativeSymbol : Stri
       val entryPointTemp = if (signature == AdaptedProcedureSignature) {
         // The procedure already has the correct signature
         // This is unlikely but worth checking
-        val entryPointTemp = ps.EntryPointTemp()
-        plan.steps += ps.CreateNamedEntryPoint(entryPointTemp, signature, nativeSymbol)
-
-        entryPointTemp
+        planEntryPoint()
       }
       else {
         // Give the trampoline a sufficently scary looking symbol
         val trampolineSymbol = "__llambda_" + nativeSymbol + "_trampoline"
 
         // Ensure this already hasn't been planned
-        if (!plan.plannedFunctions.contains(trampolineSymbol)) {
+        plan.plannedFunctions.getOrElseUpdate(trampolineSymbol, {
           // Plan the trampoline
-          plan.plannedFunctions += (trampolineSymbol -> PlanProcedureTrampoline(signature, nativeSymbol))
-        }
+          PlanProcedureTrampoline(signature, nativeSymbol)
+        })
 
         // Load the trampoline's entry point
         val trampEntryPointTemp = ps.EntryPointTemp()
@@ -60,8 +57,7 @@ abstract class KnownProc(val signature : ProcedureSignature, nativeSymbol : Stri
       
       val cellTemp = selfTempOpt match {
         case Some(selfTemp) =>
-          // Store the entry point in the procedure cell containing our closure
-          // data
+          // Store the entry point in the procedure cell containing our closure data
           plan.steps += ps.SetProcedureEntryPoint(selfTemp, entryPointTemp)
 
           selfTemp
@@ -69,8 +65,7 @@ abstract class KnownProc(val signature : ProcedureSignature, nativeSymbol : Stri
         case None =>
           // This must have an empty closure
           // If we had a closure selfTempOpt would have been defined to contain it
-          // This means we have to create a new closureless procedure cell to
-          // contain the entry point
+          // This means we have to create a new closureless procedure cell to contain the entry point
           val cellTemp = ps.CellTemp(ct.ProcedureCell)
 
           plan.steps += ps.CreateEmptyClosure(cellTemp, entryPointTemp)
