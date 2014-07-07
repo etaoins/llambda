@@ -20,7 +20,7 @@ case class GeneratedType(
   storageType : TypeDataStorage.Value
 )
 
-class TypeGenerator(module : IrModuleBuilder, targetPlatform : TargetPlatform) {
+class TypeGenerator(module : IrModuleBuilder, targetPlatform : TargetPlatform) extends ((vt.RecordLikeType) => GeneratedType) {
   private val generatedTypes = collection.mutable.Map[vt.RecordLikeType, GeneratedType]()
   private var nextClassId : Long = 0
 

@@ -119,9 +119,6 @@ class ClosureType(val sourceName : String, val fields : List[RecordField]) exten
 /** Types visible to Scheme programs without using the NFI */ 
 sealed abstract trait SchemeType extends CellValueType {
   val schemeType = this
-
-  /** Returns a set of all possible cell representations for this type */
-  val possibleCellRepresentations : Set[ct.ConcreteCellType]
   
   /** Subtracts another type from this one
     *
@@ -153,7 +150,6 @@ sealed abstract trait SchemeType extends CellValueType {
 sealed abstract trait NonUnionSchemeType extends SchemeType {
   // Non-union types always have a concrete cell type
   val cellType : ct.ConcreteCellType
-  val possibleCellRepresentations = Set(cellType) 
 
   def -(otherType : SchemeType) : SchemeType = 
     if (satisfiesType(otherType) == Some(true)) {
@@ -283,8 +279,6 @@ case class UnionType(memberTypes : Set[NonUnionSchemeType]) extends SchemeType {
       possibleCellTypes.subsetOf(candidateCellType.concreteTypes)
     }).get
   }
-
-  lazy val possibleCellRepresentations = memberTypes.map(_.cellType)
 
   /** Cell type exactly matching our member types or None if no exact match exists */
   private def exactCellTypeOpt : Option[ct.CellType] = {

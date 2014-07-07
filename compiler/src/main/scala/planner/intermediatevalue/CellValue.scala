@@ -140,10 +140,7 @@ class CellValue(val schemeType : vt.SchemeType, val tempType : ct.CellType, val 
       }
       else {
         // We have to check types here and branch on the result
-        val isExactIntPred = ps.Temp(vt.Predicate)
-
-        val possibleCellTypes = schemeType.possibleCellRepresentations
-        plan.steps += ps.TestCellType(isExactIntPred, tempValue, ct.ExactIntegerCell, possibleCellTypes)
+        val isExactIntPred = PlanTypeCheck(tempValue, schemeType, vt.ExactIntegerType) 
 
         // Try again with constrained types
         // This will hit the branches above us

@@ -12,6 +12,11 @@ object PlanTypeCheck {
     predTemp
   }
 
+  private def flattenType(schemeType : vt.SchemeType) : Set[vt.NonUnionSchemeType] = schemeType match {
+    case nonUnion : vt.NonUnionSchemeType => Set(nonUnion)
+    case vt.UnionType(memberTypes)        => memberTypes
+  }
+
   private def testDerivedNonUnionType(
       plan : PlanWriter,
       valueTemp : ps.TempValue,
@@ -19,17 +24,35 @@ object PlanTypeCheck {
       testingType : vt.NonUnionSchemeType
   ) : ps.TempValue = testingType match {
     case recordType : vt.RecordType =>
+      val flattenedType = flattenType(valueType)
+
+      // If we contain a generic record type we can be of any record class
+      val recordCellType = vt.SchemeTypeAtom(ct.RecordCell)
+      val containsGenericRecordType = flattenedType.exists(recordCellType.satisfiesType(_) == Some(true))
+
+      val possibleTypesOpt = if (containsGenericRecordType) {
+        None
+      }
+      else {
+        Some(flattenType(valueType) collect {
+          case recordType : vt.RecordType =>
+            recordType
+        } : Set[vt.RecordLikeType])
+      }
+
       // Cast the value to its boxed form
       val recordCellTemp = ps.RecordTemp()
       plan.steps += ps.CastCellToTypeUnchecked(recordCellTemp, valueTemp, recordType.cellType)
 
       val classMatchedPred = ps.Temp(vt.Predicate)
-      plan.steps += ps.TestRecordLikeClass(classMatchedPred, recordCellTemp, recordType) 
+      plan.steps += ps.TestRecordLikeClass(classMatchedPred, recordCellTemp, recordType, possibleTypesOpt) 
       classMatchedPred
     
     case vt.SchemeTypeAtom(cellType) =>
+      val possibleCellTypes = flattenType(valueType).map(_.cellType) 
+
       val isCellTypePred = ps.Temp(vt.Predicate)
-      plan.steps += ps.TestCellType(isCellTypePred, valueTemp, cellType, valueType.possibleCellRepresentations)
+      plan.steps += ps.TestCellType(isCellTypePred, valueTemp, cellType, possibleCellTypes)
       isCellTypePred
   }
   

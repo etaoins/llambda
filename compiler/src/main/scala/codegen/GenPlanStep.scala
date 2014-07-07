@@ -360,11 +360,14 @@ object GenPlanStep {
         .withTempValue(initStep.cellResult -> initedRecordLike.recordCell)
         .withTempValue(initStep.dataResult -> initedRecordLike.recordData)
     
-    case ps.TestRecordLikeClass(resultTemp, recordCellTemp, recordLikeType) => 
+    case ps.TestRecordLikeClass(resultTemp, recordCellTemp, recordLikeType, possibleTypesOpt) => 
       val generatedType = genGlobals.typeGenerator(recordLikeType)
+      val generatedPossibleTypes = possibleTypesOpt map { possibleTypes =>
+        possibleTypes.map(genGlobals.typeGenerator)
+      }
 
       val recordCellIr = state.liveTemps(recordCellTemp)
-      val irResult = GenTestRecordLikeClass(state.currentBlock)(recordCellIr, generatedType)
+      val irResult = GenTestRecordLikeClass(state.currentBlock)(recordCellIr, generatedType, generatedPossibleTypes)
 
       state.withTempValue(resultTemp -> irResult)
     

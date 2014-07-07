@@ -641,12 +641,17 @@ case class LoadRecordDataField(result : TempValue, recordData : TempValue, recor
 }
 
 /** Tests to see if a record is of a given class */
-case class TestRecordLikeClass(result : TempValue, recordCell : TempValue, recordLikeType : vt.RecordLikeType) extends Step with MergeableStep {
+case class TestRecordLikeClass(
+    result : TempValue,
+    recordCell : TempValue,
+    recordLikeType : vt.RecordLikeType,
+    possibleTypesOpt : Option[Set[vt.RecordLikeType]] = None
+) extends Step with MergeableStep {
   lazy val inputValues = Set(recordCell)
   lazy val outputValues = Set(result)
   
   def renamed(f : (TempValue) => TempValue) =
-    TestRecordLikeClass(result, f(recordCell), recordLikeType).assignLocationFrom(this)
+    TestRecordLikeClass(result, f(recordCell), recordLikeType, possibleTypesOpt).assignLocationFrom(this)
 }
 
 /** Asserts that a record is of a given class 
