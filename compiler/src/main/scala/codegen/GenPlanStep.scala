@@ -413,7 +413,9 @@ object GenPlanStep {
       val recordCellIr = state.liveTemps(recordCellTemp)
       val cellType = generatedType.recordLikeType.cellType
 
-      val isUndefinedBool = cellType.genLoadFromIsUndefined(state.currentBlock)(recordCellIr)
+      val loadMetadata = Map("range" -> RangeMetadata(ct.DatumCell.gcStateIrType, (0, 2)))
+      val isUndefinedBool = cellType.genLoadFromIsUndefined(state.currentBlock)(recordCellIr, loadMetadata)
+
       val isUndefinedPred = state.currentBlock.truncTo("undefinedPred")(isUndefinedBool, IntegerType(1))
 
       state.currentBlock.condBranch(isUndefinedPred, fatalBlock, successBlock)
