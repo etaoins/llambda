@@ -22,7 +22,25 @@ class KnownTypePredicateProc(signature : ProcedureSignature, nativeSymbol : Stri
               value=new ConstantBooleanValue(knownResult)
             ))
 
+          case _ if singleValue.schemeType != vt.AnySchemeType =>
+            // We know something about this type
+            // Doing an inline check can be a win here
+
+            val cellTemp = singleValue.toTempValue(singleValue.schemeType)
+            val resultPredIr = PlanTypeCheck(
+              valueTemp=cellTemp,
+              valueType=singleValue.schemeType,
+              testingType=testingType
+            )
+
+            Some(PlanResult(
+              state=state,
+              value=new NativePredicateValue(resultPredIr)
+            ))
+
           case _ =>
+            // We have no type information here
+            // We don't gain anything by doing an inline type check
             None
         }
 
