@@ -10,9 +10,9 @@ mkdir $BUILD_DIR
 cd $BUILD_DIR
 
 # List of configurations of the runtime to test
-RUNTIME_CONFIGURATIONS=("-DCMAKE_BUILD_TYPE=Debug -DENABLE_GC_DEBUGGING=yes"
+RUNTIME_CONFIGURATIONS=("-DCMAKE_BUILD_TYPE=Release"
                         "-DCMAKE_BUILD_TYPE=Debug -DENABLE_GC_DEBUGGING=no"
-                        "-DCMAKE_BUILD_TYPE=Release")
+                        "-DCMAKE_BUILD_TYPE=Debug -DENABLE_GC_DEBUGGING=yes")
 
 for config in "${RUNTIME_CONFIGURATIONS[@]}"
 do
