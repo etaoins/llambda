@@ -287,7 +287,7 @@ private[planner] object PlanLambda {
       storageLoc -> ImmutableValue(
         new iv.KnownUserProc(
           signature=initialSignature,
-          nativeSymbol=nativeSymbol,
+          plannedSymbol=nativeSymbol,
           selfTempOpt=innerSelfTempOpt
         )
       )
@@ -389,7 +389,7 @@ private[planner] object PlanLambda {
 
     val procValue = new iv.KnownUserProc(
       signature=plannedFunction.signature,
-      nativeSymbol=nativeSymbol,
+      plannedSymbol=nativeSymbol,
       selfTempOpt=outerSelfTempOpt
     )
 

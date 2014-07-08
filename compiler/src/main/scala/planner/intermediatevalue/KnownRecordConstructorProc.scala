@@ -6,9 +6,62 @@ import llambda.compiler.planner._
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 
-class KnownRecordConstructorProc(signature : ProcedureSignature, nativeSymbol : String, recordType : vt.RecordType, initializedFields : List[vt.RecordField]) extends KnownProc(signature, nativeSymbol, None) {
-  override def restoreFromClosure(valueType : vt.ValueType, varTemp : ps.TempValue) : IntermediateValue = {
-    new KnownRecordConstructorProc(signature, nativeSymbol, recordType, initializedFields)
+class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields : List[vt.RecordField]) extends KnownArtificialProc {
+  protected val symbolHint =
+    recordType.sourceName
+      .replaceAllLiterally("<", "")
+      .replaceAllLiterally(">", "")
+
+  val signature = ProcedureSignature(
+    hasWorldArg=true,
+    hasSelfArg=false,
+    hasRestArg=false,
+    fixedArgs=initializedFields.map(_.fieldType),
+    returnType=Some(recordType),
+    attributes=Set()
+  )
+  
+  def planFunction(parentPlan : PlanWriter) : PlannedFunction = {
+    val plan = parentPlan.forkPlan()
+    val worldPtrTemp = new ps.WorldPtrValue
+
+    val fieldToTempValue = (initializedFields.map { field =>
+      (field, ps.Temp(field.fieldType))
+    }).toMap
+
+    // Get unique argument names
+    val argumentUniquer = new SourceNameUniquer
+
+    val namedArguments = ("world" -> worldPtrTemp) ::
+      (initializedFields.map { case field =>
+        (argumentUniquer(field.sourceName) -> fieldToTempValue(field))
+      }).toList
+    
+    // Initialize the record
+    val cellTemp = ps.RecordTemp()
+    val dataTemp = ps.RecordLikeDataTemp()
+
+    plan.steps += ps.InitRecordLike(cellTemp, dataTemp, recordType, isUndefined=false)
+    
+    // Set all our fields
+    for(field <- recordType.fields) {
+      val fieldTemp = fieldToTempValue.getOrElse(field, {
+        UnitValue.toTempValue(field.fieldType)(plan, worldPtrTemp)
+      })
+        
+      plan.steps += ps.SetRecordDataField(dataTemp, recordType, field, fieldTemp)
+    }
+
+    // Return the record
+    plan.steps += ps.Return(Some(cellTemp))
+
+    PlannedFunction(
+      signature=signature,
+      namedArguments=namedArguments,
+      steps=plan.steps.toList,
+      worldPtrOpt=Some(worldPtrTemp),
+      debugContextOpt=None
+    )
   }
 
   override def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = {

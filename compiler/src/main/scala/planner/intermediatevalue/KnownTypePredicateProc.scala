@@ -4,11 +4,45 @@ import io.llambda
 import llambda.compiler.{ProcedureSignature, ContextLocated}
 import llambda.compiler.planner._
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
 
-class KnownTypePredicateProc(signature : ProcedureSignature, nativeSymbol : String, val testingType : vt.SchemeType) extends KnownProc(signature, nativeSymbol, None) {
-  override def restoreFromClosure(valueType : vt.ValueType, varTemp : ps.TempValue) : IntermediateValue = {
-    new KnownTypePredicateProc(signature, nativeSymbol, testingType)
+class KnownTypePredicateProc(testingType : vt.SchemeType) extends KnownArtificialProc {
+  protected val symbolHint =
+    testingType.schemeName
+      .replaceAllLiterally("<", "")
+      .replaceAllLiterally(">", "") + "?"
+
+  val signature = ProcedureSignature(
+    hasWorldArg=false,
+    hasSelfArg=false,
+    hasRestArg=false,
+    // We must be able to take any data type without erroring out
+    fixedArgs=List(vt.AnySchemeType),
+    returnType=Some(vt.CBool),
+    attributes=Set()
+  )
+  
+  def planFunction(parentPlan : PlanWriter) : PlannedFunction = {
+    // We only have a single argument
+    val argumentTemp = ps.CellTemp(ct.DatumCell)
+    
+    val plan = parentPlan.forkPlan()
+
+    // Perform an inner type check returning a boolean result
+    val isTypePred = PlanTypeCheck(argumentTemp, vt.AnySchemeType, testingType)(plan)
+
+    val retValueTemp = ps.Temp(vt.CBool)
+    plan.steps += ps.ConvertNativeInteger(retValueTemp, isTypePred, vt.CBool.bits, false)
+    plan.steps += ps.Return(Some(retValueTemp))
+
+    PlannedFunction(
+      signature=signature,
+      namedArguments=List(("value" -> argumentTemp)),
+      steps=plan.steps.toList,
+      worldPtrOpt=None,
+      debugContextOpt=None
+    )
   }
 
   override def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] =

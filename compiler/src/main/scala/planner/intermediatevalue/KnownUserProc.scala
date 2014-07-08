@@ -8,15 +8,15 @@ import llambda.compiler.planner._
 
 /** Represents a user-provided procedure with a known signature and direct entry point
   *
-  * @param signature     Signature of the procedure
-  * @param nativeSymbol  Native symbol of the direct entry point to the procedure
-  * @param selfTempOpt   For procedures with closures a procedure cell containing the procedure's closure. The entry
-  *                      point does not have to be initialized; it will be set dynamically to a generated trampoline
-  *                      if this value is explicitly converted to a ct.ProcedureCell
-  * @param reportName    Name of this procedure in R7RS. This is used as a tag to implement certain optimizations
-  *                      elsewhere in the planner. It is not directly used by this class
+  * @param signature      Signature of the procedure
+  * @param plannedSymbol  Native symbol of the direct entry point to the procedure
+  * @param selfTempOpt    For procedures with closures a procedure cell containing the procedure's closure. The entry
+  *                       point does not have to be initialized; it will be set dynamically to a generated trampoline
+  *                       if this value is explicitly converted to a ct.ProcedureCell
+  * @param reportName     Name of this procedure in R7RS. This is used as a tag to implement certain optimizations
+  *                       elsewhere in the planner. It is not directly used by this class
   */
-final class KnownUserProc(signature : ProcedureSignature, nativeSymbol : String, selfTempOpt : Option[ps.TempValue], val reportNameOpt : Option[String] = None) extends KnownProc(signature, nativeSymbol, selfTempOpt) {
+final class KnownUserProc(val signature : ProcedureSignature, plannedSymbol : String, selfTempOpt : Option[ps.TempValue], val reportNameOpt : Option[String] = None) extends KnownProc(selfTempOpt) {
   // These objects know how to implement certain report procedure directly
   // with plan steps
   private val reportProcPlanners = List[reportproc.ReportProcPlanner](
@@ -29,12 +29,15 @@ final class KnownUserProc(signature : ProcedureSignature, nativeSymbol : String,
     reportproc.VectorProcPlanner
   )
 
+  def nativeSymbol(implicit plan : PlanWriter) : String =
+    plannedSymbol
+
   def withReportName(newReportName : String) : KnownUserProc = {
-    new KnownUserProc(signature, nativeSymbol, selfTempOpt, Some(newReportName))
+    new KnownUserProc(signature, plannedSymbol, selfTempOpt, Some(newReportName))
   }
   
   override def restoreFromClosure(valueType : vt.ValueType, varTemp : ps.TempValue) : IntermediateValue = {
-    new KnownUserProc(signature, nativeSymbol, Some(varTemp), reportNameOpt)
+    new KnownUserProc(signature, plannedSymbol, Some(varTemp), reportNameOpt)
   }
   
   override def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = {

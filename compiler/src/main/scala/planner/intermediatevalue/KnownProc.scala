@@ -17,19 +17,24 @@ import llambda.compiler.RuntimeErrorMessage
   * same for all procedures so they can be called without specific knowledge of the backing procedure. These adapted
   * procedure values are represented by InvokableProcedureCell
   *
-  * @param signature     Signature of the procedure
   * @param nativeSymbol  Native symbol of the direct entry point to the procedure
   * @param selfTempOpt   For procedures with closures a procedure cell containing the procedure's closure. The entry
   *                      point does not have to be initialized; it will be set dynamically to a generated trampoline
   *                      if this value is explicitly converted to a ct.ProcedureCell
   */
-abstract class KnownProc(val signature : ProcedureSignature, nativeSymbol : String, selfTempOpt : Option[ps.TempValue]) extends IntermediateValue with InvokableProcedure with BoxedOnlyValue {
+abstract class KnownProc(selfTempOpt : Option[ps.TempValue]) extends IntermediateValue with BoxedOnlyValue with InvokableProcedure {
   val schemeType = vt.ProcedureType
   val typeDescription = "procedure"
-  
-  def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[InvokableProcedure] = 
-    Some(this)
 
+  /** Signature for the procedure */
+  val signature : ProcedureSignature
+
+  /** Returns the native symbol for this function
+    *
+    * If the procedure is lazily planned it should be planned here
+    */
+  def nativeSymbol(implicit plan : PlanWriter) : String
+  
   def toSchemeTempValue(targetType : vt.SchemeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
     if (schemeType.satisfiesType(targetType).get == true) {
       // Store an entry point with an adapted signature
@@ -79,6 +84,9 @@ abstract class KnownProc(val signature : ProcedureSignature, nativeSymbol : Stri
       impossibleConversion(s"Cannot convert ${typeDescription} to non-procedure type ${targetType.schemeName}")
     }
   }
+  
+  def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[InvokableProcedure] = 
+    Some(this)
   
   def planEntryPoint()(implicit plan : PlanWriter) : ps.TempValue = {
     val entryPointTemp = ps.EntryPointTemp()
