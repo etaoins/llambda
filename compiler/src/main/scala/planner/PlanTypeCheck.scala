@@ -47,6 +47,19 @@ object PlanTypeCheck {
       val classMatchedPred = ps.Temp(vt.Predicate)
       plan.steps += ps.TestRecordLikeClass(classMatchedPred, recordCellTemp, recordType, possibleTypesOpt) 
       classMatchedPred
+
+    case vt.ConstantBooleanType(value) =>
+      val castTemp = ps.Temp(vt.BooleanType) 
+      plan.steps += ps.CastCellToTypeUnchecked(castTemp, valueTemp, ct.BooleanCell)
+
+      // This works because booleans are preconstructed
+      val expectedTemp = ps.Temp(vt.BooleanType)
+      plan.steps += ps.CreateBooleanCell(expectedTemp, value)
+
+      val valueMatchedPred = ps.Temp(vt.Predicate)
+      plan.steps += ps.IntegerCompare(valueMatchedPred, ps.CompareCond.Equal, None, castTemp, expectedTemp)
+
+      valueMatchedPred
     
     case vt.SchemeTypeAtom(cellType) =>
       val possibleCellTypes = flattenType(valueType).map(_.cellType) 

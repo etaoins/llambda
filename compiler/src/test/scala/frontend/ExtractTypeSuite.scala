@@ -70,4 +70,17 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
       bodyFor("(define-type <another-type> (U <int32>))")(scope)
     }
   }
+ 
+  test("defining constant boolean types") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    bodyFor("(define-type <custom-false> #f)")(scope)
+    assert(scope("<custom-false>") === BoundType(vt.ConstantBooleanType(false)))
+
+    bodyFor("(define-type <custom-true> #t)")(scope)
+    assert(scope("<custom-true>") === BoundType(vt.ConstantBooleanType(true)))
+    
+    bodyFor("(define-type <custom-boolean> (U #f #t))")(scope)
+    assert(scope("<custom-boolean>") === BoundType(vt.BooleanType))
+  }
 }

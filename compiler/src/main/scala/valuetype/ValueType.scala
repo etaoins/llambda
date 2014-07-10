@@ -241,6 +241,31 @@ case class SchemeTypeAtom(cellType : ct.ConcreteCellType) extends NonUnionScheme
         Some(false)
       }
   }
+  
+  // Handle <boolean-cell> specially - it only has two subtypes
+  override def -(otherType : SchemeType) : SchemeType =  (cellType, otherType) match {
+    case (ct.BooleanCell, ConstantBooleanType(value))=>
+      ConstantBooleanType(!value)
+
+    case _ =>
+      super.-(otherType)
+  }
+}
+
+/** Constant boolean type */
+case class ConstantBooleanType(value : Boolean) extends DerivedSchemeType {
+  val cellType = ct.BooleanCell
+  val schemeName = if (value) "#t" else "#f"
+  val parentType = BooleanType
+  val isGcManaged = BooleanType.isGcManaged
+  
+  def derivedSatisfiesType(otherType : SchemeType) = otherType match {
+    case constantBooleanType : ConstantBooleanType =>
+      Some(constantBooleanType == this)
+
+    case _ =>
+      None
+  }
 }
 
 /** Pointer to a garabge collected value cell containing a user-defined record type
@@ -333,6 +358,8 @@ case class UnionType(memberTypes : Set[NonUnionSchemeType]) extends SchemeType {
 object AnySchemeType extends UnionType(ct.DatumCell.concreteTypes.map(SchemeTypeAtom(_)))
 
 object SchemeType {
+  private val allBooleans = Set[NonUnionSchemeType](ConstantBooleanType(false), ConstantBooleanType(true))
+
   def fromCellType(cellType : ct.CellType) : SchemeType = {
     cellType match {
       case concrete : ct.ConcreteCellType =>
@@ -345,21 +372,29 @@ object SchemeType {
     }
   }
 
-  def fromTypeUnion(otherTypes : List[SchemeType]) : SchemeType = {
-    val nonUnionTypes = otherTypes.flatMap {
+  def fromTypeUnion(otherTypes : Seq[SchemeType]) : SchemeType = {
+    val nonUnionTypes = (otherTypes.flatMap {
       case nonUnion : NonUnionSchemeType =>
         Set(nonUnion)
 
       case union : UnionType =>
         union.memberTypes
+    }).toSet
+
+    // Convert (U #f #t) to <boolean-cell>
+    // This should just be cosmetic
+    val simplifiedTypes = if (allBooleans.subsetOf(nonUnionTypes)) {
+      nonUnionTypes -- allBooleans + BooleanType
+    }
+    else {
+      nonUnionTypes
     }
 
-    nonUnionTypes.distinct match {
-      case singleType :: Nil =>
-        singleType
-
-      case _ =>
-        UnionType(nonUnionTypes.toSet)
+    if (simplifiedTypes.size == 1) {
+      simplifiedTypes.head
+    }
+    else {
+      UnionType(simplifiedTypes.toSet)
     }
   }
 }

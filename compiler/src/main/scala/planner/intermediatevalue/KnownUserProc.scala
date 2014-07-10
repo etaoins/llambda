@@ -21,7 +21,6 @@ final class KnownUserProc(val signature : ProcedureSignature, plannedSymbol : St
   // with plan steps
   private val reportProcPlanners = List[reportproc.ReportProcPlanner](
     reportproc.ApplyProcPlanner,
-    reportproc.BooleanProcPlanner,
     reportproc.CadrProcPlanner,
     reportproc.EquivalenceProcPlanner,
     reportproc.ListProcPlanner,

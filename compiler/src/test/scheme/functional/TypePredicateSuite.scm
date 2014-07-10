@@ -56,3 +56,17 @@
   (assert-true (custom-union? (typeless-cell (record2))))
   (assert-false (custom-union? (typeless-cell (record3))))
   (assert-false (custom-union? #f))))
+
+(define-test "(define-predicate) for boolean constants" (expect-success
+  (import (llambda typed))
+
+  (define-predicate false? #f)
+  (define-predicate true? #t)
+
+  (assert-false (true? "Hello, world!"))
+  (assert-false (true? #f))
+  (assert-true  (true? #t))
+  
+  (assert-false (false? "Hello, world!"))
+  (assert-true  (false? #f))
+  (assert-false (false? #t))))

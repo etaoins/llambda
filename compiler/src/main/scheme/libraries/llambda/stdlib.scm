@@ -243,7 +243,7 @@
     (define-r7rs / (world-function "lliby_div" (<numeric-cell> . <list-element-cell>) -> <double>))
 
     (define-r7rs boolean? (make-predicate <boolean-cell>))
-    (define-r7rs not (native-function "lliby_not" (<bool>) -> <bool>))
+    (define-r7rs not (make-predicate #f))
     (define-r7rs boolean=? (world-function "lliby_boolean_equal" (<boolean-cell> <boolean-cell> . <list-element-cell>) -> <bool>))
 
     (define-r7rs pair? (make-predicate <pair-cell>))

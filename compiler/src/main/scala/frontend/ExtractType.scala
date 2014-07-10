@@ -44,6 +44,9 @@ object ExtractType {
     case sst.ScopedProperList((constructorName : sst.ScopedSymbol) :: operandData) =>
       applyTypeConstructor(constructorName, operandData)
 
+    case sst.NonSymbolLeaf(ast.BooleanLiteral(value)) =>
+      vt.ConstantBooleanType(value)
+
     case nonsymbol => 
       throw new BadSpecialFormException(nonsymbol, "Excepted type name to be symbol or type constructor application")
   }

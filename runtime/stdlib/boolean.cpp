@@ -9,11 +9,6 @@ extern "C"
 
 using namespace lliby;
 
-bool lliby_not(bool value)
-{
-	return !value;
-}
-
 bool lliby_boolean_equal(World &world, BooleanCell *value1, BooleanCell *value2, ListElementCell *argHead)
 {
 	if (value1 != value2)

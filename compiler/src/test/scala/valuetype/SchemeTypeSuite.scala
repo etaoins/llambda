@@ -11,6 +11,9 @@ class SchemeTypeSuite extends FunSuite {
   private val recordType1 = new RecordType("record1", Nil)
   private val recordType2 = new RecordType("record1", Nil)
 
+  private val constantTrue = ConstantBooleanType(true)
+  private val constantFalse = ConstantBooleanType(false)
+
   private def assertIntersection(type1 : SchemeType, type2 : SchemeType, resultType : SchemeType) {
     assert((type1 & type2) === resultType) 
     assert((type2 & type1) === resultType) 
@@ -178,5 +181,33 @@ class SchemeTypeSuite extends FunSuite {
   
   test("the cell type for the union of exact int, inexact and string is datum") {
     assert(UnionType(Set(ExactIntegerType, InexactRationalType, StringType)).cellType === ct.DatumCell)
+  }
+
+  test("the union of both constant booleans is the general boolean") {
+    assert(SchemeType.fromTypeUnion(List(constantFalse, constantTrue)) === BooleanType)
+  }
+
+  test("general boolean type minus a constant boolean is the other constant boolean") {
+    assert((BooleanType - constantTrue) === constantFalse)
+    assert((BooleanType - constantFalse) === constantTrue)
+  }
+
+  test("intersection of the constant booleans in an empty union") {
+    assertIntersection(constantTrue, constantFalse, UnionType(Set()))
+  }
+
+  test("intersection of the constant booleans with the general boolean is themselves") {
+    assertIntersection(constantTrue, BooleanType, constantTrue)
+    assertIntersection(constantFalse, BooleanType, constantFalse)
+  }
+  
+  test("boolean constants satisfy themselvs") {
+    assert(constantFalse.satisfiesType(constantFalse) === Some(true))
+    assert(constantTrue.satisfiesType(constantTrue) === Some(true))
+  }
+
+  test("boolean constants satisfy the general boolean type") {
+    assert(constantFalse.satisfiesType(BooleanType) === Some(true))
+    assert(constantTrue.satisfiesType(BooleanType) === Some(true))
   }
 }

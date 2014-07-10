@@ -8,7 +8,7 @@ import llambda.compiler.planner.PlanWriter
 import llambda.compiler.RuntimeErrorMessage
 
 sealed abstract class ConstantValue(val cellType : ct.ConcreteCellType) extends IntermediateValue with UninvokableValue {
-  val schemeType = vt.SchemeTypeAtom(cellType)
+  val schemeType : vt.SchemeType = vt.SchemeTypeAtom(cellType)
     
   def toConstantCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
 
@@ -116,7 +116,8 @@ class ConstantCharacterValue(value : Char) extends TrivialConstantValue(ct.Chara
 }
 
 class ConstantBooleanValue(value : Boolean) extends TrivialConstantValue(ct.BooleanCell, value, ps.CreateBooleanCell.apply) {
-  val typeDescription = "constant boolean"
+  override val schemeType = vt.ConstantBooleanType(value)
+  val typeDescription = schemeType.schemeName
 
   private val intValue = if (value) 1 else 0
 

@@ -7,7 +7,7 @@ import llambda.compiler.{valuetype => vt}
 
 sealed abstract class Datum extends SourceLocated {
   /** Scheme type for this datum */
-  val schemeType : vt.SchemeTypeAtom
+  val schemeType : vt.NonUnionSchemeType
 }
  
 sealed abstract class Leaf extends Datum
@@ -32,7 +32,7 @@ case class StringLiteral(content : String) extends NonSymbolLeaf {
 }
 
 case class BooleanLiteral(value : Boolean) extends NonSymbolLeaf {
-  val schemeType = vt.BooleanType
+  val schemeType = vt.ConstantBooleanType(value)
 
   override def toString = value match {
     case true => "#t"
