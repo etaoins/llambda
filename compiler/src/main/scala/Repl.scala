@@ -92,20 +92,6 @@ class BodyExprMode(targetPlatform : platform.TargetPlatform) extends ExprParsing
     exprs.mkString(" ")
 }
 
-/** Reduces expressions using the compile-time reducer */
-class ReduceMode(targetPlatform : platform.TargetPlatform) extends ExprParsingMode(targetPlatform, "reduce") {
-  private val userExprs = new collection.mutable.ListBuffer[et.Expr]
-
-  def evalExprs(exprs : List[et.Expr]) = {
-    userExprs ++= exprs
-
-    val allExprs = loader.libraryExprs ++ userExprs
-    val analysis = reducer.AnalyseExprs(allExprs)
-
-    reducer.ReduceExprs(analysis).toString
-  }
-}
-
 /** Compiles expressions as a standalone program and executes them */
 class CompileMode(targetPlatform : platform.TargetPlatform) extends SchemeParsingMode("compile") {
   private val frontendConfig = ReplFrontendConfig(targetPlatform)
@@ -194,9 +180,6 @@ class Repl(targetPlatform : platform.TargetPlatform) {
       
       case ":expr" =>
         acceptInput(new BodyExprMode(targetPlatform))
-      
-      case ":reduce" =>
-        acceptInput(new ReduceMode(targetPlatform))
       
       case ":compile" =>
         acceptInput(new CompileMode(targetPlatform))

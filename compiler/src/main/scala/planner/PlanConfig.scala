@@ -1,9 +1,9 @@
 package io.llambda.compiler.planner
 import io.llambda
 
-import llambda.compiler.reducer.AnalysedExprs
+import llambda.compiler.analyser.AnalysedExprs
 
 case class PlanConfig(
   optimize : Boolean,
-  analysis :  AnalysedExprs
+  analysis : AnalysedExprs
 )

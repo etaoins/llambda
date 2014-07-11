@@ -33,17 +33,11 @@ sealed abstract trait Expr extends ContextLocated {
 
   /** Returns the Scheme result type of this expression
     *
-    * This does no recursive analysis like the reducer or planner would. For example, all appplications have the result
-    * of AnySchemeType. This is just used as a rough first pass of typing by the reducer
+    * This does no recursive analysis like the or planner would. For example, all appplications have the result of
+    * AnySchemeType. This is used to discard unused top-level expressions early if possible
     */
   def schemeType : vt.SchemeType = vt.AnySchemeType
 }
-
-/** Represents any expression except for Literal
-  *
-  * This is used by reducer.PartialValue to define ReducedExpr
-  */
-sealed abstract trait NonLiteralExpr extends Expr
 
 object Expr {
   def fromSequence(exprs : List[Expr]) : Expr = exprs match {
@@ -56,7 +50,7 @@ object Expr {
   }
 }
 
-case class Begin(exprs : List[Expr]) extends NonLiteralExpr {
+case class Begin(exprs : List[Expr]) extends Expr {
   val subexprs = exprs
 
   def map(f : Expr => Expr) : Begin =
@@ -66,7 +60,7 @@ case class Begin(exprs : List[Expr]) extends NonLiteralExpr {
     subexprs.flatMap(_.toSequence)
 }
 
-case class Apply(procedure : Expr, operands : List[Expr]) extends NonLiteralExpr {
+case class Apply(procedure : Expr, operands : List[Expr]) extends Expr {
   val subexprs = procedure :: operands
 
   def map(f : Expr => Expr) : Apply =
@@ -77,7 +71,7 @@ case class Apply(procedure : Expr, operands : List[Expr]) extends NonLiteralExpr
     "Apply(" + (procedure :: operands).mkString(", ") + ")"
 }
 
-case class VarRef(variable : StorageLocation) extends NonLiteralExpr {
+case class VarRef(variable : StorageLocation) extends Expr {
   val subexprs = Nil
 
   def map(f : Expr => Expr) : VarRef = this
@@ -88,7 +82,7 @@ case class VarRef(variable : StorageLocation) extends NonLiteralExpr {
   override def schemeType = variable.schemeType
 }
 
-case class MutateVar(variable : StorageLocation, value : Expr) extends NonLiteralExpr {
+case class MutateVar(variable : StorageLocation, value : Expr) extends Expr {
   val subexprs = value :: Nil
 
   def map(f : Expr => Expr) : MutateVar =
@@ -108,7 +102,7 @@ case class Literal(value : ast.Datum) extends Expr {
   override def schemeType = value.schemeType
 }
 
-case class Cond(test : Expr, trueExpr : Expr, falseExpr : Expr) extends NonLiteralExpr {
+case class Cond(test : Expr, trueExpr : Expr, falseExpr : Expr) extends Expr {
   val subexprs = test :: trueExpr :: falseExpr :: Nil
 
   def map(f : Expr => Expr) : Cond =
@@ -117,7 +111,7 @@ case class Cond(test : Expr, trueExpr : Expr, falseExpr : Expr) extends NonLiter
   override def schemeType = trueExpr.schemeType + falseExpr.schemeType
 }
 
-case class Lambda(fixedArgs : List[StorageLocation], restArg : Option[StorageLocation], body : Expr, debugContextOpt : Option[debug.SubprogramContext] = None) extends NonLiteralExpr {
+case class Lambda(fixedArgs : List[StorageLocation], restArg : Option[StorageLocation], body : Expr, debugContextOpt : Option[debug.SubprogramContext] = None) extends Expr {
   val subexprs = body :: Nil
 
   def map(f : Expr => Expr) : Lambda =
@@ -126,7 +120,7 @@ case class Lambda(fixedArgs : List[StorageLocation], restArg : Option[StorageLoc
   override def schemeType = vt.ProcedureType
 }
 
-sealed abstract trait BindingExpr extends NonLiteralExpr {
+sealed abstract trait BindingExpr extends Expr {
   val bindings : List[(StorageLocation, Expr)]
 }
 
@@ -151,7 +145,7 @@ case class InternalDefine(bindings : List[(StorageLocation, Expr)], body : Expr)
 case class NativeFunction(
   signature : ProcedureSignature,
   nativeSymbol : String
-) extends NonLiteralExpr {
+) extends Expr {
   val subexprs = Nil
 
   def map(f : Expr => Expr) : NativeFunction = this
@@ -166,7 +160,7 @@ case class NativeFunction(
   *
   * They do not correspond to a defined procedure in the Scheme source
   */
-sealed abstract class ArtificialProcedure extends NonLiteralExpr {
+sealed abstract class ArtificialProcedure extends Expr {
   val subexprs = Nil
   def map(f : Expr => Expr) : this.type = this
 
@@ -197,7 +191,7 @@ case class TypePredicate(testingType : vt.SchemeType) extends ArtificialProcedur
     TypePredicate(testingType).assignLocationFrom(this)
 }
 
-case class Cast(valueExpr : Expr, targetType : vt.SchemeType) extends NonLiteralExpr {
+case class Cast(valueExpr : Expr, targetType : vt.SchemeType) extends Expr {
   val subexprs = valueExpr :: Nil
 
   def map(f : Expr => Expr) : Cast =
@@ -206,7 +200,7 @@ case class Cast(valueExpr : Expr, targetType : vt.SchemeType) extends NonLiteral
   override def schemeType = targetType
 }
 
-case class Parameterize(parameterValues : List[(Expr, Expr)], body : Expr) extends NonLiteralExpr {
+case class Parameterize(parameterValues : List[(Expr, Expr)], body : Expr) extends Expr {
   lazy val subexprs = body :: parameterValues.flatMap { case (parameter, value) =>
     List(parameter, value)
   }
@@ -221,7 +215,7 @@ case class Parameterize(parameterValues : List[(Expr, Expr)], body : Expr) exten
 }
 
 /** Returns from the current lambda with the given value */
-case class Return(value : Expr) extends NonLiteralExpr {
+case class Return(value : Expr) extends Expr {
   lazy val subexprs = List(value)
 
   def map(f : Expr => Expr) : Return = 

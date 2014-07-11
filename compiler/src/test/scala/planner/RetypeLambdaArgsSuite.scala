@@ -30,7 +30,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
 
     val data = List(importDecl, procedureDatum, referenceDatum)
 
-    val functions = planForData(data, optimise=true, reduce=false)
+    val functions = planForData(data, optimise=true)
     functions(retypingProcedureName).signature
   }
 

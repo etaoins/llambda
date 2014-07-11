@@ -40,23 +40,9 @@ class PlanLocatingSuite extends FunSuite with PlanHelpers {
     val functions = planForData(
       data=programData,
       optimise=true,
-      reduce=false,
       includePath=testutil.NonTrivialProgram.includePath
     )
 
     assertPlanLocated(functions, "after planning")
-  }
-  
-  test("all non-housekeeping steps are source located after reduction and planning") {
-    val programData = testutil.NonTrivialProgram.data
-    
-    val functions = planForData(
-      data=programData,
-      optimise=true,
-      reduce=true,
-      includePath=testutil.NonTrivialProgram.includePath
-    )
-
-    assertPlanLocated(functions, "after reduction and planning")
   }
 }

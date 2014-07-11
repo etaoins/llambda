@@ -7,7 +7,7 @@ import llambda.compiler._
 import llambda.compiler.frontend.IncludePath
 
 trait PlanHelpers extends FunSuite {
-  protected def planForData(data : List[ast.Datum], optimise : Boolean, reduce : Boolean, includePath : IncludePath = IncludePath()) : Map[String, PlannedFunction] = {
+  protected def planForData(data : List[ast.Datum], optimise : Boolean, includePath : IncludePath = IncludePath()) : Map[String, PlannedFunction] = {
     val frontendConfig = frontend.FrontendConfig(
       includePath=includePath,
       featureIdentifiers=Set()
@@ -20,22 +20,14 @@ trait PlanHelpers extends FunSuite {
     )
   
     val loader = new frontend.LibraryLoader(compileConfig.targetPlatform)
-    val expressions = frontend.ExtractProgram(None, data)(loader, frontendConfig)
-    val analysis = reducer.AnalyseExprs(expressions)
-
-    val reducedExprs = if (reduce) {
-      List(reducer.ReduceExprs(analysis))
-    }
-    else {
-      // Don't use usedTopLevelExpressions here - make sure everything in the stdlib is located also
-      expressions
-    }
+    val exprs = frontend.ExtractProgram(None, data)(loader, frontendConfig)
+    val analysis = analyser.AnalyseExprs(exprs)
 
     val planConfig = planner.PlanConfig(
       optimize=optimise,
       analysis=analysis
     )
 
-    planner.PlanProgram(reducedExprs)(planConfig)
+    planner.PlanProgram(exprs)(planConfig)
   }
 }

@@ -165,19 +165,7 @@ object Compiler {
     val exprs = frontend.ExtractProgram(entryFilenameOpt, data)(loader, frontendConfig)
 
     // Analyse and drop unused top-level defines
-    val analysis = reducer.AnalyseExprs(exprs)
-
-    // Drop unused top-level bindings
-    // Otherwise we produce a lot of unused LLVM IR on -O 0
-    val droppedExprs = analysis.usedTopLevelExprs
-
-    val reducedExprs = if (config.optimizeLevel > 1) {
-      // Reduce the expressions
-      List(reducer.ReduceExprs(analysis))
-    }
-    else {
-      droppedExprs
-    }
+    val analysis = analyser.AnalyseExprs(exprs)
     
     // Plan execution
     val planConfig = planner.PlanConfig(
@@ -185,7 +173,7 @@ object Compiler {
       analysis=analysis
     )
 
-    val functions = planner.PlanProgram(reducedExprs)(planConfig)
+    val functions = planner.PlanProgram(analysis.usedTopLevelExprs)(planConfig)
     
     val optimizedFunctions = if (config.optimizeLevel > 1) {
       conniverPasses.foldLeft(functions) { case (functions, conniverPass) =>

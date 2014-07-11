@@ -1,4 +1,4 @@
-package io.llambda.compiler.reducer
+package io.llambda.compiler.analyser
 import io.llambda
 
 import llambda.compiler.{et, ast, StorageLocation}

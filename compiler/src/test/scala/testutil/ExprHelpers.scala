@@ -51,34 +51,6 @@ trait ExprHelpers extends FunSuite with OptionValues {
     exprs
   }
 
-  def reductionFor(scheme : String, preserveTopLevelDefines : Boolean = false)(implicit scope : Scope) = {
-    val userExprs = bodyFor(scheme)(scope)
-
-    // Analyse libraries + user exprs
-    val allExprs = libraryLoader.libraryExprs ++ userExprs
-    val analysis = reducer.AnalyseExprs(allExprs)
-
-    val reducedExpr = reducer.ReduceExprs(analysis)
-
-    if (preserveTopLevelDefines) {
-      reducedExpr
-    }
-    else {
-      et.Expr.fromSequence(
-        // Remove all top level defines
-        reducedExpr.toSequence.flatMap {
-          case et.TopLevelDefine(_) =>
-            None
-
-          case other =>
-            // Make sure this is located
-            assertExprLocated(other)
-            Some(other)
-        }
-      )
-    }
-  }
-
   def assertExprLocated(expr : et.Expr) {
     expr match {
       case et.TopLevelDefine(List((reportProc : ReportProcedure, _))) if reportProc.reportName == "features" =>
