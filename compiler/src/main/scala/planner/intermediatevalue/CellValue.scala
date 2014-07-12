@@ -16,8 +16,8 @@ class CellValue(val schemeType : vt.SchemeType, val tempType : ct.CellType, val 
   override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     val truthyTemp = ps.Temp(vt.Predicate)
 
-    if (schemeType.satisfiesType(vt.BooleanType) == Some(false)) {
-      // We cannot be a boolean
+    if (schemeType.satisfiesType(vt.ConstantBooleanType(false)) == Some(false)) {
+      // We cannot be a boolean false
       // That means we must evaluate as true
       plan.steps += ps.CreateNativeInteger(truthyTemp, 1, 1) 
     }

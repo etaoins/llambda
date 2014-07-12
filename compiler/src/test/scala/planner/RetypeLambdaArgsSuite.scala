@@ -120,7 +120,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
   test("types used across (if) branches are unioned together") {
     val signature = signatureFor("""
       (lambda (value)
-        (if car
+        (if (car '(1 2))
           (ann value <string>)
           (ann value <symbol>)))""")
 

@@ -157,27 +157,39 @@ private[planner] object PlanExpr {
 
       case et.Cond(testExpr, trueExpr, falseExpr) =>
         val testResult = apply(initialState)(testExpr)
-        val truthyPred = testResult.value.toTruthyPredicate()
 
-        val trueWriter = plan.forkPlan()
-        val trueValue = apply(testResult.state)(trueExpr)(planConfig, trueWriter).value
+        testResult.value.schemeType.satisfiesType(vt.ConstantBooleanType(false)) match {
+          case Some(true) =>
+            // The test result must be false
+            PlanExpr(testResult.state)(falseExpr)
 
-        val falseWriter = plan.forkPlan() 
-        val falseValue = apply(testResult.state)(falseExpr)(planConfig, falseWriter).value
-    
-        val planPhiResult = trueValue.planPhiWith(falseValue)(trueWriter, falseWriter)
+          case Some(false) =>
+            // The test result can't be false
+            PlanExpr(testResult.state)(trueExpr)
 
-        plan.steps += ps.CondBranch(
-          planPhiResult.resultTemp,
-          truthyPred,
-          trueWriter.steps.toList, planPhiResult.ourTempValue,
-          falseWriter.steps.toList, planPhiResult.theirTempValue
-        )
+          case None =>
+            val truthyPred = testResult.value.toTempValue(vt.Predicate)
 
-        PlanResult(
-          state=testResult.state,
-          value=planPhiResult.resultIntermediate
-        )
+            val trueWriter = plan.forkPlan()
+            val trueValue = apply(testResult.state)(trueExpr)(planConfig, trueWriter).value
+
+            val falseWriter = plan.forkPlan() 
+            val falseValue = apply(testResult.state)(falseExpr)(planConfig, falseWriter).value
+        
+            val planPhiResult = trueValue.planPhiWith(falseValue)(trueWriter, falseWriter)
+
+            plan.steps += ps.CondBranch(
+              planPhiResult.resultTemp,
+              truthyPred,
+              trueWriter.steps.toList, planPhiResult.ourTempValue,
+              falseWriter.steps.toList, planPhiResult.theirTempValue
+            )
+
+            PlanResult(
+              state=testResult.state,
+              value=planPhiResult.resultIntermediate
+            )
+        }
       
       case nativeFunc : et.NativeFunction =>
         PlanResult(

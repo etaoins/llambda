@@ -57,17 +57,19 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
 
   protected def toSchemeTempValue(schemeType : vt.SchemeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
   protected def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
-
-  def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
+  protected def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     val trueTemp = ps.Temp(vt.Predicate)
     plan.steps += ps.CreateNativeInteger(trueTemp, 1, 1) 
 
-    trueTemp
+   trueTemp
   }
   
   def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[InvokableProcedure]
 
   def toTempValue(targetType : vt.ValueType, errorMessageOpt : Option[RuntimeErrorMessage] = None)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = targetType match {
+    case vt.Predicate =>
+      toTruthyPredicate()
+
     case vt.CBool =>
       val truthyPredTemp = toTruthyPredicate()
 
