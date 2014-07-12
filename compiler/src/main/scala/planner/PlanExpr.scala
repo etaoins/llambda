@@ -10,21 +10,6 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.{InternalCompilerErrorException, ValueNotApplicableException}
 
 private[planner] object PlanExpr {
-  private def resultWithUserProc(state : PlannerState)(suggestedName : String, plannedFunction : PlannedFunction)(implicit plan : PlanWriter) : PlanResult = {
-    val nativeSymbol = plan.allocProcedureSymbol(suggestedName)
-
-    plan.plannedFunctions += (nativeSymbol -> plannedFunction)
-
-    PlanResult(
-      state=state,
-      value=new iv.KnownUserProc(
-        signature=plannedFunction.signature,
-        plannedSymbol=nativeSymbol,
-        selfTempOpt=None
-      )
-    )
-  }
-  
   def apply(initialState : PlannerState)(expr : et.Expr, sourceNameHint : Option[String] = None)(implicit planConfig : PlanConfig, plan : PlanWriter) : PlanResult = plan.withContextLocation(expr) {
     implicit val worldPtr = initialState.worldPtr
 
