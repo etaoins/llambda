@@ -8,7 +8,7 @@ import llambda.compiler.IncompatibleArityException
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 
-object PlanApplication {
+object PlanInvokeApply {
   private def boxRestArgs(restArgs : List[iv.IntermediateValue])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
     val restArgCount = restArgs.length
 

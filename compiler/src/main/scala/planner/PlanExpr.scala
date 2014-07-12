@@ -42,11 +42,9 @@ private[planner] object PlanExpr {
         PlanResult(state=finalState, value=finalValue)
 
       case et.Apply(procExpr, operandExprs) =>
-        val procResult = apply(initialState)(procExpr)
-
         val operandBuffer = new mutable.ListBuffer[(ContextLocated, iv.IntermediateValue)]
 
-        val finalState = operandExprs.foldLeft(procResult.state) { case (state, operandExpr) =>
+        val operandState  = operandExprs.foldLeft(initialState) { case (state, operandExpr) =>
           val operandResult = apply(state)(operandExpr)
 
           operandBuffer += ((operandExpr, operandResult.value))
@@ -54,15 +52,31 @@ private[planner] object PlanExpr {
         }
 
         val operands = operandBuffer.toList
+        
+        // Try to apply this inline if we can
+        procExpr match {
+          case lambdaExpr : et.Lambda if planConfig.optimize =>
+            // We can apply this inline!
+            for(inlineResult <- AttemptInlineApply(operandState)(lambdaExpr, operands)) {
+              return PlanResult(
+                state=operandState,
+                value=inlineResult
+              )
+            }
+
+          case _ =>
+        }
+        
+        val procResult = apply(operandState)(procExpr)
 
         val invokableProc = procResult.value.toInvokableProcedure() getOrElse {
           throw new ValueNotApplicableException(expr, procResult.value.typeDescription)
         }
-
+        
         // Does this procedure support planning its application inline?
         procResult.value match {
           case knownProc : iv.KnownProc if planConfig.optimize =>
-            for(inlineResult <- knownProc.attemptInlineApplication(finalState)(operands)) {
+            for(inlineResult <- knownProc.attemptInlineApplication(operandState)(operands)) {
               return inlineResult
             }
 
@@ -70,11 +84,12 @@ private[planner] object PlanExpr {
         }
 
         // Perform a function call
-        val applyValueOpt = PlanApplication(invokableProc, operands) 
+        val applyValueOpt = PlanInvokeApply(invokableProc, operands) 
 
         PlanResult(
-          state=finalState,
-          value=applyValueOpt.getOrElse(iv.UnitValue))
+          state=procResult.state,
+          value=applyValueOpt.getOrElse(iv.UnitValue)
+        )
 
       case et.TopLevelDefine(bindings) =>
         PlanResult(

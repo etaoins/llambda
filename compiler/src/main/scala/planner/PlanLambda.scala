@@ -33,46 +33,6 @@ private[planner] object PlanLambda {
     val valueType = vt.ListElementType
   }
 
-  private sealed abstract class ClosedVariable
-
-  private case class ImportedImmutable(
-    storageLoc : StorageLocation,
-    parentIntermediate : iv.IntermediateValue
-  ) extends ClosedVariable
-
-  private sealed abstract class CapturedVariable extends ClosedVariable {
-    val storageLoc : StorageLocation
-    val valueType : vt.ValueType
-    val recordField : vt.RecordField
-  }
-
-  private case class CapturedImmutable(
-    storageLoc : StorageLocation,
-    parentIntermediate : iv.IntermediateValue,
-    valueType : vt.ValueType,
-    recordField : vt.RecordField
-  ) extends CapturedVariable
-  
-  private case class CapturedMutable(
-    storageLoc : StorageLocation,
-    parentMutable : MutableValue,
-    recordField : vt.RecordField
-  ) extends CapturedVariable {
-    val valueType = parentMutable.mutableType
-  }
-
-  /** Finds all referenced variables in an expression and returns them in a stable order */
-  private def findRefedVariables(expr : et.Expr) : List[StorageLocation] = expr match {
-    case et.VarRef(variable) =>
-      List(variable)
-
-    case et.MutateVar(variable, expr) =>
-      variable :: findRefedVariables(expr)
-
-    case otherExpr =>
-      otherExpr.subexprs.flatMap(findRefedVariables)
-  }
-
   /** Finds the last expression in a body that corresponds a user-produced expression
     *
     * This is used to source locate our return value-related steps
@@ -153,18 +113,6 @@ private[planner] object PlanLambda {
     }
   }
 
-  private def containsImmediateReturn(expr : et.Expr) : Boolean = expr match {
-    case _ : et.Return =>
-      true
-
-    case lambda : et.Lambda  =>
-      // If the return exists in tbe body of a nested lambda it's not immediate
-      false
-
-    case _ =>
-      expr.subexprs.exists(containsImmediateReturn)
-  }
-
   def apply(parentState : PlannerState, parentPlan : PlanWriter)(
       lambdaExpr : et.Lambda,
       sourceNameHint : Option[String],
@@ -178,30 +126,7 @@ private[planner] object PlanLambda {
     val restArgLoc = lambdaExpr.restArg
     val body = lambdaExpr.body
 
-    // Find the variables that are closed by the parent scope
-    val refedVarsList = findRefedVariables(body)
-
-    // Figure out if the immutables need to be captured
-    val closedVariables = (refedVarsList.distinct flatMap { storageLoc =>
-      parentState.values.get(storageLoc) map {
-        case ImmutableValue(parentIntermediate) =>
-          if (parentIntermediate.needsClosureRepresentation) {
-            val compactType = CompactRepresentationForType(parentIntermediate.preferredRepresentation)
-            val recordField = new vt.RecordField(storageLoc.sourceName, compactType)
-
-            // We have to capture this
-            CapturedImmutable(storageLoc, parentIntermediate, compactType, recordField)
-          }
-          else {
-            // No need for capturing - import the intermediate value directly
-            ImportedImmutable(storageLoc, parentIntermediate)
-          }
-
-      case parentMutable : MutableValue =>
-        val recordField = new vt.RecordField(storageLoc.sourceName, parentMutable.mutableType)
-        CapturedMutable(storageLoc, parentMutable, recordField)
-      }
-    })
+    val closedVariables = FindClosedVars(parentState, body)
     
     // Collect only the capture variables
     val capturedVariables = (closedVariables collect {
@@ -325,7 +250,7 @@ private[planner] object PlanLambda {
       initialSignature
     }
     else {
-      val returnTypeOpt = if (containsImmediateReturn(body)) {
+      val returnTypeOpt = if (ContainsImmediateReturn(body)) {
         // Return a DatumCell
         // XXX: We can be more clever here and try to find a common return type across all returns
         Some(vt.AnySchemeType)
