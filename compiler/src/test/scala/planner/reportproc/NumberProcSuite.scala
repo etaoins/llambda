@@ -47,4 +47,74 @@ class NumberProcSuite extends FunSuite with PlanHelpers {
       ast.IntegerLiteral(-30)
     )
   }
+
+  test("static (=)") {
+    assertStaticPlan("(= 50 50)",
+      ast.BooleanLiteral(true)
+    )
+    
+    assertStaticPlan("(= 50 200)",
+      ast.BooleanLiteral(false)
+    )
+    
+    assertStaticPlan("(= 200 50)",
+      ast.BooleanLiteral(false)
+    )
+  }
+  
+  test("static (<)") {
+    assertStaticPlan("(< 50 50)",
+      ast.BooleanLiteral(false)
+    )
+    
+    assertStaticPlan("(< 50 200)",
+      ast.BooleanLiteral(true)
+    )
+    
+    assertStaticPlan("(< 200 50)",
+      ast.BooleanLiteral(false)
+    )
+  }
+  
+  test("static (<=)") {
+    assertStaticPlan("(<= 50 50)",
+      ast.BooleanLiteral(true)
+    )
+    
+    assertStaticPlan("(<= 50 200)",
+      ast.BooleanLiteral(true)
+    )
+    
+    assertStaticPlan("(<= 200 50)",
+      ast.BooleanLiteral(false)
+    )
+  }
+  
+  test("static (>)") {
+    assertStaticPlan("(> 50 50)",
+      ast.BooleanLiteral(false)
+    )
+    
+    assertStaticPlan("(> 50 200)",
+      ast.BooleanLiteral(false)
+    )
+    
+    assertStaticPlan("(> 200 50)",
+      ast.BooleanLiteral(true)
+    )
+  }
+  
+  test("static (>=)") {
+    assertStaticPlan("(>= 50 50)",
+      ast.BooleanLiteral(true)
+    )
+    
+    assertStaticPlan("(>= 50 200)",
+      ast.BooleanLiteral(false)
+    )
+    
+    assertStaticPlan("(>= 200 50)",
+      ast.BooleanLiteral(true)
+    )
+  }
 }

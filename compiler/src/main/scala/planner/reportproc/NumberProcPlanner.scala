@@ -10,34 +10,46 @@ import llambda.compiler.planner._
 
 object NumberProcPlanner extends ReportProcPlanner {
   private type IntegerInstrBuilder = (ps.TempValue, ps.TempValue, ps.TempValue) => ps.Step
+  private type IntegerCompartor = (Long, Long) => Boolean
   private type StaticResultBuilder = (Long, Long) => Long
 
-  private def compareOperands(state : PlannerState)(compareCond : ps.CompareCond.CompareCond, val1 : iv.IntermediateValue, val2 : iv.IntermediateValue)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = {
-    if (val1.hasDefiniteType(vt.ExactIntegerType) &&
-        val2.hasDefiniteType(vt.ExactIntegerType)) {
-      // Do a direct integer comparison
-      val val1Temp = val1.toTempValue(vt.Int64)
-      val val2Temp = val2.toTempValue(vt.Int64)
-
-      val predicateTemp = ps.Temp(vt.Predicate)
-
-      val signed = if (compareCond == ps.CompareCond.Equal) {
-        None
-      }
-      else {
-        Some(true)
-      }
-
-      // Do a direct integer compare
-      plan.steps += ps.IntegerCompare(predicateTemp, compareCond, signed, val1Temp, val2Temp)
-
-      Some(PlanResult(
-        state=state,
-        value=new iv.NativePredicateValue(predicateTemp)
-      ))
+  private def compareOperands(state : PlannerState)(compareCond : ps.CompareCond.CompareCond, staticCalc : IntegerCompartor, val1 : iv.IntermediateValue, val2 : iv.IntermediateValue)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = {
+    if (!List(val1, val2).forall(_.hasDefiniteType(vt.ExactIntegerType))) {
+      // Can't fast path this
+      return None
     }
-    else {
-      None
+
+    (val1, val2) match {
+      case (constantVal1 : iv.ConstantExactIntegerValue, constantVal2 : iv.ConstantExactIntegerValue) =>
+
+        val compareResult = staticCalc(constantVal1.value, constantVal2.value)
+
+        Some(PlanResult(
+          state=state,
+          value=new iv.ConstantBooleanValue(compareResult)
+        ))
+
+      case _ =>
+        // Do a direct integer comparison
+        val val1Temp = val1.toTempValue(vt.Int64)
+        val val2Temp = val2.toTempValue(vt.Int64)
+
+        val predicateTemp = ps.Temp(vt.Predicate)
+
+        val signed = if (compareCond == ps.CompareCond.Equal) {
+          None
+        }
+        else {
+          Some(true)
+        }
+
+        // Do a direct integer compare
+        plan.steps += ps.IntegerCompare(predicateTemp, compareCond, signed, val1Temp, val2Temp)
+
+        Some(PlanResult(
+          state=state,
+          value=new iv.NativePredicateValue(predicateTemp)
+        ))
     }
   }
 
@@ -88,19 +100,19 @@ object NumberProcPlanner extends ReportProcPlanner {
 
   def apply(state : PlannerState)(reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = (reportName, operands) match {
     case ("=", List((_, val1), (_, val2))) =>
-      compareOperands(state)(ps.CompareCond.Equal, val1, val2)
+      compareOperands(state)(ps.CompareCond.Equal, _ == _, val1, val2)
     
     case (">", List((_, val1), (_, val2))) =>
-      compareOperands(state)(ps.CompareCond.GreaterThan, val1, val2)
+      compareOperands(state)(ps.CompareCond.GreaterThan, _ > _, val1, val2)
     
     case (">=", List((_, val1), (_, val2))) =>
-      compareOperands(state)(ps.CompareCond.GreaterThanEqual, val1, val2)
+      compareOperands(state)(ps.CompareCond.GreaterThanEqual, _ >= _, val1, val2)
     
     case ("<", List((_, val1), (_, val2))) =>
-      compareOperands(state)(ps.CompareCond.LessThan, val1, val2)
+      compareOperands(state)(ps.CompareCond.LessThan, _ < _, val1, val2)
     
     case ("<=", List((_, val1), (_, val2))) =>
-      compareOperands(state)(ps.CompareCond.LessThanEqual, val1, val2)
+      compareOperands(state)(ps.CompareCond.LessThanEqual, _ <= _, val1, val2)
 
     case ("+", Nil) =>
       Some(PlanResult(
