@@ -371,26 +371,6 @@ object GenPlanStep {
 
       state.withTempValue(resultTemp -> irResult)
     
-    case ps.AssertRecordLikeClass(worldPtrTemp, recordCellTemp, recordLikeType, errorMessage) => 
-      val worldPtrIr = state.liveTemps(worldPtrTemp)
-      val generatedType = genGlobals.typeGenerator(recordLikeType)
-      
-      // Start our branches
-      val irFunction = state.currentBlock.function
-      val fatalBlock = irFunction.startChildBlock("wrongRecordClass")
-      val successBlock = irFunction.startChildBlock("correctRecordClass")
-
-      GenErrorSignal(state.copy(currentBlock=fatalBlock))(worldPtrIr, errorMessage)
-
-      // Branch if we're not of the right class
-      val recordCellIr = state.liveTemps(recordCellTemp)
-      val irResult = GenTestRecordLikeClass(state.currentBlock)(recordCellIr, generatedType)
-
-      state.currentBlock.condBranch(irResult, successBlock, fatalBlock)
-
-      // Continue with the successful block
-      state.copy(currentBlock=successBlock)
-  
     case ps.SetRecordLikeDefined(recordCellTemp, recordLikeType) => 
       val generatedType = genGlobals.typeGenerator(recordLikeType)
       

@@ -645,21 +645,6 @@ case class TestRecordLikeClass(
     TestRecordLikeClass(result, f(recordCell), recordLikeType, possibleTypesOpt).assignLocationFrom(this)
 }
 
-/** Asserts that a record is of a given class 
-  *
-  * A runtime error will occur if the record isn't of the passed class
-  */
-case class AssertRecordLikeClass(worldPtr : WorldPtrValue, recordCell : TempValue, recordLikeType : vt.RecordLikeType, errorMessage : RuntimeErrorMessage) extends MergeableSideEffect {
-  lazy val inputValues = Set(worldPtr, recordCell)
-  val outputValues = Set[TempValue]()
-
-  def renamed(f : (TempValue) => TempValue) =
-    AssertRecordLikeClass(worldPtr, f(recordCell), recordLikeType, errorMessage).assignLocationFrom(this)
-  
-  override def mergeKey = 
-    (worldPtr, recordCell, recordLikeType)
-}
-
 /** Loads the data of a record 
   *
   * Note this cannot be safely merged as this may point to inside a movable GC managed value
