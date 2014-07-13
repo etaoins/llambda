@@ -30,4 +30,41 @@ class StaticInlineSuite extends FunSuite with PlanHelpers {
         (return-arg -10))
     """, ast.IntegerLiteral(-10))
   }
+
+  test("inlining procedures passed as arguments") {
+    assertStaticPlan("""
+      (define (add2 val) (+ val 2))
+      (define (apply-proc-to-arg proc arg)
+        (proc arg))
+      (apply-proc-to-arg add2 6)
+    """, ast.IntegerLiteral(8))
+  }
+
+  test("inlining procedures returned from other exprs") {
+    assertStaticPlan("""
+      (define proc-from-let (let ((mutliplier 2))
+        (lambda (to-multiply)
+          (* mutliplier to-multiply))))
+      (proc-from-let -5)
+    """, ast.IntegerLiteral(-10))
+  }
+
+  test("reducing procedures decided by a conditional") {
+    assertStaticPlan("""
+      (define (multi-op val1 val2 use-minus)
+        (define operator (if use-minus - +))
+        (operator val1 val2))
+      (multi-op 4 10 #f)
+    """, ast.IntegerLiteral(14))
+  }
+
+  test("recursive inlining") {
+    assertStaticPlan("""
+      (define (add-two n)
+        (+ 2 n))
+      (define (times-four n)
+        (* (add-two 2) n))
+      (times-four 8)
+    """, ast.IntegerLiteral(32))
+  }
 }

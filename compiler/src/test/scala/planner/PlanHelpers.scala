@@ -41,7 +41,10 @@ trait PlanHelpers extends FunSuite with Inside {
       importDecl,
       ast.ProperList(List(
         // Call exit to force the value to be evaluated
-        ast.Symbol("exit"), SchemeParser.parseStringAsData(scheme, None).head
+        ast.Symbol("exit"), ast.ProperList(
+          ast.Symbol("begin") ::
+          SchemeParser.parseStringAsData(scheme, None)
+        )
       ))
     )
 
