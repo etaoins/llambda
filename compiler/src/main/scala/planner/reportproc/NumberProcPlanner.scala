@@ -9,7 +9,9 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
 
 object NumberProcPlanner extends ReportProcPlanner {
-  private type IntegerOperation = (ps.TempValue, ps.TempValue, ps.TempValue) => ps.Step
+  private type IntegerInstrBuilder = (ps.TempValue, ps.TempValue, ps.TempValue) => ps.Step
+  private type StaticResultBuilder = (Long, Long) => Long
+
   private def compareOperands(state : PlannerState)(compareCond : ps.CompareCond.CompareCond, val1 : iv.IntermediateValue, val2 : iv.IntermediateValue)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = {
     if (val1.hasDefiniteType(vt.ExactIntegerType) &&
         val2.hasDefiniteType(vt.ExactIntegerType)) {
@@ -39,31 +41,49 @@ object NumberProcPlanner extends ReportProcPlanner {
     }
   }
 
-  private def performBinaryIntegerOp(state : PlannerState)(operation : IntegerOperation, operands : List[iv.IntermediateValue])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = {
+  private def performBinaryIntegerOp(state : PlannerState)(instr : IntegerInstrBuilder, staticCalc : StaticResultBuilder, operands : List[iv.IntermediateValue])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = {
     if (!operands.forall(_.hasDefiniteType(vt.ExactIntegerType))) {
       // Can't fast path this
-      None
+      return None
+    }
+
+    // Split the list in to constant and non-constant values
+    val constantValues = operands.collect { case constantInt : iv.ConstantExactIntegerValue =>
+      constantInt.value
+    }
+
+    val dynamicValues = operands.filterNot(_.isInstanceOf[iv.ConstantExactIntegerValue])
+
+    val instrOperands = if (constantValues.isEmpty) {
+      // We have no dynamic values
+      dynamicValues
     }
     else {
-      val finalValue = operands.reduceLeft { (op1, op2) =>
-        val op1Temp = op1.toTempValue(vt.Int64)
-        val op2Temp = op2.toTempValue(vt.Int64)
+      // Calculate the static value
+      val constantValue = constantValues.reduceLeft(staticCalc)
 
-        val resultTemp = ps.Temp(vt.Int64)
+      // Add this to our dynamic values
+      new iv.ConstantExactIntegerValue(constantValue) :: dynamicValues
+    } : List[iv.IntermediateValue]
 
-        plan.steps += operation(resultTemp, op1Temp, op2Temp)
+    val finalValue = instrOperands.reduceLeft { (op1, op2) =>
+      val op1Temp = op1.toTempValue(vt.Int64)
+      val op2Temp = op2.toTempValue(vt.Int64)
 
-        TempValueToIntermediate(
-          vt.Int64,
-          resultTemp
-        )
-      }
+      val resultTemp = ps.Temp(vt.Int64)
 
-      Some(PlanResult(
-        state=state,
-        value=finalValue
-      ))
+      plan.steps += instr(resultTemp, op1Temp, op2Temp)
+
+      TempValueToIntermediate(
+        vt.Int64,
+        resultTemp
+      )
     }
+
+    Some(PlanResult(
+      state=state,
+      value=finalValue
+    ))
   }
 
   def apply(state : PlannerState)(reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = (reportName, operands) match {
@@ -113,16 +133,19 @@ object NumberProcPlanner extends ReportProcPlanner {
     case ("-", List((_, singleOperand))) =>
       // This is a special case that negates the passed value
       val constantZero = new iv.ConstantExactIntegerValue(0)
-      performBinaryIntegerOp(state)(ps.IntegerSub.apply, List(constantZero, singleOperand))
+      performBinaryIntegerOp(state)(ps.IntegerSub.apply, _ - _, List(constantZero, singleOperand))
 
     case ("+", multipleOperands) =>
-      performBinaryIntegerOp(state)(ps.IntegerAdd.apply, multipleOperands.map(_._2))
+      val operandValues = multipleOperands.map(_._2) 
+      performBinaryIntegerOp(state)(ps.IntegerAdd.apply, _ + _, operandValues)
     
     case ("-", multipleOperands) =>
-      performBinaryIntegerOp(state)(ps.IntegerSub.apply, multipleOperands.map(_._2))
+      val operandValues = multipleOperands.map(_._2) 
+      performBinaryIntegerOp(state)(ps.IntegerSub.apply, _ - _, operandValues)
     
     case ("*", multipleOperands) =>
-      performBinaryIntegerOp(state)(ps.IntegerMul.apply, multipleOperands.map(_._2))
+      val operandValues = multipleOperands.map(_._2) 
+      performBinaryIntegerOp(state)(ps.IntegerMul.apply, _ * _, operandValues)
 
     case _ =>
       None

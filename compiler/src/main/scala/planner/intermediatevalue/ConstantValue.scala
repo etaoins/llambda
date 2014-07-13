@@ -45,7 +45,7 @@ class ConstantSymbolValue(value : String) extends TrivialConstantValue(ct.Symbol
   val typeDescription = "constant symbol"
 }
 
-class ConstantExactIntegerValue(value : Long) extends TrivialConstantValue(ct.ExactIntegerCell, value, ps.CreateExactIntegerCell.apply) {
+class ConstantExactIntegerValue(val value : Long) extends TrivialConstantValue(ct.ExactIntegerCell, value, ps.CreateExactIntegerCell.apply) {
   val typeDescription = "constant exact integer"
   
   override def toSchemeTempValue(targetType : vt.SchemeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
