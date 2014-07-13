@@ -255,7 +255,7 @@ private[planner] object PlanLambda {
         // XXX: We can be more clever here and try to find a common return type across all returns
         Some(vt.AnySchemeType)
       }
-      else if (planResult.value.hasDefiniteCellType(ct.UnitCell)) {
+      else if (planResult.value.hasDefiniteType(vt.UnitType)) {
         // Instead of returning a unit cell just return void
         None
       }

@@ -41,12 +41,12 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
   /** Provides a human-readable description of the value's type */
   def typeDescription : String
 
-  /** Returns true is this value definitely has the type of passed cell */
-  def hasDefiniteCellType(cellType : ct.ConcreteCellType) : Boolean =
-    schemeType.satisfiesType(vt.SchemeTypeAtom(cellType)) == Some(true)
+  /** Returns true is this value definitely has the passed type */
+  def hasDefiniteType(otherType : vt.SchemeType) : Boolean =
+    schemeType.satisfiesType(otherType) == Some(true)
 
   lazy val isDefiniteProperList : Boolean =
-    hasDefiniteCellType(ct.EmptyListCell)
+    hasDefiniteType(vt.EmptyListType)
 
   case class PlanPhiResult(
     ourTempValue : ps.TempValue,

@@ -11,8 +11,8 @@ import llambda.compiler.planner._
 object NumberProcPlanner extends ReportProcPlanner {
   private type IntegerOperation = (ps.TempValue, ps.TempValue, ps.TempValue) => ps.Step
   private def compareOperands(state : PlannerState)(compareCond : ps.CompareCond.CompareCond, val1 : iv.IntermediateValue, val2 : iv.IntermediateValue)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = {
-    if (val1.hasDefiniteCellType(ct.ExactIntegerCell) &&
-        val2.hasDefiniteCellType(ct.ExactIntegerCell)) {
+    if (val1.hasDefiniteType(vt.ExactIntegerType) &&
+        val2.hasDefiniteType(vt.ExactIntegerType)) {
       // Do a direct integer comparison
       val val1Temp = val1.toTempValue(vt.Int64)
       val val2Temp = val2.toTempValue(vt.Int64)
@@ -40,7 +40,7 @@ object NumberProcPlanner extends ReportProcPlanner {
   }
 
   private def performBinaryIntegerOp(state : PlannerState)(operation : IntegerOperation, operands : List[iv.IntermediateValue])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = {
-    if (!operands.forall(_.hasDefiniteCellType(ct.ExactIntegerCell))) {
+    if (!operands.forall(_.hasDefiniteType(vt.ExactIntegerType))) {
       // Can't fast path this
       None
     }

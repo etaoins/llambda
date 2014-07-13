@@ -63,12 +63,12 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
       directCompareAsType(state)(vt.AnySchemeType, val1, val2)
 
     }
-    else if (val1.hasDefiniteCellType(ct.ExactIntegerCell) && 
-             val2.hasDefiniteCellType(ct.ExactIntegerCell)) {
+    else if (val1.hasDefiniteType(vt.ExactIntegerType) && 
+             val2.hasDefiniteType(vt.ExactIntegerType)) {
       directCompareAsType(state)(vt.Int64, val1, val2)
     }
-    else if (val1.hasDefiniteCellType(ct.CharacterCell) && 
-             val2.hasDefiniteCellType(ct.CharacterCell)) {
+    else if (val1.hasDefiniteType(vt.CharacterType) && 
+             val2.hasDefiniteType(vt.CharacterType)) {
       directCompareAsType(state)(vt.UnicodeChar, val1, val2)
     }
     else {

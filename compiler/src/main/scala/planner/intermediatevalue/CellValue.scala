@@ -9,7 +9,7 @@ import llambda.compiler.InternalCompilerErrorException
 import llambda.compiler.RuntimeErrorMessage
 
 class CellValue(val schemeType : vt.SchemeType, val tempType : ct.CellType, val tempValue : ps.TempValue, val properListCell : Boolean = false) extends IntermediateValue {
-  override lazy val isDefiniteProperList = properListCell || hasDefiniteCellType(ct.EmptyListCell)
+  override lazy val isDefiniteProperList = properListCell || hasDefiniteType(vt.EmptyListType)
 
   lazy val typeDescription = s"cell of type ${schemeType}"
 
