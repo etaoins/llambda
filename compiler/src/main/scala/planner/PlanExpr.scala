@@ -3,13 +3,15 @@ import io.llambda
 
 import collection.mutable
 
-import llambda.compiler.{et, StorageLocation, ContextLocated, RuntimeErrorMessage}
+import llambda.compiler.{et, StorageLocation, ReportProcedure, ContextLocated, RuntimeErrorMessage}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.InternalCompilerErrorException
 
 private[planner] object PlanExpr {
+  private val callCcNames = Set("call-with-current-continuation", "call/cc")
+  
   def apply(initialState : PlannerState)(expr : et.Expr, sourceNameHint : Option[String] = None)(implicit planConfig : PlanConfig, plan : PlanWriter) : PlanResult = plan.withContextLocation(expr) {
     implicit val worldPtr = initialState.worldPtr
 
@@ -25,6 +27,16 @@ private[planner] object PlanExpr {
         }
 
         PlanResult(state=finalState, value=finalValue)
+
+      case et.Apply(procRef @ et.VarRef(callCcProc : ReportProcedure), operands) if callCcNames.contains(callCcProc.reportName) && planConfig.optimize =>
+        // This is a (call/cc)
+        ReduceCallCc(expr, operands) match {
+          case SimplifiedCallCc(newOperands) =>
+            PlanApplication(initialState)(expr, procRef, newOperands)
+          
+          case StrippedCallCc(newExpr) =>
+            PlanExpr(initialState)(newExpr)
+        }
 
       case et.Apply(procExpr, operandExprs) =>
         PlanApplication(initialState)(expr, procExpr, operandExprs)

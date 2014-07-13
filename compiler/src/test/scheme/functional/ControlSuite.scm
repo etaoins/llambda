@@ -15,6 +15,16 @@
 	(call/cc (lambda (return)
 		5))))
 
+(define-test "trivial (call/cc) only mutating escape procedure" (expect 5
+	(call/cc (lambda (return)
+    (set! return #f)
+		5))))
+
+(define-test "trivial (call/cc) mutating and invoking escape procedure" (expect -5
+	(call/cc (lambda (return)
+    (set! return -)
+		(return 5)))))
+
 (define-test "nested (call/cc) invoking both escape procedures" (expect 15
 	(call/cc (lambda (outer-return)
 		(outer-return (call/cc (lambda (inner-return)
