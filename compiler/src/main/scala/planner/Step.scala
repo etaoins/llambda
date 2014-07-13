@@ -421,15 +421,6 @@ sealed trait UnboxValue extends Step {
   lazy val outputValues = Set(result)
 }
 
-/** Stores if a cell is "truthy". All values except false are truthy. 
-  *
-  * This is mergeable because booleans are immutable and cells can't change types at runtime
-  */
-case class UnboxAsTruthy(result : TempValue, boxed : TempValue) extends UnboxValue with MergeableStep {
-  def renamed(f : (TempValue) => TempValue) =
-    UnboxAsTruthy(f(result), f(boxed)).assignLocationFrom(this)
-}
-
 case class UnboxExactInteger(result : TempValue, boxed : TempValue) extends UnboxValue with MergeableStep {
   def renamed(f : (TempValue) => TempValue) =
     UnboxExactInteger(f(result), f(boxed)).assignLocationFrom(this)

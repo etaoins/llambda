@@ -14,18 +14,16 @@ class CellValue(val schemeType : vt.SchemeType, val tempType : ct.CellType, val 
   lazy val typeDescription = s"cell of type ${schemeType}"
 
   override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
-    val truthyTemp = ps.Temp(vt.Predicate)
+    // Find out if we're false
+    val isFalsePred = PlanTypeCheck(tempValue, schemeType, vt.ConstantBooleanType(false))
 
-    if (schemeType.satisfiesType(vt.ConstantBooleanType(false)) == Some(false)) {
-      // We cannot be a boolean false
-      // That means we must evaluate as true
-      plan.steps += ps.CreateNativeInteger(truthyTemp, 1, 1) 
-    }
-    else {
-      plan.steps += ps.UnboxAsTruthy(truthyTemp, tempValue) 
-    }
+    // Invert the result
+    val constantZeroPred = ps.Temp(vt.Predicate)
+    plan.steps += ps.CreateNativeInteger(constantZeroPred, 0, vt.Predicate.bits) 
 
-    truthyTemp
+    val truthyPred = ps.Temp(vt.Predicate)
+    plan.steps += ps.IntegerCompare(truthyPred, ps.CompareCond.Equal, None, isFalsePred, constantZeroPred)
+    truthyPred
   }
   
   def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[InvokableProcedure] =  {
