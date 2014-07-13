@@ -312,10 +312,13 @@ private[planner] object PlanLambda {
 
     parentPlan.plannedFunctions += (nativeSymbol -> plannedFunction) 
 
-    val procValue = new iv.KnownUserProc(
+    val procValue = new iv.KnownSchemeProc(
       signature=plannedFunction.signature,
       plannedSymbol=nativeSymbol,
-      selfTempOpt=outerSelfTempOpt
+      parentState=parentState,
+      lambdaExpr=lambdaExpr,
+      selfTempOpt=outerSelfTempOpt,
+      recursiveSelfLoc=recursiveSelfLoc
     )
 
     PlanResult(

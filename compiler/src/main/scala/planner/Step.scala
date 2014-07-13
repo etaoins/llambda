@@ -100,7 +100,7 @@ object MergeableStep {
   object PlaceholderResultTemp extends TempValue(false)
 }
 
-/** Mergeable step thse is used entirely for its side effects
+/** Mergeable step that is used entirely for its side effects
   *
   * These are typically assertions about immutable properties of values
   */

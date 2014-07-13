@@ -16,4 +16,18 @@ class StaticInlineSuite extends FunSuite with PlanHelpers {
       ((lambda (arg) arg) 25)
     """, ast.IntegerLiteral(25))
   }
+  
+  test("trivial inline of bound procedure") {
+    assertStaticPlan("""
+      (let ((return-15 (lambda () 15)))
+        (return-15))
+    """, ast.IntegerLiteral(15))
+  }
+  
+  test("trivial inline of bound procedure with one argument") {
+    assertStaticPlan("""
+      (let ((return-arg (lambda (arg) arg)))
+        (return-arg -10))
+    """, ast.IntegerLiteral(-10))
+  }
 }

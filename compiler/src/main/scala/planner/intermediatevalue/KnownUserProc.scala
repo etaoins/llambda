@@ -16,7 +16,7 @@ import llambda.compiler.planner._
   * @param reportName     Name of this procedure in R7RS. This is used as a tag to implement certain optimizations
   *                       elsewhere in the planner. It is not directly used by this class
   */
-final class KnownUserProc(val signature : ProcedureSignature, plannedSymbol : String, selfTempOpt : Option[ps.TempValue], val reportNameOpt : Option[String] = None) extends KnownProc(selfTempOpt) {
+class KnownUserProc(val signature : ProcedureSignature, plannedSymbol : String, selfTempOpt : Option[ps.TempValue], val reportNameOpt : Option[String] = None) extends KnownProc(selfTempOpt) {
   // These objects know how to implement certain report procedure directly
   // with plan steps
   private val reportProcPlanners = List[reportproc.ReportProcPlanner](

@@ -57,7 +57,7 @@ private[planner] object AttemptInlineApply {
     })(breakOut) : Map[StorageLocation, LocationValue]
     
     // Map our input immutables to their new storage locations
-    val inlineBodyState = parentState.copy(
+    val inlineBodyState = PlannerState(
       values=argImmutables ++ importedValues,
       worldPtr=worldPtr
     )

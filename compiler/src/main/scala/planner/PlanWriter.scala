@@ -29,6 +29,11 @@ class PlanWriter(
       stepBuffer += step
     }
 
+    def ++=(other : PlanWriter#StepBuilder) = {
+      // Assume these steps were properly located when the other plan was built
+      stepBuffer ++= other.stepBuffer
+    }
+
     def toList : List[ps.Step] = 
       stepBuffer.toList
   }

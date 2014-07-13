@@ -73,6 +73,11 @@ trait PlanHelpers extends FunSuite with Inside {
             inside(constantValueStep) { case ps.CreateBooleanCell(_, actualValue) =>
               assert(constantValue === actualValue)
             }
+          
+          case ast.Symbol(constantValue) =>
+            inside(constantValueStep) { case ps.CreateSymbolCell(_, actualValue) =>
+              assert(constantValue === actualValue)
+            }
 
           case other =>
             fail("Unhandled datum type: " + other)
