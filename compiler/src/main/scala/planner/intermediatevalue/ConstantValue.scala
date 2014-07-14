@@ -37,11 +37,11 @@ sealed abstract class TrivialConstantValue[T, U <: ps.CreateConstantCell](cellTy
   }
 }
 
-class ConstantStringValue(value : String) extends TrivialConstantValue(ct.StringCell, value, ps.CreateStringCell.apply) with BoxedOnlyValue {
+class ConstantStringValue(val value : String) extends TrivialConstantValue(ct.StringCell, value, ps.CreateStringCell.apply) with BoxedOnlyValue {
   val typeDescription = "constant string"
 }
 
-class ConstantSymbolValue(value : String) extends TrivialConstantValue(ct.SymbolCell, value, ps.CreateSymbolCell.apply) with BoxedOnlyValue {
+class ConstantSymbolValue(val value : String) extends TrivialConstantValue(ct.SymbolCell, value, ps.CreateSymbolCell.apply) with BoxedOnlyValue {
   val typeDescription = "constant symbol"
 }
 
@@ -81,7 +81,7 @@ class ConstantExactIntegerValue(val value : Long) extends TrivialConstantValue(c
     vt.Int64
 }
 
-class ConstantInexactRationalValue(value : Double) extends TrivialConstantValue(ct.InexactRationalCell, value, ps.CreateInexactRationalCell.apply) {
+class ConstantInexactRationalValue(val value : Double) extends TrivialConstantValue(ct.InexactRationalCell, value, ps.CreateInexactRationalCell.apply) {
   val typeDescription = "constant inexact rational"
 
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = nativeType match {
@@ -98,7 +98,7 @@ class ConstantInexactRationalValue(value : Double) extends TrivialConstantValue(
     vt.Double
 }
 
-class ConstantCharacterValue(value : Char) extends TrivialConstantValue(ct.CharacterCell, value, ps.CreateCharacterCell.apply) {
+class ConstantCharacterValue(val value : Char) extends TrivialConstantValue(ct.CharacterCell, value, ps.CreateCharacterCell.apply) {
   val typeDescription = "constant character"
 
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = nativeType match {
@@ -115,7 +115,7 @@ class ConstantCharacterValue(value : Char) extends TrivialConstantValue(ct.Chara
     vt.UnicodeChar
 }
 
-class ConstantBooleanValue(value : Boolean) extends TrivialConstantValue(ct.BooleanCell, value, ps.CreateBooleanCell.apply) {
+class ConstantBooleanValue(val value : Boolean) extends TrivialConstantValue(ct.BooleanCell, value, ps.CreateBooleanCell.apply) {
   override val schemeType = vt.ConstantBooleanType(value)
   val typeDescription = schemeType.schemeName
 
@@ -136,11 +136,11 @@ class ConstantBooleanValue(value : Boolean) extends TrivialConstantValue(ct.Bool
     vt.CBool
 }
 
-class ConstantBytevectorValue(value : Vector[Short]) extends TrivialConstantValue(ct.BytevectorCell, value, ps.CreateBytevectorCell.apply) with BoxedOnlyValue {
+class ConstantBytevectorValue(val elements : Vector[Short]) extends TrivialConstantValue(ct.BytevectorCell, elements, ps.CreateBytevectorCell.apply) with BoxedOnlyValue {
   val typeDescription = "constant bytevector"
 }
 
-class ConstantPairValue(car : ConstantValue, cdr : ConstantValue, val listLengthOpt : Option[Long]) extends ConstantValue(ct.PairCell) with BoxedOnlyValue {
+class ConstantPairValue(val car : ConstantValue, val cdr : ConstantValue, val listLengthOpt : Option[Long]) extends ConstantValue(ct.PairCell) with BoxedOnlyValue {
   val typeDescription = "constant pair"
 
   override lazy val isDefiniteProperList = listLengthOpt.isDefined
@@ -158,7 +158,7 @@ class ConstantPairValue(car : ConstantValue, cdr : ConstantValue, val listLength
   }
 }
 
-class ConstantVectorValue(elements : Vector[ConstantValue]) extends ConstantValue(ct.VectorCell) with BoxedOnlyValue {
+class ConstantVectorValue(val elements : Vector[ConstantValue]) extends ConstantValue(ct.VectorCell) with BoxedOnlyValue {
   val typeDescription = "constant vector"
 
   def toConstantCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {

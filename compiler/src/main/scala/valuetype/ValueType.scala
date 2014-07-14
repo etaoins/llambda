@@ -357,6 +357,8 @@ case class UnionType(memberTypes : Set[NonUnionSchemeType]) extends SchemeType {
 /** Union of all possible Scheme types */
 object AnySchemeType extends UnionType(ct.DatumCell.concreteTypes.map(SchemeTypeAtom(_)))
 
+object EmptySchemeType extends UnionType(Set())
+
 object SchemeType {
   private val allBooleans = Set[NonUnionSchemeType](ConstantBooleanType(false), ConstantBooleanType(true))
 
