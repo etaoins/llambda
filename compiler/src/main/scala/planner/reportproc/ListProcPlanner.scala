@@ -50,6 +50,12 @@ object ListProcPlanner extends ReportProcPlanner {
             ))
           }
 
+        case iv.EmptyListValue =>
+          return Some(PlanResult(
+            state=initialState,
+            value=new iv.ConstantExactIntegerValue(0L)
+          ))
+
         case _ =>
       }
 
