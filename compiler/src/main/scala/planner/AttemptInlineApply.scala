@@ -19,11 +19,6 @@ private[planner] object AttemptInlineApply {
       return None
     }
 
-    if (lambdaExpr.restArg.isDefined) {
-      // Not supported yet
-      return None
-    }
-
     if (lambdaExpr.fixedArgs.length != operands.length) {
       // Not supported yet
       return None
@@ -47,7 +42,7 @@ private[planner] object AttemptInlineApply {
     }
 
     // Convert our arguments to ImmutableValues
-    val argImmutables = (lambdaExpr.fixedArgs.zip(operands).map { case (storageLoc, (_, argValue)) =>
+    val fixedArgImmutables = (lambdaExpr.fixedArgs.zip(operands).map { case (storageLoc, (_, argValue)) =>
       if (argValue.schemeType.satisfiesType(storageLoc.schemeType) != Some(true)) {
         // This type cast could fail at runtime
         return None
@@ -56,9 +51,14 @@ private[planner] object AttemptInlineApply {
       (storageLoc -> ImmutableValue(argValue))
     })(breakOut) : Map[StorageLocation, LocationValue]
     
+    // We only support empty rest args at this point
+    val restArgImmutables = lambdaExpr.restArg.map { restArgLoc =>
+      restArgLoc -> ImmutableValue(iv.EmptyListValue)
+    }
+
     // Map our input immutables to their new storage locations
     val inlineBodyState = PlannerState(
-      values=argImmutables ++ importedValues,
+      values=fixedArgImmutables ++ restArgImmutables ++ importedValues,
       worldPtr=worldPtr
     )
 

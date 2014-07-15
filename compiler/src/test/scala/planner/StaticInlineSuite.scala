@@ -17,6 +17,12 @@ class StaticInlineSuite extends FunSuite with PlanHelpers {
     """, ast.IntegerLiteral(25))
   }
   
+  test("self-executing inline with only empty rest argument") {
+    assertStaticPlan("""
+      ((lambda rest-args (null? rest-args)))
+    """, ast.BooleanLiteral(true))
+  }
+  
   test("trivial inline of bound procedure") {
     assertStaticPlan("""
       (let ((return-15 (lambda () 15)))
@@ -29,6 +35,13 @@ class StaticInlineSuite extends FunSuite with PlanHelpers {
       (let ((return-arg (lambda (arg) arg)))
         (return-arg -10))
     """, ast.IntegerLiteral(-10))
+  }
+ 
+  test("trivial inline of bound procedure with one argument and empty rest arg") {
+    assertStaticPlan("""
+      (let ((has-no-args? (lambda rest-args (null? rest-args))))
+        (has-no-args?))
+    """, ast.BooleanLiteral(true))
   }
 
   test("inlining procedures passed as arguments") {
