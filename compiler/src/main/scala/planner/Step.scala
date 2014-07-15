@@ -67,16 +67,16 @@ sealed trait CellConsumer extends Step {
   val allocSize : Int
 }
 
-/** Step producing a value that can be merged with identical instances of itself
+/** Step producing a value that can be disposed or merged with identical instances of itself
   *
   * These must satisfy the following properties:
   * - The step must not depend on global state
   * - The step must not have any side effects on global state besides potentially raising an error
   * - The source and destination values must either both be immutable or reference the same location in memory
   *
-  * These are merged by conniver.MergeIdenticalSteps
+  * These are potentially disposed by ps.DisposeValues or merged by conniver.MergeIdenticalSteps
   */
-sealed trait MergeableStep extends Step {
+sealed trait DisposableStep extends Step {
   val result : TempValue
   
   /** Key used to compare if two mergeable steps are the same
@@ -87,7 +87,7 @@ sealed trait MergeableStep extends Step {
    def mergeKey : Any = {
      this.renamed({ tempValue =>
        if (tempValue == result) {
-         MergeableStep.PlaceholderResultTemp
+         DisposableStep.PlaceholderResultTemp
        }
        else {
          tempValue
@@ -96,16 +96,27 @@ sealed trait MergeableStep extends Step {
    }
 }
 
-object MergeableStep {
+object DisposableStep {
   object PlaceholderResultTemp extends TempValue(false)
 }
 
-/** Mergeable step that is used entirely for its side effects
+/** Step without any side effects
   *
-  * These are typically assertions about immutable properties of values
+  * Examples of nullipotent steps are loading values from memory, converting values or comparing values. These may be
+  * disposed entirely by DisposeValues if its result is unused. Identical steps are also candidates for merging
   */
-sealed trait MergeableSideEffect extends MergeableStep {
-  val result = MergeableStep.PlaceholderResultTemp
+sealed trait NullipotentStep extends DisposableStep
+
+/** Step with side effects
+  *
+  * Examples of idempotent steps are stores. Idempotent steps cannot be disposed even if their result is unused but they
+  * can be merged with identical instances of themselves.
+  */
+sealed trait IdempotentStep extends DisposableStep
+
+/** Step that can conditionally terminate execution based on a test */
+sealed trait AssertStep extends IdempotentStep {
+  val result = DisposableStep.PlaceholderResultTemp
 }
 
 /** Argument passed to invoke
@@ -212,7 +223,7 @@ case class TestCellType(
     value : TempValue,
     testType : ct.ConcreteCellType,
     possibleTypes : Set[ct.ConcreteCellType] = ct.DatumCell.concreteTypes
-) extends Step with MergeableStep {
+) extends Step with NullipotentStep {
   lazy val inputValues = Set(value)
   lazy val outputValues = Set(result)
   
@@ -225,7 +236,7 @@ case class TestCellType(
 }
 
 /** Casts a cell to another type without checking the validity of the cast */
-case class CastCellToTypeUnchecked(result : TempValue, value : TempValue, toType : ct.CellType) extends Step with MergeableStep {
+case class CastCellToTypeUnchecked(result : TempValue, value : TempValue, toType : ct.CellType) extends Step with NullipotentStep {
   lazy val inputValues = Set(value)
   lazy val outputValues = Set(result)
   
@@ -234,7 +245,7 @@ case class CastCellToTypeUnchecked(result : TempValue, value : TempValue, toType
 }
 
 /** Converts an native integer to another width and/or signedness */
-case class ConvertNativeInteger(result : TempValue, fromValue : TempValue, toBits : Int, signed : Boolean) extends Step with MergeableStep {
+case class ConvertNativeInteger(result : TempValue, fromValue : TempValue, toBits : Int, signed : Boolean) extends Step with NullipotentStep {
   lazy val inputValues = Set(fromValue)
   lazy val outputValues = Set(result)
   
@@ -243,7 +254,7 @@ case class ConvertNativeInteger(result : TempValue, fromValue : TempValue, toBit
 }
 
 /** Converts an native float to another type */
-case class ConvertNativeFloat(result : TempValue, fromValue : TempValue, toType : vt.FpType) extends Step with MergeableStep {
+case class ConvertNativeFloat(result : TempValue, fromValue : TempValue, toType : vt.FpType) extends Step with NullipotentStep {
   lazy val inputValues = Set(fromValue)
   lazy val outputValues = Set(result)
   
@@ -252,7 +263,7 @@ case class ConvertNativeFloat(result : TempValue, fromValue : TempValue, toType 
 }
 
 /** Converts an native integer to a float */
-case class ConvertNativeIntegerToFloat(result : TempValue, fromValue : TempValue, fromSigned: Boolean, toType : vt.FpType) extends Step with MergeableStep {
+case class ConvertNativeIntegerToFloat(result : TempValue, fromValue : TempValue, fromSigned: Boolean, toType : vt.FpType) extends Step with NullipotentStep {
   lazy val inputValues = Set(fromValue)
   lazy val outputValues = Set(result)
   
@@ -279,7 +290,7 @@ case class BuildProperList(result : TempValue, listValues : List[TempValue]) ext
   *
   * The passed list must be a proper list or the result is undefined
   */
-case class CalcProperListLength(result : TempValue, listHead : TempValue) extends Step with MergeableStep {
+case class CalcProperListLength(result : TempValue, listHead : TempValue) extends Step with NullipotentStep {
   lazy val inputValues = Set(listHead)
   lazy val outputValues = Set(result)
 
@@ -288,7 +299,7 @@ case class CalcProperListLength(result : TempValue, listHead : TempValue) extend
 }
 
 /** Indicates a step that creates a constant value */
-sealed trait CreateConstant extends Step with MergeableStep {
+sealed trait CreateConstant extends Step with NullipotentStep {
   val result : TempValue
   lazy val outputValues = Set(result)
 }
@@ -297,7 +308,7 @@ sealed trait CreateConstant extends Step with MergeableStep {
   *
   * This can be called with Invoke
   */
-case class CreateNamedEntryPoint(result : TempValue, signature : ProcedureSignature, nativeSymbol : String) extends Step with MergeableStep {
+case class CreateNamedEntryPoint(result : TempValue, signature : ProcedureSignature, nativeSymbol : String) extends Step with NullipotentStep {
   val inputValues = Set[TempValue]()
   lazy val outputValues = Set(result)
   
@@ -421,17 +432,17 @@ sealed trait UnboxValue extends Step {
   lazy val outputValues = Set(result)
 }
 
-case class UnboxExactInteger(result : TempValue, boxed : TempValue) extends UnboxValue with MergeableStep {
+case class UnboxExactInteger(result : TempValue, boxed : TempValue) extends UnboxValue with NullipotentStep {
   def renamed(f : (TempValue) => TempValue) =
     UnboxExactInteger(f(result), f(boxed)).assignLocationFrom(this)
 }
 
-case class UnboxInexactRational(result : TempValue, boxed : TempValue) extends UnboxValue with MergeableStep {
+case class UnboxInexactRational(result : TempValue, boxed : TempValue) extends UnboxValue with NullipotentStep {
   def renamed(f : (TempValue) => TempValue) =
     UnboxInexactRational(f(result), f(boxed)).assignLocationFrom(this)
 }
 
-case class UnboxCharacter(result : TempValue, boxed : TempValue) extends UnboxValue with MergeableStep {
+case class UnboxCharacter(result : TempValue, boxed : TempValue) extends UnboxValue with NullipotentStep {
   def renamed(f : (TempValue) => TempValue) =
     UnboxCharacter(f(result), f(boxed)).assignLocationFrom(this)
 }
@@ -469,7 +480,7 @@ case class LoadProcedureEntryPoint(result : TempValue, boxed : TempValue) extend
 }
 
 /** Loads the length of a vector as an Int32 */
-case class LoadVectorLength(result : TempValue, boxed : TempValue) extends Step with MergeableStep {
+case class LoadVectorLength(result : TempValue, boxed : TempValue) extends Step with NullipotentStep {
   lazy val inputValues = Set(boxed)
   lazy val outputValues = Set(result)
   
@@ -481,7 +492,7 @@ case class LoadVectorLength(result : TempValue, boxed : TempValue) extends Step 
   *
   * These are mergeable because SSA guarantees native values can't change at runtime
   */
-sealed trait BoxValue extends Step with MergeableStep {
+sealed trait BoxValue extends Step with NullipotentStep {
   val result : TempValue
   val unboxed : TempValue
   
@@ -550,7 +561,7 @@ case class InitPair(result : TempValue) extends Step with CellConsumer {
   *
   * It is illegal to attempt SetPairCar or SetPairCdr on an immutable pair
   */
-case class AssertPairMutable(worldPtr : WorldPtrValue, pairValue : TempValue, errorMessage : RuntimeErrorMessage) extends MergeableSideEffect {
+case class AssertPairMutable(worldPtr : WorldPtrValue, pairValue : TempValue, errorMessage : RuntimeErrorMessage) extends AssertStep {
   lazy val inputValues = Set[TempValue](worldPtr, pairValue)
   val outputValues = Set[TempValue]()
 
@@ -596,7 +607,7 @@ case class InitRecordLike(cellResult : TempValue, dataResult : TempValue, record
 }
 
 /** Sets a record as defined */
-case class SetRecordLikeDefined(record : TempValue, recordLikeType : vt.RecordLikeType) extends Step with MergeableSideEffect {
+case class SetRecordLikeDefined(record : TempValue, recordLikeType : vt.RecordLikeType) extends Step {
   lazy val inputValues = Set(record)
   val outputValues = Set[TempValue]()
   
@@ -605,7 +616,7 @@ case class SetRecordLikeDefined(record : TempValue, recordLikeType : vt.RecordLi
 }
 
 /** Asserts that a record is defined */
-case class AssertRecordLikeDefined(worldPtr : WorldPtrValue, record : TempValue, recordLikeType : vt.RecordLikeType, errorMessage : RuntimeErrorMessage) extends Step with MergeableSideEffect {
+case class AssertRecordLikeDefined(worldPtr : WorldPtrValue, record : TempValue, recordLikeType : vt.RecordLikeType, errorMessage : RuntimeErrorMessage) extends Step with AssertStep {
   lazy val inputValues = Set(worldPtr, record)
   val outputValues = Set[TempValue]()
   
@@ -637,7 +648,7 @@ case class TestRecordLikeClass(
     recordCell : TempValue,
     recordLikeType : vt.RecordLikeType,
     possibleTypesOpt : Option[Set[vt.RecordLikeType]] = None
-) extends Step with MergeableStep {
+) extends Step with NullipotentStep {
   lazy val inputValues = Set(recordCell)
   lazy val outputValues = Set(result)
   
@@ -698,7 +709,7 @@ case class PopDynamicState(worldPtr : WorldPtrValue) extends Step {
 }
 
 /** Adds two integers of the same type */
-case class IntegerAdd(result : TempValue, val1 : TempValue, val2 : TempValue) extends Step with MergeableStep {
+case class IntegerAdd(result : TempValue, val1 : TempValue, val2 : TempValue) extends Step with NullipotentStep {
   lazy val inputValues = Set[TempValue](val1, val2)
   lazy val outputValues = Set[TempValue](result)
   
@@ -707,7 +718,7 @@ case class IntegerAdd(result : TempValue, val1 : TempValue, val2 : TempValue) ex
 }
 
 /** Subtracts two integers of the same type */
-case class IntegerSub(result : TempValue, val1 : TempValue, val2 : TempValue) extends Step with MergeableStep {
+case class IntegerSub(result : TempValue, val1 : TempValue, val2 : TempValue) extends Step with NullipotentStep {
   lazy val inputValues = Set[TempValue](val1, val2)
   lazy val outputValues = Set[TempValue](result)
   
@@ -716,7 +727,7 @@ case class IntegerSub(result : TempValue, val1 : TempValue, val2 : TempValue) ex
 }
 
 /** Multiplies two integers of the same type */
-case class IntegerMul(result : TempValue, val1 : TempValue, val2 : TempValue) extends Step with MergeableStep {
+case class IntegerMul(result : TempValue, val1 : TempValue, val2 : TempValue) extends Step with NullipotentStep {
   lazy val inputValues = Set[TempValue](val1, val2)
   lazy val outputValues = Set[TempValue](result)
   
@@ -739,7 +750,7 @@ object CompareCond {
   *
   * This can also be used to compare two pointers of the same type, GC managed or otherwise.
   */
-case class IntegerCompare(result : TempValue, cond : CompareCond.CompareCond, signed : Option[Boolean], val1 : TempValue, val2 : TempValue) extends Step with MergeableStep {
+case class IntegerCompare(result : TempValue, cond : CompareCond.CompareCond, signed : Option[Boolean], val1 : TempValue, val2 : TempValue) extends Step with NullipotentStep {
   lazy val inputValues = Set[TempValue](val1, val2)
   lazy val outputValues = Set[TempValue](result)
   
@@ -751,7 +762,7 @@ case class AssertPredicate(
     worldPtr : WorldPtrValue,
     predicate : TempValue,
     errorMessage : RuntimeErrorMessage
-) extends Step with MergeableSideEffect {
+) extends Step with AssertStep {
   lazy val inputValues = Set(worldPtr, predicate)
   val outputValues = Set[TempValue]()
 

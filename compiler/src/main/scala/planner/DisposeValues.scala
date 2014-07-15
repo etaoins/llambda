@@ -67,6 +67,10 @@ object DisposeValues {
       val newAcc = newInvoke :: (disposeResultOption.toList ++ acc)
       discardUnusedValues(branchInputValues, reverseTail, newUsedValues, newAcc) 
 
+    case (disposableStep : ps.NullipotentStep) :: reverseTail if !usedValues.contains(disposableStep.result) =>
+      // We can drop this step completely
+      discardUnusedValues(branchInputValues, reverseTail, usedValues, acc)
+
     case nonBranching :: reverseTail =>
       // If this is the last use of any of the input or output values they should be discarded
       val allStepValues = nonBranching.inputValues ++ nonBranching.outputValues
