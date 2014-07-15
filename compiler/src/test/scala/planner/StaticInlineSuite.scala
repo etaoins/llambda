@@ -61,6 +61,15 @@ class StaticInlineSuite extends FunSuite with PlanHelpers {
       (proc-from-let -5)
     """, ast.IntegerLiteral(-10))
   }
+  
+  test("inlining procedures capturing variables also live at application site") {
+    assertStaticPlan("""
+      (define (times-four val)
+        (define (val-times-two) (+ val val))
+        (+ (val-times-two) (val-times-two)))
+
+      (times-four -6)""", ast.IntegerLiteral(-24))
+  }
 
   test("reducing procedures decided by a conditional") {
     assertStaticPlan("""
