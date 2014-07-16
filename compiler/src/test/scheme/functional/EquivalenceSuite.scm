@@ -103,17 +103,26 @@
 (define-test "native functions are eq" (expect #t
 	(eq? car car)))
 
-(define-test "lists in the same storage location are eq" (expect #t
- 	(let ((x '(a)))
-		(eq? x x))))
+(define-test "values in the same argument are eq" (expect-success
+  (define (arg-is-self-eq? x) (eq? x x))
 
-(define-test "vectors in the same storage location are eq" (expect #t
- 	(let ((x '#()))
-		(eq? x x))))
+  (assert-true (arg-is-self-eq? '(a)))
+  (assert-true (arg-is-self-eq? #()))
+  (assert-true (arg-is-self-eq? #u8(1 2 3 4)))
+  (assert-true (arg-is-self-eq? (lambda (x) x)))))
 
-(define-test "procedures in the same storage location are eq" (expect #t
- 	(let ((x (lambda (x) x)))
-		(eq? x x))))
+(define-test "values in the same variable are eq" (expect-success
+  (define test-list '(a))
+  (assert-true (eq? test-list test-list))
+
+  (define test-vec #())
+  (assert-true (eq? test-vec test-vec))
+  
+  (define test-bytevec #u8(1 2 3 4))
+  (assert-true (eq? test-bytevec test-bytevec))
+
+  (define test-proc (lambda (x) x))
+  (assert-true (eq? test-proc test-proc))))
 
 (define-test "calculated 'test and 'test are eq" (expect #t
 	(eq? (string->symbol "test") (string->symbol "test"))))

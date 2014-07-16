@@ -39,11 +39,13 @@ object GenProgram {
 
     val plannedSymbols = functions.keySet
     val typeGenerator = new TypeGenerator(module, compileConfig.targetPlatform)
+    val constantGenerator = new ConstantGenerator(typeGenerator)
 
     // Package up our global generator state
     val genGlobals = GenGlobals(
       plannedSymbols=plannedSymbols,
       typeGenerator=typeGenerator,
+      constantGenerator=constantGenerator,
       debugInfoGeneratorOpt=debugInfoGeneratorOpt,
       targetPlatform=compileConfig.targetPlatform
     )

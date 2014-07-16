@@ -3,6 +3,8 @@ import io.llambda
 
 import scala.io.Codec
 
+import scala.collection.mutable
+
 import llambda.compiler.InternalCompilerErrorException
 
 import llambda.compiler.planner.{step => ps}
@@ -10,7 +12,28 @@ import llambda.llvmir._
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 
-object GenConstant {
+
+class ConstantGenerator(typeGenerator : TypeGenerator) {
+  /* Caches of constants indexed by their value 
+   *
+   * This is ensure proper Scheme semantics are enforced with the lazily value instantiation the planner does. For
+   * example, the following code:
+   * (define x '(1 2 3))
+   * (eq? x x)
+   * 
+   * Will actually plan the list for 'x' once for each argument. This breaks the Scheme semantics as (eq?) would
+   * return false there
+   */
+
+  private val stringCache = new mutable.HashMap[String, IrConstant]
+  private val symbolCache = new mutable.HashMap[String, IrConstant]
+  private val exactIntegerCache = new mutable.HashMap[Long, IrConstant]
+  private val inexactRationalCache = new mutable.HashMap[Double, IrConstant]
+  private val characterCache = new mutable.HashMap[Char, IrConstant]
+  private val bytevectorCache = new mutable.HashMap[Vector[Short], IrConstant]
+  private val pairCache = new mutable.HashMap[(IrConstant, IrConstant), IrConstant]
+  private val vectorCache = new mutable.HashMap[Vector[IrConstant], IrConstant]
+
   // Maximum value of a 32bit unsigned integer
   private val sharedConstantRefCount = (math.pow(2, 32) - 1).toLong
 
@@ -190,33 +213,41 @@ object GenConstant {
     )
   }
 
-  def apply(state : GenerationState, typeGenerator : TypeGenerator)(createStep : ps.CreateConstant) : IrConstant = {
+  def apply(state : GenerationState)(createStep : ps.CreateConstant) : IrConstant = {
     val module = state.currentBlock.function.module
 
     createStep match {
       case ps.CreateStringCell(_, value) =>
-        genStringCell(module)(value)
+        stringCache.getOrElseUpdate(value, {
+          genStringCell(module)(value)
+        })
 
       case ps.CreateSymbolCell(_, value) =>
-        genSymbolCell(module)(value)
+        symbolCache.getOrElseUpdate(value, {
+          genSymbolCell(module)(value)
+        })
 
       case ps.CreateExactIntegerCell(_, value) =>
-        val intCellName = module.nameSource.allocate("schemeExactInteger")
+        exactIntegerCache.getOrElseUpdate(value, {
+          val intCellName = module.nameSource.allocate("schemeExactInteger")
 
-        val intCell = ct.ExactIntegerCell.createConstant(
-          value=value
-        )
+          val intCell = ct.ExactIntegerCell.createConstant(
+            value=value
+          )
 
-        defineConstantData(module)(intCellName, intCell)
+          defineConstantData(module)(intCellName, intCell)
+        })
       
       case ps.CreateInexactRationalCell(_, value) =>
-        val rationalCellName = module.nameSource.allocate("schemeInexactRational")
+        inexactRationalCache.getOrElseUpdate(value, {
+          val rationalCellName = module.nameSource.allocate("schemeInexactRational")
 
-        val rationalCell = ct.InexactRationalCell.createConstant(
-          value=DoubleConstant(value)
-        )
+          val rationalCell = ct.InexactRationalCell.createConstant(
+            value=DoubleConstant(value)
+          )
 
-        defineConstantData(module)(rationalCellName, rationalCell)
+          defineConstantData(module)(rationalCellName, rationalCell)
+        })
 
       case ps.CreateBooleanCell(_, true) =>
         GlobalDefines.trueIrValue
@@ -225,16 +256,20 @@ object GenConstant {
         GlobalDefines.falseIrValue
       
       case ps.CreateCharacterCell(_, value) =>
-        val charCellName = module.nameSource.allocate("schemeCharacter")
+        characterCache.getOrElseUpdate(value, {
+          val charCellName = module.nameSource.allocate("schemeCharacter")
 
-        val charCell = ct.CharacterCell.createConstant(
-          unicodeChar=value
-        )
+          val charCell = ct.CharacterCell.createConstant(
+            unicodeChar=value
+          )
 
-        defineConstantData(module)(charCellName, charCell)
+          defineConstantData(module)(charCellName, charCell)
+        })
       
       case ps.CreateBytevectorCell(_, elements) =>
-        genBytevectorCell(module)(elements)
+        bytevectorCache.getOrElseUpdate(elements, {
+          genBytevectorCell(module)(elements)
+        })
       
       case ps.CreateVectorCell(_, elementTemps) =>
         val elementIrs = elementTemps.map { elementTemp =>
@@ -245,10 +280,11 @@ object GenConstant {
           }
         }
 
-        genVectorCell(module)(elementIrs)
+        vectorCache.getOrElseUpdate(elementIrs, {
+          genVectorCell(module)(elementIrs)
+        })
 
       case ps.CreatePairCell(_, carTemp, cdrTemp, listLengthOpt) =>
-        val pairCellName = module.nameSource.allocate("schemePair")
         val carIrConstant = state.liveTemps(carTemp) match {
           case constant : IrConstant => constant
           case other =>
@@ -261,16 +297,20 @@ object GenConstant {
             throw new InternalCompilerErrorException(s"Attempted to create constant pair with non-constant cdr: ${other}")
         }
 
-        // It's not possible for pairs to have a length of zero - only EmptyLists are zero length
-        val listLength = listLengthOpt.getOrElse(0L)
+        pairCache.getOrElseUpdate((carIrConstant, cdrIrConstant), {
+          val pairCellName = module.nameSource.allocate("schemePair")
 
-        val pairCell = ct.PairCell.createConstant(
-          listLength=listLength,
-          car=carIrConstant,
-          cdr=cdrIrConstant
-        )
+          // It's not possible for pairs to have a length of zero - only EmptyLists are zero length
+          val listLength = listLengthOpt.getOrElse(0L)
 
-        defineConstantData(module)(pairCellName, pairCell)
+          val pairCell = ct.PairCell.createConstant(
+            listLength=listLength,
+            car=carIrConstant,
+            cdr=cdrIrConstant
+          )
+
+          defineConstantData(module)(pairCellName, pairCell)
+        })
 
       case ps.CreateUnitCell(_) =>
         GlobalDefines.unitIrValue

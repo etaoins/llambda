@@ -63,7 +63,7 @@ object GenPlanStep {
       allocState.copy(currentAllocation=allocation)
 
     case createConstantStep : ps.CreateConstant =>
-      val irResult = GenConstant(state, genGlobals.typeGenerator)(createConstantStep)
+      val irResult = genGlobals.constantGenerator(state)(createConstantStep)
 
       state.withTempValue(createConstantStep.result -> irResult)
 
