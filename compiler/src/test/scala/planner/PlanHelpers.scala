@@ -7,9 +7,37 @@ import llambda.compiler._
 import llambda.compiler.frontend.IncludePath
 import llambda.compiler.SchemeStringImplicits._
 import llambda.compiler.planner.{step => ps}
+import llambda.compiler.{valuetype => vt}
 
 trait PlanHelpers extends FunSuite with Inside {
   val topLevelSymbol = codegen.LlambdaTopLevelSignature.nativeSymbol
+
+  private def stepsForConstantDatum(datum : ast.Datum) : List[ps.Step] = {
+    val planWriter = PlanWriter()
+    val fakeWorldPtr = new ps.WorldPtrValue
+
+    val constantValue = DatumToConstantValue(datum)
+
+    constantValue.toTempValue(vt.AnySchemeType)(planWriter, fakeWorldPtr)
+    planWriter.steps.toList
+  }
+
+  private def filterPlanStep : PartialFunction[ps.Step, Boolean] = {
+    case _ : ps.CastCellToTypeUnchecked =>
+      // This doesn't produce machine code and will be used to convert our result to %datum* to pass to (exit)
+      false
+
+    case _ : ps.DisposeValue =>
+      // This doesn't produce machine code
+      false
+
+    case ps.CreateNamedEntryPoint(_, _, "lliby_exit") =>
+      // This is loading the pointer to (exit)
+      false
+
+    case _ => 
+      true
+  }
 
   protected def planForData(data : List[ast.Datum], optimise : Boolean, includePath : IncludePath = IncludePath()) : Map[String, PlannedFunction] = {
     val frontendConfig = frontend.FrontendConfig(
@@ -49,41 +77,31 @@ trait PlanHelpers extends FunSuite with Inside {
     )
 
     val plannedFunctions = planForData(data, optimise=true)
-    val topLevelSteps = plannedFunctions(topLevelSymbol).steps 
+    val topLevelSteps = DisposeValues(plannedFunctions(topLevelSymbol)).steps 
 
-    val filteredSteps = topLevelSteps.filter {
-      case _ : ps.CastCellToTypeUnchecked =>
-        // This doesn't produce machine code and will be used to convert our result to %datum* to pass to (exit)
-        false
+    val filteredSteps = topLevelSteps.filter(filterPlanStep)
+    
+    inside(filteredSteps.reverse) {
+      case ps.Return(None) :: (_ : ps.Invoke) :: reverseActualSteps =>
+        // These are the steps we expect to see
+        val expectedSteps = stepsForConstantDatum(expected).filter(filterPlanStep)
+        // These are the steps we actually saw
+        val actualSteps = reverseActualSteps.reverse
 
-      case ps.CreateNamedEntryPoint(_, _, "lliby_exit") =>
-        // This is loading the pointer to (exit)
-        false
+        assert(actualSteps.length === expectedSteps.length)
 
-      case _ => 
-        true
-    }
+        expectedSteps.zip(actualSteps) map {
+          case (_ : ps.CreatePairCell, _ : ps.CreatePairCell) =>
+            // XXX: We need to be more clever to deal with this
+            // Depend on the fact the actual list members will be interleaved with the pairs in a predictable way
+          case (_ : ps.CreateVectorCell, _ : ps.CreateVectorCell) =>
+            // XXX: We need to be more clever to deal with this
+          case (expectedStep : ps.DisposableStep, actualStep : ps.DisposableStep) =>
+            // Use merge the merge key which will replace the result TempValue with a fixed constant
+            assert(expectedStep.mergeKey === actualStep.mergeKey)
 
-    inside(filteredSteps) {
-      case List(constantValueStep, _ : ps.Invoke, ps.Return(None)) =>
-        expected match {
-          case ast.IntegerLiteral(constantValue) =>
-            inside(constantValueStep) { case ps.CreateExactIntegerCell(_, actualValue) =>
-              assert(constantValue === actualValue)
-            }
-
-          case ast.BooleanLiteral(constantValue) =>
-            inside(constantValueStep) { case ps.CreateBooleanCell(_, actualValue) =>
-              assert(constantValue === actualValue)
-            }
-          
-          case ast.Symbol(constantValue) =>
-            inside(constantValueStep) { case ps.CreateSymbolCell(_, actualValue) =>
-              assert(constantValue === actualValue)
-            }
-
-          case other =>
-            fail("Unhandled datum type: " + other)
+          case _ =>
+            fail("Non-disposable step encountered; cannot compare:")
         }
     }
   }

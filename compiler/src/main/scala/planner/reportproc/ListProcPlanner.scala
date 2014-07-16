@@ -8,8 +8,35 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
 
+import scala.annotation.tailrec
+
 object ListProcPlanner extends ReportProcPlanner {
   private val listElementType = vt.SchemeType.fromCellType(ct.ListElementCell)
+
+  private def staticMemberSearch(compareFunc : StaticValueEqv.EqvFunction, needleValue : iv.IntermediateValue, listValue : iv.IntermediateValue) : Option[iv.IntermediateValue] = listValue match {
+    case constantPairValue : iv.ConstantPairValue =>
+      compareFunc(needleValue, constantPairValue.car) match {
+        case Some(true) =>
+          // Found it!
+          Some(constantPairValue)
+
+        case Some(false) =>
+          // definitely not a match - keep looking
+          staticMemberSearch(compareFunc, needleValue, constantPairValue.cdr)
+
+        case None =>
+          // Can't statically determine this
+          None
+      }
+
+    case iv.EmptyListValue =>
+      // Doesn't exist in the list
+      Some(new iv.ConstantBooleanValue(false))
+
+    case _ =>
+      // Not a constant list
+      None
+  }
 
   def apply(initialState : PlannerState)(reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = (reportName, operands) match {
     case ("list?", List((_, singleOperand))) if singleOperand.isDefiniteProperList =>
@@ -130,6 +157,22 @@ object ListProcPlanner extends ReportProcPlanner {
         state=initialState,
         value=TempValueToIntermediate(vt.PairType, pairTemp)
       ))
+
+    case (_, List((_, needleValue), (_, listValue))) if List("memq", "memv").contains(reportName) =>
+      staticMemberSearch(StaticValueEqv.valuesAreEqv, needleValue, listValue) map { staticValue =>
+        PlanResult(
+          state=initialState,
+          value=staticValue
+        )
+      }
+
+    case ("member", List((_, needleValue), (_, listValue))) =>
+      staticMemberSearch(StaticValueEqv.valuesAreEqual, needleValue, listValue) map { staticValue =>
+        PlanResult(
+          state=initialState,
+          value=staticValue
+        )
+      }
 
     case _ =>
       None
