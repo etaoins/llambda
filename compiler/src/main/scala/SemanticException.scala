@@ -67,4 +67,8 @@ class IncompatibleArityException(located : SourceLocated, message : String) exte
   val semanticErrorType = "incompatible arity"
 }
 
+class OutOfBoundsException(located : SourceLocated, message : String) extends SemanticException(located, message) {
+  val semanticErrorType = "out of bounds"
+}
+
 class DefinitionOutsideTopLevelException(located : SourceLocated) extends BadSpecialFormException(located, "Definitions can only be introduced in at the outermost level or at the beginning of a body") 
