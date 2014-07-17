@@ -12,7 +12,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
   private def retypingProcedureName = "retyping-procedure"
 
   private def signatureFor(scheme : String) : ProcedureSignature = {
-    val importDecl = datum"(import (scheme base) (llambda typed))"
+    val importDecl = datum"(import (scheme base) (llambda typed) (llambda test-util))"
 
     // Give the procedure a distinctive name so we can find it later
     val procedureDatum = ast.ProperList(List(
@@ -120,7 +120,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
   test("types used across (if) branches are unioned together") {
     val signature = signatureFor("""
       (lambda (value)
-        (if (car '(1 2))
+        (if dynamic-true
           (ann value <string>)
           (ann value <symbol>)))""")
 

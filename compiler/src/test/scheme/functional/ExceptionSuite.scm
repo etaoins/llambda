@@ -114,5 +114,5 @@
           (normal-exit (cons 'one 'two)))
         (lambda ()
           ; This will blow up at runtime
-          (vector-ref #(1 2 3) (car (cons #f #t))))))))
+          (vector-ref #(1 2 3) dynamic-true))))))
 ))

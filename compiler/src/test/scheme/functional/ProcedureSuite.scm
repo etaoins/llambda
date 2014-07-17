@@ -14,7 +14,7 @@
 		; Also note that + and / have different signatures which will have to be
 		; normalized when they're boxed. This doesn't matter for our current
 		; implementation but it may matter if we try to be more tricky
-		(if undecided-true + /))
+		(if dynamic-true + /))
 
 	(math-op 2 3 5)))
 

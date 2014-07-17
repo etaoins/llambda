@@ -5,11 +5,11 @@
 
 (define-test "#false can be unboxed as truthy" (expect #t
 	; This assumes (not) takes a truthy boolean
-	(not (car '(#f . #f)))))
+	(not dynamic-false)))
 
 (define-test "#false can be unboxed as bool" (expect #t
 	; This assumes (boolean=?) takes two native booleans
-	(boolean=? #f (car '(#f . #f)))))
+	(boolean=? #f dynamic-false)))
 
 (define-test "#true can be unboxed as boolean" (expect #f
 	(import (llambda test-util))

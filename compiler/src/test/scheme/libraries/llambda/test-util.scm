@@ -1,18 +1,17 @@
 (define-library (llambda test-util)
-	(import (scheme base) (scheme write) (scheme process-context))	
-	(export undecided-false undecided-true typeless-cell
+  (import (scheme base) (scheme write) (scheme process-context))  
+  (export dynamic-false dynamic-true typeless-cell
           assert-equal assert-true assert-false)
-	(begin
-	  ; Our optimizer is fairly stupid. This will do for now.
-	  (define undecided-false (car (cons #f #t)))
-	  (define undecided-true (cdr (cons #f #t)))
+  (begin
+    ; Use a mutable to launder the value so its type information is lost
+    ; There's very little motivation to optimise mutable usage so this should be safe for a long time
+    (define (typeless-cell x)
+      (define mutable #!unit)
+      (set! mutable x)
+      mutable)
 
-	  ; We're actually clever enough to track type information and use that
-	  ; for optimization, early errors, etc.
-	  ; This is enough to foil the compiler for now
-     (define-syntax typeless-cell
-       (syntax-rules ()
-		  ((typeless-cell x) (car (cons x #f)))))
+    (define dynamic-false (typeless-cell #f))
+    (define dynamic-true (typeless-cell #t))
 
     (define-syntax assert-equal
       (syntax-rules ()

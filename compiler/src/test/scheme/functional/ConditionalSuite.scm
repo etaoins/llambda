@@ -79,7 +79,7 @@
 	(import (llambda test-util))
    (define result 'not-executed)
 
-   (if undecided-true
+   (if dynamic-true
      (begin
        (cons 1 2)
        (set! result 'true))
