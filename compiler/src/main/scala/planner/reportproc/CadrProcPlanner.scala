@@ -10,7 +10,21 @@ import llambda.compiler.planner._
 
 object CadrProcPlanner extends ReportProcPlanner {
   def apply(initialState : PlannerState)(reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = (reportName, operands) match {
-    case ("car" | "cdr", singleOperand :: Nil) =>
+    case ("car" | "cdr", List((_, constantPair : iv.ConstantPairValue))) =>
+      // We can resolve this at compile time
+      val resultValue = if (reportName == "car") {
+        constantPair.car
+      }
+      else {
+        constantPair.cdr
+      }
+
+      Some(PlanResult(
+        state=initialState,
+        value=resultValue
+      ))
+
+    case ("car" | "cdr", List(singleOperand)) =>
       val pairTemp = plan.withContextLocation(singleOperand._1) {
         singleOperand._2.toTempValue(vt.PairType)
       }

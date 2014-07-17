@@ -20,6 +20,19 @@ class ListProcSuite extends FunSuite with PlanHelpers {
     )
   }
 
+  test("static cadr") {
+    assertStaticPlan("(car '(a b c))",
+      ast.Symbol("a")
+    )
+    
+    assertStaticPlan("(cdr '(a b c))",
+      ast.ProperList(List(
+        ast.Symbol("b"),
+        ast.Symbol("c")
+      ))
+    )
+  }
+  
   test("static (memq)") {
     assertStaticPlan("(memq 'a '(a b c))",
       ast.ProperList(List(
