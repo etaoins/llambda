@@ -28,6 +28,7 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
   private val stringCache = new mutable.HashMap[String, IrConstant]
   private val symbolCache = new mutable.HashMap[String, IrConstant]
   private val exactIntegerCache = new mutable.HashMap[Long, IrConstant]
+  private var nanCache : Option[IrConstant] = None
   private val inexactRationalCache = new mutable.HashMap[Double, IrConstant]
   private val characterCache = new mutable.HashMap[Char, IrConstant]
   private val bytevectorCache = new mutable.HashMap[Vector[Short], IrConstant]
@@ -237,6 +238,19 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
 
           defineConstantData(module)(intCellName, intCell)
         })
+      
+      case ps.CreateInexactRationalCell(_, value) if value.isNaN =>
+        if (!nanCache.isDefined) {
+          val rationalCell = ct.InexactRationalCell.createConstant(
+            value=DoubleConstant(value)
+          )
+
+          nanCache = Some(
+            defineConstantData(module)("schemeNaN", rationalCell)
+          )
+        }
+
+        nanCache.get
       
       case ps.CreateInexactRationalCell(_, value) =>
         inexactRationalCache.getOrElseUpdate(value, {

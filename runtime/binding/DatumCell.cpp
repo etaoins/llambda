@@ -1,6 +1,7 @@
 #include "DatumCell.h"
 
-#include <string.h>
+#include <cstring>
+#include <cmath>
 
 #include "ExactIntegerCell.h"
 #include "InexactRationalCell.h"
@@ -34,6 +35,15 @@ bool DatumCell::isEqv(const DatumCell *other) const
 	{
 		if (auto otherRational = datum_cast<InexactRationalCell>(other))
 		{
+			const double thisValue = thisRational->value();
+			const double otherValue = otherRational->value();
+
+			if (std::isnan(thisValue) && std::isnan(otherValue)) 
+			{
+				// Both are NaN
+				return true;
+			}
+
 			return thisRational->value() == otherRational->value();
 		}
 	}

@@ -73,6 +73,15 @@
 (define-test "-163.5 and 3435.5 are not eqv" (expect #f
 	(eqv? -163.5 3435.5)))
 
+; This is undefined by R7RS
+; However, if we do a pointer or intermediate value fast path comparison between NaN and itself we will return #t. If
+; we want to be consistent we should return #t everywhere at all optimisation levels.
+(define-test "literal +nan.0 and +nan.0 are eqv" (expect #t
+  (eqv? +nan.0 +nan.0)))
+
+(define-test "calculated +nan.0 and +nan.0 are eqv" (expect #t
+  (eqv? (/ 0. 0.) (/ 0. 0.))))
+
 (define-test "#\a and #\b are not eqv" (expect #f
 	(eqv? #\a #\b)))
 
