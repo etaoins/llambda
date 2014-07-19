@@ -17,58 +17,57 @@ object PlanTypeCheck {
     case vt.UnionType(memberTypes)        => memberTypes
   }
 
-  private def testDerivedNonUnionType(
+  private def testRecordClass(
+    plan : PlanWriter,
+    valueTemp : ps.TempValue,
+    valueType : vt.SchemeType,
+    recordType : vt.RecordType
+  ) : ps.TempValue = {
+    val flattenedType = flattenType(valueType)
+
+    // If we contain a generic record type we can be of any record class
+    val recordCellType = vt.SchemeTypeAtom(ct.RecordCell)
+    val containsGenericRecordType = flattenedType.exists(recordCellType.satisfiesType(_) == Some(true))
+
+    val possibleTypesOpt = if (containsGenericRecordType) {
+      None
+    }
+    else {
+      Some(flattenType(valueType) collect {
+        case recordType : vt.RecordType =>
+          recordType
+      } : Set[vt.RecordLikeType])
+    }
+
+    // Cast the value to its boxed form
+    val recordCellTemp = ps.RecordTemp()
+    plan.steps += ps.CastCellToTypeUnchecked(recordCellTemp, valueTemp, recordType.cellType)
+
+    val classMatchedPred = ps.Temp(vt.Predicate)
+    plan.steps += ps.TestRecordLikeClass(classMatchedPred, recordCellTemp, recordType, possibleTypesOpt) 
+    classMatchedPred
+  }
+  
+  private def requireType(
       plan : PlanWriter,
       valueTemp : ps.TempValue,
       valueType : vt.SchemeType,
-      testingType : vt.NonUnionSchemeType
-  ) : ps.TempValue = testingType match {
-    case recordType : vt.RecordType =>
-      val flattenedType = flattenType(valueType)
+      requiredType : vt.NonUnionSchemeType,
+      innerTypeCheck : (PlanWriter, vt.SchemeType) => ps.TempValue
+  ) : ps.TempValue = {
+    val isRequiredTypePred = testNonUnionType(plan, valueTemp, valueType, requiredType) 
 
-      // If we contain a generic record type we can be of any record class
-      val recordCellType = vt.SchemeTypeAtom(ct.RecordCell)
-      val containsGenericRecordType = flattenedType.exists(recordCellType.satisfiesType(_) == Some(true))
-
-      val possibleTypesOpt = if (containsGenericRecordType) {
-        None
-      }
-      else {
-        Some(flattenType(valueType) collect {
-          case recordType : vt.RecordType =>
-            recordType
-        } : Set[vt.RecordLikeType])
-      }
-
-      // Cast the value to its boxed form
-      val recordCellTemp = ps.RecordTemp()
-      plan.steps += ps.CastCellToTypeUnchecked(recordCellTemp, valueTemp, recordType.cellType)
-
-      val classMatchedPred = ps.Temp(vt.Predicate)
-      plan.steps += ps.TestRecordLikeClass(classMatchedPred, recordCellTemp, recordType, possibleTypesOpt) 
-      classMatchedPred
-
-    case vt.ConstantBooleanType(value) =>
-      val castTemp = ps.Temp(vt.BooleanType) 
-      plan.steps += ps.CastCellToTypeUnchecked(castTemp, valueTemp, ct.BooleanCell)
-
-      // This works because booleans are preconstructed
-      val expectedTemp = ps.Temp(vt.BooleanType)
-      plan.steps += ps.CreateBooleanCell(expectedTemp, value)
-
-      val valueMatchedPred = ps.Temp(vt.Predicate)
-      plan.steps += ps.IntegerCompare(valueMatchedPred, ps.CompareCond.Equal, None, castTemp, expectedTemp)
-
-      valueMatchedPred
-    
-    case vt.SchemeTypeAtom(cellType) =>
-      val possibleCellTypes = flattenType(valueType).map(_.cellType) 
-
-      val isCellTypePred = ps.Temp(vt.Predicate)
-      plan.steps += ps.TestCellType(isCellTypePred, valueTemp, cellType, possibleCellTypes)
-      isCellTypePred
+    plan.buildCondBranch(isRequiredTypePred, {isRequiredTypePlan =>
+      // Now we can test oureslves
+      val remainingType = requiredType & valueType
+      innerTypeCheck(isRequiredTypePlan, remainingType)
+    },
+    { isNotRequiredTypePlan =>
+      // Not our parent type
+      predicateTemp(isNotRequiredTypePlan, false)
+    })
   }
-  
+
   private def testNonUnionType(
       plan : PlanWriter,
       valueTemp : ps.TempValue,
@@ -80,25 +79,32 @@ object PlanTypeCheck {
 
     case None =>
       testingType match {
-        case derivedType : vt.DerivedSchemeType =>
-          // Make sure our parent type is satisfied
-          val isParentTypePred = testNonUnionType(plan, valueTemp, valueType, derivedType.parentType) 
-
-          plan.buildCondBranch(isParentTypePred, {isTypePlan =>
-            val remainingType = valueType & derivedType.parentType
-
-            // Now we can test oureslves
-            testDerivedNonUnionType(isTypePlan, valueTemp, remainingType, testingType)
-          },
-          { isNotTypePlan =>
-            // Not our parent type
-            predicateTemp(isNotTypePlan, false)
+        case recordType : vt.RecordType =>
+          requireType(plan, valueTemp, valueType, recordType.parentType, { (isRecordPlan, remainingType) =>
+            testRecordClass(isRecordPlan, valueTemp, remainingType, recordType)
           })
 
-        case topLevelType =>
-          testDerivedNonUnionType(plan, valueTemp, valueType, testingType)
+        case vt.ConstantBooleanType(value) =>
+          val castTemp = ps.Temp(vt.BooleanType) 
+          plan.steps += ps.CastCellToTypeUnchecked(castTemp, valueTemp, ct.BooleanCell)
+
+          // This works because booleans are preconstructed
+          val expectedTemp = ps.Temp(vt.BooleanType)
+          plan.steps += ps.CreateBooleanCell(expectedTemp, value)
+
+          val valueMatchedPred = ps.Temp(vt.Predicate)
+          plan.steps += ps.IntegerCompare(valueMatchedPred, ps.CompareCond.Equal, None, castTemp, expectedTemp)
+
+          valueMatchedPred
+        
+        case vt.SchemeTypeAtom(cellType) =>
+          val possibleCellTypes = flattenType(valueType).map(_.cellType) 
+
+          val isCellTypePred = ps.Temp(vt.Predicate)
+          plan.steps += ps.TestCellType(isCellTypePred, valueTemp, cellType, possibleCellTypes)
+          isCellTypePred
       }
-  }  
+  }
 
   private def testUnionTypeRecursively(
       plan : PlanWriter,
