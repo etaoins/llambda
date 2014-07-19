@@ -15,7 +15,7 @@ class ExtractLibrarySuite extends FunSuite with Inside {
 
   val frontendConfig = FrontendConfig(
     includePath=includePath,
-    featureIdentifiers=Set()
+    featureIdentifiers=Set("test-feature")
   )
 
   val exampleName = List(StringComponent("example"), StringComponent("lib"))
@@ -52,6 +52,27 @@ class ExtractLibrarySuite extends FunSuite with Inside {
            (export number5)
            (begin 
              (define number5 5)))"""
+     )) {
+       case Library(_, bindings, exprs) =>
+          inside(bindings("number5")) {
+            case storageLoc : StorageLocation =>
+              assert(exprs === List(et.TopLevelDefine(List(storageLoc -> et.Literal(ast.IntegerLiteral(5))))))
+          }
+     }
+  }
+  
+  test("top-level (cond-expand)") {
+    inside(libraryFor(
+      """(define-library (example lib)
+           (import (llambda internal primitives))
+           (cond-expand ((not test-feature)
+             (export doesnt-exist)))
+
+           (export number5)
+
+           (cond-expand (test-feature
+             (begin 
+               (define number5 5)))))"""
      )) {
        case Library(_, bindings, exprs) =>
           inside(bindings("number5")) {

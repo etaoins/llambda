@@ -5,10 +5,10 @@ import llambda.compiler._
 import collection.mutable.{ListBuffer, MapBuilder}
 
 private[frontend] object ExtractLibrary {
-  private def expandIncludeDecls(datum : ast.Datum)(implicit includePath : IncludePath) : List[(IncludePath, ast.Datum)] = datum match {
+  private def expandDecls(datum : ast.Datum)(implicit libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : List[(IncludePath, ast.Datum)] = datum match {
     case ast.ProperList(ast.Symbol("include") :: includeNameData) =>
       // Include the files and wrap them in (begin)
-      val includeResults = ResolveIncludeList(includeNameData, datum)
+      val includeResults = ResolveIncludeList(includeNameData, datum)(frontendConfig.includePath)
 
       includeResults map { result =>
         (result.innerIncludePath, ast.ProperList(ast.Symbol("begin") :: result.data))
@@ -16,17 +16,25 @@ private[frontend] object ExtractLibrary {
     
     case ast.ProperList(ast.Symbol("include-library-declarations") :: includeNameData) =>
       // Splice the includes in directly
-      val includeResults = ResolveIncludeList(includeNameData, datum)
+      val includeResults = ResolveIncludeList(includeNameData, datum)(frontendConfig.includePath)
       
       includeResults flatMap { result =>
         result.data flatMap { datum =>
-          // Recursively expand inner (include)s
-          expandIncludeDecls(datum)(result.innerIncludePath)
+          // Recursively expand inner decls
+          val innerFrontendConfig = frontendConfig.copy(
+            includePath=result.innerIncludePath
+          )
+
+          expandDecls(datum)(libraryLoader, innerFrontendConfig)
         }
       }
 
-    case nonInclude =>
-      List((includePath, nonInclude))
+    case ast.ProperList(ast.Symbol("cond-expand") :: firstClause :: restClauses) =>
+      // Evaluate the (cond-expand)
+      CondExpander.expandData(firstClause :: restClauses).flatMap(expandDecls)
+
+    case nonExpand =>
+      List((frontendConfig.includePath, nonExpand))
   }
 
   def apply(filenameOpt : Option[String], datum : ast.Datum, expectedName : Option[Seq[LibraryNameComponent]] = None)(implicit libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : Library = datum match {
@@ -43,7 +51,7 @@ private[frontend] object ExtractLibrary {
       // Expand both types of includes in our first pass
       // Construct the proper include path at the same time so second-order  includes from these includes are pathed
       // properly
-      val expandedDecls = decls.flatMap(expandIncludeDecls(_)(frontendConfig.includePath))
+      val expandedDecls = decls.flatMap(expandDecls(_))
 
       // Library bodies seems to be mostly order-indepenent. This is annoying
       object DeclType extends Enumeration {

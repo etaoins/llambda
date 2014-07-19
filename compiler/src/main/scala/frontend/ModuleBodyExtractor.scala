@@ -305,7 +305,7 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
         et.Cast(extractExpr(valueExpr), ExtractType.extractSchemeType(typeDatum))
 
       case (Primitives.CondExpand, firstClause :: restClauses) =>
-        val expandedData = CondExpander(firstClause :: restClauses)(libraryLoader, frontendConfig)
+        val expandedData = CondExpander.expandScopedData(firstClause :: restClauses)(libraryLoader, frontendConfig)
 
         et.Begin(expandedData.map(extractExpr))
 

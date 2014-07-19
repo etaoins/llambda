@@ -11,14 +11,13 @@ class CondExpanderSuite extends FunSuite {
 
   private def expansionFor(clauseList : List[String], featureIdentifiers : Set[String]) : List[ast.Datum] = {
     val parsedClauses = clauseList.map(SchemeParser.parseStringAsData(_, None).head)
-    val scopedClauses = parsedClauses.map(sst.ScopedDatum(primitiveScope, _))
 
     val frontendConfig = FrontendConfig(
       includePath=IncludePath(),
       featureIdentifiers=featureIdentifiers
     )
 
-    CondExpander(scopedClauses)(libraryLoader, frontendConfig).map(_.unscope)
+    CondExpander.expandData(parsedClauses)(libraryLoader, frontendConfig)
   }
   
   test("non-proper list clause fails") {
