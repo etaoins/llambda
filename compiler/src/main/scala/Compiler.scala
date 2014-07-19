@@ -169,6 +169,7 @@ object Compiler {
     
     // Plan execution
     val planConfig = planner.PlanConfig(
+      schemeDialect=config.schemeDialect,
       optimize=config.optimizeLevel > 1,
       analysis=analysis
     )

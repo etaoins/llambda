@@ -26,15 +26,7 @@ object PlanInvokeApply {
       listElemCast
     }
     else {
-      val restArgTemp = ps.CellTemp(ct.ListElementCell)
-
-      val argTemps = restArgs.map {
-        _.toTempValue(vt.AnySchemeType)
-      }
-
-      plan.steps += ps.BuildProperList(restArgTemp, argTemps)
-
-      restArgTemp
+      ValuesToProperList(restArgs).toTempValue(vt.ListElementType)
     }
   }
 

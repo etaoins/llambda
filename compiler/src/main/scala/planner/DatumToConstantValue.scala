@@ -27,22 +27,7 @@ object DatumToConstantValue {
       
       case ast.Pair(car, cdr) =>
         // Recurse down the car and cdr
-        val carConstant = apply(car)
-        val cdrConstant = apply(cdr)
-
-        val listLengthOpt = cdrConstant match {
-          case pairValue : iv.ConstantPairValue =>
-            pairValue.listLengthOpt.map(_ + 1)
-
-          case iv.EmptyListValue =>
-            Some(1L)
-
-          case _ =>
-            // Not a proper list
-            None
-        }
-
-        new iv.ConstantPairValue(carConstant, cdrConstant, listLengthOpt)
+        new iv.ConstantPairValue(apply(car), apply(cdr))
 
       case ast.VectorLiteral(elements) =>
         new iv.ConstantVectorValue(elements.map(apply))

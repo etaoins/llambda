@@ -12,8 +12,37 @@ import llambda.compiler.{valuetype => vt}
 trait PlanHelpers extends FunSuite with Inside {
   val topLevelSymbol = codegen.LlambdaTopLevelSignature.nativeSymbol
 
+  private def testPlanConfig(data : List[ast.Datum], optimise : Boolean, includePath : IncludePath = IncludePath()) = {
+    val compileConfig = CompileConfig(
+      includePath=includePath,
+      optimizeLevel=if (optimise) 0 else 2,
+      targetPlatform=platform.Posix64LE,
+      schemeDialect=dialect.Dialect.default
+    )
+
+    val featureIdentifiers =
+      compileConfig.targetPlatform.platformFeatures ++ compileConfig.schemeDialect.dialectFeatures
+  
+    val frontendConfig = frontend.FrontendConfig(
+      includePath=includePath,
+      featureIdentifiers=featureIdentifiers
+    )
+    
+    val loader = new frontend.LibraryLoader(compileConfig.targetPlatform)
+    val exprs = frontend.ExtractProgram(None, data)(loader, frontendConfig)
+    val analysis = analyser.AnalyseExprs(exprs)
+
+    planner.PlanConfig(
+      schemeDialect=dialect.Dialect.default,
+      optimize=optimise,
+      analysis=analysis
+    )
+  }
+
   private def stepsForConstantDatum(datum : ast.Datum) : List[ps.Step] = {
-    val planWriter = PlanWriter()
+    val planConfig = testPlanConfig(Nil, optimise=true)
+
+    val planWriter = PlanWriter(planConfig)
     val fakeWorldPtr = new ps.WorldPtrValue
 
     val constantValue = DatumToConstantValue(datum)
@@ -39,31 +68,13 @@ trait PlanHelpers extends FunSuite with Inside {
       true
   }
 
+  /** Returns a map of planned functions to the given Scheme data */
   protected def planForData(data : List[ast.Datum], optimise : Boolean, includePath : IncludePath = IncludePath()) : Map[String, PlannedFunction] = {
-    val frontendConfig = frontend.FrontendConfig(
-      includePath=includePath,
-      featureIdentifiers=Set()
-    )
-    
-    val compileConfig = CompileConfig(
-      includePath=includePath,
-      optimizeLevel=if (optimise) 0 else 2,
-      targetPlatform=platform.Posix64LE,
-      schemeDialect=dialect.Dialect.default
-    )
-  
-    val loader = new frontend.LibraryLoader(compileConfig.targetPlatform)
-    val exprs = frontend.ExtractProgram(None, data)(loader, frontendConfig)
-    val analysis = analyser.AnalyseExprs(exprs)
-
-    val planConfig = planner.PlanConfig(
-      optimize=optimise,
-      analysis=analysis
-    )
-
-    planner.PlanProgram(analysis.usedTopLevelExprs)(planConfig)
+    val planConfig = testPlanConfig(data, optimise, includePath)
+    planner.PlanProgram(planConfig.analysis.usedTopLevelExprs)(planConfig)
   }
   
+  /** Asserts that a Scheme string statically evaluates to the passed constant datum */
   protected def assertStaticPlan(scheme : String, expected : ast.Datum) {
     val importDecl = datum"(import (scheme base) (scheme process-context) (llambda typed))"
     val data = List(

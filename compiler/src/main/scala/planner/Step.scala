@@ -271,21 +271,6 @@ case class ConvertNativeIntegerToFloat(result : TempValue, fromValue : TempValue
     ConvertNativeIntegerToFloat(f(result), f(fromValue), fromSigned, toType).assignLocationFrom(this)
 }
       
-/** Builds a proper list at runtime
-  *
-  * @param result      location to store the head of the proper list
-  * @param listValues  DatumCell values to add to the list
-  */
-case class BuildProperList(result : TempValue, listValues : List[TempValue]) extends Step with CellConsumer {
-  lazy val inputValues = listValues.toSet
-  lazy val outputValues = Set(result)
-
-  val allocSize = listValues.length
-  
-  def renamed(f : (TempValue) => TempValue) =
-    BuildProperList(f(result), listValues.map(f)).assignLocationFrom(this)
-}
-
 /** Calculates the length of a proper list as a uint32
   *
   * The passed list must be a proper list or the result is undefined

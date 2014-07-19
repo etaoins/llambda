@@ -11,18 +11,16 @@ import llambda.compiler.planner._
 import scala.annotation.tailrec
 
 object ListProcPlanner extends ReportProcPlanner {
-  private val listElementType = vt.SchemeType.fromCellType(ct.ListElementCell)
-
   private def staticMemberSearch(compareFunc : StaticValueEqv.EqvFunction, needleValue : iv.IntermediateValue, listValue : iv.IntermediateValue) : Option[iv.IntermediateValue] = listValue match {
-    case constantPairValue : iv.ConstantPairValue =>
-      compareFunc(needleValue, constantPairValue.car) match {
+    case knownPair : iv.KnownPair =>
+      compareFunc(needleValue, knownPair.car) match {
         case Some(true) =>
           // Found it!
-          Some(constantPairValue)
+          Some(knownPair)
 
         case Some(false) =>
           // definitely not a match - keep looking
-          staticMemberSearch(compareFunc, needleValue, constantPairValue.cdr)
+          staticMemberSearch(compareFunc, needleValue, knownPair.cdr)
 
         case None =>
           // Can't statically determine this
@@ -48,28 +46,18 @@ object ListProcPlanner extends ReportProcPlanner {
 
     case ("list", operands) =>
       // Build a proper list directly
-      val resultTemp = ps.CellTemp(ct.ListElementCell)
-      val operandTemps = operands.map(_._2).map(_.toTempValue(vt.AnySchemeType))
-
-      plan.steps += ps.BuildProperList(resultTemp, operandTemps) 
-      
-      val listValue = new iv.CellValue(
-        schemeType=listElementType,
-        tempType=ct.ListElementCell,
-        tempValue=resultTemp,
-        properListCell=true 
-      )
+      val operandValues = operands.map(_._2)
 
       Some(PlanResult(
         state=initialState,
-        value=listValue
+        value=ValuesToProperList(operandValues)
       ))
 
     case ("length", List((_, singleOperand))) =>
       // Do we know the length at compile time?
       singleOperand match {
-        case constantPair : iv.ConstantPairValue =>
-          for(listLength <- constantPair.listLengthOpt) {
+        case knownPair : iv.KnownPair =>
+          for(listLength <- knownPair.listLengthOpt) {
             // Yes, return it directly
             return Some(PlanResult(
               state=initialState,
@@ -87,7 +75,7 @@ object ListProcPlanner extends ReportProcPlanner {
       }
 
       if (singleOperand.isDefiniteProperList) {
-        val listElementTemp = singleOperand.toTempValue(listElementType)
+        val listElementTemp = singleOperand.toTempValue(vt.ListElementType)
         val resultTemp = ps.Temp(vt.UInt32)
 
         // This is a guaranteed proper list - we can quickly calculate the length inline

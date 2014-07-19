@@ -8,9 +8,7 @@ import llambda.compiler.planner.{PlanWriter, InvokableProcedure, PlanTypeCheck}
 import llambda.compiler.InternalCompilerErrorException
 import llambda.compiler.RuntimeErrorMessage
 
-class CellValue(val schemeType : vt.SchemeType, val tempType : ct.CellType, val tempValue : ps.TempValue, val properListCell : Boolean = false) extends IntermediateValue {
-  override lazy val isDefiniteProperList = properListCell || hasDefiniteType(vt.EmptyListType)
-
+class CellValue(val schemeType : vt.SchemeType, val tempType : ct.CellType, val tempValue : ps.TempValue) extends IntermediateValue {
   lazy val typeDescription = s"cell of type ${schemeType}"
 
   override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {

@@ -119,13 +119,6 @@ object GenPlanStep {
       val resultIr = GenFloatConversion(state.currentBlock)(fromValueIr, fpType)
 
       state.withTempValue(resultTemp -> resultIr)
-
-    case ps.BuildProperList(resultTemp, valueTemps) =>
-      val valueIrs = valueTemps.map(state.liveTemps.apply)
-
-      val (listState, properListIr) = GenProperList(state)(valueIrs)
-
-      listState.withTempValue(resultTemp -> properListIr)
     
     case ps.CalcProperListLength(resultTemp, listHeadTemp) =>
       val listHeadIr = state.liveTemps(listHeadTemp)

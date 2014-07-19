@@ -73,10 +73,6 @@ object CostForPlanSteps {
       // This requires an allocation plus a store of the boxed value
       cellConsumptionCost + storeCost
 
-    case ps.BuildProperList(_, listValues) =>
-      // Each list element takes a cell, a store to its car and cdr
-      listValues.length * (cellConsumptionCost + (storeCost * 2)) 
-    
     case allocateCells : ps.AllocateCells =>
       gcBarrierCost
 

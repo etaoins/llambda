@@ -20,6 +20,20 @@ class ListProcSuite extends FunSuite with PlanHelpers {
     )
   }
 
+  test("static (list)") {
+    assertStaticPlan("(null? (list))",
+      ast.BooleanLiteral(true)
+    )
+    
+    assertStaticPlan("(length (list))",
+      ast.IntegerLiteral(0)
+    )
+    
+    assertStaticPlan("(length (list 1 2 3 4 5))",
+      ast.IntegerLiteral(5)
+    )
+  }
+
   test("static cadr") {
     assertStaticPlan("(car '(a b c))",
       ast.Symbol("a")

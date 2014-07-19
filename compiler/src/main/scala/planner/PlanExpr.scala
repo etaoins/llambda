@@ -12,7 +12,7 @@ import llambda.compiler.InternalCompilerErrorException
 private[planner] object PlanExpr {
   private val callCcNames = Set("call-with-current-continuation", "call/cc")
   
-  def apply(initialState : PlannerState)(expr : et.Expr, sourceNameHint : Option[String] = None)(implicit planConfig : PlanConfig, plan : PlanWriter) : PlanResult = plan.withContextLocation(expr) {
+  def apply(initialState : PlannerState)(expr : et.Expr, sourceNameHint : Option[String] = None)(implicit plan : PlanWriter) : PlanResult = plan.withContextLocation(expr) {
     implicit val worldPtr = initialState.worldPtr
 
     expr match {
@@ -28,9 +28,9 @@ private[planner] object PlanExpr {
 
         PlanResult(state=finalState, value=finalValue)
 
-      case et.Apply(procRef @ et.VarRef(callCcProc : ReportProcedure), operands) if callCcNames.contains(callCcProc.reportName) && planConfig.optimize =>
+      case et.Apply(procRef @ et.VarRef(callCcProc : ReportProcedure), operands) if callCcNames.contains(callCcProc.reportName) && plan.config.optimize =>
         // This is a (call/cc)
-        ReduceCallCc(expr, operands) match {
+        ReduceCallCc(expr, operands)(plan.config) match {
           case SimplifiedCallCc(newOperands) =>
             PlanApplication(initialState)(expr, procRef, newOperands)
           
@@ -136,10 +136,10 @@ private[planner] object PlanExpr {
             val truthyPred = testResult.value.toTempValue(vt.Predicate)
 
             val trueWriter = plan.forkPlan()
-            val trueValue = apply(testResult.state)(trueExpr)(planConfig, trueWriter).value
+            val trueValue = apply(testResult.state)(trueExpr)(trueWriter).value
 
             val falseWriter = plan.forkPlan() 
-            val falseValue = apply(testResult.state)(falseExpr)(planConfig, falseWriter).value
+            val falseValue = apply(testResult.state)(falseExpr)(falseWriter).value
         
             val planPhiResult = trueValue.planPhiWith(falseValue)(trueWriter, falseWriter)
 

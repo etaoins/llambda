@@ -106,8 +106,10 @@
 	(assert-equal '(a b c) (memq 'a '(a b c)))
   (assert-equal '(b c) (memq 'b '(a b c)))
   (assert-false (memq 'a '(b c d)))
-  ; memq isn't recurive
-	(assert-false (memq (list 'a) '(b (a) c)))))
+
+  (cond-expand ((not immutable-pairs)
+    ; memq isn't recurive
+    (assert-false (memq (list 'a) '(b (a) c)))))))
 
 (define-test "(member) is recursive" (expect ((a) c)
 	(member (list 'a) '(b (a) c))))

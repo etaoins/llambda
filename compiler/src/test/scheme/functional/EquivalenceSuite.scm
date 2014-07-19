@@ -88,8 +88,10 @@
 (define-test "'() and '(1 2 3) are not eqv" (expect #f
 	(eqv? '() '(1 2 3))))
 
-(define-test "'two constructed lists are not eqv" (expect #f
-	(eqv? (list 1 2 3) (list 1 2 3))))
+; With immutable pairs there's no distinction between constant and constructed lists
+(cond-expand ((not immutable-pairs)
+  (define-test "'two constructed lists are not eqv" (expect #f
+    (eqv? (list 1 2 3) (list 1 2 3))))))
 
 (define-test "'two constructed vectors are not eqv" (expect #f
 	(eqv? (vector 1 2 3) (vector 1 2 3))))
@@ -103,8 +105,9 @@
 (define-test "constant 'a and 'a are eq" (expect #t
 	(eq? 'a 'a)))
 
-(define-test "constructed lists are not eq" (expect #f
-	(eq? (list 'a) (list 'a))))
+(cond-expand ((not immutable-pairs)
+  (define-test "constructed lists are not eq" (expect #f
+    (eq? (list 'a) (list 'a))))))
 
 (define-test "'() and '() are eq" (expect #t
 	(eq? '() '())))

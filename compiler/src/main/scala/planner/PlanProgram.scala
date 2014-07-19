@@ -13,9 +13,9 @@ object PlanProgram {
       worldPtr=worldTemp
     ) 
 
-    val plan = PlanWriter()
+    val plan = PlanWriter(planConfig)
       
-    PlanExpr(emptyState)(et.Begin(exprs))(planConfig, plan)
+    PlanExpr(emptyState)(et.Begin(exprs))(plan)
 
     // __llambda_top_level is a void function
     plan.steps += ps.Return(None)

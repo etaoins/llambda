@@ -16,7 +16,7 @@ private[planner] object PlanBind {
       nonVarRef.subexprs.exists(storageLocRefedByExpr(storageLoc, _))
   }
 
-  def apply(initialState : PlannerState)(bindings : List[(StorageLocation, et.Expr)])(implicit planConfig : PlanConfig, plan : PlanWriter) : PlannerState = {
+  def apply(initialState : PlannerState)(bindings : List[(StorageLocation, et.Expr)])(implicit plan : PlanWriter) : PlannerState = {
     implicit val worldPtr = initialState.worldPtr
 
     val bindingLocs = bindings.map(_._1).toSet
@@ -30,7 +30,7 @@ private[planner] object PlanBind {
 
       // Is this a lambda referring to itself recursively and is not a mutable value?
       val isSelfRecursiveLambda = neededRecursives.contains(storageLoc) &&
-        !planConfig.analysis.mutableVars.contains(storageLoc) &&
+        !plan.config.analysis.mutableVars.contains(storageLoc) &&
         initialValue.isInstanceOf[et.Lambda]
 
       val neededNonSelfRecursives = if (isSelfRecursiveLambda) {
@@ -93,7 +93,7 @@ private[planner] object PlanBind {
           None
       }
 
-      if (planConfig.analysis.mutableVars.contains(storageLoc)) {
+      if (plan.config.analysis.mutableVars.contains(storageLoc)) {
         // If we used to be a recursive value we can reuse that record
         val mutableValue = prevRecursiveOpt.getOrElse {
           val mutableTemp = ps.RecordTemp()

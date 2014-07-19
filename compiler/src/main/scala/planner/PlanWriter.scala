@@ -11,6 +11,7 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{intermediatevalue => iv}
 
 class PlanWriter(
+    val config : PlanConfig,
     val plannedFunctions : mutable.Map[String, PlannedFunction],
     val allocedProcSymbols : mutable.HashSet[String],
     val plannedTypePredicates : mutable.Map[vt.SchemeType, iv.KnownTypePredicateProc]
@@ -101,7 +102,7 @@ class PlanWriter(
 
   def forkPlan() : PlanWriter = 
     // All forks share plannedFunctions
-    new PlanWriter(plannedFunctions, allocedProcSymbols, plannedTypePredicates)
+    new PlanWriter(config, plannedFunctions, allocedProcSymbols, plannedTypePredicates)
 
   def buildCondBranch(test : ps.TempValue, trueBuilder : (PlanWriter) => ps.TempValue, falseBuilder : (PlanWriter) => ps.TempValue) : ps.TempValue = {
     val truePlan = forkPlan()
@@ -124,6 +125,11 @@ class PlanWriter(
 }
 
 object PlanWriter {
-  def apply() =
-    new PlanWriter(new mutable.HashMap[String, PlannedFunction], new mutable.HashSet[String], new mutable.HashMap[vt.SchemeType, iv.KnownTypePredicateProc])
+  def apply(planConfig : PlanConfig) =
+    new PlanWriter(
+      config=planConfig,
+      plannedFunctions=new mutable.HashMap[String, PlannedFunction],
+      allocedProcSymbols=new mutable.HashSet[String],
+      plannedTypePredicates=new mutable.HashMap[vt.SchemeType, iv.KnownTypePredicateProc]
+    )
 }

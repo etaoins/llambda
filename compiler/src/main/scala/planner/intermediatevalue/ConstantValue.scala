@@ -140,11 +140,9 @@ class ConstantBytevectorValue(val elements : Vector[Short]) extends TrivialConst
   val typeDescription = "constant bytevector"
 }
 
-class ConstantPairValue(val car : ConstantValue, val cdr : ConstantValue, val listLengthOpt : Option[Long]) extends ConstantValue(ct.PairCell) with BoxedOnlyValue {
+class ConstantPairValue(val car : ConstantValue, val cdr : ConstantValue) extends ConstantValue(ct.PairCell) with BoxedOnlyValue with KnownPair {
   val typeDescription = "constant pair"
 
-  override lazy val isDefiniteProperList = listLengthOpt.isDefined
-  
   def toConstantCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
     val constantTemp = ps.CellTemp(cellType, knownConstant=true)
 

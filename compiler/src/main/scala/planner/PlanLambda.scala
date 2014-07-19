@@ -117,7 +117,7 @@ private[planner] object PlanLambda {
       lambdaExpr : et.Lambda,
       sourceNameHint : Option[String],
       recursiveSelfLoc : Option[StorageLocation]
-  )(implicit planConfig : PlanConfig) : PlanResult = {
+  ) : PlanResult = {
     // Give ourselves a name. This will be made unique if it collides
     val sourceName = sourceNameHint.getOrElse("anonymous-procedure")
     val nativeSymbol = parentPlan.allocProcedureSymbol(sourceName)
@@ -155,7 +155,7 @@ private[planner] object PlanLambda {
     }
     
     // See if we can retype some of our args
-    val argTypeMapping = RetypeLambdaArgs(lambdaExpr)(parentState, planConfig)
+    val argTypeMapping = RetypeLambdaArgs(lambdaExpr)(parentState, parentPlan.config)
     val retypedFixedArgs = fixedArgLocs.map({ argLoc =>
       (argLoc -> argTypeMapping.getOrElse(argLoc, argLoc.schemeType))
     })
@@ -170,7 +170,7 @@ private[planner] object PlanLambda {
 
     // Split our args in to mutable and immutable
     val (mutableArgs, immutableArgs) = allArgs.partition { argument =>
-      planConfig.analysis.mutableVars.contains(argument.storageLoc)
+      parentPlan.config.analysis.mutableVars.contains(argument.storageLoc)
     }
 
     // Immutable vars can be used immediately
@@ -187,8 +187,7 @@ private[planner] object PlanLambda {
         val restValue = new iv.CellValue(
           schemeType=vt.ListElementType,
           tempType=ct.ListElementCell,
-          tempValue=tempValue,
-          properListCell=true // Our ABI guarantees that this is a proper list
+          tempValue=tempValue
         )
 
         (storageLoc, ImmutableValue(restValue))
@@ -244,7 +243,7 @@ private[planner] object PlanLambda {
     }
 
     // Plan the body
-    val planResult = PlanExpr(postClosureState)(body)(planConfig, procPlan)
+    val planResult = PlanExpr(postClosureState)(body)(procPlan)
 
     val procSignature = if (!canRefineSignature) {
       initialSignature

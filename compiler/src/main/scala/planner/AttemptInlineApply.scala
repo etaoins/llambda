@@ -10,8 +10,8 @@ import llambda.compiler.et
 import scala.collection.breakOut
 
 private[planner] object AttemptInlineApply {
-  def apply(parentState : PlannerState)(lambdaExpr : et.Lambda, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit planConfig : PlanConfig, plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
-    val mutableVars = planConfig.analysis.mutableVars
+  def apply(parentState : PlannerState)(lambdaExpr : et.Lambda, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
+    val mutableVars = plan.config.analysis.mutableVars
     val allArgs = lambdaExpr.fixedArgs ++ lambdaExpr.restArg
 
     if (!(mutableVars & allArgs.toSet).isEmpty) {

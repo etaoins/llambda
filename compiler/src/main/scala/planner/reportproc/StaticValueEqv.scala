@@ -80,8 +80,8 @@ private[reportproc] object StaticValueEqv {
   
   def valuesAreEqual(val1 : iv.IntermediateValue, val2 : iv.IntermediateValue) : Option[Boolean] = {
     (val1, val2) match {
-      case (constPair1 : iv.ConstantPairValue, constPair2 : iv.ConstantPairValue) =>
-       elementsAreEqual(List(constPair1.car, constPair1.cdr), List(constPair2.car, constPair2.cdr))
+      case (knownPair1 : iv.KnownPair, knownPair2 : iv.KnownPair) =>
+       elementsAreEqual(List(knownPair1.car, knownPair1.cdr), List(knownPair2.car, knownPair2.cdr))
 
       case (constVector1 : iv.ConstantVectorValue, constVector2 : iv.ConstantVectorValue) =>
         elementsAreEqual(constVector1.elements, constVector2.elements)
