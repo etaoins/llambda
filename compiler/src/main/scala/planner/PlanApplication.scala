@@ -3,7 +3,7 @@ import io.llambda
 
 import collection.mutable
 
-import llambda.compiler.{et, ContextLocated}
+import llambda.compiler.{et, ContextLocated, ReportProcedure}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.ValueNotApplicableException
 import llambda.compiler.codegen.CostForPlanSteps
@@ -11,6 +11,35 @@ import llambda.compiler.codegen.CostForPlanSteps
 private[planner] object PlanApplication {
   def apply(initialState : PlannerState)(located : ContextLocated, procExpr : et.Expr, operandExprs : List[et.Expr])(implicit plan : PlanWriter) : PlanResult = {
     implicit val worldPtr = initialState.worldPtr
+
+    // Are we applying (apply)?
+    (procExpr, operandExprs) match {
+      case (et.VarRef(applyProc : ReportProcedure), List(applyProcExpr, applyArgsExpr)) if applyProc.reportName == "apply" =>
+        // Don't evaluate applyProcExpr - it could be an inline lambda like (case-lambda) generates
+        // We want to inline it if at all possible
+        val applyArgsResult = PlanExpr(initialState)(applyArgsExpr)
+
+        applyArgsResult.value match {
+          case knownListElement : iv.KnownListElement =>
+            for(argValues <- knownListElement.toValueList) {
+              // We statically know our arguments!
+              val locatedArgValues = argValues.map((applyArgsExpr, _))
+
+              return planWithOperandValues(applyArgsResult.state)(
+                located, 
+                applyProcExpr,
+                locatedArgValues
+              )
+            }
+
+          case other =>
+            // Not a known list
+        }
+
+      case _ =>
+        // Not (apply)
+    }
+
     val operandBuffer = new mutable.ListBuffer[(ContextLocated, iv.IntermediateValue)]
 
     val operandState  = operandExprs.foldLeft(initialState) { case (state, operandExpr) =>
@@ -36,8 +65,18 @@ private[planner] object PlanApplication {
 
       case _ =>
     }
+
+    planWithOperandValues(operandState)(located, procExpr, operands)
+  }
     
-    val procResult = PlanExpr(operandState)(procExpr)
+  def planWithOperandValues(initialState : PlannerState)(
+      located : ContextLocated,
+      procExpr : et.Expr,
+      operands : List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan : PlanWriter) : PlanResult = {
+    implicit val worldPtr = initialState.worldPtr
+
+    val procResult = PlanExpr(initialState)(procExpr)
 
     val invokableProc = procResult.value.toInvokableProcedure() getOrElse {
       throw new ValueNotApplicableException(located, procResult.value.typeDescription)
@@ -46,7 +85,7 @@ private[planner] object PlanApplication {
     // Does this procedure support planning its application inline?
     procResult.value match {
       case knownProc : iv.KnownProc if plan.config.optimize =>
-        for(inlineResult <- knownProc.attemptInlineApplication(operandState)(operands)) {
+        for(inlineResult <- knownProc.attemptInlineApplication(procResult.state)(operands)) {
           return inlineResult
         }
 

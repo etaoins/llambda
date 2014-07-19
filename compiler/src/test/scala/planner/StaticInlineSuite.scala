@@ -108,4 +108,21 @@ class StaticInlineSuite extends FunSuite with PlanHelpers {
       (times-four 8)
     """, ast.IntegerLiteral(32))
   }
+
+  test("trivial inlining using (apply)") {
+    assertStaticPlan("""
+      (apply + '(1 2 3 4))
+    """, ast.IntegerLiteral(10))
+  }
+
+  test("inlining (case-lambda)") {
+    assertStaticPlan("""
+      (define case-function
+        (case-lambda
+          ((first) (- first))
+          ((first second) (* first second))))
+
+      (+ (case-function 4 5) (case-function 1))
+      """, ast.IntegerLiteral(19))
+  }
 }

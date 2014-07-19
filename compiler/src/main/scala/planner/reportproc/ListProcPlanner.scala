@@ -56,20 +56,14 @@ object ListProcPlanner extends ReportProcPlanner {
     case ("length", List((_, singleOperand))) =>
       // Do we know the length at compile time?
       singleOperand match {
-        case knownPair : iv.KnownPair =>
-          for(listLength <- knownPair.listLengthOpt) {
+        case knownListElement : iv.KnownListElement =>
+          for(listLength <- knownListElement.listLengthOpt) {
             // Yes, return it directly
             return Some(PlanResult(
               state=initialState,
               value=new iv.ConstantExactIntegerValue(listLength)
             ))
           }
-
-        case iv.EmptyListValue =>
-          return Some(PlanResult(
-            state=initialState,
-            value=new iv.ConstantExactIntegerValue(0L)
-          ))
 
         case _ =>
       }

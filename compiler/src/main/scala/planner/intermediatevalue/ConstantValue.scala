@@ -173,7 +173,7 @@ class ConstantVectorValue(val elements : Vector[ConstantValue]) extends Constant
   }
 }
 
-object EmptyListValue extends ConstantValue(ct.EmptyListCell) with BoxedOnlyValue {
+object EmptyListValue extends ConstantValue(ct.EmptyListCell) with BoxedOnlyValue with KnownListElement {
   val typeDescription = "constant empty list"
 
   def toConstantCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
@@ -181,6 +181,10 @@ object EmptyListValue extends ConstantValue(ct.EmptyListCell) with BoxedOnlyValu
     plan.steps += ps.CreateEmptyListCell(constantTemp)
     constantTemp
   }
+  
+  // KnownListElement implementation
+  lazy val listLengthOpt = Some(0L)
+  def toValueList = Some(Nil)
 }
 
 object UnitValue extends ConstantValue(ct.UnitCell) with BoxedOnlyValue {

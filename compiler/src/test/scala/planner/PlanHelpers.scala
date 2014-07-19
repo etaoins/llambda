@@ -76,7 +76,7 @@ trait PlanHelpers extends FunSuite with Inside {
   
   /** Asserts that a Scheme string statically evaluates to the passed constant datum */
   protected def assertStaticPlan(scheme : String, expected : ast.Datum) {
-    val importDecl = datum"(import (scheme base) (scheme process-context) (llambda typed))"
+    val importDecl = datum"(import (llambda stdlib) (llambda typed))"
     val data = List(
       importDecl,
       ast.ProperList(List(
