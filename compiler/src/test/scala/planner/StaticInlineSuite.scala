@@ -29,6 +29,25 @@ class StaticInlineSuite extends FunSuite with PlanHelpers {
         (return-15))
     """, ast.IntegerLiteral(15))
   }
+ 
+
+  test("bound procedure counting its rest args") {
+    assertStaticPlan("""
+      (define (count-rest-args . rest-args)
+        (length rest-args))
+
+      (count-rest-args 1 2 3 4 5)
+    """, ast.IntegerLiteral(5))
+  }
+  
+  test("bound procedure inspecting its rest args") {
+    assertStaticPlan("""
+      (define (add-first-2 . rest-args)
+        (+ (car rest-args) (car (cdr rest-args))))
+
+      (add-first-2 1 2 3 4 5)
+    """, ast.IntegerLiteral(3))
+  }
   
   test("trivial inline of bound procedure with one argument") {
     assertStaticPlan("""

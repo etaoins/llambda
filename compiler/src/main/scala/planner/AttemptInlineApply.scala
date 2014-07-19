@@ -19,8 +19,9 @@ private[planner] object AttemptInlineApply {
       return None
     }
 
-    if (lambdaExpr.fixedArgs.length != operands.length) {
-      // Not supported yet
+    if ((operands.length < lambdaExpr.fixedArgs.length) ||
+        ((operands.length > lambdaExpr.fixedArgs.length) && !lambdaExpr.restArg.isDefined)) {
+      // Incompatible arity - let PlanInvokeApply fail this
       return None
     }
 
@@ -53,7 +54,8 @@ private[planner] object AttemptInlineApply {
     
     // We only support empty rest args at this point
     val restArgImmutables = lambdaExpr.restArg.map { restArgLoc =>
-      restArgLoc -> ImmutableValue(iv.EmptyListValue)
+      val restValues = operands.drop(lambdaExpr.fixedArgs.length).map(_._2)
+      restArgLoc -> ImmutableValue(ValuesToProperList(restValues))
     }
 
     // Map our input immutables to their new storage locations
