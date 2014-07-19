@@ -48,7 +48,8 @@ trait PlanHelpers extends FunSuite with Inside {
     val compileConfig = CompileConfig(
       includePath=includePath,
       optimizeLevel=if (optimise) 0 else 2,
-      targetPlatform=platform.DetectJvmPlatform()
+      targetPlatform=platform.Posix64LE,
+      schemeDialect=dialect.Dialect.default
     )
   
     val loader = new frontend.LibraryLoader(compileConfig.targetPlatform)

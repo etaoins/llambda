@@ -78,14 +78,14 @@
 
     (set-rest-arg 1 2 3 4 5)))
 
-; R7RS requires the procedure to be passed a newly allocated list
-; This is very annoying for optimisation reasons so at least make sure it works
-(define-test "procedure mutating rest list contents" (expect (3 2)
-    (define (mutate-rest-arg . rest)
-      (set-car! rest 3)
-      rest)
+(cond-expand ((not immutable-pairs)
+  ; R7RS requires the procedure to be passed a newly allocated list
+  (define-test "procedure mutating rest list contents" (expect (3 2)
+      (define (mutate-rest-arg . rest)
+        (set-car! rest 3)
+        rest)
 
-    (mutate-rest-arg 1 2)))
+      (mutate-rest-arg 1 2)))))
 
 (define-test "capturing constants" (expect 7
 	(define two 2)

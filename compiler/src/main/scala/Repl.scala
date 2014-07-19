@@ -39,9 +39,9 @@ abstract class SchemeParsingMode(name : String) extends ReplMode(name) {
   }
 }
 
-abstract class ExprParsingMode(targetPlatform : platform.TargetPlatform, name : String) extends SchemeParsingMode(name) {
+abstract class ExprParsingMode(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dialect, name : String) extends SchemeParsingMode(name) {
   protected val loader = new frontend.LibraryLoader(targetPlatform)
-  private val frontendConfig = ReplFrontendConfig(targetPlatform)
+  private val frontendConfig = ReplFrontendConfig(targetPlatform, schemeDialect)
   private val schemeBaseBindings = loader.loadSchemeBase(frontendConfig)
 
   val scope = new Scope(collection.mutable.Map(schemeBaseBindings.toSeq : _*))
@@ -65,7 +65,7 @@ abstract class ExprParsingMode(targetPlatform : platform.TargetPlatform, name : 
 }
 
 private object ReplFrontendConfig {
-  def apply(targetPlatform : platform.TargetPlatform) : frontend.FrontendConfig =  {
+  def apply(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dialect) : frontend.FrontendConfig =  {
     val currentDirUrl = (new File(System.getProperty("user.dir"))).toURI.toURL
 
     val includePath = frontend.IncludePath(
@@ -75,7 +75,7 @@ private object ReplFrontendConfig {
 
     frontend.FrontendConfig(
       includePath=includePath,
-      featureIdentifiers=FeatureIdentifiers(targetPlatform)
+      featureIdentifiers=FeatureIdentifiers(targetPlatform, schemeDialect)
     )
   }
 }
@@ -87,18 +87,19 @@ class ParseOnlyMode extends SchemeParsingMode("parse") {
 }
 
 /** Extract expressions allowed in a library, program or lambda body */
-class BodyExprMode(targetPlatform : platform.TargetPlatform) extends ExprParsingMode(targetPlatform, "expr") {
+class BodyExprMode(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dialect) extends ExprParsingMode(targetPlatform, schemeDialect, "expr") {
   def evalExprs(exprs : List[et.Expr]) =
     exprs.mkString(" ")
 }
 
 /** Compiles expressions as a standalone program and executes them */
-class CompileMode(targetPlatform : platform.TargetPlatform) extends SchemeParsingMode("compile") {
-  private val frontendConfig = ReplFrontendConfig(targetPlatform)
+class CompileMode(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dialect) extends SchemeParsingMode("compile") {
+  private val frontendConfig = ReplFrontendConfig(targetPlatform, schemeDialect)
   private val compileConfig = CompileConfig(
     includePath=frontendConfig.includePath,
     optimizeLevel=2,
-    targetPlatform=targetPlatform
+    targetPlatform=targetPlatform,
+    schemeDialect=schemeDialect
   )
 
   private val loader = new frontend.LibraryLoader(targetPlatform)
@@ -160,7 +161,7 @@ class CompileMode(targetPlatform : platform.TargetPlatform) extends SchemeParsin
 }
 
 /** Implements the REPL loop and switching modes */
-class Repl(targetPlatform : platform.TargetPlatform) {
+class Repl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dialect) {
   @tailrec
   private def acceptInput(mode : ReplMode)(implicit reader : ConsoleReader) {
     val command = reader.readLine(mode.name + "> ")
@@ -179,10 +180,10 @@ class Repl(targetPlatform : platform.TargetPlatform) {
         acceptInput(new ParseOnlyMode)
       
       case ":expr" =>
-        acceptInput(new BodyExprMode(targetPlatform))
+        acceptInput(new BodyExprMode(targetPlatform, schemeDialect))
       
       case ":compile" =>
-        acceptInput(new CompileMode(targetPlatform))
+        acceptInput(new CompileMode(targetPlatform, schemeDialect))
 
       case userString =>
         mode.evaluate(userString)
@@ -199,6 +200,6 @@ class Repl(targetPlatform : platform.TargetPlatform) {
     val reader = new ConsoleReader;
     reader.setHistory(new history.FileHistory(historyFile))
 
-    acceptInput(new CompileMode(targetPlatform))(reader)
+    acceptInput(new CompileMode(targetPlatform, schemeDialect))(reader)
   }
 }

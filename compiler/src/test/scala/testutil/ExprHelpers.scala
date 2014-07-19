@@ -21,8 +21,8 @@ trait ExprHelpers extends FunSuite with OptionValues {
 
   val frontendConfig = frontend.FrontendConfig(
     includePath=includePath,
-    featureIdentifiers=FeatureIdentifiers(platform.Posix64LE)
-  )
+    featureIdentifiers=FeatureIdentifiers(platform.Posix64LE, dialect.Dialect.default)
+ )
   
   val schemeBaseBindings = libraryLoader.loadSchemeBase(frontendConfig)
   def schemeBaseScope = new Scope(collection.mutable.Map(schemeBaseBindings.toSeq : _*))

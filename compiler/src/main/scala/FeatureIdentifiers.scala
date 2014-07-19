@@ -11,9 +11,6 @@ object FeatureIdentifiers {
   val compilerVersionIdentifier = "llambda-0.0"
 
   private def commonFeatures = Set(
-    // XXX: We aren't a full R7RS implementation but that's what we're targeting 
-    "r7rs",
-
     // We only support exact integers so don't define this
     // "exact-closed",
 
@@ -39,6 +36,6 @@ object FeatureIdentifiers {
     compilerVersionIdentifier
   )
 
-  def apply(platform : TargetPlatform, extraIdents : Set[String] = Set()) =
-    commonFeatures ++ platform.platformFeatures ++ extraIdents
+  def apply(platform : TargetPlatform, schemeDialect : dialect.Dialect, extraIdents : Set[String] = Set()) =
+    commonFeatures ++ platform.platformFeatures ++ schemeDialect.dialectFeatures ++ extraIdents
 }

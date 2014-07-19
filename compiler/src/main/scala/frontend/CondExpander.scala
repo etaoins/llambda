@@ -6,7 +6,7 @@ import scala.annotation.tailrec
 import llambda.compiler.{sst, ast, Scope}
 import llambda.compiler.BadSpecialFormException
 
-private[frontend] object CondExpander {
+object CondExpander {
   private lazy val dummyScope = new Scope(collection.mutable.Map())
 
   private def requirementSatisfied(requirement : sst.ScopedDatum)(implicit libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : Boolean = requirement match {

@@ -70,14 +70,23 @@
   ; this makes some sense
   (assert-equal 'a (list-copy 'a))))
 
-(define-test "(list-copy) of non-empty proper list" (expect-success
-	(define immutable-list '(1.0 2.0 3.0))
-	(define copied-list (list-copy immutable-list))
-	; This shouldn't effect the immutable list
-	(set-car! copied-list -1.0)
 
-  (assert-equal '(1.0 2.0 3.0) immutable-list)
-  (assert-equal '(-1.0 2.0 3.0) copied-list)))
+(cond-expand
+  (immutable-pairs
+    (define-test "(list-copy) of non-empty proper list" (expect-success
+      (define immutable-list '(1.0 2.0 3.0))
+      (define copied-list (list-copy immutable-list))
+
+      (assert-equal '(1.0 2.0 3.0) copied-list))))
+  (else
+    (define-test "(list-copy) of non-empty proper list" (expect-success
+      (define immutable-list '(1.0 2.0 3.0))
+      (define copied-list (list-copy immutable-list))
+      ; This shouldn't effect the immutable list
+      (set-car! copied-list -1.0)
+
+      (assert-equal '(1.0 2.0 3.0) immutable-list)
+      (assert-equal '(-1.0 2.0 3.0) copied-list)))))
 
 (define-test "(list)" (expect-success
 	(assert-equal '() (list))
@@ -108,18 +117,19 @@
 (define-test "(memv) on number list" (expect (101 102)
 	(memv 101 '(100 101 102))))
 
-(define-test "(set-car!) of cons" (expect (new-car . old-cdr)
-	(define test-cons (cons 'old-car 'old-cdr))
-	(set-car! test-cons 'new-car)
-	test-cons))
+(cond-expand ((not immutable-pairs)
+  (define-test "(set-car!) of cons" (expect (new-car . old-cdr)
+    (define test-cons (cons 'old-car 'old-cdr))
+    (set-car! test-cons 'new-car)
+    test-cons))
 
-(define-test "(set-car!) on literal fails" (expect-failure
-	(set-car! '(old-car . old-cdr) 'new-car)))
+  (define-test "(set-car!) on literal fails" (expect-failure
+    (set-car! '(old-car . old-cdr) 'new-car)))
 
-(define-test "(set-cdr!) of cons" (expect (old-car . new-cdr)
-	(define test-cons (cons 'old-car 'old-cdr))
-	(set-cdr! test-cons 'new-cdr)
-	test-cons))
+  (define-test "(set-cdr!) of cons" (expect (old-car . new-cdr)
+    (define test-cons (cons 'old-car 'old-cdr))
+    (set-cdr! test-cons 'new-cdr)
+    test-cons))
 
-(define-test "(set-cdr!) on literal fails" (expect-failure
-	(set-cdr! '(old-car . old-cdr) 'new-cdr)))
+  (define-test "(set-cdr!) on literal fails" (expect-failure
+    (set-cdr! '(old-car . old-cdr) 'new-cdr)))))

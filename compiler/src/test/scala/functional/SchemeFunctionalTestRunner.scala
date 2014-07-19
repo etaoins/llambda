@@ -28,6 +28,8 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
     128 + 11
   )
 
+  private val targetPlatform = platform.DetectJvmPlatform()
+    
   private case class ExecutionResult(success : Boolean, output : List[ast.Datum], errorString : String)
 
   val resourceBaseDir = "functional/"
@@ -52,14 +54,42 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
   runAllTests(parsed)
 
   private def runAllTests(allTests : List[ast.Datum]) {
-    for(singleTest <- allTests) {
+    // Just run one pass at -O 0
+    runTestConfiguration(allTests, dialect.Dialect.default, 0)
+          
+    // Run every dialect at -O 2
+    for(dialect <- dialect.Dialect.dialects.values) {
+      runTestConfiguration(allTests, dialect, 2)
+    }
+  }
+
+  /** Expands top-level (cond-expand) expressions in the test source */
+  private def expandTopLevel(data : List[ast.Datum])(implicit libraryLoader : frontend.LibraryLoader, frontendConfig : frontend.FrontendConfig) : List[ast.Datum] = {
+    data flatMap {
+      case ast.ProperList(ast.Symbol("cond-expand") :: firstClause :: restClauses) =>
+        frontend.CondExpander.expandData(firstClause :: restClauses)
+
+      case other =>
+        List(other)
+    }
+  }
+
+  private def runTestConfiguration(allTests : List[ast.Datum], schemeDialect : dialect.Dialect, optimizeLevel : Int) {
+    // Deal with (cond-expand) for this configuration
+    val expandLibraryLoader = new frontend.LibraryLoader(targetPlatform)
+    val expandFrontendConfig = frontend.FrontendConfig(
+      includePath=includePath,
+      featureIdentifiers=targetPlatform.platformFeatures ++ schemeDialect.dialectFeatures
+    )
+
+    val expandedTests = expandTopLevel(allTests)(expandLibraryLoader, expandFrontendConfig)
+
+    for(singleTest <- expandedTests) {
       singleTest match {
         case ast.ProperList(ast.Symbol("define-test") :: ast.StringLiteral(name) :: condition :: Nil) =>
           // Start a nested test
-          for(optimizeLevel <- List(0, 2)) {
-            test(s"$name (-O $optimizeLevel)") {
-              runSingleCondition(condition, optimizeLevel)
-            }
+          test(s"$name (${schemeDialect.name} -O ${optimizeLevel})") {
+            runSingleCondition(condition, schemeDialect, optimizeLevel)
           }
 
         case other =>
@@ -68,10 +98,10 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
     }
   }
 
-  private def runSingleCondition(condition : ast.Datum, optimizeLevel : Int) {
+  private def runSingleCondition(condition : ast.Datum, schemeDialect : dialect.Dialect, optimizeLevel : Int) {
     condition match {
       case ast.ProperList(ast.Symbol("expect") :: expectedValue :: program) if !program.isEmpty =>
-        val result = executeProgram(program, optimizeLevel, true)
+        val result = executeProgram(program, schemeDialect, optimizeLevel, true)
 
         if (!result.success) {
           if (result.errorString.isEmpty) {
@@ -86,7 +116,7 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
         assert(result.output === List(expectedValue))
       
       case ast.ProperList(ast.Symbol("expect-output") :: ast.ProperList(expectedOutput) :: program) if !program.isEmpty =>
-        val result = executeProgram(program, optimizeLevel, false)
+        val result = executeProgram(program, schemeDialect, optimizeLevel, false)
 
         if (!result.success) {
           if (result.errorString.isEmpty) {
@@ -105,7 +135,7 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
         val canaryValue = ast.Symbol("test-completed")
         val programWithCanary = program :+ ast.ProperList(List(ast.Symbol("quote"), canaryValue)) 
 
-        val result = executeProgram(programWithCanary, optimizeLevel, true)
+        val result = executeProgram(programWithCanary, schemeDialect, optimizeLevel, true)
 
         if (!result.success) {
           if (result.errorString.isEmpty) {
@@ -121,7 +151,7 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
       
       case ast.ProperList(ast.Symbol("expect-failure") :: program) if !program.isEmpty =>
         try {
-          val result = executeProgram(program, optimizeLevel, false)
+          val result = executeProgram(program, schemeDialect, optimizeLevel, false)
 
           // If we compiled make sure we fail at runtime
           assert(result.success === false, "Execution unexpectedly succeeded")
@@ -139,7 +169,7 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
   private def utf8InputStreamToString(stream : InputStream) : String =
     Source.fromInputStream(stream, "UTF-8").mkString
 
-  private def executeProgram(program : List[ast.Datum], optimizeLevel : Int, printLastValue : Boolean) : ExecutionResult = {
+  private def executeProgram(program : List[ast.Datum], schemeDialect : dialect.Dialect, optimizeLevel : Int, printLastValue : Boolean) : ExecutionResult = {
     // Import (llambda nfi) and (scheme base)
 
     val finalProgram = if (printLastValue) {
@@ -166,7 +196,9 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
       val compileConfig = CompileConfig(
         includePath=includePath,
         optimizeLevel=optimizeLevel,
-        targetPlatform=platform.DetectJvmPlatform())
+        targetPlatform=targetPlatform,
+        schemeDialect=schemeDialect
+      )
 
       Compiler.compileData(finalProgram, outputFile, compileConfig)
 

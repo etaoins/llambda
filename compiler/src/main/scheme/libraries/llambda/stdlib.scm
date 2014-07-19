@@ -252,8 +252,7 @@
     (define-r7rs cons (world-function "lliby_cons" (<datum-cell> <datum-cell>) -> <pair-cell>))
     (define-r7rs car (native-function "lliby_car" (<pair-cell>) -> <datum-cell>))
     (define-r7rs cdr (native-function "lliby_cdr" (<pair-cell>) -> <datum-cell>))
-    (define-r7rs set-car! (world-function "lliby_set_car" (<pair-cell> <datum-cell>)))
-    (define-r7rs set-cdr! (world-function "lliby_set_cdr" (<pair-cell> <datum-cell>)))
+
     (define-r7rs list-copy (world-function "lliby_list_copy" (<datum-cell>) -> <datum-cell>))
     (define-r7rs list (native-function "lliby_list" <list-element-cell> -> <list-element-cell>))
     (define-r7rs append (world-function "lliby_append" <list-element-cell> -> <datum-cell>))
@@ -340,6 +339,12 @@
     (define-r7rs error-object? (make-predicate <error-object-cell>))
     (define-r7rs error-object-message (native-function "lliby_error_object_message" (<error-object-cell>) -> <string-cell>))
     (define-r7rs error-object-irritants (native-function "lliby_error_object_irritants" (<error-object-cell>) -> <list-element-cell>)))
+    
+  ; Optional R7RS mutable pair support
+  (cond-expand ((not immutable-pairs)
+    (begin
+      (define-r7rs set-car! (world-function "lliby_set_car" (<pair-cell> <datum-cell>)))
+      (define-r7rs set-cdr! (world-function "lliby_set_cdr" (<pair-cell> <datum-cell>))))))
 
   ; process-context library
   (include-library-declarations "../../interfaces/scheme/process-context.scm")

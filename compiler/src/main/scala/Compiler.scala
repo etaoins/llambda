@@ -154,7 +154,7 @@ object Compiler {
   def compileDataToIr(data : List[ast.Datum], config : CompileConfig, entryFilenameOpt : Option[String] = None) : String = {
     // Prepare to extract
     val loader = new frontend.LibraryLoader(config.targetPlatform)
-    val featureIdentifiers = FeatureIdentifiers(config.targetPlatform, config.extraFeatureIdents) 
+    val featureIdentifiers = FeatureIdentifiers(config.targetPlatform, config.schemeDialect, config.extraFeatureIdents) 
 
     // Extract expressions
     val frontendConfig = frontend.FrontendConfig(

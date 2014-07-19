@@ -740,7 +740,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   
   test("cond-expand with one false with else") {
     // We would normally expand this to an empty et.Begin but it's disallowed by R7RS
-    assert(exprFor("""(cond-expand ((not r7rs) 1 2 3) (else 4 5 6))""") ===
+    assert(exprFor("""(cond-expand ((not llambda) 1 2 3) (else 4 5 6))""") ===
       et.Begin(List(
         et.Literal(ast.IntegerLiteral(4)),
         et.Literal(ast.IntegerLiteral(5)),

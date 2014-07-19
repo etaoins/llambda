@@ -12,6 +12,7 @@ object CompilerApp extends App {
     extraFeatureIdents : Set[String] = Set(),
     genDebugInfo : Boolean = false,
     targetPlatformOpt : Option[platform.TargetPlatform] = None,
+    schemeDialect : dialect.Dialect = dialect.Dialect.default,
     saveTempObj : Boolean = false
   )
   
@@ -23,7 +24,6 @@ object CompilerApp extends App {
     ("win32"     -> platform.Win32),
     ("win64"     -> platform.Win64)
   )
-
 
   val parser = new scopt.OptionParser[Config]("llambda") {
     head("llambda")
@@ -54,14 +54,26 @@ object CompilerApp extends App {
     opt[String]("target-platform") action { (platformString, c) =>
       c.copy(targetPlatformOpt=Some(stringToPlatform(platformString)))
     } validate { platformString =>
-      if (!stringToPlatform.contains(platformString)) {
-        val validPlatforms = stringToPlatform.keys.toList.sorted
+      val validPlatforms = stringToPlatform.keys.toList.sorted
+      if (!validPlatforms.contains(platformString)) {
         failure("Unknown target platform. Valid values are: " + validPlatforms.mkString(", "))
       }
       else {
         success
       }
     } text("target platform") 
+
+    opt[String]("scheme-dialect") action { (dialectString, c) =>
+      c.copy(schemeDialect=dialect.Dialect.dialects(dialectString))
+    } validate { dialectString => 
+      val validDialects = dialect.Dialect.dialects.keys.toList.sorted
+      if (!validDialects.contains(dialectString)) {
+        failure("Unknown Scheme dialect. Valid values are: " + validDialects.mkString(", "))
+      }
+      else {
+        success
+      }
+    } text("scheme dialect")
 
     opt[String]("with-feature-ident") unbounded() action { (featureIdent, c) =>
       c.copy(extraFeatureIdents=c.extraFeatureIdents + featureIdent)
@@ -131,6 +143,7 @@ object CompilerApp extends App {
         val compileConfig = CompileConfig(
           includePath=includePath,
           targetPlatform=targetPlatform,
+          schemeDialect=config.schemeDialect,
           emitLlvm=config.emitLlvm,
           optimizeLevel=config.optimizeLevel,
           extraFeatureIdents=config.extraFeatureIdents,
@@ -142,7 +155,7 @@ object CompilerApp extends App {
 
       case None =>
         // Launch the REPL
-        val repl = new Repl(targetPlatform)
+        val repl = new Repl(targetPlatform, config.schemeDialect)
         repl()
     }
   }  getOrElse {
