@@ -99,7 +99,10 @@
   (assert-equal -450.5 (+ -450.5))
   (assert-equal -435065 (+ 70 -1024589 589454))
   (assert-equal 300.0 (+ 100.5 -0.5 200.0))
-  (assert-equal 300.0 (+ 100.5 -0.5 200))))
+  (assert-equal 300.0 (+ 100.5 -0.5 200))
+             
+  (define dynamic-5 (length (typeless-cell '(1 2 3 4 5))))
+  (assert-equal 8 (+ dynamic-5 1 2))))
 
 (define-test "adding single string fails" (expect-failure
   (+ "Hello!")))
@@ -110,7 +113,10 @@
   (assert-equal -450.5 (* -450.5))
   (assert-equal -499332738025 (* 4135 -3547 34045))
   (assert-equal -10050.0 (* 100.5 -0.5 200.0))
-  (assert-equal 10050.0 (* 100.5 0.5 200))))
+  (assert-equal 10050.0 (* 100.5 0.5 200))
+  
+  (define dynamic-5 (length (typeless-cell '(1 2 3 4 5))))
+  (assert-equal 10 (* dynamic-5 1 2))))
 
 (define-test "multiplying single string fails" (expect-failure
   (* "Hello!")))
@@ -120,7 +126,11 @@
   (assert-equal 450.5 (- -450.5))
   (assert-equal -26363 (- 4135 -3547 34045))
   (assert-equal -99.0 (- 100.5 -0.5 200.0))
-  (assert-equal -100.0 (- 100.5 0.5 200))))
+  (assert-equal -100.0 (- 100.5 0.5 200))
+  
+  (define dynamic-5 (length (typeless-cell '(1 2 3 4 5))))
+  (assert-equal 2 (- dynamic-5 1 2))
+  (assert-equal -6 (- 1 2 dynamic-5))))
 
 (define-test "subtracting no numbers fails" (expect-failure
   (-)))
