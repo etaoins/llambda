@@ -56,7 +56,7 @@ private[planner] object PlanApplication {
     procExpr match {
       case lambdaExpr : et.Lambda if plan.config.optimize =>
         // We can apply this inline!
-        for(inlineResult <- AttemptInlineApply(operandState)(lambdaExpr, operands)) {
+        for(inlineResult <- AttemptInlineApply(operandState, operandState)(lambdaExpr, operands)) {
           return PlanResult(
             state=operandState,
             value=inlineResult
@@ -104,7 +104,7 @@ private[planner] object PlanApplication {
         // Try to plan this as in inline app[lication
         val inlinePlan = plan.forkPlan()
 
-        val inlineValueOpt = AttemptInlineApply(schemeProc.parentState)(
+        val inlineValueOpt = AttemptInlineApply(schemeProc.parentState, procResult.state)(
           lambdaExpr=schemeProc.lambdaExpr,
           operands=operands
         )(inlinePlan, worldPtr) 

@@ -10,7 +10,7 @@ import llambda.compiler.et
 import scala.collection.breakOut
 
 private[planner] object AttemptInlineApply {
-  def apply(parentState : PlannerState)(lambdaExpr : et.Lambda, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
+  def apply(parentState : PlannerState, inlineState : PlannerState)(lambdaExpr : et.Lambda, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
     val mutableVars = plan.config.analysis.mutableVars
     val allArgs = lambdaExpr.fixedArgs ++ lambdaExpr.restArg
 
@@ -36,6 +36,11 @@ private[planner] object AttemptInlineApply {
     val importedValues = closedVars collect {
       case ImportedImmutable(storageLoc, parentIntermediate) =>
         (storageLoc -> ImmutableValue(parentIntermediate))
+
+      case commonCapture : CapturedVariable if inlineState.values.contains(commonCapture.storageLoc) =>
+        // This is captured variable the lambda expression and our inline state have in common
+        // We can just import it directly for the purposes of inlining
+        (commonCapture.storageLoc -> inlineState.values(commonCapture.storageLoc))
 
       case _ =>
         // Not supported
