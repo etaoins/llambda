@@ -48,7 +48,7 @@ class KnownTypePredicateProc(testingType : vt.SchemeType) extends KnownArtificia
   override def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] =
     operands match {
       case List((_, singleValue)) =>
-        singleValue.schemeType.satisfiesType(testingType) match {
+        vt.SatisfiesType(testingType, singleValue.schemeType) match {
           case Some(knownResult) =>
             // We can satisfy this at plan time
             Some(PlanResult(

@@ -106,7 +106,7 @@ private[frontend] object ParseRecordTypeDefine {
           if (!initializedFields.contains(field)) {
             // Make sure this can be initialized to #!unit
             field.fieldType match {
-              case schemeType : vt.SchemeType if vt.UnitType.satisfiesType(schemeType).get =>
+              case schemeType : vt.SchemeType if vt.SatisfiesType(schemeType, vt.UnitType).get =>
                 // This is okay
 
               case _ =>

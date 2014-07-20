@@ -6,6 +6,7 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.{StorageLocation, ContextLocated}
 import llambda.compiler.IncompatibleArityException
 import llambda.compiler.et
+import llambda.compiler.{valuetype => vt}
 
 import scala.collection.breakOut
 
@@ -49,7 +50,7 @@ private[planner] object AttemptInlineApply {
 
     // Convert our arguments to ImmutableValues
     val fixedArgImmutables = (lambdaExpr.fixedArgs.zip(operands).map { case (storageLoc, (_, argValue)) =>
-      if (argValue.schemeType.satisfiesType(storageLoc.schemeType) != Some(true)) {
+      if (vt.SatisfiesType(storageLoc.schemeType, argValue.schemeType) != Some(true)) {
         // This type cast could fail at runtime
         return None
       }

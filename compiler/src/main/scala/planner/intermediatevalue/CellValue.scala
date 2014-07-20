@@ -25,7 +25,7 @@ class CellValue(val schemeType : vt.SchemeType, val tempType : ct.CellType, val 
   }
   
   def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[InvokableProcedure] =  {
-    if (schemeType.satisfiesType(vt.ProcedureType) == Some(false)) {
+    if (vt.SatisfiesType(vt.ProcedureType, schemeType) == Some(false)) {
       None
     }
     else {
@@ -38,7 +38,7 @@ class CellValue(val schemeType : vt.SchemeType, val tempType : ct.CellType, val 
   
   def toSchemeTempValue(targetType : vt.SchemeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
     // Are our possible concrete types a subset of the target types?
-    schemeType.satisfiesType(targetType) match {
+    vt.SatisfiesType(targetType, schemeType) match {
       case Some(true) =>
         // Need to cast to the right type
         // We've confirmed that no checking is needed because all of our possible types are equal to or supertypes of the
@@ -98,8 +98,8 @@ class CellValue(val schemeType : vt.SchemeType, val tempType : ct.CellType, val 
       }
 
     case fpType : vt.FpType =>
-      val possiblyExactInt = schemeType.satisfiesType(vt.ExactIntegerType) != Some(false)
-      val possiblyInexactRational = schemeType.satisfiesType(vt.InexactRationalType) != Some(false)
+      val possiblyExactInt = vt.SatisfiesType(vt.ExactIntegerType, schemeType) != Some(false)
+      val possiblyInexactRational = vt.SatisfiesType(vt.InexactRationalType, schemeType) != Some(false)
 
       if (!possiblyExactInt && !possiblyInexactRational) {
         // Not possible

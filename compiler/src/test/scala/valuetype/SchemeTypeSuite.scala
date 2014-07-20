@@ -43,70 +43,79 @@ class SchemeTypeSuite extends FunSuite {
     )
   }
 
-  test("atom types definitely satisfy themselves") {
-    assert(ExactIntegerType.satisfiesType(ExactIntegerType) ===
+  test("atom types satisfy themselves") {
+    assert(SatisfiesType(ExactIntegerType, ExactIntegerType) ===
       Some(true)
     )
   }
   
   test("atom types definitely don't satisfy other atom types") {
-    assert(ExactIntegerType.satisfiesType(InexactRationalType) ===
+    assert(SatisfiesType(ExactIntegerType, InexactRationalType) ===
       Some(false)
     )
   }
 
   test("record types definitely satisfy themselves") {
-    assert(recordType1.satisfiesType(recordType1) ===
+    assert(SatisfiesType(recordType1, recordType1) ===
       Some(true)
     )
   }
   
-  test("record types definitely don't satisfy other atom types") {
-    assert(recordType1.satisfiesType(recordType2) ===
+  test("record types definitely don't satisfy other record types") {
+    assert(SatisfiesType(recordType1, recordType2) ===
       Some(false)
     )
   }
   
   test("record types definitely satisfy the record atom") {
-    assert(recordType1.satisfiesType(recordAtomType) ===
+    assert(SatisfiesType(recordAtomType, recordType1) ===
       Some(true)
     )
   }
 
   test("the record atom may satisfy a record type") {
-    assert(recordAtomType.satisfiesType(recordType2) ===
+    assert(SatisfiesType(recordType2, recordAtomType) ===
       None
     )
   }
 
   test("atom types definitely satisfy a union containing themselves") {
-    assert(ExactIntegerType.satisfiesType(UnionType(Set(ExactIntegerType, InexactRationalType))) ===
+    val unionWithExactInt = UnionType(Set(ExactIntegerType, InexactRationalType))
+
+    assert(SatisfiesType(unionWithExactInt, ExactIntegerType) ===
       Some(true)
     )
   }
   
   test("atom types definitely don't satisfy a union not containing themselves") {
-    assert(ExactIntegerType.satisfiesType(UnionType(Set(StringType, InexactRationalType))) ===
+    val unionWithoutExactInt = UnionType(Set(InexactRationalType, InexactRationalType))
+
+    assert(SatisfiesType(unionWithoutExactInt, ExactIntegerType) ===
       Some(false)
     )
   }
 
   test("union types definitely satisfy superset unions") {
-    assert(UnionType(Set(InexactRationalType, ExactIntegerType)).satisfiesType(UnionType(Set(StringType, InexactRationalType, ExactIntegerType))) ===
-      Some(true)
-    )
+    val subunion = UnionType(Set(InexactRationalType, ExactIntegerType))
+    val superunion = UnionType(Set(StringType, InexactRationalType, ExactIntegerType))
+
+    assert(SatisfiesType(superunion, subunion) === Some(true))
   }
   
   test("union types definitely don't satisfy disjoint unions") {
-    assert(UnionType(Set(InexactRationalType, ExactIntegerType)).satisfiesType(UnionType(Set(StringType))) ===
-      Some(false)
-    )
+    val union1 = UnionType(Set(InexactRationalType, ExactIntegerType))
+    val union2 = UnionType(Set(StringType))
+
+    assert(SatisfiesType(union1, union2) === Some(false))
+    assert(SatisfiesType(union2, union1) === Some(false))
   }
   
   test("union types may satisfy intersecting union type") {
-    assert(UnionType(Set(InexactRationalType, ExactIntegerType)).satisfiesType(UnionType(Set(StringType, InexactRationalType))) ===
-      None
-    )
+    val union1 = UnionType(Set(InexactRationalType, ExactIntegerType))
+    val union2 = UnionType(Set(StringType, InexactRationalType))
+
+    assert(SatisfiesType(union1, union2) === None)
+    assert(SatisfiesType(union2, union1) === None)
   }
 
   test("atom types minus themselves is an empty union") {
@@ -202,28 +211,33 @@ class SchemeTypeSuite extends FunSuite {
   }
   
   test("boolean constants satisfy themselvs") {
-    assert(constantFalse.satisfiesType(constantFalse) === Some(true))
-    assert(constantTrue.satisfiesType(constantTrue) === Some(true))
+    assert(SatisfiesType(constantFalse, constantFalse) === Some(true))
+    assert(SatisfiesType(constantTrue, constantTrue) === Some(true))
   }
 
   test("boolean constants satisfy the general boolean type") {
-    assert(constantFalse.satisfiesType(BooleanType) === Some(true))
-    assert(constantTrue.satisfiesType(BooleanType) === Some(true))
+    assert(SatisfiesType(BooleanType, constantFalse) === Some(true))
+    assert(SatisfiesType(BooleanType, constantTrue) === Some(true))
   }
 
   test("the any pair type satisfies itself") {
-    assert(AnyPairType.satisfiesType(AnyPairType) === Some(true))
+    assert(SatisfiesType(AnyPairType, AnyPairType) === Some(true))
   }
   
   test("specific pair type satisfies the any pair type") {
-    assert(PairType(SymbolType, StringType).satisfiesType(AnyPairType) === Some(true))
+    val specificPairType = PairType(SymbolType, StringType)
+    assert(SatisfiesType(AnyPairType, specificPairType) === Some(true))
   }
 
   test("the any pair type may satisfy a specific pair type") {
-    assert(AnyPairType.satisfiesType(PairType(SymbolType, StringType)) === None)
+    val specificPairType = PairType(SymbolType, StringType)
+    assert(SatisfiesType(specificPairType, AnyPairType) === None)
   }
 
   test("incompatible specific pair types do not satisfy each other") {
-    assert(PairType(SymbolType, StringType).satisfiesType(PairType(StringType, SymbolType)) === Some(false))
+    val specificPairType1 = PairType(SymbolType, StringType)
+    val specificPairType2 = PairType(StringType, SymbolType)
+
+    assert(SatisfiesType(specificPairType1, specificPairType2) === Some(false))
   }
 }

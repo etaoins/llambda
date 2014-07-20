@@ -33,7 +33,7 @@ sealed abstract class NativeValue(val nativeType : vt.NativeType, val cellType :
     }
   
   def toSchemeTempValue(targetType : vt.SchemeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
-    if (schemeType.satisfiesType(targetType) == Some(true)) {
+    if (hasDefiniteType(targetType)) {
       val boxedTemp = planCellTempValue()
 
       cellTempToSupertype(boxedTemp, cellType, targetType.cellType)
@@ -122,7 +122,7 @@ class NativeExactIntegerValue(tempValue : ps.TempValue, nativeType : vt.IntType)
   
   override def planCastToSchemeTempValue(targetType : vt.SchemeType)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
     // Will an inexact rational make this conversion happy?
-    if (vt.InexactRationalType.satisfiesType(targetType) == Some(true)) {
+    if (vt.SatisfiesType(targetType, vt.InexactRationalType) == Some(true)) {
       // Convert us to double and box
       val boxedTemp = ps.CellTemp(cellType)
       

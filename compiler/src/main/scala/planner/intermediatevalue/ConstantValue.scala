@@ -13,7 +13,7 @@ sealed abstract class ConstantValue(val cellType : ct.ConcreteCellType) extends 
   def toConstantCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
 
   def toSchemeTempValue(targetType : vt.SchemeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
-    if (schemeType.satisfiesType(targetType) != Some(true)) {
+    if (vt.SatisfiesType(targetType, schemeType) != Some(true)) {
       impossibleConversion(s"Cannot convert ${typeDescription} to incompatible type ${targetType.schemeName}")
     }
 
@@ -49,8 +49,8 @@ class ConstantExactIntegerValue(val value : Long) extends TrivialConstantValue(c
   val typeDescription = "constant exact integer"
   
   override def toSchemeTempValue(targetType : vt.SchemeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
-    if ((vt.ExactIntegerType.satisfiesType(targetType).get == false) &&
-        (vt.InexactRationalType.satisfiesType(targetType).get == true)) {
+    if ((vt.SatisfiesType(targetType, vt.ExactIntegerType).get == false) &&
+        (vt.SatisfiesType(targetType, vt.InexactRationalType).get == true)) {
       // Do a special implicit cast to an inexact cell
       val constantTemp = ps.CellTemp(ct.InexactRationalCell, knownConstant=true)
       plan.steps += ps.CreateInexactRationalCell(constantTemp, value.toDouble)

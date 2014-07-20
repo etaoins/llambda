@@ -30,7 +30,7 @@ private[planner] object RetypeLambdaArgs {
           // We control this storage loc!
           argTypes + (storageLoc -> (existingType & schemeType))
 
-        case None if schemeType.satisfiesType(storageLoc.schemeType) == Some(true) =>
+        case None if vt.SatisfiesType(storageLoc.schemeType, schemeType) == Some(true) =>
           // This type conversion can't fail - continue
           argTypes
 

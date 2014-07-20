@@ -43,7 +43,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
 
   /** Returns true is this value definitely has the passed type */
   def hasDefiniteType(otherType : vt.SchemeType) : Boolean =
-    schemeType.satisfiesType(otherType) == Some(true)
+    vt.SatisfiesType(otherType, schemeType) == Some(true)
 
   lazy val isDefiniteProperList : Boolean =
     hasDefiniteType(vt.EmptyListType)
@@ -117,7 +117,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     * explicitly required
     */
   def castToSchemeType(targetType : vt.SchemeType)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : IntermediateValue= {
-    if (schemeType.satisfiesType(targetType) == Some(true)) {
+    if (hasDefiniteType(targetType)) {
       // We don't need to do anything 
       return this
     }

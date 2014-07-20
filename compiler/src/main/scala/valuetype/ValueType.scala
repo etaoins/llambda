@@ -133,15 +133,10 @@ sealed abstract trait SchemeType extends CellValueType {
   
   /** Intersects this type with another */
   def &(otherType : SchemeType) : SchemeType
-
-  /** Determines if we satisfy another Scheme type
-    *
-    * Some(true) indicates all values of this type satisfies the passed type. Some(false) indicates no values of this
-    * type satisfy the passed type. None indicates that some values satisify the other type.
-    */
-  def satisfiesType(otherType : SchemeType) : Option[Boolean]
 }
 
+/** Scheme type representing an exact value */
+sealed abstract trait ConstantValueType extends SchemeType
 
 /** All Scheme types except unions
   *
@@ -152,7 +147,8 @@ sealed abstract trait NonUnionSchemeType extends SchemeType {
   val cellType : ct.ConcreteCellType
 
   def -(otherType : SchemeType) : SchemeType = 
-    if (satisfiesType(otherType) == Some(true)) {
+    if (SatisfiesType(otherType, this) == Some(true)) {
+      // No type remains
       UnionType(Set())
     }
     else {
@@ -161,10 +157,10 @@ sealed abstract trait NonUnionSchemeType extends SchemeType {
 
   def &(otherType : SchemeType) : SchemeType = {
     // Find the most specific type
-    if (this.satisfiesType(otherType) == Some(true)) {
+    if (SatisfiesType(otherType, this) == Some(true)) {
       this
     }
-    else if (otherType.satisfiesType(this) == Some(true)) {
+    else if (SatisfiesType(this, otherType) == Some(true)) {
       otherType
     }
     else {
@@ -172,50 +168,11 @@ sealed abstract trait NonUnionSchemeType extends SchemeType {
       UnionType(Set())
     }
   }
-  
-  def satisfiesNonUnionType(otherType : NonUnionSchemeType) : Option[Boolean]
-
-  def satisfiesType(otherType : SchemeType) : Option[Boolean] = otherType match {
-    case AnySchemeType =>
-      // This is an optimisation - this can be removed without affecting correctness
-      Some(true)
-
-    case unionType : UnionType =>
-      // This can be universally handled for all types
-      val recursiveResult = unionType.memberTypes.map(this.satisfiesType(_))
-
-      if (recursiveResult.contains(Some(true))) {
-        // We satisfy at least one member type
-        Some(true)
-      }
-      else if (recursiveResult == Set(Some(false))) {
-        // We satisfy no member types
-        Some(false)
-      }
-      else {
-        None
-      }
-
-    case nonUnion : NonUnionSchemeType =>
-      satisfiesNonUnionType(nonUnion)
-  }
-
 }
 
 /** Utility type for Scheme types derived from other Scheme types */
 sealed abstract trait DerivedSchemeType extends NonUnionSchemeType {
   val parentType : NonUnionSchemeType
-
-  protected def derivedSatisfiesType(otherType : SchemeType) : Option[Boolean] 
-
-  def satisfiesNonUnionType(otherType : NonUnionSchemeType) = 
-    // Check our parent types first
-    parentType.satisfiesNonUnionType(otherType) match {
-      case Some(parentResult) =>
-        Some(parentResult)
-      case _ =>
-        derivedSatisfiesType(otherType)
-    }
 }
 
 /** Pointer to a garbage collected value cell containing an intrinsic type */
@@ -231,21 +188,6 @@ case class SchemeTypeAtom(cellType : ct.ConcreteCellType) extends NonUnionScheme
       true
   }
   
-  def satisfiesNonUnionType(otherType : NonUnionSchemeType) = otherType match {
-    case typeAtom : SchemeTypeAtom =>
-      // We definitely satisfy ourselves
-      Some(typeAtom == this)
-
-    case derivedType : DerivedSchemeType =>
-      if (satisfiesType(derivedType.parentType) != Some(false)) {
-        // We may satisfy a super type
-        None
-      }
-      else {
-        Some(false)
-      }
-  }
-  
   // Handle <boolean-cell> specially - it only has two subtypes
   override def -(otherType : SchemeType) : SchemeType =  (cellType, otherType) match {
     case (ct.BooleanCell, ConstantBooleanType(value))=>
@@ -257,19 +199,11 @@ case class SchemeTypeAtom(cellType : ct.ConcreteCellType) extends NonUnionScheme
 }
 
 /** Constant boolean type */
-case class ConstantBooleanType(value : Boolean) extends DerivedSchemeType {
+case class ConstantBooleanType(value : Boolean) extends DerivedSchemeType with ConstantValueType {
   val cellType = ct.BooleanCell
   val schemeName = if (value) "#t" else "#f"
   val parentType = BooleanType
   val isGcManaged = BooleanType.isGcManaged
-  
-  def derivedSatisfiesType(otherType : SchemeType) = otherType match {
-    case constantBooleanType : ConstantBooleanType =>
-      Some(constantBooleanType == this)
-
-    case _ =>
-      None
-  }
 }
 
 /** Trait for pair types */
@@ -284,17 +218,6 @@ case class SpecificPairType(carType : SchemeType, cdrType : SchemeType) extends 
   val schemeName = s"(Pair ${carType.schemeName} ${cdrType.schemeName})"
   val parentType = SchemeTypeAtom(ct.PairCell)
   val isGcManaged = true
-
-  def derivedSatisfiesType(otherType : SchemeType) = otherType match {
-    case pairType : PairType =>
-      for(carSatisfies <- carType.satisfiesType(pairType.carType);
-          cdrSatisfies <- cdrType.satisfiesType(pairType.cdrType))
-      yield
-        (carSatisfies && cdrSatisfies)
-
-    case _ =>
-      None
-  }
 }
 
 /** Pair with no type constraints on its car or cdr
@@ -316,7 +239,7 @@ object PairType {
     * SpecificPairType is constructed.
     */
   def apply(carType : SchemeType, cdrType : SchemeType) : PairType = {
-    (AnySchemeType.satisfiesType(carType), AnySchemeType.satisfiesType(cdrType)) match {
+    (SatisfiesType(carType, AnySchemeType), SatisfiesType(cdrType, AnySchemeType)) match {
       case (Some(true), Some(true)) =>
         AnyPairType
 
@@ -334,15 +257,6 @@ class RecordType(val sourceName : String, val fields : List[RecordField]) extend
   val cellType = ct.RecordCell
   val schemeName = sourceName
   val parentType = SchemeTypeAtom(ct.RecordCell)
-
-  def derivedSatisfiesType(otherType : SchemeType) = otherType match {
-    case recordType : RecordType =>
-      // We satisfy ourselves
-      Some(recordType eq this)
-
-    case _ =>
-      None
-  }
 }
 
 /** Union of multiple Scheme types */
@@ -384,30 +298,8 @@ case class UnionType(memberTypes : Set[NonUnionSchemeType]) extends SchemeType {
       }
   }
   
-  def satisfiesType(otherType : SchemeType) : Option[Boolean] = {
-    if (otherType eq AnySchemeType) {
-        // This is an optimisation - this can be removed without affecting correctness
-      return Some(true)
-    }
-
-    val recursiveResult = memberTypes.map(_.satisfiesType(otherType))
-
-    if (recursiveResult == Set(Some(true))) {
-      // All member types satisfy this type
-      Some(true)
-    }
-    else if (recursiveResult == Set(Some(false))) {
-      // No member types satisfy this type
-      Some(false)
-    }
-    else {
-      None
-    }
-  }
-  
   def -(otherType : SchemeType) : SchemeType = {
-    val remainingMembers = memberTypes.filter(_.satisfiesType(otherType) != Some(true))
-
+    val remainingMembers = memberTypes.filter(SatisfiesType(otherType, _) != Some(true))
     SchemeType.fromTypeUnion(remainingMembers.toList)
   }
 

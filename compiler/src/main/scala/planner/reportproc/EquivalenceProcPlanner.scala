@@ -47,10 +47,10 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
   }
   
   private def planEquivalenceProc(state : PlannerState)(ptrCompareTypes : Set[vt.NonUnionSchemeType], val1 : iv.IntermediateValue, val2 : iv.IntermediateValue)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = {
-    val ptrCompareUnionType = vt.UnionType(ptrCompareTypes)
+    val ptrCompareUnion = vt.UnionType(ptrCompareTypes)
     
-    if ((val1.schemeType.satisfiesType(ptrCompareUnionType) == Some(true)) ||
-             (val2.schemeType.satisfiesType(ptrCompareUnionType) == Some(true))) {
+    if ((vt.SatisfiesType(ptrCompareUnion, val1.schemeType) == Some(true)) ||
+        (vt.SatisfiesType(ptrCompareUnion, val2.schemeType) == Some(true))) {
       // We can fast path this?
       // If the pssible types for either value consists entirely of fast path types
       directCompareAsType(state)(vt.AnySchemeType, val1, val2)

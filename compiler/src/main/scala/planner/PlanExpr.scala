@@ -123,7 +123,7 @@ private[planner] object PlanExpr {
       case et.Cond(testExpr, trueExpr, falseExpr) =>
         val testResult = apply(initialState)(testExpr)
 
-        testResult.value.schemeType.satisfiesType(vt.ConstantBooleanType(false)) match {
+        vt.SatisfiesType(vt.ConstantBooleanType(false), testResult.value.schemeType) match {
           case Some(true) =>
             // The test result must be false
             PlanExpr(testResult.state)(falseExpr)

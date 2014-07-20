@@ -27,7 +27,7 @@ object PlanTypeCheck {
 
     // If we contain a generic record type we can be of any record class
     val recordCellType = vt.SchemeTypeAtom(ct.RecordCell)
-    val containsGenericRecordType = flattenedType.exists(recordCellType.satisfiesType(_) == Some(true))
+    val containsGenericRecordType = flattenedType.exists(vt.SatisfiesType(_, recordCellType) == Some(true))
 
     val possibleTypesOpt = if (containsGenericRecordType) {
       None
@@ -105,7 +105,7 @@ object PlanTypeCheck {
         valueMatchedPred
       
       case vt.SchemeTypeAtom(cellType) =>
-        val possibleCellTypes = flattenType(valueType).map(_.cellType) 
+        val possibleCellTypes = flattenType(valueType).flatMap(_.cellType.concreteTypes) 
 
         val isCellTypePred = ps.Temp(vt.Predicate)
         plan.steps += ps.TestCellType(isCellTypePred, valueTemp, cellType, possibleCellTypes)
@@ -137,7 +137,7 @@ object PlanTypeCheck {
       isTypePlanner : ((PlanWriter, vt.SchemeType) => ps.TempValue) = { (plan, _) => predicateTemp(plan, true) },
       isNotTypePlanner : ((PlanWriter, vt.SchemeType) => ps.TempValue) = { (plan, _) => predicateTemp(plan, false) }
   ) : ps.TempValue =  {
-    valueType.satisfiesType(testingType) match {
+    vt.SatisfiesType(testingType, valueType) match {
       case Some(true) =>
         isTypePlanner(plan, valueType)
 

@@ -36,7 +36,7 @@ abstract class KnownProc(selfTempOpt : Option[ps.TempValue]) extends Intermediat
   def nativeSymbol(implicit plan : PlanWriter) : String
   
   def toSchemeTempValue(targetType : vt.SchemeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
-    if (schemeType.satisfiesType(targetType).get == true) {
+    if (hasDefiniteType(targetType)) {
       // Store an entry point with an adapted signature
       val entryPointTemp = if (signature == AdaptedProcedureSignature) {
         // The procedure already has the correct signature
