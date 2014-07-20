@@ -25,8 +25,22 @@ object CadrProcPlanner extends ReportProcPlanner {
       ))
 
     case ("car" | "cdr", List(singleOperand)) =>
+      val pairValue = singleOperand._2
+
       val pairTemp = plan.withContextLocation(singleOperand._1) {
-        singleOperand._2.toTempValue(vt.PairType)
+        pairValue.toTempValue(vt.AnyPairType)
+      }
+
+      // Does this pair have a specific pair type?
+      val resultType = pairValue.schemeType match {
+        case pairType : vt.PairType if reportName == "car" =>
+          pairType.carType
+
+        case pairType : vt.PairType if reportName == "cdr" =>
+          pairType.cdrType
+
+        case _ =>
+          vt.AnySchemeType
       }
 
       val resultTemp = ps.CellTemp(ct.DatumCell)
@@ -38,7 +52,7 @@ object CadrProcPlanner extends ReportProcPlanner {
         plan.steps += ps.LoadPairCdr(resultTemp, pairTemp)
       }
 
-      val resultValue = new iv.CellValue(vt.AnySchemeType, ct.DatumCell, resultTemp)
+      val resultValue = new iv.CellValue(resultType, ct.DatumCell, resultTemp)
 
       Some(PlanResult(
         state=initialState,

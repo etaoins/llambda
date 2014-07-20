@@ -6,6 +6,34 @@ import llambda.compiler.planner.PlanHelpers
 import org.scalatest.FunSuite
 
 class ListProcSuite extends FunSuite with PlanHelpers {
+  test("static predicates") {
+    assertStaticPlan("(null? '())",
+      ast.BooleanLiteral(true)
+    )
+    
+    assertStaticPlan("(null? '(1 . 2))",
+      ast.BooleanLiteral(false)
+    )
+    
+    assertStaticPlan("(pair? '())",
+      ast.BooleanLiteral(false)
+    )
+    
+    assertStaticPlan("(pair? '(1 . 2))",
+      ast.BooleanLiteral(true)
+    )
+    
+    assertStaticPlan("""
+      (define-type <number-symbol-pair> (Pair <number> <symbol>))
+      ((make-predicate <number-symbol-pair>) '(1 . hello))
+      """, ast.BooleanLiteral(true))
+    
+    assertStaticPlan("""
+      (define-type <number-symbol-pair> (Pair <number> <symbol>))
+      ((make-predicate <number-symbol-pair>) '(hello . 1))
+      """, ast.BooleanLiteral(false))
+  }
+
   test("static (length)") {
     assertStaticPlan("(length '())",
       ast.IntegerLiteral(0)

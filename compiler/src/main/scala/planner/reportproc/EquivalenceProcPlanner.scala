@@ -26,7 +26,7 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
 
   // These can be tested for (eqv?) with a simple pointer compare
   private lazy val ptrCompareEqvTypes = (ptrCompareEqualsTypes ++ Set(
-    vt.PairType,
+    vt.AnyPairType,
     vt.VectorType,
     vt.BytevectorType
   )) : Set[vt.NonUnionSchemeType]

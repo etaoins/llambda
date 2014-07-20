@@ -87,7 +87,7 @@ object ListProcPlanner extends ReportProcPlanner {
 
     case ("set-car!", List((pairLoc, pairValue), (_, newValue))) =>
       val pairTemp = plan.withContextLocation(pairLoc) {
-        pairValue.toTempValue(vt.PairType)
+        pairValue.toTempValue(vt.AnyPairType)
       }
 
       val newValueTemp = newValue.toTempValue(vt.AnySchemeType)
@@ -107,7 +107,7 @@ object ListProcPlanner extends ReportProcPlanner {
     
     case ("set-cdr!", List((pairLoc, pairValue), (_, newValue))) =>
       val pairTemp = plan.withContextLocation(pairLoc) {
-        pairValue.toTempValue(vt.PairType)
+        pairValue.toTempValue(vt.AnyPairType)
       }
 
       val newValueTemp = newValue.toTempValue(vt.AnySchemeType)
@@ -137,7 +137,7 @@ object ListProcPlanner extends ReportProcPlanner {
 
       Some(PlanResult(
         state=initialState,
-        value=TempValueToIntermediate(vt.PairType, pairTemp)
+        value=TempValueToIntermediate(vt.AnyPairType, pairTemp)
       ))
 
     case (_, List((_, needleValue), (_, listValue))) if List("memq", "memv").contains(reportName) =>

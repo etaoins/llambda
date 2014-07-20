@@ -51,7 +51,7 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
         vt.ExactIntegerType,
         vt.InexactRationalType,
         vt.EmptyListType,
-        vt.PairType
+        vt.AnyPairType
       )))
     )
 
@@ -82,5 +82,33 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     
     bodyFor("(define-type <custom-boolean> (U #f #t))")(scope)
     assert(scope("<custom-boolean>") === BoundType(vt.BooleanType))
+  }
+  
+  test("defining pair types") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    bodyFor("(define-type <string-pair> (Pair <string-cell> <string-cell>))")(scope)
+    assert(scope("<string-pair>") === BoundType(vt.PairType(vt.StringType, vt.StringType)))
+
+    bodyFor("(define-type <nested-pair> (Pair <symbol-cell> (Pair <string-cell> <port-cell>)))")(scope)
+    assert(scope("<nested-pair>") === BoundType(
+      vt.PairType(
+        vt.SymbolType,
+        vt.PairType(
+          vt.StringType,
+          vt.PortType
+        )
+      )
+    ))
+    
+    intercept[BadSpecialFormException] {
+      // Too many arguments
+      bodyFor("(define-type <too-many-args> (Pair <string-cell> <string-cell> <string-cell>))")(scope)
+    }
+    
+    intercept[BadSpecialFormException] {
+      // Not enough arguments
+      bodyFor("(define-type <insufficient-args> (Pair <string-cell>))")(scope)
+    }
   }
 }

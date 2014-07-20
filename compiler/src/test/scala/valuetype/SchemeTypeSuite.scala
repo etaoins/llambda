@@ -210,4 +210,20 @@ class SchemeTypeSuite extends FunSuite {
     assert(constantFalse.satisfiesType(BooleanType) === Some(true))
     assert(constantTrue.satisfiesType(BooleanType) === Some(true))
   }
+
+  test("the any pair type satisfies itself") {
+    assert(AnyPairType.satisfiesType(AnyPairType) === Some(true))
+  }
+  
+  test("specific pair type satisfies the any pair type") {
+    assert(PairType(SymbolType, StringType).satisfiesType(AnyPairType) === Some(true))
+  }
+
+  test("the any pair type may satisfy a specific pair type") {
+    assert(AnyPairType.satisfiesType(PairType(SymbolType, StringType)) === None)
+  }
+
+  test("incompatible specific pair types do not satisfy each other") {
+    assert(PairType(SymbolType, StringType).satisfiesType(PairType(StringType, SymbolType)) === Some(false))
+  }
 }

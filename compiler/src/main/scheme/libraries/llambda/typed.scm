@@ -5,6 +5,16 @@
   ; Re-export from (llambda primitives) 
   (export define-type ann : define: define-record-type: lambda: make-predicate U)
 
+  ; Mutable pairs make handling the (Pair) type very complex
+  ; For example, consider the following code:
+  ; (define: typed-pair : (Pair <symbol> <integer>) '(foo . 5))
+  ; (define: untyped-pair : <pair> typed-pair)
+  ; (set-car! untyped-pair #f)
+  ; 
+  ; This would violate the type constraint of "typed-pair" without directly modifying its value
+  (cond-expand (immutable-pairs
+    (export Pair)))
+
   ; Export our type names
   (export <any> <list-element> <pair> <empty-list> <string> <symbol> <boolean> <number> <integer> <flonum> <char>
           <vector> <bytevector> <procedure> <port>)
@@ -15,7 +25,7 @@
   (begin 
     (define-type <any> <datum-cell>)
     (define-type <list-element> <list-element-cell>)
-    (define-type <pair> <pair-cell>)
+    (define-type <pair> (Pair <any> <any>))
     (define-type <empty-list> <empty-list-cell>)
     (define-type <string> <string-cell>)
     (define-type <symbol> <symbol-cell>)

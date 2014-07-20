@@ -70,3 +70,30 @@
   (assert-false (false? "Hello, world!"))
   (assert-true  (false? #f))
   (assert-false (false? #t))))
+
+(cond-expand (immutable-pairs
+  (define-test "(define-predicate) for pairs" (expect-success
+    (import (llambda typed))
+
+    (define-predicate any-pair? (Pair <any> <any>))
+    (define-predicate string-symbol-pair? (Pair <string> <symbol>))
+    (define-predicate symbol-string-pair? (Pair <symbol> <string>))
+
+    (assert-true  (any-pair? '(1 . 2)))
+    (assert-true  (any-pair? '(foo . "bar")))
+    (assert-true  (any-pair? '("bar" . foo)))
+    
+    (assert-false (string-symbol-pair? '(1 . 2)))
+    (assert-false (string-symbol-pair? '(foo . "bar")))
+    (assert-true  (string-symbol-pair? '("bar" . foo)))
+    
+    (assert-false (symbol-string-pair? '(1 . 2)))
+    (assert-true  (symbol-string-pair? '(foo . "bar")))
+    (assert-false (symbol-string-pair? '("bar" . foo)))
+    
+    (define-predicate two-number-proper-list? (Pair <number> (Pair <number> <empty-list>)))
+
+    (assert-true (two-number-proper-list? '(1 2)))
+    (assert-true (two-number-proper-list? '(1.0 -5)))
+    (assert-false (two-number-proper-list? '(1 . 2)))
+    (assert-false (two-number-proper-list? '(1 sneaky-symbol)))))))

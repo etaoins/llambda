@@ -13,11 +13,20 @@ object ExtractType {
       throw new MalformedExprException(scopedSymbol, "Syntax cannot be used as an expression")
   }
 
-  private def applyTypeConstructor(constructorName : sst.ScopedSymbol, operands : List[sst.ScopedDatum]) = {
+  private def applyTypeConstructor(constructorName : sst.ScopedSymbol, operands : List[sst.ScopedDatum]) : vt.SchemeType = {
     resolveTypeConstructor(constructorName) match {
       case Primitives.TypeUnion =>
         val schemeTypeOperands = operands.map(extractSchemeType)
         vt.SchemeType.fromTypeUnion(schemeTypeOperands)
+      
+      case Primitives.Pair =>
+        operands.map(extractSchemeType) match {
+          case List(carType, cdrType) =>
+            vt.PairType(carType, cdrType)
+
+          case _ =>
+            throw new BadSpecialFormException(constructorName, "Pair constructor requires exactly two arguments")
+        }
 
       case _ =>
         throw new BadSpecialFormException(constructorName, "Invalid type constructor syntax")

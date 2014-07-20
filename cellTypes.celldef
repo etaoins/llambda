@@ -38,7 +38,7 @@ preconstructed cell Unit : Datum {
 abstract cell ListElement : Datum {
 };
 
-concrete cell Pair : ListElement {
+concrete internal cell Pair : ListElement {
 	uint32 listLength;
 	Datum* car;
 	Datum* cdr;

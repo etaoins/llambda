@@ -246,12 +246,15 @@
     (define-r7rs not (make-predicate #f))
     (define-r7rs boolean=? (world-function "lliby_boolean_equal" (<boolean-cell> <boolean-cell> . <list-element-cell>) -> <bool>))
 
-    (define-r7rs pair? (make-predicate <pair-cell>))
+    ; Internal helper type
+    (define-type <pair> (Pair <datum-cell> <datum-cell>))
+
+    (define-r7rs pair? (make-predicate <pair>))
     (define-r7rs null? (make-predicate <empty-list-cell>))
     (define-r7rs list? (native-function "lliby_is_list" (<datum-cell>) -> <bool>))
-    (define-r7rs cons (world-function "lliby_cons" (<datum-cell> <datum-cell>) -> <pair-cell>))
-    (define-r7rs car (native-function "lliby_car" (<pair-cell>) -> <datum-cell>))
-    (define-r7rs cdr (native-function "lliby_cdr" (<pair-cell>) -> <datum-cell>))
+    (define-r7rs cons (world-function "lliby_cons" (<datum-cell> <datum-cell>) -> <pair>))
+    (define-r7rs car (native-function "lliby_car" (<pair>) -> <datum-cell>))
+    (define-r7rs cdr (native-function "lliby_cdr" (<pair>) -> <datum-cell>))
 
     (define-r7rs list-copy (world-function "lliby_list_copy" (<datum-cell>) -> <datum-cell>))
     (define-r7rs list (native-function "lliby_list" <list-element-cell> -> <list-element-cell>))
@@ -343,8 +346,8 @@
   ; Optional R7RS mutable pair support
   (cond-expand ((not immutable-pairs)
     (begin
-      (define-r7rs set-car! (world-function "lliby_set_car" (<pair-cell> <datum-cell>)))
-      (define-r7rs set-cdr! (world-function "lliby_set_cdr" (<pair-cell> <datum-cell>))))))
+      (define-r7rs set-car! (world-function "lliby_set_car" (<pair> <datum-cell>)))
+      (define-r7rs set-cdr! (world-function "lliby_set_cdr" (<pair> <datum-cell>))))))
 
   ; process-context library
   (include-library-declarations "../../interfaces/scheme/process-context.scm")

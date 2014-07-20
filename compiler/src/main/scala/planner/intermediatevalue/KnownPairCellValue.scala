@@ -9,7 +9,9 @@ import llambda.compiler.planner.{step => ps}
   *
   * These can only exist in Scheme dialects with immutable pairs. In the R7RS dialect these will not be constructed
   */
-  class KnownPairCellValue(val car : IntermediateValue, val cdr : IntermediateValue, tempValue : ps.TempValue) extends CellValue(vt.PairType, ct.PairCell, tempValue) with KnownPair {
-}
-  
+  class KnownPairCellValue(
+      val car : IntermediateValue,
+      val cdr : IntermediateValue,
+      tempValue : ps.TempValue
+  ) extends CellValue(vt.PairType(car.schemeType, cdr.schemeType), ct.PairCell, tempValue) with KnownPair
 

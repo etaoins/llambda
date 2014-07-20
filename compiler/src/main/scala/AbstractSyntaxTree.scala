@@ -104,7 +104,7 @@ case class EmptyList() extends NonSymbolLeaf {
 }
 
 case class Pair(car : Datum, cdr : Datum) extends Datum {
-  val schemeType = vt.PairType
+  val schemeType = vt.PairType(car.schemeType, cdr.schemeType)
 
   override def toString = this match {
     case ProperList(data) =>

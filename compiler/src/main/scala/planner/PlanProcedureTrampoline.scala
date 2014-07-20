@@ -56,7 +56,7 @@ private[planner] object PlanProcedureTrampoline {
     // Convert our arg list in to the arguments our procedure is expecting
     val restArgValue = signature.fixedArgs.foldLeft(argListHeadValue) { case (argListElementValue, nativeType) =>
       // Make sure this is a pair
-      val argPairTemp = argListElementValue.toTempValue(vt.PairType, Some(insufficientArgsMessage))(plan, worldPtrTemp)
+      val argPairTemp = argListElementValue.toTempValue(vt.AnyPairType, Some(insufficientArgsMessage))(plan, worldPtrTemp)
 
       // Get the car of the pair as the arg's value 
       val argDatumTemp = ps.CellTemp(ct.DatumCell)

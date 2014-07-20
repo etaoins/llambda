@@ -48,62 +48,69 @@ object PlanTypeCheck {
     classMatchedPred
   }
   
-  private def requireType(
-      plan : PlanWriter,
-      valueTemp : ps.TempValue,
-      valueType : vt.SchemeType,
-      requiredType : vt.NonUnionSchemeType,
-      innerTypeCheck : (PlanWriter, vt.SchemeType) => ps.TempValue
-  ) : ps.TempValue = {
-    val isRequiredTypePred = testNonUnionType(plan, valueTemp, valueType, requiredType) 
-
-    plan.buildCondBranch(isRequiredTypePred, {isRequiredTypePlan =>
-      // Now we can test oureslves
-      val remainingType = requiredType & valueType
-      innerTypeCheck(isRequiredTypePlan, remainingType)
-    },
-    { isNotRequiredTypePlan =>
-      // Not our parent type
-      predicateTemp(isNotRequiredTypePlan, false)
-    })
-  }
-
   private def testNonUnionType(
       plan : PlanWriter,
       valueTemp : ps.TempValue,
       valueType : vt.SchemeType,
       testingType : vt.NonUnionSchemeType
-  ) : ps.TempValue = valueType.satisfiesType(testingType) match {
-    case Some(knownValue) =>
-      predicateTemp(plan, knownValue)
-
-    case None =>
-      testingType match {
-        case recordType : vt.RecordType =>
-          requireType(plan, valueTemp, valueType, recordType.parentType, { (isRecordPlan, remainingType) =>
+  ) : ps.TempValue = {
+    testingType match {
+      case recordType : vt.RecordType =>
+        branchOnType(plan, valueTemp, valueType, recordType.parentType, isTypePlanner={
+          (isRecordPlan, remainingType) =>
             testRecordClass(isRecordPlan, valueTemp, remainingType, recordType)
-          })
+        })
 
-        case vt.ConstantBooleanType(value) =>
-          val castTemp = ps.Temp(vt.BooleanType) 
-          plan.steps += ps.CastCellToTypeUnchecked(castTemp, valueTemp, ct.BooleanCell)
+      case vt.SpecificPairType(testingCarType, testingCdrType) =>
+        // Determine what we know about the car and cdr types already
+        // This can speed up their type checks
+        val (knownCarType, knownCdrType) = valueType match {
+          case pairType : vt.PairType =>
+            (pairType.carType, pairType.cdrType)
 
-          // This works because booleans are preconstructed
-          val expectedTemp = ps.Temp(vt.BooleanType)
-          plan.steps += ps.CreateBooleanCell(expectedTemp, value)
+          case _ =>
+            (vt.AnySchemeType, vt.AnySchemeType)
+        }
 
-          val valueMatchedPred = ps.Temp(vt.Predicate)
-          plan.steps += ps.IntegerCompare(valueMatchedPred, ps.CompareCond.Equal, None, castTemp, expectedTemp)
+        branchOnType(plan, valueTemp, valueType, vt.AnyPairType, isTypePlanner={
+          (isPairPlan, remainingType) =>
+            val pairCellTemp = ps.CellTemp(ct.PairCell)
+            plan.steps += ps.CastCellToTypeUnchecked(pairCellTemp, valueTemp, ct.PairCell)
 
-          valueMatchedPred
-        
-        case vt.SchemeTypeAtom(cellType) =>
-          val possibleCellTypes = flattenType(valueType).map(_.cellType) 
+            // Test the car first - the order doesn't actually matter here
+            val carTemp = ps.CellTemp(ct.DatumCell)
+            plan.steps += ps.LoadPairCar(carTemp, pairCellTemp)
 
-          val isCellTypePred = ps.Temp(vt.Predicate)
-          plan.steps += ps.TestCellType(isCellTypePred, valueTemp, cellType, possibleCellTypes)
-          isCellTypePred
-      }
+            branchOnType(isPairPlan, carTemp, knownCarType, testingCarType, isTypePlanner={
+              (carSatifiesPlan, _) =>
+                // car matched, load the cdr
+                val cdrTemp = ps.CellTemp(ct.DatumCell)
+                plan.steps += ps.LoadPairCdr(cdrTemp, pairCellTemp)
+
+                branchOnType(carSatifiesPlan, cdrTemp, knownCdrType, testingCdrType)
+            })
+        })
+
+      case vt.ConstantBooleanType(value) =>
+        val castTemp = ps.Temp(vt.BooleanType) 
+        plan.steps += ps.CastCellToTypeUnchecked(castTemp, valueTemp, ct.BooleanCell)
+
+        // This works because booleans are preconstructed
+        val expectedTemp = ps.Temp(vt.BooleanType)
+        plan.steps += ps.CreateBooleanCell(expectedTemp, value)
+
+        val valueMatchedPred = ps.Temp(vt.Predicate)
+        plan.steps += ps.IntegerCompare(valueMatchedPred, ps.CompareCond.Equal, None, castTemp, expectedTemp)
+
+        valueMatchedPred
+      
+      case vt.SchemeTypeAtom(cellType) =>
+        val possibleCellTypes = flattenType(valueType).map(_.cellType) 
+
+        val isCellTypePred = ps.Temp(vt.Predicate)
+        plan.steps += ps.TestCellType(isCellTypePred, valueTemp, cellType, possibleCellTypes)
+        isCellTypePred
+    }
   }
 
   private def testUnionTypeRecursively(
@@ -113,31 +120,61 @@ object PlanTypeCheck {
       memberTypes : List[vt.NonUnionSchemeType]
   ) : ps.TempValue = memberTypes match {
     case testingType :: restTypes =>
-      val isTestingTypePred = testNonUnionType(plan, valueTemp, valueType, testingType)
-      
-      plan.buildCondBranch(isTestingTypePred, {isTypePlan =>
-        predicateTemp(isTypePlan, true)
-      },
-      { isNotTypePlan  =>
-        val remainingType = valueType - testingType
-        testUnionTypeRecursively(isNotTypePlan, valueTemp, remainingType, restTypes)
+      branchOnType(plan, valueTemp, valueType, testingType, isNotTypePlanner={
+        (isNotTypePlan, remainingType) =>
+          testUnionTypeRecursively(isNotTypePlan, valueTemp, remainingType, restTypes)
       })
-
 
     case Nil =>
       predicateTemp(plan, false)
   }
-
-  /** Checks that a temp value has the passed Scheme type and returns a predicate */
-  def apply(
+  
+  private def branchOnType(
+      plan : PlanWriter,
       valueTemp : ps.TempValue,
       valueType : vt.SchemeType,
-      testingType : vt.SchemeType
-  )(implicit plan : PlanWriter) : ps.TempValue = testingType match {
-    case nonUnion : vt.NonUnionSchemeType =>
-      testNonUnionType(plan, valueTemp, valueType, nonUnion)
+      testingType : vt.SchemeType,
+      isTypePlanner : ((PlanWriter, vt.SchemeType) => ps.TempValue) = { (plan, _) => predicateTemp(plan, true) },
+      isNotTypePlanner : ((PlanWriter, vt.SchemeType) => ps.TempValue) = { (plan, _) => predicateTemp(plan, false) }
+  ) : ps.TempValue =  {
+    valueType.satisfiesType(testingType) match {
+      case Some(true) =>
+        isTypePlanner(plan, valueType)
 
-    case vt.UnionType(memberTypes) =>
-      testUnionTypeRecursively(plan, valueTemp, valueType, memberTypes.toList)
+      case Some(false) =>
+        isNotTypePlanner(plan, valueType)
+
+      case None =>
+        val isTypePred = testingType match {
+          case nonUnion : vt.NonUnionSchemeType =>
+            testNonUnionType(plan, valueTemp, valueType, nonUnion)
+
+          case vt.UnionType(memberTypes) =>
+            testUnionTypeRecursively(plan, valueTemp, valueType, memberTypes.toList)
+        }
+
+        plan.buildCondBranch(isTypePred, {isTypePlan =>
+          // Now we can test oureslves
+          val remainingType = valueType & testingType
+          isTypePlanner(isTypePlan, remainingType)
+        },
+        { isNotTypePlan =>
+          // Not our parent type
+          val remainingType = valueType - testingType
+          isNotTypePlanner(isNotTypePlan, remainingType)
+        })
+    }
+  }
+
+  /** Plans a type check for a given value and testing type
+    *
+    * @param  valueTemp    Temp value to plan a type test for. This value may be of any cell type.
+    * @param  valueType    Known Scheme value for the type. More specific Scheme types may produce more a efficient
+    *                      type check plan
+    * @param  testingType  Scheme type to test if valueTemp is a member of
+    * @return Predicate true if valueTemp satisfies testingType, false otherwise
+    */
+  def apply(valueTemp : ps.TempValue, valueType : vt.SchemeType, testingType : vt.SchemeType)(implicit plan : PlanWriter) : ps.TempValue = {
+    branchOnType(plan, valueTemp, valueType, testingType)
   }
 }

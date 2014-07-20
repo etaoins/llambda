@@ -29,6 +29,7 @@ object Primitives {
   object MakePredicate extends PrimitiveExpr
 
   object TypeUnion extends PrimitiveTypeConstructor
+  object Pair extends PrimitiveTypeConstructor
 
   val bindings = {
     Map[String, BoundValue](
@@ -56,7 +57,9 @@ object Primitives {
       "define-record-type:" -> TypedDefineRecordType,
       "lambda:" -> TypedLambda,
       "make-predicate" -> MakePredicate,
-      "U" -> TypeUnion
+
+      "U" -> TypeUnion,
+      "Pair" -> Pair
     )
   }
 }

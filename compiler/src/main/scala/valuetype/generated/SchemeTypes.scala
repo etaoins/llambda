@@ -9,7 +9,6 @@ import compiler.{celltype => ct}
 
 object UnitType extends SchemeTypeAtom(ct.UnitCell)
 object ListElementType extends UnionType(Set(SchemeTypeAtom(ct.PairCell), SchemeTypeAtom(ct.EmptyListCell)))
-object PairType extends SchemeTypeAtom(ct.PairCell)
 object EmptyListType extends SchemeTypeAtom(ct.EmptyListCell)
 object StringType extends SchemeTypeAtom(ct.StringCell)
 object SymbolType extends SchemeTypeAtom(ct.SymbolCell)
@@ -28,7 +27,6 @@ object IntrinsicSchemeTypes {
   def apply() : Map[String, SchemeType] = Map(
     (ct.UnitCell.schemeName -> UnitType),
     (ct.ListElementCell.schemeName -> ListElementType),
-    (ct.PairCell.schemeName -> PairType),
     (ct.EmptyListCell.schemeName -> EmptyListType),
     (ct.StringCell.schemeName -> StringType),
     (ct.SymbolCell.schemeName -> SymbolType),

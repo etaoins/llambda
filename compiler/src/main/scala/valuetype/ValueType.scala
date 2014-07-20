@@ -176,6 +176,10 @@ sealed abstract trait NonUnionSchemeType extends SchemeType {
   def satisfiesNonUnionType(otherType : NonUnionSchemeType) : Option[Boolean]
 
   def satisfiesType(otherType : SchemeType) : Option[Boolean] = otherType match {
+    case AnySchemeType =>
+      // This is an optimisation - this can be removed without affecting correctness
+      Some(true)
+
     case unionType : UnionType =>
       // This can be universally handled for all types
       val recursiveResult = unionType.memberTypes.map(this.satisfiesType(_))
@@ -268,6 +272,60 @@ case class ConstantBooleanType(value : Boolean) extends DerivedSchemeType {
   }
 }
 
+/** Trait for pair types */
+sealed trait PairType extends NonUnionSchemeType {
+  val carType : SchemeType
+  val cdrType : SchemeType
+}
+
+/** Pair with specific types for its car and cdr */
+case class SpecificPairType(carType : SchemeType, cdrType : SchemeType) extends DerivedSchemeType with PairType {
+  val cellType = ct.PairCell
+  val schemeName = s"(Pair ${carType.schemeName} ${cdrType.schemeName})"
+  val parentType = SchemeTypeAtom(ct.PairCell)
+  val isGcManaged = true
+
+  def derivedSatisfiesType(otherType : SchemeType) = otherType match {
+    case pairType : PairType =>
+      for(carSatisfies <- carType.satisfiesType(pairType.carType);
+          cdrSatisfies <- cdrType.satisfiesType(pairType.cdrType))
+      yield
+        (carSatisfies && cdrSatisfies)
+
+    case _ =>
+      None
+  }
+}
+
+/** Pair with no type constraints on its car or cdr
+  *
+  * This is identical to the pair cell's Scheme type atom. This is important so that there isn't a distinct pair type
+  * atom from a pair type with <any> for both of its types
+  */
+object AnyPairType extends SchemeTypeAtom(ct.PairCell) with PairType {
+  val carType = AnySchemeType
+  val cdrType = AnySchemeType
+
+  override val schemeName = s"(Pair ${carType.schemeName} ${cdrType.schemeName})"
+}
+
+object PairType {
+  /** Constructs a new pair type with the given car and cdr types
+    *
+    * If both car and cdr are <any> then AnyPairType is returned. Otherwise, an appropriate instance of
+    * SpecificPairType is constructed.
+    */
+  def apply(carType : SchemeType, cdrType : SchemeType) : PairType = {
+    (AnySchemeType.satisfiesType(carType), AnySchemeType.satisfiesType(cdrType)) match {
+      case (Some(true), Some(true)) =>
+        AnyPairType
+
+      case _ =>
+        SpecificPairType(carType, cdrType)
+    }
+  }
+}
+
 /** Pointer to a garabge collected value cell containing a user-defined record type
   * 
   * This uniquely identifies a record type even if has the same name and internal structure as another type 
@@ -327,6 +385,11 @@ case class UnionType(memberTypes : Set[NonUnionSchemeType]) extends SchemeType {
   }
   
   def satisfiesType(otherType : SchemeType) : Option[Boolean] = {
+    if (otherType eq AnySchemeType) {
+        // This is an optimisation - this can be removed without affecting correctness
+      return Some(true)
+    }
+
     val recursiveResult = memberTypes.map(_.satisfiesType(otherType))
 
     if (recursiveResult == Set(Some(true))) {
@@ -355,7 +418,9 @@ case class UnionType(memberTypes : Set[NonUnionSchemeType]) extends SchemeType {
 }
 
 /** Union of all possible Scheme types */
-object AnySchemeType extends UnionType(ct.DatumCell.concreteTypes.map(SchemeTypeAtom(_)))
+object AnySchemeType extends UnionType(ct.DatumCell.concreteTypes.map(SchemeTypeAtom(_))) {
+  override lazy val schemeName = "<any>"
+}
 
 object EmptySchemeType extends UnionType(Set())
 

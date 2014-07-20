@@ -141,6 +141,7 @@ class ConstantBytevectorValue(val elements : Vector[Short]) extends TrivialConst
 }
 
 class ConstantPairValue(val car : ConstantValue, val cdr : ConstantValue) extends ConstantValue(ct.PairCell) with BoxedOnlyValue with KnownPair {
+  override val schemeType : vt.SchemeType = vt.PairType(car.schemeType, cdr.schemeType)
   val typeDescription = "constant pair"
 
   def toConstantCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
