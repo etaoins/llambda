@@ -75,17 +75,17 @@ object PlanTypeCheck {
         branchOnType(plan, valueTemp, valueType, vt.AnyPairType, isTypePlanner={
           (isPairPlan, remainingType) =>
             val pairCellTemp = ps.CellTemp(ct.PairCell)
-            plan.steps += ps.CastCellToTypeUnchecked(pairCellTemp, valueTemp, ct.PairCell)
+            isPairPlan.steps += ps.CastCellToTypeUnchecked(pairCellTemp, valueTemp, ct.PairCell)
 
             // Test the car first - the order doesn't actually matter here
             val carTemp = ps.CellTemp(ct.DatumCell)
-            plan.steps += ps.LoadPairCar(carTemp, pairCellTemp)
+            isPairPlan.steps += ps.LoadPairCar(carTemp, pairCellTemp)
 
             branchOnType(isPairPlan, carTemp, knownCarType, testingCarType, isTypePlanner={
               (carSatifiesPlan, _) =>
                 // car matched, load the cdr
                 val cdrTemp = ps.CellTemp(ct.DatumCell)
-                plan.steps += ps.LoadPairCdr(cdrTemp, pairCellTemp)
+                carSatifiesPlan.steps += ps.LoadPairCdr(cdrTemp, pairCellTemp)
 
                 branchOnType(carSatifiesPlan, cdrTemp, knownCdrType, testingCdrType)
             })

@@ -18,10 +18,16 @@ class PlanWriter(
 ) {
   private val contextLocStack = new mutable.Stack[ContextLocated] 
 
+  private var planSealed = false
+
   class StepBuilder {
     private val stepBuffer = new mutable.ListBuffer[ps.Step] 
 
     def +=(step : ps.Step) {
+      if (planSealed) {
+        throw new InternalCompilerErrorException("Attempt to write to sealed plan")
+      }
+
       for(contextLoc <- contextLocStack.headOption) {
         // Context locate this step
         step.assignLocationFrom(contextLoc)
@@ -31,6 +37,10 @@ class PlanWriter(
     }
 
     def ++=(other : PlanWriter#StepBuilder) = {
+      if (planSealed) {
+        throw new InternalCompilerErrorException("Attempt to write to sealed plan")
+      }
+
       // Assume these steps were properly located when the other plan was built
       stepBuffer ++= other.stepBuffer
     }
@@ -105,6 +115,9 @@ class PlanWriter(
     new PlanWriter(config, plannedFunctions, allocedProcSymbols, plannedTypePredicates)
 
   def buildCondBranch(test : ps.TempValue, trueBuilder : (PlanWriter) => ps.TempValue, falseBuilder : (PlanWriter) => ps.TempValue) : ps.TempValue = {
+    // Seal ourselves to catch accidental writes to the parent branch
+    this.planSealed = true
+
     val truePlan = forkPlan()
     val trueValue = trueBuilder(truePlan) 
 
@@ -117,6 +130,7 @@ class PlanWriter(
 
     val phiTemp = new ps.TempValue(trueValue.isGcManaged)
 
+    this.planSealed = false
     this.steps += ps.CondBranch(phiTemp, test, truePlan.steps.toList, trueValue, falsePlan.steps.toList, falseValue)
 
     // Return the phi'ed value
