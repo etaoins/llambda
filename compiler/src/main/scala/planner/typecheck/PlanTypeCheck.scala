@@ -1,17 +1,12 @@
-package io.llambda.compiler.planner
+package io.llambda.compiler.planner.typecheck
 import io.llambda
 
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.planner.PlanWriter
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
 
 object PlanTypeCheck {
-  private def predicateTemp(plan : PlanWriter, value : Boolean) : ps.TempValue = {
-    val predTemp = ps.Temp(vt.Predicate)
-    plan.steps += ps.CreateNativeInteger(predTemp, if (value) 1 else 0, vt.Predicate.bits)
-    predTemp
-  }
-
   private def flattenType(schemeType : vt.SchemeType) : Set[vt.NonUnionSchemeType] = schemeType match {
     case nonUnion : vt.NonUnionSchemeType => Set(nonUnion)
     case vt.UnionType(memberTypes)        => memberTypes
@@ -22,7 +17,7 @@ object PlanTypeCheck {
     valueTemp : ps.TempValue,
     valueType : vt.SchemeType,
     recordType : vt.RecordType
-  ) : ps.TempValue = {
+  ) : CheckResult = {
     val flattenedType = flattenType(valueType)
 
     // If we contain a generic record type we can be of any record class
@@ -45,7 +40,7 @@ object PlanTypeCheck {
 
     val classMatchedPred = ps.Temp(vt.Predicate)
     plan.steps += ps.TestRecordLikeClass(classMatchedPred, recordCellTemp, recordType, possibleTypesOpt) 
-    classMatchedPred
+    DynamicPredResult(classMatchedPred)
   }
   
   private def testNonUnionType(
@@ -53,7 +48,7 @@ object PlanTypeCheck {
       valueTemp : ps.TempValue,
       valueType : vt.SchemeType,
       testingType : vt.NonUnionSchemeType
-  ) : ps.TempValue = {
+  ) : CheckResult = {
     testingType match {
       case recordType : vt.RecordType =>
         branchOnType(plan, valueTemp, valueType, recordType.parentType, isTypePlanner={
@@ -102,14 +97,14 @@ object PlanTypeCheck {
         val valueMatchedPred = ps.Temp(vt.Predicate)
         plan.steps += ps.IntegerCompare(valueMatchedPred, ps.CompareCond.Equal, None, castTemp, expectedTemp)
 
-        valueMatchedPred
+        DynamicPredResult(valueMatchedPred)
       
       case vt.SchemeTypeAtom(cellType) =>
         val possibleCellTypes = flattenType(valueType).flatMap(_.cellType.concreteTypes) 
 
         val isCellTypePred = ps.Temp(vt.Predicate)
         plan.steps += ps.TestCellType(isCellTypePred, valueTemp, cellType, possibleCellTypes)
-        isCellTypePred
+        DynamicPredResult(isCellTypePred)
     }
   }
 
@@ -118,7 +113,7 @@ object PlanTypeCheck {
       valueTemp : ps.TempValue,
       valueType : vt.SchemeType,
       memberTypes : List[vt.NonUnionSchemeType]
-  ) : ps.TempValue = memberTypes match {
+  ) : CheckResult = memberTypes match {
     case testingType :: restTypes =>
       branchOnType(plan, valueTemp, valueType, testingType, isNotTypePlanner={
         (isNotTypePlan, remainingType) =>
@@ -126,7 +121,8 @@ object PlanTypeCheck {
       })
 
     case Nil =>
-      predicateTemp(plan, false)
+      // No types left
+      StaticFalseResult
   }
   
   private def branchOnType(
@@ -134,9 +130,9 @@ object PlanTypeCheck {
       valueTemp : ps.TempValue,
       valueType : vt.SchemeType,
       testingType : vt.SchemeType,
-      isTypePlanner : ((PlanWriter, vt.SchemeType) => ps.TempValue) = { (plan, _) => predicateTemp(plan, true) },
-      isNotTypePlanner : ((PlanWriter, vt.SchemeType) => ps.TempValue) = { (plan, _) => predicateTemp(plan, false) }
-  ) : ps.TempValue =  {
+      isTypePlanner : ((PlanWriter, vt.SchemeType) => CheckResult) = { (_, _) => StaticTrueResult },
+      isNotTypePlanner : ((PlanWriter, vt.SchemeType) => CheckResult) = { (_, _) => StaticFalseResult }
+  ) : CheckResult =  {
     vt.SatisfiesType(testingType, valueType) match {
       case Some(true) =>
         isTypePlanner(plan, valueType)
@@ -145,24 +141,26 @@ object PlanTypeCheck {
         isNotTypePlanner(plan, valueType)
 
       case None =>
-        val isTypePred = testingType match {
+        val isTypePred = (testingType match {
           case nonUnion : vt.NonUnionSchemeType =>
             testNonUnionType(plan, valueTemp, valueType, nonUnion)
 
           case vt.UnionType(memberTypes) =>
             testUnionTypeRecursively(plan, valueTemp, valueType, memberTypes.toList)
-        }
+        }).toNativePred()(plan)
 
-        plan.buildCondBranch(isTypePred, {isTypePlan =>
+        val phiPred = plan.buildCondBranch(isTypePred, {isTypePlan =>
           // Now we can test oureslves
           val remainingType = valueType & testingType
-          isTypePlanner(isTypePlan, remainingType)
+          isTypePlanner(isTypePlan, remainingType).toNativePred()(isTypePlan)
         },
         { isNotTypePlan =>
           // Not our parent type
           val remainingType = valueType - testingType
-          isNotTypePlanner(isNotTypePlan, remainingType)
+          isNotTypePlanner(isNotTypePlan, remainingType).toNativePred()(isNotTypePlan)
         })
+
+        DynamicPredResult(phiPred)
     }
   }
 
@@ -172,9 +170,9 @@ object PlanTypeCheck {
     * @param  valueType    Known Scheme value for the type. More specific Scheme types may produce more a efficient
     *                      type check plan
     * @param  testingType  Scheme type to test if valueTemp is a member of
-    * @return Predicate true if valueTemp satisfies testingType, false otherwise
+    * @return CheckResult indicating if valueTemp satisfies testingType
     */
-  def apply(valueTemp : ps.TempValue, valueType : vt.SchemeType, testingType : vt.SchemeType)(implicit plan : PlanWriter) : ps.TempValue = {
+  def apply(valueTemp : ps.TempValue, valueType : vt.SchemeType, testingType : vt.SchemeType)(implicit plan : PlanWriter) : CheckResult = {
     branchOnType(plan, valueTemp, valueType, testingType)
   }
 }

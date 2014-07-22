@@ -3,6 +3,7 @@ import io.llambda
 
 import llambda.compiler.{ProcedureSignature, ContextLocated}
 import llambda.compiler.planner._
+import llambda.compiler.planner.typecheck.PlanTypeCheck
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
@@ -30,10 +31,9 @@ class KnownTypePredicateProc(testingType : vt.SchemeType) extends KnownArtificia
     val plan = parentPlan.forkPlan()
 
     // Perform an inner type check returning a boolean result
-    val isTypePred = PlanTypeCheck(argumentTemp, vt.AnySchemeType, testingType)(plan)
+    val checkResult = PlanTypeCheck(argumentTemp, vt.AnySchemeType, testingType)(plan)
+    val retValueTemp = checkResult.toNativeCBool()(plan)
 
-    val retValueTemp = ps.Temp(vt.CBool)
-    plan.steps += ps.ConvertNativeInteger(retValueTemp, isTypePred, vt.CBool.bits, false)
     plan.steps += ps.Return(Some(retValueTemp))
 
     PlannedFunction(
@@ -61,7 +61,7 @@ class KnownTypePredicateProc(testingType : vt.SchemeType) extends KnownArtificia
             // Doing an inline check can be a win here
 
             val cellTemp = singleValue.toTempValue(singleValue.schemeType)
-            val resultPredIr = PlanTypeCheck(
+            val checkResult = PlanTypeCheck(
               valueTemp=cellTemp,
               valueType=singleValue.schemeType,
               testingType=testingType
@@ -69,7 +69,7 @@ class KnownTypePredicateProc(testingType : vt.SchemeType) extends KnownArtificia
 
             Some(PlanResult(
               state=state,
-              value=new NativePredicateValue(resultPredIr)
+              value=checkResult.toIntermediateValue
             ))
 
           case _ =>

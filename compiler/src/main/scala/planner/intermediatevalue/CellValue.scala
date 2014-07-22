@@ -4,7 +4,8 @@ import io.llambda
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
-import llambda.compiler.planner.{PlanWriter, InvokableProcedure, PlanTypeCheck}
+import llambda.compiler.planner.typecheck.PlanTypeCheck
+import llambda.compiler.planner.{PlanWriter, InvokableProcedure}
 import llambda.compiler.InternalCompilerErrorException
 import llambda.compiler.RuntimeErrorMessage
 
@@ -13,7 +14,7 @@ class CellValue(val schemeType : vt.SchemeType, val tempType : ct.CellType, val 
 
   override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     // Find out if we're false
-    val isFalsePred = PlanTypeCheck(tempValue, schemeType, vt.ConstantBooleanType(false))
+    val isFalsePred = PlanTypeCheck(tempValue, schemeType, vt.ConstantBooleanType(false)).toNativePred()
 
     // Invert the result
     val constantZeroPred = ps.Temp(vt.Predicate)
@@ -58,7 +59,7 @@ class CellValue(val schemeType : vt.SchemeType, val tempType : ct.CellType, val 
           valueTemp=tempValue,
           valueType=schemeType,
           testingType=targetType
-        )
+        ).toNativePred()
             
         plan.steps += ps.AssertPredicate(worldPtr, isTypePred, errorMessage)
 
@@ -136,7 +137,7 @@ class CellValue(val schemeType : vt.SchemeType, val tempType : ct.CellType, val 
       }
       else {
         // We have to check types here and branch on the result
-        val isExactIntPred = PlanTypeCheck(tempValue, schemeType, vt.ExactIntegerType) 
+        val isExactIntPred = PlanTypeCheck(tempValue, schemeType, vt.ExactIntegerType).toNativePred()
 
         // Try again with constrained types
         // This will hit the branches above us
