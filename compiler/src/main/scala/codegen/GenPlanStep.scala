@@ -250,7 +250,7 @@ object GenPlanStep {
           ).withTempValue(resultTemp -> phiResultIr)
       }
       
-    case invokeStep @ ps.Invoke(resultOpt, signature, funcPtrTemp, arguments) =>
+    case invokeStep @ ps.Invoke(resultOpt, signature, funcPtrTemp, arguments, tailCall) =>
       val irSignature = ProcedureSignatureToIr(signature)
       val irFuncPtr = state.liveTemps(funcPtrTemp)
       val irArguments = arguments.map { argument =>
@@ -265,20 +265,19 @@ object GenPlanStep {
         liveTemps=state.liveTemps -- disposedArgTemps
       )
 
-      val callBlock = () => {  
-        val irValue = preBarrierState.currentBlock.call(Some("ret"))(irSignature, irFuncPtr, irArguments)
-        (preBarrierState.currentBlock, irValue)
-      }
-
       val (finalState, irRetOpt) = if (invokeStep.canAllocate) {
         if (signature.attributes.contains(ProcedureAttribute.NoReturn)) {
           // This can't return - unroot all of our values and terminate the function
           return state.terminateFunction(() => {
-            preBarrierState.currentBlock.call(None)(irSignature, irFuncPtr, irArguments)
+            preBarrierState.currentBlock.call(None)(irSignature, irFuncPtr, irArguments, tailCall=tailCall)
             preBarrierState.currentBlock.unreachable
           })
         }
         else {
+          if (tailCall) {
+            throw new InternalCompilerErrorException("Attempted to perform a tail call to a world function")
+          }
+
           // We need a GC barrier
           GenGcBarrier(preBarrierState) {
             val invokeBlock = preBarrierState.currentBlock
@@ -298,7 +297,7 @@ object GenPlanStep {
       }
       else {
         // This call can't allocate or throw exceptions - skip the barrier and invoke 
-        val irValue = preBarrierState.currentBlock.call(Some("ret"))(irSignature, irFuncPtr, irArguments)
+        val irValue = preBarrierState.currentBlock.call(Some("ret"))(irSignature, irFuncPtr, irArguments, tailCall=tailCall)
         (preBarrierState, irValue)
       }
 

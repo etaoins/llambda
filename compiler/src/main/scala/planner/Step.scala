@@ -138,7 +138,7 @@ case class InvokeArgument(
   *
   * Entry points can be loaded with CreateNamedEntryPoint
   */
-case class Invoke(result : Option[TempValue], signature : ProcedureSignature, entryPoint : TempValue, arguments : List[InvokeArgument]) extends Step {
+case class Invoke(result : Option[TempValue], signature : ProcedureSignature, entryPoint : TempValue, arguments : List[InvokeArgument], tailCall : Boolean = false) extends Step {
   lazy val inputValues = arguments.map(_.tempValue).toSet + entryPoint
   lazy val outputValues = result.toSet
 
@@ -150,7 +150,8 @@ case class Invoke(result : Option[TempValue], signature : ProcedureSignature, en
       result=result.map(f),
       signature=signature,
       entryPoint=f(entryPoint),
-      arguments=arguments.map(_.renamed(f))
+      arguments=arguments.map(_.renamed(f)),
+      tailCall=tailCall
     ).assignLocationFrom(this)
 }
 

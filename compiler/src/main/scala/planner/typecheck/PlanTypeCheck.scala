@@ -190,13 +190,13 @@ object PlanTypeCheck {
         }
         else {
           // Plan this out-of-line
-          val nativeSymbol = predProcOpt match {
+          val (nativeSymbol, tailCall) = predProcOpt match {
             case Some(PlanningPredicateProc(predType, nativeSymbol)) if predType == testType =>
               // This is a recursive tail call to ourselves
-              nativeSymbol
+              (nativeSymbol, true)
 
             case _ =>
-              TypePredicateProcForType(testType)(plan).nativeSymbol(plan)
+              (TypePredicateProcForType(testType)(plan).nativeSymbol(plan), false)
           }
 
           val signature = TypePredicateProcSignature
@@ -209,7 +209,13 @@ object PlanTypeCheck {
           val datumValueTemp = checkValue.castToCellTempValue(ct.DatumCell)(plan)
 
           val resultPredTemp = ps.Temp(vt.Predicate)
-          plan.steps += ps.Invoke(Some(resultPredTemp), signature, entryPointTemp, List(ps.InvokeArgument(datumValueTemp)))
+          plan.steps += ps.Invoke(
+            result=Some(resultPredTemp),
+            signature=signature,
+            entryPoint=entryPointTemp,
+            arguments=List(ps.InvokeArgument(datumValueTemp)),
+            tailCall=tailCall
+          )
 
           DynamicResult(resultPredTemp) 
         }

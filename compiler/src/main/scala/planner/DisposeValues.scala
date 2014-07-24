@@ -44,7 +44,7 @@ object DisposeValues {
       val newAcc = newStep :: (disposeOutputSteps ++ acc)
       discardUnusedValues(branchInputValues, reverseTail, newUsedValues, newAcc)
 
-    case (invoke @ ps.Invoke(resultOption, signature, entryPoint, arguments)) :: reverseTail =>
+    case (invoke @ ps.Invoke(resultOption, signature, entryPoint, arguments, tailCall)) :: reverseTail =>
       val disposeResultOption = resultOption match { 
         case Some(result) if !usedValues.contains(result) =>
           Some(ps.DisposeValue(result))
@@ -62,7 +62,7 @@ object DisposeValues {
       }
 
       val newUsedValues = invoke.inputValues ++ usedValues
-      val newInvoke = ps.Invoke(resultOption, signature, entryPoint, newArguments).assignLocationFrom(invoke)
+      val newInvoke = ps.Invoke(resultOption, signature, entryPoint, newArguments, tailCall).assignLocationFrom(invoke)
 
       val newAcc = newInvoke :: (disposeResultOption.toList ++ acc)
       discardUnusedValues(branchInputValues, reverseTail, newUsedValues, newAcc) 
