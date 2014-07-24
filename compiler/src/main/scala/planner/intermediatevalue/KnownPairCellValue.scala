@@ -4,6 +4,7 @@ import io.llambda
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
+import llambda.compiler.planner.BoxedValue
 
 /** Represents a constructed pair with a car and cdr value known at compile time
   *
@@ -13,5 +14,5 @@ import llambda.compiler.planner.{step => ps}
       val car : IntermediateValue,
       val cdr : IntermediateValue,
       tempValue : ps.TempValue
-  ) extends CellValue(vt.PairType(car.schemeType, cdr.schemeType), ct.PairCell, tempValue) with KnownPair
+  ) extends CellValue(vt.PairType(car.schemeType, cdr.schemeType), BoxedValue(ct.PairCell, tempValue)) with KnownPair
 

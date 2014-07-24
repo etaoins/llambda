@@ -91,7 +91,7 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
 
     Some(PlanResult(
       state=state,
-      value=new CellValue(recordType, recordType.cellType, cellTemp) 
+      value=new CellValue(recordType, BoxedValue(recordType.cellType, cellTemp))
     ))
   }
 }

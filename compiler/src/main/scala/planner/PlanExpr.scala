@@ -190,15 +190,9 @@ private[planner] object PlanExpr {
         )
       
       case typePredicate @ et.TypePredicate(schemeType) =>
-        val knownProcedure = plan.plannedTypePredicates.getOrElseUpdate(schemeType, {
-          new iv.KnownTypePredicateProc(
-            testingType=schemeType
-          )
-        })
-
         PlanResult(
           state=initialState,
-          value=knownProcedure
+          value=typecheck.TypePredicateProcForType(schemeType)
         )
 
       case et.Cast(valueExpr, targetType) =>

@@ -186,8 +186,7 @@ private[planner] object PlanLambda {
       case RestArgument(storageLoc, tempValue) =>
         val restValue = new iv.CellValue(
           schemeType=vt.ListElementType,
-          tempType=ct.ListElementCell,
-          tempValue=tempValue
+          boxedValue=BoxedValue(ct.ListElementCell, tempValue)
         )
 
         (storageLoc, ImmutableValue(restValue))

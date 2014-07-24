@@ -52,7 +52,7 @@ object CadrProcPlanner extends ReportProcPlanner {
         plan.steps += ps.LoadPairCdr(resultTemp, pairTemp)
       }
 
-      val resultValue = new iv.CellValue(resultType, ct.DatumCell, resultTemp)
+      val resultValue = new iv.CellValue(resultType, BoxedValue(ct.DatumCell, resultTemp))
 
       Some(PlanResult(
         state=initialState,

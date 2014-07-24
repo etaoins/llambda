@@ -3,7 +3,7 @@ import io.llambda
 
 import llambda.compiler.{ProcedureSignature, ContextLocated}
 import llambda.compiler.planner._
-import llambda.compiler.planner.typecheck.PlanTypeCheck
+import llambda.compiler.planner.typecheck._
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
@@ -14,15 +14,7 @@ class KnownTypePredicateProc(testingType : vt.SchemeType) extends KnownArtificia
       .replaceAllLiterally("<", "")
       .replaceAllLiterally(">", "") + "?"
 
-  val signature = ProcedureSignature(
-    hasWorldArg=false,
-    hasSelfArg=false,
-    hasRestArg=false,
-    // We must be able to take any data type without erroring out
-    fixedArgs=List(vt.AnySchemeType),
-    returnType=Some(vt.CBool),
-    attributes=Set()
-  )
+  val signature = TypePredicateProcSignature
   
   def planFunction(parentPlan : PlanWriter) : PlannedFunction = {
     // We only have a single argument
@@ -31,7 +23,11 @@ class KnownTypePredicateProc(testingType : vt.SchemeType) extends KnownArtificia
     val plan = parentPlan.forkPlan()
 
     // Perform an inner type check returning a boolean result
-    val checkResult = PlanTypeCheck(argumentTemp, vt.AnySchemeType, testingType)(plan)
+    // Note that this is forced inline chck. The normal PlanTypeCheck entry point to the type system might decide
+    // to call this type check out-of-line which won't work because *this* is the out-of-line implementation.
+    val cellTemp = BoxedValue(ct.DatumCell, argumentTemp)
+    val checkResult = PlanTypeCheck(cellTemp, vt.AnySchemeType, testingType, mustInline=true)(plan)
+
     val retValueTemp = checkResult.toNativeCBool()(plan)
 
     plan.steps += ps.Return(Some(retValueTemp))
@@ -48,35 +44,16 @@ class KnownTypePredicateProc(testingType : vt.SchemeType) extends KnownArtificia
   override def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] =
     operands match {
       case List((_, singleValue)) =>
-        vt.SatisfiesType(testingType, singleValue.schemeType) match {
-          case Some(knownResult) =>
-            // We can satisfy this at plan time
-            Some(PlanResult(
-              state=state,
-              value=new ConstantBooleanValue(knownResult)
-            ))
+        val checkResult = PlanTypeCheck(
+          checkValue={singleValue.toBoxedValue()},
+          valueType=singleValue.schemeType,
+          testType=testingType
+        )
 
-          case _ if singleValue.schemeType != vt.AnySchemeType =>
-            // We know something about this type
-            // Doing an inline check can be a win here
-
-            val cellTemp = singleValue.toTempValue(singleValue.schemeType)
-            val checkResult = PlanTypeCheck(
-              valueTemp=cellTemp,
-              valueType=singleValue.schemeType,
-              testingType=testingType
-            )
-
-            Some(PlanResult(
-              state=state,
-              value=checkResult.toIntermediateValue
-            ))
-
-          case _ =>
-            // We have no type information here
-            // We don't gain anything by doing an inline type check
-            None
-        }
+        Some(PlanResult(
+          state=state,
+          value=checkResult.toIntermediateValue
+        ))
 
       case _ =>
         None

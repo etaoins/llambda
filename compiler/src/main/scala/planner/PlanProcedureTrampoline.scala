@@ -73,7 +73,7 @@ private[planner] object PlanProcedureTrampoline {
       plan.steps += ps.LoadPairCdr(argCdrTemp, argPairTemp)
 
       // We know this is a list element but its type will be DatumCell
-      new iv.CellValue(vt.ListElementType, ct.DatumCell, argCdrTemp)
+      new iv.CellValue(vt.ListElementType, BoxedValue(ct.DatumCell, argCdrTemp))
     }
 
     if (signature.hasRestArg) {

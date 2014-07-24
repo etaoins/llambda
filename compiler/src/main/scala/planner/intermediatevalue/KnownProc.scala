@@ -35,50 +35,53 @@ abstract class KnownProc(selfTempOpt : Option[ps.TempValue]) extends Intermediat
     */
   def nativeSymbol(implicit plan : PlanWriter) : String
   
+  def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue = {
+    // Store an entry point with an adapted signature
+    val entryPointTemp = if (signature == AdaptedProcedureSignature) {
+      // The procedure already has the correct signature
+      // This is unlikely but worth checking
+      planEntryPoint()
+    }
+    else {
+      // Give the trampoline a sufficently scary looking symbol
+      val trampolineSymbol = "__llambda_" + nativeSymbol + "_trampoline"
+
+      // Ensure this already hasn't been planned
+      plan.plannedFunctions.getOrElseUpdate(trampolineSymbol, {
+        // Plan the trampoline
+        PlanProcedureTrampoline(signature, nativeSymbol)
+      })
+
+      // Load the trampoline's entry point
+      val trampEntryPointTemp = ps.EntryPointTemp()
+      plan.steps += ps.CreateNamedEntryPoint(trampEntryPointTemp, AdaptedProcedureSignature, trampolineSymbol) 
+
+      trampEntryPointTemp
+    }
+    
+    val cellTemp = selfTempOpt match {
+      case Some(selfTemp) =>
+        // Store the entry point in the procedure cell containing our closure data
+        plan.steps += ps.SetProcedureEntryPoint(selfTemp, entryPointTemp)
+
+        selfTemp
+
+      case None =>
+        // This must have an empty closure
+        // If we had a closure selfTempOpt would have been defined to contain it
+        // This means we have to create a new closureless procedure cell to contain the entry point
+        val cellTemp = ps.CellTemp(ct.ProcedureCell)
+        plan.steps += ps.CreateEmptyClosure(cellTemp, entryPointTemp)
+
+        cellTemp
+    }
+
+    BoxedValue(ct.ProcedureCell, cellTemp)
+  }
+  
   def toSchemeTempValue(targetType : vt.SchemeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
     if (hasDefiniteType(targetType)) {
-      // Store an entry point with an adapted signature
-      val entryPointTemp = if (signature == AdaptedProcedureSignature) {
-        // The procedure already has the correct signature
-        // This is unlikely but worth checking
-        planEntryPoint()
-      }
-      else {
-        // Give the trampoline a sufficently scary looking symbol
-        val trampolineSymbol = "__llambda_" + nativeSymbol + "_trampoline"
-
-        // Ensure this already hasn't been planned
-        plan.plannedFunctions.getOrElseUpdate(trampolineSymbol, {
-          // Plan the trampoline
-          PlanProcedureTrampoline(signature, nativeSymbol)
-        })
-
-        // Load the trampoline's entry point
-        val trampEntryPointTemp = ps.EntryPointTemp()
-        plan.steps += ps.CreateNamedEntryPoint(trampEntryPointTemp, AdaptedProcedureSignature, trampolineSymbol) 
-
-        trampEntryPointTemp
-      }
-      
-      val cellTemp = selfTempOpt match {
-        case Some(selfTemp) =>
-          // Store the entry point in the procedure cell containing our closure data
-          plan.steps += ps.SetProcedureEntryPoint(selfTemp, entryPointTemp)
-
-          selfTemp
-
-        case None =>
-          // This must have an empty closure
-          // If we had a closure selfTempOpt would have been defined to contain it
-          // This means we have to create a new closureless procedure cell to contain the entry point
-          val cellTemp = ps.CellTemp(ct.ProcedureCell)
-
-          plan.steps += ps.CreateEmptyClosure(cellTemp, entryPointTemp)
-
-          cellTemp
-      }
-    
-      cellTempToSupertype(cellTemp, ct.ProcedureCell, targetType.cellType)
+      toBoxedValue().castToCellTempValue(targetType.cellType)
     }
     else {
       impossibleConversion(s"Cannot convert ${typeDescription} to non-procedure type ${targetType.schemeName}")

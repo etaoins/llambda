@@ -4,17 +4,21 @@ import io.llambda
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
-import llambda.compiler.planner.typecheck.PlanTypeCheck
-import llambda.compiler.planner.{PlanWriter, InvokableProcedure}
+import llambda.compiler.planner.typecheck
+import llambda.compiler.planner.{PlanWriter, InvokableProcedure, BoxedValue}
 import llambda.compiler.InternalCompilerErrorException
 import llambda.compiler.RuntimeErrorMessage
 
-class CellValue(val schemeType : vt.SchemeType, val tempType : ct.CellType, val tempValue : ps.TempValue) extends IntermediateValue {
+class CellValue(val schemeType : vt.SchemeType, val boxedValue : BoxedValue) extends IntermediateValue {
   lazy val typeDescription = s"cell of type ${schemeType}"
+
+  private def isTypeNativePred(testType : vt.SchemeType)(implicit plan : PlanWriter) : ps.TempValue = {
+    typecheck.PlanTypeCheck(boxedValue, schemeType, testType).toNativePred()
+  }
 
   override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     // Find out if we're false
-    val isFalsePred = PlanTypeCheck(tempValue, schemeType, vt.ConstantBooleanType(false)).toNativePred()
+    val isFalsePred = isTypeNativePred(vt.ConstantBooleanType(false))
 
     // Invert the result
     val constantZeroPred = ps.Temp(vt.Predicate)
@@ -24,6 +28,9 @@ class CellValue(val schemeType : vt.SchemeType, val tempType : ct.CellType, val 
     plan.steps += ps.IntegerCompare(truthyPred, ps.CompareCond.Equal, None, isFalsePred, constantZeroPred)
     truthyPred
   }
+  
+  def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue =
+    boxedValue
   
   def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[InvokableProcedure] =  {
     if (vt.SatisfiesType(vt.ProcedureType, schemeType) == Some(false)) {
@@ -44,7 +51,7 @@ class CellValue(val schemeType : vt.SchemeType, val tempType : ct.CellType, val 
         // Need to cast to the right type
         // We've confirmed that no checking is needed because all of our possible types are equal to or supertypes of the
         // target type
-        cellTempToSupertype(tempValue, tempType, targetType.cellType) 
+        boxedValue.castToCellTempValue(targetType.cellType)
     
       case None =>
         val errorMessage = errorMessageOpt getOrElse {
@@ -55,17 +62,10 @@ class CellValue(val schemeType : vt.SchemeType, val tempType : ct.CellType, val 
         }
 
         // We have further type checking to do
-        val isTypePred = PlanTypeCheck(
-          valueTemp=tempValue,
-          valueType=schemeType,
-          testingType=targetType
-        ).toNativePred()
+        val isTypePred = isTypeNativePred(targetType)
             
         plan.steps += ps.AssertPredicate(worldPtr, isTypePred, errorMessage)
-
-        val castTemp = new ps.TempValue(tempValue.isGcManaged)
-        plan.steps += ps.CastCellToTypeUnchecked(castTemp, tempValue, targetType.cellType)
-        castTemp
+        boxedValue.castToCellTempValue(targetType.cellType)
 
       case Some(false) =>
         // Not possible
@@ -137,17 +137,17 @@ class CellValue(val schemeType : vt.SchemeType, val tempType : ct.CellType, val 
       }
       else {
         // We have to check types here and branch on the result
-        val isExactIntPred = PlanTypeCheck(tempValue, schemeType, vt.ExactIntegerType).toNativePred()
+        val isExactIntPred = isTypeNativePred(vt.ExactIntegerType)
 
         // Try again with constrained types
         // This will hit the branches above us
         val trueWriter = plan.forkPlan()
-        val trueDynamicValue = new CellValue(vt.ExactIntegerType, tempType, tempValue)
+        val trueDynamicValue = new CellValue(vt.ExactIntegerType, boxedValue)
         val trueTempValue = trueDynamicValue.toTempValue(fpType)(trueWriter, worldPtr)
 
         val falseWriter = plan.forkPlan()
         val refinedSchemeType = schemeType - vt.ExactIntegerType
-        val falseDynamicValue = new CellValue(refinedSchemeType, tempType, tempValue)
+        val falseDynamicValue = new CellValue(refinedSchemeType, boxedValue)
         val falseTempValue = falseDynamicValue.toTempValue(fpType)(falseWriter, worldPtr)
       
         val phiTemp = ps.Temp(fpType)

@@ -24,7 +24,7 @@ object TempValueToIntermediate {
       new iv.NativeCharacterValue(tempValue)
 
     case schemeType : vt.SchemeType =>
-      new iv.CellValue(schemeType, schemeType.cellType, tempValue)
+      new iv.CellValue(schemeType, BoxedValue(schemeType.cellType, tempValue))
 
     case _ : vt.ClosureType =>
       // "Closures" are mostly a fiction to re-use the machinery of records.

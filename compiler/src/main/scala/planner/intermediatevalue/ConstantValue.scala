@@ -4,22 +4,18 @@ import io.llambda
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
-import llambda.compiler.planner.PlanWriter
+import llambda.compiler.planner.{PlanWriter, BoxedValue}
 import llambda.compiler.RuntimeErrorMessage
 
 sealed abstract class ConstantValue(val cellType : ct.ConcreteCellType) extends IntermediateValue with UninvokableValue {
   val schemeType : vt.SchemeType = vt.SchemeTypeAtom(cellType)
     
-  def toConstantCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
-
   def toSchemeTempValue(targetType : vt.SchemeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
     if (vt.SatisfiesType(targetType, schemeType) != Some(true)) {
       impossibleConversion(s"Cannot convert ${typeDescription} to incompatible type ${targetType.schemeName}")
     }
 
-    val boxedTempValue = toConstantCellTempValue()
-    
-    cellTempToSupertype(boxedTempValue, cellType, targetType.cellType)
+    toBoxedValue().castToCellTempValue(targetType.cellType)
   }
   
   def preferredRepresentation : vt.ValueType =
@@ -30,10 +26,11 @@ sealed abstract class ConstantValue(val cellType : ct.ConcreteCellType) extends 
 }
 
 sealed abstract class TrivialConstantValue[T, U <: ps.CreateConstantCell](cellType : ct.ConcreteCellType, value : T, stepConstructor : (ps.TempValue, T) => U) extends ConstantValue(cellType) {
-  def toConstantCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
+  def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue = {
     val constantTemp = ps.CellTemp(cellType, knownConstant=true)
     plan.steps += stepConstructor(constantTemp, value)
-    constantTemp
+
+    BoxedValue(cellType, constantTemp)
   }
 }
 
@@ -55,7 +52,7 @@ class ConstantExactIntegerValue(val value : Long) extends TrivialConstantValue(c
       val constantTemp = ps.CellTemp(ct.InexactRationalCell, knownConstant=true)
       plan.steps += ps.CreateInexactRationalCell(constantTemp, value.toDouble)
     
-      cellTempToSupertype(constantTemp, ct.InexactRationalCell, targetType.cellType)
+      BoxedValue(ct.InexactRationalCell, constantTemp).castToCellTempValue(targetType.cellType)
     }
     else {
       super.toSchemeTempValue(targetType, errorMessageOpt)
@@ -144,7 +141,7 @@ class ConstantPairValue(val car : ConstantValue, val cdr : ConstantValue) extend
   override val schemeType : vt.SchemeType = vt.PairType(car.schemeType, cdr.schemeType)
   val typeDescription = "constant pair"
 
-  def toConstantCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
+  def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue = {
     val constantTemp = ps.CellTemp(cellType, knownConstant=true)
 
     // Box our car/cdr first
@@ -153,14 +150,14 @@ class ConstantPairValue(val car : ConstantValue, val cdr : ConstantValue) extend
 
     plan.steps += ps.CreatePairCell(constantTemp, carTemp, cdrTemp, listLengthOpt)
 
-    constantTemp
+    BoxedValue(cellType, constantTemp)
   }
 }
 
 class ConstantVectorValue(val elements : Vector[ConstantValue]) extends ConstantValue(ct.VectorCell) with BoxedOnlyValue {
   val typeDescription = "constant vector"
 
-  def toConstantCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
+  def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue = {
     val constantTemp = ps.CellTemp(cellType, knownConstant=true)
 
     // Box our elements
@@ -170,17 +167,17 @@ class ConstantVectorValue(val elements : Vector[ConstantValue]) extends Constant
 
     plan.steps += ps.CreateVectorCell(constantTemp, elementTemps)
 
-    constantTemp
+    BoxedValue(cellType, constantTemp)
   }
 }
 
 object EmptyListValue extends ConstantValue(ct.EmptyListCell) with BoxedOnlyValue with KnownListElement {
   val typeDescription = "constant empty list"
 
-  def toConstantCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
+  def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue = {
     val constantTemp = ps.CellTemp(cellType, knownConstant=true)
     plan.steps += ps.CreateEmptyListCell(constantTemp)
-    constantTemp
+    BoxedValue(cellType, constantTemp)
   }
   
   // KnownListElement implementation
@@ -191,10 +188,10 @@ object EmptyListValue extends ConstantValue(ct.EmptyListCell) with BoxedOnlyValu
 object UnitValue extends ConstantValue(ct.UnitCell) with BoxedOnlyValue {
   val typeDescription = "constant unit value"
 
-  def toConstantCellTempValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
+  def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue = {
     val constantTemp = ps.CellTemp(cellType, knownConstant=true)
     plan.steps += ps.CreateUnitCell(constantTemp)
-    constantTemp
+    BoxedValue(cellType, constantTemp)
   }
 }
 

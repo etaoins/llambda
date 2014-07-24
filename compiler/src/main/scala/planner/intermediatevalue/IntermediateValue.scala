@@ -5,7 +5,8 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.RuntimeErrorMessage
 import llambda.compiler.planner.{step => ps}
-import llambda.compiler.planner.{PlanWriter, TempValueToIntermediate, InvokableProcedure}
+import llambda.compiler.planner.typecheck
+import llambda.compiler.planner.{PlanWriter, TempValueToIntermediate, InvokableProcedure, BoxedValue}
 import llambda.compiler.ImpossibleTypeConversionException
 import llambda.compiler.InternalCompilerErrorException
 
@@ -14,25 +15,6 @@ trait IntermediateValueHelpers {
   protected def impossibleConversion(message : String)(implicit plan : PlanWriter) = { 
     throw new ImpossibleTypeConversionException(plan.activeContextLocated, message)
   }
-  
-  /** Converts the temp value of the given actual type to the passed super type
-    *
-    * This is a noop if the actual type matches the supertype
-    */
-  protected def cellTempToSupertype(cellTemp : ps.TempValue, actualType : ct.CellType, supertype : ct.CellType)(implicit plan : PlanWriter) : ps.TempValue = 
-    if (actualType != supertype) {
-      // Cast this to super
-
-      // This only needs to be GC managed if the original is GC managed
-      // This prevents us from rooting super casts of constant cells
-      val castTemp = new ps.TempValue(cellTemp.isGcManaged)
-      plan.steps += ps.CastCellToTypeUnchecked(castTemp, cellTemp, supertype)
-
-      castTemp
-    }
-    else {
-      cellTemp
-    }
 }
 
 abstract class IntermediateValue extends IntermediateValueHelpers {
@@ -63,7 +45,13 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
 
    trueTemp
   }
-  
+
+  /** Converts this value to any boxed cell value
+    *
+    * This is primarily used to interface with the type checking system which works on boxed values only
+    */
+  def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue
+
   def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[InvokableProcedure]
 
   def toTempValue(targetType : vt.ValueType, errorMessageOpt : Option[RuntimeErrorMessage] = None)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = targetType match {
@@ -102,11 +90,13 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     val phiResultTemp = new ps.TempValue(isGcManaged)
     val phiSchemeType = schemeType + theirValue.schemeType
 
+    val boxedValue = BoxedValue(ct.DatumCell, phiResultTemp)
+
     PlanPhiResult(
       ourTempValue=ourTempValue,
       theirTempValue=theirTempValue,
       resultTemp=phiResultTemp,
-      resultIntermediate=new CellValue(phiSchemeType, ct.DatumCell, phiResultTemp)
+      resultIntermediate=new CellValue(phiSchemeType, boxedValue)
     )
   }
 
