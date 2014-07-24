@@ -33,7 +33,7 @@ class ProcedureSignatureToIrSuite extends FunSuite {
     val procSignature = ProcedureSignature(
       hasWorldArg=false,
       hasSelfArg=false,
-      fixedArgs=List(vt.CBool, vt.UInt16),
+      fixedArgs=List(vt.Predicate, vt.UInt16),
       hasRestArg=false,
       returnType=Some(vt.Int32),
       attributes=Set()
@@ -43,7 +43,7 @@ class ProcedureSignatureToIrSuite extends FunSuite {
 
     assert(irSignature === IrSignature(
       result=Result(IntegerType(32), Set(SignExt)),
-      arguments=List(Argument(IntegerType(8), Set(ZeroExt)), Argument(IntegerType(16), Set(ZeroExt))),
+      arguments=List(Argument(IntegerType(1), Set(ZeroExt)), Argument(IntegerType(16), Set(ZeroExt))),
       attributes=Set(NoUnwind)
     ))
   }

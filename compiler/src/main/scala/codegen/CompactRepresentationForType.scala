@@ -12,7 +12,7 @@ object CompactRepresentationForType {
   def apply(valueType : vt.ValueType) : vt.ValueType = valueType match {
     case vt.ExactIntegerType => vt.Int64
     case vt.InexactRationalType => vt.Double
-    case vt.BooleanType => vt.CBool
+    case vt.BooleanType => vt.Predicate
     case vt.CharacterType => vt.UnicodeChar
     case other => other
   }

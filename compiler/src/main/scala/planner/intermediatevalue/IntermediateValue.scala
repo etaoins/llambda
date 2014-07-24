@@ -58,14 +58,6 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     case vt.Predicate =>
       toTruthyPredicate()
 
-    case vt.CBool =>
-      val truthyPredTemp = toTruthyPredicate()
-
-      val intConvTemp = ps.Temp(vt.CBool)
-      plan.steps += ps.ConvertNativeInteger(intConvTemp, truthyPredTemp, vt.CBool.bits, false)
-
-      intConvTemp
-
     case nativeType : vt.NativeType =>
       toNativeTempValue(nativeType, errorMessageOpt)
 

@@ -8,9 +8,9 @@ import org.scalatest.FunSuite
 
 class ValueTypeToIrSuite extends FunSuite {
   test("bool") {
-    val typeWithSign = ValueTypeToIr(vt.CBool)
+    val typeWithSign = ValueTypeToIr(vt.Predicate)
 
-    assert(typeWithSign.irType === llvmir.IntegerType(8))
+    assert(typeWithSign.irType === llvmir.IntegerType(1))
     assert(typeWithSign.signed === Some(false))
   }
   

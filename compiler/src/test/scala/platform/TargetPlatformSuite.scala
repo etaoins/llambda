@@ -53,6 +53,7 @@ class TargetPlatformSuite extends FunSuite {
 
   test("bytesForType for integers") {
     // This shouldn't be platform-specifc
+    assert(Posix64LE.bytesForType(vt.Predicate) === 1)
     assert(Posix64LE.bytesForType(vt.Int8) === 1)
     assert(Posix64LE.bytesForType(vt.Int16) === 2)
     assert(Posix64LE.bytesForType(vt.Int32) === 4)

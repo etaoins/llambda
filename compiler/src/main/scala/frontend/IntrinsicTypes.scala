@@ -8,7 +8,7 @@ object IntrinsicTypes {
   def apply(targetPlatform : TargetPlatform) : Map[String, vt.ValueType] = 
     // Intrinsic native types
     List(
-      vt.CBool,
+      vt.Predicate,
       vt.Int8,
       vt.Int16,
       vt.Int32,

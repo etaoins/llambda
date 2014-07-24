@@ -11,9 +11,6 @@ object TempValueToIntermediate {
     case vt.Predicate =>
       new iv.NativePredicateValue(tempValue)
 
-    case vt.CBool =>
-      new iv.NativeBooleanValue(tempValue)
-
     case intType : vt.IntType =>
       new iv.NativeExactIntegerValue(tempValue, intType)
     

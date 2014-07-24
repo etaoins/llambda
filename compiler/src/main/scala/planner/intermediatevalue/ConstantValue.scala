@@ -120,7 +120,7 @@ class ConstantBooleanValue(val value : Boolean) extends TrivialConstantValue(ct.
 
   override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     val predTemp = ps.Temp(vt.Predicate)
-    plan.steps += ps.CreateNativeInteger(predTemp, intValue, 1) 
+    plan.steps += ps.CreateNativeInteger(predTemp, intValue, vt.Predicate.bits) 
 
     predTemp
   }
@@ -130,7 +130,7 @@ class ConstantBooleanValue(val value : Boolean) extends TrivialConstantValue(ct.
     impossibleConversion(s"Cannot convert ${typeDescription} to non-boolean native type ${nativeType.schemeName}")
   
   override def preferredRepresentation : vt.ValueType =
-    vt.CBool
+    vt.Predicate
 }
 
 class ConstantBytevectorValue(val elements : Vector[Short]) extends TrivialConstantValue(ct.BytevectorCell, elements, ps.CreateBytevectorCell.apply) with BoxedOnlyValue {

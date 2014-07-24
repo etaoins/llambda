@@ -80,24 +80,6 @@ class NativePredicateValue(tempValue : ps.TempValue) extends NativeValue(vt.Pred
   }
 }
 
-class NativeBooleanValue(tempValue : ps.TempValue) extends NativeValue(vt.CBool, ct.BooleanCell, tempValue) {
-  def withNewTempValue(tempValue : ps.TempValue) = new NativeBooleanValue(tempValue)
-
-  override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
-    val predTemp = ps.Temp(nativeType)
-    plan.steps += ps.ConvertNativeInteger(predTemp, tempValue, 1, false) 
-
-    predTemp
-  }
-  
-  def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue =  {
-    val boxedTemp = ps.CellTemp(ct.BooleanCell)
-    plan.steps += ps.BoxBoolean(boxedTemp, toTruthyPredicate())
-
-    BoxedValue(cellType, boxedTemp)
-  }
-}
-
 class NativeExactIntegerValue(tempValue : ps.TempValue, nativeType : vt.IntType) extends NativeValue(nativeType, ct.ExactIntegerCell, tempValue) {
   def withNewTempValue(tempValue : ps.TempValue) = new NativeExactIntegerValue(tempValue, nativeType)
 

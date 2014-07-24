@@ -159,7 +159,7 @@ class CellValue(val schemeType : vt.SchemeType, val boxedValue : BoxedValue) ext
         phiTemp
       }
 
-    case _ : vt.BoolLikeType =>
+    case vt.Predicate =>
       throw new InternalCompilerErrorException("Attempt to directly convert to native boolean. Should be caught by toTruthyPredicate.")
   }
   

@@ -33,18 +33,9 @@ sealed abstract class NativeType extends ValueType {
 /** Type reperesented by a native integer */
 sealed abstract class IntLikeType(val bits : Int, val signed : Boolean) extends NativeType
 
-/** Native integer type representing a Scheme boolean */
-sealed abstract class BoolLikeType(bits : Int) extends IntLikeType(bits, false) {
+/** Native boolean value */
+case object Predicate extends IntLikeType(1, false) {
   val schemeType = BooleanType
-}
-
-/** LLVM single bit predicates */
-case object Predicate extends BoolLikeType(1) {
-  val schemeName = "<internal-predicate>"
-}
-
-/** C99/C++ style single byte boolean */
-case object CBool extends BoolLikeType(8) {
   val schemeName = "<bool>"
 }
 

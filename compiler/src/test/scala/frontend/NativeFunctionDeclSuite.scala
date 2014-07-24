@@ -142,9 +142,9 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgs=List(vt.CBool),
+        fixedArgs=List(vt.Predicate),
         hasRestArg=false,
-        returnType=Some(vt.CBool),
+        returnType=Some(vt.Predicate),
         attributes=Set()
       ),
       "lliby_newline"
@@ -214,7 +214,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgs=List(vt.CBool),
+        fixedArgs=List(vt.Predicate),
         hasRestArg=true,
         returnType=Some(vt.Int32),
         attributes=Set()
