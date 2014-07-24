@@ -4,8 +4,6 @@ import io.llambda
 import llambda.compiler.{valuetype => vt}
 
 trait KnownListElement extends IntermediateValue {
-  override lazy val isDefiniteProperList = listLengthOpt.isDefined
-
   /** Returns the length of the proper list this element is a part of
     *
     * If this element isn't part of a proper list or the length of the list can't be statically determined then this

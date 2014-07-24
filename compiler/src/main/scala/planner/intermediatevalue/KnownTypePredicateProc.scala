@@ -16,19 +16,20 @@ class KnownTypePredicateProc(testingType : vt.SchemeType) extends KnownArtificia
 
   val signature = TypePredicateProcSignature
   
-  def planFunction(parentPlan : PlanWriter) : PlannedFunction = {
+  def planFunction(parentPlan : PlanWriter, allocedSymbol : String) : PlannedFunction = {
     // We only have a single argument
     val argumentTemp = ps.CellTemp(ct.DatumCell)
     
     val plan = parentPlan.forkPlan()
 
     // Perform an inner type check returning a boolean result
-    // Note that this is forced inline chck. The normal PlanTypeCheck entry point to the type system might decide
-    // to call this type check out-of-line which won't work because *this* is the out-of-line implementation.
+    // Note that this is forced inline check because we pass selfSymbolOpt. The normal PlanTypeCheck entry point to the
+    // type system might decide  to call this type check out-of-line which won't work because *this* is the out-of-line
+    // implementation.
     val cellTemp = BoxedValue(ct.DatumCell, argumentTemp)
-    val checkResult = PlanTypeCheck(cellTemp, vt.AnySchemeType, testingType, mustInline=true)(plan)
+    val checkResult = PlanTypeCheck(cellTemp, vt.AnySchemeType, testingType, selfSymbolOpt=Some(allocedSymbol))(plan)
 
-    val retValueTemp = checkResult.toNativeCBool()(plan)
+    val retValueTemp = checkResult.toNativePred()(plan)
 
     plan.steps += ps.Return(Some(retValueTemp))
 

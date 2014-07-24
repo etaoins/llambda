@@ -25,7 +25,7 @@ abstract class KnownArtificialProc extends KnownProc(None) {
   def nativeSymbol(implicit plan : PlanWriter) : String = {
     if (!plannedNativeSymbolOpt.isDefined) {
       val allocedSymbol = plan.allocProcedureSymbol(symbolHint)
-      plan.plannedFunctions += (allocedSymbol -> planFunction(plan))
+      plan.plannedFunctions += (allocedSymbol -> planFunction(plan, allocedSymbol))
 
       plannedNativeSymbolOpt = Some(allocedSymbol)
     }
@@ -33,7 +33,7 @@ abstract class KnownArtificialProc extends KnownProc(None) {
     plannedNativeSymbolOpt.get
   }
   
-  protected def planFunction(parentPlan : PlanWriter) : PlannedFunction
+  protected def planFunction(parentPlan : PlanWriter, allocedSymbol : String) : PlannedFunction
 
   override def restoreFromClosure(valueType : vt.ValueType, varTemp : ps.TempValue) : IntermediateValue = {
     // We have no self value so we don't need be to captured and therefore restored

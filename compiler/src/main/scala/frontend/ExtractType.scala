@@ -27,6 +27,15 @@ object ExtractType {
           case _ =>
             throw new BadSpecialFormException(constructorName, "Pair constructor requires exactly two arguments")
         }
+      
+      case Primitives.Listof =>
+        operands match {
+          case List(memberDatum) =>
+            vt.ProperListType(extractSchemeType(memberDatum))
+
+          case _ =>
+            throw new BadSpecialFormException(constructorName, "Listof requires exactly one member type argument")
+        }
 
       case _ =>
         throw new BadSpecialFormException(constructorName, "Invalid type constructor syntax")

@@ -246,12 +246,30 @@
     (define-r7rs not (make-predicate #f))
     (define-r7rs boolean=? (world-function "lliby_boolean_equal" (<boolean-cell> <boolean-cell> . <list-element-cell>) -> <bool>))
 
-    ; Internal helper type
-    (define-type <pair> (Pair <datum-cell> <datum-cell>))
+    ; Internal helper types
+    (define-type <any> <datum-cell>)
+    (define-type <pair> (Pair <any> <any>))
 
     (define-r7rs pair? (make-predicate <pair>))
     (define-r7rs null? (make-predicate <empty-list-cell>))
-    (define-r7rs list? (native-function "lliby_is_list" (<datum-cell>) -> <bool>))
+
+    (define-r7rs list?
+      (cond-expand
+        (immutable-pairs
+          (make-predicate (Listof <any>)))
+        (else 
+          ; This is tricky 
+          ; We really shouldn't use (Listof) at all if we don't have immutable pairs. The problem with directly defining
+          ; list? as a predicate is that occurrence typing might notice that (list?) is satisfied once and then deduce
+          ; that its a list for the rest of the value's lifetime. If pairs are mutable that assumption could be violated
+          ; at any time
+          ;
+          ; Get around this by defining (list?) as a procedure that examines its argument. The argument value is
+          ; distinct from the value passed to (list?) so it shouldn't affect the caller's type information.
+          (lambda (obj)
+            (define arg-is-list? (make-predicate (Listof <any>)))
+            (arg-is-list? obj)))))
+
     (define-r7rs cons (world-function "lliby_cons" (<datum-cell> <datum-cell>) -> <pair>))
     (define-r7rs car (native-function "lliby_car" (<pair>) -> <datum-cell>))
     (define-r7rs cdr (native-function "lliby_cdr" (<pair>) -> <datum-cell>))

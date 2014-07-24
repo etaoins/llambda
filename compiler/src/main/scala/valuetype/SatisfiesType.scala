@@ -65,6 +65,41 @@ object SatisfiesType {
         yield
           (carSatisfies && cdrSatisfies)
 
+      case (superList @ ProperListType(superMember), _) =>
+        testingType match {
+          case ProperListType(testingMember) =>
+            SatisfiesType(superMember, testingMember)
+
+          case testingPair : PairType =>
+            for(carSatisfies <- SatisfiesType(superMember, testingPair.carType);
+                cdrSatisfies <- SatisfiesType(superList, testingPair.cdrType))
+            yield
+              (carSatisfies && cdrSatisfies)
+
+          case EmptyListType =>
+            // Empty list satisfies all proper lists
+            Some(true)
+
+          case _ =>
+            Some(false)
+        }
+
+      case (_, testingList @ ProperListType(testingMember)) =>
+        superType match {
+          case superPair : PairType => 
+            for(carSatisfies <- SatisfiesType(superPair.carType, testingMember);
+                cdrSatisfies <- SatisfiesType(superPair.cdrType, testingList))
+            yield
+              (carSatisfies && cdrSatisfies)
+
+          case EmptyListType =>
+            // Proper lists may satisfy a proper list
+            None
+          
+          case _ =>
+            Some(false)
+        }
+
       case (superDerived : DerivedSchemeType, _) =>
         // Didn't have an exact match - check our parent types
         apply(superDerived.parentType, testingType) match {

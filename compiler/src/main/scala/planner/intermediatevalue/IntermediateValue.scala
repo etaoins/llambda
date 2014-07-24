@@ -27,8 +27,8 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
   def hasDefiniteType(otherType : vt.SchemeType) : Boolean =
     vt.SatisfiesType(otherType, schemeType) == Some(true)
 
-  lazy val isDefiniteProperList : Boolean =
-    hasDefiniteType(vt.EmptyListType)
+  def isDefiniteProperList : Boolean =
+    vt.SatisfiesType(vt.ProperListType(vt.AnySchemeType), schemeType) == Some(true)
 
   case class PlanPhiResult(
     ourTempValue : ps.TempValue,

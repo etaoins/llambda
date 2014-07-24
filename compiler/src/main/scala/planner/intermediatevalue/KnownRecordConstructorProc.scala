@@ -21,7 +21,7 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
     attributes=Set()
   )
   
-  def planFunction(parentPlan : PlanWriter) : PlannedFunction = {
+  def planFunction(parentPlan : PlanWriter, allocedSymbol : String) : PlannedFunction = {
     val plan = parentPlan.forkPlan()
     val worldPtrTemp = new ps.WorldPtrValue
 

@@ -32,6 +32,36 @@ class ListProcSuite extends FunSuite with PlanHelpers {
       (define-type <number-symbol-pair> (Pair <number> <symbol>))
       ((make-predicate <number-symbol-pair>) '(hello . 1))
       """, ast.BooleanLiteral(false))
+    
+    // List of strings is a list of strings
+    assertStaticPlan("""
+      (define-type <string-list> (Listof <string>))
+      ((make-predicate <string-list>) '("one" "two" "three"))
+      """, ast.BooleanLiteral(true))
+    
+    // Empty list is a list of strings
+    assertStaticPlan("""
+      (define-type <string-list> (Listof <string>))
+      ((make-predicate <string-list>) '())
+      """, ast.BooleanLiteral(true))
+    
+    // List containing symbol is not a list of strings
+    assertStaticPlan("""
+      (define-type <string-list> (Listof <string>))
+      ((make-predicate <string-list>) '("one" 'two "three"))
+      """, ast.BooleanLiteral(false))
+    
+    // List-of-list-of-strings is a list-of-list-of-strings
+    assertStaticPlan("""
+      (define-type <string-list-list> (Listof (Listof <string>)))
+      ((make-predicate <string-list-list>) '(("one" "two") ("three") ()))
+      """, ast.BooleanLiteral(true))
+    
+    // List of strings is not a list-of-list-of-strings
+    assertStaticPlan("""
+      (define-type <string-list-list> (Listof (Listof <string>)))
+      ((make-predicate <string-list-list>) '("one" "two" "three"))
+      """, ast.BooleanLiteral(false))
   }
 
   test("static (length)") {

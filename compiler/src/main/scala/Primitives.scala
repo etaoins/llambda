@@ -30,6 +30,7 @@ object Primitives {
 
   object TypeUnion extends PrimitiveTypeConstructor
   object Pair extends PrimitiveTypeConstructor
+  object Listof extends PrimitiveTypeConstructor
 
   val bindings = {
     Map[String, BoundValue](
@@ -59,7 +60,8 @@ object Primitives {
       "make-predicate" -> MakePredicate,
 
       "U" -> TypeUnion,
-      "Pair" -> Pair
+      "Pair" -> Pair,
+      "Listof" -> Listof
     )
   }
 }

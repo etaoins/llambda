@@ -17,7 +17,6 @@ import llambda.compiler.RuntimeErrorMessage
   * same for all procedures so they can be called without specific knowledge of the backing procedure. These adapted
   * procedure values are represented by InvokableProcedureCell
   *
-  * @param nativeSymbol  Native symbol of the direct entry point to the procedure
   * @param selfTempOpt   For procedures with closures a procedure cell containing the procedure's closure. The entry
   *                      point does not have to be initialized; it will be set dynamically to a generated trampoline
   *                      if this value is explicitly converted to a ct.ProcedureCell

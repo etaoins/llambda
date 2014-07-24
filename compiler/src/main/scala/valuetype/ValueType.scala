@@ -143,8 +143,7 @@ sealed abstract trait ConstantValueType extends SchemeType
   * This is to enforce that unions of unions have their member types flattened in to a single union.
   */
 sealed abstract trait NonUnionSchemeType extends SchemeType {
-  // Non-union types always have a concrete cell type
-  val cellType : ct.ConcreteCellType
+  val cellType : ct.CellType
 
   def -(otherType : SchemeType) : SchemeType = 
     if (SatisfiesType(otherType, this) == Some(true)) {
@@ -249,6 +248,14 @@ object PairType {
   }
 }
 
+/** Proper list contains members of a certain type */
+case class ProperListType(memberType : SchemeType) extends NonUnionSchemeType {
+  val cellType = ct.ListElementCell
+  val schemeName = s"(Listof ${memberType.schemeName}" 
+  val isGcManaged = true
+}
+
+
 /** Pointer to a garabge collected value cell containing a user-defined record type
   * 
   * This uniquely identifies a record type even if has the same name and internal structure as another type 
@@ -269,7 +276,7 @@ case class UnionType(memberTypes : Set[NonUnionSchemeType]) extends SchemeType {
 
   /** Most specific cell type that is a superset all of our member types */
   lazy val cellType : ct.CellType = {
-    val possibleCellTypes = memberTypes.map(_.cellType) : Set[ct.ConcreteCellType]
+    val possibleCellTypes = memberTypes.flatMap(_.cellType.concreteTypes) : Set[ct.ConcreteCellType]
 
     // Find the most specific cell type that will cover all of our member types
     (cellTypesBySpecificity(ct.DatumCell).find { candidateCellType =>

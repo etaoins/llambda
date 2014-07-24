@@ -97,3 +97,20 @@
     (assert-true (two-number-proper-list? '(1.0 -5)))
     (assert-false (two-number-proper-list? '(1 . 2)))
     (assert-false (two-number-proper-list? '(1 sneaky-symbol)))))))
+
+(cond-expand (immutable-pairs
+  (define-test "(define-predicate) for lists" (expect-success
+    
+  (import (llambda typed))
+    
+  (define-predicate string-list? (Listof <string>))
+  (define-predicate symbol-list? (Listof <symbol>))
+
+  (assert-true  (string-list? '("one" "two")))
+  (assert-false (string-list? '(one two)))
+  (assert-false (string-list? '(1 2)))
+
+  (assert-false (symbol-list? '("one" "two")))
+  (assert-true  (symbol-list? '(one two)))
+  (assert-false (symbol-list? '(1 2)))))))
+

@@ -111,4 +111,24 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
       bodyFor("(define-type <insufficient-args> (Pair <string-cell>))")(scope)
     }
   }
+  
+  test("defining list types") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    bodyFor("(define-type <string-list> (Listof <string-cell>))")(scope)
+    assert(scope("<string-list>") === BoundType(vt.ProperListType(vt.StringType)))
+    
+    bodyFor("(define-type <string-list-list> (Listof (Listof <string-cell>)))")(scope)
+    assert(scope("<string-list-list>") === BoundType(vt.ProperListType(vt.ProperListType(vt.StringType))))
+
+    intercept[BadSpecialFormException] {
+      // Too many arguments
+      bodyFor("(define-type <too-many-args> (Listof <string-cell> <string-cell>))")(scope)
+    }
+    
+    intercept[BadSpecialFormException] {
+      // Not enough arguments
+      bodyFor("(define-type <insufficient-args> (Listof))")(scope)
+    }
+  }
 }

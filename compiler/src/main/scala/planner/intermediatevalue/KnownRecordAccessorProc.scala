@@ -22,7 +22,7 @@ class KnownRecordAccessorProc(recordType : vt.RecordType, field : vt.RecordField
     attributes=Set()
   )
   
-  def planFunction(parentPlan : PlanWriter) : PlannedFunction = {
+  def planFunction(parentPlan : PlanWriter, allocedSymbol : String) : PlannedFunction = {
     val recordCellTemp = ps.RecordTemp()
     
     val plan = parentPlan.forkPlan()

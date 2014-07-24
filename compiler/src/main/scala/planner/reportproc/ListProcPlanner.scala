@@ -37,13 +37,6 @@ object ListProcPlanner extends ReportProcPlanner {
   }
 
   def apply(initialState : PlannerState)(reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = (reportName, operands) match {
-    case ("list?", List((_, singleOperand))) if singleOperand.isDefiniteProperList =>
-      // Definitely a proper list
-      Some(PlanResult(
-        state=initialState,
-        value=new iv.ConstantBooleanValue(true)
-      ))
-
     case ("list", operands) =>
       // Build a proper list directly
       val operandValues = operands.map(_._2)

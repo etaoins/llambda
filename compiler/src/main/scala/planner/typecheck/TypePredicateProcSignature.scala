@@ -10,7 +10,7 @@ object TypePredicateProcSignature extends ProcedureSignature(
     hasRestArg=false,
     // We must be able to take any data type without erroring out
     fixedArgs=List(vt.AnySchemeType),
-    returnType=Some(vt.CBool),
+    returnType=Some(vt.Predicate),
     attributes=Set()
 )
   

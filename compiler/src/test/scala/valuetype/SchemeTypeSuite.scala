@@ -14,6 +14,17 @@ class SchemeTypeSuite extends FunSuite {
   private val constantTrue = ConstantBooleanType(true)
   private val constantFalse = ConstantBooleanType(false)
 
+  private val stringList = ProperListType(StringType)
+  private val numericList = ProperListType(NumericType)
+  private val exactIntList = ProperListType(ExactIntegerType)
+  private val inexactList = ProperListType(InexactRationalType)
+    
+  private val knownNumberList = PairType(NumericType,
+    PairType(ExactIntegerType,
+      PairType(InexactRationalType,
+        EmptyListType)))
+
+
   private def assertIntersection(type1 : SchemeType, type2 : SchemeType, resultType : SchemeType) {
     assert((type1 & type2) === resultType) 
     assert((type2 & type1) === resultType) 
@@ -239,5 +250,49 @@ class SchemeTypeSuite extends FunSuite {
     val specificPairType2 = PairType(StringType, SymbolType)
 
     assert(SatisfiesType(specificPairType1, specificPairType2) === Some(false))
+  }
+
+  test("proper list type satisfies itself") {
+    assert(SatisfiesType(stringList, stringList) === Some(true))
+  }
+  
+  test("proper list type satisfies more general proper list") {
+    assert(SatisfiesType(numericList, exactIntList) === Some(true))
+  }
+  
+  test("proper list type may satisfy more specific proper list") {
+    assert(SatisfiesType(exactIntList, numericList) === None)
+  }
+
+  test("proper list does not satisfy disjoint proper list") {
+    assert(SatisfiesType(stringList, exactIntList) === Some(false))
+  }
+  
+  test("empty list definitely satisfies proper list") {
+    assert(SatisfiesType(stringList, EmptyListType) === Some(true))
+  }
+  
+  test("known list structure satisfies proper list") {
+    assert(SatisfiesType(numericList, knownNumberList) === Some(true))
+  }
+
+  test("proper list may satisfy empty list") {
+    assert(SatisfiesType(EmptyListType, stringList) === None)
+  }
+  
+  test("proper list may satisfy compatible pair") {
+    assert(SatisfiesType(knownNumberList, numericList) === None)
+  }
+  
+  test("proper list definitely does not satisfy incompatible pair") {
+    assert(SatisfiesType(knownNumberList, stringList) === None)
+  }
+  
+  test("proper list type definitely doesn't satisfy non-list element") {
+    assert(SatisfiesType(ExactIntegerType, numericList) === Some(false))
+  }
+  
+  test("non-list element doesn't satisfy a proper list") {
+    assert(SatisfiesType(numericList, ExactIntegerType) === Some(false))
   }
 }

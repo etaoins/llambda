@@ -23,7 +23,7 @@ class KnownRecordMutatorProc(recordType : vt.RecordType, field : vt.RecordField)
       "-" + field.sourceName +
       "!"
   
-  def planFunction(parentPlan : PlanWriter) : PlannedFunction = {
+  def planFunction(parentPlan : PlanWriter, allocedSymbol : String) : PlannedFunction = {
     // Set up our arguments
     val recordCellTemp = ps.RecordTemp()
     val newValueTemp = ps.Temp(field.fieldType)
