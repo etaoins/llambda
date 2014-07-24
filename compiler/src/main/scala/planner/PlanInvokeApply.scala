@@ -10,24 +10,7 @@ import llambda.compiler.{celltype => ct}
 
 object PlanInvokeApply {
   private def boxRestArgs(restArgs : List[iv.IntermediateValue])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
-    val restArgCount = restArgs.length
-
-    if (restArgCount == 0) {
-      // Avoid a cell allocation here so our plan optimizer knows we don't need GC
-
-      // This is unmanaged because the empty list is a constant value
-      val emptyListTemp = ps.CellTemp(ct.EmptyListCell, knownConstant=true)
-      plan.steps += ps.CreateEmptyListCell(emptyListTemp)
-
-      // We know this is constant because the empty list is constant
-      val listElemCast = ps.CellTemp(ct.ListElementCell, knownConstant=true)
-      plan.steps += ps.CastCellToTypeUnchecked(listElemCast, emptyListTemp, ct.ListElementCell)
-
-      listElemCast
-    }
-    else {
-      ValuesToProperList(restArgs).toTempValue(vt.ListElementType)
-    }
+    ValuesToProperList(restArgs).toTempValue(vt.ListElementType)
   }
 
   def apply(invokableProc : InvokableProcedure, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
