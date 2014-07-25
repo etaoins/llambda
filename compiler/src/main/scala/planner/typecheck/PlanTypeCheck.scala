@@ -175,9 +175,12 @@ object PlanTypeCheck {
       case None =>
         // Have we either:
         // 1) Explicitly been asked to inline (e.g. while planning the type predicate itself(
-        // 2) Been given a value with type information that would be lost calling a predicate
+        // 2) Been given a value with type information that would be lost calling a predicate. Exclude proper lists as
+        //    they require a recursive function call anyway 
         // 3) Have an extremely trivial check to perform
-        val shouldInline = mustInline || !(valueType eq vt.AnySchemeType) || testType.isInstanceOf[vt.SchemeTypeAtom]
+        val shouldInline = mustInline || 
+          (!(valueType eq vt.AnySchemeType) && !testType.isInstanceOf[vt.ProperListType]) || 
+          testType.isInstanceOf[vt.SchemeTypeAtom]
 
         val testResult = if (shouldInline) {
           testType match {

@@ -139,14 +139,25 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
     assert(signature.fixedArgs === List(vt.VectorType, vt.ExactIntegerType))
     assert(signature.returnType === Some(vt.AnySchemeType))
   }
+
+  test("procedure proxying function with typed rest arg") {
+    val signature = signatureFor("""
+      (lambda (val1 val2) 
+        (+ 5 val1 val2))""")
+
+    // (+) can can throw an exception
+    // This mean (vector-ref) may not be executed
+    assert(signature.fixedArgs === List(vt.NumericType, vt.NumericType))
+    assert(signature.returnType === Some(vt.NumericType))
+  }
   
   test("procedure proxying (vector-ref) past possible exception point") {
     val signature = signatureFor("""
       (lambda (vec index) 
-        (+ 1 2 3 'not-a-number)
+        (/ 0 0)
         (vector-ref vec index))""")
 
-    // (+) can can throw an exception
+    // (/) can can throw an exception
     // This mean (vector-ref) may not be executed
     assert(signature.fixedArgs === List(vt.AnySchemeType, vt.AnySchemeType))
     assert(signature.returnType === Some(vt.AnySchemeType))
@@ -155,7 +166,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
   test("aborted retyping preserves original argument types") {
     val signature = signatureFor("""
       (lambda: ((vec : <vector>) (index : <number>)) 
-        (+ 1 2 3 'not-a-number)
+        (/ 0 0)
         (vector-ref vec index))""")
 
     assert(signature.fixedArgs === List(vt.VectorType, vt.NumericType))

@@ -8,7 +8,7 @@ object LlambdaTopLevelSignature extends ProcedureSignature(
   hasWorldArg=true,
   hasSelfArg=false,
   fixedArgs=Nil,
-  hasRestArg=false,
+  restArgOpt=None,
   returnType=None,
   attributes=Set()
 ) {

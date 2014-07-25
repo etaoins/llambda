@@ -46,7 +46,7 @@ class AnalyseExprsSuite extends FunSuite {
       hasWorldArg=true,
       hasSelfArg=false,
       fixedArgs=Nil,
-      hasRestArg=false,
+      restArgOpt=None,
       returnType=None,
       attributes=Set()
     )

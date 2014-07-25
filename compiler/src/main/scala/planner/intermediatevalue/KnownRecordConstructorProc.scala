@@ -15,7 +15,7 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
   val signature = ProcedureSignature(
     hasWorldArg=true,
     hasSelfArg=false,
-    hasRestArg=false,
+    restArgOpt=None,
     fixedArgs=initializedFields.map(_.fieldType),
     returnType=Some(recordType),
     attributes=Set()

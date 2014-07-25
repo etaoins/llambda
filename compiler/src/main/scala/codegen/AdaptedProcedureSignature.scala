@@ -13,7 +13,7 @@ object AdaptedProcedureSignature extends ProcedureSignature(
   hasWorldArg=true,
   hasSelfArg=true,
   fixedArgs=Nil,
-  hasRestArg=true,
+  restArgOpt=Some(vt.AnySchemeType),
   returnType=Some(vt.AnySchemeType),
   attributes=Set()
 )

@@ -10,7 +10,7 @@ class KnownRecordMutatorProc(recordType : vt.RecordType, field : vt.RecordField)
   val signature = ProcedureSignature(
     hasWorldArg=false,
     hasSelfArg=false,
-    hasRestArg=false,
+    restArgOpt=None,
     fixedArgs=List(recordType, field.fieldType),
     returnType=None,
     attributes=Set()

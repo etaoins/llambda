@@ -15,7 +15,7 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       hasWorldArg=false,
       hasSelfArg=false,
       fixedArgs=Nil,
-      hasRestArg=false,
+      restArgOpt=None,
       returnType=None,
       attributes=Set()
     )
@@ -34,7 +34,7 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       hasWorldArg=false,
       hasSelfArg=false,
       fixedArgs=List(vt.Predicate, vt.UInt16),
-      hasRestArg=false,
+      restArgOpt=None,
       returnType=Some(vt.Int32),
       attributes=Set()
     )
@@ -53,7 +53,7 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       hasWorldArg=true,
       hasSelfArg=true,
       fixedArgs=Nil,
-      hasRestArg=false,
+      restArgOpt=None,
       returnType=None,
       attributes=Set(ProcedureAttribute.NoReturn)
     )
@@ -75,7 +75,7 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       hasWorldArg=false,
       hasSelfArg=false,
       fixedArgs=Nil,
-      hasRestArg=true,
+      restArgOpt=Some(vt.SymbolType),
       returnType=Some(vt.UInt32),
       attributes=Set()
     )
@@ -94,7 +94,7 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       hasWorldArg=true,
       hasSelfArg=true,
       fixedArgs=List(vt.NumericType, vt.NumericType),
-      hasRestArg=true,
+      restArgOpt=Some(vt.ExactIntegerType),
       returnType=Some(vt.InexactRationalType),
       attributes=Set()
     )

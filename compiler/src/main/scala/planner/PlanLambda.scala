@@ -196,7 +196,7 @@ private[planner] object PlanLambda {
     val initialSignature = ProcedureSignature(
       hasWorldArg=true,
       hasSelfArg=innerSelfTempOpt.isDefined,
-      hasRestArg=restArgLoc.isDefined,
+      restArgOpt=restArgLoc.map(_ => vt.AnySchemeType),
       fixedArgs=retypedFixedArgs.map(_._2),
       returnType=Some(vt.AnySchemeType),
       attributes=Set()

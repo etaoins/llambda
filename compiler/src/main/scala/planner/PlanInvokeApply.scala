@@ -9,16 +9,12 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 
 object PlanInvokeApply {
-  private def boxRestArgs(restArgs : List[iv.IntermediateValue])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
-    ValuesToProperList(restArgs).toTempValue(vt.ListElementType)
-  }
-
   def apply(invokableProc : InvokableProcedure, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
     val entryPointTemp = invokableProc.planEntryPoint()
     val signature = invokableProc.signature
 
     // Ensure our arity is sane
-    if (signature.hasRestArg) {
+    if (signature.restArgOpt.isDefined) {
       if (operands.length < signature.fixedArgs.length) {
         throw new IncompatibleArityException(
           located=plan.activeContextLocated,
@@ -56,11 +52,16 @@ object PlanInvokeApply {
       }
     }
 
-    val restTemps = if (signature.hasRestArg) {
-      boxRestArgs(operands.map(_._2).drop(signature.fixedArgs.length)) :: Nil
-    }
-    else {
-      Nil
+    val restTemps = signature.restArgOpt map { memberType =>
+      val restOperands = operands.drop(signature.fixedArgs.length)
+
+      val restArgs = restOperands map { case (contextLocated, restValue) =>
+        plan.withContextLocation(contextLocated) {
+          restValue.castToSchemeType(memberType)
+        }
+      }
+
+      ValuesToProperList(restArgs).toTempValue(vt.ListElementType)
     }
 
     val argTemps = worldTemps ++ selfTemps ++ fixedTemps ++ restTemps

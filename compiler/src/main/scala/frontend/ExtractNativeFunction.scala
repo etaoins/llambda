@@ -15,16 +15,12 @@ object ExtractNativeFunction {
   ) : et.NativeFunction = {
     val fixedArgTypes = fixedArgData map ExtractType.extractValueType
 
-    val hasRestArg = restArgDatum match {
+    val restArgOpt = restArgDatum match {
       case sst.NonSymbolLeaf(ast.EmptyList()) =>
-        false
+        None
 
       case datum =>
-        ExtractType.extractValueType(datum) match {
-          case vt.ListElementType => true
-          case _ =>
-            throw new BadSpecialFormException(datum, "Only <list-element-cell> can be used as a rest argument")
-        }
+        Some(ExtractType.extractSchemeType(datum))
     }
 
     val returnType = returnTypeDatum map ExtractType.extractValueType
@@ -33,7 +29,7 @@ object ExtractNativeFunction {
       hasWorldArg=hasWorldArg,
       hasSelfArg=false,
       fixedArgs=fixedArgTypes,
-      hasRestArg=hasRestArg,
+      restArgOpt=restArgOpt,
       returnType=returnType,
       attributes=attributes
     )

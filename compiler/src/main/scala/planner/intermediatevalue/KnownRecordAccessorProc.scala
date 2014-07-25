@@ -16,7 +16,7 @@ class KnownRecordAccessorProc(recordType : vt.RecordType, field : vt.RecordField
   val signature = ProcedureSignature(
     hasWorldArg=false,
     hasSelfArg=false,
-    hasRestArg=false,
+    restArgOpt=None,
     fixedArgs=List(recordType),
     returnType=Some(field.fieldType),
     attributes=Set()

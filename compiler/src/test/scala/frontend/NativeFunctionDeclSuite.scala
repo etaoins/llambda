@@ -17,7 +17,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         hasWorldArg=false,
         hasSelfArg=false,
         fixedArgs=Nil,
-        hasRestArg=false,
+        restArgOpt=None,
         returnType=None,
         attributes=Set()
       ),
@@ -35,7 +35,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         hasWorldArg=false,
         hasSelfArg=false,
         fixedArgs=Nil,
-        hasRestArg=false,
+        restArgOpt=None,
         returnType=None,
         attributes=Set(ProcedureAttribute.NoReturn)
       ),
@@ -53,7 +53,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         hasWorldArg=true,
         hasSelfArg=false,
         fixedArgs=Nil,
-        hasRestArg=false,
+        restArgOpt=None,
         returnType=None,
         attributes=Set()
       ),
@@ -71,7 +71,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         hasWorldArg=false,
         hasSelfArg=false,
         fixedArgs=Nil,
-        hasRestArg=false,
+        restArgOpt=None,
         returnType=Some(vt.Int8),
         attributes=Set()
       ),
@@ -89,7 +89,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         hasWorldArg=false,
         hasSelfArg=false,
         fixedArgs=List(vt.Int16),
-        hasRestArg=false,
+        restArgOpt=None,
         returnType=Some(vt.Int32),
         attributes=Set()
       ),
@@ -107,7 +107,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         hasWorldArg=true,
         hasSelfArg=false,
         fixedArgs=List(vt.Int64, vt.Float),
-        hasRestArg=false,
+        restArgOpt=None,
         returnType=Some(vt.Double),
         attributes=Set()
       ),
@@ -125,7 +125,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         hasWorldArg=false,
         hasSelfArg=false,
         fixedArgs=List(vt.UInt16),
-        hasRestArg=false,
+        restArgOpt=None,
         returnType=Some(vt.UInt32),
         attributes=Set()
       ),
@@ -143,7 +143,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         hasWorldArg=false,
         hasSelfArg=false,
         fixedArgs=List(vt.Predicate),
-        hasRestArg=false,
+        restArgOpt=None,
         returnType=Some(vt.Predicate),
         attributes=Set()
       ),
@@ -161,7 +161,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         hasWorldArg=false,
         hasSelfArg=false,
         fixedArgs=List(vt.Int8),
-        hasRestArg=false,
+        restArgOpt=None,
         returnType=Some(vt.UnicodeChar),
         attributes=Set()
       ),
@@ -179,7 +179,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         hasWorldArg=false,
         hasSelfArg=false,
         fixedArgs=List(vt.ExactIntegerType),
-        hasRestArg=false,
+        restArgOpt=None,
         returnType=Some(vt.InexactRationalType),
         attributes=Set()
       ),
@@ -197,7 +197,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         hasWorldArg=false,
         hasSelfArg=false,
         fixedArgs=Nil,
-        hasRestArg=true,
+        restArgOpt=Some(vt.AnySchemeType),
         returnType=Some(vt.AnySchemeType),
         attributes=Set()
       ),
@@ -205,7 +205,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function "lliby_vector" <list-element-cell> -> <datum-cell>)""")
+      exprFor("""(native-function "lliby_vector" <datum-cell> -> <datum-cell>)""")
     }
   }
   
@@ -215,7 +215,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         hasWorldArg=false,
         hasSelfArg=false,
         fixedArgs=List(vt.Predicate),
-        hasRestArg=true,
+        restArgOpt=Some(vt.ExactIntegerType),
         returnType=Some(vt.Int32),
         attributes=Set()
       ),
@@ -223,7 +223,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function "lliby_misc" (<bool> . <list-element-cell>) -> <int>)""")
+      exprFor("""(native-function "lliby_misc" (<bool> . <exact-integer-cell>) -> <int>)""")
     }
   }
   

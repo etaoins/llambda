@@ -27,7 +27,7 @@ private[planner] object PlanProcedureTrampoline {
     implicit val plan = parentPlan.forkPlan()
 
     // Change our argListHeadTemp to a IntermediateValue
-    val argListHeadValue = TempValueToIntermediate(vt.ListElementType, argListHeadTemp)
+    val argListHeadValue = TempValueToIntermediate(vt.ProperListType(vt.AnySchemeType), argListHeadTemp)
 
     val argTemps = new mutable.ListBuffer[ps.TempValue]
 
@@ -40,7 +40,7 @@ private[planner] object PlanProcedureTrampoline {
       argTemps += selfTemp
     }
 
-    val insufficientArgsMessage = if (signature.hasRestArg) {
+    val insufficientArgsMessage = if (signature.restArgOpt.isDefined) {
       RuntimeErrorMessage(
         name=s"insufficientArgsFor${nativeSymbol}",
         text=s"Called ${nativeSymbol} with insufficient arguments; requires at least ${signature.fixedArgs.length} arguments."
@@ -73,21 +73,22 @@ private[planner] object PlanProcedureTrampoline {
       plan.steps += ps.LoadPairCdr(argCdrTemp, argPairTemp)
 
       // We know this is a list element but its type will be DatumCell
-      new iv.CellValue(vt.ListElementType, BoxedValue(ct.DatumCell, argCdrTemp))
+      new iv.CellValue(vt.ProperListType(vt.AnySchemeType), BoxedValue(ct.DatumCell, argCdrTemp))
     }
 
-    if (signature.hasRestArg) {
-      // This is already a ListElementCell
-      argTemps += restArgValue.toTempValue(vt.ListElementType)(plan, worldPtrTemp)
-    }
-    else {
-      val tooManyArgsMessage = RuntimeErrorMessage(
-        name=s"tooManyArgsFor${nativeSymbol}",
-        text=s"Called ${nativeSymbol} with too many arguments; requires exactly ${signature.fixedArgs.length} arguments."
-      )
-      
-      // Make sure we're out of args by doing a check cast to an empty list
-      restArgValue.toTempValue(vt.EmptyListType, Some(tooManyArgsMessage))(plan, worldPtrTemp)
+    signature.restArgOpt match {
+      case Some(memberType) =>
+        val typeCheckedRestArg = restArgValue.toTempValue(vt.ProperListType(memberType))(plan, worldPtrTemp)
+        argTemps += typeCheckedRestArg
+
+      case None =>
+        val tooManyArgsMessage = RuntimeErrorMessage(
+          name=s"tooManyArgsFor${nativeSymbol}",
+          text=s"Called ${nativeSymbol} with too many arguments; requires exactly ${signature.fixedArgs.length} arguments."
+        )
+        
+        // Make sure we're out of args by doing a check cast to an empty list
+        restArgValue.toTempValue(vt.EmptyListType, Some(tooManyArgsMessage))(plan, worldPtrTemp)
     }
 
     // Load the entry point for the function we're jumping to

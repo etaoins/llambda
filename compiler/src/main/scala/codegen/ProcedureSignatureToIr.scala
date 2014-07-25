@@ -35,7 +35,7 @@ object ProcedureSignatureToIr {
         Argument(irType, paramSignednessToAttribs(signedness))
     }
 
-    val restArgs = if (signature.hasRestArg) {
+    val restArgs = if (signature.restArgOpt.isDefined) {
       List(Argument(PointerType(ct.ListElementCell.irType), Set()))
     }
     else {

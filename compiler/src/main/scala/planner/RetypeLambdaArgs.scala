@@ -84,14 +84,29 @@ private[planner] object RetypeLambdaArgs {
       }
 
       for(knownProc <- knownProcOpt) {
-        val fixedArgTypes = knownProc.signature.fixedArgs
+        val signature = knownProc.signature
 
-        val finalArgTypes = operandExprs.zip(fixedArgTypes).foldLeft(argTypes) {
+        val postFixedArgTypes = operandExprs.zip(signature.fixedArgs).foldLeft(argTypes) {
           case (currentArgTypes, (operandExpr, argValueType)) =>
             attributeTypeToExpr(operandExpr, argValueType.schemeType, currentArgTypes)
         }
 
-        if (knownProc.signature.hasWorldArg) {
+        // Do we have a typed rest arg?
+        val finalArgTypes = signature.restArgOpt match { 
+          case Some(memberType) =>
+            // Attribute the rest arg member type to all of the rest args
+            val restArgExprs = operandExprs.drop(signature.fixedArgs.length)
+
+            restArgExprs.foldLeft(postFixedArgTypes) {
+              case (currentArgTypes, restArgExpr) =>
+                attributeTypeToExpr(restArgExpr, memberType, currentArgTypes)
+            }
+
+          case None =>
+            postFixedArgTypes
+        } 
+
+        if (signature.hasWorldArg) {
           // This might terminate - abort retyping
           throw new CollectionAborted(finalArgTypes)
         }

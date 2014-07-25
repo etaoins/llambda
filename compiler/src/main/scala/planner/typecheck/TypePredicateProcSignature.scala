@@ -7,7 +7,7 @@ import llambda.compiler.{valuetype => vt}
 object TypePredicateProcSignature extends ProcedureSignature(
     hasWorldArg=false,
     hasSelfArg=false,
-    hasRestArg=false,
+    restArgOpt=None,
     // We must be able to take any data type without erroring out
     fixedArgs=List(vt.AnySchemeType),
     returnType=Some(vt.Predicate),

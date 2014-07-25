@@ -20,7 +20,7 @@ case class ProcedureSignature(
   hasWorldArg : Boolean,
   hasSelfArg : Boolean,
   fixedArgs : List[vt.ValueType],
-  hasRestArg : Boolean,
+  restArgOpt : Option[vt.SchemeType],
   returnType : Option[vt.ValueType],
   attributes : Set[ProcedureAttribute]
 )
