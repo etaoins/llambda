@@ -17,7 +17,7 @@ private[planner] object ValuesToProperList {
       case carValue :: restValues =>
         // Recurse down our cdr
         val cdrValue = apply(restValues)
-        ValuesToPair(carValue, cdrValue)
+        ValuesToPair(carValue, cdrValue, Some(restValues.length + 1))
 
       case Nil =>
         // No more list values

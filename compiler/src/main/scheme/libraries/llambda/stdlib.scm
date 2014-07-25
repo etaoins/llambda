@@ -180,11 +180,11 @@
     (define-r7rs apply (world-function "lliby_apply" (<procedure-cell> . <any>) -> <datum-cell>))
     (define-r7rs length (world-function "lliby_length" (<list-element-cell>) -> <uint32>))
     (define-r7rs error (world-function "lliby_error" (<string-cell> . <any>) noreturn))
-    (define-r7rs = (world-function "lliby_numeric_equal" (<numeric-cell> <numeric-cell> . <number>) -> <bool>))
-    (define-r7rs < (world-function "lliby_numeric_lt" (<numeric-cell> <numeric-cell> . <number>) -> <bool>))
-    (define-r7rs > (world-function "lliby_numeric_gt" (<numeric-cell> <numeric-cell> . <number>) -> <bool>))
-    (define-r7rs <= (world-function "lliby_numeric_lte" (<numeric-cell> <numeric-cell> . <number>) -> <bool>))
-    (define-r7rs >= (world-function "lliby_numeric_gte" (<numeric-cell> <numeric-cell> . <number>) -> <bool>))
+    (define-r7rs = (native-function "lliby_numeric_equal" (<numeric-cell> <numeric-cell> . <number>) -> <bool>))
+    (define-r7rs < (native-function "lliby_numeric_lt" (<numeric-cell> <numeric-cell> . <number>) -> <bool>))
+    (define-r7rs > (native-function "lliby_numeric_gt" (<numeric-cell> <numeric-cell> . <number>) -> <bool>))
+    (define-r7rs <= (native-function "lliby_numeric_lte" (<numeric-cell> <numeric-cell> . <number>) -> <bool>))
+    (define-r7rs >= (native-function "lliby_numeric_gte" (<numeric-cell> <numeric-cell> . <number>) -> <bool>))
     (define-r7rs positive? (native-function "lliby_is_positive" (<numeric-cell>) -> <bool>))
     (define-r7rs negative? (native-function "lliby_is_negative" (<numeric-cell>) -> <bool>))
     
@@ -249,7 +249,7 @@
 
     (define-r7rs boolean? (make-predicate <boolean-cell>))
     (define-r7rs not (make-predicate #f))
-    (define-r7rs boolean=? (world-function "lliby_boolean_equal" (<boolean-cell> <boolean-cell> . <boolean-cell>) -> <bool>))
+    (define-r7rs boolean=? (native-function "lliby_boolean_equal" (<boolean-cell> <boolean-cell> . <boolean-cell>) -> <bool>))
 
     (define-r7rs pair? (make-predicate <pair>))
     (define-r7rs null? (make-predicate <empty-list-cell>))
@@ -289,7 +289,7 @@
       ((len fill) (native-make-list len fill))))
 
     (define-r7rs symbol? (make-predicate <symbol-cell>))
-    (define-r7rs symbol=? (world-function "lliby_symbol_equal" (<symbol-cell> <symbol-cell> . <symbol-cell>) -> <bool>))
+    (define-r7rs symbol=? (native-function "lliby_symbol_equal" (<symbol-cell> <symbol-cell> . <symbol-cell>) -> <bool>))
     (define-r7rs symbol->string (world-function "lliby_symbol_to_string" (<symbol-cell>) -> <string-cell>))
     (define-r7rs string->symbol (world-function "lliby_string_to_symbol" (<string-cell>) -> <symbol-cell>))
 

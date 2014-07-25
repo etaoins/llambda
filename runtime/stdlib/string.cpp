@@ -2,6 +2,7 @@
 #include "binding/ListElementCell.h"
 #include "binding/StringCell.h"
 #include "binding/ProperList.h"
+#include "binding/RestArgument.h"
 
 #include "core/error.h"
 
@@ -15,6 +16,7 @@ StringCell *lliby_make_string(World &world, std::uint32_t length, UnicodeChar fi
 	return StringCell::fromFill(world, length, fill);
 }
 
+// Note we can't use RestArgument here because invalid lists can be passed in via our (list->string) alias
 StringCell *lliby_string(World &world, ListElementCell *argHead)
 {
 	ProperList<CharacterCell> charProperList(argHead);
@@ -65,14 +67,9 @@ void lliby_string_set(World &world, StringCell *string, std::uint32_t index, Uni
 	}
 }
 
-StringCell* lliby_string_append(World &world, ListElementCell *argHead)
+StringCell* lliby_string_append(World &world, RestArgument<StringCell> *argHead)
 {
 	ProperList<StringCell> properList(argHead);
-
-	if (!properList.isValid())
-	{
-		signalError(world, "Non-string passed to (string-append)", {argHead});
-	}
 
 	// Use the std::vector range constructor 
 	std::vector<StringCell*> stringList(properList.begin(), properList.end()); 

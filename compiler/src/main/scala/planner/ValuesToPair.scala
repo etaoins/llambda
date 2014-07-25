@@ -12,7 +12,11 @@ private[planner] object ValuesToPair {
     * This automatically takes advantage of immutable pair support to build KnownPairCellValue instances when the Scheme
     * dialect allows it
     */
-  def apply(carValue : iv.IntermediateValue, cdrValue : iv.IntermediateValue)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : iv.IntermediateValue = {
+  def apply(
+      carValue : iv.IntermediateValue,
+      cdrValue : iv.IntermediateValue,
+      listLengthOpt : Option[Int]
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : iv.IntermediateValue = {
     if (plan.config.schemeDialect.pairsAreImmutable) {
       (carValue, cdrValue) match {
         case (constantCar : iv.ConstantValue, constantCdr : iv.ConstantValue) =>
@@ -28,7 +32,16 @@ private[planner] object ValuesToPair {
     val carTemp = carValue.toTempValue(vt.AnySchemeType)
     val cdrTemp = cdrValue.toTempValue(vt.AnySchemeType)
 
-    plan.steps += ps.InitPair(pairTemp)
+    // We can only encode the list length if we're using immutable pairs
+    // Otherwise any modification to the list's pair could invalidate the information
+    val safeListLengthOpt = if (plan.config.schemeDialect.pairsAreImmutable) {
+      listLengthOpt
+    }
+    else {
+      None
+    }
+
+    plan.steps += ps.InitPair(pairTemp, safeListLengthOpt)
     plan.steps += ps.SetPairCar(pairTemp, carTemp)
     plan.steps += ps.SetPairCdr(pairTemp, cdrTemp)
 

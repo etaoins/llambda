@@ -7,6 +7,7 @@
 #include "ListElementCell.h"
 #include "PairCell.h"
 #include "EmptyListCell.h"
+#include "RestArgument.h"
 
 namespace lliby
 {
@@ -61,6 +62,30 @@ public:
 		
 		const ListElementCell *m_head;
 	};
+	
+	
+	explicit ProperList(const RestArgument<T> *head) :
+		m_head(head),
+		m_valid(true),
+		m_length(0)
+	{
+		// This list has already been verified by Scheme; we just need to find its length
+		const DatumCell *datum = head;
+			
+		while(auto pair = datum_cast<PairCell>(datum))
+		{
+			if (pair->listLength() != 0)
+			{
+				// We have a list length hint
+				m_length += pair->listLength();
+				break;
+			}
+
+			// No length hint, keep checking 
+			datum = pair->cdr();
+			m_length++;
+		}
+	}
 
 	explicit ProperList(const ListElementCell *head) :
 		m_head(EmptyListCell::instance()),

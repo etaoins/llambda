@@ -533,14 +533,14 @@ case class Return(returnValue : Option[TempValue]) extends Step {
   *
   * SetPairCar and SetPairCdr must be called on the new pair before it is accessed or the next GC barrier
   */
-case class InitPair(result : TempValue) extends Step with CellConsumer {
+case class InitPair(result : TempValue, listLengthOpt : Option[Int] = None) extends Step with CellConsumer {
   val allocSize = 1
 
   val inputValues = Set[TempValue]()
   lazy val outputValues = Set(result)
 
   def renamed(f : (TempValue) => TempValue) =
-    InitPair(f(result)).assignLocationFrom(this)
+    InitPair(f(result), listLengthOpt).assignLocationFrom(this)
 }
 
 /** Asserts that a pair is mutable

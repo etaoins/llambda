@@ -2,6 +2,7 @@
 #include "binding/EmptyListCell.h"
 #include "binding/BooleanCell.h"
 #include "binding/ProperList.h"
+#include "binding/RestArgument.h"
 
 #include "alloc/allocator.h"
 #include "alloc/RangeAlloc.h"
@@ -155,7 +156,7 @@ DatumCell* lliby_list_copy(World &world, DatumCell *sourceHead)
 	return destHead;
 }
 
-ListElementCell* lliby_list(ListElementCell *head)
+ListElementCell* lliby_list(RestArgument<DatumCell> *head)
 {
 	// Our calling convention requires that any rest parameters are passed as
 	// a proper list. Because (list) is defined as only having rest args the
@@ -164,14 +165,9 @@ ListElementCell* lliby_list(ListElementCell *head)
 	return head;
 }
 
-DatumCell* lliby_append(World &world, ListElementCell *argHead)
+DatumCell* lliby_append(World &world, RestArgument<DatumCell> *argHead)
 {
 	ProperList<DatumCell> argList(argHead);
-
-	if (!argList.isValid())
-	{
-		signalError(world, "Invalid argument list passed to (append)", {argHead});
-	}
 
 	auto argCount = argList.length();
 

@@ -1,6 +1,7 @@
-#include "binding/ProperList.h"
 #include "binding/StringCell.h"
 #include "binding/SymbolCell.h"
+#include "binding/ProperList.h"
+#include "binding/RestArgument.h"
 
 #include "core/error.h"
 
@@ -9,7 +10,7 @@ extern "C"
 
 using namespace lliby;
 
-bool lliby_symbol_equal(World &world, SymbolCell *value1, SymbolCell *value2, ListElementCell *argHead)
+bool lliby_symbol_equal(SymbolCell *value1, SymbolCell *value2, RestArgument<SymbolCell> *argHead)
 {
 	if (*value1 != *value2)
 	{
@@ -17,11 +18,6 @@ bool lliby_symbol_equal(World &world, SymbolCell *value1, SymbolCell *value2, Li
 	}
 	
 	ProperList<SymbolCell> properList(argHead);
-
-	if (!properList.isValid())
-	{
-		signalError(world, "Non-symbol passed to (symbol=?)", {argHead});
-	}
 
 	for(auto symbolCell : properList)
 	{

@@ -1,6 +1,7 @@
 #include "binding/ListElementCell.h"
 #include "binding/BooleanCell.h"
 #include "binding/ProperList.h"
+#include "binding/RestArgument.h"
 
 #include "core/error.h"
 
@@ -9,7 +10,7 @@ extern "C"
 
 using namespace lliby;
 
-bool lliby_boolean_equal(World &world, BooleanCell *value1, BooleanCell *value2, ListElementCell *argHead)
+bool lliby_boolean_equal(BooleanCell *value1, BooleanCell *value2, RestArgument<BooleanCell> *argHead)
 {
 	if (value1 != value2)
 	{
@@ -17,11 +18,6 @@ bool lliby_boolean_equal(World &world, BooleanCell *value1, BooleanCell *value2,
 	}
 	
 	ProperList<BooleanCell> properList(argHead);
-
-	if (!properList.isValid())
-	{
-		signalError(world, "Non-boolean passed to (boolean=?)", {argHead});
-	}
 
 	for(auto boolCell : properList)
 	{

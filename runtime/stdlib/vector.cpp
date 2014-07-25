@@ -1,6 +1,7 @@
 #include "binding/DatumCell.h"
 #include "binding/VectorCell.h"
 #include "binding/ProperList.h"
+#include "binding/RestArgument.h"
 
 #include "core/error.h"
 #include "core/World.h"
@@ -45,6 +46,7 @@ void lliby_vector_set(World &world, VectorCell *vector, std::uint32_t index, Dat
 	}
 }
 
+// Note we can't use RestArgument here because invalid lists can be passed in via our (list->vector) alias
 VectorCell *lliby_vector(World &world, ListElementCell *argHead)
 {
 	ProperList<DatumCell> properList(argHead);
@@ -68,15 +70,10 @@ VectorCell *lliby_vector(World &world, ListElementCell *argHead)
 	return VectorCell::fromElements(world, newElements, length);
 }
 
-VectorCell *lliby_vector_append(World &world, ListElementCell *argHead)
+VectorCell *lliby_vector_append(World &world, RestArgument<VectorCell> *argHead)
 {
 	ProperList<VectorCell> argList(argHead);
 	
-	if (!argList.isValid())
-	{
-		signalError(world, "Non-vector passed to (vector-append)", {argHead}); 
-	}
-
 	// Create a std::vector
 	auto vectorElements = std::vector<const VectorCell*>(argList.begin(), argList.end());
 

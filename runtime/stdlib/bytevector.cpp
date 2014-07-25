@@ -2,6 +2,7 @@
 #include "binding/BytevectorCell.h"
 #include "binding/ExactIntegerCell.h"
 #include "binding/ProperList.h"
+#include "binding/RestArgument.h"
 
 #include "core/error.h"
 
@@ -45,15 +46,10 @@ void lliby_bytevector_u8_set(World &world, BytevectorCell *bytevector, std::uint
 	}
 }
 
-BytevectorCell *lliby_bytevector(World &world, ListElementCell *argHead)
+BytevectorCell *lliby_bytevector(World &world, RestArgument<ExactIntegerCell> *argHead)
 {
 	ProperList<ExactIntegerCell> properList(argHead);
 	
-	if (!properList.isValid())
-	{
-		signalError(world, "Non-exact integer passed to (bytevector)", {argHead}); 
-	}
-
 	auto length = properList.length();
 	SharedByteArray *byteArray = SharedByteArray::createInstance(length);
 	unsigned int byteIndex = 0;
@@ -68,15 +64,10 @@ BytevectorCell *lliby_bytevector(World &world, ListElementCell *argHead)
 	return BytevectorCell::withByteArray(world, byteArray, length);
 }
 
-BytevectorCell *lliby_bytevector_append(World &world, ListElementCell *argHead)
+BytevectorCell *lliby_bytevector_append(World &world, RestArgument<BytevectorCell> *argHead)
 {
 	ProperList<BytevectorCell> argList(argHead);
 	
-	if (!argList.isValid())
-	{
-		signalError(world, "Non-bytevector passed to (bytevector-append)", {argHead}); 
-	}
-
 	// Create a std::list
 	auto bytevectorList = std::list<const BytevectorCell*>(argList.begin(), argList.end());
 
