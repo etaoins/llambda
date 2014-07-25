@@ -9,7 +9,7 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
 
 object CadrProcPlanner extends ReportProcPlanner {
-  def apply(initialState : PlannerState)(reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = (reportName, operands) match {
+  def apply(initialState : PlannerState)(reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = (reportName, operands) match {
     case ("car" | "cdr", List((_, knownPair : iv.KnownPair))) =>
       // We can resolve this at compile time
       val resultValue = if (reportName == "car") {
@@ -19,10 +19,7 @@ object CadrProcPlanner extends ReportProcPlanner {
         knownPair.cdr
       }
 
-      Some(PlanResult(
-        state=initialState,
-        value=resultValue
-      ))
+      Some(resultValue)
 
     case ("car" | "cdr", List(singleOperand)) =>
       val pairValue = singleOperand._2
@@ -54,10 +51,7 @@ object CadrProcPlanner extends ReportProcPlanner {
 
       val resultValue = new iv.CellValue(resultType, BoxedValue(ct.DatumCell, resultTemp))
 
-      Some(PlanResult(
-        state=initialState,
-        value=resultValue
-      ))
+      Some(resultValue)
 
     case _ =>
       None

@@ -36,15 +36,11 @@ object ListProcPlanner extends ReportProcPlanner {
       None
   }
 
-  def apply(initialState : PlannerState)(reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = (reportName, operands) match {
+  def apply(initialState : PlannerState)(reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = (reportName, operands) match {
     case ("list", operands) =>
       // Build a proper list directly
       val operandValues = operands.map(_._2)
-
-      Some(PlanResult(
-        state=initialState,
-        value=ValuesToProperList(operandValues)
-      ))
+      Some(ValuesToProperList(operandValues))
 
     case ("length", List((_, singleOperand))) =>
       // Do we know the length at compile time?
@@ -52,10 +48,9 @@ object ListProcPlanner extends ReportProcPlanner {
         case knownListElement : iv.KnownListElement =>
           for(listLength <- knownListElement.listLengthOpt) {
             // Yes, return it directly
-            return Some(PlanResult(
-              state=initialState,
-              value=new iv.ConstantExactIntegerValue(listLength)
-            ))
+            return Some(
+              new iv.ConstantExactIntegerValue(listLength)
+            )
           }
 
         case _ =>
@@ -68,10 +63,9 @@ object ListProcPlanner extends ReportProcPlanner {
         // This is a guaranteed proper list - we can quickly calculate the length inline
         plan.steps += ps.CalcProperListLength(resultTemp, listElementTemp)
 
-        return Some(PlanResult(
-          state=initialState,
-          value=TempValueToIntermediate(vt.UInt32, resultTemp)
-        ))
+        return Some(
+          TempValueToIntermediate(vt.UInt32, resultTemp)
+        )
       }
       else {
         // This can error out at runtime - let the stdlib deal with it
@@ -93,10 +87,7 @@ object ListProcPlanner extends ReportProcPlanner {
       plan.steps += ps.AssertPairMutable(worldPtr, pairTemp, errorMessage)
       plan.steps += ps.SetPairCar(pairTemp, newValueTemp)
 
-      Some(PlanResult(
-        state=initialState,
-        value=iv.UnitValue
-      ))
+      Some(iv.UnitValue)
     
     case ("set-cdr!", List((pairLoc, pairValue), (_, newValue))) =>
       val pairTemp = plan.withContextLocation(pairLoc) {
@@ -113,10 +104,7 @@ object ListProcPlanner extends ReportProcPlanner {
       plan.steps += ps.AssertPairMutable(worldPtr, pairTemp, errorMessage)
       plan.steps += ps.SetPairCdr(pairTemp, newValueTemp)
 
-      Some(PlanResult(
-        state=initialState,
-        value=iv.UnitValue
-      ))
+      Some(iv.UnitValue)
 
     case ("cons", List((_, carValue), (_, cdrValue))) =>
       val pairTemp = ps.CellTemp(ct.PairCell)
@@ -128,26 +116,13 @@ object ListProcPlanner extends ReportProcPlanner {
       plan.steps += ps.SetPairCar(pairTemp, carTemp)
       plan.steps += ps.SetPairCdr(pairTemp, cdrTemp)
 
-      Some(PlanResult(
-        state=initialState,
-        value=TempValueToIntermediate(vt.AnyPairType, pairTemp)
-      ))
+      Some(TempValueToIntermediate(vt.AnyPairType, pairTemp))
 
     case (_, List((_, needleValue), (_, listValue))) if List("memq", "memv").contains(reportName) =>
-      staticMemberSearch(StaticValueEqv.valuesAreEqv, needleValue, listValue) map { staticValue =>
-        PlanResult(
-          state=initialState,
-          value=staticValue
-        )
-      }
+      staticMemberSearch(StaticValueEqv.valuesAreEqv, needleValue, listValue)
 
     case ("member", List((_, needleValue), (_, listValue))) =>
-      staticMemberSearch(StaticValueEqv.valuesAreEqual, needleValue, listValue) map { staticValue =>
-        PlanResult(
-          state=initialState,
-          value=staticValue
-        )
-      }
+      staticMemberSearch(StaticValueEqv.valuesAreEqual, needleValue, listValue)
 
     case _ =>
       None

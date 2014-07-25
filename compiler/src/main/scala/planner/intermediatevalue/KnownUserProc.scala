@@ -43,8 +43,11 @@ class KnownUserProc(val signature : ProcedureSignature, plannedSymbol : String, 
     // Find the first report proc planner that knowns how to plan us
     for(reportName <- reportNameOpt;
         reportProcPlanner <- reportProcPlanners;
-        planResult <- reportProcPlanner(state)(reportName, operands)) {
-      return Some(planResult)
+        resultValue <- reportProcPlanner(state)(reportName, operands)) {
+      return Some(PlanResult(
+        state=state,
+        value=resultValue
+      ))
     }
 
     None

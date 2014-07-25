@@ -13,7 +13,7 @@ object NumberProcPlanner extends ReportProcPlanner {
   private type IntegerCompartor = (Long, Long) => Boolean
   private type StaticResultBuilder = (Long, Long) => Long
 
-  private def compareOperands(state : PlannerState)(compareCond : ps.CompareCond.CompareCond, staticCalc : IntegerCompartor, val1 : iv.IntermediateValue, val2 : iv.IntermediateValue)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = {
+  private def compareOperands(state : PlannerState)(compareCond : ps.CompareCond.CompareCond, staticCalc : IntegerCompartor, val1 : iv.IntermediateValue, val2 : iv.IntermediateValue)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
     if (!List(val1, val2).forall(_.hasDefiniteType(vt.ExactIntegerType))) {
       // Can't fast path this
       return None
@@ -24,10 +24,7 @@ object NumberProcPlanner extends ReportProcPlanner {
 
         val compareResult = staticCalc(constantVal1.value, constantVal2.value)
 
-        Some(PlanResult(
-          state=state,
-          value=new iv.ConstantBooleanValue(compareResult)
-        ))
+        Some(new iv.ConstantBooleanValue(compareResult))
 
       case _ =>
         // Do a direct integer comparison
@@ -46,10 +43,7 @@ object NumberProcPlanner extends ReportProcPlanner {
         // Do a direct integer compare
         plan.steps += ps.IntegerCompare(predicateTemp, compareCond, signed, val1Temp, val2Temp)
 
-        Some(PlanResult(
-          state=state,
-          value=new iv.NativePredicateValue(predicateTemp)
-        ))
+        Some(new iv.NativePredicateValue(predicateTemp))
     }
   }
 
@@ -58,7 +52,7 @@ object NumberProcPlanner extends ReportProcPlanner {
       staticCalc : StaticResultBuilder,
       isCommutative : Boolean,
       operands : List[iv.IntermediateValue]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = {
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
     if (!operands.forall(_.hasDefiniteType(vt.ExactIntegerType))) {
       // Can't fast path this
       return None
@@ -101,13 +95,10 @@ object NumberProcPlanner extends ReportProcPlanner {
       )
     }
 
-    Some(PlanResult(
-      state=state,
-      value=finalValue
-    ))
+    Some(finalValue)
   }
 
-  def apply(state : PlannerState)(reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = (reportName, operands) match {
+  def apply(state : PlannerState)(reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = (reportName, operands) match {
     case ("=", List((_, val1), (_, val2))) =>
       compareOperands(state)(ps.CompareCond.Equal, _ == _, val1, val2)
     
@@ -124,16 +115,10 @@ object NumberProcPlanner extends ReportProcPlanner {
       compareOperands(state)(ps.CompareCond.LessThanEqual, _ <= _, val1, val2)
 
     case ("+", Nil) =>
-      Some(PlanResult(
-        state=state,
-        value=new iv.ConstantExactIntegerValue(0)
-      ))
+      Some(new iv.ConstantExactIntegerValue(0))
     
     case ("*", Nil) =>
-      Some(PlanResult(
-        state=state,
-        value=new iv.ConstantExactIntegerValue(1)
-      ))
+      Some(new iv.ConstantExactIntegerValue(1))
     
     case (reportName, List((operandSourceLoc, singleOperand))) if List("+", "*").contains(reportName) =>
       // Make sure the operand is numeric
@@ -142,10 +127,7 @@ object NumberProcPlanner extends ReportProcPlanner {
       }
       
       // Return it directly
-      Some(PlanResult(
-        state=state,
-        value=TempValueToIntermediate(vt.NumericType, numericTemp)
-      ))
+      Some(TempValueToIntermediate(vt.NumericType, numericTemp))
 
     case ("-", Nil) =>
       // This isn't allowed - let it fail at runtime

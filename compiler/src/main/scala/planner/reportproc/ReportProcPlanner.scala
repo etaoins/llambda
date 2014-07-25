@@ -9,5 +9,5 @@ import llambda.compiler.planner._
 
 /** Optionally replaces a call to a report procedure with plan steps */
 trait ReportProcPlanner {
-  def apply(initialState : PlannerState)(reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult]  
+  def apply(initialState : PlannerState)(reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue]  
 }
