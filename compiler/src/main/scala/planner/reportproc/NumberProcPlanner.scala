@@ -150,6 +150,52 @@ object NumberProcPlanner extends ReportProcPlanner {
       val operandValues = multipleOperands.map(_._2) 
       performBinaryIntegerOp(state)(ps.IntegerMul.apply, _ * _, true, operandValues)
 
+    case ("exact", List(singleOperand)) =>
+      val singleValue = singleOperand._2
+
+      singleValue match  {
+        case knownExactInt if vt.SatisfiesType(vt.ExactIntegerType, knownExactInt.schemeType) == Some(true) =>
+          // Already an exact int
+          Some(singleValue)
+
+        case constInexact : iv.ConstantInexactRationalValue =>
+          val longValue = constInexact.value.toLong
+
+          // Make sure this was lossless
+          if (longValue.toDouble== constInexact.value) {
+            Some(new iv.ConstantExactIntegerValue(longValue))
+          }
+          else {
+            None
+          }
+
+        case _ =>
+          None
+      }
+    
+    case ("inexact", List(singleOperand)) =>
+      val singleValue = singleOperand._2
+
+      singleValue match  {
+        case knownInexact if vt.SatisfiesType(vt.InexactRationalType, knownInexact.schemeType) == Some(true) =>
+          // Already an inexact rational
+          Some(knownInexact)
+
+        case constExactInt : iv.ConstantExactIntegerValue =>
+          val doubleValue = constExactInt.value.toDouble
+
+          // Make sure this was lossless
+          if (doubleValue.toLong == constExactInt.value) {
+            Some(new iv.ConstantInexactRationalValue(doubleValue))
+          }
+          else {
+            None
+          }
+        
+        case _ =>
+          None
+      }
+
     case _ =>
       None
   }

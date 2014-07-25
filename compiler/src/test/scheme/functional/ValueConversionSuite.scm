@@ -44,24 +44,22 @@
 (define-test "inexact rational can be unboxed as double" (expect 1.0
 	(import (scheme inexact))
 	(import (llambda test-util))
-	; This assumes (cos) takes an native double
-	(cos (typeless-cell 0.0))))
+	(define fabs (native-function "fabs" (<double>) -> <double>))
+	(fabs (typeless-cell -1.0))))
 
 (define-test "inexact rational can be unboxed as float" (expect 10.0
 	(import (llambda test-util))
-	; Nothing in the stdlib takes float
 	(define fabsf (native-function "fabsf" (<float>) -> <float>))
 	(fabsf (typeless-cell -10.0))))
 
-(define-test "exact integer can be unboxed as double" (expect 1.0
+(define-test "exact integer cannot be unboxed as double" (expect-failure
 	(import (scheme inexact))
 	(import (llambda test-util))
-	; This assumes (cos) takes a native double
-	(cos (typeless-cell 0))))
+	(define fabs (native-function "fabs" (<double>) -> <double>))
+	(fabs (typeless-cell 0))))
 
-(define-test "exact integer can be unboxed as float" (expect 10.0
+(define-test "exact integer cannot be unboxed as float" (expect-failure
 	(import (llambda test-util))
-	; Nothing in the stdlib takes float
 	(define fabsf (native-function "fabsf" (<float>) -> <float>))
 	(fabsf (typeless-cell -10))))
 
@@ -70,12 +68,12 @@
 	; native i32
 	(vector-ref #(a b c) (exact 1))))
 
-(define-test "native i64 can be boxed as an inexact rational" (expect -53.0
+(define-test "native i64 cannot be boxed as an inexact rational" (expect-failure
 	(define inexact->inexact (world-function "lliby_inexact" (<inexact-rational-cell>) -> <double>))
 	; This assumes (exact) returns an native i64
 	(inexact->inexact (exact -53))))
 
-(define-test "constant exact integer can be boxed as an inexact rational" (expect -53.0
+(define-test "constant exact integer cannot be boxed as an inexact rational" (expect-failure
 	(define inexact->inexact (world-function "lliby_inexact" (<inexact-rational-cell>) -> <double>))
 	; This assumes (exact) returns an native i64
 	(inexact->inexact -53)))
@@ -98,7 +96,7 @@
 	; Thie assumes (boolean=? takes two bools)
 	(boolean=? (not #t) (not #f))))
 
-(define-test "exact integer can be passed to a procedure as float" (expect 10.0
+(define-test "exact integer can be passed to a procedure as float" (expect-failure
 	; Nothing in the stdlib takes float
 	(define fabsf (native-function "fabsf" (<float>) -> <float>))
 	(fabsf -10)))

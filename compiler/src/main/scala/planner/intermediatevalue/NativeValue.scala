@@ -90,14 +90,8 @@ class NativeExactIntegerValue(tempValue : ps.TempValue, nativeType : vt.IntType)
 
       convTemp
 
-    case fpType : vt.FpType =>
-      val convTemp = ps.Temp(nativeType)
-      plan.steps += ps.ConvertNativeIntegerToFloat(convTemp, tempValue, nativeType.signed, fpType)
-
-      convTemp
-
     case _ => 
-      impossibleConversion(s"Cannot convert ${typeDescription} to non-numeric native type ${targetType.schemeName}") 
+      impossibleConversion(s"Cannot convert ${typeDescription} to non-integer native type ${targetType.schemeName}") 
   }
   
   override def planCastToSchemeTempValue(targetType : vt.SchemeType)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {

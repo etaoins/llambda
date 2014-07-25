@@ -92,7 +92,7 @@
 		(field2 three-value-field2 set-three-value-field2!)
 		((field3 : <flonum>) three-value-field3 set-three-value-field3!))
 	
-	(define instance (three-value 20 30 50))
+	(define instance (three-value 20 30 50.0))
 	(set-three-value-field2! instance 40)
 
 	(list (three-value-field1 instance) (three-value-field2 instance) (three-value-field3 instance))))

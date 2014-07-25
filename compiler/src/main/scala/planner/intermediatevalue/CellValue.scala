@@ -99,64 +99,25 @@ class CellValue(val schemeType : vt.SchemeType, val boxedValue : BoxedValue) ext
       }
 
     case fpType : vt.FpType =>
-      val possiblyExactInt = vt.SatisfiesType(vt.ExactIntegerType, schemeType) != Some(false)
-      val possiblyInexactRational = vt.SatisfiesType(vt.InexactRationalType, schemeType) != Some(false)
-
-      if (!possiblyExactInt && !possiblyInexactRational) {
+      if (vt.SatisfiesType(vt.InexactRationalType, schemeType) == Some(false)) {
         // Not possible
-        impossibleConversion(s"Unable to convert non-numeric ${typeDescription} to ${fpType.schemeName}")
+        impossibleConversion(s"Unable to convert non-flonum ${typeDescription} to ${fpType.schemeName}")
       }
-      else if (possiblyExactInt & !possiblyInexactRational) {
-        // Unbox as exact int
-        val boxedExactInt = toTempValue(vt.ExactIntegerType)
-        val unboxedTemp = ps.Temp(vt.Int64)
-        plan.steps += ps.UnboxExactInteger(unboxedTemp, boxedExactInt)
 
-        // Convert to the wanted type
-        val convTemp = ps.Temp(fpType)
-        plan.steps += ps.ConvertNativeIntegerToFloat(convTemp, unboxedTemp, true, fpType)
+      // Unbox as inexact rational
+      val boxedInexactRational = toTempValue(vt.InexactRationalType)
+      val unboxedTemp = ps.Temp(vt.Double)
+      plan.steps += ps.UnboxInexactRational(unboxedTemp, boxedInexactRational)
 
-        convTemp
-      }
-      else if (!possiblyExactInt && possiblyInexactRational) {
-        // Unbox as inexact rational
-        val boxedInexactRational = toTempValue(vt.InexactRationalType)
-        val unboxedTemp = ps.Temp(vt.Double)
-        plan.steps += ps.UnboxInexactRational(unboxedTemp, boxedInexactRational)
-
-        if (fpType == vt.Double) {
-          // No conversion needed
-          unboxedTemp
-        }
-        else {
-          val convTemp = ps.Temp(fpType)
-
-          plan.steps += ps.ConvertNativeFloat(convTemp, unboxedTemp, fpType)
-          convTemp
-        }
+      if (fpType == vt.Double) {
+        // No conversion needed
+        unboxedTemp
       }
       else {
-        // We have to check types here and branch on the result
-        val isExactIntPred = isTypeNativePred(vt.ExactIntegerType)
+        val convTemp = ps.Temp(fpType)
 
-        // Try again with constrained types
-        // This will hit the branches above us
-        val trueWriter = plan.forkPlan()
-        val trueDynamicValue = new CellValue(vt.ExactIntegerType, boxedValue)
-        val trueTempValue = trueDynamicValue.toTempValue(fpType)(trueWriter, worldPtr)
-
-        val falseWriter = plan.forkPlan()
-        val refinedSchemeType = schemeType - vt.ExactIntegerType
-        val falseDynamicValue = new CellValue(refinedSchemeType, boxedValue)
-        val falseTempValue = falseDynamicValue.toTempValue(fpType)(falseWriter, worldPtr)
-      
-        val phiTemp = ps.Temp(fpType)
-
-        plan.steps += ps.CondBranch(phiTemp, isExactIntPred, 
-          trueWriter.steps.toList, trueTempValue,
-          falseWriter.steps.toList, falseTempValue) 
-
-        phiTemp
+        plan.steps += ps.ConvertNativeFloat(convTemp, unboxedTemp, fpType)
+        convTemp
       }
 
     case vt.Predicate =>

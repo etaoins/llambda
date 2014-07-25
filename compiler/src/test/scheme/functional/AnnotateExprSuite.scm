@@ -3,7 +3,7 @@
 	(ann 10 <integer>)))
 
 ; Do we want this?
-(define-test "annotation can convert types" (expect 50.0
+(define-test "annotation cannot convert int to flonum" (expect-failure
 	(import (llambda typed))
 	(ann 50 <flonum>)))
 

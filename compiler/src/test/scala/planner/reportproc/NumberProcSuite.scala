@@ -117,4 +117,24 @@ class NumberProcSuite extends FunSuite with PlanHelpers {
       ast.BooleanLiteral(true)
     )
   }
+  
+  test("static (exact)") {
+    assertStaticPlan("(exact 50)",
+      ast.IntegerLiteral(50)
+    )
+    
+    assertStaticPlan("(exact -60.0)",
+      ast.IntegerLiteral(-60)
+    )
+  }
+  
+  test("static (inexact)") {
+    assertStaticPlan("(inexact 50)",
+      ast.RationalLiteral(50.0)
+    )
+    
+    assertStaticPlan("(inexact -60.0)",
+      ast.RationalLiteral(-60.0)
+    )
+  }
 }

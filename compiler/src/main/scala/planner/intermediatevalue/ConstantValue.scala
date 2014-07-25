@@ -45,20 +45,6 @@ class ConstantSymbolValue(val value : String) extends TrivialConstantValue(ct.Sy
 class ConstantExactIntegerValue(val value : Long) extends TrivialConstantValue(ct.ExactIntegerCell, value, ps.CreateExactIntegerCell.apply) {
   val typeDescription = "constant exact integer"
   
-  override def toSchemeTempValue(targetType : vt.SchemeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
-    if ((vt.SatisfiesType(targetType, vt.ExactIntegerType).get == false) &&
-        (vt.SatisfiesType(targetType, vt.InexactRationalType).get == true)) {
-      // Do a special implicit cast to an inexact cell
-      val constantTemp = ps.CellTemp(ct.InexactRationalCell, knownConstant=true)
-      plan.steps += ps.CreateInexactRationalCell(constantTemp, value.toDouble)
-    
-      BoxedValue(ct.InexactRationalCell, constantTemp).castToCellTempValue(targetType.cellType)
-    }
-    else {
-      super.toSchemeTempValue(targetType, errorMessageOpt)
-    }
-  }
-
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = nativeType match {
     case intType : vt.IntType =>
       val constantTemp = ps.Temp(intType)
@@ -66,12 +52,10 @@ class ConstantExactIntegerValue(val value : Long) extends TrivialConstantValue(c
       constantTemp
 
     case fpType : vt.FpType =>
-      val constantTemp = ps.Temp(fpType)
-      plan.steps += ps.CreateNativeFloat(constantTemp, value.toDouble, fpType)
-      constantTemp
+      impossibleConversion(s"Cannot convert ${typeDescription} to floating point native type ${nativeType.schemeName}. Consider using (inexact) to explicitly convert the value.")
 
     case _ =>
-      impossibleConversion(s"Cannot convert ${typeDescription} to non-numeric native type ${nativeType.schemeName}")
+      impossibleConversion(s"Cannot convert ${typeDescription} to non-integer native type ${nativeType.schemeName}")
   }
   
   override def preferredRepresentation : vt.ValueType =
@@ -86,9 +70,12 @@ class ConstantInexactRationalValue(val value : Double) extends TrivialConstantVa
       val constantTemp = ps.Temp(fpType)
       plan.steps += ps.CreateNativeFloat(constantTemp, value, fpType)
       constantTemp
+    
+    case intType : vt.IntType =>
+      impossibleConversion(s"Cannot convert ${typeDescription} to iinteger native type ${nativeType.schemeName}. Consider using (exact) to explicitly convert the value.")
 
     case _ => 
-      impossibleConversion(s"Cannot convert ${typeDescription} to non-float native type ${nativeType.schemeName}")
+      impossibleConversion(s"Cannot convert ${typeDescription} to non-floating point native type ${nativeType.schemeName}")
   }
   
   override def preferredRepresentation : vt.ValueType =

@@ -376,11 +376,19 @@
   ; inexact library
   (include-library-declarations "../../interfaces/scheme/inexact.scm")
   (begin
-    ; These always return inexact numbers so we can use the C standard
-    ; library directly
-    (define-r7rs sin (native-function "sin" (<double>) -> <double>))
-    (define-r7rs cos (native-function "cos" (<double>) -> <double>))
-    (define-r7rs tan (native-function "tan" (<double>) -> <double>)))
+    ; These always return inexact numbers so we can use the C standard library. However, they need to be wrapped in a
+    ; Scheme procedure to explicitly convert the number in to flonum.
+    (define-r7rs sin (lambda: ((num : <number>))
+      (define native-sin (native-function "sin" (<double>) -> <double>))
+      (native-sin (inexact num))))
+
+    (define-r7rs cos (lambda: ((num : <number>))
+      (define native-cos (native-function "cos" (<double>) -> <double>))
+      (native-cos (inexact num))))
+
+    (define-r7rs tan (lambda: ((num : <number>))
+      (define native-tan (native-function "tan" (<double>) -> <double>))
+      (native-tan (inexact num)))))
 
   ; write library
   (include-library-declarations "../../interfaces/scheme/write.scm")
