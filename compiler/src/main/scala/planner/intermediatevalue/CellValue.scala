@@ -12,13 +12,10 @@ import llambda.compiler.RuntimeErrorMessage
 class CellValue(val schemeType : vt.SchemeType, val boxedValue : BoxedValue) extends IntermediateValue {
   lazy val typeDescription = s"cell of type ${schemeType}"
 
-  private def isTypeNativePred(testType : vt.SchemeType)(implicit plan : PlanWriter) : ps.TempValue = {
-    typecheck.PlanTypeCheck(boxedValue, schemeType, testType).toNativePred()
-  }
-
   override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     // Find out if we're false
-    val isFalsePred = isTypeNativePred(vt.ConstantBooleanType(false))
+    val isFalseResult = typecheck.PlanTypeCheck(boxedValue, schemeType, vt.ConstantBooleanType(false))
+    val isFalsePred = isFalseResult.toNativePred()
 
     // Invert the result
     val constantZeroPred = ps.Temp(vt.Predicate)
@@ -41,35 +38,6 @@ class CellValue(val schemeType : vt.SchemeType, val boxedValue : BoxedValue) ext
       val boxedProcTemp = toTempValue(vt.ProcedureType)
 
       Some(new InvokableProcedureCell(boxedProcTemp))
-    }
-  }
-  
-  def toSchemeTempValue(targetType : vt.SchemeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
-    // Are our possible concrete types a subset of the target types?
-    vt.SatisfiesType(targetType, schemeType) match {
-      case Some(true) =>
-        // Need to cast to the right type
-        // We've confirmed that no checking is needed because all of our possible types are equal to or supertypes of the
-        // target type
-        boxedValue.castToCellTempValue(targetType.cellType)
-    
-      case None =>
-        val errorMessage = errorMessageOpt getOrElse {
-          RuntimeErrorMessage(
-            name=s"subcastTo${targetType.cellType.llvmName.capitalize}Failed",
-            text=s"Runtime cast to subtype '${targetType.schemeName}' failed"
-          )
-        }
-
-        // We have further type checking to do
-        val isTypePred = isTypeNativePred(targetType)
-            
-        plan.steps += ps.AssertPredicate(worldPtr, isTypePred, errorMessage)
-        boxedValue.castToCellTempValue(targetType.cellType)
-
-      case Some(false) =>
-        // Not possible
-        impossibleConversion(s"Unable to convert ${typeDescription} to ${targetType.schemeName}") 
     }
   }
 

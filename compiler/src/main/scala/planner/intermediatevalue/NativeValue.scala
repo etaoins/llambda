@@ -32,15 +32,6 @@ sealed abstract class NativeValue(val nativeType : vt.NativeType, val cellType :
       planCastToNativeTempValue(targetType)
     }
   
-  def toSchemeTempValue(targetType : vt.SchemeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
-    if (hasDefiniteType(targetType)) {
-      toBoxedValue().castToCellTempValue(targetType.cellType)
-    }
-    else {
-      planCastToSchemeTempValue(targetType)
-    }
-  }
-  
   override def planPhiWith(theirValue : IntermediateValue)(ourPlan : PlanWriter, theirPlan : PlanWriter)(implicit worldPtr : ps.WorldPtrValue) : PlanPhiResult = theirValue match {
     case theirUnboxed : NativeValue if nativeType == theirUnboxed.nativeType =>
       // Our types exactly match - no conversion needed!

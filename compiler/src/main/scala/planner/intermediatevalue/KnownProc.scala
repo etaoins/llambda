@@ -78,15 +78,6 @@ abstract class KnownProc(selfTempOpt : Option[ps.TempValue]) extends Intermediat
     BoxedValue(ct.ProcedureCell, cellTemp)
   }
   
-  def toSchemeTempValue(targetType : vt.SchemeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
-    if (hasDefiniteType(targetType)) {
-      toBoxedValue().castToCellTempValue(targetType.cellType)
-    }
-    else {
-      impossibleConversion(s"Cannot convert ${typeDescription} to non-procedure type ${targetType.schemeName}")
-    }
-  }
-  
   def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[InvokableProcedure] = 
     Some(this)
   

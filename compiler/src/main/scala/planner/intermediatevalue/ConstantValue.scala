@@ -10,14 +10,6 @@ import llambda.compiler.RuntimeErrorMessage
 sealed abstract class ConstantValue(val cellType : ct.ConcreteCellType) extends IntermediateValue with UninvokableValue {
   val schemeType : vt.SchemeType = vt.SchemeTypeAtom(cellType)
     
-  def toSchemeTempValue(targetType : vt.SchemeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
-    if (vt.SatisfiesType(targetType, schemeType) != Some(true)) {
-      impossibleConversion(s"Cannot convert ${typeDescription} to incompatible type ${targetType.schemeName}")
-    }
-
-    toBoxedValue().castToCellTempValue(targetType.cellType)
-  }
-  
   def preferredRepresentation : vt.ValueType =
     schemeType
   

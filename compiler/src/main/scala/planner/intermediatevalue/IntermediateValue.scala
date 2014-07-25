@@ -37,13 +37,42 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     resultIntermediate : IntermediateValue
   )
 
-  protected def toSchemeTempValue(schemeType : vt.SchemeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
   protected def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
   protected def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     val trueTemp = ps.Temp(vt.Predicate)
     plan.steps += ps.CreateNativeInteger(trueTemp, 1, 1) 
 
    trueTemp
+  }
+  
+  private def toSchemeTempValue(targetType : vt.SchemeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
+    // Are our possible concrete types a subset of the target types?
+    vt.SatisfiesType(targetType, schemeType) match {
+      case Some(true) =>
+        // Need to cast to the right type
+        // We've confirmed that no checking is needed because all of our possible types are equal to or supertypes of the
+        // target type
+        toBoxedValue().castToCellTempValue(targetType.cellType)
+    
+      case None =>
+        val errorMessage = errorMessageOpt getOrElse {
+          RuntimeErrorMessage(
+            name=s"subcastTo${targetType.cellType.llvmName.capitalize}Failed",
+            text=s"Runtime cast to subtype '${targetType.schemeName}' failed"
+          )
+        }
+
+        // We have further type checking to do
+        val boxedValue = this.toBoxedValue()
+        val isTypePred = typecheck.PlanTypeCheck(boxedValue, schemeType, targetType).toNativePred()
+            
+        plan.steps += ps.AssertPredicate(worldPtr, isTypePred, errorMessage)
+        boxedValue.castToCellTempValue(targetType.cellType)
+
+      case Some(false) =>
+        // Not possible
+        impossibleConversion(s"Unable to convert ${typeDescription} to ${targetType.schemeName}") 
+    }
   }
 
   /** Converts this value to any boxed cell value
