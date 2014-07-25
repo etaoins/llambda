@@ -1,7 +1,7 @@
 package io.llambda.compiler.analyser
 import io.llambda
 
-import llambda.compiler.{et, ast, StorageLocation}
+import llambda.compiler.{et, ast, StorageLocation, ProcedureSignature}
 import org.scalatest.FunSuite
 
 class AnalyseExprsSuite extends FunSuite {
@@ -39,6 +39,33 @@ class AnalyseExprsSuite extends FunSuite {
       ),
       usedVars=Set(testLocA, testLocB)
     ))
+  }
+  
+  test("native symbols") {
+    val testSignature = ProcedureSignature(
+      hasWorldArg=true,
+      hasSelfArg=false,
+      fixedArgs=Nil,
+      hasRestArg=false,
+      returnType=None,
+      attributes=Set()
+    )
+
+    val testLocA = new StorageLocation("testLocA")
+    val testLocB = new StorageLocation("testLocB")
+    val testExprs = List(
+      et.TopLevelDefine(List(
+        testLocA -> et.NativeFunction(testSignature, "nativeSymbol1"),
+        testLocB -> et.NativeFunction(testSignature, "nativeSymbol2")
+      )),
+      // Apply the procs so their definitions don't get dropped
+      et.Apply(et.VarRef(testLocA), Nil),
+      et.Apply(et.VarRef(testLocB), Nil)
+    )
+
+    val analysis = AnalyseExprs(testExprs)
+
+    assert(analysis.nativeSymbols === Set("nativeSymbol1", "nativeSymbol2"))
   }
   
   test("direct mutate var makes a var mutable") {

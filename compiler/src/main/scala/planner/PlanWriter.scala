@@ -143,7 +143,7 @@ object PlanWriter {
     new PlanWriter(
       config=planConfig,
       plannedFunctions=new mutable.HashMap[String, PlannedFunction],
-      allocedProcSymbols=new mutable.HashSet[String],
+      allocedProcSymbols=mutable.HashSet(planConfig.analysis.nativeSymbols.toSeq : _*),
       plannedTypePredicates=new mutable.HashMap[vt.SchemeType, iv.KnownTypePredicateProc]
     )
 }

@@ -8,7 +8,8 @@ case class AnalysedExprs(
   usedTopLevelExprs : List[et.Expr] = List(),
   mutableVars : Set[StorageLocation] = Set(),
   constantTopLevelBindings : List[(StorageLocation, et.Expr)] = Nil,
-  usedVars : Set[StorageLocation] = Set()
+  usedVars : Set[StorageLocation] = Set(),
+  nativeSymbols : Set[String] = Set()
 )
 
 object AnalyseExprs  {
@@ -30,6 +31,11 @@ object AnalyseExprs  {
       // We're used!
       acc.copy(
         usedVars=acc.usedVars + storageLoc
+      )
+
+    case et.NativeFunction(_, nativeSymbol) =>
+      acc.copy(
+        nativeSymbols=acc.nativeSymbols + nativeSymbol
       )
 
     case other =>
