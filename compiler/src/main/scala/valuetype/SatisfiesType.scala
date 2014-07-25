@@ -87,10 +87,14 @@ object SatisfiesType {
       case (_, testingList @ ProperListType(testingMember)) =>
         superType match {
           case superPair : PairType => 
-            for(carSatisfies <- SatisfiesType(superPair.carType, testingMember);
-                cdrSatisfies <- SatisfiesType(superPair.cdrType, testingList))
-            yield
-              (carSatisfies && cdrSatisfies)
+            if ((SatisfiesType(superPair.carType, testingMember) == Some(false)) ||
+                (SatisfiesType(superPair.cdrType, testingList) == Some(false))) {
+              // Definitely don't satisfy
+              Some(false)
+            }
+
+            // We may satisfy this pair or we may be an empty list
+            None
 
           case EmptyListType =>
             // Proper lists may satisfy a proper list

@@ -282,6 +282,7 @@ class SchemeTypeSuite extends FunSuite {
   
   test("proper list may satisfy compatible pair") {
     assert(SatisfiesType(knownNumberList, numericList) === None)
+    assert(SatisfiesType(AnyPairType, numericList) === None)
   }
   
   test("proper list definitely does not satisfy incompatible pair") {
