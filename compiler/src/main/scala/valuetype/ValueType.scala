@@ -242,7 +242,7 @@ object PairType {
 /** Proper list contains members of a certain type */
 case class ProperListType(memberType : SchemeType) extends NonUnionSchemeType {
   val cellType = ct.ListElementCell
-  val schemeName = s"(Listof ${memberType.schemeName}" 
+  val schemeName = s"(Listof ${memberType.schemeName})"
   val isGcManaged = true
 }
 

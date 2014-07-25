@@ -57,7 +57,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
       case None =>
         val errorMessage = errorMessageOpt getOrElse {
           RuntimeErrorMessage(
-            name=s"subcastTo${targetType.cellType.llvmName.capitalize}Failed",
+            name=s"subcastTo${targetType.schemeName}Failed",
             text=s"Runtime cast to subtype '${targetType.schemeName}' failed"
           )
         }
