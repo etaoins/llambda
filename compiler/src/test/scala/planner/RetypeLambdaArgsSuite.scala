@@ -57,7 +57,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
   }
 
   test("explicitly casting procedure argument to type") {
-    val signature = signatureFor("""(lambda (x) (ann x <char>))""")
+    val signature = signatureFor("""(lambda (x) (cast x <char>))""")
 
     assert(signature.fixedArgs === List(vt.CharacterType))
     assert(signature.returnType === Some(vt.CharacterType))
@@ -121,8 +121,8 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
     val signature = signatureFor("""
       (lambda (value)
         (if dynamic-true
-          (ann value <string>)
-          (ann value <symbol>)))""")
+          (cast value <string>)
+          (cast value <symbol>)))""")
 
     assert(signature.fixedArgs === List(vt.UnionType(Set(vt.StringType, vt.SymbolType))))
     assert(signature.returnType === Some(vt.UnionType(Set(vt.StringType, vt.SymbolType))))

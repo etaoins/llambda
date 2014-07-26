@@ -3,7 +3,7 @@
   (import (llambda nfi))
 
   ; Re-export from (llambda primitives) 
-  (export define-type ann : define: define-record-type: lambda: make-predicate U)
+  (export define-type cast : define: define-record-type: lambda: make-predicate U)
 
   ; Mutable pairs make handling (Pair) and (Listof) very complex
   ; For example, consider the following code:

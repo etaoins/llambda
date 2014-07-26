@@ -301,7 +301,7 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
           operands.map(extractExpr)
         )
 
-      case (Primitives.AnnotateExprType, valueExpr :: typeDatum :: Nil) =>
+      case (Primitives.Cast, valueExpr :: typeDatum :: Nil) =>
         et.Cast(extractExpr(valueExpr), ExtractType.extractSchemeType(typeDatum))
 
       case (Primitives.CondExpand, firstClause :: restClauses) =>
