@@ -45,7 +45,11 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
    trueTemp
   }
   
-  private def toSchemeTempValue(targetType : vt.SchemeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
+  private def toSchemeTempValue(
+      targetType : vt.SchemeType,
+      errorMessageOpt : Option[RuntimeErrorMessage],
+      staticCheck : Boolean = false
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
     // Are our possible concrete types a subset of the target types?
     vt.SatisfiesType(targetType, schemeType) match {
       case Some(true) =>
@@ -53,8 +57,11 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
         // We've confirmed that no checking is needed because all of our possible types are equal to or supertypes of the
         // target type
         toBoxedValue().castToCellTempValue(targetType.cellType)
+
+      case None if staticCheck =>
+        impossibleConversion(s"${typeDescription} does not statically satisfy ${targetType.schemeName}") 
     
-      case None =>
+      case None if !staticCheck =>
         val errorMessage = errorMessageOpt getOrElse {
           RuntimeErrorMessage(
             name=s"subcastTo${targetType.schemeName}Failed",
@@ -83,7 +90,19 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
 
   def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[InvokableProcedure]
 
-  def toTempValue(targetType : vt.ValueType, errorMessageOpt : Option[RuntimeErrorMessage] = None)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = targetType match {
+  /** Converts this intermediate value to a TempValue of the specified type
+    *
+    * @param  targetType       Target Scheme type to convert the value to
+    * @param  errorMessageOpt  Error message to used to indicate type conversion failure. If this is not provided a
+    *                          default message will be generated.
+    * @param  staticCheck      If true then the type must be satisfied at compile time. Otherwise a runtime check will
+    *                          be generated for possible but not definite type conversions.
+    */
+  def toTempValue(
+      targetType : vt.ValueType,
+      errorMessageOpt : Option[RuntimeErrorMessage] = None,
+      staticCheck : Boolean = false
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = targetType match {
     case vt.Predicate =>
       toTruthyPredicate()
 
@@ -91,7 +110,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
       toNativeTempValue(nativeType, errorMessageOpt)
 
     case schemeType : vt.SchemeType =>
-      toSchemeTempValue(schemeType, errorMessageOpt)
+      toSchemeTempValue(schemeType, errorMessageOpt, staticCheck)
 
     case closureType : vt.ClosureType =>
       // Closure types are an internal implementation detail.
@@ -126,14 +145,21 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     * The result may not be of represented by the specified cell value type (e.g. it may be unboxed) but it is 
     * guaranteed to be convertable to that type. toTempValue should be used when a particular representation is 
     * explicitly required
+    *
+    * @param  targetType   Target Scheme type to convert the value to
+    * @param  staticCheck  If true then the type must be satisfied at compile time. Otherwise a runtime check will be
+    *                      generated for possible but not definite type conversions.
     */
-  def castToSchemeType(targetType : vt.SchemeType)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : IntermediateValue= {
+  def castToSchemeType(
+      targetType : vt.SchemeType,
+      staticCheck : Boolean = false
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : IntermediateValue= {
     if (hasDefiniteType(targetType)) {
       // We don't need to do anything 
       return this
     }
 
-    val castTemp = toTempValue(targetType)
+    val castTemp = toTempValue(targetType, staticCheck=staticCheck)
     TempValueToIntermediate(targetType, castTemp)
   }
   

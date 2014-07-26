@@ -1,21 +1,44 @@
-(define-test "no-op cast" (expect 10
+(define-test "no-op (cast)" (expect 10
 	(import (llambda typed))
 	(cast 10 <integer>)))
 
-(define-test "cast cannot convert int to flonum" (expect-failure
+(define-test "no-op (ann)" (expect 10
+	(import (llambda typed))
+	(ann 10 <integer>)))
+
+(define-test "(cast) cannot convert int to flonum" (expect-compile-failure
 	(import (llambda typed))
 	(cast 50 <flonum>)))
 
-(define-test "impossible cast fails" (expect-failure
+(define-test "(ann) cannot convert int to flonum" (expect-compile-failure
+	(import (llambda typed))
+	(ann 50 <flonum>)))
+
+(define-test "statically impossible (cast) fails at compile time" (expect-compile-failure
 	(import (llambda typed))
 	(cast #t <integer>)))
 
-(define-test "cast can convert typeless datums" (expect #t
+(define-test "statically impossible (ann) fails at compile time" (expect-compile-failure
 	(import (llambda typed))
-	(import (llambda test-util))
+	(ann #t <integer>)))
+
+(define-test "dynamically impossible (cast) fails at runtime" (expect-runtime-failure
+	(import (llambda typed))
+	(cast (typeless-cell #t) <integer>)))
+
+(define-test "dynamically impossible (ann) fails at compile time" (expect-compile-failure
+	(import (llambda typed))
+	(ann (typeless-cell #t) <integer>)))
+
+(define-test "dynamically possible (cast) succeeds" (expect #t
+	(import (llambda typed))
 	(cast (typeless-cell #t) <boolean>)))
 
-(define-test "expressions can be annotated as record types" (expect #t
+(define-test "dynamically possible (ann) fails at compile time" (expect-compile-failure
+	(import (llambda typed))
+	(ann (typeless-cell #t) <boolean>)))
+
+(define-test "expressions can be cast as record types" (expect #t
 	(import (llambda typed))
 	(import (llambda test-util))
 

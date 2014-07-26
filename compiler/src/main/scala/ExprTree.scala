@@ -191,11 +191,19 @@ case class TypePredicate(testingType : vt.SchemeType) extends ArtificialProcedur
     TypePredicate(testingType).assignLocationFrom(this)
 }
 
-case class Cast(valueExpr : Expr, targetType : vt.SchemeType) extends Expr {
+/** Casts the result of an expression to a given type
+  * 
+  * @param  valueExpr    Expresion to have its result value cast
+  * @param  targetType   Type to cast the the expression's result to  
+  * @param  staticCheck  If true, the value must satisfy the target type at compile time. This is the mode used by
+  *                      (ann)
+  *                      If false, runtime type checks may be generated. This is the mode used by (cast).
+  */
+case class Cast(valueExpr : Expr, targetType : vt.SchemeType, staticCheck : Boolean) extends Expr {
   val subexprs = valueExpr :: Nil
 
   def map(f : Expr => Expr) : Cast =
-    Cast(f(valueExpr), targetType).assignLocationFrom(this)
+    Cast(f(valueExpr), targetType, staticCheck).assignLocationFrom(this)
 
   override def schemeType = targetType
 }

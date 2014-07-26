@@ -151,7 +151,7 @@ private[planner] object RetypeLambdaArgs {
         mergedArgTypes
       }
 
-    case et.Cast(valueExpr, targetType) =>
+    case et.Cast(valueExpr, targetType, _) =>
       attributeTypeToExpr(valueExpr, targetType, argTypes)
 
     case _ : et.Lambda | _ : et.NativeFunction | _ : et.Literal | _ : et.ArtificialProcedure | _ : et.VarRef =>

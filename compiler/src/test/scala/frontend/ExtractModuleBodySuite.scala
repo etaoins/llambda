@@ -691,7 +691,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   
   test("cast expression types") {
     assert(exprFor("(cast #t <boolean-cell>)")(nfiScope) === 
-      et.Cast(et.Literal(ast.BooleanLiteral(true)), vt.BooleanType)
+      et.Cast(et.Literal(ast.BooleanLiteral(true)), vt.BooleanType, false)
     )
   
     intercept[BadSpecialFormException] {
@@ -712,6 +712,32 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     intercept[BadSpecialFormException] {
       // Native type
       exprFor("(cast #t <int64>)")(nfiScope)
+    }
+  }
+  
+  test("annotation expression types") {
+    assert(exprFor("(ann #t <boolean-cell>)")(nfiScope) === 
+      et.Cast(et.Literal(ast.BooleanLiteral(true)), vt.BooleanType, true)
+    )
+  
+    intercept[BadSpecialFormException] {
+      // No args
+      exprFor("(ann #t)")(nfiScope)
+    }
+    
+    intercept[BadSpecialFormException] {
+      // Too many args
+      exprFor("(ann #t <datum-cell> <string-cell>)")(nfiScope)
+    }
+    
+    intercept[UnboundVariableException] {
+      // Not a type
+      exprFor("(ann #t <not-a-type>)")(nfiScope)
+    }
+    
+    intercept[BadSpecialFormException] {
+      // Native type
+      exprFor("(ann #t <int64>)")(nfiScope)
     }
   }
   

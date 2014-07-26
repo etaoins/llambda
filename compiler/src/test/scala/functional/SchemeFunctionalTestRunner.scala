@@ -160,6 +160,15 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
           case e : SemanticException =>
             // Semantic exceptions are allowed
         }
+      
+      case ast.ProperList(ast.Symbol("expect-compile-failure") :: program) if !program.isEmpty =>
+        intercept[SemanticException] {
+          executeProgram(program, schemeDialect, optimizeLevel, false)
+        }
+      
+      case ast.ProperList(ast.Symbol("expect-runtime-failure") :: program) if !program.isEmpty =>
+        val result = executeProgram(program, schemeDialect, optimizeLevel, false)
+        assert(result.success === false, "Execution unexpectedly succeeded")
 
       case other =>
           fail("Unable to parse condition: " + condition.toString)

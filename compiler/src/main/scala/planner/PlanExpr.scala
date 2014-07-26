@@ -195,9 +195,9 @@ private[planner] object PlanExpr {
           value=typecheck.TypePredicateProcForType(schemeType)
         )
 
-      case et.Cast(valueExpr, targetType) =>
+      case et.Cast(valueExpr, targetType, staticCheck) =>
         val valueResult = apply(initialState)(valueExpr)
-        val castValue = valueResult.value.castToSchemeType(targetType)
+        val castValue = valueResult.value.castToSchemeType(targetType, staticCheck)
           
         PlanResult(state=valueResult.state, value=castValue)
 
