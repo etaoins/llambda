@@ -145,18 +145,20 @@ sealed abstract trait NonUnionSchemeType extends SchemeType {
       this
     }
 
-  def &(otherType : SchemeType) : SchemeType = {
-    // Find the most specific type
-    if (SatisfiesType(otherType, this) == Some(true)) {
+  def &(otherType : SchemeType) : SchemeType = otherType match {
+    case otherProperList : ProperListType =>
+      // Proper lists know how to deal with intersections
+      otherProperList & this
+
+    case _ if (SatisfiesType(otherType, this) == Some(true)) =>
       this
-    }
-    else if (SatisfiesType(this, otherType) == Some(true)) {
+
+    case _ if (SatisfiesType(this, otherType) == Some(true)) =>
       otherType
-    }
-    else {
+
+    case _ =>
       // No intersection
       UnionType(Set())
-    }
   }
 }
 
@@ -244,6 +246,46 @@ case class ProperListType(memberType : SchemeType) extends NonUnionSchemeType {
   val cellType = ct.ListElementCell
   val schemeName = s"(Listof ${memberType.schemeName})"
   val isGcManaged = true
+
+  private def pairType = SpecificPairType(memberType, this)
+  
+  override def -(otherType : SchemeType) : SchemeType = otherType match {
+    case superType if SatisfiesType(otherType, this) == Some(true) =>
+      UnionType(Set())
+
+    case EmptyListType => 
+      pairType
+
+    case compatiblePair : PairType if SatisfiesType(compatiblePair, pairType) == Some(true) =>
+      EmptyListType
+
+    case _ =>
+      this
+  }
+
+  override def &(otherType: SchemeType) : SchemeType = otherType match {
+    case superType if SatisfiesType(otherType, this) == Some(true) =>
+      this
+
+    case ProperListType(otherMemberType) =>
+      val memberTypeIntersect = memberType & otherMemberType
+
+      if (memberTypeIntersect == UnionType(Set())) {
+        UnionType(Set())
+      }
+      else {
+        ProperListType(memberTypeIntersect)
+      }
+
+    case compatiblePair : PairType if SatisfiesType(compatiblePair, pairType) == Some(true) =>
+      pairType & compatiblePair
+
+    case EmptyListType =>
+      EmptyListType
+
+    case _ =>
+      UnionType(Set())
+  }
 }
 
 
@@ -297,13 +339,18 @@ case class UnionType(memberTypes : Set[NonUnionSchemeType]) extends SchemeType {
   }
   
   def -(otherType : SchemeType) : SchemeType = {
-    val remainingMembers = memberTypes.filter(SatisfiesType(otherType, _) != Some(true))
+    val remainingMembers = memberTypes.map(_.-(otherType))
     SchemeType.fromTypeUnion(remainingMembers.toList)
   }
 
-  def &(otherType: SchemeType) : SchemeType = {
-    val intersectedMembers = memberTypes.map(_.&(otherType))
-    SchemeType.fromTypeUnion(intersectedMembers.toList)
+  def &(otherType: SchemeType) : SchemeType = otherType match {
+    case otherProperList : ProperListType =>
+      // Proper lists know how to deal with intersections
+      otherProperList & this
+
+    case _ =>
+      val intersectedMembers = memberTypes.map(_.&(otherType))
+      SchemeType.fromTypeUnion(intersectedMembers.toList)
   }
 }
 

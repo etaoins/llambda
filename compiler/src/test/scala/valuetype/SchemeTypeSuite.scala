@@ -256,6 +256,14 @@ class SchemeTypeSuite extends FunSuite {
     assert(SatisfiesType(stringList, stringList) === Some(true))
   }
   
+  test("proper list type satisfies list element type") {
+    assert(SatisfiesType(ListElementType, stringList) === Some(true))
+  }
+  
+  test("list element type may satisfy proper list type") {
+    assert(SatisfiesType(stringList, ListElementType) === None)
+  }
+  
   test("proper list type satisfies more general proper list") {
     assert(SatisfiesType(numericList, exactIntList) === Some(true))
   }
@@ -295,5 +303,66 @@ class SchemeTypeSuite extends FunSuite {
   
   test("non-list element doesn't satisfy a proper list") {
     assert(SatisfiesType(numericList, ExactIntegerType) === Some(false))
+  }
+  
+  test("proper list type minus a compatible list is the empty union") {
+    assert((exactIntList - numericList) == UnionType(Set())) 
+  }
+  
+  test("proper list type minus an incompatible list is itself") {
+    assert((exactIntList - stringList) == exactIntList) 
+  }
+
+  test("proper list type minus the empty list type is its pair type") {
+    assert((stringList - EmptyListType) == SpecificPairType(StringType, stringList)) 
+  }
+  
+  test("proper list type minus a compatible pair type is the empty list") {
+    assert((stringList - AnyPairType) == EmptyListType) 
+  }
+  
+  test("proper list type minus an incompatible pair type is itself") {
+    assert((stringList - SpecificPairType(SymbolType, StringType)) == stringList) 
+  }
+  
+  test("proper list type minus the list element type is the empty union") {
+    assert((stringList - ListElementType) == UnionType(Set()))
+  }
+  
+  test("the list element type minus a proper list is a pair") {
+    // EmptyListType is a proper list so this must be a pair
+    assert((ListElementType - stringList) == AnyPairType)
+  }
+  
+  test("proper list type minus an unrelated type is itself") {
+    assert((exactIntList - PortType) == exactIntList) 
+  }
+  
+  test("proper list type intersected with a compatible list is the most specific list") {
+    assertIntersection(exactIntList, numericList, exactIntList) 
+  }
+  
+  test("proper list type intersected with an incompatible list is the empty union") {
+    assertIntersection(exactIntList, stringList, UnionType(Set())) 
+  }
+
+  test("proper list type intersected with the empty list is an empty list") {
+    assertIntersection(stringList, EmptyListType, EmptyListType) 
+  }
+  
+  test("proper list type intersected with a compatible pair is its pair type") {
+    assertIntersection(stringList, AnyPairType, SpecificPairType(StringType, stringList)) 
+  }
+  
+  test("proper list type intersected with an incompatible pair is an empty union") {
+    assertIntersection(stringList, SpecificPairType(SymbolType, StringType), UnionType(Set()))
+  }
+  
+  test("proper list type intersected with the list element type is itself") {
+    assertIntersection(stringList, ListElementType, stringList)
+  }
+  
+  test("proper list type intersected with an unrelated type is an empty union") {
+    assertIntersection(stringList, PortType, UnionType(Set()))
   }
 }
