@@ -2,7 +2,6 @@
 	(import (llambda typed))
 	(cast 10 <integer>)))
 
-; Do we want this?
 (define-test "cast cannot convert int to flonum" (expect-failure
 	(import (llambda typed))
 	(cast 50 <flonum>)))
