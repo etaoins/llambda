@@ -30,7 +30,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
 
     val data = List(importDecl, procedureDatum, referenceDatum)
 
-    val functions = planForData(data, optimise=true)
+    val functions = planForData(data, optimise=false)
     functions(retypingProcedureName).signature
   }
 
@@ -145,8 +145,6 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
       (lambda (val1 val2) 
         (+ 5 val1 val2))""")
 
-    // (+) can can throw an exception
-    // This mean (vector-ref) may not be executed
     assert(signature.fixedArgs === List(vt.NumericType, vt.NumericType))
     assert(signature.returnType === Some(vt.NumericType))
   }
@@ -163,6 +161,37 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
     assert(signature.returnType === Some(vt.AnySchemeType))
   }
   
+  test("procedure proxying (vector-ref) past possible exception point in true branch") {
+    val signature = signatureFor("""
+      (lambda (vec index) 
+        (if #t (/ 0 0) #f)
+        (vector-ref vec index))""")
+
+    assert(signature.fixedArgs === List(vt.AnySchemeType, vt.AnySchemeType))
+    assert(signature.returnType === Some(vt.AnySchemeType))
+  }
+  
+  test("procedure proxying (vector-ref) past possible exception point in false branch") {
+    val signature = signatureFor("""
+      (lambda (vec index) 
+        (if #t #f (/ 0 0))
+        (vector-ref vec index))""")
+
+    assert(signature.fixedArgs === List(vt.AnySchemeType, vt.AnySchemeType))
+    assert(signature.returnType === Some(vt.AnySchemeType))
+  }
+
+  test("procedure proxying (>) inside a conditional test") {
+    // This makes sure the types from (+) are passed down to the branches
+    // (>) is used here because it can't throw exceptions
+    val signature = signatureFor("""
+      (lambda (m n) 
+        (if (> 0 m n) #t #f))""")
+
+    assert(signature.fixedArgs === List(vt.NumericType, vt.NumericType))
+    assert(signature.returnType === Some(vt.BooleanType))
+  }
+
   test("aborted retyping preserves original argument types") {
     val signature = signatureFor("""
       (lambda: ((vec : <vector>) (index : <number>)) 

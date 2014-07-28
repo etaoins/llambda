@@ -123,7 +123,7 @@ private[planner] object RetypeLambdaArgs {
       val postTestArgTypes = collectTypeEvidence(testExpr, argTypes)
 
       val (trueAborted, trueArgTypes) = try {
-        (false, collectTypeEvidence(trueExpr, argTypes))
+        (false, collectTypeEvidence(trueExpr, postTestArgTypes))
       }
       catch {
         case aborted : CollectionAborted =>
@@ -131,11 +131,11 @@ private[planner] object RetypeLambdaArgs {
       }
       
       val (falseAborted, falseArgTypes) = try {
-        (false, collectTypeEvidence(falseExpr, argTypes))
+        (false, collectTypeEvidence(falseExpr, postTestArgTypes))
       }
       catch {
         case aborted : CollectionAborted =>
-          (false, aborted.argTypes)
+          (true, aborted.argTypes)
       }
 
       // Now union the type argTypes from both branches
