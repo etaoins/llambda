@@ -85,7 +85,16 @@
         (set-car! rest 3)
         rest)
 
-      (mutate-rest-arg 1 2)))))
+      (mutate-rest-arg 1 2)))
+  (define-test "procedure mutating rest list to improper list" (expect-success
+      (define (mutate-rest-arg . rest)
+        (set-car! rest 3)
+        (set-cdr! rest 4)
+        ; No longer an proper list
+        (assert-false (list? rest))
+        rest)
+
+      (assert-equal '(3 . 4) (mutate-rest-arg 1 2))))))
 
 (define-test "capturing constants" (expect 7
 	(define two 2)

@@ -184,8 +184,16 @@ private[planner] object PlanLambda {
         (storageLoc, ImmutableValue(TempValueToIntermediate(valueType, tempValue)))
 
       case RestArgument(storageLoc, tempValue) =>
+        val restArgType = if (parentPlan.config.schemeDialect.pairsAreImmutable) {
+          vt.ProperListType(vt.AnySchemeType)
+        }
+        else {
+          // If pairs are immutable we can only guarantee that this value is a list element
+          vt.ListElementType
+        }
+
         val restValue = new iv.CellValue(
-          schemeType=vt.ListElementType,
+          schemeType=restArgType,
           boxedValue=BoxedValue(ct.ListElementCell, tempValue)
         )
 
