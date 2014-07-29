@@ -82,7 +82,7 @@ sealed trait DisposableStep extends Step {
   /** Key used to compare if two mergeable steps are the same
     * 
     * The default key is just the original mergeable step with the result renamed to a constant value. Other steps may
-    * want to override this return a tuple of fields to exclusive things like error messages.
+    * want to override this return a tuple of fields to exclude things like error messages.
     */
    def mergeKey : Any = {
      this.renamed({ tempValue =>
