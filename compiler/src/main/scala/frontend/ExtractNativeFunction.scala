@@ -11,7 +11,7 @@ object ExtractNativeFunction {
       restArgDatum : sst.ScopedDatum,
       returnTypeDatum : Option[sst.ScopedSymbol],
       nativeSymbol : String,
-      attributes : Set[ProcedureAttribute]
+      attributes : Set[ProcedureAttribute.ProcedureAttribute]
   ) : et.NativeFunction = {
     val fixedArgTypes = fixedArgData map ExtractType.extractValueType
 

@@ -29,14 +29,14 @@ class ProcedureSignatureToIrSuite extends FunSuite {
     ))
   }
   
-  test("function taking boolean, unsigned int returning signed int") {
+  test("fastcc function taking boolean, unsigned int returning signed int") {
     val procSignature = ProcedureSignature(
       hasWorldArg=false,
       hasSelfArg=false,
       fixedArgs=List(vt.Predicate, vt.UInt16),
       restArgOpt=None,
       returnType=Some(vt.Int32),
-      attributes=Set()
+      attributes=Set(ProcedureAttribute.FastCC)
     )
 
     val irSignature = ProcedureSignatureToIr(procSignature)
@@ -44,7 +44,8 @@ class ProcedureSignatureToIrSuite extends FunSuite {
     assert(irSignature === IrSignature(
       result=Result(IntegerType(32), Set(SignExt)),
       arguments=List(Argument(IntegerType(1), Set(ZeroExt)), Argument(IntegerType(16), Set(ZeroExt))),
-      attributes=Set(NoUnwind)
+      attributes=Set(NoUnwind),
+      callingConv=CallingConv.FastCC
     ))
   }
   

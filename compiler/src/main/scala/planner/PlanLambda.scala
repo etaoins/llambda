@@ -10,7 +10,7 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
-import llambda.compiler.{StorageLocation, ProcedureSignature}
+import llambda.compiler.{StorageLocation, ProcedureSignature, ProcedureAttribute}
 import llambda.compiler.codegen.CompactRepresentationForType
 
 private[planner] object PlanLambda {
@@ -207,7 +207,7 @@ private[planner] object PlanLambda {
       restArgOpt=restArgLoc.map(_ => vt.AnySchemeType),
       fixedArgs=retypedFixedArgs.map(_._2),
       returnType=Some(vt.AnySchemeType),
-      attributes=Set()
+      attributes=Set(ProcedureAttribute.FastCC)
     )
 
     // If we're recursive we can't deviate from our initial signature

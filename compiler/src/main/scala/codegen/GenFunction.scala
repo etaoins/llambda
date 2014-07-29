@@ -20,7 +20,8 @@ private[codegen] object GenFunction {
       result=irSignature.result,
       namedArguments=namedIrArguments,
       name=nativeSymbol,
-      linkage=Linkage.Internal
+      linkage=Linkage.Internal,
+      callingConv=irSignature.callingConv
     ) 
 
     // Create a blank generation state with just our args

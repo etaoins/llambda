@@ -3,7 +3,7 @@ import io.llambda
 
 import llambda.compiler.{ProcedureSignature, ProcedureAttribute}
 import llambda.compiler.{celltype => ct}
-import llambda.llvmir.{IrSignature, PointerType, VoidType, IntegerType}
+import llambda.llvmir.{IrSignature, PointerType, VoidType, IntegerType, CallingConv}
 import llambda.llvmir.IrFunction._
 
 object ProcedureSignatureToIr {
@@ -67,6 +67,13 @@ object ProcedureSignatureToIr {
       explicitAttributes + NoUnwind
     }
 
-    IrSignature(result=result, arguments=allArgs, attributes=attributes)
+    val callingConv = if (signature.attributes.contains(ProcedureAttribute.FastCC)) {
+      CallingConv.FastCC
+    }
+    else {
+      CallingConv.Default
+    }
+
+    IrSignature(result=result, arguments=allArgs, attributes=attributes, callingConv=callingConv)
   }
 }
