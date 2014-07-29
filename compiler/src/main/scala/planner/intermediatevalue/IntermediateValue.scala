@@ -119,18 +119,19 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
   }
   
   def planPhiWith(theirValue : IntermediateValue)(ourPlan : PlanWriter, theirPlan : PlanWriter)(implicit worldPtr : ps.WorldPtrValue) : PlanPhiResult = {
+    val phiSchemeType = schemeType + theirValue.schemeType
+
     // This is extremely inefficient for compatible native types
     // This should be overridden where possible
-    val ourTempValue = this.toTempValue(vt.AnySchemeType)(ourPlan, worldPtr)
-    val theirTempValue = theirValue.toTempValue(vt.AnySchemeType)(theirPlan, worldPtr)
+    val ourTempValue = this.toTempValue(phiSchemeType)(ourPlan, worldPtr)
+    val theirTempValue = theirValue.toTempValue(phiSchemeType)(theirPlan, worldPtr)
 
     // If we're constants on both sides we don't need to be GC managed
     val isGcManaged = ourTempValue.isGcManaged || theirTempValue.isGcManaged
 
     val phiResultTemp = new ps.TempValue(isGcManaged)
-    val phiSchemeType = schemeType + theirValue.schemeType
 
-    val boxedValue = BoxedValue(ct.DatumCell, phiResultTemp)
+    val boxedValue = BoxedValue(phiSchemeType.cellType, phiResultTemp)
 
     PlanPhiResult(
       ourTempValue=ourTempValue,
