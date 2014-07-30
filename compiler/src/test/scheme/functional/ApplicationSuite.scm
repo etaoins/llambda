@@ -19,6 +19,20 @@
 (define-test "applying procedure with terminal non-list fails" (expect-failure
 	(apply - 2)))
 
+; This is testing a very specific bug in PlanApplication
+(define-test "applying a procedure with an unknown list only evaluates the arg expression once" (expect-success
+  (define counter 0)
+
+  (define (inc-and-return-list)
+    (set! counter (+ counter 1))
+    '(2 3))
+
+  (define result
+    (apply * (inc-and-return-list)))
+
+  (assert-equal 6 result)
+  (assert-equal 1 counter)))
+
 (define-test "nested apply" (expect 3
 	(apply apply (list + '(1 2)))))
 

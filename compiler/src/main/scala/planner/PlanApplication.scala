@@ -13,9 +13,12 @@ private[planner] object PlanApplication {
     // Are we applying (apply)?
     (procExpr, operandExprs) match {
       case (et.VarRef(applyProc : ReportProcedure), List(applyProcExpr, applyArgsExpr)) if applyProc.reportName == "apply" =>
+        // Plan this on a separate plan so we don't double plan applyArgsExpr if we fail
+        val staticApplyPlan = plan.forkPlan()
+
         // Don't evaluate applyProcExpr - it could be an inline lambda like (case-lambda) generates
         // We want to inline it if at all possible
-        val applyArgsResult = PlanExpr(initialState)(applyArgsExpr)
+        val applyArgsResult = PlanExpr(initialState)(applyArgsExpr)(staticApplyPlan)
 
         applyArgsResult.value match {
           case knownListElement : iv.KnownListElement =>
@@ -23,6 +26,7 @@ private[planner] object PlanApplication {
               // We statically know our arguments!
               val locatedArgValues = argValues.map((applyArgsExpr, _))
 
+              plan.steps ++= staticApplyPlan.steps
               return planWithOperandValues(applyArgsResult.state)(
                 located, 
                 applyProcExpr,
