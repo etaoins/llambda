@@ -367,7 +367,6 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
         }))
       
       case (Primitives.TypedDefine, sst.ScopedAnyList((symbol : sst.ScopedSymbol) :: fixedArgs, restArgDatum) :: body) =>
-
         Some(ParsedVarDefine(symbol, None, () => {
           createLambda(true, fixedArgs, restArgDatum, body, Some(symbol.name)).assignLocationAndContextFrom(appliedSymbol, debugContext)
         }))
