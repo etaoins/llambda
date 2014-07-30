@@ -52,21 +52,6 @@ private[planner] object PlanApplication {
     val operandState = operandResults.last.state
     // Zip with the orignal operand expr so we can use it to locate exceptions related to that operand
     val operands = operandExprs.zip(operandResults.tail.map(_.value))
-    
-    // If this is a self-executing lambda try to apply it without planning a function at all
-    // The procedure expression will never be used again so there's no reason to cost the the out-of-line version
-    procExpr match {
-      case lambdaExpr : et.Lambda if plan.config.optimize =>
-        // We can apply this inline!
-        for(inlineResult <- AttemptInlineApply(operandState, operandState)(lambdaExpr, operands)) {
-          return PlanResult(
-            state=operandState,
-            value=inlineResult
-          )
-        }
-
-      case _ =>
-    }
 
     planWithOperandValues(operandState)(located, procExpr, operands)
   }
@@ -77,6 +62,21 @@ private[planner] object PlanApplication {
       operands : List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan : PlanWriter) : PlanResult = {
     implicit val worldPtr = initialState.worldPtr
+    
+    // If this is a self-executing lambda try to apply it without planning a function at all
+    // The procedure expression will never be used again so there's no reason to cost the the out-of-line version
+    procExpr match {
+      case lambdaExpr : et.Lambda if plan.config.optimize =>
+        // We can apply this inline!
+        for(inlineResult <- AttemptInlineApply(initialState, initialState)(lambdaExpr, operands)) {
+          return PlanResult(
+            state=initialState,
+            value=inlineResult
+          )
+        }
+
+      case _ =>
+    }
 
     val procResult = PlanExpr(initialState)(procExpr)
 
