@@ -1,8 +1,6 @@
 package io.llambda.compiler.planner
 import io.llambda
 
-import collection.mutable
-
 import llambda.compiler.{et, ContextLocated, ReportProcedure}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.ValueNotApplicableException
@@ -40,16 +38,16 @@ private[planner] object PlanApplication {
         // Not (apply)
     }
 
-    val operandBuffer = new mutable.ListBuffer[(ContextLocated, iv.IntermediateValue)]
+    val initialResult = PlanResult(state=initialState, value=iv.UnitValue)
 
-    val operandState  = operandExprs.foldLeft(initialState) { case (state, operandExpr) =>
-      val operandResult = PlanExpr(state)(operandExpr)
-
-      operandBuffer += ((operandExpr, operandResult.value))
-      operandResult.state
+    val operandResults = operandExprs.scanLeft(initialResult) { case (prevResult, operandExpr) =>
+      PlanExpr(prevResult.state)(operandExpr)
     }
 
-    val operands = operandBuffer.toList
+    // Use the final operand's state
+    val operandState = operandResults.last.state
+    // Zip with the orignal operand expr so we can use it to locate exceptions related to that operand
+    val operands = operandExprs.zip(operandResults.tail.map(_.value))
     
     // If this is a self-executing lambda try to apply it without planning a function at all
     // The procedure expression will never be used again so there's no reason to cost the the out-of-line version
