@@ -19,6 +19,16 @@
 (define-test "applying procedure with terminal non-list fails" (expect-failure
 	(apply - 2)))
 
+(define-test "consecutively applying with incompatible arg types fails at compile time" (expect-compile-failure
+  (import (llambda typed))
+  (define typeless-vector (typeless-cell #(1 2 3)))
+  (define typeless-1 (typeless-cell 1))
+
+  ; typeless-vector should be typed as a vector after this
+  (vector-ref typeless-vector typeless-1)
+  ; The type system should notice this is illegal
+  (* typeless-vector typeless-1)))
+
 ; This is testing a very specific bug in PlanApplication
 (define-test "applying a procedure with an unknown list only evaluates the arg expression once" (expect-success
   (define counter 0)

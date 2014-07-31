@@ -92,6 +92,10 @@ class CellValue(val schemeType : vt.SchemeType, val boxedValue : BoxedValue) ext
       throw new InternalCompilerErrorException("Attempt to directly convert to native boolean. Should be caught by toTruthyPredicate.")
   }
   
+  override def withSchemeType(newType : vt.SchemeType) : IntermediateValue = {
+    new CellValue(newType, boxedValue)
+  }
+  
   def preferredRepresentation : vt.ValueType =
     schemeType
   

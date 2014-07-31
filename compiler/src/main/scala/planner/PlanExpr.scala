@@ -121,40 +121,7 @@ private[planner] object PlanExpr {
         )
 
       case et.Cond(testExpr, trueExpr, falseExpr) =>
-        val testResult = apply(initialState)(testExpr)
-
-        vt.SatisfiesType(vt.ConstantBooleanType(false), testResult.value.schemeType) match {
-          case Some(true) =>
-            // The test result must be false
-            PlanExpr(testResult.state)(falseExpr)
-
-          case Some(false) =>
-            // The test result can't be false
-            PlanExpr(testResult.state)(trueExpr)
-
-          case None =>
-            val truthyPred = testResult.value.toTempValue(vt.Predicate)
-
-            val trueWriter = plan.forkPlan()
-            val trueValue = apply(testResult.state)(trueExpr)(trueWriter).value
-
-            val falseWriter = plan.forkPlan() 
-            val falseValue = apply(testResult.state)(falseExpr)(falseWriter).value
-        
-            val planPhiResult = trueValue.planPhiWith(falseValue)(trueWriter, falseWriter)
-
-            plan.steps += ps.CondBranch(
-              planPhiResult.resultTemp,
-              truthyPred,
-              trueWriter.steps.toList, planPhiResult.ourTempValue,
-              falseWriter.steps.toList, planPhiResult.theirTempValue
-            )
-
-            PlanResult(
-              state=testResult.state,
-              value=planPhiResult.resultIntermediate
-            )
-        }
+        PlanCond(initialState)(testExpr, trueExpr, falseExpr)
       
       case nativeFunc : et.NativeFunction =>
         PlanResult(

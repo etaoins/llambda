@@ -41,13 +41,15 @@ class KnownUserProc(val signature : ProcedureSignature, plannedSymbol : String, 
   
   override def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = {
     // Find the first report proc planner that knowns how to plan us
-    for(reportName <- reportNameOpt;
-        reportProcPlanner <- reportProcPlanners;
-        resultValue <- reportProcPlanner(state)(reportName, operands)) {
-      return Some(PlanResult(
-        state=state,
-        value=resultValue
-      ))
+    if (plan.config.optimize) {
+      for(reportName <- reportNameOpt;
+          reportProcPlanner <- reportProcPlanners;
+          resultValue <- reportProcPlanner(state)(reportName, operands)) {
+        return Some(PlanResult(
+          state=state,
+          value=resultValue
+        ))
+      }
     }
 
     None

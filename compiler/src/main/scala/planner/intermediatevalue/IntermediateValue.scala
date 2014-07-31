@@ -163,6 +163,22 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     val castTemp = toTempValue(targetType, staticCheck=staticCheck)
     TempValueToIntermediate(targetType, castTemp)
   }
+
+  /** Returns this value with a new Scheme type
+    *
+    * The new type must completely satisfy the previous type - that is, the new type must be a subtype of the old type.
+    *
+    * This may not have an affect on all values. This is merely a type checking and optimisation hint to feed type
+    * information the planner discovers back in to the value
+    */
+  def withSchemeType(newType : vt.SchemeType) : IntermediateValue = newType match {
+    case vt.ConstantBooleanType(boolVal) =>
+      new ConstantBooleanValue(boolVal)
+
+    case _ =>
+      this
+  }
+
   
   /** Returns the preferred type to represent this value
     * 

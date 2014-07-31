@@ -4,7 +4,6 @@ import io.llambda
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.ContextLocated
-import llambda.compiler.IncompatibleArityException
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 
@@ -12,24 +11,6 @@ object PlanInvokeApply {
   def apply(invokableProc : InvokableProcedure, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
     val entryPointTemp = invokableProc.planEntryPoint()
     val signature = invokableProc.signature
-
-    // Ensure our arity is sane
-    if (signature.restArgOpt.isDefined) {
-      if (operands.length < signature.fixedArgs.length) {
-        throw new IncompatibleArityException(
-          located=plan.activeContextLocated,
-          message=s"Called procedure with ${operands.length} arguments; requires at least ${signature.fixedArgs.length} arguments"
-        )
-      }
-    }
-    else {
-      if (signature.fixedArgs.length != operands.length) {
-        throw new IncompatibleArityException(
-          located=plan.activeContextLocated,
-          message=s"Called procedure with ${operands.length} arguments; requires exactly ${signature.fixedArgs.length} arguments"
-        )
-      }
-    }
 
     val worldTemps = if (signature.hasWorldArg) {
       worldPtr :: Nil

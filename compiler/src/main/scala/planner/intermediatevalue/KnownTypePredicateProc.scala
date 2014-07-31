@@ -51,9 +51,21 @@ class KnownTypePredicateProc(testingType : vt.SchemeType) extends KnownArtificia
           testType=testingType
         )
 
+        val resultValue = checkResult.toIntermediateValue
+
+        // Register this result value to enable occurrence typing
+        val registeredState = ConstrainType.addCondAction(state)(
+          conditionValue=resultValue,
+          ConstrainType.CondAction(
+            subjectValue=singleValue,
+            trueConstraint=ConstrainType.IntersectType(testingType),
+            falseConstraint=ConstrainType.SubtractType(testingType)
+          )
+        )
+
         Some(PlanResult(
-          state=state,
-          value=checkResult.toIntermediateValue
+          state=registeredState,
+          value=resultValue
         ))
 
       case _ =>

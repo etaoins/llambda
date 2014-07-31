@@ -11,8 +11,9 @@ case class MutableValue(mutableType : MutableType, mutableTemp : ps.TempValue, n
 
 case class PlannerState(
   values : Map[StorageLocation, LocationValue] = Map(),
+  typeConstraintState : ConstrainType.State = ConstrainType.State(),
   worldPtr : ps.WorldPtrValue
 ) {
-  def withValue(newValue : (StorageLocation, LocationValue)) =
+  def withValue(newValue : (StorageLocation, LocationValue)) : PlannerState  =
     this.copy(values=values + newValue)
 }
