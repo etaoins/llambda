@@ -24,6 +24,11 @@ private[codegen] object GenFunction {
       callingConv=irSignature.callingConv
     ) 
 
+    // Add our IR comment if one has been supplied
+    for(irComment <- plannedFunction.irCommentOpt) {
+      generatedFunction.entryBlock.comment(irComment)
+    }
+
     // Create a blank generation state with just our args
     val argTemps = plannedFunction.namedArguments.foldLeft(LiveTemps()) { case (liveTemps, (name, tempValue)) =>
       liveTemps + (tempValue -> generatedFunction.argumentValues(name))

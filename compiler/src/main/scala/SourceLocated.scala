@@ -43,10 +43,16 @@ case class SourceLocation(
     lineOfInterest + "\n" + columnArrow
   }
 
-  override def toString = 
+  def locationWithSnippetString =
     filenameOpt.getOrElse("(unknown)") + ":" +
       line + ":\n" +
       sourceSnippet
+
+  def locationOnlyString =
+    filenameOpt.getOrElse("(unknown)") + ":" + line
+
+  override def toString = 
+    locationWithSnippetString
 }
 
 abstract trait SourceLocated {

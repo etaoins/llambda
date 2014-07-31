@@ -8,7 +8,7 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner._
 import llambda.compiler.codegen.AdaptedProcedureSignature
 import llambda.compiler.InternalCompilerErrorException
-import llambda.compiler.RuntimeErrorMessage
+import llambda.compiler.{RuntimeErrorMessage, ContextLocated}
 
 /** Represents a procedure with a known signature and direct entry point
   *
@@ -27,6 +27,13 @@ abstract class KnownProc(selfTempOpt : Option[ps.TempValue]) extends Intermediat
 
   /** Signature for the procedure */
   val signature : ProcedureSignature
+
+  /** Optional location of this procedure's definition
+    *
+    * This is used to generate a comment for the procedure's trampoline
+    */
+  def locationOpt : Option[ContextLocated] =
+    None
 
   /** Returns the native symbol for this function
     *
@@ -48,7 +55,7 @@ abstract class KnownProc(selfTempOpt : Option[ps.TempValue]) extends Intermediat
       // Ensure this already hasn't been planned
       plan.plannedFunctions.getOrElseUpdate(trampolineSymbol, {
         // Plan the trampoline
-        PlanProcedureTrampoline(signature, nativeSymbol)
+        PlanProcedureTrampoline(signature, nativeSymbol, locationOpt)
       })
 
       // Load the trampoline's entry point

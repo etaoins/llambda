@@ -294,6 +294,11 @@ private[planner] object PlanLambda {
 
     val steps = procPlan.steps.toList
     val worldPtrRequired = WorldPtrUsedBySteps(steps, worldPtr)
+    
+    val irCommentOpt =
+      for(location <- lambdaExpr.locationOpt)
+      yield
+        s"Scheme procedure defined at ${location.locationOnlyString}"
 
     // Determine our procedure
     val plannedFunction = PlannedFunction(
@@ -301,7 +306,8 @@ private[planner] object PlanLambda {
       namedArguments=namedArguments,
       steps=steps,
       worldPtrOpt=if (worldPtrRequired) Some(worldPtr) else None,
-      debugContextOpt=lambdaExpr.debugContextOpt
+      debugContextOpt=lambdaExpr.debugContextOpt,
+      irCommentOpt=irCommentOpt
     )
 
     val outerSelfTempOpt = innerSelfTempOpt map { _ => 

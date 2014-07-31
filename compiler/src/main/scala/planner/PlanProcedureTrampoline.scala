@@ -10,16 +10,26 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.codegen.AdaptedProcedureSignature
-import llambda.compiler.RuntimeErrorMessage
+import llambda.compiler.{RuntimeErrorMessage, ContextLocated}
 
-/** Plans a trampoline for the passed procedure 
-  * 
-  * All trampolines have AdaptedProcedureSignature which means they can be called without knowing the signature of the
-  * underlying procedure. It is assumed the argument list a proper list; it is inappropriate to pass user provided
-  * arguments lists to a trampoline without confirming the list is proper beforehand.
-  */
 private[planner] object PlanProcedureTrampoline {
-  def apply(signature : ProcedureSignature, nativeSymbol : String)(implicit parentPlan : PlanWriter) : PlannedFunction = {
+  /** Plans a trampoline for the passed procedure 
+    * 
+    * All trampolines have AdaptedProcedureSignature which means they can be called without knowing the signature of the
+    * underlying procedure. It is assumed the argument list a proper list; it is inappropriate to pass user provided
+    * arguments lists to a trampoline without confirming the list is proper beforehand.
+    *
+    * @param  signature         Signature of the target procedure. The trampoline will ensure the arguments it's passed
+    *                           satisfy the target procedure's signature and perform any required type conversions. 
+    * @param  nativeSymbol      Native symbol of the target procedure 
+    * @param  targetProcLocOpt  Source location of the target procedure. This is used to generate a comment in the 
+    *                           output IR identifying the trampoline.
+    */
+  def apply(
+      signature : ProcedureSignature,
+      nativeSymbol : String,
+      targetProcLocOpt : Option[ContextLocated] = None
+  )(implicit parentPlan : PlanWriter) : PlannedFunction = {
     val worldPtrTemp = new ps.WorldPtrValue
     val selfTemp = ps.CellTemp(ct.ProcedureCell)
     val argListHeadTemp = ps.CellTemp(ct.ListElementCell)
@@ -113,6 +123,12 @@ private[planner] object PlanProcedureTrampoline {
     val returnTemp = returnValue.toTempValue(vt.AnySchemeType)(plan, worldPtrTemp)
     plan.steps += ps.Return(Some(returnTemp))
 
+    val irCommentOpt =
+      for(targetProcLoc <- targetProcLocOpt;
+          location <- targetProcLoc.locationOpt)
+      yield
+        s"Trampoline function for Scheme procedure defined at ${location.locationOnlyString}"
+
     PlannedFunction(
       signature=AdaptedProcedureSignature,
       namedArguments=List(
@@ -122,7 +138,8 @@ private[planner] object PlanProcedureTrampoline {
       ),
       steps=plan.steps.toList,
       worldPtrOpt=Some(worldPtrTemp),
-      debugContextOpt=None
+      debugContextOpt=None,
+      irCommentOpt=irCommentOpt
     ) 
   }
 }

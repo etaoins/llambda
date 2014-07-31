@@ -17,6 +17,9 @@ class KnownSchemeProc(
     val recursiveSelfLoc : Option[StorageLocation],
     reportNameOpt : Option[String] = None)
 extends KnownUserProc(signature, plannedSymbol, selfTempOpt, reportNameOpt) {
+  override def locationOpt : Option[ContextLocated] =
+    Some(lambdaExpr)
+
   override def withReportName(newReportName : String) : KnownUserProc = {
     new KnownSchemeProc(
       signature,
