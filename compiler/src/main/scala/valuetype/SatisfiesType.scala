@@ -30,12 +30,19 @@ object SatisfiesType {
     * type.
     */
   def apply(superType : SchemeType, testingType : SchemeType) : Option[Boolean] = {
-    if (superType eq AnySchemeType) {
-      // Quick optimisation - this does not affect correctness
-      return Some(true)
-    }
-
     (superType, testingType) match {
+      case (superAny, _) if superAny eq AnySchemeType =>
+        // Quick optimisation - this should not affect correctness
+        Some(true)
+      
+      case (_, EmptySchemeType) =>
+        // The empty type satisfies all types
+        Some(true)
+
+      case (EmptySchemeType, _) =>
+        // Nothing satisfies the empty type except itself
+        Some(false)
+
       case (superList @ ProperListType(superMember), _) =>
         testingType match {
           case ProperListType(testingMember) =>

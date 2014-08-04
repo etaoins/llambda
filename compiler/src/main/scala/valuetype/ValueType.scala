@@ -139,7 +139,7 @@ sealed abstract trait NonUnionSchemeType extends SchemeType {
   def -(otherType : SchemeType) : SchemeType = 
     if (SatisfiesType(otherType, this) == Some(true)) {
       // No type remains
-      UnionType(Set())
+      EmptySchemeType
     }
     else {
       this
@@ -158,7 +158,7 @@ sealed abstract trait NonUnionSchemeType extends SchemeType {
 
     case _ =>
       // No intersection
-      UnionType(Set())
+      EmptySchemeType
   }
 }
 
@@ -251,7 +251,7 @@ case class ProperListType(memberType : SchemeType) extends NonUnionSchemeType {
   
   override def -(otherType : SchemeType) : SchemeType = otherType match {
     case superType if SatisfiesType(otherType, this) == Some(true) =>
-      UnionType(Set())
+      EmptySchemeType
 
     case EmptyListType => 
       pairType
@@ -270,8 +270,8 @@ case class ProperListType(memberType : SchemeType) extends NonUnionSchemeType {
     case ProperListType(otherMemberType) =>
       val memberTypeIntersect = memberType & otherMemberType
 
-      if (memberTypeIntersect == UnionType(Set())) {
-        UnionType(Set())
+      if (memberTypeIntersect == EmptySchemeType) {
+        EmptySchemeType
       }
       else {
         ProperListType(memberTypeIntersect)
@@ -284,7 +284,7 @@ case class ProperListType(memberType : SchemeType) extends NonUnionSchemeType {
       EmptyListType
 
     case _ =>
-      UnionType(Set())
+      EmptySchemeType
   }
 }
 
@@ -359,6 +359,12 @@ object AnySchemeType extends UnionType(ct.DatumCell.concreteTypes.map(SchemeType
   override lazy val schemeName = "<any>"
 }
 
+/** Empty union of types
+  *
+  * No type satisfies this type. It doesn't make sense for values or operands to have the empty type but it's not
+  * explicitly forbiddened. It occurs mostly as a result of operations on other types, such as the intersection
+  * of disjoint types.
+  */
 object EmptySchemeType extends UnionType(Set())
 
 object SchemeType {

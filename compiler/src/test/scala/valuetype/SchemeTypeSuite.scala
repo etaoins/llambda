@@ -106,6 +106,18 @@ class SchemeTypeSuite extends FunSuite {
     )
   }
 
+  test("the empty type definitely satisfies the any type") {
+    assert(SatisfiesType(AnySchemeType, EmptySchemeType) === Some(true))
+  }
+  
+  test("the any type definitely does not satisfy the empty type") {
+    assert(SatisfiesType(EmptySchemeType, AnySchemeType) === Some(false))
+  }
+  
+  test("the empty type definitely satisfies itself") {
+    assert(SatisfiesType(EmptySchemeType, EmptySchemeType) === Some(true))
+  }
+
   test("union types definitely satisfy superset unions") {
     val subunion = UnionType(Set(InexactRationalType, ExactIntegerType))
     val superunion = UnionType(Set(StringType, InexactRationalType, ExactIntegerType))
@@ -121,6 +133,18 @@ class SchemeTypeSuite extends FunSuite {
     assert(SatisfiesType(union2, union1) === Some(false))
   }
   
+  test("union types definitely don't satisfy the empty type") {
+    val nonEmptyUnion = UnionType(Set(InexactRationalType, ExactIntegerType))
+
+    assert(SatisfiesType(EmptySchemeType, nonEmptyUnion) === Some(false))
+  }
+  
+  test("the empty scheme type definitely satisfies union types") {
+    val nonEmptyUnion = UnionType(Set(InexactRationalType, ExactIntegerType))
+
+    assert(SatisfiesType(nonEmptyUnion, EmptySchemeType) === Some(true))
+  }
+  
   test("union types may satisfy intersecting union type") {
     val union1 = UnionType(Set(InexactRationalType, ExactIntegerType))
     val union2 = UnionType(Set(StringType, InexactRationalType))
@@ -128,12 +152,29 @@ class SchemeTypeSuite extends FunSuite {
     assert(SatisfiesType(union1, union2) === None)
     assert(SatisfiesType(union2, union1) === None)
   }
+  
+  test("union type minus intersecting union type is the remaining types") {
+    val union1 = UnionType(Set(InexactRationalType, ExactIntegerType))
+    val union2 = UnionType(Set(StringType, InexactRationalType))
 
-  test("atom types minus themselves is an empty union") {
-    assert((ExactIntegerType - ExactIntegerType) === UnionType(Set()))
+    assert((union1 - union2) === ExactIntegerType)
+  }
+  
+  test("union type minus the empty type is itself") {
+    val nonEmptyUnion = UnionType(Set(InexactRationalType, ExactIntegerType))
+
+    assert((nonEmptyUnion - EmptySchemeType) === nonEmptyUnion)
   }
 
-  test("atom types minus another atom type is original type") {
+  test("atom types minus themselves is an empty union") {
+    assert((ExactIntegerType - ExactIntegerType) === EmptySchemeType)
+  }
+  
+  test("atom type minus the empty type is itself") {
+    assert((ExactIntegerType - EmptySchemeType) === ExactIntegerType)
+  }
+
+  test("atom type minus another atom type is original type") {
     assert((ExactIntegerType - InexactRationalType) === ExactIntegerType)
   }
   
@@ -159,8 +200,12 @@ class SchemeTypeSuite extends FunSuite {
     assertIntersection(ExactIntegerType, ExactIntegerType, ExactIntegerType)
   }
   
-  test("atom types intersected with another atom is an empty union") {
-    assertIntersection(ExactIntegerType, InexactRationalType, UnionType(Set()))
+  test("atom types intersected with another atom is the empty type") {
+    assertIntersection(ExactIntegerType, InexactRationalType, EmptySchemeType)
+  }
+  
+  test("atom types intersected with the empty type is the empty type") {
+    assertIntersection(ExactIntegerType, EmptySchemeType, EmptySchemeType)
   }
 
   test("atom types intersected with a union containing the atom is the original atom") {
@@ -168,11 +213,11 @@ class SchemeTypeSuite extends FunSuite {
   }
   
   test("atom types intersected with a union not containing the atom is an empty union") {
-    assertIntersection(InexactRationalType, UnionType(Set(ExactIntegerType, StringType)), UnionType(Set()))
+    assertIntersection(InexactRationalType, UnionType(Set(ExactIntegerType, StringType)), EmptySchemeType)
   }
 
   test("distinct record types intersected with each other is an empty union") {
-    assertIntersection(recordType1, recordType2, UnionType(Set()))
+    assertIntersection(recordType1, recordType2, EmptySchemeType)
   }
   
   test("union of record types intersected with the record type atom is the original union") {
@@ -181,6 +226,10 @@ class SchemeTypeSuite extends FunSuite {
 
   test("two union types intersected is the common member") {
     assertIntersection(UnionType(Set(InexactRationalType, ExactIntegerType)), UnionType(Set(ExactIntegerType, StringType)), ExactIntegerType)
+  }
+  
+  test("union types intersected with the empty type is the empty type") {
+    assertIntersection(UnionType(Set(InexactRationalType, ExactIntegerType)), EmptySchemeType, EmptySchemeType)
   }
 
   test("scheme names for single type unions is the name of the inner type") {
@@ -213,10 +262,10 @@ class SchemeTypeSuite extends FunSuite {
   }
 
   test("intersection of the constant booleans in an empty union") {
-    assertIntersection(constantTrue, constantFalse, UnionType(Set()))
+    assertIntersection(constantTrue, constantFalse, EmptySchemeType)
   }
 
-  test("intersection of the constant booleans with the general boolean is themselves") {
+  test("intersection of a constant boolean with the general boolean is itself") {
     assertIntersection(constantTrue, BooleanType, constantTrue)
     assertIntersection(constantFalse, BooleanType, constantFalse)
   }
@@ -306,7 +355,11 @@ class SchemeTypeSuite extends FunSuite {
   }
   
   test("proper list type minus a compatible list is the empty union") {
-    assert((exactIntList - numericList) == UnionType(Set())) 
+    assert((exactIntList - numericList) == EmptySchemeType) 
+  }
+  
+  test("proper list type minus the empty type is itself") {
+    assert((exactIntList - EmptySchemeType) == exactIntList) 
   }
   
   test("proper list type minus an incompatible list is itself") {
@@ -326,7 +379,7 @@ class SchemeTypeSuite extends FunSuite {
   }
   
   test("proper list type minus the list element type is the empty union") {
-    assert((stringList - ListElementType) == UnionType(Set()))
+    assert((stringList - ListElementType) == EmptySchemeType)
   }
   
   test("the list element type minus a proper list is a pair") {
@@ -343,7 +396,7 @@ class SchemeTypeSuite extends FunSuite {
   }
   
   test("proper list type intersected with an incompatible list is the empty union") {
-    assertIntersection(exactIntList, stringList, UnionType(Set())) 
+    assertIntersection(exactIntList, stringList, EmptySchemeType) 
   }
 
   test("proper list type intersected with the empty list is an empty list") {
@@ -355,7 +408,7 @@ class SchemeTypeSuite extends FunSuite {
   }
   
   test("proper list type intersected with an incompatible pair is an empty union") {
-    assertIntersection(stringList, SpecificPairType(SymbolType, StringType), UnionType(Set()))
+    assertIntersection(stringList, SpecificPairType(SymbolType, StringType), EmptySchemeType)
   }
   
   test("proper list type intersected with the list element type is itself") {
@@ -363,6 +416,6 @@ class SchemeTypeSuite extends FunSuite {
   }
   
   test("proper list type intersected with an unrelated type is an empty union") {
-    assertIntersection(stringList, PortType, UnionType(Set()))
+    assertIntersection(stringList, PortType, EmptySchemeType)
   }
 }

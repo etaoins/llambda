@@ -33,7 +33,7 @@ object ConstrainType {
       subjectType - withType
     
     def definiteNoop : Boolean =
-      withType == vt.UnionType(Set())
+      withType == vt.EmptySchemeType
   }
   
   /** Preserves the value's exisiting type 
