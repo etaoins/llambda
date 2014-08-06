@@ -64,7 +64,7 @@ class ConstantInexactRationalValue(val value : Double) extends TrivialConstantVa
       constantTemp
     
     case intType : vt.IntType =>
-      impossibleConversion(s"Cannot convert ${typeDescription} to iinteger native type ${nativeType.schemeName}. Consider using (exact) to explicitly convert the value.")
+      impossibleConversion(s"Cannot convert ${typeDescription} to integer native type ${nativeType.schemeName}. Consider using (exact) to explicitly convert the value.")
 
     case _ => 
       impossibleConversion(s"Cannot convert ${typeDescription} to non-floating point native type ${nativeType.schemeName}")
