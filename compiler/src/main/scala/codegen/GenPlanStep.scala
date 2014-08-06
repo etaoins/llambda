@@ -26,13 +26,13 @@ object GenPlanStep {
     }
   }
 
-  private def stepCompareCondToIr(stepCond : ps.CompareCond.CompareCond) : ComparisonCond.ComparisonCond = stepCond match {
-    case ps.CompareCond.Equal => ComparisonCond.Equal
-    case ps.CompareCond.NotEqual => ComparisonCond.NotEqual
-    case ps.CompareCond.GreaterThan => ComparisonCond.GreaterThan
-    case ps.CompareCond.GreaterThanEqual => ComparisonCond.GreaterThanEqual
-    case ps.CompareCond.LessThan => ComparisonCond.LessThan
-    case ps.CompareCond.LessThanEqual => ComparisonCond.LessThanEqual
+  private def stepCompareCondToIr(stepCond : ps.CompareCond.CompareCond) : IComparisonCond.IComparisonCond = stepCond match {
+    case ps.CompareCond.Equal => IComparisonCond.Equal
+    case ps.CompareCond.NotEqual => IComparisonCond.NotEqual
+    case ps.CompareCond.GreaterThan => IComparisonCond.GreaterThan
+    case ps.CompareCond.GreaterThanEqual => IComparisonCond.GreaterThanEqual
+    case ps.CompareCond.LessThan => IComparisonCond.LessThan
+    case ps.CompareCond.LessThanEqual => IComparisonCond.LessThanEqual
   }
   
   def apply(state : GenerationState, genGlobals : GenGlobals)(step : ps.Step) : GenResult = {
@@ -141,7 +141,7 @@ object GenPlanStep {
       val datumIr = ct.DatumCell.genPointerBitcast(block)(cellIr)
       val typeIdIr = ct.DatumCell.genLoadFromTypeId(block)(datumIr, metadata=loadMetadata)
 
-      val resultIr = block.icmp(cellType.llvmName + "Check")(ComparisonCond.Equal, None, typeIdIr, IntegerConstant(ct.DatumCell.typeIdIrType, cellType.typeId))
+      val resultIr = block.icmp(cellType.llvmName + "Check")(IComparisonCond.Equal, None, typeIdIr, IntegerConstant(ct.DatumCell.typeIdIrType, cellType.typeId))
 
       state.withTempValue(resultTemp -> resultIr)
 
@@ -510,7 +510,7 @@ object GenPlanStep {
 
       val globalConstantGcState = IntegerConstant(ct.DatumCell.gcStateIrType, 1)
       val gcStateIr = ct.PairCell.genLoadFromGcState(state.currentBlock)(pairIr, metadata=Map("range" -> rangeMetadata))
-      val irResult = state.currentBlock.icmp("isMutable")(ComparisonCond.NotEqual, None, globalConstantGcState, gcStateIr) 
+      val irResult = state.currentBlock.icmp("isMutable")(IComparisonCond.NotEqual, None, globalConstantGcState, gcStateIr) 
 
       state.currentBlock.condBranch(irResult, successBlock, fatalBlock)
 

@@ -59,7 +59,7 @@ object GenCalcProperListLength {
 
     // Compare the list element to the empty list
     val emptyListCastIr = countBlock.bitcastTo("emptyListCast")(currentListElIr, emptyListPtrType)
-    val isEmptyListIr = countBlock.icmp("isEmptyList")(ComparisonCond.Equal, None, emptyListCastIr, GlobalDefines.emptyListIrValue) 
+    val isEmptyListIr = countBlock.icmp("isEmptyList")(IComparisonCond.Equal, None, emptyListCastIr, GlobalDefines.emptyListIrValue) 
 
     // Jump to the exit if we've reached the end
     countBlock.condBranch(isEmptyListIr, countDoneBlock, continueCountBlock)

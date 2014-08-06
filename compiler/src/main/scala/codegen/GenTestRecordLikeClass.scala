@@ -28,7 +28,7 @@ object GenTestRecordLikeClass {
 
     // Now compare
     val testClassIdIr = IntegerConstant(cellType.recordClassIdIrType, generatedType.classId)
-    block.icmp("classMatches")(ComparisonCond.Equal, None, testClassIdIr, actualClassIdIr)
+    block.icmp("classMatches")(IComparisonCond.Equal, None, testClassIdIr, actualClassIdIr)
   }
 }
 

@@ -22,7 +22,7 @@ class OtherInstrsSuite extends IrTestSuite {
     val var2 = IntegerConstant(IntegerType(32), 30)
 
     val block = createTestBlock()
-    val resultVal = block.icmp("equal")(ComparisonCond.Equal, None, var1, var2)
+    val resultVal = block.icmp("equal")(IComparisonCond.Equal, None, var1, var2)
 
     assert(resultVal.irType === IntegerType(1))
     assertInstr(block, "%equal1 = icmp eq i32 20, 30")
@@ -33,7 +33,7 @@ class OtherInstrsSuite extends IrTestSuite {
     val var2 = IntegerConstant(IntegerType(32), 30)
 
     val block = createTestBlock()
-    val resultVal = block.icmp("inequal")(ComparisonCond.NotEqual, None, var1, var2)
+    val resultVal = block.icmp("inequal")(IComparisonCond.NotEqual, None, var1, var2)
 
     assert(resultVal.irType === IntegerType(1))
     assertInstr(block, "%inequal1 = icmp ne i32 20, 30")
@@ -44,7 +44,7 @@ class OtherInstrsSuite extends IrTestSuite {
     val var2 = IntegerConstant(IntegerType(32), 30)
 
     val block = createTestBlock()
-    val resultVal = block.icmp("greaterthan")(ComparisonCond.GreaterThan, Some(true), var1, var2)
+    val resultVal = block.icmp("greaterthan")(IComparisonCond.GreaterThan, Some(true), var1, var2)
 
     assert(resultVal.irType === IntegerType(1))
     assertInstr(block, "%greaterthan1 = icmp sgt i32 20, 30")
@@ -55,7 +55,7 @@ class OtherInstrsSuite extends IrTestSuite {
     val var2 = IntegerConstant(IntegerType(32), 30)
 
     val block = createTestBlock()
-    val resultVal = block.icmp("lessthanequals")(ComparisonCond.LessThanEqual, Some(false), var1, var2)
+    val resultVal = block.icmp("lessthanequals")(IComparisonCond.LessThanEqual, Some(false), var1, var2)
 
     assert(resultVal.irType === IntegerType(1))
     assertInstr(block, "%lessthanequals1 = icmp ule i32 20, 30")
@@ -68,7 +68,7 @@ class OtherInstrsSuite extends IrTestSuite {
     val block = createTestBlock()
 
     intercept[InconsistentIrException] {
-      block.icmp("signed")(ComparisonCond.Equal, Some(true), var1, var2)
+      block.icmp("signed")(IComparisonCond.Equal, Some(true), var1, var2)
     }
   }
   
@@ -79,7 +79,7 @@ class OtherInstrsSuite extends IrTestSuite {
     val block = createTestBlock()
 
     intercept[InconsistentIrException] {
-      block.icmp("notsigned")(ComparisonCond.LessThan, None, var1, var2)
+      block.icmp("notsigned")(IComparisonCond.LessThan, None, var1, var2)
     }
   }
   
@@ -88,7 +88,7 @@ class OtherInstrsSuite extends IrTestSuite {
     val fakePointer2 = LocalVariable("fake2", PointerType(IntegerType(64)))
 
     val block = createTestBlock()
-    val resultVal = block.icmp("pointer")(ComparisonCond.Equal, None, fakePointer1, fakePointer2)
+    val resultVal = block.icmp("pointer")(IComparisonCond.Equal, None, fakePointer1, fakePointer2)
 
     assert(resultVal.irType === IntegerType(1))
     assertInstr(block, "%pointer1 = icmp eq i64* %fake1, %fake2")
@@ -101,7 +101,7 @@ class OtherInstrsSuite extends IrTestSuite {
     val block = createTestBlock()
 
     intercept[InconsistentIrException] {
-      block.icmp("incompatible")(ComparisonCond.Equal, None, var1, var2)
+      block.icmp("incompatible")(IComparisonCond.Equal, None, var1, var2)
     }
   }
   
@@ -112,7 +112,51 @@ class OtherInstrsSuite extends IrTestSuite {
     val block = createTestBlock()
 
     intercept[InconsistentIrException] {
-      block.icmp("noninteger")(ComparisonCond.Equal, None, var1, var2)
+      block.icmp("noninteger")(IComparisonCond.Equal, None, var1, var2)
+    }
+  }
+
+  test("float ordered equality") {
+    val var1 = DoubleConstant(20.0)
+    val var2 = DoubleConstant(30.0)
+
+    val block = createTestBlock()
+    val resultVal = block.fcmp("equal")(FComparisonCond.OrderedEqual, var1, var2)
+
+    assert(resultVal.irType === IntegerType(1))
+    assertInstr(block, "%equal1 = fcmp oeq double 20.0, 30.0")
+  }
+  
+  test("float unordered inequality") {
+    val var1 = FloatConstant(20.0f)
+    val var2 = FloatConstant(30.0f)
+
+    val block = createTestBlock()
+    val resultVal = block.fcmp("inequal")(FComparisonCond.UnorderedNotEqual, var1, var2)
+
+    assert(resultVal.irType === IntegerType(1))
+    assertInstr(block, "%inequal1 = fcmp une float 20.0, 30.0")
+  }
+  
+  test("float equality with incompatible types fails") {
+    val var1 = FloatConstant(20.0f)
+    val var2 = DoubleConstant(30.0f)
+
+    val block = createTestBlock()
+
+    intercept[InconsistentIrException] {
+      block.fcmp("incompatible")(FComparisonCond.Ordered, var1, var2)
+    }
+  }
+  
+  test("float equality with integers fails") {
+    val var1 = IntegerConstant(IntegerType(32), 20)
+    val var2 = IntegerConstant(IntegerType(32), 30)
+
+    val block = createTestBlock()
+
+    intercept[InconsistentIrException] {
+      block.fcmp("nonfloat")(FComparisonCond.True, var1, var2)
     }
   }
 

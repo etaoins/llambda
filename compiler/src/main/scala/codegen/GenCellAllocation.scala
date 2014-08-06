@@ -44,7 +44,7 @@ object GenCellAllocation {
     val allocFinishedBlock = irFunction.startChildBlock("allocFinished")
 
     // See if we ran out of space
-    val directSucceededPred = startBlock.icmp("directSucceeded")(ComparisonCond.LessThanEqual, Some(false), newAllocNextValue, allocEndValue)
+    val directSucceededPred = startBlock.icmp("directSucceeded")(IComparisonCond.LessThanEqual, Some(false), newAllocNextValue, allocEndValue)
 
     startBlock.condBranch(directSucceededPred, directSuccessBlock, collectGarbageBlock)
 

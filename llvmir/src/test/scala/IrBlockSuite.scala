@@ -80,7 +80,7 @@ class IrBlockSuite extends IrTestSuite {
     val localVar = LocalVariable("predefinedVar", IntegerType(1))
 
     val block = createTestBlock()
-    block.icmp(localVar)(ComparisonCond.Equal, None, var1, var2)
+    block.icmp(localVar)(IComparisonCond.Equal, None, var1, var2)
 
     assertInstr(block, "%predefinedVar = icmp eq i32 20, 30")
   }
@@ -94,7 +94,7 @@ class IrBlockSuite extends IrTestSuite {
     val block = createTestBlock()
     
     intercept[InconsistentIrException] {
-      block.icmp(localVar)(ComparisonCond.Equal, None, var1, var2)
+      block.icmp(localVar)(IComparisonCond.Equal, None, var1, var2)
     }
   }
 }

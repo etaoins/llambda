@@ -1,22 +1,45 @@
 package io.llambda.llvmir
 
-object ComparisonCond {
+object IComparisonCond {
   // This doesn't extend Irable because the mnemonic needs to be combined with
   // an instruction-specific prefix to be valid IR
-  sealed abstract class ComparisonCond(val mnemonic : String, val signedDependent : Boolean)
+  sealed abstract class IComparisonCond(val mnemonic : String, val signedDependent : Boolean)
 
-  case object Equal extends ComparisonCond("eq", false)
-  case object NotEqual extends ComparisonCond("ne", false)
+  case object Equal extends IComparisonCond("eq", false)
+  case object NotEqual extends IComparisonCond("ne", false)
   
-  case object GreaterThan extends ComparisonCond("gt", true)
-  case object GreaterThanEqual extends ComparisonCond("ge", true)
+  case object GreaterThan extends IComparisonCond("gt", true)
+  case object GreaterThanEqual extends IComparisonCond("ge", true)
   
-  case object LessThan extends ComparisonCond("lt", true)
-  case object LessThanEqual extends ComparisonCond("le", true)
+  case object LessThan extends IComparisonCond("lt", true)
+  case object LessThanEqual extends IComparisonCond("le", true)
+}
+
+object FComparisonCond {
+  sealed abstract class FComparisonCond(mnemonic : String) extends Irable {
+    def toIr = mnemonic
+  }
+
+  case object False extends FComparisonCond("false")
+  case object OrderedEqual extends FComparisonCond("oeq")
+  case object OrderedGreaterThan extends FComparisonCond("ogt")
+  case object OrderedGreaterThanEqual extends FComparisonCond("oge")
+  case object OrderedLessThan extends FComparisonCond("olt")
+  case object OrderedLessThanEqual extends FComparisonCond("ole")
+  case object OrderedNotEqual extends FComparisonCond("one")
+  case object Ordered extends FComparisonCond("ord")
+  case object UnorderedEqual extends FComparisonCond("ueq")
+  case object UnorderedGreaterThan extends FComparisonCond("ugt")
+  case object UnorderedGreaterThanEqual extends FComparisonCond("uge")
+  case object UnorderedLessThan extends FComparisonCond("ult")
+  case object UnorderedLessThanEqual extends FComparisonCond("ule")
+  case object UnorderedNotEqual extends FComparisonCond("une")
+  case object Unordered extends FComparisonCond("uno")
+  case object True extends FComparisonCond("true")
 }
 
 private[llvmir] trait OtherInstrs extends IrInstrBuilder {
-  def icmp(resultDest : ResultDestination)(compareCond : ComparisonCond.ComparisonCond, signed : Option[Boolean], val1 : IrValue, val2 : IrValue) = {
+  def icmp(resultDest : ResultDestination)(compareCond : IComparisonCond.IComparisonCond, signed : Option[Boolean], val1 : IrValue, val2 : IrValue) = {
     if (val1.irType != val2.irType) {
       throw new InconsistentIrException("Attempted icmp with incompatible types")
     }
@@ -42,6 +65,22 @@ private[llvmir] trait OtherInstrs extends IrInstrBuilder {
 
     addInstruction(s"${resultVar.toIr} = icmp ${conditionIr} ${comparedType.toIr} ${val1.toIr}, ${val2.toIr}")
 
+    resultVar
+  }
+
+  def fcmp(resultDest : ResultDestination)(compareCond : FComparisonCond.FComparisonCond, val1 : IrValue, val2 : IrValue) = {
+    if (val1.irType != val2.irType) {
+      throw new InconsistentIrException("Attempted fcmp with incompatible types")
+    }
+
+    val comparedType = val1.irType
+
+    if (!comparedType.isInstanceOf[FloatingPointType]) {
+      throw new InconsistentIrException("Attempted fcmp with non-floating point type")
+    }
+
+    val resultVar = resultDest.asLocalVariable(nameSource, IntegerType(1))
+    addInstruction(s"${resultVar.toIr} = fcmp ${compareCond.toIr} ${comparedType.toIr} ${val1.toIr}, ${val2.toIr}")
     resultVar
   }
 
