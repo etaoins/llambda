@@ -205,4 +205,46 @@ class NumberProcSuite extends FunSuite with PlanHelpers {
       ast.RationalLiteral(-60.0)
     )
   }
+  
+  test("static (positive?)") {
+    assertStaticPlan("(positive? 50)",
+      ast.BooleanLiteral(true)
+    )
+    
+    assertStaticPlan("(positive? 0)",
+      ast.BooleanLiteral(false)
+    )
+    
+    assertStaticPlan("(positive? -200.0)",
+      ast.BooleanLiteral(false)
+    )
+  }
+  
+  test("static (negative?)") {
+    assertStaticPlan("(negative? 50)",
+      ast.BooleanLiteral(false)
+    )
+    
+    assertStaticPlan("(negative? 0)",
+      ast.BooleanLiteral(false)
+    )
+    
+    assertStaticPlan("(negative? -200.0)",
+      ast.BooleanLiteral(true)
+    )
+  }
+  
+  test("static (zero?)") {
+    assertStaticPlan("(zero? 50)",
+      ast.BooleanLiteral(false)
+    )
+    
+    assertStaticPlan("(zero? 0)",
+      ast.BooleanLiteral(true)
+    )
+    
+    assertStaticPlan("(zero? -200.0)",
+      ast.BooleanLiteral(false)
+    )
+  }
 }

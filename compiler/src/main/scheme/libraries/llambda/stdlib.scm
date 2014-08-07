@@ -185,8 +185,6 @@
     (define-r7rs > (native-function "lliby_numeric_gt" (<numeric-cell> <numeric-cell> . <number>) -> <bool>))
     (define-r7rs <= (native-function "lliby_numeric_lte" (<numeric-cell> <numeric-cell> . <number>) -> <bool>))
     (define-r7rs >= (native-function "lliby_numeric_gte" (<numeric-cell> <numeric-cell> . <number>) -> <bool>))
-    (define-r7rs positive? (native-function "lliby_is_positive" (<numeric-cell>) -> <bool>))
-    (define-r7rs negative? (native-function "lliby_is_negative" (<numeric-cell>) -> <bool>))
     
     (define-syntax case-lambda
       (syntax-rules ()
@@ -235,9 +233,18 @@
     (define-r7rs finite? (native-function "lliby_is_finite" (<numeric-cell>) -> <bool>))
     (define-r7rs infinite? (native-function "lliby_is_infinite" (<numeric-cell>) -> <bool>))
     (define-r7rs nan? (native-function "lliby_is_nan" (<numeric-cell>) -> <bool>))
-    (define-r7rs zero? (native-function "lliby_is_zero" (<numeric-cell>) -> <bool>))
     (define-r7rs odd? (native-function "lliby_is_odd" (<int64>) -> <bool>))
     (define-r7rs even? (native-function "lliby_is_even" (<int64>) -> <bool>))
+    
+    ; These branch on type as our planner currently won't optimise comparisons without a definite type
+    (define-r7rs zero? (lambda: ((n : <number>))
+      (if (integer? n) (= n 0) (= n 0.0))))
+
+    (define-r7rs positive? (lambda: ((n : <number>))
+      (if (integer? n) (> n 0) (> n 0.0))))
+    
+    (define-r7rs negative? (lambda: ((n : <number>))
+      (if (integer? n) (< n 0) (< n 0.0))))
 
     (define-r7rs exact (world-function "lliby_exact" (<numeric-cell>) -> <int64>))
     (define-r7rs inexact (world-function "lliby_inexact" (<numeric-cell>) -> <double>))

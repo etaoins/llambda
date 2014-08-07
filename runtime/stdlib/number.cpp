@@ -333,19 +333,6 @@ bool lliby_is_nan(NumericCell *value)
 	}
 }
 
-bool lliby_is_zero(NumericCell *value)
-{
-	if (auto exactInteger = datum_cast<ExactIntegerCell>(value))
-	{
-		return exactInteger->value() == 0;
-	}
-	else
-	{
-		auto inexactRational = datum_unchecked_cast<InexactRationalCell>(value);
-		return inexactRational->value() == 0.0;
-	}
-}
-
 bool lliby_is_odd(std::int64_t value)
 {
 	// Since C++11 the remainder of a negative number mod a positive is negative
@@ -356,16 +343,6 @@ bool lliby_is_odd(std::int64_t value)
 bool lliby_is_even(std::int64_t value)
 {
 	return (value % 2) == 0;
-}
-
-bool lliby_is_positive(NumericCell *value)
-{
-	return doubleValueFor(value) > 0.0;
-}
-
-bool lliby_is_negative(NumericCell *value)
-{
-	return doubleValueFor(value) < 0.0;
 }
 
 bool lliby_numeric_equal(NumericCell *value1, NumericCell *value2, RestArgument<NumericCell> *argHead)
