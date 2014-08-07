@@ -26,13 +26,22 @@ object GenPlanStep {
     }
   }
 
-  private def stepCompareCondToIr(stepCond : ps.CompareCond.CompareCond) : IComparisonCond.IComparisonCond = stepCond match {
+  private def stepCompareCondToIntegerIr(stepCond : ps.CompareCond.CompareCond) : IComparisonCond.IComparisonCond = stepCond match {
     case ps.CompareCond.Equal => IComparisonCond.Equal
     case ps.CompareCond.NotEqual => IComparisonCond.NotEqual
     case ps.CompareCond.GreaterThan => IComparisonCond.GreaterThan
     case ps.CompareCond.GreaterThanEqual => IComparisonCond.GreaterThanEqual
     case ps.CompareCond.LessThan => IComparisonCond.LessThan
     case ps.CompareCond.LessThanEqual => IComparisonCond.LessThanEqual
+  }
+  
+  private def stepCompareCondToFloatIr(stepCond : ps.CompareCond.CompareCond) : FComparisonCond.FComparisonCond = stepCond match {
+    case ps.CompareCond.Equal => FComparisonCond.OrderedEqual
+    case ps.CompareCond.NotEqual => FComparisonCond.OrderedNotEqual
+    case ps.CompareCond.GreaterThan => FComparisonCond.OrderedGreaterThan
+    case ps.CompareCond.GreaterThanEqual => FComparisonCond.OrderedGreaterThanEqual
+    case ps.CompareCond.LessThan => FComparisonCond.OrderedLessThan
+    case ps.CompareCond.LessThanEqual => FComparisonCond.OrderedLessThanEqual
   }
   
   def apply(state : GenerationState, genGlobals : GenGlobals)(step : ps.Step) : GenResult = {
@@ -473,8 +482,17 @@ object GenPlanStep {
       val val1Ir = state.liveTemps(val1Temp)
       val val2Ir = state.liveTemps(val2Temp)
 
-      val condIr = stepCompareCondToIr(compareCond)
+      val condIr = stepCompareCondToIntegerIr(compareCond)
       val resultIr = state.currentBlock.icmp("compResult")(condIr, signed, val1Ir, val2Ir)
+
+      state.withTempValue(resultTemp -> resultIr)
+    
+    case ps.FloatCompare(resultTemp, compareCond, val1Temp, val2Temp) =>
+      val val1Ir = state.liveTemps(val1Temp)
+      val val2Ir = state.liveTemps(val2Temp)
+
+      val condIr = stepCompareCondToFloatIr(compareCond)
+      val resultIr = state.currentBlock.fcmp("compResult")(condIr, val1Ir, val2Ir)
 
       state.withTempValue(resultTemp -> resultIr)
 

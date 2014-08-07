@@ -60,6 +60,26 @@ class NumberProcSuite extends FunSuite with PlanHelpers {
     assertStaticPlan("(= 200 50)",
       ast.BooleanLiteral(false)
     )
+    
+    assertStaticPlan("(= 50.0 50.0)",
+      ast.BooleanLiteral(true)
+    )
+    
+    assertStaticPlan("(= 50.0 200.0)",
+      ast.BooleanLiteral(false)
+    )
+    
+    assertStaticPlan("(= 200.0 50.0)",
+      ast.BooleanLiteral(false)
+    )
+    
+    assertStaticPlan("(= 50 50.0)",
+      ast.BooleanLiteral(true)
+    )
+    
+    assertStaticPlan("(= 50.0 50)",
+      ast.BooleanLiteral(true)
+    )
   }
   
   test("static (<)") {
@@ -72,6 +92,18 @@ class NumberProcSuite extends FunSuite with PlanHelpers {
     )
     
     assertStaticPlan("(< 200 50)",
+      ast.BooleanLiteral(false)
+    )
+    
+    assertStaticPlan("(< 50.0 50.0)",
+      ast.BooleanLiteral(false)
+    )
+    
+    assertStaticPlan("(< 50.0 200.0)",
+      ast.BooleanLiteral(true)
+    )
+    
+    assertStaticPlan("(< 200.0 50.0)",
       ast.BooleanLiteral(false)
     )
   }
@@ -88,6 +120,18 @@ class NumberProcSuite extends FunSuite with PlanHelpers {
     assertStaticPlan("(<= 200 50)",
       ast.BooleanLiteral(false)
     )
+    
+    assertStaticPlan("(<= 50.0 50.0)",
+      ast.BooleanLiteral(true)
+    )
+    
+    assertStaticPlan("(<= 50.0 200.0)",
+      ast.BooleanLiteral(true)
+    )
+    
+    assertStaticPlan("(<= 200.0 50.0)",
+      ast.BooleanLiteral(false)
+    )
   }
   
   test("static (>)") {
@@ -102,6 +146,18 @@ class NumberProcSuite extends FunSuite with PlanHelpers {
     assertStaticPlan("(> 200 50)",
       ast.BooleanLiteral(true)
     )
+    
+    assertStaticPlan("(> 50.0 50.0)",
+      ast.BooleanLiteral(false)
+    )
+    
+    assertStaticPlan("(> 50.0 200.0)",
+      ast.BooleanLiteral(false)
+    )
+    
+    assertStaticPlan("(> 200.0 50.0)",
+      ast.BooleanLiteral(true)
+    )
   }
   
   test("static (>=)") {
@@ -114,6 +170,18 @@ class NumberProcSuite extends FunSuite with PlanHelpers {
     )
     
     assertStaticPlan("(>= 200 50)",
+      ast.BooleanLiteral(true)
+    )
+    
+    assertStaticPlan("(>= 50.0 50.0)",
+      ast.BooleanLiteral(true)
+    )
+    
+    assertStaticPlan("(>= 50.0 200.0)",
+      ast.BooleanLiteral(false)
+    )
+    
+    assertStaticPlan("(>= 200.0 50.0)",
       ast.BooleanLiteral(true)
     )
   }

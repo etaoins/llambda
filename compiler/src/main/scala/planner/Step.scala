@@ -744,6 +744,15 @@ case class IntegerCompare(result : TempValue, cond : CompareCond.CompareCond, si
     IntegerCompare(f(result), cond, signed, f(val1), f(val2)).assignLocationFrom(this)
 }
 
+/** Performs an ordered comparison between two floating point values */
+case class FloatCompare(result : TempValue, cond : CompareCond.CompareCond, val1 : TempValue, val2 : TempValue) extends Step with NullipotentStep {
+  lazy val inputValues = Set[TempValue](val1, val2)
+  lazy val outputValues = Set[TempValue](result)
+  
+  def renamed(f : (TempValue) => TempValue) = 
+    FloatCompare(f(result), cond, f(val1), f(val2)).assignLocationFrom(this)
+}
+
 case class AssertPredicate(
     worldPtr : WorldPtrValue,
     predicate : TempValue,

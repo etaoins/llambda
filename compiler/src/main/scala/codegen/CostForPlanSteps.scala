@@ -33,7 +33,8 @@ object CostForPlanSteps {
       // These are usually cheap don't require a load
       trivialInstrCost
 
-    case _ : ps.IntegerAdd | _ : ps.IntegerSub | _ : ps.IntegerMul | _ : ps.IntegerCompare | _ : ps.Return =>
+    case _ : ps.IntegerAdd | _ : ps.IntegerSub | _ : ps.IntegerMul | _ : ps.IntegerCompare | _ : ps.FloatCompare |
+         _ : ps.Return =>
       // These effectively map 1:1 to assembler instructions
       trivialInstrCost
     
