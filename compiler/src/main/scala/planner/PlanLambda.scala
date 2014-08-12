@@ -252,7 +252,7 @@ private[planner] object PlanLambda {
     // Plan the body
     val planResult = PlanExpr(postClosureState)(body)(procPlan)
 
-    val procSignature = if (!canRefineSignature) {
+    val retTypedSignature = if (!canRefineSignature) {
       initialSignature
     }
     else {
@@ -277,23 +277,32 @@ private[planner] object PlanLambda {
 
     // Return from the function
     procPlan.withContextLocationOpt(lastExprOpt) {
-      procPlan.steps += ps.Return(procSignature.returnType map { returnType =>
+      procPlan.steps += ps.Return(retTypedSignature.returnType map { returnType =>
         planResult.value.toTempValue(returnType)(procPlan, worldPtr)
       })
     }
     
+    val steps = procPlan.steps.toList
+
+    val (worldPtrOpt, procSignature) = if (canRefineSignature && !WorldPtrUsedBySteps(steps, worldPtr)) {
+      // World pointer is not required, strip it out
+      (None, retTypedSignature.copy(hasWorldArg=false))
+    }
+    else {
+      (Some(worldPtr), retTypedSignature)
+    }
+
     // Name our function arguments
     val namedArguments =
-      ("world" -> worldPtr) ::
+      worldPtrOpt.toList.map({ worldPtr =>
+        ("world" -> worldPtr)
+      }) ++
       innerSelfTempOpt.toList.map({ procSelf =>
         ("self" -> procSelf)
       }) ++
       (allArgs.map { argument =>
         (argument.storageLoc.sourceName -> argument.tempValue)
       })
-
-    val steps = procPlan.steps.toList
-    val worldPtrRequired = WorldPtrUsedBySteps(steps, worldPtr)
     
     val irCommentOpt =
       for(location <- lambdaExpr.locationOpt)
@@ -305,7 +314,7 @@ private[planner] object PlanLambda {
       signature=procSignature,
       namedArguments=namedArguments,
       steps=steps,
-      worldPtrOpt=if (worldPtrRequired) Some(worldPtr) else None,
+      worldPtrOpt=worldPtrOpt,
       debugContextOpt=lambdaExpr.debugContextOpt,
       irCommentOpt=irCommentOpt
     )

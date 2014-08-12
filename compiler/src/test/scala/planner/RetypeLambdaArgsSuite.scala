@@ -37,6 +37,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
   test("argless procedure returning integer constant") {
     val signature = signatureFor("""(lambda () 1)""")
 
+    assert(signature.hasWorldArg === false)
     assert(signature.fixedArgs === Nil)
     assert(signature.returnType === Some(vt.Int64))
   }
@@ -45,6 +46,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
     val signature = signatureFor("""(lambda (x) x)""")
 
     // This can be passed anything so it can return anything
+    assert(signature.hasWorldArg === false)
     assert(signature.fixedArgs === List(vt.AnySchemeType))
     assert(signature.returnType === Some(vt.AnySchemeType))
   }
@@ -52,6 +54,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
   test("explicitly typed procedure returning its argument") {
     val signature = signatureFor("""(lambda: ((x : <integer>)) x)""")
 
+    assert(signature.hasWorldArg === false)
     assert(signature.fixedArgs === List(vt.ExactIntegerType))
     assert(signature.returnType === Some(vt.ExactIntegerType))
   }
