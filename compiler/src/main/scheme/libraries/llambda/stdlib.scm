@@ -218,15 +218,13 @@
     (define-r7rs complex? number?)
     (define-r7rs real? number?)
     (define-r7rs rational? number?)
-
-    (define-r7rs integer? (make-predicate <exact-integer-cell>))
-
+    
     ; These aren't quite normal predicates as they only take numbers
     (define-r7rs inexact? (lambda: ((val : <numeric-cell>))
       ((make-predicate <inexact-rational-cell>) val)))
 
     (define-r7rs exact? (lambda: ((val : <numeric-cell>))
-      (integer? val)))
+      ((make-predicate <exact-integer-cell>) val)))
 
     (define-r7rs exact-integer? exact?)
 
@@ -238,13 +236,37 @@
     
     ; These branch on type as our planner currently won't optimise comparisons without a definite type
     (define-r7rs zero? (lambda: ((n : <number>))
-      (if (integer? n) (= n 0) (= n 0.0))))
+      (if (exact-integer? n) (= n 0) (= n 0.0))))
 
     (define-r7rs positive? (lambda: ((n : <number>))
-      (if (integer? n) (> n 0) (> n 0.0))))
+      (if (exact-integer? n) (> n 0) (> n 0.0))))
     
     (define-r7rs negative? (lambda: ((n : <number>))
-      (if (integer? n) (< n 0) (< n 0.0))))
+      (if (exact-integer? n) (< n 0) (< n 0.0))))
+    
+    (define native-floor (native-function "floor" (<double>) -> <double>))
+    (define-r7rs floor (lambda: ((n : <number>))
+      (if (exact-integer? n) n (native-floor n))))
+    
+    (define native-ceil (native-function "ceil" (<double>) -> <double>))
+    (define-r7rs ceiling (lambda: ((n : <number>))
+      (if (exact-integer? n) n (native-ceil n))))
+    
+    (define native-trunc (native-function "trunc" (<double>) -> <double>))
+    (define-r7rs truncate (lambda: ((n : <number>))
+      (if (exact-integer? n) n (native-trunc n))))
+    
+    (define native-round (native-function "round" (<double>) -> <double>))
+    (define-r7rs round (lambda: ((n : <number>))
+      (if (exact-integer? n) n (native-round n))))
+
+    ; This is tricky because it's possible to be both inexact and an integer
+    (define-r7rs integer? (lambda (x)
+      (if (number? x)
+        ; Some  numbers are integers
+        (= x (floor x))
+        ; Not numeric
+        #f)))
 
     (define-r7rs exact (world-function "lliby_exact" (<numeric-cell>) -> <int64>))
     (define-r7rs inexact (world-function "lliby_inexact" (<numeric-cell>) -> <double>))

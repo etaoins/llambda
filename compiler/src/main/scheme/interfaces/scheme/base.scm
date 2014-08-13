@@ -10,7 +10,7 @@
 (export do)
 (export eqv? eq? equal?)
 (export number? complex? real? rational? exact? integer? exact-integer? inexact? finite? infinite? nan? zero? even? odd?
-        exact inexact + - / * = < > <= >= positive? negative?)
+        exact inexact + - / * = < > <= >= positive? negative? floor ceiling truncate round)
 (export boolean? not boolean=?)
 (export pair? null? list? cons car cdr length list-copy make-list list append memv memq member)
 
