@@ -320,19 +320,6 @@ bool lliby_is_infinite(NumericCell *value)
 	}
 }
 
-bool lliby_is_nan(NumericCell *value)
-{
-	if (auto inexactRational = datum_cast<InexactRationalCell>(value))
-	{
-		return std::isnan(inexactRational->value());
-	}
-	else
-	{
-		// Exact integers cannot be NaN
-		return false;
-	}
-}
-
 bool lliby_is_odd(std::int64_t value)
 {
 	// Since C++11 the remainder of a negative number mod a positive is negative

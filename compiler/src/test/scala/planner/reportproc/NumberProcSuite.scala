@@ -218,6 +218,10 @@ class NumberProcSuite extends FunSuite with PlanHelpers {
     assertStaticPlan("(positive? -200.0)",
       ast.BooleanLiteral(false)
     )
+    
+    assertStaticPlan("(positive? +nan.0)",
+      ast.BooleanLiteral(false)
+    )
   }
   
   test("static (negative?)") {
@@ -232,6 +236,10 @@ class NumberProcSuite extends FunSuite with PlanHelpers {
     assertStaticPlan("(negative? -200.0)",
       ast.BooleanLiteral(true)
     )
+    
+    assertStaticPlan("(negative? +nan.0)",
+      ast.BooleanLiteral(false)
+    )
   }
   
   test("static (zero?)") {
@@ -245,6 +253,24 @@ class NumberProcSuite extends FunSuite with PlanHelpers {
     
     assertStaticPlan("(zero? -200.0)",
       ast.BooleanLiteral(false)
+    )
+    
+    assertStaticPlan("(zero? +nan.0)",
+      ast.BooleanLiteral(false)
+    )
+  }
+
+  test("static (nan?)") {
+    assertStaticPlan("(nan? 50)",
+      ast.BooleanLiteral(false)
+    )
+    
+    assertStaticPlan("(nan? 55.5)",
+      ast.BooleanLiteral(false)
+    )
+    
+    assertStaticPlan("(nan? +nan.0)",
+      ast.BooleanLiteral(true)
     )
   }
 }

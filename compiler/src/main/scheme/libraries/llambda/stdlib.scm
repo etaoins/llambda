@@ -230,9 +230,11 @@
 
     (define-r7rs finite? (native-function "lliby_is_finite" (<numeric-cell>) -> <bool>))
     (define-r7rs infinite? (native-function "lliby_is_infinite" (<numeric-cell>) -> <bool>))
-    (define-r7rs nan? (native-function "lliby_is_nan" (<numeric-cell>) -> <bool>))
     (define-r7rs odd? (native-function "lliby_is_odd" (<int64>) -> <bool>))
     (define-r7rs even? (native-function "lliby_is_even" (<int64>) -> <bool>))
+
+    (define-r7rs nan? (lambda: ((n : <number>))
+      (eq? n +nan.0)))
     
     ; These branch on type as our planner currently won't optimise comparisons without a definite type
     (define-r7rs zero? (lambda: ((n : <number>))
