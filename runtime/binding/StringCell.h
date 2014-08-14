@@ -1,7 +1,7 @@
 #ifndef _LLIBY_BINDING_STRINGCELL_H
 #define _LLIBY_BINDING_STRINGCELL_H
 
-#include "DatumCell.h"
+#include "AnyCell.h"
 #include <list>
 #include <vector>
 #include <ostream>
@@ -14,7 +14,7 @@ namespace lliby
 class World;
 class ImplicitSharingTest;
 
-class StringCell : public DatumCell
+class StringCell : public AnyCell
 {
 	friend class SymbolCell;
 	friend class ImplicitSharingTest;
@@ -73,7 +73,7 @@ public:
 
 protected:
 	StringCell(std::uint32_t byteLength, std::uint32_t charLength, std::uint16_t allocSlackBytes) :
-		DatumCell(CellTypeId::String),
+		AnyCell(CellTypeId::String),
 		m_allocSlackBytes(allocSlackBytes),
 		m_charLength(charLength),
 		m_byteLength(byteLength)

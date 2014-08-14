@@ -1,7 +1,7 @@
 #ifndef _LLIBY_DYNAMIC_STATE_H
 #define _LLIBY_DYNAMIC_STATE_H
 
-#include "binding/DatumCell.h"
+#include "binding/AnyCell.h"
 #include "binding/ProcedureCell.h"
 
 #include <unordered_map>
@@ -22,7 +22,7 @@ class ParameterProcedureCell;
 class State
 {
 public:
-	typedef std::unordered_map<ParameterProcedureCell*, DatumCell*> ParameterValueMap;
+	typedef std::unordered_map<ParameterProcedureCell*, AnyCell*> ParameterValueMap;
 	
 	/**
 	 * Creates a new state with a specified parent and before/after procedures
@@ -41,14 +41,14 @@ public:
 	 *
 	 * This will recurse up this state's ancestors. If no value is found the parameter's initial value will be returned.
 	 */
-	DatumCell *valueForParameter(ParameterProcedureCell *param) const;
+	AnyCell *valueForParameter(ParameterProcedureCell *param) const;
 	
 	/**
 	 * Sets the value for the passed parameter
 	 *
 	 * This only sets the value for this State instance; ancestor states are unmodified
 	 */
-	void setValueForParameter(ParameterProcedureCell *param, DatumCell *value);
+	void setValueForParameter(ParameterProcedureCell *param, AnyCell *value);
 
 	/**
 	 * Returns the parent for this state or nullptr if this is a root state

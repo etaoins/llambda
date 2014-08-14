@@ -55,17 +55,17 @@ private[reportproc] object StaticValueEqv {
       case (constInteger1 : iv.ConstantExactIntegerValue, constInteger2 : iv.ConstantExactIntegerValue) =>
         Some(constInteger1.value == constInteger2.value)
       
-      case (constRational1 : iv.ConstantInexactRationalValue, constRational2 : iv.ConstantInexactRationalValue) =>
-        if (constRational1.value.isNaN && constRational2.value.isNaN) {
+      case (constFlonum1 : iv.ConstantFlonumValue, constFlonum2 : iv.ConstantFlonumValue) =>
+        if (constFlonum1.value.isNaN && constFlonum2.value.isNaN) {
           // Both values are NaN
           Some(true)
         }
         else {
-          Some(constRational1.value == constRational2.value)
+          Some(constFlonum1.value == constFlonum2.value)
         }
       
-      case (constCharacter1 : iv.ConstantCharacterValue, constCharacter2 : iv.ConstantCharacterValue) =>
-        Some(constCharacter1.value == constCharacter2.value)
+      case (constChar1 : iv.ConstantCharValue, constChar2 : iv.ConstantCharValue) =>
+        Some(constChar1.value == constChar2.value)
       
       case (iv.UnitValue, iv.UnitValue) =>
         Some(true)

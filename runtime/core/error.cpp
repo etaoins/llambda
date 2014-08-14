@@ -20,12 +20,12 @@ extern "C"
 
 using namespace lliby;
 
-void _lliby_fatal(const char *message, const DatumCell *evidence)
+void _lliby_fatal(const char *message, const AnyCell *evidence)
 {
 	fatalError(message, evidence);
 }
 
-void _lliby_signal_error(World &world, const char *message, DatumCell *irritant)
+void _lliby_signal_error(World &world, const char *message, AnyCell *irritant)
 {
 	if (irritant != nullptr)
 	{
@@ -42,7 +42,7 @@ void _lliby_signal_error(World &world, const char *message, DatumCell *irritant)
 namespace lliby
 {
 
-void signalError(World &world, const char *message, const std::vector<DatumCell*> &irritants)
+void signalError(World &world, const char *message, const std::vector<AnyCell*> &irritants)
 {
 	// Convert our C++ data type to Scheme cells
 	alloc::ListElementRef irritantsCell(world, ListElementCell::createProperList(world, irritants));
@@ -53,7 +53,7 @@ void signalError(World &world, const char *message, const std::vector<DatumCell*
 	throw dynamic::SchemeException(world, errorObj);
 }
 
-void fatalError(const char *message, const DatumCell *evidence)
+void fatalError(const char *message, const AnyCell *evidence)
 {
 	std::cerr << message << std::endl;
 
@@ -61,12 +61,12 @@ void fatalError(const char *message, const DatumCell *evidence)
 	{
 		ExternalFormDatumWriter writer(std::cerr);
 
-		if (auto errorCell = datum_cast<ErrorObjectCell>(evidence))
+		if (auto errorCell = cell_cast<ErrorObjectCell>(evidence))
 		{
 			// Handle error objects specially
 			std::cerr << "Message: " << errorCell->message() << std::endl;
 
-			ProperList<DatumCell> irritantList(errorCell->irritants());
+			ProperList<AnyCell> irritantList(errorCell->irritants());
 
 			if (irritantList.length() == 1)
 			{

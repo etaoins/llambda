@@ -36,7 +36,7 @@ enum class GarbageState : std::uint8_t
 	 *
 	 * These occur at the end of every non-terminal heap segment to point to the next heap segment.
 	 *
-	 * These aren't actual datum cells; they're only used internally by the allocator
+	 * These aren't actual cells; they're only used internally by the allocator
 	 */
 	SegmentTerminator = 3,
 	
@@ -46,7 +46,7 @@ enum class GarbageState : std::uint8_t
 	 * This occurs once at the end of the heap. This is placed by the allocator to mark the end of the heap before
 	 * collecting garbage.
 	 *
-	 * These aren't actual datum cells; they're only used internally by the allocator
+	 * These aren't actual cells; they're only used internally by the allocator
 	 */
 	HeapTerminator = 4,
 

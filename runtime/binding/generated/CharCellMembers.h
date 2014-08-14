@@ -3,21 +3,21 @@
  ************************************************************/
 
 public:
-	double value() const
+	UnicodeChar unicodeChar() const
 	{
-		return m_value;
+		return m_unicodeChar;
 	}
 
 public:
 	static bool typeIdIsTypeOrSubtype(CellTypeId typeId)
 	{
-		return typeId == CellTypeId::InexactRational;
+		return typeId == CellTypeId::Char;
 	}
 
-	static bool isInstance(const DatumCell *datum)
+	static bool isInstance(const AnyCell *cell)
 	{
-		return typeIdIsTypeOrSubtype(datum->typeId());
+		return typeIdIsTypeOrSubtype(cell->typeId());
 	}
 
 private:
-	double m_value;
+	UnicodeChar m_unicodeChar;

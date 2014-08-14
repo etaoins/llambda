@@ -189,28 +189,28 @@
 (define-test "simple typed let:" (expect 12
   (import (llambda typed))
 
-  (let: ((x : <number> 7) (y : <integer> 5))
+  (let: ((x : <number> 7) (y : <exact-integer> 5))
     (+ y x))))
 
 (define-test "typed let: with incorrect type fails" (expect-failure
   (import (llambda typed))
 
-  (let: ((x : <integer> 7.5))
+  (let: ((x : <exact-integer> 7.5))
     (+ 1 x))))
 
 (define-test "simple typed let*:" (expect 70
   (import (llambda typed))
                                           
 	(let: ((x : <any> 2) (y : <number> 3))
-	  (let*: ((x : <integer> 7)
-			 (z : <integer> (+ x y)))
+	  (let*: ((x : <exact-integer> 7)
+			 (z : <exact-integer> (+ x y)))
 		(* z x)))))
 
 (define-test "typed let*: with incorrect type fails" (expect-failure
   (import (llambda typed))
                                           
 	(let: ((x : <any> 2) (y : <number> 3))
-	  (let*: ((x : <integer> 7)
+	  (let*: ((x : <exact-integer> 7)
 			 (z : <string> (+ x y)))
 		(* z x)))))
 
@@ -225,8 +225,8 @@
                 (if (zero? y)
                   0
                   (+ 1 (p (- y 1))))))
-            (x : <integer> (p 5))
-            (y : <integer> x))
+            (x : <exact-integer> (p 5))
+            (y : <exact-integer> x))
            y)))
 
 (define-test "typed simple letrec:" (expect #t

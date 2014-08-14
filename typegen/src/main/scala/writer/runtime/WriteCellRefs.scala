@@ -9,7 +9,7 @@ object WriteCellRefs extends writer.OutputWriter {
 
     incBuilder.appendRaw(writer.GeneratedClikeFileComment)
     
-    incBuilder += "#include \"binding/DatumCell.h\""
+    incBuilder += "#include \"binding/" + processedTypes.rootCellClass.names.cppClassName + ".h\""
     incBuilder += "#include \"alloc/StrongRef.h\""
     incBuilder.sep()
 

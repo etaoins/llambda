@@ -79,7 +79,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function "lliby_newline" () -> <int8>)""")
+      exprFor("""(native-function "lliby_newline" () -> <native-int8>)""")
     }
   }
   
@@ -97,7 +97,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function "lliby_newline" (<int16>) -> <int32>)""")
+      exprFor("""(native-function "lliby_newline" (<native-int16>) -> <native-int32>)""")
     }
   }
   
@@ -115,7 +115,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(world-function "lliby_newline" (<int64> <float>) -> <double>)""")
+      exprFor("""(world-function "lliby_newline" (<native-int64> <native-float>) -> <native-double>)""")
     }
   }
   
@@ -133,7 +133,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function "lliby_newline" (<uint16>) -> <uint32>)""")
+      exprFor("""(native-function "lliby_newline" (<native-uint16>) -> <native-uint32>)""")
     }
   }
   
@@ -151,7 +151,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function "lliby_newline" (<bool>) -> <bool>)""")
+      exprFor("""(native-function "lliby_newline" (<native-bool>) -> <native-bool>)""")
     }
   }
   
@@ -169,7 +169,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function "lliby_newline" (<int8>) -> <unicode-char>)""")
+      exprFor("""(native-function "lliby_newline" (<native-int8>) -> <native-unicode-char>)""")
     }
   }
   
@@ -180,14 +180,14 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         hasSelfArg=false,
         fixedArgs=List(vt.ExactIntegerType),
         restArgOpt=None,
-        returnType=Some(vt.InexactRationalType),
+        returnType=Some(vt.FlonumType),
         attributes=Set()
       ),
       "lliby_newline"
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function "lliby_newline" (<exact-integer-cell>) -> <inexact-rational-cell>)""")
+      exprFor("""(native-function "lliby_newline" (<exact-integer>) -> <flonum>)""")
     }
   }
 
@@ -205,7 +205,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function "lliby_vector" <datum-cell> -> <datum-cell>)""")
+      exprFor("""(native-function "lliby_vector" <any> -> <any>)""")
     }
   }
   
@@ -223,13 +223,13 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function "lliby_misc" (<bool> . <exact-integer-cell>) -> <int>)""")
+      exprFor("""(native-function "lliby_misc" (<native-bool> . <exact-integer>) -> <native-int>)""")
     }
   }
   
   test("function with non-list element rest arg") {
     intercept[BadSpecialFormException] {
-      exprFor("""(native-function "lliby_vector" <int64> -> <datum-cell>)""")
+      exprFor("""(native-function "lliby_vector" <native-int64> -> <any>)""")
     }
   }
   

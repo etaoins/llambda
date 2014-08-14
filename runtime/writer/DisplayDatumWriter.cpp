@@ -2,7 +2,7 @@
 
 #include <sstream>
 
-#include "binding/CharacterCell.h"
+#include "binding/CharCell.h"
 #include "unicode/utf8.h"
 
 namespace lliby
@@ -14,7 +14,7 @@ void DisplayDatumWriter::renderStringLike(const std::uint8_t *utf8Data, std::uin
 	m_outStream.write(reinterpret_cast<const char *>(utf8Data), byteLength);
 }
 
-void DisplayDatumWriter::renderCharacter(const CharacterCell *value)
+void DisplayDatumWriter::renderCharacter(const CharCell *value)
 {
 	// Write the raw UTF-8 value
 	std::vector<std::uint8_t> utf8Bytes = utf8::encodeUtf8Char(value->unicodeChar());

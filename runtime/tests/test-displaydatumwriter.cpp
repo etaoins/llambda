@@ -7,7 +7,7 @@
 #include "writer/DisplayDatumWriter.h"
 #include "binding/StringCell.h"
 #include "binding/SymbolCell.h"
-#include "binding/CharacterCell.h"
+#include "binding/CharCell.h"
 
 #include "alloc/cellref.h"
 #include "assertions.h"
@@ -17,7 +17,7 @@ namespace
 {
 using namespace lliby;
 
-std::string displayFormFor(const DatumCell *datum)
+std::string displayFormFor(const AnyCell *datum)
 {
 	std::ostringstream outputStream;
 
@@ -27,7 +27,7 @@ std::string displayFormFor(const DatumCell *datum)
 	return outputStream.str();
 }
 
-void assertForm(const DatumCell *datum, std::string expected)
+void assertForm(const AnyCell *datum, std::string expected)
 {
 	ASSERT_EQUAL(displayFormFor(datum), expected);
 }
@@ -67,14 +67,14 @@ void testString(World &world)
 
 void testCharacter(World &world)
 {
-	assertForm(CharacterCell::createInstance(world, UnicodeChar(0x0a)), "\n");
-	assertForm(CharacterCell::createInstance(world, UnicodeChar(0x0d)), "\r");
-	assertForm(CharacterCell::createInstance(world, UnicodeChar(0x20)), " ");
-	assertForm(CharacterCell::createInstance(world, UnicodeChar('A')), "A");
-	assertForm(CharacterCell::createInstance(world, UnicodeChar('a')), "a");
-	assertForm(CharacterCell::createInstance(world, UnicodeChar('1')), "1");
-	assertForm(CharacterCell::createInstance(world, UnicodeChar(')')), ")");
-	assertForm(CharacterCell::createInstance(world, UnicodeChar(0x03bb)), u8"\u03bb");
+	assertForm(CharCell::createInstance(world, UnicodeChar(0x0a)), "\n");
+	assertForm(CharCell::createInstance(world, UnicodeChar(0x0d)), "\r");
+	assertForm(CharCell::createInstance(world, UnicodeChar(0x20)), " ");
+	assertForm(CharCell::createInstance(world, UnicodeChar('A')), "A");
+	assertForm(CharCell::createInstance(world, UnicodeChar('a')), "a");
+	assertForm(CharCell::createInstance(world, UnicodeChar('1')), "1");
+	assertForm(CharCell::createInstance(world, UnicodeChar(')')), ")");
+	assertForm(CharCell::createInstance(world, UnicodeChar(0x03bb)), u8"\u03bb");
 }
 
 void testAll(World &world)

@@ -43,9 +43,9 @@ class CellValue(val schemeType : vt.SchemeType, val boxedValue : BoxedValue) ext
 
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = nativeType match {
     case vt.UnicodeChar =>
-      val boxedChar = toTempValue(vt.CharacterType)
+      val boxedChar = toTempValue(vt.CharType)
       val unboxedTemp = ps.Temp(vt.UnicodeChar)
-      plan.steps += ps.UnboxCharacter(unboxedTemp, boxedChar)
+      plan.steps += ps.UnboxChar(unboxedTemp, boxedChar)
 
       unboxedTemp
       
@@ -67,15 +67,15 @@ class CellValue(val schemeType : vt.SchemeType, val boxedValue : BoxedValue) ext
       }
 
     case fpType : vt.FpType =>
-      if (vt.SatisfiesType(vt.InexactRationalType, schemeType) == Some(false)) {
+      if (vt.SatisfiesType(vt.FlonumType, schemeType) == Some(false)) {
         // Not possible
         impossibleConversion(s"Unable to convert non-flonum ${typeDescription} to ${fpType.schemeName}")
       }
 
-      // Unbox as inexact rational
-      val boxedInexactRational = toTempValue(vt.InexactRationalType)
+      // Unbox as flonum
+      val boxedFlonum = toTempValue(vt.FlonumType)
       val unboxedTemp = ps.Temp(vt.Double)
-      plan.steps += ps.UnboxInexactRational(unboxedTemp, boxedInexactRational)
+      plan.steps += ps.UnboxFlonum(unboxedTemp, boxedFlonum)
 
       if (fpType == vt.Double) {
         // No conversion needed

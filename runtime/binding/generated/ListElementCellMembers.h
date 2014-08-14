@@ -8,8 +8,8 @@ public:
 		return (typeId == CellTypeId::Pair) || (typeId == CellTypeId::EmptyList);
 	}
 
-	static bool isInstance(const DatumCell *datum)
+	static bool isInstance(const AnyCell *cell)
 	{
-		return typeIdIsTypeOrSubtype(datum->typeId());
+		return typeIdIsTypeOrSubtype(cell->typeId());
 	}
 

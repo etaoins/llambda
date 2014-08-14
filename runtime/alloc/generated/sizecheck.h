@@ -9,8 +9,8 @@
 #include "binding/SymbolCell.h"
 #include "binding/BooleanCell.h"
 #include "binding/ExactIntegerCell.h"
-#include "binding/InexactRationalCell.h"
-#include "binding/CharacterCell.h"
+#include "binding/FlonumCell.h"
+#include "binding/CharCell.h"
 #include "binding/VectorCell.h"
 #include "binding/BytevectorCell.h"
 #include "binding/ProcedureCell.h"
@@ -31,8 +31,8 @@ static_assert(sizeof(lliby::InlineSymbolCell) <= sizeof(AllocCell), "InlineSymbo
 static_assert(sizeof(lliby::HeapSymbolCell) <= sizeof(AllocCell), "HeapSymbolCell does not fit in to a cell");
 static_assert(sizeof(lliby::BooleanCell) <= sizeof(AllocCell), "BooleanCell does not fit in to a cell");
 static_assert(sizeof(lliby::ExactIntegerCell) <= sizeof(AllocCell), "ExactIntegerCell does not fit in to a cell");
-static_assert(sizeof(lliby::InexactRationalCell) <= sizeof(AllocCell), "InexactRationalCell does not fit in to a cell");
-static_assert(sizeof(lliby::CharacterCell) <= sizeof(AllocCell), "CharacterCell does not fit in to a cell");
+static_assert(sizeof(lliby::FlonumCell) <= sizeof(AllocCell), "FlonumCell does not fit in to a cell");
+static_assert(sizeof(lliby::CharCell) <= sizeof(AllocCell), "CharCell does not fit in to a cell");
 static_assert(sizeof(lliby::VectorCell) <= sizeof(AllocCell), "VectorCell does not fit in to a cell");
 static_assert(sizeof(lliby::BytevectorCell) <= sizeof(AllocCell), "BytevectorCell does not fit in to a cell");
 static_assert(sizeof(lliby::ProcedureCell) <= sizeof(AllocCell), "ProcedureCell does not fit in to a cell");

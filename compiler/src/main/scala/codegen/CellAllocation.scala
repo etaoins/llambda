@@ -31,7 +31,7 @@ class CellAllocation(basePointer : IrValue, currentOffset : Int, totalSize : Int
     // We will already have our state set to Allocated when it comes off the heap 
 
     // Set its type
-    val typeId = IntegerConstant(ct.DatumCell.typeIdIrType, asType.typeId)
+    val typeId = IntegerConstant(ct.AnyCell.typeIdIrType, asType.typeId)
     asType.genStoreToTypeId(block)(typeId, typedPointer)
 
     // Return the typed pointer and new allocation
@@ -44,6 +44,6 @@ class CellAllocation(basePointer : IrValue, currentOffset : Int, totalSize : Int
 object EmptyCellAllocation {
   def apply() : CellAllocation = {
     // Any attempt to use this will immediately fail
-    new CellAllocation(NullPointerConstant(PointerType(ct.DatumCell.irType)), 0, 0)
+    new CellAllocation(NullPointerConstant(PointerType(ct.AnyCell.irType)), 0, 0)
   }
 }

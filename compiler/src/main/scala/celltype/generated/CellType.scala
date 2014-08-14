@@ -21,7 +21,7 @@ sealed abstract class CastableValue {
     }
 }
 
-sealed abstract class CellType extends CastableValue with DatumFields {
+sealed abstract class CellType extends CastableValue with AnyFields {
   val schemeName : String
   val directSubtypes : Set[CellType]
 
@@ -55,7 +55,7 @@ object CellType {
   val nextMetadataIndex = 86L
 }
 
-sealed trait DatumFields {
+sealed trait AnyFields {
   val irType : FirstClassType
 
   val typeIdIrType = IntegerType(8)
@@ -117,11 +117,11 @@ sealed trait DatumFields {
   }
 }
 
-object DatumCell extends CellType with DatumFields {
-  val llvmName = "datum"
-  val irType = UserDefinedType("datum")
-  val schemeName = "<datum-cell>"
-  val directSubtypes = Set[CellType](UnitCell, ListElementCell, StringCell, SymbolCell, BooleanCell, NumericCell, CharacterCell, VectorCell, BytevectorCell, RecordLikeCell, ErrorObjectCell, PortCell)
+object AnyCell extends CellType with AnyFields {
+  val llvmName = "any"
+  val irType = UserDefinedType("any")
+  val schemeName = "<any>"
+  val directSubtypes = Set[CellType](UnitCell, ListElementCell, StringCell, SymbolCell, BooleanCell, NumberCell, CharCell, VectorCell, BytevectorCell, RecordLikeCell, ErrorObjectCell, PortCell)
 
   val typeIdGepIndices = List(0, 0)
   val gcStateGepIndices = List(0, 1)
@@ -137,14 +137,14 @@ object DatumCell extends CellType with DatumFields {
   }
 }
 
-sealed trait UnitFields extends DatumFields {
+sealed trait UnitFields extends AnyFields {
   val irType : FirstClassType
 }
 
 object UnitCell extends PreconstructedCellType with UnitFields {
   val llvmName = "unit"
   val irType = UserDefinedType("unit")
-  val schemeName = "<unit-cell>"
+  val schemeName = "<unit>"
   val directSubtypes = Set[CellType]()
 
   val typeId = 1L
@@ -156,14 +156,14 @@ object UnitCell extends PreconstructedCellType with UnitFields {
   val gcStateTbaaNode = NumberedMetadata(13L)
 }
 
-sealed trait ListElementFields extends DatumFields {
+sealed trait ListElementFields extends AnyFields {
   val irType : FirstClassType
 }
 
 object ListElementCell extends CellType with ListElementFields {
   val llvmName = "listElement"
   val irType = UserDefinedType("listElement")
-  val schemeName = "<list-element-cell>"
+  val schemeName = "<list-element>"
   val directSubtypes = Set[CellType](PairCell, EmptyListCell)
 
   val typeIdGepIndices = List(0, 0, 0)
@@ -174,7 +174,7 @@ object ListElementCell extends CellType with ListElementFields {
 
   def createConstant(typeId : Long) : StructureConstant = {
     StructureConstant(List(
-      DatumCell.createConstant(typeId=typeId)
+      AnyCell.createConstant(typeId=typeId)
     ), userDefinedType=Some(irType))
   }
 }
@@ -186,11 +186,11 @@ sealed trait PairFields extends ListElementFields {
   val listLengthTbaaNode : Metadata
   val listLengthGepIndices : List[Int]
 
-  val carIrType = PointerType(UserDefinedType("datum"))
+  val carIrType = PointerType(UserDefinedType("any"))
   val carTbaaNode : Metadata
   val carGepIndices : List[Int]
 
-  val cdrIrType = PointerType(UserDefinedType("datum"))
+  val cdrIrType = PointerType(UserDefinedType("any"))
   val cdrTbaaNode : Metadata
   val cdrGepIndices : List[Int]
 
@@ -273,7 +273,7 @@ sealed trait PairFields extends ListElementFields {
 object PairCell extends ConcreteCellType with PairFields {
   val llvmName = "pair"
   val irType = UserDefinedType("pair")
-  val schemeName = "<pair-cell>"
+  val schemeName = "<pair>"
   val directSubtypes = Set[CellType]()
 
   val typeId = 2L
@@ -315,7 +315,7 @@ sealed trait EmptyListFields extends ListElementFields {
 object EmptyListCell extends PreconstructedCellType with EmptyListFields {
   val llvmName = "emptyList"
   val irType = UserDefinedType("emptyList")
-  val schemeName = "<empty-list-cell>"
+  val schemeName = "<empty-list>"
   val directSubtypes = Set[CellType]()
 
   val typeId = 3L
@@ -327,7 +327,7 @@ object EmptyListCell extends PreconstructedCellType with EmptyListFields {
   val gcStateTbaaNode = NumberedMetadata(22L)
 }
 
-sealed trait StringFields extends DatumFields {
+sealed trait StringFields extends AnyFields {
   val irType : FirstClassType
 
   val allocSlackBytesIrType = IntegerType(16)
@@ -421,7 +421,7 @@ sealed trait StringFields extends DatumFields {
 object StringCell extends ConcreteCellType with StringFields {
   val llvmName = "string"
   val irType = UserDefinedType("string")
-  val schemeName = "<string-cell>"
+  val schemeName = "<string>"
   val directSubtypes = Set[CellType]()
 
   val typeId = 4L
@@ -440,7 +440,7 @@ object StringCell extends ConcreteCellType with StringFields {
 
   def createConstant(allocSlackBytes : Long, charLength : Long, byteLength : Long) : StructureConstant = {
     StructureConstant(List(
-      DatumCell.createConstant(typeId=typeId),
+      AnyCell.createConstant(typeId=typeId),
       IntegerConstant(allocSlackBytesIrType, allocSlackBytes),
       IntegerConstant(charLengthIrType, charLength),
       IntegerConstant(byteLengthIrType, byteLength)
@@ -574,7 +574,7 @@ object HeapStringCell extends CellTypeVariant with HeapStringFields {
   }
 }
 
-sealed trait SymbolFields extends DatumFields {
+sealed trait SymbolFields extends AnyFields {
   val irType : FirstClassType
 
   val charLengthIrType = IntegerType(32)
@@ -639,7 +639,7 @@ sealed trait SymbolFields extends DatumFields {
 object SymbolCell extends ConcreteCellType with SymbolFields {
   val llvmName = "symbol"
   val irType = UserDefinedType("symbol")
-  val schemeName = "<symbol-cell>"
+  val schemeName = "<symbol>"
   val directSubtypes = Set[CellType]()
 
   val typeId = 5L
@@ -656,7 +656,7 @@ object SymbolCell extends ConcreteCellType with SymbolFields {
 
   def createConstant(charLength : Long, byteLength : Long) : StructureConstant = {
     StructureConstant(List(
-      DatumCell.createConstant(typeId=typeId),
+      AnyCell.createConstant(typeId=typeId),
       IntegerConstant(charLengthIrType, charLength),
       IntegerConstant(byteLengthIrType, byteLength)
     ), userDefinedType=Some(irType))
@@ -785,7 +785,7 @@ object HeapSymbolCell extends CellTypeVariant with HeapSymbolFields {
   }
 }
 
-sealed trait BooleanFields extends DatumFields {
+sealed trait BooleanFields extends AnyFields {
   val irType : FirstClassType
 
   val valueIrType = IntegerType(8)
@@ -821,7 +821,7 @@ sealed trait BooleanFields extends DatumFields {
 object BooleanCell extends PreconstructedCellType with BooleanFields {
   val llvmName = "boolean"
   val irType = UserDefinedType("boolean")
-  val schemeName = "<boolean-cell>"
+  val schemeName = "<boolean>"
   val directSubtypes = Set[CellType]()
 
   val typeId = 6L
@@ -835,15 +835,15 @@ object BooleanCell extends PreconstructedCellType with BooleanFields {
   val valueTbaaNode = NumberedMetadata(38L)
 }
 
-sealed trait NumericFields extends DatumFields {
+sealed trait NumberFields extends AnyFields {
   val irType : FirstClassType
 }
 
-object NumericCell extends CellType with NumericFields {
-  val llvmName = "numeric"
-  val irType = UserDefinedType("numeric")
-  val schemeName = "<numeric-cell>"
-  val directSubtypes = Set[CellType](ExactIntegerCell, InexactRationalCell)
+object NumberCell extends CellType with NumberFields {
+  val llvmName = "number"
+  val irType = UserDefinedType("number")
+  val schemeName = "<number>"
+  val directSubtypes = Set[CellType](ExactIntegerCell, FlonumCell)
 
   val typeIdGepIndices = List(0, 0, 0)
   val gcStateGepIndices = List(0, 0, 1)
@@ -853,12 +853,12 @@ object NumericCell extends CellType with NumericFields {
 
   def createConstant(typeId : Long) : StructureConstant = {
     StructureConstant(List(
-      DatumCell.createConstant(typeId=typeId)
+      AnyCell.createConstant(typeId=typeId)
     ), userDefinedType=Some(irType))
   }
 }
 
-sealed trait ExactIntegerFields extends NumericFields {
+sealed trait ExactIntegerFields extends NumberFields {
   val irType : FirstClassType
 
   val valueIrType = IntegerType(64)
@@ -894,7 +894,7 @@ sealed trait ExactIntegerFields extends NumericFields {
 object ExactIntegerCell extends ConcreteCellType with ExactIntegerFields {
   val llvmName = "exactInteger"
   val irType = UserDefinedType("exactInteger")
-  val schemeName = "<exact-integer-cell>"
+  val schemeName = "<exact-integer>"
   val directSubtypes = Set[CellType]()
 
   val typeId = 7L
@@ -909,13 +909,13 @@ object ExactIntegerCell extends ConcreteCellType with ExactIntegerFields {
 
   def createConstant(value : Long) : StructureConstant = {
     StructureConstant(List(
-      NumericCell.createConstant(typeId=typeId),
+      NumberCell.createConstant(typeId=typeId),
       IntegerConstant(valueIrType, value)
     ), userDefinedType=Some(irType))
   }
 }
 
-sealed trait InexactRationalFields extends NumericFields {
+sealed trait FlonumFields extends NumberFields {
   val irType : FirstClassType
 
   val valueIrType = DoubleType
@@ -948,10 +948,10 @@ sealed trait InexactRationalFields extends NumericFields {
   }
 }
 
-object InexactRationalCell extends ConcreteCellType with InexactRationalFields {
-  val llvmName = "inexactRational"
-  val irType = UserDefinedType("inexactRational")
-  val schemeName = "<inexact-rational-cell>"
+object FlonumCell extends ConcreteCellType with FlonumFields {
+  val llvmName = "flonum"
+  val irType = UserDefinedType("flonum")
+  val schemeName = "<flonum>"
   val directSubtypes = Set[CellType]()
 
   val typeId = 8L
@@ -970,13 +970,13 @@ object InexactRationalCell extends ConcreteCellType with InexactRationalFields {
     }
 
     StructureConstant(List(
-      NumericCell.createConstant(typeId=typeId),
+      NumberCell.createConstant(typeId=typeId),
       value
     ), userDefinedType=Some(irType))
   }
 }
 
-sealed trait CharacterFields extends DatumFields {
+sealed trait CharFields extends AnyFields {
   val irType : FirstClassType
 
   val unicodeCharIrType = IntegerType(32)
@@ -1009,10 +1009,10 @@ sealed trait CharacterFields extends DatumFields {
   }
 }
 
-object CharacterCell extends ConcreteCellType with CharacterFields {
-  val llvmName = "character"
-  val irType = UserDefinedType("character")
-  val schemeName = "<character-cell>"
+object CharCell extends ConcreteCellType with CharFields {
+  val llvmName = "char"
+  val irType = UserDefinedType("char")
+  val schemeName = "<char>"
   val directSubtypes = Set[CellType]()
 
   val typeId = 9L
@@ -1027,20 +1027,20 @@ object CharacterCell extends ConcreteCellType with CharacterFields {
 
   def createConstant(unicodeChar : Long) : StructureConstant = {
     StructureConstant(List(
-      DatumCell.createConstant(typeId=typeId),
+      AnyCell.createConstant(typeId=typeId),
       IntegerConstant(unicodeCharIrType, unicodeChar)
     ), userDefinedType=Some(irType))
   }
 }
 
-sealed trait VectorFields extends DatumFields {
+sealed trait VectorFields extends AnyFields {
   val irType : FirstClassType
 
   val lengthIrType = IntegerType(32)
   val lengthTbaaNode : Metadata
   val lengthGepIndices : List[Int]
 
-  val elementsIrType = PointerType(PointerType(UserDefinedType("datum")))
+  val elementsIrType = PointerType(PointerType(UserDefinedType("any")))
   val elementsTbaaNode : Metadata
   val elementsGepIndices : List[Int]
 
@@ -1098,7 +1098,7 @@ sealed trait VectorFields extends DatumFields {
 object VectorCell extends ConcreteCellType with VectorFields {
   val llvmName = "vector"
   val irType = UserDefinedType("vector")
-  val schemeName = "<vector-cell>"
+  val schemeName = "<vector>"
   val directSubtypes = Set[CellType]()
 
   val typeId = 10L
@@ -1119,14 +1119,14 @@ object VectorCell extends ConcreteCellType with VectorFields {
     }
 
     StructureConstant(List(
-      DatumCell.createConstant(typeId=typeId),
+      AnyCell.createConstant(typeId=typeId),
       IntegerConstant(lengthIrType, length),
       elements
     ), userDefinedType=Some(irType))
   }
 }
 
-sealed trait BytevectorFields extends DatumFields {
+sealed trait BytevectorFields extends AnyFields {
   val irType : FirstClassType
 
   val lengthIrType = IntegerType(32)
@@ -1191,7 +1191,7 @@ sealed trait BytevectorFields extends DatumFields {
 object BytevectorCell extends ConcreteCellType with BytevectorFields {
   val llvmName = "bytevector"
   val irType = UserDefinedType("bytevector")
-  val schemeName = "<bytevector-cell>"
+  val schemeName = "<bytevector>"
   val directSubtypes = Set[CellType]()
 
   val typeId = 11L
@@ -1212,14 +1212,14 @@ object BytevectorCell extends ConcreteCellType with BytevectorFields {
     }
 
     StructureConstant(List(
-      DatumCell.createConstant(typeId=typeId),
+      AnyCell.createConstant(typeId=typeId),
       IntegerConstant(lengthIrType, length),
       byteArray
     ), userDefinedType=Some(irType))
   }
 }
 
-sealed trait RecordLikeFields extends DatumFields {
+sealed trait RecordLikeFields extends AnyFields {
   val irType : FirstClassType
 
   val dataIsInlineIrType = IntegerType(8)
@@ -1342,7 +1342,7 @@ sealed trait RecordLikeFields extends DatumFields {
 object RecordLikeCell extends CellType with RecordLikeFields {
   val llvmName = "recordLike"
   val irType = UserDefinedType("recordLike")
-  val schemeName = "<record-like-cell>"
+  val schemeName = "<record-like>"
   val directSubtypes = Set[CellType](ProcedureCell, RecordCell)
 
   val typeIdGepIndices = List(0, 0, 0)
@@ -1365,7 +1365,7 @@ object RecordLikeCell extends CellType with RecordLikeFields {
     }
 
     StructureConstant(List(
-      DatumCell.createConstant(typeId=typeId),
+      AnyCell.createConstant(typeId=typeId),
       IntegerConstant(dataIsInlineIrType, dataIsInline),
       IntegerConstant(isUndefinedIrType, isUndefined),
       IntegerConstant(recordClassIdIrType, recordClassId),
@@ -1377,7 +1377,7 @@ object RecordLikeCell extends CellType with RecordLikeFields {
 sealed trait ProcedureFields extends RecordLikeFields {
   val irType : FirstClassType
 
-  val entryPointIrType = PointerType(FunctionType(PointerType(UserDefinedType("datum")), List(PointerType(UserDefinedType("world")), PointerType(UserDefinedType("procedure")), PointerType(UserDefinedType("listElement"))), false))
+  val entryPointIrType = PointerType(FunctionType(PointerType(UserDefinedType("any")), List(PointerType(UserDefinedType("world")), PointerType(UserDefinedType("procedure")), PointerType(UserDefinedType("listElement"))), false))
   val entryPointTbaaNode : Metadata
   val entryPointGepIndices : List[Int]
 
@@ -1410,7 +1410,7 @@ sealed trait ProcedureFields extends RecordLikeFields {
 object ProcedureCell extends ConcreteCellType with ProcedureFields {
   val llvmName = "procedure"
   val irType = UserDefinedType("procedure")
-  val schemeName = "<procedure-cell>"
+  val schemeName = "<procedure>"
   val directSubtypes = Set[CellType]()
 
   val typeId = 12L
@@ -1479,7 +1479,7 @@ sealed trait RecordFields extends RecordLikeFields {
 object RecordCell extends ConcreteCellType with RecordFields {
   val llvmName = "record"
   val irType = UserDefinedType("record")
-  val schemeName = "<record-cell>"
+  val schemeName = "<record>"
   val directSubtypes = Set[CellType]()
 
   val typeId = 13L
@@ -1512,7 +1512,7 @@ object RecordCell extends ConcreteCellType with RecordFields {
   }
 }
 
-sealed trait ErrorObjectFields extends DatumFields {
+sealed trait ErrorObjectFields extends AnyFields {
   val irType : FirstClassType
 
   val messageIrType = PointerType(UserDefinedType("string"))
@@ -1577,7 +1577,7 @@ sealed trait ErrorObjectFields extends DatumFields {
 object ErrorObjectCell extends ConcreteCellType with ErrorObjectFields {
   val llvmName = "errorObject"
   val irType = UserDefinedType("errorObject")
-  val schemeName = "<error-object-cell>"
+  val schemeName = "<error-object>"
   val directSubtypes = Set[CellType]()
 
   val typeId = 14L
@@ -1602,14 +1602,14 @@ object ErrorObjectCell extends ConcreteCellType with ErrorObjectFields {
     }
 
     StructureConstant(List(
-      DatumCell.createConstant(typeId=typeId),
+      AnyCell.createConstant(typeId=typeId),
       message,
       irritants
     ), userDefinedType=Some(irType))
   }
 }
 
-sealed trait PortFields extends DatumFields {
+sealed trait PortFields extends AnyFields {
   val irType : FirstClassType
 
   val isOwnedIrType = IntegerType(8)
@@ -1674,7 +1674,7 @@ sealed trait PortFields extends DatumFields {
 object PortCell extends ConcreteCellType with PortFields {
   val llvmName = "port"
   val irType = UserDefinedType("port")
-  val schemeName = "<port-cell>"
+  val schemeName = "<port>"
   val directSubtypes = Set[CellType]()
 
   val typeId = 15L
@@ -1695,7 +1695,7 @@ object PortCell extends ConcreteCellType with PortFields {
     }
 
     StructureConstant(List(
-      DatumCell.createConstant(typeId=typeId),
+      AnyCell.createConstant(typeId=typeId),
       IntegerConstant(isOwnedIrType, isOwned),
       stream
     ), userDefinedType=Some(irType))

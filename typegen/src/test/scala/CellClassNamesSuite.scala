@@ -14,7 +14,7 @@ class CellNamesSuite extends FunSuite {
     assert(names.scalaCellTypeName === "DatumCell")
     assert(names.scalaFieldsTraitName === "DatumFields")
     assert(names.scalaValueTypeName === "DatumType")
-    assert(names.schemeName === "<datum-cell>")
+    assert(names.schemeName === "<datum>")
   }
   
   test("camel case name") {
@@ -28,6 +28,6 @@ class CellNamesSuite extends FunSuite {
     assert(names.scalaCellTypeName === "StringLikeCell")
     assert(names.scalaFieldsTraitName === "StringLikeFields")
     assert(names.scalaValueTypeName === "StringLikeType")
-    assert(names.schemeName === "<string-like-cell>")
+    assert(names.schemeName === "<string-like>")
   }
 }

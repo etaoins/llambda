@@ -16,14 +16,14 @@ object DatumToConstantValue {
       case ast.IntegerLiteral(value) =>
         new iv.ConstantExactIntegerValue(value)
 
-      case ast.RationalLiteral(value) =>
-        new iv.ConstantInexactRationalValue(value)
+      case ast.FlonumLiteral(value) =>
+        new iv.ConstantFlonumValue(value)
 
       case ast.BooleanLiteral(value) =>
         new iv.ConstantBooleanValue(value)
       
       case ast.CharLiteral(value) =>
-        new iv.ConstantCharacterValue(value)
+        new iv.ConstantCharValue(value)
       
       case ast.Pair(car, cdr) =>
         // Recurse down the car and cdr

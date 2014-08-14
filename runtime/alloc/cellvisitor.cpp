@@ -10,11 +10,11 @@
 #include "binding/EmptyListCell.h"
 #include "binding/BooleanCell.h"
 #include "binding/ExactIntegerCell.h"
-#include "binding/InexactRationalCell.h"
+#include "binding/FlonumCell.h"
 #include "binding/StringCell.h"
 #include "binding/SymbolCell.h"
 #include "binding/BytevectorCell.h"
-#include "binding/CharacterCell.h"
+#include "binding/CharCell.h"
 #include "binding/PairCell.h"
 #include "binding/VectorCell.h"
 #include "binding/RecordLikeCell.h"
@@ -33,7 +33,7 @@ namespace lliby
 namespace alloc
 {
 
-void visitCell(DatumCell **rootCellRef, std::function<bool(DatumCell **)> &visitor)
+void visitCell(AnyCell **rootCellRef, std::function<bool(AnyCell **)> &visitor)
 {
 	if (!visitor(rootCellRef))
 	{
@@ -41,25 +41,25 @@ void visitCell(DatumCell **rootCellRef, std::function<bool(DatumCell **)> &visit
 		return;
 	}
 	
-	if (datum_cast<UnitCell>(*rootCellRef) ||
-	    datum_cast<EmptyListCell>(*rootCellRef) ||
-	    datum_cast<BooleanCell>(*rootCellRef) ||
-	    datum_cast<ExactIntegerCell>(*rootCellRef) ||
-	    datum_cast<InexactRationalCell>(*rootCellRef) ||
-	    datum_cast<StringCell>(*rootCellRef) ||
-	    datum_cast<SymbolCell>(*rootCellRef) ||
-	    datum_cast<BytevectorCell>(*rootCellRef) ||
-	    datum_cast<CharacterCell>(*rootCellRef) ||
-	    datum_cast<PortCell>(*rootCellRef))
+	if (cell_cast<UnitCell>(*rootCellRef) ||
+	    cell_cast<EmptyListCell>(*rootCellRef) ||
+	    cell_cast<BooleanCell>(*rootCellRef) ||
+	    cell_cast<ExactIntegerCell>(*rootCellRef) ||
+	    cell_cast<FlonumCell>(*rootCellRef) ||
+	    cell_cast<StringCell>(*rootCellRef) ||
+	    cell_cast<SymbolCell>(*rootCellRef) ||
+	    cell_cast<BytevectorCell>(*rootCellRef) ||
+	    cell_cast<CharCell>(*rootCellRef) ||
+	    cell_cast<PortCell>(*rootCellRef))
 	{
 		// No children
 	}
-	else if (auto pairCell = datum_cast<PairCell>(*rootCellRef))
+	else if (auto pairCell = cell_cast<PairCell>(*rootCellRef))
 	{
 		visitCell(pairCell->carRef(), visitor);
 		visitCell(pairCell->cdrRef(), visitor);
 	}
-	else if (auto vectorCell = datum_cast<VectorCell>(*rootCellRef))
+	else if (auto vectorCell = cell_cast<VectorCell>(*rootCellRef))
 	{
 		for(std::uint32_t i = 0; i < vectorCell->length(); i++)
 		{
@@ -67,7 +67,7 @@ void visitCell(DatumCell **rootCellRef, std::function<bool(DatumCell **)> &visit
 			visitCell(&vectorCell->elements()[i], visitor);
 		}
 	}
-	else if (auto recordLikeCell = datum_cast<RecordLikeCell>(*rootCellRef))
+	else if (auto recordLikeCell = cell_cast<RecordLikeCell>(*rootCellRef))
 	{
 		const RecordClassOffsetMap *offsetMap = recordLikeCell->offsetMap();
 
@@ -78,26 +78,26 @@ void visitCell(DatumCell **rootCellRef, std::function<bool(DatumCell **)> &visit
 			for(std::uint32_t i = 0; i < offsetMap->offsetCount; i++)
 			{
 				const std::uint32_t byteOffset = offsetMap->offsets[i]; 
-				std::uint8_t *datumRef;
+				std::uint8_t *cellRef;
 
 				if (recordLikeCell->dataIsInline())
 				{
 					// The data is stored inline inside the cell 
-					datumRef = reinterpret_cast<std::uint8_t*>(recordLikeCell->recordDataRef()) + byteOffset;
+					cellRef = reinterpret_cast<std::uint8_t*>(recordLikeCell->recordDataRef()) + byteOffset;
 				}
 				else
 				{
-					datumRef = reinterpret_cast<std::uint8_t*>(recordLikeCell->recordData()) + byteOffset;
+					cellRef = reinterpret_cast<std::uint8_t*>(recordLikeCell->recordData()) + byteOffset;
 				}
 
-				visitCell(reinterpret_cast<DatumCell**>(datumRef), visitor);
+				visitCell(reinterpret_cast<AnyCell**>(cellRef), visitor);
 			}
 		}
 	}
-	else if (auto errorObjectCell = datum_cast<ErrorObjectCell>(*rootCellRef))
+	else if (auto errorObjectCell = cell_cast<ErrorObjectCell>(*rootCellRef))
 	{
-		visitCell(reinterpret_cast<DatumCell**>(errorObjectCell->messageRef()), visitor);
-		visitCell(reinterpret_cast<DatumCell**>(errorObjectCell->irritantsRef()), visitor);
+		visitCell(reinterpret_cast<AnyCell**>(errorObjectCell->messageRef()), visitor);
+		visitCell(reinterpret_cast<AnyCell**>(errorObjectCell->irritantsRef()), visitor);
 	}
 	else
 	{
@@ -105,7 +105,7 @@ void visitCell(DatumCell **rootCellRef, std::function<bool(DatumCell **)> &visit
 	}
 }
 
-void visitDynamicState(dynamic::State *state, std::function<bool(DatumCell **)> &visitor)
+void visitDynamicState(dynamic::State *state, std::function<bool(AnyCell **)> &visitor)
 {
 	dynamic::State::ParameterValueMap rebuiltMap;
 	const size_t valueCount = state->selfValues().size();
@@ -113,12 +113,12 @@ void visitDynamicState(dynamic::State *state, std::function<bool(DatumCell **)> 
 	// Visit the before and after procedures
 	if (state->beforeProcedure())
 	{
-		visitCell(reinterpret_cast<DatumCell**>(state->beforeProcedureRef()), visitor);
+		visitCell(reinterpret_cast<AnyCell**>(state->beforeProcedureRef()), visitor);
 	}
 	
 	if (state->afterProcedure())
 	{
-		visitCell(reinterpret_cast<DatumCell**>(state->afterProcedureRef()), visitor);
+		visitCell(reinterpret_cast<AnyCell**>(state->afterProcedureRef()), visitor);
 	}
 
 	if (valueCount > 0)
@@ -129,10 +129,10 @@ void visitDynamicState(dynamic::State *state, std::function<bool(DatumCell **)> 
 		for(auto valueItem : state->selfValues())
 		{
 			dynamic::ParameterProcedureCell *paramProc = valueItem.first;
-			DatumCell *value = valueItem.second;
+			AnyCell *value = valueItem.second;
 
-			visitCell(reinterpret_cast<DatumCell**>(&paramProc), visitor);
-			visitCell(reinterpret_cast<DatumCell**>(&value), visitor);
+			visitCell(reinterpret_cast<AnyCell**>(&paramProc), visitor);
+			visitCell(reinterpret_cast<AnyCell**>(&value), visitor);
 
 			rebuiltMap[paramProc] = value;
 		}
@@ -147,14 +147,14 @@ void visitDynamicState(dynamic::State *state, std::function<bool(DatumCell **)> 
 }
 
 #ifndef _NDEBUG
-void dumpReachableFrom(DatumCell *rootCell, bool dumpGlobalConstants)
+void dumpReachableFrom(AnyCell *rootCell, bool dumpGlobalConstants)
 {
-	std::unordered_set<DatumCell*> shownCells;
+	std::unordered_set<AnyCell*> shownCells;
 	ExternalFormDatumWriter writer(std::cout);
 
-	std::function<bool(DatumCell**)> visitor = [&] (DatumCell **cellRef) 
+	std::function<bool(AnyCell**)> visitor = [&] (AnyCell **cellRef) 
 	{
-		DatumCell *cell = *cellRef;
+		AnyCell *cell = *cellRef;
 
 		if (!dumpGlobalConstants && (cell->gcState() == GarbageState::GlobalConstant))
 		{

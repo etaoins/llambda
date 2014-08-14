@@ -140,17 +140,17 @@ object GenPlanStep {
 
       // Build range metadata from our possible types
       val rangeMetadata = RangeMetadata.fromPossibleValues(
-        integerType=ct.DatumCell.typeIdIrType,
+        integerType=ct.AnyCell.typeIdIrType,
         possibleTypes.map(_.typeId)
       )
       val loadMetadata = Map("range" -> rangeMetadata)
 
       // Load the type ID
       val block = state.currentBlock
-      val datumIr = ct.DatumCell.genPointerBitcast(block)(cellIr)
-      val typeIdIr = ct.DatumCell.genLoadFromTypeId(block)(datumIr, metadata=loadMetadata)
+      val datumIr = ct.AnyCell.genPointerBitcast(block)(cellIr)
+      val typeIdIr = ct.AnyCell.genLoadFromTypeId(block)(datumIr, metadata=loadMetadata)
 
-      val resultIr = block.icmp(cellType.llvmName + "Check")(IComparisonCond.Equal, None, typeIdIr, IntegerConstant(ct.DatumCell.typeIdIrType, cellType.typeId))
+      val resultIr = block.icmp(cellType.llvmName + "Check")(IComparisonCond.Equal, None, typeIdIr, IntegerConstant(ct.AnyCell.typeIdIrType, cellType.typeId))
 
       state.withTempValue(resultTemp -> resultIr)
 
@@ -397,7 +397,7 @@ object GenPlanStep {
       val recordCellIr = state.liveTemps(recordCellTemp)
       val cellType = generatedType.recordLikeType.cellType
 
-      val loadMetadata = Map("range" -> RangeMetadata(ct.DatumCell.gcStateIrType, (0, 2)))
+      val loadMetadata = Map("range" -> RangeMetadata(ct.AnyCell.gcStateIrType, (0, 2)))
       val isUndefinedBool = cellType.genLoadFromIsUndefined(state.currentBlock)(recordCellIr, loadMetadata)
 
       val isUndefinedPred = state.currentBlock.truncTo("undefinedPred")(isUndefinedBool, IntegerType(1))
@@ -524,9 +524,9 @@ object GenPlanStep {
 
       // The GC state can only be 0 (GC allocated) or 1 (global constant)
       // There are other GC states temporarily used during GC but they should never be reachable by program code
-      val rangeMetadata = RangeMetadata(ct.DatumCell.gcStateIrType, (0, 2))
+      val rangeMetadata = RangeMetadata(ct.AnyCell.gcStateIrType, (0, 2))
 
-      val globalConstantGcState = IntegerConstant(ct.DatumCell.gcStateIrType, 1)
+      val globalConstantGcState = IntegerConstant(ct.AnyCell.gcStateIrType, 1)
       val gcStateIr = ct.PairCell.genLoadFromGcState(state.currentBlock)(pairIr, metadata=Map("range" -> rangeMetadata))
       val irResult = state.currentBlock.icmp("isMutable")(IComparisonCond.NotEqual, None, globalConstantGcState, gcStateIr) 
 

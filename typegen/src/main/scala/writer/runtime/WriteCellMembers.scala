@@ -77,9 +77,9 @@ object WriteCellMembers extends writer.OutputWriter {
             cppBuilder += "return " + cppTypePredicate(processedTypes, cellClass) + ";"
           }
 
-          cppBuilder += s"static bool isInstance(const ${rootCellCppName} *datum)"
+          cppBuilder += s"static bool isInstance(const ${rootCellCppName} *cell)"
           cppBuilder.blockSep {
-            cppBuilder += s"return typeIdIsTypeOrSubtype(datum->${typeTagField.name}());"
+            cppBuilder += s"return typeIdIsTypeOrSubtype(cell->${typeTagField.name}());"
           }
         }
     }

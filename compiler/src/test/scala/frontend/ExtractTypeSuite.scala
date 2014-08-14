@@ -12,7 +12,7 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
   
   test("define simple type aliases") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
-    bodyFor("(define-type <custom-type> <int32>)")(scope)
+    bodyFor("(define-type <custom-type> <native-int32>)")(scope)
 
     assert(scope("<custom-type>") === BoundType(vt.Int32))
 
@@ -27,29 +27,29 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     
     intercept[BadSpecialFormException] {
       // Too many args
-      bodyFor("(define-type <another-type> <int32> <unicode-char>)")(scope)
+      bodyFor("(define-type <another-type> <native-int32> <unicode-char>)")(scope)
     }
   }
 
   test("defining union types") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
-    bodyFor("(define-type <custom-type> (U <string-cell> <port-cell>))")(scope)
+    bodyFor("(define-type <custom-type> (U <string> <port>))")(scope)
 
     assert(scope("<custom-type>") ===
       BoundType(vt.UnionType(Set(vt.PortType, vt.StringType)))
     )
 
     // Single type unions should degrade to that exact typer
-    bodyFor("(define-type <single-type-union> (U <string-cell>))")(scope)
+    bodyFor("(define-type <single-type-union> (U <string>))")(scope)
     assert(scope("<single-type-union>") === BoundType(vt.StringType))
     
     // Unions of unions should break down to their member types
-    // Also we should ignore duplicate types (<empty-list-cell> in this case)
-    bodyFor("(define-type <union-of-union> (U <list-element-cell> <empty-list-cell> <numeric-cell>))")(scope)
+    // Also we should ignore duplicate types (<empty-list> in this case)
+    bodyFor("(define-type <union-of-union> (U <list-element> <empty-list> <number>))")(scope)
     assert(scope("<union-of-union>") ===
       BoundType(vt.UnionType(Set(
         vt.ExactIntegerType,
-        vt.InexactRationalType,
+        vt.FlonumType,
         vt.EmptyListType,
         vt.AnyPairType
       )))
@@ -62,12 +62,12 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     
     intercept[MalformedExprException] {
       // Using a non-type constructor
-      bodyFor("(define-type <another-type> (if <string-cell>))")(scope)
+      bodyFor("(define-type <another-type> (if <string>))")(scope)
     }
     
     intercept[BadSpecialFormException] {
       // Using a native type
-      bodyFor("(define-type <another-type> (U <int32>))")(scope)
+      bodyFor("(define-type <another-type> (U <native-int32>))")(scope)
     }
   }
  
@@ -87,10 +87,10 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
   test("defining pair types") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
-    bodyFor("(define-type <string-pair> (Pair <string-cell> <string-cell>))")(scope)
+    bodyFor("(define-type <string-pair> (Pair <string> <string>))")(scope)
     assert(scope("<string-pair>") === BoundType(vt.PairType(vt.StringType, vt.StringType)))
 
-    bodyFor("(define-type <nested-pair> (Pair <symbol-cell> (Pair <string-cell> <port-cell>)))")(scope)
+    bodyFor("(define-type <nested-pair> (Pair <symbol> (Pair <string> <port>)))")(scope)
     assert(scope("<nested-pair>") === BoundType(
       vt.PairType(
         vt.SymbolType,
@@ -103,27 +103,27 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     
     intercept[BadSpecialFormException] {
       // Too many arguments
-      bodyFor("(define-type <too-many-args> (Pair <string-cell> <string-cell> <string-cell>))")(scope)
+      bodyFor("(define-type <too-many-args> (Pair <string> <string> <string>))")(scope)
     }
     
     intercept[BadSpecialFormException] {
       // Not enough arguments
-      bodyFor("(define-type <insufficient-args> (Pair <string-cell>))")(scope)
+      bodyFor("(define-type <insufficient-args> (Pair <string>))")(scope)
     }
   }
   
   test("defining list types") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
-    bodyFor("(define-type <string-list> (Listof <string-cell>))")(scope)
+    bodyFor("(define-type <string-list> (Listof <string>))")(scope)
     assert(scope("<string-list>") === BoundType(vt.ProperListType(vt.StringType)))
     
-    bodyFor("(define-type <string-list-list> (Listof (Listof <string-cell>)))")(scope)
+    bodyFor("(define-type <string-list-list> (Listof (Listof <string>)))")(scope)
     assert(scope("<string-list-list>") === BoundType(vt.ProperListType(vt.ProperListType(vt.StringType))))
 
     intercept[BadSpecialFormException] {
       // Too many arguments
-      bodyFor("(define-type <too-many-args> (Listof <string-cell> <string-cell>))")(scope)
+      bodyFor("(define-type <too-many-args> (Listof <string> <string>))")(scope)
     }
     
     intercept[BadSpecialFormException] {

@@ -2,7 +2,7 @@
 #define _LLIBY_CORE_ERROR_H
 
 #include <vector>
-#include "binding/DatumCell.h"
+#include "binding/AnyCell.h"
 
 namespace lliby
 {
@@ -10,10 +10,10 @@ namespace lliby
 class World;
 
 [[noreturn]]
-void signalError(World &world, const char *message, const std::vector<DatumCell*> &irritants = std::vector<DatumCell*>());
+void signalError(World &world, const char *message, const std::vector<AnyCell*> &irritants = std::vector<AnyCell*>());
 
 [[noreturn]]
-void fatalError(const char *message, const lliby::DatumCell *evidence = nullptr);
+void fatalError(const char *message, const lliby::AnyCell *evidence = nullptr);
 
 }
 

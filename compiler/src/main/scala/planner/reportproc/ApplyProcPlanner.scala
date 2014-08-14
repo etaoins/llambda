@@ -27,7 +27,7 @@ object ApplyProcPlanner extends ReportProcPlanner {
       val allArgs = List(worldPtr, procTemp, restArgTemp).map(ps.InvokeArgument(_))
 
       // Prepare the result
-      val resultTemp = ps.CellTemp(ct.DatumCell)
+      val resultTemp = ps.CellTemp(ct.AnyCell)
 
       plan.steps += ps.Invoke(Some(resultTemp), AdaptedProcedureSignature, entryPointTemp, allArgs)
 

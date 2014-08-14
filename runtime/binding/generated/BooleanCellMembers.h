@@ -14,9 +14,9 @@ public:
 		return typeId == CellTypeId::Boolean;
 	}
 
-	static bool isInstance(const DatumCell *datum)
+	static bool isInstance(const AnyCell *cell)
 	{
-		return typeIdIsTypeOrSubtype(datum->typeId());
+		return typeIdIsTypeOrSubtype(cell->typeId());
 	}
 
 private:

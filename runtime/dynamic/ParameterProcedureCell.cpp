@@ -17,7 +17,7 @@ namespace
 	// startup
 	std::uint32_t registeredClassId = ~0;
 
-	DatumCell *procedureBody(World &world, ProcedureCell *self, ListElementCell *argHead)
+	AnyCell *procedureBody(World &world, ProcedureCell *self, ListElementCell *argHead)
 	{
 		if (argHead != EmptyListCell::instance())
 		{
@@ -30,10 +30,10 @@ namespace
 	}
 }
 	
-ParameterProcedureCell* ParameterProcedureCell::createInstance(World &world, DatumCell *initialValueRaw, ProcedureCell *converterProcedureRaw)
+ParameterProcedureCell* ParameterProcedureCell::createInstance(World &world, AnyCell *initialValueRaw, ProcedureCell *converterProcedureRaw)
 {
 	// Root these across the allocation of the actual procedure cell
-	alloc::DatumRef initialValue(world, initialValueRaw);
+	alloc::AnyRef initialValue(world, initialValueRaw);
 	alloc::ProcedureRef converterProcedure(world, converterProcedureRaw);
 
 	auto closure = static_cast<ParameterProcedureClosure*>(allocateRecordData(sizeof(ParameterProcedureClosure)));

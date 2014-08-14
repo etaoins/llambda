@@ -24,7 +24,7 @@ void testAll(World &world)
 	{
 		ListElementCell *emptyListHead = ListElementCell::createProperList(world, {});
 
-		ProperList<DatumCell> properList(emptyListHead);
+		ProperList<AnyCell> properList(emptyListHead);
 
 		ASSERT_TRUE(properList.isValid());
 		ASSERT_TRUE(properList.begin() == properList.end());
@@ -35,7 +35,7 @@ void testAll(World &world)
 	{
 		ListElementCell *stringListHead = ListElementCell::createProperList(world, {valueA, valueB, valueC});
 
-		ProperList<DatumCell> properList(stringListHead);
+		ProperList<AnyCell> properList(stringListHead);
 
 		ASSERT_TRUE(properList.isValid());
 		ASSERT_TRUE(properList.begin() != properList.end());
@@ -55,9 +55,9 @@ void testAll(World &world)
 	}
 	
 	{
-		DatumCell *improperList = ListElementCell::createList(world, {valueA, valueB}, valueC);
+		AnyCell *improperList = ListElementCell::createList(world, {valueA, valueB}, valueC);
 		
-		auto stringImproperHead = datum_cast<ListElementCell>(improperList);
+		auto stringImproperHead = cell_cast<ListElementCell>(improperList);
 		ASSERT_TRUE(stringImproperHead != nullptr);
 
 		// Improper list

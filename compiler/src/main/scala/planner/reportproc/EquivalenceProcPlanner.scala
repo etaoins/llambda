@@ -13,7 +13,7 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
     rootType.directSubtypes ++ rootType.directSubtypes.flatMap(allSubtypes)
 
   private lazy val preconstructedTypes =
-    allSubtypes(ct.DatumCell).collect {
+    allSubtypes(ct.AnyCell).collect {
       case precons : ct.PreconstructedCellType =>
         vt.SchemeTypeAtom(precons)
     } : Set[vt.NonUnionSchemeType]
@@ -57,8 +57,8 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
              val2.hasDefiniteType(vt.ExactIntegerType)) {
       directCompareAsType(state)(vt.Int64, val1, val2)
     }
-    else if (val1.hasDefiniteType(vt.CharacterType) && 
-             val2.hasDefiniteType(vt.CharacterType)) {
+    else if (val1.hasDefiniteType(vt.CharType) && 
+             val2.hasDefiniteType(vt.CharType)) {
       directCompareAsType(state)(vt.UnicodeChar, val1, val2)
     }
     else {

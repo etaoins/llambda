@@ -11,7 +11,7 @@ ProcedureCell* ProcedureCell::createInstance(World &world, std::uint32_t recordC
 	return new (cellPlacement) ProcedureCell(recordClassId, dataIsInline, recordData, entryPoint);
 }
 
-DatumCell* ProcedureCell::apply(World &world, ListElementCell *arguments)
+AnyCell* ProcedureCell::apply(World &world, ListElementCell *arguments)
 { 
 	return m_entryPoint(world, this, arguments);
 }

@@ -9,24 +9,24 @@
 namespace lliby
 {
 
-ListElementCell* ListElementCell::createProperList(World &world, std::vector<DatumCell*> &elements)
+ListElementCell* ListElementCell::createProperList(World &world, std::vector<AnyCell*> &elements)
 {
 	auto list = createList(world, elements, EmptyListCell::instance());
 
-	return datum_unchecked_cast<ListElementCell>(list);
+	return cell_unchecked_cast<ListElementCell>(list);
 }
 
-DatumCell* ListElementCell::createList(World &world, std::vector<DatumCell*> &elements, DatumCell *tail)
+AnyCell* ListElementCell::createList(World &world, std::vector<AnyCell*> &elements, AnyCell *tail)
 {
 	// We allocate space for our pairs below. Make sure we GC root the new elements first.
-	alloc::DatumRefRange elementsRoot(world, elements);
-	alloc::DatumRef tailRef(world, tail);
+	alloc::AnyRefRange elementsRoot(world, elements);
+	alloc::AnyRef tailRef(world, tail);
 
 	alloc::RangeAlloc allocation = alloc::allocateRange(world, elements.size());
 	auto allocIt = allocation.end();
 	
 	auto it = elements.rbegin();
-	DatumCell *cdr = tailRef;
+	AnyCell *cdr = tailRef;
 
 	for(;it != elements.rend(); it++)
 	{

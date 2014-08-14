@@ -1,11 +1,11 @@
 (define-test "(make-predicate) for intrinsic types" (expect-success
   (import (llambda typed))
 
-  (assert-true ((make-predicate <integer>) 10))
+  (assert-true ((make-predicate <exact-integer>) 10))
   (assert-true ((make-predicate <number>) 10))
   (assert-true ((make-predicate <any>) 10))
 
-  (assert-false ((make-predicate <integer>) 'test))
+  (assert-false ((make-predicate <exact-integer>) 'test))
   (assert-false ((make-predicate <number>) 'test))
   (assert-true ((make-predicate <any>) 'test))))
 

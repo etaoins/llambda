@@ -11,13 +11,13 @@ object GenUnboxing {
       val block = state.currentBlock
       ct.ExactIntegerCell.genLoadFromValue(block)(boxedValue)
     
-    case _ : ps.UnboxInexactRational =>
+    case _ : ps.UnboxFlonum =>
       val block = state.currentBlock
-      ct.InexactRationalCell.genLoadFromValue(block)(boxedValue)
+      ct.FlonumCell.genLoadFromValue(block)(boxedValue)
     
-    case _ : ps.UnboxCharacter =>
+    case _ : ps.UnboxChar =>
       val block = state.currentBlock
-      ct.CharacterCell.genLoadFromUnicodeChar(block)(boxedValue)
+      ct.CharCell.genLoadFromUnicodeChar(block)(boxedValue)
   }
 }
 

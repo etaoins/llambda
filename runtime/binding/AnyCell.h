@@ -1,5 +1,5 @@
-#ifndef _LLIBY_BINDING_DATUMCELL_H
-#define _LLIBY_BINDING_DATUMCELL_H
+#ifndef _LLIBY_BINDING_ANYCELL_H
+#define _LLIBY_BINDING_ANYCELL_H
 
 #include <cstddef>
 #include <cassert>
@@ -14,9 +14,9 @@
 namespace lliby
 {
 
-class DatumCell
+class AnyCell
 {
-#include "generated/DatumCellMembers.h"
+#include "generated/AnyCellMembers.h"
 public:
 	void *operator new(size_t s, void *placement)
 	{
@@ -42,16 +42,14 @@ public:
 	}
 
 	/**
-	 * Returns true if the other datum is equivalent to this one in the sense of
-	 * eqv?
+	 * Returns true if the other cell is equivalent to this one in the sense of eqv?
 	 */
-	bool isEqv(const DatumCell *other) const;
+	bool isEqv(const AnyCell *other) const;
 	
 	/**
-	 * Returns true if the other datum is equal to this one in the sense of
-	 * equal?
+	 * Returns true if the other cell is equal to this one in the sense of equal?
 	 */
-	bool isEqual(const DatumCell *other) const;
+	bool isEqual(const AnyCell *other) const;
 
 	void setGcState(GarbageState gcState)
 	{
@@ -63,12 +61,12 @@ public:
 protected:
 	// Used for normal allocations
 	// alloc::allocateCons already returns the correct garbage state
-	DatumCell(CellTypeId typeId) : m_typeId(typeId)
+	AnyCell(CellTypeId typeId) : m_typeId(typeId)
 	{
 	}
 
 	// Used for constant allocations
-	DatumCell(CellTypeId typeId, GarbageState gcState) :
+	AnyCell(CellTypeId typeId, GarbageState gcState) :
 		m_typeId(typeId),
 		m_gcState(gcState)
 	{
@@ -76,11 +74,11 @@ protected:
 };
 
 template <class T>
-T* datum_cast(DatumCell *datumValue)
+T* cell_cast(AnyCell *cellValue)
 {
-	if (T::isInstance(datumValue))
+	if (T::isInstance(cellValue))
 	{
-		return static_cast<T*>(datumValue);
+		return static_cast<T*>(cellValue);
 	}
 	else
 	{
@@ -89,11 +87,11 @@ T* datum_cast(DatumCell *datumValue)
 }
 
 template <class T>
-const T* datum_cast(const DatumCell *datumValue)
+const T* cell_cast(const AnyCell *cellValue)
 {
-	if (T::isInstance(datumValue))
+	if (T::isInstance(cellValue))
 	{
-		return static_cast<const T*>(datumValue);
+		return static_cast<const T*>(cellValue);
 	}
 	else
 	{
@@ -102,31 +100,31 @@ const T* datum_cast(const DatumCell *datumValue)
 }
 
 template <class T>
-T* datum_unchecked_cast(DatumCell *datumValue)
+T* cell_unchecked_cast(AnyCell *cellValue)
 {
 	// In debug builds make sure this is of the correct type
-	assert(T::isInstance(datumValue));
-	return static_cast<T*>(datumValue);
+	assert(T::isInstance(cellValue));
+	return static_cast<T*>(cellValue);
 }
 
 template <class T>
-const T* datum_unchecked_cast(const DatumCell *datumValue)
+const T* cell_unchecked_cast(const AnyCell *cellValue)
 {
 	// In debug builds make sure this is of the correct type
-	assert(T::isInstance(datumValue));
-	return static_cast<T*>(datumValue);
+	assert(T::isInstance(cellValue));
+	return static_cast<T*>(cellValue);
 }
 
 template <>
-inline DatumCell* datum_unchecked_cast<DatumCell>(DatumCell *datumValue)
+inline AnyCell* cell_unchecked_cast<AnyCell>(AnyCell *cellValue)
 {
-	return datumValue;
+	return cellValue;
 }
 
 template <>
-inline const DatumCell* datum_unchecked_cast<DatumCell>(const DatumCell *datumValue)
+inline const AnyCell* cell_unchecked_cast<AnyCell>(const AnyCell *cellValue)
 {
-	return datumValue;
+	return cellValue;
 }
 
 }

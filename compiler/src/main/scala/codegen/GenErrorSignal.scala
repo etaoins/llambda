@@ -33,9 +33,9 @@ object GenErrorSignal {
 
     // Build our evidence - assume it's a datum cell
     val evidencePtr = evidence.map(
-      ct.DatumCell.genPointerBitcast(block)(_)
+      ct.AnyCell.genPointerBitcast(block)(_)
     ).getOrElse(
-      NullPointerConstant(PointerType(ct.DatumCell.irType))
+      NullPointerConstant(PointerType(ct.AnyCell.irType))
     )
 
     // Get a pointer to the first element

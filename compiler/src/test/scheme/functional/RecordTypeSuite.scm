@@ -69,7 +69,7 @@
 	(import (llambda typed))
 
 	(define-record-type: <mutable-value> (mutable-value field) mutable-value?
-		((field : <integer>) mutable-value-field set-mutable-value-field!))
+		((field : <exact-integer>) mutable-value-field set-mutable-value-field!))
 	
 	(define instance (mutable-value 50))
 	(set-mutable-value-field! instance -20)
@@ -79,7 +79,7 @@
 	(import (llambda typed))
 
 	(define-record-type: <mutable-value> (mutable-value field) mutable-value?
-		((field : <integer>) mutable-value-field set-mutable-value-field!))
+		((field : <exact-integer>) mutable-value-field set-mutable-value-field!))
 	
 	(set-mutable-value-field! (mutable-value 50) #t)))
 
@@ -88,7 +88,7 @@
 
 	; Use at least three 64bit fields to force out-of-line storage
 	(define-record-type: <three-value> (three-value field1 field2 field3) three-value?
-		((field1 : <integer>) three-value-field1)
+		((field1 : <exact-integer>) three-value-field1)
 		(field2 three-value-field2 set-three-value-field2!)
 		((field3 : <flonum>) three-value-field3 set-three-value-field3!))
 	
@@ -102,7 +102,7 @@
 	(import (llambda test-util))
 
 	(define-record-type: <two-value> (two-value field1 field2) two-value?
-		((field1 : <integer>) two-value-field1)
+		((field1 : <exact-integer>) two-value-field1)
 		(field2 two-value-field2 set-two-value-field2!))
 	
 	(define instance ((typeless-cell two-value) 20 30))
@@ -116,7 +116,7 @@
 
 	(define-record-type: <single-value> (single-value field1 field2 field3) single-value?
 		((field1 : <char>) single-value-field1)
-		((field2 : <integer>) single-value-field2)
+		((field2 : <exact-integer>) single-value-field2)
 		((field3 : <char>) single-value-field3))
 
 	(define instance (single-value #\a 2 #\c))

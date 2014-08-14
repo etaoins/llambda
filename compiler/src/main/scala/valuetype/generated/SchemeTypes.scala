@@ -13,10 +13,10 @@ object EmptyListType extends SchemeTypeAtom(ct.EmptyListCell)
 object StringType extends SchemeTypeAtom(ct.StringCell)
 object SymbolType extends SchemeTypeAtom(ct.SymbolCell)
 object BooleanType extends SchemeTypeAtom(ct.BooleanCell)
-object NumericType extends UnionType(Set(SchemeTypeAtom(ct.ExactIntegerCell), SchemeTypeAtom(ct.InexactRationalCell)))
+object NumberType extends UnionType(Set(SchemeTypeAtom(ct.ExactIntegerCell), SchemeTypeAtom(ct.FlonumCell)))
 object ExactIntegerType extends SchemeTypeAtom(ct.ExactIntegerCell)
-object InexactRationalType extends SchemeTypeAtom(ct.InexactRationalCell)
-object CharacterType extends SchemeTypeAtom(ct.CharacterCell)
+object FlonumType extends SchemeTypeAtom(ct.FlonumCell)
+object CharType extends SchemeTypeAtom(ct.CharCell)
 object VectorType extends SchemeTypeAtom(ct.VectorCell)
 object BytevectorType extends SchemeTypeAtom(ct.BytevectorCell)
 object ProcedureType extends SchemeTypeAtom(ct.ProcedureCell)
@@ -31,10 +31,10 @@ object IntrinsicSchemeTypes {
     (ct.StringCell.schemeName -> StringType),
     (ct.SymbolCell.schemeName -> SymbolType),
     (ct.BooleanCell.schemeName -> BooleanType),
-    (ct.NumericCell.schemeName -> NumericType),
+    (ct.NumberCell.schemeName -> NumberType),
     (ct.ExactIntegerCell.schemeName -> ExactIntegerType),
-    (ct.InexactRationalCell.schemeName -> InexactRationalType),
-    (ct.CharacterCell.schemeName -> CharacterType),
+    (ct.FlonumCell.schemeName -> FlonumType),
+    (ct.CharCell.schemeName -> CharType),
     (ct.VectorCell.schemeName -> VectorType),
     (ct.BytevectorCell.schemeName -> BytevectorType),
     (ct.ProcedureCell.schemeName -> ProcedureType),

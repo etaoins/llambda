@@ -72,7 +72,7 @@ class GcSlotGenerator(entryBlock : IrEntryBlockBuilder)(worldPtrIr : IrValue, ne
     for((variable, index) <- slotVariables.zipWithIndex) { 
       // Calculate our slot's index
       val gepIndices = List(0, index).map(IntegerConstant(IntegerType(64), _))
-      val slotPtr = entryBlock.getelementptr(variable)(PointerType(ct.DatumCell.irType), rootsArray, gepIndices, inbounds=true)
+      val slotPtr = entryBlock.getelementptr(variable)(PointerType(ct.AnyCell.irType), rootsArray, gepIndices, inbounds=true)
       
       // Initialize the field to null
       entryBlock.store(NullPointerConstant(GcSlotGenerator.slotValueType), slotPtr)
@@ -91,7 +91,7 @@ class GcSlotGenerator(entryBlock : IrEntryBlockBuilder)(worldPtrIr : IrValue, ne
 }
 
 object GcSlotGenerator {
-  val slotValueType = PointerType(ct.DatumCell.irType)
+  val slotValueType = PointerType(ct.AnyCell.irType)
   val slotPointerType = PointerType(slotValueType)
 
   def irValueForSlot(slot : Int) = {

@@ -37,7 +37,7 @@ class SchemeParserSuite extends FunSuite with Inside {
     )
     
     assertReflexiveParse(shorthand + "(real? 1.0)",
-      ast.ProperList(List(ast.Symbol(symbolName), ast.ProperList(List(ast.Symbol("real?"), ast.RationalLiteral(1.0))))) :: Nil
+      ast.ProperList(List(ast.Symbol(symbolName), ast.ProperList(List(ast.Symbol("real?"), ast.FlonumLiteral(1.0))))) :: Nil
     )
     
     assertReflexiveParse(shorthand + shorthand + "#true",
@@ -105,9 +105,9 @@ class SchemeParserSuite extends FunSuite with Inside {
   }
 
   test("reals") {
-    assertReflexiveParse("0.0", List(ast.RationalLiteral(0.0)))
-    assertReflexiveParse("33.337", List(ast.RationalLiteral(33.337)))
-    assertReflexiveParse("-0100.0", List(ast.RationalLiteral(-100.0)))
+    assertReflexiveParse("0.0", List(ast.FlonumLiteral(0.0)))
+    assertReflexiveParse("33.337", List(ast.FlonumLiteral(33.337)))
+    assertReflexiveParse("-0100.0", List(ast.FlonumLiteral(-100.0)))
 
     assertReflexiveParse("+inf.0", List(ast.PositiveInfinityLiteral()))
     assertReflexiveParse("-inf.0", List(ast.NegativeInfinityLiteral()))
@@ -154,7 +154,7 @@ newline""", "Bare\nnewline")
         ast.Symbol("integer?"), 
         ast.Symbol("Hello"),
         ast.IntegerLiteral(-1),
-        ast.RationalLiteral(2.0)
+        ast.FlonumLiteral(2.0)
       ))
     ))
     
@@ -167,7 +167,7 @@ newline""", "Bare\nnewline")
     assert(scm"(#false ONE 2.0 . +inf.0)" == List(
       ast.Pair(ast.BooleanLiteral(false),
         ast.Pair(ast.Symbol("ONE"),
-          ast.Pair(ast.RationalLiteral(2.0), ast.PositiveInfinityLiteral()
+          ast.Pair(ast.FlonumLiteral(2.0), ast.PositiveInfinityLiteral()
     )))))
   }
   

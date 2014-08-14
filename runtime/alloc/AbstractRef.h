@@ -5,7 +5,7 @@
 #include <vector>
 #include <type_traits>
 
-#include "binding/DatumCell.h"
+#include "binding/AnyCell.h"
 #include "alloc/AllocCell.h"
 #include "alloc/CellRefRangeList.h"
 
@@ -23,7 +23,7 @@ template<class T>
 class AbstractRefRange
 {
 protected:
-	static_assert(std::is_base_of<DatumCell, T>(), "Only DatumCell subclasses can be GC roots");
+	static_assert(std::is_base_of<AnyCell, T>(), "Only AnyCell subclasses can be GC roots");
 
 	/**
 	 * Creates a new instance rooting a cell or cell array

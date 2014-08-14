@@ -13,7 +13,7 @@ class PairCell : public ListElementCell
 	friend class ListElementCell;
 #include "generated/PairCellMembers.h"
 public:
-	PairCell(DatumCell *car, DatumCell *cdr) :
+	PairCell(AnyCell *car, AnyCell *cdr) :
 		ListElementCell(CellTypeId::Pair),
 		m_car(car),
 		m_cdr(cdr)
@@ -27,15 +27,15 @@ public:
 	 * @param  car    car value of the new pair. This will be GC rooted internally.
 	 * @param  cdr    cdr value of the new pair. This will be GC rooted internally.
 	 */
-	static PairCell* createInstance(World &world, DatumCell *car, DatumCell *cdr);
+	static PairCell* createInstance(World &world, AnyCell *car, AnyCell *cdr);
 
-	void setCar(DatumCell *obj)
+	void setCar(AnyCell *obj)
 	{
 		assert(!isGlobalConstant());
 		m_car = obj;
 	}
 	
-	void setCdr(DatumCell *obj)
+	void setCdr(AnyCell *obj)
 	{
 		assert(!isGlobalConstant());
 		m_cdr = obj;
@@ -43,12 +43,12 @@ public:
 	
 	// These are used by the garbage collector to update the car and cdr pointers during compaction
 	
-	DatumCell** carRef()
+	AnyCell** carRef()
 	{
 		return &m_car;
 	}
 
-	DatumCell** cdrRef()
+	AnyCell** cdrRef()
 	{
 		return &m_cdr;
 	}

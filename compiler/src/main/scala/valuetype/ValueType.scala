@@ -36,16 +36,16 @@ sealed abstract class IntLikeType(val bits : Int, val signed : Boolean) extends 
 /** Native boolean value */
 case object Predicate extends IntLikeType(1, false) {
   val schemeType = BooleanType
-  val schemeName = "<bool>"
+  val schemeName = "<native-bool>"
 }
 
 /** Native integer type representing a Scheme exact integer */
 sealed abstract class IntType(bits : Int, signed : Boolean) extends IntLikeType(bits, signed) {
   val schemeName = if (signed) {
-    s"<int${bits}>"
+    s"<native-int${bits}>"
   }
   else {
-    s"<uint${bits}>"
+    s"<native-uint${bits}>"
   }
 
   val schemeType = ExactIntegerType
@@ -63,21 +63,21 @@ case object UInt32 extends IntType(32, false)
 
 /** Native floating point type representing a Scheme inexact rational */
 sealed abstract class FpType extends NativeType {
-  val schemeType = InexactRationalType
+  val schemeType = FlonumType
 }
 
 case object Float extends FpType {
-  val schemeName = "<float>"
+  val schemeName = "<native-float>"
 }
 
 case object Double extends FpType {
-  val schemeName = "<double>"
+  val schemeName = "<native-double>"
 }
 
 /** Native integer representing a Unicode code point */
 case object UnicodeChar extends IntLikeType(32, true) {
-  val schemeName = "<unicode-char>"
-  val schemeType = CharacterType
+  val schemeName = "<native-unicode-char>"
+  val schemeType = CharType
 }
 
 /** Identifies a record field
@@ -180,7 +180,7 @@ case class SchemeTypeAtom(cellType : ct.ConcreteCellType) extends NonUnionScheme
       true
   }
   
-  // Handle <boolean-cell> specially - it only has two subtypes
+  // Handle <boolean> specially - it only has two subtypes
   override def -(otherType : SchemeType) : SchemeType =  (cellType, otherType) match {
     case (ct.BooleanCell, ConstantBooleanType(value))=>
       ConstantBooleanType(!value)
@@ -312,14 +312,14 @@ case class UnionType(memberTypes : Set[NonUnionSchemeType]) extends SchemeType {
     val possibleCellTypes = memberTypes.flatMap(_.cellType.concreteTypes) : Set[ct.ConcreteCellType]
 
     // Find the most specific cell type that will cover all of our member types
-    (cellTypesBySpecificity(ct.DatumCell).find { candidateCellType =>
+    (cellTypesBySpecificity(ct.AnyCell).find { candidateCellType =>
       possibleCellTypes.subsetOf(candidateCellType.concreteTypes)
     }).get
   }
 
   /** Cell type exactly matching our member types or None if no exact match exists */
   private def exactCellTypeOpt : Option[ct.CellType] = {
-    (cellTypesBySpecificity(ct.DatumCell).find { candidateCellType =>
+    (cellTypesBySpecificity(ct.AnyCell).find { candidateCellType =>
       SchemeType.fromCellType(candidateCellType) == this 
     })
   }
@@ -355,7 +355,7 @@ case class UnionType(memberTypes : Set[NonUnionSchemeType]) extends SchemeType {
 }
 
 /** Union of all possible Scheme types */
-object AnySchemeType extends UnionType(ct.DatumCell.concreteTypes.map(SchemeTypeAtom(_))) {
+object AnySchemeType extends UnionType(ct.AnyCell.concreteTypes.map(SchemeTypeAtom(_))) {
   override lazy val schemeName = "<any>"
 }
 
@@ -391,7 +391,7 @@ object SchemeType {
         union.memberTypes
     }).toSet
 
-    // Convert (U #f #t) to <boolean-cell>
+    // Convert (U #f #t) to <boolean>
     // This should just be cosmetic
     val simplifiedTypes = if (allBooleans.subsetOf(nonUnionTypes)) {
       nonUnionTypes -- allBooleans + BooleanType

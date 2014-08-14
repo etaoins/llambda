@@ -13,18 +13,18 @@ class MemoryBlock;
 // This is a placeholder for size purposes
 // We assume a PairCell is the largest allocation with two pointers
 // If this isn't true then sizecheck.h will assert at compile time
-class AllocCell : public DatumCell
+class AllocCell : public AnyCell
 {
 protected:
 	std::uint8_t padding[22]; 
 };
 
 // This is a special cell that terminates a heap segment
-class SegmentTerminatorCell : public DatumCell
+class SegmentTerminatorCell : public AnyCell
 {
 public:
 	SegmentTerminatorCell(MemoryBlock *nextSegment) :
-		DatumCell(CellTypeId::Invalid, GarbageState::SegmentTerminator),
+		AnyCell(CellTypeId::Invalid, GarbageState::SegmentTerminator),
 		m_nextSegment(nextSegment)
 	{
 	}
@@ -39,11 +39,11 @@ private:
 };
 
 // This is a special cell that terminates an entire
-class HeapTerminatorCell : public DatumCell
+class HeapTerminatorCell : public AnyCell
 {
 public:
 	HeapTerminatorCell() :
-		DatumCell(CellTypeId::Invalid, GarbageState::HeapTerminator)
+		AnyCell(CellTypeId::Invalid, GarbageState::HeapTerminator)
 	{
 	}
 };

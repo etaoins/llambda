@@ -16,7 +16,7 @@ public:
 
 protected:
 	virtual void renderStringLike(const std::uint8_t *utf8Data, std::uint32_t byteLength, std::uint8_t quoteChar, bool needsQuotes) override;
-	virtual void renderCharacter(const CharacterCell *value) override;
+	virtual void renderCharacter(const CharCell *value) override;
 };
 
 }

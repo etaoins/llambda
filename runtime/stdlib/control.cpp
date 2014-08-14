@@ -16,7 +16,7 @@ using namespace lliby;
 extern "C"
 {
 
-DatumCell *lliby_apply(World &world, ProcedureCell *procedure, ListElementCell *argHead)
+AnyCell *lliby_apply(World &world, ProcedureCell *procedure, ListElementCell *argHead)
 {
 	ListElementCell *procArgHead;
 
@@ -25,7 +25,7 @@ DatumCell *lliby_apply(World &world, ProcedureCell *procedure, ListElementCell *
 	// tail call optimization
 	{
 		// Find our arguments
-		ProperList<DatumCell> applyArgList(argHead);
+		ProperList<AnyCell> applyArgList(argHead);
 
 		if (!applyArgList.isValid())
 		{
@@ -43,18 +43,18 @@ DatumCell *lliby_apply(World &world, ProcedureCell *procedure, ListElementCell *
 			
 			// Standalone args are zero or more args that appear before the final final proper list
 			auto standaloneArgCount = applyArgList.length() - 1;
-			std::vector<DatumCell*> standaloneArgs(standaloneArgCount);
+			std::vector<AnyCell*> standaloneArgs(standaloneArgCount);
 
-			for(ProperList<DatumCell>::size_type i = 0; i < standaloneArgCount; i++)
+			for(ProperList<AnyCell>::size_type i = 0; i < standaloneArgCount; i++)
 			{
 				standaloneArgs[i] = *(applyArgIt++);
 			}
 
 			// Ensure the final argument is a proper list
 			// This would violate our calling convention otherwise
-			auto finalListHead = datum_cast<ListElementCell>(*applyArgIt);
+			auto finalListHead = cell_cast<ListElementCell>(*applyArgIt);
 
-			if (!(finalListHead && ProperList<DatumCell>(finalListHead).isValid()))
+			if (!(finalListHead && ProperList<AnyCell>(finalListHead).isValid()))
 			{
 				signalError(world, "Final argument to (apply) must be a proper list", {*applyArgIt});
 			}
@@ -63,14 +63,14 @@ DatumCell *lliby_apply(World &world, ProcedureCell *procedure, ListElementCell *
 			alloc::ProcedureRefRange procedureRef(world, &procedure, 1);	
 
 			// We verified the final arg is a proper list so this must also be a proper list
-			procArgHead = datum_unchecked_cast<ListElementCell>(ListElementCell::createList(world, standaloneArgs, finalListHead));
+			procArgHead = cell_unchecked_cast<ListElementCell>(ListElementCell::createList(world, standaloneArgs, finalListHead));
 		}
 	}
 
 	return procedure->apply(world, procArgHead);
 }
 
-DatumCell *lliby_call_with_current_continuation(World &world, ProcedureCell *proc)
+AnyCell *lliby_call_with_current_continuation(World &world, ProcedureCell *proc)
 {
 	// This is the procedure we're calling and it's argument head	
 	alloc::ProcedureRef procRef(world, proc);
@@ -89,7 +89,7 @@ DatumCell *lliby_call_with_current_continuation(World &world, ProcedureCell *pro
 		argHead = ListElementCell::createProperList(world, {escapeProcRef.data()});
 	}
 
-	DatumCell *returnValue = nullptr;
+	AnyCell *returnValue = nullptr;
 
 	try
 	{

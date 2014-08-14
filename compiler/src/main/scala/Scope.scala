@@ -10,7 +10,7 @@ sealed abstract class BoundValue
   * @param  sourceName   Name of the variable in the Scheme source. This is used for error reporting and chosing
   *                      names in the generated IR
   * @param  schemeType   Type of the storage location. Normal Scheme values are untyped which is represented by
-  *                      DatumCell. Typed Scheme may explicitly restrict values further. 
+  *                      AnySchemeType. Typed Scheme may explicitly restrict values further. 
   */
 class StorageLocation(
     val sourceName : String,

@@ -8,12 +8,12 @@ public:
 		return m_listLength;
 	}
 
-	DatumCell* car() const
+	AnyCell* car() const
 	{
 		return m_car;
 	}
 
-	DatumCell* cdr() const
+	AnyCell* cdr() const
 	{
 		return m_cdr;
 	}
@@ -24,12 +24,12 @@ public:
 		return typeId == CellTypeId::Pair;
 	}
 
-	static bool isInstance(const DatumCell *datum)
+	static bool isInstance(const AnyCell *cell)
 	{
-		return typeIdIsTypeOrSubtype(datum->typeId());
+		return typeIdIsTypeOrSubtype(cell->typeId());
 	}
 
 private:
 	std::uint32_t m_listLength;
-	DatumCell* m_car;
-	DatumCell* m_cdr;
+	AnyCell* m_car;
+	AnyCell* m_cdr;

@@ -54,8 +54,8 @@ class ConstantExactIntegerValue(val value : Long) extends TrivialConstantValue(c
     vt.Int64
 }
 
-class ConstantInexactRationalValue(val value : Double) extends TrivialConstantValue(ct.InexactRationalCell, value, ps.CreateInexactRationalCell.apply) {
-  val typeDescription = "constant inexact rational"
+class ConstantFlonumValue(val value : Double) extends TrivialConstantValue(ct.FlonumCell, value, ps.CreateFlonumCell.apply) {
+  val typeDescription = "constant flonum"
 
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = nativeType match {
     case fpType : vt.FpType =>
@@ -74,7 +74,7 @@ class ConstantInexactRationalValue(val value : Double) extends TrivialConstantVa
     vt.Double
 }
 
-class ConstantCharacterValue(val value : Char) extends TrivialConstantValue(ct.CharacterCell, value, ps.CreateCharacterCell.apply) {
+class ConstantCharValue(val value : Char) extends TrivialConstantValue(ct.CharCell, value, ps.CreateCharCell.apply) {
   val typeDescription = "constant character"
 
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = nativeType match {

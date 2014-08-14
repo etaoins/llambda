@@ -9,7 +9,7 @@ namespace lliby
 {
 
 class World;
-class DatumCell;
+class AnyCell;
 class UnitCell;
 class ListElementCell;
 class PairCell;
@@ -21,10 +21,10 @@ class SymbolCell;
 class InlineSymbolCell;
 class HeapSymbolCell;
 class BooleanCell;
-class NumericCell;
+class NumberCell;
 class ExactIntegerCell;
-class InexactRationalCell;
-class CharacterCell;
+class FlonumCell;
+class CharCell;
 class VectorCell;
 class BytevectorCell;
 class RecordLikeCell;
@@ -33,7 +33,7 @@ class RecordCell;
 class ErrorObjectCell;
 class PortCell;
 
-typedef DatumCell* (*ProcedureEntryPoint)(World&, ProcedureCell*, ListElementCell*);
+typedef AnyCell* (*ProcedureEntryPoint)(World&, ProcedureCell*, ListElementCell*);
 
 }
 #endif

@@ -10,8 +10,8 @@
 
   (begin
     (define-record-type: <promise-data> (make-promise-data done? value) promise-data?
-      ((done? : <boolean-cell>) promise-data-done? set-promise-data-done!)
-      ((value : <datum-cell>) promise-data-value set-promise-data-value!))
+      ((done? : <boolean>) promise-data-done? set-promise-data-done!)
+      ((value : <any>) promise-data-value set-promise-data-value!))
 
     (define-record-type: <promise> (make-promise-box data) promise?
       ((data : <promise-data>) promise-data set-promise-data!))

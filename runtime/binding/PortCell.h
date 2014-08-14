@@ -1,14 +1,14 @@
 #ifndef _LLIBY_BINDING_PORTCELL_H
 #define _LLIBY_BINDING_PORTCELL_H
 
-#include "DatumCell.h"
+#include "AnyCell.h"
 #include <iostream>
 
 namespace lliby
 {
 class World;
 
-class PortCell : public DatumCell
+class PortCell : public AnyCell
 {
 #include "generated/PortCellMembers.h"
 public:
@@ -18,7 +18,7 @@ public:
 
 protected:
 	PortCell(std::ios *stream, bool isOwned = true) :
-		DatumCell(CellTypeId::Port),
+		AnyCell(CellTypeId::Port),
 		m_isOwned(isOwned),
 		m_stream(stream)
 	{

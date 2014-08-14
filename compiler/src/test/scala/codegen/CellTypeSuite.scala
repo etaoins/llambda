@@ -16,14 +16,14 @@ class CellTypeSuite extends FunSuite {
       Nil)
     ).entryBlock
 
-  test("create constant inexact rational cell") {
+  test("create constant flonum cell") {
     val innerValue = llvmir.DoubleConstant(31.5)
 
-    val constant = ct.InexactRationalCell.createConstant(innerValue)
-    val expectedTypeId = ct.InexactRationalCell.typeId.toString
+    val constant = ct.FlonumCell.createConstant(innerValue)
+    val expectedTypeId = ct.FlonumCell.typeId.toString
 
     assert(constant.toIr === 
-      s"{%numeric {%datum {i8 ${expectedTypeId}, i8 1}}, double 31.5}"
+      s"{%number {%any {i8 ${expectedTypeId}, i8 1}}, double 31.5}"
     )
   }
   
@@ -31,54 +31,54 @@ class CellTypeSuite extends FunSuite {
     val innerValue = llvmir.StringConstant.fromUtf8String("Hello, world!")
     
     intercept[InternalCompilerErrorException] {
-      ct.InexactRationalCell.createConstant(innerValue)
+      ct.FlonumCell.createConstant(innerValue)
     }
   }
 
   test("isTypeOrSubtypeOf") {
-    assert(ct.InexactRationalCell.isTypeOrSubtypeOf(ct.InexactRationalCell) === true)
-    assert(ct.InexactRationalCell.isTypeOrSubtypeOf(ct.NumericCell) === true)
-    assert(ct.InexactRationalCell.isTypeOrSubtypeOf(ct.DatumCell) === true)
+    assert(ct.FlonumCell.isTypeOrSubtypeOf(ct.FlonumCell) === true)
+    assert(ct.FlonumCell.isTypeOrSubtypeOf(ct.NumberCell) === true)
+    assert(ct.FlonumCell.isTypeOrSubtypeOf(ct.AnyCell) === true)
     
-    assert(ct.InexactRationalCell.isTypeOrSubtypeOf(ct.StringCell) === false)
-    assert(ct.NumericCell.isTypeOrSubtypeOf(ct.InexactRationalCell) === false)
-    assert(ct.DatumCell.isTypeOrSubtypeOf(ct.InexactRationalCell) === false)
+    assert(ct.FlonumCell.isTypeOrSubtypeOf(ct.StringCell) === false)
+    assert(ct.NumberCell.isTypeOrSubtypeOf(ct.FlonumCell) === false)
+    assert(ct.AnyCell.isTypeOrSubtypeOf(ct.FlonumCell) === false)
   }
   
   test("isTypeOrSupertypeOf") {
-    assert(ct.InexactRationalCell.isTypeOrSupertypeOf(ct.InexactRationalCell) === true)
-    assert(ct.NumericCell.isTypeOrSupertypeOf(ct.InexactRationalCell) === true)
-    assert(ct.DatumCell.isTypeOrSupertypeOf(ct.InexactRationalCell) === true)
+    assert(ct.FlonumCell.isTypeOrSupertypeOf(ct.FlonumCell) === true)
+    assert(ct.NumberCell.isTypeOrSupertypeOf(ct.FlonumCell) === true)
+    assert(ct.AnyCell.isTypeOrSupertypeOf(ct.FlonumCell) === true)
     
-    assert(ct.StringCell.isTypeOrSupertypeOf(ct.InexactRationalCell) === false)
-    assert(ct.InexactRationalCell.isTypeOrSupertypeOf(ct.NumericCell) === false)
-    assert(ct.InexactRationalCell.isTypeOrSupertypeOf(ct.DatumCell) === false)
+    assert(ct.StringCell.isTypeOrSupertypeOf(ct.FlonumCell) === false)
+    assert(ct.FlonumCell.isTypeOrSupertypeOf(ct.NumberCell) === false)
+    assert(ct.FlonumCell.isTypeOrSupertypeOf(ct.AnyCell) === false)
   }
 
   test("concreteTypes") {
     assert(ct.ListElementCell.concreteTypes === Set(ct.PairCell, ct.EmptyListCell))
-    assert(ct.NumericCell.concreteTypes === Set(ct.ExactIntegerCell, ct.InexactRationalCell))
+    assert(ct.NumberCell.concreteTypes === Set(ct.ExactIntegerCell, ct.FlonumCell))
     assert(ct.StringCell.concreteTypes === Set(ct.StringCell))
   }
   
   test("noop bitcast") {
-    val nullNumeric = llvmir.NullPointerConstant(llvmir.PointerType(ct.NumericCell.irType))
+    val nullNumber = llvmir.NullPointerConstant(llvmir.PointerType(ct.NumberCell.irType))
 
     val block = createTestBlock()
-    val resultValue = ct.NumericCell.genPointerBitcast(block)(nullNumeric)
+    val resultValue = ct.NumberCell.genPointerBitcast(block)(nullNumber)
 
-    assert(resultValue === nullNumeric)
+    assert(resultValue === nullNumber)
   }
   
   test("simple bitcast") {
-    val nullNumeric = llvmir.NullPointerConstant(llvmir.PointerType(ct.NumericCell.irType))
+    val nullNumber = llvmir.NullPointerConstant(llvmir.PointerType(ct.NumberCell.irType))
 
     val block = createTestBlock()
-    val resultValue = ct.DatumCell.genPointerBitcast(block)(nullNumeric)
+    val resultValue = ct.AnyCell.genPointerBitcast(block)(nullNumber)
 
-    assert(block.toIr === "entry:\n\t%datumCast1 = bitcast %numeric* null to %datum*") 
+    assert(block.toIr === "entry:\n\t%anyCast1 = bitcast %number* null to %any*") 
 
-    assert(resultValue != nullNumeric)
-    assert(resultValue.irType === llvmir.PointerType(ct.DatumCell.irType))
+    assert(resultValue != nullNumber)
+    assert(resultValue.irType === llvmir.PointerType(ct.AnyCell.irType))
   }
 }

@@ -1,14 +1,14 @@
 #ifndef _LLIBY_BINDING_EXACTINTEGERCELL_H
 #define _LLIBY_BINDING_EXACTINTEGERCELL_H
 
-#include "NumericCell.h"
+#include "NumberCell.h"
 
 #include "alloc/allocator.h"
 
 namespace lliby
 {
 
-class ExactIntegerCell : public NumericCell
+class ExactIntegerCell : public NumberCell
 {
 #include "generated/ExactIntegerCellMembers.h"
 public:
@@ -20,7 +20,7 @@ public:
 
 private:
 	ExactIntegerCell(std::int64_t value) :
-		NumericCell(CellTypeId::ExactInteger),
+		NumberCell(CellTypeId::ExactInteger),
 		m_value(value)
 	{
 	}

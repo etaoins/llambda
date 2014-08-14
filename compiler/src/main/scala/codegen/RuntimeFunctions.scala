@@ -22,7 +22,7 @@ object RuntimeFunctions {
     arguments=List(
       IrFunction.Argument(PointerType(WorldValue.irType)),
       IrFunction.Argument(PointerType(IntegerType(8)), Set(IrFunction.NoCapture)),
-      IrFunction.Argument(PointerType(ct.DatumCell.irType))
+      IrFunction.Argument(PointerType(ct.AnyCell.irType))
     ),
     attributes=Set(NoReturn, Cold)
   )
@@ -41,7 +41,7 @@ object RuntimeFunctions {
     arguments=List(
       Argument(PointerType(WorldValue.irType)),
       Argument(PointerType(ct.ProcedureCell.irType)),
-      Argument(PointerType(ct.DatumCell.irType))
+      Argument(PointerType(ct.AnyCell.irType))
     ),
     attributes=Set(NoUnwind)
   )

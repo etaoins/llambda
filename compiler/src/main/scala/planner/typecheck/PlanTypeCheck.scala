@@ -71,17 +71,17 @@ object PlanTypeCheck {
         val pairCellTemp = checkValue.castToCellTempValue(ct.PairCell)(isPairPlan)
 
         // Test the car first - the order doesn't actually matter here
-        val carTemp = ps.CellTemp(ct.DatumCell)
+        val carTemp = ps.CellTemp(ct.AnyCell)
         isPairPlan.steps += ps.LoadPairCar(carTemp, pairCellTemp)
 
-        val checkableCar = BoxedValue(ct.DatumCell, carTemp)
+        val checkableCar = BoxedValue(ct.AnyCell, carTemp)
         branchOnType(isPairPlan, predProcOpt, checkableCar, knownCarType, testCarType, isTypePlanner=Some({
           (carSatifiesPlan, _) =>
             // car matched, load the cdr
-            val cdrTemp = ps.CellTemp(ct.DatumCell)
+            val cdrTemp = ps.CellTemp(ct.AnyCell)
             carSatifiesPlan.steps += ps.LoadPairCdr(cdrTemp, pairCellTemp)
 
-            val checkableCdr = BoxedValue(ct.DatumCell, cdrTemp)
+            val checkableCdr = BoxedValue(ct.AnyCell, cdrTemp)
             branchOnType(carSatifiesPlan,  predProcOpt, checkableCdr, knownCdrType, testCdrType)
         }))
     }))
@@ -209,7 +209,7 @@ object PlanTypeCheck {
           plan.steps += ps.CreateNamedEntryPoint(entryPointTemp, signature, nativeSymbol)
 
           // Cast the value to datum*
-          val datumValueTemp = checkValue.castToCellTempValue(ct.DatumCell)(plan)
+          val datumValueTemp = checkValue.castToCellTempValue(ct.AnyCell)(plan)
 
           val resultPredTemp = ps.Temp(vt.Predicate)
           plan.steps += ps.Invoke(

@@ -1,7 +1,7 @@
 #include "core/init.h"
 #include "core/World.h"
 
-#include "binding/InexactRationalCell.h"
+#include "binding/FlonumCell.h"
 
 #include "assertions.h"
 #include "stubdefinitions.h"
@@ -14,7 +14,7 @@ using namespace lliby;
 void testAll(World &world)
 {
 	{
-		InexactRationalCell *value = InexactRationalCell::fromValue(world, 0.0);
+		FlonumCell *value = FlonumCell::fromValue(world, 0.0);
 		ASSERT_EQUAL(value->value(), 0.0);
 
 		ASSERT_TRUE(value->isInteger());
@@ -25,7 +25,7 @@ void testAll(World &world)
 	}
 	
 	{
-		InexactRationalCell *value = InexactRationalCell::fromValue(world, 256.5);
+		FlonumCell *value = FlonumCell::fromValue(world, 256.5);
 		ASSERT_EQUAL(value->value(), 256.5);
 		
 		ASSERT_FALSE(value->isInteger());
@@ -36,7 +36,7 @@ void testAll(World &world)
 	}
 	
 	{
-		InexactRationalCell *value = InexactRationalCell::fromValue(world, -500);
+		FlonumCell *value = FlonumCell::fromValue(world, -500);
 		ASSERT_EQUAL(value->value(), -500);
 		
 		ASSERT_TRUE(value->isInteger());
@@ -47,7 +47,7 @@ void testAll(World &world)
 	}
 	
 	{
-		InexactRationalCell *value = InexactRationalCell::NaN(world);
+		FlonumCell *value = FlonumCell::NaN(world);
 
 		ASSERT_TRUE(value->isNaN());
 		ASSERT_FALSE(value->isInfinite());
@@ -56,7 +56,7 @@ void testAll(World &world)
 	}
 	
 	{
-		InexactRationalCell *value = InexactRationalCell::positiveInfinity(world);
+		FlonumCell *value = FlonumCell::positiveInfinity(world);
 
 		ASSERT_FALSE(value->isNaN());
 		ASSERT_TRUE(value->isInfinite());
@@ -65,7 +65,7 @@ void testAll(World &world)
 	}
 	
 	{
-		InexactRationalCell *value = InexactRationalCell::negativeInfinity(world);
+		FlonumCell *value = FlonumCell::negativeInfinity(world);
 
 		ASSERT_FALSE(value->isNaN());
 		ASSERT_TRUE(value->isInfinite());

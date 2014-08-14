@@ -18,7 +18,7 @@ class KnownTypePredicateProc(testingType : vt.SchemeType) extends KnownArtificia
   
   def planFunction(parentPlan : PlanWriter, allocedSymbol : String) : PlannedFunction = {
     // We only have a single argument
-    val argumentTemp = ps.CellTemp(ct.DatumCell)
+    val argumentTemp = ps.CellTemp(ct.AnyCell)
     
     val plan = parentPlan.forkPlan()
 
@@ -26,7 +26,7 @@ class KnownTypePredicateProc(testingType : vt.SchemeType) extends KnownArtificia
     // Note that this is forced inline check because we pass selfSymbolOpt. The normal PlanTypeCheck entry point to the
     // type system might decide  to call this type check out-of-line which won't work because *this* is the out-of-line
     // implementation.
-    val cellTemp = BoxedValue(ct.DatumCell, argumentTemp)
+    val cellTemp = BoxedValue(ct.AnyCell, argumentTemp)
     val checkResult = PlanTypeCheck(cellTemp, vt.AnySchemeType, testingType, selfSymbolOpt=Some(allocedSymbol))(plan)
 
     val retValueTemp = checkResult.toNativePred()(plan)

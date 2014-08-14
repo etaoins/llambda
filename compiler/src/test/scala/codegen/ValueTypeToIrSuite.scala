@@ -80,7 +80,7 @@ class ValueTypeToIrSuite extends FunSuite {
   test("datum cell") {
     val typeWithSign = ValueTypeToIr(vt.AnySchemeType)
 
-    assert(typeWithSign.irType === llvmir.PointerType(ct.DatumCell.irType))
+    assert(typeWithSign.irType === llvmir.PointerType(ct.AnyCell.irType))
     assert(typeWithSign.signed === None)
   }
   

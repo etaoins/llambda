@@ -3,13 +3,21 @@
  ************************************************************/
 
 public:
+	double value() const
+	{
+		return m_value;
+	}
+
+public:
 	static bool typeIdIsTypeOrSubtype(CellTypeId typeId)
 	{
-		return (typeId == CellTypeId::ExactInteger) || (typeId == CellTypeId::InexactRational);
+		return typeId == CellTypeId::Flonum;
 	}
 
-	static bool isInstance(const DatumCell *datum)
+	static bool isInstance(const AnyCell *cell)
 	{
-		return typeIdIsTypeOrSubtype(datum->typeId());
+		return typeIdIsTypeOrSubtype(cell->typeId());
 	}
 
+private:
+	double m_value;

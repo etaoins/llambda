@@ -15,13 +15,13 @@ class SchemeTypeSuite extends FunSuite {
   private val constantFalse = ConstantBooleanType(false)
 
   private val stringList = ProperListType(StringType)
-  private val numericList = ProperListType(NumericType)
+  private val numericList = ProperListType(NumberType)
   private val exactIntList = ProperListType(ExactIntegerType)
-  private val inexactList = ProperListType(InexactRationalType)
+  private val inexactList = ProperListType(FlonumType)
     
-  private val knownNumberList = PairType(NumericType,
+  private val knownNumberList = PairType(NumberType,
     PairType(ExactIntegerType,
-      PairType(InexactRationalType,
+      PairType(FlonumType,
         EmptyListType)))
 
 
@@ -37,20 +37,20 @@ class SchemeTypeSuite extends FunSuite {
   }
   
   test("creating scheme types from abstract cell types") {
-    assert(SchemeType.fromCellType(ct.NumericCell) ===
-      UnionType(Set(ExactIntegerType, InexactRationalType))
+    assert(SchemeType.fromCellType(ct.NumberCell) ===
+      UnionType(Set(ExactIntegerType, FlonumType))
     )
   }
 
   test("union of two type atoms is a simple union") {
-    assert(SchemeType.fromTypeUnion(List(ExactIntegerType, InexactRationalType)) ===
-      UnionType(Set(ExactIntegerType, InexactRationalType))
+    assert(SchemeType.fromTypeUnion(List(ExactIntegerType, FlonumType)) ===
+      UnionType(Set(ExactIntegerType, FlonumType))
     )
   }
   
   test("union types are flattened when creating a new union") {
-    assert(SchemeType.fromTypeUnion(List(ExactIntegerType, UnionType(Set(InexactRationalType, StringType)))) ===
-      UnionType(Set(ExactIntegerType, InexactRationalType, StringType))
+    assert(SchemeType.fromTypeUnion(List(ExactIntegerType, UnionType(Set(FlonumType, StringType)))) ===
+      UnionType(Set(ExactIntegerType, FlonumType, StringType))
     )
   }
 
@@ -61,7 +61,7 @@ class SchemeTypeSuite extends FunSuite {
   }
   
   test("atom types definitely don't satisfy other atom types") {
-    assert(SatisfiesType(ExactIntegerType, InexactRationalType) ===
+    assert(SatisfiesType(ExactIntegerType, FlonumType) ===
       Some(false)
     )
   }
@@ -91,7 +91,7 @@ class SchemeTypeSuite extends FunSuite {
   }
 
   test("atom types definitely satisfy a union containing themselves") {
-    val unionWithExactInt = UnionType(Set(ExactIntegerType, InexactRationalType))
+    val unionWithExactInt = UnionType(Set(ExactIntegerType, FlonumType))
 
     assert(SatisfiesType(unionWithExactInt, ExactIntegerType) ===
       Some(true)
@@ -99,7 +99,7 @@ class SchemeTypeSuite extends FunSuite {
   }
   
   test("atom types definitely don't satisfy a union not containing themselves") {
-    val unionWithoutExactInt = UnionType(Set(InexactRationalType, InexactRationalType))
+    val unionWithoutExactInt = UnionType(Set(FlonumType, FlonumType))
 
     assert(SatisfiesType(unionWithoutExactInt, ExactIntegerType) ===
       Some(false)
@@ -119,14 +119,14 @@ class SchemeTypeSuite extends FunSuite {
   }
 
   test("union types definitely satisfy superset unions") {
-    val subunion = UnionType(Set(InexactRationalType, ExactIntegerType))
-    val superunion = UnionType(Set(StringType, InexactRationalType, ExactIntegerType))
+    val subunion = UnionType(Set(FlonumType, ExactIntegerType))
+    val superunion = UnionType(Set(StringType, FlonumType, ExactIntegerType))
 
     assert(SatisfiesType(superunion, subunion) === Some(true))
   }
   
   test("union types definitely don't satisfy disjoint unions") {
-    val union1 = UnionType(Set(InexactRationalType, ExactIntegerType))
+    val union1 = UnionType(Set(FlonumType, ExactIntegerType))
     val union2 = UnionType(Set(StringType))
 
     assert(SatisfiesType(union1, union2) === Some(false))
@@ -134,34 +134,34 @@ class SchemeTypeSuite extends FunSuite {
   }
   
   test("union types definitely don't satisfy the empty type") {
-    val nonEmptyUnion = UnionType(Set(InexactRationalType, ExactIntegerType))
+    val nonEmptyUnion = UnionType(Set(FlonumType, ExactIntegerType))
 
     assert(SatisfiesType(EmptySchemeType, nonEmptyUnion) === Some(false))
   }
   
   test("the empty scheme type definitely satisfies union types") {
-    val nonEmptyUnion = UnionType(Set(InexactRationalType, ExactIntegerType))
+    val nonEmptyUnion = UnionType(Set(FlonumType, ExactIntegerType))
 
     assert(SatisfiesType(nonEmptyUnion, EmptySchemeType) === Some(true))
   }
   
   test("union types may satisfy intersecting union type") {
-    val union1 = UnionType(Set(InexactRationalType, ExactIntegerType))
-    val union2 = UnionType(Set(StringType, InexactRationalType))
+    val union1 = UnionType(Set(FlonumType, ExactIntegerType))
+    val union2 = UnionType(Set(StringType, FlonumType))
 
     assert(SatisfiesType(union1, union2) === None)
     assert(SatisfiesType(union2, union1) === None)
   }
   
   test("union type minus intersecting union type is the remaining types") {
-    val union1 = UnionType(Set(InexactRationalType, ExactIntegerType))
-    val union2 = UnionType(Set(StringType, InexactRationalType))
+    val union1 = UnionType(Set(FlonumType, ExactIntegerType))
+    val union2 = UnionType(Set(StringType, FlonumType))
 
     assert((union1 - union2) === ExactIntegerType)
   }
   
   test("union type minus the empty type is itself") {
-    val nonEmptyUnion = UnionType(Set(InexactRationalType, ExactIntegerType))
+    val nonEmptyUnion = UnionType(Set(FlonumType, ExactIntegerType))
 
     assert((nonEmptyUnion - EmptySchemeType) === nonEmptyUnion)
   }
@@ -175,12 +175,12 @@ class SchemeTypeSuite extends FunSuite {
   }
 
   test("atom type minus another atom type is original type") {
-    assert((ExactIntegerType - InexactRationalType) === ExactIntegerType)
+    assert((ExactIntegerType - FlonumType) === ExactIntegerType)
   }
   
   test("union type minus an atom type removes that type from the union") {
-    assert((UnionType(Set(ExactIntegerType, InexactRationalType, StringType)) - ExactIntegerType) ===
-      UnionType(Set(InexactRationalType, StringType))
+    assert((UnionType(Set(ExactIntegerType, FlonumType, StringType)) - ExactIntegerType) ===
+      UnionType(Set(FlonumType, StringType))
     )
   }
 
@@ -201,7 +201,7 @@ class SchemeTypeSuite extends FunSuite {
   }
   
   test("atom types intersected with another atom is the empty type") {
-    assertIntersection(ExactIntegerType, InexactRationalType, EmptySchemeType)
+    assertIntersection(ExactIntegerType, FlonumType, EmptySchemeType)
   }
   
   test("atom types intersected with the empty type is the empty type") {
@@ -213,7 +213,7 @@ class SchemeTypeSuite extends FunSuite {
   }
   
   test("atom types intersected with a union not containing the atom is an empty union") {
-    assertIntersection(InexactRationalType, UnionType(Set(ExactIntegerType, StringType)), EmptySchemeType)
+    assertIntersection(FlonumType, UnionType(Set(ExactIntegerType, StringType)), EmptySchemeType)
   }
 
   test("distinct record types intersected with each other is an empty union") {
@@ -225,31 +225,31 @@ class SchemeTypeSuite extends FunSuite {
   }
 
   test("two union types intersected is the common member") {
-    assertIntersection(UnionType(Set(InexactRationalType, ExactIntegerType)), UnionType(Set(ExactIntegerType, StringType)), ExactIntegerType)
+    assertIntersection(UnionType(Set(FlonumType, ExactIntegerType)), UnionType(Set(ExactIntegerType, StringType)), ExactIntegerType)
   }
   
   test("union types intersected with the empty type is the empty type") {
-    assertIntersection(UnionType(Set(InexactRationalType, ExactIntegerType)), EmptySchemeType, EmptySchemeType)
+    assertIntersection(UnionType(Set(FlonumType, ExactIntegerType)), EmptySchemeType, EmptySchemeType)
   }
 
   test("scheme names for single type unions is the name of the inner type") {
-    assert(UnionType(Set(ExactIntegerType)).schemeName === "<exact-integer-cell>")
+    assert(UnionType(Set(ExactIntegerType)).schemeName === "<exact-integer>")
   }
   
   test("scheme names for multple type unions with matching cell type") {
-    assert(UnionType(Set(ExactIntegerType, InexactRationalType)).schemeName === "<numeric-cell>")
+    assert(UnionType(Set(ExactIntegerType, FlonumType)).schemeName === "<number>")
   }
   
   test("scheme names for multple type unions without matching cell type") {
-    assert(UnionType(Set(ExactIntegerType, StringType)).schemeName === "(U <exact-integer-cell> <string-cell>)")
+    assert(UnionType(Set(ExactIntegerType, StringType)).schemeName === "(U <exact-integer> <string>)")
   }
 
   test("the cell type for the union of exact int and inexact is numeric") {
-    assert(UnionType(Set(ExactIntegerType, InexactRationalType)).cellType === ct.NumericCell)
+    assert(UnionType(Set(ExactIntegerType, FlonumType)).cellType === ct.NumberCell)
   }
   
   test("the cell type for the union of exact int, inexact and string is datum") {
-    assert(UnionType(Set(ExactIntegerType, InexactRationalType, StringType)).cellType === ct.DatumCell)
+    assert(UnionType(Set(ExactIntegerType, FlonumType, StringType)).cellType === ct.AnyCell)
   }
 
   test("the union of both constant booleans is the general boolean") {

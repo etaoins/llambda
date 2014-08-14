@@ -1,4 +1,4 @@
-#include "binding/DatumCell.h"
+#include "binding/AnyCell.h"
 #include "binding/VectorCell.h"
 #include "binding/ProperList.h"
 #include "binding/RestArgument.h"
@@ -11,7 +11,7 @@ using namespace lliby;
 extern "C"
 {
 
-VectorCell *lliby_make_vector(World &world, std::uint32_t length, DatumCell *fill)
+VectorCell *lliby_make_vector(World &world, std::uint32_t length, AnyCell *fill)
 {
 	return VectorCell::fromFill(world, length, fill);
 }
@@ -21,9 +21,9 @@ std::uint32_t lliby_vector_length(VectorCell *vector)
 	return vector->length();
 }
 
-DatumCell* lliby_vector_ref(World &world, VectorCell *vector, std::uint32_t index)
+AnyCell* lliby_vector_ref(World &world, VectorCell *vector, std::uint32_t index)
 {
-	DatumCell* element = vector->elementAt(index);
+	AnyCell* element = vector->elementAt(index);
 
 	if (element == nullptr)
 	{
@@ -33,7 +33,7 @@ DatumCell* lliby_vector_ref(World &world, VectorCell *vector, std::uint32_t inde
 	return element;
 }
 
-void lliby_vector_set(World &world, VectorCell *vector, std::uint32_t index, DatumCell *obj)
+void lliby_vector_set(World &world, VectorCell *vector, std::uint32_t index, AnyCell *obj)
 {
 	if (vector->isGlobalConstant())
 	{
@@ -49,7 +49,7 @@ void lliby_vector_set(World &world, VectorCell *vector, std::uint32_t index, Dat
 // Note we can't use RestArgument here because invalid lists can be passed in via our (list->vector) alias
 VectorCell *lliby_vector(World &world, ListElementCell *argHead)
 {
-	ProperList<DatumCell> properList(argHead);
+	ProperList<AnyCell> properList(argHead);
 	
 	if (!properList.isValid())
 	{
@@ -57,7 +57,7 @@ VectorCell *lliby_vector(World &world, ListElementCell *argHead)
 	}
 
 	auto length = properList.length();
-	auto newElements = new DatumCell*[length];
+	auto newElements = new AnyCell*[length];
 	unsigned int elementIndex = 0;
 
 	// Fill out the new elements from the list

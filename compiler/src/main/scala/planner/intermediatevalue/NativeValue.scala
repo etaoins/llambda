@@ -86,14 +86,14 @@ class NativeExactIntegerValue(tempValue : ps.TempValue, nativeType : vt.IntType)
   }
   
   override def planCastToSchemeTempValue(targetType : vt.SchemeType)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
-    // Will an inexact rational make this conversion happy?
-    if (vt.SatisfiesType(targetType, vt.InexactRationalType) == Some(true)) {
+    // Will a flonum make this conversion happy?
+    if (vt.SatisfiesType(targetType, vt.FlonumType) == Some(true)) {
       // Convert us to double and box
-      val boxedTemp = ps.CellTemp(ct.InexactRationalCell)
+      val boxedTemp = ps.CellTemp(ct.FlonumCell)
       
-      plan.steps += ps.BoxInexactRational(boxedTemp, toTempValue(vt.Double))
+      plan.steps += ps.BoxFlonum(boxedTemp, toTempValue(vt.Double))
 
-      BoxedValue(ct.InexactRationalCell, boxedTemp).castToCellTempValue(targetType.cellType)
+      BoxedValue(ct.FlonumCell, boxedTemp).castToCellTempValue(targetType.cellType)
     }
     else {
       impossibleConversion(s"Cannot convert ${typeDescription} to non-numeric cell type ${cellType.schemeName}") 
@@ -109,8 +109,8 @@ class NativeExactIntegerValue(tempValue : ps.TempValue, nativeType : vt.IntType)
   }
 }
 
-class NativeInexactRationalValue(tempValue : ps.TempValue, nativeType : vt.FpType) extends NativeValue(nativeType, ct.InexactRationalCell, tempValue) {
-  def withNewTempValue(tempValue : ps.TempValue) = new NativeInexactRationalValue(tempValue, nativeType)
+class NativeFlonumValue(tempValue : ps.TempValue, nativeType : vt.FpType) extends NativeValue(nativeType, ct.FlonumCell, tempValue) {
+  def withNewTempValue(tempValue : ps.TempValue) = new NativeFlonumValue(tempValue, nativeType)
 
   override def planCastToNativeTempValue(targetType : vt.NativeType)(implicit plan : PlanWriter) : ps.TempValue = targetType match {
     case fpType : vt.FpType =>
@@ -125,19 +125,19 @@ class NativeInexactRationalValue(tempValue : ps.TempValue, nativeType : vt.FpTyp
   
   def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue =  {
     // We can only box doubles
-    val boxedTemp = ps.CellTemp(ct.InexactRationalCell)
-    plan.steps += ps.BoxInexactRational(boxedTemp, toTempValue(vt.Double))
+    val boxedTemp = ps.CellTemp(ct.FlonumCell)
+    plan.steps += ps.BoxFlonum(boxedTemp, toTempValue(vt.Double))
 
     BoxedValue(cellType, boxedTemp)
   }
 }
 
-class NativeCharacterValue(tempValue : ps.TempValue) extends NativeValue(vt.UnicodeChar, ct.CharacterCell, tempValue) {
-  def withNewTempValue(tempValue : ps.TempValue) = new NativeCharacterValue(tempValue)
+class NativeCharValue(tempValue : ps.TempValue) extends NativeValue(vt.UnicodeChar, ct.CharCell, tempValue) {
+  def withNewTempValue(tempValue : ps.TempValue) = new NativeCharValue(tempValue)
 
   def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue =  {
     val boxedTemp = ps.CellTemp(cellType)
-    plan.steps += ps.BoxCharacter(boxedTemp, tempValue)
+    plan.steps += ps.BoxChar(boxedTemp, tempValue)
 
     BoxedValue(cellType, boxedTemp)
   }

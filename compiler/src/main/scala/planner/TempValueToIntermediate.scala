@@ -15,10 +15,10 @@ object TempValueToIntermediate {
       new iv.NativeExactIntegerValue(tempValue, intType)
     
     case fpType : vt.FpType =>
-      new iv.NativeInexactRationalValue(tempValue, fpType)
+      new iv.NativeFlonumValue(tempValue, fpType)
 
     case vt.UnicodeChar =>
-      new iv.NativeCharacterValue(tempValue)
+      new iv.NativeCharValue(tempValue)
 
     case schemeType : vt.SchemeType =>
       new iv.CellValue(schemeType, BoxedValue(schemeType.cellType, tempValue))

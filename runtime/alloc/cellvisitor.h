@@ -3,7 +3,7 @@
 
 #include <functional>
 
-#include "binding/DatumCell.h"
+#include "binding/AnyCell.h"
 
 namespace lliby
 {
@@ -24,14 +24,14 @@ namespace alloc
  *                     to be relocated. If the function returns true the child cells of the passed cell will be visited
  *                     next.
  */
-void visitCell(DatumCell **rootCellRef, std::function<bool(DatumCell **)> &visitor);
+void visitCell(AnyCell **rootCellRef, std::function<bool(AnyCell **)> &visitor);
 
 /**
  * Visits all the cells referenced by a dynamic state
  *
  * This presumes the caller is updating the state's parameters
  */
-void visitDynamicState(dynamic::State *state, std::function<bool(DatumCell **)> &visitor);
+void visitDynamicState(dynamic::State *state, std::function<bool(AnyCell **)> &visitor);
 
 #ifndef NDEBUG
 /**
@@ -39,7 +39,7 @@ void visitDynamicState(dynamic::State *state, std::function<bool(DatumCell **)> 
  *
  * This is for debug purposes only
  */
-void dumpReachableFrom(DatumCell *rootCell, bool dumpGlobalConstants = true);
+void dumpReachableFrom(AnyCell *rootCell, bool dumpGlobalConstants = true);
 #endif
 
 }

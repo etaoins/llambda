@@ -29,9 +29,9 @@ public:
 		return (typeId == CellTypeId::Procedure) || (typeId == CellTypeId::Record);
 	}
 
-	static bool isInstance(const DatumCell *datum)
+	static bool isInstance(const AnyCell *cell)
 	{
-		return typeIdIsTypeOrSubtype(datum->typeId());
+		return typeIdIsTypeOrSubtype(cell->typeId());
 	}
 
 private:

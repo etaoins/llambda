@@ -19,7 +19,7 @@ void initWorld(World &world);
 void shutdownWorld(World &world);
 
 /**
- * Allocator for DatumCells
+ * Allocator for AnyCells
  */
 AllocCell *allocateCells(World &, size_t count = 1);
 RangeAlloc allocateRange(World &, size_t count);

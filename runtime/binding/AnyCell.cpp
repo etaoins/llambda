@@ -1,10 +1,10 @@
-#include "DatumCell.h"
+#include "AnyCell.h"
 
 #include <cstring>
 #include <cmath>
 
 #include "ExactIntegerCell.h"
-#include "InexactRationalCell.h"
+#include "FlonumCell.h"
 #include "SymbolCell.h"
 #include "ProcedureCell.h"
 #include "PairCell.h"
@@ -16,7 +16,7 @@
 namespace lliby
 {
 
-bool DatumCell::isEqv(const DatumCell *other) const
+bool AnyCell::isEqv(const AnyCell *other) const
 {
 	if (this == other)
 	{
@@ -24,19 +24,19 @@ bool DatumCell::isEqv(const DatumCell *other) const
 	}
 
 	// These require more than address comparison by eqv?
-	if (auto thisInteger = datum_cast<ExactIntegerCell>(this))
+	if (auto thisInteger = cell_cast<ExactIntegerCell>(this))
 	{
-		if (auto otherInteger = datum_cast<ExactIntegerCell>(other))
+		if (auto otherInteger = cell_cast<ExactIntegerCell>(other))
 		{
 			return thisInteger->value() == otherInteger->value();
 		}
 	}
-	else if (auto thisRational = datum_cast<InexactRationalCell>(this))
+	else if (auto thisFlonum = cell_cast<FlonumCell>(this))
 	{
-		if (auto otherRational = datum_cast<InexactRationalCell>(other))
+		if (auto otherFlonum = cell_cast<FlonumCell>(other))
 		{
-			const double thisValue = thisRational->value();
-			const double otherValue = otherRational->value();
+			const double thisValue = thisFlonum->value();
+			const double otherValue = otherFlonum->value();
 
 			if (std::isnan(thisValue) && std::isnan(otherValue)) 
 			{
@@ -44,19 +44,19 @@ bool DatumCell::isEqv(const DatumCell *other) const
 				return true;
 			}
 
-			return thisRational->value() == otherRational->value();
+			return thisFlonum->value() == otherFlonum->value();
 		}
 	}
-	else if (auto thisSymbol = datum_cast<SymbolCell>(this))
+	else if (auto thisSymbol = cell_cast<SymbolCell>(this))
 	{
-		if (auto otherSymbol = datum_cast<SymbolCell>(other))
+		if (auto otherSymbol = cell_cast<SymbolCell>(other))
 		{
 			return *thisSymbol == *otherSymbol;
 		}
 	}
-	else if (auto thisProcedure = datum_cast<ProcedureCell>(this))
+	else if (auto thisProcedure = cell_cast<ProcedureCell>(this))
 	{
-		if (auto otherProcedure = datum_cast<ProcedureCell>(other))
+		if (auto otherProcedure = cell_cast<ProcedureCell>(other))
 		{
 			// If neither procedures captures variables and they have the same entry point then they are eqv?
 			
@@ -69,12 +69,12 @@ bool DatumCell::isEqv(const DatumCell *other) const
 			}
 		}
 	}
-	else if (auto thisString = datum_cast<StringCell>(this))
+	else if (auto thisString = cell_cast<StringCell>(this))
 	{
 		// R7RS doesn't require us to compare string contents so this isn't strictly required
 		// However, we're already required to do this with symbols which have the exact same comparison logic. This also
 		// makes eqv? on constant strings consistent between -O2 (which folds constants) and -O0 (which doesn't)
-		if (auto otherString = datum_cast<StringCell>(other))
+		if (auto otherString = cell_cast<StringCell>(other))
 		{
 			return *thisString == *otherString;
 		}
@@ -83,24 +83,24 @@ bool DatumCell::isEqv(const DatumCell *other) const
 	return false;
 }
 
-bool DatumCell::isEqual(const DatumCell *other) const
+bool AnyCell::isEqual(const AnyCell *other) const
 {
 	if (isEqv(other))
 	{
 		return true;
 	}
 
-	if (auto thisPair = datum_cast<PairCell>(this))
+	if (auto thisPair = cell_cast<PairCell>(this))
 	{
-		if (auto otherPair = datum_cast<PairCell>(other))
+		if (auto otherPair = cell_cast<PairCell>(other))
 		{
 			return thisPair->car()->isEqual(otherPair->car()) &&
 				    thisPair->cdr()->isEqual(otherPair->cdr());
 		}
 	}
-	else if (auto thisVector = datum_cast<VectorCell>(this))
+	else if (auto thisVector = cell_cast<VectorCell>(this))
 	{
-		if (auto otherVector = datum_cast<VectorCell>(other))
+		if (auto otherVector = cell_cast<VectorCell>(other))
 		{
 			if (thisVector->length() != otherVector->length())
 			{
@@ -119,9 +119,9 @@ bool DatumCell::isEqual(const DatumCell *other) const
 			return true;
 		}
 	}
-	else if (auto thisBytevector = datum_cast<BytevectorCell>(this))
+	else if (auto thisBytevector = cell_cast<BytevectorCell>(this))
 	{
-		if (auto otherBytevector = datum_cast<BytevectorCell>(other))
+		if (auto otherBytevector = cell_cast<BytevectorCell>(other))
 		{
 			if (thisBytevector->length() != otherBytevector->length())
 			{
@@ -140,29 +140,29 @@ bool DatumCell::isEqual(const DatumCell *other) const
 	return false;
 }
 	
-void DatumCell::finalize()
+void AnyCell::finalize()
 {
-	if (auto thisString = datum_cast<StringCell>(this))
+	if (auto thisString = cell_cast<StringCell>(this))
 	{
 		thisString->finalizeString();
 	}
-	else if (auto thisSymbol = datum_cast<SymbolCell>(this))
+	else if (auto thisSymbol = cell_cast<SymbolCell>(this))
 	{
 		thisSymbol->finalizeSymbol();
 	}
-	else if (auto thisVector = datum_cast<VectorCell>(this))
+	else if (auto thisVector = cell_cast<VectorCell>(this))
 	{
 		thisVector->finalizeVector();
 	}
-	else if (auto thisBytevector = datum_cast<BytevectorCell>(this))
+	else if (auto thisBytevector = cell_cast<BytevectorCell>(this))
 	{
 		thisBytevector->finalizeBytevector();
 	}
-	else if (auto thisRecordLike = datum_cast<RecordLikeCell>(this))
+	else if (auto thisRecordLike = cell_cast<RecordLikeCell>(this))
 	{
 		thisRecordLike->finalizeRecordLike();
 	}
-	else if (auto thisPort = datum_cast<PortCell>(this))
+	else if (auto thisPort = cell_cast<PortCell>(this))
 	{
 		thisPort->finalizePort();
 	}

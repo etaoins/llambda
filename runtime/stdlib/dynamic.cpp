@@ -12,12 +12,12 @@ using namespace lliby;
 extern "C"
 {
 
-ProcedureCell *lliby_make_parameter(World &world, DatumCell *initialValue)
+ProcedureCell *lliby_make_parameter(World &world, AnyCell *initialValue)
 {
 	return dynamic::ParameterProcedureCell::createInstance(world, initialValue, nullptr);
 }
 
-DatumCell *lliby_dynamic_wind(World &world, ProcedureCell *before, ProcedureCell *thunk, ProcedureCell *after)
+AnyCell *lliby_dynamic_wind(World &world, ProcedureCell *before, ProcedureCell *thunk, ProcedureCell *after)
 {
 	{
 		// pushActiveState() can call before which can GC
@@ -27,7 +27,7 @@ DatumCell *lliby_dynamic_wind(World &world, ProcedureCell *before, ProcedureCell
 		dynamic::State::pushActiveState(world, before, after);
 	}
 	
-	alloc::DatumRef thunkResult(world, thunk->apply(world, EmptyListCell::instance()));
+	alloc::AnyRef thunkResult(world, thunk->apply(world, EmptyListCell::instance()));
 
 	dynamic::State::popActiveState(world);
 

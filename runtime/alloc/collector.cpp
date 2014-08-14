@@ -10,7 +10,7 @@
 #include "alloc/CellRefRangeList.h"
 #include "alloc/Heap.h"
 
-#include "binding/DatumCell.h"
+#include "binding/AnyCell.h"
 
 #include "dynamic/State.h"
 
@@ -26,26 +26,26 @@ namespace
 	 *
 	 * These should not be reachable outside of the garbage collector
 	 */
-	class ForwardingCell : public DatumCell
+	class ForwardingCell : public AnyCell
 	{
 	public:
-		ForwardingCell(DatumCell *newLocation) :
-			DatumCell(CellTypeId::Invalid, GarbageState::ForwardingCell),
+		ForwardingCell(AnyCell *newLocation) :
+			AnyCell(CellTypeId::Invalid, GarbageState::ForwardingCell),
 			m_newLocation(newLocation)
 		{
 		}
 
-		DatumCell* newLocation() const
+		AnyCell* newLocation() const
 		{
 			return m_newLocation;
 		}
 
 	private:
-		DatumCell *m_newLocation;
+		AnyCell *m_newLocation;
 	};
 
 	// Visit every non-null cell in a cell ref list
-	void visitCellRefList(const CellRefRangeList *cellRefList, std::function<bool (DatumCell**)> &visitor)
+	void visitCellRefList(const CellRefRangeList *cellRefList, std::function<bool (AnyCell**)> &visitor)
 	{
 		for(auto cellRefRange = cellRefList->head();
 		    cellRefRange != nullptr;
@@ -54,20 +54,20 @@ namespace
 			// Visit each cell in this range
 			for(size_t i = 0; i < cellRefRange->cellCount; i++)
 			{
-				auto datumCellRef = reinterpret_cast<DatumCell**>(&cellRefRange->basePointer[i]);
+				auto cellRef = reinterpret_cast<AnyCell**>(&cellRefRange->basePointer[i]);
 
-				if (*datumCellRef != nullptr)
+				if (*cellRef != nullptr)
 				{
-					visitCell(datumCellRef, visitor);
+					visitCell(cellRef, visitor);
 				}
 			}
 		}
 	}
 
 	// For updating weak refs
-	bool weakRefVisitor(DatumCell **cellRef)
+	bool weakRefVisitor(AnyCell **cellRef)
 	{
-		DatumCell *oldCellLocation = *cellRef;
+		AnyCell *oldCellLocation = *cellRef;
 
 		if (oldCellLocation->gcState() == GarbageState::GlobalConstant)
 		{
@@ -90,9 +90,9 @@ size_t collect(World &world, Heap &newHeap)
 {
 	size_t reachableCells = 0;
 
-	std::function<bool (DatumCell**)> rootVisitor = [&] (DatumCell **cellRef) -> bool
+	std::function<bool (AnyCell**)> rootVisitor = [&] (AnyCell **cellRef) -> bool
 	{
-		DatumCell *oldCellLocation = *cellRef;
+		AnyCell *oldCellLocation = *cellRef;
 
 		if (oldCellLocation->gcState() == GarbageState::GlobalConstant)
 		{
@@ -113,7 +113,7 @@ size_t collect(World &world, Heap &newHeap)
 		}
 
 		// Move the cell to the new location
-		DatumCell *newCellLocation = static_cast<DatumCell*>(newHeap.allocate(1));
+		AnyCell *newCellLocation = static_cast<AnyCell*>(newHeap.allocate(1));
 		memcpy(newCellLocation, oldCellLocation, sizeof(AllocCell));
 
 		// Update the reference to it
@@ -139,11 +139,11 @@ size_t collect(World &world, Heap &newHeap)
 	{
 		for(std::uint64_t i = 0; i < stackEntry->cellCount; i++)
 		{
-			auto datumCellRef = &stackEntry->roots[i];
+			auto cellRef = &stackEntry->roots[i];
 
-			if (*datumCellRef != nullptr)
+			if (*cellRef != nullptr)
 			{
-				visitCell(datumCellRef, rootVisitor);
+				visitCell(cellRef, rootVisitor);
 			}
 		}
 	}
@@ -155,7 +155,7 @@ size_t collect(World &world, Heap &newHeap)
 	visitDynamicState(dynamic::State::activeState(world), rootVisitor);
 
 	// Visit each runtime weak ref
-	std::function<bool (DatumCell**)> weakRefFunction = weakRefVisitor;
+	std::function<bool (AnyCell**)> weakRefFunction = weakRefVisitor;
 	visitCellRefList(world.weakRefs, weakRefFunction);
 
 	return reachableCells;

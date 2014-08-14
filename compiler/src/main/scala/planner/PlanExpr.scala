@@ -198,7 +198,7 @@ private[planner] object PlanExpr {
 
       case et.Return(returnedExpr) =>
         val returnValueResult = apply(initialState)(returnedExpr)
-        // If there's a return the return type is always DatumCell
+        // If there's a return the return type is always AnyCell
         val returnValueTemp = returnValueResult.value.toTempValue(vt.AnySchemeType)
 
         plan.steps += ps.Return(Some(returnValueTemp))

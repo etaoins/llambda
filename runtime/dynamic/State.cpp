@@ -17,7 +17,7 @@ State::State(ProcedureCell *before, ProcedureCell *after, State *parent) :
 {
 }
 	
-DatumCell* State::valueForParameter(ParameterProcedureCell *param) const
+AnyCell* State::valueForParameter(ParameterProcedureCell *param) const
 {
 	ParameterValueMap::const_iterator valueIt = mSelfValues.find(param);
 
@@ -35,7 +35,7 @@ DatumCell* State::valueForParameter(ParameterProcedureCell *param) const
 	}
 }
 
-void State::setValueForParameter(ParameterProcedureCell *param, DatumCell *value)
+void State::setValueForParameter(ParameterProcedureCell *param, AnyCell *value)
 {
 	mSelfValues[param] = value;
 }

@@ -17,12 +17,12 @@ using namespace lliby;
 
 bool isProperList(const ListElementCell *head)
 {
-	return ProperList<DatumCell>(head).isValid();
+	return ProperList<AnyCell>(head).isValid();
 }
 
 std::uint32_t listLength(const ListElementCell *head)
 {
-	return ProperList<DatumCell>(head).length();
+	return ProperList<AnyCell>(head).length();
 }
 
 void testAll(World &world)
@@ -43,7 +43,7 @@ void testAll(World &world)
 			valueA
 		});
 
-		PairCell *onlyPair = datum_cast<PairCell>(properList);
+		PairCell *onlyPair = cell_cast<PairCell>(properList);
 
 		ASSERT_TRUE(onlyPair != nullptr);
 		ASSERT_EQUAL(onlyPair->car(), valueA.data());
@@ -58,18 +58,18 @@ void testAll(World &world)
 			valueC
 		});
 
-		PairCell *firstPair = datum_cast<PairCell>(properList);
+		PairCell *firstPair = cell_cast<PairCell>(properList);
 
 		ASSERT_TRUE(firstPair != nullptr);
 		ASSERT_EQUAL(firstPair->car(), valueA.data());
 		ASSERT_EQUAL(listLength(firstPair), 3);
 
-		PairCell *secondPair = datum_cast<PairCell>(firstPair->cdr());
+		PairCell *secondPair = cell_cast<PairCell>(firstPair->cdr());
 		ASSERT_TRUE(secondPair != nullptr);
 		ASSERT_EQUAL(secondPair->car(), valueB.data());
 		ASSERT_EQUAL(listLength(secondPair), 2);
 		
-		PairCell *thirdPair = datum_cast<PairCell>(secondPair->cdr());
+		PairCell *thirdPair = cell_cast<PairCell>(secondPair->cdr());
 		ASSERT_TRUE(thirdPair != nullptr);
 		ASSERT_EQUAL(thirdPair->car(), valueC.data());
 		ASSERT_EQUAL(thirdPair->cdr(), EmptyListCell::instance());
@@ -77,15 +77,15 @@ void testAll(World &world)
 	}
 
 	{
-		DatumCell *improperList = ListElementCell::createList(world, {}, valueA);
+		AnyCell *improperList = ListElementCell::createList(world, {}, valueA);
 
 		ASSERT_TRUE(improperList == valueA.data());
 	}
 	
 	{
-		DatumCell *improperList = ListElementCell::createList(world, {valueA}, valueB);
+		AnyCell *improperList = ListElementCell::createList(world, {valueA}, valueB);
 
-		auto *onlyPair = datum_cast<PairCell>(improperList);
+		auto *onlyPair = cell_cast<PairCell>(improperList);
 		ASSERT_TRUE(onlyPair != nullptr);
 
 		ASSERT_EQUAL(onlyPair->car(), valueA.data());
@@ -94,18 +94,18 @@ void testAll(World &world)
 	}
 	
 	{
-		DatumCell *improperList = ListElementCell::createList(world, {
+		AnyCell *improperList = ListElementCell::createList(world, {
 			valueA,
 			valueB
 		}, valueC);
 		
-		auto *firstPair = datum_cast<PairCell>(improperList);
+		auto *firstPair = cell_cast<PairCell>(improperList);
 		ASSERT_TRUE(firstPair != nullptr);
 
 		ASSERT_EQUAL(firstPair->car(), valueA.data());
 		ASSERT_FALSE(isProperList(firstPair));
 
-		auto secondPair = datum_cast<PairCell>(firstPair->cdr());
+		auto secondPair = cell_cast<PairCell>(firstPair->cdr());
 		ASSERT_TRUE(secondPair != nullptr);
 		
 		ASSERT_EQUAL(secondPair->car(), valueB.data());

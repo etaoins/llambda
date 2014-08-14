@@ -1,5 +1,5 @@
 #include "binding/ProcedureCell.h"
-#include "binding/DatumCell.h"
+#include "binding/AnyCell.h"
 #include "dynamic/State.h"
 #include "dynamic/ParameterProcedureCell.h"
 
@@ -16,9 +16,9 @@ void _lliby_dynamicenv_push(World &world)
 	dynamic::State::pushActiveState(world, nullptr, nullptr);
 }
 
-void _lliby_dynamicenv_set_value(World &world, ProcedureCell *procCell, DatumCell *value)
+void _lliby_dynamicenv_set_value(World &world, ProcedureCell *procCell, AnyCell *value)
 {
-	auto paramCell = datum_cast<ParameterProcedureCell>(procCell);
+	auto paramCell = cell_cast<ParameterProcedureCell>(procCell);
 
 	if (paramCell == nullptr)
 	{

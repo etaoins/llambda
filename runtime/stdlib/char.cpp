@@ -1,4 +1,4 @@
-#include "binding/CharacterCell.h"
+#include "binding/CharCell.h"
 #include "binding/ExactIntegerCell.h"
 #include "binding/BooleanCell.h"
 #include "unicode/UnicodeChar.h"
@@ -8,7 +8,7 @@ using namespace lliby;
 extern "C"
 {
 
-const DatumCell *lliby_digit_value(World &world, UnicodeChar character)
+const AnyCell *lliby_digit_value(World &world, UnicodeChar character)
 {
 	UnicodeChar::DigitValue digitValue = character.digitValue();
 

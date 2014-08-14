@@ -7,7 +7,7 @@
 namespace lliby
 {
 
-class BooleanCell : public PreconstructedValue<DatumCell>
+class BooleanCell : public PreconstructedValue<AnyCell>
 {
 #include "generated/BooleanCellMembers.h"
 public:

@@ -1,7 +1,6 @@
-#include "binding/DatumCell.h"
+#include "binding/AnyCell.h"
 #include "binding/BooleanCell.h"
 #include "binding/ExactIntegerCell.h"
-#include "binding/InexactRationalCell.h"
 
 #include "dynamic/State.h"
 
@@ -12,7 +11,7 @@ using namespace lliby;
 
 namespace
 {
-	int datumToStatusCode(DatumCell *datum)
+	int cellToStatusCode(AnyCell *datum)
 	{
 		if (datum == BooleanCell::trueInstance())
 		{
@@ -24,7 +23,7 @@ namespace
 			// #f is failure
 			return -1;
 		}
-		else if (auto exactInt = datum_cast<ExactIntegerCell>(datum))
+		else if (auto exactInt = cell_cast<ExactIntegerCell>(datum))
 		{
 			// Return the exact integer
 			return exactInt->value();
@@ -38,15 +37,15 @@ namespace
 extern "C"
 {
 
-void lliby_exit(World &world, DatumCell *exitValue)
+void lliby_exit(World &world, AnyCell *exitValue)
 {
 	dynamic::State::popAllStates(world);
-	exit(datumToStatusCode(exitValue));
+	exit(cellToStatusCode(exitValue));
 }
 
-void lliby_emergency_exit(DatumCell *exitValue)
+void lliby_emergency_exit(AnyCell *exitValue)
 {
-	_exit(datumToStatusCode(exitValue));
+	_exit(cellToStatusCode(exitValue));
 }
 
 }

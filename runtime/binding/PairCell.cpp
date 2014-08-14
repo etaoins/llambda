@@ -6,11 +6,11 @@
 namespace lliby
 {
 
-PairCell* PairCell::createInstance(World &world, DatumCell *car, DatumCell *cdr)
+PairCell* PairCell::createInstance(World &world, AnyCell *car, AnyCell *cdr)
 {
 	// Root the car and cdr for the next allocation
-	alloc::DatumRef carRef(world, car);
-	alloc::DatumRef cdrRef(world, cdr);
+	alloc::AnyRef carRef(world, car);
+	alloc::AnyRef cdrRef(world, cdr);
 
 	void *cellPlacement = alloc::allocateCells(world);
 	return new (cellPlacement) PairCell(carRef, cdrRef);

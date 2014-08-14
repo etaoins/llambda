@@ -6,7 +6,7 @@
   (define ref-result (vector-ref typeless-vector typeless-1))
 
   (assert-equal #(1 2 3) (ann typeless-vector <vector>))
-  (assert-equal 1 (ann typeless-1 <integer>))
+  (assert-equal 1 (ann typeless-1 <exact-integer>))
   (assert-equal 2 ref-result)))
 
 (define-test "applying rest arg storage locs constrains their type" (expect-success

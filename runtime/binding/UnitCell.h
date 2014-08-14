@@ -7,7 +7,7 @@
 namespace lliby
 {
 
-class UnitCell : public PreconstructedValue<DatumCell>
+class UnitCell : public PreconstructedValue<AnyCell>
 {
 #include "generated/UnitCellMembers.h"
 public:

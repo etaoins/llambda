@@ -12,8 +12,8 @@ add_library(lliby
 	alloc/cellvisitor.cpp
 	alloc/collector.cpp
 	binding/BytevectorCell.cpp
-	binding/CharacterCell.cpp
-	binding/DatumCell.cpp
+	binding/CharCell.cpp
+	binding/AnyCell.cpp
 	binding/ErrorObjectCell.cpp
 	binding/ListElementCell.cpp
 	binding/PairCell.cpp
@@ -38,7 +38,7 @@ add_library(lliby
 	platform/memory.cpp
 	stdlib/boolean.cpp
 	stdlib/bytevector.cpp
-	stdlib/character.cpp
+	stdlib/char.cpp
 	stdlib/control.cpp
 	stdlib/dynamic.cpp
 	stdlib/eqv.cpp
@@ -111,7 +111,7 @@ set(ALL_TEST_NAMES
 	displaydatumwriter
 	externalformdatumwriter
 	implicitsharing
-	inexactrational
+	flonum
 	listelement
 	properlist
 	sharedbytearray

@@ -69,7 +69,7 @@ private[planner] object PlanProcedureTrampoline {
       val argPairTemp = argListElementValue.toTempValue(vt.AnyPairType, Some(insufficientArgsMessage))(plan, worldPtrTemp)
 
       // Get the car of the pair as the arg's value 
-      val argDatumTemp = ps.CellTemp(ct.DatumCell)
+      val argDatumTemp = ps.CellTemp(ct.AnyCell)
       plan.steps += ps.LoadPairCar(argDatumTemp, argPairTemp)
 
       // Convert it to the expected type
@@ -79,11 +79,11 @@ private[planner] object PlanProcedureTrampoline {
       argTemps += argTemp
 
       // Now load the cdr
-      val argCdrTemp = ps.CellTemp(ct.DatumCell)
+      val argCdrTemp = ps.CellTemp(ct.AnyCell)
       plan.steps += ps.LoadPairCdr(argCdrTemp, argPairTemp)
 
-      // We know this is a list element but its type will be DatumCell
-      new iv.CellValue(vt.ProperListType(vt.AnySchemeType), BoxedValue(ct.DatumCell, argCdrTemp))
+      // We know this is a list element but its type will be AnyCell
+      new iv.CellValue(vt.ProperListType(vt.AnySchemeType), BoxedValue(ct.AnyCell, argCdrTemp))
     }
 
     signature.restArgOpt match {

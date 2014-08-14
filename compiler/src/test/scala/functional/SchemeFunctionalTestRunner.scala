@@ -15,7 +15,7 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
   private val testImportDecl = datum"(import (llambda nfi) (scheme base) (llambda test-util))"
 
   // Our special version of (write) that generates less code
-  private val lastValueWriter = datum"""(native-function "_lliby_write_stdout" (<datum-cell>))"""
+  private val lastValueWriter = datum"""(native-function "_lliby_write_stdout" (<any>))"""
 
   private val AbnormalExitCodes = List(
     // SIGILL

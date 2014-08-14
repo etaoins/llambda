@@ -9,7 +9,7 @@ namespace lliby
 class DatumWriter
 {
 public:
-	virtual void render(const DatumCell *datum) = 0; 
+	virtual void render(const AnyCell *datum) = 0; 
 };
 
 }

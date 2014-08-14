@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#include "binding/DatumCell.h"
+#include "binding/AnyCell.h"
 
 namespace lliby
 {
@@ -17,7 +17,7 @@ struct ShadowStackEntry
 {
 	ShadowStackEntry *next;
 	std::uint64_t cellCount;
-	DatumCell* roots[];
+	AnyCell* roots[];
 };
 
 }

@@ -40,7 +40,7 @@ object CadrProcPlanner extends ReportProcPlanner {
           vt.AnySchemeType
       }
 
-      val resultTemp = ps.CellTemp(ct.DatumCell)
+      val resultTemp = ps.CellTemp(ct.AnyCell)
 
       if (reportName == "car") {
         plan.steps += ps.LoadPairCar(resultTemp, pairTemp)
@@ -49,7 +49,7 @@ object CadrProcPlanner extends ReportProcPlanner {
         plan.steps += ps.LoadPairCdr(resultTemp, pairTemp)
       }
 
-      val resultValue = new iv.CellValue(resultType, BoxedValue(ct.DatumCell, resultTemp))
+      val resultValue = new iv.CellValue(resultType, BoxedValue(ct.AnyCell, resultTemp))
 
       Some(resultValue)
 

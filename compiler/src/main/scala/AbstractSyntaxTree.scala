@@ -48,13 +48,13 @@ case class IntegerLiteral(value : Long) extends NumberLiteral {
   override def toString = value.toString
 }
 
-case class RationalLiteral(value : Double) extends NumberLiteral {
-  val schemeType = vt.InexactRationalType
+case class FlonumLiteral(value : Double) extends NumberLiteral {
+  val schemeType = vt.FlonumType
   
   // Consider all NaN literals to be equal
   // This is different from numeric equality which indeed doesn't make sense for NaNs
   override def equals(other : Any) : Boolean = other match {
-    case RationalLiteral(otherValue) =>
+    case FlonumLiteral(otherValue) =>
       if (otherValue.isNaN) {
         value.isNaN
       }
@@ -75,15 +75,15 @@ case class RationalLiteral(value : Double) extends NumberLiteral {
 }
 
 object PositiveInfinityLiteral {
-  def apply() = RationalLiteral(Double.PositiveInfinity)
+  def apply() = FlonumLiteral(Double.PositiveInfinity)
 }
 
 object NegativeInfinityLiteral {
-  def apply() = RationalLiteral(Double.NegativeInfinity)
+  def apply() = FlonumLiteral(Double.NegativeInfinity)
 }
 
 object NaNLiteral {
-  def apply() =  RationalLiteral(Double.NaN)
+  def apply() =  FlonumLiteral(Double.NaN)
 }
 
 case class Symbol(name : String) extends Leaf {
@@ -176,7 +176,7 @@ case class Bytevector(elements : Vector[Short]) extends NonSymbolLeaf {
 }
 
 case class CharLiteral(value : Char) extends NonSymbolLeaf {
-  val schemeType = vt.CharacterType
+  val schemeType = vt.CharType
 
   override def toString = value match {
     case 0    => """#\null"""

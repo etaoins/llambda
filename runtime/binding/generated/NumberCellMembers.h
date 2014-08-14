@@ -3,21 +3,13 @@
  ************************************************************/
 
 public:
-	UnicodeChar unicodeChar() const
-	{
-		return m_unicodeChar;
-	}
-
-public:
 	static bool typeIdIsTypeOrSubtype(CellTypeId typeId)
 	{
-		return typeId == CellTypeId::Character;
+		return (typeId == CellTypeId::ExactInteger) || (typeId == CellTypeId::Flonum);
 	}
 
-	static bool isInstance(const DatumCell *datum)
+	static bool isInstance(const AnyCell *cell)
 	{
-		return typeIdIsTypeOrSubtype(datum->typeId());
+		return typeIdIsTypeOrSubtype(cell->typeId());
 	}
 
-private:
-	UnicodeChar m_unicodeChar;

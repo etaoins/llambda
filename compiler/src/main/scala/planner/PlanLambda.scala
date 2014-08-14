@@ -257,7 +257,7 @@ private[planner] object PlanLambda {
     }
     else {
       val returnTypeOpt = if (ContainsImmediateReturn(body)) {
-        // Return a DatumCell
+        // Return an AnyCell
         // XXX: We can be more clever here and try to find a common return type across all returns
         Some(vt.AnySchemeType)
       }

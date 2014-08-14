@@ -164,7 +164,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   
   test("define typed variable") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
-    val expressions = bodyFor("(define: a : <exact-integer-cell> 2)")(scope)
+    val expressions = bodyFor("(define: a : <exact-integer> 2)")(scope)
 
     inside(scope.get("a").value) {
       case storageLoc : StorageLocation =>
@@ -181,7 +181,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   test("define type declared variable") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
     val expressions = bodyFor(
-      """(: a <exact-integer-cell>)
+      """(: a <exact-integer>)
          (define a 2)""")(scope)
 
     inside(scope.get("a").value) {
@@ -197,8 +197,8 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   test("multiple compatible type declarations are allowed") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
     val expressions = bodyFor(
-      """(: a <exact-integer-cell>)
-         (: a <exact-integer-cell>)
+      """(: a <exact-integer>)
+         (: a <exact-integer>)
          (define a 2)""")(scope)
 
     inside(scope.get("a").value) {
@@ -215,7 +215,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
     intercept[UnboundVariableException] {
-      bodyFor("""(: a <exact-integer-cell>)""")(scope)
+      bodyFor("""(: a <exact-integer>)""")(scope)
     }
   }
 
@@ -225,7 +225,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     intercept[BadSpecialFormException] {
       bodyFor(
         """(define a 1)
-           (: a <exact-integer-cell>)""")(scope)
+           (: a <exact-integer>)""")(scope)
     }
   }
   
@@ -316,9 +316,9 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
         assert(body === et.Literal(ast.BooleanLiteral(true)))
     }
 
-    inside(exprFor("(lambda: ((x : <numeric-cell>)) x)")(nfiScope)) {
+    inside(exprFor("(lambda: ((x : <number>)) x)")(nfiScope)) {
       case et.Lambda(List(argX), None, body, _) =>
-        assert(argX.schemeType === vt.NumericType)
+        assert(argX.schemeType === vt.NumberType)
         assert(body === et.VarRef(argX))
     }
     
@@ -328,7 +328,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
         assert(body === et.VarRef(restArg))
     }
 
-    inside(exprFor("(lambda: ((x : <exact-integer-cell>) (y : <string-cell>) . z) x y z)")(nfiScope)) {
+    inside(exprFor("(lambda: ((x : <exact-integer>) (y : <string>) . z) x y z)")(nfiScope)) {
       case et.Lambda(List(argX, argY), Some(restArg), body, _) =>
         assert(argX.schemeType === vt.ExactIntegerType)
         assert(argY.schemeType === vt.StringType)
@@ -406,7 +406,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   test("typed one arg lambda shorthand") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
-    val expr = exprFor("(define: (return-true (unused-param : <symbol-cell>)) #t)")(scope)
+    val expr = exprFor("(define: (return-true (unused-param : <symbol>)) #t)")(scope)
     val procLoc = scope.get("return-true").value
 
     inside(expr) {
@@ -438,7 +438,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   test("typed fixed and rest arg lambda shorthand") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
     
-    val expr = exprFor("(define: (return-false (some : <boolean-cell>) . rest) #f)")(scope)
+    val expr = exprFor("(define: (return-false (some : <boolean>) . rest) #f)")(scope)
     val procLoc = scope.get("return-false").value
 
     inside(expr) {
@@ -523,7 +523,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val expressions = bodyFor(
       """(define x 'foo)
          (lambda ()
-           (: x <exact-integer-cell>)
+           (: x <exact-integer>)
            (define x 2))"""
     )(scope) 
 
@@ -541,7 +541,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     val expressions = bodyFor(
       """(lambda ()
-         (: x <exact-integer-cell>)
+         (: x <exact-integer>)
          (define x 2))"""
     )(scope) 
 
@@ -557,8 +557,8 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     intercept[BadSpecialFormException] {
       bodyFor(
         """(lambda ()
-           (define: x : <inexact-rational-cell> 4.0)
-           (: x <exact-integer-cell>))"""
+           (define: x : <flonum> 4.0)
+           (: x <exact-integer>))"""
       )(scope) 
     }
   }
@@ -568,8 +568,8 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     val expressions = bodyFor(
       """(lambda ()
-         (: x <exact-integer-cell>)
-         (define: x : <exact-integer-cell> 2))"""
+         (: x <exact-integer>)
+         (define: x : <exact-integer> 2))"""
     )(scope) 
 
     inside(expressions) {
@@ -584,8 +584,8 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     intercept[BadSpecialFormException] {
       bodyFor(
         """(lambda ()
-           (: x <exact-integer-cell>)
-           (define: x : <inexact-rational-cell> 2))"""
+           (: x <exact-integer>)
+           (define: x : <flonum> 2))"""
       )(scope) 
     }
   }
@@ -596,7 +596,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     intercept[UnboundVariableException] {
       bodyFor(
         """(lambda ()
-           (: x <exact-integer-cell>))"""
+           (: x <exact-integer>))"""
       )(scope) 
     }
   }
@@ -606,7 +606,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     intercept[UnboundVariableException] {
       bodyFor(
-        """(: x <exact-integer-cell>)
+        """(: x <exact-integer>)
            (lambda ()
            (define x 2))"""
       )(scope) 
@@ -690,7 +690,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   }
   
   test("cast expression types") {
-    assert(exprFor("(cast #t <boolean-cell>)")(nfiScope) === 
+    assert(exprFor("(cast #t <boolean>)")(nfiScope) === 
       et.Cast(et.Literal(ast.BooleanLiteral(true)), vt.BooleanType, false)
     )
   
@@ -701,7 +701,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     
     intercept[BadSpecialFormException] {
       // Too many args
-      exprFor("(cast #t <datum-cell> <string-cell>)")(nfiScope)
+      exprFor("(cast #t <any> <string>)")(nfiScope)
     }
     
     intercept[UnboundVariableException] {
@@ -711,12 +711,12 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     
     intercept[BadSpecialFormException] {
       // Native type
-      exprFor("(cast #t <int64>)")(nfiScope)
+      exprFor("(cast #t <native-int64>)")(nfiScope)
     }
   }
   
   test("annotation expression types") {
-    assert(exprFor("(ann #t <boolean-cell>)")(nfiScope) === 
+    assert(exprFor("(ann #t <boolean>)")(nfiScope) === 
       et.Cast(et.Literal(ast.BooleanLiteral(true)), vt.BooleanType, true)
     )
   
@@ -727,7 +727,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     
     intercept[BadSpecialFormException] {
       // Too many args
-      exprFor("(ann #t <datum-cell> <string-cell>)")(nfiScope)
+      exprFor("(ann #t <any> <string>)")(nfiScope)
     }
     
     intercept[UnboundVariableException] {
@@ -737,7 +737,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     
     intercept[BadSpecialFormException] {
       // Native type
-      exprFor("(ann #t <int64>)")(nfiScope)
+      exprFor("(ann #t <native-int64>)")(nfiScope)
     }
   }
   
@@ -843,7 +843,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   }
 
   test("creating type predicate from a Scheme type") {
-    assert(exprFor("(make-predicate <symbol-cell>)")(nfiScope) === 
+    assert(exprFor("(make-predicate <symbol>)")(nfiScope) === 
       et.TypePredicate(vt.SymbolType)
     )
   }

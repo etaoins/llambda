@@ -47,12 +47,12 @@
 
 (define-test "typed procedure returning its only argument" (expect 7
   (import (llambda typed))
-	(define: (return-value (value : <integer>)) value)
+	(define: (return-value (value : <exact-integer>)) value)
 	(return-value 7)))
 
 (define-test "typed procedure invoked with wrong type fails" (expect-failure
   (import (llambda typed))
-	(define: (return-value (value : <integer>)) value)
+	(define: (return-value (value : <exact-integer>)) value)
 	(return-value 'symbol)))
 
 (define-test "untyped procedure adding its arguments" (expect 7
@@ -61,7 +61,7 @@
 
 (define-test "typed procedure adding its arguments" (expect 7
   (import (llambda typed))
-	(define: (add-two-values (a : <integer>) (b : <integer>)) (+ a b))
+	(define: (add-two-values (a : <exact-integer>) (b : <exact-integer>)) (+ a b))
 	(add-two-values 4 3)))
 
 (define-test "procedure mutating args does not affect caller" (expect 7
@@ -116,7 +116,7 @@
   (import (llambda typed))
 
 	(define (create-counter)
-	  (define: value : <integer> 0)
+	  (define: value : <exact-integer> 0)
 	  (lambda ()
 		 (set! value (+ value 1))
 		 value))

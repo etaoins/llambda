@@ -34,6 +34,6 @@ case class CellClassNames(definitionName : String) {
   lazy val scalaValueTypeName = definitionName + "Type"
   
   /** Name for the Scheme type */
-  lazy val schemeName = "<" + definitionName.replaceAll("""(?<!^)([A-Z]+)""", """-$1""").toLowerCase + "-cell>"
+  lazy val schemeName = "<" + definitionName.replaceAll("""(?<!^)([A-Z]+)""", """-$1""").toLowerCase + ">"
 }
 

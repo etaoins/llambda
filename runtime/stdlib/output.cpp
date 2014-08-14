@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "binding/DatumCell.h"
+#include "binding/AnyCell.h"
 #include "binding/PortCell.h"
 #include "writer/DisplayDatumWriter.h"
 
@@ -11,7 +11,7 @@ using namespace lliby;
 extern "C"
 {
 
-void lliby_write(World &world, DatumCell *datum, PortCell *port)
+void lliby_write(World &world, AnyCell *datum, PortCell *port)
 {
 	std::ostream *portStream;
 
@@ -24,7 +24,7 @@ void lliby_write(World &world, DatumCell *datum, PortCell *port)
 	writer.render(datum);
 }
 
-void lliby_display(World &world, DatumCell *datum, PortCell *port)
+void lliby_display(World &world, AnyCell *datum, PortCell *port)
 {
 	std::ostream *portStream;
 	

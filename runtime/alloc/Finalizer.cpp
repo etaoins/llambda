@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include "binding/DatumCell.h"
+#include "binding/AnyCell.h"
 
 #include "alloc/AllocCell.h"
 #include "alloc/MemoryBlock.h"

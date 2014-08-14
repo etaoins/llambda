@@ -25,8 +25,8 @@ public:
 		T* operator*() const
 		{
 			// ProperList verifies all the cars are of type T in its constructor
-			auto pairHead = datum_unchecked_cast<const PairCell>(m_head);
-			return datum_unchecked_cast<T>(pairHead->car());
+			auto pairHead = cell_unchecked_cast<const PairCell>(m_head);
+			return cell_unchecked_cast<T>(pairHead->car());
 		}
 
 		bool operator==(const ConstIterator &other) const
@@ -41,8 +41,8 @@ public:
 
 		ConstIterator& operator++()
 		{
-			auto pairHead = datum_unchecked_cast<const PairCell>(m_head);
-			m_head = datum_unchecked_cast<const ListElementCell>(pairHead->cdr());
+			auto pairHead = cell_unchecked_cast<const PairCell>(m_head);
+			m_head = cell_unchecked_cast<const ListElementCell>(pairHead->cdr());
 
 			return *this;
 		}
@@ -70,9 +70,9 @@ public:
 		m_length(0)
 	{
 		// This list has already been verified by Scheme; we just need to find its length
-		const DatumCell *datum = head;
+		const AnyCell *cell = head;
 			
-		while(auto pair = datum_cast<PairCell>(datum))
+		while(auto pair = cell_cast<PairCell>(cell))
 		{
 			if (pair->listLength() != 0)
 			{
@@ -82,7 +82,7 @@ public:
 			}
 
 			// No length hint, keep checking 
-			datum = pair->cdr();
+			cell = pair->cdr();
 			m_length++;
 		}
 	}
@@ -93,23 +93,23 @@ public:
 		m_length(0)
 	{
 		// Manually verify the list
-		const DatumCell *datum = head;
+		const AnyCell *cell = head;
 		size_type length = 0;
 			
-		while(auto pair = datum_cast<PairCell>(datum))
+		while(auto pair = cell_cast<PairCell>(cell))
 		{
 			length++;
 			
-			if (datum_cast<T>(pair->car()) == nullptr)
+			if (cell_cast<T>(pair->car()) == nullptr)
 			{
 				// Wrong element type
 				return;
 			}
 
-			datum = pair->cdr();
+			cell = pair->cdr();
 		}
 
-		if (datum != EmptyListCell::instance())
+		if (cell != EmptyListCell::instance())
 		{
 			// Not a proper list
 			return;

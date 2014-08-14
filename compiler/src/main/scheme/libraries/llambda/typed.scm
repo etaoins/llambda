@@ -7,7 +7,7 @@
 
   ; Mutable pairs make handling (Pair) and (Listof) very complex
   ; For example, consider the following code:
-  ; (define: typed-pair : (Pair <symbol> <integer>) '(foo . 5))
+  ; (define: typed-pair : (Pair <symbol> <exact-integer>) '(foo . 5))
   ; (define: untyped-pair : <pair> typed-pair)
   ; (set-car! untyped-pair #f)
   ; 
@@ -16,29 +16,16 @@
     (export Pair Listof)))
 
   ; Export our type names
-  (export <any> <list-element> <pair> <empty-list> <string> <symbol> <boolean> <number> <integer> <flonum> <char>
+  (export <any> <list-element> <pair> <empty-list> <string> <symbol> <boolean> <number> <exact-integer> <flonum> <char>
           <vector> <bytevector> <procedure> <port>)
 
   ; These are new macros
   (export define-predicate let: let*: letrec*: letrec:)
+  
+  (begin
+    (define-type <pair> (Pair <any> <any>)))
 
   (begin 
-    (define-type <any> <datum-cell>)
-    (define-type <list-element> <list-element-cell>)
-    (define-type <pair> (Pair <any> <any>))
-    (define-type <empty-list> <empty-list-cell>)
-    (define-type <string> <string-cell>)
-    (define-type <symbol> <symbol-cell>)
-    (define-type <boolean> <boolean-cell>)
-    (define-type <number> <numeric-cell>)
-    (define-type <integer> <exact-integer-cell>)
-    (define-type <flonum> <inexact-rational-cell>)
-    (define-type <char> <character-cell>)
-    (define-type <vector> <vector-cell>)
-    (define-type <bytevector> <bytevector-cell>)
-    (define-type <procedure> <procedure-cell>)
-    (define-type <port> <port-cell>)
-
     (define-syntax define-predicate
       (syntax-rules ()
                     ((define-predicate name type)

@@ -1,14 +1,14 @@
 #ifndef _LLIBY_BINDING_BYTEVECTORCELL_H
 #define _LLIBY_BINDING_BYTEVECTORCELL_H
 
-#include "DatumCell.h"
+#include "AnyCell.h"
 #include <list>
 #include <cassert>
 
 namespace lliby
 {
 
-class BytevectorCell : public DatumCell
+class BytevectorCell : public AnyCell
 {
 #include "generated/BytevectorCellMembers.h"
 public:
@@ -73,7 +73,7 @@ public:
 
 protected:
 	BytevectorCell(SharedByteArray *byteArray, std::uint32_t length) :
-		DatumCell(CellTypeId::Bytevector),
+		AnyCell(CellTypeId::Bytevector),
 		m_length(length),
 		m_byteArray(byteArray)
 	{

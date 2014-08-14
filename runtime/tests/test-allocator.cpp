@@ -7,11 +7,11 @@
 #include "stubdefinitions.h"
 
 #include "binding/ExactIntegerCell.h"
-#include "binding/InexactRationalCell.h"
+#include "binding/FlonumCell.h"
 #include "binding/StringCell.h"
 #include "binding/SymbolCell.h"
 #include "binding/BytevectorCell.h"
-#include "binding/CharacterCell.h"
+#include "binding/CharCell.h"
 #include "binding/PairCell.h"
 #include "binding/EmptyListCell.h"
 #include "binding/VectorCell.h"
@@ -230,9 +230,9 @@ void testRecordLikeGc(World &world)
 {
 	struct CustomRecordLikeData
 	{
-		DatumCell *cell0;
+		AnyCell *cell0;
 		std::uint32_t native;
-		DatumCell *cell1;
+		AnyCell *cell1;
 	};
 
 	// Register the record class
@@ -289,7 +289,7 @@ void testRecordLikeGc(World &world)
 
 void createListOfSize(World &world, size_t cellCount)
 {
-	std::vector<DatumCell*> falseCells;
+	std::vector<AnyCell*> falseCells;
 	falseCells.resize(cellCount);
 
 	for(size_t i = 0; i < cellCount; i++)
@@ -340,9 +340,9 @@ void testAll(World &world)
 	});
 	
 	// Test inexact rationals
-	testNonRecursiveGc<InexactRationalCell>(world, [&world] ()
+	testNonRecursiveGc<FlonumCell>(world, [&world] ()
 	{
-		return InexactRationalCell::fromValue(world, 5.0);
+		return FlonumCell::fromValue(world, 5.0);
 	});
 	
 	// Test inline symbols
@@ -376,9 +376,9 @@ void testAll(World &world)
 	});
 	
 	// Test characters
-	testNonRecursiveGc<CharacterCell>(world, [&world] ()
+	testNonRecursiveGc<CharCell>(world, [&world] ()
 	{
-		return CharacterCell::createInstance(world, UnicodeChar(0x61));
+		return CharCell::createInstance(world, UnicodeChar(0x61));
 	});
 	
 	// Test pairs

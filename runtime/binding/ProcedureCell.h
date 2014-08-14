@@ -13,7 +13,7 @@ class ProcedureCell : public RecordLikeCell
 public:
 	static ProcedureCell* createInstance(World &World, std::uint32_t recordClassId, bool dataIsInline, void *recordData, ProcedureEntryPoint entryPoint);
 
-	DatumCell* apply(World &world, ListElementCell *arguments);
+	AnyCell* apply(World &world, ListElementCell *arguments);
 
 	/**
 	 * Indicates if this procedure captures variables from its enclosing scope

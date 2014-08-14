@@ -5,17 +5,17 @@
 #include <iomanip>
 #include <unordered_map>
 
-#include "binding/DatumCell.h"
+#include "binding/AnyCell.h"
 #include "binding/UnitCell.h"
 #include "binding/BooleanCell.h"
 #include "binding/ExactIntegerCell.h"
-#include "binding/InexactRationalCell.h"
+#include "binding/FlonumCell.h"
 #include "binding/SymbolCell.h"
 #include "binding/StringCell.h"
 #include "binding/PairCell.h"
 #include "binding/BytevectorCell.h"
 #include "binding/VectorCell.h"
-#include "binding/CharacterCell.h"
+#include "binding/CharCell.h"
 #include "binding/EmptyListCell.h"
 #include "binding/ProcedureCell.h"
 #include "binding/RecordCell.h"
@@ -27,65 +27,65 @@
 namespace lliby
 {
 
-void ExternalFormDatumWriter::render(const DatumCell *datum)
+void ExternalFormDatumWriter::render(const AnyCell *datum)
 {
-	if (auto value = datum_cast<UnitCell>(datum))
+	if (auto value = cell_cast<UnitCell>(datum))
 	{
 		renderUnit(value);
 	}
-	else if (auto value = datum_cast<EmptyListCell>(datum))
+	else if (auto value = cell_cast<EmptyListCell>(datum))
 	{
 		renderEmptyList(value);
 	}
-	else if (auto value = datum_cast<BooleanCell>(datum))
+	else if (auto value = cell_cast<BooleanCell>(datum))
 	{
 		renderBoolean(value);
 	}
-	else if (auto value = datum_cast<ExactIntegerCell>(datum))
+	else if (auto value = cell_cast<ExactIntegerCell>(datum))
 	{
 		renderExactInteger(value);
 	}
-	else if (auto value = datum_cast<InexactRationalCell>(datum))
+	else if (auto value = cell_cast<FlonumCell>(datum))
 	{
-		renderInexactRational(value);
+		renderFlonum(value);
 	}
-	else if (auto value = datum_cast<SymbolCell>(datum))
+	else if (auto value = cell_cast<SymbolCell>(datum))
 	{
 		renderStringLike(value->constUtf8Data(), value->byteLength(), static_cast<std::uint8_t>('|'), false);
 	}
-	else if (auto value = datum_cast<StringCell>(datum))
+	else if (auto value = cell_cast<StringCell>(datum))
 	{
 		renderStringLike(value->constUtf8Data(), value->byteLength(), static_cast<std::uint8_t>('"'), true);
 	}
-	else if (auto value = datum_cast<PairCell>(datum))
+	else if (auto value = cell_cast<PairCell>(datum))
 	{
 		renderPair(value);
 	}
-	else if (auto value = datum_cast<BytevectorCell>(datum))
+	else if (auto value = cell_cast<BytevectorCell>(datum))
 	{
 		renderBytevector(value);
 	}
-	else if (auto value = datum_cast<VectorCell>(datum))
+	else if (auto value = cell_cast<VectorCell>(datum))
 	{
 		renderVector(value);
 	}
-	else if (auto value = datum_cast<ProcedureCell>(datum))
+	else if (auto value = cell_cast<ProcedureCell>(datum))
 	{
 		renderProcedure(value);
 	}
-	else if (auto value = datum_cast<CharacterCell>(datum))
+	else if (auto value = cell_cast<CharCell>(datum))
 	{
 		renderCharacter(value);
 	}
-	else if (auto value = datum_cast<RecordCell>(datum))
+	else if (auto value = cell_cast<RecordCell>(datum))
 	{
 		renderRecord(value);
 	}
-	else if (auto errorObj = datum_cast<ErrorObjectCell>(datum))
+	else if (auto errorObj = cell_cast<ErrorObjectCell>(datum))
 	{
 		renderErrorObject(errorObj);
 	}
-	else if (auto port = datum_cast<PortCell>(datum))
+	else if (auto port = cell_cast<PortCell>(datum))
 	{
 		renderPort(port);
 	}
@@ -122,7 +122,7 @@ void ExternalFormDatumWriter::renderExactInteger(const ExactIntegerCell *value)
 	m_outStream << value->value();
 }
 
-void ExternalFormDatumWriter::renderInexactRational(const InexactRationalCell *value)
+void ExternalFormDatumWriter::renderFlonum(const FlonumCell *value)
 {
 	if (value->isNaN())
 	{
@@ -237,7 +237,7 @@ void ExternalFormDatumWriter::renderPair(const PairCell *value, bool inList)
 	{
 		m_outStream << ")";
 	}
-	else if (auto rest = datum_cast<PairCell>(value->cdr()))
+	else if (auto rest = cell_cast<PairCell>(value->cdr()))
 	{
 		m_outStream << " ";
 		renderPair(rest, true);
@@ -312,7 +312,7 @@ void ExternalFormDatumWriter::renderProcedure(const ProcedureCell *proc)
 
 }
 
-void ExternalFormDatumWriter::renderCharacter(const CharacterCell *value)
+void ExternalFormDatumWriter::renderCharacter(const CharCell *value)
 {
 	std::int32_t codePoint = value->unicodeChar().codePoint();
 	static const std::unordered_map<std::uint32_t, const char *> specialChars = {

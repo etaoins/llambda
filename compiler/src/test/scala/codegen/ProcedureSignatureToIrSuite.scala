@@ -90,25 +90,25 @@ class ProcedureSignatureToIrSuite extends FunSuite {
     ))
   }
   
-  test("function taking world, self, two numerics, rest arg returning rational") {
+  test("function taking world, self, two numbers, rest arg returning rational") {
     val procSignature = ProcedureSignature(
       hasWorldArg=true,
       hasSelfArg=true,
-      fixedArgs=List(vt.NumericType, vt.NumericType),
+      fixedArgs=List(vt.NumberType, vt.NumberType),
       restArgOpt=Some(vt.ExactIntegerType),
-      returnType=Some(vt.InexactRationalType),
+      returnType=Some(vt.FlonumType),
       attributes=Set()
     )
 
     val irSignature = ProcedureSignatureToIr(procSignature)
 
     assert(irSignature === IrSignature(
-      result=Result(PointerType(ct.InexactRationalCell.irType)),
+      result=Result(PointerType(ct.FlonumCell.irType)),
       arguments=List(
         Argument(PointerType(WorldValue.irType)),
         Argument(PointerType(ct.ProcedureCell.irType)),
-        Argument(PointerType(ct.NumericCell.irType)),
-        Argument(PointerType(ct.NumericCell.irType)), 
+        Argument(PointerType(ct.NumberCell.irType)),
+        Argument(PointerType(ct.NumberCell.irType)), 
         Argument(PointerType(ct.ListElementCell.irType))
       )
     ))
@@ -118,7 +118,7 @@ class ProcedureSignatureToIrSuite extends FunSuite {
     val irSignature = ProcedureSignatureToIr(AdaptedProcedureSignature)
 
     assert(irSignature === IrSignature(
-      result=Result(PointerType(ct.DatumCell.irType)),
+      result=Result(PointerType(ct.AnyCell.irType)),
       arguments=List(
         Argument(PointerType(WorldValue.irType)),
         Argument(PointerType(ct.ProcedureCell.irType)),

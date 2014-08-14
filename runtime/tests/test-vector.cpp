@@ -111,14 +111,14 @@ void testCopy(World &world)
 
 		ASSERT_EQUAL(wholeCopy->length(), 5);
 
-		ASSERT_EQUAL(memcmp(wholeCopy->elements(), testVector->elements(), 5 * sizeof(DatumCell*)), 0);
+		ASSERT_EQUAL(memcmp(wholeCopy->elements(), testVector->elements(), 5 * sizeof(AnyCell*)), 0);
 	}
 	
 	{
 		VectorCell *explicitWholeCopy = testVector->copy(world, 0, 5);
 
 		ASSERT_EQUAL(explicitWholeCopy->length(), 5);
-		ASSERT_EQUAL(memcmp(explicitWholeCopy->elements(), testVector->elements(), 5 * sizeof(DatumCell*)), 0);
+		ASSERT_EQUAL(memcmp(explicitWholeCopy->elements(), testVector->elements(), 5 * sizeof(AnyCell*)), 0);
 	}
 	
 	{
@@ -154,9 +154,9 @@ void testReplace(World &world)
 		fromVector->setElementAt(i, newString);
 	}
 	
-	DatumCell *destElements[5] = {nullptr};
+	AnyCell *destElements[5] = {nullptr};
 	// We have to make sure these are rooted while we build them
-	alloc::DatumRefRange destRoot(world, destElements, 5);
+	alloc::AnyRefRange destRoot(world, destElements, 5);
 
 	for(unsigned int i = 0; i < 5; i++)
 	{

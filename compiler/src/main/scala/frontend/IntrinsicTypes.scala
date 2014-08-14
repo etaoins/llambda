@@ -24,12 +24,12 @@ object IntrinsicTypes {
     }).toMap ++
     // Type aliases
     Map(
-      ("<int>"     -> targetPlatform.intType),
-      ("<long>"    -> targetPlatform.longType),
-      ("<ushort>"  -> targetPlatform.ushortType),
-      ("<uint>"    -> targetPlatform.uintType),
-      ("<size_t>"  -> targetPlatform.sizeType),
-      ("<wchar_t>" -> targetPlatform.wcharType)
+      ("<native-int>"     -> targetPlatform.intType),
+      ("<native-long>"    -> targetPlatform.longType),
+      ("<native-ushort>"  -> targetPlatform.ushortType),
+      ("<native-uint>"    -> targetPlatform.uintType),
+      ("<native-size_t>"  -> targetPlatform.sizeType),
+      ("<native-wchar_t>" -> targetPlatform.wcharType)
     ) ++ vt.IntrinsicSchemeTypes() +
-    ("<datum-cell>" -> vt.AnySchemeType)
+    ("<any>" -> vt.AnySchemeType)
 }

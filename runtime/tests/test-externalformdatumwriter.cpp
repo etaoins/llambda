@@ -9,14 +9,14 @@
 #include "binding/EmptyListCell.h"
 #include "binding/BooleanCell.h"
 #include "binding/ExactIntegerCell.h"
-#include "binding/InexactRationalCell.h"
+#include "binding/FlonumCell.h"
 #include "binding/StringCell.h"
 #include "binding/SymbolCell.h"
 #include "binding/PairCell.h"
 #include "binding/BytevectorCell.h"
 #include "binding/VectorCell.h"
 #include "binding/ProcedureCell.h"
-#include "binding/CharacterCell.h"
+#include "binding/CharCell.h"
 #include "binding/RecordCell.h"
 #include "binding/ErrorObjectCell.h"
 #include "binding/PortCell.h"
@@ -29,7 +29,7 @@ namespace
 {
 using namespace lliby;
 
-std::string externalFormFor(const DatumCell *datum)
+std::string externalFormFor(const AnyCell *datum)
 {
 	std::ostringstream outputStream;
 
@@ -39,7 +39,7 @@ std::string externalFormFor(const DatumCell *datum)
 	return outputStream.str();
 }
 
-void assertForm(const DatumCell *datum, std::string expected)
+void assertForm(const AnyCell *datum, std::string expected)
 {
 	ASSERT_EQUAL(externalFormFor(datum), expected);
 }
@@ -77,19 +77,19 @@ void testExactInteger(World &world)
 	assertForm(ExactIntegerCell::fromValue(world,-31337), "-31337");
 }
 
-void testInexactRational(World &world)
+void testFlonum(World &world)
 {
-	assertForm(InexactRationalCell::fromValue(world, 0.0), "0.0");
+	assertForm(FlonumCell::fromValue(world, 0.0), "0.0");
 
-	assertForm(InexactRationalCell::fromValue(world, 12.5), "12.5");
-	assertForm(InexactRationalCell::fromValue(world, -4.5), "-4.5");
+	assertForm(FlonumCell::fromValue(world, 12.5), "12.5");
+	assertForm(FlonumCell::fromValue(world, -4.5), "-4.5");
 
-	assertForm(InexactRationalCell::fromValue(world, 100.0), "100.0");
-	assertForm(InexactRationalCell::fromValue(world, -500.0), "-500.0");
+	assertForm(FlonumCell::fromValue(world, 100.0), "100.0");
+	assertForm(FlonumCell::fromValue(world, -500.0), "-500.0");
 
-	assertForm(InexactRationalCell::NaN(world), "+nan.0");
-	assertForm(InexactRationalCell::positiveInfinity(world), "+inf.0");
-	assertForm(InexactRationalCell::negativeInfinity(world), "-inf.0");
+	assertForm(FlonumCell::NaN(world), "+nan.0");
+	assertForm(FlonumCell::positiveInfinity(world), "+inf.0");
+	assertForm(FlonumCell::negativeInfinity(world), "-inf.0");
 }
 
 void testSymbol(World &world)
@@ -130,8 +130,8 @@ void testPair(World &world)
 	assertForm(PairCell::createList(world, {valueA, valueB}, valueC), "(A B . C)");
 
 	// Create a  nested list
-	DatumCell *innerList = PairCell::createList(world, {valueA, valueB}, valueC);
-	DatumCell *outerList = PairCell::createProperList(world, {valueA, valueB, valueC, innerList});
+	AnyCell *innerList = PairCell::createList(world, {valueA, valueB}, valueC);
+	AnyCell *outerList = PairCell::createProperList(world, {valueA, valueB, valueC, innerList});
 	assertForm(outerList, "(A B C (A B . C))");
 }
 
@@ -185,20 +185,20 @@ void testProcedure(World &world)
 
 void testCharacter(World &world)
 {
-	assertForm(CharacterCell::createInstance(world, UnicodeChar(0x07)), "#\\alarm");
-	assertForm(CharacterCell::createInstance(world, UnicodeChar(0x08)), "#\\backspace");
-	assertForm(CharacterCell::createInstance(world, UnicodeChar(0x7f)), "#\\delete");
-	assertForm(CharacterCell::createInstance(world, UnicodeChar(0x1b)), "#\\escape");
-	assertForm(CharacterCell::createInstance(world, UnicodeChar(0x0a)), "#\\newline");
-	assertForm(CharacterCell::createInstance(world, UnicodeChar(0x00)), "#\\null");
-	assertForm(CharacterCell::createInstance(world, UnicodeChar(0x0d)), "#\\return");
-	assertForm(CharacterCell::createInstance(world, UnicodeChar(0x20)), "#\\space");
-	assertForm(CharacterCell::createInstance(world, UnicodeChar(0x09)), "#\\tab");
-	assertForm(CharacterCell::createInstance(world, UnicodeChar('A')), "#\\A");
-	assertForm(CharacterCell::createInstance(world, UnicodeChar('a')), "#\\a");
-	assertForm(CharacterCell::createInstance(world, UnicodeChar('1')), "#\\1");
-	assertForm(CharacterCell::createInstance(world, UnicodeChar(')')), "#\\)");
-	assertForm(CharacterCell::createInstance(world, UnicodeChar(0x03bb)), "#\\x3bb");
+	assertForm(CharCell::createInstance(world, UnicodeChar(0x07)), "#\\alarm");
+	assertForm(CharCell::createInstance(world, UnicodeChar(0x08)), "#\\backspace");
+	assertForm(CharCell::createInstance(world, UnicodeChar(0x7f)), "#\\delete");
+	assertForm(CharCell::createInstance(world, UnicodeChar(0x1b)), "#\\escape");
+	assertForm(CharCell::createInstance(world, UnicodeChar(0x0a)), "#\\newline");
+	assertForm(CharCell::createInstance(world, UnicodeChar(0x00)), "#\\null");
+	assertForm(CharCell::createInstance(world, UnicodeChar(0x0d)), "#\\return");
+	assertForm(CharCell::createInstance(world, UnicodeChar(0x20)), "#\\space");
+	assertForm(CharCell::createInstance(world, UnicodeChar(0x09)), "#\\tab");
+	assertForm(CharCell::createInstance(world, UnicodeChar('A')), "#\\A");
+	assertForm(CharCell::createInstance(world, UnicodeChar('a')), "#\\a");
+	assertForm(CharCell::createInstance(world, UnicodeChar('1')), "#\\1");
+	assertForm(CharCell::createInstance(world, UnicodeChar(')')), "#\\)");
+	assertForm(CharCell::createInstance(world, UnicodeChar(0x03bb)), "#\\x3bb");
 }
 
 void testRecord(World &world)
@@ -226,7 +226,7 @@ void testAll(World &world)
 	testEmptyList();
 	testBoolean();
 	testExactInteger(world);
-	testInexactRational(world);
+	testFlonum(world);
 	testSymbol(world);
 	testString(world);
 	testPair(world);

@@ -27,15 +27,15 @@ object NumberProcPlanner extends ReportProcPlanner {
         val compareResult = staticIntCalc(constantExactInt1.value, constantExactInt2.value)
         Some(new iv.ConstantBooleanValue(compareResult))
       
-      case (constantFlonum1 : iv.ConstantInexactRationalValue, constantFlonum2 : iv.ConstantInexactRationalValue) =>
+      case (constantFlonum1 : iv.ConstantFlonumValue, constantFlonum2 : iv.ConstantFlonumValue) =>
         val compareResult = staticDoubleCalc(constantFlonum1.value, constantFlonum2.value)
         Some(new iv.ConstantBooleanValue(compareResult))
       
-      case (constantExactInt1 : iv.ConstantExactIntegerValue, constantFlonum2 : iv.ConstantInexactRationalValue) =>
+      case (constantExactInt1 : iv.ConstantExactIntegerValue, constantFlonum2 : iv.ConstantFlonumValue) =>
         val compareResult = staticDoubleCalc(constantExactInt1.value.toDouble, constantFlonum2.value)
         Some(new iv.ConstantBooleanValue(compareResult))
       
-      case (constantFlonum1 : iv.ConstantInexactRationalValue, constantExactInt2 : iv.ConstantExactIntegerValue) =>
+      case (constantFlonum1 : iv.ConstantFlonumValue, constantExactInt2 : iv.ConstantExactIntegerValue) =>
         val compareResult = staticDoubleCalc(constantFlonum1.value, constantExactInt2.value.toDouble)
         Some(new iv.ConstantBooleanValue(compareResult))
 
@@ -57,7 +57,7 @@ object NumberProcPlanner extends ReportProcPlanner {
 
         Some(new iv.NativePredicateValue(predicateTemp))
 
-      case (flonum1, flonum2) if flonum1.hasDefiniteType(vt.InexactRationalType) && flonum2.hasDefiniteType(vt.InexactRationalType) =>
+      case (flonum1, flonum2) if flonum1.hasDefiniteType(vt.FlonumType) && flonum2.hasDefiniteType(vt.FlonumType) =>
         val val1Temp = flonum1.toTempValue(vt.Double)
         val val2Temp = flonum2.toTempValue(vt.Double)
 
@@ -149,11 +149,11 @@ object NumberProcPlanner extends ReportProcPlanner {
     case (reportName, List((operandSourceLoc, singleOperand))) if List("+", "*").contains(reportName) =>
       // Make sure the operand is numeric
       val numericTemp = plan.withContextLocation(operandSourceLoc) {
-        singleOperand.toTempValue(vt.NumericType)
+        singleOperand.toTempValue(vt.NumberType)
       }
       
       // Return it directly
-      Some(TempValueToIntermediate(vt.NumericType, numericTemp))
+      Some(TempValueToIntermediate(vt.NumberType, numericTemp))
 
     case ("-", Nil) =>
       // This isn't allowed - let it fail at runtime
@@ -184,11 +184,11 @@ object NumberProcPlanner extends ReportProcPlanner {
           // Already an exact int
           Some(singleValue)
 
-        case constInexact : iv.ConstantInexactRationalValue =>
-          val longValue = constInexact.value.toLong
+        case constFlonum : iv.ConstantFlonumValue =>
+          val longValue = constFlonum.value.toLong
 
           // Make sure this was lossless
-          if (longValue.toDouble== constInexact.value) {
+          if (longValue.toDouble== constFlonum.value) {
             Some(new iv.ConstantExactIntegerValue(longValue))
           }
           else {
@@ -203,16 +203,16 @@ object NumberProcPlanner extends ReportProcPlanner {
       val singleValue = singleOperand._2
 
       singleValue match  {
-        case knownInexact if vt.SatisfiesType(vt.InexactRationalType, knownInexact.schemeType) == Some(true) =>
-          // Already an inexact rational
-          Some(knownInexact)
+        case knownFlonum if vt.SatisfiesType(vt.FlonumType, knownFlonum.schemeType) == Some(true) =>
+          // Already a flonum
+          Some(knownFlonum)
 
         case constExactInt : iv.ConstantExactIntegerValue =>
           val doubleValue = constExactInt.value.toDouble
 
           // Make sure this was lossless
           if (doubleValue.toLong == constExactInt.value) {
-            Some(new iv.ConstantInexactRationalValue(doubleValue))
+            Some(new iv.ConstantFlonumValue(doubleValue))
           }
           else {
             None

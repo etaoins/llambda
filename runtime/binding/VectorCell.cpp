@@ -32,7 +32,7 @@ namespace
 namespace lliby
 {
 
-bool VectorCell::fill(DatumCell *fill, std::int64_t start, std::int64_t end)
+bool VectorCell::fill(AnyCell *fill, std::int64_t start, std::int64_t end)
 {
 	// Fill doesn't need to be rooted because we have no allocations
 	if (!adjustRange(start, end, length()))
@@ -49,19 +49,19 @@ bool VectorCell::fill(DatumCell *fill, std::int64_t start, std::int64_t end)
 	return true;
 }
 	
-VectorCell* VectorCell::fromElements(World &world, DatumCell **elements, std::uint32_t length)
+VectorCell* VectorCell::fromElements(World &world, AnyCell **elements, std::uint32_t length)
 {
 	// Make sure our elements array is GC rooted for the next allocation
-	alloc::DatumRefRange newElementsRoot(world, elements, length);
+	alloc::AnyRefRange newElementsRoot(world, elements, length);
 
 	void *cellPlacement = alloc::allocateCells(world);
 	return new (cellPlacement) VectorCell(elements, length);
 }
 	
-VectorCell* VectorCell::fromFill(World &world, std::uint32_t length, DatumCell *fill)
+VectorCell* VectorCell::fromFill(World &world, std::uint32_t length, AnyCell *fill)
 {
-	alloc::DatumRef fillRef(world, fill);
-	auto newElements = new DatumCell*[length];
+	alloc::AnyRef fillRef(world, fill);
+	auto newElements = new AnyCell*[length];
 
 	void *cellPlacement = alloc::allocateCells(world);
 	auto newVector = new (cellPlacement) VectorCell(newElements, length);
@@ -90,19 +90,19 @@ VectorCell* VectorCell::fromAppended(World &world, const std::vector<const Vecto
 		return nullptr;
 	}
 
-	auto newElements = new DatumCell*[totalLength];
-	DatumCell **copyPtr = newElements;
+	auto newElements = new AnyCell*[totalLength];
+	AnyCell **copyPtr = newElements;
 
 	for(auto vector : vectors)
 	{
-		auto bytesToCopy = static_cast<size_t>(vector->length()) * sizeof(DatumCell*);
+		auto bytesToCopy = static_cast<size_t>(vector->length()) * sizeof(AnyCell*);
 
 		memcpy(copyPtr, vector->elements(), bytesToCopy);
 		copyPtr += vector->length();
 	}
 
 	// Root our elements in case allocating the vector cell triggers GC
-	alloc::DatumRefRange newElementsRoot(world, newElements, totalLength);
+	alloc::AnyRefRange newElementsRoot(world, newElements, totalLength);
 	
 	void *cellPlacement = alloc::allocateCells(world);
 	return new (cellPlacement) VectorCell(newElements, totalLength);
@@ -116,11 +116,11 @@ VectorCell* VectorCell::copy(World &world, std::int64_t start, std::int64_t end)
 	}
 
 	std::uint32_t newLength = end - start;
-	auto newElements = new DatumCell*[newLength];
+	auto newElements = new AnyCell*[newLength];
 
-	memcpy(newElements, &elements()[start], newLength * sizeof(DatumCell*));
+	memcpy(newElements, &elements()[start], newLength * sizeof(AnyCell*));
 
-	alloc::DatumRefRange newElementsRoot(world, newElements, newLength);
+	alloc::AnyRefRange newElementsRoot(world, newElements, newLength);
 	
 	void *cellPlacement = alloc::allocateCells(world);
 	return new (cellPlacement) VectorCell(newElements, newLength);
@@ -141,7 +141,7 @@ bool VectorCell::replace(std::uint32_t offset, const VectorCell *from, std::int6
 	}
 
 	assert(!isGlobalConstant());
-	memmove(&elements()[offset], &from->elements()[fromStart], replacedLength * sizeof(DatumCell*));
+	memmove(&elements()[offset], &from->elements()[fromStart], replacedLength * sizeof(AnyCell*));
 
 	return true;
 }

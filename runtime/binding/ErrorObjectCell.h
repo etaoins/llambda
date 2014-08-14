@@ -1,7 +1,7 @@
 #ifndef _LLIBY_BINDING_ERROROBJECTCELL_H
 #define _LLIBY_BINDING_ERROROBJECTCELL_H
 
-#include "DatumCell.h"
+#include "AnyCell.h"
 
 namespace lliby
 {
@@ -10,13 +10,13 @@ class World;
 class StringCell;
 class ListElementCell;
 
-class ErrorObjectCell : public DatumCell
+class ErrorObjectCell : public AnyCell
 {
 #include "generated/ErrorObjectCellMembers.h"
 public:
 	static ErrorObjectCell *createInstance(World &world, StringCell *message, ListElementCell *irritants);
 	
-	// These are used by the garbage collector to update the datum pointers during compaction
+	// These are used by the garbage collector to update the cell pointers during compaction
 	StringCell** messageRef()
 	{
 		return &m_message;
@@ -29,7 +29,7 @@ public:
 	
 private:
 	ErrorObjectCell(StringCell *message, ListElementCell *irritants) :
-		DatumCell(CellTypeId::ErrorObject),
+		AnyCell(CellTypeId::ErrorObject),
 		m_message(message),
 		m_irritants(irritants)
 	{

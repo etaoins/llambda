@@ -8,7 +8,7 @@ public:
 		return m_length;
 	}
 
-	DatumCell** elements() const
+	AnyCell** elements() const
 	{
 		return m_elements;
 	}
@@ -19,11 +19,11 @@ public:
 		return typeId == CellTypeId::Vector;
 	}
 
-	static bool isInstance(const DatumCell *datum)
+	static bool isInstance(const AnyCell *cell)
 	{
-		return typeIdIsTypeOrSubtype(datum->typeId());
+		return typeIdIsTypeOrSubtype(cell->typeId());
 	}
 
 private:
 	std::uint32_t m_length;
-	DatumCell** m_elements;
+	AnyCell** m_elements;

@@ -1,10 +1,10 @@
 (define-test "no-op (cast)" (expect 10
 	(import (llambda typed))
-	(cast 10 <integer>)))
+	(cast 10 <exact-integer>)))
 
 (define-test "no-op (ann)" (expect 10
 	(import (llambda typed))
-	(ann 10 <integer>)))
+	(ann 10 <exact-integer>)))
 
 (define-test "(cast) cannot convert int to flonum" (expect-compile-failure
 	(import (llambda typed))
@@ -16,19 +16,19 @@
 
 (define-test "statically impossible (cast) fails at compile time" (expect-compile-failure
 	(import (llambda typed))
-	(cast #t <integer>)))
+	(cast #t <exact-integer>)))
 
 (define-test "statically impossible (ann) fails at compile time" (expect-compile-failure
 	(import (llambda typed))
-	(ann #t <integer>)))
+	(ann #t <exact-integer>)))
 
 (define-test "dynamically impossible (cast) fails at runtime" (expect-runtime-failure
 	(import (llambda typed))
-	(cast (typeless-cell #t) <integer>)))
+	(cast (typeless-cell #t) <exact-integer>)))
 
 (define-test "dynamically impossible (ann) fails at compile time" (expect-compile-failure
 	(import (llambda typed))
-	(ann (typeless-cell #t) <integer>)))
+	(ann (typeless-cell #t) <exact-integer>)))
 
 (define-test "dynamically possible (cast) succeeds" (expect #t
 	(import (llambda typed))

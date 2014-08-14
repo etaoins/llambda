@@ -9,10 +9,10 @@ fieldtype ios : uint8 {
 };
 
 // Entry point for adapted procedures
-cell Datum;
+cell Any;
 cell Procedure;
 cell ListElement;
-fieldtype ProcedureEntryPoint : Datum* (*)(World&, Procedure*, ListElement*) {
+fieldtype ProcedureEntryPoint : Any* (*)(World&, Procedure*, ListElement*) {
 	cppname = ProcedureEntryPoint;
 };
 
@@ -26,28 +26,28 @@ fieldtype GarbageState : uint8 {
 	extern cppname = GarbageState;
 };
 
-root cell Datum typetag typeId {
+root cell Any typetag typeId {
 	TypeId typeId;
 	// This is GarbageState::GlobalConstant
 	GarbageState gcState = 1;
 };
 
-preconstructed cell Unit : Datum {
+preconstructed cell Unit : Any {
 };
 
-abstract cell ListElement : Datum {
+abstract cell ListElement : Any {
 };
 
 concrete internal cell Pair : ListElement {
 	uint32 listLength;
-	Datum* car;
-	Datum* cdr;
+	Any* car;
+	Any* cdr;
 };
 
 preconstructed cell EmptyList : ListElement {
 };
 
-concrete cell String : Datum {
+concrete cell String : Any {
 	uint16 allocSlackBytes;
 	uint32 charLength;
 	uint32 byteLength;
@@ -61,7 +61,7 @@ variant cell HeapString : String {
 	SharedByteArray* heapByteArray;
 };
 
-concrete cell Symbol : Datum { 
+concrete cell Symbol : Any { 
 	uint32 charLength;
 	uint32 byteLength;
 };
@@ -74,36 +74,36 @@ variant cell HeapSymbol : Symbol {
 	SharedByteArray* heapByteArray;
 };
 
-preconstructed cell Boolean : Datum {
+preconstructed cell Boolean : Any {
 	bool value;
 };
 
-abstract cell Numeric : Datum {
+abstract cell Number : Any {
 };
 
-concrete cell ExactInteger : Numeric {
+concrete cell ExactInteger : Number {
 	int64 value;
 };
 
-concrete cell InexactRational : Numeric {
+concrete cell Flonum : Number {
 	double value;
 };
 
-concrete cell Character : Datum {
+concrete cell Char : Any {
 	UnicodeChar unicodeChar;
 };
 
-concrete cell Vector : Datum {
+concrete cell Vector : Any {
 	uint32 length;
-	Datum** elements;
+	Any** elements;
 };
 
-concrete cell Bytevector : Datum {
+concrete cell Bytevector : Any {
 	uint32 length;
 	SharedByteArray* byteArray;
 };
 
-abstract internal cell RecordLike : Datum {
+abstract internal cell RecordLike : Any {
 	bool dataIsInline;
 	bool isUndefined;
 	uint32 recordClassId;
@@ -120,12 +120,12 @@ concrete internal cell Record : RecordLike {
 	untypedptr extraData;
 };
 
-concrete cell ErrorObject : Datum {
+concrete cell ErrorObject : Any {
 	String* message;
 	ListElement* irritants;
 };
 
-concrete cell Port : Datum {
+concrete cell Port : Any {
 	bool isOwned;
 	ios *stream;
 };

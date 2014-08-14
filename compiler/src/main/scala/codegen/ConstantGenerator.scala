@@ -29,7 +29,7 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
   private val symbolCache = new mutable.HashMap[String, IrConstant]
   private val exactIntegerCache = new mutable.HashMap[Long, IrConstant]
   private var nanCache : Option[IrConstant] = None
-  private val inexactRationalCache = new mutable.HashMap[Double, IrConstant]
+  private val flonumCache = new mutable.HashMap[Double, IrConstant]
   private val characterCache = new mutable.HashMap[Char, IrConstant]
   private val bytevectorCache = new mutable.HashMap[Vector[Short], IrConstant]
   private val pairCache = new mutable.HashMap[(IrConstant, IrConstant), IrConstant]
@@ -109,7 +109,7 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
     val baseName = module.nameSource.allocate("schemeVector")
 
     val elementsName = baseName + ".elements"
-    val elementsInitializer = ArrayConstant(PointerType(ct.DatumCell.irType), irElements.toList)
+    val elementsInitializer = ArrayConstant(PointerType(ct.AnyCell.irType), irElements.toList)
     
     val elementsDef = defineConstantData(module)(elementsName, elementsInitializer)
 
@@ -117,7 +117,7 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
 
     val vectorCell = ct.VectorCell.createConstant(
       length=irElements.length,
-      elements=ElementPointerConstant(PointerType(ct.DatumCell.irType), elementsDef, List(0, 0)))
+      elements=ElementPointerConstant(PointerType(ct.AnyCell.irType), elementsDef, List(0, 0)))
 
     defineConstantData(module)(vectorCellName, vectorCell)
   }
@@ -239,28 +239,28 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
           defineConstantData(module)(intCellName, intCell)
         })
       
-      case ps.CreateInexactRationalCell(_, value) if value.isNaN =>
+      case ps.CreateFlonumCell(_, value) if value.isNaN =>
         if (!nanCache.isDefined) {
-          val rationalCell = ct.InexactRationalCell.createConstant(
+          val flonumCell = ct.FlonumCell.createConstant(
             value=DoubleConstant(value)
           )
 
           nanCache = Some(
-            defineConstantData(module)("schemeNaN", rationalCell)
+            defineConstantData(module)("schemeNaN", flonumCell)
           )
         }
 
         nanCache.get
       
-      case ps.CreateInexactRationalCell(_, value) =>
-        inexactRationalCache.getOrElseUpdate(value, {
-          val rationalCellName = module.nameSource.allocate("schemeInexactRational")
+      case ps.CreateFlonumCell(_, value) =>
+        flonumCache.getOrElseUpdate(value, {
+          val flonumCellName = module.nameSource.allocate("schemeFlonum")
 
-          val rationalCell = ct.InexactRationalCell.createConstant(
+          val flonumCell = ct.FlonumCell.createConstant(
             value=DoubleConstant(value)
           )
 
-          defineConstantData(module)(rationalCellName, rationalCell)
+          defineConstantData(module)(flonumCellName, flonumCell)
         })
 
       case ps.CreateBooleanCell(_, true) =>
@@ -269,11 +269,11 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
       case ps.CreateBooleanCell(_, false) =>
         GlobalDefines.falseIrValue
       
-      case ps.CreateCharacterCell(_, value) =>
+      case ps.CreateCharCell(_, value) =>
         characterCache.getOrElseUpdate(value, {
-          val charCellName = module.nameSource.allocate("schemeCharacter")
+          val charCellName = module.nameSource.allocate("schemeChar")
 
-          val charCell = ct.CharacterCell.createConstant(
+          val charCell = ct.CharCell.createConstant(
             unicodeChar=value
           )
 

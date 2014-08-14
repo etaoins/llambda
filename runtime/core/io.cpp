@@ -23,7 +23,7 @@ PortCell *_lliby_stdin_port(World &world)
 	return PortCell::createInstance(world, &std::cin, false);
 }
 
-void _lliby_write_stdout(DatumCell *datum)
+void _lliby_write_stdout(AnyCell *datum)
 {
 	ExternalFormDatumWriter writer(std::cout);
 	writer.render(datum);

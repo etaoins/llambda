@@ -55,7 +55,7 @@ public:
 class EscapeProcedureInvokedException
 {
 public:
-	EscapeProcedureInvokedException(World &world, EscapeProcedureCell *escapeProcedure, DatumCell *passedValue) :
+	EscapeProcedureInvokedException(World &world, EscapeProcedureCell *escapeProcedure, AnyCell *passedValue) :
 		m_escapeProcedureRef(world, escapeProcedure),
 		m_passedValueRef(world, passedValue)
 	{
@@ -66,14 +66,14 @@ public:
 		return m_escapeProcedureRef.data();
 	}
 
-	DatumCell *passedValue() const
+	AnyCell *passedValue() const
 	{
 		return m_passedValueRef.data();
 	}
 
 private:
 	alloc::StrongRef<EscapeProcedureCell> m_escapeProcedureRef;
-	alloc::DatumRef m_passedValueRef;
+	alloc::AnyRef m_passedValueRef;
 };
 
 }

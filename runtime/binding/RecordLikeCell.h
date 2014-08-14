@@ -1,7 +1,7 @@
 #ifndef _LLIBY_BINDING_RECORDLIKECELL_H
 #define _LLIBY_BINDING_RECORDLIKECELL_H
 
-#include "DatumCell.h"
+#include "AnyCell.h"
 
 #include <vector>
 
@@ -20,7 +20,7 @@ enum class RecordLikeDataStorage
 	OutOfLne
 };
 
-class RecordLikeCell : public DatumCell
+class RecordLikeCell : public AnyCell
 {
 #include "generated/RecordLikeCellMembers.h"
 public:
@@ -41,7 +41,7 @@ public:
 	/**
 	 * Registers a runtime-created record-like class
 	 *
-	 * @param  offsets  List of offsets of DatumCells inside the record-like data
+	 * @param  offsets  List of offsets of AnyCells inside the record-like data
 	 * @return Unique class ID for the new record-like class 
 	 */
 	static std::uint32_t registerRuntimeRecordClass(const std::vector<size_t> &offsets);
@@ -53,7 +53,7 @@ public:
 
 protected:
 	RecordLikeCell(CellTypeId typeId, std::uint32_t recordClassId, bool dataIsInline, void *recordData) :
-		DatumCell(typeId),
+		AnyCell(typeId),
 		m_dataIsInline(dataIsInline),
 		m_isUndefined(false),
 		m_recordClassId(recordClassId),

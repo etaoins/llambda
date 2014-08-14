@@ -167,25 +167,25 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   }
 
   def RealDatum = rule {
-    RationalDatum | PositiveInfinity | NegativeInfinity | NaNDatum
+    FlonumDatum | PositiveInfinity | NegativeInfinity | NaNDatum
   }
 
-  def RationalDatum = rule {
+  def FlonumDatum = rule {
     capture(optional(SignCharacter) ~ oneOrMore(Digit) ~ optional('.') ~ oneOrMore(Digit)) ~> ({ number =>
-      ast.RationalLiteral(number.toDouble)
+      ast.FlonumLiteral(number.toDouble)
     })
   }
 
   def PositiveInfinity = rule {
-    ignoreCase("+inf.0") ~ push(ast.RationalLiteral(Double.PositiveInfinity))
+    ignoreCase("+inf.0") ~ push(ast.FlonumLiteral(Double.PositiveInfinity))
   }
 
   def NegativeInfinity = rule {
-    ignoreCase("-inf.0") ~ push(ast.RationalLiteral(Double.NegativeInfinity))
+    ignoreCase("-inf.0") ~ push(ast.FlonumLiteral(Double.NegativeInfinity))
   }
 
   def NaNDatum = rule {
-    SignCharacter ~ ignoreCase("nan.0") ~ push(ast.RationalLiteral(Double.NaN))
+    SignCharacter ~ ignoreCase("nan.0") ~ push(ast.FlonumLiteral(Double.NaN))
   }
 
   def IntegerDatum = rule {

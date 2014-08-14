@@ -16,10 +16,10 @@ class ParameterProcedureCell : public ProcedureCell
 private:
 	struct ParameterProcedureClosure
 	{
-		DatumCell *initialValue;
+		AnyCell *initialValue;
 		// If there is no converter it will be an instance of UnspecificCell
 		// This is to prevent special casing elsewhere in the runtime
-		DatumCell *converter;
+		AnyCell *converter;
 	};
 
 public:
@@ -36,14 +36,14 @@ public:
 	 *                            identity function should be used nullptr can be passed to avoid the overhead of
 	 *                            re-entering Scheme,
 	 */
-	static ParameterProcedureCell *createInstance(World &world, DatumCell *initialValue, ProcedureCell *converterProcedure = nullptr);
+	static ParameterProcedureCell *createInstance(World &world, AnyCell *initialValue, ProcedureCell *converterProcedure = nullptr);
  
 	/**
 	 * Returns the initial value for this parameter
 	 *
 	 * This is used whenever the parameter hasn't explicitly been parameterized
 	 */
-	DatumCell* initialValue() const
+	AnyCell* initialValue() const
 	{
 		return static_cast<ParameterProcedureClosure*>(recordData())->initialValue;
 	}
@@ -53,15 +53,15 @@ public:
 	 */
 	ProcedureCell* converterProcedure() const
 	{
-		return datum_cast<ProcedureCell>(static_cast<ParameterProcedureClosure*>(recordData())->converter);
+		return cell_cast<ProcedureCell>(static_cast<ParameterProcedureClosure*>(recordData())->converter);
 	}
 	
 	/**
-	 * Returns true if the passed datum is a ParameterProcedureCell
+	 * Returns true if the passed cell is a ParameterProcedureCell
 	 */
-	static bool isInstance(const DatumCell *datum)
+	static bool isInstance(const AnyCell *cell)
 	{
-		auto procedureCell = datum_cast<ProcedureCell>(datum);
+		auto procedureCell = cell_cast<ProcedureCell>(cell);
 		return procedureCell && isInstance(procedureCell);
 	}
 

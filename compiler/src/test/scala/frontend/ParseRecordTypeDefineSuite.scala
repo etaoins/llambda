@@ -92,7 +92,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         assert(recordType.sourceName === "<new-type>")
 
         val constDatumField = recordType.fieldForSourceName("const-datum")
-        // No type defaults to <datum-cell>, the most permissive type
+        // No type defaults to <any>, the most permissive type
         assert(constDatumField.fieldType === vt.AnySchemeType)
 
         inside(exprs) {
@@ -113,7 +113,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
       bodyFor("""(define-record-type <new-type>
                  (new-type const-int)
                  new-type?
-                 ((const-int : <exact-integer-cell>) new-type-const-int))""")(scope)
+                 ((const-int : <exact-integer>) new-type-const-int))""")(scope)
     }
   }
   
@@ -123,7 +123,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
     val exprs = bodyFor("""(define-record-type: <new-type>
                            (new-type const-int)
                            new-type?
-                           ((const-int : <exact-integer-cell>) new-type-const-int))""")(scope)
+                           ((const-int : <exact-integer>) new-type-const-int))""")(scope)
 
     inside(scope("<new-type>")) {
       case BoundType(recordType : vt.RecordType) =>
@@ -154,7 +154,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
                            (new-type mutable-int const-datum)
                            new-type?
                            (const-datum new-type-const-datum)
-                           ((mutable-int : <exact-integer-cell>) new-type-mutable-int set-new-type-mutable-int!))""")(scope)
+                           ((mutable-int : <exact-integer>) new-type-mutable-int set-new-type-mutable-int!))""")(scope)
 
     inside(scope("<new-type>")) {
       case BoundType(recordType : vt.RecordType) =>
@@ -170,7 +170,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         val mutableIntField = recordType.fieldForSourceName("mutable-int")
           
         assert(constDatumField.fieldType === vt.AnySchemeType)
-        // <exact-integer-cell> should be implicitly converted to int64 for storage
+        // <exact-integer> should be implicitly converted to int64 for storage
         assert(mutableIntField.fieldType === vt.Int64)
 
         inside(exprs) {
@@ -242,8 +242,8 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
       bodyFor("""(define-record-type <new-type>
                  (new-type const-int)
                  new-type?
-                 ((const-int : <int64>) new-type-const-int)
-                 ((const-int : <exact-integer-cell>) new-type-mutable-int set-new-type-mutable-int!))""")(scope)
+                 ((const-int : <native-int64>) new-type-const-int)
+                 ((const-int : <exact-integer>) new-type-mutable-int set-new-type-mutable-int!))""")(scope)
     }
   }
   
@@ -254,7 +254,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
       bodyFor("""(define-record-type <new-type>
                  (new-type const-int const-int)
                  new-type?
-                 ((const-int : <int64>) new-type-const-int))""")(scope)
+                 ((const-int : <native-int64>) new-type-const-int))""")(scope)
     }
   }
   
@@ -276,7 +276,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
       bodyFor("""(define-record-type <new-type>
                  (new-type const-int not-a-field)
                  new-type?
-                 ((const-int : <int64>) new-type-const-int))""")(scope)
+                 ((const-int : <native-int64>) new-type-const-int))""")(scope)
     }
   }
   
@@ -288,7 +288,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
       bodyFor("""(define-record-type <new-type>
                  (new-type)
                  new-type?
-                 ((const-int : <int64>) new-type-const-int))""")(scope)
+                 ((const-int : <native-int64>) new-type-const-int))""")(scope)
     }
   }
   
@@ -299,7 +299,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
       bodyFor("""(define-record-type <new-type>
                  (new-type const-int)
                  new-type?
-                 ((const-int : <int64>) new-type-const-int new-type-const-int))""")(scope)
+                 ((const-int : <native-int64>) new-type-const-int new-type-const-int))""")(scope)
     }
   }
 }

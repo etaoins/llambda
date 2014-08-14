@@ -1,4 +1,4 @@
-#include "binding/DatumCell.h"
+#include "binding/AnyCell.h"
 #include "binding/ProcedureCell.h"
 #include "binding/EmptyListCell.h"
 #include "binding/ListElementCell.h"
@@ -15,7 +15,7 @@ using namespace lliby;
 extern "C"
 {
 
-DatumCell* lliby_with_exception_handler(World &world, ProcedureCell *handlerRaw, ProcedureCell *thunk)
+AnyCell* lliby_with_exception_handler(World &world, ProcedureCell *handlerRaw, ProcedureCell *thunk)
 {
 	// Root our exception handler
 	alloc::ProcedureRef handler(world, handlerRaw);
@@ -42,7 +42,7 @@ DatumCell* lliby_with_exception_handler(World &world, ProcedureCell *handlerRaw,
 	}
 }
 
-void lliby_raise(World &world, DatumCell *obj)
+void lliby_raise(World &world, AnyCell *obj)
 {
 	throw dynamic::SchemeException(world, obj);
 }

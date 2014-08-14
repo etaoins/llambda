@@ -52,7 +52,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
   }
   
   test("explicitly typed procedure returning its argument") {
-    val signature = signatureFor("""(lambda: ((x : <integer>)) x)""")
+    val signature = signatureFor("""(lambda: ((x : <exact-integer>)) x)""")
 
     assert(signature.hasWorldArg === false)
     assert(signature.fixedArgs === List(vt.ExactIntegerType))
@@ -62,8 +62,8 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
   test("explicitly casting procedure argument to type") {
     val signature = signatureFor("""(lambda (x) (cast x <char>))""")
 
-    assert(signature.fixedArgs === List(vt.CharacterType))
-    assert(signature.returnType === Some(vt.CharacterType))
+    assert(signature.fixedArgs === List(vt.CharType))
+    assert(signature.returnType === Some(vt.CharType))
   }
 
   test("assigning procedure argument to typed immutable") {
@@ -73,8 +73,8 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
         y)"""
     )
 
-    assert(signature.fixedArgs === List(vt.InexactRationalType))
-    assert(signature.returnType === Some(vt.InexactRationalType))
+    assert(signature.fixedArgs === List(vt.FlonumType))
+    assert(signature.returnType === Some(vt.FlonumType))
   }
   
   test("assigning procedure argument to typed mutable") {
@@ -85,7 +85,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
         y)"""
     )
 
-    assert(signature.fixedArgs === List(vt.InexactRationalType))
+    assert(signature.fixedArgs === List(vt.FlonumType))
   }
   
   test("procedure proxying (vector-ref)") {
@@ -100,7 +100,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
   test("typed procedure proxying (vector-ref)") {
     val signature = signatureFor("""(lambda: ((vec : <vector>) (index : <number>)) (vector-ref vec index))""")
 
-    // We should refine <number> in to <integer>
+    // We should refine <number> in to <exact-integer>
     assert(signature.fixedArgs === List(vt.VectorType, vt.ExactIntegerType))
     assert(signature.returnType === Some(vt.AnySchemeType))
   }
@@ -108,7 +108,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
   test("custom union typed procedure proxying (vector-ref)") {
     val signature = signatureFor("""(lambda: ((vec : (U <vector> <char>)) (index : <number>)) (vector-ref vec index))""")
 
-    // We should refine <number> in to <integer>
+    // We should refine <number> in to <exact-integer>
     assert(signature.fixedArgs === List(vt.VectorType, vt.ExactIntegerType))
     assert(signature.returnType === Some(vt.AnySchemeType))
   }
@@ -148,8 +148,8 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
       (lambda (val1 val2) 
         (+ 5 val1 val2))""")
 
-    assert(signature.fixedArgs === List(vt.NumericType, vt.NumericType))
-    assert(signature.returnType === Some(vt.NumericType))
+    assert(signature.fixedArgs === List(vt.NumberType, vt.NumberType))
+    assert(signature.returnType === Some(vt.NumberType))
   }
   
   test("procedure proxying (vector-ref) past possible exception point") {
@@ -191,7 +191,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
       (lambda (m n) 
         (if (> 0 m n) #t #f))""")
 
-    assert(signature.fixedArgs === List(vt.NumericType, vt.NumericType))
+    assert(signature.fixedArgs === List(vt.NumberType, vt.NumberType))
     assert(signature.returnType === Some(vt.BooleanType))
   }
 
@@ -201,7 +201,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
         (/ 0 0)
         (vector-ref vec index))""")
 
-    assert(signature.fixedArgs === List(vt.VectorType, vt.NumericType))
+    assert(signature.fixedArgs === List(vt.VectorType, vt.NumberType))
     assert(signature.returnType === Some(vt.AnySchemeType))
   }
   

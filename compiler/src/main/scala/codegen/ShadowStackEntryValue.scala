@@ -22,7 +22,7 @@ object ShadowStackEntryValue extends StructureValue("shadowStackEntry") {
   val rootsField = StructureField(
     name="roots",
     index=2,
-    irType=ArrayType(0, PointerType(ct.DatumCell.irType)),
+    irType=ArrayType(0, PointerType(ct.AnyCell.irType)),
     tbaaNode=NumberedMetadata(5)
   )
   

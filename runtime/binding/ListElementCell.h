@@ -1,7 +1,7 @@
 #ifndef _LLIBY_BINDING_LISTELEMENTCELL_H
 #define _LLIBY_BINDING_LISTELEMENTCELL_H
 
-#include "DatumCell.h"
+#include "AnyCell.h"
 
 #include <vector>
 
@@ -10,7 +10,7 @@ namespace lliby
 
 class World;
 
-class ListElementCell : public DatumCell
+class ListElementCell : public AnyCell
 {
 #include "generated/ListElementCellMembers.h"
 public:
@@ -19,11 +19,11 @@ public:
 	 *
 	 * See createList() for more information
 	 */
-	static ListElementCell *createProperList(World &world, std::vector<DatumCell*> &elements);
+	static ListElementCell *createProperList(World &world, std::vector<AnyCell*> &elements);
 	
-	static ListElementCell *createProperList(World &world, const std::vector<DatumCell*> &elements)
+	static ListElementCell *createProperList(World &world, const std::vector<AnyCell*> &elements)
 	{
-		std::vector<DatumCell*> elementsCopy(elements);
+		std::vector<AnyCell*> elementsCopy(elements);
 		return createProperList(world, elementsCopy);
 	}
 
@@ -37,22 +37,22 @@ public:
 	 * @param  tail     Tail element of the list. If this is EmptyListCell::instance() this will construct a proper
 	 *                  list; otherwise, the list will improper
 	 */
-	static DatumCell *createList(World &world, std::vector<DatumCell*> &elements, DatumCell *tail);
+	static AnyCell *createList(World &world, std::vector<AnyCell*> &elements, AnyCell *tail);
 
-	static DatumCell *createList(World &world, const std::vector<DatumCell*> &elements, DatumCell *tail)
+	static AnyCell *createList(World &world, const std::vector<AnyCell*> &elements, AnyCell *tail)
 	{
-		std::vector<DatumCell*> elementsCopy(elements);
+		std::vector<AnyCell*> elementsCopy(elements);
 		return createList(world, elementsCopy, tail);
 	}
 
 protected:
 	explicit ListElementCell(CellTypeId typeId) :
-		DatumCell(typeId)
+		AnyCell(typeId)
 	{
 	}
 
 	ListElementCell(CellTypeId typeId, GarbageState gcState) :
-		DatumCell(typeId, gcState)
+		AnyCell(typeId, gcState)
 	{
 	}
 };

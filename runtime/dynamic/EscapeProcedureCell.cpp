@@ -12,10 +12,10 @@ namespace
 {
 	std::uint32_t registeredClassId = ~0;
 
-	DatumCell *procedureBody(World &world, ProcedureCell *procSelf, ListElementCell *argHead)
+	AnyCell *procedureBody(World &world, ProcedureCell *procSelf, ListElementCell *argHead)
 	{
 		EscapeProcedureCell *escapeSelf = static_cast<EscapeProcedureCell*>(procSelf);
-		ProperList<DatumCell> argList(argHead);
+		ProperList<AnyCell> argList(argHead);
 
 		if (!argList.isValid() || (argList.length() != 1))
 		{

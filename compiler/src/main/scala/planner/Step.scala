@@ -223,7 +223,7 @@ case class TestCellType(
     result : TempValue,
     value : TempValue,
     testType : ct.ConcreteCellType,
-    possibleTypes : Set[ct.ConcreteCellType] = ct.DatumCell.concreteTypes
+    possibleTypes : Set[ct.ConcreteCellType] = ct.AnyCell.concreteTypes
 ) extends Step with NullipotentStep {
   lazy val inputValues = Set(value)
   lazy val outputValues = Set(result)
@@ -326,18 +326,18 @@ case class CreateExactIntegerCell(result : TempValue, value : Long) extends Crea
     CreateExactIntegerCell(f(result), value).assignLocationFrom(this)
 }
 
-case class CreateInexactRationalCell(result : TempValue, value : Double) extends CreateConstantCell {
+case class CreateFlonumCell(result : TempValue, value : Double) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    CreateInexactRationalCell(f(result), value).assignLocationFrom(this)
+    CreateFlonumCell(f(result), value).assignLocationFrom(this)
 }
 
-case class CreateCharacterCell(result : TempValue, value : Char) extends CreateConstantCell {
+case class CreateCharCell(result : TempValue, value : Char) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    CreateCharacterCell(f(result), value).assignLocationFrom(this)
+    CreateCharCell(f(result), value).assignLocationFrom(this)
 }
 
 case class CreateBooleanCell(result : TempValue, value : Boolean) extends CreateConstantCell {
@@ -423,19 +423,19 @@ case class UnboxExactInteger(result : TempValue, boxed : TempValue) extends Unbo
     UnboxExactInteger(f(result), f(boxed)).assignLocationFrom(this)
 }
 
-case class UnboxInexactRational(result : TempValue, boxed : TempValue) extends UnboxValue with NullipotentStep {
+case class UnboxFlonum(result : TempValue, boxed : TempValue) extends UnboxValue with NullipotentStep {
   def renamed(f : (TempValue) => TempValue) =
-    UnboxInexactRational(f(result), f(boxed)).assignLocationFrom(this)
+    UnboxFlonum(f(result), f(boxed)).assignLocationFrom(this)
 }
 
-case class UnboxCharacter(result : TempValue, boxed : TempValue) extends UnboxValue with NullipotentStep {
+case class UnboxChar(result : TempValue, boxed : TempValue) extends UnboxValue with NullipotentStep {
   def renamed(f : (TempValue) => TempValue) =
-    UnboxCharacter(f(result), f(boxed)).assignLocationFrom(this)
+    UnboxChar(f(result), f(boxed)).assignLocationFrom(this)
 }
 
 // These aren't quite an unboxing because there's two values per boxed value
 
-/** Loads the car of the passed PairCell as a DatumCell */
+/** Loads the car of the passed PairCell as a AnyCell */
 case class LoadPairCar(result : TempValue, boxed : TempValue) extends Step {
   lazy val inputValues = Set(boxed)
   lazy val outputValues = Set(result)
@@ -444,7 +444,7 @@ case class LoadPairCar(result : TempValue, boxed : TempValue) extends Step {
     LoadPairCar(f(result), f(boxed)).assignLocationFrom(this)
 }
 
-/** Loads the cdr of the passed PairCell as a DatumCell */
+/** Loads the cdr of the passed PairCell as a AnyCell */
 case class LoadPairCdr(result : TempValue, boxed : TempValue) extends Step {
   lazy val inputValues = Set(boxed)
   lazy val outputValues = Set(result)
@@ -502,22 +502,22 @@ case class BoxExactInteger(result : TempValue, unboxed : TempValue) extends BoxV
     BoxExactInteger(f(result), f(unboxed)).assignLocationFrom(this)
 }
 
-case class BoxInexactRational(result : TempValue, unboxed : TempValue) extends BoxValue with CellConsumer {
+case class BoxFlonum(result : TempValue, unboxed : TempValue) extends BoxValue with CellConsumer {
   val allocSize = 1
   
   lazy val inputValues = Set(unboxed)
   
   def renamed(f : (TempValue) => TempValue) =
-    BoxInexactRational(f(result), f(unboxed)).assignLocationFrom(this)
+    BoxFlonum(f(result), f(unboxed)).assignLocationFrom(this)
 }
 
-case class BoxCharacter(result : TempValue, unboxed : TempValue) extends BoxValue with CellConsumer {
+case class BoxChar(result : TempValue, unboxed : TempValue) extends BoxValue with CellConsumer {
   val allocSize = 1
   
   lazy val inputValues = Set(unboxed)
   
   def renamed(f : (TempValue) => TempValue) =
-    BoxCharacter(f(result), f(unboxed)).assignLocationFrom(this)
+    BoxChar(f(result), f(unboxed)).assignLocationFrom(this)
 }
 
 /** Returns from the current function */

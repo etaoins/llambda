@@ -1,4 +1,4 @@
-#include "binding/CharacterCell.h"
+#include "binding/CharCell.h"
 #include "binding/ListElementCell.h"
 #include "binding/StringCell.h"
 #include "binding/ProperList.h"
@@ -19,7 +19,7 @@ StringCell *lliby_make_string(World &world, std::uint32_t length, UnicodeChar fi
 // Note we can't use RestArgument here because invalid lists can be passed in via our (list->string) alias
 StringCell *lliby_string(World &world, ListElementCell *argHead)
 {
-	ProperList<CharacterCell> charProperList(argHead);
+	ProperList<CharCell> charProperList(argHead);
 
 	if (!charProperList.isValid())
 	{
