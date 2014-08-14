@@ -10,11 +10,10 @@ import llambda.compiler.{celltype => ct}
   * representations.
   */
 sealed abstract class ValueType {
-  val schemeName : String
   val schemeType : SchemeType
   val isGcManaged : Boolean
 
-  override def toString = schemeName
+  override def toString = NameForType(this)
 }
 
 /** Type represented by a native pointer */
@@ -36,18 +35,10 @@ sealed abstract class IntLikeType(val bits : Int, val signed : Boolean) extends 
 /** Native boolean value */
 case object Predicate extends IntLikeType(1, false) {
   val schemeType = BooleanType
-  val schemeName = "<native-bool>"
 }
 
 /** Native integer type representing a Scheme exact integer */
 sealed abstract class IntType(bits : Int, signed : Boolean) extends IntLikeType(bits, signed) {
-  val schemeName = if (signed) {
-    s"<native-int${bits}>"
-  }
-  else {
-    s"<native-uint${bits}>"
-  }
-
   val schemeType = ExactIntegerType
 }
 
@@ -66,17 +57,11 @@ sealed abstract class FpType extends NativeType {
   val schemeType = FlonumType
 }
 
-case object Float extends FpType {
-  val schemeName = "<native-float>"
-}
-
-case object Double extends FpType {
-  val schemeName = "<native-double>"
-}
+case object Float extends FpType 
+case object Double extends FpType
 
 /** Native integer representing a Unicode code point */
 case object UnicodeChar extends IntLikeType(32, true) {
-  val schemeName = "<native-unicode-char>"
   val schemeType = CharType
 }
 
@@ -103,7 +88,6 @@ sealed abstract class RecordLikeType extends CellValueType {
   */
 class ClosureType(val sourceName : String, val fields : List[RecordField]) extends RecordLikeType {
   val cellType = ct.ProcedureCell
-  val schemeName = "<internal-closure-type>"
   val schemeType = ProcedureType
 }
 
@@ -169,8 +153,6 @@ sealed abstract trait DerivedSchemeType extends NonUnionSchemeType {
 
 /** Pointer to a garbage collected value cell containing an intrinsic type */
 case class SchemeTypeAtom(cellType : ct.ConcreteCellType) extends NonUnionSchemeType {
-  val schemeName = cellType.schemeName
-
   val isGcManaged = cellType match {
     case preconstruct : ct.PreconstructedCellType =>
       // Only constant instances of this exist
@@ -193,7 +175,6 @@ case class SchemeTypeAtom(cellType : ct.ConcreteCellType) extends NonUnionScheme
 /** Constant boolean type */
 case class ConstantBooleanType(value : Boolean) extends DerivedSchemeType with ConstantValueType {
   val cellType = ct.BooleanCell
-  val schemeName = if (value) "#t" else "#f"
   val parentType = BooleanType
   val isGcManaged = BooleanType.isGcManaged
 }
@@ -207,7 +188,6 @@ sealed trait PairType extends NonUnionSchemeType {
 /** Pair with specific types for its car and cdr */
 case class SpecificPairType(carType : SchemeType, cdrType : SchemeType) extends DerivedSchemeType with PairType {
   val cellType = ct.PairCell
-  val schemeName = s"(Pair ${carType.schemeName} ${cdrType.schemeName})"
   val parentType = SchemeTypeAtom(ct.PairCell)
   val isGcManaged = true
 }
@@ -220,8 +200,6 @@ case class SpecificPairType(carType : SchemeType, cdrType : SchemeType) extends 
 object AnyPairType extends SchemeTypeAtom(ct.PairCell) with PairType {
   val carType = AnySchemeType
   val cdrType = AnySchemeType
-
-  override val schemeName = s"(Pair ${carType.schemeName} ${cdrType.schemeName})"
 }
 
 object PairType {
@@ -244,7 +222,6 @@ object PairType {
 /** Proper list contains members of a certain type */
 case class ProperListType(memberType : SchemeType) extends NonUnionSchemeType {
   val cellType = ct.ListElementCell
-  val schemeName = s"(Listof ${memberType.schemeName})"
   val isGcManaged = true
 
   private def pairType = SpecificPairType(memberType, this)
@@ -295,7 +272,6 @@ case class ProperListType(memberType : SchemeType) extends NonUnionSchemeType {
   */
 class RecordType(val sourceName : String, val fields : List[RecordField]) extends RecordLikeType with DerivedSchemeType {
   val cellType = ct.RecordCell
-  val schemeName = sourceName
   val parentType = SchemeTypeAtom(ct.RecordCell)
 }
 
@@ -318,24 +294,10 @@ case class UnionType(memberTypes : Set[NonUnionSchemeType]) extends SchemeType {
   }
 
   /** Cell type exactly matching our member types or None if no exact match exists */
-  private def exactCellTypeOpt : Option[ct.CellType] = {
+  private[valuetype] lazy val exactCellTypeOpt : Option[ct.CellType] = {
     (cellTypesBySpecificity(ct.AnyCell).find { candidateCellType =>
       SchemeType.fromCellType(candidateCellType) == this 
     })
-  }
-
-  lazy val schemeName = exactCellTypeOpt match {
-    case Some(exactCellType) =>
-      exactCellType.schemeName 
-
-    case _ =>
-      memberTypes.toList.map(_.schemeName).sorted match {
-        case singleTypeName :: Nil =>
-          singleTypeName
-
-        case multipleTypeNames =>
-          "(U" + multipleTypeNames.map(" " + _).mkString("")  + ")"
-      }
   }
   
   def -(otherType : SchemeType) : SchemeType = {
@@ -355,9 +317,7 @@ case class UnionType(memberTypes : Set[NonUnionSchemeType]) extends SchemeType {
 }
 
 /** Union of all possible Scheme types */
-object AnySchemeType extends UnionType(ct.AnyCell.concreteTypes.map(SchemeTypeAtom(_))) {
-  override lazy val schemeName = "<any>"
-}
+object AnySchemeType extends UnionType(ct.AnyCell.concreteTypes.map(SchemeTypeAtom(_)))
 
 /** Empty union of types
   *

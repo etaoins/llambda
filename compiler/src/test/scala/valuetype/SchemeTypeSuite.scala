@@ -232,18 +232,6 @@ class SchemeTypeSuite extends FunSuite {
     assertIntersection(UnionType(Set(FlonumType, ExactIntegerType)), EmptySchemeType, EmptySchemeType)
   }
 
-  test("scheme names for single type unions is the name of the inner type") {
-    assert(UnionType(Set(ExactIntegerType)).schemeName === "<exact-integer>")
-  }
-  
-  test("scheme names for multple type unions with matching cell type") {
-    assert(UnionType(Set(ExactIntegerType, FlonumType)).schemeName === "<number>")
-  }
-  
-  test("scheme names for multple type unions without matching cell type") {
-    assert(UnionType(Set(ExactIntegerType, StringType)).schemeName === "(U <exact-integer> <string>)")
-  }
-
   test("the cell type for the union of exact int and inexact is numeric") {
     assert(UnionType(Set(ExactIntegerType, FlonumType)).cellType === ct.NumberCell)
   }

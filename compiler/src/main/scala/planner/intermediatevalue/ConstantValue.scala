@@ -44,10 +44,10 @@ class ConstantExactIntegerValue(val value : Long) extends TrivialConstantValue(c
       constantTemp
 
     case fpType : vt.FpType =>
-      impossibleConversion(s"Cannot convert ${typeDescription} to floating point native type ${nativeType.schemeName}. Consider using (inexact) to explicitly convert the value.")
+      impossibleConversion(s"Cannot convert ${typeDescription} to floating point native type ${vt.NameForType(nativeType)}. Consider using (inexact) to explicitly convert the value.")
 
     case _ =>
-      impossibleConversion(s"Cannot convert ${typeDescription} to non-integer native type ${nativeType.schemeName}")
+      impossibleConversion(s"Cannot convert ${typeDescription} to non-integer native type ${vt.NameForType(nativeType)}")
   }
   
   override def preferredRepresentation : vt.ValueType =
@@ -64,10 +64,10 @@ class ConstantFlonumValue(val value : Double) extends TrivialConstantValue(ct.Fl
       constantTemp
     
     case intType : vt.IntType =>
-      impossibleConversion(s"Cannot convert ${typeDescription} to integer native type ${nativeType.schemeName}. Consider using (exact) to explicitly convert the value.")
+      impossibleConversion(s"Cannot convert ${typeDescription} to integer native type ${vt.NameForType(nativeType)}. Consider using (exact) to explicitly convert the value.")
 
     case _ => 
-      impossibleConversion(s"Cannot convert ${typeDescription} to non-floating point native type ${nativeType.schemeName}")
+      impossibleConversion(s"Cannot convert ${typeDescription} to non-floating point native type ${vt.NameForType(nativeType)}")
   }
   
   override def preferredRepresentation : vt.ValueType =
@@ -84,7 +84,7 @@ class ConstantCharValue(val value : Char) extends TrivialConstantValue(ct.CharCe
       constantTemp
 
     case _ =>
-      impossibleConversion(s"Cannot convert ${typeDescription} to non-character native type ${nativeType.schemeName}")
+      impossibleConversion(s"Cannot convert ${typeDescription} to non-character native type ${vt.NameForType(nativeType)}")
   }
   
   override def preferredRepresentation : vt.ValueType =
@@ -93,7 +93,7 @@ class ConstantCharValue(val value : Char) extends TrivialConstantValue(ct.CharCe
 
 class ConstantBooleanValue(val value : Boolean) extends TrivialConstantValue(ct.BooleanCell, value, ps.CreateBooleanCell.apply) {
   override val schemeType = vt.ConstantBooleanType(value)
-  val typeDescription = schemeType.schemeName
+  val typeDescription = vt.NameForType(schemeType)
 
   private val intValue = if (value) 1 else 0
 
@@ -106,7 +106,7 @@ class ConstantBooleanValue(val value : Boolean) extends TrivialConstantValue(ct.
 
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = 
     // toTruthyPredicate() will catch our conversion to bool
-    impossibleConversion(s"Cannot convert ${typeDescription} to non-boolean native type ${nativeType.schemeName}")
+    impossibleConversion(s"Cannot convert ${typeDescription} to non-boolean native type ${vt.NameForType(nativeType)}")
   
   override def preferredRepresentation : vt.ValueType =
     vt.Predicate

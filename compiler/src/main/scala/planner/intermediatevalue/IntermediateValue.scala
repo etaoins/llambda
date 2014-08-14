@@ -59,13 +59,13 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
         toBoxedValue().castToCellTempValue(targetType.cellType)
 
       case None if staticCheck =>
-        impossibleConversion(s"${typeDescription} does not statically satisfy ${targetType.schemeName}") 
+        impossibleConversion(s"${typeDescription} does not statically satisfy ${vt.NameForType(targetType)}") 
     
       case None if !staticCheck =>
         val errorMessage = errorMessageOpt getOrElse {
           RuntimeErrorMessage(
-            name=s"subcastTo${targetType.schemeName}Failed",
-            text=s"Runtime cast to subtype '${targetType.schemeName}' failed"
+            name=s"subcastTo${vt.NameForType(targetType)}Failed",
+            text=s"Runtime cast to subtype '${vt.NameForType(targetType)}' failed"
           )
         }
 
@@ -78,7 +78,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
 
       case Some(false) =>
         // Not possible
-        impossibleConversion(s"Unable to convert ${typeDescription} to ${targetType.schemeName}") 
+        impossibleConversion(s"Unable to convert ${typeDescription} to ${vt.NameForType(targetType)}") 
     }
   }
 

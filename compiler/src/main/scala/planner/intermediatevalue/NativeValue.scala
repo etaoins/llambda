@@ -11,16 +11,16 @@ sealed abstract class NativeValue(val nativeType : vt.NativeType, val cellType :
   val schemeType = vt.SchemeTypeAtom(cellType)
 
   lazy val typeDescription = 
-    s"native value of type ${nativeType.schemeName}"
+    s"native value of type ${vt.NameForType(nativeType)}"
 
   // This is used for our shortcut in planPhiWith to build a new phi'ed intermediate
   protected def withNewTempValue(tempValue : ps.TempValue) : NativeValue
 
   protected def planCastToNativeTempValue(targetType : vt.NativeType)(implicit plan : PlanWriter) : ps.TempValue = 
-    impossibleConversion(s"Cannot convert ${typeDescription} to requested type ${targetType.schemeName} or any other native type")
+    impossibleConversion(s"Cannot convert ${typeDescription} to requested type ${vt.NameForType(targetType)} or any other native type")
   
   protected def planCastToSchemeTempValue(targetType : vt.SchemeType)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue  = 
-    impossibleConversion(s"Cannot convert ${typeDescription} to requested type ${targetType.schemeName} or any other Scheme type except ${cellType.schemeName}")
+    impossibleConversion(s"Cannot convert ${typeDescription} to requested type ${vt.NameForType(targetType)} or any other Scheme type except ${cellType.schemeName}")
   
   def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue
 
@@ -82,7 +82,7 @@ class NativeExactIntegerValue(tempValue : ps.TempValue, nativeType : vt.IntType)
       convTemp
 
     case _ => 
-      impossibleConversion(s"Cannot convert ${typeDescription} to non-integer native type ${targetType.schemeName}") 
+      impossibleConversion(s"Cannot convert ${typeDescription} to non-integer native type ${vt.NameForType(targetType)}") 
   }
   
   override def planCastToSchemeTempValue(targetType : vt.SchemeType)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
@@ -120,7 +120,7 @@ class NativeFlonumValue(tempValue : ps.TempValue, nativeType : vt.FpType) extend
       convTemp
 
     case _ => 
-      impossibleConversion(s"Cannot convert native floating value of type ${nativeType.schemeName} to non-float native type ${targetType.schemeName}") 
+      impossibleConversion(s"Cannot convert native floating value of type ${vt.NameForType(nativeType)} to non-float native type ${vt.NameForType(targetType)}") 
   }
   
   def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue =  {

@@ -45,7 +45,7 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
         // Does the declared type match the provided type exactly?
         providedTypeOpt match {
           case Some(incompatibleType) if incompatibleType != declaredType =>
-            throw new BadSpecialFormException(symbol, s"Symbol previously declared with type ${declaredType.schemeName}")
+            throw new BadSpecialFormException(symbol, s"Symbol previously declared with type ${vt.NameForType(declaredType)}")
 
           case _ =>
         }

@@ -69,7 +69,7 @@ class CellValue(val schemeType : vt.SchemeType, val boxedValue : BoxedValue) ext
     case fpType : vt.FpType =>
       if (vt.SatisfiesType(vt.FlonumType, schemeType) == Some(false)) {
         // Not possible
-        impossibleConversion(s"Unable to convert non-flonum ${typeDescription} to ${fpType.schemeName}")
+        impossibleConversion(s"Unable to convert non-flonum ${typeDescription} to ${vt.NameForType(fpType)}")
       }
 
       // Unbox as flonum

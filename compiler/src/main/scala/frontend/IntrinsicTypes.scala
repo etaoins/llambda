@@ -20,7 +20,7 @@ object IntrinsicTypes {
       vt.Double,
       vt.UnicodeChar
     ).map({nativeType =>
-      (nativeType.schemeName -> nativeType)
+      (vt.NameForType(nativeType) -> nativeType)
     }).toMap ++
     // Type aliases
     Map(

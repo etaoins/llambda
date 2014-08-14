@@ -10,7 +10,7 @@ import llambda.compiler.planner.{step => ps}
 
 class KnownTypePredicateProc(testingType : vt.SchemeType) extends KnownArtificialProc {
   protected val symbolHint =
-    testingType.schemeName
+    vt.NameForType(testingType)
       .replaceAllLiterally("<", "")
       .replaceAllLiterally(">", "") + "?"
 
