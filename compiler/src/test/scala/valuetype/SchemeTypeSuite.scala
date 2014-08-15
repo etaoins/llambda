@@ -282,9 +282,24 @@ class SchemeTypeSuite extends FunSuite {
     assert(SatisfiesType(specificPairType, AnyPairType) === None)
   }
 
-  test("incompatible specific pair types do not satisfy each other") {
+  test("union with any pair type intersected with union with specific pair type is the specific pair type union") {
+    val anyPairUnion = UnionType(Set(EmptyListType, AnyPairType))
+    val specificPairUnion = UnionType(Set(EmptyListType, PairType(SymbolType, StringType)))
+
+    assertIntersection(anyPairUnion, specificPairUnion, specificPairUnion)
+  }
+
+  test("completely incompatible specific pair types do not satisfy each other") {
     val specificPairType1 = PairType(SymbolType, StringType)
     val specificPairType2 = PairType(StringType, SymbolType)
+
+    assert(SatisfiesType(specificPairType1, specificPairType2) === Some(false))
+  }
+  
+  test("partially compatible specific pair types do not satisfy each other") {
+    // car may satisfy, cdr does not satisfy
+    val specificPairType1 = PairType(ExactIntegerType, StringType)
+    val specificPairType2 = PairType(NumberType, SymbolType)
 
     assert(SatisfiesType(specificPairType1, specificPairType2) === Some(false))
   }
@@ -309,8 +324,9 @@ class SchemeTypeSuite extends FunSuite {
     assert(SatisfiesType(exactIntList, numericList) === None)
   }
 
-  test("proper list does not satisfy disjoint proper list") {
-    assert(SatisfiesType(stringList, exactIntList) === Some(false))
+  test("proper list may satisfy disjoint proper list") {
+    // This is because two "typed" empty lists will satisfy each other
+    assert(SatisfiesType(stringList, exactIntList) === None)
   }
   
   test("empty list definitely satisfies proper list") {
@@ -331,7 +347,7 @@ class SchemeTypeSuite extends FunSuite {
   }
   
   test("proper list definitely does not satisfy incompatible pair") {
-    assert(SatisfiesType(knownNumberList, stringList) === None)
+    assert(SatisfiesType(knownNumberList, stringList) === Some(false))
   }
   
   test("proper list type definitely doesn't satisfy non-list element") {
@@ -350,8 +366,8 @@ class SchemeTypeSuite extends FunSuite {
     assert((exactIntList - EmptySchemeType) == exactIntList) 
   }
   
-  test("proper list type minus an incompatible list is itself") {
-    assert((exactIntList - stringList) == exactIntList) 
+  test("proper list type minus an incompatible list is a pair with a proper list cdr") {
+    assert((exactIntList - stringList) == PairType(ExactIntegerType, exactIntList))
   }
 
   test("proper list type minus the empty list type is its pair type") {
@@ -383,8 +399,8 @@ class SchemeTypeSuite extends FunSuite {
     assertIntersection(exactIntList, numericList, exactIntList) 
   }
   
-  test("proper list type intersected with an incompatible list is the empty union") {
-    assertIntersection(exactIntList, stringList, EmptySchemeType) 
+  test("proper list type intersected with an incompatible list is the empty list") {
+    assertIntersection(exactIntList, stringList, EmptyListType) 
   }
 
   test("proper list type intersected with the empty list is an empty list") {

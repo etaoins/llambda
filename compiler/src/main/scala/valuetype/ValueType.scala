@@ -130,8 +130,11 @@ sealed abstract trait NonUnionSchemeType extends SchemeType {
     }
 
   def &(otherType : SchemeType) : SchemeType = otherType match {
+    case otherUnion : UnionType =>
+      // Union types know how to deal with intersections 
+      otherUnion & this
+
     case otherProperList : ProperListType =>
-      // Proper lists know how to deal with intersections
       otherProperList & this
 
     case _ if (SatisfiesType(otherType, this) == Some(true)) =>
@@ -236,6 +239,10 @@ case class ProperListType(memberType : SchemeType) extends NonUnionSchemeType {
     case compatiblePair : PairType if SatisfiesType(compatiblePair, pairType) == Some(true) =>
       EmptyListType
 
+    case incompatibleList : ProperListType =>
+      // If we're not of another list type then we can't be empty as all empty lists are compatible with each other
+      PairType(memberType, ProperListType(memberType))
+
     case _ =>
       this
   }
@@ -248,7 +255,8 @@ case class ProperListType(memberType : SchemeType) extends NonUnionSchemeType {
       val memberTypeIntersect = memberType & otherMemberType
 
       if (memberTypeIntersect == EmptySchemeType) {
-        EmptySchemeType
+        // Both proper lists have the empty list in common
+        EmptyListType
       }
       else {
         ProperListType(memberTypeIntersect)

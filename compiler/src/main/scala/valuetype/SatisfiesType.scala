@@ -46,7 +46,14 @@ object SatisfiesType {
       case (superList @ ProperListType(superMember), _) =>
         testingType match {
           case ProperListType(testingMember) =>
-            SatisfiesType(superMember, testingMember)
+            if (SatisfiesType(superMember, testingMember) == Some(true)) {
+              Some(true)
+            }
+            else {
+              // This makes me unhappy
+              // Two "typed" proper lists can satisfy each other if they're both empty
+              None
+            }
 
           case testingPair : PairType =>
             for(carSatisfies <- SatisfiesType(superMember, testingPair.carType);
@@ -105,10 +112,23 @@ object SatisfiesType {
       
       case (superPair : PairType, testingPair : PairType) =>
         // Pairs satisfy their more general pairs
-        for(carSatisfies <- SatisfiesType(superPair.carType, testingPair.carType);
-            cdrSatisfies <- SatisfiesType(superPair.cdrType, testingPair.cdrType))
-        yield
-          (carSatisfies && cdrSatisfies)
+        val memberResults = Set(
+          SatisfiesType(superPair.carType, testingPair.carType),
+          SatisfiesType(superPair.cdrType, testingPair.cdrType)
+        )
+
+        if (memberResults.contains(Some(false))) {
+          // Definitely not compatible
+          Some(false)
+        }
+        else if (memberResults.contains(None)) {
+          // May satisfy
+          None
+        }
+        else {
+          // Definitely satisfies
+          Some(true)
+        }
 
       case (superDerived : DerivedSchemeType, _) =>
         // Didn't have an exact match - check our parent types
