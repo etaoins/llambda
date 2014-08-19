@@ -5,13 +5,19 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{PlanWriter, BoxedValue}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
+import llambda.compiler.InternalCompilerErrorException
 
 object PlanTypeCheck {
-  /** Used to track if we're planning a predicate */
-  private case class PlanningPredicateProc(
-    testType : vt.SchemeType,
-    nativeSymbol : String
-  )
+  private def unrolledTypeRef(schemeTypeRef : vt.SchemeTypeRef) : vt.SchemeType = {
+    // We pre-unroll our types so we should never encounter a recursive ref
+    schemeTypeRef match {
+      case vt.DirectSchemeTypeRef(directType) =>
+        directType
+
+      case _ =>
+        throw new InternalCompilerErrorException("Encountered recursive reference - type should be unrolleD")
+    }
+  }
 
   private def flattenType(schemeType : vt.SchemeType) : Set[vt.NonUnionSchemeType] = schemeType match {
     case nonUnion : vt.NonUnionSchemeType => Set(nonUnion)
@@ -50,7 +56,7 @@ object PlanTypeCheck {
 
   private def testPairType(
       plan : PlanWriter,
-      predProcOpt : Option[PlanningPredicateProc],
+      predProcs : Map[vt.SchemeType, String],
       checkValue : BoxedValue,
       valueType : vt.SchemeType,
       testCarType : vt.SchemeType,
@@ -60,13 +66,13 @@ object PlanTypeCheck {
     // This can speed up their type checks
     val (knownCarType, knownCdrType) = valueType match {
       case pairType : vt.PairType =>
-        (pairType.carType, pairType.cdrType)
+        (unrolledTypeRef(pairType.carTypeRef), unrolledTypeRef(pairType.cdrTypeRef))
 
       case _ =>
         (vt.AnySchemeType, vt.AnySchemeType)
     }
 
-    branchOnType(plan, predProcOpt, checkValue, valueType, vt.AnyPairType, isTypePlanner=Some({
+    branchOnType(plan, predProcs, checkValue, valueType, vt.AnyPairType, isTypePlanner=Some({
       (isPairPlan, remainingType) =>
         val pairCellTemp = checkValue.castToCellTempValue(ct.PairCell)(isPairPlan)
 
@@ -75,43 +81,38 @@ object PlanTypeCheck {
         isPairPlan.steps += ps.LoadPairCar(carTemp, pairCellTemp)
 
         val checkableCar = BoxedValue(ct.AnyCell, carTemp)
-        branchOnType(isPairPlan, predProcOpt, checkableCar, knownCarType, testCarType, isTypePlanner=Some({
+        branchOnType(isPairPlan, predProcs, checkableCar, knownCarType, testCarType, isTypePlanner=Some({
           (carSatifiesPlan, _) =>
             // car matched, load the cdr
             val cdrTemp = ps.CellTemp(ct.AnyCell)
             carSatifiesPlan.steps += ps.LoadPairCdr(cdrTemp, pairCellTemp)
 
             val checkableCdr = BoxedValue(ct.AnyCell, cdrTemp)
-            branchOnType(carSatifiesPlan,  predProcOpt, checkableCdr, knownCdrType, testCdrType)
+            branchOnType(carSatifiesPlan,  predProcs, checkableCdr, knownCdrType, testCdrType)
         }))
     }))
   }
   
   private def testNonUnionType(
       plan : PlanWriter,
-      predProcOpt : Option[PlanningPredicateProc],
+      predProcs : Map[vt.SchemeType, String],
       checkValue : BoxedValue,
       valueType : vt.SchemeType,
       testType : vt.NonUnionSchemeType
   ) : CheckResult = {
     testType match {
       case recordType : vt.RecordType =>
-        branchOnType(plan, predProcOpt, checkValue, valueType, recordType.parentType, isTypePlanner=Some({
+        branchOnType(plan, predProcs, checkValue, valueType, recordType.parentType, isTypePlanner=Some({
           (isRecordPlan, remainingType) =>
             testRecordClass(isRecordPlan, checkValue, remainingType, recordType)
         }))
 
-      case vt.SpecificPairType(testCarType, testCdrType) =>
-        testPairType(plan, predProcOpt, checkValue, valueType, testCarType, testCdrType)
-      
-      case properListType @ vt.ProperListType(memberType) =>
-        // This must either be the empty list or a pair with a car of member type and a cdr of the same proper list
-        // type
-        branchOnType(plan, predProcOpt, checkValue, valueType, vt.EmptyListType, isNotTypePlanner=Some({
-          (isNotEmptyListPlan, remainingType) =>
-            testPairType(isNotEmptyListPlan, predProcOpt, checkValue, remainingType, memberType, properListType)
-        }))
+      case vt.SpecificPairType(testCarTypeRef, testCdrTypeRef) =>
+        val testCarType = unrolledTypeRef(testCarTypeRef)
+        val testCdrType = unrolledTypeRef(testCdrTypeRef)
 
+        testPairType(plan, predProcs, checkValue, valueType, testCarType, testCdrType)
+      
       case vt.ConstantBooleanType(value) =>
         val castTemp = checkValue.castToCellTempValue(ct.BooleanCell)(plan)
 
@@ -135,15 +136,15 @@ object PlanTypeCheck {
 
   private def testUnionTypeRecursively(
       plan : PlanWriter,
-      predProcOpt : Option[PlanningPredicateProc],
+      predProcs : Map[vt.SchemeType, String],
       checkValue : BoxedValue,
       valueType : vt.SchemeType,
       memberTypes : List[vt.NonUnionSchemeType]
   ) : CheckResult = memberTypes match {
     case testType :: restTypes =>
-      branchOnType(plan, predProcOpt, checkValue, valueType, testType, isNotTypePlanner=Some({
+      branchOnType(plan, predProcs, checkValue, valueType, testType, isNotTypePlanner=Some({
         (isNotTypePlan, remainingType) =>
-          testUnionTypeRecursively(isNotTypePlan, predProcOpt, checkValue, remainingType, restTypes)
+          testUnionTypeRecursively(isNotTypePlan, predProcs, checkValue, remainingType, restTypes)
       }))
 
     case Nil =>
@@ -153,7 +154,7 @@ object PlanTypeCheck {
   
   private def branchOnType(
       plan : PlanWriter,
-      predProcOpt : Option[PlanningPredicateProc],
+      predProcs : Map[vt.SchemeType, String],
       checkValue : BoxedValue,
       valueType : vt.SchemeType,
       testType : vt.SchemeType,
@@ -175,31 +176,33 @@ object PlanTypeCheck {
       case None =>
         // Have we either:
         // 1) Explicitly been asked to inline (e.g. while planning the type predicate itself(
-        // 2) Been given a value with type information that would be lost calling a predicate. Exclude proper lists as
-        //    they require a recursive function call anyway 
+        // 2) Been given a value with type information that would be lost calling a predicate. Exclude types with 
+        //    recursive references as they require a function call
         // 3) Have an extremely trivial check to perform
         val shouldInline = mustInline || 
-          (!(valueType eq vt.AnySchemeType) && !testType.isInstanceOf[vt.ProperListType]) || 
+          (!(valueType eq vt.AnySchemeType) && !vt.HasRecursiveRef(valueType) && !predProcs.contains(valueType)) || 
           testType.isInstanceOf[vt.SchemeTypeAtom]
 
         val testResult = if (shouldInline) {
-          testType match {
+          // Unroll this type in case it's recursive
+          // Our original type will be in predProcs 
+          testType.unrolled match {
             case nonUnion : vt.NonUnionSchemeType =>
-              testNonUnionType(plan, predProcOpt, checkValue, valueType, nonUnion)
+              testNonUnionType(plan, predProcs, checkValue, valueType, nonUnion)
 
             case vt.UnionType(memberTypes) =>
-              testUnionTypeRecursively(plan, predProcOpt, checkValue, valueType, memberTypes.toList)
+              testUnionTypeRecursively(plan, predProcs, checkValue, valueType, memberTypes.toList)
           }
         }
         else {
           // Plan this out-of-line
-          val (nativeSymbol, tailCall) = predProcOpt match {
-            case Some(PlanningPredicateProc(predType, nativeSymbol)) if predType == testType =>
+          val nativeSymbol = predProcs.get(testType) match {
+            case Some(nativeSymbol) =>
               // This is a recursive tail call to ourselves
-              (nativeSymbol, true)
+              nativeSymbol
 
             case _ =>
-              (TypePredicateProcForType(testType)(plan).nativeSymbol(plan), false)
+              TypePredicateProcForType(testType)(plan).nativeSymbol(plan)
           }
 
           val signature = TypePredicateProcSignature
@@ -217,7 +220,7 @@ object PlanTypeCheck {
             signature=signature,
             entryPoint=entryPointTemp,
             arguments=List(ps.InvokeArgument(datumValueTemp)),
-            tailCall=tailCall
+            tailCall=true
           )
 
           DynamicResult(resultPredTemp) 
@@ -273,10 +276,10 @@ object PlanTypeCheck {
       testType : vt.SchemeType,
       selfSymbolOpt : Option[String] = None
   )(implicit plan : PlanWriter) : CheckResult = {
-    val predProcOpt = selfSymbolOpt map { selfSymbol =>
-      PlanningPredicateProc(testType, selfSymbol)
-    }
+    val predProcs = (selfSymbolOpt map { selfSymbol =>
+      (testType -> selfSymbol)
+    }).toMap
 
-    branchOnType(plan, predProcOpt, checkValue, valueType, testType, mustInline=predProcOpt.isDefined)
+    branchOnType(plan, predProcs, checkValue, valueType, testType, mustInline=selfSymbolOpt.isDefined)
   }
 }

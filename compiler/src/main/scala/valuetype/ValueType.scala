@@ -12,8 +12,6 @@ import llambda.compiler.{celltype => ct}
 sealed abstract class ValueType {
   val schemeType : SchemeType
   val isGcManaged : Boolean
-
-  override def toString = NameForType(this)
 }
 
 /** Type represented by a native pointer */
@@ -94,20 +92,44 @@ class ClosureType(val sourceName : String, val fields : List[RecordField]) exten
 /** Types visible to Scheme programs without using the NFI */ 
 sealed abstract trait SchemeType extends CellValueType {
   val schemeType = this
-  
-  /** Subtracts another type from this one
+
+  /** Unrolls any recursive type references to ourselves */
+  def unrolled : SchemeType =
+    UnrollType.unrollType(this, this, 0)
+
+  /** Unrolls one of our child types
     *
-    * This is typically used after a type test to build a new possible Scheme type for a tested value
+    * Unrolling makes sure any recursive references to ourselves inside the unrolled type are replaced by a literal
+    * copy of ourselves. This ensures that the resulting type is a valid standalone type
     */
-  def -(otherType : SchemeType) : SchemeType
+  def unrollChildType(childType : SchemeType) : SchemeType =
+    UnrollType.unrollType(childType, this, 1)
+
+  /** Unrolls a child type reference
+    *
+    * This is the same as unrollChildType except it operates on type references
+    */
+  def unrollChildTypeRef(childTypeRef : SchemeTypeRef) : SchemeType =
+    UnrollType.unrollTypeRef(childTypeRef, this, 0) match {
+      case DirectSchemeTypeRef(directType) =>
+        directType
+
+      case _ =>
+        throw new InvalidSchemeTypeRef("Attempted to unroll invalid recursive type") 
+    }
+  
+  /** Shortcut for IntersectTypes(this, otherType) */
+  def &(otherType : SchemeType) : SchemeType =
+    IntersectTypes(this, otherType)
+
+  /** Shortcut for SubtractTypes(this, otherType) */
+  def -(otherType : SchemeType) : SchemeType =
+    SubtractTypes(this, otherType)
 
   /** Creates a union of this type with another */
   def +(otherType : SchemeType) : SchemeType = {
     SchemeType.fromTypeUnion(List(this, otherType))
   }
-  
-  /** Intersects this type with another */
-  def &(otherType : SchemeType) : SchemeType
 }
 
 /** Scheme type representing an exact value */
@@ -119,34 +141,6 @@ sealed abstract trait ConstantValueType extends SchemeType
   */
 sealed abstract trait NonUnionSchemeType extends SchemeType {
   val cellType : ct.CellType
-
-  def -(otherType : SchemeType) : SchemeType = 
-    if (SatisfiesType(otherType, this) == Some(true)) {
-      // No type remains
-      EmptySchemeType
-    }
-    else {
-      this
-    }
-
-  def &(otherType : SchemeType) : SchemeType = otherType match {
-    case otherUnion : UnionType =>
-      // Union types know how to deal with intersections 
-      otherUnion & this
-
-    case otherProperList : ProperListType =>
-      otherProperList & this
-
-    case _ if (SatisfiesType(otherType, this) == Some(true)) =>
-      this
-
-    case _ if (SatisfiesType(this, otherType) == Some(true)) =>
-      otherType
-
-    case _ =>
-      // No intersection
-      EmptySchemeType
-  }
 }
 
 /** Utility type for Scheme types derived from other Scheme types */
@@ -164,15 +158,6 @@ case class SchemeTypeAtom(cellType : ct.ConcreteCellType) extends NonUnionScheme
     case _ =>
       true
   }
-  
-  // Handle <boolean> specially - it only has two subtypes
-  override def -(otherType : SchemeType) : SchemeType =  (cellType, otherType) match {
-    case (ct.BooleanCell, ConstantBooleanType(value))=>
-      ConstantBooleanType(!value)
-
-    case _ =>
-      super.-(otherType)
-  }
 }
 
 /** Constant boolean type */
@@ -184,12 +169,12 @@ case class ConstantBooleanType(value : Boolean) extends DerivedSchemeType with C
 
 /** Trait for pair types */
 sealed trait PairType extends NonUnionSchemeType {
-  val carType : SchemeType
-  val cdrType : SchemeType
+  val carTypeRef : SchemeTypeRef
+  val cdrTypeRef : SchemeTypeRef
 }
 
 /** Pair with specific types for its car and cdr */
-case class SpecificPairType(carType : SchemeType, cdrType : SchemeType) extends DerivedSchemeType with PairType {
+case class SpecificPairType(carTypeRef : SchemeTypeRef, cdrTypeRef : SchemeTypeRef) extends DerivedSchemeType with PairType {
   val cellType = ct.PairCell
   val parentType = SchemeTypeAtom(ct.PairCell)
   val isGcManaged = true
@@ -201,8 +186,8 @@ case class SpecificPairType(carType : SchemeType, cdrType : SchemeType) extends 
   * atom from a pair type with <any> for both of its types
   */
 object AnyPairType extends SchemeTypeAtom(ct.PairCell) with PairType {
-  val carType = AnySchemeType
-  val cdrType = AnySchemeType
+  val carTypeRef = DirectSchemeTypeRef(AnySchemeType)
+  val cdrTypeRef = DirectSchemeTypeRef(AnySchemeType)
 }
 
 object PairType {
@@ -217,62 +202,26 @@ object PairType {
         AnyPairType
 
       case _ =>
-        SpecificPairType(carType, cdrType)
+        SpecificPairType(
+          carTypeRef=DirectSchemeTypeRef(carType),
+          cdrTypeRef=DirectSchemeTypeRef(cdrType)
+        )
     }
   }
 }
 
-/** Proper list contains members of a certain type */
-case class ProperListType(memberType : SchemeType) extends NonUnionSchemeType {
-  val cellType = ct.ListElementCell
-  val isGcManaged = true
-
-  private def pairType = SpecificPairType(memberType, this)
-  
-  override def -(otherType : SchemeType) : SchemeType = otherType match {
-    case superType if SatisfiesType(otherType, this) == Some(true) =>
-      EmptySchemeType
-
-    case EmptyListType => 
-      pairType
-
-    case compatiblePair : PairType if SatisfiesType(compatiblePair, pairType) == Some(true) =>
-      EmptyListType
-
-    case incompatibleList : ProperListType =>
-      // If we're not of another list type then we can't be empty as all empty lists are compatible with each other
-      PairType(memberType, ProperListType(memberType))
-
-    case _ =>
-      this
-  }
-
-  override def &(otherType: SchemeType) : SchemeType = otherType match {
-    case superType if SatisfiesType(otherType, this) == Some(true) =>
-      this
-
-    case ProperListType(otherMemberType) =>
-      val memberTypeIntersect = memberType & otherMemberType
-
-      if (memberTypeIntersect == EmptySchemeType) {
-        // Both proper lists have the empty list in common
-        EmptyListType
-      }
-      else {
-        ProperListType(memberTypeIntersect)
-      }
-
-    case compatiblePair : PairType if SatisfiesType(compatiblePair, pairType) == Some(true) =>
-      pairType & compatiblePair
-
-    case EmptyListType =>
-      EmptyListType
-
-    case _ =>
-      EmptySchemeType
+object ProperListType {
+  def apply(memberType : SchemeType) = {
+    UnionType(Set(
+      EmptyListType,
+      SpecificPairType(
+        carTypeRef=DirectSchemeTypeRef(memberType),
+        // Point back to the outer union type
+        cdrTypeRef=RecursiveSchemeTypeRef(1)
+      )
+    ))
   }
 }
-
 
 /** Pointer to a garabge collected value cell containing a user-defined record type
   * 
@@ -302,25 +251,10 @@ case class UnionType(memberTypes : Set[NonUnionSchemeType]) extends SchemeType {
   }
 
   /** Cell type exactly matching our member types or None if no exact match exists */
-  private[valuetype] lazy val exactCellTypeOpt : Option[ct.CellType] = {
+  private[valuetype] def exactCellTypeOpt : Option[ct.CellType] = {
     (cellTypesBySpecificity(ct.AnyCell).find { candidateCellType =>
       SchemeType.fromCellType(candidateCellType) == this 
     })
-  }
-  
-  def -(otherType : SchemeType) : SchemeType = {
-    val remainingMembers = memberTypes.map(_.-(otherType))
-    SchemeType.fromTypeUnion(remainingMembers.toList)
-  }
-
-  def &(otherType: SchemeType) : SchemeType = otherType match {
-    case otherProperList : ProperListType =>
-      // Proper lists know how to deal with intersections
-      otherProperList & this
-
-    case _ =>
-      val intersectedMembers = memberTypes.map(_.&(otherType))
-      SchemeType.fromTypeUnion(intersectedMembers.toList)
   }
 }
 
@@ -338,6 +272,13 @@ object EmptySchemeType extends UnionType(Set())
 object SchemeType {
   private val allBooleans = Set[NonUnionSchemeType](ConstantBooleanType(false), ConstantBooleanType(true))
 
+  /** Represents a stack of Scheme types
+    *
+    * SchemeType stacks are used to track enclosing types when handling recursive types. Recursive type references are
+    * made to a particular level in the type stack above the referencing type.
+    */
+  type Stack = List[SchemeType]
+
   def fromCellType(cellType : ct.CellType) : SchemeType = {
     cellType match {
       case concrete : ct.ConcreteCellType =>
@@ -350,7 +291,7 @@ object SchemeType {
     }
   }
 
-  def fromTypeUnion(otherTypes : Seq[SchemeType]) : SchemeType = {
+  def fromTypeUnion(otherTypes : Iterable[SchemeType]) : SchemeType = {
     val nonUnionTypes = (otherTypes.flatMap {
       case nonUnion : NonUnionSchemeType =>
         Set(nonUnion)

@@ -6,6 +6,15 @@ import org.scalatest.FunSuite
 import llambda.compiler.{celltype => ct}
 
 class NameForTypeSuite extends FunSuite {
+  private def binaryTreeType(memberType : SchemeType) : SchemeType =
+    SchemeType.fromTypeUnion(List(
+      memberType,
+      SpecificPairType(
+        RecursiveSchemeTypeRef(1),
+        RecursiveSchemeTypeRef(1)
+      )
+    ))
+
   test("<native-bool>") {
     assert(NameForType(Predicate) === "<native-bool>")
   }
@@ -48,21 +57,25 @@ class NameForTypeSuite extends FunSuite {
   }
 
   test("(Pair <exact-integer> <flonum>)") {
-    val pairType = SpecificPairType(ExactIntegerType, FlonumType)
+    val pairType = PairType(ExactIntegerType, FlonumType)
     assert(NameForType(pairType) === "(Pair <exact-integer> <flonum>)")
   }
   
-  test("(Pair <any> <any>)") {
-    val pairType = SpecificPairType(AnySchemeType, AnySchemeType)
-    assert(NameForType(pairType) === "(Pair <any> <any>)")
+  test("<pair>") {
+    val pairType = PairType(AnySchemeType, AnySchemeType)
+    assert(NameForType(pairType) === "<pair>")
   }
   
   test("(Listof <symbol>)") {
     assert(NameForType(ProperListType(SymbolType)) === "(Listof <symbol>)")
   }
   
+  test("(Listof (Listof <symbol>))") {
+    assert(NameForType(ProperListType(ProperListType(SymbolType))) === "(Listof (Listof <symbol>))")
+  }
+  
   test("(Listof <any>)") {
-    val pairType = SpecificPairType(AnySchemeType, AnySchemeType)
+    val pairType = PairType(AnySchemeType, AnySchemeType)
     assert(NameForType(ProperListType(AnySchemeType)) === "(Listof <any>)")
   }
 
@@ -85,5 +98,9 @@ class NameForTypeSuite extends FunSuite {
 
   test("<any>") {
     assert(NameForType(AnySchemeType) === "<any>")
+  }
+
+  test("(Rec A (U <symbol> Pair(A A)))") {
+    assert(NameForType(binaryTreeType(SymbolType)) === "(Rec A (U (Pair A A) <symbol>))")
   }
 }

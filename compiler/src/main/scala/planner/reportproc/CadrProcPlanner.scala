@@ -31,10 +31,10 @@ object CadrProcPlanner extends ReportProcPlanner {
       // Does this pair have a specific pair type?
       val resultType = pairValue.schemeType match {
         case pairType : vt.PairType if reportName == "car" =>
-          pairType.carType
+          pairType.unrollChildTypeRef(pairType.carTypeRef)
 
         case pairType : vt.PairType if reportName == "cdr" =>
-          pairType.cdrType
+          pairType.unrollChildTypeRef(pairType.cdrTypeRef)
 
         case _ =>
           vt.AnySchemeType

@@ -4,33 +4,26 @@ import io.llambda
 import llambda.compiler.{celltype => ct}
 
 object SatisfiesType {
-  private def unionLikeSatisfiesType(
-      superType : SchemeType,
-      testingMemberTypes : Set[NonUnionSchemeType]
+  private def satisfiesTypeRef(
+      superTypeRef : SchemeTypeRef,
+      superStack : SchemeType.Stack,
+      testingTypeRef : SchemeTypeRef,
+      testingStack : SchemeType.Stack
   ) : Option[Boolean] = {
-    val memberResult = testingMemberTypes.map(apply(superType, _)) 
+    // Different depths - resolve the types and then compare them
+    val superType = superTypeRef.resolve(superStack)
+    val testingType = testingTypeRef.resolve(testingStack)
 
-    if (memberResult == Set(Some(true))) {
-      // All member types satisfy this type
+    if (superStack.contains(superType) && testingStack.contains(testingType)) {
       Some(true)
     }
-    else if (memberResult == Set(Some(false))) {
-      // No member types satisfy this type
-      Some(false)
-    }
     else {
-      None
+      stackedSatisfiesType(superType :: superStack, testingType :: testingStack)
     }
   }
 
-  /** Determines if a Scheme type satisfies another
-    *
-    * Some(true) indicates all values of test testing type satisfy the super type. Some(false) indicates no values of
-    * the testing type satisfy the super type.  None indicates that some values of the testing type satisfy the super
-    * type.
-    */
-  def apply(superType : SchemeType, testingType : SchemeType) : Option[Boolean] = {
-    (superType, testingType) match {
+  def stackedSatisfiesType(superStack : SchemeType.Stack, testingStack : SchemeType.Stack) : Option[Boolean] = {
+    (superStack.head, testingStack.head) match {
       case (superAny, _) if superAny eq AnySchemeType =>
         // Quick optimisation - this should not affect correctness
         Some(true)
@@ -43,55 +36,36 @@ object SatisfiesType {
         // Nothing satisfies the empty type except itself
         Some(false)
 
-      case (superList @ ProperListType(superMember), _) =>
-        testingType match {
-          case ProperListType(testingMember) =>
-            if (SatisfiesType(superMember, testingMember) == Some(true)) {
-              Some(true)
-            }
-            else {
-              // This makes me unhappy
-              // Two "typed" proper lists can satisfy each other if they're both empty
-              None
-            }
-
-          case testingPair : PairType =>
-            for(carSatisfies <- SatisfiesType(superMember, testingPair.carType);
-                cdrSatisfies <- SatisfiesType(superList, testingPair.cdrType))
-            yield
-              (carSatisfies && cdrSatisfies)
-
-          case EmptyListType =>
-            // Empty list satisfies all proper lists
-            Some(true)
-
-          case UnionType(testingMemberTypes) =>
-            unionLikeSatisfiesType(superList, testingMemberTypes)
-
-          case _ =>
-            Some(false)
+      case (_, UnionType(testingMemberTypes)) =>
+        val memberResults = testingMemberTypes.map { testingMemberType =>
+          stackedSatisfiesType(superStack, testingMemberType :: testingStack)
         }
 
-      case (_, testingList @ ProperListType(testingMember)) =>
-        // Treat this as a special kind of union
-        val testingMemberTypes = Set[NonUnionSchemeType](
-          EmptyListType,
-          SpecificPairType(testingMember, testingList)
-        )
-
-        unionLikeSatisfiesType(superType, testingMemberTypes)
-
-      case (_, UnionType(testingMemberTypes)) =>
-        unionLikeSatisfiesType(superType, testingMemberTypes)
-
-      case (UnionType(memberTypes), _) =>
-        val memberResult = memberTypes.map(apply(_, testingType))
-
-        if (memberResult.contains(Some(true))) {
-          // We satisfy at least one member type
+        if (memberResults == Set(Some(true))) {
+          // All member types satisfy this type
           Some(true)
         }
-        else if (memberResult == Set(Some(false))) {
+        else if (memberResults == Set(Some(false))) {
+          // No member types satisfy this type
+          Some(false)
+        }
+        else {
+          None
+        }
+
+      case (UnionType(superMemberTypes), _) =>
+        val memberResults = superMemberTypes.map { superMemberType =>
+          val memberResult = stackedSatisfiesType(superMemberType :: superStack, testingStack)
+
+          if (memberResult == Some(true)) {
+            // We found at least one type - we can abandon early
+            return Some(true)
+          }
+
+          memberResult
+        }
+
+        if (memberResults == Set(Some(false))) {
           // We satisfy no member types
           Some(false)
         }
@@ -112,16 +86,16 @@ object SatisfiesType {
       
       case (superPair : PairType, testingPair : PairType) =>
         // Pairs satisfy their more general pairs
-        val memberResults = Set(
-          SatisfiesType(superPair.carType, testingPair.carType),
-          SatisfiesType(superPair.cdrType, testingPair.cdrType)
+        val memberResultss = Set(
+          satisfiesTypeRef(superPair.carTypeRef, superStack, testingPair.carTypeRef, testingStack),
+          satisfiesTypeRef(superPair.cdrTypeRef, superStack, testingPair.cdrTypeRef, testingStack)
         )
 
-        if (memberResults.contains(Some(false))) {
+        if (memberResultss.contains(Some(false))) {
           // Definitely not compatible
           Some(false)
         }
-        else if (memberResults.contains(None)) {
+        else if (memberResultss.contains(None)) {
           // May satisfy
           None
         }
@@ -132,7 +106,7 @@ object SatisfiesType {
 
       case (superDerived : DerivedSchemeType, _) =>
         // Didn't have an exact match - check our parent types
-        apply(superDerived.parentType, testingType) match {
+        stackedSatisfiesType(superDerived.parentType :: superStack.tail, testingStack) match {
           case Some(false) =>
             // Definitely doesn't match
             Some(false)
@@ -143,7 +117,17 @@ object SatisfiesType {
         }
       
       case (_, testingDerived : DerivedSchemeType) =>
-        apply(superType, testingDerived.parentType)
+        stackedSatisfiesType(superStack, testingDerived.parentType :: testingStack.tail)
     }
+  }
+
+  /** Determines if a Scheme type satisfies another
+    *
+    * Some(true) indicates all values of test testing type satisfy the super type. Some(false) indicates no values of
+    * the testing type satisfy the super type.  None indicates that some values of the testing type satisfy the super
+    * type.
+    */
+  def apply(superType : SchemeType, testingType : SchemeType) : Option[Boolean] = {
+    stackedSatisfiesType(superType :: Nil, testingType :: Nil)
   }
 }

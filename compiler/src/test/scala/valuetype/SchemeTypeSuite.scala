@@ -23,7 +23,24 @@ class SchemeTypeSuite extends FunSuite {
     PairType(ExactIntegerType,
       PairType(FlonumType,
         EmptyListType)))
+  
+  private def nonEmptyProperList(memberType : SchemeType) : SchemeType = 
+    PairType(memberType, ProperListType(memberType))
 
+  private def binaryTreeType(memberType : SchemeType) : SchemeType =
+    SchemeType.fromTypeUnion(List(
+      memberType,
+      SpecificPairType(
+        RecursiveSchemeTypeRef(1),
+        RecursiveSchemeTypeRef(1)
+      )
+    ))
+  
+  private def infiniteListType(memberType : SchemeType) : SchemeType =
+    SpecificPairType(
+      DirectSchemeTypeRef(memberType),
+      RecursiveSchemeTypeRef(0)
+    )
 
   private def assertIntersection(type1 : SchemeType, type2 : SchemeType, resultType : SchemeType) {
     assert((type1 & type2) === resultType) 
@@ -281,7 +298,7 @@ class SchemeTypeSuite extends FunSuite {
     val specificPairType = PairType(SymbolType, StringType)
     assert(SatisfiesType(specificPairType, AnyPairType) === None)
   }
-
+  
   test("union with any pair type intersected with union with specific pair type is the specific pair type union") {
     val anyPairUnion = UnionType(Set(EmptyListType, AnyPairType))
     val specificPairUnion = UnionType(Set(EmptyListType, PairType(SymbolType, StringType)))
@@ -306,6 +323,14 @@ class SchemeTypeSuite extends FunSuite {
 
   test("proper list type satisfies itself") {
     assert(SatisfiesType(stringList, stringList) === Some(true))
+  }
+  
+  test("proper list type satisfies its unrolled version") {
+    assert(SatisfiesType(stringList.unrolled, stringList) === Some(true))
+  }
+  
+  test("unrolled proper list type satisfies its rolled version") {
+    assert(SatisfiesType(stringList, stringList.unrolled) === Some(true))
   }
   
   test("proper list type satisfies list element type") {
@@ -371,15 +396,19 @@ class SchemeTypeSuite extends FunSuite {
   }
 
   test("proper list type minus the empty list type is its pair type") {
-    assert((stringList - EmptyListType) == SpecificPairType(StringType, stringList)) 
+    assert((stringList - EmptyListType) == PairType(StringType, stringList)) 
   }
   
   test("proper list type minus a compatible pair type is the empty list") {
     assert((stringList - AnyPairType) == EmptyListType) 
   }
   
+  test("string proper list minus a non-empty string proper list is an empty list") {
+    assert((stringList - nonEmptyProperList(StringType)) === EmptyListType)
+  }
+  
   test("proper list type minus an incompatible pair type is itself") {
-    assert((stringList - SpecificPairType(SymbolType, StringType)) == stringList) 
+    assert((stringList - PairType(SymbolType, StringType)) == stringList) 
   }
   
   test("proper list type minus the list element type is the empty union") {
@@ -399,7 +428,7 @@ class SchemeTypeSuite extends FunSuite {
     assertIntersection(exactIntList, numericList, exactIntList) 
   }
   
-  test("proper list type intersected with an incompatible list is the empty list") {
+  test("proper list type intersected with an incompatible list is an empty list") {
     assertIntersection(exactIntList, stringList, EmptyListType) 
   }
 
@@ -408,18 +437,74 @@ class SchemeTypeSuite extends FunSuite {
   }
   
   test("proper list type intersected with a compatible pair is its pair type") {
-    assertIntersection(stringList, AnyPairType, SpecificPairType(StringType, stringList)) 
+    assertIntersection(stringList, AnyPairType, PairType(StringType, stringList)) 
   }
   
   test("proper list type intersected with an incompatible pair is an empty union") {
-    assertIntersection(stringList, SpecificPairType(SymbolType, StringType), EmptySchemeType)
+    assertIntersection(stringList, PairType(SymbolType, StringType), EmptySchemeType)
   }
   
   test("proper list type intersected with the list element type is itself") {
     assertIntersection(stringList, ListElementType, stringList)
   }
-  
+
   test("proper list type intersected with an unrelated type is an empty union") {
     assertIntersection(stringList, PortType, EmptySchemeType)
+  }
+
+  test("string proper list may satisfy non-empty string proper list") {
+    assert(SatisfiesType(nonEmptyProperList(StringType), ProperListType(StringType)) === None)
+  }
+
+  test("non-empty string proper list definitely satisfies string proper list") {
+    assert(SatisfiesType(ProperListType(StringType), nonEmptyProperList(StringType)) === Some(true))
+  }
+  
+  test("exact int binary tree definitely satisfies itself") {
+    assert(SatisfiesType(binaryTreeType(ExactIntegerType), binaryTreeType(ExactIntegerType)) === Some(true))
+  }
+  
+  test("exact int binary tree definitely satisfies number binary tree") {
+    assert(SatisfiesType(binaryTreeType(NumberType), binaryTreeType(ExactIntegerType)) === Some(true))
+  }
+  
+  test("number binary tree may satisfy exact int binary tree") {
+    assert(SatisfiesType(binaryTreeType(ExactIntegerType), binaryTreeType(NumberType)) === None)
+  }
+  
+  test("binary tree type minus itself is the empty type") {
+    assert((binaryTreeType(SymbolType) - binaryTreeType(SymbolType)) === EmptySchemeType)
+  }
+
+  test("intersection of a binary tree and its member type is the member type") {
+    assertIntersection(binaryTreeType(PortType), PortType, PortType)
+  }
+
+  test("intersection of two binary trees is the most specific binary tree") {
+    assertIntersection(binaryTreeType(NumberType), binaryTreeType(FlonumType), binaryTreeType(FlonumType))
+  }
+  
+  test("empty list does not satisfy an infinite list") {
+    assert(SatisfiesType(infiniteListType(StringType), EmptyListType) === Some(false))
+  }
+  
+  test("proper list may satisify an infinite list") {
+    assert(SatisfiesType(infiniteListType(StringType), stringList) === None)
+  }
+  
+  test("non-empty proper list may satisify an infinite list") {
+    assert(SatisfiesType(infiniteListType(StringType), nonEmptyProperList(StringType)) === None)
+  }
+  
+  test("infinite list definitely satisfies a proper list") {
+    assert(SatisfiesType(stringList, infiniteListType(StringType)) === Some(true))
+  }
+  
+  test("infinite list definitely satisfies a non-empty list") {
+    assert(SatisfiesType(nonEmptyProperList(StringType), infiniteListType(StringType)) === Some(true))
+  }
+
+  test("intersection of two infinite lists is the most specific list") {
+    assertIntersection(infiniteListType(NumberType), infiniteListType(FlonumType), infiniteListType(FlonumType))
   }
 }
