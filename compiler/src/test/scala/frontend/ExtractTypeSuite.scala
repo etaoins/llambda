@@ -179,6 +179,9 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     bodyFor("(define-type <manual-string-list> (Rec PL (U <empty-list> (Pairof <string> PL))))")(scope)
     assert(scope("<manual-string-list>") === BoundType(vt.ProperListType(vt.StringType)))
     
+    bodyFor("(define-type <implicit-recursive> (U <empty-list> (Pairof <string> <implicit-recursive>)))")(scope)
+    assert(scope("<implicit-recursive>") === BoundType(vt.ProperListType(vt.StringType)))
+    
     bodyFor("(define-type <string-tree> (Rec BT (U <string> (Pairof BT BT))))")(scope)
     assert(scope("<string-tree>") === BoundType(
       vt.UnionType(Set(

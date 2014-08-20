@@ -380,8 +380,12 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
       case (Primitives.TypedDefineRecordType, _) =>
         Some(ParseRecordTypeDefine(appliedSymbol, operands, allowTypes=true))
 
-      case (Primitives.DefineType, (typeAlias : sst.ScopedSymbol) :: existingTypeDatum :: Nil) =>
-        Some(ParsedSimpleDefine(typeAlias, BoundType(ExtractType.extractValueType(existingTypeDatum)))) 
+      case (Primitives.DefineType, (typeAlias : sst.ScopedSymbol) :: typeDatum :: Nil) =>
+        // Allow the type's new name to be a recursion marker inside the definition
+        val recursiveVars = ExtractType.RecursiveVars(Map(typeAlias.name -> 0))
+        val extractedType = ExtractType.extractValueType(typeDatum, recursiveVars) 
+
+        Some(ParsedSimpleDefine(typeAlias, BoundType(extractedType))) 
 
       case (Primitives.DefineReportProcedure, _) =>
         operands match {
