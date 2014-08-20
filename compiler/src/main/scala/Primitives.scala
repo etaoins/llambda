@@ -32,6 +32,7 @@ object Primitives {
   object UnionType extends PrimitiveTypeConstructor
   object PairofType extends PrimitiveTypeConstructor
   object ListofType extends PrimitiveTypeConstructor
+  object ListType extends PrimitiveTypeConstructor
   object RecType extends PrimitiveTypeConstructor
 
   val bindings = {
@@ -65,6 +66,7 @@ object Primitives {
       "U" -> UnionType,
       "Pairof" -> PairofType,
       "Listof" -> ListofType,
+      "List" -> ListType,
       "Rec" -> RecType
     )
   }

@@ -13,7 +13,7 @@
   ; 
   ; This would violate the type constraint of "typed-pair" without directly modifying its value
   (cond-expand (immutable-pairs
-    (export Pairof Listof)))
+    (export Pairof Listof List)))
 
   ; Export our type names
   (export <any> <list-element> <pair> <empty-list> <string> <symbol> <boolean> <number> <exact-integer> <flonum> <char>

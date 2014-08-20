@@ -57,6 +57,15 @@ object ExtractType {
           case _ =>
             throw new BadSpecialFormException(constructorName, "Listof requires exactly one member type argument")
         }
+
+      case Primitives.ListType =>
+        val memberTypes = operands.zipWithIndex map { case (operand, index) =>
+          extractSchemeTypeRef(operand, recursiveVars.recursed(index))
+        }
+
+        memberTypes.foldRight(vt.EmptyListType : vt.SchemeType) { case (memberType, cdrType) =>
+          vt.SpecificPairType(memberType, cdrType)
+        }
       
       case Primitives.RecType =>
         operands match {

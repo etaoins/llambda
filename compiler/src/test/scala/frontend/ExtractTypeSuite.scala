@@ -113,7 +113,7 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     }
   }
   
-  test("defining list types") {
+  test("defining homogeneous list types") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
     bodyFor("(define-type <string-list> (Listof <string>))")(scope)
@@ -131,6 +131,46 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
       // Not enough arguments
       bodyFor("(define-type <insufficient-args> (Listof))")(scope)
     }
+  }
+
+  test("defining specified type lists") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    bodyFor("(define-type <other-empty-list> (List))")(scope)
+    assert(scope("<other-empty-list>") === BoundType(vt.EmptyListType))
+    
+    bodyFor("(define-type <string-tuple> (List <string>))")(scope)
+    assert(scope("<string-tuple>") === BoundType(
+      vt.SpecificPairType(
+        vt.StringType,
+        vt.EmptyListType
+      )
+    ))
+    
+    bodyFor("(define-type <string-symbol-tuple> (List <string> <symbol>))")(scope)
+    assert(scope("<string-symbol-tuple>") === BoundType(
+      vt.SpecificPairType(
+        vt.StringType,
+        vt.SpecificPairType(
+          vt.SymbolType,
+          vt.EmptyListType
+        )
+      )
+    ))
+    
+    bodyFor("(define-type <recursive-tuple> (Rec T (List <string> <symbol> T)))")(scope)
+    assert(scope("<recursive-tuple>") === BoundType(
+      vt.SpecificPairType(
+        vt.StringType,
+        vt.SpecificPairType(
+          vt.SymbolType,
+          vt.SpecificPairType(
+            vt.RecursiveSchemeTypeRef(2),
+            vt.EmptyListType
+          )
+        )
+      )
+    ))
   }
 
   test("defining recursive types") {
