@@ -12,6 +12,8 @@ import llambda.compiler.{celltype => ct}
 sealed abstract class ValueType {
   val schemeType : SchemeType
   val isGcManaged : Boolean
+
+  override def toString = NameForType(this)
 }
 
 /** Type represented by a native pointer */
