@@ -75,9 +75,9 @@
   (define-test "(define-predicate) for pairs" (expect-success
     (import (llambda typed))
 
-    (define-predicate any-pair? (Pair <any> <any>))
-    (define-predicate string-symbol-pair? (Pair <string> <symbol>))
-    (define-predicate symbol-string-pair? (Pair <symbol> <string>))
+    (define-predicate any-pair? (Pairof <any> <any>))
+    (define-predicate string-symbol-pair? (Pairof <string> <symbol>))
+    (define-predicate symbol-string-pair? (Pairof <symbol> <string>))
 
     (assert-true  (any-pair? '(1 . 2)))
     (assert-true  (any-pair? '(foo . "bar")))
@@ -91,7 +91,7 @@
     (assert-true  (symbol-string-pair? '(foo . "bar")))
     (assert-false (symbol-string-pair? '("bar" . foo)))
     
-    (define-predicate two-number-proper-list? (Pair <number> (Pair <number> <empty-list>)))
+    (define-predicate two-number-proper-list? (Pairof <number> (Pairof <number> <empty-list>)))
 
     (assert-true (two-number-proper-list? '(1 2)))
     (assert-true (two-number-proper-list? '(1.0 -5)))
@@ -117,7 +117,7 @@
   (define-test "(define-predicate) for binary trees" (expect-success
     (import (llambda typed))
       
-    (define-predicate string-tree? (Rec BT (U <string> (Pair BT BT))))
+    (define-predicate string-tree? (Rec BT (U <string> (Pairof BT BT))))
 
     (define string-list '("one" "two"))
     (define bare-string "one")

@@ -30,7 +30,7 @@ object Primitives {
   object MakePredicate extends PrimitiveExpr
 
   object UnionType extends PrimitiveTypeConstructor
-  object PairType extends PrimitiveTypeConstructor
+  object PairofType extends PrimitiveTypeConstructor
   object ListofType extends PrimitiveTypeConstructor
   object RecType extends PrimitiveTypeConstructor
 
@@ -63,7 +63,7 @@ object Primitives {
       "make-predicate" -> MakePredicate,
 
       "U" -> UnionType,
-      "Pair" -> PairType,
+      "Pairof" -> PairofType,
       "Listof" -> ListofType,
       "Rec" -> RecType
     )

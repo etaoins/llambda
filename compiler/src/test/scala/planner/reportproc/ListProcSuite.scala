@@ -24,12 +24,12 @@ class ListProcSuite extends FunSuite with PlanHelpers {
     )
     
     assertStaticPlan("""
-      (define-type <number-symbol-pair> (Pair <number> <symbol>))
+      (define-type <number-symbol-pair> (Pairof <number> <symbol>))
       ((make-predicate <number-symbol-pair>) '(1 . hello))
       """, ast.BooleanLiteral(true))
     
     assertStaticPlan("""
-      (define-type <number-symbol-pair> (Pair <number> <symbol>))
+      (define-type <number-symbol-pair> (Pairof <number> <symbol>))
       ((make-predicate <number-symbol-pair>) '(hello . 1))
       """, ast.BooleanLiteral(false))
     

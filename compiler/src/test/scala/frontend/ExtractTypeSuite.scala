@@ -88,10 +88,10 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
   test("defining pair types") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
-    bodyFor("(define-type <string-pair> (Pair <string> <string>))")(scope)
+    bodyFor("(define-type <string-pair> (Pairof <string> <string>))")(scope)
     assert(scope("<string-pair>") === BoundType(vt.PairType(vt.StringType, vt.StringType)))
 
-    bodyFor("(define-type <nested-pair> (Pair <symbol> (Pair <string> <port>)))")(scope)
+    bodyFor("(define-type <nested-pair> (Pairof <symbol> (Pairof <string> <port>)))")(scope)
     assert(scope("<nested-pair>") === BoundType(
       vt.PairType(
         vt.SymbolType,
@@ -104,12 +104,12 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     
     intercept[BadSpecialFormException] {
       // Too many arguments
-      bodyFor("(define-type <too-many-args> (Pair <string> <string> <string>))")(scope)
+      bodyFor("(define-type <too-many-args> (Pairof <string> <string> <string>))")(scope)
     }
     
     intercept[BadSpecialFormException] {
       // Not enough arguments
-      bodyFor("(define-type <insufficient-args> (Pair <string>))")(scope)
+      bodyFor("(define-type <insufficient-args> (Pairof <string>))")(scope)
     }
   }
   
@@ -136,10 +136,10 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
   test("defining recursive types") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
     
-    bodyFor("(define-type <manual-string-list> (Rec PL (U <empty-list> (Pair <string> PL))))")(scope)
+    bodyFor("(define-type <manual-string-list> (Rec PL (U <empty-list> (Pairof <string> PL))))")(scope)
     assert(scope("<manual-string-list>") === BoundType(vt.ProperListType(vt.StringType)))
     
-    bodyFor("(define-type <string-tree> (Rec BT (U <string> (Pair BT BT))))")(scope)
+    bodyFor("(define-type <string-tree> (Rec BT (U <string> (Pairof BT BT))))")(scope)
     assert(scope("<string-tree>") === BoundType(
       vt.UnionType(Set(
         vt.StringType,
@@ -163,7 +163,7 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
       ))
     ))
 
-    bodyFor("(define-type <list-of-pairs-to-list> (Rec W (Listof (Pair <boolean> W))))")(scope)
+    bodyFor("(define-type <list-of-pairs-to-list> (Rec W (Listof (Pairof <boolean> W))))")(scope)
     assert(scope("<list-of-pairs-to-list>") === BoundType(
       vt.UnionType(Set(
         vt.EmptyListType,
@@ -183,11 +183,11 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     }
       
     intercept[BadSpecialFormException] {
-      bodyFor("(define-type <too-many-args> (Rec BT BT (U <string> (Pair BT BT))))")(scope)
+      bodyFor("(define-type <too-many-args> (Rec BT BT (U <string> (Pairof BT BT))))")(scope)
     }
       
     intercept[BadSpecialFormException] {
-      bodyFor("(define-type <insufficient-args> (Rec (U <string> (Pair BT BT))))")(scope)
+      bodyFor("(define-type <insufficient-args> (Rec (U <string> (Pairof BT BT))))")(scope)
     }
   }
 }

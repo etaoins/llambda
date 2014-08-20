@@ -57,9 +57,9 @@ class NameForTypeSuite extends FunSuite {
     assert(NameForType(ConstantBooleanType(false)) === "#f")
   }
 
-  test("(Pair <exact-integer> <flonum>)") {
+  test("(Pairof <exact-integer> <flonum>)") {
     val pairType = PairType(ExactIntegerType, FlonumType)
-    assert(NameForType(pairType) === "(Pair <exact-integer> <flonum>)")
+    assert(NameForType(pairType) === "(Pairof <exact-integer> <flonum>)")
   }
   
   test("<pair>") {
@@ -101,7 +101,7 @@ class NameForTypeSuite extends FunSuite {
     assert(NameForType(AnySchemeType) === "<any>")
   }
 
-  test("(Rec A (U <symbol> Pair(A A)))") {
-    assert(NameForType(binaryTreeType(SymbolType)) === "(Rec A (U (Pair A A) <symbol>))")
+  test("(Rec A (U <symbol> (Pairof A A)))") {
+    assert(NameForType(binaryTreeType(SymbolType)) === "(Rec A (U (Pairof A A) <symbol>))")
   }
 }

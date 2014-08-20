@@ -37,7 +37,7 @@ object ExtractType {
         val schemeTypeOperands = operands.map(extractSchemeType(_, memberRecursiveVars))
         vt.SchemeType.fromTypeUnion(schemeTypeOperands)
       
-      case Primitives.PairType =>
+      case Primitives.PairofType =>
         // Don't increase the depth of our recursive vars - the car/cdr references refer to the pair itself
         operands.map(extractSchemeTypeRef(_, recursiveVars)) match {
           case List(carTypeRef, cdrTypeRef) =>

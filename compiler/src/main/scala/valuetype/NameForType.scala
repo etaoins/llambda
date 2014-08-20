@@ -29,7 +29,7 @@ object NameForType {
         val carName = stackedNameForTypeRef(pairType.carTypeRef, typeStack, recurseVarNames)
         val cdrName = stackedNameForTypeRef(pairType.cdrTypeRef, typeStack, recurseVarNames)
 
-        s"(Pair ${carName} ${cdrName})"
+        s"(Pairof ${carName} ${cdrName})"
 
       case recordType : RecordType =>
         recordType.sourceName
