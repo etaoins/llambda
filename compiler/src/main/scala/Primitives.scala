@@ -29,9 +29,10 @@ object Primitives {
   object TypedLambda extends PrimitiveExpr
   object MakePredicate extends PrimitiveExpr
 
-  object TypeUnion extends PrimitiveTypeConstructor
-  object Pair extends PrimitiveTypeConstructor
-  object Listof extends PrimitiveTypeConstructor
+  object UnionType extends PrimitiveTypeConstructor
+  object PairType extends PrimitiveTypeConstructor
+  object ListofType extends PrimitiveTypeConstructor
+  object RecType extends PrimitiveTypeConstructor
 
   val bindings = {
     Map[String, BoundValue](
@@ -61,9 +62,10 @@ object Primitives {
       "lambda:" -> TypedLambda,
       "make-predicate" -> MakePredicate,
 
-      "U" -> TypeUnion,
-      "Pair" -> Pair,
-      "Listof" -> Listof
+      "U" -> UnionType,
+      "Pair" -> PairType,
+      "Listof" -> ListofType,
+      "Rec" -> RecType
     )
   }
 }

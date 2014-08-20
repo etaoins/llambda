@@ -13,7 +13,7 @@ object ExtractNativeFunction {
       nativeSymbol : String,
       attributes : Set[ProcedureAttribute.ProcedureAttribute]
   ) : et.NativeFunction = {
-    val fixedArgTypes = fixedArgData map ExtractType.extractValueType
+    val fixedArgTypes = fixedArgData.map(ExtractType.extractValueType(_))
 
     val restArgOpt = restArgDatum match {
       case sst.NonSymbolLeaf(ast.EmptyList()) =>
@@ -23,7 +23,7 @@ object ExtractNativeFunction {
         Some(ExtractType.extractSchemeType(datum))
     }
 
-    val returnType = returnTypeDatum map ExtractType.extractValueType
+    val returnType = returnTypeDatum.map(ExtractType.extractValueType(_))
 
     val signature = ProcedureSignature(
       hasWorldArg=hasWorldArg,

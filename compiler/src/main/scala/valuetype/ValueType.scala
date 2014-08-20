@@ -196,26 +196,23 @@ object PairType {
     * If both car and cdr are <any> then AnyPairType is returned. Otherwise, an appropriate instance of
     * SpecificPairType is constructed.
     */
-  def apply(carType : SchemeType, cdrType : SchemeType) : PairType = {
-    (SatisfiesType(carType, AnySchemeType), SatisfiesType(cdrType, AnySchemeType)) match {
-      case (Some(true), Some(true)) =>
+  def apply(carTypeRef : SchemeTypeRef, cdrTypeRef : SchemeTypeRef) : PairType = {
+    (carTypeRef, cdrTypeRef) match {
+      case (DirectSchemeTypeRef(AnySchemeType), DirectSchemeTypeRef(AnySchemeType)) =>
         AnyPairType
 
       case _ =>
-        SpecificPairType(
-          carTypeRef=DirectSchemeTypeRef(carType),
-          cdrTypeRef=DirectSchemeTypeRef(cdrType)
-        )
+        SpecificPairType(carTypeRef, cdrTypeRef)
     }
   }
 }
 
 object ProperListType {
-  def apply(memberType : SchemeType) = {
+  def apply(memberTypeRef : SchemeTypeRef) = {
     UnionType(Set(
       EmptyListType,
       SpecificPairType(
-        carTypeRef=DirectSchemeTypeRef(memberType),
+        carTypeRef=memberTypeRef,
         // Point back to the outer union type
         cdrTypeRef=RecursiveSchemeTypeRef(1)
       )

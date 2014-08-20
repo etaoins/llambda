@@ -4,6 +4,7 @@ import io.llambda
 import llambda.compiler.SchemeParser
 import llambda.compiler.SourceLocated
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.valuetype.Implicits._
 
 sealed abstract class Datum extends SourceLocated {
   /** Scheme type for this datum */

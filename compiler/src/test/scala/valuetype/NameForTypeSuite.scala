@@ -4,6 +4,7 @@ import io.llambda
 import org.scalatest.FunSuite
 
 import llambda.compiler.{celltype => ct}
+import Implicits._
 
 class NameForTypeSuite extends FunSuite {
   private def binaryTreeType(memberType : SchemeType) : SchemeType =

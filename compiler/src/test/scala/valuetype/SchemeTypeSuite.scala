@@ -4,6 +4,7 @@ import io.llambda
 import org.scalatest.FunSuite
 
 import llambda.compiler.{celltype => ct}
+import Implicits._
 
 class SchemeTypeSuite extends FunSuite {
   private val recordAtomType = SchemeTypeAtom(ct.RecordCell)
@@ -38,7 +39,7 @@ class SchemeTypeSuite extends FunSuite {
   
   private def infiniteListType(memberType : SchemeType) : SchemeType =
     SpecificPairType(
-      DirectSchemeTypeRef(memberType),
+      memberType,
       RecursiveSchemeTypeRef(0)
     )
 

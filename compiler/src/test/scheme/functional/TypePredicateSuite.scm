@@ -100,17 +100,45 @@
 
 (cond-expand (immutable-pairs
   (define-test "(define-predicate) for lists" (expect-success
+    (import (llambda typed))
+      
+    (define-predicate string-list? (Listof <string>))
+    (define-predicate symbol-list? (Listof <symbol>))
+
+    (assert-true  (string-list? '("one" "two")))
+    (assert-false (string-list? '(one two)))
+    (assert-false (string-list? '(1 2)))
+
+    (assert-false (symbol-list? '("one" "two")))
+    (assert-true  (symbol-list? '(one two)))
+    (assert-false (symbol-list? '(1 2)))))))
+
+(cond-expand (immutable-pairs
+  (define-test "(define-predicate) for binary trees" (expect-success
+    (import (llambda typed))
+      
+    (define-predicate string-tree? (Rec BT (U <string> (Pair BT BT))))
+
+    (define string-list '("one" "two"))
+    (define bare-string "one")
+    (define string-tree '("one" . ("three" . "four")))
+    (define untyped-string-tree (typeless-cell string-tree))
+    (define untyped-string-list (typeless-cell string-list))
     
-  (import (llambda typed))
+    (define symbol-list '(one two))
+    (define bare-symbol 'one)
+    (define symbol-tree '(one . (three . four)))
+    (define untyped-symbol-tree (typeless-cell symbol-tree))
+    (define untyped-symbol-list (typeless-cell symbol-list))
+
+    (assert-false (string-tree? string-list))
+    (assert-true  (string-tree? bare-string))
+    (assert-true  (string-tree? string-tree))
+    (assert-true  (string-tree? untyped-string-tree))
+    (assert-false (string-tree? untyped-string-list))
     
-  (define-predicate string-list? (Listof <string>))
-  (define-predicate symbol-list? (Listof <symbol>))
-
-  (assert-true  (string-list? '("one" "two")))
-  (assert-false (string-list? '(one two)))
-  (assert-false (string-list? '(1 2)))
-
-  (assert-false (symbol-list? '("one" "two")))
-  (assert-true  (symbol-list? '(one two)))
-  (assert-false (symbol-list? '(1 2)))))))
-
+    (assert-false (string-tree? symbol-list))
+    (assert-false (string-tree? bare-symbol))
+    (assert-false (string-tree? symbol-tree))
+    (assert-false (string-tree? untyped-symbol-tree))
+    (assert-false (string-tree? untyped-symbol-list))))))

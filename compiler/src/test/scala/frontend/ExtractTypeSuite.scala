@@ -5,6 +5,7 @@ import org.scalatest.FunSuite
 
 import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.valuetype.Implicits._
 
 class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
   val primitiveScope = new ImmutableScope(collection.mutable.Map(Primitives.bindings.toSeq : _*))
@@ -129,6 +130,64 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     intercept[BadSpecialFormException] {
       // Not enough arguments
       bodyFor("(define-type <insufficient-args> (Listof))")(scope)
+    }
+  }
+
+  test("defining recursive types") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+    
+    bodyFor("(define-type <manual-string-list> (Rec PL (U <empty-list> (Pair <string> PL))))")(scope)
+    assert(scope("<manual-string-list>") === BoundType(vt.ProperListType(vt.StringType)))
+    
+    bodyFor("(define-type <string-tree> (Rec BT (U <string> (Pair BT BT))))")(scope)
+    assert(scope("<string-tree>") === BoundType(
+      vt.UnionType(Set(
+        vt.StringType,
+        vt.SpecificPairType(
+          vt.RecursiveSchemeTypeRef(1),
+          vt.RecursiveSchemeTypeRef(1)
+        )
+      ))
+    ))
+
+    // This isn't a meaninful type; don't think about it too hard
+    // This is just checking (Listof) can take a type reference
+    bodyFor("(define-type <list-list> (Rec LL (Listof LL)))")(scope)
+    assert(scope("<list-list>") === BoundType(
+      vt.UnionType(Set(
+        vt.EmptyListType,
+        vt.SpecificPairType(
+          vt.RecursiveSchemeTypeRef(1),
+          vt.RecursiveSchemeTypeRef(1)
+        )
+      ))
+    ))
+
+    bodyFor("(define-type <list-of-pairs-to-list> (Rec W (Listof (Pair <boolean> W))))")(scope)
+    assert(scope("<list-of-pairs-to-list>") === BoundType(
+      vt.UnionType(Set(
+        vt.EmptyListType,
+        vt.SpecificPairType(
+          vt.SpecificPairType(
+            vt.BooleanType,
+            vt.RecursiveSchemeTypeRef(2)
+          ),
+          vt.RecursiveSchemeTypeRef(1)
+        )
+      ))
+    ))
+    
+    intercept[BadSpecialFormException] {
+      // Unions can't have recursive types
+      bodyFor("(define-type <inside-union> (Rec UT (U <string> UT)))")(scope)
+    }
+      
+    intercept[BadSpecialFormException] {
+      bodyFor("(define-type <too-many-args> (Rec BT BT (U <string> (Pair BT BT))))")(scope)
+    }
+      
+    intercept[BadSpecialFormException] {
+      bodyFor("(define-type <insufficient-args> (Rec (U <string> (Pair BT BT))))")(scope)
     }
   }
 }

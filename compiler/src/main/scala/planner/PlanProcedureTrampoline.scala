@@ -9,6 +9,7 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.valuetype.Implicits._
 import llambda.compiler.codegen.AdaptedProcedureSignature
 import llambda.compiler.{RuntimeErrorMessage, ContextLocated}
 

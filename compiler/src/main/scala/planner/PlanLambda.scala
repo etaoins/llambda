@@ -7,6 +7,7 @@ import annotation.tailrec
 
 import llambda.compiler.et
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.valuetype.Implicits._
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
