@@ -41,15 +41,15 @@ private[frontend] object ParseRecordTypeDefine {
             (nameSymbol, compactType)
 
           case other =>
-            val typeMessage = if (allowTypes) {
+            val message = if (allowTypes) {
               // Types aren't allowed in this form - don't mention them
-              ""
+              s"Unrecognized record field name definition. Must be identifier."
             }
             else {
-              " or (identifier : <type>)" 
+              s"Unrecognized record field name definition. Must be either identiifer or (identifier : <type>)." 
             }
 
-            throw new BadSpecialFormException(other, s"Unrecognized record field name definition. Must be either identiifer${typeMessage}.")
+            throw new BadSpecialFormException(other, message)
         }
 
         // Shorthand for error message use
