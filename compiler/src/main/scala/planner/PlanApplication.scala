@@ -101,7 +101,7 @@ private[planner] object PlanApplication {
               value=inlineResult
             ),
             fixedArgTypes=lambdaExpr.fixedArgs.map(_.schemeType),
-            restArgMemberTypeOpt=lambdaExpr.restArg.map(_ => vt.AnySchemeType)
+            restArgMemberTypeOpt=lambdaExpr.restArgOpt.map(_.memberType)
           )
         }
 

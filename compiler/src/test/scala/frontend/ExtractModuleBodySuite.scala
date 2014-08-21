@@ -5,6 +5,7 @@ import org.scalatest.{FunSuite,Inside,OptionValues}
 
 import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.valuetype.Implicits._
 
 class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with testutil.ExprHelpers {
   implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(Primitives.bindings.toSeq : _*))
@@ -300,20 +301,23 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     
     inside(exprFor("(lambda x x)")) {
       case et.Lambda(Nil, Some(restArg), body, _) =>
-        assert(restArg.schemeType === vt.AnySchemeType)
-        assert(body === et.VarRef(restArg))
+        assert(restArg.memberType === vt.AnySchemeType)
+        assert(restArg.storageLoc.schemeType === vt.ProperListType(vt.AnySchemeType))
+
+        assert(body === et.VarRef(restArg.storageLoc))
     }
 
     inside(exprFor("(lambda (x y . z) x y z)")) {
       case et.Lambda(List(argX, argY), Some(restArg), body, _) =>
         assert(argX.schemeType === vt.AnySchemeType)
         assert(argY.schemeType === vt.AnySchemeType)
-        assert(restArg.schemeType === vt.AnySchemeType)
+        assert(restArg.memberType === vt.AnySchemeType)
+        assert(restArg.storageLoc.schemeType === vt.ProperListType(vt.AnySchemeType))
 
         assert(body === et.Begin(List(
           et.VarRef(argX),
           et.VarRef(argY),
-          et.VarRef(restArg)
+          et.VarRef(restArg.storageLoc)
         )))
     }
   }
@@ -330,22 +334,25 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
         assert(body === et.VarRef(argX))
     }
     
-    inside(exprFor("(lambda: x x)")(nfiScope)) {
+    inside(exprFor("(lambda: (x : <any> *) x)")(nfiScope)) {
       case et.Lambda(Nil, Some(restArg), body, _) =>
-        assert(restArg.schemeType === vt.AnySchemeType)
-        assert(body === et.VarRef(restArg))
+        assert(restArg.memberType === vt.AnySchemeType)
+        assert(restArg.storageLoc.schemeType === vt.ProperListType(vt.AnySchemeType))
+
+        assert(body === et.VarRef(restArg.storageLoc))
     }
 
-    inside(exprFor("(lambda: ((x : <exact-integer>) (y : <string>) . z) x y z)")(nfiScope)) {
+    inside(exprFor("(lambda: ((x : <exact-integer>) (y : <string>) z : <symbol> *) x y z)")(nfiScope)) {
       case et.Lambda(List(argX, argY), Some(restArg), body, _) =>
         assert(argX.schemeType === vt.ExactIntegerType)
         assert(argY.schemeType === vt.StringType)
-        assert(restArg.schemeType === vt.AnySchemeType)
+        assert(restArg.memberType === vt.SymbolType)
+        assert(restArg.storageLoc.schemeType === vt.ProperListType(vt.SymbolType))
 
         assert(body === et.Begin(List(
           et.VarRef(argX),
           et.VarRef(argY),
-          et.VarRef(restArg)
+          et.VarRef(restArg.storageLoc)
         )))
     }
   }
@@ -432,7 +439,8 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     inside(expr) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(List(fixedArg), Some(restArg), bodyExpr, _)))) if procLoc == storageLoc =>
         assert(fixedArg.schemeType === vt.AnySchemeType)
-        assert(restArg.schemeType === vt.AnySchemeType)
+        assert(restArg.memberType === vt.AnySchemeType)
+        assert(restArg.storageLoc.schemeType === vt.ProperListType(vt.AnySchemeType))
 
         assert(bodyExpr === et.Literal(ast.BooleanLiteral(false)))
     }
@@ -446,13 +454,14 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   test("typed fixed and rest arg lambda shorthand") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
     
-    val expr = exprFor("(define: (return-false (some : <boolean>) . rest) #f)")(scope)
+    val expr = exprFor("(define: (return-false (some : <boolean>) rest : <string> *) #f)")(scope)
     val procLoc = scope.get("return-false").value
 
     inside(expr) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(List(fixedArg), Some(restArg), _, _)))) if procLoc == storageLoc =>
         assert(fixedArg.schemeType === vt.BooleanType)
-        assert(restArg.schemeType === vt.AnySchemeType)
+        assert(restArg.memberType === vt.StringType)
+        assert(restArg.storageLoc.schemeType === vt.ProperListType(vt.StringType))
     }
   }
     
@@ -463,7 +472,8 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-six").value
     inside(expr) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(Nil, Some(restArg), bodyExpr, _)))) if procLoc == storageLoc =>
-        assert(restArg.schemeType === vt.AnySchemeType)
+        assert(restArg.storageLoc.schemeType === vt.ProperListType(vt.AnySchemeType))
+        assert(restArg.memberType === vt.AnySchemeType)
         assert(bodyExpr === et.Literal(ast.IntegerLiteral(6)))
     }
     
@@ -476,11 +486,24 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   test("typed rest only arg lambda shorthand") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
     
-    val expr = exprFor("(define: (return-six . rest) 6)")(scope)
+    val expr = exprFor("(define: (return-six rest : <port> *) 6)")(scope)
     val procLoc = scope.get("return-six").value
     inside(expr) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(Nil, Some(restArg), _, _)))) if procLoc == storageLoc =>
-        assert(restArg.schemeType === vt.AnySchemeType)
+        assert(restArg.memberType === vt.PortType)
+        assert(restArg.storageLoc.schemeType === vt.ProperListType(vt.PortType))
+    }
+  }
+  
+  test("typed rest only arg lambda shorthand does create proper list storage locs in R7RS") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+    
+    val expr = bodyFor("(define: (return-six rest : <port> *) 6)")(scope, dialect.R7RS)
+    val procLoc = scope.get("return-six").value
+    inside(expr) {
+      case et.TopLevelDefine(List((storageLoc, et.Lambda(Nil, Some(restArg), _, _)))) :: Nil if procLoc == storageLoc =>
+        assert(restArg.memberType === vt.PortType)
+        assert(restArg.storageLoc.schemeType === vt.ListElementType)
     }
   }
 

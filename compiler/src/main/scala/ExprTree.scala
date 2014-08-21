@@ -111,11 +111,13 @@ case class Cond(test : Expr, trueExpr : Expr, falseExpr : Expr) extends Expr {
   override def schemeType = trueExpr.schemeType + falseExpr.schemeType
 }
 
-case class Lambda(fixedArgs : List[StorageLocation], restArg : Option[StorageLocation], body : Expr, debugContextOpt : Option[debug.SubprogramContext] = None) extends Expr {
+case class RestArgument(storageLoc : StorageLocation, memberType : vt.SchemeType)
+
+case class Lambda(fixedArgs : List[StorageLocation], restArgOpt : Option[RestArgument], body : Expr, debugContextOpt : Option[debug.SubprogramContext] = None) extends Expr {
   val subexprs = body :: Nil
 
   def map(f : Expr => Expr) : Lambda =
-    Lambda(fixedArgs, restArg, f(body), debugContextOpt).assignLocationFrom(this)
+    Lambda(fixedArgs, restArgOpt, f(body), debugContextOpt).assignLocationFrom(this)
 
   override def schemeType = vt.ProcedureType
 }

@@ -3,12 +3,11 @@ import io.llambda
 
 import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.valuetype.Implicits._
 import llambda.compiler.frontend.syntax.{ParseSyntaxDefine, ExpandMacro}
 
 import collection.mutable.ListBuffer
   
-private[frontend] case class ScopedArgument(symbol : sst.ScopedSymbol, boundValue : StorageLocation)
-
 class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) {
   private def uniqueScopes(datum : sst.ScopedDatum) : Set[Scope] = {
     datum match {
@@ -152,7 +151,32 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
     }
   }
 
-  private def createLambda(typed : Boolean, fixedArgData : List[sst.ScopedDatum], restArgDatum : sst.ScopedDatum, definition : List[sst.ScopedDatum], sourceNameHint : Option[String]) : et.Lambda = {
+  private def createLambda(
+      typed : Boolean,
+      operandList : List[sst.ScopedDatum],
+      operandTerminator : sst.ScopedDatum,
+      definition : List[sst.ScopedDatum],
+      sourceNameHint : Option[String]
+  ) : et.Lambda = {
+    // Parse our operand list in to its basic parts
+    val (fixedArgData, restArgDatum, restArgMemberType) = 
+      (operandList.reverse, operandTerminator) match {
+        // This looks for a terminal rest arg in the form: name : <type> *
+        case (
+            sst.ScopedSymbol(_, "*") ::
+            (restArgType : sst.ScopedSymbol) ::
+            (typeColon @ sst.ScopedSymbol(_, ":")) ::
+            (restArgName : sst.ScopedSymbol) :: 
+            reverseFixedArgs
+        , sst.NonSymbolLeaf(ast.EmptyList())) if typed =>
+          // This is a typed rest argument 
+          (reverseFixedArgs.reverse, restArgName, ExtractType.extractSchemeType(restArgType))
+
+        case (_, _) =>
+          // This has no rest argument or an untyped rest argument
+          (operandList, operandTerminator, vt.AnySchemeType)
+      }
+
     // Create our actual procedure arguments
     // These unique identify the argument independently of its binding at a given time
 
@@ -161,7 +185,7 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
       fixedArgData.map {
         case sst.ScopedProperList(List(scopedSymbol : sst.ScopedSymbol, sst.ScopedSymbol(_, ":"), typeDatum)) =>
           val schemeType = ExtractType.extractSchemeType(typeDatum)
-          ScopedArgument(scopedSymbol, new StorageLocation(scopedSymbol.name, schemeType))
+          ScopedFixedArgument(scopedSymbol, new StorageLocation(scopedSymbol.name, schemeType))
 
         case other =>
           throw new BadSpecialFormException(other, "Expected (symbol : <type>)")
@@ -169,20 +193,30 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
     }
     else {
       fixedArgData.map {
-        case symbol : sst.ScopedSymbol => ScopedArgument(symbol, new StorageLocation(symbol.name))
+        case symbol : sst.ScopedSymbol => ScopedFixedArgument(symbol, new StorageLocation(symbol.name))
         case datum => throw new BadSpecialFormException(datum, "Symbol expected")
       }
     }
 
     val restArgOpt = restArgDatum match {
-      case scopedSymbol : sst.ScopedSymbol =>
-        Some(ScopedArgument(scopedSymbol, new StorageLocation(scopedSymbol.name)))
+      case restArgSymbol : sst.ScopedSymbol =>
+        val storageLoc = if (frontendConfig.schemeDialect.pairsAreImmutable) {
+          // Lists are immutable, our type can't vary
+          new StorageLocation(restArgSymbol.name, vt.ProperListType(restArgMemberType))
+        }
+        else {
+          // Lists are mutable
+          new StorageLocation(restArgSymbol.name, vt.ListElementType)
+        }
+
+        val restArg = et.RestArgument(storageLoc, restArgMemberType)
+        Some(ScopedRestArgument(restArgSymbol, restArg))
 
       case sst.NonSymbolLeaf(ast.EmptyList()) =>
         None
 
       case datum =>
-        throw new BadSpecialFormException(datum, "Symbol expected")
+        throw new BadSpecialFormException(datum, "Rest argument expected")
     }
     
     val allArgs = fixedArgs ++ restArgOpt.toList
@@ -205,7 +239,7 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
 
     et.Lambda(
       fixedArgs=fixedArgs.map(_.boundValue),
-      restArg=restArgOpt.map(_.boundValue),
+      restArgOpt=restArgOpt.map(_.restArg),
       body=bodyExpr,
       debugContextOpt=subprogramDebugContextOpt
     )

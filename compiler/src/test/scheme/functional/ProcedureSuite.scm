@@ -55,6 +55,30 @@
 	(define: (return-value (value : <exact-integer>)) value)
 	(return-value 'symbol)))
 
+(define-test "typed procedure invoked with wrong rest arg type fails" (expect-failure
+  (import (llambda typed))
+  (define: (return-value vals : <exact-integer> *) 
+    vals)
+
+  (return-value 'symbol)))
+
+(define-test "typed procedure invoked as datum cell with wrong rest arg type fails" (expect-failure
+  (import (llambda typed))
+  (define: (return-value vals : <exact-integer> *) 
+    vals)
+
+  ((typeless-cell return-value) 'symbol)))
+
+(define-test "typed procedure invoked with correct rest arg types" (expect-success
+  (import (llambda typed))
+	(define: (add-values vals : <exact-integer> *) 
+    (cond-expand (immutable-pairs
+      (ann vals (Listof <exact-integer>))))
+
+    (apply + vals))
+
+  (assert-equal 6 (add-values 1 2 3))))
+
 (define-test "untyped procedure adding its arguments" (expect 7
 	(define (add-two-values a b) (+ a b))
 	(add-two-values 4 3)))

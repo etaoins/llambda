@@ -13,7 +13,7 @@ import scala.collection.breakOut
 private[planner] object AttemptInlineApply {
   def apply(parentState : PlannerState, inlineState : PlannerState)(lambdaExpr : et.Lambda, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
     val mutableVars = plan.config.analysis.mutableVars
-    val allArgs = lambdaExpr.fixedArgs ++ lambdaExpr.restArg
+    val allArgs = lambdaExpr.fixedArgs ++ lambdaExpr.restArgOpt.map(_.storageLoc)
 
     if (!(mutableVars & allArgs.toSet).isEmpty) {
       // Not supported yet
@@ -21,7 +21,7 @@ private[planner] object AttemptInlineApply {
     }
 
     if ((operands.length < lambdaExpr.fixedArgs.length) ||
-        ((operands.length > lambdaExpr.fixedArgs.length) && !lambdaExpr.restArg.isDefined)) {
+        ((operands.length > lambdaExpr.fixedArgs.length) && !lambdaExpr.restArgOpt.isDefined)) {
       // Incompatible arity - let PlanInvokeApply fail this
       return None
     }
@@ -59,9 +59,17 @@ private[planner] object AttemptInlineApply {
     })(breakOut) : Map[StorageLocation, LocationValue]
     
     // We only support empty rest args at this point
-    val restArgImmutables = lambdaExpr.restArg.map { restArgLoc =>
+    val restArgImmutables = lambdaExpr.restArgOpt.map { restArg =>
       val restValues = operands.drop(lambdaExpr.fixedArgs.length).map(_._2)
-      restArgLoc -> ImmutableValue(ValuesToProperList(restValues))
+      
+      for (restValue <- restValues)  {
+        if (vt.SatisfiesType(restArg.memberType, restValue.schemeType) != Some(true)) {
+          // This type cast could fail at runtime
+          return None
+        }
+      }
+
+      restArg.storageLoc -> ImmutableValue(ValuesToProperList(restValues))
     }
 
     // Map our input immutables to their new storage locations

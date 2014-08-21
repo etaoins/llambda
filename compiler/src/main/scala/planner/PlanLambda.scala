@@ -124,7 +124,7 @@ private[planner] object PlanLambda {
     val nativeSymbol = parentPlan.allocProcedureSymbol(sourceName)
       
     val fixedArgLocs = lambdaExpr.fixedArgs
-    val restArgLoc = lambdaExpr.restArg
+    val restArgLoc = lambdaExpr.restArgOpt.map(_.storageLoc)
     val body = lambdaExpr.body
 
     val closedVariables = FindClosedVars(parentState, body)
@@ -185,16 +185,8 @@ private[planner] object PlanLambda {
         (storageLoc, ImmutableValue(TempValueToIntermediate(valueType, tempValue)))
 
       case RestArgument(storageLoc, tempValue) =>
-        val restArgType = if (parentPlan.config.schemeDialect.pairsAreImmutable) {
-          vt.ProperListType(vt.AnySchemeType)
-        }
-        else {
-          // If pairs are immutable we can only guarantee that this value is a list element
-          vt.ListElementType
-        }
-
         val restValue = new iv.CellValue(
-          schemeType=restArgType,
+          schemeType=storageLoc.schemeType,
           boxedValue=BoxedValue(ct.ListElementCell, tempValue)
         )
 
@@ -205,7 +197,7 @@ private[planner] object PlanLambda {
     val initialSignature = ProcedureSignature(
       hasWorldArg=true,
       hasSelfArg=innerSelfTempOpt.isDefined,
-      restArgOpt=restArgLoc.map(_ => vt.AnySchemeType),
+      restArgOpt=lambdaExpr.restArgOpt.map(_.memberType),
       fixedArgs=retypedFixedArgs.map(_._2),
       returnType=Some(vt.AnySchemeType),
       attributes=Set(ProcedureAttribute.FastCC)

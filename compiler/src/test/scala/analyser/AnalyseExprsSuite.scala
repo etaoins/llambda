@@ -162,7 +162,7 @@ class AnalyseExprsSuite extends FunSuite {
       et.Apply(
         et.Lambda(
           fixedArgs=Nil,
-          restArg=None,
+          restArgOpt=None,
           body=et.Begin(Nil)
         ),
         List(
@@ -194,7 +194,7 @@ class AnalyseExprsSuite extends FunSuite {
       et.Apply(
         et.Lambda(
           fixedArgs=Nil,
-          restArg=None,
+          restArgOpt=None,
           body=et.MutateVar(testLocA, et.Literal(ast.EmptyList()))
         ),
         Nil
@@ -223,7 +223,7 @@ class AnalyseExprsSuite extends FunSuite {
       ),
       et.Lambda(
         fixedArgs=Nil,
-        restArg=None,
+        restArgOpt=None,
         body=et.MutateVar(testLocA, et.Literal(ast.EmptyList()))
       ),
       et.VarRef(testLocA)
