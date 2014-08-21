@@ -159,7 +159,8 @@ object Compiler {
     // Extract expressions
     val frontendConfig = frontend.FrontendConfig(
       includePath=config.includePath,
-      featureIdentifiers=featureIdentifiers 
+      featureIdentifiers=featureIdentifiers,
+      schemeDialect=config.schemeDialect
     )
 
     val exprs = frontend.ExtractProgram(entryFilenameOpt, data)(loader, frontendConfig)

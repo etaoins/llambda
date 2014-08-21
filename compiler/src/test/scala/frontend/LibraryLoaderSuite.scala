@@ -8,7 +8,8 @@ class LibraryLoaderSuite extends FunSuite {
   implicit val defaultFrontendConfig = 
     FrontendConfig(
       includePath=IncludePath(),
-      featureIdentifiers=Set()
+      featureIdentifiers=Set(),
+      schemeDialect=dialect.Dialect.default
     )
 
   test("load non-existant library") {
@@ -105,7 +106,8 @@ class LibraryLoaderSuite extends FunSuite {
       includePath=IncludePath(
         userConfiguredPaths=List(getClass.getClassLoader.getResource("libraries/test/"))
       ),
-      featureIdentifiers=Set()
+      featureIdentifiers=Set(),
+      schemeDialect=dialect.Dialect.default
     )
 
     // We should be able to load without the "text" prefix
@@ -121,7 +123,8 @@ class LibraryLoaderSuite extends FunSuite {
       includePath=IncludePath(
         userConfiguredPaths=List(getClass.getClassLoader.getResource("libraries/test/"))
       ),
-      featureIdentifiers=Set()
+      featureIdentifiers=Set(),
+      schemeDialect=dialect.Dialect.default
     )
 
     assert(loader.exists(List(StringComponent("pathedsingleexpr")))(frontendConfig) === true)

@@ -19,11 +19,16 @@ trait ExprHelpers extends FunSuite with OptionValues {
     packageRootDir=Some(resourceBaseUrl)
   )
 
-  val frontendConfig = frontend.FrontendConfig(
-    includePath=includePath,
-    featureIdentifiers=FeatureIdentifiers(platform.Posix64LE, dialect.Dialect.default)
- )
-  
+
+  private def frontendConfigForDialect(schemeDialect : dialect.Dialect) = 
+    frontend.FrontendConfig(
+      includePath=includePath,
+      featureIdentifiers=FeatureIdentifiers(platform.Posix64LE, schemeDialect),
+      schemeDialect=schemeDialect
+    )
+
+  val frontendConfig = frontendConfigForDialect(dialect.Dialect.default)
+
   val schemeBaseBindings = libraryLoader.loadSchemeBase(frontendConfig)
   def schemeBaseScope = new Scope(collection.mutable.Map(schemeBaseBindings.toSeq : _*))
   
@@ -35,14 +40,15 @@ trait ExprHelpers extends FunSuite with OptionValues {
     expr
   }
   
-  def bindingFor(scheme : String, varName : String)(scope : Scope)  = {
-    bodyFor(scheme)(scope)
+  def bindingFor(scheme : String, varName : String)(scope : Scope, schemeDialect : dialect.Dialect = dialect.Dialect.default)  = {
+    bodyFor(scheme)(scope, schemeDialect)
     scope.get(varName).value
   }
-  
-  def bodyFor(scheme : String)(scope : Scope) = {
+
+  def bodyFor(scheme : String)(scope : Scope, schemeDialect : dialect.Dialect = dialect.Dialect.default) = {
     val data = SchemeParser.parseStringAsData(scheme)
 
+    val frontendConfig = frontendConfigForDialect(schemeDialect)
     val bodyExtractor = new frontend.ModuleBodyExtractor(debugContext, libraryLoader, frontendConfig)
     val exprs = bodyExtractor(data, scope)
 

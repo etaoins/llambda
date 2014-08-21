@@ -239,9 +239,9 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     }
   }
 
-  test("redefine variable") {
+  test("redefine variable succeeds in R7RS") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
-    val expressions = bodyFor("(define a 2)(define a 3)")(scope)
+    val expressions = bodyFor("(define a 2)(define a 3)")(scope, dialect.R7RS)
 
     inside(scope.get("a").value) {
       case storageLoc : StorageLocation =>
@@ -249,6 +249,14 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
           et.TopLevelDefine(List(storageLoc -> et.Literal(ast.IntegerLiteral(2)))),
           et.MutateVar(storageLoc, et.Literal(ast.IntegerLiteral(3)))
         ))
+    }
+  }
+  
+  test("redefine variable fails in llambda") {
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
+    intercept[DuplicateDefinitionException] {
+      bodyFor("(define a 2)(define a 3)")(scope, dialect.Llambda)
     }
   }
   

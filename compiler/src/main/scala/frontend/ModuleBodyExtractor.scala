@@ -427,6 +427,12 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
       case _ => None
   } 
 
+  private def disallowTopLevelRedefinition(symbol : sst.ScopedSymbol) {
+    if (!frontendConfig.schemeDialect.allowTopLevelRedefinition && symbol.resolveOpt.isDefined) {
+      throw new DuplicateDefinitionException(symbol)
+    }
+  }
+
   private def extractApplicationLike(boundValue : BoundValue, appliedSymbol : sst.ScopedSymbol, operands : List[sst.ScopedDatum], atOutermostLevel : Boolean) : et.Expr = {
     // Try to parse this as a type of definition
     parseDefine(boundValue, appliedSymbol, operands) match {
@@ -437,6 +443,9 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
         // There's a wart in Scheme that allows a top-level (define) to become a (set!) if the value is already defined
         // as a storage location
         symbol.resolveOpt match {
+          case Some(_) if !frontendConfig.schemeDialect.allowTopLevelRedefinition =>
+            throw new DuplicateDefinitionException(symbol)
+
           case Some(storageLoc : StorageLocation) =>
             // Convert this to a (set!)
             et.MutateVar(storageLoc, exprBlock())
@@ -454,6 +463,8 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
         }
 
       case Some(ParsedSimpleDefine(symbol, boundValue)) =>
+        disallowTopLevelRedefinition(symbol)
+
         // This doesn't create any expression tree nodes 
         symbol.scope += (symbol.name -> boundValue)
         et.Begin(Nil)
@@ -464,6 +475,8 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
         et.TopLevelDefine((procedures.map { case (procedureSymbol, expr) =>
           val schemeType = declaredSymbolType(procedureSymbol)
           val storageLoc = new StorageLocation(procedureSymbol.name, schemeType)
+
+          disallowTopLevelRedefinition(procedureSymbol)
 
           procedureSymbol.scope += (procedureSymbol.name -> storageLoc)
           (storageLoc, expr) 

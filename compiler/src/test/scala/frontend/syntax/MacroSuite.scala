@@ -5,12 +5,14 @@ import org.scalatest.{FunSuite,Inside,OptionValues}
 import llambda.compiler._
 
 class MacroSuite extends FunSuite with Inside with OptionValues with testutil.ExprHelpers {
-  implicit val primitiveScope = new Scope(collection.mutable.Map(Primitives.bindings.toSeq : _*))
+  val primitiveScope = new Scope(collection.mutable.Map(Primitives.bindings.toSeq : _*))
   
   val plusLoc = new StorageLocation("+")
   val plusScope = new Scope(collection.mutable.Map("+" -> plusLoc), Some(primitiveScope))
 
   test("multiple template is error") {
+    val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     intercept[BadSpecialFormException] {
       bodyFor(
         """(define-syntax six
@@ -18,11 +20,13 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
              ((six)
                5
                6
-           )))""")(primitiveScope)
+           )))""")(syntaxScope)
     }
   }
 
   test("trivial replacement") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     assert(exprFor(
       """(define-syntax false-literal
            (syntax-rules ()
@@ -33,7 +37,46 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
     ) === et.Literal(ast.BooleanLiteral(false)))
   }
   
+  test("redefine syntax succeeds in R7RS") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
+    assert(bodyFor(
+      """(define-syntax false-literal
+           (syntax-rules ()
+             ((false-literal)
+               #f
+         )))
+         (define-syntax false-literal
+           (syntax-rules ()
+             ((false-literal)
+               #f
+         )))
+         (false-literal)"""
+    )(syntaxScope, dialect.R7RS) === List(et.Literal(ast.BooleanLiteral(false))))
+  }
+  
+  test("redefine syntax fails in llambda") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
+    intercept[DuplicateDefinitionException] {
+      bodyFor(
+        """(define-syntax false-literal
+             (syntax-rules ()
+               ((false-literal)
+                 #f
+           )))
+           (define-syntax false-literal
+             (syntax-rules ()
+               ((false-literal)
+                 #f
+           )))
+           (false-literal)""")(syntaxScope, dialect.Llambda)
+    }
+  }
+  
   test("syntax cannot be used as expression") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     intercept[MalformedExprException] {
       exprFor(
         """(define-syntax false-literal
@@ -46,6 +89,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("first pattern symbol is ignored") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     assert(exprFor(
       """(define-syntax false-literal
            (syntax-rules ()
@@ -57,6 +102,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("simple expansion") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     assert(exprFor(
       """(define-syntax return-single
            (syntax-rules ()
@@ -85,6 +132,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("two value expansion") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     assert(exprFor(
       """(define-syntax return-two
            (syntax-rules ()
@@ -96,6 +145,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("literals must exactly match") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     intercept[NoSyntaxRuleException] {
       exprFor(
         """(define-syntax for
@@ -108,6 +159,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
 
   test("literal operand identifiers don't match non-literal pattern identifiers") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     intercept[NoSyntaxRuleException] {
       // "literal" should not match "first-capture" 
       exprFor(
@@ -139,6 +192,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("ellipsis can be a literal") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     intercept[NoSyntaxRuleException] {
       // If ellipsis wasn't a literal the middle of the list would match "b ..."
       exprFor(
@@ -152,6 +207,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("multiple rules") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     assert(exprFor(
       """(define-syntax arg-count
            (syntax-rules ()
@@ -164,6 +221,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("recursive expansion") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     assert(exprFor(
       """(define-syntax recurse
            (syntax-rules ()
@@ -175,6 +234,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("proper list matching") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     assert(exprFor(
       """(define-syntax second-element
            (syntax-rules ()
@@ -186,6 +247,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("exact improper list matching") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     assert(exprFor(
       """(define-syntax improper-mix
            (syntax-rules ()
@@ -197,6 +260,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("improper list can match larger proper list") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     assert(exprFor(
       """(define-syntax improper-match
            (syntax-rules ()
@@ -215,6 +280,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("improper list can match larger improper list") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     assert(exprFor(
       """(define-syntax improper-match
            (syntax-rules ()
@@ -233,6 +300,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("pattern can be an improper list") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     assert(exprFor(
       """(define-syntax improper-match
            (syntax-rules ()
@@ -251,6 +320,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("macro can be applied as an improper list") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     assert(exprFor(
       """(define-syntax improper-match
            (syntax-rules ()
@@ -266,6 +337,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("vector matching") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     assert(exprFor(
       """(define-syntax vector-mid
            (syntax-rules ()
@@ -277,6 +350,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("constant matching") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     assert(exprFor(
       """(define-syntax truth-symbol
            (syntax-rules ()
@@ -286,28 +361,16 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
          (truth-symbol #t)"""
     ) === et.Literal(ast.Symbol("true")))
     
-    assert(exprFor(
-      """(define-syntax truth-symbol
-           (syntax-rules ()
-             ((truth-symbol #t) 'true) 
-             ((truth-symbol #f) 'false) 
-         ))
-         (truth-symbol #f)"""
-    ) === et.Literal(ast.Symbol("false")))
+    assert(exprFor("(truth-symbol #f)") === et.Literal(ast.Symbol("false")))
 
     intercept[NoSyntaxRuleException] {
-      exprFor(
-        """(define-syntax truth-symbol
-             (syntax-rules ()
-               ((truth-symbol #t) 'true) 
-               ((truth-symbol #f) 'false) 
-           ))
-           (truth-symbol 6)"""
-      )
+      exprFor("""(truth-symbol 6)""")
     }
   }
   
   test("deeply nested matching") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     assert(exprFor(
       """(define-syntax deep-extract
            (syntax-rules ()
@@ -318,17 +381,13 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
     ) === et.Literal(ast.Pair(ast.Symbol("y"), ast.Symbol("z"))))
 
     intercept[NoSyntaxRuleException] {
-      exprFor(
-        """(define-syntax deep-extract
-             (syntax-rules ()
-               ((deep-extract (1 #(first #t (_ . second)))) 
-                 '(first . second))
-           ))
-           (deep-extract (1 #(y #f (_ . z))))""")
+      exprFor("(deep-extract (1 #(y #f (_ . z))))")
     }
   }
   
   test("wildcards") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     assert(exprFor(
       """(define-syntax return-second
            (syntax-rules ()
@@ -340,17 +399,21 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
 
   test("duplicate pattern variables fail at define time") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     intercept[BadSpecialFormException] {
       bodyFor(
         """(define-syntax test-expand
              (syntax-rules ()
                    ((test-expand expr expr ...)
                     ((lambda () expr ...)))))"""
-      )(primitiveScope)
+      )(syntaxScope)
     }
   }
   
   test("first rule matches") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     assert(exprFor(
       """(define-syntax return-one
            (syntax-rules ()
@@ -362,6 +425,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
 
   test("terminal zero or more match") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     assert(exprFor(
       """(define-syntax return-all
            (syntax-rules ()
@@ -373,6 +438,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("zero or more match with zero matches") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     assert(exprFor(
       """(define-syntax return-all
            (syntax-rules ()
@@ -384,6 +451,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("middle zero or more match") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     assert(exprFor(
       """(define-syntax return-all-but-first-last
            (syntax-rules ()
@@ -395,17 +464,13 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
     
     // This requires at least two datums
     intercept[NoSyntaxRuleException] {
-      exprFor(
-        """(define-syntax return-all-but-first-last
-             (syntax-rules ()
-               ((return-all-but-first-last first values ... last)
-                 '(values ...)
-           )))
-           (return-all-but-first-last 'a)""")
+      exprFor("(return-all-but-first-last 'a)")
     }
   }
   
   test("splice to middle of proper list") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     assert(exprFor(
       """(define-syntax append-false
            (syntax-rules ()
@@ -417,6 +482,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("splice to middle of improper list") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     assert(exprFor(
       """(define-syntax append-improper-false
            (syntax-rules ()
@@ -428,6 +495,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("splice to middle of vector") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     assert(exprFor(
       """(define-syntax append-vector-false
            (syntax-rules ()
@@ -439,6 +508,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("custom ellipsis identifier") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     assert(exprFor(
       """(define-syntax append-vector-false
            (syntax-rules my-ellipsis ()
@@ -452,6 +523,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
 
   test("zero or more template without pattern variables fails") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     // We don't have a termination condition here
     intercept[BadSpecialFormException] {
       bodyFor(
@@ -460,11 +533,13 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                    ((test-expand expr ...)
                     (5 ... ))))
            (test-expand #f)"""
-      )(primitiveScope)
+      )(syntaxScope)
     }
   }
   
   test("zero or more template with pattern variables from separate subpatterns fails") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     intercept[BadSpecialFormException] {
       bodyFor(
         """(define-syntax test-expand
@@ -472,12 +547,12 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                    ((test-expand (list1 ...) (list2 ...))
                      ((list1 list2) ...))))
            (test-expand (a b c) (1 2 3))"""
-      )(primitiveScope)
+      )(syntaxScope)
     }
   }
 
   test("body expressions allowed in body context") {
-    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 
     val exprs = bodyFor(
       """(define-syntax my-define
@@ -485,9 +560,9 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
              ((my-define ident value) (define ident value))
          ))
          (my-define a 2)"""
-    )(scope) 
+    )(syntaxScope) 
 
-    inside(scope.get("a").value) {
+    inside(syntaxScope.get("a").value) {
       case storageLoc : StorageLocation =>
         assert(exprs == List(
           et.TopLevelDefine(List(
@@ -498,16 +573,16 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("non-restructuring repeating subpattern with replacement") {
-    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 
-	 val expr = exprFor(
-		 """(define-syntax repeating-pair
-			  (syntax-rules ()
-								 ((repeating-pair (left right) ...)
-								  '((left right) ...))))
+    val expr = exprFor(
+      """(define-syntax repeating-pair
+        (syntax-rules ()
+                 ((repeating-pair (left right) ...)
+                  '((left right) ...))))
            
         (repeating-pair (left1 right1) (left2 right2))"""
-    )(scope)
+    )(syntaxScope)
 
     assert(expr === et.Literal(ast.ProperList(List(
       ast.ProperList(List(ast.Symbol("left1"), ast.Symbol("right1"))),
@@ -516,17 +591,17 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
 
   test("non-restructuring repeating subpattern with no replacement") {
-    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 
-	 val expr = exprFor(
-		 """(define-syntax repeating-pair
-			  (syntax-rules ()
-								 ((repeating-pair (left1 right1) (left2 right2) ...)
-								  '((left1 right1)
-									 (left2 right2) ...))))
+    val expr = exprFor(
+      """(define-syntax repeating-pair
+         (syntax-rules ()
+                  ((repeating-pair (left1 right1) (left2 right2) ...)
+                   '((left1 right1)
+                    (left2 right2) ...))))
            
-        (repeating-pair (left1 right1))"""
-    )(scope)
+         (repeating-pair (left1 right1))"""
+    )(syntaxScope)
 
     assert(expr === et.Literal(ast.ProperList(List(
       ast.ProperList(List(ast.Symbol("left1"), ast.Symbol("right1")))
@@ -534,7 +609,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
 
   test("restructuring subpattern") {
-    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 
     val expr :: Nil = bodyFor(
       """(define-syntax let
@@ -543,7 +618,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                ((lambda (name ...) body1 body2 ...)
                  val ...))))
          (let ((a 1) (b 2)) a b)"""
-    )(scope) 
+    )(syntaxScope) 
 
     inside(expr) {
       case et.Apply(et.Lambda(List(arg1, arg2), None, body, _), List(argVal1, argVal2)) =>
@@ -554,6 +629,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
 
   test("nested subpatterns") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     assert(exprFor(
       """(define-syntax nested-subpatterns
             (syntax-rules ()
@@ -570,7 +647,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("dependent macros") {
-    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 
     val expr = exprFor(
       """(define-syntax let
@@ -587,7 +664,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
                  (if x x (or test2 ...))))))
          
          (or 1 2)"""
-    )(scope)
+    )(syntaxScope)
 
     inside(expr) {
       case et.Apply(et.Lambda(List(arg), None, bodyExpr, _), List(argVal)) =>
@@ -625,6 +702,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
 
   test("syntax-error") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     intercept[UserDefinedSyntaxError] {
       exprFor(
         """(define-syntax error-if-pair
@@ -636,6 +715,8 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
   }
   
   test("escape ellipsis") {
+    implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
     assert(exprFor(
       """(define-syntax literal-ellipsis
            (syntax-rules ()

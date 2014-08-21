@@ -31,6 +31,27 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
       bodyFor("(define-type <another-type> <native-int32> <unicode-char>)")(scope)
     }
   }
+  
+  test("redefining type succeeds in R7RS") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+    bodyFor("""
+      (define-type <custom-type> <native-int32>)
+      (define-type <custom-type> <native-int64>)
+    """)(scope, dialect.R7RS)
+
+    assert(scope("<custom-type>") === BoundType(vt.Int64))
+  }
+  
+  test("redefining type fails in Llambda") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    intercept[DuplicateDefinitionException] {
+      bodyFor("""
+        (define-type <custom-type> <native-int32>)
+        (define-type <custom-type> <native-int64>)
+      """)(scope, dialect.Llambda)
+    }
+  }
 
   test("defining union types") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))

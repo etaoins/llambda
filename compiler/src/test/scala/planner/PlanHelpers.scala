@@ -25,7 +25,8 @@ trait PlanHelpers extends FunSuite with Inside {
   
     val frontendConfig = frontend.FrontendConfig(
       includePath=includePath,
-      featureIdentifiers=featureIdentifiers
+      featureIdentifiers=featureIdentifiers,
+      schemeDialect=dialect.Dialect.default
     )
     
     val loader = new frontend.LibraryLoader(compileConfig.targetPlatform)

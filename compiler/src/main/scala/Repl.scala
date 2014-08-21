@@ -75,7 +75,8 @@ private object ReplFrontendConfig {
 
     frontend.FrontendConfig(
       includePath=includePath,
-      featureIdentifiers=FeatureIdentifiers(targetPlatform, schemeDialect)
+      featureIdentifiers=FeatureIdentifiers(targetPlatform, schemeDialect),
+      schemeDialect=schemeDialect
     )
   }
 }

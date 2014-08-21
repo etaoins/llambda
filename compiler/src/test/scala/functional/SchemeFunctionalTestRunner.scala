@@ -79,7 +79,8 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
     val expandLibraryLoader = new frontend.LibraryLoader(targetPlatform)
     val expandFrontendConfig = frontend.FrontendConfig(
       includePath=includePath,
-      featureIdentifiers=targetPlatform.platformFeatures ++ schemeDialect.dialectFeatures
+      featureIdentifiers=targetPlatform.platformFeatures ++ schemeDialect.dialectFeatures,
+      schemeDialect=schemeDialect
     )
 
     val expandedTests = expandTopLevel(allTests)(expandLibraryLoader, expandFrontendConfig)

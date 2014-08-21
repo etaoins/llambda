@@ -14,7 +14,8 @@ class CondExpanderSuite extends FunSuite {
 
     val frontendConfig = FrontendConfig(
       includePath=IncludePath(),
-      featureIdentifiers=featureIdentifiers
+      featureIdentifiers=featureIdentifiers,
+      schemeDialect=dialect.Dialect.default
     )
 
     CondExpander.expandData(parsedClauses)(libraryLoader, frontendConfig)
