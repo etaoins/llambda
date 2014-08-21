@@ -225,35 +225,40 @@ object PlanTypeCheck {
 
           DynamicResult(resultPredTemp) 
         }
+          
+        val isTypePlan = plan.forkPlan()
+        val isNotTypePlan = plan.forkPlan()
 
-        if (!isTypePlanner.isDefined && !isNotTypePlanner.isDefined) {
-          // We can use this result directly - no need to generate a branch
+        val isTypeResult = isTypePlanner.map({planner =>
+          val remainingType = valueType & testType
+          planner(isTypePlan, remainingType)
+        }) getOrElse StaticTrueResult
+
+        val isNotTypeResult = isNotTypePlanner.map({planner =>
+          val remainingType = valueType - testType
+          planner(isNotTypePlan, remainingType)
+        }) getOrElse StaticFalseResult
+
+        if ((isTypeResult == StaticTrueResult) && (isNotTypeResult == StaticFalseResult)) {
+          // We can use our result directly without using the type branches
           testResult
         }
         else {
+          val phiPred = ps.Temp(vt.Predicate)
           val testPred = testResult.toNativePred()(plan)
+          val trueValue = isTypeResult.toNativePred()(isTypePlan)
+          val falseValue = isNotTypeResult.toNativePred()(isNotTypePlan)
 
-          val phiPred = plan.buildCondBranch(testPred, {isTypePlan =>
-            // Now we can test oureslves
-            val remainingType = valueType & testType
-            
-            val innerCheckResult = isTypePlanner.map { planner =>
-              planner(isTypePlan, remainingType)
-            } getOrElse StaticTrueResult
-
-            innerCheckResult.toNativePred()(isTypePlan)
-          },
-          { isNotTypePlan =>
-            // Not our parent type
-            val remainingType = valueType - testType
-            
-            val innerCheckResult = isNotTypePlanner.map { planner =>
-              planner(isNotTypePlan, remainingType)
-            } getOrElse StaticFalseResult
-
-            innerCheckResult.toNativePred()(isNotTypePlan)
-          })
-
+          // We need to phi the two type branches
+          plan.steps += ps.CondBranch(
+            result=phiPred,
+            test=testPred,
+            trueSteps=isTypePlan.steps.toList,
+            trueValue=trueValue,
+            falseSteps=isNotTypePlan.steps.toList,
+            falseValue=falseValue
+          )
+          
           DynamicResult(phiPred)
         }
     }
