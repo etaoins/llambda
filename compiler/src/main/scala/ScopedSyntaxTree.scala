@@ -13,22 +13,33 @@ sealed abstract class ScopedDatum extends SourceLocated {
 
     unlocated
   }
+  
+  def rescoped(mapping : Map[Scope, Scope]) : ScopedDatum
 }
 
 case class ScopedPair(car : ScopedDatum, cdr : ScopedDatum) extends ScopedDatum {
   def unlocatedUnscope : ast.Pair = ast.Pair(car.unscope, cdr.unscope)
   override def toString = "(" + car + " . " + cdr + ")"
+
+  def rescoped(mapping : Map[Scope, Scope]) : ScopedPair =
+    ScopedPair(car.rescoped(mapping), cdr.rescoped(mapping)).assignLocationFrom(this)
 }
 
 case class ScopedVectorLiteral(elements : Vector[ScopedDatum]) extends ScopedDatum {
   def unlocatedUnscope = ast.VectorLiteral(elements.map(_.unscope))
   override def toString = 
     "#(" + elements.map(_.toString).mkString(" ") + ")"
+  
+  def rescoped(mapping : Map[Scope, Scope]) : ScopedVectorLiteral =
+    ScopedVectorLiteral(elements.map(_.rescoped(mapping))).assignLocationFrom(this)
 }
 
 case class NonSymbolLeaf(atom : ast.NonSymbolLeaf) extends ScopedDatum {
   def unlocatedUnscope = atom
   override def toString = atom.toString
+
+  def rescoped(mapping : Map[Scope, Scope]) : NonSymbolLeaf =
+    this
 }
 
 case class ScopedSymbol(scope : Scope, name : String) extends ScopedDatum {
@@ -40,6 +51,15 @@ case class ScopedSymbol(scope : Scope, name : String) extends ScopedDatum {
   def resolve : BoundValue = resolveOpt getOrElse {
     throw new UnboundVariableException(this, name)
   }
+  
+  def rescoped(mapping : Map[Scope, Scope]) : ScopedSymbol =
+    mapping.get(scope) match {
+      case Some(newScope) =>
+        ScopedSymbol(newScope, name).assignLocationFrom(this)
+
+      case _ =>
+        this
+    }
 }
 
 // The following two objects are essential copied from AbstractSyntaxTree

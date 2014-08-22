@@ -21,16 +21,41 @@ object ExtractType {
     }
   }
 
-  private def resolveTypeConstructor(scopedSymbol : sst.ScopedSymbol) : PrimitiveTypeConstructor = scopedSymbol.resolve match {
-    case typeConstructor : PrimitiveTypeConstructor =>
+  private def resolveTypeConstructor(scopedSymbol : sst.ScopedSymbol) : TypeConstructor = scopedSymbol.resolve match {
+    case typeConstructor : TypeConstructor =>
       typeConstructor
 
     case _ =>
-      throw new MalformedExprException(scopedSymbol, "Syntax cannot be used as an expression")
+      throw new MalformedExprException(scopedSymbol, "Type constructor expected")
   }
 
   private def applyTypeConstructor(constructorName : sst.ScopedSymbol, operands : List[sst.ScopedDatum], recursiveVars : RecursiveVars) : vt.SchemeType = {
     resolveTypeConstructor(constructorName) match {
+      case UserDefinedTypeConstructor(constructorArgs, definition) =>
+        if (operands.length != constructorArgs.length) {
+          throw new BadSpecialFormException(constructorName, s"Type constructor expects ${constructorArgs.length} arguments, ${operands.length} provided")
+        }
+
+        // Resolve the type the should be bound to each argument
+        val operandRecursiveVars = recursiveVars.recursed()
+        val argTypes = constructorArgs.zip(operands).map { case (constructorArgSymbol, operand) =>
+          (constructorArgSymbol -> extractValueType(operand, operandRecursiveVars))
+        }
+
+        // Create new scopes that bind the arguments to their new types
+        val argsForScope = argTypes groupBy(_._1.scope)
+
+        val scopeMapping = argsForScope map { case (oldScope, scopeArgTypes) =>
+          val bindings = collection.mutable.Map(scopeArgTypes.map { case (constructorArgSymbol, valueType) =>
+            constructorArgSymbol.name -> (BoundType(valueType) : BoundValue)
+          } : _*)
+
+          (oldScope -> new Scope(bindings, Some(oldScope)))
+        }
+
+        // Process the rescoped definition
+        extractSchemeType(definition.rescoped(scopeMapping), recursiveVars)
+
       case Primitives.UnionType =>
         val memberRecursiveVars = recursiveVars.recursed()
 
@@ -118,6 +143,9 @@ object ExtractType {
     case symbol : sst.ScopedSymbol =>
       symbol.resolve match {
         case BoundType(schemeType) => schemeType
+
+        case typeConstructor : TypeConstructor =>
+          throw new BadSpecialFormException(symbol, "Type constructor used as type")
 
         case _ =>
           throw new BadSpecialFormException(symbol, "Non-type value used as type")

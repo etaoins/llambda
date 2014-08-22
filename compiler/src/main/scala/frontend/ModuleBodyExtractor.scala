@@ -21,23 +21,6 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
     }
   }
 
-  private def rescope(datum : sst.ScopedDatum, mapping : Map[Scope, Scope]) : sst.ScopedDatum = { 
-    (datum match {
-      case sst.ScopedPair(car, cdr) =>
-        sst.ScopedPair(rescope(car, mapping), rescope(cdr, mapping))
-      case sst.ScopedSymbol(scope, name) =>
-        mapping.get(scope) match {
-          case Some(newScope) => sst.ScopedSymbol(newScope, name)
-          case _ => datum
-        }
-
-      case sst.ScopedVectorLiteral(elements) =>
-        sst.ScopedVectorLiteral(elements.map(rescope(_, mapping)))
-      case leaf : sst.NonSymbolLeaf => 
-        leaf
-    }).assignLocationFrom(datum)
-  }
-  
   private def declaredSymbolType(symbol : sst.ScopedSymbol, providedTypeOpt : Option[vt.SchemeType] = None) : vt.SchemeType = {
     symbol.scope.typeDeclarations.get(symbol) match {
       case Some(declaredType) =>
@@ -90,7 +73,7 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
     }).toMap
 
     // Rescope our definition
-    val scopedDefinition = definition.map(rescope(_, scopeMapping))
+    val scopedDefinition = definition.map(_.rescoped(scopeMapping))
     
     // Split our definition is to (define)s and a body
     val defineBuilder = new ListBuffer[ParsedDefine]
@@ -420,6 +403,16 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
         val extractedType = ExtractType.extractValueType(typeDatum, recursiveVars) 
 
         Some(ParsedSimpleDefine(typeAlias, BoundType(extractedType))) 
+      
+      case (Primitives.DefineType, sst.ScopedProperList((constructorName : sst.ScopedSymbol) :: operands) :: definition :: Nil) =>
+        val operandSymbols = operands collect {
+          case scopedSymbol : sst.ScopedSymbol => scopedSymbol
+          case other =>
+            throw new BadSpecialFormException(other, "Type constructor argument identifier expected")
+        }
+
+        val typeConstructor = UserDefinedTypeConstructor(operandSymbols, definition)
+        Some(ParsedSimpleDefine(constructorName, typeConstructor)) 
 
       case (Primitives.DefineReportProcedure, _) =>
         operands match {
@@ -583,7 +576,7 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
         case _ : PrimitiveExpr =>
           throw new MalformedExprException(scopedSymbol, "Primitive cannot be used as an expression")
         
-        case _ : PrimitiveTypeConstructor =>
+        case _ : TypeConstructor =>
           throw new MalformedExprException(scopedSymbol, "Type constructor cannot be used as an expression")
 
         case _ : BoundType =>

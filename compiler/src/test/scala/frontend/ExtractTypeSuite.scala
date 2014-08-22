@@ -254,4 +254,79 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
       bodyFor("(define-type <insufficient-args> (Rec (U <string> (Pairof BT BT))))")(scope)
     }
   }
+  
+  test("defining type constructors") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    // No operands (is this useful?)
+    bodyFor("(define-type (Boolean) <boolean>)")(scope)
+    bodyFor("(define-type <constructed-boolean> (Boolean))")(scope)
+    
+    assert(scope("<constructed-boolean>") === BoundType(vt.BooleanType))
+    
+    intercept[BadSpecialFormException] {
+      // Too many operands
+      bodyFor("(define-type <too-many-args> (Boolean <pair>))")(scope)
+    }
+    
+    // Non-symbol as argument 
+    intercept[BadSpecialFormException] {
+      bodyFor("(define-type (NonSymbol 1) <boolean>)")(scope)
+    }
+    
+    // Single operand
+    bodyFor("(define-type (Option T) (U T <empty-list>))")(scope)
+    
+    bodyFor("(define-type <string-option> (Option <string>))")(scope)
+    
+    assert(scope("<string-option>") === BoundType(
+      vt.UnionType(Set(
+        vt.EmptyListType,
+        vt.StringType
+      ))
+    ))
+
+    intercept[BadSpecialFormException] {
+      // Not enough operands
+      bodyFor("(define-type <insufficient-args> (Option))")(scope)
+    }
+    
+    intercept[BadSpecialFormException] {
+      // Too many operands
+      bodyFor("(define-type <too-many-args> (Option <pair> <string>))")(scope)
+    }
+
+    // Multiple operands and recursive types
+    bodyFor("(define-type (ListWithTerminator M T) (Rec L (U T (Pairof M L))))")(scope)
+
+    bodyFor("(define-type <string-unit-tlist> (ListWithTerminator <string> <unit>))")(scope)
+    assert(scope("<string-unit-tlist>") === BoundType(
+      vt.UnionType(Set(
+        vt.UnitType,
+        vt.SpecificPairType(
+          vt.StringType,
+          vt.RecursiveSchemeTypeRef(1)
+        )
+      ))
+    ))
+    
+    // This is identical to a proper list
+    bodyFor("(define-type <port-list> (ListWithTerminator <port> <empty-list>))")(scope)
+    assert(scope("<port-list>") === BoundType(vt.ProperListType(vt.PortType)))
+
+    // Nested type constructors
+    bodyFor("(define-type <nested-type> (ListWithTerminator (Option <symbol>) <boolean>))")(scope)
+    assert(scope("<nested-type>") === BoundType(
+      vt.UnionType(Set(
+        vt.BooleanType,
+        vt.SpecificPairType(
+          vt.UnionType(Set(
+            vt.EmptyListType,
+            vt.SymbolType
+          )),
+          vt.RecursiveSchemeTypeRef(1)
+        )
+      ))
+    ))
+  }
 }

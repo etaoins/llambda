@@ -31,8 +31,25 @@ class ReportProcedure(
 // These are primitive expressions treated specially by the frontend
 abstract class PrimitiveExpr extends BoundValue
 
-// These are similar to primitive expressions but they can only appear when creating types
-abstract class PrimitiveTypeConstructor extends BoundValue
+/** Type constructors
+  *
+  * Type constructors build types based off of type arguments passed to them. These types aren't necessarily distinct
+  * from existing types; typically a type constuctor with the same arguments will produce an identical type.
+  */
+sealed abstract class TypeConstructor extends BoundValue
+
+/** Intrinsic type constructors
+  *
+  * These are analogous to primitive expressions in that they're implemented in the compiler frontend and provide a
+  * basis for more complex type constructors to be built on.
+  */
+abstract class PrimitiveTypeConstructor extends TypeConstructor
+
+/** User defined type constructors 
+  *
+  * These allow the construction of types based off type arguments
+  */
+case class UserDefinedTypeConstructor(args : List[sst.ScopedSymbol], definition : sst.ScopedDatum) extends TypeConstructor
 
 // These are what (define-syntax) creates
 
