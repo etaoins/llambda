@@ -28,10 +28,10 @@ public:
 };
 
 /**
- * Custom list of CellRefRanges backed by a memory pool
+ * List of CellRefRanges
  *
- * This was measured to provide a 10x speedup versus using std::list<{AllocCell **, size_t}>. One drawback is only 
- * 128 ranges are supported on 64bit (256 on 32bit). If that becomes an issue this code can be re-evaluated.
+ * The list structure is implemented using internal pointers on CellRefRange itself. This means that CellRefRangeList
+ * only consists of a pointer to the head of the list.
  */
 class CellRefRangeList
 {

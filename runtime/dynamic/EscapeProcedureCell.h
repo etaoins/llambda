@@ -28,7 +28,6 @@ public:
 	 * This will enter the allocator and can potentially trigger GC
 	 *
 	 * @param world               Current world pointer
-	 *                            re-entering Scheme,
 	 */
 	static EscapeProcedureCell *createInstance(World &world);
 	
