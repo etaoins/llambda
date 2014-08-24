@@ -24,6 +24,8 @@
 #include "classmap/RecordClassMap.h"
 
 #include "dynamic/State.h"
+#include "dynamic/Continuation.h"
+#include "dynamic/EscapeProcedureCell.h"
 
 #include "writer/ExternalFormDatumWriter.h"
 
@@ -74,7 +76,7 @@ void visitCell(AnyCell **rootCellRef, std::function<bool(AnyCell **)> &visitor)
 		// Does this have any child cells and is it not undefined?
 		if ((offsetMap != nullptr) && !recordLikeCell->isUndefined())
 		{
-			// Yes, iterator over them
+			// Yes, iterate over them
 			for(std::uint32_t i = 0; i < offsetMap->offsetCount; i++)
 			{
 				const std::uint32_t byteOffset = offsetMap->offsets[i]; 
@@ -93,6 +95,13 @@ void visitCell(AnyCell **rootCellRef, std::function<bool(AnyCell **)> &visitor)
 				visitCell(reinterpret_cast<AnyCell**>(cellRef), visitor);
 			}
 		}
+		else if (auto escapeProcCell = cell_cast<dynamic::EscapeProcedureCell>(*rootCellRef))
+		{
+			if (escapeProcCell->continuation() != nullptr)
+			{
+				visitContinuation(escapeProcCell->continuation(), visitor);
+			}
+		}
 	}
 	else if (auto errorObjectCell = cell_cast<ErrorObjectCell>(*rootCellRef))
 	{
@@ -103,6 +112,57 @@ void visitCell(AnyCell **rootCellRef, std::function<bool(AnyCell **)> &visitor)
 	{
 		fatalError("Unknown cell type encountered attempting to visit children", *rootCellRef);
 	}
+}
+
+void visitCellRefList(const CellRefRangeList &cellRefList, std::function<bool(AnyCell **)> &visitor)
+{
+	for(auto cellRefRange = cellRefList.head();
+		cellRefRange != nullptr;
+		cellRefRange = cellRefRange->next)
+	{
+		// Visit each cell in this range
+		for(size_t i = 0; i < cellRefRange->cellCount; i++)
+		{
+			auto cellRef = reinterpret_cast<AnyCell**>(&cellRefRange->basePointer[i]);
+
+			if (*cellRef != nullptr)
+			{
+				visitCell(cellRef, visitor);
+			}
+		}
+	}
+}
+
+void visitShadowStack(ShadowStackEntry *head, std::function<bool(AnyCell **)> &visitor)
+{
+	for(ShadowStackEntry *stackEntry = head;
+		 stackEntry != nullptr;
+		 stackEntry = stackEntry->next)
+	{
+		for(std::uint64_t i = 0; i < stackEntry->cellCount; i++)
+		{
+			auto cellRef = &stackEntry->roots[i];
+
+			if (*cellRef != nullptr)
+			{
+				visitCell(cellRef, visitor);
+			}
+		}
+	}
+}
+
+void visitContinuation(dynamic::Continuation *continuation, std::function<bool(AnyCell **)> &visitor)
+{
+	visitCellRefList(continuation->strongRefs(), visitor);
+	visitShadowStack(continuation->shadowStackHead(), visitor);
+	visitDynamicState(continuation->dynamicState(), visitor);
+
+	// XXX: This isn't correct
+	// This effectively treats all weak references inside the continuation's saved stack as a strong reference. This is
+	// because the collector uses a special visitor for weak refs that we don't have access to. Even if it was passed
+	// through all weak references need to be processed at the end of GC, not when we encounter the continuation.
+	// As weak references are effectively unused this is close enough
+	visitCellRefList(continuation->weakRefs(), visitor);
 }
 
 void visitDynamicState(dynamic::State *state, std::function<bool(AnyCell **)> &visitor)

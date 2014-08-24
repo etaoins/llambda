@@ -12,6 +12,7 @@ namespace lliby
 namespace dynamic
 {
 
+class Continuation;
 class State;
 
 }
@@ -49,6 +50,14 @@ public:
 	// These are lists of strong and weak refs in the current world
 	alloc::CellRefRangeList *strongRefs;
 	alloc::CellRefRangeList *weakRefs;
+
+	// This is the stack base where continuations are copied to/from
+	void *continuationBase;
+
+	// The currently resuming continuation
+	// This is used as temporary storage space while a continuation resumes itself
+	// This is used as temporary storage space while a continuation resumes itself
+	volatile dynamic::Continuation *resumingContinuation;
 	
 private:
 	World();

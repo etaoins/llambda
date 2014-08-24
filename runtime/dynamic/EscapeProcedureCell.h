@@ -4,6 +4,7 @@
 #include "binding/ProcedureCell.h"
 #include "alloc/StrongRef.h"
 #include "alloc/cellref.h"
+#include "alloc/CellRefRangeList.h"
 
 namespace lliby
 {
@@ -13,12 +14,13 @@ class World;
 namespace dynamic
 {
 
+class Continuation;
+
 class EscapeProcedureCell : public ProcedureCell
 {
 private:
 	struct EscapeProcedureClosure
 	{
-		bool invalidated;
 	};
 
 public:
@@ -27,9 +29,10 @@ public:
 	 *
 	 * This will enter the allocator and can potentially trigger GC
 	 *
-	 * @param world               Current world pointer
+	 * @param  world         Current world pointer
+	 * @param  continuation  Continuation to resume for when this escape procedure is applied
 	 */
-	static EscapeProcedureCell *createInstance(World &world);
+	static EscapeProcedureCell *createInstance(World &world, Continuation *continuation);
 	
 	/**
 	 * Registers the record class for the escape procedure's closure
@@ -37,42 +40,30 @@ public:
 	 * This is called by dynamic::init() at startup; this should not be directly invoked
 	 */
 	static void registerRecordClass();
+	
+	/**
+	 * Returns true if the passed cell is a EscapeProcedureCell
+	 */
+	static bool isInstance(const AnyCell *cell)
+	{
+		auto procedureCell = cell_cast<ProcedureCell>(cell);
+		return procedureCell && isInstance(procedureCell);
+	}
 
 	/**
-	 * Must be called once an escape procedure falls out of its scope
-	 *
-	 * This is a side effect of call/cc being (incompletely) emulated using exceptions
+	 * Returns true if the passed procedure cell is a EscapeProcedureCell
 	 */
-	void invalidate();
+	static bool isInstance(const ProcedureCell *);
 
 	/**
-	 * Returns true if this instance has been invalidated
+	 * Returns the continuation associated with this escape procedure
 	 */
-	bool isInvalidated() const;
-};
+	Continuation *continuation() const;
 
-class EscapeProcedureInvokedException
-{
-public:
-	EscapeProcedureInvokedException(World &world, EscapeProcedureCell *escapeProcedure, AnyCell *passedValue) :
-		m_escapeProcedureRef(world, escapeProcedure),
-		m_passedValueRef(world, passedValue)
-	{
-	}
-
-	EscapeProcedureCell *escapeProcedure() const
-	{
-		return m_escapeProcedureRef.data();
-	}
-
-	AnyCell *passedValue() const
-	{
-		return m_passedValueRef.data();
-	}
-
-private:
-	alloc::StrongRef<EscapeProcedureCell> m_escapeProcedureRef;
-	alloc::AnyRef m_passedValueRef;
+	/**
+	 * Sets the continuation for this escape procedure
+	 */
+	void setContinuation(Continuation *);
 };
 
 }

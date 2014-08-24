@@ -33,6 +33,7 @@ void World::launchWorld(void (*entryPoint)(World &))
 	World world;
 
 	alloc::initWorld(world);
+	world.continuationBase = &world;
 
 	try
 	{

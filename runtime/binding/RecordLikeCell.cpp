@@ -49,13 +49,18 @@ std::uint32_t RecordLikeCell::registerRuntimeRecordClass(const std::vector<size_
 	const std::uint32_t rawClassId = runtimeRecordClassOffsets.size();
 
 	// Create the offset map
-	auto offsetMap = static_cast<RecordClassOffsetMap*>(malloc(sizeof(std::uint32_t) * (offsetCount + 1)));
-
-	offsetMap->offsetCount = offsetCount;
-
-	for(std::uint32_t i = 0; i < offsetCount; i++)
+	RecordClassOffsetMap *offsetMap = nullptr;
+	
+	if (offsetCount > 0)
 	{
-		offsetMap->offsets[i] = offsets[i];
+		offsetMap = static_cast<RecordClassOffsetMap*>(malloc(sizeof(std::uint32_t) * (offsetCount + 1)));
+
+		offsetMap->offsetCount = offsetCount;
+
+		for(std::uint32_t i = 0; i < offsetCount; i++)
+		{
+			offsetMap->offsets[i] = offsets[i];
+		}
 	}
 
 	runtimeRecordClassOffsets.push_back(offsetMap);

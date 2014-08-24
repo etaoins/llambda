@@ -8,6 +8,7 @@
 #include "alloc/cellref.h"
 
 #include "dynamic/EscapeProcedureCell.h"
+#include "dynamic/Continuation.h"
 
 #include "core/error.h"
 
@@ -72,53 +73,37 @@ AnyCell *lliby_apply(World &world, ProcedureCell *procedure, ListElementCell *ar
 
 AnyCell *lliby_call_with_current_continuation(World &world, ProcedureCell *proc)
 {
-	// This is the procedure we're calling and it's argument head	
+	using dynamic::Continuation;
+	using dynamic::EscapeProcedureCell;
+
+	// This is the procedure we're calling
 	alloc::ProcedureRef procRef(world, proc);
-	ListElementCell *argHead;
+		
+	// Create the escape procedure and its args
+	// We build this first as there's no way to GC root a continuation at the moment
+	EscapeProcedureCell *escapeProc = EscapeProcedureCell::createInstance(world, nullptr);
+
+	// Capture the current continuation
+	Continuation::CaptureResult result = Continuation::capture(world);
 	
-	// This is the escape procedure we're passing it
-	alloc::WeakRef<dynamic::EscapeProcedureCell> escapeProcRef(world);
-
+	if (result.passedValue == nullptr)
 	{
-		// Create the escape procedure
-		escapeProcRef.setData(
-				dynamic::EscapeProcedureCell::createInstance(world)
-		); 
-
-		// Create a proper list with the escape procedure
-		argHead = ListElementCell::createProperList(world, {escapeProcRef.data()});
-	}
-
-	AnyCell *returnValue = nullptr;
-
-	try
-	{
+		// We're the original code flow path 
+		// Set the continuation on the escape proc - this will make the continuation reachable from GC
+		escapeProc->setContinuation(result.continuation);
+	
+		// Create an argument list just contianing the escape proc
+		ListElementCell *argHead = ListElementCell::createProperList(world, {escapeProc});
+		
 		// Invoke the procedure passing in the escape proc
 		// If it returns without invoking the escape proc we'll return through here
-		returnValue = procRef->apply(world, argHead);
+		return procRef->apply(world, argHead);
 	}
-	catch (dynamic::EscapeProcedureInvokedException &e)
+	else
 	{
-		if (e.escapeProcedure() == escapeProcRef.data())
-		{
-			// The escape procedure was invoked
-			returnValue = e.passedValue();
-		}
-		else
-		{
-			// This was another call/cc; invalidate ourselves and rethrow
-			escapeProcRef->invalidate();
-			throw;
-		}
+		// We're the result of a continuation being invoked
+		return result.passedValue;
 	}
-
-	if (escapeProcRef)
-	{
-		// The escape procedure can no longer be used
-		escapeProcRef->invalidate();
-	}
-
-	return returnValue;
 }
 
 }

@@ -23,6 +23,7 @@
 #include "binding/PortCell.h"
 
 #include "dynamic/ParameterProcedureCell.h"
+#include "dynamic/EscapeProcedureCell.h"
 
 namespace lliby
 {
@@ -299,6 +300,10 @@ void ExternalFormDatumWriter::renderProcedure(const ProcedureCell *proc)
 		if (dynamic::ParameterProcedureCell::isInstance(proc))
 		{
 			m_outStream << "#!procedure(parameter:" << proc << ")";
+		}
+		else if (dynamic::EscapeProcedureCell::isInstance(proc))
+		{
+			m_outStream << "#!procedure(escape:" << proc << ")";
 		}
 		else
 		{

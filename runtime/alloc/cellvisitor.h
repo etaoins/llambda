@@ -4,6 +4,7 @@
 #include <functional>
 
 #include "binding/AnyCell.h"
+#include "alloc/CellRefRangeList.h"
 
 namespace lliby
 {
@@ -11,10 +12,13 @@ namespace lliby
 namespace dynamic
 {
 	class State;
+	class Continuation;
 }
 
 namespace alloc
 {
+
+struct ShadowStackEntry;
 
 /** 
  * Visits a cell by calling visitor
@@ -25,6 +29,21 @@ namespace alloc
  *                     next.
  */
 void visitCell(AnyCell **rootCellRef, std::function<bool(AnyCell **)> &visitor);
+
+/**
+ * Visits a CellRefRangeList by calling a visitor
+ */
+void visitCellRefList(const CellRefRangeList &cellRefList, std::function<bool(AnyCell **)> &visitor);
+
+/**
+ * Visits a shadow stack
+ */
+void visitShadowStack(ShadowStackEntry *head, std::function<bool(AnyCell **)> &visitor);
+
+/**
+ * Visits a continuation
+ */
+void visitContinuation(dynamic::Continuation *continuation, std::function<bool(AnyCell **)> &visitor);
 
 /**
  * Visits all the cells referenced by a dynamic state

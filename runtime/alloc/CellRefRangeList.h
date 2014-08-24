@@ -38,14 +38,16 @@ class CellRefRangeList
 public:
 	CellRefRange *head() const
 	{
-		return mHead;
+		return m_head;
 	}
 
 	void addRange(CellRefRange &range);
 	void removeRange(CellRefRange &range);
 
+	void relocate(std::ptrdiff_t offset, void *oldStackStart, void *oldStackEnd);
+
 private:
-	CellRefRange *mHead = nullptr;
+	CellRefRange *m_head = nullptr;
 };
 
 }

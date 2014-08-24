@@ -2,6 +2,9 @@
 
 #include "core/error.h"
 #include "binding/ProperList.h"
+#include "binding/RestArgument.h"
+#include "binding/UnitCell.h"
+#include "dynamic/Continuation.h"
 
 namespace lliby
 {
@@ -14,33 +17,25 @@ namespace
 
 	AnyCell *procedureBody(World &world, ProcedureCell *procSelf, ListElementCell *argHead)
 	{
-		EscapeProcedureCell *escapeSelf = static_cast<EscapeProcedureCell*>(procSelf);
 		ProperList<AnyCell> argList(argHead);
 
-		if (!argList.isValid() || (argList.length() != 1))
+		if (argList.length() != 1)
 		{
 			signalError(world, "Escape procedures must be passed exactly one argument", {argHead});
 		}
 
-		if (escapeSelf->isInvalidated())
-		{
-			// This is a current implementation limitation of llambda
-			signalError(world, "Invoked escape procedure that has fallen out of scope", {});
-		}
-		else
-		{
-			throw EscapeProcedureInvokedException(world, escapeSelf, *argList.begin());
-		}
+		// Call the continuation
+		Continuation *continuation = static_cast<EscapeProcedureCell*>(procSelf)->continuation();
+		continuation->resume(world, *argList.begin());
+
+		// This code is unreachable
+		__builtin_unreachable();
 	}
 }
 
-EscapeProcedureCell* EscapeProcedureCell::createInstance(World &world)
+EscapeProcedureCell* EscapeProcedureCell::createInstance(World &world, Continuation *continuation)
 {
-	auto closure = static_cast<EscapeProcedureClosure*>(allocateRecordData(sizeof(EscapeProcedureClosure)));
-
-	ProcedureCell *procedureCell = ProcedureCell::createInstance(world, registeredClassId, false, closure, &procedureBody);
-	closure->invalidated = false;	
-
+	ProcedureCell *procedureCell = ProcedureCell::createInstance(world, registeredClassId, false, continuation, &procedureBody);
 	return static_cast<EscapeProcedureCell*>(procedureCell);
 }
 
@@ -50,14 +45,19 @@ void EscapeProcedureCell::registerRecordClass()
 	registeredClassId = RecordLikeCell::registerRuntimeRecordClass({}); 
 }
 
-void EscapeProcedureCell::invalidate()
+bool EscapeProcedureCell::isInstance(const ProcedureCell *proc)
 {
-	static_cast<EscapeProcedureClosure*>(recordData())->invalidated = true;
+	return proc->recordClassId() == registeredClassId;
 }
-	
-bool EscapeProcedureCell::isInvalidated() const
+
+Continuation* EscapeProcedureCell::continuation() const
 {
-	return static_cast<EscapeProcedureClosure*>(recordData())->invalidated;
+	return static_cast<Continuation*>(recordData());
+}
+
+void EscapeProcedureCell::setContinuation(Continuation *continuation)
+{
+	setRecordData(continuation);
 }
 
 }

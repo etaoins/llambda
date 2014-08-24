@@ -1,6 +1,7 @@
 #include "alloc/collector.h"
 
 #include <cstring>
+#include <cassert>
 
 #include "core/World.h"
 
@@ -13,6 +14,8 @@
 #include "binding/AnyCell.h"
 
 #include "dynamic/State.h"
+
+#include <iostream>
 
 namespace lliby
 {
@@ -44,26 +47,6 @@ namespace
 		AnyCell *m_newLocation;
 	};
 
-	// Visit every non-null cell in a cell ref list
-	void visitCellRefList(const CellRefRangeList *cellRefList, std::function<bool (AnyCell**)> &visitor)
-	{
-		for(auto cellRefRange = cellRefList->head();
-		    cellRefRange != nullptr;
-		    cellRefRange = cellRefRange->next)
-		{
-			// Visit each cell in this range
-			for(size_t i = 0; i < cellRefRange->cellCount; i++)
-			{
-				auto cellRef = reinterpret_cast<AnyCell**>(&cellRefRange->basePointer[i]);
-
-				if (*cellRef != nullptr)
-				{
-					visitCell(cellRef, visitor);
-				}
-			}
-		}
-	}
-
 	// For updating weak refs
 	bool weakRefVisitor(AnyCell **cellRef)
 	{
@@ -77,6 +60,7 @@ namespace
 		{
 			// This was moved; updated the reference
 			*cellRef = static_cast<ForwardingCell*>(oldCellLocation)->newLocation(); 
+
 			return false;
 		}
 
@@ -130,23 +114,10 @@ size_t collect(World &world, Heap &newHeap)
 	};
 
 	// Visit each runtime GC root
-	visitCellRefList(world.strongRefs, rootVisitor);
+	visitCellRefList(*world.strongRefs, rootVisitor);
 
 	// Visit each compiler GC root
-	for(ShadowStackEntry *stackEntry = world.shadowStackHead;
-		 stackEntry != nullptr;
-		 stackEntry = stackEntry->next)
-	{
-		for(std::uint64_t i = 0; i < stackEntry->cellCount; i++)
-		{
-			auto cellRef = &stackEntry->roots[i];
-
-			if (*cellRef != nullptr)
-			{
-				visitCell(cellRef, rootVisitor);
-			}
-		}
-	}
+	visitShadowStack(world.shadowStackHead, rootVisitor);
 
 	// Visit the dynamic state
 	// XXX: In theory if a parameter function isn't referenced it's safe to remove it from all states. However, because
@@ -156,7 +127,7 @@ size_t collect(World &world, Heap &newHeap)
 
 	// Visit each runtime weak ref
 	std::function<bool (AnyCell**)> weakRefFunction = weakRefVisitor;
-	visitCellRefList(world.weakRefs, weakRefFunction);
+	visitCellRefList(*world.weakRefs, weakRefFunction);
 
 	return reachableCells;
 }

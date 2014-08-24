@@ -62,3 +62,22 @@
 		  (return 'one)
 		  #f)
 	))))
+
+(define-test "captured continuation called multiple times" (expect (0 1 2 3 4 5 6 7 8 9 10)
+  (define result-list '())
+  (define captured-cont #!unit)
+
+  (define callcc-result
+    (call/cc 
+      (lambda (cont)
+        (set! captured-cont cont)
+        (cont 0))))
+
+  ; Append the result on to our result list so we can check it later
+  (set! result-list (append result-list (list callcc-result)))
+
+  ; Keep calling until the value is 10
+  (if (< callcc-result 10)
+    (captured-cont (+ callcc-result 1)))
+
+  result-list))
