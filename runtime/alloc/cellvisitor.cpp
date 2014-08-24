@@ -43,19 +43,6 @@ void visitCell(AnyCell **rootCellRef, std::function<bool(AnyCell **)> &visitor)
 		return;
 	}
 	
-	if (cell_cast<UnitCell>(*rootCellRef) ||
-	    cell_cast<EmptyListCell>(*rootCellRef) ||
-	    cell_cast<BooleanCell>(*rootCellRef) ||
-	    cell_cast<ExactIntegerCell>(*rootCellRef) ||
-	    cell_cast<FlonumCell>(*rootCellRef) ||
-	    cell_cast<StringCell>(*rootCellRef) ||
-	    cell_cast<SymbolCell>(*rootCellRef) ||
-	    cell_cast<BytevectorCell>(*rootCellRef) ||
-	    cell_cast<CharCell>(*rootCellRef) ||
-	    cell_cast<PortCell>(*rootCellRef))
-	{
-		// No children
-	}
 	else if (auto pairCell = cell_cast<PairCell>(*rootCellRef))
 	{
 		visitCell(pairCell->carRef(), visitor);
@@ -108,10 +95,25 @@ void visitCell(AnyCell **rootCellRef, std::function<bool(AnyCell **)> &visitor)
 		visitCell(reinterpret_cast<AnyCell**>(errorObjectCell->messageRef()), visitor);
 		visitCell(reinterpret_cast<AnyCell**>(errorObjectCell->irritantsRef()), visitor);
 	}
+#ifndef NDEBUG
+	else if (cell_cast<UnitCell>(*rootCellRef) ||
+	    cell_cast<EmptyListCell>(*rootCellRef) ||
+	    cell_cast<BooleanCell>(*rootCellRef) ||
+	    cell_cast<ExactIntegerCell>(*rootCellRef) ||
+	    cell_cast<FlonumCell>(*rootCellRef) ||
+	    cell_cast<StringCell>(*rootCellRef) ||
+	    cell_cast<SymbolCell>(*rootCellRef) ||
+	    cell_cast<BytevectorCell>(*rootCellRef) ||
+	    cell_cast<CharCell>(*rootCellRef) ||
+	    cell_cast<PortCell>(*rootCellRef))
+	{
+		// No children
+	}
 	else
 	{
 		fatalError("Unknown cell type encountered attempting to visit children", *rootCellRef);
 	}
+#endif
 }
 
 void visitCellRefList(const CellRefRangeList &cellRefList, std::function<bool(AnyCell **)> &visitor)
