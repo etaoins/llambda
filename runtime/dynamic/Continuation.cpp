@@ -1,6 +1,7 @@
 #include "dynamic/Continuation.h"
 
 #include <cassert>
+#include <cstdlib>
 
 #include "binding/RecordLikeCell.h"
 #include "dynamic/State.h"
@@ -114,7 +115,7 @@ Continuation::CaptureResult Continuation::capture(World &world)
 	else
 	{
 		// Unexpected return value from longjmp 
-		assert(0);
+		abort();
 	}
 }
 	
