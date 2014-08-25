@@ -21,31 +21,38 @@ object GenParameterize {
     }
   }
 
-  def genPush(state : GenerationState)(step : ps.PushDynamicState) {
+  def genPush(state : GenerationState)(step : ps.PushDynamicState) : GenerationState = {
     declareSupportFunctions(state)
 
-    // Get our world pointer IR value
+    val block = state.currentBlock
     val worldPtrIr = state.liveTemps(step.worldPtr)
 
-    val block = state.currentBlock
-    
-    // Push the new environment
-    block.callDecl(None)(dynamicenvPushDecl, List(worldPtrIr))
+    // States are wrapped in cells to suppoort GC - this means we need to insert a GC barrier here
+    val (finalState, _)  = GenGcBarrier(state) {
+      // Push the new environment
+      block.callDecl(None)(dynamicenvPushDecl, List(worldPtrIr))
 
+      (block, Unit)
+    }
+      
     // Set each value
     for((parameterTemp, valueTemp) <- step.parameterValues) {
-      val parameterIr = state.liveTemps(parameterTemp) 
-      val valueIr = state.liveTemps(valueTemp) 
+      val parameterIr = finalState.liveTemps(parameterTemp) 
+      val valueIr = finalState.liveTemps(valueTemp) 
 
       block.callDecl(None)(dynamicenvSetValueDecl, List(worldPtrIr, parameterIr, valueIr))
     }
+
+    finalState
   }
   
-  def genPop(state : GenerationState)(step : ps.PopDynamicState) {
+  def genPop(state : GenerationState)(step : ps.PopDynamicState) : GenerationState = {
     declareSupportFunctions(state)
           
     // Pop the environment
     val worldPtrIr = state.liveTemps(step.worldPtr)
     state.currentBlock.callDecl(None)(dynamicenvPopDecl, List(worldPtrIr))
+
+    state
   }
 }

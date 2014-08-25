@@ -59,6 +59,8 @@ typedef StrongRef<ErrorObjectCell> ErrorObjectRef;
 typedef StrongRefRange<ErrorObjectCell> ErrorObjectRefRange;
 typedef StrongRef<PortCell> PortRef;
 typedef StrongRefRange<PortCell> PortRefRange;
+typedef StrongRef<DynamicStateCell> DynamicStateRef;
+typedef StrongRefRange<DynamicStateCell> DynamicStateRefRange;
 
 }
 }

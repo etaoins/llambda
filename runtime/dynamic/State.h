@@ -4,6 +4,8 @@
 #include "binding/AnyCell.h"
 #include "binding/ProcedureCell.h"
 
+#include "binding/DynamicStateCell.h"
+
 #include <unordered_map>
 
 namespace lliby
@@ -27,13 +29,13 @@ public:
 	/**
 	 * Creates a new state with a specified parent and before/after procedures
 	 *
-	 * @param  before  Procedure to invoke before activating this state or its children. nullptr will disable this 
-	 *                 functionality.
-	 * @param  after   Procedure to invoke after deactivating this state or children. nullptr will disable this 
-	 *                 functionality.
-	 * @param  parent  Parent of the state or nullptr if this is a root state.
+	 * @param  before      Procedure to invoke before activating this state or its children. nullptr will disable this 
+	 *                     functionality.
+	 * @param  after       Procedure to invoke after deactivating this state or children. nullptr will disable this 
+	 *                     functionality.
+	 * @param  parentCell  Cell pointer to the parent state or nullptr if this is a root state.
 	 */
-	State(ProcedureCell *before, ProcedureCell *after, State *parent = nullptr);
+	State(ProcedureCell *before, ProcedureCell *after, DynamicStateCell *parentCell = nullptr);
 
 	/**
 	 * Returns the value for the passed parameter
@@ -50,11 +52,34 @@ public:
 	void setValueForParameter(ParameterProcedureCell *param, AnyCell *value);
 
 	/**
-	 * Returns the parent for this state or nullptr if this is a root state
+	 * Returns the parent cell for this state or nullptr if this is a root state
+	 */
+	DynamicStateCell *parentCell() const
+	{
+		return mParentCell;
+	}
+
+	/**
+	 * Returns a pointer to our parent state or nullptr if this is the root state
 	 */
 	State *parent() const
 	{
-		return mParent;
+		if (mParentCell != nullptr)
+		{
+			return mParentCell->state();
+		}
+
+		return nullptr;
+	}
+	
+	/**
+	 * Returns a pointer to the parent cell
+	 *
+	 * This is used by the garbage collector to replace our parent pointer
+	 */
+	DynamicStateCell** parentCellRef()
+	{
+		return &mParentCell;
 	}
 
 	/**
@@ -150,16 +175,16 @@ public:
 	static void popAllStates(World &world);
 
 	/**
-	 * Switches to the specified state
+	 * Switches to the specified state cell
 	 *
-	 * Without continuations this will just pop until the state matches the passed argument
+	 * All "after" procedures for exiting states will be called followed by all "before" procedures for entering states.
 	 */
-	static void switchState(World &world, State *);
+	static void switchStateCell(World &world, DynamicStateCell *);
 
 private:
 	ProcedureCell *mBefore;
 	ProcedureCell *mAfter;
-	State *mParent;
+	DynamicStateCell *mParentCell;
 	ParameterValueMap mSelfValues;
 };
 

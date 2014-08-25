@@ -71,7 +71,7 @@ Continuation::CaptureResult Continuation::capture(World &world)
 	cont->m_weakRefs = *world.weakRefs;
 	cont->m_weakRefs.relocate(relocationOffset, stackPointer, world.continuationBase);
 
-	cont->m_dynamicState = world.activeState;
+	cont->m_dynamicStateCell = world.activeStateCell;
 
 	// Finally set the jump target
 	const int jumpResult = setjmp(cont->m_jumpTarget);
@@ -105,7 +105,7 @@ Continuation::CaptureResult Continuation::capture(World &world)
 		alloc::StrongRef<AnyCell> passedValueRef(world, cont->m_passedValue);
 
 		// Switch our dynamic state
-		State::switchState(world, cont->m_dynamicState);
+		State::switchStateCell(world, cont->m_dynamicStateCell);
 
 		return {
 			.continuation = cont,

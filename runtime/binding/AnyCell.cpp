@@ -12,6 +12,7 @@
 #include "BytevectorCell.h"
 #include "StringCell.h"
 #include "PortCell.h"
+#include "DynamicStateCell.h"
 
 namespace lliby
 {
@@ -165,6 +166,10 @@ void AnyCell::finalize()
 	else if (auto thisPort = cell_cast<PortCell>(this))
 	{
 		thisPort->finalizePort();
+	}
+	else if (auto thisDynamicState = cell_cast<DynamicStateCell>(this))
+	{
+		thisDynamicState->finalizeDynamicState();
 	}
 }
 

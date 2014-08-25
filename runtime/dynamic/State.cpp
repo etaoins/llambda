@@ -4,16 +4,44 @@
 #include "dynamic/ParameterProcedureCell.h"
 #include "alloc/cellref.h"
 #include "binding/EmptyListCell.h"
+#include "binding/DynamicStateCell.h"
 
 namespace lliby
 {
 namespace dynamic
 {
+
+namespace
+{
+	/**
+	 * Returns the path of states from "descendant" to "ancestor" in descendant to ancestor order
+	 *
+	 * If "descendant" isn't a descendant of "ancestor" an empty list is returned
+	 */
+	std::vector<DynamicStateCell*> pathToAncestorState(DynamicStateCell *descendant, DynamicStateCell *ancestor)
+	{
+		std::vector<DynamicStateCell*> path;
+
+		while(descendant != nullptr)
+		{
+			if (descendant == ancestor)
+			{
+				return path;
+			}
+
+			path.push_back(descendant);
+			descendant = descendant->state()->parentCell();
+		}
+
+		// Fell off the end of the list; we're not an ancestor
+		return std::vector<DynamicStateCell*>();
+	}
+}
 	
-State::State(ProcedureCell *before, ProcedureCell *after, State *parent) : 
+State::State(ProcedureCell *before, ProcedureCell *after, DynamicStateCell *parentCell) : 
 	mBefore(before),
 	mAfter(after),
-	mParent(parent)
+	mParentCell(parentCell)
 {
 }
 	
@@ -25,9 +53,9 @@ AnyCell* State::valueForParameter(ParameterProcedureCell *param) const
 	{
 		return valueIt->second;
 	}
-	else if (mParent)
+	else if (mParentCell)
 	{
-		return mParent->valueForParameter(param);
+		return mParentCell->state()->valueForParameter(param);
 	}
 	else
 	{
@@ -42,51 +70,87 @@ void State::setValueForParameter(ParameterProcedureCell *param, AnyCell *value)
 
 State* State::activeState(World &world)
 {
-	return world.activeState;
+	return world.activeStateCell->state();
 }
 
 void State::pushActiveState(World &world, ProcedureCell *before, ProcedureCell *after)
 {
-	if (before != nullptr)
-	{
-		// Avoid rooting these if we don't have to
-		alloc::ProcedureRefRange beforeRoot(world, &before, 1);
-		alloc::ProcedureRefRange afterRoot(world, &after, 1);
+	alloc::ProcedureRef beforeRef(world, before);
+	alloc::ProcedureRef afterRef(world, after);
 
-		// Invoke the before procedure 
-		before->apply(world, EmptyListCell::instance());
+	// Invoke the before procedure 
+	if (beforeRef)
+	{
+		beforeRef->apply(world, EmptyListCell::instance());
 	}
 	
-	world.activeState = new State(before, after, world.activeState);
+	// Allocate the dynamic state cell
+	DynamicStateCell *pushedDynamicStateCell = DynamicStateCell::createInstance(world, nullptr);
+	
+	// Create a state and associated it with the dynamic state cell
+	auto pushedState = new State(beforeRef, afterRef, world.activeStateCell);
+	pushedDynamicStateCell->setState(pushedState);
+
+	world.activeStateCell = pushedDynamicStateCell;
 }
 
 void State::popActiveState(World &world)
 {
-	State *oldActiveState = world.activeState;
+	State *oldActiveState = world.activeStateCell->state();
 
 	// Make the old state active and reference it
-	world.activeState = world.activeState->parent();
+	world.activeStateCell = world.activeStateCell->state()->parentCell();
 
+	// After is executed in the "outer" state
 	if (oldActiveState->afterProcedure())
 	{
 		oldActiveState->afterProcedure()->apply(world, EmptyListCell::instance());
 	}
-	
-	delete oldActiveState;
 }
 	
 void State::popAllStates(World &world)
 {
-	while(world.activeState->parent() != nullptr)
+	while(world.activeStateCell->state()->parentCell() != nullptr)
 	{
 		popActiveState(world);
 	}
 }
 	
-void State::switchState(World &world, State *state)
+void State::switchStateCell(World &world, DynamicStateCell *targetStateCell)
 {
-	while(world.activeState != state)
+	alloc::DynamicStateRef targetStateRef(world, targetStateCell);
+
+	while(true)
 	{
+		if (world.activeStateCell == targetStateRef.data())
+		{
+			// We're done
+			return;
+		}
+
+		// Is the target state a descendant of our current state? 
+		std::vector<DynamicStateCell*> pathToTargetState = pathToAncestorState(targetStateRef, world.activeStateCell);
+
+		if (!pathToTargetState.empty())
+		{
+			// Root the path in case the before procedures cause GC
+			alloc::StrongRefRange<DynamicStateCell> pathRef(world, pathToTargetState);
+
+			for(auto it = pathToTargetState.rbegin(); it != pathToTargetState.rend(); it++)
+			{
+				if ((*it)->state()->beforeProcedure())
+				{
+					(*it)->state()->beforeProcedure()->apply(world, EmptyListCell::instance());
+				}
+
+				world.activeStateCell = *it; 
+			}
+
+			// We're done
+			return;
+		}
+
+		// No, climb the state tree more
 		popActiveState(world);
 	}
 }

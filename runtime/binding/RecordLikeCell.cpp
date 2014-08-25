@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "classmap/RecordClassMap.h"
+#include "dynamic/State.h"
 
 namespace lliby
 {

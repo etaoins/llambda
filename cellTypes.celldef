@@ -26,6 +26,10 @@ fieldtype GarbageState : uint8 {
 	extern cppname = GarbageState;
 };
 
+fieldtype State : untypedptr {
+	extern cppname = dynamic::State;
+};
+
 root cell Any typetag typeId {
 	TypeId typeId;
 	// This is GarbageState::GlobalConstant
@@ -128,4 +132,8 @@ concrete cell ErrorObject : Any {
 concrete cell Port : Any {
 	bool isOwned;
 	ios *stream;
+};
+
+concrete internal cell DynamicState : Any {
+	State *state;
 };

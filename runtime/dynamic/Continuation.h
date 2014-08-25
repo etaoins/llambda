@@ -43,9 +43,15 @@ public:
 		return m_weakRefs;
 	}
 
-	State* dynamicState() const
+	DynamicStateCell* dynamicStateCell() const
 	{
-		return m_dynamicState;
+		return m_dynamicStateCell;
+	}
+	
+	// This is used by the garbage collector to update our dynamic state pointer
+	DynamicStateCell** dynamicStateCellRef() 
+	{
+		return &m_dynamicStateCell;
 	}
 
 private:
@@ -60,7 +66,7 @@ private:
 	alloc::ShadowStackEntry *m_shadowStackHead = nullptr;
 	alloc::CellRefRangeList m_strongRefs;
 	alloc::CellRefRangeList m_weakRefs;
-	State *m_dynamicState;
+	DynamicStateCell *m_dynamicStateCell;
 
 	/**
 	 * Space store a value passed to a continuation

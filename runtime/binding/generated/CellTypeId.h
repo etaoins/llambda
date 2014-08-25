@@ -28,6 +28,7 @@ enum class CellTypeId : std::uint8_t
 	Record = 13,
 	ErrorObject = 14,
 	Port = 15,
+	DynamicState = 16,
 };
 
 }

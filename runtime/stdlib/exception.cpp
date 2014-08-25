@@ -21,7 +21,7 @@ AnyCell* lliby_with_exception_handler(World &world, ProcedureCell *handlerRaw, P
 	alloc::ProcedureRef handler(world, handlerRaw);
 
 	// Keep track of our dynamic state
-	dynamic::State *expectedState = dynamic::State::activeState(world);
+	alloc::DynamicStateRef expectedStateRef(world, world.activeStateCell);
 
 	try
 	{
@@ -36,7 +36,7 @@ AnyCell* lliby_with_exception_handler(World &world, ProcedureCell *handlerRaw, P
 		handler->apply(world, argHead);
 		
 		// Now switch to the state we were in before re-raising the exception
-		dynamic::State::switchState(world, expectedState);
+		dynamic::State::switchStateCell(world, expectedStateRef);
 
 		throw except;
 	}

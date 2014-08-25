@@ -11,19 +11,14 @@ namespace lliby
 
 namespace dynamic
 {
-
 class Continuation;
-class State;
-
 }
 
 namespace alloc
 {
-
 class MemoryBlock;
 class AllocCell;
 class CellRefRangeList;
-
 }
 
 class World
@@ -45,7 +40,7 @@ public:
 	// This is only used internally by the runtime
 	//
 	
-	dynamic::State *activeState;
+	DynamicStateCell *activeStateCell;
 
 	// These are lists of strong and weak refs in the current world
 	alloc::CellRefRangeList *strongRefs;

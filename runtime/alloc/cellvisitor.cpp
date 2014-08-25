@@ -20,6 +20,7 @@
 #include "binding/RecordLikeCell.h"
 #include "binding/ErrorObjectCell.h"
 #include "binding/PortCell.h"
+#include "binding/DynamicStateCell.h"
 
 #include "classmap/RecordClassMap.h"
 
@@ -34,6 +35,8 @@ namespace lliby
 {
 namespace alloc
 {
+
+void visitDynamicState(dynamic::State *state, std::function<bool(AnyCell **)> &visitor);
 
 void visitCell(AnyCell **rootCellRef, std::function<bool(AnyCell **)> &visitor)
 {
@@ -94,6 +97,13 @@ void visitCell(AnyCell **rootCellRef, std::function<bool(AnyCell **)> &visitor)
 	{
 		visitCell(reinterpret_cast<AnyCell**>(errorObjectCell->messageRef()), visitor);
 		visitCell(reinterpret_cast<AnyCell**>(errorObjectCell->irritantsRef()), visitor);
+	}
+	else if (auto dynamicStateCell = cell_cast<DynamicStateCell>(*rootCellRef))
+	{
+		if (dynamicStateCell->state() != nullptr)
+		{
+			visitDynamicState(dynamicStateCell->state(), visitor);
+		}
 	}
 #ifndef NDEBUG
 	else if (cell_cast<UnitCell>(*rootCellRef) ||
@@ -157,7 +167,7 @@ void visitContinuation(dynamic::Continuation *continuation, std::function<bool(A
 {
 	visitCellRefList(continuation->strongRefs(), visitor);
 	visitShadowStack(continuation->shadowStackHead(), visitor);
-	visitDynamicState(continuation->dynamicState(), visitor);
+	visitCell(reinterpret_cast<AnyCell**>(continuation->dynamicStateCellRef()), visitor);
 
 	// XXX: This isn't correct
 	// This effectively treats all weak references inside the continuation's saved stack as a strong reference. This is
@@ -202,9 +212,9 @@ void visitDynamicState(dynamic::State *state, std::function<bool(AnyCell **)> &v
 		state->setSelfValues(rebuiltMap);
 	}
 
-	if (state->parent() != nullptr)
+	if (state->parentCell() != nullptr)
 	{
-		visitDynamicState(state->parent(), visitor);
+		visitCell(reinterpret_cast<AnyCell**>(state->parentCellRef()), visitor);
 	}
 }
 

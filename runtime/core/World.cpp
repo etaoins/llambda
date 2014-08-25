@@ -5,17 +5,25 @@
 #include "alloc/CellRefRangeList.h"
 #include "alloc/allocator.h"
 
+#include "binding/DynamicStateCell.h"
+
 #include "dynamic/State.h"
 #include "dynamic/SchemeException.h"
 #include "dynamic/State.h"
 
 using namespace lliby;
 
+namespace
+{
+	dynamic::State sharedRootState(nullptr, nullptr, nullptr);
+	DynamicStateCell sharedRootStateCell(&sharedRootState, GarbageState::GlobalConstant);
+}
+
 namespace lliby
 {
 
 World::World() :
-	activeState(new dynamic::State(nullptr, nullptr)),
+	activeStateCell(&sharedRootStateCell),
 	strongRefs(new alloc::CellRefRangeList),
 	weakRefs(new alloc::CellRefRangeList)
 {
@@ -23,7 +31,6 @@ World::World() :
 
 World::~World()
 {
-	delete activeState;
 	delete strongRefs;
 	delete weakRefs;
 }

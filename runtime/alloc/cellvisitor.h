@@ -45,13 +45,6 @@ void visitShadowStack(ShadowStackEntry *head, std::function<bool(AnyCell **)> &v
  */
 void visitContinuation(dynamic::Continuation *continuation, std::function<bool(AnyCell **)> &visitor);
 
-/**
- * Visits all the cells referenced by a dynamic state
- *
- * This presumes the caller is updating the state's parameters
- */
-void visitDynamicState(dynamic::State *state, std::function<bool(AnyCell **)> &visitor);
-
 #ifndef NDEBUG
 /**
  * Dumps all reachable cells to std::cout

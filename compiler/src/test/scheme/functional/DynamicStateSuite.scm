@@ -53,3 +53,48 @@
 
 	(cons returnValue testValue)))
 
+
+(define-test "continuations between two (dynamic-wind)s" (expect (
+    first-before
+    first-inner 
+    first-after
+    second-before
+    second-inner
+    second-after
+    first-before
+    first-after
+    second-before
+    second-inner
+    second-after)
+  (import (llambda typed))
+
+  (define history-list '())
+
+  (define first-cont #!unit)
+  (define second-cont #!unit)
+
+  (define: (append-history-item (item : <symbol>))
+    (set! history-list (append history-list (list item))))
+
+  (define is-recontinued
+    (dynamic-wind
+      (lambda () (append-history-item 'first-before))
+      (lambda () 
+        (call/cc (lambda (cont)
+          (set! first-cont cont)
+          (append-history-item 'first-inner)
+          #f)))
+      (lambda () (append-history-item 'first-after))))
+
+  (dynamic-wind
+    (lambda () (append-history-item 'second-before))
+    (lambda () 
+      (call/cc (lambda (cont)
+        (set! second-cont cont)
+        (append-history-item 'second-inner)
+        ; This should leave our dynamic wind and re-enter the first one
+        (unless is-recontinued
+          (first-cont #t)))))
+    (lambda () (append-history-item 'second-after)))
+    
+    history-list))

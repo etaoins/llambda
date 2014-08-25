@@ -1,7 +1,5 @@
 #include "CellRefRangeList.h"
 
-#include <cassert>
-
 namespace lliby
 {
 namespace alloc
@@ -62,10 +60,10 @@ void CellRefRangeList::relocate(std::ptrdiff_t offset, void *oldStackStart, void
 		relocateCellRefRangePtr(cellRefRange->prev, offset);
 		relocateCellRefRangePtr(cellRefRange->next, offset);
 
-		// Ensure the old reference range was on the stack that we're saving
-		assert((cellRefRange->basePointer >= oldStackStart) && (cellRefRange->basePointer <= oldStackEnd));
-		
-		cellRefRange->basePointer = reinterpret_cast<AllocCell**>(reinterpret_cast<char*>(cellRefRange->basePointer) + offset);
+		if ((cellRefRange->basePointer >= oldStackStart) && (cellRefRange->basePointer < oldStackEnd))
+		{
+			cellRefRange->basePointer = reinterpret_cast<AllocCell**>(reinterpret_cast<char*>(cellRefRange->basePointer) + offset);
+		}
 	}
 }
 

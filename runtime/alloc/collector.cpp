@@ -15,8 +15,6 @@
 
 #include "dynamic/State.h"
 
-#include <iostream>
-
 namespace lliby
 {
 namespace alloc
@@ -123,7 +121,7 @@ size_t collect(World &world, Heap &newHeap)
 	// XXX: In theory if a parameter function isn't referenced it's safe to remove it from all states. However, because
 	// parameter values can themselves reference other parameter functions this gets extremely tricky.  Parameterization
 	// of an unreachable parameter seems like too much of a corner case to justify the additional code complexity.
-	visitDynamicState(dynamic::State::activeState(world), rootVisitor);
+	visitCell(reinterpret_cast<AnyCell**>(&world.activeStateCell), rootVisitor);
 
 	// Visit each runtime weak ref
 	std::function<bool (AnyCell**)> weakRefFunction = weakRefVisitor;

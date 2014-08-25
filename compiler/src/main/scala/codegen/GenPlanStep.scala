@@ -448,11 +448,9 @@ object GenPlanStep {
 
     case pushDynamic : ps.PushDynamicState =>
       GenParameterize.genPush(state)(pushDynamic)
-      state
     
     case popDynamic : ps.PopDynamicState =>
       GenParameterize.genPop(state)(popDynamic)
-      state
     
     case ps.IntegerAdd(resultTemp, val1Temp, val2Temp) =>
       val val1Ir = state.liveTemps(val1Temp)
