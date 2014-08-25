@@ -13,6 +13,12 @@ namespace dynamic
 
 class Continuation;
 
+/**
+ * Represents a (call/cc) escape procedure
+ *
+ * This is a direct wrapper for dynamic::Continuation that simply resumes the continuation whenever the procedure is
+ * applied. This also allows the garbage collector to manage Continuation instances via their proxy EscapeProcedureCell.
+ */
 class EscapeProcedureCell : public ProcedureCell
 {
 public:
