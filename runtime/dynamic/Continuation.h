@@ -25,31 +25,13 @@ namespace dynamic
 class Continuation
 {
 public:
-	struct CaptureResult
-	{
-		/**
-		 * Captured continuation object
-		 *
-		 * This is initialised in both the capture and resume return paths
-		 */
-		Continuation *continuation;
-
-		/**
-		 * Value passed to the resumed continuation
-		 *
-		 * This is set to nullptr in the capture return paths
-		 */
-		AnyCell *passedValue;
-	};
-
 	/**
 	 * Captures the current continuation
 	 *
-	 * This function can appear to return multiple times. It will return once normally (called the capture path) and
-	 * return just a Continuation* instance. Every time resume() is invoked on the returned Continuation instance this
-	 * function will return an additional time on a copy of the original stack
+	 * This function can appear to return multiple times. It will return once normally with a null passedValue(). Calls
+	 * to resume() will cause additional returns from capture() where passedValue() returns the cell passed to resume().
 	 */
-	static CaptureResult capture(World &world); 
+	static Continuation* capture(World &world); 
 
 	/**
 	 * Resumes the continuation passing the specified value
@@ -57,6 +39,16 @@ public:
 	 * This will cause the original capture() call to return again on a copy of its original stack
 	 */
 	void resume(World &world, AnyCell *passedValue);
+
+	/**
+	 * Returns the captured value passed to resume()
+	 *
+	 * Until the continuation is resumed this will return nullptr
+	 */
+	AnyCell *passedValue() const
+	{
+		return m_passedValue;
+	}
 
 	/**
 	 * Pointer to the shadow stack of this continuation

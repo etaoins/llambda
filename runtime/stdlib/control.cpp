@@ -84,13 +84,13 @@ AnyCell *lliby_call_with_current_continuation(World &world, ProcedureCell *proc)
 	EscapeProcedureCell *escapeProc = EscapeProcedureCell::createInstance(world, nullptr);
 
 	// Capture the current continuation
-	Continuation::CaptureResult result = Continuation::capture(world);
+	Continuation *cont = Continuation::capture(world);
 	
-	if (result.passedValue == nullptr)
+	if (cont->passedValue() == nullptr)
 	{
 		// We're the original code flow path 
 		// Set the continuation on the escape proc - this will make the continuation reachable from GC
-		escapeProc->setContinuation(result.continuation);
+		escapeProc->setContinuation(cont);
 	
 		// Create an argument list just contianing the escape proc
 		ListElementCell *argHead = ListElementCell::createProperList(world, {escapeProc});
@@ -102,7 +102,7 @@ AnyCell *lliby_call_with_current_continuation(World &world, ProcedureCell *proc)
 	else
 	{
 		// We're the result of a continuation being invoked
-		return result.passedValue;
+		return cont->passedValue();
 	}
 }
 

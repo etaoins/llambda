@@ -40,7 +40,7 @@ namespace
 	}
 }
 
-Continuation::CaptureResult Continuation::capture(World &world)
+Continuation* Continuation::capture(World &world)
 {
 	int currentStackCanary;
 	void *stackPointer = &currentStackCanary;
@@ -73,15 +73,15 @@ Continuation::CaptureResult Continuation::capture(World &world)
 
 	cont->m_dynamicStateCell = world.activeStateCell;
 
+	// We don't have a passed value yet
+	cont->m_passedValue = nullptr;
+
 	// Finally set the jump target
 	const int jumpResult = setjmp(cont->m_jumpTarget);
 
 	if (jumpResult == 0)
 	{
-		return {
-			.continuation = cont,
-			.passedValue = nullptr
-		};
+		return cont;
 	}
 	else if (jumpResult == ContinuationResumeCookie)
 	{
@@ -102,15 +102,12 @@ Continuation::CaptureResult Continuation::capture(World &world)
 		world.weakRefs.relocate(delocationOffset, &cont->m_savedStack[0], &cont->m_savedStack[stackSize]);
 
 		// Root our passed value - switching dynamic state can re-enter Scheme and cause GC
-		alloc::StrongRef<AnyCell> passedValueRef(world, cont->m_passedValue);
+		alloc::StrongRefRange<AnyCell> passedValueRef(world, &cont->m_passedValue, 1);
 
 		// Switch our dynamic state
 		State::switchStateCell(world, cont->m_dynamicStateCell);
 
-		return {
-			.continuation = cont,
-			.passedValue = passedValueRef
-		};
+		return cont;
 	}
 	else
 	{
