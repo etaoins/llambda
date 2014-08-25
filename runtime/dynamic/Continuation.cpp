@@ -65,10 +65,10 @@ Continuation::CaptureResult Continuation::capture(World &world)
 	cont->m_shadowStackHead = world.shadowStackHead;
 	relocateShadowStack(cont->m_shadowStackHead, relocationOffset);
 
-	cont->m_strongRefs = *world.strongRefs;
+	cont->m_strongRefs = world.strongRefs;
 	cont->m_strongRefs.relocate(relocationOffset, stackPointer, world.continuationBase);
 
-	cont->m_weakRefs = *world.weakRefs;
+	cont->m_weakRefs = world.weakRefs;
 	cont->m_weakRefs.relocate(relocationOffset, stackPointer, world.continuationBase);
 
 	cont->m_dynamicStateCell = world.activeStateCell;
@@ -95,11 +95,11 @@ Continuation::CaptureResult Continuation::capture(World &world)
 		world.shadowStackHead = cont->m_shadowStackHead;
 		relocateShadowStack(world.shadowStackHead, delocationOffset);
 
-		(*world.strongRefs) = cont->m_strongRefs;
-		world.strongRefs->relocate(delocationOffset, &cont->m_savedStack[0], &cont->m_savedStack[stackSize]);
+		world.strongRefs = cont->m_strongRefs;
+		world.strongRefs.relocate(delocationOffset, &cont->m_savedStack[0], &cont->m_savedStack[stackSize]);
 
-		(*world.weakRefs) = cont->m_weakRefs;
-		world.weakRefs->relocate(delocationOffset, &cont->m_savedStack[0], &cont->m_savedStack[stackSize]);
+		world.weakRefs = cont->m_weakRefs;
+		world.weakRefs.relocate(delocationOffset, &cont->m_savedStack[0], &cont->m_savedStack[stackSize]);
 
 		// Root our passed value - switching dynamic state can re-enter Scheme and cause GC
 		alloc::StrongRef<AnyCell> passedValueRef(world, cont->m_passedValue);

@@ -3,6 +3,7 @@
 
 #include "alloc/Heap.h"
 #include "alloc/ShadowStackEntry.h"
+#include "alloc/CellRefRangeList.h"
 
 #include "core/World.h"
 
@@ -43,8 +44,8 @@ public:
 	DynamicStateCell *activeStateCell;
 
 	// These are lists of strong and weak refs in the current world
-	alloc::CellRefRangeList *strongRefs;
-	alloc::CellRefRangeList *weakRefs;
+	alloc::CellRefRangeList strongRefs;
+	alloc::CellRefRangeList weakRefs;
 
 	// This is the stack base where continuations are copied to/from
 	void *continuationBase;

@@ -22,17 +22,12 @@ namespace
 namespace lliby
 {
 
-World::World() :
-	activeStateCell(&sharedRootStateCell),
-	strongRefs(new alloc::CellRefRangeList),
-	weakRefs(new alloc::CellRefRangeList)
+World::World() : activeStateCell(&sharedRootStateCell)
 {
 }
 
 World::~World()
 {
-	delete strongRefs;
-	delete weakRefs;
 }
 
 void World::launchWorld(void (*entryPoint)(World &))

@@ -21,12 +21,12 @@ class WeakRef : public AbstractRef<T>
 {
 public:
 	WeakRef(World &world) :
-		AbstractRef<T>(world.weakRefs)
+		AbstractRef<T>(&world.weakRefs)
 	{
 	}
 
 	WeakRef(World &world, T* cell) :
-		AbstractRef<T>(world.weakRefs, cell)
+		AbstractRef<T>(&world.weakRefs, cell)
 	{
 	}
 	

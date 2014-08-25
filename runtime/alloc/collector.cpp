@@ -112,7 +112,7 @@ size_t collect(World &world, Heap &newHeap)
 	};
 
 	// Visit each runtime GC root
-	visitCellRefList(*world.strongRefs, rootVisitor);
+	visitCellRefList(world.strongRefs, rootVisitor);
 
 	// Visit each compiler GC root
 	visitShadowStack(world.shadowStackHead, rootVisitor);
@@ -125,7 +125,7 @@ size_t collect(World &world, Heap &newHeap)
 
 	// Visit each runtime weak ref
 	std::function<bool (AnyCell**)> weakRefFunction = weakRefVisitor;
-	visitCellRefList(*world.weakRefs, weakRefFunction);
+	visitCellRefList(world.weakRefs, weakRefFunction);
 
 	return reachableCells;
 }

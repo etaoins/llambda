@@ -20,12 +20,12 @@ class StrongRef : public AbstractRef<T>
 {
 public:
 	StrongRef(World &world) :
-		AbstractRef<T>(world.strongRefs)
+		AbstractRef<T>(&world.strongRefs)
 	{
 	}
 	
 	StrongRef(World &world, T* cell) :
-		AbstractRef<T>(world.strongRefs, cell)
+		AbstractRef<T>(&world.strongRefs, cell)
 	{
 	}
 	
@@ -47,12 +47,12 @@ class StrongRefRange : public AbstractRefRange<T>
 {
 public:
 	explicit StrongRefRange(World &world, T** cellRef, size_t cellCount) :
-		AbstractRefRange<T>(world.strongRefs, cellRef, cellCount)
+		AbstractRefRange<T>(&world.strongRefs, cellRef, cellCount)
 	{
 	}
 	
 	explicit StrongRefRange(World &world, std::vector<T*> &cellVector) :
-		AbstractRefRange<T>(world.strongRefs, cellVector)
+		AbstractRefRange<T>(&world.strongRefs, cellVector)
 	{
 	}
 };
