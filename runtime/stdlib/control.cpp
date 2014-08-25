@@ -86,7 +86,12 @@ AnyCell *lliby_call_with_current_continuation(World &world, ProcedureCell *proc)
 	// Capture the current continuation
 	Continuation *cont = Continuation::capture(world);
 	
-	if (cont->passedValue() == nullptr)
+	if (AnyCell *passedValue = cont->takePassedValue())
+	{
+		// We're the result of a continuation being invoked
+		return passedValue;
+	}
+	else
 	{
 		// We're the original code flow path 
 		// Set the continuation on the escape proc - this will make the continuation reachable from GC
@@ -98,11 +103,6 @@ AnyCell *lliby_call_with_current_continuation(World &world, ProcedureCell *proc)
 		// Invoke the procedure passing in the escape proc
 		// If it returns without invoking the escape proc we'll return through here
 		return procRef->apply(world, argHead);
-	}
-	else
-	{
-		// We're the result of a continuation being invoked
-		return cont->passedValue();
 	}
 }
 

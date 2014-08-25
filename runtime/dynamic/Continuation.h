@@ -41,13 +41,21 @@ public:
 	void resume(World &world, AnyCell *passedValue);
 
 	/**
-	 * Returns the captured value passed to resume()
+	 * Returns the captured value passed to resume() value and sets it to null
 	 *
-	 * Until the continuation is resumed this will return nullptr
+	 * This should be used by callers of capture() to retrieve the passed value
 	 */
-	AnyCell *passedValue() const
+	AnyCell *takePassedValue()
 	{
-		return m_passedValue;
+		auto ret = m_passedValue;
+		m_passedValue = nullptr;
+		return ret;
+	}
+
+	// This is used by the GC to update our passed value pointer
+	AnyCell** passedValueRef()
+	{
+		return &m_passedValue;
 	}
 
 	/**

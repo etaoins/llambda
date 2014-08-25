@@ -169,6 +169,11 @@ void visitContinuation(dynamic::Continuation *continuation, std::function<bool(A
 	visitShadowStack(continuation->shadowStackHead(), visitor);
 	visitCell(reinterpret_cast<AnyCell**>(continuation->dynamicStateCellRef()), visitor);
 
+	if (*continuation->passedValueRef())
+	{
+		visitCell(continuation->passedValueRef(), visitor);
+	}
+
 	// XXX: This isn't correct
 	// This effectively treats all weak references inside the continuation's saved stack as a strong reference. This is
 	// because the collector uses a special visitor for weak refs that we don't have access to. Even if it was passed

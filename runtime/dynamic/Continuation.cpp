@@ -100,9 +100,6 @@ Continuation* Continuation::capture(World &world)
 		world.weakRefs = cont->m_weakRefs;
 		world.weakRefs.relocate(delocationOffset, &cont->m_savedStack[0], &cont->m_savedStack[stackSize]);
 
-		// Root our passed value - switching dynamic state can re-enter Scheme and cause GC
-		alloc::StrongRefRange<AnyCell> passedValueRef(world, &cont->m_passedValue, 1);
-
 		// Switch our dynamic state
 		State::switchStateCell(world, cont->m_dynamicStateCell);
 
