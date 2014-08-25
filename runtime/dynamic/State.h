@@ -31,8 +31,7 @@ public:
 	 *                 functionality.
 	 * @param  after   Procedure to invoke after deactivating this state or children. nullptr will disable this 
 	 *                 functionality.
-	 * @param  parent  Parent of the state or nullptr if this is a root state. The parent will have its reference count
-	 *                 incremented.
+	 * @param  parent  Parent of the state or nullptr if this is a root state.
 	 */
 	State(ProcedureCell *before, ProcedureCell *after, State *parent = nullptr);
 

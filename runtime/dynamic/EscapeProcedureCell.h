@@ -2,9 +2,6 @@
 #define _LLIBY_DYNAMIC_ESCAPEPROCEDURECELL_H
 
 #include "binding/ProcedureCell.h"
-#include "alloc/StrongRef.h"
-#include "alloc/cellref.h"
-#include "alloc/CellRefRangeList.h"
 
 namespace lliby
 {
@@ -18,11 +15,6 @@ class Continuation;
 
 class EscapeProcedureCell : public ProcedureCell
 {
-private:
-	struct EscapeProcedureClosure
-	{
-	};
-
 public:
 	/**
 	 * Creates a new escape procedure cell instance
