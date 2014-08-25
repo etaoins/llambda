@@ -12,7 +12,6 @@ final class CellField(
   val initializer : Option[Long]
 ) extends Positional
 
-
 /** Common types related to cell classes */
 object CellClass {
   /** Instance type of a cell class */
@@ -33,6 +32,33 @@ object CellClass {
     * list, boolean, etc) to reduce GC pressure
     */
   object Preconstructed extends InstanceType
+
+  sealed abstract class Visibility {
+    val fromScheme : Boolean
+    val fromCompiler : Boolean
+    val fromRuntime : Boolean
+  }
+
+  /** Cell class should be visible to Scheme, the compiler and the runtime */
+  object Public extends Visibility {
+    val fromScheme = true
+    val fromCompiler = true
+    val fromRuntime = true
+  }
+
+  /** Cell class should be visible to the compiler and runtime */
+  object Internal extends Visibility {
+    val fromScheme = false
+    val fromCompiler = true
+    val fromRuntime = true
+  }
+
+  /** Cell class should only be visible to the runtime */
+  object RuntimeOnly extends Visibility {
+    val fromScheme = false
+    val fromCompiler = false
+    val fromRuntime = true
+  }
 }
 
 /** Top-level types for cell classes
@@ -58,12 +84,8 @@ sealed abstract class CellClass extends Positional {
   
   val instanceType : CellClass.InstanceType
 
-  /** Indicates if this cell class should be hidden from Scheme
-    *
-    * If this is true then no Scheme type value will be registered in
-    * IntrinsicCellTypes and no type predicate will be generated
-    */
-  val internal : Boolean
+  /** Visibility of this cell class */
+  val visibility : CellClass.Visibility
 
   /** Optional parent of the cell class
     *
@@ -92,7 +114,7 @@ case class RootCellClass(
     name : String,
     typeTagField : CellField,
     fields : List[CellField],
-    internal : Boolean,
+    visibility : CellClass.Visibility,
     fieldTbaaNodes : ListMap[CellField, llvmir.NumberedMetadataDef]
   ) extends CellClass {
   val instanceType = CellClass.Abstract
@@ -106,7 +128,7 @@ case class TaggedCellClass(
     instanceType : CellClass.InstanceType,
     parent : CellClass,
     fields : List[CellField],
-    internal : Boolean,
+    visibility : CellClass.Visibility,
     typeId : Option[Int],
     fieldTbaaNodes : ListMap[CellField, llvmir.NumberedMetadataDef]
   ) extends ParentedCellClass
@@ -123,6 +145,6 @@ case class VariantCellClass(
     fieldTbaaNodes : ListMap[CellField, llvmir.NumberedMetadataDef]
   ) extends ParentedCellClass {
   val instanceType = CellClass.Variant
-  val internal = true
+  val visibility = CellClass.Internal
   val typeId = None
 }

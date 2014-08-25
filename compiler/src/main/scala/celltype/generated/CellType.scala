@@ -121,7 +121,7 @@ object AnyCell extends CellType with AnyFields {
   val llvmName = "any"
   val irType = UserDefinedType("any")
   val schemeName = "<any>"
-  val directSubtypes = Set[CellType](UnitCell, ListElementCell, StringCell, SymbolCell, BooleanCell, NumberCell, CharCell, VectorCell, BytevectorCell, RecordLikeCell, ErrorObjectCell, PortCell, DynamicStateCell)
+  val directSubtypes = Set[CellType](UnitCell, ListElementCell, StringCell, SymbolCell, BooleanCell, NumberCell, CharCell, VectorCell, BytevectorCell, RecordLikeCell, ErrorObjectCell, PortCell)
 
   val typeIdGepIndices = List(0, 0)
   val gcStateGepIndices = List(0, 1)
@@ -1698,67 +1698,6 @@ object PortCell extends ConcreteCellType with PortFields {
       AnyCell.createConstant(typeId=typeId),
       IntegerConstant(isOwnedIrType, isOwned),
       stream
-    ), userDefinedType=Some(irType))
-  }
-}
-
-sealed trait DynamicStateFields extends AnyFields {
-  val irType : FirstClassType
-
-  val stateIrType = PointerType(PointerType(IntegerType(8)))
-  val stateTbaaNode : Metadata
-  val stateGepIndices : List[Int]
-
-  def genPointerToState(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
-    if (valueCell.irType != PointerType(irType)) {
-      throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
-    }
-
-    block.getelementptr("statePtr")(
-      elementType=stateIrType,
-      basePointer=valueCell,
-      indices=stateGepIndices.map(IntegerConstant(IntegerType(32), _)),
-      inbounds=true
-    )
-  }
-
-  def genStoreToState(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
-    val statePtr = genPointerToState(block)(valueCell)
-    val allMetadata = metadata ++ Map("tbaa" -> stateTbaaNode)
-    block.store(toStore, statePtr, metadata=allMetadata)
-  }
-
-  def genLoadFromState(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
-    val statePtr = genPointerToState(block)(valueCell)
-    val allMetadata = Map("tbaa" -> stateTbaaNode) ++ metadata
-    block.load("state")(statePtr, metadata=allMetadata)
-  }
-}
-
-object DynamicStateCell extends ConcreteCellType with DynamicStateFields {
-  val llvmName = "dynamicState"
-  val irType = UserDefinedType("dynamicState")
-  val schemeName = "<dynamic-state>"
-  val directSubtypes = Set[CellType]()
-
-  val typeId = 16L
-
-  val typeIdGepIndices = List(0, 0, 0)
-  val gcStateGepIndices = List(0, 0, 1)
-  val stateGepIndices = List(0, 1)
-
-  val typeIdTbaaNode = NumberedMetadata(86L)
-  val gcStateTbaaNode = NumberedMetadata(87L)
-  val stateTbaaNode = NumberedMetadata(88L)
-
-  def createConstant(state : IrConstant) : StructureConstant = {
-    if (state.irType != stateIrType) {
-      throw new InternalCompilerErrorException("Unexpected type for field state")
-    }
-
-    StructureConstant(List(
-      AnyCell.createConstant(typeId=typeId),
-      state
     ), userDefinedType=Some(irType))
   }
 }

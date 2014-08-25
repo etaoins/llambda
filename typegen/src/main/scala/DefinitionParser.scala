@@ -70,14 +70,14 @@ trait CellDeclarationParser extends CommonParsers {
 trait CellDefinitionParser extends CommonParsers {
   def cellDefinition = positioned(rootCellDefinition | taggedCellDefinition | variantCellDefinition)
 
-  def rootCellDefinition = "root" ~ internal ~ "cell" ~ identifier ~ "typetag" ~ identifier ~ fields ~ ";" ^^ {
-    case _ ~ internal ~ _ ~ typeName ~ _ ~  typeTagField  ~ commonFields ~ _ =>
-      ParsedRootClassDefinition(typeName, typeTagField, commonFields, internal)
+  def rootCellDefinition = "root" ~ opt(visibilityType) ~ "cell" ~ identifier ~ "typetag" ~ identifier ~ fields ~ ";" ^^ {
+    case _ ~ visibility ~ _ ~ typeName ~ _ ~  typeTagField  ~ commonFields ~ _ =>
+      ParsedRootClassDefinition(typeName, typeTagField, commonFields, visibility.getOrElse(CellClass.Public))
   }
 
-  def taggedCellDefinition = instanceType ~ internal ~ ("cell" ~> identifier) ~ cellInheritence ~ fields <~ ";" ^^ {
-    case instanceType ~ internal ~ typeName ~ inherits ~ fields =>
-      ParsedTaggedClassDefinition(typeName, instanceType, inherits, fields, internal)
+  def taggedCellDefinition = instanceType ~ opt(visibilityType) ~ ("cell" ~> identifier) ~ cellInheritence ~ fields <~ ";" ^^ {
+    case instanceType ~ visibility ~ typeName ~ inherits ~ fields =>
+      ParsedTaggedClassDefinition(typeName, instanceType, inherits, fields, visibility.getOrElse(CellClass.Public))
   }
  
   def variantCellDefinition = "variant" ~ "cell" ~> identifier ~ cellInheritence ~ fields <~ ";" ^^ { case typeName ~ inherits ~ fields =>
@@ -93,7 +93,10 @@ trait CellDefinitionParser extends CommonParsers {
   // Cells can only inherit from other cells, not field types
   def cellInheritence = ":" ~> identifier
 
-  def internal = opt("internal") ^^ (_.isDefined)
+  def visibilityType = internalSpecifier | runtimeOnlySpecifier
+
+  def internalSpecifier = "internal"   ^^^ CellClass.Internal
+  def runtimeOnlySpecifier = "runtime" ^^^ CellClass.RuntimeOnly
 
   def fields = "{" ~> rep(field) <~ "}"
 

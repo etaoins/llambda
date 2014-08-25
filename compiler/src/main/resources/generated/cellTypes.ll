@@ -146,9 +146,3 @@
 !83 = metadata !{metadata !"Any::gcState->Port", metadata !11}
 !84 = metadata !{metadata !"Port::isOwned"}
 !85 = metadata !{metadata !"Port::stream"}
-
-; {supertype, state}
-%dynamicState = type {%any, i8**}
-!86 = metadata !{metadata !"Any::typeId->DynamicState", metadata !10}
-!87 = metadata !{metadata !"Any::gcState->DynamicState", metadata !11}
-!88 = metadata !{metadata !"DynamicState::state"}

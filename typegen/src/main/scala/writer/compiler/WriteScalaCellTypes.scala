@@ -264,7 +264,8 @@ object WriteScalaCellTypes extends writer.OutputWriter {
         scalaBuilder += "val schemeName = \"" + names.schemeName + "\"" 
         
         // Get all of our subclasses
-        val subtypeParts = processedTypes.taggedCellClassesByParent.getOrElse(cellClass, Nil) map { taggedClass =>
+        val subtypes = processedTypes.taggedCellClassesByParent.getOrElse(cellClass, Nil)
+        val subtypeParts = subtypes filter(_.visibility.fromCompiler) map { taggedClass =>
           taggedClass.names.scalaCellTypeName
         }
 
@@ -328,7 +329,7 @@ object WriteScalaCellTypes extends writer.OutputWriter {
     scalaBuilder.appendRaw(expandedTemplate)
     scalaBuilder.sep()
 
-    for(cellClass <- processedTypes.cellClasses.values) {
+    for(cellClass <- processedTypes.cellClasses.values if cellClass.visibility.fromCompiler) {
       // Write the fields trait
       writeFieldTrait(scalaBuilder, cellClass)
 

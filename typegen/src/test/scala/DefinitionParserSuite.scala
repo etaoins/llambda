@@ -37,7 +37,7 @@ class DefinitionParserSuite extends FunSuite {
     assert(cellType.name === "Datum")
     assert(cellType.typeTagField === "typeId")
     assert(cellType.instanceType === CellClass.Abstract)
-    assert(cellType.internal === true)
+    assert(cellType.visibility === CellClass.Internal)
   }
   
   test("root cell class definition with variants fails") {
@@ -65,7 +65,19 @@ class DefinitionParserSuite extends FunSuite {
     assert(cellType.name === "Symbol")
     assert(cellType.instanceType === CellClass.Abstract)
     assert(cellType.parent === "Datum")
-    assert(cellType.internal === true)
+    assert(cellType.visibility === CellClass.Internal)
+  }
+  
+  test("runtime-only tagged cell class definition") {
+    val (cellType : ParsedTaggedClassDefinition) :: Nil = parseString("""
+      abstract runtime cell Symbol : Datum {
+      };
+    """)
+
+    assert(cellType.name === "Symbol")
+    assert(cellType.instanceType === CellClass.Abstract)
+    assert(cellType.parent === "Datum")
+    assert(cellType.visibility === CellClass.RuntimeOnly)
   }
   
   test("preconstructed cell class definition") {
@@ -77,7 +89,7 @@ class DefinitionParserSuite extends FunSuite {
     assert(cellType.name === "EmptyList")
     assert(cellType.instanceType === CellClass.Preconstructed)
     assert(cellType.parent === "Datum")
-    assert(cellType.internal === false)
+    assert(cellType.visibility === CellClass.Public)
   }
 
   test("single line comments") {
@@ -90,7 +102,7 @@ class DefinitionParserSuite extends FunSuite {
     assert(cellType.name === "Datum")
     assert(cellType.typeTagField === "typeId")
     assert(cellType.instanceType === CellClass.Abstract)
-    assert(cellType.internal === false)
+    assert(cellType.visibility === CellClass.Public)
   }
   
   test("multiline comments") {
@@ -106,7 +118,7 @@ class DefinitionParserSuite extends FunSuite {
     assert(cellType.name === "Datum")
     assert(cellType.typeTagField === "typeId")
     assert(cellType.instanceType === CellClass.Abstract)
-    assert(cellType.internal === false)
+    assert(cellType.visibility === CellClass.Public)
   }
   
   test("multiple definitions") {
@@ -120,12 +132,12 @@ class DefinitionParserSuite extends FunSuite {
 
     assert(datumType.name === "Datum")
     assert(datumType.instanceType === CellClass.Abstract)
-    assert(datumType.internal === false)
+    assert(datumType.visibility === CellClass.Public)
     
     assert(numericType.instanceType === CellClass.Concrete)
     assert(numericType.name === "Numeric")
     assert(numericType.parent === "Datum")
-    assert(numericType.internal === false)
+    assert(numericType.visibility === CellClass.Public)
   }
 
   test("root cell class with fields and initializer") {
