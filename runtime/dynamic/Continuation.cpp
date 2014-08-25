@@ -42,8 +42,7 @@ namespace
 
 Continuation* Continuation::capture(World &world)
 {
-	int currentStackCanary;
-	void *stackPointer = &currentStackCanary;
+	void *stackPointer = &stackPointer;
 	
 	ptrdiff_t stackSize = static_cast<char*>(world.continuationBase) - static_cast<char*>(stackPointer);
 	assert(stackSize > 0);
@@ -118,8 +117,7 @@ Continuation* Continuation::capture(World &world)
 	
 void Continuation::resume(World &world, AnyCell *passedValue)
 {
-	int currentStackCanary;
-	void *stackPointer = &currentStackCanary;
+	void *stackPointer = &stackPointer;
 	
 	ptrdiff_t currentStackSize = static_cast<char*>(world.continuationBase) - static_cast<char*>(stackPointer);
 	assert(currentStackSize > -1);
