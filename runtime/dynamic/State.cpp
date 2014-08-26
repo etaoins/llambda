@@ -3,6 +3,7 @@
 #include "core/World.h"
 #include "dynamic/ParameterProcedureCell.h"
 #include "alloc/cellref.h"
+#include "alloc/allocator.h"
 #include "binding/EmptyListCell.h"
 #include "binding/DynamicStateCell.h"
 
@@ -119,6 +120,12 @@ void State::popAllStates(World &world)
 void State::switchStateCell(World &world, DynamicStateCell *targetStateCell)
 {
 	alloc::DynamicStateRef targetStateRef(world, targetStateCell);
+
+#ifdef _LLIBY_ALWAYS_GC
+	// We can potentially GC if we cross a state that has a before/after procedure that allocates memory. However, this
+	// isn't very common. Ensure people are properly rooting their values by forcing a collection on every state switch.
+	alloc::forceCollection(world);
+#endif
 
 	while(true)
 	{
