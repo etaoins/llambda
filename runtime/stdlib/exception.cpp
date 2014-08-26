@@ -5,7 +5,10 @@
 #include "binding/ErrorObjectCell.h"
 
 #include "alloc/cellref.h"
+
 #include "dynamic/State.h"
+#include "dynamic/EscapeProcedureCell.h"
+#include "dynamic/Continuation.h"
 #include "dynamic/SchemeException.h"
 
 #include <iostream>
@@ -33,7 +36,13 @@ AnyCell* lliby_with_exception_handler(World &world, ProcedureCell *handlerRaw, P
 
 		// Call the handler in the dynamic environment (raise) was in
 		// This is required by R7RS for reasons mysterious to me
-		handler->apply(world, argHead);
+		AnyCell *handlerResult = handler->apply(world, argHead);
+
+		// Is this a resumable exception?
+		if (except.resumeProc() != nullptr)
+		{
+			except.resumeProc()->continuation()->resume(world, handlerResult);
+		}
 		
 		// Now switch to the state we were in before re-raising the exception
 		dynamic::State::switchStateCell(world, expectedStateRef);
@@ -45,6 +54,28 @@ AnyCell* lliby_with_exception_handler(World &world, ProcedureCell *handlerRaw, P
 void lliby_raise(World &world, AnyCell *obj)
 {
 	throw dynamic::SchemeException(world, obj);
+}
+
+AnyCell* lliby_raise_continuable(World &world, AnyCell *obj)
+{
+	using dynamic::EscapeProcedureCell;
+	using dynamic::Continuation;
+
+	alloc::StrongRef<EscapeProcedureCell> resumeRef(world, EscapeProcedureCell::createInstance(world, nullptr));
+
+	Continuation *cont = Continuation::capture(world);
+
+	if (AnyCell *passedValue = cont->takePassedValue())
+	{
+		// The exception handler resumed us
+		return passedValue;
+	}
+	else
+	{
+		// We're in the original capture path - throw an exception!
+		resumeRef->setContinuation(cont);
+		throw dynamic::SchemeException(world, obj, resumeRef);
+	}
 }
 
 void lliby_error(World &world, StringCell *message, ListElementCell *irritants)

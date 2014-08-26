@@ -27,4 +27,4 @@
 (export port? input-port? output-port? current-input-port current-output-port current-error-port)
 (export newline)
 (export features)
-(export with-exception-handler raise error error-object? error-object-message error-object-irritants)
+(export with-exception-handler raise raise-continuable error error-object? error-object-message error-object-irritants)

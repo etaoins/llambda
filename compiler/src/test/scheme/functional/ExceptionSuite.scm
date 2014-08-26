@@ -116,3 +116,20 @@
           ; This will blow up at runtime
           (vector-ref #(1 2 3) dynamic-true))))))
 ))
+
+(define-test "(raise-continuable)" (expect-output ("should be a number" 65)
+	(import (scheme write))
+  (write
+    (with-exception-handler
+      (lambda (con)
+        (cond
+          ((string? con)
+           (write con)
+           (newline))
+          (else
+            (write "a warning has been issued")
+            (newline)))
+        42)
+      (lambda ()
+        (+ (raise-continuable "should be a number")
+           23))))))

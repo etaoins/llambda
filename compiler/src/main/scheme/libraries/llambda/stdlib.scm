@@ -387,6 +387,7 @@
 
     (define-r7rs with-exception-handler (world-function "lliby_with_exception_handler" (<procedure> <procedure>) -> <any>))
     (define-r7rs raise (world-function "lliby_raise" (<any>) noreturn))
+    (define-r7rs raise-continuable (world-function "lliby_raise_continuable" (<any>) -> <any>))
     (define-r7rs error-object? (make-predicate <error-object>))
     (define-r7rs error-object-message (native-function "lliby_error_object_message" (<error-object>) -> <string>))
     (define-r7rs error-object-irritants (native-function "lliby_error_object_irritants" (<error-object>) -> <list-element>)))
