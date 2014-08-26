@@ -5,6 +5,8 @@
 
 #include "core/World.h"
 
+#include "binding/RecordLikeCell.h"
+
 #include "alloc/AllocCell.h"
 #include "alloc/RangeAlloc.h"
 #include "alloc/Finalizer.h"
@@ -66,6 +68,12 @@ void shutdownWorld(World &world)
 	if (SharedByteArray::instanceCount() != 0)
 	{
 		std::cerr << "SharedByteArray instances leaked on exit!" << std::endl;
+		exit(-1);
+	}
+	
+	if (RecordLikeCell::recordDataInstanceCount() != 0)
+	{
+		std::cerr << "Record data instances leaked on exit!" << std::endl;
 		exit(-1);
 	}
 #endif

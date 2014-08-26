@@ -51,6 +51,17 @@ public:
 		m_recordData = newData;
 	}
 
+	/**
+	 * Returns the number of active record data allocations
+	 *
+	 * If leak checking is disabled this always returns 0
+	 *
+	 * This is not synchronized with other threads. For that reason this value is only accurate when there is no
+	 * concurrent instance creation or destruction and any other previously modifying threads have been synchronized
+	 * with through another mechanism.
+	 */
+	static size_t recordDataInstanceCount();
+
 protected:
 	RecordLikeCell(CellTypeId typeId, std::uint32_t recordClassId, bool dataIsInline, void *recordData) :
 		AnyCell(typeId),
