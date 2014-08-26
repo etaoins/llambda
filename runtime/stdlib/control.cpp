@@ -80,8 +80,10 @@ AnyCell *lliby_call_with_current_continuation(World &world, ProcedureCell *proc)
 	alloc::ProcedureRef procRef(world, proc);
 		
 	// Create the escape procedure and its args
-	// We build this first as there's no way to GC root a continuation at the moment
-	EscapeProcedureCell *escapeProc = EscapeProcedureCell::createInstance(world, nullptr);
+	// We build this first as there's no way to GC root a continuation at the moment. This also make sure the 
+	// continuation stays rooted in the resume path so we can access cont->passedValue(). Otherwise switching dynamic
+	// states back to the original continuation could free the the continuation.
+	alloc::StrongRef<EscapeProcedureCell> escapeRef(world, EscapeProcedureCell::createInstance(world, nullptr));
 
 	// Capture the current continuation
 	Continuation *cont = Continuation::capture(world);
@@ -95,10 +97,10 @@ AnyCell *lliby_call_with_current_continuation(World &world, ProcedureCell *proc)
 	{
 		// We're the original code flow path 
 		// Set the continuation on the escape proc - this will make the continuation reachable from GC
-		escapeProc->setContinuation(cont);
+		escapeRef->setContinuation(cont);
 	
 		// Create an argument list just contianing the escape proc
-		ListElementCell *argHead = ListElementCell::createProperList(world, {escapeProc});
+		ListElementCell *argHead = ListElementCell::createProperList(world, {escapeRef});
 		
 		// Invoke the procedure passing in the escape proc
 		// If it returns without invoking the escape proc we'll return through here
