@@ -215,6 +215,22 @@ AnyCell* lliby_append(World &world, RestArgument<AnyCell> *argHead)
 	return ListElementCell::createList(world, appenedElements, *(argIt++));
 }
 
+ListElementCell* lliby_reverse(World &world, ListElementCell *sourceHead)
+{
+	ProperList<AnyCell> sourceList(sourceHead);
+	auto sourceIt = sourceList.begin(); 
+	auto memberCount = sourceList.length();
+
+	std::vector<AnyCell*> reversedMembers(memberCount);
+
+	while(memberCount--)
+	{
+		reversedMembers[memberCount] = *(sourceIt++);
+	}
+
+	return ListElementCell::createProperList(world, reversedMembers);
+}
+
 const AnyCell* lliby_memv(World &world, const AnyCell *obj, ListElementCell *listHead)
 {
 	return list_search(world, obj, listHead, &AnyCell::isEqv);

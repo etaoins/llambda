@@ -135,3 +135,8 @@
 
   (define-test "(set-cdr!) on literal fails" (expect-failure
     (set-cdr! '(old-car . old-cdr) 'new-cdr)))))
+
+(define-test "(reverse)" (expect-success
+  (assert-equal '() (reverse '()))
+  (assert-equal '(c b a) (reverse '(a b c)))
+  (assert-equal '((e (f)) d (b c) a) (reverse '(a (b c) d (e (f)))))))

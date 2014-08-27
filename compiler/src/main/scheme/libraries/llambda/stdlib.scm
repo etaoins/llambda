@@ -311,6 +311,7 @@
     ; (eq?) is defined as (eqv?) so define (memq) as (memv)
     (define-r7rs memq memv)
     (define-r7rs member (world-function "lliby_member" (<any> <list-element>) -> <any>))
+    (define-r7rs reverse (world-function "lliby_reverse" (<list-element>) -> <list-element>))
     
     (define native-make-list (world-function "lliby_make_list" (<native-uint32> <any>) -> <list-element>))
     (define-r7rs make-list (case-lambda

@@ -12,7 +12,7 @@
 (export number? complex? real? rational? exact? integer? exact-integer? inexact? finite? infinite? nan? zero? even? odd?
         exact inexact + - / * = < > <= >= positive? negative? floor ceiling truncate round)
 (export boolean? not boolean=?)
-(export pair? null? list? cons car cdr length list-copy make-list list append memv memq member)
+(export pair? null? list? cons car cdr length list-copy make-list list append memv memq member reverse)
 
 (cond-expand ((not immutable-pairs)
   (export set-car! set-cdr!)))
