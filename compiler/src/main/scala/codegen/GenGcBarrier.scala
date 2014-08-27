@@ -25,6 +25,11 @@ object GenGcBarrier {
     val liveTemps = state.liveTemps
     val gcState = state.gcState
 
+    if (!state.currentAllocation.isEmpty) {
+      // Allocations cannot cross GC barriers
+      throw new InternalCompilerErrorException("Cell allocation held across GC barrier")
+    }
+
     // We only care about GC managed values
     // Sort them by their IR representation to ensure we generate stable IR between runs
     val liveGcManagedValues = liveTemps.tempValueToIr.toSeq.filter(_._1.isGcManaged).sortBy(_._2.toIr)

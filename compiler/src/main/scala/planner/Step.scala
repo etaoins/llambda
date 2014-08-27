@@ -675,6 +675,8 @@ case class PushDynamicState(worldPtr : WorldPtrValue, parameterValues : List[(Te
     List(parameter, value)
   }).toSet + worldPtr
   val outputValues = Set[TempValue]()
+  
+  override def canAllocate : Boolean = true
 
   def renamed(f : (TempValue) => TempValue) = 
     PushDynamicState(worldPtr, parameterValues.map { case (parameter, value) =>
