@@ -35,7 +35,7 @@ class KnownUserProc(val signature : ProcedureSignature, plannedSymbol : String, 
     new KnownUserProc(signature, plannedSymbol, selfTempOpt, Some(newReportName))
   }
   
-  override def restoreFromClosure(valueType : vt.ValueType, varTemp : ps.TempValue) : IntermediateValue = {
+  override def restoreFromClosure(valueType : vt.ValueType, varTemp : ps.TempValue)(planConfig : PlanConfig) : IntermediateValue = {
     new KnownUserProc(signature, plannedSymbol, Some(varTemp), reportNameOpt)
   }
   

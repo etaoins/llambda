@@ -38,7 +38,7 @@ private[planner] object PlanProcedureTrampoline {
     implicit val plan = parentPlan.forkPlan()
 
     // Change our argListHeadTemp to a IntermediateValue
-    val argListHeadValue = TempValueToIntermediate(vt.ProperListType(vt.AnySchemeType), argListHeadTemp)
+    val argListHeadValue = TempValueToIntermediate(vt.ProperListType(vt.AnySchemeType), argListHeadTemp)(parentPlan.config)
 
     val argTemps = new mutable.ListBuffer[ps.TempValue]
 
@@ -74,7 +74,7 @@ private[planner] object PlanProcedureTrampoline {
       plan.steps += ps.LoadPairCar(argDatumTemp, argPairTemp)
 
       // Convert it to the expected type
-      val argValue = TempValueToIntermediate(vt.AnySchemeType, argDatumTemp)
+      val argValue = TempValueToIntermediate(vt.AnySchemeType, argDatumTemp)(plan.config)
       val argTemp = argValue.toTempValue(nativeType)(plan, worldPtrTemp)
 
       argTemps += argTemp
@@ -116,7 +116,7 @@ private[planner] object PlanProcedureTrampoline {
     plan.steps += ps.Invoke(resultTempOpt, signature, entryPointTemp, invokeArgs)
 
     val returnValue = resultTempOpt map { resultTemp =>
-      TempValueToIntermediate(signature.returnType.get, resultTemp)
+      TempValueToIntermediate(signature.returnType.get, resultTemp)(plan.config)
     } getOrElse {
       DatumToConstantValue(ast.UnitValue())
     }

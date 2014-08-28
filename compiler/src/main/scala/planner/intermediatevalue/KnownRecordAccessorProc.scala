@@ -59,7 +59,7 @@ class KnownRecordAccessorProc(recordType : vt.RecordType, field : vt.RecordField
 
         Some(PlanResult(
           state=state,
-          value=TempValueToIntermediate(field.fieldType, fieldValueTemp)
+          value=TempValueToIntermediate(field.fieldType, fieldValueTemp)(plan.config)
         ))
 
       case _ =>

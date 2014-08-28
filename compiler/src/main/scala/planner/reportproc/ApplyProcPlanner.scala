@@ -32,7 +32,7 @@ object ApplyProcPlanner extends ReportProcPlanner {
       plan.steps += ps.Invoke(Some(resultTemp), AdaptedProcedureSignature, entryPointTemp, allArgs)
 
       Some(
-        TempValueToIntermediate(AdaptedProcedureSignature.returnType.get, resultTemp)
+        TempValueToIntermediate(AdaptedProcedureSignature.returnType.get, resultTemp)(plan.config)
       )
 
     case _ =>

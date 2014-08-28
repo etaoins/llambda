@@ -82,7 +82,7 @@ private[planner] object PlanExpr {
 
             PlanResult(
               state=initialState,
-              value=TempValueToIntermediate(mutableType.innerType, resultTemp)
+              value=TempValueToIntermediate(mutableType.innerType, resultTemp)(plan.config)
             )
         }
       

@@ -66,14 +66,14 @@ private[planner] object PlanApplication {
     val postFixedArgState = operands.zip(applyResult.fixedArgTypes).foldLeft(applyResult.planResult.state) {
       case (state, ((_, fixedArgValue), argType)) =>
         val constraint = ConstrainType.IntersectType(argType)
-        ConstrainType(state)(fixedArgValue, constraint)
+        ConstrainType(state)(fixedArgValue, constraint)(plan.config)
     }
 
     val restOperandValues = operands.drop(applyResult.fixedArgTypes.length)
     val postRestArgState = restOperandValues.foldLeft(postFixedArgState) {
       case (state, (_, restArgValue)) =>
         val constraint = ConstrainType.IntersectType(applyResult.restArgMemberTypeOpt.get)
-        ConstrainType(state)(restArgValue, constraint)
+        ConstrainType(state)(restArgValue, constraint)(plan.config)
     }
 
     PlanResult(

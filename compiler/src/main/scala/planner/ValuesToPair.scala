@@ -51,7 +51,7 @@ private[planner] object ValuesToPair {
     }
     else {
       // This pair can be mutated at any time by (set-car!) or (set-cdr!) even if it's an immutable storage location
-      TempValueToIntermediate(vt.AnyPairType, pairTemp)
+      TempValueToIntermediate(vt.AnyPairType, pairTemp)(plan.config)
     }
 
     resultValue

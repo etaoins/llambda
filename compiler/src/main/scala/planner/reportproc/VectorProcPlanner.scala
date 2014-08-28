@@ -33,7 +33,7 @@ object VectorProcPlanner extends ReportProcPlanner {
       val resultTemp = ps.Temp(vt.UInt32)
       plan.steps += ps.LoadVectorLength(resultTemp, vectorTemp)
 
-      Some(TempValueToIntermediate(vt.UInt32, resultTemp))
+      Some(TempValueToIntermediate(vt.UInt32, resultTemp)(plan.config))
 
     case _ =>
       None

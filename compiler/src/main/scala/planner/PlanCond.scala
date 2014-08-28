@@ -31,14 +31,14 @@ object PlanCond {
         val trueWriter = plan.forkPlan()
         // The test expression is definitely not false in this branch
         val trueConstraint = ConstrainType.SubtractType(vt.ConstantBooleanType(false))
-        val initialTrueState = ConstrainType(testResult.state)(testResult.value, trueConstraint)
+        val initialTrueState = ConstrainType(testResult.state)(testResult.value, trueConstraint)(plan.config)
         val trueResult = PlanExpr(initialTrueState)(trueExpr)(trueWriter)
         val trueValue = trueResult.value
 
         val falseWriter = plan.forkPlan() 
         // The test expression is definitely false in this branch
         val falseConstraint = ConstrainType.IntersectType(vt.ConstantBooleanType(false))
-        val initialFalseState = ConstrainType(testResult.state)(testResult.value, falseConstraint)
+        val initialFalseState = ConstrainType(testResult.state)(testResult.value, falseConstraint)(plan.config)
         val falseResult = PlanExpr(initialFalseState)(falseExpr)(falseWriter)
         val falseValue = falseResult.value
     

@@ -71,74 +71,71 @@
   (assert-true  (false? #f))
   (assert-false (false? #t))))
 
-(cond-expand (immutable-pairs
-  (define-test "(define-predicate) for pairs" (expect-success
-    (import (llambda typed))
+(define-test "(define-predicate) for pairs" (expect-success
+  (import (llambda typed))
 
-    (define-predicate any-pair? (Pairof <any> <any>))
-    (define-predicate string-symbol-pair? (Pairof <string> <symbol>))
-    (define-predicate symbol-string-pair? (Pairof <symbol> <string>))
+  (define-predicate any-pair? (Pairof <any> <any>))
+  (define-predicate string-symbol-pair? (Pairof <string> <symbol>))
+  (define-predicate symbol-string-pair? (Pairof <symbol> <string>))
 
-    (assert-true  (any-pair? '(1 . 2)))
-    (assert-true  (any-pair? '(foo . "bar")))
-    (assert-true  (any-pair? '("bar" . foo)))
+  (assert-true  (any-pair? '(1 . 2)))
+  (assert-true  (any-pair? '(foo . "bar")))
+  (assert-true  (any-pair? '("bar" . foo)))
+  
+  (assert-false (string-symbol-pair? '(1 . 2)))
+  (assert-false (string-symbol-pair? '(foo . "bar")))
+  (assert-true  (string-symbol-pair? '("bar" . foo)))
+  
+  (assert-false (symbol-string-pair? '(1 . 2)))
+  (assert-true  (symbol-string-pair? '(foo . "bar")))
+  (assert-false (symbol-string-pair? '("bar" . foo)))
+  
+  (define-predicate two-number-proper-list? (Pairof <number> (Pairof <number> <empty-list>)))
+
+  (assert-true (two-number-proper-list? '(1 2)))
+  (assert-true (two-number-proper-list? '(1.0 -5)))
+  (assert-false (two-number-proper-list? '(1 . 2)))
+  (assert-false (two-number-proper-list? '(1 sneaky-symbol)))))
+
+(define-test "(define-predicate) for lists" (expect-success
+  (import (llambda typed))
     
-    (assert-false (string-symbol-pair? '(1 . 2)))
-    (assert-false (string-symbol-pair? '(foo . "bar")))
-    (assert-true  (string-symbol-pair? '("bar" . foo)))
+  (define-predicate string-list? (Listof <string>))
+  (define-predicate symbol-list? (Listof <symbol>))
+
+  (assert-true  (string-list? '("one" "two")))
+  (assert-false (string-list? '(one two)))
+  (assert-false (string-list? '(1 2)))
+
+  (assert-false (symbol-list? '("one" "two")))
+  (assert-true  (symbol-list? '(one two)))
+  (assert-false (symbol-list? '(1 2)))))
+
+(define-test "(define-predicate) for binary trees" (expect-success
+  (import (llambda typed))
     
-    (assert-false (symbol-string-pair? '(1 . 2)))
-    (assert-true  (symbol-string-pair? '(foo . "bar")))
-    (assert-false (symbol-string-pair? '("bar" . foo)))
-    
-    (define-predicate two-number-proper-list? (Pairof <number> (Pairof <number> <empty-list>)))
+  (define-predicate string-tree? (Rec BT (U <string> (Pairof BT BT))))
 
-    (assert-true (two-number-proper-list? '(1 2)))
-    (assert-true (two-number-proper-list? '(1.0 -5)))
-    (assert-false (two-number-proper-list? '(1 . 2)))
-    (assert-false (two-number-proper-list? '(1 sneaky-symbol)))))))
+  (define string-list '("one" "two"))
+  (define bare-string "one")
+  (define string-tree '("one" . ("three" . "four")))
+  (define untyped-string-tree (typeless-cell string-tree))
+  (define untyped-string-list (typeless-cell string-list))
+  
+  (define symbol-list '(one two))
+  (define bare-symbol 'one)
+  (define symbol-tree '(one . (three . four)))
+  (define untyped-symbol-tree (typeless-cell symbol-tree))
+  (define untyped-symbol-list (typeless-cell symbol-list))
 
-(cond-expand (immutable-pairs
-  (define-test "(define-predicate) for lists" (expect-success
-    (import (llambda typed))
-      
-    (define-predicate string-list? (Listof <string>))
-    (define-predicate symbol-list? (Listof <symbol>))
-
-    (assert-true  (string-list? '("one" "two")))
-    (assert-false (string-list? '(one two)))
-    (assert-false (string-list? '(1 2)))
-
-    (assert-false (symbol-list? '("one" "two")))
-    (assert-true  (symbol-list? '(one two)))
-    (assert-false (symbol-list? '(1 2)))))))
-
-(cond-expand (immutable-pairs
-  (define-test "(define-predicate) for binary trees" (expect-success
-    (import (llambda typed))
-      
-    (define-predicate string-tree? (Rec BT (U <string> (Pairof BT BT))))
-
-    (define string-list '("one" "two"))
-    (define bare-string "one")
-    (define string-tree '("one" . ("three" . "four")))
-    (define untyped-string-tree (typeless-cell string-tree))
-    (define untyped-string-list (typeless-cell string-list))
-    
-    (define symbol-list '(one two))
-    (define bare-symbol 'one)
-    (define symbol-tree '(one . (three . four)))
-    (define untyped-symbol-tree (typeless-cell symbol-tree))
-    (define untyped-symbol-list (typeless-cell symbol-list))
-
-    (assert-false (string-tree? string-list))
-    (assert-true  (string-tree? bare-string))
-    (assert-true  (string-tree? string-tree))
-    (assert-true  (string-tree? untyped-string-tree))
-    (assert-false (string-tree? untyped-string-list))
-    
-    (assert-false (string-tree? symbol-list))
-    (assert-false (string-tree? bare-symbol))
-    (assert-false (string-tree? symbol-tree))
-    (assert-false (string-tree? untyped-symbol-tree))
-    (assert-false (string-tree? untyped-symbol-list))))))
+  (assert-false (string-tree? string-list))
+  (assert-true  (string-tree? bare-string))
+  (assert-true  (string-tree? string-tree))
+  (assert-true  (string-tree? untyped-string-tree))
+  (assert-false (string-tree? untyped-string-list))
+  
+  (assert-false (string-tree? symbol-list))
+  (assert-false (string-tree? bare-symbol))
+  (assert-false (string-tree? symbol-tree))
+  (assert-false (string-tree? untyped-symbol-tree))
+  (assert-false (string-tree? untyped-symbol-list))))

@@ -6,8 +6,10 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.InternalCompilerErrorException
 
+import llambda.compiler.valuetype.Implicits._
+
 object TempValueToIntermediate {
-  def apply(valueType : vt.ValueType, tempValue : ps.TempValue) : iv.IntermediateValue = valueType match {
+  def apply(valueType : vt.ValueType, tempValue : ps.TempValue)(planConfig : PlanConfig) : iv.IntermediateValue = valueType match {
     case vt.Predicate =>
       new iv.NativePredicateValue(tempValue)
 
@@ -21,7 +23,8 @@ object TempValueToIntermediate {
       new iv.NativeCharValue(tempValue)
 
     case schemeType : vt.SchemeType =>
-      new iv.CellValue(schemeType, BoxedValue(schemeType.cellType, tempValue))
+      val stableType = vt.StabiliseType(schemeType, planConfig.schemeDialect)
+      new iv.CellValue(stableType, BoxedValue(schemeType.cellType, tempValue))
 
     case _ : vt.ClosureType =>
       // "Closures" are mostly a fiction to re-use the machinery of records.

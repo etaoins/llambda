@@ -179,6 +179,15 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     }
   }
   
+  test("define unstable typed variable fails") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    // Because R7RS uses mutable pairs the (Listof) type isn't stable
+    intercept[BadSpecialFormException] {
+      bodyFor("(define: a : (Listof <exact-integer>) '(1 2 3 4))")(scope, dialect.R7RS)
+    }
+  }
+  
   test("define type declared variable") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
     val expressions = bodyFor(
@@ -495,18 +504,6 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     }
   }
   
-  test("typed rest only arg lambda shorthand does create proper list storage locs in R7RS") {
-    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
-    
-    val expr = bodyFor("(define: (return-six rest : <port> *) 6)")(scope, dialect.R7RS)
-    val procLoc = scope.get("return-six").value
-    inside(expr) {
-      case et.TopLevelDefine(List((storageLoc, et.Lambda(Nil, Some(restArg), _, _)))) :: Nil if procLoc == storageLoc =>
-        assert(restArg.memberType === vt.PortType)
-        assert(restArg.storageLoc.schemeType === vt.ListElementType)
-    }
-  }
-
   test("recursive lambda") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 

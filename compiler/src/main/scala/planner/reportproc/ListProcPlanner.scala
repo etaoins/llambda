@@ -64,7 +64,7 @@ object ListProcPlanner extends ReportProcPlanner {
         plan.steps += ps.CalcProperListLength(resultTemp, listElementTemp)
 
         return Some(
-          TempValueToIntermediate(vt.UInt32, resultTemp)
+          TempValueToIntermediate(vt.UInt32, resultTemp)(plan.config)
         )
       }
       else {
@@ -116,7 +116,7 @@ object ListProcPlanner extends ReportProcPlanner {
       plan.steps += ps.SetPairCar(pairTemp, carTemp)
       plan.steps += ps.SetPairCdr(pairTemp, cdrTemp)
 
-      Some(TempValueToIntermediate(vt.AnyPairType, pairTemp))
+      Some(TempValueToIntermediate(vt.AnyPairType, pairTemp)(plan.config))
 
     case (_, List((_, needleValue), (_, listValue))) if List("memq", "memv").contains(reportName) =>
       staticMemberSearch(StaticValueEqv.valuesAreEqv, needleValue, listValue)

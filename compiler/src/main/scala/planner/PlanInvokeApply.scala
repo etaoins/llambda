@@ -55,7 +55,7 @@ object PlanInvokeApply {
     plan.steps += ps.Invoke(resultTemp, signature, entryPointTemp, invokeArgs)
 
     resultTemp.map { tempValue =>
-      TempValueToIntermediate(signature.returnType.get, tempValue)
+      TempValueToIntermediate(signature.returnType.get, tempValue)(plan.config)
     }
   }
 }

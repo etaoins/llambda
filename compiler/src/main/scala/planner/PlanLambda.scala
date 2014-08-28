@@ -60,7 +60,7 @@ private[planner] object PlanLambda {
 
     case argCount =>
       mutableArgs.foldLeft(initialState) { case (state, argument) =>
-        val argValue = TempValueToIntermediate(argument.valueType, argument.tempValue)
+        val argValue = TempValueToIntermediate(argument.valueType, argument.tempValue)(plan.config)
 
         // Init the mutable
         val mutableTemp = ps.RecordTemp()
@@ -89,7 +89,7 @@ private[planner] object PlanLambda {
       // Add it to our state
       capturedVar match {
         case immutable : CapturedImmutable =>
-          val varValue = immutable.parentIntermediate.restoreFromClosure(capturedVar.valueType, varTemp)
+          val varValue = immutable.parentIntermediate.restoreFromClosure(capturedVar.valueType, varTemp)(plan.config)
           state.withValue(capturedVar.storageLoc -> ImmutableValue(varValue))
 
         case capturedMutable : CapturedMutable => 
@@ -182,7 +182,7 @@ private[planner] object PlanLambda {
 
     val argImmutables = (immutableArgs.map {
       case FixedArgument(storageLoc, tempValue, valueType) =>
-        (storageLoc, ImmutableValue(TempValueToIntermediate(valueType, tempValue)))
+        (storageLoc, ImmutableValue(TempValueToIntermediate(valueType, tempValue)(parentPlan.config)))
 
       case RestArgument(storageLoc, tempValue) =>
         val restValue = new iv.CellValue(

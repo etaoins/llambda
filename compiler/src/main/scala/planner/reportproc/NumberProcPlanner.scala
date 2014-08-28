@@ -118,7 +118,7 @@ object NumberProcPlanner extends ReportProcPlanner {
       TempValueToIntermediate(
         vt.Int64,
         resultTemp
-      )
+      )(plan.config)
     }
 
     Some(finalValue)
@@ -153,7 +153,7 @@ object NumberProcPlanner extends ReportProcPlanner {
       }
       
       // Return it directly
-      Some(TempValueToIntermediate(vt.NumberType, numericTemp))
+      Some(TempValueToIntermediate(vt.NumberType, numericTemp)(plan.config))
 
     case ("-", Nil) =>
       // This isn't allowed - let it fail at runtime

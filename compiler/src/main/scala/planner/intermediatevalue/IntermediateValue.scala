@@ -7,7 +7,7 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.RuntimeErrorMessage
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.typecheck
-import llambda.compiler.planner.{PlanWriter, TempValueToIntermediate, InvokableProcedure, BoxedValue}
+import llambda.compiler.planner.{PlanWriter, TempValueToIntermediate, InvokableProcedure, BoxedValue, PlanConfig}
 import llambda.compiler.ImpossibleTypeConversionException
 import llambda.compiler.InternalCompilerErrorException
 
@@ -162,7 +162,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     }
 
     val castTemp = toTempValue(targetType, staticCheck=staticCheck)
-    TempValueToIntermediate(targetType, castTemp)
+    TempValueToIntermediate(targetType, castTemp)(plan.config)
   }
 
   /** Returns this value with a new Scheme type
@@ -201,8 +201,8 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     * This can be overriden to carry value-specific metadata that isn't contained in the value's type alone. This can
     * include things like procedure signature, value ranges, etc.
     */
-  def restoreFromClosure(valueType : vt.ValueType, varTemp : ps.TempValue) : IntermediateValue = {
-    TempValueToIntermediate(valueType, varTemp) 
+  def restoreFromClosure(valueType : vt.ValueType, varTemp : ps.TempValue)(planConfig : PlanConfig) : IntermediateValue = {
+    TempValueToIntermediate(valueType, varTemp)(planConfig) 
   }
 }
 

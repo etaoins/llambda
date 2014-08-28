@@ -99,7 +99,7 @@ object ConstrainType {
   private def triggerCondActions(state : PlannerState)(
       value : iv.IntermediateValue,
       newType : vt.SchemeType
-  ) : PlannerState = {
+  )(planConfig : PlanConfig) : PlannerState = {
     state.typeConstraintState.condActions.get(value) match {
       case Some(condActionList) =>
         vt.SatisfiesType(vt.ConstantBooleanType(false), newType) match {
@@ -114,10 +114,10 @@ object ConstrainType {
 
               // Apply our conditional action
               if (definiteFalse) {
-                apply(newState)(condAction.subjectValue, condAction.falseConstraint)
+                apply(newState)(condAction.subjectValue, condAction.falseConstraint)(planConfig)
               }
               else {
-                apply(newState)(condAction.subjectValue, condAction.trueConstraint)
+                apply(newState)(condAction.subjectValue, condAction.trueConstraint)(planConfig)
               }
             }
 
@@ -138,16 +138,21 @@ object ConstrainType {
   def apply(state : PlannerState)(
       value : iv.IntermediateValue,
       constraint : TypeConstraint
-  ) : PlannerState = {
+  )(planConfig : PlanConfig) : PlannerState = {
     // We do some O(n) operations below so abort early for noop constraints
     if (constraint.definiteNoop) {
       return state
     }
 
-    // Create a new intermediate value with the constrained type
+    // Calculate the new type
     val existingType = value.schemeType
-    val newType = constraint.applyToSubject(existingType)
-    val constrainedValue = value.withSchemeType(newType)
+    val rawNewType = constraint.applyToSubject(existingType)
+
+    // We have to be careful to make storage locations with "stable" types in case they can be mutated
+    val stableNewType = vt.StabiliseType(rawNewType, planConfig.schemeDialect)
+
+    // Create a new intermediate value with the constrained type
+    val constrainedValue = value.withSchemeType(stableNewType)
 
     def valueMapper(inputValue : iv.IntermediateValue) =
       if (inputValue eq value) constrainedValue else inputValue
@@ -181,6 +186,6 @@ object ConstrainType {
       typeConstraintState=newConstraintState
     )
 
-    triggerCondActions(constrainedState)(constrainedValue, newType)
+    triggerCondActions(constrainedState)(constrainedValue, rawNewType)(planConfig)
   }
 }

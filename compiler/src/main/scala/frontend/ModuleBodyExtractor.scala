@@ -183,16 +183,9 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
 
     val restArgOpt = restArgDatum match {
       case restArgSymbol : sst.ScopedSymbol =>
-        val storageLoc = if (frontendConfig.schemeDialect.pairsAreImmutable) {
-          // Lists are immutable, our type can't vary
-          new StorageLocation(restArgSymbol.name, vt.ProperListType(restArgMemberType))
-        }
-        else {
-          // Lists are mutable
-          new StorageLocation(restArgSymbol.name, vt.ListElementType)
-        }
-
+        val storageLoc = new StorageLocation(restArgSymbol.name, vt.ProperListType(restArgMemberType))
         val restArg = et.RestArgument(storageLoc, restArgMemberType)
+
         Some(ScopedRestArgument(restArgSymbol, restArg))
 
       case sst.NonSymbolLeaf(ast.EmptyList()) =>
@@ -373,7 +366,8 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
         }))
       
       case (Primitives.TypedDefine, List(symbol : sst.ScopedSymbol, sst.ScopedSymbol(_, ":"), typeDatum, value)) =>
-        val providedType = ExtractType.extractSchemeType(typeDatum)
+        val providedType = ExtractType.extractStableType(typeDatum)(frontendConfig)
+
         Some(ParsedVarDefine(symbol, Some(providedType), () => {
           extractExpr(value)
         }))
@@ -392,10 +386,10 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
         Some(ParseSyntaxDefine(appliedSymbol, operands, debugContext))
 
       case (Primitives.DefineRecordType, _) =>
-        Some(ParseRecordTypeDefine(appliedSymbol, operands, allowTypes=false))
+        Some(ParseRecordTypeDefine(appliedSymbol, operands, allowTypes=false)(frontendConfig))
       
       case (Primitives.TypedDefineRecordType, _) =>
-        Some(ParseRecordTypeDefine(appliedSymbol, operands, allowTypes=true))
+        Some(ParseRecordTypeDefine(appliedSymbol, operands, allowTypes=true)(frontendConfig))
 
       case (Primitives.DefineType, (typeAlias : sst.ScopedSymbol) :: typeDatum :: Nil) =>
         // Allow the type's new name to be a recursion marker inside the definition

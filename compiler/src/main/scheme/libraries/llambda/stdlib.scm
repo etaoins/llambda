@@ -173,10 +173,11 @@
     
     ; Internal helper types
     (define-type <pair> (Pairof <any> <any>))
+    (define-type <list> (Listof <any>))
     
     ; Bootstrap definitions for case-lambda
     (define-r7rs apply (world-function "lliby_apply" (<procedure> . <any>) -> <any>))
-    (define-r7rs length (world-function "lliby_length" (<list-element>) -> <native-uint32>))
+    (define-r7rs length (world-function "lliby_length" (<list>) -> <native-uint32>))
     (define-r7rs error (world-function "lliby_error" (<string> . <any>) noreturn))
     (define-r7rs = (native-function "lliby_numeric_equal" (<number> <number> . <number>) -> <native-bool>))
     (define-r7rs < (native-function "lliby_numeric_lt" (<number> <number> . <number>) -> <native-bool>))
@@ -282,38 +283,22 @@
 
     (define-r7rs pair? (make-predicate <pair>))
     (define-r7rs null? (make-predicate <empty-list>))
-
-    (define-r7rs list?
-      (cond-expand
-        (immutable-pairs
-          (make-predicate (Listof <any>)))
-        (else 
-          ; This is tricky 
-          ; We really shouldn't use (Listof) at all if we don't have immutable pairs. The problem with directly defining
-          ; list? as a predicate is that occurrence typing might notice that (list?) is satisfied once and then deduce
-          ; that its a list for the rest of the value's lifetime. If pairs are mutable that assumption could be violated
-          ; at any time
-          ;
-          ; Get around this by defining (list?) as a procedure that examines its argument. The argument value is
-          ; distinct from the value passed to (list?) so it shouldn't affect the caller's type information.
-          (lambda (obj)
-            (define arg-is-list? (make-predicate (Listof <any>)))
-            (arg-is-list? obj)))))
+    (define-r7rs list? (make-predicate <list>))
 
     (define-r7rs cons (world-function "lliby_cons" (<any> <any>) -> <pair>))
     (define-r7rs car (native-function "lliby_car" (<pair>) -> <any>))
     (define-r7rs cdr (native-function "lliby_cdr" (<pair>) -> <any>))
 
     (define-r7rs list-copy (world-function "lliby_list_copy" (<any>) -> <any>))
-    (define-r7rs list (native-function "lliby_list" <any> -> <list-element>))
+    (define-r7rs list (native-function "lliby_list" <any> -> <list>))
     (define-r7rs append (world-function "lliby_append" <any> -> <any>))
-    (define-r7rs memv (world-function "lliby_memv" (<any> <list-element>) -> <any>))
+    (define-r7rs memv (world-function "lliby_memv" (<any> <list>) -> <any>))
     ; (eq?) is defined as (eqv?) so define (memq) as (memv)
     (define-r7rs memq memv)
-    (define-r7rs member (world-function "lliby_member" (<any> <list-element>) -> <any>))
-    (define-r7rs reverse (world-function "lliby_reverse" (<list-element>) -> <list-element>))
+    (define-r7rs member (world-function "lliby_member" (<any> <list>) -> <any>))
+    (define-r7rs reverse (world-function "lliby_reverse" (<list>) -> <list>))
     
-    (define native-make-list (world-function "lliby_make_list" (<native-uint32> <any>) -> <list-element>))
+    (define native-make-list (world-function "lliby_make_list" (<native-uint32> <any>) -> <list>))
     (define-r7rs make-list (case-lambda
       ((len) (native-make-list len #!unit))
       ((len fill) (native-make-list len fill))))
@@ -331,7 +316,7 @@
     (define-r7rs vector? (make-predicate <vector>))
     (define-r7rs vector (world-function "lliby_vector" <any> -> <vector>))
     ; This is the same runtime function but instead of using a rest arg explicitly pass in the list
-    (define-r7rs list->vector (world-function "lliby_vector" (<list-element>) -> <vector>))
+    (define-r7rs list->vector (world-function "lliby_vector" (<list>) -> <vector>))
     (define-r7rs vector-length (native-function "lliby_vector_length" (<vector>) -> <native-uint32>))
     (define-r7rs vector-ref (world-function "lliby_vector_ref" (<vector> <native-uint32>) -> <any>))
     (define-r7rs vector-set! (world-function "lliby_vector_set" (<vector> <native-uint32> <any>)))
@@ -358,7 +343,7 @@
     (define-r7rs make-string (world-function "lliby_make_string" (<native-uint32> <native-unicode-char>) -> <string>))
     (define-r7rs string (world-function "lliby_string" <char> -> <string>))
     ; This is the same runtime function but instead of using a rest arg explicitly pass in the list
-    (define-r7rs list->string (world-function "lliby_string" (<list-element>) -> <string>))
+    (define-r7rs list->string (world-function "lliby_string" (<list>) -> <string>))
     (define-r7rs string-length (native-function "lliby_string_length" (<string>) -> <native-uint32>))
     (define-r7rs string-ref (world-function "lliby_string_ref" (<string> <native-uint32>) -> <native-unicode-char>))
     (define-r7rs string-set! (world-function "lliby_string_set" (<string> <native-uint32> <native-unicode-char>)))
@@ -391,7 +376,7 @@
     (define-r7rs raise-continuable (world-function "lliby_raise_continuable" (<any>) -> <any>))
     (define-r7rs error-object? (make-predicate <error-object>))
     (define-r7rs error-object-message (native-function "lliby_error_object_message" (<error-object>) -> <string>))
-    (define-r7rs error-object-irritants (native-function "lliby_error_object_irritants" (<error-object>) -> <list-element>)))
+    (define-r7rs error-object-irritants (native-function "lliby_error_object_irritants" (<error-object>) -> <list>)))
     
   ; Optional R7RS mutable pair support
   (cond-expand ((not immutable-pairs)
