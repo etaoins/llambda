@@ -148,3 +148,17 @@
   (assert-equal '(3 . 4) (cadr test-list))
   (assert-equal 2 (cdar test-list))
   (assert-equal '() (cddr test-list))))
+
+(define-test "association lists" (expect-success
+  (define e '((a 1)(b 2)(c 3)))
+
+  (assert-equal '(a 1) (assq 'a e))
+  (assert-equal '(b 2) (assq 'b e))
+  (assert-equal #f (assq 'd e))
+
+  (cond-expand ((not immutable-pairs)
+    (assert-equal #f (assq (list 'a) '(((a)) ((b)) ((c)))))))
+
+  (assert-equal '((a)) (assoc (list 'a) '(((a)) ((b)) ((c)))))
+
+  (assert-equal '(5 7) (assv 5 '((2 3) (5 7) (11 13))))))

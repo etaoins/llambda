@@ -36,6 +36,27 @@ namespace
 		assert(cell == EmptyListCell::instance());
 		return BooleanCell::falseInstance();
 	}
+	
+	// This is used to implement assq, assv and assoc
+	const AnyCell* alist_search(const AnyCell *obj, ListElementCell *listHead, bool (AnyCell::*equalityCheck)(const AnyCell*) const)
+	{
+		const AnyCell *cell = listHead;
+
+		while(auto pair = cell_cast<PairCell>(cell))
+		{
+			auto testingPair = cell_unchecked_cast<PairCell>(pair->car());
+
+			if ((testingPair->car()->*equalityCheck)(obj))
+			{
+				return testingPair;
+			}
+
+			cell = pair->cdr();
+		}
+
+		assert(cell == EmptyListCell::instance());
+		return BooleanCell::falseInstance();
+	}
 }
 
 extern "C"
@@ -235,6 +256,16 @@ const AnyCell* lliby_memv(const AnyCell *obj, ListElementCell *listHead)
 const AnyCell* lliby_member(const AnyCell *obj, ListElementCell *listHead)
 {
 	return list_search(obj, listHead, &AnyCell::isEqual);
+}
+
+const AnyCell* lliby_assv(const AnyCell *obj, ListElementCell *listHead)
+{
+	return alist_search(obj, listHead, &AnyCell::isEqv);
+}
+
+const AnyCell* lliby_assoc(const AnyCell *obj, ListElementCell *listHead)
+{
+	return alist_search(obj, listHead, &AnyCell::isEqual);
 }
 
 }

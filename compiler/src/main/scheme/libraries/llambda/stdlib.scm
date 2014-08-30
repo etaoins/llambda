@@ -174,6 +174,7 @@
     ; Internal helper types
     (define-type <pair> (Pairof <any> <any>))
     (define-type <list> (Listof <any>))
+    (define-type <alist> (Listof <pair>))
     
     ; Bootstrap definitions for case-lambda
     (define-r7rs apply (world-function "lliby_apply" (<procedure> . <any>) -> <any>))
@@ -296,10 +297,16 @@
     (define-r7rs list-copy (world-function "lliby_list_copy" (<any>) -> <any>))
     (define-r7rs list (native-function "lliby_list" <any> -> <list>))
     (define-r7rs append (world-function "lliby_append" <any> -> <any>))
+
     (define-r7rs memv (native-function "lliby_memv" (<any> <list>) -> <any>))
     ; (eq?) is defined as (eqv?) so define (memq) as (memv)
     (define-r7rs memq memv)
     (define-r7rs member (native-function "lliby_member" (<any> <list>) -> <any>))
+    
+    (define-r7rs assv (native-function "lliby_assv" (<any> <alist>) -> <any>))
+    (define-r7rs assq assv)
+    (define-r7rs assoc (native-function "lliby_assoc" (<any> <alist>) -> <any>))
+
     (define-r7rs reverse (world-function "lliby_reverse" (<list>) -> <list>))
     
     (define native-make-list (world-function "lliby_make_list" (<native-uint32> <any>) -> <list>))
