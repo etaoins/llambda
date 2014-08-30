@@ -104,6 +104,20 @@
       (ann typeless-string <string>)
       (ann typeless-symbol <symbol>)))))
 
+(define-test "branching on type predicates with (cond)" (expect-success
+  (import (llambda typed))
+
+  (define typeless-string (cast (typeless-cell "test") (U <string> <exact-integer>)))
+  (define typeless-symbol (cast (typeless-cell 'test) <any>))
+
+  (cond
+    ((string? typeless-string)
+     (ann typeless-string <string>))
+    ((symbol? typeless-symbol)
+     (ann typeless-symbol <symbol>))
+    (else 
+     (ann typeless-string <exact-integer>)))))
+
 (define-test "branching on type predicates with (or)" (expect-success
   (import (llambda typed))
 
@@ -142,5 +156,3 @@
         (set-cdr! test-list 2)
         (list? test-list))
       'unreachable)))))
-
-
