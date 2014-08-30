@@ -288,6 +288,10 @@
     (define-r7rs cons (world-function "lliby_cons" (<any> <any>) -> <pair>))
     (define-r7rs car (native-function "lliby_car" (<pair>) -> <any>))
     (define-r7rs cdr (native-function "lliby_cdr" (<pair>) -> <any>))
+    (define-r7rs caar (lambda: ((x : (Pairof <pair> <any>))) (car (car x))))
+    (define-r7rs cadr (lambda: ((x : (Pairof <any> <pair>))) (car (cdr x))))
+    (define-r7rs cdar (lambda: ((x : (Pairof <pair> <any>))) (cdr (car x))))
+    (define-r7rs cddr (lambda: ((x : (Pairof <any> <pair>))) (cdr (cdr x))))
 
     (define-r7rs list-copy (world-function "lliby_list_copy" (<any>) -> <any>))
     (define-r7rs list (native-function "lliby_list" <any> -> <list>))

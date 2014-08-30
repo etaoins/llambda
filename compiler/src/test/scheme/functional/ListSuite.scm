@@ -140,3 +140,11 @@
   (assert-equal '() (reverse '()))
   (assert-equal '(c b a) (reverse '(a b c)))
   (assert-equal '((e (f)) d (b c) a) (reverse '(a (b c) d (e (f)))))))
+
+(define-test "base cadr procedures" (expect-success
+  (define test-list '((1 . 2) (3 . 4)))
+
+  (assert-equal 1 (caar test-list))
+  (assert-equal '(3 . 4) (cadr test-list))
+  (assert-equal 2 (cdar test-list))
+  (assert-equal '() (cddr test-list))))
