@@ -9,11 +9,17 @@
   (export <any> <list-element> <pair> <empty-list> <string> <symbol> <boolean> <number> <exact-integer> <flonum> <char>
           <vector> <bytevector> <procedure> <port>)
 
+  ; Our own type constructors
+  (export Assocof)
+
   ; These are new macros
   (export define-predicate let: let*: letrec*: letrec:)
   
   (begin
     (define-type <pair> (Pairof <any> <any>)))
+
+  (begin
+    (define-type (Assocof KT VT) (Listof (Pairof KT VT))))
 
   (begin 
     (define-syntax define-predicate

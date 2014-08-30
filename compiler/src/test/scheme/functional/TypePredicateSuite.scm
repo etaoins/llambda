@@ -139,3 +139,19 @@
   (assert-false (string-tree? symbol-tree))
   (assert-false (string-tree? untyped-symbol-tree))
   (assert-false (string-tree? untyped-symbol-list))))
+
+(define-test "(define-predicate) for associative lists" (expect-success
+  (import (llambda typed))
+  
+  (define symbol-list '(one two))
+  (define bare-symbol 'one)
+  (define symbol-to-int-alist '((one 1) (two 2) (three 3)))
+  (define string-to-int-alist '(("one" 1) ("two" 2) ("three" 3)))
+
+  (define-predicate symbol-to-int-alist? (Assocof <symbol> (Listof <exact-integer>)))
+
+  (assert-false (symbol-to-int-alist? symbol-list))
+  (assert-false (symbol-to-int-alist? bare-symbol))
+  (assert-true  (symbol-to-int-alist? symbol-to-int-alist))
+  (assert-false (symbol-to-int-alist? string-to-int-alist))))
+
