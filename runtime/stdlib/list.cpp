@@ -1,3 +1,5 @@
+#include <cassert>
+
 #include "binding/PairCell.h"
 #include "binding/EmptyListCell.h"
 #include "binding/BooleanCell.h"
@@ -15,7 +17,7 @@ using namespace lliby;
 namespace 
 {
 	// This is used to implement memq, memv and member without a callback
-	const AnyCell* list_search(World &world, const AnyCell *obj, ListElementCell *listHead, bool (AnyCell::*equalityCheck)(const AnyCell*) const)
+	const AnyCell* list_search(const AnyCell *obj, ListElementCell *listHead, bool (AnyCell::*equalityCheck)(const AnyCell*) const)
 	{
 		const AnyCell *cell = listHead;
 
@@ -31,14 +33,8 @@ namespace
 			cell = pair->cdr();
 		}
 
-		if (cell == EmptyListCell::instance())
-		{
-			return BooleanCell::falseInstance();
-		}
-		else
-		{
-			signalError(world, "Attempted to search non-list", {listHead});
-		}
+		assert(cell == EmptyListCell::instance());
+		return BooleanCell::falseInstance();
 	}
 }
 
@@ -231,14 +227,14 @@ ListElementCell* lliby_reverse(World &world, ListElementCell *sourceHead)
 	return ListElementCell::createProperList(world, reversedMembers);
 }
 
-const AnyCell* lliby_memv(World &world, const AnyCell *obj, ListElementCell *listHead)
+const AnyCell* lliby_memv(const AnyCell *obj, ListElementCell *listHead)
 {
-	return list_search(world, obj, listHead, &AnyCell::isEqv);
+	return list_search(obj, listHead, &AnyCell::isEqv);
 }
 
-const AnyCell* lliby_member(World &world, const AnyCell *obj, ListElementCell *listHead)
+const AnyCell* lliby_member(const AnyCell *obj, ListElementCell *listHead)
 {
-	return list_search(world, obj, listHead, &AnyCell::isEqual);
+	return list_search(obj, listHead, &AnyCell::isEqual);
 }
 
 }
