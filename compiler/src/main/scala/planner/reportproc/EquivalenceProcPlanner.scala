@@ -8,6 +8,8 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
 
+import llambda.compiler.valuetype.Implicits._
+
 object EquivalenceProcPlanner extends ReportProcPlanner {
   private def allSubtypes(rootType : ct.CellType) : Set[ct.CellType] =
     rootType.directSubtypes ++ rootType.directSubtypes.flatMap(allSubtypes)
@@ -27,7 +29,7 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
   // These can be tested for (eqv?) with a simple pointer compare
   private lazy val ptrCompareEqvTypes = (ptrCompareEqualsTypes ++ Set(
     vt.AnyPairType,
-    vt.VectorType,
+    vt.VectorOfType(vt.AnySchemeType),
     vt.BytevectorType
   )) : Set[vt.NonUnionSchemeType]
 

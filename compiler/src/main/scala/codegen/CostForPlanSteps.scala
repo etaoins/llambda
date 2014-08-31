@@ -39,7 +39,7 @@ object CostForPlanSteps {
       trivialInstrCost
     
     case _ : ps.UnboxValue | _ : ps.LoadPairCar | _ : ps.LoadPairCdr | _ : ps.LoadProcedureEntryPoint |
-         _ : ps.LoadVectorLength | _ : ps.LoadRecordLikeData | _ : ps.LoadRecordDataField =>
+         _ : ps.LoadVectorLength | _ : ps.LoadRecordLikeData | _ : ps.LoadRecordDataField | _ : ps.LoadVectorElement =>
       // This is a load from memory
       loadCost
 
@@ -55,7 +55,7 @@ object CostForPlanSteps {
       // Constant just create additional .data in the resulting executable and have a good chance of being merged
       constantCellCost
 
-    case _ : ps.CondBranch =>
+    case _ : ps.NestingStep =>
       // The branch might force a GC barrier
       // Also, if the branch actually makes it to the assembler it can be fairly expensive
       (gcBarrierCost / 2) + trivialInstrCost

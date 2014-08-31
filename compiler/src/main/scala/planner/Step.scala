@@ -62,6 +62,28 @@ sealed trait Step extends ContextLocated {
   def canAllocate : Boolean = false
 }
 
+sealed trait NestingStep extends Step {
+  /** Input values used by the nesting step itself
+    *
+    * This excludes any input values used by the inner branches
+    */
+  def outerInputValues : Set[TempValue]
+
+  /** List of inner branches
+    *
+    * Branches are a tuple of (steps, outputValue)
+    */
+  def innerBranches : List[(List[Step], TempValue)]
+
+  /** Rewrites this step with new inner branches */
+  def mapInnerBranches(mapper : (List[Step], TempValue) => (List[Step], TempValue)) : NestingStep
+  
+  lazy val inputValues =
+    outerInputValues ++ 
+    innerBranches.flatMap(_._1).flatMap(_.inputValues) ++
+    innerBranches.map(_._2)
+}
+
 /** Step requiring a cell from a temporary allocation */
 sealed trait CellConsumer extends Step {
   val allocSize : Int
@@ -190,21 +212,18 @@ case class DisposeValue(value : TempValue) extends Step {
   * @param falseSteps  steps to perform if the condition is false
   * @param falseValue  value to place in result after performing falseSteps
   */
-case class CondBranch(result : TempValue, test : TempValue, trueSteps : List[Step], trueValue : TempValue, falseSteps : List[Step], falseValue : TempValue) extends Step {
+case class CondBranch(result : TempValue, test : TempValue, trueSteps : List[Step], trueValue : TempValue, falseSteps : List[Step], falseValue : TempValue) extends NestingStep {
   lazy val outerInputValues = Set(test)
   lazy val innerBranches = List((trueSteps, trueValue), (falseSteps, falseValue))
   
   lazy val outputValues = Set(result)
-  lazy val inputValues =
-    outerInputValues ++ 
-    innerBranches.flatMap(_._1).flatMap(_.inputValues) ++
-    innerBranches.map(_._2)
 
   def mapInnerBranches(mapper : (List[Step], TempValue) => (List[Step], TempValue)) = {
     val (mappedTrueSteps, mappedTrueValue) = mapper(trueSteps, trueValue)
     val (mappedFalseSteps, mappedFalseValue) = mapper(falseSteps, falseValue)
 
     CondBranch(result, test, mappedTrueSteps, mappedTrueValue, mappedFalseSteps, mappedFalseValue)
+      .assignLocationFrom(this)
   }
   
   def renamed(f : (TempValue) => TempValue) =
@@ -215,6 +234,36 @@ case class CondBranch(result : TempValue, test : TempValue, trueSteps : List[Ste
       trueValue=f(trueValue),
       falseSteps=falseSteps.map(_.renamed(f)),
       falseValue=f(falseValue)
+    ).assignLocationFrom(this)
+}
+
+/** Checks if the loop body returns true for every index */
+case class ForAll(
+    result : TempValue,
+    loopCountValue : TempValue,
+    loopIndexValue : TempValue,
+    loopSteps : List[Step],
+    loopResultPred : TempValue
+) extends NestingStep {
+  lazy val outerInputValues = Set(loopCountValue)
+  lazy val innerBranches = List((loopSteps, loopResultPred))
+
+  lazy val outputValues = Set(result)
+  
+  def mapInnerBranches(mapper : (List[Step], TempValue) => (List[Step], TempValue)) = {
+    val (mappedLoopSteps, mappedLoopResultPred) = mapper(loopSteps, loopResultPred)
+
+    ForAll(result, loopCountValue, loopIndexValue, mappedLoopSteps, mappedLoopResultPred)
+      .assignLocationFrom(this)
+  }
+  
+  def renamed(f : (TempValue) => TempValue) =
+    ForAll(
+      result=f(result),
+      loopCountValue=f(loopCountValue),
+      loopIndexValue=f(loopIndexValue),
+      loopSteps=loopSteps.map(_.renamed(f)),
+      loopResultPred=f(loopResultPred)
     ).assignLocationFrom(this)
 }
 
@@ -472,6 +521,19 @@ case class LoadVectorLength(result : TempValue, boxed : TempValue) extends Step 
   
   def renamed(f : (TempValue) => TempValue) =
     LoadVectorLength(f(result), f(boxed)).assignLocationFrom(this)
+}
+
+/** Loads an element from a vector 
+  *
+  * @param  boxed  Vector to load an element from
+  * @param  index  Index of the element to load as a UInt32. This value must be previously determined to be in range
+  */
+case class LoadVectorElement(result : TempValue, boxed : TempValue, index : TempValue) extends Step with NullipotentStep {
+  lazy val inputValues = Set(boxed, index)
+  lazy val outputValues = Set(result)
+
+  def renamed(f : (TempValue) => TempValue) =
+    LoadVectorElement(result, f(boxed), f(index)).assignLocationFrom(this) 
 }
 
 /** Indicates a step that boxes a native value

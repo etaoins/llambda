@@ -22,6 +22,21 @@ object SatisfiesType {
     }
   }
 
+  private def mergeNonUnionMemberTypeResults(memberResults : Set[Option[Boolean]]) : Option[Boolean] =
+    if (memberResults.contains(Some(false))) {
+      // Definitely not compatible
+      Some(false)
+    }
+    else if (memberResults.contains(None)) {
+      // May satisfy
+      None
+    }
+    else {
+      // Definitely satisfies
+      Some(true)
+    }
+
+
   def stackedSatisfiesType(superStack : SchemeType.Stack, testingStack : SchemeType.Stack) : Option[Boolean] = {
     (superStack.head, testingStack.head) match {
       case (superAny, _) if superAny eq AnySchemeType =>
@@ -86,22 +101,52 @@ object SatisfiesType {
       
       case (superPair : PairType, testingPair : PairType) =>
         // Pairs satisfy their more general pairs
-        val memberResultss = Set(
+        val memberResults = Set(
           satisfiesTypeRef(superPair.carTypeRef, superStack, testingPair.carTypeRef, testingStack),
           satisfiesTypeRef(superPair.cdrTypeRef, superStack, testingPair.cdrTypeRef, testingStack)
         )
 
-        if (memberResultss.contains(Some(false))) {
-          // Definitely not compatible
+        mergeNonUnionMemberTypeResults(memberResults)
+
+      case (UniformVectorType(superMemberTypeRef), UniformVectorType(testingMemberTypeRef)) =>
+        satisfiesTypeRef(superMemberTypeRef, superStack, testingMemberTypeRef, testingStack)
+
+      case (UniformVectorType(DirectSchemeTypeRef(AnySchemeType)), SchemeTypeAtom(ct.VectorCell)) =>
+        Some(true)
+      
+      case (SpecificVectorType(superMemberTypeRefs), SpecificVectorType(testingMemberTypeRefs)) =>
+        if (superMemberTypeRefs.size != testingMemberTypeRefs.size) {
+          // Different lengths
           Some(false)
         }
-        else if (memberResultss.contains(None)) {
-          // May satisfy
-          None
+        else {
+          val memberResults = (superMemberTypeRefs zip testingMemberTypeRefs) map {
+            case (superMemberTypeRef, testingMemberTypeRef) =>
+              satisfiesTypeRef(superMemberTypeRef, superStack, testingMemberTypeRef, testingStack)
+          }
+        
+          mergeNonUnionMemberTypeResults(memberResults.toSet)
+        }
+
+      case (UniformVectorType(superMemberTypeRef), SpecificVectorType(testingMemberTypeRefs)) =>
+        val memberResults = testingMemberTypeRefs.map { testingMemberTypeRef =>
+          satisfiesTypeRef(superMemberTypeRef, superStack, testingMemberTypeRef, testingStack)
+        }
+          
+        mergeNonUnionMemberTypeResults(memberResults.toSet)
+
+      case (SpecificVectorType(superMemberTypeRefs), UniformVectorType(testingMemberTypeRef)) =>
+        val memberResults = superMemberTypeRefs.map { superMemberTypeRef =>
+          satisfiesTypeRef(superMemberTypeRef, superStack, testingMemberTypeRef, testingStack)
+        }
+
+        if (memberResults.contains(Some(false))) {
+          // Definitely doesn't match
+          Some(false)
         }
         else {
-          // Definitely satisfies
-          Some(true)
+          // May match depending on the length of the uniform vector
+          None
         }
 
       case (superDerived : DerivedSchemeType, _) =>

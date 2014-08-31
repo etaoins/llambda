@@ -19,8 +19,8 @@ object MergeIdenticalSteps extends FunctionConniver {
       }
 
       renamedStep match {
-        case condStep : ps.CondBranch =>
-          val mappedStep = condStep.mapInnerBranches { case (innerSteps, innerResultTemp) =>
+        case nestingStep : ps.NestingStep =>
+          val mappedStep = nestingStep.mapInnerBranches { case (innerSteps, innerResultTemp) =>
             val (mappedSteps, finalRenames) = dropAndRename(innerSteps, renames, availableMerges, Nil)
 
             // Map the result value using the branch step's renames in case it came from an inner dropped cast

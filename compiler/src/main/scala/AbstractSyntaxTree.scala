@@ -163,7 +163,9 @@ object ProperList {
 }
 
 case class VectorLiteral(elements : Vector[Datum]) extends Datum {
-  val schemeType = vt.VectorType
+  val schemeType = vt.SpecificVectorType(elements.map { memberValue =>
+    vt.DirectSchemeTypeRef(memberValue.schemeType)
+  })
 
   override def toString = 
     "#(" + elements.map(_.toString).mkString(" ") + ")"

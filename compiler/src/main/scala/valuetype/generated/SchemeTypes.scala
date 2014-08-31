@@ -17,7 +17,6 @@ object NumberType extends UnionType(Set(SchemeTypeAtom(ct.ExactIntegerCell), Sch
 object ExactIntegerType extends SchemeTypeAtom(ct.ExactIntegerCell)
 object FlonumType extends SchemeTypeAtom(ct.FlonumCell)
 object CharType extends SchemeTypeAtom(ct.CharCell)
-object VectorType extends SchemeTypeAtom(ct.VectorCell)
 object BytevectorType extends SchemeTypeAtom(ct.BytevectorCell)
 object ProcedureType extends SchemeTypeAtom(ct.ProcedureCell)
 object ErrorObjectType extends SchemeTypeAtom(ct.ErrorObjectCell)
@@ -35,7 +34,6 @@ object IntrinsicSchemeTypes {
     (ct.ExactIntegerCell.schemeName -> ExactIntegerType),
     (ct.FlonumCell.schemeName -> FlonumType),
     (ct.CharCell.schemeName -> CharType),
-    (ct.VectorCell.schemeName -> VectorType),
     (ct.BytevectorCell.schemeName -> BytevectorType),
     (ct.ProcedureCell.schemeName -> ProcedureType),
     (ct.ErrorObjectCell.schemeName -> ErrorObjectType),

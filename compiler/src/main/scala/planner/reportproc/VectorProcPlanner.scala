@@ -8,6 +8,8 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
 
+import llambda.compiler.valuetype.Implicits._
+
 object VectorProcPlanner extends ReportProcPlanner {
   def apply(state : PlannerState)(reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = (reportName, operands) match {
     case ("vector-ref", List((_, constantVector : iv.ConstantVectorValue), (_, constantInt : iv.ConstantExactIntegerValue))) =>
@@ -27,7 +29,7 @@ object VectorProcPlanner extends ReportProcPlanner {
       
     case ("vector-length", List((located, vectorValue))) =>
       val vectorTemp = plan.withContextLocation(located) {
-        vectorValue.toTempValue(vt.VectorType)
+        vectorValue.toTempValue(vt.VectorOfType(vt.AnySchemeType))
       }
 
       val resultTemp = ps.Temp(vt.UInt32)

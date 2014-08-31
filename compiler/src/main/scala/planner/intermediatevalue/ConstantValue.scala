@@ -135,6 +135,10 @@ class ConstantPairValue(val car : ConstantValue, val cdr : ConstantValue) extend
 }
 
 class ConstantVectorValue(val elements : Vector[ConstantValue]) extends ConstantValue(ct.VectorCell) with BoxedOnlyValue {
+  override val schemeType : vt.SchemeType = vt.SpecificVectorType(elements.map { element =>
+    vt.DirectSchemeTypeRef(element.schemeType)
+  })
+
   val typeDescription = "constant vector"
 
   def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue = {

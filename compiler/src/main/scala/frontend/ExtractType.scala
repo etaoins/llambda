@@ -105,6 +105,25 @@ object ExtractType {
             throw new BadSpecialFormException(constructorName, "Rec requires a type variable and inner type as arguments")
         }
 
+      case Primitives.VectorofType =>
+        operands match {
+          case List(memberDatum) =>
+            val memberRecursiveVars = recursiveVars.recursed()
+            vt.VectorOfType(extractSchemeTypeRef(memberDatum, memberRecursiveVars))
+
+          case _ =>
+            throw new BadSpecialFormException(constructorName, "Vectorof requires exactly one member type argument")
+        }
+      
+      case Primitives.VectorType =>
+        val memberRecursiveVars = recursiveVars.recursed()
+
+        val memberTypeRefs = operands.map { memberDatum =>
+          extractSchemeTypeRef(memberDatum, memberRecursiveVars)
+        }
+
+        vt.SpecificVectorType(memberTypeRefs.toVector)
+
       case _ =>
         throw new BadSpecialFormException(constructorName, "Invalid type constructor syntax")
     }

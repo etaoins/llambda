@@ -52,6 +52,18 @@ private[valuetype] object UnrollType {
 
       SpecificPairType(replacedCar, replacedCdr) 
 
+    case SpecificVectorType(memberTypeRefs) =>
+      val replacedMemberTypeRefs = memberTypeRefs map { memberTypeRef =>
+        unrollTypeRef(memberTypeRef, replacementType, depth)
+      }
+
+      SpecificVectorType(replacedMemberTypeRefs)
+    
+    case UniformVectorType(memberTypeRef)  =>
+      val replacedMemberType = unrollTypeRef(memberTypeRef, replacementType, depth)
+
+      UniformVectorType(replacedMemberType)
+
     case other =>
       other
   }

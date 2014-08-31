@@ -257,6 +257,30 @@ case class UnionType(memberTypes : Set[NonUnionSchemeType]) extends SchemeType {
   }
 }
 
+/** Abstract trait for vector types */
+sealed trait VectorType extends DerivedSchemeType {
+  val cellType = ct.VectorCell
+  val isGcManaged = true
+
+  val parentType = SchemeTypeAtom(ct.VectorCell)
+}
+
+/** Vector with a uniform type */
+case class UniformVectorType(memberTypeRef : SchemeTypeRef) extends VectorType
+
+/** Vector with known value types */
+case class SpecificVectorType(memberTypeRefs : Vector[SchemeTypeRef]) extends VectorType
+
+object VectorOfType {
+  def apply(memberTypeRef : SchemeTypeRef) : NonUnionSchemeType =
+    if (memberTypeRef == DirectSchemeTypeRef(AnySchemeType)) {
+      SchemeTypeAtom(ct.VectorCell)
+    }
+    else {
+      UniformVectorType(memberTypeRef)
+    }
+}
+
 /** Union of all possible Scheme types */
 object AnySchemeType extends UnionType(ct.AnyCell.concreteTypes.map(SchemeTypeAtom(_)))
 

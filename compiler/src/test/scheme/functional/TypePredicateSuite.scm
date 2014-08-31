@@ -111,6 +111,82 @@
   (assert-true  (symbol-list? '(one two)))
   (assert-false (symbol-list? '(1 2)))))
 
+(define-test "(define-predicate) for uniform vectors" (expect-success
+  (import (llambda typed))
+
+  (define number-vector #(1 2 3.5))
+  (define exact-int-vector #(1 2 3))
+  (define mixed-vector #(1 'a #f))
+  (define empty-vector #())
+  (define untyped-number-vector (typeless-cell number-vector))
+  (define untyped-exact-int-vector (typeless-cell exact-int-vector))
+  (define untyped-mixed-vector (typeless-cell mixed-vector))
+  (define untyped-empty-vector (typeless-cell empty-vector))
+  
+  (define-predicate number-vector? (Vectorof <number>))
+  (define-predicate exact-int-vector? (Vectorof <exact-integer>))
+  
+  (assert-true  (number-vector? number-vector))
+  (assert-true  (number-vector? exact-int-vector))
+  (assert-false (number-vector? mixed-vector))
+  (assert-true  (number-vector? empty-vector))
+  (assert-true  (number-vector? untyped-number-vector))
+  (assert-true  (number-vector? untyped-exact-int-vector))
+  (assert-false (number-vector? untyped-mixed-vector))
+  (assert-true  (number-vector? untyped-empty-vector))
+  
+  (assert-false (exact-int-vector? number-vector))
+  (assert-true  (exact-int-vector? exact-int-vector))
+  (assert-false (exact-int-vector? mixed-vector))
+  (assert-true  (exact-int-vector? empty-vector))
+  (assert-false (exact-int-vector? untyped-number-vector))
+  (assert-true  (exact-int-vector? untyped-exact-int-vector))
+  (assert-false (exact-int-vector? untyped-mixed-vector))
+  (assert-true  (exact-int-vector? untyped-empty-vector))))
+
+(define-test "(define-predicate) for specific vectors" (expect-success
+  (import (llambda typed))
+
+  (define symbol-string-vector #(symbol "string"))
+  (define symbol-string-string-vector #(symbol "string" "string"))
+  (define exact-int-vector #(1 2 3))
+  (define empty-vector #())
+  (define untyped-symbol-string-vector (typeless-cell symbol-string-vector))
+  (define untyped-symbol-string-string-vector (typeless-cell symbol-string-string-vector))
+  (define untyped-exact-int-vector (typeless-cell exact-int-vector))
+  (define untyped-empty-vector (typeless-cell empty-vector))
+
+  (define-predicate symbol-string-vector? (Vector <symbol> <string>))
+  (define-predicate symbol-string-string-vector? (Vector <symbol> <string> <string>))
+  (define-predicate empty-vector? (Vector))
+
+  (assert-true  (symbol-string-vector? symbol-string-vector))
+  (assert-false (symbol-string-vector? symbol-string-string-vector))
+  (assert-false (symbol-string-vector? exact-int-vector))
+  (assert-false (symbol-string-vector? empty-vector))
+  (assert-true  (symbol-string-vector? untyped-symbol-string-vector))
+  (assert-false (symbol-string-vector? untyped-symbol-string-string-vector))
+  (assert-false (symbol-string-vector? untyped-exact-int-vector))
+  (assert-false (symbol-string-vector? untyped-empty-vector))
+
+  (assert-false (symbol-string-string-vector? symbol-string-vector))
+  (assert-true  (symbol-string-string-vector? symbol-string-string-vector))
+  (assert-false (symbol-string-string-vector? exact-int-vector))
+  (assert-false (symbol-string-string-vector? empty-vector))
+  (assert-false (symbol-string-string-vector? untyped-symbol-string-vector))
+  (assert-true  (symbol-string-string-vector? untyped-symbol-string-string-vector))
+  (assert-false (symbol-string-string-vector? untyped-exact-int-vector))
+  (assert-false (symbol-string-string-vector? untyped-empty-vector))
+  
+  (assert-false (empty-vector? symbol-string-vector))
+  (assert-false (empty-vector? symbol-string-string-vector))
+  (assert-false (empty-vector? exact-int-vector))
+  (assert-true  (empty-vector? empty-vector))
+  (assert-false (empty-vector? untyped-symbol-string-vector))
+  (assert-false (empty-vector? untyped-symbol-string-string-vector))
+  (assert-false (empty-vector? untyped-exact-int-vector))
+  (assert-true  (empty-vector? untyped-empty-vector))))
+
 (define-test "(define-predicate) for binary trees" (expect-success
   (import (llambda typed))
     

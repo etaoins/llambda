@@ -97,7 +97,7 @@ concrete cell Char : Any {
 	UnicodeChar unicodeChar;
 };
 
-concrete cell Vector : Any {
+concrete internal cell Vector : Any {
 	uint32 length;
 	Any** elements;
 };

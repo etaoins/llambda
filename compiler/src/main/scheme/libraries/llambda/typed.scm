@@ -3,7 +3,8 @@
   (import (llambda nfi))
 
   ; Re-export from (llambda primitives) 
-  (export define-type cast ann : define: define-record-type: lambda: make-predicate U Rec Listof Pairof List)
+  (export define-type cast ann : define: define-record-type: lambda: make-predicate U Rec Listof Pairof List Vector
+          Vectorof)
 
   ; Export our type names
   (export <any> <list-element> <pair> <empty-list> <string> <symbol> <boolean> <number> <exact-integer> <flonum> <char>
@@ -16,7 +17,8 @@
   (export define-predicate let: let*: letrec*: letrec:)
   
   (begin
-    (define-type <pair> (Pairof <any> <any>)))
+    (define-type <pair> (Pairof <any> <any>))
+    (define-type <vector> (Vectorof <any>)))
 
   (begin
     (define-type (Assocof KT VT) (Listof (Pairof KT VT))))

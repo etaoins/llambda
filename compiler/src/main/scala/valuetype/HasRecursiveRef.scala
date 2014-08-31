@@ -18,6 +18,14 @@ object HasRecursiveRef {
       refHasRecursiveRef(pairType.carTypeRef, depth) ||
         refHasRecursiveRef(pairType.cdrTypeRef, depth)
 
+    case SpecificVectorType(memberTypeRefs) =>
+      memberTypeRefs.exists { memberTypeRef =>
+        refHasRecursiveRef(memberTypeRef, depth)
+      }
+
+    case UniformVectorType(memberTypeRef)  =>
+      refHasRecursiveRef(memberTypeRef, depth)
+
     case other =>
       false
   }

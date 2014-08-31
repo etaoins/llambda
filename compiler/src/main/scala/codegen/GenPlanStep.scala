@@ -18,8 +18,8 @@ object GenPlanStep {
     step match {
       case allocating if step.canAllocate => true
 
-      case cond : ps.CondBranch =>
-        cond.innerBranches.flatMap(_._1).exists(containsAllocatingStep)
+      case nestingStep : ps.NestingStep =>
+        nestingStep.innerBranches.flatMap(_._1).exists(containsAllocatingStep)
 
       case _ =>
         false
@@ -347,6 +347,24 @@ object GenPlanStep {
       val carIr = ct.VectorCell.genLoadFromLength(state.currentBlock)(vectorIr)
 
       state.withTempValue(resultTemp -> carIr)
+    
+    case ps.LoadVectorElement(resultTemp, vectorTemp, indexTemp) =>
+      val block = state.currentBlock
+
+      val vectorIr = state.liveTemps(vectorTemp)
+      val indexIr = state.liveTemps(indexTemp)
+
+      val elementsIr = ct.VectorCell.genLoadFromElements(block)(vectorIr)
+
+      val elementPtrIr = block.getelementptr("elementPtr")(
+        elementType=PointerType(ct.AnyCell.irType),
+        basePointer=elementsIr,
+        indices=Vector(indexIr),
+        inbounds=true
+      )
+
+      val elementIr = block.load("element")(elementPtrIr)
+      state.withTempValue(resultTemp -> elementIr)
 
     case ps.LoadProcedureEntryPoint(resultTemp, procTemp) =>
       val procIr = state.liveTemps(procTemp)
@@ -563,5 +581,68 @@ object GenPlanStep {
       // Continue with the successful block
       state.copy(currentBlock=successBlock)
   
+    case ps.ForAll(resultTemp, loopCountValueTemp, loopIndexValue, loopSteps, loopResultPred) =>
+      val irFunction = state.currentBlock.function
+
+      val previousBlock = state.currentBlock
+      val rangeCheckBlock = irFunction.startChildBlock("forAllRangeCheck")
+      val loopBodyBlock = irFunction.startChildBlock("forAllLoopBody")
+      val loopContBlock = irFunction.startChildBlock("forAllLoopCont")
+      val exitBlock = irFunction.startChildBlock("forAllExit")
+
+      val indexType = IntegerType(32)
+      val incedIndex = LocalVariable(irFunction.nameSource.allocate("incedIndex"), indexType)
+      val loopCountIr = state.liveTemps(loopCountValueTemp)
+
+      previousBlock.uncondBranch(rangeCheckBlock)
+
+      // Find our loop index
+      val loopIndexIr = rangeCheckBlock.phi("loopIndex")(
+        PhiSource(IntegerConstant(IntegerType(32), 0), previousBlock),
+        PhiSource(incedIndex, loopContBlock)
+      )
+
+      val indexExhaustedIr = rangeCheckBlock.icmp("indexExhausted")(
+        compareCond=IComparisonCond.GreaterThanEqual,
+        signed=Some(false),
+        val1=loopIndexIr,
+        val2=loopCountIr
+      )
+
+      rangeCheckBlock.condBranch(indexExhaustedIr, exitBlock, loopBodyBlock)
+      
+      val loopBodyStartState = state.copy(
+        currentBlock=loopBodyBlock
+      ).withTempValue(loopIndexValue -> loopIndexIr)
+
+      val loopBodyResult = GenPlanSteps(loopBodyStartState, genGlobals)(loopSteps)
+
+      val loopResultPredIr = loopBodyResult match {
+        case BlockTerminated(_) =>
+          throw new InternalCompilerErrorException("ForAll loop body terminated") 
+
+        case loopEndState : GenerationState =>
+          loopEndState.liveTemps(loopResultPred)
+      }
+
+      loopBodyBlock.condBranch(loopResultPredIr, loopContBlock, exitBlock) 
+
+      // It's impossible for this to wrap
+      val wrapBehaviour = Set[WrapBehaviour](
+        WrapBehaviour.NoSignedWrap,
+        WrapBehaviour.NoUnsignedWrap
+      )
+
+      loopContBlock.add(incedIndex)(wrapBehaviour, loopIndexIr, IntegerConstant(indexType, 1))
+      loopContBlock.uncondBranch(rangeCheckBlock)
+
+      val resultIr = exitBlock.phi("forAllResult")(
+        PhiSource(IntegerConstant(IntegerType(1), 1), rangeCheckBlock),
+        PhiSource(IntegerConstant(IntegerType(1), 0), loopBodyBlock)
+      )
+
+      state.copy(currentBlock=exitBlock).withTempValue(
+        resultTemp -> resultIr
+      )
   }
 }

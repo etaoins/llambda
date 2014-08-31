@@ -2,6 +2,7 @@ package io.llambda.compiler.valuetype
 import io.llambda
 
 import llambda.compiler.dialect
+import llambda.compiler.{celltype => ct}
 
 object StabiliseType {
   /** Returns the part of a Scheme type that can't be mutated at runtime
@@ -16,6 +17,16 @@ object StabiliseType {
 
     case pairType : SpecificPairType if !schemeDialect.pairsAreImmutable =>
       AnyPairType
+
+    case SpecificVectorType(memberTypeRefs) =>
+      val anyMemberTypeRefs = memberTypeRefs map { _ =>
+        DirectSchemeTypeRef(AnySchemeType)
+      }
+
+      SpecificVectorType(anyMemberTypeRefs)
+
+    case UniformVectorType(_) =>
+      SchemeTypeAtom(ct.VectorCell)
 
     case other =>
       other

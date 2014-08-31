@@ -92,6 +92,144 @@ object PlanTypeCheck {
         }))
     }))
   }
+
+  private def testUniformVectorType(
+      plan : PlanWriter,
+      predProcs : Map[vt.SchemeType, String],
+      checkValue : BoxedValue,
+      valueType : vt.SchemeType,
+      testMemberType : vt.SchemeType
+  ) : CheckResult = {
+    branchOnType(plan, predProcs, checkValue, valueType, vt.SchemeTypeAtom(ct.VectorCell), isTypePlanner=Some({
+      (isVectorPlan, remainingType) =>
+        // Find our value's member type
+        val knownMemberType = valueType match {
+          case vt.UniformVectorType(memberTypeRef) =>
+            unrolledTypeRef(memberTypeRef)
+
+          case _ =>
+            vt.AnySchemeType
+        }
+        
+        if (vt.SatisfiesType(testMemberType, knownMemberType) == Some(true)) {
+          // No need to loop
+          StaticTrueResult
+        }
+        else {
+          val vectorCellTemp = checkValue.castToCellTempValue(ct.VectorCell)(isVectorPlan)
+
+          // Find the length of the vector
+          val vectorLengthTemp = ps.Temp(vt.UInt32)
+          isVectorPlan.steps += ps.LoadVectorLength(vectorLengthTemp, vectorCellTemp)
+
+          // Create a temp for the vector index
+          val vectorIndexTemp = ps.Temp(vt.UInt32)
+
+          // For the plan
+          val loopPlan = isVectorPlan.forkPlan()
+
+          val loopResultPred ={
+            // Load the element
+            val elementTemp = ps.Temp(vt.AnySchemeType) 
+            loopPlan.steps += ps.LoadVectorElement(elementTemp, vectorCellTemp, vectorIndexTemp) 
+
+            // Check its type
+            val checkableElement = BoxedValue(ct.AnyCell, elementTemp)
+            val memberResult = branchOnType(loopPlan, predProcs, checkableElement, knownMemberType, testMemberType)
+
+            // Create a predicate for the result
+            memberResult.toNativePred()(loopPlan)
+          }
+
+          val forAllResultPred = ps.Temp(vt.Predicate)
+          isVectorPlan.steps += ps.ForAll(
+            result=forAllResultPred,
+            loopCountValue=vectorLengthTemp,
+            loopIndexValue=vectorIndexTemp,
+            loopSteps=loopPlan.steps.toList,
+            loopResultPred=loopResultPred
+          )
+
+          DynamicResult(forAllResultPred)
+        }
+    }))
+  }
+
+  private def testVectorElementTypes(
+      plan : PlanWriter,
+      predProcs : Map[vt.SchemeType, String],
+      vectorCellTemp : ps.TempValue,
+      typesToTest : Vector[(vt.SchemeType, vt.SchemeType)],
+      index : Int
+  ) : CheckResult = if (index >= typesToTest.size) {
+    StaticTrueResult
+  }
+  else {
+    val (valueMemberType, testMemberType) = typesToTest(index)
+
+    val indexTemp = ps.Temp(vt.UInt32)
+    plan.steps += ps.CreateNativeInteger(indexTemp, index, 32)
+
+    val elementTemp = ps.Temp(vt.AnySchemeType)
+    plan.steps += ps.LoadVectorElement(elementTemp, vectorCellTemp, indexTemp)
+
+    val checkableElement = BoxedValue(ct.AnyCell, elementTemp)
+    branchOnType(plan, predProcs, checkableElement, valueMemberType, testMemberType, Some({
+      (isTypePlan, remainingType) =>
+        testVectorElementTypes(plan, predProcs, vectorCellTemp, typesToTest, index + 1)
+    }))
+  }
+      
+  
+  private def testSpecificVectorType(
+      plan : PlanWriter,
+      predProcs : Map[vt.SchemeType, String],
+      checkValue : BoxedValue,
+      valueType : vt.SchemeType,
+      testMemberTypes : Vector[vt.SchemeType]
+  ) : CheckResult = {
+    branchOnType(plan, predProcs, checkValue, valueType, vt.SchemeTypeAtom(ct.VectorCell), isTypePlanner=Some({
+      (isVectorPlan, remainingType) =>
+        val expectedLength = testMemberTypes.size
+
+        val vectorCellTemp = checkValue.castToCellTempValue(ct.VectorCell)(isVectorPlan)
+
+        // Find the length of the vector
+        val vectorLengthTemp = ps.Temp(vt.UInt32)
+        isVectorPlan.steps += ps.LoadVectorLength(vectorLengthTemp, vectorCellTemp)
+
+        val expectedLengthTemp = ps.Temp(vt.UInt32)
+        isVectorPlan.steps += ps.CreateNativeInteger(expectedLengthTemp, expectedLength, ct.VectorCell.lengthIrType.bits) 
+
+        val lengthMatchTemp = ps.Temp(vt.Predicate)
+        isVectorPlan.steps += ps.IntegerCompare(lengthMatchTemp, ps.CompareCond.Equal, None, vectorLengthTemp, expectedLengthTemp) 
+
+        val resultTemp = isVectorPlan.buildCondBranch(lengthMatchTemp, { (lengthMatchPlan) =>
+          val knownMemberTypes = valueType match {
+            case vt.UniformVectorType(memberTypeRef) =>
+              Vector.fill(expectedLength)(unrolledTypeRef(memberTypeRef))
+
+            case vt.SpecificVectorType(memberTypeRefs) =>
+              memberTypeRefs.map(unrolledTypeRef)
+
+            case _ =>
+              Vector.fill(expectedLength)(vt.AnySchemeType)
+          }
+
+          val typesToTest = knownMemberTypes.zip(testMemberTypes)
+          val checkResult = testVectorElementTypes(lengthMatchPlan, predProcs, vectorCellTemp, typesToTest, 0)
+
+          checkResult.toNativePred()(lengthMatchPlan)
+        }, {lengthMismatchPlan =>
+          val falseTemp = ps.Temp(vt.Predicate)
+          lengthMismatchPlan.steps += ps.CreateNativeInteger(falseTemp, 0, vt.Predicate.bits)
+
+          falseTemp
+        })
+
+        DynamicResult(resultTemp)
+    }))
+  }
   
   private def testNonUnionType(
       plan : PlanWriter,
@@ -124,6 +262,17 @@ object PlanTypeCheck {
         plan.steps += ps.IntegerCompare(valueMatchedPred, ps.CompareCond.Equal, None, castTemp, expectedTemp)
 
         DynamicResult(valueMatchedPred)
+      
+      case vt.SpecificVectorType(testMemberTypeRefs) =>
+        val testMemberTypes = testMemberTypeRefs map { testMemberTypeRef =>
+          unrolledTypeRef(testMemberTypeRef)
+        }
+
+        testSpecificVectorType(plan, predProcs, checkValue, valueType, testMemberTypes)
+
+      case vt.UniformVectorType(testMemberTypeRef) =>
+        val testMemberType = unrolledTypeRef(testMemberTypeRef)
+        testUniformVectorType(plan, predProcs, checkValue, valueType, testMemberType)
       
       case vt.SchemeTypeAtom(cellType) =>
         val possibleCellTypes = flattenType(valueType).flatMap(_.cellType.concreteTypes) 

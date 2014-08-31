@@ -21,25 +21,25 @@ object DisposeValues {
     * @return  List of new branch steps in forward order
     */
   private def discardUnusedValues(branchInputValues : Set[ps.TempValue], reverseSteps : List[ps.Step], usedValues : Set[ps.TempValue], acc : List[ps.Step]) : List[ps.Step] = reverseSteps match {
-    case (condStep : ps.CondBranch) :: reverseTail =>
+    case (nestingStep : ps.NestingStep) :: reverseTail =>
       // Determine which input values are no longer used
-      val unusedInputValues = condStep.outerInputValues.filter(!usedValues.contains(_))
+      val unusedInputValues = nestingStep.outerInputValues.filter(!usedValues.contains(_))
 
       // Step to dispose the result outputs if they're unused
       // This will be placed after the step itself
-      val unusedOutputValues = condStep.outputValues.filter(!usedValues.contains(_))
+      val unusedOutputValues = nestingStep.outputValues.filter(!usedValues.contains(_))
       val disposeOutputSteps = unusedOutputValues.toList.map { unusedValue =>
         ps.DisposeValue(unusedValue)
       }
 
       // Recurse down the branches
-      val newStep = condStep.mapInnerBranches { (branchSteps, outputValue) =>
+      val newStep = nestingStep.mapInnerBranches { (branchSteps, outputValue) =>
         // Pass the unused input values as argument values
         // If they're not used within the branch they'll be disposed at the top of it
         (discardUnusedValues(unusedInputValues, branchSteps.reverse, usedValues + outputValue, Nil), outputValue)
       }
 
-      val newUsedValues = condStep.inputValues ++ usedValues 
+      val newUsedValues = nestingStep.inputValues ++ usedValues 
 
       val newAcc = newStep :: (disposeOutputSteps ++ acc)
       discardUnusedValues(branchInputValues, reverseTail, newUsedValues, newAcc)
