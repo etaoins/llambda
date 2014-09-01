@@ -108,18 +108,15 @@ object ExtractType {
       case Primitives.VectorofType =>
         operands match {
           case List(memberDatum) =>
-            val memberRecursiveVars = recursiveVars.recursed()
-            vt.VectorOfType(extractSchemeTypeRef(memberDatum, memberRecursiveVars))
+            vt.VectorOfType(extractSchemeTypeRef(memberDatum, recursiveVars))
 
           case _ =>
             throw new BadSpecialFormException(constructorName, "Vectorof requires exactly one member type argument")
         }
       
       case Primitives.VectorType =>
-        val memberRecursiveVars = recursiveVars.recursed()
-
         val memberTypeRefs = operands.map { memberDatum =>
-          extractSchemeTypeRef(memberDatum, memberRecursiveVars)
+          extractSchemeTypeRef(memberDatum, recursiveVars)
         }
 
         vt.SpecificVectorType(memberTypeRefs.toVector)

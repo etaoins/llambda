@@ -169,6 +169,18 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     }
   }
   
+  test("definiting recursive vector types") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+    
+    bodyFor("(define-type <string-vector-tree> (Rec VT (U <string> (Vectorof VT))))")(scope)
+    assert(scope("<string-vector-tree>") === BoundType(
+      vt.UnionType(Set(
+        vt.StringType,
+        vt.UniformVectorType(vt.RecursiveSchemeTypeRef(1))
+      ))
+    ))
+  }
+  
   test("defining homogeneous list types") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 

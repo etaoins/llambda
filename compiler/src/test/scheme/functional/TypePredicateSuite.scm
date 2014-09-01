@@ -187,6 +187,26 @@
   (assert-false (empty-vector? untyped-exact-int-vector))
   (assert-true  (empty-vector? untyped-empty-vector))))
 
+(define-test "(define-predicate) for vector trees" (expect-success
+  (import (llambda typed))
+
+  (define symbol-vector-tree 
+    #(one #(two three #(four)) #()))
+
+  (define mixed-vector-tree
+    #(one #(two "three" #(four)) #()))
+
+  (define untyped-symbol-vector-tree (typeless-cell symbol-vector-tree))
+  (define untyped-mixed-vector-tree (typeless-cell mixed-vector-tree))
+
+  (define-predicate symbol-vector-tree? (Rec VT (U <symbol> (Vectorof VT))))
+
+  (assert-true  (symbol-vector-tree? symbol-vector-tree))
+  (assert-false (symbol-vector-tree? mixed-vector-tree))
+  
+  (assert-true  (symbol-vector-tree? untyped-symbol-vector-tree))
+  (assert-false (symbol-vector-tree? untyped-mixed-vector-tree))))
+
 (define-test "(define-predicate) for binary trees" (expect-success
   (import (llambda typed))
     
