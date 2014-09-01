@@ -528,12 +528,12 @@ case class LoadVectorLength(result : TempValue, boxed : TempValue) extends Step 
   * @param  boxed  Vector to load an element from
   * @param  index  Index of the element to load as a UInt32. This value must be previously determined to be in range
   */
-case class LoadVectorElement(result : TempValue, boxed : TempValue, index : TempValue) extends Step with NullipotentStep {
+case class LoadVectorElement(result : TempValue, boxed : TempValue, index : TempValue) extends Step {
   lazy val inputValues = Set(boxed, index)
   lazy val outputValues = Set(result)
 
   def renamed(f : (TempValue) => TempValue) =
-    LoadVectorElement(result, f(boxed), f(index)).assignLocationFrom(this) 
+    LoadVectorElement(f(result), f(boxed), f(index)).assignLocationFrom(this) 
 }
 
 /** Indicates a step that boxes a native value
