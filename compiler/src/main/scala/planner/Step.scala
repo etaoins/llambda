@@ -40,6 +40,11 @@ object RecordLikeDataTemp {
     new TempValue(false)
 }
 
+object VectorElementsTemp {
+  def apply() =
+    new TempValue(false)
+}
+
 object EntryPointTemp {
   def apply() =
     new TempValue(false)
@@ -514,6 +519,37 @@ case class LoadProcedureEntryPoint(result : TempValue, boxed : TempValue) extend
     LoadProcedureEntryPoint(f(result), f(boxed)).assignLocationFrom(this)
 }
 
+/** Creates a new uninitialised vector of the given length
+  *
+  * All elements need to be initialised before it is accessed or the next GC barrier
+  *
+  * @param  vectorResult    Boxed vector cell result
+  * @param  elementsResult  Vector element data result
+  * @param  length          Number of elements in the newly allocated vector
+  */
+case class InitVector(
+    vectorResult : TempValue,
+    elementsResult : TempValue,
+    length : TempValue
+) extends Step with CellConsumer {
+  val allocSize = 1
+
+  lazy val inputValues = Set(length)
+  lazy val outputValues = Set(vectorResult, elementsResult)
+
+  def renamed(f : (TempValue) => TempValue) =
+    InitVector(f(vectorResult), f(elementsResult), f(length)).assignLocationFrom(this)
+}
+
+/** Loads the pointer to the vector element data */
+case class LoadVectorElementsData(result : TempValue, vectorCell : TempValue) extends Step with NullipotentStep { 
+  lazy val inputValues = Set(vectorCell)
+  lazy val outputValues = Set(result)
+  
+  def renamed(f : (TempValue) => TempValue) =
+    LoadVectorElementsData(f(result), f(vectorCell)).assignLocationFrom(this)
+}
+
 /** Loads the length of a vector as an Int32 */
 case class LoadVectorLength(result : TempValue, boxed : TempValue) extends Step with NullipotentStep {
   lazy val inputValues = Set(boxed)
@@ -525,15 +561,41 @@ case class LoadVectorLength(result : TempValue, boxed : TempValue) extends Step 
 
 /** Loads an element from a vector 
   *
-  * @param  boxed  Vector to load an element from
-  * @param  index  Index of the element to load as a UInt32. This value must be previously determined to be in range
+  * @param  vectorCell  Vector to load an element from
+  * @param  elements    Vector elements pointer
+  * @param  index       Index of the element to load as a UInt32. This value must be determined to be in range
   */
-case class LoadVectorElement(result : TempValue, boxed : TempValue, index : TempValue) extends Step {
-  lazy val inputValues = Set(boxed, index)
+case class LoadVectorElement(
+    result : TempValue,
+    vectorCell : TempValue,
+    elements : TempValue,
+    index : TempValue
+) extends Step {
+  lazy val inputValues = Set(vectorCell, elements, index)
   lazy val outputValues = Set(result)
 
   def renamed(f : (TempValue) => TempValue) =
-    LoadVectorElement(f(result), f(boxed), f(index)).assignLocationFrom(this) 
+    LoadVectorElement(f(result), f(vectorCell), f(elements), f(index)).assignLocationFrom(this) 
+}
+
+/** Store an element in a vector 
+  *
+  * @param  vectorCell  Vector to load an element from
+  * @param  elements    Vector elements pointer
+  * @param  index       Index of the element to load as a UInt32. This value must be determined to be in range
+  * @param  newValue    Boxed value to store at the element index 
+  */
+case class StoreVectorElement(
+    vectorCell : TempValue,
+    elements : TempValue,
+    index : TempValue,
+    newValue : TempValue
+) extends Step {
+  lazy val inputValues = Set(vectorCell, elements, index, newValue)
+  val outputValues = Set[TempValue]()
+
+  def renamed(f : (TempValue) => TempValue) =
+    StoreVectorElement(f(vectorCell), f(elements), f(index), f(newValue)).assignLocationFrom(this) 
 }
 
 /** Indicates a step that boxes a native value

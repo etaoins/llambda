@@ -71,6 +71,15 @@ object RuntimeFunctions {
     ),
     attributes=Set(IrFunction.NoUnwind)
   )
+
+  val vectorElementsAlloc = IrFunctionDecl(
+    result=IrFunction.Result(PointerType(PointerType(ct.AnyCell.irType))),
+    name="_lliby_vector_elements_alloc",
+    arguments=List(
+      IrFunction.Argument(IntegerType(32))
+    ),
+    attributes=Set(IrFunction.NoUnwind)
+  )
   
   val init = IrFunctionDecl(
     result=IrFunction.Result(VoidType),

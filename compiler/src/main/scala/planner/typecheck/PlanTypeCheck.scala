@@ -116,22 +116,26 @@ object PlanTypeCheck {
           StaticTrueResult
         }
         else {
-          val vectorCellTemp = checkValue.castToCellTempValue(ct.VectorCell)(isVectorPlan)
+          val vectorTemp = checkValue.castToCellTempValue(ct.VectorCell)(isVectorPlan)
 
           // Find the length of the vector
           val vectorLengthTemp = ps.Temp(vt.UInt32)
-          isVectorPlan.steps += ps.LoadVectorLength(vectorLengthTemp, vectorCellTemp)
+          isVectorPlan.steps += ps.LoadVectorLength(vectorLengthTemp, vectorTemp)
+
+          // Load the vector elements pointer
+          val elementsTemp = ps.VectorElementsTemp()
+          isVectorPlan.steps += ps.LoadVectorElementsData(elementsTemp, vectorTemp)
 
           // Create a temp for the vector index
           val vectorIndexTemp = ps.Temp(vt.UInt32)
 
-          // For the plan
+          // Fork the plan
           val loopPlan = isVectorPlan.forkPlan()
 
           val loopResultPred ={
             // Load the element
             val elementTemp = ps.Temp(vt.AnySchemeType) 
-            loopPlan.steps += ps.LoadVectorElement(elementTemp, vectorCellTemp, vectorIndexTemp) 
+            loopPlan.steps += ps.LoadVectorElement(elementTemp, vectorTemp, elementsTemp, vectorIndexTemp) 
 
             // Check its type
             val checkableElement = BoxedValue(ct.AnyCell, elementTemp)
@@ -158,7 +162,8 @@ object PlanTypeCheck {
   private def testVectorElementTypes(
       plan : PlanWriter,
       predProcs : Map[vt.SchemeType, String],
-      vectorCellTemp : ps.TempValue,
+      vectorTemp : ps.TempValue,
+      elementsTemp : ps.TempValue,
       typesToTest : Vector[(vt.SchemeType, vt.SchemeType)],
       index : Int
   ) : CheckResult = if (index >= typesToTest.size) {
@@ -171,16 +176,15 @@ object PlanTypeCheck {
     plan.steps += ps.CreateNativeInteger(indexTemp, index, 32)
 
     val elementTemp = ps.Temp(vt.AnySchemeType)
-    plan.steps += ps.LoadVectorElement(elementTemp, vectorCellTemp, indexTemp)
+    plan.steps += ps.LoadVectorElement(elementTemp, vectorTemp, elementsTemp, indexTemp)
 
     val checkableElement = BoxedValue(ct.AnyCell, elementTemp)
     branchOnType(plan, predProcs, checkableElement, valueMemberType, testMemberType, Some({
       (isTypePlan, remainingType) =>
-        testVectorElementTypes(plan, predProcs, vectorCellTemp, typesToTest, index + 1)
+        testVectorElementTypes(plan, predProcs, vectorTemp, elementsTemp, typesToTest, index + 1)
     }))
   }
       
-  
   private def testSpecificVectorType(
       plan : PlanWriter,
       predProcs : Map[vt.SchemeType, String],
@@ -192,11 +196,15 @@ object PlanTypeCheck {
       (isVectorPlan, remainingType) =>
         val expectedLength = testMemberTypes.size
 
-        val vectorCellTemp = checkValue.castToCellTempValue(ct.VectorCell)(isVectorPlan)
+        val vectorTemp = checkValue.castToCellTempValue(ct.VectorCell)(isVectorPlan)
+          
+        // Load the vector elements pointer
+        val elementsTemp = ps.VectorElementsTemp()
+        isVectorPlan.steps += ps.LoadVectorElementsData(elementsTemp, vectorTemp)
 
         // Find the length of the vector
         val vectorLengthTemp = ps.Temp(vt.UInt32)
-        isVectorPlan.steps += ps.LoadVectorLength(vectorLengthTemp, vectorCellTemp)
+        isVectorPlan.steps += ps.LoadVectorLength(vectorLengthTemp, vectorTemp)
 
         val expectedLengthTemp = ps.Temp(vt.UInt32)
         isVectorPlan.steps += ps.CreateNativeInteger(expectedLengthTemp, expectedLength, ct.VectorCell.lengthIrType.bits) 
@@ -217,7 +225,7 @@ object PlanTypeCheck {
           }
 
           val typesToTest = knownMemberTypes.zip(testMemberTypes)
-          val checkResult = testVectorElementTypes(lengthMatchPlan, predProcs, vectorCellTemp, typesToTest, 0)
+          val checkResult = testVectorElementTypes(lengthMatchPlan, predProcs, vectorTemp, elementsTemp, typesToTest, 0)
 
           checkResult.toNativePred()(lengthMatchPlan)
         }, {lengthMismatchPlan =>

@@ -9,7 +9,19 @@ import llambda.compiler.planner.{PlanWriter, InvokableProcedure, BoxedValue}
 import llambda.compiler.InternalCompilerErrorException
 import llambda.compiler.RuntimeErrorMessage
 
-class CellValue(val schemeType : vt.SchemeType, val boxedValue : BoxedValue) extends IntermediateValue {
+/** Represents a value boxed in an alloc cell
+  *
+  * @param  schemeType      Scheme type of the CellValue. For types that are accessible from Scheme code this must be a
+  *                         stable type
+  * @param  boxedValue      BoxedValue containing the value's TempValue and cell type
+  * @param  knownAllocated  True if this cell is known to be allocated from the garbage collector. Otherwise the value
+  *                         may be a compile-time constant value.
+  */
+class CellValue(
+    val schemeType : vt.SchemeType,
+    val boxedValue : BoxedValue,
+    val knownAllocated : Boolean = false
+) extends IntermediateValue {
   lazy val typeDescription = s"cell of type ${schemeType}"
 
   override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
@@ -93,7 +105,7 @@ class CellValue(val schemeType : vt.SchemeType, val boxedValue : BoxedValue) ext
   }
   
   override def withSchemeType(newType : vt.SchemeType) : IntermediateValue = {
-    new CellValue(newType, boxedValue)
+    new CellValue(newType, boxedValue, knownAllocated)
   }
   
   def preferredRepresentation : vt.ValueType =

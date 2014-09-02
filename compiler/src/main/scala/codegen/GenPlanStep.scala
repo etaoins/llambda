@@ -341,30 +341,41 @@ object GenPlanStep {
       val cdrIr = ct.PairCell.genLoadFromCdr(state.currentBlock)(pairIr)
 
       state.withTempValue(resultTemp -> cdrIr)
-    
+
+    case ps.InitVector(vectorResult, elementsResult, length) =>
+      val lengthIr = state.liveTemps(length)
+      val result = GenVector.init(state)(lengthIr)
+
+      result.finalState
+        .withTempValue(vectorResult -> result.vectorIr)
+        .withTempValue(elementsResult -> result.elementsIr)
+
+    case ps.LoadVectorElementsData(resultTemp, vectorTemp) =>
+      val vectorIr = state.liveTemps(vectorTemp)
+      val elementsIr = ct.VectorCell.genLoadFromElements(state.currentBlock)(vectorIr)
+
+      state.withTempValue(resultTemp -> elementsIr)
+
     case ps.LoadVectorLength(resultTemp, vectorTemp) =>
       val vectorIr = state.liveTemps(vectorTemp)
       val carIr = ct.VectorCell.genLoadFromLength(state.currentBlock)(vectorIr)
 
       state.withTempValue(resultTemp -> carIr)
     
-    case ps.LoadVectorElement(resultTemp, vectorTemp, indexTemp) =>
-      val block = state.currentBlock
-
-      val vectorIr = state.liveTemps(vectorTemp)
+    case ps.LoadVectorElement(resultTemp, _, elementsTemp, indexTemp) =>
+      val elementsIr = state.liveTemps(elementsTemp)
       val indexIr = state.liveTemps(indexTemp)
 
-      val elementsIr = ct.VectorCell.genLoadFromElements(block)(vectorIr)
-
-      val elementPtrIr = block.getelementptr("elementPtr")(
-        elementType=PointerType(ct.AnyCell.irType),
-        basePointer=elementsIr,
-        indices=Vector(indexIr),
-        inbounds=true
-      )
-
-      val elementIr = block.load("element")(elementPtrIr)
+      val elementIr = GenVector.loadElement(state.currentBlock)(elementsIr, indexIr)
       state.withTempValue(resultTemp -> elementIr)
+    
+    case ps.StoreVectorElement(_, elementsTemp, indexTemp, newValueTemp) =>
+      val elementsIr = state.liveTemps(elementsTemp)
+      val indexIr = state.liveTemps(indexTemp)
+      val newValueIr = state.liveTemps(newValueTemp)
+
+      GenVector.storeElement(state.currentBlock)(elementsIr, indexIr, newValueIr)
+      state
 
     case ps.LoadProcedureEntryPoint(resultTemp, procTemp) =>
       val procIr = state.liveTemps(procTemp)

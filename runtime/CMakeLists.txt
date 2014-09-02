@@ -32,6 +32,7 @@ add_library(lliby
 	core/init.cpp
 	core/io.cpp
 	core/recorddata.cpp
+	core/vector.cpp
 	dynamic/Continuation.cpp
 	dynamic/State.cpp
 	dynamic/EscapeProcedureCell.cpp
