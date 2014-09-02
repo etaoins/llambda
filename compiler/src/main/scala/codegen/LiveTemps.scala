@@ -26,6 +26,9 @@ case class LiveTemps(
   def apply(tempValue : ps.TempValue) : IrValue =
     tempValueToIr(tempValue)
 
+  def get(tempValue : ps.TempValue) : Option[IrValue] =
+    tempValueToIr.get(tempValue)
+
   def keySet = tempValueToIr.keySet
 
   def +(tempTuple : (ps.TempValue, IrValue)) = {
