@@ -17,16 +17,14 @@ private[planner] object PlanExpr {
 
     expr match {
       case et.Begin(exprs) =>
-        var finalValue : iv.IntermediateValue = iv.UnitValue
+        val initialResult = PlanResult(
+          state=initialState,
+          value=iv.UnitValue
+        )
 
-        val finalState = exprs.foldLeft(initialState) { case (state, expr) =>
-          val result = apply(state)(expr)
-          finalValue = result.value
-
-          result.state
+        exprs.foldLeft(initialResult) { case (planResult, expr) =>
+          apply(planResult.state)(expr)
         }
-
-        PlanResult(state=finalState, value=finalValue)
 
       case et.Apply(procRef @ et.VarRef(callCcProc : ReportProcedure), operands) if callCcNames.contains(callCcProc.reportName) && plan.config.optimize =>
         // This is a (call/cc)
