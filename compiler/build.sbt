@@ -10,7 +10,7 @@ scalacOptions ++= Seq("-deprecation", "-feature", "-Xlint")
 
 libraryDependencies += "org.scala-lang" % "scala-reflect" % "2.11.2"
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.0" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.1" % "test"
 
 libraryDependencies += "com.github.scopt" %% "scopt" % "3.2.0"
 
