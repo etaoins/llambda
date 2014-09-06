@@ -26,8 +26,9 @@ private[planner] object PlanApplication {
         // Don't evaluate applyProcExpr - it could be an inline lambda like (case-lambda) generates
         // We want to inline it if at all possible
         val applyArgsResult = PlanExpr(initialState)(applyArgsExpr)(staticApplyPlan)
+        val resultValue = applyArgsResult.values.toIntermediateValue()
 
-        applyArgsResult.value match {
+        resultValue match {
           case knownListElement : iv.KnownListElement =>
             for(argValues <- knownListElement.toValueList) {
               // We statically know our arguments!
@@ -49,7 +50,10 @@ private[planner] object PlanApplication {
         // Not (apply)
     }
 
-    val initialResult = PlanResult(state=initialState, value=iv.UnitValue)
+    val initialResult = PlanResult(
+      state=initialState,
+      values=SingleValue(iv.UnitValue)
+    )
 
     val operandResults = operandExprs.scanLeft(initialResult) { case (prevResult, operandExpr) =>
       PlanExpr(prevResult.state)(operandExpr)
@@ -58,7 +62,7 @@ private[planner] object PlanApplication {
     // Use the final operand's state
     val operandState = operandResults.last.state
     // Zip with the orignal operand expr so we can use it to locate exceptions related to that operand
-    val operands = operandExprs.zip(operandResults.tail.map(_.value))
+    val operands = operandExprs.zip(operandResults.tail.map(_.values.toIntermediateValue()))
 
     val applyResult = planWithOperandValues(operandState)(located, procExpr, operands)
 
@@ -78,7 +82,7 @@ private[planner] object PlanApplication {
 
     PlanResult(
       state=postRestArgState,
-      value=applyResult.planResult.value
+      values=applyResult.planResult.values
     )
   }
     
@@ -98,7 +102,7 @@ private[planner] object PlanApplication {
           return PlanApplyResult(
             planResult=PlanResult(
               state=initialState,
-              value=inlineResult
+              values=inlineResult
             ),
             fixedArgTypes=lambdaExpr.fixedArgs.map(_.schemeType),
             restArgMemberTypeOpt=lambdaExpr.restArgOpt.map(_.memberType)
@@ -109,9 +113,10 @@ private[planner] object PlanApplication {
     }
 
     val procResult = PlanExpr(initialState)(procExpr)
+    val procResultValue = procResult.values.toIntermediateValue()
 
-    val invokableProc = procResult.value.toInvokableProcedure() getOrElse {
-      throw new ValueNotApplicableException(located, procResult.value.typeDescription)
+    val invokableProc = procResultValue.toInvokableProcedure() getOrElse {
+      throw new ValueNotApplicableException(located, procResultValue.typeDescription)
     }
 
     val signature = invokableProc.signature
@@ -135,7 +140,7 @@ private[planner] object PlanApplication {
     }
 
     // Does this procedure support planning its application inline?
-    procResult.value match {
+    procResultValue match {
       case knownProc : iv.KnownProc =>
         for(inlineResult <- knownProc.attemptInlineApplication(procResult.state)(operands)) {
           return PlanApplyResult(
@@ -151,21 +156,21 @@ private[planner] object PlanApplication {
     // Plan this as a an invoke (function call)
     val invokePlan = plan.forkPlan()
 
-    val invokeValue = (invokePlan.withContextLocation(located) {
+    val invokeValues = (invokePlan.withContextLocation(located) {
       PlanInvokeApply(invokableProc, operands)(invokePlan, worldPtr) 
-    }).getOrElse(iv.UnitValue)
+    })
 
-    procResult.value match {
+    procResultValue match {
       case schemeProc : iv.KnownSchemeProc if plan.config.optimize && !schemeProc.recursiveSelfLoc.isDefined =>
         // Try to plan this as in inline app[lication
         val inlinePlan = plan.forkPlan()
 
-        val inlineValueOpt = AttemptInlineApply(schemeProc.parentState, procResult.state)(
+        val inlineValuesOpt = AttemptInlineApply(schemeProc.parentState, procResult.state)(
           lambdaExpr=schemeProc.lambdaExpr,
           operands=operands
         )(inlinePlan, worldPtr) 
 
-        for(inlineValue <- inlineValueOpt) {
+        for(inlineValues <- inlineValuesOpt) {
           val inlineCost = CostForPlanSteps(inlinePlan.steps.toList)
           val invokeCost = CostForPlanSteps(invokePlan.steps.toList)
 
@@ -176,7 +181,7 @@ private[planner] object PlanApplication {
             return PlanApplyResult( 
               planResult=PlanResult(
                 state=procResult.state,
-                value=inlineValue
+                values=inlineValues
               ),
               fixedArgTypes=signature.fixedArgs.map(_.schemeType),
               restArgMemberTypeOpt=signature.restArgOpt
@@ -193,7 +198,7 @@ private[planner] object PlanApplication {
     PlanApplyResult(
       planResult=PlanResult(
         state=procResult.state,
-        value=invokeValue
+        values=invokeValues
       ),
       fixedArgTypes=signature.fixedArgs.map(_.schemeType),
       restArgMemberTypeOpt=signature.restArgOpt

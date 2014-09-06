@@ -1,7 +1,7 @@
 package io.llambda.compiler.planner.intermediatevalue
 import io.llambda
 
-import llambda.compiler.{ProcedureSignature, ContextLocated}
+import llambda.compiler.{ProcedureSignature, ContextLocated, ReturnType}
 import llambda.compiler.planner._
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
@@ -12,7 +12,7 @@ class KnownRecordMutatorProc(recordType : vt.RecordType, field : vt.RecordField)
     hasSelfArg=false,
     restArgOpt=None,
     fixedArgs=List(recordType, field.fieldType),
-    returnType=None,
+    returnType=ReturnType.SingleValue(vt.UnitType),
     attributes=Set()
   )
 
@@ -66,7 +66,7 @@ class KnownRecordMutatorProc(recordType : vt.RecordType, field : vt.RecordField)
 
         Some(PlanResult(
           state=state,
-          value=UnitValue
+          values=SingleValue(UnitValue)
         ))
 
       case _ =>

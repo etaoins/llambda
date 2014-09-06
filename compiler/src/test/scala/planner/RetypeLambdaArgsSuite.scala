@@ -43,7 +43,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
 
     assert(signature.hasWorldArg === false)
     assert(signature.fixedArgs === Nil)
-    assert(signature.returnType === Some(vt.Int64))
+    assert(signature.returnType === ReturnType.SingleValue(vt.Int64))
   }
   
   test("procedure returning its argument") {
@@ -52,7 +52,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
     // This can be passed anything so it can return anything
     assert(signature.hasWorldArg === false)
     assert(signature.fixedArgs === List(vt.AnySchemeType))
-    assert(signature.returnType === Some(vt.AnySchemeType))
+    assert(signature.returnType === ReturnType.SingleValue(vt.AnySchemeType))
   }
   
   test("explicitly typed procedure returning its argument") {
@@ -60,14 +60,14 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
 
     assert(signature.hasWorldArg === false)
     assert(signature.fixedArgs === List(vt.ExactIntegerType))
-    assert(signature.returnType === Some(vt.ExactIntegerType))
+    assert(signature.returnType === ReturnType.SingleValue(vt.ExactIntegerType))
   }
 
   test("explicitly casting procedure argument to type") {
     val signature = signatureFor("""(lambda (x) (cast x <char>))""")
 
     assert(signature.fixedArgs === List(vt.CharType))
-    assert(signature.returnType === Some(vt.CharType))
+    assert(signature.returnType === ReturnType.SingleValue(vt.CharType))
   }
 
   test("assigning procedure argument to typed immutable") {
@@ -78,7 +78,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
     )
 
     assert(signature.fixedArgs === List(vt.FlonumType))
-    assert(signature.returnType === Some(vt.FlonumType))
+    assert(signature.returnType === ReturnType.SingleValue(vt.FlonumType))
   }
   
   test("assigning procedure argument to typed mutable") {
@@ -98,7 +98,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
     // This can be passed anything so it can return anything
     // Note that this could really be ct.UInt32 but we're not smart enough to figure that out
     assert(signature.fixedArgs === List(anyVectorType, vt.ExactIntegerType))
-    assert(signature.returnType === Some(vt.AnySchemeType))
+    assert(signature.returnType === ReturnType.SingleValue(vt.AnySchemeType))
   }
   
   test("typed procedure proxying (vector-ref)") {
@@ -106,7 +106,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
 
     // We should refine <number> in to <exact-integer>
     assert(signature.fixedArgs === List(anyVectorType, vt.ExactIntegerType))
-    assert(signature.returnType === Some(vt.AnySchemeType))
+    assert(signature.returnType === ReturnType.SingleValue(vt.AnySchemeType))
   }
   
   test("custom union typed procedure proxying (vector-ref)") {
@@ -114,14 +114,14 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
 
     // We should refine <number> in to <exact-integer>
     assert(signature.fixedArgs === List(anyVectorType, vt.ExactIntegerType))
-    assert(signature.returnType === Some(vt.AnySchemeType))
+    assert(signature.returnType === ReturnType.SingleValue(vt.AnySchemeType))
   }
   
   test("procedure proxying (vector-set!)") {
     val signature = signatureFor("""(lambda (vec index) (vector-set! vec index #f))""")
 
     assert(signature.fixedArgs === List(anyVectorType, vt.ExactIntegerType))
-    assert(signature.returnType === None)
+    assert(signature.returnType === ReturnType.SingleValue(vt.UnitType))
   }
 
   test("types used across (if) branches are unioned together") {
@@ -132,7 +132,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
           (cast value <symbol>)))""")
 
     assert(signature.fixedArgs === List(vt.UnionType(Set(vt.StringType, vt.SymbolType))))
-    assert(signature.returnType === Some(vt.UnionType(Set(vt.StringType, vt.SymbolType))))
+    assert(signature.returnType === ReturnType.SingleValue(vt.UnionType(Set(vt.StringType, vt.SymbolType))))
   }
   
   test("procedure proxying (vector-ref) past a conditional") {
@@ -144,7 +144,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
     // Because the (vector-ref) is unconditionally executed the condition
     // should change the conditional
     assert(signature.fixedArgs === List(anyVectorType, vt.ExactIntegerType))
-    assert(signature.returnType === Some(vt.AnySchemeType))
+    assert(signature.returnType === ReturnType.SingleValue(vt.AnySchemeType))
   }
 
   test("procedure proxying function with typed rest arg") {
@@ -153,7 +153,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
         (+ 5 val1 val2))""")
 
     assert(signature.fixedArgs === List(vt.NumberType, vt.NumberType))
-    assert(signature.returnType === Some(vt.NumberType))
+    assert(signature.returnType === ReturnType.SingleValue(vt.NumberType))
   }
   
   test("procedure proxying (vector-ref) past possible exception point") {
@@ -165,7 +165,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
     // (/) can can throw an exception
     // This mean (vector-ref) may not be executed
     assert(signature.fixedArgs === List(vt.AnySchemeType, vt.AnySchemeType))
-    assert(signature.returnType === Some(vt.AnySchemeType))
+    assert(signature.returnType === ReturnType.SingleValue(vt.AnySchemeType))
   }
   
   test("procedure proxying (vector-ref) past possible exception point in true branch") {
@@ -175,7 +175,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
         (vector-ref vec index))""")
 
     assert(signature.fixedArgs === List(vt.AnySchemeType, vt.AnySchemeType))
-    assert(signature.returnType === Some(vt.AnySchemeType))
+    assert(signature.returnType === ReturnType.SingleValue(vt.AnySchemeType))
   }
   
   test("procedure proxying (vector-ref) past possible exception point in false branch") {
@@ -185,7 +185,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
         (vector-ref vec index))""")
 
     assert(signature.fixedArgs === List(vt.AnySchemeType, vt.AnySchemeType))
-    assert(signature.returnType === Some(vt.AnySchemeType))
+    assert(signature.returnType === ReturnType.SingleValue(vt.AnySchemeType))
   }
 
   test("procedure proxying (>) inside a conditional test") {
@@ -196,7 +196,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
         (if (> 0 m n) #t #f))""")
 
     assert(signature.fixedArgs === List(vt.NumberType, vt.NumberType))
-    assert(signature.returnType === Some(vt.BooleanType))
+    assert(signature.returnType === ReturnType.SingleValue(vt.BooleanType))
   }
 
   test("aborted retyping preserves original argument types") {
@@ -206,7 +206,7 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
         (vector-ref vec index))""")
 
     assert(signature.fixedArgs === List(anyVectorType, vt.NumberType))
-    assert(signature.returnType === Some(vt.AnySchemeType))
+    assert(signature.returnType === ReturnType.SingleValue(vt.AnySchemeType))
   }
   
   
@@ -218,6 +218,6 @@ class RetypeLambdaArgsSuite extends FunSuite with PlanHelpers{
 
     // The (vector-ref) is conditionally executed, we can't assert anything about our parameters
     assert(signature.fixedArgs === List(vt.AnySchemeType, vt.AnySchemeType))
-    assert(signature.returnType === Some(vt.AnySchemeType))
+    assert(signature.returnType === ReturnType.SingleValue(vt.AnySchemeType))
   }
 }

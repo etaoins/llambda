@@ -576,16 +576,17 @@ object GenPlanStep {
       ct.PairCell.genStoreToCdr(state.currentBlock)(newValueIr, pairIr)
       state
 
-    case ps.AssertPredicate(worldPtrTemp, predicateTemp, errorMessage) =>
+    case ps.AssertPredicate(worldPtrTemp, predicateTemp, errorMessage, evidenceOpt) =>
       val worldPtrIr = state.liveTemps(worldPtrTemp)
       val predIr = state.liveTemps(predicateTemp)
+      val evidenceIrOpt = evidenceOpt.map(state.liveTemps)
       
       // Start our branches
       val irFunction = state.currentBlock.function
       val fatalBlock = irFunction.startChildBlock("predFalse")
       val successBlock = irFunction.startChildBlock("predTrue")
 
-      GenErrorSignal(state.copy(currentBlock=fatalBlock))(worldPtrIr, errorMessage)
+      GenErrorSignal(state.copy(currentBlock=fatalBlock))(worldPtrIr, errorMessage, evidenceIrOpt)
 
       state.currentBlock.condBranch(predIr, successBlock, fatalBlock)
 

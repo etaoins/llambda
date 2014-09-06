@@ -33,7 +33,11 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
     vt.BytevectorType
   )) : Set[vt.NonUnionSchemeType]
 
-  private def directCompareAsType(state : PlannerState)(valueType : vt.ValueType, val1 : iv.IntermediateValue, val2 : iv.IntermediateValue)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
+  private def directCompareAsType(state : PlannerState)(
+      valueType : vt.ValueType,
+      val1 : iv.IntermediateValue,
+      val2 : iv.IntermediateValue
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ResultValues] = {
     val val1Temp = val1.toTempValue(valueType)
     val val2Temp = val2.toTempValue(valueType)
 
@@ -42,10 +46,16 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
     // Do a direct integer compare
     plan.steps += ps.IntegerCompare(predicateTemp, ps.CompareCond.Equal, None, val1Temp, val2Temp)
 
-    Some(new iv.NativePredicateValue(predicateTemp))
+    Some(SingleValue(
+      new iv.NativePredicateValue(predicateTemp)
+    ))
   }
   
-  private def planEquivalenceProc(state : PlannerState)(ptrCompareTypes : Set[vt.NonUnionSchemeType], val1 : iv.IntermediateValue, val2 : iv.IntermediateValue)(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
+  private def planEquivalenceProc(state : PlannerState)(
+      ptrCompareTypes : Set[vt.NonUnionSchemeType],
+      val1 : iv.IntermediateValue,
+      val2 : iv.IntermediateValue)
+  (implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ResultValues] = {
     val ptrCompareUnion = vt.UnionType(ptrCompareTypes)
     
     if ((vt.SatisfiesType(ptrCompareUnion, val1.schemeType) == Some(true)) ||
@@ -68,17 +78,20 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
     }
   }
 
-  def apply(state : PlannerState)(reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = (reportName, operands) match {
+  def apply(state : PlannerState)(
+      reportName : String,
+      operands : List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ResultValues] = (reportName, operands) match {
     case (_, List((_, val1), (_, val2))) if List("eqv?", "eq?").contains(reportName) =>
       StaticValueEqv.valuesAreEqv(val1, val2).map { staticResult =>
-        new iv.ConstantBooleanValue(staticResult)
+        SingleValue(new iv.ConstantBooleanValue(staticResult))
       } orElse {
         planEquivalenceProc(state)(ptrCompareEqvTypes, val1, val2)
       }
     
     case ("equal?", List((_, val1), (_, val2))) =>
       StaticValueEqv.valuesAreEqual(val1, val2).map { staticResult =>
-        new iv.ConstantBooleanValue(staticResult)
+        SingleValue(new iv.ConstantBooleanValue(staticResult))
       } orElse {
         planEquivalenceProc(state)(ptrCompareEqualsTypes, val1, val2)
       }

@@ -34,7 +34,7 @@ class ErrorObjectCell;
 class PortCell;
 class DynamicStateCell;
 
-typedef AnyCell* (*ProcedureEntryPoint)(World&, ProcedureCell*, ListElementCell*);
+typedef ListElementCell* (*ProcedureEntryPoint)(World&, ProcedureCell*, ListElementCell*);
 
 }
 #endif

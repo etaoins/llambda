@@ -11,7 +11,10 @@ import llambda.compiler.planner._
 import llambda.compiler.codegen.AdaptedProcedureSignature
 
 object ApplyProcPlanner extends ReportProcPlanner {
-  def apply(state : PlannerState)(reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = (reportName, operands) match {
+  def apply(state : PlannerState)(
+      reportName : String,
+      operands : List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ResultValues] = (reportName, operands) match {
     case ("apply", List((procContextLoc, procValue), (_, argListValue))) if argListValue.isDefiniteProperList =>
       // Convert to a procedure cell so we can use its trampoline
       val procTemp = plan.withContextLocation(procContextLoc) {
@@ -30,10 +33,7 @@ object ApplyProcPlanner extends ReportProcPlanner {
       val resultTemp = ps.CellTemp(ct.AnyCell)
 
       plan.steps += ps.Invoke(Some(resultTemp), AdaptedProcedureSignature, entryPointTemp, allArgs)
-
-      Some(
-        TempValueToIntermediate(AdaptedProcedureSignature.returnType.get, resultTemp)(plan.config)
-      )
+      Some(TempValueToResults(AdaptedProcedureSignature.returnType, resultTemp))
 
     case _ =>
       None

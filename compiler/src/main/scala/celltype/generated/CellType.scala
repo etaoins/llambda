@@ -1377,7 +1377,7 @@ object RecordLikeCell extends CellType with RecordLikeFields {
 sealed trait ProcedureFields extends RecordLikeFields {
   val irType : FirstClassType
 
-  val entryPointIrType = PointerType(FunctionType(PointerType(UserDefinedType("any")), List(PointerType(UserDefinedType("world")), PointerType(UserDefinedType("procedure")), PointerType(UserDefinedType("listElement"))), false))
+  val entryPointIrType = PointerType(FunctionType(PointerType(UserDefinedType("listElement")), List(PointerType(UserDefinedType("world")), PointerType(UserDefinedType("procedure")), PointerType(UserDefinedType("listElement"))), false))
   val entryPointTbaaNode : Metadata
   val entryPointGepIndices : List[Int]
 

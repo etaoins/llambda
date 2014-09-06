@@ -114,7 +114,7 @@
 !63 = metadata !{metadata !"RecordLike::recordData"}
 
 ; {supertype, entryPoint}
-%procedure = type {%recordLike, %any* (%world*, %procedure*, %listElement*)*}
+%procedure = type {%recordLike, %listElement* (%world*, %procedure*, %listElement*)*}
 !64 = metadata !{metadata !"Any::typeId->RecordLike->Procedure", metadata !58}
 !65 = metadata !{metadata !"Any::gcState->RecordLike->Procedure", metadata !59}
 !66 = metadata !{metadata !"RecordLike::dataIsInline->Procedure", metadata !60}

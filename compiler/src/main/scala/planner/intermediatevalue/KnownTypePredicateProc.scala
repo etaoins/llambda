@@ -65,7 +65,7 @@ class KnownTypePredicateProc(testingType : vt.SchemeType) extends KnownArtificia
 
         Some(PlanResult(
           state=registeredState,
-          value=resultValue
+          values=SingleValue(resultValue)
         ))
 
       case _ =>

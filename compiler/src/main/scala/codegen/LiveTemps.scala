@@ -21,7 +21,7 @@ final class GcPointerIdentity
 case class LiveTemps(
   tempValueToIr : Map[ps.TempValue, IrValue] = Map(),
   pointerIdentities : Map[ps.TempValue, GcPointerIdentity]  = Map()
-) {
+) extends ((ps.TempValue) => IrValue) {
   /** Returns the IR value for a temp value */
   def apply(tempValue : ps.TempValue) : IrValue =
     tempValueToIr(tempValue)

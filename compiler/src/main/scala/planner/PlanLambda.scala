@@ -11,7 +11,7 @@ import llambda.compiler.valuetype.Implicits._
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
-import llambda.compiler.{StorageLocation, ProcedureSignature, ProcedureAttribute}
+import llambda.compiler.{StorageLocation, ProcedureSignature, ProcedureAttribute, ReturnType}
 import llambda.compiler.codegen.CompactRepresentationForType
 
 private[planner] object PlanLambda {
@@ -194,14 +194,17 @@ private[planner] object PlanLambda {
     }).toMap 
 
     // Determine our initial signature
-    val initialSignature = ProcedureSignature(
+    // This is fun - try renaming scalaBugSignature to initialSignature and remove the assignment below
+    val scalaBugSignature = ProcedureSignature(
       hasWorldArg=true,
       hasSelfArg=innerSelfTempOpt.isDefined,
       restArgOpt=lambdaExpr.restArgOpt.map(_.memberType),
       fixedArgs=retypedFixedArgs.map(_._2),
-      returnType=Some(vt.AnySchemeType),
+      returnType=ReturnType.ArbitraryValues,
       attributes=Set(ProcedureAttribute.FastCC)
-    )
+    ) : ProcedureSignature
+
+    val initialSignature : ProcedureSignature = scalaBugSignature
 
     // If we're recursive we can't deviate from our initial signature
     val canRefineSignature = !recursiveSelfLoc.isDefined
@@ -245,44 +248,31 @@ private[planner] object PlanLambda {
     // Plan the body
     val planResult = PlanExpr(postClosureState)(body)(procPlan)
 
-    val retTypedSignature = if (!canRefineSignature) {
-      initialSignature
+    val returnType = if (!canRefineSignature || ContainsImmediateReturn(body)) {
+      // Return an arbitrary number of values with arbitrary types
+      // XXX: We can be more clever here and try to find a common return type across all returns
+      ReturnType.ArbitraryValues
     }
-    else {
-      val returnTypeOpt = if (ContainsImmediateReturn(body)) {
-        // Return an AnyCell
-        // XXX: We can be more clever here and try to find a common return type across all returns
-        Some(vt.AnySchemeType)
-      }
-      else if (planResult.value.hasDefiniteType(vt.UnitType)) {
-        // Instead of returning a unit cell just return void
-        None
-      }
-      else {
-        // Find the preferred representation of our return value
-        Some(planResult.value.preferredRepresentation)
-      }
-
-      initialSignature.copy(returnType=returnTypeOpt)
+    else { 
+      planResult.values.preferredReturnType
     }
 
     val lastExprOpt = lastNonStructuralExpr(body)
 
     // Return from the function
     procPlan.withContextLocationOpt(lastExprOpt) {
-      procPlan.steps += ps.Return(retTypedSignature.returnType map { returnType =>
-        planResult.value.toTempValue(returnType)(procPlan, worldPtr)
-      })
+      val resultTempOpt = planResult.values.toReturnTempValue(returnType)(procPlan, worldPtr)
+      procPlan.steps += ps.Return(resultTempOpt)
     }
     
     val steps = procPlan.steps.toList
 
     val (worldPtrOpt, procSignature) = if (canRefineSignature && !WorldPtrUsedBySteps(steps, worldPtr)) {
       // World pointer is not required, strip it out
-      (None, retTypedSignature.copy(hasWorldArg=false))
+      (None, initialSignature.copy(hasWorldArg=false, returnType=returnType))
     }
     else {
-      (Some(worldPtr), retTypedSignature)
+      (Some(worldPtr), initialSignature.copy(returnType=returnType))
     }
 
     // Name our function arguments
@@ -337,7 +327,7 @@ private[planner] object PlanLambda {
 
     PlanResult(
       state=parentState,
-      value=procValue
+      values=SingleValue(procValue)
     )
   }
 }

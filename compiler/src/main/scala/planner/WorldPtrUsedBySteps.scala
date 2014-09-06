@@ -10,10 +10,10 @@ object WorldPtrUsedBySteps {
       // planning. We have to implicitly know CellConsumers will generate steps requiring the world pointer
       true
 
-    case condStep : ps.CondBranch =>
+    case nestingStep : ps.NestingStep =>
       // Recurse down each side
-      condStep.outerInputValues.contains(worldPtrTemp) || 
-        condStep.innerBranches.flatMap(_._1).exists({ branchStep =>
+      nestingStep.outerInputValues.contains(worldPtrTemp) || 
+        nestingStep.innerBranches.flatMap(_._1).exists({ branchStep =>
           worldPtrUsedByStep(worldPtrTemp, branchStep)
         })
 

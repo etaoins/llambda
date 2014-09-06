@@ -11,12 +11,16 @@ import llambda.compiler.planner._
 import scala.annotation.tailrec
 
 object ListProcPlanner extends ReportProcPlanner {
-  private def staticMemberSearch(compareFunc : StaticValueEqv.EqvFunction, needleValue : iv.IntermediateValue, listValue : iv.IntermediateValue) : Option[iv.IntermediateValue] = listValue match {
+  private def staticMemberSearch(
+      compareFunc : StaticValueEqv.EqvFunction,
+      needleValue : iv.IntermediateValue,
+      listValue : iv.IntermediateValue
+  ) : Option[ResultValues] = listValue match {
     case knownPair : iv.KnownPair =>
       compareFunc(needleValue, knownPair.car) match {
         case Some(true) =>
           // Found it!
-          Some(knownPair)
+          Some(SingleValue(knownPair))
 
         case Some(false) =>
           // definitely not a match - keep looking
@@ -29,18 +33,21 @@ object ListProcPlanner extends ReportProcPlanner {
 
     case iv.EmptyListValue =>
       // Doesn't exist in the list
-      Some(new iv.ConstantBooleanValue(false))
+      Some(SingleValue(new iv.ConstantBooleanValue(false)))
 
     case _ =>
       // Not a constant list
       None
   }
 
-  def apply(initialState : PlannerState)(reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = (reportName, operands) match {
+  def apply(initialState : PlannerState)(
+      reportName : String,
+      operands : List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ResultValues] = (reportName, operands) match {
     case ("list", operands) =>
       // Build a proper list directly
       val operandValues = operands.map(_._2)
-      Some(ValuesToProperList(operandValues))
+      Some(SingleValue(ValuesToProperList(operandValues)))
 
     case ("length", List((_, singleOperand))) =>
       // Do we know the length at compile time?
@@ -49,7 +56,7 @@ object ListProcPlanner extends ReportProcPlanner {
           for(listLength <- knownListElement.listLengthOpt) {
             // Yes, return it directly
             return Some(
-              new iv.ConstantExactIntegerValue(listLength)
+              SingleValue(new iv.ConstantExactIntegerValue(listLength))
             )
           }
 
@@ -64,7 +71,7 @@ object ListProcPlanner extends ReportProcPlanner {
         plan.steps += ps.CalcProperListLength(resultTemp, listElementTemp)
 
         return Some(
-          TempValueToIntermediate(vt.UInt32, resultTemp)(plan.config)
+          SingleValue(TempValueToIntermediate(vt.UInt32, resultTemp)(plan.config))
         )
       }
       else {
@@ -87,7 +94,7 @@ object ListProcPlanner extends ReportProcPlanner {
       plan.steps += ps.AssertPairMutable(worldPtr, pairTemp, errorMessage)
       plan.steps += ps.SetPairCar(pairTemp, newValueTemp)
 
-      Some(iv.UnitValue)
+      Some(SingleValue(iv.UnitValue))
     
     case ("set-cdr!", List((pairLoc, pairValue), (_, newValue))) =>
       val pairTemp = plan.withContextLocation(pairLoc) {
@@ -104,7 +111,7 @@ object ListProcPlanner extends ReportProcPlanner {
       plan.steps += ps.AssertPairMutable(worldPtr, pairTemp, errorMessage)
       plan.steps += ps.SetPairCdr(pairTemp, newValueTemp)
 
-      Some(iv.UnitValue)
+      Some(SingleValue(iv.UnitValue))
 
     case ("cons", List((_, carValue), (_, cdrValue))) =>
       val pairTemp = ps.CellTemp(ct.PairCell)
@@ -116,7 +123,9 @@ object ListProcPlanner extends ReportProcPlanner {
       plan.steps += ps.SetPairCar(pairTemp, carTemp)
       plan.steps += ps.SetPairCdr(pairTemp, cdrTemp)
 
-      Some(TempValueToIntermediate(vt.AnyPairType, pairTemp)(plan.config))
+      Some(SingleValue(
+        TempValueToIntermediate(vt.AnyPairType, pairTemp)(plan.config)
+      ))
 
     case (_, List((_, needleValue), (_, listValue))) if List("memq", "memv").contains(reportName) =>
       staticMemberSearch(StaticValueEqv.valuesAreEqv, needleValue, listValue)

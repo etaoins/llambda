@@ -50,12 +50,12 @@ abstract class KnownProc(selfTempOpt : Option[ps.TempValue]) extends Intermediat
     }
     else {
       // Give the trampoline a sufficently scary looking symbol
-      val trampolineSymbol = "__llambda_" + nativeSymbol + "_trampoline"
+      val trampolineSymbol = nativeSymbol + " Trampoline"
 
       // Ensure this already hasn't been planned
       plan.plannedFunctions.getOrElseUpdate(trampolineSymbol, {
         // Plan the trampoline
-        PlanProcedureTrampoline(signature, nativeSymbol, locationOpt)
+        PlanProcedureTrampoline(this, nativeSymbol, locationOpt)
       })
 
       // Load the trampoline's entry point

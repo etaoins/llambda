@@ -68,7 +68,11 @@ private[planner] object PlanBind {
           PlanExpr(postrecursiveState)(otherExpr, Some(storageLoc.sourceName))
       }
 
-      val initialIntermediate = initialValueResult.value.castToSchemeType(storageLoc.schemeType) 
+      // Convert the result values to a single value
+      val uncastIntermediate = initialValueResult.values.toIntermediateValue()
+
+      // And cast to the correct type
+      val initialIntermediate = uncastIntermediate.castToSchemeType(storageLoc.schemeType) 
 
       // Was this previously a recursive value?
       val prevRecursiveOpt = postrecursiveState.values.get(storageLoc) match {

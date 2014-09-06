@@ -20,37 +20,26 @@ private[planner] object PlanProcedureTrampoline {
     * underlying procedure. It is assumed the argument list a proper list; it is inappropriate to pass user provided
     * arguments lists to a trampoline without confirming the list is proper beforehand.
     *
-    * @param  signature         Signature of the target procedure. The trampoline will ensure the arguments it's passed
-    *                           satisfy the target procedure's signature and perform any required type conversions. 
-    * @param  nativeSymbol      Native symbol of the target procedure 
+    * @param  invokableProc     The target procedure. The trampoline will ensure the arguments it's passed satisfy
+    *                           the target procedure's signature and perform any required type conversions. 
     * @param  targetProcLocOpt  Source location of the target procedure. This is used to generate a comment in the 
     *                           output IR identifying the trampoline.
     */
   def apply(
-      signature : ProcedureSignature,
+      invokableProc : InvokableProcedure,
       nativeSymbol : String,
       targetProcLocOpt : Option[ContextLocated] = None
   )(implicit parentPlan : PlanWriter) : PlannedFunction = {
     val worldPtrTemp = new ps.WorldPtrValue
     val selfTemp = ps.CellTemp(ct.ProcedureCell)
     val argListHeadTemp = ps.CellTemp(ct.ListElementCell)
+    val signature = invokableProc.signature
 
     implicit val plan = parentPlan.forkPlan()
 
     // Change our argListHeadTemp to a IntermediateValue
     val argListType = vt.UniformProperListType(vt.AnySchemeType)
     val argListHeadValue = TempValueToIntermediate(argListType, argListHeadTemp)(parentPlan.config)
-
-    val argTemps = new mutable.ListBuffer[ps.TempValue]
-
-    if (signature.hasWorldArg) {
-      argTemps += worldPtrTemp
-    }
-
-    if (signature.hasSelfArg) {
-      // Pass the closure through directly
-      argTemps += selfTemp
-    }
 
     val insufficientArgsMessage = if (signature.restArgOpt.isDefined) {
       RuntimeErrorMessage(
@@ -66,6 +55,8 @@ private[planner] object PlanProcedureTrampoline {
     }
     
     // Convert our arg list in to the arguments our procedure is expecting
+    val fixedArgTemps = new mutable.ListBuffer[ps.TempValue]
+
     val restArgValue = signature.fixedArgs.foldLeft(argListHeadValue) { case (argListElementValue, nativeType) =>
       // Make sure this is a pair
       val argPairTemp = argListElementValue.toTempValue(vt.AnyPairType, Some(insufficientArgsMessage))(plan, worldPtrTemp)
@@ -78,7 +69,7 @@ private[planner] object PlanProcedureTrampoline {
       val argValue = TempValueToIntermediate(vt.AnySchemeType, argDatumTemp)(plan.config)
       val argTemp = argValue.toTempValue(nativeType)(plan, worldPtrTemp)
 
-      argTemps += argTemp
+      fixedArgTemps += argTemp
 
       // Now load the cdr
       val argCdrTemp = ps.CellTemp(ct.AnyCell)
@@ -88,11 +79,12 @@ private[planner] object PlanProcedureTrampoline {
       new iv.CellValue(argListType, BoxedValue(ct.AnyCell, argCdrTemp))
     }
 
-    signature.restArgOpt match {
+    val restArgTemps = signature.restArgOpt match {
       case Some(memberType) =>
         val requiredRestArgType = vt.UniformProperListType(memberType)
         val typeCheckedRestArg = restArgValue.toTempValue(requiredRestArgType)(plan, worldPtrTemp)
-        argTemps += typeCheckedRestArg
+
+        Some(typeCheckedRestArg)
 
       case None =>
         val tooManyArgsMessage = RuntimeErrorMessage(
@@ -102,29 +94,18 @@ private[planner] object PlanProcedureTrampoline {
         
         // Make sure we're out of args by doing a check cast to an empty list
         restArgValue.toTempValue(vt.EmptyListType, Some(tooManyArgsMessage))(plan, worldPtrTemp)
+        None
     }
 
-    // Load the entry point for the function we're jumping to
-    val entryPointTemp = ps.EntryPointTemp()
-    plan.steps += ps.CreateNamedEntryPoint(entryPointTemp, signature, nativeSymbol)
+    val resultValues = PlanInvokeApply.invokeWithTempValues(
+      invokableProc=invokableProc,
+      fixedTemps=fixedArgTemps.toList,
+      restTemps=restArgTemps,
+      selfTempOverride=Some(selfTemp)
+    )(plan, worldPtrTemp)
 
-    // Create our result temp value if any
-    val resultTempOpt = signature.returnType map { returnType =>
-      new ps.TempValue(returnType.isGcManaged)
-    }
-
-    // Invoke!
-    val invokeArgs = argTemps.toList.map(ps.InvokeArgument(_))
-    plan.steps += ps.Invoke(resultTempOpt, signature, entryPointTemp, invokeArgs)
-
-    val returnValue = resultTempOpt map { resultTemp =>
-      TempValueToIntermediate(signature.returnType.get, resultTemp)(plan.config)
-    } getOrElse {
-      DatumToConstantValue(ast.UnitValue())
-    }
-
-    val returnTemp = returnValue.toTempValue(vt.AnySchemeType)(plan, worldPtrTemp)
-    plan.steps += ps.Return(Some(returnTemp))
+    val returnTempOpt = resultValues.toReturnTempValue(AdaptedProcedureSignature.returnType)(plan, worldPtrTemp)
+    plan.steps += ps.Return(returnTempOpt)
 
     val irCommentOpt =
       for(targetProcLoc <- targetProcLocOpt;

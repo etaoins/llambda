@@ -44,10 +44,10 @@ class KnownUserProc(val signature : ProcedureSignature, plannedSymbol : String, 
     if (plan.config.optimize) {
       for(reportName <- reportNameOpt;
           reportProcPlanner <- reportProcPlanners;
-          resultValue <- reportProcPlanner(state)(reportName, operands)) {
+          resultValues <- reportProcPlanner(state)(reportName, operands)) {
         return Some(PlanResult(
           state=state,
-          value=resultValue
+          values=resultValues
         ))
       }
     }

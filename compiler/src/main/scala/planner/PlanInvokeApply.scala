@@ -3,28 +3,55 @@ import io.llambda
 
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
-import llambda.compiler.ContextLocated
+import llambda.compiler.{ContextLocated, ReturnType}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 
 object PlanInvokeApply {
-  def apply(invokableProc : InvokableProcedure, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
+  def invokeWithTempValues(
+      invokableProc : InvokableProcedure,
+      fixedTemps : Seq[ps.TempValue],
+      restTemps : Option[ps.TempValue],
+      selfTempOverride : Option[ps.TempValue] = None
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ResultValues = {
     val entryPointTemp = invokableProc.planEntryPoint()
     val signature = invokableProc.signature
 
     val worldTemps = if (signature.hasWorldArg) {
-      worldPtr :: Nil
+      List(worldPtr)
     }
     else {
       Nil
     }
 
     val selfTemps = if (signature.hasSelfArg) {
-      invokableProc.planSelf() :: Nil
+      List(selfTempOverride.getOrElse {
+        invokableProc.planSelf()
+      })
     }
     else {
       Nil
     }
+    
+    val argTemps = worldTemps ++ selfTemps ++ fixedTemps ++ restTemps
+    val invokeArgs = argTemps.toList.map(ps.InvokeArgument(_))
+
+    signature.returnType match {
+      case ReturnType.SingleValue(vt.UnitType) =>
+        plan.steps += ps.Invoke(None, signature, entryPointTemp, invokeArgs)
+        SingleValue(iv.UnitValue)
+
+      case otherType =>
+        val resultTemp = ps.Temp(otherType.representationTypeOpt.get)
+        plan.steps += ps.Invoke(Some(resultTemp), signature, entryPointTemp, invokeArgs)
+
+        TempValueToResults(otherType, resultTemp)
+    }
+  }
+
+
+  def apply(invokableProc : InvokableProcedure, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ResultValues = {
+    val signature = invokableProc.signature
 
     // Convert all the operands
     val fixedTemps = operands.zip(signature.fixedArgs) map { case ((contextLocated, operand), nativeType) =>
@@ -45,18 +72,7 @@ object PlanInvokeApply {
       ValuesToProperList(restArgs).toTempValue(vt.ListElementType)
     }
 
-    val argTemps = worldTemps ++ selfTemps ++ fixedTemps ++ restTemps
-
-    val resultTemp = signature.returnType.map { returnType =>
-      new ps.TempValue(returnType.isGcManaged)
-    }
-
-    val invokeArgs = argTemps.toList.map(ps.InvokeArgument(_))
-    plan.steps += ps.Invoke(resultTemp, signature, entryPointTemp, invokeArgs)
-
-    resultTemp.map { tempValue =>
-      TempValueToIntermediate(signature.returnType.get, tempValue)(plan.config)
-    }
+    invokeWithTempValues(invokableProc, fixedTemps, restTemps)
   }
 }
 

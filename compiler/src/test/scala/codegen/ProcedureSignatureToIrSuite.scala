@@ -5,7 +5,7 @@ import org.scalatest.FunSuite
 
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.{ProcedureSignature, ProcedureAttribute}
+import llambda.compiler.{ProcedureSignature, ProcedureAttribute, ReturnType}
 import llambda.llvmir._
 import llambda.llvmir.IrFunction._
 
@@ -16,7 +16,7 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       hasSelfArg=false,
       fixedArgs=Nil,
       restArgOpt=None,
-      returnType=None,
+      returnType=ReturnType.SingleValue(vt.UnitType),
       attributes=Set()
     )
 
@@ -35,7 +35,7 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       hasSelfArg=false,
       fixedArgs=List(vt.Predicate, vt.UInt16),
       restArgOpt=None,
-      returnType=Some(vt.Int32),
+      returnType=ReturnType.SingleValue(vt.Int32),
       attributes=Set(ProcedureAttribute.FastCC)
     )
 
@@ -55,7 +55,7 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       hasSelfArg=true,
       fixedArgs=Nil,
       restArgOpt=None,
-      returnType=None,
+      returnType=ReturnType.SingleValue(vt.UnitType),
       attributes=Set(ProcedureAttribute.NoReturn)
     )
 
@@ -77,7 +77,7 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       hasSelfArg=false,
       fixedArgs=Nil,
       restArgOpt=Some(vt.SymbolType),
-      returnType=Some(vt.UInt32),
+      returnType=ReturnType.SingleValue(vt.UInt32),
       attributes=Set()
     )
 
@@ -90,13 +90,32 @@ class ProcedureSignatureToIrSuite extends FunSuite {
     ))
   }
   
+  test("function taking union of port and symbol returning arbitrary multiple values") {
+    val procSignature = ProcedureSignature(
+      hasWorldArg=false,
+      hasSelfArg=false,
+      fixedArgs=List(vt.UnionType(Set(vt.PortType, vt.SymbolType))),
+      restArgOpt=None,
+      returnType=ReturnType.ArbitraryValues,
+      attributes=Set()
+    )
+
+    val irSignature = ProcedureSignatureToIr(procSignature)
+
+    assert(irSignature === IrSignature(
+      result=Result(PointerType(ct.ListElementCell.irType)),
+      arguments=List(Argument(PointerType(ct.AnyCell.irType))),
+      attributes=Set(NoUnwind)
+    ))
+  }
+  
   test("function taking world, self, two numbers, rest arg returning rational") {
     val procSignature = ProcedureSignature(
       hasWorldArg=true,
       hasSelfArg=true,
       fixedArgs=List(vt.NumberType, vt.NumberType),
       restArgOpt=Some(vt.ExactIntegerType),
-      returnType=Some(vt.FlonumType),
+      returnType=ReturnType.SingleValue(vt.FlonumType),
       attributes=Set()
     )
 
@@ -113,12 +132,33 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       )
     ))
   }
+  
+  test("function only self and returning specific multiple values") {
+    val procSignature = ProcedureSignature(
+      hasWorldArg=false,
+      hasSelfArg=true,
+      fixedArgs=Nil,
+      restArgOpt=None,
+      returnType=ReturnType.SpecificValues(List(vt.FlonumType, vt.ExactIntegerType)),
+      attributes=Set()
+    )
+
+    val irSignature = ProcedureSignatureToIr(procSignature)
+
+    assert(irSignature === IrSignature(
+      result=Result(PointerType(ct.PairCell.irType)),
+      arguments=List(
+        Argument(PointerType(ct.ProcedureCell.irType))
+      ),
+      attributes=Set(NoUnwind)
+    ))
+  }
 
   test("adapted procedure signature") {
     val irSignature = ProcedureSignatureToIr(AdaptedProcedureSignature)
 
     assert(irSignature === IrSignature(
-      result=Result(PointerType(ct.AnyCell.irType)),
+      result=Result(PointerType(ct.ListElementCell.irType)),
       arguments=List(
         Argument(PointerType(WorldValue.irType)),
         Argument(PointerType(ct.ProcedureCell.irType)),

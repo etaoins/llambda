@@ -18,7 +18,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         hasSelfArg=false,
         fixedArgs=Nil,
         restArgOpt=None,
-        returnType=None,
+        returnType=ReturnType.SingleValue(vt.UnitType),
         attributes=Set()
       ),
       "lliby_newline"
@@ -36,7 +36,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         hasSelfArg=false,
         fixedArgs=Nil,
         restArgOpt=None,
-        returnType=None,
+        returnType=ReturnType.SingleValue(vt.UnitType),
         attributes=Set(ProcedureAttribute.NoReturn)
       ),
       "lliby_newline"
@@ -54,7 +54,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         hasSelfArg=false,
         fixedArgs=Nil,
         restArgOpt=None,
-        returnType=None,
+        returnType=ReturnType.SingleValue(vt.UnitType),
         attributes=Set()
       ),
       "lliby_newline"
@@ -72,7 +72,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         hasSelfArg=false,
         fixedArgs=Nil,
         restArgOpt=None,
-        returnType=Some(vt.Int8),
+        returnType=ReturnType.SingleValue(vt.Int8),
         attributes=Set()
       ),
       "lliby_newline"
@@ -90,7 +90,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         hasSelfArg=false,
         fixedArgs=List(vt.Int16),
         restArgOpt=None,
-        returnType=Some(vt.Int32),
+        returnType=ReturnType.SingleValue(vt.Int32),
         attributes=Set()
       ),
       "lliby_newline"
@@ -108,7 +108,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         hasSelfArg=false,
         fixedArgs=List(vt.Int64, vt.Float),
         restArgOpt=None,
-        returnType=Some(vt.Double),
+        returnType=ReturnType.SingleValue(vt.Double),
         attributes=Set()
       ),
       "lliby_newline"
@@ -126,7 +126,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         hasSelfArg=false,
         fixedArgs=List(vt.UInt16),
         restArgOpt=None,
-        returnType=Some(vt.UInt32),
+        returnType=ReturnType.SingleValue(vt.UInt32),
         attributes=Set()
       ),
       "lliby_newline"
@@ -144,7 +144,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         hasSelfArg=false,
         fixedArgs=List(vt.Predicate),
         restArgOpt=None,
-        returnType=Some(vt.Predicate),
+        returnType=ReturnType.SingleValue(vt.Predicate),
         attributes=Set()
       ),
       "lliby_newline"
@@ -162,7 +162,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         hasSelfArg=false,
         fixedArgs=List(vt.Int8),
         restArgOpt=None,
-        returnType=Some(vt.UnicodeChar),
+        returnType=ReturnType.SingleValue(vt.UnicodeChar),
         attributes=Set()
       ),
       "lliby_newline"
@@ -180,7 +180,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         hasSelfArg=false,
         fixedArgs=List(vt.ExactIntegerType),
         restArgOpt=None,
-        returnType=Some(vt.FlonumType),
+        returnType=ReturnType.SingleValue(vt.FlonumType),
         attributes=Set()
       ),
       "lliby_newline"
@@ -198,7 +198,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         hasSelfArg=false,
         fixedArgs=Nil,
         restArgOpt=Some(vt.AnySchemeType),
-        returnType=Some(vt.AnySchemeType),
+        returnType=ReturnType.SingleValue(vt.AnySchemeType),
         attributes=Set()
       ),
       "lliby_vector"
@@ -216,7 +216,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         hasSelfArg=false,
         fixedArgs=List(vt.Predicate),
         restArgOpt=Some(vt.ExactIntegerType),
-        returnType=Some(vt.Int32),
+        returnType=ReturnType.SingleValue(vt.Int32),
         attributes=Set()
       ),
       "lliby_misc"

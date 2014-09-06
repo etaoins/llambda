@@ -1,10 +1,11 @@
 package io.llambda.compiler.codegen
 import io.llambda
 
-import llambda.compiler.{ProcedureSignature, ProcedureAttribute}
+import llambda.compiler.{ProcedureSignature, ProcedureAttribute, ReturnType}
 import llambda.compiler.{celltype => ct}
 import llambda.llvmir.{IrSignature, PointerType, VoidType, IntegerType, CallingConv}
 import llambda.llvmir.IrFunction._
+import llambda.compiler.{valuetype => vt}
 
 object ProcedureSignatureToIr {
   private def paramSignednessToAttribs(signedness : Option[Boolean]) : Set[ParameterAttribute] = {
@@ -44,11 +45,13 @@ object ProcedureSignatureToIr {
 
     val allArgs = worldArgs ++ selfArgs ++ fixedArgs ++ restArgs
 
-    val result = signature.returnType map (ValueTypeToIr(_)) match {
-      case None => 
+    val result = signature.returnType.representationTypeOpt match {
+      case None =>
         Result(VoidType, Set())
-      case Some(SignedFirstClassType(irType, signedness)) =>
-        Result(irType, paramSignednessToAttribs(signedness))
+
+      case Some(valueType) =>
+        val signedType = ValueTypeToIr(valueType)
+        Result(signedType.irType, paramSignednessToAttribs(signedType.signed))
     }
 
     // Convert our internal attributes to LLVM IR ones if applicable

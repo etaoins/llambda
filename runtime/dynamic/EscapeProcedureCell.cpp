@@ -15,7 +15,7 @@ namespace
 {
 	std::uint32_t registeredClassId = ~0;
 
-	AnyCell *procedureBody(World &world, ProcedureCell *procSelf, ListElementCell *argHead)
+	ListElementCell *procedureBody(World &world, ProcedureCell *procSelf, ListElementCell *argHead)
 	{
 		ProperList<AnyCell> argList(argHead);
 

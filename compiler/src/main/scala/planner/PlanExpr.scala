@@ -3,7 +3,7 @@ import io.llambda
 
 import collection.mutable
 
-import llambda.compiler.{et, StorageLocation, ReportProcedure, ContextLocated, RuntimeErrorMessage}
+import llambda.compiler.{et, StorageLocation, ReportProcedure, ContextLocated, RuntimeErrorMessage, ReturnType}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
@@ -19,7 +19,7 @@ private[planner] object PlanExpr {
       case et.Begin(exprs) =>
         val initialResult = PlanResult(
           state=initialState,
-          value=iv.UnitValue
+          values=SingleValue(iv.UnitValue)
         )
 
         exprs.foldLeft(initialResult) { case (planResult, expr) =>
@@ -42,7 +42,7 @@ private[planner] object PlanExpr {
       case et.TopLevelDefine(bindings) =>
         PlanResult(
           state=PlanBind(initialState)(bindings),
-          value=iv.UnitValue
+          values=SingleValue(iv.UnitValue)
         )
 
       case et.InternalDefine(bindings, bodyExpr) =>
@@ -52,7 +52,7 @@ private[planner] object PlanExpr {
         // InternalDefines can re-bind existing variables and they must be restored after its body is planned
         PlanResult(
           state=initialState,
-          value=apply(bodyState)(bodyExpr).value
+          values=apply(bodyState)(bodyExpr).values
         )
 
       case et.VarRef(storageLoc : StorageLocation) => 
@@ -61,7 +61,7 @@ private[planner] object PlanExpr {
             // Return the value directly 
             PlanResult(
               state=initialState,
-              value=value
+              values=SingleValue(value)
             )
 
           case MutableValue(mutableType, mutableTemp, needsUndefCheck) =>
@@ -78,9 +78,11 @@ private[planner] object PlanExpr {
             val resultTemp = ps.Temp(mutableType.innerType)
             plan.steps += ps.LoadRecordDataField(resultTemp, recordDataTemp, mutableType, mutableType.recordField)
 
+            val resultValue = TempValueToIntermediate(mutableType.innerType, resultTemp)(plan.config)
+
             PlanResult(
               state=initialState,
-              value=TempValueToIntermediate(mutableType.innerType, resultTemp)(plan.config)
+              values=SingleValue(resultValue)
             )
         }
       
@@ -98,7 +100,8 @@ private[planner] object PlanExpr {
 
         // Evaluate at convert to the correct type for the mutable
         val newValueResult = apply(initialState)(valueExpr)
-        val newValueTemp = newValueResult.value.toTempValue(mutableType.innerType)
+        val newValueIntermediate = newValueResult.values.toIntermediateValue()
+        val newValueTemp = newValueIntermediate.toTempValue(mutableType.innerType)
 
         // Load our data pointer
         val recordDataTemp = ps.RecordLikeDataTemp()
@@ -109,62 +112,76 @@ private[planner] object PlanExpr {
 
         PlanResult(
           state=newValueResult.state,
-          value=iv.UnitValue
+          values=SingleValue(iv.UnitValue)
         )
 
       case et.Literal(value) =>
         PlanResult(
           state=initialState,
-          value=DatumToConstantValue(value)
+          values=SingleValue(DatumToConstantValue(value))
         )
 
       case et.Cond(testExpr, trueExpr, falseExpr) =>
         PlanCond(initialState)(testExpr, trueExpr, falseExpr)
       
       case nativeFunc : et.NativeFunction =>
+        val newProcValue = new iv.KnownUserProc(nativeFunc.signature, nativeFunc.nativeSymbol, None)
+
         PlanResult(
           state=initialState,
-          value=new iv.KnownUserProc(nativeFunc.signature, nativeFunc.nativeSymbol, None)
+          values=SingleValue(newProcValue)
         )
 
       case recordConstructor @ et.RecordConstructor(recordType, initializedFields) =>
+        val newProcValue = new iv.KnownRecordConstructorProc(
+          recordType=recordType,
+          initializedFields=initializedFields
+        )
+
         PlanResult(
           state=initialState,
-          value=new iv.KnownRecordConstructorProc(
-            recordType=recordType,
-            initializedFields=initializedFields
-          )
+          values=SingleValue(newProcValue)
         )
       
       case recordAccessor @ et.RecordAccessor(recordType, field) =>
+        val newProcValue =new iv.KnownRecordAccessorProc(
+          recordType=recordType,
+          field=field
+        )
+
         PlanResult(
           state=initialState,
-          value=new iv.KnownRecordAccessorProc(
-            recordType=recordType,
-            field=field
-          )
+          values=SingleValue(newProcValue)
         )
       
       case recordMutator @ et.RecordMutator(recordType, field) =>
+        val newProcValue = new iv.KnownRecordMutatorProc(
+          recordType=recordType,
+          field=field
+        )
+
         PlanResult(
           state=initialState,
-          value=new iv.KnownRecordMutatorProc(
-            recordType=recordType,
-            field=field
-          )
+          values=SingleValue(newProcValue)
         )
       
       case typePredicate @ et.TypePredicate(schemeType) =>
+        val newProcValue = typecheck.TypePredicateProcForType(schemeType)
+
         PlanResult(
           state=initialState,
-          value=typecheck.TypePredicateProcForType(schemeType)
+          values=SingleValue(newProcValue)
         )
 
       case et.Cast(valueExpr, targetType, staticCheck) =>
         val valueResult = apply(initialState)(valueExpr)
-        val castValue = valueResult.value.castToSchemeType(targetType, staticCheck)
+        val valueIntermediate = valueResult.values.toIntermediateValue
+        val castValue = valueIntermediate.castToSchemeType(targetType, staticCheck)
           
-        PlanResult(state=valueResult.state, value=castValue)
+        PlanResult(
+          state=valueResult.state,
+          values=SingleValue(castValue)
+        )
 
       case lambdaExpr : et.Lambda =>
         PlanLambda(initialState, plan)(
@@ -180,8 +197,11 @@ private[planner] object PlanExpr {
           val parameterResult = apply(state)(parameterExpr)
           val valueResult = apply(parameterResult.state)(valueExpr)
 
-          val parameterTemp = parameterResult.value.toTempValue(vt.ProcedureType)
-          val valueTemp = valueResult.value.toTempValue(vt.AnySchemeType)
+          val parameterIntermediate = parameterResult.values.toIntermediateValue()
+          val parameterTemp = parameterIntermediate.toTempValue(vt.ProcedureType)
+
+          val valueIntermediate = valueResult.values.toIntermediateValue()
+          val valueTemp = valueIntermediate.toTempValue(vt.AnySchemeType)
 
           parameterValueTemps += ((parameterTemp, valueTemp))
 
@@ -196,14 +216,15 @@ private[planner] object PlanExpr {
 
       case et.Return(returnedExpr) =>
         val returnValueResult = apply(initialState)(returnedExpr)
-        // If there's a return the return type is always AnyCell
-        val returnValueTemp = returnValueResult.value.toTempValue(vt.AnySchemeType)
+        // If there's a return the return type is always ArbitraryValues
+        val returnValueTempOpt = returnValueResult.values.toReturnTempValue(ReturnType.ArbitraryValues)
 
-        plan.steps += ps.Return(Some(returnValueTemp))
+        plan.steps += ps.Return(returnValueTempOpt)
 
         PlanResult(
           state=returnValueResult.state,
-          value=iv.UnitValue // et.Return does not have a value - execution stops
+          // et.Return does not have a value - execution stops
+          values=SingleValue(iv.UnitValue)
         )
     }  
   }

@@ -9,7 +9,7 @@ object ExtractNativeFunction {
       hasWorldArg : Boolean,
       fixedArgData : List[sst.ScopedDatum],
       restArgDatum : sst.ScopedDatum,
-      returnTypeDatum : Option[sst.ScopedSymbol],
+      returnTypeDatumOpt : Option[sst.ScopedSymbol],
       nativeSymbol : String,
       attributes : Set[ProcedureAttribute.ProcedureAttribute]
   ) : et.NativeFunction = {
@@ -23,7 +23,14 @@ object ExtractNativeFunction {
         Some(ExtractType.extractSchemeType(datum))
     }
 
-    val returnType = returnTypeDatum.map(ExtractType.extractValueType(_))
+    val returnType = returnTypeDatumOpt match {
+      case None =>
+        ReturnType.SingleValue(vt.UnitType)
+
+      case Some(returnTypeDatum) =>
+        val valueType = ExtractType.extractValueType(returnTypeDatum)
+        ReturnType.SingleValue(valueType)
+    }
 
     val signature = ProcedureSignature(
       hasWorldArg=hasWorldArg,
@@ -36,7 +43,8 @@ object ExtractNativeFunction {
 
     et.NativeFunction(
       signature=signature,
-      nativeSymbol = nativeSymbol)
+      nativeSymbol = nativeSymbol
+    )
   }
 
   def apply(hasWorldArg : Boolean, operands : List[sst.ScopedDatum], defineLocation : SourceLocated) : et.NativeFunction = operands match {

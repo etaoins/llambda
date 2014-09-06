@@ -13,8 +13,8 @@ sealed abstract class NativeValue(val nativeType : vt.NativeType, val cellType :
   lazy val typeDescription = 
     s"native value of type ${vt.NameForType(nativeType)}"
 
-  // This is used for our shortcut in planPhiWith to build a new phi'ed intermediate
-  protected def withNewTempValue(tempValue : ps.TempValue) : NativeValue
+  // This is used for our shortcut in PlanResultValuesPhi to build a new phi'ed intermediate
+  def withNewTempValue(tempValue : ps.TempValue) : NativeValue
 
   protected def planCastToNativeTempValue(targetType : vt.NativeType)(implicit plan : PlanWriter) : ps.TempValue = 
     impossibleConversion(s"Cannot convert ${typeDescription} to requested type ${vt.NameForType(targetType)} or any other native type")
@@ -31,23 +31,6 @@ sealed abstract class NativeValue(val nativeType : vt.NativeType, val cellType :
     else {
       planCastToNativeTempValue(targetType)
     }
-  
-  override def planPhiWith(theirValue : IntermediateValue)(ourPlan : PlanWriter, theirPlan : PlanWriter)(implicit worldPtr : ps.WorldPtrValue) : PlanPhiResult = theirValue match {
-    case theirUnboxed : NativeValue if nativeType == theirUnboxed.nativeType =>
-      // Our types exactly match - no conversion needed!
-      val phiResultTemp = ps.Temp(nativeType)
-
-      PlanPhiResult(
-        ourTempValue=tempValue,
-        theirTempValue=theirUnboxed.tempValue,
-        resultTemp=phiResultTemp,
-        resultIntermediate=this.withNewTempValue(phiResultTemp)
-      )
-
-    case _ =>
-      // Fall back to dumb unboxing
-      super.planPhiWith(theirValue)(ourPlan, theirPlan)
-  }
   
   def preferredRepresentation : vt.ValueType =
     nativeType

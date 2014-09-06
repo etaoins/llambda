@@ -1,7 +1,8 @@
 package io.llambda.compiler.analyser
 import io.llambda
 
-import llambda.compiler.{et, ast, StorageLocation, ProcedureSignature}
+import llambda.compiler.{et, ast, StorageLocation, ProcedureSignature, ReturnType}
+import llambda.compiler.{valuetype => vt}
 import org.scalatest.FunSuite
 
 class AnalyseExprsSuite extends FunSuite {
@@ -47,7 +48,7 @@ class AnalyseExprsSuite extends FunSuite {
       hasSelfArg=false,
       fixedArgs=Nil,
       restArgOpt=None,
-      returnType=None,
+      returnType=ReturnType.SingleValue(vt.UnitType),
       attributes=Set()
     )
 

@@ -31,13 +31,6 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
   def isDefiniteProperList : Boolean =
     vt.SatisfiesType(vt.UniformProperListType(vt.AnySchemeType), schemeType) == Some(true)
 
-  case class PlanPhiResult(
-    ourTempValue : ps.TempValue,
-    theirTempValue : ps.TempValue,
-    resultTemp : ps.TempValue,
-    resultIntermediate : IntermediateValue
-  )
-
   protected def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
   protected def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     val trueTemp = ps.Temp(vt.Predicate)
@@ -119,29 +112,6 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
       throw new InternalCompilerErrorException("Attempt to convert value to a closure type")
   }
   
-  def planPhiWith(theirValue : IntermediateValue)(ourPlan : PlanWriter, theirPlan : PlanWriter)(implicit worldPtr : ps.WorldPtrValue) : PlanPhiResult = {
-    val phiSchemeType = schemeType + theirValue.schemeType
-
-    // This is extremely inefficient for compatible native types
-    // This should be overridden where possible
-    val ourTempValue = this.toTempValue(phiSchemeType)(ourPlan, worldPtr)
-    val theirTempValue = theirValue.toTempValue(phiSchemeType)(theirPlan, worldPtr)
-
-    // If we're constants on both sides we don't need to be GC managed
-    val isGcManaged = ourTempValue.isGcManaged || theirTempValue.isGcManaged
-
-    val phiResultTemp = new ps.TempValue(isGcManaged)
-
-    val boxedValue = BoxedValue(phiSchemeType.cellType, phiResultTemp)
-
-    PlanPhiResult(
-      ourTempValue=ourTempValue,
-      theirTempValue=theirTempValue,
-      resultTemp=phiResultTemp,
-      resultIntermediate=new CellValue(phiSchemeType, boxedValue)
-    )
-  }
-
   /** Casts this value to the specified cell value type
     *
     * The result may not be of represented by the specified cell value type (e.g. it may be unboxed) but it is 

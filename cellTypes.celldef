@@ -12,7 +12,7 @@ fieldtype ios : uint8 {
 cell Any;
 cell Procedure;
 cell ListElement;
-fieldtype ProcedureEntryPoint : Any* (*)(World&, Procedure*, ListElement*) {
+fieldtype ProcedureEntryPoint : ListElement* (*)(World&, Procedure*, ListElement*) {
 	cppname = ProcedureEntryPoint;
 };
 

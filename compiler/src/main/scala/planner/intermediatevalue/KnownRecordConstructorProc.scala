@@ -1,7 +1,7 @@
 package io.llambda.compiler.planner.intermediatevalue
 import io.llambda
 
-import llambda.compiler.{ProcedureSignature, ContextLocated}
+import llambda.compiler.{ProcedureSignature, ContextLocated, ReturnType}
 import llambda.compiler.planner._
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
@@ -17,7 +17,7 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
     hasSelfArg=false,
     restArgOpt=None,
     fixedArgs=initializedFields.map(_.fieldType),
-    returnType=Some(recordType),
+    returnType=ReturnType.SingleValue(recordType),
     attributes=Set()
   )
   
@@ -89,9 +89,11 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
       plan.steps += ps.SetRecordDataField(dataTemp, recordType, field, fieldTemp)
     }
 
+    val resultValue = TempValueToIntermediate(recordType, cellTemp)(plan.config)
+
     Some(PlanResult(
       state=state,
-      value=new CellValue(recordType, BoxedValue(recordType.cellType, cellTemp))
+      values=SingleValue(resultValue)
     ))
   }
 }

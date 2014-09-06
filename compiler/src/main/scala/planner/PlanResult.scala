@@ -5,5 +5,5 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 
 case class PlanResult(
   state : PlannerState,
-  value : iv.IntermediateValue
+  values : ResultValues
 )

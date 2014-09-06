@@ -2,6 +2,7 @@
 
 #include "dynamic/State.h"
 #include "binding/EmptyListCell.h"
+#include "binding/ListElementCell.h"
 #include "alloc/cellref.h"
 
 #include "core/error.h"
@@ -17,7 +18,7 @@ namespace
 	// startup
 	std::uint32_t registeredClassId = ~0;
 
-	AnyCell *procedureBody(World &world, ProcedureCell *self, ListElementCell *argHead)
+	ListElementCell *procedureBody(World &world, ProcedureCell *self, ListElementCell *argHead)
 	{
 		if (argHead != EmptyListCell::instance())
 		{
@@ -26,7 +27,10 @@ namespace
 
 		// We know we're a parameter procedure because only parameter procedures have us as an entry point
 		auto parameterProc = static_cast<ParameterProcedureCell*>(self);
-		return State::activeState(world)->valueForParameter(parameterProc);
+		AnyCell *paramValue = State::activeState(world)->valueForParameter(parameterProc);
+
+		// Return a list of values
+		return ListElementCell::createProperList(world, {paramValue});	
 	}
 }
 	

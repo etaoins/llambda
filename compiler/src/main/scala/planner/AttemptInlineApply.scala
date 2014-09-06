@@ -11,7 +11,7 @@ import llambda.compiler.{valuetype => vt}
 import scala.collection.breakOut
 
 private[planner] object AttemptInlineApply {
-  def apply(parentState : PlannerState, inlineState : PlannerState)(lambdaExpr : et.Lambda, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
+  def apply(parentState : PlannerState, inlineState : PlannerState)(lambdaExpr : et.Lambda, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ResultValues] = {
     val mutableVars = plan.config.analysis.mutableVars
     val allArgs = lambdaExpr.fixedArgs ++ lambdaExpr.restArgOpt.map(_.storageLoc)
 
@@ -79,6 +79,6 @@ private[planner] object AttemptInlineApply {
     )
 
     val planResult = PlanExpr(inlineBodyState)(lambdaExpr.body)
-    Some(planResult.value)
+    Some(planResult.values)
   }
 }

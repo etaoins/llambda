@@ -28,6 +28,6 @@ case class ProcedureSignature(
   hasSelfArg : Boolean,
   fixedArgs : List[vt.ValueType],
   restArgOpt : Option[vt.SchemeType],
-  returnType : Option[vt.ValueType],
+  returnType : ReturnType.ReturnType,
   attributes : Set[ProcedureAttribute.ProcedureAttribute]
 )

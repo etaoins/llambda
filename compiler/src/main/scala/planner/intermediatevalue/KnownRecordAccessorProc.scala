@@ -1,7 +1,7 @@
 package io.llambda.compiler.planner.intermediatevalue
 import io.llambda
 
-import llambda.compiler.{ProcedureSignature, ContextLocated}
+import llambda.compiler.{ProcedureSignature, ContextLocated, ReturnType}
 import llambda.compiler.planner._
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
@@ -18,7 +18,7 @@ class KnownRecordAccessorProc(recordType : vt.RecordType, field : vt.RecordField
     hasSelfArg=false,
     restArgOpt=None,
     fixedArgs=List(recordType),
-    returnType=Some(field.fieldType),
+    returnType=ReturnType.SingleValue(field.fieldType),
     attributes=Set()
   )
   
@@ -57,9 +57,11 @@ class KnownRecordAccessorProc(recordType : vt.RecordType, field : vt.RecordField
         val fieldValueTemp = ps.Temp(field.fieldType)
         plan.steps += ps.LoadRecordDataField(fieldValueTemp, recordDataTemp, recordType, field) 
 
+        val resultValue = TempValueToIntermediate(field.fieldType, fieldValueTemp)(plan.config)
+
         Some(PlanResult(
           state=state,
-          value=TempValueToIntermediate(field.fieldType, fieldValueTemp)(plan.config)
+          values=SingleValue(resultValue)
         ))
 
       case _ =>

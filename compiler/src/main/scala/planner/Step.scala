@@ -882,16 +882,18 @@ case class FloatCompare(result : TempValue, cond : CompareCond.CompareCond, val1
 case class AssertPredicate(
     worldPtr : WorldPtrValue,
     predicate : TempValue,
-    errorMessage : RuntimeErrorMessage
+    errorMessage : RuntimeErrorMessage,
+    evidenceOpt : Option[TempValue] = None
 ) extends Step with AssertStep {
-  lazy val inputValues = Set(worldPtr, predicate)
+  lazy val inputValues = Set(worldPtr, predicate) ++ evidenceOpt.toSet
   val outputValues = Set[TempValue]()
 
   def renamed(f : (TempValue) => TempValue) =
     AssertPredicate(
       worldPtr,
       f(predicate),
-      errorMessage
+      errorMessage,
+      evidenceOpt.map(f)
     ).assignLocationFrom(this)
 
   override def mergeKey = 
