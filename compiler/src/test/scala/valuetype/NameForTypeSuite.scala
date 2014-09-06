@@ -68,16 +68,22 @@ class NameForTypeSuite extends FunSuite {
   }
   
   test("(Listof <symbol>)") {
-    assert(NameForType(ProperListType(SymbolType)) === "(Listof <symbol>)")
+    assert(NameForType(UniformProperListType(SymbolType)) === "(Listof <symbol>)")
   }
   
   test("(Listof (Listof <symbol>))") {
-    assert(NameForType(ProperListType(ProperListType(SymbolType))) === "(Listof (Listof <symbol>))")
+    assert(NameForType(
+      UniformProperListType(
+        UniformProperListType(
+          SymbolType
+        )
+      )
+    ) === "(Listof (Listof <symbol>))")
   }
   
   test("(Listof <any>)") {
     val pairType = PairType(AnySchemeType, AnySchemeType)
-    assert(NameForType(ProperListType(AnySchemeType)) === "(Listof <any>)")
+    assert(NameForType(UniformProperListType(AnySchemeType)) === "(Listof <any>)")
   }
 
   test("record type") {

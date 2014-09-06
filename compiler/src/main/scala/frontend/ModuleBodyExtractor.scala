@@ -183,7 +183,7 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
 
     val restArgOpt = restArgDatum match {
       case restArgSymbol : sst.ScopedSymbol =>
-        val storageLoc = new StorageLocation(restArgSymbol.name, vt.ProperListType(restArgMemberType))
+        val storageLoc = new StorageLocation(restArgSymbol.name, vt.UniformProperListType(restArgMemberType))
         val restArg = et.RestArgument(storageLoc, restArgMemberType)
 
         Some(ScopedRestArgument(restArgSymbol, restArg))

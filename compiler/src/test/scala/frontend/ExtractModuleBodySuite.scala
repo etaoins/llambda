@@ -311,7 +311,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     inside(exprFor("(lambda x x)")) {
       case et.Lambda(Nil, Some(restArg), body, _) =>
         assert(restArg.memberType === vt.AnySchemeType)
-        assert(restArg.storageLoc.schemeType === vt.ProperListType(vt.AnySchemeType))
+        assert(restArg.storageLoc.schemeType === vt.UniformProperListType(vt.AnySchemeType))
 
         assert(body === et.VarRef(restArg.storageLoc))
     }
@@ -321,7 +321,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
         assert(argX.schemeType === vt.AnySchemeType)
         assert(argY.schemeType === vt.AnySchemeType)
         assert(restArg.memberType === vt.AnySchemeType)
-        assert(restArg.storageLoc.schemeType === vt.ProperListType(vt.AnySchemeType))
+        assert(restArg.storageLoc.schemeType === vt.UniformProperListType(vt.AnySchemeType))
 
         assert(body === et.Begin(List(
           et.VarRef(argX),
@@ -346,7 +346,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     inside(exprFor("(lambda: (x : <any> *) x)")(nfiScope)) {
       case et.Lambda(Nil, Some(restArg), body, _) =>
         assert(restArg.memberType === vt.AnySchemeType)
-        assert(restArg.storageLoc.schemeType === vt.ProperListType(vt.AnySchemeType))
+        assert(restArg.storageLoc.schemeType === vt.UniformProperListType(vt.AnySchemeType))
 
         assert(body === et.VarRef(restArg.storageLoc))
     }
@@ -356,7 +356,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
         assert(argX.schemeType === vt.ExactIntegerType)
         assert(argY.schemeType === vt.StringType)
         assert(restArg.memberType === vt.SymbolType)
-        assert(restArg.storageLoc.schemeType === vt.ProperListType(vt.SymbolType))
+        assert(restArg.storageLoc.schemeType === vt.UniformProperListType(vt.SymbolType))
 
         assert(body === et.Begin(List(
           et.VarRef(argX),
@@ -449,7 +449,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
       case et.TopLevelDefine(List((storageLoc, et.Lambda(List(fixedArg), Some(restArg), bodyExpr, _)))) if procLoc == storageLoc =>
         assert(fixedArg.schemeType === vt.AnySchemeType)
         assert(restArg.memberType === vt.AnySchemeType)
-        assert(restArg.storageLoc.schemeType === vt.ProperListType(vt.AnySchemeType))
+        assert(restArg.storageLoc.schemeType === vt.UniformProperListType(vt.AnySchemeType))
 
         assert(bodyExpr === et.Literal(ast.BooleanLiteral(false)))
     }
@@ -470,7 +470,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
       case et.TopLevelDefine(List((storageLoc, et.Lambda(List(fixedArg), Some(restArg), _, _)))) if procLoc == storageLoc =>
         assert(fixedArg.schemeType === vt.BooleanType)
         assert(restArg.memberType === vt.StringType)
-        assert(restArg.storageLoc.schemeType === vt.ProperListType(vt.StringType))
+        assert(restArg.storageLoc.schemeType === vt.UniformProperListType(vt.StringType))
     }
   }
     
@@ -481,7 +481,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-six").value
     inside(expr) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(Nil, Some(restArg), bodyExpr, _)))) if procLoc == storageLoc =>
-        assert(restArg.storageLoc.schemeType === vt.ProperListType(vt.AnySchemeType))
+        assert(restArg.storageLoc.schemeType === vt.UniformProperListType(vt.AnySchemeType))
         assert(restArg.memberType === vt.AnySchemeType)
         assert(bodyExpr === et.Literal(ast.IntegerLiteral(6)))
     }
@@ -500,7 +500,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     inside(expr) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(Nil, Some(restArg), _, _)))) if procLoc == storageLoc =>
         assert(restArg.memberType === vt.PortType)
-        assert(restArg.storageLoc.schemeType === vt.ProperListType(vt.PortType))
+        assert(restArg.storageLoc.schemeType === vt.UniformProperListType(vt.PortType))
     }
   }
   

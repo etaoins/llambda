@@ -139,10 +139,10 @@ class ProperListTypeSuite extends SchemeTypeSuite {
   }
 
   test("string proper list may satisfy non-empty string proper list") {
-    assert(SatisfiesType(nonEmptyProperList(StringType), ProperListType(StringType)) === None)
+    assert(SatisfiesType(nonEmptyProperList(StringType), UniformProperListType(StringType)) === None)
   }
 
   test("non-empty string proper list definitely satisfies string proper list") {
-    assert(SatisfiesType(ProperListType(StringType), nonEmptyProperList(StringType)) === Some(true))
+    assert(SatisfiesType(UniformProperListType(StringType), nonEmptyProperList(StringType)) === Some(true))
   }
 }

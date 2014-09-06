@@ -38,7 +38,8 @@ private[planner] object PlanProcedureTrampoline {
     implicit val plan = parentPlan.forkPlan()
 
     // Change our argListHeadTemp to a IntermediateValue
-    val argListHeadValue = TempValueToIntermediate(vt.ProperListType(vt.AnySchemeType), argListHeadTemp)(parentPlan.config)
+    val argListType = vt.UniformProperListType(vt.AnySchemeType)
+    val argListHeadValue = TempValueToIntermediate(argListType, argListHeadTemp)(parentPlan.config)
 
     val argTemps = new mutable.ListBuffer[ps.TempValue]
 
@@ -84,12 +85,13 @@ private[planner] object PlanProcedureTrampoline {
       plan.steps += ps.LoadPairCdr(argCdrTemp, argPairTemp)
 
       // We know this is a list element but its type will be AnyCell
-      new iv.CellValue(vt.ProperListType(vt.AnySchemeType), BoxedValue(ct.AnyCell, argCdrTemp))
+      new iv.CellValue(argListType, BoxedValue(ct.AnyCell, argCdrTemp))
     }
 
     signature.restArgOpt match {
       case Some(memberType) =>
-        val typeCheckedRestArg = restArgValue.toTempValue(vt.ProperListType(memberType))(plan, worldPtrTemp)
+        val requiredRestArgType = vt.UniformProperListType(memberType)
+        val typeCheckedRestArg = restArgValue.toTempValue(requiredRestArgType)(plan, worldPtrTemp)
         argTemps += typeCheckedRestArg
 
       case None =>

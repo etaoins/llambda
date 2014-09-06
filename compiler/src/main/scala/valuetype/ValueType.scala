@@ -209,8 +209,9 @@ object PairType {
   }
 }
 
-object ProperListType {
-  def apply(memberTypeRef : SchemeTypeRef) = {
+object UniformProperListType {
+  /** Constructs a recursive type representing a unsized proper list with a uniform member type */
+  def apply(memberTypeRef : SchemeTypeRef) : SchemeType = {
     UnionType(Set(
       EmptyListType,
       SpecificPairType(
@@ -220,6 +221,14 @@ object ProperListType {
       )
     ))
   }
+}
+
+object SpecificProperListType {
+  /** Constructs a recursive type representing a fixed length proper list with specific member types */
+  def apply(memberTypeRefs : Iterable[SchemeTypeRef]) : SchemeType = 
+    memberTypeRefs.foldRight(EmptyListType : SchemeType) { case (memberTypeRef, cdrType) =>
+      SpecificPairType(memberTypeRef, DirectSchemeTypeRef(cdrType))
+    }
 }
 
 /** Pointer to a garabge collected value cell containing a user-defined record type

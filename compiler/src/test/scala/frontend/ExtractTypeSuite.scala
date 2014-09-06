@@ -183,12 +183,13 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
   
   test("defining homogeneous list types") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+    val stringListType = vt.UniformProperListType(vt.StringType)
 
     bodyFor("(define-type <string-list> (Listof <string>))")(scope)
-    assert(scope("<string-list>") === BoundType(vt.ProperListType(vt.StringType)))
+    assert(scope("<string-list>") === BoundType(stringListType))
     
     bodyFor("(define-type <string-list-list> (Listof (Listof <string>)))")(scope)
-    assert(scope("<string-list-list>") === BoundType(vt.ProperListType(vt.ProperListType(vt.StringType))))
+    assert(scope("<string-list-list>") === BoundType(vt.UniformProperListType(stringListType)))
 
     intercept[BadSpecialFormException] {
       // Too many arguments
@@ -243,12 +244,13 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
 
   test("defining recursive types") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+    val stringListType = vt.UniformProperListType(vt.StringType)
     
     bodyFor("(define-type <manual-string-list> (Rec PL (U <empty-list> (Pairof <string> PL))))")(scope)
-    assert(scope("<manual-string-list>") === BoundType(vt.ProperListType(vt.StringType)))
+    assert(scope("<manual-string-list>") === BoundType(stringListType))
     
     bodyFor("(define-type <implicit-recursive> (U <empty-list> (Pairof <string> <implicit-recursive>)))")(scope)
-    assert(scope("<implicit-recursive>") === BoundType(vt.ProperListType(vt.StringType)))
+    assert(scope("<implicit-recursive>") === BoundType(stringListType))
     
     bodyFor("(define-type <string-tree> (Rec BT (U <string> (Pairof BT BT))))")(scope)
     assert(scope("<string-tree>") === BoundType(
@@ -359,7 +361,7 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     
     // This is identical to a proper list
     bodyFor("(define-type <port-list> (ListWithTerminator <port> <empty-list>))")(scope)
-    assert(scope("<port-list>") === BoundType(vt.ProperListType(vt.PortType)))
+    assert(scope("<port-list>") === BoundType(vt.UniformProperListType(vt.PortType)))
 
     // Nested type constructors
     bodyFor("(define-type <nested-type> (ListWithTerminator (Option <symbol>) <boolean>))")(scope)

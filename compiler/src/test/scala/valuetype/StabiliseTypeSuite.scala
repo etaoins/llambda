@@ -20,12 +20,12 @@ class StabiliseTypeSuite extends FunSuite {
   }
   
   test("proper list type is preserved in llambda dialect") {
-    val stringList = ProperListType(StringType)
+    val stringList = UniformProperListType(StringType)
     assert(StabiliseType(stringList, dialect.Llambda) === stringList)
   }
 
   test("proper list type is converted to ListElementType in R7RS dialect") {
-    val stringList = ProperListType(StringType)
+    val stringList = UniformProperListType(StringType)
     assert(StabiliseType(stringList, dialect.R7RS) === ListElementType)
   }
 

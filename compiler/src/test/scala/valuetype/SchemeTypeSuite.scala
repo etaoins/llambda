@@ -15,10 +15,10 @@ trait SchemeTypeSuite extends FunSuite {
   protected val constantTrue = ConstantBooleanType(true)
   protected val constantFalse = ConstantBooleanType(false)
 
-  protected val stringList = ProperListType(StringType)
-  protected val numericList = ProperListType(NumberType)
-  protected val exactIntList = ProperListType(ExactIntegerType)
-  protected val inexactList = ProperListType(FlonumType)
+  protected val stringList = UniformProperListType(StringType)
+  protected val numericList = UniformProperListType(NumberType)
+  protected val exactIntList = UniformProperListType(ExactIntegerType)
+  protected val inexactList = UniformProperListType(FlonumType)
     
   protected val knownNumberList = PairType(NumberType,
     PairType(ExactIntegerType,
@@ -26,7 +26,7 @@ trait SchemeTypeSuite extends FunSuite {
         EmptyListType)))
   
   protected def nonEmptyProperList(memberType : SchemeType) : SchemeType = 
-    PairType(memberType, ProperListType(memberType))
+    PairType(memberType, UniformProperListType(memberType))
 
   protected def assertIntersection(type1 : SchemeType, type2 : SchemeType, resultType : SchemeType) {
     assert((type1 & type2) === resultType) 

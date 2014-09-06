@@ -29,7 +29,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     vt.SatisfiesType(otherType, schemeType) == Some(true)
 
   def isDefiniteProperList : Boolean =
-    vt.SatisfiesType(vt.ProperListType(vt.AnySchemeType), schemeType) == Some(true)
+    vt.SatisfiesType(vt.UniformProperListType(vt.AnySchemeType), schemeType) == Some(true)
 
   case class PlanPhiResult(
     ourTempValue : ps.TempValue,
