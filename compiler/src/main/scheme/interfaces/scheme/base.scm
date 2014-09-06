@@ -23,7 +23,7 @@
 (export vector? make-vector vector vector-length vector-ref vector-set! list->vector vector-append)
 (export bytevector? make-bytevector bytevector bytevector-length bytevector-u8-ref bytevector-u8-set! bytevector-append)
 (export string? make-string string string-length string-ref string-set! string-append list->string)
-(export procedure? apply call-with-current-continuation call/cc)
+(export procedure? apply call-with-current-continuation call/cc values call-with-values)
 (export make-parameter dynamic-wind)
 (export port? input-port? output-port? current-input-port current-output-port current-error-port)
 (export newline)

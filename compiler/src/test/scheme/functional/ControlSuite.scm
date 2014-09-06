@@ -63,6 +63,24 @@
 		  #f)
 	))))
 
+(define-test "(define) doesn't accept multiple values" (expect-failure
+  (define x (values 1 2 3))))
+
+(define-test "(define) accepts single value produced with (values)" (expect test
+  (define x (values 'test))
+  x))
+
+(define-test "(call-with-values) with single value" (expect -1
+  (call-with-values * -)))
+
+(define-test "(call-with-values) with multiple values" (expect 5
+  (call-with-values (lambda () (values 4 5))
+                    (lambda (a b) b))))
+
+(define-test "(call-with-values) with mismatched arity fails" (expect-failure
+  (call-with-values (lambda () (values 4 5))
+                    (lambda (a b c) b))))
+
 (define-test "captured continuation called multiple times" (expect (0 1 2 3 4 5 6 7 8 9 10)
   (define result-list '())
   (define captured-cont #!unit)

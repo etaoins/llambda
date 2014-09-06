@@ -1,5 +1,6 @@
 #include "binding/ProcedureCell.h"
 #include "binding/ListElementCell.h"
+#include "binding/EmptyListCell.h"
 #include "binding/ProperList.h"
 
 #include "alloc/allocator.h"
@@ -106,6 +107,14 @@ ReturnValuesList *lliby_call_with_current_continuation(World &world, ProcedureCe
 		// If it returns without invoking the escape proc we'll return through here
 		return procRef->apply(world, argHead);
 	}
+}
+
+ReturnValuesList *lliby_call_with_values(World &world, ProcedureCell *producer, ProcedureCell *consumerRaw)
+{
+	alloc::ProcedureRef consumer(world, consumerRaw);
+
+	ReturnValuesList *values = producer->apply(world, EmptyListCell::instance());
+	return consumer->apply(world, values);
 }
 
 }
