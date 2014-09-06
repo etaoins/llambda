@@ -11,6 +11,14 @@
 	(call/cc (lambda (return)
 		(return 5)))))
 
+(define-test "(call/cc) invoking escape procedure with multiple values" (expect 21
+  (call-with-values
+    (lambda ()
+      (call/cc (lambda (return)
+        (return * 7 3))))
+    (lambda (proc . args)
+      (apply proc args)))))
+
 (define-test "trivial (call/cc) not invoking escape procedure" (expect 5
 	(call/cc (lambda (return)
 		5))))
@@ -80,6 +88,15 @@
 (define-test "(call-with-values) with mismatched arity fails" (expect-failure
   (call-with-values (lambda () (values 4 5))
                     (lambda (a b c) b))))
+
+(define-test "multiple values returned from (if)" (expect (1 2 3 4)
+  (define (return-multiple)
+    (if dynamic-true
+      (values 1 2 3 4)
+      (values 4 5 6 7)))
+
+  (call-with-values return-multiple
+                    (lambda values-list values-list))))
 
 (define-test "captured continuation called multiple times" (expect (0 1 2 3 4 5 6 7 8 9 10)
   (define result-list '())

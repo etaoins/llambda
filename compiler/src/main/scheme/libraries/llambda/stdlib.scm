@@ -364,9 +364,7 @@
     (define-r7rs procedure? (make-predicate <procedure>))
     (define-r7rs call-with-current-continuation (world-function "lliby_call_with_current_continuation" (<any>) -> *))
     (define-r7rs call/cc call-with-current-continuation)
-    (define-r7rs values (lambda things
-      (call/cc
-        (lambda (cont) (apply cont things)))))
+    (define-r7rs values (native-function "lliby_values" <any> -> *))
     (define-r7rs call-with-values (world-function "lliby_call_with_values" (<procedure> <procedure>) -> *))
 
     ; XXX: This should accept a procedure once (case-lambda) is implemented

@@ -72,6 +72,11 @@ ReturnValuesList *lliby_apply(World &world, ProcedureCell *procedure, ListElemen
 	return procedure->apply(world, procArgHead);
 }
 
+ReturnValuesList *lliby_values(RestArgument<AnyCell> *restArgHead)
+{
+	return restArgHead;
+}
+
 ReturnValuesList *lliby_call_with_current_continuation(World &world, ProcedureCell *proc)
 {
 	using dynamic::Continuation;
