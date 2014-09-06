@@ -175,10 +175,8 @@ AnyCell* lliby_list_copy(World &world, AnyCell *sourceHead)
 
 ListElementCell* lliby_list(RestArgument<AnyCell> *head)
 {
-	// Our calling convention requires that any rest parameters are passed as
-	// a proper list. Because (list) is defined as only having rest args the
-	// codegen will do the heavy lifting of building the list and we only have
-	// to return it.
+	// Our calling convention requires that rest parameters are passed as a proper list. Because (list) is defined as
+	// only having rest args the codegen will do the heavy lifting of building the list and we only have to return it.
 	return head;
 }
 
