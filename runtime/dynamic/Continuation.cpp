@@ -73,7 +73,7 @@ Continuation* Continuation::capture(World &world)
 	cont->m_dynamicStateCell = world.activeStateCell;
 
 	// We don't have a passed value yet
-	cont->m_passedValue = nullptr;
+	cont->m_passedValues = nullptr;
 
 	// Finally set the jump target
 	const int jumpResult = setjmp(cont->m_jumpTarget);
@@ -112,7 +112,7 @@ Continuation* Continuation::capture(World &world)
 	}
 }
 	
-void Continuation::resume(World &world, AnyCell *passedValue)
+void Continuation::resume(World &world, ListElementCell *passedValues)
 {
 	void *stackPointer = &stackPointer;
 	
@@ -125,14 +125,14 @@ void Continuation::resume(World &world, AnyCell *passedValue)
 		// This means memcpy() will have its return stack corrupted and all sorts of badness will happen. Instead just
 		// alloca() enough space and re-enter ourselves to ensure our entire stack frame is safe
 		alloca(m_savedStackBytes - currentStackSize);
-		resume(world, passedValue);
+		resume(world, passedValues);
 	}
 
 	// Track that we're the resuming continuation
 	world.resumingContinuation = this;
 
 	// Stash our passed value inside the continuation
-	m_passedValue = passedValue;
+	m_passedValues = passedValues;
 
 	// Copy the stack back over
 	memcpy(static_cast<char*>(world.continuationBase) - m_savedStackBytes, m_savedStack, m_savedStackBytes); 

@@ -4,6 +4,7 @@
 #include <csetjmp>
 
 #include "binding/AnyCell.h"
+#include "binding/ListElementCell.h"
 #include "alloc/StrongRef.h"
 #include "alloc/cellref.h"
 #include "alloc/CellRefRangeList.h"
@@ -38,24 +39,24 @@ public:
 	 *
 	 * This will cause the original capture() call to return again on a copy of its original stack
 	 */
-	void resume(World &world, AnyCell *passedValue);
+	void resume(World &world, ListElementCell *passedValues);
 
 	/**
 	 * Returns the captured value passed to resume() value and sets it to null
 	 *
 	 * This should be used by callers of capture() to retrieve the passed value
 	 */
-	AnyCell *takePassedValue()
+	ListElementCell *takePassedValues()
 	{
-		auto ret = m_passedValue;
-		m_passedValue = nullptr;
+		auto ret = m_passedValues;
+		m_passedValues = nullptr;
 		return ret;
 	}
 
 	// This is used by the GC to update our passed value pointer
-	AnyCell** passedValueRef()
+	ListElementCell** passedValuesRef()
 	{
-		return &m_passedValue;
+		return &m_passedValues;
 	}
 
 	/**
@@ -120,9 +121,9 @@ private:
 	DynamicStateCell *m_dynamicStateCell;
 
 	/**
-	 * Space store a value passed to a continuation
+	 * Space store values passed to a continuation
 	 */
-	AnyCell *m_passedValue;
+	ListElementCell *m_passedValues;
 
 	/**
 	 * Jump target of the continuation

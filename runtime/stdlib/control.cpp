@@ -88,11 +88,10 @@ ReturnValuesList *lliby_call_with_current_continuation(World &world, ProcedureCe
 	// Capture the current continuation
 	Continuation *cont = Continuation::capture(world);
 	
-	if (AnyCell *passedValue = cont->takePassedValue())
+	if (ListElementCell *passedValues = cont->takePassedValues())
 	{
 		// We're the result of a continuation being invoked
-		// XXX: This needs to support multiple values
-		return ListElementCell::createProperList(world, {passedValue});
+		return passedValues;
 	}
 	else
 	{

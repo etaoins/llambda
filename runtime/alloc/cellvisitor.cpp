@@ -169,9 +169,9 @@ void visitContinuation(dynamic::Continuation *continuation, std::function<bool(A
 	visitShadowStack(continuation->shadowStackHead(), visitor);
 	visitCell(reinterpret_cast<AnyCell**>(continuation->dynamicStateCellRef()), visitor);
 
-	if (*continuation->passedValueRef())
+	if (*continuation->passedValuesRef())
 	{
-		visitCell(continuation->passedValueRef(), visitor);
+		visitCell(reinterpret_cast<AnyCell**>(continuation->passedValuesRef()), visitor);
 	}
 
 	// XXX: This isn't correct

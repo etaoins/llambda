@@ -18,16 +18,9 @@ namespace
 
 	ReturnValuesList *procedureBody(World &world, ProcedureCell *procSelf, ListElementCell *argHead)
 	{
-		ProperList<AnyCell> argList(argHead);
-
-		if (argList.length() != 1)
-		{
-			signalError(world, "Escape procedures must be passed exactly one argument", {argHead});
-		}
-
 		// Call the continuation
 		Continuation *continuation = static_cast<EscapeProcedureCell*>(procSelf)->continuation();
-		continuation->resume(world, *argList.begin());
+		continuation->resume(world, argHead);
 
 		// This code is unreachable
 		__builtin_unreachable();

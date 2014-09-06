@@ -2,6 +2,7 @@
 #include "binding/ProcedureCell.h"
 #include "binding/EmptyListCell.h"
 #include "binding/ListElementCell.h"
+#include "binding/ReturnValuesList.h"
 #include "binding/ErrorObjectCell.h"
 
 #include "alloc/cellref.h"
@@ -36,7 +37,7 @@ ReturnValuesList* lliby_with_exception_handler(World &world, ProcedureCell *hand
 
 		// Call the handler in the dynamic environment (raise) was in
 		// This is required by R7RS for reasons mysterious to me
-		AnyCell *handlerResult = handler->apply(world, argHead);
+		ReturnValuesList *handlerResult = handler->apply(world, argHead);
 
 		// Is this a resumable exception?
 		if (except.resumeProc() != nullptr)
@@ -56,7 +57,7 @@ void lliby_raise(World &world, AnyCell *obj)
 	throw dynamic::SchemeException(world, obj);
 }
 
-AnyCell* lliby_raise_continuable(World &world, AnyCell *obj)
+ReturnValuesList* lliby_raise_continuable(World &world, AnyCell *obj)
 {
 	using dynamic::EscapeProcedureCell;
 	using dynamic::Continuation;
@@ -65,11 +66,10 @@ AnyCell* lliby_raise_continuable(World &world, AnyCell *obj)
 
 	Continuation *cont = Continuation::capture(world);
 
-	if (AnyCell *passedValue = cont->takePassedValue())
+	if (ListElementCell *passedValues = cont->takePassedValues())
 	{
 		// The exception handler resumed us
-		// XXX: Support multiple values
-		return ListElementCell::createProperList(world, {passedValue});
+		return passedValues; 
 	}
 	else
 	{
