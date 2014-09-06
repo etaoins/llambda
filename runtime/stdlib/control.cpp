@@ -17,7 +17,7 @@ using namespace lliby;
 extern "C"
 {
 
-AnyCell *lliby_apply(World &world, ProcedureCell *procedure, ListElementCell *argHead)
+ReturnValuesList *lliby_apply(World &world, ProcedureCell *procedure, ListElementCell *argHead)
 {
 	ListElementCell *procArgHead;
 
@@ -71,7 +71,7 @@ AnyCell *lliby_apply(World &world, ProcedureCell *procedure, ListElementCell *ar
 	return procedure->apply(world, procArgHead);
 }
 
-AnyCell *lliby_call_with_current_continuation(World &world, ProcedureCell *proc)
+ReturnValuesList *lliby_call_with_current_continuation(World &world, ProcedureCell *proc)
 {
 	using dynamic::Continuation;
 	using dynamic::EscapeProcedureCell;
@@ -91,7 +91,8 @@ AnyCell *lliby_call_with_current_continuation(World &world, ProcedureCell *proc)
 	if (AnyCell *passedValue = cont->takePassedValue())
 	{
 		// We're the result of a continuation being invoked
-		return passedValue;
+		// XXX: This needs to support multiple values
+		return ListElementCell::createProperList(world, {passedValue});
 	}
 	else
 	{

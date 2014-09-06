@@ -4,7 +4,7 @@
 
   ; Re-export from (llambda primitives) 
   (export define-type cast ann : define: define-record-type: lambda: make-predicate U Rec Listof Pairof List Vector
-          Vectorof)
+          Vectorof Values)
 
   ; Export our type names
   (export <any> <list-element> <pair> <empty-list> <string> <symbol> <boolean> <number> <exact-integer> <flonum> <char>

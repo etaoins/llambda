@@ -9,7 +9,7 @@ object ExtractNativeFunction {
       hasWorldArg : Boolean,
       fixedArgData : List[sst.ScopedDatum],
       restArgDatum : sst.ScopedDatum,
-      returnTypeDatumOpt : Option[sst.ScopedSymbol],
+      returnTypeDatumOpt : Option[sst.ScopedDatum],
       nativeSymbol : String,
       attributes : Set[ProcedureAttribute.ProcedureAttribute]
   ) : et.NativeFunction = {
@@ -28,8 +28,7 @@ object ExtractNativeFunction {
         ReturnType.SingleValue(vt.UnitType)
 
       case Some(returnTypeDatum) =>
-        val valueType = ExtractType.extractValueType(returnTypeDatum)
-        ReturnType.SingleValue(valueType)
+        ExtractType.extractReturnType(returnTypeDatum)
     }
 
     val signature = ProcedureSignature(
@@ -54,7 +53,7 @@ object ExtractNativeFunction {
           case List(sst.ScopedListOrDatum(fixedArgs, restArgDatum)) =>
             createNativeFunction(hasWorldArg, fixedArgs, restArgDatum, None, nativeSymbol, Set())
           
-          case List(sst.ScopedListOrDatum(fixedArgs, restArgDatum), sst.ScopedSymbol(_, "->"), (returnTypeDatum : sst.ScopedSymbol)) =>
+          case List(sst.ScopedListOrDatum(fixedArgs, restArgDatum), sst.ScopedSymbol(_, "->"), returnTypeDatum) =>
             createNativeFunction(hasWorldArg, fixedArgs, restArgDatum, Some(returnTypeDatum), nativeSymbol, Set())
           
           case List(sst.ScopedListOrDatum(fixedArgs, restArgDatum), sst.ScopedSymbol(_, "noreturn")) =>

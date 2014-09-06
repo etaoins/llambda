@@ -189,4 +189,31 @@ object ExtractType {
     case nonsymbol => 
       throw new BadSpecialFormException(nonsymbol, "Excepted type name to be symbol or type constructor application")
   }
+
+  def extractReturnType(datum : sst.ScopedDatum) : ReturnType.ReturnType = datum match {
+    case sst.ScopedSymbol(_, "*") =>
+      ReturnType.ArbitraryValues
+
+    case sst.ScopedProperList((constructorName : sst.ScopedSymbol) :: operandData) =>
+      constructorName.resolve match {
+        case Primitives.ValuesType =>
+          val valueTypes = operandData.map(extractSchemeType(_))
+
+          valueTypes match {
+            case List(singleValue) =>
+              ReturnType.SingleValue(singleValue)
+
+            case multipleValues =>
+              ReturnType.SpecificValues(multipleValues)
+          }
+
+        case _ =>
+          ReturnType.SingleValue(
+            applyTypeConstructor(constructorName, operandData, RecursiveVars())
+          )
+      }
+
+    case otherDatum =>
+      ReturnType.SingleValue(extractValueType(otherDatum))
+  }
 }

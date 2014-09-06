@@ -178,7 +178,7 @@
     (define-type <vector> (Vectorof <any>))
     
     ; Bootstrap definitions for case-lambda
-    (define-r7rs apply (world-function "lliby_apply" (<procedure> . <any>) -> <any>))
+    (define-r7rs apply (world-function "lliby_apply" (<procedure> . <any>) -> *))
     (define-r7rs length (world-function "lliby_length" (<list>) -> <native-uint32>))
     (define-r7rs error (world-function "lliby_error" (<string> . <any>) noreturn))
     (define-r7rs = (native-function "lliby_numeric_equal" (<number> <number> . <number>) -> <native-bool>))
@@ -362,12 +362,12 @@
     (define-r7rs string-append (world-function "lliby_string_append" <string> -> <string>))
 
     (define-r7rs procedure? (make-predicate <procedure>))
-    (define-r7rs call-with-current-continuation (world-function "lliby_call_with_current_continuation" (<any>) -> <any>))
+    (define-r7rs call-with-current-continuation (world-function "lliby_call_with_current_continuation" (<any>) -> *))
     (define-r7rs call/cc call-with-current-continuation)
 
     ; XXX: This should accept a procedure once (case-lambda) is implemented
     (define-r7rs make-parameter (world-function "lliby_make_parameter" (<any>) -> <procedure>))
-    (define-r7rs dynamic-wind (world-function "lliby_dynamic_wind" (<procedure> <procedure> <procedure>) -> <any>))
+    (define-r7rs dynamic-wind (world-function "lliby_dynamic_wind" (<procedure> <procedure> <procedure>) -> *))
 
     ; Port support
     (define-r7rs port? (make-predicate <port>))
@@ -383,9 +383,9 @@
       (() (native-newline (current-output-port)))
       ((port) (native-newline port))))
 
-    (define-r7rs with-exception-handler (world-function "lliby_with_exception_handler" (<procedure> <procedure>) -> <any>))
+    (define-r7rs with-exception-handler (world-function "lliby_with_exception_handler" (<procedure> <procedure>) -> *))
     (define-r7rs raise (world-function "lliby_raise" (<any>) noreturn))
-    (define-r7rs raise-continuable (world-function "lliby_raise_continuable" (<any>) -> <any>))
+    (define-r7rs raise-continuable (world-function "lliby_raise_continuable" (<any>) -> *))
     (define-r7rs error-object? (make-predicate <error-object>))
     (define-r7rs error-object-message (native-function "lliby_error_object_message" (<error-object>) -> <string>))
     (define-r7rs error-object-irritants (native-function "lliby_error_object_irritants" (<error-object>) -> <list>)))

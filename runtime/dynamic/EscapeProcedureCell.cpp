@@ -3,6 +3,7 @@
 #include "core/error.h"
 #include "binding/ProperList.h"
 #include "binding/RestArgument.h"
+#include "binding/ReturnValuesList.h"
 #include "binding/UnitCell.h"
 #include "dynamic/Continuation.h"
 
@@ -15,7 +16,7 @@ namespace
 {
 	std::uint32_t registeredClassId = ~0;
 
-	ListElementCell *procedureBody(World &world, ProcedureCell *procSelf, ListElementCell *argHead)
+	ReturnValuesList *procedureBody(World &world, ProcedureCell *procSelf, ListElementCell *argHead)
 	{
 		ProperList<AnyCell> argList(argHead);
 

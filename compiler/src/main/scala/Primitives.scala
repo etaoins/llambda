@@ -36,6 +36,7 @@ object Primitives {
   object RecType extends PrimitiveTypeConstructor
   object VectorofType extends PrimitiveTypeConstructor
   object VectorType extends PrimitiveTypeConstructor
+  object ValuesType extends PrimitiveTypeConstructor
 
   val bindings = {
     Map[String, BoundValue](
@@ -71,7 +72,8 @@ object Primitives {
       "List" -> ListType,
       "Rec" -> RecType,
       "Vectorof" -> VectorofType,
-      "Vector" -> VectorType
+      "Vector" -> VectorType,
+      "Values" -> ValuesType
     )
   }
 }

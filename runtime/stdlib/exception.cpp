@@ -18,7 +18,7 @@ using namespace lliby;
 extern "C"
 {
 
-AnyCell* lliby_with_exception_handler(World &world, ProcedureCell *handlerRaw, ProcedureCell *thunk)
+ReturnValuesList* lliby_with_exception_handler(World &world, ProcedureCell *handlerRaw, ProcedureCell *thunk)
 {
 	// Root our exception handler
 	alloc::ProcedureRef handler(world, handlerRaw);
@@ -68,7 +68,8 @@ AnyCell* lliby_raise_continuable(World &world, AnyCell *obj)
 	if (AnyCell *passedValue = cont->takePassedValue())
 	{
 		// The exception handler resumed us
-		return passedValue;
+		// XXX: Support multiple values
+		return ListElementCell::createProperList(world, {passedValue});
 	}
 	else
 	{

@@ -2,6 +2,7 @@
 #define _LLIBY_BINDING_PROCEDURECELL_H
 
 #include "RecordLikeCell.h"
+#include "ReturnValuesList.h"
 
 namespace lliby
 {
@@ -13,7 +14,7 @@ class ProcedureCell : public RecordLikeCell
 public:
 	static ProcedureCell* createInstance(World &World, std::uint32_t recordClassId, bool dataIsInline, void *recordData, ProcedureEntryPoint entryPoint);
 
-	ListElementCell* apply(World &world, ListElementCell *arguments);
+	ReturnValuesList* apply(World &world, ListElementCell *arguments);
 
 	/**
 	 * Indicates if this procedure captures variables from its enclosing scope

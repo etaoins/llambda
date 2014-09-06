@@ -8,7 +8,7 @@ import llambda.compiler.{valuetype => vt}
 
 class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
   implicit val nfiScope = {
-    new Scope(testutil.NfiExports())
+    new Scope(testutil.NfiExports() ++ typedLambdaBindings)
   }
   
   test("void native function") {
@@ -170,6 +170,42 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
 
     assertResult(expectedFunction) {
       exprFor("""(native-function "lliby_newline" (<native-int8>) -> <native-unicode-char>)""")
+    }
+  }
+  
+  test("function taking double and returning arbitrary values") {
+    val expectedFunction = et.NativeFunction(
+      ProcedureSignature(
+        hasWorldArg=false,
+        hasSelfArg=false,
+        fixedArgs=List(vt.Double),
+        restArgOpt=None,
+        returnType=ReturnType.ArbitraryValues,
+        attributes=Set()
+      ),
+      "lliby_newline"
+    )
+
+    assertResult(expectedFunction) {
+      exprFor("""(native-function "lliby_newline" (<native-double>) -> *)""")
+    }
+  }
+  
+  test("function taking union and returning specific values") {
+    val expectedFunction = et.NativeFunction(
+      ProcedureSignature(
+        hasWorldArg=false,
+        hasSelfArg=false,
+        fixedArgs=List(vt.UnionType(Set(vt.StringType, vt.SymbolType))),
+        restArgOpt=None,
+        returnType=ReturnType.SpecificValues(List(vt.StringType, vt.SymbolType)),
+        attributes=Set()
+      ),
+      "lliby_newline"
+    )
+
+    assertResult(expectedFunction) {
+      exprFor("""(native-function "lliby_newline" ((U <string> <symbol>)) -> (Values <string> <symbol>))""")
     }
   }
   

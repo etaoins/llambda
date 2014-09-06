@@ -17,7 +17,7 @@ ProcedureCell *lliby_make_parameter(World &world, AnyCell *initialValue)
 	return dynamic::ParameterProcedureCell::createInstance(world, initialValue, nullptr);
 }
 
-AnyCell *lliby_dynamic_wind(World &world, ProcedureCell *before, ProcedureCell *thunk, ProcedureCell *after)
+ReturnValuesList *lliby_dynamic_wind(World &world, ProcedureCell *before, ProcedureCell *thunk, ProcedureCell *after)
 {
 	{
 		// pushActiveState() can call before which can GC
@@ -27,7 +27,7 @@ AnyCell *lliby_dynamic_wind(World &world, ProcedureCell *before, ProcedureCell *
 		dynamic::State::pushActiveState(world, before, after);
 	}
 	
-	alloc::AnyRef thunkResult(world, thunk->apply(world, EmptyListCell::instance()));
+	alloc::ListElementRef thunkResult(world, thunk->apply(world, EmptyListCell::instance()));
 
 	dynamic::State::popActiveState(world);
 

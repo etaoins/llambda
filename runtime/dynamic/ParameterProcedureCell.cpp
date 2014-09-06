@@ -2,7 +2,7 @@
 
 #include "dynamic/State.h"
 #include "binding/EmptyListCell.h"
-#include "binding/ListElementCell.h"
+#include "binding/ReturnValuesList.h"
 #include "alloc/cellref.h"
 
 #include "core/error.h"
@@ -18,7 +18,7 @@ namespace
 	// startup
 	std::uint32_t registeredClassId = ~0;
 
-	ListElementCell *procedureBody(World &world, ProcedureCell *self, ListElementCell *argHead)
+	ReturnValuesList *procedureBody(World &world, ProcedureCell *self, ListElementCell *argHead)
 	{
 		if (argHead != EmptyListCell::instance())
 		{
