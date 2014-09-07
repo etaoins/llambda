@@ -94,3 +94,16 @@ case class MultipleValues(multipleValueList : iv.IntermediateValue) extends Resu
   def preferredReturnType =
     returnType
 }
+
+object ResultValues {
+  def apply(
+      values : List[iv.IntermediateValue]
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) = values match {
+    case List(singleValue) =>
+      SingleValue(singleValue)
+
+    case multipleValues =>
+      val multipleValueList = ValuesToProperList(multipleValues)
+      MultipleValues(multipleValueList)
+  }
+}

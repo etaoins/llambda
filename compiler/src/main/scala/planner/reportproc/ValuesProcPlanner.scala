@@ -12,15 +12,10 @@ object ValuesProcPlanner extends ReportProcPlanner {
       reportName : String,
       operands : List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ResultValues] = (reportName, operands) match {
-    case ("values", List(singleOperand)) =>
-      Some(SingleValue(singleOperand._2))
-
     case ("values", operands) =>
       // We have a specific type here!
       val operandValues = operands.map(_._2)
-      val returnList = ValuesToProperList(operandValues)
-
-      Some(MultipleValues(returnList))
+      Some(ResultValues(operandValues))
 
     case ("call-with-values", List(
         (producerContextLoc, producerValue),

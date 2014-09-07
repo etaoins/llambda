@@ -214,15 +214,27 @@ private[planner] object PlanExpr {
 
         postInnerResult
 
-      case et.Return(returnedExpr) =>
-        val returnValueResult = apply(initialState)(returnedExpr)
+      case et.Return(returnedExprs) =>
+        val initialResult = PlanResult(
+          state=initialState,
+          values=SingleValue(iv.UnitValue)
+        )
+
+        // Evaluate each value to return
+        val scannedExprs = returnedExprs.scanLeft(initialResult) { case (prevResult, returnedExpr) =>
+          apply(prevResult.state)(returnedExpr)
+        }
+
+        // Extract the result values from the PlanResult
+        val resultValues = ResultValues(scannedExprs.tail.map(_.values.toSingleValue))
+
         // If there's a return the return type is always ArbitraryValues
-        val returnValueTempOpt = returnValueResult.values.toReturnTempValue(ReturnType.ArbitraryValues)
+        val returnValueTempOpt = resultValues.toReturnTempValue(ReturnType.ArbitraryValues)
 
         plan.steps += ps.Return(returnValueTempOpt)
 
         PlanResult(
-          state=returnValueResult.state,
+          state=scannedExprs.last.state,
           // et.Return does not have a value - execution stops
           values=SingleValue(iv.UnitValue)
         )

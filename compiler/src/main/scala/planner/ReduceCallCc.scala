@@ -27,7 +27,7 @@ object ReduceCallCc {
     */
   @tailrec
   private def convertUnconditionalReturn(bodyExprs : List[et.Expr], acc : List[et.Expr] = List()) : List[et.Expr] = bodyExprs match {
-    case et.Return(returnedExpr) :: discaredTail =>
+    case et.Return(List(returnedExpr)) :: discaredTail =>
       // We exited!
       // Discard our tail and change from an et.Return to a normal body
       (returnedExpr :: acc).reverse
@@ -40,11 +40,13 @@ object ReduceCallCc {
   } 
 
   private def replaceExitProcWithReturn(expr : et.Expr, exitProc : StorageLocation) : et.Expr = expr match {
-    case applyExpr @ et.Apply(et.VarRef(appliedVar), List(returnedExpr)) if appliedVar == exitProc =>
-      // Perform replacement in the expression we're returning
-      val replacedReturnedExpr = replaceExitProcWithReturn(returnedExpr, exitProc)
+    case applyExpr @ et.Apply(et.VarRef(appliedVar), returnedExprs) if appliedVar == exitProc =>
+      // Perform replacement in the expressions we're returning
+      val replacedReturnedExprs = returnedExprs map { returnedExpr =>
+        replaceExitProcWithReturn(returnedExpr, exitProc)
+      }
 
-      et.Return(replacedReturnedExpr).assignLocationFrom(expr)
+      et.Return(replacedReturnedExprs).assignLocationFrom(expr)
 
     case lambdaExpr : et.Lambda =>
       // Don't recurse inside nested lambdas

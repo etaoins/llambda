@@ -225,9 +225,9 @@ case class Parameterize(parameterValues : List[(Expr, Expr)], body : Expr) exten
 }
 
 /** Returns from the current lambda with the given value */
-case class Return(value : Expr) extends Expr {
-  lazy val subexprs = List(value)
+case class Return(values : List[Expr]) extends Expr {
+  lazy val subexprs = values
 
   def map(f : Expr => Expr) : Return = 
-    Return(f(value)).assignLocationFrom(this)
+    Return(values.map(f)).assignLocationFrom(this)
 }
