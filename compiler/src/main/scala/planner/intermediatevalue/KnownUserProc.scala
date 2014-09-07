@@ -25,6 +25,7 @@ class KnownUserProc(val signature : ProcedureSignature, plannedSymbol : String, 
     reportproc.EquivalenceProcPlanner,
     reportproc.ListProcPlanner,
     reportproc.NumberProcPlanner,
+    reportproc.ValuesProcPlanner,
     reportproc.VectorProcPlanner
   )
 

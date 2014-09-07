@@ -89,6 +89,11 @@
   (call-with-values (lambda () (values 4 5))
                     (lambda (a b c) b))))
 
+(define-test "(call-with-values) with wrong type fails" (expect-failure
+  (import (llambda typed))
+  (call-with-values (lambda () (values 4 5))
+                    (lambda: ((a : <exact-integer>) (b : <flonum>)) b))))
+
 (define-test "multiple values returned from (if)" (expect (1 2 3 4)
   (define (return-multiple)
     (if dynamic-true

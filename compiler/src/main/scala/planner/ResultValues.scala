@@ -23,13 +23,25 @@ sealed abstract class ResultValues {
   /** Returns the preferred return type for this result value */
   def preferredReturnType : ReturnType.ReturnType
 
-  /** Returns a TempValue representing this result of the appropriate ReturnType
+  /** Returns an IntermediateValue representing the result in the appropriate representation for the ReturnType
+    *
+    * If void should be returned from the function then the result will not be defined
+    */
+  def toReturnIntermediateValue(
+      returnType : ReturnType.ReturnType
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue]
+  
+  /** Returns a TempValue representing the result in the appropriate representation for the ReturnType
     *
     * If void should be returned from the function then the result will not be defined
     */
   def toReturnTempValue(
       returnType : ReturnType.ReturnType
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ps.TempValue]
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ps.TempValue] = {
+    toReturnIntermediateValue(returnType) map { valueList =>
+      valueList.toTempValue(returnType.representationTypeOpt.get)
+    }
+  }
 }
 
 case class SingleValue(value : iv.IntermediateValue) extends ResultValues {
@@ -42,14 +54,14 @@ case class SingleValue(value : iv.IntermediateValue) extends ResultValues {
   def preferredReturnType = 
     ReturnType.SingleValue(value.preferredRepresentation)
   
-  def toReturnTempValue(
+  def toReturnIntermediateValue(
       returnType : ReturnType.ReturnType
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ps.TempValue] = returnType match {
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = returnType match {
     case ReturnType.SingleValue(vt.UnitType) =>
       None
 
     case ReturnType.SingleValue(resultType) =>
-      Some(value.toTempValue(resultType))
+      Some(value)
 
     case specificValues @ ReturnType.SpecificValues(valueTypes) =>
       if (valueTypes.length != 1) {
@@ -57,12 +69,10 @@ case class SingleValue(value : iv.IntermediateValue) extends ResultValues {
       }
       
       // Make sure the multiple value list is of the correct type
-      val requiredType = specificValues.representationType
-      Some(ValuesToProperList(List(value)).toTempValue(requiredType))
+      Some(ValuesToProperList(List(value)))
 
     case ReturnType.ArbitraryValues =>
-      val requiredType = ReturnType.ArbitraryValues.representationType
-      Some(ValuesToProperList(List(value)).toTempValue(requiredType))
+      Some(ValuesToProperList(List(value)))
   }
 }
 
@@ -72,31 +82,24 @@ sealed abstract class MultipleValues extends ResultValues {
 
   def returnType : ReturnType.MultipleValues
   
-  def toReturnTempValue(
+  def toReturnIntermediateValue(
       targetReturnType : ReturnType.ReturnType
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ps.TempValue] = targetReturnType match {
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = targetReturnType match {
     case ReturnType.SingleValue(vt.UnitType) =>
       None
 
     case ReturnType.SingleValue(resultType) =>
-      val singleValue = toIntermediateValue()
-      val resultTemp = singleValue.toTempValue(resultType)
+      Some(toIntermediateValue())
 
-      Some(resultTemp)
-
-    case specificValues @ ReturnType.SpecificValues(targetValueTypes) =>
-      val requiredListType = specificValues.representationType
+    case multipleValues : ReturnType.MultipleValues =>
+      val requiredListType = multipleValues.representationType
       
       // Ensure our list is of the correct type
-      val multipleValueListType = returnType.representationType
+      val multipleValueListType = this.returnType.representationType
       val multipleValueListValue = new iv.CellValue(multipleValueListType, multipleValueList)
-      multipleValueListValue.castToSchemeType(requiredListType)
+      val castValueListValue = multipleValueListValue.castToSchemeType(requiredListType)
 
-      Some(multipleValueList.castToCellTempValue(requiredListType.cellType))
-
-    case ReturnType.ArbitraryValues =>
-      val requiredListType = ReturnType.ArbitraryValues.representationType
-      Some(multipleValueList.castToCellTempValue(requiredListType.cellType))
+      Some(castValueListValue)
   }
 }
 
