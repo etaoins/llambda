@@ -69,7 +69,7 @@ private[planner] object PlanBind {
       }
 
       // Convert the result values to a single value
-      val uncastIntermediate = initialValueResult.values.toIntermediateValue()
+      val uncastIntermediate = initialValueResult.values.toSingleValue()
 
       // And cast to the correct type
       val initialIntermediate = uncastIntermediate.castToSchemeType(storageLoc.schemeType) 

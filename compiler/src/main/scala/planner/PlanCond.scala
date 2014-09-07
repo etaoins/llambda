@@ -102,7 +102,7 @@ object PlanCond {
     implicit val worldPtr = initialState.worldPtr
 
     val testResult = PlanExpr(initialState)(testExpr)
-    val testValue = testResult.values.toIntermediateValue()
+    val testValue = testResult.values.toSingleValue()
 
     vt.SatisfiesType(vt.ConstantBooleanType(false), testValue.schemeType) match {
       case Some(true) =>

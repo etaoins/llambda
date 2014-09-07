@@ -3,6 +3,8 @@ import io.llambda
 
 import llambda.compiler.{valuetype => vt}
 
+import llambda.compiler.valuetype.Implicits._
+
 object ReturnType {
   /** Represents the return type of a procedure */
   sealed abstract trait ReturnType {
@@ -32,24 +34,23 @@ object ReturnType {
     * This is internally represented as a proper list of values. This makes the implementation of (values) and 
     * (call-by-values) simpler
     */
-  sealed abstract trait MultipleValues extends ReturnType {
-    def representationType : vt.SchemeType
+  case class MultipleValues(valueListType : vt.SchemeType) extends ReturnType {
+    def representationType : vt.SchemeType = valueListType
 
     def representationTypeOpt : Option[vt.ValueType] = 
       Some(representationType)
   }
 
   /** Represents a fixed number of return values of specific types */
-  case class SpecificValues(valueTypes : List[vt.SchemeType]) extends MultipleValues {
-    def representationType : vt.SchemeType =
-      vt.SpecificProperListType(valueTypes.map(vt.DirectSchemeTypeRef)) 
+  object SpecificValues {
+    def apply(valueTypes : List[vt.SchemeType]) =
+      MultipleValues(
+        vt.SpecificProperListType(valueTypes.map(vt.DirectSchemeTypeRef)) 
+      )
   }
 
   /** Represents an arbitrary number of return values of any type */
-  object ArbitraryValues extends MultipleValues {
-    def representationType : vt.SchemeType =
-      vt.UniformProperListType(vt.DirectSchemeTypeRef(vt.AnySchemeType))
-  }
+  object ArbitraryValues extends MultipleValues(vt.UniformProperListType(vt.AnySchemeType))
 }
 
 

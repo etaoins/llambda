@@ -26,7 +26,7 @@ private[planner] object PlanApplication {
         // Don't evaluate applyProcExpr - it could be an inline lambda like (case-lambda) generates
         // We want to inline it if at all possible
         val applyArgsResult = PlanExpr(initialState)(applyArgsExpr)(staticApplyPlan)
-        val resultValue = applyArgsResult.values.toIntermediateValue()
+        val resultValue = applyArgsResult.values.toSingleValue()
 
         resultValue match {
           case knownListElement : iv.KnownListElement =>
@@ -62,7 +62,7 @@ private[planner] object PlanApplication {
     // Use the final operand's state
     val operandState = operandResults.last.state
     // Zip with the orignal operand expr so we can use it to locate exceptions related to that operand
-    val operands = operandExprs.zip(operandResults.tail.map(_.values.toIntermediateValue()))
+    val operands = operandExprs.zip(operandResults.tail.map(_.values.toSingleValue()))
 
     val applyResult = planWithOperandValues(operandState)(located, procExpr, operands)
 
@@ -113,7 +113,7 @@ private[planner] object PlanApplication {
     }
 
     val procResult = PlanExpr(initialState)(procExpr)
-    val procResultValue = procResult.values.toIntermediateValue()
+    val procResultValue = procResult.values.toSingleValue()
 
     val invokableProc = procResultValue.toInvokableProcedure()
 

@@ -100,7 +100,7 @@ private[planner] object PlanExpr {
 
         // Evaluate at convert to the correct type for the mutable
         val newValueResult = apply(initialState)(valueExpr)
-        val newValueIntermediate = newValueResult.values.toIntermediateValue()
+        val newValueIntermediate = newValueResult.values.toSingleValue()
         val newValueTemp = newValueIntermediate.toTempValue(mutableType.innerType)
 
         // Load our data pointer
@@ -175,7 +175,7 @@ private[planner] object PlanExpr {
 
       case et.Cast(valueExpr, targetType, staticCheck) =>
         val valueResult = apply(initialState)(valueExpr)
-        val valueIntermediate = valueResult.values.toIntermediateValue
+        val valueIntermediate = valueResult.values.toSingleValue
         val castValue = valueIntermediate.castToSchemeType(targetType, staticCheck)
           
         PlanResult(
@@ -197,10 +197,10 @@ private[planner] object PlanExpr {
           val parameterResult = apply(state)(parameterExpr)
           val valueResult = apply(parameterResult.state)(valueExpr)
 
-          val parameterIntermediate = parameterResult.values.toIntermediateValue()
+          val parameterIntermediate = parameterResult.values.toSingleValue()
           val parameterTemp = parameterIntermediate.toTempValue(vt.ProcedureType)
 
-          val valueIntermediate = valueResult.values.toIntermediateValue()
+          val valueIntermediate = valueResult.values.toSingleValue()
           val valueTemp = valueIntermediate.toTempValue(vt.AnySchemeType)
 
           parameterValueTemps += ((parameterTemp, valueTemp))

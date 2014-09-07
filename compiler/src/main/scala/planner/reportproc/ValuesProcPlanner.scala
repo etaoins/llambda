@@ -18,16 +18,9 @@ object ValuesProcPlanner extends ReportProcPlanner {
     case ("values", operands) =>
       // We have a specific type here!
       val operandValues = operands.map(_._2)
-      val operandTypes = operandValues.map(_.schemeType)
+      val returnList = ValuesToProperList(operandValues)
 
-      val returnType = ReturnType.SpecificValues(operandTypes)
-      val representationType = returnType.representationType
-
-      // Create a list with the correct represention type
-      val returnListTemp = ValuesToProperList(operandValues).toTempValue(returnType.representationType)
-      val returnListBoxed = BoxedValue(representationType.cellType, returnListTemp)
-
-      Some(SpecificValues(returnListBoxed, operandTypes))
+      Some(MultipleValues(returnList))
 
     case ("call-with-values", List(
         (producerContextLoc, producerValue),
@@ -45,7 +38,7 @@ object ValuesProcPlanner extends ReportProcPlanner {
       val values = PlanInvokeApply.withIntermediateValues(invokableProducer, Nil)
 
       // Invoke the consumer
-      val valuesReturnList = values.toReturnIntermediateValue(ReturnType.ArbitraryValues).get
+      val valuesReturnList = values.toMultipleValueList()
       val consumerValues = PlanInvokeApply.withArgumentList(invokableConsumer, valuesReturnList)
 
       Some(consumerValues)

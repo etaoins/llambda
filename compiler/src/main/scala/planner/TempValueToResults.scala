@@ -9,18 +9,10 @@ object TempValueToResults {
     returnType match {
       case ReturnType.SingleValue(valueType) =>
         val singleValue = TempValueToIntermediate(valueType, resultTemp)(plan.config)
-        new SingleValue(singleValue)
+        SingleValue(singleValue)
 
-      case specificValues @ ReturnType.SpecificValues(valueTypes) =>
-        val resultCellType = specificValues.representationType.cellType
-        val resultBoxed = BoxedValue(resultCellType, resultTemp)
-
-        new SpecificValues(resultBoxed, valueTypes)
-        
-      case ReturnType.ArbitraryValues =>
-        val resultCellType = ReturnType.ArbitraryValues.representationType.cellType
-        val resultBoxed = BoxedValue(resultCellType, resultTemp)
-
-        new ArbitraryValues(resultBoxed)
+      case multipleValues @ ReturnType.MultipleValues(valueListType) =>
+        val multipleValueList = TempValueToIntermediate(valueListType, resultTemp)(plan.config)
+        MultipleValues(multipleValueList)
     }
 }

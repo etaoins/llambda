@@ -54,43 +54,21 @@ object PlanResultValuesPhi {
           resultValues=SingleValue(new iv.CellValue(phiSchemeType, boxedValue))
         )
 
-      case (leftSpecific @ SpecificValues(leftBoxed, leftTypes),
-            rightSpecific @ SpecificValues(rightBoxed, rightTypes)
-      ) if (leftTypes.size == rightTypes.size) =>
-        val phiResultTypes = leftTypes.zip(rightTypes) map { case (leftType, rightType) =>
-          leftType + rightType
-        }
-
-        // If the size of the list is the same then the head of the list must be of the same type
-        val resultCellType = leftBoxed.cellType 
-
-        val phiResultTemp = ps.CellTemp(resultCellType)
-        val phiResultBoxed = BoxedValue(resultCellType, phiResultTemp) 
-
-        Result(
-          leftTempValue=leftBoxed.tempValue,
-          rightTempValue=rightBoxed.tempValue,
-          resultTemp=phiResultTemp,
-          resultValues=SpecificValues(phiResultBoxed, phiResultTypes)
-        )
-
       case _ =>
-        // Fallback
-        val leftTempValue = leftValues.toReturnTempValue(ReturnType.ArbitraryValues)(leftPlan, worldPtr).get
-        val rightTempValue = rightValues.toReturnTempValue(ReturnType.ArbitraryValues)(rightPlan, worldPtr).get
+        // Construct value lists to deal with this
+        val leftValueList = leftValues.toMultipleValueList()(leftPlan, worldPtr)
+        val rightValueList = rightValues.toMultipleValueList()(rightPlan, worldPtr)
 
-        val isGcManaged = leftTempValue.isGcManaged || rightTempValue.isGcManaged
+        val phiResultListType = leftValueList.schemeType + rightValueList.schemeType
+        val phiResultTemp = ps.Temp(phiResultListType)
 
-        val resultCellType = ReturnType.ArbitraryValues.representationType.cellType
-
-        val phiResultTemp = new ps.TempValue(isGcManaged)
-        val phiResultBoxed = BoxedValue(resultCellType, phiResultTemp)
+        val phiResultList = TempValueToIntermediate(phiResultListType, phiResultTemp)(leftPlan.config)
 
         Result(
-          leftTempValue=leftTempValue,
-          rightTempValue=rightTempValue,
+          leftTempValue=leftValueList.toTempValue(phiResultListType)(leftPlan, worldPtr),
+          rightTempValue=rightValueList.toTempValue(phiResultListType)(rightPlan, worldPtr),
           resultTemp=phiResultTemp,
-          resultValues=ArbitraryValues(phiResultBoxed)
+          resultValues=MultipleValues(phiResultList)
         )
     }
 }
