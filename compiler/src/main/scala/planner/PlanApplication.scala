@@ -115,9 +115,7 @@ private[planner] object PlanApplication {
     val procResult = PlanExpr(initialState)(procExpr)
     val procResultValue = procResult.values.toIntermediateValue()
 
-    val invokableProc = procResultValue.toInvokableProcedure() getOrElse {
-      throw new ValueNotApplicableException(located, procResultValue.typeDescription)
-    }
+    val invokableProc = procResultValue.toInvokableProcedure()
 
     val signature = invokableProc.signature
     
@@ -157,7 +155,7 @@ private[planner] object PlanApplication {
     val invokePlan = plan.forkPlan()
 
     val invokeValues = (invokePlan.withContextLocation(located) {
-      PlanInvokeApply(invokableProc, operands)(invokePlan, worldPtr) 
+      PlanInvokeApply.withIntermediateValues(invokableProc, operands)(invokePlan, worldPtr) 
     })
 
     procResultValue match {

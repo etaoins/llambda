@@ -82,7 +82,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     */
   def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue
 
-  def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[InvokableProcedure]
+  def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : InvokableProcedure
 
   /** Converts this intermediate value to a TempValue of the specified type
     *

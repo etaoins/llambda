@@ -9,9 +9,10 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.valuetype.Implicits._
 import llambda.compiler.codegen.AdaptedProcedureSignature
 import llambda.compiler.{RuntimeErrorMessage, ContextLocated}
+
+import llambda.compiler.valuetype.Implicits._
 
 private[planner] object PlanProcedureTrampoline {
   /** Plans a trampoline for the passed procedure 
@@ -39,68 +40,11 @@ private[planner] object PlanProcedureTrampoline {
 
     // Change our argListHeadTemp to a IntermediateValue
     val argListType = vt.UniformProperListType(vt.AnySchemeType)
-    val argListHeadValue = TempValueToIntermediate(argListType, argListHeadTemp)(parentPlan.config)
+    val argListValue = TempValueToIntermediate(argListType, argListHeadTemp)(parentPlan.config)
 
-    val insufficientArgsMessage = if (signature.restArgOpt.isDefined) {
-      RuntimeErrorMessage(
-        name=s"insufficientArgsFor${nativeSymbol}",
-        text=s"Called ${nativeSymbol} with insufficient arguments; requires at least ${signature.fixedArgs.length} arguments."
-      )
-    }
-    else {
-      RuntimeErrorMessage(
-        name=s"insufficientArgsFor${nativeSymbol}",
-        text=s"Called ${nativeSymbol} with insufficient arguments; requires exactly ${signature.fixedArgs.length} arguments."
-      )
-    }
-    
-    // Convert our arg list in to the arguments our procedure is expecting
-    val fixedArgTemps = new mutable.ListBuffer[ps.TempValue]
-
-    val restArgValue = signature.fixedArgs.foldLeft(argListHeadValue) { case (argListElementValue, nativeType) =>
-      // Make sure this is a pair
-      val argPairTemp = argListElementValue.toTempValue(vt.AnyPairType, Some(insufficientArgsMessage))(plan, worldPtrTemp)
-
-      // Get the car of the pair as the arg's value 
-      val argDatumTemp = ps.CellTemp(ct.AnyCell)
-      plan.steps += ps.LoadPairCar(argDatumTemp, argPairTemp)
-
-      // Convert it to the expected type
-      val argValue = TempValueToIntermediate(vt.AnySchemeType, argDatumTemp)(plan.config)
-      val argTemp = argValue.toTempValue(nativeType)(plan, worldPtrTemp)
-
-      fixedArgTemps += argTemp
-
-      // Now load the cdr
-      val argCdrTemp = ps.CellTemp(ct.AnyCell)
-      plan.steps += ps.LoadPairCdr(argCdrTemp, argPairTemp)
-
-      // We know this is a list element but its type will be AnyCell
-      new iv.CellValue(argListType, BoxedValue(ct.AnyCell, argCdrTemp))
-    }
-
-    val restArgTemps = signature.restArgOpt match {
-      case Some(memberType) =>
-        val requiredRestArgType = vt.UniformProperListType(memberType)
-        val typeCheckedRestArg = restArgValue.toTempValue(requiredRestArgType)(plan, worldPtrTemp)
-
-        Some(typeCheckedRestArg)
-
-      case None =>
-        val tooManyArgsMessage = RuntimeErrorMessage(
-          name=s"tooManyArgsFor${nativeSymbol}",
-          text=s"Called ${nativeSymbol} with too many arguments; requires exactly ${signature.fixedArgs.length} arguments."
-        )
-        
-        // Make sure we're out of args by doing a check cast to an empty list
-        restArgValue.toTempValue(vt.EmptyListType, Some(tooManyArgsMessage))(plan, worldPtrTemp)
-        None
-    }
-
-    val resultValues = PlanInvokeApply.invokeWithTempValues(
+    val resultValues = PlanInvokeApply.withArgumentList(
       invokableProc=invokableProc,
-      fixedTemps=fixedArgTemps.toList,
-      restTemps=restArgTemps,
+      argListValue=argListValue,
       selfTempOverride=Some(selfTemp)
     )(plan, worldPtrTemp)
 

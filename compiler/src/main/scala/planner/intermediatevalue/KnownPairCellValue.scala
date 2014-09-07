@@ -11,11 +11,11 @@ import llambda.compiler.planner.BoxedValue
   *
   * These can only exist in Scheme dialects with immutable pairs. In the R7RS dialect these will not be constructed
   */
-  class KnownPairCellValue(
-      val car : IntermediateValue,
-      val cdr : IntermediateValue,
-      tempValue : ps.TempValue
-  ) extends CellValue(vt.PairType(car.schemeType, cdr.schemeType), BoxedValue(ct.PairCell, tempValue)) with KnownPair {
+class KnownPairCellValue(
+    val car : IntermediateValue,
+    val cdr : IntermediateValue,
+    tempValue : ps.TempValue
+) extends CellValue(vt.PairType(car.schemeType, cdr.schemeType), BoxedValue(ct.PairCell, tempValue)) with KnownPair {
   override def withSchemeType(newType : vt.SchemeType) : IntermediateValue =
     // Our type is well specified; it's unlikely the type constraint system can help us much here
     this

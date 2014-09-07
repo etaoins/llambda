@@ -3,7 +3,7 @@ import io.llambda
 
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.ContextLocated
+import llambda.compiler.{ContextLocated, RuntimeErrorMessage}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 
@@ -15,6 +15,7 @@ object PlanCadr {
   private def loadCadr(
       located : ContextLocated,
       pairValue : iv.IntermediateValue,
+      errorMessageOpt : Option[RuntimeErrorMessage],
       knownPairLoader : KnownPairLoader,
       typeRefForPairType : TypeRefForPairType,
       planLoader : PlanLoader
@@ -25,7 +26,7 @@ object PlanCadr {
 
     case _ =>
       val pairTemp = plan.withContextLocation(located) {
-        pairValue.toTempValue(vt.AnyPairType)
+        pairValue.toTempValue(vt.AnyPairType, errorMessageOpt)
       }
 
       // Does this pair have a specific pair type?
@@ -46,15 +47,17 @@ object PlanCadr {
 
   def loadCar(
       located : ContextLocated,
-      pairValue : iv.IntermediateValue
+      pairValue : iv.IntermediateValue,
+      errorMessageOpt : Option[RuntimeErrorMessage] = None
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : iv.IntermediateValue = {
-    loadCadr(located, pairValue, _.car, _.carTypeRef, ps.LoadPairCar)
+    loadCadr(located, pairValue, errorMessageOpt, _.car, _.carTypeRef, ps.LoadPairCar)
   }
   
   def loadCdr(
       located : ContextLocated,
-      pairValue : iv.IntermediateValue
+      pairValue : iv.IntermediateValue,
+      errorMessageOpt : Option[RuntimeErrorMessage] = None
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : iv.IntermediateValue = {
-    loadCadr(located, pairValue, _.cdr, _.cdrTypeRef, ps.LoadPairCdr)
+    loadCadr(located, pairValue, errorMessageOpt, _.cdr, _.cdrTypeRef, ps.LoadPairCdr)
   }
 }

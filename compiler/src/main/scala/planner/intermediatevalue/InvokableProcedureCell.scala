@@ -17,5 +17,8 @@ class InvokableProcedureCell(tempValue : ps.TempValue) extends InvokableProcedur
 
     entryPointTemp
   }
+
+  def nativeSymbolOpt(implicit plan : PlanWriter) = 
+    None
 }
 

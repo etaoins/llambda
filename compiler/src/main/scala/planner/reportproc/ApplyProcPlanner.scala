@@ -8,8 +8,6 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
 
-import llambda.compiler.codegen.AdaptedProcedureSignature
-
 object ApplyProcPlanner extends ReportProcPlanner {
   def apply(state : PlannerState)(
       reportName : String,
@@ -17,23 +15,11 @@ object ApplyProcPlanner extends ReportProcPlanner {
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ResultValues] = (reportName, operands) match {
     case ("apply", List((procContextLoc, procValue), (_, argListValue))) if argListValue.isDefiniteProperList =>
       // Convert to a procedure cell so we can use its trampoline
-      val procTemp = plan.withContextLocation(procContextLoc) {
-        procValue.toTempValue(vt.ProcedureType)
+      val invokableProc = plan.withContextLocation(procContextLoc) {
+        procValue.toInvokableProcedure()
       }
 
-      // Load the entry point
-      val entryPointTemp = ps.EntryPointTemp()
-      plan.steps += ps.LoadProcedureEntryPoint(entryPointTemp, procTemp)
-
-      // Prepare the arguments
-      val restArgTemp = argListValue.toTempValue(vt.ListElementType)
-      val allArgs = List(worldPtr, procTemp, restArgTemp).map(ps.InvokeArgument(_))
-
-      // Prepare the result
-      val resultTemp = ps.CellTemp(ct.AnyCell)
-
-      plan.steps += ps.Invoke(Some(resultTemp), AdaptedProcedureSignature, entryPointTemp, allArgs)
-      Some(TempValueToResults(AdaptedProcedureSignature.returnType, resultTemp))
+      Some(PlanInvokeApply.withArgumentList(invokableProc, argListValue))
 
     case _ =>
       None

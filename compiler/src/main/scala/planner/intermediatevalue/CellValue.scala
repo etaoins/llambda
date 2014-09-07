@@ -6,7 +6,7 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.typecheck
 import llambda.compiler.planner.{PlanWriter, InvokableProcedure, BoxedValue}
-import llambda.compiler.InternalCompilerErrorException
+import llambda.compiler.{InternalCompilerErrorException, ValueNotApplicableException}
 import llambda.compiler.RuntimeErrorMessage
 
 /** Represents a value boxed in an alloc cell
@@ -41,15 +41,14 @@ class CellValue(
   def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue =
     boxedValue
   
-  def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[InvokableProcedure] =  {
+  def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : InvokableProcedure =  {
     if (vt.SatisfiesType(vt.ProcedureType, schemeType) == Some(false)) {
-      None
+      throw new ValueNotApplicableException(plan.activeContextLocated, typeDescription)
     }
     else {
       // Cast to a procedure
       val boxedProcTemp = toTempValue(vt.ProcedureType)
-
-      Some(new InvokableProcedureCell(boxedProcTemp))
+      new InvokableProcedureCell(boxedProcTemp)
     }
   }
 

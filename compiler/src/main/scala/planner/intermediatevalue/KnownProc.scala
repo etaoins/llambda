@@ -40,6 +40,9 @@ abstract class KnownProc(selfTempOpt : Option[ps.TempValue]) extends Intermediat
     * If the procedure is lazily planned it should be planned here
     */
   def nativeSymbol(implicit plan : PlanWriter) : String
+
+  def nativeSymbolOpt(implicit plan : PlanWriter) : Option[String] =
+    Some(nativeSymbol)
   
   def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue = {
     // Store an entry point with an adapted signature
@@ -85,8 +88,8 @@ abstract class KnownProc(selfTempOpt : Option[ps.TempValue]) extends Intermediat
     BoxedValue(ct.ProcedureCell, cellTemp)
   }
   
-  def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[InvokableProcedure] = 
-    Some(this)
+  def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : InvokableProcedure = 
+    this
   
   def planEntryPoint()(implicit plan : PlanWriter) : ps.TempValue = {
     val entryPointTemp = ps.EntryPointTemp()
