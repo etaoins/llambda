@@ -17,15 +17,21 @@ import llambda.compiler.planner._
   *                       elsewhere in the planner. It is not directly used by this class
   */
 class KnownUserProc(val signature : ProcedureSignature, plannedSymbol : String, selfTempOpt : Option[ps.TempValue], val reportNameOpt : Option[String] = None) extends KnownProc(selfTempOpt) {
-  // These objects know how to implement certain report procedure directly
-  // with plan steps
-  private val reportProcPlanners = List[reportproc.ReportProcPlanner](
+  //
+  // These objects know how to implement certain report procedure directly with plan steps
+  // 
+  
+  private val correctnessPlanners = List[reportproc.ReportProcPlanner](
+    // Planning (values) allows proper type signatures to be extracted
+    reportproc.ValuesProcPlanner
+  )
+  
+  private val optimisingPlanners = List[reportproc.ReportProcPlanner](
     reportproc.ApplyProcPlanner,
     reportproc.CadrProcPlanner,
     reportproc.EquivalenceProcPlanner,
     reportproc.ListProcPlanner,
     reportproc.NumberProcPlanner,
-    reportproc.ValuesProcPlanner,
     reportproc.VectorProcPlanner
   )
 
@@ -41,16 +47,21 @@ class KnownUserProc(val signature : ProcedureSignature, plannedSymbol : String, 
   }
   
   override def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = {
+    val reportProcPlanners = if (plan.config.optimize) {
+      correctnessPlanners ++ optimisingPlanners
+    }
+    else {
+      correctnessPlanners
+    }
+
     // Find the first report proc planner that knowns how to plan us
-    if (plan.config.optimize) {
-      for(reportName <- reportNameOpt;
-          reportProcPlanner <- reportProcPlanners;
-          resultValues <- reportProcPlanner(state)(reportName, operands)) {
-        return Some(PlanResult(
-          state=state,
-          values=resultValues
-        ))
-      }
+    for(reportName <- reportNameOpt;
+        reportProcPlanner <- reportProcPlanners;
+        resultValues <- reportProcPlanner(state)(reportName, operands)) {
+      return Some(PlanResult(
+        state=state,
+        values=resultValues
+      ))
     }
 
     None

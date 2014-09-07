@@ -176,7 +176,7 @@ private[planner] object PlanExpr {
       case et.Cast(valueExpr, targetType, staticCheck) =>
         val valueResult = apply(initialState)(valueExpr)
         val valueIntermediate = valueResult.values.toSingleValue
-        val castValue = valueIntermediate.castToSchemeType(targetType, staticCheck)
+        val castValue = valueIntermediate.castToSchemeType(targetType, None, staticCheck)
           
         PlanResult(
           state=valueResult.state,

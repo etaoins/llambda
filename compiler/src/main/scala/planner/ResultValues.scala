@@ -80,7 +80,7 @@ case class MultipleValues(multipleValueList : iv.IntermediateValue) extends Resu
 
     // Make sure there's no more values
     val cdrValue = PlanCadr.loadCdr(plan.activeContextLocated, retypedMultipleValueList)
-    cdrValue.castToSchemeType(vt.EmptyListType)
+    cdrValue.castToSchemeType(vt.EmptyListType, Some(extraValuesMessage))
 
     carValue
   }

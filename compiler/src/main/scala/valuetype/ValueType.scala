@@ -225,8 +225,8 @@ object UniformProperListType {
 
 object SpecificProperListType {
   /** Constructs a recursive type representing a fixed length proper list with specific member types */
-  def apply(memberTypeRefs : Iterable[SchemeTypeRef]) : SchemeType = 
-    memberTypeRefs.foldRight(EmptyListType : SchemeType) { case (memberTypeRef, cdrType) =>
+  def apply(memberTypeRefs : Iterable[SchemeTypeRef]) : NonUnionSchemeType = 
+    memberTypeRefs.foldRight(EmptyListType : NonUnionSchemeType) { case (memberTypeRef, cdrType) =>
       SpecificPairType(memberTypeRef, DirectSchemeTypeRef(cdrType))
     }
 }

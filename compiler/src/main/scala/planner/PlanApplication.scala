@@ -56,12 +56,16 @@ private[planner] object PlanApplication {
               // We statically know our arguments!
               val locatedArgValues = argValues.map((producerExpr, _))
 
-              return planWithOperandValues(producerResult.state)(consumerExpr, consumerExpr, locatedArgValues).planResult
+              return plan.withContextLocation(consumerExpr) {
+                planWithOperandValues(producerResult.state)(consumerExpr, consumerExpr, locatedArgValues).planResult
+              }
             }
 
           case otherArgList =>
             val consumerResult = PlanExpr(producerResult.state)(consumerExpr)
-            val invokableConsumer = consumerResult.values.toSingleValue.toInvokableProcedure
+            val invokableConsumer = plan.withContextLocation(consumerExpr) {
+              consumerResult.values.toSingleValue.toInvokableProcedure
+            }
 
             return PlanResult(
               state=consumerResult.state,

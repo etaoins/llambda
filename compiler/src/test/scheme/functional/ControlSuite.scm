@@ -94,6 +94,14 @@
   (call-with-values (lambda () (values 4 5))
                     (lambda: ((a : <exact-integer>) (b : <flonum>)) b))))
 
+(define-test "(call-with-values) with zero values returning multiple values" (expect (a b c)
+  (call-with-values
+    (lambda ()
+      (call-with-values (lambda () (values))
+                        (lambda () (values 'a 'b 'c))))
+    (lambda values-list
+      values-list))))
+
 (define-test "multiple values returned from (if)" (expect (1 2 3 4)
   (define (return-multiple)
     (if dynamic-true
