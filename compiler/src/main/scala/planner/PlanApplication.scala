@@ -30,7 +30,7 @@ private[planner] object PlanApplication {
 
         resultValue match {
           case knownListElement : iv.KnownListElement =>
-            for(argValues <- knownListElement.toValueList) {
+            for(argValues <- knownListElement.toValueListOpt) {
               // We statically know our arguments!
               val locatedArgValues = argValues.map((applyArgsExpr, _))
 
@@ -44,6 +44,29 @@ private[planner] object PlanApplication {
 
           case other =>
             // Not a known list
+        }
+      
+      case (et.VarRef(cwvProc : ReportProcedure), List(producerExpr, consumerExpr)) if cwvProc.reportName == "call-with-values" =>
+        // Call the producer, possibly while inlining
+        val producerResult = PlanApplication(initialState)(producerExpr, producerExpr, Nil)
+
+        producerResult.values.toMultipleValueList() match {
+          case knownListElement : iv.KnownListElement =>
+            for(argValues <- knownListElement.toValueListOpt) {
+              // We statically know our arguments!
+              val locatedArgValues = argValues.map((producerExpr, _))
+
+              return planWithOperandValues(producerResult.state)(consumerExpr, consumerExpr, locatedArgValues).planResult
+            }
+
+          case otherArgList =>
+            val consumerResult = PlanExpr(producerResult.state)(consumerExpr)
+            val invokableConsumer = consumerResult.values.toSingleValue.toInvokableProcedure
+
+            return PlanResult(
+              state=consumerResult.state,
+              values=PlanInvokeApply.withArgumentList(invokableConsumer, otherArgList)
+            )
         }
 
       case _ =>

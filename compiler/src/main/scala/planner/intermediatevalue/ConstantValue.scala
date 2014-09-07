@@ -166,7 +166,7 @@ object EmptyListValue extends ConstantValue(ct.EmptyListCell) with BoxedOnlyValu
   
   // KnownListElement implementation
   lazy val listLengthOpt = Some(0L)
-  def toValueList = Some(Nil)
+  def toValueListOpt = Some(Nil)
 }
 
 object UnitValue extends ConstantValue(ct.UnitCell) with BoxedOnlyValue {

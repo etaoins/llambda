@@ -15,7 +15,7 @@ trait KnownListElement extends IntermediateValue {
     *
     * This will only be defined for lists that have statically known members at compile time
     */
-  def toValueList : Option[List[IntermediateValue]]
+  def toValueListOpt : Option[List[IntermediateValue]]
 }
 
 trait KnownPair extends KnownListElement {
@@ -31,10 +31,10 @@ trait KnownPair extends KnownListElement {
         None
     }
 
-  def toValueList : Option[List[IntermediateValue]] = {
+  def toValueListOpt : Option[List[IntermediateValue]] = {
     cdr match {
       case knownListElement : KnownListElement =>
-        knownListElement.toValueList.map(car :: _)
+        knownListElement.toValueListOpt.map(car :: _)
 
       case _ =>
         None

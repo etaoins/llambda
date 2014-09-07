@@ -17,27 +17,6 @@ object ValuesProcPlanner extends ReportProcPlanner {
       val operandValues = operands.map(_._2)
       Some(ResultValues(operandValues))
 
-    case ("call-with-values", List(
-        (producerContextLoc, producerValue),
-        (consumerContextLoc, consumerValue)
-    )) =>
-      val invokableProducer = plan.withContextLocation(producerContextLoc) {
-        producerValue.toInvokableProcedure
-      }
-
-      val invokableConsumer = plan.withContextLocation(producerContextLoc) {
-        consumerValue.toInvokableProcedure
-      }
-
-      // Get the producer values
-      val values = PlanInvokeApply.withIntermediateValues(invokableProducer, Nil)
-
-      // Invoke the consumer
-      val valuesReturnList = values.toMultipleValueList()
-      val consumerValues = PlanInvokeApply.withArgumentList(invokableConsumer, valuesReturnList)
-
-      Some(consumerValues)
-
     case _ =>
       None
   }
