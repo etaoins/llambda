@@ -14,9 +14,9 @@ namespace dynamic
 class SchemeException
 {
 public:
-	SchemeException(World &world, AnyCell *object, EscapeProcedureCell *resumeProc = nullptr) :
-		m_object(world, object),
-		m_resumeProc(world, resumeProc)
+	SchemeException(AnyCell *object, EscapeProcedureCell *resumeProc = nullptr) :
+		m_object(object),
+		m_resumeProc(resumeProc)
 	{
 	}
 
@@ -42,8 +42,8 @@ public:
 	}
 
 private:
-	alloc::AnyRef m_object;
-	alloc::StrongRef<EscapeProcedureCell> m_resumeProc;
+	AnyCell *m_object;
+	EscapeProcedureCell *m_resumeProc;
 };
 
 }

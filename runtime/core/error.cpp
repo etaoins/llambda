@@ -50,7 +50,7 @@ void signalError(World &world, const char *message, const std::vector<AnyCell*> 
 
 	// Throw a new exception
 	auto errorObj = ErrorObjectCell::createInstance(world, messageCell, irritantsCell);
-	throw dynamic::SchemeException(world, errorObj);
+	throw dynamic::SchemeException(errorObj);
 }
 
 void fatalError(const char *message, const AnyCell *evidence)

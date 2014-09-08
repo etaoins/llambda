@@ -33,6 +33,13 @@ ReturnValuesList* lliby_with_exception_handler(World &world, ProcedureCell *hand
 	}
 	catch (dynamic::SchemeException &except)
 	{
+		// GC root the exception's information
+		// We need to do this to be able to reconstruct the exception in the case that our continuation is captured
+		// inside the Scheme exception handler. C++ exceptions are allocated outside of the normal stack so they
+		// aren't copied as part of the (call/cc) capture process
+		alloc::AnyRef objectRef(world, except.object());
+		alloc::StrongRef<dynamic::EscapeProcedureCell> resumeProcRef(world, except.resumeProc());
+
 		ListElementCell *argHead = ListElementCell::createProperList(world, {except.object()});
 
 		// Call the handler in the dynamic environment (raise) was in
@@ -40,21 +47,22 @@ ReturnValuesList* lliby_with_exception_handler(World &world, ProcedureCell *hand
 		ReturnValuesList *handlerResult = handler->apply(world, argHead);
 
 		// Is this a resumable exception?
-		if (except.resumeProc() != nullptr)
+		if (resumeProcRef != nullptr)
 		{
-			except.resumeProc()->continuation()->resume(world, handlerResult);
+			resumeProcRef->continuation()->resume(world, handlerResult);
 		}
 		
 		// Now switch to the state we were in before re-raising the exception
 		dynamic::State::switchStateCell(world, expectedStateRef);
 
-		throw except;
+		// Reconstruct the original exception and rethrow
+		throw dynamic::SchemeException(objectRef, resumeProcRef);
 	}
 }
 
 void lliby_raise(World &world, AnyCell *obj)
 {
-	throw dynamic::SchemeException(world, obj);
+	throw dynamic::SchemeException(obj);
 }
 
 ReturnValuesList* lliby_raise_continuable(World &world, AnyCell *obj)
@@ -75,7 +83,7 @@ ReturnValuesList* lliby_raise_continuable(World &world, AnyCell *obj)
 	{
 		// We're in the original capture path - throw an exception!
 		resumeRef->setContinuation(cont);
-		throw dynamic::SchemeException(world, obj, resumeRef);
+		throw dynamic::SchemeException(obj, resumeRef);
 	}
 }
 
