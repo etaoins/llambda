@@ -165,6 +165,70 @@
         (+ (raise-continuable "should be a number")
            23))))))
 
+(define-test "(guard)" (expect-success
+  ; This matches the first clause
+  (assert-equal 42 
+    (guard (condition
+             ((assq 'a condition) => cdr)
+             ((assq 'b condition)))
+           (raise (list (cons 'a 42)))))
+
+  ; This matches the second clause
+  (assert-equal '(b . 23)
+    (guard (condition
+             ((assq 'a condition) => cdr)
+             ((assq 'b condition)))
+           (raise (list (cons 'b 23)))))
+  
+  ; This matches the else
+  (assert-equal 'fallthrough
+    (guard (condition
+             ((assq 'a condition) => cdr)
+             ((assq 'b condition))
+             (else 'fallthrough))
+           (raise (list (cons 'c 23)))))
+  
+  ; This doesn't invoke the handler it all and returns a single value
+  (assert-equal 'no-except
+    (guard (condition
+             ((assq 'a condition) => cdr)
+             ((assq 'b condition))
+             (else 'fallthrough))
+           'no-except))
+
+  ; This doesn't invoke the handler it all and returns a multiple values
+  (assert-equal '(1 2 3)
+    (call-with-values
+      (lambda ()
+        (guard (condition
+                 ((assq 'a condition) => cdr)
+                 ((assq 'b condition))
+                 (else 'fallthrough))
+               (values 1 2 3)))
+      (lambda args args)))
+
+  ; This doesn't match any clause and re-throws to the outer exception handler
+  (assert-equal '(outer-caught original-datum)
+    (call/cc (lambda (return)
+      (with-exception-handler
+        (lambda (obj)
+          (return (list 'outer-caught obj)))
+        (lambda ()
+          (guard (condition
+                   ((string? condition) 'matched))
+                 (raise 'original-datum)))))))
+
+  ; Make sure the guard conditions are evaluated in the dynamic environment of the guard
+  (define test-parameter (make-parameter 'default))
+  (parameterize ((test-parameter 'outer1))
+    (assert-equal 'outer1
+      (guard (condition
+               ((assq 'a condition) => cdr)
+               ((assq 'b condition))
+               (else (test-parameter)))
+             (parameterize ((test-parameter 'inner1))
+               (raise (list (cons 'c 23)))))))))
+
 (define-test "R7RS definition of (guard) works as defined" (expect-success
   (define-syntax r7rs-guard
     (syntax-rules ()

@@ -4,6 +4,7 @@
 #include "binding/ListElementCell.h"
 #include "binding/ReturnValuesList.h"
 #include "binding/ErrorObjectCell.h"
+#include "binding/BooleanCell.h"
 
 #include "alloc/cellref.h"
 
@@ -55,6 +56,31 @@ ReturnValuesList* lliby_with_exception_handler(World &world, ProcedureCell *hand
 
 		// Reconstruct the original exception and rethrow
 		throw dynamic::SchemeException(objectRef, resumeProcRef);
+	}
+}
+
+ReturnValuesList *_lliby_guard_kernel(World &world, ProcedureCell *guardAuxProcRaw, ProcedureCell *thunk) 
+{
+	alloc::ProcedureRef guardAuxProc(world, guardAuxProcRaw);
+	alloc::DynamicStateRef expectedStateRef(world, world.activeStateCell);
+
+	try
+	{
+		return thunk->apply(world, EmptyListCell::instance()); 
+	}
+	catch (dynamic::SchemeException &except)
+	{
+		alloc::AnyRef objectRef(world, except.object());
+
+		// Switch to the guard's dynamic state
+		dynamic::State::switchStateCell(world, expectedStateRef);
+		
+		// Build an argument list with the exception value
+		ListElementCell *argHead = ListElementCell::createProperList(world, {objectRef});
+
+		// Call our guard-aux procedure
+		// This will re-throw if no match is encountered
+		return guardAuxProc->apply(world, argHead);
 	}
 }
 

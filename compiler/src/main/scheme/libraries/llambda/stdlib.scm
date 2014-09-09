@@ -390,7 +390,53 @@
     (define-r7rs raise-continuable (world-function "lliby_raise_continuable" (<any>) -> *))
     (define-r7rs error-object? (make-predicate <error-object>))
     (define-r7rs error-object-message (native-function "lliby_error_object_message" (<error-object>) -> <string>))
-    (define-r7rs error-object-irritants (native-function "lliby_error_object_irritants" (<error-object>) -> <list>)))
+    (define-r7rs error-object-irritants (native-function "lliby_error_object_irritants" (<error-object>) -> <list>))
+    
+    ; This is a native code helper which replaces most of the (guard) macro from R7RS with a much more efficient
+    ; native code implementation
+    (define guard-kernel (world-function "_lliby_guard_kernel" (<procedure> <procedure>) -> *))
+
+    (define-syntax guard
+      (syntax-rules ()
+                    ((guard (var clause ...) e1 e2 ...)
+                     (guard-kernel
+                       (lambda (var)
+                         (guard-aux (raise var) clause ...))
+                       (lambda () e1 e2 ...)))))
+
+    ; This is taken directly from R7RS   
+    (define-syntax guard-aux
+      (syntax-rules (else =>)
+                    ((guard-aux reraise (else result1 result2 ...))
+                     (begin result1 result2 ...))
+                    ((guard-aux reraise (test => result))
+                     (let ((temp test))
+                       (if temp
+                         (result temp)
+                         reraise)))
+                    ((guard-aux reraise (test => result)
+                                clause1 clause2 ...)
+                     (let ((temp test))
+                       (if temp
+                         (result temp)
+                         (guard-aux reraise clause1 clause2 ...))))
+                    ((guard-aux reraise (test))
+                     (or test reraise))
+                    ((guard-aux reraise (test) clause1 clause2 ...)
+                     (let ((temp test))
+                       (if temp
+                         temp
+                         (guard-aux reraise clause1 clause2 ...))))
+                    ((guard-aux reraise (test result1 result2 ...))
+                     (if test
+                       (begin result1 result2 ...)
+                       reraise))
+                    ((guard-aux reraise
+                                (test result1 result2 ...)
+                                clause1 clause2 ...)
+                     (if test
+                       (begin result1 result2 ...)
+                       (guard-aux reraise clause1 clause2 ...))))))
     
   ; Optional R7RS mutable pair support
   (cond-expand ((not immutable-pairs)
