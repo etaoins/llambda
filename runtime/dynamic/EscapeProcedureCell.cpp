@@ -1,10 +1,7 @@
 #include "dynamic/EscapeProcedureCell.h"
 
 #include "core/error.h"
-#include "binding/ProperList.h"
-#include "binding/RestArgument.h"
 #include "binding/ReturnValuesList.h"
-#include "binding/UnitCell.h"
 #include "dynamic/Continuation.h"
 
 namespace lliby

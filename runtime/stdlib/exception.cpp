@@ -12,8 +12,6 @@
 #include "dynamic/Continuation.h"
 #include "dynamic/SchemeException.h"
 
-#include <iostream>
-
 using namespace lliby;
 
 extern "C"
