@@ -20,12 +20,15 @@ object PlanProgram {
     // __llambda_top_level is a void function
     plan.steps += ps.Return(None)
 
-    (plan.plannedFunctions + (LlambdaTopLevelSignature.nativeSymbol -> PlannedFunction(
-      signature=LlambdaTopLevelSignature,
-      namedArguments=List("world" -> worldTemp),
-      steps=plan.steps.toList,
-      worldPtrOpt=Some(worldTemp),
-      debugContextOpt=None
-    ))).toMap
+    val allPlannedFunctions = 
+      (plan.plannedFunctions + (LlambdaTopLevelSignature.nativeSymbol -> PlannedFunction(
+        signature=LlambdaTopLevelSignature,
+        namedArguments=List("world" -> worldTemp),
+        steps=plan.steps.toList,
+        worldPtrOpt=Some(worldTemp),
+        debugContextOpt=None
+      ))).toMap
+
+    FindUsedFunctions(allPlannedFunctions, LlambdaTopLevelSignature.nativeSymbol)
   }
 }
