@@ -248,6 +248,234 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
            (define a 1)""")(scope)
     }
   }
+  
+  test("type declaration for untyped lambda with compatible arity") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    inside(exprFor(
+      """(: string-to-symbol (-> <string> <symbol>))
+         (define (string-to-symbol x) x)"""
+    )(scope)) {
+      case et.TopLevelDefine(List((storageLoc, et.Lambda(lambdaType, _, _, _, _))))  =>
+        val expectedType = vt.ProcedureType(
+          fixedArgTypes=List(vt.StringType),
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.SingleValue(vt.SymbolType)
+        )
+
+        assert(storageLoc.schemeType === expectedType)
+        assert(lambdaType === expectedType)
+    }
+    
+    inside(exprFor(
+      """(: strings-to-symbol (-> <string> <string> * <symbol>))
+         (define (strings-to-symbol x . rest) x)"""
+    )(scope)) {
+      case et.TopLevelDefine(List((storageLoc, et.Lambda(lambdaType, _, _, _, _))))  =>
+        val expectedType = vt.ProcedureType(
+          fixedArgTypes=List(vt.StringType),
+          restArgMemberTypeOpt=Some(vt.StringType),
+          returnType=vt.ReturnType.SingleValue(vt.SymbolType)
+        )
+
+        assert(storageLoc.schemeType === expectedType)
+        assert(lambdaType === expectedType)
+    }
+  }
+  
+  test("type declaration for untyped lambda with incompatible fixed arg arity fails") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    intercept[BadSpecialFormException] {
+      exprFor(
+        """(: string-to-symbol (-> <string> <symbol>))
+           (define (string-to-symbol x y) x)"""
+      )(scope)
+    }
+  }
+  
+  test("type declaration for untyped lambda with incompatible rest arg arity fails") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    intercept[BadSpecialFormException] {
+      exprFor(
+        """(: string-to-symbol (-> <string> <string> * <symbol>))
+           (define (string-to-symbol x) x)"""
+      )(scope)
+    }
+    
+    intercept[BadSpecialFormException] {
+      exprFor(
+        """(: string-to-symbol (-> <string> <string> <symbol>))
+           (define (string-to-symbol x . rest) x)"""
+      )(scope)
+    }
+  }
+
+  test("type declaration for typed lambda with compatible arity") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    inside(exprFor(
+      """(: string-to-symbol (-> <string> <symbol>))
+         (define: (string-to-symbol (x : <string>)) x)"""
+    )(scope)) {
+      case et.TopLevelDefine(List((storageLoc, et.Lambda(lambdaType, _, _, _, _))))  =>
+        val expectedType = vt.ProcedureType(
+          fixedArgTypes=List(vt.StringType),
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.SingleValue(vt.SymbolType)
+        )
+
+        assert(storageLoc.schemeType === expectedType)
+        assert(lambdaType === expectedType)
+    }
+    
+    inside(exprFor(
+      """(: strings-to-symbol (-> <string> <string> * <symbol>))
+         (define: (strings-to-symbol (x : <string>) rest : <string> *) x)"""
+    )(scope)) {
+      case et.TopLevelDefine(List((storageLoc, et.Lambda(lambdaType, _, _, _, _))))  =>
+        val expectedType = vt.ProcedureType(
+          fixedArgTypes=List(vt.StringType),
+          restArgMemberTypeOpt=Some(vt.StringType),
+          returnType=vt.ReturnType.SingleValue(vt.SymbolType)
+        )
+
+        assert(storageLoc.schemeType === expectedType)
+        assert(lambdaType === expectedType)
+    }
+  }
+  
+  test("type declaration for typed lambda uses most specific fixed arg type") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    inside(exprFor(
+      """(: le-to-symbol (-> <list-element> <symbol>))
+         (define: (le-to-symbol (x : <pair>)) x)"""
+    )(scope)) {
+      case et.TopLevelDefine(List((storageLoc, et.Lambda(lambdaType, _, _, _, _))))  =>
+        val expectedStorageLocType = vt.ProcedureType(
+          fixedArgTypes=List(vt.ListElementType),
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.SingleValue(vt.SymbolType)
+        )
+        
+        val expectedLambdaType = vt.ProcedureType(
+          fixedArgTypes=List(vt.AnyPairType),
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.SingleValue(vt.SymbolType)
+        )
+
+        assert(storageLoc.schemeType === expectedStorageLocType)
+        assert(lambdaType === expectedLambdaType)
+    }
+    
+    inside(exprFor(
+      """(: pair-to-symbol (-> <pair> <symbol>))
+         (define: (pair-to-symbol (x : <list-element>)) x)"""
+    )(scope)) {
+      case et.TopLevelDefine(List((storageLoc, et.Lambda(lambdaType, _, _, _, _))))  =>
+        val expectedType = vt.ProcedureType(
+          fixedArgTypes=List(vt.AnyPairType),
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.SingleValue(vt.SymbolType)
+        )
+
+        assert(storageLoc.schemeType === expectedType)
+        assert(lambdaType === expectedType)
+    }
+  }
+  
+  test("type declaration for typed lambda uses most specific rest arg type") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    inside(exprFor(
+      """(: le-to-symbol (-> <list-element> * <symbol>))
+         (define: (le-to-symbol x : <pair> *) x)"""
+    )(scope)) {
+      case et.TopLevelDefine(List((storageLoc, et.Lambda(lambdaType, _, _, _, _))))  =>
+        val expectedStorageLocType = vt.ProcedureType(
+          fixedArgTypes=Nil,
+          restArgMemberTypeOpt=Some(vt.ListElementType),
+          returnType=vt.ReturnType.SingleValue(vt.SymbolType)
+        )
+        
+        val expectedLambdaType = vt.ProcedureType(
+          fixedArgTypes=Nil,
+          restArgMemberTypeOpt=Some(vt.AnyPairType),
+          returnType=vt.ReturnType.SingleValue(vt.SymbolType)
+        )
+
+        assert(storageLoc.schemeType === expectedStorageLocType)
+        assert(lambdaType === expectedLambdaType)
+    }
+    
+    inside(exprFor(
+      """(: pair-to-symbol (-> <pair> * <symbol>))
+         (define: (pair-to-symbol x : <list-element> *) x)"""
+    )(scope)) {
+      case et.TopLevelDefine(List((storageLoc, et.Lambda(lambdaType, _, _, _, _))))  =>
+        val expectedType = vt.ProcedureType(
+          fixedArgTypes=Nil,
+          restArgMemberTypeOpt=Some(vt.AnyPairType),
+          returnType=vt.ReturnType.SingleValue(vt.SymbolType)
+        )
+
+        assert(storageLoc.schemeType === expectedType)
+        assert(lambdaType === expectedType)
+    }
+  }
+  
+  test("type declaration for typed lambda with incompatible fixed arg arity fails") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    intercept[BadSpecialFormException] {
+      exprFor(
+        """(: string-to-symbol (-> <string> <symbol>))
+           (define: (string-to-symbol (x : <string>) (y : <string>)) x)"""
+      )(scope)
+    }
+  }
+  
+  test("type declaration for typed lambda with incompatible fixed arg type fails") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    intercept[BadSpecialFormException] {
+      exprFor(
+        """(: string-to-symbol (-> <string> <symbol>))
+           (define: (string-to-symbol (x : <symbol>)) x)"""
+      )(scope)
+    }
+  }
+  
+  test("type declaration for typed lambda with incompatible rest arg arity fails") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    intercept[BadSpecialFormException] {
+      exprFor(
+        """(: string-to-symbol (-> <string> <string> * <symbol>))
+           (define: (string-to-symbol (x : <string>)) x)"""
+      )(scope)
+    }
+        
+    intercept[BadSpecialFormException] {
+      exprFor(
+        """(: string-to-symbol (-> <string> <string> <symbol>))
+           (define (string-to-symbol (x : <string>) rest : <string> *) x)"""
+      )(scope)
+    }
+  }
+  
+  test("type declaration for typed lambda with incompatible rest arg type fails") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    intercept[BadSpecialFormException] {
+      exprFor(
+        """(: string-to-symbol (-> <string> * <symbol>))
+           (define: (string-to-symbol x : <symbol> *) x)"""
+      )(scope)
+    }
+  }
 
   test("redefine variable succeeds in R7RS") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
@@ -298,77 +526,127 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   
   test("untyped lambdas") {
     inside(exprFor("(lambda () #t)")) {
-      case et.Lambda(Nil, None, body, _) =>
+      case et.Lambda(schemeType, Nil, None, body, _) =>
+        assert(schemeType === vt.ProcedureType(
+          fixedArgTypes=Nil,
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.ArbitraryValues
+        ))
+
         assert(body === et.Literal(ast.BooleanLiteral(true)))
     }
 
     inside(exprFor("(lambda (x) x)")) {
-      case et.Lambda(List(argX), None, body, _) =>
+      case et.Lambda(schemeType, List(argX), None, body, _) =>
+        assert(schemeType === vt.ProcedureType(
+          fixedArgTypes=List(vt.AnySchemeType),
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.ArbitraryValues
+        ))
+
         assert(argX.schemeType === vt.AnySchemeType)
         assert(body === et.VarRef(argX))
     }
     
     inside(exprFor("(lambda x x)")) {
-      case et.Lambda(Nil, Some(restArg), body, _) =>
-        assert(restArg.memberType === vt.AnySchemeType)
-        assert(restArg.storageLoc.schemeType === vt.UniformProperListType(vt.AnySchemeType))
+      case et.Lambda(schemeType, Nil, Some(restArg), body, _) =>
+        assert(schemeType === vt.ProcedureType(
+          fixedArgTypes=Nil,
+          restArgMemberTypeOpt=Some(vt.AnySchemeType),
+          returnType=vt.ReturnType.ArbitraryValues
+        ))
 
-        assert(body === et.VarRef(restArg.storageLoc))
+        assert(restArg.schemeType === vt.UniformProperListType(vt.AnySchemeType))
+
+        assert(body === et.VarRef(restArg))
     }
 
     inside(exprFor("(lambda (x y . z) x y z)")) {
-      case et.Lambda(List(argX, argY), Some(restArg), body, _) =>
+      case et.Lambda(schemeType, List(argX, argY), Some(restArg), body, _) =>
+        assert(schemeType === vt.ProcedureType(
+          fixedArgTypes=List(vt.AnySchemeType, vt.AnySchemeType),
+          restArgMemberTypeOpt=Some(vt.AnySchemeType),
+          returnType=vt.ReturnType.ArbitraryValues
+        ))
+
         assert(argX.schemeType === vt.AnySchemeType)
         assert(argY.schemeType === vt.AnySchemeType)
-        assert(restArg.memberType === vt.AnySchemeType)
-        assert(restArg.storageLoc.schemeType === vt.UniformProperListType(vt.AnySchemeType))
+        assert(restArg.schemeType === vt.UniformProperListType(vt.AnySchemeType))
 
         assert(body === et.Begin(List(
           et.VarRef(argX),
           et.VarRef(argY),
-          et.VarRef(restArg.storageLoc)
+          et.VarRef(restArg)
         )))
     }
   }
   
   test("typed lambdas") {
     inside(exprFor("(lambda: () #t)")(nfiScope)) {
-      case et.Lambda(Nil, None, body, _) =>
+      case et.Lambda(schemeType, Nil, None, body, _) =>
+        assert(schemeType === vt.ProcedureType(
+          fixedArgTypes=Nil,
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.ArbitraryValues
+        ))
+
         assert(body === et.Literal(ast.BooleanLiteral(true)))
     }
 
     inside(exprFor("(lambda: ((x : <number>)) x)")(nfiScope)) {
-      case et.Lambda(List(argX), None, body, _) =>
+      case et.Lambda(schemeType, List(argX), None, body, _) =>
+        assert(schemeType === vt.ProcedureType(
+          fixedArgTypes=List(vt.NumberType),
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.ArbitraryValues
+        ))
+
         assert(argX.schemeType === vt.NumberType)
         assert(body === et.VarRef(argX))
     }
     
     inside(exprFor("(lambda: (x : <any> *) x)")(nfiScope)) {
-      case et.Lambda(Nil, Some(restArg), body, _) =>
-        assert(restArg.memberType === vt.AnySchemeType)
-        assert(restArg.storageLoc.schemeType === vt.UniformProperListType(vt.AnySchemeType))
+      case et.Lambda(schemeType, Nil, Some(restArg), body, _) =>
+        assert(schemeType === vt.ProcedureType(
+          fixedArgTypes=Nil,
+          restArgMemberTypeOpt=Some(vt.AnySchemeType),
+          returnType=vt.ReturnType.ArbitraryValues
+        ))
 
-        assert(body === et.VarRef(restArg.storageLoc))
+        assert(restArg.schemeType === vt.UniformProperListType(vt.AnySchemeType))
+
+        assert(body === et.VarRef(restArg))
     }
 
     inside(exprFor("(lambda: ((x : <exact-integer>) (y : <string>) z : <symbol> *) x y z)")(nfiScope)) {
-      case et.Lambda(List(argX, argY), Some(restArg), body, _) =>
+      case et.Lambda(schemeType, List(argX, argY), Some(restArg), body, _) =>
+        assert(schemeType === vt.ProcedureType(
+          fixedArgTypes=List(vt.ExactIntegerType, vt.StringType),
+          restArgMemberTypeOpt=Some(vt.SymbolType),
+          returnType=vt.ReturnType.ArbitraryValues
+        ))
+
         assert(argX.schemeType === vt.ExactIntegerType)
         assert(argY.schemeType === vt.StringType)
-        assert(restArg.memberType === vt.SymbolType)
-        assert(restArg.storageLoc.schemeType === vt.UniformProperListType(vt.SymbolType))
+        assert(restArg.schemeType === vt.UniformProperListType(vt.SymbolType))
 
         assert(body === et.Begin(List(
           et.VarRef(argX),
           et.VarRef(argY),
-          et.VarRef(restArg.storageLoc)
+          et.VarRef(restArg)
         )))
     }
   }
   
   test("self-executing lambdas") {
     inside(exprFor("((lambda (x) x) 1)")) {
-      case et.Apply(et.Lambda(List(argX), None, body, _), List(value)) =>
+      case et.Apply(et.Lambda(schemeType, List(argX), None, body, _), List(value)) =>
+        assert(schemeType === vt.ProcedureType(
+          fixedArgTypes=List(vt.AnySchemeType),
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.ArbitraryValues
+        ))
+
         assert(body === et.VarRef(argX))
         assert(value === et.Literal(ast.IntegerLiteral(1)))
     }
@@ -380,10 +658,10 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
         (define foo (lambda (y) (bar x y)))
         (define bar (lambda (a b) (if a b)))
         (foo #t))""")) {
-      case et.Lambda(List(xLoc), None, et.InternalDefine(
+      case et.Lambda(_, List(xLoc), None, et.InternalDefine(
         List(
-          (fooLoc, et.Lambda(List(yLoc), None, fooExpr, _)),
-          (barLoc, et.Lambda(List(aLoc, bLoc), None, barExpr, _))
+          (fooLoc, et.Lambda(_, List(yLoc), None, fooExpr, _)),
+          (barLoc, et.Lambda(_, List(aLoc, bLoc), None, barExpr, _))
         ), bodyExpr), _) =>
           assert(fooExpr === et.Apply(et.VarRef(barLoc), et.VarRef(xLoc) :: et.VarRef(yLoc) :: Nil))
           assert(barExpr === et.Cond(et.VarRef(aLoc), et.VarRef(bLoc), et.Literal(ast.UnitValue())))
@@ -399,7 +677,13 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-true").value
 
     inside(expr) {
-      case et.TopLevelDefine(List((storageLoc, et.Lambda(Nil, None, bodyExpr, _)))) if procLoc == storageLoc =>
+      case et.TopLevelDefine(List((storageLoc, et.Lambda(schemeType, Nil, None, bodyExpr, _)))) if procLoc == storageLoc =>
+        assert(schemeType === vt.ProcedureType(
+          fixedArgTypes=Nil,
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.ArbitraryValues
+        ))
+
         assert(bodyExpr === et.Literal(ast.BooleanLiteral(true)))
     }
 
@@ -416,7 +700,13 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-true").value
 
     inside(expr) {
-      case et.TopLevelDefine(List((storageLoc, et.Lambda(List(fixedArg), None, bodyExpr, _)))) if procLoc == storageLoc =>
+      case et.TopLevelDefine(List((storageLoc, et.Lambda(schemeType, List(fixedArg), None, bodyExpr, _)))) if procLoc == storageLoc =>
+        assert(schemeType === vt.ProcedureType(
+          fixedArgTypes=List(vt.AnySchemeType),
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.ArbitraryValues
+        ))
+
         assert(fixedArg.schemeType === vt.AnySchemeType)
         assert(bodyExpr === et.Literal(ast.BooleanLiteral(true)))
     }
@@ -434,7 +724,13 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-true").value
 
     inside(expr) {
-      case et.TopLevelDefine(List((storageLoc, et.Lambda(List(fixedArg), None, _, _)))) if procLoc == storageLoc =>
+      case et.TopLevelDefine(List((storageLoc, et.Lambda(schemeType, List(fixedArg), None, _, _)))) if procLoc == storageLoc =>
+        assert(schemeType === vt.ProcedureType(
+          fixedArgTypes=List(vt.SymbolType),
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.ArbitraryValues
+        ))
+
         assert(fixedArg.schemeType === vt.SymbolType)
     }
   }
@@ -446,10 +742,15 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-false").value
 
     inside(expr) {
-      case et.TopLevelDefine(List((storageLoc, et.Lambda(List(fixedArg), Some(restArg), bodyExpr, _)))) if procLoc == storageLoc =>
+      case et.TopLevelDefine(List((storageLoc, et.Lambda(schemeType, List(fixedArg), Some(restArg), bodyExpr, _)))) if procLoc == storageLoc =>
+        assert(schemeType === vt.ProcedureType(
+          fixedArgTypes=List(vt.AnySchemeType),
+          restArgMemberTypeOpt=Some(vt.AnySchemeType),
+          returnType=vt.ReturnType.ArbitraryValues
+        ))
+
         assert(fixedArg.schemeType === vt.AnySchemeType)
-        assert(restArg.memberType === vt.AnySchemeType)
-        assert(restArg.storageLoc.schemeType === vt.UniformProperListType(vt.AnySchemeType))
+        assert(restArg.schemeType === vt.UniformProperListType(vt.AnySchemeType))
 
         assert(bodyExpr === et.Literal(ast.BooleanLiteral(false)))
     }
@@ -467,10 +768,15 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-false").value
 
     inside(expr) {
-      case et.TopLevelDefine(List((storageLoc, et.Lambda(List(fixedArg), Some(restArg), _, _)))) if procLoc == storageLoc =>
+      case et.TopLevelDefine(List((storageLoc, et.Lambda(schemeType, List(fixedArg), Some(restArg), _, _)))) if procLoc == storageLoc =>
+        assert(schemeType === vt.ProcedureType(
+          fixedArgTypes=List(vt.BooleanType),
+          restArgMemberTypeOpt=Some(vt.StringType),
+          returnType=vt.ReturnType.ArbitraryValues
+        ))
+
         assert(fixedArg.schemeType === vt.BooleanType)
-        assert(restArg.memberType === vt.StringType)
-        assert(restArg.storageLoc.schemeType === vt.UniformProperListType(vt.StringType))
+        assert(restArg.schemeType === vt.UniformProperListType(vt.StringType))
     }
   }
     
@@ -480,9 +786,14 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val expr = exprFor("(define (return-six . rest) 6)")(scope)
     val procLoc = scope.get("return-six").value
     inside(expr) {
-      case et.TopLevelDefine(List((storageLoc, et.Lambda(Nil, Some(restArg), bodyExpr, _)))) if procLoc == storageLoc =>
-        assert(restArg.storageLoc.schemeType === vt.UniformProperListType(vt.AnySchemeType))
-        assert(restArg.memberType === vt.AnySchemeType)
+      case et.TopLevelDefine(List((storageLoc, et.Lambda(schemeType, Nil, Some(restArg), bodyExpr, _)))) if procLoc == storageLoc =>
+        assert(schemeType === vt.ProcedureType(
+          fixedArgTypes=Nil,
+          restArgMemberTypeOpt=Some(vt.AnySchemeType),
+          returnType=vt.ReturnType.ArbitraryValues
+        ))
+
+        assert(restArg.schemeType === vt.UniformProperListType(vt.AnySchemeType))
         assert(bodyExpr === et.Literal(ast.IntegerLiteral(6)))
     }
     
@@ -498,9 +809,14 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val expr = exprFor("(define: (return-six rest : <port> *) 6)")(scope)
     val procLoc = scope.get("return-six").value
     inside(expr) {
-      case et.TopLevelDefine(List((storageLoc, et.Lambda(Nil, Some(restArg), _, _)))) if procLoc == storageLoc =>
-        assert(restArg.memberType === vt.PortType)
-        assert(restArg.storageLoc.schemeType === vt.UniformProperListType(vt.PortType))
+      case et.TopLevelDefine(List((storageLoc, et.Lambda(schemeType, Nil, Some(restArg), _, _)))) if procLoc == storageLoc =>
+        assert(schemeType === vt.ProcedureType(
+          fixedArgTypes=Nil,
+          restArgMemberTypeOpt=Some(vt.PortType),
+          returnType=vt.ReturnType.ArbitraryValues
+        ))
+
+        assert(restArg.schemeType === vt.UniformProperListType(vt.PortType))
     }
   }
   
@@ -510,7 +826,13 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val expr = exprFor("(define (return-self) return-self)")(scope)
     val procLoc = scope.get("return-self").value
     inside(expr) {
-      case et.TopLevelDefine(List((storageLoc, et.Lambda(Nil, None, bodyExpr, _)))) if procLoc == storageLoc =>
+      case et.TopLevelDefine(List((storageLoc, et.Lambda(schemeType, Nil, None, bodyExpr, _)))) if procLoc == storageLoc =>
+        assert(schemeType === vt.ProcedureType(
+          fixedArgTypes=Nil,
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.ArbitraryValues
+        ))
+
         assert(bodyExpr === et.VarRef(storageLoc))
     }
   }
@@ -526,7 +848,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     val expressions = bodyFor("(define x 1)(lambda (x) x)")(scope)
     inside(expressions) {
-      case List(et.TopLevelDefine(List((shadowed, _))), et.Lambda(List(argX), None, et.VarRef(inner), _)) =>
+      case List(et.TopLevelDefine(List((shadowed, _))), et.Lambda(_, List(argX), None, et.VarRef(inner), _)) =>
         assert(inner != shadowed)
     }
   }
@@ -540,7 +862,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     )(scope) 
 
     inside(expressions) {
-      case List(et.TopLevelDefine(List((shadowed, _))), et.Lambda(Nil, None, et.InternalDefine(List((inner, _)), _), _)) =>
+      case List(et.TopLevelDefine(List((shadowed, _))), et.Lambda(_, Nil, None, et.InternalDefine(List((inner, _)), _), _)) =>
         assert(inner != shadowed)
     }
   }
@@ -556,7 +878,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     )(scope) 
 
     inside(expressions) {
-      case List(et.TopLevelDefine(List((shadowed, _))), et.Lambda(Nil, None, et.InternalDefine(List((inner, _)), _), _)) =>
+      case List(et.TopLevelDefine(List((shadowed, _))), et.Lambda(_, Nil, None, et.InternalDefine(List((inner, _)), _), _)) =>
         assert(inner != shadowed)
 
         assert(shadowed.schemeType === vt.AnySchemeType)
@@ -574,7 +896,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     )(scope) 
 
     inside(expressions) {
-      case List( et.Lambda(Nil, None, et.InternalDefine(List((inner, _)), _), _)) =>
+      case List( et.Lambda(_, Nil, None, et.InternalDefine(List((inner, _)), _), _)) =>
         assert(inner.schemeType === vt.ExactIntegerType)
     }
   }
@@ -601,7 +923,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     )(scope) 
 
     inside(expressions) {
-      case List( et.Lambda(Nil, None, et.InternalDefine(List((inner, _)), _), _)) =>
+      case List( et.Lambda(_, Nil, None, et.InternalDefine(List((inner, _)), _), _)) =>
         assert(inner.schemeType === vt.ExactIntegerType)
     }
   }
@@ -647,7 +969,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val expressions = bodyFor("(define y 1)(lambda (x) y)")(scope)
 
     inside(expressions) {
-      case List(et.TopLevelDefine(List((outer, _))), et.Lambda(List(argX), None, et.VarRef(inner), _)) =>
+      case List(et.TopLevelDefine(List((outer, _))), et.Lambda(_, List(argX), None, et.VarRef(inner), _)) =>
         assert(outer === inner)
     }
   }
@@ -664,7 +986,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     }
 
     inside(expr) {
-      case et.TopLevelDefine(List((loc, et.Lambda(Nil, None, et.Literal(ast.BooleanLiteral(false)), _)))) =>
+      case et.TopLevelDefine(List((loc, et.Lambda(_, Nil, None, et.Literal(ast.BooleanLiteral(false)), _)))) =>
         assert(loc === listBinding)
     }
   }

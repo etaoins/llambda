@@ -18,7 +18,6 @@ object ExactIntegerType extends SchemeTypeAtom(ct.ExactIntegerCell)
 object FlonumType extends SchemeTypeAtom(ct.FlonumCell)
 object CharType extends SchemeTypeAtom(ct.CharCell)
 object BytevectorType extends SchemeTypeAtom(ct.BytevectorCell)
-object ProcedureType extends SchemeTypeAtom(ct.ProcedureCell)
 object ErrorObjectType extends SchemeTypeAtom(ct.ErrorObjectCell)
 object PortType extends SchemeTypeAtom(ct.PortCell)
 
@@ -35,7 +34,6 @@ object IntrinsicSchemeTypes {
     (ct.FlonumCell.schemeName -> FlonumType),
     (ct.CharCell.schemeName -> CharType),
     (ct.BytevectorCell.schemeName -> BytevectorType),
-    (ct.ProcedureCell.schemeName -> ProcedureType),
     (ct.ErrorObjectCell.schemeName -> ErrorObjectType),
     (ct.PortCell.schemeName -> PortType)
   )

@@ -3,7 +3,7 @@ import io.llambda
 
 import llambda.llvmir._
 import llambda.llvmir.IrFunction._
-import llambda.compiler.{ProcedureSignature, ReturnType}
+import llambda.compiler.ProcedureSignature
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 
@@ -106,9 +106,9 @@ object RuntimeFunctions {
   val valueForParameterSignature = ProcedureSignature(
     hasWorldArg=true,
     hasSelfArg=true,
-    fixedArgs=Nil,
-    restArgOpt=None,
-    returnType=ReturnType.SingleValue(vt.AnySchemeType),
+    fixedArgTypes=Nil,
+    restArgMemberTypeOpt=None,
+    returnType=vt.ReturnType.SingleValue(vt.AnySchemeType),
     attributes=Set()
   )
   

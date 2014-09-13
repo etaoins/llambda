@@ -1,7 +1,7 @@
 package io.llambda.compiler.codegen
 import io.llambda
 
-import llambda.compiler.{ProcedureSignature, ProcedureAttribute, ReturnType}
+import llambda.compiler.{ProcedureSignature, ProcedureAttribute}
 import llambda.compiler.{celltype => ct}
 import llambda.llvmir.{IrSignature, PointerType, VoidType, IntegerType, CallingConv}
 import llambda.llvmir.IrFunction._
@@ -31,12 +31,12 @@ object ProcedureSignatureToIr {
       Nil
     }
 
-    val fixedArgs = signature.fixedArgs map (ValueTypeToIr(_)) map {
+    val fixedArgs = signature.fixedArgTypes map (ValueTypeToIr(_)) map {
       case SignedFirstClassType(irType, signedness) =>
         Argument(irType, paramSignednessToAttribs(signedness))
     }
 
-    val restArgs = if (signature.restArgOpt.isDefined) {
+    val restArgs = if (signature.restArgMemberTypeOpt.isDefined) {
       List(Argument(PointerType(ct.ListElementCell.irType), Set()))
     }
     else {

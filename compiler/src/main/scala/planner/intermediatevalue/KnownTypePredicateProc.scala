@@ -8,14 +8,14 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
 
-class KnownTypePredicateProc(testingType : vt.SchemeType) extends KnownArtificialProc {
+class KnownTypePredicateProc(testingType : vt.SchemeType) extends KnownArtificialProc(
+  TypePredicateProcSignature
+) {
   protected val symbolHint =
     vt.NameForType(testingType)
       .replaceAllLiterally("<", "")
       .replaceAllLiterally(">", "") + "?"
 
-  val signature = TypePredicateProcSignature
-  
   def planFunction(parentPlan : PlanWriter, allocedSymbol : String) : PlannedFunction = {
     // We only have a single argument
     val argumentTemp = ps.CellTemp(ct.AnyCell)

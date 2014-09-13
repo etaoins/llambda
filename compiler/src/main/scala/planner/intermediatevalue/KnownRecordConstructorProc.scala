@@ -1,26 +1,26 @@
 package io.llambda.compiler.planner.intermediatevalue
 import io.llambda
 
-import llambda.compiler.{ProcedureSignature, ContextLocated, ReturnType}
+import llambda.compiler.{ProcedureSignature, ContextLocated}
 import llambda.compiler.planner._
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 
-class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields : List[vt.RecordField]) extends KnownArtificialProc {
+class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields : List[vt.RecordField]) extends KnownArtificialProc(
+    ProcedureSignature(
+      hasWorldArg=true,
+      hasSelfArg=false,
+      restArgMemberTypeOpt=None,
+      fixedArgTypes=initializedFields.map(_.fieldType),
+      returnType=vt.ReturnType.SingleValue(recordType),
+      attributes=Set()
+    )
+){
   protected val symbolHint =
     recordType.sourceName
       .replaceAllLiterally("<", "")
       .replaceAllLiterally(">", "")
 
-  val signature = ProcedureSignature(
-    hasWorldArg=true,
-    hasSelfArg=false,
-    restArgOpt=None,
-    fixedArgs=initializedFields.map(_.fieldType),
-    returnType=ReturnType.SingleValue(recordType),
-    attributes=Set()
-  )
-  
   def planFunction(parentPlan : PlanWriter, allocedSymbol : String) : PlannedFunction = {
     val plan = parentPlan.forkPlan()
     val worldPtrTemp = new ps.WorldPtrValue

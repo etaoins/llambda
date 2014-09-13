@@ -21,12 +21,10 @@ import llambda.compiler.{RuntimeErrorMessage, ContextLocated}
   *                      point does not have to be initialized; it will be set dynamically to a generated trampoline
   *                      if this value is explicitly converted to a ct.ProcedureCell
   */
-abstract class KnownProc(selfTempOpt : Option[ps.TempValue]) extends IntermediateValue with BoxedOnlyValue with InvokableProcedure {
-  val schemeType = vt.ProcedureType
+abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Option[ps.TempValue]) extends IntermediateValue with BoxedOnlyValue with InvokableProcedure {
   val typeDescription = "procedure"
 
-  /** Signature for the procedure */
-  val signature : ProcedureSignature
+  final val schemeType = signature.toSchemeProcedureType
 
   /** Optional location of this procedure's definition
     *
@@ -103,7 +101,7 @@ abstract class KnownProc(selfTempOpt : Option[ps.TempValue]) extends Intermediat
   }
   
   def preferredRepresentation : vt.ValueType =
-    vt.ProcedureType
+    schemeType
 
   def needsClosureRepresentation  = 
     // We only need a closure if we have a closure ourselves (i.e. a self temp)

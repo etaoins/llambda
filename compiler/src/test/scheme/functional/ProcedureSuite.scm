@@ -41,6 +41,15 @@
 	(define (return-7) 7)
 	(return-7)))
 
+(define-test "typed procedure with mismatched return type fails" (expect-failure
+  (import (llambda typed))
+
+  (: bad-proc (-> <number> <string>))
+  (define (bad-proc x)
+    'symbol)
+   
+  (bad-proc)))
+
 (define-test "untyped procedure returning its only argument" (expect 7
 	(define (return-value value) value)
 	(return-value 7)))
@@ -198,3 +207,18 @@
                (false-loop val 5))))
     (false-loop 3))))
 
+(define-test "procedure taking typed procedure argument" (expect 50
+  (import (llambda typed))
+  (: apply-number-proc (-> (-> <number> <number> <number>) <exact-integer> <exact-integer> <number>))
+  (define (apply-number-proc binary-op val1 val2)
+    (binary-op val1 val2))
+
+  (apply-number-proc * -25 -2)))
+
+(define-test "procedure taking typed procedure argument of wrong type fails" (expect-compile-failure
+  (import (llambda typed))
+  (: apply-number-proc (-> (-> <number> <number> <number>) <exact-integer> <exact-integer> <number>))
+  (define (apply-number-proc binary-op val1 val2)
+    (binary-op val1 val2))
+
+  (apply-number-proc list -25 -2)))

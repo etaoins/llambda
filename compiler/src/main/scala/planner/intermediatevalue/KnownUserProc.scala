@@ -13,10 +13,15 @@ import llambda.compiler.planner._
   * @param selfTempOpt    For procedures with closures a procedure cell containing the procedure's closure. The entry
   *                       point does not have to be initialized; it will be set dynamically to a generated trampoline
   *                       if this value is explicitly converted to a ct.ProcedureCell
-  * @param reportName     Name of this procedure in R7RS. This is used as a tag to implement certain optimizations
+  * @param reportNameOpt  Name of this procedure in R7RS. This is used as a tag to implement certain optimizations
   *                       elsewhere in the planner. It is not directly used by this class
   */
-class KnownUserProc(val signature : ProcedureSignature, plannedSymbol : String, selfTempOpt : Option[ps.TempValue], val reportNameOpt : Option[String] = None) extends KnownProc(selfTempOpt) {
+class KnownUserProc(
+    signature : ProcedureSignature,
+    plannedSymbol : String,
+    selfTempOpt : Option[ps.TempValue],
+    val reportNameOpt : Option[String] = None
+) extends KnownProc(signature, selfTempOpt) {
   //
   // These objects know how to implement certain report procedure directly with plan steps
   // 

@@ -3,7 +3,7 @@ import io.llambda
 
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
-import llambda.compiler.{ContextLocated, ReturnType, RuntimeErrorMessage}
+import llambda.compiler.{ContextLocated, RuntimeErrorMessage}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 
@@ -39,7 +39,7 @@ object PlanInvokeApply {
     val invokeArgs = argTemps.toList.map(ps.InvokeArgument(_))
 
     signature.returnType match {
-      case ReturnType.SingleValue(vt.UnitType) =>
+      case vt.ReturnType.SingleValue(vt.UnitType) =>
         plan.steps += ps.Invoke(None, signature, entryPointTemp, invokeArgs)
         SingleValue(iv.UnitValue)
 
@@ -60,16 +60,16 @@ object PlanInvokeApply {
     val argListType = vt.UniformProperListType(vt.AnySchemeType)
     val nativeSymbol = invokableProc.nativeSymbolOpt.getOrElse("procedure")
     
-    val insufficientArgsMessage = if (signature.restArgOpt.isDefined) {
+    val insufficientArgsMessage = if (signature.restArgMemberTypeOpt.isDefined) {
       RuntimeErrorMessage(
         name=s"insufficientArgsFor${nativeSymbol}",
-        text=s"Called ${nativeSymbol} with insufficient arguments; requires at least ${signature.fixedArgs.length} arguments."
+        text=s"Called ${nativeSymbol} with insufficient arguments; requires at least ${signature.fixedArgTypes.length} arguments."
       )
     }
     else {
       RuntimeErrorMessage(
         name=s"insufficientArgsFor${nativeSymbol}",
-        text=s"Called ${nativeSymbol} with insufficient arguments; requires exactly ${signature.fixedArgs.length} arguments."
+        text=s"Called ${nativeSymbol} with insufficient arguments; requires exactly ${signature.fixedArgTypes.length} arguments."
       )
     }
 
@@ -81,7 +81,7 @@ object PlanInvokeApply {
 
     val initialArgState = ArgState(Nil, argListValue)
 
-    val finalArgState = signature.fixedArgs.foldLeft(initialArgState) {
+    val finalArgState = signature.fixedArgTypes.foldLeft(initialArgState) {
       case (ArgState(fixedArgTemps, restArgValue), valueType) =>
         // Load the argument value
         val argValue = PlanCadr.loadCar(plan.activeContextLocated, restArgValue, Some(insufficientArgsMessage))
@@ -103,7 +103,7 @@ object PlanInvokeApply {
     val fixedArgTemps = finalArgState.fixedArgTemps
     val restArgValue = finalArgState.restArgValue
 
-    val restArgTemps = signature.restArgOpt match {
+    val restArgTemps = signature.restArgMemberTypeOpt match {
       case Some(memberType) =>
         val requiredRestArgType = vt.UniformProperListType(memberType)
         val typeCheckedRestArg = restArgValue.toTempValue(requiredRestArgType)
@@ -113,7 +113,7 @@ object PlanInvokeApply {
       case None =>
         val tooManyArgsMessage = RuntimeErrorMessage(
           name=s"tooManyArgsFor${nativeSymbol}",
-          text=s"Called ${nativeSymbol} with too many arguments; requires exactly ${signature.fixedArgs.length} arguments."
+          text=s"Called ${nativeSymbol} with too many arguments; requires exactly ${signature.fixedArgTypes.length} arguments."
         )
         
         // Make sure we're out of args by doing a check cast to an empty list
@@ -132,14 +132,14 @@ object PlanInvokeApply {
     val signature = invokableProc.signature
 
     // Convert all the operands
-    val fixedTemps = operands.zip(signature.fixedArgs) map { case ((contextLocated, operand), nativeType) =>
+    val fixedTemps = operands.zip(signature.fixedArgTypes) map { case ((contextLocated, operand), nativeType) =>
       plan.withContextLocation(contextLocated) {
         operand.toTempValue(nativeType)
       }
     }
 
-    val restTemps = signature.restArgOpt map { memberType =>
-      val restOperands = operands.drop(signature.fixedArgs.length)
+    val restTemps = signature.restArgMemberTypeOpt map { memberType =>
+      val restOperands = operands.drop(signature.fixedArgTypes.length)
 
       val restArgs = restOperands map { case (contextLocated, restValue) =>
         plan.withContextLocation(contextLocated) {
@@ -147,7 +147,7 @@ object PlanInvokeApply {
         }
       }
 
-      ValuesToProperList(restArgs).toTempValue(vt.ListElementType)
+      ValuesToProperList(restArgs, capturable=false).toTempValue(vt.ListElementType)
     }
 
     PlanInvokeApply.withTempValues(invokableProc, fixedTemps, restTemps)

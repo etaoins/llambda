@@ -7,7 +7,7 @@ import llambda.compiler.planner._
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 
-abstract class KnownArtificialProc extends KnownProc(None) {
+abstract class KnownArtificialProc(signature : ProcedureSignature) extends KnownProc(signature, None) {
   private var plannedNativeSymbolOpt : Option[String] = None
 
   /** Hint for the name of the symbol
@@ -15,12 +15,6 @@ abstract class KnownArtificialProc extends KnownProc(None) {
     * If this name is already taken a unique name will be assigned 
     */
   protected val symbolHint : String
-
-  /** Signature for the procedure
-    *
-    * This is needed before the procedure is actually planned to support function typing in the future
-    */
-  val signature : ProcedureSignature
 
   def nativeSymbol(implicit plan : PlanWriter) : String = {
     if (!plannedNativeSymbolOpt.isDefined) {

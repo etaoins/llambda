@@ -5,7 +5,7 @@ import org.scalatest.FunSuite
 
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.{ProcedureSignature, ProcedureAttribute, ReturnType}
+import llambda.compiler.{ProcedureSignature, ProcedureAttribute}
 import llambda.llvmir._
 import llambda.llvmir.IrFunction._
 
@@ -14,9 +14,9 @@ class ProcedureSignatureToIrSuite extends FunSuite {
     val procSignature = ProcedureSignature(
       hasWorldArg=false,
       hasSelfArg=false,
-      fixedArgs=Nil,
-      restArgOpt=None,
-      returnType=ReturnType.SingleValue(vt.UnitType),
+      fixedArgTypes=Nil,
+      restArgMemberTypeOpt=None,
+      returnType=vt.ReturnType.SingleValue(vt.UnitType),
       attributes=Set()
     )
 
@@ -33,9 +33,9 @@ class ProcedureSignatureToIrSuite extends FunSuite {
     val procSignature = ProcedureSignature(
       hasWorldArg=false,
       hasSelfArg=false,
-      fixedArgs=List(vt.Predicate, vt.UInt16),
-      restArgOpt=None,
-      returnType=ReturnType.SingleValue(vt.Int32),
+      fixedArgTypes=List(vt.Predicate, vt.UInt16),
+      restArgMemberTypeOpt=None,
+      returnType=vt.ReturnType.SingleValue(vt.Int32),
       attributes=Set(ProcedureAttribute.FastCC)
     )
 
@@ -53,9 +53,9 @@ class ProcedureSignatureToIrSuite extends FunSuite {
     val procSignature = new ProcedureSignature(
       hasWorldArg=true,
       hasSelfArg=true,
-      fixedArgs=Nil,
-      restArgOpt=None,
-      returnType=ReturnType.SingleValue(vt.UnitType),
+      fixedArgTypes=Nil,
+      restArgMemberTypeOpt=None,
+      returnType=vt.ReturnType.SingleValue(vt.UnitType),
       attributes=Set(ProcedureAttribute.NoReturn)
     )
 
@@ -75,9 +75,9 @@ class ProcedureSignatureToIrSuite extends FunSuite {
     val procSignature = ProcedureSignature(
       hasWorldArg=false,
       hasSelfArg=false,
-      fixedArgs=Nil,
-      restArgOpt=Some(vt.SymbolType),
-      returnType=ReturnType.SingleValue(vt.UInt32),
+      fixedArgTypes=Nil,
+      restArgMemberTypeOpt=Some(vt.SymbolType),
+      returnType=vt.ReturnType.SingleValue(vt.UInt32),
       attributes=Set()
     )
 
@@ -94,9 +94,9 @@ class ProcedureSignatureToIrSuite extends FunSuite {
     val procSignature = ProcedureSignature(
       hasWorldArg=false,
       hasSelfArg=false,
-      fixedArgs=List(vt.UnionType(Set(vt.PortType, vt.SymbolType))),
-      restArgOpt=None,
-      returnType=ReturnType.ArbitraryValues,
+      fixedArgTypes=List(vt.UnionType(Set(vt.PortType, vt.SymbolType))),
+      restArgMemberTypeOpt=None,
+      returnType=vt.ReturnType.ArbitraryValues,
       attributes=Set()
     )
 
@@ -113,9 +113,9 @@ class ProcedureSignatureToIrSuite extends FunSuite {
     val procSignature = ProcedureSignature(
       hasWorldArg=true,
       hasSelfArg=true,
-      fixedArgs=List(vt.NumberType, vt.NumberType),
-      restArgOpt=Some(vt.ExactIntegerType),
-      returnType=ReturnType.SingleValue(vt.FlonumType),
+      fixedArgTypes=List(vt.NumberType, vt.NumberType),
+      restArgMemberTypeOpt=Some(vt.ExactIntegerType),
+      returnType=vt.ReturnType.SingleValue(vt.FlonumType),
       attributes=Set()
     )
 
@@ -137,9 +137,9 @@ class ProcedureSignatureToIrSuite extends FunSuite {
     val procSignature = ProcedureSignature(
       hasWorldArg=false,
       hasSelfArg=true,
-      fixedArgs=Nil,
-      restArgOpt=None,
-      returnType=ReturnType.SpecificValues(List(vt.FlonumType, vt.ExactIntegerType)),
+      fixedArgTypes=Nil,
+      restArgMemberTypeOpt=None,
+      returnType=vt.ReturnType.SpecificValues(List(vt.FlonumType, vt.ExactIntegerType)),
       attributes=Set()
     )
 

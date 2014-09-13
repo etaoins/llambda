@@ -119,6 +119,28 @@ object ExtractType {
 
         vt.SpecificVectorType(memberTypeRefs.toVector)
 
+      case Primitives.ProcedureType =>
+        // Explicitly recursive types cross procedure boundaries due to lack of testing and use cases
+        val noRecursiveVars  = RecursiveVars()
+
+        operands.reverse match {
+          case returnDatum :: sst.ScopedSymbol(_, "*") :: restArgMemberDatum :: reverseFixedArgData =>
+            val fixedArgTypes = reverseFixedArgData.reverse.map(extractNonEmptySchemeType(_,  noRecursiveVars))
+            val restArgMemberType = extractNonEmptySchemeType(restArgMemberDatum, noRecursiveVars)
+            val returnType = extractReturnType(returnDatum)
+
+            vt.ProcedureType(fixedArgTypes, Some(restArgMemberType), returnType)
+
+          case returnDatum :: reverseFixedArgData =>
+            val fixedArgTypes = reverseFixedArgData.reverse.map(extractNonEmptySchemeType(_, noRecursiveVars))
+            val returnType = extractReturnType(returnDatum)
+            
+            vt.ProcedureType(fixedArgTypes, None, returnType)
+
+          case  _ =>
+            throw new BadSpecialFormException(constructorName, "-> requires at least one return type argument")
+        }
+
       case _ =>
         throw new BadSpecialFormException(constructorName, "Invalid type constructor syntax")
     }
@@ -146,6 +168,18 @@ object ExtractType {
     case nonCellValue =>
       throw new BadSpecialFormException(datum, "Native type used where Scheme type expected")
   }
+
+  def extractNonEmptySchemeType(
+      datum : sst.ScopedDatum,
+      recursiveVars : RecursiveVars = RecursiveVars()
+  ) : vt.SchemeType = extractSchemeType(datum, recursiveVars) match {
+    case vt.EmptySchemeType =>
+      throw new BadSpecialFormException(datum, "Empty Scheme type where non-empty type expected")
+
+    case nonEmptyType =>
+      nonEmptyType
+  }
+
   
   def extractStableType(
       datum : sst.ScopedDatum,
@@ -190,30 +224,30 @@ object ExtractType {
       throw new BadSpecialFormException(nonsymbol, "Excepted type name to be symbol or type constructor application")
   }
 
-  def extractReturnType(datum : sst.ScopedDatum) : ReturnType.ReturnType = datum match {
+  def extractReturnType(datum : sst.ScopedDatum) : vt.ReturnType.ReturnType = datum match {
     case sst.ScopedSymbol(_, "*") =>
-      ReturnType.ArbitraryValues
+      vt.ReturnType.ArbitraryValues
 
     case sst.ScopedProperList((constructorName : sst.ScopedSymbol) :: operandData) =>
       constructorName.resolve match {
         case Primitives.ValuesType =>
-          val valueTypes = operandData.map(extractSchemeType(_))
+          val valueTypes = operandData.map(extractNonEmptySchemeType(_))
 
           valueTypes match {
             case List(singleValue) =>
-              ReturnType.SingleValue(singleValue)
+              vt.ReturnType.SingleValue(singleValue)
 
             case multipleValues =>
-              ReturnType.SpecificValues(multipleValues)
+              vt.ReturnType.SpecificValues(multipleValues)
           }
 
         case _ =>
-          ReturnType.SingleValue(
+          vt.ReturnType.SingleValue(
             applyTypeConstructor(constructorName, operandData, RecursiveVars())
           )
       }
 
     case otherDatum =>
-      ReturnType.SingleValue(extractValueType(otherDatum))
+      vt.ReturnType.SingleValue(extractValueType(otherDatum))
   }
 }

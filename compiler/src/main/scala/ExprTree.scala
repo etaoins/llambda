@@ -111,15 +111,17 @@ case class Cond(test : Expr, trueExpr : Expr, falseExpr : Expr) extends Expr {
   override def schemeType = trueExpr.schemeType + falseExpr.schemeType
 }
 
-case class RestArgument(storageLoc : StorageLocation, memberType : vt.SchemeType)
-
-case class Lambda(fixedArgs : List[StorageLocation], restArgOpt : Option[RestArgument], body : Expr, debugContextOpt : Option[debug.SubprogramContext] = None) extends Expr {
+case class Lambda(
+    override val schemeType : vt.ProcedureType,
+    fixedArgs : List[StorageLocation],
+    restArgOpt : Option[StorageLocation],
+    body : Expr,
+    debugContextOpt : Option[debug.SubprogramContext] = None
+) extends Expr {
   val subexprs = body :: Nil
 
   def map(f : Expr => Expr) : Lambda =
-    Lambda(fixedArgs, restArgOpt, f(body), debugContextOpt).assignLocationFrom(this)
-
-  override def schemeType = vt.ProcedureType
+    Lambda(schemeType, fixedArgs, restArgOpt, f(body), debugContextOpt).assignLocationFrom(this)
 }
 
 sealed abstract trait BindingExpr extends Expr {
@@ -155,7 +157,8 @@ case class NativeFunction(
   override def cloningMap(f : Expr => Expr) : Expr =
     NativeFunction(signature, nativeSymbol).assignLocationFrom(this)
 
-  override def schemeType = vt.ProcedureType
+  override def schemeType = 
+    signature.toSchemeProcedureType
 }
 
 /** Artificial procedures are created internally by the compiler
@@ -165,8 +168,6 @@ case class NativeFunction(
 sealed abstract class ArtificialProcedure extends Expr {
   val subexprs = Nil
   def map(f : Expr => Expr) : this.type = this
-
-  override def schemeType = vt.ProcedureType
 }
 
 sealed abstract class RecordProcedure extends ArtificialProcedure {
@@ -176,16 +177,34 @@ sealed abstract class RecordProcedure extends ArtificialProcedure {
 case class RecordConstructor(recordType : vt.RecordType, initializedFields : List[vt.RecordField]) extends RecordProcedure {
   override def cloningMap(f : Expr => Expr) : Expr =
     RecordConstructor(recordType, initializedFields).assignLocationFrom(this)
+  
+  override def schemeType = vt.ProcedureType(
+    fixedArgTypes=initializedFields.map(_.fieldType.schemeType),
+    restArgMemberTypeOpt=None,
+    returnType=vt.ReturnType.SingleValue(recordType)
+  )
 }
 
 case class RecordAccessor(recordType : vt.RecordType, field : vt.RecordField) extends RecordProcedure {
   override def cloningMap(f : Expr => Expr) : Expr =
     RecordAccessor(recordType, field).assignLocationFrom(this)
+  
+  override def schemeType = vt.ProcedureType(
+    fixedArgTypes=List(recordType),
+    restArgMemberTypeOpt=None,
+    returnType=vt.ReturnType.SingleValue(field.fieldType.schemeType)
+  )
 }
 
 case class RecordMutator(recordType : vt.RecordType, field : vt.RecordField) extends RecordProcedure {
   override def cloningMap(f : Expr => Expr) : Expr =
     RecordMutator(recordType, field).assignLocationFrom(this)
+
+  override def schemeType = vt.ProcedureType(
+    fixedArgTypes=List(recordType, field.fieldType.schemeType),
+    restArgMemberTypeOpt=None,
+    returnType=vt.ReturnType.SingleValue(vt.UnitType)
+  )
 }
 
 case class TypePredicate(testingType : vt.SchemeType) extends ArtificialProcedure {

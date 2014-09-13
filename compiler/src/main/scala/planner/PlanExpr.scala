@@ -3,7 +3,7 @@ import io.llambda
 
 import collection.mutable
 
-import llambda.compiler.{et, StorageLocation, ReportProcedure, ContextLocated, RuntimeErrorMessage, ReturnType}
+import llambda.compiler.{et, StorageLocation, ReportProcedure, ContextLocated, RuntimeErrorMessage}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
@@ -198,7 +198,7 @@ private[planner] object PlanExpr {
           val valueResult = apply(parameterResult.state)(valueExpr)
 
           val parameterIntermediate = parameterResult.values.toSingleValue()
-          val parameterTemp = parameterIntermediate.toTempValue(vt.ProcedureType)
+          val parameterTemp = parameterIntermediate.toTempValue(vt.AnyProcedureType)
 
           val mayHaveConverterProc = parameterIntermediate match {
             case knownParamProc : iv.KnownParameterProc =>
@@ -237,7 +237,7 @@ private[planner] object PlanExpr {
         val resultValues = ResultValues(scannedExprs.tail.map(_.values.toSingleValue))
 
         // If there's a return the return type is always ArbitraryValues
-        val returnValueTempOpt = resultValues.toReturnTempValue(ReturnType.ArbitraryValues)
+        val returnValueTempOpt = resultValues.toReturnTempValue(vt.ReturnType.ArbitraryValues)
 
         plan.steps += ps.Return(returnValueTempOpt)
 

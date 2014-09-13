@@ -47,6 +47,19 @@ object NameForType {
 
         s"(Vectorof ${memberTypeName})"
 
+      case ProcedureType(fixedArgTypes, restArgMemberTypeOpt, returnType) =>
+        val fixedArgNames = fixedArgTypes.map { fixedArgType =>
+          stackedNameForType(fixedArgType :: typeStack, recurseVarNames)
+        }
+
+        val restArgNames = restArgMemberTypeOpt map { restArgMemberType =>
+          stackedNameForType(restArgMemberType :: typeStack, recurseVarNames) + " *"
+        }
+
+        val returnTypeName = NameForReturnType(returnType)
+        
+        "(-> " + (fixedArgNames ++ restArgNames :+ returnTypeName).mkString(" ") + ")"
+
       case unionType @ UnionType(memberTypes) =>
         unionType.exactCellTypeOpt match {
           case Some(exactCellType) =>

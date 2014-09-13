@@ -1,7 +1,7 @@
 package io.llambda.compiler.planner
 import io.llambda
 
-import llambda.compiler.{ReturnType, RuntimeErrorMessage}
+import llambda.compiler.RuntimeErrorMessage
 import llambda.compiler.ImpossibleTypeConversionException
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner.{step => ps}
@@ -21,25 +21,25 @@ sealed abstract class ResultValues {
   def toMultipleValueList()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : iv.IntermediateValue
 
   /** Returns the actual return type for this result value */
-  def returnType : ReturnType.ReturnType
+  def returnType : vt.ReturnType.ReturnType
 
   /** Returns the preferred return type for this result value */
-  def preferredReturnType : ReturnType.ReturnType
+  def preferredReturnType : vt.ReturnType.ReturnType
 
   /** Returns a TempValue representing the result in the appropriate representation for the ReturnType
     *
     * If void should be returned from the function then the result will not be defined
     */
   def toReturnTempValue(
-      returnType : ReturnType.ReturnType
+      returnType : vt.ReturnType.ReturnType
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ps.TempValue] = returnType match {
-    case ReturnType.SingleValue(vt.UnitType) =>
+    case vt.ReturnType.SingleValue(vt.UnitType) =>
       None
 
-    case ReturnType.SingleValue(resultType) =>
+    case vt.ReturnType.SingleValue(resultType) =>
       Some(toSingleValue().toTempValue(resultType))
 
-    case ReturnType.MultipleValues(valueListType) =>
+    case vt.ReturnType.MultipleValues(valueListType) =>
       Some(toMultipleValueList().toTempValue(valueListType))
   }
 }
@@ -49,13 +49,13 @@ case class SingleValue(value : iv.IntermediateValue) extends ResultValues {
     value
 
   def toMultipleValueList()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) =
-    ValuesToProperList(List(value))
+    ValuesToProperList(List(value), capturable=false)
   
   def returnType = 
-    ReturnType.SingleValue(value.schemeType)
+    vt.ReturnType.SingleValue(value.schemeType)
 
   def preferredReturnType = 
-    ReturnType.SingleValue(value.preferredRepresentation)
+    vt.ReturnType.SingleValue(value.preferredRepresentation)
 }
 
 case class MultipleValues(multipleValueList : iv.IntermediateValue) extends ResultValues {
@@ -89,7 +89,7 @@ case class MultipleValues(multipleValueList : iv.IntermediateValue) extends Resu
     multipleValueList
 
   def returnType =
-    ReturnType.MultipleValues(multipleValueList.schemeType)
+    vt.ReturnType.MultipleValues(multipleValueList.schemeType)
 
   def preferredReturnType =
     returnType
@@ -103,7 +103,7 @@ object ResultValues {
       SingleValue(singleValue)
 
     case multipleValues =>
-      val multipleValueList = ValuesToProperList(multipleValues)
+      val multipleValueList = ValuesToProperList(multipleValues, capturable=false)
       MultipleValues(multipleValueList)
   }
 }

@@ -19,7 +19,7 @@ object DynamicProcPlanner extends ReportProcPlanner {
       operands : List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ResultValues] = (reportName, operands) match {
     case ("make-parameter", List(initialValue)) =>
-      val resultTemp = ps.Temp(vt.ProcedureType)
+      val resultTemp = ps.Temp(vt.AnyProcedureType)
       val initialValueTemp = initialValue._2.toTempValue(vt.AnySchemeType)
 
       plan.steps += ps.CreateParameterProc(worldPtr, resultTemp, initialValueTemp, None)
@@ -29,11 +29,11 @@ object DynamicProcPlanner extends ReportProcPlanner {
       ))
     
     case ("make-parameter", List(initialValue, converterProc)) =>
-      val resultTemp = ps.Temp(vt.ProcedureType)
+      val resultTemp = ps.Temp(vt.AnyProcedureType)
       val initialValueTemp = initialValue._2.toTempValue(vt.AnySchemeType)
 
       val converterTemp = plan.withContextLocation(converterProc._1) {
-        converterProc._2.toTempValue(vt.ProcedureType)
+        converterProc._2.toTempValue(vt.AnyProcedureType)
       }
 
       plan.steps += ps.CreateParameterProc(worldPtr, resultTemp, initialValueTemp, Some(converterTemp))

@@ -15,7 +15,7 @@ object ExtractNativeFunction {
   ) : et.NativeFunction = {
     val fixedArgTypes = fixedArgData.map(ExtractType.extractValueType(_))
 
-    val restArgOpt = restArgDatum match {
+    val restArgMemberTypeOpt = restArgDatum match {
       case sst.NonSymbolLeaf(ast.EmptyList()) =>
         None
 
@@ -25,7 +25,7 @@ object ExtractNativeFunction {
 
     val returnType = returnTypeDatumOpt match {
       case None =>
-        ReturnType.SingleValue(vt.UnitType)
+        vt.ReturnType.SingleValue(vt.UnitType)
 
       case Some(returnTypeDatum) =>
         ExtractType.extractReturnType(returnTypeDatum)
@@ -34,8 +34,8 @@ object ExtractNativeFunction {
     val signature = ProcedureSignature(
       hasWorldArg=hasWorldArg,
       hasSelfArg=false,
-      fixedArgs=fixedArgTypes,
-      restArgOpt=restArgOpt,
+      fixedArgTypes=fixedArgTypes,
+      restArgMemberTypeOpt=restArgMemberTypeOpt,
       returnType=returnType,
       attributes=attributes
     )

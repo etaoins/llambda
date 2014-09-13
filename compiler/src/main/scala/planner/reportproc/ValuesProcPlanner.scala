@@ -5,7 +5,6 @@ import llambda.compiler.ContextLocated
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
-import llambda.compiler.ReturnType
 
 object ValuesProcPlanner extends ReportProcPlanner {
   def apply(state : PlannerState)(

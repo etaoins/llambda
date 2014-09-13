@@ -10,8 +10,7 @@ import llambda.compiler.codegen.CostForPlanSteps
 private[planner] object PlanApplication {
   private case class PlanApplyResult(
       planResult : PlanResult,
-      fixedArgTypes : Seq[vt.SchemeType],
-      restArgMemberTypeOpt : Option[vt.SchemeType]
+      procedureType : vt.ProcedureType
   )
 
   def apply(initialState : PlannerState)(located : ContextLocated, procExpr : et.Expr, operandExprs : List[et.Expr])(implicit plan : PlanWriter) : PlanResult = {
@@ -94,16 +93,19 @@ private[planner] object PlanApplication {
     val applyResult = planWithOperandValues(operandState)(located, procExpr, operands)
 
     // If we've gotten this far we know all of our operands are of the correct type
-    val postFixedArgState = operands.zip(applyResult.fixedArgTypes).foldLeft(applyResult.planResult.state) {
+    val fixedArgTypes = applyResult.procedureType.fixedArgTypes
+    
+    val postFixedArgState = operands.zip(fixedArgTypes).foldLeft(applyResult.planResult.state) {
       case (state, ((_, fixedArgValue), argType)) =>
         val constraint = ConstrainType.IntersectType(argType)
         ConstrainType(state)(fixedArgValue, constraint)(plan.config)
     }
 
-    val restOperandValues = operands.drop(applyResult.fixedArgTypes.length)
+    val restOperandValues = operands.drop(fixedArgTypes.length)
     val postRestArgState = restOperandValues.foldLeft(postFixedArgState) {
       case (state, (_, restArgValue)) =>
-        val constraint = ConstrainType.IntersectType(applyResult.restArgMemberTypeOpt.get)
+        val restArgMemberTypeOpt = applyResult.procedureType.restArgMemberTypeOpt
+        val constraint = ConstrainType.IntersectType(restArgMemberTypeOpt.get)
         ConstrainType(state)(restArgValue, constraint)(plan.config)
     }
 
@@ -131,8 +133,7 @@ private[planner] object PlanApplication {
               state=initialState,
               values=inlineResult
             ),
-            fixedArgTypes=lambdaExpr.fixedArgs.map(_.schemeType),
-            restArgMemberTypeOpt=lambdaExpr.restArgOpt.map(_.memberType)
+            procedureType=lambdaExpr.schemeType
           )
         }
 
@@ -147,19 +148,19 @@ private[planner] object PlanApplication {
     val signature = invokableProc.signature
     
     // Ensure our arity is sane
-    if (signature.restArgOpt.isDefined) {
-      if (operands.length < signature.fixedArgs.length) {
+    if (signature.restArgMemberTypeOpt.isDefined) {
+      if (operands.length < signature.fixedArgTypes.length) {
         throw new IncompatibleArityException(
           located=plan.activeContextLocated,
-          message=s"Called procedure with ${operands.length} arguments; requires at least ${signature.fixedArgs.length} arguments"
+          message=s"Called procedure with ${operands.length} arguments; requires at least ${signature.fixedArgTypes.length} arguments"
         )
       }
     }
     else {
-      if (signature.fixedArgs.length != operands.length) {
+      if (signature.fixedArgTypes.length != operands.length) {
         throw new IncompatibleArityException(
           located=plan.activeContextLocated,
-          message=s"Called procedure with ${operands.length} arguments; requires exactly ${signature.fixedArgs.length} arguments"
+          message=s"Called procedure with ${operands.length} arguments; requires exactly ${signature.fixedArgTypes.length} arguments"
         )
       }
     }
@@ -170,8 +171,7 @@ private[planner] object PlanApplication {
         for(inlineResult <- knownProc.attemptInlineApplication(procResult.state)(operands)) {
           return PlanApplyResult(
             planResult=inlineResult,
-            fixedArgTypes=signature.fixedArgs.map(_.schemeType),
-            restArgMemberTypeOpt=signature.restArgOpt
+            procedureType=knownProc.schemeType
           )
         }
 
@@ -208,8 +208,7 @@ private[planner] object PlanApplication {
                 state=procResult.state,
                 values=inlineValues
               ),
-              fixedArgTypes=signature.fixedArgs.map(_.schemeType),
-              restArgMemberTypeOpt=signature.restArgOpt
+              procedureType=signature.toSchemeProcedureType
             )
           }
         }
@@ -225,8 +224,7 @@ private[planner] object PlanApplication {
         state=procResult.state,
         values=invokeValues
       ),
-      fixedArgTypes=signature.fixedArgs.map(_.schemeType),
-      restArgMemberTypeOpt=signature.restArgOpt
+      procedureType=signature.toSchemeProcedureType
     )
 }
 }

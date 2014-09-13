@@ -16,9 +16,9 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgs=Nil,
-        restArgOpt=None,
-        returnType=ReturnType.SingleValue(vt.UnitType),
+        fixedArgTypes=Nil,
+        restArgMemberTypeOpt=None,
+        returnType=vt.ReturnType.SingleValue(vt.UnitType),
         attributes=Set()
       ),
       "lliby_newline"
@@ -34,9 +34,9 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgs=Nil,
-        restArgOpt=None,
-        returnType=ReturnType.SingleValue(vt.UnitType),
+        fixedArgTypes=Nil,
+        restArgMemberTypeOpt=None,
+        returnType=vt.ReturnType.SingleValue(vt.UnitType),
         attributes=Set(ProcedureAttribute.NoReturn)
       ),
       "lliby_newline"
@@ -52,9 +52,9 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
       ProcedureSignature(
         hasWorldArg=true,
         hasSelfArg=false,
-        fixedArgs=Nil,
-        restArgOpt=None,
-        returnType=ReturnType.SingleValue(vt.UnitType),
+        fixedArgTypes=Nil,
+        restArgMemberTypeOpt=None,
+        returnType=vt.ReturnType.SingleValue(vt.UnitType),
         attributes=Set()
       ),
       "lliby_newline"
@@ -70,9 +70,9 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgs=Nil,
-        restArgOpt=None,
-        returnType=ReturnType.SingleValue(vt.Int8),
+        fixedArgTypes=Nil,
+        restArgMemberTypeOpt=None,
+        returnType=vt.ReturnType.SingleValue(vt.Int8),
         attributes=Set()
       ),
       "lliby_newline"
@@ -88,9 +88,9 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgs=List(vt.Int16),
-        restArgOpt=None,
-        returnType=ReturnType.SingleValue(vt.Int32),
+        fixedArgTypes=List(vt.Int16),
+        restArgMemberTypeOpt=None,
+        returnType=vt.ReturnType.SingleValue(vt.Int32),
         attributes=Set()
       ),
       "lliby_newline"
@@ -106,9 +106,9 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
       ProcedureSignature(
         hasWorldArg=true,
         hasSelfArg=false,
-        fixedArgs=List(vt.Int64, vt.Float),
-        restArgOpt=None,
-        returnType=ReturnType.SingleValue(vt.Double),
+        fixedArgTypes=List(vt.Int64, vt.Float),
+        restArgMemberTypeOpt=None,
+        returnType=vt.ReturnType.SingleValue(vt.Double),
         attributes=Set()
       ),
       "lliby_newline"
@@ -124,9 +124,9 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgs=List(vt.UInt16),
-        restArgOpt=None,
-        returnType=ReturnType.SingleValue(vt.UInt32),
+        fixedArgTypes=List(vt.UInt16),
+        restArgMemberTypeOpt=None,
+        returnType=vt.ReturnType.SingleValue(vt.UInt32),
         attributes=Set()
       ),
       "lliby_newline"
@@ -142,9 +142,9 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgs=List(vt.Predicate),
-        restArgOpt=None,
-        returnType=ReturnType.SingleValue(vt.Predicate),
+        fixedArgTypes=List(vt.Predicate),
+        restArgMemberTypeOpt=None,
+        returnType=vt.ReturnType.SingleValue(vt.Predicate),
         attributes=Set()
       ),
       "lliby_newline"
@@ -160,9 +160,9 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgs=List(vt.Int8),
-        restArgOpt=None,
-        returnType=ReturnType.SingleValue(vt.UnicodeChar),
+        fixedArgTypes=List(vt.Int8),
+        restArgMemberTypeOpt=None,
+        returnType=vt.ReturnType.SingleValue(vt.UnicodeChar),
         attributes=Set()
       ),
       "lliby_newline"
@@ -178,9 +178,9 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgs=List(vt.Double),
-        restArgOpt=None,
-        returnType=ReturnType.ArbitraryValues,
+        fixedArgTypes=List(vt.Double),
+        restArgMemberTypeOpt=None,
+        returnType=vt.ReturnType.ArbitraryValues,
         attributes=Set()
       ),
       "lliby_newline"
@@ -196,9 +196,9 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgs=List(vt.UnionType(Set(vt.StringType, vt.SymbolType))),
-        restArgOpt=None,
-        returnType=ReturnType.SpecificValues(List(vt.StringType, vt.SymbolType)),
+        fixedArgTypes=List(vt.UnionType(Set(vt.StringType, vt.SymbolType))),
+        restArgMemberTypeOpt=None,
+        returnType=vt.ReturnType.SpecificValues(List(vt.StringType, vt.SymbolType)),
         attributes=Set()
       ),
       "lliby_newline"
@@ -214,9 +214,9 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgs=List(vt.ExactIntegerType),
-        restArgOpt=None,
-        returnType=ReturnType.SingleValue(vt.FlonumType),
+        fixedArgTypes=List(vt.ExactIntegerType),
+        restArgMemberTypeOpt=None,
+        returnType=vt.ReturnType.SingleValue(vt.FlonumType),
         attributes=Set()
       ),
       "lliby_newline"
@@ -232,9 +232,9 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgs=Nil,
-        restArgOpt=Some(vt.AnySchemeType),
-        returnType=ReturnType.SingleValue(vt.AnySchemeType),
+        fixedArgTypes=Nil,
+        restArgMemberTypeOpt=Some(vt.AnySchemeType),
+        returnType=vt.ReturnType.SingleValue(vt.AnySchemeType),
         attributes=Set()
       ),
       "lliby_vector"
@@ -250,9 +250,9 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
-        fixedArgs=List(vt.Predicate),
-        restArgOpt=Some(vt.ExactIntegerType),
-        returnType=ReturnType.SingleValue(vt.Int32),
+        fixedArgTypes=List(vt.Predicate),
+        restArgMemberTypeOpt=Some(vt.ExactIntegerType),
+        returnType=vt.ReturnType.SingleValue(vt.Int32),
         attributes=Set()
       ),
       "lliby_misc"

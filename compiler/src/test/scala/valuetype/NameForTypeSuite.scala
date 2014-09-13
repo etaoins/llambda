@@ -99,7 +99,7 @@ class NameForTypeSuite extends FunSuite {
   }
   
   test("multiple type union") {
-    val memberTypes = Set[NonUnionSchemeType](ProcedureType, EmptyListType, UnitType)
+    val memberTypes = Set[NonUnionSchemeType](AnyProcedureType, EmptyListType, UnitType)
     assert(NameForType(UnionType(memberTypes)) === "(U <empty-list> <procedure> <unit>)")
   }
 
@@ -142,5 +142,55 @@ class NameForTypeSuite extends FunSuite {
     ))
 
     assert(NameForType(vectorType) === "(Rec A (U (Vector A) <symbol>))")
+  }
+
+  test("(-> <number>") {
+    val procedureType = ProcedureType(
+      fixedArgTypes=Nil,
+      restArgMemberTypeOpt=None,
+      returnType=ReturnType.SingleValue(NumberType)
+    )
+
+    assert(NameForType(procedureType) === "(-> <number>)")
+  }
+  
+  test("(-> <string> <symbol> <number>") {
+    val procedureType = ProcedureType(
+      fixedArgTypes=List(StringType, SymbolType),
+      restArgMemberTypeOpt=None,
+      returnType=ReturnType.SingleValue(NumberType)
+    )
+
+  assert(NameForType(procedureType) === "(-> <string> <symbol> <number>)")
+  }
+  
+  test("(-> <string> <symbol> * <number>") {
+    val procedureType = ProcedureType(
+      fixedArgTypes=List(StringType),
+      restArgMemberTypeOpt=Some(SymbolType),
+      returnType=ReturnType.SingleValue(NumberType)
+    )
+
+    assert(NameForType(procedureType) === "(-> <string> <symbol> * <number>)")
+  }
+  
+  test("(-> <string> <symbol> * (values <port> <unit>)") {
+    val procedureType = ProcedureType(
+      fixedArgTypes=List(StringType),
+      restArgMemberTypeOpt=Some(SymbolType),
+      returnType=ReturnType.SpecificValues(List(PortType, UnitType))
+    )
+
+    assert(NameForType(procedureType) === "(-> <string> <symbol> * (values <port> <unit>))")
+  }
+  
+  test("(-> <any> * *)") {
+    val procedureType = ProcedureType(
+      fixedArgTypes=Nil,
+      restArgMemberTypeOpt=Some(AnySchemeType),
+      returnType=ReturnType.ArbitraryValues
+    )
+
+    assert(NameForType(procedureType) === "(-> <any> * *)")
   }
 }

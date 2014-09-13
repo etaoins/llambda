@@ -169,7 +169,7 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     }
   }
   
-  test("definiting recursive vector types") {
+  test("defining recursive vector types") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
     
     bodyFor("(define-type <string-vector-tree> (Rec VT (U <string> (Vectorof VT))))")(scope)
@@ -242,6 +242,52 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     ))
   }
 
+  test("defining procedure types") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    bodyFor("(define-type <string-proc> (-> <string>))")(scope)
+    assert(scope("<string-proc>") === BoundType(
+      vt.ProcedureType(
+        fixedArgTypes=Nil,
+        restArgMemberTypeOpt=None,
+        returnType=vt.ReturnType.SingleValue(vt.StringType)
+      )
+    ))
+
+    bodyFor("(define-type <values-to-string-proc> (-> <port> <symbol> <string>))")(scope)
+    assert(scope("<values-to-string-proc>") === BoundType(
+      vt.ProcedureType(
+        fixedArgTypes=List(vt.PortType, vt.SymbolType),
+        restArgMemberTypeOpt=None,
+        returnType=vt.ReturnType.SingleValue(vt.StringType)
+      )
+    ))
+    
+    bodyFor("(define-type <symbol-to-values-proc> (-> <symbol> (Values <exact-integer> <flonum>)))")(scope)
+    assert(scope("<symbol-to-values-proc>") === BoundType(
+      vt.ProcedureType(
+        fixedArgTypes=List(vt.SymbolType),
+        restArgMemberTypeOpt=None,
+        returnType=vt.ReturnType.MultipleValues(
+          vt.SpecificProperListType(List(vt.ExactIntegerType, vt.FlonumType))
+        )
+      )
+    ))
+    
+    bodyFor("(define-type <values-with-rest-to-arbitrary-proc> (-> <port> <symbol> <pair> * *))")(scope)
+    assert(scope("<values-with-rest-to-arbitrary-proc>") === BoundType(
+      vt.ProcedureType(
+        fixedArgTypes=List(vt.PortType, vt.SymbolType),
+        restArgMemberTypeOpt=Some(vt.AnyPairType),
+        returnType=vt.ReturnType.ArbitraryValues
+      )
+    ))
+    
+    intercept[BadSpecialFormException] {
+      bodyFor("(define-type <insufficient-args> (->))")(scope)
+    }
+  }
+
   test("defining recursive types") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
     val stringListType = vt.UniformProperListType(vt.StringType)
@@ -301,6 +347,10 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
       
     intercept[BadSpecialFormException] {
       bodyFor("(define-type <insufficient-args> (Rec (U <string> (Pairof BT BT))))")(scope)
+    }
+      
+    intercept[UnboundVariableException] {
+      bodyFor("(define-type <cross-procedure-type> (Rec T (-> (Pairof T T) *)))")(scope)
     }
   }
   

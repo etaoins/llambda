@@ -86,16 +86,16 @@ private[planner] object RetypeLambdaArgs {
       for(knownProc <- knownProcOpt) {
         val signature = knownProc.signature
 
-        val postFixedArgTypes = operandExprs.zip(signature.fixedArgs).foldLeft(argTypes) {
+        val postFixedArgTypes = operandExprs.zip(signature.fixedArgTypes).foldLeft(argTypes) {
           case (currentArgTypes, (operandExpr, argValueType)) =>
             attributeTypeToExpr(operandExpr, argValueType.schemeType, currentArgTypes)
         }
 
         // Do we have a typed rest arg?
-        val finalArgTypes = signature.restArgOpt match { 
+        val finalArgTypes = signature.restArgMemberTypeOpt match { 
           case Some(memberType) =>
             // Attribute the rest arg member type to all of the rest args
-            val restArgExprs = operandExprs.drop(signature.fixedArgs.length)
+            val restArgExprs = operandExprs.drop(signature.fixedArgTypes.length)
 
             restArgExprs.foldLeft(postFixedArgTypes) {
               case (currentArgTypes, restArgExpr) =>

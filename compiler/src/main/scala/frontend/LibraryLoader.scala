@@ -2,6 +2,9 @@ package io.llambda.compiler.frontend
 import io.llambda
 
 import llambda.compiler._
+import llambda.compiler.{valuetype => vt}
+
+import llambda.compiler.valuetype.Implicits._
 
 class LibraryLoader(targetPlatform : platform.TargetPlatform) {
   private val exprBuffer = collection.mutable.ListBuffer[et.Expr]()
@@ -58,9 +61,13 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
       )
     
     case List(StringComponent("llambda"), StringComponent("nfi")) =>
-      // Our NFI types depend on our target platform
       Some(
+        // Our NFI types depend on our target platform
         IntrinsicTypes(targetPlatform).mapValues(BoundType.apply) +
+          ("<list>" -> BoundType(vt.UniformProperListType(vt.AnySchemeType))) +
+          ("<pair>" -> BoundType(vt.AnyPairType)) +
+          ("<procedure>" -> BoundType(vt.AnyProcedureType)) +
+          ("<vector>" -> BoundType(vt.VectorOfType(vt.AnySchemeType))) +
           ("world-function" -> Primitives.WorldFunction) +
           ("native-function" -> Primitives.NativeFunction)
       )

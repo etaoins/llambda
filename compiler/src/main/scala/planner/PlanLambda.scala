@@ -11,7 +11,8 @@ import llambda.compiler.valuetype.Implicits._
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
-import llambda.compiler.{StorageLocation, ProcedureSignature, ProcedureAttribute, ReturnType}
+import llambda.compiler.{StorageLocation, ProcedureSignature, ProcedureAttribute}
+import llambda.compiler.ImpossibleTypeConversionException
 import llambda.compiler.codegen.CompactRepresentationForType
 
 private[planner] object PlanLambda {
@@ -124,7 +125,7 @@ private[planner] object PlanLambda {
     val nativeSymbol = parentPlan.allocProcedureSymbol(sourceName)
       
     val fixedArgLocs = lambdaExpr.fixedArgs
-    val restArgLoc = lambdaExpr.restArgOpt.map(_.storageLoc)
+    val restArgLoc = lambdaExpr.restArgOpt
     val body = lambdaExpr.body
 
     val closedVariables = FindClosedVars(parentState, body)
@@ -198,9 +199,9 @@ private[planner] object PlanLambda {
     val scalaBugSignature = ProcedureSignature(
       hasWorldArg=true,
       hasSelfArg=innerSelfTempOpt.isDefined,
-      restArgOpt=lambdaExpr.restArgOpt.map(_.memberType),
-      fixedArgs=retypedFixedArgs.map(_._2),
-      returnType=ReturnType.ArbitraryValues,
+      restArgMemberTypeOpt=lambdaExpr.schemeType.restArgMemberTypeOpt,
+      fixedArgTypes=retypedFixedArgs.map(_._2),
+      returnType=lambdaExpr.schemeType.returnType,
       attributes=Set(ProcedureAttribute.FastCC)
     ) : ProcedureSignature
 
@@ -251,10 +252,28 @@ private[planner] object PlanLambda {
     val returnType = if (!canRefineSignature || ContainsImmediateReturn(body)) {
       // Return an arbitrary number of values with arbitrary types
       // XXX: We can be more clever here and try to find a common return type across all returns
-      ReturnType.ArbitraryValues
+      initialSignature.returnType
     }
-    else { 
-      planResult.values.preferredReturnType
+    else {
+      val resultReturnType = planResult.values.preferredReturnType
+      val resultReturnListType = resultReturnType.toValueListType
+
+      val declaredReturnType = initialSignature.returnType
+      val declaredReturnListType = initialSignature.returnType.toValueListType
+
+      // This is essentially intersecting the return types
+      if (vt.SatisfiesType(declaredReturnListType, resultReturnListType) == Some(true)) {
+        resultReturnType
+      }
+      else if (vt.SatisfiesType(resultReturnListType, declaredReturnListType) == Some(true)) {
+        declaredReturnType
+      }
+      else {
+        throw new ImpossibleTypeConversionException(
+          parentPlan.activeContextLocated,
+          s"Result return type of ${resultReturnType} cannot be converted to declared return type of ${declaredReturnType}"
+        )
+      }
     }
 
     val lastExprOpt = lastNonStructuralExpr(body)

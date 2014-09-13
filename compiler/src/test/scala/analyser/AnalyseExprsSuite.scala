@@ -1,7 +1,7 @@
 package io.llambda.compiler.analyser
 import io.llambda
 
-import llambda.compiler.{et, ast, StorageLocation, ProcedureSignature, ReturnType}
+import llambda.compiler.{et, ast, StorageLocation, ProcedureSignature}
 import llambda.compiler.{valuetype => vt}
 import org.scalatest.FunSuite
 
@@ -46,9 +46,9 @@ class AnalyseExprsSuite extends FunSuite {
     val testSignature = ProcedureSignature(
       hasWorldArg=true,
       hasSelfArg=false,
-      fixedArgs=Nil,
-      restArgOpt=None,
-      returnType=ReturnType.SingleValue(vt.UnitType),
+      fixedArgTypes=Nil,
+      restArgMemberTypeOpt=None,
+      returnType=vt.ReturnType.SingleValue(vt.UnitType),
       attributes=Set()
     )
 
@@ -162,6 +162,7 @@ class AnalyseExprsSuite extends FunSuite {
       ),
       et.Apply(
         et.Lambda(
+          schemeType=vt.ProcedureType(Nil, None, vt.ReturnType.ArbitraryValues),
           fixedArgs=Nil,
           restArgOpt=None,
           body=et.Begin(Nil)
@@ -194,6 +195,7 @@ class AnalyseExprsSuite extends FunSuite {
       ),
       et.Apply(
         et.Lambda(
+          schemeType=vt.ProcedureType(Nil, None, vt.ReturnType.ArbitraryValues),
           fixedArgs=Nil,
           restArgOpt=None,
           body=et.MutateVar(testLocA, et.Literal(ast.EmptyList()))
@@ -223,6 +225,7 @@ class AnalyseExprsSuite extends FunSuite {
         )
       ),
       et.Lambda(
+        schemeType=vt.ProcedureType(Nil, None, vt.ReturnType.ArbitraryValues),
         fixedArgs=Nil,
         restArgOpt=None,
         body=et.MutateVar(testLocA, et.Literal(ast.EmptyList()))

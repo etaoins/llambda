@@ -1,7 +1,6 @@
 package io.llambda.compiler.planner
 import io.llambda
 
-import llambda.compiler.ReturnType
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
@@ -62,7 +61,9 @@ object PlanResultValuesPhi {
         val phiResultListType = leftValueList.schemeType + rightValueList.schemeType
         val phiResultTemp = ps.Temp(phiResultListType)
 
-        val phiResultList = TempValueToIntermediate(phiResultListType, phiResultTemp)(leftPlan.config)
+        // Don't use TempValueToIntermediate because it will attempt to stablise our list type even though
+        // the value list types are modifiable at this point
+        val phiResultList = new iv.CellValue(phiResultListType, BoxedValue(phiResultListType.cellType, phiResultTemp))
 
         Result(
           leftTempValue=leftValueList.toTempValue(phiResultListType)(leftPlan, worldPtr),

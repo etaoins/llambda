@@ -1,21 +1,21 @@
 package io.llambda.compiler.planner.intermediatevalue
 import io.llambda
 
-import llambda.compiler.{ProcedureSignature, ContextLocated, ReturnType}
+import llambda.compiler.{ProcedureSignature, ContextLocated}
 import llambda.compiler.planner._
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 
-class KnownRecordMutatorProc(recordType : vt.RecordType, field : vt.RecordField) extends KnownArtificialProc {
-  val signature = ProcedureSignature(
-    hasWorldArg=false,
-    hasSelfArg=false,
-    restArgOpt=None,
-    fixedArgs=List(recordType, field.fieldType),
-    returnType=ReturnType.SingleValue(vt.UnitType),
-    attributes=Set()
-  )
-
+class KnownRecordMutatorProc(recordType : vt.RecordType, field : vt.RecordField) extends KnownArtificialProc(
+    ProcedureSignature(
+      hasWorldArg=false,
+      hasSelfArg=false,
+      restArgMemberTypeOpt=None,
+      fixedArgTypes=List(recordType, field.fieldType),
+      returnType=vt.ReturnType.SingleValue(vt.UnitType),
+      attributes=Set()
+    )
+) {
   protected val symbolHint = 
     recordType.sourceName
       .replaceAllLiterally("<", "")

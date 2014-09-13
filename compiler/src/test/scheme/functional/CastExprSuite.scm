@@ -22,6 +22,10 @@
 	(import (llambda typed))
 	(ann #t <exact-integer>)))
 
+(define-test "(ann) on a procedure" (expect-success
+	(import (llambda typed))
+  (ann + (-> <number> <number> <number>))))
+
 (define-test "dynamically impossible (cast) fails at runtime" (expect-runtime-failure
 	(import (llambda typed))
 	(cast (typeless-cell #t) <exact-integer>)))

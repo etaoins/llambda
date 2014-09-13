@@ -26,8 +26,15 @@ object ProcedureAttribute {
 case class ProcedureSignature(
   hasWorldArg : Boolean,
   hasSelfArg : Boolean,
-  fixedArgs : List[vt.ValueType],
-  restArgOpt : Option[vt.SchemeType],
-  returnType : ReturnType.ReturnType,
+  fixedArgTypes : List[vt.ValueType],
+  restArgMemberTypeOpt : Option[vt.SchemeType],
+  returnType : vt.ReturnType.ReturnType,
   attributes : Set[ProcedureAttribute.ProcedureAttribute]
-)
+) {
+  def toSchemeProcedureType =
+    vt.ProcedureType(
+      fixedArgTypes=fixedArgTypes.map(_.schemeType),
+      restArgMemberTypeOpt=restArgMemberTypeOpt,
+      returnType=returnType
+    )
+}

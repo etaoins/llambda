@@ -172,10 +172,7 @@
                      y)))
     
     ; Internal helper types
-    (define-type <pair> (Pairof <any> <any>))
-    (define-type <list> (Listof <any>))
     (define-type <alist> (Listof <pair>))
-    (define-type <vector> (Vectorof <any>))
     
     ; Bootstrap definitions for case-lambda
     (define-r7rs apply (world-function "lliby_apply" (<procedure> . <any>) -> *))

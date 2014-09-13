@@ -11,11 +11,19 @@ private[planner] object ValuesToPair {
     *
     * This automatically takes advantage of immutable pair support to build KnownPairCellValue instances when the Scheme
     * dialect allows it
+    *
+    * @param  carValue       car value for the new pair
+    * @param  cdrValue       cdr value for the new pair
+    * @param  listLengthOpt  Optional length of the proper list this pair is the head of. This is ignored if the Scheme
+    *                        dialect uses mutable pairs
+    * @param  capturable     Indicates if this pair can be captured to a storage location during the lifetime of the
+    *                        returned IntermediateValue
     */
   def apply(
       carValue : iv.IntermediateValue,
       cdrValue : iv.IntermediateValue,
-      listLengthOpt : Option[Int]
+      listLengthOpt : Option[Int],
+      capturable : Boolean = true
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : iv.IntermediateValue = {
     if (plan.config.schemeDialect.pairsAreImmutable) {
       (carValue, cdrValue) match {
@@ -45,7 +53,7 @@ private[planner] object ValuesToPair {
     plan.steps += ps.SetPairCar(pairTemp, carTemp)
     plan.steps += ps.SetPairCdr(pairTemp, cdrTemp)
 
-    val resultValue = if (plan.config.schemeDialect.pairsAreImmutable) {
+    val resultValue = if (plan.config.schemeDialect.pairsAreImmutable || !capturable) {
       // This pair is constant and we can optimise based on that
       new iv.KnownPairCellValue(carValue, cdrValue, pairTemp)
     }

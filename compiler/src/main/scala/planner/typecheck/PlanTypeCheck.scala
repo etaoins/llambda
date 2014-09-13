@@ -5,7 +5,7 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{PlanWriter, BoxedValue}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
-import llambda.compiler.InternalCompilerErrorException
+import llambda.compiler.{InternalCompilerErrorException, ImpossibleTypeConversionException}
 
 object PlanTypeCheck {
   private def unrolledTypeRef(schemeTypeRef : vt.SchemeTypeRef) : vt.SchemeType = {
@@ -15,7 +15,7 @@ object PlanTypeCheck {
         directType
 
       case _ =>
-        throw new InternalCompilerErrorException("Encountered recursive reference - type should be unrolleD")
+        throw new InternalCompilerErrorException("Encountered recursive reference - type should be unrolled")
     }
   }
 
@@ -288,6 +288,12 @@ object PlanTypeCheck {
         val isCellTypePred = ps.Temp(vt.Predicate)
         plan.steps += ps.TestCellType(isCellTypePred, checkValue.tempValue, cellType, possibleCellTypes)
         DynamicResult(isCellTypePred)
+
+      case _ : vt.ProcedureType =>
+        throw new ImpossibleTypeConversionException(
+          located=plan.activeContextLocated,
+          message=s"Value of type ${valueType} does not statically satisfy procedure type ${testType}"
+        )
     }
   }
 

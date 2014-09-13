@@ -114,7 +114,7 @@ abstract internal cell RecordLike : Any {
 	untypedptr recordData;
 };
 
-concrete cell Procedure : RecordLike {
+concrete internal cell Procedure : RecordLike {
 	ProcedureEntryPoint entryPoint;
 };
 

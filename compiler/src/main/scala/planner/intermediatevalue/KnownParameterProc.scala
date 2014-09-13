@@ -15,9 +15,11 @@ import llambda.compiler.codegen
   * @param  selfTemp      Parameter procedure cell
   * @param  hasConverter  Indicates if this parameter procedure was created with a converter procedure
   */
-class KnownParameterProc(selfTemp : ps.TempValue, val hasConverter : Boolean) extends KnownProc(Some(selfTemp)) {
+class KnownParameterProc(selfTemp : ps.TempValue, val hasConverter : Boolean) extends KnownProc(
+    codegen.RuntimeFunctions.valueForParameterSignature,
+    Some(selfTemp)
+) {
   override val typeDescription = "parameter procedure"
-  val signature = codegen.RuntimeFunctions.valueForParameterSignature
   
   def nativeSymbol(implicit plan : PlanWriter) =
     codegen.RuntimeFunctions.valueForParameter.name

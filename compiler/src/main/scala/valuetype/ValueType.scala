@@ -2,6 +2,7 @@ package io.llambda.compiler.valuetype
 import io.llambda
 
 import llambda.compiler.{celltype => ct}
+import llambda.compiler.{valuetype => vt}
 
 /** Type of any value known to the compiler
   * 
@@ -88,7 +89,7 @@ sealed abstract class RecordLikeType extends CellValueType {
   */
 class ClosureType(val sourceName : String, val fields : List[RecordField]) extends RecordLikeType {
   val cellType = ct.ProcedureCell
-  val schemeType = ProcedureType
+  val schemeType = AnyProcedureType
 }
 
 /** Types visible to Scheme programs without using the NFI */ 
@@ -229,6 +230,18 @@ object SpecificProperListType {
     memberTypeRefs.foldRight(EmptyListType : NonUnionSchemeType) { case (memberTypeRef, cdrType) =>
       SpecificPairType(memberTypeRef, DirectSchemeTypeRef(cdrType))
     }
+
+  def unapply(schemeType : SchemeType) : Option[List[SchemeTypeRef]] = schemeType match {
+    case SpecificPairType(typeRef, DirectSchemeTypeRef(EmptyListType)) =>
+      Some(List(typeRef))
+
+    case SpecificPairType(typeRef, DirectSchemeTypeRef(tail))  => 
+      unapply(tail).map { tailTypeRefs =>
+        typeRef :: tailTypeRefs
+      }
+
+    case _ => None
+  }
 }
 
 /** Pointer to a garabge collected value cell containing a user-defined record type
@@ -289,6 +302,19 @@ object VectorOfType {
       UniformVectorType(memberTypeRef)
     }
 }
+
+case class ProcedureType(
+    fixedArgTypes : List[SchemeType],
+    restArgMemberTypeOpt : Option[SchemeType],
+    returnType : vt.ReturnType.ReturnType
+) extends DerivedSchemeType {
+  val cellType = ct.ProcedureCell
+  val isGcManaged = true
+
+  val parentType = SchemeTypeAtom(ct.ProcedureCell)
+}
+
+object AnyProcedureType extends SchemeTypeAtom(ct.ProcedureCell)
 
 /** Union of all possible Scheme types */
 object AnySchemeType extends UnionType(ct.AnyCell.concreteTypes.map(SchemeTypeAtom(_)))

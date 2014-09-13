@@ -1,27 +1,28 @@
 package io.llambda.compiler.planner.intermediatevalue
 import io.llambda
 
-import llambda.compiler.{ProcedureSignature, ContextLocated, ReturnType}
+import llambda.compiler.{ProcedureSignature, ContextLocated}
 import llambda.compiler.planner._
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 
-class KnownRecordAccessorProc(recordType : vt.RecordType, field : vt.RecordField) extends KnownArtificialProc {
+class KnownRecordAccessorProc(recordType : vt.RecordType, field : vt.RecordField) extends KnownArtificialProc( 
+    ProcedureSignature(
+      hasWorldArg=false,
+      hasSelfArg=false,
+      restArgMemberTypeOpt=None,
+      fixedArgTypes=List(recordType),
+      returnType=vt.ReturnType.SingleValue(field.fieldType),
+      attributes=Set()
+    )
+) {
   protected val symbolHint =
     recordType.sourceName
       .replaceAllLiterally("<", "")
       .replaceAllLiterally(">", "") + 
       "-" + field.sourceName
         
-  val signature = ProcedureSignature(
-    hasWorldArg=false,
-    hasSelfArg=false,
-    restArgOpt=None,
-    fixedArgs=List(recordType),
-    returnType=ReturnType.SingleValue(field.fieldType),
-    attributes=Set()
-  )
-  
+
   def planFunction(parentPlan : PlanWriter, allocedSymbol : String) : PlannedFunction = {
     val recordCellTemp = ps.RecordTemp()
     

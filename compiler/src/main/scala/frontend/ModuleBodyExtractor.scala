@@ -8,7 +8,7 @@ import llambda.compiler.frontend.syntax.{ParseSyntaxDefine, ExpandMacro}
 
 import collection.mutable.ListBuffer
   
-class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) {
+final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) {
   private def uniqueScopes(datum : sst.ScopedDatum) : Set[Scope] = {
     datum match {
       case sst.ScopedPair(car, cdr) => uniqueScopes(car) ++ uniqueScopes(cdr)
@@ -40,31 +40,31 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
     }
   }
 
-  private def extractBodyDefinition(arguments : List[ScopedArgument], definition : List[sst.ScopedDatum]) : et.Expr = {
+  private[frontend] def extractBodyDefinition(arguments : List[(sst.ScopedSymbol, BoundValue)], definition : List[sst.ScopedDatum]) : et.Expr = {
     // Find all the scopes in the definition
     val definitionScopes = definition.foldLeft(Set[Scope]()) { (scopes, datum) =>
       scopes ++ uniqueScopes(datum)
     }
 
     // Introduce new scopes with our arguments injected in to them
-    val argsForScope = arguments groupBy(_.symbol.scope)
+    val argsForScope = arguments groupBy(_._1.scope)
       
     val scopeMapping = (definitionScopes map { outerScope => 
       val scopeArgs = argsForScope.getOrElse(outerScope, List())
       
       // Check for duplicate args within this scope
-      scopeArgs.foldLeft(Set[String]()) { case (names, scopeArg) =>  
-        val name = scopeArg.symbol.name
+      scopeArgs.foldLeft(Set[String]()) { case (names, (symbol, _)) =>  
+        val name = symbol.name
 
         if (names.contains(name)) {
-          throw new BadSpecialFormException(scopeArg.symbol, "Duplicate formal parameter: " + name)
+          throw new BadSpecialFormException(symbol, "Duplicate formal parameter: " + name)
         }
 
         names + name
       }
 
-      val binding = collection.mutable.Map(scopeArgs.map { arg =>
-        (arg.symbol.name -> arg.boundValue)
+      val binding = collection.mutable.Map(scopeArgs.map { case (symbol, boundValue) =>
+        (symbol.name -> boundValue)
       } : _*) : collection.mutable.Map[String, BoundValue]
 
       val innerScope = new Scope(binding, Some(outerScope))
@@ -134,93 +134,6 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
     }
   }
 
-  private def createLambda(
-      typed : Boolean,
-      operandList : List[sst.ScopedDatum],
-      operandTerminator : sst.ScopedDatum,
-      definition : List[sst.ScopedDatum],
-      sourceNameHint : Option[String]
-  ) : et.Lambda = {
-    // Parse our operand list in to its basic parts
-    val (fixedArgData, restArgDatum, restArgMemberType) = 
-      (operandList.reverse, operandTerminator) match {
-        // This looks for a terminal rest arg in the form: name : <type> *
-        case (
-            sst.ScopedSymbol(_, "*") ::
-            (restArgType : sst.ScopedSymbol) ::
-            (typeColon @ sst.ScopedSymbol(_, ":")) ::
-            (restArgName : sst.ScopedSymbol) :: 
-            reverseFixedArgs
-        , sst.NonSymbolLeaf(ast.EmptyList())) if typed =>
-          // This is a typed rest argument 
-          (reverseFixedArgs.reverse, restArgName, ExtractType.extractSchemeType(restArgType))
-
-        case (_, _) =>
-          // This has no rest argument or an untyped rest argument
-          (operandList, operandTerminator, vt.AnySchemeType)
-      }
-
-    // Create our actual procedure arguments
-    // These unique identify the argument independently of its binding at a given time
-
-    // Determine our arguments
-    val fixedArgs = if (typed) {
-      fixedArgData.map {
-        case sst.ScopedProperList(List(scopedSymbol : sst.ScopedSymbol, sst.ScopedSymbol(_, ":"), typeDatum)) =>
-          val schemeType = ExtractType.extractSchemeType(typeDatum)
-          ScopedFixedArgument(scopedSymbol, new StorageLocation(scopedSymbol.name, schemeType))
-
-        case other =>
-          throw new BadSpecialFormException(other, "Expected (symbol : <type>)")
-      }
-    }
-    else {
-      fixedArgData.map {
-        case symbol : sst.ScopedSymbol => ScopedFixedArgument(symbol, new StorageLocation(symbol.name))
-        case datum => throw new BadSpecialFormException(datum, "Symbol expected")
-      }
-    }
-
-    val restArgOpt = restArgDatum match {
-      case restArgSymbol : sst.ScopedSymbol =>
-        val storageLoc = new StorageLocation(restArgSymbol.name, vt.UniformProperListType(restArgMemberType))
-        val restArg = et.RestArgument(storageLoc, restArgMemberType)
-
-        Some(ScopedRestArgument(restArgSymbol, restArg))
-
-      case sst.NonSymbolLeaf(ast.EmptyList()) =>
-        None
-
-      case datum =>
-        throw new BadSpecialFormException(datum, "Rest argument expected")
-    }
-    
-    val allArgs = fixedArgs ++ restArgOpt.toList
-
-    // Create a subprogram for debug info purposes
-    val subprogramDebugContextOpt = definition.headOption.flatMap(_.locationOpt).map { location =>
-      new debug.SubprogramContext(
-        parentContext=debugContext,
-        filenameOpt=location.filenameOpt,
-        startLine=location.line,
-        sourceNameOpt=sourceNameHint
-      )
-    }
-
-    val bodyDebugContext = subprogramDebugContextOpt.getOrElse(debug.UnknownContext)
-
-    // Extract the body 
-    val extractor = new ModuleBodyExtractor(bodyDebugContext, libraryLoader, frontendConfig)
-    val bodyExpr = extractor.extractBodyDefinition(allArgs, definition)
-
-    et.Lambda(
-      fixedArgs=fixedArgs.map(_.boundValue),
-      restArgOpt=restArgOpt.map(_.restArg),
-      body=bodyExpr,
-      debugContextOpt=subprogramDebugContextOpt
-    )
-  }
-
   private def extractInclude(scope : Scope, includeNameData : List[sst.ScopedDatum], includeLocation : SourceLocated) : et.Expr = {
     val includeResults = ResolveIncludeList(includeNameData.map(_.unscope), includeLocation)(frontendConfig.includePath)
 
@@ -272,10 +185,22 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
         }
 
       case (Primitives.Lambda, sst.ScopedListOrDatum(fixedArgData, restArgDatum) :: definition) =>
-        createLambda(false, fixedArgData, restArgDatum, definition, None)
+        ExtractLambda(
+          located=appliedSymbol,
+          typed=false,
+          operandList=fixedArgData,
+          operandTerminator=restArgDatum,
+          definition=definition
+        )(debugContext, libraryLoader, frontendConfig)
       
       case (Primitives.TypedLambda, sst.ScopedListOrDatum(fixedArgData, restArgDatum) :: definition) =>
-        createLambda(true, fixedArgData, restArgDatum, definition, None)
+        ExtractLambda(
+          located=appliedSymbol,
+          typed=true,
+          operandList=fixedArgData,
+          operandTerminator=restArgDatum,
+          definition=definition
+        )(debugContext, libraryLoader, frontendConfig)
 
       case (Primitives.SyntaxError, (errorDatum @ sst.NonSymbolLeaf(ast.StringLiteral(errorString))) :: data) =>
         throw new UserDefinedSyntaxError(errorDatum, errorString, data.map(_.unscope))
@@ -374,12 +299,28 @@ class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : Li
 
       case (Primitives.Define, sst.ScopedAnyList((symbol : sst.ScopedSymbol) :: fixedArgs, restArgDatum) :: body) =>
         Some(ParsedVarDefine(symbol, None, () => {
-          createLambda(false, fixedArgs, restArgDatum, body, Some(symbol.name)).assignLocationAndContextFrom(appliedSymbol, debugContext)
+          ExtractLambda(
+            located=appliedSymbol,
+            typed=false,
+            operandList=fixedArgs,
+            operandTerminator=restArgDatum,
+            definition=body,
+            sourceNameHint=Some(symbol.name),
+            typeDeclaration=declaredSymbolType(symbol)
+          )(debugContext, libraryLoader, frontendConfig).assignLocationAndContextFrom(appliedSymbol, debugContext)
         }))
       
       case (Primitives.TypedDefine, sst.ScopedAnyList((symbol : sst.ScopedSymbol) :: fixedArgs, restArgDatum) :: body) =>
         Some(ParsedVarDefine(symbol, None, () => {
-          createLambda(true, fixedArgs, restArgDatum, body, Some(symbol.name)).assignLocationAndContextFrom(appliedSymbol, debugContext)
+          ExtractLambda(
+            located=appliedSymbol,
+            typed=true,
+            operandList=fixedArgs,
+            operandTerminator=restArgDatum,
+            definition=body,
+            sourceNameHint=Some(symbol.name),
+            typeDeclaration=declaredSymbolType(symbol)
+          )(debugContext, libraryLoader, frontendConfig).assignLocationAndContextFrom(appliedSymbol, debugContext)
         }))
 
       case (Primitives.DefineSyntax, _) =>

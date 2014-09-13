@@ -4,6 +4,23 @@ import io.llambda
 import llambda.compiler.{celltype => ct}
 
 object SatisfiesType {
+  private def argTypeToListType(fixedArgs : List[SchemeType], restArgMemberTypeOpt : Option[SchemeType]) : SchemeType = {
+    val fixedArgCdr = restArgMemberTypeOpt match {
+      case None =>
+        EmptyListType
+
+      case Some(memberType) =>
+        UniformProperListType(DirectSchemeTypeRef(memberType))
+    }
+
+    fixedArgs.foldRight(fixedArgCdr) { case (fixedArgType, cdrType) =>
+      SpecificPairType(
+        DirectSchemeTypeRef(fixedArgType),
+        DirectSchemeTypeRef(cdrType)
+      )
+    }
+  }
+
   private def satisfiesTypeRef(
       superTypeRef : SchemeTypeRef,
       superStack : SchemeType.Stack,
@@ -147,6 +164,31 @@ object SatisfiesType {
         else {
           // May match depending on the length of the uniform vector
           None
+        }
+
+      case (ProcedureType(superFixedArgTypes, superRestArgMemberTypeOpt, superReturnType),
+            ProcedureType(testingFixedArgTypes, testingRestArgMemberTypeOpt, testingReturnType)) =>
+        // Construct a list type based on our arguments
+        val superArgList = argTypeToListType(superFixedArgTypes, superRestArgMemberTypeOpt)
+        val testingArgList = argTypeToListType(testingFixedArgTypes, testingRestArgMemberTypeOpt)
+        // Test the list type - note that super/test is reversed because argument types are contravariant
+        val argListResult = apply(testingArgList, superArgList)
+
+        // Construct a list type based on our return type
+        val superReturnTypeList = superReturnType.toValueListType
+        val testingReturnTypeList = testingReturnType.toValueListType
+        val returnTypeResult = apply(superReturnTypeList, testingReturnTypeList)
+
+        val allResults = Set(argListResult, returnTypeResult)
+
+        if (allResults.contains(Some(false))) {
+          Some(false)
+        }
+        else if (allResults.contains(None)) {
+          None
+        }
+        else {
+          Some(true)
         }
 
       case (superDerived : DerivedSchemeType, _) =>
