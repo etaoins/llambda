@@ -29,6 +29,7 @@ class KnownUserProc(val signature : ProcedureSignature, plannedSymbol : String, 
   private val optimisingPlanners = List[reportproc.ReportProcPlanner](
     reportproc.ApplyProcPlanner,
     reportproc.CadrProcPlanner,
+    reportproc.DynamicProcPlanner,
     reportproc.EquivalenceProcPlanner,
     reportproc.ListProcPlanner,
     reportproc.NumberProcPlanner,

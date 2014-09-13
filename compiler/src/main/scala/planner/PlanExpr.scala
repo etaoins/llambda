@@ -191,7 +191,7 @@ private[planner] object PlanExpr {
         )
 
       case et.Parameterize(parameterValues, innerExpr) => 
-        val parameterValueTemps = new mutable.ListBuffer[(ps.TempValue, ps.TempValue)]
+        val parameterValueTemps = new mutable.ListBuffer[ps.ParameterizedValue]
 
         val postValueState = parameterValues.foldLeft(initialState) { case (state, (parameterExpr, valueExpr)) =>
           val parameterResult = apply(state)(parameterExpr)
@@ -200,10 +200,18 @@ private[planner] object PlanExpr {
           val parameterIntermediate = parameterResult.values.toSingleValue()
           val parameterTemp = parameterIntermediate.toTempValue(vt.ProcedureType)
 
+          val mayHaveConverterProc = parameterIntermediate match {
+            case knownParamProc : iv.KnownParameterProc =>
+              knownParamProc.hasConverter
+
+            case _ =>
+              true
+          }
+
           val valueIntermediate = valueResult.values.toSingleValue()
           val valueTemp = valueIntermediate.toTempValue(vt.AnySchemeType)
 
-          parameterValueTemps += ((parameterTemp, valueTemp))
+          parameterValueTemps += ps.ParameterizedValue(parameterTemp, valueTemp, mayHaveConverterProc)
 
           valueResult.state
         }

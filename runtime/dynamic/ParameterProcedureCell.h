@@ -29,9 +29,9 @@ public:
 	 * This will enter the allocator and can potentially trigger GC
 	 *
 	 * @param world               Current world pointer
-	 * @param initialValue        Initial value for the parameter. This should be pre-convertered using
-	 *                            converterProcedure by the caller.
-	 *               
+	 * @param initialValue        Initial value for the parameter. This should be pre-converted using
+	 *                            converterProcedure by the caller. State::applyConverterProcedure() can be used for 
+	 *                            this purpose.
 	 * @param converterProcedure  Procedure to invoke to convert parameterized values for this parameter. If the 
 	 *                            identity function should be used nullptr can be passed to avoid the overhead of
 	 *                            re-entering Scheme,

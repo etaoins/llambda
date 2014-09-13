@@ -367,8 +367,11 @@
     (define-r7rs values (native-function "lliby_values" <any> -> *))
     (define-r7rs call-with-values (world-function "lliby_call_with_values" (<procedure> <procedure>) -> *))
 
-    ; XXX: This should accept a procedure once (case-lambda) is implemented
-    (define-r7rs make-parameter (world-function "lliby_make_parameter" (<any>) -> <procedure>))
+    (define native-make-parameter (world-function "_lliby_make_parameter" (<any> (U <procedure> <unit>)) -> <procedure>))
+    (define-r7rs make-parameter (case-lambda
+      ((init) (native-make-parameter init #!unit))
+      ((init converter) (native-make-parameter init converter))))
+
     (define-r7rs dynamic-wind (world-function "lliby_dynamic_wind" (<procedure> <procedure> <procedure>) -> *))
 
     ; Port support

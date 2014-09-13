@@ -70,16 +70,25 @@ object DisposeValues {
     case (disposableStep : ps.NullipotentStep) :: reverseTail if !usedValues.contains(disposableStep.result) =>
       // We can drop this step completely
       discardUnusedValues(branchInputValues, reverseTail, usedValues, acc)
+    
+    case (valueDisposable : ps.ValueDisposableStep) :: reverseTail =>
+      // If this is the last use of any of the input or output values they should be discarded
+      val allStepValues = valueDisposable.inputValues ++ valueDisposable.outputValues
+      val disposeSet = allStepValues -- usedValues
+
+      // All the input values are now used
+      val newUsedValues = usedValues ++ valueDisposable.inputValues
+
+      val newAcc = valueDisposable.withDisposedValues(disposeSet) :: acc
+      discardUnusedValues(branchInputValues, reverseTail, newUsedValues, newAcc)
 
     case nonBranching :: reverseTail =>
-      // If this is the last use of any of the input or output values they should be discarded
       val allStepValues = nonBranching.inputValues ++ nonBranching.outputValues
 
       val disposeList = (allStepValues -- usedValues).toList.map { value =>
         ps.DisposeValue(value)
       }
 
-      // All the input values are now used
       val newUsedValues = usedValues ++ nonBranching.inputValues
 
       val newAcc = nonBranching :: (disposeList ++ acc)

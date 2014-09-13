@@ -12,11 +12,6 @@ using namespace lliby;
 extern "C"
 {
 
-ProcedureCell *lliby_make_parameter(World &world, AnyCell *initialValue)
-{
-	return dynamic::ParameterProcedureCell::createInstance(world, initialValue, nullptr);
-}
-
 ReturnValuesList *lliby_dynamic_wind(World &world, ProcedureCell *before, ProcedureCell *thunk, ProcedureCell *after)
 {
 	{

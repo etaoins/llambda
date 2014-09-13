@@ -1,11 +1,14 @@
 #include "dynamic/State.h"
 
 #include "core/World.h"
+#include "core/error.h"
 #include "dynamic/ParameterProcedureCell.h"
 #include "alloc/cellref.h"
 #include "alloc/allocator.h"
 #include "binding/EmptyListCell.h"
 #include "binding/DynamicStateCell.h"
+#include "binding/ReturnValuesList.h"
+#include "binding/ProperList.h"
 
 namespace lliby
 {
@@ -63,9 +66,40 @@ AnyCell* State::valueForParameter(ParameterProcedureCell *param) const
 		return param->initialValue();
 	}
 }
-
-void State::setValueForParameter(ParameterProcedureCell *param, AnyCell *value)
+	
+AnyCell* State::applyConverterProcedure(World &world, alloc::ProcedureRef &converterProc, AnyCell *value)
 {
+	// Root our parameter procedure
+	// Call our converter
+	ListElementCell *converterArgs = ListElementCell::createProperList(world, {value});
+	
+	ReturnValuesList *convertedValuesHead = converterProc->apply(world, converterArgs);
+
+	// Ensure we received a single value
+	ProperList<AnyCell> convertedValuesList(convertedValuesHead);
+
+	if (convertedValuesList.length() != 1)
+	{
+		// This isn't good
+		signalError(world, "Converter procedures must return a single value", {convertedValuesHead});
+	}
+
+	// Replace the value
+	return *convertedValuesList.begin(); 
+}
+
+void State::setValueForParameter(World &world, ParameterProcedureCell *param, AnyCell *value)
+{
+	ProcedureCell *converterProcRaw = param->converterProcedure();
+
+	if (converterProcRaw)
+	{
+		alloc::StrongRefRange<ParameterProcedureCell> paramRoot(world, &param, 1);
+		alloc::StrongRef<ProcedureCell> converterProc(world, converterProcRaw);
+
+		value = applyConverterProcedure(world, converterProc, value);
+	}
+
 	mSelfValues[param] = value;
 }
 

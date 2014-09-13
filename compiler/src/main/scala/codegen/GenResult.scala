@@ -36,6 +36,10 @@ case class GenerationState(
       liveTemps=liveTemps + tempTuple
     )
   }
+
+  def withDisposedValues(disposedValues : Set[ps.TempValue]) = {
+    this.copy(liveTemps=liveTemps -- disposedValues)
+  }
 }
 
 case class BlockTerminated(gcState : GcState) extends GenResult

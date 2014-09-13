@@ -3,6 +3,8 @@ import io.llambda
 
 import llambda.llvmir._
 import llambda.llvmir.IrFunction._
+import llambda.compiler.{ProcedureSignature, ReturnType}
+import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 
 object RuntimeFunctions {
@@ -79,6 +81,35 @@ object RuntimeFunctions {
       IrFunction.Argument(IntegerType(32))
     ),
     attributes=Set(IrFunction.NoUnwind)
+  )
+
+  val makeParameter = IrFunctionDecl(
+    result=Result(PointerType(ct.ProcedureCell.irType)),
+    name="_lliby_make_parameter",
+    arguments=List(
+      Argument(PointerType(WorldValue.irType)),
+      Argument(PointerType(ct.AnyCell.irType)),
+      Argument(PointerType(ct.AnyCell.irType))
+    )
+  )
+  
+  val valueForParameter = IrFunctionDecl(
+    result=Result(PointerType(ct.AnyCell.irType)),
+    name="_lliby_value_for_parameter",
+    arguments=List(
+      Argument(PointerType(WorldValue.irType)),
+      Argument(PointerType(ct.ProcedureCell.irType))
+    ),
+    attributes=Set(IrFunction.NoUnwind, IrFunction.ReadOnly)
+  )
+
+  val valueForParameterSignature = ProcedureSignature(
+    hasWorldArg=true,
+    hasSelfArg=true,
+    fixedArgs=Nil,
+    restArgOpt=None,
+    returnType=ReturnType.SingleValue(vt.AnySchemeType),
+    attributes=Set()
   )
   
   val init = IrFunctionDecl(

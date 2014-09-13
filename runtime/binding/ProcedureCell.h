@@ -14,6 +14,13 @@ class ProcedureCell : public RecordLikeCell
 public:
 	static ProcedureCell* createInstance(World &World, std::uint32_t recordClassId, bool dataIsInline, void *recordData, ProcedureEntryPoint entryPoint);
 
+	/**
+	 * Applies this procedure
+	 *
+	 * @param  world      Active world object
+	 * @param  arguments  Proper list of arguments to pass to the procedure
+	 * @return  Multiple return value list of results
+	 */
 	ReturnValuesList* apply(World &world, ListElementCell *arguments);
 
 	/**

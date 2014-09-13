@@ -43,6 +43,15 @@ object GenPlanStep {
     case ps.CompareCond.LessThan => FComparisonCond.OrderedLessThan
     case ps.CompareCond.LessThanEqual => FComparisonCond.OrderedLessThanEqual
   }
+
+  private def genValueDisposingStep(state : GenerationState)(
+      valueDisposable : ps.ValueDisposableStep,
+      block : GenerationState => GenerationState
+  ) : GenerationState = {
+    // Dispose any input values before planning the step
+    val inputDisposedState = state.withDisposedValues(valueDisposable.valuesToDispose)
+    block(inputDisposedState).withDisposedValues(valueDisposable.valuesToDispose)
+  }
   
   def apply(state : GenerationState, genGlobals : GenGlobals)(step : ps.Step) : GenResult = {
     genGlobals.debugInfoGeneratorOpt match {
@@ -269,10 +278,7 @@ object GenPlanStep {
       // Dispose of arguments before our barrier
       // This prevents us from GC rooting them needlessly
       val disposedArgTemps = arguments.filter(_.dispose).map(_.tempValue).toSet
-
-      val preBarrierState = state.copy(
-        liveTemps=state.liveTemps -- disposedArgTemps
-      )
+      val preBarrierState = state.withDisposedValues(disposedArgTemps)
 
       val (finalState, irRetOpt) = if (invokeStep.canAllocate) {
         if (signature.attributes.contains(ProcedureAttribute.NoReturn)) {
@@ -476,10 +482,32 @@ object GenPlanStep {
       )
 
     case pushDynamic : ps.PushDynamicState =>
-      GenParameterize.genPush(state)(pushDynamic)
+      GenParameter.genPushDynamicState(state)(pushDynamic)
     
     case popDynamic : ps.PopDynamicState =>
-      GenParameterize.genPop(state)(popDynamic)
+      GenParameter.genPopDynamicState(state)(popDynamic)
+
+    case disposeStep @ ps.CreateParameterProc(worldPtrTemp, resultTemp, initialValueTemp, converterProcTempOpt, _) =>
+      val worldPtrIr = state.liveTemps(worldPtrTemp)
+      val initialValueIr = state.liveTemps(initialValueTemp)
+      val converterProcOptIr = converterProcTempOpt.map(state.liveTemps)
+
+      genValueDisposingStep(state)(disposeStep, { state =>
+        val (postProcState, resultIr) = GenParameter.genCreateParameterProc(state)(
+          worldPtrIr,
+          initialValueIr,
+          converterProcOptIr
+        ) 
+
+        postProcState.withTempValue(resultTemp -> resultIr)
+      })
+
+    case ps.LoadValueForParameterProc(worldPtrTemp, resultTemp, parameterProcTemp) =>
+      val worldPtrIr = state.liveTemps(worldPtrTemp)
+      val parameterProcIr = state.liveTemps(parameterProcTemp)
+
+      val resultIr = GenParameter.genLoadValueForParameterProc(state)(worldPtrIr, parameterProcIr) 
+      state.withTempValue(resultTemp -> resultIr)
     
     case ps.IntegerAdd(resultTemp, val1Temp, val2Temp) =>
       val val1Ir = state.liveTemps(val1Temp)
