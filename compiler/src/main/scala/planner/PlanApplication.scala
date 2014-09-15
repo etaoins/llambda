@@ -4,7 +4,7 @@ import io.llambda
 import llambda.compiler.{et, ContextLocated, ReportProcedure}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{intermediatevalue => iv}
-import llambda.compiler.{ValueNotApplicableException, IncompatibleArityException}
+import llambda.compiler.{ValueNotApplicableException, IncompatibleArityException, ImpossibleTypeConversionException}
 import llambda.compiler.codegen.CostForPlanSteps
 
 private[planner] object PlanApplication {
@@ -144,31 +144,58 @@ private[planner] object PlanApplication {
     val procResultValue = procResult.values.toSingleValue()
 
     val invokableProc = procResultValue.toInvokableProcedure()
-
     val signature = invokableProc.signature
     
+    val procedureType = procResultValue.schemeType match {
+      case procType : vt.ProcedureType =>
+        procType
+
+      case _ =>
+        signature.toSchemeProcedureType
+    }
+    
     // Ensure our arity is sane
-    if (signature.restArgMemberTypeOpt.isDefined) {
-      if (operands.length < signature.fixedArgTypes.length) {
+    if (procedureType.restArgMemberTypeOpt.isDefined) {
+      if (operands.length < procedureType.fixedArgTypes.length) {
         throw new IncompatibleArityException(
           located=plan.activeContextLocated,
-          message=s"Called procedure with ${operands.length} arguments; requires at least ${signature.fixedArgTypes.length} arguments"
+          message=s"Called procedure with ${operands.length} arguments; requires at least ${procedureType.fixedArgTypes.length} arguments"
         )
       }
     }
     else {
-      if (signature.fixedArgTypes.length != operands.length) {
+      if (procedureType.fixedArgTypes.length != operands.length) {
         throw new IncompatibleArityException(
           located=plan.activeContextLocated,
-          message=s"Called procedure with ${operands.length} arguments; requires exactly ${signature.fixedArgTypes.length} arguments"
+          message=s"Called procedure with ${operands.length} arguments; requires exactly ${procedureType.fixedArgTypes.length} arguments"
         )
       }
     }
 
+    // We have an exact procedure type - ensure we're applying the correct types in case our procedure type is
+    // more restrictive than the physical signature type
+    val (procTypeFixedArgs, procTypeRestArgs) = operands.splitAt(procedureType.fixedArgTypes.length)
+
+    val castFixedArgs = procTypeFixedArgs.zip(procedureType.fixedArgTypes) map {
+      case ((located, fixedArgValue), requiredType) =>
+        plan.withContextLocation(located) {
+          (located -> fixedArgValue.castToSchemeType(requiredType))
+        }
+    }
+
+    val castRestArgs = procTypeRestArgs map { case (located, restArgValue) =>
+      val requiredType = procedureType.restArgMemberTypeOpt.get
+      plan.withContextLocation(located) {
+        (located -> restArgValue.castToSchemeType(requiredType))
+      }
+    }
+
+    val castOperands = castFixedArgs ++ castRestArgs
+
     // Does this procedure support planning its application inline?
     procResultValue match {
       case knownProc : iv.KnownProc =>
-        for(inlineResult <- knownProc.attemptInlineApplication(procResult.state)(operands)) {
+        for(inlineResult <- knownProc.attemptInlineApplication(procResult.state)(castOperands)) {
           return PlanApplyResult(
             planResult=inlineResult,
             procedureType=knownProc.schemeType
@@ -182,7 +209,7 @@ private[planner] object PlanApplication {
     val invokePlan = plan.forkPlan()
 
     val invokeValues = (invokePlan.withContextLocation(located) {
-      PlanInvokeApply.withIntermediateValues(invokableProc, operands)(invokePlan, worldPtr) 
+      PlanInvokeApply.withIntermediateValues(invokableProc, castOperands)(invokePlan, worldPtr) 
     })
 
     procResultValue match {
@@ -192,7 +219,7 @@ private[planner] object PlanApplication {
 
         val inlineValuesOpt = AttemptInlineApply(schemeProc.parentState, procResult.state)(
           lambdaExpr=schemeProc.lambdaExpr,
-          operands=operands
+          operands=castOperands
         )(inlinePlan, worldPtr) 
 
         for(inlineValues <- inlineValuesOpt) {
@@ -208,7 +235,7 @@ private[planner] object PlanApplication {
                 state=procResult.state,
                 values=inlineValues
               ),
-              procedureType=signature.toSchemeProcedureType
+              procedureType=procedureType
             )
           }
         }
@@ -222,9 +249,9 @@ private[planner] object PlanApplication {
     PlanApplyResult(
       planResult=PlanResult(
         state=procResult.state,
-        values=invokeValues
+        values=invokeValues.withReturnType(procedureType.returnType)
       ),
-      procedureType=signature.toSchemeProcedureType
+      procedureType=procedureType
     )
-}
+  }
 }

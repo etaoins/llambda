@@ -2,7 +2,7 @@ package io.llambda.compiler.planner
 import io.llambda
 
 import llambda.compiler.RuntimeErrorMessage
-import llambda.compiler.ImpossibleTypeConversionException
+import llambda.compiler.{ImpossibleTypeConversionException, InternalCompilerErrorException}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{celltype => ct}
@@ -42,6 +42,8 @@ sealed abstract class ResultValues {
     case vt.ReturnType.MultipleValues(valueListType) =>
       Some(toMultipleValueList().toTempValue(valueListType))
   }
+
+  def withReturnType(newReturnType : vt.ReturnType.ReturnType) : ResultValues
 }
 
 case class SingleValue(value : iv.IntermediateValue) extends ResultValues {
@@ -56,6 +58,17 @@ case class SingleValue(value : iv.IntermediateValue) extends ResultValues {
 
   def preferredReturnType = 
     vt.ReturnType.SingleValue(value.preferredRepresentation)
+  
+  def withReturnType(newReturnType : vt.ReturnType.ReturnType) : ResultValues = returnType.toValueListType match {
+    case vt.SpecificPairType(
+      vt.DirectSchemeTypeRef(newSingleValueType),
+      vt.DirectSchemeTypeRef(vt.EmptyListType)
+    ) =>
+      SingleValue(value.withSchemeType(newSingleValueType))
+
+    case _ =>
+      throw new InternalCompilerErrorException("Attempted to retype result values with incompatible type")
+  }
 }
 
 case class MultipleValues(multipleValueList : iv.IntermediateValue) extends ResultValues {
@@ -93,6 +106,9 @@ case class MultipleValues(multipleValueList : iv.IntermediateValue) extends Resu
 
   def preferredReturnType =
     returnType
+  
+  def withReturnType(newReturnType : vt.ReturnType.ReturnType) : ResultValues = 
+    MultipleValues(multipleValueList.withSchemeType(newReturnType.toValueListType))
 }
 
 object ResultValues {

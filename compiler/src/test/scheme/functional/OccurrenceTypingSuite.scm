@@ -9,6 +9,17 @@
   (assert-equal 1 (ann typeless-1 <exact-integer>))
   (assert-equal 2 ref-result)))
 
+(define-test "applying fixed arg storage locs through a typed procedure value constrains their type" (expect 2
+  (import (llambda typed))
+  (: apply-vector-proc (-> (-> <vector> <exact-integer> <any>) <any> <any> <any>))
+  (define (apply-vector-proc vector-proc vec offset)
+    (define result (vector-proc vec offset))
+    (ann vec <vector>)
+    (ann offset <exact-integer>)
+    result)
+
+  (apply-vector-proc vector-ref #(1 2 3) 1)))
+
 (define-test "applying rest arg storage locs constrains their type" (expect-success
   (import (llambda typed))
   (define typeless-2 (typeless-cell 2))
@@ -19,6 +30,20 @@
   (assert-equal 2 (ann typeless-2 <number>))
   (assert-equal 3 (ann typeless-3 <number>))
   (assert-equal 6 *-result)))
+
+(define-test "applying rest arg storage locs through a typed procedure value constrains their type" (expect 6
+  (import (llambda typed))
+  (define typeless-2 (typeless-cell 2))
+  (define typeless-3 (typeless-cell 3))
+
+  (: apply-numbers-proc (-> (-> <number> * <number>) <any> <any> <number>))
+  (define (apply-numbers-proc numbers-proc op1 op2) 
+    (define result (numbers-proc op1 op2))
+    (ann op1 <number>)
+    (ann op2 <number>)
+    result)
+
+  (apply-numbers-proc * 3 2)))
 
 (define-test "(if) propagates test truthiness information to its branches" (expect-success
   (import (llambda typed))

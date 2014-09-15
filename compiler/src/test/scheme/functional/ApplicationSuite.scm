@@ -46,6 +46,33 @@
 (define-test "nested apply" (expect 3
 	(apply apply (list + '(1 2)))))
 
+(define-test "applying a typed procedure value with incompatible fixed arg types fails at compile time" (expect-compile-failure
+  (import (llambda typed))
+
+  (: apply-binary-op (-> (-> <number> <number> <number>) <number> <symbol> <number>))
+  (define (apply-binary-op number-proc op1 op2)
+    (number-proc op1 op2))
+
+  (apply-binary-op + 1 'foo)))
+
+(define-test "applying a typed procedure value with incompatible rest arg types fails at compile time" (expect-compile-failure
+  (import (llambda typed))
+
+  (: apply-numbers-proc (-> (-> <number> * <number>) <number> <symbol> <number>))
+  (define (apply-numbers-proc number-proc op1 op2)
+    (number-proc op1 op2))
+
+  (apply-numbers-proc + 1 'foo)))
+
+(define-test "applying a typed procedure value correctly types the return value" (expect-success
+  (import (llambda typed))
+
+  (: apply-binary-op (-> (-> <number> <number> <number>) <number> <number> <number>))
+  (define (apply-binary-op number-proc op1 op2)
+    (ann (number-proc op1 op2) <number>))
+
+  (apply-binary-op + 1 2)))
+
 (define-test "applying a capturing procedure" (expect 7
 	(define (create-adder-proc to-add)
 	  (lambda (value)
