@@ -144,7 +144,7 @@ class NameForTypeSuite extends FunSuite {
     assert(NameForType(vectorType) === "(Rec A (U (Vector A) <symbol>))")
   }
 
-  test("(-> <number>") {
+  test("(-> <number>)") {
     val procedureType = ProcedureType(
       fixedArgTypes=Nil,
       restArgMemberTypeOpt=None,
@@ -154,7 +154,7 @@ class NameForTypeSuite extends FunSuite {
     assert(NameForType(procedureType) === "(-> <number>)")
   }
   
-  test("(-> <string> <symbol> <number>") {
+  test("(-> <string> <symbol> <number>)") {
     val procedureType = ProcedureType(
       fixedArgTypes=List(StringType, SymbolType),
       restArgMemberTypeOpt=None,
@@ -164,7 +164,7 @@ class NameForTypeSuite extends FunSuite {
   assert(NameForType(procedureType) === "(-> <string> <symbol> <number>)")
   }
   
-  test("(-> <string> <symbol> * <number>") {
+  test("(-> <string> <symbol> * <number>)") {
     val procedureType = ProcedureType(
       fixedArgTypes=List(StringType),
       restArgMemberTypeOpt=Some(SymbolType),
