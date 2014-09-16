@@ -110,9 +110,13 @@ class PlanWriter(
     freeSymbol
   }
 
-  def forkPlan() : PlanWriter = 
+  def forkPlan() : PlanWriter = { 
     // All forks share plannedFunctions
-    new PlanWriter(config, plannedFunctions, allocedProcSymbols, plannedTypePredicates)
+    val forkedPlan = new PlanWriter(config, plannedFunctions, allocedProcSymbols, plannedTypePredicates)
+    forkedPlan.contextLocStack.pushAll(this.contextLocStack.headOption)
+
+    forkedPlan
+  }
 
   def buildCondBranch(test : ps.TempValue, trueBuilder : (PlanWriter) => ps.TempValue, falseBuilder : (PlanWriter) => ps.TempValue) : ps.TempValue = {
     // Seal ourselves to catch accidental writes to the parent branch
