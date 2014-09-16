@@ -172,6 +172,19 @@ private[planner] object PlanApplication {
       }
     }
 
+    // Does this procedure support planning its application inline?
+    procResultValue match {
+      case knownProc : iv.KnownProc =>
+        for(inlineResult <- knownProc.attemptInlineApplication(procResult.state)(operands)) {
+          return PlanApplyResult(
+            planResult=inlineResult,
+            procedureType=knownProc.schemeType
+          )
+        }
+
+      case _ => 
+    }
+
     // We have an exact procedure type - ensure we're applying the correct types in case our procedure type is
     // more restrictive than the physical signature type
     val (procTypeFixedArgs, procTypeRestArgs) = operands.splitAt(procedureType.fixedArgTypes.length)
@@ -191,19 +204,6 @@ private[planner] object PlanApplication {
     }
 
     val castOperands = castFixedArgs ++ castRestArgs
-
-    // Does this procedure support planning its application inline?
-    procResultValue match {
-      case knownProc : iv.KnownProc =>
-        for(inlineResult <- knownProc.attemptInlineApplication(procResult.state)(castOperands)) {
-          return PlanApplyResult(
-            planResult=inlineResult,
-            procedureType=knownProc.schemeType
-          )
-        }
-
-      case _ => 
-    }
 
     // Plan this as a an invoke (function call)
     val invokePlan = plan.forkPlan()

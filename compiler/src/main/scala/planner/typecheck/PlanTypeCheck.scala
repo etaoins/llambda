@@ -318,7 +318,7 @@ object PlanTypeCheck {
   private def branchOnType(
       plan : PlanWriter,
       predProcs : Map[vt.SchemeType, String],
-      checkValue : BoxedValue,
+      checkValue : => BoxedValue,
       valueType : vt.SchemeType,
       testType : vt.SchemeType,
       isTypePlanner : Option[((PlanWriter, vt.SchemeType) => CheckResult)] = None,

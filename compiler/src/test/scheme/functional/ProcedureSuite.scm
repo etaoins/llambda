@@ -4,6 +4,15 @@
 (define-test "#f is not a procedure" (expect #f
 	(procedure? #f)))
 
+(define-test "procedures accepting procedure arguments are procedures" (expect-success
+  (import (llambda typed))
+
+  (: higher-level-proc (-> (-> <number> <number> <number>) <number> <number>))
+  (define (higher-level-proc op val)
+    (op 2 val))
+
+  (procedure? higher-level-proc)))
+
 (define-test "non-constant procedure values can be applied" (expect 10
 	(import (llambda test-util))
 

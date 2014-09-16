@@ -67,8 +67,18 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
     returnType=ReturnType.SingleValue(UnitType)
   )
 
+  val higherOrderProcedure = ProcedureType(
+    fixedArgTypes=List(symbolToUnitProcedure, anyStringToNumberProcedure),
+    restArgMemberTypeOpt=Some(listElementToUnitProcedure),
+    returnType=ReturnType.SingleValue(twoStringToExactIntProcedure)
+  )
+
   test("specific procedure type satisfies itself") {
     assert(SatisfiesType(twoStringToNumberProcedure, twoStringToNumberProcedure) === Some(true))
+  }
+
+  test("higher order procedure type satisfies itself") {
+    assert(SatisfiesType(higherOrderProcedure, higherOrderProcedure) === Some(true))
   }
 
   test("procedure type does not satisfy string type") {
@@ -81,6 +91,18 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
   
   test("specific procedure type definitely satisfies top procedure type") {
     assert(SatisfiesType(AnyProcedureType, twoStringToNumberProcedure) === Some(true))
+  }
+  
+  test("specific procedure type definitely satisfies <any> type") {
+    assert(SatisfiesType(AnySchemeType, twoStringToNumberProcedure) === Some(true))
+  }
+
+  test("higher order procedure type definitely satisfies top procedure type") {
+    assert(SatisfiesType(AnyProcedureType, higherOrderProcedure) === Some(true))
+  }
+  
+  test("higher order procedure type definitely satisfies <any> type") {
+    assert(SatisfiesType(AnySchemeType, higherOrderProcedure) === Some(true))
   }
   
   test("any procedure type may satisfy specific procedure type") {
