@@ -110,4 +110,21 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
   /** Optionally plans an application of this procedure inline at the call site */
   def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] =
     None
+
+  override def withSchemeType(newType : vt.SchemeType) : KnownProc =
+    this
+  
+  override def castToSchemeType(
+      targetType : vt.SchemeType,
+      errorMessageOpt : Option[RuntimeErrorMessage] = None,
+      staticCheck : Boolean = false
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : IntermediateValue= {
+    if (hasDefiniteType(targetType)) {
+      // We don't need to do anything 
+      return this
+    }
+
+    // Procedures cannot have their types tested at runtime
+    impossibleConversion(s"${typeDescription} does not statically satisfy type ${targetType}")
+  }
 }

@@ -185,33 +185,33 @@ private[planner] object PlanApplication {
       case _ => 
     }
 
-    // We have an exact procedure type - ensure we're applying the correct types in case our procedure type is
-    // more restrictive than the physical signature type
+    // Plan this as a an invoke (function call)
+    val invokePlan = plan.forkPlan()
+
+    // Ensure we're applying the correct types in case our procedure type is more restrictive than the physical
+    // signature type than the procedure we're applying. This doesn't need to happen in the inline plan because it's not
+    // possible to retype known procedures.
     val (procTypeFixedArgs, procTypeRestArgs) = operands.splitAt(procedureType.fixedArgTypes.length)
 
     val castFixedArgs = procTypeFixedArgs.zip(procedureType.fixedArgTypes) map {
       case ((located, fixedArgValue), requiredType) =>
-        plan.withContextLocation(located) {
-          (located -> fixedArgValue.castToSchemeType(requiredType))
+        invokePlan.withContextLocation(located) {
+          (located -> fixedArgValue.castToSchemeType(requiredType)(invokePlan, worldPtr))
         }
     }
 
     val castRestArgs = procTypeRestArgs map { case (located, restArgValue) =>
       val requiredType = procedureType.restArgMemberTypeOpt.get
-      plan.withContextLocation(located) {
-        (located -> restArgValue.castToSchemeType(requiredType))
+      invokePlan.withContextLocation(located) {
+        (located -> restArgValue.castToSchemeType(requiredType)(invokePlan, worldPtr))
       }
     }
 
     val castOperands = castFixedArgs ++ castRestArgs
-
-    // Plan this as a an invoke (function call)
-    val invokePlan = plan.forkPlan()
-
     val invokeValues = (invokePlan.withContextLocation(located) {
       PlanInvokeApply.withIntermediateValues(invokableProc, castOperands)(invokePlan, worldPtr) 
     })
-
+    
     procResultValue match {
       case schemeProc : iv.KnownSchemeProc if plan.config.optimize && !schemeProc.recursiveSelfLoc.isDefined =>
         // Try to plan this as in inline app[lication
@@ -219,7 +219,7 @@ private[planner] object PlanApplication {
 
         val inlineValuesOpt = AttemptInlineApply(schemeProc.parentState, procResult.state)(
           lambdaExpr=schemeProc.lambdaExpr,
-          operands=castOperands
+          operands=operands
         )(inlinePlan, worldPtr) 
 
         for(inlineValues <- inlineValuesOpt) {
