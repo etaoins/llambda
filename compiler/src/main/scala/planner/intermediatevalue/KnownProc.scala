@@ -42,6 +42,20 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
     Some(nativeSymbol)
   
   def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue = {
+    val procTemp = toProcedureTempValue(vt.TopProcedureType, None)
+    BoxedValue(ct.ProcedureCell, procTemp)
+  }
+  
+  def toProcedureTempValue(
+      targetType : vt.SchemeType,
+      errorMessageOpt : Option[RuntimeErrorMessage],
+      staticCheck : Boolean = false
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
+    if (vt.SatisfiesType(targetType, schemeType) == Some(false)) {
+      val message = s"Unable to convert ${typeDescription} to procedure type ${targetType}"
+      impossibleConversion(message)
+    }
+
     val requiredSignature = ProcedureTypeToAdaptedSignature(vt.TopProcedureType)
 
     // Store an entry point with an adapted signature
@@ -67,7 +81,7 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
       trampEntryPointTemp
     }
     
-    val cellTemp = selfTempOpt match {
+    selfTempOpt match {
       case Some(selfTemp) =>
         // Store the entry point in the procedure cell containing our closure data
         plan.steps += ps.SetProcedureEntryPoint(selfTemp, entryPointTemp)
@@ -83,8 +97,6 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
 
         cellTemp
     }
-
-    BoxedValue(ct.ProcedureCell, cellTemp)
   }
   
   def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : InvokableProcedure = 

@@ -51,6 +51,19 @@ class CellValue(
       new InvokableProcedureCell(boxedProcTemp)
     }
   }
+  
+  protected def toProcedureTempValue(
+      targetType : vt.SchemeType,
+      errorMessageOpt : Option[RuntimeErrorMessage],
+      staticCheck : Boolean = false
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
+    if (vt.SatisfiesType(targetType, schemeType) == Some(false)) {
+      val message = s"Unable to convert ${typeDescription} to procedure type ${targetType}"
+      impossibleConversion(message)
+    }
+
+    toSchemeTempValue(vt.TopProcedureType, None)
+  }
 
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = nativeType match {
     case vt.UnicodeChar =>

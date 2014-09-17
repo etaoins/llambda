@@ -39,7 +39,13 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
    trueTemp
   }
   
-  private def toSchemeTempValue(
+  protected def toProcedureTempValue(
+      targetType : vt.SchemeType,
+      errorMessageOpt : Option[RuntimeErrorMessage],
+      staticCheck : Boolean = false
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
+  
+  protected def toSchemeTempValue(
       targetType : vt.SchemeType,
       errorMessageOpt : Option[RuntimeErrorMessage],
       staticCheck : Boolean = false
@@ -110,6 +116,9 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
 
     case nativeType : vt.NativeType =>
       toNativeTempValue(nativeType, errorMessageOpt)
+
+    case procedureType : vt.ProcedureType =>
+      toProcedureTempValue(procedureType, errorMessageOpt, staticCheck)
 
     case schemeType : vt.SchemeType =>
       toSchemeTempValue(schemeType, errorMessageOpt, staticCheck)
