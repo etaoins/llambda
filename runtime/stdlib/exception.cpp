@@ -1,5 +1,6 @@
 #include "binding/AnyCell.h"
 #include "binding/ProcedureCell.h"
+#include "binding/TypedProcedureCell.h"
 #include "binding/EmptyListCell.h"
 #include "binding/ListElementCell.h"
 #include "binding/ReturnValuesList.h"
@@ -18,10 +19,10 @@ using namespace lliby;
 extern "C"
 {
 
-ReturnValuesList* lliby_with_exception_handler(World &world, ProcedureCell *handlerRaw, ProcedureCell *thunk)
+ReturnValuesList* lliby_with_exception_handler(World &world, TopProcedureCell *handlerRaw, TopProcedureCell *thunk)
 {
 	// Root our exception handler
-	alloc::ProcedureRef handler(world, handlerRaw);
+	alloc::StrongRef<TopProcedureCell> handler(world, handlerRaw);
 
 	// Keep track of our dynamic state
 	alloc::DynamicStateRef expectedStateRef(world, world.activeStateCell);
@@ -59,9 +60,9 @@ ReturnValuesList* lliby_with_exception_handler(World &world, ProcedureCell *hand
 	}
 }
 
-ReturnValuesList *_lliby_guard_kernel(World &world, ProcedureCell *guardAuxProcRaw, ProcedureCell *thunk) 
+ReturnValuesList *_lliby_guard_kernel(World &world, TopProcedureCell *guardAuxProcRaw, TopProcedureCell *thunk) 
 {
-	alloc::ProcedureRef guardAuxProc(world, guardAuxProcRaw);
+	alloc::StrongRef<TopProcedureCell> guardAuxProc(world, guardAuxProcRaw);
 	alloc::DynamicStateRef expectedStateRef(world, world.activeStateCell);
 
 	try

@@ -26,7 +26,7 @@ namespace
 
 EscapeProcedureCell* EscapeProcedureCell::createInstance(World &world, Continuation *continuation)
 {
-	ProcedureCell *procedureCell = ProcedureCell::createInstance(world, registeredClassId, false, continuation, &procedureBody);
+	TopProcedureCell *procedureCell = TopProcedureCell::createInstance(world, registeredClassId, false, continuation, &procedureBody);
 	return static_cast<EscapeProcedureCell*>(procedureCell);
 }
 

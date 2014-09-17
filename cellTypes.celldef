@@ -12,9 +12,6 @@ fieldtype ios : uint8 {
 cell Any;
 cell Procedure;
 cell ListElement;
-fieldtype ProcedureEntryPoint : ListElement* (*)(World&, Procedure*, ListElement*) {
-	cppname = ProcedureEntryPoint;
-};
 
 // This is a special type
 fieldtype TypeId : uint8 {
@@ -115,7 +112,7 @@ abstract internal cell RecordLike : Any {
 };
 
 concrete internal cell Procedure : RecordLike {
-	ProcedureEntryPoint entryPoint;
+	untypedptr entryPoint;
 };
 
 // Records are internal because each record class is exposed as its own 

@@ -99,7 +99,7 @@ class NameForTypeSuite extends FunSuite {
   }
   
   test("multiple type union") {
-    val memberTypes = Set[NonUnionSchemeType](AnyProcedureType, EmptyListType, UnitType)
+    val memberTypes = Set[NonUnionSchemeType](TopProcedureType, EmptyListType, UnitType)
     assert(NameForType(UnionType(memberTypes)) === "(U <empty-list> <procedure> <unit>)")
   }
 

@@ -338,8 +338,10 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
           case other =>
             throw new InternalCompilerErrorException(s"Attempted to create constant closure with non-constant entry point: ${other}")
         }
-
-        genEmptyClosure(module, typeGenerator)(entryPointConstant)
+          
+        // Cast to an untyped entry point
+        val castEntryPoint = BitcastToConstant(entryPointConstant, ct.ProcedureCell.entryPointIrType)
+        genEmptyClosure(module, typeGenerator)(castEntryPoint)
 
       case ps.CreateNativeInteger(_, value, bits) =>
         IntegerConstant(IntegerType(bits), value)

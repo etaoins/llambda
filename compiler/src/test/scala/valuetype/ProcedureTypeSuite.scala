@@ -90,7 +90,7 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
   }
   
   test("specific procedure type definitely satisfies top procedure type") {
-    assert(SatisfiesType(AnyProcedureType, twoStringToNumberProcedure) === Some(true))
+    assert(SatisfiesType(TopProcedureType, twoStringToNumberProcedure) === Some(true))
   }
   
   test("specific procedure type definitely satisfies <any> type") {
@@ -98,15 +98,15 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
   }
 
   test("higher order procedure type definitely satisfies top procedure type") {
-    assert(SatisfiesType(AnyProcedureType, higherOrderProcedure) === Some(true))
+    assert(SatisfiesType(TopProcedureType, higherOrderProcedure) === Some(true))
   }
   
   test("higher order procedure type definitely satisfies <any> type") {
     assert(SatisfiesType(AnySchemeType, higherOrderProcedure) === Some(true))
   }
   
-  test("any procedure type may satisfy specific procedure type") {
-    assert(SatisfiesType(twoStringToNumberProcedure, AnyProcedureType) === None)
+  test("top procedure type may satisfy specific procedure type") {
+    assert(SatisfiesType(twoStringToNumberProcedure, TopProcedureType) === None)
   }
 
   test("procedure with fixed args may satisfy procedure with compatible rest args") {

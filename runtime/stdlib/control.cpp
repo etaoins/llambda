@@ -1,4 +1,5 @@
 #include "binding/ProcedureCell.h"
+#include "binding/TypedProcedureCell.h"
 #include "binding/ListElementCell.h"
 #include "binding/EmptyListCell.h"
 #include "binding/ProperList.h"
@@ -18,7 +19,7 @@ using namespace lliby;
 extern "C"
 {
 
-ReturnValuesList *lliby_apply(World &world, ProcedureCell *procedure, ListElementCell *argHead)
+ReturnValuesList *lliby_apply(World &world, TopProcedureCell *procedure, ListElementCell *argHead)
 {
 	ListElementCell *procArgHead;
 
@@ -62,7 +63,7 @@ ReturnValuesList *lliby_apply(World &world, ProcedureCell *procedure, ListElemen
 			}
 
 			// Reference the procedure cell before allocating the argument list
-			alloc::ProcedureRefRange procedureRef(world, &procedure, 1);	
+			alloc::StrongRefRange<TopProcedureCell> procedureRef(world, &procedure, 1);	
 
 			// We verified the final arg is a proper list so this must also be a proper list
 			procArgHead = cell_unchecked_cast<ListElementCell>(ListElementCell::createList(world, standaloneArgs, finalListHead));
@@ -77,13 +78,13 @@ ReturnValuesList *lliby_values(RestArgument<AnyCell> *restArgHead)
 	return restArgHead;
 }
 
-ReturnValuesList *lliby_call_with_current_continuation(World &world, ProcedureCell *proc)
+ReturnValuesList *lliby_call_with_current_continuation(World &world, TopProcedureCell *proc)
 {
 	using dynamic::Continuation;
 	using dynamic::EscapeProcedureCell;
 
 	// This is the procedure we're calling
-	alloc::ProcedureRef procRef(world, proc);
+	alloc::StrongRef<TopProcedureCell> procRef(world, proc);
 		
 	// Create the escape procedure and its args
 	// We build this first as there's no way to GC root a continuation at the moment. This also make sure the 
@@ -114,9 +115,9 @@ ReturnValuesList *lliby_call_with_current_continuation(World &world, ProcedureCe
 	}
 }
 
-ReturnValuesList *lliby_call_with_values(World &world, ProcedureCell *producer, ProcedureCell *consumerRaw)
+ReturnValuesList *lliby_call_with_values(World &world, TopProcedureCell *producer, TopProcedureCell *consumerRaw)
 {
-	alloc::ProcedureRef consumer(world, consumerRaw);
+	alloc::StrongRef<TopProcedureCell> consumer(world, consumerRaw);
 
 	ReturnValuesList *values = producer->apply(world, EmptyListCell::instance());
 	return consumer->apply(world, values);

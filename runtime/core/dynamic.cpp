@@ -1,5 +1,7 @@
 #include "binding/ProcedureCell.h"
 #include "binding/AnyCell.h"
+#include "binding/TypedProcedureCell.h"
+
 #include "dynamic/State.h"
 #include "dynamic/ParameterProcedureCell.h"
 
@@ -37,13 +39,13 @@ ProcedureCell *_lliby_make_parameter(World &world, AnyCell *initialValue, AnyCel
 {
 	// Scheme will pass in #!unit if it doesn't want a converter
 	// This will become nullptr which is what C++ expects to disable conversion
-	ProcedureCell *converterProcRaw = cell_cast<ProcedureCell>(converterValue);
+	auto converterProcRaw = static_cast<TopProcedureCell*>(cell_cast<ProcedureCell>(converterValue));
 
 	// Try to only GC root things if we have a converter - the majority of procedures don't
 	if (converterProcRaw != nullptr)
 	{
 		// Convert initialValue
-		alloc::ProcedureRef converterProc(world, converterProcRaw);
+		alloc::StrongRef<TopProcedureCell> converterProc(world, converterProcRaw);
 
 		initialValue = dynamic::State::applyConverterProcedure(world, converterProc, initialValue);
 		converterProcRaw = converterProc.data();

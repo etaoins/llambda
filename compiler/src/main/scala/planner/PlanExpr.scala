@@ -198,7 +198,7 @@ private[planner] object PlanExpr {
           val valueResult = apply(parameterResult.state)(valueExpr)
 
           val parameterIntermediate = parameterResult.values.toSingleValue()
-          val parameterTemp = parameterIntermediate.toTempValue(vt.AnyProcedureType)
+          val parameterTemp = parameterIntermediate.toTempValue(vt.TopProcedureType)
 
           val mayHaveConverterProc = parameterIntermediate match {
             case knownParamProc : iv.KnownParameterProc =>

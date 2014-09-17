@@ -520,12 +520,13 @@ case class LoadPairCdr(result : TempValue, boxed : TempValue) extends Step {
   *
   * This is not mergeable to allow procedures to dynamically change entry points
   */
-case class LoadProcedureEntryPoint(result : TempValue, boxed : TempValue) extends Step {
+case class LoadProcedureEntryPoint(result : TempValue, boxed : TempValue, signature : ProcedureSignature) extends Step {
   lazy val inputValues = Set(boxed)
   lazy val outputValues = Set(result)
   
   def renamed(f : (TempValue) => TempValue) =
-    LoadProcedureEntryPoint(f(result), f(boxed)).assignLocationFrom(this)
+    LoadProcedureEntryPoint(f(result), f(boxed), signature)
+      .assignLocationFrom(this)
 }
 
 /** Creates a new uninitialised vector of the given length

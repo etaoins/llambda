@@ -383,11 +383,17 @@ object GenPlanStep {
       GenVector.storeElement(state.currentBlock)(elementsIr, indexIr, newValueIr)
       state
 
-    case ps.LoadProcedureEntryPoint(resultTemp, procTemp) =>
+    case ps.LoadProcedureEntryPoint(resultTemp, procTemp, signature) =>
       val procIr = state.liveTemps(procTemp)
-      val entryPoint = ct.ProcedureCell.genLoadFromEntryPoint(state.currentBlock)(procIr)
+      val signatureIrType =  ProcedureSignatureToIr(signature).irType
+      val block = state.currentBlock
 
-      state.withTempValue(resultTemp -> entryPoint)
+      // Load the entry point
+      val entryPointIr = ct.ProcedureCell.genLoadFromEntryPoint(block)(procIr)
+      // Cast it to the expected entry point type 
+      val castEntryPointIr = block.bitcastTo("castEntryPoint")(entryPointIr, PointerType(signatureIrType))
+
+      state.withTempValue(resultTemp -> castEntryPointIr)
 
     case initStep : ps.InitRecordLike  =>
       val (initedState, initedRecordLike) = GenInitRecordLike(state, genGlobals.typeGenerator)(initStep)
@@ -472,7 +478,10 @@ object GenPlanStep {
       val entryPointIr = state.liveTemps(entryPointTemp)
 
       // Store the entry point
-      ct.ProcedureCell.genStoreToEntryPoint(state.currentBlock)(entryPointIr, procedureCellIr)
+      val block = state.currentBlock
+
+      val castEntryPointIr = block.bitcastTo("castEntryPoint")(entryPointIr, ct.ProcedureCell.entryPointIrType)
+      ct.ProcedureCell.genStoreToEntryPoint(state.currentBlock)(castEntryPointIr, procedureCellIr)
 
       state
 

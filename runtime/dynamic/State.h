@@ -3,6 +3,7 @@
 
 #include "binding/AnyCell.h"
 #include "binding/ProcedureCell.h"
+#include "binding/TypedProcedureCell.h"
 #include "binding/DynamicStateCell.h"
 
 #include "alloc/cellref.h"
@@ -36,7 +37,7 @@ public:
 	 *                     functionality.
 	 * @param  parentCell  Cell pointer to the parent state or nullptr if this is a root state.
 	 */
-	State(ProcedureCell *before, ProcedureCell *after, DynamicStateCell *parentCell = nullptr);
+	State(TopProcedureCell *before, TopProcedureCell *after, DynamicStateCell *parentCell = nullptr);
 
 	/**
 	 * Returns the value for the passed parameter
@@ -55,7 +56,7 @@ public:
 	/**
 	 * Applies a converter procedure to a parameter value
 	 */
-	static AnyCell* applyConverterProcedure(World &world, alloc::ProcedureRef &converterProc, AnyCell *value);
+	static AnyCell* applyConverterProcedure(World &world, alloc::StrongRef<TopProcedureCell> &converterProc, AnyCell *value);
 
 	/**
 	 * Returns the parent cell for this state or nullptr if this is a root state
@@ -91,7 +92,7 @@ public:
 	/**
 	 * Returns the procedure to invoke before activating this state or its children
 	 */
-	ProcedureCell *beforeProcedure()
+	TopProcedureCell *beforeProcedure()
 	{
 		return mBefore;
 	}
@@ -101,7 +102,7 @@ public:
 	 *
 	 * This is intended for use by the garbage collector
 	 */
-	ProcedureCell** beforeProcedureRef()
+	TopProcedureCell** beforeProcedureRef()
 	{
 		return &mBefore;
 	}
@@ -109,7 +110,7 @@ public:
 	/**
 	 * Returns the procedure to invoke after deactivating this state or its children
 	 */
-	ProcedureCell *afterProcedure()
+	TopProcedureCell *afterProcedure()
 	{
 		return mAfter;
 	}
@@ -119,7 +120,7 @@ public:
 	 *
 	 * This is intended for use by the garbage collector
 	 */
-	ProcedureCell** afterProcedureRef()
+	TopProcedureCell** afterProcedureRef()
 	{
 		return &mAfter;
 	}
@@ -160,7 +161,7 @@ public:
 	 *
 	 * This may re-enter Scheme and invoke the garbage collector if before is not null
 	 */
-	static void pushActiveState(World &world, ProcedureCell *before, ProcedureCell *after);
+	static void pushActiveState(World &world, TopProcedureCell *before, TopProcedureCell *after);
 
 	/**
 	 * Makes the parent of the currently active state active
@@ -188,8 +189,8 @@ public:
 	static void switchStateCell(World &world, DynamicStateCell *);
 
 private:
-	ProcedureCell *mBefore;
-	ProcedureCell *mAfter;
+	TopProcedureCell *mBefore;
+	TopProcedureCell *mAfter;
 	DynamicStateCell *mParentCell;
 	ParameterValueMap mSelfValues;
 };

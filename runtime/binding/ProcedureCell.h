@@ -2,26 +2,22 @@
 #define _LLIBY_BINDING_PROCEDURECELL_H
 
 #include "RecordLikeCell.h"
-#include "ReturnValuesList.h"
 
 namespace lliby
 {
 class World;
 
+/**
+ * Represents a Scheme procedure of an unknown type
+ *
+ * Untyped procedures can only have garbage collection performed on them. To be applied their exact type must be known.
+ * See TypedProcedureCell for a subclass that that supports application.
+ */
 class ProcedureCell : public RecordLikeCell
 {
 #include "generated/ProcedureCellMembers.h"
 public:
-	static ProcedureCell* createInstance(World &World, std::uint32_t recordClassId, bool dataIsInline, void *recordData, ProcedureEntryPoint entryPoint);
-
-	/**
-	 * Applies this procedure
-	 *
-	 * @param  world      Active world object
-	 * @param  arguments  Proper list of arguments to pass to the procedure
-	 * @return  Multiple return value list of results
-	 */
-	ReturnValuesList* apply(World &world, ListElementCell *arguments);
+	static ProcedureCell* createInstance(World &World, std::uint32_t recordClassId, bool dataIsInline, void *recordData, void *entryPoint);
 
 	/**
 	 * Indicates if this procedure captures variables from its enclosing scope
@@ -32,7 +28,7 @@ public:
 	}
 
 protected:
-	ProcedureCell(std::uint32_t recordClassId, bool dataIsInline, void *recordData, ProcedureEntryPoint entryPoint) :
+	ProcedureCell(std::uint32_t recordClassId, bool dataIsInline, void *recordData, void *entryPoint) :
 		RecordLikeCell(CellTypeId::Procedure, recordClassId, dataIsInline, recordData),
 		m_entryPoint(entryPoint)
 	{

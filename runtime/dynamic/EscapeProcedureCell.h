@@ -1,7 +1,7 @@
 #ifndef _LLIBY_DYNAMIC_ESCAPEPROCEDURECELL_H
 #define _LLIBY_DYNAMIC_ESCAPEPROCEDURECELL_H
 
-#include "binding/ProcedureCell.h"
+#include "binding/TypedProcedureCell.h"
 
 namespace lliby
 {
@@ -19,7 +19,7 @@ class Continuation;
  * This is a direct wrapper for dynamic::Continuation that simply resumes the continuation whenever the procedure is
  * applied. This also allows the garbage collector to manage Continuation instances via their proxy EscapeProcedureCell.
  */
-class EscapeProcedureCell : public ProcedureCell
+class EscapeProcedureCell : public TopProcedureCell
 {
 public:
 	/**

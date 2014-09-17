@@ -34,14 +34,14 @@ namespace
 	}
 }
 	
-ParameterProcedureCell* ParameterProcedureCell::createInstance(World &world, AnyCell *initialValueRaw, ProcedureCell *converterProcedureRaw)
+ParameterProcedureCell* ParameterProcedureCell::createInstance(World &world, AnyCell *initialValueRaw, TopProcedureCell *converterProcedureRaw)
 {
 	// Root these across the allocation of the actual procedure cell
 	alloc::AnyRef initialValue(world, initialValueRaw);
 	alloc::ProcedureRef converterProcedure(world, converterProcedureRaw);
 
 	auto closure = static_cast<ParameterProcedureClosure*>(allocateRecordData(sizeof(ParameterProcedureClosure)));
-	ProcedureCell *procedureCell = ProcedureCell::createInstance(world, registeredClassId, false, closure, &procedureBody);
+	TopProcedureCell *procedureCell = TopProcedureCell::createInstance(world, registeredClassId, false, closure, &procedureBody);
 
 	closure->initialValue = initialValue;
 

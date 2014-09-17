@@ -42,7 +42,7 @@ namespace
 	}
 }
 	
-State::State(ProcedureCell *before, ProcedureCell *after, DynamicStateCell *parentCell) : 
+State::State(TopProcedureCell *before, TopProcedureCell *after, DynamicStateCell *parentCell) : 
 	mBefore(before),
 	mAfter(after),
 	mParentCell(parentCell)
@@ -67,7 +67,7 @@ AnyCell* State::valueForParameter(ParameterProcedureCell *param) const
 	}
 }
 	
-AnyCell* State::applyConverterProcedure(World &world, alloc::ProcedureRef &converterProc, AnyCell *value)
+AnyCell* State::applyConverterProcedure(World &world, alloc::StrongRef<TopProcedureCell> &converterProc, AnyCell *value)
 {
 	// Root our parameter procedure
 	// Call our converter
@@ -90,12 +90,12 @@ AnyCell* State::applyConverterProcedure(World &world, alloc::ProcedureRef &conve
 
 void State::setValueForParameter(World &world, ParameterProcedureCell *param, AnyCell *value)
 {
-	ProcedureCell *converterProcRaw = param->converterProcedure();
+	TopProcedureCell *converterProcRaw = param->converterProcedure();
 
 	if (converterProcRaw)
 	{
 		alloc::StrongRefRange<ParameterProcedureCell> paramRoot(world, &param, 1);
-		alloc::StrongRef<ProcedureCell> converterProc(world, converterProcRaw);
+		alloc::StrongRef<TopProcedureCell> converterProc(world, converterProcRaw);
 
 		value = applyConverterProcedure(world, converterProc, value);
 	}
@@ -108,10 +108,10 @@ State* State::activeState(World &world)
 	return world.activeStateCell->state();
 }
 
-void State::pushActiveState(World &world, ProcedureCell *before, ProcedureCell *after)
+void State::pushActiveState(World &world, TopProcedureCell *before, TopProcedureCell *after)
 {
-	alloc::ProcedureRef beforeRef(world, before);
-	alloc::ProcedureRef afterRef(world, after);
+	alloc::StrongRef<TopProcedureCell> beforeRef(world, before);
+	alloc::StrongRef<TopProcedureCell> afterRef(world, after);
 
 	// Invoke the before procedure 
 	if (beforeRef)

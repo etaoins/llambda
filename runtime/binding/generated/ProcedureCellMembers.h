@@ -3,7 +3,7 @@
  ************************************************************/
 
 public:
-	ProcedureEntryPoint entryPoint() const
+	void* entryPoint() const
 	{
 		return m_entryPoint;
 	}
@@ -20,4 +20,4 @@ public:
 	}
 
 private:
-	ProcedureEntryPoint m_entryPoint;
+	void* m_entryPoint;

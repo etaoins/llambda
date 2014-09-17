@@ -89,7 +89,7 @@ sealed abstract class RecordLikeType extends CellValueType {
   */
 class ClosureType(val sourceName : String, val fields : List[RecordField]) extends RecordLikeType {
   val cellType = ct.ProcedureCell
-  val schemeType = AnyProcedureType
+  val schemeType = TopProcedureType
 }
 
 /** Types visible to Scheme programs without using the NFI */ 
@@ -314,7 +314,7 @@ case class ProcedureType(
   val parentType = SchemeTypeAtom(ct.ProcedureCell)
 }
 
-object AnyProcedureType extends SchemeTypeAtom(ct.ProcedureCell)
+object TopProcedureType extends SchemeTypeAtom(ct.ProcedureCell)
 
 /** Union of all possible Scheme types */
 object AnySchemeType extends UnionType(ct.AnyCell.concreteTypes.map(SchemeTypeAtom(_)))
