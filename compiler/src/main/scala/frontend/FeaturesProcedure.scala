@@ -12,7 +12,7 @@ private[frontend] object FeaturesProcedure {
     // This prevents us from having to duplicate features between the frontend and stdlib
     val featuresList = frontendConfig.featureIdentifiers.toList.sorted
 
-    val featuresProcType = vt.ProcedureType(
+    val featuresProcType = vt.SpecificProcedureType(
       fixedArgTypes=Nil,
       restArgMemberTypeOpt=None,
       returnType=vt.ReturnType.SingleValue(vt.UniformProperListType(vt.SymbolType))

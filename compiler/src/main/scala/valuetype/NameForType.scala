@@ -47,7 +47,7 @@ object NameForType {
 
         s"(Vectorof ${memberTypeName})"
 
-      case ProcedureType(fixedArgTypes, restArgMemberTypeOpt, returnType) =>
+      case SpecificProcedureType(fixedArgTypes, restArgMemberTypeOpt, returnType) =>
         val fixedArgNames = fixedArgTypes.map { fixedArgType =>
           stackedNameForType(fixedArgType :: typeStack, recurseVarNames)
         }

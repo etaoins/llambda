@@ -303,18 +303,28 @@ object VectorOfType {
     }
 }
 
-case class ProcedureType(
+sealed trait ProcedureType extends NonUnionSchemeType {
+  val fixedArgTypes : List[SchemeType]
+  val restArgMemberTypeOpt : Option[SchemeType]
+  val returnType : vt.ReturnType.ReturnType
+}
+
+case class SpecificProcedureType(
     fixedArgTypes : List[SchemeType],
     restArgMemberTypeOpt : Option[SchemeType],
     returnType : vt.ReturnType.ReturnType
-) extends DerivedSchemeType {
+) extends DerivedSchemeType with ProcedureType {
   val cellType = ct.ProcedureCell
   val isGcManaged = true
 
   val parentType = SchemeTypeAtom(ct.ProcedureCell)
 }
 
-object TopProcedureType extends SchemeTypeAtom(ct.ProcedureCell)
+object TopProcedureType extends SchemeTypeAtom(ct.ProcedureCell) with ProcedureType {
+  val fixedArgTypes = Nil
+  val restArgMemberTypeOpt = Some(AnySchemeType)
+  val returnType = ReturnType.ArbitraryValues
+}
 
 /** Union of all possible Scheme types */
 object AnySchemeType extends UnionType(ct.AnyCell.concreteTypes.map(SchemeTypeAtom(_)))

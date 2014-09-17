@@ -6,7 +6,6 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner._
-import llambda.compiler.codegen.AdaptedProcedureSignature
 import llambda.compiler.InternalCompilerErrorException
 import llambda.compiler.{RuntimeErrorMessage, ContextLocated}
 
@@ -43,8 +42,10 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
     Some(nativeSymbol)
   
   def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue = {
+    val requiredSignature = ProcedureTypeToAdaptedSignature(vt.TopProcedureType)
+
     // Store an entry point with an adapted signature
-    val entryPointTemp = if (signature == AdaptedProcedureSignature) {
+    val entryPointTemp = if (signature == requiredSignature) {
       // The procedure already has the correct signature
       // This is unlikely but worth checking
       planEntryPoint()
@@ -61,7 +62,7 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
 
       // Load the trampoline's entry point
       val trampEntryPointTemp = ps.EntryPointTemp()
-      plan.steps += ps.CreateNamedEntryPoint(trampEntryPointTemp, AdaptedProcedureSignature, trampolineSymbol) 
+      plan.steps += ps.CreateNamedEntryPoint(trampEntryPointTemp, requiredSignature, trampolineSymbol) 
 
       trampEntryPointTemp
     }

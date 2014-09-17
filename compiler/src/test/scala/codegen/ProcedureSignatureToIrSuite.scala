@@ -153,17 +153,4 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       attributes=Set(NoUnwind)
     ))
   }
-
-  test("adapted procedure signature") {
-    val irSignature = ProcedureSignatureToIr(AdaptedProcedureSignature)
-
-    assert(irSignature === IrSignature(
-      result=Result(PointerType(ct.ListElementCell.irType)),
-      arguments=List(
-        Argument(PointerType(WorldValue.irType)),
-        Argument(PointerType(ct.ProcedureCell.irType)),
-        Argument(PointerType(ct.ListElementCell.irType))
-      )
-    ))
-  }
 }

@@ -247,7 +247,7 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
 
     bodyFor("(define-type <string-proc> (-> <string>))")(scope)
     assert(scope("<string-proc>") === BoundType(
-      vt.ProcedureType(
+      vt.SpecificProcedureType(
         fixedArgTypes=Nil,
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SingleValue(vt.StringType)
@@ -256,7 +256,7 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
 
     bodyFor("(define-type <values-to-string-proc> (-> <port> <symbol> <string>))")(scope)
     assert(scope("<values-to-string-proc>") === BoundType(
-      vt.ProcedureType(
+      vt.SpecificProcedureType(
         fixedArgTypes=List(vt.PortType, vt.SymbolType),
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SingleValue(vt.StringType)
@@ -265,7 +265,7 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     
     bodyFor("(define-type <symbol-to-values-proc> (-> <symbol> (Values <exact-integer> <flonum>)))")(scope)
     assert(scope("<symbol-to-values-proc>") === BoundType(
-      vt.ProcedureType(
+      vt.SpecificProcedureType(
         fixedArgTypes=List(vt.SymbolType),
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.MultipleValues(
@@ -276,7 +276,7 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     
     bodyFor("(define-type <values-with-rest-to-arbitrary-proc> (-> <port> <symbol> <pair> * *))")(scope)
     assert(scope("<values-with-rest-to-arbitrary-proc>") === BoundType(
-      vt.ProcedureType(
+      vt.SpecificProcedureType(
         fixedArgTypes=List(vt.PortType, vt.SymbolType),
         restArgMemberTypeOpt=Some(vt.AnyPairType),
         returnType=vt.ReturnType.ArbitraryValues

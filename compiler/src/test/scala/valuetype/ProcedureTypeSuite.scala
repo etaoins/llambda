@@ -7,67 +7,67 @@ import llambda.compiler.{celltype => ct}
 import Implicits._
 
 class ProcedureTypeSuite extends SchemeTypeSuite {
-  val twoStringToNumberProcedure = ProcedureType(
+  val twoStringToNumberProcedure = SpecificProcedureType(
     fixedArgTypes=List(StringType, StringType),
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SingleValue(NumberType)
   )
   
-  val twoStringToExactIntProcedure = ProcedureType(
+  val twoStringToExactIntProcedure = SpecificProcedureType(
     fixedArgTypes=List(StringType, StringType),
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SingleValue(ExactIntegerType)
   )
 
-  val twoStringToPortProcedure = ProcedureType(
+  val twoStringToPortProcedure = SpecificProcedureType(
     fixedArgTypes=List(StringType, StringType),
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SingleValue(PortType)
   )
   
-  val anyStringToNumberProcedure = ProcedureType(
+  val anyStringToNumberProcedure = SpecificProcedureType(
     fixedArgTypes=Nil,
     restArgMemberTypeOpt=Some(StringType),
     returnType=ReturnType.SingleValue(NumberType)
   )
 
-  val listElementToUnitProcedure = ProcedureType(
+  val listElementToUnitProcedure = SpecificProcedureType(
     fixedArgTypes=List(ListElementType),
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SingleValue(UnitType)
   )
   
-  val pairToUnitProcedure = ProcedureType(
+  val pairToUnitProcedure = SpecificProcedureType(
     fixedArgTypes=List(AnyPairType),
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SingleValue(UnitType)
   )
   
-  val symbolToUnitProcedure = ProcedureType(
+  val symbolToUnitProcedure = SpecificProcedureType(
     fixedArgTypes=List(SymbolType),
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SingleValue(UnitType)
   )
   
-  val listElementsToUnitProcedure = ProcedureType(
+  val listElementsToUnitProcedure = SpecificProcedureType(
     fixedArgTypes=Nil,
     restArgMemberTypeOpt=Some(ListElementType),
     returnType=ReturnType.SingleValue(UnitType)
   )
   
-  val pairsToUnitProcedure = ProcedureType(
+  val pairsToUnitProcedure = SpecificProcedureType(
     fixedArgTypes=Nil,
     restArgMemberTypeOpt=Some(AnyPairType),
     returnType=ReturnType.SingleValue(UnitType)
   )
   
-  val symbolsToUnitProcedure = ProcedureType(
+  val symbolsToUnitProcedure = SpecificProcedureType(
     fixedArgTypes=Nil,
     restArgMemberTypeOpt=Some(SymbolType),
     returnType=ReturnType.SingleValue(UnitType)
   )
 
-  val higherOrderProcedure = ProcedureType(
+  val higherOrderProcedure = SpecificProcedureType(
     fixedArgTypes=List(symbolToUnitProcedure, anyStringToNumberProcedure),
     restArgMemberTypeOpt=Some(listElementToUnitProcedure),
     returnType=ReturnType.SingleValue(twoStringToExactIntProcedure)

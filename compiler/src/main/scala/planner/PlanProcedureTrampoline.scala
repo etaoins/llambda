@@ -9,7 +9,6 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.codegen.AdaptedProcedureSignature
 import llambda.compiler.{RuntimeErrorMessage, ContextLocated}
 
 import llambda.compiler.valuetype.Implicits._
@@ -17,10 +16,6 @@ import llambda.compiler.valuetype.Implicits._
 private[planner] object PlanProcedureTrampoline {
   /** Plans a trampoline for the passed procedure 
     * 
-    * All trampolines have AdaptedProcedureSignature which means they can be called without knowing the signature of the
-    * underlying procedure. It is assumed the argument list a proper list; it is inappropriate to pass user provided
-    * arguments lists to a trampoline without confirming the list is proper beforehand.
-    *
     * @param  invokableProc     The target procedure. The trampoline will ensure the arguments it's passed satisfy
     *                           the target procedure's signature and perform any required type conversions. 
     * @param  targetProcLocOpt  Source location of the target procedure. This is used to generate a comment in the 
@@ -34,7 +29,7 @@ private[planner] object PlanProcedureTrampoline {
     val worldPtrTemp = new ps.WorldPtrValue
     val selfTemp = ps.CellTemp(ct.ProcedureCell)
     val argListHeadTemp = ps.CellTemp(ct.ListElementCell)
-    val signature = invokableProc.signature
+    val trampolineSignature = ProcedureTypeToAdaptedSignature(vt.TopProcedureType)
 
     implicit val plan = parentPlan.forkPlan()
 
@@ -48,7 +43,7 @@ private[planner] object PlanProcedureTrampoline {
       selfTempOverride=Some(selfTemp)
     )(plan, worldPtrTemp)
 
-    val returnTempOpt = resultValues.toReturnTempValue(AdaptedProcedureSignature.returnType)(plan, worldPtrTemp)
+    val returnTempOpt = resultValues.toReturnTempValue(trampolineSignature.returnType)(plan, worldPtrTemp)
     plan.steps += ps.Return(returnTempOpt)
 
     val irCommentOpt =
@@ -58,7 +53,7 @@ private[planner] object PlanProcedureTrampoline {
         s"Trampoline function for Scheme procedure defined at ${location.locationOnlyString}"
 
     PlannedFunction(
-      signature=AdaptedProcedureSignature,
+      signature=trampolineSignature,
       namedArguments=List(
         ("world"   -> worldPtrTemp),
         ("closure" -> selfTemp),

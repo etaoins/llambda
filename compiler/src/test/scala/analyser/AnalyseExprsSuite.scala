@@ -162,7 +162,7 @@ class AnalyseExprsSuite extends FunSuite {
       ),
       et.Apply(
         et.Lambda(
-          schemeType=vt.ProcedureType(Nil, None, vt.ReturnType.ArbitraryValues),
+          schemeType=vt.SpecificProcedureType(Nil, None, vt.ReturnType.ArbitraryValues),
           fixedArgs=Nil,
           restArgOpt=None,
           body=et.Begin(Nil)
@@ -195,7 +195,7 @@ class AnalyseExprsSuite extends FunSuite {
       ),
       et.Apply(
         et.Lambda(
-          schemeType=vt.ProcedureType(Nil, None, vt.ReturnType.ArbitraryValues),
+          schemeType=vt.SpecificProcedureType(Nil, None, vt.ReturnType.ArbitraryValues),
           fixedArgs=Nil,
           restArgOpt=None,
           body=et.MutateVar(testLocA, et.Literal(ast.EmptyList()))
@@ -225,7 +225,7 @@ class AnalyseExprsSuite extends FunSuite {
         )
       ),
       et.Lambda(
-        schemeType=vt.ProcedureType(Nil, None, vt.ReturnType.ArbitraryValues),
+        schemeType=vt.SpecificProcedureType(Nil, None, vt.ReturnType.ArbitraryValues),
         fixedArgs=Nil,
         restArgOpt=None,
         body=et.MutateVar(testLocA, et.Literal(ast.EmptyList()))

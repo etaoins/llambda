@@ -2,11 +2,11 @@ package io.llambda.compiler.planner.intermediatevalue
 import io.llambda
 
 import llambda.compiler.planner.{step => ps}
-import llambda.compiler.planner.{PlanWriter, InvokableProcedure}
-import llambda.compiler.codegen.AdaptedProcedureSignature
+import llambda.compiler.planner.{PlanWriter, InvokableProcedure, ProcedureTypeToAdaptedSignature}
+import llambda.compiler.{valuetype => vt}
 
 class InvokableProcedureCell(tempValue : ps.TempValue) extends InvokableProcedure {
-  val signature = AdaptedProcedureSignature
+  val signature = ProcedureTypeToAdaptedSignature(vt.TopProcedureType)
   
   def planSelf()(implicit plan : PlanWriter) : ps.TempValue = 
     tempValue

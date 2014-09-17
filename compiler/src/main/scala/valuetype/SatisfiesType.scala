@@ -166,8 +166,8 @@ object SatisfiesType {
           None
         }
 
-      case (ProcedureType(superFixedArgTypes, superRestArgMemberTypeOpt, superReturnType),
-            ProcedureType(testingFixedArgTypes, testingRestArgMemberTypeOpt, testingReturnType)) =>
+      case (SpecificProcedureType(superFixedArgTypes, superRestArgMemberTypeOpt, superReturnType),
+            SpecificProcedureType(testingFixedArgTypes, testingRestArgMemberTypeOpt, testingReturnType)) =>
         // Construct a list type based on our arguments
         val superArgList = argTypeToListType(superFixedArgTypes, superRestArgMemberTypeOpt)
         val testingArgList = argTypeToListType(testingFixedArgTypes, testingRestArgMemberTypeOpt)
