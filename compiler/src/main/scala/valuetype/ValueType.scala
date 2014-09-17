@@ -370,18 +370,27 @@ object SchemeType {
 
     // Convert (U #f #t) to <boolean>
     // This should just be cosmetic
-    val simplifiedTypes = if (allBooleans.subsetOf(nonUnionTypes)) {
+    val boolSimplifiedTypes = if (allBooleans.subsetOf(nonUnionTypes)) {
       nonUnionTypes -- allBooleans + BooleanType
     }
     else {
       nonUnionTypes
     }
 
-    if (simplifiedTypes.size == 1) {
-      simplifiedTypes.head
+    // We can't distinguish procedure types at runtime
+    // Collapse them all in the top procedure type so the types in the union can still be distinguished from each other
+    val procSimplifiedTypes = if (boolSimplifiedTypes.count(_.isInstanceOf[ProcedureType]) > 1) {
+      boolSimplifiedTypes.filterNot(_.isInstanceOf[SpecificProcedureType]) + TopProcedureType
     }
     else {
-      UnionType(simplifiedTypes.toSet)
+      boolSimplifiedTypes
+    }
+
+    if (procSimplifiedTypes.size == 1) {
+      procSimplifiedTypes.head
+    }
+    else {
+      UnionType(procSimplifiedTypes.toSet)
     }
   }
 }

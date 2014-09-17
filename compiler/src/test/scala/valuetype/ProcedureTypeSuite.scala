@@ -153,4 +153,16 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
   test("procedure definitely doesn't satisfy procedure with disjoint return type") {
     assert(SatisfiesType(twoStringToPortProcedure, twoStringToNumberProcedure) === Some(false))
   }
+  
+  test("the union of two identical specific procedure types is that procedure type") {
+    assert((twoStringToPortProcedure + twoStringToPortProcedure) === twoStringToPortProcedure)
+  }
+
+  test("the union of two distinct specific procedure types is the top procedure type") {
+    assert((twoStringToPortProcedure + anyStringToNumberProcedure) === TopProcedureType)
+  }
+  
+  test("the union of a specific procedure type and the top procedure type is the top procedure type") {
+    assert((twoStringToPortProcedure + TopProcedureType) === TopProcedureType)
+  }
 }
