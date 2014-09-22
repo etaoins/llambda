@@ -70,7 +70,7 @@ private[planner] object AttemptInlineApply {
           }
         }
 
-        storageLoc -> ImmutableValue(ValuesToProperList(restValues))
+        storageLoc -> ImmutableValue(ValuesToList(restValues))
     }
 
     // Map our input immutables to their new storage locations

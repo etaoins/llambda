@@ -76,6 +76,10 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
   test("specific procedure type satisfies itself") {
     assert(SatisfiesType(twoStringToNumberProcedure, twoStringToNumberProcedure) === Some(true))
   }
+  
+  test("specific procedure type's procedure type is itself") {
+    assert(twoStringToNumberProcedure.procedureTypeOpt === Some(twoStringToNumberProcedure))
+  }
 
   test("higher order procedure type satisfies itself") {
     assert(SatisfiesType(higherOrderProcedure, higherOrderProcedure) === Some(true))
@@ -107,6 +111,10 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
   
   test("top procedure type may satisfy specific procedure type") {
     assert(SatisfiesType(twoStringToNumberProcedure, TopProcedureType) === None)
+  }
+  
+  test("top procedure type's procedure type is itself") {
+    assert(TopProcedureType.procedureTypeOpt === Some(TopProcedureType))
   }
 
   test("procedure with fixed args may satisfy procedure with compatible rest args") {
@@ -157,12 +165,28 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
   test("the union of two identical specific procedure types is that procedure type") {
     assert((twoStringToPortProcedure + twoStringToPortProcedure) === twoStringToPortProcedure)
   }
-
+  
   test("the union of two distinct specific procedure types is the top procedure type") {
     assert((twoStringToPortProcedure + anyStringToNumberProcedure) === TopProcedureType)
   }
   
   test("the union of a specific procedure type and the top procedure type is the top procedure type") {
     assert((twoStringToPortProcedure + TopProcedureType) === TopProcedureType)
+  }
+  
+  test("the union of a specific procedure type and the string type has the procedure type of the specific procedure type") {
+    assert((twoStringToPortProcedure + StringType).procedureTypeOpt === Some(twoStringToPortProcedure))
+  }
+  
+  test("the union of two non-procedure types has no procedure type") {
+    assert((NumberType + StringType).procedureTypeOpt === None)
+  }
+  
+  test("the procedure type atom has the procedure type of the top procedure type") {
+    assert(SchemeTypeAtom(ct.ProcedureCell).procedureTypeOpt === Some(TopProcedureType))
+  }
+
+  test("the <any> type has a procedure type of the top procedure type") {
+    assert(AnySchemeType.procedureTypeOpt === Some(TopProcedureType))
   }
 }

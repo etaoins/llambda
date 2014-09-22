@@ -18,7 +18,7 @@ abstract class KnownArtificialProc(signature : ProcedureSignature) extends Known
 
   def nativeSymbol(implicit plan : PlanWriter) : String = {
     if (!plannedNativeSymbolOpt.isDefined) {
-      val allocedSymbol = plan.allocProcedureSymbol(symbolHint)
+      val allocedSymbol = plan.allocSymbol(symbolHint)
       plan.plannedFunctions += (allocedSymbol -> planFunction(plan, allocedSymbol))
 
       plannedNativeSymbolOpt = Some(allocedSymbol)

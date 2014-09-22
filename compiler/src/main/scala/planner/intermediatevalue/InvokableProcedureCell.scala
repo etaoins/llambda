@@ -5,8 +5,8 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{PlanWriter, InvokableProcedure, ProcedureTypeToAdaptedSignature}
 import llambda.compiler.{valuetype => vt}
 
-class InvokableProcedureCell(tempValue : ps.TempValue) extends InvokableProcedure {
-  val signature = ProcedureTypeToAdaptedSignature(vt.TopProcedureType)
+class InvokableProcedureCell(procedureType : vt.ProcedureType, tempValue : ps.TempValue) extends InvokableProcedure {
+  val signature = ProcedureTypeToAdaptedSignature(procedureType)
   
   def planSelf()(implicit plan : PlanWriter) : ps.TempValue = 
     tempValue

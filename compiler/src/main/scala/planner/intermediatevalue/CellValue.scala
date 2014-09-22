@@ -42,18 +42,19 @@ class CellValue(
     boxedValue
   
   def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : InvokableProcedure =  {
-    if (vt.SatisfiesType(vt.TopProcedureType, schemeType) == Some(false)) {
-      throw new ValueNotApplicableException(plan.activeContextLocated, typeDescription)
-    }
-    else {
-      // Cast to a procedure
-      val boxedProcTemp = toTempValue(vt.TopProcedureType)
-      new InvokableProcedureCell(boxedProcTemp)
+    schemeType.procedureTypeOpt match {
+      case Some(procedureType) =>
+        val boxedProcTemp = toTempValue(procedureType)
+        new InvokableProcedureCell(procedureType, boxedProcTemp)
+
+      case None =>
+        // This is definitely not applicable
+        throw new ValueNotApplicableException(plan.activeContextLocated, typeDescription)
     }
   }
   
   protected def toProcedureTempValue(
-      targetType : vt.SchemeType,
+      targetType : vt.ProcedureType,
       errorMessageOpt : Option[RuntimeErrorMessage],
       staticCheck : Boolean = false
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {

@@ -47,7 +47,7 @@ object ListProcPlanner extends ReportProcPlanner {
     case ("list", operands) =>
       // Build a proper list directly
       val operandValues = operands.map(_._2)
-      Some(SingleValue(ValuesToProperList(operandValues)))
+      Some(SingleValue(ValuesToList(operandValues)))
 
     case ("length", List((_, singleOperand))) =>
       // Do we know the length at compile time?

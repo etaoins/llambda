@@ -13,7 +13,6 @@ object PlanCadr {
   private type PlanLoader = (ps.TempValue, ps.TempValue) => ps.Step
   
   private def loadCadr(
-      located : ContextLocated,
       pairValue : iv.IntermediateValue,
       errorMessageOpt : Option[RuntimeErrorMessage],
       knownPairLoader : KnownPairLoader,
@@ -25,9 +24,7 @@ object PlanCadr {
       knownPairLoader(knownPair)
 
     case _ =>
-      val pairTemp = plan.withContextLocation(located) {
-        pairValue.toTempValue(vt.AnyPairType, errorMessageOpt)
-      }
+      val pairTemp = pairValue.toTempValue(vt.AnyPairType, errorMessageOpt)
 
       // Does this pair have a specific pair type?
       val resultType = pairValue.schemeType match {
@@ -46,18 +43,16 @@ object PlanCadr {
   }
 
   def loadCar(
-      located : ContextLocated,
       pairValue : iv.IntermediateValue,
       errorMessageOpt : Option[RuntimeErrorMessage] = None
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : iv.IntermediateValue = {
-    loadCadr(located, pairValue, errorMessageOpt, _.car, _.carTypeRef, ps.LoadPairCar)
+    loadCadr(pairValue, errorMessageOpt, _.car, _.carTypeRef, ps.LoadPairCar)
   }
   
   def loadCdr(
-      located : ContextLocated,
       pairValue : iv.IntermediateValue,
       errorMessageOpt : Option[RuntimeErrorMessage] = None
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : iv.IntermediateValue = {
-    loadCadr(located, pairValue, errorMessageOpt, _.cdr, _.cdrTypeRef, ps.LoadPairCdr)
+    loadCadr(pairValue, errorMessageOpt, _.cdr, _.cdrTypeRef, ps.LoadPairCdr)
   }
 }

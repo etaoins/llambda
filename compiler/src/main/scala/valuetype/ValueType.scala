@@ -133,6 +133,14 @@ sealed abstract trait SchemeType extends CellValueType {
   def +(otherType : SchemeType) : SchemeType = {
     SchemeType.fromTypeUnion(List(this, otherType))
   }
+  
+  /** Returns the procedure type for this type if one exists
+    *
+    * Unions can only have a single procedure type at once. This will return that procedure type if it exists or 
+    * None if the union has no procedure type.
+    */
+  def procedureTypeOpt : Option[ProcedureType] =
+    None
 }
 
 /** Scheme type representing an exact value */
@@ -161,6 +169,14 @@ case class SchemeTypeAtom(cellType : ct.ConcreteCellType) extends NonUnionScheme
     case _ =>
       true
   }
+  
+  override def procedureTypeOpt : Option[ProcedureType] =
+    if (cellType == ct.ProcedureCell) {
+      Some(TopProcedureType)
+    }
+    else {
+      None
+    }
 }
 
 /** Constant boolean type */
@@ -277,6 +293,9 @@ case class UnionType(memberTypes : Set[NonUnionSchemeType]) extends SchemeType {
       SchemeType.fromCellType(candidateCellType) == this 
     })
   }
+  
+  override def procedureTypeOpt : Option[ProcedureType] =
+    memberTypes.flatMap(_.procedureTypeOpt).headOption
 }
 
 /** Abstract trait for vector types */
@@ -307,6 +326,9 @@ sealed trait ProcedureType extends NonUnionSchemeType {
   val fixedArgTypes : List[SchemeType]
   val restArgMemberTypeOpt : Option[SchemeType]
   val returnType : vt.ReturnType.ReturnType
+  
+  override def procedureTypeOpt : Option[ProcedureType] =
+    Some(this)
 }
 
 case class SpecificProcedureType(

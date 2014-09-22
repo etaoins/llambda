@@ -122,7 +122,7 @@ private[planner] object PlanLambda {
   ) : PlanResult = {
     // Give ourselves a name. This will be made unique if it collides
     val sourceName = sourceNameHint.getOrElse("anonymous-procedure")
-    val nativeSymbol = parentPlan.allocProcedureSymbol(sourceName)
+    val nativeSymbol = parentPlan.allocSymbol(sourceName)
       
     val fixedArgLocs = lambdaExpr.fixedArgs
     val restArgLoc = lambdaExpr.restArgOpt

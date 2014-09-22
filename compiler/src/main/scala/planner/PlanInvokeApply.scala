@@ -58,50 +58,14 @@ object PlanInvokeApply {
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ResultValues = {
     val signature = invokableProc.signature
     val argListType = vt.UniformProperListType(vt.AnySchemeType)
-    val nativeSymbol = invokableProc.nativeSymbolOpt.getOrElse("procedure")
     
-    val insufficientArgsMessage = if (signature.restArgMemberTypeOpt.isDefined) {
-      RuntimeErrorMessage(
-        name=s"insufficientArgsFor${nativeSymbol}",
-        text=s"Called ${nativeSymbol} with insufficient arguments; requires at least ${signature.fixedArgTypes.length} arguments."
-      )
-    }
-    else {
-      RuntimeErrorMessage(
-        name=s"insufficientArgsFor${nativeSymbol}",
-        text=s"Called ${nativeSymbol} with insufficient arguments; requires exactly ${signature.fixedArgTypes.length} arguments."
-      )
-    }
+    val insufficientArgsMessage = ArityRuntimeErrorMessage.insufficientArgs(invokableProc)
 
     // Split our arguments in to fixed args and a rest arg
-    case class ArgState(
-      fixedArgTemps : List[ps.TempValue],
-      restArgValue : iv.IntermediateValue
-    )
+    val destructuredArgs = DestructureList(argListValue, signature.fixedArgTypes, insufficientArgsMessage)
 
-    val initialArgState = ArgState(Nil, argListValue)
-
-    val finalArgState = signature.fixedArgTypes.foldLeft(initialArgState) {
-      case (ArgState(fixedArgTemps, restArgValue), valueType) =>
-        // Load the argument value
-        val argValue = PlanCadr.loadCar(plan.activeContextLocated, restArgValue, Some(insufficientArgsMessage))
-
-        val argTemp = argValue.toTempValue(valueType)
-
-        // We know we just loaded from a pair
-        val restArgValueType = restArgValue.schemeType & vt.AnyPairType
-        val retypedRestArgValue = restArgValue.withSchemeType(restArgValueType)
-
-        val remainingRestArgValue = PlanCadr.loadCdr(plan.activeContextLocated, retypedRestArgValue)
-
-        ArgState(
-          fixedArgTemps=fixedArgTemps :+ argTemp,
-          restArgValue=remainingRestArgValue
-        )
-    }
-
-    val fixedArgTemps = finalArgState.fixedArgTemps
-    val restArgValue = finalArgState.restArgValue
+    val fixedArgTemps = destructuredArgs.memberTemps
+    val restArgValue = destructuredArgs.listTailValue
 
     val restArgTemps = signature.restArgMemberTypeOpt match {
       case Some(memberType) =>
@@ -111,10 +75,7 @@ object PlanInvokeApply {
         Some(typeCheckedRestArg)
 
       case None =>
-        val tooManyArgsMessage = RuntimeErrorMessage(
-          name=s"tooManyArgsFor${nativeSymbol}",
-          text=s"Called ${nativeSymbol} with too many arguments; requires exactly ${signature.fixedArgTypes.length} arguments."
-        )
+        val tooManyArgsMessage = ArityRuntimeErrorMessage.tooManyArgs(invokableProc)
         
         // Make sure we're out of args by doing a check cast to an empty list
         restArgValue.toTempValue(vt.EmptyListType, Some(tooManyArgsMessage))
@@ -147,7 +108,7 @@ object PlanInvokeApply {
         }
       }
 
-      ValuesToProperList(restArgs, capturable=false).toTempValue(vt.ListElementType)
+      ValuesToList(restArgs, capturable=false).toTempValue(vt.ListElementType)
     }
 
     PlanInvokeApply.withTempValues(invokableProc, fixedTemps, restTemps)

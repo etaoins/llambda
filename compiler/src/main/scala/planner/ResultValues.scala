@@ -51,7 +51,7 @@ case class SingleValue(value : iv.IntermediateValue) extends ResultValues {
     value
 
   def toMultipleValueList()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) =
-    ValuesToProperList(List(value), capturable=false)
+    ValuesToList(List(value), capturable=false)
   
   def returnType = 
     vt.ReturnType.SingleValue(value.schemeType)
@@ -80,7 +80,7 @@ case class MultipleValues(multipleValueList : iv.IntermediateValue) extends Resu
       text="Single value expected; 0 values provided"
     )
 
-    val carValue = PlanCadr.loadCar(plan.activeContextLocated, multipleValueList, Some(notEnoughValuesMessage)) 
+    val carValue = PlanCadr.loadCar(multipleValueList, Some(notEnoughValuesMessage)) 
     
     val extraValuesMessage = RuntimeErrorMessage(
       name="extraValuesForSingle",
@@ -92,7 +92,7 @@ case class MultipleValues(multipleValueList : iv.IntermediateValue) extends Resu
     val retypedMultipleValueList = multipleValueList.withSchemeType(newListSchemeType)
 
     // Make sure there's no more values
-    val cdrValue = PlanCadr.loadCdr(plan.activeContextLocated, retypedMultipleValueList)
+    val cdrValue = PlanCadr.loadCdr(retypedMultipleValueList)
     cdrValue.castToSchemeType(vt.EmptyListType, Some(extraValuesMessage))
 
     carValue
@@ -119,7 +119,7 @@ object ResultValues {
       SingleValue(singleValue)
 
     case multipleValues =>
-      val multipleValueList = ValuesToProperList(multipleValues, capturable=false)
+      val multipleValueList = ValuesToList(multipleValues, capturable=false)
       MultipleValues(multipleValueList)
   }
 }

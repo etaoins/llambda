@@ -40,7 +40,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
   }
   
   protected def toProcedureTempValue(
-      targetType : vt.SchemeType,
+      targetType : vt.ProcedureType,
       errorMessageOpt : Option[RuntimeErrorMessage],
       staticCheck : Boolean = false
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue

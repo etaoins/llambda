@@ -47,7 +47,7 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
   }
   
   def toProcedureTempValue(
-      targetType : vt.SchemeType,
+      targetType : vt.ProcedureType,
       errorMessageOpt : Option[RuntimeErrorMessage],
       staticCheck : Boolean = false
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
@@ -56,7 +56,7 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
       impossibleConversion(message)
     }
 
-    val requiredSignature = ProcedureTypeToAdaptedSignature(vt.TopProcedureType)
+    val requiredSignature = ProcedureTypeToAdaptedSignature(targetType)
 
     // Store an entry point with an adapted signature
     val entryPointTemp = if (signature == requiredSignature) {
@@ -65,13 +65,16 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
       planEntryPoint()
     }
     else {
-      // Give the trampoline a sufficently scary looking symbol
-      val trampolineSymbol = nativeSymbol + " Trampoline"
+      // Check if this symbol/signature combination has been planned
+      val trampolineKey = (nativeSymbol, requiredSignature)
+      val trampolineSymbol = plan.knownProcTrampolines.getOrElseUpdate(trampolineKey, {
+        val trampolineSymbol = plan.allocSymbol(nativeSymbol + " Trampoline")
 
-      // Ensure this already hasn't been planned
-      plan.plannedFunctions.getOrElseUpdate(trampolineSymbol, {
         // Plan the trampoline
-        PlanProcedureTrampoline(this, nativeSymbol, locationOpt)
+        val plannedTrampoline = PlanProcedureTrampoline(requiredSignature, this, locationOpt)
+        plan.plannedFunctions += trampolineSymbol -> plannedTrampoline
+
+        trampolineSymbol
       })
 
       // Load the trampoline's entry point

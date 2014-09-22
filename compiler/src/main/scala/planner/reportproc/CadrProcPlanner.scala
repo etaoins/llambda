@@ -13,14 +13,18 @@ object CadrProcPlanner extends ReportProcPlanner {
       reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ResultValues] = (reportName, operands) match {
     case ("car", List((located, pairValue))) =>
-      Some(SingleValue(
-        PlanCadr.loadCar(located, pairValue)
-      ))
+      plan.withContextLocation(located) {
+        Some(SingleValue(
+          PlanCadr.loadCar(pairValue)
+        ))
+      }
 
     case ("cdr", List((located, pairValue))) =>
-      Some(SingleValue(
-        PlanCadr.loadCdr(located, pairValue)
-      ))
+      plan.withContextLocation(located) {
+        Some(SingleValue(
+          PlanCadr.loadCdr(pairValue)
+        ))
+      }
 
     case _ =>
       None

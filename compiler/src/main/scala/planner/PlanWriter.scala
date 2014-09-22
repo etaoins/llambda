@@ -7,14 +7,16 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{ContextLocated, NoContextLocation}
 import llambda.compiler.InternalCompilerErrorException
 import llambda.compiler.et
+import llambda.compiler.ProcedureSignature
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{intermediatevalue => iv}
 
 class PlanWriter(
     val config : PlanConfig,
     val plannedFunctions : mutable.Map[String, PlannedFunction],
-    val allocedProcSymbols : mutable.HashSet[String],
-    val plannedTypePredicates : mutable.Map[vt.SchemeType, iv.KnownTypePredicateProc]
+    val allocedSymbols : mutable.HashSet[String],
+    val plannedTypePredicates : mutable.Map[vt.SchemeType, iv.KnownTypePredicateProc],
+    val knownProcTrampolines : mutable.Map[(String, ProcedureSignature), String]
 ) {
   private val contextLocStack = new mutable.Stack[ContextLocated] 
 
@@ -81,7 +83,7 @@ class PlanWriter(
   }
 
   private def findNextFreeSymbol(sourceName : String) : String = {
-    val allKnownSymbols = plannedFunctions.keySet ++ allocedProcSymbols
+    val allKnownSymbols = plannedFunctions.keySet ++ allocedSymbols
 
     if (!allKnownSymbols.contains(sourceName)) {
       sourceName
@@ -99,20 +101,27 @@ class PlanWriter(
     }
   }
 
-  /** Allocates a unique name for a procedure
+  /** Allocates a unique name for a procedure or function
     *
     * codegen expects a flat namespace for procedures but the same name can appear in multiple Scheme scopes 
     */
-  def allocProcedureSymbol(sourceName : String) : String = {
+  def allocSymbol(sourceName : String) : String = {
     val freeSymbol = findNextFreeSymbol(sourceName)
-    allocedProcSymbols += freeSymbol
+    allocedSymbols += freeSymbol
 
     freeSymbol
   }
 
   def forkPlan() : PlanWriter = { 
     // All forks share plannedFunctions
-    val forkedPlan = new PlanWriter(config, plannedFunctions, allocedProcSymbols, plannedTypePredicates)
+    val forkedPlan = new PlanWriter(
+      config,
+      plannedFunctions,
+      allocedSymbols,
+      plannedTypePredicates,
+      knownProcTrampolines
+    )
+
     forkedPlan.contextLocStack.pushAll(this.contextLocStack.headOption)
 
     forkedPlan
@@ -147,7 +156,8 @@ object PlanWriter {
     new PlanWriter(
       config=planConfig,
       plannedFunctions=new mutable.HashMap[String, PlannedFunction],
-      allocedProcSymbols=mutable.HashSet(planConfig.analysis.nativeSymbols.toSeq : _*),
-      plannedTypePredicates=new mutable.HashMap[vt.SchemeType, iv.KnownTypePredicateProc]
+      allocedSymbols=mutable.HashSet(planConfig.analysis.nativeSymbols.toSeq : _*),
+      plannedTypePredicates=new mutable.HashMap[vt.SchemeType, iv.KnownTypePredicateProc],
+      knownProcTrampolines=new mutable.HashMap[(String, ProcedureSignature), String]
     )
 }
