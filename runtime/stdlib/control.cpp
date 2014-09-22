@@ -78,13 +78,13 @@ ReturnValuesList *lliby_values(RestArgument<AnyCell> *restArgHead)
 	return restArgHead;
 }
 
-ReturnValuesList *lliby_call_with_current_continuation(World &world, TopProcedureCell *proc)
+ReturnValuesList *lliby_call_with_current_continuation(World &world, TypedProcedureCell<ReturnValuesList*, ProcedureCell*> *proc)
 {
 	using dynamic::Continuation;
 	using dynamic::EscapeProcedureCell;
 
 	// This is the procedure we're calling
-	alloc::StrongRef<TopProcedureCell> procRef(world, proc);
+	alloc::StrongRef<TypedProcedureCell<ReturnValuesList*, ProcedureCell*>> procRef(world, proc);
 		
 	// Create the escape procedure and its args
 	// We build this first as there's no way to GC root a continuation at the moment. This also make sure the 
@@ -106,20 +106,17 @@ ReturnValuesList *lliby_call_with_current_continuation(World &world, TopProcedur
 		// Set the continuation on the escape proc - this will make the continuation reachable from GC
 		escapeRef->setContinuation(cont);
 	
-		// Create an argument list just contianing the escape proc
-		ListElementCell *argHead = ListElementCell::createProperList(world, {escapeRef});
-		
 		// Invoke the procedure passing in the escape proc
 		// If it returns without invoking the escape proc we'll return through here
-		return procRef->apply(world, argHead);
+		return procRef->apply(world, escapeRef);
 	}
 }
 
-ReturnValuesList *lliby_call_with_values(World &world, TopProcedureCell *producer, TopProcedureCell *consumerRaw)
+ReturnValuesList *lliby_call_with_values(World &world, ThunkProcedureCell *producer, TopProcedureCell *consumerRaw)
 {
 	alloc::StrongRef<TopProcedureCell> consumer(world, consumerRaw);
 
-	ReturnValuesList *values = producer->apply(world, EmptyListCell::instance());
+	ReturnValuesList *values = producer->apply(world);
 	return consumer->apply(world, values);
 }
 
