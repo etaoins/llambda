@@ -385,7 +385,7 @@
       (() (native-newline (current-output-port)))
       ((port) (native-newline port))))
 
-    (define-r7rs with-exception-handler (world-function "lliby_with_exception_handler" (<procedure> <procedure>) -> *))
+    (define-r7rs with-exception-handler (world-function "lliby_with_exception_handler" ((-> <any> *) (-> *)) -> *))
     (define-r7rs raise (world-function "lliby_raise" (<any>) noreturn))
     (define-r7rs raise-continuable (world-function "lliby_raise_continuable" (<any>) -> *))
     (define-r7rs error-object? (make-predicate <error-object>))
@@ -394,7 +394,7 @@
     
     ; This is a native code helper which replaces most of the (guard) macro from R7RS with a much more efficient
     ; native code implementation
-    (define guard-kernel (world-function "_lliby_guard_kernel" (<procedure> <procedure>) -> *))
+    (define guard-kernel (world-function "_lliby_guard_kernel" ((-> <any> *) (-> *)) -> *))
 
     (define-syntax guard
       (syntax-rules ()

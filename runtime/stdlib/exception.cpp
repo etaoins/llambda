@@ -19,17 +19,20 @@ using namespace lliby;
 extern "C"
 {
 
-ReturnValuesList* lliby_with_exception_handler(World &world, TopProcedureCell *handlerRaw, TopProcedureCell *thunk)
+using ThunkProcedureCell = TypedProcedureCell<ReturnValuesList*>;
+using HandlerProcedureCell = TypedProcedureCell<ReturnValuesList*, AnyCell*>;
+
+ReturnValuesList* lliby_with_exception_handler(World &world, HandlerProcedureCell *handlerRaw, ThunkProcedureCell *thunk)
 {
 	// Root our exception handler
-	alloc::StrongRef<TopProcedureCell> handler(world, handlerRaw);
+	alloc::StrongRef<HandlerProcedureCell> handler(world, handlerRaw);
 
 	// Keep track of our dynamic state
 	alloc::DynamicStateRef expectedStateRef(world, world.activeStateCell);
 
 	try
 	{
-		return thunk->apply(world, EmptyListCell::instance());
+		return thunk->apply(world);
 	}
 	catch (dynamic::SchemeException &except)
 	{
@@ -40,11 +43,9 @@ ReturnValuesList* lliby_with_exception_handler(World &world, TopProcedureCell *h
 		alloc::AnyRef objectRef(world, except.object());
 		alloc::StrongRef<dynamic::EscapeProcedureCell> resumeProcRef(world, except.resumeProc());
 
-		ListElementCell *argHead = ListElementCell::createProperList(world, {except.object()});
-
 		// Call the handler in the dynamic environment (raise) was in
 		// This is required by R7RS for reasons mysterious to me
-		ReturnValuesList *handlerResult = handler->apply(world, argHead);
+		ReturnValuesList *handlerResult = handler->apply(world, except.object());
 
 		// Is this a resumable exception?
 		if (resumeProcRef != nullptr)
@@ -60,14 +61,14 @@ ReturnValuesList* lliby_with_exception_handler(World &world, TopProcedureCell *h
 	}
 }
 
-ReturnValuesList *_lliby_guard_kernel(World &world, TopProcedureCell *guardAuxProcRaw, TopProcedureCell *thunk) 
+ReturnValuesList *_lliby_guard_kernel(World &world, HandlerProcedureCell *guardAuxProcRaw, ThunkProcedureCell *thunk) 
 {
-	alloc::StrongRef<TopProcedureCell> guardAuxProc(world, guardAuxProcRaw);
+	alloc::StrongRef<HandlerProcedureCell> guardAuxProc(world, guardAuxProcRaw);
 	alloc::DynamicStateRef expectedStateRef(world, world.activeStateCell);
 
 	try
 	{
-		return thunk->apply(world, EmptyListCell::instance()); 
+		return thunk->apply(world); 
 	}
 	catch (dynamic::SchemeException &except)
 	{
@@ -75,13 +76,10 @@ ReturnValuesList *_lliby_guard_kernel(World &world, TopProcedureCell *guardAuxPr
 
 		// Switch to the guard's dynamic state
 		dynamic::State::switchStateCell(world, expectedStateRef);
-		
-		// Build an argument list with the exception value
-		ListElementCell *argHead = ListElementCell::createProperList(world, {objectRef});
 
 		// Call our guard-aux procedure
 		// This will re-throw if no match is encountered
-		return guardAuxProc->apply(world, argHead);
+		return guardAuxProc->apply(world, objectRef);
 	}
 }
 

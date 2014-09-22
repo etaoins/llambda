@@ -40,6 +40,26 @@
 		 (raise 'raised-data)))
 ))
 
+(define-test "exception handler with incorrect thunk arity fails at compile time" (expect-compile-failure
+	(import (scheme process-context))
+	(with-exception-handler 
+	  (lambda (obj)
+		 (exit #f))
+
+	  (lambda (too many args)
+		 (raise 'raised-data)))
+))
+
+(define-test "exception handler with incorrect handler arity fails at compile time" (expect-compile-failure
+	(import (scheme process-context))
+	(with-exception-handler 
+	  (lambda ()
+		 (exit #f))
+
+	  (lambda ()
+		 (raise 'raised-data)))
+))
+
 (define-test "with-exception-handler returns inner value when no exception is raised" (expect inner-value
 	(with-exception-handler
 	  (lambda (x))
