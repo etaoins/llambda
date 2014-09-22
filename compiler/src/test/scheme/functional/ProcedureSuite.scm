@@ -137,6 +137,15 @@
 
   ((typeless-cell return-value) 'symbol)))
 
+(define-test "procedure with rest arg can be converted to typed procedure without rest arg" (expect 1
+  (import (llambda typed))
+
+  (: apply-thunk (-> (-> <any>) <any>))
+  (define (apply-thunk thunk)
+    (thunk))
+
+  (apply-thunk *)))
+
 (define-test "typed procedure invoked with correct rest arg types" (expect-success
   (import (llambda typed))
 	(define: (add-values vals : <exact-integer> *) 

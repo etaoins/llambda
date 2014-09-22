@@ -121,8 +121,11 @@ private[planner] object PlanProcedureTrampoline {
 
         Some(outRestArgValue.toTempValue(vt.ListElementType)(plan, worldPtrTemp))
 
-      case _ =>
+      case None if !outHasRestArg =>
         None
+      
+      case None if outHasRestArg =>
+        Some(iv.EmptyListValue.toTempValue(vt.ListElementType)(plan, worldPtrTemp))
     }
 
     val (updatedInvokable, outSelfTemp) = if (isAdapter) {
