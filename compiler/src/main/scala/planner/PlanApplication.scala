@@ -188,28 +188,8 @@ private[planner] object PlanApplication {
     // Plan this as a an invoke (function call)
     val invokePlan = plan.forkPlan()
 
-    // Ensure we're applying the correct types in case our procedure type is more restrictive than the physical
-    // signature type than the procedure we're applying. This doesn't need to happen in the inline plan because it's not
-    // possible to retype known procedures.
-    val (procTypeFixedArgs, procTypeRestArgs) = operands.splitAt(procedureType.fixedArgTypes.length)
-
-    val castFixedArgs = procTypeFixedArgs.zip(procedureType.fixedArgTypes) map {
-      case ((located, fixedArgValue), requiredType) =>
-        invokePlan.withContextLocation(located) {
-          (located -> fixedArgValue.castToSchemeType(requiredType)(invokePlan, worldPtr))
-        }
-    }
-
-    val castRestArgs = procTypeRestArgs map { case (located, restArgValue) =>
-      val requiredType = procedureType.restArgMemberTypeOpt.get
-      invokePlan.withContextLocation(located) {
-        (located -> restArgValue.castToSchemeType(requiredType)(invokePlan, worldPtr))
-      }
-    }
-
-    val castOperands = castFixedArgs ++ castRestArgs
     val invokeValues = (invokePlan.withContextLocation(located) {
-      PlanInvokeApply.withIntermediateValues(invokableProc, castOperands)(invokePlan, worldPtr) 
+      PlanInvokeApply.withIntermediateValues(invokableProc, operands)(invokePlan, worldPtr) 
     })
     
     procResultValue match {
