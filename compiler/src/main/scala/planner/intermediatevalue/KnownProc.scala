@@ -42,7 +42,7 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
     Some(nativeSymbol)
   
   def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue = {
-    val procTemp = toProcedureTempValue(vt.TopProcedureType, None)
+    val procTemp = toProcedureTempValue(schemeType, None)
     BoxedValue(ct.ProcedureCell, procTemp)
   }
   
@@ -61,7 +61,6 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
     // Store an entry point with an adapted signature
     val entryPointTemp = if (signature == requiredSignature) {
       // The procedure already has the correct signature
-      // This is unlikely but worth checking
       planEntryPoint()
     }
     else {
@@ -71,7 +70,7 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
         val trampolineSymbol = plan.allocSymbol(nativeSymbol + " Trampoline")
 
         // Plan the trampoline
-        val plannedTrampoline = PlanProcedureTrampoline(requiredSignature, this, locationOpt)
+        val plannedTrampoline = PlanProcedureTrampoline(requiredSignature, this, isAdapter=false, locationOpt)
         plan.plannedFunctions += trampolineSymbol -> plannedTrampoline
 
         trampolineSymbol
@@ -130,17 +129,11 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
   override def withSchemeType(newType : vt.SchemeType) : KnownProc =
     this
   
-  override def castToSchemeType(
-      targetType : vt.SchemeType,
-      errorMessageOpt : Option[RuntimeErrorMessage] = None,
-      staticCheck : Boolean = false
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : IntermediateValue= {
-    if (hasDefiniteType(targetType)) {
-      // We don't need to do anything 
-      return this
-    }
+  def withSelfValue(selfValue : ps.TempValue) : KnownProc
 
-    // Procedures cannot have their types tested at runtime
-    impossibleConversion(s"${typeDescription} does not statically satisfy type ${targetType}")
-  }
+  override def restoreFromClosure(
+      valueType : vt.ValueType,
+      varTemp : ps.TempValue
+  )(planConfig : PlanConfig) : IntermediateValue = 
+    withSelfValue(varTemp)
 }

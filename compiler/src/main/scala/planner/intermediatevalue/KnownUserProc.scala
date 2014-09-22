@@ -48,8 +48,8 @@ class KnownUserProc(
     new KnownUserProc(signature, plannedSymbol, selfTempOpt, Some(newReportName))
   }
   
-  override def restoreFromClosure(valueType : vt.ValueType, varTemp : ps.TempValue)(planConfig : PlanConfig) : IntermediateValue = {
-    new KnownUserProc(signature, plannedSymbol, Some(varTemp), reportNameOpt)
+  override def withSelfValue(selfTemp : ps.TempValue) : KnownUserProc = {
+    new KnownUserProc(signature, plannedSymbol, Some(selfTemp), reportNameOpt)
   }
   
   override def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = {

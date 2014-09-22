@@ -112,7 +112,7 @@ case class Cond(test : Expr, trueExpr : Expr, falseExpr : Expr) extends Expr {
 }
 
 case class Lambda(
-    override val schemeType : vt.SpecificProcedureType,
+    override val schemeType : vt.ProcedureType,
     fixedArgs : List[StorageLocation],
     restArgOpt : Option[StorageLocation],
     body : Expr,
@@ -178,7 +178,7 @@ case class RecordConstructor(recordType : vt.RecordType, initializedFields : Lis
   override def cloningMap(f : Expr => Expr) : Expr =
     RecordConstructor(recordType, initializedFields).assignLocationFrom(this)
   
-  override def schemeType = vt.SpecificProcedureType(
+  override def schemeType = vt.ProcedureType(
     fixedArgTypes=initializedFields.map(_.fieldType.schemeType),
     restArgMemberTypeOpt=None,
     returnType=vt.ReturnType.SingleValue(recordType)
@@ -189,7 +189,7 @@ case class RecordAccessor(recordType : vt.RecordType, field : vt.RecordField) ex
   override def cloningMap(f : Expr => Expr) : Expr =
     RecordAccessor(recordType, field).assignLocationFrom(this)
   
-  override def schemeType = vt.SpecificProcedureType(
+  override def schemeType = vt.ProcedureType(
     fixedArgTypes=List(recordType),
     restArgMemberTypeOpt=None,
     returnType=vt.ReturnType.SingleValue(field.fieldType.schemeType)
@@ -200,7 +200,7 @@ case class RecordMutator(recordType : vt.RecordType, field : vt.RecordField) ext
   override def cloningMap(f : Expr => Expr) : Expr =
     RecordMutator(recordType, field).assignLocationFrom(this)
 
-  override def schemeType = vt.SpecificProcedureType(
+  override def schemeType = vt.ProcedureType(
     fixedArgTypes=List(recordType, field.fieldType.schemeType),
     restArgMemberTypeOpt=None,
     returnType=vt.ReturnType.SingleValue(vt.UnitType)

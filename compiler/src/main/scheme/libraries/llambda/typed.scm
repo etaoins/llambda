@@ -8,7 +8,7 @@
 
   ; Export our type names
   (export <any> <list-element> <pair> <empty-list> <string> <symbol> <boolean> <number> <exact-integer> <flonum> <char>
-          <vector> <bytevector> <procedure> <port>)
+          <vector> <bytevector> <procedure> <port> <unit>)
 
   ; Our own type constructors
   (export Assocof)

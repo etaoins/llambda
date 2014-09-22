@@ -32,6 +32,56 @@
 
 	((typeless-cell -) 80 50 20)))
 
+(define-test "datum cells can be converted to specific procedure type" (expect 8
+	(import (llambda test-util))
+	(import (llambda typed))
+
+  (: double-binary-op (-> (-> <exact-integer> <exact-integer> <exact-integer>) <exact-integer> <exact-integer>))
+  (define (double-binary-op proc operand)
+    (proc operand operand))
+
+  (double-binary-op (typeless-cell +) 4)))
+
+(define-test "specific procedure types can be converted to other procedure types" (expect 8
+	(import (llambda typed))
+
+  (define: plus : (-> <number> * <number>) *)
+  (set! plus +)
+
+  (: double-binary-op (-> (-> <exact-integer> <exact-integer> <exact-integer>) <exact-integer> <exact-integer>))
+  (define (double-binary-op proc operand)
+    (proc operand operand))
+
+  (double-binary-op plus 4)))
+
+(define-test "multiple specific procedure types can be converted to the same other procedure type" (expect-success
+  (import (llambda typed))
+
+  (define: plus : (-> <number> * <number>) *)
+  (set! plus +)
+
+  (define: construct : (-> <number> <number> <any>) *)
+  (set! construct cons)
+
+  (: double-binary-op (-> (-> <exact-integer> <exact-integer> <any>) <exact-integer> <any>))
+  (define (double-binary-op proc operand)
+    (proc operand operand))
+
+  (assert-equal 8 (double-binary-op plus 4))
+  (assert-equal '(4 . 4) (double-binary-op construct 4))))
+
+(define-test "unions containing procedure types can be converted to other procedure types" (expect 8
+	(import (llambda typed))
+
+  (define: plus : (U <unit> (-> <number> * <number>)) #!unit)
+  (set! plus +)
+
+  (: double-binary-op (-> (-> <exact-integer> <exact-integer> <exact-integer>) <exact-integer> <exact-integer>))
+  (define (double-binary-op proc operand)
+    (proc operand operand))
+
+  (double-binary-op plus 4)))
+
 (define-test "applying datum cells with too many arguments fails" (expect-failure
 	(import (llambda test-util))
 

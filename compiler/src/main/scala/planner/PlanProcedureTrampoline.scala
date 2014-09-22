@@ -18,17 +18,20 @@ private[planner] object PlanProcedureTrampoline {
     * 
     * @param  trampolineSignature  The required signature for the trampoline function
     * @param  targetProc           The target procedure. The trampoline will ensure the arguments it's passed satisfy
-    *                              the target procedure's signature and perform any required type conversions. 
+    *                              the target procedure's signature and perform any required type conversions.
+    * @param  isAdapter            If true this is an adapter procedure. The real procedure cell will be loaded from
+    *                              the self parameter and passed to the destination procedure
     * @param  targetProcLocOpt     Source location of the target procedure. This is used to generate a comment in the 
     *                              output IR identifying the trampoline.
     */
   def apply(
       trampolineSignature : ProcedureSignature,
       targetProc : InvokableProcedure,
+      isAdapter : Boolean,
       targetProcLocOpt : Option[ContextLocated] = None
   )(implicit parentPlan : PlanWriter) : PlannedFunction = {
     val worldPtrTemp = new ps.WorldPtrValue
-    val selfTemp = ps.CellTemp(ct.ProcedureCell)
+    val inSelfTemp = ps.CellTemp(ct.ProcedureCell)
     implicit val plan = parentPlan.forkPlan()
 
     // Make some aliases
@@ -122,15 +125,29 @@ private[planner] object PlanProcedureTrampoline {
         None
     }
 
+    val (updatedInvokable, outSelfTemp) = if (isAdapter) {
+      // Load the real target proc
+      val closureDataTemp = ps.RecordLikeDataTemp()
+      plan.steps += ps.LoadRecordLikeData(closureDataTemp, inSelfTemp, AdapterProcType)
+
+      val targetProcCell = ps.CellTemp(ct.ProcedureCell)
+      plan.steps += ps.LoadRecordDataField(targetProcCell, closureDataTemp, AdapterProcType, AdapterProcField)
+
+      (targetProc.withSelfValue(targetProcCell), targetProcCell)
+    }
+    else {
+      (targetProc, inSelfTemp) 
+    }
+
     // Collect all of our arguments now
     val allInFixedArgTemps = mappedFixedArgs.map(_._1) ++ extraInFixedArgTemps  
     val allOutFixedArgTemps = mappedFixedArgs.map(_._2) ++ extraOutFixedArgTemps  
 
     val resultValues = PlanInvokeApply.withTempValues(
-      invokableProc=targetProc,
+      invokableProc=updatedInvokable,
       fixedTemps=allOutFixedArgTemps,
       restTemps=outRestArgTempOpt,
-      selfTempOverride=Some(selfTemp)
+      selfTempOverride=Some(outSelfTemp)
     )(plan, worldPtrTemp)
 
     val returnTempOpt = resultValues.toReturnTempValue(trampolineSignature.returnType)(plan, worldPtrTemp)
@@ -144,7 +161,7 @@ private[planner] object PlanProcedureTrampoline {
 
     val inNamedArguments = List(
       ("world"   -> worldPtrTemp),
-      ("closure" -> selfTemp)
+      ("closure" -> inSelfTemp)
     ) ++ allInFixedArgTemps.zipWithIndex.map { case (fixedArgTemp, index) =>
       s"fixedArg${index}" -> fixedArgTemp
     } ++ inRestArgTempOpt.toList.map { case restArgTemp =>

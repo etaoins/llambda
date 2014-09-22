@@ -100,7 +100,7 @@ class NameForTypeSuite extends FunSuite {
   
   test("multiple type union") {
     val memberTypes = Set[NonUnionSchemeType](TopProcedureType, EmptyListType, UnitType)
-    assert(NameForType(UnionType(memberTypes)) === "(U <empty-list> <procedure> <unit>)")
+    assert(NameForType(UnionType(memberTypes)) === "(U (-> <any> * *) <empty-list> <unit>)")
   }
 
   test("<any>") {
@@ -145,7 +145,7 @@ class NameForTypeSuite extends FunSuite {
   }
 
   test("(-> <number>)") {
-    val procedureType = SpecificProcedureType(
+    val procedureType = ProcedureType(
       fixedArgTypes=Nil,
       restArgMemberTypeOpt=None,
       returnType=ReturnType.SingleValue(NumberType)
@@ -155,7 +155,7 @@ class NameForTypeSuite extends FunSuite {
   }
   
   test("(-> <string> <symbol> <number>)") {
-    val procedureType = SpecificProcedureType(
+    val procedureType = ProcedureType(
       fixedArgTypes=List(StringType, SymbolType),
       restArgMemberTypeOpt=None,
       returnType=ReturnType.SingleValue(NumberType)
@@ -165,7 +165,7 @@ class NameForTypeSuite extends FunSuite {
   }
   
   test("(-> <string> <symbol> * <number>)") {
-    val procedureType = SpecificProcedureType(
+    val procedureType = ProcedureType(
       fixedArgTypes=List(StringType),
       restArgMemberTypeOpt=Some(SymbolType),
       returnType=ReturnType.SingleValue(NumberType)
@@ -175,7 +175,7 @@ class NameForTypeSuite extends FunSuite {
   }
   
   test("(-> <string> <symbol> * (values <port> <unit>)") {
-    val procedureType = SpecificProcedureType(
+    val procedureType = ProcedureType(
       fixedArgTypes=List(StringType),
       restArgMemberTypeOpt=Some(SymbolType),
       returnType=ReturnType.SpecificValues(List(PortType, UnitType))
@@ -185,7 +185,7 @@ class NameForTypeSuite extends FunSuite {
   }
   
   test("(-> <any> * *)") {
-    val procedureType = SpecificProcedureType(
+    val procedureType = ProcedureType(
       fixedArgTypes=Nil,
       restArgMemberTypeOpt=Some(AnySchemeType),
       returnType=ReturnType.ArbitraryValues

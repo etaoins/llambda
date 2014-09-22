@@ -68,7 +68,7 @@ object ExtractLambda {
 
     // Process our type declaration
     val (fixedArgTypes, restArgMemberTypeOpt, returnType) = typeDeclaration match {
-      case vt.SpecificProcedureType(fixedArgAnns, restArgAnnOpt, returnTypeAnn) =>
+      case vt.ProcedureType(fixedArgAnns, restArgAnnOpt, returnTypeAnn) =>
         if (signatureFixedArgTypes.length != fixedArgAnns.length) {
           throw new BadSpecialFormException(located, s"Procedure symbol previously declared with ${fixedArgAnns.length} fixed arguments")
         }
@@ -135,7 +135,7 @@ object ExtractLambda {
     val extractor = new ModuleBodyExtractor(bodyDebugContext, libraryLoader, frontendConfig)
     val bodyExpr = extractor.extractBodyDefinition(boundFixedArgs ++ boundRestArgOpt, definition)
 
-    val procedureType = vt.SpecificProcedureType(
+    val procedureType = vt.ProcedureType(
       fixedArgTypes=fixedArgTypes.map(_._2),
       restArgMemberTypeOpt=restArgMemberTypeOpt.map(_._2),
       returnType=returnType

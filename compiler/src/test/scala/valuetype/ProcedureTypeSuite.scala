@@ -7,67 +7,67 @@ import llambda.compiler.{celltype => ct}
 import Implicits._
 
 class ProcedureTypeSuite extends SchemeTypeSuite {
-  val twoStringToNumberProcedure = SpecificProcedureType(
+  val twoStringToNumberProcedure = ProcedureType(
     fixedArgTypes=List(StringType, StringType),
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SingleValue(NumberType)
   )
   
-  val twoStringToExactIntProcedure = SpecificProcedureType(
+  val twoStringToExactIntProcedure = ProcedureType(
     fixedArgTypes=List(StringType, StringType),
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SingleValue(ExactIntegerType)
   )
 
-  val twoStringToPortProcedure = SpecificProcedureType(
+  val twoStringToPortProcedure = ProcedureType(
     fixedArgTypes=List(StringType, StringType),
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SingleValue(PortType)
   )
   
-  val anyStringToNumberProcedure = SpecificProcedureType(
+  val anyStringToNumberProcedure = ProcedureType(
     fixedArgTypes=Nil,
     restArgMemberTypeOpt=Some(StringType),
     returnType=ReturnType.SingleValue(NumberType)
   )
 
-  val listElementToUnitProcedure = SpecificProcedureType(
+  val listElementToUnitProcedure = ProcedureType(
     fixedArgTypes=List(ListElementType),
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SingleValue(UnitType)
   )
   
-  val pairToUnitProcedure = SpecificProcedureType(
+  val pairToUnitProcedure = ProcedureType(
     fixedArgTypes=List(AnyPairType),
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SingleValue(UnitType)
   )
   
-  val symbolToUnitProcedure = SpecificProcedureType(
+  val symbolToUnitProcedure = ProcedureType(
     fixedArgTypes=List(SymbolType),
     restArgMemberTypeOpt=None,
     returnType=ReturnType.SingleValue(UnitType)
   )
   
-  val listElementsToUnitProcedure = SpecificProcedureType(
+  val listElementsToUnitProcedure = ProcedureType(
     fixedArgTypes=Nil,
     restArgMemberTypeOpt=Some(ListElementType),
     returnType=ReturnType.SingleValue(UnitType)
   )
   
-  val pairsToUnitProcedure = SpecificProcedureType(
+  val pairsToUnitProcedure = ProcedureType(
     fixedArgTypes=Nil,
     restArgMemberTypeOpt=Some(AnyPairType),
     returnType=ReturnType.SingleValue(UnitType)
   )
   
-  val symbolsToUnitProcedure = SpecificProcedureType(
+  val symbolsToUnitProcedure = ProcedureType(
     fixedArgTypes=Nil,
     restArgMemberTypeOpt=Some(SymbolType),
     returnType=ReturnType.SingleValue(UnitType)
   )
 
-  val higherOrderProcedure = SpecificProcedureType(
+  val higherOrderProcedure = ProcedureType(
     fixedArgTypes=List(symbolToUnitProcedure, anyStringToNumberProcedure),
     restArgMemberTypeOpt=Some(listElementToUnitProcedure),
     returnType=ReturnType.SingleValue(twoStringToExactIntProcedure)
@@ -93,16 +93,24 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
     assert(SatisfiesType(twoStringToPortProcedure, StringType) === Some(false))
   }
   
-  test("specific procedure type definitely satisfies top procedure type") {
-    assert(SatisfiesType(TopProcedureType, twoStringToNumberProcedure) === Some(true))
+  test("specific procedure type may satisfy top procedure type") {
+    assert(SatisfiesType(TopProcedureType, twoStringToNumberProcedure) === None)
+  }
+  
+  test("specific procedure type definitely satisfies procedure atom type") {
+    assert(SatisfiesType(SchemeTypeAtom(ct.ProcedureCell), twoStringToNumberProcedure) === Some(true))
   }
   
   test("specific procedure type definitely satisfies <any> type") {
     assert(SatisfiesType(AnySchemeType, twoStringToNumberProcedure) === Some(true))
   }
 
-  test("higher order procedure type definitely satisfies top procedure type") {
-    assert(SatisfiesType(TopProcedureType, higherOrderProcedure) === Some(true))
+  test("higher order procedure type may satisfy top procedure type") {
+    assert(SatisfiesType(TopProcedureType, higherOrderProcedure) === None)
+  }
+  
+  test("higher order procedure type definitely satisfies procedure type atom") {
+    assert(SatisfiesType(SchemeTypeAtom(ct.ProcedureCell), higherOrderProcedure) === Some(true))
   }
   
   test("higher order procedure type definitely satisfies <any> type") {

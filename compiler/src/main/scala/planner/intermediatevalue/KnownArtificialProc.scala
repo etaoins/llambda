@@ -29,9 +29,8 @@ abstract class KnownArtificialProc(signature : ProcedureSignature) extends Known
   
   protected def planFunction(parentPlan : PlanWriter, allocedSymbol : String) : PlannedFunction
 
-  override def restoreFromClosure(valueType : vt.ValueType, varTemp : ps.TempValue)(planConifg : PlanConfig) : IntermediateValue = {
+  override def withSelfValue(selfTemp : ps.TempValue) = {
     // We have no self value so we don't need be to captured and therefore restored
-    throw new InternalCompilerErrorException("Attempted to restore an artificial procedure from a closure")
+    throw new InternalCompilerErrorException("Attempt to change the self value of an artificial procedure")
   }
-
 }

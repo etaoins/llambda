@@ -129,13 +129,13 @@ object ExtractType {
             val restArgMemberType = extractNonEmptySchemeType(restArgMemberDatum, noRecursiveVars)
             val returnType = extractReturnType(returnDatum)
 
-            vt.SpecificProcedureType(fixedArgTypes, Some(restArgMemberType), returnType)
+            vt.ProcedureType(fixedArgTypes, Some(restArgMemberType), returnType)
 
           case returnDatum :: reverseFixedArgData =>
             val fixedArgTypes = reverseFixedArgData.reverse.map(extractNonEmptySchemeType(_, noRecursiveVars))
             val returnType = extractReturnType(returnDatum)
             
-            vt.SpecificProcedureType(fixedArgTypes, None, returnType)
+            vt.ProcedureType(fixedArgTypes, None, returnType)
 
           case  _ =>
             throw new BadSpecialFormException(constructorName, "-> requires at least one return type argument")

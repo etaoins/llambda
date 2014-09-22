@@ -16,7 +16,8 @@ class PlanWriter(
     val plannedFunctions : mutable.Map[String, PlannedFunction],
     val allocedSymbols : mutable.HashSet[String],
     val plannedTypePredicates : mutable.Map[vt.SchemeType, iv.KnownTypePredicateProc],
-    val knownProcTrampolines : mutable.Map[(String, ProcedureSignature), String]
+    val knownProcTrampolines : mutable.Map[(String, ProcedureSignature), String],
+    val adapterProcTrampolines : mutable.Map[(ProcedureSignature, ProcedureSignature), String]
 ) {
   private val contextLocStack = new mutable.Stack[ContextLocated] 
 
@@ -119,7 +120,8 @@ class PlanWriter(
       plannedFunctions,
       allocedSymbols,
       plannedTypePredicates,
-      knownProcTrampolines
+      knownProcTrampolines,
+      adapterProcTrampolines
     )
 
     forkedPlan.contextLocStack.pushAll(this.contextLocStack.headOption)
@@ -158,6 +160,7 @@ object PlanWriter {
       plannedFunctions=new mutable.HashMap[String, PlannedFunction],
       allocedSymbols=mutable.HashSet(planConfig.analysis.nativeSymbols.toSeq : _*),
       plannedTypePredicates=new mutable.HashMap[vt.SchemeType, iv.KnownTypePredicateProc],
-      knownProcTrampolines=new mutable.HashMap[(String, ProcedureSignature), String]
+      knownProcTrampolines=new mutable.HashMap[(String, ProcedureSignature), String],
+      adapterProcTrampolines=new mutable.HashMap[(ProcedureSignature, ProcedureSignature), String]
     )
 }

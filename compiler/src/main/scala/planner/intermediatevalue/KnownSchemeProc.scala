@@ -32,19 +32,15 @@ extends KnownUserProc(signature, plannedSymbol, selfTempOpt, reportNameOpt) {
     )
   }
   
-  override def restoreFromClosure(
-      valueType : vt.ValueType,
-      varTemp : ps.TempValue
-  )(planConfig : PlanConfig) : IntermediateValue = {
+  override def withSelfValue(selfTemp : ps.TempValue) : KnownUserProc =
     new KnownSchemeProc(
       signature,
       plannedSymbol,
-      Some(varTemp),
+      Some(selfTemp),
       parentState,
       lambdaExpr,
       recursiveSelfLoc,
       reportNameOpt
     )
-  }
 }
 

@@ -32,7 +32,7 @@ case class ProcedureSignature(
   attributes : Set[ProcedureAttribute.ProcedureAttribute]
 ) {
   def toSchemeProcedureType =
-    vt.SpecificProcedureType(
+    vt.ProcedureType(
       fixedArgTypes=fixedArgTypes.map(_.schemeType),
       restArgMemberTypeOpt=restArgMemberTypeOpt,
       returnType=returnType

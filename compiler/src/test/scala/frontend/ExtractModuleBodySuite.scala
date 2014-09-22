@@ -257,7 +257,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
          (define (string-to-symbol x) x)"""
     )(scope)) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(lambdaType, _, _, _, _))))  =>
-        val expectedType = vt.SpecificProcedureType(
+        val expectedType = vt.ProcedureType(
           fixedArgTypes=List(vt.StringType),
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.SingleValue(vt.SymbolType)
@@ -272,7 +272,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
          (define (strings-to-symbol x . rest) x)"""
     )(scope)) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(lambdaType, _, _, _, _))))  =>
-        val expectedType = vt.SpecificProcedureType(
+        val expectedType = vt.ProcedureType(
           fixedArgTypes=List(vt.StringType),
           restArgMemberTypeOpt=Some(vt.StringType),
           returnType=vt.ReturnType.SingleValue(vt.SymbolType)
@@ -320,7 +320,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
          (define: (string-to-symbol (x : <string>)) x)"""
     )(scope)) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(lambdaType, _, _, _, _))))  =>
-        val expectedType = vt.SpecificProcedureType(
+        val expectedType = vt.ProcedureType(
           fixedArgTypes=List(vt.StringType),
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.SingleValue(vt.SymbolType)
@@ -335,7 +335,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
          (define: (strings-to-symbol (x : <string>) rest : <string> *) x)"""
     )(scope)) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(lambdaType, _, _, _, _))))  =>
-        val expectedType = vt.SpecificProcedureType(
+        val expectedType = vt.ProcedureType(
           fixedArgTypes=List(vt.StringType),
           restArgMemberTypeOpt=Some(vt.StringType),
           returnType=vt.ReturnType.SingleValue(vt.SymbolType)
@@ -354,13 +354,13 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
          (define: (le-to-symbol (x : <pair>)) x)"""
     )(scope)) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(lambdaType, _, _, _, _))))  =>
-        val expectedStorageLocType = vt.SpecificProcedureType(
+        val expectedStorageLocType = vt.ProcedureType(
           fixedArgTypes=List(vt.ListElementType),
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.SingleValue(vt.SymbolType)
         )
         
-        val expectedLambdaType = vt.SpecificProcedureType(
+        val expectedLambdaType = vt.ProcedureType(
           fixedArgTypes=List(vt.AnyPairType),
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.SingleValue(vt.SymbolType)
@@ -375,7 +375,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
          (define: (pair-to-symbol (x : <list-element>)) x)"""
     )(scope)) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(lambdaType, _, _, _, _))))  =>
-        val expectedType = vt.SpecificProcedureType(
+        val expectedType = vt.ProcedureType(
           fixedArgTypes=List(vt.AnyPairType),
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.SingleValue(vt.SymbolType)
@@ -394,13 +394,13 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
          (define: (le-to-symbol x : <pair> *) x)"""
     )(scope)) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(lambdaType, _, _, _, _))))  =>
-        val expectedStorageLocType = vt.SpecificProcedureType(
+        val expectedStorageLocType = vt.ProcedureType(
           fixedArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.ListElementType),
           returnType=vt.ReturnType.SingleValue(vt.SymbolType)
         )
         
-        val expectedLambdaType = vt.SpecificProcedureType(
+        val expectedLambdaType = vt.ProcedureType(
           fixedArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.AnyPairType),
           returnType=vt.ReturnType.SingleValue(vt.SymbolType)
@@ -415,7 +415,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
          (define: (pair-to-symbol x : <list-element> *) x)"""
     )(scope)) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(lambdaType, _, _, _, _))))  =>
-        val expectedType = vt.SpecificProcedureType(
+        val expectedType = vt.ProcedureType(
           fixedArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.AnyPairType),
           returnType=vt.ReturnType.SingleValue(vt.SymbolType)
@@ -527,7 +527,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   test("untyped lambdas") {
     inside(exprFor("(lambda () #t)")) {
       case et.Lambda(schemeType, Nil, None, body, _) =>
-        assert(schemeType === vt.SpecificProcedureType(
+        assert(schemeType === vt.ProcedureType(
           fixedArgTypes=Nil,
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.ArbitraryValues
@@ -538,7 +538,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     inside(exprFor("(lambda (x) x)")) {
       case et.Lambda(schemeType, List(argX), None, body, _) =>
-        assert(schemeType === vt.SpecificProcedureType(
+        assert(schemeType === vt.ProcedureType(
           fixedArgTypes=List(vt.AnySchemeType),
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.ArbitraryValues
@@ -550,7 +550,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     
     inside(exprFor("(lambda x x)")) {
       case et.Lambda(schemeType, Nil, Some(restArg), body, _) =>
-        assert(schemeType === vt.SpecificProcedureType(
+        assert(schemeType === vt.ProcedureType(
           fixedArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.AnySchemeType),
           returnType=vt.ReturnType.ArbitraryValues
@@ -563,7 +563,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     inside(exprFor("(lambda (x y . z) x y z)")) {
       case et.Lambda(schemeType, List(argX, argY), Some(restArg), body, _) =>
-        assert(schemeType === vt.SpecificProcedureType(
+        assert(schemeType === vt.ProcedureType(
           fixedArgTypes=List(vt.AnySchemeType, vt.AnySchemeType),
           restArgMemberTypeOpt=Some(vt.AnySchemeType),
           returnType=vt.ReturnType.ArbitraryValues
@@ -584,7 +584,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   test("typed lambdas") {
     inside(exprFor("(lambda: () #t)")(nfiScope)) {
       case et.Lambda(schemeType, Nil, None, body, _) =>
-        assert(schemeType === vt.SpecificProcedureType(
+        assert(schemeType === vt.ProcedureType(
           fixedArgTypes=Nil,
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.ArbitraryValues
@@ -595,7 +595,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     inside(exprFor("(lambda: ((x : <number>)) x)")(nfiScope)) {
       case et.Lambda(schemeType, List(argX), None, body, _) =>
-        assert(schemeType === vt.SpecificProcedureType(
+        assert(schemeType === vt.ProcedureType(
           fixedArgTypes=List(vt.NumberType),
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.ArbitraryValues
@@ -607,7 +607,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     
     inside(exprFor("(lambda: (x : <any> *) x)")(nfiScope)) {
       case et.Lambda(schemeType, Nil, Some(restArg), body, _) =>
-        assert(schemeType === vt.SpecificProcedureType(
+        assert(schemeType === vt.ProcedureType(
           fixedArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.AnySchemeType),
           returnType=vt.ReturnType.ArbitraryValues
@@ -620,7 +620,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     inside(exprFor("(lambda: ((x : <exact-integer>) (y : <string>) z : <symbol> *) x y z)")(nfiScope)) {
       case et.Lambda(schemeType, List(argX, argY), Some(restArg), body, _) =>
-        assert(schemeType === vt.SpecificProcedureType(
+        assert(schemeType === vt.ProcedureType(
           fixedArgTypes=List(vt.ExactIntegerType, vt.StringType),
           restArgMemberTypeOpt=Some(vt.SymbolType),
           returnType=vt.ReturnType.ArbitraryValues
@@ -641,7 +641,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   test("self-executing lambdas") {
     inside(exprFor("((lambda (x) x) 1)")) {
       case et.Apply(et.Lambda(schemeType, List(argX), None, body, _), List(value)) =>
-        assert(schemeType === vt.SpecificProcedureType(
+        assert(schemeType === vt.ProcedureType(
           fixedArgTypes=List(vt.AnySchemeType),
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.ArbitraryValues
@@ -678,7 +678,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     inside(expr) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(schemeType, Nil, None, bodyExpr, _)))) if procLoc == storageLoc =>
-        assert(schemeType === vt.SpecificProcedureType(
+        assert(schemeType === vt.ProcedureType(
           fixedArgTypes=Nil,
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.ArbitraryValues
@@ -701,7 +701,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     inside(expr) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(schemeType, List(fixedArg), None, bodyExpr, _)))) if procLoc == storageLoc =>
-        assert(schemeType === vt.SpecificProcedureType(
+        assert(schemeType === vt.ProcedureType(
           fixedArgTypes=List(vt.AnySchemeType),
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.ArbitraryValues
@@ -725,7 +725,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     inside(expr) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(schemeType, List(fixedArg), None, _, _)))) if procLoc == storageLoc =>
-        assert(schemeType === vt.SpecificProcedureType(
+        assert(schemeType === vt.ProcedureType(
           fixedArgTypes=List(vt.SymbolType),
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.ArbitraryValues
@@ -743,7 +743,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     inside(expr) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(schemeType, List(fixedArg), Some(restArg), bodyExpr, _)))) if procLoc == storageLoc =>
-        assert(schemeType === vt.SpecificProcedureType(
+        assert(schemeType === vt.ProcedureType(
           fixedArgTypes=List(vt.AnySchemeType),
           restArgMemberTypeOpt=Some(vt.AnySchemeType),
           returnType=vt.ReturnType.ArbitraryValues
@@ -769,7 +769,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     inside(expr) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(schemeType, List(fixedArg), Some(restArg), _, _)))) if procLoc == storageLoc =>
-        assert(schemeType === vt.SpecificProcedureType(
+        assert(schemeType === vt.ProcedureType(
           fixedArgTypes=List(vt.BooleanType),
           restArgMemberTypeOpt=Some(vt.StringType),
           returnType=vt.ReturnType.ArbitraryValues
@@ -787,7 +787,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-six").value
     inside(expr) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(schemeType, Nil, Some(restArg), bodyExpr, _)))) if procLoc == storageLoc =>
-        assert(schemeType === vt.SpecificProcedureType(
+        assert(schemeType === vt.ProcedureType(
           fixedArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.AnySchemeType),
           returnType=vt.ReturnType.ArbitraryValues
@@ -810,7 +810,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-six").value
     inside(expr) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(schemeType, Nil, Some(restArg), _, _)))) if procLoc == storageLoc =>
-        assert(schemeType === vt.SpecificProcedureType(
+        assert(schemeType === vt.ProcedureType(
           fixedArgTypes=Nil,
           restArgMemberTypeOpt=Some(vt.PortType),
           returnType=vt.ReturnType.ArbitraryValues
@@ -827,7 +827,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     val procLoc = scope.get("return-self").value
     inside(expr) {
       case et.TopLevelDefine(List((storageLoc, et.Lambda(schemeType, Nil, None, bodyExpr, _)))) if procLoc == storageLoc =>
-        assert(schemeType === vt.SpecificProcedureType(
+        assert(schemeType === vt.ProcedureType(
           fixedArgTypes=Nil,
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.ArbitraryValues

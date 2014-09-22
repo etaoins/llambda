@@ -322,31 +322,21 @@ object VectorOfType {
     }
 }
 
-sealed trait ProcedureType extends NonUnionSchemeType {
-  val fixedArgTypes : List[SchemeType]
-  val restArgMemberTypeOpt : Option[SchemeType]
-  val returnType : vt.ReturnType.ReturnType
+case class ProcedureType(
+    fixedArgTypes : List[SchemeType],
+    restArgMemberTypeOpt : Option[SchemeType],
+    returnType : vt.ReturnType.ReturnType
+) extends DerivedSchemeType {
+  val cellType = ct.ProcedureCell
+  val isGcManaged = true
+
+  val parentType = SchemeTypeAtom(ct.ProcedureCell)
   
   override def procedureTypeOpt : Option[ProcedureType] =
     Some(this)
 }
 
-case class SpecificProcedureType(
-    fixedArgTypes : List[SchemeType],
-    restArgMemberTypeOpt : Option[SchemeType],
-    returnType : vt.ReturnType.ReturnType
-) extends DerivedSchemeType with ProcedureType {
-  val cellType = ct.ProcedureCell
-  val isGcManaged = true
-
-  val parentType = SchemeTypeAtom(ct.ProcedureCell)
-}
-
-object TopProcedureType extends SchemeTypeAtom(ct.ProcedureCell) with ProcedureType {
-  val fixedArgTypes = Nil
-  val restArgMemberTypeOpt = Some(AnySchemeType)
-  val returnType = ReturnType.ArbitraryValues
-}
+object TopProcedureType extends ProcedureType(Nil, Some(AnySchemeType), ReturnType.ArbitraryValues)
 
 /** Union of all possible Scheme types */
 object AnySchemeType extends UnionType(ct.AnyCell.concreteTypes.map(SchemeTypeAtom(_)))
@@ -402,7 +392,7 @@ object SchemeType {
     // We can't distinguish procedure types at runtime
     // Collapse them all in the top procedure type so the types in the union can still be distinguished from each other
     val procSimplifiedTypes = if (boolSimplifiedTypes.count(_.isInstanceOf[ProcedureType]) > 1) {
-      boolSimplifiedTypes.filterNot(_.isInstanceOf[SpecificProcedureType]) + TopProcedureType
+      boolSimplifiedTypes.filterNot(_.isInstanceOf[ProcedureType]) + TopProcedureType
     }
     else {
       boolSimplifiedTypes

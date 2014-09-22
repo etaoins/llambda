@@ -5,7 +5,7 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.typecheck
-import llambda.compiler.planner.{PlanWriter, InvokableProcedure, BoxedValue}
+import llambda.compiler.planner._
 import llambda.compiler.{InternalCompilerErrorException, ValueNotApplicableException}
 import llambda.compiler.RuntimeErrorMessage
 
@@ -44,7 +44,7 @@ class CellValue(
   def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : InvokableProcedure =  {
     schemeType.procedureTypeOpt match {
       case Some(procedureType) =>
-        val boxedProcTemp = toTempValue(procedureType)
+        val boxedProcTemp = toProcedureTempValue(procedureType, None, false)
         new InvokableProcedureCell(procedureType, boxedProcTemp)
 
       case None =>
@@ -58,12 +58,75 @@ class CellValue(
       errorMessageOpt : Option[RuntimeErrorMessage],
       staticCheck : Boolean = false
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
-    if (vt.SatisfiesType(targetType, schemeType) == Some(false)) {
-      val message = s"Unable to convert ${typeDescription} to procedure type ${targetType}"
+    val schemeProcType = schemeType.procedureTypeOpt getOrElse {
+      val message = errorMessageOpt.map(_.text) getOrElse {
+        s"Unable to convert ${typeDescription} to ${targetType}"
+      }
+
       impossibleConversion(message)
     }
 
-    toSchemeTempValue(vt.TopProcedureType, None)
+    if (targetType == schemeProcType) {
+      // We already have the correct type
+      return toNonProcedureTempValue(vt.SchemeTypeAtom(ct.ProcedureCell), errorMessageOpt, staticCheck)
+    }
+    
+    // Make sure our types are sane
+    vt.SatisfiesType(targetType, schemeType) match {
+      case None if staticCheck =>
+        impossibleConversionToType(targetType, errorMessageOpt, true)
+
+      case Some(false) =>
+        impossibleConversionToType(targetType, errorMessageOpt, false)
+
+      case _ =>
+    }
+
+    // Ensure we're a procedure
+    val procedureTypeAtom = vt.SchemeTypeAtom(ct.ProcedureCell)
+
+    if (vt.SatisfiesType(procedureTypeAtom, schemeType) != Some(true)) {
+      val errorMessage = errorMessageOpt getOrElse {
+        RuntimeErrorMessage(
+          name=s"subcastTo${vt.NameForType(targetType)}Failed",
+          text=s"Union typed value did not have a procedure type while attempting to convert value to procedure"
+        )
+      }
+
+      val isProcPred = typecheck.PlanTypeCheck(boxedValue, schemeType, procedureTypeAtom).toNativePred()
+      plan.steps += ps.AssertPredicate(worldPtr, isProcPred, errorMessage)
+    }
+
+    // Find our required signature
+    val requiredSignature = ProcedureTypeToAdaptedSignature(targetType)
+
+    // Prepare a trampoline for this procedure conversion
+    val targetProcTemp = boxedValue.castToCellTempValue(ct.ProcedureCell)
+    val invokableTarget = new InvokableProcedureCell(schemeProcType, targetProcTemp)
+
+    val trampolineKey = (invokableTarget.signature, requiredSignature)
+    val trampolineSymbol = plan.adapterProcTrampolines.getOrElseUpdate(trampolineKey, {
+      val trampolineSymbol = plan.allocSymbol(schemeProcType + " to " + targetType + " Adapter")
+
+      // Plan the trampoline
+      val plannedTrampoline = PlanProcedureTrampoline(requiredSignature, invokableTarget, isAdapter=true)
+      plan.plannedFunctions += trampolineSymbol -> plannedTrampoline
+
+      trampolineSymbol
+    })
+      
+    val trampEntryPointTemp = ps.EntryPointTemp()
+    plan.steps += ps.CreateNamedEntryPoint(trampEntryPointTemp, requiredSignature, trampolineSymbol) 
+
+    // Create the adapter procedure cell
+    val adapterProcTemp = ps.ClosureTemp()
+    val adapterDataTemp = ps.RecordLikeDataTemp()
+
+    plan.steps += ps.InitRecordLike(adapterProcTemp, adapterDataTemp, AdapterProcType, false)
+    plan.steps += ps.SetRecordDataField(adapterDataTemp, AdapterProcType, AdapterProcField, targetProcTemp)
+    plan.steps += ps.SetProcedureEntryPoint(adapterProcTemp, trampEntryPointTemp)
+
+    adapterProcTemp
   }
 
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = nativeType match {

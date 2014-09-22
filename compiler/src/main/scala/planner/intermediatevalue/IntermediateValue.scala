@@ -12,9 +12,30 @@ import llambda.compiler.ImpossibleTypeConversionException
 import llambda.compiler.InternalCompilerErrorException
 
 trait IntermediateValueHelpers {
+  def typeDescription : String
+
   /** Helper for signalling impossible conversions */
   protected def impossibleConversion(message : String)(implicit plan : PlanWriter) = { 
     throw new ImpossibleTypeConversionException(plan.activeContextLocated, message)
+  }
+
+  protected def impossibleConversionToType(
+      targetType : vt.SchemeType,
+      errorMessageOpt : Option[RuntimeErrorMessage],
+      staticCheck : Boolean = false
+  )(implicit plan : PlanWriter) = if (staticCheck) {
+    val message = errorMessageOpt.map(_.text) getOrElse {
+      s"${typeDescription} does not statically satisfy ${vt.NameForType(targetType)}"
+    }
+
+    impossibleConversion(message) 
+  }
+  else {
+    val message = errorMessageOpt.map(_.text) getOrElse {
+      s"Unable to convert ${typeDescription} to ${vt.NameForType(targetType)}"
+    }
+
+    impossibleConversion(message) 
   }
 }
 
@@ -45,7 +66,64 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
       staticCheck : Boolean = false
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
   
-  protected def toSchemeTempValue(
+  private def toProcedureTypeUnionTempValue(
+      targetType : vt.SchemeType,
+      targetSchemeProcType : vt.ProcedureType,
+      errorMessageOpt : Option[RuntimeErrorMessage],
+      staticCheck : Boolean = false
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
+    // This is a union containing different procedure types
+    val resultCellType = targetType.cellType
+    val procTypeAtom = vt.SchemeTypeAtom(ct.ProcedureCell)
+
+    val createProcTemp = { isProcPlan : PlanWriter =>
+      val knownType = schemeType & procTypeAtom
+      val retypedThis = this.withSchemeType(knownType)
+
+      val procTemp = toProcedureTempValue(
+        targetSchemeProcType,
+        errorMessageOpt,
+        staticCheck
+      )(isProcPlan, worldPtr)
+
+      val castTemp = ps.CellTemp(resultCellType)
+      isProcPlan.steps += ps.CastCellToTypeUnchecked(castTemp, procTemp, resultCellType)
+      castTemp
+    }
+
+    val createNonProcTemp = { isNotProcPlan : PlanWriter =>
+      val knownType = schemeType - procTypeAtom
+      val retypedThis = this.withSchemeType(knownType)
+
+      val nonProcTargetType = targetType - procTypeAtom
+      val nonProcTemp = retypedThis.toNonProcedureTempValue(
+        nonProcTargetType,
+        errorMessageOpt,
+        staticCheck
+      )(isNotProcPlan, worldPtr)
+
+      val castTemp = ps.CellTemp(resultCellType)
+      isNotProcPlan.steps += ps.CastCellToTypeUnchecked(castTemp, nonProcTemp, resultCellType)
+      castTemp
+    }
+
+    vt.SatisfiesType(procTypeAtom, schemeType) match {
+      case Some(true) =>
+        createProcTemp(plan)
+
+      case Some(false) =>
+        createNonProcTemp(plan)
+        
+      case None =>
+        // Branch depending on if this is a proc or not
+        val boxedValue = this.toBoxedValue()
+        val isProcPred = typecheck.PlanTypeCheck(boxedValue, schemeType, procTypeAtom).toNativePred()
+
+        plan.buildCondBranch(isProcPred, createProcTemp, createNonProcTemp)
+    }
+  }
+  
+  protected def toNonProcedureTempValue(
       targetType : vt.SchemeType,
       errorMessageOpt : Option[RuntimeErrorMessage],
       staticCheck : Boolean = false
@@ -59,11 +137,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
         toBoxedValue().castToCellTempValue(targetType.cellType)
 
       case None if staticCheck =>
-        val message = errorMessageOpt.map(_.text) getOrElse {
-          s"${typeDescription} does not statically satisfy ${vt.NameForType(targetType)}"
-        }
-
-        impossibleConversion(message) 
+        impossibleConversionToType(targetType, errorMessageOpt, true)
     
       case None if !staticCheck =>
         val errorMessage = errorMessageOpt getOrElse {
@@ -82,11 +156,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
 
       case Some(false) =>
         // Not possible
-        val message = errorMessageOpt.map(_.text) getOrElse {
-          s"Unable to convert ${typeDescription} to ${vt.NameForType(targetType)}"
-        }
-
-        impossibleConversion(message) 
+        impossibleConversionToType(targetType, errorMessageOpt, false)
     }
   }
 
@@ -120,8 +190,14 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     case procedureType : vt.ProcedureType =>
       toProcedureTempValue(procedureType, errorMessageOpt, staticCheck)
 
-    case schemeType : vt.SchemeType =>
-      toSchemeTempValue(schemeType, errorMessageOpt, staticCheck)
+    case targetSchemeType : vt.SchemeType =>
+      (schemeType.procedureTypeOpt, targetSchemeType.procedureTypeOpt) match {
+        case (Some(schemeProcType), Some(targetSchemeProcType)) if schemeProcType != targetSchemeProcType =>
+          toProcedureTypeUnionTempValue(targetSchemeType, targetSchemeProcType, errorMessageOpt, staticCheck)
+
+        case _ =>
+          toNonProcedureTempValue(targetSchemeType, errorMessageOpt, staticCheck)
+      }
 
     case closureType : vt.ClosureType =>
       // Closure types are an internal implementation detail.
@@ -169,7 +245,6 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     case _ =>
       this
   }
-
   
   /** Returns the preferred type to represent this value
     * 

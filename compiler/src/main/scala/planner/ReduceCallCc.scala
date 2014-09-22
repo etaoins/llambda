@@ -79,7 +79,7 @@ object ReduceCallCc {
         SimplifiedCallCc(List(dereturnedLambdaExpr))
       }
       else if (ContainsImmediateReturn(dereturnedBodyExpr)) {
-        val selfApplyProcType = vt.SpecificProcedureType(
+        val selfApplyProcType = vt.ProcedureType(
           fixedArgTypes=Nil,
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.ArbitraryValues

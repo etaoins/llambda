@@ -19,4 +19,7 @@ trait InvokableProcedure {
     * This is used for generating error messages. For some procedure values this will be unknown.
     */
   def nativeSymbolOpt(implicit plan : PlanWriter) : Option[String]
+
+  /** Creates a copy of this invokable procedure with a new self value */
+  def withSelfValue(tempValue : ps.TempValue) : InvokableProcedure
 }

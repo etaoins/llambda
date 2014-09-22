@@ -3,6 +3,7 @@ import io.llambda
 
 import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.{celltype => ct}
 
 import llambda.compiler.valuetype.Implicits._
 
@@ -66,7 +67,7 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
         IntrinsicTypes(targetPlatform).mapValues(BoundType.apply) +
           ("<list>" -> BoundType(vt.UniformProperListType(vt.AnySchemeType))) +
           ("<pair>" -> BoundType(vt.AnyPairType)) +
-          ("<procedure>" -> BoundType(vt.TopProcedureType)) +
+          ("<procedure>" -> BoundType(vt.SchemeTypeAtom(ct.ProcedureCell))) +
           ("<vector>" -> BoundType(vt.VectorOfType(vt.AnySchemeType))) +
           ("world-function" -> Primitives.WorldFunction) +
           ("native-function" -> Primitives.NativeFunction)
