@@ -34,7 +34,7 @@ namespace
 	}
 }
 	
-ParameterProcedureCell* ParameterProcedureCell::createInstance(World &world, AnyCell *initialValueRaw, TopProcedureCell *converterProcedureRaw)
+ParameterProcedureCell* ParameterProcedureCell::createInstance(World &world, AnyCell *initialValueRaw, ConverterProcedureCell *converterProcedureRaw)
 {
 	// Root these across the allocation of the actual procedure cell
 	alloc::AnyRef initialValue(world, initialValueRaw);

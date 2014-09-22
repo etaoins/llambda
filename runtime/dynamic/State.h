@@ -6,6 +6,7 @@
 #include "binding/TypedProcedureCell.h"
 #include "binding/DynamicStateCell.h"
 
+#include "dynamic/ConverterProcedureCell.h"
 #include "alloc/cellref.h"
 
 #include <unordered_map>
@@ -52,11 +53,6 @@ public:
 	 * This only sets the value for this State instance; ancestor states are unmodified
 	 */
 	void setValueForParameter(World &world, ParameterProcedureCell *param, AnyCell *value);
-
-	/**
-	 * Applies a converter procedure to a parameter value
-	 */
-	static AnyCell* applyConverterProcedure(World &world, alloc::StrongRef<TopProcedureCell> &converterProc, AnyCell *value);
 
 	/**
 	 * Returns the parent cell for this state or nullptr if this is a root state

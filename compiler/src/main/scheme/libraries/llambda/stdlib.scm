@@ -364,7 +364,7 @@
     (define-r7rs values (native-function "lliby_values" <any> -> *))
     (define-r7rs call-with-values (world-function "lliby_call_with_values" (<procedure> <procedure>) -> *))
 
-    (define native-make-parameter (world-function "_lliby_make_parameter" (<any> (U <procedure> <unit>)) -> <procedure>))
+    (define native-make-parameter (world-function "_lliby_make_parameter" (<any> (U (-> <any> <any>) <unit>)) -> <procedure>))
     (define-r7rs make-parameter (case-lambda
       ((init) (native-make-parameter init #!unit))
       ((init converter) (native-make-parameter init converter))))

@@ -67,37 +67,16 @@ AnyCell* State::valueForParameter(ParameterProcedureCell *param) const
 	}
 }
 	
-AnyCell* State::applyConverterProcedure(World &world, alloc::StrongRef<TopProcedureCell> &converterProc, AnyCell *value)
-{
-	// Root our parameter procedure
-	// Call our converter
-	ListElementCell *converterArgs = ListElementCell::createProperList(world, {value});
-	
-	ReturnValuesList *convertedValuesHead = converterProc->apply(world, converterArgs);
-
-	// Ensure we received a single value
-	ProperList<AnyCell> convertedValuesList(convertedValuesHead);
-
-	if (convertedValuesList.length() != 1)
-	{
-		// This isn't good
-		signalError(world, "Converter procedures must return a single value", {convertedValuesHead});
-	}
-
-	// Replace the value
-	return *convertedValuesList.begin(); 
-}
-
 void State::setValueForParameter(World &world, ParameterProcedureCell *param, AnyCell *value)
 {
-	TopProcedureCell *converterProcRaw = param->converterProcedure();
+	ConverterProcedureCell *converterProcRaw = param->converterProcedure();
 
 	if (converterProcRaw)
 	{
 		alloc::StrongRefRange<ParameterProcedureCell> paramRoot(world, &param, 1);
-		alloc::StrongRef<TopProcedureCell> converterProc(world, converterProcRaw);
+		alloc::StrongRef<ConverterProcedureCell> converterProc(world, converterProcRaw);
 
-		value = applyConverterProcedure(world, converterProc, value);
+		value = converterProc->apply(world, value);
 	}
 
 	mSelfValues[param] = value;

@@ -33,7 +33,13 @@ object DynamicProcPlanner extends ReportProcPlanner {
       val initialValueTemp = initialValue._2.toTempValue(vt.AnySchemeType)
 
       val converterTemp = plan.withContextLocation(converterProc._1) {
-        converterProc._2.toTempValue(vt.TopProcedureType)
+        val converterProcType = vt.ProcedureType(
+          fixedArgTypes=List(vt.AnySchemeType),
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.SingleValue(vt.AnySchemeType)
+        )
+
+        converterProc._2.toTempValue(converterProcType)
       }
 
       plan.steps += ps.CreateParameterProc(worldPtr, resultTemp, initialValueTemp, Some(converterTemp))

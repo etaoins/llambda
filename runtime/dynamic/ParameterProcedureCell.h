@@ -2,6 +2,7 @@
 #define _LLIBY_DYNAMIC_PARAMETERPROCEDURECELL_H
 
 #include "binding/TypedProcedureCell.h"
+#include "dynamic/ConverterProcedureCell.h"
 
 namespace lliby
 {
@@ -36,7 +37,7 @@ public:
 	 *                            identity function should be used nullptr can be passed to avoid the overhead of
 	 *                            re-entering Scheme,
 	 */
-	static ParameterProcedureCell *createInstance(World &world, AnyCell *initialValue, TopProcedureCell *converterProcedure = nullptr);
+	static ParameterProcedureCell *createInstance(World &world, AnyCell *initialValue, ConverterProcedureCell *converterProcedure = nullptr);
  
 	/**
 	 * Returns the initial value for this parameter
@@ -51,10 +52,10 @@ public:
 	/**
 	 * Returns the converter procedure for this parameter or null if the identity function should be used
 	 */
-	TopProcedureCell* converterProcedure() const
+	ConverterProcedureCell* converterProcedure() const
 	{
 		auto procCell = cell_cast<ProcedureCell>(static_cast<ParameterProcedureClosure*>(recordData())->converter);
-		return static_cast<TopProcedureCell*>(procCell);
+		return static_cast<ConverterProcedureCell*>(procCell);
 	}
 	
 	/**
