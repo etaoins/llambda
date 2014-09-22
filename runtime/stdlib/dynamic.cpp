@@ -13,17 +13,17 @@ using namespace lliby;
 extern "C"
 {
 
-ReturnValuesList *lliby_dynamic_wind(World &world, TopProcedureCell *before, TopProcedureCell *thunk, TopProcedureCell *after)
+ReturnValuesList *lliby_dynamic_wind(World &world, ThunkProcedureCell *before, ThunkProcedureCell *thunk, ThunkProcedureCell *after)
 {
 	{
 		// pushActiveState() can call before which can GC
 		// Make sure we root thunk 
-		alloc::StrongRefRange<TopProcedureCell> thunkRoot(world, &thunk, 1);
+		alloc::StrongRefRange<ThunkProcedureCell> thunkRoot(world, &thunk, 1);
 
 		dynamic::State::pushActiveState(world, before, after);
 	}
 	
-	alloc::ListElementRef thunkResult(world, thunk->apply(world, EmptyListCell::instance()));
+	alloc::ListElementRef thunkResult(world, thunk->apply(world));
 
 	dynamic::State::popActiveState(world);
 

@@ -70,6 +70,11 @@ private:
  */
 using TopProcedureCell = TypedProcedureCell<ReturnValuesList*, ListElementCell*>;
 
+/**
+ * TypedProcedureCell accepting no arguments and producing any value
+ */
+using ThunkProcedureCell = TypedProcedureCell<ReturnValuesList*>;
+
 }
 
 #endif

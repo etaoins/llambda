@@ -42,7 +42,7 @@ namespace
 	}
 }
 	
-State::State(TopProcedureCell *before, TopProcedureCell *after, DynamicStateCell *parentCell) : 
+State::State(ThunkProcedureCell *before, ThunkProcedureCell *after, DynamicStateCell *parentCell) : 
 	mBefore(before),
 	mAfter(after),
 	mParentCell(parentCell)
@@ -108,15 +108,15 @@ State* State::activeState(World &world)
 	return world.activeStateCell->state();
 }
 
-void State::pushActiveState(World &world, TopProcedureCell *before, TopProcedureCell *after)
+void State::pushActiveState(World &world, ThunkProcedureCell *before, ThunkProcedureCell *after)
 {
-	alloc::StrongRef<TopProcedureCell> beforeRef(world, before);
-	alloc::StrongRef<TopProcedureCell> afterRef(world, after);
+	alloc::StrongRef<ThunkProcedureCell> beforeRef(world, before);
+	alloc::StrongRef<ThunkProcedureCell> afterRef(world, after);
 
 	// Invoke the before procedure 
 	if (beforeRef)
 	{
-		beforeRef->apply(world, EmptyListCell::instance());
+		beforeRef->apply(world);
 	}
 	
 	// Allocate the dynamic state cell
@@ -139,7 +139,7 @@ void State::popActiveState(World &world)
 	// After is executed in the "outer" state
 	if (oldActiveState->afterProcedure())
 	{
-		oldActiveState->afterProcedure()->apply(world, EmptyListCell::instance());
+		oldActiveState->afterProcedure()->apply(world);
 	}
 }
 	
@@ -181,7 +181,7 @@ void State::switchStateCell(World &world, DynamicStateCell *targetStateCell)
 			{
 				if ((*it)->state()->beforeProcedure())
 				{
-					(*it)->state()->beforeProcedure()->apply(world, EmptyListCell::instance());
+					(*it)->state()->beforeProcedure()->apply(world);
 				}
 
 				world.activeStateCell = *it; 

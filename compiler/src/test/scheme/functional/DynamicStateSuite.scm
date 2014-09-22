@@ -92,6 +92,24 @@
 
 	(cons returnValue testValue)))
 
+(define-test "dynamic-wind with incorrect before proc arity fails at compile time" (expect-compile-failure
+  (dynamic-wind
+		(lambda (too))
+		(lambda ())
+		(lambda ()))))
+
+(define-test "dynamic-wind with incorrect thunk proc arity fails at compile time" (expect-compile-failure
+  (dynamic-wind
+		(lambda ())
+		(lambda (many))
+		(lambda ()))))
+
+(define-test "dynamic-wind with incorrect after proc arity fails at compile time" (expect-compile-failure
+  (dynamic-wind
+		(lambda ())
+		(lambda ())
+		(lambda (args)))))
+
 (define-test "continuations with (dynamic-wind)" (expect (connect talk1 disconnect connect talk2 disconnect)
   (let ((path '())
         (c #f))

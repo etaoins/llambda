@@ -19,7 +19,6 @@ using namespace lliby;
 extern "C"
 {
 
-using ThunkProcedureCell = TypedProcedureCell<ReturnValuesList*>;
 using HandlerProcedureCell = TypedProcedureCell<ReturnValuesList*, AnyCell*>;
 
 ReturnValuesList* lliby_with_exception_handler(World &world, HandlerProcedureCell *handlerRaw, ThunkProcedureCell *thunk)

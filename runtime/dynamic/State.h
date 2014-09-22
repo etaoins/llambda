@@ -37,7 +37,7 @@ public:
 	 *                     functionality.
 	 * @param  parentCell  Cell pointer to the parent state or nullptr if this is a root state.
 	 */
-	State(TopProcedureCell *before, TopProcedureCell *after, DynamicStateCell *parentCell = nullptr);
+	State(ThunkProcedureCell *before, ThunkProcedureCell *after, DynamicStateCell *parentCell = nullptr);
 
 	/**
 	 * Returns the value for the passed parameter
@@ -92,7 +92,7 @@ public:
 	/**
 	 * Returns the procedure to invoke before activating this state or its children
 	 */
-	TopProcedureCell *beforeProcedure()
+	ThunkProcedureCell *beforeProcedure()
 	{
 		return mBefore;
 	}
@@ -102,7 +102,7 @@ public:
 	 *
 	 * This is intended for use by the garbage collector
 	 */
-	TopProcedureCell** beforeProcedureRef()
+	ThunkProcedureCell** beforeProcedureRef()
 	{
 		return &mBefore;
 	}
@@ -110,7 +110,7 @@ public:
 	/**
 	 * Returns the procedure to invoke after deactivating this state or its children
 	 */
-	TopProcedureCell *afterProcedure()
+	ThunkProcedureCell *afterProcedure()
 	{
 		return mAfter;
 	}
@@ -120,7 +120,7 @@ public:
 	 *
 	 * This is intended for use by the garbage collector
 	 */
-	TopProcedureCell** afterProcedureRef()
+	ThunkProcedureCell** afterProcedureRef()
 	{
 		return &mAfter;
 	}
@@ -161,7 +161,7 @@ public:
 	 *
 	 * This may re-enter Scheme and invoke the garbage collector if before is not null
 	 */
-	static void pushActiveState(World &world, TopProcedureCell *before, TopProcedureCell *after);
+	static void pushActiveState(World &world, ThunkProcedureCell *before, ThunkProcedureCell *after);
 
 	/**
 	 * Makes the parent of the currently active state active
@@ -189,8 +189,8 @@ public:
 	static void switchStateCell(World &world, DynamicStateCell *);
 
 private:
-	TopProcedureCell *mBefore;
-	TopProcedureCell *mAfter;
+	ThunkProcedureCell *mBefore;
+	ThunkProcedureCell *mAfter;
 	DynamicStateCell *mParentCell;
 	ParameterValueMap mSelfValues;
 };

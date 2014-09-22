@@ -369,7 +369,7 @@
       ((init) (native-make-parameter init #!unit))
       ((init converter) (native-make-parameter init converter))))
 
-    (define-r7rs dynamic-wind (world-function "lliby_dynamic_wind" (<procedure> <procedure> <procedure>) -> *))
+    (define-r7rs dynamic-wind (world-function "lliby_dynamic_wind" ((-> *) (-> *) (-> *)) -> *))
 
     ; Port support
     (define-r7rs port? (make-predicate <port>))
