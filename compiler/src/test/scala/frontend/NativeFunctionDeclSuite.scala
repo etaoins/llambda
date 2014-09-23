@@ -263,7 +263,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     }
   }
   
-  test("function with non-list element rest arg") {
+  test("function with non-Scheme rest arg") {
     intercept[BadSpecialFormException] {
       exprFor("""(native-function "lliby_vector" <native-int64> -> <any>)""")
     }
