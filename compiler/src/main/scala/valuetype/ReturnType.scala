@@ -59,10 +59,15 @@ object ReturnType {
 
   /** Represents a fixed number of return values of specific types */
   object SpecificValues {
-    def apply(valueTypes : List[SchemeType]) =
-      MultipleValues(
-        SpecificProperListType(valueTypes.map(DirectSchemeTypeRef)) 
-      )
+    def apply(valueTypes : List[SchemeType]) = valueTypes match {
+      case List(singleValue) =>
+        SingleValue(singleValue)
+
+      case multipleValues =>
+        MultipleValues(
+          SpecificProperListType(multipleValues.map(DirectSchemeTypeRef)) 
+        )
+    }
   }
 
   /** Represents an arbitrary number of return values of any type */

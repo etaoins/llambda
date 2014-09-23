@@ -59,7 +59,7 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
     val requiredSignature = ProcedureTypeToAdaptedSignature(targetType)
 
     // Store an entry point with an adapted signature
-    val entryPointTemp = if (signature == requiredSignature) {
+    val entryPointTemp = if (SatisfiesSignature(requiredSignature, signature)) {
       // The procedure already has the correct signature
       planEntryPoint()
     }

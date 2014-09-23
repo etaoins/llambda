@@ -232,14 +232,7 @@ object ExtractType {
       constructorName.resolve match {
         case Primitives.ValuesType =>
           val valueTypes = operandData.map(extractNonEmptySchemeType(_))
-
-          valueTypes match {
-            case List(singleValue) =>
-              vt.ReturnType.SingleValue(singleValue)
-
-            case multipleValues =>
-              vt.ReturnType.SpecificValues(multipleValues)
-          }
+          vt.ReturnType.SpecificValues(valueTypes)
 
         case _ =>
           vt.ReturnType.SingleValue(

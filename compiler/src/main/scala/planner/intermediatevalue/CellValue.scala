@@ -66,7 +66,10 @@ class CellValue(
       impossibleConversion(message)
     }
 
-    if (targetType == schemeProcType) {
+    val currentSignature = ProcedureTypeToAdaptedSignature(schemeProcType)
+    val requiredSignature = ProcedureTypeToAdaptedSignature(targetType)
+
+    if (SatisfiesSignature(requiredSignature, currentSignature)) {
       // We already have the correct type
       return toNonProcedureTempValue(vt.SchemeTypeAtom(ct.ProcedureCell), errorMessageOpt, staticCheck)
     }
@@ -96,9 +99,6 @@ class CellValue(
       val isProcPred = typecheck.PlanTypeCheck(boxedValue, schemeType, procedureTypeAtom).toNativePred()
       plan.steps += ps.AssertPredicate(worldPtr, isProcPred, errorMessage)
     }
-
-    // Find our required signature
-    val requiredSignature = ProcedureTypeToAdaptedSignature(targetType)
 
     // Prepare a trampoline for this procedure conversion
     val targetProcTemp = boxedValue.castToCellTempValue(ct.ProcedureCell)
