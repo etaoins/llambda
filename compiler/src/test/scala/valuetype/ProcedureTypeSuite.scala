@@ -174,8 +174,12 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
     assert((twoStringToPortProcedure + twoStringToPortProcedure) === twoStringToPortProcedure)
   }
   
-  test("the union of two distinct specific procedure types is the top procedure type") {
+  test("the union of two unrelated specific procedure types is the top procedure type") {
     assert((twoStringToPortProcedure + anyStringToNumberProcedure) === TopProcedureType)
+  }
+  
+  test("the union of two related specific procedure types is the most general procedure type") {
+    assert((twoStringToNumberProcedure + twoStringToExactIntProcedure) === twoStringToNumberProcedure)
   }
   
   test("the union of a specific procedure type and the top procedure type is the top procedure type") {

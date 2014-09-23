@@ -92,6 +92,12 @@
 
 	((typeless-cell exact?))))
 
+(define-test "phied number procedure cannot be applied with non-number arguments" (expect-compile-failure
+  ; + and - have different signatures
+  ; However, we should determine that this is impossible because their phied type should be (-> <number> * <number>)
+  (define math-proc (if dynamic-true + -))
+  (math-proc 'one 'two)))
+
 (define-test "procedure returning nothing" (expect #!unit
 	(define (return-nothing))
 	(return-nothing)))

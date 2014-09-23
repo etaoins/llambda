@@ -371,6 +371,34 @@ object SchemeType {
     }
   }
 
+  private def simplifyProcTypes(nonUnionTypes : Set[NonUnionSchemeType]) : Set[NonUnionSchemeType] = 
+    if (nonUnionTypes.count(_.isInstanceOf[ProcedureType]) > 1) {
+      val (allProcTypes, nonProcTypes) =  nonUnionTypes.partition(_.isInstanceOf[ProcedureType])
+
+      // We can't distinguish procedure types at runtime
+      // Try to combine them in to a single procedure type
+      val superProcType = allProcTypes.reduceLeft({
+        (left : vt.NonUnionSchemeType, right : vt.NonUnionSchemeType) =>
+          if (vt.SatisfiesType(left, right) == Some(true)) {
+            // Left type is more general
+            left
+          }
+          else if (vt.SatisfiesType(right, left) == Some(true)) {
+            // Right type is more general
+            right
+          }
+          else {
+            // Types are disjoint - use the top procedure type and abort
+            return nonProcTypes + TopProcedureType
+          }
+      })
+
+      nonProcTypes + superProcType
+    }
+    else {
+      nonUnionTypes
+    }
+
   def fromTypeUnion(otherTypes : Iterable[SchemeType]) : SchemeType = {
     val nonUnionTypes = (otherTypes.flatMap {
       case nonUnion : NonUnionSchemeType =>
@@ -389,14 +417,7 @@ object SchemeType {
       nonUnionTypes
     }
 
-    // We can't distinguish procedure types at runtime
-    // Collapse them all in the top procedure type so the types in the union can still be distinguished from each other
-    val procSimplifiedTypes = if (boolSimplifiedTypes.count(_.isInstanceOf[ProcedureType]) > 1) {
-      boolSimplifiedTypes.filterNot(_.isInstanceOf[ProcedureType]) + TopProcedureType
-    }
-    else {
-      boolSimplifiedTypes
-    }
+    val procSimplifiedTypes = simplifyProcTypes(boolSimplifiedTypes)
 
     if (procSimplifiedTypes.size == 1) {
       procSimplifiedTypes.head
