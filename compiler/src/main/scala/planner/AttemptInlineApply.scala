@@ -58,7 +58,6 @@ private[planner] object AttemptInlineApply {
       (storageLoc -> ImmutableValue(argValue))
     })(breakOut) : Map[StorageLocation, LocationValue]
     
-    // We only support empty rest args at this point
     val restArgImmutables = lambdaExpr.restArgOpt.zip(lambdaExpr.schemeType.restArgMemberTypeOpt) map {
       case (storageLoc, memberType) =>
         val restValues = operands.drop(lambdaExpr.fixedArgs.length).map(_._2)
