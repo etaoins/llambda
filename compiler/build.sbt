@@ -16,7 +16,7 @@ libraryDependencies += "com.github.scopt" %% "scopt" % "3.2.0"
 
 libraryDependencies += "jline" % "jline" % "2.11"
 
-libraryDependencies += "org.parboiled" %% "parboiled" % "2.0.0"
+libraryDependencies += "org.parboiled" %% "parboiled" % "2.0.1"
 
 val schemeSourceDir = new File("compiler/src/main/scheme")
 
