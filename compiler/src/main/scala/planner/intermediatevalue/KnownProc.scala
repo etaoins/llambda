@@ -67,7 +67,7 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
       // Check if this symbol/signature combination has been planned
       val trampolineKey = (nativeSymbol, requiredSignature)
       val trampolineSymbol = plan.knownProcTrampolines.getOrElseUpdate(trampolineKey, {
-        val trampolineSymbol = plan.allocSymbol(nativeSymbol + " Trampoline")
+        val trampolineSymbol = plan.allocSymbol(s"${nativeSymbol} ${targetType} Trampoline")
 
         // Plan the trampoline
         val plannedTrampoline = PlanProcedureTrampoline(requiredSignature, this, isAdapter=false, locationOpt)
