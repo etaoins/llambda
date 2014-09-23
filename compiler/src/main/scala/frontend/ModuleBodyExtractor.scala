@@ -264,8 +264,15 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
         )
 
       case (Primitives.MakePredicate, List(typeDatum)) =>
-        val schemeType = ExtractType.extractSchemeType(typeDatum)
-        et.TypePredicate(schemeType)
+        val nonProcType = ExtractType.extractSchemeType(typeDatum) match {
+          case _ : vt.ProcedureType =>
+            throw new BadSpecialFormException(typeDatum, "Creating procedure predicates it not possible; procedures of different types do not have distinct runtime representations")
+
+          case nonProcType =>
+            nonProcType
+        }
+
+        et.TypePredicate(nonProcType)
       
       case otherPrimitive =>
         throw new BadSpecialFormException(appliedSymbol, "Invalid primitive syntax")
