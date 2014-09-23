@@ -14,8 +14,6 @@
   (procedure? higher-level-proc)))
 
 (define-test "non-constant procedure values can be applied" (expect 10
-	(import (llambda test-util))
-
 	(define math-op
 		; This is + but our optimizer won't know that
 		; That means this has to be converted to a function value at runtime
@@ -28,12 +26,9 @@
 	(math-op 2 3 5)))
 
 (define-test "datum cells can be applied" (expect 10
-	(import (llambda test-util))
-
 	((typeless-cell -) 80 50 20)))
 
 (define-test "datum cells can be converted to specific procedure type" (expect 8
-	(import (llambda test-util))
 	(import (llambda typed))
 
   (: double-binary-op (-> (-> <exact-integer> <exact-integer> <exact-integer>) <exact-integer> <exact-integer>))
@@ -83,13 +78,9 @@
   (double-binary-op plus 4)))
 
 (define-test "applying datum cells with too many arguments fails" (expect-failure
-	(import (llambda test-util))
-
 	((typeless-cell exact?) 80 20)))
 
 (define-test "applying datum cells with insufficient arguments fails" (expect-failure
-	(import (llambda test-util))
-
 	((typeless-cell exact?))))
 
 (define-test "phied number procedure cannot be applied with non-number arguments" (expect-compile-failure

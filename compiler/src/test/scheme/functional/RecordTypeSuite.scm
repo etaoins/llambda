@@ -26,8 +26,6 @@
 	(single-value-field instance)))
 
 (define-test "record types can be converted to and from typeless data" (expect 1
-	(import (llambda test-util))
-
 	(define-record-type <single-value> (single-value field) single-value?
 		(field single-value-field))
 	
@@ -99,7 +97,6 @@
 
 (define-test "constructors, accessors and mutators be boxed and invoked" (expect (20 40)
 	(import (llambda typed))
-	(import (llambda test-util))
 
 	(define-record-type: <two-value> (two-value field1 field2) two-value?
 		((field1 : <exact-integer>) two-value-field1)

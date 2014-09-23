@@ -1,5 +1,4 @@
 (define-test "datum can be cast to pair" (expect 1
-	(import (llambda test-util))
 	; This assumes (vector-ref) takes a pair
 	(vector-ref (typeless-cell #(1)) 0)))
 
@@ -12,54 +11,42 @@
 	(boolean=? #f dynamic-false)))
 
 (define-test "#true can be unboxed as boolean" (expect #f
-	(import (llambda test-util))
 	; This assumes (not) takes a truthy
 	(not (typeless-cell #t))))
 
 (define-test "#true can be unboxed as bool" (expect #t
-	(import (llambda test-util))
 	; This assumes (boolean=?) takes two native booleans
 	(boolean=? #t (typeless-cell #t))))
 
 (define-test "empty list can be unboxed as truthy" (expect #f
-	(import (llambda test-util))
 	; This assumes (not) takes a truthy
 	(not (typeless-cell '()))))
 
 (define-test "empty list cannot unboxed as bool" (expect-failure
-	(import (llambda test-util))
 	; This assumes (boolean=?) takes two native booleans
 	(boolean=? #t (typeless-cell '()))))
 
 (define-test "exact int can be unboxed as integer" (expect #(#t #t #t)
-	(import (llambda test-util))
 	; This assumes (make-vector) takes an native exact integer
 	(make-vector (typeless-cell 3) #t)))
 
 (define-test "inexact rational cannot be unboxed as integer" (expect-failure
-	(import (llambda test-util))
 	; This assumes (make-vector) takes an native exact integer
 	(make-vector (typeless-cell 3.0) #t)))
 
 (define-test "inexact rational can be unboxed as double" (expect 1.0
-	(import (scheme inexact))
-	(import (llambda test-util))
 	(define fabs (native-function "fabs" (<native-double>) -> <native-double>))
 	(fabs (typeless-cell -1.0))))
 
 (define-test "inexact rational can be unboxed as float" (expect 10.0
-	(import (llambda test-util))
 	(define fabsf (native-function "fabsf" (<native-float>) -> <native-float>))
 	(fabsf (typeless-cell -10.0))))
 
 (define-test "exact integer cannot be unboxed as double" (expect-failure
-	(import (scheme inexact))
-	(import (llambda test-util))
 	(define fabs (native-function "fabs" (<native-double>) -> <native-double>))
 	(fabs (typeless-cell 0))))
 
 (define-test "exact integer cannot be unboxed as float" (expect-failure
-	(import (llambda test-util))
 	(define fabsf (native-function "fabsf" (<native-float>) -> <native-float>))
 	(fabsf (typeless-cell -10))))
 
@@ -79,7 +66,6 @@
 	(inexact->inexact -53)))
 
 (define-test "'3' can be unboxed as a character" (expect 3
-	(import (llambda test-util))
 	; This assumes (digit-value) takes an native Unicode character
 	(digit-value (typeless-cell #\3))))
 

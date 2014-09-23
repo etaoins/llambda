@@ -4,7 +4,6 @@
 	x))
 
 (define-test "mutatation across branches" (expect 3
-	(import (llambda test-util))
 	(define x 1)
 	(if dynamic-false
 	  (set! x 2)

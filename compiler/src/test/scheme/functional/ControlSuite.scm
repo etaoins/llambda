@@ -62,7 +62,6 @@
 	))))
 
 (define-test "(call/cc) exiting from both branch sides" (expect one
-	(import (llambda test-util))
 	(call/cc (lambda (return)
 		(if dynamic-true 
 		  (return 'one)
@@ -70,7 +69,6 @@
 	))))
 
 (define-test "(call/cc) exiting from one branch side" (expect one
-	(import (llambda test-util))
 	(call/cc (lambda (return)
 		(if dynamic-true 
 		  (return 'one)

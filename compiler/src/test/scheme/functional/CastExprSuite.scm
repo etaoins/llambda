@@ -44,7 +44,6 @@
 
 (define-test "expressions can be cast as record types" (expect #t
 	(import (llambda typed))
-	(import (llambda test-util))
 
 	(define-record-type <type1> (type1) type1?)
 
