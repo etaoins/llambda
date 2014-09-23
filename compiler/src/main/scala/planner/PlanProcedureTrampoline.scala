@@ -128,7 +128,7 @@ private[planner] object PlanProcedureTrampoline {
         Some(iv.EmptyListValue.toTempValue(vt.ListElementType)(plan, worldPtrTemp))
     }
 
-    val (updatedInvokable, outSelfTemp) = if (isAdapter) {
+    val updatedInvokable = if (isAdapter) {
       // Load the real target proc
       val closureDataTemp = ps.RecordLikeDataTemp()
       plan.steps += ps.LoadRecordLikeData(closureDataTemp, inSelfTemp, AdapterProcType)
@@ -136,10 +136,13 @@ private[planner] object PlanProcedureTrampoline {
       val targetProcCell = ps.CellTemp(ct.ProcedureCell)
       plan.steps += ps.LoadRecordDataField(targetProcCell, closureDataTemp, AdapterProcType, AdapterProcField)
 
-      (targetProc.withSelfValue(targetProcCell), targetProcCell)
+      targetProc.withSelfValue(targetProcCell)
+    }
+    else if (outSignature.hasSelfArg) {
+      targetProc.withSelfValue(inSelfTemp)
     }
     else {
-      (targetProc, inSelfTemp) 
+      targetProc
     }
 
     // Collect all of our arguments now
@@ -149,8 +152,7 @@ private[planner] object PlanProcedureTrampoline {
     val resultValues = PlanInvokeApply.withTempValues(
       invokableProc=updatedInvokable,
       fixedTemps=allOutFixedArgTemps,
-      restTemps=outRestArgTempOpt,
-      selfTempOverride=Some(outSelfTemp)
+      restTemps=outRestArgTempOpt
     )(plan, worldPtrTemp)
 
     val returnTempOpt = resultValues.toReturnTempValue(trampolineSignature.returnType)(plan, worldPtrTemp)

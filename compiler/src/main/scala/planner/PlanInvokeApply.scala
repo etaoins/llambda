@@ -13,8 +13,7 @@ object PlanInvokeApply {
   def withTempValues(
       invokableProc : InvokableProcedure,
       fixedTemps : Seq[ps.TempValue],
-      restTemps : Option[ps.TempValue],
-      selfTempOverride : Option[ps.TempValue] = None
+      restTemps : Option[ps.TempValue]
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ResultValues = {
     val entryPointTemp = invokableProc.planEntryPoint()
     val signature = invokableProc.signature
@@ -27,9 +26,7 @@ object PlanInvokeApply {
     }
 
     val selfTemps = if (signature.hasSelfArg) {
-      List(selfTempOverride.getOrElse {
-        invokableProc.planSelf()
-      })
+      List(invokableProc.planSelf())
     }
     else {
       Nil
@@ -53,11 +50,9 @@ object PlanInvokeApply {
 
   def withArgumentList(
       invokableProc : InvokableProcedure,
-      argListValue : iv.IntermediateValue,
-      selfTempOverride : Option[ps.TempValue] = None
+      argListValue : iv.IntermediateValue
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ResultValues = {
     val signature = invokableProc.signature
-    val argListType = vt.UniformProperListType(vt.AnySchemeType)
     
     val insufficientArgsMessage = ArityRuntimeErrorMessage.insufficientArgs(invokableProc)
 
@@ -82,9 +77,8 @@ object PlanInvokeApply {
         None
     }
 
-    PlanInvokeApply.withTempValues(invokableProc, fixedArgTemps, restArgTemps, selfTempOverride) 
+    PlanInvokeApply.withTempValues(invokableProc, fixedArgTemps, restArgTemps) 
   }
-
 
   def withIntermediateValues(
       invokableProc : InvokableProcedure,
