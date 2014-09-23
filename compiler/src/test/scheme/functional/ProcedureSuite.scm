@@ -290,3 +290,23 @@
     (binary-op val1 val2))
 
   (apply-number-proc list -25 -2)))
+
+(define-test "typed procedure returning typed, recursive, capturing procedure" (expect-success
+  (import (llambda typed))
+
+  (: make-length-counter (-> <boolean> (-> <any> <exact-integer>)))
+  (define (make-length-counter fail-on-improper)
+    (: manual-length (-> <any> <exact-integer>))
+    (define (manual-length obj)
+      (if (pair? obj)
+        (+ (manual-length (cdr obj)) 1)
+        (if (and fail-on-improper (not (null? obj)))
+          (raise "Improper list!")
+          0)))
+
+      manual-length)
+
+    (assert-equal 5 ((make-length-counter dynamic-false) '(1 2 3 4 5 . 6)))
+    (assert-raises
+      ((make-length-counter dynamic-true) '(1 2 3 4 5 . 6)))))
+

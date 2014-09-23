@@ -1,7 +1,7 @@
 (define-library (llambda test-util)
   (import (scheme base) (scheme write) (scheme process-context))  
   (export dynamic-false dynamic-true typeless-cell
-          assert-equal assert-true assert-false)
+          assert-equal assert-true assert-false assert-raises)
   (begin
     ; Use a mutable to launder the value so its type information is lost
     ; There's very little motivation to optimise mutable usage so this should be safe for a long time
@@ -38,5 +38,17 @@
       (syntax-rules ()
                     ((assert-true actual-expr)
                      (assert-equal #f actual-expr))))
+
+    (define-syntax assert-raises
+      (syntax-rules ()
+                    ((assert-raises body ...)
+                     (guard (condition
+                              (else #t))
+                            body ...
+                            (parameterize ((current-output-port (current-error-port)))
+                                          (display "Expected exception to be raised while evaluating '")
+                                          (write 'body)
+                                          (display "' but execution completed normally")
+                                          (exit -1))))))
   )
 )
