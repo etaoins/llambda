@@ -27,9 +27,12 @@ object PlanCadr {
       val pairTemp = pairValue.toTempValue(vt.AnyPairType, errorMessageOpt)
 
       // Does this pair have a specific pair type?
-      val resultType = pairValue.schemeType match {
+      val resultType = (pairValue.schemeType & vt.AnyPairType)  match {
         case pairType : vt.PairType =>
-          pairType.unrollChildTypeRef(typeRefForPairType(pairType))
+          val rawResultType = pairType.unrollChildTypeRef(typeRefForPairType(pairType))
+
+          // ValuesToPair will always convert to TopProcedureType
+          rawResultType.replaceProcedureType(vt.TopProcedureType)
 
         case _ =>
           vt.AnySchemeType
