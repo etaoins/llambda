@@ -1,7 +1,6 @@
 (define-library (llambda lazy)
   (import (scheme base))
-	(import (llambda internal primitives))
-  (import (llambda nfi))
+  (import (llambda typed))
 
   ; R7RS lazy library
   (include-library-declarations "../../interfaces/scheme/lazy.scm")
@@ -33,20 +32,25 @@
                     ((delay expression)
                      (delay-force (make-promise-internal #t expression)))))
 
+    (: make-promise (-> <any> <promise>))
     (define (make-promise value)
       (make-promise-internal #t value))
 
+    (: promise-done? (-> <promise> <boolean>))
     (define (promise-done? x)
       (promise-data-done? (promise-data x)))
 
+    (: promise-value (-> <promise> <any>))
     (define (promise-value x)
       (promise-data-value (promise-data x)))
 
+    (: promise-update! (-> <promise> <promise> <unit>))
     (define (promise-update! new old)
       (set-promise-data-done! (promise-data old) (promise-done? new))
       (set-promise-data-value! (promise-data old) (promise-value new))
       (set-promise-data! new (promise-data old)))
 
+    (: force (-> <promise> <any>))
     (define (force promise)
       (if (promise-done? promise)
         (promise-value promise)
