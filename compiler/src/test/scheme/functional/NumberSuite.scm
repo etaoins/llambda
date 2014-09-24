@@ -254,3 +254,23 @@
   (assert-equal 3.0  (truncate 3.5))
   (assert-equal 4.0  (round 3.5))
   (assert-equal 7    (round 7))))
+
+(define-test "(expt)" (expect-success
+  ; This is exact and within the range we can represent
+  (assert-true (eqv? (expt 2 16) 65536))
+  
+  ; These are inexact versions of the above
+  (assert-true (eqv? (expt 2.0 16) 65536.0))
+  (assert-true (eqv? (expt 2 16.0) 65536.0))
+  (assert-true (eqv? (expt 2.0 16) 65536.0))
+
+  ; Make sure non-integers work
+  (assert-true (eqv? (expt 0.5 3) 0.125))
+
+  ; This is within the range of values we can exactly represent on all platforms
+  (assert-true (eqv? (expt 2 53) 9007199254740992))
+
+  ; This is outside the range we can exactly represent
+  (assert-true (eqv? (expt 2 63) 9223372036854775808.0))
+ ))
+

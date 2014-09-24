@@ -17,6 +17,7 @@ add_library(lliby
 	binding/DynamicStateCell.cpp
 	binding/ErrorObjectCell.cpp
 	binding/ListElementCell.cpp
+	binding/NumberCell.cpp
 	binding/PairCell.cpp
 	binding/PortCell.cpp
 	binding/ProcedureCell.cpp

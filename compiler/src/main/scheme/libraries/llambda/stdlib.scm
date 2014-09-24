@@ -276,6 +276,8 @@
     (define-r7rs * (world-function "lliby_mul" <number> -> <number>))
     (define-r7rs / (world-function "lliby_div" (<number> . <number>) -> <native-double>))
 
+    (define-r7rs expt (world-function "lliby_expt" (<number> <number>) -> <number>))
+
     (define-r7rs boolean? (make-predicate <boolean>))
     (define-r7rs not (make-predicate #f))
     (define-r7rs boolean=? (native-function "lliby_boolean_equal" (<boolean> <boolean> . <boolean>) -> <native-bool>))

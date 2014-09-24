@@ -12,19 +12,6 @@ using namespace lliby;
 
 namespace
 {
-	double doubleValueFor(NumberCell *value)
-	{
-		if (auto exactInteger = cell_cast<ExactIntegerCell>(value))
-		{
-			return exactInteger->value();
-		}
-		else
-		{
-			auto flonum = cell_unchecked_cast<FlonumCell>(value);
-			return flonum->value();
-		}
-	}
-
 	template<class ExactCompare, class InexactCompare>
 	bool numericCompare(NumberCell *value1, NumberCell *value2, RestArgument<NumberCell> *argHead, ExactCompare exactCompare, InexactCompare inexactCompare)
 	{
@@ -278,7 +265,7 @@ double lliby_div(World &world, NumberCell *startValue, RestArgument<NumberCell> 
 {
 	const ProperList<NumberCell> argList(argHead);
 
-	double currentValue = doubleValueFor(startValue);
+	double currentValue = startValue->toDouble();
 
 	if (argList.isEmpty())
 	{
@@ -288,7 +275,7 @@ double lliby_div(World &world, NumberCell *startValue, RestArgument<NumberCell> 
 	
 	for (auto numeric : argList)
 	{
-		currentValue /= doubleValueFor(numeric);
+		currentValue /= numeric->toDouble();
 	}
 	
 	return currentValue;
@@ -365,6 +352,20 @@ bool lliby_numeric_gte(NumberCell *value1, NumberCell *value2, RestArgument<Numb
 	return numericCompare(value1, value2, argHead, 
 			[] (std::int64_t value1, int64_t value2) { return value1 >= value2; },
 			[] (double value1, double value2) { return value1 >= value2; });
+}
+
+NumberCell* lliby_expt(World &world, NumberCell *base, NumberCell *power)
+{
+	const bool canBeExact = base->isExact() && power->isExact();
+
+	// Convert to long double to give us 80bits on x86-64 which allow us to have an extended range of exactly
+	// represented integers
+	const long double floatBase = base->toLongDouble();
+	const long double floatPower = power->toLongDouble();
+
+	const long double floatResult = pow(floatBase, floatPower);
+
+	return NumberCell::fromValue(world, floatResult, canBeExact);
 }
 
 }
