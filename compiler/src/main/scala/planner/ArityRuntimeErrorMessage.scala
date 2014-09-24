@@ -7,17 +7,18 @@ object ArityRuntimeErrorMessage {
   def insufficientArgs(invokableProc : InvokableProcedure)(implicit plan : PlanWriter) : RuntimeErrorMessage = {
     val signature = invokableProc.signature
     val nativeSymbol = invokableProc.nativeSymbolOpt.getOrElse("procedure")
+    val fixedArgCount = signature.fixedArgTypes.length
 
     if (signature.restArgMemberTypeOpt.isDefined) {
       RuntimeErrorMessage(
         name=s"insufficientArgsFor${nativeSymbol}",
-        text=s"Called ${nativeSymbol} with insufficient arguments; requires at least ${signature.fixedArgTypes.length} arguments."
+        text=s"Called ${nativeSymbol} with insufficient arguments; requires at least ${fixedArgCount} arguments."
       )
     }
     else {
       RuntimeErrorMessage(
-        name=s"insufficientArgsFor${nativeSymbol}",
-        text=s"Called ${nativeSymbol} with insufficient arguments; requires exactly ${signature.fixedArgTypes.length} arguments."
+        name=s"insufficientArgsFor${nativeSymbol}Requires${fixedArgCount}",
+        text=s"Called ${nativeSymbol} with insufficient arguments; requires exactly ${fixedArgCount} arguments."
       )
     }
   }
@@ -25,10 +26,11 @@ object ArityRuntimeErrorMessage {
   def tooManyArgs(invokableProc : InvokableProcedure)(implicit plan : PlanWriter) : RuntimeErrorMessage = {
     val signature = invokableProc.signature
     val nativeSymbol = invokableProc.nativeSymbolOpt.getOrElse("procedure")
+    val fixedArgCount = signature.fixedArgTypes.length
         
     RuntimeErrorMessage(
-      name=s"tooManyArgsFor${nativeSymbol}",
-      text=s"Called ${nativeSymbol} with too many arguments; requires exactly ${signature.fixedArgTypes.length} arguments."
+      name=s"tooManyArgsFor${nativeSymbol}Requires${fixedArgCount}",
+      text=s"Called ${nativeSymbol} with too many arguments; requires exactly ${fixedArgCount} arguments."
     )
   }
 }

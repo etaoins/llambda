@@ -141,6 +141,13 @@ sealed abstract trait SchemeType extends CellValueType {
     */
   def procedureTypeOpt : Option[ProcedureType] =
     None
+
+  /** Returns this type with a new procedure type
+    *
+    * If the previous type did not have a procedure type this will return the original type
+    */
+   def replaceProcedureType(procType : vt.ProcedureType) : SchemeType =
+     this
 }
 
 /** Scheme type representing an exact value */
@@ -176,6 +183,14 @@ case class SchemeTypeAtom(cellType : ct.ConcreteCellType) extends NonUnionScheme
     }
     else {
       None
+    }
+   
+  override def replaceProcedureType(procType : vt.ProcedureType) : SchemeType =
+    if (cellType == ct.ProcedureCell) {
+      procType
+    }
+    else {
+      this
     }
 }
 
@@ -296,6 +311,18 @@ case class UnionType(memberTypes : Set[NonUnionSchemeType]) extends SchemeType {
   
   override def procedureTypeOpt : Option[ProcedureType] =
     memberTypes.flatMap(_.procedureTypeOpt).headOption
+  
+  override def replaceProcedureType(procType : vt.ProcedureType) : SchemeType = {
+    val (oldProcTypes, nonProcTypes) =  memberTypes.partition(_.isInstanceOf[ProcedureType])
+
+    if (oldProcTypes.isEmpty) {
+      this
+    }
+    else {
+      SchemeType.fromTypeUnion(nonProcTypes + procType)
+    }
+  }
+
 }
 
 /** Abstract trait for vector types */
@@ -334,6 +361,9 @@ case class ProcedureType(
   
   override def procedureTypeOpt : Option[ProcedureType] =
     Some(this)
+
+  override def replaceProcedureType(procType : vt.ProcedureType) =
+    procType
 }
 
 object TopProcedureType extends ProcedureType(Nil, Some(AnySchemeType), ReturnType.ArbitraryValues)

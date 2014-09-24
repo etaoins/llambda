@@ -201,4 +201,23 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
   test("the <any> type has a procedure type of the top procedure type") {
     assert(AnySchemeType.procedureTypeOpt === Some(TopProcedureType))
   }
+
+  test("replacing the procedure type of a non-procedure type") {
+    assert(NumberType.replaceProcedureType(listElementToUnitProcedure) === NumberType)
+  }
+  
+  test("replacing the procedure type of the procedure type atom") {
+    val replacedType = SchemeTypeAtom(ct.ProcedureCell).replaceProcedureType(listElementToUnitProcedure)
+    assert(replacedType === listElementToUnitProcedure)
+  }
+  
+  test("replacing the procedure type of a procedure type") {
+    val replacedType = twoStringToPortProcedure.replaceProcedureType(listElementToUnitProcedure)
+    assert(replacedType === listElementToUnitProcedure)
+  }
+  
+  test("replacing the procedure type of a type union") {
+    val replacedType = (twoStringToPortProcedure + NumberType).replaceProcedureType(listElementToUnitProcedure) 
+    assert(replacedType === (listElementToUnitProcedure + NumberType))
+  }
 }

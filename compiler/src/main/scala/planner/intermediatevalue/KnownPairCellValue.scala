@@ -14,8 +14,9 @@ import llambda.compiler.planner.BoxedValue
 class KnownPairCellValue(
     val car : IntermediateValue,
     val cdr : IntermediateValue,
+    schemeType : vt.PairType,
     tempValue : ps.TempValue
-) extends CellValue(vt.PairType(car.schemeType, cdr.schemeType), BoxedValue(ct.PairCell, tempValue)) with KnownPair {
+) extends CellValue(schemeType, BoxedValue(ct.PairCell, tempValue)) with KnownPair {
   override def withSchemeType(newType : vt.SchemeType) : IntermediateValue =
     // Our type is well specified; it's unlikely the type constraint system can help us much here
     this

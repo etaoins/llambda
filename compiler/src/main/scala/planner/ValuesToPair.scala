@@ -35,7 +35,7 @@ private[planner] object ValuesToPair {
       }
     }
 
-    val pairTemp = ps.CellTemp(ct.PairCell)
+    val preserveTypes = plan.config.schemeDialect.pairsAreImmutable || !capturable
 
     val carTemp = carValue.toTempValue(vt.AnySchemeType)
     val cdrTemp = cdrValue.toTempValue(vt.AnySchemeType)
@@ -49,13 +49,23 @@ private[planner] object ValuesToPair {
       None
     }
 
+    val pairTemp = ps.CellTemp(ct.PairCell)
     plan.steps += ps.InitPair(pairTemp, safeListLengthOpt)
     plan.steps += ps.SetPairCar(pairTemp, carTemp)
     plan.steps += ps.SetPairCdr(pairTemp, cdrTemp)
 
-    val resultValue = if (plan.config.schemeDialect.pairsAreImmutable || !capturable) {
-      // This pair is constant and we can optimise based on that
-      new iv.KnownPairCellValue(carValue, cdrValue, pairTemp)
+    val resultValue = if (preserveTypes) {
+      // Note that when we converted to an vt.AnySchemeType TempValue we converted any procedure type we had to the
+      // TopProceduretype
+      // This is actually what we want - otherwise it would be very complicated to convert procedure typed lists
+      // between each other
+      var storedType = vt.PairType(
+        carTypeRef=vt.DirectSchemeTypeRef(carValue.schemeType.replaceProcedureType(vt.TopProcedureType)),
+        cdrTypeRef=vt.DirectSchemeTypeRef(cdrValue.schemeType.replaceProcedureType(vt.TopProcedureType))
+      )
+
+      // This pair is immutable and we can optimise based on that
+      new iv.KnownPairCellValue(carValue, cdrValue, storedType, pairTemp)
     }
     else {
       // This pair can be mutated at any time by (set-car!) or (set-cdr!) even if it's an immutable storage location

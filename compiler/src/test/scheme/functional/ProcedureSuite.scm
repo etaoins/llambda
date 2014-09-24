@@ -307,3 +307,41 @@
     (assert-raises
       ((make-length-counter dynamic-true) '(1 2 3 4 5 . 6)))))
 
+(cond-expand
+  (immutable-pairs
+    (define-test "applying typed procedure rest argument" (expect-success 
+      (import (llambda typed))
+
+      ; Takes an initial value and then four numerical procedures to fold the value over
+      (: apply-number-procs (-> <number> (-> <number> <number>) * <number>))
+      (define (apply-number-procs initial .  proc-rest-arg)
+        (define first-proc (car proc-rest-arg))
+        (define second-proc (car (cdr proc-rest-arg)))
+        (define third-proc (car (cdr (cdr proc-rest-arg))))
+        (define fourth-proc (car (cdr (cdr (cdr proc-rest-arg)))))
+
+        (fourth-proc (third-proc (second-proc (first-proc initial)))))
+
+      (assert-equal -0.25 (apply-number-procs 4 - * + /))))))
+
+(define-test "invoking procedures placed in lists" (expect-success
+  (define escape-list
+    ((lambda (mutable-arg)
+      ; This exists to prevent compile-time evaluation
+      (set! mutable-arg #f)
+      (list (lambda ()))) #!unit))
+
+  (define escaped-lambda (car escape-list))
+  (escaped-lambda)))
+
+(define-test "invoking procedures returned from multiple value lists" (expect-output (-1)
+  (import (scheme write))
+  (import (scheme process-context))
+
+  (call-with-values
+    (lambda ()
+      (values 
+        (if dynamic-true write exit)
+        (if dynamic-false + -)))
+    (lambda (writer proc)
+      (writer (proc 1 2))))))
