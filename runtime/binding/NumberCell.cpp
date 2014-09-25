@@ -26,7 +26,7 @@ namespace
 		}
 		else if (sizeof(T) == 8)
 		{
-			const auto limitValue = 1UL << 53; // 2^53
+			const auto limitValue = 1ULL << 53; // 2^53
 			return ((testValue >= -limitValue) && (testValue <= limitValue));
 		}
 		else if (sizeof(T) >= 10)
