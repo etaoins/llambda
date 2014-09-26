@@ -290,6 +290,20 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
 
   test("defining case procedure types") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+    
+    bodyFor("(define-type <zero-case-proc> (case->))")(scope)
+    assert(scope("<zero-case-proc>") === BoundType(vt.CaseProcedureType(Nil)))
+    
+    bodyFor("(define-type <one-case-proc> (case-> (-> <string>)))")(scope)
+    assert(scope("<one-case-proc>") === BoundType(
+      vt.CaseProcedureType(List(
+        vt.ProcedureType(
+          fixedArgTypes=Nil,
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.SingleValue(vt.StringType)
+        )
+      ))
+    ))
 
     bodyFor("(define-type <two-case-proc> (case-> (-> <number>) (-> <string> <number>)))")(scope)
     assert(scope("<two-case-proc>") === BoundType(
@@ -306,15 +320,7 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
         )
       ))
     ))
-
-    intercept[BadSpecialFormException] {
-      bodyFor("(define-type <zero-case-fails> (case->))")(scope)
-    }
-    
-    intercept[BadSpecialFormException] {
-      bodyFor("(define-type <one-case-fails> (case-> (-> <string>)))")(scope)
-    }
-    
+ 
     intercept[BadSpecialFormException] {
       bodyFor("(define-type <non-proc-case-fails> (case-> (-> <string>) <string>))")(scope)
     }

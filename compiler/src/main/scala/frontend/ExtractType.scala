@@ -53,41 +53,37 @@ object ExtractType {
   }
   
   private def applyCaseProcedureTypeConstructor(located : SourceLocated, operands : List[sst.ScopedDatum]) : vt.SchemeType = {
-    operands match {
-      case Nil | List(_) =>
-        throw new BadSpecialFormException(located, "case-> requires at least two arguments")
+    val locatedSignatures = operands map { operand =>
+      extractSchemeType(operand) match {
+        case procType : vt.ProcedureType =>
+          (operand, procType)
 
-      case multipleOperands =>
-        val locatedSignatures = multipleOperands map { operand =>
-          extractSchemeType(operand) match {
-            case procType : vt.ProcedureType =>
-              (operand, procType)
-
-            case _ =>
-              throw new BadSpecialFormException(operand, "case-> only accepts procedure type arguments")
-          }
-        }
-
-        // Make sure the arities make sense
-        locatedSignatures.tail.scanLeft(locatedSignatures.head._2) {
-          case (prevSignature, (located, signature)) =>
-            val prevFixedArgCount = prevSignature.fixedArgTypes.length
-            val fixedArgCount = signature.fixedArgTypes.length 
-
-            if (fixedArgCount <= prevFixedArgCount) {
-              val message = s"Case unreachable; has ${fixedArgCount} fixed arguments while previous case has ${prevFixedArgCount}"
-              throw new BadSpecialFormException(located, message) 
-            }
-            else if (prevSignature.restArgMemberTypeOpt.isDefined) {
-              val message = "Case unreachable; previous case had a rest argument"
-              throw new BadSpecialFormException(located, message) 
-            }
-
-            signature
-        }
-
-        vt.CaseProcedureType(locatedSignatures.map(_._2))
+        case _ =>
+          throw new BadSpecialFormException(operand, "case-> only accepts procedure type arguments")
+      }
     }
+
+    // Make sure the arities make sense
+    if (locatedSignatures.length > 1) {
+      locatedSignatures.tail.scanLeft(locatedSignatures.head._2) {
+        case (prevSignature, (located, signature)) =>
+          val prevFixedArgCount = prevSignature.fixedArgTypes.length
+          val fixedArgCount = signature.fixedArgTypes.length 
+
+          if (fixedArgCount <= prevFixedArgCount) {
+            val message = s"Case unreachable; has ${fixedArgCount} fixed arguments while previous case has ${prevFixedArgCount}"
+            throw new BadSpecialFormException(located, message) 
+          }
+          else if (prevSignature.restArgMemberTypeOpt.isDefined) {
+            val message = "Case unreachable; previous case had a rest argument"
+            throw new BadSpecialFormException(located, message) 
+          }
+
+          signature
+      }
+    }
+
+    vt.CaseProcedureType(locatedSignatures.map(_._2))
   }
 
   private def applyTypeConstructor(constructorName : sst.ScopedSymbol, operands : List[sst.ScopedDatum], recursiveVars : RecursiveVars) : vt.SchemeType = {
