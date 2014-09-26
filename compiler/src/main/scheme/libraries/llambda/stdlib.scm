@@ -174,39 +174,6 @@
     ; Internal helper types
     (define-type <alist> (Listof <pair>))
     
-    ; Bootstrap definitions for case-lambda
-    (define-r7rs apply (world-function "lliby_apply" (<procedure> . <any>) -> *))
-    (define-r7rs length (world-function "lliby_length" (<list>) -> <native-uint32>))
-    (define-r7rs error (world-function "lliby_error" (<string> . <any>) noreturn))
-    (define-r7rs = (native-function "lliby_numeric_equal" (<number> <number> . <number>) -> <native-bool>))
-    (define-r7rs < (native-function "lliby_numeric_lt" (<number> <number> . <number>) -> <native-bool>))
-    (define-r7rs > (native-function "lliby_numeric_gt" (<number> <number> . <number>) -> <native-bool>))
-    (define-r7rs <= (native-function "lliby_numeric_lte" (<number> <number> . <number>) -> <native-bool>))
-    (define-r7rs >= (native-function "lliby_numeric_gte" (<number> <number> . <number>) -> <native-bool>))
-    
-    (define-syntax case-lambda
-      (syntax-rules ()
-                    ((case-lambda (params body0 ...) ...)
-                     (lambda args
-                       (let ((len (length args)))
-                         (let-syntax
-                           ((cl (syntax-rules ::: ()
-                                              ((cl)
-                                               (error "no matching clause"))
-                                              ((cl ((p :::) . body) . rest)
-                                               (if (= len (length '(p :::)))
-                                                 (apply (lambda (p :::)
-                                                          . body) args)
-                                                 (cl . rest)))
-                                              ((cl ((p ::: . tail) . body)
-                                                   . rest)
-                                               (if (>= len (length '(p :::)))
-                                                 (apply
-                                                   (lambda (p ::: . tail)
-                                                     . body) args)
-                                                 (cl . rest))))))
-                           (cl (params body0 ...) ...)))))))
-
     (define-r7rs eqv? (native-function "lliby_is_eqv" (<any> <any>) -> <native-bool>))
     (define-r7rs eq? eqv?)
     (define-r7rs equal? (native-function "lliby_is_equal" (<any> <any>) -> <native-bool>))
@@ -234,6 +201,12 @@
     (define-r7rs nan? (lambda: ((n : <number>))
       (eq? n +nan.0)))
     
+    (define-r7rs = (native-function "lliby_numeric_equal" (<number> <number> . <number>) -> <native-bool>))
+    (define-r7rs < (native-function "lliby_numeric_lt" (<number> <number> . <number>) -> <native-bool>))
+    (define-r7rs > (native-function "lliby_numeric_gt" (<number> <number> . <number>) -> <native-bool>))
+    (define-r7rs <= (native-function "lliby_numeric_lte" (<number> <number> . <number>) -> <native-bool>))
+    (define-r7rs >= (native-function "lliby_numeric_gte" (<number> <number> . <number>) -> <native-bool>))
+
     ; These branch on type as our planner currently won't optimise comparisons without a definite type
     (define-r7rs zero? (lambda: ((n : <number>))
       (if (exact-integer? n) (= n 0) (= n 0.0))))
@@ -275,7 +248,7 @@
     (define-r7rs - (world-function "lliby_sub" (<number> . <number>) -> <number>))
     (define-r7rs * (world-function "lliby_mul" <number> -> <number>))
     (define-r7rs / (world-function "lliby_div" (<number> . <number>) -> <native-double>))
-
+    
     (define-r7rs expt (world-function "lliby_expt" (<number> <number>) -> <number>))
 
     (define-r7rs boolean? (make-predicate <boolean>))
@@ -285,6 +258,8 @@
     (define-r7rs pair? (make-predicate <pair>))
     (define-r7rs null? (make-predicate <empty-list>))
     (define-r7rs list? (make-predicate <list>))
+    
+    (define-r7rs length (world-function "lliby_length" (<list>) -> <native-uint32>))
 
     (define-r7rs cons (world-function "lliby_cons" (<any> <any>) -> <pair>))
     (define-r7rs car (native-function "lliby_car" (<pair>) -> <any>))
@@ -365,6 +340,7 @@
     (define-r7rs call/cc call-with-current-continuation)
     (define-r7rs values (native-function "lliby_values" <any> -> *))
     (define-r7rs call-with-values (world-function "lliby_call_with_values" ((-> *) <procedure>) -> *))
+    (define-r7rs apply (world-function "lliby_apply" (<procedure> . <any>) -> *))
 
     (define native-make-parameter (world-function "_lliby_make_parameter" (<any> (U (-> <any> <any>) <unit>)) -> <procedure>))
     (define-r7rs make-parameter (case-lambda
@@ -390,6 +366,7 @@
     (define-r7rs with-exception-handler (world-function "lliby_with_exception_handler" ((-> <any> *) (-> *)) -> *))
     (define-r7rs raise (world-function "lliby_raise" (<any>) noreturn))
     (define-r7rs raise-continuable (world-function "lliby_raise_continuable" (<any>) -> *))
+    (define-r7rs error (world-function "lliby_error" (<string> . <any>) noreturn))
     (define-r7rs error-object? (make-predicate <error-object>))
     (define-r7rs error-object-message (native-function "lliby_error_object_message" (<error-object>) -> <string>))
     (define-r7rs error-object-irritants (native-function "lliby_error_object_irritants" (<error-object>) -> <list>))

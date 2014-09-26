@@ -320,6 +320,22 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
         )
       ))
     ))
+    
+    bodyFor("(define-type <two-case-with-rest-proc> (case-> (-> <number>) (-> <string> * <number>)))")(scope)
+    assert(scope("<two-case-with-rest-proc>") === BoundType(
+      vt.CaseProcedureType(List(
+        vt.ProcedureType(
+          fixedArgTypes=Nil,
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.SingleValue(vt.NumberType)
+        ),
+        vt.ProcedureType(
+          fixedArgTypes=Nil,
+          restArgMemberTypeOpt=Some(vt.StringType),
+          returnType=vt.ReturnType.SingleValue(vt.NumberType)
+        )
+      ))
+    ))
  
     intercept[BadSpecialFormException] {
       bodyFor("(define-type <non-proc-case-fails> (case-> (-> <string>) <string>))")(scope)

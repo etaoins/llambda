@@ -201,6 +201,13 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
           operandTerminator=restArgDatum,
           definition=definition
         )(debugContext, libraryLoader, frontendConfig)
+      
+      case (Primitives.CaseLambda, clauseData) =>
+        ExtractCaseLambda(
+          located=appliedSymbol,
+          typed=false,
+          clauseData=clauseData
+        )(debugContext, libraryLoader, frontendConfig)
 
       case (Primitives.SyntaxError, (errorDatum @ sst.NonSymbolLeaf(ast.StringLiteral(errorString))) :: data) =>
         throw new UserDefinedSyntaxError(errorDatum, errorString, data.map(_.unscope))

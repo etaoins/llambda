@@ -118,10 +118,22 @@ case class Lambda(
     body : Expr,
     debugContextOpt : Option[debug.SubprogramContext] = None
 ) extends Expr {
-  val subexprs = body :: Nil
+  val subexprs = List(body)
 
   def map(f : Expr => Expr) : Lambda =
     Lambda(schemeType, fixedArgs, restArgOpt, f(body), debugContextOpt).assignLocationFrom(this)
+}
+
+case class CaseLambda(
+    clauses : List[Lambda]
+) extends Expr {
+  val subexprs = clauses 
+
+  def map(f : Expr => Expr) : CaseLambda =
+    CaseLambda(clauses.map(_.map(f))).assignLocationFrom(this)
+
+  override def schemeType =
+    vt.CaseProcedureType(clauses.map(_.schemeType))
 }
 
 sealed abstract trait BindingExpr extends Expr {

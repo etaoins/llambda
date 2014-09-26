@@ -63,26 +63,7 @@ object ExtractType {
       }
     }
 
-    // Make sure the arities make sense
-    if (locatedSignatures.length > 1) {
-      locatedSignatures.tail.scanLeft(locatedSignatures.head._2) {
-        case (prevSignature, (located, signature)) =>
-          val prevFixedArgCount = prevSignature.fixedArgTypes.length
-          val fixedArgCount = signature.fixedArgTypes.length 
-
-          if (fixedArgCount <= prevFixedArgCount) {
-            val message = s"Case unreachable; has ${fixedArgCount} fixed arguments while previous case has ${prevFixedArgCount}"
-            throw new BadSpecialFormException(located, message) 
-          }
-          else if (prevSignature.restArgMemberTypeOpt.isDefined) {
-            val message = "Case unreachable; previous case had a rest argument"
-            throw new BadSpecialFormException(located, message) 
-          }
-
-          signature
-      }
-    }
-
+    ValidateCaseLambdaClauses(locatedSignatures)
     vt.CaseProcedureType(locatedSignatures.map(_._2))
   }
 

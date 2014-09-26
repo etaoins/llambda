@@ -4,6 +4,7 @@ import io.llambda
 /** Bindings for the primitive expressions and type constructors */
 object Primitives {
   object Lambda extends PrimitiveExpr
+  object CaseLambda extends PrimitiveExpr
   object Quote extends PrimitiveExpr
   object If extends PrimitiveExpr
   object Set extends PrimitiveExpr
@@ -43,6 +44,7 @@ object Primitives {
   val bindings = {
     Map[String, BoundValue](
       "lambda" -> Lambda,
+      "case-lambda" -> CaseLambda,
       "quote" -> Quote,
       "if" -> If,
       "set!" -> Set,
