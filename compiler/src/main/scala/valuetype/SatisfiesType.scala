@@ -53,6 +53,70 @@ object SatisfiesType {
       Some(true)
     }
 
+  private def satifiesProcedureType(superType : ProcedureType, testingType : ProcedureType) : Option[Boolean] =
+    (superType, testingType) match {
+      case (ProcedureType(superFixedArgTypes, superRestArgMemberTypeOpt, superReturnType),
+            ProcedureType(testingFixedArgTypes, testingRestArgMemberTypeOpt, testingReturnType)) =>
+        // Construct a list type based on our arguments
+        val superArgList = argTypeToListType(superFixedArgTypes, superRestArgMemberTypeOpt)
+        val testingArgList = argTypeToListType(testingFixedArgTypes, testingRestArgMemberTypeOpt)
+        // Test the list type - note that super/test is reversed because argument types are contravariant
+        val argListResult = apply(testingArgList, superArgList)
+
+        // Construct a list type based on our return type
+        val superReturnTypeList = superReturnType.toValueListType
+        val testingReturnTypeList = testingReturnType.toValueListType
+        val returnTypeResult = apply(superReturnTypeList, testingReturnTypeList)
+
+        val allResults = Set(argListResult, returnTypeResult)
+
+        if (allResults.contains(Some(false))) {
+          Some(false)
+        }
+        else if (allResults.contains(None)) {
+          None
+        }
+        else {
+          Some(true)
+        }
+    }
+
+  /** Compares two applicable types
+    *
+    * This ensures that each signature in the testing type is satisfied by at least one signature in the super type
+    */
+  private def satifiesApplicableType(superType : ApplicableType, testingType : ApplicableType) : Option[Boolean] = {
+    val allSignatureResults = (testingType.signatures.map { testingSignature =>
+      val testingSignatureResults = superType.signatures map { superSignature =>
+        satifiesProcedureType(superSignature, testingSignature)
+      }
+
+      if (testingSignatureResults.contains(Some(true))) {
+        // At least one of these signatures is definitely satisfies
+        Some(true)
+      }
+      else if (testingSignatureResults.contains(None)) {
+        // One signature can possibly match
+        None
+      }
+      else {
+        Some(false)
+      }
+    }).toSet
+
+    if (allSignatureResults == Set(Some(true))) {
+      // All signatures definitely satisfy
+      Some(true)
+    }
+    else if (allSignatureResults == Set(Some(false))) {
+      // No signatures match
+      Some(false)
+    }
+    else {
+      // Some applications match
+      None
+    }
+  }
 
   def stackedSatisfiesType(superStack : SchemeType.Stack, testingStack : SchemeType.Stack) : Option[Boolean] = {
     (superStack.head, testingStack.head) match {
@@ -166,30 +230,8 @@ object SatisfiesType {
           None
         }
 
-      case (ProcedureType(superFixedArgTypes, superRestArgMemberTypeOpt, superReturnType),
-            ProcedureType(testingFixedArgTypes, testingRestArgMemberTypeOpt, testingReturnType)) =>
-        // Construct a list type based on our arguments
-        val superArgList = argTypeToListType(superFixedArgTypes, superRestArgMemberTypeOpt)
-        val testingArgList = argTypeToListType(testingFixedArgTypes, testingRestArgMemberTypeOpt)
-        // Test the list type - note that super/test is reversed because argument types are contravariant
-        val argListResult = apply(testingArgList, superArgList)
-
-        // Construct a list type based on our return type
-        val superReturnTypeList = superReturnType.toValueListType
-        val testingReturnTypeList = testingReturnType.toValueListType
-        val returnTypeResult = apply(superReturnTypeList, testingReturnTypeList)
-
-        val allResults = Set(argListResult, returnTypeResult)
-
-        if (allResults.contains(Some(false))) {
-          Some(false)
-        }
-        else if (allResults.contains(None)) {
-          None
-        }
-        else {
-          Some(true)
-        }
+      case (superApplicable : ApplicableType, testingApplicable : ApplicableType) =>
+        satifiesApplicableType(superApplicable, testingApplicable)
 
       case (superDerived : DerivedSchemeType, _) =>
         // Didn't have an exact match - check our parent types

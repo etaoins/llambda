@@ -42,7 +42,7 @@ class CellValue(
     boxedValue
   
   def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : InvokableProcedure =  {
-    schemeType.procedureTypeOpt match {
+    schemeType.applicableTypeOpt match {
       case Some(procedureType) =>
         val boxedProcTemp = toProcedureTempValue(procedureType, None, false)
         new InvokableProcedureCell(procedureType, boxedProcTemp)
@@ -54,11 +54,11 @@ class CellValue(
   }
   
   protected def toProcedureTempValue(
-      targetType : vt.ProcedureType,
+      targetType : vt.ApplicableType,
       errorMessageOpt : Option[RuntimeErrorMessage],
       staticCheck : Boolean = false
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
-    val schemeProcType = schemeType.procedureTypeOpt getOrElse {
+    val applicableType = schemeType.applicableTypeOpt getOrElse {
       val message = errorMessageOpt.map(_.text) getOrElse {
         s"Unable to convert ${typeDescription} to ${targetType}"
       }
@@ -66,8 +66,8 @@ class CellValue(
       impossibleConversion(message)
     }
 
-    val currentSignature = ProcedureTypeToAdaptedSignature(schemeProcType)
-    val requiredSignature = ProcedureTypeToAdaptedSignature(targetType)
+    val currentSignature = ApplicableTypeToAdaptedSignature(applicableType)
+    val requiredSignature = ApplicableTypeToAdaptedSignature(targetType)
 
     if (SatisfiesSignature(requiredSignature, currentSignature)) {
       // We already have the correct type
@@ -102,11 +102,11 @@ class CellValue(
 
     // Prepare a trampoline for this procedure conversion
     val targetProcTemp = boxedValue.castToCellTempValue(ct.ProcedureCell)
-    val invokableTarget = new InvokableProcedureCell(schemeProcType, targetProcTemp)
+    val invokableTarget = new InvokableProcedureCell(applicableType, targetProcTemp)
 
     val trampolineKey = (invokableTarget.signature, requiredSignature)
     val trampolineSymbol = plan.adapterProcTrampolines.getOrElseUpdate(trampolineKey, {
-      val trampolineSymbol = plan.allocSymbol(schemeProcType + " to " + targetType + " Adapter")
+      val trampolineSymbol = plan.allocSymbol(applicableType + " to " + targetType + " Adapter")
 
       // Plan the trampoline
       val plannedTrampoline = PlanProcedureTrampoline(requiredSignature, invokableTarget)

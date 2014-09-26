@@ -289,7 +289,7 @@ object PlanTypeCheck {
         plan.steps += ps.TestCellType(isCellTypePred, checkValue.tempValue, cellType, possibleCellTypes)
         DynamicResult(isCellTypePred)
 
-      case _ : vt.ProcedureType =>
+      case _ : vt.ApplicableType =>
         throw new ImpossibleTypeConversionException(
           located=plan.activeContextLocated,
           message=s"Value of type ${valueType} does not statically satisfy procedure type ${testType}"

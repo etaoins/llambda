@@ -13,6 +13,21 @@ object NameForType {
     case DirectSchemeTypeRef(directType) =>
       stackedNameForType(directType :: typeStack, recurseVarNames)
   }
+
+  private def nameForProcedureType(procType : ProcedureType) : String = procType match {
+    case ProcedureType(fixedArgTypes, restArgMemberTypeOpt, returnType) =>
+      val fixedArgNames = fixedArgTypes.map { fixedArgType =>
+        apply(fixedArgType)
+      }
+
+      val restArgNames = restArgMemberTypeOpt map { restArgMemberType =>
+        apply(restArgMemberType) + " *"
+      }
+
+      val returnTypeName = NameForReturnType(returnType)
+      
+      "(-> " + (fixedArgNames ++ restArgNames :+ returnTypeName).mkString(" ") + ")"
+  }
   
   private[valuetype] def stackedNameForNonRecurseType(typeStack : SchemeType.Stack, recurseVarNames : Map[SchemeType, Char]) : String = {
     typeStack.head match {
@@ -47,18 +62,13 @@ object NameForType {
 
         s"(Vectorof ${memberTypeName})"
 
-      case ProcedureType(fixedArgTypes, restArgMemberTypeOpt, returnType) =>
-        val fixedArgNames = fixedArgTypes.map { fixedArgType =>
-          stackedNameForType(fixedArgType :: typeStack, recurseVarNames)
-        }
+      case procType : ProcedureType =>
+        nameForProcedureType(procType)
 
-        val restArgNames = restArgMemberTypeOpt map { restArgMemberType =>
-          stackedNameForType(restArgMemberType :: typeStack, recurseVarNames) + " *"
-        }
+      case caseProcType : CaseProcedureType =>
+        val signatureNames = caseProcType.signatures.map(nameForProcedureType).mkString(" ")
 
-        val returnTypeName = NameForReturnType(returnType)
-        
-        "(-> " + (fixedArgNames ++ restArgNames :+ returnTypeName).mkString(" ") + ")"
+        s"(case-> ${signatureNames})"
 
       case unionType @ UnionType(memberTypes) =>
         unionType.exactCellTypeOpt match {

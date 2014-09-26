@@ -2,11 +2,11 @@ package io.llambda.compiler.planner.intermediatevalue
 import io.llambda
 
 import llambda.compiler.planner.{step => ps}
-import llambda.compiler.planner.{PlanWriter, InvokableProcedure, ProcedureTypeToAdaptedSignature}
+import llambda.compiler.planner.{PlanWriter, InvokableProcedure, ApplicableTypeToAdaptedSignature}
 import llambda.compiler.{valuetype => vt}
 
-class InvokableProcedureCell(procedureType : vt.ProcedureType, tempValue : ps.TempValue) extends InvokableProcedure {
-  val signature = ProcedureTypeToAdaptedSignature(procedureType)
+class InvokableProcedureCell(applicableType : vt.ApplicableType, tempValue : ps.TempValue) extends InvokableProcedure {
+  val signature = ApplicableTypeToAdaptedSignature(applicableType)
   
   def planSelf()(implicit plan : PlanWriter) : ps.TempValue = 
     tempValue
@@ -22,6 +22,6 @@ class InvokableProcedureCell(procedureType : vt.ProcedureType, tempValue : ps.Te
     None
 
   def withSelfTemp(selfTemp : ps.TempValue) = 
-    new InvokableProcedureCell(procedureType, selfTemp)
+    new InvokableProcedureCell(applicableType, selfTemp)
 }
 

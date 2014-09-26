@@ -58,7 +58,7 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
   }
   
   def toProcedureTempValue(
-      targetType : vt.ProcedureType,
+      targetType : vt.ApplicableType,
       errorMessageOpt : Option[RuntimeErrorMessage],
       staticCheck : Boolean = false
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
@@ -67,7 +67,7 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
       impossibleConversion(message)
     }
 
-    val requiredSignature = ProcedureTypeToAdaptedSignature(targetType)
+    val requiredSignature = ApplicableTypeToAdaptedSignature(targetType)
 
     if (SatisfiesSignature(requiredSignature, signature)) {
       // The procedure already has the correct signature - return our exisiting cell directly

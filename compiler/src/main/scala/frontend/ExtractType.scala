@@ -29,6 +29,67 @@ object ExtractType {
       throw new MalformedExprException(scopedSymbol, "Type constructor expected")
   }
 
+  private def applyProcedureTypeConstructor(located : SourceLocated, operands : List[sst.ScopedDatum]) : vt.SchemeType = {
+    // Explicitly recursive types cross procedure boundaries due to lack of testing and use cases
+    val noRecursiveVars  = RecursiveVars()
+
+    operands.reverse match {
+      case returnDatum :: sst.ScopedSymbol(_, "*") :: restArgMemberDatum :: reverseFixedArgData =>
+        val fixedArgTypes = reverseFixedArgData.reverse.map(extractNonEmptySchemeType(_,  noRecursiveVars))
+        val restArgMemberType = extractNonEmptySchemeType(restArgMemberDatum, noRecursiveVars)
+        val returnType = extractReturnType(returnDatum)
+
+        vt.ProcedureType(fixedArgTypes, Some(restArgMemberType), returnType)
+
+      case returnDatum :: reverseFixedArgData =>
+        val fixedArgTypes = reverseFixedArgData.reverse.map(extractNonEmptySchemeType(_, noRecursiveVars))
+        val returnType = extractReturnType(returnDatum)
+        
+        vt.ProcedureType(fixedArgTypes, None, returnType)
+
+      case  _ =>
+        throw new BadSpecialFormException(located, "-> requires at least one return type argument")
+    }
+  }
+  
+  private def applyCaseProcedureTypeConstructor(located : SourceLocated, operands : List[sst.ScopedDatum]) : vt.SchemeType = {
+    operands match {
+      case Nil | List(_) =>
+        throw new BadSpecialFormException(located, "case-> requires at least two arguments")
+
+      case multipleOperands =>
+        val locatedSignatures = multipleOperands map { operand =>
+          extractSchemeType(operand) match {
+            case procType : vt.ProcedureType =>
+              (operand, procType)
+
+            case _ =>
+              throw new BadSpecialFormException(operand, "case-> only accepts procedure type arguments")
+          }
+        }
+
+        // Make sure the arities make sense
+        locatedSignatures.tail.scanLeft(locatedSignatures.head._2) {
+          case (prevSignature, (located, signature)) =>
+            val prevFixedArgCount = prevSignature.fixedArgTypes.length
+            val fixedArgCount = signature.fixedArgTypes.length 
+
+            if (fixedArgCount <= prevFixedArgCount) {
+              val message = s"Case unreachable; has ${fixedArgCount} fixed arguments while previous case has ${prevFixedArgCount}"
+              throw new BadSpecialFormException(located, message) 
+            }
+            else if (prevSignature.restArgMemberTypeOpt.isDefined) {
+              val message = "Case unreachable; previous case had a rest argument"
+              throw new BadSpecialFormException(located, message) 
+            }
+
+            signature
+        }
+
+        vt.CaseProcedureType(locatedSignatures.map(_._2))
+    }
+  }
+
   private def applyTypeConstructor(constructorName : sst.ScopedSymbol, operands : List[sst.ScopedDatum], recursiveVars : RecursiveVars) : vt.SchemeType = {
     resolveTypeConstructor(constructorName) match {
       case UserDefinedTypeConstructor(constructorArgs, definition) =>
@@ -120,26 +181,10 @@ object ExtractType {
         vt.SpecificVectorType(memberTypeRefs.toVector)
 
       case Primitives.ProcedureType =>
-        // Explicitly recursive types cross procedure boundaries due to lack of testing and use cases
-        val noRecursiveVars  = RecursiveVars()
-
-        operands.reverse match {
-          case returnDatum :: sst.ScopedSymbol(_, "*") :: restArgMemberDatum :: reverseFixedArgData =>
-            val fixedArgTypes = reverseFixedArgData.reverse.map(extractNonEmptySchemeType(_,  noRecursiveVars))
-            val restArgMemberType = extractNonEmptySchemeType(restArgMemberDatum, noRecursiveVars)
-            val returnType = extractReturnType(returnDatum)
-
-            vt.ProcedureType(fixedArgTypes, Some(restArgMemberType), returnType)
-
-          case returnDatum :: reverseFixedArgData =>
-            val fixedArgTypes = reverseFixedArgData.reverse.map(extractNonEmptySchemeType(_, noRecursiveVars))
-            val returnType = extractReturnType(returnDatum)
-            
-            vt.ProcedureType(fixedArgTypes, None, returnType)
-
-          case  _ =>
-            throw new BadSpecialFormException(constructorName, "-> requires at least one return type argument")
-        }
+        applyProcedureTypeConstructor(constructorName, operands)
+      
+      case Primitives.CaseProcedureType =>
+        applyCaseProcedureTypeConstructor(constructorName, operands)
 
       case _ =>
         throw new BadSpecialFormException(constructorName, "Invalid type constructor syntax")

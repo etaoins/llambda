@@ -60,8 +60,8 @@ private[planner] object ValuesToPair {
       // This is actually what we want - otherwise it would be very complicated to convert procedure typed lists
       // between each other
       var storedType = vt.PairType(
-        carTypeRef=vt.DirectSchemeTypeRef(carValue.schemeType.replaceProcedureType(vt.TopProcedureType)),
-        cdrTypeRef=vt.DirectSchemeTypeRef(cdrValue.schemeType.replaceProcedureType(vt.TopProcedureType))
+        carTypeRef=vt.DirectSchemeTypeRef(carValue.schemeType.replaceApplicableType(vt.TopProcedureType)),
+        cdrTypeRef=vt.DirectSchemeTypeRef(cdrValue.schemeType.replaceApplicableType(vt.TopProcedureType))
       )
 
       // This pair is immutable and we can optimise based on that

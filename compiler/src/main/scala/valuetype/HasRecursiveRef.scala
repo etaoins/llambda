@@ -26,7 +26,7 @@ object HasRecursiveRef {
     case UniformVectorType(memberTypeRef)  =>
       refHasRecursiveRef(memberTypeRef, depth)
 
-    case procedureType : ProcedureType =>
+    case applicableType : ApplicableType =>
       // Procedure types explicitly have recursion disabled at the moment
       false
 

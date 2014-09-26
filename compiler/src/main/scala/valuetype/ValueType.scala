@@ -134,19 +134,19 @@ sealed abstract trait SchemeType extends CellValueType {
     SchemeType.fromTypeUnion(List(this, otherType))
   }
   
-  /** Returns the procedure type for this type if one exists
+  /** Returns the applicable type for this type if one exists
     *
-    * Unions can only have a single procedure type at once. This will return that procedure type if it exists or 
-    * None if the union has no procedure type.
+    * Unions can only have a single applicable type at once. This will return that applicable type if it exists or None 
+    * if the union has no applicable type.
     */
-  def procedureTypeOpt : Option[ProcedureType] =
+  def applicableTypeOpt : Option[ApplicableType] =
     None
 
-  /** Returns this type with a new procedure type
+  /** Returns this type with a new applicable type
     *
-    * If the previous type did not have a procedure type this will return the original type
+    * If the previous type did not have a applicable type this will return the original type
     */
-   def replaceProcedureType(procType : vt.ProcedureType) : SchemeType =
+   def replaceApplicableType(applicableType : vt.ApplicableType) : SchemeType =
      this
 }
 
@@ -177,7 +177,7 @@ case class SchemeTypeAtom(cellType : ct.ConcreteCellType) extends NonUnionScheme
       true
   }
   
-  override def procedureTypeOpt : Option[ProcedureType] =
+  override def applicableTypeOpt : Option[ApplicableType] =
     if (cellType == ct.ProcedureCell) {
       Some(TopProcedureType)
     }
@@ -185,7 +185,7 @@ case class SchemeTypeAtom(cellType : ct.ConcreteCellType) extends NonUnionScheme
       None
     }
    
-  override def replaceProcedureType(procType : vt.ProcedureType) : SchemeType =
+  override def replaceApplicableType(procType : vt.ApplicableType) : SchemeType =
     if (cellType == ct.ProcedureCell) {
       procType
     }
@@ -309,10 +309,10 @@ case class UnionType(memberTypes : Set[NonUnionSchemeType]) extends SchemeType {
     })
   }
   
-  override def procedureTypeOpt : Option[ProcedureType] =
-    memberTypes.flatMap(_.procedureTypeOpt).headOption
+  override def applicableTypeOpt : Option[ApplicableType] =
+    memberTypes.flatMap(_.applicableTypeOpt).headOption
   
-  override def replaceProcedureType(procType : vt.ProcedureType) : SchemeType = {
+  override def replaceApplicableType(procType : vt.ApplicableType) : SchemeType = {
     val (oldProcTypes, nonProcTypes) =  memberTypes.partition(_.isInstanceOf[ProcedureType])
 
     if (oldProcTypes.isEmpty) {
@@ -349,21 +349,41 @@ object VectorOfType {
     }
 }
 
+sealed abstract trait ApplicableType extends NonUnionSchemeType {
+  def signatures : Seq[ProcedureType]
+}
+
 case class ProcedureType(
     fixedArgTypes : List[SchemeType],
     restArgMemberTypeOpt : Option[SchemeType],
     returnType : vt.ReturnType.ReturnType
-) extends DerivedSchemeType {
+) extends DerivedSchemeType with ApplicableType {
   val cellType = ct.ProcedureCell
   val isGcManaged = true
 
   val parentType = SchemeTypeAtom(ct.ProcedureCell)
+
+  def signatures = List(this)
   
-  override def procedureTypeOpt : Option[ProcedureType] =
+  override def applicableTypeOpt : Option[ApplicableType] =
     Some(this)
 
-  override def replaceProcedureType(procType : vt.ProcedureType) =
-    procType
+  override def replaceApplicableType(applicableType : vt.ApplicableType) =
+    applicableType
+}
+
+case class CaseProcedureType(
+    clauseTypes : List[ProcedureType]
+) extends DerivedSchemeType with ApplicableType {
+  val cellType = ct.ProcedureCell
+  val isGcManaged = true
+
+  val parentType = SchemeTypeAtom(ct.ProcedureCell)
+
+  def signatures = clauseTypes
+  
+  override def applicableTypeOpt : Option[ApplicableType] =
+    Some(this)
 }
 
 object TopProcedureType extends ProcedureType(Nil, Some(AnySchemeType), ReturnType.ArbitraryValues)
@@ -401,13 +421,13 @@ object SchemeType {
     }
   }
 
-  private def simplifyProcTypes(nonUnionTypes : Set[NonUnionSchemeType]) : Set[NonUnionSchemeType] = 
-    if (nonUnionTypes.count(_.isInstanceOf[ProcedureType]) > 1) {
-      val (allProcTypes, nonProcTypes) =  nonUnionTypes.partition(_.isInstanceOf[ProcedureType])
+  private def simplifyApplicableTypes(nonUnionTypes : Set[NonUnionSchemeType]) : Set[NonUnionSchemeType] = 
+    if (nonUnionTypes.count(_.isInstanceOf[ApplicableType]) > 1) {
+      val (allApplicableTypes, nonApplicableTypes) = nonUnionTypes.partition(_.isInstanceOf[ApplicableType])
 
       // We can't distinguish procedure types at runtime
       // Try to combine them in to a single procedure type
-      val superProcType = allProcTypes.reduceLeft({
+      val superApplicableType = allApplicableTypes.reduceLeft({
         (left : vt.NonUnionSchemeType, right : vt.NonUnionSchemeType) =>
           if (vt.SatisfiesType(left, right) == Some(true)) {
             // Left type is more general
@@ -419,11 +439,11 @@ object SchemeType {
           }
           else {
             // Types are disjoint - use the top procedure type and abort
-            return nonProcTypes + TopProcedureType
+            return nonApplicableTypes + TopProcedureType
           }
       })
 
-      nonProcTypes + superProcType
+      nonApplicableTypes + superApplicableType
     }
     else {
       nonUnionTypes
@@ -447,13 +467,13 @@ object SchemeType {
       nonUnionTypes
     }
 
-    val procSimplifiedTypes = simplifyProcTypes(boolSimplifiedTypes)
+    val applicableSimplifiedTypes = simplifyApplicableTypes(boolSimplifiedTypes)
 
-    if (procSimplifiedTypes.size == 1) {
-      procSimplifiedTypes.head
+    if (applicableSimplifiedTypes.size == 1) {
+      applicableSimplifiedTypes.head
     }
     else {
-      UnionType(procSimplifiedTypes.toSet)
+      UnionType(applicableSimplifiedTypes.toSet)
     }
   }
 }

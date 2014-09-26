@@ -288,6 +288,50 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     }
   }
 
+  test("defining case procedure types") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    bodyFor("(define-type <two-case-proc> (case-> (-> <number>) (-> <string> <number>)))")(scope)
+    assert(scope("<two-case-proc>") === BoundType(
+      vt.CaseProcedureType(List(
+        vt.ProcedureType(
+          fixedArgTypes=Nil,
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.SingleValue(vt.NumberType)
+        ),
+        vt.ProcedureType(
+          fixedArgTypes=List(vt.StringType),
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.SingleValue(vt.NumberType)
+        )
+      ))
+    ))
+
+    intercept[BadSpecialFormException] {
+      bodyFor("(define-type <zero-case-fails> (case->))")(scope)
+    }
+    
+    intercept[BadSpecialFormException] {
+      bodyFor("(define-type <one-case-fails> (case-> (-> <string>)))")(scope)
+    }
+    
+    intercept[BadSpecialFormException] {
+      bodyFor("(define-type <non-proc-case-fails> (case-> (-> <string>) <string>))")(scope)
+    }
+      
+    intercept[BadSpecialFormException] {
+      bodyFor("(define-type <same-arity-fails> (case-> (-> <string>) (-> <string>)))")(scope)
+    }
+      
+    intercept[BadSpecialFormException] {
+      bodyFor("(define-type <decreasing-arity-fails> (case-> (-> <number> <string>) (-> <string>)))")(scope)
+    }
+      
+    intercept[BadSpecialFormException] {
+      bodyFor("(define-type <after-rest-fails> (case-> (-> <symbol> * <string>) (-> <number> <string>)))")(scope)
+    }
+  }
+
   test("defining recursive types") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
     val stringListType = vt.UniformProperListType(vt.StringType)
