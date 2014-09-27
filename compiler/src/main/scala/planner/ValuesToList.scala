@@ -21,7 +21,7 @@ private[planner] object ValuesToList {
   def apply(
       memberValues : List[iv.IntermediateValue],
       tailValue : iv.IntermediateValue = iv.EmptyListValue,
-      capturable : Boolean = false
+      capturable : Boolean = true
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : iv.IntermediateValue = 
     memberValues match {
       case carValue :: restValues =>

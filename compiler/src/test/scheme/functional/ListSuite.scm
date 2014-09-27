@@ -92,6 +92,16 @@
 	(assert-equal '() (list))
 	(assert-equal '(1 2 3) (list 1 2 3))))
 
+(cond-expand
+  ((not immutable-pairs)
+    (define-test "mutating (list) to improper" (expect-success
+      (define test-list (list 1 2 3))
+      (set-cdr! test-list 2)
+      
+      ; No longer an improper list
+      (assert-false (list? test-list))
+      (assert-equal '(1 . 2) test-list)))))
+
 (define-test "(append)" (expect-success
 	(assert-equal '() (append))
 	(assert-equal 'a (append 'a))
