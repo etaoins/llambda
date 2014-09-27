@@ -44,18 +44,8 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
   def nativeSymbolOpt(implicit plan : PlanWriter) : Option[String] =
     Some(nativeSymbol)
   
-  def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue = {
-    selfTempOpt match {
-      case Some(selfTemp) =>
-        BoxedValue(ct.ProcedureCell, selfTemp)
-
-      case None =>
-        val cellTemp = ps.CellTemp(ct.ProcedureCell)
-        plan.steps += ps.CreateEmptyClosure(cellTemp, planEntryPoint())
-
-        BoxedValue(ct.ProcedureCell, cellTemp)
-    }
-  }
+  def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue =
+    BoxedValue(ct.ProcedureCell, planSelf())
   
   def toProcedureTempValue(
       targetType : vt.ApplicableType,
@@ -119,9 +109,15 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
     entryPointTemp
   }
 
-  def planSelf()(implicit plan : PlanWriter) : ps.TempValue = selfTempOpt getOrElse {
-    throw new InternalCompilerErrorException("Attempted to get self value of a procedure without a closure")
-  }
+  def planSelf()(implicit plan : PlanWriter) : ps.TempValue =
+    selfTempOpt match {
+      case Some(selfTemp) => selfTemp
+
+      case None =>
+        val cellTemp = ps.CellTemp(ct.ProcedureCell)
+        plan.steps += ps.CreateEmptyClosure(cellTemp, planEntryPoint())
+        cellTemp
+    }
   
   def preferredRepresentation : vt.ValueType =
     schemeType

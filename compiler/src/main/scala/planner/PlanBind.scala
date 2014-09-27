@@ -57,10 +57,15 @@ private[planner] object PlanBind {
       val initialValueResult = initialValue match {
         case lambdaExpr : et.Lambda if isSelfRecursiveLambda =>
           plan.withContextLocation(initialValue) {
-            PlanLambda(initialState, plan)(
+            val procValue = PlanLambda(initialState, plan)(
               lambdaExpr=lambdaExpr,
               sourceNameHint=Some(storageLoc.sourceName),
               recursiveSelfLoc=Some(storageLoc)
+            )
+
+            PlanResult(
+              state=initialState,
+              values=SingleValue(procValue)
             )
           }
 

@@ -139,11 +139,8 @@ class PlanWriter(
     val falsePlan = forkPlan()
     val falseValue = falseBuilder(falsePlan)
 
-    if (trueValue.isGcManaged != falseValue.isGcManaged) {
-      throw new InternalCompilerErrorException("phi branches returning GC incompatible values")
-    }
-
-    val phiTemp = new ps.TempValue(trueValue.isGcManaged)
+    val resultGcManaged = trueValue.isGcManaged || falseValue.isGcManaged
+    val phiTemp = new ps.TempValue(resultGcManaged)
 
     this.planSealed = false
     this.steps += ps.CondBranch(phiTemp, test, truePlan.steps.toList, trueValue, falsePlan.steps.toList, falseValue)

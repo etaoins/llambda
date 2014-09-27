@@ -119,7 +119,7 @@ private[planner] object PlanLambda {
       lambdaExpr : et.Lambda,
       sourceNameHint : Option[String],
       recursiveSelfLoc : Option[StorageLocation]
-  ) : PlanResult = {
+  ) : iv.KnownSchemeProc = {
     // Give ourselves a name. This will be made unique if it collides
     val sourceName = sourceNameHint.getOrElse("anonymous-procedure")
     val nativeSymbol = parentPlan.allocSymbol(sourceName)
@@ -341,18 +341,13 @@ private[planner] object PlanLambda {
 
     parentPlan.plannedFunctions += (nativeSymbol -> plannedFunction) 
 
-    val procValue = new iv.KnownSchemeProc(
+    new iv.KnownSchemeProc(
       signature=procSignature,
       plannedSymbol=nativeSymbol,
       parentState=parentState,
       lambdaExpr=lambdaExpr,
       selfTempOpt=outerSelfTempOpt,
       recursiveSelfLoc=recursiveSelfLoc
-    )
-
-    PlanResult(
-      state=parentState,
-      values=SingleValue(procValue)
     )
   }
 }

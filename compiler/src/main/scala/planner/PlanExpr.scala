@@ -185,10 +185,26 @@ private[planner] object PlanExpr {
         )
 
       case lambdaExpr : et.Lambda =>
-        PlanLambda(initialState, plan)(
+        val procValue = PlanLambda(initialState, plan)(
           lambdaExpr=lambdaExpr,
           sourceNameHint=sourceNameHint,
           recursiveSelfLoc=None
+        )
+
+        PlanResult(
+          state=initialState,
+          values=SingleValue(procValue)
+        )
+
+      case et.CaseLambda(clauseExprs) =>
+        val procValue = PlanCaseLambda(initialState, plan)(
+          clauseExprs=clauseExprs,
+          sourceNameHint=sourceNameHint
+        )
+
+        PlanResult(
+          state=initialState,
+          values=SingleValue(procValue)
         )
 
       case et.Parameterize(parameterValues, innerExpr) => 
