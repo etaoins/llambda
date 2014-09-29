@@ -129,11 +129,11 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
   override def withSchemeType(newType : vt.SchemeType) : KnownProc =
     this
   
-  def withSelfValue(selfValue : ps.TempValue) : KnownProc
+  def withSelfTemp(selfValue : ps.TempValue) : KnownProc
 
   override def restoreFromClosure(
       valueType : vt.ValueType,
       varTemp : ps.TempValue
   )(planConfig : PlanConfig) : IntermediateValue = 
-    withSelfValue(varTemp)
+    withSelfTemp(varTemp)
 }

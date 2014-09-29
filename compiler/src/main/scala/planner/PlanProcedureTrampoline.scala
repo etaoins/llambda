@@ -136,10 +136,10 @@ private[planner] object PlanProcedureTrampoline {
       val targetProcCell = ps.CellTemp(ct.ProcedureCell)
       plan.steps += ps.LoadRecordDataField(targetProcCell, closureDataTemp, AdapterProcType, AdapterProcField)
 
-      targetProc.withSelfValue(targetProcCell)
+      targetProc.withSelfTemp(targetProcCell)
     }
     else if (outSignature.hasSelfArg) {
-      targetProc.withSelfValue(inSelfTemp)
+      targetProc.withSelfTemp(inSelfTemp)
     }
     else {
       targetProc

@@ -20,6 +20,6 @@ trait InvokableProcedure {
     */
   def nativeSymbolOpt(implicit plan : PlanWriter) : Option[String]
 
-  /** Creates a copy of this invokable procedure with a new self value */
-  def withSelfValue(tempValue : ps.TempValue) : InvokableProcedure
+  /** Creates a copy of this invokable procedure with a new self temp */
+  def withSelfTemp(tempValue : ps.TempValue) : InvokableProcedure
 }

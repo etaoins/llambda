@@ -48,7 +48,7 @@ class KnownUserProc(
     new KnownUserProc(signature, plannedSymbol, selfTempOpt, Some(newReportName))
   }
   
-  override def withSelfValue(selfTemp : ps.TempValue) : KnownUserProc = {
+  override def withSelfTemp(selfTemp : ps.TempValue) : KnownUserProc = {
     new KnownUserProc(signature, plannedSymbol, Some(selfTemp), reportNameOpt)
   }
   

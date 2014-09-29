@@ -21,7 +21,7 @@ class InvokableProcedureCell(procedureType : vt.ProcedureType, tempValue : ps.Te
   def nativeSymbolOpt(implicit plan : PlanWriter) = 
     None
 
-  def withSelfValue(selfTemp : ps.TempValue) = 
+  def withSelfTemp(selfTemp : ps.TempValue) = 
     new InvokableProcedureCell(procedureType, selfTemp)
 }
 

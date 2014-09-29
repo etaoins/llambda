@@ -32,7 +32,7 @@ extends KnownUserProc(signature, plannedSymbol, selfTempOpt, reportNameOpt) {
     )
   }
   
-  override def withSelfValue(selfTemp : ps.TempValue) : KnownUserProc =
+  override def withSelfTemp(selfTemp : ps.TempValue) : KnownUserProc =
     new KnownSchemeProc(
       signature,
       plannedSymbol,

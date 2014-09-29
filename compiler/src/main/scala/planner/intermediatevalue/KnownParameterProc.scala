@@ -27,7 +27,7 @@ class KnownParameterProc(selfTemp : ps.TempValue, val hasConverter : Boolean) ex
   def withReportName(newReportName : String) : KnownParameterProc =
     new KnownParameterProc(selfTemp, hasConverter)
   
-  def withSelfValue(selfTemp : ps.TempValue) =
+  def withSelfTemp(selfTemp : ps.TempValue) =
     new KnownParameterProc(selfTemp, hasConverter)
   
   override def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue = 
