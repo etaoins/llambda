@@ -1,5 +1,7 @@
 #include "dynamic/EscapeProcedureCell.h"
 
+#include <cassert>
+
 #include "core/error.h"
 #include "binding/ReturnValuesList.h"
 #include "dynamic/Continuation.h"
@@ -15,6 +17,8 @@ namespace
 
 	ReturnValuesList *procedureBody(World &world, ProcedureCell *procSelf, ListElementCell *argHead)
 	{
+		assert(EscapeProcedureCell::isInstance(procSelf));
+
 		// Call the continuation
 		Continuation *continuation = static_cast<EscapeProcedureCell*>(procSelf)->continuation();
 		continuation->resume(world, argHead);

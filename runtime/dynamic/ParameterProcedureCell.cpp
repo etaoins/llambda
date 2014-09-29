@@ -1,5 +1,7 @@
 #include "dynamic/ParameterProcedureCell.h"
 
+#include <cassert>
+
 #include "dynamic/State.h"
 #include "binding/EmptyListCell.h"
 #include "binding/ReturnValuesList.h"
@@ -20,6 +22,8 @@ namespace
 
 	ReturnValuesList *procedureBody(World &world, ProcedureCell *self, ListElementCell *argHead)
 	{
+		assert(ParameterProcedureCell::isInstance(self));
+
 		if (argHead != EmptyListCell::instance())
 		{
 			signalError(world, "Parameter procedures don't accept arguments", {argHead});
