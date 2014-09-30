@@ -109,7 +109,7 @@ class CellValue(
       val trampolineSymbol = plan.allocSymbol(schemeProcType + " to " + targetType + " Adapter")
 
       // Plan the trampoline
-      val plannedTrampoline = PlanProcedureTrampoline(requiredSignature, invokableTarget, isAdapter=true)
+      val plannedTrampoline = PlanProcedureTrampoline(requiredSignature, invokableTarget)
       plan.plannedFunctions += trampolineSymbol -> plannedTrampoline
 
       trampolineSymbol
@@ -119,7 +119,7 @@ class CellValue(
     plan.steps += ps.CreateNamedEntryPoint(trampEntryPointTemp, requiredSignature, trampolineSymbol) 
 
     // Create the adapter procedure cell
-    val adapterProcTemp = ps.ClosureTemp()
+    val adapterProcTemp = ps.CellTemp(ct.ProcedureCell)
     val adapterDataTemp = ps.RecordLikeDataTemp()
 
     plan.steps += ps.InitRecordLike(adapterProcTemp, adapterDataTemp, AdapterProcType, false)

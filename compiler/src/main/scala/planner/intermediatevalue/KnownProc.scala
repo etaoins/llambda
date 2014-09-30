@@ -80,7 +80,7 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
       val trampolineSymbol = plan.allocSymbol(s"${nativeSymbol} ${targetType} Trampoline")
 
       // Plan the trampoline
-      val plannedTrampoline = PlanProcedureTrampoline(requiredSignature, this, isAdapter=false, locationOpt)
+      val plannedTrampoline = PlanProcedureTrampoline(requiredSignature, this, locationOpt)
       plan.plannedFunctions += trampolineSymbol -> plannedTrampoline
 
       trampolineSymbol
@@ -90,22 +90,23 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
     val trampEntryPointTemp = ps.EntryPointTemp()
     plan.steps += ps.CreateNamedEntryPoint(trampEntryPointTemp, requiredSignature, trampolineSymbol) 
 
+    // Create the adapter procedure cell
+    val adapterProcTemp = ps.CellTemp(ct.ProcedureCell)
+
     selfTempOpt match {
       case Some(selfTemp) =>
-        // Store the entry point in the procedure cell containing our closure data
-        plan.steps += ps.SetProcedureEntryPoint(selfTemp, trampEntryPointTemp)
+        // Create a closure for the adapter pointing to our original closure
+        val adapterDataTemp = ps.RecordLikeDataTemp()
 
-        selfTemp
+        plan.steps += ps.InitRecordLike(adapterProcTemp, adapterDataTemp, AdapterProcType, false)
+        plan.steps += ps.SetRecordDataField(adapterDataTemp, AdapterProcType, AdapterProcField, selfTemp)
+        plan.steps += ps.SetProcedureEntryPoint(adapterProcTemp, trampEntryPointTemp)
 
       case None =>
-        // This must have an empty closure
-        // If we had a closure selfTempOpt would have been defined to contain it
-        // This means we have to create a new closureless procedure cell to contain the entry point
-        val cellTemp = ps.CellTemp(ct.ProcedureCell)
-        plan.steps += ps.CreateEmptyClosure(cellTemp, trampEntryPointTemp)
-
-        cellTemp
+        plan.steps += ps.CreateEmptyClosure(adapterProcTemp, trampEntryPointTemp)
     }
+
+    adapterProcTemp
   }
   
   def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : InvokableProcedure = 

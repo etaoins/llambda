@@ -328,7 +328,13 @@ private[planner] object PlanLambda {
 
       parentPlan.steps += ps.InitRecordLike(cellTemp, dataTemp, closureType, isUndefined=false)
 
+      // Create our closure
       storeClosureData(dataTemp, closureType, capturedVariables)(parentPlan, parentState.worldPtr)
+
+      // Store our entry point
+      val entryPointTemp = ps.EntryPointTemp()
+      parentPlan.steps += ps.CreateNamedEntryPoint(entryPointTemp, procSignature, nativeSymbol)
+      parentPlan.steps += ps.SetProcedureEntryPoint(cellTemp, entryPointTemp)
 
       cellTemp
     }
@@ -336,7 +342,7 @@ private[planner] object PlanLambda {
     parentPlan.plannedFunctions += (nativeSymbol -> plannedFunction) 
 
     val procValue = new iv.KnownSchemeProc(
-      signature=plannedFunction.signature,
+      signature=procSignature,
       plannedSymbol=nativeSymbol,
       parentState=parentState,
       lambdaExpr=lambdaExpr,

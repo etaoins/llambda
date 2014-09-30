@@ -19,15 +19,12 @@ private[planner] object PlanProcedureTrampoline {
     * @param  trampolineSignature  The required signature for the trampoline function
     * @param  targetProc           The target procedure. The trampoline will ensure the arguments it's passed satisfy
     *                              the target procedure's signature and perform any required type conversions.
-    * @param  isAdapter            If true this is an adapter procedure. The real procedure cell will be loaded from
-    *                              the self parameter and passed to the destination procedure
     * @param  targetProcLocOpt     Source location of the target procedure. This is used to generate a comment in the 
     *                              output IR identifying the trampoline.
     */
   def apply(
       trampolineSignature : ProcedureSignature,
       targetProc : InvokableProcedure,
-      isAdapter : Boolean,
       targetProcLocOpt : Option[ContextLocated] = None
   )(implicit parentPlan : PlanWriter) : PlannedFunction = {
     val worldPtrTemp = new ps.WorldPtrValue
@@ -128,7 +125,7 @@ private[planner] object PlanProcedureTrampoline {
         Some(iv.EmptyListValue.toTempValue(vt.ListElementType)(plan, worldPtrTemp))
     }
 
-    val updatedInvokable = if (isAdapter) {
+    val updatedInvokable = if (outSignature.hasSelfArg) {
       // Load the real target proc
       val closureDataTemp = ps.RecordLikeDataTemp()
       plan.steps += ps.LoadRecordLikeData(closureDataTemp, inSelfTemp, AdapterProcType)
@@ -137,9 +134,6 @@ private[planner] object PlanProcedureTrampoline {
       plan.steps += ps.LoadRecordDataField(targetProcCell, closureDataTemp, AdapterProcType, AdapterProcField)
 
       targetProc.withSelfTemp(targetProcCell)
-    }
-    else if (outSignature.hasSelfArg) {
-      targetProc.withSelfTemp(inSelfTemp)
     }
     else {
       targetProc
