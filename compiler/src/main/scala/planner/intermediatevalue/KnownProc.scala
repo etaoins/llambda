@@ -32,6 +32,9 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
   def locationOpt : Option[ContextLocated] =
     None
 
+  override def procedureSignatureOpt =
+    Some(signature)
+
   /** Returns the native symbol for this function
     *
     * If the procedure is lazily planned it should be planned here
@@ -42,8 +45,16 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
     Some(nativeSymbol)
   
   def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue = {
-    val procTemp = toProcedureTempValue(schemeType, None)
-    BoxedValue(ct.ProcedureCell, procTemp)
+    selfTempOpt match {
+      case Some(selfTemp) =>
+        BoxedValue(ct.ProcedureCell, selfTemp)
+
+      case None =>
+        val cellTemp = ps.CellTemp(ct.ProcedureCell)
+        plan.steps += ps.CreateEmptyClosure(cellTemp, planEntryPoint())
+
+        BoxedValue(ct.ProcedureCell, cellTemp)
+    }
   }
   
   def toProcedureTempValue(
@@ -58,35 +69,31 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
 
     val requiredSignature = ProcedureTypeToAdaptedSignature(targetType)
 
-    // Store an entry point with an adapted signature
-    val entryPointTemp = if (SatisfiesSignature(requiredSignature, signature)) {
-      // The procedure already has the correct signature
-      planEntryPoint()
+    if (SatisfiesSignature(requiredSignature, signature)) {
+      // The procedure already has the correct signature - return our exisiting cell directly
+      return toBoxedValue().tempValue
     }
-    else {
-      // Check if this symbol/signature combination has been planned
-      val trampolineKey = (nativeSymbol, requiredSignature)
-      val trampolineSymbol = plan.knownProcTrampolines.getOrElseUpdate(trampolineKey, {
-        val trampolineSymbol = plan.allocSymbol(s"${nativeSymbol} ${targetType} Trampoline")
+      
+    // Check if this symbol/signature combination has been planned
+    val trampolineKey = (nativeSymbol, requiredSignature)
+    val trampolineSymbol = plan.knownProcTrampolines.getOrElseUpdate(trampolineKey, {
+      val trampolineSymbol = plan.allocSymbol(s"${nativeSymbol} ${targetType} Trampoline")
 
-        // Plan the trampoline
-        val plannedTrampoline = PlanProcedureTrampoline(requiredSignature, this, isAdapter=false, locationOpt)
-        plan.plannedFunctions += trampolineSymbol -> plannedTrampoline
+      // Plan the trampoline
+      val plannedTrampoline = PlanProcedureTrampoline(requiredSignature, this, isAdapter=false, locationOpt)
+      plan.plannedFunctions += trampolineSymbol -> plannedTrampoline
 
-        trampolineSymbol
-      })
+      trampolineSymbol
+    })
 
-      // Load the trampoline's entry point
-      val trampEntryPointTemp = ps.EntryPointTemp()
-      plan.steps += ps.CreateNamedEntryPoint(trampEntryPointTemp, requiredSignature, trampolineSymbol) 
+    // Load the trampoline's entry point
+    val trampEntryPointTemp = ps.EntryPointTemp()
+    plan.steps += ps.CreateNamedEntryPoint(trampEntryPointTemp, requiredSignature, trampolineSymbol) 
 
-      trampEntryPointTemp
-    }
-    
     selfTempOpt match {
       case Some(selfTemp) =>
         // Store the entry point in the procedure cell containing our closure data
-        plan.steps += ps.SetProcedureEntryPoint(selfTemp, entryPointTemp)
+        plan.steps += ps.SetProcedureEntryPoint(selfTemp, trampEntryPointTemp)
 
         selfTemp
 
@@ -95,7 +102,7 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
         // If we had a closure selfTempOpt would have been defined to contain it
         // This means we have to create a new closureless procedure cell to contain the entry point
         val cellTemp = ps.CellTemp(ct.ProcedureCell)
-        plan.steps += ps.CreateEmptyClosure(cellTemp, entryPointTemp)
+        plan.steps += ps.CreateEmptyClosure(cellTemp, trampEntryPointTemp)
 
         cellTemp
     }

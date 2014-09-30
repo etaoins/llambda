@@ -5,6 +5,7 @@ import collection.mutable
 
 import llambda.compiler.{et, StorageLocation, ReportProcedure, ContextLocated, RuntimeErrorMessage}
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.InternalCompilerErrorException
@@ -198,7 +199,7 @@ private[planner] object PlanExpr {
           val valueResult = apply(parameterResult.state)(valueExpr)
 
           val parameterIntermediate = parameterResult.values.toSingleValue()
-          val parameterTemp = parameterIntermediate.toTempValue(vt.TopProcedureType)
+          val parameterTemp = parameterIntermediate.toTempValue(vt.SchemeTypeAtom(ct.ProcedureCell), convertProcType=false)
 
           val mayHaveConverterProc = parameterIntermediate match {
             case knownParamProc : iv.KnownParameterProc =>

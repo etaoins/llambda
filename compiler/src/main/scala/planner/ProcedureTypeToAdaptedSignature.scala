@@ -4,7 +4,7 @@ import io.llambda
 import llambda.compiler.ProcedureSignature
 import llambda.compiler.{valuetype => vt}
 
-object ProcedureTypeToAdaptedSignature {
+object ProcedureTypeToAdaptedSignature extends (vt.ProcedureType => ProcedureSignature) {
   /** Returns the expected signature for the specified procedure type
     *
     * This is used when creating procedure cells with a specific procedure type

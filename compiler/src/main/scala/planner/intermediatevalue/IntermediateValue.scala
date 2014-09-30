@@ -6,8 +6,8 @@ import llambda.compiler.valuetype.Implicits._
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.RuntimeErrorMessage
 import llambda.compiler.planner.{step => ps}
-import llambda.compiler.planner.typecheck
-import llambda.compiler.planner.{PlanWriter, TempValueToIntermediate, InvokableProcedure, BoxedValue, PlanConfig}
+import llambda.compiler.planner._
+import llambda.compiler.ProcedureSignature
 import llambda.compiler.ImpossibleTypeConversionException
 import llambda.compiler.InternalCompilerErrorException
 
@@ -51,6 +51,10 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
 
   def isDefiniteProperList : Boolean =
     vt.SatisfiesType(vt.UniformProperListType(vt.AnySchemeType), schemeType) == Some(true)
+
+  /** Returns our exact procedure signature */
+  def procedureSignatureOpt : Option[ProcedureSignature] = 
+    schemeType.procedureTypeOpt.map(ProcedureTypeToAdaptedSignature)
 
   protected def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
   protected def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
@@ -175,11 +179,17 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     *                          default message will be generated.
     * @param  staticCheck      If true then the type must be satisfied at compile time. Otherwise a runtime check will
     *                          be generated for possible but not definite type conversions.
+    * @param  convertProcType  Indicates if the signature of the procedure should be adapted to match the signature
+    *                          expected Scheme type. This may cause expensive type check to be generated or an adapter
+    *                          procedure to be allocated. When the result is known to be non-invokable (for example in
+    *                          a parameterize) or used to restore the original value (using withSelfTemp) this should
+    *                          be skipped.
     */
   def toTempValue(
       targetType : vt.ValueType,
       errorMessageOpt : Option[RuntimeErrorMessage] = None,
-      staticCheck : Boolean = false
+      staticCheck : Boolean = false,
+      convertProcType : Boolean = true
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = targetType match {
     case vt.Predicate =>
       toTruthyPredicate()
@@ -187,17 +197,21 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     case nativeType : vt.NativeType =>
       toNativeTempValue(nativeType, errorMessageOpt)
 
-    case procedureType : vt.ProcedureType =>
+    case procedureType : vt.ProcedureType if convertProcType  =>
       toProcedureTempValue(procedureType, errorMessageOpt, staticCheck)
 
     case targetSchemeType : vt.SchemeType =>
-      (schemeType.procedureTypeOpt, targetSchemeType.procedureTypeOpt) match {
-        case (Some(schemeProcType), Some(targetSchemeProcType)) if schemeProcType != targetSchemeProcType =>
-          toProcedureTypeUnionTempValue(targetSchemeType, targetSchemeProcType, errorMessageOpt, staticCheck)
+      for(ourSignature <- procedureSignatureOpt;
+          targetProcType <- targetSchemeType.procedureTypeOpt) {
+        val targetSignature = ProcedureTypeToAdaptedSignature(targetProcType)
 
-        case _ =>
-          toNonProcedureTempValue(targetSchemeType, errorMessageOpt, staticCheck)
+        if (convertProcType && !SatisfiesSignature(targetSignature, ourSignature)) {
+          // Need to perform procedure type conversion
+          return toProcedureTypeUnionTempValue(targetSchemeType, targetProcType, errorMessageOpt, staticCheck)
+        }
       }
+
+      toNonProcedureTempValue(targetSchemeType, errorMessageOpt, staticCheck)
 
     case closureType : vt.ClosureType =>
       // Closure types are an internal implementation detail.

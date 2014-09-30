@@ -103,7 +103,7 @@ private[planner] object PlanLambda {
       val varTemp = capturedVar match {
         case immutable : CapturedImmutable =>
           // Cast the value to its preferred type
-          immutable.parentIntermediate.toTempValue(capturedVar.valueType)
+          immutable.parentIntermediate.toTempValue(capturedVar.valueType, convertProcType=false)
 
         case mutable : CapturedMutable =>
           // Store the pointer to the mutable directly
