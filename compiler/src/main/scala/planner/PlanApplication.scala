@@ -141,7 +141,7 @@ private[planner] object PlanApplication {
     }
 
     val procResult = PlanExpr(initialState)(procExpr)
-    val procResultValue = procResult.values.toSingleValue()
+    val procResultValue = procResult.values.toSingleValue().toApplicableValueForArity(operands.length)
 
     val invokableProc = procResultValue.toInvokableProcedure()
     val signature = invokableProc.signature

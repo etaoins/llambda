@@ -283,5 +283,15 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
   def restoreFromClosure(valueType : vt.ValueType, varTemp : ps.TempValue)(planConfig : PlanConfig) : IntermediateValue = {
     TempValueToIntermediate(valueType, varTemp)(planConfig) 
   }
+  
+  /** Returns an applicable value for the given number of operands
+    *
+    * This is usually the identity function. It's overridden by KnownCase:ambdaProc to enable directly selecting the  
+    * correct (case-lambda) clause
+    */
+  def toApplicableValueForArity (
+      operandCount : Int
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : IntermediateValue =
+    this
 }
 

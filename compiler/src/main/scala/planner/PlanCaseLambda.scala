@@ -221,10 +221,16 @@ private[planner] object PlanCaseLambda {
 
     parentPlan.plannedFunctions += (nativeSymbol -> plannedFunction)
 
+    val knownClauses = plannedClauses map { case PlannedClause(procValue, capturedProcOpt) =>
+      iv.KnownCaseLambdaClause(procValue, capturedProcOpt.map(_.recordField))
+    }
+
     new iv.KnownCaseLambdaProc(
-      plannedClauses=plannedClauses.map(_.procValue),
+      closureType=closureType,
+      clauses=knownClauses,
       plannedSymbol=nativeSymbol,
-      selfTempOpt=outerSelfTempOpt
+      selfTempOpt=outerSelfTempOpt,
+      clausesInScope=true
     )
   }
 }

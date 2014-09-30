@@ -16,3 +16,11 @@
         ((first second) 'second)
         ((first second . rest) rest)))
     (rest-lambda 0 1 2 3 4)))
+
+(define-test "(case-lambda) with wrong arity fails at compile time" (expect-compile-failure
+    (import (scheme case-lambda))
+    (define fixed-lambda
+      (case-lambda
+        ((first) 'first)
+        ((first second) 'second)))
+    (fixed-lambda 0 1 2)))
