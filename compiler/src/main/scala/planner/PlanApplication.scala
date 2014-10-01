@@ -206,7 +206,7 @@ private[planner] object PlanApplication {
           val inlineCost = CostForPlanSteps(inlinePlan.steps.toList)
           val invokeCost = CostForPlanSteps(invokePlan.steps.toList)
 
-          if (inlineCost < invokeCost) {
+          if (inlineCost <= invokeCost) {
             // Use the inline plan
             plan.steps ++= inlinePlan.steps
 
