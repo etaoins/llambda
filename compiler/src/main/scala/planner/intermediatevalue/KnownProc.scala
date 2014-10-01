@@ -49,8 +49,7 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
   
   def toProcedureTempValue(
       targetType : vt.ApplicableType,
-      errorMessageOpt : Option[RuntimeErrorMessage],
-      staticCheck : Boolean = false
+      errorMessageOpt : Option[RuntimeErrorMessage]
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
     if (vt.SatisfiesType(targetType, schemeType) == Some(false)) {
       val message = s"Unable to convert ${typeDescription} to procedure type ${targetType}"

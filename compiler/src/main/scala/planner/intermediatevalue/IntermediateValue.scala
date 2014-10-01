@@ -66,15 +66,13 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
   
   protected def toProcedureTempValue(
       targetType : vt.ApplicableType,
-      errorMessageOpt : Option[RuntimeErrorMessage],
-      staticCheck : Boolean = false
+      errorMessageOpt : Option[RuntimeErrorMessage]
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
   
   private def toProcedureTypeUnionTempValue(
       targetType : vt.SchemeType,
       targetApplicableType : vt.ApplicableType,
-      errorMessageOpt : Option[RuntimeErrorMessage],
-      staticCheck : Boolean = false
+      errorMessageOpt : Option[RuntimeErrorMessage]
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
     // This is a union containing different procedure types
     val resultCellType = targetType.cellType
@@ -86,8 +84,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
 
       val procTemp = toProcedureTempValue(
         targetApplicableType,
-        errorMessageOpt,
-        staticCheck
+        errorMessageOpt
       )(isProcPlan, worldPtr)
 
       val castTemp = ps.CellTemp(resultCellType)
@@ -102,8 +99,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
       val nonProcTargetType = targetType - procTypeAtom
       val nonProcTemp = retypedThis.toNonProcedureTempValue(
         nonProcTargetType,
-        errorMessageOpt,
-        staticCheck
+        errorMessageOpt
       )(isNotProcPlan, worldPtr)
 
       val castTemp = ps.CellTemp(resultCellType)
@@ -129,8 +125,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
   
   protected def toNonProcedureTempValue(
       targetType : vt.SchemeType,
-      errorMessageOpt : Option[RuntimeErrorMessage],
-      staticCheck : Boolean = false
+      errorMessageOpt : Option[RuntimeErrorMessage]
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
     // Are our possible concrete types a subset of the target types?
     vt.SatisfiesType(targetType, schemeType) match {
@@ -139,11 +134,8 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
         // We've confirmed that no checking is needed because all of our possible types are equal to or supertypes of the
         // target type
         toBoxedValue().castToCellTempValue(targetType.cellType)
-
-      case None if staticCheck =>
-        impossibleConversionToType(targetType, errorMessageOpt, true)
     
-      case None if !staticCheck =>
+      case None =>
         val errorMessage = errorMessageOpt getOrElse {
           RuntimeErrorMessage(
             name=s"subcastTo${vt.NameForType(targetType)}Failed",
@@ -177,8 +169,6 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     * @param  targetType       Target Scheme type to convert the value to
     * @param  errorMessageOpt  Error message to used to indicate type conversion failure. If this is not provided a
     *                          default message will be generated.
-    * @param  staticCheck      If true then the type must be satisfied at compile time. Otherwise a runtime check will
-    *                          be generated for possible but not definite type conversions.
     * @param  convertProcType  Indicates if the signature of the procedure should be adapted to match the signature
     *                          expected Scheme type. This may cause expensive type check to be generated or an adapter
     *                          procedure to be allocated. When the result is known to be non-invokable (for example in
@@ -188,7 +178,6 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
   def toTempValue(
       targetType : vt.ValueType,
       errorMessageOpt : Option[RuntimeErrorMessage] = None,
-      staticCheck : Boolean = false,
       convertProcType : Boolean = true
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = targetType match {
     case vt.Predicate =>
@@ -198,7 +187,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
       toNativeTempValue(nativeType, errorMessageOpt)
 
     case procedureType : vt.ProcedureType if convertProcType  =>
-      toProcedureTempValue(procedureType, errorMessageOpt, staticCheck)
+      toProcedureTempValue(procedureType, errorMessageOpt)
 
     case targetSchemeType : vt.SchemeType =>
       for(ourSignature <- procedureSignatureOpt;
@@ -207,11 +196,11 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
 
         if (convertProcType && !SatisfiesSignature(targetSignature, ourSignature)) {
           // Need to perform procedure type conversion
-          return toProcedureTypeUnionTempValue(targetSchemeType, targetProcType, errorMessageOpt, staticCheck)
+          return toProcedureTypeUnionTempValue(targetSchemeType, targetProcType, errorMessageOpt)
         }
       }
 
-      toNonProcedureTempValue(targetSchemeType, errorMessageOpt, staticCheck)
+      toNonProcedureTempValue(targetSchemeType, errorMessageOpt)
 
     case closureType : vt.ClosureType =>
       // Closure types are an internal implementation detail.
@@ -236,13 +225,23 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
       errorMessageOpt : Option[RuntimeErrorMessage] = None,
       staticCheck : Boolean = false
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : IntermediateValue= {
-    if (hasDefiniteType(targetType)) {
-      // We don't need to do anything 
-      return this
-    }
+    vt.SatisfiesType(targetType, schemeType) match {
+      case Some(true) =>
+        // We don't need to do anything 
+        return this
 
-    val castTemp = toTempValue(targetType, errorMessageOpt, staticCheck=staticCheck)
-    TempValueToIntermediate(targetType, castTemp)(plan.config)
+      case Some(false) =>
+        // Impossible conversion
+        impossibleConversionToType(targetType, errorMessageOpt, false)
+
+      case None if staticCheck =>
+        // Doesn't statically satisfy
+        impossibleConversionToType(targetType, errorMessageOpt, true)
+
+      case _ =>
+        val castTemp = toTempValue(targetType, errorMessageOpt)
+        TempValueToIntermediate(targetType, castTemp)(plan.config)
+    }
   }
 
   /** Returns this value with a new Scheme type

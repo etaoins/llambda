@@ -42,6 +42,14 @@
 	(import (llambda typed))
 	(ann (typeless-cell #t) <boolean>)))
 
+(define-test "dynamically possible procedure (ann) fails at compile time" (expect-compile-failure
+	(import (llambda typed))
+
+  (: test-proc (-> <exact-integer> <number>))
+  (define (test-proc x) x)
+
+	(ann test-proc (-> <number> <number>))))
+
 (define-test "expressions can be cast as record types" (expect #t
 	(import (llambda typed))
 

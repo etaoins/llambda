@@ -11,8 +11,7 @@ import llambda.compiler.ValueNotApplicableException
 trait UninvokableValue extends IntermediateValue {
   protected def toProcedureTempValue(
       targetType : vt.ApplicableType,
-      errorMessageOpt : Option[RuntimeErrorMessage],
-      staticCheck : Boolean = false
+      errorMessageOpt : Option[RuntimeErrorMessage]
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
     val message = errorMessageOpt.map(_.text) getOrElse {
       s"Unable to convert ${typeDescription} to ${targetType}"

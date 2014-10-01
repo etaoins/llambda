@@ -44,7 +44,7 @@ class CellValue(
   def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : InvokableProcedure =  {
     schemeType.applicableTypeOpt match {
       case Some(procedureType) =>
-        val boxedProcTemp = toProcedureTempValue(procedureType, None, false)
+        val boxedProcTemp = toProcedureTempValue(procedureType, None)
         new InvokableProcedureCell(procedureType, boxedProcTemp)
 
       case None =>
@@ -55,8 +55,7 @@ class CellValue(
   
   protected def toProcedureTempValue(
       targetType : vt.ApplicableType,
-      errorMessageOpt : Option[RuntimeErrorMessage],
-      staticCheck : Boolean = false
+      errorMessageOpt : Option[RuntimeErrorMessage]
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
     val applicableType = schemeType.applicableTypeOpt getOrElse {
       val message = errorMessageOpt.map(_.text) getOrElse {
@@ -71,18 +70,12 @@ class CellValue(
 
     if (SatisfiesSignature(requiredSignature, currentSignature)) {
       // We already have the correct type
-      return toNonProcedureTempValue(vt.SchemeTypeAtom(ct.ProcedureCell), errorMessageOpt, staticCheck)
+      return toNonProcedureTempValue(vt.SchemeTypeAtom(ct.ProcedureCell), errorMessageOpt)
     }
     
     // Make sure our types are sane
-    vt.SatisfiesType(targetType, schemeType) match {
-      case None if staticCheck =>
-        impossibleConversionToType(targetType, errorMessageOpt, true)
-
-      case Some(false) =>
-        impossibleConversionToType(targetType, errorMessageOpt, false)
-
-      case _ =>
+    if (vt.SatisfiesType(targetType, schemeType) == Some(false)) {
+      impossibleConversionToType(targetType, errorMessageOpt, false)
     }
 
     // Ensure we're a procedure
