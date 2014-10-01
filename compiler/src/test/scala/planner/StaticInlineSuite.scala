@@ -125,4 +125,15 @@ class StaticInlineSuite extends FunSuite with PlanHelpers {
       (+ (case-function 4 5) (case-function 1))
       """, ast.IntegerLiteral(19))
   }
+  
+  test("inlining R7RS's (case-lambda)") {
+    assertStaticPlan("""
+      (define case-function
+        (r7rs-case-lambda
+          ((first) (- first))
+          ((first second) (* first second))))
+
+      (+ (case-function 4 5) (case-function 1))
+      """, ast.IntegerLiteral(19))
+  }
 }
