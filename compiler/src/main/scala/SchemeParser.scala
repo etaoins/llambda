@@ -81,6 +81,9 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
 
         case '(' =>
           ListDatum
+        
+        case '[' =>
+          SquareListDatum
 
         case '|' =>
           EnclosedSymbol
@@ -157,6 +160,20 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   
   def ImproperList = rule {
     "(" ~ zeroOrMore(Datum) ~ "." ~ Datum ~ ")" ~> ({ (head, terminator) =>
+      ast.AnyList(head, terminator)
+    })
+  }
+  
+  def SquareListDatum = rule {
+    SquareProperList | SquareImproperList
+  }
+
+  def SquareProperList = rule {
+    "[" ~ zeroOrMore(Datum) ~ "]" ~> (ast.ProperList(_))
+  }
+  
+  def SquareImproperList = rule {
+    "[" ~ zeroOrMore(Datum) ~ "." ~ Datum ~ "]" ~> ({ (head, terminator) =>
       ast.AnyList(head, terminator)
     })
   }

@@ -171,6 +171,30 @@ newline""", "Bare\nnewline")
     )))))
   }
   
+  test("square proper lists") {
+    assert(scm"[#true integer? |Hello| -1 2.0]" === List(
+      ast.ProperList(List(
+        ast.BooleanLiteral(true), 
+        ast.Symbol("integer?"), 
+        ast.Symbol("Hello"),
+        ast.IntegerLiteral(-1),
+        ast.FlonumLiteral(2.0)
+      ))
+    ))
+    
+    intercept[ParseErrorException] {
+      scm"""open (list"""
+    }
+  }
+
+  test("square improper lists") {
+    assert(scm"[#false ONE 2.0 . +inf.0]" == List(
+      ast.Pair(ast.BooleanLiteral(false),
+        ast.Pair(ast.Symbol("ONE"),
+          ast.Pair(ast.FlonumLiteral(2.0), ast.PositiveInfinityLiteral()
+    )))))
+  }
+  
   test("no expressions") {
     assert(scm"" === Nil)
   }
