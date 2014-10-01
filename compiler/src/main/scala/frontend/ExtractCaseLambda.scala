@@ -10,15 +10,13 @@ object ExtractCaseLambda {
   def apply(
       located : SourceLocated, 
       typed : Boolean,
-      clauseData : List[sst.ScopedDatum],
-      sourceNameHint : Option[String] = None,
-      typeDeclaration : vt.SchemeType = vt.AnySchemeType
+      clauseData : List[sst.ScopedDatum]
   )(debugContext : debug.SourceContext, libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : et.CaseLambda = {
     val locatedClauses = clauseData map {
       case clauseDatum @ sst.ScopedProperList(sst.ScopedListOrDatum(fixedArgData, restArgDatum) :: definition) =>
         val lambdaExpr = ExtractLambda(
           located=clauseDatum,
-          typed=false,
+          typed=typed,
           operandList=fixedArgData,
           operandTerminator=restArgDatum,
           definition=definition

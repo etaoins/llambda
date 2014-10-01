@@ -7,7 +7,7 @@ import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.valuetype.Implicits._
 
-class ExtractCaseLambdaBodySuite extends FunSuite with Inside with testutil.ExprHelpers {
+class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers {
   implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(Primitives.bindings.toSeq : _*))
   val nfiScope = new ImmutableScope(testutil.NfiExports(), Some(primitiveScope))
   
@@ -50,6 +50,39 @@ class ExtractCaseLambdaBodySuite extends FunSuite with Inside with testutil.Expr
         }
     }
   }
+
+  test("typed (case-lambda) with fixed args") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    inside(exprFor(
+      """(case-lambda:
+           (() #t)
+           (((one : <exact-integer>)) #f))"""
+    )(scope)) {
+      case caseExpr @ et.CaseLambda(List(firstLambda, secondLambda)) =>
+        val firstProcType = vt.ProcedureType(
+          fixedArgTypes=Nil,
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.ArbitraryValues
+        )
+        
+        val secondProcType = vt.ProcedureType(
+          fixedArgTypes=List(vt.ExactIntegerType),
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.ArbitraryValues
+        )
+
+        assert(caseExpr.schemeType === vt.CaseProcedureType(List(firstProcType, secondProcType)))
+
+        inside(firstLambda) {
+          case et.Lambda(`firstProcType`, Nil, None, et.Literal(ast.BooleanLiteral(true)), _) =>
+        }
+        
+        inside(secondLambda) {
+          case et.Lambda(`secondProcType`, List(_), None, et.Literal(ast.BooleanLiteral(false)), _) =>
+        }
+    }
+  }
   
   test("untyped (case-lambda) with rest argument") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
@@ -69,6 +102,39 @@ class ExtractCaseLambdaBodySuite extends FunSuite with Inside with testutil.Expr
         val secondProcType = vt.ProcedureType(
           fixedArgTypes=List(vt.AnySchemeType),
           restArgMemberTypeOpt=Some(vt.AnySchemeType),
+          returnType=vt.ReturnType.ArbitraryValues
+        )
+
+        assert(caseExpr.schemeType === vt.CaseProcedureType(List(firstProcType, secondProcType)))
+
+        inside(firstLambda) {
+          case et.Lambda(`firstProcType`, List(_), None, et.Literal(ast.BooleanLiteral(true)), _) =>
+        }
+        
+        inside(secondLambda) {
+          case et.Lambda(`secondProcType`, List(_), Some(_), et.Literal(ast.BooleanLiteral(false)), _) =>
+        }
+    }
+  }
+  
+  test("typed (case-lambda) with rest argument") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    inside(exprFor(
+      """(case-lambda:
+           (((one : <symbol>)) #t)
+           (((first : <string>) rest : <port> *) #f))"""
+    )(scope)) {
+      case caseExpr @ et.CaseLambda(List(firstLambda, secondLambda)) =>
+        val firstProcType = vt.ProcedureType(
+          fixedArgTypes=List(vt.SymbolType),
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.ArbitraryValues
+        )
+        
+        val secondProcType = vt.ProcedureType(
+          fixedArgTypes=List(vt.StringType),
+          restArgMemberTypeOpt=Some(vt.PortType),
           returnType=vt.ReturnType.ArbitraryValues
         )
 

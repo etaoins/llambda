@@ -38,6 +38,27 @@
       ((first second) 'second)))
   (fixed-lambda 0 1 2)))
 
+(define-test "(case-lambda:) with type fails at compile time" (expect-compile-failure
+  (import (scheme case-lambda))
+  (import (llambda typed))
+
+  (define fixed-lambda
+    (case-lambda:
+      (((first : <exact-integer>)) 'first)
+      (((first : <exact-integer>) (second : <symbol>)) 'second)))
+  (fixed-lambda 0 1)))
+
+(define-test "(case-lambda:) returns value with case-> type" (expect-success
+  (import (scheme case-lambda))
+  (import (llambda typed))
+
+  (define fixed-lambda
+    (case-lambda:
+      (((first : <exact-integer>)) 'first)
+      (((first : <exact-integer>) (second : <symbol>)) 'second)))
+
+  (ann fixed-lambda (case-> (-> <exact-integer> *) (-> <exact-integer> <symbol> *)))))
+
 (define-test "R7RS (case-lambda) with wrong arity fails at runtime" (expect-failure
   (import (llambda r7rs-case-lambda))
 

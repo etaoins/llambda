@@ -28,6 +28,7 @@ object Primitives {
   object TypedDefine extends PrimitiveExpr
   object TypedDefineRecordType extends PrimitiveExpr
   object TypedLambda extends PrimitiveExpr
+  object TypedCaseLambda extends PrimitiveExpr
   object MakePredicate extends PrimitiveExpr
 
   object UnionType extends PrimitiveTypeConstructor
@@ -68,6 +69,7 @@ object Primitives {
       "define:" -> TypedDefine,
       "define-record-type:" -> TypedDefineRecordType,
       "lambda:" -> TypedLambda,
+      "case-lambda:" -> TypedCaseLambda,
       "make-predicate" -> MakePredicate,
 
       "U" -> UnionType,
