@@ -22,7 +22,7 @@ private[planner] object PlanApplication {
         // Plan this on a separate plan so we don't double plan applyArgsExpr if we fail
         val staticApplyPlan = plan.forkPlan()
 
-        // Don't evaluate applyProcExpr - it could be an inline lambda like (case-lambda) generates
+        // Don't evaluate applyProcExpr - it could be an inline lambda
         // We want to inline it if at all possible
         val applyArgsResult = PlanExpr(initialState)(applyArgsExpr)(staticApplyPlan)
         val resultValue = applyArgsResult.values.toSingleValue()
