@@ -283,9 +283,11 @@
     (define-r7rs reverse (world-function "lliby_reverse" (<list>) -> <list>))
     
     (define native-make-list (world-function "lliby_make_list" (<native-uint32> <any>) -> <list>))
-    (define-r7rs make-list (case-lambda
-      ((len) (native-make-list len #!unit))
-      ((len fill) (native-make-list len fill))))
+    (define-r7rs make-list (case-lambda:
+      (([len : <exact-integer>])
+       (native-make-list len #!unit))
+      (([len : <exact-integer>] [fill : <any>])
+       (native-make-list len fill))))
 
     (define-r7rs symbol? (make-predicate <symbol>))
     (define-r7rs symbol=? (native-function "lliby_symbol_equal" (<symbol> <symbol> . <symbol>) -> <native-bool>))
@@ -307,9 +309,11 @@
     (define-r7rs vector-append (world-function "lliby_vector_append" <vector> -> <vector>))
     
     (define native-make-vector (world-function "lliby_make_vector" (<native-uint32> <any>) -> <vector>))
-    (define-r7rs make-vector (case-lambda
-      ((len) (native-make-vector len #!unit))
-      ((len fill) (native-make-vector len fill))))
+    (define-r7rs make-vector (case-lambda:
+      (([len : <exact-integer>])
+       (native-make-vector len #!unit))
+      (([len : <exact-integer>] [fill : <any>])
+       (native-make-vector len fill))))
 
     (define-r7rs bytevector? (make-predicate <bytevector>))
     (define-r7rs bytevector (world-function "lliby_bytevector" <exact-integer> -> <bytevector>))
@@ -319,9 +323,11 @@
     (define-r7rs bytevector-append (world-function "lliby_bytevector_append" <bytevector> -> <bytevector>))
     
     (define native-make-bytevector (world-function "lliby_make_bytevector" (<native-uint32> <native-uint8>) -> <bytevector>))
-    (define-r7rs make-bytevector (case-lambda
-      ((len) (native-make-bytevector len 0))
-      ((len fill) (native-make-bytevector len fill))))
+    (define-r7rs make-bytevector (case-lambda:
+      (([len : <exact-integer>])
+       (native-make-bytevector len 0))
+      (([len : <exact-integer>] [fill : <exact-integer>])
+       (native-make-bytevector len fill))))
 
     (define-r7rs string? (make-predicate <string>))
     (define-r7rs make-string (world-function "lliby_make_string" (<native-uint32> <native-unicode-char>) -> <string>))
@@ -341,9 +347,11 @@
     (define-r7rs apply (world-function "lliby_apply" (<procedure> . <any>) -> *))
 
     (define native-make-parameter (world-function "_lliby_make_parameter" (<any> (U (-> <any> <any>) <unit>)) -> <procedure>))
-    (define-r7rs make-parameter (case-lambda
-      ((init) (native-make-parameter init #!unit))
-      ((init converter) (native-make-parameter init converter))))
+    (define-r7rs make-parameter (case-lambda:
+      (([init : <any>])
+       (native-make-parameter init #!unit))
+      (([init : <any>] [converter : (-> <any> <any>)])
+       (native-make-parameter init converter))))
 
     (define-r7rs dynamic-wind (world-function "lliby_dynamic_wind" ((-> *) (-> *) (-> *)) -> *))
 
@@ -357,9 +365,11 @@
     (define-r7rs current-error-port (make-parameter ((world-function "_lliby_stderr_port" () -> <port>))))
 
     (define native-newline (world-function "lliby_newline" (<port>)))
-    (define-r7rs newline (case-lambda
-      (() (native-newline (current-output-port)))
-      ((port) (native-newline port))))
+    (define-r7rs newline (case-lambda:
+      (()
+       (native-newline (current-output-port)))
+      (([port : <port>])
+       (native-newline port))))
 
     (define-r7rs with-exception-handler (world-function "lliby_with_exception_handler" ((-> <any> *) (-> *)) -> *))
     (define-r7rs raise (world-function "lliby_raise" (<any>) noreturn))
