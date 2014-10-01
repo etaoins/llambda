@@ -9,6 +9,22 @@
   (assert-equal 1 (ann typeless-1 <exact-integer>))
   (assert-equal 2 ref-result)))
 
+(define-test "applying fixed arg storage locs to a case procedure constrains their type" (expect 4
+  (import (llambda typed))
+
+  (define typed-case (case-lambda:
+    (([first : <exact-integer>]) first)
+    (([first : <flonum>] [second : <exact-integer>]) first)))
+  
+  (define first (typeless-cell 1.5))
+  (define second (typeless-cell 4))
+
+  ; This should match the second clause statically
+  (typed-case first second)
+
+  (ann first <flonum>)
+  (ann second <exact-integer>)))
+
 (define-test "applying fixed arg storage locs through a typed procedure value constrains their type" (expect 2
   (import (llambda typed))
   (: apply-vector-proc (-> (-> <vector> <exact-integer> <any>) <any> <any> <any>))

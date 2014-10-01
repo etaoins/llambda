@@ -101,6 +101,13 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
     assert(signature.returnType === vt.ReturnType.SingleValue(vt.AnySchemeType))
   }
   
+  test("procedure proxying (make-vector)") {
+    val signature = signatureFor("""(lambda (len fill) (make-vector len fill))""")
+
+    assert(signature.fixedArgTypes === List(vt.ExactIntegerType, vt.AnySchemeType))
+    assert(signature.returnType === vt.ReturnType.SingleValue(anyVectorType))
+  }
+  
   test("typed procedure proxying (vector-ref)") {
     val signature = signatureFor("""(lambda: ((vec : <vector>) (index : <number>)) (vector-ref vec index))""")
 

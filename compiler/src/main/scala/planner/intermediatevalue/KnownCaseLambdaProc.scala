@@ -70,24 +70,28 @@ class KnownCaseLambdaProc(
         clause.knownProc
     }
   }
-  
-  override def toApplicableValueForArity (
-      operandCount : Int
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : IntermediateValue = {
-    for(clause <- clauses) {
+
+  /** Returns the clause matching the passed arity or None if no clauses match */
+  def clauseForArityOpt(operandCount : Int) : Option[KnownCaseLambdaClause] = 
+    clauses find { clause =>
       val signature = clause.knownProc.signature
       val fixedArgCount = signature.fixedArgTypes.length
       val hasRestArg = signature.restArgMemberTypeOpt.isDefined
 
-      if (operandCount == fixedArgCount) {
-        return restoreClause(clause)
-      }
-      else if ((operandCount > fixedArgCount) && hasRestArg) {
-        return restoreClause(clause)
-      }
+      (operandCount == fixedArgCount) || ((operandCount > fixedArgCount) && hasRestArg)
     }
+  
+  override def toApplicableValueForArity (
+      operandCount : Int
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : IntermediateValue = {
+    clauseForArityOpt(operandCount) match {
+      case Some(clause) =>
+        restoreClause(clause)
 
-    throw new IncompatibleArityException(plan.activeContextLocated, "No (case-lambda) clause matches the requested arity")
+      case None =>
+        val message = s"No (case-lambda) clause matches an arity of ${operandCount}"
+        throw new IncompatibleArityException(plan.activeContextLocated, message)
+    }
   }
 }
 
