@@ -17,6 +17,10 @@ class KnownSchemeProc(
     val recursiveSelfLoc : Option[StorageLocation],
     reportNameOpt : Option[String] = None)
 extends KnownUserProc(signature, plannedSymbol, selfTempOpt, reportNameOpt) {
+  // Override this to ensure we have vt.ProcedureType
+  // This is required for KnownCaseLambdaProc to collect its type from its clauses
+  override val schemeType : vt.ProcedureType = signature.toSchemeProcedureType
+
   override def locationOpt : Option[ContextLocated] =
     Some(lambdaExpr)
 

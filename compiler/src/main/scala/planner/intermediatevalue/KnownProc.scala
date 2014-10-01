@@ -23,7 +23,7 @@ import llambda.compiler.{RuntimeErrorMessage, ContextLocated}
 abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Option[ps.TempValue]) extends IntermediateValue with BoxedOnlyValue with InvokableProcedure {
   val typeDescription = "procedure"
 
-  final val schemeType = signature.toSchemeProcedureType
+  val schemeType : vt.ApplicableType = signature.toSchemeProcedureType
 
   /** Optional location of this procedure's definition
     *

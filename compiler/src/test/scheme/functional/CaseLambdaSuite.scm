@@ -59,6 +59,17 @@
 
   (ann fixed-lambda (case-> (-> <exact-integer> *) (-> <exact-integer> <symbol> *)))))
 
+(define-test "(case-lambda:) cannot be annotated with incompatible case-> type" (expect-compile-failure
+  (import (scheme case-lambda))
+  (import (llambda typed))
+
+  (define fixed-lambda
+    (case-lambda:
+      (((first : <exact-integer>)) 'first)
+      (((first : <exact-integer>) (second : <symbol>)) 'second)))
+
+  (ann fixed-lambda (case-> (-> <exact-integer> *) (-> <exact-integer> <string> *)))))
+
 (define-test "R7RS (case-lambda) with wrong arity fails at runtime" (expect-failure
   (import (llambda r7rs-case-lambda))
 

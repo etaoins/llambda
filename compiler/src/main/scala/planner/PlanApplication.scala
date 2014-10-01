@@ -178,7 +178,7 @@ private[planner] object PlanApplication {
         for(inlineResult <- knownProc.attemptInlineApplication(procResult.state)(operands)) {
           return PlanApplyResult(
             planResult=inlineResult,
-            procedureType=knownProc.schemeType
+            procedureType=procedureType
           )
         }
 

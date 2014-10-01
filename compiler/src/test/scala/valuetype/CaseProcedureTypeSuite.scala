@@ -72,6 +72,18 @@ class CaseProcedureTypeSuite extends SchemeTypeSuite {
 
     assert(SatisfiesType(superCase, testingCase) === None)
   }
+  
+  test("case procedure may satisfy case with partially disjoint clauses") {
+    val superCase = CaseProcedureType(
+      List(oneUnitToPortProcedure, twoStringToNumberProcedure)
+    )
+    
+    val testingCase = CaseProcedureType(
+      List(oneUnitToPortProcedure, threeSymbolToNullProcedure)
+    )
+
+    assert(SatisfiesType(superCase, testingCase) === None)
+  }
 
   test("case procedure definitely satisfies case with super clauses") {
     val superCase = CaseProcedureType(

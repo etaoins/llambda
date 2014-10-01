@@ -33,6 +33,12 @@ class KnownCaseLambdaProc(
     reportNameOpt : Option[String] = None,
     clausesInScope : Boolean = false
 ) extends KnownUserProc(CaseLambdaSignature, plannedSymbol, selfTempOpt, reportNameOpt) {
+  override val typeDescription = "case procedure"
+
+  override val schemeType = vt.CaseProcedureType(
+    clauses.map(_.knownProc.schemeType)
+  )
+
   override def withReportName(newReportName : String) : KnownUserProc =
     new KnownCaseLambdaProc(
       closureType=closureType,
