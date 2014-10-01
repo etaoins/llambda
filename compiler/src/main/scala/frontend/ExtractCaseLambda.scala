@@ -14,9 +14,6 @@ object ExtractCaseLambda {
       sourceNameHint : Option[String] = None,
       typeDeclaration : vt.SchemeType = vt.AnySchemeType
   )(debugContext : debug.SourceContext, libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : et.CaseLambda = {
-    if (clauseData.length < 2) {
-    }
-
     val locatedClauses = clauseData map {
       case clauseDatum @ sst.ScopedProperList(sst.ScopedListOrDatum(fixedArgData, restArgDatum) :: definition) =>
         val lambdaExpr = ExtractLambda(
