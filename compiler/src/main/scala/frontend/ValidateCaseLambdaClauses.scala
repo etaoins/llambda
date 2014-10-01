@@ -20,12 +20,8 @@ private[frontend] object ValidateCaseLambdaClauses {
             val message = "Case unreachable; previous case had a rest argument"
             throw new BadSpecialFormException(located, message) 
           }
-          else if (fixedArgCount < prevFixedArgCount) {
+          else if ((fixedArgCount <= prevFixedArgCount) && !signature.restArgMemberTypeOpt.isDefined) {
             val message = s"Case unreachable; has ${fixedArgCount} fixed arguments while previous case has ${prevFixedArgCount}"
-            throw new BadSpecialFormException(located, message) 
-          }
-          else if ((prevFixedArgCount == fixedArgCount) && !signature.restArgMemberTypeOpt.isDefined) {
-            val message = "Case unreachable; previous case had same fixed number of arguments and this case does not have a rest argument"
             throw new BadSpecialFormException(located, message) 
           }
 

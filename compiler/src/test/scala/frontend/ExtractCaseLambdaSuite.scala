@@ -117,6 +117,39 @@ class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelp
     }
   }
   
+  test("untyped (case-lambda) with rest argument clause with no fixed args") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    inside(exprFor(
+      """(case-lambda
+           ((one) #t)
+           (rest #f))"""
+    )(scope)) {
+      case caseExpr @ et.CaseLambda(List(firstLambda, secondLambda)) =>
+        val firstProcType = vt.ProcedureType(
+          fixedArgTypes=List(vt.AnySchemeType),
+          restArgMemberTypeOpt=None,
+          returnType=vt.ReturnType.ArbitraryValues
+        )
+        
+        val secondProcType = vt.ProcedureType(
+          fixedArgTypes=List(),
+          restArgMemberTypeOpt=Some(vt.AnySchemeType),
+          returnType=vt.ReturnType.ArbitraryValues
+        )
+
+        assert(caseExpr.schemeType === vt.CaseProcedureType(List(firstProcType, secondProcType)))
+
+        inside(firstLambda) {
+          case et.Lambda(`firstProcType`, List(_), None, et.Literal(ast.BooleanLiteral(true)), _) =>
+        }
+        
+        inside(secondLambda) {
+          case et.Lambda(`secondProcType`, Nil, Some(_), et.Literal(ast.BooleanLiteral(false)), _) =>
+        }
+    }
+  }
+  
   test("typed (case-lambda) with rest argument") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 

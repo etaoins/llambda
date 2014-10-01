@@ -29,6 +29,21 @@
       ((first second . rest) rest)))
   (rest-lambda 0 1 2 3 4)))
 
+(define-test "(case-lambda) cell" (expect-success
+  (import (scheme case-lambda))
+
+  ; This ensures our generated top-level (case-lambda) function works correctly
+  (define case-cell (typeless-cell (case-lambda
+    ((one) (- one))
+    ((one two) (* one two))
+    ((one two three) (+ one two three))
+    (rest rest))))
+
+  (assert-equal -1 (case-cell 1))
+  (assert-equal 2 (case-cell 1 2))
+  (assert-equal 6 (case-cell 1 2 3))
+  (assert-equal '(1 2 3 4) (case-cell 1 2 3 4))))
+
 (define-test "(case-lambda) with wrong arity fails at compile time" (expect-compile-failure
   (import (scheme case-lambda))
 
