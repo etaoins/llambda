@@ -266,4 +266,23 @@ const AnyCell* lliby_assoc(const AnyCell *obj, ListElementCell *listHead)
 	return alist_search(obj, listHead, &AnyCell::isEqual);
 }
 
+ListElementCell* lliby_list_tail(World &world, ListElementCell *head, std::uint32_t count)
+{
+	while(count--)
+	{
+		auto pairHead = cell_cast<PairCell>(head);
+
+		if (pairHead == nullptr)
+		{
+			signalError(world, "(list-tail) on list of insufficient length");	
+		}
+
+		// Advance to the next list element
+		// Our argument is defined to be a proper list on the Scheme side so this is safe
+		head = cell_unchecked_cast<ListElementCell>(pairHead->cdr());
+	}
+
+	return head;
+}
+
 }

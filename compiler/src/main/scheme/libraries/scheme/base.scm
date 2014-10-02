@@ -281,6 +281,10 @@
     (define-r7rs assoc (native-function "lliby_assoc" (<any> <alist>) -> <any>))
 
     (define-r7rs reverse (world-function "lliby_reverse" (<list>) -> <list>))
+
+    (define-r7rs list-tail (world-function "lliby_list_tail" (<list> <native-uint32>) -> <list>))
+    (define-r7rs list-ref (lambda: ([l : <list>] [n : <exact-integer>])
+      (car (list-tail l n))))
     
     (define native-make-list (world-function "lliby_make_list" (<native-uint32> <any>) -> <list>))
     (define-r7rs make-list (case-lambda:
@@ -429,5 +433,7 @@
   (cond-expand ((not immutable-pairs)
     (begin
       (define-r7rs set-car! (world-function "lliby_set_car" (<pair> <any>)))
-      (define-r7rs set-cdr! (world-function "lliby_set_cdr" (<pair> <any>))))))
+      (define-r7rs set-cdr! (world-function "lliby_set_cdr" (<pair> <any>)))
+      (define-r7rs list-set! (lambda: ([l : <list>] [n : <exact-integer>] [val : <any>])
+        (set-car! (list-tail l n) val))))))
 )

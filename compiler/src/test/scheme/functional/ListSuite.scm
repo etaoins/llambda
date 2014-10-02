@@ -172,3 +172,38 @@
   (assert-equal '((a)) (assoc (list 'a) '(((a)) ((b)) ((c)))))
 
   (assert-equal '(5 7) (assv 5 '((2 3) (5 7) (11 13))))))
+
+(define-test "(list-tail)" (expect-success
+  (assert-equal '(1 2 3) (list-tail '(1 2 3) 0))
+  (assert-equal '(2 3) (list-tail '(1 2 3) 1))
+  (assert-equal '(3) (list-tail '(1 2 3) 2))
+  (assert-equal '() (list-tail '(1 2 3) 3))))
+
+(define-test "(list-tail) past end of list fails" (expect-failure
+  (list-tail '(1 2 3) 4)))
+
+(define-test "(list-tail) on non-list fails" (expect-failure
+  ; This is so we don't try to be too clever and directly return the argument when the index is 0
+  (list-tail #f 0)))
+
+(define-test "(list-ref)" (expect-success
+  (assert-equal 'c (list-ref '(a b c d) 2))
+  (assert-equal 'c (list-ref '(a b c d) (exact (round 1.8))))))
+
+(define-test "(list-ref) past end of list fails" (expect-failure
+  (list-ref '(1 2 3) 3)))
+
+(cond-expand
+  ((not immutable-pairs)
+   (define-test "(list-set!)" (expect (one two three)
+     (let ((ls (list 'one 'two 'five)))
+       (list-set! ls 2 'three)
+       ls)))
+
+   (define-test "(list-set!) past end of list fails" (expect-failure
+     (let ((ls (list 'one 'two 'five)))
+       (list-set! ls 5 'three)
+       ls)))
+   
+   (define-test "(list-set!) on constant list fails" (expect-failure
+     (list-set! '(0 1 2) 1  "oops")))))

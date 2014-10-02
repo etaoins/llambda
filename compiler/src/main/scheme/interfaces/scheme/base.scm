@@ -13,10 +13,10 @@
         exact inexact + - / * expt = < > <= >= positive? negative? floor ceiling truncate round)
 (export boolean? not boolean=?)
 (export pair? null? list? cons car cdr caar cadr cdar cddr length list-copy make-list list append memv memq member assv
-        assq assoc reverse)
+        assq assoc reverse list-tail list-ref)
 
 (cond-expand ((not immutable-pairs)
-  (export set-car! set-cdr!)))
+  (export set-car! set-cdr! list-set!)))
 
 (export symbol? symbol=? symbol->string string->symbol)
 (export char? digit-value char->integer integer->char)
