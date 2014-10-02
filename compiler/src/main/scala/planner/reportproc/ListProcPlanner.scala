@@ -3,7 +3,7 @@ import io.llambda
 
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.{RuntimeErrorMessage, ContextLocated}
+import llambda.compiler.{RuntimeErrorMessage, ContextLocated, OutOfBoundsException, InternalCompilerErrorException}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
@@ -39,6 +39,21 @@ object ListProcPlanner extends ReportProcPlanner {
       // Not a constant list
       None
   }
+
+  @tailrec
+  private def listTail(listValue : iv.IntermediateValue, index : Int) : iv.IntermediateValue =
+    if (index == 0) {
+      listValue
+    }
+    else {
+      listValue match {
+        case knownPair : iv.KnownPair =>
+          listTail(knownPair.cdr, index - 1)
+
+        case _ =>
+          throw new InternalCompilerErrorException("Invalid list passed to listTail")
+      }
+    }
 
   def apply(initialState : PlannerState)(
       reportName : String,
@@ -132,6 +147,24 @@ object ListProcPlanner extends ReportProcPlanner {
 
     case ("member", List((_, needleValue), (_, listValue))) =>
       staticMemberSearch(StaticValueEqv.valuesAreEqual, needleValue, listValue)
+    
+    case ("list-tail", List((_, listValue), (_, indexValue))) =>
+      (listValue, indexValue) match {
+        case (knownListElement : iv.KnownListElement, constantIndexValue : iv.ConstantExactIntegerValue) =>
+          val index = constantIndexValue.value
+
+          // If listLengthOpt is defined we're a proper list
+          knownListElement.listLengthOpt map { listLength =>
+            if ((index < 0) || (index > listLength)) {
+              throw new OutOfBoundsException(plan.activeContextLocated, s"List index ${index} out of bounds")
+            }
+
+            SingleValue(listTail(knownListElement, index.toInt))
+          }
+
+        case _ =>
+          None
+      }
 
     case _ =>
       None

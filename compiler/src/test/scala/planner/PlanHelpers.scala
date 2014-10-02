@@ -74,9 +74,8 @@ trait PlanHelpers extends FunSuite with Inside {
     val planConfig = testPlanConfig(data, optimise, includePath)
     planner.PlanProgram(planConfig.analysis.usedTopLevelExprs)(planConfig)
   }
-  
-  /** Asserts that a Scheme string statically evaluates to the passed constant datum */
-  protected def assertStaticPlan(scheme : String, expected : ast.Datum) {
+
+  protected def planStepsFor(scheme : String) : List[ps.Step] = {
     val importDecl = datum"(import (scheme base) (llambda typed) (scheme case-lambda) (scheme process-context) (llambda r7rs-case-lambda))"
     val data = List(
       importDecl,
@@ -92,9 +91,14 @@ trait PlanHelpers extends FunSuite with Inside {
     val plannedFunctions = planForData(data, optimise=true)
     val topLevelSteps = DisposeValues(plannedFunctions(topLevelSymbol)).steps 
 
-    val filteredSteps = topLevelSteps.filter(filterPlanStep)
+    topLevelSteps.filter(filterPlanStep)
+  }
+  
+  /** Asserts that a Scheme string statically evaluates to the passed constant datum */
+  protected def assertStaticPlan(scheme : String, expected : ast.Datum) {
+    val planSteps = planStepsFor(scheme)
     
-    inside(filteredSteps.reverse) {
+    inside(planSteps.reverse) {
       case ps.Return(None) :: (_ : ps.Invoke) :: reverseActualSteps =>
         // These are the steps we expect to see
         val expectedSteps = stepsForConstantDatum(expected).filter(filterPlanStep)
