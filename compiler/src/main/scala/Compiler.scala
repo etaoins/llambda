@@ -12,7 +12,8 @@ object Compiler {
   private val runtimeObjPath = "build/liblliby.a"
 
   private val conniverPasses = List[conniver.Conniver](
-    conniver.MergeIdenticalSteps
+    conniver.MergeIdenticalSteps,
+    conniver.FindTailCalls
   )
 
   private lazy val platformClangFlags : List[String] =

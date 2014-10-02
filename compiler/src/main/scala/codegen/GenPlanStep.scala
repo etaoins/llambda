@@ -268,7 +268,7 @@ object GenPlanStep {
           ).withTempValue(resultTemp -> phiResultIr)
       }
       
-    case invokeStep @ ps.Invoke(resultOpt, signature, funcPtrTemp, arguments, tailCall) =>
+    case invokeStep @ ps.Invoke(resultOpt, signature, funcPtrTemp, arguments) =>
       val irSignature = ProcedureSignatureToIr(signature)
       val irFuncPtr = state.liveTemps(funcPtrTemp)
       val irArguments = arguments.map { argument =>
@@ -284,15 +284,11 @@ object GenPlanStep {
         if (signature.attributes.contains(ProcedureAttribute.NoReturn)) {
           // This can't return - unroot all of our values and terminate the function
           return state.terminateFunction(() => {
-            preBarrierState.currentBlock.call(None)(irSignature, irFuncPtr, irArguments, tailCall=tailCall)
+            preBarrierState.currentBlock.call(None)(irSignature, irFuncPtr, irArguments)
             preBarrierState.currentBlock.unreachable
           })
         }
         else {
-          if (tailCall) {
-            throw new InternalCompilerErrorException("Attempted to perform a tail call to a world function")
-          }
-
           // We need a GC barrier
           GenGcBarrier(preBarrierState) {
             val invokeBlock = preBarrierState.currentBlock
@@ -312,7 +308,7 @@ object GenPlanStep {
       }
       else {
         // This call can't allocate or throw exceptions - skip the barrier and invoke 
-        val irValue = preBarrierState.currentBlock.call(Some("ret"))(irSignature, irFuncPtr, irArguments, tailCall=tailCall)
+        val irValue = preBarrierState.currentBlock.call(Some("ret"))(irSignature, irFuncPtr, irArguments)
         (preBarrierState, irValue)
       }
 
@@ -323,6 +319,23 @@ object GenPlanStep {
         case None =>
           finalState
       }
+    
+    case ps.TailCall(signature, funcPtrTemp, arguments) =>
+      val irSignature = ProcedureSignatureToIr(signature)
+      val irFuncPtr = state.liveTemps(funcPtrTemp)
+      val irArguments = arguments.map(state.liveTemps)
+
+      // Always use call - we don't care about exceptions
+      state.terminateFunction({ () => 
+        if (irSignature.result.irType == VoidType) {
+          state.currentBlock.call(None)(irSignature, irFuncPtr, irArguments, tailCall=true)
+          state.currentBlock.retVoid()
+        }
+        else {
+          val irRetValueOpt = state.currentBlock.call(Some("ret"))(irSignature, irFuncPtr, irArguments, tailCall=true)
+          state.currentBlock.ret(irRetValueOpt.get)
+        }
+      })
 
     case ps.Return(None) =>
       state.terminateFunction(() => {

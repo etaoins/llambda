@@ -170,24 +170,40 @@ case class InvokeArgument(
     InvokeArgument(f(tempValue), dispose)
 }
 
+sealed trait InvokeLike extends Step {
+  val signature : ProcedureSignature
+
+  // The world arg is required for allocations
+  override def canAllocate = signature.hasWorldArg
+}
+
 /** Invokes an entry point with the given arguments
   *
   * Entry points can be loaded with CreateNamedEntryPoint
   */
-case class Invoke(result : Option[TempValue], signature : ProcedureSignature, entryPoint : TempValue, arguments : List[InvokeArgument], tailCall : Boolean = false) extends Step {
+case class Invoke(result : Option[TempValue], signature : ProcedureSignature, entryPoint : TempValue, arguments : List[InvokeArgument]) extends InvokeLike {
   lazy val inputValues = arguments.map(_.tempValue).toSet + entryPoint
   lazy val outputValues = result.toSet
 
-  // The world arg is required for allocations
-  override def canAllocate = signature.hasWorldArg
-  
   def renamed(f : (TempValue) => TempValue) = 
     Invoke(
       result=result.map(f),
       signature=signature,
       entryPoint=f(entryPoint),
-      arguments=arguments.map(_.renamed(f)),
-      tailCall=tailCall
+      arguments=arguments.map(_.renamed(f))
+    ).assignLocationFrom(this)
+}
+
+/** Invokes a procedure and immediately returns the value */
+case class TailCall(signature : ProcedureSignature, entryPoint : TempValue, arguments : List[TempValue]) extends InvokeLike {
+  lazy val inputValues = arguments.toSet + entryPoint
+  val outputValues = Set[TempValue]()
+
+  def renamed(f : (TempValue) => TempValue) = 
+    TailCall(
+      signature=signature,
+      entryPoint=f(entryPoint),
+      arguments=arguments.map(f)
     ).assignLocationFrom(this)
 }
 
