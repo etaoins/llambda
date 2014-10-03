@@ -26,6 +26,19 @@ object GenPlanStep {
     }
   }
 
+  private def unconditionallyTerminates(step : ps.Step) : Boolean = step match {
+    case _ : ps.Return | _ : ps.TailCall => 
+      // These return
+      true
+
+    case invokeStep : ps.Invoke if invokeStep.signature.attributes.contains(ProcedureAttribute.NoReturn) =>
+      // These throw exceptions or exit
+      true
+
+    case _ => 
+      false
+  }
+
   private def stepCompareCondToIntegerIr(stepCond : ps.CompareCond.CompareCond) : IComparisonCond.IComparisonCond = stepCond match {
     case ps.CompareCond.Equal => IComparisonCond.Equal
     case ps.CompareCond.NotEqual => IComparisonCond.NotEqual
@@ -171,7 +184,12 @@ object GenPlanStep {
       val trueStartBlock = irFunction.startChildBlock("condTrue")
       val falseStartBlock = irFunction.startChildBlock("condFalse")
 
-      val postFlushState  = if (containsAllocatingStep(step)) {
+      // If one or both of our branches terminates unconditionally we don't need to merge our GC state
+      // This is common when dealing with tail calls
+      val needsGcStateMerge = !trueSteps.exists(unconditionallyTerminates) &&
+                              !falseSteps.exists(unconditionallyTerminates)
+
+      val postFlushState  = if (needsGcStateMerge && containsAllocatingStep(step)) {
         // Flush our GC roots out
         // This is half a barrier - we write out any pending roots
         // This has two purposes:
