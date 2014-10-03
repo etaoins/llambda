@@ -86,3 +86,16 @@
        (set! result 'false)))
 
    result))
+
+(define-test "conditional with GC root in one branch and termination in the other" (expect test
+  (import (scheme process-context))
+
+  (if dynamic-false
+    (begin
+      ; This branch doesn't continue
+      (exit #t))
+    (begin
+      ; This branch GC roots cells
+      (define new-vector (vector 1 2 3))
+      (vector-set! new-vector 1 'test)
+      (vector-ref new-vector 1)))))

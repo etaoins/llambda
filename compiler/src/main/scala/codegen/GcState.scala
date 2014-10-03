@@ -9,8 +9,8 @@ case class GcState(
 )
 
 object GcState {
-  def fromBranches(parentState : GcState, childStates : List[GcState]) = {
-    val nextUnallocatedSlot = childStates.map(_.nextUnallocatedSlot).max
+  def fromBranches(continuingState : GcState, otherStates : List[GcState]) = {
+    val nextUnallocatedSlot = (continuingState :: otherStates).map(_.nextUnallocatedSlot).max
 
     // This is tricky and depends on a few assumptions:
     // 1) At the end of every branch all newly allocated slots are idle. This is because we pre-root everything live in
@@ -19,7 +19,7 @@ object GcState {
     // 2) Any slots allocated in one branch must be null in the other because they would've been nulled in the entry
     //    block
     GcState(
-      rootedIdentities=parentState.rootedIdentities,
+      rootedIdentities=continuingState.rootedIdentities,
       nextUnallocatedSlot=nextUnallocatedSlot
     )
   }
