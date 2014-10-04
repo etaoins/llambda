@@ -345,3 +345,23 @@
         (if dynamic-false + -)))
     (lambda (writer proc)
       (writer (proc 1 2))))))
+
+(define-test "trivial typed tail recursion" (expect ()
+  (import (llambda typed))
+
+  ; This is non-allocating which means it should complete in reasonable time even with GC debugging enabled
+  (: list-terminator (-> <list-element> <any>))
+  (define (list-terminator head)
+    (if (pair? head)
+      (list-terminator (cdr head))
+      head))
+
+  (list-terminator (make-list 500000))))
+
+(define-test "trivial untyped tail recursion" (expect ()
+  (define (list-terminator head)
+    (if (pair? head)
+      (list-terminator (cdr head))
+      head))
+
+  (list-terminator (make-list 500000))))

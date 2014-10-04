@@ -73,12 +73,13 @@ object Compiler {
     val optimizeArg = s"-O${optimizeLevel}"
 
     val llcCmd = List("llc", optimizeArg) ++
+      List("-tailcallopt") ++
       List("-filetype=obj") ++
       List("-o", objOutputPath)
 
     // Build a pipeline for our object file
     val objFilePipeline = (if (optimizeLevel > 1) { 
-      val optCmd = List("opt", optimizeArg)
+      val optCmd = List("opt", "-tailcallopt", optimizeArg)
       optCmd #| llcCmd
     }
     else {
@@ -184,7 +185,8 @@ object Compiler {
       }
     }
     else {
-      functions
+      // This is required for correctness
+      conniver.FindTailCalls(functions)
     }
 
     // Dispose any unused values
