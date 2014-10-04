@@ -7,39 +7,18 @@ import llambda.compiler.planner.typecheck._
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
+import llambda.compiler.InternalCompilerErrorException
 
-class KnownTypePredicateProc(testingType : vt.SchemeType) extends KnownArtificialProc(
-  TypePredicateProcSignature
+class KnownTypePredicateProc(testingType : vt.SchemeType) extends KnownProc(
+  TypePredicateProcSignature,
+  None
 ) {
-  protected val symbolHint =
-    vt.NameForType(testingType)
-      .replaceAllLiterally("<", "")
-      .replaceAllLiterally(">", "") + "?"
-
-  def planFunction(parentPlan : PlanWriter, allocedSymbol : String) : PlannedFunction = {
-    // We only have a single argument
-    val argumentTemp = ps.CellTemp(ct.AnyCell)
-    
-    val plan = parentPlan.forkPlan()
-
-    // Perform an inner type check returning a boolean result
-    // Note that this is forced inline check because we pass selfSymbolOpt. The normal PlanTypeCheck entry point to the
-    // type system might decide  to call this type check out-of-line which won't work because *this* is the out-of-line
-    // implementation.
-    val cellTemp = BoxedValue(ct.AnyCell, argumentTemp)
-    val checkResult = PlanTypeCheck(cellTemp, vt.AnySchemeType, testingType, selfSymbolOpt=Some(allocedSymbol))(plan)
-
-    val retValueTemp = checkResult.toNativePred()(plan)
-
-    plan.steps += ps.Return(Some(retValueTemp))
-
-    PlannedFunction(
-      signature=signature,
-      namedArguments=List(("value" -> argumentTemp)),
-      steps=plan.steps.toList,
-      worldPtrOpt=None,
-      debugContextOpt=None
-    )
+  def nativeSymbol(implicit plan : PlanWriter) : String =
+    SymbolForTypePredicateProc(plan, testingType)
+  
+  override def withSelfTemp(selfTemp : ps.TempValue) = {
+    // We have no self value so we don't need be to captured and therefore restored
+    throw new InternalCompilerErrorException("Attempt to change the self value of a type predicate")
   }
 
   override def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] =

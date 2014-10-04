@@ -15,7 +15,7 @@ class PlanWriter(
     val config : PlanConfig,
     val plannedFunctions : mutable.Map[String, PlannedFunction],
     val allocedSymbols : mutable.HashSet[String],
-    val plannedTypePredicates : mutable.Map[vt.SchemeType, iv.KnownTypePredicateProc],
+    val plannedTypePredicates : mutable.Map[vt.SchemeType, String],
     val knownProcTrampolines : mutable.Map[(String, ProcedureSignature), String],
     val adapterProcTrampolines : mutable.Map[(ProcedureSignature, ProcedureSignature), String]
 ) {
@@ -156,7 +156,7 @@ object PlanWriter {
       config=planConfig,
       plannedFunctions=new mutable.HashMap[String, PlannedFunction],
       allocedSymbols=mutable.HashSet(planConfig.analysis.nativeSymbols.toSeq : _*),
-      plannedTypePredicates=new mutable.HashMap[vt.SchemeType, iv.KnownTypePredicateProc],
+      plannedTypePredicates=new mutable.HashMap[vt.SchemeType, String],
       knownProcTrampolines=new mutable.HashMap[(String, ProcedureSignature), String],
       adapterProcTrampolines=new mutable.HashMap[(ProcedureSignature, ProcedureSignature), String]
     )

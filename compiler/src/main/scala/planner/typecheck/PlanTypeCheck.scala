@@ -56,7 +56,6 @@ object PlanTypeCheck {
 
   private def testPairType(
       plan : PlanWriter,
-      predProcs : Map[vt.SchemeType, String],
       checkValue : BoxedValue,
       valueType : vt.SchemeType,
       testCarType : vt.SchemeType,
@@ -72,7 +71,7 @@ object PlanTypeCheck {
         (vt.AnySchemeType, vt.AnySchemeType)
     }
 
-    branchOnType(plan, predProcs, checkValue, valueType, vt.AnyPairType, isTypePlanner=Some({
+    branchOnType(plan, checkValue, valueType, vt.AnyPairType, isTypePlanner=Some({
       (isPairPlan, remainingType) =>
         val pairCellTemp = checkValue.castToCellTempValue(ct.PairCell)(isPairPlan)
 
@@ -81,26 +80,25 @@ object PlanTypeCheck {
         isPairPlan.steps += ps.LoadPairCar(carTemp, pairCellTemp)
 
         val checkableCar = BoxedValue(ct.AnyCell, carTemp)
-        branchOnType(isPairPlan, predProcs, checkableCar, knownCarType, testCarType, isTypePlanner=Some({
+        branchOnType(isPairPlan, checkableCar, knownCarType, testCarType, isTypePlanner=Some({
           (carSatifiesPlan, _) =>
             // car matched, load the cdr
             val cdrTemp = ps.CellTemp(ct.AnyCell)
             carSatifiesPlan.steps += ps.LoadPairCdr(cdrTemp, pairCellTemp)
 
             val checkableCdr = BoxedValue(ct.AnyCell, cdrTemp)
-            branchOnType(carSatifiesPlan,  predProcs, checkableCdr, knownCdrType, testCdrType)
+            branchOnType(carSatifiesPlan, checkableCdr, knownCdrType, testCdrType)
         }))
     }))
   }
 
   private def testUniformVectorType(
       plan : PlanWriter,
-      predProcs : Map[vt.SchemeType, String],
       checkValue : BoxedValue,
       valueType : vt.SchemeType,
       testMemberType : vt.SchemeType
   ) : CheckResult = {
-    branchOnType(plan, predProcs, checkValue, valueType, vt.SchemeTypeAtom(ct.VectorCell), isTypePlanner=Some({
+    branchOnType(plan, checkValue, valueType, vt.SchemeTypeAtom(ct.VectorCell), isTypePlanner=Some({
       (isVectorPlan, remainingType) =>
         // Find our value's member type
         val knownMemberType = valueType match {
@@ -139,7 +137,7 @@ object PlanTypeCheck {
 
             // Check its type
             val checkableElement = BoxedValue(ct.AnyCell, elementTemp)
-            val memberResult = branchOnType(loopPlan, predProcs, checkableElement, knownMemberType, testMemberType)
+            val memberResult = branchOnType(loopPlan, checkableElement, knownMemberType, testMemberType)
 
             // Create a predicate for the result
             memberResult.toNativePred()(loopPlan)
@@ -161,7 +159,6 @@ object PlanTypeCheck {
 
   private def testVectorElementTypes(
       plan : PlanWriter,
-      predProcs : Map[vt.SchemeType, String],
       vectorTemp : ps.TempValue,
       elementsTemp : ps.TempValue,
       typesToTest : Vector[(vt.SchemeType, vt.SchemeType)],
@@ -179,20 +176,19 @@ object PlanTypeCheck {
     plan.steps += ps.LoadVectorElement(elementTemp, vectorTemp, elementsTemp, indexTemp)
 
     val checkableElement = BoxedValue(ct.AnyCell, elementTemp)
-    branchOnType(plan, predProcs, checkableElement, valueMemberType, testMemberType, Some({
+    branchOnType(plan, checkableElement, valueMemberType, testMemberType, Some({
       (isTypePlan, remainingType) =>
-        testVectorElementTypes(plan, predProcs, vectorTemp, elementsTemp, typesToTest, index + 1)
+        testVectorElementTypes(plan, vectorTemp, elementsTemp, typesToTest, index + 1)
     }))
   }
       
   private def testSpecificVectorType(
       plan : PlanWriter,
-      predProcs : Map[vt.SchemeType, String],
       checkValue : BoxedValue,
       valueType : vt.SchemeType,
       testMemberTypes : Vector[vt.SchemeType]
   ) : CheckResult = {
-    branchOnType(plan, predProcs, checkValue, valueType, vt.SchemeTypeAtom(ct.VectorCell), isTypePlanner=Some({
+    branchOnType(plan, checkValue, valueType, vt.SchemeTypeAtom(ct.VectorCell), isTypePlanner=Some({
       (isVectorPlan, remainingType) =>
         val expectedLength = testMemberTypes.size
 
@@ -225,7 +221,7 @@ object PlanTypeCheck {
           }
 
           val typesToTest = knownMemberTypes.zip(testMemberTypes)
-          val checkResult = testVectorElementTypes(lengthMatchPlan, predProcs, vectorTemp, elementsTemp, typesToTest, 0)
+          val checkResult = testVectorElementTypes(lengthMatchPlan, vectorTemp, elementsTemp, typesToTest, 0)
 
           checkResult.toNativePred()(lengthMatchPlan)
         }, {lengthMismatchPlan =>
@@ -241,14 +237,13 @@ object PlanTypeCheck {
   
   private def testNonUnionType(
       plan : PlanWriter,
-      predProcs : Map[vt.SchemeType, String],
       checkValue : BoxedValue,
       valueType : vt.SchemeType,
       testType : vt.NonUnionSchemeType
   ) : CheckResult = {
     testType match {
       case recordType : vt.RecordType =>
-        branchOnType(plan, predProcs, checkValue, valueType, recordType.parentType, isTypePlanner=Some({
+        branchOnType(plan, checkValue, valueType, recordType.parentType, isTypePlanner=Some({
           (isRecordPlan, remainingType) =>
             testRecordClass(isRecordPlan, checkValue, remainingType, recordType)
         }))
@@ -257,7 +252,7 @@ object PlanTypeCheck {
         val testCarType = unrolledTypeRef(testCarTypeRef)
         val testCdrType = unrolledTypeRef(testCdrTypeRef)
 
-        testPairType(plan, predProcs, checkValue, valueType, testCarType, testCdrType)
+        testPairType(plan, checkValue, valueType, testCarType, testCdrType)
       
       case vt.ConstantBooleanType(value) =>
         val castTemp = checkValue.castToCellTempValue(ct.BooleanCell)(plan)
@@ -276,11 +271,11 @@ object PlanTypeCheck {
           unrolledTypeRef(testMemberTypeRef)
         }
 
-        testSpecificVectorType(plan, predProcs, checkValue, valueType, testMemberTypes)
+        testSpecificVectorType(plan, checkValue, valueType, testMemberTypes)
 
       case vt.UniformVectorType(testMemberTypeRef) =>
         val testMemberType = unrolledTypeRef(testMemberTypeRef)
-        testUniformVectorType(plan, predProcs, checkValue, valueType, testMemberType)
+        testUniformVectorType(plan, checkValue, valueType, testMemberType)
       
       case vt.SchemeTypeAtom(cellType) =>
         val possibleCellTypes = flattenType(valueType).flatMap(_.cellType.concreteTypes) 
@@ -299,15 +294,14 @@ object PlanTypeCheck {
 
   private def testUnionTypeRecursively(
       plan : PlanWriter,
-      predProcs : Map[vt.SchemeType, String],
       checkValue : BoxedValue,
       valueType : vt.SchemeType,
       memberTypes : List[vt.NonUnionSchemeType]
   ) : CheckResult = memberTypes match {
     case testType :: restTypes =>
-      branchOnType(plan, predProcs, checkValue, valueType, testType, isNotTypePlanner=Some({
+      branchOnType(plan, checkValue, valueType, testType, isNotTypePlanner=Some({
         (isNotTypePlan, remainingType) =>
-          testUnionTypeRecursively(isNotTypePlan, predProcs, checkValue, remainingType, restTypes)
+          testUnionTypeRecursively(isNotTypePlan, checkValue, remainingType, restTypes)
       }))
 
     case Nil =>
@@ -317,7 +311,6 @@ object PlanTypeCheck {
   
   private def branchOnType(
       plan : PlanWriter,
-      predProcs : Map[vt.SchemeType, String],
       checkValue : => BoxedValue,
       valueType : vt.SchemeType,
       testType : vt.SchemeType,
@@ -337,37 +330,33 @@ object PlanTypeCheck {
         } getOrElse StaticFalseResult
 
       case None =>
+        // Determine which predicate procs we're planning at the moment
+        val planningTypes = plan.plannedTypePredicates.filter { case (schemeType, nativeSymbol) =>
+          !plan.plannedFunctions.contains(nativeSymbol)
+        }
+
         // Have we either:
         // 1) Explicitly been asked to inline (e.g. while planning the type predicate itself(
         // 2) Been given a value with type information that would be lost calling a predicate. Exclude types with 
         //    recursive references as they require a function call
         // 3) Have an extremely trivial check to perform
         val shouldInline = mustInline || 
-          (!(valueType eq vt.AnySchemeType) && !vt.HasRecursiveRef(valueType) && !predProcs.contains(valueType)) || 
+          (!(valueType eq vt.AnySchemeType) && !vt.HasRecursiveRef(valueType) && !planningTypes.contains(valueType)) || 
           testType.isInstanceOf[vt.SchemeTypeAtom]
 
         val testResult = if (shouldInline) {
           // Unroll this type in case it's recursive
-          // Our original type will be in predProcs 
           testType.unrolled match {
             case nonUnion : vt.NonUnionSchemeType =>
-              testNonUnionType(plan, predProcs, checkValue, valueType, nonUnion)
+              testNonUnionType(plan, checkValue, valueType, nonUnion)
 
             case vt.UnionType(memberTypes) =>
-              testUnionTypeRecursively(plan, predProcs, checkValue, valueType, memberTypes.toList)
+              testUnionTypeRecursively(plan, checkValue, valueType, memberTypes.toList)
           }
         }
         else {
           // Plan this out-of-line
-          val nativeSymbol = predProcs.get(testType) match {
-            case Some(nativeSymbol) =>
-              // This is a recursive tail call to ourselves
-              nativeSymbol
-
-            case _ =>
-              TypePredicateProcForType(testType)(plan).nativeSymbol(plan)
-          }
-
+          val nativeSymbol = SymbolForTypePredicateProc(plan, testType)
           val signature = TypePredicateProcSignature
 
           // Load the entry point for the predicate procedure
@@ -447,6 +436,6 @@ object PlanTypeCheck {
       (testType -> selfSymbol)
     }).toMap
 
-    branchOnType(plan, predProcs, checkValue, valueType, testType, mustInline=selfSymbolOpt.isDefined)
+    branchOnType(plan, checkValue, valueType, testType, mustInline=selfSymbolOpt.isDefined)
   }
 }

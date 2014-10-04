@@ -167,7 +167,7 @@ private[planner] object PlanExpr {
         )
       
       case typePredicate @ et.TypePredicate(schemeType) =>
-        val newProcValue = typecheck.TypePredicateProcForType(schemeType)
+        val newProcValue = new iv.KnownTypePredicateProc(schemeType)
 
         PlanResult(
           state=initialState,
