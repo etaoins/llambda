@@ -59,15 +59,15 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
     val signature = signatureFor("""(lambda: ((x : <exact-integer>)) x)""")
 
     assert(signature.hasWorldArg === false)
-    assert(signature.fixedArgTypes === List(vt.ExactIntegerType))
-    assert(signature.returnType === vt.ReturnType.SingleValue(vt.ExactIntegerType))
+    assert(signature.fixedArgTypes === List(vt.Int64))
+    assert(signature.returnType === vt.ReturnType.SingleValue(vt.Int64))
   }
 
   test("explicitly casting procedure argument to type") {
     val signature = signatureFor("""(lambda (x) (cast x <char>))""")
 
-    assert(signature.fixedArgTypes === List(vt.CharType))
-    assert(signature.returnType === vt.ReturnType.SingleValue(vt.CharType))
+    assert(signature.fixedArgTypes === List(vt.UnicodeChar))
+    assert(signature.returnType === vt.ReturnType.SingleValue(vt.UnicodeChar))
   }
 
   test("assigning procedure argument to typed immutable") {
@@ -77,8 +77,8 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
         y)"""
     )
 
-    assert(signature.fixedArgTypes === List(vt.FlonumType))
-    assert(signature.returnType === vt.ReturnType.SingleValue(vt.FlonumType))
+    assert(signature.fixedArgTypes === List(vt.Double))
+    assert(signature.returnType === vt.ReturnType.SingleValue(vt.Double))
   }
   
   test("assigning procedure argument to typed mutable") {
@@ -89,22 +89,22 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
         y)"""
     )
 
-    assert(signature.fixedArgTypes === List(vt.FlonumType))
+    assert(signature.fixedArgTypes === List(vt.Double))
   }
   
   test("procedure proxying (vector-ref)") {
     val signature = signatureFor("""(lambda (vec index) (vector-ref vec index))""")
 
     // This can be passed anything so it can return anything
-    // Note that this could really be ct.UInt32 but we're not smart enough to figure that out
-    assert(signature.fixedArgTypes === List(anyVectorType, vt.ExactIntegerType))
+    // Note that this could really be vt.UInt32 but we're not smart enough to figure that out
+    assert(signature.fixedArgTypes === List(anyVectorType, vt.Int64))
     assert(signature.returnType === vt.ReturnType.SingleValue(vt.AnySchemeType))
   }
   
   test("procedure proxying (make-vector)") {
     val signature = signatureFor("""(lambda (len fill) (make-vector len fill))""")
 
-    assert(signature.fixedArgTypes === List(vt.ExactIntegerType, vt.AnySchemeType))
+    assert(signature.fixedArgTypes === List(vt.Int64, vt.AnySchemeType))
     assert(signature.returnType === vt.ReturnType.SingleValue(anyVectorType))
   }
   
@@ -112,7 +112,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
     val signature = signatureFor("""(lambda: ((vec : <vector>) (index : <number>)) (vector-ref vec index))""")
 
     // We should refine <number> in to <exact-integer>
-    assert(signature.fixedArgTypes === List(anyVectorType, vt.ExactIntegerType))
+    assert(signature.fixedArgTypes === List(anyVectorType, vt.Int64))
     assert(signature.returnType === vt.ReturnType.SingleValue(vt.AnySchemeType))
   }
   
@@ -120,14 +120,14 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
     val signature = signatureFor("""(lambda: ((vec : (U <vector> <char>)) (index : <number>)) (vector-ref vec index))""")
 
     // We should refine <number> in to <exact-integer>
-    assert(signature.fixedArgTypes === List(anyVectorType, vt.ExactIntegerType))
+    assert(signature.fixedArgTypes === List(anyVectorType, vt.Int64))
     assert(signature.returnType === vt.ReturnType.SingleValue(vt.AnySchemeType))
   }
   
   test("procedure proxying (vector-set!)") {
     val signature = signatureFor("""(lambda (vec index) (vector-set! vec index #f))""")
 
-    assert(signature.fixedArgTypes === List(anyVectorType, vt.ExactIntegerType))
+    assert(signature.fixedArgTypes === List(anyVectorType, vt.Int64))
     assert(signature.returnType === vt.ReturnType.SingleValue(vt.UnitType))
   }
 
@@ -150,7 +150,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
 
     // Because the (vector-ref) is unconditionally executed the condition
     // should change the conditional
-    assert(signature.fixedArgTypes === List(anyVectorType, vt.ExactIntegerType))
+    assert(signature.fixedArgTypes === List(anyVectorType, vt.Int64))
     assert(signature.returnType === vt.ReturnType.SingleValue(vt.AnySchemeType))
   }
 

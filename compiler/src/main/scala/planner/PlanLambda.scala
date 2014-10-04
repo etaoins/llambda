@@ -159,7 +159,10 @@ private[planner] object PlanLambda {
     // See if we can retype some of our args
     val argTypeMapping = RetypeLambdaArgs(lambdaExpr)(parentState, parentPlan.config)
     val retypedFixedArgs = fixedArgLocs.map({ argLoc =>
-      (argLoc -> argTypeMapping.getOrElse(argLoc, argLoc.schemeType))
+      val retypedType = argTypeMapping.getOrElse(argLoc, argLoc.schemeType)
+      val compactType = CompactRepresentationForType(retypedType)
+
+      (argLoc -> compactType)
     })
 
     // Build as list of all of our args
