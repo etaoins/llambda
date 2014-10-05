@@ -46,7 +46,7 @@ object GenErrorSignal {
       inbounds=true)
 
     state.terminateFunction(() => {
-      // Call _lliby_fatal
+      // Call _lliby_signal_error
       block.callDecl(None)(signalErrorDecl, List(worldPtr, stringStartPtr, evidencePtr))
 
       // Terminate the failure block

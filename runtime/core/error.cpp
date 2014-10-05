@@ -20,11 +20,6 @@ extern "C"
 
 using namespace lliby;
 
-void _lliby_fatal(const char *message, const AnyCell *evidence)
-{
-	fatalError(message, evidence);
-}
-
 void _lliby_signal_error(World &world, const char *message, AnyCell *irritant)
 {
 	if (irritant != nullptr)
