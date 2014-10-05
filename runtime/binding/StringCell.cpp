@@ -173,8 +173,6 @@ StringCell* StringCell::fromUtf8Data(World &world, const std::uint8_t *data, std
 		utf8Data[i] = data[i];
 	}
 
-	utf8Data[byteLength] = 0;
-
 	// We know the character length now
 	newString->setCharLength(charLength);
 

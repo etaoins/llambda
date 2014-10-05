@@ -242,7 +242,7 @@ void testUtf8ToString(World &world)
 
 		ASSERT_EQUAL(fullString->byteLength(), 10);
 		ASSERT_EQUAL(fullString->charLength(), 8);
-		ASSERT_EQUAL(memcmp(fullString->constUtf8Data(), u8"Hello ☃!", 11), 0);
+		ASSERT_EQUAL(memcmp(fullString->constUtf8Data(), u8"Hello ☃!", 10), 0);
 
 	}
 	
@@ -251,7 +251,7 @@ void testUtf8ToString(World &world)
 
 		ASSERT_EQUAL(fullString->byteLength(), 10);
 		ASSERT_EQUAL(fullString->charLength(), 8);
-		ASSERT_EQUAL(memcmp(fullString->constUtf8Data(), u8"Hello ☃!", 11), 0);
+		ASSERT_EQUAL(memcmp(fullString->constUtf8Data(), u8"Hello ☃!", 10), 0);
 	}
 	
 	{
@@ -259,7 +259,7 @@ void testUtf8ToString(World &world)
 
 		ASSERT_EQUAL(emptyString->byteLength(), 0);
 		ASSERT_EQUAL(emptyString->charLength(), 0);
-		ASSERT_EQUAL(memcmp(emptyString->constUtf8Data(), u8"", 1), 0);
+		ASSERT_EQUAL(memcmp(emptyString->constUtf8Data(), u8"", 0), 0);
 	}
 	
 	{
@@ -267,7 +267,7 @@ void testUtf8ToString(World &world)
 
 		ASSERT_EQUAL(helloString->byteLength(), 5);
 		ASSERT_EQUAL(helloString->charLength(), 5);
-		ASSERT_EQUAL(memcmp(helloString->constUtf8Data(), u8"Hello", 6), 0);
+		ASSERT_EQUAL(memcmp(helloString->constUtf8Data(), u8"Hello", 5), 0);
 	}
 	
 	{
@@ -275,7 +275,7 @@ void testUtf8ToString(World &world)
 
 		ASSERT_EQUAL(endString->byteLength(), 4);
 		ASSERT_EQUAL(endString->charLength(), 2);
-		ASSERT_EQUAL(memcmp(endString->constUtf8Data(), u8"☃!", 5), 0);
+		ASSERT_EQUAL(memcmp(endString->constUtf8Data(), u8"☃!", 4), 0);
 	}
 	
 	{

@@ -7,6 +7,7 @@
 #include "core/World.h"
 #include "assertions.h"
 #include "stubdefinitions.h"
+#include "platform/memory.h"
 
 #include "alloc/cellref.h"
 
@@ -76,6 +77,23 @@ void testFromUtf8Data(World &world)
 
 		ASSERT_EQUAL(highUnicodeValue->byteLength(), 7);
 		ASSERT_EQUAL(highUnicodeValue->charLength(), 2);
+	}
+
+	{
+		// Intentionally allocate exactly to the size of memory the OS will return 
+		// This is to check for off-by-one errors, especially when run under a memory checker such as Valgrind
+		platform::SizedMallocResult testAllocResult = platform::sizedMalloc(24);
+		const size_t testSize = testAllocResult.actualSize; 
+
+		auto *testCharData = new unsigned char[testSize];
+		memset(testCharData, 'a', testSize);
+		StringCell *offByOneTest = StringCell::fromUtf8Data(world, testCharData, testSize);
+
+		ASSERT_EQUAL(offByOneTest->byteLength(), testSize);
+		ASSERT_EQUAL(offByOneTest->charLength(), testSize);
+		ASSERT_EQUAL(memcmp(offByOneTest->constUtf8Data(), testCharData, testSize), 0);
+
+		delete[] testCharData;
 	}
 }
 
