@@ -33,6 +33,16 @@ DynamicMemoryBlock::~DynamicMemoryBlock()
 #endif
 	}
 }
+	
+void DynamicMemoryBlock::init()
+{
+#if !defined(NDEBUG) && defined(__APPLE__)
+	// XXX: Valgrind 3.10.0 on Mac OS X 10.9 will return a NULL pointer for the first mmap()
+	// This confuses DynamicMemoryBlock greatly
+	// Create a throwaway allocation so subsequent allocations succeed
+	mmap(NULL, 4096, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0);
+#endif
+}
 
 }
 }

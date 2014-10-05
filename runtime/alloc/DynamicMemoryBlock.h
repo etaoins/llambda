@@ -13,6 +13,8 @@ class DynamicMemoryBlock : public MemoryBlock
 public:
 	DynamicMemoryBlock(size_t size);
 	~DynamicMemoryBlock();
+	
+	static void init();
 
 	void* startPointer() const
 	{
