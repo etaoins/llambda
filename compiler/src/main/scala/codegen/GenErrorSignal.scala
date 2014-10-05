@@ -3,29 +3,61 @@ import io.llambda
 
 import llambda.llvmir._
 import llambda.compiler.{celltype => ct}
-import llambda.compiler.RuntimeErrorMessage
+import llambda.compiler.{RuntimeErrorMessage, SourceLocated}
 
 object GenErrorSignal {
-  def apply(state : GenerationState)(worldPtr : IrValue, errorMessage : RuntimeErrorMessage, evidence : Option[IrValue] = None) = {
+  private val pathIrType = PointerType(IntegerType(8))
+  private val lineNumberIrType = IntegerType(32)
+
+  private def defineConstantString(module : IrModuleBuilder)(constantName : String, text : String) : IrConstant = {
+    val stringConstantVar = IrGlobalVariableDef(
+      name=constantName,
+      initializer=StringConstant.fromUtf8String(text),
+      visibility=Visibility.Hidden,
+      constant=true,
+      unnamedAddr=true)
+
+    module.unlessDeclared(constantName) {
+      module.defineGlobalVariable(stringConstantVar)
+    }
+
+    // Get a pointer to the first element
+    ElementPointerConstant(
+      IntegerType(8),
+      stringConstantVar.variable,
+      indices=List(0, 0),
+      inbounds=true
+    )
+  }
+
+  def apply(state : GenerationState)(
+      worldPtr : IrValue,
+      errorMessage : RuntimeErrorMessage,
+      evidence : Option[IrValue] = None, 
+      locatedOpt : Option[SourceLocated] = None 
+  ) = {
     val block = state.currentBlock
     val module = block.function.module
     val signalErrorDecl = RuntimeFunctions.signalError
 
     // Define the error string
-    val stringConstantName = s"${errorMessage.name}ErrorString"
-    val stringConstantVar = IrGlobalVariableDef(
-      name=stringConstantName,
-      initializer=StringConstant.fromUtf8String(errorMessage.text),
-      visibility=Visibility.Hidden,
-      constant=true,
-      unnamedAddr=true)
+    val messageStartPtr = defineConstantString(module)(s"${errorMessage.name}ErrorString", errorMessage.text)
+    
+    val locationOpt = for(located <- locatedOpt; location <- located.locationOpt) yield location
 
-    module.unlessDeclared(stringConstantName) {
-      module.defineGlobalVariable(stringConstantVar)
-    }
+    val (fileIr, lineIr) = locationOpt match {
+      case Some(location) =>
+        val fileIr = location.filenameOpt.map({ filename =>
+          defineConstantString(module)(s"${filename}Path", filename)
+        }).getOrElse(NullPointerConstant(pathIrType))
 
-    module.unlessDeclared(signalErrorDecl) {
-      module.declareFunction(signalErrorDecl)
+        val lineIr = IntegerConstant(lineNumberIrType, location.line)
+
+        (fileIr, lineIr)
+
+      case None =>
+        // No location information
+        (NullPointerConstant(pathIrType), IntegerConstant(lineNumberIrType, 0))
     }
 
     // Unwind any partial allocations we have
@@ -38,16 +70,13 @@ object GenErrorSignal {
       NullPointerConstant(PointerType(ct.AnyCell.irType))
     )
 
-    // Get a pointer to the first element
-    val stringStartPtr = ElementPointerConstant(
-      IntegerType(8),
-      stringConstantVar.variable,
-      indices=List(0, 0),
-      inbounds=true)
+    module.unlessDeclared(signalErrorDecl) {
+      module.declareFunction(signalErrorDecl)
+    }
 
     state.terminateFunction(() => {
       // Call _lliby_signal_error
-      block.callDecl(None)(signalErrorDecl, List(worldPtr, stringStartPtr, evidencePtr))
+      block.callDecl(None)(signalErrorDecl, List(worldPtr, messageStartPtr, evidencePtr, fileIr, lineIr))
 
       // Terminate the failure block
       block.unreachable

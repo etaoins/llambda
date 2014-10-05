@@ -463,7 +463,7 @@ object GenPlanStep {
       val fatalBlock = irFunction.startChildBlock("recordIsUndefined")
       val successBlock = irFunction.startChildBlock("recordIsDefined")
 
-      GenErrorSignal(state.copy(currentBlock=fatalBlock))(worldPtrIr, errorMessage)
+      GenErrorSignal(state.copy(currentBlock=fatalBlock))(worldPtrIr, errorMessage, locatedOpt=Some(step))
 
       // Branch if we're defined
       val recordCellIr = state.liveTemps(recordCellTemp)
@@ -615,7 +615,7 @@ object GenPlanStep {
       val fatalBlock = irFunction.startChildBlock("pairIsImmutable")
       val successBlock = irFunction.startChildBlock("pairIsMutable")
 
-      GenErrorSignal(state.copy(currentBlock=fatalBlock))(worldPtrIr, errorMessage)
+      GenErrorSignal(state.copy(currentBlock=fatalBlock))(worldPtrIr, errorMessage, locatedOpt=Some(step))
 
       // The GC state can only be 0 (GC allocated) or 1 (global constant)
       // There are other GC states temporarily used during GC but they should never be reachable by program code
@@ -654,7 +654,7 @@ object GenPlanStep {
       val fatalBlock = irFunction.startChildBlock("predFalse")
       val successBlock = irFunction.startChildBlock("predTrue")
 
-      GenErrorSignal(state.copy(currentBlock=fatalBlock))(worldPtrIr, errorMessage, evidenceIrOpt)
+      GenErrorSignal(state.copy(currentBlock=fatalBlock))(worldPtrIr, errorMessage, evidenceIrOpt, locatedOpt=Some(step))
 
       state.currentBlock.condBranch(predIr, successBlock, fatalBlock)
 

@@ -24,7 +24,9 @@ object RuntimeFunctions {
     arguments=List(
       IrFunction.Argument(PointerType(WorldValue.irType)),
       IrFunction.Argument(PointerType(IntegerType(8)), Set(IrFunction.NoCapture)),
-      IrFunction.Argument(PointerType(ct.AnyCell.irType))
+      IrFunction.Argument(PointerType(ct.AnyCell.irType)),
+      IrFunction.Argument(PointerType(IntegerType(8)), Set(IrFunction.NoCapture)),
+      IrFunction.Argument(IntegerType(32))
     ),
     attributes=Set(NoReturn, Cold)
   )

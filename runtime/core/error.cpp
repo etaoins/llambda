@@ -5,6 +5,7 @@
 
 #include <unistd.h>
 #include <iostream>
+#include <sstream>
 
 #include "binding/StringCell.h"
 #include "binding/ListElementCell.h"
@@ -20,11 +21,11 @@ extern "C"
 
 using namespace lliby;
 
-void _lliby_signal_error(World &world, const char *message, AnyCell *irritant)
+void _lliby_signal_error(World &world, const char *message, AnyCell *irritant, const char *path, unsigned int lineNumber)
 {
 	if (irritant != nullptr)
 	{
-		signalError(world, message, {irritant});
+		signalError(world, message, {irritant}, path, lineNumber);
 	}
 	else
 	{
@@ -37,11 +38,20 @@ void _lliby_signal_error(World &world, const char *message, AnyCell *irritant)
 namespace lliby
 {
 
-void signalError(World &world, const char *message, const std::vector<AnyCell*> &irritants)
+void signalError(World &world, const char *message, const std::vector<AnyCell*> &irritants, const char *path, unsigned int lineNumber)
 {
+	// Build our full message string
+	std::ostringstream messageStream;
+	messageStream << message;
+
+	if (path != nullptr)
+	{
+		messageStream << " at " << path << ":" << lineNumber;
+	}
+
 	// Convert our C++ data type to Scheme cells
 	alloc::ListElementRef irritantsCell(world, ListElementCell::createProperList(world, irritants));
-	alloc::StringRef messageCell(world, StringCell::fromUtf8CString(world, message));
+	alloc::StringRef messageCell(world, StringCell::fromUtf8StdString(world, messageStream.str()));
 
 	// Throw a new exception
 	auto errorObj = ErrorObjectCell::createInstance(world, messageCell, irritantsCell);

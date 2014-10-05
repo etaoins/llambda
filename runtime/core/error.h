@@ -10,7 +10,7 @@ namespace lliby
 class World;
 
 [[noreturn]]
-void signalError(World &world, const char *message, const std::vector<AnyCell*> &irritants = std::vector<AnyCell*>());
+void signalError(World &world, const char *message, const std::vector<AnyCell*> &irritants = std::vector<AnyCell*>(), const char *path = nullptr, unsigned int lineNumber = 0);
 
 [[noreturn]]
 void fatalError(const char *message, const lliby::AnyCell *evidence = nullptr);
