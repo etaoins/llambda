@@ -351,7 +351,18 @@ object PlanTypeCheck {
               testNonUnionType(plan, checkValue, valueType, nonUnion)
 
             case vt.UnionType(memberTypes) =>
-              testUnionTypeRecursively(plan, checkValue, valueType, memberTypes.toList)
+              // Determine a semi-stable order to test the member types in
+              val orderedMemberTypes = memberTypes.toList.sortBy {
+                case vt.SchemeTypeAtom(cellType) =>
+                  // Prefer testing type atoms first because they're quick to test
+                  cellType.typeId.toInt
+
+                case _ =>
+                  // This is the maximum cell type ID + 1
+                  256
+              }
+
+              testUnionTypeRecursively(plan, checkValue, valueType, orderedMemberTypes)
           }
         }
         else {
