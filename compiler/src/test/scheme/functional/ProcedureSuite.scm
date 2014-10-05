@@ -365,3 +365,14 @@
       head))
 
   (list-terminator (make-list 500000))))
+
+(define-test "tail recursion with a counter" (expect (3)
+  (import (llambda typed))
+
+  (: my-list-tail (-> <list-element> <exact-integer> <any>))
+  (define (my-list-tail head count)
+    (if (zero? count)
+      head
+      (my-list-tail (cdr head) (- count 1))))
+
+  (my-list-tail '(1 2 3) 2)))

@@ -9,9 +9,9 @@ import llambda.compiler.{celltype => ct}
 
 object GenPlanStep {
   // Our runtime doesn't have defined wrap behaviour so we don't either
+  // We only do math on signed values so nsw is sufficient here
   private val integerWrapBehaviour = Set(
-    WrapBehaviour.NoSignedWrap,
-    WrapBehaviour.NoUnsignedWrap
+    WrapBehaviour.NoSignedWrap
   ) : Set[WrapBehaviour]
 
   private def containsAllocatingStep(step : ps.Step) : Boolean = {
