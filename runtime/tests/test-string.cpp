@@ -97,6 +97,17 @@ void testFromUtf8Data(World &world)
 	}
 }
 
+void testFromUtf8StdString(World &world)
+{
+	// Include a NULL character to ensure the conversion is NULL safe
+	const char *nullStringData = "Hell\0o";
+	std::string nullStdString(nullStringData, 6);
+	StringCell *nullValue = StringCell::fromUtf8StdString(world, nullStdString);
+
+	ASSERT_EQUAL(nullValue->byteLength(), 6);
+	ASSERT_EQUAL(nullValue->charLength(), 6);
+	ASSERT_EQUAL(memcmp(nullValue->constUtf8Data(), nullStringData, 6), 0);
+}
 void testCompare(World &world)
 {
 	alloc::StringRef hello1(world, StringCell::fromUtf8CString(world, "Hello"));
@@ -861,6 +872,7 @@ void testCaseConversion(World &world)
 void testAll(World &world)
 {
 	testFromUtf8CString(world);
+	testFromUtf8StdString(world);
 	testFromUtf8Data(world);
 
 	testCompare(world);

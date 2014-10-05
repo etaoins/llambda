@@ -5,6 +5,7 @@
 #include <list>
 #include <vector>
 #include <ostream>
+#include <string>
 
 #include "unicode/UnicodeChar.h"
 
@@ -21,6 +22,7 @@ class StringCell : public AnyCell
 #include "generated/StringCellMembers.h"
 public:
 	static StringCell* fromUtf8CString(World &world, const char *str);
+	static StringCell* fromUtf8StdString(World &world, const std::string &str);
 	static StringCell* fromUtf8Data(World &world, const std::uint8_t *data, std::uint32_t byteLength);
 	static StringCell* withUtf8ByteArray(World &world, SharedByteArray *byteArray, std::uint32_t byteLength);
 

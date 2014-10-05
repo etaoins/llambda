@@ -123,6 +123,11 @@ StringCell* StringCell::fromUtf8CString(World &world, const char *signedStr)
 	return newString;
 }
 
+StringCell* StringCell::fromUtf8StdString(World &world, const std::string &str)
+{
+	return StringCell::fromUtf8Data(world, reinterpret_cast<const unsigned char *>(str.data()), str.size());
+}
+
 StringCell* StringCell::withUtf8ByteArray(World &world, SharedByteArray *byteArray, std::uint32_t byteLength)
 {
 	if (byteLength <= inlineDataSize())
