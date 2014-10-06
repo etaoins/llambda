@@ -11,44 +11,55 @@ import llambda.compiler.planner.{step => ps}
   * procedures to use bounded space as required by Scheme.
   */
 object FindTailCalls extends FunctionConniver {
-  private def invokeToTailCall(invokeStep : ps.Invoke) : ps.TailCall =
-    ps.TailCall(invokeStep.signature, invokeStep.entryPoint, invokeStep.arguments.map(_.tempValue))
-      .assignLocationFrom(invokeStep)
-        
-      
+  private def replaceTailStep(tailStep : ps.Step, retValueOpt : Option[ps.TempValue]) : (ps.Step, Boolean) = tailStep match {
+    case ps.Invoke(`retValueOpt`, signature, entryPoint, arguments)  =>
+      // This is a tail call - replace the ps.Invoke with an equivalent ps.TailCall
+      val replacedStep = ps.TailCall(signature, entryPoint, arguments.map(_.tempValue))
+        .assignLocationFrom(tailStep)
+
+      // We can discard the return here
+      (replacedStep, true)
+
+    case ps.CondBranch(condResult, test, trueSteps, trueValue, falseSteps, falseValue)
+        if retValueOpt.isDefined && retValueOpt.get == condResult =>
+      // We can replace any tail calls that appear at the end of the condition branches
+      val replacedTrueSteps = replaceBranchTailCalls(trueSteps.reverse, trueValue)
+      val replacedFalseSteps = replaceBranchTailCalls(falseSteps.reverse, falseValue)
+
+      val replacedStep = ps.CondBranch(condResult, test, replacedTrueSteps, trueValue, replacedFalseSteps, falseValue)
+        .assignLocationFrom(tailStep)
+
+      // We might still need the return if one of the branches wasn't converted to a tail call
+      (replacedStep, false)
+
+    case other => 
+      (other, false)
+  }
+
   private def replaceBranchTailCalls(reverseSteps : List[ps.Step], branchResult : ps.TempValue) : List[ps.Step] =
     reverseSteps match {
-      case (invokeStep @ ps.Invoke(Some(`branchResult`), _, _, _)) :: reverseTail =>
-        // We have an invoke at the tail of the branch that would normally be phi'ed and returned
-        // Convert it to a tail call
-        val replacedStep = invokeToTailCall(invokeStep)
+      case tailStep :: reverseTail =>
+        val (replacedStep, _) = replaceTailStep(tailStep, Some(branchResult))
         replaceTailCalls(reverseTail, List(replacedStep))
 
-      case nonTailResult =>
-        // Not a tail call but check higher up in the branch for tail calls
-        replaceTailCalls(nonTailResult, Nil)
+      case Nil =>
+        Nil
     }
 
   private def replaceTailCalls(reverseSteps : List[ps.Step], acc : List[ps.Step]) : List[ps.Step] =
     reverseSteps match {
-      case ps.Return(retValue) ::
-           (invokeStep @ ps.Invoke(invokeResult, _, _, _)) ::
-           reverseTail
-      if retValue == invokeResult =>
-        val replacedStep = invokeToTailCall(invokeStep)
-        // We can discard all further steps here
-        replaceTailCalls(reverseTail, replacedStep :: Nil)
+      case (retStep @ ps.Return(retValueOpt)) :: tailStep :: reverseTail =>
+        // Attempt to replace the step
+        // This will only succeed for certain steps that replaceTailStep can handle and if those steps are producing
+        // the expected return value
+        val (replacedStep, discardReturn) = replaceTailStep(tailStep, retValueOpt)
 
-      case (retStep @ ps.Return(Some(retValue))) ::
-           (condStep @ ps.CondBranch(condResult, test, trueSteps, trueValue, falseSteps, falseValue)) ::
-           reverseTail
-      if retValue == condResult =>
-        // This is tricky - we're tail calling using the result of a condition
-        val replacedTrueSteps = replaceBranchTailCalls(trueSteps.reverse, trueValue)
-        val replacedFalseSteps = replaceBranchTailCalls(falseSteps.reverse, falseValue)
-
-        val replacedStep = ps.CondBranch(condResult, test, replacedTrueSteps, trueValue, replacedFalseSteps, falseValue)
-        replaceTailCalls(reverseTail, replacedStep :: retStep :: acc)
+        if (discardReturn) {
+          replaceTailCalls(reverseTail, List(replacedStep))
+        }
+        else {
+          replaceTailCalls(reverseTail, List(replacedStep, retStep))
+        }
 
       case other :: reverseTail =>
         replaceTailCalls(reverseTail, other :: acc)
@@ -58,7 +69,7 @@ object FindTailCalls extends FunctionConniver {
     }
 
   protected[conniver] def conniveSteps(steps : List[ps.Step]) : List[ps.Step] =
-      replaceTailCalls(steps.reverse, Nil)
+    replaceTailCalls(steps.reverse, Nil)
 
   protected def conniveFunction(function : PlannedFunction) : PlannedFunction = {
     function.copy(

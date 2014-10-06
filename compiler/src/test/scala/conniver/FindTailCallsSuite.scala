@@ -21,7 +21,7 @@ class FindTailCallsSuite extends FunSuite {
   def findTailCalls(steps : List[ps.Step]) : List[ps.Step] = {
     FindTailCalls.conniveSteps(steps)
   }
-  
+
   test("trivial tail call returning void") {
     val entryTemp = ps.EntryPointTemp()
     val retTemp = new ps.TempValue(false)
@@ -104,15 +104,31 @@ class FindTailCallsSuite extends FunSuite {
 
   test("returning from cond branch can be converted to a tail call") {
     val entryTemp = ps.EntryPointTemp()
-    val testTemp = new ps.TempValue(false)
+    val innerTestTemp = new ps.TempValue(false)
+    val outerTestTemp = new ps.TempValue(false)
     val retTemp = new ps.TempValue(false)
 
+    val trueTrueResultTemp = new ps.TempValue(true)
+    val trueFalseResultTemp = new ps.TempValue(true)
     val trueResultTemp = new ps.TempValue(true)
     val falseResultTemp = new ps.TempValue(true)
 
+    // (if #t (if #t ...) ...)
+    val inputTrueTrueSteps = List(
+      ps.CreateNamedEntryPoint(entryTemp, testSignature, "lliby_true_true_call"),
+      ps.Invoke(Some(trueTrueResultTemp), testSignature, entryTemp, Nil)
+    )
+    
+    // (if #t (if #f ...) ...)
+    val inputTrueFalseSteps = List(
+      ps.CreateNamedEntryPoint(entryTemp, testSignature, "lliby_true_false_call"),
+      ps.Invoke(Some(trueFalseResultTemp), testSignature, entryTemp, Nil)
+    )
+
+    // The true branch contains a nested (if)
     val inputTrueSteps = List(
-      ps.CreateNamedEntryPoint(entryTemp, testSignature, "lliby_true_call"),
-      ps.Invoke(Some(trueResultTemp), testSignature, entryTemp, Nil)
+      ps.CreateBooleanCell(innerTestTemp, false),
+      ps.CondBranch(trueResultTemp, innerTestTemp, inputTrueTrueSteps, trueTrueResultTemp, inputTrueFalseSteps, trueFalseResultTemp)
     )
     
     val inputFalseSteps = List(
@@ -121,14 +137,24 @@ class FindTailCallsSuite extends FunSuite {
     )
 
     val inputSteps = List(
-      ps.CreateBooleanCell(testTemp, false),
-      ps.CondBranch(retTemp, testTemp, inputTrueSteps, trueResultTemp, inputFalseSteps, falseResultTemp),
+      ps.CreateBooleanCell(outerTestTemp, false),
+      ps.CondBranch(retTemp, outerTestTemp, inputTrueSteps, trueResultTemp, inputFalseSteps, falseResultTemp),
       ps.Return(Some(retTemp))
+    )
+    
+    val expectedTrueTrueSteps = List(
+      ps.CreateNamedEntryPoint(entryTemp, testSignature, "lliby_true_true_call"),
+      ps.TailCall(testSignature, entryTemp, Nil)
+    )
+    
+    val expectedTrueFalseSteps = List(
+      ps.CreateNamedEntryPoint(entryTemp, testSignature, "lliby_true_false_call"),
+      ps.TailCall(testSignature, entryTemp, Nil)
     )
 
     val expectedTrueSteps = List(
-      ps.CreateNamedEntryPoint(entryTemp, testSignature, "lliby_true_call"),
-      ps.TailCall(testSignature, entryTemp, Nil)
+      ps.CreateBooleanCell(innerTestTemp, false),
+      ps.CondBranch(trueResultTemp, innerTestTemp, expectedTrueTrueSteps, trueTrueResultTemp, expectedTrueFalseSteps, trueFalseResultTemp)
     )
     
     val expectedFalseSteps = List(
@@ -137,8 +163,8 @@ class FindTailCallsSuite extends FunSuite {
     )
 
     assert(findTailCalls(inputSteps) === List(
-      ps.CreateBooleanCell(testTemp, false),
-      ps.CondBranch(retTemp, testTemp, expectedTrueSteps, trueResultTemp, expectedFalseSteps, falseResultTemp),
+      ps.CreateBooleanCell(outerTestTemp, false),
+      ps.CondBranch(retTemp, outerTestTemp, expectedTrueSteps, trueResultTemp, expectedFalseSteps, falseResultTemp),
       // This isn't strictly needed but it's harmless
       ps.Return(Some(retTemp))
     ))
