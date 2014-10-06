@@ -90,13 +90,13 @@
 
 ; With immutable pairs there's no distinction between constant and constructed lists
 (cond-expand ((not immutable-pairs)
-  (define-test "'two constructed lists are not eqv" (expect #f
+  (define-test "two constructed lists are not eqv" (expect #f
     (eqv? (list 1 2 3) (list 1 2 3))))))
 
-(define-test "'two constructed vectors are not eqv" (expect #f
+(define-test "two constructed vectors are not eqv" (expect #f
 	(eqv? (vector 1 2 3) (vector 1 2 3))))
 
-(define-test "'two different procedures are not eqv" (expect #f
+(define-test "two different procedures are not eqv" (expect #f
 	; If these returned different values it would be legal to merge them
 	(define (procecedure1) 1)
 	(define (procecedure2) 2)
