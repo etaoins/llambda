@@ -15,37 +15,34 @@ object NumberProcPlanner extends ReportProcPlanner {
   
   private type DoubleCompartor = (Double, Double) => Boolean
 
+  private sealed abstract class CompareResult
+  private case class StaticCompare(result : Boolean) extends CompareResult
+  private case class DynamicCompare(nativePred : ps.TempValue) extends CompareResult
+  private case object UnplannableCompare extends CompareResult
+
   private def compareOperands(state : PlannerState)(
       compareCond : ps.CompareCond.CompareCond,
       staticIntCalc : IntegerCompartor,
       staticDoubleCalc : DoubleCompartor,
       val1 : iv.IntermediateValue,
       val2 : iv.IntermediateValue
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ResultValues] = {
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : CompareResult = {
     (val1, val2) match {
       case (constantExactInt1 : iv.ConstantExactIntegerValue, constantExactInt2 : iv.ConstantExactIntegerValue) =>
         val compareResult = staticIntCalc(constantExactInt1.value, constantExactInt2.value)
-        Some(SingleValue(
-          new iv.ConstantBooleanValue(compareResult)
-        ))
+        StaticCompare(compareResult)
       
       case (constantFlonum1 : iv.ConstantFlonumValue, constantFlonum2 : iv.ConstantFlonumValue) =>
         val compareResult = staticDoubleCalc(constantFlonum1.value, constantFlonum2.value)
-        Some(SingleValue(
-          new iv.ConstantBooleanValue(compareResult)
-        ))
+        StaticCompare(compareResult)
       
       case (constantExactInt1 : iv.ConstantExactIntegerValue, constantFlonum2 : iv.ConstantFlonumValue) =>
         val compareResult = staticDoubleCalc(constantExactInt1.value.toDouble, constantFlonum2.value)
-        Some(SingleValue(
-          new iv.ConstantBooleanValue(compareResult)
-        ))
+        StaticCompare(compareResult)
       
       case (constantFlonum1 : iv.ConstantFlonumValue, constantExactInt2 : iv.ConstantExactIntegerValue) =>
         val compareResult = staticDoubleCalc(constantFlonum1.value, constantExactInt2.value.toDouble)
-        Some(SingleValue(
-          new iv.ConstantBooleanValue(compareResult)
-        ))
+        StaticCompare(compareResult)
 
       case (exactInt1, exactInt2) if exactInt1.hasDefiniteType(vt.ExactIntegerType) && exactInt2.hasDefiniteType(vt.ExactIntegerType) =>
         val val1Temp = exactInt1.toTempValue(vt.Int64)
@@ -63,9 +60,7 @@ object NumberProcPlanner extends ReportProcPlanner {
         // Do a direct integer compare
         plan.steps += ps.IntegerCompare(predicateTemp, compareCond, signed, val1Temp, val2Temp)
 
-        Some(SingleValue(
-          new iv.NativePredicateValue(predicateTemp)
-        ))
+        DynamicCompare(predicateTemp)
 
       case (flonum1, flonum2) if flonum1.hasDefiniteType(vt.FlonumType) && flonum2.hasDefiniteType(vt.FlonumType) =>
         val val1Temp = flonum1.toTempValue(vt.Double)
@@ -76,13 +71,62 @@ object NumberProcPlanner extends ReportProcPlanner {
         // Do a direct float compare
         plan.steps += ps.FloatCompare(predicateTemp, compareCond, val1Temp, val2Temp)
 
-        Some(SingleValue(
-          new iv.NativePredicateValue(predicateTemp)
-        ))
+        DynamicCompare(predicateTemp)
 
       case _ =>
-        None
+        UnplannableCompare
     }
+  }
+  
+  private def compareOperandList(state : PlannerState)(
+      compareCond : ps.CompareCond.CompareCond,
+      staticIntCalc : IntegerCompartor,
+      staticDoubleCalc : DoubleCompartor,
+      operands : List[iv.IntermediateValue]
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ResultValues] = {
+    // Compare in a fork in case we abort the whole thing later
+    val comparePlan = plan.forkPlan()
+
+    val pairwiseResults = operands.sliding(2).toList map {
+      case List(left, right) =>
+        compareOperands(state)(compareCond, staticIntCalc, staticDoubleCalc, left, right)(comparePlan, worldPtr)
+    }
+
+    // Now filter out all the static results
+    val pairwiseNativePreds = pairwiseResults flatMap {
+      case UnplannableCompare =>
+        // We can't compare this at compile time
+        return None
+
+      case StaticCompare(false) =>
+        // This is false - the whole expression must be false!
+        return Some(SingleValue(new iv.ConstantBooleanValue(false)))
+
+      case StaticCompare(true) =>
+        // We don't need to include constant true values
+        None
+
+      case DynamicCompare(nativePred) =>
+        Some(nativePred)
+    } : List[ps.TempValue]
+
+    if (pairwiseNativePreds.isEmpty) {
+      // This is statically true
+      return Some(SingleValue(new iv.ConstantBooleanValue(true)))
+    }
+
+    // We definitely need to compare at runtime - include our plan steps
+    plan.steps ++= comparePlan.steps
+
+    // Combine all of the native predicates together
+    val resultPred = pairwiseNativePreds.reduceLeft { (nativePred, trueBranchValue) =>
+      val condResult = ps.Temp(vt.Predicate)
+      plan.steps += ps.CondBranch(condResult, nativePred, Nil, trueBranchValue, Nil, nativePred)
+
+      condResult
+    }
+
+    Some(SingleValue(new iv.NativePredicateValue(resultPred)))
   }
 
   private def performBinaryIntegerOp(state : PlannerState)(
@@ -142,20 +186,20 @@ object NumberProcPlanner extends ReportProcPlanner {
       reportName : String,
       operands : List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ResultValues] = (reportName, operands) match {
-    case ("=", List((_, val1), (_, val2))) =>
-      compareOperands(state)(ps.CompareCond.Equal, _ == _, _ == _, val1, val2)
+    case ("=", operands) if operands.length >= 2 =>
+      compareOperandList(state)(ps.CompareCond.Equal, _ == _, _ == _, operands.map(_._2))
     
-    case (">", List((_, val1), (_, val2))) =>
-      compareOperands(state)(ps.CompareCond.GreaterThan, _ > _, _ > _, val1, val2)
+    case (">", operands) if operands.length >= 2 =>
+      compareOperandList(state)(ps.CompareCond.GreaterThan, _ > _, _ > _, operands.map(_._2))
     
-    case (">=", List((_, val1), (_, val2))) =>
-      compareOperands(state)(ps.CompareCond.GreaterThanEqual, _ >= _, _ >= _, val1, val2)
+    case (">=", operands) if operands.length >= 2 =>
+      compareOperandList(state)(ps.CompareCond.GreaterThanEqual, _ >= _, _ >= _, operands.map(_._2))
     
-    case ("<", List((_, val1), (_, val2))) =>
-      compareOperands(state)(ps.CompareCond.LessThan, _ < _, _ < _, val1, val2)
+    case ("<", operands) if operands.length >= 2 =>
+      compareOperandList(state)(ps.CompareCond.LessThan, _ < _, _ < _, operands.map(_._2))
     
-    case ("<=", List((_, val1), (_, val2))) =>
-      compareOperands(state)(ps.CompareCond.LessThanEqual, _ <= _, _ <= _, val1, val2)
+    case ("<=", operands) if operands.length >= 2 =>
+      compareOperandList(state)(ps.CompareCond.LessThanEqual, _ <= _, _ <= _, operands.map(_._2))
 
     case ("+", Nil) =>
       Some(SingleValue(

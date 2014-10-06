@@ -199,6 +199,36 @@
   (assert-false (>= 4.0 5.6))
   (assert-false (>= 4.0 4.5 5.6))))
 
+(define-test "integer (<=) procedure" (expect-success
+  (import (llambda typed))
+
+  ; This is testing that we correctly deal with generating code that does multiple value comparisons
+  ; The type annotations make it eligible for native code generation
+  (: in-range (-> <exact-integer> <exact-integer> <exact-integer> <boolean>))
+  (define (in-range lower val upper)
+    (<= lower val upper))
+
+  ; Strip the type to make sure we don't inline
+  (define typeless-in-range (typeless-cell in-range))
+
+  (assert-true (typeless-in-range 0 5 10))
+  (assert-true (typeless-in-range 5 5 10))
+  (assert-false (typeless-in-range 5 -5 10))
+  (assert-false (typeless-in-range 5 15 10))
+  
+  (: byte-in-range (-> <exact-integer> <exact-integer> <exact-integer> <boolean>))
+  (define (byte-in-range lower val upper)
+    (<= 0 lower val upper 255))
+
+  ; Strip the type to make sure we don't inline
+  (define typeless-byte-in-range (typeless-cell byte-in-range))
+  
+  (assert-true (typeless-byte-in-range 0 5 10))
+  (assert-true (typeless-byte-in-range 5 5 10))
+  (assert-false (typeless-byte-in-range 5 11 10))
+  ; This is inside the range we specify but outside of the byte range
+  (assert-false (typeless-byte-in-range 0 300 500))))
+
 (define-test "(zero?)" (expect-success
   (assert-true  (zero? 0))
   (assert-true  (zero? 0.0))
