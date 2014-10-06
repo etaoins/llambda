@@ -7,26 +7,18 @@ import llambda.compiler.ContextLocated
 import llambda.compiler.planner._
 import llambda.compiler.planner.{intermediatevalue => iv}
 
-/*
-import llambda.compiler.OutOfBoundsException
-import llambda.compiler.{celltype => ct}
-
-import llambda.compiler.valuetype.Implicits._*/
-
 object DynamicProcPlanner extends ReportProcPlanner {
-  def apply(state : PlannerState)(
+  override def planWithValue(state : PlannerState)(
       reportName : String,
       operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ResultValues] = (reportName, operands) match {
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = (reportName, operands) match {
     case ("make-parameter", List(initialValue)) =>
       val resultTemp = ps.Temp(vt.TopProcedureType)
       val initialValueTemp = initialValue._2.toTempValue(vt.AnySchemeType)
 
       plan.steps += ps.CreateParameterProc(worldPtr, resultTemp, initialValueTemp, None)
 
-      Some(SingleValue(
-        new iv.KnownParameterProc(resultTemp, hasConverter=false)
-      ))
+      Some(new iv.KnownParameterProc(resultTemp, hasConverter=false))
     
     case ("make-parameter", List(initialValue, converterProc)) =>
       val resultTemp = ps.Temp(vt.TopProcedureType)
@@ -44,9 +36,7 @@ object DynamicProcPlanner extends ReportProcPlanner {
 
       plan.steps += ps.CreateParameterProc(worldPtr, resultTemp, initialValueTemp, Some(converterTemp))
 
-      Some(SingleValue(
-        new iv.KnownParameterProc(resultTemp, hasConverter=true)
-      ))
+      Some(new iv.KnownParameterProc(resultTemp, hasConverter=true))
 
     case _ =>
       None

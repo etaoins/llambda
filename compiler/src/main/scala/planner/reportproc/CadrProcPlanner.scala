@@ -9,21 +9,17 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
 
 object CadrProcPlanner extends ReportProcPlanner {
-  def apply(initialState : PlannerState)(
+  override def planWithValue(initialState : PlannerState)(
       reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ResultValues] = (reportName, operands) match {
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = (reportName, operands) match {
     case ("car", List((located, pairValue))) =>
       plan.withContextLocation(located) {
-        Some(SingleValue(
-          PlanCadr.loadCar(pairValue)
-        ))
+        Some(PlanCadr.loadCar(pairValue))
       }
 
     case ("cdr", List((located, pairValue))) =>
       plan.withContextLocation(located) {
-        Some(SingleValue(
-          PlanCadr.loadCdr(pairValue)
-        ))
+        Some(PlanCadr.loadCdr(pairValue))
       }
 
     case _ =>

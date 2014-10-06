@@ -125,6 +125,33 @@
     (ann string-or-symbol <string>)
     (ann string-or-symbol <symbol>))))
 
+(define-test "branching on (exact-integer?) propagates type information" (expect-success
+  (import (llambda typed))
+
+  (define number (cast (typeless-cell 5) (U <number>)))
+
+  (if (exact-integer? number)
+    (ann number <exact-integer>)
+    (ann number <flonum>))))
+
+(define-test "branching on (exact?) propagates type information" (expect-success
+  (import (llambda typed))
+
+  (define number (cast (typeless-cell 5) (U <number>)))
+
+  (if (exact? number)
+    (ann number <exact-integer>)
+    (ann number <flonum>))))
+
+(define-test "branching on (inexact?) propagates type information" (expect-success
+  (import (llambda typed))
+
+  (define number (cast (typeless-cell 5) (U <number>)))
+
+  (if (inexact? number)
+    (ann number <flonum>)
+    (ann number <exact-integer>))))
+
 (define-test "branching on type predicates with (not)" (expect-success
   (import (llambda typed))
 

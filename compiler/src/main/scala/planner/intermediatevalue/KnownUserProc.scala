@@ -27,6 +27,8 @@ class KnownUserProc(
   // 
   
   private val correctnessPlanners = List[reportproc.ReportProcPlanner](
+    // This is needed for occurrence typing
+    reportproc.NumberPredicateProcPlanner,
     // Planning (values) allows proper type signatures to be extracted
     reportproc.ValuesProcPlanner
   )
@@ -63,11 +65,8 @@ class KnownUserProc(
     // Find the first report proc planner that knowns how to plan us
     for(reportName <- reportNameOpt;
         reportProcPlanner <- reportProcPlanners;
-        resultValues <- reportProcPlanner(state)(reportName, operands)) {
-      return Some(PlanResult(
-        state=state,
-        values=resultValues
-      ))
+        planResult <- reportProcPlanner.planWithResult(state)(reportName, operands)) {
+      return Some(planResult)
     }
 
     None

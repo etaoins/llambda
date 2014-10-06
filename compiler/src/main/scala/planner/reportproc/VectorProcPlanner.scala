@@ -65,19 +65,15 @@ object VectorProcPlanner extends ReportProcPlanner {
     new iv.CellValue(unstableType, BoxedValue(ct.VectorCell, vectorTemp), knownAllocated=true) 
   }
 
-  def apply(state : PlannerState)(
+  override def planWithValue(state : PlannerState)(
       reportName : String,
       operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ResultValues] = (reportName, operands) match {
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = (reportName, operands) match {
     case ("make-vector", List(length)) =>
-      Some(SingleValue(
-        makeFilledVector(state)(length, iv.UnitValue)
-      ))
+      Some(makeFilledVector(state)(length, iv.UnitValue))
     
     case ("make-vector", List(length, (_, fillValue))) =>
-      Some(SingleValue(
-        makeFilledVector(state)(length, fillValue)
-      ))
+      Some(makeFilledVector(state)(length, fillValue))
     
     case ("vector", initialElements) =>
       val initialElementValues = initialElements.map(_._2)
@@ -101,14 +97,10 @@ object VectorProcPlanner extends ReportProcPlanner {
         plan.steps += ps.StoreVectorElement(vectorTemp, elementsTemp, indexTemp, elementTemp)
       }
 
-      Some(SingleValue(
-        TempValueToIntermediate(vectorType, vectorTemp)(plan.config)
-      ))
+      Some(TempValueToIntermediate(vectorType, vectorTemp)(plan.config))
 
     case ("vector-length", List((_, constantVector : iv.ConstantVectorValue))) =>
-      Some(SingleValue(
-        new iv.ConstantExactIntegerValue(constantVector.elements.length)
-      ))
+      Some(new iv.ConstantExactIntegerValue(constantVector.elements.length))
       
     case ("vector-length", List((located, vectorValue))) =>
       val vectorTemp = plan.withContextLocation(located) {
@@ -118,9 +110,7 @@ object VectorProcPlanner extends ReportProcPlanner {
       val resultTemp = ps.Temp(vt.UInt32)
       plan.steps += ps.LoadVectorLength(resultTemp, vectorTemp)
 
-      Some(SingleValue(
-        TempValueToIntermediate(vt.UInt32, resultTemp)(plan.config)
-      ))
+      Some(TempValueToIntermediate(vt.UInt32, resultTemp)(plan.config))
     
     case ("vector-ref", List((_, constantVector : iv.ConstantVectorValue), (_, constantInt : iv.ConstantExactIntegerValue))) =>
       val index = constantInt.value
@@ -132,9 +122,7 @@ object VectorProcPlanner extends ReportProcPlanner {
         )
       }
 
-      Some(SingleValue(
-        constantVector.elements(index.toInt)
-      ))
+      Some(constantVector.elements(index.toInt))
 
     case ("vector-ref", List((vectorLocated, vectorValue), (_, constantInt : iv.ConstantExactIntegerValue))) =>
       vectorValue.schemeType match {
@@ -163,9 +151,7 @@ object VectorProcPlanner extends ReportProcPlanner {
           plan.steps += ps.LoadVectorElement(resultTemp, vectorTemp, elementsTemp, indexTemp) 
 
           val elementType = vectorType.unrollChildTypeRef(elementTypes(index.toInt))
-          Some(SingleValue(
-            new iv.CellValue(elementType, BoxedValue(ct.AnyCell, resultTemp))
-          ))
+          Some(new iv.CellValue(elementType, BoxedValue(ct.AnyCell, resultTemp)))
 
         case _ =>
           None
@@ -203,9 +189,7 @@ object VectorProcPlanner extends ReportProcPlanner {
           
           plan.steps += ps.StoreVectorElement(vectorTemp, elementsTemp, indexTemp, objectTemp) 
 
-          Some(SingleValue(
-            iv.UnitValue
-          ))
+          Some(iv.UnitValue)
 
         case _ =>
           None

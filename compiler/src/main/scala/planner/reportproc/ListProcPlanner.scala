@@ -15,12 +15,12 @@ object ListProcPlanner extends ReportProcPlanner {
       compareFunc : StaticValueEqv.EqvFunction,
       needleValue : iv.IntermediateValue,
       listValue : iv.IntermediateValue
-  ) : Option[ResultValues] = listValue match {
+  ) : Option[iv.IntermediateValue] = listValue match {
     case knownPair : iv.KnownPair =>
       compareFunc(needleValue, knownPair.car) match {
         case Some(true) =>
           // Found it!
-          Some(SingleValue(knownPair))
+          Some(knownPair)
 
         case Some(false) =>
           // definitely not a match - keep looking
@@ -33,7 +33,7 @@ object ListProcPlanner extends ReportProcPlanner {
 
     case iv.EmptyListValue =>
       // Doesn't exist in the list
-      Some(SingleValue(new iv.ConstantBooleanValue(false)))
+      Some(new iv.ConstantBooleanValue(false))
 
     case _ =>
       // Not a constant list
@@ -55,14 +55,14 @@ object ListProcPlanner extends ReportProcPlanner {
       }
     }
 
-  def apply(initialState : PlannerState)(
+  override def planWithValue(initialState : PlannerState)(
       reportName : String,
       operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ResultValues] = (reportName, operands) match {
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = (reportName, operands) match {
     case ("list", operands) =>
       // Build a proper list directly
       val operandValues = operands.map(_._2)
-      Some(SingleValue(ValuesToList(operandValues)))
+      Some(ValuesToList(operandValues))
 
     case ("length", List((_, singleOperand))) =>
       // Do we know the length at compile time?
@@ -70,9 +70,7 @@ object ListProcPlanner extends ReportProcPlanner {
         case knownListElement : iv.KnownListElement =>
           for(listLength <- knownListElement.listLengthOpt) {
             // Yes, return it directly
-            return Some(
-              SingleValue(new iv.ConstantExactIntegerValue(listLength))
-            )
+            return Some(new iv.ConstantExactIntegerValue(listLength))
           }
 
         case _ =>
@@ -85,9 +83,7 @@ object ListProcPlanner extends ReportProcPlanner {
         // This is a guaranteed proper list - we can quickly calculate the length inline
         plan.steps += ps.CalcProperListLength(resultTemp, listElementTemp)
 
-        return Some(
-          SingleValue(TempValueToIntermediate(vt.UInt32, resultTemp)(plan.config))
-        )
+        return Some(TempValueToIntermediate(vt.UInt32, resultTemp)(plan.config))
       }
       else {
         // This can error out at runtime - let the stdlib deal with it
@@ -109,7 +105,7 @@ object ListProcPlanner extends ReportProcPlanner {
       plan.steps += ps.AssertPairMutable(worldPtr, pairTemp, errorMessage)
       plan.steps += ps.SetPairCar(pairTemp, newValueTemp)
 
-      Some(SingleValue(iv.UnitValue))
+      Some(iv.UnitValue)
     
     case ("set-cdr!", List((pairLoc, pairValue), (_, newValue))) =>
       val pairTemp = plan.withContextLocation(pairLoc) {
@@ -126,7 +122,7 @@ object ListProcPlanner extends ReportProcPlanner {
       plan.steps += ps.AssertPairMutable(worldPtr, pairTemp, errorMessage)
       plan.steps += ps.SetPairCdr(pairTemp, newValueTemp)
 
-      Some(SingleValue(iv.UnitValue))
+      Some(iv.UnitValue)
 
     case ("cons", List((_, carValue), (_, cdrValue))) =>
       val pairTemp = ps.CellTemp(ct.PairCell)
@@ -138,9 +134,7 @@ object ListProcPlanner extends ReportProcPlanner {
       plan.steps += ps.SetPairCar(pairTemp, carTemp)
       plan.steps += ps.SetPairCdr(pairTemp, cdrTemp)
 
-      Some(SingleValue(
-        TempValueToIntermediate(vt.AnyPairType, pairTemp)(plan.config)
-      ))
+      Some(TempValueToIntermediate(vt.AnyPairType, pairTemp)(plan.config))
 
     case (_, List((_, needleValue), (_, listValue))) if List("memq", "memv").contains(reportName) =>
       staticMemberSearch(StaticValueEqv.valuesAreEqv, needleValue, listValue)
@@ -159,7 +153,7 @@ object ListProcPlanner extends ReportProcPlanner {
               throw new OutOfBoundsException(plan.activeContextLocated, s"List index ${index} out of bounds")
             }
 
-            SingleValue(listTail(knownListElement, index.toInt))
+            listTail(knownListElement, index.toInt)
           }
 
         case _ =>

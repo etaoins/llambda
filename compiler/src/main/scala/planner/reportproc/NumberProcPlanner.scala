@@ -83,7 +83,7 @@ object NumberProcPlanner extends ReportProcPlanner {
       staticIntCalc : IntegerCompartor,
       staticDoubleCalc : DoubleCompartor,
       operands : List[iv.IntermediateValue]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ResultValues] = {
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
     // Compare in a fork in case we abort the whole thing later
     val comparePlan = plan.forkPlan()
 
@@ -100,7 +100,7 @@ object NumberProcPlanner extends ReportProcPlanner {
 
       case StaticCompare(false) =>
         // This is false - the whole expression must be false!
-        return Some(SingleValue(new iv.ConstantBooleanValue(false)))
+        return Some(new iv.ConstantBooleanValue(false))
 
       case StaticCompare(true) =>
         // We don't need to include constant true values
@@ -112,7 +112,7 @@ object NumberProcPlanner extends ReportProcPlanner {
 
     if (pairwiseNativePreds.isEmpty) {
       // This is statically true
-      return Some(SingleValue(new iv.ConstantBooleanValue(true)))
+      return Some(new iv.ConstantBooleanValue(true))
     }
 
     // We definitely need to compare at runtime - include our plan steps
@@ -126,7 +126,7 @@ object NumberProcPlanner extends ReportProcPlanner {
       condResult
     }
 
-    Some(SingleValue(new iv.NativePredicateValue(resultPred)))
+    Some(new iv.NativePredicateValue(resultPred))
   }
 
   private def performBinaryIntegerOp(state : PlannerState)(
@@ -134,7 +134,7 @@ object NumberProcPlanner extends ReportProcPlanner {
       staticCalc : StaticResultBuilder,
       isCommutative : Boolean,
       operands : List[iv.IntermediateValue]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ResultValues] = {
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
     if (!operands.forall(_.hasDefiniteType(vt.ExactIntegerType))) {
       // Can't fast path this
       return None
@@ -177,15 +177,13 @@ object NumberProcPlanner extends ReportProcPlanner {
       )(plan.config)
     }
 
-    Some(SingleValue(
-      finalValue
-    ))
-  }
+    Some(finalValue)
+  } 
 
-  def apply(state : PlannerState)(
+  override def planWithValue(state : PlannerState)(
       reportName : String,
       operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ResultValues] = (reportName, operands) match {
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = (reportName, operands) match {
     case ("=", operands) if operands.length >= 2 =>
       compareOperandList(state)(ps.CompareCond.Equal, _ == _, _ == _, operands.map(_._2))
     
@@ -202,14 +200,10 @@ object NumberProcPlanner extends ReportProcPlanner {
       compareOperandList(state)(ps.CompareCond.LessThanEqual, _ <= _, _ <= _, operands.map(_._2))
 
     case ("+", Nil) =>
-      Some(SingleValue(
-        new iv.ConstantExactIntegerValue(0)
-      ))
+      Some(new iv.ConstantExactIntegerValue(0))
     
     case ("*", Nil) =>
-      Some(SingleValue(
-        new iv.ConstantExactIntegerValue(1)
-      ))
+      Some(new iv.ConstantExactIntegerValue(1))
     
     case (reportName, List((operandSourceLoc, singleOperand))) if List("+", "*").contains(reportName) =>
       // Make sure the operand is numeric
@@ -218,9 +212,7 @@ object NumberProcPlanner extends ReportProcPlanner {
       }
       
       // Return it directly
-      Some(SingleValue(
-        TempValueToIntermediate(vt.NumberType, numericTemp)(plan.config)
-      ))
+      Some(TempValueToIntermediate(vt.NumberType, numericTemp)(plan.config))
 
     case ("-", Nil) =>
       // This isn't allowed - let it fail at runtime
@@ -249,18 +241,14 @@ object NumberProcPlanner extends ReportProcPlanner {
       singleValue match  {
         case knownExactInt if vt.SatisfiesType(vt.ExactIntegerType, knownExactInt.schemeType) == Some(true) =>
           // Already an exact int
-          Some(SingleValue(
-            singleValue
-          ))
+          Some(singleValue)
 
         case constFlonum : iv.ConstantFlonumValue =>
           val longValue = constFlonum.value.toLong
 
           // Make sure this was lossless
-          if (longValue.toDouble== constFlonum.value) {
-            Some(SingleValue(
-              new iv.ConstantExactIntegerValue(longValue)
-            ))
+          if (longValue.toDouble == constFlonum.value) {
+            Some(new iv.ConstantExactIntegerValue(longValue))
           }
           else {
             None
@@ -276,18 +264,14 @@ object NumberProcPlanner extends ReportProcPlanner {
       singleValue match  {
         case knownFlonum if vt.SatisfiesType(vt.FlonumType, knownFlonum.schemeType) == Some(true) =>
           // Already a flonum
-          Some(SingleValue(
-            knownFlonum
-          ))
+          Some(knownFlonum)
 
         case constExactInt : iv.ConstantExactIntegerValue =>
           val doubleValue = constExactInt.value.toDouble
 
           // Make sure this was lossless
           if (doubleValue.toLong == constExactInt.value) {
-            Some(SingleValue(
-              new iv.ConstantFlonumValue(doubleValue)
-            ))
+            Some(new iv.ConstantFlonumValue(doubleValue))
           }
           else {
             None
