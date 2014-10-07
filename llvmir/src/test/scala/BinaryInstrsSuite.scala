@@ -96,4 +96,74 @@ class BinaryInstrsSuite extends IrTestSuite {
     assert(resultVar.irType === IntegerType(64))
     assertInstr(block, "%nuwtest1 = mul nuw i64 12, 1")
   }
+  
+  test("trivial fadd") {
+    val block = createTestBlock()
+
+    val op1 = FloatConstant(14.5f)
+    val op2 = FloatConstant(-100.0f)
+
+    val resultVar = block.fadd("add")(Set(), op1, op2)
+
+    assert(resultVar.irType === FloatType)
+    assertInstr(block, "%add1 = fadd float 14.5, -100.0")
+  }
+  
+  test("fadd with mismatched type fails") {
+    val block = createTestBlock()
+
+    val op1 = FloatConstant(14.5f)
+    val op2 = DoubleConstant(-100.0)
+
+    intercept[InconsistentIrException] {
+      block.fadd("mismatched")(Set(), op1, op2)
+    }
+  }
+  
+  test("fadd with non-floats fails") {
+    val block = createTestBlock()
+
+    val op1 = IntegerConstant(IntegerType(32), 5)
+    val op2 = IntegerConstant(IntegerType(32), -10)
+
+    intercept[InconsistentIrException] {
+      block.fadd("nonfloat")(Set(), op1, op2)
+    }
+  }
+
+  test("fsub with nnan") {
+    val block = createTestBlock()
+
+    val op1 = DoubleConstant(14.5)
+    val op2 = DoubleConstant(-100.0)
+
+    val resultVar = block.fsub("sub")(Set(FastMathFlag.NoNaN), op1, op2)
+
+    assert(resultVar.irType === DoubleType)
+    assertInstr(block, "%sub1 = fsub nnan double 14.5, -100.0")
+  }
+  
+  test("fmul with ninf and arcp") {
+    val block = createTestBlock()
+
+    val op1 = DoubleConstant(14.5)
+    val op2 = DoubleConstant(-100.0)
+
+    val resultVar = block.fsub("mul")(Set(FastMathFlag.NoInf, FastMathFlag.AllowReciprocal), op1, op2)
+
+    assert(resultVar.irType === DoubleType)
+    assertInstr(block, "%mul1 = fsub arcp ninf double 14.5, -100.0")
+  }
+  
+  test("fdiv with nsz and fast") {
+    val block = createTestBlock()
+
+    val op1 = DoubleConstant(14.5)
+    val op2 = DoubleConstant(-100.0)
+
+    val resultVar = block.fdiv("div")(Set(FastMathFlag.NoSignedZero, FastMathFlag.Fast), op1, op2)
+
+    assert(resultVar.irType === DoubleType)
+    assertInstr(block, "%div1 = fdiv fast nsz double 14.5, -100.0")
+  }
 }
