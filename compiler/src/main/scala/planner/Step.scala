@@ -946,6 +946,33 @@ case class IntegerMul(result : TempValue, val1 : TempValue, val2 : TempValue) ex
     IntegerMul(f(result), f(val1), f(val2)).assignLocationFrom(this)
 }
 
+/** Adds two floats of the same type */
+case class FloatAdd(result : TempValue, val1 : TempValue, val2 : TempValue) extends Step with NullipotentStep {
+  lazy val inputValues = Set[TempValue](val1, val2)
+  lazy val outputValues = Set[TempValue](result)
+  
+  def renamed(f : (TempValue) => TempValue) = 
+    FloatAdd(f(result), f(val1), f(val2)).assignLocationFrom(this)
+}
+
+/** Subtracts two floats of the same type */
+case class FloatSub(result : TempValue, val1 : TempValue, val2 : TempValue) extends Step with NullipotentStep {
+  lazy val inputValues = Set[TempValue](val1, val2)
+  lazy val outputValues = Set[TempValue](result)
+  
+  def renamed(f : (TempValue) => TempValue) = 
+    FloatSub(f(result), f(val1), f(val2)).assignLocationFrom(this)
+}
+
+/** Multiplies two floats of the same type */
+case class FloatMul(result : TempValue, val1 : TempValue, val2 : TempValue) extends Step with NullipotentStep {
+  lazy val inputValues = Set[TempValue](val1, val2)
+  lazy val outputValues = Set[TempValue](result)
+  
+  def renamed(f : (TempValue) => TempValue) = 
+    FloatMul(f(result), f(val1), f(val2)).assignLocationFrom(this)
+}
+
 object CompareCond {
   sealed abstract class CompareCond
 

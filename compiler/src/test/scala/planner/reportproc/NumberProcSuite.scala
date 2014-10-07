@@ -26,6 +26,14 @@ class NumberProcSuite extends FunSuite with PlanHelpers {
     assertStaticPlan("(+ 56 (+ -3 -3))",
       ast.IntegerLiteral(50)
     )
+    
+    assertStaticPlan("(+ 56.5 -6.5)",
+      ast.FlonumLiteral(50.0)
+    )
+    
+    assertStaticPlan("(+ 100.0 200.0)",
+      ast.FlonumLiteral(300.0)
+    )
   }
   
   test("static (-)") {
@@ -35,6 +43,10 @@ class NumberProcSuite extends FunSuite with PlanHelpers {
     
     assertStaticPlan("(- 200 50)",
       ast.IntegerLiteral(150)
+    )
+    
+    assertStaticPlan("(- 200 50.0)",
+      ast.FlonumLiteral(150.0)
     )
   }
   
@@ -53,6 +65,10 @@ class NumberProcSuite extends FunSuite with PlanHelpers {
     
     assertStaticPlan("(* 5 -6)",
       ast.IntegerLiteral(-30)
+    )
+    
+    assertStaticPlan("(* 0.5 -6)",
+      ast.FlonumLiteral(-3.0)
     )
   }
 

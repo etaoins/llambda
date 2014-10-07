@@ -301,6 +301,13 @@
   (assert-true (eqv? (expt 2 53) 9007199254740992))
 
   ; This is outside the range we can exactly represent
-  (assert-true (eqv? (expt 2 63) 9223372036854775808.0))
- ))
+  (assert-true (eqv? (expt 2 63) 9223372036854775808.0))))
 
+(define-test "typed procedure taking multiple number types" (expect-success
+  (import (llambda typed))
+
+  (: add-nums (-> <flonum> <flonum> <exact-integer> <flonum>))
+  (define (add-nums op1 op2 op3)
+    (+ op1 op2 op3))
+
+  (assert-equal 83.5 (add-nums 100.5 -50.0 33))))

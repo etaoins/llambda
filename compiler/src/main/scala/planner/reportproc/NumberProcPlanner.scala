@@ -9,11 +9,13 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
 
 object NumberProcPlanner extends ReportProcPlanner {
-  private type IntegerInstrBuilder = (ps.TempValue, ps.TempValue, ps.TempValue) => ps.Step
+  private type BinaryInstrBuilder = (ps.TempValue, ps.TempValue, ps.TempValue) => ps.Step
   private type IntegerCompartor = (Long, Long) => Boolean
-  private type StaticResultBuilder = (Long, Long) => Long
-  
+
   private type DoubleCompartor = (Double, Double) => Boolean
+  
+  private type StaticIntegerOp = (Long, Long) => Long
+  private type StaticDoubleOp = (Double, Double) => Double
 
   private sealed abstract class CompareResult
   private case class StaticCompare(result : Boolean) extends CompareResult
@@ -23,7 +25,7 @@ object NumberProcPlanner extends ReportProcPlanner {
   private def compareOperands(state : PlannerState)(
       compareCond : ps.CompareCond.CompareCond,
       staticIntCalc : IntegerCompartor,
-      staticDoubleCalc : DoubleCompartor,
+      staticFlonumCalc : DoubleCompartor,
       val1 : iv.IntermediateValue,
       val2 : iv.IntermediateValue
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : CompareResult = {
@@ -33,15 +35,15 @@ object NumberProcPlanner extends ReportProcPlanner {
         StaticCompare(compareResult)
       
       case (constantFlonum1 : iv.ConstantFlonumValue, constantFlonum2 : iv.ConstantFlonumValue) =>
-        val compareResult = staticDoubleCalc(constantFlonum1.value, constantFlonum2.value)
+        val compareResult = staticFlonumCalc(constantFlonum1.value, constantFlonum2.value)
         StaticCompare(compareResult)
       
       case (constantExactInt1 : iv.ConstantExactIntegerValue, constantFlonum2 : iv.ConstantFlonumValue) =>
-        val compareResult = staticDoubleCalc(constantExactInt1.value.toDouble, constantFlonum2.value)
+        val compareResult = staticFlonumCalc(constantExactInt1.value.toDouble, constantFlonum2.value)
         StaticCompare(compareResult)
       
       case (constantFlonum1 : iv.ConstantFlonumValue, constantExactInt2 : iv.ConstantExactIntegerValue) =>
-        val compareResult = staticDoubleCalc(constantFlonum1.value, constantExactInt2.value.toDouble)
+        val compareResult = staticFlonumCalc(constantFlonum1.value, constantExactInt2.value.toDouble)
         StaticCompare(compareResult)
 
       case (exactInt1, exactInt2) if exactInt1.hasDefiniteType(vt.ExactIntegerType) && exactInt2.hasDefiniteType(vt.ExactIntegerType) =>
@@ -81,7 +83,7 @@ object NumberProcPlanner extends ReportProcPlanner {
   private def compareOperandList(state : PlannerState)(
       compareCond : ps.CompareCond.CompareCond,
       staticIntCalc : IntegerCompartor,
-      staticDoubleCalc : DoubleCompartor,
+      staticFlonumCalc : DoubleCompartor,
       operands : List[iv.IntermediateValue]
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
     // Compare in a fork in case we abort the whole thing later
@@ -89,7 +91,7 @@ object NumberProcPlanner extends ReportProcPlanner {
 
     val pairwiseResults = operands.sliding(2).toList map {
       case List(left, right) =>
-        compareOperands(state)(compareCond, staticIntCalc, staticDoubleCalc, left, right)(comparePlan, worldPtr)
+        compareOperands(state)(compareCond, staticIntCalc, staticFlonumCalc, left, right)(comparePlan, worldPtr)
     }
 
     // Now filter out all the static results
@@ -130,54 +132,86 @@ object NumberProcPlanner extends ReportProcPlanner {
   }
 
   private def performBinaryIntegerOp(state : PlannerState)(
-      instr : IntegerInstrBuilder,
-      staticCalc : StaticResultBuilder,
-      isCommutative : Boolean,
+      intInstr : BinaryInstrBuilder,
+      flonumInstr : BinaryInstrBuilder,
+      staticIntCalc : StaticIntegerOp,
+      staticFlonumCalc : StaticDoubleOp,
       operands : List[iv.IntermediateValue]
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
-    if (!operands.forall(_.hasDefiniteType(vt.ExactIntegerType))) {
-      // Can't fast path this
-      return None
-    }
+    implicit val inlinePlan = plan.forkPlan()
 
-    // Split the list in to constant and non-constant values
-    val constantValues = operands.collect { case constantInt : iv.ConstantExactIntegerValue =>
-      constantInt.value
-    }
+    val resultValue = operands.reduceLeft { (op1 : iv.IntermediateValue, op2 : iv.IntermediateValue) => (op1, op2) match {
+      case (constantInt1 : iv.ConstantExactIntegerValue, constantInt2 : iv.ConstantExactIntegerValue) =>
+        new iv.ConstantExactIntegerValue(staticIntCalc(constantInt1.value, constantInt2.value))
+      
+      case (constantFlonum1 : iv.ConstantFlonumValue, constantFlonum2 : iv.ConstantFlonumValue) =>
+        new iv.ConstantFlonumValue(staticFlonumCalc(constantFlonum1.value, constantFlonum2.value))
+      
+      case (constantInt1 : iv.ConstantExactIntegerValue, constantFlonum2 : iv.ConstantFlonumValue) =>
+        val flonum1 = constantInt1.value.toDouble
+        new iv.ConstantFlonumValue(staticFlonumCalc(flonum1, constantFlonum2.value))
+      
+      case (constantFlonum1 : iv.ConstantFlonumValue, constantInt2 : iv.ConstantExactIntegerValue) =>
+        val flonum2 = constantInt2.value.toDouble
+        new iv.ConstantFlonumValue(staticFlonumCalc(constantFlonum1.value, flonum2))
 
-    val dynamicValues = operands.filterNot(_.isInstanceOf[iv.ConstantExactIntegerValue])
+      case (dynamic1, dynamic2) =>
+        val dynamic1IsInt = dynamic1.hasDefiniteType(vt.ExactIntegerType)
+        val dynamic1IsFlonum = dynamic1.hasDefiniteType(vt.FlonumType)
 
-    val instrOperands = if ((constantValues.length != operands.length) && !isCommutative) {
-      // This operation is non-commutative so we can't re-order our operands
-      operands
-    }
-    else if (constantValues.isEmpty) {
-      // We have no constant values
-      dynamicValues
-    }
-    else {
-      // Calculate the static value
-      val constantValue = constantValues.reduceLeft(staticCalc)
+        val dynamic2IsInt = dynamic2.hasDefiniteType(vt.ExactIntegerType)
+        val dynamic2IsFlonum = dynamic2.hasDefiniteType(vt.FlonumType)
 
-      // Add this to our dynamic values
-      new iv.ConstantExactIntegerValue(constantValue) :: dynamicValues
-    } : List[iv.IntermediateValue]
+        if (!(dynamic1IsInt || dynamic1IsFlonum) || !(dynamic2IsInt || dynamic2IsFlonum)) {
+          // We don't have definite types; abourt
+          return None
+        }
+        else if (dynamic1IsInt && dynamic2IsInt) {
+          // Both integers
+          val intTemp1 = dynamic1.toTempValue(vt.Int64)(inlinePlan, worldPtr)
+          val intTemp2 = dynamic2.toTempValue(vt.Int64)(inlinePlan, worldPtr)
+          val resultTemp = ps.Temp(vt.Int64)
 
-    val finalValue = instrOperands.reduceLeft { (op1, op2) =>
-      val op1Temp = op1.toTempValue(vt.Int64)
-      val op2Temp = op2.toTempValue(vt.Int64)
+          inlinePlan.steps += intInstr(resultTemp, intTemp1, intTemp2) 
+          
+          new iv.NativeExactIntegerValue(resultTemp, vt.Int64)
+        }
+        else {
+          // At least one is a double
+          val doubleTemp1 = if (dynamic1IsFlonum) {
+            dynamic1.toTempValue(vt.Double)(inlinePlan, worldPtr)
+          }
+          else {
+            val intTemp1 = dynamic1.toTempValue(vt.Int64)(inlinePlan, worldPtr)
+            val convertTemp1 = ps.Temp(vt.Double)
+            inlinePlan.steps += ps.ConvertNativeIntegerToFloat(convertTemp1, intTemp1, true, vt.Double)
 
-      val resultTemp = ps.Temp(vt.Int64)
+            convertTemp1
+          }
+          
+          val doubleTemp2 = if (dynamic2IsFlonum) {
+            dynamic2.toTempValue(vt.Double)(inlinePlan, worldPtr)
+          }
+          else {
+            val intTemp2 = dynamic2.toTempValue(vt.Int64)(inlinePlan, worldPtr)
+            val convertTemp2 = ps.Temp(vt.Double)
+            inlinePlan.steps += ps.ConvertNativeIntegerToFloat(convertTemp2, intTemp2, true, vt.Double)
 
-      plan.steps += instr(resultTemp, op1Temp, op2Temp)
+            convertTemp2
+          }
 
-      TempValueToIntermediate(
-        vt.Int64,
-        resultTemp
-      )(plan.config)
-    }
+          val resultTemp = ps.Temp(vt.Double)
+          inlinePlan.steps += flonumInstr(resultTemp, doubleTemp1, doubleTemp2) 
+          
+          new iv.NativeFlonumValue(resultTemp, vt.Double)
+        }
 
-    Some(finalValue)
+    }}
+
+    // We need the inline plan now
+    plan.steps ++= inlinePlan.steps
+
+    Some(resultValue)
   } 
 
   override def planWithValue(state : PlannerState)(
@@ -221,19 +255,43 @@ object NumberProcPlanner extends ReportProcPlanner {
     case ("-", List((_, singleOperand))) =>
       // This is a special case that negates the passed value
       val constantZero = new iv.ConstantExactIntegerValue(0)
-      performBinaryIntegerOp(state)(ps.IntegerSub.apply, _ - _, false, List(constantZero, singleOperand))
+      performBinaryIntegerOp(state)(
+        intInstr=ps.IntegerSub.apply,
+        flonumInstr=ps.FloatSub.apply,
+        staticIntCalc=_ - _,
+        staticFlonumCalc=_ - _,
+        operands=List(constantZero, singleOperand)
+      )
 
     case ("+", multipleOperands) =>
       val operandValues = multipleOperands.map(_._2) 
-      performBinaryIntegerOp(state)(ps.IntegerAdd.apply, _ + _, true, operandValues)
+      performBinaryIntegerOp(state)(
+        intInstr=ps.IntegerAdd.apply,
+        flonumInstr=ps.FloatAdd.apply,
+        staticIntCalc=_ + _,
+        staticFlonumCalc=_ + _,
+        operands=operandValues
+      )
     
     case ("-", multipleOperands) =>
       val operandValues = multipleOperands.map(_._2) 
-      performBinaryIntegerOp(state)(ps.IntegerSub.apply, _ - _, false, operandValues)
+      performBinaryIntegerOp(state)(
+        intInstr=ps.IntegerSub.apply,
+        flonumInstr=ps.FloatSub.apply,
+        staticIntCalc=_ - _,
+        staticFlonumCalc=_ - _,
+        operands=operandValues
+      )
     
     case ("*", multipleOperands) =>
       val operandValues = multipleOperands.map(_._2) 
-      performBinaryIntegerOp(state)(ps.IntegerMul.apply, _ * _, true, operandValues)
+      performBinaryIntegerOp(state)(
+        intInstr=ps.IntegerMul.apply,
+        flonumInstr=ps.FloatMul.apply,
+        staticIntCalc=_ * _,
+        staticFlonumCalc=_ * _,
+        operands=operandValues
+      )
 
     case ("exact", List(singleOperand)) =>
       val singleValue = singleOperand._2

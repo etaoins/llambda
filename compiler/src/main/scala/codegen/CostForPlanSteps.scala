@@ -10,6 +10,8 @@ object CostForPlanSteps {
   private val storeCost = 1L
   /** Cost of a single load from memory */
   private val loadCost = 1L
+  /** Cost of a floating point arithmetic instruction */
+  private val floatMathCost = 2L
   /** Cost of constant cell in the .data segment */
   private val constantCellCost = 2L
   /** Cost of consuming a single cell */
@@ -37,6 +39,9 @@ object CostForPlanSteps {
          _ : ps.Return =>
       // These effectively map 1:1 to assembler instructions
       trivialInstrCost
+
+    case _ : ps.FloatAdd | _ : ps.FloatSub | _ : ps.FloatMul =>
+      floatMathCost
     
     case _ : ps.UnboxValue | _ : ps.LoadPairCar | _ : ps.LoadPairCdr | _ : ps.LoadProcedureEntryPoint |
          _ : ps.LoadVectorLength | _ : ps.LoadRecordLikeData | _ : ps.LoadRecordDataField | _ : ps.LoadVectorElement |

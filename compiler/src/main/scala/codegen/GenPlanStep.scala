@@ -14,6 +14,8 @@ object GenPlanStep {
     WrapBehaviour.NoSignedWrap
   ) : Set[WrapBehaviour]
 
+  private val fastMathFlags = Set[FastMathFlag]()
+
   private def containsAllocatingStep(step : ps.Step) : Boolean = {
     step match {
       case allocating if step.canAllocate => true
@@ -572,7 +574,31 @@ object GenPlanStep {
       val resultIr = state.currentBlock.mul("mulResult")(integerWrapBehaviour, val1Ir, val2Ir)
 
       state.withTempValue(resultTemp -> resultIr)
+    
+    case ps.FloatAdd(resultTemp, val1Temp, val2Temp) =>
+      val val1Ir = state.liveTemps(val1Temp)
+      val val2Ir = state.liveTemps(val2Temp)
 
+      val resultIr = state.currentBlock.fadd("faddResult")(fastMathFlags, val1Ir, val2Ir)
+
+      state.withTempValue(resultTemp -> resultIr)
+    
+    case ps.FloatSub(resultTemp, val1Temp, val2Temp) =>
+      val val1Ir = state.liveTemps(val1Temp)
+      val val2Ir = state.liveTemps(val2Temp)
+
+      val resultIr = state.currentBlock.fsub("fsubResult")(fastMathFlags, val1Ir, val2Ir)
+
+      state.withTempValue(resultTemp -> resultIr)
+    
+    case ps.FloatMul(resultTemp, val1Temp, val2Temp) =>
+      val val1Ir = state.liveTemps(val1Temp)
+      val val2Ir = state.liveTemps(val2Temp)
+
+      val resultIr = state.currentBlock.fmul("fmulResult")(fastMathFlags, val1Ir, val2Ir)
+
+      state.withTempValue(resultTemp -> resultIr)
+    
     case ps.IntegerCompare(resultTemp, compareCond, signed, val1Temp, val2Temp) =>
       val val1Ir = state.liveTemps(val1Temp)
       val val2Ir = state.liveTemps(val2Temp)
