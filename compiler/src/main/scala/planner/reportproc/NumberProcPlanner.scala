@@ -207,12 +207,12 @@ object NumberProcPlanner extends ReportProcPlanner {
     
     case (reportName, List((operandSourceLoc, singleOperand))) if List("+", "*").contains(reportName) =>
       // Make sure the operand is numeric
-      val numericTemp = plan.withContextLocation(operandSourceLoc) {
-        singleOperand.toTempValue(vt.NumberType)
+      val numericValue = plan.withContextLocation(operandSourceLoc) {
+        singleOperand.castToSchemeType(vt.NumberType)
       }
       
       // Return it directly
-      Some(TempValueToIntermediate(vt.NumberType, numericTemp)(plan.config))
+      Some(numericValue)
 
     case ("-", Nil) =>
       // This isn't allowed - let it fail at runtime

@@ -15,6 +15,10 @@ class NumberProcSuite extends FunSuite with PlanHelpers {
       ast.IntegerLiteral(56)
     )
     
+    assertStaticPlan("(+ (+ 66) (+ -10))",
+      ast.IntegerLiteral(56)
+    )
+    
     assertStaticPlan("(+ 56 -6)",
       ast.IntegerLiteral(50)
     )
@@ -40,6 +44,10 @@ class NumberProcSuite extends FunSuite with PlanHelpers {
     )
     
     assertStaticPlan("(* 56)",
+      ast.IntegerLiteral(56)
+    )
+    
+    assertStaticPlan("(* (* 7) (* 8))",
       ast.IntegerLiteral(56)
     )
     
