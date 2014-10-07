@@ -95,6 +95,27 @@ object RuntimeFunctions {
     )
   )
   
+  val isEqvSymbol = "_lliby_is_eqv"
+  val isEqualSymbol = "_lliby_is_equal"
+  
+  val equivalenceProcSignature = ProcedureSignature(
+    hasWorldArg=false,
+    hasSelfArg=false,
+    fixedArgTypes=List(vt.AnySchemeType, vt.AnySchemeType),
+    restArgMemberTypeOpt=None,
+    returnType=vt.ReturnType.SingleValue(vt.Predicate),
+    attributes=Set()
+  )
+  
+  val valueForParameterSignature = ProcedureSignature(
+    hasWorldArg=true,
+    hasSelfArg=true,
+    fixedArgTypes=Nil,
+    restArgMemberTypeOpt=None,
+    returnType=vt.ReturnType.SingleValue(vt.AnySchemeType),
+    attributes=Set()
+  )
+  
   val valueForParameter = IrFunctionDecl(
     result=Result(PointerType(ct.AnyCell.irType)),
     name="_lliby_value_for_parameter",
@@ -105,15 +126,6 @@ object RuntimeFunctions {
     attributes=Set(IrFunction.NoUnwind, IrFunction.ReadOnly)
   )
 
-  val valueForParameterSignature = ProcedureSignature(
-    hasWorldArg=true,
-    hasSelfArg=true,
-    fixedArgTypes=Nil,
-    restArgMemberTypeOpt=None,
-    returnType=vt.ReturnType.SingleValue(vt.AnySchemeType),
-    attributes=Set()
-  )
-  
   val init = IrFunctionDecl(
     result=IrFunction.Result(VoidType),
     name="lliby_init",

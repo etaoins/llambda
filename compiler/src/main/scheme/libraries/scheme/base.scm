@@ -172,9 +172,9 @@
     ; Internal helper types
     (define-type <alist> (Listof <pair>))
     
-    (define-r7rs eqv? (native-function "lliby_is_eqv" (<any> <any>) -> <native-bool>))
+    (define-r7rs eqv? (native-function "_lliby_is_eqv" (<any> <any>) -> <native-bool>))
     (define-r7rs eq? eqv?)
-    (define-r7rs equal? (native-function "lliby_is_equal" (<any> <any>) -> <native-bool>))
+    (define-r7rs equal? (native-function "_lliby_is_equal" (<any> <any>) -> <native-bool>))
 
     (define-r7rs number? (make-predicate <number>))
     ; We only support real and rational numbers

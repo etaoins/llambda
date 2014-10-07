@@ -27,7 +27,8 @@ class KnownUserProc(
   // 
   
   private val correctnessPlanners = List[reportproc.ReportProcPlanner](
-    // This is needed for occurrence typing
+    // These are needed for occurrence typing
+    reportproc.EquivalenceProcPlanner,
     reportproc.NumberPredicateProcPlanner,
     // Planning (values) allows proper type signatures to be extracted
     reportproc.ValuesProcPlanner
@@ -37,7 +38,6 @@ class KnownUserProc(
     reportproc.ApplyProcPlanner,
     reportproc.CadrProcPlanner,
     reportproc.DynamicProcPlanner,
-    reportproc.EquivalenceProcPlanner,
     reportproc.ListProcPlanner,
     reportproc.NumberProcPlanner,
     reportproc.VectorProcPlanner

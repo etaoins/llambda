@@ -29,6 +29,7 @@ add_library(lliby
 	core/World.cpp
 	core/constinstances.cpp
 	core/dynamic.cpp
+	core/eqv.cpp
 	core/error.cpp
 	core/init.cpp
 	core/io.cpp
@@ -45,7 +46,6 @@ add_library(lliby
 	stdlib/char.cpp
 	stdlib/control.cpp
 	stdlib/dynamic.cpp
-	stdlib/eqv.cpp
 	stdlib/exception.cpp
 	stdlib/list.cpp
 	stdlib/number.cpp
