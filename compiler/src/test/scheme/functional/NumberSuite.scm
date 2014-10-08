@@ -303,7 +303,7 @@
   ; This is outside the range we can exactly represent
   (assert-true (eqv? (expt 2 63) 9223372036854775808.0))))
 
-(define-test "typed procedure taking multiple number types" (expect-success
+(define-test "typed procedure adding multiple number types" (expect-success
   (import (llambda typed))
 
   (: add-nums (-> <flonum> <flonum> <exact-integer> <flonum>))
@@ -311,3 +311,30 @@
     (+ op1 op2 op3))
 
   (assert-equal 83.5 (add-nums 100.5 -50.0 33))))
+
+(define-test "typed procedure muliplying multiple number types" (expect-success
+  (import (llambda typed))
+
+  (: mul-nums (-> <flonum> <flonum> <exact-integer> <flonum>))
+  (define (mul-nums op1 op2 op3)
+    (* op1 op2 op3))
+
+  (assert-equal -5.0 (mul-nums -0.25 0.5 40))))
+
+(define-test "typed procedure subtracting multiple number types" (expect-success
+  (import (llambda typed))
+
+  (: sub-nums (-> <flonum> <flonum> <exact-integer> <flonum>))
+  (define (sub-nums op1 op2 op3)
+    (- op1 op2 op3))
+
+  (assert-equal 0.0 (sub-nums 50.0 20.0 30))))
+
+(define-test "typed procedure dividing multiple number types" (expect-success
+  (import (llambda typed))
+
+  (: div-nums (-> <flonum> <flonum> <exact-integer> <flonum>))
+  (define (div-nums op1 op2 op3)
+    (/ op1 op2 op3))
+
+  (assert-equal -5.0 (div-nums 500.0 25.0 -4))))

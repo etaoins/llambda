@@ -131,7 +131,22 @@ object NumberProcPlanner extends ReportProcPlanner {
     Some(new iv.NativePredicateValue(resultPred))
   }
 
-  private def performBinaryIntegerOp(state : PlannerState)(
+  private def numberToDoubleTemp(
+      value : iv.IntermediateValue,
+      isFlonum : Boolean
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue =
+    if (isFlonum) {
+      value.toTempValue(vt.Double)
+    }
+    else {
+      val intTemp = value.toTempValue(vt.Int64)
+      val convertTemp = ps.Temp(vt.Double)
+      plan.steps += ps.ConvertNativeIntegerToFloat(convertTemp, intTemp, true, vt.Double)
+
+      convertTemp
+    }
+
+  private def performBinaryMixedOp(state : PlannerState)(
       intInstr : BinaryInstrBuilder,
       flonumInstr : BinaryInstrBuilder,
       staticIntCalc : StaticIntegerOp,
@@ -163,7 +178,7 @@ object NumberProcPlanner extends ReportProcPlanner {
         val dynamic2IsFlonum = dynamic2.hasDefiniteType(vt.FlonumType)
 
         if (!(dynamic1IsInt || dynamic1IsFlonum) || !(dynamic2IsInt || dynamic2IsFlonum)) {
-          // We don't have definite types; abourt
+          // We don't have definite types; abort
           return None
         }
         else if (dynamic1IsInt && dynamic2IsInt) {
@@ -178,27 +193,8 @@ object NumberProcPlanner extends ReportProcPlanner {
         }
         else {
           // At least one is a double
-          val doubleTemp1 = if (dynamic1IsFlonum) {
-            dynamic1.toTempValue(vt.Double)(inlinePlan, worldPtr)
-          }
-          else {
-            val intTemp1 = dynamic1.toTempValue(vt.Int64)(inlinePlan, worldPtr)
-            val convertTemp1 = ps.Temp(vt.Double)
-            inlinePlan.steps += ps.ConvertNativeIntegerToFloat(convertTemp1, intTemp1, true, vt.Double)
-
-            convertTemp1
-          }
-          
-          val doubleTemp2 = if (dynamic2IsFlonum) {
-            dynamic2.toTempValue(vt.Double)(inlinePlan, worldPtr)
-          }
-          else {
-            val intTemp2 = dynamic2.toTempValue(vt.Int64)(inlinePlan, worldPtr)
-            val convertTemp2 = ps.Temp(vt.Double)
-            inlinePlan.steps += ps.ConvertNativeIntegerToFloat(convertTemp2, intTemp2, true, vt.Double)
-
-            convertTemp2
-          }
+          val doubleTemp1 = numberToDoubleTemp(dynamic1, dynamic1IsFlonum)(inlinePlan, worldPtr)
+          val doubleTemp2 = numberToDoubleTemp(dynamic2, dynamic2IsFlonum)(inlinePlan, worldPtr)
 
           val resultTemp = ps.Temp(vt.Double)
           inlinePlan.steps += flonumInstr(resultTemp, doubleTemp1, doubleTemp2) 
@@ -214,6 +210,44 @@ object NumberProcPlanner extends ReportProcPlanner {
     Some(resultValue)
   } 
 
+  private def performBinaryFlonumOp(state : PlannerState)(
+      instr : BinaryInstrBuilder,
+      staticCalc : StaticDoubleOp,
+      operands : List[iv.IntermediateValue]
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
+    implicit val inlinePlan = plan.forkPlan()
+
+    val resultValue = operands.reduceLeft { (op1 : iv.IntermediateValue, op2 : iv.IntermediateValue) => (op1, op2) match {
+      case (constant1 : iv.ConstantNumberValue, constant2 : iv.ConstantNumberValue) =>
+        new iv.ConstantFlonumValue(staticCalc(constant1.doubleValue, constant2.doubleValue))
+
+      case (dynamic1, dynamic2) =>
+        val dynamic1IsInt = dynamic1.hasDefiniteType(vt.ExactIntegerType)
+        val dynamic1IsFlonum = dynamic1.hasDefiniteType(vt.FlonumType)
+
+        val dynamic2IsInt = dynamic2.hasDefiniteType(vt.ExactIntegerType)
+        val dynamic2IsFlonum = dynamic2.hasDefiniteType(vt.FlonumType)
+
+        if (!(dynamic1IsInt || dynamic1IsFlonum) || !(dynamic2IsInt || dynamic2IsFlonum)) {
+          // We don't have definite types; abort
+          return None
+        }
+        else {
+          val doubleTemp1 = numberToDoubleTemp(dynamic1, dynamic1IsFlonum)(inlinePlan, worldPtr)
+          val doubleTemp2 = numberToDoubleTemp(dynamic2, dynamic2IsFlonum)(inlinePlan, worldPtr)
+
+          val resultTemp = ps.Temp(vt.Double)
+          inlinePlan.steps += instr(resultTemp, doubleTemp1, doubleTemp2) 
+          
+          new iv.NativeFlonumValue(resultTemp, vt.Double)
+        }
+    }}
+
+    // We need the inline plan now
+    plan.steps ++= inlinePlan.steps
+
+    Some(resultValue)
+  } 
   override def planWithValue(state : PlannerState)(
       reportName : String,
       operands : List[(ContextLocated, iv.IntermediateValue)]
@@ -248,6 +282,16 @@ object NumberProcPlanner extends ReportProcPlanner {
       // Return it directly
       Some(numericValue)
 
+    case ("+", multipleOperands) =>
+      val operandValues = multipleOperands.map(_._2) 
+      performBinaryMixedOp(state)(
+        intInstr=ps.IntegerAdd.apply,
+        flonumInstr=ps.FloatAdd.apply,
+        staticIntCalc=_ + _,
+        staticFlonumCalc=_ + _,
+        operands=operandValues
+      )
+
     case ("-", Nil) =>
       // This isn't allowed - let it fail at runtime
       None
@@ -255,27 +299,17 @@ object NumberProcPlanner extends ReportProcPlanner {
     case ("-", List((_, singleOperand))) =>
       // This is a special case that negates the passed value
       val constantZero = new iv.ConstantExactIntegerValue(0)
-      performBinaryIntegerOp(state)(
+      performBinaryMixedOp(state)(
         intInstr=ps.IntegerSub.apply,
         flonumInstr=ps.FloatSub.apply,
         staticIntCalc=_ - _,
         staticFlonumCalc=_ - _,
         operands=List(constantZero, singleOperand)
       )
-
-    case ("+", multipleOperands) =>
-      val operandValues = multipleOperands.map(_._2) 
-      performBinaryIntegerOp(state)(
-        intInstr=ps.IntegerAdd.apply,
-        flonumInstr=ps.FloatAdd.apply,
-        staticIntCalc=_ + _,
-        staticFlonumCalc=_ + _,
-        operands=operandValues
-      )
     
     case ("-", multipleOperands) =>
       val operandValues = multipleOperands.map(_._2) 
-      performBinaryIntegerOp(state)(
+      performBinaryMixedOp(state)(
         intInstr=ps.IntegerSub.apply,
         flonumInstr=ps.FloatSub.apply,
         staticIntCalc=_ - _,
@@ -285,11 +319,32 @@ object NumberProcPlanner extends ReportProcPlanner {
     
     case ("*", multipleOperands) =>
       val operandValues = multipleOperands.map(_._2) 
-      performBinaryIntegerOp(state)(
+      performBinaryMixedOp(state)(
         intInstr=ps.IntegerMul.apply,
         flonumInstr=ps.FloatMul.apply,
         staticIntCalc=_ * _,
         staticFlonumCalc=_ * _,
+        operands=operandValues
+      )
+    
+    case ("/", Nil) =>
+      // This isn't allowed - let it fail at runtime
+      None
+    
+    case ("/", List((_, singleOperand))) =>
+      // This is a special case that negates the passed value
+      val constantZero = new iv.ConstantFlonumValue(1.0)
+      performBinaryFlonumOp(state)(
+        instr=ps.FloatDiv.apply,
+        staticCalc=_ / _,
+        operands=List(constantZero, singleOperand)
+      )
+    
+    case ("/", multipleOperands) =>
+      val operandValues = multipleOperands.map(_._2) 
+      performBinaryFlonumOp(state)(
+        instr=ps.FloatDiv.apply,
+        staticCalc=_ / _,
         operands=operandValues
       )
 

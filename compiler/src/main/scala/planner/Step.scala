@@ -955,6 +955,15 @@ case class FloatMul(result : TempValue, val1 : TempValue, val2 : TempValue) exte
     FloatMul(f(result), f(val1), f(val2)).assignLocationFrom(this)
 }
 
+/** Divides two floats of the same type */
+case class FloatDiv(result : TempValue, val1 : TempValue, val2 : TempValue) extends Step with NullipotentStep {
+  lazy val inputValues = Set[TempValue](val1, val2)
+  lazy val outputValues = Set[TempValue](result)
+  
+  def renamed(f : (TempValue) => TempValue) = 
+    FloatDiv(f(result), f(val1), f(val2)).assignLocationFrom(this)
+}
+
 object CompareCond {
   sealed abstract class CompareCond
 

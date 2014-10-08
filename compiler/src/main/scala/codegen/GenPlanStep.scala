@@ -585,6 +585,14 @@ object GenPlanStep {
 
       state.withTempValue(resultTemp -> resultIr)
     
+    case ps.FloatDiv(resultTemp, val1Temp, val2Temp) =>
+      val val1Ir = state.liveTemps(val1Temp)
+      val val2Ir = state.liveTemps(val2Temp)
+
+      val resultIr = state.currentBlock.fdiv("fdivResult")(fastMathFlags, val1Ir, val2Ir)
+
+      state.withTempValue(resultTemp -> resultIr)
+    
     case ps.IntegerCompare(resultTemp, compareCond, signed, val1Temp, val2Temp) =>
       val val1Ir = state.liveTemps(val1Temp)
       val val2Ir = state.liveTemps(val2Temp)

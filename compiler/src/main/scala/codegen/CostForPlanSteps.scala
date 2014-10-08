@@ -40,7 +40,7 @@ object CostForPlanSteps {
       // These effectively map 1:1 to assembler instructions
       trivialInstrCost
 
-    case _ : ps.FloatAdd | _ : ps.FloatSub | _ : ps.FloatMul =>
+    case _ : ps.FloatAdd | _ : ps.FloatSub | _ : ps.FloatMul | _ : ps.FloatDiv =>
       floatMathCost
     
     case _ : ps.UnboxValue | _ : ps.LoadPairCar | _ : ps.LoadPairCdr | _ : ps.LoadProcedureEntryPoint |

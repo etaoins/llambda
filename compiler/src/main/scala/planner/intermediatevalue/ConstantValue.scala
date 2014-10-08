@@ -35,7 +35,11 @@ class ConstantSymbolValue(val value : String) extends TrivialConstantValue(ct.Sy
   val typeDescription = "constant symbol"
 }
 
-class ConstantExactIntegerValue(val value : Long) extends TrivialConstantValue(ct.ExactIntegerCell, value, ps.CreateExactIntegerCell.apply) {
+trait ConstantNumberValue extends ConstantValue {
+  def doubleValue : Double
+}
+
+class ConstantExactIntegerValue(val value : Long) extends TrivialConstantValue(ct.ExactIntegerCell, value, ps.CreateExactIntegerCell.apply) with ConstantNumberValue {
   val typeDescription = "constant exact integer"
   
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = nativeType match {
@@ -72,9 +76,12 @@ class ConstantExactIntegerValue(val value : Long) extends TrivialConstantValue(c
   
   override def preferredRepresentation : vt.ValueType =
     vt.Int64
+
+  def doubleValue : Double =
+    value.toDouble
 }
 
-class ConstantFlonumValue(val value : Double) extends TrivialConstantValue(ct.FlonumCell, value, ps.CreateFlonumCell.apply) {
+class ConstantFlonumValue(val value : Double) extends TrivialConstantValue(ct.FlonumCell, value, ps.CreateFlonumCell.apply) with ConstantNumberValue {
   val typeDescription = "constant flonum"
 
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = nativeType match {
@@ -92,6 +99,9 @@ class ConstantFlonumValue(val value : Double) extends TrivialConstantValue(ct.Fl
   
   override def preferredRepresentation : vt.ValueType =
     vt.Double
+
+  def doubleValue : Double =
+    value
 }
 
 class ConstantCharValue(val value : Char) extends TrivialConstantValue(ct.CharCell, value, ps.CreateCharCell.apply) {
