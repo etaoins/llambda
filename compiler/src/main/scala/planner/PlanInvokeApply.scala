@@ -33,16 +33,15 @@ object PlanInvokeApply {
     }
     
     val argTemps = worldTemps ++ selfTemps ++ fixedTemps ++ restTemps
-    val invokeArgs = argTemps.toList.map(ps.InvokeArgument(_))
 
     signature.returnType match {
       case vt.ReturnType.SingleValue(vt.UnitType) =>
-        plan.steps += ps.Invoke(None, signature, entryPointTemp, invokeArgs)
+        plan.steps += ps.Invoke(None, signature, entryPointTemp, argTemps)
         SingleValue(iv.UnitValue)
 
       case otherType =>
         val resultTemp = ps.Temp(otherType.representationTypeOpt.get)
-        plan.steps += ps.Invoke(Some(resultTemp), signature, entryPointTemp, invokeArgs)
+        plan.steps += ps.Invoke(Some(resultTemp), signature, entryPointTemp, argTemps)
 
         TempValueToResults(otherType, resultTemp)
     }

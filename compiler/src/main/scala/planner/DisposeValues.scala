@@ -9,18 +9,30 @@ import io.llambda.compiler.planner.{step => ps}
   * on generated code for non-GC managed values.
   */
 object DisposeValues {
+  private def disposeValuesToSteps(toDispose : Set[ps.TempValue]) : List[ps.Step] = if (toDispose.isEmpty) {
+    Nil
+  }
+  else {
+    List(ps.DisposeValues(toDispose))
+  }
+
   /**  Iterates over a branch in reverse order discarding values on their last use
     *
     * @param  branchInputValues  Input values to the branch. For a procedure these are the procedure's arguments.
     *                            For conditional branches these will be the values in the test. These are discarded at
     *                            the top of the branch if they're unused.
-    * @param  branchSteps        Branch steps in reverse order
+    * @param  reverseSteps       Branch steps in reverse order
     * @param  usedValues         Values used at this point in the branch. This set grows as the branch is scanned in
     *                            reverse order
     * @param  acc                Result accumulator for tail call optmization
     * @return  List of new branch steps in forward order
     */
-  private def discardUnusedValues(branchInputValues : Set[ps.TempValue], reverseSteps : List[ps.Step], usedValues : Set[ps.TempValue], acc : List[ps.Step]) : List[ps.Step] = reverseSteps match {
+  private def discardUnusedValues(
+      branchInputValues : Set[ps.TempValue],
+      reverseSteps : List[ps.Step],
+      usedValues : Set[ps.TempValue],
+      acc : List[ps.Step]
+  ) : List[ps.Step] = reverseSteps match {
     case (nestingStep : ps.NestingStep) :: reverseTail =>
       // Determine which input values are no longer used
       val unusedInputValues = nestingStep.outerInputValues.filter(!usedValues.contains(_))
@@ -28,67 +40,46 @@ object DisposeValues {
       // Step to dispose the result outputs if they're unused
       // This will be placed after the step itself
       val unusedOutputValues = nestingStep.outputValues.filter(!usedValues.contains(_))
-      val disposeOutputSteps = unusedOutputValues.toList.map { unusedValue =>
-        ps.DisposeValue(unusedValue)
-      }
+
+      // Which branch results are from outside the branch and are no longer used?
+      val unusedBranchResults = nestingStep.innerBranches.filter({ case (steps, branchResult) =>
+        !usedValues.contains(branchResult) && !steps.exists(_.outputValues.contains(branchResult))
+      }).map(_._2).toSet
+
+      val disposeSteps = disposeValuesToSteps(unusedOutputValues ++ unusedBranchResults)
 
       // Recurse down the branches
       val newStep = nestingStep.mapInnerBranches { (branchSteps, outputValue) =>
         // Pass the unused input values as argument values
         // If they're not used within the branch they'll be disposed at the top of it
-        (discardUnusedValues(unusedInputValues, branchSteps.reverse, usedValues + outputValue, Nil), outputValue)
+        val allInputValues = unusedInputValues ++ unusedBranchResults
+        (discardUnusedValues(allInputValues, branchSteps.reverse, usedValues + outputValue, Nil), outputValue)
       }
 
       val newUsedValues = nestingStep.inputValues ++ usedValues 
 
-      val newAcc = newStep :: (disposeOutputSteps ++ acc)
+      val newAcc = newStep :: (disposeSteps ++ acc)
       discardUnusedValues(branchInputValues, reverseTail, newUsedValues, newAcc)
-
-    case (invoke @ ps.Invoke(resultOption, signature, entryPoint, arguments)) :: reverseTail =>
-      val disposeResultOption = resultOption match { 
-        case Some(result) if !usedValues.contains(result) =>
-          Some(ps.DisposeValue(result))
-
-        case _ =>
-          None
-      }
-
-      val newArguments = arguments.map { argument =>
-        // Arguments have be disposed inside the invoke
-        // If they were disposed before there would be no way to reference them
-        val shouldDispose = !usedValues.contains(argument.tempValue)
-
-        argument.copy(dispose=shouldDispose)
-      }
-
-      val newUsedValues = invoke.inputValues ++ usedValues
-      val newInvoke = ps.Invoke(resultOption, signature, entryPoint, newArguments).assignLocationFrom(invoke)
-
-      val newAcc = newInvoke :: (disposeResultOption.toList ++ acc)
-      discardUnusedValues(branchInputValues, reverseTail, newUsedValues, newAcc) 
 
     case (disposableStep : ps.NullipotentStep) :: reverseTail if !usedValues.contains(disposableStep.result) =>
       // We can drop this step completely
       discardUnusedValues(branchInputValues, reverseTail, usedValues, acc)
     
-    case (valueDisposable : ps.ValueDisposableStep) :: reverseTail =>
-      // If this is the last use of any of the input or output values they should be discarded
-      val allStepValues = valueDisposable.inputValues ++ valueDisposable.outputValues
-      val disposeSet = allStepValues -- usedValues
+    case (inputDisposable : ps.InputDisposableStep) :: reverseTail =>
+      // If this is the last use of any of the input values they should be discarded as part of the step
+      val inputDisposeSet = inputDisposable.inputValues -- usedValues
+      // Any unused output values should be discarded as normal 
+      val outputDisposeSteps = disposeValuesToSteps(inputDisposable.outputValues -- usedValues)
 
       // All the input values are now used
-      val newUsedValues = usedValues ++ valueDisposable.inputValues
+      val newUsedValues = usedValues ++ inputDisposable.inputValues
 
-      val newAcc = valueDisposable.withDisposedValues(disposeSet) :: acc
+      val newAcc = inputDisposable.withDisposedInput(inputDisposeSet) :: (outputDisposeSteps ++ acc)
       discardUnusedValues(branchInputValues, reverseTail, newUsedValues, newAcc)
 
     case nonBranching :: reverseTail =>
       val allStepValues = nonBranching.inputValues ++ nonBranching.outputValues
-
-      val disposeList = (allStepValues -- usedValues).toList.map { value =>
-        ps.DisposeValue(value)
-      }
-
+      val disposeList = disposeValuesToSteps(allStepValues -- usedValues) 
       val newUsedValues = usedValues ++ nonBranching.inputValues
 
       val newAcc = nonBranching :: (disposeList ++ acc)
@@ -97,9 +88,7 @@ object DisposeValues {
     case Nil =>
       // We've reached the top of the branch
       // Dispose all unused branch input values
-      val disposeList = (branchInputValues -- usedValues).toList.map { value =>
-        ps.DisposeValue(value) 
-      }
+      val disposeList = disposeValuesToSteps(branchInputValues -- usedValues) 
 
       disposeList ++ acc
   }

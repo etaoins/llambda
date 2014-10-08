@@ -94,13 +94,14 @@ sealed trait CellConsumer extends Step {
   val allocSize : Int
 }
 
-/** Step that dispose its input or ouput values as part of the step 
+/** Step that dispose its input values as part of the step 
   *
-  * Steps implementing this must be able to dispose all of their input values
+  * This is typically used for steps that are GC barriers so they can avoid rooting input values that will be unused
+  * after the step completets
   */
-sealed trait ValueDisposableStep extends Step {
-  def valuesToDispose : Set[TempValue]
-  def withDisposedValues(valuesToDispose : Set[TempValue]) : ValueDisposableStep
+sealed trait InputDisposableStep extends Step {
+  def inputToDispose : Set[TempValue]
+  def withDisposedInput(inputToDispose : Set[TempValue]) : InputDisposableStep
 }
 
 /** Step producing a value that can be disposed or merged with identical instances of itself
@@ -155,21 +156,6 @@ sealed trait AssertStep extends IdempotentStep {
   val result = DisposableStep.PlaceholderResultTemp
 }
 
-/** Argument passed to invoke
-  *
-  * @param  tempValue  Value to pass as the argument
-  * @param  dispose    If true the value is disposed after being passed to the procedure. This effectively transfers
-  *                    ownership of the value to the procedure and avoids the overhead of GC rooting the value by the
-  *                    caller.
-  */
-case class InvokeArgument(
-  tempValue : TempValue,
-  dispose : Boolean = false
-) {
-  def renamed(f : (TempValue) => TempValue) = 
-    InvokeArgument(f(tempValue), dispose)
-}
-
 sealed trait InvokeLike extends Step {
   val signature : ProcedureSignature
 
@@ -181,16 +167,26 @@ sealed trait InvokeLike extends Step {
   *
   * Entry points can be loaded with CreateNamedEntryPoint
   */
-case class Invoke(result : Option[TempValue], signature : ProcedureSignature, entryPoint : TempValue, arguments : List[InvokeArgument]) extends InvokeLike {
-  lazy val inputValues = arguments.map(_.tempValue).toSet + entryPoint
+case class Invoke(
+    result : Option[TempValue],
+    signature : ProcedureSignature,
+    entryPoint : TempValue,
+    arguments : List[TempValue],
+    inputToDispose : Set[TempValue] = Set()
+) extends InvokeLike with InputDisposableStep {
+  lazy val inputValues = arguments.toSet + entryPoint
   lazy val outputValues = result.toSet
+    
+  def withDisposedInput(values : Set[TempValue]) =
+    this.copy(inputToDispose=values).assignLocationFrom(this)
 
   def renamed(f : (TempValue) => TempValue) = 
     Invoke(
       result=result.map(f),
       signature=signature,
       entryPoint=f(entryPoint),
-      arguments=arguments.map(_.renamed(f))
+      arguments=arguments.map(f),
+      inputToDispose=inputToDispose
     ).assignLocationFrom(this)
 }
 
@@ -222,15 +218,15 @@ case class AllocateCells(worldPtr : WorldPtrValue, count : Int) extends Step {
 
 /** Permanently forgets about a temp value
   *
-  * Referencing a TempValue after DisposeValue has been called will fail at compile time. Disposing a GC managed value
+  * Referencing a TempValue after DisposeValues has been called will fail at compile time. Disposing a GC managed value
   * will allow it to be garbage collected at the next allocaion if there are no other references to it
   */
-case class DisposeValue(value : TempValue) extends Step {
-  lazy val inputValues = Set[TempValue](value)
+case class DisposeValues(values : Set[TempValue]) extends Step {
+  lazy val inputValues = values
   val outputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =
-    DisposeValue(f(value)).assignLocationFrom(this)
+    DisposeValues(values.map(f)).assignLocationFrom(this)
 }
 
 /** Conditionally branches based on a value 
@@ -828,15 +824,15 @@ case class CreateParameterProc(
     result : TempValue,
     initialValue : TempValue,
     converterProcOpt : Option[TempValue],
-    valuesToDispose : Set[TempValue] = Set()
-) extends Step with ValueDisposableStep {
+    inputToDispose : Set[TempValue] = Set()
+) extends Step with InputDisposableStep {
   lazy val inputValues = Set(worldPtr, initialValue) ++ converterProcOpt.toSet
   lazy val outputValues = Set(result)
   
   override def canAllocate = true
 
-  def withDisposedValues(values : Set[TempValue]) =
-    this.copy(valuesToDispose=values).assignLocationFrom(this)
+  def withDisposedInput(values : Set[TempValue]) =
+    this.copy(inputToDispose=values).assignLocationFrom(this)
 
   def renamed(f : (TempValue) => TempValue) =
     CreateParameterProc(
@@ -844,7 +840,7 @@ case class CreateParameterProc(
       f(result),
       f(initialValue),
       converterProcOpt.map(f),
-      valuesToDispose
+      inputToDispose
     ).assignLocationFrom(this)
 }
 

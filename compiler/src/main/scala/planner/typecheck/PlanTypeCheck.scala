@@ -382,7 +382,7 @@ object PlanTypeCheck {
             result=Some(resultPredTemp),
             signature=signature,
             entryPoint=entryPointTemp,
-            arguments=List(ps.InvokeArgument(datumValueTemp))
+            arguments=List(datumValueTemp)
           )
 
           DynamicResult(resultPredTemp) 

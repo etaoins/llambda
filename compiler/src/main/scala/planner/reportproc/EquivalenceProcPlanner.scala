@@ -88,7 +88,7 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
     val entryPointTemp = ps.EntryPointTemp()
     val resultTemp = ps.Temp(vt.Predicate)
 
-    val invokeArgs = List(val1Temp, val2Temp).map(ps.InvokeArgument(_))
+    val invokeArgs = List(val1Temp, val2Temp)
 
     plan.steps += ps.CreateNamedEntryPoint(entryPointTemp, signature, runtimeCompareSymbol)
     plan.steps += ps.Invoke(Some(resultTemp), signature, entryPointTemp, invokeArgs)

@@ -58,15 +58,6 @@ object GenPlanStep {
     case ps.CompareCond.LessThan => FComparisonCond.OrderedLessThan
     case ps.CompareCond.LessThanEqual => FComparisonCond.OrderedLessThanEqual
   }
-
-  private def genValueDisposingStep(state : GenerationState)(
-      valueDisposable : ps.ValueDisposableStep,
-      block : GenerationState => GenerationState
-  ) : GenerationState = {
-    // Dispose any input values before planning the step
-    val inputDisposedState = state.withDisposedValues(valueDisposable.valuesToDispose)
-    block(inputDisposedState).withDisposedValues(valueDisposable.valuesToDispose)
-  }
   
   def apply(state : GenerationState, genGlobals : GenGlobals)(step : ps.Step) : GenResult = {
     genGlobals.debugInfoGeneratorOpt match {
@@ -288,17 +279,12 @@ object GenPlanStep {
           ).withTempValue(resultTemp -> phiResultIr)
       }
       
-    case invokeStep @ ps.Invoke(resultOpt, signature, funcPtrTemp, arguments) =>
+    case invokeStep @ ps.Invoke(resultOpt, signature, funcPtrTemp, arguments, inputToDispose) =>
       val irSignature = ProcedureSignatureToIr(signature)
       val irFuncPtr = state.liveTemps(funcPtrTemp)
-      val irArguments = arguments.map { argument =>
-        state.liveTemps(argument.tempValue)
-      }
+      val irArguments = arguments.map(state.liveTemps)
 
-      // Dispose of arguments before our barrier
-      // This prevents us from GC rooting them needlessly
-      val disposedArgTemps = arguments.filter(_.dispose).map(_.tempValue).toSet
-      val preBarrierState = state.withDisposedValues(disposedArgTemps)
+      val preBarrierState = state.withDisposedValues(inputToDispose)
 
       val (finalState, irRetOpt) = if (invokeStep.canAllocate) {
         if (signature.attributes.contains(ProcedureAttribute.NoReturn)) {
@@ -518,9 +504,9 @@ object GenPlanStep {
 
       state
 
-    case ps.DisposeValue(disposedTemp) =>
+    case ps.DisposeValues(disposedTemps) =>
       state.copy(
-        liveTemps=state.liveTemps - disposedTemp
+        liveTemps=state.liveTemps -- disposedTemps
       )
 
     case pushDynamic : ps.PushDynamicState =>
@@ -529,20 +515,20 @@ object GenPlanStep {
     case popDynamic : ps.PopDynamicState =>
       GenParameter.genPopDynamicState(state)(popDynamic)
 
-    case disposeStep @ ps.CreateParameterProc(worldPtrTemp, resultTemp, initialValueTemp, converterProcTempOpt, _) =>
+    case ps.CreateParameterProc(worldPtrTemp, resultTemp, initialValueTemp, converterProcTempOpt, inputToDispose) =>
       val worldPtrIr = state.liveTemps(worldPtrTemp)
       val initialValueIr = state.liveTemps(initialValueTemp)
       val converterProcOptIr = converterProcTempOpt.map(state.liveTemps)
 
-      genValueDisposingStep(state)(disposeStep, { state =>
-        val (postProcState, resultIr) = GenParameter.genCreateParameterProc(state)(
-          worldPtrIr,
-          initialValueIr,
-          converterProcOptIr
-        ) 
+      val disposedState = state.withDisposedValues(inputToDispose)
 
-        postProcState.withTempValue(resultTemp -> resultIr)
-      })
+      val (postProcState, resultIr) = GenParameter.genCreateParameterProc(disposedState)(
+        worldPtrIr,
+        initialValueIr,
+        converterProcOptIr
+      ) 
+
+      postProcState.withTempValue(resultTemp -> resultIr)
 
     case ps.LoadValueForParameterProc(worldPtrTemp, resultTemp, parameterProcTemp) =>
       val worldPtrIr = state.liveTemps(worldPtrTemp)

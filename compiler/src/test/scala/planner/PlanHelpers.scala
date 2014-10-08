@@ -57,7 +57,7 @@ trait PlanHelpers extends FunSuite with Inside {
       // This doesn't produce machine code and will be used to convert our result to %datum* to pass to (exit)
       false
 
-    case _ : ps.DisposeValue =>
+    case _ : ps.DisposeValues =>
       // This doesn't produce machine code
       false
 

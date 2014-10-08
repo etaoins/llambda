@@ -22,7 +22,7 @@ object CostForPlanSteps {
   private val functionCallCost = 10L
 
   private def costForStep(step : ps.Step) : Long = step match {
-    case _ : ps.DisposeValue | _ : ps.ConvertNativeInteger | _ : ps.CreateNamedEntryPoint | _ : ps.CreateBooleanCell |
+    case _ : ps.DisposeValues | _ : ps.ConvertNativeInteger | _ : ps.CreateNamedEntryPoint | _ : ps.CreateBooleanCell |
          _ : ps.CreateEmptyListCell | _ : ps.CreateUnitCell | _ : ps.CastCellToTypeUnchecked =>
       // These typically don't generate any asembler
       0L
