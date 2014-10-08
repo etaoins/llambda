@@ -4,18 +4,28 @@ import io.llambda
 import io.llambda.compiler.planner.{step => ps}
 
 /** Inserts AllocateCell steps to satisfy the allocations for cell consumers 
- *
- * This should be the very final pass after planning and conniving
- */ 
+  *
+  * This should be the very final pass after planning and conniving
+  */ 
 object PlanCellAllocations {
-  // Only returns an allocation step if we require more than zero cells
-  // Allocating zero cells is actually handled properly by codegen but it's nice to omit them in case a human is
-  // examining raw planner output
-  private def allocCellSteps(requiredCells : Int)(implicit worldPtr : ps.WorldPtrValue) = if (requiredCells > 0) {
-    List(ps.AllocateCells(worldPtr, requiredCells))
-  }
-  else {
-    Nil
+  /** Prepends an allocation step to the front of the accumulator step 
+    *
+    * This takes care to allow a DisposeValues step to happen before the AllocateCells to reduce GC pressure
+    */
+  private def prependAllocStep(
+      requiredCells : Int,
+      acc : List[ps.Step]
+  )(implicit worldPtr : ps.WorldPtrValue) = acc match {
+    case _ if requiredCells == 0 =>
+      // We don't need this step at all
+      acc
+
+    case (disposeStep : ps.DisposeValues) :: accTail =>
+      // Dispose values before allocating so we don't need to root them across the allocation 
+      disposeStep :: ps.AllocateCells(worldPtr, requiredCells) :: accTail
+
+    case otherAcc =>
+      ps.AllocateCells(worldPtr, requiredCells) :: otherAcc 
   }
 
   /** Returns true if a step can either consume or allocate cells
@@ -35,14 +45,14 @@ object PlanCellAllocations {
 
   private def placeCellAllocations(reverseSteps : List[ps.Step], requiredCells : Int, acc : List[ps.Step])(implicit worldPtr : ps.WorldPtrValue) : List[ps.Step] = reverseSteps match {
     case (consumer : ps.CellConsumer) :: reverseTail =>
-      // Add the consumer's cell count to our required cells and keep processing
+      // Increment the cell count and keep processing
       val newAcc = consumer :: acc
-      placeCellAllocations(reverseTail, requiredCells + consumer.allocSize, newAcc)
+      placeCellAllocations(reverseTail, requiredCells + 1, newAcc)
 
-    case allocatingStep :: reverseTail if allocatingStep.canAllocate =>
+    case barrierStep :: reverseTail if barrierStep.canAllocate =>
       // This is a GC barrier - allocations can't cross this
       // Make our allocation step and then keep processing after resetting our required cell count accumulator
-      val newAcc = allocatingStep :: (allocCellSteps(requiredCells) ++ acc)
+      val newAcc = barrierStep :: prependAllocStep(requiredCells, acc)
       placeCellAllocations(reverseTail, 0, newAcc) 
 
     case (nestingStep : ps.NestingStep) :: reverseTail if stepConsumesOrAllocates(nestingStep) =>
@@ -52,7 +62,7 @@ object PlanCellAllocations {
       }
 
       // Treat this as a GC barrier for now
-      val newAcc = newNestingStep :: (allocCellSteps(requiredCells) ++  acc)
+      val newAcc = newNestingStep :: prependAllocStep(requiredCells, acc)
       placeCellAllocations(reverseTail, 0, newAcc) 
 
     case otherStep :: reverseTail =>
@@ -63,7 +73,7 @@ object PlanCellAllocations {
 
     case Nil =>
       // We've reached the top of the branch - allocate any cells we need and terminate
-      allocCellSteps(requiredCells) ++ acc
+      prependAllocStep(requiredCells, acc)
   }
 
   def apply(function : PlannedFunction) : PlannedFunction = function.worldPtrOpt match {

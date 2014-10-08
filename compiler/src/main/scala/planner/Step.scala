@@ -90,9 +90,7 @@ sealed trait NestingStep extends Step {
 }
 
 /** Step requiring a cell from a temporary allocation */
-sealed trait CellConsumer extends Step {
-  val allocSize : Int
-}
+sealed trait CellConsumer extends Step
 
 /** Step that dispose its input values as part of the step 
   *
@@ -554,8 +552,6 @@ case class InitVector(
     elementsResult : TempValue,
     length : TempValue
 ) extends Step with CellConsumer {
-  val allocSize = 1
-
   lazy val inputValues = Set(length)
   lazy val outputValues = Set(vectorResult, elementsResult)
 
@@ -640,8 +636,6 @@ case class BoxBoolean(result : TempValue, unboxed : TempValue) extends BoxValue 
 }
 
 case class BoxExactInteger(result : TempValue, unboxed : TempValue) extends BoxValue with CellConsumer {
-  val allocSize = 1
-
   lazy val inputValues = Set(unboxed)
   
   def renamed(f : (TempValue) => TempValue) =
@@ -649,8 +643,6 @@ case class BoxExactInteger(result : TempValue, unboxed : TempValue) extends BoxV
 }
 
 case class BoxFlonum(result : TempValue, unboxed : TempValue) extends BoxValue with CellConsumer {
-  val allocSize = 1
-  
   lazy val inputValues = Set(unboxed)
   
   def renamed(f : (TempValue) => TempValue) =
@@ -658,8 +650,6 @@ case class BoxFlonum(result : TempValue, unboxed : TempValue) extends BoxValue w
 }
 
 case class BoxChar(result : TempValue, unboxed : TempValue) extends BoxValue with CellConsumer {
-  val allocSize = 1
-  
   lazy val inputValues = Set(unboxed)
   
   def renamed(f : (TempValue) => TempValue) =
@@ -680,8 +670,6 @@ case class Return(returnValue : Option[TempValue]) extends Step {
   * SetPairCar and SetPairCdr must be called on the new pair before it is accessed or the next GC barrier
   */
 case class InitPair(result : TempValue, listLengthOpt : Option[Int] = None) extends Step with CellConsumer {
-  val allocSize = 1
-
   val inputValues = Set[TempValue]()
   lazy val outputValues = Set(result)
 
@@ -729,8 +717,6 @@ case class SetPairCdr(pairValue : TempValue, newValue : TempValue) extends Step 
  *                     AssertRecordLikeDefined. This is used in the implementation of recursive values
  */
 case class InitRecordLike(cellResult : TempValue, dataResult : TempValue, recordLikeType : vt.RecordLikeType, isUndefined : Boolean) extends Step with CellConsumer {
-  val allocSize = 1
-
   val inputValues = Set[TempValue]()
   val outputValues = Set(cellResult, dataResult)
   
