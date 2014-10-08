@@ -60,7 +60,7 @@ class CondExpanderSuite extends FunSuite {
     assert(data === Nil)
   }
   
-  test("else clause fallaback no conditions match") {
+  test("else clause fallback no conditions match") {
     val data = expansionFor(
       List(
         """(this-is-not-a-feature 1 2 3)""",
