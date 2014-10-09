@@ -125,16 +125,31 @@ object ListProcPlanner extends ReportProcPlanner {
       Some(iv.UnitValue)
 
     case ("cons", List((_, carValue), (_, cdrValue))) =>
-      val pairTemp = ps.CellTemp(ct.PairCell)
+      Some(ValuesToPair(carValue, cdrValue, None))
+    
+    case ("append", operands) =>
+      val (listOperands, terminator) = operands.map(_._2).reverse match {
+        case Nil =>
+          // No arguments; return the empty list
+          (Nil, iv.EmptyListValue)
 
-      val carTemp = carValue.toTempValue(vt.AnySchemeType)
-      val cdrTemp = cdrValue.toTempValue(vt.AnySchemeType)
+        case terminator :: reverseHead =>
+          (reverseHead.reverse, terminator)
+      }
 
-      plan.steps += ps.InitPair(pairTemp)
-      plan.steps += ps.SetPairCar(pairTemp, carTemp)
-      plan.steps += ps.SetPairCdr(pairTemp, cdrTemp)
+      val headValues = listOperands flatMap {
+        case knownList : iv.KnownListElement => 
+          knownList.toValueListOpt match {
+            case Some(valueList) => valueList
+            case _ =>
+              return None
+          }
 
-      Some(TempValueToIntermediate(vt.AnyPairType, pairTemp)(plan.config))
+        case _ =>
+          return None
+      }
+
+      Some(ValuesToList(headValues, terminator))
 
     case (_, List((_, needleValue), (_, listValue))) if List("memq", "memv").contains(reportName) =>
       staticMemberSearch(StaticValueEqv.valuesAreEqv, needleValue, listValue)

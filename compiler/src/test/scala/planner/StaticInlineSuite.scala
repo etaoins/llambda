@@ -114,6 +114,26 @@ class StaticInlineSuite extends FunSuite with PlanHelpers {
       (apply + '(1 2 3 4))
     """, ast.IntegerLiteral(10))
   }
+  
+  test("inlining using (apply) and (cons)") {
+    assertStaticPlan("""
+      (apply + (cons 1 '(2 3 4)))
+    """, ast.IntegerLiteral(10))
+  }
+  
+  test("inlining using (apply) and (append)") {
+    assertStaticPlan("""
+      (apply + (append '(1 2) '(3 4)))
+    """, ast.IntegerLiteral(10))
+  }
+  
+  test("inlining using (apply), (list) and (append)") {
+    assertStaticPlan("""
+      (define one 1)
+      (define two 2)
+      (apply + (append (list one two) '(3 4)))
+    """, ast.IntegerLiteral(10))
+  }
 
   test("inlining (case-lambda)") {
     assertStaticPlan("""

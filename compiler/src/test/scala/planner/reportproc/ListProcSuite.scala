@@ -92,6 +92,42 @@ class ListProcSuite extends FunSuite with PlanHelpers {
       ast.IntegerLiteral(5)
     )
   }
+  
+  test("static (cons)") {
+    assertStaticPlan("(cons 1 2)",
+      ast.Pair(
+        ast.IntegerLiteral(1),
+        ast.IntegerLiteral(2)
+      )
+    )
+  }
+  
+  test("static (append)") {
+    assertStaticPlan("(append)",
+      ast.EmptyList()
+    )
+    
+    assertStaticPlan("(append #t)",
+      ast.BooleanLiteral(true)
+    )
+    
+    assertStaticPlan("(append '(1 2) '(3 4))",
+      ast.ProperList(List(
+        ast.IntegerLiteral(1),
+        ast.IntegerLiteral(2),
+        ast.IntegerLiteral(3),
+        ast.IntegerLiteral(4)
+      ))
+    )
+    
+    assertStaticPlan("(append '(1 2 3) 4)",
+      ast.AnyList(List(
+        ast.IntegerLiteral(1),
+        ast.IntegerLiteral(2),
+        ast.IntegerLiteral(3)
+      ), ast.IntegerLiteral(4))
+    )
+  }
 
   test("static cadr") {
     assertStaticPlan("(car '(a b c))",
