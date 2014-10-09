@@ -109,6 +109,10 @@ class SchemeParserSuite extends FunSuite with Inside {
     assertReflexiveParse("33.337", List(ast.FlonumLiteral(33.337)))
     assertReflexiveParse("-0100.0", List(ast.FlonumLiteral(-100.0)))
 
+    assertReflexiveParse("2/5", List(ast.FlonumLiteral(0.4)))
+    assertReflexiveParse("+20/50", List(ast.FlonumLiteral(0.4)))
+    assertReflexiveParse("-20/2", List(ast.FlonumLiteral(-10.0)))
+
     assertReflexiveParse("+inf.0", List(ast.PositiveInfinityLiteral()))
     assertReflexiveParse("-inf.0", List(ast.NegativeInfinityLiteral()))
     

@@ -184,13 +184,29 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   }
 
   def RealDatum = rule {
-    FlonumDatum | PositiveInfinity | NegativeInfinity | NaNDatum
+    FlonumDatum | FractionDatum | PositiveInfinity | NegativeInfinity | NaNDatum
   }
 
   def FlonumDatum = rule {
     capture(optional(SignCharacter) ~ oneOrMore(Digit) ~ optional('.') ~ oneOrMore(Digit)) ~> ({ number =>
       ast.FlonumLiteral(number.toDouble)
     })
+  }
+  
+  def FractionDatum = rule {
+    (PositiveFraction | NegativeFraction) ~> (ast.FlonumLiteral(_))
+  }
+
+  def PositiveFraction = rule {
+    optional('+') ~ UnsignedFraction 
+  }
+
+  def NegativeFraction = rule {
+    '-' ~ UnsignedFraction ~> (-_)
+  }
+  
+  def UnsignedFraction = rule {
+    capture(oneOrMore(Digit)) ~ "/" ~ capture(oneOrMore(Digit)) ~> (_.toDouble / _.toDouble)
   }
 
   def PositiveInfinity = rule {
