@@ -249,6 +249,9 @@
     (define-r7rs / (world-function "lliby_div" (<number> . <number>) -> <native-double>))
     
     (define-r7rs expt (world-function "lliby_expt" (<number> <number>) -> <number>))
+    
+    (define-r7rs square (lambda: ([num : <number>])
+      (* num num)))
 
     (define-r7rs boolean? (make-predicate <boolean>))
     (define-r7rs not (make-predicate #f))

@@ -18,4 +18,8 @@
 
     (define-r7rs tan (lambda: ((num : <number>))
       (define native-tan (native-function "tan" (<native-double>) -> <native-double>))
-      (native-tan (inexact num))))))
+      (native-tan (inexact num))))
+    
+    (define-r7rs sqrt (lambda: ((num : <number>))
+      (define native-sqrt (native-function "sqrt" (<native-double>) -> <native-double>))
+      (native-sqrt (inexact num))))))

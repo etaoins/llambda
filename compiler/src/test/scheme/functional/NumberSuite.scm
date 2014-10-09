@@ -84,20 +84,6 @@
 (define-test "(inexact 9007199254740993) fails" (expect-failure
   (inexact 9007199254740993)))
 
-; Super ghetto but anything else depends too much on floating point
-; representations
-(define-test "inexact trigonometric procedures" (expect-success
-  (import (scheme inexact))
-  (assert-equal 0.0 (sin 0.0))
-  (assert-equal 1.0 (cos 0.0))
-  (assert-equal 0.0 (tan 0.0))))
-
-(define-test "exact trigonometric procedures" (expect-success
-  (import (scheme inexact))
-  (assert-equal 0.0 (sin 0))
-  (assert-equal 1.0 (cos 0))
-  (assert-equal 0.0 (tan 0))))
-
 (define-test "(+)" (expect-success
   (assert-equal 0 (+))
   (assert-equal 12 (+ 12))
@@ -341,3 +327,7 @@
     (/ op1 op2 op3))
 
   (assert-equal -5.0 (div-nums 500.0 25.0 -4))))
+
+(define-test "(square)" (expect-success
+  (assert-equal 1764 (square 42))
+  (assert-equal 4.0 (square 2.0))))
