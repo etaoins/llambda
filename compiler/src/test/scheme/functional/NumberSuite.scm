@@ -16,6 +16,9 @@
 (define-test "(rational?)" (expect-success
   (assert-true  (rational? 4))
   (assert-true  (rational? -5.0))
+  (assert-true  (rational? 6/10))
+  (assert-false (rational? +inf.0))
+  (assert-false (rational? +nan.0))
   (assert-false (rational? '()))))
 
 (define-test "(complex?)" (expect-success

@@ -180,7 +180,8 @@
     ; We only support real and rational numbers
     (define-r7rs complex? number?)
     (define-r7rs real? number?)
-    (define-r7rs rational? number?)
+
+    (define-r7rs rational? (native-function "lliby_is_rational" (<any>) -> <native-bool>))
     
     ; These aren't quite normal predicates as they only take numbers
     (define-r7rs inexact? (lambda: ((val : <number>))

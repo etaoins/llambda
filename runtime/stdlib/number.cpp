@@ -319,6 +319,24 @@ bool lliby_is_even(std::int64_t value)
 	return (value % 2) == 0;
 }
 
+bool lliby_is_rational(AnyCell *anyCell)
+{
+	if (ExactIntegerCell::isInstance(anyCell))
+	{
+		return true;
+	}
+	else if (auto flonumCell = cell_cast<FlonumCell>(anyCell))
+	{
+		double doubleValue = flonumCell->value();
+		return !std::isnan(doubleValue) && !std::isinf(doubleValue);
+	}	
+	else
+	{
+		// Not a number
+		return false;
+	}
+}
+
 bool lliby_numeric_equal(NumberCell *value1, NumberCell *value2, RestArgument<NumberCell> *argHead)
 {
 	return numericCompare(value1, value2, argHead, 
