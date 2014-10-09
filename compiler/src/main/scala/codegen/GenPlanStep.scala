@@ -611,6 +611,15 @@ object GenPlanStep {
 
       state.withTempValue(resultTemp -> resultIr)
 
+    case ps.FloatIsNaN(resultTemp, valTemp) =>
+      val valIr = state.liveTemps(valTemp)
+      
+      // This is tricky - only NaN is not equal to itself. This is actually now isnan is implemented on OS X and LLVM
+      // optimises it appropriately
+      val resultIr = state.currentBlock.fcmp("isNaN")(FComparisonCond.UnorderedNotEqual, valIr, valIr)
+      
+      state.withTempValue(resultTemp -> resultIr)
+
     case ps.InitPair(resultTemp, listLengthOpt) =>
       val block = state.currentBlock
       val allocation = state.currentAllocation

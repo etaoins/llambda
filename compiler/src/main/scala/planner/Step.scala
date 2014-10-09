@@ -996,6 +996,14 @@ case class FloatCompare(result : TempValue, cond : CompareCond.CompareCond, val1
     FloatCompare(f(result), cond, f(val1), f(val2)).assignLocationFrom(this)
 }
 
+case class FloatIsNaN(result : TempValue, value : TempValue) extends Step with NullipotentStep {
+  lazy val inputValues = Set[TempValue](value)
+  lazy val outputValues = Set[TempValue](result)
+  
+  def renamed(f : (TempValue) => TempValue) = 
+    FloatIsNaN(f(result), f(value)).assignLocationFrom(this)
+}
+
 case class AssertPredicate(
     worldPtr : WorldPtrValue,
     predicate : TempValue,

@@ -82,6 +82,14 @@
 (define-test "calculated +nan.0 and +nan.0 are eqv" (expect #t
   (eqv? (/ 0. 0.) (/ 0. 0.))))
 
+(define-test "literal +nan.0 and dynamic 0 are not eqv" (expect #f
+  (import (llambda typed))
+  (eqv? +nan.0 (cast (typeless-cell 0.0) <flonum>))))
+
+(define-test "literal +nan.0 and dynamic +nan.0 are eqv" (expect #t
+  (import (llambda typed))
+  (eqv? +nan.0 (cast (typeless-cell +nan.0) <flonum>))))
+
 (define-test "#\a and #\b are not eqv" (expect #f
 	(eqv? #\a #\b)))
 

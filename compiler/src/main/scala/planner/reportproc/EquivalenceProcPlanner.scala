@@ -59,7 +59,7 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
     )
   }
 
-  private def directCompareAsType(state : PlannerState)(
+  private def directCompareAsType(
       valueType : vt.ValueType,
       val1 : iv.IntermediateValue,
       val2 : iv.IntermediateValue
@@ -75,7 +75,32 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
     new iv.NativePredicateValue(predicateTemp)
   }
 
-  private def invokeCompare(state : PlannerState)(
+  private def flonumCompare(
+      staticValue : Double,
+      dynamicValue : iv.IntermediateValue
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : iv.IntermediateValue = {
+    val resultPred = ps.Temp(vt.Predicate)
+
+    if (staticValue.isNaN) {
+      val dynamicTemp = dynamicValue.toTempValue(vt.Double)
+      plan.steps += ps.FloatIsNaN(resultPred, dynamicTemp)
+    }
+    else {
+      // Create the static double
+      val staticTemp = ps.Temp(vt.Double)
+      plan.steps += ps.CreateNativeFloat(staticTemp, staticValue, vt.Double)
+
+      // Create the dynamic double
+      val dynamicTemp = dynamicValue.toTempValue(vt.Double)
+
+      // Compare them
+      plan.steps += ps.FloatCompare(resultPred, ps.CompareCond.Equal, staticTemp, dynamicTemp)
+    }
+
+    new iv.NativePredicateValue(resultPred)
+  }
+
+  private def invokeCompare(
       runtimeCompareSymbol : String,
       val1 : iv.IntermediateValue,
       val2 : iv.IntermediateValue)
@@ -108,24 +133,34 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
       if ((vt.SatisfiesType(ptrCompareUnion, val1.schemeType) == Some(true)) ||
           (vt.SatisfiesType(ptrCompareUnion, val2.schemeType) == Some(true))) {
         // We can fast path this; the possible types for either value consist entirely of fast path types
-        directCompareAsType(state)(vt.AnySchemeType, val1, val2)
+        directCompareAsType(vt.AnySchemeType, val1, val2)
       }
       else if (val1.hasDefiniteType(vt.ExactIntegerType) && 
                val2.hasDefiniteType(vt.ExactIntegerType)) {
-        directCompareAsType(state)(vt.Int64, val1, val2)
+        directCompareAsType(vt.Int64, val1, val2)
       }
       else if (val1.hasDefiniteType(vt.CharType) && 
                val2.hasDefiniteType(vt.CharType)) {
-        directCompareAsType(state)(vt.UnicodeChar, val1, val2)
+        directCompareAsType(vt.UnicodeChar, val1, val2)
       }
       else {
-        // We need to invoke the runtime
-        invokeCompare(state)(runtimeCompareSymbol, val1, val2)
+        // Due to NaN we can only do double comparisons if one value is known
+        (val1, val2) match {
+          case (static1 : iv.ConstantFlonumValue, dynamic2) if dynamic2.hasDefiniteType(vt.FlonumType) =>
+            flonumCompare(static1.value, dynamic2)
+
+          case (dynamic1, static2 : iv.ConstantFlonumValue) if dynamic1.hasDefiniteType(vt.FlonumType) =>
+            flonumCompare(static2.value, dynamic1)
+
+          case _ =>
+            // We need to invoke the runtime
+            invokeCompare(runtimeCompareSymbol, val1, val2)
+        }
       }
     }
     else {
       // Always call our runtime
-      invokeCompare(state)(runtimeCompareSymbol, val1, val2)
+      invokeCompare(runtimeCompareSymbol, val1, val2)
     }
 
     // Register our type constraints for occurrence typing
