@@ -1,6 +1,7 @@
 (define-library (llambda test-util)
   (import (scheme base) (scheme write) (scheme process-context))  
-  (export dynamic-false dynamic-true typeless-cell
+  (import (llambda typed))
+  (export dynamic-false dynamic-true typeless-cell typed-dynamic
           assert-equal assert-true assert-false assert-raises)
   (begin
     ; Use a mutable to launder the value so its type information is lost
@@ -9,6 +10,12 @@
       (define mutable #!unit)
       (set! mutable x)
       mutable)
+
+    ; This is similar to (cast) except it destroys any optimiser information about the underlying value
+    (define-syntax typed-dynamic
+      (syntax-rules ()
+                    ((typed-cell value <type>)
+                     (cast (typeless-cell value) <type>))))
 
     (define dynamic-false (typeless-cell #f))
     (define dynamic-true (typeless-cell #t))

@@ -143,50 +143,75 @@
   (/)))
 
 (define-test "(=)" (expect-success
+  (define dynamic-nan (typed-dynamic +nan.0 <flonum>))
+
   (assert-true  (= 4.0 4))
   (assert-true  (= 0.0 -0.0))
   (assert-true  (= 4.0 4 4.0))
   (assert-false (= 4.0 5.6))
-  (assert-false (= 4.0 4 5.6))))
+  (assert-false (= 4.0 4 5.6))
+  (assert-false (= +nan.0 +nan.0))
+  (assert-false (= dynamic-nan +nan.0))
+  (assert-false (= dynamic-nan 0))))
 
 (define-test "equality of two numbers and boolean false is an error" (expect-failure
   (= 4.0 4 #f)))
 
 (define-test "(<)" (expect-success
+  (define dynamic-nan (typed-dynamic +nan.0 <flonum>))
+
   (assert-false (< 4.0 4))
   (assert-false (< -0.0 0.0))
   (assert-false (< 4.0 4 4.0))
   (assert-false (< 5.6 4.0))
   (assert-false (< 5.6 0 -4.5))
   (assert-true  (< 4.0 5.6))
-  (assert-true  (< 4.0 4.5 5.6))))
+  (assert-true  (< 4.0 4.5 5.6))
+  (assert-false (< +nan.0 +nan.0))
+  (assert-false (< dynamic-nan +nan.0))
+  (assert-false (< dynamic-nan 0))))
 
 (define-test "(>)" (expect-success
+  (define dynamic-nan (typed-dynamic +nan.0 <flonum>))
+
   (assert-false (> 4.0 4))
   (assert-false (> -0.0 0.0))
   (assert-false (> 4.0 4 4.0))
   (assert-true  (> 5.6 4.0))
   (assert-true  (> 5.6 0 -4.5))
   (assert-false (> 4.0 5.6))
-  (assert-false (> 4.0 4.5 5.6))))
+  (assert-false (> 4.0 4.5 5.6))
+  (assert-false (> +nan.0 +nan.0))
+  (assert-false (> dynamic-nan +nan.0))
+  (assert-false (> dynamic-nan 0))))
 
 (define-test "(<=)" (expect-success
+  (define dynamic-nan (typed-dynamic +nan.0 <flonum>))
+
   (assert-true  (<= 4.0 4))
   (assert-true  (<= -0.0 0.0))
   (assert-true  (<= 4.0 4 4.0))
   (assert-false (<= 5.6 4.0))
   (assert-false (<= 5.6 0 -4.5))
   (assert-true  (<= 4.0 5.6))
-  (assert-true  (<= 4.0 4.5 5.6))))
+  (assert-true  (<= 4.0 4.5 5.6))
+  (assert-false (<= +nan.0 +nan.0))
+  (assert-false (<= dynamic-nan +nan.0))
+  (assert-false (<= dynamic-nan 0))))
 
 (define-test "(>=)" (expect-success
+  (define dynamic-nan (typed-dynamic +nan.0 <flonum>))
+
   (assert-true  (>= 4.0 4))
   (assert-true  (>= -0.0 0.0))
   (assert-true  (>= 4.0 4 4.0))
   (assert-true  (>= 5.6 4.0))
   (assert-true  (>= 5.6 0 -4.5))
   (assert-false (>= 4.0 5.6))
-  (assert-false (>= 4.0 4.5 5.6))))
+  (assert-false (>= 4.0 4.5 5.6))
+  (assert-false (>= +nan.0 +nan.0))
+  (assert-false (>= dynamic-nan +nan.0))
+  (assert-false (>= dynamic-nan 0))))
 
 (define-test "integer (<=) procedure" (expect-success
   (import (llambda typed))
