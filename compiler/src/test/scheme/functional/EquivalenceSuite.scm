@@ -1,114 +1,78 @@
-(define-test "#t and #t are eqv" (expect #t
-	(eqv? #t #t)))
+(define-test "boolean (eqv?)" (expect-success
+	(assert-true (eqv? #t #t))
+	(assert-true (eqv? #f #f))
+	(assert-false (eqv? #f #t))))
 
-(define-test "#f and #f are eqv" (expect #t
-	(eqv? #f #f)))
+(define-test "symbol (eqv?)" (expect-success
+	(assert-true (eqv? 'test 'test))
+	(assert-true (eqv? (string->symbol "test") (string->symbol "test")))
+	(assert-true (eqv? 'test (string->symbol "test")))
+	(assert-false (eqv? 'one 'two))))
 
-(define-test "constant 'test and 'test are eqv" (expect #t
-	(eqv? 'test 'test)))
+(define-test "numeric (eqv?)" (expect-success
+  (import (llambda typed))
 
-(define-test "calculated 'test and 'test are eqv" (expect #t
-	(eqv? (string->symbol "test") (string->symbol "test"))))
+	(assert-true (eqv? -163 -163))
+	(assert-true (eqv? (- 163) (- 163)))
+	(assert-true (eqv? 153.5 153.5))
+	(assert-true (eqv? (- -153.5) (- -153.5)))
+	(assert-true (eqv? +inf.0 +inf.0))
+	(assert-false (eqv? -163 -163.0))
+	(assert-false (eqv? -163 3435))
+	(assert-false (eqv? -163.5 3435.5))
+  (assert-false (eqv? +nan.0 (typed-dynamic 0.0 <flonum>)))
 
-(define-test "constant 'test and calculated 'test are eqv" (expect #t
-	(eqv? 'test (string->symbol "test"))))
+  ; This is undefined by R7RS
+  ; However, if we do a pointer or intermediate value fast path comparison between NaN and itself we will return #t. If
+  ; we want to be consistent we should return #t everywhere at all optimisation levels.
+  (assert-true (eqv? +nan.0 +nan.0))
+  (assert-true (eqv? (/ 0. 0.) (/ 0. 0.)))
+  (assert-true (eqv? +nan.0 (typed-dynamic +nan.0 <flonum>)))))
 
-(define-test "constant -163 and -163 are eqv" (expect #t
-	(eqv? -163 -163)))
+(define-test "char (eqv?)" (expect-success
+	(assert-true (eqv? #\a #\a))
+	(assert-false (eqv? #\a #\b))))
 
-(define-test "calculated -163 and -163 are eqv" (expect #t
-	(eqv? (- 163) (- 163))))
+(define-test "null (eqv?)" (expect-success
+	(assert-true (eqv? '() '()))))
 
-(define-test "constant 153.5 and 153.5 are eqv" (expect #t
-	(eqv? 153.5 153.5)))
-
-(define-test "calculatued 153.5 and 153.5 are eqv" (expect #t
-	(eqv? (- -153.5) (- -153.5))))
-
-(define-test "+inf.0 and +inf.0 are eqv" (expect #t
-	(eqv? +inf.0 +inf.0)))
-
-(define-test "#\a and #\a are eqv" (expect #t
-	(eqv? #\a #\a)))
-
-(define-test "'() and '() are eqv" (expect #t
-	(eqv? '() '())))
-
-(define-test "pairs in the same location are eqv" (expect #t
+(define-test "pair (eqv?)" (expect-success
 	(let ((var '(a b)))
-		(eqv? var var))))
+		(assert-true (eqv? var var)))
 
-(define-test "vectors in the same location are eqv" (expect #t
+  (assert-false (eqv? '() '(1 2 3)))
+
+  ; With immutable pairs there's no distinction between constant and constructed lists
+  (cond-expand ((not immutable-pairs)
+    (assert-false (eqv? (list 1 2 3) (list 1 2 3)))))))
+
+(define-test "vector (eqv?)" (expect-success
 	(let ((var #(1 2 3)))
-		(eqv? var var))))
+		(assert-true (eqv? var var)))
 
-(define-test "records in the same location are eqv" (expect #t
+	(assert-false (eqv? (vector 1 2 3) (vector 1 2 3)))))
+
+(define-test "record (eqv?)" (expect-success
 	(define-record-type <unit> (unit) unit?)
 
 	(let ((var (unit)))
-		(eqv? var var))))
+		(assert-true (eqv? var var)))
 
-(define-test "procedures in the same location are eqv" (expect #t
+  (assert-false (eqv? (unit) (unit)))))
+
+(define-test "procedure (eqv?)" (expect-success
 	(let ((procecedure (lambda () 5)))
-		(eqv? procecedure procecedure))))
+		(assert-true (eqv? procecedure procecedure)))
 
-(define-test "native functions are eqv" (expect #t
-	(eqv? eqv? eqv?)))
+  (assert-true (eqv? eqv? eqv?))
+
+  ; If these returned different values it would be legal to merge them
+  (define (procecedure1) 1)
+  (define (procecedure2) 2)
+  (assert-false (eqv? procecedure1 procecedure2))))
 
 (define-test "1 and #t are not eqv" (expect #f
 	(eqv? 1 #t)))
-
-(define-test "#t and #f are not eqv" (expect #f
-	(eqv? #t #f)))
-
-(define-test "'one and 'two are not eqv" (expect #f
-	(eqv? 'one 'two)))
-
-(define-test "-163 and -163.0 are not eqv" (expect #f
-	(eqv? -163 -163.0)))
-
-(define-test "-163 and 3435 are not eqv" (expect #f
-	(eqv? -163 3435)))
-
-(define-test "-163.5 and 3435.5 are not eqv" (expect #f
-	(eqv? -163.5 3435.5)))
-
-; This is undefined by R7RS
-; However, if we do a pointer or intermediate value fast path comparison between NaN and itself we will return #t. If
-; we want to be consistent we should return #t everywhere at all optimisation levels.
-(define-test "literal +nan.0 and +nan.0 are eqv" (expect #t
-  (eqv? +nan.0 +nan.0)))
-
-(define-test "calculated +nan.0 and +nan.0 are eqv" (expect #t
-  (eqv? (/ 0. 0.) (/ 0. 0.))))
-
-(define-test "literal +nan.0 and dynamic 0 are not eqv" (expect #f
-  (import (llambda typed))
-  (eqv? +nan.0 (cast (typeless-cell 0.0) <flonum>))))
-
-(define-test "literal +nan.0 and dynamic +nan.0 are eqv" (expect #t
-  (import (llambda typed))
-  (eqv? +nan.0 (cast (typeless-cell +nan.0) <flonum>))))
-
-(define-test "#\a and #\b are not eqv" (expect #f
-	(eqv? #\a #\b)))
-
-(define-test "'() and '(1 2 3) are not eqv" (expect #f
-	(eqv? '() '(1 2 3))))
-
-; With immutable pairs there's no distinction between constant and constructed lists
-(cond-expand ((not immutable-pairs)
-  (define-test "two constructed lists are not eqv" (expect #f
-    (eqv? (list 1 2 3) (list 1 2 3))))))
-
-(define-test "two constructed vectors are not eqv" (expect #f
-	(eqv? (vector 1 2 3) (vector 1 2 3))))
-
-(define-test "two different procedures are not eqv" (expect #f
-	; If these returned different values it would be legal to merge them
-	(define (procecedure1) 1)
-	(define (procecedure2) 2)
-	(eqv? procecedure1 procecedure2)))
 
 (define-test "constant 'a and 'a are eq" (expect #t
 	(eq? 'a 'a)))
@@ -137,7 +101,7 @@
 
   (define test-vec #())
   (assert-true (eq? test-vec test-vec))
-  
+
   (define test-bytevec #u8(1 2 3 4))
   (assert-true (eq? test-bytevec test-bytevec))
 
@@ -150,17 +114,11 @@
 (define-test "constant 'a and 'a are equal" (expect #t
 	(equal? 'a 'a)))
 
-(define-test "constant lists are equal" (expect #t
-	(equal? '(a) '(a))))
-
-(define-test "constructed lists with equal content are equal" (expect #t
-	(equal? (list 1 2 3) (list 1 2 3))))
-
-(define-test "constructed lists withi different content are inequal" (expect #f
-	(equal? (list 1 2 3) (list 1 2 5))))
-
-(define-test "constant nested lists are equal" (expect #t
-	(equal? '(a (b) c) '(a (b) c))))
+(define-test "list (equal?)" (expect-success
+	(assert-true (equal? '(a) '(a)))
+	(assert-true (equal? (list 1 2 3) (list 1 2 3)))
+	(assert-false (equal? (list 1 2 3) (list 1 2 5)))
+	(assert-true (equal? '(a (b) c) '(a (b) c)))))
 
 (define-test "constant strings are equal" (expect #t
 	(equal? "abc" "abc")))
@@ -168,20 +126,12 @@
 (define-test "constant exact integers are equal" (expect #t
 	(equal? 2 2)))
 
-(define-test "constructed vectors with equal content are equal" (expect #t
-	(equal? (make-vector 5 'a) (make-vector 5 'a))))
+(define-test "vector (equal?)" (expect-success
+	(assert-true (equal? (make-vector 5 'a) (make-vector 5 'a)))
+	(assert-false (equal? (make-vector 5 'a) (make-vector 6 'a)))
+	(assert-false (equal? (make-vector 5 'a) (make-vector 5 'b)))))
 
-(define-test "constructed vectors with differing lengths are inequal" (expect #f
-	(equal? (make-vector 5 'a) (make-vector 6 'a))))
-
-(define-test "constructed vectors with differing content are inequal" (expect #f
-	(equal? (make-vector 5 'a) (make-vector 5 'b))))
-
-(define-test "constructed bytevectors with equal content are equal" (expect #t
-	(equal? (make-bytevector 5 200) (make-bytevector 5 200))))
-
-(define-test "constructed bytevectors with differing lengths are inequal" (expect #f
-	(equal? (make-bytevector 5 200) (make-bytevector 6 200))))
-
-(define-test "constructed bytevectors with differing content are inequal" (expect #f
-	(equal? (make-bytevector 5 100) (make-bytevector 5 200))))
+(define-test "bytevector (equal?)" (expect-success
+	(assert-true (equal? (make-bytevector 5 200) (make-bytevector 5 200)))
+	(assert-false (equal? (make-bytevector 5 200) (make-bytevector 6 200)))
+	(assert-false (equal? (make-bytevector 5 100) (make-bytevector 5 200)))))
