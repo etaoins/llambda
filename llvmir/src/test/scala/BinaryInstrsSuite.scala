@@ -149,10 +149,10 @@ class BinaryInstrsSuite extends IrTestSuite {
     val op1 = DoubleConstant(14.5)
     val op2 = DoubleConstant(-100.0)
 
-    val resultVar = block.fsub("mul")(Set(FastMathFlag.NoInf, FastMathFlag.AllowReciprocal), op1, op2)
+    val resultVar = block.fmul("mul")(Set(FastMathFlag.NoInf, FastMathFlag.AllowReciprocal), op1, op2)
 
     assert(resultVar.irType === DoubleType)
-    assertInstr(block, "%mul1 = fsub arcp ninf double 14.5, -100.0")
+    assertInstr(block, "%mul1 = fmul arcp ninf double 14.5, -100.0")
   }
   
   test("fdiv with nsz and fast") {

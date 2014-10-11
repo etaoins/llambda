@@ -119,12 +119,33 @@ class IrValueSuite extends FunSuite {
     val elementPtrConstant = ElementPointerConstant(
       elementType=IntegerType(8),
       basePointer=globalVarDef.variable,
+      indices=List(1, 0),
+      inbounds=false
+    )
+
+    assert(elementPtrConstant.irType === PointerType(IntegerType(8)))
+    assert(elementPtrConstant.toIr === "getelementptr ([6 x i8]* @helloString, i32 1, i32 0)")
+
+    val inboundElementPtrConstant = ElementPointerConstant(
+      elementType=IntegerType(8),
+      basePointer=globalVarDef.variable,
       indices=List(0, 2),
       inbounds=true
     )
 
-    assert(elementPtrConstant.irType === PointerType(IntegerType(8)))
-    assert(elementPtrConstant.toIr === "getelementptr inbounds ([6 x i8]* @helloString, i32 0, i32 2)")
+    assert(inboundElementPtrConstant.irType === PointerType(IntegerType(8)))
+    assert(inboundElementPtrConstant.toIr === "getelementptr inbounds ([6 x i8]* @helloString, i32 0, i32 2)")
+
+    intercept[InconsistentIrException] {
+      val boolConstant = TrueConstant
+
+      val elementPtrConstant = ElementPointerConstant(
+        elementType=IntegerType(1),
+        basePointer=boolConstant,
+        indices=List(0, 2),
+        inbounds=true
+      )
+    }
   }
   
   test("bitcast constant") {

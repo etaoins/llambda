@@ -237,7 +237,7 @@ class MemoryInstrsSuite extends IrTestSuite {
       block.getelementptr("error")(
         elementType=IntegerType(16),
         basePointer=fakePointer,
-        indices=List(StringConstant.fromUtf8String("HELLO"))
+        indices=List(IntegerConstant(IntegerType(32), 4), StringConstant.fromUtf8String("HELLO"))
       )
     }
   }

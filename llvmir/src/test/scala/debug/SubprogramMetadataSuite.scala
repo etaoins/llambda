@@ -57,12 +57,12 @@ class SubprogramMetadataSuite extends FunSuite {
       definitionLine=3,
       typeDescriptor=fakeTypeDescriptor,
       compileUnitLocal=true,
-      definedInCompileUnit=true,
+      definedInCompileUnit=false,
       virtuality=0,
       virtualIndex=0,
       baseTypeOpt=None,
       flags=0,
-      optimised=true,
+      optimised=false,
       llvmFunctionOpt=None,
       functionTemplateParametersOpt=None,
       functionDeclDescriptorOpt=None,
@@ -71,7 +71,7 @@ class SubprogramMetadataSuite extends FunSuite {
     )
 
     assert(subprogramNode.toIrWithType ===
-      """metadata !{i32 786478, metadata !1, metadata !5, metadata !"inlineMe", metadata !"inlineMe", metadata !"", i32 3, metadata !6, i1 1, i1 1, i32 0, i32 0, null, i32 0, i1 1, null, null, null, metadata !{i32 0}, i32 4}"""
+      """metadata !{i32 786478, metadata !1, metadata !5, metadata !"inlineMe", metadata !"inlineMe", metadata !"", i32 3, metadata !6, i1 1, i1 0, i32 0, i32 0, null, i32 0, i1 0, null, null, null, metadata !{i32 0}, i32 4}"""
     )
   }
 }

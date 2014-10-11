@@ -222,6 +222,25 @@ class TerminatorInstrsSuite extends IrTestSuite {
       block.invokeDecl(None)(decl=decl, arguments=List(), normalBlock, exceptionBlock)
     }
   }
+  
+  test("invoke with insufficent varargs") {
+    val declResult = IrFunction.Result(VoidType, Set())
+    val declArgs = List(IrFunction.Argument(PointerType(IntegerType(8)), Set(IrFunction.NoCapture)))
+    val decl = IrFunctionDecl(
+      result=declResult,
+      name="notEnoughArgs",
+      arguments=declArgs,
+      hasVararg=true)
+    
+    val normalBlock = createTestBlock("success")
+    val exceptionBlock = createTestBlock("exception")
+    
+    val block = createTestBlock()
+
+    intercept[InconsistentIrException] {
+      block.invokeDecl(None)(decl=decl, arguments=List(), normalBlock, exceptionBlock)
+    }
+  }
 
   test("invoke with unmatched args") {
     val declResult = IrFunction.Result(VoidType, Set())

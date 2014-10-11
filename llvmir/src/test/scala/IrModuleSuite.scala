@@ -68,6 +68,10 @@ class IrModuleSuite extends FunSuite {
       assert(false)
     }
 
+    // And is declared
+    assert(module.isDeclared(putsDecl) === true)
+    assert(module.isDeclared("unknownDecl") === false)
+
     var blockRun = false
     module.unlessDeclared("randomString") {
       blockRun = true
