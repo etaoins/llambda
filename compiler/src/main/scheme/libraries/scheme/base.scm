@@ -241,7 +241,7 @@
         #f)))
 
     (define-r7rs exact (world-function "lliby_exact" (<number>) -> <native-int64>))
-    (define-r7rs inexact (world-function "lliby_inexact" (<number>) -> <native-double>))
+    (define-r7rs inexact (native-function "lliby_inexact" (<number>) -> <native-double>))
 
     (define-r7rs + (world-function "lliby_add" <number> -> <number>))
     (define-r7rs - (world-function "lliby_sub" (<number> . <number>) -> <number>))

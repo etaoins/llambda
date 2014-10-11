@@ -111,7 +111,7 @@ std::int64_t lliby_exact(World &world, NumberCell *numeric)
 	return static_cast<std::int64_t>(flonum->value());
 }
 
-double lliby_inexact(World &world, NumberCell *numeric)
+double lliby_inexact(NumberCell *numeric)
 {
 	if (auto flonum = cell_cast<FlonumCell>(numeric))
 	{
@@ -123,16 +123,7 @@ double lliby_inexact(World &world, NumberCell *numeric)
 	auto exactInt = cell_unchecked_cast<ExactIntegerCell>(numeric);
 
 	// Cast to a double
-	double inexactValue = static_cast<double>(exactInt->value());
-
-	// Make sure we have the same value now. Integers larger than 2^53 aren't guaranteed to have exact douvble
-	// representations
-	if (static_cast<std::int64_t>(inexactValue) != exactInt->value())
-	{
-		signalError(world, "Attempted to convert exact integer with a value that cannot be represented by an inexact rational", {numeric});
-	}
-
-	return inexactValue;
+	return static_cast<double>(exactInt->value());
 }
 
 NumberCell *lliby_add(World &world, RestArgument<NumberCell> *argHead)

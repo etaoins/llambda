@@ -76,13 +76,11 @@
 (define-test "(exact 112.5) fails" (expect-failure
   (exact 112.5)))
 
-(define-test "Inexact 567 is 567.0" (expect-success
+(define-test "(inexact)" (expect-success
   (assert-equal 567.0 (inexact 567))
-  (assert-equal -3289.5 (inexact -3289.5))))
-
-; This can't be exactly represented by a double
-(define-test "(inexact 9007199254740993) fails" (expect-failure
-  (inexact 9007199254740993)))
+  (assert-equal -3289.5 (inexact -3289.5))
+  ; This is the closest float to the passed value
+  (assert-equal 9007199254740992.0 (inexact 9007199254740993))))
 
 (define-test "(+)" (expect-success
   (assert-equal 0 (+))

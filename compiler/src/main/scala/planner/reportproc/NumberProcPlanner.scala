@@ -375,20 +375,21 @@ object NumberProcPlanner extends ReportProcPlanner {
       val singleValue = singleOperand._2
 
       singleValue match  {
-        case knownFlonum if vt.SatisfiesType(vt.FlonumType, knownFlonum.schemeType) == Some(true) =>
+        case knownFlonum if knownFlonum.hasDefiniteType(vt.FlonumType) =>
           // Already a flonum
           Some(knownFlonum)
 
         case constExactInt : iv.ConstantExactIntegerValue =>
-          val doubleValue = constExactInt.value.toDouble
+          // Statically convert it to a double
+          Some(new iv.ConstantFlonumValue(constExactInt.value.toDouble))
 
-          // Make sure this was lossless
-          if (doubleValue.toLong == constExactInt.value) {
-            Some(new iv.ConstantFlonumValue(doubleValue))
-          }
-          else {
-            None
-          }
+        case knownInt if knownInt.hasDefiniteType(vt.ExactIntegerType) =>
+          val intTemp = knownInt.toTempValue(vt.ExactIntegerType)
+          val doubleTemp = ps.Temp(vt.Double)
+
+          plan.steps += ps.ConvertNativeIntegerToFloat(doubleTemp, intTemp, true, vt.Double)
+
+          Some(new iv.NativeFlonumValue(doubleTemp, vt.Double))
         
         case _ =>
           None
