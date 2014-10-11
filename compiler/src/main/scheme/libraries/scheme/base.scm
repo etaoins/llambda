@@ -192,14 +192,9 @@
 
     (define-r7rs exact-integer? exact?)
 
-    (define-r7rs finite? (native-function "lliby_is_finite" (<number>) -> <native-bool>))
-    (define-r7rs infinite? (native-function "lliby_is_infinite" (<number>) -> <native-bool>))
     (define-r7rs odd? (native-function "lliby_is_odd" (<native-int64>) -> <native-bool>))
     (define-r7rs even? (native-function "lliby_is_even" (<native-int64>) -> <native-bool>))
 
-    (define-r7rs nan? (lambda: ((n : <number>))
-      (eq? n +nan.0)))
-    
     (define-r7rs = (native-function "lliby_numeric_equal" (<number> <number> . <number>) -> <native-bool>))
     (define-r7rs < (native-function "lliby_numeric_lt" (<number> <number> . <number>) -> <native-bool>))
     (define-r7rs > (native-function "lliby_numeric_gt" (<number> <number> . <number>) -> <native-bool>))

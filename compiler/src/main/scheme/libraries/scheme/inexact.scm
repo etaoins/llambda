@@ -1,11 +1,17 @@
 (define-library (scheme inexact)
   (import (llambda nfi))
   (import (rename (llambda internal primitives) (define-report-procedure define-r7rs)))
-  (import (only (scheme base) inexact))
+  (import (only (scheme base) inexact eq?))
 
   ; inexact library
   (include-library-declarations "../../interfaces/scheme/inexact.scm")
   (begin
+    (define-r7rs finite? (native-function "lliby_is_finite" (<number>) -> <native-bool>))
+    (define-r7rs infinite? (native-function "lliby_is_infinite" (<number>) -> <native-bool>))
+    
+    (define-r7rs nan? (lambda: ((n : <number>))
+      (eq? n +nan.0)))
+
     ; These always return inexact numbers so we can use the C standard library. However, they need to be wrapped in a
     ; Scheme procedure to explicitly convert the number in to flonum.
     (define-r7rs sin (lambda: ((num : <number>))

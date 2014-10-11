@@ -76,7 +76,11 @@ trait PlanHelpers extends FunSuite with Inside {
   }
 
   protected def planStepsFor(scheme : String) : List[ps.Step] = {
-    val importDecl = datum"(import (scheme base) (llambda typed) (scheme case-lambda) (scheme process-context) (llambda r7rs-case-lambda))"
+    val importDecl = datum"""
+      (import (scheme base) (scheme inexact) (scheme case-lambda) (scheme process-context)
+              (llambda typed) (llambda r7rs-case-lambda))
+    """
+
     val data = List(
       importDecl,
       ast.ProperList(List(

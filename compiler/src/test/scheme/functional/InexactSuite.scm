@@ -20,3 +20,23 @@
   ; We don't support complex numbers
   (assert-equal +nan.0 (sqrt -9.0))))
   
+(define-test "(finite?)" (expect-success
+  (import (scheme inexact))
+  (assert-true  (finite? 3))
+  (assert-true  (finite? 4.5))
+  (assert-false (finite? +inf.0))
+  (assert-false (finite? +nan.0))))
+
+(define-test "(infinite?)" (expect-success
+  (import (scheme inexact))
+  (assert-false (infinite? 3))
+  (assert-false (infinite? 4.5))
+  (assert-true  (infinite? +inf.0))
+  (assert-false (infinite? +nan.0))))
+
+(define-test "(nan?)" (expect-success
+  (import (scheme inexact))
+  (assert-false (nan? 3))
+  (assert-false (nan? 4.5))
+  (assert-false (nan? +inf.0))
+  (assert-true  (nan? +nan.0))))

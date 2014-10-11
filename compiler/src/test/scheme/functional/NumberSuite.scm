@@ -47,24 +47,6 @@
 (define-test "(inexact?) fails with non-numbers" (expect-failure
   (inexact? 'notanumber)))
 
-(define-test "(finite?)" (expect-success
-  (assert-true  (finite? 3))
-  (assert-true  (finite? 4.5))
-  (assert-false (finite? +inf.0))
-  (assert-false (finite? +nan.0))))
-
-(define-test "(infinite?)" (expect-success
-  (assert-false (infinite? 3))
-  (assert-false (infinite? 4.5))
-  (assert-true  (infinite? +inf.0))
-  (assert-false (infinite? +nan.0))))
-
-(define-test "(nan?)" (expect-success
-  (assert-false (nan? 3))
-  (assert-false (nan? 4.5))
-  (assert-false (nan? +inf.0))
-  (assert-true  (nan? +nan.0))))
-
 (define-test "(exact-integer?)" (expect-success
   (assert-true (exact-integer? 32))
   (assert-false (exact-integer? 32.0))))

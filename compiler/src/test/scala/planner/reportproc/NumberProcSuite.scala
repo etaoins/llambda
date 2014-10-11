@@ -341,18 +341,4 @@ class NumberProcSuite extends FunSuite with PlanHelpers {
       ast.BooleanLiteral(false)
     )
   }
-
-  test("static (nan?)") {
-    assertStaticPlan("(nan? 50)",
-      ast.BooleanLiteral(false)
-    )
-    
-    assertStaticPlan("(nan? 55.5)",
-      ast.BooleanLiteral(false)
-    )
-    
-    assertStaticPlan("(nan? +nan.0)",
-      ast.BooleanLiteral(true)
-    )
-  }
 }
