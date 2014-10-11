@@ -93,8 +93,13 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
       // Create the dynamic double
       val dynamicTemp = dynamicValue.toTempValue(vt.Double)
 
-      // Compare them
-      plan.steps += ps.FloatCompare(resultPred, ps.CompareCond.Equal, staticTemp, dynamicTemp)
+      if (staticValue == 0.0) {
+        // Compare the values bitwise to distinguish positive and negative zero
+        plan.steps += ps.FloatBitwiseCompare(resultPred, staticTemp, dynamicTemp)
+      }
+      else {
+        plan.steps += ps.FloatCompare(resultPred, ps.CompareCond.Equal, staticTemp, dynamicTemp)
+      }
     }
 
     new iv.NativePredicateValue(resultPred)

@@ -39,10 +39,16 @@ bool AnyCell::isEqv(const AnyCell *other) const
 			const double thisValue = thisFlonum->value();
 			const double otherValue = otherFlonum->value();
 
-			if (std::isnan(thisValue) && std::isnan(otherValue)) 
+			if (std::isnan(thisValue) && std::isnan(otherValue))
 			{
 				// Both are NaN
 				return true;
+			}
+
+			// Distinguish positive and negative zero
+			if (std::signbit(thisValue) != std::signbit(otherValue))
+			{
+				return false;
 			}
 
 			return thisFlonum->value() == otherFlonum->value();

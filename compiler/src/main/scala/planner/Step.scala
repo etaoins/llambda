@@ -304,9 +304,11 @@ case class TestCellType(
   def renamed(f : (TempValue) => TempValue) =
     TestCellType(f(result), f(value), testType, possibleTypes).assignLocationFrom(this)
   
-  override def mergeKey = 
+  private case class MergeKey(value : TempValue, testType : ct.ConcreteCellType)
+
+  override def mergeKey : Any =
     // Merge steps with different possibleTypes - it's just an optimisation hint
-    (value, testType)
+    MergeKey(value, testType)
 }
 
 /** Casts a cell to another type without checking the validity of the cast */
@@ -404,6 +406,12 @@ case class CreateFlonumCell(result : TempValue, value : Double) extends CreateCo
   
   def renamed(f : (TempValue) => TempValue) =
     CreateFlonumCell(f(result), value).assignLocationFrom(this)
+
+  private case class MergeKey(value : Double)
+
+  override def mergeKey : Any =
+    // Use the long bits so +nan.0, -0.0 etc are handled correctly
+    MergeKey(java.lang.Double.doubleToLongBits(value))
 }
 
 case class CreateCharCell(result : TempValue, value : Char) extends CreateConstantCell {
@@ -480,6 +488,12 @@ case class CreateNativeInteger(result : TempValue, value : Long, bits : Int) ext
 case class CreateNativeFloat(result : TempValue, value : Double, fpType : vt.FpType) extends CreateNativeConstant {
   def renamed(f : (TempValue) => TempValue) =
     CreateNativeFloat(f(result), value, fpType).assignLocationFrom(this)
+
+  private case class MergeKey(value : Double, fpType : vt.FpType)
+
+  override def mergeKey : Any =
+    // Use the long bits so +nan.0, -0.0 etc are handled correctly
+    MergeKey(java.lang.Double.doubleToLongBits(value), fpType)
 }
 
 /** Indicates a step that unboxes a cell */
@@ -996,12 +1010,30 @@ case class FloatCompare(result : TempValue, cond : CompareCond.CompareCond, val1
     FloatCompare(f(result), cond, f(val1), f(val2)).assignLocationFrom(this)
 }
 
+/** Tests if a floating point value is NaN */
 case class FloatIsNaN(result : TempValue, value : TempValue) extends Step with NullipotentStep {
   lazy val inputValues = Set[TempValue](value)
   lazy val outputValues = Set[TempValue](result)
   
   def renamed(f : (TempValue) => TempValue) = 
     FloatIsNaN(f(result), f(value)).assignLocationFrom(this)
+}
+
+/** Tests if two floating point values have exactly the same IEEE bitwise representation
+  *
+  * This is useful for distinguishing positive and negative zero from each other. NaNs or denormalised values cannot
+  * be tested using this method as they have multiple equivalent encodings
+  */
+case class FloatBitwiseCompare(
+    result : TempValue,
+    val1 : TempValue,
+    val2 : TempValue
+) extends Step with NullipotentStep {
+  lazy val inputValues = Set[TempValue](val1, val2)
+  lazy val outputValues = Set[TempValue](result)
+
+  def renamed(f : (TempValue) => TempValue) =
+    FloatBitwiseCompare(f(result), f(val1), f(val2)).assignLocationFrom(this)
 }
 
 case class AssertPredicate(

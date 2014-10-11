@@ -620,6 +620,17 @@ object GenPlanStep {
       
       state.withTempValue(resultTemp -> resultIr)
 
+    case ps.FloatBitwiseCompare(resultTemp, val1Temp, val2Temp) =>
+      val val1Ir = state.liveTemps(val1Temp)
+      val val2Ir = state.liveTemps(val2Temp)
+
+      val block = state.currentBlock
+      val val1IntCastIr = block.bitcastTo("val1IntCast")(val1Ir, IntegerType(64))
+      val val2IntCastIr = block.bitcastTo("val2IntCast")(val2Ir, IntegerType(64))
+
+      val resultIr = block.icmp("compResult")(IComparisonCond.Equal, None, val1IntCastIr, val2IntCastIr)
+      state.withTempValue(resultTemp -> resultIr)
+
     case ps.InitPair(resultTemp, listLengthOpt) =>
       val block = state.currentBlock
       val allocation = state.currentAllocation

@@ -22,6 +22,11 @@
 	(assert-false (eqv? -163.5 3435.5))
   (assert-false (eqv? +nan.0 (typed-dynamic 0.0 <flonum>)))
 
+  (assert-false (eqv? 0.0 -0.0))
+  (assert-false (eqv? 0.0 (typed-dynamic -0.0 <flonum>)))
+  (assert-false (eqv? -0.0 (typed-dynamic 0.0 <flonum>)))
+  (assert-false (eqv? (typed-dynamic 0.0 <flonum>) (typed-dynamic -0.0 <flonum>)))
+
   ; This is undefined by R7RS
   ; However, if we do a pointer or intermediate value fast path comparison between NaN and itself we will return #t. If
   ; we want to be consistent we should return #t everywhere at all optimisation levels.

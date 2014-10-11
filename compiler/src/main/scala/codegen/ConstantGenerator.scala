@@ -28,8 +28,7 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
   private val stringCache = new mutable.HashMap[String, IrConstant]
   private val symbolCache = new mutable.HashMap[String, IrConstant]
   private val exactIntegerCache = new mutable.HashMap[Long, IrConstant]
-  private var nanCache : Option[IrConstant] = None
-  private val flonumCache = new mutable.HashMap[Double, IrConstant]
+  private val flonumCache = new mutable.HashMap[Long, IrConstant]
   private val characterCache = new mutable.HashMap[Char, IrConstant]
   private val bytevectorCache = new mutable.HashMap[Vector[Short], IrConstant]
   private val pairCache = new mutable.HashMap[(IrConstant, IrConstant), IrConstant]
@@ -238,22 +237,12 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
 
           defineConstantData(module)(intCellName, intCell)
         })
-      
-      case ps.CreateFlonumCell(_, value) if value.isNaN =>
-        if (!nanCache.isDefined) {
-          val flonumCell = ct.FlonumCell.createConstant(
-            value=DoubleConstant(value)
-          )
 
-          nanCache = Some(
-            defineConstantData(module)("schemeNaN", flonumCell)
-          )
-        }
-
-        nanCache.get
-      
       case ps.CreateFlonumCell(_, value) =>
-        flonumCache.getOrElseUpdate(value, {
+        // Use longBits here so we distinguish +nan.0, -0.0, etc properly
+        val longBits = java.lang.Double.doubleToLongBits(value)
+
+        flonumCache.getOrElseUpdate(longBits, {
           val flonumCellName = module.nameSource.allocate("schemeFlonum")
 
           val flonumCell = ct.FlonumCell.createConstant(

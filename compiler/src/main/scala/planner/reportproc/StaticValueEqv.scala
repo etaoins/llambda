@@ -56,13 +56,7 @@ private[reportproc] object StaticValueEqv {
         Some(constInteger1.value == constInteger2.value)
       
       case (constFlonum1 : iv.ConstantFlonumValue, constFlonum2 : iv.ConstantFlonumValue) =>
-        if (constFlonum1.value.isNaN && constFlonum2.value.isNaN) {
-          // Both values are NaN
-          Some(true)
-        }
-        else {
-          Some(constFlonum1.value == constFlonum2.value)
-        }
+        Some(constFlonum1.value.equals(constFlonum2.value))
       
       case (constChar1 : iv.ConstantCharValue, constChar2 : iv.ConstantCharValue) =>
         Some(constChar1.value == constChar2.value)
