@@ -25,6 +25,7 @@ object PlanResultValuesPhi {
         val commonType = leftUnboxed.nativeType
         val phiResultTemp = ps.Temp(commonType)
         
+        // Our types exactly match - no conversion needed!
         Result(
           leftTempValue=leftUnboxed.tempValue,
           rightTempValue=rightUnboxed.tempValue,
@@ -35,7 +36,6 @@ object PlanResultValuesPhi {
       case (SingleValue(leftValue), SingleValue(rightValue)) =>
         val phiSchemeType = leftValue.schemeType + rightValue.schemeType
 
-        // Our types exactly match - no conversion needed!
         val leftTempValue = leftValue.toTempValue(phiSchemeType)(leftPlan, worldPtr)
         val rightTempValue = rightValue.toTempValue(phiSchemeType)(rightPlan, worldPtr)
 
