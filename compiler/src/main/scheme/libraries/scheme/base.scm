@@ -248,6 +248,20 @@
     (define-r7rs square (lambda: ([num : <number>])
       (* num num)))
 
+    (define-r7rs abs (lambda: ([num : <number>])
+      ; Do a top-level type check to make the compiler generate a specialised version of each branch. The test itself is
+      ; semantically a no-op
+      (if (exact-integer? num)
+        (if (< num 0)
+          (- num)
+          num)
+        ; On x86-64 the raw arithmetic this generates is less efficient than fabs(). On ARM64 the code is identical.
+        ; However, this has two important benefits: it can be statically evaluated without any explicit (abs) planning
+        ; in the compiler and it avoid a cell allocation for positive values.
+        (if (< num 0.0)
+          (- num)
+          num))))
+
     (define-r7rs boolean? (make-predicate <boolean>))
     (define-r7rs not (make-predicate #f))
     (define-r7rs boolean=? (native-function "lliby_boolean_equal" (<boolean> <boolean> . <boolean>) -> <native-bool>))

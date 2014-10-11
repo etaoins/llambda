@@ -336,3 +336,14 @@
 (define-test "(square)" (expect-success
   (assert-equal 1764 (square 42))
   (assert-equal 4.0 (square 2.0))))
+
+(define-test "(abs)" (expect-success
+  (assert-equal 0 (abs 0))
+  (assert-equal 0.0 (abs 0.0))
+  (assert-equal 0.0 (abs -0.0))
+  (assert-equal 7 (abs 7))
+  (assert-equal 7 (abs -7))
+  (assert-equal 7.0 (abs -7.0))
+  (assert-equal +nan.0 (abs +nan.0))
+  (assert-equal +inf.0 (abs +inf.0))
+  (assert-equal +inf.0 (abs -inf.0))))
