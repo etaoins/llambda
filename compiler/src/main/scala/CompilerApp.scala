@@ -13,7 +13,8 @@ object CompilerApp extends App {
     genDebugInfo : Boolean = false,
     targetPlatformOpt : Option[platform.TargetPlatform] = None,
     schemeDialect : dialect.Dialect = dialect.Dialect.default,
-    saveTempObj : Boolean = false
+    saveTempObj : Boolean = false,
+    dumpPlan : Boolean = false
   )
   
   private val stringToPlatform = Map(
@@ -87,6 +88,10 @@ object CompilerApp extends App {
       c.copy(saveTempObj=true)
     } text ("save intermediate .o file during compilation")
 
+    opt[Unit]("dump-plan") action { (_, c) =>
+      c.copy(dumpPlan=true)
+    } text ("dump internal execution plan")
+
     help("help")
 
     checkConfig { c =>
@@ -148,7 +153,8 @@ object CompilerApp extends App {
           optimizeLevel=config.optimizeLevel,
           extraFeatureIdents=config.extraFeatureIdents,
           genDebugInfo=config.genDebugInfo,
-          saveTempObj=config.saveTempObj
+          saveTempObj=config.saveTempObj,
+          dumpPlan=config.dumpPlan
         )
 
         Compiler.compileFile(input, output, compileConfig)

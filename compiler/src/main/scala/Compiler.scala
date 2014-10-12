@@ -195,6 +195,10 @@ object Compiler {
     // Plan our cell allocations after all optimizations have been done
     val allocatedFunctions = disposedFunctions.mapValues(planner.PlanCellAllocations(_))
 
+    if (config.dumpPlan) {
+      println(planner.PrettyPrintPlan(allocatedFunctions))
+    }
+
     // Generate the LLVM IR
     codegen.GenProgram(
       functions=allocatedFunctions,

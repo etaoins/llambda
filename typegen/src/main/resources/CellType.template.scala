@@ -37,6 +37,8 @@ sealed abstract class CellType extends CastableValue with ${ROOT_CLASS_FIELDS_TR
     case concreteType : ConcreteCellType => Set(concreteType)
     case abstractType => directSubtypes.flatMap(_.concreteTypes)
   }
+
+  override def toString = schemeName
 }
 
 sealed abstract class ConcreteCellType extends CellType {

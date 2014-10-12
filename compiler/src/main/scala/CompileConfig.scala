@@ -11,5 +11,6 @@ case class CompileConfig(
   emitLlvm : Boolean = false,
   extraFeatureIdents : Set[String] = Set(),
   genDebugInfo : Boolean = false,
-  saveTempObj : Boolean = false
+  saveTempObj : Boolean = false,
+  dumpPlan : Boolean = false
 )
