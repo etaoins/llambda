@@ -25,7 +25,27 @@
     (define-r7rs tan (lambda: ((num : <number>))
       (define native-tan (native-function "tan" (<native-double>) -> <native-double>))
       (native-tan (inexact num))))
-    
+
+    (define-r7rs asin (lambda: ((num : <number>))
+      (define native-asin (native-function "asin" (<native-double>) -> <native-double>))
+      (native-asin (inexact num))))
+
+    (define-r7rs acos (lambda: ((num : <number>))
+      (define native-acos (native-function "acos" (<native-double>) -> <native-double>))
+      (native-acos (inexact num))))
+
+    (define-r7rs atan (lambda: ((num : <number>))
+      (define native-atan (native-function "atan" (<native-double>) -> <native-double>))
+      (native-atan (inexact num))))
+
     (define-r7rs sqrt (lambda: ((num : <number>))
       (define native-sqrt (native-function "sqrt" (<native-double>) -> <native-double>))
-      (native-sqrt (inexact num))))))
+      (native-sqrt (inexact num))))
+
+    (define-r7rs exp (lambda: ((num : <number>))
+      (define native-exp (native-function "exp" (<native-double>) -> <native-double>))
+      (native-exp (inexact num))))
+
+    (define-r7rs log (lambda: ((num : <number>))
+      (define native-log (native-function "log" (<native-double>) -> <native-double>))
+      (native-log (inexact num))))))

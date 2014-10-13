@@ -2,7 +2,7 @@
   (import (scheme base) (scheme write) (scheme process-context))  
   (import (llambda typed))
   (export dynamic-false dynamic-true typeless-cell typed-dynamic
-          assert-equal assert-true assert-false assert-raises)
+          assert-equal assert-true assert-false assert-raises assert-within)
   (begin
     ; Use a mutable to launder the value so its type information is lost
     ; There's very little motivation to optimise mutable usage so this should be safe for a long time
@@ -45,6 +45,11 @@
       (syntax-rules ()
                     ((assert-true actual-expr)
                      (assert-equal #f actual-expr))))
+
+    (define-syntax assert-within
+      (syntax-rules ()
+                    ((assert-within value max-diff actual-expr)
+                     (assert-true (< (abs (- value actual-expr)) max-diff)))))
 
     (define-syntax assert-raises
       (syntax-rules ()
