@@ -16,7 +16,15 @@ object DisposeValues {
     List(ps.DisposeValues(toDispose))
   }
 
-  /**  Iterates over a branch in reverse order discarding values on their last use
+  def innerOutputValuesForStep(step : ps.Step) : Set[ps.TempValue] = step match {
+    case nestingStep : ps.NestingStep =>
+      nestingStep.innerBranches.flatMap(_._1).flatMap(innerOutputValuesForStep).toSet
+
+    case other =>
+      other.outputValues
+  }
+
+  /** Iterates over a branch in reverse order discarding values on their last use
     *
     * @param  branchInputValues  Input values to the branch. For a procedure these are the procedure's arguments.
     *                            For conditional branches these will be the values in the test. These are discarded at
@@ -34,8 +42,13 @@ object DisposeValues {
       acc : List[ps.Step]
   ) : List[ps.Step] = reverseSteps match {
     case (nestingStep : ps.NestingStep) :: reverseTail =>
-      // Determine which input values are no longer used
-      val unusedInputValues = nestingStep.outerInputValues.filter(!usedValues.contains(_))
+      // Build a set of output values generated inside the branch. This is used to distinguish input values that come
+      // from before the branch (and therefore need to be disposed) versus input values that come from within the branch
+      val innerOutputValues = innerOutputValuesForStep(nestingStep)
+
+      // Determine which input values come from outside the branch
+      val externalInputValues = nestingStep.inputValues -- innerOutputValues
+      val unusedExternalInputValues = externalInputValues.filter(!usedValues.contains(_))
 
       // Step to dispose the result outputs if they're unused
       // This will be placed after the step itself
@@ -43,7 +56,7 @@ object DisposeValues {
 
       // Which branch results are from outside the branch and are no longer used?
       val unusedBranchResults = nestingStep.innerBranches.filter({ case (steps, branchResult) =>
-        !usedValues.contains(branchResult) && !steps.exists(_.outputValues.contains(branchResult))
+        !usedValues.contains(branchResult) && !innerOutputValues.contains(branchResult)
       }).map(_._2).toSet
 
       val disposeSteps = disposeValuesToSteps(unusedOutputValues ++ unusedBranchResults)
@@ -52,11 +65,11 @@ object DisposeValues {
       val newStep = nestingStep.mapInnerBranches { (branchSteps, outputValue) =>
         // Pass the unused input values as argument values
         // If they're not used within the branch they'll be disposed at the top of it
-        val allInputValues = unusedInputValues ++ unusedBranchResults
-        (discardUnusedValues(allInputValues, branchSteps.reverse, usedValues + outputValue, Nil), outputValue)
+        val nestedInputValues = unusedExternalInputValues
+        (discardUnusedValues(nestedInputValues, branchSteps.reverse, usedValues + outputValue, Nil), outputValue)
       }
 
-      val newUsedValues = nestingStep.inputValues ++ usedValues 
+      val newUsedValues = externalInputValues ++ usedValues
 
       val newAcc = newStep :: (disposeSteps ++ acc)
       discardUnusedValues(branchInputValues, reverseTail, newUsedValues, newAcc)
@@ -64,7 +77,7 @@ object DisposeValues {
     case (disposableStep : ps.NullipotentStep) :: reverseTail if !usedValues.contains(disposableStep.result) =>
       // We can drop this step completely
       discardUnusedValues(branchInputValues, reverseTail, usedValues, acc)
-    
+
     case (inputDisposable : ps.InputDisposableStep) :: reverseTail =>
       // If this is the last use of any of the input values they should be discarded as part of the step
       val inputDisposeSet = inputDisposable.inputValues -- usedValues

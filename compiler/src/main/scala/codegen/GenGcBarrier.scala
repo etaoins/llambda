@@ -21,11 +21,18 @@ object GenGcBarrier {
     finalGcState : GcState
   )
 
-  def calculateGcBarrier(state: GenerationState) : CalculatedBarrier = {
+  /** Calculates a GC barrier without generating any code
+    *
+    * @param  flushFilterOpt  If defined this will instead calculate a GC flush only rooting the passed values. GC
+    *                         flushes are used to root values that required rooting on both sides of a conditional
+    *                         branch
+    */
+  def calculateGcBarrier(state: GenerationState)(flushFilterOpt : Option[Set[ps.TempValue]] = None) : CalculatedBarrier = {
     val liveTemps = state.liveTemps
     val gcState = state.gcState
+    val flushOnly = flushFilterOpt.isDefined
 
-    if (!state.currentAllocation.isEmpty) {
+    if (!state.currentAllocation.isEmpty && !flushOnly) {
       // Allocations cannot cross GC barriers
       throw new InternalCompilerErrorException("Cell allocation held across GC barrier")
     }
@@ -34,14 +41,30 @@ object GenGcBarrier {
     // Sort them by their IR representation to ensure we generate stable IR between runs
     val liveGcManagedValues = liveTemps.tempValueToIr.toSeq.filter(_._1.isGcManaged).sortBy(_._2.toIr)
 
+    // If we have a root filter due to a GC flush we might be only rooting some GC managed values
+    val flushingGcManagedValues = flushFilterOpt match {
+      case Some(filterTemps) =>
+        liveGcManagedValues.filter { case (tempValue, irValue) =>
+          filterTemps.contains(tempValue)
+        }
+
+      case _ =>
+        liveGcManagedValues
+    }
+
+    // Build a set of all pointer identities that are live, even if they aren't being flushed
+    val liveIdentities = Set[GcPointerIdentity](liveGcManagedValues.map({ case (tempValue, _) =>
+      liveTemps.pointerIdentities(tempValue)
+    }) : _*)
+
     // If multiple values with the same identity need to be saved we should only save one
-    val liveIdentities = ListMap(liveGcManagedValues.map({ case (tempValue, irValue) =>
+    val flushingIdentities = ListMap(flushingGcManagedValues.map({ case (tempValue, irValue) =>
       // Find their identities and pick an arbitrary one to save
       liveTemps.pointerIdentities(tempValue) -> irValue
     }) : _*)
       
     // Find the set of values that need to be flushed to memory
-    val unflushedIdentities = liveIdentities.filter({ case (pointerIdentity, irValue) => 
+    val unflushedIdentities = flushingIdentities.filter({ case (pointerIdentity, irValue) => 
       // Filter out any identities already rooted
       !gcState.rootedIdentities.contains(pointerIdentity)
     })
@@ -50,7 +73,7 @@ object GenGcBarrier {
     val idleSlots = (0 until gcState.nextUnallocatedSlot).toSet -- gcState.rootedIdentities.values.toSet
     
     // Find the set of values that need to be derooted
-    val newlyDerootedIdentities = gcState.rootedIdentities.keySet -- liveIdentities.keySet
+    val newlyDerootedIdentities = gcState.rootedIdentities.keySet -- liveIdentities
     val newlyDerootedSlots = newlyDerootedIdentities.map(gcState.rootedIdentities)
 
     // Figure out if we can steal any slots
@@ -85,15 +108,21 @@ object GenGcBarrier {
     val rootedIdentities = (gcState.rootedIdentities -- newlyDerootedIdentities) ++ stolenIdentitiesToSlot ++ unstolenIdentitiesToSlot
 
     // Generate restore information for them in slot order
-    val restoreTemps = (liveGcManagedValues.map { case (tempValue, previousIrValue) =>
-      val loadFromSlot = rootedIdentities(liveTemps.pointerIdentities(tempValue))
+    val restoreTemps = if (!flushOnly) {
+      (liveGcManagedValues.map { case (tempValue, previousIrValue) =>
+        val loadFromSlot = rootedIdentities(liveTemps.pointerIdentities(tempValue))
 
-      RestoreData(
-        loadFromSlot=loadFromSlot,
-        previousIrValue=previousIrValue,
-        restoreToTemp=tempValue
-      )
-    }).toList.sortBy(_.loadFromSlot)
+        RestoreData(
+          loadFromSlot=loadFromSlot,
+          previousIrValue=previousIrValue,
+          restoreToTemp=tempValue
+        )
+      }).toList.sortBy(_.loadFromSlot)
+    }
+    else {
+      // We can't restore if we're flushing
+      Nil
+    }
     
     CalculatedBarrier(
       nullSlots=nullSlots,
@@ -162,17 +191,23 @@ object GenGcBarrier {
     })
   }
 
-  def flushGcRoots(state : GenerationState) : GenerationState = {
-    val calcedBarrier = calculateGcBarrier(state)
-    genSaveGcRoots(state)(calcedBarrier, "GC flush")
+  def flushGcRoots(state : GenerationState)(toFlush : Set[ps.TempValue]) : GenerationState = {
+    if (toFlush.isEmpty) {
+      // Nothing to do!
+      state
+    }
+    else {
+      val calcedBarrier = calculateGcBarrier(state)(Some(toFlush))
+      genSaveGcRoots(state)(calcedBarrier, "GC flush")
 
-    state.copy(
-      gcState=calcedBarrier.finalGcState
-    )
+      state.copy(
+        gcState=calcedBarrier.finalGcState
+      )
+    }
   }
 
   def apply[T](initialState : GenerationState)(innerBlock : => (IrBlockBuilder, T)) : (GenerationState, T) = {
-    val calcedBarrier = calculateGcBarrier(initialState)
+    val calcedBarrier = calculateGcBarrier(initialState)(None)
     
     genSaveGcRoots(initialState)(calcedBarrier)
 

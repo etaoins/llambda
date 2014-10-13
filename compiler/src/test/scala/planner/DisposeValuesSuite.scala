@@ -190,6 +190,57 @@ class DisposeValuesSuite extends FunSuite {
     assert(DisposeValues(testFunction).steps === expectedSteps)
   }
   
+  test("condition using outer value in only one branch disposes value in other branch") {
+    val condResult = namedTemp(vt.Int64, "condResult")
+    val outerValue = namedTemp(vt.ExactIntegerType, "outerValue")
+
+    // Make sure we don't try to unroot internal result in the other branch
+    val internalUnboxResult = namedTemp(vt.Int64, "internalUnbox")
+    val internalReboxResult = namedTemp(vt.ExactIntegerType, "internalReboxResult")
+    val trueResult = namedTemp(vt.Int64, "trueResult")
+    val trueSteps = List(
+      ps.UnboxExactInteger(internalUnboxResult, outerValue),
+      ps.BoxExactInteger(internalReboxResult, internalUnboxResult),
+      ps.UnboxExactInteger(trueResult, internalReboxResult)
+    )
+
+    val falseResult = namedTemp(vt.Int64, "falseResult")
+    val falseSteps = List(
+      ps.CreateNativeInteger(falseResult, 25, 64)
+    )
+
+    val testSteps = List(
+      ps.CreateExactIntegerCell(outerValue, 50),
+      ps.CondBranch(condResult, restArgTemp, trueSteps, trueResult, falseSteps, falseResult)
+    )
+
+    val testFunction = functionForSteps(testSteps)
+
+    val expectedTrueSteps = List(
+      ps.DisposeValues(Set(restArgTemp)),
+      ps.UnboxExactInteger(internalUnboxResult, outerValue),
+      ps.DisposeValues(Set(outerValue)),
+      ps.BoxExactInteger(internalReboxResult, internalUnboxResult),
+      ps.DisposeValues(Set(internalUnboxResult)),
+      ps.UnboxExactInteger(trueResult, internalReboxResult),
+      ps.DisposeValues(Set(internalReboxResult))
+    )
+
+    val expectedFalseSteps = List(
+      ps.DisposeValues(Set(restArgTemp, outerValue)),
+      ps.CreateNativeInteger(falseResult, 25, 64)
+    )
+
+    val expectedSteps = List(
+      ps.DisposeValues(Set(selfTemp, fixedArgTemp)),
+      ps.CreateExactIntegerCell(outerValue, 50),
+      ps.CondBranch(condResult, restArgTemp, expectedTrueSteps, trueResult, expectedFalseSteps, falseResult),
+      ps.DisposeValues(Set(condResult))
+    )
+
+    assert(DisposeValues(testFunction).steps === expectedSteps)
+  }
+  
   test("invoke disposing both arguments") {
     val entryPoint = ps.EntryPointTemp()
     val invokeResult = namedTemp(vt.Int64, "invokeResult")

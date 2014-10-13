@@ -3,60 +3,33 @@ import io.llambda
 
 import llambda.compiler.planner.{step => ps}
 import llambda.llvmir._
-import llambda.compiler.ProcedureAttribute
 
 private[codegen] object GenCondBranch {
-  private def containsAllocatingStep(step : ps.Step) : Boolean = {
-    step match {
-      case allocating if step.canAllocate => true
-
-      case nestingStep : ps.NestingStep =>
-        nestingStep.innerBranches.flatMap(_._1).exists(containsAllocatingStep)
-
-      case _ =>
-        false
-    }
-  }
-
-  private def unconditionallyTerminates(step : ps.Step) : Boolean = step match {
-    case _ : ps.Return | _ : ps.TailCall => 
-      // These return
-      true
-
-    case invokeStep : ps.Invoke if invokeStep.signature.attributes.contains(ProcedureAttribute.NoReturn) =>
-      // These throw exceptions or exit
-      true
-
-    case _ => 
-      false
-  }
-
   def apply(state : GenerationState, genGlobals : GenGlobals)(step : ps.CondBranch) : GenResult = step match {
     case ps.CondBranch(resultTemp, testTemp, trueSteps, trueTemp, falseSteps, falseTemp) =>
       val testIr = state.liveTemps(testTemp)
-      
+
       // Make two blocks
       val irFunction = state.currentBlock.function
       val trueStartBlock = irFunction.startChildBlock("condTrue")
       val falseStartBlock = irFunction.startChildBlock("condFalse")
 
-      // If one or both of our branches terminates unconditionally we don't need to merge our GC state
-      // This is common when dealing with tail calls
-      val needsGcStateMerge = !trueSteps.exists(unconditionallyTerminates) &&
-                              !falseSteps.exists(unconditionallyTerminates)
+      // Determine which GC values we'll need to root in both branches so they can be pre-rooted. This has two
+      // advantages:
+      //
+      // 1) After the branch terminates we don't need to attempt to reconcile the values rooted between the two
+      //    branches. In particular, ensuring roots are assigned the same GC slot across mutiple complex branches is
+      //    difficuly unless we just explicitly pre-root them here
+      // 2) It generates less code by hoisting the root flushing out of the branches. This could be done by LLVM in
+      //    some situations but this makes it explicit
+      val liveValueResult = LiveValuesAtBarrier(List(step), state.liveTemps.keySet)
 
-      val postFlushState  = if (needsGcStateMerge && containsAllocatingStep(step)) {
-        // Flush our GC roots out
-        // This is half a barrier - we write out any pending roots
-        // This has two purposes:
-        // 1) It prevents unflushed roots from building up in the main execution path while being repeatedly flushed in
-        //    branches
-        // 2) It's significantly easier to reason about and merge the GC states of the branches if the parent roots are
-        //    all flushed
-        GenGcBarrier.flushGcRoots(state)
-      }
-      else {
-        state
+      val postFlushState = liveValueResult match {
+        case LiveValuesAtBarrier.Result.NoBarrier =>
+          state
+
+        case LiveValuesAtBarrier.Result.BarrierEncountered(commonFlushValues) =>
+          GenGcBarrier.flushGcRoots(state)(commonFlushValues)
       }
 
       // Branch!
@@ -119,7 +92,7 @@ private[codegen] object GenCondBranch {
           val sortedCommonLiveTemps = sortedTrueLiveTemps.filter(falseEndState.liveTemps.tempValueToIr.contains)
 
           // Phi any values that have diverged across branches
-          val tempValueToIrUpdate = sortedCommonLiveTemps map { liveTemp =>
+          val newTempValueToIr = sortedCommonLiveTemps map { liveTemp =>
             val trueValueIrValue = trueEndState.liveTemps(liveTemp)
             val falseValueIrValue = falseEndState.liveTemps(liveTemp)
               
@@ -137,7 +110,7 @@ private[codegen] object GenCondBranch {
           // Make sure we preserve pointer identities or else the identity count will explode
           postFlushState.copy(
             currentBlock=phiBlock,
-            liveTemps=state.liveTemps.withUpdatedIrValues(tempValueToIrUpdate),
+            liveTemps=state.liveTemps.copy(tempValueToIr=newTempValueToIr.toMap),
             gcState=GcState.fromBranches(postFlushState.gcState, List(trueEndState.gcState, falseEndState.gcState))
           ).withTempValue(resultTemp -> phiResultIr)
       }

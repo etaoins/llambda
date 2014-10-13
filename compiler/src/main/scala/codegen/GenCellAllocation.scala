@@ -55,7 +55,7 @@ object GenCellAllocation {
     // In the garage collection block first save our GC roots
     val collectGarbageState = initialState.copy(currentBlock=collectGarbageBlock) 
 
-    val calcedBarrier = GenGcBarrier.calculateGcBarrier(collectGarbageState)
+    val calcedBarrier = GenGcBarrier.calculateGcBarrier(collectGarbageState)()
     GenGcBarrier.genSaveGcRoots(collectGarbageState)(calcedBarrier)
 
     // Now call the runtime
