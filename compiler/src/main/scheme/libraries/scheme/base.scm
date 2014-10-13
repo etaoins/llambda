@@ -227,11 +227,13 @@
     (define-r7rs round (lambda: ((n : <number>))
       (if (exact-integer? n) n (native-round n))))
 
-    ; This is tricky because it's possible to be both inexact and an integer
     (define-r7rs integer? (lambda (x)
       (if (number? x)
-        ; Some  numbers are integers
-        (= x (floor x))
+        (if (exact-integer? x)
+          ; All exact integers are integers
+          #t
+          ; Some flonums are integers
+          (= x (floor x)))
         ; Not numeric
         #f)))
 
