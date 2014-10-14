@@ -3,6 +3,7 @@
 #include "binding/ListElementCell.h"
 #include "binding/EmptyListCell.h"
 #include "binding/ProperList.h"
+#include "binding/RestArgument.h"
 
 #include "alloc/allocator.h"
 #include "alloc/WeakRef.h"
@@ -19,7 +20,7 @@ using namespace lliby;
 extern "C"
 {
 
-ReturnValuesList *lliby_apply(World &world, TopProcedureCell *procedure, ListElementCell *argHead)
+ReturnValuesList *lliby_apply(World &world, TopProcedureCell *procedure, RestArgument<AnyCell> *argHead)
 {
 	ListElementCell *procArgHead;
 
@@ -30,11 +31,7 @@ ReturnValuesList *lliby_apply(World &world, TopProcedureCell *procedure, ListEle
 		// Find our arguments
 		ProperList<AnyCell> applyArgList(argHead);
 
-		if (!applyArgList.isValid())
-		{
-			signalError(world, "Non-list passed to (apply)", {argHead});
-		}
-		else if (applyArgList.length() == 0)
+		if (applyArgList.length() == 0)
 		{
 			// This is easy - call with no args
 			procArgHead = argHead;
