@@ -3,11 +3,12 @@ import io.llambda
 
 import llambda.compiler._
 import util.control.Exception._
+import util.control.NoStackTrace
 
 private[frontend] object ExpandMacro {
   private case class Expandable(transformer : Transformer, matchedData : MatchedData)
   
-  private class MatchFailedException extends Exception
+  private class MatchFailedException extends NoStackTrace
 
   private case class MatchedData(
     variableData : Map[SyntaxVariable, sst.ScopedDatum] = Map(),
