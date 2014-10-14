@@ -41,7 +41,7 @@ ReturnValuesList *lliby_apply(World &world, TopProcedureCell *procedure, RestArg
 			// Build our procedure args
 			auto applyArgIt = applyArgList.begin();
 			
-			// Standalone args are zero or more args that appear before the final final proper list
+			// Standalone args are zero or more args that appear before the final proper list
 			auto standaloneArgCount = applyArgList.length() - 1;
 			std::vector<AnyCell*> standaloneArgs(standaloneArgCount);
 
