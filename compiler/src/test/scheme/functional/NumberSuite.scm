@@ -149,6 +149,35 @@
       (truncate/ -5 -2))
     (lambda (quot remain)
       (assert-equal 2 quot)
+      (assert-equal -1 remain)))
+
+    ; Our native code generation requires a constant denominator to avoid divide by zero checks
+  (call-with-values
+    (lambda ()
+      (truncate/ (typed-dynamic 5 <exact-integer>) 2))
+    (lambda (quot remain)
+      (assert-equal 2 quot)
+      (assert-equal 1 remain)))
+
+  (call-with-values
+    (lambda ()
+      (truncate/ (typed-dynamic -5 <exact-integer>) 2))
+    (lambda (quot remain)
+      (assert-equal -2 quot)
+      (assert-equal -1 remain)))
+
+  (call-with-values
+    (lambda ()
+      (truncate/ (typed-dynamic 5 <exact-integer>) -2))
+    (lambda (quot remain)
+      (assert-equal -2 quot)
+      (assert-equal 1 remain)))
+
+  (call-with-values
+    (lambda ()
+      (truncate/ (typed-dynamic -5 <exact-integer>) -2))
+    (lambda (quot remain)
+      (assert-equal 2 quot)
       (assert-equal -1 remain)))))
 
 (define-test "(truncate/) by zero fails" (expect-failure
@@ -158,7 +187,12 @@
     (assert-equal 2 (truncate-quotient 5 2))
     (assert-equal -2 (truncate-quotient -5 2))
     (assert-equal -2 (truncate-quotient 5 -2))
-    (assert-equal 2 (truncate-quotient -5 -2))))
+    (assert-equal 2 (truncate-quotient -5 -2))
+
+    (assert-equal 2 (truncate-quotient (typed-dynamic 5 <exact-integer>) 2))
+    (assert-equal -2 (truncate-quotient (typed-dynamic -5 <exact-integer>) 2))
+    (assert-equal -2 (truncate-quotient (typed-dynamic 5 <exact-integer>) -2))
+    (assert-equal 2 (truncate-quotient (typed-dynamic -5 <exact-integer>) -2))))
 
 (define-test "(truncate-quotient) by zero fails" (expect-failure
     (truncate-quotient 5 0)))
@@ -167,7 +201,12 @@
     (assert-equal 1 (truncate-remainder 5 2))
     (assert-equal -1 (truncate-remainder -5 2))
     (assert-equal 1 (truncate-remainder 5 -2))
-    (assert-equal -1 (truncate-remainder -5 -2))))
+    (assert-equal -1 (truncate-remainder -5 -2))
+
+    (assert-equal 1 (truncate-remainder (typed-dynamic 5 <exact-integer>) 2))
+    (assert-equal -1 (truncate-remainder (typed-dynamic -5 <exact-integer>) 2))
+    (assert-equal 1 (truncate-remainder (typed-dynamic 5 <exact-integer>) -2))
+    (assert-equal -1 (truncate-remainder (typed-dynamic -5 <exact-integer>) -2))))
 
 (define-test "(truncate-remainder) by zero fails" (expect-failure
     (truncate-remainder 5 0)))

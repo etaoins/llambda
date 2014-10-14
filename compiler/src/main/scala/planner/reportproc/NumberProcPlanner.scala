@@ -4,6 +4,7 @@ import io.llambda
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.ContextLocated
+import llambda.compiler.DivideByZeroException
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
@@ -248,7 +249,80 @@ object NumberProcPlanner extends ReportProcPlanner {
 
     Some(resultValue)
   } 
-  override def planWithValue(state : PlannerState)(
+
+  private def performIntegerDivOp(
+      instr : BinaryInstrBuilder,
+      staticCalc : StaticIntegerOp,
+      numerator : (ContextLocated, iv.IntermediateValue),
+      denominator : (ContextLocated, iv.IntermediateValue)
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
+    (numerator, denominator) match {
+      case (_, (denomLoc, constantDenom : iv.ConstantExactIntegerValue)) if constantDenom.value == 0 =>
+        // Catch divide by zero first
+        throw new DivideByZeroException(denomLoc, "Attempted integer division by zero")
+
+      case ((_, constantNumer : iv.ConstantExactIntegerValue),
+            (_, constantDenom : iv.ConstantExactIntegerValue)) =>
+        val resultValue = staticCalc(constantNumer.value, constantDenom.value)
+        Some(new iv.ConstantExactIntegerValue(resultValue))
+
+      case ((numerLoc, dynamicNumer),
+            (_, constantDenom : iv.ConstantExactIntegerValue)) =>
+        val numerTemp = plan.withContextLocation(numerLoc) {
+          dynamicNumer.toTempValue(vt.Int64)
+        }
+
+        val denomTemp = constantDenom.toTempValue(vt.Int64)
+
+        val resultTemp = ps.Temp(vt.Int64)
+        plan.steps += instr(resultTemp, numerTemp, denomTemp)
+
+        Some(new iv.NativeExactIntegerValue(resultTemp, vt.Int64))
+
+      case _ =>
+        None
+    }
+  }
+
+  private def performIntegerDivide(
+      numerator : (ContextLocated, iv.IntermediateValue),
+      denominator : (ContextLocated, iv.IntermediateValue)
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] =
+    performIntegerDivOp(ps.IntegerDiv(_, true, _, _), _ / _, numerator, denominator)
+
+  private def performIntegerRemainder(
+      numerator : (ContextLocated, iv.IntermediateValue),
+      denominator : (ContextLocated, iv.IntermediateValue)
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] =
+    performIntegerDivOp(ps.IntegerRem(_, true, _, _), _ % _, numerator, denominator)
+
+  override def planWithValues(state : PlannerState)(
+    reportName : String,
+    operands : List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ResultValues] = (reportName, operands) match {
+    case ("truncate/", List(numerator, denominator)) =>
+      // Handle this here because it produces multiple values
+      val inlinePlan = plan.forkPlan()
+
+      val quotientValueOpt = performIntegerDivide(numerator, denominator)
+      val remainderValueOpt = performIntegerRemainder(numerator, denominator)
+
+      (quotientValueOpt, remainderValueOpt) match {
+        case (Some(quotientValue), Some(remainderValue)) =>
+          plan.steps ++= inlinePlan.steps
+          Some(ResultValues(List(quotientValue, remainderValue)))
+
+        case _ =>
+          None
+      }
+
+    case _ =>
+      planWithSingleValue(state)(reportName, operands) map { value =>
+        SingleValue(value)
+      }
+  }
+
+  private def planWithSingleValue(state : PlannerState)(
       reportName : String,
       operands : List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = (reportName, operands) match {
@@ -347,6 +421,12 @@ object NumberProcPlanner extends ReportProcPlanner {
         staticCalc=_ / _,
         operands=operandValues
       )
+
+    case ("truncate-quotient", List(numerator, denominator)) =>
+      performIntegerDivide(numerator, denominator)
+
+    case ("truncate-remainder", List(numerator, denominator)) =>
+      performIntegerRemainder(numerator, denominator)
 
     case ("exact", List(singleOperand)) =>
       val singleValue = singleOperand._2

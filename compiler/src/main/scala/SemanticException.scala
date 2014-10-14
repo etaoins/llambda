@@ -71,6 +71,10 @@ class OutOfBoundsException(located : SourceLocated, message : String) extends Se
   val semanticErrorType = "out of bounds"
 }
 
+class DivideByZeroException(located : SourceLocated, message : String) extends SemanticException(located, message) {
+  val semanticErrorType = "divide by zero"
+}
+
 class DefinitionOutsideTopLevelException(located : SourceLocated) extends BadSpecialFormException(located, "Definitions can only be introduced in at the outermost level or at the beginning of a body") 
 
 class DuplicateDefinitionException(val symbol : sst.ScopedSymbol) extends SemanticException(symbol, s"Duplicate definition for ${symbol.name}") {

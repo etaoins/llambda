@@ -1,6 +1,7 @@
 package io.llambda.compiler.planner.reportproc
 import io.llambda
 
+import llambda.compiler.{DivideByZeroException}
 import llambda.compiler.ast
 import llambda.compiler.planner.PlanHelpers
 import org.scalatest.FunSuite
@@ -340,5 +341,49 @@ class NumberProcSuite extends FunSuite with PlanHelpers {
     assertStaticPlan("(zero? +nan.0)",
       ast.BooleanLiteral(false)
     )
+  }
+
+  test("static (truncate-quotient)") {
+    assertStaticPlan("(truncate-quotient 5 2)",
+      ast.IntegerLiteral(2)
+    )
+
+    assertStaticPlan("(truncate-quotient -5 2)",
+      ast.IntegerLiteral(-2)
+    )
+
+    assertStaticPlan("(truncate-quotient 5 -2)",
+      ast.IntegerLiteral(-2)
+    )
+
+    assertStaticPlan("(truncate-quotient -5 -2)",
+      ast.IntegerLiteral(2)
+    )
+
+    intercept[DivideByZeroException] {
+      planStepsFor("(truncate-quotient 5 0)")
+    }
+  }
+
+  test("static (truncate-remainder)") {
+    assertStaticPlan("(truncate-remainder 5 2)",
+      ast.IntegerLiteral(1)
+    )
+
+    assertStaticPlan("(truncate-remainder -5 2)",
+      ast.IntegerLiteral(-1)
+    )
+
+    assertStaticPlan("(truncate-remainder 5 -2)",
+      ast.IntegerLiteral(1)
+    )
+
+    assertStaticPlan("(truncate-remainder -5 -2)",
+      ast.IntegerLiteral(-1)
+    )
+
+    intercept[DivideByZeroException] {
+      planStepsFor("(truncate-remainder 5 0)")
+    }
   }
 }
