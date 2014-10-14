@@ -7,10 +7,29 @@ import llambda.compiler.ProcedureAttribute
 object LiveValuesAtBarrier {
   object Result {
     sealed trait Result
+
+    /** GC barrier was encountered in all execution paths
+      *
+      * @param  liveValues  Set of values live at the GC barrier
+      */
     case class BarrierEncountered(liveValues : Set[ps.TempValue]) extends Result
+
+    /** No GC barrier was encountered in at least one execution path */
     case object NoBarrier extends Result
   }
 
+  /** Determines which TempValues will definitely cross a GC barrier in the passed steps
+    *
+    * This only considers values passed in from initialValues. Values created during the execution of the passed steps
+    * will not be included in the result.
+    *
+    * When encountering with branches this will follow each branch and only consider values that crossed a GC barrier
+    * in both branches. Terminating step are not considered GC barriers as the current function's GC state is cleaned
+    * up before the step is executed.
+    *
+    * @param  steps           List of steps in forward order to examine for GC barriers
+    * @param  initialValues   Set of values to consider live at the beginning of the steps
+    */
   def apply(steps : List[ps.Step], initialValues : Set[ps.TempValue]) : Result.Result = {
     import Result._
 
