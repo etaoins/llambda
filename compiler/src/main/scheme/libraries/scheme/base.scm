@@ -266,6 +266,10 @@
             (- num)
             num)))))
 
+    (define-r7rs truncate/ (world-function "lliby_truncate_div" (<native-int64> <native-int64>) -> (Values <exact-integer> <exact-integer>)))
+    (define-r7rs truncate-quotient (world-function "lliby_truncate_quotient" (<native-int64> <native-int64>) -> <native-int64>))
+    (define-r7rs truncate-remainder (world-function "lliby_truncate_remainder" (<native-int64> <native-int64>) -> <native-int64>))
+
     (define-r7rs boolean? (make-predicate <boolean>))
     (define-r7rs not (make-predicate #f))
     (define-r7rs boolean=? (native-function "lliby_boolean_equal" (<boolean> <boolean> . <boolean>) -> <native-bool>))

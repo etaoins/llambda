@@ -122,6 +122,56 @@
 (define-test "dividing no numbers fails" (expect-failure
   (/)))
 
+(define-test "(truncate/)" (expect-success
+  (call-with-values 
+    (lambda ()
+      (truncate/ 5 2))
+    (lambda (quot remain)
+      (assert-equal 2 quot)
+      (assert-equal 1 remain)))
+  
+  (call-with-values 
+    (lambda ()
+      (truncate/ -5 2))
+    (lambda (quot remain)
+      (assert-equal -2 quot)
+      (assert-equal -1 remain)))
+  
+  (call-with-values 
+    (lambda ()
+      (truncate/ 5 -2))
+    (lambda (quot remain)
+      (assert-equal -2 quot)
+      (assert-equal 1 remain)))
+  
+  (call-with-values 
+    (lambda ()
+      (truncate/ -5 -2))
+    (lambda (quot remain)
+      (assert-equal 2 quot)
+      (assert-equal -1 remain)))))
+
+(define-test "(truncate/) by zero fails" (expect-failure
+  (truncate/ 5 0)))
+
+(define-test "(truncate-quotient)" (expect-success
+    (assert-equal 2 (truncate-quotient 5 2))
+    (assert-equal -2 (truncate-quotient -5 2))
+    (assert-equal -2 (truncate-quotient 5 -2))
+    (assert-equal 2 (truncate-quotient -5 -2))))
+
+(define-test "(truncate-quotient) by zero fails" (expect-failure
+    (truncate-quotient 5 0)))
+
+(define-test "(truncate-remainder)" (expect-success
+    (assert-equal 1 (truncate-remainder 5 2))
+    (assert-equal -1 (truncate-remainder -5 2))
+    (assert-equal 1 (truncate-remainder 5 -2))
+    (assert-equal -1 (truncate-remainder -5 -2))))
+
+(define-test "(truncate-remainder) by zero fails" (expect-failure
+    (truncate-remainder 5 0)))
+
 (define-test "(=)" (expect-success
   (define dynamic-nan (typed-dynamic +nan.0 <flonum>))
 

@@ -4,6 +4,8 @@
 #include "binding/ProperList.h"
 #include "binding/RestArgument.h"
 
+#include "alloc/RangeAlloc.h"
+
 #include <cmath>
 
 #include "core/error.h"
@@ -270,6 +272,42 @@ double lliby_div(World &world, NumberCell *startValue, RestArgument<NumberCell> 
 	}
 	
 	return currentValue;
+}
+
+ListElementCell* lliby_truncate_div(World &world, std::int64_t numerator, std::int64_t denominator)
+{
+	if (denominator == 0)
+	{
+		signalError(world, "Attempted (truncate/) by zero");
+	}
+
+	alloc::RangeAlloc allocation = alloc::allocateRange(world, 2);
+	auto allocIt = allocation.begin();
+
+	auto quotient = new (*allocIt++) ExactIntegerCell(numerator / denominator);
+	auto remainder = new (*allocIt++) ExactIntegerCell(numerator % denominator);
+
+	return ListElementCell::createProperList(world, {quotient, remainder});
+}
+
+std::int64_t lliby_truncate_quotient(World &world, std::int64_t numerator, std::int64_t denominator)
+{
+	if (denominator == 0)
+	{
+		signalError(world, "Attempted (truncate-quotient) by zero");
+	}
+
+	return numerator / denominator;
+}
+
+std::int64_t lliby_truncate_remainder(World &world, std::int64_t numerator, std::int64_t denominator)
+{
+	if (denominator == 0)
+	{
+		signalError(world, "Attempted (truncate-remainder) by zero");
+	}
+
+	return numerator % denominator;
 }
 
 bool lliby_is_finite(NumberCell *value)

@@ -10,7 +10,8 @@
 (export do)
 (export eqv? eq? equal?)
 (export number? complex? real? rational? exact? integer? exact-integer? inexact? zero? even? odd? exact inexact + - / *
-        expt = < > <= >= positive? negative? floor ceiling truncate round square abs)
+        expt = < > <= >= positive? negative? floor ceiling truncate round square abs truncate/ truncate-quotient
+        truncate-remainder)
 (export boolean? not boolean=?)
 (export pair? null? list? cons car cdr caar cadr cdar cddr length list-copy make-list list append memv memq member assv
         assq assoc reverse list-tail list-ref)
