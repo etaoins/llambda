@@ -15,6 +15,12 @@ class FlonumCell : public NumberCell
 {
 #include "generated/FlonumCellMembers.h"
 public:
+	explicit FlonumCell(double value) :
+		NumberCell(CellTypeId::Flonum),
+		m_value(value)
+	{
+	}
+
 	static FlonumCell* fromValue(World &world, double value)
 	{
 		void *cellPlacement = alloc::allocateCells(world);
@@ -63,14 +69,7 @@ public:
 	{
 		double unused;
 		return std::modf(value(), &unused) == 0.0;
-	}
-	
-private:
-	FlonumCell(double value) :
-		NumberCell(CellTypeId::Flonum),
-		m_value(value)
-	{
-	}
+	}	
 };
 
 }

@@ -12,17 +12,16 @@ class PortCell : public AnyCell
 {
 #include "generated/PortCellMembers.h"
 public:
-	static PortCell* createInstance(World &world, std::ios* stream, bool isOwned = true);
-	
-	void finalizePort();
-
-protected:
-	PortCell(std::ios *stream, bool isOwned = true) :
+	explicit PortCell(std::ios *stream, bool isOwned = true) :
 		AnyCell(CellTypeId::Port),
 		m_isOwned(isOwned),
 		m_stream(stream)
 	{
 	}
+
+	static PortCell* createInstance(World &world, std::ios* stream, bool isOwned = true);
+	
+	void finalizePort();
 };
 	
 }

@@ -22,6 +22,12 @@ class DynamicStateCell : public AnyCell
 {
 #include "generated/DynamicStateCellMembers.h"
 public:
+	DynamicStateCell(dynamic::State *state, GarbageState gcState) :
+		AnyCell(CellTypeId::DynamicState, gcState),
+		m_state(state)
+	{
+	}
+
 	static DynamicStateCell* createInstance(World &world, dynamic::State *state = nullptr);
 	
 	void finalizeDynamicState();
@@ -29,17 +35,6 @@ public:
 	void setState(dynamic::State *state)
 	{
 		m_state = state;
-	}
-
-	/**
-	 * Directly creates a new DynamicStateCell
-	 *
-	 * This is only public to allow the creation of the shared root global state
-	 */
-	DynamicStateCell(dynamic::State *state, GarbageState gcState) :
-		AnyCell(CellTypeId::DynamicState, gcState),
-		m_state(state)
-	{
 	}
 };
 	

@@ -23,11 +23,13 @@ public:
 		return placement;
 	}
 
+	// Don't allow heap allocations
+	void *operator new(size_t s) = delete;
+
 	void operator delete(void *value)
 	{
-		// Since exceptions are enabled the compiler will wants to implicitly
-		// call delete in some unwind paths. This isn't actually harmful as we'll
-		// eventually garbage collect the cell.
+		// Since exceptions are enabled the compiler will wants to implicitly call delete in some unwind paths. This
+		// isn't actually harmful as we'll eventually garbage collect the cell.
 	}
 
 	/**

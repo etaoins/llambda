@@ -12,14 +12,13 @@ class CharCell : public AnyCell
 {
 #include "generated/CharCellMembers.h"
 public:
-	static CharCell* createInstance(World &world, UnicodeChar unicodeChar);
-
-protected:
-	CharCell(UnicodeChar unicodeChar) :
+	explicit CharCell(UnicodeChar unicodeChar) :
 		AnyCell(CellTypeId::Char),
 		m_unicodeChar(unicodeChar)
 	{
 	}
+
+	static CharCell* createInstance(World &world, UnicodeChar unicodeChar);
 };
 	
 }

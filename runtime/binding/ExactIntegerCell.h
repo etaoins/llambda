@@ -12,17 +12,16 @@ class ExactIntegerCell : public NumberCell
 {
 #include "generated/ExactIntegerCellMembers.h"
 public:
+	explicit ExactIntegerCell(std::int64_t value) :
+		NumberCell(CellTypeId::ExactInteger),
+		m_value(value)
+	{
+	}
+
 	static ExactIntegerCell* fromValue(World &world, std::int64_t value)
 	{
 		void *cellLocation = alloc::allocateCells(world);
 		return new (cellLocation) ExactIntegerCell(value);
-	}
-
-private:
-	ExactIntegerCell(std::int64_t value) :
-		NumberCell(CellTypeId::ExactInteger),
-		m_value(value)
-	{
 	}
 };
 

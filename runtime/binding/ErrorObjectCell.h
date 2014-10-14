@@ -14,6 +14,13 @@ class ErrorObjectCell : public AnyCell
 {
 #include "generated/ErrorObjectCellMembers.h"
 public:
+	ErrorObjectCell(StringCell *message, ListElementCell *irritants) :
+		AnyCell(CellTypeId::ErrorObject),
+		m_message(message),
+		m_irritants(irritants)
+	{
+	}
+
 	static ErrorObjectCell *createInstance(World &world, StringCell *message, ListElementCell *irritants);
 	
 	// These are used by the garbage collector to update the cell pointers during compaction
@@ -25,14 +32,6 @@ public:
 	ListElementCell** irritantsRef()
 	{
 		return &m_irritants;
-	}
-	
-private:
-	ErrorObjectCell(StringCell *message, ListElementCell *irritants) :
-		AnyCell(CellTypeId::ErrorObject),
-		m_message(message),
-		m_irritants(irritants)
-	{
 	}
 };
 

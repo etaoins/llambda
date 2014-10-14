@@ -17,6 +17,12 @@ class ProcedureCell : public RecordLikeCell
 {
 #include "generated/ProcedureCellMembers.h"
 public:
+	ProcedureCell(std::uint32_t recordClassId, bool dataIsInline, void *recordData, void *entryPoint) :
+		RecordLikeCell(CellTypeId::Procedure, recordClassId, dataIsInline, recordData),
+		m_entryPoint(entryPoint)
+	{
+	}
+
 	static ProcedureCell* createInstance(World &World, std::uint32_t recordClassId, bool dataIsInline, void *recordData, void *entryPoint);
 
 	/**
@@ -25,13 +31,6 @@ public:
 	bool capturesVariables() const
 	{
 		return recordClassId() != EmptyClosureRecordClassId;
-	}
-
-protected:
-	ProcedureCell(std::uint32_t recordClassId, bool dataIsInline, void *recordData, void *entryPoint) :
-		RecordLikeCell(CellTypeId::Procedure, recordClassId, dataIsInline, recordData),
-		m_entryPoint(entryPoint)
-	{
 	}
 };
 
