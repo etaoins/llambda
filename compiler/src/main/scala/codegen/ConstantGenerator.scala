@@ -27,8 +27,8 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
 
   private val stringCache = new mutable.HashMap[String, IrConstant]
   private val symbolCache = new mutable.HashMap[String, IrConstant]
-  private val exactIntegerCache = new mutable.HashMap[Long, IrConstant]
-  private val flonumCache = new mutable.HashMap[Long, IrConstant]
+  private val exactIntegerCache = new mutable.LongMap[IrConstant]
+  private val flonumCache = new mutable.LongMap[IrConstant]
   private val characterCache = new mutable.HashMap[Char, IrConstant]
   private val bytevectorCache = new mutable.HashMap[Vector[Short], IrConstant]
   private val pairCache = new mutable.HashMap[(IrConstant, IrConstant), IrConstant]
