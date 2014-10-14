@@ -166,4 +166,64 @@ class BinaryInstrsSuite extends IrTestSuite {
     assert(resultVar.irType === DoubleType)
     assertInstr(block, "%div1 = fdiv fast nsz double 14.5, -100.0")
   }
+
+  test("non-exact sdiv") {
+    val block = createTestBlock()
+
+    val op1 = IntegerConstant(IntegerType(64), 12)
+    val op2 = IntegerConstant(IntegerType(64), 1)
+
+    val resultVar = block.sdiv("sdiv")(false, op1, op2)
+
+    assert(resultVar.irType === IntegerType(64))
+    assertInstr(block, "%sdiv1 = sdiv i64 12, 1")
+  }
+
+  test("exact sdiv") {
+    val block = createTestBlock()
+
+    val op1 = IntegerConstant(IntegerType(32), 12)
+    val op2 = IntegerConstant(IntegerType(32), -1)
+
+    val resultVar = block.sdiv("sdivexact")(true, op1, op2)
+
+    assert(resultVar.irType === IntegerType(32))
+    assertInstr(block, "%sdivexact1 = sdiv exact i32 12, -1")
+  }
+
+  test("non-exact udiv") {
+    val block = createTestBlock()
+
+    val op1 = IntegerConstant(IntegerType(16), 12)
+    val op2 = IntegerConstant(IntegerType(16), 1)
+
+    val resultVar = block.udiv("udiv")(false, op1, op2)
+
+    assert(resultVar.irType === IntegerType(16))
+    assertInstr(block, "%udiv1 = udiv i16 12, 1")
+  }
+
+  test("srem") {
+    val block = createTestBlock()
+
+    val op1 = IntegerConstant(IntegerType(64), 12)
+    val op2 = IntegerConstant(IntegerType(64), 1)
+
+    val resultVar = block.srem("srem")(op1, op2)
+
+    assert(resultVar.irType === IntegerType(64))
+    assertInstr(block, "%srem1 = srem i64 12, 1")
+  }
+
+  test("urem") {
+    val block = createTestBlock()
+
+    val op1 = IntegerConstant(IntegerType(64), 12)
+    val op2 = IntegerConstant(IntegerType(64), 1)
+
+    val resultVar = block.urem("urem")(op1, op2)
+
+    assert(resultVar.irType === IntegerType(64))
+    assertInstr(block, "%urem1 = urem i64 12, 1")
+  }
 }

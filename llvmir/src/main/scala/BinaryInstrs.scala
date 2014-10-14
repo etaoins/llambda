@@ -18,19 +18,21 @@ object FastMathFlag {
 }
 
 private[llvmir] trait BinaryInstrs extends IrInstrBuilder {
-  private def simpleIntegerMathInstr(instruction : String)(resultDest : ResultDestination)(wrapBehavior : Set[WrapBehaviour], op1 : IrValue, op2 : IrValue) : IrValue = {
+  private def commonIntegerType(instruction : String)(op1 : IrValue, op2 : IrValue) : IntegerType = {
     if (op1.irType != op2.irType) {
       throw new InconsistentIrException(s"Attempted ${instruction} with non-identical types")
     }
     
-    val resultType = op1.irType 
-    
-    resultType match {
-      case IntegerType(_) =>
+    op1.irType match {
+      case intType : IntegerType =>
+        intType
       case _ =>
         throw new InconsistentIrException(s"Attempted ${instruction} of non-integer")
     }
-    
+  }
+
+  private def simpleIntegerMathInstr(instruction : String)(resultDest : ResultDestination)(wrapBehavior : Set[WrapBehaviour], op1 : IrValue, op2 : IrValue) : IrValue = {
+    val resultType = commonIntegerType(instruction)(op1, op2)
     val resultVar = resultDest.asLocalVariable(nameSource, resultType)
 
     val wrapIr = wrapBehavior.map(_.mnemonic + " ").toList.sorted.mkString("")
@@ -60,9 +62,40 @@ private[llvmir] trait BinaryInstrs extends IrInstrBuilder {
     resultVar
   }
 
+  private def integerDivisionInstr(instruction : String)(resultDest : ResultDestination)(
+      exact : Boolean,
+      op1 : IrValue,
+      op2 : IrValue
+  ) : IrValue = {
+    val resultType = commonIntegerType(instruction)(op1, op2)
+    val resultVar = resultDest.asLocalVariable(nameSource, resultType)
+
+    val exactIr = if (exact) "exact " else ""
+
+    addInstruction(s"${resultVar.toIr} = ${instruction} ${exactIr}${resultType.toIr} ${op1.toIr}, ${op2.toIr}")
+
+    resultVar
+  }
+
+  private def integerRemainderInstr(instruction : String)(resultDest : ResultDestination)(
+      op1 : IrValue,
+      op2 : IrValue
+  ) : IrValue = {
+    val resultType = commonIntegerType(instruction)(op1, op2)
+    val resultVar = resultDest.asLocalVariable(nameSource, resultType)
+
+    addInstruction(s"${resultVar.toIr} = ${instruction} ${resultType.toIr} ${op1.toIr}, ${op2.toIr}")
+
+    resultVar
+  }
+
   val add = simpleIntegerMathInstr("add")_
   val sub = simpleIntegerMathInstr("sub")_
   val mul = simpleIntegerMathInstr("mul")_
+  val sdiv = integerDivisionInstr("sdiv")_
+  val udiv = integerDivisionInstr("udiv")_
+  val srem = integerRemainderInstr("srem")_
+  val urem = integerRemainderInstr("urem")_
   
   val fadd = simpleFloatMathInstr("fadd")_
   val fsub = simpleFloatMathInstr("fsub")_
