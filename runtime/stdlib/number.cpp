@@ -336,18 +336,6 @@ bool lliby_is_infinite(NumberCell *value)
 	}
 }
 
-bool lliby_is_odd(std::int64_t value)
-{
-	// Since C++11 the remainder of a negative number mod a positive is negative
-	// Before it was implementation-defined
-	return (value % 2) != 0;
-}
-
-bool lliby_is_even(std::int64_t value)
-{
-	return (value % 2) == 0;
-}
-
 bool lliby_is_rational(AnyCell *anyCell)
 {
 	if (ExactIntegerCell::isInstance(anyCell))

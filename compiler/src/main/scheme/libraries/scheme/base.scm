@@ -176,6 +176,10 @@
     (define-r7rs eq? eqv?)
     (define-r7rs equal? (native-function "_lliby_is_equal" (<any> <any>) -> <native-bool>))
 
+    (define-r7rs boolean? (make-predicate <boolean>))
+    (define-r7rs not (make-predicate #f))
+    (define-r7rs boolean=? (native-function "lliby_boolean_equal" (<boolean> <boolean> . <boolean>) -> <native-bool>))
+
     (define-r7rs number? (make-predicate <number>))
     ; We only support real and rational numbers
     (define-r7rs complex? number?)
@@ -192,8 +196,6 @@
 
     (define-r7rs exact-integer? exact?)
 
-    (define-r7rs odd? (native-function "lliby_is_odd" (<native-int64>) -> <native-bool>))
-    (define-r7rs even? (native-function "lliby_is_even" (<native-int64>) -> <native-bool>))
 
     (define-r7rs = (native-function "lliby_numeric_equal" (<number> <number> . <number>) -> <native-bool>))
     (define-r7rs < (native-function "lliby_numeric_lt" (<number> <number> . <number>) -> <native-bool>))
@@ -270,9 +272,11 @@
     (define-r7rs truncate-quotient (world-function "lliby_truncate_quotient" (<native-int64> <native-int64>) -> <native-int64>))
     (define-r7rs truncate-remainder (world-function "lliby_truncate_remainder" (<native-int64> <native-int64>) -> <native-int64>))
 
-    (define-r7rs boolean? (make-predicate <boolean>))
-    (define-r7rs not (make-predicate #f))
-    (define-r7rs boolean=? (native-function "lliby_boolean_equal" (<boolean> <boolean> . <boolean>) -> <native-bool>))
+    (define-r7rs odd? (lambda: ([val : <exact-integer>])
+                               (not (= (truncate-remainder val 2) 0))))
+
+    (define-r7rs even? (lambda: ([val : <exact-integer>])
+                                (= (truncate-remainder val 2) 0)))
 
     (define-r7rs pair? (make-predicate <pair>))
     (define-r7rs null? (make-predicate <empty-list>))
