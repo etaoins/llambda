@@ -208,6 +208,13 @@
     (assert-equal 1 (truncate-remainder (typed-dynamic 5 <exact-integer>) -2))
     (assert-equal -1 (truncate-remainder (typed-dynamic -5 <exact-integer>) -2))))
 
+; These are legacy aliases
+(define-test "(quotient)" (expect 5
+  (quotient 10 2)))
+
+(define-test "(remainder)" (expect 0
+  (remainder 10 2)))
+
 (define-test "(truncate-remainder) by zero fails" (expect-failure
     (truncate-remainder 5 0)))
 
