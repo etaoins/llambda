@@ -235,6 +235,12 @@ object GenPlanStep {
 
       state.withTempValue(resultTemp -> cdrIr)
 
+    case ps.LoadStringCharLength(resultTemp, stringTemp) =>
+      val stringIr = state.liveTemps(stringTemp)
+      val lengthIr = ct.StringCell.genLoadFromCharLength(state.currentBlock)(stringIr)
+
+      state.withTempValue(resultTemp -> lengthIr)
+
     case ps.InitVector(vectorResult, elementsResult, length) =>
       val lengthIr = state.liveTemps(length)
       val result = GenVector.init(state)(lengthIr)

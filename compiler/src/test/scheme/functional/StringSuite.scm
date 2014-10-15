@@ -79,8 +79,11 @@
 (define-test "string-append of one string" (expect "Hello"
 	(string-append "Hello")))
 
-(define-test "string-append of three strings" (expect "Hell☃!"
-	(string-append "Hell" "☃" "!")))
+(define-test "string-append of three strings" (expect-success
+  (define new-string (string-append "Hell" "☃" "!"))
+
+  (assert-equal "Hell☃!" new-string)
+  (assert-equal 6 (string-length new-string))))
 
 (define-test "string-append of boolean fails" (expect-failure
 	(string-append "Hell" "☃" "!" #f)))

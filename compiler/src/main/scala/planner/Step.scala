@@ -553,6 +553,19 @@ case class LoadProcedureEntryPoint(result : TempValue, boxed : TempValue, signat
       .assignLocationFrom(this)
 }
 
+/** Loads the length of a string in characters as a UInt32
+  *
+  * This is nullipotent as a string's character length is immutable
+  */
+case class LoadStringCharLength(result : TempValue, boxed : TempValue) extends Step with NullipotentStep {
+  lazy val inputValues = Set(boxed)
+  lazy val outputValues = Set(result)
+
+  def renamed(f : (TempValue) => TempValue) =
+    LoadStringCharLength(f(result), f(boxed))
+      .assignLocationFrom(this)
+}
+
 /** Creates a new uninitialised vector of the given length
   *
   * All elements need to be initialised before it is accessed or the next GC barrier

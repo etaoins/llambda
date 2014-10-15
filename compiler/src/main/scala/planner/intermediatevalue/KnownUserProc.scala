@@ -40,6 +40,7 @@ class KnownUserProc(
     reportproc.DynamicProcPlanner,
     reportproc.ListProcPlanner,
     reportproc.NumberProcPlanner,
+    reportproc.StringProcPlanner,
     reportproc.VectorProcPlanner
   )
 
