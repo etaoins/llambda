@@ -251,9 +251,9 @@ object GenPlanStep {
 
     case ps.LoadVectorLength(resultTemp, vectorTemp) =>
       val vectorIr = state.liveTemps(vectorTemp)
-      val carIr = ct.VectorCell.genLoadFromLength(state.currentBlock)(vectorIr)
+      val lengthIr = ct.VectorCell.genLoadFromLength(state.currentBlock)(vectorIr)
 
-      state.withTempValue(resultTemp -> carIr)
+      state.withTempValue(resultTemp -> lengthIr)
     
     case ps.LoadVectorElement(resultTemp, _, elementsTemp, indexTemp) =>
       val elementsIr = state.liveTemps(elementsTemp)
