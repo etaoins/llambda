@@ -340,7 +340,13 @@
     (define-r7rs vector-ref (world-function "lliby_vector_ref" (<vector> <native-uint32>) -> <any>))
     (define-r7rs vector-set! (world-function "lliby_vector_set" (<vector> <native-uint32> <any>)))
     (define-r7rs vector-append (world-function "lliby_vector_append" <vector> -> <vector>))
-    
+
+    (define native-vector->list (world-function "lliby_vector_to_list" (<vector> <native-uint32> <native-uint32>) -> <list>))
+    (define-r7rs vector->list (case-lambda
+                                ((vec) (native-vector->list vec 0 (vector-length vec)))
+                                ((vec start) (native-vector->list vec start (vector-length vec)))
+                                ((vec start end) (native-vector->list vec start end))))
+
     (define native-make-vector (world-function "lliby_make_vector" (<native-uint32> <any>) -> <vector>))
     (define-r7rs make-vector (case-lambda:
       (([len : <exact-integer>])

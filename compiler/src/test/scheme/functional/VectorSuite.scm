@@ -83,3 +83,19 @@
 
 (define-test "(vector-append) with non-vector fails" (expect-failure
 	(vector-append '(1 2) '(3 4))))
+
+(define-test "(vector->list)" (expect-success
+  (assert-equal '() (vector->list #()))
+  (assert-equal '(dah dah didah) (vector->list #(dah dah didah)))
+  (assert-equal '(dah didah) (vector->list '#(dah dah didah) 1))
+  (assert-equal '(dah) (vector->list '#(dah dah didah) 1 2))
+  (assert-equal '(#(a b) #(c d) #(e f)) (vector->list #(#(a b) #(c d) #(e f))))))
+
+(define-test "(vector->list) with backwards slice fails" (expect-failure
+  (vector->list '#(dah dah didah) 2 1)))
+
+(define-test "(vector->list) past end of vector fails" (expect-failure
+  (vector->list '#(dah dah didah) 0 4)))
+
+(define-test "(vector->list) with negative start index fails" (expect-failure
+  (vector->list '#(dah dah didah) -1)))
