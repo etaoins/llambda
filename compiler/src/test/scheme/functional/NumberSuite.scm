@@ -445,3 +445,15 @@
   (assert-equal +nan.0 (abs +nan.0))
   (assert-equal +inf.0 (abs +inf.0))
   (assert-equal +inf.0 (abs -inf.0))))
+
+(define-test "(max)" (expect-success
+  (assert-equal -1 (max -1))
+  (assert-equal 3 (max -1 2 3 2))
+  (assert-equal 3.0 (max -1 2.5 3 2))
+  (assert-equal 3.7 (max -1 2.5 3.7 2))))
+
+(define-test "(min)" (expect-success
+  (assert-equal -1 (min -1))
+  (assert-equal -2 (min -1 2 3 -2))
+  (assert-equal -3.0 (min -1 2.5 -3 2))
+  (assert-equal -1.75 (min -1.75 2.5 3.7 2))))

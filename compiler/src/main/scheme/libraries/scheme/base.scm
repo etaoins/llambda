@@ -282,6 +282,9 @@
     (define-r7rs even? (lambda: ([val : <exact-integer>])
                                 (= (truncate-remainder val 2) 0)))
 
+    (define-r7rs max (world-function "lliby_max" (<number> . <number>) -> <number>))
+    (define-r7rs min (world-function "lliby_min" (<number> . <number>) -> <number>))
+
     (define-r7rs pair? (make-predicate <pair>))
     (define-r7rs null? (make-predicate <empty-list>))
     (define-r7rs list? (make-predicate <list>))

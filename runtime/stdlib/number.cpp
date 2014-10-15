@@ -89,6 +89,51 @@ namespace
 
 		return true;
 	}
+
+	template<class ExactCompare, class InexactCompare>
+	NumberCell *selectNumericValue(World &world, NumberCell *initialNumber, RestArgument<NumberCell> *argHead, ExactCompare exactCompare, InexactCompare inexactCompare)
+	{
+		ProperList<NumberCell> otherNumbers(argHead);
+		NumberCell *selectedNumber = initialNumber;
+		bool resultExact = true;
+
+		for(auto otherNumber : otherNumbers)
+		{
+			auto selectedInt = cell_cast<ExactIntegerCell>(selectedNumber);
+			auto otherInt = cell_cast<ExactIntegerCell>(otherNumber);
+
+			if (selectedInt && otherInt)
+			{
+				// We can compare these as integers
+				if (exactCompare(otherInt->value(), selectedInt->value()))
+				{
+					// Switch the selected number
+					selectedNumber = otherInt;
+				}
+			}
+			else
+			{
+				// We have to compare these as doubles - even if we don't select the inexact value the entire result
+				// becomes inexact
+				resultExact = false;
+
+				if (inexactCompare(otherNumber->toDouble(), selectedNumber->toDouble()))
+				{
+					selectedNumber = otherNumber;
+				}
+			}
+		}
+
+		if (!resultExact && selectedNumber->isExact())
+		{
+			// We have to allocate a new cell to de-exact this number
+			return FlonumCell::fromValue(world, selectedNumber->toDouble());
+		}
+		else
+		{
+			return selectedNumber;
+		}
+	}
 }
 
 extern "C"
@@ -387,6 +432,20 @@ bool lliby_numeric_gte(NumberCell *value1, NumberCell *value2, RestArgument<Numb
 	return numericCompare(value1, value2, argHead, 
 			[] (std::int64_t value1, int64_t value2) { return value1 >= value2; },
 			[] (double value1, double value2) { return value1 >= value2; });
+}
+
+NumberCell *lliby_max(World &world, NumberCell *currentMaxNumber, RestArgument<NumberCell> *argHead)
+{
+	return selectNumericValue(world, currentMaxNumber, argHead,
+			[] (std::int64_t value1, int64_t value2) { return value1 > value2; },
+			[] (double value1, double value2) { return value1 > value2; });
+}
+
+NumberCell *lliby_min(World &world, NumberCell *currentMaxNumber, RestArgument<NumberCell> *argHead)
+{
+	return selectNumericValue(world, currentMaxNumber, argHead,
+			[] (std::int64_t value1, int64_t value2) { return value1 < value2; },
+			[] (double value1, double value2) { return value1 < value2; });
 }
 
 NumberCell* lliby_expt(World &world, NumberCell *base, NumberCell *power)
