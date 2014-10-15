@@ -53,12 +53,25 @@ private[planner] object FindClosedVars {
       otherExpr.subexprs.flatMap(findRefedVariables)
   }
 
-  def apply(parentState : PlannerState, bodyExpr : et.Expr) : List[ClosedVariable] = {
+  def apply(
+      parentState : PlannerState,
+      bodyExpr : et.Expr,
+      recursiveSelfLoc : Option[StorageLocation]
+  ) : List[ClosedVariable] = {
     // Find the variables that are closed by the parent scope
     val refedVarsList = findRefedVariables(bodyExpr)
 
+    // We don't need to capture ourselves; we're passed in explicitly
+    val nonSelfRefedVarsList = recursiveSelfLoc match {
+      case Some(recursiveSelf) =>
+        refedVarsList.filterNot(recursiveSelf == _)
+
+      case _ =>
+        refedVarsList
+    }
+
     // Figure out if the immutables need to be captured
-    refedVarsList.distinct flatMap { storageLoc =>
+    nonSelfRefedVarsList.distinct flatMap { storageLoc =>
       parentState.values.get(storageLoc) map {
         case ImmutableValue(parentIntermediate) =>
           if (parentIntermediate.needsClosureRepresentation) {

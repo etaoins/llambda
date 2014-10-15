@@ -31,7 +31,7 @@ private[planner] object AttemptInlineApply {
       return None
     }
     
-    val closedVars = FindClosedVars(parentState, lambdaExpr.body)
+    val closedVars = FindClosedVars(parentState, lambdaExpr.body, None)
 
     // We only support immutables at this point
     val importedValues = closedVars collect {

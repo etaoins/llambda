@@ -59,6 +59,17 @@
        (even? (- n 1)))))
   ))))
 
+(define-test "recursive lambda can capture non-lambda from same binding" (expect 11
+  (define (count-until n)
+    (define (iter p)
+      (if (> p stop)
+        p
+        (iter (+ p 1))))
+    (define stop n)
+    (iter 0))
+
+  (count-until 10)))
+
 (define-test "hygienic scoped macro binding using let-syntax" (expect (now . outer)
   (define result1 (let-syntax ((given-that (syntax-rules ()
 										 ((given-that test stmt1 stmt2 ...)

@@ -128,7 +128,7 @@ private[planner] object PlanLambda {
     val restArgLoc = lambdaExpr.restArgOpt
     val body = lambdaExpr.body
 
-    val closedVariables = FindClosedVars(parentState, body)
+    val closedVariables = FindClosedVars(parentState, body, recursiveSelfLoc)
     
     // Collect only the capture variables
     val capturedVariables = (closedVariables collect {
