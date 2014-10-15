@@ -48,23 +48,24 @@ private[planner] object PlanCaseLambda {
       closureType : vt.ClosureType,
       argListHeadTemp : ps.TempValue,
       argLengthTemp : ps.TempValue
-  )(implicit entryPlan : PlanWriter, worldPtrTemp : ps.WorldPtrValue) : ps.TempValue = plannedClauses match {
+  )(implicit entryPlan : PlanWriter, worldPtrTemp : ps.WorldPtrValue) : ResultValues = plannedClauses match {
     case Nil =>
-      // No clauses left - we fell off the end
+      // We were called with no clauses
+      // Note that the checkingClause match below will explicitly check for empty clauses before recursing so this will
+      // only be called for completely empty (case-lambda)s
       val falsePredTemp = ps.Temp(vt.Predicate)
       entryPlan.steps += ps.CreateNativeInteger(falsePredTemp, value=0, bits=vt.Predicate.bits)
       entryPlan.steps += ps.AssertPredicate(worldPtrTemp, falsePredTemp, noMatchingClauseRuntimeErrorMessage)
 
       // This isn't reachable but we need to return to make codegen happy
-      // XXX: Communicate the unreachability to codegen
-      iv.EmptyListValue.toTempValue(vt.ListElementType)(entryPlan, worldPtrTemp)
+      SingleValue(iv.UnitValue)
 
     case checkingClause :: tailClauses =>
       // See if our length matched
       val procValue = checkingClause.procValue
       val signature = procValue.signature
       val testingLength = signature.fixedArgTypes.length
-      
+
       val testingLengthTemp = ps.Temp(vt.UInt32)
       entryPlan.steps += ps.CreateNativeInteger(testingLengthTemp, testingLength, vt.UInt32.bits)
 
@@ -80,37 +81,60 @@ private[planner] object PlanCaseLambda {
       val matchesPred = ps.Temp(vt.Predicate)
       entryPlan.steps += ps.IntegerCompare(matchesPred, testingCond, signedOpt, argLengthTemp, testingLengthTemp) 
 
-      entryPlan.buildCondBranch(matchesPred, { truePlan =>
-        val restoredProcValue = checkingClause.capturedProcOpt match {
-          case Some(CapturedProc(_, recordField)) =>
-            // We need to restore this procedure from our closure
-            val closureDataTemp = ps.RecordLikeDataTemp()
-            truePlan.steps += ps.LoadRecordLikeData(closureDataTemp, innerSelfTempOpt.get, closureType)
+      // Plan for if the clause matches
+      val truePlan = entryPlan.forkPlan()
+      val restoredProcValue = checkingClause.capturedProcOpt match {
+        case Some(CapturedProc(_, recordField)) =>
+          // We need to restore this procedure from our closure
+          val closureDataTemp = ps.RecordLikeDataTemp()
+          truePlan.steps += ps.LoadRecordLikeData(closureDataTemp, innerSelfTempOpt.get, closureType)
 
-            val restoredTemp = ps.Temp(recordField.fieldType)
-            truePlan.steps += ps.LoadRecordDataField(restoredTemp, closureDataTemp, closureType, recordField)
+          val restoredTemp = ps.Temp(recordField.fieldType)
+          truePlan.steps += ps.LoadRecordDataField(restoredTemp, closureDataTemp, closureType, recordField)
 
-            procValue.withSelfTemp(restoredTemp)
+          procValue.withSelfTemp(restoredTemp)
 
-          case None =>
-            procValue
-        }
+        case None =>
+          procValue
+      }
 
-        val argListBoxed = BoxedValue(ct.ListElementCell, argListHeadTemp)
-        val argListValue = new iv.CellValue(argListType, argListBoxed)
+      val argListBoxed = BoxedValue(ct.ListElementCell, argListHeadTemp)
+      val argListValue = new iv.CellValue(argListType, argListBoxed)
 
-        val resultValues = PlanInvokeApply.withArgumentList(restoredProcValue, argListValue)(truePlan, worldPtrTemp)
-         
-        resultValues.toReturnTempValue(vt.ReturnType.ArbitraryValues)(truePlan, worldPtrTemp).get
-      }, { falsePlan =>
-        planClauseTests(
+      val trueValues = PlanInvokeApply.withArgumentList(restoredProcValue, argListValue)(truePlan, worldPtrTemp)
+
+      if (tailClauses.isEmpty) {
+        // We have to use this clause - assert then use the true values directly
+        entryPlan.steps += ps.AssertPredicate(worldPtrTemp, matchesPred, noMatchingClauseRuntimeErrorMessage)
+        entryPlan.steps ++= truePlan.steps
+
+        trueValues
+      }
+      else {
+        // If the clause doesn't match then recurse
+        val falsePlan = entryPlan.forkPlan()
+        val falseValues = planClauseTests(
           plannedClauses=tailClauses,
           innerSelfTempOpt=innerSelfTempOpt,
           closureType=closureType,
           argListHeadTemp=argListHeadTemp,
           argLengthTemp=argLengthTemp
         )(falsePlan, worldPtrTemp)
-      })
+
+        // Now phi them together
+        val phiResult = PlanResultValuesPhi(truePlan, trueValues, falsePlan, falseValues)
+
+        entryPlan.steps += ps.CondBranch(
+          result=phiResult.resultTemp,
+          test=matchesPred,
+          trueSteps=truePlan.steps.toList,
+          trueValue=phiResult.leftTempValue,
+          falseSteps=falsePlan.steps.toList,
+          falseValue=phiResult.rightTempValue
+        )
+
+        phiResult.resultValues
+      }
   }
 
   def apply(parentState : PlannerState, parentPlan : PlanWriter)(
@@ -125,7 +149,7 @@ private[planner] object PlanCaseLambda {
       val clauseNameHint = s"${sourceName} clause ${index}"
 
       val procValue = PlanLambda(parentState, parentPlan)(clauseExpr, Some(clauseNameHint), None)
-      
+
       val capturedProcOpt = if (procValue.needsClosureRepresentation) {
         // Convert to a TempValue now because we can't enter GC while building our closure
         val procType = procValue.schemeType
@@ -173,7 +197,7 @@ private[planner] object PlanCaseLambda {
     val argLengthTemp = ps.Temp(vt.UInt32)
     procPlan.steps += ps.CalcProperListLength(argLengthTemp, argListHeadTemp)
 
-    val resultTemp = planClauseTests(
+    val resultValues = planClauseTests(
       plannedClauses=plannedClauses,
       innerSelfTempOpt=innerSelfTempOpt,
       closureType=closureType,
@@ -181,7 +205,9 @@ private[planner] object PlanCaseLambda {
       argLengthTemp=argLengthTemp
     )(procPlan, worldPtrTemp)
 
-    procPlan.steps += ps.Return(Some(resultTemp))
+    val returnType = resultValues.preferredReturnType
+    val resultTempOpt = resultValues.toReturnTempValue(returnType)(procPlan, worldPtrTemp)
+    procPlan.steps += ps.Return(resultTempOpt)
 
     // Determine our signature
     val signature = ProcedureSignature(
@@ -189,10 +215,10 @@ private[planner] object PlanCaseLambda {
       hasSelfArg=closureRequired,
       restArgMemberTypeOpt=Some(vt.AnySchemeType),
       fixedArgTypes=Nil,
-      returnType=vt.ReturnType.ArbitraryValues,
+      returnType=returnType,
       attributes=Set(ProcedureAttribute.FastCC)
     ) : ProcedureSignature
-   
+
     // Store the planend procedures in our closure
     val outerSelfTempOpt = if (closureRequired) {
       // Save the closure values from the parent's scope
@@ -208,7 +234,7 @@ private[planner] object PlanCaseLambda {
 
         parentPlan.steps += ps.SetRecordDataField(dataTemp, closureType, recordField, procTemp)
       }
-      
+
       // Store our entry point
       val entryPointTemp = ps.EntryPointTemp()
       parentPlan.steps += ps.CreateNamedEntryPoint(entryPointTemp, signature, nativeSymbol)
