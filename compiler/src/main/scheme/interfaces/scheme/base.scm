@@ -21,7 +21,8 @@
 
 (export symbol? symbol=? symbol->string string->symbol)
 (export char? digit-value char->integer integer->char)
-(export vector? make-vector vector vector-length vector-ref vector-set! list->vector vector->list vector-append)
+(export vector? make-vector vector vector-length vector-ref vector-set! list->vector vector->list vector-append
+        vector-copy)
 (export bytevector? make-bytevector bytevector bytevector-length bytevector-u8-ref bytevector-u8-set! bytevector-append)
 (export string? make-string string string-length string-ref string-set! string-append list->string)
 (export procedure? apply call-with-current-continuation call/cc values call-with-values)

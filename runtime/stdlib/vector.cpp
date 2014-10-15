@@ -100,4 +100,19 @@ ListElementCell *lliby_vector_to_list(World &world, VectorCell *vectorCell, std:
 	return ListElementCell::createProperList(world, vectorElements);
 }
 
+VectorCell *lliby_vector_copy(World &world, VectorCell *sourceVector, std::uint32_t start, std::uint32_t end)
+{
+	if (end > sourceVector->length())
+	{
+		signalError(world, "Attempted slice past end of vector in (vector-copy)", {sourceVector});
+	}
+
+	if (start > end)
+	{
+		signalError(world, "Slice start index greater than end index in (vector-copy)", {sourceVector});
+	}
+
+	return sourceVector->copy(world, start, end);
+}
+
 }

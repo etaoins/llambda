@@ -347,6 +347,12 @@
                                 ((vec start) (native-vector->list vec start (vector-length vec)))
                                 ((vec start end) (native-vector->list vec start end))))
 
+    (define native-vector-copy (world-function "lliby_vector_copy" (<vector> <native-uint32> <native-uint32>) -> <vector>))
+    (define-r7rs vector-copy (case-lambda
+                                ((vec) (native-vector-copy vec 0 (vector-length vec)))
+                                ((vec start) (native-vector-copy vec start (vector-length vec)))
+                                ((vec start end) (native-vector-copy vec start end))))
+
     (define native-make-vector (world-function "lliby_make_vector" (<native-uint32> <any>) -> <vector>))
     (define-r7rs make-vector (case-lambda:
       (([len : <exact-integer>])

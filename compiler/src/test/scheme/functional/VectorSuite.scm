@@ -99,3 +99,21 @@
 
 (define-test "(vector->list) with negative start index fails" (expect-failure
   (vector->list '#(dah dah didah) -1)))
+
+(define-test "(vector-copy)" (expect-success
+  (define a #(1 8 2 8)) ; a may be immutable
+  (define b (vector-copy a))
+  (vector-set! b 0 3) ; b is mutable
+  (assert-equal #(3 8 2 8) b)
+  (define c (vector-copy b 1 3))
+  (assert-equal #(8 2) c)))
+
+(define-test "(vector-copy) with backwards slice fails" (expect-failure
+  (vector-copy '#(dah dah didah) 2 1)))
+
+(define-test "(vector-copy) past end of vector fails" (expect-failure
+  (vector-copy '#(dah dah didah) 0 4)))
+
+(define-test "(vector-copy) with negative start index fails" (expect-failure
+  (vector-copy '#(dah dah didah) -1)))
+
