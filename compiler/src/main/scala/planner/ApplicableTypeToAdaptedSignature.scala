@@ -22,6 +22,14 @@ object ApplicableTypeToAdaptedSignature extends (vt.ApplicableType => ProcedureS
         )
 
       case _ : vt.CaseProcedureType =>
-        CaseLambdaSignature
+        // All adapted case procedures have the same signature at the moment
+        ProcedureSignature(
+          hasWorldArg=true,
+          hasSelfArg=true,
+          fixedArgTypes=Nil,
+          restArgMemberTypeOpt=Some(vt.AnySchemeType),
+          returnType=vt.ReturnType.ArbitraryValues,
+          attributes=Set()
+        )
     }
 }

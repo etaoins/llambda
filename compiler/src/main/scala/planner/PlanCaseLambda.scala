@@ -6,7 +6,7 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{intermediatevalue => iv}
-import llambda.compiler.RuntimeErrorMessage
+import llambda.compiler.{RuntimeErrorMessage, ProcedureSignature, ProcedureAttribute}
 
 import llambda.compiler.valuetype.Implicits._
 
@@ -44,7 +44,7 @@ private[planner] object PlanCaseLambda {
 
   private def planClauseTests(
       plannedClauses : List[PlannedClause],
-      innerSelfTemp : ps.TempValue,
+      innerSelfTempOpt : Option[ps.TempValue],
       closureType : vt.ClosureType,
       argListHeadTemp : ps.TempValue,
       argLengthTemp : ps.TempValue
@@ -85,7 +85,7 @@ private[planner] object PlanCaseLambda {
           case Some(CapturedProc(_, recordField)) =>
             // We need to restore this procedure from our closure
             val closureDataTemp = ps.RecordLikeDataTemp()
-            truePlan.steps += ps.LoadRecordLikeData(closureDataTemp, innerSelfTemp, closureType)
+            truePlan.steps += ps.LoadRecordLikeData(closureDataTemp, innerSelfTempOpt.get, closureType)
 
             val restoredTemp = ps.Temp(recordField.fieldType)
             truePlan.steps += ps.LoadRecordDataField(restoredTemp, closureDataTemp, closureType, recordField)
@@ -105,7 +105,7 @@ private[planner] object PlanCaseLambda {
       }, { falsePlan =>
         planClauseTests(
           plannedClauses=tailClauses,
-          innerSelfTemp=innerSelfTemp,
+          innerSelfTempOpt=innerSelfTempOpt,
           closureType=closureType,
           argListHeadTemp=argListHeadTemp,
           argLengthTemp=argLengthTemp
@@ -144,7 +144,7 @@ private[planner] object PlanCaseLambda {
 
     // Determine if we need a closure
     val closureRequired = plannedClauses.exists(_.capturedProcOpt.isDefined)
-    
+
     // Make our closure type
     val closureType = if (closureRequired) {
       val closureSourceName = sourceName + "-closure"
@@ -156,10 +156,15 @@ private[planner] object PlanCaseLambda {
       vt.EmptyClosureType
     }
     
-    // We always take a self temp if we have a closure or not
-    // This is to give us ahomogeneous signatures to avoid the need for trampolines or adapters
     val worldPtrTemp = new ps.WorldPtrValue
-    val innerSelfTemp = ps.CellTemp(ct.ProcedureCell)
+
+    val innerSelfTempOpt = if (closureRequired) {
+      Some(ps.CellTemp(ct.ProcedureCell))
+    }
+    else {
+      None
+    }
+
     val argListHeadTemp = ps.CellTemp(ct.ListElementCell)
 
     val procPlan = parentPlan.forkPlan()
@@ -170,13 +175,23 @@ private[planner] object PlanCaseLambda {
 
     val resultTemp = planClauseTests(
       plannedClauses=plannedClauses,
-      innerSelfTemp=innerSelfTemp,
+      innerSelfTempOpt=innerSelfTempOpt,
       closureType=closureType,
       argListHeadTemp=argListHeadTemp,
       argLengthTemp=argLengthTemp
     )(procPlan, worldPtrTemp)
 
     procPlan.steps += ps.Return(Some(resultTemp))
+
+    // Determine our signature
+    val signature = ProcedureSignature(
+      hasWorldArg=true,
+      hasSelfArg=closureRequired,
+      restArgMemberTypeOpt=Some(vt.AnySchemeType),
+      fixedArgTypes=Nil,
+      returnType=vt.ReturnType.ArbitraryValues,
+      attributes=Set(ProcedureAttribute.FastCC)
+    ) : ProcedureSignature
    
     // Store the planend procedures in our closure
     val outerSelfTempOpt = if (closureRequired) {
@@ -196,7 +211,7 @@ private[planner] object PlanCaseLambda {
       
       // Store our entry point
       val entryPointTemp = ps.EntryPointTemp()
-      parentPlan.steps += ps.CreateNamedEntryPoint(entryPointTemp, CaseLambdaSignature, nativeSymbol)
+      parentPlan.steps += ps.CreateNamedEntryPoint(entryPointTemp, signature, nativeSymbol)
       parentPlan.steps += ps.SetProcedureEntryPoint(cellTemp, entryPointTemp)
 
       Some(cellTemp)
@@ -204,13 +219,16 @@ private[planner] object PlanCaseLambda {
     else {
       None
     }
-    
-    // Determine our procedure
+
     val plannedFunction = PlannedFunction(
-      signature=CaseLambdaSignature,
+      signature=signature,
       namedArguments=List(
-        "world" -> worldPtrTemp,
-        "closure" -> innerSelfTemp,
+        "world" -> worldPtrTemp
+      ) ++
+      innerSelfTempOpt.toList.map({ procSelf =>
+        ("self" -> procSelf)
+      }) ++
+      List(
         "restArg" -> argListHeadTemp
       ),
       steps=procPlan.steps.toList,
@@ -226,6 +244,7 @@ private[planner] object PlanCaseLambda {
     }
 
     new iv.KnownCaseLambdaProc(
+      signature=signature,
       closureType=closureType,
       clauses=knownClauses,
       plannedSymbol=nativeSymbol,

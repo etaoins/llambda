@@ -14,6 +14,7 @@ case class KnownCaseLambdaClause(
 
 /** Represents a user-provided procedure with a known signature and direct entry point
   *
+  * @param signature       Signature of the outer (case-lambda)
   * @param closureType     Closure type of the outer (case-lambda)
   * @param clauses         List of planned Scheme procedures in the order they appear in the (case-lambda)
   * @param plannedSymbol   Native symbol of the direct entry point to the procedure
@@ -26,13 +27,14 @@ case class KnownCaseLambdaClause(
   *                        optimisation to avoid having to load them from the (case-lambda)'s closure
   */
 class KnownCaseLambdaProc(
+    signature : ProcedureSignature,
     closureType : vt.ClosureType,
     clauses : List[KnownCaseLambdaClause],
     plannedSymbol : String,
     selfTempOpt : Option[ps.TempValue],
     reportNameOpt : Option[String] = None,
     clausesInScope : Boolean = false
-) extends KnownUserProc(CaseLambdaSignature, plannedSymbol, selfTempOpt, reportNameOpt) {
+) extends KnownUserProc(signature, plannedSymbol, selfTempOpt, reportNameOpt) {
   override val typeDescription = "case procedure"
 
   override val schemeType = vt.CaseProcedureType(
@@ -41,6 +43,7 @@ class KnownCaseLambdaProc(
 
   override def withReportName(newReportName : String) : KnownUserProc =
     new KnownCaseLambdaProc(
+      signature=signature,
       closureType=closureType,
       clauses=clauses,
       plannedSymbol=plannedSymbol,
@@ -50,7 +53,15 @@ class KnownCaseLambdaProc(
     )
   
   override def withSelfTemp(selfTemp : ps.TempValue) : KnownUserProc =
-    new KnownCaseLambdaProc(closureType, clauses, plannedSymbol, Some(selfTemp), reportNameOpt, clausesInScope=false)
+    new KnownCaseLambdaProc(
+      signature=signature,
+      closureType=closureType,
+      clauses=clauses,
+      plannedSymbol=plannedSymbol,
+      selfTempOpt=Some(selfTemp),
+      reportNameOpt=reportNameOpt,
+      clausesInScope=false // Our clause values are no longer in scope
+    )
 
   private def restoreClause(
       clause : KnownCaseLambdaClause
