@@ -80,6 +80,13 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
     StringConstant(terminatedUtf8Data)
   }
 
+  private def charLengthForString(stringValue : String) : Int = {
+    // Java is internally based on UTF-16. For Unicode code points outside the BMP it uses surrogate pairs which count
+    // as two Java "characters"
+    // Llambda is native UTF-8 and considers a code point the same as a character
+    stringValue.codePointCount(0, stringValue.length)
+  }
+
   def genBytevectorCell(module : IrModuleBuilder)(elements : Seq[Short]) : IrConstant = {
     // Make our elements
     val baseName = module.nameSource.allocate("schemeBytevector")
@@ -155,7 +162,7 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
       ct.InlineStringCell.createConstant(
         inlineData=utf8Constant,
         allocSlackBytes=0,
-        charLength=value.length,
+        charLength=charLengthForString(value),
         byteLength=utf8Data.length
       )
     }
@@ -166,7 +173,7 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
       ct.HeapStringCell.createConstant(
         heapByteArray=utf8Constant,
         allocSlackBytes=0,
-        charLength=value.length,
+        charLength=charLengthForString(value),
         byteLength=utf8Data.length
       )
     }

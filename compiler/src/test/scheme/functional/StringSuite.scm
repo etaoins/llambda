@@ -32,14 +32,20 @@
 (define-test "length of ASCII string" (expect 5
 	(string-length "Hello")))
  
-(define-test "length of Unicode string" (expect 6
+(define-test "length of BMP Unicode string" (expect 6
 	(string-length "Hell☃!")))
+
+(define-test "length of non-BMP Unicode string" (expect 6
+	(string-length "Hell🏂!")))
 
 (define-test "string-ref on ASCII character" (expect #\e
 	(string-ref "Hell☃!" 1)))
 
-(define-test "string-ref on Unicode character" (expect #\x2603
+(define-test "string-ref on BMP Unicode character" (expect #\x2603
 	(string-ref "Hell☃!" 4)))
+
+(define-test "string-ref on non-BMP Unicode character" (expect #\x1f3c2
+	(string-ref "Hell🏂!" 4)))
 
 (define-test "string-ref past end of string" (expect-failure
 	(string-ref "Hell☃!" 10)))
