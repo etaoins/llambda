@@ -171,7 +171,22 @@
     
     ; Internal helper types
     (define-type <alist> (Listof <pair>))
-    
+
+    ; Defines a procedure that operates on a slice of a given type with optional start and end indicies
+    ; native-proc should accept a value of <source-type> and a start and end index
+    ; source-length-proc should accept a value of <source-type> and return its length
+    (define-syntax define-slice-proc
+      (syntax-rules ()
+        ((define-slice-proc name native-proc <source-type> source-length-proc)
+         (define-r7rs name
+           (case-lambda:
+             (([source : <source-type>])
+              (native-proc source 0 (source-length-proc source)))
+              (([source : <source-type>] [start : <exact-integer>])
+               (native-proc source start (source-length-proc source)))
+              (([source : <source-type>] [start : <exact-integer>] [end : <exact-integer>])
+               (native-proc source start end)))))))
+
     (define-r7rs eqv? (native-function "_lliby_is_eqv" (<any> <any>) -> <native-bool>))
     (define-r7rs eq? eqv?)
     (define-r7rs equal? (native-function "_lliby_is_equal" (<any> <any>) -> <native-bool>))
@@ -345,16 +360,10 @@
     (define-r7rs vector-append (world-function "lliby_vector_append" <vector> -> <vector>))
 
     (define native-vector->list (world-function "lliby_vector_to_list" (<vector> <native-uint32> <native-uint32>) -> <list>))
-    (define-r7rs vector->list (case-lambda
-                                ((vec) (native-vector->list vec 0 (vector-length vec)))
-                                ((vec start) (native-vector->list vec start (vector-length vec)))
-                                ((vec start end) (native-vector->list vec start end))))
+    (define-slice-proc vector->list native-vector->list <vector> vector-length)
 
     (define native-vector-copy (world-function "lliby_vector_copy" (<vector> <native-uint32> <native-uint32>) -> <vector>))
-    (define-r7rs vector-copy (case-lambda
-                                ((vec) (native-vector-copy vec 0 (vector-length vec)))
-                                ((vec start) (native-vector-copy vec start (vector-length vec)))
-                                ((vec start end) (native-vector-copy vec start end))))
+    (define-slice-proc vector-copy native-vector-copy <vector> vector-length)
 
     (define native-make-vector (world-function "lliby_make_vector" (<native-uint32> <any>) -> <vector>))
     (define-r7rs make-vector (case-lambda:
