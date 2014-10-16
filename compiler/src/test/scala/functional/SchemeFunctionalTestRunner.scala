@@ -10,7 +10,7 @@ import org.scalatest.{FunSuite, Inside}
 import llambda.compiler._
 import llambda.compiler.SchemeStringImplicits._
 
-abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite with Inside {
+abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boolean = false) extends FunSuite with Inside {
   // Implicit import decl every test gets
   private val testImportDecl = datum"(import (llambda nfi) (scheme base) (llambda test-util))"
 
@@ -54,9 +54,11 @@ abstract class SchemeFunctionalTestRunner(testName : String) extends FunSuite wi
   runAllTests(parsed)
 
   private def runAllTests(allTests : List[ast.Datum]) {
-    // Just run one pass at -O 0
-    runTestConfiguration(allTests, dialect.Dialect.default, 0)
-          
+    if (!onlyOptimised) {
+      // Just run one pass at -O 0
+      runTestConfiguration(allTests, dialect.Dialect.default, 0)
+    }
+
     // Run every dialect at -O 2
     for(dialect <- dialect.Dialect.dialects.values) {
       runTestConfiguration(allTests, dialect, 2)
