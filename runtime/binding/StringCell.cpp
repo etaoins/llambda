@@ -687,9 +687,14 @@ StringCell* StringCell::copy(World &world, std::int64_t start, std::int64_t end)
 	
 std::vector<UnicodeChar> StringCell::unicodeChars(std::int64_t start, std::int64_t end) const
 {
-	if ((end != -1) && (end < start))
+	if (end == -1)
 	{
-		// Doesn't make sense
+		end = charLength();
+	}
+
+	if ((end > charLength()) || (end < start))
+	{
+		// Invalid range
 		return std::vector<UnicodeChar>();
 	}
 
@@ -701,15 +706,20 @@ std::vector<UnicodeChar> StringCell::unicodeChars(std::int64_t start, std::int64
 		return std::vector<UnicodeChar>();
 	}
 
+	const std::uint32_t charCount = end - start;
+
 	std::vector<UnicodeChar> ret;
+	ret.reserve(charCount);
 
-	if (end != -1)
+	while(ret.size() < charCount)
 	{
-		ret.reserve(end - start);
-	}
+		if (scanPtr >= endPtr)
+		{
+			// This shouldn't happen unless our charLength() doesn't match our UTF-8 data
+			assert(false);
+			return std::vector<UnicodeChar>();
+		}
 
-	while(scanPtr < endPtr)
-	{
 		const UnicodeChar unicodeChar = utf8::decodeUtf8Char(&scanPtr);
 
 		if (!unicodeChar.isValid())
@@ -718,18 +728,6 @@ std::vector<UnicodeChar> StringCell::unicodeChars(std::int64_t start, std::int64
 		}
 
 		ret.push_back(unicodeChar);
-
-		if ((end != -1) && (ret.size() == (end - start)))
-		{
-			// We have enough characters
-			return ret;
-		}
-	}
-		
-	if (end != -1)
-	{
-		// We fell off the end
-		return std::vector<UnicodeChar>();
 	}
 
 	return ret;

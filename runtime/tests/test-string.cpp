@@ -717,6 +717,12 @@ void testUnicodeChars(World &world)
 
 		ASSERT_TRUE(unicodeChars == std::vector<UnicodeChar>({}));
 	}
+
+	{
+		std::vector<UnicodeChar> unicodeChars = helloValue->unicodeChars(8, 8);
+
+		ASSERT_TRUE(unicodeChars == std::vector<UnicodeChar>({}));
+	}
 	
 	{
 		std::vector<UnicodeChar> unicodeChars = helloValue->unicodeChars(2);
