@@ -28,7 +28,6 @@ DynamicMemoryBlock::~DynamicMemoryBlock()
 		munmap(mStartPointer, mSize);
 #else
 		// Mark the old semispace as unreadable but keep the address space allocated
-		madvise(mStartPointer, mSize, MADV_DONTNEED);
 		mprotect(mStartPointer, mSize, PROT_NONE);
 #endif
 	}
