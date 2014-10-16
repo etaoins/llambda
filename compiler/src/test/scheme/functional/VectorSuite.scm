@@ -89,6 +89,8 @@
   (assert-equal '(dah dah didah) (vector->list #(dah dah didah)))
   (assert-equal '(dah didah) (vector->list '#(dah dah didah) 1))
   (assert-equal '(dah) (vector->list '#(dah dah didah) 1 2))
+  (assert-equal '() (vector->list '#(dah dah didah) 0 0))
+  (assert-equal '() (vector->list '#(dah dah didah) 3 3))
   (assert-equal '(#(a b) #(c d) #(e f)) (vector->list #(#(a b) #(c d) #(e f))))))
 
 (define-test "(vector->list) with backwards slice fails" (expect-failure
@@ -101,6 +103,13 @@
   (vector->list '#(dah dah didah) -1)))
 
 (define-test "(vector-copy)" (expect-success
+  (assert-equal #() (vector-copy #()))
+  (assert-equal #(1 2 3) (vector-copy #(1 2 3)))
+  (assert-equal #(2 3) (vector-copy #(1 2 3) 1))
+  (assert-equal #(2) (vector-copy #(1 2 3) 1 2))
+  (assert-equal #() (vector-copy #(1 2 3) 0 0))
+  (assert-equal #() (vector-copy #(1 2 3) 3 3))
+
   (define a #(1 8 2 8)) ; a may be immutable
   (define b (vector-copy a))
   (vector-set! b 0 3) ; b is mutable
