@@ -23,7 +23,7 @@ object NumberProcPlanner extends ReportProcPlanner {
   private case class DynamicCompare(nativePred : ps.TempValue) extends CompareResult
   private case object UnplannableCompare extends CompareResult
 
-  private def compareOperands(state : PlannerState)(
+  private def compareOperands(
       compareCond : ps.CompareCond.CompareCond,
       staticIntCalc : IntegerCompartor,
       staticFlonumCalc : DoubleCompartor,
@@ -81,7 +81,7 @@ object NumberProcPlanner extends ReportProcPlanner {
     }
   }
   
-  private def compareOperandList(state : PlannerState)(
+  private def compareOperandList(
       compareCond : ps.CompareCond.CompareCond,
       staticIntCalc : IntegerCompartor,
       staticFlonumCalc : DoubleCompartor,
@@ -92,7 +92,7 @@ object NumberProcPlanner extends ReportProcPlanner {
 
     val pairwiseResults = operands.sliding(2).toList map {
       case List(left, right) =>
-        compareOperands(state)(compareCond, staticIntCalc, staticFlonumCalc, left, right)(comparePlan, worldPtr)
+        compareOperands(compareCond, staticIntCalc, staticFlonumCalc, left, right)(comparePlan, worldPtr)
     }
 
     // Now filter out all the static results
@@ -147,7 +147,7 @@ object NumberProcPlanner extends ReportProcPlanner {
       convertTemp
     }
 
-  private def performBinaryMixedOp(state : PlannerState)(
+  private def performBinaryMixedOp(
       intInstr : BinaryInstrBuilder,
       flonumInstr : BinaryInstrBuilder,
       staticIntCalc : StaticIntegerOp,
@@ -211,7 +211,7 @@ object NumberProcPlanner extends ReportProcPlanner {
     Some(resultValue)
   } 
 
-  private def performBinaryFlonumOp(state : PlannerState)(
+  private def performBinaryFlonumOp(
       instr : BinaryInstrBuilder,
       staticCalc : StaticDoubleOp,
       operands : List[iv.IntermediateValue]
@@ -327,19 +327,19 @@ object NumberProcPlanner extends ReportProcPlanner {
       operands : List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = (reportName, operands) match {
     case ("=", operands) if operands.length >= 2 =>
-      compareOperandList(state)(ps.CompareCond.Equal, _ == _, _ == _, operands.map(_._2))
-    
+      compareOperandList(ps.CompareCond.Equal, _ == _, _ == _, operands.map(_._2))
+
     case (">", operands) if operands.length >= 2 =>
-      compareOperandList(state)(ps.CompareCond.GreaterThan, _ > _, _ > _, operands.map(_._2))
-    
+      compareOperandList(ps.CompareCond.GreaterThan, _ > _, _ > _, operands.map(_._2))
+
     case (">=", operands) if operands.length >= 2 =>
-      compareOperandList(state)(ps.CompareCond.GreaterThanEqual, _ >= _, _ >= _, operands.map(_._2))
-    
+      compareOperandList(ps.CompareCond.GreaterThanEqual, _ >= _, _ >= _, operands.map(_._2))
+
     case ("<", operands) if operands.length >= 2 =>
-      compareOperandList(state)(ps.CompareCond.LessThan, _ < _, _ < _, operands.map(_._2))
-    
+      compareOperandList(ps.CompareCond.LessThan, _ < _, _ < _, operands.map(_._2))
+
     case ("<=", operands) if operands.length >= 2 =>
-      compareOperandList(state)(ps.CompareCond.LessThanEqual, _ <= _, _ <= _, operands.map(_._2))
+      compareOperandList(ps.CompareCond.LessThanEqual, _ <= _, _ <= _, operands.map(_._2))
 
     case ("+", Nil) =>
       Some(new iv.ConstantExactIntegerValue(0))
@@ -358,7 +358,7 @@ object NumberProcPlanner extends ReportProcPlanner {
 
     case ("+", multipleOperands) =>
       val operandValues = multipleOperands.map(_._2) 
-      performBinaryMixedOp(state)(
+      performBinaryMixedOp(
         intInstr=ps.IntegerAdd.apply,
         flonumInstr=ps.FloatAdd.apply,
         staticIntCalc=_ + _,
@@ -373,7 +373,7 @@ object NumberProcPlanner extends ReportProcPlanner {
     case ("-", List((_, singleOperand))) =>
       // This is a special case that negates the passed value
       val constantZero = new iv.ConstantExactIntegerValue(0)
-      performBinaryMixedOp(state)(
+      performBinaryMixedOp(
         intInstr=ps.IntegerSub.apply,
         flonumInstr=ps.FloatSub.apply,
         staticIntCalc=_ - _,
@@ -383,7 +383,7 @@ object NumberProcPlanner extends ReportProcPlanner {
     
     case ("-", multipleOperands) =>
       val operandValues = multipleOperands.map(_._2) 
-      performBinaryMixedOp(state)(
+      performBinaryMixedOp(
         intInstr=ps.IntegerSub.apply,
         flonumInstr=ps.FloatSub.apply,
         staticIntCalc=_ - _,
@@ -393,7 +393,7 @@ object NumberProcPlanner extends ReportProcPlanner {
     
     case ("*", multipleOperands) =>
       val operandValues = multipleOperands.map(_._2) 
-      performBinaryMixedOp(state)(
+      performBinaryMixedOp(
         intInstr=ps.IntegerMul.apply,
         flonumInstr=ps.FloatMul.apply,
         staticIntCalc=_ * _,
@@ -408,7 +408,7 @@ object NumberProcPlanner extends ReportProcPlanner {
     case ("/", List((_, singleOperand))) =>
       // This is a special case that negates the passed value
       val constantZero = new iv.ConstantFlonumValue(1.0)
-      performBinaryFlonumOp(state)(
+      performBinaryFlonumOp(
         instr=ps.FloatDiv.apply,
         staticCalc=_ / _,
         operands=List(constantZero, singleOperand)
@@ -416,7 +416,7 @@ object NumberProcPlanner extends ReportProcPlanner {
     
     case ("/", multipleOperands) =>
       val operandValues = multipleOperands.map(_._2) 
-      performBinaryFlonumOp(state)(
+      performBinaryFlonumOp(
         instr=ps.FloatDiv.apply,
         staticCalc=_ / _,
         operands=operandValues
