@@ -396,6 +396,9 @@
     (define-r7rs string-set! (world-function "lliby_string_set" (<string> <native-uint32> <native-unicode-char>)))
     (define-r7rs string-append (world-function "lliby_string_append" <string> -> <string>))
 
+    (define native-string->list (world-function "lliby_string_to_list" (<string> <native-uint32> <native-uint32>) -> (Listof <char>)))
+    (define-slice-proc string->list native-string->list <string> string-length)
+
     (define-r7rs procedure? (make-predicate <procedure>))
     (define-r7rs call-with-current-continuation (world-function "lliby_call_with_current_continuation" ((-> <procedure> *)) -> *))
     (define-r7rs call/cc call-with-current-continuation)

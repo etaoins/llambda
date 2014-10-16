@@ -4,7 +4,12 @@
 #include "binding/ProperList.h"
 #include "binding/RestArgument.h"
 
+#include "alloc/allocator.h"
+#include "alloc/RangeAlloc.h"
+
 #include "core/error.h"
+
+#include "util/assertSliceValid.h"
 
 using namespace lliby;
 
@@ -75,6 +80,29 @@ StringCell* lliby_string_append(World &world, RestArgument<StringCell> *argHead)
 	std::vector<StringCell*> stringList(properList.begin(), properList.end()); 
 
 	return StringCell::fromAppended(world, stringList);
+}
+
+ListElementCell* lliby_string_to_list(World &world, StringCell *sourceString, std::uint32_t start, std::uint32_t end)
+{
+	assertSliceValid(world, "(string->list)", sourceString, sourceString->charLength(), start, end);
+
+	// Get the unboxed Unicode chars
+	std::vector<UnicodeChar> unboxedChars(sourceString->unicodeChars(start, end));
+
+	// Allocate space for the boxed chars
+	alloc::RangeAlloc allocation = alloc::allocateRange(world, unboxedChars.size());
+	auto allocIt = allocation.begin();
+
+	// Box all of the characters
+	std::vector<AnyCell*> boxedChars;
+	boxedChars.reserve(unboxedChars.size());
+
+	for(auto unboxedChar : unboxedChars)
+	{
+		boxedChars.push_back(new (*allocIt++) CharCell(unboxedChar));
+	}
+
+	return ListElementCell::createProperList(world, boxedChars);
 }
 
 }

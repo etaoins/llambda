@@ -87,3 +87,19 @@
 
 (define-test "string-append of boolean fails" (expect-failure
 	(string-append "Hell" "☃" "!" #f)))
+
+(define-test "(string->list)" (expect-failure
+  (assert-equal '(#\H #\e #\l #\l #\x2603 #\!) (string->list "Hell☃!"))
+  (assert-equal '(#\l #\l #\x2603 #\!) (string->list "Hell☃!" 2))
+  (assert-equal '(#\l #\l) (string->list "Hell☃!" 2 4))
+  (assert-equal '() (string->list "Hell☃!" 0 0))
+  (assert-equal '() (string->list "Hell☃!" 6 6))))
+
+(define-test "(string->list) with backwards slice fails" (expect-failure
+  (string->list "Hell☃!" 2 1)))
+
+(define-test "(string->list) past end of string fails" (expect-failure
+  (string->list "Hell☃!" 0 8)))
+
+(define-test "(string->list) with negative start index fails" (expect-failure
+  (string->list "Hell☃!" -1)))
