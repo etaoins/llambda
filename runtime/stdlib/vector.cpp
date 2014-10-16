@@ -6,6 +6,8 @@
 #include "core/error.h"
 #include "core/World.h"
 
+#include "util/assertSliceValid.h"
+
 using namespace lliby;
 
 extern "C"
@@ -83,15 +85,7 @@ VectorCell *lliby_vector_append(World &world, RestArgument<VectorCell> *argHead)
 
 ListElementCell *lliby_vector_to_list(World &world, VectorCell *vectorCell, std::uint32_t start, std::uint32_t end)
 {
-	if (end > vectorCell->length())
-	{
-		signalError(world, "Attempted slice past end of vector in (vector->list)", {vectorCell});
-	}
-
-	if (start > end)
-	{
-		signalError(world, "Slice start index greater than end index in (vector->list)", {vectorCell});
-	}
+	assertSliceValid(world,"(vector->list)", vectorCell, vectorCell->length(), start, end);
 
 	AnyCell **startPointer = vectorCell->elements() + start;
 	AnyCell **endPointer = vectorCell->elements() + end;
@@ -102,15 +96,7 @@ ListElementCell *lliby_vector_to_list(World &world, VectorCell *vectorCell, std:
 
 VectorCell *lliby_vector_copy(World &world, VectorCell *sourceVector, std::uint32_t start, std::uint32_t end)
 {
-	if (end > sourceVector->length())
-	{
-		signalError(world, "Attempted slice past end of vector in (vector-copy)", {sourceVector});
-	}
-
-	if (start > end)
-	{
-		signalError(world, "Slice start index greater than end index in (vector-copy)", {sourceVector});
-	}
+	assertSliceValid(world, "(vector-copy)", sourceVector, sourceVector->length(), start, end);
 
 	return sourceVector->copy(world, start, end);
 }
