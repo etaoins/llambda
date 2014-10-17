@@ -260,7 +260,7 @@
     (define-r7rs + (world-function "lliby_add" <number> -> <number>))
     (define-r7rs - (world-function "lliby_sub" (<number> . <number>) -> <number>))
     (define-r7rs * (world-function "lliby_mul" <number> -> <number>))
-    (define-r7rs / (world-function "lliby_div" (<number> . <number>) -> <native-double>))
+    (define-r7rs / (world-function "lliby_div" (<number> . <number>) -> <number>))
     
     (define-r7rs expt (world-function "lliby_expt" (<number> <number>) -> <number>))
     

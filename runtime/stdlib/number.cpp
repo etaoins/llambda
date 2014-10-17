@@ -134,6 +134,19 @@ namespace
 			return selectedNumber;
 		}
 	}
+
+	// Helper used by lliby_div
+	FlonumCell *inexactDivision(World &world, double startValue, ProperList<NumberCell>::ConstIterator begin, ProperList<NumberCell>::ConstIterator end)
+	{
+		double numeratorValue = startValue;
+
+		for (auto it = begin; it != end; it++)
+		{
+			numeratorValue /= (*it)->toDouble();
+		}
+
+		return FlonumCell::fromValue(world, numeratorValue);
+	}
 }
 
 extern "C"
@@ -299,24 +312,66 @@ NumberCell *lliby_sub(World &world, NumberCell *startValue, RestArgument<NumberC
 	}
 }
 
-double lliby_div(World &world, NumberCell *startValue, RestArgument<NumberCell> *argHead)
+NumberCell* lliby_div(World &world, NumberCell *startValue, RestArgument<NumberCell> *argHead)
 {
 	const ProperList<NumberCell> argList(argHead);
-
-	double currentValue = startValue->toDouble();
 
 	if (argList.isEmpty())
 	{
 		// Return the reciprocal
-		return 1.0 / currentValue;
+		// This can only be exact if startValue is an exact 1 or -1
+		if (auto startExactInt = cell_cast<ExactIntegerCell>(startValue))
+		{
+			if ((startExactInt->value() == 1) || (startExactInt->value() == -1))
+			{
+				return startExactInt;
+			}
+		}
+
+		// Perform inexact reciprocal
+		return FlonumCell::fromValue(world, 1.0 / startValue->toDouble());
 	}
-	
-	for (auto numeric : argList)
+
+	if (auto startExactInt = cell_cast<ExactIntegerCell>(startValue))
 	{
-		currentValue /= numeric->toDouble();
+		// Perform integer division until we hit an inexact value
+		std::int64_t numeratorInt = startExactInt->value();
+
+		for (auto it = argList.begin(); it != argList.end(); it++)
+		{
+			if (auto denomintorExactInt = cell_cast<ExactIntegerCell>(*it))
+			{
+				// We have another integer!
+				std::int64_t denominatorInt = denomintorExactInt->value();
+
+				// Does it divide exactly and is not a divide by zero?
+				if ((denominatorInt != 0) && ((numeratorInt % denominatorInt) == 0))
+				{
+					// Yes!
+					numeratorInt = numeratorInt / denominatorInt;
+				}
+				else
+				{
+					// No; perform this division as inexact and pass the tail to inexactDivision()
+					double inexactResult = static_cast<double>(numeratorInt) / static_cast<double>(denominatorInt);
+					return inexactDivision(world, inexactResult, ++it, argList.end());
+				}
+			}
+			else
+			{
+				// Nope, this is a flonum. Have inexactDivision() handle this value
+				return inexactDivision(world, static_cast<double>(numeratorInt), it, argList.end());
+			}
+		}
+
+		// We have an exact result somehow!
+		return ExactIntegerCell::fromValue(world, numeratorInt);
 	}
-	
-	return currentValue;
+	else
+	{
+		double startDouble = cell_unchecked_cast<FlonumCell>(startValue)->value();
+		return inexactDivision(world, startDouble, argList.begin(), argList.end());
+	}
 }
 
 ListElementCell* lliby_truncate_div(World &world, std::int64_t numerator, std::int64_t denominator)

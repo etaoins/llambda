@@ -114,7 +114,20 @@
   (assert-equal -4.0 (/ -0.25))
   (assert-equal 0.15 (/ 3 4 5))
   (assert-equal 64.0 (/ 128.0 0.25 8))
-  (assert-equal -64.0 (/ 128.0 -0.25 8))))
+  (assert-equal -64.0 (/ 128.0 -0.25 8))
+  (assert-equal 1 (/ 1))
+  (assert-equal -1 (/ -1))
+  (assert-equal +inf.0 (/ 0))
+  (assert-equal +inf.0 (/ 5 0))
+  (assert-equal -inf.0 (/ -5 0))
+  (assert-equal +nan.0 (/ -5 +nan.0))
+  (assert-equal 0.5 (/ 20 5 2 4))
+
+  ; This divides exactly
+  (assert-equal 2 (/ 20 5 2))
+
+  ; This divides exactly but contains an inexact value
+  (assert-equal 2.0 (/ 20 5.0 2))))
 
 (define-test "dividing single string fails" (expect-failure
   (/ "Hello!")))

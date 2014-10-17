@@ -77,15 +77,15 @@ class NumberProcSuite extends FunSuite with PlanHelpers {
     assertStaticPlan("(/ 0.25)",
       ast.FlonumLiteral(4.0)
     )
-    
+
     assertStaticPlan("(/ 10 2)",
-      ast.FlonumLiteral(5.0)
+      ast.IntegerLiteral(5)
     )
-    
+
     assertStaticPlan("(/ 0.5 -0.125)",
       ast.FlonumLiteral(-4.0)
     )
-    
+
     assertStaticPlan("(/ 200.0 20.0 5.0 0.25)",
       ast.FlonumLiteral(8.0)
     )

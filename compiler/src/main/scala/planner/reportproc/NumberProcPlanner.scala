@@ -211,35 +211,52 @@ object NumberProcPlanner extends ReportProcPlanner {
     Some(resultValue)
   } 
 
-  private def performBinaryFlonumOp(
-      instr : BinaryInstrBuilder,
-      staticCalc : StaticDoubleOp,
+  private def performNumericDivide(
       operands : List[iv.IntermediateValue]
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
     implicit val inlinePlan = plan.forkPlan()
 
     val resultValue = operands.reduceLeft { (op1 : iv.IntermediateValue, op2 : iv.IntermediateValue) => (op1, op2) match {
-      case (constant1 : iv.ConstantNumberValue, constant2 : iv.ConstantNumberValue) =>
-        new iv.ConstantFlonumValue(staticCalc(constant1.doubleValue, constant2.doubleValue))
+      case (numerIntValue : iv.ConstantExactIntegerValue, denomIntValue : iv.ConstantExactIntegerValue) =>
+        val numerInt = numerIntValue.value
+        val denomInt = denomIntValue.value
 
-      case (dynamic1, dynamic2) =>
-        val dynamic1IsInt = dynamic1.hasDefiniteType(vt.ExactIntegerType)
-        val dynamic1IsFlonum = dynamic1.hasDefiniteType(vt.FlonumType)
+        if ((denomInt != 0) && ((numerInt % denomInt) == 0))
+        {
+          // This divides exactly
+          new iv.ConstantExactIntegerValue(numerInt / denomInt)
+        }
+        else
+        {
+          // This does not divide exactly
+          new iv.ConstantFlonumValue(numerInt.toDouble / denomInt.toDouble)
+        }
 
-        val dynamic2IsInt = dynamic2.hasDefiniteType(vt.ExactIntegerType)
-        val dynamic2IsFlonum = dynamic2.hasDefiniteType(vt.FlonumType)
+      case (numerNumValue : iv.ConstantNumberValue, denomNumValue : iv.ConstantNumberValue) =>
+        new iv.ConstantFlonumValue(numerNumValue.doubleValue / denomNumValue.doubleValue)
 
-        if (!(dynamic1IsInt || dynamic1IsFlonum) || !(dynamic2IsInt || dynamic2IsFlonum)) {
+      case (dynamicNumer, dynamicDenom) =>
+        val dynamicNumerIsInt = dynamicNumer.hasDefiniteType(vt.ExactIntegerType)
+        val dynamicNumerIsFlonum = dynamicNumer.hasDefiniteType(vt.FlonumType)
+
+        val dynamicDenomIsInt = dynamicDenom.hasDefiniteType(vt.ExactIntegerType)
+        val dynamicDenomIsFlonum = dynamicDenom.hasDefiniteType(vt.FlonumType)
+
+        if (!(dynamicNumerIsInt || dynamicNumerIsFlonum) || !(dynamicDenomIsInt || dynamicDenomIsFlonum)) {
           // We don't have definite types; abort
           return None
         }
-        else {
-          val doubleTemp1 = numberToDoubleTemp(dynamic1, dynamic1IsFlonum)(inlinePlan, worldPtr)
-          val doubleTemp2 = numberToDoubleTemp(dynamic2, dynamic2IsFlonum)(inlinePlan, worldPtr)
+        else if (dynamicNumerIsInt && dynamicDenomIsInt) {
+          // This result may be exact or inexact - abort and let the library handle it
+          return None
+        }
+        else  {
+          val doubleTemp1 = numberToDoubleTemp(dynamicNumer, dynamicNumerIsFlonum)(inlinePlan, worldPtr)
+          val doubleTemp2 = numberToDoubleTemp(dynamicDenom, dynamicDenomIsFlonum)(inlinePlan, worldPtr)
 
           val resultTemp = ps.Temp(vt.Double)
-          inlinePlan.steps += instr(resultTemp, doubleTemp1, doubleTemp2) 
-          
+          inlinePlan.steps += ps.FloatDiv(resultTemp, doubleTemp1, doubleTemp2)
+
           new iv.NativeFlonumValue(resultTemp, vt.Double)
         }
     }}
@@ -248,7 +265,7 @@ object NumberProcPlanner extends ReportProcPlanner {
     plan.steps ++= inlinePlan.steps
 
     Some(resultValue)
-  } 
+  }
 
   private def performIntegerDivOp(
       instr : BinaryInstrBuilder,
@@ -404,23 +421,15 @@ object NumberProcPlanner extends ReportProcPlanner {
     case ("/", Nil) =>
       // This isn't allowed - let it fail at runtime
       None
-    
+
     case ("/", List((_, singleOperand))) =>
       // This is a special case that negates the passed value
-      val constantZero = new iv.ConstantFlonumValue(1.0)
-      performBinaryFlonumOp(
-        instr=ps.FloatDiv.apply,
-        staticCalc=_ / _,
-        operands=List(constantZero, singleOperand)
-      )
-    
+      val constantZero = new iv.ConstantExactIntegerValue(1)
+      performNumericDivide(operands=List(constantZero, singleOperand))
+
     case ("/", multipleOperands) =>
-      val operandValues = multipleOperands.map(_._2) 
-      performBinaryFlonumOp(
-        instr=ps.FloatDiv.apply,
-        staticCalc=_ / _,
-        operands=operandValues
-      )
+      val operandValues = multipleOperands.map(_._2)
+      performNumericDivide(operandValues)
 
     case ("truncate-quotient", List(numerator, denominator)) =>
       performIntegerDivide(numerator, denominator)
