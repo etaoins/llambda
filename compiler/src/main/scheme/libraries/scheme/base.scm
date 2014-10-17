@@ -291,9 +291,14 @@
     (define-r7rs truncate-quotient (world-function "lliby_truncate_quotient" (<native-int64> <native-int64>) -> <native-int64>))
     (define-r7rs truncate-remainder (world-function "lliby_truncate_remainder" (<native-int64> <native-int64>) -> <native-int64>))
 
+    (define-r7rs floor/ (world-function "lliby_floor_div" (<native-int64> <native-int64>) -> (Values <exact-integer> <exact-integer>)))
+    (define-r7rs floor-quotient (world-function "lliby_floor_quotient" (<native-int64> <native-int64>) -> <native-int64>))
+    (define-r7rs floor-remainder (world-function "lliby_floor_remainder" (<native-int64> <native-int64>) -> <native-int64>))
+
     ; R7RS defines these as legacy aliases
     (define-r7rs quotient truncate-quotient)
     (define-r7rs remainder truncate-remainder)
+    (define-r7rs modulo floor-remainder)
 
     (define-r7rs odd? (lambda: ([val : <exact-integer>])
                                (not (= (truncate-remainder val 2) 0))))

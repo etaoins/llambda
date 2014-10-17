@@ -221,11 +221,61 @@
     (assert-equal 1 (truncate-remainder (typed-dynamic 5 <exact-integer>) -2))
     (assert-equal -1 (truncate-remainder (typed-dynamic -5 <exact-integer>) -2))))
 
+(define-test "(floor/)" (expect-success
+  (call-with-values
+    (lambda ()
+      (floor/ 5 2))
+    (lambda (quot remain)
+      (assert-equal 2 quot)
+      (assert-equal 1 remain)))
+
+  (call-with-values
+    (lambda ()
+      (floor/ -5 2))
+    (lambda (quot remain)
+      (assert-equal -3 quot)
+      (assert-equal 1 remain)))
+
+  (call-with-values
+    (lambda ()
+      (floor/ 5 -2))
+    (lambda (quot remain)
+      (assert-equal -3 quot)
+      (assert-equal -1 remain)))
+
+  (call-with-values
+    (lambda ()
+      (floor/ -5 -2))
+    (lambda (quot remain)
+      (assert-equal 2 quot)
+      (assert-equal -1 remain)))))
+
+(define-test "(floor/) by zero fails" (expect-failure
+  (floor/ 5 0)))
+
+(define-test "(floor-quotient)" (expect-success
+    (assert-equal 2 (floor-quotient 5 2))
+    (assert-equal -3 (floor-quotient -5 2))
+    (assert-equal -3 (floor-quotient 5 -2))
+    (assert-equal 2 (floor-quotient -5 -2))))
+
+(define-test "(floor-quotient) by zero fails" (expect-failure
+    (floor-quotient 5 0)))
+
+(define-test "(floor-remainder)" (expect-success
+    (assert-equal 1 (floor-remainder 5 2))
+    (assert-equal 1 (floor-remainder -5 2))
+    (assert-equal -1 (floor-remainder 5 -2))
+    (assert-equal -1 (floor-remainder -5 -2))))
+
 ; These are legacy aliases
 (define-test "(quotient)" (expect 5
   (quotient 10 2)))
 
 (define-test "(remainder)" (expect 0
+  (remainder 10 2)))
+
+(define-test "(modulo)" (expect 0
   (remainder 10 2)))
 
 (define-test "(truncate-remainder) by zero fails" (expect-failure

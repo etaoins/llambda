@@ -147,6 +147,29 @@ namespace
 
 		return FlonumCell::fromValue(world, numeratorValue);
 	}
+
+	// Helper used by the (floor/) procedures
+	struct FloorDivisionResult
+	{
+		std::int64_t quotient;
+		std::int64_t remainder;
+	};
+
+	FloorDivisionResult floorDivision(std::int64_t numerator, std::int64_t denominator)
+	{
+		// Do a truncating division first - this is the only integer division supported by C++
+		std::int64_t quotient = numerator / denominator;
+		std::int64_t remainder = numerator % denominator;
+
+		if ((quotient < 0) && (remainder != 0))
+		{
+			// Fall down to the previous value
+			quotient--;
+			remainder += denominator;
+		}
+
+		return {quotient, remainder};
+	}
 }
 
 extern "C"
@@ -408,6 +431,44 @@ std::int64_t lliby_truncate_remainder(World &world, std::int64_t numerator, std:
 	}
 
 	return numerator % denominator;
+}
+
+ListElementCell* lliby_floor_div(World &world, std::int64_t numerator, std::int64_t denominator)
+{
+	if (denominator == 0)
+	{
+		signalError(world, "Attempted (floor/) by zero");
+	}
+
+	auto floorResult = floorDivision(numerator, denominator);
+
+	alloc::RangeAlloc allocation = alloc::allocateRange(world, 2);
+	auto allocIt = allocation.begin();
+
+	auto quotientCell = new (*allocIt++) ExactIntegerCell(floorResult.quotient);
+	auto remainderCell = new (*allocIt++) ExactIntegerCell(floorResult.remainder);
+
+	return ListElementCell::createProperList(world, {quotientCell, remainderCell});
+}
+
+std::int64_t lliby_floor_quotient(World &world, std::int64_t numerator, std::int64_t denominator)
+{
+	if (denominator == 0)
+	{
+		signalError(world, "Attempted (truncate-quotient) by zero");
+	}
+
+	return floorDivision(numerator, denominator).quotient;
+}
+
+std::int64_t lliby_floor_remainder(World &world, std::int64_t numerator, std::int64_t denominator)
+{
+	if (denominator == 0)
+	{
+		signalError(world, "Attempted (truncate-remainder) by zero");
+	}
+
+	return floorDivision(numerator, denominator).remainder;
 }
 
 bool lliby_is_finite(NumberCell *value)
