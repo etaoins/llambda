@@ -193,7 +193,7 @@ AnyCell* lliby_append(World &world, RestArgument<AnyCell> *argHead)
 	}
 
 	// XXX: This is not very efficient
-	std::vector<AnyCell*> appenedElements;
+	std::vector<AnyCell*> appendedElements;
 	size_t appendIndex = 0;
 
 	auto argIt = argList.begin();
@@ -212,7 +212,7 @@ AnyCell* lliby_append(World &world, RestArgument<AnyCell> *argHead)
 		ProperList<AnyCell> properList(listHead);
 	
 		// Reserve the size of the vector
-		appenedElements.resize(appendIndex + properList.length());
+		appendedElements.resize(appendIndex + properList.length());
 
 		if (!properList.isValid())
 		{
@@ -221,13 +221,13 @@ AnyCell* lliby_append(World &world, RestArgument<AnyCell> *argHead)
 
 		for(auto element : properList)
 		{
-			appenedElements[appendIndex++] = element;
+			appendedElements[appendIndex++] = element;
 		}
 	}
 
 	// Use createList to append the last list on sharing its structure.
 	// This is required by R7RS
-	return ListElementCell::createList(world, appenedElements, *(argIt++));
+	return ListElementCell::createList(world, appendedElements, *(argIt++));
 }
 
 ListElementCell* lliby_reverse(World &world, ListElementCell *sourceHead)
