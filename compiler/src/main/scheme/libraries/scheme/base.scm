@@ -11,11 +11,15 @@
                     ((begin exp ...)
                      ((lambda () exp ...)))))
 
-    ; This isn't the full definition - tagged let isn't supported
     (define-syntax let
       (syntax-rules ()
                     ((let ((name val) ...) body1 body2 ...)
                      ((lambda (name ...) body1 body2 ...)
+                      val ...))
+                    ((let tag ((name val) ...) body1 body2 ...)
+                     ((letrec ((tag (lambda (name ...)
+                                      body1 body2 ...)))
+                        tag)
                       val ...))))
 
     (define-syntax let*

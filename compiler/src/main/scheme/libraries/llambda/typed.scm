@@ -1,6 +1,7 @@
 (define-library (llambda typed)
 	(import (llambda internal primitives))
   (import (llambda nfi))
+  (import (only (scheme base) letrec))
 
   ; Re-export from (llambda primitives) 
   (export define-type cast ann : define: define-record-type: lambda: case-lambda: make-predicate U Rec Listof Pairof
@@ -29,6 +30,11 @@
       (syntax-rules (:)
                     ((let: ((name : type val) ...) body1 body2 ...)
                      ((lambda: ((name : type) ...) body1 body2 ...)
+                      val ...))
+                    ((let: tag ((name : type val) ...) body1 body2 ...)
+                     ((letrec ((tag (lambda: ([name : type] ...)
+                                      body1 body2 ...)))
+                        tag)
                       val ...))))
 
     (define-syntax let*:
