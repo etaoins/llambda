@@ -126,3 +126,30 @@
 (define-test "(vector-copy) with negative start index fails" (expect-failure
   (vector-copy '#(dah dah didah) -1)))
 
+(define-test "(vector-fill!)" (expect-success
+  (define a (vector 1 2 3 4 5))
+  (vector-fill! a 'smash 2 4)
+
+  (assert-equal #(1 2 smash smash 5) a)
+
+  (vector-fill! a 'bang 4)
+  (assert-equal #(1 2 smash smash bang) a)
+
+  (vector-fill! a 'empty 0 0)
+  (vector-fill! a 'empty 5 5)
+  (assert-equal #(1 2 smash smash bang) a)
+
+  (vector-fill! a 'all)
+  (assert-equal #(all all all all all) a)))
+
+(define-test "(vector-fill!) on vector literal fails" (expect-failure
+  (vector-fill! #(dah dah didah) #t)))
+
+(define-test "(vector-fill!) with backwards slice fails" (expect-failure
+  (vector-fill! (vector 'dah 'dah 'didah) #t 2 1)))
+
+(define-test "(vector-fill!) past end of vector fails" (expect-failure
+  (vector-fill! (vector 'dah 'dah 'didah) #t 0 4)))
+
+(define-test "(vector-fill!) with negative start index fails" (expect-failure
+  (vector-fill! (vector 'dah 'dah 'didah) #t -1)))

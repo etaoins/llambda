@@ -369,6 +369,16 @@
     (define native-vector-copy (world-function "lliby_vector_copy" (<vector> <native-uint32> <native-uint32>) -> <vector>))
     (define-slice-proc vector-copy native-vector-copy <vector> vector-length)
 
+    (define native-vector-fill! (world-function "lliby_vector_mutating_fill" (<vector> <any> <native-uint32> <native-uint32>)))
+    (define-r7rs vector-fill!
+      (case-lambda:
+        (([target : <vector>] [fill : <any>])
+         (native-vector-fill! target fill 0 (vector-length target)))
+        (([target : <vector>] [fill : <any>] [start : <exact-integer>])
+         (native-vector-fill! target fill start (vector-length target)))
+        (([target : <vector>] [fill : <any>] [start : <exact-integer>] [end : <exact-integer>])
+         (native-vector-fill! target fill start end))))
+
     (define native-make-vector (world-function "lliby_make_vector" (<native-uint32> <any>) -> <vector>))
     (define-r7rs make-vector (case-lambda:
       (([len : <exact-integer>])

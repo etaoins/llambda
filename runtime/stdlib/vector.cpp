@@ -101,4 +101,16 @@ VectorCell *lliby_vector_copy(World &world, VectorCell *sourceVector, std::uint3
 	return sourceVector->copy(world, start, end);
 }
 
+void lliby_vector_mutating_fill(World &world, VectorCell *vector, AnyCell *fill, std::uint32_t start, std::uint32_t end)
+{
+	if (vector->isGlobalConstant())
+	{
+		signalError(world, "(vector-fill!) on vector literal", {vector});
+	}
+
+	assertSliceValid(world, "(vector-fill!)", vector, vector->length(), start, end);
+
+	vector->fill(fill, start, end);
+}
+
 }
