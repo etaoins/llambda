@@ -15,7 +15,7 @@ using namespace lliby;
 namespace
 {
 	// Helper used by lliby_div
-	FlonumCell *inexactDivision(World &world, double startValue, ProperList<NumberCell>::ConstIterator begin, ProperList<NumberCell>::ConstIterator end)
+	FlonumCell *inexactDivision(World &world, double startValue, ProperList<NumberCell>::Iterator begin, ProperList<NumberCell>::Iterator end)
 	{
 		double numeratorValue = startValue;
 

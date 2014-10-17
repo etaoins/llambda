@@ -18,7 +18,7 @@ class ProperList
 public:
 	typedef std::uint32_t size_type;
 
-	class ConstIterator : public std::iterator<std::forward_iterator_tag, T*>
+	class Iterator : public std::iterator<std::forward_iterator_tag, T*>
 	{
 		friend class ProperList;
 	public:
@@ -29,17 +29,17 @@ public:
 			return cell_unchecked_cast<T>(pairHead->car());
 		}
 
-		bool operator==(const ConstIterator &other) const
+		bool operator==(const Iterator &other) const
 		{
 			return m_head == other.m_head;
 		}
 		
-		bool operator!=(const ConstIterator &other) const
+		bool operator!=(const Iterator &other) const
 		{
 			return m_head != other.m_head;
 		}
 
-		ConstIterator& operator++()
+		Iterator& operator++()
 		{
 			auto pairHead = cell_unchecked_cast<const PairCell>(m_head);
 			m_head = cell_unchecked_cast<const ListElementCell>(pairHead->cdr());
@@ -47,15 +47,15 @@ public:
 			return *this;
 		}
 		
-		ConstIterator operator++(int postfix)
+		Iterator operator++(int postfix)
 		{
-			ConstIterator originalValue(*this);
+			Iterator originalValue(*this);
 			++(*this);
 			return originalValue;
 		}
 
 	private:
-		explicit ConstIterator(const ListElementCell *head) :
+		explicit Iterator(const ListElementCell *head) :
 			m_head(head)
 		{
 		}
@@ -135,14 +135,14 @@ public:
 		return m_length;
 	}
 
-	ConstIterator begin() const
+	Iterator begin() const
 	{
-		return ConstIterator(m_head);
+		return Iterator(m_head);
 	}
 
-	ConstIterator end() const
+	Iterator end() const
 	{
-		return ConstIterator(EmptyListCell::instance());
+		return Iterator(EmptyListCell::instance());
 	}
 
 private:
