@@ -36,6 +36,7 @@ class KnownUserProc(
   
   private val optimisingPlanners = List[reportproc.ReportProcPlanner](
     reportproc.ApplyProcPlanner,
+    reportproc.ArithmeticProcPlanner,
     reportproc.CadrProcPlanner,
     reportproc.DynamicProcPlanner,
     reportproc.ListProcPlanner,

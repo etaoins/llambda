@@ -41,12 +41,14 @@ add_library(lliby
 	dynamic/ParameterProcedureCell.cpp
 	dynamic/init.cpp
 	platform/memory.cpp
+	stdlib/arithmetic.cpp
 	stdlib/boolean.cpp
 	stdlib/bytevector.cpp
 	stdlib/char.cpp
 	stdlib/control.cpp
 	stdlib/dynamic.cpp
 	stdlib/exception.cpp
+	stdlib/inexact.cpp
 	stdlib/list.cpp
 	stdlib/number.cpp
 	stdlib/port.cpp
