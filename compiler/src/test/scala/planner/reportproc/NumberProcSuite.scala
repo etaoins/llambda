@@ -386,4 +386,32 @@ class NumberProcSuite extends FunSuite with PlanHelpers {
       planStepsFor("(truncate-remainder 5 0)")
     }
   }
+
+  test("static (min)") {
+    assertStaticPlan("(min 2 3 1 -2)",
+      ast.IntegerLiteral(-2)
+    )
+
+    assertStaticPlan("(min 2.0 3.0 1.0 -2.0)",
+      ast.FlonumLiteral(-2.0)
+    )
+
+    assertStaticPlan("(min 2 3.0 1 -2)",
+      ast.FlonumLiteral(-2.0)
+    )
+  }
+
+  test("static (max)") {
+    assertStaticPlan("(max 2 3 1 -2)",
+      ast.IntegerLiteral(3)
+    )
+
+    assertStaticPlan("(max 2.0 3.0 1.0 -2.0)",
+      ast.FlonumLiteral(3.0)
+    )
+
+    assertStaticPlan("(max 2 3 1.0 -2)",
+      ast.FlonumLiteral(3.0)
+    )
+  }
 }
