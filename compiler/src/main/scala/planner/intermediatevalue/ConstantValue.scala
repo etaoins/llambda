@@ -104,7 +104,7 @@ class ConstantFlonumValue(val value : Double) extends TrivialConstantValue(ct.Fl
     value
 }
 
-class ConstantCharValue(val value : Char) extends TrivialConstantValue(ct.CharCell, value, ps.CreateCharCell.apply) {
+class ConstantCharValue(val value : Int) extends TrivialConstantValue(ct.CharCell, value, ps.CreateCharCell.apply) {
   val typeDescription = "constant character"
 
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = nativeType match {

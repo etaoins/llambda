@@ -302,7 +302,7 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
     '"' ~ appendSB(0x22.toChar) |
     '|' ~ appendSB(0x7c.toChar) |
     'x' ~ capture(zeroOrMore(HexDigit)) ~ ';' ~> { hexNumber =>
-      appendSB(Integer.parseInt(hexNumber, 16).toChar)
+      appendSB(new String(Array(Integer.parseInt(hexNumber, 16)), 0, 1))
       ()
     } |
     zeroOrMore(IntralineWhitespaceChar) ~ '\n' ~ zeroOrMore(IntralineWhitespaceChar) // Line continuation
@@ -366,7 +366,7 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
     """space"""     ~ push(ast.CharLiteral(' ')) |
     """tab"""       ~ push(ast.CharLiteral(0x09)) |
     ignoreCase("x") ~ capture(oneOrMore(HexDigit)) ~ Whitespace ~> ({ hexCode =>
-      ast.CharLiteral(Integer.parseInt(hexCode, 16).toChar)
+      ast.CharLiteral(Integer.parseInt(hexCode, 16))
     }) |
     capture(Digit) ~ Whitespace ~> ({ literalCharString =>
       ast.CharLiteral(literalCharString.charAt(0))

@@ -36,6 +36,7 @@
 
 (define-test "char (eqv?)" (expect-success
 	(assert-true (eqv? #\a #\a))
+	(assert-true (eqv? #\a (integer->char (char->integer #\a))))
 	(assert-false (eqv? #\a #\b))))
 
 (define-test "null (eqv?)" (expect-success

@@ -44,8 +44,11 @@
 (define-test "string-ref on BMP Unicode character" (expect #\x2603
 	(string-ref "Hell☃!" 4)))
 
-(define-test "string-ref on non-BMP Unicode character" (expect #\x1f3c2
+(define-test "string-ref on non-BMP Unicode literal character" (expect #\x1f3c2
 	(string-ref "Hell🏂!" 4)))
+
+(define-test "string-ref on non-BMP Unicode escaped character" (expect #\x1f3c2
+	(string-ref "Hell\x1f3c2;" 4)))
 
 (define-test "string-ref past end of string" (expect-failure
 	(string-ref "Hell☃!" 10)))
@@ -88,7 +91,7 @@
 (define-test "string-append of boolean fails" (expect-failure
 	(string-append "Hell" "☃" "!" #f)))
 
-(define-test "(string->list)" (expect-failure
+(define-test "(string->list)" (expect-success
   (assert-equal '(#\H #\e #\l #\l #\x2603 #\!) (string->list "Hell☃!"))
   (assert-equal '(#\l #\l #\x2603 #\!) (string->list "Hell☃!" 2))
   (assert-equal '(#\l #\l) (string->list "Hell☃!" 2 4))

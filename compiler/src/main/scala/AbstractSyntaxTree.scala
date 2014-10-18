@@ -178,7 +178,7 @@ case class Bytevector(elements : Vector[Short]) extends NonSymbolLeaf {
     "#u8(" + elements.map(_.toString).mkString(" ") + ")"
 }
 
-case class CharLiteral(value : Char) extends NonSymbolLeaf {
+case class CharLiteral(value : Int) extends NonSymbolLeaf {
   val schemeType = vt.CharType
 
   override def toString = value match {
@@ -187,9 +187,9 @@ case class CharLiteral(value : Char) extends NonSymbolLeaf {
     case '\n' => """#\newline"""
     case '\r' => """#\return"""
     case '\t' => """#\tab"""
-    case _ if value.isLetterOrDigit && (value.toInt <= 127) =>
-      """#\""" + value
+    case _ if value.toChar.isLetterOrDigit && (value <= 127) =>
+      """#\""" + value.toChar
     case _ =>
-      """#\x""" + value.toInt.toHexString
+      """#\x""" + value.toHexString
   }
 }

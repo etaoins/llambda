@@ -13,6 +13,7 @@
 #include "StringCell.h"
 #include "PortCell.h"
 #include "DynamicStateCell.h"
+#include "CharCell.h"
 
 namespace lliby
 {
@@ -84,6 +85,13 @@ bool AnyCell::isEqv(const AnyCell *other) const
 		if (auto otherString = cell_cast<StringCell>(other))
 		{
 			return *thisString == *otherString;
+		}
+	}
+	else if (auto thisChar = cell_cast<CharCell>(this))
+	{
+		if (auto otherChar = cell_cast<CharCell>(other))
+		{
+			return thisChar->unicodeChar() == otherChar->unicodeChar();
 		}
 	}
 

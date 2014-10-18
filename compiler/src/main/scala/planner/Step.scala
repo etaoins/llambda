@@ -414,7 +414,7 @@ case class CreateFlonumCell(result : TempValue, value : Double) extends CreateCo
     MergeKey(java.lang.Double.doubleToLongBits(value))
 }
 
-case class CreateCharCell(result : TempValue, value : Char) extends CreateConstantCell {
+case class CreateCharCell(result : TempValue, value : Int) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
   
   def renamed(f : (TempValue) => TempValue) =

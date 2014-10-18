@@ -19,17 +19,15 @@
 (define-test "digit value of x0EA6 is #f" (expect #f
 	(digit-value #\x0EA6)))
 
-(define-test "integer value of of x41" (expect #x41
-	(char->integer #\x41)))
+(define-test "(char->integer)" (expect-success
+	(assert-equal #x41 (char->integer #\x41))
+	(assert-equal #x4141 (char->integer #\x4141))
+	(assert-equal #x1f3c2 (char->integer #\x1f3c2))))
 
-(define-test "integer value of of x4141" (expect #x4141
-	(char->integer #\x4141)))
-
-(define-test "character value of of x41" (expect #\x41
-	(integer->char #x41)))
-
-(define-test "character value of of x4141" (expect #\x4141
-	(integer->char #x4141)))
+(define-test "(integer->char)" (expect-success
+	(assert-equal #\x41 (integer->char #x41))
+	(assert-equal #\x4141 (integer->char #x4141))
+	(assert-equal #\x1f3c2 (integer->char #x1f3c2))))
 
 (define-test "(char=?)" (expect-success
   (assert-true  (char=? #\a #\a))
