@@ -257,3 +257,25 @@
 
   (assert-equal '(2 4 5) (lis < '(3 2 6 4 5 1)))
   (assert-equal '(0 2 6 9 11 15) (lis < '(0 8 4 12 2 10 6 14 1 9 5 13 3 11 7 15)))))
+
+; Based on http://rosettacode.org/wiki/Levenshtein_distance#SchemeGG
+(define-test "levenshtein distance" (expect 3
+  (import (llambda typed))
+
+  (: levenshtein (-> <string> <string> <exact-integer>))
+  (define (levenshtein s t)
+    (: %levenshtein (-> (Listof <char>) <exact-integer> (Listof <char>) <exact-integer> <exact-integer>))
+    (define (%levenshtein s sl t tl)
+      (cond ((zero? sl) tl)
+            ((zero? tl) sl)
+            (else
+              (min (+ (%levenshtein (cdr s) (- sl 1) t tl) 1)
+                   (+ (%levenshtein s sl (cdr t) (- tl 1)) 1)
+                   (+ (%levenshtein (cdr s) (- sl 1) (cdr t) (- tl 1))
+                      (if (char=? (car s) (car t)) 0 1))))))
+    (%levenshtein (string->list s)
+                  (string-length s)
+                  (string->list t)
+                  (string-length t)))
+
+  (levenshtein "kitten" "sitting")))
