@@ -195,7 +195,16 @@ private[planner] object PlanLambda {
         )
 
         (storageLoc, ImmutableValue(restValue))
-    }).toMap 
+    }).toMap
+
+    // Prefer compact return types where possible
+    val compactReturnType = lambdaExpr.schemeType.returnType match {
+      case vt.ReturnType.SingleValue(schemeType) =>
+        vt.ReturnType.SingleValue(CompactRepresentationForType(schemeType))
+
+      case other =>
+        other
+    }
 
     // Determine our initial signature
     // This is fun - try renaming scalaBugSignature to initialSignature and remove the assignment below
@@ -204,7 +213,7 @@ private[planner] object PlanLambda {
       hasSelfArg=innerSelfTempOpt.isDefined,
       restArgMemberTypeOpt=lambdaExpr.schemeType.restArgMemberTypeOpt,
       fixedArgTypes=retypedFixedArgs.map(_._2),
-      returnType=lambdaExpr.schemeType.returnType,
+      returnType=compactReturnType,
       attributes=Set(ProcedureAttribute.FastCC)
     ) : ProcedureSignature
 
