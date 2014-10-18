@@ -18,6 +18,12 @@ ListElementCell* ListElementCell::createProperList(World &world, std::vector<Any
 
 AnyCell* ListElementCell::createList(World &world, std::vector<AnyCell*> &elements, AnyCell *tail)
 {
+	// Avoid GC rooting etc. if we don't need to allocate anything
+	if (elements.empty())
+	{
+		return tail;
+	}
+
 	// We allocate space for our pairs below. Make sure we GC root the new elements first.
 	alloc::AnyRefRange elementsRoot(world, elements);
 	alloc::AnyRef tailRef(world, tail);
