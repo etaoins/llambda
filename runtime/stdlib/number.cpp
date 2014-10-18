@@ -192,49 +192,49 @@ bool lliby_is_rational(AnyCell *anyCell)
 bool lliby_numeric_equal(NumberCell *value1, NumberCell *value2, RestArgument<NumberCell> *argHead)
 {
 	return numericCompare(value1, value2, argHead,
-			[] (std::int64_t value1, int64_t value2) { return value1 == value2; },
+			[] (std::int64_t value1, std::int64_t value2) { return value1 == value2; },
 			[] (double value1, double value2) { return value1 == value2; });
 }
 
 bool lliby_numeric_lt(NumberCell *value1, NumberCell *value2, RestArgument<NumberCell> *argHead)
 {
 	return numericCompare(value1, value2, argHead,
-			[] (std::int64_t value1, int64_t value2) { return value1 < value2; },
+			[] (std::int64_t value1, std::int64_t value2) { return value1 < value2; },
 			[] (double value1, double value2) { return value1 < value2; });
 }
 
 bool lliby_numeric_gt(NumberCell *value1, NumberCell *value2, RestArgument<NumberCell> *argHead)
 {
 	return numericCompare(value1, value2, argHead,
-			[] (std::int64_t value1, int64_t value2) { return value1 > value2; },
+			[] (std::int64_t value1, std::int64_t value2) { return value1 > value2; },
 			[] (double value1, double value2) { return value1 > value2; });
 }
 
 bool lliby_numeric_lte(NumberCell *value1, NumberCell *value2, RestArgument<NumberCell> *argHead)
 {
 	return numericCompare(value1, value2, argHead,
-			[] (std::int64_t value1, int64_t value2) { return value1 <= value2; },
+			[] (std::int64_t value1, std::int64_t value2) { return value1 <= value2; },
 			[] (double value1, double value2) { return value1 <= value2; });
 }
 
 bool lliby_numeric_gte(NumberCell *value1, NumberCell *value2, RestArgument<NumberCell> *argHead)
 {
 	return numericCompare(value1, value2, argHead,
-			[] (std::int64_t value1, int64_t value2) { return value1 >= value2; },
+			[] (std::int64_t value1, std::int64_t value2) { return value1 >= value2; },
 			[] (double value1, double value2) { return value1 >= value2; });
 }
 
 NumberCell *lliby_max(World &world, NumberCell *currentMaxNumber, RestArgument<NumberCell> *argHead)
 {
 	return selectNumericValue(world, currentMaxNumber, argHead,
-			[] (std::int64_t value1, int64_t value2) { return value1 > value2; },
+			[] (std::int64_t value1, std::int64_t value2) { return value1 > value2; },
 			[] (double value1, double value2) { return value1 > value2; });
 }
 
 NumberCell *lliby_min(World &world, NumberCell *currentMaxNumber, RestArgument<NumberCell> *argHead)
 {
 	return selectNumericValue(world, currentMaxNumber, argHead,
-			[] (std::int64_t value1, int64_t value2) { return value1 < value2; },
+			[] (std::int64_t value1, std::int64_t value2) { return value1 < value2; },
 			[] (double value1, double value2) { return value1 < value2; });
 }
 
