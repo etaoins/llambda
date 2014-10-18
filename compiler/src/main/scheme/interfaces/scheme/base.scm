@@ -20,7 +20,7 @@
   (export set-car! set-cdr! list-set!)))
 
 (export symbol? symbol=? symbol->string string->symbol)
-(export char? digit-value char->integer integer->char)
+(export char? digit-value char->integer integer->char char=? char<? char>? char<=? char>=?)
 (export vector? make-vector vector vector-length vector-ref vector-set! list->vector vector->list vector-append
         vector-copy vector-fill!)
 (export bytevector? make-bytevector bytevector bytevector-length bytevector-u8-ref bytevector-u8-set! bytevector-append)

@@ -30,3 +30,46 @@
 
 (define-test "character value of of x4141" (expect #\x4141
 	(integer->char #x4141)))
+
+(define-test "(char=?)" (expect-success
+  (assert-true  (char=? #\a #\a))
+  (assert-false (char=? #\a #\b))
+
+  (assert-true  (char=? #\a #\a #\a))
+  (assert-false (char=? #\a #\a #\b))))
+
+(define-test "(char<?)" (expect-success
+  (assert-true  (char<? #\a #\b))
+  (assert-false (char<? #\a #\a))
+  (assert-false (char<? #\b #\a))
+
+  (assert-true  (char<? #\a #\b #\c))
+  (assert-false (char<? #\b #\b #\b))
+  (assert-false (char<? #\c #\b #\a))))
+
+(define-test "(char>?)" (expect-success
+  (assert-false (char>? #\a #\b))
+  (assert-false (char>? #\a #\a))
+  (assert-true  (char>? #\b #\a))
+
+  (assert-false (char>? #\a #\b #\c))
+  (assert-false (char>? #\b #\b #\b))
+  (assert-true  (char>? #\c #\b #\a))))
+
+(define-test "(char<=?)" (expect-success
+  (assert-true  (char<=? #\a #\b))
+  (assert-true  (char<=? #\a #\a))
+  (assert-false (char<=? #\b #\a))
+
+  (assert-true  (char<=? #\a #\b #\c))
+  (assert-true  (char<=? #\b #\b #\b))
+  (assert-false (char<=? #\c #\b #\a))))
+
+(define-test "(char>=?)" (expect-success
+  (assert-false (char>=? #\a #\b))
+  (assert-true  (char>=? #\a #\a))
+  (assert-true  (char>=? #\b #\a))
+
+  (assert-false (char>=? #\a #\b #\c))
+  (assert-true  (char>=? #\b #\b #\b))
+  (assert-true  (char>=? #\c #\b #\a))))

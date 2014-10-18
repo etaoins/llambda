@@ -55,6 +55,26 @@ public:
 		return codePoint() != other.codePoint();
 	}
 
+	bool operator<(const UnicodeChar &other) const
+	{
+		return codePoint() < other.codePoint();
+	}
+
+	bool operator<=(const UnicodeChar &other) const
+	{
+		return codePoint() <= other.codePoint();
+	}
+
+	bool operator>(const UnicodeChar &other) const
+	{
+		return codePoint() > other.codePoint();
+	}
+
+	bool operator>=(const UnicodeChar &other) const
+	{
+		return codePoint() >= other.codePoint();
+	}
+
 	int compare(const UnicodeChar &other, CaseSensitivity cs = CaseSensitivity::Sensitive) const
 	{
 		switch(cs)

@@ -358,6 +358,11 @@
     (define-r7rs digit-value (world-function "lliby_digit_value" (<native-unicode-char>) -> <any>))
     (define-r7rs char->integer (native-function "lliby_char_to_integer" (<native-unicode-char>) -> <native-int32>))
     (define-r7rs integer->char (native-function "lliby_integer_to_char" (<native-int32>) -> <native-unicode-char>))
+    (define-r7rs char=? (native-function "lliby_char_equal" (<native-unicode-char> <native-unicode-char> . <char>) -> <native-bool>))
+    (define-r7rs char<? (native-function "lliby_char_lt" (<native-unicode-char> <native-unicode-char> . <char>) -> <native-bool>))
+    (define-r7rs char>? (native-function "lliby_char_gt" (<native-unicode-char> <native-unicode-char> . <char>) -> <native-bool>))
+    (define-r7rs char<=? (native-function "lliby_char_lte" (<native-unicode-char> <native-unicode-char> . <char>) -> <native-bool>))
+    (define-r7rs char>=? (native-function "lliby_char_gte" (<native-unicode-char> <native-unicode-char> . <char>) -> <native-bool>))
 
     (define-r7rs vector? (make-predicate <vector>))
     (define-r7rs vector (world-function "lliby_vector" <any> -> <vector>))
