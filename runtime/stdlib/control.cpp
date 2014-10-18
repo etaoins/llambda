@@ -3,6 +3,8 @@
 #include "binding/ListElementCell.h"
 #include "binding/EmptyListCell.h"
 #include "binding/ProperList.h"
+#include "binding/VectorCell.h"
+#include "binding/UnitCell.h"
 #include "binding/RestArgument.h"
 
 #include "alloc/allocator.h"
@@ -16,6 +18,30 @@
 #include "core/error.h"
 
 using namespace lliby;
+
+namespace
+{
+	using AnyMapProcedureCell = TypedProcedureCell<AnyCell *, AnyCell *, ListElementCell *>;
+
+	/**
+	 * Variant of cell_cast that raises an error if the cast fails
+	 *
+	 * This is used during (map) to defend against the input lists being modified during the (map) operation causing
+	 * crashes.
+	 */
+	template<class T>
+	T *cell_map_cast(World &world, AnyCell *value)
+	{
+		T *castResult = cell_cast<T>(value);
+
+		if (castResult == nullptr)
+		{
+			signalError(world, "Input list mutated during (map)");
+		}
+
+		return castResult;
+	}
+}
 
 extern "C"
 {
@@ -115,6 +141,112 @@ ReturnValuesList *lliby_call_with_values(World &world, ThunkProcedureCell *produ
 
 	ReturnValuesList *values = producer->apply(world);
 	return consumer->apply(world, values);
+}
+
+VectorCell *lliby_vector_map(World &world, AnyMapProcedureCell *mapProcRaw, VectorCell *firstVectorRaw, RestArgument<VectorCell> *argHead)
+{
+	ProperList<VectorCell> restVectorList(argHead);
+	alloc::StrongRef<AnyMapProcedureCell> mapProc(world, mapProcRaw);
+
+	// This is the minimum length of all of our input vectos
+	std::uint32_t minimumLength = firstVectorRaw->length();
+
+	// Build our vector of input vector cells
+	std::vector<VectorCell*> restVectors;
+	restVectors.reserve(restVectorList.length());
+
+	for(auto restVector : restVectorList)
+	{
+		if (restVector->length() < minimumLength)
+		{
+			minimumLength = restVector->length();
+		}
+
+		restVectors.push_back(restVector);
+	}
+
+	// Root the input vector
+	alloc::StrongRef<VectorCell> firstVector(world, firstVectorRaw);
+
+	// Root the input vectors before we allocate the output vector and input lists
+	alloc::StrongRefRange<VectorCell> restVectorsRoot(world, restVectors);
+
+	// Allocate the output vector
+	VectorCell *outputVectorRaw = VectorCell::fromFill(world, minimumLength, UnitCell::instance());
+	alloc::StrongRef<VectorCell> outputVector(world, outputVectorRaw);
+
+	for(std::uint32_t i = 0; i < minimumLength; i++)
+	{
+		// Build the rest argument list
+		std::vector<AnyCell*> restArgVector;
+		restArgVector.reserve(restVectors.size());
+
+		for(auto restVector : restVectors)
+		{
+			// Use elements() directly because we already checked the length of all the vectors
+			// This lets us skip the bounds check
+			restArgVector.push_back(restVector->elements()[i]);
+		}
+
+		ListElementCell *restArgList = ListElementCell::createProperList(world, restArgVector);
+
+		AnyCell *result = mapProc->apply(world, firstVector->elements()[i], restArgList);
+		outputVector->elements()[i] = result;
+	}
+
+	return outputVector;
+}
+
+ListElementCell *lliby_map(World &world, AnyMapProcedureCell *mapProcRaw, ListElementCell *firstListRaw, RestArgument<ListElementCell>* restListsRaw)
+{
+	alloc::StrongRef<ListElementCell> firstList(world, firstListRaw);
+	std::vector<alloc::StrongRef<ListElementCell>> restLists;
+
+	alloc::StrongRef<AnyMapProcedureCell> mapProc(world, mapProcRaw);
+
+	// This is the minimum length of all of our input lists first
+	std::uint32_t minimumLength = ProperList<AnyCell>(firstList).length();
+
+	for(auto restListHead : ProperList<ListElementCell>(restListsRaw))
+	{
+		// Create the strong ref for the rest list
+		restLists.emplace(restLists.end(), world, restListHead);
+
+		std::uint32_t restListLength = ProperList<AnyCell>(restListHead).length();
+		minimumLength = std::min(minimumLength, restListLength);
+	}
+
+	// Create the vector of output values and GC root it
+	std::vector<AnyCell*> outputVector(minimumLength, nullptr);
+	alloc::StrongRefRange<AnyCell> outputVectorRoot(world, outputVector);
+
+	for(std::uint32_t i = 0; i < minimumLength; i++)
+	{
+		// Build the rest argument list
+		std::vector<AnyCell*> restArgVector;
+		restArgVector.reserve(restLists.size());
+
+		for(auto restList : restLists)
+		{
+			auto restListPair = cell_map_cast<PairCell>(world, restList.data());
+			restArgVector.push_back(restListPair->car());
+
+			// Move this forward to the next element
+			restList.setData(cell_map_cast<ListElementCell>(world, restListPair->cdr()));
+		}
+
+		// Create the rest argument list
+		ListElementCell *restArgList = ListElementCell::createProperList(world, restArgVector);
+
+		// Extract the first list value and move it forward
+		auto firstListPair = cell_map_cast<PairCell>(world, firstList.data());
+		firstList.setData(cell_map_cast<ListElementCell>(world, firstListPair->cdr()));
+
+		AnyCell *result = mapProc->apply(world, firstListPair->car(), restArgList);
+		outputVector[i] = result;
+	}
+
+	return ListElementCell::createProperList(world, outputVector);
 }
 
 }

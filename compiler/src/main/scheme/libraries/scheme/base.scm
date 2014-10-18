@@ -425,6 +425,13 @@
     (define-r7rs call-with-values (world-function "lliby_call_with_values" ((-> *) <procedure>) -> *))
     (define-r7rs apply (world-function "lliby_apply" (<procedure> . <any>) -> *))
 
+    ; (vector-map) iterates in a defined order so it's the same as (vector-for-each)
+    (define-r7rs vector-map (world-function "lliby_vector_map" ((-> <any> <any> * <any>) <vector> . <vector>) -> <vector>))
+    (define-r7rs vector-for-each vector-map)
+
+    (define-r7rs map (world-function "lliby_map" ((-> <any> <any> * <any>) <list> . <list>) -> <list>))
+    (define-r7rs for-each vector-map)
+
     (define native-make-parameter (world-function "_lliby_make_parameter" (<any> (U (-> <any> <any>) <unit>)) -> <procedure>))
     (define-r7rs make-parameter (case-lambda:
       (([init : <any>])

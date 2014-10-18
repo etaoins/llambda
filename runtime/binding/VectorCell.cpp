@@ -48,7 +48,12 @@ bool VectorCell::fill(AnyCell *fill, std::int64_t start, std::int64_t end)
 
 	return true;
 }
-	
+
+VectorCell* VectorCell::fromElements(World &world, std::vector<AnyCell*> &elements)
+{
+	return VectorCell::fromElements(world, elements.data(), elements.size());
+}
+
 VectorCell* VectorCell::fromElements(World &world, AnyCell **elements, std::uint32_t length)
 {
 	// Make sure our elements array is GC rooted for the next allocation

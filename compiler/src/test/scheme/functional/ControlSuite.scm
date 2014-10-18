@@ -136,3 +136,75 @@
     (captured-cont (+ callcc-result 1)))
 
   result-list))
+
+(define-test "(vector-map)" (expect-success
+  (assert-equal #(b e h) (vector-map cadr '#((a b) (d e) (g h))))
+  (assert-equal #(1 4 27 256 3125) (vector-map (lambda (n) (expt n n)) '#(1 2 3 4 5)))
+  (assert-equal #(5 7 9) (vector-map + '#(1 2 3) '#(4 5 6 7)))
+
+  (assert-equal #(1 2)
+                (let ((count 0))
+                  (vector-map
+                    (lambda (ignored)
+                      (set! count (+ count 1))
+                      count)
+                    '#(a b))))))
+
+(define-test "(vector-for-each)" (expect-success
+  (assert-equal #(0 1 4 9 16)
+                (let ((v (make-vector 5)))
+                  (vector-for-each
+                    (lambda (i) (vector-set! v i (* i i)))
+                    '#(0 1 2 3 4))
+                  v))))
+
+(define-test "(map)" (expect-success
+  (assert-equal '(b e h) (map cadr '((a b) (d e) (g h))))
+  (assert-equal '(1 4 27 256 3125) (map (lambda (n) (expt n n)) '(1 2 3 4 5)))
+  (assert-equal '(5 6 7) (map + '(1 2 3) '(4 5 6 7)))
+
+  (assert-equal '(1 2)
+                (let ((count 0))
+                  (map
+                    (lambda (ignored)
+                      (set! count (+ count 1))
+                      count)
+                    '(a b))))
+
+  (cond-expand
+    ((not immutable-pairs)
+     (begin
+       (define input-list (list-copy '(1 2 3 4)))
+
+       (define (mapper-proc n)
+         ; Mutate the list during (map) - this is an undefined operation but shouldn't crash
+         (set-cdr! (cdr input-list) '())
+         (* n n))
+
+
+       (guard (condition
+                (else 'ignore))
+              (map mapper-proc input-list)))))))
+
+(define-test "(for-each)" (expect-success
+  (assert-equal #(0 1 4 9 16)
+                (let ((v (make-vector 5)))
+                  (for-each
+                    (lambda (i) (vector-set! v i (* i i)))
+                    '#(0 1 2 3 4))
+                  v))
+
+  (cond-expand
+    ((not immutable-pairs)
+     (begin
+       (define input-list (list-copy '(1 2 3 4)))
+
+       (define (iter-proc n)
+         ; Mutate the list during (for-each) - this is an undefined operation but shouldn't crash
+         (set-cdr! (cdr input-list) '())
+         (* n n))
+
+
+       (guard (condition
+                (else 'ignore))
+              (for-each iter-proc input-list)))))))

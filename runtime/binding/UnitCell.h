@@ -15,10 +15,10 @@ public:
 		PreconstructedValue(CellTypeId::Unit)
 	{
 	}
-	
-	static const UnitCell* instance()
+
+	static UnitCell* instance()
 	{
-		return &lliby_unit_value;
+		return const_cast<UnitCell*>(&lliby_unit_value);
 	}
 };
 
