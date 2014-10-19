@@ -38,6 +38,7 @@ class KnownUserProc(
     reportproc.ApplyProcPlanner,
     reportproc.ArithmeticProcPlanner,
     reportproc.CadrProcPlanner,
+    reportproc.CharProcPlanner,
     reportproc.DynamicProcPlanner,
     reportproc.ListProcPlanner,
     reportproc.NumberProcPlanner,

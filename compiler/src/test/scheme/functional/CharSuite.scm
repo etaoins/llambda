@@ -22,12 +22,16 @@
 (define-test "(char->integer)" (expect-success
 	(assert-equal #x41 (char->integer #\x41))
 	(assert-equal #x4141 (char->integer #\x4141))
-	(assert-equal #x1f3c2 (char->integer #\x1f3c2))))
+	(assert-equal #x1f3c2 (char->integer #\x1f3c2))
+
+  (assert-equal #x1f3c2 (char->integer (typed-dynamic #\x1f3c2 <char>)))))
 
 (define-test "(integer->char)" (expect-success
 	(assert-equal #\x41 (integer->char #x41))
 	(assert-equal #\x4141 (integer->char #x4141))
-	(assert-equal #\x1f3c2 (integer->char #x1f3c2))))
+	(assert-equal #\x1f3c2 (integer->char #x1f3c2))
+
+	(assert-equal #\x1f3c2 (integer->char (typed-dynamic #x1f3c2 <exact-integer>)))))
 
 (define-test "(char=?)" (expect-success
   (assert-true  (char=? #\a #\a))
