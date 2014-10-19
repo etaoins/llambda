@@ -17,4 +17,74 @@ class CharProcSuite extends FunSuite with PlanHelpers {
       ast.CharLiteral('A')
     )
   }
+
+  test("(char=?)") {
+    assertStaticPlan("""(char=? #\1 #\1 #\1)""",
+      ast.BooleanLiteral(true)
+    )
+
+    assertStaticPlan("""(char=? #\1 #\2 #\3)""",
+      ast.BooleanLiteral(false)
+    )
+
+   assertStaticPlan("""(char=? #\3 #\2 #\1)""",
+      ast.BooleanLiteral(false)
+    )
+  }
+
+  test("(char<?)") {
+    assertStaticPlan("""(char<? #\1 #\1 #\1)""",
+      ast.BooleanLiteral(false)
+    )
+
+    assertStaticPlan("""(char<? #\1 #\2 #\3)""",
+      ast.BooleanLiteral(true)
+    )
+
+   assertStaticPlan("""(char<? #\3 #\2 #\1)""",
+      ast.BooleanLiteral(false)
+    )
+  }
+
+  test("(char>?)") {
+    assertStaticPlan("""(char>? #\1 #\1 #\1)""",
+      ast.BooleanLiteral(false)
+    )
+
+    assertStaticPlan("""(char>? #\1 #\2 #\3)""",
+      ast.BooleanLiteral(false)
+    )
+
+    assertStaticPlan("""(char>? #\3 #\2 #\1)""",
+      ast.BooleanLiteral(true)
+    )
+  }
+
+  test("(char<=?)") {
+    assertStaticPlan("""(char<=? #\1 #\1 #\1)""",
+      ast.BooleanLiteral(true)
+    )
+
+    assertStaticPlan("""(char<=? #\1 #\2 #\3)""",
+      ast.BooleanLiteral(true)
+    )
+
+   assertStaticPlan("""(char<=? #\3 #\2 #\1)""",
+      ast.BooleanLiteral(false)
+    )
+  }
+
+  test("(char>=?)") {
+    assertStaticPlan("""(char>=? #\1 #\1 #\1)""",
+      ast.BooleanLiteral(true)
+    )
+
+    assertStaticPlan("""(char>=? #\1 #\2 #\3)""",
+      ast.BooleanLiteral(false)
+    )
+
+    assertStaticPlan("""(char>=? #\3 #\2 #\1)""",
+      ast.BooleanLiteral(true)
+    )
+  }
 }
