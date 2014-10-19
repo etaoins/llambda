@@ -15,7 +15,12 @@ namespace alloc
 {
 
 /**
- * Abstract reference to a range of GC managed values
+ * Abstract reference to a contiguous range of GC managed values
+ *
+ * Note that unlike AbstractRef this does not maintain a copy of the referenced values. This has two important
+ * implications:
+ * - The referenced memory range must be valid for the lifetime of the AbstractRefRange.
+ * - The same memory range must not rooted by multiple AbstractRefRanges when the garbage collector in entered.
  *
  * \sa StrongRefRange
  */

@@ -218,32 +218,36 @@ ListElementCell *lliby_map(World &world, AnyMapProcedureCell *mapProcRaw, ListEl
 
 	// Create the vector of output values and GC root it
 	std::vector<AnyCell*> outputVector(minimumLength, nullptr);
-	alloc::StrongRefRange<AnyCell> outputVectorRoot(world, outputVector);
 
-	for(std::uint32_t i = 0; i < minimumLength; i++)
+	// Place the outputVectorRoot inside a block to ensure we don't double GC root the same memory
 	{
-		// Build the rest argument list
-		std::vector<AnyCell*> restArgVector;
-		restArgVector.reserve(restLists.size());
+		alloc::StrongRefRange<AnyCell> outputVectorRoot(world, outputVector);
 
-		for(auto restList : restLists)
+		for(std::uint32_t i = 0; i < minimumLength; i++)
 		{
-			auto restListPair = cell_map_cast<PairCell>(world, restList.data());
-			restArgVector.push_back(restListPair->car());
+			// Build the rest argument list
+			std::vector<AnyCell*> restArgVector;
+			restArgVector.reserve(restLists.size());
 
-			// Move this forward to the next element
-			restList.setData(cell_map_cast<ListElementCell>(world, restListPair->cdr()));
+			for(auto restList : restLists)
+			{
+				auto restListPair = cell_map_cast<PairCell>(world, restList.data());
+				restArgVector.push_back(restListPair->car());
+
+				// Move this forward to the next element
+				restList.setData(cell_map_cast<ListElementCell>(world, restListPair->cdr()));
+			}
+
+			// Create the rest argument list
+			ListElementCell *restArgList = ListElementCell::createProperList(world, restArgVector);
+
+			// Extract the first list value and move it forward
+			auto firstListPair = cell_map_cast<PairCell>(world, firstList.data());
+			firstList.setData(cell_map_cast<ListElementCell>(world, firstListPair->cdr()));
+
+			AnyCell *result = mapProc->apply(world, firstListPair->car(), restArgList);
+			outputVector[i] = result;
 		}
-
-		// Create the rest argument list
-		ListElementCell *restArgList = ListElementCell::createProperList(world, restArgVector);
-
-		// Extract the first list value and move it forward
-		auto firstListPair = cell_map_cast<PairCell>(world, firstList.data());
-		firstList.setData(cell_map_cast<ListElementCell>(world, firstListPair->cdr()));
-
-		AnyCell *result = mapProc->apply(world, firstListPair->car(), restArgList);
-		outputVector[i] = result;
 	}
 
 	return ListElementCell::createProperList(world, outputVector);

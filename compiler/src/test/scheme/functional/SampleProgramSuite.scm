@@ -279,3 +279,17 @@
                   (string-length t)))
 
   (levenshtein "kitten" "sitting")))
+
+; Taken from http://rosettacode.org/wiki/Permutations#Scheme
+(define-test "permutations" (expect ((1 2 3) (1 3 2) (2 1 3) (2 3 1) (3 2 1) (3 1 2))
+  (define (perm s)
+    (cond ((null? s) '())
+          ((null? (cdr s)) (list s))
+          (else ;; extract each item in list in turn and perm the rest
+            (let splice ((l '()) (m (car s)) (r (cdr s)))
+              (append
+                (map (lambda (x) (cons m x)) (perm (append l r)))
+                (if (null? r) '()
+                  (splice (cons m l) (car r) (cdr r))))))))
+
+  (perm '(1 2 3))))

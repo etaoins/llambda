@@ -1,5 +1,7 @@
 #include "CellRefRangeList.h"
 
+#include <cassert>
+
 namespace lliby
 {
 namespace alloc
@@ -19,6 +21,26 @@ namespace
 
 void CellRefRangeList::addRange(CellRefRange &range)
 {
+#ifndef NDEBUG
+	// Ensure this hasn't already been rooted
+	for(auto existingRange = head();
+		existingRange != nullptr;
+		existingRange = existingRange->next)
+	{
+		void *newStart = range.basePointer;
+		void *newEnd = range.basePointer + range.cellCount;
+
+		void *existingStart = existingRange->basePointer;
+		void *existingEnd = existingRange->basePointer + existingRange->cellCount;
+
+		if (((newStart >= existingStart) && (newStart < existingEnd)) ||
+			((newEnd > existingStart) && (newEnd <= existingEnd)))
+		{
+			assert(false);
+		}
+	}
+#endif
+
 	// Add to the active list
 	range.prev = nullptr;
 	range.next = m_head;
