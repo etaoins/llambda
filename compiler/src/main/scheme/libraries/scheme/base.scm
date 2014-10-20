@@ -355,7 +355,6 @@
     (define-r7rs string->symbol (world-function "lliby_string_to_symbol" (<string>) -> <symbol>))
 
     (define-r7rs char? (make-predicate <char>))
-    (define-r7rs digit-value (world-function "lliby_digit_value" (<native-unicode-char>) -> <any>))
     (define-r7rs char->integer (native-function "lliby_char_to_integer" (<native-unicode-char>) -> <native-int32>))
     (define-r7rs integer->char (native-function "lliby_integer_to_char" (<native-int32>) -> <native-unicode-char>))
     (define-r7rs char=? (native-function "lliby_char_equal" (<native-unicode-char> <native-unicode-char> . <char>) -> <native-bool>))

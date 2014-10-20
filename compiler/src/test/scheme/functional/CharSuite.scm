@@ -4,25 +4,18 @@
 (define-test "number 3 is not a character" (expect #f
 	(char? 3)))
 
-(define-test "digit value of '3' is 3" (expect 3
-	(digit-value #\3)))
+(define-test "digit-value" (expect-success
+  (import (scheme char))
 
-(define-test "digit value of x0664 is 4" (expect 4
-	(digit-value #\x0664)))
-
-(define-test "digit value of x0AE6 is 4" (expect 0
-	(digit-value #\x0AE6)))
-
-(define-test "digit value of x0EA6 is 4" (expect #f
-	(digit-value #\x0EA6)))
-
-(define-test "digit value of x0EA6 is #f" (expect #f
-	(digit-value #\x0EA6)))
+	(assert-equal 3 (digit-value #\3))
+	(assert-equal 4 (digit-value #\x0664))
+	(assert-equal 0 (digit-value #\x0AE6))
+	(assert-equal #f (digit-value #\x0EA6))))
 
 (define-test "(char->integer)" (expect-success
-	(assert-equal #x41 (char->integer #\x41))
-	(assert-equal #x4141 (char->integer #\x4141))
-	(assert-equal #x1f3c2 (char->integer #\x1f3c2))
+  (assert-equal #x41 (char->integer #\x41))
+  (assert-equal #x4141 (char->integer #\x4141))
+  (assert-equal #x1f3c2 (char->integer #\x1f3c2))
 
   (assert-equal #x1f3c2 (char->integer (typed-dynamic #\x1f3c2 <char>)))))
 
