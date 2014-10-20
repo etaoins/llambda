@@ -3,6 +3,7 @@ import io.llambda
 
 import llambda.compiler.ProcedureSignature
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.codegen.CompactRepresentationForType
 
 object ApplicableTypeToAdaptedSignature extends (vt.ApplicableType => ProcedureSignature) {
   /** Returns the expected signature for the specified applicable type
@@ -12,12 +13,20 @@ object ApplicableTypeToAdaptedSignature extends (vt.ApplicableType => ProcedureS
   def apply(applicableType : vt.ApplicableType) : ProcedureSignature =
     applicableType match {
       case procType : vt.ProcedureType =>
+        val compactReturnType = procType.returnType match {
+          case vt.ReturnType.SingleValue(schemeType) =>
+            vt.ReturnType.SingleValue(CompactRepresentationForType(schemeType))
+
+          case other =>
+            other
+        }
+
         ProcedureSignature(
           hasWorldArg=true,
           hasSelfArg=true,
-          fixedArgTypes=procType.fixedArgTypes,
+          fixedArgTypes=procType.fixedArgTypes.map(CompactRepresentationForType),
           restArgMemberTypeOpt=procType.restArgMemberTypeOpt,
-          returnType=procType.returnType,
+          returnType=compactReturnType,
           attributes=Set()
         )
 
