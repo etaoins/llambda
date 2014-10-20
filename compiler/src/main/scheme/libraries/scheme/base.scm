@@ -436,6 +436,9 @@
     (define-r7rs map (world-function "lliby_map" ((-> <any> <any> * <any>) <list> . <list>) -> <list>))
     (define-r7rs for-each map)
 
+    (define-r7rs string-map (world-function "lliby_string_map" ((-> <char> <char> * <char>) <string> . <string>) -> <string>))
+    (define-r7rs string-for-each string-map)
+
     (define native-make-parameter (world-function "_lliby_make_parameter" (<any> (U (-> <any> <any>) <unit>)) -> <procedure>))
     (define-r7rs make-parameter (case-lambda:
       (([init : <any>])

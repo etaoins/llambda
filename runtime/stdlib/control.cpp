@@ -6,6 +6,9 @@
 #include "binding/VectorCell.h"
 #include "binding/UnitCell.h"
 #include "binding/RestArgument.h"
+#include "binding/CharCell.h"
+#include "binding/StringCell.h"
+#include "unicode/UnicodeChar.h"
 
 #include "alloc/allocator.h"
 #include "alloc/WeakRef.h"
@@ -22,6 +25,7 @@ using namespace lliby;
 namespace
 {
 	using AnyMapProcedureCell = TypedProcedureCell<AnyCell *, AnyCell *, ListElementCell *>;
+	using StringMapProcedureCell = TypedProcedureCell<UnicodeChar, UnicodeChar, ListElementCell *>;
 
 	/**
 	 * Variant of cell_cast that raises an error if the cast fails
@@ -157,12 +161,8 @@ VectorCell *lliby_vector_map(World &world, AnyMapProcedureCell *mapProcRaw, Vect
 
 	for(auto restVector : restVectorList)
 	{
-		if (restVector->length() < minimumLength)
-		{
-			minimumLength = restVector->length();
-		}
-
 		restVectors.push_back(restVector);
+		minimumLength = std::min(minimumLength, restVector->length());
 	}
 
 	// Root the input vector
@@ -251,6 +251,48 @@ ListElementCell *lliby_map(World &world, AnyMapProcedureCell *mapProcRaw, ListEl
 	}
 
 	return ListElementCell::createProperList(world, outputVector);
+}
+
+StringCell *lliby_string_map(World &world, StringMapProcedureCell *mapProcRaw, StringCell *firstString, RestArgument<StringCell> *restStrings)
+{
+	// Extract the code points from the string argument. Once this is done we no longer need the original strings
+	std::vector<UnicodeChar> firstCharVector(firstString->unicodeChars());
+
+	ProperList<StringCell> restStringList(restStrings);
+	std::vector<std::vector<UnicodeChar>> restCharVectors;
+
+	std::size_t minimumLength = firstCharVector.size();
+
+	for(auto restString : restStringList)
+	{
+		auto newVectorIt = restCharVectors.emplace(restCharVectors.end(), restString->unicodeChars());
+		minimumLength = std::min(minimumLength, newVectorIt->size());
+	}
+
+	std::vector<UnicodeChar> outputVector;
+	outputVector.resize(minimumLength);
+
+	alloc::StrongRef<StringMapProcedureCell> mapProc(world, mapProcRaw);
+
+	for(std::size_t i = 0; i < minimumLength; i++)
+	{
+		// Build the rest argument list
+		std::vector<AnyCell*> restArgVector;
+		restArgVector.reserve(restCharVectors.size());
+
+		auto boxedCharAllocIt = alloc::allocateCells(world, restCharVectors.size());
+		for(auto restCharVector : restCharVectors)
+		{
+			restArgVector.push_back(new (boxedCharAllocIt++) CharCell(restCharVector[i]));
+		}
+
+		// Create the rest argument list
+		ListElementCell *restArgList = ListElementCell::createProperList(world, restArgVector);
+
+		outputVector[i] = mapProc->apply(world, firstCharVector[i], restArgList);
+	}
+
+	return StringCell::fromUnicodeChars(world, outputVector);
 }
 
 }

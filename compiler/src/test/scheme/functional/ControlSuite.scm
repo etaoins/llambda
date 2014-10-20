@@ -208,3 +208,19 @@
        (guard (condition
                 (else 'ignore))
               (for-each iter-proc input-list)))))))
+
+(define-test "(string-map)" (expect-success
+  (import (scheme char))
+  (assert-equal "abdegh" (string-map char-foldcase "AbdEgH"))
+
+  (assert-equal "IBM" (string-map
+                        (lambda (c)
+                          (integer->char (+ 1 (char->integer c))))
+                        "HAL"))
+
+  (assert-equal "StUdLyCaPs" (string-map
+                               (lambda (c k)
+                                 ((if (eqv? k #\u) char-upcase char-downcase)
+                                  c))
+                               "studlycaps xxx"
+                               "ululululul"))))
