@@ -435,7 +435,7 @@
     (define-r7rs vector-for-each vector-map)
 
     (define-r7rs map (world-function "lliby_map" ((-> <any> <any> * <any>) <list> . <list>) -> <list>))
-    (define-r7rs for-each vector-map)
+    (define-r7rs for-each map)
 
     (define native-make-parameter (world-function "_lliby_make_parameter" (<any> (U (-> <any> <any>) <unit>)) -> <procedure>))
     (define-r7rs make-parameter (case-lambda:
