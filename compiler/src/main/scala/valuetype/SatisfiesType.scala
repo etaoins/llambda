@@ -64,9 +64,15 @@ object SatisfiesType {
         val argListResult = apply(testingArgList, superArgList)
 
         // Construct a list type based on our return type
-        val superReturnTypeList = superReturnType.toValueListType
-        val testingReturnTypeList = testingReturnType.toValueListType
-        val returnTypeResult = apply(superReturnTypeList, testingReturnTypeList)
+        val returnTypeResult = superReturnType match {
+          case ReturnType.SingleValue(UnitType) =>
+            Some(true)
+
+          case _ =>
+            val superReturnTypeList = superReturnType.toValueListType
+            val testingReturnTypeList = testingReturnType.toValueListType
+            apply(superReturnTypeList, testingReturnTypeList)
+        }
 
         val allResults = Set(argListResult, returnTypeResult)
 
@@ -131,6 +137,10 @@ object SatisfiesType {
       case (EmptySchemeType, _) =>
         // Nothing satisfies the empty type except itself
         Some(false)
+
+      case (UnitType, _) =>
+        // Everything satisfies the unit type
+        Some(true)
 
       case (_, UnionType(testingMemberTypes)) =>
         val memberResults = testingMemberTypes.map { testingMemberType =>

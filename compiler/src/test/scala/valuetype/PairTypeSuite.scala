@@ -35,7 +35,11 @@ class PairTypeSuite extends SchemeTypeSuite {
     val specificPairType = PairType(SymbolType, StringType)
     assert(SatisfiesType(specificPairType, AnyPairType) === None)
   }
-  
+
+  test("the any pair type satisfies the unit type") {
+    assert(SatisfiesType(UnitType, AnyPairType) === Some(true))
+  }
+
   test("union with any pair type intersected with union with specific pair type is the specific pair type union") {
     val anyPairUnion = UnionType(Set(EmptyListType, AnyPairType))
     val specificPairUnion = UnionType(Set(EmptyListType, PairType(SymbolType, StringType)))

@@ -180,6 +180,11 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
       errorMessageOpt : Option[RuntimeErrorMessage] = None,
       convertProcType : Boolean = true
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = targetType match {
+    case vt.UnitType =>
+      val constantTemp = ps.CellTemp(ct.UnitCell, knownConstant=true)
+      plan.steps += ps.CreateUnitCell(constantTemp)
+      constantTemp
+
     case vt.Predicate =>
       toTruthyPredicate()
 

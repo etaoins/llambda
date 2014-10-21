@@ -94,17 +94,7 @@ class EquivalenceProcSuite extends FunSuite with PlanHelpers {
       ast.BooleanLiteral(false)
     )
   }
-  
-  test("unit (eqv?)") {
-    assertStaticPlan("""(eqv? #!unit #!unit)""",
-      ast.BooleanLiteral(true)
-    )
-    
-    assertStaticPlan("""(eqv? #!unit '())""",
-      ast.BooleanLiteral(false)
-    )
-  }
-  
+
   test("empty list (eqv?)") {
     assertStaticPlan("(eqv? '() '())",
       ast.BooleanLiteral(true)

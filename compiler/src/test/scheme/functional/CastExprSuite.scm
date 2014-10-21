@@ -14,6 +14,14 @@
 	(import (llambda typed))
 	(ann 50 <flonum>)))
 
+(define-test "(cast) can convert int to unit" (expect-success
+	(import (llambda typed))
+	(cast 50 <unit>)))
+
+(define-test "(ann) can convert int to unit" (expect-success
+	(import (llambda typed))
+	(ann 50 <unit>)))
+
 (define-test "statically impossible (cast) fails at compile time" (expect-compile-failure
 	(import (llambda typed))
 	(cast #t <exact-integer>)))

@@ -162,6 +162,16 @@
 	(define: (add-two-values (a : <exact-integer>) (b : <exact-integer>)) (+ a b))
 	(add-two-values 4 3)))
 
+(define-test "procedure returning value can be passed as procedure returning unit" (expect finished
+  (import (llambda typed))
+
+  (: invoke-unit-thunk (-> <exact-integer> <exact-integer> (-> <exact-integer> <exact-integer> <unit>) <unit>))
+  (define (invoke-unit-thunk val1 val2 thunk)
+    (thunk val1 val1)
+    'finished)
+
+  (invoke-unit-thunk 3 4 +)))
+
 (define-test "procedure mutating args does not affect caller" (expect 7
 	(define (set-arg a) (set! a -89))
 	
