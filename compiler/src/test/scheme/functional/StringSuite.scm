@@ -140,3 +140,27 @@
   (assert-equal "本" (substring "日本国" 1 2))
   (assert-equal "" (substring "日本国" 0 0))
   (assert-equal "" (substring "日本国" 3 3))))
+
+(define-test "(string-upcase)" (expect-success
+  (import (scheme char))
+
+  (assert-equal "" (string-upcase ""))
+  (assert-equal "HELL☃ WORLDS" (string-upcase "hell☃ worldſ"))
+  (assert-equal "HELLO W☃RLDS" (string-upcase "HELLO W☃RLDſ"))
+  (assert-equal "日本国" (string-upcase "日本国"))))
+
+(define-test "(string-downcase)" (expect-success
+  (import (scheme char))
+
+  (assert-equal "" (string-downcase ""))
+  (assert-equal "hell☃ worldſ" (string-downcase "hell☃ worldſ"))
+  (assert-equal "hello w☃rldſ" (string-downcase "HELLO W☃RLDſ"))
+  (assert-equal "日本国" (string-downcase "日本国"))))
+
+(define-test "(string-foldcase)" (expect-success
+  (import (scheme char))
+
+  (assert-equal "" (string-foldcase ""))
+  (assert-equal "hell☃ worlds" (string-foldcase "hell☃ worldſ"))
+  (assert-equal "hello w☃rlds" (string-foldcase "HELLO W☃RLDſ"))
+  (assert-equal "日本国" (string-foldcase "日本国"))))

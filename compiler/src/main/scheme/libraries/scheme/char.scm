@@ -14,4 +14,7 @@
     (define-r7rs char-upcase (native-function "lliby_char_upcase" (<native-unicode-char>) -> <native-unicode-char>))
     (define-r7rs char-downcase (native-function "lliby_char_downcase" (<native-unicode-char>) -> <native-unicode-char>))
     (define-r7rs char-foldcase (native-function "lliby_char_foldcase" (<native-unicode-char>) -> <native-unicode-char>))
+    (define-r7rs string-upcase (world-function "lliby_string_upcase" (<string>) -> <string>))
+    (define-r7rs string-downcase (world-function "lliby_string_downcase" (<string>) -> <string>))
+    (define-r7rs string-foldcase (world-function "lliby_string_foldcase" (<string>) -> <string>))
     (define-r7rs digit-value (world-function "lliby_digit_value" (<native-unicode-char>) -> <any>))))

@@ -112,4 +112,19 @@ StringCell* lliby_substring(World &world, StringCell *sourceString, std::uint32_
 	return sourceString->copy(world, start, end);
 }
 
+StringCell* lliby_string_upcase(World &world, StringCell *sourceString)
+{
+	return sourceString->toUppercaseString(world);
+}
+
+StringCell* lliby_string_downcase(World &world, StringCell *sourceString)
+{
+	return sourceString->toLowercaseString(world);
+}
+
+StringCell* lliby_string_foldcase(World &world, StringCell *sourceString)
+{
+	return sourceString->toCaseFoldedString(world);
+}
+
 }
