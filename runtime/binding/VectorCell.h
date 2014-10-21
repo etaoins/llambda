@@ -35,8 +35,13 @@ public:
 		return true;
 	}
 
-	static VectorCell* fromElements(World &world, std::vector<AnyCell*> &elements);
+	/**
+	 * Constructs a vector cell from the passed array of elements
+	 *
+	 * This transfers ownership of the elements array to the VectorCell. The array must be allocated using new[]
+	 */
 	static VectorCell* fromElements(World &world, AnyCell **elements, std::uint32_t length);
+
 	static VectorCell* fromFill(World &world, std::uint32_t length, AnyCell *fill = nullptr);
 	static VectorCell* fromAppended(World &world, const std::vector<const VectorCell*> &vectors);
 	
