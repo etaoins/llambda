@@ -50,6 +50,7 @@ add_library(lliby
 	stdlib/exception.cpp
 	stdlib/inexact.cpp
 	stdlib/list.cpp
+	stdlib/map.cpp
 	stdlib/number.cpp
 	stdlib/port.cpp
 	stdlib/output.cpp

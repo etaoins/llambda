@@ -151,12 +151,25 @@
                     '#(a b))))))
 
 (define-test "(vector-for-each)" (expect-success
+  (import (llambda typed))
+
   (assert-equal #(0 1 4 9 16)
                 (let ((v (make-vector 5)))
                   (vector-for-each
                     (lambda (i) (vector-set! v i (* i i)))
                     '#(0 1 2 3 4))
-                  v))))
+                  v))
+
+  ; We should be able to iterate while returning mulitple values unlike (vector-map)
+  (define: counter : <exact-integer> 0)
+
+  (vector-for-each
+    (lambda (i)
+      (set! counter (+ counter 1))
+      (values i counter))
+    #(a b c d e f))
+
+  (assert-equal 6 counter)))
 
 (define-test "(map)" (expect-success
   (assert-equal '(b e h) (map cadr '((a b) (d e) (g h))))
@@ -187,12 +200,25 @@
               (map mapper-proc input-list)))))))
 
 (define-test "(for-each)" (expect-success
+  (import (llambda typed))
+
   (assert-equal #(0 1 4 9 16)
                 (let ((v (make-vector 5)))
                   (for-each
                     (lambda (i) (vector-set! v i (* i i)))
                     '(0 1 2 3 4))
                   v))
+
+  ; We should be able to iterate while returning mulitple values unlike (vector-map)
+  (define: acc : <exact-integer> 0)
+
+  (for-each
+    (lambda (i)
+      (set! acc (+ acc i))
+      (values i acc))
+    '(1 2 3 4 5))
+
+  (assert-equal 15 acc)
 
   (cond-expand
     ((not immutable-pairs)
@@ -224,3 +250,10 @@
                                   c))
                                "studlycaps xxx"
                                "ululululul"))))
+
+(define-test "(string-for-each)" (expect (101 100 99 98 97)
+  (let ((v '()))
+    (string-for-each
+      (lambda (c) (set! v (cons (char->integer c) v)))
+      "abcde")
+    v)))
