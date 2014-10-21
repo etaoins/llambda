@@ -302,6 +302,18 @@ void testFromUnicodeChars(World &world)
 		ASSERT_EQUAL(unicodeValue->charLength(), 3);
 		ASSERT_EQUAL(memcmp(unicodeValue->constUtf8Data(), u8"🐉☃!", 8), 0);
 	}
+
+	{
+		platform::SizedMallocResult testAllocResult = platform::sizedMalloc(24);
+		const size_t testSize = testAllocResult.actualSize;
+
+		std::vector<UnicodeChar> unicodeChars(testSize, UnicodeChar(0x20));
+
+		StringCell *offByOneTest = StringCell::fromUnicodeChars(world, unicodeChars);
+
+		ASSERT_EQUAL(offByOneTest->byteLength(), testSize);
+		ASSERT_EQUAL(offByOneTest->charLength(), testSize);
+	}
 }
 
 void testStringCopy(World &world)
@@ -421,6 +433,18 @@ void testStringCopy(World &world)
 		ASSERT_EQUAL(helloCopy->byteLength(), 5);
 		ASSERT_EQUAL(helloCopy->charLength(), 5);
 		ASSERT_EQUAL(memcmp(helloCopy->constUtf8Data(), u8"Hello", 5), 0);
+	}
+
+	{
+		platform::SizedMallocResult testAllocResult = platform::sizedMalloc(24);
+		const size_t testSize = testAllocResult.actualSize;
+
+		// Allocate an extra by so copy() needs to COW
+		StringCell *offByOneTest = StringCell::fromFill(world, testSize + 1, UnicodeChar(0x20));
+		StringCell *offByOneCopy = offByOneTest->copy(world, 0, testSize);
+
+		ASSERT_EQUAL(offByOneCopy->byteLength(), testSize);
+		ASSERT_EQUAL(offByOneCopy->charLength(), testSize);
 	}
 }
 

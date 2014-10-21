@@ -275,8 +275,6 @@ StringCell* StringCell::fromUnicodeChars(World &world, const std::vector<Unicode
 
 	memcpy(utf8Data, encodedData.data(), totalByteLength);
 
-	utf8Data[totalByteLength] = 0;
-
 	return newString;
 }
 
@@ -680,7 +678,6 @@ StringCell* StringCell::copy(World &world, std::int64_t start, std::int64_t end)
 	std::uint8_t *newUtf8Data = newString->utf8Data();
 
 	memcpy(newUtf8Data, range.startPointer, newByteLength);
-	newUtf8Data[newByteLength] = 0;
 
 	return newString;
 }
