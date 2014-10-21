@@ -72,7 +72,7 @@ size_t collect(World &world, Heap &newHeap)
 {
 	size_t reachableCells = 0;
 
-	std::function<bool (AnyCell**)> rootVisitor = [&] (AnyCell **cellRef) -> bool
+	auto rootVisitor = [&] (AnyCell **cellRef) -> bool
 	{
 		AnyCell *oldCellLocation = *cellRef;
 
@@ -124,8 +124,7 @@ size_t collect(World &world, Heap &newHeap)
 	visitCell(reinterpret_cast<AnyCell**>(&world.activeStateCell), rootVisitor);
 
 	// Visit each runtime weak ref
-	std::function<bool (AnyCell**)> weakRefFunction = weakRefVisitor;
-	visitCellRefList(world.weakRefs, weakRefFunction);
+	visitCellRefList(world.weakRefs, weakRefVisitor);
 
 	return reachableCells;
 }

@@ -9,7 +9,6 @@ add_library(lliby
 	alloc/Finalizer.cpp
 	alloc/Heap.cpp
 	alloc/allocator.cpp
-	alloc/cellvisitor.cpp
 	alloc/collector.cpp
 	binding/BytevectorCell.cpp
 	binding/CharCell.cpp

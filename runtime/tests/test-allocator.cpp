@@ -22,7 +22,6 @@
 #include "unicode/UnicodeChar.h"
 
 #include "alloc/allocator.h"
-#include "alloc/cellvisitor.h"
 #include "alloc/cellref.h"
 #include "alloc/RangeAlloc.h"
 
