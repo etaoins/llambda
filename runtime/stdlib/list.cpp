@@ -14,10 +14,10 @@
 
 using namespace lliby;
 
-namespace 
+namespace
 {
 	// This is used to implement memq, memv and member without a callback
-	const AnyCell* list_search(const AnyCell *obj, ListElementCell *listHead, bool (AnyCell::*equalityCheck)(const AnyCell*) const)
+	const AnyCell* listSearch(const AnyCell *obj, ListElementCell *listHead, bool (AnyCell::*equalityCheck)(const AnyCell*) const)
 	{
 		const AnyCell *cell = listHead;
 
@@ -36,9 +36,9 @@ namespace
 		assert(cell == EmptyListCell::instance());
 		return BooleanCell::falseInstance();
 	}
-	
+
 	// This is used to implement assq, assv and assoc
-	const AnyCell* alist_search(const AnyCell *obj, ListElementCell *listHead, bool (AnyCell::*equalityCheck)(const AnyCell*) const)
+	const AnyCell* alistSearch(const AnyCell *obj, ListElementCell *listHead, bool (AnyCell::*equalityCheck)(const AnyCell*) const)
 	{
 		const AnyCell *cell = listHead;
 
@@ -248,22 +248,22 @@ ListElementCell* lliby_reverse(World &world, ListElementCell *sourceHead)
 
 const AnyCell* lliby_memv(const AnyCell *obj, ListElementCell *listHead)
 {
-	return list_search(obj, listHead, &AnyCell::isEqv);
+	return listSearch(obj, listHead, &AnyCell::isEqv);
 }
 
 const AnyCell* lliby_member(const AnyCell *obj, ListElementCell *listHead)
 {
-	return list_search(obj, listHead, &AnyCell::isEqual);
+	return listSearch(obj, listHead, &AnyCell::isEqual);
 }
 
 const AnyCell* lliby_assv(const AnyCell *obj, ListElementCell *listHead)
 {
-	return alist_search(obj, listHead, &AnyCell::isEqv);
+	return alistSearch(obj, listHead, &AnyCell::isEqv);
 }
 
 const AnyCell* lliby_assoc(const AnyCell *obj, ListElementCell *listHead)
 {
-	return alist_search(obj, listHead, &AnyCell::isEqual);
+	return alistSearch(obj, listHead, &AnyCell::isEqual);
 }
 
 ListElementCell* lliby_list_tail(World &world, ListElementCell *head, std::uint32_t count)
