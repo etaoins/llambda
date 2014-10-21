@@ -40,16 +40,23 @@ void visitDynamicState(dynamic::State *state, std::function<bool(AnyCell **)> &v
 
 void visitCell(AnyCell **rootCellRef, std::function<bool(AnyCell **)> &visitor)
 {
+visitTop:
 	if (!visitor(rootCellRef))
 	{
 		// The visitor doesn't want to visit the child cells
 		return;
 	}
-	
+
 	else if (auto pairCell = cell_cast<PairCell>(*rootCellRef))
 	{
 		visitCell(pairCell->carRef(), visitor);
-		visitCell(pairCell->cdrRef(), visitor);
+
+		// This is gross
+		// C++ doesn't guarantee tail recursion here and in fact Clang will not make this tail recursive. For very
+		// long lists this will end up causing deep stack recursion. Directly hack tail recursion using goto which
+		// is well defined in C++
+		rootCellRef = pairCell->cdrRef();
+		goto visitTop;
 	}
 	else if (auto vectorCell = cell_cast<VectorCell>(*rootCellRef))
 	{
