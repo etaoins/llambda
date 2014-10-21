@@ -422,6 +422,11 @@
     (define native-string->list (world-function "lliby_string_to_list" (<string> <native-uint32> <native-uint32>) -> (Listof <char>)))
     (define-slice-proc string->list native-string->list <string> string-length)
 
+    ; Unlike other slicing functions the raw slicer is exposed as (substring) to implement the procedure with the same
+    ; name defined in R7RS
+    (define substring (world-function "lliby_substring" (<string> <native-uint32> <native-uint32>) -> <string>))
+    (define-slice-proc string-copy substring <string> string-length)
+
     (define-r7rs procedure? (make-predicate <procedure>))
     (define-r7rs call-with-current-continuation (world-function "lliby_call_with_current_continuation" ((-> <procedure> *)) -> *))
     (define-r7rs call/cc call-with-current-continuation)

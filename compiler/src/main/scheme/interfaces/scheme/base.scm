@@ -24,7 +24,8 @@
 (export vector? make-vector vector vector-length vector-ref vector-set! list->vector vector->list vector-append
         vector-copy vector-fill!)
 (export bytevector? make-bytevector bytevector bytevector-length bytevector-u8-ref bytevector-u8-set! bytevector-append)
-(export string? make-string string string-length string-ref string-set! string-append list->string string->list)
+(export string? make-string string string-length string-ref string-set! string-append list->string string->list
+        string-copy substring)
 (export procedure? apply call-with-current-continuation call/cc values call-with-values vector-map vector-for-each
         map for-each string-map string-for-each)
 (export make-parameter dynamic-wind)

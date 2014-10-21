@@ -105,4 +105,11 @@ ListElementCell* lliby_string_to_list(World &world, StringCell *sourceString, st
 	return ListElementCell::createProperList(world, boxedChars);
 }
 
+// This is also used to implement (string-copy)
+StringCell* lliby_substring(World &world, StringCell *sourceString, std::uint32_t start, std::uint32_t end)
+{
+	assertSliceValid(world, "(substring)", sourceString, sourceString->charLength(), start, end);
+	return sourceString->copy(world, start, end);
+}
+
 }

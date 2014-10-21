@@ -106,3 +106,37 @@
 
 (define-test "(string->list) with negative start index fails" (expect-failure
   (string->list "Hell☃!" -1)))
+
+(define-test "(string-copy)" (expect-success
+  (assert-equal "" (string-copy ""))
+  (assert-equal "1☃3" (string-copy "1☃3"))
+  (assert-equal "☃3" (string-copy "1☃3" 1))
+  (assert-equal "☃" (string-copy "1☃3" 1 2))
+  (assert-equal "" (string-copy "1☃3" 0 0))
+  (assert-equal "" (string-copy "1☃3" 3 3))
+
+  (define a "18☃8") ; a may be immutable
+  (define b (string-copy a))
+  (string-set! b 0 #\Я) ; b is mutable
+
+  ; Make sure a was preserved
+  (assert-equal "18☃8" a)
+
+  (assert-equal "Я8☃8" b)
+  (define c (string-copy b 1 3))
+  (assert-equal "8☃" c)))
+
+(define-test "(string-copy) with backwards slice fails" (expect-failure
+  (string-copy "1☃3" 2 1)))
+
+(define-test "(string-copy) past end of vector fails" (expect-failure
+  (string-copy "1☃3" 0 4)))
+
+(define-test "(string-copy) with negative start index fails" (expect-failure
+  (string-copy "1☃3" -1)))
+
+(define-test "(substring)" (expect-success
+  (assert-equal "日本国" (substring "日本国" 0 3))
+  (assert-equal "本" (substring "日本国" 1 2))
+  (assert-equal "" (substring "日本国" 0 0))
+  (assert-equal "" (substring "日本国" 3 3))))
