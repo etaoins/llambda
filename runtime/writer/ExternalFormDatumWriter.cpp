@@ -1,7 +1,6 @@
 #include "ExternalFormDatumWriter.h"
 
 #include <cassert>
-#include <sstream>
 #include <iomanip>
 
 #include "binding/AnyCell.h"
@@ -23,6 +22,22 @@
 
 #include "dynamic/ParameterProcedureCell.h"
 #include "dynamic/EscapeProcedureCell.h"
+
+namespace
+{
+	bool stringLikeByteIsDirectlyPrintable(std::uint8_t byteValue)
+	{
+		return
+			// Has to be above the control character and whitespace range
+			(byteValue > 0x20) &&
+			// Can't be a literal backslash
+			(byteValue != 0x5c) &&
+			// Can't be DEL
+			(byteValue != 0x7f) &&
+			// Can't be " even if it's not the quote character
+			(byteValue != 0x22);
+	}
+}
 
 namespace lliby
 {
@@ -147,74 +162,70 @@ void ExternalFormDatumWriter::renderFlonum(const FlonumCell *value)
 		}
 	}
 }
-	
+
 void ExternalFormDatumWriter::renderStringLike(const std::uint8_t *utf8Data, std::uint32_t byteLength, std::uint8_t quoteChar, bool needsQuotes)
 {
-	std::ostringstream outBuf;
-
 	if (byteLength == 0)
 	{
 		// This is for the empty symbol which is represented by ||
 		needsQuotes = true;
 	}
-
-	for(std::uint32_t i = 0; i < byteLength; i++)
+	else if (!needsQuotes)
 	{
-		std::uint8_t byteValue = utf8Data[i];
+		// Scan the string to determine if we need quotes
+		for(std::uint32_t i = 0; i < byteLength; i++)
+		{
+			const std::uint8_t byteValue = utf8Data[i];
 
-		if (byteValue == quoteChar)
-		{
-			needsQuotes = true;
-			outBuf << "\\" << static_cast<char>(byteValue);
-		}
-		else if (// Has to be above the control character and whitespace range
-			(byteValue > 0x20) &&
-			// Can't be a literal backslash
-			(byteValue != 0x5c) && 
-			// Can't be DEL
-			(byteValue != 0x7f) &&
-			// Can't be " even if it's not the quote character
-			(byteValue != 0x22))
-		{
-			if (byteValue > 0x7f)
+			if ((byteValue == quoteChar) || (byteValue > 0x7f) || !stringLikeByteIsDirectlyPrintable(byteValue))
 			{
-				// R7RS requires symbols to be quoted if they have non-ASCII characters
 				needsQuotes = true;
-			}
-
-			// These can be used literally
-			outBuf << static_cast<char>(byteValue);
-		}
-		else
-		{
-			needsQuotes = true;
-
-			switch(byteValue)
-			{
-			case 0x07: outBuf << "\\a";  break;
-			case 0x08: outBuf << "\\b";  break;
-			case 0x09: outBuf << "\\t";  break;
-			case 0x0a: outBuf << "\\n";  break;
-			case 0x0d: outBuf << "\\r";  break;
-			case 0x20: outBuf << " ";    break;
-			case 0x5c: outBuf << "\\\\"; break;
-			case 0x22: outBuf << "\"";   break;
-			default:
-				outBuf << "\\x" << std::hex << byteValue;
+				break;
 			}
 		}
 	}
 
 	if (needsQuotes)
 	{
-		m_outStream << static_cast<char>(quoteChar) << outBuf.str() << static_cast<char>(quoteChar);
+		m_outStream << static_cast<char>(quoteChar);
 	}
-	else
+
+	for(std::uint32_t i = 0; i < byteLength; i++)
 	{
-		m_outStream << outBuf.str();
+		const std::uint8_t byteValue = utf8Data[i];
+
+		if (byteValue == quoteChar)
+		{
+			m_outStream << "\\" << static_cast<char>(byteValue);
+		}
+		else if (stringLikeByteIsDirectlyPrintable(byteValue))
+		{
+			m_outStream << static_cast<char>(byteValue);
+		}
+		else
+		{
+			switch(byteValue)
+			{
+			case 0x07: m_outStream << "\\a";  break;
+			case 0x08: m_outStream << "\\b";  break;
+			case 0x09: m_outStream << "\\t";  break;
+			case 0x0a: m_outStream << "\\n";  break;
+			case 0x0d: m_outStream << "\\r";  break;
+			case 0x20: m_outStream << " ";    break;
+			case 0x5c: m_outStream << "\\\\"; break;
+			case 0x22: m_outStream << "\"";   break;
+			default:
+				m_outStream << "\\x" << std::hex << byteValue;
+			}
+		}
+	}
+
+	if (needsQuotes)
+	{
+		m_outStream << static_cast<char>(quoteChar);
 	}
 }
-	
+
 void ExternalFormDatumWriter::renderPair(const PairCell *value, bool inList)
 {
 	if (!inList)
