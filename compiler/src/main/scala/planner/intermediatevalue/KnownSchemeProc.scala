@@ -24,7 +24,7 @@ extends KnownUserProc(signature, plannedSymbol, selfTempOpt, reportNameOpt) {
   override def locationOpt : Option[ContextLocated] =
     Some(lambdaExpr)
 
-  override def withReportName(newReportName : String) : KnownUserProc = {
+  override def withReportName(newReportName : String) : KnownSchemeProc = {
     new KnownSchemeProc(
       signature,
       plannedSymbol,
@@ -36,7 +36,7 @@ extends KnownUserProc(signature, plannedSymbol, selfTempOpt, reportNameOpt) {
     )
   }
   
-  override def withSelfTemp(selfTemp : ps.TempValue) : KnownUserProc =
+  override def withSelfTemp(selfTemp : ps.TempValue) : KnownSchemeProc =
     new KnownSchemeProc(
       signature,
       plannedSymbol,

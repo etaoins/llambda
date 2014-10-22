@@ -41,16 +41,21 @@ class KnownCaseLambdaProc(
     clauses.map(_.knownProc.schemeType)
   )
 
-  override def withReportName(newReportName : String) : KnownUserProc =
+  override def withReportName(newReportName : String) : KnownUserProc = {
+    val mappedClauses = clauses.map { clause =>
+      clause.copy(knownProc=clause.knownProc.withReportName(newReportName))
+    }
+
     new KnownCaseLambdaProc(
       signature=signature,
       closureType=closureType,
-      clauses=clauses,
+      clauses=mappedClauses,
       plannedSymbol=plannedSymbol,
       selfTempOpt=selfTempOpt,
       reportNameOpt=Some(newReportName),
       clausesInScope=clausesInScope
     )
+  }
   
   override def withSelfTemp(selfTemp : ps.TempValue) : KnownUserProc =
     new KnownCaseLambdaProc(
