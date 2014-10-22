@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <limits>
 #include <cassert>
+#include <iterator>
 
 #include "SymbolCell.h"
 #include "BytevectorCell.h"
@@ -187,7 +188,8 @@ StringCell* StringCell::fromUtf8Data(World &world, const std::uint8_t *data, std
 StringCell* StringCell::fromFill(World &world, std::uint32_t length, UnicodeChar fill)
 {
 	// Figure out how many bytes we'll need
-	std::vector<std::uint8_t> encoded = utf8::encodeUtf8Char(fill);
+	std::vector<std::uint8_t> encoded(utf8::encodeUtf8Char(fill));
+
 	const size_t encodedCharSize = encoded.size();
 
 	const std::uint32_t byteLength = encodedCharSize * length;
@@ -252,17 +254,14 @@ StringCell* StringCell::fromAppended(World &world, std::vector<StringCell*> &str
 StringCell* StringCell::fromUnicodeChars(World &world, const std::vector<UnicodeChar> &unicodeChars)
 {
 	std::vector<std::uint8_t> encodedData;
-	std::uint32_t charLength = 0;
+	const std::uint32_t charLength = unicodeChars.size();
 
 	// The encoded data will have the be at least this size
-	encodedData.reserve(unicodeChars.size());
+	encodedData.reserve(charLength);
 
 	for(auto unicodeChar : unicodeChars)
 	{
-		const std::vector<std::uint8_t> encodedChar = utf8::encodeUtf8Char(unicodeChar);
-		encodedData.insert(encodedData.end(), encodedChar.begin(), encodedChar.end());
-
-		charLength++;
+		utf8::appendUtf8Char(unicodeChar, std::back_inserter(encodedData));
 	}
 	
 	const std::uint32_t totalByteLength = encodedData.size();
@@ -593,7 +592,7 @@ bool StringCell::fill(UnicodeChar unicodeChar, std::int64_t start, std::int64_t 
 	}
 
 	// Encode the new character
-	std::vector<std::uint8_t> encoded = utf8::encodeUtf8Char(unicodeChar);
+	std::vector<std::uint8_t> encoded(utf8::encodeUtf8Char(unicodeChar));
 
 	if (encoded.size() == 0)
 	{
@@ -869,8 +868,7 @@ StringCell *StringCell::toConvertedString(World &world, UnicodeChar (UnicodeChar
 
 		const UnicodeChar convertedChar = (originalChar.*converter)();
 
-		const std::vector<std::uint8_t> encodedChar = utf8::encodeUtf8Char(convertedChar);
-		convertedData.insert(convertedData.end(), encodedChar.begin(), encodedChar.end());
+		utf8::appendUtf8Char(convertedChar, std::back_inserter(convertedData));
 	}
 	
 	const std::uint32_t totalByteLength = convertedData.size();

@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <vector>
 #include <cassert>
+#include <iterator>
 
 #include "unicode/UnicodeChar.h"
 
@@ -80,49 +81,43 @@ inline UnicodeChar decodeUtf8Char(std::uint8_t **charPtr)
 	return UnicodeChar(codePoint);
 }
 
-inline std::vector<std::uint8_t> encodeUtf8Char(UnicodeChar unicodeChar)
+template<typename T>
+T appendUtf8Char(UnicodeChar unicodeChar, T output)
 {
-	unsigned int continuationBytes;
-	std::uint8_t firstByteHeader;
 	std::int32_t codePoint = unicodeChar.codePoint();
 
-	if (codePoint > 0x10FFFF)
-	{
-		// Not valid - see RFC-3629
-		return std::vector<std::uint8_t>();
-	}
-	else if (codePoint >= 0x10000)
-	{
-		continuationBytes = 3;
-		firstByteHeader = FourByteHeaderValue;
-	}
-	else if (codePoint >= 0x800)
-	{
-		continuationBytes = 2;
-		firstByteHeader = ThreeByteHeaderValue;
-	}
-	else if (codePoint >= 0x80)
-	{
-		continuationBytes = 1;
-		firstByteHeader = TwoByteHeaderValue;
-	}
-	else
+	if (codePoint < 0x80)
 	{
 		// Pure ASCII
-		return std::vector<std::uint8_t>{static_cast<std::uint8_t>(codePoint)};
+		*(output++) = codePoint;
 	}
-
-	std::vector<std::uint8_t> encoded(continuationBytes + 1);
-
-	for(unsigned int i = continuationBytes; i; i--)
+	else if (codePoint < 0x800)
 	{
-		encoded[i] = ContinuationHeaderValue | (~ContinuationHeaderMask & codePoint);
-		codePoint = codePoint >> 6;
+		*(output++) = (codePoint >> 6)  | TwoByteHeaderValue;
+		*(output++) = (codePoint        & ~ContinuationHeaderMask) | ContinuationHeaderValue;
+	}
+	else if (codePoint < 0x10000)
+	{
+		*(output++) = (codePoint >> 12) | ThreeByteHeaderValue;
+		*(output++) = ((codePoint >> 6) & ~ContinuationHeaderMask)  | ContinuationHeaderValue;
+		*(output++) = (codePoint         & ~ContinuationHeaderMask) | ContinuationHeaderValue;
+	}
+	else if (codePoint < 0x110000)
+	{
+		*(output++) = (codePoint >> 18)  | FourByteHeaderValue;
+		*(output++) = ((codePoint >> 12) & ~ContinuationHeaderMask) | ContinuationHeaderValue;
+		*(output++) = ((codePoint >> 6)  & ~ContinuationHeaderMask) | ContinuationHeaderValue;
+		*(output++) = (codePoint         & ~ContinuationHeaderMask) | ContinuationHeaderValue;
 	}
 
-	encoded[0] = firstByteHeader | codePoint;
+	return output;
+}
 
-	return encoded;
+inline std::vector<std::uint8_t> encodeUtf8Char(UnicodeChar unicodeChar)
+{
+	std::vector<uint8_t> encodedChar;
+	appendUtf8Char(unicodeChar, std::back_inserter(encodedChar));
+	return encodedChar;
 }
 
 }
