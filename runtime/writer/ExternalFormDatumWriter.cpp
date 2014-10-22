@@ -3,7 +3,6 @@
 #include <cassert>
 #include <sstream>
 #include <iomanip>
-#include <unordered_map>
 
 #include "binding/AnyCell.h"
 #include "binding/UnitCell.h"
@@ -153,17 +152,6 @@ void ExternalFormDatumWriter::renderStringLike(const std::uint8_t *utf8Data, std
 {
 	std::ostringstream outBuf;
 
-	static const std::unordered_map<std::uint8_t, const char *> specialChars = {
-		{0x07, "\\a"},
-		{0x08, "\\b"},
-		{0x09, "\\t"},
-		{0x0a, "\\n"},
-		{0x0d, "\\r"},
-		{0x20, " "},
-		{0x5c, "\\\\"},
-		{0x22, "\""}
-	};
-
 	if (byteLength == 0)
 	{
 		// This is for the empty symbol which is represented by ||
@@ -201,15 +189,17 @@ void ExternalFormDatumWriter::renderStringLike(const std::uint8_t *utf8Data, std
 		{
 			needsQuotes = true;
 
-			auto charReplacement = specialChars.find(byteValue);
-
-			if (charReplacement != specialChars.cend())
+			switch(byteValue)
 			{
-				outBuf << charReplacement->second;
-			}
-			else
-			{
-				// These are anonymous control characters
+			case 0x07: outBuf << "\\a";  break;
+			case 0x08: outBuf << "\\b";  break;
+			case 0x09: outBuf << "\\t";  break;
+			case 0x0a: outBuf << "\\n";  break;
+			case 0x0d: outBuf << "\\r";  break;
+			case 0x20: outBuf << " ";    break;
+			case 0x5c: outBuf << "\\\\"; break;
+			case 0x22: outBuf << "\"";   break;
+			default:
 				outBuf << "\\x" << std::hex << byteValue;
 			}
 		}
@@ -320,17 +310,6 @@ void ExternalFormDatumWriter::renderProcedure(const ProcedureCell *proc)
 void ExternalFormDatumWriter::renderCharacter(const CharCell *value)
 {
 	std::int32_t codePoint = value->unicodeChar().codePoint();
-	static const std::unordered_map<std::uint32_t, const char *> specialChars = {
-		{0x07, "#\\alarm"},
-		{0x08, "#\\backspace"},
-		{0x7f, "#\\delete"},
-		{0x1b, "#\\escape"},
-		{0x0a, "#\\newline"},
-		{0x00, "#\\null"},
-		{0x0d, "#\\return"},
-		{0x20, "#\\space"},
-		{0x09, "#\\tab"},
-	};
 
 	if ((codePoint >= 0x21) && (codePoint <= 0x7e))
 	{
@@ -338,14 +317,18 @@ void ExternalFormDatumWriter::renderCharacter(const CharCell *value)
 	}
 	else
 	{
-		auto specialCharIt = specialChars.find(codePoint);
-
-		if (specialCharIt != specialChars.cend())
+		switch(codePoint)
 		{
-			m_outStream << specialCharIt->second;
-		}
-		else
-		{
+		case 0x07: m_outStream << "#\\alarm";     break;
+		case 0x08: m_outStream << "#\\backspace"; break;
+		case 0x7f: m_outStream << "#\\delete";    break;
+		case 0x1b: m_outStream << "#\\escape";    break;
+		case 0x0a: m_outStream << "#\\newline";   break;
+		case 0x00: m_outStream << "#\\null";      break;
+		case 0x0d: m_outStream << "#\\return";    break;
+		case 0x20: m_outStream << "#\\space";     break;
+		case 0x09: m_outStream << "#\\tab";       break;
+		default:
 			m_outStream << "#\\x" << std::hex << codePoint;
 		}
 	}
