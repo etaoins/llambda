@@ -231,25 +231,25 @@ void ExternalFormDatumWriter::renderPair(const PairCell *value, bool inList)
 {
 	if (!inList)
 	{
-		m_outStream << "(";
+		m_outStream << '(';
 	}
 
 	render(value->car());
 
 	if (EmptyListCell::isInstance(value->cdr()))
 	{
-		m_outStream << ")";
+		m_outStream << ')';
 	}
 	else if (auto rest = cell_cast<PairCell>(value->cdr()))
 	{
-		m_outStream << " ";
+		m_outStream << ' ';
 		renderPair(rest, true);
 	}
 	else 
 	{
 		m_outStream << " . ";
 		render(value->cdr());
-		m_outStream << ")";
+		m_outStream << ')';
 	}
 }
 	
