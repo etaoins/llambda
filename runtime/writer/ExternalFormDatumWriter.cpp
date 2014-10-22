@@ -185,10 +185,14 @@ void ExternalFormDatumWriter::renderStringLike(const std::uint8_t *utf8Data, std
 		}
 	}
 
-	if (needsQuotes)
+	if (!needsQuotes)
 	{
-		m_outStream << static_cast<char>(quoteChar);
+		// We can print this directly without any transformation
+		m_outStream.write(reinterpret_cast<const char *>(utf8Data), byteLength);
+		return;
 	}
+
+	m_outStream << static_cast<char>(quoteChar);
 
 	for(std::uint32_t i = 0; i < byteLength; i++)
 	{
@@ -220,10 +224,7 @@ void ExternalFormDatumWriter::renderStringLike(const std::uint8_t *utf8Data, std
 		}
 	}
 
-	if (needsQuotes)
-	{
-		m_outStream << static_cast<char>(quoteChar);
-	}
+	m_outStream << static_cast<char>(quoteChar);
 }
 
 void ExternalFormDatumWriter::renderPair(const PairCell *value, bool inList)
