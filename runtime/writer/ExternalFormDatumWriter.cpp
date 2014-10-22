@@ -229,6 +229,7 @@ void ExternalFormDatumWriter::renderStringLike(const std::uint8_t *utf8Data, std
 
 void ExternalFormDatumWriter::renderPair(const PairCell *value, bool inList)
 {
+renderPairEntry:
 	if (!inList)
 	{
 		m_outStream << '(';
@@ -243,9 +244,13 @@ void ExternalFormDatumWriter::renderPair(const PairCell *value, bool inList)
 	else if (auto rest = cell_cast<PairCell>(value->cdr()))
 	{
 		m_outStream << ' ';
-		renderPair(rest, true);
+
+		// Force tail recursion here for the cdr so we can render deep lists
+		value = rest;
+		inList = true;
+		goto renderPairEntry;
 	}
-	else 
+	else
 	{
 		m_outStream << " . ";
 		render(value->cdr());
