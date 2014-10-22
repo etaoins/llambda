@@ -20,7 +20,13 @@ public:
 	 * See createList() for more information
 	 */
 	static ListElementCell *createProperList(World &world, std::vector<AnyCell*> &elements);
-	
+
+	static ListElementCell *createProperList(World &world, std::initializer_list<AnyCell*> elementsList)
+	{
+		std::vector<AnyCell*> elements(elementsList);
+		return createProperList(world, elements);
+	}
+
 	static ListElementCell *createProperList(World &world, const std::vector<AnyCell*> &elements)
 	{
 		std::vector<AnyCell*> elementsCopy(elements);
@@ -38,6 +44,12 @@ public:
 	 *                  list; otherwise, the list will improper
 	 */
 	static AnyCell *createList(World &world, std::vector<AnyCell*> &elements, AnyCell *tail);
+
+	static AnyCell *createList(World &world, std::initializer_list<AnyCell*> elementsList, AnyCell *tail)
+	{
+		std::vector<AnyCell*> elements(elementsList);
+		return createList(world, elements, tail);
+	}
 
 	static AnyCell *createList(World &world, const std::vector<AnyCell*> &elements, AnyCell *tail)
 	{
