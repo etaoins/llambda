@@ -56,11 +56,12 @@
 (define-test "length of improper list fails" (expect-failure
 	(length '(1 . 2))))
 
-(define-test "make-list" (expect-success 
+(define-test "make-list" (expect-success
 	(assert-equal '() (make-list 0))
   (assert-equal '() (make-list 0 4.0))
   (assert-equal '(#!unit #!unit #!unit #!unit) (make-list 4))
-  (assert-equal '(4.0 4.0 4.0 4.0) (make-list 4 4.0))))
+  (assert-equal '(4.0 4.0 4.0 4.0) (make-list 4 4.0))
+  (assert-equal '(#() #()) (make-list 2 (make-vector 0)))))
 
 (define-test "(list-copy) of degenerate lists" (expect-success
   (assert-equal '() (list-copy '()))

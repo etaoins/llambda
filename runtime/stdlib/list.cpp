@@ -99,9 +99,10 @@ std::uint32_t lliby_length(World &world, ProperList<AnyCell> *list)
 	return list->size();
 }
 
-ListElementCell* lliby_make_list(World &world, std::uint32_t count, AnyCell *fill)
+ListElementCell* lliby_make_list(World &world, std::uint32_t count, AnyCell *fillRaw)
 {
 	ListElementCell *cdr = EmptyListCell::instance();
+	alloc::AnyRef fill(world, fillRaw);
 
 	// Allocate all the new pairs at once
 	alloc::RangeAlloc allocation(alloc::allocateRange(world, count));
