@@ -2,7 +2,6 @@
 #include "binding/ExactIntegerCell.h"
 #include "binding/BooleanCell.h"
 #include "binding/ProperList.h"
-#include "binding/RestArgument.h"
 
 #include "unicode/UnicodeChar.h"
 
@@ -11,10 +10,9 @@ using namespace lliby;
 namespace
 {
 	template<class Comparator>
-	bool charCompare(UnicodeChar value1, UnicodeChar value2, RestArgument<CharCell> *argHead, Comparator charCompare)
+	bool charCompare(UnicodeChar value1, UnicodeChar value2, ProperList<CharCell> *argList, Comparator charCompare)
 	{
-		const ProperList<CharCell> argList(argHead);
-		auto argListIt = argList.begin();
+		auto argListIt = argList->begin();
 
 		while(true)
 		{
@@ -23,7 +21,7 @@ namespace
 				return false;
 			}
 
-			if (argListIt == argList.end())
+			if (argListIt == argList->end())
 			{
 				// All done!
 				return true;
@@ -103,31 +101,31 @@ std::int32_t lliby_integer_to_char(std::int32_t codePoint)
 	return codePoint;
 }
 
-bool lliby_char_equal(UnicodeChar value1, UnicodeChar value2, RestArgument<CharCell> *argHead)
+bool lliby_char_equal(UnicodeChar value1, UnicodeChar value2, ProperList<CharCell> *argHead)
 {
 	return charCompare(value1, value2, argHead,
 			[] (UnicodeChar value1, UnicodeChar value2) { return value1 == value2; });
 }
 
-bool lliby_char_lt(UnicodeChar value1, UnicodeChar value2, RestArgument<CharCell> *argHead)
+bool lliby_char_lt(UnicodeChar value1, UnicodeChar value2, ProperList<CharCell> *argHead)
 {
 	return charCompare(value1, value2, argHead,
 			[] (UnicodeChar value1, UnicodeChar value2) { return value1 < value2; });
 }
 
-bool lliby_char_gt(UnicodeChar value1, UnicodeChar value2, RestArgument<CharCell> *argHead)
+bool lliby_char_gt(UnicodeChar value1, UnicodeChar value2, ProperList<CharCell> *argHead)
 {
 	return charCompare(value1, value2, argHead,
 			[] (UnicodeChar value1, UnicodeChar value2) { return value1 > value2; });
 }
 
-bool lliby_char_lte(UnicodeChar value1, UnicodeChar value2, RestArgument<CharCell> *argHead)
+bool lliby_char_lte(UnicodeChar value1, UnicodeChar value2, ProperList<CharCell> *argHead)
 {
 	return charCompare(value1, value2, argHead,
 			[] (UnicodeChar value1, UnicodeChar value2) { return value1 <= value2; });
 }
 
-bool lliby_char_gte(UnicodeChar value1, UnicodeChar value2, RestArgument<CharCell> *argHead)
+bool lliby_char_gte(UnicodeChar value1, UnicodeChar value2, ProperList<CharCell> *argHead)
 {
 	return charCompare(value1, value2, argHead,
 			[] (UnicodeChar value1, UnicodeChar value2) { return value1 >= value2; });

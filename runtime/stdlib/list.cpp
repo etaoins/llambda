@@ -4,7 +4,6 @@
 #include "binding/EmptyListCell.h"
 #include "binding/BooleanCell.h"
 #include "binding/ProperList.h"
-#include "binding/RestArgument.h"
 
 #include "alloc/allocator.h"
 #include "alloc/RangeAlloc.h"
@@ -17,12 +16,10 @@ using namespace lliby;
 namespace
 {
 	// This is used to implement memq, memv and member without a callback
-	const AnyCell* listSearch(const AnyCell *obj, ListElementCell *listHead, bool (AnyCell::*equalityCheck)(const AnyCell*) const)
+	const AnyCell* listSearch(const AnyCell *obj, ProperList<AnyCell> *listHead, bool (AnyCell::*equalityCheck)(const AnyCell*) const)
 	{
 		const AnyCell *cell = listHead;
 
-		// Do this in a single pass for efficiency
-		// ProperList doesn't give us much here
 		while(auto pair = cell_cast<PairCell>(cell))
 		{
 			if ((pair->car()->*equalityCheck)(obj))
@@ -38,7 +35,7 @@ namespace
 	}
 
 	// This is used to implement assq, assv and assoc
-	const AnyCell* alistSearch(const AnyCell *obj, ListElementCell *listHead, bool (AnyCell::*equalityCheck)(const AnyCell*) const)
+	const AnyCell* alistSearch(const AnyCell *obj, ProperList<AnyCell> *listHead, bool (AnyCell::*equalityCheck)(const AnyCell*) const)
 	{
 		const AnyCell *cell = listHead;
 
@@ -97,16 +94,9 @@ void lliby_set_cdr(World &world, PairCell *pair, AnyCell *obj)
 	return pair->setCdr(obj);
 }
 
-std::uint32_t lliby_length(World &world, ListElementCell *head) 
+std::uint32_t lliby_length(World &world, ProperList<AnyCell> *list)
 {
-	ProperList<AnyCell> properList(head);
-
-	if (!properList.isValid())
-	{
-		signalError(world, "Non-list passed to list-length", {head});
-	}
-
-	return properList.length();
+	return list->size();
 }
 
 ListElementCell* lliby_make_list(World &world, std::uint32_t count, AnyCell *fill)
@@ -173,18 +163,16 @@ AnyCell* lliby_list_copy(World &world, AnyCell *sourceHead)
 	return destHead;
 }
 
-ListElementCell* lliby_list(RestArgument<AnyCell> *head)
+ProperList<AnyCell>* lliby_list(ProperList<AnyCell> *head)
 {
 	// Our calling convention requires that rest parameters are passed as a proper list. Because (list) is defined as
 	// only having rest args the codegen will do the heavy lifting of building the list and we only have to return it.
 	return head;
 }
 
-AnyCell* lliby_append(World &world, RestArgument<AnyCell> *argHead)
+AnyCell* lliby_append(World &world, ProperList<AnyCell> *argList)
 {
-	ProperList<AnyCell> argList(argHead);
-
-	auto argCount = argList.length();
+	auto argCount = argList->size();
 
 	if (argCount == 0)
 	{
@@ -192,49 +180,30 @@ AnyCell* lliby_append(World &world, RestArgument<AnyCell> *argHead)
 		return EmptyListCell::instance();
 	}
 
-	// XXX: This is not very efficient
 	std::vector<AnyCell*> appendedElements;
-	size_t appendIndex = 0;
-
-	auto argIt = argList.begin();
+	auto argIt = argList->begin();
 
 	while(--argCount)
 	{
 		auto argDatum = *(argIt++);
-		auto listHead = cell_cast<ListElementCell>(argDatum);
+		auto properList = cell_cast<ProperList<AnyCell>>(argDatum);
 
-		if (listHead == nullptr)
+		if (properList == nullptr)
 		{
 			signalError(world, "Non-list passed to (append) in non-terminal position", {argDatum});
 		}
 
-		// Get the passed list
-		ProperList<AnyCell> properList(listHead);
-	
-		// Reserve the size of the vector
-		appendedElements.resize(appendIndex + properList.length());
-
-		if (!properList.isValid())
-		{
-			signalError(world, "Improper list passed to (append) in non-terminal position", {listHead});
-		}
-
-		for(auto element : properList)
-		{
-			appendedElements[appendIndex++] = element;
-		}
+		appendedElements.insert(appendedElements.end(), properList->begin(), properList->end());
 	}
 
-	// Use createList to append the last list on sharing its structure.
-	// This is required by R7RS
+	// Use createList to append the last list on sharing its structure. This is required by R7RS
 	return ListElementCell::createList(world, appendedElements, *(argIt++));
 }
 
-ListElementCell* lliby_reverse(World &world, ListElementCell *sourceHead)
+ProperList<AnyCell>* lliby_reverse(World &world, ProperList<AnyCell> *sourceList)
 {
-	ProperList<AnyCell> sourceList(sourceHead);
-	auto sourceIt = sourceList.begin(); 
-	auto memberCount = sourceList.length();
+	auto sourceIt = sourceList->begin();
+	auto memberCount = sourceList->size();
 
 	std::vector<AnyCell*> reversedMembers(memberCount);
 
@@ -243,38 +212,40 @@ ListElementCell* lliby_reverse(World &world, ListElementCell *sourceHead)
 		reversedMembers[memberCount] = *(sourceIt++);
 	}
 
-	return ListElementCell::createProperList(world, reversedMembers);
+	return ProperList<AnyCell>::create(world, reversedMembers);
 }
 
-const AnyCell* lliby_memv(const AnyCell *obj, ListElementCell *listHead)
+const AnyCell* lliby_memv(const AnyCell *obj, ProperList<AnyCell> *listHead)
 {
 	return listSearch(obj, listHead, &AnyCell::isEqv);
 }
 
-const AnyCell* lliby_member(const AnyCell *obj, ListElementCell *listHead)
+const AnyCell* lliby_member(const AnyCell *obj, ProperList<AnyCell> *listHead)
 {
 	return listSearch(obj, listHead, &AnyCell::isEqual);
 }
 
-const AnyCell* lliby_assv(const AnyCell *obj, ListElementCell *listHead)
+const AnyCell* lliby_assv(const AnyCell *obj, ProperList<AnyCell> *listHead)
 {
 	return alistSearch(obj, listHead, &AnyCell::isEqv);
 }
 
-const AnyCell* lliby_assoc(const AnyCell *obj, ListElementCell *listHead)
+const AnyCell* lliby_assoc(const AnyCell *obj, ProperList<AnyCell> *listHead)
 {
 	return alistSearch(obj, listHead, &AnyCell::isEqual);
 }
 
-ListElementCell* lliby_list_tail(World &world, ListElementCell *head, std::uint32_t count)
+ListElementCell* lliby_list_tail(World &world, ProperList<AnyCell> *initialHead, std::uint32_t count)
 {
+	ListElementCell *head = initialHead;
+
 	while(count--)
 	{
 		auto pairHead = cell_cast<PairCell>(head);
 
 		if (pairHead == nullptr)
 		{
-			signalError(world, "(list-tail) on list of insufficient length");	
+			signalError(world, "(list-tail) on list of insufficient length");
 		}
 
 		// Advance to the next list element

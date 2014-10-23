@@ -8,6 +8,9 @@
 namespace lliby
 {
 
+template<class T>
+class ProperList;
+
 class EmptyListCell : public PreconstructedValue<ListElementCell>
 {
 #include "generated/EmptyListCellMembers.h"
@@ -16,13 +19,19 @@ public:
 		PreconstructedValue(CellTypeId::EmptyList)
 	{
 	}
-	
+
 	static EmptyListCell* instance()
 	{
 		// There is nothing inside EmptyListCell which is modifiable so const doesn't mean anything
 		// Be friendly and allow functions expecting non-const to work with the empty list singleton without sprinkling
 		// const casts throughout the code
 		return const_cast<EmptyListCell*>(&lliby_empty_list_value);
+	}
+
+	template<class T>
+	static ProperList<T>* asProperList()
+	{
+		return reinterpret_cast<ProperList<T>*>(instance());
 	}
 };
 

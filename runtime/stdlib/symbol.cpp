@@ -1,7 +1,6 @@
 #include "binding/StringCell.h"
 #include "binding/SymbolCell.h"
 #include "binding/ProperList.h"
-#include "binding/RestArgument.h"
 
 #include "core/error.h"
 
@@ -10,16 +9,14 @@ extern "C"
 
 using namespace lliby;
 
-bool lliby_symbol_equal(SymbolCell *value1, SymbolCell *value2, RestArgument<SymbolCell> *argHead)
+bool lliby_symbol_equal(SymbolCell *value1, SymbolCell *value2, ProperList<SymbolCell> *argHead)
 {
 	if (*value1 != *value2)
 	{
 		return false;
 	}
-	
-	ProperList<SymbolCell> properList(argHead);
 
-	for(auto symbolCell : properList)
+	for(auto symbolCell : *argHead)
 	{
 		if (*symbolCell != *value1)
 		{

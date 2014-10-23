@@ -296,12 +296,10 @@ void createListOfSize(World &world, size_t cellCount)
 		falseCells[i] = const_cast<BooleanCell*>(BooleanCell::falseInstance());
 	}
 
-	ListElementCell *listHead = ListElementCell::createProperList(world, falseCells);
+	ProperList<AnyCell> *properList = ProperList<AnyCell>::create(world, falseCells);
 
 	// This iterates over the whole list so this should make sure the allocation succeeded
-	ProperList<BooleanCell> properList(listHead);
-	ASSERT_TRUE(properList.isValid());
-	ASSERT_EQUAL(properList.length(), cellCount);
+	ASSERT_EQUAL(properList->size(), cellCount);
 }
 
 void testHugeRangeAlloc(World &world)

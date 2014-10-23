@@ -10,29 +10,13 @@ namespace lliby
 
 class World;
 
+template<class T>
+class ProperList;
+
 class ListElementCell : public AnyCell
 {
 #include "generated/ListElementCellMembers.h"
 public:
-	/**
-	 * Convenience wrapper for createList(elements, EmptyListCell::instance())
-	 *
-	 * See createList() for more information
-	 */
-	static ListElementCell *createProperList(World &world, std::vector<AnyCell*> &elements);
-
-	static ListElementCell *createProperList(World &world, std::initializer_list<AnyCell*> elementsList)
-	{
-		std::vector<AnyCell*> elements(elementsList);
-		return createProperList(world, elements);
-	}
-
-	static ListElementCell *createProperList(World &world, const std::vector<AnyCell*> &elements)
-	{
-		std::vector<AnyCell*> elementsCopy(elements);
-		return createProperList(world, elementsCopy);
-	}
-
 	/**
 	 * Creates a new proper or improper list
 	 *

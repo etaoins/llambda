@@ -3,6 +3,7 @@
 
 #include "ProcedureCell.h"
 #include "ReturnValuesList.h"
+#include "ProperList.h"
 
 #include "alloc/allocator.h"
 
@@ -68,7 +69,7 @@ private:
  * for procedures explicitly defined the top procedure type. See the TypedProcedureCell documentation for a discussion
  * of why subtyping doesn't work ask expected here.
  */
-using TopProcedureCell = TypedProcedureCell<ReturnValuesList*, ListElementCell*>;
+using TopProcedureCell = TypedProcedureCell<ReturnValuesList*, ProperList<AnyCell>*>;
 
 /**
  * TypedProcedureCell accepting no arguments and producing any value

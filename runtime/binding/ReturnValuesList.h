@@ -1,11 +1,11 @@
 #ifndef _LLIBY_BINDING_RETURNVALUESLIST_H
 #define _LLIBY_BINDING_RETURNVALUESLIST_H
 
-#include "ListElementCell.h"
+#include "ProperList.h"
 
 namespace lliby
 {
-	typedef ListElementCell ReturnValuesList;
+	using ReturnValuesList = ProperList<AnyCell>;
 }
 
 #endif

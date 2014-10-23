@@ -4,6 +4,7 @@
 
 #include "core/error.h"
 #include "binding/ReturnValuesList.h"
+#include "binding/ProperList.h"
 #include "dynamic/Continuation.h"
 
 namespace lliby
@@ -15,7 +16,7 @@ namespace
 {
 	std::uint32_t registeredClassId = ~0;
 
-	ReturnValuesList *procedureBody(World &world, ProcedureCell *procSelf, ListElementCell *argHead)
+	ReturnValuesList *procedureBody(World &world, ProcedureCell *procSelf, ProperList<AnyCell> *argHead)
 	{
 		assert(EscapeProcedureCell::isInstance(procSelf));
 

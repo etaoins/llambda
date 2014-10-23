@@ -121,17 +121,17 @@ void testPair(World &world)
 	alloc::SymbolRef valueB(world, symbolFor(world, "B"));
 	alloc::SymbolRef valueC(world, symbolFor(world, "C"));
 
-	assertForm(PairCell::createProperList(world, {}), "()");
-	assertForm(PairCell::createProperList(world, {valueA}), "(A)");
-	assertForm(PairCell::createProperList(world, {valueA, valueB}), "(A B)");
-	assertForm(PairCell::createProperList(world, {valueA, valueB, valueC}), "(A B C)");
+	assertForm(ProperList<AnyCell>::create(world, {}), "()");
+	assertForm(ProperList<AnyCell>::create(world, {valueA}), "(A)");
+	assertForm(ProperList<AnyCell>::create(world, {valueA, valueB}), "(A B)");
+	assertForm(ProperList<AnyCell>::create(world, {valueA, valueB, valueC}), "(A B C)");
 
 	assertForm(PairCell::createList(world, {valueA}, valueB), "(A . B)");
 	assertForm(PairCell::createList(world, {valueA, valueB}, valueC), "(A B . C)");
 
 	// Create a  nested list
 	AnyCell *innerList = PairCell::createList(world, {valueA, valueB}, valueC);
-	AnyCell *outerList = PairCell::createProperList(world, {valueA, valueB, valueC, innerList});
+	AnyCell *outerList = ProperList<AnyCell>::create(world, {valueA, valueB, valueC, innerList});
 	assertForm(outerList, "(A B C (A B . C))");
 }
 
@@ -209,7 +209,7 @@ void testRecord(World &world)
 void testErrorObject(World &world)
 {
 	alloc::StringRef errorString(world, StringCell::fromUtf8CString(world, u8"Test error"));
-	auto errorObj = ErrorObjectCell::createInstance(world, errorString, EmptyListCell::instance());
+	auto errorObj = ErrorObjectCell::createInstance(world, errorString, EmptyListCell::asProperList<AnyCell>());
 
 	assertForm(errorObj, "#!error(Test error)");
 }

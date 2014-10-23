@@ -413,7 +413,7 @@
     (define-r7rs make-string (world-function "lliby_make_string" (<native-uint32> <native-unicode-char>) -> <string>))
     (define-r7rs string (world-function "lliby_string" <char> -> <string>))
     ; This is the same runtime function but instead of using a rest arg explicitly pass in the list
-    (define-r7rs list->string (world-function "lliby_string" (<list>) -> <string>))
+    (define-r7rs list->string (world-function "lliby_string" ((Listof <char>)) -> <string>))
     (define-r7rs string-length (native-function "lliby_string_length" (<string>) -> <native-uint32>))
     (define-r7rs string-ref (world-function "lliby_string_ref" (<string> <native-uint32>) -> <native-unicode-char>))
     (define-r7rs string-set! (world-function "lliby_string_set" (<string> <native-uint32> <native-unicode-char>)))

@@ -1,9 +1,7 @@
 #include "binding/ProcedureCell.h"
 #include "binding/TypedProcedureCell.h"
 #include "binding/ListElementCell.h"
-#include "binding/EmptyListCell.h"
 #include "binding/ProperList.h"
-#include "binding/RestArgument.h"
 
 #include "alloc/allocator.h"
 #include "alloc/cellref.h"
@@ -18,29 +16,27 @@ using namespace lliby;
 extern "C"
 {
 
-ReturnValuesList *lliby_apply(World &world, TopProcedureCell *procedure, RestArgument<AnyCell> *argHead)
+ReturnValuesList *lliby_apply(World &world, TopProcedureCell *procedure, ProperList<AnyCell> *applyArgList)
 {
-	ListElementCell *procArgHead;
+	ProperList<AnyCell> *procArgHead;
 
 	// Do everything inside the block so the ProperList/StrongRefRange is destructed before calling the procedure
 	// This reduces the resources we use during recursive calls to (apply) and might allow the compiler to perform
 	// tail call optimization
 	{
 		// Find our arguments
-		ProperList<AnyCell> applyArgList(argHead);
-
-		if (applyArgList.length() == 0)
+		if (applyArgList->empty())
 		{
 			// This is easy - call with no args
-			procArgHead = argHead;
+			procArgHead = applyArgList;
 		}
 		else
 		{
 			// Build our procedure args
-			auto applyArgIt = applyArgList.begin();
-			
+			auto applyArgIt = applyArgList->begin();
+
 			// Standalone args are zero or more args that appear before the final proper list
-			auto standaloneArgCount = applyArgList.length() - 1;
+			auto standaloneArgCount = applyArgList->size() - 1;
 			std::vector<AnyCell*> standaloneArgs(standaloneArgCount);
 
 			for(ProperList<AnyCell>::size_type i = 0; i < standaloneArgCount; i++)
@@ -50,25 +46,25 @@ ReturnValuesList *lliby_apply(World &world, TopProcedureCell *procedure, RestArg
 
 			// Ensure the final argument is a proper list
 			// This would violate our calling convention otherwise
-			auto finalListHead = cell_cast<ListElementCell>(*applyArgIt);
+			auto finalListHead = cell_cast<ProperList<AnyCell>>(*applyArgIt);
 
-			if (!(finalListHead && ProperList<AnyCell>(finalListHead).isValid()))
+			if (!finalListHead)
 			{
 				signalError(world, "Final argument to (apply) must be a proper list", {*applyArgIt});
 			}
 
 			// Reference the procedure cell before allocating the argument list
-			alloc::StrongRefRange<TopProcedureCell> procedureRef(world, &procedure, 1);	
+			alloc::StrongRefRange<TopProcedureCell> procedureRef(world, &procedure, 1);
 
 			// We verified the final arg is a proper list so this must also be a proper list
-			procArgHead = cell_unchecked_cast<ListElementCell>(ListElementCell::createList(world, standaloneArgs, finalListHead));
+			procArgHead = cell_unchecked_cast<ProperList<AnyCell>>(ListElementCell::createList(world, standaloneArgs, finalListHead));
 		}
 	}
 
 	return procedure->apply(world, procArgHead);
 }
 
-ReturnValuesList *lliby_values(RestArgument<AnyCell> *restArgHead)
+ReturnValuesList *lliby_values(ProperList<AnyCell> *restArgHead)
 {
 	return restArgHead;
 }
@@ -90,7 +86,7 @@ ReturnValuesList *lliby_call_with_current_continuation(World &world, TypedProced
 	// Capture the current continuation
 	Continuation *cont = Continuation::capture(world);
 	
-	if (ListElementCell *passedValues = cont->takePassedValues())
+	if (ProperList<AnyCell> *passedValues = cont->takePassedValues())
 	{
 		// We're the result of a continuation being invoked
 		return passedValues;

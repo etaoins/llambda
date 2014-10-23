@@ -2,7 +2,7 @@
 #include "binding/ExactIntegerCell.h"
 #include "binding/FlonumCell.h"
 #include "binding/ProperList.h"
-#include "binding/RestArgument.h"
+#include "binding/ReturnValuesList.h"
 
 #include "alloc/RangeAlloc.h"
 
@@ -54,15 +54,13 @@ namespace
 extern "C"
 {
 
-NumberCell *lliby_add(World &world, RestArgument<NumberCell> *argHead)
+NumberCell *lliby_add(World &world, ProperList<NumberCell> *argList)
 {
-	const ProperList<NumberCell> argList(argHead);
-
 	std::int64_t exactSum = 0;
 	double inexactSum = 0.0;
 	bool resultInexact = false;
 
-	for (auto numeric : argList)
+	for (auto numeric : *argList)
 	{
 		if (auto exactInteger = cell_cast<ExactIntegerCell>(numeric))
 		{
@@ -87,15 +85,13 @@ NumberCell *lliby_add(World &world, RestArgument<NumberCell> *argHead)
 	}
 }
 
-NumberCell *lliby_mul(World &world, RestArgument<NumberCell> *argHead)
+NumberCell *lliby_mul(World &world, ProperList<NumberCell> *argList)
 {
-	const ProperList<NumberCell> argList(argHead);
-
 	std::int64_t exactProduct = 1;
 	double inexactProduct = 1.0;
 	bool resultInexact = false;
 
-	for (auto numeric : argList)
+	for (auto numeric : *argList)
 	{
 		if (auto exactInteger = cell_cast<ExactIntegerCell>(numeric))
 		{
@@ -120,17 +116,15 @@ NumberCell *lliby_mul(World &world, RestArgument<NumberCell> *argHead)
 	}
 }
 
-NumberCell *lliby_sub(World &world, NumberCell *startValue, RestArgument<NumberCell> *argHead)
+NumberCell *lliby_sub(World &world, NumberCell *startValue, ProperList<NumberCell> *argList)
 {
-	const ProperList<NumberCell> argList(argHead);
-
 	std::int64_t exactDifference;
 	double inexactDifference;
 	bool resultInexact;
 
 	if (auto exactInteger = cell_cast<ExactIntegerCell>(startValue))
 	{
-		if (argList.isEmpty())
+		if (argList->empty())
 		{
 			// Return the inverse
 			return ExactIntegerCell::fromValue(world, -exactInteger->value());
@@ -144,7 +138,7 @@ NumberCell *lliby_sub(World &world, NumberCell *startValue, RestArgument<NumberC
 	{
 		auto flonum = cell_unchecked_cast<FlonumCell>(startValue);
 
-		if (argList.isEmpty())
+		if (argList->empty())
 		{
 			// Return the inverse
 			return FlonumCell::fromValue(world, -flonum->value());
@@ -155,7 +149,7 @@ NumberCell *lliby_sub(World &world, NumberCell *startValue, RestArgument<NumberC
 		resultInexact = true;
 	}
 
-	for (auto numeric : argList)
+	for (auto numeric : *argList)
 	{
 		if (auto exactInteger = cell_cast<ExactIntegerCell>(numeric))
 		{
@@ -180,11 +174,9 @@ NumberCell *lliby_sub(World &world, NumberCell *startValue, RestArgument<NumberC
 	}
 }
 
-NumberCell* lliby_div(World &world, NumberCell *startValue, RestArgument<NumberCell> *argHead)
+NumberCell* lliby_div(World &world, NumberCell *startValue, ProperList<NumberCell> *argList)
 {
-	const ProperList<NumberCell> argList(argHead);
-
-	if (argList.isEmpty())
+	if (argList->empty())
 	{
 		// Return the reciprocal
 		// This can only be exact if startValue is an exact 1 or -1
@@ -205,7 +197,7 @@ NumberCell* lliby_div(World &world, NumberCell *startValue, RestArgument<NumberC
 		// Perform integer division until we hit an inexact value
 		std::int64_t numeratorInt = startExactInt->value();
 
-		for (auto it = argList.begin(); it != argList.end(); it++)
+		for (auto it = argList->begin(); it != argList->end(); it++)
 		{
 			if (auto denomintorExactInt = cell_cast<ExactIntegerCell>(*it))
 			{
@@ -222,13 +214,13 @@ NumberCell* lliby_div(World &world, NumberCell *startValue, RestArgument<NumberC
 				{
 					// No; perform this division as inexact and pass the tail to inexactDivision()
 					double inexactResult = static_cast<double>(numeratorInt) / static_cast<double>(denominatorInt);
-					return inexactDivision(world, inexactResult, ++it, argList.end());
+					return inexactDivision(world, inexactResult, ++it, argList->end());
 				}
 			}
 			else
 			{
 				// Nope, this is a flonum. Have inexactDivision() handle this value
-				return inexactDivision(world, static_cast<double>(numeratorInt), it, argList.end());
+				return inexactDivision(world, static_cast<double>(numeratorInt), it, argList->end());
 			}
 		}
 
@@ -238,11 +230,11 @@ NumberCell* lliby_div(World &world, NumberCell *startValue, RestArgument<NumberC
 	else
 	{
 		double startDouble = cell_unchecked_cast<FlonumCell>(startValue)->value();
-		return inexactDivision(world, startDouble, argList.begin(), argList.end());
+		return inexactDivision(world, startDouble, argList->begin(), argList->end());
 	}
 }
 
-ListElementCell* lliby_truncate_div(World &world, std::int64_t numerator, std::int64_t denominator)
+ReturnValuesList* lliby_truncate_div(World &world, std::int64_t numerator, std::int64_t denominator)
 {
 	if (denominator == 0)
 	{
@@ -255,7 +247,7 @@ ListElementCell* lliby_truncate_div(World &world, std::int64_t numerator, std::i
 	auto quotient = new (*allocIt++) ExactIntegerCell(numerator / denominator);
 	auto remainder = new (*allocIt++) ExactIntegerCell(numerator % denominator);
 
-	return ListElementCell::createProperList(world, {quotient, remainder});
+	return ReturnValuesList::create(world, {quotient, remainder});
 }
 
 std::int64_t lliby_truncate_quotient(World &world, std::int64_t numerator, std::int64_t denominator)
@@ -278,7 +270,7 @@ std::int64_t lliby_truncate_remainder(World &world, std::int64_t numerator, std:
 	return numerator % denominator;
 }
 
-ListElementCell* lliby_floor_div(World &world, std::int64_t numerator, std::int64_t denominator)
+ReturnValuesList* lliby_floor_div(World &world, std::int64_t numerator, std::int64_t denominator)
 {
 	if (denominator == 0)
 	{
@@ -293,7 +285,7 @@ ListElementCell* lliby_floor_div(World &world, std::int64_t numerator, std::int6
 	auto quotientCell = new (*allocIt++) ExactIntegerCell(floorResult.quotient);
 	auto remainderCell = new (*allocIt++) ExactIntegerCell(floorResult.remainder);
 
-	return ListElementCell::createProperList(world, {quotientCell, remainderCell});
+	return ReturnValuesList::create(world, {quotientCell, remainderCell});
 }
 
 std::int64_t lliby_floor_quotient(World &world, std::int64_t numerator, std::int64_t denominator)

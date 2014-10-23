@@ -1,157 +1,190 @@
 #ifndef _LLIBY_BINDING_PROPERLIST_H
 #define _LLIBY_BINDING_PROPERLIST_H
 
-#include <iterator>
-#include <cassert>
-
 #include "ListElementCell.h"
-#include "PairCell.h"
 #include "EmptyListCell.h"
-#include "RestArgument.h"
+#include "PairCell.h"
+
+#include "alloc/RangeAlloc.h"
+#include "alloc/StrongRef.h"
+
+#include <iterator>
 
 namespace lliby
 {
-
-template<class T>
-class ProperList
-{
-public:
-	typedef std::uint32_t size_type;
-
-	class Iterator : public std::iterator<std::forward_iterator_tag, T*>
+	/**
+	 * Represents the head of a proper list
+	 *
+	 * Proper lists are defined by Scheme to be a pair with a cdr of either a the empty list or another proper list.
+	 * On the Scheme side they're defined with the type (Listof <type>) where <type> is the type of the car values.
+	 * This is the analogous C++ representation. It supports forward iteration, size calculations and construction of
+	 * new instances via ::create.
+	 *
+	 * This implements ::isInstance() which allows cell_cast<> and cell_unchecked_cast<> to convert other cells to
+	 * the appropriate ProperList type.
+	 */
+	template<class T>
+	class ProperList : public ListElementCell
 	{
-		friend class ProperList;
 	public:
-		T* operator*() const
+		using size_type = std::uint32_t;
+
+		class Iterator : public std::iterator<std::forward_iterator_tag, T*>
 		{
-			// ProperList verifies all the cars are of type T in its constructor
-			auto pairHead = cell_unchecked_cast<const PairCell>(m_head);
-			return cell_unchecked_cast<T>(pairHead->car());
+			friend class ProperList;
+		public:
+			T* operator*() const
+			{
+				auto pairHead = cell_unchecked_cast<const PairCell>(m_head);
+				return cell_unchecked_cast<T>(pairHead->car());
+			}
+
+			bool operator==(const Iterator &other) const
+			{
+				return m_head == other.m_head;
+			}
+
+			bool operator!=(const Iterator &other) const
+			{
+				return m_head != other.m_head;
+			}
+
+			Iterator& operator++()
+			{
+				auto pairHead = cell_unchecked_cast<const PairCell>(m_head);
+				m_head = cell_unchecked_cast<const ListElementCell>(pairHead->cdr());
+
+				return *this;
+			}
+
+			Iterator operator++(int postfix)
+			{
+				Iterator originalValue(*this);
+				++(*this);
+				return originalValue;
+			}
+
+		private:
+			explicit Iterator(const ListElementCell *head) :
+				m_head(head)
+			{
+			}
+
+			const ListElementCell *m_head;
+		};
+
+		/**
+		 * Returns an iterator pointing to the beginning of this proper list
+		 */
+		typename ProperList<T>::Iterator begin() const
+		{
+			return typename ProperList<T>::Iterator(this);
 		}
 
-		bool operator==(const Iterator &other) const
+		typename ProperList<T>::Iterator end() const
 		{
-			return m_head == other.m_head;
-		}
-		
-		bool operator!=(const Iterator &other) const
-		{
-			return m_head != other.m_head;
+			return typename ProperList<T>::Iterator(EmptyListCell::instance());
 		}
 
-		Iterator& operator++()
+		/**
+		 * Returns true if this proper list is empty
+		 *
+		 * This is more efficient than size() == 0
+		 */
+		bool empty() const
 		{
-			auto pairHead = cell_unchecked_cast<const PairCell>(m_head);
-			m_head = cell_unchecked_cast<const ListElementCell>(pairHead->cdr());
-
-			return *this;
-		}
-		
-		Iterator operator++(int postfix)
-		{
-			Iterator originalValue(*this);
-			++(*this);
-			return originalValue;
+			return begin() == end();
 		}
 
-	private:
-		explicit Iterator(const ListElementCell *head) :
-			m_head(head)
+		/**
+		 * Returns this size of this proper list
+		 *
+		 * If the compiler produced a length hint then this is an O(1) operation. Otherwise it's O(n) with the length
+		 * of the list. For that reason the length should be cached whenever possible.
+		 */
+		size_type size() const
 		{
+			// Try a length hint first
+			if (auto pair = cell_cast<PairCell>(this))
+			{
+				if (pair->listLength() != 0)
+				{
+					return pair->listLength();
+				}
+			}
+
+			// Calculate it manually
+			return std::distance(begin(), end());
 		}
-		
-		const ListElementCell *m_head;
+
+		/**
+		 * Creates a new ProperList instance containing the passed elements
+		 *
+		 * This requires entering the garbage collector. For that reason the elements vector is GC rooted before
+		 * allocating the list elements.
+		 */
+		static ProperList<T> *create(World &world, std::vector<T*> &elements)
+		{
+			// Avoid GC rooting etc. if we don't need to allocate anything
+			if (elements.empty())
+			{
+				return EmptyListCell::asProperList<T>();
+			}
+
+			// We allocate space for our pairs below. Make sure we GC root the new elements first.
+			alloc::StrongRefRange<T> elementsRoot(world, elements);
+
+			alloc::RangeAlloc allocation = alloc::allocateRange(world, elements.size());
+			auto allocIt = allocation.end();
+
+			auto it = elements.rbegin();
+			AnyCell *cdr = EmptyListCell::instance();
+
+			for(;it != elements.rend(); it++)
+			{
+				cdr = new (*--allocIt) PairCell(*it, cdr);
+			}
+
+			return static_cast<ProperList<T>*>(cdr);
+		}
+
+		static ProperList<T> *create(World &world, std::initializer_list<T*> elementsList)
+		{
+			std::vector<T*> elements(elementsList);
+			return create(world, elements);
+		}
+
+		static ProperList<T> *create(World &world, const std::vector<T*> &elements)
+		{
+			std::vector<T*> elementsCopy(elements);
+			return create(world, elementsCopy);
+		}
+
+		/**
+		 * Returns true if the passed cell is a proper list of the correct type
+		 *
+		 * This is used to implement cell_cast<> for ProperList instances.
+		 */
+		static bool isInstance(const AnyCell *cell)
+		{
+			while(auto pair = cell_cast<PairCell>(cell))
+			{
+				if (!T::isInstance(pair->car()))
+				{
+					return false;
+				}
+
+				cell = pair->cdr();
+			}
+
+			if (cell != EmptyListCell::instance())
+			{
+				return false;
+			}
+
+			return true;
+		}
 	};
-	
-	
-	explicit ProperList(const RestArgument<T> *head) :
-		m_head(head),
-		m_valid(true),
-		m_length(0)
-	{
-		// This list has already been verified by Scheme; we just need to find its length
-		const AnyCell *cell = head;
-			
-		while(auto pair = cell_cast<PairCell>(cell))
-		{
-			if (pair->listLength() != 0)
-			{
-				// We have a list length hint
-				m_length += pair->listLength();
-				break;
-			}
-
-			// No length hint, keep checking 
-			cell = pair->cdr();
-			m_length++;
-		}
-	}
-
-	explicit ProperList(const ListElementCell *head) :
-		m_head(EmptyListCell::instance()),
-		m_valid(false),
-		m_length(0)
-	{
-		// Manually verify the list
-		const AnyCell *cell = head;
-		size_type length = 0;
-			
-		while(auto pair = cell_cast<PairCell>(cell))
-		{
-			length++;
-			
-			if (cell_cast<T>(pair->car()) == nullptr)
-			{
-				// Wrong element type
-				return;
-			}
-
-			cell = pair->cdr();
-		}
-
-		if (cell != EmptyListCell::instance())
-		{
-			// Not a proper list
-			return;
-		}
-
-		m_head = head;
-		m_valid = true;
-		m_length = length;
-	}
-
-	bool isValid() const
-	{
-		return m_valid;
-	}
-
-	bool isEmpty() const
-	{
-		return m_length == 0;
-	}
-
-	size_type length() const
-	{
-		return m_length;
-	}
-
-	Iterator begin() const
-	{
-		return Iterator(m_head);
-	}
-
-	Iterator end() const
-	{
-		return Iterator(EmptyListCell::instance());
-	}
-
-private:
-	const ListElementCell *m_head;
-	bool m_valid;
-	size_type m_length;
-};
-
-
 }
 
 #endif

@@ -2,7 +2,6 @@
 #include "binding/BytevectorCell.h"
 #include "binding/ExactIntegerCell.h"
 #include "binding/ProperList.h"
-#include "binding/RestArgument.h"
 
 #include "core/error.h"
 
@@ -46,16 +45,14 @@ void lliby_bytevector_u8_set(World &world, BytevectorCell *bytevector, std::uint
 	}
 }
 
-BytevectorCell *lliby_bytevector(World &world, RestArgument<ExactIntegerCell> *argHead)
+BytevectorCell *lliby_bytevector(World &world, ProperList<ExactIntegerCell> *argList)
 {
-	ProperList<ExactIntegerCell> properList(argHead);
-	
-	auto length = properList.length();
+	auto length = argList->size();
 	SharedByteArray *byteArray = SharedByteArray::createInstance(length);
 	unsigned int byteIndex = 0;
 
 	// Fill out the new elements from the list
-	for(auto element : properList)
+	for(auto element : *argList)
 	{
 		byteArray->data()[byteIndex++] = element->value();
 	}
@@ -64,12 +61,10 @@ BytevectorCell *lliby_bytevector(World &world, RestArgument<ExactIntegerCell> *a
 	return BytevectorCell::withByteArray(world, byteArray, length);
 }
 
-BytevectorCell *lliby_bytevector_append(World &world, RestArgument<BytevectorCell> *argHead)
+BytevectorCell *lliby_bytevector_append(World &world, ProperList<BytevectorCell> *argList)
 {
-	ProperList<BytevectorCell> argList(argHead);
-	
 	// Create a std::list
-	auto bytevectorList = std::list<const BytevectorCell*>(argList.begin(), argList.end());
+	auto bytevectorList = std::list<const BytevectorCell*>(argList->begin(), argList->end());
 
 	// Append the vectors
 	return BytevectorCell::fromAppended(world, bytevectorList);

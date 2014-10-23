@@ -8,10 +8,11 @@ fieldtype ios : uint8 {
 	extern cppname = std::ios;
 };
 
-// Entry point for adapted procedures
-cell Any;
-cell Procedure;
+// C++ has a special ProperList type for known proper lists
 cell ListElement;
+fieldtype ProperList : ListElement {
+	extern cppname = ProperList<AnyCell>;
+};
 
 // This is a special type
 fieldtype TypeId : uint8 {
@@ -123,7 +124,7 @@ concrete internal cell Record : RecordLike {
 
 concrete cell ErrorObject : Any {
 	String* message;
-	ListElement* irritants;
+	ProperList* irritants;
 };
 
 concrete cell Port : Any {

@@ -4,7 +4,6 @@
 #include "binding/CharCell.h"
 #include "binding/StringCell.h"
 #include "unicode/UnicodeChar.h"
-#include "binding/RestArgument.h"
 #include "binding/ProperList.h"
 #include "binding/UnitCell.h"
 
@@ -18,11 +17,11 @@ using namespace lliby;
 
 namespace
 {
-	using AnyMapProcedureCell = TypedProcedureCell<AnyCell *, AnyCell *, ListElementCell *>;
-	using AnyIteratorProcedureCell = TypedProcedureCell<void, AnyCell *, ListElementCell *>;
+	using AnyMapProcedureCell = TypedProcedureCell<AnyCell *, AnyCell *, ProperList<AnyCell> *>;
+	using AnyIteratorProcedureCell = TypedProcedureCell<void, AnyCell *, ProperList<AnyCell> *>;
 
-	using StringMapProcedureCell = TypedProcedureCell<UnicodeChar, UnicodeChar, ListElementCell *>;
-	using StringIteratorProcedureCell = TypedProcedureCell<UnicodeChar, UnicodeChar, ListElementCell *>;
+	using StringMapProcedureCell = TypedProcedureCell<UnicodeChar, UnicodeChar, ProperList<CharCell> *>;
+	using StringIteratorProcedureCell = TypedProcedureCell<UnicodeChar, UnicodeChar, ProperList<CharCell> *>;
 
 	/**
 	 * Variant of cell_cast that raises an error if the cast fails
@@ -44,22 +43,13 @@ namespace
 	}
 
 	template<typename MapFunction>
-	VectorCell* abstractVectorMap(World &world, MapFunction mapFunc, VectorCell *firstVectorRaw, RestArgument<VectorCell> *argHead)
+	VectorCell* abstractVectorMap(World &world, MapFunction mapFunc, VectorCell *firstVectorRaw, ProperList<VectorCell> *restVectorList)
 	{
-		ProperList<VectorCell> restVectorList(argHead);
-
 		// This is the minimum length of all of our input vectors
 		std::uint32_t minimumLength = firstVectorRaw->length();
 
 		// Build our vector of input vector cells
-		std::vector<VectorCell*> restVectors;
-		restVectors.reserve(restVectorList.length());
-
-		for(auto restVector : restVectorList)
-		{
-			restVectors.push_back(restVector);
-			minimumLength = std::min(minimumLength, restVector->length());
-		}
+		std::vector<VectorCell*> restVectors(restVectorList->begin(), restVectorList->end());
 
 		// Root the input vector
 		alloc::StrongRef<VectorCell> firstVector(world, firstVectorRaw);
@@ -81,7 +71,7 @@ namespace
 				restArgVector.push_back(restVector->elements()[i]);
 			}
 
-			ListElementCell *restArgList = ListElementCell::createProperList(world, restArgVector);
+			ProperList<AnyCell> *restArgList = ProperList<AnyCell>::create(world, restArgVector);
 			AnyCell *result = mapFunc(firstVector->elements()[i], restArgList);
 
 			// Use elements() here to skip the bounds check that setElementAt() will perform
@@ -92,21 +82,20 @@ namespace
 	}
 
 	template<typename MapFunction>
-	std::vector<AnyCell*> abstractListMap(World &world, MapFunction mapFunc, ListElementCell *firstListRaw, RestArgument<ListElementCell>* restListsRaw)
+	std::vector<AnyCell*> abstractListMap(World &world, MapFunction mapFunc, ProperList<AnyCell> *firstListRaw, ProperList<ProperList<AnyCell>> *restListsRaw)
 	{
 		alloc::StrongRef<ListElementCell> firstList(world, firstListRaw);
 		std::vector<alloc::StrongRef<ListElementCell>> restLists;
 
 		// This is the minimum length of all of our input lists first
-		std::uint32_t minimumLength = ProperList<AnyCell>(firstList).length();
+		std::uint32_t minimumLength = firstListRaw->size();
 
-		for(auto restListHead : ProperList<ListElementCell>(restListsRaw))
+		for(auto restList : *restListsRaw)
 		{
 			// Create the strong ref for the rest list
-			restLists.emplace(restLists.end(), world, restListHead);
+			restLists.emplace(restLists.end(), world, restList);
 
-			std::uint32_t restListLength = ProperList<AnyCell>(restListHead).length();
-			minimumLength = std::min(minimumLength, restListLength);
+			minimumLength = std::min(minimumLength, restList->size());
 		}
 
 		// Create the vector of output values and GC root it
@@ -129,7 +118,7 @@ namespace
 			}
 
 			// Create the rest argument list
-			ListElementCell *restArgList = ListElementCell::createProperList(world, restArgVector);
+			ProperList<AnyCell> *restArgList = ProperList<AnyCell>::create(world, restArgVector);
 
 			// Extract the first list value and move it forward
 			auto firstListPair = cell_map_cast<PairCell>(world, firstList.data());
@@ -142,17 +131,15 @@ namespace
 	}
 
 	template<typename MapFunction>
-	std::vector<UnicodeChar> abstractStringMap(World &world, MapFunction mapFunc, StringCell *firstString, RestArgument<StringCell> *restStrings)
+	std::vector<UnicodeChar> abstractStringMap(World &world, MapFunction mapFunc, StringCell *firstString, ProperList<StringCell> *restStringList)
 	{
 		// Extract the code points from the string argument. Once this is done we no longer need the original strings
 		std::vector<UnicodeChar> firstCharVector(firstString->unicodeChars());
 
-		ProperList<StringCell> restStringList(restStrings);
-		std::vector<std::vector<UnicodeChar>> restCharVectors;
-
 		std::size_t minimumLength = firstCharVector.size();
 
-		for(auto restString : restStringList)
+		std::vector<std::vector<UnicodeChar>> restCharVectors;
+		for(auto restString : *restStringList)
 		{
 			auto newVectorIt = restCharVectors.emplace(restCharVectors.end(), restString->unicodeChars());
 			minimumLength = std::min(minimumLength, newVectorIt->size());
@@ -164,7 +151,7 @@ namespace
 		for(std::size_t i = 0; i < minimumLength; i++)
 		{
 			// Build the rest argument list
-			std::vector<AnyCell*> restArgVector;
+			std::vector<CharCell*> restArgVector;
 			restArgVector.reserve(restCharVectors.size());
 
 			auto boxedCharAllocIt = alloc::allocateCells(world, restCharVectors.size());
@@ -174,8 +161,7 @@ namespace
 			}
 
 			// Create the rest argument list
-			ListElementCell *restArgList = ListElementCell::createProperList(world, restArgVector);
-
+			ProperList<CharCell> *restArgList = ProperList<CharCell>::create(world, restArgVector);
 			outputVector[i] = mapFunc(firstCharVector[i], restArgList);
 		}
 
@@ -186,22 +172,22 @@ namespace
 extern "C"
 {
 
-VectorCell *lliby_vector_map(World &world, AnyMapProcedureCell *mapProcRaw, VectorCell *firstVectorRaw, RestArgument<VectorCell> *argHead)
+VectorCell *lliby_vector_map(World &world, AnyMapProcedureCell *mapProcRaw, VectorCell *firstVectorRaw, ProperList<VectorCell> *argHead)
 {
 	alloc::StrongRef<AnyMapProcedureCell> mapProc(world, mapProcRaw);
 
-	auto mapFunc = [&] (AnyCell *firstArg, ListElementCell *restArgs) {
+	auto mapFunc = [&] (AnyCell *firstArg, ProperList<AnyCell> *restArgs) {
 		return mapProc->apply(world, firstArg, restArgs);
 	};
 
 	return abstractVectorMap(world, mapFunc, firstVectorRaw, argHead);
 }
 
-void lliby_vector_for_each(World &world, AnyIteratorProcedureCell *mapProcRaw, VectorCell *firstVectorRaw, RestArgument<VectorCell> *argHead)
+void lliby_vector_for_each(World &world, AnyIteratorProcedureCell *mapProcRaw, VectorCell *firstVectorRaw, ProperList<VectorCell> *argHead)
 {
 	alloc::StrongRef<AnyIteratorProcedureCell> mapProc(world, mapProcRaw);
 
-	auto mapFunc = [&] (AnyCell *firstArg, ListElementCell *restArgs) {
+	auto mapFunc = [&] (AnyCell *firstArg, ProperList<AnyCell> *restArgs) {
 		mapProc->apply(world, firstArg, restArgs);
 		return UnitCell::instance();
 	};
@@ -209,23 +195,23 @@ void lliby_vector_for_each(World &world, AnyIteratorProcedureCell *mapProcRaw, V
 	abstractVectorMap(world, mapFunc, firstVectorRaw, argHead);
 }
 
-ListElementCell *lliby_map(World &world, AnyMapProcedureCell *mapProcRaw, ListElementCell *firstListRaw, RestArgument<ListElementCell>* argHead)
+ProperList<AnyCell> *lliby_map(World &world, AnyMapProcedureCell *mapProcRaw, ProperList<AnyCell> *firstListRaw, ProperList<ProperList<AnyCell>>* argHead)
 {
 	alloc::StrongRef<AnyMapProcedureCell> mapProc(world, mapProcRaw);
 
-	auto mapFunc = [&] (AnyCell *firstArg, ListElementCell *restArgs) {
+	auto mapFunc = [&] (AnyCell *firstArg, ProperList<AnyCell> *restArgs) {
 		return mapProc->apply(world, firstArg, restArgs);
 	};
 
 	std::vector<AnyCell*> result = abstractListMap(world, mapFunc, firstListRaw, argHead);
-	return ListElementCell::createProperList(world, result);
+	return ProperList<AnyCell>::create(world, result);
 }
 
-void lliby_for_each(World &world, AnyIteratorProcedureCell *mapProcRaw, ListElementCell *firstListRaw, RestArgument<ListElementCell>* argHead)
+void lliby_for_each(World &world, AnyIteratorProcedureCell *mapProcRaw, ProperList<AnyCell> *firstListRaw, ProperList<ProperList<AnyCell>>* argHead)
 {
 	alloc::StrongRef<AnyIteratorProcedureCell> mapProc(world, mapProcRaw);
 
-	auto mapFunc = [&] (AnyCell *firstArg, ListElementCell *restArgs) {
+	auto mapFunc = [&] (AnyCell *firstArg, ProperList<AnyCell> *restArgs) {
 		mapProc->apply(world, firstArg, restArgs);
 		return UnitCell::instance();
 	};
@@ -233,11 +219,11 @@ void lliby_for_each(World &world, AnyIteratorProcedureCell *mapProcRaw, ListElem
 	abstractListMap(world, mapFunc, firstListRaw, argHead);
 }
 
-StringCell *lliby_string_map(World &world, StringMapProcedureCell *mapProcRaw, StringCell *firstString, RestArgument<StringCell> *argHead)
+StringCell *lliby_string_map(World &world, StringMapProcedureCell *mapProcRaw, StringCell *firstString, ProperList<StringCell> *argHead)
 {
 	alloc::StrongRef<StringMapProcedureCell> mapProc(world, mapProcRaw);
 
-	auto mapFunc = [&] (UnicodeChar firstArg, ListElementCell *restArgs) {
+	auto mapFunc = [&] (UnicodeChar firstArg, ProperList<CharCell> *restArgs) {
 		return mapProc->apply(world, firstArg, restArgs);
 	};
 
@@ -245,11 +231,11 @@ StringCell *lliby_string_map(World &world, StringMapProcedureCell *mapProcRaw, S
 	return StringCell::fromUnicodeChars(world, result);
 }
 
-void lliby_string_for_each(World &world, StringIteratorProcedureCell *mapProcRaw, StringCell *firstString, RestArgument<StringCell> *argHead)
+void lliby_string_for_each(World &world, StringIteratorProcedureCell *mapProcRaw, StringCell *firstString, ProperList<StringCell> *argHead)
 {
 	alloc::StrongRef<StringIteratorProcedureCell> mapProc(world, mapProcRaw);
 
-	auto mapFunc = [&] (UnicodeChar firstArg, ListElementCell *restArgs) {
+	auto mapFunc = [&] (UnicodeChar firstArg, ProperList<CharCell> *restArgs) {
 		mapProc->apply(world, firstArg, restArgs);
 		return UnicodeChar(0);
 	};

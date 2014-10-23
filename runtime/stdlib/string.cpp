@@ -1,8 +1,6 @@
 #include "binding/CharCell.h"
-#include "binding/ListElementCell.h"
 #include "binding/StringCell.h"
 #include "binding/ProperList.h"
-#include "binding/RestArgument.h"
 
 #include "alloc/allocator.h"
 #include "alloc/RangeAlloc.h"
@@ -21,20 +19,12 @@ StringCell *lliby_make_string(World &world, std::uint32_t length, UnicodeChar fi
 	return StringCell::fromFill(world, length, fill);
 }
 
-// Note we can't use RestArgument here because invalid lists can be passed in via our (list->string) alias
-StringCell *lliby_string(World &world, ListElementCell *argHead)
+StringCell *lliby_string(World &world, ProperList<CharCell> *charProperList)
 {
-	ProperList<CharCell> charProperList(argHead);
-
-	if (!charProperList.isValid())
-	{
-		signalError(world, "Non-character passed to (string)", {argHead}); 
-	}
-
 	std::vector<UnicodeChar> unicodeCharList;
-	unicodeCharList.reserve(charProperList.length());
+	unicodeCharList.reserve(charProperList->size());
 
-	for(auto charCell : charProperList)
+	for(auto charCell : *charProperList)
 	{
 		unicodeCharList.push_back(charCell->unicodeChar());
 	}
@@ -72,17 +62,14 @@ void lliby_string_set(World &world, StringCell *string, std::uint32_t index, Uni
 	}
 }
 
-StringCell* lliby_string_append(World &world, RestArgument<StringCell> *argHead)
+StringCell* lliby_string_append(World &world, ProperList<StringCell> *argHead)
 {
-	ProperList<StringCell> properList(argHead);
-
-	// Use the std::vector range constructor 
-	std::vector<StringCell*> stringList(properList.begin(), properList.end()); 
+	std::vector<StringCell*> stringList(argHead->begin(), argHead->end());
 
 	return StringCell::fromAppended(world, stringList);
 }
 
-ListElementCell* lliby_string_to_list(World &world, StringCell *sourceString, std::uint32_t start, std::uint32_t end)
+ProperList<CharCell>* lliby_string_to_list(World &world, StringCell *sourceString, std::uint32_t start, std::uint32_t end)
 {
 	assertSliceValid(world, "(string->list)", sourceString, sourceString->charLength(), start, end);
 
@@ -94,7 +81,7 @@ ListElementCell* lliby_string_to_list(World &world, StringCell *sourceString, st
 	auto allocIt = allocation.begin();
 
 	// Box all of the characters
-	std::vector<AnyCell*> boxedChars;
+	std::vector<CharCell*> boxedChars;
 	boxedChars.reserve(unboxedChars.size());
 
 	for(auto unboxedChar : unboxedChars)
@@ -102,7 +89,7 @@ ListElementCell* lliby_string_to_list(World &world, StringCell *sourceString, st
 		boxedChars.push_back(new (*allocIt++) CharCell(unboxedChar));
 	}
 
-	return ListElementCell::createProperList(world, boxedChars);
+	return ProperList<CharCell>::create(world, boxedChars);
 }
 
 // This is also used to implement (string-copy)

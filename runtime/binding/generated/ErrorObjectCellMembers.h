@@ -8,7 +8,7 @@ public:
 		return m_message;
 	}
 
-	ListElementCell* irritants() const
+	ProperList<AnyCell>* irritants() const
 	{
 		return m_irritants;
 	}
@@ -26,4 +26,4 @@ public:
 
 private:
 	StringCell* m_message;
-	ListElementCell* m_irritants;
+	ProperList<AnyCell>* m_irritants;

@@ -1,11 +1,10 @@
 #include "binding/AnyCell.h"
 #include "binding/ProcedureCell.h"
 #include "binding/TypedProcedureCell.h"
-#include "binding/EmptyListCell.h"
-#include "binding/ListElementCell.h"
 #include "binding/ReturnValuesList.h"
 #include "binding/ErrorObjectCell.h"
 #include "binding/BooleanCell.h"
+#include "binding/ProperList.h"
 
 #include "alloc/cellref.h"
 
@@ -96,10 +95,10 @@ ReturnValuesList* lliby_raise_continuable(World &world, AnyCell *obj)
 
 	Continuation *cont = Continuation::capture(world);
 
-	if (ListElementCell *passedValues = cont->takePassedValues())
+	if (ProperList<AnyCell> *passedValues = cont->takePassedValues())
 	{
 		// The exception handler resumed us
-		return passedValues; 
+		return passedValues;
 	}
 	else
 	{
@@ -109,7 +108,7 @@ ReturnValuesList* lliby_raise_continuable(World &world, AnyCell *obj)
 	}
 }
 
-void lliby_error(World &world, StringCell *message, ListElementCell *irritants)
+void lliby_error(World &world, StringCell *message, ProperList<AnyCell> *irritants)
 {
 	lliby_raise(world, ErrorObjectCell::createInstance(world, message, irritants));
 }
@@ -119,7 +118,7 @@ StringCell* lliby_error_object_message(ErrorObjectCell *errorObject)
 	return errorObject->message();
 }
 
-ListElementCell* lliby_error_object_irritants(ErrorObjectCell *errorObject)
+ProperList<AnyCell>* lliby_error_object_irritants(ErrorObjectCell *errorObject)
 {
 	return errorObject->irritants();
 }

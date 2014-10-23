@@ -53,7 +53,7 @@ trait FieldTypeAliasParser extends CommonParsers {
 
   def fieldTypeBody = "{" ~> opt(cppNameDef) <~ "}"
   
-  def cppTypeName = """([a-zA-Z_][a-zA-Z0-9_]*::)*[a-zA-Z_][a-zA-Z0-9_]*""".r
+  def cppTypeName = """([a-zA-Z_][a-zA-Z0-9_<>]*::)*[a-zA-Z_][a-zA-Z0-9_<>]*""".r
   def cppNameDef = opt("extern") ~ "cppname" ~ "=" ~ cppTypeName <~ ";" ^^ { case externOpt ~ _ ~ _ ~ name => 
     val needsDefinition = !externOpt.isDefined
     ParsedCppType(name, needsDefinition)

@@ -111,11 +111,11 @@ Continuation* Continuation::capture(World &world)
 		abort();
 	}
 }
-	
-void Continuation::resume(World &world, ListElementCell *passedValues)
+
+void Continuation::resume(World &world, ProperList<AnyCell> *passedValues)
 {
 	void *stackPointer = &stackPointer;
-	
+
 	ptrdiff_t currentStackSize = static_cast<char*>(world.continuationBase) - static_cast<char*>(stackPointer);
 	assert(currentStackSize > -1);
 

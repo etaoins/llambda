@@ -20,13 +20,13 @@ namespace
 	// startup
 	std::uint32_t registeredClassId = ~0;
 
-	ReturnValuesList *procedureBody(World &world, ProcedureCell *self, ListElementCell *argHead)
+	ReturnValuesList *procedureBody(World &world, ProcedureCell *self, ProperList<AnyCell> *argList)
 	{
 		assert(ParameterProcedureCell::isInstance(self));
 
-		if (argHead != EmptyListCell::instance())
+		if (!argList->empty())
 		{
-			signalError(world, "Parameter procedures don't accept arguments", {argHead});
+			signalError(world, "Parameter procedures don't accept arguments", {argList});
 		}
 
 		// We know we're a parameter procedure because only parameter procedures have us as an entry point
@@ -34,7 +34,7 @@ namespace
 		AnyCell *paramValue = State::activeState(world)->valueForParameter(parameterProc);
 
 		// Return a list of values
-		return ListElementCell::createProperList(world, {paramValue});	
+		return ReturnValuesList::create(world, {paramValue});
 	}
 }
 	
