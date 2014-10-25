@@ -308,3 +308,32 @@
   (assert-equal 5 (lcm -5))
   (assert-equal 288 (lcm 32 -36))
   (assert-equal 576 (lcm 32 -36 192))))
+
+(define-test "(exact-integer-sqrt)" (expect-success
+  (call-with-values (lambda ()
+                      (exact-integer-sqrt 0))
+                    (lambda (root rem)
+                      (assert-equal 0 root)
+                      (assert-equal 0 rem)))
+
+  (call-with-values (lambda ()
+                      (exact-integer-sqrt 4))
+                    (lambda (root rem)
+                      (assert-equal 2 root)
+                      (assert-equal 0 rem)))
+
+  (call-with-values (lambda ()
+                      (exact-integer-sqrt 5))
+                    (lambda (root rem)
+                      (assert-equal 2 root)
+                      (assert-equal 1 rem)))
+
+  ; Ensure large integer values work correctly - converting to double won't work here
+  (call-with-values (lambda ()
+                      (exact-integer-sqrt 4611686018427387911))
+                    (lambda (root rem)
+                      (assert-equal 2147483648 root)
+                      (assert-equal 7 rem)))))
+
+(define-test "(exact-integer-sqrt) with negative values fails" (expect-failure
+  (exact-integer-sqrt -1)))

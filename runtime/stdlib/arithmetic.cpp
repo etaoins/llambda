@@ -366,4 +366,24 @@ std::int64_t lliby_lcm(std::int64_t a, std::int64_t b, ProperList<ExactIntegerCe
 	return (result < 0) ? -result : result;
 }
 
+ReturnValuesList* lliby_exact_integer_sqrt(World &world, std::int64_t val)
+{
+	if (val < 0)
+	{
+		signalError(world, "Attempted (exact-integer-sqrt) with negative value");
+	}
+
+	// This depends on the integral sqrt in C++11
+	const std::int64_t floorResult = std::sqrt(val);
+	const std::int64_t remainder = val - (floorResult * floorResult);
+
+	alloc::RangeAlloc allocation = alloc::allocateRange(world, 2);
+	auto allocIt = allocation.begin();
+
+	auto floorResultCell = new (*allocIt++) ExactIntegerCell(floorResult);
+	auto remainderCell = new (*allocIt++) ExactIntegerCell(remainder);
+
+	return ReturnValuesList::create(world, {floorResultCell, remainderCell});
+}
+
 }

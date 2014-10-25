@@ -328,6 +328,8 @@
                        (([single : <exact-integer>]) (abs single))
                        (rest (apply native-lcm rest))))
 
+    (define-r7rs exact-integer-sqrt (world-function "lliby_exact_integer_sqrt" (<native-int64>) -> (Values <exact-integer> <exact-integer>)))
+
     (define-r7rs pair? (make-predicate <pair>))
     (define-r7rs null? (make-predicate <empty-list>))
     (define-r7rs list? (make-predicate <list>))
