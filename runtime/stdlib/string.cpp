@@ -8,6 +8,7 @@
 #include "core/error.h"
 
 #include "util/assertSliceValid.h"
+#include "util/StringCellBuilder.h"
 
 using namespace lliby;
 
@@ -21,15 +22,14 @@ StringCell *lliby_make_string(World &world, std::uint32_t length, UnicodeChar fi
 
 StringCell *lliby_string(World &world, ProperList<CharCell> *charProperList)
 {
-	std::vector<UnicodeChar> unicodeCharList;
-	unicodeCharList.reserve(charProperList->size());
+	StringCellBuilder builder(charProperList->size());
 
 	for(auto charCell : *charProperList)
 	{
-		unicodeCharList.push_back(charCell->unicodeChar());
+		builder << charCell->unicodeChar();
 	}
 
-	return StringCell::fromUnicodeChars(world, unicodeCharList);
+	return builder.result(world);
 }
 
 std::uint32_t lliby_string_length(const StringCell *string)

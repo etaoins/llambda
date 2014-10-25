@@ -11,6 +11,8 @@
 #include "alloc/RangeAlloc.h"
 #include "alloc/cellref.h"
 
+#include "util/StringCellBuilder.h"
+
 #include "core/error.h"
 
 using namespace lliby;
@@ -131,7 +133,7 @@ namespace
 	}
 
 	template<typename MapFunction>
-	std::vector<UnicodeChar> abstractStringMap(World &world, MapFunction mapFunc, StringCell *firstString, ProperList<StringCell> *restStringList)
+	StringCellBuilder abstractStringMap(World &world, MapFunction mapFunc, StringCell *firstString, ProperList<StringCell> *restStringList)
 	{
 		// Extract the code points from the string argument. Once this is done we no longer need the original strings
 		std::vector<UnicodeChar> firstCharVector(firstString->unicodeChars());
@@ -145,8 +147,7 @@ namespace
 			minimumLength = std::min(minimumLength, newVectorIt->size());
 		}
 
-		std::vector<UnicodeChar> outputVector;
-		outputVector.resize(minimumLength);
+		StringCellBuilder builder(minimumLength);
 
 		for(std::size_t i = 0; i < minimumLength; i++)
 		{
@@ -162,10 +163,10 @@ namespace
 
 			// Create the rest argument list
 			ProperList<CharCell> *restArgList = ProperList<CharCell>::create(world, restArgVector);
-			outputVector[i] = mapFunc(firstCharVector[i], restArgList);
+			builder << mapFunc(firstCharVector[i], restArgList);
 		}
 
-		return outputVector;
+		return builder;
 	}
 }
 
@@ -227,8 +228,8 @@ StringCell *lliby_string_map(World &world, StringMapProcedureCell *mapProcRaw, S
 		return mapProc->apply(world, firstArg, restArgs);
 	};
 
-	std::vector<UnicodeChar> result = abstractStringMap(world, mapFunc, firstString, argHead);
-	return StringCell::fromUnicodeChars(world, result);
+	StringCellBuilder builder(abstractStringMap(world, mapFunc, firstString, argHead));
+	return builder.result(world);
 }
 
 void lliby_string_for_each(World &world, StringIteratorProcedureCell *mapProcRaw, StringCell *firstString, ProperList<StringCell> *argHead)

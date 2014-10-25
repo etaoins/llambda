@@ -2,6 +2,7 @@
 
 #include "binding/StringCell.h"
 #include "binding/BytevectorCell.h"
+#include "util/StringCellBuilder.h"
 
 #include "core/init.h"
 #include "core/World.h"
@@ -265,39 +266,41 @@ void testFromAppended(World &world)
 	}
 }
 
-void testFromUnicodeChars(World &world)
+void testStringCellBuilder(World &world)
 {
 	{
-		StringCell *emptyValue = StringCell::fromUnicodeChars(world, std::vector<UnicodeChar>());
+		StringCellBuilder builder(0);
+		StringCell *emptyValue = builder.result(world);
+
 		ASSERT_EQUAL(emptyValue->byteLength(), 0);
 		ASSERT_EQUAL(emptyValue->charLength(), 0);
 	}
 
 	{
-		const std::vector<UnicodeChar> helloPoints = {
-			UnicodeChar('H'),
-			UnicodeChar('e'),
-			UnicodeChar('l'),
-			UnicodeChar('l'),
-			UnicodeChar('o')
-		};
+		StringCellBuilder builder(5);
 
-		StringCell *helloValue = StringCell::fromUnicodeChars(world, helloPoints);
-		
+		builder << UnicodeChar('H');
+		builder << UnicodeChar('e');
+		builder << UnicodeChar('l');
+		builder << UnicodeChar('l');
+		builder << UnicodeChar('o');
+
+		StringCell *helloValue = builder.result(world);
+
 		ASSERT_EQUAL(helloValue->byteLength(), 5);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
 		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"Hello", 5), 0);
 	}
-	
-	{
-		const std::vector<UnicodeChar> unicodeChars = {
-			UnicodeChar(0x1F409),
-			UnicodeChar(0x02603),
-			UnicodeChar('!')
-		};
 
-		StringCell *unicodeValue = StringCell::fromUnicodeChars(world, unicodeChars);
-		
+	{
+		StringCellBuilder builder(3);
+
+		builder << UnicodeChar(0x1F409);
+		builder << UnicodeChar(0x02603);
+		builder << UnicodeChar('!');
+
+		StringCell *unicodeValue = builder.result(world);
+
 		ASSERT_EQUAL(unicodeValue->byteLength(), 8);
 		ASSERT_EQUAL(unicodeValue->charLength(), 3);
 		ASSERT_EQUAL(memcmp(unicodeValue->constUtf8Data(), u8"🐉☃!", 8), 0);
@@ -306,10 +309,14 @@ void testFromUnicodeChars(World &world)
 	{
 		platform::SizedMallocResult testAllocResult = platform::sizedMalloc(24);
 		const size_t testSize = testAllocResult.actualSize;
+		StringCellBuilder builder(testSize);
 
-		std::vector<UnicodeChar> unicodeChars(testSize, UnicodeChar(0x20));
+		for(auto i = 0; i < testSize; i++)
+		{
+			builder << UnicodeChar(0x20);
+		}
 
-		StringCell *offByOneTest = StringCell::fromUnicodeChars(world, unicodeChars);
+		StringCell *offByOneTest = builder.result(world);
 
 		ASSERT_EQUAL(offByOneTest->byteLength(), testSize);
 		ASSERT_EQUAL(offByOneTest->charLength(), testSize);
@@ -910,7 +917,7 @@ void testAll(World &world)
 	
 	testFromFill(world);
 	testFromAppended(world);
-	testFromUnicodeChars(world);
+	testStringCellBuilder(world);
 
 	testStringCopy(world);
 

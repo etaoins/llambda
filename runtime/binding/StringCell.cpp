@@ -250,32 +250,6 @@ StringCell* StringCell::fromAppended(World &world, std::vector<StringCell*> &str
 
 	return newString;
 }
-	
-StringCell* StringCell::fromUnicodeChars(World &world, const std::vector<UnicodeChar> &unicodeChars)
-{
-	std::vector<std::uint8_t> encodedData;
-	const std::uint32_t charLength = unicodeChars.size();
-
-	// The encoded data will have the be at least this size
-	encodedData.reserve(charLength);
-
-	for(auto unicodeChar : unicodeChars)
-	{
-		utf8::appendUtf8Char(unicodeChar, std::back_inserter(encodedData));
-	}
-	
-	const std::uint32_t totalByteLength = encodedData.size();
-
-	// Create a new string to write in to
-	auto newString = StringCell::createUninitialized(world, totalByteLength);
-	newString->setCharLength(charLength);
-
-	std::uint8_t *utf8Data = newString->utf8Data();
-
-	memcpy(utf8Data, encodedData.data(), totalByteLength);
-
-	return newString;
-}
 
 StringCell* StringCell::fromSymbol(World &world, SymbolCell *symbol)
 {

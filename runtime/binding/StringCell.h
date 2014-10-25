@@ -14,11 +14,13 @@ namespace lliby
 
 class World;
 class ImplicitSharingTest;
+class StringCellBuilder;
 
 class StringCell : public AnyCell
 {
 	friend class SymbolCell;
 	friend class ImplicitSharingTest;
+	friend class StringCellBuilder;
 #include "generated/StringCellMembers.h"
 public:
 	static StringCell* fromUtf8CString(World &world, const char *str);
@@ -27,7 +29,6 @@ public:
 	static StringCell* withUtf8ByteArray(World &world, SharedByteArray *byteArray, std::uint32_t byteLength);
 
 	static StringCell* fromFill(World &world, std::uint32_t length, UnicodeChar fill);
-	static StringCell* fromUnicodeChars(World &world, const std::vector<UnicodeChar> &unicodeChars);
 	static StringCell* fromSymbol(World &world, SymbolCell *symbol);
 	
 	static StringCell* fromAppended(World &world, std::vector<StringCell*> &strings);
