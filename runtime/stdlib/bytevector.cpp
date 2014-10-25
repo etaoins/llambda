@@ -2,8 +2,11 @@
 #include "binding/BytevectorCell.h"
 #include "binding/ExactIntegerCell.h"
 #include "binding/ProperList.h"
+#include "binding/StringCell.h"
 
 #include "core/error.h"
+
+#include "util/assertSliceValid.h"
 
 using namespace lliby;
 
@@ -68,6 +71,18 @@ BytevectorCell *lliby_bytevector_append(World &world, ProperList<BytevectorCell>
 
 	// Append the vectors
 	return BytevectorCell::fromAppended(world, bytevectorList);
+}
+
+BytevectorCell *lliby_string_to_utf8(World &world, StringCell *string, std::uint32_t start, std::uint32_t end)
+{
+	assertSliceValid(world, "(string->utf8)", string, string->charLength(), start, end);
+	return string->toUtf8Bytevector(world, start, end);
+}
+
+StringCell *lliby_utf8_to_string(World &world, BytevectorCell *bytevector, std::uint32_t start, std::uint32_t end)
+{
+	assertSliceValid(world, "(utf8->string)", bytevector, bytevector->length(), start, end);
+	return bytevector->utf8ToString(world, start, end);
 }
 
 }

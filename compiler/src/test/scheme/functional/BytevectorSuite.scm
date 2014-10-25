@@ -73,3 +73,39 @@
 
 (define-test "(bytevector-append) with non-bytevector fails" (expect-failure
 	(bytevector-append #u8(1 2) #(3 4))))
+
+(define-test "(utf8->string)" (expect-success
+  (assert-equal "" (utf8->string #u8()))
+  (assert-equal "A" (utf8->string #u8(#x41)))
+  (assert-equal "Hell☃!" (utf8->string #u8(#x48 #x65 #x6c #x6c #xe2 #x98 #x83 #x21)))
+  (assert-equal "☃!" (utf8->string #u8(#x48 #x65 #x6c #x6c #xe2 #x98 #x83 #x21) 4))
+  (assert-equal "" (utf8->string #u8(#x48 #x65 #x6c #x6c #xe2 #x98 #x83 #x21) 0 0))
+  (assert-equal "" (utf8->string #u8(#x48 #x65 #x6c #x6c #xe2 #x98 #x83 #x21) 8 8))
+  (assert-equal "ell☃" (utf8->string #u8(#x48 #x65 #x6c #x6c #xe2 #x98 #x83 #x21) 1 7))))
+
+(define-test "(utf8->string) with backwards slice fails" (expect-failure
+  (utf8->string #u8(#x48 #x65 #x6c #x6c #xe2 #x98 #x83 #x21) 2 1)))
+
+(define-test "(utf8->string) past end of bytevector fails" (expect-failure
+  (utf8->string #u8(#x48 #x65 #x6c #x6c #xe2 #x98 #x83 #x21) 0 9)))
+
+(define-test "(utf8->string) with negative start index fails" (expect-failure
+  (utf8->string #u8(#x48 #x65 #x6c #x6c #xe2 #x98 #x83 #x21) -1)))
+
+(define-test "(string->utf8)" (expect-success
+  (assert-equal #u8() (string->utf8 ""))
+  (assert-equal #u8(#xce #xbb) (string->utf8 "λ"))
+  (assert-equal #u8(#x48 #x65 #x6c #x6c #xe2 #x98 #x83 #x21) (string->utf8 "Hell☃!"))
+  (assert-equal #u8(#xe2 #x98 #x83 #x21) (string->utf8 "Hell☃!" 4))
+  (assert-equal #u8() (string->utf8 "Hell☃!" 0 0))
+  (assert-equal #u8() (string->utf8 "Hell☃!" 5 5))
+  (assert-equal #u8(#xe2 #x98 #x83) (string->utf8 "Hell☃!" 4 5))))
+
+(define-test "(string->utf8) with backwards slice fails" (expect-failure
+  (string->utf8 "Hell☃!" 2 1)))
+
+(define-test "(string->utf8) past end of string fails" (expect-failure
+  (string->utf8 "Hell☃!" 0 9)))
+
+(define-test "(string->utf8) with negative start index fails" (expect-failure
+  (string->utf8 "Hell☃!" -1)))

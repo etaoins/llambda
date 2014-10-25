@@ -422,7 +422,10 @@
     (define-r7rs bytevector-u8-ref (world-function "lliby_bytevector_u8_ref" (<bytevector> <native-uint32>) -> <native-uint8>))
     (define-r7rs bytevector-u8-set! (world-function "lliby_bytevector_u8_set" (<bytevector> <native-uint32> <native-uint8>)))
     (define-r7rs bytevector-append (world-function "lliby_bytevector_append" <bytevector> -> <bytevector>))
-    
+
+    (define native-utf8->string (world-function "lliby_utf8_to_string" (<bytevector> <native-uint32> <native-uint32>) -> <string>))
+    (define-slice-proc utf8->string native-utf8->string <bytevector> bytevector-length)
+
     (define native-make-bytevector (world-function "lliby_make_bytevector" (<native-uint32> <native-uint8>) -> <bytevector>))
     (define-r7rs make-bytevector (case-lambda:
       (([len : <exact-integer>])
@@ -442,6 +445,9 @@
 
     (define native-string->list (world-function "lliby_string_to_list" (<string> <native-uint32> <native-uint32>) -> (Listof <char>)))
     (define-slice-proc string->list native-string->list <string> string-length)
+
+    (define native-string->utf8 (world-function "lliby_string_to_utf8" (<string> <native-uint32> <native-uint32>) -> <bytevector>))
+    (define-slice-proc string->utf8 native-string->utf8 <string> string-length)
 
     ; Unlike other slicing functions the raw slicer is exposed as (substring) to implement the procedure with the same
     ; name defined in R7RS
