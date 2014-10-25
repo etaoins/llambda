@@ -93,3 +93,16 @@
       ((first) 'first)
       ((first second) 'second)))
   (fixed-lambda 0 1 2)))
+
+(define-test "recursive (case-lambda:)" (expect 5
+  (import (llambda typed))
+
+  (define my-gcd (case-lambda:
+                (() 0)
+                (([a : <exact-integer>]) a)
+                (([a : <exact-integer>] [b : <exact-integer>])
+                 (if (zero? b)
+                   a
+                   (my-gcd b (modulo a b))))))
+
+  (my-gcd 15 25)))

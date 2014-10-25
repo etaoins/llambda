@@ -191,36 +191,38 @@ private[planner] object PlanApplication {
     val invokeValues = (invokePlan.withContextLocation(located) {
       PlanInvokeApply.withIntermediateValues(invokableProc, operands)(invokePlan, worldPtr) 
     })
-    
-    procResultValue match {
-      case schemeProc : iv.KnownSchemeProc if plan.config.optimize && !schemeProc.recursiveSelfLoc.isDefined =>
-        // Try to plan this as in inline app[lication
-        val inlinePlan = plan.forkPlan()
 
-        val inlineValuesOpt = AttemptInlineApply(schemeProc.parentState, procResult.state)(
-          lambdaExpr=schemeProc.lambdaExpr,
-          operands=operands
-        )(inlinePlan, worldPtr) 
+    if (plan.config.optimize && (initialState.inlineDepth < 8)) {
+      procResultValue match {
+        case schemeProc : iv.KnownSchemeProc if !schemeProc.recursiveSelfLoc.isDefined =>
+          // Try to plan this as in inline app[lication
+          val inlinePlan = plan.forkPlan()
 
-        for(inlineValues <- inlineValuesOpt) {
-          val inlineCost = CostForPlanSteps(inlinePlan.steps.toList)
-          val invokeCost = CostForPlanSteps(invokePlan.steps.toList)
+          val inlineValuesOpt = AttemptInlineApply(schemeProc.parentState, procResult.state)(
+            lambdaExpr=schemeProc.lambdaExpr,
+            operands=operands
+          )(inlinePlan, worldPtr)
 
-          if (inlineCost <= invokeCost) {
-            // Use the inline plan
-            plan.steps ++= inlinePlan.steps
+          for(inlineValues <- inlineValuesOpt) {
+            val inlineCost = CostForPlanSteps(inlinePlan.steps.toList)
+            val invokeCost = CostForPlanSteps(invokePlan.steps.toList)
 
-            return PlanApplyResult( 
-              planResult=PlanResult(
-                state=procResult.state,
-                values=inlineValues
-              ),
-              procedureType=procedureType
-            )
+            if (inlineCost <= invokeCost) {
+              // Use the inline plan
+              plan.steps ++= inlinePlan.steps
+
+              return PlanApplyResult(
+                planResult=PlanResult(
+                  state=procResult.state,
+                  values=inlineValues
+                ),
+                procedureType=procedureType
+              )
+            }
           }
-        }
 
-      case _ =>
+        case _ =>
+      }
     }
 
     // Use the invoke plan

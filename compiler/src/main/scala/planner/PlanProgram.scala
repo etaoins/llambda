@@ -10,8 +10,9 @@ object PlanProgram {
     val worldTemp = new ps.WorldPtrValue
 
     val emptyState = PlannerState(
-      worldPtr=worldTemp
-    ) 
+      worldPtr=worldTemp,
+      inlineDepth=0
+    )
 
     val plan = PlanWriter(planConfig)
       

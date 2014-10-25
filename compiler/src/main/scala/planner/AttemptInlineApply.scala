@@ -75,7 +75,8 @@ private[planner] object AttemptInlineApply {
     // Map our input immutables to their new storage locations
     val inlineBodyState = PlannerState(
       values=fixedArgImmutables ++ restArgImmutables ++ importedValues,
-      worldPtr=worldPtr
+      worldPtr=worldPtr,
+      inlineDepth=inlineState.inlineDepth + 1
     )
 
     val planResult = PlanExpr(inlineBodyState)(lambdaExpr.body)

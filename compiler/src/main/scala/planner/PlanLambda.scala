@@ -238,7 +238,8 @@ private[planner] object PlanLambda {
 
     val preMutableState = PlannerState(
       values=initialImmutables,
-      worldPtr=worldPtr
+      worldPtr=worldPtr,
+      inlineDepth=parentState.inlineDepth
     )
 
     val procPlan = parentPlan.forkPlan() 
