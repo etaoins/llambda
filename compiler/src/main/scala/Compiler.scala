@@ -13,6 +13,7 @@ object Compiler {
 
   private val conniverPasses = List[conniver.Conniver](
     conniver.MergeIdenticalSteps,
+    conniver.UnboxEarly,
     conniver.FindTailCalls
   )
 
