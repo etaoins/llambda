@@ -49,6 +49,26 @@ namespace
 
 		return {quotient, remainder};
 	}
+
+	std::int64_t greatestCommonDivisor(std::int64_t a, std::int64_t b)
+	{
+		if (b == 0)
+		{
+			return a;
+		}
+		else
+		{
+			return greatestCommonDivisor(b, a % b);
+		}
+	}
+
+	std::int64_t leastCommonMultiple(std::int64_t a, std::int64_t b)
+	{
+		const std::int64_t product = a * b;
+		const std::int64_t gcm = greatestCommonDivisor(a, b);
+
+		return product / gcm;
+	}
 }
 
 extern "C"
@@ -320,6 +340,30 @@ NumberCell* lliby_expt(World &world, NumberCell *base, NumberCell *power)
 	const long double floatResult = pow(floatBase, floatPower);
 
 	return NumberCell::fromValue(world, floatResult, canBeExact);
+}
+
+std::int64_t lliby_gcd(std::int64_t a, std::int64_t b, ProperList<ExactIntegerCell> *restInts)
+{
+	std::int64_t result = greatestCommonDivisor(a, b);
+
+	for(auto restInt : *restInts)
+	{
+		result = greatestCommonDivisor(result, restInt->value());
+	}
+
+	return (result < 0) ? -result : result;
+}
+
+std::int64_t lliby_lcm(std::int64_t a, std::int64_t b, ProperList<ExactIntegerCell> *restInts)
+{
+	std::int64_t result = leastCommonMultiple(a, b);
+
+	for(auto restInt : *restInts)
+	{
+		result = leastCommonMultiple(result, restInt->value());
+	}
+
+	return (result < 0) ? -result : result;
 }
 
 }

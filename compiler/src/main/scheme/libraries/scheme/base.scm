@@ -199,6 +199,13 @@
     (define-r7rs not (make-predicate #f))
     (define-r7rs boolean=? (native-function "lliby_boolean_equal" (<boolean> <boolean> . <boolean>) -> <native-bool>))
 
+    (define-r7rs procedure? (make-predicate <procedure>))
+    (define-r7rs call-with-current-continuation (world-function "lliby_call_with_current_continuation" ((-> <procedure> *)) -> *))
+    (define-r7rs call/cc call-with-current-continuation)
+    (define-r7rs values (native-function "lliby_values" <any> -> *))
+    (define-r7rs call-with-values (world-function "lliby_call_with_values" ((-> *) <procedure>) -> *))
+    (define-r7rs apply (world-function "lliby_apply" (<procedure> . <any>) -> *))
+
     (define-r7rs number? (make-predicate <number>))
     ; We only support real and rational numbers
     (define-r7rs complex? number?)
@@ -308,6 +315,18 @@
 
     (define-r7rs max (world-function "lliby_max" (<number> . <number>) -> <number>))
     (define-r7rs min (world-function "lliby_min" (<number> . <number>) -> <number>))
+
+    (define native-gcd (native-function "lliby_gcd" (<native-int64> <native-int64> . <exact-integer>) -> <native-int64>))
+    (define-r7rs gcd (case-lambda:
+                       (() 0)
+                       (([single : <exact-integer>]) (abs single))
+                       (rest (apply native-gcd rest))))
+
+    (define native-lcm (native-function "lliby_lcm" (<native-int64> <native-int64> . <exact-integer>) -> <native-int64>))
+    (define-r7rs lcm (case-lambda:
+                       (() 1)
+                       (([single : <exact-integer>]) (abs single))
+                       (rest (apply native-lcm rest))))
 
     (define-r7rs pair? (make-predicate <pair>))
     (define-r7rs null? (make-predicate <empty-list>))
@@ -426,13 +445,6 @@
     ; name defined in R7RS
     (define substring (world-function "lliby_substring" (<string> <native-uint32> <native-uint32>) -> <string>))
     (define-slice-proc string-copy substring <string> string-length)
-
-    (define-r7rs procedure? (make-predicate <procedure>))
-    (define-r7rs call-with-current-continuation (world-function "lliby_call_with_current_continuation" ((-> <procedure> *)) -> *))
-    (define-r7rs call/cc call-with-current-continuation)
-    (define-r7rs values (native-function "lliby_values" <any> -> *))
-    (define-r7rs call-with-values (world-function "lliby_call_with_values" ((-> *) <procedure>) -> *))
-    (define-r7rs apply (world-function "lliby_apply" (<procedure> . <any>) -> *))
 
     (define-r7rs vector-map (world-function "lliby_vector_map" ((-> <any> <any> * <any>) <vector> . <vector>) -> <vector>))
     (define-r7rs vector-for-each (world-function "lliby_vector_for_each" ((-> <any> <any> * <unit>) <vector> . <vector>)))
