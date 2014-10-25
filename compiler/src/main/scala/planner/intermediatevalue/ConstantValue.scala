@@ -35,13 +35,14 @@ class ConstantSymbolValue(val value : String) extends TrivialConstantValue(ct.Sy
   val typeDescription = "constant symbol"
 }
 
-trait ConstantNumberValue extends ConstantValue {
+trait ConstantNumberValue extends ConstantValue with UnboxedValue {
   def doubleValue : Double
 }
 
 class ConstantExactIntegerValue(val value : Long) extends TrivialConstantValue(ct.ExactIntegerCell, value, ps.CreateExactIntegerCell.apply) with ConstantNumberValue {
   val typeDescription = "constant exact integer"
-  
+  val nativeType = vt.Int64
+
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = nativeType match {
     case intType : vt.IntType =>
       val minIntValue = if (intType.signed) {
@@ -73,9 +74,6 @@ class ConstantExactIntegerValue(val value : Long) extends TrivialConstantValue(c
     case _ =>
       impossibleConversion(s"Cannot convert ${typeDescription} to non-integer native type ${vt.NameForType(nativeType)}")
   }
-  
-  override def preferredRepresentation : vt.ValueType =
-    vt.Int64
 
   def doubleValue : Double =
     value.toDouble
@@ -83,6 +81,7 @@ class ConstantExactIntegerValue(val value : Long) extends TrivialConstantValue(c
 
 class ConstantFlonumValue(val value : Double) extends TrivialConstantValue(ct.FlonumCell, value, ps.CreateFlonumCell.apply) with ConstantNumberValue {
   val typeDescription = "constant flonum"
+  val nativeType = vt.Double
 
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = nativeType match {
     case fpType : vt.FpType =>
@@ -96,16 +95,14 @@ class ConstantFlonumValue(val value : Double) extends TrivialConstantValue(ct.Fl
     case _ => 
       impossibleConversion(s"Cannot convert ${typeDescription} to non-floating point native type ${vt.NameForType(nativeType)}")
   }
-  
-  override def preferredRepresentation : vt.ValueType =
-    vt.Double
 
   def doubleValue : Double =
     value
 }
 
-class ConstantCharValue(val value : Int) extends TrivialConstantValue(ct.CharCell, value, ps.CreateCharCell.apply) {
+class ConstantCharValue(val value : Int) extends TrivialConstantValue(ct.CharCell, value, ps.CreateCharCell.apply) with UnboxedValue {
   val typeDescription = "constant character"
+  val nativeType = vt.UnicodeChar
 
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = nativeType match {
     case vt.UnicodeChar =>
@@ -116,14 +113,12 @@ class ConstantCharValue(val value : Int) extends TrivialConstantValue(ct.CharCel
     case _ =>
       impossibleConversion(s"Cannot convert ${typeDescription} to non-character native type ${vt.NameForType(nativeType)}")
   }
-  
-  override def preferredRepresentation : vt.ValueType =
-    vt.UnicodeChar
 }
 
-class ConstantBooleanValue(val value : Boolean) extends TrivialConstantValue(ct.BooleanCell, value, ps.CreateBooleanCell.apply) {
+class ConstantBooleanValue(val value : Boolean) extends TrivialConstantValue(ct.BooleanCell, value, ps.CreateBooleanCell.apply) with UnboxedValue {
   override val schemeType = vt.ConstantBooleanType(value)
   val typeDescription = vt.NameForType(schemeType)
+  val nativeType = vt.Predicate
 
   private val intValue = if (value) 1 else 0
 
@@ -137,9 +132,6 @@ class ConstantBooleanValue(val value : Boolean) extends TrivialConstantValue(ct.
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = 
     // toTruthyPredicate() will catch our conversion to bool
     impossibleConversion(s"Cannot convert ${typeDescription} to non-boolean native type ${vt.NameForType(nativeType)}")
-  
-  override def preferredRepresentation : vt.ValueType =
-    vt.Predicate
 }
 
 class ConstantBytevectorValue(val elements : Vector[Short]) extends TrivialConstantValue(ct.BytevectorCell, elements, ps.CreateBytevectorCell.apply) with BoxedOnlyValue {

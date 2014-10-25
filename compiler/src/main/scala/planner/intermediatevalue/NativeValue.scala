@@ -7,14 +7,15 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{PlanWriter, BoxedValue}
 import llambda.compiler.RuntimeErrorMessage
 
-sealed abstract class NativeValue(val nativeType : vt.NativeType, val cellType : ct.ConcreteCellType, val tempValue : ps.TempValue) extends IntermediateValue with UninvokableValue {
+sealed abstract class NativeValue(
+    val nativeType : vt.NativeType,
+    val cellType : ct.ConcreteCellType,
+    val tempValue : ps.TempValue
+) extends IntermediateValue with UninvokableValue with UnboxedValue {
   val schemeType = vt.SchemeTypeAtom(cellType)
 
   lazy val typeDescription = 
     s"native value of type ${vt.NameForType(nativeType)}"
-
-  // This is used for our shortcut in PlanResultValuesPhi to build a new phi'ed intermediate
-  def withNewTempValue(tempValue : ps.TempValue) : NativeValue
 
   protected def planCastToNativeTempValue(targetType : vt.NativeType)(implicit plan : PlanWriter) : ps.TempValue = 
     impossibleConversion(s"Cannot convert ${typeDescription} to requested type ${vt.NameForType(targetType)} or any other native type")
@@ -32,16 +33,11 @@ sealed abstract class NativeValue(val nativeType : vt.NativeType, val cellType :
       planCastToNativeTempValue(targetType)
     }
   
-  def preferredRepresentation : vt.ValueType =
-    nativeType
-  
   def needsClosureRepresentation =
     true
 }
 
 class NativePredicateValue(tempValue : ps.TempValue) extends NativeValue(vt.Predicate, ct.BooleanCell, tempValue) {
-  def withNewTempValue(tempValue : ps.TempValue) = new NativePredicateValue(tempValue)
-
   override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     tempValue
   }
@@ -55,8 +51,6 @@ class NativePredicateValue(tempValue : ps.TempValue) extends NativeValue(vt.Pred
 }
 
 class NativeExactIntegerValue(tempValue : ps.TempValue, nativeType : vt.IntType) extends NativeValue(nativeType, ct.ExactIntegerCell, tempValue) {
-  def withNewTempValue(tempValue : ps.TempValue) = new NativeExactIntegerValue(tempValue, nativeType)
-
   override def planCastToNativeTempValue(targetType : vt.NativeType)(implicit plan : PlanWriter) : ps.TempValue = targetType match {
     case intType : vt.IntType =>
       val convTemp = ps.Temp(nativeType)
@@ -93,8 +87,6 @@ class NativeExactIntegerValue(tempValue : ps.TempValue, nativeType : vt.IntType)
 }
 
 class NativeFlonumValue(tempValue : ps.TempValue, nativeType : vt.FpType) extends NativeValue(nativeType, ct.FlonumCell, tempValue) {
-  def withNewTempValue(tempValue : ps.TempValue) = new NativeFlonumValue(tempValue, nativeType)
-
   override def planCastToNativeTempValue(targetType : vt.NativeType)(implicit plan : PlanWriter) : ps.TempValue = targetType match {
     case fpType : vt.FpType =>
       val convTemp = ps.Temp(fpType)
@@ -116,8 +108,6 @@ class NativeFlonumValue(tempValue : ps.TempValue, nativeType : vt.FpType) extend
 }
 
 class NativeCharValue(tempValue : ps.TempValue) extends NativeValue(vt.UnicodeChar, ct.CharCell, tempValue) {
-  def withNewTempValue(tempValue : ps.TempValue) = new NativeCharValue(tempValue)
-
   def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue =  {
     val boxedTemp = ps.CellTemp(cellType)
     plan.steps += ps.BoxChar(boxedTemp, tempValue)

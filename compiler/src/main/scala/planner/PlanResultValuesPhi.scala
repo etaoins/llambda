@@ -20,17 +20,22 @@ object PlanResultValuesPhi {
       rightValues : ResultValues
   )(implicit worldPtr : ps.WorldPtrValue) : Result =
     (leftValues, rightValues) match {
-      case (SingleValue(leftUnboxed : iv.NativeValue), SingleValue(rightUnboxed : iv.NativeValue))
+      case (SingleValue(leftUnboxed : iv.UnboxedValue), SingleValue(rightUnboxed : iv.UnboxedValue))
           if leftUnboxed.nativeType == rightUnboxed.nativeType =>
         val commonType = leftUnboxed.nativeType
         val phiResultTemp = ps.Temp(commonType)
-        
+
+        val leftTempValue = leftUnboxed.toTempValue(commonType)(leftPlan, worldPtr)
+        val rightTempValue = rightUnboxed.toTempValue(commonType)(rightPlan, worldPtr)
+
+        val resultValue = TempValueToIntermediate(commonType, phiResultTemp)(leftPlan.config)
+
         // Our types exactly match - no conversion needed!
         Result(
-          leftTempValue=leftUnboxed.tempValue,
-          rightTempValue=rightUnboxed.tempValue,
+          leftTempValue=leftTempValue,
+          rightTempValue=rightTempValue,
           resultTemp=phiResultTemp,
-          resultValues=SingleValue(leftUnboxed.withNewTempValue(phiResultTemp))
+          resultValues=SingleValue(resultValue)
         )
 
       case (SingleValue(leftValue), SingleValue(rightValue)) =>

@@ -203,7 +203,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
         (if (> 0 m n) #t #f))""")
 
     assert(signature.fixedArgTypes === List(vt.NumberType, vt.NumberType))
-    assert(signature.returnType === vt.ReturnType.SingleValue(vt.BooleanType))
+    assert(signature.returnType === vt.ReturnType.SingleValue(vt.Predicate))
   }
 
   test("aborted retyping preserves original argument types") {
