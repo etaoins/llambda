@@ -241,6 +241,12 @@ object GenPlanStep {
 
       state.withTempValue(resultTemp -> lengthIr)
 
+    case ps.LoadBytevectorLength(resultTemp, bytevectorTemp) =>
+      val bytevectorIr = state.liveTemps(bytevectorTemp)
+      val lengthIr = ct.BytevectorCell.genLoadFromLength(state.currentBlock)(bytevectorIr)
+
+      state.withTempValue(resultTemp -> lengthIr)
+
     case ps.InitVector(vectorResult, elementsResult, length) =>
       val lengthIr = state.liveTemps(length)
       val result = GenVector.init(state)(lengthIr)

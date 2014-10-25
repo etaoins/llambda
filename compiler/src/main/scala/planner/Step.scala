@@ -566,6 +566,15 @@ case class LoadStringCharLength(result : TempValue, boxed : TempValue) extends S
       .assignLocationFrom(this)
 }
 
+/** Loads the length of a bytevector as a UInt32 */
+case class LoadBytevectorLength(result : TempValue, boxed : TempValue) extends Step with NullipotentStep {
+  lazy val inputValues = Set(boxed)
+  lazy val outputValues = Set(result)
+
+  def renamed(f : (TempValue) => TempValue) =
+    LoadBytevectorLength(f(result), f(boxed)).assignLocationFrom(this)
+}
+
 /** Creates a new uninitialised vector of the given length
   *
   * All elements need to be initialised before it is accessed or the next GC barrier
