@@ -191,6 +191,11 @@
               (([source : <source-type>] [start : <exact-integer>] [end : <exact-integer>])
                (native-proc source start end)))))))
 
+    ; Define the length accessors for slicing values
+    (define-r7rs vector-length (native-function "lliby_vector_length" (<vector>) -> <native-uint32>))
+    (define-r7rs bytevector-length (native-function "lliby_bytevector_length" (<bytevector>) -> <native-uint32>))
+    (define-r7rs string-length (native-function "lliby_string_length" (<string>) -> <native-uint32>))
+
     (define-r7rs eqv? (native-function "_lliby_is_eqv" (<any> <any>) -> <native-bool>))
     (define-r7rs eq? eqv?)
     (define-r7rs equal? (native-function "_lliby_is_equal" (<any> <any>) -> <native-bool>))
@@ -388,7 +393,6 @@
     (define-r7rs vector (world-function "lliby_vector" <any> -> <vector>))
     ; This is the same runtime function but instead of using a rest arg explicitly pass in the list
     (define-r7rs list->vector (world-function "lliby_vector" (<list>) -> <vector>))
-    (define-r7rs vector-length (native-function "lliby_vector_length" (<vector>) -> <native-uint32>))
     (define-r7rs vector-ref (world-function "lliby_vector_ref" (<vector> <native-uint32>) -> <any>))
     (define-r7rs vector-set! (world-function "lliby_vector_set" (<vector> <native-uint32> <any>)))
     (define-r7rs vector-append (world-function "lliby_vector_append" <vector> -> <vector>))
@@ -416,9 +420,14 @@
       (([len : <exact-integer>] [fill : <any>])
        (native-make-vector len fill))))
 
+    (define native-vector->string (world-function "lliby_vector_to_string" ((Vectorof <char>) <native-uint32> <native-uint32>) -> <string>))
+    (define-slice-proc vector->string native-vector->string <vector> vector-length)
+
+    (define native-string->vector (world-function "lliby_string_to_vector" (<string> <native-uint32> <native-uint32>) -> (Vectorof <char>)))
+    (define-slice-proc string->vector native-string->vector <string> string-length)
+
     (define-r7rs bytevector? (make-predicate <bytevector>))
     (define-r7rs bytevector (world-function "lliby_bytevector" <exact-integer> -> <bytevector>))
-    (define-r7rs bytevector-length (native-function "lliby_bytevector_length" (<bytevector>) -> <native-uint32>))
     (define-r7rs bytevector-u8-ref (world-function "lliby_bytevector_u8_ref" (<bytevector> <native-uint32>) -> <native-uint8>))
     (define-r7rs bytevector-u8-set! (world-function "lliby_bytevector_u8_set" (<bytevector> <native-uint32> <native-uint8>)))
     (define-r7rs bytevector-append (world-function "lliby_bytevector_append" <bytevector> -> <bytevector>))
@@ -438,7 +447,6 @@
     (define-r7rs string (world-function "lliby_string" <char> -> <string>))
     ; This is the same runtime function but instead of using a rest arg explicitly pass in the list
     (define-r7rs list->string (world-function "lliby_string" ((Listof <char>)) -> <string>))
-    (define-r7rs string-length (native-function "lliby_string_length" (<string>) -> <native-uint32>))
     (define-r7rs string-ref (world-function "lliby_string_ref" (<string> <native-uint32>) -> <native-unicode-char>))
     (define-r7rs string-set! (world-function "lliby_string_set" (<string> <native-uint32> <native-unicode-char>)))
     (define-r7rs string-append (world-function "lliby_string_append" <string> -> <string>))

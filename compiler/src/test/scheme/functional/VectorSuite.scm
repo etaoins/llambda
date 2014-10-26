@@ -153,3 +153,44 @@
 
 (define-test "(vector-fill!) with negative start index fails" (expect-failure
   (vector-fill! (vector 'dah 'dah 'didah) #t -1)))
+
+(define-test "(string->vector)" (expect-success
+  (assert-equal #(#\A #\B #\C) (string->vector "ABC"))
+  (assert-equal #(#\H #\e #\l #\l #\x2603 #\!) (string->vector "Hell☃!"))
+  (assert-equal #(#\l #\l #\x2603 #\!) (string->vector "Hell☃!" 2))
+  (assert-equal #(#\l #\l) (string->vector "Hell☃!" 2 4))
+  (assert-equal #() (string->vector "Hell☃!" 0 0))
+  (assert-equal #() (string->vector "Hell☃!" 6 6))))
+
+(define-test "(string->vector) with backwards slice fails" (expect-failure
+  (string->vector "Hell☃!" 2 1)))
+
+(define-test "(string->vector) past end of string fails" (expect-failure
+  (string->vector "Hell☃!" 0 8)))
+
+(define-test "(string->vector) with negative start index fails" (expect-failure
+  (string->vector "Hell☃!" -1)))
+
+(define-test "(vector->string)" (expect-success
+  (assert-equal "ABC" (vector->string #(#\A #\B #\C)))
+  (assert-equal "Hell☃!" (vector->string #(#\H #\e #\l #\l #\x2603 #\!)))
+  (assert-equal "ll☃!" (vector->string #(#\H #\e #\l #\l #\x2603 #\!) 2))
+  (assert-equal "ll" (vector->string #(#\H #\e #\l #\l #\x2603 #\!) 2 4))
+  (assert-equal "" (vector->string #(#\H #\e #\l #\l #\x2603 #\!) 0 0))
+  (assert-equal "" (vector->string #(#\H #\e #\l #\l #\x2603 #\!) 6 6))))
+
+(define-test "(vector->string) with constant non-char fails at compile time" (expect-compile-failure
+  (vector->string #(#\H #\e #\l #\l 'notchar #\!))))
+
+(define-test "(vector->string) with dynamic non-char fails" (expect-failure
+  (define test-vector (vector #\H #\e #\l #\l 'notchar #\!))
+  (vector->string test-vector)))
+
+(define-test "(vector->string) with backwards slice fails" (expect-failure
+  (vector->string #(#\H #\e #\l #\l #\x2603 #\!) 2 1)))
+
+(define-test "(vector->string) past end of string fails" (expect-failure
+  (vector->string #(#\H #\e #\l #\l #\x2603 #\!) 0 8)))
+
+(define-test "(vector->string) with negative start index fails" (expect-failure
+  (vector->string #(#\H #\e #\l #\l #\x2603 #\!) -1)))

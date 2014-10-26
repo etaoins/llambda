@@ -1,11 +1,16 @@
 #include "binding/AnyCell.h"
 #include "binding/VectorCell.h"
 #include "binding/ProperList.h"
+#include "binding/StringCell.h"
+#include "binding/CharCell.h"
 
 #include "core/error.h"
 #include "core/World.h"
 
+#include "unicode/UnicodeChar.h"
+
 #include "util/assertSliceValid.h"
+#include "util/StringCellBuilder.h"
 
 using namespace lliby;
 
@@ -95,6 +100,42 @@ void lliby_vector_mutating_fill(World &world, VectorCell *vector, AnyCell *fill,
 	assertSliceValid(world, "(vector-fill!)", vector, vector->length(), start, end);
 
 	vector->fill(fill, start, end);
+}
+
+VectorCell* lliby_string_to_vector(World &world, StringCell *string, std::uint32_t start, std::uint32_t end)
+{
+	assertSliceValid(world, "(string->vector)", string, string->charLength(), start, end);
+
+	std::vector<UnicodeChar> unboxedChars(string->unicodeChars(start, end));
+	const size_t charCount = unboxedChars.size();
+
+	alloc::RangeAlloc allocation = alloc::allocateRange(world, charCount);
+	auto allocIt = allocation.begin();
+
+	AnyCell **boxedChars = new AnyCell*[charCount];
+	auto unboxedIt = unboxedChars.begin();
+
+	for(size_t i = 0; i < charCount; i++)
+	{
+		boxedChars[i] = new (*allocIt++) CharCell(*unboxedIt++);
+	}
+
+	return VectorCell::fromElements(world, boxedChars, charCount);
+}
+
+StringCell *lliby_vector_to_string(World &world, VectorCell *vector, std::uint32_t start, std::uint32_t end)
+{
+	assertSliceValid(world, "(vector->string)", vector, vector->length(), start, end);
+
+	StringCellBuilder builder(end - start);
+
+	for(std::uint32_t i = start; i < end; i++)
+	{
+		AnyCell *member = vector->elements()[i];
+		builder << cell_unchecked_cast<CharCell>(member)->unicodeChar();
+	}
+
+	return builder.result(world);
 }
 
 }
