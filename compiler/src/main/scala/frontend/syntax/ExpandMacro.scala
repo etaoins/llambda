@@ -1,9 +1,12 @@
 package io.llambda.compiler.frontend.syntax
 import io.llambda
 
-import llambda.compiler._
 import util.control.Exception._
 import util.control.NoStackTrace
+import scala.collection.breakOut
+
+import llambda.compiler._
+import llambda.compiler.frontend.UniqueScopesForDatum
 
 private[frontend] object ExpandMacro {
   private case class Expandable(transformer : Transformer, matchedData : MatchedData)
@@ -20,7 +23,17 @@ private[frontend] object ExpandMacro {
         subpatternData=subpatternData ++ other.subpatternData
       )
   }
-  
+
+  /** Recopes the passed datum so that each scope is replaced with an empty child scope parented to its previous scope
+    */
+  private def assignFreshScopes(datum : sst.ScopedDatum) : sst.ScopedDatum = {
+    val scopeMapping = UniqueScopesForDatum(datum).map({ parentScope =>
+      parentScope -> new Scope(new collection.mutable.HashMap[String, BoundValue], Some(parentScope))
+    })(breakOut) : Map[Scope, Scope]
+
+    datum.rescoped(scopeMapping)
+  }
+
   private def matchPatternListWithRest(patternData : List[sst.ScopedDatum], operandData : List[sst.ScopedDatum])(implicit matchConfig : MatchConfig) : (List[sst.ScopedDatum], MatchedData) = {
     (patternData, operandData) match {
       case (subpatternDatum :: sst.ScopedSymbol(_, matchConfig.ellipsisIdentifier) :: patternTail,
@@ -282,7 +295,12 @@ private[frontend] object ExpandMacro {
     }
 
     val transformer = expandable.transformer
-    expandTemplate(transformer.template, transformer.patternVariables, expandable.matchedData)(matchConfig, expandedFrom)
+    // Assign every symbol in the template a new scope to ensure it won't conflict with any existing symbols. This is
+    // especially important when a macro recursively expands itself potentially introducing the exact same template
+    // symbol multiple times in the expanded output.
+    val rescopedTemplate = assignFreshScopes(transformer.template)
+
+    expandTemplate(rescopedTemplate, transformer.patternVariables, expandable.matchedData)(matchConfig, expandedFrom)
   }
 }
 

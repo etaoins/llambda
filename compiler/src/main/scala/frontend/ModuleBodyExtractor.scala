@@ -7,20 +7,8 @@ import llambda.compiler.valuetype.Implicits._
 import llambda.compiler.frontend.syntax.{ParseSyntaxDefine, ExpandMacro}
 
 import collection.mutable.ListBuffer
-  
-final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) {
-  private def uniqueScopes(datum : sst.ScopedDatum) : Set[Scope] = {
-    datum match {
-      case sst.ScopedPair(car, cdr) => uniqueScopes(car) ++ uniqueScopes(cdr)
-      case sst.ScopedSymbol(scope, name) => Set(scope)
-      case sst.ScopedVectorLiteral(elements) => 
-        elements.foldLeft(Set[Scope]()) { (scopes, element) =>
-          scopes ++ uniqueScopes(element)
-        }
-      case leaf : sst.NonSymbolLeaf => Set()
-    }
-  }
 
+final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) {
   private def declaredSymbolType(symbol : sst.ScopedSymbol, providedTypeOpt : Option[vt.SchemeType] = None) : vt.SchemeType = {
     symbol.scope.typeDeclarations.get(symbol) match {
       case Some(declaredType) =>
@@ -43,7 +31,7 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
   private[frontend] def extractBodyDefinition(arguments : List[(sst.ScopedSymbol, BoundValue)], definition : List[sst.ScopedDatum]) : et.Expr = {
     // Find all the scopes in the definition
     val definitionScopes = definition.foldLeft(Set[Scope]()) { (scopes, datum) =>
-      scopes ++ uniqueScopes(datum)
+      scopes ++ UniqueScopesForDatum(datum)
     }
 
     // Introduce new scopes with our arguments injected in to them
