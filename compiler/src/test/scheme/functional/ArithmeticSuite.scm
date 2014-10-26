@@ -70,62 +70,38 @@
   (/)))
 
 (define-test "(truncate/)" (expect-success
-  (call-with-values
-    (lambda ()
-      (truncate/ 5 2))
-    (lambda (quot remain)
-      (assert-equal 2 quot)
-      (assert-equal 1 remain)))
+  (let-values (((quot remain) (truncate/ 5 2)))
+    (assert-equal 2 quot)
+    (assert-equal 1 remain))
 
-  (call-with-values
-    (lambda ()
-      (truncate/ -5 2))
-    (lambda (quot remain)
-      (assert-equal -2 quot)
-      (assert-equal -1 remain)))
+  (let-values (((quot remain) (truncate/ -5 2)))
+    (assert-equal -2 quot)
+    (assert-equal -1 remain))
 
-  (call-with-values
-    (lambda ()
-      (truncate/ 5 -2))
-    (lambda (quot remain)
-      (assert-equal -2 quot)
-      (assert-equal 1 remain)))
+  (let-values (((quot remain) (truncate/ 5 -2)))
+    (assert-equal -2 quot)
+    (assert-equal 1 remain))
 
-  (call-with-values
-    (lambda ()
-      (truncate/ -5 -2))
-    (lambda (quot remain)
-      (assert-equal 2 quot)
-      (assert-equal -1 remain)))
+  (let-values (((quot remain) (truncate/ -5 -2)))
+    (assert-equal 2 quot)
+    (assert-equal -1 remain))
 
-    ; Our native code generation requires a constant denominator to avoid divide by zero checks
-  (call-with-values
-    (lambda ()
-      (truncate/ (typed-dynamic 5 <exact-integer>) 2))
-    (lambda (quot remain)
-      (assert-equal 2 quot)
-      (assert-equal 1 remain)))
+  ; Our native code generation requires a constant denominator to avoid divide by zero checks
+  (let-values (((quot remain) (truncate/ (typed-dynamic 5 <exact-integer>) 2)))
+    (assert-equal 2 quot)
+    (assert-equal 1 remain))
 
-  (call-with-values
-    (lambda ()
-      (truncate/ (typed-dynamic -5 <exact-integer>) 2))
-    (lambda (quot remain)
-      (assert-equal -2 quot)
-      (assert-equal -1 remain)))
+  (let-values (((quot remain) (truncate/ (typed-dynamic -5 <exact-integer>) 2)))
+    (assert-equal -2 quot)
+    (assert-equal -1 remain))
 
-  (call-with-values
-    (lambda ()
-      (truncate/ (typed-dynamic 5 <exact-integer>) -2))
-    (lambda (quot remain)
-      (assert-equal -2 quot)
-      (assert-equal 1 remain)))
+  (let-values (((quot remain) (truncate/ (typed-dynamic 5 <exact-integer>) -2)))
+    (assert-equal -2 quot)
+    (assert-equal 1 remain))
 
-  (call-with-values
-    (lambda ()
-      (truncate/ (typed-dynamic -5 <exact-integer>) -2))
-    (lambda (quot remain)
-      (assert-equal 2 quot)
-      (assert-equal -1 remain)))))
+  (let-values (((quot remain) (truncate/ (typed-dynamic -5 <exact-integer>) -2)))
+    (assert-equal 2 quot)
+    (assert-equal -1 remain))))
 
 (define-test "(truncate/) by zero fails" (expect-failure
   (truncate/ 5 0)))
@@ -156,33 +132,21 @@
     (assert-equal -1 (truncate-remainder (typed-dynamic -5 <exact-integer>) -2))))
 
 (define-test "(floor/)" (expect-success
-  (call-with-values
-    (lambda ()
-      (floor/ 5 2))
-    (lambda (quot remain)
-      (assert-equal 2 quot)
-      (assert-equal 1 remain)))
+  (let-values (((quot remain) (floor/ 5 2)))
+    (assert-equal 2 quot)
+    (assert-equal 1 remain))
 
-  (call-with-values
-    (lambda ()
-      (floor/ -5 2))
-    (lambda (quot remain)
-      (assert-equal -3 quot)
-      (assert-equal 1 remain)))
+  (let-values (((quot remain) (floor/ -5 2)))
+    (assert-equal -3 quot)
+    (assert-equal 1 remain))
 
-  (call-with-values
-    (lambda ()
-      (floor/ 5 -2))
-    (lambda (quot remain)
-      (assert-equal -3 quot)
-      (assert-equal -1 remain)))
+  (let-values (((quot remain) (floor/ 5 -2)))
+    (assert-equal -3 quot)
+    (assert-equal -1 remain))
 
-  (call-with-values
-    (lambda ()
-      (floor/ -5 -2))
-    (lambda (quot remain)
-      (assert-equal 2 quot)
-      (assert-equal -1 remain)))))
+  (let-values (((quot remain) (floor/ -5 -2)))
+    (assert-equal 2 quot)
+    (assert-equal -1 remain))))
 
 (define-test "(floor/) by zero fails" (expect-failure
   (floor/ 5 0)))
@@ -310,30 +274,22 @@
   (assert-equal 576 (lcm 32 -36 192))))
 
 (define-test "(exact-integer-sqrt)" (expect-success
-  (call-with-values (lambda ()
-                      (exact-integer-sqrt 0))
-                    (lambda (root rem)
-                      (assert-equal 0 root)
-                      (assert-equal 0 rem)))
+  (let-values (((root rem) (exact-integer-sqrt 0)))
+    (assert-equal 0 root)
+    (assert-equal 0 rem))
 
-  (call-with-values (lambda ()
-                      (exact-integer-sqrt 4))
-                    (lambda (root rem)
-                      (assert-equal 2 root)
-                      (assert-equal 0 rem)))
+  (let-values (((root rem) (exact-integer-sqrt 4)))
+    (assert-equal 2 root)
+    (assert-equal 0 rem))
 
-  (call-with-values (lambda ()
-                      (exact-integer-sqrt 5))
-                    (lambda (root rem)
-                      (assert-equal 2 root)
-                      (assert-equal 1 rem)))
+  (let-values (((root rem) (exact-integer-sqrt 5)))
+    (assert-equal 2 root)
+    (assert-equal 1 rem))
 
   ; Ensure large integer values work correctly - converting to double won't work here
-  (call-with-values (lambda ()
-                      (exact-integer-sqrt 4611686018427387911))
-                    (lambda (root rem)
-                      (assert-equal 2147483648 root)
-                      (assert-equal 7 rem)))))
+  (let-values (((root rem) (exact-integer-sqrt 4611686018427387911)))
+    (assert-equal 2147483648 root)
+    (assert-equal 7 rem))))
 
 (define-test "(exact-integer-sqrt) with negative values fails" (expect-failure
   (exact-integer-sqrt -1)))
