@@ -5,7 +5,7 @@
         cond-expand parameterize)
 
 (export begin)
-(export let let* letrec* letrec let-syntax letrec-syntax)
+(export let let* letrec* letrec let-syntax letrec-syntax let-values let*-values)
 (export cond case and or when unless)
 (export do)
 (export eqv? eq? equal?)

@@ -255,3 +255,15 @@
                  (even? (- n 1))))))
     (even? 8))))
 
+(define-test "(let-values)" (expect-success
+  (assert-equal 100 (let-values (((product) (* 5 20)))
+                                product))
+
+  (assert-equal 35 (let-values (((root rem) (exact-integer-sqrt 32)))
+                               (* root rem)))))
+
+(define-test "(let*-values)" (expect (x y x y)
+  (let ((a 'a) (b 'b) (x 'x) (y 'y))
+    (let*-values (((a b) (values x y))
+                  ((x y) (values a b)))
+                 (list a b x y)))))
