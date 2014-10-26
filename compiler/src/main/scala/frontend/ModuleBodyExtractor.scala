@@ -476,7 +476,7 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
       appliedSymbol.resolve match {
         case syntax : BoundSyntax =>
           // This is a macro - expand it
-          val expandedDatum = ExpandMacro(syntax, cdr, datum)
+          val expandedDatum = ExpandMacro(syntax, cdr, datum, trace=frontendConfig.traceMacroExpansion)
           
           // Get the expanded expression 
           val extractor = new ModuleBodyExtractor(syntax.debugContext, libraryLoader, frontendConfig)

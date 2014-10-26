@@ -163,7 +163,8 @@ object Compiler {
     val frontendConfig = frontend.FrontendConfig(
       includePath=config.includePath,
       featureIdentifiers=featureIdentifiers,
-      schemeDialect=config.schemeDialect
+      schemeDialect=config.schemeDialect,
+      traceMacroExpansion=config.traceMacroExpansion
     )
 
     val exprs = frontend.ExtractProgram(entryFilenameOpt, data)(loader, frontendConfig)

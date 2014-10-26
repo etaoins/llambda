@@ -282,7 +282,26 @@ private[frontend] object ExpandMacro {
     }
   }
 
-  def apply(syntax : BoundSyntax, operands : sst.ScopedDatum, expandedFrom : SourceLocated) : sst.ScopedDatum = {
+  private def dumpExpansion(
+      expandedFrom : SourceLocated,
+      operands : sst.ScopedDatum,
+      expandable : Expandable,
+      expansion : sst.ScopedDatum
+  ) {
+    println(expandedFrom.locationString)
+    println("Pattern:   " + expandable.transformer.pattern.unscope)
+    println("Operands:  " + operands.unscope)
+    println("Template:  " + expandable.transformer.template.unscope)
+    println("Expansion: " + expansion.unscope)
+    println()
+  }
+
+  def apply(
+      syntax : BoundSyntax,
+      operands : sst.ScopedDatum,
+      expandedFrom : SourceLocated,
+      trace : Boolean = false
+  ) : sst.ScopedDatum = {
     val matchConfig = MatchConfig(
       ellipsisIdentifier=syntax.ellipsisIdentifier,
       literals=syntax.literals
@@ -300,7 +319,13 @@ private[frontend] object ExpandMacro {
     // symbol multiple times in the expanded output.
     val rescopedTemplate = assignFreshScopes(transformer.template)
 
-    expandTemplate(rescopedTemplate, transformer.patternVariables, expandable.matchedData)(matchConfig, expandedFrom)
+    val expansion = expandTemplate(rescopedTemplate, transformer.patternVariables, expandable.matchedData)(matchConfig, expandedFrom)
+
+    if (trace) {
+      dumpExpansion(expandedFrom, operands, expandable, expansion)
+    }
+
+    expansion
   }
 }
 

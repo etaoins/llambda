@@ -14,9 +14,10 @@ object CompilerApp extends App {
     targetPlatformOpt : Option[platform.TargetPlatform] = None,
     schemeDialect : dialect.Dialect = dialect.Dialect.default,
     saveTempObj : Boolean = false,
-    dumpPlan : Boolean = false
+    dumpPlan : Boolean = false,
+    traceMacroExpansion : Boolean = false
   )
-  
+
   private val stringToPlatform = Map(
     ("posix64be" -> platform.Posix64BE),
     ("posix64le" -> platform.Posix64LE),
@@ -92,6 +93,10 @@ object CompilerApp extends App {
       c.copy(dumpPlan=true)
     } text ("dump internal execution plan")
 
+    opt[Unit]("trace-macro-expansion") action { (_, c) =>
+      c.copy(traceMacroExpansion=true)
+    } text ("trace macro expansion process")
+
     help("help")
 
     checkConfig { c =>
@@ -154,7 +159,8 @@ object CompilerApp extends App {
           extraFeatureIdents=config.extraFeatureIdents,
           genDebugInfo=config.genDebugInfo,
           saveTempObj=config.saveTempObj,
-          dumpPlan=config.dumpPlan
+          dumpPlan=config.dumpPlan,
+          traceMacroExpansion=config.traceMacroExpansion
         )
 
         Compiler.compileFile(input, output, compileConfig)

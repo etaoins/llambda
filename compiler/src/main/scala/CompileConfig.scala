@@ -12,5 +12,6 @@ case class CompileConfig(
   extraFeatureIdents : Set[String] = Set(),
   genDebugInfo : Boolean = false,
   saveTempObj : Boolean = false,
-  dumpPlan : Boolean = false
+  dumpPlan : Boolean = false,
+  traceMacroExpansion : Boolean = false
 )
