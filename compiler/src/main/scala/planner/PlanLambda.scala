@@ -307,6 +307,8 @@ private[planner] object PlanLambda {
       (Some(worldPtr), initialSignature.copy(returnType=returnType))
     }
 
+    val argumentUniquer = new SourceNameUniquer
+
     // Name our function arguments
     val namedArguments =
       worldPtrOpt.toList.map({ worldPtr =>
@@ -316,9 +318,9 @@ private[planner] object PlanLambda {
         ("self" -> procSelf)
       }) ++
       (allArgs.map { argument =>
-        (argument.storageLoc.sourceName -> argument.tempValue)
+        (argumentUniquer(argument.storageLoc.sourceName) -> argument.tempValue)
       })
-    
+
     val irCommentOpt =
       for(location <- lambdaExpr.locationOpt)
       yield
