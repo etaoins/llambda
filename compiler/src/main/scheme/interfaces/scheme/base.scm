@@ -31,7 +31,8 @@
 (export procedure? apply call-with-current-continuation call/cc values call-with-values vector-map vector-for-each
         map for-each string-map string-for-each)
 (export make-parameter dynamic-wind)
-(export port? input-port? output-port? current-input-port current-output-port current-error-port)
+(export port? input-port? output-port? current-input-port current-output-port current-error-port textual-port?
+        binary-port?)
 (export newline)
 (export features)
 (export with-exception-handler raise raise-continuable error error-object? error-object-message error-object-irritants

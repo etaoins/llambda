@@ -530,6 +530,8 @@
     (define-r7rs port? (make-predicate <port>))
     (define-r7rs input-port? (native-function "lliby_is_input_port" (<any>) -> <native-bool>))
     (define-r7rs output-port? (native-function "lliby_is_output_port" (<any>) -> <native-bool>))
+    (define-r7rs textual-port? port?)
+    (define-r7rs binary-port? port?)
 
     (define-r7rs current-input-port (make-parameter ((world-function "_lliby_stdin_port" () -> <port>))))
     (define-r7rs current-output-port (make-parameter ((world-function "_lliby_stdout_port" () -> <port>))))
