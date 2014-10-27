@@ -262,8 +262,57 @@
   (assert-equal 35 (let-values (((root rem) (exact-integer-sqrt 32)))
                                (* root rem)))))
 
+(define-test "(let-values) with mismatched value count fails" (expect-compile-failure
+  (assert-equal 100 (let-values (((product extra) (* 5 20)))
+                                product))))
+
 (define-test "(let*-values)" (expect (x y x y)
   (let ((a 'a) (b 'b) (x 'x) (y 'y))
     (let*-values (((a b) (values x y))
                   ((x y) (values a b)))
                  (list a b x y)))))
+
+(define-test "(let*-values) with mismatched value count fails" (expect-compile-failure
+  (let ((a 'a) (b 'b) (x 'x) (y 'y))
+    (let*-values (((a) (values x y))
+                  ((x y) (values a b)))
+                 (list a b x y)))))
+
+(define-test "(let-values:)" (expect-success
+  (import (llambda typed))
+  (assert-equal 100 (let-values: ((([product : <exact-integer>]) (* 5 20)))
+                                 product))
+
+  (assert-equal 35 (let-values: ((([root : <exact-integer>] [rem : <exact-integer>]) (exact-integer-sqrt 32)))
+                                (* root rem)))))
+
+(define-test "(let-values:) with mismatched value count fails" (expect-compile-failure
+  (import (llambda typed))
+  (assert-equal 100 (let-values: ((([product : <exact-integer>]) (exact-integer-sqrt 32)))
+                                 product))))
+
+(define-test "(let-values:) with mismatched type fails" (expect-compile-failure
+  (import (llambda typed))
+  (assert-equal 35 (let-values: ((([root : <exact-integer>] [rem : <flonum>]) (exact-integer-sqrt 32)))
+                                (* root rem)))))
+
+(define-test "(let*-values:)" (expect (x y x y)
+  (import (llambda typed))
+  (let ((a 'a) (b 'b) (x 'x) (y 'y))
+    (let*-values: ((([a : <symbol>] [b : <symbol>]) (values x y))
+                   (([x : <symbol>] [y : <symbol>]) (values a b)))
+                  (list a b x y)))))
+
+(define-test "(let*-values:) with mismatched value count fails" (expect-compile-failure
+  (import (llambda typed))
+  (let ((a 'a) (b 'b) (x 'x) (y 'y))
+    (let*-values: ((([a : <symbol>] [b : <symbol>] [extra : <symbol>]) (values x y))
+                   (([x : <symbol>] [y : <symbol>]) (values a b)))
+                  (list a b x y)))))
+
+(define-test "(let*-values:) with mismatched type fails" (expect-compile-failure
+  (import (llambda typed))
+  (let ((a 'a) (b 'b) (x 'x) (y 'y))
+    (let*-values: ((([a : <symbol>] [b : <string>]) (values x y))
+                   (([x : <symbol>] [y : <symbol>]) (values a b)))
+                  (list a b x y)))))
