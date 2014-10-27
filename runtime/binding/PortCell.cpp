@@ -2,21 +2,20 @@
 
 #include "alloc/allocator.h"
 
+#include "port/AbstractPort.h"
+
 namespace lliby
 {
 
-PortCell* PortCell::createInstance(World &world, std::ios *stream, bool isOwned)
+PortCell* PortCell::createInstance(World &world, AbstractPort *port)
 {
 	void *cellPlacement = alloc::allocateCells(world);
-	return new (cellPlacement) PortCell(stream, isOwned);
+	return new (cellPlacement) PortCell(port);
 }
 
 void PortCell::finalizePort()
 {
-	if (isOwned())
-	{
-		delete m_stream;
-	}
+	delete m_port;
 }
 
 }

@@ -140,9 +140,8 @@
 !80 = metadata !{metadata !"ErrorObject::message"}
 !81 = metadata !{metadata !"ErrorObject::irritants"}
 
-; {supertype, bool isOwned, stream}
-%port = type {%any, i8, i8*}
+; {supertype, port}
+%port = type {%any, i8*}
 !82 = metadata !{metadata !"Any::typeId->Port", metadata !10}
 !83 = metadata !{metadata !"Any::gcState->Port", metadata !11}
-!84 = metadata !{metadata !"Port::isOwned"}
-!85 = metadata !{metadata !"Port::stream"}
+!84 = metadata !{metadata !"Port::port"}

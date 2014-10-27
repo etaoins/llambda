@@ -4,8 +4,8 @@ fieldtype UnicodeChar : uint32 {
 	extern cppname = UnicodeChar;
 };
 
-fieldtype ios : uint8 {
-	extern cppname = std::ios;
+fieldtype AbstractPort : uint8 {
+	extern cppname = AbstractPort;
 };
 
 // C++ has a special ProperList type for known proper lists
@@ -128,8 +128,7 @@ concrete cell ErrorObject : Any {
 };
 
 concrete cell Port : Any {
-	bool isOwned;
-	ios *stream;
+	AbstractPort *port;
 };
 
 // Internal runtime-only cell to track dynamic states with the garbage collector

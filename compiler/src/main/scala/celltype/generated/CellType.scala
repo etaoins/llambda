@@ -54,7 +54,7 @@ sealed abstract class PreconstructedCellType extends ConcreteCellType
 sealed abstract class CellTypeVariant extends CastableValue
 
 object CellType {
-  val nextMetadataIndex = 89L
+  val nextMetadataIndex = 88L
 }
 
 sealed trait AnyFields {
@@ -1614,62 +1614,33 @@ object ErrorObjectCell extends ConcreteCellType with ErrorObjectFields {
 sealed trait PortFields extends AnyFields {
   val irType : FirstClassType
 
-  val isOwnedIrType = IntegerType(8)
-  val isOwnedTbaaNode : Metadata
-  val isOwnedGepIndices : List[Int]
+  val portIrType = PointerType(IntegerType(8))
+  val portTbaaNode : Metadata
+  val portGepIndices : List[Int]
 
-  val streamIrType = PointerType(IntegerType(8))
-  val streamTbaaNode : Metadata
-  val streamGepIndices : List[Int]
-
-  def genPointerToIsOwned(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+  def genPointerToPort(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
     if (valueCell.irType != PointerType(irType)) {
       throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
     }
 
-    block.getelementptr("isOwnedPtr")(
-      elementType=isOwnedIrType,
+    block.getelementptr("portPtr")(
+      elementType=portIrType,
       basePointer=valueCell,
-      indices=isOwnedGepIndices.map(IntegerConstant(IntegerType(32), _)),
+      indices=portGepIndices.map(IntegerConstant(IntegerType(32), _)),
       inbounds=true
     )
   }
 
-  def genStoreToIsOwned(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
-    val isOwnedPtr = genPointerToIsOwned(block)(valueCell)
-    val allMetadata = metadata ++ Map("tbaa" -> isOwnedTbaaNode)
-    block.store(toStore, isOwnedPtr, metadata=allMetadata)
+  def genStoreToPort(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+    val portPtr = genPointerToPort(block)(valueCell)
+    val allMetadata = metadata ++ Map("tbaa" -> portTbaaNode)
+    block.store(toStore, portPtr, metadata=allMetadata)
   }
 
-  def genLoadFromIsOwned(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
-    val isOwnedPtr = genPointerToIsOwned(block)(valueCell)
-    val allMetadata = Map("tbaa" -> isOwnedTbaaNode) ++ metadata
-    block.load("isOwned")(isOwnedPtr, metadata=allMetadata)
-  }
-
-  def genPointerToStream(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
-    if (valueCell.irType != PointerType(irType)) {
-      throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
-    }
-
-    block.getelementptr("streamPtr")(
-      elementType=streamIrType,
-      basePointer=valueCell,
-      indices=streamGepIndices.map(IntegerConstant(IntegerType(32), _)),
-      inbounds=true
-    )
-  }
-
-  def genStoreToStream(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
-    val streamPtr = genPointerToStream(block)(valueCell)
-    val allMetadata = metadata ++ Map("tbaa" -> streamTbaaNode)
-    block.store(toStore, streamPtr, metadata=allMetadata)
-  }
-
-  def genLoadFromStream(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
-    val streamPtr = genPointerToStream(block)(valueCell)
-    val allMetadata = Map("tbaa" -> streamTbaaNode) ++ metadata
-    block.load("stream")(streamPtr, metadata=allMetadata)
+  def genLoadFromPort(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+    val portPtr = genPointerToPort(block)(valueCell)
+    val allMetadata = Map("tbaa" -> portTbaaNode) ++ metadata
+    block.load("port")(portPtr, metadata=allMetadata)
   }
 }
 
@@ -1683,23 +1654,20 @@ object PortCell extends ConcreteCellType with PortFields {
 
   val typeIdGepIndices = List(0, 0, 0)
   val gcStateGepIndices = List(0, 0, 1)
-  val isOwnedGepIndices = List(0, 1)
-  val streamGepIndices = List(0, 2)
+  val portGepIndices = List(0, 1)
 
   val typeIdTbaaNode = NumberedMetadata(82L)
   val gcStateTbaaNode = NumberedMetadata(83L)
-  val isOwnedTbaaNode = NumberedMetadata(84L)
-  val streamTbaaNode = NumberedMetadata(85L)
+  val portTbaaNode = NumberedMetadata(84L)
 
-  def createConstant(isOwned : Long, stream : IrConstant) : StructureConstant = {
-    if (stream.irType != streamIrType) {
-      throw new InternalCompilerErrorException("Unexpected type for field stream")
+  def createConstant(port : IrConstant) : StructureConstant = {
+    if (port.irType != portIrType) {
+      throw new InternalCompilerErrorException("Unexpected type for field port")
     }
 
     StructureConstant(List(
       AnyCell.createConstant(typeId=typeId),
-      IntegerConstant(isOwnedIrType, isOwned),
-      stream
+      port
     ), userDefinedType=Some(irType))
   }
 }

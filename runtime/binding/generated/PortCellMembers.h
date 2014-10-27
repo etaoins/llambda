@@ -3,14 +3,9 @@
  ************************************************************/
 
 public:
-	bool isOwned() const
+	AbstractPort* port() const
 	{
-		return m_isOwned;
-	}
-
-	std::ios* stream() const
-	{
-		return m_stream;
+		return m_port;
 	}
 
 public:
@@ -25,5 +20,4 @@ public:
 	}
 
 private:
-	bool m_isOwned;
-	std::ios* m_stream;
+	AbstractPort* m_port;

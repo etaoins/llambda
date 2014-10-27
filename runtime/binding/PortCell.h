@@ -2,28 +2,27 @@
 #define _LLIBY_BINDING_PORTCELL_H
 
 #include "AnyCell.h"
-#include <iostream>
 
 namespace lliby
 {
 class World;
+class AbstractPort;
 
 class PortCell : public AnyCell
 {
 #include "generated/PortCellMembers.h"
 public:
-	explicit PortCell(std::ios *stream, bool isOwned = true) :
+	explicit PortCell(AbstractPort *port) :
 		AnyCell(CellTypeId::Port),
-		m_isOwned(isOwned),
-		m_stream(stream)
+		m_port(port)
 	{
 	}
 
-	static PortCell* createInstance(World &world, std::ios* stream, bool isOwned = true);
-	
+	static PortCell* createInstance(World &world, AbstractPort *port);
+
 	void finalizePort();
 };
-	
+
 }
 
 

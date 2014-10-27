@@ -32,7 +32,7 @@
         map for-each string-map string-for-each)
 (export make-parameter dynamic-wind)
 (export port? input-port? output-port? current-input-port current-output-port current-error-port textual-port?
-        binary-port?)
+        binary-port? input-port-open? output-port-open? close-port close-input-port close-output-port)
 (export newline)
 (export features)
 (export with-exception-handler raise raise-continuable error error-object? error-object-message error-object-irritants

@@ -21,6 +21,8 @@
 #include "binding/ErrorObjectCell.h"
 #include "binding/PortCell.h"
 
+#include "port/StandardOutputPort.h"
+
 #include "alloc/cellref.h"
 #include "assertions.h"
 #include "stubdefinitions.h"
@@ -216,8 +218,8 @@ void testErrorObject(World &world)
 
 void testPort(World &world)
 {
-	auto port = PortCell::createInstance(world, &std::cout, false);
-	assertForm(port, "#!port");
+	auto portCell = PortCell::createInstance(world, new StandardOutputPort(std::cout, -1));
+	assertForm(portCell, "#!port");
 }
 
 void testAll(World &world)
