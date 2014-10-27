@@ -17,4 +17,10 @@
     (define-r7rs string-upcase (world-function "lliby_string_upcase" (<string>) -> <string>))
     (define-r7rs string-downcase (world-function "lliby_string_downcase" (<string>) -> <string>))
     (define-r7rs string-foldcase (world-function "lliby_string_foldcase" (<string>) -> <string>))
-    (define-r7rs digit-value (world-function "lliby_digit_value" (<native-unicode-char>) -> <any>))))
+    (define-r7rs digit-value (world-function "lliby_digit_value" (<native-unicode-char>) -> <any>))
+
+    (define-r7rs string-ci=? (native-function "lliby_string_ci_equal" (<string> <string> . <string>) -> <native-bool>))
+    (define-r7rs string-ci<? (native-function "lliby_string_ci_lt" (<string> <string> . <string>) -> <native-bool>))
+    (define-r7rs string-ci>? (native-function "lliby_string_ci_gt" (<string> <string> . <string>) -> <native-bool>))
+    (define-r7rs string-ci<=? (native-function "lliby_string_ci_lte" (<string> <string> . <string>) -> <native-bool>))
+    (define-r7rs string-ci>=? (native-function "lliby_string_ci_gte" (<string> <string> . <string>) -> <native-bool>))))

@@ -502,6 +502,12 @@
     (define substring (world-function "lliby_substring" (<string> <native-uint32> <native-uint32>) -> <string>))
     (define-slice-proc string-copy substring <string> string-length)
 
+    (define-r7rs string=? (native-function "lliby_string_equal" (<string> <string> . <string>) -> <native-bool>))
+    (define-r7rs string<? (native-function "lliby_string_lt" (<string> <string> . <string>) -> <native-bool>))
+    (define-r7rs string>? (native-function "lliby_string_gt" (<string> <string> . <string>) -> <native-bool>))
+    (define-r7rs string<=? (native-function "lliby_string_lte" (<string> <string> . <string>) -> <native-bool>))
+    (define-r7rs string>=? (native-function "lliby_string_gte" (<string> <string> . <string>) -> <native-bool>))
+
     (define-r7rs vector-map (world-function "lliby_vector_map" ((-> <any> <any> * <any>) <vector> . <vector>) -> <vector>))
     (define-r7rs vector-for-each (world-function "lliby_vector_for_each" ((-> <any> <any> * <unit>) <vector> . <vector>)))
 

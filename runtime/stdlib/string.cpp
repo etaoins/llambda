@@ -12,6 +12,33 @@
 
 using namespace lliby;
 
+namespace
+{
+	template<class Comparator>
+	bool stringCompare(StringCell *value1, StringCell *value2, ProperList<StringCell> *argList, Comparator stringCompare)
+	{
+		auto argListIt = argList->begin();
+
+		while(true)
+		{
+			if (!stringCompare(value1, value2))
+			{
+				return false;
+			}
+
+			if (argListIt == argList->end())
+			{
+				// All done!
+				return true;
+			}
+
+			// Move the the next string pair
+			value1 = value2;
+			value2 = (*argListIt++);
+		}
+	}
+}
+
 extern "C"
 {
 
@@ -112,6 +139,66 @@ StringCell* lliby_string_downcase(World &world, StringCell *sourceString)
 StringCell* lliby_string_foldcase(World &world, StringCell *sourceString)
 {
 	return sourceString->toCaseFoldedString(world);
+}
+
+bool lliby_string_equal(StringCell *value1, StringCell *value2, ProperList<StringCell> *argHead)
+{
+	return stringCompare(value1, value2, argHead,
+			[] (StringCell *value1, StringCell *value2) { return *value1 == *value2; });
+}
+
+bool lliby_string_lt(StringCell *value1, StringCell *value2, ProperList<StringCell> *argHead)
+{
+	return stringCompare(value1, value2, argHead,
+			[] (StringCell *value1, StringCell *value2) { return value1->compare(value2, CaseSensitivity::Sensitive) < 0; });
+}
+
+bool lliby_string_gt(StringCell *value1, StringCell *value2, ProperList<StringCell> *argHead)
+{
+	return stringCompare(value1, value2, argHead,
+			[] (StringCell *value1, StringCell *value2) { return value1->compare(value2, CaseSensitivity::Sensitive) > 0; });
+}
+
+bool lliby_string_lte(StringCell *value1, StringCell *value2, ProperList<StringCell> *argHead)
+{
+	return stringCompare(value1, value2, argHead,
+			[] (StringCell *value1, StringCell *value2) { return value1->compare(value2, CaseSensitivity::Sensitive) <= 0; });
+}
+
+bool lliby_string_gte(StringCell *value1, StringCell *value2, ProperList<StringCell> *argHead)
+{
+	return stringCompare(value1, value2, argHead,
+			[] (StringCell *value1, StringCell *value2) { return value1->compare(value2, CaseSensitivity::Sensitive) >= 0; });
+}
+
+bool lliby_string_ci_equal(StringCell *value1, StringCell *value2, ProperList<StringCell> *argHead)
+{
+	return stringCompare(value1, value2, argHead,
+			[] (StringCell *value1, StringCell *value2) { return value1->compare(value2, CaseSensitivity::Insensitive) == 0; });
+}
+
+bool lliby_string_ci_lt(StringCell *value1, StringCell *value2, ProperList<StringCell> *argHead)
+{
+	return stringCompare(value1, value2, argHead,
+			[] (StringCell *value1, StringCell *value2) { return value1->compare(value2, CaseSensitivity::Insensitive) < 0; });
+}
+
+bool lliby_string_ci_gt(StringCell *value1, StringCell *value2, ProperList<StringCell> *argHead)
+{
+	return stringCompare(value1, value2, argHead,
+			[] (StringCell *value1, StringCell *value2) { return value1->compare(value2, CaseSensitivity::Insensitive) > 0; });
+}
+
+bool lliby_string_ci_lte(StringCell *value1, StringCell *value2, ProperList<StringCell> *argHead)
+{
+	return stringCompare(value1, value2, argHead,
+			[] (StringCell *value1, StringCell *value2) { return value1->compare(value2, CaseSensitivity::Insensitive) <= 0; });
+}
+
+bool lliby_string_ci_gte(StringCell *value1, StringCell *value2, ProperList<StringCell> *argHead)
+{
+	return stringCompare(value1, value2, argHead,
+			[] (StringCell *value1, StringCell *value2) { return value1->compare(value2, CaseSensitivity::Insensitive) >= 0; });
 }
 
 }

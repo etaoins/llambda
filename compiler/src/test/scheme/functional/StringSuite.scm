@@ -164,3 +164,93 @@
   (assert-equal "hell☃ worlds" (string-foldcase "hell☃ worldſ"))
   (assert-equal "hello w☃rlds" (string-foldcase "HELLO W☃RLDſ"))
   (assert-equal "日本国" (string-foldcase "日本国"))))
+
+(define-test "(string=?)" (expect-success
+  (assert-true  (string=? "hello" "hello"))
+  (assert-false (string=? "hello" "HELLO"))
+  (assert-false (string=? "HELLO" "hello"))
+  (assert-false (string=? "hello" "hello!"))
+  (assert-false (string=? "hello!" "hello"))
+  (assert-true  (string=? "日本国" "日本国"))))
+
+(define-test "(string<?)" (expect-success
+  (assert-false (string<? "hello" "hello"))
+  (assert-false (string<? "hello" "HELLO"))
+  (assert-true  (string<? "HELLO" "hello"))
+  (assert-true  (string<? "hello" "hello!"))
+  (assert-false (string<? "hello!" "hello"))
+  (assert-false (string<? "日本国" "日本国"))))
+
+(define-test "(string>?)" (expect-success
+  (assert-false (string>? "hello" "hello"))
+  (assert-true  (string>? "hello" "HELLO"))
+  (assert-false (string>? "HELLO" "hello"))
+  (assert-false (string>? "hello" "hello!"))
+  (assert-true  (string>? "hello!" "hello"))
+  (assert-false (string>? "日本国" "日本国"))))
+
+(define-test "(string<=?)" (expect-success
+  (assert-true  (string<=? "hello" "hello"))
+  (assert-false (string<=? "hello" "HELLO"))
+  (assert-true  (string<=? "HELLO" "hello"))
+  (assert-true  (string<=? "hello" "hello!"))
+  (assert-false (string<=? "hello!" "hello"))
+  (assert-true  (string<=? "日本国" "日本国"))))
+
+(define-test "(string>=?)" (expect-success
+  (assert-true  (string>=? "hello" "hello"))
+  (assert-true  (string>=? "hello" "HELLO"))
+  (assert-false (string>=? "HELLO" "hello"))
+  (assert-false (string>=? "hello" "hello!"))
+  (assert-true  (string>=? "hello!" "hello"))
+  (assert-true  (string>=? "日本国" "日本国"))))
+
+(define-test "(string-ci=?)" (expect-success
+  (import (scheme char))
+
+  (assert-true  (string-ci=? "hello" "hello"))
+  (assert-true  (string-ci=? "hello" "HELLO"))
+  (assert-true  (string-ci=? "HELLO" "hello"))
+  (assert-false (string-ci=? "hello" "hello!"))
+  (assert-false (string-ci=? "hello!" "hello"))
+  (assert-true  (string-ci=? "日本国" "日本国"))))
+
+(define-test "(string-ci<?)" (expect-success
+  (import (scheme char))
+
+  (assert-false (string-ci<? "hello" "hello"))
+  (assert-false (string-ci<? "hello" "HELLO"))
+  (assert-false (string-ci<? "HELLO" "hello"))
+  (assert-true  (string-ci<? "hello" "hello!"))
+  (assert-false (string-ci<? "hello!" "hello"))
+  (assert-false (string-ci<? "日本国" "日本国"))))
+
+(define-test "(string-ci>?)" (expect-success
+  (import (scheme char))
+
+  (assert-false (string-ci>? "hello" "hello"))
+  (assert-false (string-ci>? "hello" "HELLO"))
+  (assert-false (string-ci>? "HELLO" "hello"))
+  (assert-false (string-ci>? "hello" "hello!"))
+  (assert-true  (string-ci>? "hello!" "hello"))
+  (assert-false (string-ci>? "日本国" "日本国"))))
+
+(define-test "(string-ci<=?)" (expect-success
+  (import (scheme char))
+
+  (assert-true  (string-ci<=? "hello" "hello"))
+  (assert-true  (string-ci<=? "hello" "HELLO"))
+  (assert-true  (string-ci<=? "HELLO" "hello"))
+  (assert-true  (string-ci<=? "hello" "hello!"))
+  (assert-false (string-ci<=? "hello!" "hello"))
+  (assert-true  (string-ci<=? "日本国" "日本国"))))
+
+(define-test "(string-ci>=?)" (expect-success
+  (import (scheme char))
+
+  (assert-true  (string-ci>=? "hello" "hello"))
+  (assert-true  (string-ci>=? "hello" "HELLO"))
+  (assert-true  (string-ci>=? "HELLO" "hello"))
+  (assert-false (string-ci>=? "hello" "hello!"))
+  (assert-true  (string-ci>=? "hello!" "hello"))
+  (assert-true  (string-ci>=? "日本国" "日本国"))))
