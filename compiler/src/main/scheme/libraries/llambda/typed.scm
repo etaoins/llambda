@@ -9,7 +9,7 @@
 
   ; Export our type names
   (export <any> <list-element> <pair> <empty-list> <string> <symbol> <boolean> <number> <exact-integer> <flonum> <char>
-          <vector> <bytevector> <procedure> <port> <unit>)
+          <vector> <bytevector> <procedure> <port> <unit> <eof-object>)
 
   ; Our own type constructors
   (export Assocof)
@@ -18,9 +18,10 @@
   (export define-predicate let: let*: letrec*: letrec: let-values: let*-values:)
 
   (begin
-    (define-type (Assocof KT VT) (Listof (Pairof KT VT))))
+    (define-type (Assocof KT VT) (Listof (Pairof KT VT)))
+    (define-type <eof-object> <unit>))
 
-  (begin 
+  (begin
     (define-syntax define-predicate
       (syntax-rules ()
                     ((define-predicate name type)

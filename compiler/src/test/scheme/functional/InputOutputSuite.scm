@@ -1,3 +1,11 @@
+(define-test "eof-object" (expect-success
+  (import (llambda typed))
+  (assert-true  (eof-object? (eof-object)))
+  (assert-false (eof-object? ""))
+  (assert-false (eof-object? #\x00))
+  (assert-false (eof-object? #u8()))
+  (ann (eof-object) <eof-object>)))
+
 (define-test "written strings can be read" (expect-output ("Hello!")
   (import (scheme write))
   (write "Hello!")))

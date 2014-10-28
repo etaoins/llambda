@@ -548,6 +548,11 @@
     (define-r7rs current-output-port (make-parameter ((world-function "_lliby_stdout_port" () -> <port>))))
     (define-r7rs current-error-port (make-parameter ((world-function "_lliby_stderr_port" () -> <port>))))
 
+    ; We don't support (read) so we can use #!unit for the end-of-file object
+    (define-type <eof-object> <unit>)
+    (define-r7rs eof-object? (make-predicate <eof-object>))
+    (define-r7rs eof-object (lambda () #!unit))
+
     (define native-newline (world-function "lliby_newline" (<port>)))
     (define-r7rs newline (case-lambda:
       (()
