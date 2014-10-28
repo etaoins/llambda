@@ -106,4 +106,19 @@
     (get-output-string (current-output-port)))))
 
 (define-test "(get-output-string) fails on non-output string port" (expect-failure
-  (get-output-string (current-output-port))))
+  (get-output-string (open-output-bytevector))))
+
+(define-test "output bytevector ports" (expect #u8(#x70 #x69 #x65 #x63 #x65 #x20 #x62 #x79 #x20 #x70 #x69 #x65 #x63 #x65 #x20 #x62 #x79 #x20 #x70 #x69 #x65 #x63 #x65 #x2e #x0a)
+  (import (scheme write))
+
+  (parameterize
+    ((current-output-port
+       (open-output-bytevector)))
+    (display "piece")
+    (display " by piece ")
+    (display "by piece.")
+    (newline)
+    (get-output-bytevector (current-output-port)))))
+
+(define-test "(get-output-bytevector) fails on non-output bytevector port" (expect-failure
+  (get-output-bytevector (open-output-string))))

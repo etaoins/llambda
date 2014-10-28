@@ -5,6 +5,7 @@
 
 #include "port/AbstractPort.h"
 #include "port/StringOutputPort.h"
+#include "port/BytevectorOutputPort.h"
 
 #include "core/error.h"
 
@@ -87,6 +88,23 @@ StringCell* lliby_get_output_string(World &world, PortCell *portCell)
 	}
 
 	return stringOutputPort->outputToStringCell(world);
+}
+
+PortCell* lliby_open_output_bytevector(World &world)
+{
+	return PortCell::createInstance(world, new BytevectorOutputPort);
+}
+
+BytevectorCell* lliby_get_output_bytevector(World &world, PortCell *portCell)
+{
+	auto bytevectorOutputPort = dynamic_cast<BytevectorOutputPort*>(portCell->port());
+
+	if (bytevectorOutputPort == nullptr)
+	{
+		signalError(world, "Attempted (get-output-bytevector) on non-output bytevector port", {portCell});
+	}
+
+	return bytevectorOutputPort->outputToBytevectorCell(world);
 }
 
 }
