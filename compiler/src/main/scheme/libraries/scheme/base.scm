@@ -537,6 +537,8 @@
     (define-r7rs close-port (native-function "lliby_close_port" (<port>)))
     (define-r7rs close-input-port (world-function "lliby_close_input_port" (<port>)))
     (define-r7rs close-output-port (world-function "lliby_close_output_port" (<port>)))
+    (define-r7rs open-output-string (world-function "lliby_open_output_string" () -> <port>))
+    (define-r7rs get-output-string (world-function "lliby_get_output_string" (<port>) -> <string>))
 
     (define-r7rs current-input-port (make-parameter ((world-function "_lliby_stdin_port" () -> <port>))))
     (define-r7rs current-output-port (make-parameter ((world-function "_lliby_stdout_port" () -> <port>))))

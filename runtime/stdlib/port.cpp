@@ -4,6 +4,7 @@
 #include "binding/PortCell.h"
 
 #include "port/AbstractPort.h"
+#include "port/StringOutputPort.h"
 
 #include "core/error.h"
 
@@ -69,6 +70,23 @@ void lliby_close_output_port(World &world, PortCell *portCell)
 	}
 
 	port->closeOutputPort();
+}
+
+PortCell* lliby_open_output_string(World &world)
+{
+	return PortCell::createInstance(world, new StringOutputPort);
+}
+
+StringCell* lliby_get_output_string(World &world, PortCell *portCell)
+{
+	auto stringOutputPort = dynamic_cast<StringOutputPort*>(portCell->port());
+
+	if (stringOutputPort == nullptr)
+	{
+		signalError(world, "Attempted (get-output-string) on non-output string port", {portCell});
+	}
+
+	return stringOutputPort->outputToStringCell(world);
 }
 
 }

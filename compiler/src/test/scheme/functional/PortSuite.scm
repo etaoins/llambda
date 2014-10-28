@@ -46,10 +46,10 @@
   (close-input-port input-port)))
 
 (define-test "(close-input-port) on output port fails" (expect-failure
-  (close-input-port (current-output-port))))
+  (close-input-port (open-output-string))))
 
 (define-test "(close-output-port)" (expect-success
-  (define output-port (current-error-port))
+  (define output-port (open-output-string))
 
   (assert-true (output-port-open? output-port))
   (assert-true (output-port? output-port))
@@ -72,7 +72,7 @@
   (close-port input-port)
   (assert-false (input-port-open? input-port))
 
-  (define output-port (current-error-port))
+  (define output-port (open-output-string))
   (assert-true (output-port-open? output-port))
   (assert-true (output-port? output-port))
   (close-port output-port)
@@ -85,10 +85,25 @@
 (define-test "writing to a closed ouput port fails" (expect-failure
   (import (scheme write))
 
-  (define output-port (current-output-port))
+  (define output-port (open-output-string))
   (close-output-port output-port)
   (write "Test" output-port)))
 
 (define-test "ports can be parameterized" (expect #t
 	(parameterize ((current-output-port (current-error-port)))
     (eqv? (current-output-port) (current-error-port)))))
+
+(define-test "output string ports" (expect "piece by piece by piece.\n"
+  (import (scheme write))
+
+  (parameterize
+    ((current-output-port
+       (open-output-string)))
+    (display "piece")
+    (display " by piece ")
+    (display "by piece.")
+    (newline)
+    (get-output-string (current-output-port)))))
+
+(define-test "(get-output-string) fails on non-output string port" (expect-failure
+  (get-output-string (current-output-port))))
