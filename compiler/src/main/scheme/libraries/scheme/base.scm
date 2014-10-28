@@ -541,6 +541,8 @@
     (define-r7rs get-output-string (world-function "lliby_get_output_string" (<port>) -> <string>))
     (define-r7rs open-output-bytevector (world-function "lliby_open_output_bytevector" () -> <port>))
     (define-r7rs get-output-bytevector (world-function "lliby_get_output_bytevector" (<port>) -> <bytevector>))
+    (define-r7rs open-input-string (world-function "lliby_open_input_string" (<string>) -> <port>))
+    (define-r7rs open-input-bytevector (world-function "lliby_open_input_bytevector" (<bytevector>) -> <port>))
 
     (define-r7rs current-input-port (make-parameter ((world-function "_lliby_stdin_port" () -> <port>))))
     (define-r7rs current-output-port (make-parameter ((world-function "_lliby_stdout_port" () -> <port>))))

@@ -5,7 +5,10 @@
 
 #include "port/AbstractPort.h"
 #include "port/StringOutputPort.h"
+#include "port/BufferInputPort.h"
 #include "port/BytevectorOutputPort.h"
+
+#include "util/SharedByteArray.h"
 
 #include "core/error.h"
 
@@ -105,6 +108,21 @@ BytevectorCell* lliby_get_output_bytevector(World &world, PortCell *portCell)
 	}
 
 	return bytevectorOutputPort->outputToBytevectorCell(world);
+}
+
+PortCell* lliby_open_input_string(World &world, StringCell *string)
+{
+	std::string inputString(reinterpret_cast<const char *>(string->constUtf8Data()), string->byteLength());
+
+	return PortCell::createInstance(world, new BufferInputPort(inputString));
+}
+
+PortCell* lliby_open_input_bytevector(World &world, BytevectorCell *bytevector)
+{
+	SharedByteArray *byteArray = bytevector->byteArray();
+	std::string inputString(reinterpret_cast<const char *>(byteArray->data()), bytevector->length());
+
+	return PortCell::createInstance(world, new BufferInputPort(inputString));
 }
 
 }

@@ -33,7 +33,7 @@
 (export make-parameter dynamic-wind)
 (export port? input-port? output-port? current-input-port current-output-port current-error-port textual-port?
         binary-port? input-port-open? output-port-open? close-port close-input-port close-output-port open-output-string
-        get-output-string open-output-bytevector get-output-bytevector)
+        get-output-string open-output-bytevector get-output-bytevector open-input-string open-input-bytevector)
 (export newline)
 (export features)
 (export with-exception-handler raise raise-continuable error error-object? error-object-message error-object-irritants

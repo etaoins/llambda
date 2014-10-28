@@ -122,3 +122,29 @@
 
 (define-test "(get-output-bytevector) fails on non-output bytevector port" (expect-failure
   (get-output-bytevector (open-output-string))))
+
+(define-test "(open-input-string)" (expect-success
+  (define input-string (open-input-string "Hello!"))
+
+  (assert-true (port? input-string))
+  (assert-true (input-port? input-string))
+  (assert-true (input-port-open? input-string))
+
+  (close-port input-string)
+
+  (assert-true  (port? input-string))
+  (assert-true  (input-port? input-string))
+  (assert-false (input-port-open? input-string))))
+
+(define-test "(open-input-bytevector)" (expect-success
+  (define input-bytevector (open-input-bytevector #u8(#x48 #x65 #x6c #x6c #x6f #x21)))
+
+  (assert-true (port? input-bytevector))
+  (assert-true (input-port? input-bytevector))
+  (assert-true (input-port-open? input-bytevector))
+
+  (close-port input-bytevector)
+
+  (assert-true  (port? input-bytevector))
+  (assert-true  (input-port? input-bytevector))
+  (assert-false (input-port-open? input-bytevector))))
