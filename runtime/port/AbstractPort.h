@@ -74,6 +74,25 @@ public:
 	 * If the port is closed or not an output port the result of this function is undefined
 	 */
 	virtual std::ostream *outputStream() const = 0;
+
+	/**
+	 * Closes this port for input and output
+	 *
+	 * This corresponds to (close-port) in Scheme. The default implementation is defined in terms of closeInputPort()
+	 * and closeOutputPort().
+	 */
+	virtual void closePort()
+	{
+		if (isInputPortOpen())
+		{
+			closeInputPort();
+		}
+
+		if (isOutputPortOpen())
+		{
+			closeOutputPort();
+		}
+	}
 };
 
 class AbstractOutputPort : public AbstractPort

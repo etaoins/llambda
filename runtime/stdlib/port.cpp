@@ -44,17 +44,7 @@ bool lliby_is_output_port_open(PortCell *portCell)
 
 void lliby_close_port(PortCell *portCell)
 {
-	AbstractPort *port = portCell->port();
-
-	if (port->isInputPortOpen())
-	{
-		port->closeInputPort();
-	}
-
-	if (port->isOutputPortOpen())
-	{
-		port->closeOutputPort();
-	}
+	portCell->port()->closePort();
 }
 
 void lliby_close_input_port(World &world, PortCell *portCell)
