@@ -230,9 +230,9 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
       errorMessageOpt : Option[RuntimeErrorMessage] = None,
       staticCheck : Boolean = false
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : IntermediateValue= {
-    vt.SatisfiesType(targetType, schemeType) match {
+    vt.ConvertibleToType(targetType, schemeType) match {
       case Some(true) =>
-        // We don't need to do anything 
+        // We don't need to do anything
         return this
 
       case Some(false) =>

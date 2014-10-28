@@ -37,7 +37,7 @@ class PairTypeSuite extends SchemeTypeSuite {
   }
 
   test("the any pair type satisfies the unit type") {
-    assert(SatisfiesType(UnitType, AnyPairType) === Some(true))
+    assert(ConvertibleToType(UnitType, AnyPairType) === Some(true))
   }
 
   test("union with any pair type intersected with union with specific pair type is the specific pair type union") {

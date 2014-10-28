@@ -269,16 +269,13 @@ private[planner] object PlanLambda {
     }
     else {
       val resultReturnType = planResult.values.preferredReturnType
-      val resultReturnListType = resultReturnType.toValueListType
-
       val declaredReturnType = initialSignature.returnType
-      val declaredReturnListType = initialSignature.returnType.toValueListType
 
       // This is essentially intersecting the return types
-      if (vt.SatisfiesType(declaredReturnListType, resultReturnListType) == Some(true)) {
+      if (vt.ConvertibleToReturnType(declaredReturnType, resultReturnType) == Some(true)) {
         resultReturnType
       }
-      else if (vt.SatisfiesType(resultReturnListType, declaredReturnListType) == Some(true)) {
+      else if (vt.ConvertibleToReturnType(resultReturnType, declaredReturnType) == Some(true)) {
         declaredReturnType
       }
       else {

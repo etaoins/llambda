@@ -16,12 +16,17 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
   private def allSubtypes(rootType : ct.CellType) : Set[ct.CellType] =
     rootType.directSubtypes ++ rootType.directSubtypes.flatMap(allSubtypes)
 
+  private lazy val preconstructedTypes =
+    allSubtypes(ct.AnyCell).collect {
+      case precons : ct.PreconstructedCellType =>
+        vt.SchemeTypeAtom(precons)
+    } : Set[vt.NonUnionSchemeType]
+
   // These can be tested for (equals?) with a simple pointer compare
-  private lazy val ptrCompareEqualsTypes = Set(
-    vt.EmptyListType,
+  private lazy val ptrCompareEqualsTypes = preconstructedTypes ++ (Set(
     vt.ErrorObjectType,
     vt.PortType
-  ) : Set[vt.NonUnionSchemeType]
+  ) : Set[vt.NonUnionSchemeType])
 
   // These can be tested for (eqv?) with a simple pointer compare
   private lazy val ptrCompareEqvTypes = (ptrCompareEqualsTypes ++ Set(

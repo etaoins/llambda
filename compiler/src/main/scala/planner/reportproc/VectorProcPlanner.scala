@@ -62,7 +62,7 @@ object VectorProcPlanner extends ReportProcPlanner {
       loopResultPred=trueTemp
     )
 
-    new iv.CellValue(unstableType, BoxedValue(ct.VectorCell, vectorTemp), knownAllocated=true) 
+    new iv.CellValue(stableType, BoxedValue(ct.VectorCell, vectorTemp), knownAllocated=true)
   }
 
   override def planWithValue(state : PlannerState)(

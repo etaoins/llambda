@@ -38,7 +38,7 @@ class SchemeTypeAtomSuite extends SchemeTypeSuite {
   }
 
   test("atom types satisfy the unit type") {
-    assert(SatisfiesType(UnitType, ExactIntegerType) ===
+    assert(ConvertibleToType(UnitType, ExactIntegerType) ===
       Some(true)
     )
   }

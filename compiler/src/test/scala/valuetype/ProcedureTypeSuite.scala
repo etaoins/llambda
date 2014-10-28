@@ -111,8 +111,8 @@ class ProcedureTypeSuite extends SchemeTypeSuite {
     assert(SatisfiesType(twoStringToPortProcedure, StringType) === Some(false))
   }
 
-  test("procedure type satisfies the unit type") {
-    assert(SatisfiesType(UnitType, StringType) === Some(true))
+  test("procedure type is convertible to the unit type") {
+    assert(ConvertibleToType(UnitType, StringType) === Some(true))
   }
 
   test("specific procedure type may satisfy top procedure type") {
