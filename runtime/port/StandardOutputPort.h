@@ -27,6 +27,8 @@ public:
 	{
 		if (isOutputPortOpen())
 		{
+			m_outputStream.flush();
+
 			close(m_fd);
 			m_fd = ClosedFd;
 		}
