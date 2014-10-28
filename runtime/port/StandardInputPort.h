@@ -32,7 +32,7 @@ public:
 		}
 	}
 
-	std::istream *inputStream() const override
+	std::istream *inputStream() override
 	{
 		return &m_inputStream;
 	}

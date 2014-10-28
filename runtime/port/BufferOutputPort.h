@@ -21,14 +21,14 @@ public:
 		m_open = false;
 	}
 
-	std::ostream *outputStream() const override
+	std::ostream *outputStream() override
 	{
 		return &m_buffer;
 	}
 
 protected:
 	bool m_open = true;
-	mutable std::ostringstream m_buffer;
+	std::ostringstream m_buffer;
 };
 
 }

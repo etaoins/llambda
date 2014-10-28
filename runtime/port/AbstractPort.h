@@ -45,7 +45,7 @@ public:
 	 *
 	 * If the port is closed or not an input port the result of this function is undefined
 	 */
-	virtual std::istream *inputStream() const = 0;
+	virtual std::istream *inputStream() = 0;
 
 	/**
 	 * Returns true if this is an output port
@@ -73,7 +73,7 @@ public:
 	 *
 	 * If the port is closed or not an output port the result of this function is undefined
 	 */
-	virtual std::ostream *outputStream() const = 0;
+	virtual std::ostream *outputStream() = 0;
 
 	/**
 	 * Closes this port for input and output
@@ -111,7 +111,7 @@ class AbstractOutputPort : public AbstractPort
 	{
 	}
 
-	std::istream *inputStream() const override
+	std::istream *inputStream() override
 	{
 		return nullptr;
 	}
@@ -143,7 +143,7 @@ class AbstractInputPort : public AbstractPort
 	{
 	}
 
-	std::ostream *outputStream() const override
+	std::ostream *outputStream() override
 	{
 		return nullptr;
 	}

@@ -34,7 +34,7 @@ public:
 		}
 	}
 
-	std::ostream *outputStream() const override
+	std::ostream *outputStream() override
 	{
 		return &m_outputStream;
 	}
