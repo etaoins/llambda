@@ -553,6 +553,20 @@
     (define-r7rs eof-object? (make-predicate <eof-object>))
     (define-r7rs eof-object (lambda () #!unit))
 
+    (define native-read-u8 (world-function "lliby_read_u8" (<port>) -> (U <exact-integer> <eof-object>)))
+    (define-r7rs read-u8 (case-lambda:
+      (()
+       (native-read-u8 (current-input-port)))
+      (([port : <port>])
+       (native-read-u8 port))))
+
+    (define native-peek-u8 (world-function "lliby_peek_u8" (<port>) -> (U <exact-integer> <eof-object>)))
+    (define-r7rs peek-u8 (case-lambda:
+      (()
+       (native-peek-u8 (current-input-port)))
+      (([port : <port>])
+       (native-peek-u8 port))))
+
     (define native-newline (world-function "lliby_newline" (<port>)))
     (define-r7rs newline (case-lambda:
       (()

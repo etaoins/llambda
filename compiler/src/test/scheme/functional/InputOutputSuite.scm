@@ -35,3 +35,25 @@
   (display #\")
   (display '|Hello!|)
   (display #\")))
+
+(define-test "(read-u8), (peek-u8)" (expect-success
+  (define input-string (open-input-string "Hell☃!"))
+
+  (assert-equal #x48 (read-u8 input-string))
+  (assert-equal #x65 (read-u8 input-string))
+
+  (assert-equal #x6c (peek-u8 input-string))
+  (assert-equal #x6c (peek-u8 input-string))
+
+  (assert-equal #x6c (read-u8 input-string))
+  (assert-equal #x6c (read-u8 input-string))
+
+  (parameterize
+    ((current-input-port input-string))
+    (assert-equal #xe2 (read-u8))
+    (assert-equal #x98 (read-u8))
+    (assert-equal #x83 (read-u8))
+    (assert-equal #x21 (read-u8)))
+
+  (assert-true (eof-object? (peek-u8 input-string)))
+  (assert-true (eof-object? (read-u8 input-string)))))

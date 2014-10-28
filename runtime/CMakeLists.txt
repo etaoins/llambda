@@ -48,6 +48,7 @@ add_library(lliby
 	stdlib/dynamic.cpp
 	stdlib/exception.cpp
 	stdlib/inexact.cpp
+	stdlib/input.cpp
 	stdlib/list.cpp
 	stdlib/map.cpp
 	stdlib/number.cpp
