@@ -59,6 +59,7 @@ add_library(lliby
 	stdlib/symbol.cpp
 	stdlib/vector.cpp
 	unicode/UnicodeChar.cpp
+	unicode/utf8.cpp
 	util/SharedByteArray.cpp
 	writer/DisplayDatumWriter.cpp
 	writer/ExternalFormDatumWriter.cpp
@@ -124,6 +125,7 @@ set(ALL_TEST_NAMES
 	sharedbytearray
 	string
 	unicodechar
+	utf8
 	vector)
 
 foreach( test_name ${ALL_TEST_NAMES} )

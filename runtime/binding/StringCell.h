@@ -26,6 +26,13 @@ public:
 	static StringCell* fromUtf8CString(World &world, const char *str);
 	static StringCell* fromUtf8StdString(World &world, const std::string &str);
 	static StringCell* fromUtf8Data(World &world, const std::uint8_t *data, std::uint32_t byteLength);
+
+	/**
+	 * Creates a StringCell using a SharedByteArray
+	 *
+	 * If possible the new StringCell will be constructed sharing the passed SharedByteArray. If that occurs then the
+	 * byteArray will have its reference count incremented.
+	 */
 	static StringCell* withUtf8ByteArray(World &world, SharedByteArray *byteArray, std::uint32_t byteLength);
 
 	static StringCell* fromFill(World &world, std::uint32_t length, UnicodeChar fill);
@@ -88,15 +95,15 @@ protected:
 	static const std::uint32_t InlineDataSize = 12;
 
 	// Creates an uninitialized cell with the given size
-	static StringCell* createUninitialized(World &world, std::uint32_t byteLength);
+	static StringCell* createUninitialized(World &world, std::uint32_t byteLength, std::uint32_t charLength);
 
-	std::uint8_t *charPointer(std::uint8_t *scanFrom, std::uint32_t bytesLeft, uint32_t charOffset);
-	std::uint8_t *charPointer(std::uint32_t charOffset);
+	const std::uint8_t *charPointer(const std::uint8_t *scanFrom, uint32_t charOffset);
+	const std::uint8_t *charPointer(std::uint32_t charOffset);
 
 	struct CharRange
 	{
-		std::uint8_t *startPointer;
-		std::uint8_t *endPointer;
+		const std::uint8_t *startPointer;
+		const std::uint8_t *endPointer;
 		std::uint32_t charCount;
 
 		bool isNull() const
@@ -117,8 +124,8 @@ protected:
 	};
 
 	CharRange charRange(std::int64_t start, std::int64_t end = -1); 
-	bool replaceBytes(const CharRange &range, std::uint8_t *pattern, unsigned int patternBytes, unsigned int count, bool sameString);
-	
+	bool replaceBytes(const CharRange &range, const std::uint8_t *pattern, unsigned int patternBytes, unsigned int count, bool sameString);
+
 	int compareCaseSensitive(const StringCell *other) const;
 	int compareCaseInsensitive(const StringCell *other) const;
 
@@ -131,12 +138,7 @@ protected:
 	{
 		m_byteLength = newByteLength;
 	}
-	
-	void setCharLength(std::uint32_t newCharLength)
-	{
-		m_charLength = newCharLength;
-	}
-	
+
 	void setAllocSlackBytes(std::uint16_t newAllocSlackBytes)
 	{
 		m_allocSlackBytes = newAllocSlackBytes;

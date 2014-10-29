@@ -163,7 +163,13 @@ namespace
 
 			// Create the rest argument list
 			ProperList<CharCell> *restArgList = ProperList<CharCell>::create(world, restArgVector);
-			builder << mapFunc(firstCharVector[i], restArgList);
+
+			UnicodeChar result(mapFunc(firstCharVector[i], restArgList));
+			if (!result.isValid())
+			{
+				signalError(world, "(string-map) mapping procedure returned invalid character");
+			}
+			builder << result;
 		}
 
 		return builder;

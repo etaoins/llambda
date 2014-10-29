@@ -257,3 +257,7 @@
       (lambda (c) (set! v (cons (char->integer c) v)))
       "abcde")
     v)))
+
+(define-test "(string-map) mapping to invalid character fails" (expect-failure
+  (string-map (lambda (x) #\x110000)"AbdEgH")))
+

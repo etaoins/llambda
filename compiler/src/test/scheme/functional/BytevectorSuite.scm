@@ -83,6 +83,9 @@
   (assert-equal "" (utf8->string #u8(#x48 #x65 #x6c #x6c #xe2 #x98 #x83 #x21) 8 8))
   (assert-equal "ell☃" (utf8->string #u8(#x48 #x65 #x6c #x6c #xe2 #x98 #x83 #x21) 1 7))))
 
+(define-test "(utf8->string) with invalid byte sequence fails" (expect-failure
+  (utf8->string #u8(#xff))))
+
 (define-test "(utf8->string) with backwards slice fails" (expect-failure
   (utf8->string #u8(#x48 #x65 #x6c #x6c #xe2 #x98 #x83 #x21) 2 1)))
 

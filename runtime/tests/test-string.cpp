@@ -10,6 +10,8 @@
 #include "stubdefinitions.h"
 #include "platform/memory.h"
 
+#include "unicode/utf8/InvalidByteSequenceException.h"
+
 #include "alloc/cellref.h"
 
 namespace
@@ -50,6 +52,23 @@ void testFromUtf8CString(World &world)
 		ASSERT_EQUAL(highUnicodeValue->byteLength(), 7);
 		ASSERT_EQUAL(highUnicodeValue->charLength(), 2);
 	}
+
+	{
+		bool caughtException = false;
+
+		try
+		{
+			// Truncated sequence
+			StringCell::fromUtf8CString(world, "H\xE2\x98");
+		}
+		catch(const utf8::InvalidByteSequenceException &e)
+		{
+			ASSERT_EQUAL(e.byteOffset(), 2);
+			caughtException = true;
+		}
+
+		ASSERT_TRUE(caughtException);
+	}
 }
 
 void testFromUtf8Data(World &world)
@@ -81,6 +100,24 @@ void testFromUtf8Data(World &world)
 	}
 
 	{
+		bool caughtException = false;
+
+		try
+		{
+			// This ends with a truncated 3 byte sequence
+			auto truncatedThreeBytes = reinterpret_cast<const std::uint8_t*>("H\xE2\x98");
+			StringCell::fromUtf8Data(world, truncatedThreeBytes, 3);
+		}
+		catch(utf8::InvalidByteSequenceException &e)
+		{
+			ASSERT_EQUAL(e.byteOffset(), 2);
+			caughtException = true;
+		}
+
+		ASSERT_TRUE(caughtException);
+	}
+
+	{
 		// Intentionally allocate exactly to the size of memory the OS will return 
 		// This is to check for off-by-one errors, especially when run under a memory checker such as Valgrind
 		platform::SizedMallocResult testAllocResult = platform::sizedMalloc(24);
@@ -109,6 +146,7 @@ void testFromUtf8StdString(World &world)
 	ASSERT_EQUAL(nullValue->charLength(), 6);
 	ASSERT_EQUAL(memcmp(nullValue->constUtf8Data(), nullStringData, 6), 0);
 }
+
 void testCompare(World &world)
 {
 	alloc::StringRef hello1(world, StringCell::fromUtf8CString(world, "Hello"));
@@ -182,10 +220,10 @@ void testCharAt(World &world)
 		ASSERT_FALSE(helloValue->charAt(5).isValid());
 		ASSERT_FALSE(helloValue->charAt(1024).isValid());
 	}
-	
+
 	{
 		StringCell *highUnicodeValue = StringCell::fromUtf8CString(world, u8"☃🐉");
-		
+
 		ASSERT_EQUAL(highUnicodeValue->charAt(0), UnicodeChar(0x02603));
 		ASSERT_EQUAL(highUnicodeValue->charAt(1), UnicodeChar(0x1F409));
 		ASSERT_FALSE(highUnicodeValue->charAt(2).isValid());

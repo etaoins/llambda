@@ -3,6 +3,8 @@
 #include "binding/BytevectorCell.h"
 #include "binding/StringCell.h"
 
+#include "unicode/utf8/InvalidByteSequenceException.h"
+
 #include "core/init.h"
 #include "core/World.h"
 
@@ -277,7 +279,7 @@ void testUtf8ToString(World &world)
 		ASSERT_EQUAL(endString->charLength(), 2);
 		ASSERT_EQUAL(memcmp(endString->constUtf8Data(), u8"☃!", 4), 0);
 	}
-	
+
 	{
 		StringCell *invalidString = sourceVector->utf8ToString(world, 7, 12);
 		ASSERT_EQUAL(invalidString, 0);
@@ -292,6 +294,35 @@ void testUtf8ToString(World &world)
 		StringCell *invalidString = sourceVector->utf8ToString(world, 11);
 		ASSERT_EQUAL(invalidString, 0);
 	}
+	
+	{
+		const char *invalidString = "Very long not inline string terminated by \xFE";
+		auto invalidData = reinterpret_cast<std::uint8_t*>(strdup(invalidString));
+
+		alloc::BytevectorRef invalidVector(world, BytevectorCell::fromData(world, invalidData, strlen(invalidString)));
+
+		ASSERT_TRUE(invalidVector->byteArray()->isExclusive());
+
+		bool caughtException = false;
+
+		try
+		{
+			// This will throw an exception because the UTF-8 sequence is truncatred
+			invalidVector->utf8ToString(world);
+		}
+		catch(const utf8::InvalidByteSequenceException &e)
+		{
+			ASSERT_EQUAL(e.byteOffset(), 42);
+			caughtException = true;
+		}
+
+		ASSERT_TRUE(caughtException);
+		// Make sure we have exclusive access again
+		ASSERT_TRUE(invalidVector->byteArray()->isExclusive());
+
+		free(invalidData);
+	}
+	
 
 	free(stringData);
 }

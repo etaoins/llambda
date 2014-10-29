@@ -4,6 +4,7 @@
 #include "binding/ProperList.h"
 #include "binding/StringCell.h"
 
+#include "unicode/utf8/InvalidByteSequenceException.h"
 #include "core/error.h"
 
 #include "util/assertSliceValid.h"
@@ -82,7 +83,15 @@ BytevectorCell *lliby_string_to_utf8(World &world, StringCell *string, std::uint
 StringCell *lliby_utf8_to_string(World &world, BytevectorCell *bytevector, std::uint32_t start, std::uint32_t end)
 {
 	assertSliceValid(world, "(utf8->string)", bytevector, bytevector->length(), start, end);
-	return bytevector->utf8ToString(world, start, end);
+
+	try
+	{
+		return bytevector->utf8ToString(world, start, end);
+	}
+	catch (utf8::InvalidByteSequenceException)
+	{
+		signalError(world, "Invalid UTF-8 byte sequence in (utf8->string)");
+	}
 }
 
 }

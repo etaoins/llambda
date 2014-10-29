@@ -22,7 +22,7 @@ public:
 
 	bool isValid() const
 	{
-		return m_codePoint != InvalidCodePoint;
+		return (m_codePoint >= 0) && (m_codePoint < 0x110000);
 	}
 
 	std::int32_t codePoint() const

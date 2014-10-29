@@ -138,7 +138,7 @@ StringCell* BytevectorCell::utf8ToString(World &world, std::int64_t start, std::
 	if ((start == 0) && (end == length()))
 	{
 		// We can share our byte array
-		return StringCell::withUtf8ByteArray(world, byteArray()->ref(), length());
+		return StringCell::withUtf8ByteArray(world, byteArray(), length());
 	}
 	else
 	{

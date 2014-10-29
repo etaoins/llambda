@@ -44,6 +44,11 @@ extern "C"
 
 StringCell *lliby_make_string(World &world, std::uint32_t length, UnicodeChar fill)
 {
+	if (!fill.isValid())
+	{
+		signalError(world, "(make-string) with invalid fill character");
+	}
+
 	return StringCell::fromFill(world, length, fill);
 }
 
@@ -53,6 +58,13 @@ StringCell *lliby_string(World &world, ProperList<CharCell> *charProperList)
 
 	for(auto charCell : *charProperList)
 	{
+		UnicodeChar character(charCell->unicodeChar());
+
+		if (!character.isValid())
+		{
+			signalError(world, "(string) with invalid character", {charProperList});
+		}
+
 		builder << charCell->unicodeChar();
 	}
 
@@ -81,6 +93,11 @@ void lliby_string_set(World &world, StringCell *string, std::uint32_t index, Uni
 	if (string->isGlobalConstant())
 	{
 		signalError(world, "(string-set!) on a string literal", {string});
+	}
+
+	if (!unicodeChar.isValid())
+	{
+		signalError(world, "(string-set!) with invalid character");
 	}
 
 	if (!string->setCharAt(index, unicodeChar))

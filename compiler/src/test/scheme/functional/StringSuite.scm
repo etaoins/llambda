@@ -14,17 +14,26 @@
 (define-test "make non-empty string" (expect "aaaaa"
 	(make-string 5 #\a)))
 
+(define-test "make string with invalid fill character fails" (expect-failure
+	(make-string 5 #\x110000)))
+
 (define-test "(string) with no arguments" (expect ""
 	(string)))
 
 (define-test "(string) with Unicode arguments" (expect "Hell☃!"
 	(string #\H #\e #\l #\l #\x2603 #\!)))
 
+(define-test "(string) with invalid character fails" (expect-failure
+	(string #\H #\e #\l #\x110000 #\x2603 #\!)))
+
 (define-test "list->string with empty list" (expect ""
 	(list->string '())))
 
 (define-test "list->string with Unicode chars" (expect "Hell☃!"
 	(list->string '(#\H #\e #\l #\l #\x2603 #\!))))
+
+(define-test "list->string with invalid character fails" (expect-failure
+	(list->string '(#\H #\e #\l #\l #\x110000 #\!))))
 
 (define-test "length of empty string" (expect 0
 	(string-length "")))
@@ -74,6 +83,11 @@
 (define-test "string-set! past end of string fails" (expect-failure
 	(define test-string (make-string 3 #\*))
 	(string-set! test-string 4 #\x2603)
+	test-string))
+
+(define-test "string-set! with invalid character fails" (expect-failure
+	(define test-string (make-string 3 #\*))
+	(string-set! test-string 0 #\x110000)
 	test-string))
 
 (define-test "string-append of no strings" (expect ""

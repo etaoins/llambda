@@ -59,11 +59,9 @@ public:
 		const std::uint32_t totalByteLength = m_outputCursor - m_outputBuffer;
 
 		// Create a new string to write in to
-		auto newString = StringCell::createUninitialized(world, totalByteLength);
-		newString->setCharLength(m_expectedChars);
+		auto newString = StringCell::createUninitialized(world, totalByteLength, m_expectedChars);
 
 		std::uint8_t *utf8Data = newString->utf8Data();
-
 		memcpy(utf8Data, m_outputBuffer, totalByteLength);
 
 		return newString;
@@ -75,9 +73,10 @@ public:
 	StringCellBuilder& operator<<(UnicodeChar character)
 	{
 #ifndef NDEBUG
+		assert(character.isValid());
 		m_actualChars++;
 #endif
-		m_outputCursor = utf8::appendUtf8Char(character, m_outputCursor);
+		m_outputCursor = utf8::appendChar(character, m_outputCursor);
 		return *this;
 	}
 

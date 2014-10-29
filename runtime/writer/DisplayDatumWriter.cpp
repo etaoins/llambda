@@ -17,7 +17,7 @@ void DisplayDatumWriter::renderStringLike(const std::uint8_t *utf8Data, std::uin
 void DisplayDatumWriter::renderCharacter(const CharCell *value)
 {
 	// Write the raw UTF-8 value
-	std::vector<std::uint8_t> utf8Bytes = utf8::encodeUtf8Char(value->unicodeChar());
+	std::vector<std::uint8_t> utf8Bytes = utf8::encodeChar(value->unicodeChar());
 	m_outStream.write(reinterpret_cast<const char *>(utf8Bytes.data()), utf8Bytes.size());
 }
 
