@@ -42,7 +42,7 @@ public:
 
 	~StringCellBuilder()
 	{
-		delete m_outputBuffer;
+		delete[] m_outputBuffer;
 	}
 
 	/**
