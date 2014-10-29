@@ -55,4 +55,10 @@ void lliby_newline(World &world, PortCell *portCell)
 	*portStream << std::endl;
 }
 
+void lliby_write_u8(World &world, std::uint8_t value, PortCell *portCell)
+{
+	std::ostream *portStream = portCellToOutputStream(world, portCell);
+	*portStream << static_cast<char>(value);
+}
+
 }

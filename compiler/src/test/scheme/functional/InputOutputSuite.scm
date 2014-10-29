@@ -57,3 +57,20 @@
 
   (assert-true (eof-object? (peek-u8 input-string)))
   (assert-true (eof-object? (read-u8 input-string)))))
+
+(define-test "(write-u8)" (expect-success
+  (define output-string (open-output-string))
+
+  (write-u8 #x48 output-string)
+  (write-u8 #x65 output-string)
+  (write-u8 #x6c output-string)
+  (write-u8 #x6c output-string)
+
+  (parameterize
+    ((current-output-port output-string))
+    (write-u8 #xe2 output-string)
+    (write-u8 #x98 output-string)
+    (write-u8 #x83 output-string)
+    (write-u8 #x21 output-string))
+
+  (assert-equal "Hell☃!" (get-output-string output-string))))
