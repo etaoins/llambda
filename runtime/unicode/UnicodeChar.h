@@ -15,14 +15,32 @@ enum class CaseSensitivity
 class UnicodeChar
 {
 public:
+	/**
+	 * First valid Unicode code point
+	 *
+	 * This is Unicode NULL
+	 */
+	static const std::int32_t FirstCodePoint = 0x0;
+
+	/**
+	 * Last representable Unicode code point
+	 *
+	 * This is the maximum value that can be represented in UTF-16. No code points will be assigned past this value for
+	 * compatibility.
+	 */
+	static const std::int32_t LastCodePoint = 0x10FFFF;
+
 	explicit UnicodeChar(std::int32_t codePoint = InvalidCodePoint) :
 		m_codePoint(codePoint)
 	{
 	}
 
+	/**
+	 * Returns if this character contains a valid Unicode code point
+	 */
 	bool isValid() const
 	{
-		return (m_codePoint >= 0) && (m_codePoint < 0x110000);
+		return (m_codePoint >= FirstCodePoint) && (m_codePoint < LastCodePoint);
 	}
 
 	std::int32_t codePoint() const

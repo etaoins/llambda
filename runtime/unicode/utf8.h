@@ -68,7 +68,7 @@ inline int bytesForChar(UnicodeChar unicodeChar)
 {
 	const std::int32_t codePoint = unicodeChar.codePoint();
 
-	if (codePoint < 0)
+	if (codePoint < UnicodeChar::FirstCodePoint)
 	{
 		return -1;
 	}
@@ -84,7 +84,7 @@ inline int bytesForChar(UnicodeChar unicodeChar)
 	{
 		return 3;
 	}
-	else if (codePoint < 0x110000)
+	else if (codePoint <= UnicodeChar::LastCodePoint)
 	{
 		return 4;
 	}
