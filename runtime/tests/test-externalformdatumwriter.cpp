@@ -115,6 +115,7 @@ void testString(World &world)
 	assertForm(stringFor(world, u8"Hello\bworld"), u8"\"Hello\\bworld\"");
 	assertForm(stringFor(world, u8"Hello\"world"), u8"\"Hello\\\"world\"");
 	assertForm(stringFor(world, u8""), u8"\"\"");
+	assertForm(stringFor(world, u8"\u0019"), u8"\"\\x19;\"");
 }
 
 void testPair(World &world)

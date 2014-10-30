@@ -138,6 +138,7 @@ class SchemeParserSuite extends FunSuite with Inside {
     assertStringParsesAs("""carriage: \r""", "carriage: \r")
     assertStringParsesAs("""Space\x20;Bar""", "Space Bar")
     assertStringParsesAs("""l\x03BB;""", "l\u03bb")
+    assertStringParsesAs("""\x0;null!""", "\u0000null!")
     assertStringParsesAs("""The word \"recursion\" has many meanings.""", """The word "recursion" has many meanings.""")
 
     assertStringParsesAs("""Bare

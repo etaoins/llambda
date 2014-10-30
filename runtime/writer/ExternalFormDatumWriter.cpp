@@ -219,7 +219,7 @@ void ExternalFormDatumWriter::renderStringLike(const std::uint8_t *utf8Data, std
 			case 0x5c: m_outStream << "\\\\"; break;
 			case 0x22: m_outStream << "\"";   break;
 			default:
-				m_outStream << "\\x" << std::hex << byteValue;
+				m_outStream << "\\x" << std::hex << static_cast<int>(byteValue) << ";";
 			}
 		}
 	}
