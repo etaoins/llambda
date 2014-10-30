@@ -312,7 +312,8 @@ void testUtf8ToString(World &world)
 		}
 		catch(const utf8::InvalidByteSequenceException &e)
 		{
-			ASSERT_EQUAL(e.byteOffset(), 42);
+			ASSERT_EQUAL(e.startOffset(), 42);
+			ASSERT_EQUAL(e.endOffset(), 42);
 			caughtException = true;
 		}
 

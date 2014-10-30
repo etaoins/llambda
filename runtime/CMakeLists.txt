@@ -60,7 +60,9 @@ add_library(lliby
 	stdlib/vector.cpp
 	unicode/UnicodeChar.cpp
 	unicode/utf8.cpp
+	unicode/utf8/InvalidByteSequenceException.cpp
 	util/SharedByteArray.cpp
+	util/utf8ExceptionToSchemeError.cpp
 	writer/DisplayDatumWriter.cpp
 	writer/ExternalFormDatumWriter.cpp
 	)

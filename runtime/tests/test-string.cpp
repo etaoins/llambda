@@ -74,7 +74,8 @@ void testFromUtf8CString(World &world)
 		}
 		catch(const utf8::InvalidByteSequenceException &e)
 		{
-			ASSERT_EQUAL(e.byteOffset(), 2);
+			ASSERT_EQUAL(e.startOffset(), 1);
+			ASSERT_EQUAL(e.endOffset(), 2);
 			caughtException = true;
 		}
 
@@ -121,7 +122,8 @@ void testFromUtf8Data(World &world)
 		}
 		catch(utf8::InvalidByteSequenceException &e)
 		{
-			ASSERT_EQUAL(e.byteOffset(), 2);
+			ASSERT_EQUAL(e.startOffset(), 1);
+			ASSERT_EQUAL(e.endOffset(), 2);
 			caughtException = true;
 		}
 

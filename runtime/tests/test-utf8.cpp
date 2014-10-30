@@ -38,7 +38,8 @@ auto lonelyFourByte =  reinterpret_cast<const std::uint8_t*>("\xF0\x20\x20\x20")
 	} \
 	catch(const utf8::InvalidByteSequenceException &e) \
 	{ \
-		ASSERT_EQUAL(e.byteOffset(), errorOffset); \
+		ASSERT_EQUAL(e.startOffset(), 0); \
+		ASSERT_EQUAL(e.endOffset(), errorOffset); \
 		caughtException = true; \
 	} \
 	ASSERT_TRUE(caughtException); \

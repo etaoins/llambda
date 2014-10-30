@@ -23,13 +23,13 @@ namespace
 		if (seqBytes < 1)
 		{
 			// Invalid header byte
-			throw InvalidByteSequenceException(0);
+			throw InvalidByteSequenceException(0, 0, "Invalid header byte");
 		}
 
 		if (inputBytes < seqBytes)
 		{
 			// Not enough input
-			throw InvalidByteSequenceException(inputBytes - 1);
+			throw InvalidByteSequenceException(0, inputBytes - 1, "Truncated input");
 		}
 
 		switch(seqBytes)
@@ -49,14 +49,14 @@ namespace
 			codePoint = firstByte & ~FourByteHeaderMask;
 			break;
 		default:
-			throw InvalidByteSequenceException(0);
+			throw InvalidByteSequenceException(0, 0, "Invalid header byte");
 		}
 
 		while(continuationBytes--)
 		{
 			if (!isContinuationByte(*scanPtr))
 			{
-				throw InvalidByteSequenceException(scanPtr - start - 1);
+				throw InvalidByteSequenceException(0, scanPtr - start - 1, "Missing continuation byte");
 			}
 
 			codePoint = (codePoint << 6) | (*scanPtr & ~ContinuationHeaderMask);
@@ -68,7 +68,7 @@ namespace
 		if (bytesForChar(decodedChar) != seqBytes)
 		{
 			// Not a canonical encoding
-			throw InvalidByteSequenceException(scanPtr - start - 1);
+			throw InvalidByteSequenceException(0, scanPtr - start - 1, "Overlong encoding");
 		}
 
 		// Success!
@@ -92,7 +92,7 @@ std::size_t validateData(const std::uint8_t *start, const std::uint8_t *end)
 	catch(const InvalidByteSequenceException &e)
 	{
 		// Relocate the exception from its character-relative position to an input relative position
-		throw InvalidByteSequenceException(e.byteOffset() + (scanPtr - start));
+		throw e.offsetBy(scanPtr - start);
 	}
 
 	return charCount;

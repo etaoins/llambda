@@ -8,6 +8,7 @@
 #include "core/error.h"
 
 #include "util/assertSliceValid.h"
+#include "util/utf8ExceptionToSchemeError.h"
 
 using namespace lliby;
 
@@ -88,9 +89,9 @@ StringCell *lliby_utf8_to_string(World &world, BytevectorCell *bytevector, std::
 	{
 		return bytevector->utf8ToString(world, start, end);
 	}
-	catch (utf8::InvalidByteSequenceException)
+	catch (const utf8::InvalidByteSequenceException &e)
 	{
-		signalError(world, "Invalid UTF-8 byte sequence in (utf8->string)");
+		utf8ExceptionToSchemeError(world, "(utf8->string)", e, bytevector);
 	}
 }
 
