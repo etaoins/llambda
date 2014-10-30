@@ -148,3 +148,30 @@
   (assert-true  (port? input-bytevector))
   (assert-true  (input-port? input-bytevector))
   (assert-false (input-port-open? input-bytevector))))
+
+(define-test "simple (call-with-port)" (expect-success
+  (define simple-port (open-input-string ""))
+
+  ; If the procedure returns we should close the port
+  (call-with-port simple-port (lambda (port)
+    (assert-true (input-port-open? port))))
+
+  (assert-false (input-port-open? simple-port))))
+
+(define-test "(call-with-port) with non-returning thunk does not close port" (expect-success
+  (define callcc-port (open-input-string ""))
+  (define first-time #t)
+
+  ; This will be executed twice
+  (define outer-continuation (call/cc (lambda (k) k)))
+  (assert-true (input-port-open? callcc-port))
+
+  (when first-time
+    (set! first-time #f)
+    (call-with-port callcc-port (lambda (port)
+      (assert-true (input-port-open? callcc-port))
+      ; Jump back to the continuation - this should not close the port because we didn't return
+      (outer-continuation #f))))
+
+  ; Make sure we actually went through the continuation
+  (assert-false first-time)))

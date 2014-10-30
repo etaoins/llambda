@@ -33,7 +33,8 @@
 (export make-parameter dynamic-wind)
 (export port? input-port? output-port? current-input-port current-output-port current-error-port textual-port?
         binary-port? input-port-open? output-port-open? close-port close-input-port close-output-port open-output-string
-        get-output-string open-output-bytevector get-output-bytevector open-input-string open-input-bytevector)
+        get-output-string open-output-bytevector get-output-bytevector open-input-string open-input-bytevector
+        call-with-port)
 (export eof-object? eof-object read-u8 peek-u8 read-char peek-char)
 (export newline write-u8)
 (export features)

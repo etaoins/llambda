@@ -2,17 +2,22 @@
 
 #include "binding/AnyCell.h"
 #include "binding/PortCell.h"
+#include "binding/TypedProcedureCell.h"
 
 #include "port/AbstractPort.h"
 #include "port/StringOutputPort.h"
 #include "port/BufferInputPort.h"
 #include "port/BytevectorOutputPort.h"
 
+#include "alloc/WeakRef.h"
+
 #include "util/SharedByteArray.h"
 
 #include "core/error.h"
 
 using namespace lliby;
+
+using CallWithPortProcedureCell = TypedProcedureCell<ReturnValuesList*, PortCell*>;
 
 extern "C"
 {
@@ -123,6 +128,22 @@ PortCell* lliby_open_input_bytevector(World &world, BytevectorCell *bytevector)
 	std::string inputString(reinterpret_cast<const char *>(byteArray->data()), bytevector->length());
 
 	return PortCell::createInstance(world, new BufferInputPort(inputString));
+}
+
+ReturnValuesList *lliby_call_with_port(World &world, PortCell *portCell, CallWithPortProcedureCell *thunk)
+{
+	alloc::WeakRef<PortCell> portRef(world, portCell);
+
+	ReturnValuesList *returnValues = thunk->apply(world, portCell);
+
+	// If the port hasn't been GCed then close it
+	if (portRef)
+	{
+		portRef->port()->closePort();
+	}
+
+	return returnValues;
+
 }
 
 }
