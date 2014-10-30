@@ -567,6 +567,20 @@
       (([port : <port>])
        (native-peek-u8 port))))
 
+    (define native-read-char (world-function "lliby_read_char" (<port>) -> (U <char> <eof-object>)))
+    (define-r7rs read-char (case-lambda:
+      (()
+       (native-read-char (current-input-port)))
+      (([port : <port>])
+       (native-read-char port))))
+
+    (define native-peek-char (world-function "lliby_peek_char" (<port>) -> (U <char> <eof-object>)))
+    (define-r7rs peek-char (case-lambda:
+      (()
+       (native-peek-char (current-input-port)))
+      (([port : <port>])
+       (native-peek-char port))))
+
     (define native-newline (world-function "lliby_newline" (<port>)))
     (define-r7rs newline (case-lambda:
       (()

@@ -12,6 +12,8 @@ namespace lliby
 namespace utf8
 {
 
+static const int LongestByteSequence = 4;
+
 static const std::uint8_t ContinuationHeaderMask  = 0xC0;
 static const std::uint8_t ContinuationHeaderValue = 0x80;
 
