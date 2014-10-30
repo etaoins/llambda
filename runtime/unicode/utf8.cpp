@@ -11,7 +11,7 @@ namespace
 {
 	const std::uint8_t* validateChar(const std::uint8_t *start, const std::uint8_t *end)
 	{
-		const size_t inputBytes = end - start;
+		const std::size_t inputBytes = end - start;
 
 		const std::uint8_t *scanPtr = start;
 		std::uint8_t firstByte = *(scanPtr++);
@@ -76,9 +76,9 @@ namespace
 	}
 }
 
-size_t validateData(const std::uint8_t *start, const std::uint8_t *end)
+std::size_t validateData(const std::uint8_t *start, const std::uint8_t *end)
 {
-	size_t charCount = 0;
+	std::size_t charCount = 0;
 	const std::uint8_t *scanPtr = start;
 
 	try

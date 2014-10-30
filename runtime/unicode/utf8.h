@@ -97,7 +97,7 @@ inline int bytesForChar(UnicodeChar unicodeChar)
  *
  * This will either return the number of characters in the sequence or throw an InvalidByteSequenceException
  */
-size_t validateData(const std::uint8_t *start, const std::uint8_t *end);
+std::size_t validateData(const std::uint8_t *start, const std::uint8_t *end);
 
 /**
  * Decodes a UTF-8 sequence from validated UTF-8 data

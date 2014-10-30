@@ -1,6 +1,8 @@
 #ifndef _LLIBY_UNICODE_UTF8_INVALIDBYTESEQUENCEEXCEPTION_H
 #define _LLIBY_UNICODE_UTF8_INVALIDBYTESEQUENCEEXCEPTION_H
 
+#include <cstdint>
+
 namespace lliby
 {
 namespace utf8
@@ -12,7 +14,7 @@ namespace utf8
 class InvalidByteSequenceException
 {
 public:
-	explicit InvalidByteSequenceException(size_t byteOffset) :
+	explicit InvalidByteSequenceException(std::size_t byteOffset) :
 		m_byteOffset(byteOffset)
 	{
 	}
@@ -22,13 +24,13 @@ public:
 	 *
 	 * This is useful for error reporting or restarting UTF-8 parsing after the invalid sequence
 	 */
-	size_t byteOffset() const
+	std::size_t byteOffset() const
 	{
 		return m_byteOffset;
 	}
 
 private:
-	size_t m_byteOffset;
+	std::size_t m_byteOffset;
 };
 
 
