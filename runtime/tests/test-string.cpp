@@ -29,6 +29,17 @@ std::uint8_t* utf8Bytes(const char *str)
 	return (std::uint8_t*)(str);
 }
 
+// Finds an string size in bytes that will result in no allocation slack
+// This is useful for checking for boundary conditions
+std::size_t slacklessStringSize(size_t minimumSize)
+{
+	platform::SizedMallocResult testAllocResult = platform::sizedMalloc(minimumSize);
+	const size_t testSize = testAllocResult.actualSize;
+	free(testAllocResult.basePointer);
+
+	return testSize;
+}
+
 void testFromUtf8CString(World &world)
 {
 	{
@@ -118,10 +129,7 @@ void testFromUtf8Data(World &world)
 	}
 
 	{
-		// Intentionally allocate exactly to the size of memory the OS will return 
-		// This is to check for off-by-one errors, especially when run under a memory checker such as Valgrind
-		platform::SizedMallocResult testAllocResult = platform::sizedMalloc(24);
-		const size_t testSize = testAllocResult.actualSize; 
+		const size_t testSize = slacklessStringSize(24);
 
 		auto *testCharData = new unsigned char[testSize];
 		memset(testCharData, 'a', testSize);
@@ -345,8 +353,8 @@ void testStringCellBuilder(World &world)
 	}
 
 	{
-		platform::SizedMallocResult testAllocResult = platform::sizedMalloc(24);
-		const size_t testSize = testAllocResult.actualSize;
+		const size_t testSize = slacklessStringSize(24);
+
 		StringCellBuilder builder(testSize);
 
 		for(auto i = 0; i < testSize; i++)
@@ -481,8 +489,7 @@ void testStringCopy(World &world)
 	}
 
 	{
-		platform::SizedMallocResult testAllocResult = platform::sizedMalloc(24);
-		const size_t testSize = testAllocResult.actualSize;
+		const size_t testSize = slacklessStringSize(24);
 
 		// Allocate an extra by so copy() needs to COW
 		StringCell *offByOneTest = StringCell::fromFill(world, testSize + 1, UnicodeChar(0x20));
