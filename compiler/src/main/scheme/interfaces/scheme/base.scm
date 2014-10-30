@@ -36,7 +36,7 @@
         get-output-string open-output-bytevector get-output-bytevector open-input-string open-input-bytevector
         call-with-port)
 (export eof-object? eof-object read-u8 peek-u8 read-char peek-char)
-(export newline write-u8)
+(export newline write-u8 write-char)
 (export features)
 (export with-exception-handler raise raise-continuable error error-object? error-object-message error-object-irritants
         guard)

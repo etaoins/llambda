@@ -135,3 +135,20 @@
   (assert-raises (peek-char invalid-utf8-no-continue-port))     ; No continuation byte
   (assert-raises (read-char invalid-utf8-no-continue-port))
   (assert-equal #\3 (read-char invalid-utf8-no-continue-port))))  ; Should recover at next character
+
+(define-test "(write-char)" (expect-success
+  (define output-string (open-output-string))
+
+  (write-char #\H output-string)
+  (write-char #\e output-string)
+  (write-char #\l output-string)
+  (write-char #\l output-string)
+
+  (parameterize ((current-output-port output-string))
+    (write-char #\☃))
+
+  (write-char #\! output-string)
+  (assert-equal "Hell☃!" (get-output-string output-string))))
+
+(define-test "(write-char) with invalid character fails" (expect-failure
+  (write-char #\x110000 (open-output-string))))

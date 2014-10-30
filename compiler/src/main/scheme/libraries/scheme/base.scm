@@ -596,6 +596,13 @@
       (([byte : <exact-integer>] [port : <port>])
        (native-write-u8 byte port))))
 
+    (define native-write-char (world-function "lliby_write_char" (<native-unicode-char> <port>)))
+    (define-r7rs write-char (case-lambda:
+      (([byte : <char>])
+       (native-write-char byte (current-output-port)))
+      (([byte : <char>] [port : <port>])
+       (native-write-char byte port))))
+
     (define-r7rs with-exception-handler (world-function "lliby_with_exception_handler" ((-> <any> *) (-> *)) -> *))
     (define-r7rs raise (world-function "lliby_raise" (<any>) noreturn))
     (define-r7rs raise-continuable (world-function "lliby_raise_continuable" (<any>) -> *))
