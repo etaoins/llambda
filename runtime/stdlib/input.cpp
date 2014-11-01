@@ -69,7 +69,7 @@ namespace
 		}
 
 		char charBuffer[utf8::LongestByteSequence];
-		const std::uint8_t* utf8DataBufffer = reinterpret_cast<std::uint8_t*>(charBuffer);
+		const std::uint8_t* utf8DataBuffer = reinterpret_cast<std::uint8_t*>(charBuffer);
 
 		charBuffer[0] = headerChar;
 
@@ -96,7 +96,7 @@ namespace
 		try
 		{
 			// Ensure the character is valid
-			utf8::validateData(utf8DataBufffer, utf8DataBufffer + seqBytes);
+			utf8::validateData(utf8DataBuffer, utf8DataBuffer + seqBytes);
 		}
 		catch (utf8::InvalidByteSequenceException &e)
 		{
@@ -113,7 +113,7 @@ namespace
 			utf8ExceptionToSchemeError(world, procName, e);
 		}
 
-		return CharCell::createInstance(world, utf8::decodeChar(&utf8DataBufffer));
+		return CharCell::createInstance(world, utf8::decodeChar(&utf8DataBuffer));
 	}
 }
 
