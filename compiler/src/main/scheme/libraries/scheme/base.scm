@@ -554,33 +554,22 @@
     (define-r7rs eof-object? (make-predicate <eof-object>))
     (define-r7rs eof-object (lambda () #!unit))
 
-    (define native-read-u8 (world-function "lliby_read_u8" (<port>) -> (U <exact-integer> <eof-object>)))
-    (define-r7rs read-u8 (case-lambda:
-      (()
-       (native-read-u8 (current-input-port)))
-      (([port : <port>])
-       (native-read-u8 port))))
+    (define-syntax define-input-proc
+      (syntax-rules ()
+                    ((define-input-proc name native-symbol <result-type>)
+                     (define-r7rs name
+                                  (let ((native-proc (world-function native-symbol (<port>) -> (U <result-type> <eof-object>))))
+                                    (case-lambda:
+                                      (()
+                                       (native-proc (current-input-port)))
+                                      (([port : <port>])
+                                       (native-proc port))))))))
 
-    (define native-peek-u8 (world-function "lliby_peek_u8" (<port>) -> (U <exact-integer> <eof-object>)))
-    (define-r7rs peek-u8 (case-lambda:
-      (()
-       (native-peek-u8 (current-input-port)))
-      (([port : <port>])
-       (native-peek-u8 port))))
-
-    (define native-read-char (world-function "lliby_read_char" (<port>) -> (U <char> <eof-object>)))
-    (define-r7rs read-char (case-lambda:
-      (()
-       (native-read-char (current-input-port)))
-      (([port : <port>])
-       (native-read-char port))))
-
-    (define native-peek-char (world-function "lliby_peek_char" (<port>) -> (U <char> <eof-object>)))
-    (define-r7rs peek-char (case-lambda:
-      (()
-       (native-peek-char (current-input-port)))
-      (([port : <port>])
-       (native-peek-char port))))
+    (define-input-proc read-u8 "lliby_read_u8" <exact-integer>)
+    (define-input-proc peek-u8 "lliby_peek_u8" <exact-integer>)
+    (define-input-proc read-char "lliby_read_char" <char>)
+    (define-input-proc peek-char "lliby_peek_char" <char>)
+    (define-input-proc read-line "lliby_read_line" <string>)
 
     (define native-newline (world-function "lliby_newline" (<port>)))
     (define-r7rs newline (case-lambda:

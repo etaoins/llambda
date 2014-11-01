@@ -152,3 +152,24 @@
 
 (define-test "(write-char) with invalid character fails" (expect-failure
   (write-char #\x110000 (open-output-string))))
+
+(define-test "(read-line)" (expect-success
+  (define test-bytevector (bytevector-append
+                            (string->utf8 "ASCII line 1!\n")   ; Pure ASCII
+                            (string->utf8 "Unicode line 2‼\n") ; Unicode double exclamation mark
+                            (string->utf8 "\n")                ; Empty line
+                            #u8(#xe0 #x0a)                     ; Invalid Unicode character
+                            (string->utf8 "Final line 3!!!"))) ; No newline character
+
+  (define input-bytevector (open-input-bytevector test-bytevector))
+
+  (assert-equal "ASCII line 1!" (read-line input-bytevector))
+  (assert-equal "Unicode line 2‼" (read-line input-bytevector))
+  (assert-equal "" (read-line input-bytevector))
+
+  (assert-raises (parameterize ((current-input-port input-bytevector))
+                               (read-line)))
+
+  (assert-equal "Final line 3!!!" (read-line input-bytevector))
+  (assert-true (eof-object? (read-line input-bytevector)))))
+

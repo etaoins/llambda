@@ -87,12 +87,12 @@ StringCell* StringCell::createUninitialized(World &world, std::uint32_t byteLeng
 
 StringCell* StringCell::fromUtf8CString(World &world, const char *signedStr)
 {
-	return StringCell::fromUtf8Data(world, reinterpret_cast<const unsigned char *>(signedStr), strlen(signedStr));
+	return StringCell::fromUtf8Data(world, reinterpret_cast<const std::uint8_t*>(signedStr), strlen(signedStr));
 }
 
 StringCell* StringCell::fromUtf8StdString(World &world, const std::string &str)
 {
-	return StringCell::fromUtf8Data(world, reinterpret_cast<const unsigned char *>(str.data()), str.size());
+	return StringCell::fromUtf8Data(world, reinterpret_cast<const std::uint8_t*>(str.data()), str.size());
 }
 
 StringCell* StringCell::withUtf8ByteArray(World &world, SharedByteArray *byteArray, std::uint32_t byteLength)

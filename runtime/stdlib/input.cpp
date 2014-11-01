@@ -6,9 +6,11 @@
 #include "binding/ExactIntegerCell.h"
 #include "binding/UnitCell.h"
 #include "binding/CharCell.h"
+#include "binding/StringCell.h"
 
 #include "unicode/utf8.h"
 #include "unicode/utf8/InvalidByteSequenceException.h"
+
 #include "util/utf8ExceptionToSchemeError.h"
 
 #include "port/AbstractPort.h"
@@ -158,6 +160,29 @@ AnyCell *lliby_peek_char(World &world, PortCell *portCell)
 {
 	std::istream *portStream = portCellToInputStream(world, portCell);
 	return readUtf8Character(world, "(peek-char)", portStream, true);
+}
+
+AnyCell *lliby_read_line(World &world, PortCell *portCell)
+{
+	std::istream *portStream = portCellToInputStream(world, portCell);
+
+	std::string lineBuffer;
+	std::getline(*portStream, lineBuffer);
+
+	if (lineBuffer.empty() && !portStream->good())
+	{
+		// End of input
+		return eofObject();
+	}
+
+	try
+	{
+		return StringCell::fromUtf8StdString(world, lineBuffer);
+	}
+	catch (utf8::InvalidByteSequenceException &e)
+	{
+		utf8ExceptionToSchemeError(world, "(read-line)", e);
+	}
 }
 
 }
