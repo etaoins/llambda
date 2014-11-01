@@ -14,10 +14,14 @@ private[analyser] object ExprHasSideEffects extends ((et.Expr) => Boolean) {
     case _ : et.Lambda | _ : et.CaseLambda | _ : et.NativeFunction | _ : et.ArtificialProcedure =>
       // Procedure definitions themselves are always pure
       false
-    
+
     case et.Apply(et.VarRef(reportProc : ReportProcedure), operands) =>
       operands.exists(ExprHasSideEffects) ||
         ReportProcHasSideEffects(reportProc.reportName, operands.length)
+
+    case et.Apply(lambdaExpr : et.Lambda, operands) =>
+      operands.exists(ExprHasSideEffects) ||
+        ExprHasSideEffects(lambdaExpr.body)
 
     case et.Apply(nativeFunc : et.NativeFunction, operands) =>
       operands.exists(ExprHasSideEffects) ||
