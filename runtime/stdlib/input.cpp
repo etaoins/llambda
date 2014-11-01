@@ -7,11 +7,13 @@
 #include "binding/UnitCell.h"
 #include "binding/CharCell.h"
 #include "binding/StringCell.h"
+#include "binding/BytevectorCell.h"
 
 #include "unicode/utf8.h"
 #include "unicode/utf8/InvalidByteSequenceException.h"
 
 #include "util/utf8ExceptionToSchemeError.h"
+#include "util/SharedByteArray.h"
 
 #include "port/AbstractPort.h"
 
@@ -183,6 +185,32 @@ AnyCell *lliby_read_line(World &world, PortCell *portCell)
 	{
 		utf8ExceptionToSchemeError(world, "(read-line)", e);
 	}
+}
+
+AnyCell *lliby_read_bytevector(World &world, std::uint32_t requestedBytes, PortCell *portCell)
+{
+	std::istream *portStream = portCellToInputStream(world, portCell);
+
+	// Read in to a SharedByteArray so BytevectorCell can use it directly
+	auto byteArray = SharedByteArray::createInstance(requestedBytes);
+	portStream->read(reinterpret_cast<char*>(byteArray->data()), requestedBytes);
+
+	const auto readBytes = portStream->gcount();
+
+	if (!readBytes && !portStream->good())
+	{
+		// End of input
+		byteArray->unref();
+		return eofObject();
+	}
+
+	if (readBytes != requestedBytes)
+	{
+		// Shrink the SharedByteArray down to size to avoid memory waste
+		byteArray = byteArray->destructivelyResizeTo(readBytes);
+	}
+
+	return BytevectorCell::withByteArray(world, byteArray, readBytes);
 }
 
 }

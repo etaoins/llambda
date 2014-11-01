@@ -1,15 +1,119 @@
 #include "util/SharedByteArray.h"
 
-#ifdef _LLIBY_CHECK_LEAKS
-
-namespace
-{
-	std::atomic<size_t> allocationCount(0);
-}
+#include <cstring>
+#include <cassert>
+#include <new>
 
 namespace lliby
 {
-	
+
+namespace
+{
+	std::atomic<std::size_t> allocationCount(0);
+
+	size_t objectSizeForBytes(std::size_t bytes)
+	{
+		return sizeof(SharedByteArray) + bytes;
+	}
+}
+
+SharedByteArray::SharedByteArray(refcount_t initialRefCount) :
+	m_refCount(initialRefCount)
+{
+	incrementInstanceCount();
+}
+
+SharedByteArray* SharedByteArray::createInstance(std::size_t bytes)
+{
+	// This is tricky because we're a variable length object
+	// Calculate our required length and then place the object
+	void *allocPlacement = malloc(objectSizeForBytes(bytes));
+
+	return new (allocPlacement) SharedByteArray(1);
+}
+
+SharedByteArray* SharedByteArray::createMinimumSizedInstance(std::size_t &bytes)
+{
+	std::size_t minimumAllocSize = objectSizeForBytes(bytes);
+	platform::SizedMallocResult sizedResult = platform::sizedMalloc(minimumAllocSize);
+
+	// Update the actual size for the caller
+	bytes = sizedResult.actualSize - sizeof(SharedByteArray);
+
+	return new (sizedResult.basePointer) SharedByteArray(1);
+}
+
+SharedByteArray* SharedByteArray::destructivelyResizeTo(std::size_t bytes)
+{
+	assert(isExclusive() && !isSharedConstant());
+
+	const std::size_t allocSize = objectSizeForBytes(bytes);
+	return reinterpret_cast<SharedByteArray*>(realloc(this, allocSize));
+}
+
+SharedByteArray* SharedByteArray::asWritable(std::size_t bytes)
+{
+	if (isExclusive())
+	{
+		// We have an exclusive copy
+		return this;
+	}
+	else
+	{
+		// We need to fork this
+		SharedByteArray *duplicateCopy = createInstance(bytes);
+		memcpy(duplicateCopy->m_data, m_data, bytes);
+
+		// Unref ourselves
+		unref();
+
+		return duplicateCopy;
+	}
+}
+
+SharedByteArray* SharedByteArray::ref()
+{
+	if (isSharedConstant())
+	{
+		// Don't increment; we're readonly
+		return this;
+	}
+
+	// We don't need any memory ordering here
+
+	// In the case of refing to pass to another thread is sufficient to make the refcount increment itself visible.
+	// In the case of one thread incrementing and then decrementing later the decrement itself will enforce memory
+	// ordering. This ensures other threads won't falsely delete the byte array.
+	m_refCount.fetch_add(1u, std::memory_order_relaxed);
+
+	return this;
+}
+
+bool SharedByteArray::unref()
+{
+	if (isSharedConstant())
+	{
+		// Don't decrement; we're readonly
+		return false;
+	}
+
+	const bool shouldDestroy = m_refCount.fetch_sub(1u, std::memory_order_release) == 1;
+
+	if (shouldDestroy)
+	{
+		// We were the last reference
+		// Make sure the memory operations from this delete are strictly after the fetch_sub
+		std::atomic_thread_fence(std::memory_order_acquire);
+
+		delete this;
+		return true;
+	}
+
+	return false;
+}
+
+#ifdef _LLIBY_CHECK_LEAKS
+
 SharedByteArray::~SharedByteArray()
 {
 	allocationCount.fetch_sub(1, std::memory_order_relaxed);
@@ -20,11 +124,23 @@ void SharedByteArray::incrementInstanceCount()
 	allocationCount.fetch_add(1, std::memory_order_relaxed);
 }
 
-size_t SharedByteArray::instanceCount()
+std::size_t SharedByteArray::instanceCount()
 {
 	return allocationCount.load(std::memory_order_relaxed);
 }
 
+#else
+
+void SharedByteArray::incrementInstanceCount()
+{
+}
+
+std::size_t SharedByteArray::instanceCount()
+{
+	return 0;
 }
 
 #endif
+
+}
+

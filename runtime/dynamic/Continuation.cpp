@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cstdlib>
+#include <cstring>
 
 #include "binding/RecordLikeCell.h"
 #include "dynamic/State.h"

@@ -173,3 +173,16 @@
   (assert-equal "Final line 3!!!" (read-line input-bytevector))
   (assert-true (eof-object? (read-line input-bytevector)))))
 
+(define-test "(read-bytevector)" (expect-success
+  (define test-bytevector #u8(1 2 3 4 5 6 7))
+  (define input-bytevector (open-input-bytevector test-bytevector))
+
+  (assert-equal #u8() (read-bytevector 0 input-bytevector))
+  (assert-equal #u8(1) (read-bytevector 1 input-bytevector))
+  (assert-equal #u8(2 3) (read-bytevector 2 input-bytevector))
+
+  (parameterize ((current-input-port input-bytevector))
+    (assert-equal #u8(4 5 6) (read-bytevector 3)))
+
+  (assert-equal #u8(7) (read-bytevector 8 input-bytevector))
+  (assert-true (eof-object? (read-bytevector 8 input-bytevector)))))
