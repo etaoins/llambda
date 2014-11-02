@@ -98,9 +98,8 @@ object CostForPlanSteps {
 
     case invoke : ps.InvokeLike =>
       functionCallCost + (if (invoke.signature.hasWorldArg) {
-        // This can allocate cells and throw exceptions - this requires a GC barrier 
+        // This can allocate cells and throw exceptions - this requires a GC barrier
         gcBarrierCost
-        functionCallCost + gcBarrierCost
       }
       else {
         // This can be invoked without a GC barrier
