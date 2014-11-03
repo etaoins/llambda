@@ -579,6 +579,7 @@
     (define-input-proc peek-char "lliby_peek_char" () -> <char>)
     (define-input-proc read-line "lliby_read_line" () -> <string>)
     (define-input-proc read-bytevector "lliby_read_bytevector" (<native-uint32>) -> <bytevector>)
+    (define-input-proc read-string "lliby_read_string" (<native-uint32>) -> <string>)
 
     (define native-newline (world-function "lliby_newline" (<port>)))
     (define-r7rs newline (case-lambda:

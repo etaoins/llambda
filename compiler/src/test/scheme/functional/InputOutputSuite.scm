@@ -185,4 +185,54 @@
     (assert-equal #u8(4 5 6) (read-bytevector 3)))
 
   (assert-equal #u8(7) (read-bytevector 8 input-bytevector))
-  (assert-true (eof-object? (read-bytevector 8 input-bytevector)))))
+  (assert-true (eof-object? (read-bytevector 8 input-bytevector)))
+  (assert-true (eof-object? (read-bytevector 0 input-bytevector)))))
+
+(define-test "(read-string)" (expect-success
+  (define valid-utf8-port (open-input-string "Hell☃!"))
+  (assert-equal "" (read-string 0 valid-utf8-port))
+  (assert-equal "Hell" (read-string 4 valid-utf8-port))
+
+  (parameterize ((current-input-port valid-utf8-port))
+    (assert-equal "☃!" (read-string 2)))
+
+  (assert-equal "" (read-string 0 valid-utf8-port))
+  (assert-true (eof-object? (read-string 1 valid-utf8-port)))
+
+  (define japanese-port (open-input-string "む姎 媥焯簨盥媯 ビョ禯騪っ鏨 を"))
+  (assert-equal "む姎 " (read-string 3 japanese-port))
+  (assert-equal "媥焯簨盥媯" (read-string 5 japanese-port))
+  (assert-equal " ビョ禯騪っ鏨 " (read-string 8 japanese-port))
+  (assert-equal "を" (read-string 1024 japanese-port))
+  (assert-true (eof-object? (read-string 1024 japanese-port)))
+  (assert-true (eof-object? (read-string 0 japanese-port)))
+
+  (define boundary-condition-port (open-input-bytevector #u8(#x00 #x7f #xc2 #x80 #xdf #xbf #xe0 #xa0 #x80 #xef #xbf #xbf #xf0 #x90 #x80 #x80 #xf4 #x8f #xbf #xbf)))
+  (assert-equal "\x00;\x7f;" (read-string 2 boundary-condition-port))
+  (assert-equal "\x80;\x7ff;" (read-string 2 boundary-condition-port))
+  (assert-equal "\x800;\xffff;" (read-string 2 boundary-condition-port))
+  (assert-equal "\x10000;\x10FFFF;" (read-string 2 boundary-condition-port))
+  (assert-true (eof-object? (read-string 2 boundary-condition-port)))
+
+  (define invalid-utf8-header-port (open-input-bytevector #u8(#x31 #x32 #xff #x33 #x34 #x35)))
+  (assert-raises (read-string 10 invalid-utf8-header-port))
+  ; This should continue properly after the error
+  (assert-equal "345" (read-string 10 invalid-utf8-header-port))
+  (assert-true (eof-object? (read-string 1 invalid-utf8-header-port)))
+
+  (define overlong-encoding-port (open-input-bytevector #u8(#xf0 #x80 #x80 #xaf #xe2 #x98 #x83 #xe0 #x80 #xaf)))
+  ; This also mixes (read-char) and (read-string)
+  (assert-raises (read-string 10 overlong-encoding-port))
+  (assert-equal #\☃ (read-char overlong-encoding-port))
+  (assert-raises (read-string 10 overlong-encoding-port))
+  (assert-true (eof-object? (read-string 1 overlong-encoding-port)))
+
+  (define truncated-utf8-port (open-input-bytevector #u8(#x31 #x32 #xe2 #x98)))
+  (assert-equal "12" (read-string 16 truncated-utf8-port))
+  ; For consistency with (read-char) we will discard the incomplete character at the end of the stream
+  (assert-true (eof-object? (read-u8 truncated-utf8-port)))
+
+  (define missing-continuation-byte-port (open-input-bytevector #u8(#x31 #x32 #xe2 #x98 #x33 #x34)))
+  (assert-raises (read-string 10 missing-continuation-byte-port))
+  (assert-equal "34" (read-string 10 missing-continuation-byte-port))
+  (assert-true (eof-object? (read-string 0 missing-continuation-byte-port)))))

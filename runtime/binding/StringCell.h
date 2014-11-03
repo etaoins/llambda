@@ -25,7 +25,9 @@ class StringCell : public AnyCell
 public:
 	static StringCell* fromUtf8CString(World &world, const char *str);
 	static StringCell* fromUtf8StdString(World &world, const std::string &str);
+
 	static StringCell* fromUtf8Data(World &world, const std::uint8_t *data, std::uint32_t byteLength);
+	static StringCell* fromValidatedUtf8Data(World &world, const std::uint8_t *data, std::uint32_t byteLength, std::uint32_t charLength);
 
 	/**
 	 * Creates a StringCell using a SharedByteArray

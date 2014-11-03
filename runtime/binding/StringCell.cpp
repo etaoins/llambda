@@ -122,6 +122,16 @@ StringCell* StringCell::withUtf8ByteArray(World &world, SharedByteArray *byteArr
 	);
 }
 
+StringCell* StringCell::fromValidatedUtf8Data(World &world, const std::uint8_t *data, std::uint32_t byteLength, std::uint32_t charLength)
+{
+	auto newString = StringCell::createUninitialized(world, byteLength, charLength);
+
+	std::uint8_t *utf8Data = newString->utf8Data();
+	memcpy(utf8Data, data, byteLength);
+
+	return newString;
+}
+
 StringCell* StringCell::fromUtf8Data(World &world, const std::uint8_t *data, std::uint32_t byteLength)
 {
 	const std::uint8_t *scanPtr = data;
@@ -130,13 +140,7 @@ StringCell* StringCell::fromUtf8Data(World &world, const std::uint8_t *data, std
 	// Find the character length - this can throw an exception
 	size_t charLength = utf8::validateData(scanPtr, endPtr);
 
-	// Allocate the new string
-	auto newString = StringCell::createUninitialized(world, byteLength, charLength);
-
-	std::uint8_t *utf8Data = newString->utf8Data();
-	memcpy(utf8Data, data, byteLength);
-
-	return newString;
+	return StringCell::fromValidatedUtf8Data(world, data, byteLength, charLength);
 }
 
 StringCell* StringCell::fromFill(World &world, std::uint32_t length, UnicodeChar fill)
@@ -721,12 +725,7 @@ StringCell *StringCell::toConvertedString(World &world, UnicodeChar (UnicodeChar
 	}
 
 	const std::uint32_t totalByteLength = convertedData.size();
-	auto newString = StringCell::createUninitialized(world, totalByteLength, charLength());
-
-	// Initialize the string from the std::vector contents
-	memcpy(newString->utf8Data(), convertedData.data(), totalByteLength);
-
-	return newString;
+	return StringCell::fromValidatedUtf8Data(world, convertedData.data(), totalByteLength, charLength());
 }
 
 StringCell* StringCell::toUppercaseString(World &world) 

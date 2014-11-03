@@ -35,7 +35,7 @@
         binary-port? input-port-open? output-port-open? close-port close-input-port close-output-port open-output-string
         get-output-string open-output-bytevector get-output-bytevector open-input-string open-input-bytevector
         call-with-port)
-(export eof-object? eof-object read-u8 peek-u8 read-char peek-char read-line read-bytevector)
+(export eof-object? eof-object read-u8 peek-u8 read-char peek-char read-line read-bytevector read-string)
 (export newline write-u8 write-char)
 (export features)
 (export with-exception-handler raise raise-continuable error error-object? error-object-message error-object-irritants

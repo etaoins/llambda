@@ -213,4 +213,81 @@ AnyCell *lliby_read_bytevector(World &world, std::uint32_t requestedBytes, PortC
 	return BytevectorCell::withByteArray(world, byteArray, readBytes);
 }
 
+AnyCell *lliby_read_string(World &world, std::uint32_t requestedChars, PortCell *portCell)
+{
+	std::istream *portStream = portCellToInputStream(world, portCell);
+
+	// Catch zero character reads after we've reached the end of the stream
+	if (portStream->eof())
+	{
+		return eofObject();
+	}
+
+	std::vector<std::uint8_t> utf8Data;
+
+	// This tracks the offset of the end of the last valid character. This prevents us from repeatedly revalidating the
+	// same data
+	std::size_t validatedOffset = 0;
+	std::size_t validChars = 0;
+
+	while(requestedChars > validChars)
+	{
+		const std::size_t existingBytes = utf8Data.size();
+
+		// We need at least one byte per character. Being conservative here prevents us from reading past the end of
+		// the requested data which is important for streaming data such as stdin, pipes, sockets, etc
+		const std::size_t requestedBytes = (requestedChars - validChars);
+
+		// Read the data in
+		utf8Data.resize(existingBytes + requestedBytes);
+
+		portStream->read(reinterpret_cast<char*>(&utf8Data[existingBytes]), requestedBytes);
+		const std::size_t actualBytes = portStream->gcount();
+
+		try
+		{
+			validChars += utf8::validateData(&utf8Data[validatedOffset], &utf8Data[existingBytes + actualBytes]);
+			// This read ended on a character boundary!
+			validatedOffset = existingBytes + actualBytes;
+		}
+		catch(const utf8::TruncatedInputException &e)
+		{
+			// We need to read more in the next loop
+			validChars += e.validChars();
+			validatedOffset += e.startOffset();
+		}
+		catch (const utf8::InvalidByteSequenceException &e)
+		{
+			std::size_t postErrorOffset = validatedOffset + e.endOffset() + 1;
+
+			// Put back any bytes read after the error
+			if ((existingBytes + actualBytes) > postErrorOffset)
+			{
+				portStream->clear();
+				for(std::size_t i = existingBytes + actualBytes; i > postErrorOffset; i--)
+				{
+					portStream->putback(utf8Data[i - 1]);
+				}
+			}
+
+			utf8ExceptionToSchemeError(world, "(read-string)", e);
+		}
+
+		if (actualBytes != requestedBytes)
+		{
+			// End of stream
+			if (validChars == 0)
+			{
+				return eofObject();
+			}
+			else
+			{
+				return StringCell::fromValidatedUtf8Data(world, utf8Data.data(), validatedOffset, validChars);
+			}
+		}
+	}
+
+	return StringCell::fromValidatedUtf8Data(world, utf8Data.data(), utf8Data.size(), validChars);
+}
+
 }
