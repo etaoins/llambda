@@ -1,7 +1,10 @@
 #include <iostream>
+#include <cassert>
 
 #include "binding/AnyCell.h"
 #include "binding/PortCell.h"
+#include "binding/StringCell.h"
+
 #include "writer/DisplayDatumWriter.h"
 
 #include "unicode/UnicodeChar.h"
@@ -10,6 +13,8 @@
 #include "port/AbstractPort.h"
 
 #include "core/error.h"
+
+#include "util/assertSliceValid.h"
 
 using namespace lliby;
 
@@ -75,6 +80,23 @@ void lliby_write_char(World &world, UnicodeChar character, PortCell *portCell)
 
 	std::ostream *portStream = portCellToOutputStream(world, portCell);
 	portStream->write(reinterpret_cast<char*>(utf8Bytes.data()), utf8Bytes.size());
+}
+
+void lliby_write_string(World &world, StringCell *stringCell, PortCell *portCell, std::uint32_t start, std::uint32_t end)
+{
+	assertSliceValid(world, "(write-string)", stringCell, stringCell->charLength(), start, end);
+
+	StringCell::CharRange range = stringCell->charRange(start, end);
+	assert(!range.isNull());
+
+	// Write directly from the string's memory
+	std::ostream *portStream = portCellToOutputStream(world, portCell);
+	portStream->write(reinterpret_cast<const char *>(range.startPointer), range.endPointer - range.startPointer);
+}
+
+void lliby_flush_output_port(World &world, PortCell *portCell)
+{
+	portCellToOutputStream(world, portCell)->flush();
 }
 
 }

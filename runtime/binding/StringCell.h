@@ -83,25 +83,6 @@ public:
 
 	void finalizeString();
 
-protected:
-	StringCell(std::uint32_t byteLength, std::uint32_t charLength, std::uint16_t allocSlackBytes) :
-		AnyCell(CellTypeId::String),
-		m_allocSlackBytes(allocSlackBytes),
-		m_charLength(charLength),
-		m_byteLength(byteLength)
-	{
-	}
-	
-	std::uint8_t* utf8Data();
-
-	static const std::uint32_t InlineDataSize = 12;
-
-	// Creates an uninitialized cell with the given size
-	static StringCell* createUninitialized(World &world, std::uint32_t byteLength, std::uint32_t charLength);
-
-	const std::uint8_t *charPointer(const std::uint8_t *scanFrom, uint32_t charOffset);
-	const std::uint8_t *charPointer(std::uint32_t charOffset);
-
 	struct CharRange
 	{
 		const std::uint8_t *startPointer;
@@ -125,7 +106,30 @@ protected:
 		}
 	};
 
-	CharRange charRange(std::int64_t start, std::int64_t end = -1); 
+	/**
+	 * Returns information about a range of characters
+	 */
+	CharRange charRange(std::int64_t start, std::int64_t end = -1);
+
+protected:
+	StringCell(std::uint32_t byteLength, std::uint32_t charLength, std::uint16_t allocSlackBytes) :
+		AnyCell(CellTypeId::String),
+		m_allocSlackBytes(allocSlackBytes),
+		m_charLength(charLength),
+		m_byteLength(byteLength)
+	{
+	}
+	
+	std::uint8_t* utf8Data();
+
+	static const std::uint32_t InlineDataSize = 12;
+
+	// Creates an uninitialized cell with the given size
+	static StringCell* createUninitialized(World &world, std::uint32_t byteLength, std::uint32_t charLength);
+
+	const std::uint8_t *charPointer(const std::uint8_t *scanFrom, uint32_t charOffset);
+	const std::uint8_t *charPointer(std::uint32_t charOffset);
+
 	bool replaceBytes(const CharRange &range, const std::uint8_t *pattern, unsigned int patternBytes, unsigned int count, bool sameString);
 
 	int compareCaseSensitive(const StringCell *other) const;

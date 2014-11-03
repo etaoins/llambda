@@ -597,10 +597,28 @@
 
     (define native-write-char (world-function "lliby_write_char" (<native-unicode-char> <port>)))
     (define-r7rs write-char (case-lambda:
-      (([byte : <char>])
-       (native-write-char byte (current-output-port)))
-      (([byte : <char>] [port : <port>])
-       (native-write-char byte port))))
+      (([char : <char>])
+       (native-write-char char (current-output-port)))
+      (([char : <char>] [port : <port>])
+       (native-write-char char port))))
+
+    (define native-write-string (world-function "lliby_write_string" (<string> <port> <native-uint32> <native-uint32>)))
+    (define-r7rs write-string (case-lambda:
+      (([str : <string>])
+       (native-write-string str (current-output-port) 0 (string-length str)))
+      (([str : <string>] [port : <port>])
+       (native-write-string str port 0 (string-length str)))
+      (([str : <string>] [port : <port>] [start : <exact-integer>])
+       (native-write-string str port start (string-length str)))
+      (([str : <string>] [port : <port>] [start : <exact-integer>] [end : <exact-integer>])
+       (native-write-string str port start end))))
+
+    (define native-flush-output-port (world-function "lliby_flush_output_port" (<port>)))
+    (define-r7rs flush-output-port (case-lambda:
+      (()
+       (native-flush-output-port (current-output-port)))
+      (([port : <port>])
+       (native-flush-output-port port))))
 
     (define-r7rs with-exception-handler (world-function "lliby_with_exception_handler" ((-> <any> *) (-> *)) -> *))
     (define-r7rs raise (world-function "lliby_raise" (<any>) noreturn))

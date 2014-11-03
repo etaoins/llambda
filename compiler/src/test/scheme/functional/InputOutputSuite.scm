@@ -236,3 +236,44 @@
   (assert-raises (read-string 10 missing-continuation-byte-port))
   (assert-equal "34" (read-string 10 missing-continuation-byte-port))
   (assert-true (eof-object? (read-string 0 missing-continuation-byte-port)))))
+
+(define-test "(write-string)" (expect-success
+  (define test-string "む姎 媥焯簨盥媯 ビョ禯騪っ鏨 を")
+
+  (define entire-output-port (open-output-string))
+  (parameterize ((current-output-port entire-output-port))
+    (write-string test-string))
+  (assert-equal test-string (get-output-string entire-output-port))
+
+  (define another-entire-output-port (open-output-string))
+  (write-string test-string another-entire-output-port)
+  (assert-equal test-string (get-output-string another-entire-output-port))
+
+  (define start-only-output-port (open-output-string))
+  (write-string test-string start-only-output-port 5)
+  (assert-equal "簨盥媯 ビョ禯騪っ鏨 を" (get-output-string start-only-output-port))
+
+  (define start-end-output-port (open-output-string))
+  (write-string test-string start-end-output-port 6 12)
+  (assert-equal "盥媯 ビョ禯" (get-output-string start-end-output-port))))
+
+(define-test "(write-string) with backwards slice fails" (expect-failure
+  (define output-port (open-output-string))
+  (write-string "1☃3" output-port 2 1)))
+
+(define-test "(write-string) past end of string fails" (expect-failure
+  (define output-port (open-output-string))
+  (write-string "1☃3" output-port 0 4)))
+
+(define-test "(write-string) with negative start index fails" (expect-failure
+  (define output-port (open-output-string))
+  (write-string "1☃3" output-port -1)))
+
+(define-test "(flush-output-port)" (expect-output (ABC)
+  (import (scheme process-context))
+
+  ; This isn't guaranteed to fail if (flush-output-port) is a no-op. However, it's likely to on most buffered
+  ; implementations
+  (write-string "ABC")
+  (flush-output-port)
+  (emergency-exit #t)))

@@ -143,7 +143,7 @@
 (define-test "(string-copy) with backwards slice fails" (expect-failure
   (string-copy "1☃3" 2 1)))
 
-(define-test "(string-copy) past end of vector fails" (expect-failure
+(define-test "(string-copy) past end of string fails" (expect-failure
   (string-copy "1☃3" 0 4)))
 
 (define-test "(string-copy) with negative start index fails" (expect-failure
