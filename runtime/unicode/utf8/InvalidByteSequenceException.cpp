@@ -23,10 +23,5 @@ std::string InvalidByteSequenceException::message() const
 	return messageStream.str();
 }
 
-InvalidByteSequenceException InvalidByteSequenceException::offsetBy(size_t byteOffset) const
-{
-	return InvalidByteSequenceException(startOffset() + byteOffset, endOffset() + byteOffset, m_errorType);
-}
-
 }
 }

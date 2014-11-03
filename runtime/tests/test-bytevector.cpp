@@ -307,11 +307,12 @@ void testUtf8ToString(World &world)
 
 		try
 		{
-			// This will throw an exception because the UTF-8 sequence is truncatred
+			// This will throw an exception because the UTF-8 sequence has an invalid header byte
 			invalidVector->utf8ToString(world);
 		}
-		catch(const utf8::InvalidByteSequenceException &e)
+		catch(const utf8::InvalidHeaderByteException &e)
 		{
+			ASSERT_EQUAL(e.validChars(), 42);
 			ASSERT_EQUAL(e.startOffset(), 42);
 			ASSERT_EQUAL(e.endOffset(), 42);
 			caughtException = true;

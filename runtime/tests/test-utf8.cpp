@@ -28,7 +28,7 @@ auto lonelyTwoByte =   reinterpret_cast<const std::uint8_t*>("\xC0\x20");
 auto lonelyThreeByte = reinterpret_cast<const std::uint8_t*>("\xE0\x20\x20");
 auto lonelyFourByte =  reinterpret_cast<const std::uint8_t*>("\xF0\x20\x20\x20");
 
-#define ASSERT_INVALID_ENCODING(begin, end, errorOffset) \
+#define ASSERT_INVALID_ENCODING(begin, end, ExceptionName, errorOffset) \
 { \
 	bool caughtException = false; \
  \
@@ -36,8 +36,9 @@ auto lonelyFourByte =  reinterpret_cast<const std::uint8_t*>("\xF0\x20\x20\x20")
 	{ \
 		utf8::validateData(begin, end); \
 	} \
-	catch(const utf8::InvalidByteSequenceException &e) \
+	catch(const ExceptionName &e) \
 	{ \
+		ASSERT_EQUAL(e.validChars(), 0); \
 		ASSERT_EQUAL(e.startOffset(), 0); \
 		ASSERT_EQUAL(e.endOffset(), errorOffset); \
 		caughtException = true; \
@@ -90,31 +91,31 @@ void testDecodeChar()
 void testValidateData()
 {
 	// Truncated sequences
-	ASSERT_INVALID_ENCODING(validTwoByte, validTwoByte + 1, 0);
+	ASSERT_INVALID_ENCODING(validTwoByte, validTwoByte + 1, utf8::TruncatedInputException, 0);
 
-	ASSERT_INVALID_ENCODING(validThreeByte, validThreeByte + 1, 0);
-	ASSERT_INVALID_ENCODING(validThreeByte, validThreeByte + 2, 1);
+	ASSERT_INVALID_ENCODING(validThreeByte, validThreeByte + 1, utf8::TruncatedInputException, 0);
+	ASSERT_INVALID_ENCODING(validThreeByte, validThreeByte + 2, utf8::TruncatedInputException, 1);
 
-	ASSERT_INVALID_ENCODING(validFourByte, validFourByte + 1, 0);
-	ASSERT_INVALID_ENCODING(validFourByte, validFourByte + 2, 1);
-	ASSERT_INVALID_ENCODING(validFourByte, validFourByte + 3, 2);
+	ASSERT_INVALID_ENCODING(validFourByte, validFourByte + 1, utf8::TruncatedInputException, 0);
+	ASSERT_INVALID_ENCODING(validFourByte, validFourByte + 2, utf8::TruncatedInputException, 1);
+	ASSERT_INVALID_ENCODING(validFourByte, validFourByte + 3, utf8::TruncatedInputException, 2);
 
 	// Forbidden sequence
-	ASSERT_INVALID_ENCODING(forbiddenByte, forbiddenByte + 1, 0);
+	ASSERT_INVALID_ENCODING(forbiddenByte, forbiddenByte + 1, utf8::InvalidHeaderByteException, 0);
 
 	// Overlong sequences
-	ASSERT_INVALID_ENCODING(overlongTwoByte, overlongTwoByte + 2, 1);
-	ASSERT_INVALID_ENCODING(overlongThreeByte, overlongThreeByte + 3, 2);
-	ASSERT_INVALID_ENCODING(overlongFourByte, overlongFourByte + 4, 3);
+	ASSERT_INVALID_ENCODING(overlongTwoByte, overlongTwoByte + 2, utf8::OverlongEncodingException, 1);
+	ASSERT_INVALID_ENCODING(overlongThreeByte, overlongThreeByte + 3, utf8::OverlongEncodingException, 2);
+	ASSERT_INVALID_ENCODING(overlongFourByte, overlongFourByte + 4, utf8::OverlongEncodingException, 3);
 
 	// These are considered invalid header bytes because we don't support the deprecated > 4 byte sequences
-	ASSERT_INVALID_ENCODING(overlongFiveByte, overlongFiveByte + 5, 0);
-	ASSERT_INVALID_ENCODING(overlongSixByte, overlongSixByte + 6, 0);
+	ASSERT_INVALID_ENCODING(overlongFiveByte, overlongFiveByte + 5, utf8::InvalidHeaderByteException, 0);
+	ASSERT_INVALID_ENCODING(overlongSixByte, overlongSixByte + 6, utf8::InvalidHeaderByteException, 0);
 
 	// Lonely sequences are start characters followed by non-continuation bytes
-	ASSERT_INVALID_ENCODING(lonelyTwoByte, lonelyTwoByte + 2, 0);
-	ASSERT_INVALID_ENCODING(lonelyThreeByte, lonelyThreeByte + 3, 0);
-	ASSERT_INVALID_ENCODING(lonelyFourByte, lonelyFourByte + 4, 0);
+	ASSERT_INVALID_ENCODING(lonelyTwoByte, lonelyTwoByte + 2, utf8::MissingContinuationByteException, 0);
+	ASSERT_INVALID_ENCODING(lonelyThreeByte, lonelyThreeByte + 3, utf8::MissingContinuationByteException, 0);
+	ASSERT_INVALID_ENCODING(lonelyFourByte, lonelyFourByte + 4, utf8::MissingContinuationByteException, 0);
 }
 
 }

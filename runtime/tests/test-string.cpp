@@ -72,8 +72,9 @@ void testFromUtf8CString(World &world)
 			// Truncated sequence
 			StringCell::fromUtf8CString(world, "H\xE2\x98");
 		}
-		catch(const utf8::InvalidByteSequenceException &e)
+		catch(const utf8::TruncatedInputException &e)
 		{
+			ASSERT_EQUAL(e.validChars(), 1);
 			ASSERT_EQUAL(e.startOffset(), 1);
 			ASSERT_EQUAL(e.endOffset(), 2);
 			caughtException = true;
@@ -120,8 +121,9 @@ void testFromUtf8Data(World &world)
 			auto truncatedThreeBytes = reinterpret_cast<const std::uint8_t*>("H\xE2\x98");
 			StringCell::fromUtf8Data(world, truncatedThreeBytes, 3);
 		}
-		catch(utf8::InvalidByteSequenceException &e)
+		catch(utf8::TruncatedInputException &e)
 		{
+			ASSERT_EQUAL(e.validChars(), 1);
 			ASSERT_EQUAL(e.startOffset(), 1);
 			ASSERT_EQUAL(e.endOffset(), 2);
 			caughtException = true;

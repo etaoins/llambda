@@ -64,7 +64,7 @@ namespace
 				inputStream->putback(headerChar);
 			}
 
-			utf8ExceptionToSchemeError(world, procName, utf8::InvalidByteSequenceException(0, 0, "Invalid header byte"));
+			utf8ExceptionToSchemeError(world, procName, utf8::InvalidHeaderByteException(0, 0));
 			signalError(world, "Invalid UTF-8 header byte in (read-char)");
 		}
 
