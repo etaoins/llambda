@@ -8,6 +8,7 @@
 #include "binding/CharCell.h"
 #include "binding/StringCell.h"
 #include "binding/BytevectorCell.h"
+#include "binding/EofObjectCell.h"
 
 #include "unicode/utf8.h"
 #include "unicode/utf8/InvalidByteSequenceException.h"
@@ -40,18 +41,13 @@ namespace
 		return port->inputStream();
 	}
 
-	AnyCell *eofObject()
-	{
-		return UnitCell::instance();
-	}
-
 	AnyCell *readUtf8Character(World &world, const char *procName, std::istream *inputStream, bool putBack = false)
 	{
 		int headerChar = inputStream->get();
 
 		if (headerChar == EOF)
 		{
-			return eofObject();
+			return EofObjectCell::instance();
 		}
 
 		int seqBytes = utf8::bytesInSequence(headerChar);
@@ -90,7 +86,7 @@ namespace
 		if (!readSuccess)
 		{
 			// End of stream mid-character
-			return eofObject();
+			return EofObjectCell::instance();
 		}
 
 		try
@@ -120,6 +116,11 @@ namespace
 extern "C"
 {
 
+EofObjectCell *lliby_eof_object()
+{
+	return EofObjectCell::instance();
+}
+
 AnyCell *lliby_read_u8(World &world, PortCell *portCell)
 {
 	std::istream *portStream = portCellToInputStream(world, portCell);
@@ -128,7 +129,7 @@ AnyCell *lliby_read_u8(World &world, PortCell *portCell)
 
 	if (readChar == EOF)
 	{
-		return eofObject();
+		return EofObjectCell::instance();
 	}
 	else
 	{
@@ -144,7 +145,7 @@ AnyCell *lliby_peek_u8(World &world, PortCell *portCell)
 
 	if (peekChar == EOF)
 	{
-		return eofObject();
+		return EofObjectCell::instance();
 	}
 	else
 	{
@@ -174,7 +175,7 @@ AnyCell *lliby_read_line(World &world, PortCell *portCell)
 	if (lineBuffer.empty() && !portStream->good())
 	{
 		// End of input
-		return eofObject();
+		return EofObjectCell::instance();
 	}
 
 	try
@@ -201,7 +202,7 @@ AnyCell *lliby_read_bytevector(World &world, std::uint32_t requestedBytes, PortC
 	{
 		// End of input
 		byteArray->unref();
-		return eofObject();
+		return EofObjectCell::instance();
 	}
 
 	if (readBytes != requestedBytes)
@@ -220,7 +221,7 @@ AnyCell *lliby_read_string(World &world, std::uint32_t requestedChars, PortCell 
 	// Catch zero character reads after we've reached the end of the stream
 	if (portStream->eof())
 	{
-		return eofObject();
+		return EofObjectCell::instance();
 	}
 
 	std::vector<std::uint8_t> utf8Data;
@@ -278,7 +279,7 @@ AnyCell *lliby_read_string(World &world, std::uint32_t requestedChars, PortCell 
 			// End of stream
 			if (validChars == 0)
 			{
-				return eofObject();
+				return EofObjectCell::instance();
 			}
 			else
 			{

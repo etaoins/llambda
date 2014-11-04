@@ -17,6 +17,7 @@
 #include "binding/RecordCell.h"
 #include "binding/ErrorObjectCell.h"
 #include "binding/PortCell.h"
+#include "binding/EofObjectCell.h"
 #include "binding/DynamicStateCell.h"
 
 using lliby::alloc::AllocCell;
@@ -40,4 +41,5 @@ static_assert(sizeof(lliby::ProcedureCell) <= sizeof(AllocCell), "ProcedureCell 
 static_assert(sizeof(lliby::RecordCell) <= sizeof(AllocCell), "RecordCell does not fit in to a cell");
 static_assert(sizeof(lliby::ErrorObjectCell) <= sizeof(AllocCell), "ErrorObjectCell does not fit in to a cell");
 static_assert(sizeof(lliby::PortCell) <= sizeof(AllocCell), "PortCell does not fit in to a cell");
+static_assert(sizeof(lliby::EofObjectCell) <= sizeof(AllocCell), "EofObjectCell does not fit in to a cell");
 static_assert(sizeof(lliby::DynamicStateCell) <= sizeof(AllocCell), "DynamicStateCell does not fit in to a cell");

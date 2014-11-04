@@ -54,7 +54,7 @@ sealed abstract class PreconstructedCellType extends ConcreteCellType
 sealed abstract class CellTypeVariant extends CastableValue
 
 object CellType {
-  val nextMetadataIndex = 88L
+  val nextMetadataIndex = 90L
 }
 
 sealed trait AnyFields {
@@ -123,7 +123,7 @@ object AnyCell extends CellType with AnyFields {
   val llvmName = "any"
   val irType = UserDefinedType("any")
   val schemeName = "<any>"
-  val directSubtypes = Set[CellType](UnitCell, ListElementCell, StringCell, SymbolCell, BooleanCell, NumberCell, CharCell, VectorCell, BytevectorCell, RecordLikeCell, ErrorObjectCell, PortCell)
+  val directSubtypes = Set[CellType](UnitCell, ListElementCell, StringCell, SymbolCell, BooleanCell, NumberCell, CharCell, VectorCell, BytevectorCell, RecordLikeCell, ErrorObjectCell, PortCell, EofObjectCell)
 
   val typeIdGepIndices = List(0, 0)
   val gcStateGepIndices = List(0, 1)
@@ -1670,5 +1670,24 @@ object PortCell extends ConcreteCellType with PortFields {
       port
     ), userDefinedType=Some(irType))
   }
+}
+
+sealed trait EofObjectFields extends AnyFields {
+  val irType : FirstClassType
+}
+
+object EofObjectCell extends PreconstructedCellType with EofObjectFields {
+  val llvmName = "eofObject"
+  val irType = UserDefinedType("eofObject")
+  val schemeName = "<eof-object>"
+  val directSubtypes = Set[CellType]()
+
+  val typeId = 16L
+
+  val typeIdGepIndices = List(0, 0, 0)
+  val gcStateGepIndices = List(0, 0, 1)
+
+  val typeIdTbaaNode = NumberedMetadata(85L)
+  val gcStateTbaaNode = NumberedMetadata(86L)
 }
 

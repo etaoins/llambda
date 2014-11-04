@@ -18,8 +18,7 @@
   (export define-predicate let: let*: letrec*: letrec: let-values: let*-values:)
 
   (begin
-    (define-type (Assocof KT VT) (Listof (Pairof KT VT)))
-    (define-type <eof-object> <unit>))
+    (define-type (Assocof KT VT) (Listof (Pairof KT VT))))
 
   (begin
     (define-syntax define-predicate

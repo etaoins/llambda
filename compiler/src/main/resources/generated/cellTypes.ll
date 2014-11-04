@@ -145,3 +145,8 @@
 !82 = metadata !{metadata !"Any::typeId->Port", metadata !10}
 !83 = metadata !{metadata !"Any::gcState->Port", metadata !11}
 !84 = metadata !{metadata !"Port::port"}
+
+; {supertype}
+%eofObject = type {%any}
+!85 = metadata !{metadata !"Any::typeId->EofObject", metadata !10}
+!86 = metadata !{metadata !"Any::gcState->EofObject", metadata !11}

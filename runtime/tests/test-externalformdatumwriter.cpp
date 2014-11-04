@@ -20,6 +20,7 @@
 #include "binding/RecordCell.h"
 #include "binding/ErrorObjectCell.h"
 #include "binding/PortCell.h"
+#include "binding/EofObjectCell.h"
 
 #include "port/StandardOutputPort.h"
 
@@ -223,6 +224,11 @@ void testPort(World &world)
 	assertForm(portCell, "#!port");
 }
 
+void testEofObject()
+{
+	assertForm(EofObjectCell::instance(), "#!eof");
+}
+
 void testAll(World &world)
 {
 	testUnit();
@@ -240,6 +246,7 @@ void testAll(World &world)
 	testRecord(world);
 	testErrorObject(world);
 	testPort(world);
+	testEofObject();
 }
 
 }

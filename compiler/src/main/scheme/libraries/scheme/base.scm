@@ -557,9 +557,8 @@
     (define-r7rs current-error-port (make-parameter ((world-function "_lliby_stderr_port" () -> <port>))))
 
     ; We don't support (read) so we can use #!unit for the end-of-file object
-    (define-type <eof-object> <unit>)
     (define-r7rs eof-object? (make-predicate <eof-object>))
-    (define-r7rs eof-object (lambda () #!unit))
+    (define-r7rs eof-object (native-function "lliby_eof_object" () -> <eof-object>))
 
     (define-syntax define-input-proc
       (syntax-rules (->)

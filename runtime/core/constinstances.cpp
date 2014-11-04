@@ -3,6 +3,7 @@
 #include "binding/UnitCell.h"
 #include "binding/BooleanCell.h"
 #include "binding/EmptyListCell.h"
+#include "binding/EofObjectCell.h"
 
 extern "C"
 {
@@ -18,5 +19,6 @@ const lliby::UnitCell lliby_unit_value;
 const lliby::BooleanCell lliby_false_value(false);
 const lliby::BooleanCell lliby_true_value(true);
 const lliby::EmptyListCell lliby_empty_list_value;
+const lliby::EofObjectCell lliby_eof_object_value;
 
 }

@@ -32,6 +32,7 @@ class ProcedureCell;
 class RecordCell;
 class ErrorObjectCell;
 class PortCell;
+class EofObjectCell;
 class DynamicStateCell;
 
 }
