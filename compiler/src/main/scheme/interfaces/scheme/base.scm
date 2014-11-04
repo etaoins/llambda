@@ -13,6 +13,7 @@
         expt = < > <= >= positive? negative? floor ceiling truncate round square abs truncate/ truncate-quotient
         truncate-remainder floor/ floor-quotient floor-remainder quotient remainder modulo max min gcd lcm
         exact-integer-sqrt)
+(export number->string)
 (export boolean? not boolean=?)
 (export pair? null? list? cons car cdr caar cadr cdar cddr length list-copy make-list list append memv memq member assv
         assq assoc reverse list-tail list-ref)

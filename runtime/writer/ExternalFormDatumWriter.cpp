@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <iomanip>
+#include <cmath>
 
 #include "binding/AnyCell.h"
 #include "binding/UnitCell.h"
@@ -42,7 +43,7 @@ namespace
 namespace lliby
 {
 
-void ExternalFormDatumWriter::render(const AnyCell *datum)
+void ExternalFormDatumWriter::render(const AnyCell *datum, int defaultRadix)
 {
 	if (auto value = cell_cast<UnitCell>(datum))
 	{
@@ -58,7 +59,7 @@ void ExternalFormDatumWriter::render(const AnyCell *datum)
 	}
 	else if (auto value = cell_cast<ExactIntegerCell>(datum))
 	{
-		renderExactInteger(value);
+		renderExactInteger(value, defaultRadix);
 	}
 	else if (auto value = cell_cast<FlonumCell>(datum))
 	{
@@ -132,30 +133,105 @@ void ExternalFormDatumWriter::renderBoolean(const BooleanCell *value)
 	}
 }
 
-void ExternalFormDatumWriter::renderExactInteger(const ExactIntegerCell *value)
+void ExternalFormDatumWriter::renderExactInteger(const ExactIntegerCell *value, int defaultRadix)
 {
-	m_outStream << value->value();
+	// Non-decimal bases don't work with negative numbers
+	const std::int64_t signedNumber = value->value();
+	bool negative = (signedNumber < 0);
+	std::uint64_t absoluteNumber = negative ? -signedNumber : signedNumber;
+
+	switch(defaultRadix)
+	{
+	case 2:
+		{
+			// Space for 64bit + #b + sign + NULL terminator
+			char outputBuffer[68];
+			char *outPtr = &outputBuffer[sizeof(outputBuffer)];
+
+			*(--outPtr) = 0;
+
+			if (absoluteNumber == 0)
+			{
+				// Need at least one number
+				*(--outPtr) = '0';
+			}
+			else
+			{
+				while(absoluteNumber)
+				{
+					*(--outPtr) = (absoluteNumber & 0x1) ? '1' : '0';
+					absoluteNumber = absoluteNumber >> 1;
+				}
+
+				if (negative)
+				{
+					*(--outPtr) = '-';
+				}
+			}
+
+			*(--outPtr) = 'b';
+			*(--outPtr) = '#';
+
+			m_outStream << outPtr;
+		}
+		break;
+
+	case 8:
+		m_outStream << "#o";
+
+		if (negative)
+		{
+			m_outStream << "-";
+		}
+
+		m_outStream << std::oct << absoluteNumber;
+		break;
+	case 16:
+		m_outStream << "#x";
+
+		if (negative)
+		{
+			m_outStream << "-";
+		}
+
+		m_outStream << std::hex << absoluteNumber;
+		break;
+	default:
+		if (negative)
+		{
+			m_outStream << "-";
+		}
+
+		m_outStream << std::dec << absoluteNumber;
+		break;
+	}
 }
 
 void ExternalFormDatumWriter::renderFlonum(const FlonumCell *value)
 {
-	if (value->isNaN())
+	const double number = value->value();
+
+	if (std::isnan(number))
 	{
 		m_outStream << "+nan.0";
 	}
-	else if (value->isNegativeInfinity())
+	else if (std::isinf(number))
 	{
-		m_outStream << "-inf.0";
-	}
-	else if (value->isPositiveInfinity())
-	{
-		m_outStream << "+inf.0";
+		if (number < 0.0)
+		{
+			m_outStream << "-inf.0";
+		}
+		else
+		{
+			m_outStream << "+inf.0";
+		}
 	}
 	else
 	{
-		m_outStream << std::setprecision(256) << value->value();
+		m_outStream << std::setprecision(256) << number;
 
-		if (value->isInteger())
+		double unused;
+		if (std::modf(number, &unused) == 0.0)
 		{
 			// Add on ".0" to indicate inexactness
 			m_outStream << ".0";

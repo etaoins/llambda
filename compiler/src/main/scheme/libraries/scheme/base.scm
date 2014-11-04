@@ -375,6 +375,13 @@
 
     (define-r7rs exact-integer-sqrt (world-function "lliby_exact_integer_sqrt" (<native-int64>) -> (Values <exact-integer> <exact-integer>)))
 
+    (define native-number->string (world-function "lliby_number_to_string" (<number> <native-uint8>) -> <string>))
+    (define-r7rs number->string (case-lambda:
+      (([num : <number>])
+       (native-number->string num 10))
+      (([num : <number>] [radix : <exact-integer>])
+       (native-number->string num radix))))
+
     (define-r7rs pair? (make-predicate <pair>))
     (define-r7rs null? (make-predicate <empty-list>))
     (define-r7rs list? (make-predicate <list>))

@@ -52,6 +52,7 @@ add_library(lliby
 	stdlib/list.cpp
 	stdlib/map.cpp
 	stdlib/number.cpp
+	stdlib/numberio.cpp
 	stdlib/port.cpp
 	stdlib/output.cpp
 	stdlib/process.cpp
