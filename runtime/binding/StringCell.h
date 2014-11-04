@@ -68,11 +68,6 @@ public:
 	// less than, equal to or greater than the other string
 	int compare(const StringCell *other, CaseSensitivity cs = CaseSensitivity::Sensitive) const;
 
-	bool asciiOnly() const
-	{
-		return byteLength() == charLength();
-	}
-
 	BytevectorCell *toUtf8Bytevector(World &world, std::int64_t start = 0, std::int64_t end = -1);
 	
 	StringCell *toUppercaseString(World &world);
@@ -127,7 +122,7 @@ protected:
 	// Creates an uninitialized cell with the given size
 	static StringCell* createUninitialized(World &world, std::uint32_t byteLength, std::uint32_t charLength);
 
-	const std::uint8_t *charPointer(const std::uint8_t *scanFrom, uint32_t charOffset);
+	const std::uint8_t *charPointer(std::uint32_t cahrOffset, const std::uint8_t *startFrom, std::uint32_t startOffset);
 	const std::uint8_t *charPointer(std::uint32_t charOffset);
 
 	bool replaceBytes(const CharRange &range, const std::uint8_t *pattern, unsigned int patternBytes, unsigned int count, bool sameString);

@@ -272,23 +272,48 @@ const std::uint8_t* StringCell::constUtf8Data() const
 
 const std::uint8_t* StringCell::charPointer(std::uint32_t charOffset)
 {
-	return charPointer(utf8Data(),charOffset);
+	return charPointer(charOffset, utf8Data(), 0);
 }
 
-const std::uint8_t* StringCell::charPointer(const std::uint8_t *scanFrom, uint32_t charOffset)
+const std::uint8_t* StringCell::charPointer(std::uint32_t charOffset, const std::uint8_t *startFrom, std::uint32_t startOffset)
 {
-	if (asciiOnly())
+	// Is the rest of the string ASCII?
+	// We can determine this by verifying the number remaining bytes in the string are equal to the number of remaining
+	// characters.
+	const auto bytesLeft = &utf8Data()[byteLength()] - startFrom;
+	const auto charsLeft = charLength() - startOffset;
+
+	if (bytesLeft == charsLeft)
 	{
-		return &scanFrom[charOffset];
+		return startFrom + (charOffset - startOffset);
 	}
 
-	const std::uint8_t *scanPtr = scanFrom;
+	const std::uint8_t *scanPtr;
 
-	while(charOffset > 0)
+	// Should we do a forward scan or backwards scan?
+	// Prefer forwards slightly as it probably plays better with hardware memory prefetch
+	if ((charOffset - startOffset) > (charsLeft / 2))
 	{
-		if (!utf8::isContinuationByte(*(++scanPtr)))
+		scanPtr = &utf8Data()[byteLength()];
+
+		auto endOffset = charLength();
+		while(endOffset > charOffset)
 		{
-			charOffset--;
+			if (!utf8::isContinuationByte(*(--scanPtr)))
+			{
+				endOffset--;
+			}
+		}
+	}
+	else
+	{
+		scanPtr = startFrom;
+		while(startOffset < charOffset)
+		{
+			if (!utf8::isContinuationByte(*(++scanPtr)))
+			{
+				startOffset++;
+			}
 		}
 	}
 
@@ -317,17 +342,7 @@ StringCell::CharRange StringCell::charRange(std::int64_t start, std::int64_t end
 	const std::uint32_t charCount = end - start;
 
 	const std::uint8_t *startPointer = charPointer(start);
-	const std::uint8_t *endPointer;
-
-	if (end == charLength())
-	{
-		endPointer = &utf8Data()[byteLength()];
-	}
-	else
-	{
-		// Find our end pointer
-		endPointer = charPointer(startPointer, charCount);
-	}
+	const std::uint8_t *endPointer = charPointer(end, startPointer, start);
 
 	return CharRange { startPointer, endPointer, charCount };
 }
