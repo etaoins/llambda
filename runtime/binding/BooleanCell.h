@@ -29,14 +29,14 @@ public:
 		}
 	}
 	
-	static const BooleanCell* falseInstance()
+	static BooleanCell* falseInstance()
 	{
-		return &lliby_false_value;
+		return const_cast<BooleanCell*>(&lliby_false_value);
 	}
 
-	static const BooleanCell* trueInstance()
+	static BooleanCell* trueInstance()
 	{
-		return &lliby_true_value;
+		return const_cast<BooleanCell*>(&lliby_true_value);
 	}
 };
 

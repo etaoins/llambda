@@ -117,7 +117,7 @@ BytevectorCell* lliby_get_output_bytevector(World &world, PortCell *portCell)
 
 PortCell* lliby_open_input_string(World &world, StringCell *string)
 {
-	std::string inputString(reinterpret_cast<const char *>(string->constUtf8Data()), string->byteLength());
+	std::string inputString(string->toUtf8StdString());
 
 	return PortCell::createInstance(world, new BufferInputPort(inputString));
 }

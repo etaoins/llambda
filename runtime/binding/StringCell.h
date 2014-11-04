@@ -69,12 +69,17 @@ public:
 	int compare(const StringCell *other, CaseSensitivity cs = CaseSensitivity::Sensitive) const;
 
 	BytevectorCell *toUtf8Bytevector(World &world, std::int64_t start = 0, std::int64_t end = -1);
-	
+
 	StringCell *toUppercaseString(World &world);
 	StringCell *toLowercaseString(World &world);
 	StringCell *toCaseFoldedString(World &world);
 	
 	const std::uint8_t* constUtf8Data() const;
+
+	std::string toUtf8StdString() const
+	{
+		return std::string(reinterpret_cast<const char*>(constUtf8Data()), byteLength());
+	}
 
 	void finalizeString();
 

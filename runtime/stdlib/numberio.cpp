@@ -4,8 +4,12 @@
 #include "binding/ExactIntegerCell.h"
 #include "binding/FlonumCell.h"
 #include "binding/StringCell.h"
+#include "binding/BooleanCell.h"
+#include "binding/EofObjectCell.h"
 
 #include "writer/ExternalFormDatumWriter.h"
+#include "reader/DatumReader.h"
+#include "reader/ReadErrorException.h"
 
 #include "core/error.h"
 
@@ -37,6 +41,39 @@ StringCell* lliby_number_to_string(World &world, NumberCell *numberCell, std::ui
 
 	writer.render(numberCell, radix);
 	return StringCell::fromUtf8StdString(world, strStream.str());
+}
+
+AnyCell* lliby_string_to_number(World &world, StringCell *stringCell, std::uint32_t radix)
+{
+	if ((radix != 2) && (radix != 8) && (radix != 10) && (radix != 16))
+	{
+		signalError(world, "(string->number) with illegal radix", {stringCell});
+	}
+
+	std::string inputString(stringCell->toUtf8StdString());
+	std::istringstream strStream(inputString);
+
+	try
+	{
+		DatumReader reader(world, strStream);
+
+		if (auto numberCell = cell_cast<NumberCell>(reader.parse(radix)))
+		{
+			if (reader.parse() != EofObjectCell::instance())
+			{
+				// Junk after number
+				return BooleanCell::falseInstance();
+			}
+
+			return numberCell;
+		}
+
+		return BooleanCell::falseInstance();
+	}
+	catch(ReadErrorException)
+	{
+		return BooleanCell::falseInstance();
+	}
 }
 
 }

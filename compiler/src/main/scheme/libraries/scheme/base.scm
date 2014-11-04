@@ -382,6 +382,13 @@
       (([num : <number>] [radix : <exact-integer>])
        (native-number->string num radix))))
 
+    (define native-string->number (world-function "lliby_string_to_number" (<string> <native-uint8>) -> (U #f <number>)))
+    (define-r7rs string->number (case-lambda:
+      (([str : <string>])
+       (native-string->number str 10))
+      (([str : <string>] [radix : <exact-integer>])
+       (native-string->number str radix))))
+
     (define-r7rs pair? (make-predicate <pair>))
     (define-r7rs null? (make-predicate <empty-list>))
     (define-r7rs list? (make-predicate <list>))

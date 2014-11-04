@@ -60,3 +60,26 @@
 
 (define-test "(number->string) with non-decimal inexact is an error" (expect-failure
   (number->string 17.0 16)))
+
+(define-test "(string->number)" (expect-success
+  (assert-equal 100 (string->number "100"))
+  (assert-equal 4 (string->number "100" 2))
+  (assert-equal 64 (string->number "100" 8))
+  (assert-equal 256 (string->number "100" 16))
+
+  (assert-equal 100 (string->number "#d100" 8))
+
+  (assert-equal +nan.0 (string->number "+nan.0" 8))
+  (assert-equal -nan.0 (string->number "-nan.0" 8))
+  (assert-equal +inf.0 (string->number "+inf.0" 8))
+  (assert-equal -inf.0 (string->number "-inf.0" 8))
+
+  (assert-equal -2.0 (string->number "-500/250"))
+
+  (assert-equal #f (string->number "+" 16))
+  (assert-equal #f (string->number "ddy" 16))
+  (assert-equal #f (string->number "2 5" 16))
+  ))
+
+(define-test "(string->number) in radix 3 is an error" (expect-failure
+  (string->number "17" 3)))
