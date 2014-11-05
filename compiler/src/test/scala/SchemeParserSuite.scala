@@ -81,6 +81,10 @@ class SchemeParserSuite extends FunSuite with Inside {
     assertParsesAsSymbol("""|two\x20;words|""", "two words")
     assertParsesAsSymbol("||", "")
     assertParsesAsSymbol("""|\t\t|""", "\t\t")
+
+    intercept[ParseErrorException] {
+      scm"""|foo"""
+    }
   }
 
   test("integers") {

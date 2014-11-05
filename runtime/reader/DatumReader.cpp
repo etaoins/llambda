@@ -5,11 +5,15 @@
 #include <cstdlib>
 #include <string>
 #include <ctype.h>
+#include <iterator>
 
 #include "binding/ExactIntegerCell.h"
 #include "binding/FlonumCell.h"
 #include "binding/EofObjectCell.h"
 #include "binding/BooleanCell.h"
+#include "binding/SymbolCell.h"
+
+#include "unicode/utf8.h"
 
 #include "ReadErrorException.h"
 
@@ -57,6 +61,83 @@ namespace
 			{
 				inStream.putback(nextChar);
 				return;
+			}
+		}
+	}
+
+	std::string takeQuotedStringLike(std::istream &inStream, char quoteChar)
+	{
+		std::string accum;
+
+		while(true)
+		{
+			int nextChar = inStream.get();
+
+			if (nextChar == EOF)
+			{
+				// Out of data without closing quote
+				throw ReadErrorException("End of input without closing quote for string-like");
+			}
+
+			if (nextChar == quoteChar)
+			{
+				return accum;
+			}
+			else if (nextChar == '\\')
+			{
+				// This is a quoted character
+				nextChar = inStream.get();
+
+				if (nextChar == EOF)
+				{
+					// Out of data without closing quote
+					throw ReadErrorException("End of input during backslash escaped sequence");
+				}
+
+				switch(nextChar)
+				{
+				case '\\': accum.push_back('\\'); break;
+				case 'a':  accum.push_back(0x07); break;
+				case 'b':  accum.push_back(0x08); break;
+				case 't':  accum.push_back(0x09); break;
+				case 'n':  accum.push_back(0x0a); break;
+				case 'r':  accum.push_back(0x0d); break;
+				case '"':  accum.push_back(0x22); break;
+				case '|':  accum.push_back(0x7c); break;
+				case 'x':
+					{
+						// Hex escape
+						std::string hexCode;
+
+						takeWhile(inStream, hexCode, [] (char c)
+						{
+							char lowerC = tolower(c);
+
+							return ((lowerC >= '0') && (lowerC <= '9')) || ((lowerC >= 'a') && (lowerC <= 'f'));
+						});
+
+						nextChar = inStream.get();
+
+						if (nextChar != ';')
+						{
+							throw ReadErrorException("Hex escape not terminated with ;");
+						}
+						else if (hexCode.empty())
+						{
+							throw ReadErrorException("Empty hex escape");
+						}
+
+						UnicodeChar escapedChar(strtol(hexCode.c_str(), nullptr, 16));
+						utf8::appendChar(escapedChar, std::back_inserter(accum));
+					}
+					break;
+
+				default:   accum.push_back('\\'); accum.push_back(nextChar);
+				}
+			}
+			else
+			{
+				accum.push_back(nextChar);
 			}
 		}
 	}
@@ -135,9 +216,13 @@ AnyCell* DatumReader::parse(int defaultRadix)
 	{
 		return parseOctoDatum();
 	}
+	else if (peekChar == '|')
+	{
+		return parseEnclosedSymbol();
+	}
 
 	// Not implemented!
-	throw ReadErrorException();
+	throw ReadErrorException("Unrecognized start character");
 }
 
 AnyCell* DatumReader::parseOctoDatum()
@@ -174,7 +259,15 @@ AnyCell* DatumReader::parseOctoDatum()
 		return BooleanCell::falseInstance();
 	}
 
-	throw ReadErrorException();
+	throw ReadErrorException("Unrecognized # datum");
+}
+
+AnyCell* DatumReader::parseEnclosedSymbol()
+{
+	// Consume the |
+	m_inStream.get();
+
+	return SymbolCell::fromUtf8StdString(m_world, takeQuotedStringLike(m_inStream, '|'));
 }
 
 AnyCell* DatumReader::parseNumber(int radix)
@@ -252,7 +345,7 @@ AnyCell* DatumReader::parseUnradixedNumber(int radix, bool negative)
 	if (numberString.empty())
 	{
 		// Not valid
-		throw ReadErrorException();
+		throw ReadErrorException("No valid number found after number prefix");
 	}
 
 	if (radix == 10)

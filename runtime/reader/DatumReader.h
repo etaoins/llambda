@@ -34,6 +34,7 @@ public:
 
 protected:
 	AnyCell *parseOctoDatum();
+	AnyCell *parseEnclosedSymbol();
 
 	AnyCell *parseNumber(int radix);
 	AnyCell *parsePositiveNumber(int radix);

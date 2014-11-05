@@ -8,8 +8,11 @@
 #include "binding/FlonumCell.h"
 #include "binding/EmptyListCell.h"
 #include "binding/EofObjectCell.h"
+#include "binding/SymbolCell.h"
+#include "binding/StringCell.h"
 
 #include "reader/DatumReader.h"
+#include "reader/ReadErrorException.h"
 #include "writer/ExternalFormDatumWriter.h"
 
 #include "alloc/cellref.h"
@@ -27,7 +30,23 @@ using namespace lliby;
 	DatumReader reader(world, inputStream); \
 	alloc::StrongRef<AnyCell> expected(world, expectedRaw); \
 	\
-	AnyCell *actual = reader.parse(); \
+	AnyCell *actual; \
+	\
+	try \
+	{ \
+		actual = reader.parse(); \
+	} \
+	catch(const ReadErrorException &e) \
+	{ \
+		ExternalFormDatumWriter writer(std::cerr); \
+		std::cerr << "\"" << datumString << "\" did not parse as expected value \""; \
+		writer.render(expected); \
+		std::cerr << "\"; instead raised parse exception \""; \
+		std::cerr << e.message(); \
+		std::cerr << "\" at line " << __LINE__ << std::endl; \
+		\
+		exit(-1); \
+	} \
 	\
 	if (!actual->isEqual(expected)) \
 	{ \
@@ -39,6 +58,29 @@ using namespace lliby;
 		std::cerr << "\" at line " << __LINE__ << std::endl; \
 		\
 		exit(-1); \
+	} \
+}
+
+#define ASSERT_INVALID_PARSE(datumString) \
+{ \
+	std::istringstream inputStream(datumString); \
+	DatumReader reader(world, inputStream); \
+	\
+	try \
+	{ \
+		AnyCell *actual = reader.parse(); \
+		\
+		ExternalFormDatumWriter writer(std::cerr); \
+		std::cerr << "\"" << datumString << "\" did not raise a parse exception "; \
+		std::cerr << "instead parsed as \""; \
+		writer.render(actual); \
+		std::cerr << "\" at line " << __LINE__ << std::endl; \
+		\
+		exit(-1); \
+	} \
+	catch(const ReadErrorException &) \
+	{ \
+		exit(0); \
 	} \
 }
 
@@ -54,6 +96,18 @@ void testBooleans(World &world)
 
 	ASSERT_PARSES("#f", BooleanCell::falseInstance());
 	ASSERT_PARSES("#false", BooleanCell::falseInstance());
+}
+
+void testEnclosedSymbols(World &world)
+{
+    ASSERT_PARSES(R"(|Hello, world!|)", SymbolCell::fromUtf8StdString(world, "Hello, world!"));
+    ASSERT_PARSES(R"(|\"|)", SymbolCell::fromUtf8StdString(world, "\""));
+    ASSERT_PARSES(R"(|\||)", SymbolCell::fromUtf8StdString(world, "|"));
+    ASSERT_PARSES(R"(|two\x20;words|)", SymbolCell::fromUtf8StdString(world, "two words"));
+    ASSERT_PARSES(R"(||)", SymbolCell::fromUtf8StdString(world, ""));
+    ASSERT_PARSES(R"(|\t\t|)", SymbolCell::fromUtf8StdString(world, "\t\t"));
+
+	ASSERT_INVALID_PARSE("|foo");
 }
 
 void testIntegers(World &world)
@@ -104,6 +158,7 @@ void testAll(World &world)
 {
 	testEmptyInput(world);
 	testBooleans(world);
+	testEnclosedSymbols(world);
 	testIntegers(world);
 	testReals(world);
 }
