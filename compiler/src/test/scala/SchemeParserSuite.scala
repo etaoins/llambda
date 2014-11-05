@@ -285,6 +285,10 @@ newline""", "Bare\nnewline")
     ))
 
     assertReflexiveParse("#u8()", List(ast.Bytevector(Vector())))
+
+    intercept[ParseErrorException] {
+      SchemeParser.parseStringAsData("#u8(1 2")
+    }
   }
 
   test("characters") { 

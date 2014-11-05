@@ -16,6 +16,7 @@
 #include "binding/UnitCell.h"
 #include "binding/EmptyListCell.h"
 #include "binding/VectorCell.h"
+#include "binding/BytevectorCell.h"
 
 #include "alloc/cellref.h"
 
@@ -319,6 +320,14 @@ AnyCell* DatumReader::parseOctoDatum()
 		if (consumeLiteral(m_inStream, "unit"))
 		{
 			return UnitCell::instance();
+		}
+	}
+	else if (getChar == 'u')
+	{
+		// This is the rest of #u8(, not just a sad face
+		if (consumeLiteral(m_inStream, "8("))
+		{
+			return parseBytevector();
 		}
 	}
 
@@ -653,6 +662,52 @@ AnyCell* DatumReader::parseVector()
 	}
 
 	return VectorCell::fromElements(m_world, newElements, elementCount);
+}
+
+AnyCell* DatumReader::parseBytevector()
+{
+	std::vector<std::uint8_t> elements;
+
+	// The ( is already taken
+
+	while(true)
+	{
+		consumeWhitespace(m_inStream);
+
+		if (m_inStream.eof())
+		{
+			throw ReadErrorException("Unexpected end of input while reading bytevector");
+		}
+
+		if (m_inStream.peek() == ')')
+		{
+			// Take the )
+			m_inStream.get();
+
+			// All done
+			break;
+		}
+
+		// Note that this is fairly inefficient as it needs to GC allocate the parsed datum and then immediately
+		// discard it
+		AnyCell *element = parse();
+
+		if (auto exactInt = cell_cast<ExactIntegerCell>(element))
+		{
+			if ((exactInt->value() < 0) || (exactInt->value() > 255))
+			{
+				throw ReadErrorException("Value out of byte range while reading bytevector");
+			}
+
+			elements.push_back(exactInt->value());
+		}
+		else
+		{
+			throw ReadErrorException("Non-integer while reading bytevector");
+		}
+	}
+
+	return BytevectorCell::fromData(m_world, elements.data(), elements.size());
 }
 
 }

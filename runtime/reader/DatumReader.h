@@ -45,6 +45,7 @@ protected:
 
 	AnyCell *parseList(char closeChar);
 	AnyCell *parseVector();
+	AnyCell *parseBytevector();
 
 	World &m_world;
 	std::istream &m_inStream;

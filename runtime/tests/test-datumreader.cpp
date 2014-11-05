@@ -12,6 +12,7 @@
 #include "binding/StringCell.h"
 #include "binding/UnitCell.h"
 #include "binding/VectorCell.h"
+#include "binding/BytevectorCell.h"
 #include "binding/ProperList.h"
 
 #include "reader/DatumReader.h"
@@ -281,6 +282,19 @@ void testVector(World &world)
 	ASSERT_INVALID_PARSE("#(bar");
 }
 
+void testBytevector(World &world)
+{
+	std::uint8_t expectedElements[] = {0, 10, 5, 255, 0};
+
+	BytevectorCell *expectedBytevector = BytevectorCell::fromData(world, expectedElements, sizeof(expectedElements));
+	ASSERT_PARSES("#u8(+0 10. 5 #xff #d0)", expectedBytevector);
+
+	expectedBytevector = BytevectorCell::fromData(world, expectedElements, 0);
+	ASSERT_PARSES("#u8()", expectedBytevector);
+
+	ASSERT_INVALID_PARSE("#u8(1 2");
+}
+
 void testUnit(World &world)
 {
 	ASSERT_PARSES("#!unit", UnitCell::instance());
@@ -300,6 +314,7 @@ void testAll(World &world)
 	testSquareProperList(world);
 	testSquareImproperList(world);
 	testVector(world);
+	testBytevector(world);
 	testUnit(world);
 }
 
