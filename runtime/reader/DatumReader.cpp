@@ -45,6 +45,19 @@ namespace
 		}
 	}
 
+	bool isUnenclosedSymbolChar(char c)
+	{
+		return
+			// Has to be above the control character and whitespace range
+			(c > 0x20) &&
+			// Can't be a literal backslash
+			(c != 0x5c) &&
+			// Can't be any syntax characters
+			(c != '|') && (c != '"') && (c != '[') && (c != ']') && (c != '(') && (c != ')') && (c != '#') &&
+			// Can't be DEL or above
+			(c < 0x7f);
+	}
+
 	template<class F>
 	void takeWhile(std::istream &inStream, std::string &accum, F predicate)
 	{
@@ -327,24 +340,16 @@ AnyCell* DatumReader::parseSymbol()
 {
 	std::string symbolData;
 
-	takeWhile(m_inStream, symbolData, [] (char c) {
-		return
-			// Has to be above the control character and whitespace range
-			(c > 0x20) &&
-			// Can't be a literal backslash
-			(c != 0x5c) &&
-			// Can't be "
-			(c != '"') &&
-			// Can't be |
-			(c != '|') &&
-			// Can't be DEL or above
-			(c < 0x7f);
-	});
+	takeWhile(m_inStream, symbolData, isUnenclosedSymbolChar);
 
 	if (symbolData.empty())
 	{
 		// Not implemented!
 		throw ReadErrorException("Unrecognized start character");
+	}
+	else if (symbolData == ".")
+	{
+		throw ReadErrorException(". reserved for terminating improper lists");
 	}
 
 	return SymbolCell::fromUtf8StdString(m_world, symbolData);
@@ -535,9 +540,11 @@ AnyCell* DatumReader::parseList(char closeChar)
 			throw ReadErrorException("Unexpected end of input while reading list");
 		}
 
-		if (m_inStream.peek() == closeChar)
+		int peekChar = m_inStream.peek();
+
+		if (peekChar == closeChar)
 		{
-			// All done
+			// Finished as a proper list
 			if (listHead)
 			{
 				return listHead.data();
@@ -545,6 +552,39 @@ AnyCell* DatumReader::parseList(char closeChar)
 			else
 			{
 				return EmptyListCell::instance();
+			}
+		}
+		else if (peekChar == '.')
+		{
+			// Take the .
+			m_inStream.get();
+
+			// Make sure they aren't a symbol
+			if (isUnenclosedSymbolChar(m_inStream.peek()))
+			{
+				m_inStream.putback('.');
+				// Fall through to parsing normal below
+			}
+			else
+			{
+				AnyCell *tailValue = parse();
+
+				consumeWhitespace(m_inStream);
+
+				if (m_inStream.get() != closeChar)
+				{
+					throw ReadErrorException("Improper list expected to terminate after tail datum");
+				}
+
+				if (!listHead)
+				{
+					return tailValue;
+				}
+				else
+				{
+					listTail->setCdr(tailValue);
+					return listHead.data();
+				}
 			}
 		}
 

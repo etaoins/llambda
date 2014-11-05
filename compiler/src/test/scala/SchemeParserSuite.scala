@@ -68,6 +68,10 @@ class SchemeParserSuite extends FunSuite with Inside {
     assertParsesAsSymbol("!$%&*+-./:<=>?@^_")
     assertParsesAsSymbol("from->to")
     assertParsesAsSymbol("...")
+
+    intercept[ParseErrorException] {
+      scm"""."""
+    }
   }
   
   test("symbols are case sensitive") {
@@ -176,11 +180,29 @@ newline""", "Bare\nnewline")
   }
 
   test("improper lists") {
-    assert(scm"(#false ONE 2.0 . +inf.0)" == List(
+    assert(scm"(. #t)" === List(ast.BooleanLiteral(true)))
+
+    assert(scm"(#false ONE 2.0 . +inf.0)" === List(
       ast.Pair(ast.BooleanLiteral(false),
         ast.Pair(ast.Symbol("ONE"),
           ast.Pair(ast.FlonumLiteral(2.0), ast.PositiveInfinityLiteral()
     )))))
+
+    // Make sure symbol prefixed with . isn't considered an improper list terminator
+    assert(scm"(one two .three)" === List(ast.ProperList(
+      List(
+        ast.Symbol("one"),
+        ast.Symbol("two"),
+        ast.Symbol(".three")
+    ))))
+
+    intercept[ParseErrorException] {
+      scm"""(one . two three)"""
+    }
+
+    intercept[ParseErrorException] {
+      scm"""(one two three .)"""
+    }
   }
   
   test("square proper lists") {
@@ -200,7 +222,9 @@ newline""", "Bare\nnewline")
   }
 
   test("square improper lists") {
-    assert(scm"[#false ONE 2.0 . +inf.0]" == List(
+    assert(scm"[. #t]" === List(ast.BooleanLiteral(true)))
+
+    assert(scm"[#false ONE 2.0 . +inf.0]" === List(
       ast.Pair(ast.BooleanLiteral(false),
         ast.Pair(ast.Symbol("ONE"),
           ast.Pair(ast.FlonumLiteral(2.0), ast.PositiveInfinityLiteral()

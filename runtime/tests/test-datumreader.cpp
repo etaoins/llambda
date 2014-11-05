@@ -119,6 +119,8 @@ void testSymbols(World &world)
 	ASSERT_SYMBOL_PARSE("+foo");
 	ASSERT_SYMBOL_PARSE("-");
 	ASSERT_SYMBOL_PARSE("-bar");
+
+	ASSERT_INVALID_PARSE(".");
 }
 
 void testEnclosedSymbols(World &world)
@@ -209,6 +211,30 @@ void testProperList(World &world)
 	ASSERT_PARSES("(#true integer? |Hello| -1 2.0)", expectedList);
 }
 
+void testImproperList(World &world)
+{
+    ASSERT_PARSES("(. #t)", BooleanCell::trueInstance());
+
+	alloc::SymbolRef oneSymbol(world, SymbolCell::fromUtf8StdString(world, "ONE"));
+	alloc::FlonumRef plusTwo(world, FlonumCell::fromValue(world, 2.0));
+	alloc::FlonumRef plusInf(world, FlonumCell::positiveInfinity(world));
+
+	AnyCell *expectedList = ListElementCell::createList(world, {BooleanCell::falseInstance(), oneSymbol, plusTwo}, plusInf);
+
+   	ASSERT_PARSES("(#false ONE 2.0 . +inf.0)", expectedList);
+
+	alloc::SymbolRef twoSymbol(world, SymbolCell::fromUtf8StdString(world, "TWO"));
+	alloc::SymbolRef dotThreeSymbol(world, SymbolCell::fromUtf8StdString(world, ".THREE"));
+	expectedList = ProperList<AnyCell>::create(world, {oneSymbol, twoSymbol, dotThreeSymbol});
+
+   	ASSERT_PARSES("(ONE TWO .THREE)", expectedList);
+
+	// List needs to terminate after .
+	ASSERT_INVALID_PARSE("(one . two three)");
+	// No datum after .
+	ASSERT_INVALID_PARSE("(one two three .)");
+}
+
 void testSquareProperList(World &world)
 {
 	alloc::SymbolRef helloSymbol(world, SymbolCell::fromUtf8StdString(world, "Hello"));
@@ -219,6 +245,17 @@ void testSquareProperList(World &world)
 	ProperList<AnyCell> *expectedList = ProperList<AnyCell>::create(world, {BooleanCell::trueInstance(), integerSymbol, helloSymbol, negativeOne, plusTwo});
 
 	ASSERT_PARSES("[#true integer? |Hello| -1 2.0]", expectedList);
+}
+
+void testSquareImproperList(World &world)
+{
+	alloc::SymbolRef oneSymbol(world, SymbolCell::fromUtf8StdString(world, "ONE"));
+	alloc::FlonumRef plusTwo(world, FlonumCell::fromValue(world, 2.0));
+	alloc::FlonumRef plusInf(world, FlonumCell::positiveInfinity(world));
+
+	AnyCell *expectedList = ListElementCell::createList(world, {BooleanCell::falseInstance(), oneSymbol, plusTwo}, plusInf);
+
+   	ASSERT_PARSES("[#false ONE 2.0 . +inf.0]", expectedList);
 }
 
 void testUnit(World &world)
@@ -236,7 +273,9 @@ void testAll(World &world)
 	testReals(world);
 	testStrings(world);
 	testProperList(world);
+	testImproperList(world);
 	testSquareProperList(world);
+	testSquareImproperList(world);
 	testUnit(world);
 }
 
