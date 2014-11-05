@@ -105,8 +105,11 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
         case ',' =>
           UnquotedSplicingDatum | UnquotedDatum
 
+        case '+' | '-' =>
+          PossibleNumber
+
         case _ =>
-          OtherDatum
+          UnenclosedSymbol
       }
     } ~> ({ (location : SourceLocation, unlocatedDatum : ast.Datum) =>
       unlocatedDatum.locationOpt = Some(location)
@@ -145,7 +148,7 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
 
   // UnradixedDecimalNumber must come first:
   // "An identifier is any sequence of (...)  provided that it does not have a prefix which is a valid number"
-  def OtherDatum = rule {
+  def PossibleNumber = rule {
     UnradixedDecimalNumber | UnenclosedSymbol
   }
 
