@@ -64,6 +64,9 @@ using namespace lliby;
 #define ASSERT_STRING_PARSE(input, expected) \
 	ASSERT_PARSES("\"" input "\"", StringCell::fromUtf8StdString(world, expected));
 
+#define ASSERT_SYMBOL_PARSE(input) \
+	ASSERT_PARSES(input, SymbolCell::fromUtf8StdString(world, input));
+
 #define ASSERT_INVALID_PARSE(datumString) \
 { \
 	std::istringstream inputStream(datumString); \
@@ -98,6 +101,22 @@ void testBooleans(World &world)
 
 	ASSERT_PARSES("#f", BooleanCell::falseInstance());
 	ASSERT_PARSES("#false", BooleanCell::falseInstance());
+}
+
+void testSymbols(World &world)
+{
+	ASSERT_SYMBOL_PARSE("HELLO");
+	ASSERT_SYMBOL_PARSE("HELLO123");
+	ASSERT_SYMBOL_PARSE("predicate?");
+	ASSERT_SYMBOL_PARSE("!$%&*+-./:<=>?@^_");
+	ASSERT_SYMBOL_PARSE("from->to");
+	ASSERT_SYMBOL_PARSE("...");
+
+	// These also have a special meaning with reals
+	ASSERT_SYMBOL_PARSE("+");
+	ASSERT_SYMBOL_PARSE("+foo");
+	ASSERT_SYMBOL_PARSE("-");
+	ASSERT_SYMBOL_PARSE("-bar");
 }
 
 void testEnclosedSymbols(World &world)
@@ -173,13 +192,14 @@ void testStrings(World &world)
 	ASSERT_STRING_PARSE("Bare\nnewline", "Bare\nnewline");
 	ASSERT_STRING_PARSE("Here's text \\\n    containing just one line""", """Here's text containing just one line""");
 
-	ASSERT_INVALID_PARSE("open \"string");
+	ASSERT_INVALID_PARSE("\"open string");
 }
 
 void testAll(World &world)
 {
 	testEmptyInput(world);
 	testBooleans(world);
+	testSymbols(world);
 	testEnclosedSymbols(world);
 	testIntegers(world);
 	testReals(world);

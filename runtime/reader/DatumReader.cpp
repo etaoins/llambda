@@ -212,11 +212,25 @@ AnyCell* DatumReader::parse(int defaultRadix)
 	}
 	else if (peekChar == '+')
 	{
-		return parsePositiveNumber(defaultRadix);
+		try
+		{
+			return parsePositiveNumber(defaultRadix);
+		}
+		catch(ReadErrorException)
+		{
+			return parseSymbol();
+		}
 	}
 	else if (peekChar == '-')
 	{
-		return parseNegativeNumber(defaultRadix);
+		try
+		{
+			return parseNegativeNumber(defaultRadix);
+		}
+		catch(ReadErrorException)
+		{
+			return parseSymbol();
+		}
 	}
 	else if (peekChar == '#')
 	{
@@ -230,9 +244,11 @@ AnyCell* DatumReader::parse(int defaultRadix)
 	{
 		return parseString();
 	}
-
-	// Not implemented!
-	throw ReadErrorException("Unrecognized start character");
+	else
+	{
+		// Everything else is a symbol
+		return parseSymbol();
+	}
 }
 
 AnyCell* DatumReader::parseOctoDatum()
@@ -288,6 +304,33 @@ AnyCell* DatumReader::parseString()
 	return StringCell::fromUtf8StdString(m_world, takeQuotedStringLike(m_inStream, '"'));
 }
 
+AnyCell* DatumReader::parseSymbol()
+{
+	std::string symbolData;
+
+	takeWhile(m_inStream, symbolData, [] (char c) {
+		return
+			// Has to be above the control character and whitespace range
+			(c > 0x20) &&
+			// Can't be a literal backslash
+			(c != 0x5c) &&
+			// Can't be "
+			(c != '"') &&
+			// Can't be |
+			(c != '|') &&
+			// Can't be DEL or above
+			(c < 0x7f);
+	});
+
+	if (symbolData.empty())
+	{
+		// Not implemented!
+		throw ReadErrorException("Unrecognized start character");
+	}
+
+	return SymbolCell::fromUtf8StdString(m_world, symbolData);
+}
+
 AnyCell* DatumReader::parseNumber(int radix)
 {
 	int peekChar = m_inStream.peek();
@@ -321,8 +364,20 @@ AnyCell* DatumReader::parsePositiveNumber(int radix)
 		return FlonumCell::NaN(m_world);
 	}
 
+	// Take the +
 	m_inStream.get();
-	return parseUnradixedNumber(radix, false);
+
+	try
+	{
+		return parseUnradixedNumber(radix, false);
+	}
+	catch(ReadErrorException)
+	{
+		// Clean up so we can backtrack as a symbol
+		m_inStream.clear();
+		m_inStream.putback('+');
+		throw;
+	}
 }
 
 AnyCell* DatumReader::parseNegativeNumber(int radix)
@@ -336,8 +391,20 @@ AnyCell* DatumReader::parseNegativeNumber(int radix)
 		return FlonumCell::NaN(m_world);
 	}
 
+	// Take the -
 	m_inStream.get();
-	return parseUnradixedNumber(radix, true);
+
+	try
+	{
+		return parseUnradixedNumber(radix, true);
+	}
+	catch(ReadErrorException)
+	{
+		// Clean up so we can backtrack as a symbol
+		m_inStream.clear();
+		m_inStream.putback('-');
+		throw;
+	}
 }
 
 AnyCell* DatumReader::parseUnradixedNumber(int radix, bool negative)
