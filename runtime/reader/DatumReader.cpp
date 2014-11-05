@@ -12,6 +12,7 @@
 #include "binding/EofObjectCell.h"
 #include "binding/BooleanCell.h"
 #include "binding/SymbolCell.h"
+#include "binding/StringCell.h"
 
 #include "unicode/utf8.h"
 
@@ -132,6 +133,11 @@ namespace
 					}
 					break;
 
+				case '\n':
+					// Consume the whitespace at the beginning of the next line
+					consumeWhitespace(inStream);
+					break;
+
 				default:   accum.push_back('\\'); accum.push_back(nextChar);
 				}
 			}
@@ -220,6 +226,10 @@ AnyCell* DatumReader::parse(int defaultRadix)
 	{
 		return parseEnclosedSymbol();
 	}
+	else if (peekChar == '"')
+	{
+		return parseString();
+	}
 
 	// Not implemented!
 	throw ReadErrorException("Unrecognized start character");
@@ -268,6 +278,14 @@ AnyCell* DatumReader::parseEnclosedSymbol()
 	m_inStream.get();
 
 	return SymbolCell::fromUtf8StdString(m_world, takeQuotedStringLike(m_inStream, '|'));
+}
+
+AnyCell* DatumReader::parseString()
+{
+	// Consume the "
+	m_inStream.get();
+
+	return StringCell::fromUtf8StdString(m_world, takeQuotedStringLike(m_inStream, '"'));
 }
 
 AnyCell* DatumReader::parseNumber(int radix)

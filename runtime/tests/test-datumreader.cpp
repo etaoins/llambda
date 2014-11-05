@@ -43,7 +43,7 @@ using namespace lliby;
 		writer.render(expected); \
 		std::cerr << "\"; instead raised parse exception \""; \
 		std::cerr << e.message(); \
-		std::cerr << "\" at line " << __LINE__ << std::endl; \
+		std::cerr << "\" at line " << std::dec << __LINE__ << std::endl; \
 		\
 		exit(-1); \
 	} \
@@ -55,11 +55,14 @@ using namespace lliby;
 		writer.render(expected); \
 		std::cerr << "\"; instead parsed as \""; \
 		writer.render(actual); \
-		std::cerr << "\" at line " << __LINE__ << std::endl; \
+		std::cerr << "\" at line " << std::dec << __LINE__ << std::endl; \
 		\
 		exit(-1); \
 	} \
 }
+
+#define ASSERT_STRING_PARSE(input, expected) \
+	ASSERT_PARSES("\"" input "\"", StringCell::fromUtf8StdString(world, expected));
 
 #define ASSERT_INVALID_PARSE(datumString) \
 { \
@@ -74,13 +77,12 @@ using namespace lliby;
 		std::cerr << "\"" << datumString << "\" did not raise a parse exception "; \
 		std::cerr << "instead parsed as \""; \
 		writer.render(actual); \
-		std::cerr << "\" at line " << __LINE__ << std::endl; \
+		std::cerr << "\" at line " << std::dec << __LINE__ << std::endl; \
 		\
 		exit(-1); \
 	} \
 	catch(const ReadErrorException &) \
 	{ \
-		exit(0); \
 	} \
 }
 
@@ -100,12 +102,12 @@ void testBooleans(World &world)
 
 void testEnclosedSymbols(World &world)
 {
-    ASSERT_PARSES(R"(|Hello, world!|)", SymbolCell::fromUtf8StdString(world, "Hello, world!"));
-    ASSERT_PARSES(R"(|\"|)", SymbolCell::fromUtf8StdString(world, "\""));
-    ASSERT_PARSES(R"(|\||)", SymbolCell::fromUtf8StdString(world, "|"));
-    ASSERT_PARSES(R"(|two\x20;words|)", SymbolCell::fromUtf8StdString(world, "two words"));
-    ASSERT_PARSES(R"(||)", SymbolCell::fromUtf8StdString(world, ""));
-    ASSERT_PARSES(R"(|\t\t|)", SymbolCell::fromUtf8StdString(world, "\t\t"));
+	 ASSERT_PARSES(R"(|Hello, world!|)", SymbolCell::fromUtf8StdString(world, "Hello, world!"));
+	 ASSERT_PARSES(R"(|\"|)", SymbolCell::fromUtf8StdString(world, "\""));
+	 ASSERT_PARSES(R"(|\||)", SymbolCell::fromUtf8StdString(world, "|"));
+	 ASSERT_PARSES(R"(|two\x20;words|)", SymbolCell::fromUtf8StdString(world, "two words"));
+	 ASSERT_PARSES(R"(||)", SymbolCell::fromUtf8StdString(world, ""));
+	 ASSERT_PARSES(R"(|\t\t|)", SymbolCell::fromUtf8StdString(world, "\t\t"));
 
 	ASSERT_INVALID_PARSE("|foo");
 }
@@ -154,6 +156,26 @@ void testReals(World &world)
 	ASSERT_PARSES("-NaN.0", FlonumCell::NaN(world));
 }
 
+void testStrings(World &world)
+{
+	ASSERT_STRING_PARSE("", "");
+	ASSERT_STRING_PARSE(R"(Hello, world!)", "Hello, world!");
+	ASSERT_STRING_PARSE(R"(Hello\"World)", "Hello\"World");
+	ASSERT_STRING_PARSE(R"(Hello\\World)", "Hello\\World");
+	ASSERT_STRING_PARSE(R"(Hello\|World)", "Hello|World");
+	ASSERT_STRING_PARSE(R"(Tab\t)", "Tab\t");
+	ASSERT_STRING_PARSE(R"(\nnewline)", "\nnewline");
+	ASSERT_STRING_PARSE(R"(carriage: \r)", "carriage: \r");
+	ASSERT_STRING_PARSE(R"(Space\x20;Bar)", "Space Bar");
+	ASSERT_STRING_PARSE(R"(l\x03BB;)", "l\u03bb");
+	ASSERT_STRING_PARSE(R"(\x0;null!)", std::string("\u0000null!", 6));
+	ASSERT_STRING_PARSE(R"(The word \"recursion\" has many meanings.)", R"(The word "recursion" has many meanings.)");
+	ASSERT_STRING_PARSE("Bare\nnewline", "Bare\nnewline");
+	ASSERT_STRING_PARSE("Here's text \\\n    containing just one line""", """Here's text containing just one line""");
+
+	ASSERT_INVALID_PARSE("open \"string");
+}
+
 void testAll(World &world)
 {
 	testEmptyInput(world);
@@ -161,6 +183,7 @@ void testAll(World &world)
 	testEnclosedSymbols(world);
 	testIntegers(world);
 	testReals(world);
+	testStrings(world);
 }
 
 }
