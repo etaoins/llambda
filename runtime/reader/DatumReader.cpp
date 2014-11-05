@@ -15,6 +15,7 @@
 #include "binding/StringCell.h"
 #include "binding/UnitCell.h"
 #include "binding/EmptyListCell.h"
+#include "binding/VectorCell.h"
 
 #include "alloc/cellref.h"
 
@@ -309,6 +310,10 @@ AnyCell* DatumReader::parseOctoDatum()
 		consumeLiteral(m_inStream, "alse");
 		return BooleanCell::falseInstance();
 	}
+	else if (getChar == '(')
+	{
+		return parseVector();
+	}
 	else if (getChar == '!')
 	{
 		if (consumeLiteral(m_inStream, "unit"))
@@ -544,6 +549,9 @@ AnyCell* DatumReader::parseList(char closeChar)
 
 		if (peekChar == closeChar)
 		{
+			// Take the )
+			m_inStream.get();
+
 			// Finished as a proper list
 			if (listHead)
 			{
@@ -607,6 +615,44 @@ AnyCell* DatumReader::parseList(char closeChar)
 			listTail.setData(tailPair);
 		}
 	}
+}
+
+AnyCell* DatumReader::parseVector()
+{
+	std::vector<alloc::AnyRef> elementRefs;
+
+	// The ( is already taken
+
+	while(true)
+	{
+		consumeWhitespace(m_inStream);
+
+		if (m_inStream.eof())
+		{
+			throw ReadErrorException("Unexpected end of input while reading vector");
+		}
+
+		if (m_inStream.peek() == ')')
+		{
+			// Take the )
+			m_inStream.get();
+
+			// All done
+			break;
+		}
+
+		elementRefs.emplace_back(m_world, parse());
+	}
+
+	const auto elementCount = elementRefs.size();
+	auto *newElements = new AnyCell*[elementCount];
+
+	for(auto i = 0; i < elementCount; i++)
+	{
+		newElements[i] = elementRefs[i].data();
+	}
+
+	return VectorCell::fromElements(m_world, newElements, elementCount);
 }
 
 }

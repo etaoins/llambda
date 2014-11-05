@@ -273,6 +273,10 @@ newline""", "Bare\nnewline")
     ))
     
     assertReflexiveParse("#()", List(ast.VectorLiteral(Vector())))
+
+    intercept[ParseErrorException] {
+      SchemeParser.parseStringAsData("#(bar")
+    }
   }
 
   test("bytevectors") {

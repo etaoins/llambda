@@ -11,6 +11,7 @@
 #include "binding/SymbolCell.h"
 #include "binding/StringCell.h"
 #include "binding/UnitCell.h"
+#include "binding/VectorCell.h"
 #include "binding/ProperList.h"
 
 #include "reader/DatumReader.h"
@@ -213,7 +214,7 @@ void testProperList(World &world)
 
 void testImproperList(World &world)
 {
-    ASSERT_PARSES("(. #t)", BooleanCell::trueInstance());
+	ASSERT_PARSES("(. #t)", BooleanCell::trueInstance());
 
 	alloc::SymbolRef oneSymbol(world, SymbolCell::fromUtf8StdString(world, "ONE"));
 	alloc::FlonumRef plusTwo(world, FlonumCell::fromValue(world, 2.0));
@@ -258,6 +259,28 @@ void testSquareImproperList(World &world)
    	ASSERT_PARSES("[#false ONE 2.0 . +inf.0]", expectedList);
 }
 
+void testVector(World &world)
+{
+	alloc::ExactIntegerRef zero(world, ExactIntegerCell::fromValue(world, 0));
+	alloc::ExactIntegerRef two(world, ExactIntegerCell::fromValue(world, 2));
+	alloc::SymbolRef annaSymbol(world, SymbolCell::fromUtf8StdString(world, "Anna"));
+
+	alloc::AnyRef innerList(world, ProperList<AnyCell>::create(world, {two, two, two, two}));
+
+	VectorCell *expectedVector = VectorCell::fromFill(world, 3, UnitCell::instance());
+	expectedVector->setElementAt(0, zero);
+	expectedVector->setElementAt(1, innerList);
+	expectedVector->setElementAt(2, annaSymbol);
+
+	ASSERT_PARSES("#(0 (2 2 2 2)Anna)", expectedVector);
+
+	expectedVector = VectorCell::fromFill(world, 0, UnitCell::instance());
+	ASSERT_PARSES("#()", expectedVector);
+
+	// Unclosed
+	ASSERT_INVALID_PARSE("#(bar");
+}
+
 void testUnit(World &world)
 {
 	ASSERT_PARSES("#!unit", UnitCell::instance());
@@ -276,6 +299,7 @@ void testAll(World &world)
 	testImproperList(world);
 	testSquareProperList(world);
 	testSquareImproperList(world);
+	testVector(world);
 	testUnit(world);
 }
 

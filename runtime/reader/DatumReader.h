@@ -44,6 +44,7 @@ protected:
 	AnyCell *parseUnradixedNumber(int radix, bool negative = false);
 
 	AnyCell *parseList(char closeChar);
+	AnyCell *parseVector();
 
 	World &m_world;
 	std::istream &m_inStream;
