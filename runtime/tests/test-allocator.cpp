@@ -71,9 +71,9 @@ void testPairGc(World &world)
 
 	// These need to be strong while allocated so value A/B don't disappear when later values are allocated 
 	// However, they need to be weak after to test how strong references affect their collection
-	alloc::StringRef valueAStrong(world, StringCell::fromUtf8CString(world, ""));
-	alloc::StringRef valueBStrong(world, StringCell::fromUtf8CString(world, ""));
-	alloc::StringRef valueCStrong(world, StringCell::fromUtf8CString(world, ""));
+	alloc::StringRef valueAStrong(world, StringCell::fromUtf8StdString(world, ""));
+	alloc::StringRef valueBStrong(world, StringCell::fromUtf8StdString(world, ""));
+	alloc::StringRef valueCStrong(world, StringCell::fromUtf8StdString(world, ""));
 	
 	alloc::RangeAlloc allocation(alloc::allocateRange(world, 3)); 
 	auto allocIt = allocation.begin();
@@ -164,9 +164,9 @@ void testVectorGc(World &world)
 		return VectorCell::fromElements(world, nullptr, 0);
 	});
 	
-	alloc::StringRef value0Strong(world, StringCell::fromUtf8CString(world, ""));
-	alloc::StringRef value1Strong(world, StringCell::fromUtf8CString(world, ""));
-	alloc::StringRef value2Strong(world, StringCell::fromUtf8CString(world, ""));
+	alloc::StringRef value0Strong(world, StringCell::fromUtf8StdString(world, ""));
+	alloc::StringRef value1Strong(world, StringCell::fromUtf8StdString(world, ""));
+	alloc::StringRef value2Strong(world, StringCell::fromUtf8StdString(world, ""));
 	
 	alloc::VectorRef testVec(world, VectorCell::fromFill(world, 3));
 	
@@ -240,8 +240,8 @@ void testRecordLikeGc(World &world)
 			offsetof(CustomRecordLikeData, cell1)});
 
 	// Make some test values
-	alloc::StringRef value0Strong(world, StringCell::fromUtf8CString(world, ""));
-	alloc::StringRef value1Strong(world, StringCell::fromUtf8CString(world, ""));
+	alloc::StringRef value0Strong(world, StringCell::fromUtf8StdString(world, ""));
+	alloc::StringRef value1Strong(world, StringCell::fromUtf8StdString(world, ""));
 	
 	// Create the record-like
 	alloc::RecordRef testRecord(world, RecordCell::createInstance(world, testClass, false, nullptr));
@@ -345,25 +345,25 @@ void testAll(World &world)
 	// Test inline symbols
 	testNonRecursiveGc<SymbolCell>(world, [&world] ()
 	{
-		return SymbolCell::fromString(world, StringCell::fromUtf8CString(world, u8""));
+		return SymbolCell::fromUtf8StdString(world, u8"");
 	});
 	
 	// Test heap symbols
 	testNonRecursiveGc<SymbolCell>(world, [&world] ()
 	{
-		return SymbolCell::fromString(world, StringCell::fromUtf8CString(world, u8"This is more than twelve bytes long"));
+		return SymbolCell::fromUtf8StdString(world, u8"This is more than twelve bytes long");
 	});
 
 	// Test inline strings
 	testNonRecursiveGc<StringCell>(world, [&world] ()
 	{
-		return StringCell::fromUtf8CString(world, u8"");
+		return StringCell::fromUtf8StdString(world, u8"");
 	});
 	
 	// Test heap strings
 	testNonRecursiveGc<StringCell>(world, [&world] ()
 	{
-		return StringCell::fromUtf8CString(world, u8"This is more than twelve bytes long");
+		return StringCell::fromUtf8StdString(world, u8"This is more than twelve bytes long");
 	});
 	
 	// Test bytevectors

@@ -98,7 +98,7 @@ public:
 		// Test a grand tour of string ->  symbol -> string -> bytevector -> string
 		//
 		
-		alloc::StringRef firstString(world, StringCell::fromUtf8CString(world, u8"Hello world everyone!"));
+		alloc::StringRef firstString(world, StringCell::fromUtf8StdString(world, u8"Hello world everyone!"));
 		alloc::SymbolRef firstSymbol(world, SymbolCell::fromString(world, firstString));
 		alloc::StringRef secondString(world, StringCell::fromSymbol(world, firstSymbol));
 		alloc::BytevectorRef firstBv(world, secondString->toUtf8Bytevector(world));

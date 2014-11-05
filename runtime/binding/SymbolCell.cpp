@@ -6,6 +6,8 @@
 #include "alloc/cellref.h"
 #include "alloc/allocator.h"
 
+#include "unicode/utf8.h"
+
 namespace lliby
 {
 
@@ -24,7 +26,44 @@ size_t SymbolCell::inlineDataSize()
 {
 	return sizeof(InlineSymbolCell::m_inlineData);
 }
-	
+
+SymbolCell* SymbolCell::fromUtf8StdString(World &world, const std::string &str)
+{
+	return SymbolCell::fromUtf8Data(world, reinterpret_cast<const std::uint8_t *>(str.data()), str.size());
+}
+
+SymbolCell* SymbolCell::fromUtf8Data(World &world, const std::uint8_t *data, std::uint32_t byteLength)
+{
+	const std::uint8_t *scanPtr = data;
+	const std::uint8_t *endPtr = data + byteLength;
+
+	// Find the character length - this can throw an exception
+	size_t charLength = utf8::validateData(scanPtr, endPtr);
+
+	void *cellPlacement = alloc::allocateCells(world);
+
+	if (byteLength <= inlineDataSize())
+	{
+		auto inlineSymbol = new (cellPlacement) InlineSymbolCell(byteLength, charLength);
+		memcpy(inlineSymbol->inlineData(), data, byteLength);
+
+		return inlineSymbol;
+	}
+	else
+	{
+		SharedByteArray *newByteArray = SharedByteArray::createInstance(byteLength);
+		memcpy(newByteArray->data(), data, byteLength);
+
+		auto heapSymbol = new (cellPlacement) HeapSymbolCell(
+				newByteArray,
+				byteLength,
+				charLength
+		);
+
+		return heapSymbol;
+	}
+}
+
 SymbolCell* SymbolCell::fromString(World &world, StringCell *string)
 {
 	alloc::StringRef stringRef(world, string);

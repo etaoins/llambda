@@ -34,12 +34,12 @@ void assertForm(const AnyCell *datum, std::string expected)
 
 SymbolCell *symbolFor(World &world, const char *utf8String)
 {
-	return SymbolCell::fromString(world, StringCell::fromUtf8CString(world, utf8String));
+	return SymbolCell::fromUtf8StdString(world, utf8String);
 }
 
 StringCell *stringFor(World &world, const char *utf8String)
 {
-	return StringCell::fromUtf8CString(world, utf8String);
+	return StringCell::fromUtf8StdString(world, utf8String);
 }
 
 void testSymbol(World &world)

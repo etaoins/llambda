@@ -23,7 +23,6 @@ class StringCell : public AnyCell
 	friend class StringCellBuilder;
 #include "generated/StringCellMembers.h"
 public:
-	static StringCell* fromUtf8CString(World &world, const char *str);
 	static StringCell* fromUtf8StdString(World &world, const std::string &str);
 
 	static StringCell* fromUtf8Data(World &world, const std::uint8_t *data, std::uint32_t byteLength);

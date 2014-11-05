@@ -49,12 +49,12 @@ void assertForm(const AnyCell *datum, std::string expected)
 
 SymbolCell *symbolFor(World &world, const char *utf8String)
 {
-	return SymbolCell::fromString(world, StringCell::fromUtf8CString(world, utf8String));
+	return SymbolCell::fromUtf8StdString(world, utf8String);
 }
 
 StringCell *stringFor(World &world, const char *utf8String)
 {
-	return StringCell::fromUtf8CString(world, utf8String);
+	return StringCell::fromUtf8StdString(world, utf8String);
 }
 
 void testUnit()
@@ -212,7 +212,7 @@ void testRecord(World &world)
 
 void testErrorObject(World &world)
 {
-	alloc::StringRef errorString(world, StringCell::fromUtf8CString(world, u8"Test error"));
+	alloc::StringRef errorString(world, StringCell::fromUtf8StdString(world, u8"Test error"));
 	auto errorObj = ErrorObjectCell::createInstance(world, errorString, EmptyListCell::asProperList<AnyCell>());
 
 	assertForm(errorObj, "#!error(Test error)");

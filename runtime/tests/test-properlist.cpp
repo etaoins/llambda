@@ -17,9 +17,9 @@ using namespace lliby;
 
 void testAll(World &world)
 {
-	alloc::StringRef valueA(world, StringCell::fromUtf8CString(world, "A"));
-	alloc::StringRef valueB(world, StringCell::fromUtf8CString(world, "B"));
-	alloc::StringRef valueC(world, StringCell::fromUtf8CString(world, "C"));
+	alloc::StringRef valueA(world, StringCell::fromUtf8StdString(world, "A"));
+	alloc::StringRef valueB(world, StringCell::fromUtf8StdString(world, "B"));
+	alloc::StringRef valueC(world, StringCell::fromUtf8StdString(world, "C"));
 
 	{
 		ProperList<AnyCell> *properList = ProperList<AnyCell>::create(world, {});

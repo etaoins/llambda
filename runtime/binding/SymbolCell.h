@@ -3,6 +3,8 @@
 
 #include "AnyCell.h"
 
+#include <string>
+
 namespace lliby
 {
 
@@ -16,6 +18,9 @@ class SymbolCell : public AnyCell
 	friend class StringCell;
 	friend class ImplicitSharingTest;
 public:
+	static SymbolCell* fromUtf8StdString(World &world, const std::string &str);
+	static SymbolCell* fromUtf8Data(World &world, const std::uint8_t *data, std::uint32_t byteLength);
+
 	static SymbolCell* fromString(World &world, StringCell *string);
 
 	const std::uint8_t* constUtf8Data() const;
