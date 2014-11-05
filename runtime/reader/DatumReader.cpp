@@ -13,6 +13,7 @@
 #include "binding/BooleanCell.h"
 #include "binding/SymbolCell.h"
 #include "binding/StringCell.h"
+#include "binding/UnitCell.h"
 
 #include "unicode/utf8.h"
 
@@ -256,33 +257,40 @@ AnyCell* DatumReader::parseOctoDatum()
 	// Consume the #
 	m_inStream.get();
 
-	int peekChar = m_inStream.get();
+	int getChar = m_inStream.get();
 
-	if ((peekChar == 'b') || (peekChar == 'B'))
+	if ((getChar == 'b') || (getChar == 'B'))
 	{
 		return parseNumber(2);
 	}
-	else if ((peekChar == 'o') || (peekChar == 'O'))
+	else if ((getChar == 'o') || (getChar == 'O'))
 	{
 		return parseNumber(8);
 	}
-	else if ((peekChar == 'd') || (peekChar == 'D'))
+	else if ((getChar == 'd') || (getChar == 'D'))
 	{
 		return parseNumber(10);
 	}
-	else if ((peekChar == 'x') || (peekChar == 'X'))
+	else if ((getChar == 'x') || (getChar == 'X'))
 	{
 		return parseNumber(16);
 	}
-	else if (peekChar == 't')
+	else if (getChar == 't')
 	{
 		consumeLiteral(m_inStream, "rue");
 		return BooleanCell::trueInstance();
 	}
-	else if (peekChar == 'f')
+	else if (getChar == 'f')
 	{
 		consumeLiteral(m_inStream, "alse");
 		return BooleanCell::falseInstance();
+	}
+	else if (getChar == '!')
+	{
+		if (consumeLiteral(m_inStream, "unit"))
+		{
+			return UnitCell::instance();
+		}
 	}
 
 	throw ReadErrorException("Unrecognized # datum");

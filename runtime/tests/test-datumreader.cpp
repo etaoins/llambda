@@ -10,6 +10,7 @@
 #include "binding/EofObjectCell.h"
 #include "binding/SymbolCell.h"
 #include "binding/StringCell.h"
+#include "binding/UnitCell.h"
 
 #include "reader/DatumReader.h"
 #include "reader/ReadErrorException.h"
@@ -195,6 +196,11 @@ void testStrings(World &world)
 	ASSERT_INVALID_PARSE("\"open string");
 }
 
+void testUnit(World &world)
+{
+	ASSERT_PARSES("#!unit", UnitCell::instance());
+}
+
 void testAll(World &world)
 {
 	testEmptyInput(world);
@@ -204,6 +210,7 @@ void testAll(World &world)
 	testIntegers(world);
 	testReals(world);
 	testStrings(world);
+	testUnit(world);
 }
 
 }

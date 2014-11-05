@@ -283,7 +283,7 @@ newline""", "Bare\nnewline")
       SchemeParser.parseStringAsData(raw"#\SPACE")
     }
 
-    // However, non-alphabetic character literls can be immediately followed
+    // However, non-alphabetic character literals can be immediately followed
     // by another token. This is probably a bad idea to use in practice.
     assertReflexiveParse(raw"#\1moretime", List(ast.CharLiteral('1'), ast.Symbol("moretime")))
   }
