@@ -39,6 +39,11 @@ namespace
 			// Can't be " even if it's not the quote character
 			(byteValue != 0x22);
 	}
+
+	bool byteIsSyntaxCharacter(std::uint8_t c)
+	{
+		return (c == '|') || (c == '"') || (c == '[') || (c == ']') || (c == '(') || (c == ')') || (c == '#');
+	}
 }
 
 namespace lliby
@@ -258,7 +263,7 @@ void ExternalFormDatumWriter::renderStringLike(const std::uint8_t *utf8Data, std
 		{
 			const std::uint8_t byteValue = utf8Data[i];
 
-			if ((byteValue == quoteChar) || (byteValue > 0x7f) || !stringLikeByteIsDirectlyPrintable(byteValue))
+			if ((byteValue > 0x7f) || !stringLikeByteIsDirectlyPrintable(byteValue) || byteIsSyntaxCharacter(byteValue))
 			{
 				needsQuotes = true;
 				break;

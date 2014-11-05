@@ -105,6 +105,11 @@ void testSymbol(World &world)
 	assertForm(symbolFor(world, u8"P|pe"), u8"|P\\|pe|");
 	assertForm(symbolFor(world, u8"Quo\"te"), u8"|Quo\"te|");
 	assertForm(symbolFor(world, u8""), u8"||");
+	assertForm(symbolFor(world, u8"Open[square"), u8"|Open[square|");
+	assertForm(symbolFor(world, u8"Close]square"), u8"|Close]square|");
+	assertForm(symbolFor(world, u8"Open(round"), u8"|Open(round|");
+	assertForm(symbolFor(world, u8"Close)round"), u8"|Close)round|");
+	assertForm(symbolFor(world, u8"Mid#hash"), u8"|Mid#hash|");
 }
 
 void testString(World &world)
