@@ -11,6 +11,7 @@
 #include "binding/SymbolCell.h"
 #include "binding/StringCell.h"
 #include "binding/UnitCell.h"
+#include "binding/ProperList.h"
 
 #include "reader/DatumReader.h"
 #include "reader/ReadErrorException.h"
@@ -196,6 +197,30 @@ void testStrings(World &world)
 	ASSERT_INVALID_PARSE("\"open string");
 }
 
+void testProperList(World &world)
+{
+	alloc::SymbolRef helloSymbol(world, SymbolCell::fromUtf8StdString(world, "Hello"));
+	alloc::SymbolRef integerSymbol(world, SymbolCell::fromUtf8StdString(world, "integer?"));
+	alloc::ExactIntegerRef negativeOne(world, ExactIntegerCell::fromValue(world, -1));
+	alloc::FlonumRef plusTwo(world, FlonumCell::fromValue(world, 2.0));
+
+	ProperList<AnyCell> *expectedList = ProperList<AnyCell>::create(world, {BooleanCell::trueInstance(), integerSymbol, helloSymbol, negativeOne, plusTwo});
+
+	ASSERT_PARSES("(#true integer? |Hello| -1 2.0)", expectedList);
+}
+
+void testSquareProperList(World &world)
+{
+	alloc::SymbolRef helloSymbol(world, SymbolCell::fromUtf8StdString(world, "Hello"));
+	alloc::SymbolRef integerSymbol(world, SymbolCell::fromUtf8StdString(world, "integer?"));
+	alloc::ExactIntegerRef negativeOne(world, ExactIntegerCell::fromValue(world, -1));
+	alloc::FlonumRef plusTwo(world, FlonumCell::fromValue(world, 2.0));
+
+	ProperList<AnyCell> *expectedList = ProperList<AnyCell>::create(world, {BooleanCell::trueInstance(), integerSymbol, helloSymbol, negativeOne, plusTwo});
+
+	ASSERT_PARSES("[#true integer? |Hello| -1 2.0]", expectedList);
+}
+
 void testUnit(World &world)
 {
 	ASSERT_PARSES("#!unit", UnitCell::instance());
@@ -210,6 +235,8 @@ void testAll(World &world)
 	testIntegers(world);
 	testReals(world);
 	testStrings(world);
+	testProperList(world);
+	testSquareProperList(world);
 	testUnit(world);
 }
 

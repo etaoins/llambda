@@ -43,6 +43,8 @@ protected:
 	AnyCell *parseNegativeNumber(int radix);
 	AnyCell *parseUnradixedNumber(int radix, bool negative = false);
 
+	AnyCell *parseList(char closeChar);
+
 	World &m_world;
 	std::istream &m_inStream;
 };

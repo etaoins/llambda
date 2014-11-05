@@ -14,6 +14,9 @@
 #include "binding/SymbolCell.h"
 #include "binding/StringCell.h"
 #include "binding/UnitCell.h"
+#include "binding/EmptyListCell.h"
+
+#include "alloc/cellref.h"
 
 #include "unicode/utf8.h"
 
@@ -244,6 +247,14 @@ AnyCell* DatumReader::parse(int defaultRadix)
 	else if (peekChar == '"')
 	{
 		return parseString();
+	}
+	else if (peekChar == '(')
+	{
+		return parseList(')');
+	}
+	else if (peekChar == '[')
+	{
+		return parseList(']');
 	}
 	else
 	{
@@ -505,6 +516,57 @@ AnyCell* DatumReader::parseUnradixedNumber(int radix, bool negative)
 	}
 
 	return ExactIntegerCell::fromValue(m_world, intValue);
+}
+
+AnyCell* DatumReader::parseList(char closeChar)
+{
+	alloc::PairRef listHead(m_world, nullptr);
+	alloc::PairRef listTail(m_world, nullptr);
+
+	// Take the ( or [
+	m_inStream.get();
+
+	while(true)
+	{
+		consumeWhitespace(m_inStream);
+
+		if (m_inStream.eof())
+		{
+			throw ReadErrorException("Unexpected end of input while reading list");
+		}
+
+		if (m_inStream.peek() == closeChar)
+		{
+			// All done
+			if (listHead)
+			{
+				return listHead.data();
+			}
+			else
+			{
+				return EmptyListCell::instance();
+			}
+		}
+
+		// Parse the next datum
+		AnyCell *nextValue = parse();
+
+		// Make a new tail pair
+		auto tailPair = PairCell::createInstance(m_world, nextValue, EmptyListCell::instance());
+
+		if (!listHead)
+		{
+			// We're the first pair!
+			listHead.setData(tailPair);
+			listTail.setData(tailPair);
+		}
+		else
+		{
+			// Move our tail forward
+			listTail->setCdr(tailPair);
+			listTail.setData(tailPair);
+		}
+	}
 }
 
 }
