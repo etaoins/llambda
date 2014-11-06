@@ -57,7 +57,7 @@ namespace
 			if (nextChar == EOF)
 			{
 				// Out of data without closing quote
-				throw ReadErrorException("End of input without closing quote for string-like");
+				throw ReadErrorException(inStream.tellg(), "End of input without closing quote for string-like");
 			}
 
 			if (nextChar == quoteChar)
@@ -72,7 +72,7 @@ namespace
 				if (nextChar == EOF)
 				{
 					// Out of data without closing quote
-					throw ReadErrorException("End of input during backslash escaped sequence");
+					throw ReadErrorException(inStream.tellg(), "End of input during backslash escaped sequence");
 				}
 
 				switch(nextChar)
@@ -94,11 +94,11 @@ namespace
 
 						if (nextChar != ';')
 						{
-							throw ReadErrorException("Hex escape not terminated with ;");
+							throw ReadErrorException(inStream.tellg(), "Hex escape not terminated with ;");
 						}
 						else if (hexCode.empty())
 						{
-							throw ReadErrorException("Empty hex escape");
+							throw ReadErrorException(inStream.tellg(), "Empty hex escape");
 						}
 
 						UnicodeChar escapedChar(strtol(hexCode.c_str(), nullptr, 16));
@@ -356,10 +356,10 @@ AnyCell* DatumReader::parseOctoDatum()
 	}
 	else if (getChar == EOF)
 	{
-		throw ReadErrorException("Unexpected end of input while parsing # datum");
+		throw ReadErrorException(m_inStream.tellg(), "Unexpected end of input while parsing # datum");
 	}
 
-	throw ReadErrorException("Unrecognized # datum");
+	throw ReadErrorException(m_inStream.tellg(), "Unrecognized # datum");
 }
 
 AnyCell* DatumReader::parseEnclosedSymbol()
@@ -386,12 +386,11 @@ AnyCell* DatumReader::parseSymbol()
 
 	if (symbolData.empty())
 	{
-		// Not implemented!
-		throw ReadErrorException("Unrecognized start character");
+		throw ReadErrorException(m_inStream.tellg(), "Unrecognized start character");
 	}
 	else if (symbolData == ".")
 	{
-		throw ReadErrorException(". reserved for terminating improper lists");
+		throw ReadErrorException(m_inStream.tellg(), ". reserved for terminating improper lists");
 	}
 
 	return SymbolCell::fromUtf8StdString(m_world, symbolData);
@@ -414,7 +413,7 @@ AnyCell* DatumReader::parseChar()
 
 	if (nextChar == EOF)
 	{
-		throw ReadErrorException("Unexpected end of input while reading character");
+		throw ReadErrorException(m_inStream.tellg(), "Unexpected end of input while reading character");
 	}
 	else if ((nextChar == 'a') && consumeLiteral(m_inStream, "larm"))
 	{
@@ -477,7 +476,7 @@ AnyCell* DatumReader::parseChar()
 
 	if (m_inStream.gcount() != (seqBytes - 1))
 	{
-		throw ReadErrorException("Unexpected end of input while reading character");
+		throw ReadErrorException(m_inStream.tellg(), "Unexpected end of input while reading character");
 	}
 
 	utf8::validateData(byteBuffer, &byteBuffer[seqBytes]);
@@ -490,7 +489,7 @@ AnyCell* DatumReader::parseChar()
 		// If this is a non-digit then it can't be followed by an identifier character
 		if (isIdentifierChar(m_inStream.peek()))
 		{
-			throw ReadErrorException("Unrecognized character name");
+			throw ReadErrorException(m_inStream.tellg(), "Unrecognized character name");
 		}
 	}
 
@@ -596,7 +595,7 @@ AnyCell* DatumReader::parseUnradixedNumber(int radix, bool negative)
 	if (numberString.empty())
 	{
 		// Not valid
-		throw ReadErrorException("No valid number found after number prefix");
+		throw ReadErrorException(m_inStream.tellg(), "No valid number found after number prefix");
 	}
 
 	if (radix == 10)
@@ -679,7 +678,7 @@ AnyCell* DatumReader::parseList(char closeChar)
 
 		if (m_inStream.eof())
 		{
-			throw ReadErrorException("Unexpected end of input while reading list");
+			throw ReadErrorException(m_inStream.tellg(), "Unexpected end of input while reading list");
 		}
 
 		int peekChar = m_inStream.peek();
@@ -718,7 +717,7 @@ AnyCell* DatumReader::parseList(char closeChar)
 
 				if (m_inStream.get() != closeChar)
 				{
-					throw ReadErrorException("Improper list expected to terminate after tail datum");
+					throw ReadErrorException(m_inStream.tellg(), "Improper list expected to terminate after tail datum");
 				}
 
 				if (!listHead)
@@ -766,7 +765,7 @@ AnyCell* DatumReader::parseVector()
 
 		if (m_inStream.eof())
 		{
-			throw ReadErrorException("Unexpected end of input while reading vector");
+			throw ReadErrorException(m_inStream.tellg(), "Unexpected end of input while reading vector");
 		}
 
 		if (m_inStream.peek() == ')')
@@ -804,7 +803,7 @@ AnyCell* DatumReader::parseBytevector()
 
 		if (m_inStream.eof())
 		{
-			throw ReadErrorException("Unexpected end of input while reading bytevector");
+			throw ReadErrorException(m_inStream.tellg(), "Unexpected end of input while reading bytevector");
 		}
 
 		if (m_inStream.peek() == ')')
@@ -824,14 +823,14 @@ AnyCell* DatumReader::parseBytevector()
 		{
 			if ((exactInt->value() < 0) || (exactInt->value() > 255))
 			{
-				throw ReadErrorException("Value out of byte range while reading bytevector");
+				throw ReadErrorException(m_inStream.tellg(), "Value out of byte range while reading bytevector");
 			}
 
 			elements.push_back(exactInt->value());
 		}
 		else
 		{
-			throw ReadErrorException("Non-integer while reading bytevector");
+			throw ReadErrorException(m_inStream.tellg(), "Non-integer while reading bytevector");
 		}
 	}
 

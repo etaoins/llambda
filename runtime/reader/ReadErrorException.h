@@ -2,6 +2,7 @@
 #define _LLIBY_READER_READERROREXCEPTION_H
 
 #include <string>
+#include <cstdint>
 
 namespace lliby
 {
@@ -12,18 +13,22 @@ namespace lliby
 class ReadErrorException
 {
 public:
-	explicit ReadErrorException(const std::string &message) :
-		m_message(message)
+	ReadErrorException(std::size_t offset, const char *errorType) :
+		m_offset(offset),
+		m_errorType(errorType)
 	{
 	}
 
-	std::string message() const
+	std::size_t offset() const
 	{
-		return m_message;
+		return m_offset;
 	}
+
+	std::string message() const;
 
 private:
-	std::string m_message;
+	std::size_t m_offset;
+	const char *m_errorType;
 };
 
 }
