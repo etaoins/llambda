@@ -133,20 +133,21 @@
 !76 = metadata !{metadata !"RecordLike::recordData->Record", metadata !63}
 !77 = metadata !{metadata !"Record::extraData"}
 
-; {supertype, message, irritants}
-%errorObject = type {%any, %string*, %listElement*}
+; {supertype, category, message, irritants}
+%errorObject = type {%any, i16, %string*, %listElement*}
 !78 = metadata !{metadata !"Any::typeId->ErrorObject", metadata !10}
 !79 = metadata !{metadata !"Any::gcState->ErrorObject", metadata !11}
-!80 = metadata !{metadata !"ErrorObject::message"}
-!81 = metadata !{metadata !"ErrorObject::irritants"}
+!80 = metadata !{metadata !"ErrorObject::category"}
+!81 = metadata !{metadata !"ErrorObject::message"}
+!82 = metadata !{metadata !"ErrorObject::irritants"}
 
 ; {supertype, port}
 %port = type {%any, i8*}
-!82 = metadata !{metadata !"Any::typeId->Port", metadata !10}
-!83 = metadata !{metadata !"Any::gcState->Port", metadata !11}
-!84 = metadata !{metadata !"Port::port"}
+!83 = metadata !{metadata !"Any::typeId->Port", metadata !10}
+!84 = metadata !{metadata !"Any::gcState->Port", metadata !11}
+!85 = metadata !{metadata !"Port::port"}
 
 ; {supertype}
 %eofObject = type {%any}
-!85 = metadata !{metadata !"Any::typeId->EofObject", metadata !10}
-!86 = metadata !{metadata !"Any::gcState->EofObject", metadata !11}
+!86 = metadata !{metadata !"Any::typeId->EofObject", metadata !10}
+!87 = metadata !{metadata !"Any::gcState->EofObject", metadata !11}

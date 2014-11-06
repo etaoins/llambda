@@ -54,7 +54,7 @@ sealed abstract class PreconstructedCellType extends ConcreteCellType
 sealed abstract class CellTypeVariant extends CastableValue
 
 object CellType {
-  val nextMetadataIndex = 90L
+  val nextMetadataIndex = 91L
 }
 
 sealed trait AnyFields {
@@ -1517,6 +1517,10 @@ object RecordCell extends ConcreteCellType with RecordFields {
 sealed trait ErrorObjectFields extends AnyFields {
   val irType : FirstClassType
 
+  val categoryIrType = IntegerType(16)
+  val categoryTbaaNode : Metadata
+  val categoryGepIndices : List[Int]
+
   val messageIrType = PointerType(UserDefinedType("string"))
   val messageTbaaNode : Metadata
   val messageGepIndices : List[Int]
@@ -1524,6 +1528,31 @@ sealed trait ErrorObjectFields extends AnyFields {
   val irritantsIrType = PointerType(UserDefinedType("listElement"))
   val irritantsTbaaNode : Metadata
   val irritantsGepIndices : List[Int]
+
+  def genPointerToCategory(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+    if (valueCell.irType != PointerType(irType)) {
+      throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
+    }
+
+    block.getelementptr("categoryPtr")(
+      elementType=categoryIrType,
+      basePointer=valueCell,
+      indices=categoryGepIndices.map(IntegerConstant(IntegerType(32), _)),
+      inbounds=true
+    )
+  }
+
+  def genStoreToCategory(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+    val categoryPtr = genPointerToCategory(block)(valueCell)
+    val allMetadata = metadata ++ Map("tbaa" -> categoryTbaaNode)
+    block.store(toStore, categoryPtr, metadata=allMetadata)
+  }
+
+  def genLoadFromCategory(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+    val categoryPtr = genPointerToCategory(block)(valueCell)
+    val allMetadata = Map("tbaa" -> categoryTbaaNode) ++ metadata
+    block.load("category")(categoryPtr, metadata=allMetadata)
+  }
 
   def genPointerToMessage(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
     if (valueCell.irType != PointerType(irType)) {
@@ -1586,15 +1615,17 @@ object ErrorObjectCell extends ConcreteCellType with ErrorObjectFields {
 
   val typeIdGepIndices = List(0, 0, 0)
   val gcStateGepIndices = List(0, 0, 1)
-  val messageGepIndices = List(0, 1)
-  val irritantsGepIndices = List(0, 2)
+  val categoryGepIndices = List(0, 1)
+  val messageGepIndices = List(0, 2)
+  val irritantsGepIndices = List(0, 3)
 
   val typeIdTbaaNode = NumberedMetadata(78L)
   val gcStateTbaaNode = NumberedMetadata(79L)
-  val messageTbaaNode = NumberedMetadata(80L)
-  val irritantsTbaaNode = NumberedMetadata(81L)
+  val categoryTbaaNode = NumberedMetadata(80L)
+  val messageTbaaNode = NumberedMetadata(81L)
+  val irritantsTbaaNode = NumberedMetadata(82L)
 
-  def createConstant(message : IrConstant, irritants : IrConstant) : StructureConstant = {
+  def createConstant(category : Long, message : IrConstant, irritants : IrConstant) : StructureConstant = {
     if (message.irType != messageIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field message")
     }
@@ -1605,6 +1636,7 @@ object ErrorObjectCell extends ConcreteCellType with ErrorObjectFields {
 
     StructureConstant(List(
       AnyCell.createConstant(typeId=typeId),
+      IntegerConstant(categoryIrType, category),
       message,
       irritants
     ), userDefinedType=Some(irType))
@@ -1656,9 +1688,9 @@ object PortCell extends ConcreteCellType with PortFields {
   val gcStateGepIndices = List(0, 0, 1)
   val portGepIndices = List(0, 1)
 
-  val typeIdTbaaNode = NumberedMetadata(82L)
-  val gcStateTbaaNode = NumberedMetadata(83L)
-  val portTbaaNode = NumberedMetadata(84L)
+  val typeIdTbaaNode = NumberedMetadata(83L)
+  val gcStateTbaaNode = NumberedMetadata(84L)
+  val portTbaaNode = NumberedMetadata(85L)
 
   def createConstant(port : IrConstant) : StructureConstant = {
     if (port.irType != portIrType) {
@@ -1687,7 +1719,7 @@ object EofObjectCell extends PreconstructedCellType with EofObjectFields {
   val typeIdGepIndices = List(0, 0, 0)
   val gcStateGepIndices = List(0, 0, 1)
 
-  val typeIdTbaaNode = NumberedMetadata(85L)
-  val gcStateTbaaNode = NumberedMetadata(86L)
+  val typeIdTbaaNode = NumberedMetadata(86L)
+  val gcStateTbaaNode = NumberedMetadata(87L)
 }
 

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "binding/AnyCell.h"
+#include "binding/ErrorCategory.h"
 
 namespace lliby
 {
@@ -10,7 +11,7 @@ namespace lliby
 class World;
 
 [[noreturn]]
-void signalError(World &world, const char *message, const std::vector<AnyCell*> &irritants = std::vector<AnyCell*>(), const char *path = nullptr, unsigned int lineNumber = 0);
+void signalError(World &world, const char *message, const std::vector<AnyCell*> &irritants = std::vector<AnyCell*>(), ErrorCategory category = ErrorCategory::Default);
 
 [[noreturn]]
 void fatalError(const char *message, const lliby::AnyCell *evidence = nullptr);

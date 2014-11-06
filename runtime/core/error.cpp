@@ -22,13 +22,29 @@ using namespace lliby;
 
 void _lliby_signal_error(World &world, const char *message, AnyCell *irritant, const char *path, unsigned int lineNumber)
 {
-	if (irritant != nullptr)
+	std::string messageStr;
+
+	if (path != nullptr)
 	{
-		signalError(world, message, {irritant}, path, lineNumber);
+		std::ostringstream messageStream;
+
+		messageStream << message;
+		messageStream << " at " << path << ":" << lineNumber;
+
+		messageStr = messageStream.str();
 	}
 	else
 	{
-		signalError(world, message, {});
+		messageStr = message;
+	}
+
+	if (irritant != nullptr)
+	{
+		signalError(world, messageStr.c_str(), {irritant}, ErrorCategory::Default);
+	}
+	else
+	{
+		signalError(world, messageStr.c_str(), {}, ErrorCategory::Default);
 	}
 }
 
@@ -37,23 +53,14 @@ void _lliby_signal_error(World &world, const char *message, AnyCell *irritant, c
 namespace lliby
 {
 
-void signalError(World &world, const char *message, const std::vector<AnyCell*> &irritants, const char *path, unsigned int lineNumber)
+void signalError(World &world, const char *message, const std::vector<AnyCell*> &irritants, ErrorCategory category)
 {
-	// Build our full message string
-	std::ostringstream messageStream;
-	messageStream << message;
-
-	if (path != nullptr)
-	{
-		messageStream << " at " << path << ":" << lineNumber;
-	}
-
 	// Convert our C++ data type to Scheme cells
 	alloc::StrongRef<ProperList<AnyCell>> irritantsCell(world, ProperList<AnyCell>::create(world, irritants));
-	StringCell *messageCell = StringCell::fromUtf8StdString(world, messageStream.str());
+	StringCell *messageCell = StringCell::fromUtf8StdString(world, message);
 
 	// Throw a new exception
-	auto errorObj = ErrorObjectCell::createInstance(world, messageCell, irritantsCell);
+	auto errorObj = ErrorObjectCell::createInstance(world, messageCell, irritantsCell, category);
 	throw dynamic::SchemeException(errorObj);
 }
 

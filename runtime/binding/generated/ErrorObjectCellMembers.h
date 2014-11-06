@@ -3,6 +3,11 @@
  ************************************************************/
 
 public:
+	ErrorCategory category() const
+	{
+		return m_category;
+	}
+
 	StringCell* message() const
 	{
 		return m_message;
@@ -25,5 +30,6 @@ public:
 	}
 
 private:
+	ErrorCategory m_category;
 	StringCell* m_message;
 	ProperList<AnyCell>* m_irritants;
