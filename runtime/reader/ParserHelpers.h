@@ -5,21 +5,28 @@
 namespace
 {
 	/**
-	 * Consumes all whitespace in a stream until non-whitespace or EOF is encountered
+	 * Discards characters from a string while they satisfy a predicate
+	 *
+	 * @param  inStream   Stream to read from
+	 * @param  predicate  Function taking a character and returning a boolean predicate indicating if the character
+	 *                    should be discared.
 	 */
-	void consumeWhitespace(std::istream &inStream)
+	template<class F>
+	void discardWhile(std::istream &inStream, F predicate)
 	{
 		while(true)
 		{
-			int peekChar = inStream.peek();
+			int nextChar = inStream.get();
 
-			if ((peekChar == '\r') || (peekChar == '\n') || (peekChar == '\t') || (peekChar == ' '))
+			if (nextChar == EOF)
 			{
-				inStream.get();
+				// Out of data
+				return;
 			}
-			else
+
+			if (!predicate(nextChar))
 			{
-				// All done
+				inStream.putback(nextChar);
 				return;
 			}
 		}

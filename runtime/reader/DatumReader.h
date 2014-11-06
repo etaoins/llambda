@@ -33,6 +33,9 @@ public:
 	AnyCell* parse(int defaultRadix = 10);
 
 protected:
+	void consumeWhitespace();
+	void consumeBlockComment();
+
 	AnyCell *parseOctoDatum();
 	AnyCell *parseEnclosedSymbol();
 	AnyCell *parseString();

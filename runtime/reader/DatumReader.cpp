@@ -109,8 +109,12 @@ namespace
 					break;
 
 				case '\n':
-					// Consume the whitespace at the beginning of the next line
-					consumeWhitespace(inStream);
+					// Discard the intraline whitespace at the beginning of the next line
+					discardWhile(inStream, [] (char c)
+					{
+						return (c == ' ') || (c == '\t');
+					});
+
 					break;
 
 				default:   accum.push_back('\\'); accum.push_back(nextChar);
@@ -126,7 +130,7 @@ namespace
 
 AnyCell* DatumReader::parse(int defaultRadix)
 {
-	consumeWhitespace(m_inStream);
+	consumeWhitespace();
 
 	int peekChar = m_inStream.peek();
 
@@ -185,6 +189,93 @@ AnyCell* DatumReader::parse(int defaultRadix)
 		// Everything else is a symbol
 		return parseSymbol();
 	}
+}
+
+void DatumReader::consumeWhitespace()
+{
+	while(true)
+	{
+		int peekChar = m_inStream.peek();
+
+		if ((peekChar == '\r') || (peekChar == '\n') || (peekChar == '\t') || (peekChar == ' '))
+		{
+			m_inStream.get();
+		}
+		else if (peekChar == ';')
+		{
+			// Consume until the end of the line
+			int getChar;
+			do
+			{
+				getChar = m_inStream.get();
+			}
+			while((getChar != '\n') && (getChar != EOF));
+		}
+		else if (peekChar == '#')
+		{
+			// This could be one of the R7RS comment types
+			m_inStream.get();
+
+			peekChar = m_inStream.peek();
+			if (peekChar == ';')
+			{
+				// Discard the commented out datum
+				m_inStream.get();
+				consumeWhitespace();
+				parse();
+			}
+			else if (peekChar == '|')
+			{
+				m_inStream.get();
+				consumeBlockComment();
+				consumeWhitespace();
+			}
+			else
+			{
+				m_inStream.putback('#');
+			}
+
+			return;
+		}
+		else
+		{
+			// All done
+			return;
+		}
+	}
+}
+
+void DatumReader::consumeBlockComment()
+{
+	int commentDepth = 1;
+
+	while(true)
+	{
+		int firstChar = m_inStream.get();
+
+		if (firstChar == EOF)
+		{
+			return;
+		}
+		else if (firstChar == '#')
+		{
+			if (m_inStream.get() == '|')
+			{
+				++commentDepth;
+			}
+		}
+		else if (firstChar == '|')
+		{
+			if (m_inStream.get() == '#')
+			{
+				if (--commentDepth == 0)
+				{
+					return;
+				}
+			}
+		}
+	}
+
 }
 
 AnyCell* DatumReader::parseOctoDatum()
@@ -456,7 +547,7 @@ AnyCell* DatumReader::parseList(char closeChar)
 
 	while(true)
 	{
-		consumeWhitespace(m_inStream);
+		consumeWhitespace();
 
 		if (m_inStream.eof())
 		{
@@ -495,7 +586,7 @@ AnyCell* DatumReader::parseList(char closeChar)
 			{
 				AnyCell *tailValue = parse();
 
-				consumeWhitespace(m_inStream);
+				consumeWhitespace();
 
 				if (m_inStream.get() != closeChar)
 				{
@@ -543,7 +634,7 @@ AnyCell* DatumReader::parseVector()
 
 	while(true)
 	{
-		consumeWhitespace(m_inStream);
+		consumeWhitespace();
 
 		if (m_inStream.eof())
 		{
@@ -581,7 +672,7 @@ AnyCell* DatumReader::parseBytevector()
 
 	while(true)
 	{
-		consumeWhitespace(m_inStream);
+		consumeWhitespace();
 
 		if (m_inStream.eof())
 		{

@@ -300,6 +300,36 @@ void testUnit(World &world)
 	ASSERT_PARSES("#!unit", UnitCell::instance());
 }
 
+void testComments(World &world)
+{
+	ProperList<AnyCell> *expectedList = ProperList<AnyCell>::create(world, {BooleanCell::falseInstance(), BooleanCell::trueInstance()});
+	ASSERT_PARSES("(#f ; COMMENT\n #t)", expectedList);
+
+	alloc::SymbolRef helloSymbol(world, SymbolCell::fromUtf8StdString(world, "Hello"));
+	alloc::SymbolRef jerkSymbol(world, SymbolCell::fromUtf8StdString(world, "jerk"));
+
+	expectedList = ProperList<AnyCell>::create(world, {helloSymbol});
+	ASSERT_PARSES("(Hello #;(you jerk))", expectedList);
+
+	expectedList = ProperList<AnyCell>::create(world, {helloSymbol, jerkSymbol});
+	ASSERT_PARSES("(Hello #;  you jerk)", expectedList);
+
+	alloc::SymbolRef displaySymbol(world, SymbolCell::fromUtf8StdString(world, "display"));
+	alloc::StringRef lolString(world, StringCell::fromUtf8StdString(world, "LOL"));
+
+	const char *multilineTest = R"(
+      #| This is a block comment\
+         This can be as many lines as it wants
+         It can also contain # and |
+         It can even contain a #| nested comment |# |#
+      (display "LOL")
+      #| Make sure we treat this as a separate comment |#
+	)";
+
+	expectedList = ProperList<AnyCell>::create(world, {displaySymbol, lolString});
+	ASSERT_PARSES(multilineTest, expectedList);
+}
+
 void testAll(World &world)
 {
 	testEmptyInput(world);
@@ -316,6 +346,7 @@ void testAll(World &world)
 	testVector(world);
 	testBytevector(world);
 	testUnit(world);
+	testComments(world);
 }
 
 }
