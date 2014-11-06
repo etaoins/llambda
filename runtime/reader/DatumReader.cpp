@@ -1,5 +1,6 @@
 #include "DatumReader.h"
 #include "ReadErrorException.h"
+#include "ParserHelpers.h"
 
 #include <cassert>
 #include <cstdlib>
@@ -22,31 +23,11 @@
 
 #include "unicode/utf8.h"
 
-#include "ReadErrorException.h"
-
 namespace lliby
 {
 
 namespace
 {
-	void consumeWhitespace(std::istream &inStream)
-	{
-		while(true)
-		{
-			int peekChar = inStream.peek();
-
-			if ((peekChar == '\r') || (peekChar == '\t') || (peekChar == ' '))
-			{
-				inStream.get();
-			}
-			else
-			{
-				// All done
-				return;
-			}
-		}
-	}
-
 	bool isUnenclosedSymbolChar(char c)
 	{
 		return
@@ -58,31 +39,6 @@ namespace
 			(c != '|') && (c != '"') && (c != '[') && (c != ']') && (c != '(') && (c != ')') && (c != '#') &&
 			// Can't be DEL or above
 			(c < 0x7f);
-	}
-
-	template<class F>
-	void takeWhile(std::istream &inStream, std::string &accum, F predicate)
-	{
-		while(true)
-		{
-			int nextChar = inStream.get();
-
-			if (nextChar == EOF)
-			{
-				// Out of data
-				return;
-			}
-
-			if (predicate(nextChar))
-			{
-				accum.push_back(nextChar);
-			}
-			else
-			{
-				inStream.putback(nextChar);
-				return;
-			}
-		}
 	}
 
 	std::string takeQuotedStringLike(std::istream &inStream, char quoteChar)
@@ -163,53 +119,6 @@ namespace
 			else
 			{
 				accum.push_back(nextChar);
-			}
-		}
-	}
-
-	bool consumeLiteral(std::istream &inStream, const char *expected, bool caseInsensitive = false)
-	{
-		std::string accum;
-
-		while(true)
-		{
-			const int expectedChar = expected[accum.size()];
-
-			if (expectedChar == 0)
-			{
-				// All done
-				return true;
-			}
-
-			const int actualChar = inStream.get();
-			accum.push_back(actualChar);
-
-			if (actualChar == EOF)
-			{
-				// Ran out of stream
-				return false;
-			}
-
-			bool matched;
-
-			if (caseInsensitive)
-			{
-				matched = tolower(expectedChar) == tolower(actualChar);
-			}
-			else
-			{
-				matched = expectedChar == actualChar;
-			}
-
-			if (!matched)
-			{
-				// Put everything back
-				for(auto i = accum.size(); i > 0; i--)
-				{
-					inStream.putback(accum[i - 1]);
-				}
-
-				return false;
 			}
 		}
 	}
