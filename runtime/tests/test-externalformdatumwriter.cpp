@@ -110,6 +110,12 @@ void testSymbol(World &world)
 	assertForm(symbolFor(world, u8"Open(round"), u8"|Open(round|");
 	assertForm(symbolFor(world, u8"Close)round"), u8"|Close)round|");
 	assertForm(symbolFor(world, u8"Mid#hash"), u8"|Mid#hash|");
+	assertForm(symbolFor(world, u8"Mid'quote"), u8"|Mid'quote|");
+	assertForm(symbolFor(world, u8"Mid,comma"), u8"|Mid,comma|");
+	assertForm(symbolFor(world, u8"Mid`backtick"), u8"|Mid`backtick|");
+
+	// This is allowed as @ is only special after a ,
+	assertForm(symbolFor(world, u8"Mid@at"), u8"Mid@at");
 }
 
 void testString(World &world)

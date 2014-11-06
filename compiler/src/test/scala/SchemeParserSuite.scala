@@ -32,7 +32,8 @@ class SchemeParserSuite extends FunSuite with Inside {
       ast.ProperList(List(ast.Symbol(symbolName), ast.Symbol("foo"))) :: Nil
     )
 
-    assertReflexiveParse(shorthand + "(1 . 2)",
+    // Make sure whitespace is allowed
+    assertReflexiveParse(shorthand + " (1 . 2)",
       ast.ProperList(List(ast.Symbol(symbolName), ast.Pair(ast.IntegerLiteral(1), ast.IntegerLiteral(2)))) :: Nil
     )
     

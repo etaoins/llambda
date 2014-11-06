@@ -18,6 +18,7 @@
 #include "binding/EmptyListCell.h"
 #include "binding/VectorCell.h"
 #include "binding/BytevectorCell.h"
+#include "binding/ProperList.h"
 
 #include "alloc/cellref.h"
 
@@ -37,6 +38,7 @@ namespace
 			(c != 0x5c) &&
 			// Can't be any syntax characters
 			(c != '|') && (c != '"') && (c != '[') && (c != ']') && (c != '(') && (c != ')') && (c != '#') &&
+			(c != '\'') && (c != '`') && (c != ',') &&
 			// Can't be DEL or above
 			(c < 0x7f);
 	}
@@ -183,6 +185,28 @@ AnyCell* DatumReader::parse(int defaultRadix)
 	else if (peekChar == '[')
 	{
 		return parseList(']');
+	}
+	else if (peekChar == '\'')
+	{
+		return parseSymbolShorthand("quote");
+	}
+	else if (peekChar == '`')
+	{
+		return parseSymbolShorthand("quasiquote");
+	}
+	else if (peekChar == ',')
+	{
+		m_inStream.get();
+
+		if (m_inStream.peek() == '@')
+		{
+			return parseSymbolShorthand("unquote-splicing");
+		}
+		else
+		{
+			m_inStream.putback(',');
+			return parseSymbolShorthand("unquote");
+		}
 	}
 	else
 	{
@@ -367,6 +391,17 @@ AnyCell* DatumReader::parseSymbol()
 	}
 
 	return SymbolCell::fromUtf8StdString(m_world, symbolData);
+}
+
+AnyCell* DatumReader::parseSymbolShorthand(const std::string &expanded)
+{
+	// Consume the shorthand
+	m_inStream.get();
+
+	alloc::SymbolRef expandedSymbol(m_world, SymbolCell::fromUtf8StdString(m_world, expanded));
+	AnyCell *innerDatum = parse();
+
+	return ProperList<AnyCell>::create(m_world, {expandedSymbol, innerDatum});
 }
 
 AnyCell* DatumReader::parseNumber(int radix)

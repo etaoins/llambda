@@ -2,6 +2,7 @@
 #define _LLIBY_READER_DATUMREADER_H
 
 #include <istream>
+#include <string>
 
 #include "binding/generated/declaretypes.h"
 
@@ -40,6 +41,7 @@ protected:
 	AnyCell *parseEnclosedSymbol();
 	AnyCell *parseString();
 	AnyCell *parseSymbol();
+	AnyCell *parseSymbolShorthand(const std::string &expanded);
 
 	AnyCell *parseNumber(int radix);
 	AnyCell *parsePositiveNumber(int radix);
