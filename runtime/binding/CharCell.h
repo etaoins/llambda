@@ -19,8 +19,14 @@ public:
 	}
 
 	static CharCell* createInstance(World &world, UnicodeChar unicodeChar);
+
+	static CharCell* createInstance(World &world, std::int32_t codePoint)
+	{
+		return createInstance(world, UnicodeChar(codePoint));
+	}
+
 };
-	
+
 }
 
 

@@ -67,6 +67,22 @@ namespace
 	}
 
 	/**
+	 * Takes a case insensitive hexidecimal string from the stream
+	 */
+	std::string takeHexidecimal(std::istream &inStream)
+	{
+		std::string result;
+
+		takeWhile(inStream, result, [] (char c)
+		{
+			char lowerC = tolower(c);
+			return ((lowerC >= '0') && (lowerC <= '9')) || ((lowerC >= 'a') && (lowerC <= 'f'));
+		});
+
+		return result;
+	}
+
+	/**
 	 * Attempts to consume a given literal string from the stream
 	 *
 	 * @param  inStream         Stream to read from

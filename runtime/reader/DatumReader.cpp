@@ -7,6 +7,7 @@
 #include <string>
 #include <ctype.h>
 #include <iterator>
+#include <iostream>
 
 #include "binding/ExactIntegerCell.h"
 #include "binding/FlonumCell.h"
@@ -18,18 +19,20 @@
 #include "binding/EmptyListCell.h"
 #include "binding/VectorCell.h"
 #include "binding/BytevectorCell.h"
+#include "binding/CharCell.h"
 #include "binding/ProperList.h"
 
 #include "alloc/cellref.h"
 
 #include "unicode/utf8.h"
+#include "unicode/utf8/InvalidByteSequenceException.h"
 
 namespace lliby
 {
 
 namespace
 {
-	bool isUnenclosedSymbolChar(char c)
+	bool isIdentifierChar(char c)
 	{
 		return
 			// Has to be above the control character and whitespace range
@@ -85,14 +88,7 @@ namespace
 				case 'x':
 					{
 						// Hex escape
-						std::string hexCode;
-
-						takeWhile(inStream, hexCode, [] (char c)
-						{
-							char lowerC = tolower(c);
-
-							return ((lowerC >= '0') && (lowerC <= '9')) || ((lowerC >= 'a') && (lowerC <= 'f'));
-						});
+						std::string hexCode = takeHexidecimal(inStream);
 
 						nextChar = inStream.get();
 
@@ -354,6 +350,14 @@ AnyCell* DatumReader::parseOctoDatum()
 			return parseBytevector();
 		}
 	}
+	else if (getChar == '\\')
+	{
+		return parseChar();
+	}
+	else if (getChar == EOF)
+	{
+		throw ReadErrorException("Unexpected end of input while parsing # datum");
+	}
 
 	throw ReadErrorException("Unrecognized # datum");
 }
@@ -378,7 +382,7 @@ AnyCell* DatumReader::parseSymbol()
 {
 	std::string symbolData;
 
-	takeWhile(m_inStream, symbolData, isUnenclosedSymbolChar);
+	takeWhile(m_inStream, symbolData, isIdentifierChar);
 
 	if (symbolData.empty())
 	{
@@ -402,6 +406,95 @@ AnyCell* DatumReader::parseSymbolShorthand(const std::string &expanded)
 	AnyCell *innerDatum = parse();
 
 	return ProperList<AnyCell>::create(m_world, {expandedSymbol, innerDatum});
+}
+
+AnyCell* DatumReader::parseChar()
+{
+	int nextChar = m_inStream.get();
+
+	if (nextChar == EOF)
+	{
+		throw ReadErrorException("Unexpected end of input while reading character");
+	}
+	else if ((nextChar == 'a') && consumeLiteral(m_inStream, "larm"))
+	{
+		return CharCell::createInstance(m_world, 0x07);
+	}
+	else if ((nextChar == 'b') && consumeLiteral(m_inStream, "ackspace"))
+	{
+		return CharCell::createInstance(m_world, 0x08);
+	}
+	else if ((nextChar == 'd') && consumeLiteral(m_inStream, "elete"))
+	{
+		return CharCell::createInstance(m_world, 0x7f);
+	}
+	else if ((nextChar == 'e') && consumeLiteral(m_inStream, "scape"))
+	{
+		return CharCell::createInstance(m_world, 0x1b);
+	}
+	else if ((nextChar == 'n') && consumeLiteral(m_inStream, "ewline"))
+	{
+		return CharCell::createInstance(m_world, 0x0a);
+	}
+	else if ((nextChar == 'n') && consumeLiteral(m_inStream, "ull"))
+	{
+		return CharCell::createInstance(m_world, 0x00);
+	}
+	else if ((nextChar == 'r') && consumeLiteral(m_inStream, "eturn"))
+	{
+		return CharCell::createInstance(m_world, 0x0d);
+	}
+	else if ((nextChar == 's') && consumeLiteral(m_inStream, "pace"))
+	{
+		return CharCell::createInstance(m_world, 0x20);
+	}
+	else if ((nextChar == 't') && consumeLiteral(m_inStream, "ab"))
+	{
+		return CharCell::createInstance(m_world, 0x09);
+	}
+	else if ((nextChar == 'x') || (nextChar == 'X'))
+	{
+		std::string hexCode = takeHexidecimal(m_inStream);
+
+		if (!hexCode.empty())
+		{
+			return CharCell::createInstance(m_world, strtoll(hexCode.c_str(), nullptr, 16));
+		}
+	}
+
+	// Literal character - we need to parse as UTF-8
+	int seqBytes = utf8::bytesInSequence(nextChar);
+
+	if (seqBytes == -1)
+	{
+		throw utf8::InvalidHeaderByteException(0, 0);
+	}
+
+	std::uint8_t byteBuffer[4];
+	byteBuffer[0] = nextChar;
+
+	m_inStream.read(reinterpret_cast<char*>(&byteBuffer[1]), seqBytes - 1);
+
+	if (m_inStream.gcount() != (seqBytes - 1))
+	{
+		throw ReadErrorException("Unexpected end of input while reading character");
+	}
+
+	utf8::validateData(byteBuffer, &byteBuffer[seqBytes]);
+
+	const std::uint8_t *scanPtr = byteBuffer;
+	UnicodeChar parsedChar = utf8::decodeChar(&scanPtr);
+
+	if ((parsedChar.codePoint() < '0') || ((parsedChar.codePoint() > '9')))
+	{
+		// If this is a non-digit then it can't be followed by an identifier character
+		if (isIdentifierChar(m_inStream.peek()))
+		{
+			throw ReadErrorException("Unrecognized character name");
+		}
+	}
+
+	return CharCell::createInstance(m_world, parsedChar);
 }
 
 AnyCell* DatumReader::parseNumber(int radix)
@@ -612,7 +705,7 @@ AnyCell* DatumReader::parseList(char closeChar)
 			m_inStream.get();
 
 			// Make sure they aren't a symbol
-			if (isUnenclosedSymbolChar(m_inStream.peek()))
+			if (isIdentifierChar(m_inStream.peek()))
 			{
 				m_inStream.putback('.');
 				// Fall through to parsing normal below

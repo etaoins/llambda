@@ -14,6 +14,7 @@
 #include "binding/VectorCell.h"
 #include "binding/BytevectorCell.h"
 #include "binding/ProperList.h"
+#include "binding/CharCell.h"
 
 #include "reader/DatumReader.h"
 #include "reader/ReadErrorException.h"
@@ -380,6 +381,41 @@ void testSplicingUnquotedData(World &world)
 	testSymbolShorthand(world, ",@", "unquote-splicing");
 }
 
+void testCharacters(World &world)
+{
+	ASSERT_PARSES(R"(#\alarm)", CharCell::createInstance(world, 0x07));
+	ASSERT_PARSES(R"(#\backspace)", CharCell::createInstance(world, 0x08));
+	ASSERT_PARSES(R"(#\delete)", CharCell::createInstance(world, 0x7f));
+	ASSERT_PARSES(R"(#\escape)", CharCell::createInstance(world, 0x1b));
+	ASSERT_PARSES(R"(#\newline)", CharCell::createInstance(world, 0x0a));
+	ASSERT_PARSES(R"(#\null)", CharCell::createInstance(world, 0x00));
+	ASSERT_PARSES(R"(#\return)", CharCell::createInstance(world, 0x0d));
+	ASSERT_PARSES(R"(#\space)", CharCell::createInstance(world, 0x20));
+	ASSERT_PARSES(R"(#\tab)", CharCell::createInstance(world, 0x09));
+
+	ASSERT_PARSES(R"(#\a)", CharCell::createInstance(world, 'a'));
+	ASSERT_PARSES(R"(#\A)", CharCell::createInstance(world, 'A'));
+	ASSERT_PARSES(R"(#\()", CharCell::createInstance(world, '('));
+	ASSERT_PARSES(R"(#\ )", CharCell::createInstance(world, ' '));
+	ASSERT_PARSES(R"(#\x03BB)", CharCell::createInstance(world, 0x3bb));
+	ASSERT_PARSES(R"(#\☃)", CharCell::createInstance(world, 0x2603));
+
+	ASSERT_INVALID_PARSE(R"(#\SPACE)");
+
+	ASSERT_INVALID_PARSE("#");
+	ASSERT_INVALID_PARSE(R"(#\)");
+
+	alloc::VectorRef expectedVector(world, VectorCell::fromFill(world, 2, UnitCell::instance()));
+
+	alloc::CharRef oneChar(world, CharCell::createInstance(world, '1'));
+	alloc::SymbolRef moreTimeSymbol(world, SymbolCell::fromUtf8StdString(world, "moretime"));
+
+	expectedVector->setElementAt(0, oneChar);
+	expectedVector->setElementAt(1, moreTimeSymbol);
+
+	ASSERT_PARSES(R"(#(#\1moretime))", expectedVector);
+}
+
 void testAll(World &world)
 {
 	testEmptyInput(world);
@@ -399,6 +435,7 @@ void testAll(World &world)
 	testSplicingUnquotedData(world);
 	testVector(world);
 	testBytevector(world);
+	testCharacters(world);
 	testUnit(world);
 	testComments(world);
 }

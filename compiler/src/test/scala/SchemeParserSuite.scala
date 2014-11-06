@@ -308,6 +308,7 @@ newline""", "Bare\nnewline")
     assertReflexiveParse(raw"#\(", List(ast.CharLiteral('(')))
     assertReflexiveParse(raw"#\ ", List(ast.CharLiteral(' ')))
     assertReflexiveParse(raw"#\x03BB", List(ast.CharLiteral(0x3bb)))
+    assertReflexiveParse(raw"#\☃", List(ast.CharLiteral(0x2603)))
 
     // Symbolic names are case sensitive by default
     // Additionally, an alphabetic character literal cannot be followed by an

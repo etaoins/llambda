@@ -26,7 +26,8 @@ public:
 	 * If the end of input is reached then EofObjectCell::instance() is returned. As the EOF object has no external form
 	 * this is an unambiguous indicator of the end of file.
 	 *
-	 * If the end of input is reached in the middle of the datum then ReadErrorException will be thrown
+	 * If the end of input is reached within a datum or syntatically invalid data is provided then ReadErrorException
+	 * will be thrown. If an invalid UTF-8 enoding is detected the utf8::InvalidByteSequenceException may be thrown.
 	 *
 	 * @param  datum  Radix to parse unprefixed numbers in. This not apply to nested data wnich uses the default radix
 	 *                of 10
@@ -42,6 +43,7 @@ protected:
 	AnyCell *parseString();
 	AnyCell *parseSymbol();
 	AnyCell *parseSymbolShorthand(const std::string &expanded);
+	AnyCell *parseChar();
 
 	AnyCell *parseNumber(int radix);
 	AnyCell *parsePositiveNumber(int radix);
