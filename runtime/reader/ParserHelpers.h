@@ -13,7 +13,7 @@ namespace
 		{
 			int peekChar = inStream.peek();
 
-			if ((peekChar == '\r') || (peekChar == '\t') || (peekChar == ' '))
+			if ((peekChar == '\r') || (peekChar == '\n') || (peekChar == '\t') || (peekChar == ' '))
 			{
 				inStream.get();
 			}

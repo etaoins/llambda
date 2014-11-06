@@ -246,7 +246,7 @@ void testSquareProperList(World &world)
 
 	ProperList<AnyCell> *expectedList = ProperList<AnyCell>::create(world, {BooleanCell::trueInstance(), integerSymbol, helloSymbol, negativeOne, plusTwo});
 
-	ASSERT_PARSES("[#true integer? |Hello| -1 2.0]", expectedList);
+	ASSERT_PARSES("[#true integer?\n|Hello| -1 2.0]", expectedList);
 }
 
 void testSquareImproperList(World &world)
