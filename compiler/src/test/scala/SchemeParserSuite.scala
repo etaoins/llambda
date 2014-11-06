@@ -326,12 +326,20 @@ newline""", "Bare\nnewline")
 
   test("comments") {
     assertReflexiveParse("test ; COMMENT", List(ast.Symbol("test")))
-    assertReflexiveParse("(Hello #;(you jerk))", List(ast.ProperList(ast.Symbol("Hello") :: Nil)))
+    assertReflexiveParse("(Hello #;(you jerk))", List(ast.ProperList(List(
+      ast.Symbol("Hello")
+    ))))
+
+    assertReflexiveParse("(Hello #;  you jerk)", List(ast.ProperList(List(
+      ast.Symbol("Hello"),
+      ast.Symbol("jerk")
+    ))))
 
     val multilineTest = """
       #| This is a block comment
          This can be as many lines as it wants
-         It can also contain # and | |#
+         It can also contain # and |
+         It can even contain a #| nested comment |# |#
       (display "LOL")
       #| Make sure we treat this as a separate comment |#
       """;

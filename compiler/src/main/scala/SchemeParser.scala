@@ -60,8 +60,9 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
     str("#|") ~ UnclosedBlockComment
   }
 
+  // The recursive BlockComment rule is to handle nested block comments
   def UnclosedBlockComment : Rule0 = rule {
-    zeroOrMore(noneOf("|")) ~ (str("|#") | (ANY ~ UnclosedBlockComment))
+    zeroOrMore(noneOf("#|")) ~ (str("|#") | BlockComment ~ UnclosedBlockComment | (ANY ~ UnclosedBlockComment))
   }
 
   implicit def wspStr(s: String): Rule0 = rule {
