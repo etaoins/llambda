@@ -10,6 +10,22 @@ namespace alloc
 {
 
 /**
+ * Declares a range of externally allocated GC root pointers
+ *
+ * It is the responsibility of the caller to ensure the external range remains valid for the lifetime of the StrongRoot
+ * instance
+ */
+template<class T>
+class StrongRoot : public AbstractRoot<T>
+{
+public:
+	StrongRoot(World &world, T** cellRef, size_t cellCount = 1) :
+		AbstractRoot<T>(&world.strongRoots, cellRef, cellCount)
+	{
+	}
+};
+
+/**
  * Holds a strong reference to a GC managed cell
  *
  * These values and their recursively referenced values will be consider active when the garbage collector runs. Their
@@ -20,15 +36,15 @@ class StrongRef : public AbstractRef<T>
 {
 public:
 	StrongRef(World &world) :
-		AbstractRef<T>(&world.strongRefs)
+		AbstractRef<T>(&world.strongRoots)
 	{
 	}
-	
+
 	StrongRef(World &world, T* cell) :
-		AbstractRef<T>(&world.strongRefs, cell)
+		AbstractRef<T>(&world.strongRoots, cell)
 	{
 	}
-	
+
 	StrongRef& operator=(T* newCell)
 	{
 		this->setData(newCell);
@@ -36,30 +52,7 @@ public:
 	}
 };
 
-/**
- * Declares a range of externally allocated GC root pointers
- *
- * It is the reponsibility of the caller to ensure the external range remains valid for the lifetime of the
- * StrongRefRange instance
- */
-template<class T>
-class StrongRefRange : public AbstractRefRange<T>
-{
-public:
-	explicit StrongRefRange(World &world, T** cellRef, size_t cellCount) :
-		AbstractRefRange<T>(&world.strongRefs, cellRef, cellCount)
-	{
-	}
-	
-	explicit StrongRefRange(World &world, std::vector<T*> &cellVector) :
-		AbstractRefRange<T>(&world.strongRefs, cellVector)
-	{
-	}
-};
-
 }
 }
-
 
 #endif
-

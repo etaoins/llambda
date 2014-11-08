@@ -185,7 +185,7 @@ StringCell* StringCell::fromAppended(World &world, std::vector<StringCell*> &str
 	}
 
 	// Mark our input strings as GC roots
-	alloc::StringRefRange inputRoots(world, strings);
+	alloc::StrongRoot<StringCell> inputRoots(world, strings.data(), strings.size());
 
 	// Allocate the new string
 	auto newString = StringCell::createUninitialized(world, totalByteLength, totalCharLength);

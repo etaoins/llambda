@@ -7,7 +7,7 @@
 #include "binding/ProperList.h"
 #include "alloc/StrongRef.h"
 #include "alloc/cellref.h"
-#include "alloc/CellRefRangeList.h"
+#include "alloc/CellRootList.h"
 
 namespace lliby
 {
@@ -71,25 +71,25 @@ public:
 	}
 
 	/**
-	 * Reference to the strong cell reference list for this continuation
+	 * Reference to the strong cell root list for this continuation
 	 *
 	 * This is duplicated from the World when the continuation is captured and then relocated to the appropriate
 	 * memory location.
 	 */
-	const alloc::CellRefRangeList& strongRefs() const
+	const alloc::CellRootList& strongRoots() const
 	{
-		return m_strongRefs;
+		return m_strongRoots;
 	}
 	
 	/**
-	 * Reference to the weak cell reference list for this continuation
+	 * Reference to the weak cell root list for this continuation
 	 *
 	 * This is duplicated from the World when the continuation is captured and then relocated to the appropriate
 	 * memory location.
 	 */
-	const alloc::CellRefRangeList& weakRefs() const
+	const alloc::CellRootList& weakRoots() const
 	{
-		return m_weakRefs;
+		return m_weakRoots;
 	}
 
 	/**
@@ -114,10 +114,10 @@ private:
 	 */
 	std::ptrdiff_t m_savedStackBytes;
 
-	// These mirror	the state in the World	
+	// These mirror	the state in the World
 	alloc::ShadowStackEntry *m_shadowStackHead = nullptr;
-	alloc::CellRefRangeList m_strongRefs;
-	alloc::CellRefRangeList m_weakRefs;
+	alloc::CellRootList m_strongRoots;
+	alloc::CellRootList m_weakRoots;
 	DynamicStateCell *m_dynamicStateCell;
 
 	/**

@@ -119,45 +119,22 @@ namespace lliby
 
 		/**
 		 * Creates a new ProperList instance containing the passed elements
-		 *
-		 * This requires entering the garbage collector. For that reason the elements vector is GC rooted before
-		 * allocating the list elements.
 		 */
+		static ProperList<T> *create(World &world, alloc::StrongRefVector<T> &elements)
+		{
+			return createFromGcRooted(world, elements);
+		}
+
 		static ProperList<T> *create(World &world, std::vector<T*> &elements)
 		{
-			// Avoid GC rooting etc. if we don't need to allocate anything
-			if (elements.empty())
-			{
-				return EmptyListCell::asProperList<T>();
-			}
-
-			// We allocate space for our pairs below. Make sure we GC root the new elements first.
-			alloc::StrongRefRange<T> elementsRoot(world, elements);
-
-			alloc::RangeAlloc allocation = alloc::allocateRange(world, elements.size());
-			auto allocIt = allocation.end();
-
-			auto it = elements.rbegin();
-			AnyCell *cdr = EmptyListCell::instance();
-
-			for(;it != elements.rend(); it++)
-			{
-				cdr = new (*--allocIt) PairCell(*it, cdr);
-			}
-
-			return static_cast<ProperList<T>*>(cdr);
+			alloc::StrongRoot<T> gcRoot(world, elements.data(), elements.size());
+			return createFromGcRooted(world, elements);
 		}
 
 		static ProperList<T> *create(World &world, std::initializer_list<T*> elementsList)
 		{
-			std::vector<T*> elements(elementsList);
+			alloc::StrongRefVector<T> elements(world, elementsList.begin(), elementsList.end());
 			return create(world, elements);
-		}
-
-		static ProperList<T> *create(World &world, const std::vector<T*> &elements)
-		{
-			std::vector<T*> elementsCopy(elements);
-			return create(world, elementsCopy);
 		}
 
 		/**
@@ -184,6 +161,30 @@ namespace lliby
 
 			return true;
 		}
+
+	private:
+		template<class Container>
+		static ProperList<T> *createFromGcRooted(World &world, Container &elements)
+		{
+			if (elements.empty())
+			{
+				return EmptyListCell::asProperList<T>();
+			}
+
+			alloc::RangeAlloc allocation = alloc::allocateRange(world, elements.size());
+			auto allocIt = allocation.end();
+
+			auto it = elements.rbegin();
+			AnyCell *cdr = EmptyListCell::instance();
+
+			for(;it != elements.rend(); it++)
+			{
+				cdr = new (*--allocIt) PairCell(*it, cdr);
+			}
+
+			return static_cast<ProperList<T>*>(cdr);
+		}
+
 	};
 }
 

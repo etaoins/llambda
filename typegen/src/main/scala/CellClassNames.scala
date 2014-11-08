@@ -20,9 +20,6 @@ case class CellClassNames(definitionName : String) {
 
   /** Name for the C++ StrongRef typedef */
   lazy val cppRefName = definitionName + "Ref"
-  
-  /** Name for the C++ StrongRefRange typedef */
-  lazy val cppRefRangeName = definitionName + "RefRange"
 
   /** Name for the Scala object in the celltype package */
   lazy val scalaCellTypeName = cppClassName

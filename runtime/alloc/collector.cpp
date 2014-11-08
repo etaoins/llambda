@@ -8,7 +8,7 @@
 #include "alloc/GarbageState.h"
 #include "alloc/AllocCell.h"
 #include "alloc/cellvisitor.h"
-#include "alloc/CellRefRangeList.h"
+#include "alloc/CellRootList.h"
 #include "alloc/Heap.h"
 
 #include "binding/AnyCell.h"
@@ -112,7 +112,7 @@ size_t collect(World &world, Heap &newHeap)
 	};
 
 	// Visit each runtime GC root
-	visitCellRefList(world.strongRefs, rootVisitor);
+	visitCellRootList(world.strongRoots, rootVisitor);
 
 	// Visit each compiler GC root
 	visitShadowStack(world.shadowStackHead, rootVisitor);
@@ -123,8 +123,8 @@ size_t collect(World &world, Heap &newHeap)
 	// of an unreachable parameter seems like too much of a corner case to justify the additional code complexity.
 	visitCell(reinterpret_cast<AnyCell**>(&world.activeStateCell), rootVisitor);
 
-	// Visit each runtime weak ref
-	visitCellRefList(world.weakRefs, weakRefVisitor);
+	// Visit each runtime weak root
+	visitCellRootList(world.weakRoots, weakRefVisitor);
 
 	return reachableCells;
 }

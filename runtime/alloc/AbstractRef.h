@@ -7,7 +7,7 @@
 
 #include "binding/AnyCell.h"
 #include "alloc/AllocCell.h"
-#include "alloc/CellRefRangeList.h"
+#include "alloc/CellRootList.h"
 
 namespace lliby
 {
@@ -15,17 +15,17 @@ namespace alloc
 {
 
 /**
- * Abstract reference to a contiguous range of GC managed values
+ * Abstract GC root of a contiguous range of GC managed values
  *
  * Note that unlike AbstractRef this does not maintain a copy of the referenced values. This has two important
  * implications:
- * - The referenced memory range must be valid for the lifetime of the AbstractRefRange.
- * - The same memory range must not rooted by multiple AbstractRefRanges when the garbage collector in entered.
+ * - The referenced memory range must be valid for the lifetime of the AbstractRoot.
+ * - The same memory range must not rooted by multiple AbstractRoots when the garbage collector in entered.
  *
- * \sa StrongRefRange
+ * \sa StrongRoot
  */
 template<class T>
-class AbstractRefRange
+class AbstractRoot
 {
 protected:
 	static_assert(std::is_base_of<AnyCell, T>(), "Only AnyCell subclasses can be GC roots");
@@ -33,51 +33,38 @@ protected:
 	/**
 	 * Creates a new instance rooting a cell or cell array
 	 *
-	 * @param refList    List to add the ref range to
+	 * @param rootList   List to add the root to
 	 * @param cellRef    Reference to the cell or cell array
 	 * @param cellCount  Number of cells in the cell array
 	 */
-	AbstractRefRange(CellRefRangeList *refList, T** cellRef, size_t cellCount) :
-		m_refList(refList)
+	AbstractRoot(CellRootList *rootList, T** cellRef, size_t cellCount = 1) :
+		m_rootList(rootList)
 	{
-		m_refRange.basePointer = reinterpret_cast<AllocCell**>(cellRef);
-		m_refRange.cellCount = cellCount;
+		m_node.basePointer = reinterpret_cast<AllocCell**>(cellRef);
+		m_node.cellCount = cellCount;
 
-		m_refList->addRange(m_refRange);
+		m_rootList->addNode(m_node);
 	}
 
-	/**
-	 * Creates a new instance rooting a cell vector
-	 *
-	 * @param refList     List to add the ref range to
-	 * @param cellVector  Vector of cells to root. The original vector will be referenced and possibly modified if
-	 *                    the garbage collector runs. Therefore it is unsafe to destroy or resize the vector while
-	 *                    it is rooted.
-	 */ 
-	AbstractRefRange(CellRefRangeList *refList, std::vector<T*> &cellVector) :
-		AbstractRefRange(refList, cellVector.data(), cellVector.size())
-	{
-	}
-
-	AbstractRefRange(const AbstractRefRange &) = delete;
+	AbstractRoot(const AbstractRoot &) = delete;
 
 	/**
 	 * Destroys the GC root object and unroots the cells originally passed to the constructor
 	 */
-	~AbstractRefRange()
+	~AbstractRoot()
 	{
-		m_refList->removeRange(m_refRange);
+		m_rootList->removeNode(m_node);
 	}
 
-	CellRefRangeList *m_refList;
-	CellRefRange m_refRange;
+	CellRootList *m_rootList;
+	CellRootListNode m_node;
 };
 
 /**
  * Abstract reference to a single GC managed value
  */
 template<class T>
-class AbstractRef : public AbstractRefRange<T>
+class AbstractRef : public AbstractRoot<T>
 {
 public:
 	operator T*() const
@@ -116,18 +103,18 @@ public:
 	}
 
 protected:
-	AbstractRef(CellRefRangeList *refList) : AbstractRef(refList, nullptr)
+	AbstractRef(CellRootList *rootList) : AbstractRef(rootList, nullptr)
 	{
 	}
 
-	AbstractRef(CellRefRangeList *refList, T* cell) :
-		AbstractRefRange<T>(refList, &m_cell, 1),
+	AbstractRef(CellRootList *rootList, T* cell) :
+		AbstractRoot<T>(rootList, &m_cell, 1),
 		m_cell(cell)
 	{
 	}
 
 	AbstractRef(const AbstractRef &other) :
-		AbstractRef(other.m_refList, other.data())
+		AbstractRef(other.m_rootList, other.data())
 	{
 	}
 

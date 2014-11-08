@@ -66,14 +66,14 @@ AnyCell* State::valueForParameter(ParameterProcedureCell *param) const
 		return param->initialValue();
 	}
 }
-	
+
 void State::setValueForParameter(World &world, ParameterProcedureCell *param, AnyCell *value)
 {
 	ConverterProcedureCell *converterProcRaw = param->converterProcedure();
 
 	if (converterProcRaw)
 	{
-		alloc::StrongRefRange<ParameterProcedureCell> paramRoot(world, &param, 1);
+		alloc::StrongRoot<ParameterProcedureCell> paramRoot(world, &param);
 		alloc::StrongRef<ConverterProcedureCell> converterProc(world, converterProcRaw);
 
 		value = converterProc->apply(world, value);
@@ -154,7 +154,7 @@ void State::switchStateCell(World &world, DynamicStateCell *targetStateCell)
 		if (!pathToTargetState.empty())
 		{
 			// Root the path in case the before procedures cause GC
-			alloc::StrongRefRange<DynamicStateCell> pathRef(world, pathToTargetState);
+			alloc::StrongRoot<DynamicStateCell> pathRef(world, pathToTargetState.data(), pathToTargetState.size());
 
 			for(auto it = pathToTargetState.rbegin(); it != pathToTargetState.rend(); it++)
 			{

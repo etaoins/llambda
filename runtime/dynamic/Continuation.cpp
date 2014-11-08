@@ -65,11 +65,11 @@ Continuation* Continuation::capture(World &world)
 	cont->m_shadowStackHead = world.shadowStackHead;
 	relocateShadowStack(cont->m_shadowStackHead, relocationOffset);
 
-	cont->m_strongRefs = world.strongRefs;
-	cont->m_strongRefs.relocate(relocationOffset, stackPointer, world.continuationBase);
+	cont->m_strongRoots = world.strongRoots;
+	cont->m_strongRoots.relocate(relocationOffset, stackPointer, world.continuationBase);
 
-	cont->m_weakRefs = world.weakRefs;
-	cont->m_weakRefs.relocate(relocationOffset, stackPointer, world.continuationBase);
+	cont->m_weakRoots = world.weakRoots;
+	cont->m_weakRoots.relocate(relocationOffset, stackPointer, world.continuationBase);
 
 	cont->m_dynamicStateCell = world.activeStateCell;
 
@@ -95,11 +95,11 @@ Continuation* Continuation::capture(World &world)
 		world.shadowStackHead = cont->m_shadowStackHead;
 		relocateShadowStack(world.shadowStackHead, delocationOffset);
 
-		world.strongRefs = cont->m_strongRefs;
-		world.strongRefs.relocate(delocationOffset, &cont->m_savedStack[0], &cont->m_savedStack[stackSize]);
+		world.strongRoots = cont->m_strongRoots;
+		world.strongRoots.relocate(delocationOffset, &cont->m_savedStack[0], &cont->m_savedStack[stackSize]);
 
-		world.weakRefs = cont->m_weakRefs;
-		world.weakRefs.relocate(delocationOffset, &cont->m_savedStack[0], &cont->m_savedStack[stackSize]);
+		world.weakRoots = cont->m_weakRoots;
+		world.weakRoots.relocate(delocationOffset, &cont->m_savedStack[0], &cont->m_savedStack[stackSize]);
 
 		// Switch our dynamic state
 		State::switchStateCell(world, cont->m_dynamicStateCell);

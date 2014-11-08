@@ -9,6 +9,7 @@
 
 #include "alloc/allocator.h"
 #include "alloc/RangeAlloc.h"
+#include "alloc/StrongRefVector.h"
 #include "alloc/cellref.h"
 
 #include "util/StringCellBuilder.h"
@@ -51,13 +52,10 @@ namespace
 		std::uint32_t minimumLength = firstVectorRaw->length();
 
 		// Build our vector of input vector cells
-		std::vector<VectorCell*> restVectors(restVectorList->begin(), restVectorList->end());
+		alloc::StrongRefVector<VectorCell> restVectors(world, restVectorList->begin(), restVectorList->end());
 
 		// Root the input vector
 		alloc::StrongRef<VectorCell> firstVector(world, firstVectorRaw);
-
-		// Root the input vectors before we allocate the output vector and input lists
-		alloc::StrongRefRange<VectorCell> restVectorsRoot(world, restVectors);
 
 		// Create the output vector and GC root it
 		alloc::VectorRef outputVector(world, VectorCell::fromFill(world, minimumLength, UnitCell::instance()));
@@ -84,7 +82,7 @@ namespace
 	}
 
 	template<typename MapFunction>
-	std::vector<AnyCell*> abstractListMap(World &world, MapFunction mapFunc, ProperList<AnyCell> *firstListRaw, ProperList<ProperList<AnyCell>> *restListsRaw)
+	alloc::StrongRefVector<AnyCell> abstractListMap(World &world, MapFunction mapFunc, ProperList<AnyCell> *firstListRaw, ProperList<ProperList<AnyCell>> *restListsRaw)
 	{
 		alloc::StrongRef<ListElementCell> firstList(world, firstListRaw);
 		std::vector<alloc::StrongRef<ListElementCell>> restLists;
@@ -100,9 +98,8 @@ namespace
 			minimumLength = std::min(minimumLength, restList->size());
 		}
 
-		// Create the vector of output values and GC root it
-		std::vector<AnyCell*> outputVector(minimumLength, nullptr);
-		alloc::StrongRefRange<AnyCell> outputVectorRoot(world, outputVector);
+		// Create the vector of output values
+		alloc::StrongRefVector<AnyCell> outputVector(world, minimumLength, nullptr);
 
 		for(std::uint32_t i = 0; i < minimumLength; i++)
 		{
@@ -210,7 +207,7 @@ ProperList<AnyCell> *lliby_map(World &world, AnyMapProcedureCell *mapProcRaw, Pr
 		return mapProc->apply(world, firstArg, restArgs);
 	};
 
-	std::vector<AnyCell*> result = abstractListMap(world, mapFunc, firstListRaw, argHead);
+	alloc::StrongRefVector<AnyCell> result = abstractListMap(world, mapFunc, firstListRaw, argHead);
 	return ProperList<AnyCell>::create(world, result);
 }
 

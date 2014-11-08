@@ -150,19 +150,19 @@ visitEntry:
 }
 
 /**
- * Visits a CellRefRangeList by calling a visitor
+ * Visits a CellRootList by calling a visitor
  */
 template<typename T>
-void visitCellRefList(const CellRefRangeList &cellRefList, T visitor)
+void visitCellRootList(const CellRootList &cellRootList, T visitor)
 {
-	for(auto cellRefRange = cellRefList.head();
-		cellRefRange != nullptr;
-		cellRefRange = cellRefRange->next)
+	for(auto node = cellRootList.head();
+		node != nullptr;
+		node = node->next)
 	{
 		// Visit each cell in this range
-		for(size_t i = 0; i < cellRefRange->cellCount; i++)
+		for(size_t i = 0; i < node->cellCount; i++)
 		{
-			auto cellRef = reinterpret_cast<AnyCell**>(&cellRefRange->basePointer[i]);
+			auto cellRef = reinterpret_cast<AnyCell**>(&node->basePointer[i]);
 
 			if (*cellRef != nullptr)
 			{
@@ -245,7 +245,7 @@ void visitDynamicState(dynamic::State *state, T visitor)
 template<typename T>
 void visitContinuation(dynamic::Continuation *continuation, T visitor)
 {
-	visitCellRefList(continuation->strongRefs(), visitor);
+	visitCellRootList(continuation->strongRoots(), visitor);
 	visitShadowStack(continuation->shadowStackHead(), visitor);
 	visitCell(reinterpret_cast<AnyCell**>(continuation->dynamicStateCellRef()), visitor);
 
@@ -259,7 +259,7 @@ void visitContinuation(dynamic::Continuation *continuation, T visitor)
 	// because the collector uses a special visitor for weak refs that we don't have access to. Even if it was passed
 	// through all weak references need to be processed at the end of GC, not when we encounter the continuation.
 	// As weak references are effectively unused this is close enough
-	visitCellRefList(continuation->weakRefs(), visitor);
+	visitCellRootList(continuation->weakRoots(), visitor);
 }
 
 }

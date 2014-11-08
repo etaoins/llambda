@@ -56,7 +56,9 @@ namespace lliby
 void signalError(World &world, const char *message, const std::vector<AnyCell*> &irritants, ErrorCategory category)
 {
 	// Convert our C++ data type to Scheme cells
-	alloc::StrongRef<ProperList<AnyCell>> irritantsCell(world, ProperList<AnyCell>::create(world, irritants));
+	std::vector<AnyCell*> irritantsCopy(irritants);
+	alloc::StrongRef<ProperList<AnyCell>> irritantsCell(world, ProperList<AnyCell>::create(world, irritantsCopy));
+
 	StringCell *messageCell = StringCell::fromUtf8StdString(world, message);
 
 	// Throw a new exception

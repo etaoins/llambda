@@ -17,7 +17,7 @@ ReturnValuesList *lliby_dynamic_wind(World &world, ThunkProcedureCell *before, T
 	{
 		// pushActiveState() can call before which can GC
 		// Make sure we root thunk
-		alloc::StrongRefRange<ThunkProcedureCell> thunkRoot(world, &thunk, 1);
+		alloc::StrongRoot<ThunkProcedureCell> thunkRoot(world, &thunk);
 
 		dynamic::State::pushActiveState(world, before, after);
 	}

@@ -23,9 +23,8 @@ object WriteCellRefs extends writer.OutputWriter {
       val names = cellClass.names
 
       incBuilder += s"typedef StrongRef<${names.cppClassName}> ${names.cppRefName};"
-      incBuilder += s"typedef StrongRefRange<${names.cppClassName}> ${names.cppRefRangeName};"
     }
-    
+
     incBuilder.sep()
     
     incBuilder += "}"

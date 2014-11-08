@@ -156,7 +156,7 @@ void testReplace(World &world)
 	
 	AnyCell *destElements[5] = {nullptr};
 	// We have to make sure these are rooted while we build them
-	alloc::AnyRefRange destRoot(world, destElements, 5);
+	alloc::StrongRoot<AnyCell> destRoot(world, destElements, 5);
 
 	for(unsigned int i = 0; i < 5; i++)
 	{

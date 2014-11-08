@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <cstdlib>
+#include <cstring>
 #include <string>
 #include <ctype.h>
 #include <iterator>
@@ -23,6 +24,7 @@
 #include "binding/ProperList.h"
 
 #include "alloc/cellref.h"
+#include "alloc/StrongRefVector.h"
 
 #include "unicode/utf8.h"
 #include "unicode/utf8/InvalidByteSequenceException.h"
@@ -755,7 +757,7 @@ AnyCell* DatumReader::parseList(char closeChar)
 
 AnyCell* DatumReader::parseVector()
 {
-	std::vector<alloc::AnyRef> elementRefs;
+	alloc::StrongRefVector<AnyCell> elementRefs(m_world);
 
 	// The ( is already taken
 
@@ -777,16 +779,12 @@ AnyCell* DatumReader::parseVector()
 			break;
 		}
 
-		elementRefs.emplace_back(m_world, parse());
+		elementRefs.push_back(parse());
 	}
 
 	const auto elementCount = elementRefs.size();
 	auto *newElements = new AnyCell*[elementCount];
-
-	for(auto i = 0; i < elementCount; i++)
-	{
-		newElements[i] = elementRefs[i].data();
-	}
+	std::memcpy(newElements, elementRefs.data(), sizeof(AnyCell*) * elementCount);
 
 	return VectorCell::fromElements(m_world, newElements, elementCount);
 }

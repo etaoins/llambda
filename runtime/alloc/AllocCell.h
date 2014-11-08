@@ -1,7 +1,7 @@
 #ifndef _LLIBY_ALLOC_ALLOCCELL_H
 #define _LLIBY_ALLOC_ALLOCCELL_H
 
-#include "binding/PairCell.h"
+#include "binding/AnyCell.h"
 
 namespace lliby
 {

@@ -3,7 +3,7 @@
 
 #include "alloc/Heap.h"
 #include "alloc/ShadowStackEntry.h"
-#include "alloc/CellRefRangeList.h"
+#include "alloc/CellRootList.h"
 
 #include "core/World.h"
 
@@ -19,7 +19,7 @@ namespace alloc
 {
 class MemoryBlock;
 class AllocCell;
-class CellRefRangeList;
+class CellRootList;
 }
 
 class World
@@ -43,9 +43,9 @@ public:
 	
 	DynamicStateCell *activeStateCell;
 
-	// These are lists of strong and weak refs in the current world
-	alloc::CellRefRangeList strongRefs;
-	alloc::CellRefRangeList weakRefs;
+	// These are lists of strong and weak roots in the current world
+	alloc::CellRootList strongRoots;
+	alloc::CellRootList weakRoots;
 
 	// This is the stack base where continuations are copied to/from
 	void *continuationBase;

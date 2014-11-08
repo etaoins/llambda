@@ -20,7 +20,7 @@ ReturnValuesList *lliby_apply(World &world, TopProcedureCell *procedure, ProperL
 {
 	ProperList<AnyCell> *procArgHead;
 
-	// Do everything inside the block so the ProperList/StrongRefRange is destructed before calling the procedure
+	// Do everything inside the block so the ProperList/StrongRoot is destructed before calling the procedure
 	// This reduces the resources we use during recursive calls to (apply) and might allow the compiler to perform
 	// tail call optimization
 	{
@@ -53,8 +53,8 @@ ReturnValuesList *lliby_apply(World &world, TopProcedureCell *procedure, ProperL
 				signalError(world, "Final argument to (apply) must be a proper list", {*applyArgIt});
 			}
 
-			// Reference the procedure cell before allocating the argument list
-			alloc::StrongRefRange<TopProcedureCell> procedureRef(world, &procedure, 1);
+			// Root the procedure cell before allocating the argument list
+			alloc::StrongRoot<TopProcedureCell> procedureRoot(world, &procedure);
 
 			// We verified the final arg is a proper list so this must also be a proper list
 			procArgHead = cell_unchecked_cast<ProperList<AnyCell>>(ListElementCell::createList(world, standaloneArgs, finalListHead));

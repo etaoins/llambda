@@ -2,7 +2,7 @@
 
 #include "core/error.h"
 
-#include "alloc/CellRefRangeList.h"
+#include "alloc/CellRootList.h"
 #include "alloc/allocator.h"
 
 #include "binding/DynamicStateCell.h"

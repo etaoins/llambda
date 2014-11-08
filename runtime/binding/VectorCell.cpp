@@ -52,7 +52,7 @@ bool VectorCell::fill(AnyCell *fill, std::int64_t start, std::int64_t end)
 VectorCell* VectorCell::fromElements(World &world, AnyCell **elements, std::uint32_t length)
 {
 	// Make sure our elements array is GC rooted for the next allocation
-	alloc::AnyRefRange newElementsRoot(world, elements, length);
+	alloc::StrongRoot<AnyCell> newElementsRoot(world, elements, length);
 
 	void *cellPlacement = alloc::allocateCells(world);
 	return new (cellPlacement) VectorCell(elements, length);
@@ -102,8 +102,8 @@ VectorCell* VectorCell::fromAppended(World &world, const std::vector<const Vecto
 	}
 
 	// Root our elements in case allocating the vector cell triggers GC
-	alloc::AnyRefRange newElementsRoot(world, newElements, totalLength);
-	
+	alloc::StrongRoot<AnyCell> newElementsRoot(world, newElements, totalLength);
+
 	void *cellPlacement = alloc::allocateCells(world);
 	return new (cellPlacement) VectorCell(newElements, totalLength);
 }
@@ -120,8 +120,8 @@ VectorCell* VectorCell::copy(World &world, std::int64_t start, std::int64_t end)
 
 	memcpy(newElements, &elements()[start], newLength * sizeof(AnyCell*));
 
-	alloc::AnyRefRange newElementsRoot(world, newElements, newLength);
-	
+	alloc::StrongRoot<AnyCell> newElementsRoot(world, newElements, newLength);
+
 	void *cellPlacement = alloc::allocateCells(world);
 	return new (cellPlacement) VectorCell(newElements, newLength);
 }
