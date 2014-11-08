@@ -19,7 +19,7 @@ object WriteCellRefs extends writer.OutputWriter {
     incBuilder += "{"
     incBuilder.sep()
 
-    for(cellClass <- processedTypes.cellClasses.values) {
+    for(cellClass <- processedTypes.cellClasses.values if cellClass.instanceType != CellClass.Preconstructed) {
       val names = cellClass.names
 
       incBuilder += s"typedef StrongRef<${names.cppClassName}> ${names.cppRefName};"

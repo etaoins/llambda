@@ -14,17 +14,14 @@ namespace alloc
 {
 
 typedef StrongRef<AnyCell> AnyRef;
-typedef StrongRef<UnitCell> UnitRef;
 typedef StrongRef<ListElementCell> ListElementRef;
 typedef StrongRef<PairCell> PairRef;
-typedef StrongRef<EmptyListCell> EmptyListRef;
 typedef StrongRef<StringCell> StringRef;
 typedef StrongRef<InlineStringCell> InlineStringRef;
 typedef StrongRef<HeapStringCell> HeapStringRef;
 typedef StrongRef<SymbolCell> SymbolRef;
 typedef StrongRef<InlineSymbolCell> InlineSymbolRef;
 typedef StrongRef<HeapSymbolCell> HeapSymbolRef;
-typedef StrongRef<BooleanCell> BooleanRef;
 typedef StrongRef<NumberCell> NumberRef;
 typedef StrongRef<ExactIntegerCell> ExactIntegerRef;
 typedef StrongRef<FlonumCell> FlonumRef;
@@ -36,7 +33,6 @@ typedef StrongRef<ProcedureCell> ProcedureRef;
 typedef StrongRef<RecordCell> RecordRef;
 typedef StrongRef<ErrorObjectCell> ErrorObjectRef;
 typedef StrongRef<PortCell> PortRef;
-typedef StrongRef<EofObjectCell> EofObjectRef;
 typedef StrongRef<DynamicStateCell> DynamicStateRef;
 
 }
