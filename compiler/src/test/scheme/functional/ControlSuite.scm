@@ -174,7 +174,7 @@
 (define-test "(map)" (expect-success
   (assert-equal '(b e h) (map cadr '((a b) (d e) (g h))))
   (assert-equal '(1 4 27 256 3125) (map (lambda (n) (expt n n)) '(1 2 3 4 5)))
-  (assert-equal '(5 6 7) (map + '(1 2 3) '(4 5 6 7)))
+  (assert-equal '(5 7 9) (map + '(1 2 3) '(4 5 6 7)))
 
   (assert-equal '(1 2)
                 (let ((count 0))

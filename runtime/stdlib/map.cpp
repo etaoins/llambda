@@ -85,7 +85,7 @@ namespace
 	alloc::StrongRefVector<AnyCell> abstractListMap(World &world, MapFunction mapFunc, ProperList<AnyCell> *firstListRaw, ProperList<ProperList<AnyCell>> *restListsRaw)
 	{
 		alloc::StrongRef<ListElementCell> firstList(world, firstListRaw);
-		std::vector<alloc::StrongRef<ListElementCell>> restLists;
+		alloc::StrongRefVector<ListElementCell> restLists(world);
 
 		// This is the minimum length of all of our input lists first
 		std::uint32_t minimumLength = firstListRaw->size();
@@ -93,7 +93,7 @@ namespace
 		for(auto restList : *restListsRaw)
 		{
 			// Create the strong ref for the rest list
-			restLists.emplace(restLists.end(), world, restList);
+			restLists.push_back(restList);
 
 			minimumLength = std::min(minimumLength, restList->size());
 		}
@@ -107,13 +107,13 @@ namespace
 			std::vector<AnyCell*> restArgVector;
 			restArgVector.reserve(restLists.size());
 
-			for(auto restList : restLists)
+			for(ListElementCell* &restList : restLists)
 			{
-				auto restListPair = cell_map_cast<PairCell>(world, restList.data());
+				auto restListPair = cell_map_cast<PairCell>(world, restList);
 				restArgVector.push_back(restListPair->car());
 
 				// Move this forward to the next element
-				restList.setData(cell_map_cast<ListElementCell>(world, restListPair->cdr()));
+				restList = cell_map_cast<ListElementCell>(world, restListPair->cdr());
 			}
 
 			// Create the rest argument list
