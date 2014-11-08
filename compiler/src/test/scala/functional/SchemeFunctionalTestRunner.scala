@@ -224,8 +224,17 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
         stderrStream => stderr = Some(stderrStream)
       )
 
+      // Build our environment
+      val extraEnv = List[(String, String)](
+        "LLAMBDA_TEST" -> "1"
+      )
+
       // Call the program
-      val testProcess = Process(outputFile.getAbsolutePath).run(outputIO)
+      val testProcess = Process(
+        command=outputFile.getAbsolutePath,
+        cwd=None,
+        extraEnv=extraEnv : _*
+      ).run(outputIO)
 
       // Request the exit value now which will wait for the process to finish
       val exitValue = testProcess.exitValue()

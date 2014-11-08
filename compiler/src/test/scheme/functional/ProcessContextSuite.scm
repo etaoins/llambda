@@ -44,3 +44,17 @@
 		 (write 'wind)
 		 (newline)))
 ))
+
+(define-test "(get-environment-variable)" (expect-success
+	(import (scheme process-context))
+
+  (assert-equal "1" (get-environment-variable "LLAMBDA_TEST"))
+  (assert-equal #f (get-environment-variable "DOES_NOT_EXIST"))))
+
+(define-test "(get-environment-variables)" (expect-success
+	(import (scheme process-context))
+
+  (define env-vars (get-environment-variables))
+
+  (assert-equal '("LLAMBDA_TEST" "1") (assoc "LLAMBDA_TEST" env-vars))
+  (assert-equal #f (assoc "DOES_NOT_EXIST" env-vars))))

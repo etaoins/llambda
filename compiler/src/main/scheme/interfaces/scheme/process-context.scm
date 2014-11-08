@@ -1,1 +1,1 @@
-(export exit emergency-exit)
+(export exit emergency-exit get-environment-variable get-environment-variables)
