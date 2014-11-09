@@ -95,7 +95,7 @@ namespace
 				case 'x':
 					{
 						// Hex escape
-						std::string hexCode = takeHexidecimal(rdbuf);
+						std::string hexCode = takeHexadecimal(rdbuf);
 
 						nextChar = rdbuf->sbumpc();
 
@@ -485,7 +485,7 @@ AnyCell* DatumReader::parseChar()
 	}
 	else if ((nextChar == 'x') || (nextChar == 'X'))
 	{
-		std::string hexCode = takeHexidecimal(rdbuf());
+		std::string hexCode = takeHexadecimal(rdbuf());
 
 		if (!hexCode.empty())
 		{

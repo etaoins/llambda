@@ -54,9 +54,9 @@ namespace
 	}
 
 	/**
-	 * Takes a case insensitive hexidecimal string from the stream
+	 * Takes a case insensitive hexadecimal string from the stream
 	 */
-	std::string takeHexidecimal(std::streambuf *rdbuf)
+	std::string takeHexadecimal(std::streambuf *rdbuf)
 	{
 		std::string result;
 
