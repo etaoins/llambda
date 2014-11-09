@@ -8,7 +8,8 @@ namespace lliby
 
 enum class ErrorCategory : std::uint16_t
 {
-	Default
+	Default,
+	File
 };
 
 }

@@ -120,21 +120,21 @@
 
   (define invalid-utf8-header-port (open-input-bytevector #u8(#x31 #xff #x33)))
   (assert-equal #\1 (read-char invalid-utf8-header-port))
-  (assert-raises (peek-char invalid-utf8-header-port))     ; Invalid header byte
-  (assert-raises (read-char invalid-utf8-header-port))
-  (assert-equal #\3 (read-char invalid-utf8-header-port))  ; Should recover at next character
+  (assert-raises error-object? (peek-char invalid-utf8-header-port)) ; Invalid header byte
+  (assert-raises error-object? (read-char invalid-utf8-header-port))
+  (assert-equal #\3 (read-char invalid-utf8-header-port)) ; Should recover at next character
 
   (define invalid-utf8-overlong-port (open-input-bytevector #u8(#x31 #xe0 #x80 #xaf #x33)))
   (assert-equal #\1 (read-char invalid-utf8-overlong-port))
-  (assert-raises (peek-char invalid-utf8-overlong-port))     ; Overlong encoding
-  (assert-raises (read-char invalid-utf8-overlong-port))
-  (assert-equal #\3 (read-char invalid-utf8-overlong-port))  ; Should recover at next character
+  (assert-raises error-object? (peek-char invalid-utf8-overlong-port)) ; Overlong encoding
+  (assert-raises error-object? (read-char invalid-utf8-overlong-port))
+  (assert-equal #\3 (read-char invalid-utf8-overlong-port)) ; Should recover at next character
 
   (define invalid-utf8-no-continue-port (open-input-bytevector #u8(#x31 #xe2 #x98 #x33)))
   (assert-equal #\1 (read-char invalid-utf8-no-continue-port))
-  (assert-raises (peek-char invalid-utf8-no-continue-port))     ; No continuation byte
-  (assert-raises (read-char invalid-utf8-no-continue-port))
-  (assert-equal #\3 (read-char invalid-utf8-no-continue-port))))  ; Should recover at next character
+  (assert-raises error-object? (peek-char invalid-utf8-no-continue-port)) ; No continuation byte
+  (assert-raises error-object? (read-char invalid-utf8-no-continue-port))
+  (assert-equal #\3 (read-char invalid-utf8-no-continue-port)))) ; Should recover at next character
 
 (define-test "(write-char)" (expect-success
   (define output-string (open-output-string))
@@ -167,8 +167,8 @@
   (assert-equal "Unicode line 2‼" (read-line input-bytevector))
   (assert-equal "" (read-line input-bytevector))
 
-  (assert-raises (parameterize ((current-input-port input-bytevector))
-                               (read-line)))
+  (assert-raises error-object? (parameterize ((current-input-port input-bytevector))
+                                             (read-line)))
 
   (assert-equal "Final line 3!!!" (read-line input-bytevector))
   (assert-true (eof-object? (read-line input-bytevector)))))
@@ -215,16 +215,16 @@
   (assert-true (eof-object? (read-string 2 boundary-condition-port)))
 
   (define invalid-utf8-header-port (open-input-bytevector #u8(#x31 #x32 #xff #x33 #x34 #x35)))
-  (assert-raises (read-string 10 invalid-utf8-header-port))
+  (assert-raises error-object? (read-string 10 invalid-utf8-header-port))
   ; This should continue properly after the error
   (assert-equal "345" (read-string 10 invalid-utf8-header-port))
   (assert-true (eof-object? (read-string 1 invalid-utf8-header-port)))
 
   (define overlong-encoding-port (open-input-bytevector #u8(#xf0 #x80 #x80 #xaf #xe2 #x98 #x83 #xe0 #x80 #xaf)))
   ; This also mixes (read-char) and (read-string)
-  (assert-raises (read-string 10 overlong-encoding-port))
+  (assert-raises error-object? (read-string 10 overlong-encoding-port))
   (assert-equal #\☃ (read-char overlong-encoding-port))
-  (assert-raises (read-string 10 overlong-encoding-port))
+  (assert-raises error-object? (read-string 10 overlong-encoding-port))
   (assert-true (eof-object? (read-string 1 overlong-encoding-port)))
 
   (define truncated-utf8-port (open-input-bytevector #u8(#x31 #x32 #xe2 #x98)))
@@ -233,7 +233,7 @@
   (assert-true (eof-object? (read-u8 truncated-utf8-port)))
 
   (define missing-continuation-byte-port (open-input-bytevector #u8(#x31 #x32 #xe2 #x98 #x33 #x34)))
-  (assert-raises (read-string 10 missing-continuation-byte-port))
+  (assert-raises error-object? (read-string 10 missing-continuation-byte-port))
   (assert-equal "34" (read-string 10 missing-continuation-byte-port))
   (assert-true (eof-object? (read-string 0 missing-continuation-byte-port)))))
 

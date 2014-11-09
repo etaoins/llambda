@@ -314,7 +314,7 @@
       manual-length)
 
     (assert-equal 5 ((make-length-counter dynamic-false) '(1 2 3 4 5 . 6)))
-    (assert-raises
+    (assert-raises string?
       ((make-length-counter dynamic-true) '(1 2 3 4 5 . 6)))))
 
 (cond-expand

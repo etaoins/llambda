@@ -40,4 +40,4 @@
 (export newline write-u8 write-char write-string flush-output-port)
 (export features)
 (export with-exception-handler raise raise-continuable error error-object? error-object-message error-object-irritants
-        guard)
+        guard file-error?)

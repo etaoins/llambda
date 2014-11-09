@@ -5,4 +5,7 @@
   (include-library-declarations "../../interfaces/scheme/file.scm")
 
   (begin
-    (define-r7rs file-exists? (native-function "lliby_file_exists" (<string>) -> <native-bool>))))
+    (define-r7rs file-exists? (native-function "lliby_file_exists" (<string>) -> <native-bool>))
+
+    (define-r7rs open-input-file (world-function "lliby_open_input_file" (<string>) -> <port>))
+    (define-r7rs open-binary-input-file open-input-file)))

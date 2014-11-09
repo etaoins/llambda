@@ -123,4 +123,14 @@ ProperList<AnyCell>* lliby_error_object_irritants(ErrorObjectCell *errorObject)
 	return errorObject->irritants();
 }
 
+bool lliby_is_file_error(AnyCell *obj)
+{
+	if (auto errorObj = cell_cast<ErrorObjectCell>(obj))
+	{
+		return errorObj->category() == ErrorCategory::File;
+	}
+
+	return false;
+}
+
 }

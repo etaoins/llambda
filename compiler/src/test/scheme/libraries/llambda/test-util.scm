@@ -53,9 +53,19 @@
 
     (define-syntax assert-raises
       (syntax-rules ()
-                    ((assert-raises body ...)
+                    ((assert-raises pred? body ...)
                      (guard (condition
-                              (else #t))
+                              ((pred? condition) #t)
+                              (else
+                                (parameterize ((current-output-port (current-error-port)))
+                                              (display "Expected exception satisfying ")
+                                              (display 'pred?)
+                                              (display " to be raised while evaluating '")
+                                              (write 'body)
+                                              (display "' but '")
+                                              (write condition)
+                                              (display "' was raised")
+                                              (exit -1))))
                             body ...
                             (parameterize ((current-output-port (current-error-port)))
                                           (display "Expected exception to be raised while evaluating '")

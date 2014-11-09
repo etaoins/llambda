@@ -134,6 +134,12 @@
 		 (error "Test error message" 'a 'b (list 'c 'd 'e))))
 ))
 
+(define-test "(error) does not raise a (file-error?)" (expect-success
+  (guard (obj
+           (else
+             (assert-false (file-error? obj))))
+         (error "Test error!"))))
+
 (define-test "if an exception handler returns an exception is raised again" (expect-output (inner outer)
 	(import (scheme process-context))
 	(import (scheme write))
