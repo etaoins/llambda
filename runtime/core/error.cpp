@@ -76,8 +76,17 @@ void fatalError(const char *message, const AnyCell *evidence)
 
 		if (auto errorCell = cell_cast<ErrorObjectCell>(evidence))
 		{
+			if (errorCell->category() == ErrorCategory::File)
+			{
+				std::cerr << "Category: File" << std::endl;
+			}
+			else if (errorCell->category() == ErrorCategory::Read)
+			{
+				std::cerr << "Category: Read" << std::endl;
+			}
+
 			// Handle error objects specially
-			std::cerr << "Message: " << errorCell->message() << std::endl;
+			std::cerr << "Message:  " << errorCell->message() << std::endl;
 
 			ProperList<AnyCell> *irritants = errorCell->irritants();
 			auto irritantCount = irritants->size();
