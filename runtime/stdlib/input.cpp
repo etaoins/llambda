@@ -18,6 +18,9 @@
 
 #include "port/AbstractPort.h"
 
+#include "reader/DatumReader.h"
+#include "reader/ReadErrorException.h"
+
 #include "core/error.h"
 
 using namespace lliby;
@@ -289,6 +292,25 @@ AnyCell *lliby_read_string(World &world, std::uint32_t requestedChars, PortCell 
 	}
 
 	return StringCell::fromValidatedUtf8Data(world, utf8Data.data(), utf8Data.size(), validChars);
+}
+
+AnyCell *lliby_read(World &world, PortCell *portCell)
+{
+	std::istream *portStream = portCellToInputStream(world, portCell);
+
+	try
+	{
+		DatumReader reader(world, *portStream);
+		return reader.parse();
+	}
+	catch(const ReadErrorException &e)
+	{
+		signalError(world, e.message().c_str(), {}, ErrorCategory::Read);
+	}
+	catch(const utf8::InvalidByteSequenceException &e)
+	{
+		utf8ExceptionToSchemeError(world, "(read)", e);
+	}
 }
 
 }

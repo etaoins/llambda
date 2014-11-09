@@ -641,6 +641,7 @@
     (define-r7rs error-object-message (native-function "lliby_error_object_message" (<error-object>) -> <string>))
     (define-r7rs error-object-irritants (native-function "lliby_error_object_irritants" (<error-object>) -> <list>))
     (define-r7rs file-error? (native-function "lliby_is_file_error" (<any>) -> <native-bool>))
+    (define-r7rs read-error? (native-function "lliby_is_read_error" (<any>) -> <native-bool>))
 
     ; This is a native code helper which replaces most of the (guard) macro from R7RS with a much more efficient
     ; native code implementation

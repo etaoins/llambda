@@ -9,7 +9,8 @@ namespace lliby
 enum class ErrorCategory : std::uint16_t
 {
 	Default,
-	File
+	File,
+	Read
 };
 
 }

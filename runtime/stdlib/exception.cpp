@@ -133,4 +133,14 @@ bool lliby_is_file_error(AnyCell *obj)
 	return false;
 }
 
+bool lliby_is_read_error(AnyCell *obj)
+{
+	if (auto errorObj = cell_cast<ErrorObjectCell>(obj))
+	{
+		return errorObj->category() == ErrorCategory::Read;
+	}
+
+	return false;
+}
+
 }

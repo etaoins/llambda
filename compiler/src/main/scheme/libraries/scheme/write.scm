@@ -1,7 +1,7 @@
 (define-library (scheme write)
   (import (llambda nfi))
   (import (rename (llambda internal primitives) (define-report-procedure define-r7rs)))
-  (import (only (scheme base) current-output-port current-input-port))
+  (import (only (scheme base) current-output-port))
 
   ; write library
   (include-library-declarations "../../interfaces/scheme/write.scm")
