@@ -1,5 +1,5 @@
 #include <sys/stat.h>
-#include <memory>
+#include <unistd.h>
 
 #include "binding/StringCell.h"
 #include "binding/PortCell.h"
@@ -45,6 +45,14 @@ PortCell* lliby_open_output_file(World &world, StringCell *filePath)
 	}
 
 	return PortCell::createInstance(world, outputPort);
+}
+
+void lliby_delete_file(World &world, StringCell *filePath)
+{
+	if (unlink(filePath->toUtf8StdString().c_str()) != 0)
+	{
+		signalError(world, "Unable to delete path", {filePath}, ErrorCategory::File);
+	}
 }
 
 }

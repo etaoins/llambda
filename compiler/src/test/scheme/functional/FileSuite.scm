@@ -77,3 +77,9 @@
 
   (with-output-to-file "/dev/null" (lambda ()
     (write-string "HELLO!")))))
+
+(define-test "(delete-file)" (expect-success
+  (import (scheme file))
+
+  (assert-raises file-error?
+                 (delete-file (path-for-test-file "path/does-not-exist")))))

@@ -28,4 +28,6 @@
                  (lambda: ([path : <string>] [proc : (-> *)])
                           (call-with-output-file path (lambda: ([port : <port>])
                                                                (parameterize ((current-output-port port))
-                                                                             (proc))))))))
+                                                                             (proc))))))
+
+    (define-r7rs delete-file (world-function "lliby_delete_file" (<string>)))))
