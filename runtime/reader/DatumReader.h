@@ -35,8 +35,15 @@ public:
 	AnyCell* parse(int defaultRadix = 10);
 
 protected:
-	void consumeWhitespace();
+	std::streambuf* rdbuf()
+	{
+		return m_inStream.rdbuf();
+	}
+
+	int consumeWhitespace();
 	void consumeBlockComment();
+
+	AnyCell *parseDatum(int defaultRadix = 10);
 
 	AnyCell *parseOctoDatum();
 	AnyCell *parseEnclosedSymbol();

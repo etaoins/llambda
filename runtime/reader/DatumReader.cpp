@@ -34,6 +34,11 @@ namespace lliby
 
 namespace
 {
+	int inputOffset(std::streambuf *rdbuf)
+	{
+		return rdbuf->pubseekoff(0, std::ios::cur, std::ios::in);
+	}
+
 	bool isIdentifierChar(char c)
 	{
 		return
@@ -48,18 +53,18 @@ namespace
 			(c < 0x7f);
 	}
 
-	std::string takeQuotedStringLike(std::istream &inStream, char quoteChar)
+	std::string takeQuotedStringLike(std::streambuf *rdbuf, char quoteChar)
 	{
 		std::string accum;
 
 		while(true)
 		{
-			int nextChar = inStream.get();
+			int nextChar = rdbuf->sbumpc();
 
 			if (nextChar == EOF)
 			{
 				// Out of data without closing quote
-				throw ReadErrorException(inStream.tellg(), "End of input without closing quote for string-like");
+				throw UnexpectedEofException(inputOffset(rdbuf), "End of input without closing quote for string-like");
 			}
 
 			if (nextChar == quoteChar)
@@ -69,12 +74,12 @@ namespace
 			else if (nextChar == '\\')
 			{
 				// This is a quoted character
-				nextChar = inStream.get();
+				nextChar = rdbuf->sbumpc();
 
 				if (nextChar == EOF)
 				{
 					// Out of data without closing quote
-					throw ReadErrorException(inStream.tellg(), "End of input during backslash escaped sequence");
+					throw UnexpectedEofException(inputOffset(rdbuf), "End of input during backslash escaped sequence");
 				}
 
 				switch(nextChar)
@@ -90,17 +95,17 @@ namespace
 				case 'x':
 					{
 						// Hex escape
-						std::string hexCode = takeHexidecimal(inStream);
+						std::string hexCode = takeHexidecimal(rdbuf);
 
-						nextChar = inStream.get();
+						nextChar = rdbuf->sbumpc();
 
 						if (nextChar != ';')
 						{
-							throw ReadErrorException(inStream.tellg(), "Hex escape not terminated with ;");
+							throw MalformedDatumException(inputOffset(rdbuf), "Hex escape not terminated with ;");
 						}
 						else if (hexCode.empty())
 						{
-							throw ReadErrorException(inStream.tellg(), "Empty hex escape");
+							throw MalformedDatumException(inputOffset(rdbuf), "Empty hex escape");
 						}
 
 						UnicodeChar escapedChar(strtol(hexCode.c_str(), nullptr, 16));
@@ -110,7 +115,7 @@ namespace
 
 				case '\n':
 					// Discard the intraline whitespace at the beginning of the next line
-					discardWhile(inStream, [] (char c)
+					discardWhile(rdbuf, [] (char c)
 					{
 						return (c == ' ') || (c == '\t');
 					});
@@ -130,9 +135,36 @@ namespace
 
 AnyCell* DatumReader::parse(int defaultRadix)
 {
+	std::istream::sentry sen(m_inStream, true);
+
+	if (!sen)
+	{
+		return EofObjectCell::instance();
+	}
+
+	try
+	{
+		AnyCell *result = parseDatum(defaultRadix);
+
+		if (result == EofObjectCell::instance())
+		{
+			m_inStream.setstate(std::ios::eofbit);
+		}
+
+		return result;
+	}
+	catch(UnexpectedEofException)
+	{
+		m_inStream.setstate(std::ios::eofbit);
+		throw;
+	}
+}
+
+AnyCell* DatumReader::parseDatum(int defaultRadix)
+{
 	consumeWhitespace();
 
-	int peekChar = m_inStream.peek();
+	int peekChar = rdbuf()->sgetc();
 
 	if (peekChar == EOF)
 	{
@@ -194,15 +226,13 @@ AnyCell* DatumReader::parse(int defaultRadix)
 	}
 	else if (peekChar == ',')
 	{
-		m_inStream.get();
-
-		if (m_inStream.peek() == '@')
+		if (rdbuf()->snextc() == '@')
 		{
 			return parseSymbolShorthand("unquote-splicing");
 		}
 		else
 		{
-			m_inStream.putback(',');
+			rdbuf()->sputbackc(',');
 			return parseSymbolShorthand("unquote");
 		}
 	}
@@ -213,15 +243,15 @@ AnyCell* DatumReader::parse(int defaultRadix)
 	}
 }
 
-void DatumReader::consumeWhitespace()
+int DatumReader::consumeWhitespace()
 {
 	while(true)
 	{
-		int peekChar = m_inStream.peek();
+		int peekChar = rdbuf()->sgetc();
 
 		if ((peekChar == '\r') || (peekChar == '\n') || (peekChar == '\t') || (peekChar == ' '))
 		{
-			m_inStream.get();
+			rdbuf()->sbumpc();
 		}
 		else if (peekChar == ';')
 		{
@@ -229,40 +259,40 @@ void DatumReader::consumeWhitespace()
 			int getChar;
 			do
 			{
-				getChar = m_inStream.get();
+				getChar = rdbuf()->sbumpc();
 			}
 			while((getChar != '\n') && (getChar != EOF));
 		}
 		else if (peekChar == '#')
 		{
 			// This could be one of the R7RS comment types
-			m_inStream.get();
+			rdbuf()->sbumpc();
 
-			peekChar = m_inStream.peek();
+			peekChar = rdbuf()->sgetc();
 			if (peekChar == ';')
 			{
 				// Discard the commented out datum
-				m_inStream.get();
+				rdbuf()->sbumpc();
 				consumeWhitespace();
 				parse();
 			}
 			else if (peekChar == '|')
 			{
-				m_inStream.get();
+				rdbuf()->sbumpc();
 				consumeBlockComment();
 				consumeWhitespace();
 			}
 			else
 			{
-				m_inStream.putback('#');
+				rdbuf()->sputbackc('#');
 			}
 
-			return;
+			return peekChar;
 		}
 		else
 		{
 			// All done
-			return;
+			return peekChar;
 		}
 	}
 }
@@ -273,7 +303,7 @@ void DatumReader::consumeBlockComment()
 
 	while(true)
 	{
-		int firstChar = m_inStream.get();
+		int firstChar = rdbuf()->sbumpc();
 
 		if (firstChar == EOF)
 		{
@@ -281,14 +311,14 @@ void DatumReader::consumeBlockComment()
 		}
 		else if (firstChar == '#')
 		{
-			if (m_inStream.get() == '|')
+			if (rdbuf()->sbumpc() == '|')
 			{
 				++commentDepth;
 			}
 		}
 		else if (firstChar == '|')
 		{
-			if (m_inStream.get() == '#')
+			if (rdbuf()->sbumpc() == '#')
 			{
 				if (--commentDepth == 0)
 				{
@@ -303,9 +333,9 @@ void DatumReader::consumeBlockComment()
 AnyCell* DatumReader::parseOctoDatum()
 {
 	// Consume the #
-	m_inStream.get();
+	rdbuf()->sbumpc();
 
-	int getChar = m_inStream.get();
+	int getChar = rdbuf()->sbumpc();
 
 	if ((getChar == 'b') || (getChar == 'B'))
 	{
@@ -325,12 +355,12 @@ AnyCell* DatumReader::parseOctoDatum()
 	}
 	else if (getChar == 't')
 	{
-		consumeLiteral(m_inStream, "rue");
+		consumeLiteral(rdbuf(), "rue");
 		return BooleanCell::trueInstance();
 	}
 	else if (getChar == 'f')
 	{
-		consumeLiteral(m_inStream, "alse");
+		consumeLiteral(rdbuf(), "alse");
 		return BooleanCell::falseInstance();
 	}
 	else if (getChar == '(')
@@ -339,7 +369,7 @@ AnyCell* DatumReader::parseOctoDatum()
 	}
 	else if (getChar == '!')
 	{
-		if (consumeLiteral(m_inStream, "unit"))
+		if (consumeLiteral(rdbuf(), "unit"))
 		{
 			return UnitCell::instance();
 		}
@@ -347,7 +377,7 @@ AnyCell* DatumReader::parseOctoDatum()
 	else if (getChar == 'u')
 	{
 		// This is the rest of #u8(, not just a sad face
-		if (consumeLiteral(m_inStream, "8("))
+		if (consumeLiteral(rdbuf(), "8("))
 		{
 			return parseBytevector();
 		}
@@ -358,41 +388,41 @@ AnyCell* DatumReader::parseOctoDatum()
 	}
 	else if (getChar == EOF)
 	{
-		throw ReadErrorException(m_inStream.tellg(), "Unexpected end of input while parsing # datum");
+		throw UnexpectedEofException(inputOffset(rdbuf()), "Unexpected end of input while parsing # datum");
 	}
 
-	throw ReadErrorException(m_inStream.tellg(), "Unrecognized # datum");
+	throw MalformedDatumException(inputOffset(rdbuf()), "Unrecognized # datum");
 }
 
 AnyCell* DatumReader::parseEnclosedSymbol()
 {
 	// Consume the |
-	m_inStream.get();
+	rdbuf()->sbumpc();
 
-	return SymbolCell::fromUtf8StdString(m_world, takeQuotedStringLike(m_inStream, '|'));
+	return SymbolCell::fromUtf8StdString(m_world, takeQuotedStringLike(rdbuf(), '|'));
 }
 
 AnyCell* DatumReader::parseString()
 {
 	// Consume the "
-	m_inStream.get();
+	rdbuf()->sbumpc();
 
-	return StringCell::fromUtf8StdString(m_world, takeQuotedStringLike(m_inStream, '"'));
+	return StringCell::fromUtf8StdString(m_world, takeQuotedStringLike(rdbuf(), '"'));
 }
 
 AnyCell* DatumReader::parseSymbol()
 {
 	std::string symbolData;
 
-	takeWhile(m_inStream, symbolData, isIdentifierChar);
+	takeWhile(rdbuf(), symbolData, isIdentifierChar);
 
 	if (symbolData.empty())
 	{
-		throw ReadErrorException(m_inStream.tellg(), "Unrecognized start character");
+		throw MalformedDatumException(inputOffset(rdbuf()), "Unrecognized start character");
 	}
 	else if (symbolData == ".")
 	{
-		throw ReadErrorException(m_inStream.tellg(), ". reserved for terminating improper lists");
+		throw MalformedDatumException(inputOffset(rdbuf()), ". reserved for terminating improper lists");
 	}
 
 	return SymbolCell::fromUtf8StdString(m_world, symbolData);
@@ -401,7 +431,7 @@ AnyCell* DatumReader::parseSymbol()
 AnyCell* DatumReader::parseSymbolShorthand(const std::string &expanded)
 {
 	// Consume the shorthand
-	m_inStream.get();
+	rdbuf()->sbumpc();
 
 	alloc::SymbolRef expandedSymbol(m_world, SymbolCell::fromUtf8StdString(m_world, expanded));
 	AnyCell *innerDatum = parse();
@@ -411,51 +441,51 @@ AnyCell* DatumReader::parseSymbolShorthand(const std::string &expanded)
 
 AnyCell* DatumReader::parseChar()
 {
-	int nextChar = m_inStream.get();
+	int nextChar = rdbuf()->sbumpc();
 
 	if (nextChar == EOF)
 	{
-		throw ReadErrorException(m_inStream.tellg(), "Unexpected end of input while reading character");
+		throw UnexpectedEofException(inputOffset(rdbuf()), "Unexpected end of input while reading character");
 	}
-	else if ((nextChar == 'a') && consumeLiteral(m_inStream, "larm"))
+	else if ((nextChar == 'a') && consumeLiteral(rdbuf(), "larm"))
 	{
 		return CharCell::createInstance(m_world, 0x07);
 	}
-	else if ((nextChar == 'b') && consumeLiteral(m_inStream, "ackspace"))
+	else if ((nextChar == 'b') && consumeLiteral(rdbuf(), "ackspace"))
 	{
 		return CharCell::createInstance(m_world, 0x08);
 	}
-	else if ((nextChar == 'd') && consumeLiteral(m_inStream, "elete"))
+	else if ((nextChar == 'd') && consumeLiteral(rdbuf(), "elete"))
 	{
 		return CharCell::createInstance(m_world, 0x7f);
 	}
-	else if ((nextChar == 'e') && consumeLiteral(m_inStream, "scape"))
+	else if ((nextChar == 'e') && consumeLiteral(rdbuf(), "scape"))
 	{
 		return CharCell::createInstance(m_world, 0x1b);
 	}
-	else if ((nextChar == 'n') && consumeLiteral(m_inStream, "ewline"))
+	else if ((nextChar == 'n') && consumeLiteral(rdbuf(), "ewline"))
 	{
 		return CharCell::createInstance(m_world, 0x0a);
 	}
-	else if ((nextChar == 'n') && consumeLiteral(m_inStream, "ull"))
+	else if ((nextChar == 'n') && consumeLiteral(rdbuf(), "ull"))
 	{
 		return CharCell::createInstance(m_world, 0x00);
 	}
-	else if ((nextChar == 'r') && consumeLiteral(m_inStream, "eturn"))
+	else if ((nextChar == 'r') && consumeLiteral(rdbuf(), "eturn"))
 	{
 		return CharCell::createInstance(m_world, 0x0d);
 	}
-	else if ((nextChar == 's') && consumeLiteral(m_inStream, "pace"))
+	else if ((nextChar == 's') && consumeLiteral(rdbuf(), "pace"))
 	{
 		return CharCell::createInstance(m_world, 0x20);
 	}
-	else if ((nextChar == 't') && consumeLiteral(m_inStream, "ab"))
+	else if ((nextChar == 't') && consumeLiteral(rdbuf(), "ab"))
 	{
 		return CharCell::createInstance(m_world, 0x09);
 	}
 	else if ((nextChar == 'x') || (nextChar == 'X'))
 	{
-		std::string hexCode = takeHexidecimal(m_inStream);
+		std::string hexCode = takeHexidecimal(rdbuf());
 
 		if (!hexCode.empty())
 		{
@@ -474,11 +504,10 @@ AnyCell* DatumReader::parseChar()
 	std::uint8_t byteBuffer[4];
 	byteBuffer[0] = nextChar;
 
-	m_inStream.read(reinterpret_cast<char*>(&byteBuffer[1]), seqBytes - 1);
-
-	if (m_inStream.gcount() != (seqBytes - 1))
+	const int bytesToRead = seqBytes - 1;
+	if (rdbuf()->sgetn(reinterpret_cast<char*>(&byteBuffer[1]), bytesToRead) != bytesToRead)
 	{
-		throw ReadErrorException(m_inStream.tellg(), "Unexpected end of input while reading character");
+		throw UnexpectedEofException(inputOffset(rdbuf()), "Unexpected end of input while reading character");
 	}
 
 	utf8::validateData(byteBuffer, &byteBuffer[seqBytes]);
@@ -489,9 +518,9 @@ AnyCell* DatumReader::parseChar()
 	if ((parsedChar.codePoint() < '0') || ((parsedChar.codePoint() > '9')))
 	{
 		// If this is a non-digit then it can't be followed by an identifier character
-		if (isIdentifierChar(m_inStream.peek()))
+		if (isIdentifierChar(rdbuf()->sgetc()))
 		{
-			throw ReadErrorException(m_inStream.tellg(), "Unrecognized character name");
+			throw MalformedDatumException(inputOffset(rdbuf()), "Unrecognized character name");
 		}
 	}
 
@@ -500,7 +529,7 @@ AnyCell* DatumReader::parseChar()
 
 AnyCell* DatumReader::parseNumber(int radix)
 {
-	int peekChar = m_inStream.peek();
+	int peekChar = rdbuf()->sgetc();
 
 	if (peekChar == EOF)
 	{
@@ -522,17 +551,17 @@ AnyCell* DatumReader::parseNumber(int radix)
 
 AnyCell* DatumReader::parsePositiveNumber(int radix)
 {
-	if (consumeLiteral(m_inStream, "+inf.0", true))
+	// Take the +
+	rdbuf()->sbumpc();
+
+	if (consumeLiteral(rdbuf(), "inf.0", true))
 	{
 		return FlonumCell::positiveInfinity(m_world);
 	}
-	else if (consumeLiteral(m_inStream, "+nan.0", true))
+	else if (consumeLiteral(rdbuf(), "nan.0", true))
 	{
 		return FlonumCell::NaN(m_world);
 	}
-
-	// Take the +
-	m_inStream.get();
 
 	try
 	{
@@ -541,25 +570,24 @@ AnyCell* DatumReader::parsePositiveNumber(int radix)
 	catch(ReadErrorException)
 	{
 		// Clean up so we can backtrack as a symbol
-		m_inStream.clear();
-		m_inStream.putback('+');
+		rdbuf()->sputbackc('+');
 		throw;
 	}
 }
 
 AnyCell* DatumReader::parseNegativeNumber(int radix)
 {
-	if (consumeLiteral(m_inStream, "-inf.0", true))
+	// Take the -
+	rdbuf()->sbumpc();
+
+	if (consumeLiteral(rdbuf(), "inf.0", true))
 	{
 		return FlonumCell::negativeInfinity(m_world);
 	}
-	else if (consumeLiteral(m_inStream, "-nan.0", true))
+	else if (consumeLiteral(rdbuf(), "nan.0", true))
 	{
 		return FlonumCell::NaN(m_world);
 	}
-
-	// Take the -
-	m_inStream.get();
 
 	try
 	{
@@ -568,8 +596,7 @@ AnyCell* DatumReader::parseNegativeNumber(int radix)
 	catch(ReadErrorException)
 	{
 		// Clean up so we can backtrack as a symbol
-		m_inStream.clear();
-		m_inStream.putback('-');
+		rdbuf()->sputbackc('-');
 		throw;
 	}
 }
@@ -578,7 +605,7 @@ AnyCell* DatumReader::parseUnradixedNumber(int radix, bool negative)
 {
 	std::string numberString;
 
-	takeWhile(m_inStream, numberString, [=] (char c) -> bool {
+	takeWhile(rdbuf(), numberString, [=] (char c) -> bool {
 		if ((c >= '0') && (c <= ('0' + std::max(10, radix) - 1)))
 		{
 			return true;
@@ -597,20 +624,20 @@ AnyCell* DatumReader::parseUnradixedNumber(int radix, bool negative)
 	if (numberString.empty())
 	{
 		// Not valid
-		throw ReadErrorException(m_inStream.tellg(), "No valid number found after number prefix");
+		throw MalformedDatumException(inputOffset(rdbuf()), "No valid number found after number prefix");
 	}
 
 	if (radix == 10)
 	{
-		int peekChar = m_inStream.peek();
+		int peekChar = rdbuf()->sgetc();
 
 		if (peekChar == '.')
 		{
 			// Add the .
-			numberString.push_back(m_inStream.get());
+			numberString.push_back(rdbuf()->sbumpc());
 
 			const auto previousSize = numberString.size();
-			takeWhile(m_inStream, numberString, [=] (char c) {
+			takeWhile(rdbuf(), numberString, [=] (char c) {
 				return (c >= '0') && (c <= ('9'));
 			});
 
@@ -629,10 +656,10 @@ AnyCell* DatumReader::parseUnradixedNumber(int radix, bool negative)
 		}
 		else if (peekChar == '/')
 		{
-			m_inStream.get();
+			rdbuf()->sbumpc();
 			std::string denomString;
 
-			takeWhile(m_inStream, denomString, [=] (char c) {
+			takeWhile(rdbuf(), denomString, [=] (char c) {
 				return (c >= '0') && (c <= '9');
 			});
 
@@ -652,7 +679,7 @@ AnyCell* DatumReader::parseUnradixedNumber(int radix, bool negative)
 			}
 
 			// Put the / back; it will treated as a symbol
-			m_inStream.putback('/');
+			rdbuf()->sputbackc('/');
 		}
 	}
 
@@ -672,23 +699,21 @@ AnyCell* DatumReader::parseList(char closeChar)
 	alloc::PairRef listTail(m_world, nullptr);
 
 	// Take the ( or [
-	m_inStream.get();
+	rdbuf()->sbumpc();
 
 	while(true)
 	{
-		consumeWhitespace();
-
-		if (m_inStream.eof())
+		if (consumeWhitespace() == EOF)
 		{
-			throw ReadErrorException(m_inStream.tellg(), "Unexpected end of input while reading list");
+			throw UnexpectedEofException(inputOffset(rdbuf()), "Unexpected end of input while reading list");
 		}
 
-		int peekChar = m_inStream.peek();
+		int peekChar = rdbuf()->sgetc();
 
 		if (peekChar == closeChar)
 		{
 			// Take the )
-			m_inStream.get();
+			rdbuf()->sbumpc();
 
 			// Finished as a proper list
 			if (listHead)
@@ -703,12 +728,12 @@ AnyCell* DatumReader::parseList(char closeChar)
 		else if (peekChar == '.')
 		{
 			// Take the .
-			m_inStream.get();
+			rdbuf()->sbumpc();
 
 			// Make sure they aren't a symbol
-			if (isIdentifierChar(m_inStream.peek()))
+			if (isIdentifierChar(rdbuf()->sgetc()))
 			{
-				m_inStream.putback('.');
+				rdbuf()->sputbackc('.');
 				// Fall through to parsing normal below
 			}
 			else
@@ -717,9 +742,9 @@ AnyCell* DatumReader::parseList(char closeChar)
 
 				consumeWhitespace();
 
-				if (m_inStream.get() != closeChar)
+				if (rdbuf()->sbumpc() != closeChar)
 				{
-					throw ReadErrorException(m_inStream.tellg(), "Improper list expected to terminate after tail datum");
+					throw MalformedDatumException(inputOffset(rdbuf()), "Improper list expected to terminate after tail datum");
 				}
 
 				if (!listHead)
@@ -763,17 +788,15 @@ AnyCell* DatumReader::parseVector()
 
 	while(true)
 	{
-		consumeWhitespace();
-
-		if (m_inStream.eof())
+		if (consumeWhitespace() == EOF)
 		{
-			throw ReadErrorException(m_inStream.tellg(), "Unexpected end of input while reading vector");
+			throw UnexpectedEofException(inputOffset(rdbuf()), "Unexpected end of input while reading vector");
 		}
 
-		if (m_inStream.peek() == ')')
+		if (rdbuf()->sgetc() == ')')
 		{
 			// Take the )
-			m_inStream.get();
+			rdbuf()->sbumpc();
 
 			// All done
 			break;
@@ -797,17 +820,15 @@ AnyCell* DatumReader::parseBytevector()
 
 	while(true)
 	{
-		consumeWhitespace();
-
-		if (m_inStream.eof())
+		if (consumeWhitespace() == EOF)
 		{
-			throw ReadErrorException(m_inStream.tellg(), "Unexpected end of input while reading bytevector");
+			throw UnexpectedEofException(inputOffset(rdbuf()), "Unexpected end of input while reading bytevector");
 		}
 
-		if (m_inStream.peek() == ')')
+		if (rdbuf()->sgetc() == ')')
 		{
 			// Take the )
-			m_inStream.get();
+			rdbuf()->sbumpc();
 
 			// All done
 			break;
@@ -821,14 +842,14 @@ AnyCell* DatumReader::parseBytevector()
 		{
 			if ((exactInt->value() < 0) || (exactInt->value() > 255))
 			{
-				throw ReadErrorException(m_inStream.tellg(), "Value out of byte range while reading bytevector");
+				throw MalformedDatumException(inputOffset(rdbuf()), "Value out of byte range while reading bytevector");
 			}
 
 			elements.push_back(exactInt->value());
 		}
 		else
 		{
-			throw ReadErrorException(m_inStream.tellg(), "Non-integer while reading bytevector");
+			throw MalformedDatumException(inputOffset(rdbuf()), "Non-integer while reading bytevector");
 		}
 	}
 
