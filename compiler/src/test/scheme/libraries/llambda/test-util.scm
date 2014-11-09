@@ -1,8 +1,8 @@
 (define-library (llambda test-util)
-  (import (scheme base) (scheme write) (scheme process-context))  
+  (import (scheme base) (scheme write) (scheme process-context))
   (import (llambda typed))
-  (export dynamic-false dynamic-true typeless-cell typed-dynamic
-          assert-equal assert-true assert-false assert-raises assert-within)
+  (export dynamic-false dynamic-true typeless-cell typed-dynamic assert-equal assert-true assert-false assert-raises
+          assert-within path-for-test-file)
   (begin
     ; Use a mutable to launder the value so its type information is lost
     ; There's very little motivation to optimise mutable usage so this should be safe for a long time
@@ -62,5 +62,6 @@
                                           (write 'body)
                                           (display "' but execution completed normally")
                                           (exit -1))))))
-  )
-)
+
+  (define: (path-for-test-file [filename : <string>])
+           (string-append (get-environment-variable "LLAMBDA_TEST_FILES_BASE") "/" filename))))

@@ -225,8 +225,12 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
       )
 
       // Build our environment
+      val testFilesBaseUrl = getClass.getClassLoader.getResource("test-files/")
+      val testFilesBaseDir = new File(testFilesBaseUrl.toURI).getAbsolutePath
+
       val extraEnv = List[(String, String)](
-        "LLAMBDA_TEST" -> "1"
+        "LLAMBDA_TEST" -> "1",
+        "LLAMBDA_TEST_FILES_BASE" -> testFilesBaseDir
       )
 
       // Call the program

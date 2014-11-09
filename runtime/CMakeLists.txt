@@ -49,6 +49,7 @@ add_library(lliby
 	stdlib/control.cpp
 	stdlib/dynamic.cpp
 	stdlib/exception.cpp
+	stdlib/file.cpp
 	stdlib/inexact.cpp
 	stdlib/input.cpp
 	stdlib/list.cpp
