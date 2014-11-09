@@ -96,7 +96,7 @@ class IrValueSuite extends FunSuite {
   
   test("ASCII string with quote") {
     val testConstant = StringConstant.fromUtf8String("Hello\"world")
-    assert(testConstant.toIr === "c\"Hello\\\"world\\00\"")
+    assert(testConstant.toIr === "c\"Hello\\22world\\00\"")
   }
   
   test("ASCII string with newline") {
