@@ -7,6 +7,7 @@
 #include "core/error.h"
 
 #include "port/FileInputPort.h"
+#include "port/FileOutputPort.h"
 
 using namespace lliby;
 
@@ -31,6 +32,19 @@ PortCell* lliby_open_input_file(World &world, StringCell *filePath)
 	}
 
 	return PortCell::createInstance(world, inputPort);
+}
+
+PortCell* lliby_open_output_file(World &world, StringCell *filePath)
+{
+	auto outputPort = new FileOutputPort(filePath->toUtf8StdString());
+
+	if (!outputPort->outputStream()->good())
+	{
+		delete outputPort;
+		signalError(world, "Unable to open path for write", {filePath}, ErrorCategory::File);
+	}
+
+	return PortCell::createInstance(world, outputPort);
 }
 
 }

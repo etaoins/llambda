@@ -30,3 +30,19 @@
   (assert-equal "" (read-line utf8-file))
   (assert-equal "Hello, world!" (read-line utf8-file))
   (assert-true (eof-object? (read-line utf8-file)))))
+
+(define-test "(open-output-file)" (expect-success
+  (import (scheme file))
+
+  (assert-raises file-error?
+                 (open-input-file (path-for-test-file "dir/does-not-exist")))
+
+  (define null-file (open-output-file "/dev/null"))
+
+  (assert-true (port? null-file))
+  (assert-true (output-port? null-file))
+  (assert-true (output-port-open? null-file))
+  (write-string "Hello, world!" null-file)
+
+  (close-port null-file)
+  (assert-false (output-port-open? null-file))))
