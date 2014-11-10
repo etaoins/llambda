@@ -4,6 +4,7 @@
 #include "binding/AnyCell.h"
 #include "binding/PortCell.h"
 #include "binding/StringCell.h"
+#include "binding/BytevectorCell.h"
 
 #include "writer/DisplayDatumWriter.h"
 
@@ -92,6 +93,16 @@ void lliby_write_string(World &world, StringCell *stringCell, PortCell *portCell
 	// Write directly from the string's memory
 	std::ostream *portStream = portCellToOutputStream(world, portCell);
 	portStream->write(reinterpret_cast<const char *>(range.startPointer), range.endPointer - range.startPointer);
+}
+
+void lliby_write_bytevector(World &world, BytevectorCell *bytevectorCell, PortCell *portCell, std::uint32_t start, std::uint32_t end)
+{
+	assertSliceValid(world, "(write-bytevector)", bytevectorCell, bytevectorCell->length(), start, end);
+
+	SharedByteArray *byteArray = bytevectorCell->byteArray();
+
+	std::ostream *portStream = portCellToOutputStream(world, portCell);
+	portStream->write(reinterpret_cast<const char *>(&byteArray->data()[start]), end - start);
 }
 
 void lliby_flush_output_port(World &world, PortCell *portCell)

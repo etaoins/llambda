@@ -626,6 +626,17 @@
       (([str : <string>] [port : <port>] [start : <exact-integer>] [end : <exact-integer>])
        (native-write-string str port start end))))
 
+    (define native-write-bytevector (world-function "lliby_write_bytevector" (<bytevector> <port> <native-uint32> <native-uint32>)))
+    (define-r7rs write-bytevector (case-lambda:
+      (([bv : <bytevector>])
+       (native-write-bytevector bv (current-output-port) 0 (bytevector-length bv)))
+      (([bv : <bytevector>] [port : <port>])
+       (native-write-bytevector bv port 0 (bytevector-length bv)))
+      (([bv : <bytevector>] [port : <port>] [start : <exact-integer>])
+       (native-write-bytevector bv port start (bytevector-length bv)))
+      (([bv : <bytevector>] [port : <port>] [start : <exact-integer>] [end : <exact-integer>])
+       (native-write-bytevector bv port start end))))
+
     (define native-flush-output-port (world-function "lliby_flush_output_port" (<port>)))
     (define-r7rs flush-output-port (case-lambda:
       (()

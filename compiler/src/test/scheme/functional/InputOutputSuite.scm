@@ -257,6 +257,22 @@
   (write-string test-string start-end-output-port 6 12)
   (assert-equal "盥媯 ビョ禯" (get-output-string start-end-output-port))))
 
+(define-test "(write-bytevector)" (expect-success
+  (define test-bytevector #u8(0 1 2 3 4 5 6 7 8 9))
+
+  (define entire-output-port (open-output-bytevector))
+  (parameterize ((current-output-port entire-output-port))
+    (write-bytevector test-bytevector))
+  (assert-equal test-bytevector (get-output-bytevector entire-output-port))
+
+  (define start-only-output-port (open-output-bytevector))
+  (write-bytevector test-bytevector start-only-output-port 5)
+  (assert-equal #u8(5 6 7 8 9) (get-output-bytevector start-only-output-port))
+
+  (define start-end-output-port (open-output-bytevector))
+  (write-bytevector test-bytevector start-end-output-port 6 8)
+  (assert-equal #u8(6 7) (get-output-bytevector start-end-output-port))))
+
 (define-test "(write-string) with backwards slice fails" (expect-failure
   (define output-port (open-output-string))
   (write-string "1☃3" output-port 2 1)))
