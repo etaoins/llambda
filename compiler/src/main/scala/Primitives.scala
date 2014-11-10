@@ -32,6 +32,7 @@ object Primitives {
   object MakePredicate extends PrimitiveExpr
   object Ellipsis extends PrimitiveExpr
   object Wildcard extends PrimitiveExpr
+  object Arrow extends PrimitiveExpr
 
   object UnionType extends PrimitiveTypeConstructor
   object PairofType extends PrimitiveTypeConstructor
@@ -75,6 +76,7 @@ object Primitives {
       "make-predicate" -> MakePredicate,
       "..." -> Ellipsis,
       "_" -> Wildcard,
+      "=>" -> Arrow,
 
       "U" -> UnionType,
       "Pairof" -> PairofType,

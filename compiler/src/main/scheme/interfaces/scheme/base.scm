@@ -9,6 +9,7 @@
 (export cond case and or when unless)
 (export do)
 (export _ ...)
+(export =>)
 (export eqv? eq? equal?)
 (export number? complex? real? rational? exact? integer? exact-integer? inexact? zero? even? odd? exact inexact + - / *
         expt = < > <= >= positive? negative? floor ceiling truncate round square abs truncate/ truncate-quotient
