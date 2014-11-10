@@ -95,4 +95,9 @@ StringCell *lliby_utf8_to_string(World &world, BytevectorCell *bytevector, std::
 	}
 }
 
+BytevectorCell *lliby_bytevector_copy(World &world, BytevectorCell *bytevector, std::uint32_t start, std::uint32_t end)
+{
+	return bytevector->copy(world, start, end);
+}
+
 }

@@ -486,6 +486,9 @@
     (define-r7rs bytevector-u8-set! (world-function "lliby_bytevector_u8_set" (<bytevector> <native-uint32> <native-uint8>)))
     (define-r7rs bytevector-append (world-function "lliby_bytevector_append" <bytevector> -> <bytevector>))
 
+    (define native-bytevector-copy (world-function "lliby_bytevector_copy" (<bytevector> <native-uint32> <native-uint32>) -> <bytevector>))
+    (define-slice-proc bytevector-copy native-bytevector-copy <bytevector> bytevector-length)
+
     (define native-utf8->string (world-function "lliby_utf8_to_string" (<bytevector> <native-uint32> <native-uint32>) -> <string>))
     (define-slice-proc utf8->string native-utf8->string <bytevector> bytevector-length)
 

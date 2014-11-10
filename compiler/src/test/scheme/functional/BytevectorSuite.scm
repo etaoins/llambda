@@ -112,3 +112,20 @@
 
 (define-test "(string->utf8) with negative start index fails" (expect-failure
   (string->utf8 "Hell☃!" -1)))
+
+(define-test "(bytevector-copy)" (expect-success
+  (define test-bytevector #u8(0 1 2 3 4 5 6 7))
+
+  (define entire-copy (bytevector-copy test-bytevector))
+  (assert-equal test-bytevector entire-copy)
+
+  ; Mutating the copy should not affect the original bytevector
+  (bytevector-u8-set! entire-copy 3 255)
+  (assert-equal #u8(0 1 2 255 4 5 6 7) entire-copy)
+  (assert-equal #u8(0 1 2 3 4 5 6 7) test-bytevector)
+
+  (assert-equal #u8() (bytevector-copy test-bytevector 0 0))
+  (assert-equal #u8() (bytevector-copy test-bytevector 8 8))
+
+  (assert-equal #u8(2 3 4 5 6 7) (bytevector-copy test-bytevector 2))
+  (assert-equal #u8(3 4 5) (bytevector-copy test-bytevector 3 6))))
