@@ -24,7 +24,7 @@
 (export symbol? symbol=? symbol->string string->symbol)
 (export char? char->integer integer->char char=? char<? char>? char<=? char>=?)
 (export vector? make-vector vector vector-length vector-ref vector-set! list->vector vector->list vector-append
-        vector-copy vector-fill! string->vector vector->string)
+        vector-copy vector-copy! vector-fill! string->vector vector->string)
 (export bytevector? make-bytevector bytevector bytevector-length bytevector-u8-ref bytevector-u8-set! bytevector-append
         utf8->string string->utf8 bytevector-copy bytevector-copy!)
 (export string? make-string string string-length string-ref string-set! string-append list->string string->list

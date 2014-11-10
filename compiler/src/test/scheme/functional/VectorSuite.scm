@@ -194,3 +194,32 @@
 
 (define-test "(vector->string) with negative start index fails" (expect-failure
   (vector->string #(#\H #\e #\l #\l #\x2603 #\!) -1)))
+
+(define-test "(vector-copy!)" (expect-success
+  (define a (vector 1 2 3 4 5))
+  (define b (vector 10 20 30 40 50))
+  (vector-copy! b 1 a 0 2)
+
+  (assert-equal #(10 1 2 40 50) b)
+
+  (vector-copy! b 1 a 0 0)
+  (vector-copy! b 1 a 5)
+  (assert-equal #(10 1 2 40 50) b)
+
+  (vector-copy! b 0 a)
+  (assert-equal #(1 2 3 4 5) b)))
+
+(define-test "(vector-copy!) with backwards slice fails" (expect-failure
+  (define a (vector 1 2 3 4 5))
+  (define b (vector 10 20 30 40 50))
+  (vector-copy! b 1 a 2 0)))
+
+(define-test "(vector-copy!) past end of from fails" (expect-failure
+  (define a (vector 1 2 3 4 5))
+  (define b (vector 10 20 30 40 50))
+  (vector-copy! b 2 a 4 6)))
+
+(define-test "(vector-copy!) past end of to fails" (expect-failure
+  (define a (vector 1 2 3 4 5))
+  (define b (vector 10 20 30 40 50))
+  (vector-copy! b 2 a 1)))

@@ -469,6 +469,9 @@
     (define native-vector-copy (world-function "lliby_vector_copy" (<vector> <native-uint32> <native-uint32>) -> <vector>))
     (define-slice-proc vector-copy native-vector-copy <vector> vector-length)
 
+    (define native-vector-copy! (world-function "lliby_vector_mutating_copy" (<vector> <native-uint32> <vector> <native-uint32> <native-uint32>)))
+    (define-mutating-copy-proc vector-copy! native-vector-copy! <vector> vector-length)
+
     (define native-vector-fill! (world-function "lliby_vector_mutating_fill" (<vector> <any> <native-uint32> <native-uint32>)))
     (define-r7rs vector-fill!
       (case-lambda:
