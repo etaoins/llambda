@@ -231,6 +231,18 @@
               (([source : <source-type>] [start : <exact-integer>] [end : <exact-integer>])
                (native-proc source start end)))))))
 
+    (define-syntax define-mutating-copy-proc
+      (syntax-rules ()
+        ((define-mutating-copy-proc name native-proc <type> length-proc)
+         (define-r7rs name
+                      (case-lambda:
+                        (([to : <type>] [at : <exact-integer>] [from : <type>])
+                         (native-proc to at from 0 (length-proc from)))
+                        (([to : <type>] [at : <exact-integer>] [from : <type>] [start : <exact-integer>])
+                         (native-proc to at from start (length-proc from)))
+                        (([to : <type>] [at : <exact-integer>] [from : <type>] [start : <exact-integer>] [end : <exact-integer>])
+                         (native-proc to at from start end)))))))
+
     ; Define the length accessors for slicing values
     (define-r7rs vector-length (native-function "lliby_vector_length" (<vector>) -> <native-uint32>))
     (define-r7rs bytevector-length (native-function "lliby_bytevector_length" (<bytevector>) -> <native-uint32>))
@@ -488,6 +500,9 @@
 
     (define native-bytevector-copy (world-function "lliby_bytevector_copy" (<bytevector> <native-uint32> <native-uint32>) -> <bytevector>))
     (define-slice-proc bytevector-copy native-bytevector-copy <bytevector> bytevector-length)
+
+    (define native-bytevector-copy! (world-function "lliby_bytevector_mutating_copy" (<bytevector> <native-uint32> <bytevector> <native-uint32> <native-uint32>)))
+    (define-mutating-copy-proc bytevector-copy! native-bytevector-copy! <bytevector> bytevector-length)
 
     (define native-utf8->string (world-function "lliby_utf8_to_string" (<bytevector> <native-uint32> <native-uint32>) -> <string>))
     (define-slice-proc utf8->string native-utf8->string <bytevector> bytevector-length)

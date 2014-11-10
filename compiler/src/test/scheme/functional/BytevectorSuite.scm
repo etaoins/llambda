@@ -114,6 +114,9 @@
   (string->utf8 "Hell☃!" -1)))
 
 (define-test "(bytevector-copy)" (expect-success
+  (define a #u8(1 2 3 4 5))
+  (assert-equal #u8(3 4) (bytevector-copy a 2 4))
+
   (define test-bytevector #u8(0 1 2 3 4 5 6 7))
 
   (define entire-copy (bytevector-copy test-bytevector))
@@ -129,3 +132,32 @@
 
   (assert-equal #u8(2 3 4 5 6 7) (bytevector-copy test-bytevector 2))
   (assert-equal #u8(3 4 5) (bytevector-copy test-bytevector 3 6))))
+
+(define-test "(bytevector-copy!)" (expect-success
+  (define a (bytevector 1 2 3 4 5))
+  (define b (bytevector 10 20 30 40 50))
+  (bytevector-copy! b 1 a 0 2)
+
+  (assert-equal #u8(10 1 2 40 50) b)
+
+  (bytevector-copy! b 1 a 0 0)
+  (bytevector-copy! b 1 a 5)
+  (assert-equal #u8(10 1 2 40 50) b)
+
+  (bytevector-copy! b 0 a)
+  (assert-equal #u8(1 2 3 4 5) b)))
+
+(define-test "(bytevector-copy!) with backwards slice fails" (expect-failure
+  (define a (bytevector 1 2 3 4 5))
+  (define b (bytevector 10 20 30 40 50))
+  (bytevector-copy! b 1 a 2 0)))
+
+(define-test "(bytevector-copy!) past end of from fails" (expect-failure
+  (define a (bytevector 1 2 3 4 5))
+  (define b (bytevector 10 20 30 40 50))
+  (bytevector-copy! b 2 a 4 6)))
+
+(define-test "(bytevector-copy!) past end of to fails" (expect-failure
+  (define a (bytevector 1 2 3 4 5))
+  (define b (bytevector 10 20 30 40 50))
+  (bytevector-copy! b 2 a 1)))
