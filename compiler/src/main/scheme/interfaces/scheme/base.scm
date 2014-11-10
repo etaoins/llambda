@@ -28,7 +28,7 @@
 (export bytevector? make-bytevector bytevector bytevector-length bytevector-u8-ref bytevector-u8-set! bytevector-append
         utf8->string string->utf8 bytevector-copy bytevector-copy!)
 (export string? make-string string string-length string-ref string-set! string-append list->string string->list
-        string-copy substring string=? string<? string>? string<=? string>=?)
+        string-copy string-copy! substring string=? string<? string>? string<=? string>=?)
 (export procedure? apply call-with-current-continuation call/cc values call-with-values vector-map vector-for-each
         map for-each string-map string-for-each)
 (export make-parameter dynamic-wind)

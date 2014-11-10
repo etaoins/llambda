@@ -143,6 +143,14 @@ StringCell* lliby_substring(World &world, StringCell *sourceString, std::uint32_
 	return sourceString->copy(world, start, end);
 }
 
+void lliby_string_mutating_copy(World &world, StringCell *to, std::uint32_t at, StringCell *from, std::uint32_t start, std::uint32_t end)
+{
+	assertSliceValid(world, "(string-copy!)", from, from->charLength(), start, end);
+	assertSliceValid(world, "(string-copy!)", to, to->charLength(), at, at + (end - start));
+
+	to->replace(at, from, start, end);
+}
+
 StringCell* lliby_string_upcase(World &world, StringCell *sourceString)
 {
 	return sourceString->toUppercaseString(world);

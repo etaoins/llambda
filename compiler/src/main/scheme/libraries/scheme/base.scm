@@ -537,6 +537,9 @@
     (define substring (world-function "lliby_substring" (<string> <native-uint32> <native-uint32>) -> <string>))
     (define-slice-proc string-copy substring <string> string-length)
 
+    (define native-string-copy! (world-function "lliby_string_mutating_copy" (<string> <native-uint32> <string> <native-uint32> <native-uint32>)))
+    (define-mutating-copy-proc string-copy! native-string-copy! <string> string-length)
+
     (define-r7rs string=? (native-function "lliby_string_equal" (<string> <string> . <string>) -> <native-bool>))
     (define-r7rs string<? (native-function "lliby_string_lt" (<string> <string> . <string>) -> <native-bool>))
     (define-r7rs string>? (native-function "lliby_string_gt" (<string> <string> . <string>) -> <native-bool>))

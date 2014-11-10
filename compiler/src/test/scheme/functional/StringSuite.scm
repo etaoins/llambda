@@ -268,3 +268,32 @@
   (assert-false (string-ci>=? "hello" "hello!"))
   (assert-true  (string-ci>=? "hello!" "hello"))
   (assert-true  (string-ci>=? "日本国" "日本国"))))
+
+(define-test "(string-copy!)" (expect-success
+  (define a "12345")
+  (define b (string-copy "abcde"))
+  (string-copy! b 1 a 0 2)
+
+  (assert-equal "a12de" b)
+
+  (string-copy! b 1 a 0 0)
+  (string-copy! b 1 a 5)
+  (assert-equal "a12de" b)
+
+  (string-copy! b 0 a)
+  (assert-equal "12345" b)))
+
+(define-test "(string-copy!) with backwards slice fails" (expect-failure
+  (define a "12345")
+  (define b (string-copy "abcde"))
+  (string-copy! b 1 a 2 0)))
+
+(define-test "(string-copy!) past end of from fails" (expect-failure
+  (define a "12345")
+  (define b (string-copy "abcde"))
+  (string-copy! b 2 a 4 6)))
+
+(define-test "(string-copy!) past end of to fails" (expect-failure
+  (define a "12345")
+  (define b (string-copy "abcde"))
+  (string-copy! b 2 a 1)))
