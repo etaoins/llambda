@@ -20,7 +20,7 @@ private[frontend] object ParseSyntaxDefine {
     }
   }
 
-  private def parseTransformers(definedSymbol : sst.ScopedSymbol, ellipsisIdentifier : String, literalData : List[sst.ScopedDatum], rulesData : List[sst.ScopedDatum], debugContext : debug.SourceContext) : ParsedSimpleDefine = {
+  private def parseTransformers(definedSymbol : sst.ScopedSymbol, ellipsisVariable : SyntaxVariable, literalData : List[sst.ScopedDatum], rulesData : List[sst.ScopedDatum], debugContext : debug.SourceContext) : ParsedSimpleDefine = {
     val literals = (literalData.map { 
       case symbol @ sst.ScopedSymbol(_, identifier) => 
         SyntaxVariable.fromSymbol(symbol)
@@ -33,7 +33,7 @@ private[frontend] object ParseSyntaxDefine {
       case sst.ScopedProperList(sst.ScopedPair(_, patternDatum) :: template :: Nil) =>
         // Find all of our pattern variables
         val matchConfig = MatchConfig(
-          ellipsisIdentifier=ellipsisIdentifier,
+          ellipsisVariable=ellipsisVariable,
           literals=literals
         )
 
@@ -57,7 +57,7 @@ private[frontend] object ParseSyntaxDefine {
       sourceNameOpt=Some(definedSymbol.name)
     )
 
-    ParsedSimpleDefine(definedSymbol, new BoundSyntax(ellipsisIdentifier, literals.toSet, parsedRules, macroDebugContext))
+    ParsedSimpleDefine(definedSymbol, new BoundSyntax(ellipsisVariable, literals.toSet, parsedRules, macroDebugContext))
   }
 
   def apply(appliedSymbol : sst.ScopedSymbol, operands : List[sst.ScopedDatum], debugContext : debug.SourceContext) : ParsedSimpleDefine = operands match {
@@ -65,13 +65,13 @@ private[frontend] object ParseSyntaxDefine {
              sst.ScopedProperList(
                sst.ScopedSymbol(_, "syntax-rules") :: sst.ScopedProperList(literalData) :: rulesData
              )) =>
-      parseTransformers(definedSymbol, "...", literalData, rulesData, debugContext)
+      parseTransformers(definedSymbol, BoundSyntaxVariable(Primitives.Ellipsis), literalData, rulesData, debugContext)
     
     case List((definedSymbol : sst.ScopedSymbol),
              sst.ScopedProperList(
-               sst.ScopedSymbol(_, "syntax-rules") :: sst.ScopedSymbol(_, ellipsisIdentifier) :: sst.ScopedProperList(literalData) :: rulesData
+               sst.ScopedSymbol(_, "syntax-rules") :: (ellipsisSymbol : sst.ScopedSymbol) :: sst.ScopedProperList(literalData) :: rulesData
              )) =>
-      parseTransformers(definedSymbol, ellipsisIdentifier, literalData, rulesData, debugContext)
+      parseTransformers(definedSymbol, SyntaxVariable.fromSymbol(ellipsisSymbol), literalData, rulesData, debugContext)
 
     case _ =>
       throw new BadSpecialFormException(appliedSymbol, "Unrecognized (define-syntax) form")

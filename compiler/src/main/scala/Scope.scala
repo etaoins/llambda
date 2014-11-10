@@ -86,13 +86,13 @@ case class PatternVariables(
 
 /** Represents a macro transformer
   *
-  * Transformers are a pattern and an  associated expansion template. A macro is made of one or more transformers that
+  * Transformers are a pattern and an associated expansion template. A macro is made of one or more transformers that
   * are sequentially tried until a matching transformer is found.
   */
 case class Transformer(pattern : sst.ScopedDatum, patternVariables : PatternVariables, template : sst.ScopedDatum)
 
 case class BoundSyntax(
-    ellipsisIdentifier : String,
+    ellipsisVariable : SyntaxVariable,
     literals : Set[SyntaxVariable],
     transformers : List[Transformer],
     debugContext : debug.SubprogramContext

@@ -1,13 +1,13 @@
 package io.llambda.compiler.frontend.syntax
 import io.llambda
 
-import llambda.compiler.sst
 import llambda.compiler._
 
 private[syntax] object FindPatternVariables {
   private def vectorElementsPatternVariables(elements : List[sst.ScopedDatum])(implicit matchConfig : MatchConfig) : PatternVariables = {
     elements match {
-      case subpatternDatum :: sst.ScopedSymbol(_, matchConfig.ellipsisIdentifier) :: tailPattern if matchConfig.zeroOrMoreAllowed =>
+      case subpatternDatum :: (ellipsisSymbol : sst.ScopedSymbol) :: tailPattern
+          if matchConfig.isZeroOrMore(ellipsisSymbol) =>
         val subpattern = apply(subpatternDatum)
 
         PatternVariables(
@@ -31,7 +31,7 @@ private[syntax] object FindPatternVariables {
         // This is a literal
         PatternVariables()
       }
-      else if (patternVariable == UnboundSyntaxVariable("_")) {
+      else if (patternVariable == matchConfig.wildcardVariable) {
         // This is a wildcard
         PatternVariables()
       }
@@ -42,7 +42,8 @@ private[syntax] object FindPatternVariables {
         )
       }
 
-    case sst.ScopedPair(subpatternDatum, sst.ScopedPair(sst.ScopedSymbol(_, matchConfig.ellipsisIdentifier), cdr)) if matchConfig.zeroOrMoreAllowed =>
+    case sst.ScopedPair(subpatternDatum, sst.ScopedPair(ellipsisSymbol : sst.ScopedSymbol, cdr))
+        if matchConfig.isZeroOrMore(ellipsisSymbol) =>
       // Ignore the ... and increase our depth
       val subpattern = apply(subpatternDatum)
 

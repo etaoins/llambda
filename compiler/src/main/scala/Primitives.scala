@@ -30,6 +30,8 @@ object Primitives {
   object TypedLambda extends PrimitiveExpr
   object TypedCaseLambda extends PrimitiveExpr
   object MakePredicate extends PrimitiveExpr
+  object Ellipsis extends PrimitiveExpr
+  object Wildcard extends PrimitiveExpr
 
   object UnionType extends PrimitiveTypeConstructor
   object PairofType extends PrimitiveTypeConstructor
@@ -71,6 +73,8 @@ object Primitives {
       "lambda:" -> TypedLambda,
       "case-lambda:" -> TypedCaseLambda,
       "make-predicate" -> MakePredicate,
+      "..." -> Ellipsis,
+      "_" -> Wildcard,
 
       "U" -> UnionType,
       "Pairof" -> PairofType,
