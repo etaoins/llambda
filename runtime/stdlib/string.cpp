@@ -151,6 +151,23 @@ void lliby_string_mutating_copy(World &world, StringCell *to, std::uint32_t at, 
 	to->replace(at, from, start, end);
 }
 
+void lliby_string_mutating_fill(World &world, StringCell *string, UnicodeChar fill, std::uint32_t start, std::uint32_t end)
+{
+	if (string->isGlobalConstant())
+	{
+		signalError(world, "(string-fill!) on string literal", {string});
+	}
+
+	if (!fill.isValid())
+	{
+		signalError(world, "(string-fill!) with invalid character");
+	}
+
+	assertSliceValid(world, "(string-fill!)", string, string->charLength(), start, end);
+
+	string->fill(fill, start, end);
+}
+
 StringCell* lliby_string_upcase(World &world, StringCell *sourceString)
 {
 	return sourceString->toUppercaseString(world);

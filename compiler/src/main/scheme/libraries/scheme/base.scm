@@ -540,6 +540,16 @@
     (define native-string-copy! (world-function "lliby_string_mutating_copy" (<string> <native-uint32> <string> <native-uint32> <native-uint32>)))
     (define-mutating-copy-proc string-copy! native-string-copy! <string> string-length)
 
+    (define native-string-fill! (world-function "lliby_string_mutating_fill" (<string> <native-unicode-char> <native-uint32> <native-uint32>)))
+    (define-r7rs string-fill!
+      (case-lambda:
+        (([target : <string>] [fill : <char>])
+         (native-string-fill! target fill 0 (string-length target)))
+        (([target : <string>] [fill : <char>] [start : <exact-integer>])
+         (native-string-fill! target fill start (string-length target)))
+        (([target : <string>] [fill : <char>] [start : <exact-integer>] [end : <exact-integer>])
+         (native-string-fill! target fill start end))))
+
     (define-r7rs string=? (native-function "lliby_string_equal" (<string> <string> . <string>) -> <native-bool>))
     (define-r7rs string<? (native-function "lliby_string_lt" (<string> <string> . <string>) -> <native-bool>))
     (define-r7rs string>? (native-function "lliby_string_gt" (<string> <string> . <string>) -> <native-bool>))

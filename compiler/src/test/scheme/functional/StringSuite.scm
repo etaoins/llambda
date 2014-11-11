@@ -297,3 +297,32 @@
   (define a "12345")
   (define b (string-copy "abcde"))
   (string-copy! b 2 a 1)))
+
+(define-test "(string-fill!)" (expect-success
+  (define test-string (string-copy "01234567"))
+
+  (string-fill! test-string #\☃ 0 0)
+  (string-fill! test-string #\☃ 4 6)
+  (assert-equal "0123☃☃67" test-string)
+
+  (string-fill! test-string #\λ 8 8)
+  (string-fill! test-string #\λ 6)
+  (assert-equal "0123☃☃λλ" test-string)
+
+  (string-fill! test-string #\ℵ)
+  (assert-equal "ℵℵℵℵℵℵℵℵ" test-string)
+
+  (string-fill! test-string #\0 2 5)
+  (assert-equal "ℵℵ000ℵℵℵ" test-string)))
+
+(define-test "(string-fill!) with backward slice fails" (expect-failure
+  (define test-string (string-copy "01234567"))
+  (string-fill! test-string #\☃ 6 4)))
+
+(define-test "(string-fill!) past end of string fails" (expect-failure
+  (define test-string (string-copy "01234567"))
+  (string-fill! test-string #\☃ 9)))
+
+(define-test "(string-fill!) with invalid fill character fails" (expect-failure
+  (define test-string (string-copy "01234567"))
+  (string-fill! test-string #\x110000)))
