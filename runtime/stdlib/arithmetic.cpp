@@ -7,6 +7,7 @@
 #include "alloc/RangeAlloc.h"
 
 #include <cmath>
+#include <cfloat>
 
 #include "core/error.h"
 
@@ -48,6 +49,59 @@ namespace
 		}
 
 		return {quotient, remainder};
+	}
+
+	struct InexactFractionResult
+	{
+		double numerator;
+		double denominator;
+	};
+
+	InexactFractionResult inexactFraction(double value)
+	{
+		// Radix == 2 lets us use bit shifts and bit counts which are more obviously correct and faster. Even on
+		// platforms that support non-binary floating point it's highly doubtful the default double type would be
+		// non-binary.
+		static_assert(FLT_RADIX == 2, "Only radix of 2 is supported");
+
+		// Handle these special cases explicitly
+		if (std::isnan(value))
+		{
+			return {NAN, NAN};
+		}
+		else if (std::isinf(value))
+		{
+			return {value, 1.0};
+		}
+		else if (value == 0.0)
+		{
+			// Make sure we return value to catch -0.0
+			return {value, 1.0};
+		}
+
+		int exponent;
+		double significand = std::frexp(value, &exponent);
+
+		if (exponent >= DBL_MANT_DIG)
+		{
+			// The value requires more range than a double's significand can represent without being magnified by an
+			// exponent. This means the value must be an integer - we can return it directly
+			return {value, 1};
+		}
+		else
+		{
+			// Multiply the significand in to an integer and reduce the exponent to match
+			std::int64_t integerMantissa = significand * double(1ULL << DBL_MANT_DIG);
+			exponent -= DBL_MANT_DIG;
+
+			// Reduce the fraction - count the trailing zeros so we know how many times we can divide the significand
+			// by 2. Limit the exponent to <= 0 so we don't create a fractional denominator.
+			const int shiftRightBy = std::min(-exponent, __builtin_ctzl(integerMantissa));
+			integerMantissa = integerMantissa >> shiftRightBy;
+			exponent += shiftRightBy;
+
+			return {static_cast<double>(integerMantissa), static_cast<double>(1ULL << -exponent)};
+		}
 	}
 
 	std::int64_t greatestCommonDivisor(std::int64_t a, std::int64_t b)
@@ -384,6 +438,16 @@ ReturnValuesList* lliby_exact_integer_sqrt(World &world, std::int64_t val)
 	auto remainderCell = new (*allocIt++) ExactIntegerCell(remainder);
 
 	return ReturnValuesList::create(world, {floorResultCell, remainderCell});
+}
+
+double lliby_numerator(double value)
+{
+	return inexactFraction(value).numerator;
+}
+
+double lliby_denominator(double value)
+{
+	return inexactFraction(value).denominator;
 }
 
 }

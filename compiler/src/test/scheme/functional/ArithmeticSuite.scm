@@ -293,3 +293,40 @@
 
 (define-test "(exact-integer-sqrt) with negative values fails" (expect-failure
   (exact-integer-sqrt -1)))
+
+(define-test "(numerator), (denominator)" (expect-success
+  (assert-equal 0 (numerator 0))
+  (assert-equal 1 (denominator 0))
+
+  (assert-equal 9223372036854775807 (numerator 9223372036854775807))
+  (assert-equal 1 (denominator 9223372036854775807))
+
+  (assert-equal -9223372036854775808 (numerator -9223372036854775808))
+  (assert-equal 1 (denominator -9223372036854775808))
+
+  (assert-equal 0.0 (numerator 0.0))
+  (assert-equal 1.0 (denominator 0.0))
+
+  (assert-equal -0.0 (numerator -0.0))
+  (assert-equal 1.0 (denominator -0.0))
+
+  (assert-equal +inf.0 (numerator +inf.0))
+  (assert-equal 1.0 (denominator +inf.0))
+
+  (assert-equal -inf.0 (numerator -inf.0))
+  (assert-equal 1.0 (denominator -inf.0))
+
+  (assert-equal +nan.0 (numerator +nan.0))
+  (assert-equal +nan.0 (denominator +nan.0))
+
+  (assert-equal 9223372036854775807.0 (numerator 9223372036854775807.0))
+  (assert-equal 1.0 (denominator 9223372036854775807.0))
+
+  (assert-equal -9223372036854775808.0 (numerator -9223372036854775808.0))
+  (assert-equal 1.0 (denominator -9223372036854775808.0))
+
+  (assert-equal 3.0 (numerator (/ 6.0 4)))
+  (assert-equal 2.0 (denominator (/ 6.0 4)))
+
+  (assert-equal 1.0 (numerator (/ 1.0 1024.0)))
+  (assert-equal 1024.0 (denominator (/ 1.0 1024.0)))))

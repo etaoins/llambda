@@ -387,6 +387,18 @@
 
     (define-r7rs exact-integer-sqrt (world-function "lliby_exact_integer_sqrt" (<native-int64>) -> (Values <exact-integer> <exact-integer>)))
 
+    (define native-numerator (native-function "lliby_numerator" (<native-double>) -> <native-double>))
+    (define-r7rs numerator (lambda: ([value : <number>])
+      (if (exact-integer? value)
+        value
+        (native-numerator value))))
+
+    (define native-denominator (native-function "lliby_denominator" (<native-double>) -> <native-double>))
+    (define-r7rs denominator (lambda: ([value : <number>])
+      (if (exact-integer? value)
+        1
+        (native-denominator value))))
+
     (define native-number->string (world-function "lliby_number_to_string" (<number> <native-uint8>) -> <string>))
     (define-r7rs number->string (case-lambda:
       (([num : <number>])
