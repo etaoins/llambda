@@ -129,7 +129,7 @@ protected:
 	const std::uint8_t *charPointer(std::uint32_t cahrOffset, const std::uint8_t *startFrom, std::uint32_t startOffset);
 	const std::uint8_t *charPointer(std::uint32_t charOffset);
 
-	bool replaceBytes(const CharRange &range, const std::uint8_t *pattern, unsigned int patternBytes, unsigned int count, bool sameString);
+	bool replaceBytes(const CharRange &range, const std::uint8_t *pattern, unsigned int patternBytes, unsigned int count);
 
 	int compareCaseSensitive(const StringCell *other) const;
 	int compareCaseInsensitive(const StringCell *other) const;
@@ -175,7 +175,7 @@ class InlineStringCell : public StringCell
 #include "generated/InlineStringCellMembers.h"
 private:
 	InlineStringCell(std::uint32_t byteLength, std::uint32_t charLength) :
-		StringCell(byteLength, charLength, InlineDataSize - byteLength - 1)
+		StringCell(byteLength, charLength, InlineDataSize - byteLength)
 	{
 	}
 };

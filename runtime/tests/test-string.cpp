@@ -663,6 +663,16 @@ void testFill(World &world)
 		ASSERT_EQUAL(helloValue->charLength(), 5);
 		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"☃YYYY", 7), 0);
 	}
+
+	{
+		StringCell *helloValue = StringCell::fromUtf8StdString(world, u8"01234567");
+
+		ASSERT_EQUAL(helloValue->fill(UnicodeChar(0x2603), 4, 6), true);
+
+		ASSERT_EQUAL(helloValue->byteLength(), 12);
+		ASSERT_EQUAL(helloValue->charLength(), 8);
+		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"0123☃☃67", 12), 0);
+	}
 }
 
 void testReplace(World &world)
@@ -745,16 +755,106 @@ void testReplace(World &world)
 		ASSERT_EQUAL(helloValue->charLength(), 5);
 		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"He本国o", 9), 0);
 	}
-	
+
+	///
+	/// The remaining tests ensure we can overwrite a string with a substring from itself
+	///
+
 	{
 		StringCell *complexValue = StringCell::fromUtf8StdString(world, u8"Hello 日本国");
 
-		// We should be able to replace a substring from ourselves
 		ASSERT_EQUAL(complexValue->replace(0, complexValue, 6), true);
 
 		ASSERT_EQUAL(complexValue->byteLength(), 21);
 		ASSERT_EQUAL(complexValue->charLength(), 9);
 		ASSERT_EQUAL(memcmp(complexValue->constUtf8Data(), u8"日本国lo 日本国", 21), 0);
+	}
+
+	{
+		StringCell *complexValue = StringCell::fromUtf8StdString(world, u8"Hello 日本国");
+
+		ASSERT_EQUAL(complexValue->replace(0, complexValue, 0, 9), true);
+
+		ASSERT_EQUAL(complexValue->byteLength(), 15);
+		ASSERT_EQUAL(complexValue->charLength(), 9);
+		ASSERT_EQUAL(memcmp(complexValue->constUtf8Data(), u8"Hello 日本国", 15), 0);
+	}
+
+	{
+		StringCell *complexValue = StringCell::fromUtf8StdString(world, u8"Hello 日本国");
+
+		ASSERT_EQUAL(complexValue->replace(1, complexValue, 0, 8), true);
+
+		ASSERT_EQUAL(complexValue->byteLength(), 13);
+		ASSERT_EQUAL(complexValue->charLength(), 9);
+
+		ASSERT_EQUAL(memcmp(complexValue->constUtf8Data(), u8"HHello 日本", 13), 0);
+	}
+
+	{
+		StringCell *complexValue = StringCell::fromUtf8StdString(world, u8"Hello 日本国");
+
+		ASSERT_EQUAL(complexValue->replace(2, complexValue, 0, 7), true);
+
+		ASSERT_EQUAL(complexValue->byteLength(), 11);
+		ASSERT_EQUAL(complexValue->charLength(), 9);
+
+		ASSERT_EQUAL(memcmp(complexValue->constUtf8Data(), u8"HeHello 日", 11), 0);
+	}
+
+	{
+		StringCell *complexValue = StringCell::fromUtf8StdString(world, u8"Hello 日本国");
+
+		ASSERT_EQUAL(complexValue->replace(3, complexValue, 0, 6), true);
+
+		ASSERT_EQUAL(complexValue->byteLength(), 9);
+		ASSERT_EQUAL(complexValue->charLength(), 9);
+
+		ASSERT_EQUAL(memcmp(complexValue->constUtf8Data(), u8"HelHello ", 9), 0);
+	}
+
+
+	{
+		StringCell *complexValue = StringCell::fromUtf8StdString(world, u8"日本国 Hello");
+
+		ASSERT_EQUAL(complexValue->replace(0, complexValue, 0, 9), true);
+
+		ASSERT_EQUAL(complexValue->byteLength(), 15);
+		ASSERT_EQUAL(complexValue->charLength(), 9);
+		ASSERT_EQUAL(memcmp(complexValue->constUtf8Data(), u8"日本国 Hello", 15), 0);
+	}
+
+	{
+		StringCell *complexValue = StringCell::fromUtf8StdString(world, u8"日本国 Hello");
+
+		ASSERT_EQUAL(complexValue->replace(1, complexValue, 0, 8), true);
+
+		ASSERT_EQUAL(complexValue->byteLength(), 17);
+		ASSERT_EQUAL(complexValue->charLength(), 9);
+
+		ASSERT_EQUAL(memcmp(complexValue->constUtf8Data(), u8"日日本国 Hell", 17), 0);
+	}
+
+	{
+		StringCell *complexValue = StringCell::fromUtf8StdString(world, u8"日本国 Hello");
+
+		ASSERT_EQUAL(complexValue->replace(2, complexValue, 0, 7), true);
+
+		ASSERT_EQUAL(complexValue->byteLength(), 19);
+		ASSERT_EQUAL(complexValue->charLength(), 9);
+
+		ASSERT_EQUAL(memcmp(complexValue->constUtf8Data(), u8"日本日本国 Hel", 19), 0);
+	}
+
+	{
+		StringCell *complexValue = StringCell::fromUtf8StdString(world, u8"日本国 Hello");
+
+		ASSERT_EQUAL(complexValue->replace(3, complexValue, 0, 6), true);
+
+		ASSERT_EQUAL(complexValue->byteLength(), 21);
+		ASSERT_EQUAL(complexValue->charLength(), 9);
+
+		ASSERT_EQUAL(memcmp(complexValue->constUtf8Data(), u8"日本国日本国 He", 21), 0);
 	}
 }
 
