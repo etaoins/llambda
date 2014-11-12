@@ -14,6 +14,7 @@
 #include "unicode/utf8/InvalidByteSequenceException.h"
 
 #include "util/utf8ExceptionToSchemeError.h"
+#include "util/assertSliceValid.h"
 #include "util/SharedByteArray.h"
 
 #include "port/AbstractPort.h"
@@ -215,6 +216,24 @@ AnyCell *lliby_read_bytevector(World &world, std::uint32_t requestedBytes, PortC
 	}
 
 	return BytevectorCell::withByteArray(world, byteArray, readBytes);
+}
+
+AnyCell *lliby_mutating_read_bytevector(World &world, BytevectorCell *bytevector, PortCell *portCell, std::uint32_t start, std::uint32_t end)
+{
+	assertSliceValid(world, "(read-bytevector!)", bytevector, bytevector->length(), start, end);
+	std::istream *portStream = portCellToInputStream(world, portCell);
+
+	char *readStart = reinterpret_cast<char*>(&bytevector->byteArray()->data()[start]);
+	portStream->read(readStart, end - start);
+
+	const std::size_t totalRead = portStream->gcount();
+
+	if (!portStream->good() && (totalRead == 0))
+	{
+		return EofObjectCell::instance();
+	}
+
+	return ExactIntegerCell::fromValue(world, totalRead);
 }
 
 AnyCell *lliby_read_string(World &world, std::uint32_t requestedChars, PortCell *portCell)

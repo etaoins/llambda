@@ -293,3 +293,45 @@
   (write-string "ABC")
   (flush-output-port)
   (emergency-exit #t)))
+
+(define-test "(read-bytevector!)" (expect-success
+  (define test-bytevector (make-bytevector 4))
+
+  (define input-port (open-input-bytevector #u8(1 2 3 4 5 6 7 8 9 10 11 12)))
+
+  (parameterize ((current-input-port input-port))
+    (assert-equal 4 (read-bytevector! test-bytevector)))
+
+  (assert-equal #u8(1 2 3 4) test-bytevector)
+
+  (assert-equal 4 (read-bytevector! test-bytevector input-port))
+  (assert-equal #u8(5 6 7 8) test-bytevector)
+
+  (assert-equal 2 (read-bytevector! test-bytevector input-port 2))
+  (assert-equal #u8(5 6 9 10) test-bytevector)
+
+  (assert-equal 2 (read-bytevector! test-bytevector input-port 0 2))
+  (assert-equal #u8(11 12 9 10) test-bytevector)
+
+  (assert-equal 0 (read-bytevector! test-bytevector input-port 0 0))
+  (assert-equal 0 (read-bytevector! test-bytevector input-port 4 4))
+
+  (assert-true (eof-object? (read-bytevector! test-bytevector input-port)))))
+
+(define-test "(read-bytevector!) with backwards slice fails" (expect-failure
+  (define test-bytevector (make-bytevector 4))
+
+  (define input-port (open-input-bytevector #u8(1 2 3 4 5 6 7 8 9 10 11 12)))
+  (read-bytevector! test-bytevector input-port 3 2)))
+
+(define-test "(read-bytevector!) past end of bytevector fails" (expect-failure
+  (define test-bytevector (make-bytevector 4))
+
+  (define input-port (open-input-bytevector #u8(1 2 3 4 5 6 7 8 9 10 11 12)))
+  (read-bytevector! test-bytevector input-port 2 5)))
+
+(define-test "(read-bytevector!) with negative start index fails" (expect-failure
+  (define test-bytevector (make-bytevector 4))
+
+  (define input-port (open-input-bytevector #u8(1 2 3 4 5 6 7 8 9 10 11 12)))
+  (read-bytevector! test-bytevector input-port -2)))

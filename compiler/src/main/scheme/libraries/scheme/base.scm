@@ -639,6 +639,17 @@
     (define-input-proc read-line "lliby_read_line" () -> <string>)
     (define-input-proc read-bytevector "lliby_read_bytevector" (<native-uint32>) -> <bytevector>)
     (define-input-proc read-string "lliby_read_string" (<native-uint32>) -> <string>)
+    (define-r7rs read-bytevector!
+                 (let ((native-proc (world-function "lliby_mutating_read_bytevector" (<bytevector> <port> <native-uint32> <native-uint32>) -> (U <exact-integer> <eof-object>))))
+                   (case-lambda:
+                     (([bv : <bytevector>])
+                      (native-proc bv (current-input-port) 0 (bytevector-length bv)))
+                     (([bv : <bytevector>] [port : <port>])
+                      (native-proc bv port 0 (bytevector-length bv)))
+                     (([bv : <bytevector>] [port : <port>] [start : <exact-integer>])
+                      (native-proc bv port start (bytevector-length bv)))
+                     (([bv : <bytevector>] [port : <port>] [start : <exact-integer>] [end : <exact-integer>])
+                      (native-proc bv port start end)))))
 
     (define native-newline (world-function "lliby_newline" (<port>)))
     (define-r7rs newline (case-lambda:
