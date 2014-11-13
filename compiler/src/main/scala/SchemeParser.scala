@@ -106,7 +106,7 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
         case ',' =>
           UnquotedSplicingDatum | UnquotedDatum
 
-        case '+' | '-' =>
+        case '+' | '-' | '.' =>
           PossibleNumber
 
         case _ =>
@@ -192,7 +192,7 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   }
 
   def FlonumDatum = rule {
-    capture(optional(SignCharacter) ~ oneOrMore(Digit) ~ optional('.') ~ oneOrMore(Digit)) ~> ({ number =>
+    capture(optional(SignCharacter) ~ zeroOrMore(Digit) ~ optional('.') ~ oneOrMore(Digit)) ~> ({ number =>
       ast.FlonumLiteral(number.toDouble)
     })
   }

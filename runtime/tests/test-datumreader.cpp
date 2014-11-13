@@ -167,6 +167,8 @@ void testReals(World &world)
 	ASSERT_PARSES("0.0", FlonumCell::fromValue(world, 0.0));
 	ASSERT_PARSES("33.337", FlonumCell::fromValue(world, 33.337));
 	ASSERT_PARSES("-0100.0", FlonumCell::fromValue(world, -100.0));
+	ASSERT_PARSES(".25", FlonumCell::fromValue(world, 0.25));
+	ASSERT_PARSES("-.125", FlonumCell::fromValue(world, -0.125));
 
 	ASSERT_PARSES("2/5", FlonumCell::fromValue(world, 0.4));
 	ASSERT_PARSES("+20/50", FlonumCell::fromValue(world, 0.4));
@@ -180,6 +182,8 @@ void testReals(World &world)
 
 	ASSERT_PARSES("+NaN.0", FlonumCell::NaN(world));
 	ASSERT_PARSES("-NaN.0", FlonumCell::NaN(world));
+
+	ASSERT_INVALID_PARSE(".");
 }
 
 void testStrings(World &world)

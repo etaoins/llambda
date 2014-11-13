@@ -174,6 +174,17 @@ AnyCell* DatumReader::parseDatum(int defaultRadix)
 	{
 		return parseUnradixedNumber(defaultRadix);
 	}
+	else if (peekChar == '.')
+	{
+		try
+		{
+			return parseUnradixedNumber(defaultRadix);
+		}
+		catch(ReadErrorException)
+		{
+			return parseSymbol();
+		}
+	}
 	else if (peekChar == '+')
 	{
 		try
@@ -621,7 +632,7 @@ AnyCell* DatumReader::parseUnradixedNumber(int radix, bool negative)
 		}
 	});
 
-	if (numberString.empty())
+	if (numberString.empty() && (rdbuf()->sgetc() != '.'))
 	{
 		// Not valid
 		throw MalformedDatumException(inputOffset(rdbuf()), "No valid number found after number prefix");
@@ -640,6 +651,14 @@ AnyCell* DatumReader::parseUnradixedNumber(int radix, bool negative)
 			takeWhile(rdbuf(), numberString, [=] (char c) {
 				return (c >= '0') && (c <= ('9'));
 			});
+
+			if (numberString.size() == 1)
+			{
+				// We just contain the "." - this isn't a valid number
+				// This should re-parse as a symbol
+				rdbuf()->sputbackc('.');
+				throw MalformedDatumException(inputOffset(rdbuf()), "Decimal point with no trailing numbers");
+			}
 
 			if (previousSize != numberString.size())
 			{

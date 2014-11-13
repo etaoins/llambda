@@ -76,6 +76,9 @@
 
   (assert-equal -2.0 (string->number "-500/250"))
 
+  (assert-equal 0.125 (string->number ".125"))
+  (assert-equal -0.25 (string->number "-.25"))
+
   (assert-equal #f (string->number "+" 16))
   (assert-equal #f (string->number "ddy" 16))
   (assert-equal #f (string->number "2 5" 16))
