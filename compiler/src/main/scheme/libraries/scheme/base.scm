@@ -399,6 +399,10 @@
         1
         (native-denominator value))))
 
+    (define native-rationalize (world-function "lliby_rationalize" (<number> <native-double>) -> <number>))
+    (define-r7rs rationalize (lambda: ([val : <number>] [maxDiff : <number>])
+      (native-rationalize val (inexact maxDiff))))
+
     (define native-number->string (world-function "lliby_number_to_string" (<number> <native-uint8>) -> <string>))
     (define-r7rs number->string (case-lambda:
       (([num : <number>])

@@ -330,3 +330,32 @@
 
   (assert-equal 1.0 (numerator (/ 1.0 1024.0)))
   (assert-equal 1024.0 (denominator (/ 1.0 1024.0)))))
+
+(define-test "(rationalize)" (expect-success
+  (assert-equal +nan.0 (rationalize 1.0 +nan.0))
+  (assert-equal +nan.0 (rationalize +nan.0 1.0))
+  (assert-equal +nan.0 (rationalize +nan.0 +nan.0))
+
+  (assert-equal +inf.0 (rationalize +inf.0 0.5))
+  (assert-equal -inf.0 (rationalize -inf.0 0.5))
+
+  (assert-equal 9223372036854775807 (rationalize 9223372036854775807 2))
+  ; For integers we don't use the maxDiff value so it doesn't matter that it's inexact
+  (assert-equal 9223372036854775807 (rationalize 9223372036854775807 2.0))
+
+  (assert-equal -9223372036854775808 (rationalize -9223372036854775808 2))
+  (assert-equal -9223372036854775808 (rationalize -9223372036854775808 2.0))
+
+  (assert-equal -64.5 (rationalize -64.45 0.1))
+  (assert-equal 64.5 (rationalize 64.45 0.1))
+
+  (assert-equal 0.0 (rationalize 0.2 0.2))
+  (assert-equal 0.0 (rationalize -0.2 0.2))
+
+  (assert-equal 0.0 (rationalize 0.2 0.5))
+  (assert-equal 0.25 (rationalize 0.2 0.1))
+  (assert-equal 0.1875 (rationalize 0.2 0.02))
+))
+
+(define-test "(rationalize) with negative maximum difference fails" (expect-failure
+  (rationalize 45.334 -0.5)))

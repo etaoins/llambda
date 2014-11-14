@@ -8,6 +8,7 @@
 
 #include <cmath>
 #include <cfloat>
+#include <iostream>
 
 #include "core/error.h"
 
@@ -448,6 +449,77 @@ double lliby_numerator(double value)
 double lliby_denominator(double value)
 {
 	return inexactFraction(value).denominator;
+}
+
+NumberCell* lliby_rationalize(World &world, NumberCell *valCell, double maxDiff)
+{
+	// If maxdiff is NaN then we are NaN
+	if (std::isnan(maxDiff))
+	{
+		return FlonumCell::NaN(world);
+	}
+	else if (maxDiff < 0.0)
+	{
+		signalError(world, "Attempted (rationalize) with negative maximum difference");
+	}
+
+	if (ExactIntegerCell::isInstance(valCell))
+	{
+		// Already an integer - this is in simplest terms
+		return valCell;
+	}
+
+	const double floatVal = cell_unchecked_cast<FlonumCell>(valCell)->value();
+
+	if (std::isnan(floatVal) || std::isinf(floatVal))
+	{
+		// Propagate these through directly
+		return valCell;
+	}
+
+	InexactFractionResult fractionVal = inexactFraction(floatVal);
+
+	struct CandidateResult
+	{
+		std::int64_t numerator;
+		std::int64_t denominator;
+
+		double toDouble() const
+		{
+			return static_cast<double>(numerator) / static_cast<double>(denominator);
+		}
+	};
+
+	CandidateResult bestResult {
+		static_cast<std::int64_t>(fractionVal.numerator),
+		static_cast<std::int64_t>(fractionVal.denominator),
+	};
+
+	CandidateResult searchResult = bestResult;
+
+	while(searchResult.denominator > 1)
+	{
+		// Try rounding the numerator both up and down. The denominator is a power of two so it always divides exactly.
+		for(int rounder = 1; rounder >= 0; rounder--)
+		{
+			CandidateResult testResult {
+				(searchResult.numerator / 2) + ((floatVal < 0) ? -rounder : rounder),
+				searchResult.denominator / 2
+			};
+
+			const double absoluteDiff = std::fabs(testResult.toDouble() - floatVal);
+
+			if (absoluteDiff <= maxDiff)
+			{
+				// This is allowed. Because we're testing progressively smaller fractions this is by definition the best
+				bestResult = testResult;
+			}
+
+			searchResult = testResult;
+		}
+	}
+
+	return FlonumCell::fromValue(world, bestResult.toDouble());
 }
 
 }
