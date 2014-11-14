@@ -551,7 +551,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
     }
   }
 
-  test("body expressions allowed in body context") {
+  test("top-level expressions allowed in top-level context") {
     val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 
     val exprs = bodyFor(
@@ -560,18 +560,39 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
              ((my-define ident value) (define ident value))
          ))
          (my-define a 2)"""
-    )(syntaxScope) 
+    )(syntaxScope)
 
     inside(syntaxScope.get("a").value) {
       case storageLoc : StorageLocation =>
         assert(exprs == List(
           et.TopLevelDefine(List(
-            (storageLoc, et.Literal(ast.IntegerLiteral(2))) 
+            (storageLoc, et.Literal(ast.IntegerLiteral(2)))
           ))
         ))
     }
   }
-  
+
+  test("body expressions allowed in body context") {
+    val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
+    val exprs = bodyFor(
+      """(define-syntax my-define
+           (syntax-rules ()
+             ((my-define ident value) (define ident value))
+         ))
+         (lambda ()
+          (my-define a 2))"""
+    )(syntaxScope)
+
+    inside(exprs) {
+      case List(et.Lambda(_, Nil, None,
+            et.InternalDefine(List(
+              (_, et.Literal(ast.IntegerLiteral(2)))
+            ), et.Begin(Nil)),
+          _)) =>
+    }
+  }
+
   test("non-restructuring repeating subpattern with replacement") {
     val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 

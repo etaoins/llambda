@@ -282,11 +282,22 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
   }
 
   private def parseDefineDatum(datum : sst.ScopedDatum) : Option[ParsedDefine] = datum match {
-    // Could this be define-y?
-    case sst.ScopedProperList((appliedSymbol : sst.ScopedSymbol) :: operands) =>
-      // Don't do a hard resolve here in case we're referencing something we haven't defined yet
-      appliedSymbol.resolveOpt flatMap { boundValue =>
-        parseDefine(boundValue, appliedSymbol, operands)
+    case sst.ScopedPair(appliedSymbol : sst.ScopedSymbol, cdr) =>
+      appliedSymbol.resolveOpt match {
+        case Some(syntax : BoundSyntax) =>
+          // This is a macro - expand it
+          val expandedDatum = ExpandMacro(syntax, cdr, datum, trace=frontendConfig.traceMacroExpansion)
+          parseDefineDatum(expandedDatum)
+
+        case Some(otherBoundValue) =>
+          cdr match {
+            case sst.ScopedProperList(operands) =>
+              parseDefine(otherBoundValue, appliedSymbol, operands)
+
+            case _ => None
+          }
+
+        case _ => None
       }
 
     case _ => None
