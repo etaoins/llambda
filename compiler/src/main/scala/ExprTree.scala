@@ -136,11 +136,7 @@ case class CaseLambda(
     vt.CaseProcedureType(clauses.map(_.schemeType))
 }
 
-sealed abstract trait BindingExpr extends Expr {
-  val bindings : List[(StorageLocation, Expr)]
-}
-
-case class TopLevelDefine(bindings : List[(StorageLocation, Expr)]) extends BindingExpr {
+case class TopLevelDefine(bindings : List[(StorageLocation, Expr)]) extends Expr {
   val subexprs = bindings.map(_._2)
 
   def map(f : Expr => Expr) : TopLevelDefine =
@@ -149,7 +145,7 @@ case class TopLevelDefine(bindings : List[(StorageLocation, Expr)]) extends Bind
     }).assignLocationFrom(this)
 }
 
-case class InternalDefine(bindings : List[(StorageLocation, Expr)], body : Expr) extends BindingExpr {
+case class InternalDefine(bindings : List[(StorageLocation, Expr)], body : Expr) extends Expr {
   val subexprs = body :: bindings.map(_._2)
 
   def map(f : Expr => Expr) : InternalDefine =
