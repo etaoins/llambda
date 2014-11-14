@@ -23,8 +23,8 @@ namespace
 	using AnyMapProcedureCell = TypedProcedureCell<AnyCell *, AnyCell *, ProperList<AnyCell> *>;
 	using AnyIteratorProcedureCell = TypedProcedureCell<void, AnyCell *, ProperList<AnyCell> *>;
 
-	using StringMapProcedureCell = TypedProcedureCell<UnicodeChar, UnicodeChar, ProperList<CharCell> *>;
-	using StringIteratorProcedureCell = TypedProcedureCell<UnicodeChar, UnicodeChar, ProperList<CharCell> *>;
+	using StringMapProcedureCell = TypedProcedureCell<UnicodeChar::CodePoint, UnicodeChar, ProperList<CharCell> *>;
+	using StringIteratorProcedureCell = TypedProcedureCell<UnicodeChar::CodePoint, UnicodeChar, ProperList<CharCell> *>;
 
 	/**
 	 * Variant of cell_cast that raises an error if the cast fails
