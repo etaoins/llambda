@@ -38,7 +38,7 @@ object Compiler {
   private def invokeDirectLlvmCompiler(irBytes : Array[Byte], output : File, optimizeLevel : Int) : Boolean = {
     val optimizeArg = s"-O${optimizeLevel}"
 
-    val llcCmd = List("llc", optimizeArg)
+    val llcCmd = List("llc", "-tailcallopt", optimizeArg)
     val clangCmd = List("clang++", optimizeArg) ++
       platformClangFlags ++
       List("-x", "assembler", "-") ++ 
@@ -46,7 +46,7 @@ object Compiler {
       List("-o", output.getAbsolutePath)
 
     val compilePipeline = if (optimizeLevel > 1) { 
-      val optCmd = List("opt", optimizeArg)
+      val optCmd = List("opt", "-tailcallopt", optimizeArg)
 
       optCmd #| llcCmd #| clangCmd
     }
