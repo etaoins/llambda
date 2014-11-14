@@ -97,7 +97,7 @@ namespace
 
 			// Reduce the fraction - count the trailing zeros so we know how many times we can divide the significand
 			// by 2. Limit the exponent to <= 0 so we don't create a fractional denominator.
-			const int shiftRightBy = std::min(-exponent, __builtin_ctzl(integerMantissa));
+			const int shiftRightBy = std::min(-exponent, __builtin_ctzll(integerMantissa));
 			integerMantissa = integerMantissa >> shiftRightBy;
 			exponent += shiftRightBy;
 
