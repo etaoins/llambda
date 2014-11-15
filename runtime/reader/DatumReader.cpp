@@ -8,7 +8,6 @@
 #include <string>
 #include <ctype.h>
 #include <iterator>
-#include <iostream>
 
 #include "binding/ExactIntegerCell.h"
 #include "binding/FlonumCell.h"
