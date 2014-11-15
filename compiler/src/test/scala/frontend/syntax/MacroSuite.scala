@@ -566,7 +566,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
       case storageLoc : StorageLocation =>
         assert(exprs == List(
           et.TopLevelDefine(List(
-            (storageLoc, et.Literal(ast.IntegerLiteral(2)))
+            et.SingleBinding(storageLoc, et.Literal(ast.IntegerLiteral(2)))
           ))
         ))
     }
@@ -587,7 +587,7 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
     inside(exprs) {
       case List(et.Lambda(_, Nil, None,
             et.InternalDefine(List(
-              (_, et.Literal(ast.IntegerLiteral(2)))
+              et.SingleBinding(_, et.Literal(ast.IntegerLiteral(2)))
             ), et.Begin(Nil)),
           _)) =>
     }

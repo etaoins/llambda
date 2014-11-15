@@ -316,3 +316,101 @@
     (let*-values: ((([a : <symbol>] [b : <string>]) (values x y))
                    (([x : <symbol>] [y : <symbol>]) (values a b)))
                   (list a b x y)))))
+
+(define-test "(define-values)" (expect-success
+  (define-values (x y) (exact-integer-sqrt 17))
+
+  (assert-equal x 4)
+  (assert-equal y 1)
+
+  (assert-equal 3
+                (let ()
+                  (define-values (x y) (values 1 2))
+                  (+ x y)))
+
+  (assert-equal 4
+                (let ()
+                  (define-values (x y . rest) (values 1 2 3 4 5 6))
+                  (define sum (length rest))
+                  sum))
+
+  ; This ensures (define-values) can both consume and produce recursive definitions
+  (define (test-recursive-defines val)
+    (define-values (times-four-proc times-six-proc)
+      (values
+        (lambda () (* 2 val-times-two))
+        (lambda () (* 2 val-times-three))))
+    (define-values (val-times-two val-times-three)
+      (values
+        (* 2 val)
+        (* 3 val)))
+
+    (+ (times-four-proc) (times-six-proc)))
+
+  (assert-equal -60 (test-recursive-defines -6))
+
+  (define-values (one two . rest) (values 1 2 3 4))
+  (assert-equal 1 one)
+  (assert-equal 2 two)
+  (assert-equal '(3 4) rest)))
+
+(define-test "mutating (define-values)" (expect-success
+  (define-values (one two) (values 1 2))
+
+  (set! two 3)
+
+  (assert-equal 1 one)
+  (assert-equal 3 two)
+
+  (assert-equal 5
+                (let ()
+                  (define-values (x y) (values 1 2))
+                  (set! y 4)
+                  (+ x y)))))
+
+(define-test "(define-values:)" (expect-success
+  (import (llambda typed))
+  (define-values: ([x : <number>] [y : <exact-integer>]) (exact-integer-sqrt 17))
+
+  (assert-equal x 4)
+  (assert-equal y 1)))
+
+(define-test "(define-values:) with static mismatched fixed type fails" (expect-compile-failure
+  (import (llambda typed))
+  (define-values: ([x : <symbol>] [y : <exact-integer>]) (exact-integer-sqrt 17))))
+
+(define-test "(define-values:) with static mismatched rest type fails" (expect-compile-failure
+  (import (llambda typed))
+  (define-values: ([x : <any>] [y : <any>] r : <string> *) (values 1 2 #t))))
+
+(define-test "(define-values:) with static insufficient values" (expect-compile-failure
+  (import (llambda typed))
+  (define-values: ([x : <exact-integer>] [y : <exact-integer>] [x : <exact-integer>]) (exact-integer-sqrt 17))))
+
+(define-test "(define-values:) with static too many values" (expect-compile-failure
+  (import (llambda typed))
+  (define-values: ([x : <exact-integer>]) (exact-integer-sqrt 17))))
+
+(define-test "(define-values:) with dynamic mismatched fixed type fails" (expect-runtime-failure
+  (import (llambda typed))
+
+  (define returns-two (typeless-cell (lambda () (values 1 2))))
+  (define-values: ([x : <symbol>] [y : <exact-integer>]) (returns-two))))
+
+(define-test "(define-values:) with dynamic mismatched rest type fails" (expect-runtime-failure
+  (import (llambda typed))
+
+  (define returns-three (typeless-cell (lambda () (values 1 2 #t))))
+  (define-values: ([x : <any>] [y : <any>] r : <string> *) (returns-three))))
+
+(define-test "(define-values:) with dynamic insufficient values" (expect-runtime-failure
+  (import (llambda typed))
+
+  (define returns-two (typeless-cell (lambda () (values 1 2))))
+  (define-values: ([x : <exact-integer>] [y : <exact-integer>] [x : <exact-integer>]) (returns-two))))
+
+(define-test "(define-values:) with dynamic too many values" (expect-runtime-failure
+  (import (llambda typed))
+
+  (define returns-two (typeless-cell (lambda () (values 1 2))))
+  (define-values: ([x : <exact-integer>]) (returns-two))))

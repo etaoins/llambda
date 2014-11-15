@@ -15,6 +15,17 @@ case class ParsedVarDefine(
     storageLocConstructor : (String, vt.SchemeType) => StorageLocation = (new StorageLocation(_, _))
 ) extends ParsedDefine
 
+case class ValueTarget(
+    definedSymbol : sst.ScopedSymbol,
+    providedType : Option[vt.SchemeType]
+)
+
+case class ParsedMultipleValueDefine(
+    fixedValueTargets : List[ValueTarget],
+    restValueTargetOpt : Option[ValueTarget],
+    expr : () => et.Expr
+) extends ParsedDefine
+
 case class ParsedSimpleDefine(definedSymbol : sst.ScopedSymbol, value : BoundValue) extends ParsedDefine
 case class ParsedRecordTypeDefine(typeSymbol : sst.ScopedSymbol, recordType : vt.RecordType, procedures : Map[sst.ScopedSymbol, et.ArtificialProcedure]) extends ParsedDefine
 

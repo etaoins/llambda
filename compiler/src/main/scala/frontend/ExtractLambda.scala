@@ -16,55 +16,16 @@ object ExtractLambda {
       sourceNameHint : Option[String] = None,
       typeDeclaration : vt.SchemeType = vt.AnySchemeType
   )(debugContext : debug.SourceContext, libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : et.Lambda = {
-    // Parse our operand list in to its basic parts
-    val (fixedArgData, restArgNameOpt, restArgMemberType) = 
-      (operandList.reverse, operandTerminator) match {
-        // This looks for a terminal rest arg in the form: name : <type> *
-        case (
-            sst.ScopedSymbol(_, "*") ::
-            (restArgType : sst.ScopedSymbol) ::
-            (typeColon @ sst.ScopedSymbol(_, ":")) ::
-            (restArgName : sst.ScopedSymbol) :: 
-            reverseFixedArgs
-        , sst.NonSymbolLeaf(ast.EmptyList())) if typed =>
-          // This is a typed rest argument 
-          (reverseFixedArgs.reverse, Some(restArgName), ExtractType.extractNonEmptySchemeType(restArgType))
+    // Parse our operand list
+    val parsedFormals = ParseFormals(typed, operandList, operandTerminator)
 
-        case (_, restArgSymbol : sst.ScopedSymbol) =>
-          // This has an untyped rest argument
-          (operandList, Some(restArgSymbol), vt.AnySchemeType)
-        
-        case (_, sst.NonSymbolLeaf(ast.EmptyList())) =>
-          // This has no rest argument
-          (operandList, None, vt.AnySchemeType)
-        
-        case (_, datum) =>
-          throw new BadSpecialFormException(datum, "Rest argument expected")
-      }
-
-    // Find the types in our signature
-    val signatureFixedArgTypes = if (typed) {
-      fixedArgData.map {
-        case sst.ScopedProperList(List(scopedSymbol : sst.ScopedSymbol, sst.ScopedSymbol(_, ":"), typeDatum)) =>
-          scopedSymbol -> ExtractType.extractNonEmptySchemeType(typeDatum)
-
-        case other =>
-          throw new BadSpecialFormException(other, "Expected (symbol : <type>)")
-      }
-    }
-    else {
-      fixedArgData.map {
-        case scopedSymbol : sst.ScopedSymbol =>
-          scopedSymbol -> vt.AnySchemeType
-
-        case datum => 
-          throw new BadSpecialFormException(datum, "Symbol expected")
-      }
+    val signatureFixedArgTypes = parsedFormals.fixedOperands map { case (symbol, typeOpt) =>
+      symbol -> typeOpt.getOrElse(vt.AnySchemeType)
     }
 
-    val signatureRestArgMemberTypeOpt = restArgNameOpt map { restArgName =>
-      restArgName -> restArgMemberType
-    } : Option[(sst.ScopedSymbol, vt.SchemeType)]
+    val signatureRestArgMemberTypeOpt = parsedFormals.restOperandOpt map { case (symbol, typeOpt) =>
+      symbol -> typeOpt.getOrElse(vt.AnySchemeType)
+    }
 
     // Process our type declaration
     val (fixedArgTypes, restArgMemberTypeOpt, returnType) = typeDeclaration match {

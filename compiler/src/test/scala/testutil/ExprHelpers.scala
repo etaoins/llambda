@@ -59,7 +59,8 @@ trait ExprHelpers extends FunSuite with OptionValues {
 
   def assertExprLocated(expr : et.Expr) {
     expr match {
-      case et.TopLevelDefine(List((reportProc : ReportProcedure, _))) if reportProc.reportName == "features" =>
+      case et.TopLevelDefine(List(et.SingleBinding(reportProc : ReportProcedure, _)))
+          if reportProc.reportName == "features" =>
         // This is an artificial procedure - don't check subexpressions
         return
 

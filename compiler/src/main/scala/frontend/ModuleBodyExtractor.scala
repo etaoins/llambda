@@ -9,7 +9,11 @@ import llambda.compiler.frontend.syntax.{ParseSyntaxDefine, ExpandMacro}
 import collection.mutable.ListBuffer
 
 final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) {
-  private def declaredSymbolType(symbol : sst.ScopedSymbol, providedTypeOpt : Option[vt.SchemeType] = None) : vt.SchemeType = {
+  private def declaredSymbolType(
+      symbol : sst.ScopedSymbol,
+      providedTypeOpt : Option[vt.SchemeType] = None,
+      defaultType : vt.SchemeType = vt.AnySchemeType
+  ) : vt.SchemeType = {
     symbol.scope.typeDeclarations.get(symbol) match {
       case Some(declaredType) =>
         // Does the declared type match the provided type exactly?
@@ -24,9 +28,20 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
 
       case None =>
         // No type declaration
-        providedTypeOpt.getOrElse(vt.AnySchemeType)
+        providedTypeOpt.getOrElse(defaultType)
     }
   }
+
+  private def valueTargetToLoc(valueTarget : ValueTarget, defaultType : vt.SchemeType) : StorageLocation =
+    valueTarget match {
+      case ValueTarget(symbol, providedTypeOpt) =>
+        val schemeType = declaredSymbolType(symbol, providedTypeOpt, defaultType)
+        val boundValue = new StorageLocation(symbol.name, schemeType)
+
+        symbol.scope += (symbol.name -> boundValue)
+
+        boundValue
+    }
 
   private[frontend] def extractBodyDefinition(arguments : List[(sst.ScopedSymbol, BoundValue)], definition : List[sst.ScopedDatum]) : et.Expr = {
     // Find all the scopes in the definition
@@ -78,12 +93,22 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
     // Expand our scopes with all of the defines
     val bindingBlocks = defineBuilder.toList flatMap {
       case ParsedVarDefine(symbol, providedTypeOpt, exprBlock, storageLocConstructor) =>
-        val schemeType = declaredSymbolType(symbol, providedTypeOpt) 
+        val schemeType = declaredSymbolType(symbol, providedTypeOpt)
         val boundValue = storageLocConstructor(symbol.name, schemeType)
 
         symbol.scope += (symbol.name -> boundValue)
 
-        (boundValue, exprBlock) :: Nil
+        List(
+          { () => et.SingleBinding(boundValue, exprBlock()) }
+        )
+      case ParsedMultipleValueDefine(fixedValueTargets, restValueTargetOpt, exprBlock) =>
+        val fixedLocs = fixedValueTargets.map(valueTargetToLoc(_, vt.AnySchemeType))
+        val restLocOpt = restValueTargetOpt.map(valueTargetToLoc(_, vt.UniformProperListType(vt.AnySchemeType)))
+
+        List(
+          { () => et.MultipleValueBinding(fixedLocs, restLocOpt, exprBlock()) }
+        )
+
       case ParsedSimpleDefine(symbol, boundValue) =>
         symbol.scope += (symbol.name -> boundValue)
         Nil
@@ -95,16 +120,15 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
           val storageLoc = new StorageLocation(procedureSymbol.name, schemeType)
 
           procedureSymbol.scope += (procedureSymbol.name -> storageLoc)
-          (storageLoc, () => expr) 
+
+          { () => et.SingleBinding(storageLoc, expr) }
         }
       case ParsedTypeAnnotation =>
         Nil
-    }
+    } : List[() => et.Binding]
 
     // Execute the expression blocks now that the scopes are prepared
-    val bindings = bindingBlocks map {
-      case (boundValue, exprBlock) => (boundValue -> exprBlock())
-    } : List[(StorageLocation, et.Expr)]
+    val bindings = bindingBlocks.map(_.apply)
 
     // Find the expressions in our body 
     val bodyExpr = et.Expr.fromSequence(
@@ -309,7 +333,7 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
         Some(ParsedVarDefine(symbol, None, () => {
           extractExpr(value)
         }))
-      
+
       case (Primitives.TypedDefine, List(symbol : sst.ScopedSymbol, sst.ScopedSymbol(_, ":"), typeDatum, value)) =>
         val providedType = ExtractType.extractStableType(typeDatum)(frontendConfig)
 
@@ -342,6 +366,12 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
             typeDeclaration=declaredSymbolType(symbol)
           )(debugContext, libraryLoader, frontendConfig).assignLocationAndContextFrom(appliedSymbol, debugContext)
         }))
+
+      case (Primitives.DefineValues, List(sst.ScopedListOrDatum(operands, operandTerminator), initialiser)) =>
+        Some(parseMultipleValueDefine(false, operands, operandTerminator, initialiser))
+
+      case (Primitives.TypedDefineValues, List(sst.ScopedAnyList(operands, operandTerminator), initialiser)) =>
+        Some(parseMultipleValueDefine(true, operands, operandTerminator, initialiser))
 
       case (Primitives.DefineSyntax, _) =>
         Some(ParseSyntaxDefine(appliedSymbol, operands, debugContext))
@@ -407,7 +437,30 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
         Some(ParsedTypeAnnotation)
 
       case _ => None
-  } 
+  }
+
+  def parseMultipleValueDefine(
+      typed : Boolean,
+      operandList : List[sst.ScopedDatum],
+      operandTerminator : sst.ScopedDatum,
+      initialiserDatum : sst.ScopedDatum
+  ) : ParsedMultipleValueDefine = {
+    val parsedFormals = ParseFormals(typed, operandList, operandTerminator)
+
+    val fixedValueTargets = parsedFormals.fixedOperands map { case (symbol, schemeTypeOpt) =>
+      ValueTarget(symbol, schemeTypeOpt)
+    }
+
+    val restValueTargetOpt = parsedFormals.restOperandOpt map { case (symbol, memberTypeOpt) =>
+      ValueTarget(symbol, memberTypeOpt.map(vt.UniformProperListType(_)))
+    }
+
+    ParsedMultipleValueDefine(
+      fixedValueTargets=fixedValueTargets,
+      restValueTargetOpt=restValueTargetOpt,
+      expr=() => {extractExpr(initialiserDatum) }
+    )
+  }
 
   private def disallowTopLevelRedefinition(symbol : sst.ScopedSymbol) {
     if (!frontendConfig.schemeDialect.allowTopLevelRedefinition && symbol.resolveOpt.isDefined) {
@@ -441,8 +494,21 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
             val boundValue = storageLocConstructor(symbol.name, schemeType)
 
             symbol.scope += (symbol.name -> boundValue)
-            et.TopLevelDefine(List(boundValue -> exprBlock()))
+            et.TopLevelDefine(List(et.SingleBinding(boundValue, exprBlock())))
         }
+
+      case Some(ParsedMultipleValueDefine(fixedValueTargets, restValueTargetOpt, exprBlock)) =>
+        // Don't support re-defining top-level values with (define-values) in any dialect
+        for (symbol <- (fixedValueTargets ++ restValueTargetOpt).map(_.definedSymbol)) {
+          if (symbol.resolveOpt.isDefined) {
+            throw new DuplicateDefinitionException(symbol)
+          }
+        }
+
+        val fixedLocs = fixedValueTargets.map(valueTargetToLoc(_, vt.AnySchemeType))
+        val restLocOpt = restValueTargetOpt.map(valueTargetToLoc(_, vt.UniformProperListType(vt.AnySchemeType)))
+
+        et.TopLevelDefine(List(et.MultipleValueBinding(fixedLocs, restLocOpt, exprBlock())))
 
       case Some(ParsedSimpleDefine(symbol, boundValue)) =>
         disallowTopLevelRedefinition(symbol)
@@ -461,7 +527,8 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
           disallowTopLevelRedefinition(procedureSymbol)
 
           procedureSymbol.scope += (procedureSymbol.name -> storageLoc)
-          (storageLoc, expr) 
+
+          et.SingleBinding(storageLoc, expr)
         }).toList)
       
       case Some(ParsedTypeAnnotation) =>

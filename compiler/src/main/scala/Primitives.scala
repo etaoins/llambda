@@ -14,6 +14,7 @@ object Primitives {
   object Unquote extends PrimitiveExpr
   object UnquoteSplicing extends PrimitiveExpr
   object Define extends PrimitiveExpr
+  object DefineValues extends PrimitiveExpr
   object DefineSyntax extends PrimitiveExpr
   object DefineRecordType extends PrimitiveExpr
   object DefineType extends PrimitiveExpr
@@ -26,6 +27,7 @@ object Primitives {
   object CondExpand extends PrimitiveExpr
   object Parameterize extends PrimitiveExpr
   object TypedDefine extends PrimitiveExpr
+  object TypedDefineValues extends PrimitiveExpr
   object TypedDefineRecordType extends PrimitiveExpr
   object TypedLambda extends PrimitiveExpr
   object TypedCaseLambda extends PrimitiveExpr
@@ -58,6 +60,7 @@ object Primitives {
       "unquote" -> Unquote,
       "unquote-splicing" -> UnquoteSplicing,
       "define" -> Define,
+      "define-values" -> DefineValues,
       "define-syntax" -> DefineSyntax,
       "define-record-type" -> DefineRecordType,
       "define-type" -> DefineType,
@@ -70,6 +73,7 @@ object Primitives {
       "cond-expand" -> CondExpand,
       "parameterize" -> Parameterize,
       "define:" -> TypedDefine,
+      "define-values:" -> TypedDefineValues,
       "define-record-type:" -> TypedDefineRecordType,
       "lambda:" -> TypedLambda,
       "case-lambda:" -> TypedCaseLambda,

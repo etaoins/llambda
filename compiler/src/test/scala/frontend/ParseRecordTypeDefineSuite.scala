@@ -67,9 +67,9 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
 
         inside(exprs) {
           case et.TopLevelDefine(bindings) :: Nil =>
-            assert(bindings.toSet === Set( 
-              (consLoc -> et.RecordConstructor(recordType, Nil)),
-              (predLoc -> et.TypePredicate(recordType))
+            assert(bindings.toSet === Set(
+              et.SingleBinding(consLoc, et.RecordConstructor(recordType, Nil)),
+              et.SingleBinding(predLoc, et.TypePredicate(recordType))
             ))
         }
     }
@@ -97,10 +97,10 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
 
         inside(exprs) {
           case et.TopLevelDefine(bindings) :: Nil =>
-            assert(bindings.toSet === Set( 
-              (consLoc -> et.RecordConstructor(recordType, List(constDatumField))),
-              (predLoc -> et.TypePredicate(recordType)),
-              (constDatumAccessorLoc -> et.RecordAccessor(recordType, constDatumField))
+            assert(bindings.toSet === Set(
+              et.SingleBinding(consLoc, et.RecordConstructor(recordType, List(constDatumField))),
+              et.SingleBinding(predLoc, et.TypePredicate(recordType)),
+              et.SingleBinding(constDatumAccessorLoc, et.RecordAccessor(recordType, constDatumField))
             ))
         }
     }
@@ -138,10 +138,10 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
 
         inside(exprs) {
           case et.TopLevelDefine(bindings) :: Nil =>
-            assert(bindings.toSet === Set( 
-              (consLoc -> et.RecordConstructor(recordType, List(constIntField))),
-              (predLoc -> et.TypePredicate(recordType)),
-              (constIntAccessorLoc -> et.RecordAccessor(recordType, constIntField))
+            assert(bindings.toSet === Set(
+              et.SingleBinding(consLoc, et.RecordConstructor(recordType, List(constIntField))),
+              et.SingleBinding(predLoc, et.TypePredicate(recordType)),
+              et.SingleBinding(constIntAccessorLoc, et.RecordAccessor(recordType, constIntField))
             ))
         }
     }
@@ -187,11 +187,11 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         inside(exprs) {
           case et.TopLevelDefine(bindings) :: Nil =>
             assert(bindings.toSet === Set(
-              (consLoc -> et.RecordConstructor(recordType, List(mutableIntField, constDatumField))),
-              (predLoc -> et.TypePredicate(recordType)),
-              (constAccessorLoc -> et.RecordAccessor(recordType, constDatumField)),
-              (mutableAccessorLoc -> et.RecordAccessor(recordType, mutableIntField)),
-              (mutableMutatorLoc -> et.RecordMutator(recordType, mutableIntField))
+              et.SingleBinding(consLoc, et.RecordConstructor(recordType, List(mutableIntField, constDatumField))),
+              et.SingleBinding(predLoc, et.TypePredicate(recordType)),
+              et.SingleBinding(constAccessorLoc, et.RecordAccessor(recordType, constDatumField)),
+              et.SingleBinding(mutableAccessorLoc, et.RecordAccessor(recordType, mutableIntField)),
+              et.SingleBinding(mutableMutatorLoc, et.RecordMutator(recordType, mutableIntField))
             ))
         }
     }
@@ -214,9 +214,9 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
 
         inside(innerExprs) {
           case et.TopLevelDefine(bindings) :: Nil =>
-            assert(bindings.toSet === Set( 
-              (innerConsLoc -> et.RecordConstructor(innerType, List())),
-              (innerPredLoc -> et.TypePredicate(innerType))
+            assert(bindings.toSet === Set(
+              et.SingleBinding(innerConsLoc, et.RecordConstructor(innerType, List())),
+              et.SingleBinding(innerPredLoc, et.TypePredicate(innerType))
             ))
         }
     
@@ -236,10 +236,10 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
 
             inside(outerExprs) {
               case et.TopLevelDefine(bindings) :: Nil =>
-                assert(bindings.toSet === Set( 
-                  (outerConsLoc -> et.RecordConstructor(outerType, List(innerField))),
-                  (outerPredLoc -> et.TypePredicate(outerType)),
-                  (innerFieldAccessorLoc -> et.RecordAccessor(outerType, innerField))
+                assert(bindings.toSet === Set(
+                  et.SingleBinding(outerConsLoc, et.RecordConstructor(outerType, List(innerField))),
+                  et.SingleBinding(outerPredLoc, et.TypePredicate(outerType)),
+                  et.SingleBinding(innerFieldAccessorLoc, et.RecordAccessor(outerType, innerField))
                 ))
             }
         }

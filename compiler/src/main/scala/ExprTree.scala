@@ -136,22 +136,43 @@ case class CaseLambda(
     vt.CaseProcedureType(clauses.map(_.schemeType))
 }
 
-case class TopLevelDefine(bindings : List[(StorageLocation, Expr)]) extends Expr {
-  val subexprs = bindings.map(_._2)
+sealed abstract class Binding {
+  def storageLocs : List[StorageLocation]
+  def initialiser : Expr
 
-  def map(f : Expr => Expr) : TopLevelDefine =
-    TopLevelDefine(bindings.map { case (storageLoc, expr) =>
-      (storageLoc, f(expr))
-    }).assignLocationFrom(this)
+  def map(f : Expr => Expr) : Binding
 }
 
-case class InternalDefine(bindings : List[(StorageLocation, Expr)], body : Expr) extends Expr {
-  val subexprs = body :: bindings.map(_._2)
+case class SingleBinding(storageLoc : StorageLocation, initialiser : Expr) extends Binding {
+  def storageLocs = List(storageLoc)
+
+  def map(f : Expr => Expr) =
+    SingleBinding(storageLoc, f(initialiser))
+}
+
+case class MultipleValueBinding(
+    fixedLocs : List[StorageLocation],
+    restLocOpt : Option[StorageLocation],
+    initialiser : Expr
+) extends Binding {
+  def storageLocs = fixedLocs ++ restLocOpt.toList
+
+  def map(f : Expr => Expr) =
+    MultipleValueBinding(fixedLocs, restLocOpt, f(initialiser))
+}
+
+case class TopLevelDefine(bindings : List[Binding]) extends Expr {
+  val subexprs = bindings.map(_.initialiser)
+
+  def map(f : Expr => Expr) : TopLevelDefine =
+    TopLevelDefine(bindings.map(_.map(f))).assignLocationFrom(this)
+}
+
+case class InternalDefine(bindings : List[Binding], body : Expr) extends Expr {
+  val subexprs = body :: bindings.map(_.initialiser)
 
   def map(f : Expr => Expr) : InternalDefine =
-    InternalDefine(bindings.map { case (storageLoc, expr) =>
-      (storageLoc, f(expr))
-    }, f(body)).assignLocationFrom(this)
+    InternalDefine(bindings.map(_.map(f)), f(body)).assignLocationFrom(this)
 }
 
 case class NativeFunction(

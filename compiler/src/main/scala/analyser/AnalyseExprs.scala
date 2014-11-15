@@ -48,8 +48,14 @@ object AnalyseExprs  {
   private def handleTopLevelExpr(expr : et.Expr, acc : AnalysedExprs) : AnalysedExprs = expr match {
     case et.TopLevelDefine(bindings) =>
       // Filter out the bindings that are unused
-      val usedBindings = bindings.filter { case (storageLoc, initialiser) =>
-        TopLevelDefineRequired(storageLoc, initialiser, acc)
+      val usedBindings = bindings.filter {
+        case et.SingleBinding(storageLoc, initialiser) =>
+          TopLevelDefineRequired(storageLoc, initialiser, acc)
+
+        case _ : et.MultipleValueBinding =>
+          // We don't have enough information in the expression tree to determine if the initialiser will provide
+          // enough values to satisfy the value target list
+          true
       }
 
       if (usedBindings.isEmpty) {
@@ -68,21 +74,26 @@ object AnalyseExprs  {
 
         // Deal with our initialisers
         // Use foldRight because our exprs are being processed in reverse order
-        usedBindings.foldRight(accWithOnlyUsedDefine) { case ((storageLoc, initialiser), previousAcc) =>
-          val accWithBinding = if (previousAcc.mutableVars.contains(storageLoc)) {
-            // Don't record the initialisers for mutable top-level bindings
-            // They provide no actionable information on the value of the storage location
-            previousAcc
-          }
-          else {
-            // Record our initialiser
-            previousAcc.copy(
-              constantTopLevelBindings=(storageLoc -> initialiser) :: previousAcc.constantTopLevelBindings
-            )
-          }
-          
-          // Recurse down our initialiser
-          handleNestedExpr(initialiser, accWithBinding)
+        usedBindings.foldRight(accWithOnlyUsedDefine) {
+          case (et.SingleBinding(storageLoc, initialiser), previousAcc) =>
+            val accWithBinding = if (previousAcc.mutableVars.contains(storageLoc)) {
+              // Don't record the initialisers for mutable top-level bindings
+              // They provide no actionable information on the value of the storage location
+              previousAcc
+            }
+            else {
+              // Record our initialiser
+              previousAcc.copy(
+                constantTopLevelBindings=(storageLoc -> initialiser) :: previousAcc.constantTopLevelBindings
+              )
+            }
+
+            // Recurse down our initialiser
+            handleNestedExpr(initialiser, accWithBinding)
+
+          case (et.MultipleValueBinding(_, _, initialiser), previousAcc) =>
+            // We don't record any initialiser information for multiple value bindings
+            handleNestedExpr(initialiser, previousAcc)
         }
       }
 

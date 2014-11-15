@@ -67,8 +67,13 @@ private[planner] object RetypeLambdaArgs {
       attributeTypeToExpr(valueExpr, mutateLoc.schemeType, argTypes)
 
     case et.InternalDefine(bindings, bodyExpr) =>
-      val postBindArgTypes = bindings.foldLeft(argTypes) { case (currentArgTypes, (bindLoc, bindExpr)) =>
-        attributeTypeToExpr(bindExpr, bindLoc.schemeType, currentArgTypes)
+      val postBindArgTypes = bindings.foldLeft(argTypes) {
+        case (currentArgTypes, et.SingleBinding(bindLoc, bindExpr)) =>
+          attributeTypeToExpr(bindExpr, bindLoc.schemeType, currentArgTypes)
+
+        case (currentArgTypes, _ : et.MultipleValueBinding) =>
+          // We don't support annotating multiple values
+          currentArgTypes
       }
 
       collectTypeEvidence(bodyExpr, postBindArgTypes)

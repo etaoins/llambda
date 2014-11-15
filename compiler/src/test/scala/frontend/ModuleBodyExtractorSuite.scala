@@ -154,7 +154,7 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
     inside(scope.get("a").value) {
       case storageLoc : StorageLocation =>
         assert(expressions === List(
-          et.TopLevelDefine(List(storageLoc -> et.Literal(ast.IntegerLiteral(2))))
+          et.TopLevelDefine(List(et.SingleBinding(storageLoc, et.Literal(ast.IntegerLiteral(2)))))
         ))
 
         // Make sure we preserved our source name for debugging purposes
@@ -162,7 +162,176 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
         assert(storageLoc.schemeType == vt.AnySchemeType)
     }
   }
-  
+
+  test("define untyped fixed-only multiple values") {
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val expressions = bodyFor("(define-values (x y) 2)")(scope)
+
+    val storageLocX = scope.get("x").value match {
+      case storageLoc : StorageLocation => storageLoc
+      case _ => fail("Unexpected bound value")
+    }
+
+    val storageLocY = scope.get("y").value match {
+      case storageLoc : StorageLocation => storageLoc
+      case _ => fail("Unexpected bound value")
+    }
+
+    assert(storageLocX.sourceName === "x")
+    assert(storageLocX.schemeType === vt.AnySchemeType)
+
+    assert(storageLocY.sourceName === "y")
+    assert(storageLocY.schemeType === vt.AnySchemeType)
+
+    assert(expressions === List(
+      et.TopLevelDefine(List(
+        et.MultipleValueBinding(List(storageLocX, storageLocY), None, et.Literal(ast.IntegerLiteral(2)))
+      ))
+    ))
+  }
+
+  test("define untyped rest-only multiple values") {
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val expressions = bodyFor("(define-values r 2)")(scope)
+
+    val storageLocR = scope.get("r").value match {
+      case storageLoc : StorageLocation => storageLoc
+      case _ => fail("Unexpected bound value")
+    }
+
+    assert(storageLocR.sourceName === "r")
+    assert(storageLocR.schemeType === vt.UniformProperListType(vt.AnySchemeType))
+
+    assert(expressions === List(
+      et.TopLevelDefine(List(
+        et.MultipleValueBinding(Nil, Some(storageLocR), et.Literal(ast.IntegerLiteral(2)))
+      ))
+    ))
+  }
+
+
+  test("define annotated fixed and rest multiple values") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+    val expressions = bodyFor("""
+      (: x <string>)
+      (define-values (x y . r) 2)
+    """)(scope)
+
+    val storageLocX = scope.get("x").value match {
+      case storageLoc : StorageLocation => storageLoc
+      case _ => fail("Unexpected bound value")
+    }
+
+    val storageLocY = scope.get("y").value match {
+      case storageLoc : StorageLocation => storageLoc
+      case _ => fail("Unexpected bound value")
+    }
+
+    val storageLocR = scope.get("r").value match {
+      case storageLoc : StorageLocation => storageLoc
+      case _ => fail("Unexpected bound value")
+    }
+
+    assert(storageLocX.sourceName === "x")
+    assert(storageLocX.schemeType === vt.StringType)
+
+    assert(storageLocY.sourceName === "y")
+    assert(storageLocY.schemeType === vt.AnySchemeType)
+
+    assert(storageLocR.sourceName === "r")
+    assert(storageLocR.schemeType === vt.UniformProperListType(vt.AnySchemeType))
+
+    assert(expressions === List(
+      et.TopLevelDefine(List(
+        et.MultipleValueBinding(List(storageLocX, storageLocY), Some(storageLocR), et.Literal(ast.IntegerLiteral(2)))
+      ))
+    ))
+  }
+
+  test("define typed fixed-only multiple values") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+    val expressions = bodyFor("(define-values: ([x : <string>] [y : <symbol>]) 2)")(scope)
+
+    val storageLocX = scope.get("x").value match {
+      case storageLoc : StorageLocation => storageLoc
+      case _ => fail("Unexpected bound value")
+    }
+
+    val storageLocY = scope.get("y").value match {
+      case storageLoc : StorageLocation => storageLoc
+      case _ => fail("Unexpected bound value")
+    }
+
+    assert(storageLocX.sourceName === "x")
+    assert(storageLocX.schemeType === vt.StringType)
+
+    assert(storageLocY.sourceName === "y")
+    assert(storageLocY.schemeType === vt.SymbolType)
+
+    assert(expressions === List(
+      et.TopLevelDefine(List(
+        et.MultipleValueBinding(List(storageLocX, storageLocY), None, et.Literal(ast.IntegerLiteral(2)))
+      ))
+    ))
+  }
+
+  test("define typed rest-only multiple values") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+    val expressions = bodyFor("(define-values: (r : <port> *) 2)")(scope)
+
+    val storageLocR = scope.get("r").value match {
+      case storageLoc : StorageLocation => storageLoc
+      case _ => fail("Unexpected bound value")
+    }
+
+    assert(storageLocR.sourceName === "r")
+    assert(storageLocR.schemeType === vt.UniformProperListType(vt.PortType))
+
+    assert(expressions === List(
+      et.TopLevelDefine(List(
+        et.MultipleValueBinding(Nil, Some(storageLocR), et.Literal(ast.IntegerLiteral(2)))
+      ))
+    ))
+  }
+
+  test("define typed fixed and rest multiple values") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+    val expressions = bodyFor("""
+      (: r (Listof <exact-integer>))
+      (define-values: ([x : <string>] [y : <symbol>] r : <exact-integer> *) 2)
+    """)(scope)
+
+    val storageLocX = scope.get("x").value match {
+      case storageLoc : StorageLocation => storageLoc
+      case _ => fail("Unexpected bound value")
+    }
+
+    val storageLocY = scope.get("y").value match {
+      case storageLoc : StorageLocation => storageLoc
+      case _ => fail("Unexpected bound value")
+    }
+
+    val storageLocR = scope.get("r").value match {
+      case storageLoc : StorageLocation => storageLoc
+      case _ => fail("Unexpected bound value")
+    }
+
+    assert(storageLocX.sourceName === "x")
+    assert(storageLocX.schemeType === vt.StringType)
+
+    assert(storageLocY.sourceName === "y")
+    assert(storageLocY.schemeType === vt.SymbolType)
+
+    assert(storageLocR.sourceName === "r")
+    assert(storageLocR.schemeType === vt.UniformProperListType(vt.ExactIntegerType))
+
+    assert(expressions === List(
+      et.TopLevelDefine(List(
+        et.MultipleValueBinding(List(storageLocX, storageLocY), Some(storageLocR), et.Literal(ast.IntegerLiteral(2)))
+      ))
+    ))
+  }
+
   test("define typed variable") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
     val expressions = bodyFor("(define: a : <exact-integer> 2)")(scope)
@@ -170,7 +339,7 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
     inside(scope.get("a").value) {
       case storageLoc : StorageLocation =>
         assert(expressions === List(
-          et.TopLevelDefine(List(storageLoc -> et.Literal(ast.IntegerLiteral(2))))
+          et.TopLevelDefine(List(et.SingleBinding(storageLoc, et.Literal(ast.IntegerLiteral(2)))))
         ))
 
         // Make sure we preserved our source name for debugging purposes
@@ -197,7 +366,7 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
     inside(scope.get("a").value) {
       case storageLoc : StorageLocation =>
         assert(expressions === List(
-          et.TopLevelDefine(List(storageLoc -> et.Literal(ast.IntegerLiteral(2))))
+          et.TopLevelDefine(List(et.SingleBinding(storageLoc, et.Literal(ast.IntegerLiteral(2)))))
         ))
 
         assert(storageLoc.schemeType === vt.ExactIntegerType)
@@ -214,7 +383,7 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
     inside(scope.get("a").value) {
       case storageLoc : StorageLocation =>
         assert(expressions === List(
-          et.TopLevelDefine(List(storageLoc -> et.Literal(ast.IntegerLiteral(2))))
+          et.TopLevelDefine(List(et.SingleBinding(storageLoc, et.Literal(ast.IntegerLiteral(2)))))
         ))
 
         assert(storageLoc.schemeType === vt.ExactIntegerType)
@@ -256,7 +425,7 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
     inside(scope.get("a").value) {
       case storageLoc : StorageLocation =>
         assert(expressions === List(
-          et.TopLevelDefine(List(storageLoc -> et.Literal(ast.IntegerLiteral(2)))),
+          et.TopLevelDefine(List(et.SingleBinding(storageLoc, et.Literal(ast.IntegerLiteral(2))))),
           et.MutateVar(storageLoc, et.Literal(ast.IntegerLiteral(3)))
         ))
     }
@@ -269,6 +438,14 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
       bodyFor("(define a 2)(define a 3)")(scope, dialect.Llambda)
     }
   }
+
+  test("redefine variable using (define-values) fails") {
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
+    intercept[DuplicateDefinitionException] {
+      bodyFor("(define a 2)(define-values (a c) (values 1 3))")(scope)
+    }
+  }
   
   test("dependent define") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
@@ -277,8 +454,8 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
     inside((scope.get("a").value, scope.get("b").value)) {
       case (storageLocA : StorageLocation, storageLocB : StorageLocation) =>
         assert(expressions === List(
-          et.TopLevelDefine(List(storageLocA -> et.Literal(ast.IntegerLiteral(2)))),
-          et.TopLevelDefine(List(storageLocB -> et.VarRef(storageLocA)))
+          et.TopLevelDefine(List(et.SingleBinding(storageLocA, et.Literal(ast.IntegerLiteral(2))))),
+          et.TopLevelDefine(List(et.SingleBinding(storageLocB, et.VarRef(storageLocA))))
         ))
     }
   }
@@ -290,7 +467,7 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
     inside(scope.get("a").value) {
       case storageLoc : StorageLocation =>
         assert(expressions === List(
-          et.TopLevelDefine(List(storageLoc -> et.Literal(ast.IntegerLiteral(2)))),
+          et.TopLevelDefine(List(et.SingleBinding(storageLoc, et.Literal(ast.IntegerLiteral(2))))),
           et.VarRef(storageLoc)
         ))
     }
@@ -301,7 +478,7 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
 
     val expressions = bodyFor("(define x 1)(lambda (x) x)")(scope)
     inside(expressions) {
-      case List(et.TopLevelDefine(List((shadowed, _))), et.Lambda(_, List(argX), None, et.VarRef(inner), _)) =>
+      case List(et.TopLevelDefine(List(et.SingleBinding(shadowed, _))), et.Lambda(_, List(argX), None, et.VarRef(inner), _)) =>
         assert(inner != shadowed)
     }
   }
@@ -315,7 +492,7 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
     )(scope) 
 
     inside(expressions) {
-      case List(et.TopLevelDefine(List((shadowed, _))), et.Lambda(_, Nil, None, et.InternalDefine(List((inner, _)), _), _)) =>
+      case List(et.TopLevelDefine(List(et.SingleBinding(shadowed, _))), et.Lambda(_, Nil, None, et.InternalDefine(List(et.SingleBinding(inner, _)), _), _)) =>
         assert(inner != shadowed)
     }
   }
@@ -331,7 +508,7 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
     )(scope) 
 
     inside(expressions) {
-      case List(et.TopLevelDefine(List((shadowed, _))), et.Lambda(_, Nil, None, et.InternalDefine(List((inner, _)), _), _)) =>
+      case List(et.TopLevelDefine(List(et.SingleBinding(shadowed, _))), et.Lambda(_, Nil, None, et.InternalDefine(List(et.SingleBinding(inner, _)), _), _)) =>
         assert(inner != shadowed)
 
         assert(shadowed.schemeType === vt.AnySchemeType)
@@ -349,7 +526,7 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
     )(scope) 
 
     inside(expressions) {
-      case List( et.Lambda(_, Nil, None, et.InternalDefine(List((inner, _)), _), _)) =>
+      case List( et.Lambda(_, Nil, None, et.InternalDefine(List(et.SingleBinding(inner, _)), _), _)) =>
         assert(inner.schemeType === vt.ExactIntegerType)
     }
   }
@@ -376,7 +553,7 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
     )(scope) 
 
     inside(expressions) {
-      case List( et.Lambda(_, Nil, None, et.InternalDefine(List((inner, _)), _), _)) =>
+      case List( et.Lambda(_, Nil, None, et.InternalDefine(List(et.SingleBinding(inner, _)), _), _)) =>
         assert(inner.schemeType === vt.ExactIntegerType)
     }
   }
@@ -422,7 +599,7 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
     val expressions = bodyFor("(define y 1)(lambda (x) y)")(scope)
 
     inside(expressions) {
-      case List(et.TopLevelDefine(List((outer, _))), et.Lambda(_, List(argX), None, et.VarRef(inner), _)) =>
+      case List(et.TopLevelDefine(List(et.SingleBinding(outer, _))), et.Lambda(_, List(argX), None, et.VarRef(inner), _)) =>
         assert(outer === inner)
     }
   }
@@ -439,7 +616,7 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
     }
 
     inside(expr) {
-      case et.TopLevelDefine(List((loc, et.Lambda(_, Nil, None, et.Literal(ast.BooleanLiteral(false)), _)))) =>
+      case et.TopLevelDefine(List(et.SingleBinding(loc, et.Lambda(_, Nil, None, et.Literal(ast.BooleanLiteral(false)), _)))) =>
         assert(loc === listBinding)
     }
   }
@@ -478,9 +655,9 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
           case storageLocB : StorageLocation =>
             assert(expression === 
               et.Begin(List(
-                et.TopLevelDefine(List(storageLocA -> et.Literal(ast.IntegerLiteral(1)))),
+                et.TopLevelDefine(List(et.SingleBinding(storageLocA, et.Literal(ast.IntegerLiteral(1))))),
                 et.Begin(List(
-                  et.TopLevelDefine(List(storageLocB -> et.Literal(ast.IntegerLiteral(2)))),
+                  et.TopLevelDefine(List(et.SingleBinding(storageLocB, et.Literal(ast.IntegerLiteral(2))))),
                   et.Begin(List(
                     et.VarRef(storageLocA),
                     et.VarRef(storageLocB)
