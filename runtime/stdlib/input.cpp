@@ -1,6 +1,8 @@
 #include <iostream>
 #include <cassert>
 
+#include "alloc/StrongRef.h"
+
 #include "binding/AnyCell.h"
 #include "binding/PortCell.h"
 #include "binding/ExactIntegerCell.h"
@@ -319,6 +321,10 @@ AnyCell *lliby_read(World &world, PortCell *portCell)
 
 	try
 	{
+		// DatumReader can allocate. Ensure we root the port to prevent it from being garbage collected and the stream
+		// deleted
+		alloc::StrongRoot<PortCell> portRoot(world, &portCell);
+
 		DatumReader reader(world, *portStream);
 		return reader.parse();
 	}
