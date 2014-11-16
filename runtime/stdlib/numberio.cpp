@@ -59,7 +59,7 @@ AnyCell* lliby_string_to_number(World &world, StringCell *stringCell, std::uint3
 
 		if (auto numberCell = cell_cast<NumberCell>(reader.parse(radix)))
 		{
-			if (reader.parse() != EofObjectCell::instance())
+			if (strStream.get() != EOF)
 			{
 				// Junk after number
 				return BooleanCell::falseInstance();
