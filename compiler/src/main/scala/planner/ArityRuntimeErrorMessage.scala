@@ -11,13 +11,13 @@ object ArityRuntimeErrorMessage {
 
     if (signature.restArgMemberTypeOpt.isDefined) {
       RuntimeErrorMessage(
-        name=s"insufficientArgsFor${nativeSymbol}",
+        name=s"insufficientArgsFor${nativeSymbol}RequiresAtLeast${fixedArgCount}",
         text=s"Called ${nativeSymbol} with insufficient arguments; requires at least ${fixedArgCount} arguments."
       )
     }
     else {
       RuntimeErrorMessage(
-        name=s"insufficientArgsFor${nativeSymbol}Requires${fixedArgCount}",
+        name=s"insufficientArgsFor${nativeSymbol}RequiresExactly${fixedArgCount}",
         text=s"Called ${nativeSymbol} with insufficient arguments; requires exactly ${fixedArgCount} arguments."
       )
     }
