@@ -345,4 +345,63 @@ bool lliby_u8_ready(World &world, PortCell *portCell)
 	return portCell->port()->bytesAvailable();
 }
 
+bool lliby_char_ready(World &world, PortCell *portCell)
+{
+	// Make sure we're an open input stream
+	std::istream *portStream = portCellToInputStream(world, portCell);
+
+	if (!portCell->port()->bytesAvailable())
+	{
+		return false;
+	}
+
+	int nextChar = portStream->get();
+
+	if (nextChar == EOF)
+	{
+		// We should return true at the end of input
+		return true;
+	}
+
+	int seqBytes = utf8::bytesInSequence(nextChar);
+
+	if (seqBytes < 1)
+	{
+		// This is invalid; (read-char) won't block
+		portStream->putback(nextChar);
+		return true;
+	}
+
+	std::vector<char> readChars;
+	readChars.push_back(nextChar);
+
+	bool wouldBlock = false;
+	while(--seqBytes)
+	{
+		if (!portCell->port()->bytesAvailable())
+		{
+			wouldBlock = true;
+			break;
+		}
+
+		nextChar = portStream->get();
+
+		if (nextChar == EOF)
+		{
+			break;
+		}
+
+		readChars.push_back(nextChar);
+	}
+
+	// Put everything we read back
+	portStream->clear();
+	for(auto it = readChars.rbegin(); it != readChars.rend(); it++)
+	{
+		portStream->putback(*it);
+	}
+
+	return !wouldBlock;
+}
+
 }

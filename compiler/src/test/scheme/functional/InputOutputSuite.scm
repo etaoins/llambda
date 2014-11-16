@@ -88,37 +88,46 @@
 
   (assert-equal "Hell☃!" (get-output-string output-string))))
 
-(define-test "(read-char), (peek-char)" (expect-success
+(define-test "(read-char), (peek-char), (char-ready?)" (expect-success
   (define empty-port (open-input-string ""))
+  (assert-true (char-ready? empty-port))
   (assert-true (eof-object? (peek-char empty-port)))
   (assert-true (eof-object? (read-char empty-port)))
+  (assert-true (char-ready? empty-port))
 
   (define ascii-port (open-input-string "Hello!"))
   (parameterize ((current-input-port ascii-port))
+    (assert-true (char-ready?))
     (assert-equal #\H (read-char))
     (assert-equal #\e (read-char))
     (assert-equal #\l (read-char))
     (assert-equal #\l (read-char))
 
+    (assert-true (char-ready?))
     (assert-equal #\o (peek-char))
     (assert-equal #\o (peek-char))
     (assert-equal #\o (read-char))
 
+    (assert-true (char-ready?))
     (assert-equal #\! (peek-char))
     (assert-equal #\! (read-char)))
 
   (assert-true (eof-object? (read-char ascii-port)))
 
   (define valid-utf8-port (open-input-string "Hell☃!"))
+  (assert-true (char-ready? valid-utf8-port))
   (assert-equal #\H (read-char valid-utf8-port))
   (assert-equal #\e (read-char valid-utf8-port))
   (assert-equal #\l (read-char valid-utf8-port))
   (assert-equal #\l (read-char valid-utf8-port))
 
+  (assert-true (char-ready? valid-utf8-port))
   (assert-equal #\☃ (peek-char valid-utf8-port))
   (assert-equal #\☃ (read-char valid-utf8-port))
 
+  (assert-true (char-ready? valid-utf8-port))
   (assert-equal #\! (read-char valid-utf8-port))
+  (assert-true (char-ready? valid-utf8-port))
 
   (define truncated-utf8-port (open-input-bytevector #u8(#x31 #xe2 #x98)))
   (assert-equal #\1 (read-char truncated-utf8-port))
@@ -130,21 +139,28 @@
 
   (define invalid-utf8-header-port (open-input-bytevector #u8(#x31 #xff #x33)))
   (assert-equal #\1 (read-char invalid-utf8-header-port))
+  (assert-true (char-ready? invalid-utf8-header-port)) ; This should return #t because (read-char) won't block
   (assert-raises error-object? (peek-char invalid-utf8-header-port)) ; Invalid header byte
   (assert-raises error-object? (read-char invalid-utf8-header-port))
   (assert-equal #\3 (read-char invalid-utf8-header-port)) ; Should recover at next character
 
   (define invalid-utf8-overlong-port (open-input-bytevector #u8(#x31 #xe0 #x80 #xaf #x33)))
   (assert-equal #\1 (read-char invalid-utf8-overlong-port))
+  (assert-true (char-ready? invalid-utf8-overlong-port))
   (assert-raises error-object? (peek-char invalid-utf8-overlong-port)) ; Overlong encoding
   (assert-raises error-object? (read-char invalid-utf8-overlong-port))
   (assert-equal #\3 (read-char invalid-utf8-overlong-port)) ; Should recover at next character
 
   (define invalid-utf8-no-continue-port (open-input-bytevector #u8(#x31 #xe2 #x98 #x33)))
   (assert-equal #\1 (read-char invalid-utf8-no-continue-port))
+  (assert-true (char-ready? invalid-utf8-no-continue-port))
   (assert-raises error-object? (peek-char invalid-utf8-no-continue-port)) ; No continuation byte
   (assert-raises error-object? (read-char invalid-utf8-no-continue-port))
   (assert-equal #\3 (read-char invalid-utf8-no-continue-port)))) ; Should recover at next character
+
+(define-test "(char-ready?) returns false for stdin" (expect-success
+  ; There shouldn't be anything to read on stdin
+  (assert-false (char-ready?))))
 
 (define-test "(write-char)" (expect-success
   (define output-string (open-output-string))

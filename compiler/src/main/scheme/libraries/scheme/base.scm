@@ -664,6 +664,14 @@
                    (([port : <port>])
                     (native-u8-ready? port))))
 
+    (define native-char-ready? (world-function "lliby_char_ready" (<port>) -> <native-bool>))
+    (define-r7rs char-ready?
+                 (case-lambda:
+                   (()
+                    (native-char-ready? (current-input-port)))
+                   (([port : <port>])
+                    (native-char-ready? port))))
+
     (define native-newline (world-function "lliby_newline" (<port>)))
     (define-r7rs newline (case-lambda:
       (()
