@@ -4,6 +4,22 @@
 (define-test "#f is not a procedure" (expect #f
 	(procedure? #f)))
 
+(define-test "R7RS procedure examples" (expect-success
+  (assert-true (procedure? (lambda (x) (+ x x))))
+  (assert-equal 8 ((lambda (x) (+ x x)) 4))
+
+  (define reverse-subtract (lambda (x y) (- y x)))
+  (assert-equal 3 (reverse-subtract 7 10))
+
+  (define add4
+      (let ((x 4))
+        (lambda (y) (+ x y))))
+
+  (assert-equal 10 (add4 6))
+
+  (assert-equal '(3 4 5 6) ((lambda x x) 3 4 5 6))
+  (assert-equal '(5 6) ((lambda (x y . z) z) 3 4 5 6))))
+
 (define-test "procedures accepting procedure arguments are procedures" (expect-success
   (import (llambda typed))
 
