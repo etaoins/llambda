@@ -338,4 +338,11 @@ AnyCell *lliby_read(World &world, PortCell *portCell)
 	}
 }
 
+bool lliby_u8_ready(World &world, PortCell *portCell)
+{
+	// Make sure we're an open input stream
+	portCellToInputStream(world, portCell);
+	return portCell->port()->bytesAvailable();
+}
+
 }

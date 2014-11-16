@@ -41,6 +41,16 @@ public:
 	virtual void closeInputPort() = 0;
 
 	/**
+	 * Returns true if there are bytes available to be read or the end of file has been reached
+	 *
+	 * This corresponds to (u8-ready?) in Scheme
+	 */
+	virtual bool bytesAvailable() const
+	{
+		return true;
+	}
+
+	/**
 	 * Returns std::istream used for input from this port
 	 *
 	 * If the port is closed or not an input port the result of this function is undefined

@@ -36,30 +36,40 @@
   (display '|Hello!|)
   (display #\")))
 
-(define-test "(read-u8), (peek-u8)" (expect-success
+(define-test "(read-u8), (peek-u8), (u8-ready?)" (expect-success
   (define input-string (open-input-string "Hell☃!"))
+  (assert-true (u8-ready? input-string))
 
   (assert-equal #x48 (read-u8 input-string))
   (assert-equal #x65 (read-u8 input-string))
+  (assert-true (u8-ready? input-string))
 
   (assert-equal #x6c (peek-u8 input-string))
   (assert-equal #x6c (peek-u8 input-string))
+  (assert-true (u8-ready? input-string))
 
   (assert-equal #x6c (read-u8 input-string))
   (assert-equal #x6c (read-u8 input-string))
+  (assert-true (u8-ready? input-string))
 
   (parameterize
     ((current-input-port input-string))
     (assert-equal #xe2 (read-u8))
     (assert-equal #x98 (read-u8))
     (assert-equal #x83 (read-u8))
+    (assert-true (u8-ready?))
 
     ; Peeking the last character should still allow it to be read
     (assert-equal #x21 (peek-u8))
     (assert-equal #x21 (read-u8)))
 
   (assert-true (eof-object? (peek-u8 input-string)))
-  (assert-true (eof-object? (read-u8 input-string)))))
+  (assert-true (eof-object? (read-u8 input-string)))
+  (assert-true (u8-ready? input-string))))
+
+(define-test "(u8-ready?) returns false for stdin" (expect-success
+  ; There shouldn't be anything to read on stdin
+  (assert-false (u8-ready?))))
 
 (define-test "(write-u8)" (expect-success
   (define output-string (open-output-string))

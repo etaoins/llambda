@@ -40,6 +40,7 @@ add_library(lliby
 	dynamic/ParameterProcedureCell.cpp
 	dynamic/init.cpp
 	platform/memory.cpp
+	port/StandardInputPort.cpp
 	reader/ReadErrorException.cpp
 	reader/DatumReader.cpp
 	stdlib/arithmetic.cpp

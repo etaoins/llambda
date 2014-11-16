@@ -656,6 +656,14 @@
                    (([bv : <bytevector>] [port : <port>] [start : <exact-integer>] [end : <exact-integer>])
                     (native-read-bytevector! bv port start end))))
 
+    (define native-u8-ready? (world-function "lliby_u8_ready" (<port>) -> <native-bool>))
+    (define-r7rs u8-ready?
+                 (case-lambda:
+                   (()
+                    (native-u8-ready? (current-input-port)))
+                   (([port : <port>])
+                    (native-u8-ready? port))))
+
     (define native-newline (world-function "lliby_newline" (<port>)))
     (define-r7rs newline (case-lambda:
       (()

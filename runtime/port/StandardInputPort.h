@@ -32,6 +32,8 @@ public:
 		}
 	}
 
+	bool bytesAvailable() const override;
+
 	std::istream *inputStream() override
 	{
 		return &m_inputStream;
