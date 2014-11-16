@@ -8,7 +8,7 @@
 namespace lliby
 {
 
-class StandardInputPort : public AbstractInputPort
+class StandardInputPort : public AbstractInputOnlyPort
 {
 	static const int ClosedFd = -1;
 public:

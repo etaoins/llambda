@@ -8,7 +8,7 @@
 namespace lliby
 {
 
-class FileInputPort : public AbstractInputPort
+class FileInputPort : public AbstractInputOnlyPort
 {
 public:
 	FileInputPort(const std::string &path) :

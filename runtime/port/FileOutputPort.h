@@ -8,7 +8,7 @@
 namespace lliby
 {
 
-class FileOutputPort : public AbstractOutputPort
+class FileOutputPort : public AbstractOutputOnlyPort
 {
 public:
 	FileOutputPort(const std::string &path) :

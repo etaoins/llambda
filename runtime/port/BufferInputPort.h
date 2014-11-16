@@ -8,7 +8,7 @@
 namespace lliby
 {
 
-class BufferInputPort : public AbstractInputPort
+class BufferInputPort : public AbstractInputOnlyPort
 {
 public:
 	BufferInputPort(const std::string &inputString) :

@@ -8,7 +8,7 @@
 namespace lliby
 {
 
-class BufferOutputPort : public AbstractOutputPort
+class BufferOutputPort : public AbstractOutputOnlyPort
 {
 public:
 	bool isOutputPortOpen() const override

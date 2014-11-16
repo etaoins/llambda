@@ -95,7 +95,12 @@ public:
 	}
 };
 
-class AbstractOutputPort : public AbstractPort
+/**
+ * Base class for ports only supporting output
+ *
+ * This mostly consists of stubs for input-related functions
+ */
+class AbstractOutputOnlyPort : public AbstractPort
 {
 	bool isInputPort() const override
 	{
@@ -122,7 +127,12 @@ class AbstractOutputPort : public AbstractPort
 	}
 };
 
-class AbstractInputPort : public AbstractPort
+/**
+ * Base class for ports only supporting input
+ *
+ * This mostly consists of stubs for output-related functions
+ */
+class AbstractInputOnlyPort : public AbstractPort
 {
 	bool isInputPort() const override
 	{
