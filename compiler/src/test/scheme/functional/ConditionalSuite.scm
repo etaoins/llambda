@@ -1,4 +1,21 @@
-(define-test "(cond) without arrows or else" (expect true 
+(define-test "R7RS (if) examples" (expect-success
+  (assert-equal 'yes (if (> 3 2) 'yes 'no))
+  (assert-equal 'no (if (> 2 3) 'yes 'no))
+
+  (assert-equal 1 (if (> 3 2) (- 3 2) (+ 3 2)))))
+
+(define-test "R7RS (cond) examples" (expect-success
+  (assert-equal 'greater (cond ((> 3 2) 'greater)
+                               ((< 3 2) 'less)))
+
+  (assert-equal 'equal (cond ((> 3 3) 'greater)
+                             ((< 3 3) 'less)
+                             (else 'equal)))
+
+  (assert-equal 2 (cond ((assv 'b '((a 1) (b 2))) => cadr)
+                        (else #f)))))
+
+(define-test "(cond) without arrows or else" (expect true
 	(cond (#f 'false)
 			(#t 'true))))
 
