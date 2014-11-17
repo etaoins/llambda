@@ -58,3 +58,13 @@
 
   (assert-equal '("LLAMBDA_TEST" "1") (assoc "LLAMBDA_TEST" env-vars))
   (assert-equal #f (assoc "DOES_NOT_EXIST" env-vars))))
+
+(define-test "(command-line)" (expect-success
+	(import (scheme process-context))
+
+  (define cmdline (command-line))
+
+  ; We should have a single argument for our program name
+  (assert-equal 1 (length cmdline))
+  (assert-true (string? (car cmdline)))))
+

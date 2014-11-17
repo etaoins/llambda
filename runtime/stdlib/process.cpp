@@ -4,6 +4,7 @@
 #include "binding/StringCell.h"
 #include "binding/ProperList.h"
 
+#include "core/init.h"
 #include "alloc/AbstractRefVector.h"
 #include "dynamic/State.h"
 
@@ -99,6 +100,20 @@ ProperList<ProperList<StringCell>>* lliby_get_environment_variables(World &world
 	}
 
 	return ProperList<ProperList<StringCell>>::create(world, parsedVariables);
+}
+
+ProperList<StringCell>* lliby_command_line(World &world)
+{
+	CommandLineArguments args(commandLineArguments());
+
+	alloc::StrongRefVector<StringCell> argStrings(world, args.argc);
+
+	for(int i = 0; i < args.argc; i++)
+	{
+		argStrings[i] = StringCell::fromUtf8StdString(world, args.argv[i]);
+	}
+
+	return ProperList<StringCell>::create(world, argStrings);
 }
 
 }

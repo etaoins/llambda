@@ -273,7 +273,7 @@ void testCompare()
 
 int main(int argc, char *argv[])
 {
-	lliby_init();
+	lliby_init(argc, argv);
 
 	testToUpper();
 	testToLower();

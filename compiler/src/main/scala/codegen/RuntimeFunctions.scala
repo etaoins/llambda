@@ -129,7 +129,10 @@ object RuntimeFunctions {
   val init = IrFunctionDecl(
     result=IrFunction.Result(VoidType),
     name="lliby_init",
-    arguments=Nil,
+    arguments=List(
+      IrFunction.Argument(IntegerType(32)),
+      IrFunction.Argument(PointerType(PointerType(IntegerType(8))))
+    ),
     attributes=Set(IrFunction.NoUnwind)
   )
 

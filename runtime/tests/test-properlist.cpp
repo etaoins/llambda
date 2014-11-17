@@ -64,7 +64,7 @@ void testAll(World &world)
 
 int main(int argc, char *argv[])
 {
-	lliby_init();
+	lliby_init(argc, argv);
 
 	lliby::World::launchWorld(&testAll);
 }
