@@ -62,6 +62,7 @@ add_library(lliby
 	stdlib/process.cpp
 	stdlib/string.cpp
 	stdlib/symbol.cpp
+	stdlib/time.cpp
 	stdlib/vector.cpp
 	unicode/UnicodeChar.cpp
 	unicode/utf8.cpp
