@@ -702,9 +702,8 @@ StringCell *StringCell::toConvertedString(World &world, UnicodeChar (UnicodeChar
 {
 	std::vector<std::uint8_t> convertedData;
 
-	// Guess that our converted data will be about the same size as the original
-	// data. Case conversion rarely moves code points far from their original
-	// value
+	// Guess that our converted data will be about the same size as the original data. Case conversion rarely moves code
+	// points far from their original value
 	convertedData.reserve(byteLength());
 
 	const std::uint8_t *scanPtr = utf8Data();
