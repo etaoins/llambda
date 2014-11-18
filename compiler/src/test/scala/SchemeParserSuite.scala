@@ -351,4 +351,20 @@ newline""", "Bare\nnewline")
     val data = SchemeParser.parseStringAsData(multilineTest)
     assert(data === List(ast.ProperList(List(ast.Symbol("display"), ast.StringLiteral("LOL")))))
   }
+
+  test("datum labels") {
+    assertReflexiveParse("#123=(a b c) (d e #123#)", List(
+      ast.ProperList(List("a", "b", "c").map(ast.Symbol(_))),
+      ast.ProperList(List(
+        ast.Symbol("d"),
+        ast.Symbol("e"),
+        ast.ProperList(List("a", "b", "c").map(ast.Symbol(_)))
+      ))
+    ))
+
+    intercept[ParseErrorException] {
+      // Reference to an undefined label
+      SchemeParser.parseStringAsData("#123=(a b c) (d e #456#)")
+    }
+  }
 }

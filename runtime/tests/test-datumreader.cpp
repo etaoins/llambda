@@ -420,6 +420,22 @@ void testCharacters(World &world)
 	ASSERT_PARSES(R"(#(#\1moretime))", expectedVector);
 }
 
+void testDatumLabels(World &world)
+{
+	alloc::SymbolRef aSymbol(world, SymbolCell::fromUtf8StdString(world, "a"));
+	alloc::SymbolRef bSymbol(world, SymbolCell::fromUtf8StdString(world, "b"));
+	alloc::SymbolRef cSymbol(world, SymbolCell::fromUtf8StdString(world, "c"));
+	alloc::SymbolRef dSymbol(world, SymbolCell::fromUtf8StdString(world, "d"));
+	alloc::SymbolRef eSymbol(world, SymbolCell::fromUtf8StdString(world, "e"));
+
+	alloc::StrongRef<ProperList<SymbolCell>> commonList(world, ProperList<SymbolCell>::create(world, {aSymbol, bSymbol, cSymbol}));
+	alloc::StrongRef<ProperList<AnyCell>> nestedList(world, ProperList<AnyCell>::create(world, {dSymbol, eSymbol, commonList}));
+
+    ASSERT_PARSES("(#123=(a b c) . (d e #123#))", PairCell::createInstance(world, commonList, nestedList));
+
+    ASSERT_INVALID_PARSE("(#123=(a b c) . (d e #456#))");
+}
+
 void testAll(World &world)
 {
 	testEmptyInput(world);
@@ -442,6 +458,7 @@ void testAll(World &world)
 	testCharacters(world);
 	testUnit(world);
 	testComments(world);
+	testDatumLabels(world);
 }
 
 }

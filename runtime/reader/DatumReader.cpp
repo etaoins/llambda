@@ -337,7 +337,6 @@ void DatumReader::consumeBlockComment()
 			}
 		}
 	}
-
 }
 
 AnyCell* DatumReader::parseOctoDatum()
@@ -395,6 +394,10 @@ AnyCell* DatumReader::parseOctoDatum()
 	else if (getChar == '\\')
 	{
 		return parseChar();
+	}
+	else if ((getChar >= '0') && (getChar <= '9'))
+	{
+		return parseDatumLabel(getChar);
 	}
 	else if (getChar == EOF)
 	{
@@ -872,6 +875,46 @@ AnyCell* DatumReader::parseBytevector()
 	}
 
 	return BytevectorCell::fromData(m_world, elements.data(), elements.size());
+}
+
+AnyCell* DatumReader::parseDatumLabel(char firstDigit)
+{
+	std::string labelString({firstDigit});
+
+	takeWhile(rdbuf(), labelString, [=] (char c) {
+		return (c >= '0') && (c <= '9');
+	});
+
+	const long long labelNumber = std::strtoll(labelString.c_str(), nullptr, 10);
+
+	int getChar = rdbuf()->sbumpc();
+
+	if (getChar == '=')
+	{
+		// We're defining a new datum
+		AnyCell *labelledDatum = parseDatum();
+
+		// Use emplace/piecewise_construct as creating temporary StrongRefs is inefficient
+		m_datumLabels.emplace(std::piecewise_construct, std::forward_as_tuple(labelNumber), std::forward_as_tuple(m_world, labelledDatum));
+
+		return labelledDatum;
+	}
+	else if (getChar == '#')
+	{
+		// We're referencing a datum
+		auto labelIt = m_datumLabels.find(labelNumber);
+
+		if (labelIt == m_datumLabels.end())
+		{
+			throw MalformedDatumException(inputOffset(rdbuf()), "Undefined datum label");
+		}
+
+		return labelIt->second;
+	}
+	else
+	{
+		throw MalformedDatumException(inputOffset(rdbuf()), "Invalid datum label syntax");
+	}
 }
 
 }

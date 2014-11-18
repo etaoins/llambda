@@ -7,7 +7,8 @@ import scala.annotation.switch
 import scala.io.Source
 import java.io.File
 import scala.util.{Try,Success,Failure}
-  
+import scala.collection.mutable.LongMap
+
 import org.parboiled2._
 
 class ParseErrorException(val filename : Option[String], val message : String) extends
@@ -15,6 +16,8 @@ class ParseErrorException(val filename : Option[String], val message : String) e
 
 class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends Parser with StringBuilding {
   import CharPredicate._
+
+  private val datumLabels = new LongMap[ast.Datum]
 
   val input : ParserInput = sourceString
 
@@ -119,7 +122,7 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   }
 
   def OctoDatum = rule {
-    UnitDatum | BooleanDatum | VectorDatum | RadixedNumber | BytevectorDatum | CharDatum
+    UnitDatum | BooleanDatum | VectorDatum | RadixedNumber | BytevectorDatum | CharDatum | DatumLabel | DatumReference
   }
 
   // Quotations
@@ -377,6 +380,25 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
     }) |
     capture(ANY) ~ !UnenclosedSymbol ~ Whitespace ~> ({ literalCharString =>
       ast.CharLiteral(literalCharString.charAt(0))
+    })
+  }
+
+  def DatumLabel = rule {
+    '#' ~ capture(oneOrMore(Digit)) ~ '=' ~ Datum ~> ({ (labelDigits, labelledDatum) =>
+      val labelValue = java.lang.Long.parseLong(labelDigits)
+
+      // Store the datum for later references
+      datumLabels += (labelValue -> labelledDatum)
+
+      labelledDatum
+    })
+  }
+
+  def DatumReference = rule {
+    '#' ~ capture(oneOrMore(Digit)) ~ '#' ~> ({ (labelDigits) =>
+      val labelValue = java.lang.Long.parseLong(labelDigits)
+
+      test(datumLabels.contains(labelValue)) ~ push(datumLabels(labelValue))
     })
   }
 }
