@@ -12,7 +12,7 @@ namespace
 	{
 #ifdef CLOCK_REALTIME
 		// This clock is in UTC and is guaranteed to work by POSIX
-		clock_gettime(CLOCK_REALTIME, &ts);
+		clock_gettime(CLOCK_REALTIME, ts);
 #else
 		// Mac OS X does not support clock_gettime
 		struct timeval tv;
