@@ -8,32 +8,13 @@ namespace lliby
 namespace platform
 {
 
-struct SizedMallocResult
-{
-	/**
-	 * Base pointer of the sized malloc
-	 *
-	 * This must be freed using free()
-	 */
-	void *basePointer;
-
-	/**
-	 * Actual usable size of the allocation in bytes
-	 *
-	 * This is guaranteed to be at least as large as the minimumSize parameter passed to sizedMalloc()
-	 */
-	size_t actualSize;
-};
-
 /**
- * Allocates a minimum number of bytes and returns the actual allocation size
+ * Returns the usable size of malloc() allocated memory
  *
- * There is currently no platform-independent way to accomplish this. Unsupported platforms fall back to a direct 
- * malloc().
- *
- * @param  minimumBytes  Minimum size in bytes of the allocation
+ * @param  allocation    Allocation to query the size of
+ * @param  fallbackSize  Size to return if the query fails
  */
-SizedMallocResult sizedMalloc(size_t minimumSize);
+std::size_t mallocActualSize(void *allocation, std::size_t fallbackSize);
 
 }
 }

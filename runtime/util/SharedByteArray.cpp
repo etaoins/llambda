@@ -1,4 +1,5 @@
 #include "util/SharedByteArray.h"
+#include "platform/memory.h"
 
 #include <cstring>
 #include <cassert>
@@ -11,11 +12,17 @@ namespace
 {
 	std::atomic<std::size_t> allocationCount(0);
 
-	size_t objectSizeForBytes(std::size_t bytes)
+	std::size_t objectSizeForBytes(std::size_t bytes)
 	{
 		return sizeof(SharedByteArray) + bytes;
 	}
+
+	std::size_t bytesForObjectSize(std::size_t objectSize)
+	{
+		return objectSize - sizeof(SharedByteArray);
+	}
 }
+
 
 SharedByteArray::SharedByteArray(refcount_t initialRefCount) :
 	m_refCount(initialRefCount)
@@ -32,15 +39,9 @@ SharedByteArray* SharedByteArray::createInstance(std::size_t bytes)
 	return new (allocPlacement) SharedByteArray(1);
 }
 
-SharedByteArray* SharedByteArray::createMinimumSizedInstance(std::size_t &bytes)
+std::size_t SharedByteArray::capacity(std::size_t fallbackCapacity)
 {
-	std::size_t minimumAllocSize = objectSizeForBytes(bytes);
-	platform::SizedMallocResult sizedResult = platform::sizedMalloc(minimumAllocSize);
-
-	// Update the actual size for the caller
-	bytes = sizedResult.actualSize - sizeof(SharedByteArray);
-
-	return new (sizedResult.basePointer) SharedByteArray(1);
+	return bytesForObjectSize(platform::mallocActualSize(this, objectSizeForBytes(fallbackCapacity)));
 }
 
 SharedByteArray* SharedByteArray::destructivelyResizeTo(std::size_t bytes)

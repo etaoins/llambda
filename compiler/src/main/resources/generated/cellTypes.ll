@@ -30,124 +30,123 @@
 !21 = metadata !{metadata !"Any::typeId->ListElement->EmptyList", metadata !14}
 !22 = metadata !{metadata !"Any::gcState->ListElement->EmptyList", metadata !15}
 
-; {supertype, unsigned allocSlackBytes, unsigned charLength, unsigned byteLength}
-%string = type {%any, i16, i32, i32}
+; {supertype, unsigned charLength, unsigned byteLength}
+%string = type {%any, i32, i32}
 !23 = metadata !{metadata !"Any::typeId->String", metadata !10}
 !24 = metadata !{metadata !"Any::gcState->String", metadata !11}
-!25 = metadata !{metadata !"String::allocSlackBytes"}
-!26 = metadata !{metadata !"String::charLength"}
-!27 = metadata !{metadata !"String::byteLength"}
+!25 = metadata !{metadata !"String::charLength"}
+!26 = metadata !{metadata !"String::byteLength"}
 
 ; {supertype, inlineData}
 %inlineString = type {%string, [12 x i8]}
-!28 = metadata !{metadata !"InlineString::inlineData"}
+!27 = metadata !{metadata !"InlineString::inlineData"}
 
 ; {supertype, heapByteArray}
 %heapString = type {%string, %sharedByteArray*}
-!29 = metadata !{metadata !"HeapString::heapByteArray"}
+!28 = metadata !{metadata !"HeapString::heapByteArray"}
 
 ; {supertype, unsigned charLength, unsigned byteLength}
 %symbol = type {%any, i32, i32}
-!30 = metadata !{metadata !"Any::typeId->Symbol", metadata !10}
-!31 = metadata !{metadata !"Any::gcState->Symbol", metadata !11}
-!32 = metadata !{metadata !"Symbol::charLength"}
-!33 = metadata !{metadata !"Symbol::byteLength"}
+!29 = metadata !{metadata !"Any::typeId->Symbol", metadata !10}
+!30 = metadata !{metadata !"Any::gcState->Symbol", metadata !11}
+!31 = metadata !{metadata !"Symbol::charLength"}
+!32 = metadata !{metadata !"Symbol::byteLength"}
 
 ; {supertype, inlineData}
 %inlineSymbol = type {%symbol, [12 x i8]}
-!34 = metadata !{metadata !"InlineSymbol::inlineData"}
+!33 = metadata !{metadata !"InlineSymbol::inlineData"}
 
 ; {supertype, heapByteArray}
 %heapSymbol = type {%symbol, %sharedByteArray*}
-!35 = metadata !{metadata !"HeapSymbol::heapByteArray"}
+!34 = metadata !{metadata !"HeapSymbol::heapByteArray"}
 
 ; {supertype, bool value}
 %boolean = type {%any, i8}
-!36 = metadata !{metadata !"Any::typeId->Boolean", metadata !10}
-!37 = metadata !{metadata !"Any::gcState->Boolean", metadata !11}
-!38 = metadata !{metadata !"Boolean::value"}
+!35 = metadata !{metadata !"Any::typeId->Boolean", metadata !10}
+!36 = metadata !{metadata !"Any::gcState->Boolean", metadata !11}
+!37 = metadata !{metadata !"Boolean::value"}
 
 ; {supertype}
 %number = type {%any}
-!39 = metadata !{metadata !"Any::typeId->Number", metadata !10}
-!40 = metadata !{metadata !"Any::gcState->Number", metadata !11}
+!38 = metadata !{metadata !"Any::typeId->Number", metadata !10}
+!39 = metadata !{metadata !"Any::gcState->Number", metadata !11}
 
 ; {supertype, signed value}
 %exactInteger = type {%number, i64}
-!41 = metadata !{metadata !"Any::typeId->Number->ExactInteger", metadata !39}
-!42 = metadata !{metadata !"Any::gcState->Number->ExactInteger", metadata !40}
-!43 = metadata !{metadata !"ExactInteger::value"}
+!40 = metadata !{metadata !"Any::typeId->Number->ExactInteger", metadata !38}
+!41 = metadata !{metadata !"Any::gcState->Number->ExactInteger", metadata !39}
+!42 = metadata !{metadata !"ExactInteger::value"}
 
 ; {supertype, value}
 %flonum = type {%number, double}
-!44 = metadata !{metadata !"Any::typeId->Number->Flonum", metadata !39}
-!45 = metadata !{metadata !"Any::gcState->Number->Flonum", metadata !40}
-!46 = metadata !{metadata !"Flonum::value"}
+!43 = metadata !{metadata !"Any::typeId->Number->Flonum", metadata !38}
+!44 = metadata !{metadata !"Any::gcState->Number->Flonum", metadata !39}
+!45 = metadata !{metadata !"Flonum::value"}
 
 ; {supertype, unicodeChar}
 %char = type {%any, i32}
-!47 = metadata !{metadata !"Any::typeId->Char", metadata !10}
-!48 = metadata !{metadata !"Any::gcState->Char", metadata !11}
-!49 = metadata !{metadata !"Char::unicodeChar"}
+!46 = metadata !{metadata !"Any::typeId->Char", metadata !10}
+!47 = metadata !{metadata !"Any::gcState->Char", metadata !11}
+!48 = metadata !{metadata !"Char::unicodeChar"}
 
 ; {supertype, unsigned length, elements}
 %vector = type {%any, i32, %any**}
-!50 = metadata !{metadata !"Any::typeId->Vector", metadata !10}
-!51 = metadata !{metadata !"Any::gcState->Vector", metadata !11}
-!52 = metadata !{metadata !"Vector::length"}
-!53 = metadata !{metadata !"Vector::elements"}
+!49 = metadata !{metadata !"Any::typeId->Vector", metadata !10}
+!50 = metadata !{metadata !"Any::gcState->Vector", metadata !11}
+!51 = metadata !{metadata !"Vector::length"}
+!52 = metadata !{metadata !"Vector::elements"}
 
 ; {supertype, unsigned length, byteArray}
 %bytevector = type {%any, i32, %sharedByteArray*}
-!54 = metadata !{metadata !"Any::typeId->Bytevector", metadata !10}
-!55 = metadata !{metadata !"Any::gcState->Bytevector", metadata !11}
-!56 = metadata !{metadata !"Bytevector::length"}
-!57 = metadata !{metadata !"Bytevector::byteArray"}
+!53 = metadata !{metadata !"Any::typeId->Bytevector", metadata !10}
+!54 = metadata !{metadata !"Any::gcState->Bytevector", metadata !11}
+!55 = metadata !{metadata !"Bytevector::length"}
+!56 = metadata !{metadata !"Bytevector::byteArray"}
 
 ; {supertype, bool dataIsInline, bool isUndefined, unsigned recordClassId, recordData}
 %recordLike = type {%any, i8, i8, i32, i8*}
-!58 = metadata !{metadata !"Any::typeId->RecordLike", metadata !10}
-!59 = metadata !{metadata !"Any::gcState->RecordLike", metadata !11}
-!60 = metadata !{metadata !"RecordLike::dataIsInline"}
-!61 = metadata !{metadata !"RecordLike::isUndefined"}
-!62 = metadata !{metadata !"RecordLike::recordClassId"}
-!63 = metadata !{metadata !"RecordLike::recordData"}
+!57 = metadata !{metadata !"Any::typeId->RecordLike", metadata !10}
+!58 = metadata !{metadata !"Any::gcState->RecordLike", metadata !11}
+!59 = metadata !{metadata !"RecordLike::dataIsInline"}
+!60 = metadata !{metadata !"RecordLike::isUndefined"}
+!61 = metadata !{metadata !"RecordLike::recordClassId"}
+!62 = metadata !{metadata !"RecordLike::recordData"}
 
 ; {supertype, entryPoint}
 %procedure = type {%recordLike, i8*}
-!64 = metadata !{metadata !"Any::typeId->RecordLike->Procedure", metadata !58}
-!65 = metadata !{metadata !"Any::gcState->RecordLike->Procedure", metadata !59}
-!66 = metadata !{metadata !"RecordLike::dataIsInline->Procedure", metadata !60}
-!67 = metadata !{metadata !"RecordLike::isUndefined->Procedure", metadata !61}
-!68 = metadata !{metadata !"RecordLike::recordClassId->Procedure", metadata !62}
-!69 = metadata !{metadata !"RecordLike::recordData->Procedure", metadata !63}
-!70 = metadata !{metadata !"Procedure::entryPoint"}
+!63 = metadata !{metadata !"Any::typeId->RecordLike->Procedure", metadata !57}
+!64 = metadata !{metadata !"Any::gcState->RecordLike->Procedure", metadata !58}
+!65 = metadata !{metadata !"RecordLike::dataIsInline->Procedure", metadata !59}
+!66 = metadata !{metadata !"RecordLike::isUndefined->Procedure", metadata !60}
+!67 = metadata !{metadata !"RecordLike::recordClassId->Procedure", metadata !61}
+!68 = metadata !{metadata !"RecordLike::recordData->Procedure", metadata !62}
+!69 = metadata !{metadata !"Procedure::entryPoint"}
 
 ; {supertype, extraData}
 %record = type {%recordLike, i8*}
-!71 = metadata !{metadata !"Any::typeId->RecordLike->Record", metadata !58}
-!72 = metadata !{metadata !"Any::gcState->RecordLike->Record", metadata !59}
-!73 = metadata !{metadata !"RecordLike::dataIsInline->Record", metadata !60}
-!74 = metadata !{metadata !"RecordLike::isUndefined->Record", metadata !61}
-!75 = metadata !{metadata !"RecordLike::recordClassId->Record", metadata !62}
-!76 = metadata !{metadata !"RecordLike::recordData->Record", metadata !63}
-!77 = metadata !{metadata !"Record::extraData"}
+!70 = metadata !{metadata !"Any::typeId->RecordLike->Record", metadata !57}
+!71 = metadata !{metadata !"Any::gcState->RecordLike->Record", metadata !58}
+!72 = metadata !{metadata !"RecordLike::dataIsInline->Record", metadata !59}
+!73 = metadata !{metadata !"RecordLike::isUndefined->Record", metadata !60}
+!74 = metadata !{metadata !"RecordLike::recordClassId->Record", metadata !61}
+!75 = metadata !{metadata !"RecordLike::recordData->Record", metadata !62}
+!76 = metadata !{metadata !"Record::extraData"}
 
 ; {supertype, category, message, irritants}
 %errorObject = type {%any, i16, %string*, %listElement*}
-!78 = metadata !{metadata !"Any::typeId->ErrorObject", metadata !10}
-!79 = metadata !{metadata !"Any::gcState->ErrorObject", metadata !11}
-!80 = metadata !{metadata !"ErrorObject::category"}
-!81 = metadata !{metadata !"ErrorObject::message"}
-!82 = metadata !{metadata !"ErrorObject::irritants"}
+!77 = metadata !{metadata !"Any::typeId->ErrorObject", metadata !10}
+!78 = metadata !{metadata !"Any::gcState->ErrorObject", metadata !11}
+!79 = metadata !{metadata !"ErrorObject::category"}
+!80 = metadata !{metadata !"ErrorObject::message"}
+!81 = metadata !{metadata !"ErrorObject::irritants"}
 
 ; {supertype, port}
 %port = type {%any, i8*}
-!83 = metadata !{metadata !"Any::typeId->Port", metadata !10}
-!84 = metadata !{metadata !"Any::gcState->Port", metadata !11}
-!85 = metadata !{metadata !"Port::port"}
+!82 = metadata !{metadata !"Any::typeId->Port", metadata !10}
+!83 = metadata !{metadata !"Any::gcState->Port", metadata !11}
+!84 = metadata !{metadata !"Port::port"}
 
 ; {supertype}
 %eofObject = type {%any}
-!86 = metadata !{metadata !"Any::typeId->EofObject", metadata !10}
-!87 = metadata !{metadata !"Any::gcState->EofObject", metadata !11}
+!85 = metadata !{metadata !"Any::typeId->EofObject", metadata !10}
+!86 = metadata !{metadata !"Any::gcState->EofObject", metadata !11}

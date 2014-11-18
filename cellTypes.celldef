@@ -54,7 +54,6 @@ preconstructed cell EmptyList : ListElement {
 };
 
 concrete cell String : Any {
-	uint16 allocSlackBytes;
 	uint32 charLength;
 	uint32 byteLength;
 };

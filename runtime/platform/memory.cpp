@@ -1,7 +1,5 @@
 #include "platform/memory.h"
 
-#include <stdlib.h>
-
 #ifdef __APPLE__
 #include <malloc/malloc.h>
 #elif defined(__GNU_LIBRARY__)
@@ -15,26 +13,14 @@ namespace lliby
 namespace platform
 {
 
-SizedMallocResult sizedMalloc(size_t minimumSize)
+std::size_t mallocActualSize(void *allocation, std::size_t fallbackSize)
 {
-	void *basePointer = malloc(minimumSize);
-
 #ifdef __APPLE__
-	return SizedMallocResult {
-		.basePointer = basePointer,
-		.actualSize = malloc_size(basePointer)
-	};
+	return malloc_size(allocation);
 #elif defined(__GNU_LIBRARY__) || defined(__FreeBSD__)
-	return SizedMallocResult {
-		.basePointer = basePointer,
-		.actualSize = malloc_usable_size(basePointer)
-	};
+	return malloc_usable_size(allocation);
 #else
-	return SizedMallocResult {
-		.basePointer = basePointer,
-		.actualSize = minimumSize
-
-	};
+	return fallbackSize;
 #endif
 }
 

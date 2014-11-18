@@ -3,11 +3,6 @@
  ************************************************************/
 
 public:
-	std::uint16_t allocSlackBytes() const
-	{
-		return m_allocSlackBytes;
-	}
-
 	std::uint32_t charLength() const
 	{
 		return m_charLength;
@@ -30,6 +25,5 @@ public:
 	}
 
 private:
-	std::uint16_t m_allocSlackBytes;
 	std::uint32_t m_charLength;
 	std::uint32_t m_byteLength;

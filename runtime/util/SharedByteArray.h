@@ -7,8 +7,6 @@
 #include <limits>
 #include <atomic>
 
-#include "platform/memory.h"
-
 namespace lliby
 {
 
@@ -27,15 +25,13 @@ public:
 	static SharedByteArray* createInstance(std::size_t bytes);
 
 	/**
-	 * Creates a new SharedByteArray instance of at least the given size
+	 * Returns the capacity of the SharedByteArray instance in bytes
 	 *
-	 * This uses lliby::sizedMalloc() internally to determine how much slack allocation was provided by the platform's
-	 * malloc() implementation
+	 * This is implemented in terms of platform::mallocActualSize()
 	 *
-	 * @param  bytes  Minimum size in types. On a successful return this will be the usable size in bytes of the byte
-	 *                array.
+	 * @param  fallbackCapacity  Capacity to return if the SharedByteArray's allocation size cannot be determined.
 	 */
-	static SharedByteArray *createMinimumSizedInstance(std::size_t &bytes);
+	std::size_t capacity(std::size_t fallbackCapacity);
 
 	/**
 	 * Destructively resizes this instance and returns a new SharedByteArray of the passed size

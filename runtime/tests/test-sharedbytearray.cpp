@@ -86,11 +86,10 @@ int main(int argc, char *argv[])
 
 	{
 		const size_t minimumByteCount = 17;
-		size_t byteCount = minimumByteCount;
 
-		SharedByteArray *handle1 = SharedByteArray::createMinimumSizedInstance(byteCount);
+		SharedByteArray *handle1 = SharedByteArray::createInstance(minimumByteCount);
 
-		ASSERT_TRUE(byteCount >= minimumByteCount);
+		ASSERT_TRUE(handle1->capacity(minimumByteCount) >= minimumByteCount);
 
 		handle1->unref();
 	}

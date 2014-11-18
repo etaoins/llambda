@@ -111,17 +111,14 @@ public:
 	CharRange charRange(std::int64_t start, std::int64_t end = -1);
 
 protected:
-	StringCell(std::uint32_t byteLength, std::uint32_t charLength, std::uint16_t allocSlackBytes) :
+	StringCell(std::uint32_t byteLength, std::uint32_t charLength) :
 		AnyCell(CellTypeId::String),
-		m_allocSlackBytes(allocSlackBytes),
 		m_charLength(charLength),
 		m_byteLength(byteLength)
 	{
 	}
 	
 	std::uint8_t* utf8Data();
-
-	static const std::uint32_t InlineDataSize = 12;
 
 	// Creates an uninitialized cell with the given size
 	static StringCell* createUninitialized(World &world, std::uint32_t byteLength, std::uint32_t charLength);
@@ -144,10 +141,7 @@ protected:
 		m_byteLength = newByteLength;
 	}
 
-	void setAllocSlackBytes(std::uint16_t newAllocSlackBytes)
-	{
-		m_allocSlackBytes = newAllocSlackBytes;
-	}
+	std::size_t byteCapacity() const;
 };
 
 class HeapStringCell : public StringCell
@@ -156,8 +150,8 @@ class HeapStringCell : public StringCell
 	friend class SymbolCell;
 #include "generated/HeapStringCellMembers.h"
 private:
-	HeapStringCell(SharedByteArray *byteArray, std::uint32_t byteLength, std::uint32_t charLength, std::uint16_t allocSlackBytes) :
-		StringCell(byteLength, charLength, allocSlackBytes),
+	HeapStringCell(SharedByteArray *byteArray, std::uint32_t byteLength, std::uint32_t charLength) :
+		StringCell(byteLength, charLength),
 		m_heapByteArray(byteArray)
 	{
 	}
@@ -175,7 +169,7 @@ class InlineStringCell : public StringCell
 #include "generated/InlineStringCellMembers.h"
 private:
 	InlineStringCell(std::uint32_t byteLength, std::uint32_t charLength) :
-		StringCell(byteLength, charLength, InlineDataSize - byteLength)
+		StringCell(byteLength, charLength)
 	{
 	}
 };

@@ -15,30 +15,6 @@
 #include "alloc/allocator.h"
 #include "alloc/cellref.h"
 
-namespace
-{
-	using namespace lliby;
-
-	// We will shrink our allocation if we would create more slack than this
-	// Note this must fit in to StringCell::m_allocSlackBytes
-	const std::uint32_t MaximumAllocationSlack = 32 * 1024;
-
-	std::uint16_t slackBytesToRecord(size_t entireSlack)
-	{
-		if (entireSlack < (MaximumAllocationSlack / 2))
-		{
-			// Our entire slack is sufficiently small
-			return entireSlack;
-		}
-		else
-		{
-			// The OS gave us lots of slack - this is probably a large allocation
-			// Don't record it all or else we'll trigger the MaximumAllocationSlack and reallocate it on the next shrink
-			return MaximumAllocationSlack / 2;
-		}
-	}
-}
-
 namespace lliby
 {
 
@@ -64,24 +40,16 @@ StringCell* StringCell::createUninitialized(World &world, std::uint32_t byteLeng
 	else
 	{
 		// Allocate a new shared byte array
-		size_t byteArraySize = byteLength;
-		SharedByteArray *newByteArray = SharedByteArray::createMinimumSizedInstance(byteArraySize);
-
-		const auto slackBytes = byteArraySize - byteLength;
+		SharedByteArray *newByteArray = SharedByteArray::createInstance(byteLength);
 
 #ifndef NDEBUG
-		if (slackBytes > 0)
+		if (newByteArray->capacity(byteLength) > byteLength)
 		{
 			newByteArray->data()[byteLength] = 0xff;
 		}
 #endif
 
-		return new (cellPlacement) HeapStringCell(
-				newByteArray,
-				byteLength,
-				charLength,
-				slackBytesToRecord(slackBytes)
-		);
+		return new (cellPlacement) HeapStringCell(newByteArray, byteLength, charLength);
 	}
 }
 
@@ -109,12 +77,7 @@ StringCell* StringCell::withUtf8ByteArray(World &world, SharedByteArray *byteArr
 
 	// Create a new heap cell sharing the byte array
 	void *cellPlacement = alloc::allocateCells(world);
-	return new (cellPlacement) HeapStringCell(
-			byteArray,
-			byteLength,
-			charLength,
-			0
-	);
+	return new (cellPlacement) HeapStringCell(byteArray, byteLength, charLength);
 }
 
 StringCell* StringCell::fromValidatedUtf8Data(World &world, const std::uint8_t *data, std::uint32_t byteLength, std::uint32_t charLength)
@@ -232,8 +195,7 @@ StringCell* StringCell::fromSymbol(World &world, SymbolCell *symbol)
 		return new (cellPlacement) HeapStringCell(
 				heapSymbol->heapByteArray()->ref(),
 				heapSymbol->byteLength(),
-				heapSymbol->charLength(),
-				0 // Symbols don't preserve slack information
+				heapSymbol->charLength()
 		);
 	}
 }
@@ -247,7 +209,19 @@ bool StringCell::dataIsInline() const
 {
 	return byteLength() <= inlineDataSize();
 }
-	
+
+std::size_t StringCell::byteCapacity() const
+{
+	if (dataIsInline())
+	{
+		return inlineDataSize();
+	}
+	else
+	{
+		return static_cast<const HeapStringCell*>(this)->heapByteArray()->capacity(byteLength());
+	}
+}
+
 std::uint8_t* StringCell::utf8Data()
 {
 	if (dataIsInline())
@@ -383,9 +357,6 @@ bool StringCell::replaceBytes(const CharRange &range, const std::uint8_t *patter
 
 		const std::uint32_t initialBytes = range.startPointer - utf8Data(); 
 		const std::uint32_t finalBytes = newByteLength - initialBytes - requiredBytes;
-		
-		// Figure out how much slack our allocation would have after this	
-		const std::int64_t newAllocSlackBytes = static_cast<std::int64_t>(byteLength()) - newByteLength + allocSlackBytes();
 
 		const bool wasInline = dataIsInline();
 		const bool nowInline = newByteLength <= inlineDataSize();
@@ -395,13 +366,13 @@ bool StringCell::replaceBytes(const CharRange &range, const std::uint8_t *patter
 
 		// Does this require a COW due to sharing our byte array?
 		const bool needsCow = (!wasInline && !nowInline) &&
-			                   !static_cast<HeapStringCell*>(this)->heapByteArray()->isExclusive(); 
+			                   !static_cast<HeapStringCell*>(this)->heapByteArray()->isExclusive();
 
-		// Make sure we have enough space and we don't exceed our maximum allocation size
-		// If we are converting from an inline string to a heap string this will also trigger because our alloc slack
-		// bytes will be exhausted
-		const bool needHeapRealloc = (newAllocSlackBytes < 0) ||
-			                         ((newAllocSlackBytes > MaximumAllocationSlack) && !nowInline) ||
+		// Determine if we exceeded our current capacity or if we're using less than half of our allocated space
+		// This will trigger a reallocation of our heap space
+		const auto currentCapacity = byteCapacity();
+		const bool needHeapRealloc = (newByteLength > currentCapacity) ||
+			                         ((newByteLength < (currentCapacity / 2)) && !nowInline) ||
 			                         needsCow;
 
 		std::uint8_t* destString;
@@ -410,7 +381,6 @@ bool StringCell::replaceBytes(const CharRange &range, const std::uint8_t *patter
 		if (!wasInline && nowInline)
 		{
 			// We're converting to an inline string
-			setAllocSlackBytes(inlineDataSize() - newByteLength);
 			destString = static_cast<InlineStringCell*>(this)->inlineData();
 			copySource = pattern;
 
@@ -425,12 +395,9 @@ bool StringCell::replaceBytes(const CharRange &range, const std::uint8_t *patter
 		{
 			size_t byteArraySize = newByteLength;
 
-			newByteArray = SharedByteArray::createMinimumSizedInstance(byteArraySize);
+			newByteArray = SharedByteArray::createInstance(byteArraySize);
 			destString = newByteArray->data();
 			copySource = pattern;
-
-			// Update our slack byte count
-			setAllocSlackBytes(slackBytesToRecord(byteArraySize - newByteLength));
 
 			// Fill the initial chunk of the string
 			memcpy(destString, utf8Data(), initialBytes);
@@ -443,7 +410,6 @@ bool StringCell::replaceBytes(const CharRange &range, const std::uint8_t *patter
 		}
 		else
 		{
-			setAllocSlackBytes(newAllocSlackBytes);
 			destString = utf8Data();
 
 			// The initial chunk is already correct
@@ -567,8 +533,7 @@ StringCell* StringCell::copy(World &world, std::int64_t start, std::int64_t end)
 		return new (cellPlacement) HeapStringCell(
 				heapThis->heapByteArray()->ref(),
 				heapThis->byteLength(),
-				heapThis->charLength(),
-				heapThis->allocSlackBytes()
+				heapThis->charLength()
 		);
 	}
 

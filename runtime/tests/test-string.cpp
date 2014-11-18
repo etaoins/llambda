@@ -33,9 +33,9 @@ std::uint8_t* utf8Bytes(const char *str)
 // This is useful for checking for boundary conditions
 std::size_t slacklessStringSize(size_t minimumSize)
 {
-	platform::SizedMallocResult testAllocResult = platform::sizedMalloc(minimumSize);
-	const size_t testSize = testAllocResult.actualSize;
-	free(testAllocResult.basePointer);
+	void *testMalloc = malloc(minimumSize);
+	const size_t testSize = platform::mallocActualSize(testMalloc, minimumSize);
+	free(testMalloc);
 
 	return testSize;
 }
@@ -659,7 +659,6 @@ void testFill(World &world)
 		ASSERT_EQUAL(helloValue->fill(UnicodeChar('Y'), 1), true);
 
 		ASSERT_EQUAL(helloValue->byteLength(), 7);
-		ASSERT_EQUAL(helloValue->allocSlackBytes(), 5);
 		ASSERT_EQUAL(helloValue->charLength(), 5);
 		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"☃YYYY", 7), 0);
 	}

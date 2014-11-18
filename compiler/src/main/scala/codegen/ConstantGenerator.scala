@@ -161,7 +161,6 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
 
       ct.InlineStringCell.createConstant(
         inlineData=utf8Constant,
-        allocSlackBytes=0,
         charLength=charLengthForString(value),
         byteLength=utf8Data.length
       )
@@ -172,7 +171,6 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
 
       ct.HeapStringCell.createConstant(
         heapByteArray=utf8Constant,
-        allocSlackBytes=0,
         charLength=charLengthForString(value),
         byteLength=utf8Data.length
       )
