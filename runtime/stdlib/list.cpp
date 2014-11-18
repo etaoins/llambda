@@ -201,19 +201,20 @@ AnyCell* lliby_append(World &world, ProperList<AnyCell> *argList)
 	return ListElementCell::createList(world, appendedElements, *(argIt++));
 }
 
-ProperList<AnyCell>* lliby_reverse(World &world, ProperList<AnyCell> *sourceList)
+ProperList<AnyCell>* lliby_reverse(World &world, ProperList<AnyCell> *sourceListRaw)
 {
-	auto sourceIt = sourceList->begin();
-	auto memberCount = sourceList->size();
+	alloc::StrongRef<ProperList<AnyCell>> sourceList(world, sourceListRaw);
 
-	std::vector<AnyCell*> reversedMembers(memberCount);
+	alloc::RangeAlloc allocation = alloc::allocateRange(world, sourceList->size());
+	auto allocIt = allocation.end();
 
-	while(memberCount--)
+	AnyCell *cdr = EmptyListCell::instance();
+	for(auto car : *sourceList)
 	{
-		reversedMembers[memberCount] = *(sourceIt++);
+		cdr = new (*--allocIt) PairCell(car, cdr);
 	}
 
-	return ProperList<AnyCell>::create(world, reversedMembers);
+	return static_cast<ProperList<AnyCell>*>(cdr);
 }
 
 const AnyCell* lliby_memv(const AnyCell *obj, ProperList<AnyCell> *listHead)
