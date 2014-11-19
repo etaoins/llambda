@@ -92,20 +92,40 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
       bodyFor("(define-type <another-type> (U <native-int32>))")(scope)
     }
   }
- 
-  test("defining constant boolean types") {
+
+  test("defining literal boolean types") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
     bodyFor("(define-type <custom-false> #f)")(scope)
-    assert(scope("<custom-false>") === BoundType(vt.ConstantBooleanType(false)))
+    assert(scope("<custom-false>") === BoundType(vt.LiteralBooleanType(false)))
+
+    bodyFor("(define-type <custom-quoted-false> '#f)")(scope)
+    assert(scope("<custom-quoted-false>") === BoundType(vt.LiteralBooleanType(false)))
 
     bodyFor("(define-type <custom-true> #t)")(scope)
-    assert(scope("<custom-true>") === BoundType(vt.ConstantBooleanType(true)))
-    
+    assert(scope("<custom-true>") === BoundType(vt.LiteralBooleanType(true)))
+
     bodyFor("(define-type <custom-boolean> (U #f #t))")(scope)
     assert(scope("<custom-boolean>") === BoundType(vt.BooleanType))
   }
-  
+
+  test("empty list shorthand") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    bodyFor("(define-type <custom-null> '())")(scope)
+    assert(scope("<custom-null>") === BoundType(vt.EmptyListType))
+  }
+
+  test("defining literal symbol types") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    bodyFor("(define-type <unescaped> 'hello)")(scope)
+    assert(scope("<unescaped>") === BoundType(vt.LiteralSymbolType("hello")))
+
+    bodyFor("(define-type <escaped> '|Hello, world!|)")(scope)
+    assert(scope("<escaped>") === BoundType(vt.LiteralSymbolType("Hello, world!")))
+  }
+
   test("defining pair types") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 

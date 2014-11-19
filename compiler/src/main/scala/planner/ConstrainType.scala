@@ -102,7 +102,7 @@ object ConstrainType {
   )(planConfig : PlanConfig) : PlannerState = {
     state.typeConstraintState.condActions.get(value) match {
       case Some(condActionList) =>
-        vt.SatisfiesType(vt.ConstantBooleanType(false), newType) match {
+        vt.SatisfiesType(vt.LiteralBooleanType(false), newType) match {
           case Some(definiteFalse) =>
             condActionList.foldLeft(state) { case (state, condAction) =>
               // Clean ourselves out from the state

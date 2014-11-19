@@ -257,7 +257,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     * information the planner discovers back in to the value
     */
   def withSchemeType(newType : vt.SchemeType) : IntermediateValue = newType match {
-    case vt.ConstantBooleanType(boolVal) =>
+    case vt.LiteralBooleanType(boolVal) =>
       new ConstantBooleanValue(boolVal)
 
     case _ =>

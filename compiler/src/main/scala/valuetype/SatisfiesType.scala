@@ -170,7 +170,7 @@ object SatisfiesType {
         // Atoms are easy
         Some(superAtom == testingAtom)
 
-      case (superValue : ConstantValueType, testingValue : ConstantValueType) =>
+      case (superValue : LiteralValueType, testingValue : LiteralValueType) =>
         Some(superValue == testingValue)
 
       case (superRecord : RecordType, testingRecord : RecordType) =>

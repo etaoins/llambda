@@ -235,8 +235,8 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
 
     val multipleValueListType = vt.SpecificProperListType(List(
       vt.ExactIntegerType,
-      vt.SymbolType,
-      vt.ConstantBooleanType(false)
+      vt.LiteralSymbolType("a"),
+      vt.LiteralBooleanType(false)
     ))
 
     assert(signature.fixedArgTypes === Nil)
@@ -253,13 +253,13 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
     val multipleValueListType = vt.UnionType(Set(
       vt.SpecificProperListType(List(
         vt.ExactIntegerType,
-        vt.SymbolType,
-        vt.ConstantBooleanType(false)
+        vt.LiteralSymbolType("a"),
+        vt.LiteralBooleanType(false)
       )),
       vt.SpecificProperListType(List(
         vt.ExactIntegerType,
         vt.EmptyListType,
-        vt.ConstantBooleanType(true)
+        vt.LiteralBooleanType(true)
       ))
     ))
 

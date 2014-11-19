@@ -29,19 +29,19 @@ object PlanCond {
   ) : PlannerState = {
     import ConstrainType._
 
-    val condActions = if (vt.SatisfiesType(vt.ConstantBooleanType(false), trueValue.schemeType) == Some(true)) {
+    val condActions = if (vt.SatisfiesType(vt.LiteralBooleanType(false), trueValue.schemeType) == Some(true)) {
       List(
         // If (if testExpr #f falseExpr) is not false then testExpr was false
         CondAction(
           subjectValue=resultValue,
-          trueConstraint=IntersectType(vt.ConstantBooleanType(false)),
-          falseConstraint=SubtractType(vt.ConstantBooleanType(false))
+          trueConstraint=IntersectType(vt.LiteralBooleanType(false)),
+          falseConstraint=SubtractType(vt.LiteralBooleanType(false))
         ),
         // If (if testExpr #f falseExpr) is not false then falseExpr was truthy
         CondAction(
           subjectValue=falseValue,
-          trueConstraint=SubtractType(vt.ConstantBooleanType(false)),
-          falseConstraint=IntersectType(vt.ConstantBooleanType(false))
+          trueConstraint=SubtractType(vt.LiteralBooleanType(false)),
+          falseConstraint=IntersectType(vt.LiteralBooleanType(false))
         )
       ) ++
       condActionsForConditionValue(falseState)(falseValue).map { condAction =>
@@ -49,19 +49,19 @@ object PlanCond {
         condAction.copy(falseConstraint=PreserveType)
       }
     }
-    else if (vt.SatisfiesType(vt.ConstantBooleanType(false), falseValue.schemeType) == Some(true)) {
+    else if (vt.SatisfiesType(vt.LiteralBooleanType(false), falseValue.schemeType) == Some(true)) {
       List(
         // If (if testExpr 'something #f) is not false then testExpr was truthy
         CondAction(
           subjectValue=testValue,
-          trueConstraint=SubtractType(vt.ConstantBooleanType(false)),
-          falseConstraint=IntersectType(vt.ConstantBooleanType(false))
+          trueConstraint=SubtractType(vt.LiteralBooleanType(false)),
+          falseConstraint=IntersectType(vt.LiteralBooleanType(false))
         ),
         // If (if testExpr trueExpr #f) is not false then trueExpr was truthy
         CondAction(
           subjectValue=trueValue,
-          trueConstraint=SubtractType(vt.ConstantBooleanType(false)),
-          falseConstraint=IntersectType(vt.ConstantBooleanType(false))
+          trueConstraint=SubtractType(vt.LiteralBooleanType(false)),
+          falseConstraint=IntersectType(vt.LiteralBooleanType(false))
         )
       ) ++
       condActionsForConditionValue(trueState)(trueValue).map { condAction =>
@@ -104,7 +104,7 @@ object PlanCond {
     val testResult = PlanExpr(initialState)(testExpr)
     val testValue = testResult.values.toSingleValue()
 
-    vt.SatisfiesType(vt.ConstantBooleanType(false), testValue.schemeType) match {
+    vt.SatisfiesType(vt.LiteralBooleanType(false), testValue.schemeType) match {
       case Some(true) =>
         // The test result must be false
         PlanExpr(testResult.state)(falseExpr)
@@ -118,14 +118,14 @@ object PlanCond {
 
         val trueWriter = plan.forkPlan()
         // The test expression is definitely not false in this branch
-        val trueConstraint = ConstrainType.SubtractType(vt.ConstantBooleanType(false))
+        val trueConstraint = ConstrainType.SubtractType(vt.LiteralBooleanType(false))
         val initialTrueState = ConstrainType(testResult.state)(testValue, trueConstraint)(plan.config)
         val trueResult = PlanExpr(initialTrueState)(trueExpr)(trueWriter)
         val trueValues = trueResult.values
 
-        val falseWriter = plan.forkPlan() 
+        val falseWriter = plan.forkPlan()
         // The test expression is definitely false in this branch
-        val falseConstraint = ConstrainType.IntersectType(vt.ConstantBooleanType(false))
+        val falseConstraint = ConstrainType.IntersectType(vt.LiteralBooleanType(false))
         val initialFalseState = ConstrainType(testResult.state)(testValue, falseConstraint)(plan.config)
         val falseResult = PlanExpr(initialFalseState)(falseExpr)(falseWriter)
         val falseValues = falseResult.values

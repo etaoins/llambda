@@ -51,10 +51,10 @@ class NameForTypeSuite extends FunSuite {
   test("<number>") {
     assert(NameForType(NumberType) === "<number>")
   }
-  
+
   test("constant boolean") {
-    assert(NameForType(ConstantBooleanType(true)) === "#t")
-    assert(NameForType(ConstantBooleanType(false)) === "#f")
+    assert(NameForType(LiteralBooleanType(true)) === "#t")
+    assert(NameForType(LiteralBooleanType(false)) === "#f")
   }
 
   test("(Pairof <exact-integer> <flonum>)") {
@@ -209,5 +209,13 @@ class NameForTypeSuite extends FunSuite {
     ))
 
     assert(NameForType(caseProcType) === "(case-> (-> <number>) (-> <number> <number>))")
+  }
+
+  test("'hello") {
+    assert(NameForType(LiteralSymbolType("hello")) === "'hello")
+  }
+
+  test("'|Hello, world!|") {
+    assert(NameForType(LiteralSymbolType("Hello, world!")) === "'|Hello, world!|")
   }
 }

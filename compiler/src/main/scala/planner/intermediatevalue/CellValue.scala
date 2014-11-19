@@ -26,7 +26,7 @@ class CellValue(
 
   override def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     // Find out if we're false
-    val isFalseResult = typecheck.PlanTypeCheck(boxedValue, schemeType, vt.ConstantBooleanType(false))
+    val isFalseResult = typecheck.PlanTypeCheck(boxedValue, schemeType, vt.LiteralBooleanType(false))
     val isFalsePred = isFalseResult.toNativePred()
 
     // Invert the result

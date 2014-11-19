@@ -51,6 +51,9 @@ abstract class PrimitiveTypeConstructor extends TypeConstructor
   */
 case class UserDefinedTypeConstructor(args : List[sst.ScopedSymbol], definition : sst.ScopedDatum) extends TypeConstructor
 
+/** Type constructor for literal types such as booleans or symbols */
+case object LiteralTypeConstructor extends TypeConstructor
+
 // These are what (define-syntax) creates
 
 /** Represents a placeholder in a macro pattern */

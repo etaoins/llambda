@@ -150,8 +150,8 @@ sealed abstract trait SchemeType extends CellValueType {
      this
 }
 
-/** Scheme type representing an exact value */
-sealed abstract trait ConstantValueType extends SchemeType
+/** Scheme type representing an specific literal value */
+sealed abstract trait LiteralValueType extends SchemeType
 
 /** All Scheme types except unions
   *
@@ -194,11 +194,18 @@ case class SchemeTypeAtom(cellType : ct.ConcreteCellType) extends NonUnionScheme
     }
 }
 
-/** Constant boolean type */
-case class ConstantBooleanType(value : Boolean) extends DerivedSchemeType with ConstantValueType {
+/** Literal boolean type */
+case class LiteralBooleanType(value : Boolean) extends DerivedSchemeType with LiteralValueType {
   val cellType = ct.BooleanCell
   val parentType = BooleanType
   val isGcManaged = BooleanType.isGcManaged
+}
+
+/** Literal symbol types */
+case class LiteralSymbolType(value : String) extends DerivedSchemeType with LiteralValueType {
+  val cellType = ct.SymbolCell
+  val parentType = SymbolType
+  val isGcManaged = SymbolType.isGcManaged
 }
 
 /** Trait for pair types */
@@ -400,7 +407,7 @@ object AnySchemeType extends UnionType(ct.AnyCell.concreteTypes.map(SchemeTypeAt
 object EmptySchemeType extends UnionType(Set())
 
 object SchemeType {
-  private val allBooleans = Set[NonUnionSchemeType](ConstantBooleanType(false), ConstantBooleanType(true))
+  private val allBooleans = Set[NonUnionSchemeType](LiteralBooleanType(false), LiteralBooleanType(true))
 
   /** Represents a stack of Scheme types
     *

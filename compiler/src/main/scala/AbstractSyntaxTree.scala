@@ -33,7 +33,7 @@ case class StringLiteral(content : String) extends NonSymbolLeaf {
 }
 
 case class BooleanLiteral(value : Boolean) extends NonSymbolLeaf {
-  val schemeType = vt.ConstantBooleanType(value)
+  val schemeType = vt.LiteralBooleanType(value)
 
   override def toString = value match {
     case true => "#t"
@@ -88,7 +88,7 @@ object NaNLiteral {
 }
 
 case class Symbol(name : String) extends Leaf {
-  val schemeType = vt.SymbolType
+  val schemeType = vt.LiteralSymbolType(name)
 
   override def toString = if (SchemeParser.isValidIdentifier(name)) {
     name

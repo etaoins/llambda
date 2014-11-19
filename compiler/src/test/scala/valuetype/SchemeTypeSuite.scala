@@ -12,8 +12,8 @@ trait SchemeTypeSuite extends FunSuite {
   protected val recordType1 = new RecordType("record1", Nil)
   protected val recordType2 = new RecordType("record1", Nil)
 
-  protected val constantTrue = ConstantBooleanType(true)
-  protected val constantFalse = ConstantBooleanType(false)
+  protected val literalTrue = LiteralBooleanType(true)
+  protected val literalFalse = LiteralBooleanType(false)
 
   protected val stringList = UniformProperListType(StringType)
   protected val numericList = UniformProperListType(NumberType)

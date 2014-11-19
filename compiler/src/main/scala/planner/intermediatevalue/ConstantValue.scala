@@ -33,6 +33,8 @@ class ConstantStringValue(val value : String) extends TrivialConstantValue(ct.St
 
 class ConstantSymbolValue(val value : String) extends TrivialConstantValue(ct.SymbolCell, value, ps.CreateSymbolCell.apply) with BoxedOnlyValue {
   val typeDescription = "constant symbol"
+
+  override val schemeType = vt.LiteralSymbolType(value)
 }
 
 trait ConstantNumberValue extends ConstantValue with UnboxedValue {
@@ -116,7 +118,7 @@ class ConstantCharValue(val value : Int) extends TrivialConstantValue(ct.CharCel
 }
 
 class ConstantBooleanValue(val value : Boolean) extends TrivialConstantValue(ct.BooleanCell, value, ps.CreateBooleanCell.apply) with UnboxedValue {
-  override val schemeType = vt.ConstantBooleanType(value)
+  override val schemeType = vt.LiteralBooleanType(value)
   val typeDescription = vt.NameForType(schemeType)
   val nativeType = vt.Predicate
 

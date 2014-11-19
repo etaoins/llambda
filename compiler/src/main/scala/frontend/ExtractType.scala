@@ -25,6 +25,9 @@ object ExtractType {
     case typeConstructor : TypeConstructor =>
       typeConstructor
 
+    case Primitives.Quote =>
+      LiteralTypeConstructor
+
     case _ =>
       throw new MalformedExprException(scopedSymbol, "Type constructor expected")
   }
@@ -65,6 +68,20 @@ object ExtractType {
 
     ValidateCaseLambdaClauses(locatedSignatures)
     vt.CaseProcedureType(locatedSignatures.map(_._2))
+  }
+
+  private def constructLiteralType(value : ast.Datum) : vt.SchemeType = value match {
+    case _ : ast.EmptyList =>
+      vt.EmptyListType
+
+    case ast.BooleanLiteral(value) =>
+      vt.LiteralBooleanType(value)
+
+    case ast.Symbol(name) =>
+      vt.LiteralSymbolType(name)
+
+    case _ =>
+      throw new BadSpecialFormException(value, s"Literal types for ${value.schemeType} are unsupported")
   }
 
   private def applyTypeConstructor(constructorName : sst.ScopedSymbol, operands : List[sst.ScopedDatum], recursiveVars : RecursiveVars) : vt.SchemeType = {
@@ -163,6 +180,15 @@ object ExtractType {
       case Primitives.CaseProcedureType =>
         applyCaseProcedureTypeConstructor(constructorName, operands)
 
+      case LiteralTypeConstructor =>
+        operands match {
+          case List(literalValue) =>
+            constructLiteralType(literalValue.unscope)
+
+          case _ =>
+            throw new BadSpecialFormException(constructorName, "Quote requires exactly one member type argument")
+        }
+
       case _ =>
         throw new BadSpecialFormException(constructorName, "Invalid type constructor syntax")
     }
@@ -240,9 +266,9 @@ object ExtractType {
       applyTypeConstructor(constructorName, operandData, recursiveVars)
 
     case sst.NonSymbolLeaf(ast.BooleanLiteral(value)) =>
-      vt.ConstantBooleanType(value)
+      vt.LiteralBooleanType(value)
 
-    case nonsymbol => 
+    case nonsymbol =>
       throw new BadSpecialFormException(nonsymbol, "Excepted type name to be symbol or type constructor application")
   }
 

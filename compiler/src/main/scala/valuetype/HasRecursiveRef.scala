@@ -30,7 +30,7 @@ object HasRecursiveRef {
       // Procedure types explicitly have recursion disabled at the moment
       false
 
-    case _ : SchemeTypeAtom | _ : ConstantBooleanType | _ : RecordType =>
+    case _ : SchemeTypeAtom | _ : LiteralBooleanType | _ : LiteralSymbolType | _ : RecordType =>
       false
   }
   

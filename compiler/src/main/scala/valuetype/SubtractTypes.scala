@@ -21,9 +21,9 @@ object SubtractTypes {
 
       SchemeType.fromTypeUnion(unrolledMembers)
 
-    case (BooleanType, ConstantBooleanType(value))=>
+    case (BooleanType, LiteralBooleanType(value)) =>
       // There are only two boolean values - special case this
-      ConstantBooleanType(!value)
+      LiteralBooleanType(!value)
 
     case _ if SatisfiesType.stackedSatisfiesType(removingType :: Nil, inputStack) == Some(true) =>
       // No type remains

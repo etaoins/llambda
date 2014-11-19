@@ -1,6 +1,8 @@
 package io.llambda.compiler.valuetype
 import io.llambda
 
+import io.llambda.compiler.ast
+
 object NameForType {
   private def stackedNameForTypeRef(
       schemeTypeRef : SchemeTypeRef,
@@ -31,11 +33,14 @@ object NameForType {
   
   private[valuetype] def stackedNameForNonRecurseType(typeStack : SchemeType.Stack, recurseVarNames : Map[SchemeType, Char]) : String = {
     typeStack.head match {
-      case ConstantBooleanType(false) =>
+      case LiteralBooleanType(false) =>
         "#f"
-      
-      case ConstantBooleanType(true) =>
+
+      case LiteralBooleanType(true) =>
         "#t"
+
+      case LiteralSymbolType(name) =>
+        "'" + ast.Symbol(name).toString
 
       case SchemeTypeAtom(concreteCellType) =>
         concreteCellType.schemeName

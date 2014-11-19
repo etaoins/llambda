@@ -5,6 +5,7 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{PlanWriter, BoxedValue}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
+import llambda.compiler.codegen.RuntimeFunctions
 import llambda.compiler.{InternalCompilerErrorException, ImpossibleTypeConversionException}
 
 object PlanTypeCheck {
@@ -234,7 +235,39 @@ object PlanTypeCheck {
         DynamicResult(resultTemp)
     }))
   }
-  
+
+  private def testLiteralSymbolType(
+      plan : PlanWriter,
+      checkValue : BoxedValue,
+      valueType : vt.SchemeType,
+      name :  String
+  ) : CheckResult = {
+    branchOnType(plan, checkValue, valueType, vt.SymbolType, isTypePlanner=Some({
+      (isSymbolPlan, remainingType) =>
+        val castTemp = checkValue.castToCellTempValue(ct.SymbolCell)(isSymbolPlan)
+        val compareTemp = ps.Temp(vt.SymbolType)
+
+        isSymbolPlan.steps += ps.CreateSymbolCell(compareTemp, name)
+
+        val entryTemp = ps.EntryPointTemp()
+        isSymbolPlan.steps += ps.CreateNamedEntryPoint(
+          entryTemp,
+          RuntimeFunctions.symbolIsEqvSignature,
+          RuntimeFunctions.symbolIsEqvSymbol
+        )
+
+        val resultPred = ps.Temp(vt.Predicate)
+        isSymbolPlan.steps += ps.Invoke(
+          result=Some(resultPred),
+          signature=RuntimeFunctions.symbolIsEqvSignature,
+          entryPoint=entryTemp,
+          arguments=List(castTemp, compareTemp)
+        )
+
+        DynamicResult(resultPred)
+    }))
+  }
+
   private def testNonUnionType(
       plan : PlanWriter,
       checkValue : BoxedValue,
@@ -253,8 +286,8 @@ object PlanTypeCheck {
         val testCdrType = unrolledTypeRef(testCdrTypeRef)
 
         testPairType(plan, checkValue, valueType, testCarType, testCdrType)
-      
-      case vt.ConstantBooleanType(value) =>
+
+      case vt.LiteralBooleanType(value) =>
         val castTemp = checkValue.castToCellTempValue(ct.BooleanCell)(plan)
 
         // This works because booleans are preconstructed
@@ -265,7 +298,10 @@ object PlanTypeCheck {
         plan.steps += ps.IntegerCompare(valueMatchedPred, ps.CompareCond.Equal, None, castTemp, expectedTemp)
 
         DynamicResult(valueMatchedPred)
-      
+
+      case vt.LiteralSymbolType(name) =>
+        testLiteralSymbolType(plan, checkValue, valueType, name)
+
       case vt.SpecificVectorType(testMemberTypeRefs) =>
         val testMemberTypes = testMemberTypeRefs map { testMemberTypeRef =>
           unrolledTypeRef(testMemberTypeRef)

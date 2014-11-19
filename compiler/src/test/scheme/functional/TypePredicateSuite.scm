@@ -251,3 +251,32 @@
   (assert-true  (symbol-to-int-alist? symbol-to-int-alist))
   (assert-false (symbol-to-int-alist? string-to-int-alist))))
 
+(define-test "(define-predicate) for symbols" (expect-success
+  (import (llambda typed))
+
+  (define-predicate hello? 'hello)
+  (define-predicate hello-or-goodbye? (U 'hello 'goodbye))
+
+  (define hello-symbol 'hello)
+  (define hello-string "hello")
+  (define goodbye-symbol 'goodbye)
+
+  (define untyped-hello-symbol (typeless-cell hello-symbol))
+  (define untyped-hello-string (typeless-cell hello-string))
+  (define untyped-goodbye-symbol (typeless-cell goodbye-symbol))
+
+  (assert-true  (hello? hello-symbol))
+  (assert-false (hello? hello-string))
+  (assert-false (hello? goodbye-symbol))
+
+  (assert-true  (hello? untyped-hello-symbol))
+  (assert-false (hello? untyped-hello-string))
+  (assert-false (hello? untyped-goodbye-symbol))
+
+  (assert-true  (hello-or-goodbye? hello-symbol))
+  (assert-false (hello-or-goodbye? hello-string))
+  (assert-true  (hello-or-goodbye? goodbye-symbol))
+
+  (assert-true  (hello-or-goodbye? untyped-hello-symbol))
+  (assert-false (hello-or-goodbye? untyped-hello-string))
+  (assert-true  (hello-or-goodbye? untyped-goodbye-symbol))))

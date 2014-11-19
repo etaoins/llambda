@@ -7,7 +7,9 @@
 	(assert-true (eqv? 'test 'test))
 	(assert-true (eqv? (string->symbol "test") (string->symbol "test")))
 	(assert-true (eqv? 'test (string->symbol "test")))
-	(assert-false (eqv? 'one 'two))))
+	(assert-true (eqv?  (typed-dynamic 'test <symbol>) (typed-dynamic 'test <symbol>)))
+	(assert-false (eqv? 'one 'two))
+	(assert-false (eqv?  (typed-dynamic 'one <symbol>) (typed-dynamic 'two <symbol>)))))
 
 (define-test "numeric (eqv?)" (expect-success
   (import (llambda typed))

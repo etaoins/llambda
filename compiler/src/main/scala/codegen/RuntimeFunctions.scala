@@ -106,7 +106,18 @@ object RuntimeFunctions {
     returnType=vt.ReturnType.SingleValue(vt.Predicate),
     attributes=Set()
   )
-  
+
+  val symbolIsEqvSymbol = "_lliby_symbol_is_eqv"
+
+  val symbolIsEqvSignature = ProcedureSignature(
+    hasWorldArg=false,
+    hasSelfArg=false,
+    fixedArgTypes=List(vt.SymbolType, vt.SymbolType),
+    restArgMemberTypeOpt=None,
+    returnType=vt.ReturnType.SingleValue(vt.Predicate),
+    attributes=Set()
+  )
+
   val valueForParameterSignature = ProcedureSignature(
     hasWorldArg=true,
     hasSelfArg=true,
