@@ -223,3 +223,9 @@
   (define a (vector 1 2 3 4 5))
   (define b (vector 10 20 30 40 50))
   (vector-copy! b 2 a 1)))
+
+(define-test "(make-vector) of large vector" (expect-success
+  ; Make sure we don't try to statically plan this and calculate a type for it
+  (define vec1 (make-vector 10000000))
+  (define vec2 (make-vector 10000000))
+  (assert-true (equal? vec1 vec2))))

@@ -12,6 +12,13 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.valuetype.Implicits._
 
 object VectorProcPlanner extends ReportProcPlanner {
+  /** Maximum length of vector type to create
+    *
+    * This prevents (make-vector) from creating pathologically large vector types that cause the compiler to consume
+    * significant amounts of memory and CPU time.
+    */
+  private val maximumVectorTypeSize = 1024
+
   private def makeFilledVector(state : PlannerState)(
       length : (ContextLocated, iv.IntermediateValue),
       fillValue : iv.IntermediateValue
@@ -19,7 +26,7 @@ object VectorProcPlanner extends ReportProcPlanner {
     val lengthValue = length._2
 
     val unstableType = lengthValue match {
-      case constantInt : iv.ConstantExactIntegerValue =>
+      case constantInt : iv.ConstantExactIntegerValue if constantInt.value <= maximumVectorTypeSize =>
         val knownLength = constantInt.value
         vt.SpecificVectorType(Vector.fill(knownLength.toInt)(fillValue.schemeType)) 
 
