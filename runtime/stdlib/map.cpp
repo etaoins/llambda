@@ -7,8 +7,6 @@
 #include "binding/ProperList.h"
 #include "binding/UnitCell.h"
 
-#include "alloc/allocator.h"
-#include "alloc/RangeAlloc.h"
 #include "alloc/StrongRefVector.h"
 #include "alloc/cellref.h"
 
@@ -149,17 +147,16 @@ namespace
 		for(std::size_t i = 0; i < minimumLength; i++)
 		{
 			// Build the rest argument list
-			std::vector<CharCell*> restArgVector;
+			std::vector<UnicodeChar> restArgVector;
 			restArgVector.reserve(restCharVectors.size());
 
-			auto boxedCharAllocIt = alloc::allocateCells(world, restCharVectors.size());
 			for(auto restCharVector : restCharVectors)
 			{
-				restArgVector.push_back(new (boxedCharAllocIt++) CharCell(restCharVector[i]));
+				restArgVector.push_back(restCharVector[i]);
 			}
 
 			// Create the rest argument list
-			ProperList<CharCell> *restArgList = ProperList<CharCell>::create(world, restArgVector);
+			ProperList<CharCell> *restArgList = ProperList<CharCell>::emplaceValues(world, restArgVector);
 
 			UnicodeChar result(mapFunc(firstCharVector[i], restArgList));
 			if (!result.isValid())

@@ -2,9 +2,6 @@
 #include "binding/ExactIntegerCell.h"
 #include "binding/FlonumCell.h"
 #include "binding/ProperList.h"
-#include "binding/ReturnValuesList.h"
-
-#include "alloc/RangeAlloc.h"
 
 #include <cmath>
 #include <cfloat>
@@ -309,20 +306,17 @@ NumberCell* lliby_div(World &world, NumberCell *startValue, ProperList<NumberCel
 	}
 }
 
-ReturnValuesList* lliby_truncate_div(World &world, std::int64_t numerator, std::int64_t denominator)
+ProperList<ExactIntegerCell>* lliby_truncate_div(World &world, std::int64_t numerator, std::int64_t denominator)
 {
 	if (denominator == 0)
 	{
 		signalError(world, "Attempted (truncate/) by zero");
 	}
 
-	alloc::RangeAlloc allocation = alloc::allocateRange(world, 2);
-	auto allocIt = allocation.begin();
+	auto quotient = numerator / denominator;
+	auto remainder = numerator % denominator;
 
-	auto quotient = new (*allocIt++) ExactIntegerCell(numerator / denominator);
-	auto remainder = new (*allocIt++) ExactIntegerCell(numerator % denominator);
-
-	return ReturnValuesList::create(world, {quotient, remainder});
+	return ProperList<ExactIntegerCell>::emplaceValues(world, {quotient, remainder});
 }
 
 std::int64_t lliby_truncate_quotient(World &world, std::int64_t numerator, std::int64_t denominator)
@@ -345,7 +339,7 @@ std::int64_t lliby_truncate_remainder(World &world, std::int64_t numerator, std:
 	return numerator % denominator;
 }
 
-ReturnValuesList* lliby_floor_div(World &world, std::int64_t numerator, std::int64_t denominator)
+ProperList<ExactIntegerCell>* lliby_floor_div(World &world, std::int64_t numerator, std::int64_t denominator)
 {
 	if (denominator == 0)
 	{
@@ -353,14 +347,7 @@ ReturnValuesList* lliby_floor_div(World &world, std::int64_t numerator, std::int
 	}
 
 	auto floorResult = floorDivision(numerator, denominator);
-
-	alloc::RangeAlloc allocation = alloc::allocateRange(world, 2);
-	auto allocIt = allocation.begin();
-
-	auto quotientCell = new (*allocIt++) ExactIntegerCell(floorResult.quotient);
-	auto remainderCell = new (*allocIt++) ExactIntegerCell(floorResult.remainder);
-
-	return ReturnValuesList::create(world, {quotientCell, remainderCell});
+	return ProperList<ExactIntegerCell>::emplaceValues(world, {floorResult.quotient, floorResult.remainder});
 }
 
 std::int64_t lliby_floor_quotient(World &world, std::int64_t numerator, std::int64_t denominator)
@@ -421,7 +408,7 @@ std::int64_t lliby_lcm(std::int64_t a, std::int64_t b, ProperList<ExactIntegerCe
 	return (result < 0) ? -result : result;
 }
 
-ReturnValuesList* lliby_exact_integer_sqrt(World &world, std::int64_t val)
+ProperList<ExactIntegerCell>* lliby_exact_integer_sqrt(World &world, std::int64_t val)
 {
 	if (val < 0)
 	{
@@ -432,13 +419,7 @@ ReturnValuesList* lliby_exact_integer_sqrt(World &world, std::int64_t val)
 	const std::int64_t floorResult = std::sqrt(val);
 	const std::int64_t remainder = val - (floorResult * floorResult);
 
-	alloc::RangeAlloc allocation = alloc::allocateRange(world, 2);
-	auto allocIt = allocation.begin();
-
-	auto floorResultCell = new (*allocIt++) ExactIntegerCell(floorResult);
-	auto remainderCell = new (*allocIt++) ExactIntegerCell(remainder);
-
-	return ReturnValuesList::create(world, {floorResultCell, remainderCell});
+	return ProperList<ExactIntegerCell>::emplaceValues(world, {floorResult, remainder});
 }
 
 double lliby_numerator(double value)

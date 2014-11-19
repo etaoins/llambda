@@ -138,6 +138,43 @@ namespace lliby
 		}
 
 		/**
+		 * Creates a new ProperList instance by passing each value to our member type's constructor
+		 *
+		 * This is useful for creating lists of boxed values from containers of unboxsed values - for example, a list of
+		 * ExactIntegerCell from a std::vector<std::int64_t>. In addition to being more convenient than constructing
+		 * each value it also has significantly less GC overhead due to allocating the list's values and pairs at once.
+		 */
+		template<typename Container>
+		static ProperList<T> *emplaceValues(World &world, const Container &values)
+		{
+			if (values.size() == 0)
+			{
+				return EmptyListCell::asProperList<T>();
+			}
+
+			alloc::RangeAlloc allocation = alloc::allocateRange(world, values.size() * 2);
+
+			auto allocIt = allocation.begin();
+			auto valueIt = values.begin();
+			for(auto left = values.size(); left; left--)
+			{
+				void *pairCell = *allocIt++;
+				void *valueCell = *allocIt++;
+				auto cdr = (left == 1) ? EmptyListCell::instance() : static_cast<AnyCell*>(*allocIt);
+
+				new (pairCell) PairCell(new (valueCell) T(*valueIt++), cdr);
+			}
+
+			return static_cast<ProperList<T>*>(*allocation.begin());
+		}
+
+		template<typename V>
+		static ProperList<T> *emplaceValues(World &world, const std::initializer_list<V> &valuesList)
+		{
+			return emplaceValues<std::initializer_list<V>>(world, valuesList);
+		}
+
+		/**
 		 * Returns true if the passed cell is a proper list of the correct type
 		 *
 		 * This is used to implement cell_cast<> for ProperList instances.

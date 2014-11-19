@@ -2,9 +2,6 @@
 #include "binding/StringCell.h"
 #include "binding/ProperList.h"
 
-#include "alloc/allocator.h"
-#include "alloc/RangeAlloc.h"
-
 #include "core/error.h"
 
 #include "util/assertSliceValid.h"
@@ -120,20 +117,7 @@ ProperList<CharCell>* lliby_string_to_list(World &world, StringCell *sourceStrin
 	// Get the unboxed Unicode chars
 	std::vector<UnicodeChar> unboxedChars(sourceString->unicodeChars(start, end));
 
-	// Allocate space for the boxed chars
-	alloc::RangeAlloc allocation = alloc::allocateRange(world, unboxedChars.size());
-	auto allocIt = allocation.begin();
-
-	// Box all of the characters
-	std::vector<CharCell*> boxedChars;
-	boxedChars.reserve(unboxedChars.size());
-
-	for(auto unboxedChar : unboxedChars)
-	{
-		boxedChars.push_back(new (*allocIt++) CharCell(unboxedChar));
-	}
-
-	return ProperList<CharCell>::create(world, boxedChars);
+	return ProperList<CharCell>::emplaceValues(world, unboxedChars);
 }
 
 // This is also used to implement (string-copy)
