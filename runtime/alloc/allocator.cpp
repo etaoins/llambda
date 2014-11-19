@@ -22,8 +22,6 @@ extern "C"
 
 using lliby::alloc::AllocCell;
 
-// These are used directly by generated code to avoid function call overhead
-
 void *_lliby_alloc_cells(lliby::World &world, std::uint64_t count)
 {
 	void *result = lliby::alloc::allocateCells(world, count);
