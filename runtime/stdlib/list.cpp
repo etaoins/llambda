@@ -164,13 +164,6 @@ AnyCell* lliby_list_copy(World &world, AnyCell *sourceHead)
 	return destHead;
 }
 
-ProperList<AnyCell>* lliby_list(ProperList<AnyCell> *head)
-{
-	// Our calling convention requires that rest parameters are passed as a proper list. Because (list) is defined as
-	// only having rest args the codegen will do the heavy lifting of building the list and we only have to return it.
-	return head;
-}
-
 AnyCell* lliby_append(World &world, ProperList<AnyCell> *argList)
 {
 	auto argCount = argList->size();

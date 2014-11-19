@@ -432,7 +432,8 @@
     (define-r7rs cddr (lambda: ((x : (Pairof <any> <pair>))) (cdr (cdr x))))
 
     (define-r7rs list-copy (world-function "lliby_list_copy" (<any>) -> <any>))
-    (define-r7rs list (native-function "lliby_list" <any> -> <list>))
+    (define-r7rs list (lambda rest rest))
+
     (define-r7rs append (world-function "lliby_append" <any> -> <any>))
 
     (define-r7rs memv (native-function "lliby_memv" (<any> <list>) -> <any>))

@@ -59,11 +59,6 @@ object ListProcPlanner extends ReportProcPlanner {
       reportName : String,
       operands : List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = (reportName, operands) match {
-    case ("list", operands) =>
-      // Build a proper list directly
-      val operandValues = operands.map(_._2)
-      Some(ValuesToList(operandValues))
-
     case ("length", List((_, singleOperand))) =>
       // Do we know the length at compile time?
       singleOperand match {
