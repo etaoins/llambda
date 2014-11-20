@@ -2,7 +2,7 @@ package io.llambda.compiler.planner.typecheck
 import io.llambda
 
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.planner.{PlanWriter, BoxedValue}
+import llambda.compiler.planner.{PlanWriter, BoxedValue, PlanSymbolEquality}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.codegen.RuntimeFunctions
@@ -236,38 +236,6 @@ object PlanTypeCheck {
     }))
   }
 
-  private def testLiteralSymbolType(
-      plan : PlanWriter,
-      checkValue : BoxedValue,
-      valueType : vt.SchemeType,
-      name :  String
-  ) : CheckResult = {
-    branchOnType(plan, checkValue, valueType, vt.SymbolType, isTypePlanner=Some({
-      (isSymbolPlan, remainingType) =>
-        val castTemp = checkValue.castToCellTempValue(ct.SymbolCell)(isSymbolPlan)
-        val compareTemp = ps.Temp(vt.SymbolType)
-
-        isSymbolPlan.steps += ps.CreateSymbolCell(compareTemp, name)
-
-        val entryTemp = ps.EntryPointTemp()
-        isSymbolPlan.steps += ps.CreateNamedEntryPoint(
-          entryTemp,
-          RuntimeFunctions.symbolIsEqvSignature,
-          RuntimeFunctions.symbolIsEqvSymbol
-        )
-
-        val resultPred = ps.Temp(vt.Predicate)
-        isSymbolPlan.steps += ps.Invoke(
-          result=Some(resultPred),
-          signature=RuntimeFunctions.symbolIsEqvSignature,
-          entryPoint=entryTemp,
-          arguments=List(castTemp, compareTemp)
-        )
-
-        DynamicResult(resultPred)
-    }))
-  }
-
   private def testNonUnionType(
       plan : PlanWriter,
       checkValue : BoxedValue,
@@ -300,7 +268,13 @@ object PlanTypeCheck {
         DynamicResult(valueMatchedPred)
 
       case vt.LiteralSymbolType(name) =>
-        testLiteralSymbolType(plan, checkValue, valueType, name)
+        branchOnType(plan, checkValue, valueType, vt.SymbolType, isTypePlanner=Some({
+          (isSymbolPlan, remainingType) =>
+            val castTemp = checkValue.castToCellTempValue(ct.SymbolCell)(isSymbolPlan)
+            val resultPred = PlanSymbolEquality.compareStatic(name, remainingType, castTemp)(isSymbolPlan)
+
+            DynamicResult(resultPred)
+        }))
 
       case vt.SpecificVectorType(testMemberTypeRefs) =>
         val testMemberTypes = testMemberTypeRefs map { testMemberTypeRef =>

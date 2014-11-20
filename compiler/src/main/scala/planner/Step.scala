@@ -566,6 +566,47 @@ case class LoadStringCharLength(result : TempValue, boxed : TempValue) extends S
       .assignLocationFrom(this)
 }
 
+/** Loads the length of a symbol in bytes as a UInt32
+  *
+  * This is nullipotent as a symbol's byte length is immutable
+  */
+case class LoadSymbolByteLength(
+    result : TempValue,
+    boxed : TempValue,
+    possibleLengthsOpt : Option[Set[Int]] = None
+) extends Step with NullipotentStep {
+  lazy val inputValues = Set(boxed)
+  lazy val outputValues = Set(result)
+
+  def renamed(f : (TempValue) => TempValue) =
+    LoadSymbolByteLength(f(result), f(boxed), possibleLengthsOpt)
+      .assignLocationFrom(this)
+}
+
+/** Loads a byte from a symbol
+  *
+  * This requires that the symbol has a statically known length in bytes
+  *
+  * @param  result            Result value as a UInt8
+  * @param  boxed             Boxed symbol value
+  * @param  offset            Requested offset in UInt32 bytes
+  * @param  symbolByteLength  Statically known length of the symbol in bytes. This is used to handle inline symbols.
+  */
+case class LoadSymbolByte(
+    result : TempValue,
+    boxed : TempValue,
+    offset : TempValue,
+    symbolByteLength : Long,
+    possibleValuesOpt : Option[Set[Byte]] = None
+) extends Step with NullipotentStep {
+  lazy val inputValues = Set(boxed, offset)
+  lazy val outputValues = Set(result)
+
+  def renamed(f : (TempValue) => TempValue) =
+    LoadSymbolByte(f(result), f(boxed), f(offset), symbolByteLength, possibleValuesOpt)
+      .assignLocationFrom(this)
+}
+
 /** Loads the length of a bytevector as a UInt32 */
 case class LoadBytevectorLength(result : TempValue, boxed : TempValue) extends Step with NullipotentStep {
   lazy val inputValues = Set(boxed)

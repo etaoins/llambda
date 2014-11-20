@@ -11,6 +11,50 @@
 	(assert-false (eqv? 'one 'two))
 	(assert-false (eqv?  (typed-dynamic 'one <symbol>) (typed-dynamic 'two <symbol>)))))
 
+(define-test "symbol union (eqv?)" (expect-success
+  (import (llambda typed))
+  ; These symbols are all of inline length
+  (define-type <inline-symbol-union> (U 'one 'two 'three 'four 'five))
+
+  (define inline-three (typed-dynamic 'three <inline-symbol-union>))
+  (define inline-four  (typed-dynamic 'four  <inline-symbol-union>))
+  (define inline-five  (typed-dynamic 'five  <inline-symbol-union>))
+
+  ; Three can be distinguished purely by length
+  (assert-true  (eqv? inline-three 'three))
+  (assert-false (eqv? inline-three 'four))
+  (assert-false (eqv? inline-three 'five))
+
+  ; Four and five need to be distinguished with a byte lookup
+  (assert-false (eqv? inline-four 'three))
+  (assert-true  (eqv? inline-four 'four))
+  (assert-false (eqv? inline-four 'five))
+
+  (assert-false (eqv? inline-five 'three))
+  (assert-false (eqv? inline-five 'four))
+  (assert-true  (eqv? inline-five 'five))
+
+  ; These symbols are all of heap length
+  (define-type <heap-symbol-union> (U 'test-symbol-one 'test-symbol-two 'test-symbol-three 'test-symbol-four 'test-symbol-five))
+
+  (define heap-three (typed-dynamic 'test-symbol-three <heap-symbol-union>))
+  (define heap-four  (typed-dynamic 'test-symbol-four  <heap-symbol-union>))
+  (define heap-five  (typed-dynamic 'test-symbol-five  <heap-symbol-union>))
+
+  ; Three can be distinguished purely by length
+  (assert-true  (eqv? heap-three 'test-symbol-three))
+  (assert-false (eqv? heap-three 'test-symbol-four))
+  (assert-false (eqv? heap-three 'test-symbol-five))
+
+  ; Four and five need to be distinguished with a byte lookup
+  (assert-false (eqv? heap-four 'test-symbol-three))
+  (assert-true  (eqv? heap-four 'test-symbol-four))
+  (assert-false (eqv? heap-four 'test-symbol-five))
+
+  (assert-false (eqv? heap-five 'test-symbol-three))
+  (assert-false (eqv? heap-five 'test-symbol-four))
+  (assert-true  (eqv? heap-five 'test-symbol-five))))
+
 (define-test "numeric (eqv?)" (expect-success
   (import (llambda typed))
 

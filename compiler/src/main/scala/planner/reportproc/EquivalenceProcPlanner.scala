@@ -106,15 +106,15 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
   }
 
   private def invokeCompare(
-      signature : ProcedureSignature,
       runtimeCompareSymbol : String,
       val1 : iv.IntermediateValue,
       val2 : iv.IntermediateValue)
   (implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : iv.IntermediateValue = {
     // (eqv?) etc don't invoke their arguments so we can skip the procedure type conversion
-    val val1Temp = val1.toTempValue(signature.fixedArgTypes(0), convertProcType=false)
-    val val2Temp = val2.toTempValue(signature.fixedArgTypes(1), convertProcType=false)
+    val val1Temp = val1.toTempValue(vt.AnySchemeType, convertProcType=false)
+    val val2Temp = val2.toTempValue(vt.AnySchemeType, convertProcType=false)
 
+    val signature = RuntimeFunctions.equivalenceProcSignature
     val entryPointTemp = ps.EntryPointTemp()
     val resultTemp = ps.Temp(vt.Predicate)
 
@@ -125,7 +125,7 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
 
     new iv.NativePredicateValue(resultTemp)
   }
-  
+
   private def planEquivalenceProc(state : PlannerState)(
       ptrCompareTypes : Set[vt.NonUnionSchemeType],
       runtimeCompareSymbol : String,
@@ -150,10 +150,9 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
       }
       else if (val1.hasDefiniteType(vt.SymbolType) &&
                val2.hasDefiniteType(vt.SymbolType)) {
-        // This is marginally more efficient than calling the <any> equivalence functions as it does not need to perform
-        // type checking. This is already exposed to implement type checking for literal symbol types so we might as
-        // well reuse iit for equivalence
-        invokeCompare(RuntimeFunctions.symbolIsEqvSignature, RuntimeFunctions.symbolIsEqvSymbol, val1, val2)
+        val resultPred = PlanSymbolEquality.compareDynamic(val1, val2)
+
+        new iv.NativePredicateValue(resultPred)
       }
       else {
         // Due to NaN we can only do double comparisons if one value is known
@@ -166,13 +165,13 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
 
           case _ =>
             // We need to invoke the runtime
-            invokeCompare(RuntimeFunctions.equivalenceProcSignature, runtimeCompareSymbol, val1, val2)
+            invokeCompare(runtimeCompareSymbol, val1, val2)
         }
       }
     }
     else {
       // Always call our runtime
-      invokeCompare(RuntimeFunctions.equivalenceProcSignature, runtimeCompareSymbol, val1, val2)
+      invokeCompare(runtimeCompareSymbol, val1, val2)
     }
 
     // Register our type constraints for occurrence typing

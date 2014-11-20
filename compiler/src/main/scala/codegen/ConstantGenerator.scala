@@ -37,14 +37,6 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
   // Maximum value of a 32bit unsigned integer
   private val sharedConstantRefCount = (math.pow(2, 32) - 1).toLong
 
-  private def arrayElementsForIrType(irType : IrType) : Int= irType match {
-    case ArrayType(elements, _) =>
-      elements
-
-    case _ =>
-      throw new InternalCompilerErrorException("Expected cell member to be array")
-  }
-
   def defineConstantData(module : IrModuleBuilder)(name : String, initializer : IrConstant) : GlobalVariable = {
     val constantDataDef = IrGlobalVariableDef(
       name=name,
@@ -153,7 +145,7 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
     val stringCellName = baseName + ".cell"
 
     val utf8Data = Codec.toUTF8(value)
-    val inlineUtf8Bytes = arrayElementsForIrType(ct.InlineStringCell.inlineDataIrType)
+    val inlineUtf8Bytes = ConstantGenerator.maximumInlineStringBytes
 
     val stringCell = if (utf8Data.length <= inlineUtf8Bytes) {
       // We can do this inline
@@ -188,7 +180,7 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
     val symbolCellName = baseName + ".cell"
 
     val utf8Data = Codec.toUTF8(value)
-    val inlineUtf8Bytes = arrayElementsForIrType(ct.InlineSymbolCell.inlineDataIrType)
+    val inlineUtf8Bytes = ConstantGenerator.maximumInlineSymbolBytes
 
     val symbolCell = if (utf8Data.length <= inlineUtf8Bytes) {
       // We can do this inline
@@ -347,5 +339,23 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
         FloatConstant(value.toFloat)
     }
   }
+}
+
+object ConstantGenerator {
+  private def arrayElementsForIrType(irType : IrType) : Int= irType match {
+    case ArrayType(elements, _) =>
+      elements
+
+    case _ =>
+      throw new InternalCompilerErrorException("Expected cell member to be array")
+  }
+
+  /** Maximum number of bytes that an can be stored in an inline symbol */
+  lazy val maximumInlineSymbolBytes =
+    arrayElementsForIrType(ct.InlineSymbolCell.inlineDataIrType)
+
+  /** Maximum number of bytes that an can be stored in an inline string */
+  lazy val maximumInlineStringBytes =
+    arrayElementsForIrType(ct.InlineStringCell.inlineDataIrType)
 }
 
