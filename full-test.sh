@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # If anything fails we should fail
 set -e
@@ -9,14 +9,8 @@ rm -Rf $BUILD_DIR
 mkdir $BUILD_DIR
 cd $BUILD_DIR
 
-# List of configurations of the runtime to test
-RUNTIME_CONFIGURATIONS=("-DCMAKE_BUILD_TYPE=Release"
-                        "-DCMAKE_BUILD_TYPE=Debug -DENABLE_GC_DEBUGGING=no"
-                        "-DCMAKE_BUILD_TYPE=Debug -DENABLE_GC_DEBUGGING=yes")
-
-for config in "${RUNTIME_CONFIGURATIONS[@]}"
-do
-	cmake -GNinja $config ../runtime
+test_configuration() {
+	cmake -GNinja $1 ../runtime
 	ninja
 
 	# Run time runtime tests
@@ -28,4 +22,9 @@ do
 	sbt test
 
 	cd -
-done
+}
+
+# Test each configuration
+test_configuration "-DCMAKE_BUILD_TYPE=Release"
+test_configuration "-DCMAKE_BUILD_TYPE=Debug -DENABLE_GC_DEBUGGING=no"
+test_configuration "-DCMAKE_BUILD_TYPE=Debug -DENABLE_GC_DEBUGGING=yes"
