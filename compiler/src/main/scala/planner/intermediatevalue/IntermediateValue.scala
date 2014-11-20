@@ -257,8 +257,8 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     * information the planner discovers back in to the value
     */
   def withSchemeType(newType : vt.SchemeType) : IntermediateValue = newType match {
-    case vt.LiteralBooleanType(boolVal) =>
-      new ConstantBooleanValue(boolVal)
+    case literalType : vt.LiteralValueType =>
+      IntermediateValue.fromLiteralType(literalType)
 
     case _ =>
       this
@@ -297,5 +297,15 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
       operandCount : Int
   )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : IntermediateValue =
     this
+}
+
+object IntermediateValue {
+  def fromLiteralType(literalType : vt.LiteralValueType) : ConstantValue = literalType match {
+    case vt.LiteralBooleanType(boolVal) =>
+      new ConstantBooleanValue(boolVal)
+
+    case vt.LiteralSymbolType(name) =>
+      new ConstantSymbolValue(name)
+  }
 }
 

@@ -173,8 +173,12 @@ class CellValue(
       throw new InternalCompilerErrorException("Attempt to directly convert to native boolean. Should be caught by toTruthyPredicate.")
   }
   
-  override def withSchemeType(newType : vt.SchemeType) : IntermediateValue = {
-    new CellValue(newType, boxedValue, knownAllocated)
+  override def withSchemeType(newType : vt.SchemeType) : IntermediateValue = newType match {
+    case literalType : vt.LiteralValueType =>
+      IntermediateValue.fromLiteralType(literalType)
+
+    case _ =>
+      new CellValue(newType, boxedValue, knownAllocated)
   }
   
   def preferredRepresentation : vt.ValueType =
