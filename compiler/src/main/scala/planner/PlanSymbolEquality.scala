@@ -47,17 +47,28 @@ object PlanSymbolEquality {
     // Find our static byte length
     val staticByteLength = staticUtf8Data.length
 
-    // Load our dynamic length
-    val dynamicLengthTemp = ps.Temp(vt.UInt16)
-    plan.steps += ps.LoadSymbolByteLength(dynamicLengthTemp, dynamicTemp, Some(possibleLengths))
+    val lengthMatchPred = if (possibleLengths == Set(staticByteLength)) {
+      // All symbol have the same length; skip length test
+      val staticTrue = ps.Temp(vt.Predicate)
+      plan.steps += ps.CreateNativeInteger(staticTrue, 1, vt.Predicate.bits)
 
-    // Create our static length
-    val staticLengthTemp = ps.Temp(vt.UInt16)
-    plan.steps += ps.CreateNativeInteger(staticLengthTemp, staticByteLength, 16)
+      staticTrue
+    }
+    else {
+      // Load our dynamic length
+      val dynamicLengthTemp = ps.Temp(vt.UInt16)
+      plan.steps += ps.LoadSymbolByteLength(dynamicLengthTemp, dynamicTemp, Some(possibleLengths))
 
-    // Compare them
-    val lengthMatchPred = ps.Temp(vt.Predicate)
-    plan.steps += ps.IntegerCompare(lengthMatchPred, ps.CompareCond.Equal, None, staticLengthTemp, dynamicLengthTemp)
+      // Create our static length
+      val staticLengthTemp = ps.Temp(vt.UInt16)
+      plan.steps += ps.CreateNativeInteger(staticLengthTemp, staticByteLength, 16)
+
+      // Compare them
+      val lengthMatchPred = ps.Temp(vt.Predicate)
+      plan.steps += ps.IntegerCompare(lengthMatchPred, ps.CompareCond.Equal, None, staticLengthTemp, dynamicLengthTemp)
+
+      lengthMatchPred
+    }
 
     // We only care about symbols with the same length as ourselves as we always do a length check
     val sameLengthMatches = otherUtf8Data.filter(_.length == staticByteLength)

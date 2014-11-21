@@ -13,6 +13,7 @@
 
 (define-test "symbol union (eqv?)" (expect-success
   (import (llambda typed))
+
   ; These symbols are all of inline length
   (define-type <inline-symbol-union> (U 'one 'two 'three 'four 'five))
 
@@ -33,6 +34,16 @@
   (assert-false (eqv? inline-five 'three))
   (assert-false (eqv? inline-five 'four))
   (assert-true  (eqv? inline-five 'five))
+
+  ; These symbols are all of the same length
+  (define-type <same-length-symbol-union> (U 'value1 'value2 'value3))
+
+  (define same-value1 (typed-dynamic 'value1 <same-length-symbol-union>))
+
+  ; Three can be distinguished purely by length
+  (assert-true  (eqv? same-value1 'value1))
+  (assert-false (eqv? same-value1 'value2))
+  (assert-false (eqv? same-value1 'value3))
 
   ; These symbols are all of heap length
   (define-type <heap-symbol-union> (U 'test-long-heap-symbol-one
