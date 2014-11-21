@@ -44,6 +44,7 @@ class KnownUserProc(
     reportproc.ListProcPlanner,
     reportproc.NumberProcPlanner,
     reportproc.StringProcPlanner,
+    reportproc.SymbolProcPlanner,
     reportproc.VectorProcPlanner
   )
 
