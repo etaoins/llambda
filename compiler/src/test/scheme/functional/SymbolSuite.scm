@@ -8,41 +8,33 @@
 (define-test "empty list is not a symbol" (expect #f
 	(string? '())))
 
-(define-test "symbol=? with one arg fails" (expect-failure
+(define-test "(symbol=?)" (expect-success
+	(assert-true (symbol=? 'test 'test))
+	(assert-false (symbol=? 'test 'nottest))
+	(assert-false (symbol=? 'test 'test 'nottest))
+
+  ; Inline symbols
+	(assert-true (symbol=? 'test 'test 'test))
+
+  ; Heap symbols
+	(assert-true (symbol=? 'very-long-test-symbol 'very-long-test-symbol 'very-long-test-symbol))))
+
+(define-test "(symbol=?) with one arg fails" (expect-compile-failure
 	(symbol=? 'test)))
 
-(define-test "symbol=? with two equal args" (expect #t
-	(symbol=? 'test 'test)))
-
-(define-test "symbol=? with two inequal args" (expect #f
-	(symbol=? 'test 'nottest)))
-
-(define-test "symbol=? with three equal inline args" (expect #t
-	(symbol=? 'test 'test 'test)))
-
-(define-test "symbol=? with three equal heap args" (expect #t
-	(symbol=? 'very-long-test-symbol 'very-long-test-symbol 'very-long-test-symbol)))
-
-(define-test "symbol=? with three inequal args" (expect #f
-	(symbol=? 'test 'test 'nottest)))
-
-(define-test "symbol=? with non-symbol fails" (expect-failure
+(define-test "(symbol=?) with non-symbol fails" (expect-compile-failure
 	(symbol=? 'test 'test "test")))
 
-(define-test "symbol->string with inline symbol" (expect "flying-cat"
-	(symbol->string 'flying-cat)))
+(define-test "(symbol->string)" (expect-success
+  ; Inline symbol
+	(assert-equal "flying-cat" (symbol->string 'flying-cat))
+  ; Heap symbol
+	(assert-equal "flying-hippopotamus" (symbol->string 'flying-hippopotamus))))
 
-(define-test "symbol->string with heap symbol" (expect "flying-hippopotamus"
-	(symbol->string 'flying-hippopotamus)))
+(define-test "(string->symbol)" (expect-success
+	(assert-equal 'mISSISSIppi (string->symbol "mISSISSIppi"))
+	(assert-equal 'MassaCHUsetts (string->symbol "MassaCHUsetts"))))
 
-(define-test "string->symbol with inline symbol" (expect mISSISSIppi
-	(string->symbol "mISSISSIppi")))
-
-(define-test "string->symbol with heap symbol" (expect MassaCHUsetts
-	(string->symbol "MassaCHUsetts")))
-
-(define-test "(string->symbol (symbol->string)) with inline symbol" (expect LollyPop
-	(string->symbol (symbol->string 'LollyPop))))
-
-(define-test "(string->symbol (symbol->string)) with heap symbol" (expect SourPatchKids
-	(string->symbol (symbol->string 'SourPatchKids))))
+(define-test "(string->symbol (symbol->string))" (expect-success
+	(assert-equal 'LollyPop (string->symbol (symbol->string 'LollyPop)))
+	(assert-equal 'SourPatchKids (string->symbol (symbol->string 'SourPatchKids)))))
