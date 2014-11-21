@@ -344,6 +344,12 @@
 
   (assert-true (eof-object? (read-bytevector! test-bytevector input-port)))))
 
+(define-test "(read-bytevector!) on bytevector literal fails" (expect-failure
+  (define test-bytevector #u8(0 0 0 0))
+
+  (define input-port (open-input-bytevector #u8(1 2 3 4 5 6 7 8 9 10 11 12)))
+  (read-bytevector! test-bytevector input-port)))
+
 (define-test "(read-bytevector!) with backwards slice fails" (expect-failure
   (define test-bytevector (make-bytevector 4))
 

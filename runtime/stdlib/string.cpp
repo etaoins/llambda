@@ -129,6 +129,11 @@ StringCell* lliby_substring(World &world, StringCell *sourceString, std::uint32_
 
 void lliby_string_mutating_copy(World &world, StringCell *to, std::uint32_t at, StringCell *from, std::uint32_t start, std::uint32_t end)
 {
+	if (to->isGlobalConstant())
+	{
+		signalError(world, "(string-copy!) on string literal", {to});
+	}
+
 	assertSliceValid(world, "(string-copy!)", from, from->charLength(), start, end);
 	assertSliceValid(world, "(string-copy!)", to, to->charLength(), at, at + (end - start));
 

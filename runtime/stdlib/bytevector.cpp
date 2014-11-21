@@ -102,6 +102,11 @@ BytevectorCell *lliby_bytevector_copy(World &world, BytevectorCell *bytevector, 
 
 void lliby_bytevector_mutating_copy(World &world, BytevectorCell *to, std::uint32_t at, BytevectorCell *from, std::uint32_t start, std::uint32_t end)
 {
+	if (to->isGlobalConstant())
+	{
+		signalError(world, "(bytevector-copy!) on bytevector literal", {to});
+	}
+
 	assertSliceValid(world, "(bytevector-copy!)", from, from->length(), start, end);
 	assertSliceValid(world, "(bytevector-copy!)", to, to->length(), at, at + (end - start));
 

@@ -222,6 +222,11 @@ AnyCell *lliby_read_bytevector(World &world, std::uint32_t requestedBytes, PortC
 
 AnyCell *lliby_mutating_read_bytevector(World &world, BytevectorCell *bytevector, PortCell *portCell, std::uint32_t start, std::uint32_t end)
 {
+	if (bytevector->isGlobalConstant())
+	{
+		signalError(world, "(bytevector-read!) on bytevector literal", {bytevector});
+	}
+
 	assertSliceValid(world, "(read-bytevector!)", bytevector, bytevector->length(), start, end);
 	std::istream *portStream = portCellToInputStream(world, portCell);
 

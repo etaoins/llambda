@@ -209,6 +209,11 @@
   (vector-copy! b 0 a)
   (assert-equal #(1 2 3 4 5) b)))
 
+(define-test "(vector-copy!) on vector literal fails" (expect-failure
+  (define a (vector 1 2 3 4 5))
+  (define b #(10 20 30 40 50))
+  (vector-copy! b 1 a 0 2)))
+
 (define-test "(vector-copy!) with backwards slice fails" (expect-failure
   (define a (vector 1 2 3 4 5))
   (define b (vector 10 20 30 40 50))

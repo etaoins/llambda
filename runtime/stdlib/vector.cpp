@@ -92,6 +92,11 @@ VectorCell *lliby_vector_copy(World &world, VectorCell *sourceVector, std::uint3
 
 void lliby_vector_mutating_copy(World &world, VectorCell *to, std::uint32_t at, VectorCell *from, std::uint32_t start, std::uint32_t end)
 {
+	if (to->isGlobalConstant())
+	{
+		signalError(world, "(vector-copy!) on vector literal", {to});
+	}
+
 	assertSliceValid(world, "(vector-copy!)", from, from->length(), start, end);
 	assertSliceValid(world, "(vector-copy!)", to, to->length(), at, at + (end - start));
 

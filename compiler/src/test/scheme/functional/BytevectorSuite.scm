@@ -147,6 +147,11 @@
   (bytevector-copy! b 0 a)
   (assert-equal #u8(1 2 3 4 5) b)))
 
+(define-test "(bytevector-copy!) on literal fails" (expect-failure
+  (define a #u8(1 2 3 4 5))
+  (define b #u8(10 20 30 40 50))
+  (bytevector-copy! b 1 a 0 2)))
+
 (define-test "(bytevector-copy!) with backwards slice fails" (expect-failure
   (define a (bytevector 1 2 3 4 5))
   (define b (bytevector 10 20 30 40 50))

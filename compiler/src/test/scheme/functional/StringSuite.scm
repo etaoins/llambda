@@ -283,6 +283,13 @@
   (string-copy! b 0 a)
   (assert-equal "12345" b)))
 
+(define-test "(string-copy!) on string literal fails" (expect-failure
+  (define a "12345")
+  (define b "abcde")
+  (string-copy! b 1 a 0 2)
+
+  (assert-equal "a12de" b)))
+
 (define-test "(string-copy!) with backwards slice fails" (expect-failure
   (define a "12345")
   (define b (string-copy "abcde"))
