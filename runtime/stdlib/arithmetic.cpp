@@ -354,7 +354,7 @@ std::int64_t lliby_floor_quotient(World &world, std::int64_t numerator, std::int
 {
 	if (denominator == 0)
 	{
-		signalError(world, "Attempted (truncate-quotient) by zero");
+		signalError(world, "Attempted (floor-quotient) by zero");
 	}
 
 	return floorDivision(numerator, denominator).quotient;
@@ -364,7 +364,7 @@ std::int64_t lliby_floor_remainder(World &world, std::int64_t numerator, std::in
 {
 	if (denominator == 0)
 	{
-		signalError(world, "Attempted (truncate-remainder) by zero");
+		signalError(world, "Attempted (floor-remainder) by zero");
 	}
 
 	return floorDivision(numerator, denominator).remainder;
