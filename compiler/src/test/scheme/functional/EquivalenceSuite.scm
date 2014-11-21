@@ -35,25 +35,29 @@
   (assert-true  (eqv? inline-five 'five))
 
   ; These symbols are all of heap length
-  (define-type <heap-symbol-union> (U 'test-symbol-one 'test-symbol-two 'test-symbol-three 'test-symbol-four 'test-symbol-five))
+  (define-type <heap-symbol-union> (U 'test-long-heap-symbol-one
+                                      'test-long-heap-symbol-two
+                                      'test-long-heap-symbol-three
+                                      'test-long-heap-symbol-four
+                                      'test-long-heap-symbol-five))
 
-  (define heap-three (typed-dynamic 'test-symbol-three <heap-symbol-union>))
-  (define heap-four  (typed-dynamic 'test-symbol-four  <heap-symbol-union>))
-  (define heap-five  (typed-dynamic 'test-symbol-five  <heap-symbol-union>))
+  (define heap-three (typed-dynamic 'test-long-heap-symbol-three <heap-symbol-union>))
+  (define heap-four  (typed-dynamic 'test-long-heap-symbol-four  <heap-symbol-union>))
+  (define heap-five  (typed-dynamic 'test-long-heap-symbol-five  <heap-symbol-union>))
 
   ; Three can be distinguished purely by length
-  (assert-true  (eqv? heap-three 'test-symbol-three))
-  (assert-false (eqv? heap-three 'test-symbol-four))
-  (assert-false (eqv? heap-three 'test-symbol-five))
+  (assert-true  (eqv? heap-three 'test-long-heap-symbol-three))
+  (assert-false (eqv? heap-three 'test-long-heap-symbol-four))
+  (assert-false (eqv? heap-three 'test-long-heap-symbol-five))
 
   ; Four and five need to be distinguished with a byte lookup
-  (assert-false (eqv? heap-four 'test-symbol-three))
-  (assert-true  (eqv? heap-four 'test-symbol-four))
-  (assert-false (eqv? heap-four 'test-symbol-five))
+  (assert-false (eqv? heap-four 'test-long-heap-symbol-three))
+  (assert-true  (eqv? heap-four 'test-long-heap-symbol-four))
+  (assert-false (eqv? heap-four 'test-long-heap-symbol-five))
 
-  (assert-false (eqv? heap-five 'test-symbol-three))
-  (assert-false (eqv? heap-five 'test-symbol-four))
-  (assert-true  (eqv? heap-five 'test-symbol-five))))
+  (assert-false (eqv? heap-five 'test-long-heap-symbol-three))
+  (assert-false (eqv? heap-five 'test-long-heap-symbol-four))
+  (assert-true  (eqv? heap-five 'test-long-heap-symbol-five))))
 
 (define-test "numeric (eqv?)" (expect-success
   (import (llambda typed))

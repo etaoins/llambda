@@ -66,16 +66,16 @@ variant cell HeapString : String {
 	SharedByteArray* heapByteArray;
 };
 
-concrete cell Symbol : Any { 
-	uint32 charLength;
-	uint32 byteLength;
+concrete cell Symbol : Any {
+	uint16 byteLength;
 };
 
 variant cell InlineSymbol : Symbol {
-	uint8 inlineData[12];
+	uint8 inlineData[20];
 };
 
 variant cell HeapSymbol : Symbol {
+	uint16 charLength;
 	SharedByteArray* heapByteArray;
 };
 

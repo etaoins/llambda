@@ -14,4 +14,4 @@ public:
 	}
 
 private:
-	std::uint8_t m_inlineData[12];
+	std::uint8_t m_inlineData[20];

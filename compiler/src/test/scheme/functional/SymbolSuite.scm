@@ -29,12 +29,29 @@
   ; Inline symbol
 	(assert-equal "flying-cat" (symbol->string 'flying-cat))
   ; Heap symbol
-	(assert-equal "flying-hippopotamus" (symbol->string 'flying-hippopotamus))))
+	(assert-equal "flying-hippopotamus" (symbol->string 'flying-hippopotamus))
+
+  (define non-bmp-string (symbol->string '|Hell🏂!|))
+  (assert-equal "Hell🏂!" non-bmp-string)
+  (assert-equal 6 (string-length non-bmp-string))))
 
 (define-test "(string->symbol)" (expect-success
+  ; Inline symbol; inline string
 	(assert-equal 'mISSISSIppi (string->symbol "mISSISSIppi"))
-	(assert-equal 'MassaCHUsetts (string->symbol "MassaCHUsetts"))))
+  ; Inline symbol; heap string
+	(assert-equal 'MassaCHUsetts (string->symbol "MassaCHUsetts"))
+  ; Heap symbol; heap string
+	(assert-equal 'Yamagawaokachiyogamizu (string->symbol "Yamagawaokachiyogamizu"))))
 
 (define-test "(string->symbol (symbol->string))" (expect-success
+  ; Inline symbol; inline string
 	(assert-equal 'LollyPop (string->symbol (symbol->string 'LollyPop)))
-	(assert-equal 'SourPatchKids (string->symbol (symbol->string 'SourPatchKids)))))
+  ; Inline symbol; heap string
+	(assert-equal 'SourPatchKids (string->symbol (symbol->string 'SourPatchKids)))
+  ; Heap symbol; heap string
+	(assert-equal '|Reese's Peanut Butter Cup| (string->symbol (symbol->string '|Reese's Peanut Butter Cup|)))
+  ; Non-BMP symbol
+	(assert-equal '|Hell🏂!| (string->symbol (symbol->string '|Hell🏂!|)))))
+
+(define-test "(string->symbol) with oversized string fails" (expect-failure
+  (string->symbol (make-string 65536 #\z))))

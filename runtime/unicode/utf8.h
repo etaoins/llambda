@@ -102,6 +102,27 @@ inline int bytesForChar(UnicodeChar unicodeChar)
 std::size_t validateData(const std::uint8_t *start, const std::uint8_t *end);
 
 /**
+ * Counts the number of characters in validated UTF-8 data
+ *
+ * This behaves the same as validateData except invalid UTF-8 will result in an undefined result instead of throwing
+ * an exception
+ */
+inline std::size_t countChars(const std::uint8_t *start, const std::uint8_t *end)
+{
+	std::size_t charCount = 0;
+
+	for(auto scanPtr = start; scanPtr != end; scanPtr++)
+	{
+		if (!isContinuationByte(*scanPtr))
+		{
+			charCount++;
+		}
+	}
+
+	return charCount;
+}
+
+/**
  * Decodes a UTF-8 sequence from validated UTF-8 data
  *
  * @param  charIt  Beginning of the UTF-8 sequence. This will be advanced to the byte following the end of the UTF-8

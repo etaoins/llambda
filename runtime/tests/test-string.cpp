@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "binding/StringCell.h"
+#include "binding/SymbolCell.h"
 #include "binding/BytevectorCell.h"
 #include "util/StringCellBuilder.h"
 
@@ -38,50 +39,6 @@ std::size_t slacklessStringSize(size_t minimumSize)
 	free(testMalloc);
 
 	return testSize;
-}
-
-void testFromUtf8CString(World &world)
-{
-	{
-		StringCell *emptyValue = StringCell::fromUtf8StdString(world, u8"");
-
-		ASSERT_EQUAL(emptyValue->byteLength(), 0);
-		ASSERT_EQUAL(emptyValue->charLength(), 0);
-	}
-
-	{
-		StringCell *helloValue = StringCell::fromUtf8StdString(world, u8"Hello");
-
-		ASSERT_EQUAL(helloValue->byteLength(), 5);
-		ASSERT_EQUAL(helloValue->constUtf8Data()[0], 'H');
-		ASSERT_EQUAL(helloValue->charLength(), 5);
-	}
-	
-	{
-		StringCell *highUnicodeValue = StringCell::fromUtf8StdString(world, u8"☃🐉");
-
-		ASSERT_EQUAL(highUnicodeValue->byteLength(), 7);
-		ASSERT_EQUAL(highUnicodeValue->charLength(), 2);
-	}
-
-	{
-		bool caughtException = false;
-
-		try
-		{
-			// Truncated sequence
-			StringCell::fromUtf8StdString(world, "H\xE2\x98");
-		}
-		catch(const utf8::TruncatedInputException &e)
-		{
-			ASSERT_EQUAL(e.validChars(), 1);
-			ASSERT_EQUAL(e.startOffset(), 1);
-			ASSERT_EQUAL(e.endOffset(), 2);
-			caughtException = true;
-		}
-
-		ASSERT_TRUE(caughtException);
-	}
 }
 
 void testFromUtf8Data(World &world)
@@ -149,14 +106,100 @@ void testFromUtf8Data(World &world)
 
 void testFromUtf8StdString(World &world)
 {
-	// Include a NULL character to ensure the conversion is NULL safe
-	const char *nullStringData = "Hell\0o";
-	std::string nullStdString(nullStringData, 6);
-	StringCell *nullValue = StringCell::fromUtf8StdString(world, nullStdString);
+	{
+		StringCell *emptyValue = StringCell::fromUtf8StdString(world, u8"");
 
-	ASSERT_EQUAL(nullValue->byteLength(), 6);
-	ASSERT_EQUAL(nullValue->charLength(), 6);
-	ASSERT_EQUAL(memcmp(nullValue->constUtf8Data(), nullStringData, 6), 0);
+		ASSERT_EQUAL(emptyValue->byteLength(), 0);
+		ASSERT_EQUAL(emptyValue->charLength(), 0);
+	}
+
+	{
+		StringCell *helloValue = StringCell::fromUtf8StdString(world, u8"Hello");
+
+		ASSERT_EQUAL(helloValue->byteLength(), 5);
+		ASSERT_EQUAL(helloValue->constUtf8Data()[0], 'H');
+		ASSERT_EQUAL(helloValue->charLength(), 5);
+	}
+
+	{
+		StringCell *highUnicodeValue = StringCell::fromUtf8StdString(world, u8"☃🐉");
+
+		ASSERT_EQUAL(highUnicodeValue->byteLength(), 7);
+		ASSERT_EQUAL(highUnicodeValue->charLength(), 2);
+	}
+
+	{
+		bool caughtException = false;
+
+		try
+		{
+			// Truncated sequence
+			StringCell::fromUtf8StdString(world, "H\xE2\x98");
+		}
+		catch(const utf8::TruncatedInputException &e)
+		{
+			ASSERT_EQUAL(e.validChars(), 1);
+			ASSERT_EQUAL(e.startOffset(), 1);
+			ASSERT_EQUAL(e.endOffset(), 2);
+			caughtException = true;
+		}
+
+		ASSERT_TRUE(caughtException);
+	}
+
+	{
+		// Include a NULL character to ensure the conversion is NULL safe
+		const char *nullStringData = "Hell\0o";
+		std::string nullStdString(nullStringData, 6);
+		StringCell *nullValue = StringCell::fromUtf8StdString(world, nullStdString);
+
+		ASSERT_EQUAL(nullValue->byteLength(), 6);
+		ASSERT_EQUAL(nullValue->charLength(), 6);
+		ASSERT_EQUAL(memcmp(nullValue->constUtf8Data(), nullStringData, 6), 0);
+	}
+}
+
+void testFromSymbol(World &world)
+{
+	{
+		alloc::SymbolRef asciiInlineSymbol(world, SymbolCell::fromUtf8StdString(world, "Hello"));
+
+		StringCell *testString = StringCell::fromSymbol(world, asciiInlineSymbol);
+
+		ASSERT_EQUAL(testString->byteLength(), 5);
+		ASSERT_EQUAL(testString->charLength(), 5);
+		ASSERT_EQUAL(memcmp(testString->constUtf8Data(), "Hello", 5), 0);
+	}
+
+	{
+		alloc::SymbolRef unicodeInlineSymbol(world, SymbolCell::fromUtf8StdString(world, "Hello ☃!"));
+
+		StringCell *testString = StringCell::fromSymbol(world, unicodeInlineSymbol);
+
+		ASSERT_EQUAL(testString->byteLength(), 10);
+		ASSERT_EQUAL(testString->charLength(), 8);
+		ASSERT_EQUAL(memcmp(testString->constUtf8Data(), "Hello ☃!", 10), 0);
+	}
+
+	{
+		alloc::SymbolRef asciiHeapSymbol(world, SymbolCell::fromUtf8StdString(world, "Greetings, unit testers!"));
+
+		StringCell *testString = StringCell::fromSymbol(world, asciiHeapSymbol);
+
+		ASSERT_EQUAL(testString->byteLength(), 24);
+		ASSERT_EQUAL(testString->charLength(), 24);
+		ASSERT_EQUAL(memcmp(testString->constUtf8Data(), "Greetings, unit testers!", 24), 0);
+	}
+
+	{
+		alloc::SymbolRef unicodeHeapSymbol(world, SymbolCell::fromUtf8StdString(world, "Look it's a snowman: ☃!"));
+
+		StringCell *testString = StringCell::fromSymbol(world, unicodeHeapSymbol);
+
+		ASSERT_EQUAL(testString->byteLength(), 25);
+		ASSERT_EQUAL(testString->charLength(), 23);
+		ASSERT_EQUAL(memcmp(testString->constUtf8Data(),  "Look it's a snowman: ☃!", 25), 0);
+	}
 }
 
 void testCompare(World &world)
@@ -1056,9 +1099,9 @@ void testCaseConversion(World &world)
 
 void testAll(World &world)
 {
-	testFromUtf8CString(world);
 	testFromUtf8StdString(world);
 	testFromUtf8Data(world);
+	testFromSymbol(world);
 
 	testCompare(world);
 	testCharAt(world);

@@ -5,7 +5,8 @@ import scala.io.Codec
 
 import scala.collection.mutable
 
-import llambda.compiler.InternalCompilerErrorException
+import llambda.compiler.SourceLocated
+import llambda.compiler.{OutOfBoundsException, InternalCompilerErrorException}
 
 import llambda.compiler.planner.{step => ps}
 import llambda.llvmir._
@@ -79,7 +80,7 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
     stringValue.codePointCount(0, stringValue.length)
   }
 
-  def genBytevectorCell(module : IrModuleBuilder)(elements : Seq[Short]) : IrConstant = {
+  private def genBytevectorCell(module : IrModuleBuilder)(elements : Seq[Short]) : IrConstant = {
     // Make our elements
     val baseName = module.nameSource.allocate("schemeBytevector")
 
@@ -102,7 +103,7 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
     defineConstantData(module)(bytevectorCellName, bytevectorCell)
   }
   
-  def genVectorCell(module : IrModuleBuilder)(irElements : Seq[IrConstant]) : IrConstant = {
+  private def genVectorCell(module : IrModuleBuilder)(irElements : Seq[IrConstant]) : IrConstant = {
     // Make our elements
     val baseName = module.nameSource.allocate("schemeVector")
 
@@ -120,7 +121,7 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
     defineConstantData(module)(vectorCellName, vectorCell)
   }
 
-  def genEmptyClosure(module : IrModuleBuilder, typeGenerator : TypeGenerator)(entryPoint : IrConstant) : IrConstant = {
+  private def genEmptyClosure(module : IrModuleBuilder, typeGenerator : TypeGenerator)(entryPoint : IrConstant) : IrConstant = {
     val procCellName = module.nameSource.allocate("schemeProcedure")
 
     // Find the class ID for the empty closure type
@@ -140,7 +141,7 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
     defineConstantData(module)(procCellName, procCell)
   }
 
-  def genStringCell(module : IrModuleBuilder)(value : String) : IrConstant = {
+  private def genStringCell(module : IrModuleBuilder)(value : String) : IrConstant = {
     val baseName = module.nameSource.allocate("schemeString")
     val stringCellName = baseName + ".cell"
 
@@ -175,12 +176,16 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
     )
   }
   
-  def genSymbolCell(module : IrModuleBuilder)(value : String) : IrConstant = {
+  private def genSymbolCell(module : IrModuleBuilder)(value : String, sourceLocated : SourceLocated) : IrConstant = {
     val baseName = module.nameSource.allocate("schemeSymbol")
     val symbolCellName = baseName + ".cell"
 
     val utf8Data = Codec.toUTF8(value)
     val inlineUtf8Bytes = ConstantGenerator.maximumInlineSymbolBytes
+
+    if (utf8Data.length >= (1L << ct.SymbolCell.byteLengthIrType.bits)) {
+      throw new OutOfBoundsException(sourceLocated, "Constant symbol exceeds maximum symbol length")
+    }
 
     val symbolCell = if (utf8Data.length <= inlineUtf8Bytes) {
       // We can do this inline
@@ -188,7 +193,6 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
 
       ct.InlineSymbolCell.createConstant(
         inlineData=utf8Constant,
-        charLength=value.length,
         byteLength=utf8Data.length
       )
     }
@@ -198,8 +202,8 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
 
       ct.HeapSymbolCell.createConstant(
         heapByteArray=utf8Constant,
-        charLength=value.length,
-        byteLength=utf8Data.length
+        byteLength=utf8Data.length,
+        charLength=charLengthForString(value)
       )
     }
 
@@ -221,7 +225,7 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
 
       case ps.CreateSymbolCell(_, value) =>
         symbolCache.getOrElseUpdate(value, {
-          genSymbolCell(module)(value)
+          genSymbolCell(module)(value, createStep)
         })
 
       case ps.CreateExactIntegerCell(_, value) =>

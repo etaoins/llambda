@@ -48,12 +48,12 @@ object PlanSymbolEquality {
     val staticByteLength = staticUtf8Data.length
 
     // Load our dynamic length
-    val dynamicLengthTemp = ps.Temp(vt.UInt32)
+    val dynamicLengthTemp = ps.Temp(vt.UInt16)
     plan.steps += ps.LoadSymbolByteLength(dynamicLengthTemp, dynamicTemp, Some(possibleLengths))
 
     // Create our static length
-    val staticLengthTemp = ps.Temp(vt.UInt32)
-    plan.steps += ps.CreateNativeInteger(staticLengthTemp, staticByteLength, 32)
+    val staticLengthTemp = ps.Temp(vt.UInt16)
+    plan.steps += ps.CreateNativeInteger(staticLengthTemp, staticByteLength, 16)
 
     // Compare them
     val lengthMatchPred = ps.Temp(vt.Predicate)

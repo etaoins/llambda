@@ -566,7 +566,7 @@ case class LoadStringCharLength(result : TempValue, boxed : TempValue) extends S
       .assignLocationFrom(this)
 }
 
-/** Loads the length of a symbol in bytes as a UInt32
+/** Loads the length of a symbol in bytes as a UInt16
   *
   * This is nullipotent as a symbol's byte length is immutable
   */

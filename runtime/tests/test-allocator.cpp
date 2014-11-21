@@ -351,7 +351,7 @@ void testAll(World &world)
 	// Test heap symbols
 	testNonRecursiveGc<SymbolCell>(world, [&world] ()
 	{
-		return SymbolCell::fromUtf8StdString(world, u8"This is more than twelve bytes long");
+		return SymbolCell::fromUtf8StdString(world, u8"This is more than twenty bytes long");
 	});
 
 	// Test inline strings

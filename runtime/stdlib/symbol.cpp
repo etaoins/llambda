@@ -34,7 +34,14 @@ StringCell *lliby_symbol_to_string(World &world, SymbolCell *symbol)
 
 SymbolCell *lliby_string_to_symbol(World &world, StringCell *string)
 {
-	return SymbolCell::fromString(world, string);
+	SymbolCell *symbol = SymbolCell::fromString(world, string);
+
+	if (symbol == nullptr)
+	{
+		signalError(world, "(string->symbol) with string exceeding 64KiB");
+	}
+
+	return symbol;
 }
 
 }

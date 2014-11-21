@@ -45,19 +45,19 @@
 %heapString = type {%string, %sharedByteArray*}
 !28 = metadata !{metadata !"HeapString::heapByteArray"}
 
-; {supertype, unsigned charLength, unsigned byteLength}
-%symbol = type {%any, i32, i32}
+; {supertype, unsigned byteLength}
+%symbol = type {%any, i16}
 !29 = metadata !{metadata !"Any::typeId->Symbol", metadata !10}
 !30 = metadata !{metadata !"Any::gcState->Symbol", metadata !11}
-!31 = metadata !{metadata !"Symbol::charLength"}
-!32 = metadata !{metadata !"Symbol::byteLength"}
+!31 = metadata !{metadata !"Symbol::byteLength"}
 
 ; {supertype, inlineData}
-%inlineSymbol = type {%symbol, [12 x i8]}
-!33 = metadata !{metadata !"InlineSymbol::inlineData"}
+%inlineSymbol = type {%symbol, [20 x i8]}
+!32 = metadata !{metadata !"InlineSymbol::inlineData"}
 
-; {supertype, heapByteArray}
-%heapSymbol = type {%symbol, %sharedByteArray*}
+; {supertype, unsigned charLength, heapByteArray}
+%heapSymbol = type {%symbol, i16, %sharedByteArray*}
+!33 = metadata !{metadata !"HeapSymbol::charLength"}
 !34 = metadata !{metadata !"HeapSymbol::heapByteArray"}
 
 ; {supertype, bool value}

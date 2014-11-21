@@ -134,6 +134,7 @@ set(ALL_TEST_NAMES
 	properlist
 	sharedbytearray
 	string
+	symbol
 	unicodechar
 	utf8
 	vector)

@@ -1,6 +1,7 @@
 #include "SymbolCell.h"
 
 #include <string.h>
+#include <limits>
 
 #include "binding/StringCell.h"
 #include "alloc/cellref.h"
@@ -11,14 +12,15 @@
 namespace lliby
 {
 
-HeapSymbolCell::HeapSymbolCell(SharedByteArray *byteArray, std::uint32_t byteLength, std::uint32_t charLength) :
-	SymbolCell(byteLength, charLength),
+HeapSymbolCell::HeapSymbolCell(SharedByteArray *byteArray, std::uint16_t byteLength, std::uint16_t charLength) :
+	SymbolCell(byteLength),
+	m_charLength(charLength),
 	m_heapByteArray(byteArray)
 {
 }
 
-InlineSymbolCell::InlineSymbolCell(std::uint32_t byteLength, std::uint32_t charLength) :
-	SymbolCell(byteLength, charLength)
+InlineSymbolCell::InlineSymbolCell(std::uint16_t byteLength) :
+	SymbolCell(byteLength)
 {
 }
 
@@ -34,17 +36,22 @@ SymbolCell* SymbolCell::fromUtf8StdString(World &world, const std::string &str)
 
 SymbolCell* SymbolCell::fromUtf8Data(World &world, const std::uint8_t *data, std::uint32_t byteLength)
 {
+	if (byteLength > std::numeric_limits<decltype(m_byteLength)>::max())
+	{
+		return nullptr;
+	}
+
 	const std::uint8_t *scanPtr = data;
 	const std::uint8_t *endPtr = data + byteLength;
 
-	// Find the character length - this can throw an exception
-	size_t charLength = utf8::validateData(scanPtr, endPtr);
+	// Validate the UTF-8 data
+	const std::size_t charLength = utf8::validateData(scanPtr, endPtr);
 
 	void *cellPlacement = alloc::allocateCells(world);
 
 	if (byteLength <= inlineDataSize())
 	{
-		auto inlineSymbol = new (cellPlacement) InlineSymbolCell(byteLength, charLength);
+		auto inlineSymbol = new (cellPlacement) InlineSymbolCell(byteLength);
 		memcpy(inlineSymbol->inlineData(), data, byteLength);
 
 		return inlineSymbol;
@@ -69,26 +76,28 @@ SymbolCell* SymbolCell::fromString(World &world, StringCell *string)
 	alloc::StringRef stringRef(world, string);
 	void *cellPlacement = alloc::allocateCells(world);
 
-	// Strings and symbols must have an identical inline/heap threshold for the below to work
+	// Symbols must have a higher inlining threshold than strings for the below logic to work
 	static_assert(
-			sizeof(InlineSymbolCell::m_inlineData) == sizeof(InlineStringCell::m_inlineData), 
+			sizeof(InlineSymbolCell::m_inlineData) >= sizeof(InlineStringCell::m_inlineData),
 			"Symbols and strings must have the same inlining threshold"
 	);
 
-	if (stringRef->dataIsInline())
-	{
-		auto inlineString = static_cast<InlineStringCell*>(stringRef.data());
+	auto const byteLength = stringRef->byteLength();
 
+	if (byteLength > std::numeric_limits<decltype(m_byteLength)>::max())
+	{
+		return nullptr;
+	}
+	else if (byteLength <= inlineDataSize())
+	{
 		// Create an inline symbol
 		auto newInlineSymbol = new (cellPlacement) InlineSymbolCell(
-				inlineString->byteLength(),
-				inlineString->charLength()
+				stringRef->byteLength()
 		);
 
 		// Copy the inline data over
-		const void *srcData = inlineString->inlineData();
-		const size_t srcSize = inlineString->byteLength(); 
-		memcpy(newInlineSymbol->inlineData(), srcData, srcSize); 
+		const void *srcData = stringRef->constUtf8Data();
+		memcpy(newInlineSymbol->inlineData(), srcData, byteLength);
 
 		return newInlineSymbol;
 	}
@@ -99,7 +108,7 @@ SymbolCell* SymbolCell::fromString(World &world, StringCell *string)
 		// Share the heap string's byte array
 		return new (cellPlacement) HeapSymbolCell(
 				heapString->heapByteArray()->ref(),
-				heapString->byteLength(),
+				byteLength,
 				heapString->charLength()
 		);
 	}
