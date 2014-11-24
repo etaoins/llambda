@@ -483,7 +483,31 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
         assert(restArg.schemeType === vt.UniformProperListType(vt.StringType))
     }
   }
-    
+
+  test("(define-report-procedure) lambda shorthand") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    val expr = exprFor("(define-report-procedure (return-false (some : <boolean>) rest : <string> *) #f)")(scope)
+    val procLoc = scope.get("return-false").value
+
+    inside(procLoc) {
+      case rp : ReportProcedure =>
+        assert(rp.reportName === "return-false")
+    }
+
+    inside(expr) {
+      case et.TopLevelDefine(List(et.SingleBinding(storageLoc, et.Lambda(schemeType, List(fixedArg), Some(restArg), _, _)))) if procLoc == storageLoc =>
+        assert(schemeType === vt.ProcedureType(
+          fixedArgTypes=List(vt.BooleanType),
+          restArgMemberTypeOpt=Some(vt.StringType),
+          returnType=vt.ReturnType.ArbitraryValues
+        ))
+
+        assert(fixedArg.schemeType === vt.BooleanType)
+        assert(restArg.schemeType === vt.UniformProperListType(vt.StringType))
+    }
+  }
+
   test("untyped rest only arg lambda shorthand") {
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
     

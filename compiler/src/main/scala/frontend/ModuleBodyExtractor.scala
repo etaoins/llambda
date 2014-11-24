@@ -362,21 +362,32 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
         val typeConstructor = UserDefinedTypeConstructor(operandSymbols, definition)
         Some(ParsedSimpleDefine(constructorName, typeConstructor)) 
 
-      case (Primitives.DefineReportProcedure, _) =>
-        operands match {
-          case (symbol : sst.ScopedSymbol) :: definitionData :: Nil =>
-            Some(ParsedVarDefine(
-              definedSymbol=symbol,
-              providedType=None,
-              expr=() => {
-                extractExpr(definitionData)
-              },
-              storageLocConstructor=(new ReportProcedure(_, _))
-            ))
+      case (Primitives.DefineReportProcedure, List(symbol : sst.ScopedSymbol, definitionData)) =>
+        Some(ParsedVarDefine(
+          definedSymbol=symbol,
+          providedType=None,
+          expr=() => {
+            extractExpr(definitionData)
+          },
+          storageLocConstructor=(new ReportProcedure(_, _))
+        ))
 
-          case _ =>
-            throw new BadSpecialFormException(appliedSymbol, "(define-report-procedure) requires exactly two arguments")
-        }
+      case (Primitives.DefineReportProcedure, sst.ScopedAnyList((symbol : sst.ScopedSymbol) :: fixedArgs, restArgDatum) :: body) =>
+        Some(ParsedVarDefine(
+          definedSymbol=symbol,
+          providedType=None,
+          expr=() => {
+            ExtractLambda(
+              located=appliedSymbol,
+              operandList=fixedArgs,
+              operandTerminator=restArgDatum,
+              definition=body,
+              sourceNameHint=Some(symbol.name),
+              typeDeclaration=declaredSymbolType(symbol)
+            )(debugContext, libraryLoader, frontendConfig).assignLocationAndContextFrom(appliedSymbol, debugContext)
+          },
+          storageLocConstructor=(new ReportProcedure(_, _))
+        ))
 
       case (Primitives.AnnotateStorageLocType, List(declaredSymbol : sst.ScopedSymbol, typeDatum)) =>
         val declarationType = ExtractType.extractSchemeType(typeDatum)

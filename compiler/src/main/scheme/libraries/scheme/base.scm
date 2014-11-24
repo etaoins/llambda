@@ -292,13 +292,13 @@
     (define-r7rs real? number?)
 
     (define-r7rs rational? (native-function "lliby_is_rational" (<any>) -> <native-bool>))
-    
-    ; These aren't quite normal predicates as they only take numbers
-    (define-r7rs inexact? (lambda ((val : <number>))
-      ((make-predicate <flonum>) val)))
 
-    (define-r7rs exact? (lambda ((val : <number>))
-      ((make-predicate <exact-integer>) val)))
+    ; These aren't quite normal predicates as they only take numbers
+    (define-r7rs (inexact? [val : <number>])
+      ((make-predicate <flonum>) val))
+
+    (define-r7rs (exact? [val : <number>])
+      ((make-predicate <exact-integer>) val))
 
     (define-r7rs exact-integer? exact?)
 
@@ -310,32 +310,32 @@
     (define-r7rs >= (native-function "lliby_numeric_gte" (<number> <number> . <number>) -> <native-bool>))
 
     ; These branch on type as our planner currently won't optimise comparisons without a definite type
-    (define-r7rs zero? (lambda ((n : <number>))
-      (if (exact-integer? n) (= n 0) (= n 0.0))))
+    (define-r7rs (zero? [n : <number>])
+      (if (exact-integer? n) (= n 0) (= n 0.0)))
 
-    (define-r7rs positive? (lambda ((n : <number>))
-      (if (exact-integer? n) (> n 0) (> n 0.0))))
-    
-    (define-r7rs negative? (lambda ((n : <number>))
-      (if (exact-integer? n) (< n 0) (< n 0.0))))
-    
+    (define-r7rs (positive? [n : <number>])
+      (if (exact-integer? n) (> n 0) (> n 0.0)))
+
+    (define-r7rs (negative? [n : <number>])
+      (if (exact-integer? n) (< n 0) (< n 0.0)))
+
     (define native-floor (native-function "floor" (<native-double>) -> <native-double>))
-    (define-r7rs floor (lambda ((n : <number>))
-      (if (exact-integer? n) n (native-floor n))))
-    
-    (define native-ceil (native-function "ceil" (<native-double>) -> <native-double>))
-    (define-r7rs ceiling (lambda ((n : <number>))
-      (if (exact-integer? n) n (native-ceil n))))
-    
-    (define native-trunc (native-function "trunc" (<native-double>) -> <native-double>))
-    (define-r7rs truncate (lambda ((n : <number>))
-      (if (exact-integer? n) n (native-trunc n))))
-    
-    (define native-round (native-function "round" (<native-double>) -> <native-double>))
-    (define-r7rs round (lambda ((n : <number>))
-      (if (exact-integer? n) n (native-round n))))
+    (define-r7rs (floor [n : <number>])
+      (if (exact-integer? n) n (native-floor n)))
 
-    (define-r7rs integer? (lambda (x)
+    (define native-ceil (native-function "ceil" (<native-double>) -> <native-double>))
+    (define-r7rs (ceiling [n : <number>])
+      (if (exact-integer? n) n (native-ceil n)))
+
+    (define native-trunc (native-function "trunc" (<native-double>) -> <native-double>))
+    (define-r7rs (truncate [n : <number>])
+      (if (exact-integer? n) n (native-trunc n)))
+
+    (define native-round (native-function "round" (<native-double>) -> <native-double>))
+    (define-r7rs (round [n : <number>])
+      (if (exact-integer? n) n (native-round n)))
+
+    (define-r7rs (integer? x)
       (if (number? x)
         (if (exact-integer? x)
           ; All exact integers are integers
@@ -343,7 +343,7 @@
           ; Some flonums are integers
           (= x (floor x)))
         ; Not numeric
-        #f)))
+        #f))
 
     (define-r7rs exact (world-function "lliby_exact" (<number>) -> <native-int64>))
     (define-r7rs inexact (native-function "lliby_inexact" (<number>) -> <native-double>))
@@ -355,10 +355,10 @@
     
     (define-r7rs expt (world-function "lliby_expt" (<number> <number>) -> <number>))
     
-    (define-r7rs square (lambda ([num : <number>])
-      (* num num)))
+    (define-r7rs (square [num : <number>])
+      (* num num))
 
-    (define-r7rs abs (lambda ([num : <number>])
+    (define-r7rs (abs [num : <number>])
       ; Do a top-level type check to make the compiler generate a specialised version of each branch. The test itself is
       ; semantically a no-op
       (if (exact-integer? num)
@@ -372,7 +372,7 @@
           0.0
           (if (< num 0.0)
             (- num)
-            num)))))
+            num))))
 
     (define-r7rs truncate/ (world-function "lliby_truncate_div" (<native-int64> <native-int64>) -> (Values <exact-integer> <exact-integer>)))
     (define-r7rs truncate-quotient (world-function "lliby_truncate_quotient" (<native-int64> <native-int64>) -> <native-int64>))
@@ -387,11 +387,11 @@
     (define-r7rs remainder truncate-remainder)
     (define-r7rs modulo floor-remainder)
 
-    (define-r7rs odd? (lambda ([val : <exact-integer>])
-                               (not (= (truncate-remainder val 2) 0))))
+    (define-r7rs (odd? [val : <exact-integer>])
+                 (not (= (truncate-remainder val 2) 0)))
 
-    (define-r7rs even? (lambda ([val : <exact-integer>])
-                                (= (truncate-remainder val 2) 0)))
+    (define-r7rs (even? [val : <exact-integer>])
+                 (= (truncate-remainder val 2) 0))
 
     (define-r7rs max (world-function "lliby_max" (<number> . <number>) -> <number>))
     (define-r7rs min (world-function "lliby_min" (<number> . <number>) -> <number>))
@@ -411,20 +411,20 @@
     (define-r7rs exact-integer-sqrt (world-function "lliby_exact_integer_sqrt" (<native-int64>) -> (Values <exact-integer> <exact-integer>)))
 
     (define native-numerator (native-function "lliby_numerator" (<native-double>) -> <native-double>))
-    (define-r7rs numerator (lambda ([value : <number>])
+    (define-r7rs (numerator [value : <number>])
       (if (exact-integer? value)
         value
-        (native-numerator value))))
+        (native-numerator value)))
 
     (define native-denominator (native-function "lliby_denominator" (<native-double>) -> <native-double>))
-    (define-r7rs denominator (lambda ([value : <number>])
+    (define-r7rs (denominator [value : <number>])
       (if (exact-integer? value)
         1
-        (native-denominator value))))
+        (native-denominator value)))
 
     (define native-rationalize (world-function "lliby_rationalize" (<number> <native-double>) -> <number>))
-    (define-r7rs rationalize (lambda ([val : <number>] [maxDiff : <number>])
-      (native-rationalize val (inexact maxDiff))))
+    (define-r7rs (rationalize [val : <number>] [max-diff : <number>])
+      (native-rationalize val (inexact max-diff)))
 
     (define native-number->string (world-function "lliby_number_to_string" (<number> <native-uint8>) -> <string>))
     (define-r7rs number->string (case-lambda
@@ -449,13 +449,13 @@
     (define-r7rs cons (world-function "lliby_cons" (<any> <any>) -> <pair>))
     (define-r7rs car (native-function "lliby_car" (<pair>) -> <any>))
     (define-r7rs cdr (native-function "lliby_cdr" (<pair>) -> <any>))
-    (define-r7rs caar (lambda ((x : (Pairof <pair> <any>))) (car (car x))))
-    (define-r7rs cadr (lambda ((x : (Pairof <any> <pair>))) (car (cdr x))))
-    (define-r7rs cdar (lambda ((x : (Pairof <pair> <any>))) (cdr (car x))))
-    (define-r7rs cddr (lambda ((x : (Pairof <any> <pair>))) (cdr (cdr x))))
+    (define-r7rs (caar (x : (Pairof <pair> <any>))) (car (car x)))
+    (define-r7rs (cadr (x : (Pairof <any> <pair>))) (car (cdr x)))
+    (define-r7rs (cdar (x : (Pairof <pair> <any>))) (cdr (car x)))
+    (define-r7rs (cddr (x : (Pairof <any> <pair>))) (cdr (cdr x)))
 
     (define-r7rs list-copy (world-function "lliby_list_copy" (<any>) -> <any>))
-    (define-r7rs list (lambda rest rest))
+    (define-r7rs (list . rest) rest)
 
     (define-r7rs append (world-function "lliby_append" <any> -> <any>))
 
@@ -471,9 +471,9 @@
     (define-r7rs reverse (world-function "lliby_reverse" (<list>) -> <list>))
 
     (define-r7rs list-tail (world-function "lliby_list_tail" (<list> <native-uint32>) -> <list>))
-    (define-r7rs list-ref (lambda ([l : <list>] [n : <exact-integer>])
-      (car (list-tail l n))))
-    
+    (define-r7rs (list-ref [l : <list>] [n : <exact-integer>])
+      (car (list-tail l n)))
+
     (define native-make-list (world-function "lliby_make_list" (<native-uint32> <any>) -> <list>))
     (define-r7rs make-list (case-lambda
       (([len : <exact-integer>])
@@ -807,6 +807,6 @@
     (begin
       (define-r7rs set-car! (world-function "lliby_set_car" (<pair> <any>)))
       (define-r7rs set-cdr! (world-function "lliby_set_cdr" (<pair> <any>)))
-      (define-r7rs list-set! (lambda ([l : <list>] [n : <exact-integer>] [val : <any>])
-        (set-car! (list-tail l n) val))))))
+      (define-r7rs (list-set! [l : <list>] [n : <exact-integer>] [val : <any>])
+        (set-car! (list-tail l n) val)))))
 )

@@ -9,4 +9,4 @@
     ; Hardcode this in Scheme
     ; This break encapsulation with the C++ implementation but allows faster code to be generated. In particular,
     ; because the value is known to be non-zero native division instructions can be emitted when it's the denominator.
-    (define-r7rs jiffies-per-second (lambda () 1000000000))))
+    (define-r7rs (jiffies-per-second) 1000000000)))
