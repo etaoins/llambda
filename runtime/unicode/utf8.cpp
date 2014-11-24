@@ -45,15 +45,15 @@ std::size_t validateData(const std::uint8_t *start, const std::uint8_t *end)
 			continue;
 		case 2:
 			continuationBytes = 1;
-			codePoint = firstByte & ~TwoByteHeaderMask;
+			codePoint = firstByte & ~TwoByteHeaderValue;
 			break;
 		case 3:
 			continuationBytes = 2;
-			codePoint = firstByte & ~ThreeByteHeaderMask;
+			codePoint = firstByte & ~ThreeByteHeaderValue;
 			break;
 		case 4:
 			continuationBytes = 3;
-			codePoint = firstByte & ~FourByteHeaderMask;
+			codePoint = firstByte & ~FourByteHeaderValue;
 			break;
 		default:
 			throw InvalidHeaderByteException(charCount, charByteOffset);

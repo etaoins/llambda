@@ -17,14 +17,11 @@ static const int LongestByteSequence = 4;
 static const std::uint8_t ContinuationHeaderMask  = 0xC0;
 static const std::uint8_t ContinuationHeaderValue = 0x80;
 
-static const std::uint8_t TwoByteHeaderMask  = 0xE0;
-static const std::uint8_t TwoByteHeaderValue = 0xC0;
-
-static const std::uint8_t ThreeByteHeaderMask  = 0xF0;
+static const std::uint8_t TwoByteHeaderValue   = 0xC0;
 static const std::uint8_t ThreeByteHeaderValue = 0xE0;
-
-static const std::uint8_t FourByteHeaderMask  = 0xF8;
-static const std::uint8_t FourByteHeaderValue = 0xF0;
+static const std::uint8_t FourByteHeaderValue  = 0xF0;
+// Note that five byte sequences are no longer valid UTF-8. This is used just for range checking.
+static const std::uint8_t FiveByteHeaderValue  = 0xF8;
 
 inline bool isContinuationByte(std::uint8_t byte)
 {
@@ -40,19 +37,19 @@ inline bool isContinuationByte(std::uint8_t byte)
  */
 inline int bytesInSequence(std::uint8_t firstByte)
 {
-	if (firstByte <= 0x7f)
+	if (firstByte < 0x80)
 	{
 		return 1;
 	}
-	else if ((firstByte & TwoByteHeaderMask) == TwoByteHeaderValue)
+	else if (firstByte < ThreeByteHeaderValue)
 	{
 		return 2;
 	}
-	else if ((firstByte & ThreeByteHeaderMask) == ThreeByteHeaderValue)
+	else if (firstByte < FourByteHeaderValue)
 	{
 		return 3;
 	}
-	else if ((firstByte & FourByteHeaderMask) == FourByteHeaderValue)
+	else if (firstByte < FiveByteHeaderValue)
 	{
 		return 4;
 	}
@@ -142,16 +139,16 @@ inline UnicodeChar decodeChar(const std::uint8_t **charIt)
 		codePoint = *(*charIt)++;
 		break;
 	case 2:
-		codePoint = ((*(*charIt)++ & ~TwoByteHeaderMask) << 6) |
+		codePoint = ((*(*charIt)++ & ~TwoByteHeaderValue) << 6) |
 			         (*(*charIt)++ & ~ContinuationHeaderMask);
 		break;
 	case 3:
-		codePoint = ((*(*charIt)++ & ~ThreeByteHeaderMask) << 12) |
+		codePoint = ((*(*charIt)++ & ~ThreeByteHeaderValue) << 12) |
 			        ((*(*charIt)++ & ~ContinuationHeaderMask) << 6) |
 			        ((*(*charIt)++ & ~ContinuationHeaderMask));
 		break;
 	case 4:
-		codePoint = ((*(*charIt)++ & ~FourByteHeaderMask) << 18) |
+		codePoint = ((*(*charIt)++ & ~FourByteHeaderValue) << 18) |
 			        ((*(*charIt)++ & ~ContinuationHeaderMask) << 12) |
 			        ((*(*charIt)++ & ~ContinuationHeaderMask) << 6) |
 			        ((*(*charIt)++ & ~ContinuationHeaderMask));
