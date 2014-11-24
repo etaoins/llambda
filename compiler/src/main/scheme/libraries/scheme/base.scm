@@ -574,7 +574,7 @@
 
     ; Unlike other slicing functions the raw slicer is exposed as (substring) to implement the procedure with the same
     ; name defined in R7RS
-    (define substring (world-function "lliby_substring" (<string> <native-uint32> <native-uint32>) -> <string>))
+    (define-r7rs substring (world-function "lliby_substring" (<string> <native-uint32> <native-uint32>) -> <string>))
     (define-slice-proc string-copy substring <string> string-length)
 
     (define native-string-copy! (world-function "lliby_string_mutating_copy" (<string> <native-uint32> <string> <native-uint32> <native-uint32>)))
