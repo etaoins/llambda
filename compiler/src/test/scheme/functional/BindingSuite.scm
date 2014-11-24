@@ -142,7 +142,7 @@
 
 (define-test "simple typed top-level define" (expect 5
   (import (llambda typed))
-  (define: num : <number> 5)
+  (define num : <number> 5)
   num))
 
 (define-test "simple typed declared top-level define" (expect "Hello!"
@@ -153,13 +153,13 @@
 
 (define-test "mutating typed top-level define" (expect 15.0
   (import (llambda typed))
-  (define: num : <number> 5)
+  (define num : <number> 5)
   (set! num 15.0)
   num))
 
 (define-test "typed top-level define with incompatible initialiser fails" (expect-failure
   (import (llambda typed))
-  (define: num : <number> "not a number")))
+  (define num : <number> "not a number")))
 
 (define-test "typed declaration with incompatible definition fails" (expect-failure
   (import (llambda typed))
@@ -168,108 +168,133 @@
 
 (define-test "mutating typed top-level define with incompatible value fails" (expect-failure
   (import (llambda typed))
-  (define: num : <number> 5)
+  (define num : <number> 5)
   (set! num "not a string")))
 
 (define-test "simple typed inner define" (expect 5
   (import (llambda typed))
   ((lambda ()
-    (define: num : <number> 5)
+    (define num : <number> 5)
     num))))
 
 (define-test "mutating typed inner define" (expect 15.0
   (import (llambda typed))
   ((lambda ()
-    (define: num : <number> 5)
+    (define num : <number> 5)
     (set! num 15.0)
     num))))
 
 (define-test "typed inner define with incompatible initialiser fails" (expect-failure
   (import (llambda typed))
   ((lambda ()
-    (define: num : <number> "not a number")
+    (define num : <number> "not a number")
   ))))
 
 (define-test "mutating typed inner define with incompatible value fails" (expect-failure
   (import (llambda typed))
   ((lambda ()
-    (define: num : <number> 5)
+    (define num : <number> 5)
     (set! num "not a string")
   ))))
 
-(define-test "simple typed let:" (expect 12
+(define-test "simple typed let" (expect 12
   (import (llambda typed))
 
-  (let: ((x : <number> 7) (y : <exact-integer> 5))
+  (let ([x : <number> 7] [y : <exact-integer> 5])
     (+ y x))))
 
-(define-test "typed let: with incorrect type fails" (expect-failure
+(define-test "typed let with incorrect type fails" (expect-failure
   (import (llambda typed))
 
-  (let: ((x : <exact-integer> 7.5))
+  (let ([x : <exact-integer> 7.5])
     (+ 1 x))))
 
-(define-test "simple typed let*:" (expect 70
-  (import (llambda typed))
-                                          
-	(let: ((x : <any> 2) (y : <number> 3))
-	  (let*: ((x : <exact-integer> 7)
-			 (z : <exact-integer> (+ x y)))
-		(* z x)))))
-
-(define-test "typed let*: with incorrect type fails" (expect-failure
-  (import (llambda typed))
-                                          
-	(let: ((x : <any> 2) (y : <number> 3))
-	  (let*: ((x : <exact-integer> 7)
-			 (z : <string> (+ x y)))
-		(* z x)))))
-
-(define-test "typed simple letrec*:" (expect 5
+(define-test "simple typed let*" (expect 70
   (import (llambda typed))
 
-  (letrec*: ((p : <procedure>
-              (lambda (x)
-                (+ 1 (q (- x 1)))))
+  (let ([x : <any> 2] [y : <number> 3])
+    (let* ([x : <exact-integer> 7]
+           [z : <exact-integer> (+ x y)])
+      (* z x)))))
+
+(define-test "typed let* with incorrect type fails" (expect-failure
+  (import (llambda typed))
+
+	(let ([x : <any> 2] [y : <number> 3])
+    (let* ([x : <exact-integer> 7]
+           [z : <string> (+ x y)])
+      (* z x)))))
+
+(define-test "typed simple letrec*" (expect 5
+  (import (llambda typed))
+
+  (letrec* ((p : <procedure>
+               (lambda (x)
+                 (+ 1 (q (- x 1)))))
             (q : <procedure>
-              (lambda (y)
-                (if (zero? y)
-                  0
-                  (+ 1 (p (- y 1))))))
+               (lambda (y)
+                 (if (zero? y)
+                   0
+                   (+ 1 (p (- y 1))))))
             (x : <exact-integer> (p 5))
             (y : <exact-integer> x))
            y)))
 
-(define-test "typed simple letrec:" (expect #t
+(define-test "typed simple letrec" (expect #t
   (import (llambda typed))
 
-  (letrec: ((even? : <procedure>
-             (lambda (n)
-               (if (zero? n)
-                 #t
-                 (odd? (- n 1)))))
+  (letrec ((even? : <procedure>
+                  (lambda (n)
+                    (if (zero? n)
+                      #t
+                      (odd? (- n 1)))))
            (odd? : <procedure>
-             (lambda (n)
-               (if (zero? n)
-                 #f
-                 (even? (- n 1))))))
+                 (lambda (n)
+                   (if (zero? n)
+                     #f
+                     (even? (- n 1))))))
     (even? 8))))
 
 (define-test "(let-values)" (expect-success
+  (import (llambda typed))
+
   (assert-equal 100 (let-values (((product) (* 5 20)))
                                 product))
 
   (assert-equal 35 (let-values (((root rem) (exact-integer-sqrt 32)))
-                               (* root rem)))))
+                               (* root rem)))
+
+  (assert-equal 100 (let-values ((([product : <exact-integer>]) (* 5 20)))
+                                 product))
+
+  (assert-equal 35 (let-values ((([root : <exact-integer>] [rem : <exact-integer>]) (exact-integer-sqrt 32)))
+                                (* root rem)))))
 
 (define-test "(let-values) with mismatched value count fails" (expect-compile-failure
   (assert-equal 100 (let-values (((product extra) (* 5 20)))
                                 product))))
 
+(define-test "typed (let-values) with mismatched value count fails" (expect-compile-failure
+  (import (llambda typed))
+  (assert-equal 100 (let-values ((([product : <exact-integer>]) (exact-integer-sqrt 32)))
+                                 product))))
+
+(define-test "typed (let-values) with mismatched type fails" (expect-compile-failure
+  (import (llambda typed))
+  (assert-equal 35 (let-values ((([root : <exact-integer>] [rem : <flonum>]) (exact-integer-sqrt 32)))
+                               (* root rem)))))
+
 (define-test "(let*-values)" (expect (x y x y)
+  (import (llambda typed))
+
   (let ((a 'a) (b 'b) (x 'x) (y 'y))
     (let*-values (((a b) (values x y))
                   ((x y) (values a b)))
+                 (list a b x y)))
+
+  (let ((a 'a) (b 'b) (x 'x) (y 'y))
+    (let*-values ((([a : <symbol>] [b : <symbol>]) (values x y))
+                  (([x : <symbol>] [y : <symbol>]) (values a b)))
                  (list a b x y)))))
 
 (define-test "(let*-values) with mismatched value count fails" (expect-compile-failure
@@ -278,46 +303,23 @@
                   ((x y) (values a b)))
                  (list a b x y)))))
 
-(define-test "(let-values:)" (expect-success
-  (import (llambda typed))
-  (assert-equal 100 (let-values: ((([product : <exact-integer>]) (* 5 20)))
-                                 product))
-
-  (assert-equal 35 (let-values: ((([root : <exact-integer>] [rem : <exact-integer>]) (exact-integer-sqrt 32)))
-                                (* root rem)))))
-
-(define-test "(let-values:) with mismatched value count fails" (expect-compile-failure
-  (import (llambda typed))
-  (assert-equal 100 (let-values: ((([product : <exact-integer>]) (exact-integer-sqrt 32)))
-                                 product))))
-
-(define-test "(let-values:) with mismatched type fails" (expect-compile-failure
-  (import (llambda typed))
-  (assert-equal 35 (let-values: ((([root : <exact-integer>] [rem : <flonum>]) (exact-integer-sqrt 32)))
-                                (* root rem)))))
-
-(define-test "(let*-values:)" (expect (x y x y)
-  (import (llambda typed))
-  (let ((a 'a) (b 'b) (x 'x) (y 'y))
-    (let*-values: ((([a : <symbol>] [b : <symbol>]) (values x y))
-                   (([x : <symbol>] [y : <symbol>]) (values a b)))
-                  (list a b x y)))))
-
 (define-test "(let*-values:) with mismatched value count fails" (expect-compile-failure
   (import (llambda typed))
   (let ((a 'a) (b 'b) (x 'x) (y 'y))
-    (let*-values: ((([a : <symbol>] [b : <symbol>] [extra : <symbol>]) (values x y))
+    (let*-values ((([a : <symbol>] [b : <symbol>] [extra : <symbol>]) (values x y))
                    (([x : <symbol>] [y : <symbol>]) (values a b)))
                   (list a b x y)))))
 
-(define-test "(let*-values:) with mismatched type fails" (expect-compile-failure
+(define-test "(let*-values) with mismatched type fails" (expect-compile-failure
   (import (llambda typed))
   (let ((a 'a) (b 'b) (x 'x) (y 'y))
-    (let*-values: ((([a : <symbol>] [b : <string>]) (values x y))
-                   (([x : <symbol>] [y : <symbol>]) (values a b)))
-                  (list a b x y)))))
+    (let*-values ((([a : <symbol>] [b : <string>]) (values x y))
+                  (([x : <symbol>] [y : <symbol>]) (values a b)))
+                 (list a b x y)))))
 
 (define-test "(define-values)" (expect-success
+  (import (llambda typed))
+
   (define-values (x y) (exact-integer-sqrt 17))
 
   (assert-equal x 4)
@@ -352,7 +354,12 @@
   (define-values (one two . rest) (values 1 2 3 4))
   (assert-equal 1 one)
   (assert-equal 2 two)
-  (assert-equal '(3 4) rest)))
+  (assert-equal '(3 4) rest)
+
+  (define-values ([num-x : <number>] [num-y : <exact-integer>]) (exact-integer-sqrt 17))
+
+  (assert-equal num-x 4)
+  (assert-equal num-y 1)))
 
 (define-test "mutating (define-values)" (expect-success
   (define-values (one two) (values 1 2))
@@ -368,49 +375,42 @@
                   (set! y 4)
                   (+ x y)))))
 
-(define-test "(define-values:)" (expect-success
+(define-test "(define-values) with static mismatched fixed type fails" (expect-compile-failure
   (import (llambda typed))
-  (define-values: ([x : <number>] [y : <exact-integer>]) (exact-integer-sqrt 17))
+  (define-values ([x : <symbol>] [y : <exact-integer>]) (exact-integer-sqrt 17))))
 
-  (assert-equal x 4)
-  (assert-equal y 1)))
-
-(define-test "(define-values:) with static mismatched fixed type fails" (expect-compile-failure
+(define-test "(define-values) with static mismatched rest type fails" (expect-compile-failure
   (import (llambda typed))
-  (define-values: ([x : <symbol>] [y : <exact-integer>]) (exact-integer-sqrt 17))))
+  (define-values ([x : <any>] [y : <any>] r : <string> *) (values 1 2 #t))))
 
-(define-test "(define-values:) with static mismatched rest type fails" (expect-compile-failure
+(define-test "(define-values) with static insufficient values" (expect-compile-failure
   (import (llambda typed))
-  (define-values: ([x : <any>] [y : <any>] r : <string> *) (values 1 2 #t))))
+  (define-values ([x : <exact-integer>] [y : <exact-integer>] [x : <exact-integer>]) (exact-integer-sqrt 17))))
 
-(define-test "(define-values:) with static insufficient values" (expect-compile-failure
+(define-test "(define-values) with static too many values" (expect-compile-failure
   (import (llambda typed))
-  (define-values: ([x : <exact-integer>] [y : <exact-integer>] [x : <exact-integer>]) (exact-integer-sqrt 17))))
+  (define-values ([x : <exact-integer>]) (exact-integer-sqrt 17))))
 
-(define-test "(define-values:) with static too many values" (expect-compile-failure
-  (import (llambda typed))
-  (define-values: ([x : <exact-integer>]) (exact-integer-sqrt 17))))
-
-(define-test "(define-values:) with dynamic mismatched fixed type fails" (expect-runtime-failure
+(define-test "(define-values) with dynamic mismatched fixed type fails" (expect-runtime-failure
   (import (llambda typed))
 
   (define returns-two (typeless-cell (lambda () (values 1 2))))
-  (define-values: ([x : <symbol>] [y : <exact-integer>]) (returns-two))))
+  (define-values ([x : <symbol>] [y : <exact-integer>]) (returns-two))))
 
-(define-test "(define-values:) with dynamic mismatched rest type fails" (expect-runtime-failure
+(define-test "(define-values) with dynamic mismatched rest type fails" (expect-runtime-failure
   (import (llambda typed))
 
   (define returns-three (typeless-cell (lambda () (values 1 2 #t))))
-  (define-values: ([x : <any>] [y : <any>] r : <string> *) (returns-three))))
+  (define-values ([x : <any>] [y : <any>] r : <string> *) (returns-three))))
 
-(define-test "(define-values:) with dynamic insufficient values" (expect-runtime-failure
+(define-test "(define-values) with dynamic insufficient values" (expect-runtime-failure
   (import (llambda typed))
 
   (define returns-two (typeless-cell (lambda () (values 1 2))))
-  (define-values: ([x : <exact-integer>] [y : <exact-integer>] [x : <exact-integer>]) (returns-two))))
+  (define-values ([x : <exact-integer>] [y : <exact-integer>] [x : <exact-integer>]) (returns-two))))
 
-(define-test "(define-values:) with dynamic too many values" (expect-runtime-failure
+(define-test "(define-values) with dynamic too many values" (expect-runtime-failure
   (import (llambda typed))
 
   (define returns-two (typeless-cell (lambda () (values 1 2))))
-  (define-values: ([x : <exact-integer>]) (returns-two))))
+  (define-values ([x : <exact-integer>]) (returns-two))))

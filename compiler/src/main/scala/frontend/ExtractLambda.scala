@@ -8,8 +8,7 @@ import llambda.compiler.valuetype.Implicits._
 
 object ExtractLambda {
   def apply(
-      located : SourceLocated, 
-      typed : Boolean,
+      located : SourceLocated,
       operandList : List[sst.ScopedDatum],
       operandTerminator : sst.ScopedDatum,
       definition : List[sst.ScopedDatum],
@@ -17,7 +16,7 @@ object ExtractLambda {
       typeDeclaration : vt.SchemeType = vt.AnySchemeType
   )(debugContext : debug.SourceContext, libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : et.Lambda = {
     // Parse our operand list
-    val parsedFormals = ParseFormals(typed, operandList, operandTerminator)
+    val parsedFormals = ParseFormals(operandList, operandTerminator)
 
     val signatureFixedArgTypes = parsedFormals.fixedOperands map { case (symbol, typeOpt) =>
       symbol -> typeOpt.getOrElse(vt.AnySchemeType)

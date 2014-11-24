@@ -10,9 +10,10 @@
   (assert-equal 2 ref-result)))
 
 (define-test "applying fixed arg storage locs to a case procedure constrains their type" (expect 4
+  (import (scheme case-lambda))
   (import (llambda typed))
 
-  (define typed-case (case-lambda:
+  (define typed-case (case-lambda
     (([first : <exact-integer>]) first)
     (([first : <flonum>] [second : <exact-integer>]) first)))
   

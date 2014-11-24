@@ -53,33 +53,33 @@
       ((first second) 'second)))
   (fixed-lambda 0 1 2)))
 
-(define-test "(case-lambda:) with type fails at compile time" (expect-compile-failure
+(define-test "(case-lambda) with type fails at compile time" (expect-compile-failure
   (import (scheme case-lambda))
   (import (llambda typed))
 
   (define fixed-lambda
-    (case-lambda:
+    (case-lambda
       (((first : <exact-integer>)) 'first)
       (((first : <exact-integer>) (second : <symbol>)) 'second)))
   (fixed-lambda 0 1)))
 
-(define-test "(case-lambda:) returns value with case-> type" (expect-success
+(define-test "(case-lambda) returns value with case-> type" (expect-success
   (import (scheme case-lambda))
   (import (llambda typed))
 
   (define fixed-lambda
-    (case-lambda:
+    (case-lambda
       (((first : <exact-integer>)) 'first)
       (((first : <exact-integer>) (second : <symbol>)) 'second)))
 
   (ann fixed-lambda (case-> (-> <exact-integer> *) (-> <exact-integer> <symbol> *)))))
 
-(define-test "(case-lambda:) cannot be annotated with incompatible case-> type" (expect-compile-failure
+(define-test "(case-lambda) cannot be annotated with incompatible case-> type" (expect-compile-failure
   (import (scheme case-lambda))
   (import (llambda typed))
 
   (define fixed-lambda
-    (case-lambda:
+    (case-lambda
       (((first : <exact-integer>)) 'first)
       (((first : <exact-integer>) (second : <symbol>)) 'second)))
 
@@ -94,10 +94,11 @@
       ((first second) 'second)))
   (fixed-lambda 0 1 2)))
 
-(define-test "recursive (case-lambda:)" (expect 5
+(define-test "recursive (case-lambda)" (expect 5
+  (import (scheme case-lambda))
   (import (llambda typed))
 
-  (define my-gcd (case-lambda:
+  (define my-gcd (case-lambda
                 (() 0)
                 (([a : <exact-integer>]) a)
                 (([a : <exact-integer>] [b : <exact-integer>])

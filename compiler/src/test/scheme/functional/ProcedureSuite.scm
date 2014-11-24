@@ -56,7 +56,7 @@
 (define-test "specific procedure types can be converted to other procedure types" (expect 8
 	(import (llambda typed))
 
-  (define: plus : (-> <number> * <number>) *)
+  (define plus : (-> <number> * <number>) *)
   (set! plus +)
 
   (: double-binary-op (-> (-> <exact-integer> <exact-integer> <exact-integer>) <exact-integer> <exact-integer>))
@@ -68,10 +68,10 @@
 (define-test "multiple specific procedure types can be converted to the same other procedure type" (expect-success
   (import (llambda typed))
 
-  (define: plus : (-> <number> * <number>) *)
+  (define plus : (-> <number> * <number>) *)
   (set! plus +)
 
-  (define: construct : (-> <number> <number> <any>) *)
+  (define construct : (-> <number> <number> <any>) *)
   (set! construct cons)
 
   (: double-binary-op (-> (-> <exact-integer> <exact-integer> <any>) <exact-integer> <any>))
@@ -84,7 +84,7 @@
 (define-test "unions containing procedure types can be converted to other procedure types" (expect 8
 	(import (llambda typed))
 
-  (define: plus : (U <unit> (-> <number> * <number>)) #!unit)
+  (define plus : (U <unit> (-> <number> * <number>)) #!unit)
   (set! plus +)
 
   (: double-binary-op (-> (-> <exact-integer> <exact-integer> <exact-integer>) <exact-integer> <exact-integer>))
@@ -128,24 +128,24 @@
 
 (define-test "typed procedure returning its only argument" (expect 7
   (import (llambda typed))
-	(define: (return-value (value : <exact-integer>)) value)
+	(define (return-value (value : <exact-integer>)) value)
 	(return-value 7)))
 
 (define-test "typed procedure invoked with wrong type fails" (expect-failure
   (import (llambda typed))
-	(define: (return-value (value : <exact-integer>)) value)
+	(define (return-value (value : <exact-integer>)) value)
 	(return-value 'symbol)))
 
 (define-test "typed procedure invoked with wrong rest arg type fails" (expect-failure
   (import (llambda typed))
-  (define: (return-value vals : <exact-integer> *) 
+  (define (return-value vals : <exact-integer> *) 
     vals)
 
   (return-value 'symbol)))
 
 (define-test "typed procedure invoked as datum cell with wrong rest arg type fails" (expect-failure
   (import (llambda typed))
-  (define: (return-value vals : <exact-integer> *) 
+  (define (return-value vals : <exact-integer> *) 
     vals)
 
   ((typeless-cell return-value) 'symbol)))
@@ -161,7 +161,7 @@
 
 (define-test "typed procedure invoked with correct rest arg types" (expect-success
   (import (llambda typed))
-	(define: (add-values vals : <exact-integer> *) 
+	(define (add-values vals : <exact-integer> *) 
     (cond-expand (immutable-pairs
       (ann vals (Listof <exact-integer>))))
 
@@ -175,7 +175,7 @@
 
 (define-test "typed procedure adding its arguments" (expect 7
   (import (llambda typed))
-	(define: (add-two-values (a : <exact-integer>) (b : <exact-integer>)) (+ a b))
+	(define (add-two-values (a : <exact-integer>) (b : <exact-integer>)) (+ a b))
 	(add-two-values 4 3)))
 
 (define-test "procedure returning value can be passed as procedure returning unit" (expect finished
@@ -240,7 +240,7 @@
   (import (llambda typed))
 
 	(define (create-counter)
-	  (define: value : <exact-integer> 0)
+	  (define value : <exact-integer> 0)
 	  (lambda ()
 		 (set! value (+ value 1))
 		 value))

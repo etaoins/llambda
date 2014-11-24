@@ -199,32 +199,14 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
       case (Primitives.Lambda, sst.ScopedListOrDatum(fixedArgData, restArgDatum) :: definition) =>
         ExtractLambda(
           located=appliedSymbol,
-          typed=false,
           operandList=fixedArgData,
           operandTerminator=restArgDatum,
           definition=definition
         )(debugContext, libraryLoader, frontendConfig)
-      
-      case (Primitives.TypedLambda, sst.ScopedListOrDatum(fixedArgData, restArgDatum) :: definition) =>
-        ExtractLambda(
-          located=appliedSymbol,
-          typed=true,
-          operandList=fixedArgData,
-          operandTerminator=restArgDatum,
-          definition=definition
-        )(debugContext, libraryLoader, frontendConfig)
-      
+
       case (Primitives.CaseLambda, clauseData) =>
         ExtractCaseLambda(
           located=appliedSymbol,
-          typed=false,
-          clauseData=clauseData
-        )(debugContext, libraryLoader, frontendConfig)
-      
-      case (Primitives.TypedCaseLambda, clauseData) =>
-        ExtractCaseLambda(
-          located=appliedSymbol,
-          typed=true,
           clauseData=clauseData
         )(debugContext, libraryLoader, frontendConfig)
 
@@ -334,7 +316,8 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
           extractExpr(value)
         }))
 
-      case (Primitives.TypedDefine, List(symbol : sst.ScopedSymbol, sst.ScopedSymbol(_, ":"), typeDatum, value)) =>
+      case (Primitives.Define, List(symbol : sst.ScopedSymbol, annSymbol : sst.ScopedSymbol, typeDatum, value))
+          if annSymbol.resolve == Primitives.AnnotateStorageLocType =>
         val providedType = ExtractType.extractStableType(typeDatum)(frontendConfig)
 
         Some(ParsedVarDefine(symbol, Some(providedType), () => {
@@ -345,20 +328,6 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
         Some(ParsedVarDefine(symbol, None, () => {
           ExtractLambda(
             located=appliedSymbol,
-            typed=false,
-            operandList=fixedArgs,
-            operandTerminator=restArgDatum,
-            definition=body,
-            sourceNameHint=Some(symbol.name),
-            typeDeclaration=declaredSymbolType(symbol)
-          )(debugContext, libraryLoader, frontendConfig).assignLocationAndContextFrom(appliedSymbol, debugContext)
-        }))
-      
-      case (Primitives.TypedDefine, sst.ScopedAnyList((symbol : sst.ScopedSymbol) :: fixedArgs, restArgDatum) :: body) =>
-        Some(ParsedVarDefine(symbol, None, () => {
-          ExtractLambda(
-            located=appliedSymbol,
-            typed=true,
             operandList=fixedArgs,
             operandTerminator=restArgDatum,
             definition=body,
@@ -368,19 +337,13 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
         }))
 
       case (Primitives.DefineValues, List(sst.ScopedListOrDatum(operands, operandTerminator), initialiser)) =>
-        Some(parseMultipleValueDefine(false, operands, operandTerminator, initialiser))
-
-      case (Primitives.TypedDefineValues, List(sst.ScopedAnyList(operands, operandTerminator), initialiser)) =>
-        Some(parseMultipleValueDefine(true, operands, operandTerminator, initialiser))
+        Some(parseMultipleValueDefine(operands, operandTerminator, initialiser))
 
       case (Primitives.DefineSyntax, _) =>
         Some(ParseSyntaxDefine(appliedSymbol, operands, debugContext))
 
       case (Primitives.DefineRecordType, _) =>
-        Some(ParseRecordTypeDefine(appliedSymbol, operands, allowTypes=false)(frontendConfig))
-      
-      case (Primitives.TypedDefineRecordType, _) =>
-        Some(ParseRecordTypeDefine(appliedSymbol, operands, allowTypes=true)(frontendConfig))
+        Some(ParseRecordTypeDefine(appliedSymbol, operands)(frontendConfig))
 
       case (Primitives.DefineType, (typeAlias : sst.ScopedSymbol) :: typeDatum :: Nil) =>
         // Allow the type's new name to be a recursion marker inside the definition
@@ -440,12 +403,11 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
   }
 
   def parseMultipleValueDefine(
-      typed : Boolean,
       operandList : List[sst.ScopedDatum],
       operandTerminator : sst.ScopedDatum,
       initialiserDatum : sst.ScopedDatum
   ) : ParsedMultipleValueDefine = {
-    val parsedFormals = ParseFormals(typed, operandList, operandTerminator)
+    val parsedFormals = ParseFormals(operandList, operandTerminator)
 
     val fixedValueTargets = parsedFormals.fixedOperands map { case (symbol, schemeTypeOpt) =>
       ValueTarget(symbol, schemeTypeOpt)

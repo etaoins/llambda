@@ -11,7 +11,6 @@ case class ParsedFormals(
 
 object ParseFormals {
   def apply(
-      typed : Boolean,
       operandList : List[sst.ScopedDatum],
       operandTerminator : sst.ScopedDatum
   ) : ParsedFormals = {
@@ -21,10 +20,11 @@ object ParseFormals {
         case (
             sst.ScopedSymbol(_, "*") ::
             (restArgType : sst.ScopedSymbol) ::
-            (typeColon @ sst.ScopedSymbol(_, ":")) ::
+            (annSymbol : sst.ScopedSymbol) ::
             (restArgName : sst.ScopedSymbol) ::
             reverseFixedArgs
-        , sst.NonSymbolLeaf(ast.EmptyList())) if typed =>
+          , sst.NonSymbolLeaf(ast.EmptyList())
+        ) if annSymbol.resolve == Primitives.AnnotateStorageLocType =>
           // This is a typed rest argument
           (reverseFixedArgs.reverse, Some(restArgName), Some(ExtractType.extractNonEmptySchemeType(restArgType)))
 
@@ -41,23 +41,17 @@ object ParseFormals {
       }
 
     // Find the types in our signature
-    val fixedOperands = if (typed) {
-      fixedArgData.map {
-        case sst.ScopedProperList(List(scopedSymbol : sst.ScopedSymbol, sst.ScopedSymbol(_, ":"), typeDatum)) =>
-          scopedSymbol -> Some(ExtractType.extractNonEmptySchemeType(typeDatum))
+    val fixedOperands = fixedArgData.map {
+      case sst.ScopedProperList(List(scopedSymbol : sst.ScopedSymbol, annSymbol : sst.ScopedSymbol, typeDatum))
+          if annSymbol.resolve == Primitives.AnnotateStorageLocType =>
+        scopedSymbol -> Some(ExtractType.extractNonEmptySchemeType(typeDatum))
 
-        case other =>
-          throw new BadSpecialFormException(other, "Expected (symbol : <type>)")
-      }
-    }
-    else {
-      fixedArgData.map {
-        case scopedSymbol : sst.ScopedSymbol =>
-          scopedSymbol -> None
+      case scopedSymbol : sst.ScopedSymbol =>
+        scopedSymbol -> None
 
-        case datum =>
-          throw new BadSpecialFormException(datum, "Symbol expected")
-      }
+      case datum =>
+        val message = s"Unrecognized operand definition. Must be either identiifer or [identifier : <type>]."
+        throw new BadSpecialFormException(datum, message)
     }
 
     val restOperandOpt = restArgNameOpt map { restArgName =>

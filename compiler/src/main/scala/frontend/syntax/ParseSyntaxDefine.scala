@@ -7,12 +7,17 @@ import llambda.compiler.frontend.ParsedSimpleDefine
 
 private[frontend] object ParseSyntaxDefine {
   private def checkDuplicateVariables(foundVariables : PatternVariables, seenVariables : Set[SyntaxVariable]) : Set[SyntaxVariable] = {
-    val afterVisitedSelf = foundVariables.variables.foldLeft(seenVariables) { case (seenVariables, foundVariable) =>
-      if (seenVariables.contains(foundVariable)) {
-        throw new BadSpecialFormException(foundVariable, "Duplicate pattern variable")
-      }
+    val afterVisitedSelf = foundVariables.variables.foldLeft(seenVariables) {
+      case (seenVariables, _ : BoundSyntaxVariable) =>
+        // Allow duplicate bound syntax variables as they must always resolve to the same bound value
+        seenVariables
 
-      seenVariables + foundVariable
+      case (seenVariables, foundVariable) =>
+        if (seenVariables.contains(foundVariable)) {
+          throw new BadSpecialFormException(foundVariable, "Duplicate pattern variable" + foundVariable.toString)
+        }
+
+        seenVariables + foundVariable
     }
 
     foundVariables.subpatterns.foldLeft(afterVisitedSelf) { case (seenVariables, subpattern) => 

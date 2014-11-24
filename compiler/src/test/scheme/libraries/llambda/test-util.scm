@@ -73,5 +73,5 @@
                                           (display "' but execution completed normally")
                                           (exit -1))))))
 
-  (define: (path-for-test-file [filename : <string>])
-           (string-append (get-environment-variable "LLAMBDA_TEST_FILES_BASE") "/" filename))))
+  (define (path-for-test-file [filename : <string>])
+    (string-append (get-environment-variable "LLAMBDA_TEST_FILES_BASE") "/" filename))))

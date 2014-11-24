@@ -99,7 +99,7 @@
 (define-test "(call-with-values) with wrong type fails" (expect-failure
   (import (llambda typed))
   (call-with-values (lambda () (values 4 5))
-                    (lambda: ((a : <exact-integer>) (b : <flonum>)) b))))
+                    (lambda ([a : <exact-integer>] [b : <flonum>]) b))))
 
 (define-test "(call-with-values) with zero values returning multiple values" (expect (a b c)
   (call-with-values
@@ -161,7 +161,7 @@
                   v))
 
   ; We should be able to iterate while returning mulitple values unlike (vector-map)
-  (define: counter : <exact-integer> 0)
+  (define counter : <exact-integer> 0)
 
   (vector-for-each
     (lambda (i)
@@ -210,7 +210,7 @@
                   v))
 
   ; We should be able to iterate while returning mulitple values unlike (vector-map)
-  (define: acc : <exact-integer> 0)
+  (define acc : <exact-integer> 0)
 
   (for-each
     (lambda (i)

@@ -8,11 +8,11 @@
   (export <promise>)
 
   (begin
-    (define-record-type: <promise-data> (make-promise-data done? value) promise-data?
+    (define-record-type <promise-data> (make-promise-data done? value) promise-data?
       ((done? : <boolean>) promise-data-done? set-promise-data-done!)
       ((value : <any>) promise-data-value set-promise-data-value!))
 
-    (define-record-type: <promise> (make-promise-box data) promise?
+    (define-record-type <promise> (make-promise-box data) promise?
       ((data : <promise-data>) promise-data set-promise-data!))
 
     ; Shorthand for creating a promise box with initial promise data

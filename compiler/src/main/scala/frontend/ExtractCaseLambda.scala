@@ -8,15 +8,13 @@ import llambda.compiler.valuetype.Implicits._
 
 object ExtractCaseLambda {
   def apply(
-      located : SourceLocated, 
-      typed : Boolean,
+      located : SourceLocated,
       clauseData : List[sst.ScopedDatum]
   )(debugContext : debug.SourceContext, libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : et.CaseLambda = {
     val locatedClauses = clauseData map {
       case clauseDatum @ sst.ScopedProperList(sst.ScopedListOrDatum(fixedArgData, restArgDatum) :: definition) =>
         val lambdaExpr = ExtractLambda(
           located=clauseDatum,
-          typed=typed,
           operandList=fixedArgData,
           operandTerminator=restArgDatum,
           definition=definition

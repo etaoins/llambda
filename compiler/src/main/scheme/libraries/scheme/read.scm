@@ -6,7 +6,7 @@
   (include-library-declarations "../../interfaces/scheme/read.scm")
   (begin
     (define native-read (world-function "lliby_read" (<port>) -> <any>))
-    (define-r7rs read (case-lambda:
+    (define-r7rs read (case-lambda
       (()
        (native-read (current-input-port)))
       (([port : <port>])

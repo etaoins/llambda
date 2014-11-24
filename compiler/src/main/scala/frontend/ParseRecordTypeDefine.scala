@@ -8,6 +8,7 @@ import llambda.compiler.sst
 import llambda.compiler.et
 import llambda.compiler.codegen.CompactRepresentationForType
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.Primitives
 import llambda.compiler.BadSpecialFormException
 
 private[frontend] object ParseRecordTypeDefine {
@@ -18,8 +19,7 @@ private[frontend] object ParseRecordTypeDefine {
   )
 
   private def parseFields(
-      fieldData : List[sst.ScopedDatum],
-      allowTypes : Boolean
+      fieldData : List[sst.ScopedDatum]
   )(implicit frontendConfig : FrontendConfig) : ListMap[sst.ScopedSymbol, ParsedField] =
     fieldData.foldLeft(ListMap[sst.ScopedSymbol, ParsedField]()) {
       case (parsedFields, fieldDatum @ sst.ScopedProperList(fieldDefDatum :: procedureData)) =>
@@ -30,11 +30,8 @@ private[frontend] object ParseRecordTypeDefine {
             // Just a bare symbol - implicitly we're of type <any>
             (nameSymbol, vt.AnySchemeType)
 
-          case sst.ScopedProperList((nameSymbol : sst.ScopedSymbol) :: sst.ScopedSymbol(_, ":") :: fieldTypeDatum :: Nil) =>
-            if (!allowTypes) {
-              throw new BadSpecialFormException(fieldDatum, "Field type annotations are only allowed with define-record-type:")
-            }
-
+          case sst.ScopedProperList(List(nameSymbol : sst.ScopedSymbol, annSymbol : sst.ScopedSymbol, fieldTypeDatum))
+              if annSymbol.resolve == Primitives.AnnotateStorageLocType =>
             // Resolve the field's Scheme type
             val schemeType = ExtractType.extractStableType(fieldTypeDatum)
 
@@ -44,13 +41,7 @@ private[frontend] object ParseRecordTypeDefine {
             (nameSymbol, compactType)
 
           case other =>
-            val message = if (allowTypes) {
-              // Types aren't allowed in this form - don't mention them
-              s"Unrecognized record field name definition. Must be identifier."
-            }
-            else {
-              s"Unrecognized record field name definition. Must be either identiifer or (identifier : <type>)." 
-            }
+            val message = s"Unrecognized record field name definition. Must be either identiifer or [identifier : <type>]."
 
             throw new BadSpecialFormException(other, message)
         }
@@ -126,12 +117,11 @@ private[frontend] object ParseRecordTypeDefine {
 
   def apply(
       appliedSymbol : sst.ScopedSymbol,
-      operands : List[sst.ScopedDatum],
-      allowTypes : Boolean
+      operands : List[sst.ScopedDatum]
   )(implicit frontendConfig : FrontendConfig) : ParsedRecordTypeDefine = operands match {
-    case (typeSymbol : sst.ScopedSymbol) :: constructorDatum :: (predicateSymbol : sst.ScopedSymbol) :: fieldData => 
+    case (typeSymbol : sst.ScopedSymbol) :: constructorDatum :: (predicateSymbol : sst.ScopedSymbol) :: fieldData =>
       // Parse our fields first
-      val symbolToParsedField = parseFields(fieldData, allowTypes)
+      val symbolToParsedField = parseFields(fieldData)
 
       // Build our record type
       val recordFields = symbolToParsedField.values.toList.map(_.field)

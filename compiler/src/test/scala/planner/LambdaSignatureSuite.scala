@@ -56,7 +56,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
   }
   
   test("explicitly typed procedure returning its argument") {
-    val signature = signatureFor("""(lambda: ((x : <exact-integer>)) x)""")
+    val signature = signatureFor("""(lambda ((x : <exact-integer>)) x)""")
 
     assert(signature.hasWorldArg === false)
     assert(signature.fixedArgTypes === List(vt.Int64))
@@ -73,7 +73,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
   test("assigning procedure argument to typed immutable") {
     val signature = signatureFor("""
       (lambda (x)
-        (define: y : <flonum> x)
+        (define y : <flonum> x)
         y)"""
     )
 
@@ -84,7 +84,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
   test("assigning procedure argument to typed mutable") {
     val signature = signatureFor("""
       (lambda (x)
-        (define: y : <flonum> x)
+        (define y : <flonum> x)
         (set! y 5.0)
         y)"""
     )
@@ -109,7 +109,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
   }
   
   test("typed procedure proxying (vector-ref)") {
-    val signature = signatureFor("""(lambda: ((vec : <vector>) (index : <number>)) (vector-ref vec index))""")
+    val signature = signatureFor("""(lambda ([vec : <vector>] [index : <number>]) (vector-ref vec index))""")
 
     // We should refine <number> in to <exact-integer>
     assert(signature.fixedArgTypes === List(anyVectorType, vt.Int64))
@@ -117,7 +117,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
   }
   
   test("custom union typed procedure proxying (vector-ref)") {
-    val signature = signatureFor("""(lambda: ((vec : (U <vector> <char>)) (index : <number>)) (vector-ref vec index))""")
+    val signature = signatureFor("""(lambda ([vec : (U <vector> <char>)] [index : <number>]) (vector-ref vec index))""")
 
     // We should refine <number> in to <exact-integer>
     assert(signature.fixedArgTypes === List(anyVectorType, vt.Int64))
@@ -208,7 +208,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
 
   test("aborted retyping preserves original argument types") {
     val signature = signatureFor("""
-      (lambda: ((vec : <vector>) (index : <number>)) 
+      (lambda ([vec : <vector>] [index : <number>])
         (/ 0 0)
         (vector-ref vec index))""")
 

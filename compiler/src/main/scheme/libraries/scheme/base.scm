@@ -20,12 +20,25 @@
                      ((letrec ((tag (lambda (name ...)
                                       body1 body2 ...)))
                         tag)
+                      val ...))
+                    ((let ((name : <type> val) ...) body1 body2 ...)
+                     ((lambda ((name : <type>) ...) body1 body2 ...)
+                      val ...))
+                    ((let tag ((name : <type> val) ...) body1 body2 ...)
+                     ((letrec ((tag (lambda ([name : <type>] ...)
+                                      body1 body2 ...)))
+                        tag)
                       val ...))))
 
     (define-syntax let*
       (syntax-rules ()
                     ((let* () body1 body2 ...)
                      (let () body1 body2 ...))
+                    ((let* ([name1 : <type1> val1] [name2 : <type2> val2] ...)
+                       body1 body2 ...)
+                     (let ([name1 : <type1> val1])
+                       (let* ([name2 : <type2> val2] ...)
+                         body1 body2 ...)))
                     ((let* ((name1 val1) (name2 val2) ...)
                        body1 body2 ...)
                      (let ((name1 val1))
@@ -38,6 +51,10 @@
     ; the macro below to implement (letrec*) in terms of body defines. The result should be equivalent.
     (define-syntax letrec*
       (syntax-rules ()
+                    ((letrec* ((name : <type> val) ...) body1 body2 ...)
+                     ((lambda ()
+                        (define name : <type> val) ...
+                        body1 body2 ...)))
                     ((letrec* ((name val) ...) body1 body2 ...)
                      ((lambda ()
                         (define name val) ...
@@ -49,6 +66,8 @@
     ; We should be more strict with invalid (letrec) uses in the future
     (define-syntax letrec
       (syntax-rules ()
+                    ((letrec ((name : <type> val) ...) body1 body2 ...)
+                     (letrec* ((name : <type> val) ...) body1 body2 ...))
                     ((letrec ((name val) ...) body1 body2 ...)
                      (letrec* ((name val) ...) body1 body2 ...))))
 
@@ -83,6 +102,10 @@
                        (lambda args
                          (let-values "bind"
                                      bindings tmps body))))
+                    ((let-values "mktmp" ([name : <type>] . b) e0 (arg ...)
+                                 bindings (tmp ...) body)
+                     (let-values "mktmp" b e0 (arg ... [x : <type>])
+                                 bindings (tmp ... (name : <type> x)) body))
                     ((let-values "mktmp" (a . b) e0 (arg ...)
                                  bindings (tmp ...) body)
                      (let-values "mktmp" b e0 (arg ... x)
@@ -223,7 +246,7 @@
       (syntax-rules ()
         ((define-slice-proc name native-proc <source-type> source-length-proc)
          (define-r7rs name
-           (case-lambda:
+           (case-lambda
              (([source : <source-type>])
               (native-proc source 0 (source-length-proc source)))
               (([source : <source-type>] [start : <exact-integer>])
@@ -235,7 +258,7 @@
       (syntax-rules ()
         ((define-mutating-copy-proc name native-proc <type> length-proc)
          (define-r7rs name
-                      (case-lambda:
+                      (case-lambda
                         (([to : <type>] [at : <exact-integer>] [from : <type>])
                          (native-proc to at from 0 (length-proc from)))
                         (([to : <type>] [at : <exact-integer>] [from : <type>] [start : <exact-integer>])
@@ -271,10 +294,10 @@
     (define-r7rs rational? (native-function "lliby_is_rational" (<any>) -> <native-bool>))
     
     ; These aren't quite normal predicates as they only take numbers
-    (define-r7rs inexact? (lambda: ((val : <number>))
+    (define-r7rs inexact? (lambda ((val : <number>))
       ((make-predicate <flonum>) val)))
 
-    (define-r7rs exact? (lambda: ((val : <number>))
+    (define-r7rs exact? (lambda ((val : <number>))
       ((make-predicate <exact-integer>) val)))
 
     (define-r7rs exact-integer? exact?)
@@ -287,29 +310,29 @@
     (define-r7rs >= (native-function "lliby_numeric_gte" (<number> <number> . <number>) -> <native-bool>))
 
     ; These branch on type as our planner currently won't optimise comparisons without a definite type
-    (define-r7rs zero? (lambda: ((n : <number>))
+    (define-r7rs zero? (lambda ((n : <number>))
       (if (exact-integer? n) (= n 0) (= n 0.0))))
 
-    (define-r7rs positive? (lambda: ((n : <number>))
+    (define-r7rs positive? (lambda ((n : <number>))
       (if (exact-integer? n) (> n 0) (> n 0.0))))
     
-    (define-r7rs negative? (lambda: ((n : <number>))
+    (define-r7rs negative? (lambda ((n : <number>))
       (if (exact-integer? n) (< n 0) (< n 0.0))))
     
     (define native-floor (native-function "floor" (<native-double>) -> <native-double>))
-    (define-r7rs floor (lambda: ((n : <number>))
+    (define-r7rs floor (lambda ((n : <number>))
       (if (exact-integer? n) n (native-floor n))))
     
     (define native-ceil (native-function "ceil" (<native-double>) -> <native-double>))
-    (define-r7rs ceiling (lambda: ((n : <number>))
+    (define-r7rs ceiling (lambda ((n : <number>))
       (if (exact-integer? n) n (native-ceil n))))
     
     (define native-trunc (native-function "trunc" (<native-double>) -> <native-double>))
-    (define-r7rs truncate (lambda: ((n : <number>))
+    (define-r7rs truncate (lambda ((n : <number>))
       (if (exact-integer? n) n (native-trunc n))))
     
     (define native-round (native-function "round" (<native-double>) -> <native-double>))
-    (define-r7rs round (lambda: ((n : <number>))
+    (define-r7rs round (lambda ((n : <number>))
       (if (exact-integer? n) n (native-round n))))
 
     (define-r7rs integer? (lambda (x)
@@ -332,10 +355,10 @@
     
     (define-r7rs expt (world-function "lliby_expt" (<number> <number>) -> <number>))
     
-    (define-r7rs square (lambda: ([num : <number>])
+    (define-r7rs square (lambda ([num : <number>])
       (* num num)))
 
-    (define-r7rs abs (lambda: ([num : <number>])
+    (define-r7rs abs (lambda ([num : <number>])
       ; Do a top-level type check to make the compiler generate a specialised version of each branch. The test itself is
       ; semantically a no-op
       (if (exact-integer? num)
@@ -364,23 +387,23 @@
     (define-r7rs remainder truncate-remainder)
     (define-r7rs modulo floor-remainder)
 
-    (define-r7rs odd? (lambda: ([val : <exact-integer>])
+    (define-r7rs odd? (lambda ([val : <exact-integer>])
                                (not (= (truncate-remainder val 2) 0))))
 
-    (define-r7rs even? (lambda: ([val : <exact-integer>])
+    (define-r7rs even? (lambda ([val : <exact-integer>])
                                 (= (truncate-remainder val 2) 0)))
 
     (define-r7rs max (world-function "lliby_max" (<number> . <number>) -> <number>))
     (define-r7rs min (world-function "lliby_min" (<number> . <number>) -> <number>))
 
     (define native-gcd (native-function "lliby_gcd" (<native-int64> <native-int64> . <exact-integer>) -> <native-int64>))
-    (define-r7rs gcd (case-lambda:
+    (define-r7rs gcd (case-lambda
                        (() 0)
                        (([single : <exact-integer>]) (abs single))
                        (rest (apply native-gcd rest))))
 
     (define native-lcm (native-function "lliby_lcm" (<native-int64> <native-int64> . <exact-integer>) -> <native-int64>))
-    (define-r7rs lcm (case-lambda:
+    (define-r7rs lcm (case-lambda
                        (() 1)
                        (([single : <exact-integer>]) (abs single))
                        (rest (apply native-lcm rest))))
@@ -388,30 +411,30 @@
     (define-r7rs exact-integer-sqrt (world-function "lliby_exact_integer_sqrt" (<native-int64>) -> (Values <exact-integer> <exact-integer>)))
 
     (define native-numerator (native-function "lliby_numerator" (<native-double>) -> <native-double>))
-    (define-r7rs numerator (lambda: ([value : <number>])
+    (define-r7rs numerator (lambda ([value : <number>])
       (if (exact-integer? value)
         value
         (native-numerator value))))
 
     (define native-denominator (native-function "lliby_denominator" (<native-double>) -> <native-double>))
-    (define-r7rs denominator (lambda: ([value : <number>])
+    (define-r7rs denominator (lambda ([value : <number>])
       (if (exact-integer? value)
         1
         (native-denominator value))))
 
     (define native-rationalize (world-function "lliby_rationalize" (<number> <native-double>) -> <number>))
-    (define-r7rs rationalize (lambda: ([val : <number>] [maxDiff : <number>])
+    (define-r7rs rationalize (lambda ([val : <number>] [maxDiff : <number>])
       (native-rationalize val (inexact maxDiff))))
 
     (define native-number->string (world-function "lliby_number_to_string" (<number> <native-uint8>) -> <string>))
-    (define-r7rs number->string (case-lambda:
+    (define-r7rs number->string (case-lambda
       (([num : <number>])
        (native-number->string num 10))
       (([num : <number>] [radix : <exact-integer>])
        (native-number->string num radix))))
 
     (define native-string->number (world-function "lliby_string_to_number" (<string> <native-uint8>) -> (U #f <number>)))
-    (define-r7rs string->number (case-lambda:
+    (define-r7rs string->number (case-lambda
       (([str : <string>])
        (native-string->number str 10))
       (([str : <string>] [radix : <exact-integer>])
@@ -426,10 +449,10 @@
     (define-r7rs cons (world-function "lliby_cons" (<any> <any>) -> <pair>))
     (define-r7rs car (native-function "lliby_car" (<pair>) -> <any>))
     (define-r7rs cdr (native-function "lliby_cdr" (<pair>) -> <any>))
-    (define-r7rs caar (lambda: ((x : (Pairof <pair> <any>))) (car (car x))))
-    (define-r7rs cadr (lambda: ((x : (Pairof <any> <pair>))) (car (cdr x))))
-    (define-r7rs cdar (lambda: ((x : (Pairof <pair> <any>))) (cdr (car x))))
-    (define-r7rs cddr (lambda: ((x : (Pairof <any> <pair>))) (cdr (cdr x))))
+    (define-r7rs caar (lambda ((x : (Pairof <pair> <any>))) (car (car x))))
+    (define-r7rs cadr (lambda ((x : (Pairof <any> <pair>))) (car (cdr x))))
+    (define-r7rs cdar (lambda ((x : (Pairof <pair> <any>))) (cdr (car x))))
+    (define-r7rs cddr (lambda ((x : (Pairof <any> <pair>))) (cdr (cdr x))))
 
     (define-r7rs list-copy (world-function "lliby_list_copy" (<any>) -> <any>))
     (define-r7rs list (lambda rest rest))
@@ -448,11 +471,11 @@
     (define-r7rs reverse (world-function "lliby_reverse" (<list>) -> <list>))
 
     (define-r7rs list-tail (world-function "lliby_list_tail" (<list> <native-uint32>) -> <list>))
-    (define-r7rs list-ref (lambda: ([l : <list>] [n : <exact-integer>])
+    (define-r7rs list-ref (lambda ([l : <list>] [n : <exact-integer>])
       (car (list-tail l n))))
     
     (define native-make-list (world-function "lliby_make_list" (<native-uint32> <any>) -> <list>))
-    (define-r7rs make-list (case-lambda:
+    (define-r7rs make-list (case-lambda
       (([len : <exact-integer>])
        (native-make-list len #!unit))
       (([len : <exact-integer>] [fill : <any>])
@@ -491,7 +514,7 @@
 
     (define native-vector-fill! (world-function "lliby_vector_mutating_fill" (<vector> <any> <native-uint32> <native-uint32>)))
     (define-r7rs vector-fill!
-      (case-lambda:
+      (case-lambda
         (([target : <vector>] [fill : <any>])
          (native-vector-fill! target fill 0 (vector-length target)))
         (([target : <vector>] [fill : <any>] [start : <exact-integer>])
@@ -500,7 +523,7 @@
          (native-vector-fill! target fill start end))))
 
     (define native-make-vector (world-function "lliby_make_vector" (<native-uint32> <any>) -> <vector>))
-    (define-r7rs make-vector (case-lambda:
+    (define-r7rs make-vector (case-lambda
       (([len : <exact-integer>])
        (native-make-vector len #!unit))
       (([len : <exact-integer>] [fill : <any>])
@@ -528,7 +551,7 @@
     (define-slice-proc utf8->string native-utf8->string <bytevector> bytevector-length)
 
     (define native-make-bytevector (world-function "lliby_make_bytevector" (<native-uint32> <native-uint8>) -> <bytevector>))
-    (define-r7rs make-bytevector (case-lambda:
+    (define-r7rs make-bytevector (case-lambda
       (([len : <exact-integer>])
        (native-make-bytevector len 0))
       (([len : <exact-integer>] [fill : <exact-integer>])
@@ -559,7 +582,7 @@
 
     (define native-string-fill! (world-function "lliby_string_mutating_fill" (<string> <native-unicode-char> <native-uint32> <native-uint32>)))
     (define-r7rs string-fill!
-      (case-lambda:
+      (case-lambda
         (([target : <string>] [fill : <char>])
          (native-string-fill! target fill 0 (string-length target)))
         (([target : <string>] [fill : <char>] [start : <exact-integer>])
@@ -583,7 +606,7 @@
     (define-r7rs string-for-each (world-function "lliby_string_for_each" ((-> <char> <char> * <unit>) <string> . <string>)))
 
     (define native-make-parameter (world-function "_lliby_make_parameter" (<any> (U (-> <any> <any>) <unit>)) -> <procedure>))
-    (define-r7rs make-parameter (case-lambda:
+    (define-r7rs make-parameter (case-lambda
       (([init : <any>])
        (native-make-parameter init #!unit))
       (([init : <any>] [converter : (-> <any> <any>)])
@@ -623,7 +646,7 @@
                     ((define-input-proc name native-symbol () -> <result-type>)
                      (define-r7rs name
                                   (let ((native-proc (world-function native-symbol (<port>) -> (U <result-type> <eof-object>))))
-                                    (case-lambda:
+                                    (case-lambda
                                       (()
                                        (native-proc (current-input-port)))
                                       (([port : <port>])
@@ -631,7 +654,7 @@
                     ((define-input-proc name native-symbol (<native-uint32>) -> <result-type>)
                      (define-r7rs name
                                   (let ((native-proc (world-function native-symbol (<native-int32> <port>) -> (U <result-type> <eof-object>))))
-                                    (case-lambda:
+                                    (case-lambda
                                       (([count : <exact-integer>])
                                        (native-proc count (current-input-port)))
                                       (([count : <exact-integer>] [port : <port>])
@@ -647,7 +670,7 @@
 
     (define native-read-bytevector! (world-function "lliby_mutating_read_bytevector" (<bytevector> <port> <native-uint32> <native-uint32>) -> (U <exact-integer> <eof-object>)))
     (define-r7rs read-bytevector!
-                 (case-lambda:
+                 (case-lambda
                    (([bv : <bytevector>])
                     (native-read-bytevector! bv (current-input-port) 0 (bytevector-length bv)))
                    (([bv : <bytevector>] [port : <port>])
@@ -659,7 +682,7 @@
 
     (define native-u8-ready? (world-function "lliby_u8_ready" (<port>) -> <native-bool>))
     (define-r7rs u8-ready?
-                 (case-lambda:
+                 (case-lambda
                    (()
                     (native-u8-ready? (current-input-port)))
                    (([port : <port>])
@@ -667,35 +690,35 @@
 
     (define native-char-ready? (world-function "lliby_char_ready" (<port>) -> <native-bool>))
     (define-r7rs char-ready?
-                 (case-lambda:
+                 (case-lambda
                    (()
                     (native-char-ready? (current-input-port)))
                    (([port : <port>])
                     (native-char-ready? port))))
 
     (define native-newline (world-function "lliby_newline" (<port>)))
-    (define-r7rs newline (case-lambda:
+    (define-r7rs newline (case-lambda
       (()
        (native-newline (current-output-port)))
       (([port : <port>])
        (native-newline port))))
 
     (define native-write-u8 (world-function "lliby_write_u8" (<native-uint8> <port>)))
-    (define-r7rs write-u8 (case-lambda:
+    (define-r7rs write-u8 (case-lambda
       (([byte : <exact-integer>])
        (native-write-u8 byte (current-output-port)))
       (([byte : <exact-integer>] [port : <port>])
        (native-write-u8 byte port))))
 
     (define native-write-char (world-function "lliby_write_char" (<native-unicode-char> <port>)))
-    (define-r7rs write-char (case-lambda:
+    (define-r7rs write-char (case-lambda
       (([char : <char>])
        (native-write-char char (current-output-port)))
       (([char : <char>] [port : <port>])
        (native-write-char char port))))
 
     (define native-write-string (world-function "lliby_write_string" (<string> <port> <native-uint32> <native-uint32>)))
-    (define-r7rs write-string (case-lambda:
+    (define-r7rs write-string (case-lambda
       (([str : <string>])
        (native-write-string str (current-output-port) 0 (string-length str)))
       (([str : <string>] [port : <port>])
@@ -706,7 +729,7 @@
        (native-write-string str port start end))))
 
     (define native-write-bytevector (world-function "lliby_write_bytevector" (<bytevector> <port> <native-uint32> <native-uint32>)))
-    (define-r7rs write-bytevector (case-lambda:
+    (define-r7rs write-bytevector (case-lambda
       (([bv : <bytevector>])
        (native-write-bytevector bv (current-output-port) 0 (bytevector-length bv)))
       (([bv : <bytevector>] [port : <port>])
@@ -717,7 +740,7 @@
        (native-write-bytevector bv port start end))))
 
     (define native-flush-output-port (world-function "lliby_flush_output_port" (<port>)))
-    (define-r7rs flush-output-port (case-lambda:
+    (define-r7rs flush-output-port (case-lambda
       (()
        (native-flush-output-port (current-output-port)))
       (([port : <port>])
@@ -784,6 +807,6 @@
     (begin
       (define-r7rs set-car! (world-function "lliby_set_car" (<pair> <any>)))
       (define-r7rs set-cdr! (world-function "lliby_set_cdr" (<pair> <any>)))
-      (define-r7rs list-set! (lambda: ([l : <list>] [n : <exact-integer>] [val : <any>])
+      (define-r7rs list-set! (lambda ([l : <list>] [n : <exact-integer>] [val : <any>])
         (set-car! (list-tail l n) val))))))
 )

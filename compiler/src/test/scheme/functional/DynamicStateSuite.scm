@@ -146,7 +146,7 @@
   (define first-cont #!unit)
   (define second-cont #!unit)
 
-  (define: (append-history-item (item : <symbol>))
+  (define (append-history-item (item : <symbol>))
     (set! history-list (append history-list (list item))))
 
   (define is-recontinued

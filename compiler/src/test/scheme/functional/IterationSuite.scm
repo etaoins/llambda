@@ -26,9 +26,9 @@
 
 (define-test "typed named let" (expect ((6 1 3) (-5 -2))
   (import (llambda typed))
-  (let: loop ((numbers : (Listof <exact-integer>) '(3 -2 1 6 -5))
-             (nonneg : (Listof <exact-integer>) '())
-             (neg : (Listof <exact-integer>) '()))
+  (let loop ([numbers : (Listof <exact-integer>) '(3 -2 1 6 -5)]
+             [nonneg : (Listof <exact-integer>) '()]
+             [neg : (Listof <exact-integer>) '()])
     (cond ((null? numbers) (list nonneg neg))
           ((>= (car numbers) 0)
            (loop (cdr numbers)

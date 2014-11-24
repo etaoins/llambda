@@ -42,7 +42,7 @@
 (define-test "constructing record type with one typed immutable field" (expect "Test string"
 	(import (llambda typed))
 
-	(define-record-type: <single-value> (single-value field) single-value?
+	(define-record-type <single-value> (single-value field) single-value?
 		((field : <string>) single-value-field))
 	
 	(single-value-field (single-value "Test string"))))
@@ -66,7 +66,7 @@
 (define-test "constructing record type with typed mutable field" (expect -20
 	(import (llambda typed))
 
-	(define-record-type: <mutable-value> (mutable-value field) mutable-value?
+	(define-record-type <mutable-value> (mutable-value field) mutable-value?
 		((field : <exact-integer>) mutable-value-field set-mutable-value-field!))
 	
 	(define instance (mutable-value 50))
@@ -76,7 +76,7 @@
 (define-test "mutating field with wrong type fails" (expect-failure
 	(import (llambda typed))
 
-	(define-record-type: <mutable-value> (mutable-value field) mutable-value?
+	(define-record-type <mutable-value> (mutable-value field) mutable-value?
 		((field : <exact-integer>) mutable-value-field set-mutable-value-field!))
 	
 	(set-mutable-value-field! (mutable-value 50) #t)))
@@ -85,7 +85,7 @@
 	(import (llambda typed))
 
 	; Use at least three 64bit fields to force out-of-line storage
-	(define-record-type: <three-value> (three-value field1 field2 field3) three-value?
+	(define-record-type <three-value> (three-value field1 field2 field3) three-value?
 		((field1 : <exact-integer>) three-value-field1)
 		(field2 three-value-field2 set-three-value-field2!)
 		((field3 : <flonum>) three-value-field3 set-three-value-field3!))
@@ -98,7 +98,7 @@
 (define-test "constructors, accessors and mutators be boxed and invoked" (expect (20 40)
 	(import (llambda typed))
 
-	(define-record-type: <two-value> (two-value field1 field2) two-value?
+	(define-record-type <two-value> (two-value field1 field2) two-value?
 		((field1 : <exact-integer>) two-value-field1)
 		(field2 two-value-field2 set-two-value-field2!))
 	
@@ -111,7 +111,7 @@
 (define-test "possibly repacked record type" (expect (#\a 2 #\c)
   (import (llambda typed))
 
-	(define-record-type: <single-value> (single-value field1 field2 field3) single-value?
+	(define-record-type <single-value> (single-value field1 field2 field3) single-value?
 		((field1 : <char>) single-value-field1)
 		((field2 : <exact-integer>) single-value-field2)
 		((field3 : <char>) single-value-field3))
@@ -126,7 +126,7 @@
 	(define-record-type <inner-type> (inner-type field) inner-type?
 		(field inner-type-field))
 	
-	(define-record-type: <outer-type> (outer-type inner-instance) outer-type?
+	(define-record-type <outer-type> (outer-type inner-instance) outer-type?
 		((inner-instance : <inner-type>) outer-type-inner-instance))
 
 	(define instance (outer-type (inner-type 'it-actually-worked)))

@@ -55,7 +55,7 @@ class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelp
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
     inside(exprFor(
-      """(case-lambda:
+      """(case-lambda
            (() #t)
            (((one : <exact-integer>)) #f))"""
     )(scope)) {
@@ -154,7 +154,7 @@ class ExtractCaseLambdaSuite extends FunSuite with Inside with testutil.ExprHelp
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
     inside(exprFor(
-      """(case-lambda:
+      """(case-lambda
            (((one : <symbol>)) #t)
            (((first : <string>) rest : <port> *) #f))"""
     )(scope)) {

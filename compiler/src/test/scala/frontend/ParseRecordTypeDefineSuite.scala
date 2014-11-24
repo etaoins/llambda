@@ -105,22 +105,11 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         }
     }
   }
-  
-  test("specifying types in untyped form fails") {
-    val scope = new Scope(collection.mutable.Map(), Some(baseScope))
 
-    intercept[BadSpecialFormException] {
-      bodyFor("""(define-record-type <new-type>
-                 (new-type const-int)
-                 new-type?
-                 ((const-int : <exact-integer>) new-type-const-int))""")(scope)
-    }
-  }
-  
   test("single read-only typed field") {
     val scope = new Scope(collection.mutable.Map(), Some(baseScope))
 
-    val exprs = bodyFor("""(define-record-type: <new-type>
+    val exprs = bodyFor("""(define-record-type <new-type>
                            (new-type const-int)
                            new-type?
                            ((const-int : <exact-integer>) new-type-const-int))""")(scope)
@@ -151,7 +140,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
     val scope = new Scope(collection.mutable.Map(), Some(baseScope))
 
     intercept[BadSpecialFormException] {
-      bodyFor("""(define-record-type: <new-type>
+      bodyFor("""(define-record-type <new-type>
                  (new-type unstable-list)
                  new-type?
                  ((unstable-list : (Listof <any>)) new-type-unstable-list))""")(scope, dialect.R7RS)
@@ -161,7 +150,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
   test("read-only and mutable field") {
     val scope = new Scope(collection.mutable.Map(), Some(baseScope))
 
-    val exprs = bodyFor("""(define-record-type: <new-type>
+    val exprs = bodyFor("""(define-record-type <new-type>
                            (new-type mutable-int const-datum)
                            new-type?
                            (const-datum new-type-const-datum)
@@ -220,7 +209,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
             ))
         }
     
-        val outerExprs = bodyFor("""(define-record-type: <outer-type>
+        val outerExprs = bodyFor("""(define-record-type <outer-type>
                                     (outer-type inner-field)
                                     outer-type?
                                     ((inner-field : <inner-type>) outer-type-inner-field))""")(scope)
@@ -273,7 +262,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
     val scope = new Scope(collection.mutable.Map(), Some(baseScope))
 
     intercept[UnboundVariableException] {
-      bodyFor("""(define-record-type: <new-type>
+      bodyFor("""(define-record-type <new-type>
                  (new-type const-int)
                  new-type?
                  ((const-int : <not-a-type>) new-type-const-int))""")(scope)

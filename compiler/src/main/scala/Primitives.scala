@@ -26,11 +26,6 @@ object Primitives {
   object AnnotateStorageLocType extends PrimitiveExpr
   object CondExpand extends PrimitiveExpr
   object Parameterize extends PrimitiveExpr
-  object TypedDefine extends PrimitiveExpr
-  object TypedDefineValues extends PrimitiveExpr
-  object TypedDefineRecordType extends PrimitiveExpr
-  object TypedLambda extends PrimitiveExpr
-  object TypedCaseLambda extends PrimitiveExpr
   object MakePredicate extends PrimitiveExpr
   object Ellipsis extends PrimitiveExpr
   object Wildcard extends PrimitiveExpr
@@ -72,11 +67,6 @@ object Primitives {
       ":" -> AnnotateStorageLocType,
       "cond-expand" -> CondExpand,
       "parameterize" -> Parameterize,
-      "define:" -> TypedDefine,
-      "define-values:" -> TypedDefineValues,
-      "define-record-type:" -> TypedDefineRecordType,
-      "lambda:" -> TypedLambda,
-      "case-lambda:" -> TypedCaseLambda,
       "make-predicate" -> MakePredicate,
       "..." -> Ellipsis,
       "_" -> Wildcard,

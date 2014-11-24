@@ -250,7 +250,7 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
 
   test("define typed fixed-only multiple values") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
-    val expressions = bodyFor("(define-values: ([x : <string>] [y : <symbol>]) 2)")(scope)
+    val expressions = bodyFor("(define-values ([x : <string>] [y : <symbol>]) 2)")(scope)
 
     val storageLocX = scope.get("x").value match {
       case storageLoc : StorageLocation => storageLoc
@@ -277,7 +277,7 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
 
   test("define typed rest-only multiple values") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
-    val expressions = bodyFor("(define-values: (r : <port> *) 2)")(scope)
+    val expressions = bodyFor("(define-values (r : <port> *) 2)")(scope)
 
     val storageLocR = scope.get("r").value match {
       case storageLoc : StorageLocation => storageLoc
@@ -298,7 +298,7 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
     val expressions = bodyFor("""
       (: r (Listof <exact-integer>))
-      (define-values: ([x : <string>] [y : <symbol>] r : <exact-integer> *) 2)
+      (define-values ([x : <string>] [y : <symbol>] r : <exact-integer> *) 2)
     """)(scope)
 
     val storageLocX = scope.get("x").value match {
@@ -334,7 +334,7 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
 
   test("define typed variable") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
-    val expressions = bodyFor("(define: a : <exact-integer> 2)")(scope)
+    val expressions = bodyFor("(define a : <exact-integer> 2)")(scope)
 
     inside(scope.get("a").value) {
       case storageLoc : StorageLocation =>
@@ -353,7 +353,7 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
 
     // Because R7RS uses mutable pairs the (Listof) type isn't stable
     intercept[BadSpecialFormException] {
-      bodyFor("(define: a : (Listof <exact-integer>) '(1 2 3 4))")(scope, dialect.R7RS)
+      bodyFor("(define a : (Listof <exact-integer>) '(1 2 3 4))")(scope, dialect.R7RS)
     }
   }
   
@@ -537,20 +537,20 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
     intercept[BadSpecialFormException] {
       bodyFor(
         """(lambda ()
-           (define: x : <flonum> 4.0)
+           (define x : <flonum> 4.0)
            (: x <exact-integer>))"""
       )(scope) 
     }
   }
   
-  test("type declaring compatible typed define:") {
+  test("type declaring compatible typed define") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
     val expressions = bodyFor(
       """(lambda ()
          (: x <exact-integer>)
-         (define: x : <exact-integer> 2))"""
-    )(scope) 
+         (define x : <exact-integer> 2))"""
+    )(scope)
 
     inside(expressions) {
       case List( et.Lambda(_, Nil, None, et.InternalDefine(List(et.SingleBinding(inner, _)), _), _)) =>
@@ -558,14 +558,14 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
     }
   }
   
-  test("type declaring incompatible typed define: fails") {
+  test("type declaring incompatible typed define fails") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
     intercept[BadSpecialFormException] {
       bodyFor(
         """(lambda ()
            (: x <exact-integer>)
-           (define: x : <flonum> 2))"""
+           (define x : <flonum> 2))"""
       )(scope) 
     }
   }
