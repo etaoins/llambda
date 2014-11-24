@@ -18,6 +18,12 @@ bool _lliby_is_equal(const AnyCell *cell1, const AnyCell *cell2)
 
 bool _lliby_symbol_is_eqv(const SymbolCell *cell1, const SymbolCell *cell2)
 {
+	// isEqv and isEqual do this internally. We need to do this manually for SymbolCell::operator==
+	if (cell1 == cell2)
+	{
+		return true;
+	}
+
 	return *cell1 == *cell2;
 }
 
