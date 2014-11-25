@@ -4,13 +4,13 @@
 #include <algorithm>
 #include <limits>
 #include <cassert>
-#include <iterator>
 
 #include "SymbolCell.h"
 #include "BytevectorCell.h"
 
 #include "platform/memory.h"
 #include "unicode/utf8.h"
+#include "util/StringCellBuilder.h"
 
 #include "alloc/allocator.h"
 #include "alloc/cellref.h"
@@ -104,9 +104,8 @@ StringCell* StringCell::fromUtf8Data(World &world, const std::uint8_t *data, std
 StringCell* StringCell::fromFill(World &world, std::uint32_t length, UnicodeChar fill)
 {
 	// Figure out how many bytes we'll need
-	std::vector<std::uint8_t> encoded(utf8::encodeChar(fill));
-
-	const size_t encodedCharSize = encoded.size();
+	utf8::EncodedChar encoded(utf8::encodeChar(fill));
+	const std::size_t encodedCharSize = encoded.size;
 
 	const std::uint32_t byteLength = encodedCharSize * length;
 
@@ -116,9 +115,9 @@ StringCell* StringCell::fromFill(World &world, std::uint32_t length, UnicodeChar
 	std::uint8_t *utf8Data = newString->utf8Data();
 
 	// Actually fill
-	for(std::uint32_t i = 0; i < length; i++) 
+	for(std::uint32_t i = 0; i < length; i++)
 	{
-		memcpy(&utf8Data[i * encodedCharSize], encoded.data(), encodedCharSize);
+		memcpy(&utf8Data[i * encodedCharSize], encoded.data, encodedCharSize);
 	}
 
 	return newString;
@@ -471,7 +470,7 @@ bool StringCell::replaceBytes(const CharRange &range, const std::uint8_t *patter
 	
 	return true;
 }
-	
+
 bool StringCell::fill(UnicodeChar unicodeChar, std::int64_t start, std::int64_t end)
 {
 	assert(unicodeChar.isValid());
@@ -484,11 +483,10 @@ bool StringCell::fill(UnicodeChar unicodeChar, std::int64_t start, std::int64_t 
 	}
 
 	// Encode the new character
-	std::vector<std::uint8_t> encoded(utf8::encodeChar(unicodeChar));
-
-	return replaceBytes(range, encoded.data(), encoded.size(), range.charCount);
+	utf8::EncodedChar encoded(utf8::encodeChar(unicodeChar));
+	return replaceBytes(range, encoded.data, encoded.size, range.charCount);
 }
-	
+
 bool StringCell::replace(std::uint32_t offset, const StringCell *from, std::int64_t fromStart, std::int64_t fromEnd)
 {
 	CharRange fromRange = const_cast<StringCell*>(from)->charRange(fromStart, fromEnd);
@@ -694,25 +692,20 @@ BytevectorCell* StringCell::toUtf8Bytevector(World &world, std::int64_t start, s
 
 StringCell *StringCell::toConvertedString(World &world, UnicodeChar (*converter)(UnicodeChar))
 {
-	std::vector<std::uint8_t> convertedData;
-
-	// Guess that our converted data will be about the same size as the original data. Case conversion rarely moves code
-	// points far from their original value
-	convertedData.reserve(byteLength());
-
 	const std::uint8_t *scanPtr = utf8Data();
 	const std::uint8_t *endPtr = &constUtf8Data()[byteLength()];
+
+	StringCellBuilder builder(charLength());
 
 	while(scanPtr != endPtr)
 	{
 		const UnicodeChar originalChar = utf8::decodeChar(&scanPtr);
 		const UnicodeChar convertedChar = (*converter)(originalChar);
 
-		utf8::appendChar(convertedChar, std::back_inserter(convertedData));
+		builder << convertedChar;
 	}
 
-	const std::uint32_t totalByteLength = convertedData.size();
-	return StringCell::fromValidatedUtf8Data(world, convertedData.data(), totalByteLength, charLength());
+	return builder.result(world);
 }
 
 void StringCell::finalizeString()

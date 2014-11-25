@@ -197,11 +197,19 @@ T appendChar(UnicodeChar unicodeChar, T output)
 	return output;
 }
 
-inline std::vector<std::uint8_t> encodeChar(UnicodeChar unicodeChar)
+struct EncodedChar
 {
-	std::vector<uint8_t> encodedChar;
-	appendChar(unicodeChar, std::back_inserter(encodedChar));
-	return encodedChar;
+	std::uint8_t data[LongestByteSequence];
+	int size;
+};
+
+inline EncodedChar encodeChar(UnicodeChar unicodeChar)
+{
+	// Encode this on the stack
+	EncodedChar ret;
+	ret.size = appendChar(unicodeChar, ret.data) - ret.data;
+
+	return ret;
 }
 
 }

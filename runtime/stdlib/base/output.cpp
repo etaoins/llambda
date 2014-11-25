@@ -40,10 +40,10 @@ void llbase_write_char(World &world, UnicodeChar character, PortCell *portCell)
 		signalError(world, "(write-char) with invalid character");
 	}
 
-	std::vector<std::uint8_t> utf8Bytes(utf8::encodeChar(character));
+	utf8::EncodedChar utf8Bytes(utf8::encodeChar(character));
 
 	std::ostream *portStream = portCellToOutputStream(world, portCell);
-	portStream->write(reinterpret_cast<char*>(utf8Bytes.data()), utf8Bytes.size());
+	portStream->write(reinterpret_cast<char*>(utf8Bytes.data), utf8Bytes.size);
 }
 
 void llbase_write_string(World &world, StringCell *stringCell, PortCell *portCell, std::uint32_t start, std::uint32_t end)

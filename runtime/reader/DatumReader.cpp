@@ -7,7 +7,6 @@
 #include <cstring>
 #include <string>
 #include <ctype.h>
-#include <iterator>
 
 #include "binding/ExactIntegerCell.h"
 #include "binding/FlonumCell.h"
@@ -108,7 +107,9 @@ namespace
 						}
 
 						UnicodeChar escapedChar(strtol(hexCode.c_str(), nullptr, 16));
-						utf8::appendChar(escapedChar, std::back_inserter(accum));
+
+						utf8::EncodedChar encoded(utf8::encodeChar(escapedChar));
+						accum.append(reinterpret_cast<char*>(encoded.data), encoded.size);
 					}
 					break;
 
