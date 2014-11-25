@@ -12,7 +12,7 @@ using namespace lliby;
 extern "C"
 {
 
-ReturnValuesList *lliby_dynamic_wind(World &world, ThunkProcedureCell *before, ThunkProcedureCell *thunk, ThunkProcedureCell *after)
+ReturnValuesList *llbase_dynamic_wind(World &world, ThunkProcedureCell *before, ThunkProcedureCell *thunk, ThunkProcedureCell *after)
 {
 	{
 		// pushActiveState() can call before which can GC

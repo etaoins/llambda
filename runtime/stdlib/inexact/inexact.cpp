@@ -5,7 +5,7 @@ using namespace lliby;
 extern "C"
 {
 
-bool lliby_is_finite(NumberCell *value)
+bool llinexact_is_finite(NumberCell *value)
 {
 	if (auto flonum = cell_cast<FlonumCell>(value))
 	{
@@ -18,7 +18,7 @@ bool lliby_is_finite(NumberCell *value)
 	}
 }
 
-bool lliby_is_infinite(NumberCell *value)
+bool llinexact_is_infinite(NumberCell *value)
 {
 	if (auto flonum = cell_cast<FlonumCell>(value))
 	{

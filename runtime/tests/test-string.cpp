@@ -11,6 +11,7 @@
 #include "stubdefinitions.h"
 #include "platform/memory.h"
 
+#include "ucd/ucd.h"
 #include "unicode/utf8/InvalidByteSequenceException.h"
 
 #include "alloc/cellref.h"
@@ -240,23 +241,23 @@ void testCompare(World &world)
 	ASSERT_TRUE(nulledHello1->compare(hell) > 0);
 
 	ASSERT_TRUE(hell->compare(nulledHello1) < 0);
-	ASSERT_TRUE(hell->compare(nulledHello1, CaseSensitivity::Insensitive) < 0);
+	ASSERT_TRUE(hell->compare(nulledHello1, ucd::toCaseFolded) < 0);
 
 	// Make sure high Unicode code points sort after ASCII
 	ASSERT_TRUE(unicodeValue->compare(hello1) > 0);
-	ASSERT_TRUE(unicodeValue->compare(hello1, CaseSensitivity::Insensitive) > 0);
+	ASSERT_TRUE(unicodeValue->compare(hello1, ucd::toCaseFolded) > 0);
 
 	// Make sure case sensitivity works on ASCII strings
 	ASSERT_TRUE(hello1->compare(HELLO) > 0);
-	ASSERT_TRUE(hello1->compare(HELLO, CaseSensitivity::Insensitive) == 0);
+	ASSERT_TRUE(hello1->compare(HELLO, ucd::toCaseFolded) == 0);
 
 	// Make sure case senstivity works with Unicode strings
 	ASSERT_TRUE(lowercaseUnicode->compare(uppercaseUnicode) > 0);
-	ASSERT_TRUE(lowercaseUnicode->compare(uppercaseUnicode, CaseSensitivity::Insensitive) == 0);
+	ASSERT_TRUE(lowercaseUnicode->compare(uppercaseUnicode, ucd::toCaseFolded) == 0);
 
 	// Make sure case sensitivity doesn't affect Unicode symbols
 	ASSERT_TRUE(unicodeValue->compare(unicodeValue) == 0);
-	ASSERT_TRUE(unicodeValue->compare(unicodeValue, CaseSensitivity::Insensitive) == 0);
+	ASSERT_TRUE(unicodeValue->compare(unicodeValue, ucd::toCaseFolded) == 0);
 }
 
 void testCharAt(World &world)
@@ -1033,14 +1034,14 @@ void testToUtf8Bytevector(World &world)
 	}
 }
 
-void testCaseConversion(World &world)
+void testConversion(World &world)
 {
 	{
 		alloc::StringRef mixedCaseAsciiString(world, StringCell::fromUtf8StdString(world, u8"Hello, World!"));
 
-		alloc::StringRef lowercaseAsciiString(world, mixedCaseAsciiString->toLowercaseString(world));
-		alloc::StringRef uppercaseAsciiString(world, mixedCaseAsciiString->toUppercaseString(world));
-		alloc::StringRef caseFoldedAsciiString(world, mixedCaseAsciiString->toCaseFoldedString(world));
+		alloc::StringRef lowercaseAsciiString(world, mixedCaseAsciiString->toConvertedString(world, ucd::toLowercase));
+		alloc::StringRef uppercaseAsciiString(world, mixedCaseAsciiString->toConvertedString(world, ucd::toUppercase));
+		alloc::StringRef caseFoldedAsciiString(world, mixedCaseAsciiString->toConvertedString(world, ucd::toCaseFolded));
 
 		ASSERT_UTF8_EQUAL(lowercaseAsciiString.data(), u8"hello, world!");
 		ASSERT_UTF8_EQUAL(uppercaseAsciiString.data(), u8"HELLO, WORLD!");
@@ -1049,36 +1050,36 @@ void testCaseConversion(World &world)
 
 	{
 		alloc::StringRef mixedCaseUnicodeString(world, StringCell::fromUtf8StdString(world, u8"Γεια σας Παγκόσμιο!"));
-		
-		alloc::StringRef lowercaseUnicodeString(world, mixedCaseUnicodeString->toLowercaseString(world));
-		alloc::StringRef uppercaseUnicodeString(world, mixedCaseUnicodeString->toUppercaseString(world));
-		alloc::StringRef caseFoldedUnicodeString(world, mixedCaseUnicodeString->toCaseFoldedString(world));
-		
+
+		alloc::StringRef lowercaseUnicodeString(world, mixedCaseUnicodeString->toConvertedString(world, ucd::toLowercase));
+		alloc::StringRef uppercaseUnicodeString(world, mixedCaseUnicodeString->toConvertedString(world, ucd::toUppercase));
+		alloc::StringRef caseFoldedUnicodeString(world, mixedCaseUnicodeString->toConvertedString(world, ucd::toCaseFolded));
+
 		ASSERT_UTF8_EQUAL(lowercaseUnicodeString.data(), u8"γεια σας παγκόσμιο!");
 		ASSERT_UTF8_EQUAL(uppercaseUnicodeString.data(), u8"ΓΕΙΑ ΣΑΣ ΠΑΓΚΌΣΜΙΟ!");
 		// Note that the final sigma folds to a normal sigma here
 		ASSERT_UTF8_EQUAL(caseFoldedUnicodeString.data(), u8"γεια σασ παγκόσμιο!");
 	}
-	
+
 	{
 		alloc::StringRef hanString(world, StringCell::fromUtf8StdString(world, u8"蒮 駓駗鴀 螒螝螜 咍垀 漊 犨"));
 
-		alloc::StringRef lowercaseHanString(world, hanString->toLowercaseString(world));
-		alloc::StringRef uppercaseHanString(world, hanString->toUppercaseString(world));
-		alloc::StringRef caseFoldedHanString(world, hanString->toCaseFoldedString(world));
-		
+		alloc::StringRef lowercaseHanString(world, hanString->toConvertedString(world, ucd::toLowercase));
+		alloc::StringRef uppercaseHanString(world, hanString->toConvertedString(world, ucd::toUppercase));
+		alloc::StringRef caseFoldedHanString(world, hanString->toConvertedString(world, ucd::toCaseFolded));
+
 		ASSERT_UTF8_EQUAL(lowercaseHanString.data(), u8"蒮 駓駗鴀 螒螝螜 咍垀 漊 犨");
 		ASSERT_UTF8_EQUAL(uppercaseHanString.data(), u8"蒮 駓駗鴀 螒螝螜 咍垀 漊 犨");
 		ASSERT_UTF8_EQUAL(caseFoldedHanString.data(), u8"蒮 駓駗鴀 螒螝螜 咍垀 漊 犨");
 	}
-	
+
 	{
 		alloc::StringRef symbolString(world, StringCell::fromUtf8StdString(world, u8"🐉☃☙"));
 
-		alloc::StringRef lowercaseSymbolString(world, symbolString->toLowercaseString(world));
-		alloc::StringRef uppercaseSymbolString(world, symbolString->toUppercaseString(world));
-		alloc::StringRef caseFoldedSymbolString(world, symbolString->toCaseFoldedString(world));
-		
+		alloc::StringRef lowercaseSymbolString(world, symbolString->toConvertedString(world, ucd::toLowercase));
+		alloc::StringRef uppercaseSymbolString(world, symbolString->toConvertedString(world, ucd::toUppercase));
+		alloc::StringRef caseFoldedSymbolString(world, symbolString->toConvertedString(world, ucd::toCaseFolded));
+
 		ASSERT_UTF8_EQUAL(lowercaseSymbolString.data(), u8"🐉☃☙");
 		ASSERT_UTF8_EQUAL(uppercaseSymbolString.data(), u8"🐉☃☙");
 		ASSERT_UTF8_EQUAL(caseFoldedSymbolString.data(), u8"🐉☃☙");
@@ -1086,10 +1087,10 @@ void testCaseConversion(World &world)
 
 	{
 		alloc::StringRef unusualFoldingString(world, StringCell::fromUtf8StdString(world, u8"µϵẛ"));
-		
-		alloc::StringRef lowercaseFoldingString(world, unusualFoldingString->toLowercaseString(world));
-		alloc::StringRef uppercaseFoldingString(world, unusualFoldingString->toUppercaseString(world));
-		alloc::StringRef caseFoldedFoldingString(world, unusualFoldingString->toCaseFoldedString(world));
+
+		alloc::StringRef lowercaseFoldingString(world, unusualFoldingString->toConvertedString(world, ucd::toLowercase));
+		alloc::StringRef uppercaseFoldingString(world, unusualFoldingString->toConvertedString(world, ucd::toUppercase));
+		alloc::StringRef caseFoldedFoldingString(world, unusualFoldingString->toConvertedString(world, ucd::toCaseFolded));
 
 		ASSERT_UTF8_EQUAL(lowercaseFoldingString.data(), u8"µϵẛ");
 		ASSERT_UTF8_EQUAL(uppercaseFoldingString.data(), u8"ΜΕṠ");
@@ -1120,14 +1121,14 @@ void testAll(World &world)
 
 	testToUtf8Bytevector(world);
 
-	testCaseConversion(world);
+	testConversion(world);
 }
 
 }
 
 int main(int argc, char *argv[])
 {
-	lliby_init(argc, argv);
+	llcore_init(argc, argv);
 
 	lliby::World::launchWorld(&testAll);
 

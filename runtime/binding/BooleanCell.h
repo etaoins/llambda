@@ -31,12 +31,12 @@ public:
 	
 	static BooleanCell* falseInstance()
 	{
-		return const_cast<BooleanCell*>(&lliby_false_value);
+		return const_cast<BooleanCell*>(&llcore_false_value);
 	}
 
 	static BooleanCell* trueInstance()
 	{
-		return const_cast<BooleanCell*>(&lliby_true_value);
+		return const_cast<BooleanCell*>(&llcore_true_value);
 	}
 };
 

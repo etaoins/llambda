@@ -10,7 +10,7 @@ import llambda.compiler.{celltype => ct}
 object RuntimeFunctions {
   val allocCells = IrFunctionDecl(
     result=Result(PointerType(UserDefinedType("cell"))),
-    name="_lliby_alloc_cells",
+    name="llcore_alloc_cells",
     arguments=List(
       Argument(PointerType(WorldValue.irType)),
       Argument(IntegerType(64))
@@ -20,7 +20,7 @@ object RuntimeFunctions {
     
   val signalError = IrFunctionDecl(
     result=IrFunction.Result(VoidType),
-    name="_lliby_signal_error",
+    name="llcore_signal_error",
     arguments=List(
       IrFunction.Argument(PointerType(WorldValue.irType)),
       IrFunction.Argument(PointerType(IntegerType(8)), Set(IrFunction.NoCapture)),
@@ -33,7 +33,7 @@ object RuntimeFunctions {
   
   val dynamicenvPush = IrFunctionDecl(
     result=Result(VoidType),
-    name="_lliby_dynamicenv_push",
+    name="llcore_dynamicenv_push",
     arguments=List(
       Argument(PointerType(WorldValue.irType))
     )
@@ -41,7 +41,7 @@ object RuntimeFunctions {
 
   val dynamicenvSetValue = IrFunctionDecl(
     result=Result(VoidType),
-    name="_lliby_dynamicenv_set_value",
+    name="llcore_dynamicenv_set_value",
     arguments=List(
       Argument(PointerType(WorldValue.irType)),
       Argument(PointerType(ct.ProcedureCell.irType)),
@@ -52,7 +52,7 @@ object RuntimeFunctions {
   
   val dynamicenvPop = IrFunctionDecl(
     result=Result(VoidType),
-    name="_lliby_dynamicenv_pop",
+    name="llcore_dynamicenv_pop",
     arguments=List(
       Argument(PointerType(WorldValue.irType))
     )
@@ -60,7 +60,7 @@ object RuntimeFunctions {
   
   val launchWorld = IrFunctionDecl(
     result=IrFunction.Result(VoidType),
-    name="_lliby_launch_world",
+    name="llcore_launch_world",
     arguments=List(IrFunction.Argument(
       // void (*entryPoint)(World *)
       PointerType(FunctionType(VoidType, List(PointerType(WorldValue.irType))))
@@ -69,7 +69,7 @@ object RuntimeFunctions {
 
   val recordDataAlloc = IrFunctionDecl(
     result=IrFunction.Result(PointerType(IntegerType(8))),
-    name="_lliby_record_data_alloc",
+    name="llcore_record_data_alloc",
     arguments=List(
       IrFunction.Argument(IntegerType(64))
     ),
@@ -78,7 +78,7 @@ object RuntimeFunctions {
 
   val vectorElementsAlloc = IrFunctionDecl(
     result=IrFunction.Result(PointerType(PointerType(ct.AnyCell.irType))),
-    name="_lliby_vector_elements_alloc",
+    name="llcore_vector_elements_alloc",
     arguments=List(
       IrFunction.Argument(IntegerType(32))
     ),
@@ -87,7 +87,7 @@ object RuntimeFunctions {
 
   val makeParameter = IrFunctionDecl(
     result=Result(PointerType(ct.ProcedureCell.irType)),
-    name="_lliby_make_parameter",
+    name="llcore_make_parameter",
     arguments=List(
       Argument(PointerType(WorldValue.irType)),
       Argument(PointerType(ct.AnyCell.irType)),
@@ -95,8 +95,8 @@ object RuntimeFunctions {
     )
   )
   
-  val isEqvSymbol = "_lliby_is_eqv"
-  val isEqualSymbol = "_lliby_is_equal"
+  val isEqvSymbol = "llcore_is_eqv"
+  val isEqualSymbol = "llcore_is_equal"
   
   val equivalenceProcSignature = ProcedureSignature(
     hasWorldArg=false,
@@ -107,7 +107,7 @@ object RuntimeFunctions {
     attributes=Set()
   )
 
-  val symbolIsEqvSymbol = "_lliby_symbol_is_eqv"
+  val symbolIsEqvSymbol = "llcore_symbol_is_eqv"
 
   val symbolIsEqvSignature = ProcedureSignature(
     hasWorldArg=false,
@@ -129,7 +129,7 @@ object RuntimeFunctions {
   
   val valueForParameter = IrFunctionDecl(
     result=Result(PointerType(ct.AnyCell.irType)),
-    name="_lliby_value_for_parameter",
+    name="llcore_value_for_parameter",
     arguments=List(
       Argument(PointerType(WorldValue.irType)),
       Argument(PointerType(ct.ProcedureCell.irType))
@@ -139,7 +139,7 @@ object RuntimeFunctions {
 
   val init = IrFunctionDecl(
     result=IrFunction.Result(VoidType),
-    name="lliby_init",
+    name="llcore_init",
     arguments=List(
       IrFunction.Argument(IntegerType(32)),
       IrFunction.Argument(PointerType(PointerType(IntegerType(8))))
@@ -148,9 +148,9 @@ object RuntimeFunctions {
   )
 
   def hasSideEffects(symbol : String, arity : Int) : Boolean = (symbol, arity) match {
-    case ("_lliby_stdin_port", 0) =>  false
-    case ("_lliby_stdout_port", 0) => false
-    case ("_lliby_stderr_port", 0) => false
+    case ("llcore_stdin_port", 0) =>  false
+    case ("llcore_stdout_port", 0) => false
+    case ("llcore_stderr_port", 0) => false
     case _ => true
   }
 }

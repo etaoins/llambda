@@ -9,8 +9,6 @@ import scala.sys.process._
 class ExternalCompilerException extends Exception
 
 object Compiler {
-  private val runtimeObjPath = "build/liblliby.a"
-
   private val conniverPasses = List[conniver.Conniver](
     conniver.MergeIdenticalSteps,
     conniver.UnboxEarly,
@@ -33,7 +31,7 @@ object Compiler {
 
   /** Returns a list of compiler flags to link the passed required libraries */
   private def libraryClangFlags(nativeLibraries : Set[NativeLibrary]) : List[String] = {
-    val systemFlags = List("build/liblliby.a")
+    val systemFlags = List("build/libllcore.a")
 
     // Note that order matters here. The core library needs to come after the stdlib libraries to satisfy their
     // symbols

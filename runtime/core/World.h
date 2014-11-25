@@ -65,7 +65,7 @@ private:
 extern "C"
 {
 
-void _lliby_launch_world(void (*entryPoint)(lliby::World &));
+void llcore_launch_world(void (*entryPoint)(lliby::World &));
 
 }
 

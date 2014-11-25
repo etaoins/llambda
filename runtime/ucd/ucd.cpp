@@ -1,7 +1,4 @@
-#include "UnicodeChar.h"
-
-namespace lliby
-{
+#include "ucd/ucd.h"
 
 namespace
 {
@@ -10,14 +7,14 @@ namespace
 		std::uint32_t startCodePoint;
 		std::uint32_t endCodePoint;
 	};
-	
+
 	struct UnicodeRangeSet
 	{
 		const UnicodeRange *ranges;
 		int rangeCount;
 		int entryRange;
 	};
-	
+
 	// This assumes that we only map ASCII characters to other ASCII characters
 	// This seems reasonable and if it's violated -Werror will fail our compile
 	// due to integer truncation
@@ -30,7 +27,7 @@ namespace
 		std::uint32_t value;
 	};
 
-	union NonAsciiHashBucket 
+	union NonAsciiHashBucket
 	{
 		const NonAsciiHashChain *chain;
 
@@ -170,50 +167,55 @@ namespace
 	}
 }
 
-bool UnicodeChar::isUppercase() const
+namespace lliby
 {
-	return codePointInRangeSet(codePoint(), UppercaseRangeSet);
+namespace ucd
+{
+
+bool isUppercase(UnicodeChar c)
+{
+	return codePointInRangeSet(c.codePoint(), UppercaseRangeSet);
 }
 
-bool UnicodeChar::isLowercase() const
+bool isLowercase(UnicodeChar c)
 {
-	return codePointInRangeSet(codePoint(), LowercaseRangeSet);
+	return codePointInRangeSet(c.codePoint(), LowercaseRangeSet);
 }
 
-bool UnicodeChar::isAlphabetic() const
+bool isAlphabetic(UnicodeChar c)
 {
-	return codePointInRangeSet(codePoint(), AlphabeticRangeSet);
+	return codePointInRangeSet(c.codePoint(), AlphabeticRangeSet);
 }
 
-bool UnicodeChar::isWhitespace() const
+bool isWhitespace(UnicodeChar c)
 {
-	return codePointInRangeSet(codePoint(), WhitespaceRangeSet);
-}
-	
-bool UnicodeChar::isNumericDigit() const
-{
-	return digitValue() != InvalidDigitValue;
+	return codePointInRangeSet(c.codePoint(), WhitespaceRangeSet);
 }
 
-UnicodeChar UnicodeChar::toUppercase() const
+bool isNumericDigit(UnicodeChar c)
 {
-	return UnicodeChar(lookupHashedValue(codePoint(), ToUpperHash, codePoint()));
+	return digitValue(c) != InvalidDigitValue;
 }
 
-UnicodeChar UnicodeChar::toLowercase() const
+UnicodeChar toUppercase(UnicodeChar c)
 {
-	return UnicodeChar(lookupHashedValue(codePoint(), ToLowerHash, codePoint()));
+	return UnicodeChar(lookupHashedValue(c.codePoint(), ToUpperHash, c.codePoint()));
 }
 
-UnicodeChar UnicodeChar::toCaseFolded() const
+UnicodeChar toLowercase(UnicodeChar c)
 {
-	return UnicodeChar(lookupHashedValue(codePoint(), ToFoldedHash, codePoint()));
+	return UnicodeChar(lookupHashedValue(c.codePoint(), ToLowerHash, c.codePoint()));
 }
 
-UnicodeChar::DigitValue UnicodeChar::digitValue() const
+UnicodeChar toCaseFolded(UnicodeChar c)
 {
-	return lookupHashedValue(codePoint(), ToNumericValueHash);
+	return UnicodeChar(lookupHashedValue(c.codePoint(), ToFoldedHash, c.codePoint()));
 }
 
+DigitValue digitValue(UnicodeChar c)
+{
+	return lookupHashedValue(c.codePoint(), ToNumericValueHash);
+}
 
+}
 }

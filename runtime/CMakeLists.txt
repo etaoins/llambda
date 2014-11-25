@@ -3,7 +3,7 @@
 cmake_minimum_required (VERSION 2.8)
 
 project (lliby)
-add_library(lliby
+add_library(llcore
 	alloc/CellRootList.cpp
 	alloc/DynamicMemoryBlock.cpp
 	alloc/Finalizer.cpp
@@ -26,6 +26,7 @@ add_library(lliby
 	binding/SymbolCell.cpp
 	binding/VectorCell.cpp
 	core/World.cpp
+	core/alloc.cpp
 	core/constinstances.cpp
 	core/dynamic.cpp
 	core/eqv.cpp
@@ -44,37 +45,62 @@ add_library(lliby
 	port/StandardInputPort.cpp
 	reader/ReadErrorException.cpp
 	reader/DatumReader.cpp
-	stdlib/arithmetic.cpp
-	stdlib/boolean.cpp
-	stdlib/bytevector.cpp
-	stdlib/char.cpp
-	stdlib/control.cpp
-	stdlib/dynamic.cpp
-	stdlib/exception.cpp
-	stdlib/file.cpp
-	stdlib/inexact.cpp
-	stdlib/input.cpp
-	stdlib/list.cpp
-	stdlib/map.cpp
-	stdlib/number.cpp
-	stdlib/numberio.cpp
-	stdlib/port.cpp
-	stdlib/output.cpp
-	stdlib/process.cpp
-	stdlib/string.cpp
-	stdlib/symbol.cpp
-	stdlib/vector.cpp
-	unicode/UnicodeChar.cpp
 	unicode/utf8.cpp
 	unicode/utf8/InvalidByteSequenceException.cpp
 	util/SharedByteArray.cpp
+	util/portCellToStream.cpp
 	util/utf8ExceptionToSchemeError.cpp
 	writer/DisplayDatumWriter.cpp
 	writer/ExternalFormDatumWriter.cpp
 )
 
+add_library(llbase
+	stdlib/base/arithmetic.cpp
+	stdlib/base/boolean.cpp
+	stdlib/base/bytevector.cpp
+	stdlib/base/char.cpp
+	stdlib/base/control.cpp
+	stdlib/base/dynamic.cpp
+	stdlib/base/exception.cpp
+	stdlib/base/input.cpp
+	stdlib/base/list.cpp
+	stdlib/base/map.cpp
+	stdlib/base/number.cpp
+	stdlib/base/numberio.cpp
+	stdlib/base/port.cpp
+	stdlib/base/output.cpp
+	stdlib/base/string.cpp
+	stdlib/base/symbol.cpp
+	stdlib/base/vector.cpp
+)
+
+add_library(llchar
+	stdlib/char/char.cpp
+	ucd/ucd.cpp
+)
+
+add_library(llinexact
+	stdlib/inexact/inexact.cpp
+)
+
+add_library(llfile
+	stdlib/file/file.cpp
+)
+
+add_library(llprocesscontext
+	stdlib/process-context/process.cpp
+)
+
+add_library(llread
+	stdlib/read/read.cpp
+)
+
 add_library(lltime
 	stdlib/time/time.cpp
+)
+
+add_library(llwrite
+	stdlib/write/write.cpp
 )
 
 include_directories(${lliby_SOURCE_DIR})
@@ -138,13 +164,13 @@ set(ALL_TEST_NAMES
 	sharedbytearray
 	string
 	symbol
-	unicodechar
+	ucd
 	utf8
 	vector)
 
 foreach( test_name ${ALL_TEST_NAMES} )
 	add_executable(test-${test_name} tests/test-${test_name}.cpp)
-	target_link_libraries(test-${test_name} lliby ${CMAKE_THREAD_LIBS_INIT})
+	target_link_libraries(test-${test_name} llcore llchar ${CMAKE_THREAD_LIBS_INIT})
 
 	add_test(${test_name} test-${test_name})
 endforeach()

@@ -63,16 +63,20 @@ public:
 		return !(*this == other);
 	}
 
-	// Returns and integer less than, equal to or greater than zero if the string
-	// less than, equal to or greater than the other string
-	int compare(const StringCell *other, CaseSensitivity cs = CaseSensitivity::Sensitive) const;
+	/**
+	 * Returns and integer less than, equal to or greater than zero if the string less than, equal to or greater than
+     * the other string
+	 */
+	int compare(const StringCell *other) const;
+	int compare(const StringCell *other, UnicodeChar (*converter)(UnicodeChar)) const;
+
+	/**
+	 * Constructs a new string converted char-by-char using the passed converter function
+	 */
+	StringCell *toConvertedString(World &world, UnicodeChar (*converter)(UnicodeChar));
 
 	BytevectorCell *toUtf8Bytevector(World &world, std::int64_t start = 0, std::int64_t end = -1);
 
-	StringCell *toUppercaseString(World &world);
-	StringCell *toLowercaseString(World &world);
-	StringCell *toCaseFoldedString(World &world);
-	
 	const std::uint8_t* constUtf8Data() const;
 
 	std::string toUtf8StdString() const
@@ -127,11 +131,6 @@ protected:
 	const std::uint8_t *charPointer(std::uint32_t charOffset);
 
 	bool replaceBytes(const CharRange &range, const std::uint8_t *pattern, unsigned int patternBytes, unsigned int count);
-
-	int compareCaseSensitive(const StringCell *other) const;
-	int compareCaseInsensitive(const StringCell *other) const;
-
-	StringCell *toConvertedString(World &world, UnicodeChar (UnicodeChar::* converter)() const); 
 	
 	static size_t inlineDataSize();
 	bool dataIsInline() const;

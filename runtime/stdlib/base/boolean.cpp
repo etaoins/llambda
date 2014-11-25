@@ -8,7 +8,7 @@ extern "C"
 
 using namespace lliby;
 
-bool lliby_boolean_equal(BooleanCell *value1, BooleanCell *value2, ProperList<BooleanCell> *argList)
+bool llbase_boolean_equal(BooleanCell *value1, BooleanCell *value2, ProperList<BooleanCell> *argList)
 {
 	if (value1 != value2)
 	{

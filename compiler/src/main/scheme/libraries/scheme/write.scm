@@ -6,14 +6,16 @@
   ; write library
   (include-library-declarations "../../interfaces/scheme/write.scm")
   (begin
-    (define native-write (world-function system-library "lliby_write" (<any> <port>)))
+    (define-native-library llwrite (static-library "llwrite"))
+
+    (define native-write (world-function llwrite "llwrite_write" (<any> <port>)))
     (define-r7rs write (case-lambda
       (([datum : <any>])
        (native-write datum (current-output-port)))
       (([datum : <any>] [port : <port>])
        (native-write datum port))))
 
-    (define native-display (world-function system-library "lliby_display" (<any> <port>)))
+    (define native-display (world-function llwrite "llwrite_display" (<any> <port>)))
     (define-r7rs display (case-lambda
       (([datum : <any>])
        (native-display datum (current-output-port)))

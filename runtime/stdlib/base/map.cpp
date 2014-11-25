@@ -173,7 +173,7 @@ namespace
 extern "C"
 {
 
-VectorCell *lliby_vector_map(World &world, AnyMapProcedureCell *mapProcRaw, VectorCell *firstVectorRaw, ProperList<VectorCell> *argHead)
+VectorCell *llbase_vector_map(World &world, AnyMapProcedureCell *mapProcRaw, VectorCell *firstVectorRaw, ProperList<VectorCell> *argHead)
 {
 	alloc::StrongRef<AnyMapProcedureCell> mapProc(world, mapProcRaw);
 
@@ -184,7 +184,7 @@ VectorCell *lliby_vector_map(World &world, AnyMapProcedureCell *mapProcRaw, Vect
 	return abstractVectorMap(world, mapFunc, firstVectorRaw, argHead);
 }
 
-void lliby_vector_for_each(World &world, AnyIteratorProcedureCell *mapProcRaw, VectorCell *firstVectorRaw, ProperList<VectorCell> *argHead)
+void llbase_vector_for_each(World &world, AnyIteratorProcedureCell *mapProcRaw, VectorCell *firstVectorRaw, ProperList<VectorCell> *argHead)
 {
 	alloc::StrongRef<AnyIteratorProcedureCell> mapProc(world, mapProcRaw);
 
@@ -196,7 +196,7 @@ void lliby_vector_for_each(World &world, AnyIteratorProcedureCell *mapProcRaw, V
 	abstractVectorMap(world, mapFunc, firstVectorRaw, argHead);
 }
 
-ProperList<AnyCell> *lliby_map(World &world, AnyMapProcedureCell *mapProcRaw, ProperList<AnyCell> *firstListRaw, ProperList<ProperList<AnyCell>>* argHead)
+ProperList<AnyCell> *llbase_map(World &world, AnyMapProcedureCell *mapProcRaw, ProperList<AnyCell> *firstListRaw, ProperList<ProperList<AnyCell>>* argHead)
 {
 	alloc::StrongRef<AnyMapProcedureCell> mapProc(world, mapProcRaw);
 
@@ -208,7 +208,7 @@ ProperList<AnyCell> *lliby_map(World &world, AnyMapProcedureCell *mapProcRaw, Pr
 	return ProperList<AnyCell>::create(world, result);
 }
 
-void lliby_for_each(World &world, AnyIteratorProcedureCell *mapProcRaw, ProperList<AnyCell> *firstListRaw, ProperList<ProperList<AnyCell>>* argHead)
+void llbase_for_each(World &world, AnyIteratorProcedureCell *mapProcRaw, ProperList<AnyCell> *firstListRaw, ProperList<ProperList<AnyCell>>* argHead)
 {
 	alloc::StrongRef<AnyIteratorProcedureCell> mapProc(world, mapProcRaw);
 
@@ -220,7 +220,7 @@ void lliby_for_each(World &world, AnyIteratorProcedureCell *mapProcRaw, ProperLi
 	abstractListMap(world, mapFunc, firstListRaw, argHead);
 }
 
-StringCell *lliby_string_map(World &world, StringMapProcedureCell *mapProcRaw, StringCell *firstString, ProperList<StringCell> *argHead)
+StringCell *llbase_string_map(World &world, StringMapProcedureCell *mapProcRaw, StringCell *firstString, ProperList<StringCell> *argHead)
 {
 	alloc::StrongRef<StringMapProcedureCell> mapProc(world, mapProcRaw);
 
@@ -232,7 +232,7 @@ StringCell *lliby_string_map(World &world, StringMapProcedureCell *mapProcRaw, S
 	return builder.result(world);
 }
 
-void lliby_string_for_each(World &world, StringIteratorProcedureCell *mapProcRaw, StringCell *firstString, ProperList<StringCell> *argHead)
+void llbase_string_for_each(World &world, StringIteratorProcedureCell *mapProcRaw, StringCell *firstString, ProperList<StringCell> *argHead)
 {
 	alloc::StrongRef<StringIteratorProcedureCell> mapProc(world, mapProcRaw);
 

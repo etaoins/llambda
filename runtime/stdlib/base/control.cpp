@@ -16,7 +16,7 @@ using namespace lliby;
 extern "C"
 {
 
-ReturnValuesList *lliby_apply(World &world, TopProcedureCell *procedure, ProperList<AnyCell> *applyArgList)
+ReturnValuesList *llbase_apply(World &world, TopProcedureCell *procedure, ProperList<AnyCell> *applyArgList)
 {
 	ProperList<AnyCell> *procArgHead;
 
@@ -64,12 +64,12 @@ ReturnValuesList *lliby_apply(World &world, TopProcedureCell *procedure, ProperL
 	return procedure->apply(world, procArgHead);
 }
 
-ReturnValuesList *lliby_values(ProperList<AnyCell> *restArgHead)
+ReturnValuesList *llbase_values(ProperList<AnyCell> *restArgHead)
 {
 	return restArgHead;
 }
 
-ReturnValuesList *lliby_call_with_current_continuation(World &world, TypedProcedureCell<ReturnValuesList*, ProcedureCell*> *proc)
+ReturnValuesList *llbase_call_with_current_continuation(World &world, TypedProcedureCell<ReturnValuesList*, ProcedureCell*> *proc)
 {
 	using dynamic::Continuation;
 	using dynamic::EscapeProcedureCell;
@@ -103,7 +103,7 @@ ReturnValuesList *lliby_call_with_current_continuation(World &world, TypedProced
 	}
 }
 
-ReturnValuesList *lliby_call_with_values(World &world, ThunkProcedureCell *producer, TopProcedureCell *consumerRaw)
+ReturnValuesList *llbase_call_with_values(World &world, ThunkProcedureCell *producer, TopProcedureCell *consumerRaw)
 {
 	alloc::StrongRef<TopProcedureCell> consumer(world, consumerRaw);
 

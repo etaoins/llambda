@@ -6,8 +6,10 @@
   ; inexact library
   (include-library-declarations "../../interfaces/scheme/inexact.scm")
   (begin
-    (define-r7rs finite? (native-function system-library "lliby_is_finite" (<number>) -> <native-bool>))
-    (define-r7rs infinite? (native-function system-library "lliby_is_infinite" (<number>) -> <native-bool>))
+    (define-native-library llinexact (static-library "llinexact"))
+
+    (define-r7rs finite? (native-function llinexact "llinexact_is_finite" (<number>) -> <native-bool>))
+    (define-r7rs infinite? (native-function llinexact "llinexact_is_infinite" (<number>) -> <native-bool>))
 
     (define-r7rs (nan? [n : <number>])
       (eq? n +nan.0))

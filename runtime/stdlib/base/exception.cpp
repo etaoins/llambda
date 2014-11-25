@@ -20,7 +20,7 @@ extern "C"
 
 using HandlerProcedureCell = TypedProcedureCell<ReturnValuesList*, AnyCell*>;
 
-ReturnValuesList* lliby_with_exception_handler(World &world, HandlerProcedureCell *handlerRaw, ThunkProcedureCell *thunk)
+ReturnValuesList* llbase_with_exception_handler(World &world, HandlerProcedureCell *handlerRaw, ThunkProcedureCell *thunk)
 {
 	// Root our exception handler
 	alloc::StrongRef<HandlerProcedureCell> handler(world, handlerRaw);
@@ -59,7 +59,7 @@ ReturnValuesList* lliby_with_exception_handler(World &world, HandlerProcedureCel
 	}
 }
 
-ReturnValuesList *_lliby_guard_kernel(World &world, HandlerProcedureCell *guardAuxProcRaw, ThunkProcedureCell *thunk) 
+ReturnValuesList *llbase_guard_kernel(World &world, HandlerProcedureCell *guardAuxProcRaw, ThunkProcedureCell *thunk)
 {
 	alloc::StrongRef<HandlerProcedureCell> guardAuxProc(world, guardAuxProcRaw);
 	alloc::DynamicStateRef expectedStateRef(world, world.activeStateCell);
@@ -81,12 +81,12 @@ ReturnValuesList *_lliby_guard_kernel(World &world, HandlerProcedureCell *guardA
 	}
 }
 
-void lliby_raise(World &world, AnyCell *obj)
+void llbase_raise(World &world, AnyCell *obj)
 {
 	throw dynamic::SchemeException(obj);
 }
 
-ReturnValuesList* lliby_raise_continuable(World &world, AnyCell *obj)
+ReturnValuesList* llbase_raise_continuable(World &world, AnyCell *obj)
 {
 	using dynamic::EscapeProcedureCell;
 	using dynamic::Continuation;
@@ -108,22 +108,22 @@ ReturnValuesList* lliby_raise_continuable(World &world, AnyCell *obj)
 	}
 }
 
-void lliby_error(World &world, StringCell *message, ProperList<AnyCell> *irritants)
+void llbase_error(World &world, StringCell *message, ProperList<AnyCell> *irritants)
 {
-	lliby_raise(world, ErrorObjectCell::createInstance(world, message, irritants));
+	llbase_raise(world, ErrorObjectCell::createInstance(world, message, irritants));
 }
 
-StringCell* lliby_error_object_message(ErrorObjectCell *errorObject)
+StringCell* llbase_error_object_message(ErrorObjectCell *errorObject)
 {
 	return errorObject->message();
 }
 
-ProperList<AnyCell>* lliby_error_object_irritants(ErrorObjectCell *errorObject)
+ProperList<AnyCell>* llbase_error_object_irritants(ErrorObjectCell *errorObject)
 {
 	return errorObject->irritants();
 }
 
-bool lliby_is_file_error(AnyCell *obj)
+bool llbase_is_file_error(AnyCell *obj)
 {
 	if (auto errorObj = cell_cast<ErrorObjectCell>(obj))
 	{
@@ -133,7 +133,7 @@ bool lliby_is_file_error(AnyCell *obj)
 	return false;
 }
 
-bool lliby_is_read_error(AnyCell *obj)
+bool llbase_is_read_error(AnyCell *obj)
 {
 	if (auto errorObj = cell_cast<ErrorObjectCell>(obj))
 	{

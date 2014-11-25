@@ -20,7 +20,7 @@ extern "C"
 
 using namespace lliby;
 
-void _lliby_signal_error(World &world, const char *message, AnyCell *irritant, const char *path, unsigned int lineNumber)
+void llcore_signal_error(World &world, const char *message, AnyCell *irritant, const char *path, unsigned int lineNumber)
 {
 	std::string messageStr;
 

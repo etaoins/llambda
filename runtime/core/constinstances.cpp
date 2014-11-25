@@ -15,10 +15,10 @@ extern "C"
 //    optimization 
 // 2) These values can be used without an allocation and the associated stress
 //    on the garbage collector
-const lliby::UnitCell lliby_unit_value;
-const lliby::BooleanCell lliby_false_value(false);
-const lliby::BooleanCell lliby_true_value(true);
-const lliby::EmptyListCell lliby_empty_list_value;
-const lliby::EofObjectCell lliby_eof_object_value;
+const lliby::UnitCell llcore_unit_value;
+const lliby::BooleanCell llcore_false_value(false);
+const lliby::BooleanCell llcore_true_value(true);
+const lliby::EmptyListCell llcore_empty_list_value;
+const lliby::EofObjectCell llcore_eof_object_value;
 
 }

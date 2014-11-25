@@ -19,7 +19,7 @@ public:
 
 	static EofObjectCell* instance()
 	{
-		return const_cast<EofObjectCell*>(&lliby_eof_object_value);
+		return const_cast<EofObjectCell*>(&llcore_eof_object_value);
 	}
 };
 

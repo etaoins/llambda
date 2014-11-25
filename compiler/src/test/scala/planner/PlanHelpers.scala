@@ -61,7 +61,7 @@ trait PlanHelpers extends FunSuite with Inside {
       // This doesn't produce machine code
       false
 
-    case ps.CreateNamedEntryPoint(_, _, "lliby_exit") =>
+    case ps.CreateNamedEntryPoint(_, _, "llprocesscontext_exit") =>
       // This is loading the pointer to (exit)
       false
 

@@ -57,7 +57,7 @@ void World::launchWorld(void (*entryPoint)(World &))
 extern "C"
 {
 
-void _lliby_launch_world(void (*entryPoint)(World &))
+void llcore_launch_world(void (*entryPoint)(World &))
 {
 	World::launchWorld(entryPoint);
 }

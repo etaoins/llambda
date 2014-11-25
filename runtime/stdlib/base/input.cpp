@@ -17,12 +17,10 @@
 
 #include "util/utf8ExceptionToSchemeError.h"
 #include "util/assertSliceValid.h"
+#include "util/portCellToStream.h"
 #include "util/SharedByteArray.h"
 
 #include "port/AbstractPort.h"
-
-#include "reader/DatumReader.h"
-#include "reader/ReadErrorException.h"
 
 #include "core/error.h"
 
@@ -30,23 +28,6 @@ using namespace lliby;
 
 namespace
 {
-	std::istream* portCellToInputStream(World &world, PortCell *portCell)
-	{
-		AbstractPort *port = portCell->port();
-
-		if (!port->isInputPort())
-		{
-			signalError(world, "Attempted to read from non-input port", {portCell});
-		}
-
-		if (!port->isInputPortOpen())
-		{
-			signalError(world, "Attempted to read from closed input port", {portCell});
-		}
-
-		return port->inputStream();
-	}
-
 	AnyCell *readUtf8Character(World &world, const char *procName, std::istream *inputStream, bool putBack = false)
 	{
 		int headerChar = inputStream->get();
@@ -122,12 +103,12 @@ namespace
 extern "C"
 {
 
-EofObjectCell *lliby_eof_object()
+EofObjectCell *llbase_eof_object()
 {
 	return EofObjectCell::instance();
 }
 
-AnyCell *lliby_read_u8(World &world, PortCell *portCell)
+AnyCell *llbase_read_u8(World &world, PortCell *portCell)
 {
 	std::istream *portStream = portCellToInputStream(world, portCell);
 
@@ -143,7 +124,7 @@ AnyCell *lliby_read_u8(World &world, PortCell *portCell)
 	}
 }
 
-AnyCell *lliby_peek_u8(World &world, PortCell *portCell)
+AnyCell *llbase_peek_u8(World &world, PortCell *portCell)
 {
 	std::istream *portStream = portCellToInputStream(world, portCell);
 
@@ -159,19 +140,19 @@ AnyCell *lliby_peek_u8(World &world, PortCell *portCell)
 	}
 }
 
-AnyCell *lliby_read_char(World &world, PortCell *portCell)
+AnyCell *llbase_read_char(World &world, PortCell *portCell)
 {
 	std::istream *portStream = portCellToInputStream(world, portCell);
 	return readUtf8Character(world, "(read-char)", portStream, false);
 }
 
-AnyCell *lliby_peek_char(World &world, PortCell *portCell)
+AnyCell *llbase_peek_char(World &world, PortCell *portCell)
 {
 	std::istream *portStream = portCellToInputStream(world, portCell);
 	return readUtf8Character(world, "(peek-char)", portStream, true);
 }
 
-AnyCell *lliby_read_line(World &world, PortCell *portCell)
+AnyCell *llbase_read_line(World &world, PortCell *portCell)
 {
 	std::istream *portStream = portCellToInputStream(world, portCell);
 
@@ -194,7 +175,7 @@ AnyCell *lliby_read_line(World &world, PortCell *portCell)
 	}
 }
 
-AnyCell *lliby_read_bytevector(World &world, std::uint32_t requestedBytes, PortCell *portCell)
+AnyCell *llbase_read_bytevector(World &world, std::uint32_t requestedBytes, PortCell *portCell)
 {
 	std::istream *portStream = portCellToInputStream(world, portCell);
 
@@ -220,7 +201,7 @@ AnyCell *lliby_read_bytevector(World &world, std::uint32_t requestedBytes, PortC
 	return BytevectorCell::withByteArray(world, byteArray, readBytes);
 }
 
-AnyCell *lliby_mutating_read_bytevector(World &world, BytevectorCell *bytevector, PortCell *portCell, std::uint32_t start, std::uint32_t end)
+AnyCell *llbase_mutating_read_bytevector(World &world, BytevectorCell *bytevector, PortCell *portCell, std::uint32_t start, std::uint32_t end)
 {
 	if (bytevector->isGlobalConstant())
 	{
@@ -243,7 +224,7 @@ AnyCell *lliby_mutating_read_bytevector(World &world, BytevectorCell *bytevector
 	return ExactIntegerCell::fromValue(world, totalRead);
 }
 
-AnyCell *lliby_read_string(World &world, std::uint32_t requestedChars, PortCell *portCell)
+AnyCell *llbase_read_string(World &world, std::uint32_t requestedChars, PortCell *portCell)
 {
 	std::istream *portStream = portCellToInputStream(world, portCell);
 
@@ -320,37 +301,14 @@ AnyCell *lliby_read_string(World &world, std::uint32_t requestedChars, PortCell 
 	return StringCell::fromValidatedUtf8Data(world, utf8Data.data(), utf8Data.size(), validChars);
 }
 
-AnyCell *lliby_read(World &world, PortCell *portCell)
-{
-	std::istream *portStream = portCellToInputStream(world, portCell);
-
-	try
-	{
-		// DatumReader can allocate. Ensure we root the port to prevent it from being garbage collected and the stream
-		// deleted
-		alloc::StrongRoot<PortCell> portRoot(world, &portCell);
-
-		DatumReader reader(world, *portStream);
-		return reader.parse();
-	}
-	catch(const ReadErrorException &e)
-	{
-		signalError(world, e.message().c_str(), {}, ErrorCategory::Read);
-	}
-	catch(const utf8::InvalidByteSequenceException &e)
-	{
-		utf8ExceptionToSchemeError(world, "(read)", e);
-	}
-}
-
-bool lliby_u8_ready(World &world, PortCell *portCell)
+bool llbase_u8_ready(World &world, PortCell *portCell)
 {
 	// Make sure we're an open input stream
 	portCellToInputStream(world, portCell);
 	return portCell->port()->bytesAvailable();
 }
 
-bool lliby_char_ready(World &world, PortCell *portCell)
+bool llbase_char_ready(World &world, PortCell *portCell)
 {
 	// Make sure we're an open input stream
 	std::istream *portStream = portCellToInputStream(world, portCell);

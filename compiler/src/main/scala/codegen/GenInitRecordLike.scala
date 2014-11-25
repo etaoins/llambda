@@ -45,7 +45,7 @@ object GenInitRecordLike {
 
         cellType.genStoreToDataIsInline(block)(IntegerConstant(cellType.dataIsInlineIrType, 0), recordCell)
 
-        // Declare _lliby_record_data_alloc 
+        // Declare llcore_record_data_alloc 
         module.unlessDeclared(recordDataAllocDecl) {
           module.declareFunction(recordDataAllocDecl)
         }
@@ -53,7 +53,7 @@ object GenInitRecordLike {
         // Find the size of the record data
         val irSize = GenSizeOf(block)(recordDataIrType)
     
-        // Allocate it using _lliby_record_data_alloc
+        // Allocate it using llcore_record_data_alloc
         val voidRecordData = block.callDecl(Some("rawRecordData"))(recordDataAllocDecl, List(irSize)).get
 
         // Store the record data pointer in the new cell

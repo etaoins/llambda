@@ -17,17 +17,17 @@ using namespace lliby;
 extern "C"
 {
 
-VectorCell *lliby_make_vector(World &world, std::uint32_t length, AnyCell *fill)
+VectorCell *llbase_make_vector(World &world, std::uint32_t length, AnyCell *fill)
 {
 	return VectorCell::fromFill(world, length, fill);
 }
 
-std::uint32_t lliby_vector_length(VectorCell *vector)
+std::uint32_t llbase_vector_length(VectorCell *vector)
 {
 	return vector->length();
 }
 
-AnyCell* lliby_vector_ref(World &world, VectorCell *vector, std::uint32_t index)
+AnyCell* llbase_vector_ref(World &world, VectorCell *vector, std::uint32_t index)
 {
 	AnyCell* element = vector->elementAt(index);
 
@@ -39,7 +39,7 @@ AnyCell* lliby_vector_ref(World &world, VectorCell *vector, std::uint32_t index)
 	return element;
 }
 
-void lliby_vector_set(World &world, VectorCell *vector, std::uint32_t index, AnyCell *obj)
+void llbase_vector_set(World &world, VectorCell *vector, std::uint32_t index, AnyCell *obj)
 {
 	if (vector->isGlobalConstant())
 	{
@@ -52,7 +52,7 @@ void lliby_vector_set(World &world, VectorCell *vector, std::uint32_t index, Any
 	}
 }
 
-VectorCell *lliby_vector(World &world, ProperList<AnyCell> *argList)
+VectorCell *llbase_vector(World &world, ProperList<AnyCell> *argList)
 {
 	const auto length = argList->size();
 
@@ -63,7 +63,7 @@ VectorCell *lliby_vector(World &world, ProperList<AnyCell> *argList)
 	return VectorCell::fromElements(world, newElements, length);
 }
 
-VectorCell *lliby_vector_append(World &world, ProperList<VectorCell> *argList)
+VectorCell *llbase_vector_append(World &world, ProperList<VectorCell> *argList)
 {
 	// Create a std::vector
 	auto vectorElements = std::vector<const VectorCell*>(argList->begin(), argList->end());
@@ -72,7 +72,7 @@ VectorCell *lliby_vector_append(World &world, ProperList<VectorCell> *argList)
 	return VectorCell::fromAppended(world, vectorElements);
 }
 
-ProperList<AnyCell> *lliby_vector_to_list(World &world, VectorCell *vectorCell, std::uint32_t start, std::uint32_t end)
+ProperList<AnyCell> *llbase_vector_to_list(World &world, VectorCell *vectorCell, std::uint32_t start, std::uint32_t end)
 {
 	assertSliceValid(world,"(vector->list)", vectorCell, vectorCell->length(), start, end);
 
@@ -83,14 +83,14 @@ ProperList<AnyCell> *lliby_vector_to_list(World &world, VectorCell *vectorCell, 
 	return ProperList<AnyCell>::create(world, vectorElements);
 }
 
-VectorCell *lliby_vector_copy(World &world, VectorCell *sourceVector, std::uint32_t start, std::uint32_t end)
+VectorCell *llbase_vector_copy(World &world, VectorCell *sourceVector, std::uint32_t start, std::uint32_t end)
 {
 	assertSliceValid(world, "(vector-copy)", sourceVector, sourceVector->length(), start, end);
 
 	return sourceVector->copy(world, start, end);
 }
 
-void lliby_vector_mutating_copy(World &world, VectorCell *to, std::uint32_t at, VectorCell *from, std::uint32_t start, std::uint32_t end)
+void llbase_vector_mutating_copy(World &world, VectorCell *to, std::uint32_t at, VectorCell *from, std::uint32_t start, std::uint32_t end)
 {
 	if (to->isGlobalConstant())
 	{
@@ -103,7 +103,7 @@ void lliby_vector_mutating_copy(World &world, VectorCell *to, std::uint32_t at, 
 	to->replace(at, from, start, end);
 }
 
-void lliby_vector_mutating_fill(World &world, VectorCell *vector, AnyCell *fill, std::uint32_t start, std::uint32_t end)
+void llbase_vector_mutating_fill(World &world, VectorCell *vector, AnyCell *fill, std::uint32_t start, std::uint32_t end)
 {
 	if (vector->isGlobalConstant())
 	{
@@ -115,7 +115,7 @@ void lliby_vector_mutating_fill(World &world, VectorCell *vector, AnyCell *fill,
 	vector->fill(fill, start, end);
 }
 
-VectorCell* lliby_string_to_vector(World &world, StringCell *string, std::uint32_t start, std::uint32_t end)
+VectorCell* llbase_string_to_vector(World &world, StringCell *string, std::uint32_t start, std::uint32_t end)
 {
 	assertSliceValid(world, "(string->vector)", string, string->charLength(), start, end);
 
@@ -136,7 +136,7 @@ VectorCell* lliby_string_to_vector(World &world, StringCell *string, std::uint32
 	return VectorCell::fromElements(world, boxedChars, charCount);
 }
 
-StringCell *lliby_vector_to_string(World &world, VectorCell *vector, std::uint32_t start, std::uint32_t end)
+StringCell *llbase_vector_to_string(World &world, VectorCell *vector, std::uint32_t start, std::uint32_t end)
 {
 	assertSliceValid(world, "(vector->string)", vector, vector->length(), start, end);
 

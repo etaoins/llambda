@@ -59,22 +59,22 @@ namespace
 extern "C"
 {
 
-PairCell *lliby_cons(World &world, AnyCell *car, AnyCell *cdr)
+PairCell *llbase_cons(World &world, AnyCell *car, AnyCell *cdr)
 {
 	return PairCell::createInstance(world, car, cdr);
 }
 
-AnyCell *lliby_car(PairCell *pair)
+AnyCell *llbase_car(PairCell *pair)
 {
 	return pair->car();
 }
 
-AnyCell *lliby_cdr(PairCell *pair)
+AnyCell *llbase_cdr(PairCell *pair)
 {
 	return pair->cdr();
 }
 
-void lliby_set_car(World &world, PairCell *pair, AnyCell *obj)
+void llbase_set_car(World &world, PairCell *pair, AnyCell *obj)
 {
 	if (pair->isGlobalConstant())
 	{
@@ -84,7 +84,7 @@ void lliby_set_car(World &world, PairCell *pair, AnyCell *obj)
 	return pair->setCar(obj);
 }
 
-void lliby_set_cdr(World &world, PairCell *pair, AnyCell *obj)
+void llbase_set_cdr(World &world, PairCell *pair, AnyCell *obj)
 {
 	if (pair->isGlobalConstant())
 	{
@@ -94,12 +94,12 @@ void lliby_set_cdr(World &world, PairCell *pair, AnyCell *obj)
 	return pair->setCdr(obj);
 }
 
-std::uint32_t lliby_length(World &world, ProperList<AnyCell> *list)
+std::uint32_t llbase_length(World &world, ProperList<AnyCell> *list)
 {
 	return list->size();
 }
 
-ListElementCell* lliby_make_list(World &world, std::uint32_t count, AnyCell *fillRaw)
+ListElementCell* llbase_make_list(World &world, std::uint32_t count, AnyCell *fillRaw)
 {
 	ListElementCell *cdr = EmptyListCell::instance();
 	alloc::AnyRef fill(world, fillRaw);
@@ -116,7 +116,7 @@ ListElementCell* lliby_make_list(World &world, std::uint32_t count, AnyCell *fil
 	return cdr;
 }
 
-AnyCell* lliby_list_copy(World &world, AnyCell *sourceHead)
+AnyCell* llbase_list_copy(World &world, AnyCell *sourceHead)
 {
 	// Find the number of pairs in the list
 	// We can't use ProperList because we need to work with improper lists and non-list objects
@@ -164,7 +164,7 @@ AnyCell* lliby_list_copy(World &world, AnyCell *sourceHead)
 	return destHead;
 }
 
-AnyCell* lliby_append(World &world, ProperList<AnyCell> *argList)
+AnyCell* llbase_append(World &world, ProperList<AnyCell> *argList)
 {
 	auto argCount = argList->size();
 
@@ -194,7 +194,7 @@ AnyCell* lliby_append(World &world, ProperList<AnyCell> *argList)
 	return ListElementCell::createList(world, appendedElements, *(argIt++));
 }
 
-ProperList<AnyCell>* lliby_reverse(World &world, ProperList<AnyCell> *sourceListRaw)
+ProperList<AnyCell>* llbase_reverse(World &world, ProperList<AnyCell> *sourceListRaw)
 {
 	alloc::StrongRef<ProperList<AnyCell>> sourceList(world, sourceListRaw);
 
@@ -210,27 +210,27 @@ ProperList<AnyCell>* lliby_reverse(World &world, ProperList<AnyCell> *sourceList
 	return static_cast<ProperList<AnyCell>*>(cdr);
 }
 
-const AnyCell* lliby_memv(const AnyCell *obj, ProperList<AnyCell> *listHead)
+const AnyCell* llbase_memv(const AnyCell *obj, ProperList<AnyCell> *listHead)
 {
 	return listSearch(obj, listHead, &AnyCell::isEqv);
 }
 
-const AnyCell* lliby_member(const AnyCell *obj, ProperList<AnyCell> *listHead)
+const AnyCell* llbase_member(const AnyCell *obj, ProperList<AnyCell> *listHead)
 {
 	return listSearch(obj, listHead, &AnyCell::isEqual);
 }
 
-const AnyCell* lliby_assv(const AnyCell *obj, ProperList<AnyCell> *listHead)
+const AnyCell* llbase_assv(const AnyCell *obj, ProperList<AnyCell> *listHead)
 {
 	return alistSearch(obj, listHead, &AnyCell::isEqv);
 }
 
-const AnyCell* lliby_assoc(const AnyCell *obj, ProperList<AnyCell> *listHead)
+const AnyCell* llbase_assoc(const AnyCell *obj, ProperList<AnyCell> *listHead)
 {
 	return alistSearch(obj, listHead, &AnyCell::isEqual);
 }
 
-ListElementCell* lliby_list_tail(World &world, ProperList<AnyCell> *initialHead, std::uint32_t count)
+ListElementCell* llbase_list_tail(World &world, ProperList<AnyCell> *initialHead, std::uint32_t count)
 {
 	ListElementCell *head = initialHead;
 

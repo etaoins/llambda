@@ -15,7 +15,7 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
   private val testImportDecl = datum"(import (llambda nfi) (scheme base) (llambda test-util))"
 
   // Our special version of (write) that generates less code
-  private val lastValueWriter = datum"""(native-function system-library "_lliby_write_stdout" (<any>))"""
+  private val lastValueWriter = datum"""(native-function system-library "llcore_write_stdout" (<any>))"""
 
   private val AbnormalExitCodes = List(
     // SIGILL

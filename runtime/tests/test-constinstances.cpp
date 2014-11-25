@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
 {
 	using namespace lliby;
 
-	lliby_init(argc, argv);
+	llcore_init(argc, argv);
 
 	ASSERT_TRUE(UnitCell::isInstance(UnitCell::instance()));
 	ASSERT_EQUAL(BooleanCell::trueInstance()->value(), true);

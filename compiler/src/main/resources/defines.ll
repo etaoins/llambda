@@ -1,8 +1,8 @@
 ; These are defined in core/constinstances.cpp in our runtime
-@lliby_unit_value = external constant %unit
-@lliby_false_value = external constant %boolean
-@lliby_true_value = external constant %boolean
-@lliby_empty_list_value = external constant %emptyList
+@llcore_unit_value = external constant %unit
+@llcore_false_value = external constant %boolean
+@llcore_true_value = external constant %boolean
+@llcore_empty_list_value = external constant %emptyList
 
 %cell = type {[24 x i8]}
 

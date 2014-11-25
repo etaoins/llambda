@@ -18,7 +18,7 @@ public:
 
 	static UnitCell* instance()
 	{
-		return const_cast<UnitCell*>(&lliby_unit_value);
+		return const_cast<UnitCell*>(&llcore_unit_value);
 	}
 };
 

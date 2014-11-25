@@ -45,18 +45,18 @@ extern "C"
 // This isn't in a standard header file
 extern char **environ;
 
-void lliby_exit(World &world, AnyCell *exitValue)
+void llprocesscontext_exit(World &world, AnyCell *exitValue)
 {
 	dynamic::State::popAllStates(world);
 	exit(cellToStatusCode(exitValue));
 }
 
-void lliby_emergency_exit(AnyCell *exitValue)
+void llprocesscontext_emergency_exit(AnyCell *exitValue)
 {
 	_exit(cellToStatusCode(exitValue));
 }
 
-AnyCell *lliby_get_environment_variable(World &world, StringCell *name)
+AnyCell *llprocesscontext_get_environment_variable(World &world, StringCell *name)
 {
 	char *value = getenv(name->toUtf8StdString().c_str());
 
@@ -70,7 +70,7 @@ AnyCell *lliby_get_environment_variable(World &world, StringCell *name)
 	}
 }
 
-ProperList<ProperList<StringCell>>* lliby_get_environment_variables(World &world)
+ProperList<ProperList<StringCell>>* llprocesscontext_get_environment_variables(World &world)
 {
 	alloc::StrongRefVector<ProperList<StringCell>> parsedVariables(world);
 	alloc::StrongRefVector<StringCell> parsedStrings(world, 2);
@@ -102,7 +102,7 @@ ProperList<ProperList<StringCell>>* lliby_get_environment_variables(World &world
 	return ProperList<ProperList<StringCell>>::create(world, parsedVariables);
 }
 
-ProperList<StringCell>* lliby_command_line(World &world)
+ProperList<StringCell>* llprocesscontext_command_line(World &world)
 {
 	CommandLineArguments args(commandLineArguments());
 

@@ -22,7 +22,7 @@ extern "C"
 {
 using namespace lliby;
 
-void lliby_init(int argc, char *argv[])
+void llcore_init(int argc, char *argv[])
 {
 	// Stash argc and argv
 	initArguments = {argc, argv};

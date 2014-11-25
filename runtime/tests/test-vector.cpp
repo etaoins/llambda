@@ -406,7 +406,7 @@ void testAll(World &world)
 
 int main(int argc, char *argv[])
 {
-	lliby_init(argc, argv);
+	llcore_init(argc, argv);
 
 	lliby::World::launchWorld(&testAll);
 

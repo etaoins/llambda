@@ -80,10 +80,10 @@ object GenProgram {
     module.declareFunction(initDecl) 
     module.declareFunction(launchWorldDecl)
 
-    // Pass argc and argv to lliby_init
+    // Pass argc and argv to llcore_init
     entryBlock.callDecl(None)(initDecl, List("argc", "argv").map(mainFunction.argumentValues))
     
-    // Call __llambda_top_level through _lliby_launch_world
+    // Call __llambda_top_level through llcore_launch_world
     // __llambda_top_level must be defined by the planner
     val execValue = GenNamedEntryPoint(module)(LlambdaTopLevelSignature, LlambdaTopLevelSignature.nativeSymbol, plannedSymbols) 
 

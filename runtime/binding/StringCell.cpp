@@ -615,7 +615,7 @@ bool StringCell::operator==(const StringCell &other) const
 	return memcmp(constUtf8Data(), other.constUtf8Data(), byteLength()) == 0;
 }
 
-int StringCell::compareCaseSensitive(const StringCell *other) const
+int StringCell::compare(const StringCell *other) const
 {
 	std::uint32_t compareBytes = std::min(byteLength(), other->byteLength());
 
@@ -632,7 +632,7 @@ int StringCell::compareCaseSensitive(const StringCell *other) const
 	}
 }
 
-int StringCell::compareCaseInsensitive(const StringCell *other) const
+int StringCell::compare(const StringCell *other, UnicodeChar (*converter)(UnicodeChar)) const
 {
 	const std::uint8_t *ourScanPtr = const_cast<StringCell*>(this)->utf8Data();
 	const std::uint8_t *ourEndPtr = &constUtf8Data()[byteLength()];
@@ -654,7 +654,7 @@ int StringCell::compareCaseInsensitive(const StringCell *other) const
 		const UnicodeChar ourChar = utf8::decodeChar(&ourScanPtr);
 		const UnicodeChar theirChar = utf8::decodeChar(&theirScanPtr);
 
-		int charCompare = ourChar.compare(theirChar, CaseSensitivity::Insensitive);
+		int charCompare = ourChar.compare(theirChar, converter);
 
 		if (charCompare != 0)
 		{
@@ -665,18 +665,6 @@ int StringCell::compareCaseInsensitive(const StringCell *other) const
 	return 0;
 }
 
-int StringCell::compare(const StringCell *other, CaseSensitivity cs) const
-{
-	if (cs == CaseSensitivity::Sensitive)
-	{
-		return compareCaseSensitive(other);
-	}
-	else
-	{
-		return compareCaseInsensitive(other);
-	}
-}
-	
 BytevectorCell* StringCell::toUtf8Bytevector(World &world, std::int64_t start, std::int64_t end) 
 {
 	CharRange range = charRange(start, end);
@@ -703,8 +691,8 @@ BytevectorCell* StringCell::toUtf8Bytevector(World &world, std::int64_t start, s
 
 	return BytevectorCell::withByteArray(world, byteArray, newLength);
 }
-	
-StringCell *StringCell::toConvertedString(World &world, UnicodeChar (UnicodeChar::* converter)() const) 
+
+StringCell *StringCell::toConvertedString(World &world, UnicodeChar (*converter)(UnicodeChar))
 {
 	std::vector<std::uint8_t> convertedData;
 
@@ -718,28 +706,13 @@ StringCell *StringCell::toConvertedString(World &world, UnicodeChar (UnicodeChar
 	while(scanPtr != endPtr)
 	{
 		const UnicodeChar originalChar = utf8::decodeChar(&scanPtr);
-		const UnicodeChar convertedChar = (originalChar.*converter)();
+		const UnicodeChar convertedChar = (*converter)(originalChar);
 
 		utf8::appendChar(convertedChar, std::back_inserter(convertedData));
 	}
 
 	const std::uint32_t totalByteLength = convertedData.size();
 	return StringCell::fromValidatedUtf8Data(world, convertedData.data(), totalByteLength, charLength());
-}
-
-StringCell* StringCell::toUppercaseString(World &world) 
-{
-	return toConvertedString(world, &UnicodeChar::toUppercase);
-}
-
-StringCell* StringCell::toLowercaseString(World &world) 
-{
-	return toConvertedString(world, &UnicodeChar::toLowercase);
-}
-
-StringCell* StringCell::toCaseFoldedString(World &world) 
-{
-	return toConvertedString(world, &UnicodeChar::toCaseFolded);
 }
 
 void StringCell::finalizeString()

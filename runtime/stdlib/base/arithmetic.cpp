@@ -13,7 +13,7 @@ using namespace lliby;
 
 namespace
 {
-	// Helper used by lliby_div
+	// Helper used by llbase_div
 	FlonumCell *inexactDivision(World &world, double startValue, ProperList<NumberCell>::Iterator begin, ProperList<NumberCell>::Iterator end)
 	{
 		double numeratorValue = startValue;
@@ -126,7 +126,7 @@ namespace
 extern "C"
 {
 
-NumberCell *lliby_add(World &world, ProperList<NumberCell> *argList)
+NumberCell *llbase_add(World &world, ProperList<NumberCell> *argList)
 {
 	std::int64_t exactSum = 0;
 	double inexactSum = 0.0;
@@ -157,7 +157,7 @@ NumberCell *lliby_add(World &world, ProperList<NumberCell> *argList)
 	}
 }
 
-NumberCell *lliby_mul(World &world, ProperList<NumberCell> *argList)
+NumberCell *llbase_mul(World &world, ProperList<NumberCell> *argList)
 {
 	std::int64_t exactProduct = 1;
 	double inexactProduct = 1.0;
@@ -188,7 +188,7 @@ NumberCell *lliby_mul(World &world, ProperList<NumberCell> *argList)
 	}
 }
 
-NumberCell *lliby_sub(World &world, NumberCell *startValue, ProperList<NumberCell> *argList)
+NumberCell *llbase_sub(World &world, NumberCell *startValue, ProperList<NumberCell> *argList)
 {
 	std::int64_t exactDifference;
 	double inexactDifference;
@@ -246,7 +246,7 @@ NumberCell *lliby_sub(World &world, NumberCell *startValue, ProperList<NumberCel
 	}
 }
 
-NumberCell* lliby_div(World &world, NumberCell *startValue, ProperList<NumberCell> *argList)
+NumberCell* llbase_div(World &world, NumberCell *startValue, ProperList<NumberCell> *argList)
 {
 	if (argList->empty())
 	{
@@ -306,7 +306,7 @@ NumberCell* lliby_div(World &world, NumberCell *startValue, ProperList<NumberCel
 	}
 }
 
-ProperList<ExactIntegerCell>* lliby_truncate_div(World &world, std::int64_t numerator, std::int64_t denominator)
+ProperList<ExactIntegerCell>* llbase_truncate_div(World &world, std::int64_t numerator, std::int64_t denominator)
 {
 	if (denominator == 0)
 	{
@@ -319,7 +319,7 @@ ProperList<ExactIntegerCell>* lliby_truncate_div(World &world, std::int64_t nume
 	return ProperList<ExactIntegerCell>::emplaceValues(world, {quotient, remainder});
 }
 
-std::int64_t lliby_truncate_quotient(World &world, std::int64_t numerator, std::int64_t denominator)
+std::int64_t llbase_truncate_quotient(World &world, std::int64_t numerator, std::int64_t denominator)
 {
 	if (denominator == 0)
 	{
@@ -329,7 +329,7 @@ std::int64_t lliby_truncate_quotient(World &world, std::int64_t numerator, std::
 	return numerator / denominator;
 }
 
-std::int64_t lliby_truncate_remainder(World &world, std::int64_t numerator, std::int64_t denominator)
+std::int64_t llbase_truncate_remainder(World &world, std::int64_t numerator, std::int64_t denominator)
 {
 	if (denominator == 0)
 	{
@@ -339,7 +339,7 @@ std::int64_t lliby_truncate_remainder(World &world, std::int64_t numerator, std:
 	return numerator % denominator;
 }
 
-ProperList<ExactIntegerCell>* lliby_floor_div(World &world, std::int64_t numerator, std::int64_t denominator)
+ProperList<ExactIntegerCell>* llbase_floor_div(World &world, std::int64_t numerator, std::int64_t denominator)
 {
 	if (denominator == 0)
 	{
@@ -350,7 +350,7 @@ ProperList<ExactIntegerCell>* lliby_floor_div(World &world, std::int64_t numerat
 	return ProperList<ExactIntegerCell>::emplaceValues(world, {floorResult.quotient, floorResult.remainder});
 }
 
-std::int64_t lliby_floor_quotient(World &world, std::int64_t numerator, std::int64_t denominator)
+std::int64_t llbase_floor_quotient(World &world, std::int64_t numerator, std::int64_t denominator)
 {
 	if (denominator == 0)
 	{
@@ -360,7 +360,7 @@ std::int64_t lliby_floor_quotient(World &world, std::int64_t numerator, std::int
 	return floorDivision(numerator, denominator).quotient;
 }
 
-std::int64_t lliby_floor_remainder(World &world, std::int64_t numerator, std::int64_t denominator)
+std::int64_t llbase_floor_remainder(World &world, std::int64_t numerator, std::int64_t denominator)
 {
 	if (denominator == 0)
 	{
@@ -370,7 +370,7 @@ std::int64_t lliby_floor_remainder(World &world, std::int64_t numerator, std::in
 	return floorDivision(numerator, denominator).remainder;
 }
 
-NumberCell* lliby_expt(World &world, NumberCell *base, NumberCell *power)
+NumberCell* llbase_expt(World &world, NumberCell *base, NumberCell *power)
 {
 	const bool canBeExact = base->isExact() && power->isExact();
 
@@ -384,7 +384,7 @@ NumberCell* lliby_expt(World &world, NumberCell *base, NumberCell *power)
 	return NumberCell::fromValue(world, floatResult, canBeExact);
 }
 
-std::int64_t lliby_gcd(std::int64_t a, std::int64_t b, ProperList<ExactIntegerCell> *restInts)
+std::int64_t llbase_gcd(std::int64_t a, std::int64_t b, ProperList<ExactIntegerCell> *restInts)
 {
 	std::int64_t result = greatestCommonDivisor(a, b);
 
@@ -396,7 +396,7 @@ std::int64_t lliby_gcd(std::int64_t a, std::int64_t b, ProperList<ExactIntegerCe
 	return (result < 0) ? -result : result;
 }
 
-std::int64_t lliby_lcm(std::int64_t a, std::int64_t b, ProperList<ExactIntegerCell> *restInts)
+std::int64_t llbase_lcm(std::int64_t a, std::int64_t b, ProperList<ExactIntegerCell> *restInts)
 {
 	std::int64_t result = leastCommonMultiple(a, b);
 
@@ -408,7 +408,7 @@ std::int64_t lliby_lcm(std::int64_t a, std::int64_t b, ProperList<ExactIntegerCe
 	return (result < 0) ? -result : result;
 }
 
-ProperList<ExactIntegerCell>* lliby_exact_integer_sqrt(World &world, std::int64_t val)
+ProperList<ExactIntegerCell>* llbase_exact_integer_sqrt(World &world, std::int64_t val)
 {
 	if (val < 0)
 	{
@@ -422,17 +422,17 @@ ProperList<ExactIntegerCell>* lliby_exact_integer_sqrt(World &world, std::int64_
 	return ProperList<ExactIntegerCell>::emplaceValues(world, {floorResult, remainder});
 }
 
-double lliby_numerator(double value)
+double llbase_numerator(double value)
 {
 	return inexactFraction(value).numerator;
 }
 
-double lliby_denominator(double value)
+double llbase_denominator(double value)
 {
 	return inexactFraction(value).denominator;
 }
 
-NumberCell* lliby_rationalize(World &world, NumberCell *valCell, double maxDiff)
+NumberCell* llbase_rationalize(World &world, NumberCell *valCell, double maxDiff)
 {
 	// If maxdiff is NaN then we are NaN
 	if (std::isnan(maxDiff))

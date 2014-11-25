@@ -66,14 +66,14 @@
 (define-test "native i64 cannot be boxed as an inexact rational" (expect-failure
   (import (llambda nfi))
 
-	(define inexact->inexact (world-function system-library "lliby_inexact" (<flonum>) -> <native-double>))
+	(define inexact->inexact (world-function system-library "llbase_inexact" (<flonum>) -> <native-double>))
 	; This assumes (exact) returns an native i64
 	(inexact->inexact (exact -53))))
 
 (define-test "constant exact integer cannot be boxed as an inexact rational" (expect-failure
   (import (llambda nfi))
 
-	(define inexact->inexact (world-function system-library "lliby_inexact" (<flonum>) -> <native-double>))
+	(define inexact->inexact (world-function system-library "llbase_inexact" (<flonum>) -> <native-double>))
 	; This assumes (exact) returns an native i64
 	(inexact->inexact -53)))
 
@@ -115,23 +115,23 @@
 (define-test "(make-bytevector) only accepts positive constant lengths" (expect-compile-failure
   (import (llambda nfi))
 
-  (define native-make-bytevector (world-function system-library "lliby_make_bytevector" (<native-uint32> <native-uint8>) -> <bytevector>))
+  (define native-make-bytevector (world-function system-library "llbase_make_bytevector" (<native-uint32> <native-uint8>) -> <bytevector>))
   (native-make-bytevector -1 0)))
 
 (define-test "(make-bytevector) only accepts 32bit constant lengths" (expect-compile-failure
   (import (llambda nfi))
 
-  (define native-make-bytevector (world-function system-library "lliby_make_bytevector" (<native-uint32> <native-uint8>) -> <bytevector>))
+  (define native-make-bytevector (world-function system-library "llbase_make_bytevector" (<native-uint32> <native-uint8>) -> <bytevector>))
   (native-make-bytevector 4294967296 0)))
 
 (define-test "(make-bytevector) only accepts positive constant fill values" (expect-compile-failure
   (import (llambda nfi))
 
-  (define native-make-bytevector (world-function system-library "lliby_make_bytevector" (<native-uint32> <native-uint8>) -> <bytevector>))
+  (define native-make-bytevector (world-function system-library "llbase_make_bytevector" (<native-uint32> <native-uint8>) -> <bytevector>))
   (native-make-bytevector 1 -1)))
 
 (define-test "(make-bytevector) only accepts 8bit constant fill values" (expect-compile-failure
   (import (llambda nfi))
 
-  (define native-make-bytevector (world-function system-library "lliby_make_bytevector" (<native-uint32> <native-int8>) -> <bytevector>))
+  (define native-make-bytevector (world-function system-library "llbase_make_bytevector" (<native-uint32> <native-int8>) -> <bytevector>))
   (native-make-bytevector 1 256)))

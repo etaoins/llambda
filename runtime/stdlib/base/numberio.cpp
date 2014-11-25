@@ -18,7 +18,7 @@ using namespace lliby;
 extern "C"
 {
 
-StringCell* lliby_number_to_string(World &world, NumberCell *numberCell, std::uint8_t radix)
+StringCell* llbase_number_to_string(World &world, NumberCell *numberCell, std::uint8_t radix)
 {
 	if ((radix != 2) && (radix != 8) && (radix != 10) && (radix != 16))
 	{
@@ -43,7 +43,7 @@ StringCell* lliby_number_to_string(World &world, NumberCell *numberCell, std::ui
 	return StringCell::fromUtf8StdString(world, strStream.str());
 }
 
-AnyCell* lliby_string_to_number(World &world, StringCell *stringCell, std::uint32_t radix)
+AnyCell* llbase_string_to_number(World &world, StringCell *stringCell, std::uint32_t radix)
 {
 	if ((radix != 2) && (radix != 8) && (radix != 10) && (radix != 16))
 	{

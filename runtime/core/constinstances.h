@@ -12,11 +12,11 @@ namespace lliby
 extern "C"
 {
 
-extern const lliby::UnitCell lliby_unit_value;
-extern const lliby::BooleanCell lliby_false_value;
-extern const lliby::BooleanCell lliby_true_value;
-extern const lliby::EmptyListCell lliby_empty_list_value;
-extern const lliby::EofObjectCell lliby_eof_object_value;
+extern const lliby::UnitCell llcore_unit_value;
+extern const lliby::BooleanCell llcore_false_value;
+extern const lliby::BooleanCell llcore_true_value;
+extern const lliby::EmptyListCell llcore_empty_list_value;
+extern const lliby::EofObjectCell llcore_eof_object_value;
 
 }
 

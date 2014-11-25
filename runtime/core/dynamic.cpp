@@ -15,12 +15,12 @@ using lliby::dynamic::ConverterProcedureCell;
 extern "C"
 {
 
-void _lliby_dynamicenv_push(World &world)
+void llcore_dynamicenv_push(World &world)
 {
 	dynamic::State::pushActiveState(world, nullptr, nullptr);
 }
 
-void _lliby_dynamicenv_set_value(World &world, ProcedureCell *procCell, AnyCell *value)
+void llcore_dynamicenv_set_value(World &world, ProcedureCell *procCell, AnyCell *value)
 {
 	auto paramCell = cell_cast<ParameterProcedureCell>(procCell);
 
@@ -32,12 +32,12 @@ void _lliby_dynamicenv_set_value(World &world, ProcedureCell *procCell, AnyCell 
 	dynamic::State::activeState(world)->setValueForParameter(world, paramCell, value);
 }
 
-void _lliby_dynamicenv_pop(World &world)
+void llcore_dynamicenv_pop(World &world)
 {
 	dynamic::State::popActiveState(world);
 }
 
-ProcedureCell *_lliby_make_parameter(World &world, AnyCell *initialValue, AnyCell *converterValue)
+ProcedureCell *llcore_make_parameter(World &world, AnyCell *initialValue, AnyCell *converterValue)
 {
 	// Scheme will pass in #!unit if it doesn't want a converter
 	// This will become nullptr which is what C++ expects to disable conversion
@@ -56,7 +56,7 @@ ProcedureCell *_lliby_make_parameter(World &world, AnyCell *initialValue, AnyCel
 	return dynamic::ParameterProcedureCell::createInstance(world, initialValue, converterProcRaw);
 }
 
-AnyCell *_lliby_value_for_parameter(World &world, ParameterProcedureCell *parameterProc)
+AnyCell *llcore_value_for_parameter(World &world, ParameterProcedureCell *parameterProc)
 {
 	return dynamic::State::activeState(world)->valueForParameter(parameterProc);
 }

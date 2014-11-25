@@ -6,12 +6,6 @@
 namespace lliby
 {
 
-enum class CaseSensitivity
-{
-	Sensitive,
-	Insensitive
-};
-
 class UnicodeChar
 {
 public:
@@ -49,21 +43,6 @@ public:
 	{
 		return m_codePoint;
 	}
-	
-	bool isUppercase() const;
-	bool isLowercase() const;
-	bool isAlphabetic() const;
-	bool isWhitespace() const;
-	bool isNumericDigit() const;
-	
-	UnicodeChar toUppercase() const;
-	UnicodeChar toLowercase() const;
-	UnicodeChar toCaseFolded() const;
-	
-	typedef std::int32_t DigitValue;
-	static const DigitValue InvalidDigitValue = -1;
-
-	DigitValue digitValue() const;
 
 	bool operator==(const UnicodeChar &other) const
 	{
@@ -95,15 +74,14 @@ public:
 		return codePoint() >= other.codePoint();
 	}
 
-	int compare(const UnicodeChar &other, CaseSensitivity cs = CaseSensitivity::Sensitive) const
+	int compare(const UnicodeChar &other) const
 	{
-		switch(cs)
-		{
-		case CaseSensitivity::Sensitive:
-			return codePoint() - other.codePoint();
-		case CaseSensitivity::Insensitive:
-			return toCaseFolded().codePoint() - other.toCaseFolded().codePoint();
-		}
+		return codePoint() - other.codePoint();
+	}
+
+	int compare(const UnicodeChar &other, UnicodeChar (*converter)(UnicodeChar)) const
+	{
+		return (*converter)(*this).codePoint() - (*converter)(other).codePoint();
 	}
 
 private:

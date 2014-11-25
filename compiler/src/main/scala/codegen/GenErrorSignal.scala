@@ -75,7 +75,7 @@ object GenErrorSignal {
     }
 
     state.terminateFunction(() => {
-      // Call _lliby_signal_error
+      // Call llcore_signal_error
       block.callDecl(None)(signalErrorDecl, List(worldPtr, messageStartPtr, evidencePtr, fileIr, lineIr))
 
       // Terminate the failure block

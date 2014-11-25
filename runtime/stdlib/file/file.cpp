@@ -14,14 +14,14 @@ using namespace lliby;
 extern "C"
 {
 
-bool lliby_file_exists(StringCell *filePath)
+bool llfile_file_exists(StringCell *filePath)
 {
 	struct stat statBuf;
 
 	return stat(filePath->toUtf8StdString().c_str(), &statBuf) == 0;
 }
 
-PortCell* lliby_open_input_file(World &world, StringCell *filePath)
+PortCell* llfile_open_input_file(World &world, StringCell *filePath)
 {
 	auto inputPort = new FileInputPort(filePath->toUtf8StdString());
 
@@ -34,7 +34,7 @@ PortCell* lliby_open_input_file(World &world, StringCell *filePath)
 	return PortCell::createInstance(world, inputPort);
 }
 
-PortCell* lliby_open_output_file(World &world, StringCell *filePath)
+PortCell* llfile_open_output_file(World &world, StringCell *filePath)
 {
 	auto outputPort = new FileOutputPort(filePath->toUtf8StdString());
 
@@ -47,7 +47,7 @@ PortCell* lliby_open_output_file(World &world, StringCell *filePath)
 	return PortCell::createInstance(world, outputPort);
 }
 
-void lliby_delete_file(World &world, StringCell *filePath)
+void llfile_delete_file(World &world, StringCell *filePath)
 {
 	if (unlink(filePath->toUtf8StdString().c_str()) != 0)
 	{
