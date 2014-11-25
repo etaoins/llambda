@@ -8,7 +8,7 @@ object CompilerApp extends App {
     inputFile : Option[File] = None,
     outputFile : Option[File] = None,
     emitLlvm : Boolean = false,
-    optimizeLevel : Int = 0,
+    optimizeLevel : Int = 2,
     extraFeatureIdents : Set[String] = Set(),
     genDebugInfo : Boolean = false,
     targetPlatformOpt : Option[platform.TargetPlatform] = None,
