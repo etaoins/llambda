@@ -13,7 +13,6 @@ object CompilerApp extends App {
     genDebugInfo : Boolean = false,
     targetPlatformOpt : Option[platform.TargetPlatform] = None,
     schemeDialect : dialect.Dialect = dialect.Dialect.default,
-    saveTempObj : Boolean = false,
     dumpPlan : Boolean = false,
     traceMacroExpansion : Boolean = false
   )
@@ -85,10 +84,6 @@ object CompilerApp extends App {
       c.copy(genDebugInfo=true)
     } text("generate debugging information")
 
-    opt[Unit]("save-temp-obj") action { (_, c) =>
-      c.copy(saveTempObj=true)
-    } text ("save intermediate .o file during compilation")
-
     opt[Unit]("dump-plan") action { (_, c) =>
       c.copy(dumpPlan=true)
     } text ("dump internal execution plan")
@@ -98,13 +93,6 @@ object CompilerApp extends App {
     } text ("trace macro expansion process")
 
     help("help")
-
-    checkConfig { c =>
-      if (c.emitLlvm && c.saveTempObj)
-        failure("--save-temp-obj does not make sense with --emit-llvm; no objects will be created")
-      else
-        success
-    }
   }
 
   parser.parse(args, Config()) map { config =>
@@ -158,7 +146,6 @@ object CompilerApp extends App {
           optimizeLevel=config.optimizeLevel,
           extraFeatureIdents=config.extraFeatureIdents,
           genDebugInfo=config.genDebugInfo,
-          saveTempObj=config.saveTempObj,
           dumpPlan=config.dumpPlan,
           traceMacroExpansion=config.traceMacroExpansion
         )

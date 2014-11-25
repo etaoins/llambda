@@ -45,7 +45,7 @@ object Compiler {
     *
     * This is the most efficient way to invoke LLVM if intermediates aren't required
     */
-  private def invokeDirectLlvmCompiler(
+  private def invokeLlvmCompiler(
       irBytes : Array[Byte],
       output : File,
       optimizeLevel : Int,
@@ -78,56 +78,7 @@ object Compiler {
     // Run the compiler pipeline in the background
     val runningProcess = compilePipeline.run(new ProcessIO(dumpIrToStdin, _.close, BasicIO.toStdErr))
 
-    runningProcess.exitValue() == 0 
-  }
-  
-  /** Invokes the LLVM compiler pipeline while saving the intermediate object file
-    *
-    * This requires two compilation stages - use invokeDirectLlvmCompiler where possible
-    */
-  private def invokeTempSavingLlvmCompiler(
-      irBytes : Array[Byte],
-      output : File,
-      optimizeLevel : Int,
-      nativeLibraries : Set[NativeLibrary]
-  ) : Boolean = {
-    val objOutputPath = output.getAbsolutePath + ".o"
-    val optimizeArg = s"-O${optimizeLevel}"
-
-    val llcCmd = List("llc", optimizeArg) ++
-      List("-tailcallopt") ++
-      List("-filetype=obj") ++
-      List("-o", objOutputPath)
-
-    // Build a pipeline for our object file
-    val objFilePipeline = (if (optimizeLevel > 1) { 
-      val optCmd = List("opt", "-tailcallopt", optimizeArg)
-      optCmd #| llcCmd
-    }
-    else {
-      llcCmd
-    }) : ProcessBuilder
-    
-    def dumpIrToStdin(stdinStream : OutputStream) {
-      stdinStream.write(irBytes)
-      stdinStream.close()
-    }
-
-    val runningObjFileProc = objFilePipeline.run(new ProcessIO(dumpIrToStdin, _.close, BasicIO.toStdErr))
-
-    if (runningObjFileProc.exitValue() != 0) {
-      // Failed!
-      return false
-    }
-    
-    val clangCmd = List("clang++", optimizeArg) ++
-      platformClangFlags ++
-      List(objOutputPath) ++
-      libraryClangFlags(nativeLibraries) ++
-      List("-o", output.getAbsolutePath)
-
-
-    clangCmd.run().exitValue() == 0
+    runningProcess.exitValue() == 0
   }
 
   def invokeFileSinkCompiler(irBytes : Array[Byte], output : File) { 
@@ -161,12 +112,7 @@ object Compiler {
     val irBytes = irString.getBytes("UTF-8")
 
     if (!config.emitLlvm) {
-      val result = if (config.saveTempObj) {
-        invokeTempSavingLlvmCompiler(irBytes, output, config.optimizeLevel, nativeLibraries)
-      }
-      else {
-        invokeDirectLlvmCompiler(irBytes, output, config.optimizeLevel, nativeLibraries)
-      }
+      val result = invokeLlvmCompiler(irBytes, output, config.optimizeLevel, nativeLibraries)
 
       if (!result) {
         throw new ExternalCompilerException
