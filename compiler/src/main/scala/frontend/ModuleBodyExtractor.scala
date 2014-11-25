@@ -348,10 +348,10 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
       case (Primitives.DefineType, (typeAlias : sst.ScopedSymbol) :: typeDatum :: Nil) =>
         // Allow the type's new name to be a recursion marker inside the definition
         val recursiveVars = ExtractType.RecursiveVars(Map(typeAlias.name -> 0))
-        val extractedType = ExtractType.extractValueType(typeDatum, recursiveVars) 
+        val extractedType = ExtractType.extractValueType(typeDatum, recursiveVars)
 
-        Some(ParsedSimpleDefine(typeAlias, BoundType(extractedType))) 
-      
+        Some(ParsedSimpleDefine(typeAlias, BoundType(extractedType)))
+
       case (Primitives.DefineType, sst.ScopedProperList((constructorName : sst.ScopedSymbol) :: operands) :: definition :: Nil) =>
         val operandSymbols = operands collect {
           case scopedSymbol : sst.ScopedSymbol => scopedSymbol
@@ -388,6 +388,9 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
           },
           storageLocConstructor=(new ReportProcedure(_, _))
         ))
+
+      case (Primitives.DefineNativeLibrary, List(libAlias : sst.ScopedSymbol, libDatum)) =>
+        Some(ParsedSimpleDefine(libAlias, ExtractNativeLibrary(libDatum)))
 
       case (Primitives.AnnotateStorageLocType, List(declaredSymbol : sst.ScopedSymbol, typeDatum)) =>
         val declarationType = ExtractType.extractSchemeType(typeDatum)
@@ -576,6 +579,9 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
 
         case _ : BoundType =>
           throw new MalformedExprException(scopedSymbol, "Type cannot be used as an expression")
+
+        case _ : NativeLibrary =>
+          throw new MalformedExprException(scopedSymbol, "Native library cannot be used as an expression")
       }
 
     // These all evaluate to themselves. See R7RS section 4.1.2

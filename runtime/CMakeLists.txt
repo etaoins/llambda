@@ -63,7 +63,6 @@ add_library(lliby
 	stdlib/process.cpp
 	stdlib/string.cpp
 	stdlib/symbol.cpp
-	stdlib/time.cpp
 	stdlib/vector.cpp
 	unicode/UnicodeChar.cpp
 	unicode/utf8.cpp
@@ -72,7 +71,11 @@ add_library(lliby
 	util/utf8ExceptionToSchemeError.cpp
 	writer/DisplayDatumWriter.cpp
 	writer/ExternalFormDatumWriter.cpp
-	)
+)
+
+add_library(lltime
+	stdlib/time/time.cpp
+)
 
 include_directories(${lliby_SOURCE_DIR})
 

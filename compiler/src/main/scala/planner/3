@@ -18,7 +18,7 @@ class PlanWriter(
     val plannedTypePredicates : mutable.Map[vt.SchemeType, String],
     val knownProcTrampolines : mutable.Map[(String, ProcedureSignature), String],
     val adapterProcTrampolines : mutable.Map[(ProcedureSignature, ProcedureSignature), String],
-    val requiredNativeLibraries : mutable.HashSet[NativeLibrary]
+    val requiredNativeLibraries : mutable.Map[NativeLibrary]
 ) {
   private val contextLocStack = new mutable.Stack[ContextLocated] 
 
@@ -114,8 +114,8 @@ class PlanWriter(
     freeSymbol
   }
 
-  def forkPlan() : PlanWriter = {
-    // All forks share their state except for steps
+  def forkPlan() : PlanWriter = { 
+    // All forks share plannedFunctions
     val forkedPlan = new PlanWriter(
       config,
       plannedFunctions,
@@ -160,7 +160,6 @@ object PlanWriter {
       allocedSymbols=mutable.HashSet(planConfig.analysis.nativeSymbols.toSeq : _*),
       plannedTypePredicates=new mutable.HashMap[vt.SchemeType, String],
       knownProcTrampolines=new mutable.HashMap[(String, ProcedureSignature), String],
-      adapterProcTrampolines=new mutable.HashMap[(ProcedureSignature, ProcedureSignature), String],
-      requiredNativeLibraries=new mutable.HashSet[NativeLibrary]
+      adapterProcTrampolines=new mutable.HashMap[(ProcedureSignature, ProcedureSignature), String]
     )
 }

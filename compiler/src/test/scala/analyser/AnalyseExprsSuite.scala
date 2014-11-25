@@ -3,6 +3,7 @@ import io.llambda
 
 import llambda.compiler.{et, ast, StorageLocation, ProcedureSignature}
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.NativeSystemLibrary
 import org.scalatest.FunSuite
 
 class AnalyseExprsSuite extends FunSuite {
@@ -56,8 +57,8 @@ class AnalyseExprsSuite extends FunSuite {
     val testLocB = new StorageLocation("testLocB")
     val testExprs = List(
       et.TopLevelDefine(List(
-        et.SingleBinding(testLocA, et.NativeFunction(testSignature, "nativeSymbol1")),
-        et.SingleBinding(testLocB, et.NativeFunction(testSignature, "nativeSymbol2"))
+        et.SingleBinding(testLocA, et.NativeFunction(NativeSystemLibrary, testSignature, "nativeSymbol1")),
+        et.SingleBinding(testLocB, et.NativeFunction(NativeSystemLibrary, testSignature, "nativeSymbol2"))
       )),
       // Apply the procs so their definitions don't get dropped
       et.Apply(et.VarRef(testLocA), Nil),

@@ -72,7 +72,7 @@ trait PlanHelpers extends FunSuite with Inside {
   /** Returns a map of planned functions to the given Scheme data */
   protected def planForData(data : List[ast.Datum], optimise : Boolean, includePath : IncludePath = IncludePath()) : Map[String, PlannedFunction] = {
     val planConfig = testPlanConfig(data, optimise, includePath)
-    planner.PlanProgram(planConfig.analysis.usedTopLevelExprs)(planConfig)
+    planner.PlanProgram(planConfig.analysis.usedTopLevelExprs)(planConfig).functions
   }
 
   protected def planStepsFor(scheme : String) : List[ps.Step] = {
@@ -97,7 +97,17 @@ trait PlanHelpers extends FunSuite with Inside {
 
     topLevelSteps.filter(filterPlanStep)
   }
-  
+
+  protected def nativeLibrariesFor(scheme : String) : Set[NativeLibrary] = {
+    val importDecl = datum"""(import (scheme base) (llambda nfi) (llambda typed) (scheme process-context))"""
+
+    val data = importDecl :: SchemeParser.parseStringAsData(scheme)
+
+    val planConfig = testPlanConfig(data, true)
+    planner.PlanProgram(planConfig.analysis.usedTopLevelExprs)(planConfig).requiredNativeLibraries
+  }
+
+
   /** Asserts that a Scheme string statically evaluates to the passed constant datum */
   protected def assertStaticPlan(scheme : String, expected : ast.Datum) {
     val planSteps = planStepsFor(scheme)

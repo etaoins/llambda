@@ -31,18 +31,36 @@ object Compiler {
       }
     }
 
+  /** Returns a list of compiler flags to link the passed required libraries */
+  private def libraryClangFlags(nativeLibraries : Set[NativeLibrary]) : List[String] = {
+    val systemFlags = List("build/liblliby.a")
+
+    // Note that order matters here. The core library needs to come after the stdlib libraries to satisfy their
+    // symbols
+    (nativeLibraries collect {
+      case NativeStaticLibrary(baseName) =>
+        s"build/lib${baseName}.a"
+    }).toList ++ systemFlags
+  }
+
   /** Invokes the LLVM compiler pipeline without creating intermediate files
     *
     * This is the most efficient way to invoke LLVM if intermediates aren't required
     */
-  private def invokeDirectLlvmCompiler(irBytes : Array[Byte], output : File, optimizeLevel : Int) : Boolean = {
+  private def invokeDirectLlvmCompiler(
+      irBytes : Array[Byte],
+      output : File,
+      optimizeLevel : Int,
+      nativeLibraries : Set[NativeLibrary]
+  ) : Boolean = {
     val optimizeArg = s"-O${optimizeLevel}"
 
     val llcCmd = List("llc", "-tailcallopt", optimizeArg)
     val clangCmd = List("clang++", optimizeArg) ++
       platformClangFlags ++
       List("-x", "assembler", "-") ++ 
-      List("-x", "none", runtimeObjPath) ++
+      List("-x", "none") ++
+      libraryClangFlags(nativeLibraries) ++
       List("-o", output.getAbsolutePath)
 
     val compilePipeline = if (optimizeLevel > 1) { 
@@ -69,7 +87,12 @@ object Compiler {
     *
     * This requires two compilation stages - use invokeDirectLlvmCompiler where possible
     */
-  private def invokeTempSavingLlvmCompiler(irBytes : Array[Byte], output : File, optimizeLevel : Int) : Boolean = {
+  private def invokeTempSavingLlvmCompiler(
+      irBytes : Array[Byte],
+      output : File,
+      optimizeLevel : Int,
+      nativeLibraries : Set[NativeLibrary]
+  ) : Boolean = {
     val objOutputPath = output.getAbsolutePath + ".o"
     val optimizeArg = s"-O${optimizeLevel}"
 
@@ -102,7 +125,7 @@ object Compiler {
     val clangCmd = List("clang++", optimizeArg) ++
       platformClangFlags ++
       List(objOutputPath) ++
-      List(runtimeObjPath) ++
+      libraryClangFlags(nativeLibraries) ++
       List("-o", output.getAbsolutePath)
 
 
@@ -131,18 +154,20 @@ object Compiler {
     )
 
   def compileData(data : List[ast.Datum], output : File, config : CompileConfig, entryFilenameOpt : Option[String] = None) : Unit = {
-    val irBytes = compileDataToIr(
+    val (irString, nativeLibraries) = compileDataToIr(
       data=data,
       config=config,
       entryFilenameOpt=entryFilenameOpt
-    ).getBytes("UTF-8")
+    )
+
+    val irBytes = irString.getBytes("UTF-8")
 
     if (!config.emitLlvm) {
       val result = if (config.saveTempObj) {
-        invokeTempSavingLlvmCompiler(irBytes, output, config.optimizeLevel)
+        invokeTempSavingLlvmCompiler(irBytes, output, config.optimizeLevel, nativeLibraries)
       }
       else {
-        invokeDirectLlvmCompiler(irBytes, output, config.optimizeLevel)
+        invokeDirectLlvmCompiler(irBytes, output, config.optimizeLevel, nativeLibraries)
       }
 
       if (!result) {
@@ -154,7 +179,11 @@ object Compiler {
     }
   }
 
-  def compileDataToIr(data : List[ast.Datum], config : CompileConfig, entryFilenameOpt : Option[String] = None) : String = {
+  def compileDataToIr(
+      data : List[ast.Datum],
+      config : CompileConfig,
+      entryFilenameOpt : Option[String] = None
+  ) : (String, Set[NativeLibrary]) = {
     // Prepare to extract
     val loader = new frontend.LibraryLoader(config.targetPlatform)
     val featureIdentifiers = FeatureIdentifiers(config.targetPlatform, config.schemeDialect, config.extraFeatureIdents) 
@@ -179,8 +208,11 @@ object Compiler {
       analysis=analysis
     )
 
-    val functions = planner.PlanProgram(analysis.usedTopLevelExprs)(planConfig)
-    
+    val plannedProgram = planner.PlanProgram(analysis.usedTopLevelExprs)(planConfig)
+
+    val nativeLibraries = plannedProgram.requiredNativeLibraries
+    val functions = plannedProgram.functions
+
     val optimizedFunctions = if (config.optimizeLevel > 1) {
       conniverPasses.foldLeft(functions) { case (functions, conniverPass) =>
         conniverPass(functions)
@@ -202,12 +234,14 @@ object Compiler {
     }
 
     // Generate the LLVM IR
-    codegen.GenProgram(
+    val irString = codegen.GenProgram(
       functions=allocatedFunctions,
       compileConfig=config,
       featureIdentifiers=featureIdentifiers,
       entryFilenameOpt=entryFilenameOpt
     )
+
+    (irString, nativeLibraries)
   }
 }
 

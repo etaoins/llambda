@@ -18,6 +18,8 @@ object Primitives {
   object DefineSyntax extends PrimitiveExpr
   object DefineRecordType extends PrimitiveExpr
   object DefineType extends PrimitiveExpr
+  object DefineNativeLibrary extends PrimitiveExpr
+  object StaticLibrary extends PrimitiveExpr
   object NativeFunction extends PrimitiveExpr
   object WorldFunction extends PrimitiveExpr
   object DefineReportProcedure extends PrimitiveExpr
@@ -59,6 +61,8 @@ object Primitives {
       "define-syntax" -> DefineSyntax,
       "define-record-type" -> DefineRecordType,
       "define-type" -> DefineType,
+      "define-native-library" -> DefineNativeLibrary,
+      "static-library" -> StaticLibrary,
       "native-function" -> NativeFunction,
       "world-function" -> WorldFunction,
       "define-report-procedure" -> DefineReportProcedure,

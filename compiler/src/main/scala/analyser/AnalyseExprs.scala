@@ -33,7 +33,7 @@ object AnalyseExprs  {
         usedVars=acc.usedVars + storageLoc
       )
 
-    case et.NativeFunction(_, nativeSymbol) =>
+    case et.NativeFunction(_, _, nativeSymbol) =>
       acc.copy(
         nativeSymbols=acc.nativeSymbols + nativeSymbol
       )

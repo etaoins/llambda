@@ -6,6 +6,7 @@ import llambda.compiler.{valuetype => vt}
 
 object ExtractNativeFunction {
   private def createNativeFunction(
+      nativeLibrary : NativeLibrary,
       hasWorldArg : Boolean,
       fixedArgData : List[sst.ScopedDatum],
       restArgDatum : sst.ScopedDatum,
@@ -41,27 +42,30 @@ object ExtractNativeFunction {
     )
 
     et.NativeFunction(
+      library=nativeLibrary,
       signature=signature,
       nativeSymbol = nativeSymbol
     )
   }
 
   def apply(hasWorldArg : Boolean, operands : List[sst.ScopedDatum], defineLocation : SourceLocated) : et.NativeFunction = operands match {
-    case sst.NonSymbolLeaf(ast.StringLiteral(nativeSymbol)) :: functionTypeData =>
-        functionTypeData match {
-          // These mirror the lambda forms
-          case List(sst.ScopedListOrDatum(fixedArgs, restArgDatum)) =>
-            createNativeFunction(hasWorldArg, fixedArgs, restArgDatum, None, nativeSymbol, Set())
-          
-          case List(sst.ScopedListOrDatum(fixedArgs, restArgDatum), sst.ScopedSymbol(_, "->"), returnTypeDatum) =>
-            createNativeFunction(hasWorldArg, fixedArgs, restArgDatum, Some(returnTypeDatum), nativeSymbol, Set())
-          
-          case List(sst.ScopedListOrDatum(fixedArgs, restArgDatum), sst.ScopedSymbol(_, "noreturn")) =>
-            createNativeFunction(hasWorldArg, fixedArgs, restArgDatum, None, nativeSymbol, Set(ProcedureAttribute.NoReturn))
+    case libraryDatum :: sst.NonSymbolLeaf(ast.StringLiteral(nativeSymbol)) :: functionTypeData =>
+      val nativeLibrary = ExtractNativeLibrary(libraryDatum)
 
-          case _ =>
-            throw new BadSpecialFormException(defineLocation, "Bad native function type definition")
-        }
+      functionTypeData match {
+        // These mirror the lambda forms
+        case List(sst.ScopedListOrDatum(fixedArgs, restArgDatum)) =>
+          createNativeFunction(nativeLibrary, hasWorldArg, fixedArgs, restArgDatum, None, nativeSymbol, Set())
+
+        case List(sst.ScopedListOrDatum(fixedArgs, restArgDatum), sst.ScopedSymbol(_, "->"), returnTypeDatum) =>
+          createNativeFunction(nativeLibrary, hasWorldArg, fixedArgs, restArgDatum, Some(returnTypeDatum), nativeSymbol, Set())
+
+        case List(sst.ScopedListOrDatum(fixedArgs, restArgDatum), sst.ScopedSymbol(_, "noreturn")) =>
+          createNativeFunction(nativeLibrary, hasWorldArg, fixedArgs, restArgDatum, None, nativeSymbol, Set(ProcedureAttribute.NoReturn))
+
+        case _ =>
+          throw new BadSpecialFormException(defineLocation, "Bad native function type definition")
+      }
 
     case _ =>
       throw new BadSpecialFormException(defineLocation, "Bad native function symbol definition")

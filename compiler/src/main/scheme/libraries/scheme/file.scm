@@ -6,9 +6,9 @@
   (include-library-declarations "../../interfaces/scheme/file.scm")
 
   (begin
-    (define-r7rs file-exists? (native-function "lliby_file_exists" (<string>) -> <native-bool>))
+    (define-r7rs file-exists? (native-function system-library "lliby_file_exists" (<string>) -> <native-bool>))
 
-    (define-r7rs open-input-file (world-function "lliby_open_input_file" (<string>) -> <port>))
+    (define-r7rs open-input-file (world-function system-library "lliby_open_input_file" (<string>) -> <port>))
     (define-r7rs open-binary-input-file open-input-file)
 
     (define-r7rs (call-with-input-file [path : <string>] [proc : (-> <port> *)])
@@ -19,7 +19,7 @@
                                               (parameterize ((current-input-port port))
                                                             (proc)))))
 
-    (define-r7rs open-output-file (world-function "lliby_open_output_file" (<string>) -> <port>))
+    (define-r7rs open-output-file (world-function system-library "lliby_open_output_file" (<string>) -> <port>))
     (define-r7rs open-binary-output-file open-output-file)
 
     (define-r7rs (call-with-output-file [path : <string>] [proc : (-> <port> *)])
@@ -30,4 +30,4 @@
                                                (parameterize ((current-output-port port))
                                                              (proc)))))
 
-    (define-r7rs delete-file (world-function "lliby_delete_file" (<string>)))))
+    (define-r7rs delete-file (world-function system-library "lliby_delete_file" (<string>)))))

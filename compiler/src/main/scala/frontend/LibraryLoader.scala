@@ -69,8 +69,11 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
           ("<pair>" -> BoundType(vt.AnyPairType)) +
           ("<procedure>" -> BoundType(vt.SchemeTypeAtom(ct.ProcedureCell))) +
           ("<vector>" -> BoundType(vt.VectorOfType(vt.AnySchemeType))) +
+          ("define-native-library" -> Primitives.DefineNativeLibrary) +
+          ("static-library" -> Primitives.StaticLibrary) +
           ("world-function" -> Primitives.WorldFunction) +
-          ("native-function" -> Primitives.NativeFunction)
+          ("native-function" -> Primitives.NativeFunction) +
+          ("system-library" -> NativeSystemLibrary)
       )
 
     case _ =>

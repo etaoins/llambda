@@ -176,17 +176,18 @@ case class InternalDefine(bindings : List[Binding], body : Expr) extends Expr {
 }
 
 case class NativeFunction(
-  signature : ProcedureSignature,
-  nativeSymbol : String
+    library : NativeLibrary,
+    signature : ProcedureSignature,
+    nativeSymbol : String
 ) extends Expr {
   val subexprs = Nil
 
   def map(f : Expr => Expr) : NativeFunction = this
 
   override def cloningMap(f : Expr => Expr) : Expr =
-    NativeFunction(signature, nativeSymbol).assignLocationFrom(this)
+    NativeFunction(library, signature, nativeSymbol).assignLocationFrom(this)
 
-  override def schemeType = 
+  override def schemeType =
     signature.toSchemeProcedureType
 }
 

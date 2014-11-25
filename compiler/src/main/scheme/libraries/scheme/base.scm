@@ -267,31 +267,31 @@
                          (native-proc to at from start end)))))))
 
     ; Define the length accessors for slicing values
-    (define-r7rs vector-length (native-function "lliby_vector_length" (<vector>) -> <native-uint32>))
-    (define-r7rs bytevector-length (native-function "lliby_bytevector_length" (<bytevector>) -> <native-uint32>))
-    (define-r7rs string-length (native-function "lliby_string_length" (<string>) -> <native-uint32>))
+    (define-r7rs vector-length (native-function system-library "lliby_vector_length" (<vector>) -> <native-uint32>))
+    (define-r7rs bytevector-length (native-function system-library "lliby_bytevector_length" (<bytevector>) -> <native-uint32>))
+    (define-r7rs string-length (native-function system-library "lliby_string_length" (<string>) -> <native-uint32>))
 
-    (define-r7rs eqv? (native-function "_lliby_is_eqv" (<any> <any>) -> <native-bool>))
+    (define-r7rs eqv? (native-function system-library "_lliby_is_eqv" (<any> <any>) -> <native-bool>))
     (define-r7rs eq? eqv?)
-    (define-r7rs equal? (native-function "_lliby_is_equal" (<any> <any>) -> <native-bool>))
+    (define-r7rs equal? (native-function system-library "_lliby_is_equal" (<any> <any>) -> <native-bool>))
 
     (define-r7rs boolean? (make-predicate <boolean>))
     (define-r7rs not (make-predicate #f))
-    (define-r7rs boolean=? (native-function "lliby_boolean_equal" (<boolean> <boolean> . <boolean>) -> <native-bool>))
+    (define-r7rs boolean=? (native-function system-library "lliby_boolean_equal" (<boolean> <boolean> . <boolean>) -> <native-bool>))
 
     (define-r7rs procedure? (make-predicate <procedure>))
-    (define-r7rs call-with-current-continuation (world-function "lliby_call_with_current_continuation" ((-> <procedure> *)) -> *))
+    (define-r7rs call-with-current-continuation (world-function system-library "lliby_call_with_current_continuation" ((-> <procedure> *)) -> *))
     (define-r7rs call/cc call-with-current-continuation)
-    (define-r7rs values (native-function "lliby_values" <any> -> *))
-    (define-r7rs call-with-values (world-function "lliby_call_with_values" ((-> *) <procedure>) -> *))
-    (define-r7rs apply (world-function "lliby_apply" (<procedure> . <any>) -> *))
+    (define-r7rs values (native-function system-library "lliby_values" <any> -> *))
+    (define-r7rs call-with-values (world-function system-library "lliby_call_with_values" ((-> *) <procedure>) -> *))
+    (define-r7rs apply (world-function system-library "lliby_apply" (<procedure> . <any>) -> *))
 
     (define-r7rs number? (make-predicate <number>))
     ; We only support real and rational numbers
     (define-r7rs complex? number?)
     (define-r7rs real? number?)
 
-    (define-r7rs rational? (native-function "lliby_is_rational" (<any>) -> <native-bool>))
+    (define-r7rs rational? (native-function system-library "lliby_is_rational" (<any>) -> <native-bool>))
 
     ; These aren't quite normal predicates as they only take numbers
     (define-r7rs (inexact? [val : <number>])
@@ -303,11 +303,11 @@
     (define-r7rs exact-integer? exact?)
 
 
-    (define-r7rs = (native-function "lliby_numeric_equal" (<number> <number> . <number>) -> <native-bool>))
-    (define-r7rs < (native-function "lliby_numeric_lt" (<number> <number> . <number>) -> <native-bool>))
-    (define-r7rs > (native-function "lliby_numeric_gt" (<number> <number> . <number>) -> <native-bool>))
-    (define-r7rs <= (native-function "lliby_numeric_lte" (<number> <number> . <number>) -> <native-bool>))
-    (define-r7rs >= (native-function "lliby_numeric_gte" (<number> <number> . <number>) -> <native-bool>))
+    (define-r7rs = (native-function system-library "lliby_numeric_equal" (<number> <number> . <number>) -> <native-bool>))
+    (define-r7rs < (native-function system-library "lliby_numeric_lt" (<number> <number> . <number>) -> <native-bool>))
+    (define-r7rs > (native-function system-library "lliby_numeric_gt" (<number> <number> . <number>) -> <native-bool>))
+    (define-r7rs <= (native-function system-library "lliby_numeric_lte" (<number> <number> . <number>) -> <native-bool>))
+    (define-r7rs >= (native-function system-library "lliby_numeric_gte" (<number> <number> . <number>) -> <native-bool>))
 
     ; These branch on type as our planner currently won't optimise comparisons without a definite type
     (define-r7rs (zero? [n : <number>])
@@ -319,19 +319,19 @@
     (define-r7rs (negative? [n : <number>])
       (if (exact-integer? n) (< n 0) (< n 0.0)))
 
-    (define native-floor (native-function "floor" (<native-double>) -> <native-double>))
+    (define native-floor (native-function system-library "floor" (<native-double>) -> <native-double>))
     (define-r7rs (floor [n : <number>])
       (if (exact-integer? n) n (native-floor n)))
 
-    (define native-ceil (native-function "ceil" (<native-double>) -> <native-double>))
+    (define native-ceil (native-function system-library "ceil" (<native-double>) -> <native-double>))
     (define-r7rs (ceiling [n : <number>])
       (if (exact-integer? n) n (native-ceil n)))
 
-    (define native-trunc (native-function "trunc" (<native-double>) -> <native-double>))
+    (define native-trunc (native-function system-library "trunc" (<native-double>) -> <native-double>))
     (define-r7rs (truncate [n : <number>])
       (if (exact-integer? n) n (native-trunc n)))
 
-    (define native-round (native-function "round" (<native-double>) -> <native-double>))
+    (define native-round (native-function system-library "round" (<native-double>) -> <native-double>))
     (define-r7rs (round [n : <number>])
       (if (exact-integer? n) n (native-round n)))
 
@@ -345,15 +345,15 @@
         ; Not numeric
         #f))
 
-    (define-r7rs exact (world-function "lliby_exact" (<number>) -> <native-int64>))
-    (define-r7rs inexact (native-function "lliby_inexact" (<number>) -> <native-double>))
+    (define-r7rs exact (world-function system-library "lliby_exact" (<number>) -> <native-int64>))
+    (define-r7rs inexact (native-function system-library "lliby_inexact" (<number>) -> <native-double>))
 
-    (define-r7rs + (world-function "lliby_add" <number> -> <number>))
-    (define-r7rs - (world-function "lliby_sub" (<number> . <number>) -> <number>))
-    (define-r7rs * (world-function "lliby_mul" <number> -> <number>))
-    (define-r7rs / (world-function "lliby_div" (<number> . <number>) -> <number>))
+    (define-r7rs + (world-function system-library "lliby_add" <number> -> <number>))
+    (define-r7rs - (world-function system-library "lliby_sub" (<number> . <number>) -> <number>))
+    (define-r7rs * (world-function system-library "lliby_mul" <number> -> <number>))
+    (define-r7rs / (world-function system-library "lliby_div" (<number> . <number>) -> <number>))
     
-    (define-r7rs expt (world-function "lliby_expt" (<number> <number>) -> <number>))
+    (define-r7rs expt (world-function system-library "lliby_expt" (<number> <number>) -> <number>))
     
     (define-r7rs (square [num : <number>])
       (* num num))
@@ -374,13 +374,13 @@
             (- num)
             num))))
 
-    (define-r7rs truncate/ (world-function "lliby_truncate_div" (<native-int64> <native-int64>) -> (Values <exact-integer> <exact-integer>)))
-    (define-r7rs truncate-quotient (world-function "lliby_truncate_quotient" (<native-int64> <native-int64>) -> <native-int64>))
-    (define-r7rs truncate-remainder (world-function "lliby_truncate_remainder" (<native-int64> <native-int64>) -> <native-int64>))
+    (define-r7rs truncate/ (world-function system-library "lliby_truncate_div" (<native-int64> <native-int64>) -> (Values <exact-integer> <exact-integer>)))
+    (define-r7rs truncate-quotient (world-function system-library "lliby_truncate_quotient" (<native-int64> <native-int64>) -> <native-int64>))
+    (define-r7rs truncate-remainder (world-function system-library "lliby_truncate_remainder" (<native-int64> <native-int64>) -> <native-int64>))
 
-    (define-r7rs floor/ (world-function "lliby_floor_div" (<native-int64> <native-int64>) -> (Values <exact-integer> <exact-integer>)))
-    (define-r7rs floor-quotient (world-function "lliby_floor_quotient" (<native-int64> <native-int64>) -> <native-int64>))
-    (define-r7rs floor-remainder (world-function "lliby_floor_remainder" (<native-int64> <native-int64>) -> <native-int64>))
+    (define-r7rs floor/ (world-function system-library "lliby_floor_div" (<native-int64> <native-int64>) -> (Values <exact-integer> <exact-integer>)))
+    (define-r7rs floor-quotient (world-function system-library "lliby_floor_quotient" (<native-int64> <native-int64>) -> <native-int64>))
+    (define-r7rs floor-remainder (world-function system-library "lliby_floor_remainder" (<native-int64> <native-int64>) -> <native-int64>))
 
     ; R7RS defines these as legacy aliases
     (define-r7rs quotient truncate-quotient)
@@ -393,47 +393,47 @@
     (define-r7rs (even? [val : <exact-integer>])
                  (= (truncate-remainder val 2) 0))
 
-    (define-r7rs max (world-function "lliby_max" (<number> . <number>) -> <number>))
-    (define-r7rs min (world-function "lliby_min" (<number> . <number>) -> <number>))
+    (define-r7rs max (world-function system-library "lliby_max" (<number> . <number>) -> <number>))
+    (define-r7rs min (world-function system-library "lliby_min" (<number> . <number>) -> <number>))
 
-    (define native-gcd (native-function "lliby_gcd" (<native-int64> <native-int64> . <exact-integer>) -> <native-int64>))
+    (define native-gcd (native-function system-library "lliby_gcd" (<native-int64> <native-int64> . <exact-integer>) -> <native-int64>))
     (define-r7rs gcd (case-lambda
                        (() 0)
                        (([single : <exact-integer>]) (abs single))
                        (rest (apply native-gcd rest))))
 
-    (define native-lcm (native-function "lliby_lcm" (<native-int64> <native-int64> . <exact-integer>) -> <native-int64>))
+    (define native-lcm (native-function system-library "lliby_lcm" (<native-int64> <native-int64> . <exact-integer>) -> <native-int64>))
     (define-r7rs lcm (case-lambda
                        (() 1)
                        (([single : <exact-integer>]) (abs single))
                        (rest (apply native-lcm rest))))
 
-    (define-r7rs exact-integer-sqrt (world-function "lliby_exact_integer_sqrt" (<native-int64>) -> (Values <exact-integer> <exact-integer>)))
+    (define-r7rs exact-integer-sqrt (world-function system-library "lliby_exact_integer_sqrt" (<native-int64>) -> (Values <exact-integer> <exact-integer>)))
 
-    (define native-numerator (native-function "lliby_numerator" (<native-double>) -> <native-double>))
+    (define native-numerator (native-function system-library "lliby_numerator" (<native-double>) -> <native-double>))
     (define-r7rs (numerator [value : <number>])
       (if (exact-integer? value)
         value
         (native-numerator value)))
 
-    (define native-denominator (native-function "lliby_denominator" (<native-double>) -> <native-double>))
+    (define native-denominator (native-function system-library "lliby_denominator" (<native-double>) -> <native-double>))
     (define-r7rs (denominator [value : <number>])
       (if (exact-integer? value)
         1
         (native-denominator value)))
 
-    (define native-rationalize (world-function "lliby_rationalize" (<number> <native-double>) -> <number>))
+    (define native-rationalize (world-function system-library "lliby_rationalize" (<number> <native-double>) -> <number>))
     (define-r7rs (rationalize [val : <number>] [max-diff : <number>])
       (native-rationalize val (inexact max-diff)))
 
-    (define native-number->string (world-function "lliby_number_to_string" (<number> <native-uint8>) -> <string>))
+    (define native-number->string (world-function system-library "lliby_number_to_string" (<number> <native-uint8>) -> <string>))
     (define-r7rs number->string (case-lambda
       (([num : <number>])
        (native-number->string num 10))
       (([num : <number>] [radix : <exact-integer>])
        (native-number->string num radix))))
 
-    (define native-string->number (world-function "lliby_string_to_number" (<string> <native-uint8>) -> (U #f <number>)))
+    (define native-string->number (world-function system-library "lliby_string_to_number" (<string> <native-uint8>) -> (U #f <number>)))
     (define-r7rs string->number (case-lambda
       (([str : <string>])
        (native-string->number str 10))
@@ -444,37 +444,37 @@
     (define-r7rs null? (make-predicate <empty-list>))
     (define-r7rs list? (make-predicate <list>))
     
-    (define-r7rs length (world-function "lliby_length" (<list>) -> <native-uint32>))
+    (define-r7rs length (world-function system-library "lliby_length" (<list>) -> <native-uint32>))
 
-    (define-r7rs cons (world-function "lliby_cons" (<any> <any>) -> <pair>))
-    (define-r7rs car (native-function "lliby_car" (<pair>) -> <any>))
-    (define-r7rs cdr (native-function "lliby_cdr" (<pair>) -> <any>))
+    (define-r7rs cons (world-function system-library "lliby_cons" (<any> <any>) -> <pair>))
+    (define-r7rs car (native-function system-library "lliby_car" (<pair>) -> <any>))
+    (define-r7rs cdr (native-function system-library "lliby_cdr" (<pair>) -> <any>))
     (define-r7rs (caar (x : (Pairof <pair> <any>))) (car (car x)))
     (define-r7rs (cadr (x : (Pairof <any> <pair>))) (car (cdr x)))
     (define-r7rs (cdar (x : (Pairof <pair> <any>))) (cdr (car x)))
     (define-r7rs (cddr (x : (Pairof <any> <pair>))) (cdr (cdr x)))
 
-    (define-r7rs list-copy (world-function "lliby_list_copy" (<any>) -> <any>))
+    (define-r7rs list-copy (world-function system-library "lliby_list_copy" (<any>) -> <any>))
     (define-r7rs (list . rest) rest)
 
-    (define-r7rs append (world-function "lliby_append" <any> -> <any>))
+    (define-r7rs append (world-function system-library "lliby_append" <any> -> <any>))
 
-    (define-r7rs memv (native-function "lliby_memv" (<any> <list>) -> <any>))
+    (define-r7rs memv (native-function system-library "lliby_memv" (<any> <list>) -> <any>))
     ; (eq?) is defined as (eqv?) so define (memq) as (memv)
     (define-r7rs memq memv)
-    (define-r7rs member (native-function "lliby_member" (<any> <list>) -> <any>))
+    (define-r7rs member (native-function system-library "lliby_member" (<any> <list>) -> <any>))
     
-    (define-r7rs assv (native-function "lliby_assv" (<any> <alist>) -> <any>))
+    (define-r7rs assv (native-function system-library "lliby_assv" (<any> <alist>) -> <any>))
     (define-r7rs assq assv)
-    (define-r7rs assoc (native-function "lliby_assoc" (<any> <alist>) -> <any>))
+    (define-r7rs assoc (native-function system-library "lliby_assoc" (<any> <alist>) -> <any>))
 
-    (define-r7rs reverse (world-function "lliby_reverse" (<list>) -> <list>))
+    (define-r7rs reverse (world-function system-library "lliby_reverse" (<list>) -> <list>))
 
-    (define-r7rs list-tail (world-function "lliby_list_tail" (<list> <native-uint32>) -> <list>))
+    (define-r7rs list-tail (world-function system-library "lliby_list_tail" (<list> <native-uint32>) -> <list>))
     (define-r7rs (list-ref [l : <list>] [n : <exact-integer>])
       (car (list-tail l n)))
 
-    (define native-make-list (world-function "lliby_make_list" (<native-uint32> <any>) -> <list>))
+    (define native-make-list (world-function system-library "lliby_make_list" (<native-uint32> <any>) -> <list>))
     (define-r7rs make-list (case-lambda
       (([len : <exact-integer>])
        (native-make-list len #!unit))
@@ -482,37 +482,37 @@
        (native-make-list len fill))))
 
     (define-r7rs symbol? (make-predicate <symbol>))
-    (define-r7rs symbol=? (native-function "lliby_symbol_equal" (<symbol> <symbol> . <symbol>) -> <native-bool>))
-    (define-r7rs symbol->string (world-function "lliby_symbol_to_string" (<symbol>) -> <string>))
-    (define-r7rs string->symbol (world-function "lliby_string_to_symbol" (<string>) -> <symbol>))
+    (define-r7rs symbol=? (native-function system-library "lliby_symbol_equal" (<symbol> <symbol> . <symbol>) -> <native-bool>))
+    (define-r7rs symbol->string (world-function system-library "lliby_symbol_to_string" (<symbol>) -> <string>))
+    (define-r7rs string->symbol (world-function system-library "lliby_string_to_symbol" (<string>) -> <symbol>))
 
     (define-r7rs char? (make-predicate <char>))
-    (define-r7rs char->integer (native-function "lliby_char_to_integer" (<native-unicode-char>) -> <native-int32>))
-    (define-r7rs integer->char (native-function "lliby_integer_to_char" (<native-int32>) -> <native-unicode-char>))
-    (define-r7rs char=? (native-function "lliby_char_equal" (<native-unicode-char> <native-unicode-char> . <char>) -> <native-bool>))
-    (define-r7rs char<? (native-function "lliby_char_lt" (<native-unicode-char> <native-unicode-char> . <char>) -> <native-bool>))
-    (define-r7rs char>? (native-function "lliby_char_gt" (<native-unicode-char> <native-unicode-char> . <char>) -> <native-bool>))
-    (define-r7rs char<=? (native-function "lliby_char_lte" (<native-unicode-char> <native-unicode-char> . <char>) -> <native-bool>))
-    (define-r7rs char>=? (native-function "lliby_char_gte" (<native-unicode-char> <native-unicode-char> . <char>) -> <native-bool>))
+    (define-r7rs char->integer (native-function system-library "lliby_char_to_integer" (<native-unicode-char>) -> <native-int32>))
+    (define-r7rs integer->char (native-function system-library "lliby_integer_to_char" (<native-int32>) -> <native-unicode-char>))
+    (define-r7rs char=? (native-function system-library "lliby_char_equal" (<native-unicode-char> <native-unicode-char> . <char>) -> <native-bool>))
+    (define-r7rs char<? (native-function system-library "lliby_char_lt" (<native-unicode-char> <native-unicode-char> . <char>) -> <native-bool>))
+    (define-r7rs char>? (native-function system-library "lliby_char_gt" (<native-unicode-char> <native-unicode-char> . <char>) -> <native-bool>))
+    (define-r7rs char<=? (native-function system-library "lliby_char_lte" (<native-unicode-char> <native-unicode-char> . <char>) -> <native-bool>))
+    (define-r7rs char>=? (native-function system-library "lliby_char_gte" (<native-unicode-char> <native-unicode-char> . <char>) -> <native-bool>))
 
     (define-r7rs vector? (make-predicate <vector>))
-    (define-r7rs vector (world-function "lliby_vector" <any> -> <vector>))
+    (define-r7rs vector (world-function system-library "lliby_vector" <any> -> <vector>))
     ; This is the same runtime function but instead of using a rest arg explicitly pass in the list
-    (define-r7rs list->vector (world-function "lliby_vector" (<list>) -> <vector>))
-    (define-r7rs vector-ref (world-function "lliby_vector_ref" (<vector> <native-uint32>) -> <any>))
-    (define-r7rs vector-set! (world-function "lliby_vector_set" (<vector> <native-uint32> <any>)))
-    (define-r7rs vector-append (world-function "lliby_vector_append" <vector> -> <vector>))
+    (define-r7rs list->vector (world-function system-library "lliby_vector" (<list>) -> <vector>))
+    (define-r7rs vector-ref (world-function system-library "lliby_vector_ref" (<vector> <native-uint32>) -> <any>))
+    (define-r7rs vector-set! (world-function system-library "lliby_vector_set" (<vector> <native-uint32> <any>)))
+    (define-r7rs vector-append (world-function system-library "lliby_vector_append" <vector> -> <vector>))
 
-    (define native-vector->list (world-function "lliby_vector_to_list" (<vector> <native-uint32> <native-uint32>) -> <list>))
+    (define native-vector->list (world-function system-library "lliby_vector_to_list" (<vector> <native-uint32> <native-uint32>) -> <list>))
     (define-slice-proc vector->list native-vector->list <vector> vector-length)
 
-    (define native-vector-copy (world-function "lliby_vector_copy" (<vector> <native-uint32> <native-uint32>) -> <vector>))
+    (define native-vector-copy (world-function system-library "lliby_vector_copy" (<vector> <native-uint32> <native-uint32>) -> <vector>))
     (define-slice-proc vector-copy native-vector-copy <vector> vector-length)
 
-    (define native-vector-copy! (world-function "lliby_vector_mutating_copy" (<vector> <native-uint32> <vector> <native-uint32> <native-uint32>)))
+    (define native-vector-copy! (world-function system-library "lliby_vector_mutating_copy" (<vector> <native-uint32> <vector> <native-uint32> <native-uint32>)))
     (define-mutating-copy-proc vector-copy! native-vector-copy! <vector> vector-length)
 
-    (define native-vector-fill! (world-function "lliby_vector_mutating_fill" (<vector> <any> <native-uint32> <native-uint32>)))
+    (define native-vector-fill! (world-function system-library "lliby_vector_mutating_fill" (<vector> <any> <native-uint32> <native-uint32>)))
     (define-r7rs vector-fill!
       (case-lambda
         (([target : <vector>] [fill : <any>])
@@ -522,35 +522,35 @@
         (([target : <vector>] [fill : <any>] [start : <exact-integer>] [end : <exact-integer>])
          (native-vector-fill! target fill start end))))
 
-    (define native-make-vector (world-function "lliby_make_vector" (<native-uint32> <any>) -> <vector>))
+    (define native-make-vector (world-function system-library "lliby_make_vector" (<native-uint32> <any>) -> <vector>))
     (define-r7rs make-vector (case-lambda
       (([len : <exact-integer>])
        (native-make-vector len #!unit))
       (([len : <exact-integer>] [fill : <any>])
        (native-make-vector len fill))))
 
-    (define native-vector->string (world-function "lliby_vector_to_string" ((Vectorof <char>) <native-uint32> <native-uint32>) -> <string>))
+    (define native-vector->string (world-function system-library "lliby_vector_to_string" ((Vectorof <char>) <native-uint32> <native-uint32>) -> <string>))
     (define-slice-proc vector->string native-vector->string <vector> vector-length)
 
-    (define native-string->vector (world-function "lliby_string_to_vector" (<string> <native-uint32> <native-uint32>) -> (Vectorof <char>)))
+    (define native-string->vector (world-function system-library "lliby_string_to_vector" (<string> <native-uint32> <native-uint32>) -> (Vectorof <char>)))
     (define-slice-proc string->vector native-string->vector <string> string-length)
 
     (define-r7rs bytevector? (make-predicate <bytevector>))
-    (define-r7rs bytevector (world-function "lliby_bytevector" <exact-integer> -> <bytevector>))
-    (define-r7rs bytevector-u8-ref (world-function "lliby_bytevector_u8_ref" (<bytevector> <native-uint32>) -> <native-uint8>))
-    (define-r7rs bytevector-u8-set! (world-function "lliby_bytevector_u8_set" (<bytevector> <native-uint32> <native-uint8>)))
-    (define-r7rs bytevector-append (world-function "lliby_bytevector_append" <bytevector> -> <bytevector>))
+    (define-r7rs bytevector (world-function system-library "lliby_bytevector" <exact-integer> -> <bytevector>))
+    (define-r7rs bytevector-u8-ref (world-function system-library "lliby_bytevector_u8_ref" (<bytevector> <native-uint32>) -> <native-uint8>))
+    (define-r7rs bytevector-u8-set! (world-function system-library "lliby_bytevector_u8_set" (<bytevector> <native-uint32> <native-uint8>)))
+    (define-r7rs bytevector-append (world-function system-library "lliby_bytevector_append" <bytevector> -> <bytevector>))
 
-    (define native-bytevector-copy (world-function "lliby_bytevector_copy" (<bytevector> <native-uint32> <native-uint32>) -> <bytevector>))
+    (define native-bytevector-copy (world-function system-library "lliby_bytevector_copy" (<bytevector> <native-uint32> <native-uint32>) -> <bytevector>))
     (define-slice-proc bytevector-copy native-bytevector-copy <bytevector> bytevector-length)
 
-    (define native-bytevector-copy! (world-function "lliby_bytevector_mutating_copy" (<bytevector> <native-uint32> <bytevector> <native-uint32> <native-uint32>)))
+    (define native-bytevector-copy! (world-function system-library "lliby_bytevector_mutating_copy" (<bytevector> <native-uint32> <bytevector> <native-uint32> <native-uint32>)))
     (define-mutating-copy-proc bytevector-copy! native-bytevector-copy! <bytevector> bytevector-length)
 
-    (define native-utf8->string (world-function "lliby_utf8_to_string" (<bytevector> <native-uint32> <native-uint32>) -> <string>))
+    (define native-utf8->string (world-function system-library "lliby_utf8_to_string" (<bytevector> <native-uint32> <native-uint32>) -> <string>))
     (define-slice-proc utf8->string native-utf8->string <bytevector> bytevector-length)
 
-    (define native-make-bytevector (world-function "lliby_make_bytevector" (<native-uint32> <native-uint8>) -> <bytevector>))
+    (define native-make-bytevector (world-function system-library "lliby_make_bytevector" (<native-uint32> <native-uint8>) -> <bytevector>))
     (define-r7rs make-bytevector (case-lambda
       (([len : <exact-integer>])
        (native-make-bytevector len 0))
@@ -558,29 +558,29 @@
        (native-make-bytevector len fill))))
 
     (define-r7rs string? (make-predicate <string>))
-    (define-r7rs make-string (world-function "lliby_make_string" (<native-uint32> <native-unicode-char>) -> <string>))
-    (define-r7rs string (world-function "lliby_string" <char> -> <string>))
+    (define-r7rs make-string (world-function system-library "lliby_make_string" (<native-uint32> <native-unicode-char>) -> <string>))
+    (define-r7rs string (world-function system-library "lliby_string" <char> -> <string>))
     ; This is the same runtime function but instead of using a rest arg explicitly pass in the list
-    (define-r7rs list->string (world-function "lliby_string" ((Listof <char>)) -> <string>))
-    (define-r7rs string-ref (world-function "lliby_string_ref" (<string> <native-uint32>) -> <native-unicode-char>))
-    (define-r7rs string-set! (world-function "lliby_string_set" (<string> <native-uint32> <native-unicode-char>)))
-    (define-r7rs string-append (world-function "lliby_string_append" <string> -> <string>))
+    (define-r7rs list->string (world-function system-library "lliby_string" ((Listof <char>)) -> <string>))
+    (define-r7rs string-ref (world-function system-library "lliby_string_ref" (<string> <native-uint32>) -> <native-unicode-char>))
+    (define-r7rs string-set! (world-function system-library "lliby_string_set" (<string> <native-uint32> <native-unicode-char>)))
+    (define-r7rs string-append (world-function system-library "lliby_string_append" <string> -> <string>))
 
-    (define native-string->list (world-function "lliby_string_to_list" (<string> <native-uint32> <native-uint32>) -> (Listof <char>)))
+    (define native-string->list (world-function system-library "lliby_string_to_list" (<string> <native-uint32> <native-uint32>) -> (Listof <char>)))
     (define-slice-proc string->list native-string->list <string> string-length)
 
-    (define native-string->utf8 (world-function "lliby_string_to_utf8" (<string> <native-uint32> <native-uint32>) -> <bytevector>))
+    (define native-string->utf8 (world-function system-library "lliby_string_to_utf8" (<string> <native-uint32> <native-uint32>) -> <bytevector>))
     (define-slice-proc string->utf8 native-string->utf8 <string> string-length)
 
     ; Unlike other slicing functions the raw slicer is exposed as (substring) to implement the procedure with the same
     ; name defined in R7RS
-    (define-r7rs substring (world-function "lliby_substring" (<string> <native-uint32> <native-uint32>) -> <string>))
+    (define-r7rs substring (world-function system-library "lliby_substring" (<string> <native-uint32> <native-uint32>) -> <string>))
     (define-slice-proc string-copy substring <string> string-length)
 
-    (define native-string-copy! (world-function "lliby_string_mutating_copy" (<string> <native-uint32> <string> <native-uint32> <native-uint32>)))
+    (define native-string-copy! (world-function system-library "lliby_string_mutating_copy" (<string> <native-uint32> <string> <native-uint32> <native-uint32>)))
     (define-mutating-copy-proc string-copy! native-string-copy! <string> string-length)
 
-    (define native-string-fill! (world-function "lliby_string_mutating_fill" (<string> <native-unicode-char> <native-uint32> <native-uint32>)))
+    (define native-string-fill! (world-function system-library "lliby_string_mutating_fill" (<string> <native-unicode-char> <native-uint32> <native-uint32>)))
     (define-r7rs string-fill!
       (case-lambda
         (([target : <string>] [fill : <char>])
@@ -590,62 +590,62 @@
         (([target : <string>] [fill : <char>] [start : <exact-integer>] [end : <exact-integer>])
          (native-string-fill! target fill start end))))
 
-    (define-r7rs string=? (native-function "lliby_string_equal" (<string> <string> . <string>) -> <native-bool>))
-    (define-r7rs string<? (native-function "lliby_string_lt" (<string> <string> . <string>) -> <native-bool>))
-    (define-r7rs string>? (native-function "lliby_string_gt" (<string> <string> . <string>) -> <native-bool>))
-    (define-r7rs string<=? (native-function "lliby_string_lte" (<string> <string> . <string>) -> <native-bool>))
-    (define-r7rs string>=? (native-function "lliby_string_gte" (<string> <string> . <string>) -> <native-bool>))
+    (define-r7rs string=? (native-function system-library "lliby_string_equal" (<string> <string> . <string>) -> <native-bool>))
+    (define-r7rs string<? (native-function system-library "lliby_string_lt" (<string> <string> . <string>) -> <native-bool>))
+    (define-r7rs string>? (native-function system-library "lliby_string_gt" (<string> <string> . <string>) -> <native-bool>))
+    (define-r7rs string<=? (native-function system-library "lliby_string_lte" (<string> <string> . <string>) -> <native-bool>))
+    (define-r7rs string>=? (native-function system-library "lliby_string_gte" (<string> <string> . <string>) -> <native-bool>))
 
-    (define-r7rs vector-map (world-function "lliby_vector_map" ((-> <any> <any> * <any>) <vector> . <vector>) -> <vector>))
-    (define-r7rs vector-for-each (world-function "lliby_vector_for_each" ((-> <any> <any> * <unit>) <vector> . <vector>)))
+    (define-r7rs vector-map (world-function system-library "lliby_vector_map" ((-> <any> <any> * <any>) <vector> . <vector>) -> <vector>))
+    (define-r7rs vector-for-each (world-function system-library "lliby_vector_for_each" ((-> <any> <any> * <unit>) <vector> . <vector>)))
 
-    (define-r7rs map (world-function "lliby_map" ((-> <any> <any> * <any>) <list> . <list>) -> <list>))
-    (define-r7rs for-each (world-function "lliby_for_each" ((-> <any> <any> * <unit>) <list> . <list>)))
+    (define-r7rs map (world-function system-library "lliby_map" ((-> <any> <any> * <any>) <list> . <list>) -> <list>))
+    (define-r7rs for-each (world-function system-library "lliby_for_each" ((-> <any> <any> * <unit>) <list> . <list>)))
 
-    (define-r7rs string-map (world-function "lliby_string_map" ((-> <char> <char> * <char>) <string> . <string>) -> <string>))
-    (define-r7rs string-for-each (world-function "lliby_string_for_each" ((-> <char> <char> * <unit>) <string> . <string>)))
+    (define-r7rs string-map (world-function system-library "lliby_string_map" ((-> <char> <char> * <char>) <string> . <string>) -> <string>))
+    (define-r7rs string-for-each (world-function system-library "lliby_string_for_each" ((-> <char> <char> * <unit>) <string> . <string>)))
 
-    (define native-make-parameter (world-function "_lliby_make_parameter" (<any> (U (-> <any> <any>) <unit>)) -> <procedure>))
+    (define native-make-parameter (world-function system-library "_lliby_make_parameter" (<any> (U (-> <any> <any>) <unit>)) -> <procedure>))
     (define-r7rs make-parameter (case-lambda
       (([init : <any>])
        (native-make-parameter init #!unit))
       (([init : <any>] [converter : (-> <any> <any>)])
        (native-make-parameter init converter))))
 
-    (define-r7rs dynamic-wind (world-function "lliby_dynamic_wind" ((-> *) (-> *) (-> *)) -> *))
+    (define-r7rs dynamic-wind (world-function system-library "lliby_dynamic_wind" ((-> *) (-> *) (-> *)) -> *))
 
     ; Port support
     (define-r7rs port? (make-predicate <port>))
-    (define-r7rs input-port? (native-function "lliby_is_input_port" (<any>) -> <native-bool>))
-    (define-r7rs output-port? (native-function "lliby_is_output_port" (<any>) -> <native-bool>))
+    (define-r7rs input-port? (native-function system-library "lliby_is_input_port" (<any>) -> <native-bool>))
+    (define-r7rs output-port? (native-function system-library "lliby_is_output_port" (<any>) -> <native-bool>))
     (define-r7rs textual-port? port?)
     (define-r7rs binary-port? port?)
-    (define-r7rs input-port-open? (native-function "lliby_is_input_port_open" (<port>) -> <native-bool>))
-    (define-r7rs output-port-open? (native-function "lliby_is_output_port_open" (<port>) -> <native-bool>))
-    (define-r7rs close-port (native-function "lliby_close_port" (<port>)))
-    (define-r7rs close-input-port (world-function "lliby_close_input_port" (<port>)))
-    (define-r7rs close-output-port (world-function "lliby_close_output_port" (<port>)))
-    (define-r7rs open-output-string (world-function "lliby_open_output_string" () -> <port>))
-    (define-r7rs get-output-string (world-function "lliby_get_output_string" (<port>) -> <string>))
-    (define-r7rs open-output-bytevector (world-function "lliby_open_output_bytevector" () -> <port>))
-    (define-r7rs get-output-bytevector (world-function "lliby_get_output_bytevector" (<port>) -> <bytevector>))
-    (define-r7rs open-input-string (world-function "lliby_open_input_string" (<string>) -> <port>))
-    (define-r7rs open-input-bytevector (world-function "lliby_open_input_bytevector" (<bytevector>) -> <port>))
-    (define-r7rs call-with-port (world-function "lliby_call_with_port" (<port> (-> <port> *)) -> <port>)) 
+    (define-r7rs input-port-open? (native-function system-library "lliby_is_input_port_open" (<port>) -> <native-bool>))
+    (define-r7rs output-port-open? (native-function system-library "lliby_is_output_port_open" (<port>) -> <native-bool>))
+    (define-r7rs close-port (native-function system-library "lliby_close_port" (<port>)))
+    (define-r7rs close-input-port (world-function system-library "lliby_close_input_port" (<port>)))
+    (define-r7rs close-output-port (world-function system-library "lliby_close_output_port" (<port>)))
+    (define-r7rs open-output-string (world-function system-library "lliby_open_output_string" () -> <port>))
+    (define-r7rs get-output-string (world-function system-library "lliby_get_output_string" (<port>) -> <string>))
+    (define-r7rs open-output-bytevector (world-function system-library "lliby_open_output_bytevector" () -> <port>))
+    (define-r7rs get-output-bytevector (world-function system-library "lliby_get_output_bytevector" (<port>) -> <bytevector>))
+    (define-r7rs open-input-string (world-function system-library "lliby_open_input_string" (<string>) -> <port>))
+    (define-r7rs open-input-bytevector (world-function system-library "lliby_open_input_bytevector" (<bytevector>) -> <port>))
+    (define-r7rs call-with-port (world-function system-library "lliby_call_with_port" (<port> (-> <port> *)) -> <port>)) 
 
-    (define-r7rs current-input-port (make-parameter ((world-function "_lliby_stdin_port" () -> <port>))))
-    (define-r7rs current-output-port (make-parameter ((world-function "_lliby_stdout_port" () -> <port>))))
-    (define-r7rs current-error-port (make-parameter ((world-function "_lliby_stderr_port" () -> <port>))))
+    (define-r7rs current-input-port (make-parameter ((world-function system-library "_lliby_stdin_port" () -> <port>))))
+    (define-r7rs current-output-port (make-parameter ((world-function system-library "_lliby_stdout_port" () -> <port>))))
+    (define-r7rs current-error-port (make-parameter ((world-function system-library "_lliby_stderr_port" () -> <port>))))
 
     ; We don't support (read) so we can use #!unit for the end-of-file object
     (define-r7rs eof-object? (make-predicate <eof-object>))
-    (define-r7rs eof-object (native-function "lliby_eof_object" () -> <eof-object>))
+    (define-r7rs eof-object (native-function system-library "lliby_eof_object" () -> <eof-object>))
 
     (define-syntax define-input-proc
       (syntax-rules (->)
                     ((define-input-proc name native-symbol () -> <result-type>)
                      (define-r7rs name
-                                  (let ((native-proc (world-function native-symbol (<port>) -> (U <result-type> <eof-object>))))
+                                  (let ((native-proc (world-function system-library native-symbol (<port>) -> (U <result-type> <eof-object>))))
                                     (case-lambda
                                       (()
                                        (native-proc (current-input-port)))
@@ -653,7 +653,7 @@
                                        (native-proc port))))))
                     ((define-input-proc name native-symbol (<native-uint32>) -> <result-type>)
                      (define-r7rs name
-                                  (let ((native-proc (world-function native-symbol (<native-int32> <port>) -> (U <result-type> <eof-object>))))
+                                  (let ((native-proc (world-function system-library native-symbol (<native-int32> <port>) -> (U <result-type> <eof-object>))))
                                     (case-lambda
                                       (([count : <exact-integer>])
                                        (native-proc count (current-input-port)))
@@ -668,7 +668,7 @@
     (define-input-proc read-bytevector "lliby_read_bytevector" (<native-uint32>) -> <bytevector>)
     (define-input-proc read-string "lliby_read_string" (<native-uint32>) -> <string>)
 
-    (define native-read-bytevector! (world-function "lliby_mutating_read_bytevector" (<bytevector> <port> <native-uint32> <native-uint32>) -> (U <exact-integer> <eof-object>)))
+    (define native-read-bytevector! (world-function system-library "lliby_mutating_read_bytevector" (<bytevector> <port> <native-uint32> <native-uint32>) -> (U <exact-integer> <eof-object>)))
     (define-r7rs read-bytevector!
                  (case-lambda
                    (([bv : <bytevector>])
@@ -680,7 +680,7 @@
                    (([bv : <bytevector>] [port : <port>] [start : <exact-integer>] [end : <exact-integer>])
                     (native-read-bytevector! bv port start end))))
 
-    (define native-u8-ready? (world-function "lliby_u8_ready" (<port>) -> <native-bool>))
+    (define native-u8-ready? (world-function system-library "lliby_u8_ready" (<port>) -> <native-bool>))
     (define-r7rs u8-ready?
                  (case-lambda
                    (()
@@ -688,7 +688,7 @@
                    (([port : <port>])
                     (native-u8-ready? port))))
 
-    (define native-char-ready? (world-function "lliby_char_ready" (<port>) -> <native-bool>))
+    (define native-char-ready? (world-function system-library "lliby_char_ready" (<port>) -> <native-bool>))
     (define-r7rs char-ready?
                  (case-lambda
                    (()
@@ -696,28 +696,28 @@
                    (([port : <port>])
                     (native-char-ready? port))))
 
-    (define native-newline (world-function "lliby_newline" (<port>)))
+    (define native-newline (world-function system-library "lliby_newline" (<port>)))
     (define-r7rs newline (case-lambda
       (()
        (native-newline (current-output-port)))
       (([port : <port>])
        (native-newline port))))
 
-    (define native-write-u8 (world-function "lliby_write_u8" (<native-uint8> <port>)))
+    (define native-write-u8 (world-function system-library "lliby_write_u8" (<native-uint8> <port>)))
     (define-r7rs write-u8 (case-lambda
       (([byte : <exact-integer>])
        (native-write-u8 byte (current-output-port)))
       (([byte : <exact-integer>] [port : <port>])
        (native-write-u8 byte port))))
 
-    (define native-write-char (world-function "lliby_write_char" (<native-unicode-char> <port>)))
+    (define native-write-char (world-function system-library "lliby_write_char" (<native-unicode-char> <port>)))
     (define-r7rs write-char (case-lambda
       (([char : <char>])
        (native-write-char char (current-output-port)))
       (([char : <char>] [port : <port>])
        (native-write-char char port))))
 
-    (define native-write-string (world-function "lliby_write_string" (<string> <port> <native-uint32> <native-uint32>)))
+    (define native-write-string (world-function system-library "lliby_write_string" (<string> <port> <native-uint32> <native-uint32>)))
     (define-r7rs write-string (case-lambda
       (([str : <string>])
        (native-write-string str (current-output-port) 0 (string-length str)))
@@ -728,7 +728,7 @@
       (([str : <string>] [port : <port>] [start : <exact-integer>] [end : <exact-integer>])
        (native-write-string str port start end))))
 
-    (define native-write-bytevector (world-function "lliby_write_bytevector" (<bytevector> <port> <native-uint32> <native-uint32>)))
+    (define native-write-bytevector (world-function system-library "lliby_write_bytevector" (<bytevector> <port> <native-uint32> <native-uint32>)))
     (define-r7rs write-bytevector (case-lambda
       (([bv : <bytevector>])
        (native-write-bytevector bv (current-output-port) 0 (bytevector-length bv)))
@@ -739,26 +739,26 @@
       (([bv : <bytevector>] [port : <port>] [start : <exact-integer>] [end : <exact-integer>])
        (native-write-bytevector bv port start end))))
 
-    (define native-flush-output-port (world-function "lliby_flush_output_port" (<port>)))
+    (define native-flush-output-port (world-function system-library "lliby_flush_output_port" (<port>)))
     (define-r7rs flush-output-port (case-lambda
       (()
        (native-flush-output-port (current-output-port)))
       (([port : <port>])
        (native-flush-output-port port))))
 
-    (define-r7rs with-exception-handler (world-function "lliby_with_exception_handler" ((-> <any> *) (-> *)) -> *))
-    (define-r7rs raise (world-function "lliby_raise" (<any>) noreturn))
-    (define-r7rs raise-continuable (world-function "lliby_raise_continuable" (<any>) -> *))
-    (define-r7rs error (world-function "lliby_error" (<string> . <any>) noreturn))
+    (define-r7rs with-exception-handler (world-function system-library "lliby_with_exception_handler" ((-> <any> *) (-> *)) -> *))
+    (define-r7rs raise (world-function system-library "lliby_raise" (<any>) noreturn))
+    (define-r7rs raise-continuable (world-function system-library "lliby_raise_continuable" (<any>) -> *))
+    (define-r7rs error (world-function system-library "lliby_error" (<string> . <any>) noreturn))
     (define-r7rs error-object? (make-predicate <error-object>))
-    (define-r7rs error-object-message (native-function "lliby_error_object_message" (<error-object>) -> <string>))
-    (define-r7rs error-object-irritants (native-function "lliby_error_object_irritants" (<error-object>) -> <list>))
-    (define-r7rs file-error? (native-function "lliby_is_file_error" (<any>) -> <native-bool>))
-    (define-r7rs read-error? (native-function "lliby_is_read_error" (<any>) -> <native-bool>))
+    (define-r7rs error-object-message (native-function system-library "lliby_error_object_message" (<error-object>) -> <string>))
+    (define-r7rs error-object-irritants (native-function system-library "lliby_error_object_irritants" (<error-object>) -> <list>))
+    (define-r7rs file-error? (native-function system-library "lliby_is_file_error" (<any>) -> <native-bool>))
+    (define-r7rs read-error? (native-function system-library "lliby_is_read_error" (<any>) -> <native-bool>))
 
     ; This is a native code helper which replaces most of the (guard) macro from R7RS with a much more efficient
     ; native code implementation
-    (define guard-kernel (world-function "_lliby_guard_kernel" ((-> <any> *) (-> *)) -> *))
+    (define guard-kernel (world-function system-library "_lliby_guard_kernel" ((-> <any> *) (-> *)) -> *))
 
     (define-syntax guard
       (syntax-rules ()
@@ -805,8 +805,8 @@
   ; Optional R7RS mutable pair support
   (cond-expand ((not immutable-pairs)
     (begin
-      (define-r7rs set-car! (world-function "lliby_set_car" (<pair> <any>)))
-      (define-r7rs set-cdr! (world-function "lliby_set_cdr" (<pair> <any>)))
+      (define-r7rs set-car! (world-function system-library "lliby_set_car" (<pair> <any>)))
+      (define-r7rs set-cdr! (world-function system-library "lliby_set_cdr" (<pair> <any>)))
       (define-r7rs (list-set! [l : <list>] [n : <exact-integer>] [val : <any>])
         (set-car! (list-tail l n) val)))))
 )

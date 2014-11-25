@@ -71,6 +71,18 @@ case class BoundSyntaxVariable(boundValue : BoundValue) extends SyntaxVariable
   */
 case class UnboundSyntaxVariable(identifier : String) extends SyntaxVariable
 
+/** Represents a native library as a source of NFI functions */
+sealed abstract class NativeLibrary extends BoundValue
+
+/** Represents the libraries implicitly linked with all Llambda programs
+  *
+  * This includes the Llambda core runtime and the system C library
+  */
+object NativeSystemLibrary extends NativeLibrary
+
+/** Represents a static native library */
+case class NativeStaticLibrary(libraryName : String) extends NativeLibrary
+
 /** Encapsulates information about pattern variables in a transformer
   *
   * This is kept only to prevent repeatedly re-parsing the pattern. It does not contain any information that could not

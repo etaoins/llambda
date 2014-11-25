@@ -10,9 +10,10 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
   implicit val nfiScope = {
     new Scope(testutil.NfiExports() ++ typedLambdaBindings)
   }
-  
+
   test("void native function") {
     val expectedFunction = et.NativeFunction(
+      NativeSystemLibrary,
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
@@ -25,12 +26,13 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function "lliby_newline" ())""")
+      exprFor("""(native-function system-library "lliby_newline" ())""")
     }
   }
-  
+
   test("void native functioni with noreturn attribute") {
     val expectedFunction = et.NativeFunction(
+      NativeSystemLibrary,
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
@@ -43,12 +45,13 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function "lliby_newline" () noreturn)""")
+      exprFor("""(native-function system-library "lliby_newline" () noreturn)""")
     }
   }
-  
+
   test("function taking world pointer") {
     val expectedFunction = et.NativeFunction(
+      NativeSystemLibrary,
       ProcedureSignature(
         hasWorldArg=true,
         hasSelfArg=false,
@@ -61,12 +64,13 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(world-function "lliby_newline" ())""")
+      exprFor("""(world-function system-library "lliby_newline" ())""")
     }
   }
-  
+
   test("function returning int8") {
     val expectedFunction = et.NativeFunction(
+      NativeSystemLibrary,
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
@@ -79,12 +83,13 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function "lliby_newline" () -> <native-int8>)""")
+      exprFor("""(native-function system-library "lliby_newline" () -> <native-int8>)""")
     }
   }
-  
+
   test("function taking int16 and returning int32") {
     val expectedFunction = et.NativeFunction(
+      NativeSystemLibrary,
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
@@ -97,12 +102,13 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function "lliby_newline" (<native-int16>) -> <native-int32>)""")
+      exprFor("""(native-function system-library "lliby_newline" (<native-int16>) -> <native-int32>)""")
     }
   }
-  
+
   test("function taking world pointer, int64, float and returning double") {
     val expectedFunction = et.NativeFunction(
+      NativeSystemLibrary,
       ProcedureSignature(
         hasWorldArg=true,
         hasSelfArg=false,
@@ -115,12 +121,13 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(world-function "lliby_newline" (<native-int64> <native-float>) -> <native-double>)""")
+      exprFor("""(world-function system-library "lliby_newline" (<native-int64> <native-float>) -> <native-double>)""")
     }
   }
-  
+
   test("function taking uint16 and returning uint32") {
     val expectedFunction = et.NativeFunction(
+      NativeSystemLibrary,
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
@@ -133,12 +140,13 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function "lliby_newline" (<native-uint16>) -> <native-uint32>)""")
+      exprFor("""(native-function system-library "lliby_newline" (<native-uint16>) -> <native-uint32>)""")
     }
   }
-  
+
   test("function taking bool and returning bool") {
     val expectedFunction = et.NativeFunction(
+      NativeSystemLibrary,
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
@@ -151,12 +159,13 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function "lliby_newline" (<native-bool>) -> <native-bool>)""")
+      exprFor("""(native-function system-library "lliby_newline" (<native-bool>) -> <native-bool>)""")
     }
   }
-  
+
   test("function taking int8 and returning unicode char") {
     val expectedFunction = et.NativeFunction(
+      NativeSystemLibrary,
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
@@ -169,12 +178,13 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function "lliby_newline" (<native-int8>) -> <native-unicode-char>)""")
+      exprFor("""(native-function system-library "lliby_newline" (<native-int8>) -> <native-unicode-char>)""")
     }
   }
-  
+
   test("function taking double and returning arbitrary values") {
     val expectedFunction = et.NativeFunction(
+      NativeSystemLibrary,
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
@@ -187,12 +197,13 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function "lliby_newline" (<native-double>) -> *)""")
+      exprFor("""(native-function system-library "lliby_newline" (<native-double>) -> *)""")
     }
   }
-  
+
   test("function taking union and returning specific values") {
     val expectedFunction = et.NativeFunction(
+      NativeSystemLibrary,
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
@@ -205,12 +216,13 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function "lliby_newline" ((U <string> <symbol>)) -> (Values <string> <symbol>))""")
+      exprFor("""(native-function system-library "lliby_newline" ((U <string> <symbol>)) -> (Values <string> <symbol>))""")
     }
   }
-  
+
   test("function taking a integer cell and returning a rational cell") {
     val expectedFunction = et.NativeFunction(
+      NativeSystemLibrary,
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
@@ -223,12 +235,13 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function "lliby_newline" (<exact-integer>) -> <flonum>)""")
+      exprFor("""(native-function system-library "lliby_newline" (<exact-integer>) -> <flonum>)""")
     }
   }
 
   test("function with only rest arg") {
     val expectedFunction = et.NativeFunction(
+      NativeSystemLibrary,
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
@@ -241,12 +254,13 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function "lliby_vector" <any> -> <any>)""")
+      exprFor("""(native-function system-library "lliby_vector" <any> -> <any>)""")
     }
   }
-  
+
   test("function with fixed and rest args") {
     val expectedFunction = et.NativeFunction(
+      NativeSystemLibrary,
       ProcedureSignature(
         hasWorldArg=false,
         hasSelfArg=false,
@@ -259,37 +273,70 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function "lliby_misc" (<native-bool> . <exact-integer>) -> <native-int>)""")
+      exprFor("""(native-function system-library "lliby_misc" (<native-bool> . <exact-integer>) -> <native-int>)""")
     }
   }
-  
+
+  test("function in static library") {
+    val expectedFunction = et.NativeFunction(
+      NativeStaticLibrary("testlib"),
+      ProcedureSignature(
+        hasWorldArg=false,
+        hasSelfArg=false,
+        fixedArgTypes=Nil,
+        restArgMemberTypeOpt=None,
+        returnType=vt.ReturnType.SingleValue(vt.UnitType),
+        attributes=Set()
+      ),
+      "lliby_misc"
+    )
+
+    assertResult(expectedFunction) {
+      exprFor("""(native-function (static-library "testlib") "lliby_misc" ())""")
+    }
+  }
+
   test("function with non-Scheme rest arg") {
     intercept[BadSpecialFormException] {
-      exprFor("""(native-function "lliby_vector" <native-int64> -> <any>)""")
+      exprFor("""(native-function system-library "lliby_vector" <native-int64> -> <any>)""")
     }
   }
-  
+
   test("function returning unknown type") {
     intercept[UnboundVariableException] {
-      exprFor("""(native-function "lliby_newline" () -> <not-a-type>)""")
+      exprFor("""(native-function system-library "lliby_newline" () -> <not-a-type>)""")
     }
   }
-  
+
   test("function returning non-symbol") {
     intercept[BadSpecialFormException] {
-      exprFor("""(native-function "lliby_newline" () -> 4)""")
+      exprFor("""(native-function system-library "lliby_newline" () -> 4)""")
     }
   }
-  
+
+  test("function in unbound library") {
+    intercept[UnboundVariableException] {
+      exprFor("""(native-function unbound-library "lliby_newline" (<not-a-type>))""")
+    }
+  }
+
+  test("function in non-library") {
+    intercept[BadSpecialFormException] {
+      exprFor("""
+        (native-function (native-function system-library "native_newline" ()) "lliby_newline" (<not-a-type>))
+      """)
+    }
+  }
+
   test("function taking unknown type") {
     intercept[UnboundVariableException] {
-      exprFor("""(native-function "lliby_newline" (<not-a-type>))""")
+      exprFor("""(native-function system-library "lliby_newline" (<not-a-type>))""")
     }
   }
-  
+
   test("function taking non-symbol") {
     intercept[BadSpecialFormException] {
-      exprFor("""(native-function "lliby_newline" (4))""")
+      exprFor("""(native-function system-library "lliby_newline" (4))""")
     }
   }
 }

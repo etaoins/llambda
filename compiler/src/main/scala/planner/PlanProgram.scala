@@ -1,12 +1,17 @@
 package io.llambda.compiler.planner
 import io.llambda
 
-import llambda.compiler.et
+import llambda.compiler.{et, NativeLibrary}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.codegen.LlambdaTopLevelSignature
 
+case class PlannedProgram(
+    functions : Map[String, PlannedFunction],
+    requiredNativeLibraries : Set[NativeLibrary]
+)
+
 object PlanProgram {
-  def apply(exprs : List[et.Expr])(planConfig : PlanConfig) : Map[String, PlannedFunction] = {
+  def apply(exprs : List[et.Expr])(planConfig : PlanConfig) : PlannedProgram = {
     val worldTemp = new ps.WorldPtrValue
 
     val emptyState = PlannerState(
@@ -30,6 +35,8 @@ object PlanProgram {
         debugContextOpt=None
       ))).toMap
 
-    FindUsedFunctions(allPlannedFunctions, LlambdaTopLevelSignature.nativeSymbol)
+    val usedFunctions = FindUsedFunctions(allPlannedFunctions, LlambdaTopLevelSignature.nativeSymbol)
+
+    PlannedProgram(usedFunctions, plan.requiredNativeLibraries.toSet)
   }
 }

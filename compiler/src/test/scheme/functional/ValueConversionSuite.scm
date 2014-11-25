@@ -35,19 +35,27 @@
 	(make-vector (typeless-cell 3.0) #t)))
 
 (define-test "inexact rational can be unboxed as double" (expect 1.0
-	(define fabs (native-function "fabs" (<native-double>) -> <native-double>))
+  (import (llambda nfi))
+
+	(define fabs (native-function system-library "fabs" (<native-double>) -> <native-double>))
 	(fabs (typeless-cell -1.0))))
 
 (define-test "inexact rational can be unboxed as float" (expect 10.0
-	(define fabsf (native-function "fabsf" (<native-float>) -> <native-float>))
+  (import (llambda nfi))
+
+	(define fabsf (native-function system-library "fabsf" (<native-float>) -> <native-float>))
 	(fabsf (typeless-cell -10.0))))
 
 (define-test "exact integer cannot be unboxed as double" (expect-failure
-	(define fabs (native-function "fabs" (<native-double>) -> <native-double>))
+  (import (llambda nfi))
+
+	(define fabs (native-function system-library "fabs" (<native-double>) -> <native-double>))
 	(fabs (typeless-cell 0))))
 
 (define-test "exact integer cannot be unboxed as float" (expect-failure
-	(define fabsf (native-function "fabsf" (<native-float>) -> <native-float>))
+  (import (llambda nfi))
+
+	(define fabsf (native-function system-library "fabsf" (<native-float>) -> <native-float>))
 	(fabsf (typeless-cell -10))))
 
 (define-test "native i64 can be passed as an native i32" (expect b
@@ -56,12 +64,16 @@
 	(vector-ref #(a b c) (exact 1))))
 
 (define-test "native i64 cannot be boxed as an inexact rational" (expect-failure
-	(define inexact->inexact (world-function "lliby_inexact" (<flonum>) -> <native-double>))
+  (import (llambda nfi))
+
+	(define inexact->inexact (world-function system-library "lliby_inexact" (<flonum>) -> <native-double>))
 	; This assumes (exact) returns an native i64
 	(inexact->inexact (exact -53))))
 
 (define-test "constant exact integer cannot be boxed as an inexact rational" (expect-failure
-	(define inexact->inexact (world-function "lliby_inexact" (<flonum>) -> <native-double>))
+  (import (llambda nfi))
+
+	(define inexact->inexact (world-function system-library "lliby_inexact" (<flonum>) -> <native-double>))
 	; This assumes (exact) returns an native i64
 	(inexact->inexact -53)))
 
@@ -84,8 +96,10 @@
 	(boolean=? (not #t) (not #f))))
 
 (define-test "exact integer can be passed to a procedure as float" (expect-failure
+  (import (llambda nfi))
+
 	; Nothing in the stdlib takes float
-	(define fabsf (native-function "fabsf" (<native-float>) -> <native-float>))
+	(define fabsf (native-function system-library "fabsf" (<native-float>) -> <native-float>))
 	(fabsf -10)))
 
 ; Make sure if we use type analysis to short circuit bool evaluation do it right
@@ -99,17 +113,25 @@
 	(length (append '(1 2) '(3 4)))))
 
 (define-test "(make-bytevector) only accepts positive constant lengths" (expect-compile-failure
-  (define native-make-bytevector (world-function "lliby_make_bytevector" (<native-uint32> <native-uint8>) -> <bytevector>))
+  (import (llambda nfi))
+
+  (define native-make-bytevector (world-function system-library "lliby_make_bytevector" (<native-uint32> <native-uint8>) -> <bytevector>))
   (native-make-bytevector -1 0)))
 
 (define-test "(make-bytevector) only accepts 32bit constant lengths" (expect-compile-failure
-  (define native-make-bytevector (world-function "lliby_make_bytevector" (<native-uint32> <native-uint8>) -> <bytevector>))
+  (import (llambda nfi))
+
+  (define native-make-bytevector (world-function system-library "lliby_make_bytevector" (<native-uint32> <native-uint8>) -> <bytevector>))
   (native-make-bytevector 4294967296 0)))
 
 (define-test "(make-bytevector) only accepts positive constant fill values" (expect-compile-failure
-  (define native-make-bytevector (world-function "lliby_make_bytevector" (<native-uint32> <native-uint8>) -> <bytevector>))
+  (import (llambda nfi))
+
+  (define native-make-bytevector (world-function system-library "lliby_make_bytevector" (<native-uint32> <native-uint8>) -> <bytevector>))
   (native-make-bytevector 1 -1)))
 
 (define-test "(make-bytevector) only accepts 8bit constant fill values" (expect-compile-failure
-  (define native-make-bytevector (world-function "lliby_make_bytevector" (<native-uint32> <native-int8>) -> <bytevector>))
+  (import (llambda nfi))
+
+  (define native-make-bytevector (world-function system-library "lliby_make_bytevector" (<native-uint32> <native-int8>) -> <bytevector>))
   (native-make-bytevector 1 256)))
