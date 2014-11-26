@@ -68,14 +68,14 @@ private[frontend] object ParseSyntaxDefine {
   def apply(appliedSymbol : sst.ScopedSymbol, operands : List[sst.ScopedDatum], debugContext : debug.SourceContext) : ParsedSimpleDefine = operands match {
     case List((definedSymbol : sst.ScopedSymbol),
              sst.ScopedProperList(
-               sst.ScopedSymbol(_, "syntax-rules") :: sst.ScopedProperList(literalData) :: rulesData
-             )) =>
+               (syntaxRules : sst.ScopedSymbol) :: sst.ScopedProperList(literalData) :: rulesData
+             )) if syntaxRules.resolve == Primitives.SyntaxRules =>
       parseTransformers(definedSymbol, BoundSyntaxVariable(Primitives.Ellipsis), literalData, rulesData, debugContext)
-    
+
     case List((definedSymbol : sst.ScopedSymbol),
              sst.ScopedProperList(
-               sst.ScopedSymbol(_, "syntax-rules") :: (ellipsisSymbol : sst.ScopedSymbol) :: sst.ScopedProperList(literalData) :: rulesData
-             )) =>
+               (syntaxRules : sst.ScopedSymbol) :: (ellipsisSymbol : sst.ScopedSymbol) :: sst.ScopedProperList(literalData) :: rulesData
+             )) if syntaxRules.resolve == Primitives.SyntaxRules =>
       parseTransformers(definedSymbol, SyntaxVariable.fromSymbol(ellipsisSymbol), literalData, rulesData, debugContext)
 
     case _ =>

@@ -6,6 +6,12 @@
   ; base library
   (include-library-declarations "../../interfaces/scheme/base.scm")
   (begin
+    (define-syntax =>
+      (syntax-rules ()))
+
+    (define-syntax else
+      (syntax-rules ()))
+
     (define-syntax begin
       (syntax-rules ()
                     ((begin exp ...)
