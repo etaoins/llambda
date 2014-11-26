@@ -5,6 +5,7 @@ import llambda.compiler.{ProcedureSignature, ContextLocated}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner._
+import llambda.compiler.planner.reportproc.ReportProcPlanner
 
 /** Represents a user-provided procedure with a known signature and direct entry point
   *
@@ -22,32 +23,6 @@ class KnownUserProc(
     selfTempOpt : Option[ps.TempValue],
     val reportNameOpt : Option[String] = None
 ) extends KnownProc(signature, selfTempOpt) {
-  //
-  // These objects know how to implement certain report procedure directly with plan steps
-  // 
-  
-  private val correctnessPlanners = List[reportproc.ReportProcPlanner](
-    // These are needed for occurrence typing
-    reportproc.EquivalenceProcPlanner,
-    reportproc.NumberPredicateProcPlanner,
-    // Planning (values) allows proper type signatures to be extracted
-    reportproc.ValuesProcPlanner
-  )
-  
-  private val optimisingPlanners = List[reportproc.ReportProcPlanner](
-    reportproc.ApplyProcPlanner,
-    reportproc.ArithmeticProcPlanner,
-    reportproc.BytevectorProcPlanner,
-    reportproc.CadrProcPlanner,
-    reportproc.CharProcPlanner,
-    reportproc.DynamicProcPlanner,
-    reportproc.ListProcPlanner,
-    reportproc.NumberProcPlanner,
-    reportproc.StringProcPlanner,
-    reportproc.SymbolProcPlanner,
-    reportproc.VectorProcPlanner
-  )
-
   def nativeSymbol(implicit plan : PlanWriter) : String =
     plannedSymbol
 
@@ -58,14 +33,9 @@ class KnownUserProc(
   override def withSelfTemp(selfTemp : ps.TempValue) : KnownUserProc = {
     new KnownUserProc(signature, plannedSymbol, Some(selfTemp), reportNameOpt)
   }
-  
+
   override def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = {
-    val reportProcPlanners = if (plan.config.optimize) {
-      correctnessPlanners ++ optimisingPlanners
-    }
-    else {
-      correctnessPlanners
-    }
+    val reportProcPlanners = ReportProcPlanner.activePlanners
 
     // Find the first report proc planner that knowns how to plan us
     for(reportName <- reportNameOpt;

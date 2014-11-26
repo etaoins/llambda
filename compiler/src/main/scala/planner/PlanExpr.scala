@@ -31,14 +31,14 @@ private[planner] object PlanExpr {
         // This is a (call/cc)
         ReduceCallCc(expr, operands)(plan.config) match {
           case SimplifiedCallCc(newOperands) =>
-            PlanApplication(initialState)(expr, procRef, newOperands)
-          
+            PlanApplication(initialState)(procRef, newOperands)
+
           case StrippedCallCc(newExpr) =>
             PlanExpr(initialState)(newExpr)
         }
 
       case et.Apply(procExpr, operandExprs) =>
-        PlanApplication(initialState)(expr, procExpr, operandExprs)
+        PlanApplication(initialState)(procExpr, operandExprs)
 
       case et.TopLevelDefine(bindings) =>
         PlanResult(

@@ -4,7 +4,6 @@ import io.llambda
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.{StorageLocation, ContextLocated}
-import llambda.compiler.IncompatibleArityException
 import llambda.compiler.et
 import llambda.compiler.{valuetype => vt}
 
@@ -33,7 +32,6 @@ private[planner] object AttemptInlineApply {
     
     val closedVars = FindClosedVars(parentState, lambdaExpr.body, None)
 
-    // We only support immutables at this point
     val importedValues = closedVars collect {
       case ImportedImmutable(storageLoc, parentIntermediate) =>
         (storageLoc -> ImmutableValue(parentIntermediate))

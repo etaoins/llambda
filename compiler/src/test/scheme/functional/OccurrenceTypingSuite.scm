@@ -62,6 +62,21 @@
 
   (apply-numbers-proc * 3 2)))
 
+(define-test "applying a procedure constraints the procedure value's type" (expect-success
+  (import (llambda typed))
+
+  ; Test using the top procedure type (as part of <any>)
+  (define typeless-proc (typeless-cell +))
+  (assert-equal 6 (typeless-proc 1 2 3))
+  (ann typeless-proc <procedure>)
+
+  ; Test using a specific procedure type
+  (define-type <expected-type> (-> <number> * <number>))
+
+  (define partially-typed-proc (typed-dynamic + (U <boolean> <expected-type>)))
+  (assert-equal 6 (partially-typed-proc 1 2 3))
+  (ann partially-typed-proc <expected-type>)))
+
 (define-test "(if) propagates test truthiness information to its branches" (expect-success
   (import (llambda typed))
 
