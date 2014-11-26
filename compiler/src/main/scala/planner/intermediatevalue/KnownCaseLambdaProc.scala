@@ -70,7 +70,7 @@ class KnownCaseLambdaProc(
 
   private def restoreClause(
       clause : KnownCaseLambdaClause
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : IntermediateValue = {
+  )(implicit plan : PlanWriter) : IntermediateValue = {
     clause.recordField match {
       case Some(recordField) if !clausesInScope =>
         val closureDataTemp = ps.RecordLikeDataTemp()
@@ -99,7 +99,7 @@ class KnownCaseLambdaProc(
   
   override def toApplicableValueForArity (
       operandCount : Int
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : IntermediateValue = {
+  )(implicit plan : PlanWriter) : IntermediateValue = {
     clauseForArityOpt(operandCount) match {
       case Some(clause) =>
         restoreClause(clause)

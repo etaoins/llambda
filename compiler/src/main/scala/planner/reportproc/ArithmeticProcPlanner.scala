@@ -16,7 +16,7 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
   private def numberToDoubleTemp(
       value : iv.IntermediateValue,
       isFlonum : Boolean
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue =
+  )(implicit plan : PlanWriter) : ps.TempValue =
     if (isFlonum) {
       value.toTempValue(vt.Double)
     }
@@ -34,7 +34,7 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
       staticIntCalc : StaticIntegerOp,
       staticFlonumCalc : StaticDoubleOp,
       operands : List[iv.IntermediateValue]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
     implicit val inlinePlan = plan.forkPlan()
 
     val resultValue = operands.reduceLeft { (op1 : iv.IntermediateValue, op2 : iv.IntermediateValue) => (op1, op2) match {
@@ -65,8 +65,8 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
         }
         else if (dynamic1IsInt && dynamic2IsInt) {
           // Both integers
-          val intTemp1 = dynamic1.toTempValue(vt.Int64)(inlinePlan, worldPtr)
-          val intTemp2 = dynamic2.toTempValue(vt.Int64)(inlinePlan, worldPtr)
+          val intTemp1 = dynamic1.toTempValue(vt.Int64)(inlinePlan)
+          val intTemp2 = dynamic2.toTempValue(vt.Int64)(inlinePlan)
           val resultTemp = ps.Temp(vt.Int64)
 
           inlinePlan.steps += intInstr(resultTemp, intTemp1, intTemp2)
@@ -75,8 +75,8 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
         }
         else {
           // At least one is a double
-          val doubleTemp1 = numberToDoubleTemp(dynamic1, dynamic1IsFlonum)(inlinePlan, worldPtr)
-          val doubleTemp2 = numberToDoubleTemp(dynamic2, dynamic2IsFlonum)(inlinePlan, worldPtr)
+          val doubleTemp1 = numberToDoubleTemp(dynamic1, dynamic1IsFlonum)(inlinePlan)
+          val doubleTemp2 = numberToDoubleTemp(dynamic2, dynamic2IsFlonum)(inlinePlan)
 
           val resultTemp = ps.Temp(vt.Double)
           inlinePlan.steps += flonumInstr(resultTemp, doubleTemp1, doubleTemp2)
@@ -94,7 +94,7 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
 
   private def performNumericDivide(
       operands : List[iv.IntermediateValue]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
     implicit val inlinePlan = plan.forkPlan()
 
     val resultValue = operands.reduceLeft { (op1 : iv.IntermediateValue, op2 : iv.IntermediateValue) => (op1, op2) match {
@@ -132,8 +132,8 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
           return None
         }
         else  {
-          val doubleTemp1 = numberToDoubleTemp(dynamicNumer, dynamicNumerIsFlonum)(inlinePlan, worldPtr)
-          val doubleTemp2 = numberToDoubleTemp(dynamicDenom, dynamicDenomIsFlonum)(inlinePlan, worldPtr)
+          val doubleTemp1 = numberToDoubleTemp(dynamicNumer, dynamicNumerIsFlonum)(inlinePlan)
+          val doubleTemp2 = numberToDoubleTemp(dynamicDenom, dynamicDenomIsFlonum)(inlinePlan)
 
           val resultTemp = ps.Temp(vt.Double)
           inlinePlan.steps += ps.FloatDiv(resultTemp, doubleTemp1, doubleTemp2)
@@ -153,7 +153,7 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
       staticCalc : StaticIntegerOp,
       numerator : (ContextLocated, iv.IntermediateValue),
       denominator : (ContextLocated, iv.IntermediateValue)
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
     (numerator, denominator) match {
       case (_, (denomLoc, constantDenom : iv.ConstantExactIntegerValue)) if constantDenom.value == 0 =>
         // Catch divide by zero first
@@ -185,19 +185,19 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
   private def performIntegerDivide(
       numerator : (ContextLocated, iv.IntermediateValue),
       denominator : (ContextLocated, iv.IntermediateValue)
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] =
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] =
     performIntegerDivOp(ps.IntegerDiv(_, true, _, _), _ / _, numerator, denominator)
 
   private def performIntegerRemainder(
       numerator : (ContextLocated, iv.IntermediateValue),
       denominator : (ContextLocated, iv.IntermediateValue)
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] =
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] =
     performIntegerDivOp(ps.IntegerRem(_, true, _, _), _ % _, numerator, denominator)
 
   override def planWithValues(state : PlannerState)(
     reportName : String,
     operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ResultValues] = (reportName, operands) match {
+  )(implicit plan : PlanWriter) : Option[ResultValues] = (reportName, operands) match {
     case ("truncate/", List(numerator, denominator)) =>
       // Handle this here because it produces multiple values
       val inlinePlan = plan.forkPlan()
@@ -223,7 +223,7 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
   private def planWithSingleValue(state : PlannerState)(
       reportName : String,
       operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = (reportName, operands) match {
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, operands) match {
     case ("+", Nil) =>
       Some(new iv.ConstantExactIntegerValue(0))
 

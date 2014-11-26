@@ -44,11 +44,10 @@ trait PlanHelpers extends FunSuite with Inside {
     val planConfig = testPlanConfig(Nil, optimise=true)
 
     val planWriter = PlanWriter(planConfig)
-    val fakeWorldPtr = new ps.WorldPtrValue
 
     val constantValue = DatumToConstantValue(datum)
 
-    constantValue.toTempValue(vt.AnySchemeType)(planWriter, fakeWorldPtr)
+    constantValue.toTempValue(vt.AnySchemeType)(planWriter)
     planWriter.steps.toList
   }
 

@@ -9,7 +9,6 @@ case class PlannedFunction(
   signature : ProcedureSignature,
   namedArguments : List[(String,  ps.TempValue)],
   steps : List[ps.Step],
-  worldPtrOpt : Option[ps.WorldPtrValue],
   debugContextOpt : Option[debug.SubprogramContext],
   irCommentOpt : Option[String] = None
 ) {

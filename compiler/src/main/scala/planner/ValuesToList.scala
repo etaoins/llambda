@@ -22,7 +22,7 @@ private[planner] object ValuesToList {
       memberValues : List[iv.IntermediateValue],
       tailValue : iv.IntermediateValue = iv.EmptyListValue,
       capturable : Boolean = true
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : iv.IntermediateValue = 
+  )(implicit plan : PlanWriter) : iv.IntermediateValue = 
     memberValues match {
       case carValue :: restValues =>
         // Recurse down our cdr

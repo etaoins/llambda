@@ -58,7 +58,7 @@ object ListProcPlanner extends ReportProcPlanner {
   override def planWithValue(initialState : PlannerState)(
       reportName : String,
       operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = (reportName, operands) match {
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, operands) match {
     case ("length", List((_, singleOperand))) =>
       // Do we know the length at compile time?
       singleOperand match {
@@ -97,7 +97,7 @@ object ListProcPlanner extends ReportProcPlanner {
         text="(set-car!) attempted on pair literal"
       )
 
-      plan.steps += ps.AssertPairMutable(worldPtr, pairTemp, errorMessage)
+      plan.steps += ps.AssertPairMutable(pairTemp, errorMessage)
       plan.steps += ps.SetPairCar(pairTemp, newValueTemp)
 
       Some(iv.UnitValue)
@@ -114,7 +114,7 @@ object ListProcPlanner extends ReportProcPlanner {
         text="(set-cdr!) attempted on pair literal"
       )
 
-      plan.steps += ps.AssertPairMutable(worldPtr, pairTemp, errorMessage)
+      plan.steps += ps.AssertPairMutable(pairTemp, errorMessage)
       plan.steps += ps.SetPairCdr(pairTemp, newValueTemp)
 
       Some(iv.UnitValue)

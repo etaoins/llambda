@@ -9,8 +9,6 @@ import org.scalatest.FunSuite
 class LiveValuesAtBarrierSuite extends FunSuite {
   import LiveValuesAtBarrier.Result._
 
-  private val worldPtrTemp = new ps.WorldPtrValue()
-
   private val nonWorldSignature = ProcedureSignature(
     hasWorldArg=false,
     hasSelfArg=false,

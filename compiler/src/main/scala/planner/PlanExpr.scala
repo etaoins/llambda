@@ -12,10 +12,8 @@ import llambda.compiler.InternalCompilerErrorException
 
 private[planner] object PlanExpr {
   private val callCcNames = Set("call-with-current-continuation", "call/cc")
-  
-  def apply(initialState : PlannerState)(expr : et.Expr, sourceNameHint : Option[String] = None)(implicit plan : PlanWriter) : PlanResult = plan.withContextLocation(expr) {
-    implicit val worldPtr = initialState.worldPtr
 
+  def apply(initialState : PlannerState)(expr : et.Expr, sourceNameHint : Option[String] = None)(implicit plan : PlanWriter) : PlanResult = plan.withContextLocation(expr) {
     expr match {
       case et.Begin(exprs) =>
         val initialResult = PlanResult(
@@ -67,10 +65,10 @@ private[planner] object PlanExpr {
 
           case MutableValue(mutableType, mutableTemp, needsUndefCheck) =>
             if (needsUndefCheck) {
-              val errorMessage = RuntimeErrorMessage("accessUndefined", "Recursively defined value referenced before its initialization") 
-              plan.steps += ps.AssertRecordLikeDefined(worldPtr, mutableTemp, mutableType, errorMessage)
+              val errorMessage = RuntimeErrorMessage("accessUndefined", "Recursively defined value referenced before its initialization")
+              plan.steps += ps.AssertRecordLikeDefined(mutableTemp, mutableType, errorMessage)
             }
-            
+
             // Load our data pointer
             val recordDataTemp = ps.RecordLikeDataTemp()
             plan.steps += ps.LoadRecordLikeData(recordDataTemp, mutableTemp, mutableType)
@@ -234,9 +232,9 @@ private[planner] object PlanExpr {
           valueResult.state
         }
 
-        plan.steps += ps.PushDynamicState(worldPtr, parameterValueTemps.toList)
+        plan.steps += ps.PushDynamicState(parameterValueTemps.toList)
         val postInnerResult = PlanExpr(postValueState)(innerExpr)
-        plan.steps += ps.PopDynamicState(worldPtr)
+        plan.steps += ps.PopDynamicState()
 
         postInnerResult
 

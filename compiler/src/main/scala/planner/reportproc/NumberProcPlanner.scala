@@ -23,7 +23,7 @@ object NumberProcPlanner extends ReportProcPlanner {
 
   private def exactValue(
       value : iv.IntermediateValue
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
       value match  {
         case knownExactInt if knownExactInt.hasDefiniteType(vt.ExactIntegerType) =>
           // Already an exact int
@@ -47,7 +47,7 @@ object NumberProcPlanner extends ReportProcPlanner {
 
   private def inexactValue(
       value : iv.IntermediateValue
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
       value match  {
         case knownFlonum if knownFlonum.hasDefiniteType(vt.FlonumType) =>
           // Already a flonum
@@ -76,7 +76,7 @@ object NumberProcPlanner extends ReportProcPlanner {
       staticFlonumCalc : DoubleCompartor,
       val1 : iv.IntermediateValue,
       val2 : iv.IntermediateValue
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : CompareResult = {
+  )(implicit plan : PlanWriter) : CompareResult = {
     (val1, val2) match {
       case (constantExactInt1 : iv.ConstantExactIntegerValue, constantExactInt2 : iv.ConstantExactIntegerValue) =>
         val compareResult = staticIntCalc(constantExactInt1.value, constantExactInt2.value)
@@ -133,13 +133,13 @@ object NumberProcPlanner extends ReportProcPlanner {
       staticIntCalc : IntegerCompartor,
       staticFlonumCalc : DoubleCompartor,
       operands : List[iv.IntermediateValue]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
     // Compare in a fork in case we abort the whole thing later
     val comparePlan = plan.forkPlan()
 
     val pairwiseResults = operands.sliding(2).toList map {
       case List(left, right) =>
-        compareOperands(compareCond, staticIntCalc, staticFlonumCalc, left, right)(comparePlan, worldPtr)
+        compareOperands(compareCond, staticIntCalc, staticFlonumCalc, left, right)(comparePlan)
     }
 
     // Now filter out all the static results
@@ -182,7 +182,7 @@ object NumberProcPlanner extends ReportProcPlanner {
   private def selectValue(
       value : iv.IntermediateValue,
       forceInexact : Boolean
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : iv.IntermediateValue = {
+  )(implicit plan : PlanWriter) : iv.IntermediateValue = {
     if (!forceInexact) {
       value
     }
@@ -207,13 +207,13 @@ object NumberProcPlanner extends ReportProcPlanner {
       staticIntCalc : IntegerCompartor,
       staticFlonumCalc : DoubleCompartor,
       operands : List[iv.IntermediateValue]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
     // Compare in a fork in case we abort the whole thing later
     val comparePlan = plan.forkPlan()
 
     val definiteResult = operands.reduceLeft { (left, right) =>
       // Compare these two values
-      val compareResult = compareOperands(compareCond, staticIntCalc, staticFlonumCalc, left, right)(comparePlan, worldPtr)
+      val compareResult = compareOperands(compareCond, staticIntCalc, staticFlonumCalc, left, right)(comparePlan)
 
       compareResult match {
         case UnplannableCompare =>
@@ -231,17 +231,17 @@ object NumberProcPlanner extends ReportProcPlanner {
         case DynamicCompare(nativePred, inexactCompare) =>
           // Create our branches and select our values (which may cause them to become inexact)
           val truePlan = comparePlan.forkPlan()
-          val selectedLeft = selectValue(left, forceInexact=inexactCompare)(truePlan, worldPtr)
+          val selectedLeft = selectValue(left, forceInexact=inexactCompare)(truePlan)
 
           val falsePlan = comparePlan.forkPlan()
-          val selectedRight = selectValue(right, forceInexact=inexactCompare)(falsePlan, worldPtr)
+          val selectedRight = selectValue(right, forceInexact=inexactCompare)(falsePlan)
 
           // Phi the results together
           val resultType = phiTypeForSelect(selectedLeft, selectedRight)
           val resultTemp = ps.Temp(resultType)
 
-          val trueResult = selectedLeft.toTempValue(resultType)(truePlan, worldPtr)
-          val falseResult = selectedRight.toTempValue(resultType)(falsePlan, worldPtr)
+          val trueResult = selectedLeft.toTempValue(resultType)(truePlan)
+          val falseResult = selectedRight.toTempValue(resultType)(falsePlan)
 
           comparePlan.steps += ps.CondBranch(resultTemp, nativePred, truePlan.steps.toList, trueResult, falsePlan.steps.toList, falseResult)
 
@@ -257,7 +257,7 @@ object NumberProcPlanner extends ReportProcPlanner {
   override def planWithValue(state : PlannerState)(
       reportName : String,
       operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = (reportName, operands) match {
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, operands) match {
     case ("=", operands) if operands.length >= 2 =>
       compareOperandList(ps.CompareCond.Equal, _ == _, _ == _, operands.map(_._2))
 

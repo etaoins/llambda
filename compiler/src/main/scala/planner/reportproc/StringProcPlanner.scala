@@ -11,7 +11,7 @@ object StringProcPlanner extends ReportProcPlanner {
   override def planWithValue(state : PlannerState)(
       reportName : String,
       operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = (reportName, operands) match {
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, operands) match {
     case ("string-length", List((stringLocated, stringValue))) =>
       stringValue match {
         case constantString : iv.ConstantStringValue =>

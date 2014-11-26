@@ -111,10 +111,10 @@ object DisposeValues {
 
     val newSteps = discardUnusedValues(
       branchInputValues,
-      function.steps.reverse, 
-      // Nothing directly uses the world ptr until PlanCellAllocations runs
-      // Artifically set it as used - it's not GC managed so there's no real gain in disposing it. 
-      function.worldPtrOpt.toSet,
+      function.steps.reverse,
+      // Allocating steps don't directly use the world ptr until PlanCellAllocations runs
+      // Artifically set it as used - it's not GC managed so there's no real gain in disposing it.
+      Set(ps.WorldPtrValue),
       Nil
     )
 

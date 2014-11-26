@@ -11,7 +11,7 @@ object ValuesProcPlanner extends ReportProcPlanner {
   override def planFromExprs(initialState : PlannerState)(
       reportName : String,
       operands : List[et.Expr]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = (reportName, operands) match {
+  )(implicit plan : PlanWriter) : Option[PlanResult] = (reportName, operands) match {
     case ("call-with-values", List(producerExpr, consumerExpr))  =>
       // Call the producer, possibly while inlining
       val producerResult = plan.withContextLocation(producerExpr) {
@@ -50,7 +50,7 @@ object ValuesProcPlanner extends ReportProcPlanner {
   override def planWithValues(state : PlannerState)(
       reportName : String,
       operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ResultValues] = (reportName, operands) match {
+  )(implicit plan : PlanWriter) : Option[ResultValues] = (reportName, operands) match {
     case ("values", operands) =>
       // We have a specific type here!
       val operandValues = operands.map(_._2)

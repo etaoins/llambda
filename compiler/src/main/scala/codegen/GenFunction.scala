@@ -35,28 +35,27 @@ private[codegen] object GenFunction {
     }
 
     // Do we need to set up GC for this function?
-    val (procStartBlock, gcSlotsOpt, gcCleanUpBlockOpt) = plannedFunction.worldPtrOpt match {
-      case Some(worldPtrTemp) =>
-        val worldPtrIr = argTemps(worldPtrTemp)
+    val (procStartBlock, gcSlotsOpt, gcCleanUpBlockOpt) = if (plannedFunction.signature.hasWorldArg) {
+      val worldPtrIr = argTemps(ps.WorldPtrValue)
 
-        // Create the start block the GC code invokes after the entry block
-        val procStartBlock = generatedFunction.startChildBlock("procStart")
-        
-        // Create our GC slot allocator
-        val gcSlots = new GcSlotGenerator(generatedFunction.entryBlock)(worldPtrIr, procStartBlock, genGlobals.targetPlatform)
+      // Create the start block the GC code invokes after the entry block
+      val procStartBlock = generatedFunction.startChildBlock("procStart")
 
-        // Create our landingpad
-        val gcCleanUpBlock = {
-          val block = generatedFunction.startChildBlock("gcCleanUp")
-          GenGcCleanUpBlock(block, gcSlots)
-          block
-        }
+      // Create our GC slot allocator
+      val gcSlots = new GcSlotGenerator(generatedFunction.entryBlock)(worldPtrIr, procStartBlock, genGlobals.targetPlatform)
 
-        (procStartBlock, Some(gcSlots), Some(gcCleanUpBlock))
+      // Create our landingpad
+      val gcCleanUpBlock = {
+        val block = generatedFunction.startChildBlock("gcCleanUp")
+        GenGcCleanUpBlock(block, gcSlots)
+        block
+      }
 
-      case None =>
-        // No GC support
-        (generatedFunction.entryBlock, None, None)
+      (procStartBlock, Some(gcSlots), Some(gcCleanUpBlock))
+    }
+    else {
+      // No GC support
+      (generatedFunction.entryBlock, None, None)
     }
 
     val startState = GenerationState(

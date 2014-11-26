@@ -47,12 +47,11 @@ class KnownRecordMutatorProc(recordType : vt.RecordType, field : vt.RecordField)
       signature=signature,
       namedArguments=namedArguments,
       steps=plan.steps.toList,
-      worldPtrOpt=None,
       debugContextOpt=None
     )
   }
 
-  override def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = {
+  override def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter) : Option[PlanResult] = {
     operands match {
       case List((_, recordValue), (_, newValue)) =>
         val recordCellTemp = recordValue.toTempValue(recordType)

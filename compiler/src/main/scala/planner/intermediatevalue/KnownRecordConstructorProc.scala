@@ -23,7 +23,6 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
 
   def planFunction(parentPlan : PlanWriter, allocedSymbol : String) : PlannedFunction = {
     val plan = parentPlan.forkPlan()
-    val worldPtrTemp = new ps.WorldPtrValue
 
     val fieldToTempValue = (initializedFields.map { field =>
       (field, ps.Temp(field.fieldType))
@@ -32,23 +31,23 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
     // Get unique argument names
     val argumentUniquer = new SourceNameUniquer
 
-    val namedArguments = ("world" -> worldPtrTemp) ::
+    val namedArguments = ("world" -> ps.WorldPtrValue) ::
       (initializedFields.map { case field =>
         (argumentUniquer(field.sourceName) -> fieldToTempValue(field))
       }).toList
-    
+
     // Initialize the record
     val cellTemp = ps.RecordTemp()
     val dataTemp = ps.RecordLikeDataTemp()
 
     plan.steps += ps.InitRecordLike(cellTemp, dataTemp, recordType, isUndefined=false)
-    
+
     // Set all our fields
     for(field <- recordType.fields) {
       val fieldTemp = fieldToTempValue.getOrElse(field, {
-        UnitValue.toTempValue(field.fieldType)(plan, worldPtrTemp)
+        UnitValue.toTempValue(field.fieldType)(plan)
       })
-        
+
       plan.steps += ps.SetRecordDataField(dataTemp, recordType, field, fieldTemp)
     }
 
@@ -59,12 +58,11 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
       signature=signature,
       namedArguments=namedArguments,
       steps=plan.steps.toList,
-      worldPtrOpt=Some(worldPtrTemp),
       debugContextOpt=None
     )
   }
 
-  override def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = {
+  override def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter) : Option[PlanResult] = {
     if (operands.length != initializedFields.length) {
       // Not the right number of operands
       return None
@@ -83,7 +81,7 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
 
     for(field <- recordType.fields) {
       val fieldTemp = fieldToTempValue.getOrElse(field, {
-        UnitValue.toTempValue(field.fieldType)(plan, worldPtr)
+        UnitValue.toTempValue(field.fieldType)(plan)
       })
         
       plan.steps += ps.SetRecordDataField(dataTemp, recordType, field, fieldTemp)

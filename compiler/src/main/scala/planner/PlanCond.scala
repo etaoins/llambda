@@ -99,8 +99,6 @@ object PlanCond {
       trueExpr : et.Expr,
       falseExpr : et.Expr
   )(implicit plan : PlanWriter) : PlanResult = {
-    implicit val worldPtr = initialState.worldPtr
-
     val testResult = PlanExpr(initialState)(testExpr)
     val testValue = testResult.values.toSingleValue()
 

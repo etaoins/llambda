@@ -14,7 +14,7 @@ object CharProcPlanner extends ReportProcPlanner {
       compareCond : ps.CompareCond.CompareCond,
       staticCalc : CharComparator,
       operands : List[iv.IntermediateValue]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = {
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
     // Compare in a fork in case we abort the whole thing later
     val comparePlan = plan.forkPlan()
 
@@ -30,8 +30,8 @@ object CharProcPlanner extends ReportProcPlanner {
         }
 
       case List(dynamic1, dynamic2) =>
-        val val1Temp = dynamic1.toTempValue(vt.UnicodeChar)(comparePlan, worldPtr)
-        val val2Temp = dynamic2.toTempValue(vt.UnicodeChar)(comparePlan, worldPtr)
+        val val1Temp = dynamic1.toTempValue(vt.UnicodeChar)(comparePlan)
+        val val2Temp = dynamic2.toTempValue(vt.UnicodeChar)(comparePlan)
 
         val predicateTemp = ps.Temp(vt.Predicate)
 
@@ -70,7 +70,7 @@ object CharProcPlanner extends ReportProcPlanner {
   override def planWithValue(state : PlannerState)(
       reportName : String,
       operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = (reportName, operands) match {
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, operands) match {
     case ("char->integer", List((_, constantChar : iv.ConstantCharValue))) =>
       Some(new iv.ConstantExactIntegerValue(constantChar.value))
 

@@ -17,8 +17,6 @@ private[planner] object PlanBind {
   }
 
   def apply(initialState : PlannerState)(bindings : List[et.Binding])(implicit plan : PlanWriter) : PlannerState = {
-    implicit val worldPtr = initialState.worldPtr
-
     val bindingLocs = bindings.flatMap(_.storageLocs).toSet
 
     bindings.foldLeft(initialState) { case (prerecursiveState, binding) =>

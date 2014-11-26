@@ -40,7 +40,6 @@ object SymbolForTypePredicateProc {
       signature=TypePredicateProcSignature,
       namedArguments=List(("value" -> argumentTemp)),
       steps=plan.steps.toList,
-      worldPtrOpt=None,
       debugContextOpt=None
     )
 

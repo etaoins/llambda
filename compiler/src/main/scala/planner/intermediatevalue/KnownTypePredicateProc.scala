@@ -21,7 +21,7 @@ class KnownTypePredicateProc(testingType : vt.SchemeType) extends KnownProc(
     throw new InternalCompilerErrorException("Attempt to change the self value of a type predicate")
   }
 
-  override def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] =
+  override def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter) : Option[PlanResult] =
     operands match {
       case List((_, singleValue)) =>
         val checkResult = PlanTypeCheck(

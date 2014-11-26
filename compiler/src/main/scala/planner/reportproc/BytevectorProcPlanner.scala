@@ -11,7 +11,7 @@ object BytevectorProcPlanner extends ReportProcPlanner {
   override def planWithValue(state : PlannerState)(
       reportName : String,
       operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = (reportName, operands) match {
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, operands) match {
     case ("bytevector-length", List((_, constantBytevector : iv.ConstantBytevectorValue))) =>
       Some(new iv.ConstantExactIntegerValue(constantBytevector.elements.length))
 

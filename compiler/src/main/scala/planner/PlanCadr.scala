@@ -18,7 +18,7 @@ object PlanCadr {
       knownPairLoader : KnownPairLoader,
       typeRefForPairType : TypeRefForPairType,
       planLoader : PlanLoader
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : iv.IntermediateValue = pairValue match {
+  )(implicit plan : PlanWriter) : iv.IntermediateValue = pairValue match {
     case knownPair : iv.KnownPair =>
       // We can resolve this at compile time
       knownPairLoader(knownPair)
@@ -48,14 +48,14 @@ object PlanCadr {
   def loadCar(
       pairValue : iv.IntermediateValue,
       errorMessageOpt : Option[RuntimeErrorMessage] = None
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : iv.IntermediateValue = {
+  )(implicit plan : PlanWriter) : iv.IntermediateValue = {
     loadCadr(pairValue, errorMessageOpt, _.car, _.carTypeRef, ps.LoadPairCar)
   }
   
   def loadCdr(
       pairValue : iv.IntermediateValue,
       errorMessageOpt : Option[RuntimeErrorMessage] = None
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : iv.IntermediateValue = {
+  )(implicit plan : PlanWriter) : iv.IntermediateValue = {
     loadCadr(pairValue, errorMessageOpt, _.cdr, _.cdrTypeRef, ps.LoadPairCdr)
   }
 }

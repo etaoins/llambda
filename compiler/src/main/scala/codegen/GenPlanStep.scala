@@ -50,13 +50,13 @@ object GenPlanStep {
   }
 
   private def genStep(state : GenerationState, genGlobals : GenGlobals)(step : ps.Step) : GenResult = step match {
-    case ps.AllocateCells(worldPtrTemp, count) =>
+    case ps.AllocateCells(count) =>
       if (!state.currentAllocation.isEmpty) {
         // This is not only wasteful but dangerous as the previous allocation won't be fully initialized
         throw new InternalCompilerErrorException("Attempted cell allocation without fully consuming previous allocation")
       }
 
-      val worldPtrIr = state.liveTemps(worldPtrTemp)
+      val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
 
       val (allocState, allocation) = GenCellAllocation.genAllocation(state)(worldPtrIr, count)
       allocState.copy(currentAllocation=allocation)
@@ -349,10 +349,10 @@ object GenPlanStep {
 
       state
 
-    case ps.AssertRecordLikeDefined(worldPtrTemp, recordCellTemp, recordLikeType, errorMessage) => 
-      val worldPtrIr = state.liveTemps(worldPtrTemp)
+    case ps.AssertRecordLikeDefined(recordCellTemp, recordLikeType, errorMessage) =>
+      val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
       val generatedType = genGlobals.typeGenerator(recordLikeType)
-      
+
       // Start our branches
       val irFunction = state.currentBlock.function
       val fatalBlock = irFunction.startChildBlock("recordIsUndefined")
@@ -422,8 +422,8 @@ object GenPlanStep {
     case popDynamic : ps.PopDynamicState =>
       GenParameter.genPopDynamicState(state)(popDynamic)
 
-    case ps.CreateParameterProc(worldPtrTemp, resultTemp, initialValueTemp, converterProcTempOpt, inputToDispose) =>
-      val worldPtrIr = state.liveTemps(worldPtrTemp)
+    case ps.CreateParameterProc(resultTemp, initialValueTemp, converterProcTempOpt, inputToDispose) =>
+      val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
       val initialValueIr = state.liveTemps(initialValueTemp)
       val converterProcOptIr = converterProcTempOpt.map(state.liveTemps)
 
@@ -437,8 +437,8 @@ object GenPlanStep {
 
       postProcState.withTempValue(resultTemp -> resultIr)
 
-    case ps.LoadValueForParameterProc(worldPtrTemp, resultTemp, parameterProcTemp) =>
-      val worldPtrIr = state.liveTemps(worldPtrTemp)
+    case ps.LoadValueForParameterProc(resultTemp, parameterProcTemp) =>
+      val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
       val parameterProcIr = state.liveTemps(parameterProcTemp)
 
       val resultIr = GenParameter.genLoadValueForParameterProc(state)(worldPtrIr, parameterProcIr) 
@@ -577,11 +577,11 @@ object GenPlanStep {
       state.copy(
         currentAllocation=newAllocation
       ).withTempValue(resultTemp -> resultIr)
-    
-    case ps.AssertPairMutable(worldPtrTemp, pairTemp, errorMessage) => 
-      val worldPtrIr = state.liveTemps(worldPtrTemp)
+
+    case ps.AssertPairMutable(pairTemp, errorMessage) =>
+      val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
       val pairIr = state.liveTemps(pairTemp)
-      
+
       // Start our branches
       val irFunction = state.currentBlock.function
       val fatalBlock = irFunction.startChildBlock("pairIsImmutable")
@@ -616,8 +616,8 @@ object GenPlanStep {
       ct.PairCell.genStoreToCdr(state.currentBlock)(newValueIr, pairIr)
       state
 
-    case ps.AssertPredicate(worldPtrTemp, predicateTemp, errorMessage, evidenceOpt) =>
-      val worldPtrIr = state.liveTemps(worldPtrTemp)
+    case ps.AssertPredicate(predicateTemp, errorMessage, evidenceOpt) =>
+      val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
       val predIr = state.liveTemps(predicateTemp)
       val evidenceIrOpt = evidenceOpt.map(state.liveTemps)
       

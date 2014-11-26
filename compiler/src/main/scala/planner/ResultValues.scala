@@ -15,10 +15,10 @@ sealed abstract class ResultValues {
     *
     * If the result contains multiple values then ImpossibleTypeConversionException will be thrown
     */
-  def toSingleValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : iv.IntermediateValue
+  def toSingleValue()(implicit plan : PlanWriter) : iv.IntermediateValue
 
   /** Returns a multiple vlaue list containing the values in this result */
-  def toMultipleValueList()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : iv.IntermediateValue
+  def toMultipleValueList()(implicit plan : PlanWriter) : iv.IntermediateValue
 
   /** Returns the actual return type for this result value */
   def returnType : vt.ReturnType.ReturnType
@@ -32,7 +32,7 @@ sealed abstract class ResultValues {
     */
   def toReturnTempValue(
       returnType : vt.ReturnType.ReturnType
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ps.TempValue] = returnType match {
+  )(implicit plan : PlanWriter) : Option[ps.TempValue] = returnType match {
     case vt.ReturnType.SingleValue(vt.UnitType) =>
       None
 
@@ -47,10 +47,10 @@ sealed abstract class ResultValues {
 }
 
 case class SingleValue(value : iv.IntermediateValue) extends ResultValues {
-  def toSingleValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : iv.IntermediateValue =
+  def toSingleValue()(implicit plan : PlanWriter) : iv.IntermediateValue =
     value
 
-  def toMultipleValueList()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) =
+  def toMultipleValueList()(implicit plan : PlanWriter) =
     ValuesToList(List(value), capturable=false)
   
   def returnType = 
@@ -72,7 +72,7 @@ case class SingleValue(value : iv.IntermediateValue) extends ResultValues {
 }
 
 case class MultipleValues(multipleValueList : iv.IntermediateValue) extends ResultValues {
-  def toSingleValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : iv.IntermediateValue = {
+  def toSingleValue()(implicit plan : PlanWriter) : iv.IntermediateValue = {
     // This is tricky - we need to make sure that we have exactly one value
     // Make sure we're not empty
     val notEnoughValuesMessage = RuntimeErrorMessage(
@@ -98,7 +98,7 @@ case class MultipleValues(multipleValueList : iv.IntermediateValue) extends Resu
     carValue
   }
   
-  def toMultipleValueList()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) =
+  def toMultipleValueList()(implicit plan : PlanWriter) =
     multipleValueList
 
   def returnType =
@@ -114,7 +114,7 @@ case class MultipleValues(multipleValueList : iv.IntermediateValue) extends Resu
 object ResultValues {
   def apply(
       values : List[iv.IntermediateValue]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) = values match {
+  )(implicit plan : PlanWriter) = values match {
     case List(singleValue) =>
       SingleValue(singleValue)
 

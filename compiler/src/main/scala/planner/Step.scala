@@ -10,7 +10,7 @@ class TempValue(val isGcManaged : Boolean) {
   override def toString = s"%${this.hashCode.toHexString}" 
 }
 
-class WorldPtrValue extends TempValue(false)
+object WorldPtrValue extends TempValue(false)
 
 object Temp {
   def apply(valueType : vt.ValueType, knownConstant : Boolean = false) =
@@ -205,8 +205,8 @@ case class TailCall(signature : ProcedureSignature, entryPoint : TempValue, argu
  *
  * This should only be inserted in to the plan by PlanCellAllocations
  */
-case class AllocateCells(worldPtr : WorldPtrValue, count : Int) extends Step {
-  val inputValues = Set[TempValue](worldPtr)
+case class AllocateCells(count : Int) extends Step {
+  val inputValues = Set[TempValue](WorldPtrValue)
   val outputValues = Set[TempValue]()
 
   override def canAllocate = true
@@ -758,15 +758,14 @@ case class InitPair(result : TempValue, listLengthOpt : Option[Int] = None) exte
   *
   * It is illegal to attempt SetPairCar or SetPairCdr on an immutable pair
   */
-case class AssertPairMutable(worldPtr : WorldPtrValue, pairValue : TempValue, errorMessage : RuntimeErrorMessage) extends AssertStep {
-  lazy val inputValues = Set[TempValue](worldPtr, pairValue)
+case class AssertPairMutable(pairValue : TempValue, errorMessage : RuntimeErrorMessage) extends AssertStep {
+  lazy val inputValues = Set[TempValue](WorldPtrValue, pairValue)
   val outputValues = Set[TempValue]()
 
   def renamed(f: (TempValue) => TempValue) =
-    AssertPairMutable(worldPtr, f(pairValue), errorMessage).assignLocationFrom(this)
+    AssertPairMutable(f(pairValue), errorMessage).assignLocationFrom(this)
 
-  override def mergeKey = 
-    (worldPtr, pairValue)
+  override def mergeKey = (pairValue)
 }
 
 case class SetPairCar(pairValue : TempValue, newValue : TempValue) extends Step {
@@ -811,12 +810,12 @@ case class SetRecordLikeDefined(record : TempValue, recordLikeType : vt.RecordLi
 }
 
 /** Asserts that a record is defined */
-case class AssertRecordLikeDefined(worldPtr : WorldPtrValue, record : TempValue, recordLikeType : vt.RecordLikeType, errorMessage : RuntimeErrorMessage) extends Step with AssertStep {
-  lazy val inputValues = Set(worldPtr, record)
+case class AssertRecordLikeDefined(record : TempValue, recordLikeType : vt.RecordLikeType, errorMessage : RuntimeErrorMessage) extends Step with AssertStep {
+  lazy val inputValues = Set(WorldPtrValue, record)
   val outputValues = Set[TempValue]()
-  
+
   def renamed(f : (TempValue) => TempValue) =
-    AssertRecordLikeDefined(worldPtr, f(record), recordLikeType, errorMessage).assignLocationFrom(this)
+    AssertRecordLikeDefined(f(record), recordLikeType, errorMessage).assignLocationFrom(this)
 }
 
 /** Sets a record field. The value must match the type of record field */
@@ -883,15 +882,14 @@ case class SetProcedureEntryPoint(procedureCell : TempValue, entryPoint : TempVa
   *                           parameterize
   */
 case class CreateParameterProc(
-    worldPtr : WorldPtrValue,
     result : TempValue,
     initialValue : TempValue,
     converterProcOpt : Option[TempValue],
     inputToDispose : Set[TempValue] = Set()
 ) extends Step with InputDisposableStep {
-  lazy val inputValues = Set(worldPtr, initialValue) ++ converterProcOpt.toSet
+  lazy val inputValues = Set(WorldPtrValue, initialValue) ++ converterProcOpt.toSet
   lazy val outputValues = Set(result)
-  
+
   override def canAllocate = true
 
   def withDisposedInput(values : Set[TempValue]) =
@@ -899,7 +897,6 @@ case class CreateParameterProc(
 
   def renamed(f : (TempValue) => TempValue) =
     CreateParameterProc(
-      worldPtr,
       f(result),
       f(initialValue),
       converterProcOpt.map(f),
@@ -917,15 +914,14 @@ case class CreateParameterProc(
   *                        undefined.
   */
 case class LoadValueForParameterProc(
-    worldPtr : WorldPtrValue,
     result : TempValue,
     parameterProc : TempValue
 ) extends Step {
-  lazy val inputValues = Set(worldPtr, parameterProc)
+  lazy val inputValues = Set(WorldPtrValue, parameterProc)
   lazy val outputValues = Set(result)
-  
+
   def renamed(f : (TempValue) => TempValue) =
-    LoadValueForParameterProc(worldPtr, f(result), f(parameterProc)).assignLocationFrom(this)
+    LoadValueForParameterProc(f(result), f(parameterProc)).assignLocationFrom(this)
 }
 
 /** Represents a value to be parameterized by PushDynamicSate
@@ -951,18 +947,18 @@ case class ParameterizedValue(
   * 
   * @param parameterValues  Map of parameter procedure IR values to the new value the paramer should take
   */
-case class PushDynamicState(worldPtr : WorldPtrValue, parameterValues : List[ParameterizedValue]) extends Step {
+case class PushDynamicState(parameterValues : List[ParameterizedValue]) extends Step {
   lazy val inputValues = parameterValues.flatMap({
     case ParameterizedValue(parameterProc, newValue, _) =>
       List(parameterProc, newValue)
-  }).toSet + worldPtr
+  }).toSet + WorldPtrValue
 
   val outputValues = Set[TempValue]()
   
   override def canAllocate : Boolean = true
 
   def renamed(f : (TempValue) => TempValue) = 
-    PushDynamicState(worldPtr, parameterValues.map(_.renamed(f)))
+    PushDynamicState(parameterValues.map(_.renamed(f)))
       .assignLocationFrom(this)
 }
 
@@ -970,8 +966,8 @@ case class PushDynamicState(worldPtr : WorldPtrValue, parameterValues : List[Par
   * 
   * This must be a state pushed with PushDynamicState, not through stdlib functions such as dynamic-wind
   */
-case class PopDynamicState(worldPtr : WorldPtrValue) extends Step {
-  lazy val inputValues = Set[TempValue](worldPtr)
+case class PopDynamicState() extends Step {
+  lazy val inputValues = Set[TempValue](WorldPtrValue)
   val outputValues = Set[TempValue]()
 
   def renamed(f : (TempValue) => TempValue) = 
@@ -1118,22 +1114,19 @@ case class FloatBitwiseCompare(
 }
 
 case class AssertPredicate(
-    worldPtr : WorldPtrValue,
     predicate : TempValue,
     errorMessage : RuntimeErrorMessage,
     evidenceOpt : Option[TempValue] = None
 ) extends Step with AssertStep {
-  lazy val inputValues = Set(worldPtr, predicate) ++ evidenceOpt.toSet
+  lazy val inputValues = Set(WorldPtrValue, predicate) ++ evidenceOpt.toSet
   val outputValues = Set[TempValue]()
 
   def renamed(f : (TempValue) => TempValue) =
     AssertPredicate(
-      worldPtr,
       f(predicate),
       errorMessage,
       evidenceOpt.map(f)
     ).assignLocationFrom(this)
 
-  override def mergeKey = 
-    (worldPtr, predicate)
+  override def mergeKey = (predicate)
 }

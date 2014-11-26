@@ -48,14 +48,14 @@ private[planner] object PlanCaseLambda {
       closureType : vt.ClosureType,
       argListHeadTemp : ps.TempValue,
       argLengthTemp : ps.TempValue
-  )(implicit entryPlan : PlanWriter, worldPtrTemp : ps.WorldPtrValue) : ResultValues = plannedClauses match {
+  )(implicit entryPlan : PlanWriter) : ResultValues = plannedClauses match {
     case Nil =>
       // We were called with no clauses
       // Note that the checkingClause match below will explicitly check for empty clauses before recursing so this will
       // only be called for completely empty (case-lambda)s
       val falsePredTemp = ps.Temp(vt.Predicate)
       entryPlan.steps += ps.CreateNativeInteger(falsePredTemp, value=0, bits=vt.Predicate.bits)
-      entryPlan.steps += ps.AssertPredicate(worldPtrTemp, falsePredTemp, noMatchingClauseRuntimeErrorMessage)
+      entryPlan.steps += ps.AssertPredicate(falsePredTemp, noMatchingClauseRuntimeErrorMessage)
 
       // This isn't reachable but we need to return to make codegen happy
       SingleValue(iv.UnitValue)
@@ -101,11 +101,11 @@ private[planner] object PlanCaseLambda {
       val argListBoxed = BoxedValue(ct.ListElementCell, argListHeadTemp)
       val argListValue = new iv.CellValue(argListType, argListBoxed)
 
-      val trueValues = PlanInvokeApply.withArgumentList(restoredProcValue, argListValue)(truePlan, worldPtrTemp)
+      val trueValues = PlanInvokeApply.withArgumentList(restoredProcValue, argListValue)(truePlan)
 
       if (tailClauses.isEmpty) {
         // We have to use this clause - assert then use the true values directly
-        entryPlan.steps += ps.AssertPredicate(worldPtrTemp, matchesPred, noMatchingClauseRuntimeErrorMessage)
+        entryPlan.steps += ps.AssertPredicate(matchesPred, noMatchingClauseRuntimeErrorMessage)
         entryPlan.steps ++= truePlan.steps
 
         trueValues
@@ -119,7 +119,7 @@ private[planner] object PlanCaseLambda {
           closureType=closureType,
           argListHeadTemp=argListHeadTemp,
           argLengthTemp=argLengthTemp
-        )(falsePlan, worldPtrTemp)
+        )(falsePlan)
 
         // Now phi them together
         val phiResult = PlanResultValuesPhi(truePlan, trueValues, falsePlan, falseValues)
@@ -153,7 +153,7 @@ private[planner] object PlanCaseLambda {
       val capturedProcOpt = if (procValue.needsClosureRepresentation) {
         // Convert to a TempValue now because we can't enter GC while building our closure
         val procType = procValue.schemeType
-        val procTemp = procValue.toTempValue(procType, convertProcType=false)(parentPlan, parentState.worldPtr)
+        val procTemp = procValue.toTempValue(procType, convertProcType=false)(parentPlan)
 
         val recordField = new vt.RecordField(s"clause{$index}", procType)
 
@@ -179,8 +179,6 @@ private[planner] object PlanCaseLambda {
     else {
       vt.EmptyClosureType
     }
-    
-    val worldPtrTemp = new ps.WorldPtrValue
 
     val innerSelfTempOpt = if (closureRequired) {
       Some(ps.CellTemp(ct.ProcedureCell))
@@ -203,10 +201,10 @@ private[planner] object PlanCaseLambda {
       closureType=closureType,
       argListHeadTemp=argListHeadTemp,
       argLengthTemp=argLengthTemp
-    )(procPlan, worldPtrTemp)
+    )(procPlan)
 
     val returnType = resultValues.preferredReturnType
-    val resultTempOpt = resultValues.toReturnTempValue(returnType)(procPlan, worldPtrTemp)
+    val resultTempOpt = resultValues.toReturnTempValue(returnType)(procPlan)
     procPlan.steps += ps.Return(resultTempOpt)
 
     // Determine our signature
@@ -249,7 +247,7 @@ private[planner] object PlanCaseLambda {
     val plannedFunction = PlannedFunction(
       signature=signature,
       namedArguments=List(
-        "world" -> worldPtrTemp
+        "world" -> ps.WorldPtrValue
       ) ++
       innerSelfTempOpt.toList.map({ procSelf =>
         ("self" -> procSelf)
@@ -258,7 +256,6 @@ private[planner] object PlanCaseLambda {
         "restArg" -> argListHeadTemp
       ),
       steps=procPlan.steps.toList,
-      worldPtrOpt=Some(worldPtrTemp),
       debugContextOpt=None,
       irCommentOpt=None
     )

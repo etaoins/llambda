@@ -63,7 +63,7 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
       valueType : vt.ValueType,
       val1 : iv.IntermediateValue,
       val2 : iv.IntermediateValue
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : iv.IntermediateValue = {
+  )(implicit plan : PlanWriter) : iv.IntermediateValue = {
     val val1Temp = val1.toTempValue(valueType, convertProcType=false)
     val val2Temp = val2.toTempValue(valueType, convertProcType=false)
 
@@ -78,7 +78,7 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
   private def flonumCompare(
       staticValue : Double,
       dynamicValue : iv.IntermediateValue
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : iv.IntermediateValue = {
+  )(implicit plan : PlanWriter) : iv.IntermediateValue = {
     val resultPred = ps.Temp(vt.Predicate)
 
     if (staticValue.isNaN) {
@@ -109,7 +109,7 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
       runtimeCompareSymbol : String,
       val1 : iv.IntermediateValue,
       val2 : iv.IntermediateValue)
-  (implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : iv.IntermediateValue = {
+  (implicit plan : PlanWriter) : iv.IntermediateValue = {
     // (eqv?) etc don't invoke their arguments so we can skip the procedure type conversion
     val val1Temp = val1.toTempValue(vt.AnySchemeType, convertProcType=false)
     val val2Temp = val2.toTempValue(vt.AnySchemeType, convertProcType=false)
@@ -131,7 +131,7 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
       runtimeCompareSymbol : String,
       val1 : iv.IntermediateValue,
       val2 : iv.IntermediateValue)
-  (implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : PlanResult = {
+  (implicit plan : PlanWriter) : PlanResult = {
     val ptrCompareUnion = vt.UnionType(ptrCompareTypes)
     
     val resultValue = if (plan.config.optimize) { 
@@ -187,7 +187,7 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
   override def planWithResult(state : PlannerState)(
       reportName : String,
       operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = (reportName, operands) match {
+  )(implicit plan : PlanWriter) : Option[PlanResult] = (reportName, operands) match {
     case (_, List((_, val1), (_, val2))) if List("eqv?", "eq?").contains(reportName) =>
       StaticValueEqv.valuesAreEqv(val1, val2).map { staticResult =>
         PlanResult(

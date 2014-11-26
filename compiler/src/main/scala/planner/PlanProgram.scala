@@ -12,16 +12,9 @@ case class PlannedProgram(
 
 object PlanProgram {
   def apply(exprs : List[et.Expr])(planConfig : PlanConfig) : PlannedProgram = {
-    val worldTemp = new ps.WorldPtrValue
-
-    val emptyState = PlannerState(
-      worldPtr=worldTemp,
-      inlineDepth=0
-    )
-
     val plan = PlanWriter(planConfig)
-      
-    PlanExpr(emptyState)(et.Begin(exprs))(plan)
+
+    PlanExpr(PlannerState())(et.Begin(exprs))(plan)
 
     // __llambda_top_level is a void function
     plan.steps += ps.Return(None)
@@ -29,9 +22,8 @@ object PlanProgram {
     val allPlannedFunctions = 
       (plan.plannedFunctions + (LlambdaTopLevelSignature.nativeSymbol -> PlannedFunction(
         signature=LlambdaTopLevelSignature,
-        namedArguments=List("world" -> worldTemp),
+        namedArguments=List("world" -> ps.WorldPtrValue),
         steps=plan.steps.toList,
-        worldPtrOpt=Some(worldTemp),
         debugContextOpt=None
       ))).toMap
 

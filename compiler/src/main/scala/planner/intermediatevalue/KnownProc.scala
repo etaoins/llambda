@@ -44,13 +44,13 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
   def nativeSymbolOpt(implicit plan : PlanWriter) : Option[String] =
     Some(nativeSymbol)
   
-  def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue =
+  def toBoxedValue()(implicit plan : PlanWriter) : BoxedValue =
     BoxedValue(ct.ProcedureCell, planSelf())
   
   def toProcedureTempValue(
       targetType : vt.ApplicableType,
       errorMessageOpt : Option[RuntimeErrorMessage]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
+  )(implicit plan : PlanWriter) : ps.TempValue = {
     if (vt.SatisfiesType(targetType, schemeType) == Some(false)) {
       val message = s"Unable to convert ${typeDescription} to procedure type ${targetType}"
       impossibleConversion(message)
@@ -98,7 +98,7 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
     adapterProcTemp
   }
   
-  def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : InvokableProcedure = 
+  def toInvokableProcedure()(implicit plan : PlanWriter) : InvokableProcedure = 
     this
   
   def planEntryPoint()(implicit plan : PlanWriter) : ps.TempValue = {
@@ -126,7 +126,7 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
     selfTempOpt.isDefined
   
   /** Optionally plans an application of this procedure inline at the call site */
-  def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] =
+  def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter) : Option[PlanResult] =
     None
 
   override def withSchemeType(newType : vt.SchemeType) : KnownProc =

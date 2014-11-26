@@ -24,7 +24,7 @@ private[planner] object ValuesToPair {
       cdrValue : iv.IntermediateValue,
       listLengthOpt : Option[Int],
       capturable : Boolean = true
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : iv.IntermediateValue = {
+  )(implicit plan : PlanWriter) : iv.IntermediateValue = {
     if (plan.config.schemeDialect.pairsAreImmutable) {
       (carValue, cdrValue) match {
         case (constantCar : iv.ConstantValue, constantCdr : iv.ConstantValue) =>

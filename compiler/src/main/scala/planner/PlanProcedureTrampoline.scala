@@ -27,7 +27,6 @@ private[planner] object PlanProcedureTrampoline {
       targetProc : InvokableProcedure,
       targetProcLocOpt : Option[ContextLocated] = None
   )(implicit parentPlan : PlanWriter) : PlannedFunction = {
-    val worldPtrTemp = new ps.WorldPtrValue
     val inSelfTemp = ps.CellTemp(ct.ProcedureCell)
     implicit val plan = parentPlan.forkPlan()
 
@@ -57,7 +56,7 @@ private[planner] object PlanProcedureTrampoline {
         val inTemp = ps.Temp(trampolineType)
         val inValue = TempValueToIntermediate(trampolineType, inTemp)(plan.config)
 
-        val outTemp = inValue.toTempValue(targetType)(plan, worldPtrTemp)
+        val outTemp = inValue.toTempValue(targetType)(plan)
 
         (inTemp -> outTemp) 
     }
@@ -72,7 +71,7 @@ private[planner] object PlanProcedureTrampoline {
         listValue=inRestArgValueOpt.get,
         memberTypes=extraOutFixedArgTypes,
         insufficientLengthMessage=insufficientArgsMessage
-      )(plan, worldPtrTemp)
+      )(plan)
 
       (destructuredArgs.memberTemps, Nil, Some(destructuredArgs.listTailValue))
     }
@@ -95,7 +94,7 @@ private[planner] object PlanProcedureTrampoline {
         memberValues=extraInFixedArgValues,
         tailValue=outRestArgTail,
         capturable=false
-      )(plan, worldPtrTemp)
+      )(plan)
 
       (Nil, extraInFixedArgTemps, Some(outRestArgValue))
     }
@@ -108,21 +107,21 @@ private[planner] object PlanProcedureTrampoline {
       case Some(outRestArgValue) if !outHasRestArg =>
         // Make sure out out rest arg is empty
         val tooManyArgsMessage = ArityRuntimeErrorMessage.tooManyArgs(targetProc)(plan)
-        outRestArgValue.toTempValue(vt.EmptyListType, Some(tooManyArgsMessage))(plan, worldPtrTemp)
+        outRestArgValue.toTempValue(vt.EmptyListType, Some(tooManyArgsMessage))(plan)
         None
 
       case Some(outRestArgValue) if outHasRestArg =>
         // Make sure the out rest arg has the right type
         val expectedType = vt.UniformProperListType(outSignature.restArgMemberTypeOpt.get)
-        outRestArgValue.castToSchemeType(expectedType)(plan, worldPtrTemp)
+        outRestArgValue.castToSchemeType(expectedType)(plan)
 
-        Some(outRestArgValue.toTempValue(vt.ListElementType)(plan, worldPtrTemp))
+        Some(outRestArgValue.toTempValue(vt.ListElementType)(plan))
 
       case None if !outHasRestArg =>
         None
-      
+
       case None if outHasRestArg =>
-        Some(iv.EmptyListValue.toTempValue(vt.ListElementType)(plan, worldPtrTemp))
+        Some(iv.EmptyListValue.toTempValue(vt.ListElementType)(plan))
     }
 
     val updatedInvokable = if (outSignature.hasSelfArg) {
@@ -147,9 +146,9 @@ private[planner] object PlanProcedureTrampoline {
       invokableProc=updatedInvokable,
       fixedTemps=allOutFixedArgTemps,
       restTemps=outRestArgTempOpt
-    )(plan, worldPtrTemp)
+    )(plan)
 
-    val returnTempOpt = resultValues.toReturnTempValue(trampolineSignature.returnType)(plan, worldPtrTemp)
+    val returnTempOpt = resultValues.toReturnTempValue(trampolineSignature.returnType)(plan)
     plan.steps += ps.Return(returnTempOpt)
 
     val irCommentOpt =
@@ -159,7 +158,7 @@ private[planner] object PlanProcedureTrampoline {
         s"Trampoline function for Scheme procedure defined at ${location.locationOnlyString}"
 
     val inNamedArguments = List(
-      ("world"   -> worldPtrTemp),
+      ("world"   -> ps.WorldPtrValue),
       ("closure" -> inSelfTemp)
     ) ++ allInFixedArgTemps.zipWithIndex.map { case (fixedArgTemp, index) =>
       s"fixedArg${index}" -> fixedArgTemp
@@ -171,9 +170,8 @@ private[planner] object PlanProcedureTrampoline {
       signature=trampolineSignature,
       namedArguments=inNamedArguments,
       steps=plan.steps.toList,
-      worldPtrOpt=Some(worldPtrTemp),
       debugContextOpt=None,
       irCommentOpt=irCommentOpt
-    ) 
+    )
   }
 }

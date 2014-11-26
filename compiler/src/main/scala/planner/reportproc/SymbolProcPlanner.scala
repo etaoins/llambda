@@ -11,7 +11,7 @@ object SymbolProcPlanner extends ReportProcPlanner {
   override def planWithValue(state : PlannerState)(
       reportName : String,
       operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = (reportName, operands) match {
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, operands) match {
     case ("string->symbol", List((_, constantString : iv.ConstantStringValue))) =>
       Some(new iv.ConstantSymbolValue(constantString.value))
 

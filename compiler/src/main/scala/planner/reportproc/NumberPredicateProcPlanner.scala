@@ -11,7 +11,7 @@ import llambda.compiler.{valuetype => vt}
 object NumberPredicateProcPlanner extends ReportProcPlanner {
   private def numberTypePredicate(state : PlannerState)(
     operand : (ContextLocated, iv.IntermediateValue), testingType : vt.SchemeType
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : PlanResult = {
+  )(implicit plan : PlanWriter) : PlanResult = {
     val operandValue = operand._2
 
     plan.withContextLocation(operand._1) {
@@ -48,7 +48,7 @@ object NumberPredicateProcPlanner extends ReportProcPlanner {
   override def planWithResult(state : PlannerState)(
       reportName : String,
       operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = (reportName, operands) match {
+  )(implicit plan : PlanWriter) : Option[PlanResult] = (reportName, operands) match {
     case ("inexact?", List(singleValue)) =>
       Some(numberTypePredicate(state)(singleValue, vt.FlonumType))
     

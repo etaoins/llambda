@@ -14,12 +14,12 @@ object PlanInvokeApply {
       invokableProc : InvokableProcedure,
       fixedTemps : Seq[ps.TempValue],
       restTemps : Option[ps.TempValue]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ResultValues = {
+  )(implicit plan : PlanWriter) : ResultValues = {
     val entryPointTemp = invokableProc.planEntryPoint()
     val signature = invokableProc.signature
 
     val worldTemps = if (signature.hasWorldArg) {
-      List(worldPtr)
+      List(ps.WorldPtrValue)
     }
     else {
       Nil
@@ -50,7 +50,7 @@ object PlanInvokeApply {
   def withArgumentList(
       invokableProc : InvokableProcedure,
       argListValue : iv.IntermediateValue
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ResultValues = {
+  )(implicit plan : PlanWriter) : ResultValues = {
     val signature = invokableProc.signature
     
     val insufficientArgsMessage = ArityRuntimeErrorMessage.insufficientArgs(invokableProc)
@@ -82,7 +82,7 @@ object PlanInvokeApply {
   def withIntermediateValues(
       invokableProc : InvokableProcedure,
       operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ResultValues = {
+  )(implicit plan : PlanWriter) : ResultValues = {
     val signature = invokableProc.signature
 
     // Convert all the operands

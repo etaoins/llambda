@@ -12,20 +12,17 @@ object PlanCellAllocations {
     *
     * This takes care to allow a DisposeValues step to happen before the AllocateCells to reduce GC pressure
     */
-  private def prependAllocStep(
-      requiredCells : Int,
-      acc : List[ps.Step]
-  )(implicit worldPtr : ps.WorldPtrValue) = acc match {
+  private def prependAllocStep(requiredCells : Int, acc : List[ps.Step]) = acc match {
     case _ if requiredCells == 0 =>
       // We don't need this step at all
       acc
 
     case (disposeStep : ps.DisposeValues) :: accTail =>
-      // Dispose values before allocating so we don't need to root them across the allocation 
-      disposeStep :: ps.AllocateCells(worldPtr, requiredCells) :: accTail
+      // Dispose values before allocating so we don't need to root them across the allocation
+      disposeStep :: ps.AllocateCells(requiredCells) :: accTail
 
     case otherAcc =>
-      ps.AllocateCells(worldPtr, requiredCells) :: otherAcc 
+      ps.AllocateCells(requiredCells) :: otherAcc
   }
 
   /** Returns true if a step can either consume or allocate cells
@@ -43,7 +40,7 @@ object PlanCellAllocations {
       otherStep.canAllocate
   }
 
-  private def placeCellAllocations(reverseSteps : List[ps.Step], requiredCells : Int, acc : List[ps.Step])(implicit worldPtr : ps.WorldPtrValue) : List[ps.Step] = reverseSteps match {
+  private def placeCellAllocations(reverseSteps : List[ps.Step], requiredCells : Int, acc : List[ps.Step]) : List[ps.Step] = reverseSteps match {
     case (consumer : ps.CellConsumer) :: reverseTail =>
       // Increment the cell count and keep processing
       val newAcc = consumer :: acc
@@ -76,13 +73,14 @@ object PlanCellAllocations {
       prependAllocStep(requiredCells, acc)
   }
 
-  def apply(function : PlannedFunction) : PlannedFunction = function.worldPtrOpt match {
-    case Some(worldPtr) =>
+  def apply(function : PlannedFunction) : PlannedFunction =
+    if (function.signature.hasWorldArg) {
       function.copy(
-        steps=placeCellAllocations(function.steps.reverse, 0, Nil)(worldPtr)
+        steps=placeCellAllocations(function.steps.reverse, 0, Nil)
       )
-    case None =>
+    }
+    else {
       // No world pointer, no allocations
       function
-  }
+    }
 }

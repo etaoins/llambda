@@ -54,7 +54,7 @@ private[planner] object PlanLambda {
       Some(other)
   }
 
-  private def initializeMutableArgs(initialState : PlannerState)(mutableArgs : List[Argument])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : PlannerState = mutableArgs.length match {
+  private def initializeMutableArgs(initialState : PlannerState)(mutableArgs : List[Argument])(implicit plan : PlanWriter) : PlannerState = mutableArgs.length match {
     case 0 =>
       // Nothing to do
       initialState
@@ -98,7 +98,7 @@ private[planner] object PlanLambda {
       }
     }
   
-  private def storeClosureData(closureDataTemp : ps.TempValue, closureType : vt.ClosureType, capturedVariables : List[CapturedVariable])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Unit = {
+  private def storeClosureData(closureDataTemp : ps.TempValue, closureType : vt.ClosureType, capturedVariables : List[CapturedVariable])(implicit plan : PlanWriter) : Unit = {
     for(capturedVar <- capturedVariables) {
       val varTemp = capturedVar match {
         case immutable : CapturedImmutable =>
@@ -134,10 +134,6 @@ private[planner] object PlanLambda {
     val capturedVariables = (closedVariables collect {
       case captured : CapturedVariable => captured
     }).toList
-
-    // Make a temp for the world pointer
-    // Don't implicit this because we also need our parent's world ptr for storing closure data
-    val worldPtr = new ps.WorldPtrValue()
 
     // Determine if we have a closure
     val innerSelfTempOpt = if (capturedVariables.isEmpty) {
@@ -238,14 +234,13 @@ private[planner] object PlanLambda {
 
     val preMutableState = PlannerState(
       values=initialImmutables,
-      worldPtr=worldPtr,
       inlineDepth=parentState.inlineDepth
     )
 
     val procPlan = parentPlan.forkPlan() 
 
     // Initialize all of our mutable parameters
-    val postMutableState = initializeMutableArgs(preMutableState)(mutableArgs)(procPlan, worldPtr) 
+    val postMutableState = initializeMutableArgs(preMutableState)(mutableArgs)(procPlan)
     
     // Load all of our captured variables
     val postClosureState = innerSelfTempOpt match {
@@ -290,18 +285,18 @@ private[planner] object PlanLambda {
 
     // Return from the function
     procPlan.withContextLocationOpt(lastExprOpt) {
-      val resultTempOpt = planResult.values.toReturnTempValue(returnType)(procPlan, worldPtr)
+      val resultTempOpt = planResult.values.toReturnTempValue(returnType)(procPlan)
       procPlan.steps += ps.Return(resultTempOpt)
     }
     
     val steps = procPlan.steps.toList
 
-    val (worldPtrOpt, procSignature) = if (canRefineSignature && !WorldPtrUsedBySteps(steps, worldPtr)) {
+    val (worldPtrOpt, procSignature) = if (canRefineSignature && !WorldPtrUsedBySteps(steps)) {
       // World pointer is not required, strip it out
       (None, initialSignature.copy(hasWorldArg=false, returnType=returnType))
     }
     else {
-      (Some(worldPtr), initialSignature.copy(returnType=returnType))
+      (Some(ps.WorldPtrValue), initialSignature.copy(returnType=returnType))
     }
 
     val argumentUniquer = new SourceNameUniquer
@@ -328,7 +323,6 @@ private[planner] object PlanLambda {
       signature=procSignature,
       namedArguments=namedArguments,
       steps=steps,
-      worldPtrOpt=worldPtrOpt,
       debugContextOpt=lambdaExpr.debugContextOpt,
       irCommentOpt=irCommentOpt
     )
@@ -341,7 +335,7 @@ private[planner] object PlanLambda {
       parentPlan.steps += ps.InitRecordLike(cellTemp, dataTemp, closureType, isUndefined=false)
 
       // Create our closure
-      storeClosureData(dataTemp, closureType, capturedVariables)(parentPlan, parentState.worldPtr)
+      storeClosureData(dataTemp, closureType, capturedVariables)(parentPlan)
 
       // Store our entry point
       val entryPointTemp = ps.EntryPointTemp()

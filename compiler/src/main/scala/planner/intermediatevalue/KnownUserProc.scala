@@ -34,7 +34,7 @@ class KnownUserProc(
     new KnownUserProc(signature, plannedSymbol, Some(selfTemp), reportNameOpt)
   }
 
-  override def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = {
+  override def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter) : Option[PlanResult] = {
     val reportProcPlanners = ReportProcPlanner.activePlanners
 
     // Find the first report proc planner that knowns how to plan us

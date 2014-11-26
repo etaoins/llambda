@@ -13,8 +13,6 @@ private[planner] object PlanApplication {
       procExpr : et.Expr,
       operandExprs : List[et.Expr]
   )(implicit plan : PlanWriter) : PlanResult = {
-    implicit val worldPtr = state.worldPtr
-
     // Are we applying a report procedure?
     procExpr match {
       case et.VarRef(reportProc : ReportProcedure) =>
@@ -74,8 +72,6 @@ private[planner] object PlanApplication {
       procExpr : et.Expr,
       operands : List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan : PlanWriter) : PlanResult = {
-    implicit val worldPtr = initialState.worldPtr
-
     // If this is a self-executing lambda try to apply it without planning a function at all
     // The procedure expression will never be used again so there's no reason to cost the the out-of-line version
     procExpr match {
@@ -136,7 +132,7 @@ private[planner] object PlanApplication {
     // Plan this as a an invoke (function call)
     val invokePlan = plan.forkPlan()
 
-    val invokeValues = PlanInvokeApply.withIntermediateValues(invokableProc, operands)(invokePlan, worldPtr)
+    val invokeValues = PlanInvokeApply.withIntermediateValues(invokableProc, operands)(invokePlan)
 
     if (plan.config.optimize && (initialState.inlineDepth < 8)) {
       procValue match {
@@ -147,7 +143,7 @@ private[planner] object PlanApplication {
           val inlineValuesOpt = AttemptInlineApply(schemeProc.parentState, procResult.state)(
             lambdaExpr=schemeProc.lambdaExpr,
             operands=operands
-          )(inlinePlan, worldPtr)
+          )(inlinePlan)
 
           for(inlineValues <- inlineValuesOpt) {
             val inlineCost = CostForPlanSteps(inlinePlan.steps.toList)

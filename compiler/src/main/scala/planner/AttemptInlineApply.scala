@@ -10,7 +10,7 @@ import llambda.compiler.{valuetype => vt}
 import scala.collection.breakOut
 
 private[planner] object AttemptInlineApply {
-  def apply(parentState : PlannerState, inlineState : PlannerState)(lambdaExpr : et.Lambda, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ResultValues] = {
+  def apply(parentState : PlannerState, inlineState : PlannerState)(lambdaExpr : et.Lambda, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter) : Option[ResultValues] = {
     val mutableVars = plan.config.analysis.mutableVars
     val allArgs = lambdaExpr.fixedArgs ++ lambdaExpr.restArgOpt
 
@@ -73,7 +73,6 @@ private[planner] object AttemptInlineApply {
     // Map our input immutables to their new storage locations
     val inlineBodyState = PlannerState(
       values=fixedArgImmutables ++ restArgImmutables ++ importedValues,
-      worldPtr=worldPtr,
       inlineDepth=inlineState.inlineDepth + 1
     )
 

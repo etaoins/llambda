@@ -13,7 +13,7 @@ object ApplyProcPlanner extends ReportProcPlanner {
   override def planFromExprs(initialState : PlannerState)(
       reportName : String,
       operands : List[et.Expr]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[PlanResult] = (reportName, operands) match {
+  )(implicit plan : PlanWriter) : Option[PlanResult] = (reportName, operands) match {
     case ("apply", List(applyProcExpr, applyArgsExpr)) =>
       // Plan this on a separate plan so we don't double plan applyArgsExpr if we fail
       val staticApplyPlan = plan.forkPlan()
@@ -49,7 +49,7 @@ object ApplyProcPlanner extends ReportProcPlanner {
   override def planWithValues(state : PlannerState)(
       reportName : String,
       operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[ResultValues] = (reportName, operands) match {
+  )(implicit plan : PlanWriter) : Option[ResultValues] = (reportName, operands) match {
     case ("apply", List((procContextLoc, procValue), (_, argListValue))) if argListValue.isDefiniteProperList =>
       // Convert to a procedure cell so we can use its trampoline
       val invokableProc = plan.withContextLocation(procContextLoc) {

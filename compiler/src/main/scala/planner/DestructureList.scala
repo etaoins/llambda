@@ -23,7 +23,7 @@ object DestructureList {
       listValue : iv.IntermediateValue,
       memberTypes : List[vt.ValueType],
       insufficientLengthMessage : RuntimeErrorMessage 
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : DestructureResult = {
+  )(implicit plan : PlanWriter) : DestructureResult = {
     val initialState = DestructureResult(Nil, listValue)
 
     memberTypes.foldLeft(initialState) {

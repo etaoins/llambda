@@ -30,7 +30,7 @@ object GenParameter {
   def genPushDynamicState(state : GenerationState)(step : ps.PushDynamicState) : GenerationState = {
     declareSupportFunctions(state)
 
-    val worldPtrIr = state.liveTemps(step.worldPtr)
+    val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
 
     // States are wrapped in cells to suppoort GC - this means we need to insert a GC barrier here
     val (postPushState, _) = GenGcBarrier(state) {
@@ -75,9 +75,9 @@ object GenParameter {
   
   def genPopDynamicState(state : GenerationState)(step : ps.PopDynamicState) : GenerationState = {
     declareSupportFunctions(state)
-          
+
     // Pop the environment
-    val worldPtrIr = state.liveTemps(step.worldPtr)
+    val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
     state.currentBlock.callDecl(None)(dynamicenvPopDecl, List(worldPtrIr))
 
     state

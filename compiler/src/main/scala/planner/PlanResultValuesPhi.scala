@@ -18,15 +18,15 @@ object PlanResultValuesPhi {
       leftValues : ResultValues,
       rightPlan : PlanWriter,
       rightValues : ResultValues
-  )(implicit worldPtr : ps.WorldPtrValue) : Result =
+  ) : Result =
     (leftValues, rightValues) match {
       case (SingleValue(leftUnboxed : iv.UnboxedValue), SingleValue(rightUnboxed : iv.UnboxedValue))
           if leftUnboxed.nativeType == rightUnboxed.nativeType =>
         val commonType = leftUnboxed.nativeType
         val phiResultTemp = ps.Temp(commonType)
 
-        val leftTempValue = leftUnboxed.toTempValue(commonType)(leftPlan, worldPtr)
-        val rightTempValue = rightUnboxed.toTempValue(commonType)(rightPlan, worldPtr)
+        val leftTempValue = leftUnboxed.toTempValue(commonType)(leftPlan)
+        val rightTempValue = rightUnboxed.toTempValue(commonType)(rightPlan)
 
         val resultValue = TempValueToIntermediate(commonType, phiResultTemp)(leftPlan.config)
 
@@ -41,8 +41,8 @@ object PlanResultValuesPhi {
       case (SingleValue(leftValue), SingleValue(rightValue)) =>
         val phiSchemeType = leftValue.schemeType + rightValue.schemeType
 
-        val leftTempValue = leftValue.toTempValue(phiSchemeType)(leftPlan, worldPtr)
-        val rightTempValue = rightValue.toTempValue(phiSchemeType)(rightPlan, worldPtr)
+        val leftTempValue = leftValue.toTempValue(phiSchemeType)(leftPlan)
+        val rightTempValue = rightValue.toTempValue(phiSchemeType)(rightPlan)
 
         // If we're constants on both sides we don't need to be GC managed
         val isGcManaged = leftTempValue.isGcManaged || rightTempValue.isGcManaged
@@ -60,8 +60,8 @@ object PlanResultValuesPhi {
 
       case _ =>
         // Construct value lists to deal with this
-        val leftValueList = leftValues.toMultipleValueList()(leftPlan, worldPtr)
-        val rightValueList = rightValues.toMultipleValueList()(rightPlan, worldPtr)
+        val leftValueList = leftValues.toMultipleValueList()(leftPlan)
+        val rightValueList = rightValues.toMultipleValueList()(rightPlan)
 
         val phiResultListType = leftValueList.schemeType + rightValueList.schemeType
         val phiResultTemp = ps.Temp(phiResultListType)
@@ -71,8 +71,8 @@ object PlanResultValuesPhi {
         val phiResultList = new iv.CellValue(phiResultListType, BoxedValue(phiResultListType.cellType, phiResultTemp))
 
         Result(
-          leftTempValue=leftValueList.toTempValue(phiResultListType)(leftPlan, worldPtr),
-          rightTempValue=rightValueList.toTempValue(phiResultListType)(rightPlan, worldPtr),
+          leftTempValue=leftValueList.toTempValue(phiResultListType)(leftPlan),
+          rightTempValue=rightValueList.toTempValue(phiResultListType)(rightPlan),
           resultTemp=phiResultTemp,
           resultValues=MultipleValues(phiResultList)
         )

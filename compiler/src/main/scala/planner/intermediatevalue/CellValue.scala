@@ -38,10 +38,10 @@ class CellValue(
     truthyPred
   }
   
-  def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue =
+  def toBoxedValue()(implicit plan : PlanWriter) : BoxedValue =
     boxedValue
   
-  def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : InvokableProcedure =  {
+  def toInvokableProcedure()(implicit plan : PlanWriter) : InvokableProcedure =  {
     schemeType.applicableTypeOpt match {
       case Some(procedureType) =>
         val boxedProcTemp = toProcedureTempValue(procedureType, None)
@@ -56,7 +56,7 @@ class CellValue(
   protected def toProcedureTempValue(
       targetType : vt.ApplicableType,
       errorMessageOpt : Option[RuntimeErrorMessage]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
+  )(implicit plan : PlanWriter) : ps.TempValue = {
     val applicableType = schemeType.applicableTypeOpt getOrElse {
       val message = errorMessageOpt.map(_.text) getOrElse {
         s"Unable to convert ${typeDescription} to ${targetType}"
@@ -90,7 +90,7 @@ class CellValue(
       }
 
       val isProcPred = typecheck.PlanTypeCheck(boxedValue, schemeType, procedureTypeAtom).toNativePred()
-      plan.steps += ps.AssertPredicate(worldPtr, isProcPred, errorMessage)
+      plan.steps += ps.AssertPredicate(isProcPred, errorMessage)
     }
 
     // Prepare a trampoline for this procedure conversion
@@ -122,7 +122,7 @@ class CellValue(
     adapterProcTemp
   }
 
-  def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = nativeType match {
+  def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue = nativeType match {
     case vt.UnicodeChar =>
       val boxedChar = toTempValue(vt.CharType)
       val unboxedTemp = ps.Temp(vt.UnicodeChar)

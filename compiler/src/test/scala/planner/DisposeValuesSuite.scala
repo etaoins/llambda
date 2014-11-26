@@ -22,8 +22,6 @@ class DisposeValuesSuite extends FunSuite {
       override def toString = name
     }
 
-  val worldPtrTemp = new ps.WorldPtrValue 
-
   val selfTemp = namedTemp(vt.TopProcedureType, "self")
   val fixedArgTemp = namedTemp(vt.ExactIntegerType, "fixedArg")
   val restArgTemp = namedTemp(vt.ListElementType, "restArg")
@@ -32,13 +30,12 @@ class DisposeValuesSuite extends FunSuite {
     PlannedFunction(
       signature=testSignature,
       namedArguments=List(
-        "world" -> worldPtrTemp,
+        "world" -> ps.WorldPtrValue,
         "self" -> selfTemp,
         "fixedArg" -> fixedArgTemp,
         "restArg" -> restArgTemp
       ),
       steps=steps,
-      worldPtrOpt=Some(worldPtrTemp),
       debugContextOpt=None
     )
 

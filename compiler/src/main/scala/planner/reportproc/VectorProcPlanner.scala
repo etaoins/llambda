@@ -22,7 +22,7 @@ object VectorProcPlanner extends ReportProcPlanner {
   private def makeFilledVector(state : PlannerState)(
       length : (ContextLocated, iv.IntermediateValue),
       fillValue : iv.IntermediateValue
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : iv.IntermediateValue = {
+  )(implicit plan : PlanWriter) : iv.IntermediateValue = {
     val lengthValue = length._2
 
     val unstableType = lengthValue match {
@@ -75,7 +75,7 @@ object VectorProcPlanner extends ReportProcPlanner {
   override def planWithValue(state : PlannerState)(
       reportName : String,
       operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = (reportName, operands) match {
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, operands) match {
     case ("make-vector", List(length)) =>
       Some(makeFilledVector(state)(length, iv.UnitValue))
     

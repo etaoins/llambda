@@ -11,12 +11,12 @@ object DynamicProcPlanner extends ReportProcPlanner {
   override def planWithValue(state : PlannerState)(
       reportName : String,
       operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : Option[iv.IntermediateValue] = (reportName, operands) match {
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, operands) match {
     case ("make-parameter", List(initialValue)) =>
       val resultTemp = ps.Temp(vt.TopProcedureType)
       val initialValueTemp = initialValue._2.toTempValue(vt.AnySchemeType)
 
-      plan.steps += ps.CreateParameterProc(worldPtr, resultTemp, initialValueTemp, None)
+      plan.steps += ps.CreateParameterProc(resultTemp, initialValueTemp, None)
 
       Some(new iv.KnownParameterProc(resultTemp, hasConverter=false))
     
@@ -34,7 +34,7 @@ object DynamicProcPlanner extends ReportProcPlanner {
         converterProc._2.toTempValue(converterProcType)
       }
 
-      plan.steps += ps.CreateParameterProc(worldPtr, resultTemp, initialValueTemp, Some(converterTemp))
+      plan.steps += ps.CreateParameterProc(resultTemp, initialValueTemp, Some(converterTemp))
 
       Some(new iv.KnownParameterProc(resultTemp, hasConverter=true))
 

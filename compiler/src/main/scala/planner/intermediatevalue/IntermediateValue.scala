@@ -56,7 +56,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
   def procedureSignatureOpt : Option[ProcedureSignature] = 
     schemeType.applicableTypeOpt.map(ApplicableTypeToAdaptedSignature)
 
-  protected def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
+  protected def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue
   protected def toTruthyPredicate()(implicit plan : PlanWriter) : ps.TempValue = {
     val trueTemp = ps.Temp(vt.Predicate)
     plan.steps += ps.CreateNativeInteger(trueTemp, 1, 1) 
@@ -67,13 +67,13 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
   protected def toProcedureTempValue(
       targetType : vt.ApplicableType,
       errorMessageOpt : Option[RuntimeErrorMessage]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue
+  )(implicit plan : PlanWriter) : ps.TempValue
   
   private def toProcedureTypeUnionTempValue(
       targetType : vt.SchemeType,
       targetApplicableType : vt.ApplicableType,
       errorMessageOpt : Option[RuntimeErrorMessage]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
+  )(implicit plan : PlanWriter) : ps.TempValue = {
     // This is a union containing different procedure types
     val resultCellType = targetType.cellType
     val procTypeAtom = vt.SchemeTypeAtom(ct.ProcedureCell)
@@ -85,7 +85,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
       val procTemp = toProcedureTempValue(
         targetApplicableType,
         errorMessageOpt
-      )(isProcPlan, worldPtr)
+      )(isProcPlan)
 
       val castTemp = ps.CellTemp(resultCellType)
       isProcPlan.steps += ps.CastCellToTypeUnchecked(castTemp, procTemp, resultCellType)
@@ -100,7 +100,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
       val nonProcTemp = retypedThis.toNonProcedureTempValue(
         nonProcTargetType,
         errorMessageOpt
-      )(isNotProcPlan, worldPtr)
+      )(isNotProcPlan)
 
       val castTemp = ps.CellTemp(resultCellType)
       isNotProcPlan.steps += ps.CastCellToTypeUnchecked(castTemp, nonProcTemp, resultCellType)
@@ -126,7 +126,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
   protected def toNonProcedureTempValue(
       targetType : vt.SchemeType,
       errorMessageOpt : Option[RuntimeErrorMessage]
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = {
+  )(implicit plan : PlanWriter) : ps.TempValue = {
     // Are our possible concrete types a subset of the target types?
     vt.SatisfiesType(targetType, schemeType) match {
       case Some(true) =>
@@ -146,8 +146,8 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
         // We have further type checking to do
         val boxedValue = this.toBoxedValue()
         val isTypePred = typecheck.PlanTypeCheck(boxedValue, schemeType, targetType).toNativePred()
-            
-        plan.steps += ps.AssertPredicate(worldPtr, isTypePred, errorMessage, evidenceOpt=Some(boxedValue.tempValue))
+
+        plan.steps += ps.AssertPredicate(isTypePred, errorMessage, evidenceOpt=Some(boxedValue.tempValue))
         boxedValue.castToCellTempValue(targetType.cellType)
 
       case Some(false) =>
@@ -160,9 +160,9 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     *
     * This is primarily used to interface with the type checking system which works on boxed values only
     */
-  def toBoxedValue()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : BoxedValue
+  def toBoxedValue()(implicit plan : PlanWriter) : BoxedValue
 
-  def toInvokableProcedure()(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : InvokableProcedure
+  def toInvokableProcedure()(implicit plan : PlanWriter) : InvokableProcedure
 
   /** Converts this intermediate value to a TempValue of the specified type
     *
@@ -179,7 +179,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
       targetType : vt.ValueType,
       errorMessageOpt : Option[RuntimeErrorMessage] = None,
       convertProcType : Boolean = true
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue = targetType match {
+  )(implicit plan : PlanWriter) : ps.TempValue = targetType match {
     case vt.UnitType =>
       val constantTemp = ps.CellTemp(ct.UnitCell, knownConstant=true)
       plan.steps += ps.CreateUnitCell(constantTemp)
@@ -229,7 +229,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
       targetType : vt.SchemeType,
       errorMessageOpt : Option[RuntimeErrorMessage] = None,
       staticCheck : Boolean = false
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : IntermediateValue= {
+  )(implicit plan : PlanWriter) : IntermediateValue= {
     vt.ConvertibleToType(targetType, schemeType) match {
       case Some(true) =>
         // We don't need to do anything
@@ -295,7 +295,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
     */
   def toApplicableValueForArity (
       operandCount : Int
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : IntermediateValue =
+  )(implicit plan : PlanWriter) : IntermediateValue =
     this
 }
 

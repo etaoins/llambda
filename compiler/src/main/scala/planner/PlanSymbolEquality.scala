@@ -176,7 +176,7 @@ object PlanSymbolEquality {
   def compareDynamic(
     val1 : iv.IntermediateValue,
     val2 : iv.IntermediateValue
-  )(implicit plan : PlanWriter, worldPtr : ps.WorldPtrValue) : ps.TempValue =
+  )(implicit plan : PlanWriter) : ps.TempValue =
     (val1.schemeType, val2.schemeType) match {
       case (vt.LiteralSymbolType(staticName1), dynamicType2) =>
         val dynamicTemp2 = val2.toTempValue(vt.SymbolType)

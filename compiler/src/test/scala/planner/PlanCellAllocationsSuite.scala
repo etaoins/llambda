@@ -17,16 +17,13 @@ class PlanCellAllocationsSuite extends FunSuite {
     attributes=Set()
   )
   
-  val worldPtrTemp = new ps.WorldPtrValue 
-
   def functionForSteps(steps : List[ps.Step]) : PlannedFunction =
     PlannedFunction(
       signature=testSignature,
       namedArguments=List(
-        "world" -> worldPtrTemp
+        "world" -> ps.WorldPtrValue
       ),
       steps=steps,
-      worldPtrOpt=Some(worldPtrTemp),
       debugContextOpt=None
     )
 
@@ -65,7 +62,7 @@ class PlanCellAllocationsSuite extends FunSuite {
     val testFunction = functionForSteps(testSteps)
     
     val expectedSteps = List(
-      ps.AllocateCells(worldPtrTemp, 1),
+      ps.AllocateCells(1),
       ps.CreateNativeInteger(nativeResult, 25, 64),
       ps.BoxExactInteger(boxedResult, nativeResult)
     )
@@ -88,7 +85,7 @@ class PlanCellAllocationsSuite extends FunSuite {
     
     val expectedSteps = List(
       ps.DisposeValues(Set(disposingTemp)),
-      ps.AllocateCells(worldPtrTemp, 1),
+      ps.AllocateCells(1),
       ps.CreateNativeInteger(nativeResult, 25, 64),
       ps.BoxExactInteger(boxedResult, nativeResult)
     )
@@ -110,7 +107,7 @@ class PlanCellAllocationsSuite extends FunSuite {
     val testFunction = functionForSteps(testSteps)
     
     val expectedSteps = List(
-      ps.AllocateCells(worldPtrTemp, 3),
+      ps.AllocateCells(3),
       ps.CreateNativeInteger(nativeResult, 25, 64),
       ps.BoxExactInteger(boxedResult, nativeResult),
       ps.BoxExactInteger(boxedResult, nativeResult),
@@ -128,19 +125,19 @@ class PlanCellAllocationsSuite extends FunSuite {
       ps.CreateNativeInteger(nativeResult, 25, 64),
       ps.BoxExactInteger(boxedResult, nativeResult),
       ps.BoxExactInteger(boxedResult, nativeResult),
-      ps.PushDynamicState(worldPtrTemp, Nil),
+      ps.PushDynamicState(Nil),
       ps.BoxExactInteger(boxedResult, nativeResult)
     )
 
     val testFunction = functionForSteps(testSteps)
     
     val expectedSteps = List(
-      ps.AllocateCells(worldPtrTemp, 2),
+      ps.AllocateCells(2),
       ps.CreateNativeInteger(nativeResult, 25, 64),
       ps.BoxExactInteger(boxedResult, nativeResult),
       ps.BoxExactInteger(boxedResult, nativeResult),
-      ps.PushDynamicState(worldPtrTemp, Nil),
-      ps.AllocateCells(worldPtrTemp, 1),
+      ps.PushDynamicState(Nil),
+      ps.AllocateCells(1),
       ps.BoxExactInteger(boxedResult, nativeResult)
     )
 
@@ -163,7 +160,7 @@ class PlanCellAllocationsSuite extends FunSuite {
     val testFunction = functionForSteps(testSteps)
     
     val expectedSteps = List(
-      ps.AllocateCells(worldPtrTemp, 3),
+      ps.AllocateCells(3),
       ps.CreateNativeInteger(nativeResult, 25, 64),
       ps.BoxExactInteger(boxedResult, nativeResult),
       ps.BoxExactInteger(boxedResult, nativeResult),
@@ -199,23 +196,23 @@ class PlanCellAllocationsSuite extends FunSuite {
     val testFunction = functionForSteps(testSteps)
     
     val expectedTrueSteps = List(
-      ps.AllocateCells(worldPtrTemp, 2),
+      ps.AllocateCells(2),
       ps.BoxExactInteger(boxedResult, nativeResult),
       ps.BoxExactInteger(boxedResult, nativeResult)
     )
 
     val expectedFalseSteps = List(
-      ps.AllocateCells(worldPtrTemp, 1),
+      ps.AllocateCells(1),
       ps.BoxExactInteger(boxedResult, nativeResult)
     )
     
     val expectedSteps = List(
-      ps.AllocateCells(worldPtrTemp, 2),
+      ps.AllocateCells(2),
       ps.CreateNativeInteger(nativeResult, 25, 64),
       ps.BoxExactInteger(boxedResult, nativeResult),
       ps.BoxExactInteger(boxedResult, nativeResult),
       ps.CondBranch(condResult, boxedResult, expectedTrueSteps, nativeResult, expectedFalseSteps, nativeResult),
-      ps.AllocateCells(worldPtrTemp, 1),
+      ps.AllocateCells(1),
       ps.BoxExactInteger(boxedResult, nativeResult)
     )
 
