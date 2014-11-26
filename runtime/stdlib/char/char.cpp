@@ -113,4 +113,34 @@ bool llchar_string_ci_gte(StringCell *value1, StringCell *value2, ProperList<Str
 			[] (StringCell *value1, StringCell *value2) { return value1->compare(value2, ucd::toCaseFolded) >= 0; });
 }
 
+bool llchar_char_ci_equal(UnicodeChar value1, UnicodeChar value2, ProperList<CharCell> *argHead)
+{
+	return charCompare(value1, value2, argHead,
+			[] (UnicodeChar value1, UnicodeChar value2) { return value1.compare(value2, ucd::toCaseFolded) == 0; });
+}
+
+bool llchar_char_ci_lt(UnicodeChar value1, UnicodeChar value2, ProperList<CharCell> *argHead)
+{
+	return charCompare(value1, value2, argHead,
+			[] (UnicodeChar value1, UnicodeChar value2) { return value1.compare(value2, ucd::toCaseFolded) < 0; });
+}
+
+bool llchar_char_ci_gt(UnicodeChar value1, UnicodeChar value2, ProperList<CharCell> *argHead)
+{
+	return charCompare(value1, value2, argHead,
+			[] (UnicodeChar value1, UnicodeChar value2) { return value1.compare(value2, ucd::toCaseFolded) > 0; });
+}
+
+bool llchar_char_ci_lte(UnicodeChar value1, UnicodeChar value2, ProperList<CharCell> *argHead)
+{
+	return charCompare(value1, value2, argHead,
+			[] (UnicodeChar value1, UnicodeChar value2) { return value1.compare(value2, ucd::toCaseFolded) <= 0; });
+}
+
+bool llchar_char_ci_gte(UnicodeChar value1, UnicodeChar value2, ProperList<CharCell> *argHead)
+{
+	return charCompare(value1, value2, argHead,
+			[] (UnicodeChar value1, UnicodeChar value2) { return value1.compare(value2, ucd::toCaseFolded) >= 0; });
+}
+
 }

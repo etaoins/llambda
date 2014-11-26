@@ -128,8 +128,10 @@
 	(assert-equal #\x1f3c2 (integer->char (typed-dynamic #x1f3c2 <exact-integer>)))))
 
 (define-test "(char=?)" (expect-success
-  (assert-true  (char=? #\a #\a))
   (assert-false (char=? #\a #\b))
+  (assert-true  (char=? #\a #\a))
+  (assert-false (char=? #\a #\A))
+  (assert-false (char=? #\b #\a))
 
   (assert-true  (char=? #\a #\a #\a))
   (assert-false (char=? #\a #\a #\b))))
@@ -137,6 +139,7 @@
 (define-test "(char<?)" (expect-success
   (assert-true  (char<? #\a #\b))
   (assert-false (char<? #\a #\a))
+  (assert-false (char<? #\a #\A))
   (assert-false (char<? #\b #\a))
 
   (assert-true  (char<? #\a #\b #\c))
@@ -146,6 +149,7 @@
 (define-test "(char>?)" (expect-success
   (assert-false (char>? #\a #\b))
   (assert-false (char>? #\a #\a))
+  (assert-true  (char>? #\a #\A))
   (assert-true  (char>? #\b #\a))
 
   (assert-false (char>? #\a #\b #\c))
@@ -155,6 +159,7 @@
 (define-test "(char<=?)" (expect-success
   (assert-true  (char<=? #\a #\b))
   (assert-true  (char<=? #\a #\a))
+  (assert-false (char<=? #\a #\A))
   (assert-false (char<=? #\b #\a))
 
   (assert-true  (char<=? #\a #\b #\c))
@@ -164,8 +169,68 @@
 (define-test "(char>=?)" (expect-success
   (assert-false (char>=? #\a #\b))
   (assert-true  (char>=? #\a #\a))
+  (assert-true  (char>=? #\a #\A))
   (assert-true  (char>=? #\b #\a))
 
   (assert-false (char>=? #\a #\b #\c))
   (assert-true  (char>=? #\b #\b #\b))
   (assert-true  (char>=? #\c #\b #\a))))
+
+(define-test "(char-ci=?)" (expect-success
+  (import (scheme char))
+
+  (assert-false (char-ci=? #\a #\b))
+  (assert-true  (char-ci=? #\a #\a))
+  (assert-true  (char-ci=? #\a #\A))
+  (assert-false (char-ci=? #\b #\a))
+
+  (assert-true  (char-ci=? #\a #\a #\a))
+  (assert-false (char-ci=? #\a #\a #\b))))
+
+(define-test "(char-ci<?)" (expect-success
+  (import (scheme char))
+
+  (assert-true  (char-ci<? #\a #\b))
+  (assert-false (char-ci<? #\a #\a))
+  (assert-false (char-ci<? #\a #\A))
+  (assert-false (char-ci<? #\b #\a))
+
+  (assert-true  (char-ci<? #\a #\b #\c))
+  (assert-false (char-ci<? #\b #\b #\b))
+  (assert-false (char-ci<? #\c #\b #\a))))
+
+(define-test "(char-ci>?)" (expect-success
+  (import (scheme char))
+
+  (assert-false (char-ci>? #\a #\b))
+  (assert-false (char-ci>? #\a #\a))
+  (assert-false (char-ci>? #\a #\A))
+  (assert-true  (char-ci>? #\b #\a))
+
+  (assert-false (char-ci>? #\a #\b #\c))
+  (assert-false (char-ci>? #\b #\b #\b))
+  (assert-true  (char-ci>? #\c #\b #\a))))
+
+(define-test "(char-ci<=?)" (expect-success
+  (import (scheme char))
+
+  (assert-true  (char-ci<=? #\a #\b))
+  (assert-true  (char-ci<=? #\a #\a))
+  (assert-true  (char-ci<=? #\a #\A))
+  (assert-false (char-ci<=? #\b #\a))
+
+  (assert-true  (char-ci<=? #\a #\b #\c))
+  (assert-true  (char-ci<=? #\b #\b #\b))
+  (assert-false (char-ci<=? #\c #\b #\a))))
+
+(define-test "(char-ci>=?)" (expect-success
+  (import (scheme char))
+
+  (assert-false (char-ci>=? #\a #\b))
+  (assert-true  (char-ci>=? #\a #\a))
+  (assert-true  (char-ci>=? #\a #\A))
+  (assert-true  (char-ci>=? #\b #\a))
+
+  (assert-false (char-ci>=? #\a #\b #\c))
+  (assert-true  (char-ci>=? #\b #\b #\b))
+  (assert-true  (char-ci>=? #\c #\b #\a))))
