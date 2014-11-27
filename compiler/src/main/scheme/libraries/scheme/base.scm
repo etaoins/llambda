@@ -462,7 +462,6 @@
     (define-r7rs (cdar (x : (Pairof <pair> <any>))) (cdr (car x)))
     (define-r7rs (cddr (x : (Pairof <any> <pair>))) (cdr (cdr x)))
 
-    (define-r7rs list-copy (world-function llbase "llbase_list_copy" (-> <any> <any>)))
     (define-r7rs (list . rest) rest)
 
     (define-r7rs append (world-function llbase "llbase_append" (-> <any> * <any>)))
@@ -809,12 +808,17 @@
                      (if test
                        (begin result1 result2 ...)
                        (guard-aux reraise clause1 clause2 ...))))))
-    
+
   ; Optional R7RS mutable pair support
-  (cond-expand ((not immutable-pairs)
-    (begin
-      (define-r7rs set-car! (world-function llbase "llbase_set_car" (-> <pair> <any> <unit>)))
-      (define-r7rs set-cdr! (world-function llbase "llbase_set_cdr" (-> <pair> <any> <unit>)))
-      (define-r7rs (list-set! [l : <list>] [n : <exact-integer>] [val : <any>])
-        (set-car! (list-tail l n) val)))))
+  (cond-expand
+    (immutable-pairs
+      (begin
+        (define-r7rs (list-copy obj) obj)))
+    (else
+      (begin
+        (define-r7rs list-copy (world-function llbase "llbase_list_copy" (-> <any> <any>)))
+        (define-r7rs set-car! (world-function llbase "llbase_set_car" (-> <pair> <any> <unit>)))
+        (define-r7rs set-cdr! (world-function llbase "llbase_set_cdr" (-> <pair> <any> <unit>)))
+        (define-r7rs (list-set! [l : <list>] [n : <exact-integer>] [val : <any>])
+          (set-car! (list-tail l n) val)))))
 )

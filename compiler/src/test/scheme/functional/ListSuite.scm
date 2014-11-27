@@ -66,11 +66,8 @@
 (define-test "(list-copy) of degenerate lists" (expect-success
   (assert-equal '() (list-copy '()))
 	(assert-equal '(1 2 . 3) (list-copy '(1 2 . 3)))
-  ; This is allowrequired by R7RS
-  ; Single objects can also be considered degenerate forms of improper lists so
-  ; this makes some sense
+  ; This is allowed by R7RS. Single objects can be considered degenerate forms of improper lists so this makes sense.
   (assert-equal 'a (list-copy 'a))))
-
 
 (cond-expand
   (immutable-pairs
