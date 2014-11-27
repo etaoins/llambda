@@ -20,11 +20,11 @@ object ParseFormals {
         case (
             sst.ScopedSymbol(_, "*") ::
             (restArgType : sst.ScopedSymbol) ::
-            (annSymbol : sst.ScopedSymbol) ::
+            sst.ResolvedSymbol(Primitives.AnnotateStorageLocType) ::
             (restArgName : sst.ScopedSymbol) ::
             reverseFixedArgs
           , sst.NonSymbolLeaf(ast.EmptyList())
-        ) if annSymbol.resolve == Primitives.AnnotateStorageLocType =>
+        ) =>
           // This is a typed rest argument
           (reverseFixedArgs.reverse, Some(restArgName), Some(ExtractType.extractNonEmptySchemeType(restArgType)))
 
@@ -42,8 +42,11 @@ object ParseFormals {
 
     // Find the types in our signature
     val fixedOperands = fixedArgData.map {
-      case sst.ScopedProperList(List(scopedSymbol : sst.ScopedSymbol, annSymbol : sst.ScopedSymbol, typeDatum))
-          if annSymbol.resolve == Primitives.AnnotateStorageLocType =>
+      case sst.ScopedProperList(List(
+          scopedSymbol : sst.ScopedSymbol,
+          sst.ResolvedSymbol(Primitives.AnnotateStorageLocType),
+          typeDatum
+      )) =>
         scopedSymbol -> Some(ExtractType.extractNonEmptySchemeType(typeDatum))
 
       case scopedSymbol : sst.ScopedSymbol =>

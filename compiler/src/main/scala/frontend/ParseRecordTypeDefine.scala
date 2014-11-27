@@ -30,8 +30,11 @@ private[frontend] object ParseRecordTypeDefine {
             // Just a bare symbol - implicitly we're of type <any>
             (nameSymbol, vt.AnySchemeType)
 
-          case sst.ScopedProperList(List(nameSymbol : sst.ScopedSymbol, annSymbol : sst.ScopedSymbol, fieldTypeDatum))
-              if annSymbol.resolve == Primitives.AnnotateStorageLocType =>
+          case sst.ScopedProperList(List(
+              nameSymbol : sst.ScopedSymbol,
+              sst.ResolvedSymbol(Primitives.AnnotateStorageLocType),
+              fieldTypeDatum
+          )) =>
             // Resolve the field's Scheme type
             val schemeType = ExtractType.extractStableType(fieldTypeDatum)
 

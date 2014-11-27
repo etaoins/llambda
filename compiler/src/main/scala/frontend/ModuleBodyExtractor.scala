@@ -316,8 +316,12 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
           extractExpr(value)
         }))
 
-      case (Primitives.Define, List(symbol : sst.ScopedSymbol, annSymbol : sst.ScopedSymbol, typeDatum, value))
-          if annSymbol.resolve == Primitives.AnnotateStorageLocType =>
+      case (Primitives.Define, List(
+          symbol : sst.ScopedSymbol,
+          sst.ResolvedSymbol(Primitives.AnnotateStorageLocType),
+          typeDatum,
+          value
+      )) =>
         val providedType = ExtractType.extractStableType(typeDatum)(frontendConfig)
 
         Some(ParsedVarDefine(symbol, Some(providedType), () => {

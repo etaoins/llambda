@@ -15,8 +15,10 @@ object ExtractNativeLibrary {
           throw new BadSpecialFormException(symbol, "Other value used where native library expected")
       }
 
-    case sst.ScopedProperList(List(staticLibrary : sst.ScopedSymbol, sst.NonSymbolLeaf(ast.StringLiteral(libraryName))))
-        if staticLibrary.resolve == Primitives.StaticLibrary =>
+    case sst.ScopedProperList(List(
+        sst.ResolvedSymbol(Primitives.StaticLibrary),
+        sst.NonSymbolLeaf(ast.StringLiteral(libraryName))
+    )) =>
       NativeStaticLibrary(libraryName)
 
     case _ =>

@@ -121,7 +121,22 @@ object ScopedDatum {
     scopedDatum
   }
 }
-  
+
+/** Matches symbols that resolve to a specific bound value
+  *
+  * This performs a hard resolve on any symbol it encounters; an UnboundVariableException will be raised for unbound
+  * symbols.
+  */
+object ResolvedSymbol {
+  def unapply(datum : ScopedDatum) : Option[BoundValue] = datum match {
+    case scopedSymbol : sst.ScopedSymbol =>
+      Some(scopedSymbol.resolve)
+
+    case _ =>
+      None
+  }
+}
+
 /** Matches either a list or a single datum
   *
   * A single datum is treated as the terminator of an otherwise empty improper list
