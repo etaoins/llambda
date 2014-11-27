@@ -218,4 +218,14 @@ class NameForTypeSuite extends FunSuite {
   test("'|Hello, world!|") {
     assert(NameForType(LiteralSymbolType("Hello, world!")) === "'|Hello, world!|")
   }
+
+  test("(Rec A (U (Pairof A A) <empty-list>))") {
+    val recursiveProperList = UnionType(Set(
+      SpecificPairType(RecursiveSchemeTypeRef(1), RecursiveSchemeTypeRef(1)),
+      EmptyListType
+    ))
+
+    // Make sure this doesn't infinitely recurse in the proper list special casing code
+    assert(NameForType(recursiveProperList) === "(Rec A (U (Pairof A A) <empty-list>))")
+  }
 }

@@ -103,10 +103,9 @@ object NameForType {
     schemeType match {
       case unionType @ UnionType(memberTypes) if memberTypes.size == 2 =>
         (memberTypes - EmptyListType).toList match {
-          case List(pairType @ SpecificPairType(memberTypeRef, RecursiveSchemeTypeRef(1))) =>
+          case List(SpecificPairType(DirectSchemeTypeRef(memberType), RecursiveSchemeTypeRef(1))) =>
             // Special case (Listof) which constructs a particular recursive type structure
-            val memberName = stackedNameForTypeRef(memberTypeRef, pairType :: unionType :: typeStack, recurseVarNames)
-            return s"(Listof ${memberName})"
+            return s"(Listof ${apply(memberType)})"
 
           case _ =>
         }
