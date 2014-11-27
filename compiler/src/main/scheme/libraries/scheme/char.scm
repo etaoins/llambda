@@ -19,7 +19,7 @@
     (define-r7rs string-upcase (world-function llchar "llchar_string_upcase" (-> <string> <string>)))
     (define-r7rs string-downcase (world-function llchar "llchar_string_downcase" (-> <string> <string>)))
     (define-r7rs string-foldcase (world-function llchar "llchar_string_foldcase" (-> <string> <string>)))
-    (define-r7rs digit-value (world-function llchar "llchar_digit_value" (-> <native-unicode-char> <any>)))
+    (define-r7rs digit-value (world-function llchar "llchar_digit_value" (-> <native-unicode-char> (U #f <exact-integer>))))
 
     (define-r7rs string-ci=? (native-function llchar "llchar_string_ci_equal" (-> <string> <string> <string> * <native-bool>)))
     (define-r7rs string-ci<? (native-function llchar "llchar_string_ci_lt" (-> <string> <string> <string> * <native-bool>)))
