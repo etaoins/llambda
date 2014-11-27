@@ -172,7 +172,7 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
 
   }
 
-  test("definiting uniform vector types") {
+  test("defining uniform vector types") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
     
     bodyFor("(define-type <string-vector> (Vectorof <string>))")(scope)
