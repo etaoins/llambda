@@ -69,10 +69,12 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
           ("<pair>" -> BoundType(vt.AnyPairType)) +
           ("<procedure>" -> BoundType(vt.SchemeTypeAtom(ct.ProcedureCell))) +
           ("<vector>" -> BoundType(vt.VectorOfType(vt.AnySchemeType))) +
+          ("->" -> Primitives.ProcedureType) +
           ("define-native-library" -> Primitives.DefineNativeLibrary) +
           ("static-library" -> Primitives.StaticLibrary) +
-          ("world-function" -> Primitives.WorldFunction) +
           ("native-function" -> Primitives.NativeFunction) +
+          ("world-function" -> Primitives.WorldFunction) +
+          ("noreturn" -> Primitives.NoReturnAttr) +
           ("system-library" -> NativeSystemLibrary)
       )
 

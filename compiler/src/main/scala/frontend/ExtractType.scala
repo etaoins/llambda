@@ -32,29 +32,22 @@ object ExtractType {
       throw new MalformedExprException(scopedSymbol, "Type constructor expected")
   }
 
+
   private def applyProcedureTypeConstructor(located : SourceLocated, operands : List[sst.ScopedDatum]) : vt.SchemeType = {
-    // Explicitly recursive types cross procedure boundaries due to lack of testing and use cases
+    // Explicitly recursive types cannot cross procedure boundaries due to lack of testing and use cases
     val noRecursiveVars  = RecursiveVars()
 
-    operands.reverse match {
-      case returnDatum :: sst.ScopedSymbol(_, "*") :: restArgMemberDatum :: reverseFixedArgData =>
-        val fixedArgTypes = reverseFixedArgData.reverse.map(extractNonEmptySchemeType(_,  noRecursiveVars))
-        val restArgMemberType = extractNonEmptySchemeType(restArgMemberDatum, noRecursiveVars)
-        val returnType = extractReturnType(returnDatum)
+    // Parse the constructor in to its components
+    val parsed = ParseProcedureTypeConstructor(located, operands)
 
-        vt.ProcedureType(fixedArgTypes, Some(restArgMemberType), returnType)
+    // Resolve the types
+    val fixedArgTypes = parsed.fixedArgData.map(extractNonEmptySchemeType(_, noRecursiveVars))
+    val restArgMemberType = parsed.restArgMemberDatumOpt.map(extractNonEmptySchemeType(_, noRecursiveVars))
+    val returnType = extractReturnType(parsed.returnDatum)
 
-      case returnDatum :: reverseFixedArgData =>
-        val fixedArgTypes = reverseFixedArgData.reverse.map(extractNonEmptySchemeType(_, noRecursiveVars))
-        val returnType = extractReturnType(returnDatum)
-        
-        vt.ProcedureType(fixedArgTypes, None, returnType)
-
-      case  _ =>
-        throw new BadSpecialFormException(located, "-> requires at least one return type argument")
-    }
+    vt.ProcedureType(fixedArgTypes, restArgMemberType, returnType)
   }
-  
+
   private def applyCaseProcedureTypeConstructor(located : SourceLocated, operands : List[sst.ScopedDatum]) : vt.SchemeType = {
     val locatedSignatures = operands map { operand =>
       extractSchemeType(operand) match {
@@ -228,7 +221,6 @@ object ExtractType {
       nonEmptyType
   }
 
-  
   def extractStableType(
       datum : sst.ScopedDatum,
       recursiveVars : RecursiveVars = RecursiveVars()
@@ -247,7 +239,7 @@ object ExtractType {
   def extractValueType(
       datum : sst.ScopedDatum,
       recursiveVars : RecursiveVars = RecursiveVars()
-  ) : vt.ValueType = datum match { 
+  ) : vt.ValueType = datum match {
     case sst.ScopedSymbol(_, varName) if recursiveVars.variables.contains(varName) =>
       throw new BadSpecialFormException(datum, "Recursive type variable used where concrete type is expected")
 
@@ -261,7 +253,7 @@ object ExtractType {
         case _ =>
           throw new BadSpecialFormException(symbol, "Non-type value used as type")
       }
-    
+
     case sst.ScopedProperList((constructorName : sst.ScopedSymbol) :: operandData) =>
       applyTypeConstructor(constructorName, operandData, recursiveVars)
 

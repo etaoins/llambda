@@ -1,71 +1,60 @@
 package io.llambda.compiler.frontend
 import io.llambda
 
+import scala.collection.breakOut
+
 import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
 
 object ExtractNativeFunction {
-  private def createNativeFunction(
-      nativeLibrary : NativeLibrary,
+  private def extractSignature(
       hasWorldArg : Boolean,
-      fixedArgData : List[sst.ScopedDatum],
-      restArgDatum : sst.ScopedDatum,
-      returnTypeDatumOpt : Option[sst.ScopedDatum],
-      nativeSymbol : String,
-      attributes : Set[ProcedureAttribute.ProcedureAttribute]
-  ) : et.NativeFunction = {
-    val fixedArgTypes = fixedArgData.map(ExtractType.extractValueType(_))
+      procTypeDatum : sst.ScopedDatum,
+      attributeData : List[sst.ScopedDatum]
+  ) : ProcedureSignature = procTypeDatum match {
+    case sst.ScopedProperList(sst.ResolvedSymbol(Primitives.ProcedureType) :: operands) =>
+      val parsed = ParseProcedureTypeConstructor(procTypeDatum, operands)
 
-    val restArgMemberTypeOpt = restArgDatum match {
-      case sst.NonSymbolLeaf(ast.EmptyList()) =>
-        None
+      val fixedArgTypes = parsed.fixedArgData.map(ExtractType.extractValueType(_))
+      val restArgMemberTypeOpt = parsed.restArgMemberDatumOpt.map(ExtractType.extractSchemeType(_))
+      val returnType = ExtractType.extractReturnType(parsed.returnDatum)
 
-      case datum =>
-        Some(ExtractType.extractSchemeType(datum))
-    }
+      val attributes = (attributeData.map {
+        case sst.ResolvedSymbol(Primitives.NoReturnAttr) =>
+          ProcedureAttribute.NoReturn
 
-    val returnType = returnTypeDatumOpt match {
-      case None =>
-        vt.ReturnType.SingleValue(vt.UnitType)
+        case other =>
+          throw new BadSpecialFormException(other, "Non-attribute used where procedure attribute expected")
+      })(breakOut) : Set[ProcedureAttribute.ProcedureAttribute]
 
-      case Some(returnTypeDatum) =>
-        ExtractType.extractReturnType(returnTypeDatum)
-    }
+      ProcedureSignature(
+        hasWorldArg=hasWorldArg,
+        hasSelfArg=false,
+        fixedArgTypes=fixedArgTypes,
+        restArgMemberTypeOpt=restArgMemberTypeOpt,
+        returnType=returnType,
+        attributes=attributes
+      )
 
-    val signature = ProcedureSignature(
-      hasWorldArg=hasWorldArg,
-      hasSelfArg=false,
-      fixedArgTypes=fixedArgTypes,
-      restArgMemberTypeOpt=restArgMemberTypeOpt,
-      returnType=returnType,
-      attributes=attributes
-    )
-
-    et.NativeFunction(
-      library=nativeLibrary,
-      signature=signature,
-      nativeSymbol = nativeSymbol
-    )
+    case _ =>
+      throw new BadSpecialFormException(procTypeDatum, "Bad native function type definition")
   }
 
-  def apply(hasWorldArg : Boolean, operands : List[sst.ScopedDatum], defineLocation : SourceLocated) : et.NativeFunction = operands match {
-    case libraryDatum :: sst.NonSymbolLeaf(ast.StringLiteral(nativeSymbol)) :: functionTypeData =>
+  def apply(
+      hasWorldArg : Boolean,
+      operands : List[sst.ScopedDatum],
+      defineLocation : SourceLocated
+  ) : et.NativeFunction = operands match {
+    case libraryDatum :: sst.NonSymbolLeaf(ast.StringLiteral(nativeSymbol)) :: procTypeDatum :: attributeData =>
       val nativeLibrary = ExtractNativeLibrary(libraryDatum)
 
-      functionTypeData match {
-        // These mirror the lambda forms
-        case List(sst.ScopedListOrDatum(fixedArgs, restArgDatum)) =>
-          createNativeFunction(nativeLibrary, hasWorldArg, fixedArgs, restArgDatum, None, nativeSymbol, Set())
+      val signature = extractSignature(hasWorldArg, procTypeDatum, attributeData)
 
-        case List(sst.ScopedListOrDatum(fixedArgs, restArgDatum), sst.ScopedSymbol(_, "->"), returnTypeDatum) =>
-          createNativeFunction(nativeLibrary, hasWorldArg, fixedArgs, restArgDatum, Some(returnTypeDatum), nativeSymbol, Set())
-
-        case List(sst.ScopedListOrDatum(fixedArgs, restArgDatum), sst.ScopedSymbol(_, "noreturn")) =>
-          createNativeFunction(nativeLibrary, hasWorldArg, fixedArgs, restArgDatum, None, nativeSymbol, Set(ProcedureAttribute.NoReturn))
-
-        case _ =>
-          throw new BadSpecialFormException(defineLocation, "Bad native function type definition")
-      }
+      et.NativeFunction(
+        library=nativeLibrary,
+        signature=signature,
+        nativeSymbol=nativeSymbol
+      )
 
     case _ =>
       throw new BadSpecialFormException(defineLocation, "Bad native function symbol definition")

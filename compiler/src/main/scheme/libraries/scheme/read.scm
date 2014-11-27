@@ -7,7 +7,7 @@
   (begin
     (define-native-library llread (static-library "llread"))
 
-    (define native-read (world-function llread "llread_read" (<port>) -> <any>))
+    (define native-read (world-function llread "llread_read" (-> <port> <any>)))
     (define-r7rs read (case-lambda
       (()
        (native-read (current-input-port)))

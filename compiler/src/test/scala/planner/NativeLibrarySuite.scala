@@ -18,7 +18,7 @@ class NativeLibrarySuite extends FunSuite with PlanHelpers {
   test("unused native function requires no libraries") {
     val actualLibraries = nativeLibrariesFor("""
       (define-native-library testlib (static-library "libtest"))
-      (define unused-func (native-function testlib "lliby_test" ()))
+      (define unused-func (native-function testlib "lliby_test" (-> <unit>)))
     """)
 
     assert(actualLibraries === Set())
@@ -26,7 +26,7 @@ class NativeLibrarySuite extends FunSuite with PlanHelpers {
 
   test("native function using the system library") {
     val actualLibraries = nativeLibrariesFor("""
-      (define used-func (native-function system-library "lliby_test" ()))
+      (define used-func (native-function system-library "lliby_test" (-> <unit>)))
       (used-func)
     """)
 
@@ -36,7 +36,7 @@ class NativeLibrarySuite extends FunSuite with PlanHelpers {
   test("native function using a static library") {
     val actualLibraries = nativeLibrariesFor("""
       (define-native-library testlib (static-library "libtest"))
-      (define used-func (native-function testlib "lliby_test_static" ()))
+      (define used-func (native-function testlib "lliby_test_static" (-> <unit>)))
       (used-func)
     """)
 

@@ -18,10 +18,6 @@ object Primitives {
   object DefineSyntax extends PrimitiveExpr
   object DefineRecordType extends PrimitiveExpr
   object DefineType extends PrimitiveExpr
-  object DefineNativeLibrary extends PrimitiveExpr
-  object StaticLibrary extends PrimitiveExpr
-  object NativeFunction extends PrimitiveExpr
-  object WorldFunction extends PrimitiveExpr
   object DefineReportProcedure extends PrimitiveExpr
   object Cast extends PrimitiveExpr
   object AnnotateExprType extends PrimitiveExpr
@@ -32,6 +28,12 @@ object Primitives {
   object Ellipsis extends PrimitiveExpr
   object Wildcard extends PrimitiveExpr
   object SyntaxRules extends PrimitiveExpr
+
+  object DefineNativeLibrary extends PrimitiveExpr
+  object StaticLibrary extends PrimitiveExpr
+  object NativeFunction extends PrimitiveExpr
+  object WorldFunction extends PrimitiveExpr
+  object NoReturnAttr extends PrimitiveExpr
 
   object UnionType extends PrimitiveTypeConstructor
   object PairofType extends PrimitiveTypeConstructor
@@ -61,10 +63,6 @@ object Primitives {
       "define-syntax" -> DefineSyntax,
       "define-record-type" -> DefineRecordType,
       "define-type" -> DefineType,
-      "define-native-library" -> DefineNativeLibrary,
-      "static-library" -> StaticLibrary,
-      "native-function" -> NativeFunction,
-      "world-function" -> WorldFunction,
       "define-report-procedure" -> DefineReportProcedure,
       "cast" -> Cast,
       "ann" -> AnnotateExprType,
@@ -75,6 +73,12 @@ object Primitives {
       "..." -> Ellipsis,
       "_" -> Wildcard,
       "syntax-rules" -> SyntaxRules,
+
+      "define-native-library" -> DefineNativeLibrary,
+      "static-library" -> StaticLibrary,
+      "native-function" -> NativeFunction,
+      "world-function" -> WorldFunction,
+      "noreturn" -> NoReturnAttr,
 
       "U" -> UnionType,
       "Pairof" -> PairofType,

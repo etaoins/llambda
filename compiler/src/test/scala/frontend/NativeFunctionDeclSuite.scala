@@ -26,7 +26,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function system-library "lliby_newline" ())""")
+      exprFor("""(native-function system-library "lliby_newline" (-> <unit>))""")
     }
   }
 
@@ -45,7 +45,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function system-library "lliby_newline" () noreturn)""")
+      exprFor("""(native-function system-library "lliby_newline" (-> <unit>) noreturn)""")
     }
   }
 
@@ -64,7 +64,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(world-function system-library "lliby_newline" ())""")
+      exprFor("""(world-function system-library "lliby_newline" (-> <unit>))""")
     }
   }
 
@@ -83,7 +83,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function system-library "lliby_newline" () -> <native-int8>)""")
+      exprFor("""(native-function system-library "lliby_newline" (-> <native-int8>))""")
     }
   }
 
@@ -102,7 +102,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function system-library "lliby_newline" (<native-int16>) -> <native-int32>)""")
+      exprFor("""(native-function system-library "lliby_newline" (-> <native-int16> <native-int32>))""")
     }
   }
 
@@ -121,7 +121,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(world-function system-library "lliby_newline" (<native-int64> <native-float>) -> <native-double>)""")
+      exprFor("""(world-function system-library "lliby_newline" (-> <native-int64> <native-float> <native-double>))""")
     }
   }
 
@@ -140,7 +140,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function system-library "lliby_newline" (<native-uint16>) -> <native-uint32>)""")
+      exprFor("""(native-function system-library "lliby_newline" (-> <native-uint16> <native-uint32>))""")
     }
   }
 
@@ -159,7 +159,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function system-library "lliby_newline" (<native-bool>) -> <native-bool>)""")
+      exprFor("""(native-function system-library "lliby_newline" (-> <native-bool> <native-bool>))""")
     }
   }
 
@@ -178,7 +178,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function system-library "lliby_newline" (<native-int8>) -> <native-unicode-char>)""")
+      exprFor("""(native-function system-library "lliby_newline" (-> <native-int8> <native-unicode-char>))""")
     }
   }
 
@@ -197,7 +197,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function system-library "lliby_newline" (<native-double>) -> *)""")
+      exprFor("""(native-function system-library "lliby_newline" (-> <native-double> *))""")
     }
   }
 
@@ -216,7 +216,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function system-library "lliby_newline" ((U <string> <symbol>)) -> (Values <string> <symbol>))""")
+      exprFor("""(native-function system-library "lliby_newline" (-> (U <string> <symbol>) (Values <string> <symbol>)))""")
     }
   }
 
@@ -235,7 +235,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function system-library "lliby_newline" (<exact-integer>) -> <flonum>)""")
+      exprFor("""(native-function system-library "lliby_newline" (-> <exact-integer> <flonum>))""")
     }
   }
 
@@ -254,7 +254,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function system-library "lliby_vector" <any> -> <any>)""")
+      exprFor("""(native-function system-library "lliby_vector" (-> <any> * <any>))""")
     }
   }
 
@@ -273,7 +273,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function system-library "lliby_misc" (<native-bool> . <exact-integer>) -> <native-int>)""")
+      exprFor("""(native-function system-library "lliby_misc" (-> <native-bool> <exact-integer> * <native-int>))""")
     }
   }
 
@@ -292,51 +292,51 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
     )
 
     assertResult(expectedFunction) {
-      exprFor("""(native-function (static-library "testlib") "lliby_misc" ())""")
+      exprFor("""(native-function (static-library "testlib") "lliby_misc" (-> <unit>))""")
     }
   }
 
   test("function with non-Scheme rest arg") {
     intercept[BadSpecialFormException] {
-      exprFor("""(native-function system-library "lliby_vector" <native-int64> -> <any>)""")
+      exprFor("""(native-function system-library "lliby_vector" (-> <native-int64> * <any>))""")
     }
   }
 
   test("function returning unknown type") {
     intercept[UnboundVariableException] {
-      exprFor("""(native-function system-library "lliby_newline" () -> <not-a-type>)""")
+      exprFor("""(native-function system-library "lliby_newline" (-> <not-a-type>))""")
     }
   }
 
   test("function returning non-symbol") {
     intercept[BadSpecialFormException] {
-      exprFor("""(native-function system-library "lliby_newline" () -> 4)""")
+      exprFor("""(native-function system-library "lliby_newline" (-> 4))""")
     }
   }
 
   test("function in unbound library") {
     intercept[UnboundVariableException] {
-      exprFor("""(native-function unbound-library "lliby_newline" (<not-a-type>))""")
+      exprFor("""(native-function unbound-library "lliby_newline" (-> <unit>))""")
     }
   }
 
   test("function in non-library") {
     intercept[BadSpecialFormException] {
       exprFor("""
-        (native-function (native-function system-library "native_newline" ()) "lliby_newline" (<not-a-type>))
+        (native-function (native-function system-library "native_newline" ()) "lliby_newline" (-> <unit>))
       """)
     }
   }
 
   test("function taking unknown type") {
     intercept[UnboundVariableException] {
-      exprFor("""(native-function system-library "lliby_newline" (<not-a-type>))""")
+      exprFor("""(native-function system-library "lliby_newline" (-> <not-a-type> <unit>))""")
     }
   }
 
   test("function taking non-symbol") {
     intercept[BadSpecialFormException] {
-      exprFor("""(native-function system-library "lliby_newline" (4))""")
+      exprFor("""(native-function system-library "lliby_newline" (-> 4 <unit>))""")
     }
   }
 }
