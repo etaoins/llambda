@@ -451,8 +451,8 @@
     (define-r7rs pair? (make-predicate <pair>))
     (define-r7rs null? (make-predicate <empty-list>))
     (define-r7rs list? (make-predicate <list>))
-    
-    (define-r7rs length (world-function llbase "llbase_length" (-> <list> <native-uint32>)))
+
+    (define-r7rs length (native-function llbase "llbase_length" (-> <list> <native-uint32>)))
 
     (define-r7rs cons (world-function llbase "llbase_cons" (-> <any> <any> <pair>)))
     (define-r7rs car (native-function llbase "llbase_car" (-> <pair> <any>)))

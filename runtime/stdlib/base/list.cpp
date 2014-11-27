@@ -94,7 +94,7 @@ void llbase_set_cdr(World &world, PairCell *pair, AnyCell *obj)
 	return pair->setCdr(obj);
 }
 
-std::uint32_t llbase_length(World &world, ProperList<AnyCell> *list)
+std::uint32_t llbase_length(ProperList<AnyCell> *list)
 {
 	return list->size();
 }
