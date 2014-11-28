@@ -65,7 +65,7 @@ object ReturnType {
 
       case multipleValues =>
         MultipleValues(
-          SpecificProperListType(multipleValues.map(DirectSchemeTypeRef)) 
+          SpecificProperListType(multipleValues)
         )
     }
   }

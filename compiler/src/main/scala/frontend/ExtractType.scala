@@ -121,23 +121,27 @@ object ExtractType {
         }
       
       case Primitives.ListofType =>
-        val memberRecursiveVars = recursiveVars.recursed()
-
         operands match {
           case List(memberDatum) =>
-            vt.UniformProperListType(extractSchemeTypeRef(memberDatum, memberRecursiveVars))
+            vt.UnionType(Set(
+              vt.EmptyListType,
+              vt.SpecificPairType(
+                carTypeRef=extractSchemeTypeRef(memberDatum, recursiveVars.recursed(1)),
+                cdrTypeRef=vt.RecursiveSchemeTypeRef(1)
+              )
+            ))
 
           case _ =>
             throw new BadSpecialFormException(constructorName, "Listof requires exactly one member type argument")
         }
 
       case Primitives.ListType =>
-        val memberTypeRefs = operands.zipWithIndex map { case (operand, index) =>
-          extractSchemeTypeRef(operand, recursiveVars.recursed(index))
+        operands.zipWithIndex.foldRight(vt.EmptyListType : vt.NonUnionSchemeType) {
+          case ((operand, index), cdrType) =>
+            val memberTypeRef = extractSchemeTypeRef(operand, recursiveVars.recursed(index))
+            vt.SpecificPairType(memberTypeRef, cdrType)
         }
 
-        vt.SpecificProperListType(memberTypeRefs)
-      
       case Primitives.RecType =>
         operands match {
           case List(sst.ScopedSymbol(_, varName), innerTypeDatum) =>

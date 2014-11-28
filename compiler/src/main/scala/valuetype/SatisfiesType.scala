@@ -10,7 +10,7 @@ object SatisfiesType {
         EmptyListType
 
       case Some(memberType) =>
-        UniformProperListType(DirectSchemeTypeRef(memberType))
+        UniformProperListType(memberType)
     }
 
     fixedArgs.foldRight(fixedArgCdr) { case (fixedArgType, cdrType) =>

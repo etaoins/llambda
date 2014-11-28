@@ -242,7 +242,7 @@ class SatisfiesSignatureSuite extends FunSuite {
     val superSignature = derivedSignature.copy(
       returnType=vt.ReturnType.MultipleValues(
         vt.SpecificProperListType(List(
-          vt.DirectSchemeTypeRef(vt.ExactIntegerType)
+          vt.ExactIntegerType
         ))
       ))
 

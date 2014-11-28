@@ -256,11 +256,11 @@ object PairType {
 
 object UniformProperListType {
   /** Constructs a recursive type representing a unsized proper list with a uniform member type */
-  def apply(memberTypeRef : SchemeTypeRef) : SchemeType = {
+  def apply(memberType : SchemeType) : SchemeType = {
     UnionType(Set(
       EmptyListType,
       SpecificPairType(
-        carTypeRef=memberTypeRef,
+        carTypeRef=DirectSchemeTypeRef(memberType),
         // Point back to the outer union type
         cdrTypeRef=RecursiveSchemeTypeRef(1)
       )
@@ -270,16 +270,16 @@ object UniformProperListType {
 
 object SpecificProperListType {
   /** Constructs a recursive type representing a fixed length proper list with specific member types */
-  def apply(memberTypeRefs : Iterable[SchemeTypeRef]) : NonUnionSchemeType = 
+  def apply(memberTypeRefs : Iterable[SchemeType]) : NonUnionSchemeType =
     memberTypeRefs.foldRight(EmptyListType : NonUnionSchemeType) { case (memberTypeRef, cdrType) =>
-      SpecificPairType(memberTypeRef, DirectSchemeTypeRef(cdrType))
+      SpecificPairType(DirectSchemeTypeRef(memberTypeRef), DirectSchemeTypeRef(cdrType))
     }
 
   def unapply(schemeType : SchemeType) : Option[List[SchemeTypeRef]] = schemeType match {
     case SpecificPairType(typeRef, DirectSchemeTypeRef(EmptyListType)) =>
       Some(List(typeRef))
 
-    case SpecificPairType(typeRef, DirectSchemeTypeRef(tail))  => 
+    case SpecificPairType(typeRef, DirectSchemeTypeRef(tail)) =>
       unapply(tail).map { tailTypeRefs =>
         typeRef :: tailTypeRefs
       }
