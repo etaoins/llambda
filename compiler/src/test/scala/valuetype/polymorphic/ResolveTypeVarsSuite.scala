@@ -1,8 +1,9 @@
-package io.llambda.compiler.valuetype
+package io.llambda.compiler.valuetype.polymorphic
 import io.llambda
 
 import org.scalatest.FunSuite
 
+import io.llambda.compiler.valuetype._
 import Implicits._
 
 class ResolveTypeVarsSuite extends FunSuite {

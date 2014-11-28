@@ -1,5 +1,7 @@
-package io.llambda.compiler.valuetype
+package io.llambda.compiler.valuetype.polymorphic
 import io.llambda
+
+import io.llambda.compiler.valuetype._
 
 object ResolveTypeVars {
   case class Result(values : Map[Int, SchemeType] = Map()) {
