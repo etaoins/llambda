@@ -2,12 +2,11 @@ package io.llambda.compiler.valuetype
 import io.llambda
 
 import llambda.compiler.{celltype => ct}
-import llambda.compiler.{valuetype => vt}
 
 /** Type of any value known to the compiler
   * 
   * These are more specific than the types defined in R7RS in that they define both the semantic type and the runtime
-  * representation. For example, Int32 and vt.ExactIntegerType are both exact integers but have different native
+  * representation. For example, Int32 and ExactIntegerType are both exact integers but have different native
   * representations.
   */
 sealed abstract class ValueType {
@@ -152,7 +151,7 @@ sealed abstract trait SchemeType extends CellValueType {
     *
     * If the previous type did not have a applicable type this will return the original type
     */
-   def replaceApplicableType(applicableType : vt.ApplicableType) : SchemeType =
+   def replaceApplicableType(applicableType : ApplicableType) : SchemeType =
      this
 }
 
@@ -191,7 +190,7 @@ case class SchemeTypeAtom(cellType : ct.ConcreteCellType) extends NonUnionScheme
       None
     }
    
-  override def replaceApplicableType(procType : vt.ApplicableType) : SchemeType =
+  override def replaceApplicableType(procType : ApplicableType) : SchemeType =
     if (cellType == ct.ProcedureCell) {
       procType
     }
@@ -325,7 +324,7 @@ case class UnionType(memberTypes : Set[NonUnionSchemeType]) extends SchemeType {
   override def applicableTypeOpt : Option[ApplicableType] =
     memberTypes.flatMap(_.applicableTypeOpt).headOption
   
-  override def replaceApplicableType(procType : vt.ApplicableType) : SchemeType = {
+  override def replaceApplicableType(procType : ApplicableType) : SchemeType = {
     val (oldProcTypes, nonProcTypes) =  memberTypes.partition(_.isInstanceOf[ProcedureType])
 
     if (oldProcTypes.isEmpty) {
@@ -369,7 +368,7 @@ sealed abstract trait ApplicableType extends NonUnionSchemeType with NonRecursiv
 case class ProcedureType(
     fixedArgTypes : List[SchemeType],
     restArgMemberTypeOpt : Option[SchemeType],
-    returnType : vt.ReturnType.ReturnType
+    returnType : ReturnType.ReturnType
 ) extends DerivedSchemeType with ApplicableType {
   val cellType = ct.ProcedureCell
   val isGcManaged = true
@@ -381,7 +380,7 @@ case class ProcedureType(
   override def applicableTypeOpt : Option[ApplicableType] =
     Some(this)
 
-  override def replaceApplicableType(applicableType : vt.ApplicableType) =
+  override def replaceApplicableType(applicableType : ApplicableType) =
     applicableType
 }
 
@@ -441,12 +440,12 @@ object SchemeType {
       // We can't distinguish procedure types at runtime
       // Try to combine them in to a single procedure type
       val superApplicableType = allApplicableTypes.reduceLeft({
-        (left : vt.NonUnionSchemeType, right : vt.NonUnionSchemeType) =>
-          if (vt.SatisfiesType(left, right) == Some(true)) {
+        (left : NonUnionSchemeType, right : NonUnionSchemeType) =>
+          if (SatisfiesType(left, right) == Some(true)) {
             // Left type is more general
             left
           }
-          else if (vt.SatisfiesType(right, left) == Some(true)) {
+          else if (SatisfiesType(right, left) == Some(true)) {
             // Right type is more general
             right
           }
