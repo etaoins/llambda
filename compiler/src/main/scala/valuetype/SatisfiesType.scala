@@ -27,7 +27,6 @@ object SatisfiesType {
       testingTypeRef : SchemeTypeRef,
       testingStack : SchemeType.Stack
   ) : Option[Boolean] = {
-    // Different depths - resolve the types and then compare them
     val superType = superTypeRef.resolve(superStack)
     val testingType = testingTypeRef.resolve(testingStack)
 

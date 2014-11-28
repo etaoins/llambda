@@ -10,7 +10,12 @@ object NameForType {
       recurseVarNames : Map[SchemeType, Char]
   ) = schemeTypeRef match {
     case RecursiveSchemeTypeRef(depth) =>
-      recurseVarNames(typeStack(depth))
+      if (depth >= typeStack.length) {
+        '?'
+      }
+      else {
+        recurseVarNames(typeStack(depth))
+      }
 
     case DirectSchemeTypeRef(directType) =>
       stackedNameForType(directType :: typeStack, recurseVarNames)
