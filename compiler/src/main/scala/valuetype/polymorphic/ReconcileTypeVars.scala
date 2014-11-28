@@ -1,15 +1,13 @@
 package io.llambda.compiler.valuetype.polymorphic
 import io.llambda
 
-import collection.breakOut
-
 import io.llambda.compiler.valuetype._
 
 import io.llambda.compiler.{NoSourceLocation, SourceLocated}
 import io.llambda.compiler.ImpossibleTypeConversionException
 
 object ReconcileTypeVars {
-  case class Result(values : Vector[SchemeType] = Vector())
+  case class Result(values : Map[TypeVar, SchemeType] = Map())
 
   /** Reconciles resolved type variables with their defined upper bounds
     *
@@ -22,12 +20,14 @@ object ReconcileTypeVars {
     *                   bounds for all of the defined type variables will be returned.
     */
   def apply(
-      typeVars : Vector[TypeVar],
+      typeVars : Set[TypeVar],
       located : SourceLocated = NoSourceLocation,
       resolved : ResolveTypeVars.Result = ResolveTypeVars.Result()
   ) : ReconcileTypeVars.Result = {
-    val finalValues = typeVars.zipWithIndex.map({ case (TypeVar(upperBound), index : Int) =>
-      resolved.values.get(index) match {
+    val finalValues = typeVars.map({ typeVar =>
+      val upperBound = typeVar.upperBound
+
+      resolved.values.get(typeVar) match {
         case Some(resolvedType) =>
           if (SatisfiesType(upperBound, resolvedType) != Some(true)) {
             throw new ImpossibleTypeConversionException(
@@ -36,13 +36,13 @@ object ReconcileTypeVars {
             )
           }
 
-          resolvedType
+          (typeVar -> resolvedType)
 
         case None =>
           // Just use the upper bound
-          upperBound
+          (typeVar -> upperBound)
       }
-    })
+    }).toMap
 
     Result(finalValues)
   }

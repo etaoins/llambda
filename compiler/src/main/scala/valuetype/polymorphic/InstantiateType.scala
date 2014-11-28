@@ -4,22 +4,82 @@ import io.llambda
 import io.llambda.compiler.valuetype._
 
 object InstantiateType {
-  private def instantiateSchemeType(poly : SchemeType, reconciledVars : ReconcileTypeVars.Result) : SchemeType = {
-    reconciledVars.values.zipWithIndex.foldLeft(poly) { case (poly, (varType, index)) =>
-      // Because type variables are represented by recursive type references we can {ab,re}use the UnrollType
-      // infrastructure to perform our replacement
-      UnrollType.unrollType(poly, varType, index + 1)
-    }
+  private def visitTypeRef(
+      typeVars : ReconcileTypeVars.Result,
+      polyRef : SchemeTypeRef
+  ) : SchemeTypeRef = polyRef match {
+    case recursiveRef : RecursiveSchemeTypeRef =>
+      recursiveRef
+
+    case DirectSchemeTypeRef(typeVar : TypeVar) =>
+      DirectSchemeTypeRef(typeVars.values(typeVar))
+
+    case DirectSchemeTypeRef(directType) =>
+      DirectSchemeTypeRef(
+        apply(typeVars, directType)
+      )
   }
 
-  /** Instantiates a type by replacing any internal type variables with their reconciled types */
-  def apply[T >: SchemeType <: ValueType](poly : T, reconciledVars : ReconcileTypeVars.Result) : T = poly match {
-    case schemeType : SchemeType =>
-      instantiateSchemeType(schemeType, reconciledVars)
+  private def visitProcedureType(
+      typeVars : ReconcileTypeVars.Result,
+      procType : ProcedureType
+  ) : ProcedureType = procType match {
+    case ProcedureType(fixedArgTypes, restArgMemberTypeOpt, returnType) =>
+      ProcedureType(
+        fixedArgTypes=fixedArgTypes.map(apply(typeVars, _)),
+        restArgMemberTypeOpt=restArgMemberTypeOpt.map(apply(typeVars, _)),
+        returnType=instantiateReturnType(typeVars, returnType)
+      )
+  }
 
-    case other =>
-      // This is for procedure signature which can be both polymorphic and contain native types
-      // Native types cannot contain type variables so just pass it through directly
-      other
+  def instantiateReturnType(
+      typeVars : ReconcileTypeVars.Result,
+      returnType : ReturnType.ReturnType
+  ) : ReturnType.ReturnType = returnType match {
+    case ReturnType.SingleValue(valueType) =>
+      ReturnType.SingleValue(apply(typeVars, valueType))
+
+    case ReturnType.MultipleValues(valueList) =>
+      ReturnType.MultipleValues(apply(typeVars, valueList))
+  }
+
+  def apply[T >: SchemeType <: ValueType](typeVars : ReconcileTypeVars.Result, poly : T) : T = poly match {
+    case _ if typeVars.values.isEmpty =>
+      // Nothing to do!
+      poly
+
+    case typeVar : TypeVar =>
+      typeVars.values(typeVar)
+
+    case UnionType(memberTypes) =>
+      val replacedMembers = memberTypes.map(apply(typeVars, _))
+      SchemeType.fromTypeUnion(replacedMembers)
+
+    case pairType : SpecificPairType =>
+      val replacedCar = visitTypeRef(typeVars, pairType.carTypeRef)
+      val replacedCdr = visitTypeRef(typeVars, pairType.cdrTypeRef)
+
+      SpecificPairType(replacedCar, replacedCdr)
+
+    case SpecificVectorType(memberTypeRefs) =>
+      val replacedMemberTypeRefs = memberTypeRefs map { memberTypeRef =>
+        visitTypeRef(typeVars, memberTypeRef)
+      }
+
+      SpecificVectorType(replacedMemberTypeRefs)
+
+    case UniformVectorType(memberTypeRef)  =>
+      val replacedMemberType = visitTypeRef(typeVars, memberTypeRef)
+
+      UniformVectorType(replacedMemberType)
+
+    case procType : ProcedureType =>
+      visitProcedureType(typeVars, procType)
+
+    case CaseProcedureType(clauseTypes) =>
+      CaseProcedureType(clauseTypes.map(visitProcedureType(typeVars, _)))
+
+    case _ : LeafType =>
+      poly
   }
 }

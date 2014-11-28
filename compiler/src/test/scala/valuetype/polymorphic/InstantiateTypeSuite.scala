@@ -10,31 +10,41 @@ import io.llambda.compiler.ImpossibleTypeConversionException
 import Implicits._
 
 class InstantiateTypeSuite extends FunSuite {
+  val polyA = new TypeVar("A")
+  val polyB = new TypeVar("B")
+
   test("instantiating a native type") {
     val polyNative = Int64
-    val reconciled = ReconcileTypeVars.Result(Vector())
+    val reconciled = ReconcileTypeVars.Result(Map())
     val expected = Int64
 
-    assert(InstantiateType(polyNative, reconciled) === expected)
+    assert(InstantiateType(reconciled, polyNative) === expected)
   }
 
   test("instantiating a leaf Scheme type") {
     val polyLeaf = ExactIntegerType
-    val reconciled = ReconcileTypeVars.Result(Vector())
+    val reconciled = ReconcileTypeVars.Result(Map())
     val expected = ExactIntegerType
 
-    assert(InstantiateType(polyLeaf, reconciled) === expected)
+    assert(InstantiateType(reconciled, polyLeaf) === expected)
+  }
+
+  test("instantiating a bare type var") {
+    val reconciled = ReconcileTypeVars.Result(Map(
+      polyA -> ExactIntegerType
+    ))
+
+    val expected = ExactIntegerType
+
+    assert(InstantiateType(reconciled, polyA) == expected)
   }
 
   test("instantiating a pair type") {
-    val polyPair = SpecificPairType(
-      RecursiveSchemeTypeRef(1), // Poly A
-      RecursiveSchemeTypeRef(2)  // Poly B
-    )
+    val polyPair = SpecificPairType(polyA, polyB)
 
-    val reconciled = ReconcileTypeVars.Result(Vector(
-      ExactIntegerType,
-      FlonumType
+    val reconciled = ReconcileTypeVars.Result(Map(
+      polyA -> ExactIntegerType,
+      polyB -> FlonumType
     ))
 
     val expected = SpecificPairType(
@@ -42,20 +52,20 @@ class InstantiateTypeSuite extends FunSuite {
       FlonumType
     )
 
-    assert(InstantiateType(polyPair, reconciled) == expected)
+    assert(InstantiateType(reconciled, polyPair) == expected)
   }
 
   test("instantiating a nested pair") {
     val polyPair = SpecificPairType(
-      RecursiveSchemeTypeRef(1), // Poly A
+      polyA,
       SpecificPairType(
-        RecursiveSchemeTypeRef(2), // Poly A
-        RecursiveSchemeTypeRef(2)  // Poly A
+        polyA,
+        polyA
       )
     )
 
-    val reconciled = ReconcileTypeVars.Result(Vector(
-      ExactIntegerType
+    val reconciled = ReconcileTypeVars.Result(Map(
+      polyA -> ExactIntegerType
     ))
 
     val expected = SpecificPairType(
@@ -66,35 +76,44 @@ class InstantiateTypeSuite extends FunSuite {
       )
     )
 
-    assert(InstantiateType(polyPair, reconciled) == expected)
+    assert(InstantiateType(reconciled, polyPair) == expected)
+  }
+
+  test("instantiating a union") {
+    val polyUnion = UnionType(Set(polyA, BooleanType))
+
+    val reconciled = ReconcileTypeVars.Result(Map(
+      polyA -> ExactIntegerType
+    ))
+
+    val expected = UnionType(Set(
+      ExactIntegerType,
+      BooleanType
+    ))
+
+    assert(InstantiateType(reconciled, polyUnion) == expected)
   }
 
   test("instantiating a uniform vector") {
-    val polyVec = UniformVectorType(
-      RecursiveSchemeTypeRef(1) // Poly A
-    )
+    val polyVec = UniformVectorType(polyA)
 
-    val reconciled = ReconcileTypeVars.Result(Vector(
-      ExactIntegerType
+    val reconciled = ReconcileTypeVars.Result(Map(
+      polyA -> ExactIntegerType
     ))
 
     val expected = UniformVectorType(
       ExactIntegerType
     )
 
-    assert(InstantiateType(polyVec, reconciled) == expected)
+    assert(InstantiateType(reconciled, polyVec) == expected)
   }
 
   test("instantiating a specific vector") {
-    val polyVec = SpecificVectorType(Vector(
-      RecursiveSchemeTypeRef(1),
-      RecursiveSchemeTypeRef(2),
-      RecursiveSchemeTypeRef(1)
-    ))
+    val polyVec = SpecificVectorType(Vector(polyA, polyB, polyA))
 
-    val reconciled = ReconcileTypeVars.Result(Vector(
-      ExactIntegerType,
-      FlonumType
+    val reconciled = ReconcileTypeVars.Result(Map(
+      polyA -> ExactIntegerType,
+      polyB -> FlonumType
     ))
 
     val expected = SpecificVectorType(Vector(
@@ -103,20 +122,17 @@ class InstantiateTypeSuite extends FunSuite {
       ExactIntegerType
     ))
 
-    assert(InstantiateType(polyVec, reconciled) == expected)
+    assert(InstantiateType(reconciled, polyVec) == expected)
   }
 
   test("instantiating a uniform vector of pairs") {
     val polyVec = UniformVectorType(
-      SpecificPairType(
-        RecursiveSchemeTypeRef(3), // Poly B
-        RecursiveSchemeTypeRef(2)  // Poly A
-      )
+      SpecificPairType(polyB, polyA)
     )
 
-    val reconciled = ReconcileTypeVars.Result(Vector(
-      ExactIntegerType,
-      FlonumType
+    val reconciled = ReconcileTypeVars.Result(Map(
+      polyA -> ExactIntegerType,
+      polyB -> FlonumType
     ))
 
     val expected = UniformVectorType(
@@ -126,6 +142,62 @@ class InstantiateTypeSuite extends FunSuite {
       )
     )
 
-    assert(InstantiateType(polyVec, reconciled) == expected)
+    assert(InstantiateType(reconciled, polyVec) == expected)
+  }
+
+  test("instantiating a procedure type") {
+    val polyProc = ProcedureType(
+      fixedArgTypes=List(polyA, PortType),
+      restArgMemberTypeOpt=Some(polyB),
+      returnType=ReturnType.SpecificValues(List(polyA, StringType))
+    )
+
+    val reconciled = ReconcileTypeVars.Result(Map(
+      polyA -> ExactIntegerType,
+      polyB -> FlonumType
+    ))
+
+    val expected = ProcedureType(
+      fixedArgTypes=List(ExactIntegerType, PortType),
+      restArgMemberTypeOpt=Some(FlonumType),
+      returnType=ReturnType.SpecificValues(List(ExactIntegerType, StringType))
+    )
+
+    assert(InstantiateType(reconciled, polyProc) == expected)
+  }
+
+  test("instantiating a case procedure type") {
+    val polyCaseProc = CaseProcedureType(List(
+      ProcedureType(
+        fixedArgTypes=List(polyA),
+        restArgMemberTypeOpt=None,
+        returnType=ReturnType.SingleValue(polyB)
+      ),
+      ProcedureType(
+        fixedArgTypes=List(polyA, polyB),
+        restArgMemberTypeOpt=None,
+        returnType=ReturnType.SingleValue(polyA)
+      )
+    ))
+
+    val reconciled = ReconcileTypeVars.Result(Map(
+      polyA -> ExactIntegerType,
+      polyB -> FlonumType
+    ))
+
+    val expected = CaseProcedureType(List(
+      ProcedureType(
+        fixedArgTypes=List(ExactIntegerType),
+        restArgMemberTypeOpt=None,
+        returnType=ReturnType.SingleValue(FlonumType)
+      ),
+      ProcedureType(
+        fixedArgTypes=List(ExactIntegerType, FlonumType),
+        restArgMemberTypeOpt=None,
+        returnType=ReturnType.SingleValue(ExactIntegerType)
+      )
+    ))
+
+    assert(InstantiateType(reconciled, polyCaseProc) == expected)
   }
 }

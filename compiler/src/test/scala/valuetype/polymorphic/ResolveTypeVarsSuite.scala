@@ -7,43 +7,40 @@ import io.llambda.compiler.valuetype._
 import Implicits._
 
 class ResolveTypeVarsSuite extends FunSuite {
+  val polyA = new TypeVar("A")
+  val polyB = new TypeVar("B")
+
   test("resolving leaf types") {
     val polyLeaf = ExactIntegerType
     val evidence = ExactIntegerType
 
-    assert(ResolveTypeVars(polyLeaf, evidence).values == Map())
+    assert(ResolveTypeVars(Set(), polyLeaf, evidence).values == Map())
   }
 
   test("resolving simple pair type with distinct car and cdr variables") {
-    val polyPair = SpecificPairType(
-      RecursiveSchemeTypeRef(1),
-      RecursiveSchemeTypeRef(2)
-    )
+    val polyPair = SpecificPairType(polyA, polyB)
 
     val evidence = SpecificPairType(
       ExactIntegerType,
       FlonumType
     )
 
-    assert(ResolveTypeVars(polyPair, evidence).values == Map(
-      0 -> ExactIntegerType,
-      1 -> FlonumType
+    assert(ResolveTypeVars(Set(polyA, polyB), polyPair, evidence).values == Map(
+      polyA -> ExactIntegerType,
+      polyB -> FlonumType
     ))
   }
 
   test("resolving simple pair type with same car and cdr variables") {
-    val polyPair = SpecificPairType(
-      RecursiveSchemeTypeRef(1),
-      RecursiveSchemeTypeRef(1)
-    )
+    val polyPair = SpecificPairType(polyA, polyA)
 
     val evidence = SpecificPairType(
       ExactIntegerType,
       FlonumType
     )
 
-    assert(ResolveTypeVars(polyPair, evidence).values == Map(
-      0 -> NumberType
+    assert(ResolveTypeVars(Set(polyA), polyPair, evidence).values == Map(
+      polyA -> NumberType
     ))
   }
 
@@ -51,15 +48,15 @@ class ResolveTypeVarsSuite extends FunSuite {
     val polyList = UnionType(Set(
       EmptyListType,
       SpecificPairType(
-        RecursiveSchemeTypeRef(2), // Polymorphic var
+        polyA,
         RecursiveSchemeTypeRef(1)  // Inner recursive var
       )
     ))
 
     val evidence = UniformProperListType(ExactIntegerType)
 
-    assert(ResolveTypeVars(polyList, evidence).values == Map(
-      0 -> ExactIntegerType
+    assert(ResolveTypeVars(Set(polyA), polyList, evidence).values == Map(
+      polyA -> ExactIntegerType
     ))
   }
 
@@ -67,26 +64,26 @@ class ResolveTypeVarsSuite extends FunSuite {
     val polyList = UnionType(Set(
       EmptyListType,
       SpecificPairType(
-        RecursiveSchemeTypeRef(2), // Poly A
+        polyA,
         RecursiveSchemeTypeRef(1)  // Inner recursive var
       )
     ))
 
     val evidence = SpecificProperListType(Vector(ExactIntegerType, FlonumType, ExactIntegerType))
 
-    assert(ResolveTypeVars(polyList, evidence).values == Map(
-      0 -> NumberType
+    assert(ResolveTypeVars(Set(polyA), polyList, evidence).values == Map(
+      polyA -> NumberType
     ))
   }
 
   test("resolving specific proper list type with uniform proper list") {
     val polyList =
       SpecificPairType(
-        RecursiveSchemeTypeRef(1), // Poly A
+        polyA,
         SpecificPairType(
-          RecursiveSchemeTypeRef(2), // Poly A
+          polyA,
           SpecificPairType(
-            RecursiveSchemeTypeRef(3), // Poly A
+            polyA,
             EmptyListType
           )
         )
@@ -94,26 +91,22 @@ class ResolveTypeVarsSuite extends FunSuite {
 
     val evidence = UniformProperListType(PortType)
 
-    assert(ResolveTypeVars(polyList, evidence).values == Map(
-      0 -> PortType
+    assert(ResolveTypeVars(Set(polyA), polyList, evidence).values == Map(
+      polyA -> PortType
     ))
   }
 
   test("resolving uniform vector type with uniform vector") {
-    val polyVec = UniformVectorType(RecursiveSchemeTypeRef(1))
+    val polyVec = UniformVectorType(polyA)
     val evidence = UniformVectorType(ExactIntegerType)
 
-    assert(ResolveTypeVars(polyVec, evidence).values == Map(
-      0 -> ExactIntegerType
+    assert(ResolveTypeVars(Set(polyA), polyVec, evidence).values == Map(
+      polyA -> ExactIntegerType
     ))
   }
 
   test("resolving specific vector type with specific vector") {
-    val polyVec = SpecificVectorType(Vector(
-      RecursiveSchemeTypeRef(1), // Poly A
-      RecursiveSchemeTypeRef(2), // Poly B
-      RecursiveSchemeTypeRef(1)  // Poly A
-    ))
+    val polyVec = SpecificVectorType(Vector(polyA, polyB, polyA))
 
     val evidence = SpecificVectorType(Vector(
       ExactIntegerType,
@@ -121,22 +114,22 @@ class ResolveTypeVarsSuite extends FunSuite {
       FlonumType
     ))
 
-    assert(ResolveTypeVars(polyVec, evidence).values == Map(
-      0 -> NumberType,
-      1 -> PortType
+    assert(ResolveTypeVars(Set(polyA, polyB), polyVec, evidence).values == Map(
+      polyA -> NumberType,
+      polyB -> PortType
     ))
   }
 
   test("resolving uniform vector type with specific vector") {
-    val polyVec = UniformVectorType(RecursiveSchemeTypeRef(1))
+    val polyVec = UniformVectorType(polyA)
 
     val evidence = SpecificVectorType(Vector(
       ExactIntegerType,
       FlonumType
     ))
 
-    assert(ResolveTypeVars(polyVec, evidence).values == Map(
-      0 -> NumberType
+    assert(ResolveTypeVars(Set(polyA), polyVec, evidence).values == Map(
+      polyA -> NumberType
     ))
   }
 }

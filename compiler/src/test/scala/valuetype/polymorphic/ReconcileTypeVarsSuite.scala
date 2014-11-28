@@ -10,76 +10,65 @@ import io.llambda.compiler.ImpossibleTypeConversionException
 import Implicits._
 
 class ReconcileTypeVarsSuite extends FunSuite {
+  val polyNumA = new TypeVar("A", NumberType)
+  val polyNumB = new TypeVar("B", NumberType)
+
+  val polyIntC = new TypeVar("C", ExactIntegerType)
+
   test("reconciling empty vars") {
-    val typeVars = Vector()
+    val typeVars = Set[TypeVar]()
     val resolved = ResolveTypeVars.Result()
 
-    val expected = ReconcileTypeVars.Result(Vector())
+    val expected = ReconcileTypeVars.Result(Map())
 
     assert(ReconcileTypeVars(typeVars, NoSourceLocation, resolved) === expected)
   }
 
   test("reconciling vars with no resolved vars") {
-    val typeVars = Vector(
-      TypeVar(ExactIntegerType),
-      TypeVar(FlonumType)
-    )
-
+    val typeVars = Set(polyNumA, polyIntC)
     val resolved = ResolveTypeVars.Result()
 
-    val expected = ReconcileTypeVars.Result(Vector(
-      ExactIntegerType,
-      FlonumType
+    val expected = ReconcileTypeVars.Result(Map(
+      polyNumA -> NumberType,
+      polyIntC -> ExactIntegerType
     ))
 
     assert(ReconcileTypeVars(typeVars, NoSourceLocation, resolved) === expected)
   }
 
   test("reconciling vars with partial resolved vars") {
-    val typeVars = Vector(
-      TypeVar(NumberType),
-      TypeVar(NumberType)
-    )
-
+    val typeVars = Set(polyNumA, polyNumB)
     val resolved = ResolveTypeVars.Result(Map(
-      1 -> ExactIntegerType
+      polyNumA -> ExactIntegerType
     ))
 
-    val expected = ReconcileTypeVars.Result(Vector(
-      NumberType,
-      ExactIntegerType
+    val expected = ReconcileTypeVars.Result(Map(
+      polyNumA -> ExactIntegerType,
+      polyNumB -> NumberType
     ))
 
     assert(ReconcileTypeVars(typeVars, NoSourceLocation, resolved) === expected)
   }
 
   test("reconciling vars with all resolved vars") {
-    val typeVars = Vector(
-      TypeVar(NumberType),
-      TypeVar(NumberType)
-    )
-
+    val typeVars = Set(polyNumA, polyNumB)
     val resolved = ResolveTypeVars.Result(Map(
-      0 -> FlonumType,
-      1 -> ExactIntegerType
+      polyNumA -> FlonumType,
+      polyNumB -> ExactIntegerType
     ))
 
-    val expected = ReconcileTypeVars.Result(Vector(
-      FlonumType,
-      ExactIntegerType
+    val expected = ReconcileTypeVars.Result(Map(
+      polyNumA -> FlonumType,
+      polyNumB -> ExactIntegerType
     ))
 
     assert(ReconcileTypeVars(typeVars, NoSourceLocation, resolved) === expected)
   }
 
   test("reconciling vars with incompatible upper bound fails") {
-    val typeVars = Vector(
-      TypeVar(NumberType),
-      TypeVar(NumberType)
-    )
-
+    val typeVars = Set(polyNumA, polyNumB)
     val resolved = ResolveTypeVars.Result(Map(
-      0 -> PortType
+      polyNumA -> PortType
     ))
 
     intercept[ImpossibleTypeConversionException] {
