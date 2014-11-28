@@ -26,15 +26,11 @@ object HasRecursiveRef {
     case UniformVectorType(memberTypeRef)  =>
       refHasRecursiveRef(memberTypeRef, depth)
 
-    case applicableType : ApplicableType =>
-      // Procedure types explicitly have recursion disabled at the moment
-      false
-
-    case _ : SchemeTypeAtom | _ : LiteralBooleanType | _ : LiteralSymbolType | _ : RecordType =>
+    case _ : NonRecursiveType =>
       false
   }
-  
+
   /** Checks if the passed type has any recursive references to itself from within a child type */
-  def apply(schemeType : SchemeType) : Boolean = 
+  def apply(schemeType : SchemeType) : Boolean =
     typeHasRecursiveRef(schemeType, 0)
 }

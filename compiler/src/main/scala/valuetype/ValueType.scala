@@ -17,6 +17,12 @@ sealed abstract class ValueType {
   override def toString = NameForType(this)
 }
 
+/** Indicates types that forbid recursive type references to cross them */
+sealed abstract trait NonRecursiveType extends ValueType
+
+/** Indicates types that contain no references to other types, recursive or direct */
+sealed abstract trait LeafType extends NonRecursiveType
+
 /** Type represented by a native pointer */
 sealed abstract trait PointerType extends ValueType
 
@@ -26,7 +32,7 @@ sealed abstract trait CellValueType extends PointerType {
 }
 
 /** Primitive types shared with C */
-sealed abstract class NativeType extends ValueType {
+sealed abstract class NativeType extends ValueType with LeafType {
   val isGcManaged = false
 }
 
@@ -75,7 +81,7 @@ case object UnicodeChar extends IntLikeType(32, true) {
 class RecordField(val sourceName : String, val fieldType : ValueType)
 
 /** Pointer to a garabge collected value cell containing a record-like type */
-sealed abstract class RecordLikeType extends CellValueType {
+sealed abstract class RecordLikeType extends CellValueType with NonRecursiveType {
   val sourceName : String
   val fields : List[RecordField]
   val cellType : ct.ConcreteCellType with ct.RecordLikeFields
@@ -151,7 +157,7 @@ sealed abstract trait SchemeType extends CellValueType {
 }
 
 /** Scheme type representing an specific literal value */
-sealed abstract trait LiteralValueType extends SchemeType
+sealed abstract trait LiteralValueType extends SchemeType with LeafType
 
 /** All Scheme types except unions
   *
@@ -167,7 +173,7 @@ sealed abstract trait DerivedSchemeType extends NonUnionSchemeType {
 }
 
 /** Pointer to a garbage collected value cell containing an intrinsic type */
-case class SchemeTypeAtom(cellType : ct.ConcreteCellType) extends NonUnionSchemeType {
+case class SchemeTypeAtom(cellType : ct.ConcreteCellType) extends NonUnionSchemeType with LeafType {
   val isGcManaged = cellType match {
     case preconstruct : ct.PreconstructedCellType =>
       // Only constant instances of this exist
@@ -356,7 +362,7 @@ object VectorOfType {
     }
 }
 
-sealed abstract trait ApplicableType extends NonUnionSchemeType {
+sealed abstract trait ApplicableType extends NonUnionSchemeType with NonRecursiveType {
   def signatures : Seq[ProcedureType]
 }
 

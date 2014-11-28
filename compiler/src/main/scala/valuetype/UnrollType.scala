@@ -64,7 +64,7 @@ private[valuetype] object UnrollType {
 
       UniformVectorType(replacedMemberType)
 
-    case other =>
+    case other : NonRecursiveType =>
       other
   }
 }
