@@ -92,7 +92,7 @@ object ExtractType {
         }
 
         // Reconcile the type vars with their upper bounds
-        val reconciledVars = pm.ReconcileTypeVars(typeVars.toSet, constructorName, pm.ResolveTypeVars.Result(argTypes.toMap))
+        val reconciledVars = pm.ReconcileTypeVars(typeVars.toSet, pm.ResolveTypeVars.Result(argTypes.toMap), constructorName, true)
 
         // Instantiate the type
         pm.InstantiateType(reconciledVars, definition)

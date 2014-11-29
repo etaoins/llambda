@@ -92,13 +92,11 @@ private[planner] object PlanApplication {
 
     val invokableProc = procValue.toInvokableProcedure()
 
-    val procedureType = procValue.schemeType match {
-      case procType : vt.ProcedureType =>
-        procType
+    // Resolve our polymorphic procedure type
+    val operandTypes = operands.map(_._2.schemeType)
+    val signature = invokableProc.polySignature.signatureForOperands(plan.activeContextLocated, operandTypes)
 
-      case other =>
-        invokableProc.polySignature.toSchemeProcedureType
-    }
+    val procedureType = signature.toSchemeProcedureType
 
     // Ensure our arity is sane
     if (procedureType.restArgMemberTypeOpt.isDefined) {

@@ -73,6 +73,9 @@ object ResolveTypeVars {
 
       results.reduce(_ ++ _)
 
+    case (_, EmptySchemeType) =>
+      Result()
+
     case (_, evidenceUnion @ UnionType(evidenceMembers)) =>
       val results = evidenceMembers map { evidenceMember =>
         visitType(typeVars, poly, polyStack, evidenceMember, evidenceUnion :: evidenceStack)

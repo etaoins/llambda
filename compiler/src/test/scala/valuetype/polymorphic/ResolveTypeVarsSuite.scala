@@ -40,6 +40,14 @@ class ResolveTypeVarsSuite extends FunSuite {
     ))
   }
 
+  test("resolving a pair with empty scheme type") {
+    val polyPair = SpecificPairType(polyA, polyB)
+    val evidence = EmptySchemeType
+
+    assert(ResolveTypeVars(Set(polyA), polyPair, evidence).values == Map())
+  }
+
+
   test("resolving simple pair type with same car and cdr variables") {
     val polyPair = SpecificPairType(polyA, polyA)
 

@@ -41,7 +41,7 @@ case class PolymorphicSignature(
     val reducedResult = allResults.foldLeft(pm.ResolveTypeVars.Result())(_ ++ _)
 
     // Reconcile our type vars with their upper bounds
-    val reconciled = pm.ReconcileTypeVars(typeVars, located, reducedResult)
+    val reconciled = pm.ReconcileTypeVars(typeVars, reducedResult, fixApplicable=true)
     instantiate(reconciled)
   }
 

@@ -21,7 +21,7 @@ class ReconcileTypeVarsSuite extends FunSuite {
 
     val expected = ReconcileTypeVars.Result(Map())
 
-    assert(ReconcileTypeVars(typeVars, NoSourceLocation, resolved) === expected)
+    assert(ReconcileTypeVars(typeVars, resolved) === expected)
   }
 
   test("reconciling vars with no resolved vars") {
@@ -33,7 +33,7 @@ class ReconcileTypeVarsSuite extends FunSuite {
       polyIntC -> ExactIntegerType
     ))
 
-    assert(ReconcileTypeVars(typeVars, NoSourceLocation, resolved) === expected)
+    assert(ReconcileTypeVars(typeVars, resolved) === expected)
   }
 
   test("reconciling vars with partial resolved vars") {
@@ -47,7 +47,7 @@ class ReconcileTypeVarsSuite extends FunSuite {
       polyNumB -> NumberType
     ))
 
-    assert(ReconcileTypeVars(typeVars, NoSourceLocation, resolved) === expected)
+    assert(ReconcileTypeVars(typeVars, resolved) === expected)
   }
 
   test("reconciling vars with all resolved vars") {
@@ -62,17 +62,32 @@ class ReconcileTypeVarsSuite extends FunSuite {
       polyNumB -> ExactIntegerType
     ))
 
-    assert(ReconcileTypeVars(typeVars, NoSourceLocation, resolved) === expected)
+    assert(ReconcileTypeVars(typeVars, resolved) === expected)
   }
 
-  test("reconciling vars with incompatible upper bound fails") {
+  test("reconciling vars with incompatible upper bound defaults to upper bound") {
+    val typeVars = Set(polyNumA, polyNumB)
+    val resolved = ResolveTypeVars.Result(Map(
+      polyNumA -> PortType
+    ))
+
+    val expected = ReconcileTypeVars.Result(Map(
+      polyNumA -> NumberType,
+      polyNumB -> NumberType
+    ))
+
+    assert(ReconcileTypeVars(typeVars, resolved) === expected)
+  }
+
+  test("reconciling vars with incompatible upper bound fails in strict mode") {
     val typeVars = Set(polyNumA, polyNumB)
     val resolved = ResolveTypeVars.Result(Map(
       polyNumA -> PortType
     ))
 
     intercept[ImpossibleTypeConversionException] {
-      ReconcileTypeVars(typeVars, NoSourceLocation, resolved)
+      ReconcileTypeVars(typeVars, resolved, NoSourceLocation, true)
     }
   }
+
 }

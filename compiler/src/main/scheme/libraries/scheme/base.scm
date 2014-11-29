@@ -243,7 +243,7 @@
                      y)))
 
     ; Internal helper types
-    (define-type <alist> (Listof <pair>))
+    (define-type (Alistof A B) (Listof (Pairof A B)))
 
     ; Defines a procedure that operates on a slice of a given type with optional start and end indicies
     ; native-proc should accept a value of <source-type> and a start and end index
@@ -356,9 +356,9 @@
     (define-r7rs exact (world-function llbase "llbase_exact" (-> <number> <native-int64>)))
     (define-r7rs inexact (native-function llbase "llbase_inexact" (-> <number> <native-double>)))
 
-    (define-r7rs + (world-function llbase "llbase_add" (-> <number> * <number>)))
-    (define-r7rs - (world-function llbase "llbase_sub" (-> <number> <number> * <number>)))
-    (define-r7rs * (world-function llbase "llbase_mul" (-> <number> * <number>)))
+    (define-r7rs + (world-function llbase "llbase_add" (All ([N : <number>]) N * N)))
+    (define-r7rs - (world-function llbase "llbase_sub" (All ([N : <number>]) N N * N)))
+    (define-r7rs * (world-function llbase "llbase_mul" (All ([N : <number>]) N * N)))
     (define-r7rs / (world-function llbase "llbase_div" (-> <number> <number> * <number>)))
     
     (define-r7rs expt (world-function llbase "llbase_expt" (-> <number> <number> <number>)))
@@ -401,8 +401,8 @@
     (define-r7rs (even? [val : <exact-integer>])
                  (= (truncate-remainder val 2) 0))
 
-    (define-r7rs max (world-function llbase "llbase_max" (-> <number> <number> * <number>)))
-    (define-r7rs min (world-function llbase "llbase_min" (-> <number> <number> * <number>)))
+    (define-r7rs max (world-function llbase "llbase_max" (All ([N : <number>]) N N * N)))
+    (define-r7rs min (world-function llbase "llbase_min" (All ([N : <number>]) N N * N)))
 
     (define native-gcd (native-function llbase "llbase_gcd" (-> <native-int64> <native-int64> <exact-integer> * <native-int64>)))
     (define-r7rs gcd (case-lambda
@@ -454,9 +454,9 @@
 
     (define-r7rs length (native-function llbase "llbase_length" (-> <list> <native-uint32>)))
 
-    (define-r7rs cons (world-function llbase "llbase_cons" (-> <any> <any> <pair>)))
-    (define-r7rs car (native-function llbase "llbase_car" (-> <pair> <any>)))
-    (define-r7rs cdr (native-function llbase "llbase_cdr" (-> <pair> <any>)))
+    (define-r7rs cons (world-function llbase "llbase_cons" (All (A B) A B (Pairof A B))))
+    (define-r7rs car (native-function llbase "llbase_car" (All (A) (Pairof A <any>) A)))
+    (define-r7rs cdr (native-function llbase "llbase_cdr" (All (A) (Pairof <any> A) A)))
     (define-r7rs (caar (x : (Pairof <pair> <any>))) (car (car x)))
     (define-r7rs (cadr (x : (Pairof <any> <pair>))) (car (cdr x)))
     (define-r7rs (cdar (x : (Pairof <pair> <any>))) (cdr (car x)))
@@ -466,14 +466,14 @@
 
     (define-r7rs append (world-function llbase "llbase_append" (-> <any> * <any>)))
 
-    (define-r7rs memv (native-function llbase "llbase_memv" (-> <any> <list> <any>)))
+    (define-r7rs memv (native-function llbase "llbase_memv" (All (A) A (Listof A) (U (Listof A) #f))))
     ; (eq?) is defined as (eqv?) so define (memq) as (memv)
     (define-r7rs memq memv)
-    (define-r7rs member (native-function llbase "llbase_member" (-> <any> <list> <any>)))
-    
-    (define-r7rs assv (native-function llbase "llbase_assv" (-> <any> <alist> <any>)))
+    (define-r7rs member (native-function llbase "llbase_member" (All (A) A (Listof A) (U (Listof A) #f))))
+
+    (define-r7rs assv (native-function llbase "llbase_assv" (All (A B) A (Alistof A B) (U (Pairof A B) #f))))
     (define-r7rs assq assv)
-    (define-r7rs assoc (native-function llbase "llbase_assoc" (-> <any> <alist> <any>)))
+    (define-r7rs assoc (native-function llbase "llbase_assoc" (All (A B) A (Alistof A B) (U (Pairof A B) #f))))
 
     (define-r7rs reverse (world-function llbase "llbase_reverse" (All (A) (Listof A) (Listof A))))
 

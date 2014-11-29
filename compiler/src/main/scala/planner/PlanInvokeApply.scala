@@ -83,11 +83,7 @@ object PlanInvokeApply {
       invokableProc : InvokableProcedure,
       operands : List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan : PlanWriter) : ResultValues = {
-    val polySignature = invokableProc.polySignature
-
-    // Instantiate our polymorphic signature
-    val operandTypes = operands.map(_._2.schemeType)
-    val signature = polySignature.signatureForOperands(plan.activeContextLocated, operandTypes)
+    val signature = invokableProc.polySignature.upperBound
 
     // Convert all the operands
     val fixedTemps = operands.zip(signature.fixedArgTypes) map { case ((contextLocated, operand), nativeType) =>
