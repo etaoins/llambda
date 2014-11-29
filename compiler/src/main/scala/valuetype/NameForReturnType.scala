@@ -5,12 +5,9 @@ import llambda.compiler.InternalCompilerErrorException
 
 object NameForReturnType {
   def apply(returnType : ReturnType.ReturnType) : String = returnType match {
-      case ReturnType.SingleValue(schemeType : SchemeType) =>
-      NameForType(schemeType)
-    
     case ReturnType.SingleValue(valueType) =>
       NameForType(valueType)
-      
+
     case ReturnType.ArbitraryValues =>
       "*"
 
