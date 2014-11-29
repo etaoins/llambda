@@ -60,9 +60,12 @@ object ResolveTypeVars {
       typeVars : Set[TypeVar],
       poly : ValueType,
       polyStack : SchemeType.Stack,
-      evidence : ValueType,
+      evidence : SchemeType,
       evidenceStack : SchemeType.Stack
   ) : Result = (poly, evidence) match {
+    case (typeVar : TypeVar, evidence) if typeVars.contains(typeVar) =>
+      Result(Map(typeVar -> evidence))
+
     case (polyUnion @ UnionType(polyMembers), _) =>
       val results = polyMembers map { polyMember =>
         visitType(typeVars, polyMember, polyUnion :: polyStack, evidence, evidenceStack)
@@ -107,7 +110,7 @@ object ResolveTypeVars {
   }
 
   /** Resolves variables in a polymorphic type based on an evidence type */
-  def apply(typeVars : Set[TypeVar], poly : ValueType, evidence : ValueType) : Result = {
+  def apply(typeVars : Set[TypeVar], poly : ValueType, evidence : SchemeType) : Result = {
     visitType(typeVars, poly, Nil, evidence, Nil)
   }
 }

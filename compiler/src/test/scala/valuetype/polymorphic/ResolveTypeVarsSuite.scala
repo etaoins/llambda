@@ -17,6 +17,15 @@ class ResolveTypeVarsSuite extends FunSuite {
     assert(ResolveTypeVars(Set(), polyLeaf, evidence).values == Map())
   }
 
+  test("resolving a type var directly") {
+    val polyVar = polyA
+    val evidence = ExactIntegerType
+
+    assert(ResolveTypeVars(Set(polyA), polyVar, evidence).values == Map(
+      polyA -> ExactIntegerType
+    ))
+  }
+
   test("resolving simple pair type with distinct car and cdr variables") {
     val polyPair = SpecificPairType(polyA, polyB)
 
