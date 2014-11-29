@@ -10,7 +10,7 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.InternalCompilerErrorException
 
 class KnownTypePredicateProc(testingType : vt.SchemeType) extends KnownProc(
-  TypePredicateProcSignature,
+  TypePredicateProcSignature.toPolymorphic,
   None
 ) {
   def nativeSymbol(implicit plan : PlanWriter) : String =

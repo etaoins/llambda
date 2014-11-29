@@ -1,13 +1,13 @@
 package io.llambda.compiler.planner.intermediatevalue
 import io.llambda
 
-import llambda.compiler.{InternalCompilerErrorException, ProcedureSignature}
+import llambda.compiler.{InternalCompilerErrorException, PolymorphicSignature}
 
 import llambda.compiler.planner._
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 
-abstract class KnownArtificialProc(signature : ProcedureSignature) extends KnownProc(signature, None) {
+abstract class KnownArtificialProc(polySignature : PolymorphicSignature) extends KnownProc(polySignature, None) {
   private var plannedNativeSymbolOpt : Option[String] = None
 
   /** Hint for the name of the symbol

@@ -222,7 +222,7 @@ private[planner] object PlanLambda {
     val recursiveSelfImmutables = recursiveSelfLoc map { storageLoc =>
       storageLoc -> ImmutableValue(
         new iv.KnownUserProc(
-          signature=initialSignature,
+          polySignature=initialSignature.toPolymorphic,
           plannedSymbol=nativeSymbol,
           selfTempOpt=innerSelfTempOpt
         )
@@ -348,7 +348,7 @@ private[planner] object PlanLambda {
     parentPlan.plannedFunctions += (nativeSymbol -> plannedFunction) 
 
     new iv.KnownSchemeProc(
-      signature=procSignature,
+      polySignature=procSignature.toPolymorphic,
       plannedSymbol=nativeSymbol,
       parentState=parentState,
       lambdaExpr=lambdaExpr,

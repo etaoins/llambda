@@ -63,7 +63,7 @@ private[planner] object PlanCaseLambda {
     case checkingClause :: tailClauses =>
       // See if our length matched
       val procValue = checkingClause.procValue
-      val signature = procValue.signature
+      val signature = procValue.polySignature.template
       val testingLength = signature.fixedArgTypes.length
 
       val testingLengthTemp = ps.Temp(vt.UInt32)
@@ -267,7 +267,7 @@ private[planner] object PlanCaseLambda {
     }
 
     new iv.KnownCaseLambdaProc(
-      signature=signature,
+      polySignature=signature.toPolymorphic,
       closureType=closureType,
       clauses=knownClauses,
       plannedSymbol=nativeSymbol,

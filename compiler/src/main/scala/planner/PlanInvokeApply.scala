@@ -16,7 +16,7 @@ object PlanInvokeApply {
       restTemps : Option[ps.TempValue]
   )(implicit plan : PlanWriter) : ResultValues = {
     val entryPointTemp = invokableProc.planEntryPoint()
-    val signature = invokableProc.signature
+    val signature = invokableProc.polySignature.upperBound
 
     val worldTemps = if (signature.hasWorldArg) {
       List(ps.WorldPtrValue)
@@ -51,8 +51,8 @@ object PlanInvokeApply {
       invokableProc : InvokableProcedure,
       argListValue : iv.IntermediateValue
   )(implicit plan : PlanWriter) : ResultValues = {
-    val signature = invokableProc.signature
-    
+    val signature = invokableProc.polySignature.upperBound
+
     val insufficientArgsMessage = ArityRuntimeErrorMessage.insufficientArgs(invokableProc)
 
     // Split our arguments in to fixed args and a rest arg
@@ -83,7 +83,7 @@ object PlanInvokeApply {
       invokableProc : InvokableProcedure,
       operands : List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan : PlanWriter) : ResultValues = {
-    val signature = invokableProc.signature
+    val signature = invokableProc.polySignature.upperBound
 
     // Convert all the operands
     val fixedTemps = operands.zip(signature.fixedArgTypes) map { case ((contextLocated, operand), nativeType) =>

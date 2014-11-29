@@ -31,6 +31,10 @@ case class ProcedureSignature(
   returnType : vt.ReturnType.ReturnType,
   attributes : Set[ProcedureAttribute.ProcedureAttribute]
 ) {
+  /** Converts this signature to a polymorphic signaure with no type variables */
+  def toPolymorphic =
+    PolymorphicSignature(Set(), this)
+
   def toSchemeProcedureType =
     vt.ProcedureType(
       fixedArgTypes=fixedArgTypes.map(_.schemeType),

@@ -5,7 +5,7 @@ import llambda.compiler.RuntimeErrorMessage
 
 object ArityRuntimeErrorMessage {
   def insufficientArgs(invokableProc : InvokableProcedure)(implicit plan : PlanWriter) : RuntimeErrorMessage = {
-    val signature = invokableProc.signature
+    val signature = invokableProc.polySignature.template
     val nativeSymbol = invokableProc.nativeSymbolOpt.getOrElse("procedure")
     val fixedArgCount = signature.fixedArgTypes.length
 
@@ -24,10 +24,10 @@ object ArityRuntimeErrorMessage {
   }
 
   def tooManyArgs(invokableProc : InvokableProcedure)(implicit plan : PlanWriter) : RuntimeErrorMessage = {
-    val signature = invokableProc.signature
+    val signature = invokableProc.polySignature.template
     val nativeSymbol = invokableProc.nativeSymbolOpt.getOrElse("procedure")
     val fixedArgCount = signature.fixedArgTypes.length
-        
+
     RuntimeErrorMessage(
       name=s"tooManyArgsFor${nativeSymbol}Requires${fixedArgCount}",
       text=s"Called ${nativeSymbol} with too many arguments; requires exactly ${fixedArgCount} arguments."

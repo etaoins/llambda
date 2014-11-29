@@ -52,7 +52,7 @@ object ExtractNativeFunction {
 
       et.NativeFunction(
         library=nativeLibrary,
-        signature=signature,
+        polySignature=signature.toPolymorphic,
         nativeSymbol=nativeSymbol
       )
 

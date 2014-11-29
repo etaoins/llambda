@@ -1,12 +1,12 @@
 package io.llambda.compiler.planner
 import io.llambda
 
-import llambda.compiler.ProcedureSignature
+import llambda.compiler.PolymorphicSignature
 import llambda.compiler.planner.{step => ps}
 
 trait InvokableProcedure {
-  /** Returns the signature of the invokable procedure */
-  val signature : ProcedureSignature
+  /** Returns the polymorphic signature of the invokable procedure */
+  val polySignature : PolymorphicSignature
 
   /** Loads the entry point in the passed plan and returns its TempValue */
   def planEntryPoint()(implicit plan : PlanWriter) : ps.TempValue

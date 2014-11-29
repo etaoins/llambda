@@ -32,7 +32,7 @@ private[planner] object PlanProcedureTrampoline {
 
     // Make some aliases
     val inSignature = trampolineSignature
-    val outSignature = targetProc.signature
+    val outSignature = targetProc.polySignature.upperBound
 
     val inFixedArgCount = inSignature.fixedArgTypes.length
     val outFixedArgCount = outSignature.fixedArgTypes.length

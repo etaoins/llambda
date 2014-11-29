@@ -1,7 +1,7 @@
 package io.llambda.compiler.planner.intermediatevalue
 import io.llambda
 
-import llambda.compiler.{ProcedureSignature, ContextLocated}
+import llambda.compiler.{PolymorphicSignature, ContextLocated}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner._
@@ -14,7 +14,7 @@ case class KnownCaseLambdaClause(
 
 /** Represents a user-provided procedure with a known signature and direct entry point
   *
-  * @param signature       Signature of the outer (case-lambda)
+  * @param polySignature   Signature of the outer (case-lambda)
   * @param closureType     Closure type of the outer (case-lambda)
   * @param clauses         List of planned Scheme procedures in the order they appear in the (case-lambda)
   * @param plannedSymbol   Native symbol of the direct entry point to the procedure
@@ -27,14 +27,14 @@ case class KnownCaseLambdaClause(
   *                        optimisation to avoid having to load them from the (case-lambda)'s closure
   */
 class KnownCaseLambdaProc(
-    signature : ProcedureSignature,
+    polySignature : PolymorphicSignature,
     closureType : vt.ClosureType,
     clauses : List[KnownCaseLambdaClause],
     plannedSymbol : String,
     selfTempOpt : Option[ps.TempValue],
     reportNameOpt : Option[String] = None,
     clausesInScope : Boolean = false
-) extends KnownUserProc(signature, plannedSymbol, selfTempOpt, reportNameOpt) {
+) extends KnownUserProc(polySignature, plannedSymbol, selfTempOpt, reportNameOpt) {
   override val typeDescription = "case procedure"
 
   override val schemeType = vt.CaseProcedureType(
@@ -47,7 +47,7 @@ class KnownCaseLambdaProc(
     }
 
     new KnownCaseLambdaProc(
-      signature=signature,
+      polySignature=polySignature,
       closureType=closureType,
       clauses=mappedClauses,
       plannedSymbol=plannedSymbol,
@@ -59,7 +59,7 @@ class KnownCaseLambdaProc(
   
   override def withSelfTemp(selfTemp : ps.TempValue) : KnownUserProc =
     new KnownCaseLambdaProc(
-      signature=signature,
+      polySignature=polySignature,
       closureType=closureType,
       clauses=clauses,
       plannedSymbol=plannedSymbol,
@@ -90,9 +90,9 @@ class KnownCaseLambdaProc(
   /** Returns the clause matching the passed arity or None if no clauses match */
   def clauseForArityOpt(operandCount : Int) : Option[KnownCaseLambdaClause] = 
     clauses find { clause =>
-      val signature = clause.knownProc.signature
-      val fixedArgCount = signature.fixedArgTypes.length
-      val hasRestArg = signature.restArgMemberTypeOpt.isDefined
+      val signatureTemplate = clause.knownProc.polySignature.template
+      val fixedArgCount = signatureTemplate.fixedArgTypes.length
+      val hasRestArg = signatureTemplate.restArgMemberTypeOpt.isDefined
 
       (operandCount == fixedArgCount) || ((operandCount > fixedArgCount) && hasRestArg)
     }

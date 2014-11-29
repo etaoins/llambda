@@ -97,7 +97,7 @@ private[planner] object PlanApplication {
         procType
 
       case other =>
-        invokableProc.signature.toSchemeProcedureType
+        invokableProc.polySignature.toSchemeProcedureType
     }
 
     // Ensure our arity is sane

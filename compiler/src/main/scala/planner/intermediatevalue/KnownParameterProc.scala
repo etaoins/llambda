@@ -16,7 +16,7 @@ import llambda.compiler.codegen
   * @param  hasConverter  Indicates if this parameter procedure was created with a converter procedure
   */
 class KnownParameterProc(selfTemp : ps.TempValue, val hasConverter : Boolean) extends KnownProc(
-    codegen.RuntimeFunctions.valueForParameterSignature,
+    codegen.RuntimeFunctions.valueForParameterSignature.toPolymorphic,
     Some(selfTemp)
 ) {
   override val typeDescription = "parameter procedure"

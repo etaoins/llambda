@@ -177,7 +177,7 @@ case class InternalDefine(bindings : List[Binding], body : Expr) extends Expr {
 
 case class NativeFunction(
     library : NativeLibrary,
-    signature : ProcedureSignature,
+    polySignature : PolymorphicSignature,
     nativeSymbol : String
 ) extends Expr {
   val subexprs = Nil
@@ -185,10 +185,10 @@ case class NativeFunction(
   def map(f : Expr => Expr) : NativeFunction = this
 
   override def cloningMap(f : Expr => Expr) : Expr =
-    NativeFunction(library, signature, nativeSymbol).assignLocationFrom(this)
+    NativeFunction(library, polySignature, nativeSymbol).assignLocationFrom(this)
 
   override def schemeType =
-    signature.toSchemeProcedureType
+    polySignature.toSchemeProcedureType
 }
 
 /** Artificial procedures are created internally by the compiler

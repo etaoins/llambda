@@ -92,7 +92,7 @@ private[planner] object RetypeLambdaArgs {
       }
 
       for(knownProc <- knownProcOpt) {
-        val signature = knownProc.signature
+        val signature = knownProc.polySignature.upperBound
 
         val postFixedArgTypes = operandExprs.zip(signature.fixedArgTypes).foldLeft(argTypes) {
           case (currentArgTypes, (operandExpr, argValueType)) =>

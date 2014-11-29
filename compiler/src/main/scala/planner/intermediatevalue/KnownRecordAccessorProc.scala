@@ -6,7 +6,7 @@ import llambda.compiler.planner._
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 
-class KnownRecordAccessorProc(recordType : vt.RecordType, field : vt.RecordField) extends KnownArtificialProc( 
+class KnownRecordAccessorProc(recordType : vt.RecordType, field : vt.RecordField) extends KnownArtificialProc(
     ProcedureSignature(
       hasWorldArg=false,
       hasSelfArg=false,
@@ -14,7 +14,7 @@ class KnownRecordAccessorProc(recordType : vt.RecordType, field : vt.RecordField
       fixedArgTypes=List(recordType),
       returnType=vt.ReturnType.SingleValue(field.fieldType),
       attributes=Set()
-    )
+    ).toPolymorphic
 ) {
   protected val symbolHint =
     recordType.sourceName
@@ -38,7 +38,7 @@ class KnownRecordAccessorProc(recordType : vt.RecordType, field : vt.RecordField
     plan.steps += ps.Return(Some(fieldValueTemp))
 
     PlannedFunction(
-      signature=signature,
+      signature=polySignature.upperBound,
       namedArguments=List(("recordCell" -> recordCellTemp)),
       steps=plan.steps.toList,
       debugContextOpt=None

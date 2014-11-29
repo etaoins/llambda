@@ -57,8 +57,16 @@ class AnalyseExprsSuite extends FunSuite {
     val testLocB = new StorageLocation("testLocB")
     val testExprs = List(
       et.TopLevelDefine(List(
-        et.SingleBinding(testLocA, et.NativeFunction(NativeSystemLibrary, testSignature, "nativeSymbol1")),
-        et.SingleBinding(testLocB, et.NativeFunction(NativeSystemLibrary, testSignature, "nativeSymbol2"))
+        et.SingleBinding(testLocA, et.NativeFunction(
+          NativeSystemLibrary,
+          testSignature.toPolymorphic,
+          "nativeSymbol1"
+        )),
+        et.SingleBinding(testLocB, et.NativeFunction(
+          NativeSystemLibrary,
+          testSignature.toPolymorphic,
+          "nativeSymbol2"
+        ))
       )),
       // Apply the procs so their definitions don't get dropped
       et.Apply(et.VarRef(testLocA), Nil),

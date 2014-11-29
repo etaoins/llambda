@@ -1,7 +1,7 @@
 package io.llambda.compiler.planner.intermediatevalue
 import io.llambda
 
-import llambda.compiler.{ProcedureSignature, ContextLocated}
+import llambda.compiler.{PolymorphicSignature, ContextLocated}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
@@ -20,10 +20,10 @@ import llambda.compiler.{RuntimeErrorMessage, ContextLocated}
   *                      point does not have to be initialized; it will be set dynamically to a generated trampoline
   *                      if this value is explicitly converted to a ct.ProcedureCell
   */
-abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Option[ps.TempValue]) extends IntermediateValue with BoxedOnlyValue with InvokableProcedure {
+abstract class KnownProc(val polySignature : PolymorphicSignature, selfTempOpt : Option[ps.TempValue]) extends IntermediateValue with BoxedOnlyValue with InvokableProcedure {
   val typeDescription = "procedure"
 
-  val schemeType : vt.ApplicableType = signature.toSchemeProcedureType
+  val schemeType : vt.ApplicableType = polySignature.upperBound.toSchemeProcedureType
 
   /** Optional location of this procedure's definition
     *
@@ -33,7 +33,7 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
     None
 
   override def procedureSignatureOpt =
-    Some(signature)
+    Some(polySignature.upperBound)
 
   /** Returns the native symbol for this function
     *
@@ -58,7 +58,7 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
 
     val requiredSignature = ApplicableTypeToAdaptedSignature(targetType)
 
-    if (SatisfiesSignature(requiredSignature, signature)) {
+    if (SatisfiesSignature(requiredSignature, polySignature.upperBound)) {
       // The procedure already has the correct signature - return our exisiting cell directly
       return toBoxedValue().tempValue
     }
@@ -103,7 +103,7 @@ abstract class KnownProc(val signature : ProcedureSignature, selfTempOpt : Optio
   
   def planEntryPoint()(implicit plan : PlanWriter) : ps.TempValue = {
     val entryPointTemp = ps.EntryPointTemp()
-    plan.steps += ps.CreateNamedEntryPoint(entryPointTemp, signature, nativeSymbol)
+    plan.steps += ps.CreateNamedEntryPoint(entryPointTemp, polySignature.upperBound, nativeSymbol)
 
     entryPointTemp
   }

@@ -1,7 +1,7 @@
 package io.llambda.compiler.planner.intermediatevalue
 import io.llambda
 
-import llambda.compiler.{ProcedureSignature, ContextLocated}
+import llambda.compiler.{PolymorphicSignature, ContextLocated}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner._
@@ -9,7 +9,7 @@ import llambda.compiler.planner.reportproc.ReportProcPlanner
 
 /** Represents a user-provided procedure with a known signature and direct entry point
   *
-  * @param signature      Signature of the procedure
+  * @param polySignature  Polymorphic signature of the procedure
   * @param plannedSymbol  Native symbol of the direct entry point to the procedure
   * @param selfTempOpt    For procedures with closures a procedure cell containing the procedure's closure. The entry
   *                       point does not have to be initialized; it will be set dynamically to a generated trampoline
@@ -18,20 +18,20 @@ import llambda.compiler.planner.reportproc.ReportProcPlanner
   *                       elsewhere in the planner. It is not directly used by this class
   */
 class KnownUserProc(
-    signature : ProcedureSignature,
+    polySignature : PolymorphicSignature,
     plannedSymbol : String,
     selfTempOpt : Option[ps.TempValue],
     val reportNameOpt : Option[String] = None
-) extends KnownProc(signature, selfTempOpt) {
+) extends KnownProc(polySignature, selfTempOpt) {
   def nativeSymbol(implicit plan : PlanWriter) : String =
     plannedSymbol
 
   def withReportName(newReportName : String) : KnownUserProc = {
-    new KnownUserProc(signature, plannedSymbol, selfTempOpt, Some(newReportName))
+    new KnownUserProc(polySignature, plannedSymbol, selfTempOpt, Some(newReportName))
   }
-  
+
   override def withSelfTemp(selfTemp : ps.TempValue) : KnownUserProc = {
-    new KnownUserProc(signature, plannedSymbol, Some(selfTemp), reportNameOpt)
+    new KnownUserProc(polySignature, plannedSymbol, Some(selfTemp), reportNameOpt)
   }
 
   override def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter) : Option[PlanResult] = {

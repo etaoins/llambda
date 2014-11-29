@@ -14,7 +14,7 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
       fixedArgTypes=initializedFields.map(_.fieldType),
       returnType=vt.ReturnType.SingleValue(recordType),
       attributes=Set()
-    )
+    ).toPolymorphic
 ){
   protected val symbolHint =
     recordType.sourceName
@@ -55,7 +55,7 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
     plan.steps += ps.Return(Some(cellTemp))
 
     PlannedFunction(
-      signature=signature,
+      signature=polySignature.upperBound,
       namedArguments=namedArguments,
       steps=plan.steps.toList,
       debugContextOpt=None

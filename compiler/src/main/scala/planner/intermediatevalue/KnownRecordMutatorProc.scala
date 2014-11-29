@@ -14,7 +14,7 @@ class KnownRecordMutatorProc(recordType : vt.RecordType, field : vt.RecordField)
       fixedArgTypes=List(recordType, field.fieldType),
       returnType=vt.ReturnType.SingleValue(vt.UnitType),
       attributes=Set()
-    )
+    ).toPolymorphic
 ) {
   protected val symbolHint = 
     recordType.sourceName
@@ -44,7 +44,7 @@ class KnownRecordMutatorProc(recordType : vt.RecordType, field : vt.RecordField)
     plan.steps += ps.Return(None)
 
     PlannedFunction(
-      signature=signature,
+      signature=polySignature.upperBound,
       namedArguments=namedArguments,
       steps=plan.steps.toList,
       debugContextOpt=None

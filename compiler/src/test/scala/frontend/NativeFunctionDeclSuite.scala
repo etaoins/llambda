@@ -21,7 +21,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SingleValue(vt.UnitType),
         attributes=Set()
-      ),
+      ).toPolymorphic,
       "lliby_newline"
     )
 
@@ -40,7 +40,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SingleValue(vt.UnitType),
         attributes=Set(ProcedureAttribute.NoReturn)
-      ),
+      ).toPolymorphic,
       "lliby_newline"
     )
 
@@ -59,7 +59,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SingleValue(vt.UnitType),
         attributes=Set()
-      ),
+      ).toPolymorphic,
       "lliby_newline"
     )
 
@@ -78,7 +78,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SingleValue(vt.Int8),
         attributes=Set()
-      ),
+      ).toPolymorphic,
       "lliby_newline"
     )
 
@@ -97,7 +97,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SingleValue(vt.Int32),
         attributes=Set()
-      ),
+      ).toPolymorphic,
       "lliby_newline"
     )
 
@@ -116,7 +116,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SingleValue(vt.Double),
         attributes=Set()
-      ),
+      ).toPolymorphic,
       "lliby_newline"
     )
 
@@ -135,7 +135,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SingleValue(vt.UInt32),
         attributes=Set()
-      ),
+      ).toPolymorphic,
       "lliby_newline"
     )
 
@@ -154,7 +154,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SingleValue(vt.Predicate),
         attributes=Set()
-      ),
+      ).toPolymorphic,
       "lliby_newline"
     )
 
@@ -173,7 +173,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SingleValue(vt.UnicodeChar),
         attributes=Set()
-      ),
+      ).toPolymorphic,
       "lliby_newline"
     )
 
@@ -192,7 +192,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.ArbitraryValues,
         attributes=Set()
-      ),
+      ).toPolymorphic,
       "lliby_newline"
     )
 
@@ -211,7 +211,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SpecificValues(List(vt.StringType, vt.SymbolType)),
         attributes=Set()
-      ),
+      ).toPolymorphic,
       "lliby_newline"
     )
 
@@ -230,7 +230,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SingleValue(vt.FlonumType),
         attributes=Set()
-      ),
+      ).toPolymorphic,
       "lliby_newline"
     )
 
@@ -249,7 +249,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         restArgMemberTypeOpt=Some(vt.AnySchemeType),
         returnType=vt.ReturnType.SingleValue(vt.AnySchemeType),
         attributes=Set()
-      ),
+      ).toPolymorphic,
       "lliby_vector"
     )
 
@@ -268,7 +268,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         restArgMemberTypeOpt=Some(vt.ExactIntegerType),
         returnType=vt.ReturnType.SingleValue(vt.Int32),
         attributes=Set()
-      ),
+      ).toPolymorphic,
       "lliby_misc"
     )
 
@@ -287,7 +287,7 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
         restArgMemberTypeOpt=None,
         returnType=vt.ReturnType.SingleValue(vt.UnitType),
         attributes=Set()
-      ),
+      ).toPolymorphic,
       "lliby_misc"
     )
 

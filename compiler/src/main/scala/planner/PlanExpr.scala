@@ -122,10 +122,10 @@ private[planner] object PlanExpr {
 
       case et.Cond(testExpr, trueExpr, falseExpr) =>
         PlanCond(initialState)(testExpr, trueExpr, falseExpr)
-      
+
       case nativeFunc : et.NativeFunction =>
         plan.requiredNativeLibraries += nativeFunc.library
-        val newProcValue = new iv.KnownUserProc(nativeFunc.signature, nativeFunc.nativeSymbol, None)
+        val newProcValue = new iv.KnownUserProc(nativeFunc.polySignature, nativeFunc.nativeSymbol, None)
 
         PlanResult(
           state=initialState,
