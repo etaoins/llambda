@@ -357,14 +357,8 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
         Some(ParsedSimpleDefine(typeAlias, BoundType(extractedType)))
 
       case (Primitives.DefineType, sst.ScopedProperList((constructorName : sst.ScopedSymbol) :: operands) :: definition :: Nil) =>
-        val operandSymbols = operands collect {
-          case scopedSymbol : sst.ScopedSymbol => scopedSymbol
-          case other =>
-            throw new BadSpecialFormException(other, "Type constructor argument identifier expected")
-        }
-
-        val typeConstructor = UserDefinedTypeConstructor(operandSymbols, definition)
-        Some(ParsedSimpleDefine(constructorName, typeConstructor)) 
+        val typeConstructor = ExtractUserDefinedTypeConstructor(operands, definition)
+        Some(ParsedSimpleDefine(constructorName, typeConstructor))
 
       case (Primitives.DefineReportProcedure, List(symbol : sst.ScopedSymbol, definitionData)) =>
         Some(ParsedVarDefine(

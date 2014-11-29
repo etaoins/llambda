@@ -446,24 +446,23 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     // No operands (is this useful?)
     bodyFor("(define-type (Boolean) <boolean>)")(scope)
     bodyFor("(define-type <constructed-boolean> (Boolean))")(scope)
-    
+
     assert(scope("<constructed-boolean>") === BoundType(vt.BooleanType))
-    
+
     intercept[BadSpecialFormException] {
       // Too many operands
       bodyFor("(define-type <too-many-args> (Boolean <pair>))")(scope)
     }
-    
-    // Non-symbol as argument 
+
+    // Non-symbol as argument
     intercept[BadSpecialFormException] {
       bodyFor("(define-type (NonSymbol 1) <boolean>)")(scope)
     }
-    
+
     // Single operand
     bodyFor("(define-type (Option T) (U T <empty-list>))")(scope)
-    
     bodyFor("(define-type <string-option> (Option <string>))")(scope)
-    
+
     assert(scope("<string-option>") === BoundType(
       vt.UnionType(Set(
         vt.EmptyListType,
@@ -471,11 +470,17 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
       ))
     ))
 
+    intercept[ImpossibleTypeConversionException] {
+      // Violates the upper type bound
+      bodyFor("(define-type (NumOption [T : <number>]) (U T <empty-list>))")(scope)
+      bodyFor("(define-type <bad-option> (NumOption <string>))")(scope)
+    }
+
     intercept[BadSpecialFormException] {
       // Not enough operands
       bodyFor("(define-type <insufficient-args> (Option))")(scope)
     }
-    
+
     intercept[BadSpecialFormException] {
       // Too many operands
       bodyFor("(define-type <too-many-args> (Option <pair> <string>))")(scope)
@@ -494,7 +499,7 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
         )
       ))
     ))
-    
+
     // This is identical to a proper list
     bodyFor("(define-type <port-list> (ListWithTerminator <port> <empty-list>))")(scope)
     assert(scope("<port-list>") === BoundType(vt.UniformProperListType(vt.PortType)))

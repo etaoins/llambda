@@ -32,7 +32,7 @@ object ReconcileTypeVars {
           if (SatisfiesType(upperBound, resolvedType) != Some(true)) {
             throw new ImpossibleTypeConversionException(
               located,
-              s"Unable to instantiate polymorphic type; resolved type variable ${resolvedType} violates upper type bound of ${upperBound}"
+              s"Unable to instantiate polymorphic type; type variable ${typeVar.sourceName} is set to ${resolvedType} which violates its upper type bound of ${upperBound}"
             )
           }
 

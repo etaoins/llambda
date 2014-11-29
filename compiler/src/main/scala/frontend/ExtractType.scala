@@ -2,6 +2,7 @@ package io.llambda.compiler.frontend
 import io.llambda
 
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.valuetype.{polymorphic => pm}
 import llambda.compiler.valuetype.Implicits._
 import llambda.compiler._
 
@@ -79,30 +80,22 @@ object ExtractType {
 
   private def applyTypeConstructor(constructorName : sst.ScopedSymbol, operands : List[sst.ScopedDatum], recursiveVars : RecursiveVars) : vt.SchemeType = {
     resolveTypeConstructor(constructorName) match {
-      case UserDefinedTypeConstructor(constructorArgs, definition) =>
-        if (operands.length != constructorArgs.length) {
-          throw new BadSpecialFormException(constructorName, s"Type constructor expects ${constructorArgs.length} arguments, ${operands.length} provided")
+      case UserDefinedTypeConstructor(typeVars, definition) =>
+        if (operands.length != typeVars.length) {
+          throw new BadSpecialFormException(constructorName, s"Type constructor expects ${typeVars.length} arguments, ${operands.length} provided")
         }
 
         // Resolve the type the should be bound to each argument
         val operandRecursiveVars = recursiveVars.recursed()
-        val argTypes = constructorArgs.zip(operands).map { case (constructorArgSymbol, operand) =>
-          (constructorArgSymbol -> extractValueType(operand, operandRecursiveVars))
+        val argTypes = typeVars.zip(operands).map { case (typeVar, operand) =>
+          (typeVar -> extractSchemeType(operand, operandRecursiveVars))
         }
 
-        // Create new scopes that bind the arguments to their new types
-        val argsForScope = argTypes groupBy(_._1.scope)
+        // Reconcile the type vars with their upper bounds
+        val reconciledVars = pm.ReconcileTypeVars(typeVars.toSet, constructorName, pm.ResolveTypeVars.Result(argTypes.toMap))
 
-        val scopeMapping = argsForScope map { case (oldScope, scopeArgTypes) =>
-          val bindings = collection.mutable.Map(scopeArgTypes.map { case (constructorArgSymbol, valueType) =>
-            constructorArgSymbol.name -> (BoundType(valueType) : BoundValue)
-          } : _*)
-
-          (oldScope -> new Scope(bindings, Some(oldScope)))
-        }
-
-        // Process the rescoped definition
-        extractSchemeType(definition.rescoped(scopeMapping), recursiveVars)
+        // Instantiate the type
+        pm.InstantiateType(reconciledVars, definition)
 
       case Primitives.UnionType =>
         val memberRecursiveVars = recursiveVars.recursed()

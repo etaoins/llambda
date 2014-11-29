@@ -2,6 +2,7 @@ package io.llambda.compiler
 import io.llambda
 
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.valuetype.{polymorphic => pm}
 
 sealed abstract class BoundValue
 
@@ -49,7 +50,7 @@ abstract class PrimitiveTypeConstructor extends TypeConstructor
   *
   * These allow the construction of types based off type arguments
   */
-case class UserDefinedTypeConstructor(args : List[sst.ScopedSymbol], definition : sst.ScopedDatum) extends TypeConstructor
+case class UserDefinedTypeConstructor(vars : List[pm.TypeVar], definition : vt.SchemeType) extends TypeConstructor
 
 /** Type constructor for literal types such as booleans or symbols */
 case object LiteralTypeConstructor extends TypeConstructor
