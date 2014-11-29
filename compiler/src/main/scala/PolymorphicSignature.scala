@@ -18,6 +18,11 @@ case class PolymorphicSignature(
 
   /** Returns our signature for the given operands */
   def signatureForOperands(located : SourceLocated, operands : List[vt.SchemeType]) : ProcedureSignature = {
+    if (typeVars.isEmpty) {
+      // Skip!
+      return template
+    }
+
     val fixedArgResults = (template.fixedArgTypes zip operands) map { case (polyArg, evidenceArg) =>
       pm.ResolveTypeVars(typeVars, polyArg, evidenceArg)
     }
@@ -32,7 +37,8 @@ case class PolymorphicSignature(
         Nil
     }
 
-    val reducedResult = (fixedArgResults ++ restArgResults).reduce(_ ++ _)
+    val allResults = fixedArgResults ++ restArgResults
+    val reducedResult = allResults.foldLeft(pm.ResolveTypeVars.Result())(_ ++ _)
 
     // Reconcile our type vars with their upper bounds
     val reconciled = pm.ReconcileTypeVars(typeVars, located, reducedResult)

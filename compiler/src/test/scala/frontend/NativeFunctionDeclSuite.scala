@@ -1,12 +1,13 @@
 package io.llambda.compiler.frontend
 import io.llambda
 
-import org.scalatest.FunSuite
+import org.scalatest.{FunSuite, Inside}
 
 import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.valuetype.{polymorphic => pm}
 
-class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
+class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers with Inside {
   implicit val nfiScope = {
     new Scope(testutil.NfiExports() ++ typedLambdaBindings)
   }
@@ -274,6 +275,99 @@ class NativeFunctionDeclSuite extends FunSuite with testutil.ExprHelpers {
 
     assertResult(expectedFunction) {
       exprFor("""(native-function system-library "lliby_misc" (-> <native-bool> <exact-integer> * <native-int>))""")
+    }
+  }
+
+  test("polymorphic function with no type vars") {
+    val expectedFunction = et.NativeFunction(
+      NativeSystemLibrary,
+      ProcedureSignature(
+        hasWorldArg=false,
+        hasSelfArg=false,
+        fixedArgTypes=List(vt.Predicate),
+        restArgMemberTypeOpt=Some(vt.ExactIntegerType),
+        returnType=vt.ReturnType.SingleValue(vt.Int32),
+        attributes=Set()
+      ).toPolymorphic,
+      "lliby_misc"
+    )
+
+    assertResult(expectedFunction) {
+      exprFor("""(native-function system-library "lliby_misc" (All () (-> <native-bool> <exact-integer> * <native-int>)))""")
+    }
+  }
+
+  test("polymorphic function with one type var") {
+    inside(exprFor("""(native-function system-library "lliby_misc" (All (A) (-> A <exact-integer> * A)))""")) {
+      case et.NativeFunction(
+        NativeSystemLibrary,
+        PolymorphicSignature(
+          typeVars,
+          ProcedureSignature(
+            false,
+            false,
+            List(fixedTypeVar : pm.TypeVar),
+            Some(vt.ExactIntegerType),
+            vt.ReturnType.SingleValue(returnTypeVar : pm.TypeVar),
+            _
+          )
+        ),
+        "lliby_misc"
+      ) =>
+        assert(fixedTypeVar === returnTypeVar)
+        assert(returnTypeVar.upperBound === vt.AnySchemeType)
+
+        assert(typeVars === Set(returnTypeVar))
+    }
+  }
+
+  test("polymorphic function with two type vars") {
+    inside(exprFor("""(native-function system-library "lliby_misc" (All ([A : <number>] B) (-> A <exact-integer> * B)))""")) {
+      case et.NativeFunction(
+        NativeSystemLibrary,
+        PolymorphicSignature(
+          typeVars,
+          ProcedureSignature(
+            false,
+            false,
+            List(fixedTypeVar : pm.TypeVar),
+            Some(vt.ExactIntegerType),
+            vt.ReturnType.SingleValue(returnTypeVar : pm.TypeVar),
+            _
+          )
+        ),
+        "lliby_misc"
+      ) =>
+        assert(fixedTypeVar !== returnTypeVar)
+        assert(fixedTypeVar.upperBound === vt.NumberType)
+        assert(returnTypeVar.upperBound === vt.AnySchemeType)
+
+        assert(typeVars === Set(returnTypeVar, fixedTypeVar))
+    }
+  }
+
+  test("polymorphic function shorthand with two type vars") {
+    inside(exprFor("""(native-function system-library "lliby_misc" (All ([A : <number>] B) A <exact-integer> * B))""")) {
+      case et.NativeFunction(
+        NativeSystemLibrary,
+        PolymorphicSignature(
+          typeVars,
+          ProcedureSignature(
+            false,
+            false,
+            List(fixedTypeVar : pm.TypeVar),
+            Some(vt.ExactIntegerType),
+            vt.ReturnType.SingleValue(returnTypeVar : pm.TypeVar),
+            _
+          )
+        ),
+        "lliby_misc"
+      ) =>
+        assert(fixedTypeVar !== returnTypeVar)
+        assert(fixedTypeVar.upperBound === vt.NumberType)
+        assert(returnTypeVar.upperBound === vt.AnySchemeType)
+
+        assert(typeVars === Set(returnTypeVar, fixedTypeVar))
     }
   }
 

@@ -13,7 +13,7 @@ sealed abstract class ScopedDatum extends SourceLocated {
 
     unlocated
   }
-  
+
   def rescoped(mapping : Map[Scope, Scope]) : ScopedDatum
 }
 

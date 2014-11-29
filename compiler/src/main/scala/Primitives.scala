@@ -45,6 +45,7 @@ object Primitives {
   object ValuesType extends PrimitiveTypeConstructor
   object ProcedureType extends PrimitiveTypeConstructor
   object CaseProcedureType extends PrimitiveTypeConstructor
+  object PolymorphicType extends PrimitiveTypeConstructor
 
   val bindings = {
     Map[String, BoundValue](
@@ -89,7 +90,8 @@ object Primitives {
       "Vector" -> VectorType,
       "Values" -> ValuesType,
       "->" -> ProcedureType,
-      "case->" -> CaseProcedureType
+      "case->" -> CaseProcedureType,
+      "All" -> PolymorphicType
     )
   }
 }

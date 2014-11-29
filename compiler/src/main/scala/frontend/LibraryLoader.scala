@@ -75,7 +75,8 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
           ("native-function" -> Primitives.NativeFunction) +
           ("world-function" -> Primitives.WorldFunction) +
           ("noreturn" -> Primitives.NoReturnAttr) +
-          ("system-library" -> NativeSystemLibrary)
+          ("system-library" -> NativeSystemLibrary) +
+          ("All" -> Primitives.PolymorphicType)
       )
 
     case _ =>

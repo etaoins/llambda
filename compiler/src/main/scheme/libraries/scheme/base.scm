@@ -475,7 +475,7 @@
     (define-r7rs assq assv)
     (define-r7rs assoc (native-function llbase "llbase_assoc" (-> <any> <alist> <any>)))
 
-    (define-r7rs reverse (world-function llbase "llbase_reverse" (-> <list> <list>)))
+    (define-r7rs reverse (world-function llbase "llbase_reverse" (All (A) (Listof A) (Listof A))))
 
     (define-r7rs list-tail (world-function llbase "llbase_list_tail" (-> <list> <native-uint32> <list>)))
     (define-r7rs (list-ref [l : <list>] [n : <exact-integer>])

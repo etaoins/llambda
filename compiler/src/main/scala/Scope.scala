@@ -158,3 +158,22 @@ final class ImmutableScope(binding : collection.mutable.Map[String, BoundValue],
   }
 }
 
+object Scope {
+  /** Generates a scope mapping to introduce the passed bound values
+    *
+    * For every distinct scope in the bound values a new child scope is created containg the bound values for that
+    * scope. The mapping of parent scope to child scope is then returned. This can be passed to
+    * [[sst.ScopedDatum.rescope]] to moved scoped data in to the new scopes.
+    */
+  def mappingForBoundValues(boundValues : Seq[(sst.ScopedSymbol, BoundValue)]) : Map[Scope, Scope] = {
+    val varsForScope = boundValues groupBy(_._1.scope)
+
+    varsForScope map { case (oldScope, scopeVars) =>
+      val bindings = collection.mutable.Map(scopeVars.map { case (varSymbol, boundValue) =>
+        varSymbol.name -> boundValue
+      } : _*)
+
+      (oldScope -> new Scope(bindings, Some(oldScope)))
+    }
+  }
+}
