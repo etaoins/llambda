@@ -28,7 +28,7 @@ case class ProcedureSignature(
   hasSelfArg : Boolean,
   fixedArgTypes : List[vt.ValueType],
   restArgMemberTypeOpt : Option[vt.SchemeType],
-  returnType : vt.ReturnType.ReturnType,
+  returnType : vt.ReturnType.ReturnType[vt.ValueType],
   attributes : Set[ProcedureAttribute.ProcedureAttribute]
 ) {
   /** Converts this signature to a polymorphic signaure with no type variables */
@@ -39,6 +39,6 @@ case class ProcedureSignature(
     vt.ProcedureType(
       fixedArgTypes=fixedArgTypes.map(_.schemeType),
       restArgMemberTypeOpt=restArgMemberTypeOpt,
-      returnType=returnType
+      returnType=returnType.schemeReturnType
     )
 }

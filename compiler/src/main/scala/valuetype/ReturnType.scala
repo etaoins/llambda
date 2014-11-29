@@ -5,13 +5,13 @@ import Implicits._
 
 object ReturnType {
   /** Represents the return type of a procedure */
-  sealed abstract trait ReturnType {
+  sealed abstract trait ReturnType[+T >: SchemeType <: ValueType] {
     /** Returns the representation used internally to contain this return type
       *
       * If no representation is required then the result is not defined
       */
-    def representationTypeOpt : Option[ValueType]
-  
+    def representationTypeOpt : Option[T]
+
     /** Returns proper list type contain the Scheme types of the return values
       *
       * This is useful for type checking or type arithmetic on return types
@@ -20,13 +20,19 @@ object ReturnType {
 
     override def toString =
       NameForReturnType(this)
+
+    /** Returns the Scheme return type for this return type
+      *
+      * This is only useful if T is set to ValueType
+      */
+    def schemeReturnType : ReturnType[SchemeType]
   }
 
-  /** Represents a single value returned from a procedure 
+  /** Represents a single value returned from a procedure
     *
     * This is the normal case. Single values are represented by the their native type without any wrapping
     */
-  case class SingleValue(valueType : ValueType) extends ReturnType {
+   case class SingleValue[+T >: SchemeType <: ValueType](valueType : T) extends ReturnType[T] {
     def representationTypeOpt = valueType match {
       case UnitType =>
         None
@@ -34,27 +40,33 @@ object ReturnType {
       case otherType =>
         Some(otherType)
     }
-    
-    def toValueListType : SchemeType = 
+
+    def toValueListType : SchemeType =
       SpecificPairType(
         carTypeRef=DirectSchemeTypeRef(valueType.schemeType),
         cdrTypeRef=DirectSchemeTypeRef(EmptyListType)
       )
+
+    def schemeReturnType : ReturnType[SchemeType] =
+      SingleValue(valueType.schemeType)
   }
 
   /** Represents multiple values returned from a procedure
     *
-    * This is internally represented as a proper list of values. This makes the implementation of (values) and 
+    * This is internally represented as a proper list of values. This makes the implementation of (values) and
     * (call-by-values) simpler
     */
-  case class MultipleValues(valueListType : SchemeType) extends ReturnType {
+  case class MultipleValues(valueListType : SchemeType) extends ReturnType[SchemeType] {
     def representationType : SchemeType = valueListType
 
-    def representationTypeOpt : Option[ValueType] = 
+    def representationTypeOpt : Option[SchemeType] =
       Some(representationType)
-    
+
     def toValueListType : SchemeType =
       valueListType
+
+    def schemeReturnType : ReturnType[SchemeType] =
+      this
   }
 
   /** Represents a fixed number of return values of specific types */

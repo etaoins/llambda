@@ -368,7 +368,7 @@ sealed abstract trait ApplicableType extends NonUnionSchemeType with NonRecursiv
 case class ProcedureType(
     fixedArgTypes : List[SchemeType],
     restArgMemberTypeOpt : Option[SchemeType],
-    returnType : ReturnType.ReturnType
+    returnType : ReturnType.ReturnType[SchemeType]
 ) extends DerivedSchemeType with ApplicableType {
   val cellType = ct.ProcedureCell
   val isGcManaged = true

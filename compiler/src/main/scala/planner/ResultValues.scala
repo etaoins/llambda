@@ -21,17 +21,17 @@ sealed abstract class ResultValues {
   def toMultipleValueList()(implicit plan : PlanWriter) : iv.IntermediateValue
 
   /** Returns the actual return type for this result value */
-  def returnType : vt.ReturnType.ReturnType
+  def returnType : vt.ReturnType.ReturnType[vt.ValueType]
 
   /** Returns the preferred return type for this result value */
-  def preferredReturnType : vt.ReturnType.ReturnType
+  def preferredReturnType : vt.ReturnType.ReturnType[vt.ValueType]
 
   /** Returns a TempValue representing the result in the appropriate representation for the ReturnType
     *
     * If void should be returned from the function then the result will not be defined
     */
   def toReturnTempValue(
-      returnType : vt.ReturnType.ReturnType
+      returnType : vt.ReturnType.ReturnType[vt.ValueType]
   )(implicit plan : PlanWriter) : Option[ps.TempValue] = returnType match {
     case vt.ReturnType.SingleValue(vt.UnitType) =>
       None
@@ -43,7 +43,7 @@ sealed abstract class ResultValues {
       Some(toMultipleValueList().toTempValue(valueListType))
   }
 
-  def withReturnType(newReturnType : vt.ReturnType.ReturnType) : ResultValues
+  def withReturnType(newReturnType : vt.ReturnType.ReturnType[vt.SchemeType]) : ResultValues
 }
 
 case class SingleValue(value : iv.IntermediateValue) extends ResultValues {
@@ -52,24 +52,25 @@ case class SingleValue(value : iv.IntermediateValue) extends ResultValues {
 
   def toMultipleValueList()(implicit plan : PlanWriter) =
     ValuesToList(List(value), capturable=false)
-  
-  def returnType = 
+
+  def returnType =
     vt.ReturnType.SingleValue(value.schemeType)
 
-  def preferredReturnType = 
+  def preferredReturnType =
     vt.ReturnType.SingleValue(value.preferredRepresentation)
-  
-  def withReturnType(newReturnType : vt.ReturnType.ReturnType) : ResultValues = newReturnType.toValueListType match {
-    case vt.SpecificPairType(
-      vt.DirectSchemeTypeRef(newSingleValueType),
-      vt.DirectSchemeTypeRef(vt.EmptyListType)
-    ) =>
-      SingleValue(value.withSchemeType(newSingleValueType))
 
-    case _ =>
-      throw new InternalCompilerErrorException("Attempted to retype result values with incompatible type")
+  def withReturnType(newReturnType : vt.ReturnType.ReturnType[vt.SchemeType]) : ResultValues =
+    newReturnType.toValueListType match {
+      case vt.SpecificPairType(
+        vt.DirectSchemeTypeRef(newSingleValueType),
+        vt.DirectSchemeTypeRef(vt.EmptyListType)
+      ) =>
+        SingleValue(value.withSchemeType(newSingleValueType))
+
+      case _ =>
+        throw new InternalCompilerErrorException("Attempted to retype result values with incompatible type")
+    }
   }
-}
 
 case class MultipleValues(multipleValueList : iv.IntermediateValue) extends ResultValues {
   def toSingleValue()(implicit plan : PlanWriter) : iv.IntermediateValue = {
@@ -80,8 +81,8 @@ case class MultipleValues(multipleValueList : iv.IntermediateValue) extends Resu
       text="Single value expected; 0 values provided"
     )
 
-    val carValue = PlanCadr.loadCar(multipleValueList, Some(notEnoughValuesMessage)) 
-    
+    val carValue = PlanCadr.loadCar(multipleValueList, Some(notEnoughValuesMessage))
+
     val extraValuesMessage = RuntimeErrorMessage(
       name="extraValuesForSingle",
       text="Single value expected; multiple values provided"
@@ -97,7 +98,7 @@ case class MultipleValues(multipleValueList : iv.IntermediateValue) extends Resu
 
     carValue
   }
-  
+
   def toMultipleValueList()(implicit plan : PlanWriter) =
     multipleValueList
 
@@ -106,8 +107,8 @@ case class MultipleValues(multipleValueList : iv.IntermediateValue) extends Resu
 
   def preferredReturnType =
     returnType
-  
-  def withReturnType(newReturnType : vt.ReturnType.ReturnType) : ResultValues = 
+
+  def withReturnType(newReturnType : vt.ReturnType.ReturnType[vt.SchemeType]) : ResultValues =
     MultipleValues(multipleValueList.withSchemeType(newReturnType.toValueListType))
 }
 

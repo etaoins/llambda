@@ -5,7 +5,10 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{valuetype => vt}
 
 object TempValueToResults {
-  def apply(returnType : vt.ReturnType.ReturnType, resultTemp : ps.TempValue)(implicit plan : PlanWriter) : ResultValues =
+  def apply(
+      returnType : vt.ReturnType.ReturnType[vt.ValueType],
+      resultTemp : ps.TempValue
+  )(implicit plan : PlanWriter) : ResultValues =
     returnType match {
       case vt.ReturnType.SingleValue(valueType) =>
         val singleValue = TempValueToIntermediate(valueType, resultTemp)(plan.config)

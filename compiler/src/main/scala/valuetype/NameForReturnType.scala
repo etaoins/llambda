@@ -4,7 +4,7 @@ import io.llambda
 import llambda.compiler.InternalCompilerErrorException
 
 object NameForReturnType {
-  def apply(returnType : ReturnType.ReturnType) : String = returnType match {
+  def apply[T >: SchemeType <: ValueType](returnType : ReturnType.ReturnType[T]) : String = returnType match {
     case ReturnType.SingleValue(valueType) =>
       NameForType(valueType)
 

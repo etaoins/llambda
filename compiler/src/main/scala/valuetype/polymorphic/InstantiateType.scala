@@ -32,10 +32,10 @@ object InstantiateType {
       )
   }
 
-  def instantiateReturnType(
+  def instantiateReturnType[T >: SchemeType <: ValueType](
       typeVars : ReconcileTypeVars.Result,
-      returnType : ReturnType.ReturnType
-  ) : ReturnType.ReturnType = returnType match {
+      returnType : ReturnType.ReturnType[T]
+  ) : ReturnType.ReturnType[T] = returnType match {
     case ReturnType.SingleValue(valueType) =>
       ReturnType.SingleValue(apply(typeVars, valueType))
 

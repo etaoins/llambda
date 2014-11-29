@@ -44,7 +44,7 @@ object ExtractType {
     // Resolve the types
     val fixedArgTypes = parsed.fixedArgData.map(extractNonEmptySchemeType(_, noRecursiveVars))
     val restArgMemberType = parsed.restArgMemberDatumOpt.map(extractNonEmptySchemeType(_, noRecursiveVars))
-    val returnType = extractReturnType(parsed.returnDatum)
+    val returnType = extractReturnSchemeType(parsed.returnDatum)
 
     vt.ProcedureType(fixedArgTypes, restArgMemberType, returnType)
   }
@@ -261,7 +261,7 @@ object ExtractType {
       throw new BadSpecialFormException(nonsymbol, "Excepted type name to be symbol or type constructor application")
   }
 
-  def extractReturnType(datum : sst.ScopedDatum) : vt.ReturnType.ReturnType = datum match {
+  def extractReturnValueType(datum : sst.ScopedDatum) : vt.ReturnType.ReturnType[vt.ValueType] = datum match {
     case sst.ScopedSymbol(_, "*") =>
       vt.ReturnType.ArbitraryValues
 
@@ -280,4 +280,17 @@ object ExtractType {
     case otherDatum =>
       vt.ReturnType.SingleValue(extractValueType(otherDatum))
   }
+
+  def extractReturnSchemeType(datum : sst.ScopedDatum) : vt.ReturnType.ReturnType[vt.SchemeType] =
+    extractReturnValueType(datum) match {
+      case vt.ReturnType.SingleValue(schemeType : vt.SchemeType) =>
+        vt.ReturnType.SingleValue(schemeType)
+
+      case vt.ReturnType.SingleValue(_) =>
+        throw new BadSpecialFormException(datum, "Native return type used where Scheme type expected")
+
+      case multipleValues : vt.ReturnType.MultipleValues =>
+        multipleValues
+    }
+
 }

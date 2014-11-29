@@ -17,7 +17,7 @@ object ExtractNativeFunction {
 
     val fixedArgTypes = parsed.fixedArgData.map(ExtractType.extractValueType(_))
     val restArgMemberTypeOpt = parsed.restArgMemberDatumOpt.map(ExtractType.extractSchemeType(_))
-    val returnType = ExtractType.extractReturnType(parsed.returnDatum)
+    val returnType = ExtractType.extractReturnValueType(parsed.returnDatum)
 
     val attributes = (attributeData.map {
       case sst.ResolvedSymbol(Primitives.NoReturnAttr) =>
