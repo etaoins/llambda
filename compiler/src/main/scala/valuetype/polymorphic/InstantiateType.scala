@@ -71,7 +71,7 @@ object InstantiateType {
     case UniformVectorType(memberTypeRef)  =>
       val replacedMemberType = visitTypeRef(typeVars, memberTypeRef)
 
-      UniformVectorType(replacedMemberType)
+      VectorOfType(replacedMemberType)
 
     case procType : ProcedureType =>
       visitProcedureType(typeVars, procType)

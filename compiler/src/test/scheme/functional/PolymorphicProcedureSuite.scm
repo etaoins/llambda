@@ -42,6 +42,12 @@
 
     (ann (assv 'one symbol-to-int) (U #f (Pairof <symbol> <exact-integer>)))))
 
+  (define-test "(list-tail) is polymorphic" (expect-success
+    (import (llambda typed))
+
+    (define exact-list (typed-dynamic '(1 2 4) (Listof <exact-integer>)))
+    (ann (list-tail exact-list 1) (Listof <exact-integer>))))
+
   (define-test "(reverse) is polymorphic" (expect-success
     (import (llambda typed))
 
@@ -109,3 +115,10 @@
 
   (ann (max exact-1 exact-2) <exact-integer>)
   (ann (max inexact-1 inexact-2) <flonum>)))
+
+(define-test "(vector-ref) is polymorphic" (expect-success
+  (import (llambda typed))
+
+  (define exact-1 (typed-dynamic 1 <exact-integer>))
+
+  (ann (vector-ref #(1 2 3) exact-1) <exact-integer>)))

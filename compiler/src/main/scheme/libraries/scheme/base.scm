@@ -477,11 +477,11 @@
 
     (define-r7rs reverse (world-function llbase "llbase_reverse" (All (A) (Listof A) (Listof A))))
 
-    (define-r7rs list-tail (world-function llbase "llbase_list_tail" (-> <list> <native-uint32> <list>)))
+    (define-r7rs list-tail (world-function llbase "llbase_list_tail" (All (A) (Listof A) <native-uint32> (Listof A))))
     (define-r7rs (list-ref [l : <list>] [n : <exact-integer>])
       (car (list-tail l n)))
 
-    (define native-make-list (world-function llbase "llbase_make_list" (-> <native-uint32> <any> <list>)))
+    (define native-make-list (world-function llbase "llbase_make_list" (All (A) <native-uint32> A (Listof A))))
     (define-r7rs make-list (case-lambda
       (([len : <exact-integer>])
        (native-make-list len #!unit))
@@ -506,7 +506,7 @@
     (define-r7rs vector (world-function llbase "llbase_vector" (-> <any> * <vector>)))
     ; This is the same runtime function but instead of using a rest arg explicitly pass in the list
     (define-r7rs list->vector (world-function llbase "llbase_vector" (-> <list> <vector>)))
-    (define-r7rs vector-ref (world-function llbase "llbase_vector_ref" (-> <vector> <native-uint32> <any>)))
+    (define-r7rs vector-ref (world-function llbase "llbase_vector_ref" (All (A) (Vectorof A) <native-uint32> A)))
     (define-r7rs vector-set! (world-function llbase "llbase_vector_set" (-> <vector> <native-uint32> <any> <unit>)))
     (define-r7rs vector-append (world-function llbase "llbase_vector_append" (-> <vector> * <vector>)))
 
