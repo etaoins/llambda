@@ -108,6 +108,17 @@ object ResolveTypeVars {
 
       results.reduce(_ ++ _)
 
+    case (ProcedureType(polyFixed, polyRestOpt, polyReturn), ProcedureType(evidenceFixed, evidenceRestOpt, evidenceReturn)) =>
+      val polyListType = FormalsToListType(polyFixed, polyRestOpt)
+      val evidenceListType = FormalsToListType(evidenceFixed, evidenceRestOpt)
+      val formalsResult = visitType(typeVars, polyListType, Nil, evidenceListType, Nil)
+
+      val polyReturnListType = polyReturn.toValueListType
+      val evidenceReturnListType = evidenceReturn.toValueListType
+      val returnResult = visitType(typeVars, polyReturnListType, Nil, evidenceReturnListType, Nil)
+
+      formalsResult ++ returnResult
+
     case _ =>
       Result()
   }

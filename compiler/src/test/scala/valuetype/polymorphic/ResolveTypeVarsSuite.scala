@@ -9,6 +9,7 @@ import Implicits._
 class ResolveTypeVarsSuite extends FunSuite {
   val polyA = new TypeVar("A")
   val polyB = new TypeVar("B")
+  val polyC = new TypeVar("C")
 
   test("resolving leaf types") {
     val polyLeaf = ExactIntegerType
@@ -147,6 +148,50 @@ class ResolveTypeVarsSuite extends FunSuite {
 
     assert(ResolveTypeVars(Set(polyA), polyVec, evidence).values == Map(
       polyA -> NumberType
+    ))
+  }
+
+  test("resolving procedure type from procedure type with identical arity") {
+    val polyProc = ProcedureType(
+      fixedArgTypes=List(polyA, polyB),
+      restArgMemberTypeOpt=Some(polyA),
+      returnType=ReturnType.SingleValue(polyC)
+    )
+
+    val evidence = ProcedureType(
+      fixedArgTypes=List(ExactIntegerType, FlonumType),
+      restArgMemberTypeOpt=Some(FlonumType),
+      returnType=ReturnType.SingleValue(PortType)
+    )
+
+    val result = ResolveTypeVars(Set(polyA, polyB, polyC), polyProc, evidence)
+
+    assert(result.values == Map(
+      polyA -> NumberType,
+      polyB -> FlonumType,
+      polyC -> PortType
+    ))
+  }
+
+  test("resolving procedure type from procedure type with different but compatible arity") {
+    val polyProc = ProcedureType(
+      fixedArgTypes=Nil,
+      restArgMemberTypeOpt=Some(polyA),
+      returnType=ReturnType.SpecificValues(List(polyB, polyC))
+    )
+
+    val evidence = ProcedureType(
+      fixedArgTypes=List(ExactIntegerType, ExactIntegerType),
+      restArgMemberTypeOpt=Some(FlonumType),
+      returnType=ReturnType.SpecificValues(List(PortType, BooleanType))
+    )
+
+    val result = ResolveTypeVars(Set(polyA, polyB, polyC), polyProc, evidence)
+
+    assert(result.values == Map(
+      polyA -> NumberType,
+      polyB -> PortType,
+      polyC -> BooleanType
     ))
   }
 }

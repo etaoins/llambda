@@ -606,7 +606,7 @@
     (define-r7rs vector-map (world-function llbase "llbase_vector_map" (-> (-> <any> <any> * <any>) <vector> <vector> * <vector>)))
     (define-r7rs vector-for-each (world-function llbase "llbase_vector_for_each" (-> (-> <any> <any> * <unit>) <vector> <vector> * <unit>)))
 
-    (define-r7rs map (world-function llbase "llbase_map" (-> (-> <any> <any> * <any>) <list> <list> * <list>)))
+    (define-r7rs map (world-function llbase "llbase_map" (All (A) (-> <any> <any> * A) <list> <list> * (Listof A))))
     (define-r7rs for-each (world-function llbase "llbase_for_each" (-> (-> <any> <any> * <unit>) <list> <list> * <unit>)))
 
     (define-r7rs string-map (world-function llbase "llbase_string_map" (-> (-> <char> <char> * <char>) <string> <string> * <string>)))

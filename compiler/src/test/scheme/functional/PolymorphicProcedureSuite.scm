@@ -54,7 +54,16 @@
     (define integer-list (typed-dynamic '(1 2 3) (Listof <exact-integer>)))
     (define reverse-list (reverse integer-list))
 
-    (ann integer-list (Listof <exact-integer>))))))
+    (ann integer-list (Listof <exact-integer>))))
+
+  (define-test "(map) is polymorphic" (expect-success
+    (import (llambda typed))
+
+    (define inexact-1 (typed-dynamic 1.0 <flonum>))
+    (define integer-list (typed-dynamic '(1 2 3) (Listof <exact-integer>)))
+
+    (ann (map (lambda (x) inexact-1) integer-list) (Listof <flonum>))))
+  ))
 
 (define-test "(+) is polymorphic" (expect-success
   (import (llambda typed))
