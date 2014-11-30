@@ -7,25 +7,25 @@ import llambda.compiler.planner.{step => ps}
 private[planner] object LoadClosureData {
   /** Loads values from a lambda's closure
     *
-    * @param  procTemp          Temp value for the procedure to load values from
-    * @param  closure           Information about the lambda's closure
-    * @param  onlyVariablesOpt  Optional filter of captured variables to load. If this is not provided then al
-    *                           captured variables will be loaded
+    * @param  procTemp     Temp value for the procedure to load values from
+    * @param  manifest     Information about the lambda's manifest
+    * @param  onlyVarsOpt  Optional filter of captured variables to load. If this is not provided then all captured
+    *                      variables will be loaded
     * @return Map of loaded values
     */
   def apply(
       procTemp : ps.TempValue,
-      closure : LambdaClosure,
-      onlyVariablesOpt : Option[Set[StorageLocation]] = None
+      manifest : LambdaManifest,
+      onlyVarsOpt : Option[Set[StorageLocation]] = None
   )(implicit plan : PlanWriter) : Map[StorageLocation, LocationValue] = {
-    val wantedVariables = onlyVariablesOpt match {
+    val wantedVariables = onlyVarsOpt match {
       case Some(onlyVariables) =>
-        closure.capturedVariables.filter { capturedVar =>
+        manifest.capturedVars.filter { capturedVar =>
           onlyVariables.contains(capturedVar.storageLoc)
         }
 
       case None =>
-        closure.capturedVariables
+        manifest.capturedVars
     }
 
     if (wantedVariables.isEmpty) {
@@ -34,12 +34,12 @@ private[planner] object LoadClosureData {
     }
     else {
       val closureDataTemp = ps.RecordLikeDataTemp()
-      plan.steps += ps.LoadRecordLikeData(closureDataTemp, procTemp, closure.closureType)
+      plan.steps += ps.LoadRecordLikeData(closureDataTemp, procTemp, manifest.closureType)
 
       wantedVariables.map({ capturedVar =>
         // Load the variable
         val varTemp = new ps.TempValue(capturedVar.recordField.fieldType.isGcManaged)
-        plan.steps += ps.LoadRecordDataField(varTemp, closureDataTemp, closure.closureType, capturedVar.recordField)
+        plan.steps += ps.LoadRecordDataField(varTemp, closureDataTemp, manifest.closureType, capturedVar.recordField)
 
         // Add it to our state
         capturedVar match {

@@ -290,8 +290,8 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
 
   /** Returns an applicable value for the given operand types
     *
-    * This is usually the identity function. It's overridden by KnownCaseLambdaProc to enable directly selecting the
-    * correct (case-lambda) clause
+    * This is usually the identity function. It's overridden by KnownCaseLambdaProc and KnownSchemeProc to implement
+    * polymorphism.
     */
   def toApplicableValueForOperands(operands : List[vt.SchemeType])(implicit plan : PlanWriter) : IntermediateValue =
     this

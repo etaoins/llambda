@@ -77,7 +77,7 @@ private[planner] object PlanApplication {
     procExpr match {
       case lambdaExpr : et.Lambda if plan.config.optimize =>
         // We can apply this inline!
-        for(inlineValues <- AttemptInlineApply(initialState, initialState)(lambdaExpr, operands)) {
+        for(inlineValues <- AttemptInlineApply.fromSEL(initialState)(lambdaExpr, operands)) {
           return PlanResult(
             state=initialState,
             values=inlineValues
@@ -134,15 +134,14 @@ private[planner] object PlanApplication {
 
     if (plan.config.optimize && (initialState.inlineDepth < 8)) {
       procValue match {
-        case schemeProc : iv.KnownSchemeProc if !schemeProc.recursiveSelfLoc.isDefined =>
+        case schemeProc : iv.KnownSchemeProc if !schemeProc.manifest.isRecursive =>
           // Try to plan this as in inline app[lication
           val inlinePlan = plan.forkPlan()
 
-          val inlineValuesOpt = AttemptInlineApply(schemeProc.parentState, procResult.state)(
-            lambdaExpr=schemeProc.lambdaExpr,
+          val inlineValuesOpt = AttemptInlineApply.fromManifiest(procResult.state)(
+            manifest=schemeProc.manifest,
             operands=operands,
-            selfTempOpt=schemeProc.selfTempOpt,
-            closureOpt=Some(schemeProc.closure)
+            selfTempOpt=schemeProc.selfTempOpt
           )(inlinePlan)
 
           for(inlineValues <- inlineValuesOpt) {

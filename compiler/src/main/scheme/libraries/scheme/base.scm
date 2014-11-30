@@ -362,11 +362,13 @@
     (define-r7rs / (world-function llbase "llbase_div" (-> <number> <number> * <number>)))
     
     (define-r7rs expt (world-function llbase "llbase_expt" (-> <number> <number> <number>)))
-    
-    (define-r7rs (square [num : <number>])
+
+    (: square (All ([N : <number>]) N N))
+    (define-r7rs (square num)
       (* num num))
 
-    (define-r7rs (abs [num : <number>])
+    (: abs (All ([N : <number>]) N N))
+    (define-r7rs (abs num)
       ; Do a top-level type check to make the compiler generate a specialised version of each branch. The test itself is
       ; semantically a no-op
       (if (exact-integer? num)
@@ -462,6 +464,7 @@
     (define-r7rs (cdar (x : (Pairof <pair> <any>))) (cdr (car x)))
     (define-r7rs (cddr (x : (Pairof <any> <pair>))) (cdr (cdr x)))
 
+    (: list (All (A) A * (Listof A)))
     (define-r7rs (list . rest) rest)
 
     (define-r7rs append (world-function llbase "llbase_append" (-> <any> * <any>)))
@@ -478,7 +481,9 @@
     (define-r7rs reverse (world-function llbase "llbase_reverse" (All (A) (Listof A) (Listof A))))
 
     (define-r7rs list-tail (world-function llbase "llbase_list_tail" (All (A) (Listof A) <native-uint32> (Listof A))))
-    (define-r7rs (list-ref [l : <list>] [n : <exact-integer>])
+
+    (: list-ref (All (A) (Listof A) <exact-integer> A))
+    (define-r7rs (list-ref l n)
       (car (list-tail l n)))
 
     (define native-make-list (world-function llbase "llbase_make_list" (All (A) <native-uint32> A (Listof A))))

@@ -67,7 +67,7 @@ private[planner] object PlanBind {
             val procValue = PlanLambda(postrecursiveState, plan)(
               lambdaExpr=lambdaExpr,
               sourceNameHint=Some(storageLoc.sourceName),
-              recursiveSelfLoc=Some(storageLoc)
+              recursiveSelfLocOpt=Some(storageLoc)
             )
 
             PlanResult(

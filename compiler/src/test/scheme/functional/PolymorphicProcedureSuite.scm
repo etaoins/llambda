@@ -23,6 +23,14 @@
 
     (ann (cdr (cons exact-1 inexact-1)) <flonum>)))
 
+  (define-test "(list) is polymorphic" (expect-success
+    (import (llambda typed))
+
+    (define exact-1 (typed-dynamic 1 <exact-integer>))
+    (define inexact-1 (typed-dynamic 1.0 <flonum>))
+
+    (ann (list exact-1 inexact-1) (Listof <number>))))
+
   (define-test "(memv) is polymorphic" (expect-success
     (import (llambda typed))
 
@@ -47,6 +55,12 @@
 
     (define exact-list (typed-dynamic '(1 2 4) (Listof <exact-integer>)))
     (ann (list-tail exact-list 1) (Listof <exact-integer>))))
+
+  (define-test "(list-ref) is polymorphic" (expect-success
+    (import (llambda typed))
+
+    (define exact-list (typed-dynamic '(1 2 4) (Listof <exact-integer>)))
+    (ann (list-ref exact-list 1) <exact-integer>)))
 
   (define-test "(reverse) is polymorphic" (expect-success
     (import (llambda typed))
@@ -101,6 +115,24 @@
   (ann (* exact-1 exact-2) <exact-integer>)
   (ann (* inexact-1 inexact-2) <flonum>)))
 
+(define-test "(square) is polymorphic" (expect-success
+  (import (llambda typed))
+
+  (define exact-1 (typed-dynamic 1 <exact-integer>))
+  (define inexact-1 (typed-dynamic 1.0 <flonum>))
+
+  (ann (square exact-1) <exact-integer>)
+  (ann (square inexact-1) <flonum>)))
+
+(define-test "(abs) is polymorphic" (expect-success
+  (import (llambda typed))
+
+  (define exact-1 (typed-dynamic 1 <exact-integer>))
+  (define inexact-1 (typed-dynamic 1.0 <flonum>))
+
+  (ann (abs exact-1) <exact-integer>)
+  (ann (abs inexact-1) <flonum>)))
+
 (define-test "(min) is polymorphic" (expect-success
   (import (llambda typed))
 
@@ -131,3 +163,60 @@
   (define exact-1 (typed-dynamic 1 <exact-integer>))
 
   (ann (vector-ref #(1 2 3) exact-1) <exact-integer>)))
+
+(define-test "simple polymorphic Scheme procedure" (expect-success
+  (import (llambda typed))
+
+  (: left-or-right (All (A) <boolean> A A A))
+  (define (left-or-right use-left left-val right-val)
+    (if use-left left-val right-val))
+
+  (define exact-1 (typed-dynamic 1 <exact-integer>))
+  (define inexact-1 (typed-dynamic 1.0 <flonum>))
+
+  (ann (left-or-right dynamic-true exact-1 inexact-1) <number>)))
+
+(define-test "polymorphic Scheme procedure violating return type variable fails" (expect-compile-failure
+  (import (llambda typed))
+
+  (: left-or-right (All (A) <boolean> A A A))
+  (define (left-or-right use-left left-val right-val)
+    'not-a-number)
+
+  (define exact-1 (typed-dynamic 1 <exact-integer>))
+  (define inexact-1 (typed-dynamic 1.0 <flonum>))
+
+  (left-or-right dynamic-true exact-1 inexact-1) <number>))
+
+(define-test "violating Scheme procedure's type bounds fails" (expect-compile-failure
+  (import (llambda typed))
+
+  (: left-or-right (All ([A : <number>]) <boolean> A A A))
+  (define (left-or-right use-left left-val right-val)
+    (if use-left left-val right-val))
+
+  (define exact-1 (typed-dynamic 1 <exact-integer>))
+  (define string-val (typed-dynamic "Hello" <string>))
+
+  (left-or-right dynamic-true exact-1 string-val)))
+
+(define-test "capturing polymorphic Scheme procedure" (expect-success
+  (import (llambda typed))
+
+  (define outer-counter 0)
+
+  (: inc-if-string (All (A) A <unit>))
+  (define (inc-if-string possible-string)
+    (when (string? possible-string)
+      (set! outer-counter (+ outer-counter 1))))
+
+  (define exact-1 (typed-dynamic 1 <exact-integer>))
+  (define inexact-1 (typed-dynamic 1.0 <flonum>))
+  (define string-val (typed-dynamic "Hello" <string>))
+
+  (inc-if-string exact-1)
+  (inc-if-string inexact-1)
+  (inc-if-string string-val)
+
+  (assert-equal 1 outer-counter)))
+

@@ -14,11 +14,11 @@ private[planner] object AttemptInlineApply {
   private case class DirectSource(storageLoc : StorageLocation, value : LocationValue) extends ValueSource
   private case class ClosureSource(storageLoc : StorageLocation) extends ValueSource
 
-  def apply(parentState : PlannerState, inlineState : PlannerState)(
+  private def attemptInline(parentState : PlannerState, inlineState : PlannerState)(
       lambdaExpr : et.Lambda,
       operands : List[(ContextLocated, iv.IntermediateValue)],
       selfTempOpt : Option[ps.TempValue] = None,
-      closureOpt : Option[LambdaClosure] = None
+      manifestOpt : Option[LambdaManifest] = None
   )(implicit plan : PlanWriter) : Option[ResultValues] = {
     val mutableVars = plan.config.analysis.mutableVars
     val allArgs = lambdaExpr.fixedArgs ++ lambdaExpr.restArgOpt
@@ -64,10 +64,10 @@ private[planner] object AttemptInlineApply {
       storageLoc
     }).toSet
 
-    val closureValues = (selfTempOpt, closureOpt) match {
-      case (Some(selfTemp), Some(closure)) =>
+    val closureValues = (selfTempOpt, manifestOpt) match {
+      case (Some(selfTemp), Some(manifest)) =>
         // Fill in the rest of our values from our closure
-        LoadClosureData(selfTemp, closure, Some(wantedClosureValues))
+        LoadClosureData(selfTemp, manifest, Some(wantedClosureValues))
 
       case _ =>
         if (wantedClosureValues.isEmpty) {
@@ -114,4 +114,41 @@ private[planner] object AttemptInlineApply {
     val planResult = PlanExpr(inlineBodyState)(lambdaExpr.body)
     Some(planResult.values)
   }
+
+  /** Attempts to inline a self-executing lambda
+    *
+    * These are in the form of ((lambda (arg) x) val) and analogous forms. These are occur frequently as the result of
+    * macro expansion of simpler forms.
+    *
+    * @param  state       State the SEL is executing in
+    * @param  lambdaExpr  Lambda expression being self-executed
+    * @param  operands    Operands for the SEL
+    * @return Result values if inlining was successful, None otherwise
+    */
+  def fromSEL(state : PlannerState)(
+      lambdaExpr : et.Lambda,
+      operands : List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan : PlanWriter) : Option[ResultValues] =
+    attemptInline(state, state)(lambdaExpr, operands)
+
+  /** Attempts to inline an already planned lambda from its manifest
+    *
+    * @param  inlineState  State the lambda in being inlined in to. This is used to avoid loading values from the
+    *                      procedure's closure that also exist in the inlining environment.
+    * @param  manifest     Manifest for the planned procedure
+    * @param  selfTempOpt  Self value for the inlining procedure if it captured variables. This is used to access the
+    *                      closure for the procedure.
+    * @return Result values if inlining was successful, None otherwise
+    */
+  def fromManifiest(inlineState : PlannerState)(
+      manifest : LambdaManifest,
+      operands : List[(ContextLocated, iv.IntermediateValue)],
+      selfTempOpt : Option[ps.TempValue] = None
+  )(implicit plan : PlanWriter) : Option[ResultValues] =
+    attemptInline(manifest.parentState, inlineState)(
+      lambdaExpr=manifest.lambdaExpr,
+      operands=operands,
+      selfTempOpt=selfTempOpt,
+      manifestOpt=Some(manifest)
+    )
 }

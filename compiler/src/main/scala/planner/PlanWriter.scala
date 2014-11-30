@@ -18,6 +18,7 @@ class PlanWriter(
     val plannedTypePredicates : mutable.Map[vt.SchemeType, String],
     val knownProcTrampolines : mutable.Map[(String, ProcedureSignature), String],
     val adapterProcTrampolines : mutable.Map[(ProcedureSignature, ProcedureSignature), String],
+    val polymorphInstances : mutable.Map[(LambdaManifest, vt.ProcedureType), String],
     val requiredNativeLibraries : mutable.HashSet[NativeLibrary]
 ) {
   private val contextLocStack = new mutable.Stack[ContextLocated] 
@@ -123,6 +124,7 @@ class PlanWriter(
       plannedTypePredicates,
       knownProcTrampolines,
       adapterProcTrampolines,
+      polymorphInstances,
       requiredNativeLibraries
     )
 
@@ -161,6 +163,7 @@ object PlanWriter {
       plannedTypePredicates=new mutable.HashMap[vt.SchemeType, String],
       knownProcTrampolines=new mutable.HashMap[(String, ProcedureSignature), String],
       adapterProcTrampolines=new mutable.HashMap[(ProcedureSignature, ProcedureSignature), String],
+      polymorphInstances=new mutable.HashMap[(LambdaManifest, vt.ProcedureType), String],
       requiredNativeLibraries=new mutable.HashSet[NativeLibrary]
     )
 }

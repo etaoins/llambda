@@ -2,6 +2,7 @@ package io.llambda.compiler.planner.intermediatevalue
 import io.llambda
 
 import llambda.compiler.{PolymorphicSignature, StorageLocation, ContextLocated}
+import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner._
@@ -12,10 +13,8 @@ class KnownSchemeProc(
     polySignature : PolymorphicSignature,
     plannedSymbol : String,
     selfTempOpt : Option[ps.TempValue],
-    val parentState : PlannerState,
-    val closure : LambdaClosure,
-    val lambdaExpr : et.Lambda,
-    val recursiveSelfLoc : Option[StorageLocation],
+    val manifest : LambdaManifest,
+    isPrimaryPolymorph : Boolean,
     reportNameOpt : Option[String] = None)
 extends KnownUserProc(polySignature, plannedSymbol, selfTempOpt, reportNameOpt) {
   // Override this to ensure we have vt.ProcedureType
@@ -23,17 +22,15 @@ extends KnownUserProc(polySignature, plannedSymbol, selfTempOpt, reportNameOpt) 
   override val schemeType : vt.ProcedureType = polySignature.toSchemeProcedureType
 
   override def locationOpt : Option[ContextLocated] =
-    Some(lambdaExpr)
+    Some(manifest.lambdaExpr)
 
   override def withReportName(newReportName : String) : KnownSchemeProc = {
     new KnownSchemeProc(
       polySignature,
       plannedSymbol,
       selfTempOpt,
-      parentState,
-      closure,
-      lambdaExpr,
-      recursiveSelfLoc,
+      manifest,
+      isPrimaryPolymorph,
       Some(newReportName)
     )
   }
@@ -43,11 +40,69 @@ extends KnownUserProc(polySignature, plannedSymbol, selfTempOpt, reportNameOpt) 
       polySignature,
       plannedSymbol,
       Some(selfTemp),
-      parentState,
-      closure,
-      lambdaExpr,
-      recursiveSelfLoc,
+      manifest,
+      isPrimaryPolymorph,
       reportNameOpt
     )
+
+  private def createPolymorph(resolvedType : vt.ProcedureType)(implicit plan : PlanWriter) : KnownSchemeProc = {
+    val polymorphKey = (manifest, resolvedType)
+
+    val polymorphSymbol = plan.polymorphInstances.getOrElseUpdate(polymorphKey, {
+      val polymorphSymbol = plan.allocSymbol(plannedSymbol + " " + resolvedType + " Polymorph")
+
+      // Plan the polymorph
+      val plannedPolymorph = PlanLambdaPolymorph(polymorphSymbol, manifest, resolvedType, false)
+      plan.plannedFunctions += polymorphSymbol -> plannedPolymorph
+
+      polymorphSymbol
+    })
+
+    val polymorphSignature = plan.plannedFunctions(polymorphSymbol).signature
+
+    val polymorphSelfTempOpt = selfTempOpt map { selfTemp =>
+      val polymorphEntryPointTemp = ps.EntryPointTemp()
+      plan.steps += ps.CreateNamedEntryPoint(polymorphEntryPointTemp, polymorphSignature, polymorphSymbol)
+
+      // Create the polymorph procedure cell
+      val polymorphProcTemp = ps.CellTemp(ct.ProcedureCell)
+      val polymorphDataTemp = ps.RecordLikeDataTemp()
+
+      plan.steps += ps.InitRecordLike(polymorphProcTemp, polymorphDataTemp, AdapterProcType, false)
+      plan.steps += ps.SetRecordDataField(polymorphDataTemp, AdapterProcType, AdapterProcField, selfTemp)
+      plan.steps += ps.SetProcedureEntryPoint(polymorphProcTemp, polymorphEntryPointTemp)
+
+      polymorphProcTemp
+    }
+
+    new KnownSchemeProc(
+      polymorphSignature.toPolymorphic,
+      polymorphSymbol,
+      polymorphSelfTempOpt,
+      manifest,
+      isPrimaryPolymorph=false,
+      reportNameOpt=reportNameOpt
+    )
+  }
+
+  override def toApplicableValueForOperands (
+      operands : List[vt.SchemeType]
+  )(implicit plan : PlanWriter) : IntermediateValue =
+    if (isPrimaryPolymorph && !manifest.lambdaExpr.polyType.typeVars.isEmpty) {
+      val polyType = manifest.lambdaExpr.polyType
+      val resolvedType = polyType.typeForOperands(plan.activeContextLocated, operands)
+
+      if (resolvedType == polyType.upperBound) {
+        // We resolved to the same type
+        this
+      }
+      else {
+        createPolymorph(resolvedType)
+      }
+    }
+    else {
+      // We're already specialised - don't re-polymorph
+      this
+    }
 }
 

@@ -187,7 +187,7 @@ private[planner] object PlanExpr {
         val procValue = PlanLambda(initialState, plan)(
           lambdaExpr=lambdaExpr,
           sourceNameHint=sourceNameHint,
-          recursiveSelfLoc=None
+          recursiveSelfLocOpt=None
         )
 
         PlanResult(
