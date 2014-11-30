@@ -13,6 +13,7 @@ class KnownSchemeProc(
     plannedSymbol : String,
     selfTempOpt : Option[ps.TempValue],
     val parentState : PlannerState,
+    val closure : LambdaClosure,
     val lambdaExpr : et.Lambda,
     val recursiveSelfLoc : Option[StorageLocation],
     reportNameOpt : Option[String] = None)
@@ -30,6 +31,7 @@ extends KnownUserProc(polySignature, plannedSymbol, selfTempOpt, reportNameOpt) 
       plannedSymbol,
       selfTempOpt,
       parentState,
+      closure,
       lambdaExpr,
       recursiveSelfLoc,
       Some(newReportName)
@@ -42,6 +44,7 @@ extends KnownUserProc(polySignature, plannedSymbol, selfTempOpt, reportNameOpt) 
       plannedSymbol,
       Some(selfTemp),
       parentState,
+      closure,
       lambdaExpr,
       recursiveSelfLoc,
       reportNameOpt

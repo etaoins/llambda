@@ -140,7 +140,9 @@ private[planner] object PlanApplication {
 
           val inlineValuesOpt = AttemptInlineApply(schemeProc.parentState, procResult.state)(
             lambdaExpr=schemeProc.lambdaExpr,
-            operands=operands
+            operands=operands,
+            selfTempOpt=schemeProc.selfTempOpt,
+            closureOpt=Some(schemeProc.closure)
           )(inlinePlan)
 
           for(inlineValues <- inlineValuesOpt) {

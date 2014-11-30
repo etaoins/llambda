@@ -20,7 +20,7 @@ import llambda.compiler.{RuntimeErrorMessage, ContextLocated}
   *                      point does not have to be initialized; it will be set dynamically to a generated trampoline
   *                      if this value is explicitly converted to a ct.ProcedureCell
   */
-abstract class KnownProc(val polySignature : PolymorphicSignature, selfTempOpt : Option[ps.TempValue]) extends IntermediateValue with BoxedOnlyValue with InvokableProcedure {
+abstract class KnownProc(val polySignature : PolymorphicSignature, val selfTempOpt : Option[ps.TempValue]) extends IntermediateValue with BoxedOnlyValue with InvokableProcedure {
   val typeDescription = "procedure"
 
   val schemeType : vt.ApplicableType = polySignature.upperBound.toSchemeProcedureType

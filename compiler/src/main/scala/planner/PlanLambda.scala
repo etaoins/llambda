@@ -78,23 +78,6 @@ private[planner] object PlanLambda {
       }
   }
 
-  private def loadClosureData(initialState : PlannerState)(closureDataTemp : ps.TempValue, closureType : vt.ClosureType, capturedVariables : List[CapturedVariable])(implicit plan : PlanWriter) : PlannerState = 
-    capturedVariables.foldLeft(initialState) { case (state, capturedVar) =>
-      // Load the variable
-      val varTemp = new ps.TempValue(capturedVar.recordField.fieldType.isGcManaged)
-      plan.steps += ps.LoadRecordDataField(varTemp, closureDataTemp, closureType, capturedVar.recordField) 
-
-      // Add it to our state
-      capturedVar match {
-        case immutable : CapturedImmutable =>
-          val varValue = immutable.parentIntermediate.restoreFromClosure(capturedVar.valueType, varTemp)(plan.config)
-          state.withValue(capturedVar.storageLoc -> ImmutableValue(varValue))
-
-        case capturedMutable : CapturedMutable => 
-          state.withValue(capturedVar.storageLoc -> capturedMutable.parentMutable.copy(mutableTemp=varTemp))
-      }
-    }
-  
   private def storeClosureData(closureDataTemp : ps.TempValue, closureType : vt.ClosureType, capturedVariables : List[CapturedVariable])(implicit plan : PlanWriter) : Unit = {
     for(capturedVar <- capturedVariables) {
       val varTemp = capturedVar match {
@@ -148,7 +131,10 @@ private[planner] object PlanLambda {
     else {
       vt.EmptyClosureType
     }
-    
+
+    // Save our closure information
+    val closure = LambdaClosure(closureType, capturedVariables)
+
     // See if we can retype some of our args
     val argTypeMapping = RetypeLambdaArgs(lambdaExpr)(parentState, parentPlan.config)
     val retypedFixedArgs = fixedArgLocs.map({ argLoc =>
@@ -244,11 +230,9 @@ private[planner] object PlanLambda {
       case None =>
         postMutableState
 
-      case Some(procSelf) => 
-        val closureDataTemp = ps.RecordLikeDataTemp()
-        procPlan.steps += ps.LoadRecordLikeData(closureDataTemp, procSelf, closureType)
-
-        loadClosureData(postMutableState)(closureDataTemp, closureType, capturedVariables)(procPlan)
+      case Some(procSelf) =>
+        val closureValues = LoadClosureData(procSelf, closure)(procPlan)
+        postMutableState.withValues(closureValues)
     }
 
     // Plan the body
@@ -348,6 +332,7 @@ private[planner] object PlanLambda {
       polySignature=procSignature.toPolymorphic,
       plannedSymbol=nativeSymbol,
       parentState=parentState,
+      closure=closure,
       lambdaExpr=lambdaExpr,
       selfTempOpt=outerSelfTempOpt,
       recursiveSelfLoc=recursiveSelfLoc

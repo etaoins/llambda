@@ -14,6 +14,9 @@ case class PlannerState(
   typeConstraintState : ConstrainType.State = ConstrainType.State(),
   inlineDepth : Int = 0
 ) {
+  def withValues(newValues : Map[StorageLocation, LocationValue]) : PlannerState  =
+    this.copy(values=values ++ newValues)
+
   def withValue(newValue : (StorageLocation, LocationValue)) : PlannerState  =
     this.copy(values=values + newValue)
 }
