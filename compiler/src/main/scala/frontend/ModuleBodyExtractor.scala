@@ -9,17 +9,17 @@ import llambda.compiler.frontend.syntax.{ParseSyntaxDefine, ExpandMacro}
 import collection.mutable.ListBuffer
 
 final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) {
-  private def declaredSymbolType(
+  private def symbolTypeDeclaration(
       symbol : sst.ScopedSymbol,
-      providedTypeOpt : Option[vt.SchemeType] = None,
+      providedTypeOpt : Option[LocTypeDeclaration] = None,
       defaultType : vt.SchemeType = vt.AnySchemeType
-  ) : vt.SchemeType = {
+  ) : LocTypeDeclaration = {
     symbol.scope.typeDeclarations.get(symbol) match {
       case Some(declaredType) =>
         // Does the declared type match the provided type exactly?
         providedTypeOpt match {
           case Some(incompatibleType) if incompatibleType != declaredType =>
-            throw new BadSpecialFormException(symbol, s"Symbol previously declared with type ${vt.NameForType(declaredType)}")
+            throw new BadSpecialFormException(symbol, s"Symbol previously declared with type ${declaredType}")
 
           case _ =>
         }
@@ -28,14 +28,28 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
 
       case None =>
         // No type declaration
-        providedTypeOpt.getOrElse(defaultType)
+        providedTypeOpt.getOrElse(MonomorphicDeclaration(defaultType))
     }
   }
+
+  private def declaredSymbolSchemeType(
+      symbol : sst.ScopedSymbol,
+      providedTypeOpt : Option[vt.SchemeType] = None,
+      defaultType : vt.SchemeType = vt.AnySchemeType
+  ) : vt.SchemeType =
+    symbolTypeDeclaration(symbol, providedTypeOpt.map(MonomorphicDeclaration), defaultType) match {
+      case MonomorphicDeclaration(schemeType) =>
+        schemeType
+
+      case _ : PolymorphicProcedureDeclaration =>
+        throw new BadSpecialFormException(symbol, "Polymorphic procedure type declaration where monomorphic type was expected")
+    }
+
 
   private def valueTargetToLoc(valueTarget : ValueTarget, defaultType : vt.SchemeType) : StorageLocation =
     valueTarget match {
       case ValueTarget(symbol, providedTypeOpt) =>
-        val schemeType = declaredSymbolType(symbol, providedTypeOpt, defaultType)
+        val schemeType = declaredSymbolSchemeType(symbol, providedTypeOpt, defaultType)
         val boundValue = new StorageLocation(symbol.name, schemeType)
 
         symbol.scope += (symbol.name -> boundValue)
@@ -93,7 +107,7 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
     // Expand our scopes with all of the defines
     val bindingBlocks = defineBuilder.toList flatMap {
       case ParsedVarDefine(symbol, providedTypeOpt, exprBlock, storageLocConstructor) =>
-        val schemeType = declaredSymbolType(symbol, providedTypeOpt)
+        val schemeType = declaredSymbolSchemeType(symbol, providedTypeOpt)
         val boundValue = storageLocConstructor(symbol.name, schemeType)
 
         symbol.scope += (symbol.name -> boundValue)
@@ -116,7 +130,7 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
         typeSymbol.scope += (typeSymbol.name -> BoundType(recordType))
 
         procedures.map { case (procedureSymbol, expr) =>
-          val schemeType = declaredSymbolType(procedureSymbol)
+          val schemeType = declaredSymbolSchemeType(procedureSymbol)
           val storageLoc = new StorageLocation(procedureSymbol.name, schemeType)
 
           procedureSymbol.scope += (procedureSymbol.name -> storageLoc)
@@ -336,7 +350,7 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
             operandTerminator=restArgDatum,
             definition=body,
             sourceNameHint=Some(symbol.name),
-            typeDeclaration=declaredSymbolType(symbol)
+            typeDeclaration=symbolTypeDeclaration(symbol)
           )(debugContext, libraryLoader, frontendConfig).assignLocationAndContextFrom(appliedSymbol, debugContext)
         }))
 
@@ -381,7 +395,7 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
               operandTerminator=restArgDatum,
               definition=body,
               sourceNameHint=Some(symbol.name),
-              typeDeclaration=declaredSymbolType(symbol)
+              typeDeclaration=symbolTypeDeclaration(symbol)
             )(debugContext, libraryLoader, frontendConfig).assignLocationAndContextFrom(appliedSymbol, debugContext)
           },
           storageLocConstructor=(new ReportProcedure(_, _))
@@ -391,23 +405,22 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
         Some(ParsedSimpleDefine(libAlias, ExtractNativeLibrary(libDatum)))
 
       case (Primitives.AnnotateStorageLocType, List(declaredSymbol : sst.ScopedSymbol, typeDatum)) =>
-        val declarationType = ExtractType.extractSchemeType(typeDatum)
+        val declarationType = ExtractType.extractLocTypeDeclaration(typeDatum)
 
         declaredSymbol.scope.bindings.get(declaredSymbol.name) match {
           case None =>
             // No previous binding
-          case Some(compatibleLoc : StorageLocation) if compatibleLoc.schemeType == declarationType =>
+          case Some(compatibleLoc : StorageLocation) if MonomorphicDeclaration(compatibleLoc.schemeType) == declarationType =>
             // Previous binding with compatible type
           case _ =>
             throw new BadSpecialFormException(declaredSymbol, "Symbol previously defined with incompatible value")
-            
         }
-        
-        // Make sure there have been no incompatible declarations before
-        val schemeType = declaredSymbolType(declaredSymbol, Some(declarationType))
 
-        // Record this declaration 
-        declaredSymbol.scope.typeDeclarations += (declaredSymbol -> schemeType)
+        // Make sure there have been no incompatible declarations before
+        symbolTypeDeclaration(declaredSymbol, Some(declarationType))
+
+        // Record this declaration
+        declaredSymbol.scope.typeDeclarations += (declaredSymbol -> declarationType)
 
         Some(ParsedTypeAnnotation)
 
@@ -462,9 +475,16 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
           case Some(_) =>
             throw new BadSpecialFormException(symbol, s"Attempted mutating (define) non-variable ${symbol.name}") 
 
-          case None  =>
+          case None =>
             // This is a fresh binding
-            val schemeType = declaredSymbolType(symbol, providedTypeOpt)
+            val schemeType = symbolTypeDeclaration(symbol, providedTypeOpt.map(MonomorphicDeclaration)) match {
+              case MonomorphicDeclaration(schemeType) =>
+                schemeType
+
+              case PolymorphicProcedureDeclaration(polyType) =>
+                polyType.upperBound
+            }
+
             val boundValue = storageLocConstructor(symbol.name, schemeType)
 
             symbol.scope += (symbol.name -> boundValue)
@@ -495,7 +515,7 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
         typeSymbol.scope += (typeSymbol.name -> BoundType(recordType))
 
         et.TopLevelDefine((procedures.map { case (procedureSymbol, expr) =>
-          val schemeType = declaredSymbolType(procedureSymbol)
+          val schemeType = declaredSymbolSchemeType(procedureSymbol)
           val storageLoc = new StorageLocation(procedureSymbol.name, schemeType)
 
           disallowTopLevelRedefinition(procedureSymbol)

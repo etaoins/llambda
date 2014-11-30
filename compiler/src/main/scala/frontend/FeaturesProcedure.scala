@@ -19,7 +19,7 @@ private[frontend] object FeaturesProcedure {
     )
 
     var featuresProc = et.Lambda(
-      featuresProcType,
+      featuresProcType.toPolymorphic,
       Nil,
       None,
       et.Literal(ast.ProperList(featuresList.map(ast.Symbol(_))))

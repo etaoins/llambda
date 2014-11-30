@@ -3,78 +3,152 @@ import io.llambda
 
 import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.valuetype.{polymorphic => pm}
 
 import llambda.compiler.valuetype.Implicits._
 
 object ExtractLambda {
+  private case class ReconciledTypes(
+    fixedArgTypes : List[(sst.ScopedSymbol, vt.SchemeType)],
+    restArgMemberTypeOpt : Option[(sst.ScopedSymbol, vt.SchemeType)],
+    returnType : vt.ReturnType.ReturnType[vt.SchemeType],
+    polymorphicType : pm.PolymorphicProcedureType
+  )
+
+  private def validateArity(
+      located : SourceLocated,
+      formalsFixedArgs : Int,
+      formalsRestArg : Boolean,
+      declFixedArgs : Int,
+      declRestArg : Boolean
+  ) : Unit = {
+    if (formalsFixedArgs != declFixedArgs) {
+      throw new BadSpecialFormException(located, s"Procedure symbol previously declared with ${declFixedArgs} fixed arguments")
+    }
+
+    if (!formalsRestArg && declRestArg) {
+      throw new BadSpecialFormException(located, s"Procedure symbol previously declared with rest argument")
+    }
+
+    if (formalsRestArg && !declRestArg) {
+      throw new BadSpecialFormException(located, s"Procedure symbol previously declared without rest argument")
+    }
+  }
+
+  private def reconcileTypes(
+      located : SourceLocated,
+      parsedFormals : ParsedFormals,
+      typeDeclaration : LocTypeDeclaration
+  ) : ReconciledTypes = {
+    val formalsFixedArgTypes = parsedFormals.fixedOperands map { case (symbol, typeOpt) =>
+      symbol -> typeOpt.getOrElse(vt.AnySchemeType)
+    }
+
+    val formalsRestArgMemberTypeOpt = parsedFormals.restOperandOpt map { case (symbol, typeOpt) =>
+      symbol -> typeOpt.getOrElse(vt.AnySchemeType)
+    }
+
+    typeDeclaration match {
+      case MonomorphicDeclaration(vt.ProcedureType(fixedArgAnns, restArgAnnOpt, returnTypeAnn)) =>
+        validateArity(
+          located=located,
+          formalsFixedArgs=formalsFixedArgTypes.length,
+          formalsRestArg=formalsRestArgMemberTypeOpt.isDefined,
+          declFixedArgs=fixedArgAnns.length,
+          declRestArg=restArgAnnOpt.isDefined
+        )
+
+        def combineArgTypes(symbol : sst.ScopedSymbol, signatureType : vt.SchemeType, annType : vt.SchemeType) : vt.SchemeType = {
+          val combinedType = signatureType & annType
+
+          if (combinedType == vt.EmptySchemeType) {
+            throw new BadSpecialFormException(symbol, s"Argument type is incompatible with previous procedure type declaration of ${annType}")
+          }
+
+          combinedType
+        }
+
+        // Combine the type declaration with the signature types
+        val combinedFixedArgs = formalsFixedArgTypes.zip(fixedArgAnns) map { case ((symbol, signatureType), annType) =>
+          symbol -> combineArgTypes(symbol, signatureType, annType)
+        }
+
+        val combinedRestArgOpt = formalsRestArgMemberTypeOpt map { case (symbol, signatureType) =>
+          symbol -> combineArgTypes(symbol, signatureType, restArgAnnOpt.get)
+        } : Option[(sst.ScopedSymbol, vt.SchemeType)]
+
+        val polyType = vt.ProcedureType(
+          fixedArgTypes=combinedFixedArgs.map(_._2),
+          restArgMemberTypeOpt=combinedRestArgOpt.map(_._2),
+          returnType=returnTypeAnn
+        ).toPolymorphic
+
+        ReconciledTypes(combinedFixedArgs, combinedRestArgOpt, returnTypeAnn, polyType)
+
+      case PolymorphicProcedureDeclaration(polyType @ pm.PolymorphicProcedureType(typeVars, template)) =>
+        val upperBound = polyType.upperBound
+
+        val fixedArgAnns = upperBound.fixedArgTypes
+        val restArgAnnOpt = upperBound.restArgMemberTypeOpt
+        val returnTypeAnn = upperBound.returnType
+
+        validateArity(
+          located=located,
+          formalsFixedArgs=formalsFixedArgTypes.length,
+          formalsRestArg=formalsRestArgMemberTypeOpt.isDefined,
+          declFixedArgs=fixedArgAnns.length,
+          declRestArg=restArgAnnOpt.isDefined
+        )
+
+        def checkForArgTypes(symbol : sst.ScopedSymbol, signatureType : vt.SchemeType, annType : vt.SchemeType) : vt.SchemeType = {
+          if (signatureType != vt.AnySchemeType) {
+            throw new BadSpecialFormException(symbol, s"Polymorphic type declarations cannot be mixed with argument type annotations")
+          }
+
+          annType
+        }
+
+        val checkedFixedArgs = formalsFixedArgTypes.zip(fixedArgAnns) map { case ((symbol, signatureType), annType) =>
+          symbol -> checkForArgTypes(symbol, signatureType, annType)
+        }
+
+        val checkedRestArgOpt = formalsRestArgMemberTypeOpt map { case (symbol, signatureType) =>
+          symbol -> checkForArgTypes(symbol, signatureType, restArgAnnOpt.get)
+        } : Option[(sst.ScopedSymbol, vt.SchemeType)]
+
+        ReconciledTypes(checkedFixedArgs, checkedRestArgOpt, returnTypeAnn, polyType)
+
+      case _ =>
+        val polyType = vt.ProcedureType(
+          fixedArgTypes=formalsFixedArgTypes.map(_._2),
+          restArgMemberTypeOpt=formalsRestArgMemberTypeOpt.map(_._2),
+          returnType=vt.ReturnType.ArbitraryValues
+        ).toPolymorphic
+
+        ReconciledTypes(formalsFixedArgTypes, formalsRestArgMemberTypeOpt, vt.ReturnType.ArbitraryValues, polyType)
+    }
+  }
+
   def apply(
       located : SourceLocated,
       operandList : List[sst.ScopedDatum],
       operandTerminator : sst.ScopedDatum,
       definition : List[sst.ScopedDatum],
       sourceNameHint : Option[String] = None,
-      typeDeclaration : vt.SchemeType = vt.AnySchemeType
+      typeDeclaration : LocTypeDeclaration = MonomorphicDeclaration(vt.AnySchemeType)
   )(debugContext : debug.SourceContext, libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : et.Lambda = {
     // Parse our operand list
     val parsedFormals = ParseFormals(operandList, operandTerminator)
 
-    val signatureFixedArgTypes = parsedFormals.fixedOperands map { case (symbol, typeOpt) =>
-      symbol -> typeOpt.getOrElse(vt.AnySchemeType)
-    }
-
-    val signatureRestArgMemberTypeOpt = parsedFormals.restOperandOpt map { case (symbol, typeOpt) =>
-      symbol -> typeOpt.getOrElse(vt.AnySchemeType)
-    }
-
     // Process our type declaration
-    val (fixedArgTypes, restArgMemberTypeOpt, returnType) = typeDeclaration match {
-      case vt.ProcedureType(fixedArgAnns, restArgAnnOpt, returnTypeAnn) =>
-        if (signatureFixedArgTypes.length != fixedArgAnns.length) {
-          throw new BadSpecialFormException(located, s"Procedure symbol previously declared with ${fixedArgAnns.length} fixed arguments")
-        }
-        
-        if (!signatureRestArgMemberTypeOpt.isDefined && restArgAnnOpt.isDefined) {
-          throw new BadSpecialFormException(located, s"Procedure symbol previously declared with rest argument")
-        }
+    val reconciledTypes = reconcileTypes(located, parsedFormals, typeDeclaration)
 
-        if (signatureRestArgMemberTypeOpt.isDefined && !restArgAnnOpt.isDefined) {
-          throw new BadSpecialFormException(located, s"Procedure symbol previously declared without rest argument")
-        }
-
-        // Combine the type declaration with the signature types
-        val combinedFixedArgs = signatureFixedArgTypes.zip(fixedArgAnns) map { case ((symbol, signatureType), annType) =>
-          val combinedType = signatureType & annType
-
-          if (combinedType == vt.EmptySchemeType) {
-            throw new BadSpecialFormException(symbol, s"Argument type is incompatible with previous procedure type declaration of ${annType}")
-          }
-
-          symbol -> combinedType
-        }
-
-        val combinedRestArgOpt = signatureRestArgMemberTypeOpt map { case (symbol, signatureType) =>
-          val annType = restArgAnnOpt.get
-          val combinedType = signatureType & annType
-
-          if (combinedType == vt.EmptySchemeType) {
-            throw new BadSpecialFormException(symbol, s"Argument type is incompatible with previous procedure type declaration of ${annType}")
-          }
-          
-          symbol -> combinedType
-        } : Option[(sst.ScopedSymbol, vt.SchemeType)]
-
-        (combinedFixedArgs, combinedRestArgOpt, returnTypeAnn)
-
-      case _ =>
-        (signatureFixedArgTypes, signatureRestArgMemberTypeOpt, vt.ReturnType.ArbitraryValues)
-    }
-
-    val boundFixedArgs = fixedArgTypes.map { case (symbol, finalType) =>
+    val boundFixedArgs = reconciledTypes.fixedArgTypes.map { case (symbol, finalType) =>
       val storageLoc = new StorageLocation(symbol.name, finalType)
       symbol -> storageLoc
     }
-    
-    val boundRestArgOpt = restArgMemberTypeOpt map { case (symbol, memberType : vt.SchemeType) =>
+
+    val boundRestArgOpt = reconciledTypes.restArgMemberTypeOpt map { case (symbol, memberType : vt.SchemeType) =>
       val storageLoc = new StorageLocation(symbol.name, vt.UniformProperListType(memberType))
       symbol -> storageLoc
     }
@@ -91,18 +165,12 @@ object ExtractLambda {
 
     val bodyDebugContext = subprogramDebugContextOpt.getOrElse(debug.UnknownContext)
 
-    // Extract the body 
+    // Extract the body
     val extractor = new ModuleBodyExtractor(bodyDebugContext, libraryLoader, frontendConfig)
     val bodyExpr = extractor.extractBodyDefinition(boundFixedArgs ++ boundRestArgOpt, definition)
 
-    val procedureType = vt.ProcedureType(
-      fixedArgTypes=fixedArgTypes.map(_._2),
-      restArgMemberTypeOpt=restArgMemberTypeOpt.map(_._2),
-      returnType=returnType
-    )
-
     et.Lambda(
-      schemeType=procedureType,
+      polyType=reconciledTypes.polymorphicType,
       fixedArgs=boundFixedArgs.map(_._2),
       restArgOpt=boundRestArgOpt.map(_._2),
       body=bodyExpr,

@@ -34,7 +34,7 @@ object ExtractType {
   }
 
 
-  private def applyProcedureTypeConstructor(located : SourceLocated, operands : List[sst.ScopedDatum]) : vt.SchemeType = {
+  private def applyProcedureTypeConstructor(located : SourceLocated, operands : List[sst.ScopedDatum]) : vt.ProcedureType = {
     // Explicitly recursive types cannot cross procedure boundaries due to lack of testing and use cases
     val noRecursiveVars  = RecursiveVars()
 
@@ -196,6 +196,26 @@ object ExtractType {
       vt.DirectSchemeTypeRef(extractSchemeType(datum, recursiveVars.recursed()))
   }
 
+  private def extractPolymorphicProcedure(
+      located : SourceLocated,
+      typeVarData : List[sst.ScopedDatum],
+      operands : List[sst.ScopedDatum]
+  ) : pm.PolymorphicProcedureType = {
+    val namedTypeVars = typeVarData map ExtractTypeVar
+
+    // Rescope the definition
+    val typeBindings = namedTypeVars map { case (name, typeVar) =>
+      name -> (BoundType(typeVar) : BoundValue)
+    }
+
+    val scopeMapping = Scope.mappingForBoundValues(typeBindings)
+
+    val rescopedOperands = operands.map(_.rescoped(scopeMapping))
+    val template = applyProcedureTypeConstructor(located, rescopedOperands)
+
+    pm.PolymorphicProcedureType(namedTypeVars.map(_._2).toSet, template)
+  }
+
   def extractSchemeType(
       datum : sst.ScopedDatum,
       recursiveVars : RecursiveVars = RecursiveVars()
@@ -293,4 +313,24 @@ object ExtractType {
         multipleValues
     }
 
+  def extractLocTypeDeclaration(datum : sst.ScopedDatum) : LocTypeDeclaration = datum match {
+    // Long form
+    case sst.ScopedProperList(List(
+      sst.ResolvedSymbol(Primitives.PolymorphicType),
+      sst.ScopedProperList(typeVarData),
+      sst.ScopedProperList(sst.ResolvedSymbol(Primitives.ProcedureType) :: operands)
+    )) =>
+      PolymorphicProcedureDeclaration(extractPolymorphicProcedure(datum, typeVarData, operands))
+
+    // Shorthand
+    case sst.ScopedProperList(
+      sst.ResolvedSymbol(Primitives.PolymorphicType) ::
+      sst.ScopedProperList(typeVarData) ::
+      operands
+    ) =>
+      PolymorphicProcedureDeclaration(extractPolymorphicProcedure(datum, typeVarData, operands))
+
+    case _ =>
+      MonomorphicDeclaration(extractSchemeType(datum))
+  }
 }

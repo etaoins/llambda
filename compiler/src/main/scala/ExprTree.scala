@@ -3,6 +3,7 @@ import io.llambda
 
 import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.valuetype.{polymorphic => pm}
 
 sealed abstract trait Expr extends ContextLocated {
   val subexprs : List[Expr]
@@ -112,16 +113,18 @@ case class Cond(test : Expr, trueExpr : Expr, falseExpr : Expr) extends Expr {
 }
 
 case class Lambda(
-    override val schemeType : vt.ProcedureType,
+    polyType : pm.PolymorphicProcedureType,
     fixedArgs : List[StorageLocation],
     restArgOpt : Option[StorageLocation],
     body : Expr,
     debugContextOpt : Option[debug.SubprogramContext] = None
 ) extends Expr {
+  override val schemeType = polyType.upperBound
+
   val subexprs = List(body)
 
   def map(f : Expr => Expr) : Lambda =
-    Lambda(schemeType, fixedArgs, restArgOpt, f(body), debugContextOpt).assignLocationFrom(this)
+    Lambda(polyType, fixedArgs, restArgOpt, f(body), debugContextOpt).assignLocationFrom(this)
 }
 
 case class CaseLambda(

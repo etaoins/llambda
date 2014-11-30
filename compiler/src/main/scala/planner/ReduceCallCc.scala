@@ -83,7 +83,7 @@ object ReduceCallCc {
           fixedArgTypes=Nil,
           restArgMemberTypeOpt=None,
           returnType=vt.ReturnType.ArbitraryValues
-        )
+        ).toPolymorphic
 
         // We converted all uses of the exit proc to et.Return. We can strip out the (call/cc) completely
         // This can be a big efficiency win

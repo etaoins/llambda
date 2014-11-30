@@ -129,7 +129,7 @@ case class BoundType(valueType : vt.ValueType) extends BoundValue
 
 /** Scope can look up bindings by name and return a list of all identifiers  */
 sealed class Scope(val bindings : collection.mutable.Map[String, BoundValue], parent : Option[Scope] = None) {
-  val typeDeclarations = new collection.mutable.HashMap[sst.ScopedSymbol, vt.SchemeType]
+  val typeDeclarations = new collection.mutable.HashMap[sst.ScopedSymbol, LocTypeDeclaration]
 
   def get(name : String) : Option[BoundValue] = 
     bindings.get(name).orElse {

@@ -2,6 +2,7 @@ package io.llambda.compiler.valuetype
 import io.llambda
 
 import llambda.compiler.{celltype => ct}
+import llambda.compiler.valuetype.{polymorphic => pm}
 
 /** Type of any value known to the compiler
   * 
@@ -382,6 +383,9 @@ case class ProcedureType(
 
   override def replaceApplicableType(applicableType : ApplicableType) =
     applicableType
+
+  def toPolymorphic =
+    pm.PolymorphicProcedureType(Set(), this)
 }
 
 case class CaseProcedureType(
