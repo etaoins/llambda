@@ -638,7 +638,7 @@
     (define-r7rs get-output-bytevector (world-function llbase "llbase_get_output_bytevector" (-> <port> <bytevector>)))
     (define-r7rs open-input-string (world-function llbase "llbase_open_input_string" (-> <string> <port>)))
     (define-r7rs open-input-bytevector (world-function llbase "llbase_open_input_bytevector" (-> <bytevector> <port>)))
-    (define-r7rs call-with-port (world-function llbase "llbase_call_with_port" (-> <port> (-> <port> *) <port>)))
+    (define-r7rs call-with-port (world-function llbase "llbase_call_with_port" (-> <port> (-> <port> *) *)))
 
     (define-r7rs current-input-port (make-parameter ((world-function system-library "llcore_stdin_port" (-> <port>)))))
     (define-r7rs current-output-port (make-parameter ((world-function system-library "llcore_stdout_port" (-> <port>)))))

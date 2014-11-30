@@ -153,9 +153,12 @@
   (define simple-port (open-input-string ""))
 
   ; If the procedure returns we should close the port
-  (call-with-port simple-port (lambda (port)
-    (assert-true (input-port-open? port))))
+  (define result-value (call-with-port simple-port
+                                       (lambda (port)
+                                         (assert-true (input-port-open? port))
+                                         'success)))
 
+  (assert-equal result-value 'success)
   (assert-false (input-port-open? simple-port))))
 
 (define-test "(call-with-port) with non-returning thunk does not close port" (expect-success
