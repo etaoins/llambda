@@ -96,16 +96,16 @@ class KnownCaseLambdaProc(
 
       (operandCount == fixedArgCount) || ((operandCount > fixedArgCount) && hasRestArg)
     }
-  
-  override def toApplicableValueForArity (
-      operandCount : Int
+
+  override def toApplicableValueForOperands (
+      operands : List[vt.SchemeType]
   )(implicit plan : PlanWriter) : IntermediateValue = {
-    clauseForArityOpt(operandCount) match {
+    clauseForArityOpt(operands.length) match {
       case Some(clause) =>
         restoreClause(clause)
 
       case None =>
-        val message = s"No (case-lambda) clause matches an arity of ${operandCount}"
+        val message = s"No (case-lambda) clause matches an arity of ${operands.length}"
         throw new IncompatibleArityException(plan.activeContextLocated, message)
     }
   }

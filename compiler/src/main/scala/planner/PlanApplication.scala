@@ -88,7 +88,7 @@ private[planner] object PlanApplication {
     }
 
     val procResult = PlanExpr(initialState)(procExpr)
-    val procValue = procResult.values.toSingleValue().toApplicableValueForArity(operands.length)
+    val procValue = procResult.values.toSingleValue().toApplicableValueForOperands(operands.map(_._2.schemeType))
 
     val invokableProc = procValue.toInvokableProcedure()
 

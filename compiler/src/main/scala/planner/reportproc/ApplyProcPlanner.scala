@@ -53,7 +53,7 @@ object ApplyProcPlanner extends ReportProcPlanner {
     case ("apply", List((procContextLoc, procValue), (_, argListValue))) if argListValue.isDefiniteProperList =>
       // Convert to a procedure cell so we can use its trampoline
       val invokableProc = plan.withContextLocation(procContextLoc) {
-        procValue.toApplicableValueForArity(operands.length).toInvokableProcedure()
+        procValue.toApplicableValueForOperands(operands.map(_._2.schemeType)).toInvokableProcedure()
       }
 
       Some(PlanInvokeApply.withArgumentList(invokableProc, argListValue))
