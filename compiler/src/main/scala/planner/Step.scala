@@ -828,7 +828,7 @@ case class SetRecordDataField(recordData : TempValue, recordLikeType : vt.Record
 }
 
 /** Reads a record field. The value must match the type of record field */
-case class LoadRecordDataField(result : TempValue, recordData : TempValue, recordLikeType : vt.RecordLikeType, recordField : vt.RecordField) extends Step {
+case class LoadRecordDataField(result : TempValue, recordData : TempValue, recordLikeType : vt.RecordLikeType, recordField : vt.RecordField) extends Step with NullipotentStep {
   lazy val inputValues = Set(recordData)
   lazy val outputValues = Set(result)
   
@@ -850,16 +850,16 @@ case class TestRecordLikeClass(
     TestRecordLikeClass(result, f(recordCell), recordLikeType, possibleTypesOpt).assignLocationFrom(this)
 }
 
-/** Loads the data of a record 
-  *
-  * Note this cannot be safely merged as this may point to inside a movable GC managed value
-  */
-case class LoadRecordLikeData(result : TempValue, recordCell : TempValue, recordLikeType : vt.RecordLikeType) extends Step {
+/** Loads the data of a record */
+case class LoadRecordLikeData(result : TempValue, recordCell : TempValue, recordLikeType : vt.RecordLikeType) extends Step with NullipotentStep {
   lazy val inputValues = Set(recordCell)
   lazy val outputValues = Set(result)
-  
+
   def renamed(f : (TempValue) => TempValue) =
     LoadRecordLikeData(f(result), f(recordCell), recordLikeType).assignLocationFrom(this)
+
+  /** Disable merging as we can point to inside a movable GC managed value */
+  override def mergeKey : Any = this
 }
 
 /** Sets the entry point of a procedure
