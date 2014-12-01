@@ -1,7 +1,7 @@
 package io.llambda.compiler.planner.typecheck
 import io.llambda
 
-import io.llambda.compiler.planner._
+import llambda.compiler.planner._
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{celltype => ct}

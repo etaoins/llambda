@@ -1,9 +1,9 @@
 package io.llambda.compiler.planner
 import io.llambda
 
-import io.llambda.compiler.et
-import io.llambda.compiler.{valuetype => vt}
-import io.llambda.compiler.planner.{intermediatevalue => iv}
+import llambda.compiler.et
+import llambda.compiler.{valuetype => vt}
+import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.InternalCompilerErrorException
 
 object ConstrainType {

@@ -1,7 +1,7 @@
 package io.llambda.compiler.planner
 import io.llambda
 
-import io.llambda.compiler.planner.{step => ps}
+import llambda.compiler.planner.{step => ps}
 
 /** Disposes values after their last use
   *

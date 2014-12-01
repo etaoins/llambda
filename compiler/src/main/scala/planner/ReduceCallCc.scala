@@ -1,8 +1,8 @@
 package io.llambda.compiler.planner
 import io.llambda
 
-import io.llambda.compiler._
-import io.llambda.compiler.{valuetype => vt}
+import llambda.compiler._
+import llambda.compiler.{valuetype => vt}
 
 import annotation.tailrec
 

@@ -1,10 +1,10 @@
 package io.llambda.compiler.valuetype.polymorphic
 import io.llambda
 
-import io.llambda.compiler.valuetype._
+import llambda.compiler.valuetype._
 
-import io.llambda.compiler.{NoSourceLocation, SourceLocated}
-import io.llambda.compiler.ImpossibleTypeConversionException
+import llambda.compiler.{NoSourceLocation, SourceLocated}
+import llambda.compiler.ImpossibleTypeConversionException
 
 object ReconcileTypeVars {
   case class Result(values : Map[TypeVar, SchemeType] = Map())

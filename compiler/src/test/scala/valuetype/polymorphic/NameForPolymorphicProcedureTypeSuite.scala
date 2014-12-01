@@ -3,7 +3,7 @@ import io.llambda
 
 import org.scalatest.FunSuite
 
-import io.llambda.compiler.valuetype._
+import llambda.compiler.valuetype._
 
 class NameForPolymorphicProcedureTypeSuite extends FunSuite {
   val polyA = new TypeVar("A")

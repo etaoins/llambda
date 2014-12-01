@@ -1,7 +1,7 @@
 package io.llambda.compiler.analyser
 import io.llambda
 
-import io.llambda.compiler._
+import llambda.compiler._
 
 private[analyser] object ExprHasSideEffects extends ((et.Expr) => Boolean) {
   def apply(expr : et.Expr) : Boolean = expr match {

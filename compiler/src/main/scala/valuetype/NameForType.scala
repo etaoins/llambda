@@ -1,7 +1,7 @@
 package io.llambda.compiler.valuetype
 import io.llambda
 
-import io.llambda.compiler.ast
+import llambda.compiler.ast
 
 object NameForType {
   private def stackedNameForTypeRef(

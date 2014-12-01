@@ -1,9 +1,9 @@
 package io.llambda.compiler.conniver
 import io.llambda
 
-import io.llambda.compiler.{valuetype => vt}
-import io.llambda.compiler.{celltype => ct}
-import io.llambda.compiler.planner.{step => ps}
+import llambda.compiler.{valuetype => vt}
+import llambda.compiler.{celltype => ct}
+import llambda.compiler.planner.{step => ps}
 
 import org.scalatest.FunSuite
 

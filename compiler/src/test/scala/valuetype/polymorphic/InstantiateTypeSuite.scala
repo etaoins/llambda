@@ -3,9 +3,9 @@ import io.llambda
 
 import org.scalatest.FunSuite
 
-import io.llambda.compiler.valuetype._
-import io.llambda.compiler.NoSourceLocation
-import io.llambda.compiler.ImpossibleTypeConversionException
+import llambda.compiler.valuetype._
+import llambda.compiler.NoSourceLocation
+import llambda.compiler.ImpossibleTypeConversionException
 
 import Implicits._
 

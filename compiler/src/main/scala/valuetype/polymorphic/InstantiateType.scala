@@ -1,7 +1,7 @@
 package io.llambda.compiler.valuetype.polymorphic
 import io.llambda
 
-import io.llambda.compiler.valuetype._
+import llambda.compiler.valuetype._
 
 object InstantiateType {
   private def visitTypeRef(

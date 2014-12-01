@@ -1,10 +1,10 @@
 package io.llambda.compiler.conniver
 import io.llambda
 
-import io.llambda.compiler.ProcedureSignature
-import io.llambda.compiler.{valuetype => vt}
-import io.llambda.compiler.planner.PlannedFunction
-import io.llambda.compiler.planner.{step => ps}
+import llambda.compiler.ProcedureSignature
+import llambda.compiler.{valuetype => vt}
+import llambda.compiler.planner.PlannedFunction
+import llambda.compiler.planner.{step => ps}
 
 import org.scalatest.FunSuite
 
