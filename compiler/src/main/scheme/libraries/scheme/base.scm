@@ -328,19 +328,23 @@
       (if (exact-integer? n) (< n 0) (< n 0.0)))
 
     (define native-floor (native-function system-library "floor" (-> <native-double> <native-double>)))
-    (define-r7rs (floor [n : <number>])
+    (: floor (All ([N : <number>]) N N))
+    (define-r7rs (floor n)
       (if (exact-integer? n) n (native-floor n)))
 
     (define native-ceil (native-function system-library "ceil" (-> <native-double> <native-double>)))
-    (define-r7rs (ceiling [n : <number>])
+    (: ceiling (All ([N : <number>]) N N))
+    (define-r7rs (ceiling n)
       (if (exact-integer? n) n (native-ceil n)))
 
     (define native-trunc (native-function system-library "trunc" (-> <native-double> <native-double>)))
-    (define-r7rs (truncate [n : <number>])
+    (: truncate (All ([N : <number>]) N N))
+    (define-r7rs (truncate n)
       (if (exact-integer? n) n (native-trunc n)))
 
     (define native-round (native-function system-library "round" (-> <native-double> <native-double>)))
-    (define-r7rs (round [n : <number>])
+    (: round (All ([N : <number>]) N N))
+    (define-r7rs (round n)
       (if (exact-integer? n) n (native-round n)))
 
     (define-r7rs (integer? x)

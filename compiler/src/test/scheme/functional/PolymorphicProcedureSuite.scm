@@ -173,6 +173,42 @@
   (ann (max exact-1 exact-2) <exact-integer>)
   (ann (max inexact-1 inexact-2) <flonum>)))
 
+(define-test "(floor) is polymorphic" (expect-success
+  (import (llambda typed))
+
+  (define exact-1 (typed-dynamic 1 <exact-integer>))
+  (define inexact-1 (typed-dynamic 1.0 <flonum>))
+
+  (ann (floor exact-1) <exact-integer>)
+  (ann (floor inexact-1) <flonum>)))
+
+(define-test "(ceiling) is polymorphic" (expect-success
+  (import (llambda typed))
+
+  (define exact-1 (typed-dynamic 1 <exact-integer>))
+  (define inexact-1 (typed-dynamic 1.0 <flonum>))
+
+  (ann (ceiling exact-1) <exact-integer>)
+  (ann (ceiling inexact-1) <flonum>)))
+
+(define-test "(truncate) is polymorphic" (expect-success
+  (import (llambda typed))
+
+  (define exact-1 (typed-dynamic 1 <exact-integer>))
+  (define inexact-1 (typed-dynamic 1.0 <flonum>))
+
+  (ann (truncate exact-1) <exact-integer>)
+  (ann (truncate inexact-1) <flonum>)))
+
+(define-test "(round) is polymorphic" (expect-success
+  (import (llambda typed))
+
+  (define exact-1 (typed-dynamic 1 <exact-integer>))
+  (define inexact-1 (typed-dynamic 1.0 <flonum>))
+
+  (ann (round exact-1) <exact-integer>)
+  (ann (round inexact-1) <flonum>)))
+
 (define-test "(vector-ref) is polymorphic" (expect-success
   (import (llambda typed))
 
