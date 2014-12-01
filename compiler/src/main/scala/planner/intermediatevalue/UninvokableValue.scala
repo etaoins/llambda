@@ -9,7 +9,7 @@ import llambda.compiler.ValueNotApplicableException
 
 /** Trait for IntermediateValues that cannot be invokable */
 trait UninvokableValue extends IntermediateValue {
-  protected def toProcedureTempValue(
+  def toProcedureTempValue(
       targetType : vt.ApplicableType,
       errorMessageOpt : Option[RuntimeErrorMessage]
   )(implicit plan : PlanWriter) : ps.TempValue = {

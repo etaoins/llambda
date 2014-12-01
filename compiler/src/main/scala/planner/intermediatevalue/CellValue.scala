@@ -52,8 +52,8 @@ class CellValue(
         throw new ValueNotApplicableException(plan.activeContextLocated, typeDescription)
     }
   }
-  
-  protected def toProcedureTempValue(
+
+  def toProcedureTempValue(
       targetType : vt.ApplicableType,
       errorMessageOpt : Option[RuntimeErrorMessage]
   )(implicit plan : PlanWriter) : ps.TempValue = {

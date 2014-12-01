@@ -220,3 +220,17 @@
 
   (assert-equal 1 outer-counter)))
 
+(define-test "converting polymorphic procedures to specific procedure types" (expect-success
+  (import (llambda typed))
+
+  (: return-arg (All (A) A A))
+  (define (return-arg x) x)
+
+  (: int-mapper (-> <exact-integer> (-> <exact-integer> <exact-integer>) <exact-integer>))
+  (define (int-mapper val mapper)
+    (mapper val))
+
+  ; The expectation here is that the compiler will instantiate the exact polymorph requested. There is no easy way to
+  ; verify this as the upper bound + trampoline will behave the same way. The best we can do is make sure this is
+  ; semantically correct.
+  (assert-equal 5 (int-mapper 5 return-arg))))

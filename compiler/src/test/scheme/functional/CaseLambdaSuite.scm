@@ -107,3 +107,43 @@
                    (my-gcd b (modulo a b))))))
 
   (my-gcd 15 25)))
+
+(define-test "converting case lambdas to specific procedure types" (expect-success
+  (import (scheme case-lambda))
+  (import (llambda typed))
+
+  (define sum-args (case-lambda
+    ((x) x)
+    ((x y) (+ x y))
+    ((x y z) (+ x y z))))
+
+  (: int-mapper (-> <exact-integer> (-> <exact-integer> <exact-integer>) <exact-integer>))
+  (define (int-mapper val mapper)
+    (mapper val))
+
+  ; The expectation here is that the compiler will pass the exact clause requested based on arity. There is no easy way
+  ; to verify this as the outer (case-lambda) will behave the same way. The best we can do is make sure this is
+  ; semantically correct.
+  (assert-equal 5 (int-mapper 5 sum-args))))
+
+(define-test "(apply) selects the correct clause" (expect-success
+  (import (scheme case-lambda))
+  (import (llambda typed))
+
+  (define count-args (case-lambda
+    ((x) 1)
+    ((x y) 2)
+    ((x y z) 3)
+    ((w x y z) 4)))
+
+  (define dynamic-symbol (typed-dynamic 'one <symbol>))
+
+  ; (apply) has a lot of code paths depending on the operands and optimisation level
+  ; Try to get good coverage here
+  (define known-content-list '(one two three))
+  (define known-length-list (list dynamic-symbol dynamic-symbol dynamic-symbol))
+  (define unknown-length-list (typed-dynamic '(one two three) (Listof <symbol>)))
+
+  (assert-equal 3 (apply count-args known-content-list))
+  (assert-equal 3 (apply count-args known-length-list))
+  (assert-equal 3 (apply count-args unknown-length-list))))

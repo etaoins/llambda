@@ -62,7 +62,19 @@ abstract class KnownProc(val polySignature : PolymorphicSignature, val selfTempO
       // The procedure already has the correct signature - return our exisiting cell directly
       return toBoxedValue().tempValue
     }
-      
+
+    // Can we select a more specific polymorph or case lambda clause?
+    targetType.signatures match {
+      case List(vt.ProcedureType(fixedTypes, None, _)) =>
+        val selectedPolymorph = toApplicableValueForOperands(fixedTypes)
+
+        if (!(selectedPolymorph eq this)) {
+          return selectedPolymorph.toProcedureTempValue(targetType, errorMessageOpt)
+        }
+
+      case _ =>
+    }
+
     // Check if this symbol/signature combination has been planned
     val trampolineKey = (nativeSymbol, requiredSignature)
     val trampolineSymbol = plan.knownProcTrampolines.getOrElseUpdate(trampolineKey, {
