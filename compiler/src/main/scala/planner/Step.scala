@@ -135,12 +135,22 @@ object DisposableStep {
   object PlaceholderResultTemp extends TempValue(false)
 }
 
-/** Step without any side effects
+/** Step without any side effects not depending on mutable state
   *
   * Examples of nullipotent steps are loading values from memory, converting values or comparing values. These may be
   * disposed entirely by DisposeValues if its result is unused. Identical steps are also candidates for merging
   */
 sealed trait NullipotentStep extends DisposableStep
+
+/** Step without side effects depending on potentially mutable state
+  *
+  * These steps may be discarded completely if the result is unused but they cannot be merged with other steps. Examples
+  * of mutable reads are reading fields from mutable records, vectors or pairs.
+  */
+sealed trait MutableReadStep extends NullipotentStep {
+  // Disable merging
+  override def mergeKey = this
+}
 
 /** Step with side effects
   *
@@ -497,7 +507,7 @@ case class CreateNativeFloat(result : TempValue, value : Double, fpType : vt.FpT
 }
 
 /** Indicates a step that unboxes a cell */
-sealed trait UnboxValue extends Step {
+sealed trait UnboxValue extends Step with NullipotentStep {
   val result : TempValue
   val boxed : TempValue
 
@@ -505,17 +515,17 @@ sealed trait UnboxValue extends Step {
   lazy val outputValues = Set(result)
 }
 
-case class UnboxExactInteger(result : TempValue, boxed : TempValue) extends UnboxValue with NullipotentStep {
+case class UnboxExactInteger(result : TempValue, boxed : TempValue) extends UnboxValue {
   def renamed(f : (TempValue) => TempValue) =
     UnboxExactInteger(f(result), f(boxed)).assignLocationFrom(this)
 }
 
-case class UnboxFlonum(result : TempValue, boxed : TempValue) extends UnboxValue with NullipotentStep {
+case class UnboxFlonum(result : TempValue, boxed : TempValue) extends UnboxValue {
   def renamed(f : (TempValue) => TempValue) =
     UnboxFlonum(f(result), f(boxed)).assignLocationFrom(this)
 }
 
-case class UnboxChar(result : TempValue, boxed : TempValue) extends UnboxValue with NullipotentStep {
+case class UnboxChar(result : TempValue, boxed : TempValue) extends UnboxValue {
   def renamed(f : (TempValue) => TempValue) =
     UnboxChar(f(result), f(boxed)).assignLocationFrom(this)
 }
@@ -523,7 +533,7 @@ case class UnboxChar(result : TempValue, boxed : TempValue) extends UnboxValue w
 // These aren't quite an unboxing because there's two values per boxed value
 
 /** Loads the car of the passed PairCell as a AnyCell */
-case class LoadPairCar(result : TempValue, boxed : TempValue) extends Step {
+case class LoadPairCar(result : TempValue, boxed : TempValue) extends Step with MutableReadStep {
   lazy val inputValues = Set(boxed)
   lazy val outputValues = Set(result)
   
@@ -532,7 +542,7 @@ case class LoadPairCar(result : TempValue, boxed : TempValue) extends Step {
 }
 
 /** Loads the cdr of the passed PairCell as a AnyCell */
-case class LoadPairCdr(result : TempValue, boxed : TempValue) extends Step {
+case class LoadPairCdr(result : TempValue, boxed : TempValue) extends Step with MutableReadStep {
   lazy val inputValues = Set(boxed)
   lazy val outputValues = Set(result)
   
@@ -542,9 +552,9 @@ case class LoadPairCdr(result : TempValue, boxed : TempValue) extends Step {
 
 /** Loads the entry point of a procedure
   *
-  * This is not mergeable to allow procedures to dynamically change entry points
+  * This is a MutableRead to allow procedures to dynamically change entry points
   */
-case class LoadProcedureEntryPoint(result : TempValue, boxed : TempValue, signature : ProcedureSignature) extends Step {
+case class LoadProcedureEntryPoint(result : TempValue, boxed : TempValue, signature : ProcedureSignature) extends MutableReadStep {
   lazy val inputValues = Set(boxed)
   lazy val outputValues = Set(result)
   
@@ -665,7 +675,7 @@ case class LoadVectorElement(
     vectorCell : TempValue,
     elements : TempValue,
     index : TempValue
-) extends Step {
+) extends Step with MutableReadStep {
   lazy val inputValues = Set(vectorCell, elements, index)
   lazy val outputValues = Set(result)
 
@@ -828,10 +838,10 @@ case class SetRecordDataField(recordData : TempValue, recordLikeType : vt.Record
 }
 
 /** Reads a record field. The value must match the type of record field */
-case class LoadRecordDataField(result : TempValue, recordData : TempValue, recordLikeType : vt.RecordLikeType, recordField : vt.RecordField) extends Step with NullipotentStep {
+case class LoadRecordDataField(result : TempValue, recordData : TempValue, recordLikeType : vt.RecordLikeType, recordField : vt.RecordField) extends Step with MutableReadStep {
   lazy val inputValues = Set(recordData)
   lazy val outputValues = Set(result)
-  
+
   def renamed(f : (TempValue) => TempValue) =
     LoadRecordDataField(f(result), f(recordData), recordLikeType, recordField).assignLocationFrom(this)
 }
@@ -850,16 +860,19 @@ case class TestRecordLikeClass(
     TestRecordLikeClass(result, f(recordCell), recordLikeType, possibleTypesOpt).assignLocationFrom(this)
 }
 
-/** Loads the data of a record */
-case class LoadRecordLikeData(result : TempValue, recordCell : TempValue, recordLikeType : vt.RecordLikeType) extends Step with NullipotentStep {
+/** Loads the data of a record
+  *
+  * This is a mutable read as the record data can point to the inside of a GC moveable value. Since record data fields
+  * aren't full GC managed values there's no way for the garbage collector to update them when performing collection.
+  * The planner is careful to not keep a record data value alive across a GC barrier but merging record data loads could
+  * defeat that.
+  */
+case class LoadRecordLikeData(result : TempValue, recordCell : TempValue, recordLikeType : vt.RecordLikeType) extends Step with MutableReadStep {
   lazy val inputValues = Set(recordCell)
   lazy val outputValues = Set(result)
 
   def renamed(f : (TempValue) => TempValue) =
     LoadRecordLikeData(f(result), f(recordCell), recordLikeType).assignLocationFrom(this)
-
-  /** Disable merging as we can point to inside a movable GC managed value */
-  override def mergeKey : Any = this
 }
 
 /** Sets the entry point of a procedure
