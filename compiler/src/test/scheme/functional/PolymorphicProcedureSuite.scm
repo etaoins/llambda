@@ -77,7 +77,23 @@
     (define integer-list (typed-dynamic '(1 2 3) (Listof <exact-integer>)))
 
     (ann (map (lambda (x) inexact-1) integer-list) (Listof <flonum>))))
-  ))
+
+  (define-test "recursive polymorphic Scheme procedures" (expect-success
+    (import (llambda typed))
+
+    (: my-list-ref (All (A [N : <number>]) (Listof A) N A))
+    (define (my-list-ref head count)
+      (if (zero? count)
+        (car head)
+        (my-list-ref (cdr head) (- count 1))))
+
+    (define int-result (my-list-ref '(1 2 3) 2))
+    (ann int-result <exact-integer>)
+    (assert-equal 3 int-result)
+
+    (define flonum-result (my-list-ref '(1.0 2.0 3.0) 1.0))
+    (ann flonum-result <flonum>)
+    (assert-equal 2.0 flonum-result)))))
 
 (define-test "(+) is polymorphic" (expect-success
   (import (llambda typed))
