@@ -17,9 +17,9 @@ object ReconcileTypeVars {
     * @param  located         Source location causing the reconciliation. This is used to locate any exceptions.
     * @param  strictBounds    Indicates if an exception should be raised if a type bound is violated. Otherwise the
     *                         type variable will default to its upper bound
-    * @param  fixApplicable   Indicates if the applicable type of the upper bound should be used. This is important
-    *                         for preserving ABI compatibility if a procedure is either accepting or returning a
-    *                         certain applicable type.
+    * @param  fixApplicable   Indicates if the applicable type of the upper bound should be used. This is important for
+    *                         preserving ABI compatibility if a procedure is either accepting or returning a certain
+    *                         applicable type.
     */
   def apply(
       typeVars : Set[TypeVar],

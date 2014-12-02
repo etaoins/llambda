@@ -12,6 +12,10 @@ object NameForPolymorphicProcedureType {
       "[" + typeVar.sourceName  + " : " + NameForType(nonDefaultBound) + "]"
   }
 
+  /** Returns the Scheme name for the passed polymorphic procedure type
+    *
+    * This is implemented using [[NameForType]]. The same caveats apply.
+    */
   def apply(polyType : PolymorphicProcedureType) : String = {
     if (polyType.typeVars.isEmpty) {
       // Not actually polymorphic

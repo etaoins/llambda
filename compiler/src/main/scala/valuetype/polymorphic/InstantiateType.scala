@@ -43,6 +43,15 @@ object InstantiateType {
       ReturnType.MultipleValues(apply(typeVars, valueList))
   }
 
+  /** Instantiates a polymorphic type based on reconciled type variables
+    *
+    * This replaces all occurrences of the type variables inside the polymorphic template with the corresponding
+    * reconciled type in typeVars
+    *
+    * @param  typeVars  Reconciled type variables as returned by ReconcileTypeVars
+    * @param  poly      Polymorphic template type
+    * @return Expanded template type
+    */
   def apply[T >: SchemeType <: ValueType](typeVars : ReconcileTypeVars.Result, poly : T) : T = poly match {
     case _ if typeVars.values.isEmpty =>
       // Nothing to do!

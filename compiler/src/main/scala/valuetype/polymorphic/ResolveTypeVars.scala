@@ -123,7 +123,18 @@ object ResolveTypeVars {
       Result()
   }
 
-  /** Resolves variables in a polymorphic type based on an evidence type */
+  /** Resolves variables in a polymorphic type based on an evidence type
+    *
+    * For example, given a polymorphic type of (Pairof A <boolean>) and an evidence type of (Pairof <port> <boolean>)
+    * this will return {A => <port>}. If a variable occur multiple times literally in the polymorphic type or after
+    * recursive expansion then the union type of its occurrences will be used.
+    *
+    * [[ReconcileTypeVars]] must be called to process this result before it can be used for instantiation.
+    *
+    * @param  typeVars  Set of type variables in the polymorphic type
+    * @param  poly      Polymorphic template type
+    * @param  evidence  Evidence type to match against
+    */
   def apply(typeVars : Set[TypeVar], poly : ValueType, evidence : SchemeType) : Result = {
     visitType(typeVars, poly, Nil, evidence, Nil)
   }

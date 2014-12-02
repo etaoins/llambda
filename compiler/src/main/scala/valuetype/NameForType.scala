@@ -132,6 +132,11 @@ object NameForType {
     }
   }
 
+  /** Returns the Scheme name for the passed type
+    *
+    * Note that this is not aware of any renaming or aliasing of types that occured in the frontend. Instead this
+    * assumes that all types have their default binding.
+    */
   def apply(valueType : ValueType) : String = valueType match {
     case Predicate =>
       "<native-bool>"
