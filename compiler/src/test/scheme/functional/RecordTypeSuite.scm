@@ -132,3 +132,11 @@
 	(define instance (outer-type (inner-type 'it-actually-worked)))
 	(inner-type-field (outer-type-inner-instance instance))))
 
+(define-test "record type with special field names" (expect-success
+  (import (llambda typed))
+
+	(define-record-type <world-value> (world-value world) world-value?
+		((world : <exact-integer>) single-value-field2))
+
+  (world-value 5)
+  ((typeless-cell world-value) 5)))

@@ -402,3 +402,34 @@
       (my-list-tail (cdr head) (- count 1))))
 
   (my-list-tail '(1 2 3) 2)))
+
+(define-test "procedures taking special argument names" (expect-success
+  ; This contains whitespace
+  (define (takes-whitespace |Return Me!|) |Return Me!|)
+
+  (assert-equal 'success (takes-whitespace 'success))
+  (assert-equal 'success ((typeless-cell takes-whitespace) 'success))
+
+  ; This contains a comma
+  (define (takes-comma |return,me|) |return,me|)
+
+  (assert-equal 'success (takes-comma 'success))
+  (assert-equal 'success ((typeless-cell takes-comma) 'success))
+
+  (define captured 0)
+
+  ; self is the internal argument name for procedures taking their own closure
+  (define (takes-self self)
+    (set! captured (+ captured 1))
+    self)
+
+  (assert-equal 'success (takes-self 'success))
+  (assert-equal 'success ((typeless-cell takes-self) 'success))
+
+  ; world is the internal argument name for procedures that require access to the current world
+  (define (takes-world world)
+    (make-parameter "This needs a world pointer")
+    world)
+
+  (assert-equal 'success (takes-world 'success))
+  (assert-equal 'success ((typeless-cell takes-world) 'success))))

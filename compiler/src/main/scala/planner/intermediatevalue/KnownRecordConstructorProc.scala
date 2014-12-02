@@ -30,6 +30,7 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
 
     // Get unique argument names
     val argumentUniquer = new SourceNameUniquer
+    argumentUniquer.reserve("world")
 
     val namedArguments = ("world" -> ps.WorldPtrValue) ::
       (initializedFields.map { case field =>

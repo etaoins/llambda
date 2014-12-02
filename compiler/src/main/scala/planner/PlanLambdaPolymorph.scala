@@ -270,6 +270,7 @@ object PlanLambdaPolymorph {
     }
 
     val argumentUniquer = new SourceNameUniquer
+    argumentUniquer.reserve("world", "self")
 
     // Name our function arguments
     val namedArguments =
