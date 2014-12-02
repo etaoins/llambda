@@ -471,7 +471,20 @@ object SchemeType {
         Set(nonUnion)
 
       case union : UnionType =>
-        union.memberTypes
+        // This is a bit tricky
+        // We attempt to flatten any union types together in to the returned union. For example,
+        // (U (U <exact-integer> <flonum>) (U <symbol> <string>))
+        // Will become:
+        // (U <exact-integer> <flonum> <symbol> <string>)
+        //
+        // However, e.g. for proper lists this would naively change:
+        // (U (Rec A (U '() (Pairof <any> A))) #f)
+        // In to:
+        // (Rec A (U '() #f (Pairof <any> A)))
+        //
+        // This is no longer a proper list type as #f has been flattened in to the proper list's union. Instead we need
+        // to unroll any recursive unions to preserve their recursive structure
+        union.memberTypes.map(UnrollType.unrollNonUnionType(_, union, depth=1))
     }).toSet
 
     // Convert (U #f #t) to <boolean>

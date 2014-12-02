@@ -124,4 +124,24 @@ class UnionTypeSuite extends SchemeTypeSuite {
   test("the cell type for the union of exact int, inexact and string is datum") {
     assert(UnionType(Set(ExactIntegerType, FlonumType, StringType)).cellType === ct.AnyCell)
   }
+
+  test("placing a recursive union inside another union unrolls the recursive union") {
+    // See the comment in fromTypeUnion for more information about this
+    val expected = UnionType(Set(
+      literalFalse,
+      EmptyListType,
+      PairType(
+        ExactIntegerType,
+        UnionType(Set(
+          EmptyListType,
+          PairType(
+            ExactIntegerType,
+            RecursiveSchemeTypeRef(1)
+          )
+        ))
+      )
+    ))
+
+    assert(SchemeType.fromTypeUnion(List(exactIntList, literalFalse)) === expected)
+  }
 }

@@ -280,3 +280,25 @@
   (assert-true  (hello-or-goodbye? untyped-hello-symbol))
   (assert-false (hello-or-goodbye? untyped-hello-string))
   (assert-true  (hello-or-goodbye? untyped-goodbye-symbol))))
+
+(define-test "(define-predicate) for proper lists in unions" (expect-success
+  (import (llambda typed))
+
+  ; This is testing that we preserve recursive union structure when flattening them in to larger union
+  (define-predicate int-list-or-false? (U (Listof <exact-integer>) #f))
+
+  (define false #f)
+  (define int-list '(1 2 3))
+  (define improper-int-list '(1 2 . #f))
+
+  (assert-true  (int-list-or-false? false))
+  (assert-true  (int-list-or-false? int-list))
+  (assert-false (int-list-or-false? improper-int-list))
+
+  (define untyped-false (typeless-cell false))
+  (define untyped-int-list (typeless-cell int-list))
+  (define untyped-improper-int-list (typeless-cell improper-int-list))
+
+  (assert-true  (int-list-or-false? untyped-false))
+  (assert-true  (int-list-or-false? untyped-int-list))
+  (assert-false (int-list-or-false? untyped-improper-int-list))))

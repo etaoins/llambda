@@ -29,11 +29,34 @@ private[valuetype] object UnrollType {
     }
   }
 
+  def unrollNonUnionType(inputType : NonUnionSchemeType, replacementType : SchemeType, depth : Int) : NonUnionSchemeType = inputType match {
+    case pairType : SpecificPairType =>
+      val replacedCar = unrollTypeRef(pairType.carTypeRef, replacementType, depth)
+      val replacedCdr = unrollTypeRef(pairType.cdrTypeRef, replacementType, depth)
+
+      SpecificPairType(replacedCar, replacedCdr)
+
+    case SpecificVectorType(memberTypeRefs) =>
+      val replacedMemberTypeRefs = memberTypeRefs map { memberTypeRef =>
+        unrollTypeRef(memberTypeRef, replacementType, depth)
+      }
+
+      SpecificVectorType(replacedMemberTypeRefs)
+
+    case UniformVectorType(memberTypeRef)  =>
+      val replacedMemberType = unrollTypeRef(memberTypeRef, replacementType, depth)
+
+      UniformVectorType(replacedMemberType)
+
+    case other : NonRecursiveType =>
+      other
+  }
+
   /** Unrolls a recursive type
     *
     * Unrolling a type involes replacing any recursive reference with a literal copy of the type. Every unrolling
     * expands the type to a larger but equivalent type
-    * 
+    *
     * @param  inputType        Type to unroll recursive types in
     * @param  replacementType  Type ro insert in the specified recursive position. In basic unrolling this is the same
     *                          as the input type but when a type has been modified it may be the original version of
@@ -46,25 +69,7 @@ private[valuetype] object UnrollType {
       val replacedMembers = memberTypes.map(unrollType(_, replacementType, depth + 1))
       SchemeType.fromTypeUnion(replacedMembers)
 
-    case pairType : SpecificPairType =>
-      val replacedCar = unrollTypeRef(pairType.carTypeRef, replacementType, depth)
-      val replacedCdr = unrollTypeRef(pairType.cdrTypeRef, replacementType, depth)
-
-      SpecificPairType(replacedCar, replacedCdr) 
-
-    case SpecificVectorType(memberTypeRefs) =>
-      val replacedMemberTypeRefs = memberTypeRefs map { memberTypeRef =>
-        unrollTypeRef(memberTypeRef, replacementType, depth)
-      }
-
-      SpecificVectorType(replacedMemberTypeRefs)
-    
-    case UniformVectorType(memberTypeRef)  =>
-      val replacedMemberType = unrollTypeRef(memberTypeRef, replacementType, depth)
-
-      UniformVectorType(replacedMemberType)
-
-    case other : NonRecursiveType =>
-      other
+    case nonUnion : NonUnionSchemeType =>
+      unrollNonUnionType(nonUnion, replacementType, depth)
   }
 }
