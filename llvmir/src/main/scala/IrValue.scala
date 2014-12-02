@@ -103,7 +103,7 @@ object StringConstant {
   }
 }
 
-case class ElementPointerConstant(elementType : FirstClassType, basePointer : IrConstant, indices : Seq[Integer], inbounds : Boolean = false) extends IrConstant {
+case class ElementPointerConstant(elementType : FirstClassType, basePointer : IrConstant, indices : Seq[Int], inbounds : Boolean = false) extends IrConstant {
   if (!basePointer.irType.isInstanceOf[PointerType]) {
     throw new InconsistentIrException("Attempted to create a getelementptr constant from non-pointer")
   }
