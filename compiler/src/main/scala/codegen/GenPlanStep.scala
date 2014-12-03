@@ -322,16 +322,16 @@ object GenPlanStep {
       state.withTempValue(resultTemp -> castEntryPointIr)
 
     case initStep : ps.InitRecordLike  =>
-      val (initedState, initedRecordLike) = GenInitRecordLike(state, genGlobals.typeGenerator)(initStep)
+      val (initedState, initedRecordLike) = GenInitRecordLike(state, genGlobals.generatedTypes)(initStep)
 
       initedState
         .withTempValue(initStep.cellResult -> initedRecordLike.recordCell)
         .withTempValue(initStep.dataResult -> initedRecordLike.recordData)
     
     case ps.TestRecordLikeClass(resultTemp, recordCellTemp, recordLikeType, possibleTypesOpt) => 
-      val generatedType = genGlobals.typeGenerator(recordLikeType)
+      val generatedType = genGlobals.generatedTypes(recordLikeType)
       val generatedPossibleTypes = possibleTypesOpt map { possibleTypes =>
-        possibleTypes.map(genGlobals.typeGenerator)
+        possibleTypes.map(genGlobals.generatedTypes)
       }
 
       val recordCellIr = state.liveTemps(recordCellTemp)
@@ -340,7 +340,7 @@ object GenPlanStep {
       state.withTempValue(resultTemp -> irResult)
     
     case ps.SetRecordLikeDefined(recordCellTemp, recordLikeType) => 
-      val generatedType = genGlobals.typeGenerator(recordLikeType)
+      val generatedType = genGlobals.generatedTypes(recordLikeType)
       
       // Mark ourselves as defined
       val recordCellIr = state.liveTemps(recordCellTemp)
@@ -351,7 +351,7 @@ object GenPlanStep {
 
     case ps.AssertRecordLikeDefined(recordCellTemp, recordLikeType, errorMessage) =>
       val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
-      val generatedType = genGlobals.typeGenerator(recordLikeType)
+      val generatedType = genGlobals.generatedTypes(recordLikeType)
 
       // Start our branches
       val irFunction = state.currentBlock.function
@@ -377,7 +377,7 @@ object GenPlanStep {
     case ps.SetRecordDataField(recordDataTemp, recordType, recordField, newValueTemp) =>
       val recordDataIr = state.liveTemps(recordDataTemp)
       val newValueIr = state.liveTemps(newValueTemp)
-      val generatedType = genGlobals.typeGenerator(recordType)
+      val generatedType = genGlobals.generatedTypes(recordType)
   
       GenSetRecordDataField(state.currentBlock)(recordDataIr, generatedType, recordField, newValueIr)
 
@@ -385,7 +385,7 @@ object GenPlanStep {
     
     case ps.LoadRecordDataField(resultTemp, recordDataTemp, recordLikeType, recordField) =>
       val recordDataIr = state.liveTemps(recordDataTemp)
-      val generatedType = genGlobals.typeGenerator(recordLikeType)
+      val generatedType = genGlobals.generatedTypes(recordLikeType)
   
       val resultIr = GenLoadRecordDataField(state.currentBlock)(recordDataIr, generatedType, recordField)
 
@@ -393,7 +393,7 @@ object GenPlanStep {
 
     case ps.LoadRecordLikeData(resultTemp, recordCellTemp, recordLikeType) =>
       val recordCellIr = state.liveTemps(recordCellTemp)
-      val generatedType = genGlobals.typeGenerator(recordLikeType)
+      val generatedType = genGlobals.generatedTypes(recordLikeType)
 
       val resultIr = GenLoadRecordLikeData(state.currentBlock)(recordCellIr, generatedType)
 

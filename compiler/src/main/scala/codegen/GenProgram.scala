@@ -38,13 +38,13 @@ object GenProgram {
     }
 
     val plannedSymbols = functions.keySet
-    val typeGenerator = new TypeGenerator(module, compileConfig.targetPlatform)
-    val constantGenerator = new ConstantGenerator(typeGenerator)
+    val generatedTypes = BuildRecordLikeTypes(module, functions, compileConfig.targetPlatform)
+    val constantGenerator = new ConstantGenerator(generatedTypes)
 
     // Package up our global generator state
     val genGlobals = GenGlobals(
       plannedSymbols=plannedSymbols,
-      typeGenerator=typeGenerator,
+      generatedTypes=generatedTypes,
       constantGenerator=constantGenerator,
       debugInfoGeneratorOpt=debugInfoGeneratorOpt,
       targetPlatform=compileConfig.targetPlatform
@@ -94,9 +94,6 @@ object GenProgram {
     entryBlock.ret(IntegerConstant(IntegerType(32), 0))
 
     module.defineFunction(mainFunction)
-
-    // Dump our type map
-    typeGenerator.emitTypeMaps()
 
     // Generate any final debug info
     for(debugInfoGenerator <- debugInfoGeneratorOpt) {

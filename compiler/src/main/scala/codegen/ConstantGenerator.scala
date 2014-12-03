@@ -13,8 +13,7 @@ import llambda.llvmir._
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 
-
-class ConstantGenerator(typeGenerator : TypeGenerator) {
+class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) {
   /* Caches of constants indexed by their value 
    *
    * This is ensure proper Scheme semantics are enforced with the lazily value instantiation the planner does. For
@@ -121,11 +120,11 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
     defineConstantData(module)(vectorCellName, vectorCell)
   }
 
-  private def genEmptyClosure(module : IrModuleBuilder, typeGenerator : TypeGenerator)(entryPoint : IrConstant) : IrConstant = {
+  private def genEmptyClosure(module : IrModuleBuilder)(entryPoint : IrConstant) : IrConstant = {
     val procCellName = module.nameSource.allocate("schemeProcedure")
 
     // Find the class ID for the empty closure type
-    val generatedType = typeGenerator(vt.EmptyClosureType)
+    val generatedType = generatedTypes(vt.EmptyClosureType)
       
     val procCell = ct.ProcedureCell.createConstant(
       entryPoint=entryPoint,
@@ -331,7 +330,7 @@ class ConstantGenerator(typeGenerator : TypeGenerator) {
           
         // Cast to an untyped entry point
         val castEntryPoint = BitcastToConstant(entryPointConstant, ct.ProcedureCell.entryPointIrType)
-        genEmptyClosure(module, typeGenerator)(castEntryPoint)
+        genEmptyClosure(module)(castEntryPoint)
 
       case ps.CreateNativeInteger(_, value, bits) =>
         IntegerConstant(IntegerType(bits), value)

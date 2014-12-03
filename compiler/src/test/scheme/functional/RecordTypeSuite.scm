@@ -140,3 +140,93 @@
 
   (world-value 5)
   ((typeless-cell world-value) 5)))
+
+(define-test "record type inheritance" (expect-success
+  (import (llambda typed))
+
+  (define-record-type <named-number> (named-number name) named-number?
+                      ([name : <string>] named-number-name set-named-number-name!))
+
+  (define-record-type <named-int> <named-number> (named-int name value) named-int?
+                      ([value : <exact-integer>] named-int-value set-named-int-value!))
+
+  (define-record-type <named-flonum> <named-number> (named-flonum name value) named-flonum?
+                      ([value : <flonum>] named-flonum-value set-named-flonum-value!))
+
+  (define-record-type <named-nan> <named-flonum> (named-nan name value) named-nan?)
+
+  (define test-named-number (named-number "Base"))
+  (define test-named-int    (named-int    "Five" 5))
+  (define test-named-flonum (named-flonum "Two" 2.0))
+  (define test-named-nan    (named-nan    "NaN" +nan.0))
+
+  (define-syntax assert-has-type
+    (syntax-rules ()
+                  ((assert-has-type pred? value)
+                   (begin
+                     (assert-true (pred? value))
+                     (assert-true (pred? (typeless-cell value)))))))
+
+  (define-syntax assert-not-type
+    (syntax-rules ()
+                  ((assert-not-type pred? value)
+                   (begin
+                     (assert-false (pred? value))
+                     (assert-false (pred? (typeless-cell value)))))))
+
+  (define-syntax assert-field-value
+    (syntax-rules ()
+                  ((assert-field-value expected accessor value)
+                   (begin
+                     (assert-equal expected (accessor value))
+                     (assert-equal expected (accessor (typeless-cell value)))))))
+
+  (define-syntax assert-lacks-field
+    (syntax-rules ()
+                  ((assert-lacks-field accessor value)
+                   (begin
+                     (assert-raises error-object? (accessor (typeless-cell value)))))))
+
+  (assert-has-type named-number? test-named-number)
+  (assert-has-type named-number? test-named-int)
+  (assert-has-type named-number? test-named-flonum)
+  (assert-has-type named-number? test-named-nan)
+
+  (assert-not-type named-int? test-named-number)
+  (assert-has-type named-int? test-named-int)
+  (assert-not-type named-int? test-named-flonum)
+  (assert-not-type named-int? test-named-nan)
+
+  (assert-not-type named-flonum? test-named-number)
+  (assert-not-type named-flonum? test-named-int)
+  (assert-has-type named-flonum? test-named-flonum)
+  (assert-has-type named-flonum? test-named-nan)
+
+  (assert-not-type named-nan? test-named-number)
+  (assert-not-type named-nan? test-named-int)
+  (assert-not-type named-nan? test-named-flonum)
+  (assert-has-type named-nan? test-named-nan)
+
+  (assert-field-value "Base" named-number-name test-named-number)
+  (assert-field-value "Five" named-number-name test-named-int)
+  (assert-field-value "Two"  named-number-name test-named-flonum)
+  (assert-field-value "NaN"  named-number-name test-named-nan)
+
+  (assert-lacks-field named-int-value test-named-number)
+  (assert-field-value 5 named-int-value test-named-int)
+  (assert-lacks-field named-int-value test-named-flonum)
+  (assert-lacks-field named-int-value test-named-nan)
+
+  (assert-lacks-field named-flonum-value test-named-number)
+  (assert-lacks-field named-flonum-value test-named-int)
+  (assert-field-value 2.0 named-flonum-value test-named-flonum)
+  (assert-field-value +nan.0 named-flonum-value test-named-nan)
+
+  (set-named-number-name! test-named-number "Number")
+  (set-named-number-name! test-named-int "Int")
+  (set-named-number-name! test-named-flonum "Flonum")
+
+  (assert-field-value "Number" named-number-name test-named-number)
+  (assert-field-value "Int" named-number-name test-named-int)
+  (assert-field-value "Flonum"  named-number-name test-named-flonum)
+  (assert-field-value "NaN"  named-number-name test-named-nan)))

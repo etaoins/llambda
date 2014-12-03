@@ -9,8 +9,11 @@ import Implicits._
 trait SchemeTypeSuite extends FunSuite {
   protected val recordAtomType = SchemeTypeAtom(ct.RecordCell)
 
-  protected val recordType1 = new RecordType("record1", Nil)
-  protected val recordType2 = new RecordType("record1", Nil)
+  protected val recordType1 = new RecordType("record1", None, Nil)
+  protected val recordType1Child1 = new RecordType("record1Child1", Some(recordType1), Nil)
+  protected val recordType1Child2 = new RecordType("record1Child2", Some(recordType1), Nil)
+
+  protected val recordType2 = new RecordType("record2", None, Nil)
 
   protected val literalTrue = LiteralBooleanType(true)
   protected val literalFalse = LiteralBooleanType(false)

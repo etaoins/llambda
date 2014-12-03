@@ -20,7 +20,7 @@ class KnownRecordMutatorProc(recordType : vt.RecordType, field : vt.RecordField)
     recordType.sourceName
       .replaceAllLiterally("<", "")
       .replaceAllLiterally(">", "") + 
-      "-" + field.sourceName +
+      "-" + field.name +
       "!"
   
   def planFunction(parentPlan : PlanWriter, allocedSymbol : String) : PlannedFunction = {

@@ -164,6 +164,14 @@ sealed trait AssertStep extends IdempotentStep {
   val result = DisposableStep.PlaceholderResultTemp
 }
 
+/** Step using a record-like type
+  *
+  * This is used by codegen to find all referenced types from a given plan
+  */
+sealed trait RecordLikeStep extends Step {
+  val recordLikeType : vt.RecordLikeType
+}
+
 sealed trait InvokeLike extends Step {
   val signature : ProcedureSignature
 
@@ -794,33 +802,42 @@ case class SetPairCdr(pairValue : TempValue, newValue : TempValue) extends Step 
     SetPairCdr(f(pairValue), f(newValue)).assignLocationFrom(this)
 }
 
-/** Allocates a cell for a record of a given type 
+/** Allocates a cell for a record of a given type
  *
- * @param cellResult   location to store the record cell 
- * @param dataResult   location to store the uninitialized record data 
+ * @param cellResult   location to store the record cell
+ * @param dataResult   location to store the uninitialized record data
  * @param recordType   type of record to create
- * @param isUndefined  flag indicating if this value should be initially marked undefined. This can be tested with 
+ * @param isUndefined  flag indicating if this value should be initially marked undefined. This can be tested with
  *                     AssertRecordLikeDefined. This is used in the implementation of recursive values
  */
-case class InitRecordLike(cellResult : TempValue, dataResult : TempValue, recordLikeType : vt.RecordLikeType, isUndefined : Boolean) extends Step with CellConsumer {
+case class InitRecordLike(
+    cellResult : TempValue,
+    dataResult : TempValue,
+    recordLikeType : vt.RecordLikeType,
+    isUndefined : Boolean
+) extends RecordLikeStep with CellConsumer {
   val inputValues = Set[TempValue]()
   val outputValues = Set(cellResult, dataResult)
-  
+
   def renamed(f : (TempValue) => TempValue) =
     InitRecordLike(f(cellResult), f(dataResult), recordLikeType, isUndefined).assignLocationFrom(this)
 }
 
 /** Sets a record as defined */
-case class SetRecordLikeDefined(record : TempValue, recordLikeType : vt.RecordLikeType) extends Step {
+case class SetRecordLikeDefined(record : TempValue, recordLikeType : vt.RecordLikeType) extends RecordLikeStep {
   lazy val inputValues = Set(record)
   val outputValues = Set[TempValue]()
-  
+
   def renamed(f : (TempValue) => TempValue) =
     SetRecordLikeDefined(f(record), recordLikeType).assignLocationFrom(this)
 }
 
 /** Asserts that a record is defined */
-case class AssertRecordLikeDefined(record : TempValue, recordLikeType : vt.RecordLikeType, errorMessage : RuntimeErrorMessage) extends Step with AssertStep {
+case class AssertRecordLikeDefined(
+    record : TempValue,
+    recordLikeType : vt.RecordLikeType,
+    errorMessage : RuntimeErrorMessage
+) extends RecordLikeStep with AssertStep {
   lazy val inputValues = Set(WorldPtrValue, record)
   val outputValues = Set[TempValue]()
 
@@ -829,16 +846,26 @@ case class AssertRecordLikeDefined(record : TempValue, recordLikeType : vt.Recor
 }
 
 /** Sets a record field. The value must match the type of record field */
-case class SetRecordDataField(recordData : TempValue, recordLikeType : vt.RecordLikeType, recordField : vt.RecordField, newValue : TempValue) extends Step {
+case class SetRecordDataField(
+    recordData : TempValue,
+    recordLikeType : vt.RecordLikeType,
+    recordField : vt.RecordField,
+    newValue : TempValue
+) extends RecordLikeStep {
   lazy val inputValues = Set(recordData, newValue)
   val outputValues = Set[TempValue]()
-  
+
   def renamed(f : (TempValue) => TempValue) =
     SetRecordDataField(f(recordData), recordLikeType, recordField, f(newValue)).assignLocationFrom(this)
 }
 
 /** Reads a record field. The value must match the type of record field */
-case class LoadRecordDataField(result : TempValue, recordData : TempValue, recordLikeType : vt.RecordLikeType, recordField : vt.RecordField) extends Step with MutableReadStep {
+case class LoadRecordDataField(
+    result : TempValue,
+    recordData : TempValue,
+    recordLikeType : vt.RecordLikeType,
+    recordField : vt.RecordField
+) extends RecordLikeStep with MutableReadStep {
   lazy val inputValues = Set(recordData)
   lazy val outputValues = Set(result)
 
@@ -852,10 +879,10 @@ case class TestRecordLikeClass(
     recordCell : TempValue,
     recordLikeType : vt.RecordLikeType,
     possibleTypesOpt : Option[Set[vt.RecordLikeType]] = None
-) extends Step with NullipotentStep {
+) extends RecordLikeStep with NullipotentStep {
   lazy val inputValues = Set(recordCell)
   lazy val outputValues = Set(result)
-  
+
   def renamed(f : (TempValue) => TempValue) =
     TestRecordLikeClass(result, f(recordCell), recordLikeType, possibleTypesOpt).assignLocationFrom(this)
 }
@@ -867,7 +894,11 @@ case class TestRecordLikeClass(
   * The planner is careful to not keep a record data value alive across a GC barrier but merging record data loads could
   * defeat that.
   */
-case class LoadRecordLikeData(result : TempValue, recordCell : TempValue, recordLikeType : vt.RecordLikeType) extends Step with MutableReadStep {
+case class LoadRecordLikeData(
+    result : TempValue,
+    recordCell : TempValue,
+    recordLikeType : vt.RecordLikeType
+) extends RecordLikeStep with MutableReadStep {
   lazy val inputValues = Set(recordCell)
   lazy val outputValues = Set(result)
 

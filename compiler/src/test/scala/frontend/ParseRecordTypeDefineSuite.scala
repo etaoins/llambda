@@ -19,9 +19,9 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
     }
 
   implicit class RecordTypeHelpers(recordType : vt.RecordType) {
-    def fieldForSourceName(sourceName : String) : vt.RecordField = 
-      recordType.fields.find(_.sourceName == sourceName) getOrElse {
-        fail("Unable to find field named " + sourceName)
+    def fieldForName(name : String) : vt.RecordField = 
+      recordType.fields.find(_.name == name) getOrElse {
+        fail("Unable to find field named " + name)
       }
   }
 
@@ -91,7 +91,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         
         assert(recordType.sourceName === "<new-type>")
 
-        val constDatumField = recordType.fieldForSourceName("const-datum")
+        val constDatumField = recordType.fieldForName("const-datum")
         // No type defaults to <any>, the most permissive type
         assert(constDatumField.fieldType === vt.AnySchemeType)
 
@@ -122,7 +122,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         
         assert(recordType.sourceName === "<new-type>")
 
-        val constIntField = recordType.fieldForSourceName("const-int")
+        val constIntField = recordType.fieldForName("const-int")
         assert(constIntField.fieldType === vt.Int64)
 
         inside(exprs) {
@@ -166,8 +166,8 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         
         assert(recordType.sourceName === "<new-type>")
         
-        val constDatumField = recordType.fieldForSourceName("const-datum")
-        val mutableIntField = recordType.fieldForSourceName("mutable-int")
+        val constDatumField = recordType.fieldForName("const-datum")
+        val mutableIntField = recordType.fieldForName("mutable-int")
           
         assert(constDatumField.fieldType === vt.AnySchemeType)
         // <exact-integer> should be implicitly converted to int64 for storage
@@ -220,7 +220,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
             val outerPredLoc = storageLocFor(scope, "outer-type?")
             val innerFieldAccessorLoc = storageLocFor(scope, "outer-type-inner-field")
 
-            val innerField = outerType.fieldForSourceName("inner-field")
+            val innerField = outerType.fieldForName("inner-field")
             assert(innerField.fieldType === innerType)
 
             inside(outerExprs) {
@@ -234,7 +234,62 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         }
     }
   }
-  
+
+  test("inherting record types") {
+    val scope = new Scope(collection.mutable.Map(), Some(baseScope))
+
+    val parentExprs = bodyFor("""(define-record-type <parent>
+                                   (parent const-int)
+                                   parent?
+                                   ((const-int : <exact-integer>) parent-const-int))""")(scope)
+
+    val childExprs = bodyFor("""(define-record-type <child> <parent>
+                                  (child const-int const-flonum)
+                                  child?
+                                  ((const-flonum : <flonum>) child-const-flonum))""")(scope)
+
+    inside((scope("<parent>"), scope("<child>"))) {
+      case (BoundType(parentType : vt.RecordType), BoundType(childType : vt.RecordType)) =>
+        val parentConsLoc = storageLocFor(scope, "parent")
+        val parentPredLoc = storageLocFor(scope, "parent?")
+        val constIntAccessorLoc = storageLocFor(scope, "parent-const-int")
+
+        assert(parentType.sourceName === "<parent>")
+        assert(parentType.parentRecordLikeOpt === None)
+
+        val constIntField = parentType.fieldForName("const-int")
+        assert(constIntField.fieldType === vt.Int64)
+
+        inside(parentExprs) {
+          case et.TopLevelDefine(bindings) :: Nil =>
+            assert(bindings.toSet === Set(
+              et.SingleBinding(parentConsLoc, et.RecordConstructor(parentType, List(constIntField))),
+              et.SingleBinding(parentPredLoc, et.TypePredicate(parentType)),
+              et.SingleBinding(constIntAccessorLoc, et.RecordAccessor(parentType, constIntField))
+            ))
+        }
+
+        val childConsLoc = storageLocFor(scope, "child")
+        val childPredLoc = storageLocFor(scope, "child?")
+        val constFlonumAccessorLoc = storageLocFor(scope, "child-const-flonum")
+
+        assert(childType.sourceName === "<child>")
+        assert(childType.parentRecordLikeOpt === Some(parentType))
+
+        val constFlonumField = childType.fieldForName("const-flonum")
+        assert(constFlonumField.fieldType === vt.Double)
+
+        inside(childExprs) {
+          case et.TopLevelDefine(bindings) :: Nil =>
+            assert(bindings.toSet === Set(
+              et.SingleBinding(childConsLoc, et.RecordConstructor(childType, List(constIntField, constFlonumField))),
+              et.SingleBinding(childPredLoc, et.TypePredicate(childType)),
+              et.SingleBinding(constFlonumAccessorLoc, et.RecordAccessor(childType, constFlonumField))
+            ))
+        }
+    }
+  }
+
   test("duplicate field name fails") {
     val scope = new Scope(collection.mutable.Map(), Some(baseScope))
 
@@ -300,6 +355,60 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
                  (new-type const-int)
                  new-type?
                  ((const-int : <native-int64>) new-type-const-int new-type-const-int))""")(scope)
+    }
+  }
+
+  test("inheriting non-record type fails") {
+    val scope = new Scope(collection.mutable.Map(), Some(baseScope))
+
+    intercept[BadSpecialFormException] {
+      bodyFor("""(define-record-type <child> <exact-integer>
+                   (child const-int)
+                   child?
+                   ((const-int : <exact-integer>) child-const-int))""")(scope)
+    }
+  }
+
+  test("inheriting record non-existent type fails") {
+    val scope = new Scope(collection.mutable.Map(), Some(baseScope))
+
+    intercept[UnboundVariableException] {
+      bodyFor("""(define-record-type <child> <does-not-exist>>
+                   (child const-int)
+                   child?
+                   ((const-int : <exact-integer>) child-const-int))""")(scope)
+    }
+  }
+
+  test("duplicate field name in child record") {
+    val scope = new Scope(collection.mutable.Map(), Some(baseScope))
+
+    bodyFor("""(define-record-type <parent>
+                 (parent const-int)
+                 parent?
+                 ((const-int : <exact-integer>) parent-const-int))""")(scope)
+
+    intercept[BadSpecialFormException] {
+      bodyFor("""(define-record-type <child> <parent>
+                   (child const-int)
+                   child?
+                   ((const-int : <exact-integer>) child-const-int))""")(scope)
+    }
+  }
+
+  test("child not initialising non-defaultable parent strucutre field fails") {
+    val scope = new Scope(collection.mutable.Map(), Some(baseScope))
+
+    bodyFor("""(define-record-type <parent>
+                 (parent const-int)
+                 parent?
+                 ((const-int : <exact-integer>) parent-const-int))""")(scope)
+
+    intercept[BadSpecialFormException] {
+      bodyFor("""(define-record-type <child> <parent>
+                   (child const-flonum)
+                   child?
+                   ((const-flonum : <flonum>) child-const-flonum))""")(scope)
     }
   }
 }

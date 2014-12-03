@@ -19,14 +19,15 @@ private[frontend] object ParseRecordTypeDefine {
   )
 
   private def parseFields(
-      fieldData : List[sst.ScopedDatum]
-  )(implicit frontendConfig : FrontendConfig) : ListMap[sst.ScopedSymbol, ParsedField] =
-    fieldData.foldLeft(ListMap[sst.ScopedSymbol, ParsedField]()) {
+      fieldData : List[sst.ScopedDatum],
+      inheritedFieldNames : Set[String]
+  )(implicit frontendConfig : FrontendConfig) : ListMap[String, ParsedField] =
+    fieldData.foldLeft(ListMap[String, ParsedField]()) {
       case (parsedFields, fieldDatum @ sst.ScopedProperList(fieldDefDatum :: procedureData)) =>
         // We can either be just a symbol and have no type or we can be a Scala/Racket style (symbol : <type>)
         // This is a compatible extension to R7RS
         val (fieldNameSymbol, fieldType) = fieldDefDatum match {
-          case nameSymbol : sst.ScopedSymbol => 
+          case nameSymbol : sst.ScopedSymbol =>
             // Just a bare symbol - implicitly we're of type <any>
             (nameSymbol, vt.AnySchemeType)
 
@@ -39,21 +40,23 @@ private[frontend] object ParseRecordTypeDefine {
             val schemeType = ExtractType.extractStableType(fieldTypeDatum)
 
             // Rewrite this to a compact native type
-            val compactType = CompactRepresentationForType(schemeType) 
+            val compactType = CompactRepresentationForType(schemeType)
 
             (nameSymbol, compactType)
 
           case other =>
             val message = s"Unrecognized record field name definition. Must be either identiifer or [identifier : <type>]."
-
             throw new BadSpecialFormException(other, message)
         }
 
-        // Shorthand for error message use
         val fieldName = fieldNameSymbol.name
-        
+
         // Check for duplicate field identifiers
-        if (parsedFields.contains(fieldNameSymbol)) {
+        if (inheritedFieldNames.contains(fieldName)) {
+          throw new BadSpecialFormException(fieldNameSymbol, "Record field name duplicates inherited field name: " + fieldName)
+        }
+
+        if (parsedFields.contains(fieldName)) {
           throw new BadSpecialFormException(fieldNameSymbol, "Duplicate record field name: " + fieldName)
         }
 
@@ -64,7 +67,7 @@ private[frontend] object ParseRecordTypeDefine {
         val parsedField = procedureData match {
           case (accessorSymbol : sst.ScopedSymbol) :: Nil =>
             ParsedField(field, accessorSymbol, None)
-          
+
           case (accessorSymbol : sst.ScopedSymbol) :: (mutatorSymbol : sst.ScopedSymbol) :: Nil =>
             ParsedField(field, accessorSymbol, Some(mutatorSymbol))
 
@@ -72,93 +75,140 @@ private[frontend] object ParseRecordTypeDefine {
             throw new BadSpecialFormException(fieldDatum, "Unrecognized record field procedure definition. One identifier for an accessor must be specified. Another may optionally provided for a mutator.")
         }
 
-        parsedFields + (fieldNameSymbol -> parsedField)
+        parsedFields + (fieldName -> parsedField)
 
       case (_, other) =>
         throw new BadSpecialFormException(other, "Unrecognized record field definition")
     }
 
-  private def parseConstructor(recordType : vt.RecordType, symbolToField : Map[sst.ScopedSymbol, vt.RecordField], constructorDatum : sst.ScopedDatum) : (sst.ScopedSymbol, et.RecordConstructor) =
-    constructorDatum match {
-      case sst.ScopedProperList((constructorSymbol : sst.ScopedSymbol) :: initializerData) =>
-        val initializedFields = initializerData.foldLeft(List[vt.RecordField]()) {
-          case (initialized, symbol @ sst.ScopedSymbol(_, fieldName)) =>  
-            // Find the field for this symbol
-            val field = symbolToField.getOrElse(symbol, {
-              throw new BadSpecialFormException(symbol, "Unknown field name in constructor: " + fieldName)
-            })
+  private def parseConstructor(
+      recordType : vt.RecordType,
+      nameToField : Map[String, vt.RecordField],
+      constructorSymbol : sst.ScopedSymbol,
+      constructorOperands : List[sst.ScopedDatum]
+  ) : (sst.ScopedSymbol, et.RecordConstructor) = {
+    val initializedFields = constructorOperands.foldLeft(List[vt.RecordField]()) {
+      case (initialized, symbol @ sst.ScopedSymbol(_, fieldName)) =>
+        // Find the field for this symbol
+        val field = nameToField.getOrElse(symbol.name, {
+          throw new BadSpecialFormException(symbol, "Unknown field name in constructor: " + fieldName)
+        })
 
-            // Make sure this hasn't already been initialized
-            if (initialized.contains(field)) {
-              throw new BadSpecialFormException(symbol, "Duplicate field name in constructor: " + fieldName)
-            }
-
-            initialized :+ field
-
-          case (_, other) =>
-            throw new BadSpecialFormException(other, "Record type constructor field names must be symbols")
+        // Make sure this hasn't already been initialized
+        if (initialized.contains(field)) {
+          throw new BadSpecialFormException(symbol, "Duplicate field name in constructor: " + fieldName)
         }
 
-        for((fieldSymbol, field) <- symbolToField) {
-          if (!initializedFields.contains(field)) {
-            // Make sure this can be initialized to #!unit
-            field.fieldType match {
-              case schemeType : vt.SchemeType if vt.SatisfiesType(schemeType, vt.UnitType).get =>
-                // This is okay
+        initialized :+ field
 
-              case _ =>
-                throw new BadSpecialFormException(fieldSymbol, "Record field \"" + fieldSymbol.name + "\" is not initialized in the constructor and its type has no default value")
-            }
-          }
-        }
-
-        (constructorSymbol -> et.RecordConstructor(recordType, initializedFields).assignLocationFrom(constructorSymbol))
-
-      case other =>
-        throw new BadSpecialFormException(other, "Unrecognized record type constructor form")
+      case (_, other) =>
+        throw new BadSpecialFormException(other, "Record type constructor field names must be symbols")
     }
+
+    for((fieldName, field) <- nameToField) {
+      if (!initializedFields.contains(field)) {
+        // Make sure this can be initialized to #!unit
+        field.fieldType match {
+          case schemeType : vt.SchemeType if vt.SatisfiesType(schemeType, vt.UnitType).get =>
+            // This is okay
+
+          case _ =>
+            throw new BadSpecialFormException(constructorSymbol, "Record field \"" + fieldName + "\" is not initialized in the constructor and its type has no default value")
+        }
+      }
+    }
+
+    (constructorSymbol -> et.RecordConstructor(recordType, initializedFields).assignLocationFrom(constructorSymbol))
+  }
+
+  private def parse(
+      appliedSymbol : sst.ScopedSymbol,
+      nameSymbol : sst.ScopedSymbol,
+      parentSymbolOpt : Option[sst.ScopedSymbol],
+      constructorSymbol : sst.ScopedSymbol,
+      constructorOperands : List[sst.ScopedDatum],
+      predicateSymbol : sst.ScopedSymbol,
+      fieldData : List[sst.ScopedDatum]
+  )(implicit frontendConfig : FrontendConfig) : ParsedRecordTypeDefine = {
+    val parentRecordOpt = parentSymbolOpt map { parentSymbol =>
+      ExtractType.extractSchemeType(parentSymbol) match {
+        case parentRecord : vt.RecordType =>
+          parentRecord
+
+        case _ =>
+          throw new BadSpecialFormException(parentSymbol, "Record types can only inherit from other record types")
+      }
+    }
+
+    // Parse our fields first
+    val parentFieldNames = parentRecordOpt match {
+      case Some(parentRecord) =>
+        parentRecord.fields.map(_.name).toSet
+
+      case _ =>
+        Set[String]()
+    }
+
+    val nameToParsedField = parseFields(fieldData, parentFieldNames)
+
+    // Build our record type
+    val recordFields = nameToParsedField.values.toList.map(_.field)
+    val recordType = new vt.RecordType(nameSymbol.name, parentRecordOpt, recordFields)
+
+    // Get a list of all of our fields including inherited ones
+    val allFieldNamesMap = (recordType.fieldsWithInherited.map { field =>
+      field.name -> field
+    }).toMap
+
+    // Create our constructor and predicate procedures
+    val constructorProcedure = parseConstructor(recordType, allFieldNamesMap, constructorSymbol, constructorOperands)
+    val predicateProcedure = (predicateSymbol -> et.TypePredicate(recordType).assignLocationFrom(predicateSymbol))
+
+    // Collect all of our accessors and mutators
+    val accessorProcedures = (nameToParsedField.values.map { parsedField =>
+      (parsedField.accessorSymbol -> et.RecordAccessor(recordType, parsedField.field).assignLocationFrom(parsedField.accessorSymbol))
+    }).toList
+
+    val mutatorProcedures = (nameToParsedField.values.flatMap { parsedField =>
+      parsedField.mutatorSymbol map { mutator =>
+        (mutator -> et.RecordMutator(recordType, parsedField.field).assignLocationFrom(mutator))
+      }
+    }).toList
+
+    // Check for duplicate accessor or mutator procedures
+    // R7RS only specifies that accessor and mutators must be unique. We intentionally ignore the predicate and
+    // constructor procedure here.
+    (accessorProcedures ++ mutatorProcedures).map(_._1).foldLeft(Set[sst.ScopedSymbol]()) { (seenSymbols, procSymbol) =>
+      if (seenSymbols.contains(procSymbol)) {
+        throw new BadSpecialFormException(procSymbol, "Duplicate record type procedure")
+      }
+
+      seenSymbols + procSymbol
+    }
+
+    val allProcedures = constructorProcedure :: predicateProcedure :: (accessorProcedures ++ mutatorProcedures)
+
+    ParsedRecordTypeDefine(nameSymbol, recordType, allProcedures.toMap)
+  }
 
   def apply(
       appliedSymbol : sst.ScopedSymbol,
       operands : List[sst.ScopedDatum]
   )(implicit frontendConfig : FrontendConfig) : ParsedRecordTypeDefine = operands match {
-    case (typeSymbol : sst.ScopedSymbol) :: constructorDatum :: (predicateSymbol : sst.ScopedSymbol) :: fieldData =>
-      // Parse our fields first
-      val symbolToParsedField = parseFields(fieldData)
+    case (nameSymbol : sst.ScopedSymbol) ::
+         sst.ScopedProperList((constructorSymbol : sst.ScopedSymbol) :: constructorOperands) ::
+         (predicateSymbol : sst.ScopedSymbol) ::
+         fieldData =>
 
-      // Build our record type
-      val recordFields = symbolToParsedField.values.toList.map(_.field)
-      val recordType = new vt.RecordType(typeSymbol.name, recordFields)
+      parse(appliedSymbol, nameSymbol, None, constructorSymbol, constructorOperands, predicateSymbol, fieldData)
 
-      // Create our constructor and predicate procedures
-      val constructorProcedure = parseConstructor(recordType, symbolToParsedField.mapValues(_.field), constructorDatum)
-      val predicateProcedure = (predicateSymbol -> et.TypePredicate(recordType).assignLocationFrom(predicateSymbol))
+    case (nameSymbol : sst.ScopedSymbol) ::
+         (parentSymbol : sst.ScopedSymbol) ::
+         sst.ScopedProperList((constructorSymbol : sst.ScopedSymbol) :: constructorOperands) ::
+         (predicateSymbol : sst.ScopedSymbol) ::
+         fieldData =>
 
-      // Collect all of our accessors and mutators
-      val accessorProcedures = (symbolToParsedField.values.map { parsedField => 
-        (parsedField.accessorSymbol -> et.RecordAccessor(recordType, parsedField.field).assignLocationFrom(parsedField.accessorSymbol))
-      }).toList
-      
-      val mutatorProcedures = (symbolToParsedField.values.flatMap { parsedField => 
-        parsedField.mutatorSymbol map { mutator =>
-          (mutator -> et.RecordMutator(recordType, parsedField.field).assignLocationFrom(mutator))
-        }
-      }).toList
-      
-      // Check for duplicate accessor or mutator procedures
-      // R7RS only specifies that accessor and mutators must be unique. We intentionally ignore the predicate and
-      // constructor procedure here.
-      (accessorProcedures ++ mutatorProcedures).map(_._1).foldLeft(Set[sst.ScopedSymbol]()) { (seenSymbols, procSymbol) =>
-        if (seenSymbols.contains(procSymbol)) {
-          throw new BadSpecialFormException(procSymbol, "Duplicate record type procedure")
-        }
-
-        seenSymbols + procSymbol
-      }
-
-      val allProcedures = constructorProcedure :: predicateProcedure :: (accessorProcedures ++ mutatorProcedures)
-      
-      ParsedRecordTypeDefine(typeSymbol, recordType, allProcedures.toMap)
+      parse(appliedSymbol, nameSymbol, Some(parentSymbol), constructorSymbol, constructorOperands, predicateSymbol, fieldData)
 
     case _ =>
       throw new BadSpecialFormException(appliedSymbol, "Unrecognized record type form")

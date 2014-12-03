@@ -8,4 +8,7 @@ import llambda.compiler.valuetype._
   * This is implemented as a virtual record type representing the type variable. This allows most of typing
   * infrastructure to handle the type variable transparently before it's been resolved.
   */
-class TypeVar(sourceName : String, val upperBound : SchemeType = AnySchemeType) extends RecordType(sourceName, Nil)
+class TypeVar(
+    sourceName : String,
+    val upperBound : SchemeType = AnySchemeType
+) extends RecordType(sourceName, None, Nil)

@@ -7,16 +7,16 @@ import llambda.compiler.InternalCompilerErrorException
 
 object GenSetRecordDataField {
   def apply(block : IrBlockBuilder)(recordDataIr : IrValue, generatedType : GeneratedType, recordField : vt.RecordField, newValueIr : IrValue) {
-    val fieldIndex = generatedType.fieldToStructIndex(recordField)
+    val fieldIndices = generatedType.fieldToGepIndices(recordField)
     val fieldIrType = ValueTypeToIr(recordField.fieldType).irType
-    
+
     // Find the TBAA node
     val tbaaNode = generatedType.fieldToTbaaNode(recordField)
     val storeMetadata = Map("tbaa" -> tbaaNode)
 
     // Get the element pointer
-    val fieldPtr = block.getelementptr("fieldPtr")(fieldIrType, recordDataIr, List(0, fieldIndex).map(IntegerConstant(IntegerType(32), _)))
-  
+    val fieldPtr = block.getelementptr("fieldPtr")(fieldIrType, recordDataIr, (0 :: fieldIndices).map(IntegerConstant(IntegerType(32), _)))
+
     // Perform the store
     block.store(newValueIr, fieldPtr, metadata=storeMetadata)
   }

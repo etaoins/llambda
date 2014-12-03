@@ -19,9 +19,8 @@ class KnownRecordAccessorProc(recordType : vt.RecordType, field : vt.RecordField
   protected val symbolHint =
     recordType.sourceName
       .replaceAllLiterally("<", "")
-      .replaceAllLiterally(">", "") + 
-      "-" + field.sourceName
-        
+      .replaceAllLiterally(">", "") +
+      "-" + field.name
 
   def planFunction(parentPlan : PlanWriter, allocedSymbol : String) : PlannedFunction = {
     val recordCellTemp = ps.RecordTemp()

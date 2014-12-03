@@ -156,9 +156,19 @@ object SatisfiesType {
         Some(superValue == testingValue)
 
       case (superRecord : RecordType, testingRecord : RecordType) =>
-        // Record types satisfy themselves
-        Some(superRecord eq testingRecord)
-      
+        if (testingRecord.isEqualToOrChildOf(superRecord)) {
+          // Testing record is a child record
+          Some(true)
+        }
+        else if (superRecord.isEqualToOrChildOf(testingRecord)) {
+          // Testing record is a parent of child record
+          None
+        }
+        else {
+          // No direct parent-child relationship
+          Some(false)
+        }
+
       case (superPair : PairType, testingPair : PairType) =>
         // Pairs satisfy their more general pairs
         val memberResults = Set(

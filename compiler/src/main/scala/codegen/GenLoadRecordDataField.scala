@@ -6,15 +6,15 @@ import llambda.compiler.{valuetype => vt}
 
 object GenLoadRecordDataField {
   def apply(block : IrBlockBuilder)(recordDataIr : IrValue, generatedType : GeneratedType, recordField : vt.RecordField) : IrValue = {
-    val fieldIndex = generatedType.fieldToStructIndex(recordField)
+    val fieldIndices = generatedType.fieldToGepIndices(recordField)
     val fieldIrType = ValueTypeToIr(recordField.fieldType).irType
 
     // Find the TBAA node
     val tbaaNode = generatedType.fieldToTbaaNode(recordField)
 
     // Get the element pointer
-    val fieldPtr = block.getelementptr("fieldPtr")(fieldIrType, recordDataIr, List(0, fieldIndex).map(IntegerConstant(IntegerType(32), _)))
-  
+    val fieldPtr = block.getelementptr("fieldPtr")(fieldIrType, recordDataIr, (0 :: fieldIndices).map(IntegerConstant(IntegerType(32), _)))
+
     // Perform the load
     block.load("loadedField")(fieldPtr, metadata=Map("tbaa" -> tbaaNode))
   }

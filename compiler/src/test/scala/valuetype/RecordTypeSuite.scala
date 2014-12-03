@@ -31,6 +31,18 @@ class RecordTypeSuite extends SchemeTypeSuite {
     )
   }
 
+  test("child record types satisfy parent types") {
+    assert(SatisfiesType(recordType1, recordType1Child1) === Some(true))
+  }
+
+  test("parent record types may satisfy child record types") {
+    assert(SatisfiesType(recordType1Child1, recordType1) === None)
+  }
+
+  test("sibling record types do not satisfy each other") {
+    assert(SatisfiesType(recordType1Child1, recordType1Child2) === Some(false))
+  }
+
   test("distinct record types intersected with each other is an empty union") {
     assertIntersection(recordType1, recordType2, EmptySchemeType)
   }

@@ -3,11 +3,15 @@ import io.llambda
 
 import llambda.llvmir._
 import llambda.compiler.planner.{step => ps}
+import llambda.compiler.{valuetype => vt}
 
 object GenInitRecordLike {
   case class InitializedRecordLike(recordCell : IrValue, recordData : IrValue)
 
-  def apply(state : GenerationState, typeGenerator : TypeGenerator)(initStep : ps.InitRecordLike) : (GenerationState, InitializedRecordLike)  = { 
+  def apply(
+      state : GenerationState,
+      generatedTypes : Map[vt.RecordLikeType, GeneratedType]
+  )(initStep : ps.InitRecordLike) : (GenerationState, InitializedRecordLike) = {
     val cellType = initStep.recordLikeType.cellType
 
     val block = state.currentBlock
@@ -19,7 +23,7 @@ object GenInitRecordLike {
     
     // Get our record type information
     val recordLikeType = initStep.recordLikeType
-    val generatedType = typeGenerator(recordLikeType)
+    val generatedType = generatedTypes(recordLikeType)
     val recordDataIrType = generatedType.irType 
     
     // Set the class ID

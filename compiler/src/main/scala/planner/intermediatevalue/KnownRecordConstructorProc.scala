@@ -34,7 +34,7 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
 
     val namedArguments = ("world" -> ps.WorldPtrValue) ::
       (initializedFields.map { case field =>
-        (argumentUniquer(field.sourceName) -> fieldToTempValue(field))
+        (argumentUniquer(field.name) -> fieldToTempValue(field))
       }).toList
 
     // Initialize the record
@@ -44,7 +44,7 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
     plan.steps += ps.InitRecordLike(cellTemp, dataTemp, recordType, isUndefined=false)
 
     // Set all our fields
-    for(field <- recordType.fields) {
+    for(field <- recordType.fieldsWithInherited) {
       val fieldTemp = fieldToTempValue.getOrElse(field, {
         UnitValue.toTempValue(field.fieldType)(plan)
       })
@@ -80,11 +80,11 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
 
     plan.steps += ps.InitRecordLike(cellTemp, dataTemp, recordType, isUndefined=false)
 
-    for(field <- recordType.fields) {
+    for(field <- recordType.fieldsWithInherited) {
       val fieldTemp = fieldToTempValue.getOrElse(field, {
         UnitValue.toTempValue(field.fieldType)(plan)
       })
-        
+
       plan.steps += ps.SetRecordDataField(dataTemp, recordType, field, fieldTemp)
     }
 

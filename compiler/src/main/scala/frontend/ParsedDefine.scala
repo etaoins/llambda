@@ -27,7 +27,11 @@ case class ParsedMultipleValueDefine(
 ) extends ParsedDefine
 
 case class ParsedSimpleDefine(definedSymbol : sst.ScopedSymbol, value : BoundValue) extends ParsedDefine
-case class ParsedRecordTypeDefine(typeSymbol : sst.ScopedSymbol, recordType : vt.RecordType, procedures : Map[sst.ScopedSymbol, et.ArtificialProcedure]) extends ParsedDefine
+case class ParsedRecordTypeDefine(
+    typeSymbol : sst.ScopedSymbol,
+    recordType : vt.RecordType,
+    procedures : Map[sst.ScopedSymbol, et.ArtificialProcedure]
+) extends ParsedDefine
 
 // This doesn't introduce any bound values - it just signals to ModuleBodyExtractor to not attempt to parse the define
 // as a normal expression
