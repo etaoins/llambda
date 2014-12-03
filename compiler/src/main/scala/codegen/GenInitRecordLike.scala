@@ -19,58 +19,57 @@ object GenInitRecordLike {
 
     // Get a pointer to the new cell
     val allocation = state.currentAllocation
-    val (newAllocation, recordCell) = allocation.consumeCells(block)(1, cellType) 
-    
+    val (newAllocation, recordCell) = allocation.consumeCells(block)(1, cellType)
+
     // Get our record type information
     val recordLikeType = initStep.recordLikeType
     val generatedType = generatedTypes(recordLikeType)
-    val recordDataIrType = generatedType.irType 
-    
+    val recordDataIrType = generatedType.irType
+
     // Set the class ID
     val classIdIr = IntegerConstant(cellType.recordClassIdIrType, generatedType.classId)
     cellType.genStoreToRecordClassId(block)(classIdIr, recordCell)
 
-    val uncastRecordData = generatedType.storageType match {
+    val castRecordData = generatedType.storageType match {
       case TypeDataStorage.Empty =>
         cellType.genStoreToDataIsInline(block)(IntegerConstant(cellType.dataIsInlineIrType, 1), recordCell)
 
         // No fields; don't bother allocating or setting the recordData pointer
-        NullPointerConstant(PointerType(IntegerType(8)))
+        NullPointerConstant(PointerType(recordDataIrType))
 
       case TypeDataStorage.Inline =>
         cellType.genStoreToDataIsInline(block)(IntegerConstant(cellType.dataIsInlineIrType, 1), recordCell)
 
         // Store the value inline in the cell on top of the recordData field instead of going through another level of
         // indirection
-        cellType.genPointerToRecordData(block)(recordCell)
+        val uncastRecordData = cellType.genPointerToRecordData(block)(recordCell)
+        block.bitcastTo("castRecordData")(uncastRecordData, PointerType(recordDataIrType))
 
       case TypeDataStorage.OutOfLine =>
         val recordDataAllocDecl = RuntimeFunctions.recordDataAlloc
 
         cellType.genStoreToDataIsInline(block)(IntegerConstant(cellType.dataIsInlineIrType, 0), recordCell)
 
-        // Declare llcore_record_data_alloc 
+        // Declare llcore_record_data_alloc
         module.unlessDeclared(recordDataAllocDecl) {
           module.declareFunction(recordDataAllocDecl)
         }
-    
+
         // Find the size of the record data
         val irSize = GenSizeOf(block)(recordDataIrType)
-    
+
         // Allocate it using llcore_record_data_alloc
         val voidRecordData = block.callDecl(Some("rawRecordData"))(recordDataAllocDecl, List(irSize)).get
 
         // Store the record data pointer in the new cell
         cellType.genStoreToRecordData(block)(voidRecordData, recordCell)
 
-        voidRecordData
+        block.bitcastTo("castRecordData")(voidRecordData, PointerType(recordDataIrType))
     }
 
     if (initStep.isUndefined) {
       cellType.genStoreToIsUndefined(block)(IntegerConstant(cellType.isUndefinedIrType, 1), recordCell)
     }
-
-    val castRecordData = block.bitcastTo("castRecordData")(uncastRecordData, PointerType(recordDataIrType))
 
     val newState = state.copy(
       currentAllocation=newAllocation
