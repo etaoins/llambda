@@ -10,7 +10,7 @@ object GenSizeOf {
     val fakeElementPtr = ElementPointerConstant(irType, typeNullPointer, List(1))
 
     // Convert to an integer
-    block.ptrtoint("sizeOfValuei")(fakeElementPtr, IntegerType(64))
+    PtrToIntConstant(fakeElementPtr, IntegerType(64))
   }
 }
 
