@@ -83,10 +83,14 @@ private[frontend] object ParseRecordTypeDefine {
 
   private def parseConstructor(
       recordType : vt.RecordType,
-      nameToField : Map[String, vt.RecordField],
       constructorSymbol : sst.ScopedSymbol,
       constructorOperands : List[sst.ScopedDatum]
   ) : (sst.ScopedSymbol, et.RecordConstructor) = {
+    // Get a list of all of our fields including inherited ones
+    val nameToField = (recordType.fieldsWithInherited.map { field =>
+      field.name -> field
+    }).toMap
+
     val initializedFields = constructorOperands.foldLeft(List[vt.RecordField]()) {
       case (initialized, symbol @ sst.ScopedSymbol(_, fieldName)) =>
         // Find the field for this symbol
@@ -155,13 +159,8 @@ private[frontend] object ParseRecordTypeDefine {
     val recordFields = nameToParsedField.values.toList.map(_.field)
     val recordType = new vt.RecordType(nameSymbol.name, parentRecordOpt, recordFields)
 
-    // Get a list of all of our fields including inherited ones
-    val allFieldNamesMap = (recordType.fieldsWithInherited.map { field =>
-      field.name -> field
-    }).toMap
-
     // Create our constructor and predicate procedures
-    val constructorProcedure = parseConstructor(recordType, allFieldNamesMap, constructorSymbol, constructorOperands)
+    val constructorProcedure = parseConstructor(recordType, constructorSymbol, constructorOperands)
     val predicateProcedure = (predicateSymbol -> et.TypePredicate(recordType).assignLocationFrom(predicateSymbol))
 
     // Collect all of our accessors and mutators

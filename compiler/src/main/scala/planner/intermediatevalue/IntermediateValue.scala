@@ -206,13 +206,8 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
       }
 
       toNonProcedureTempValue(targetSchemeType, errorMessageOpt)
-
-    case closureType : vt.ClosureType =>
-      // Closure types are an internal implementation detail.
-      // Nothing should attempt to convert to them
-      throw new InternalCompilerErrorException("Attempt to convert value to a closure type")
   }
-  
+
   /** Casts this value to the specified cell value type
     *
     * The result may not be of represented by the specified cell value type (e.g. it may be unboxed) but it is 

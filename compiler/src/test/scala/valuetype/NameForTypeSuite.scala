@@ -40,10 +40,6 @@ class NameForTypeSuite extends FunSuite {
     assert(NameForType(UnicodeChar) === "<native-unicode-char>")
   }
   
-  test("closure type") {
-    assert(NameForType(new ClosureType("procedure", Nil)) === "<internal-closure-type>")
-  }
-  
   test("<boolean>") {
     assert(NameForType(BooleanType) === "<boolean>")
   }

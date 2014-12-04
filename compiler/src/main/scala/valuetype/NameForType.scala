@@ -156,9 +156,6 @@ object NameForType {
     case UnicodeChar =>
       "<native-unicode-char>"
 
-    case _ : ClosureType =>
-      "<internal-closure-type>"
-
     case schemeType : SchemeType =>
       // We need to deal with recursion etc.
       stackedNameForType(schemeType :: Nil, Map())

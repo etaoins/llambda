@@ -106,13 +106,4 @@ class ValueTypeToIrSuite extends FunSuite {
     assert(typeWithSign.irType === llvmir.PointerType(ct.RecordCell.irType))
     assert(typeWithSign.signed === None)
   }
-  
-  test("closure") {
-    val closureType = new vt.ClosureType("closure", Nil)
-
-    val typeWithSign = ValueTypeToIr(closureType)
-
-    assert(typeWithSign.irType === llvmir.PointerType(ct.ProcedureCell.irType))
-    assert(typeWithSign.signed === None)
-  }
 }

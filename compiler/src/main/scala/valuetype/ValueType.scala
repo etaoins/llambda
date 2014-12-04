@@ -72,21 +72,18 @@ case object UnicodeChar extends IntLikeType(32, true) {
   val schemeType = CharType
 }
 
-/** Identifies a record field
+/** Pointer to a garabge collected value cell containing a user-defined record type
   *
-  * This is not a case class because a field with the same source name and type can be distinct if it's declared in
-  * another record type.
+  * This uniquely identifies a record type even if has the same name and internal structure as another type
   */
-class RecordField(val name : String, val fieldType : ValueType)
-
-/** Pointer to a garabge collected value cell containing a record-like type */
-sealed abstract class RecordLikeType extends CellValueType with NonRecursiveType {
-  val cellType : ct.ConcreteCellType with ct.RecordLikeFields
+class RecordType(
+    val sourceName : String,
+    val parentRecordLikeOpt : Option[RecordType],
+    val fields : List[RecordField]
+) extends CellValueType with NonRecursiveType with DerivedSchemeType with RecordLikeType {
+  val cellType = ct.RecordCell
   val isGcManaged = true
-
-  val sourceName : String
-  val parentRecordLikeOpt :  Option[RecordLikeType]
-  val fields : List[RecordField]
+  val parentType = SchemeTypeAtom(ct.RecordCell)
 
   /** Test if this type is equal to or a child of another type */
   def isEqualToOrChildOf(other : RecordType) : Boolean = {
@@ -103,28 +100,9 @@ sealed abstract class RecordLikeType extends CellValueType with NonRecursiveType
       }
     }
   }
-
-  /** Returns the fields we inherit from our parent recursively */
-  def inheritedFields : List[RecordField] =
-    parentRecordLikeOpt.map(_.fieldsWithInherited).getOrElse(Nil)
-
-  /** Returns the fields we introduced followed be the fields we inherit from our parent */
-  def fieldsWithInherited : List[RecordField] =
-    fields ++ inheritedFields
 }
 
-/** Pointer to a closure type
-  *
-  * Closure types store the data needed for a procedure from its parent lexical scope. The storage is internally
-  * implemented identically to user-defined record types.
-  */
-class ClosureType(val sourceName : String, val fields : List[RecordField]) extends RecordLikeType {
-  val cellType = ct.ProcedureCell
-  val schemeType = TopProcedureType
-  val parentRecordLikeOpt = None
-}
-
-/** Types visible to Scheme programs without using the NFI */ 
+/** Types visible to Scheme programs without using the NFI */
 sealed abstract trait SchemeType extends CellValueType {
   val schemeType = this
 
@@ -312,19 +290,6 @@ object SpecificProperListType {
 
     case _ => None
   }
-}
-
-/** Pointer to a garabge collected value cell containing a user-defined record type
-  * 
-  * This uniquely identifies a record type even if has the same name and internal structure as another type 
-  */
-class RecordType(
-    val sourceName : String,
-    val parentRecordLikeOpt :  Option[RecordType],
-    val fields : List[RecordField]
-) extends RecordLikeType with DerivedSchemeType {
-  val cellType = ct.RecordCell
-  val parentType = SchemeTypeAtom(ct.RecordCell)
 }
 
 /** Union of multiple Scheme types */

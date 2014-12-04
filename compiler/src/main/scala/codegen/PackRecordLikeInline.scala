@@ -66,24 +66,16 @@ object PackRecordLikeInline {
       (field, targetPlatform.bytesForType(field.fieldType))
     }
 
-    // Make sure all of the field sizes are powers of two
-    // See the comments below
-    if (fieldsWithSizes.map(_._2).forall(isPowerOfTwo(_))) {
-      // Sort the fields by size in descending order
-      // If every field is naturally aligned and its size is a power of two then this will pack the values in to an
-      // optimal size
-      val candidateOrder = recordFields.sortBy { field =>
-        -targetPlatform.bytesForType(field.fieldType)
-      }
+    // If every size is a power of two we can pack them perfectly in descending order of size
+    if (fieldsWithSizes.map(_._2).forall(isPowerOfTwo(_)) &&
+        (fieldsWithSizes.map(_._2).sum <= inlineDataBytes)) {
+      val fieldOrder = fieldsWithSizes.sortBy(-_._2).map(_._1)
 
-      // Does the new order fit?
-      if (sizeOfStruct(candidateOrder.map(_.fieldType), targetPlatform) <= inlineDataBytes) {
-        // Repack successful!
-        return PackedRecordLike(candidateOrder, true)
-      }
+      PackedRecordLike(fieldOrder, true)
     }
-
-    return existingOutOfLine
+    else {
+       existingOutOfLine
+    }
   }
 }
 

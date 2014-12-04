@@ -25,10 +25,5 @@ object TempValueToIntermediate {
     case schemeType : vt.SchemeType =>
       val stableType = vt.StabiliseType(schemeType, planConfig.schemeDialect)
       new iv.CellValue(stableType, BoxedValue(schemeType.cellType, tempValue))
-
-    case _ : vt.ClosureType =>
-      // "Closures" are mostly a fiction to re-use the machinery of records.
-      // They should be treated as procedures
-      throw new InternalCompilerErrorException("Closure used as a first-class type")
   }
 }
