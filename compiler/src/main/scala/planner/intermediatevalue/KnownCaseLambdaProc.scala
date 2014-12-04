@@ -76,7 +76,9 @@ class KnownCaseLambdaProc(
         val closureDataTemp = ps.RecordLikeDataTemp()
         plan.steps += ps.LoadRecordLikeData(closureDataTemp, selfTempOpt.get, closureType)
 
-        val clauseSelfTemp = new ps.TempValue(recordField.fieldType.isGcManaged)
+        val fieldType = closureType.typeForField(recordField)
+        val clauseSelfTemp = new ps.TempValue(fieldType.isGcManaged)
+
         plan.steps += ps.LoadRecordDataField(clauseSelfTemp, closureDataTemp, closureType, recordField) 
         
         clause.knownProc.withSelfTemp(clauseSelfTemp) 

@@ -89,7 +89,8 @@ private[planner] object PlanCaseLambda {
           val closureDataTemp = ps.RecordLikeDataTemp()
           truePlan.steps += ps.LoadRecordLikeData(closureDataTemp, innerSelfTempOpt.get, closureType)
 
-          val restoredTemp = ps.Temp(recordField.fieldType)
+          val fieldType = closureType.typeForField(recordField)
+          val restoredTemp = ps.Temp(fieldType)
           truePlan.steps += ps.LoadRecordDataField(restoredTemp, closureDataTemp, closureType, recordField)
 
           procValue.withSelfTemp(restoredTemp)

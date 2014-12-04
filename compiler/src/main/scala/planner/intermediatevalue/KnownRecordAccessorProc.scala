@@ -12,7 +12,7 @@ class KnownRecordAccessorProc(recordType : vt.RecordType, field : vt.RecordField
       hasSelfArg=false,
       restArgMemberTypeOpt=None,
       fixedArgTypes=List(recordType),
-      returnType=vt.ReturnType.SingleValue(field.fieldType),
+      returnType=vt.ReturnType.SingleValue(recordType.typeForField(field)),
       attributes=Set()
     ).toPolymorphic
 ) {
@@ -32,7 +32,9 @@ class KnownRecordAccessorProc(recordType : vt.RecordType, field : vt.RecordField
     plan.steps += ps.LoadRecordLikeData(recordDataTemp, recordCellTemp, recordType) 
     
     // Read the field
-    val fieldValueTemp = ps.Temp(field.fieldType)
+    val fieldType = recordType.typeForField(field)
+    val fieldValueTemp = ps.Temp(fieldType)
+
     plan.steps += ps.LoadRecordDataField(fieldValueTemp, recordDataTemp, recordType, field) 
     plan.steps += ps.Return(Some(fieldValueTemp))
 
@@ -51,12 +53,14 @@ class KnownRecordAccessorProc(recordType : vt.RecordType, field : vt.RecordField
 
         val recordDataTemp = ps.RecordLikeDataTemp()
         plan.steps += ps.LoadRecordLikeData(recordDataTemp, recordCellTemp, recordType) 
-        
-        // Read the field
-        val fieldValueTemp = ps.Temp(field.fieldType)
-        plan.steps += ps.LoadRecordDataField(fieldValueTemp, recordDataTemp, recordType, field) 
 
-        val resultValue = TempValueToIntermediate(field.fieldType, fieldValueTemp)(plan.config)
+        // Read the field
+        val fieldType = recordType.typeForField(field)
+        val fieldValueTemp = ps.Temp(fieldType)
+
+        plan.steps += ps.LoadRecordDataField(fieldValueTemp, recordDataTemp, recordType, field)
+
+        val resultValue = TempValueToIntermediate(fieldType, fieldValueTemp)(plan.config)
 
         Some(PlanResult(
           state=state,

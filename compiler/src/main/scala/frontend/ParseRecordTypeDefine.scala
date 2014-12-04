@@ -8,7 +8,8 @@ import llambda.compiler.sst
 import llambda.compiler.et
 import llambda.compiler.codegen.CompactRepresentationForType
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.Primitives
+import llambda.compiler.valuetype.{polymorphic => pm}
+import llambda.compiler.{Primitives, BoundType, Scope}
 import llambda.compiler.BadSpecialFormException
 
 private[frontend] object ParseRecordTypeDefine {
@@ -19,9 +20,14 @@ private[frontend] object ParseRecordTypeDefine {
   )
 
   private def parseFields(
+      selfSymbol : sst.ScopedSymbol,
+      selfTypeVar : pm.TypeVar,
       fieldData : List[sst.ScopedDatum],
       inheritedFieldNames : Set[String]
-  )(implicit frontendConfig : FrontendConfig) : ListMap[String, ParsedField] =
+  )(implicit frontendConfig : FrontendConfig) : ListMap[String, ParsedField] = {
+    val typeBindings = List(selfSymbol -> BoundType(selfTypeVar))
+    val typeScopeMapping = Scope.mappingForBoundValues(typeBindings)
+
     fieldData.foldLeft(ListMap[String, ParsedField]()) {
       case (parsedFields, fieldDatum @ sst.ScopedProperList(fieldDefDatum :: procedureData)) =>
         // We can either be just a symbol and have no type or we can be a Scala/Racket style (symbol : <type>)
@@ -37,7 +43,7 @@ private[frontend] object ParseRecordTypeDefine {
               fieldTypeDatum
           )) =>
             // Resolve the field's Scheme type
-            val schemeType = ExtractType.extractStableType(fieldTypeDatum)
+            val schemeType = ExtractType.extractStableType(fieldTypeDatum.rescoped(typeScopeMapping))
 
             // Rewrite this to a compact native type
             val compactType = CompactRepresentationForType(schemeType)
@@ -80,6 +86,7 @@ private[frontend] object ParseRecordTypeDefine {
       case (_, other) =>
         throw new BadSpecialFormException(other, "Unrecognized record field definition")
     }
+  }
 
   private def parseConstructor(
       recordType : vt.RecordType,
@@ -112,7 +119,7 @@ private[frontend] object ParseRecordTypeDefine {
     for((fieldName, field) <- nameToField) {
       if (!initializedFields.contains(field)) {
         // Make sure this can be initialized to #!unit
-        field.fieldType match {
+        recordType.typeForField(field) match {
           case schemeType : vt.SchemeType if vt.SatisfiesType(schemeType, vt.UnitType).get =>
             // This is okay
 
@@ -153,11 +160,15 @@ private[frontend] object ParseRecordTypeDefine {
         Set[String]()
     }
 
-    val nameToParsedField = parseFields(fieldData, parentFieldNames)
+    // Introduce a type variable referencing the type being defined
+    val selfTypeVar = new pm.TypeVar(nameSymbol.name)
+
+    // Parse our fields
+    val nameToParsedField = parseFields(nameSymbol, selfTypeVar, fieldData, parentFieldNames)
 
     // Build our record type
     val recordFields = nameToParsedField.values.toList.map(_.field)
-    val recordType = new vt.RecordType(nameSymbol.name, parentRecordOpt, recordFields)
+    val recordType = new vt.RecordType(nameSymbol.name, recordFields, Some(selfTypeVar), parentRecordOpt)
 
     // Create our constructor and predicate procedures
     val constructorProcedure = parseConstructor(recordType, constructorSymbol, constructorOperands)

@@ -48,7 +48,7 @@ object BuildRecordLikeTypes {
   )
 
   private def typeAndAllParents(recordLikeType : vt.RecordLikeType) : List[vt.RecordLikeType] = {
-    recordLikeType :: recordLikeType.parentRecordLikeOpt.map(typeAndAllParents).getOrElse(Nil)
+    recordLikeType :: recordLikeType.parentRecordOpt.map(typeAndAllParents).getOrElse(Nil)
   }
 
   private def findAllRecordTypes(steps : Iterable[ps.Step]) : List[vt.RecordLikeType] = {
@@ -100,7 +100,7 @@ object BuildRecordLikeTypes {
       }) * (config.targetPlatform.pointerBits / 8)
 
       // Try to pack the record fields
-      val packedRecord = PackRecordLikeInline(recordLikeType.fields, inlineDataSize, config.targetPlatform)
+      val packedRecord = PackRecordLikeInline(recordLikeType, inlineDataSize, config.targetPlatform)
 
       // Check if we can inline
       val storage = if (packedRecord.inline) {
@@ -119,7 +119,7 @@ object BuildRecordLikeTypes {
     val parentStructOpt = parentGeneratedTypeOpt.map(_.irType)
 
     val selfFields = fieldOrder.map { field =>
-      ValueTypeToIr(field.fieldType).irType
+      ValueTypeToIr(recordLikeType.typeForField(field)).irType
     }
 
     val irType = StructureType(parentStructOpt.toSeq ++ selfFields)
@@ -208,10 +208,14 @@ object BuildRecordLikeTypes {
       val recordLikeType = generatedType.recordLikeType
       val recordCellNullPointer = NullPointerConstant(PointerType(generatedType.irType))
 
+      val fieldToTypeWithInherited = recordLikeType.fieldsWithInherited map { field =>
+        field -> recordLikeType.typeForField(field)
+      }
+
       // Generate an expression for the offset of each field that points to a cell
-      val cellOffsets = recordLikeType.fieldsWithInherited.filter(_.fieldType.isGcManaged).map({ case field =>
+      val cellOffsets = fieldToTypeWithInherited.filter(_._2.isGcManaged) map { case (field, fieldType) =>
         val fieldIndices = generatedType.fieldToGepIndices(field)
-        val fieldIrType = ValueTypeToIr(field.fieldType).irType
+        val fieldIrType = ValueTypeToIr(fieldType).irType
 
         // Get a field pointer based on a null record cell pointer
         // This will generate a byte offset
@@ -219,7 +223,7 @@ object BuildRecordLikeTypes {
 
         // Convert it to i32
         PtrToIntConstant(fieldPointer, offsetIrType)
-      })
+      }
 
       if (cellOffsets.isEmpty) {
         // Nothing to do!
@@ -286,7 +290,7 @@ object BuildRecordLikeTypes {
     val allTypes = (vt.EmptyClosureType :: findAllRecordTypes(functions.flatMap(_._2.steps))).distinct
 
     // Build a inheritance-based type tree
-    val groupedTypes = allTypes.groupBy(_.parentRecordLikeOpt)
+    val groupedTypes = allTypes.groupBy(_.parentRecordOpt)
 
     val rootTypes = groupedTypes.get(None).getOrElse(Nil)
     val childTypesByParent = groupedTypes collect { case (Some(parent), child) =>

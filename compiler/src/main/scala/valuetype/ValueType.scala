@@ -78,8 +78,9 @@ case object UnicodeChar extends IntLikeType(32, true) {
   */
 class RecordType(
     val sourceName : String,
-    val parentRecordLikeOpt : Option[RecordType],
-    val fields : List[RecordField]
+    val fields : List[RecordField],
+    val selfTypeVarOpt : Option[pm.TypeVar] = None,
+    val parentRecordOpt : Option[RecordType] = None
 ) extends CellValueType with NonRecursiveType with DerivedSchemeType with RecordLikeType {
   val cellType = ct.RecordCell
   val isGcManaged = true
@@ -91,7 +92,7 @@ class RecordType(
       true
     }
     else {
-      parentRecordLikeOpt match {
+      parentRecordOpt match {
         case Some(parentRecordLike) =>
           parentRecordLike.isEqualToOrChildOf(other)
 
@@ -100,6 +101,13 @@ class RecordType(
       }
     }
   }
+
+  lazy val typeForField : Map[RecordField, ValueType] = fields.map({ field =>
+    val selfTypeVars = selfTypeVarOpt.map(_ -> this).toMap
+    val reconciledVars = pm.ReconcileTypeVars.Result(selfTypeVars)
+
+    field -> pm.InstantiateType(reconciledVars, field.typeTemplate)
+  }).toMap ++ parentRecordOpt.map(_.typeForField).getOrElse(Map())
 }
 
 /** Types visible to Scheme programs without using the NFI */

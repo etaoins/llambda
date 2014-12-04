@@ -11,4 +11,4 @@ import llambda.compiler.valuetype._
 class TypeVar(
     sourceName : String,
     val upperBound : SchemeType = AnySchemeType
-) extends RecordType(sourceName, None, Nil)
+) extends RecordType(sourceName, Nil)

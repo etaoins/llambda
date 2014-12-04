@@ -11,7 +11,7 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
       hasWorldArg=true,
       hasSelfArg=false,
       restArgMemberTypeOpt=None,
-      fixedArgTypes=initializedFields.map(_.fieldType),
+      fixedArgTypes=initializedFields.map(recordType.typeForField),
       returnType=vt.ReturnType.SingleValue(recordType),
       attributes=Set()
     ).toPolymorphic
@@ -25,7 +25,8 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
     val plan = parentPlan.forkPlan()
 
     val fieldToTempValue = (initializedFields.map { field =>
-      (field, ps.Temp(field.fieldType))
+      val fieldType = recordType.typeForField(field)
+      (field, ps.Temp(fieldType))
     }).toMap
 
     // Get unique argument names
@@ -46,7 +47,8 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
     // Set all our fields
     for(field <- recordType.fieldsWithInherited) {
       val fieldTemp = fieldToTempValue.getOrElse(field, {
-        UnitValue.toTempValue(field.fieldType)(plan)
+        val fieldType = recordType.typeForField(field)
+        UnitValue.toTempValue(fieldType)(plan)
       })
 
       plan.steps += ps.SetRecordDataField(dataTemp, recordType, field, fieldTemp)
@@ -71,7 +73,8 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
 
     // Convert our fields to the correct values
     val fieldToTempValue = (operands.map(_._2).zip(initializedFields) map { case (operandValue, field) =>
-      (field -> operandValue.toTempValue(field.fieldType))
+      val fieldType = recordType.typeForField(field)
+      (field -> operandValue.toTempValue(fieldType))
     }).toMap
 
     // Build the record value
@@ -82,7 +85,8 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
 
     for(field <- recordType.fieldsWithInherited) {
       val fieldTemp = fieldToTempValue.getOrElse(field, {
-        UnitValue.toTempValue(field.fieldType)(plan)
+        val fieldType = recordType.typeForField(field)
+        UnitValue.toTempValue(fieldType)(plan)
       })
 
       plan.steps += ps.SetRecordDataField(dataTemp, recordType, field, fieldTemp)

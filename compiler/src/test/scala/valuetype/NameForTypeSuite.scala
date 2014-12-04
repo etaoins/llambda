@@ -83,7 +83,7 @@ class NameForTypeSuite extends FunSuite {
   }
 
   test("record type") {
-    assert(NameForType(new RecordType("<custom-record>", None, Nil)) === "<custom-record>")
+    assert(NameForType(new RecordType("<custom-record>", Nil)) === "<custom-record>")
   }
   
   test("empty scheme type") {

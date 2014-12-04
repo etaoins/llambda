@@ -39,15 +39,15 @@ object PackRecordLikeInline {
     *
     * Whenever possible existing field order is preserved
     *
-    * @param recordFields      Record fields to repack
+    * @param recordLike        Record-like type to repack
     * @param inlineDataByres   Number of bytes available for inline data storage
-    * @param targetPlatform    Target platform to use when determing type sizes and alignments 
+    * @param targetPlatform    Target platform to use when determing type sizes and alignments
     */
-  def apply(recordFields : List[vt.RecordField], inlineDataBytes : Int, targetPlatform : TargetPlatform) : PackedRecordLike = {
+  def apply(recordLike : vt.RecordLikeType, inlineDataBytes : Int, targetPlatform : TargetPlatform) : PackedRecordLike = {
     // The existing order stored out-of-line
-    lazy val existingOutOfLine = PackedRecordLike(recordFields, false)
+    lazy val existingOutOfLine = PackedRecordLike(recordLike.fields, false)
     // The existing order stored inline
-    lazy val existingInline = PackedRecordLike(recordFields, true)
+    lazy val existingInline = PackedRecordLike(recordLike.fields, true)
 
     if (!targetPlatform.usesNaturalAlignment) {
       // We assume natural alignment
@@ -56,20 +56,24 @@ object PackRecordLikeInline {
       return existingOutOfLine
     }
 
-    if (sizeOfStruct(recordFields.map(_.fieldType), targetPlatform) <= inlineDataBytes) {
+    val fieldsWithType = recordLike.fields map { field =>
+      field -> recordLike.typeForField(field)
+    }
+
+    if (sizeOfStruct(fieldsWithType.map(_._2), targetPlatform) <= inlineDataBytes) {
       // This already fits
       return existingInline
     }
 
     // Get the sizes of the fields once
-    val fieldsWithSizes = recordFields.map { field =>
-      (field, targetPlatform.bytesForType(field.fieldType))
+    val fieldsWithSize = fieldsWithType.map { case (field, fieldType) =>
+      (field, targetPlatform.bytesForType(fieldType))
     }
 
     // If every size is a power of two we can pack them perfectly in descending order of size
-    if (fieldsWithSizes.map(_._2).forall(isPowerOfTwo(_)) &&
-        (fieldsWithSizes.map(_._2).sum <= inlineDataBytes)) {
-      val fieldOrder = fieldsWithSizes.sortBy(-_._2).map(_._1)
+    if (fieldsWithSize.map(_._2).forall(isPowerOfTwo(_)) &&
+        (fieldsWithSize.map(_._2).sum <= inlineDataBytes)) {
+      val fieldOrder = fieldsWithSize.sortBy(-_._2).map(_._1)
 
       PackedRecordLike(fieldOrder, true)
     }

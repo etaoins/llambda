@@ -99,7 +99,7 @@ class ValueTypeToIrSuite extends FunSuite {
   }
   
   test("record cell") {
-    val recordType = new vt.RecordType("recordType", None, Nil)
+    val recordType = new vt.RecordType("recordType", Nil)
 
     val typeWithSign = ValueTypeToIr(recordType)
 

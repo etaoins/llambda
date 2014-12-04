@@ -93,7 +93,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
 
         val constDatumField = recordType.fieldForName("const-datum")
         // No type defaults to <any>, the most permissive type
-        assert(constDatumField.fieldType === vt.AnySchemeType)
+        assert(recordType.typeForField(constDatumField) === vt.AnySchemeType)
 
         inside(exprs) {
           case et.TopLevelDefine(bindings) :: Nil =>
@@ -123,7 +123,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         assert(recordType.sourceName === "<new-type>")
 
         val constIntField = recordType.fieldForName("const-int")
-        assert(constIntField.fieldType === vt.Int64)
+        assert(recordType.typeForField(constIntField) === vt.Int64)
 
         inside(exprs) {
           case et.TopLevelDefine(bindings) :: Nil =>
@@ -168,10 +168,10 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         
         val constDatumField = recordType.fieldForName("const-datum")
         val mutableIntField = recordType.fieldForName("mutable-int")
-          
-        assert(constDatumField.fieldType === vt.AnySchemeType)
+
+        assert(recordType.typeForField(constDatumField) === vt.AnySchemeType)
         // <exact-integer> should be implicitly converted to int64 for storage
-        assert(mutableIntField.fieldType === vt.Int64)
+        assert(recordType.typeForField(mutableIntField) === vt.Int64)
 
         inside(exprs) {
           case et.TopLevelDefine(bindings) :: Nil =>
@@ -221,7 +221,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
             val innerFieldAccessorLoc = storageLocFor(scope, "outer-type-inner-field")
 
             val innerField = outerType.fieldForName("inner-field")
-            assert(innerField.fieldType === innerType)
+            assert(outerType.typeForField(innerField) === innerType)
 
             inside(outerExprs) {
               case et.TopLevelDefine(bindings) :: Nil =>
@@ -255,10 +255,10 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         val constIntAccessorLoc = storageLocFor(scope, "parent-const-int")
 
         assert(parentType.sourceName === "<parent>")
-        assert(parentType.parentRecordLikeOpt === None)
+        assert(parentType.parentRecordOpt === None)
 
         val constIntField = parentType.fieldForName("const-int")
-        assert(constIntField.fieldType === vt.Int64)
+        assert(parentType.typeForField(constIntField) === vt.Int64)
 
         inside(parentExprs) {
           case et.TopLevelDefine(bindings) :: Nil =>
@@ -274,10 +274,10 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         val constFlonumAccessorLoc = storageLocFor(scope, "child-const-flonum")
 
         assert(childType.sourceName === "<child>")
-        assert(childType.parentRecordLikeOpt === Some(parentType))
+        assert(childType.parentRecordOpt === Some(parentType))
 
         val constFlonumField = childType.fieldForName("const-flonum")
-        assert(constFlonumField.fieldType === vt.Double)
+        assert(childType.typeForField(constFlonumField) === vt.Double)
 
         inside(childExprs) {
           case et.TopLevelDefine(bindings) :: Nil =>
@@ -409,6 +409,36 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
                    (child const-flonum)
                    child?
                    ((const-flonum : <flonum>) child-const-flonum))""")(scope)
+    }
+  }
+
+  test("recursive record type") {
+    val scope = new Scope(collection.mutable.Map(), Some(baseScope))
+
+    val exprs = bodyFor("""(define-record-type <recursive-type>
+                           (recursive-type parent)
+                           recursive-type?
+                           ([parent : (U <recursive-type> <unit>)] recursive-type-parent))""")(scope)
+
+    inside(scope("<recursive-type>")) {
+      case BoundType(recordType : vt.RecordType) =>
+        val consLoc = storageLocFor(scope, "recursive-type")
+        val predLoc = storageLocFor(scope, "recursive-type?")
+        val parentAccessorLoc = storageLocFor(scope, "recursive-type-parent")
+
+        assert(recordType.sourceName === "<recursive-type>")
+
+        val parentField = recordType.fieldForName("parent")
+        assert(recordType.typeForField(parentField) === vt.UnionType(Set(recordType, vt.UnitType)))
+
+        inside(exprs) {
+          case et.TopLevelDefine(bindings) :: Nil =>
+            assert(bindings.toSet === Set(
+              et.SingleBinding(consLoc, et.RecordConstructor(recordType, List(parentField))),
+              et.SingleBinding(predLoc, et.TypePredicate(recordType)),
+              et.SingleBinding(parentAccessorLoc, et.RecordAccessor(recordType, parentField))
+            ))
+        }
     }
   }
 }

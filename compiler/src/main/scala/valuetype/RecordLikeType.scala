@@ -2,13 +2,14 @@ package io.llambda.compiler.valuetype
 import io.llambda
 
 import llambda.compiler.{celltype => ct}
+import llambda.compiler.valuetype.{polymorphic => pm}
 
 /** Identifies a record field
   *
   * This is not a case class because a field with the same source name and type can be distinct if it's declared in
   * another record type.
   */
-class RecordField(val name : String, val fieldType : ValueType)
+class RecordField(val name : String, val typeTemplate : ValueType)
 
 /** Trait for record-like types
   *
@@ -18,13 +19,20 @@ class RecordField(val name : String, val fieldType : ValueType)
 abstract trait RecordLikeType {
   val cellType : ct.ConcreteCellType with ct.RecordLikeFields
 
+  /** Souce name for this record-like. This is used when printing type names and when generating LLVM IR */
   val sourceName : String
-  val parentRecordLikeOpt : Option[RecordLikeType]
+
+  /* Optional parent RecordType for to support inheritance */
+  val parentRecordOpt : Option[RecordLikeType]
+
   val fields : List[RecordField]
+
+  /** Returns the instantiated type for the given record field */
+  val typeForField : Map[RecordField, ValueType]
 
   /** Returns the fields we inherit from our parent recursively */
   def inheritedFields : List[RecordField] =
-    parentRecordLikeOpt.map(_.fieldsWithInherited).getOrElse(Nil)
+    parentRecordOpt.map(_.fieldsWithInherited).getOrElse(Nil)
 
   /** Returns the fields we introduced followed be the fields we inherit from our parent */
   def fieldsWithInherited : List[RecordField] =
@@ -38,5 +46,10 @@ abstract trait RecordLikeType {
   */
 class ClosureType(val sourceName : String, val fields : List[RecordField]) extends RecordLikeType {
   val cellType = ct.ProcedureCell
-  val parentRecordLikeOpt = None
+  val parentRecordOpt = None
+
+  lazy val typeForField = (fields.map { field =>
+    // Closures don't support recursion or polymorphism - short circuit this
+    field -> field.typeTemplate
+  }).toMap
 }

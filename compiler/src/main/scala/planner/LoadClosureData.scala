@@ -38,7 +38,8 @@ private[planner] object LoadClosureData {
 
       wantedVariables.map({ capturedVar =>
         // Load the variable
-        val varTemp = new ps.TempValue(capturedVar.recordField.fieldType.isGcManaged)
+        val fieldType = manifest.closureType.typeForField(capturedVar.recordField)
+        val varTemp = new ps.TempValue(fieldType.isGcManaged)
         plan.steps += ps.LoadRecordDataField(varTemp, closureDataTemp, manifest.closureType, capturedVar.recordField)
 
         // Add it to our state

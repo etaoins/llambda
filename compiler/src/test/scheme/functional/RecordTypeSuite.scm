@@ -230,3 +230,24 @@
   (assert-field-value "Int" named-number-name test-named-int)
   (assert-field-value "Flonum"  named-number-name test-named-flonum)
   (assert-field-value "NaN"  named-number-name test-named-nan)))
+
+(define-test "recursive record types" (expect-success
+  (import (llambda typed))
+
+  (define-record-type <dodgy-list> (dcons dcar dcdr) dodgy-list?
+                      ([dcar : <any>] dcar set-dcar!)
+                      ([dcdr : (U <dodgy-list> '())] dcdr set-dcdr!))
+
+  (define dodgy-list (dcons 1 (dcons 2 (dcons 3 (dcons 4 '())))))
+
+  (assert-equal 1 (dcar dodgy-list))
+  (assert-equal 2 (dcar (dcdr dodgy-list)))
+  (assert-equal 3 (dcar (dcdr (dcdr dodgy-list))))
+  (assert-equal 4 (dcar (dcdr (dcdr (dcdr dodgy-list)))))
+  (assert-equal '() (dcdr (dcdr (dcdr (dcdr dodgy-list)))))
+
+  (assert-raises error-object?
+    (set-dcdr! dodgy-list (typeless-cell #f)))
+
+  (set-dcdr! dodgy-list '())
+  (assert-equal '() (dcdr dodgy-list))))
