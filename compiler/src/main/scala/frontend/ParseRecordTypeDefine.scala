@@ -51,7 +51,7 @@ private[frontend] object ParseRecordTypeDefine {
             (nameSymbol, compactType)
 
           case other =>
-            val message = s"Unrecognized record field name definition. Must be either identiifer or [identifier : <type>]."
+            val message = s"Unrecognized record field name definition. Must be either identifier or [identifier : <type>]."
             throw new BadSpecialFormException(other, message)
         }
 
