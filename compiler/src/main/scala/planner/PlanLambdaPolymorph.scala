@@ -102,7 +102,7 @@ object PlanLambdaPolymorph {
     }
 
     // See if we can retype some of our args
-    val argTypeMapping = RetypeLambdaArgs(lambdaExpr)(parentState, parentPlan.config)
+    val argTypeMapping = RetypeLambdaArgs(lambdaExpr, polymorphType)(parentState, parentPlan.config)
 
     val retypedFixedArgs = fixedArgLocs.zip(polymorphType.fixedArgTypes) map {
       case (argLoc, declType) =>

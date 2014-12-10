@@ -173,12 +173,14 @@ private[planner] object RetypeLambdaArgs {
       throw new CollectionAborted(argTypes)
   }
 
-  def apply(lambdaExpr : et.Lambda)(implicit state : PlannerState, planConfig : PlanConfig) : ArgTypes = {
-    val initialArgTypes = lambdaExpr.fixedArgs.filter({ storageLoc =>
-      !planConfig.analysis.mutableVars.contains(storageLoc)
-    }).map({ storageLoc =>
-      storageLoc -> storageLoc.schemeType
-    })(breakOut) : ArgTypes 
+  def apply(
+      lambdaExpr : et.Lambda,
+      procType : vt.ProcedureType
+  )(implicit state : PlannerState, planConfig : PlanConfig) : ArgTypes = {
+    val initialArgTypes = (lambdaExpr.fixedArgs zip procType.fixedArgTypes).filter({
+      case (storageLoc, fixedArgType) =>
+        !planConfig.analysis.mutableVars.contains(storageLoc)
+    }).toMap
 
     try {
       collectTypeEvidence(

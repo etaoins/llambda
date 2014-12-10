@@ -286,3 +286,12 @@
   ; verify this as the upper bound + trampoline will behave the same way. The best we can do is make sure this is
   ; semantically correct.
   (assert-equal 5 (int-mapper 5 return-arg))))
+
+(define-test "polymorphic procedure taking parameterized procedure of wrong type fails at compile time" (expect-compile-failure
+  (import (llambda typed))
+
+  (: apply-single (All (A B) (-> A B) A B))
+  (define (apply-single proc val)
+    (proc val))
+
+  (apply-single symbol->string "Hello")))
