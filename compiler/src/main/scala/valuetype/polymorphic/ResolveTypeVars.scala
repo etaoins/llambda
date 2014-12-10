@@ -109,15 +109,18 @@ object ResolveTypeVars {
       results.foldLeft(Result())(_ ++ _)
 
     case (ProcedureType(polyFixed, polyRestOpt, polyReturn), ProcedureType(evidenceFixed, evidenceRestOpt, evidenceReturn)) =>
-      val polyListType = FormalsToListType(polyFixed, polyRestOpt)
-      val evidenceListType = FormalsToListType(evidenceFixed, evidenceRestOpt)
-      val formalsResult = visitType(typeVars, polyListType, Nil, evidenceListType, Nil)
+      // Intentionally do not use the formals to resolve polymorphic variables. The formals aren't "evidence" of types
+      // as they're passed input from other polymorphic collections. For example, the signature for (filter) might be:
+      // (All (A) (-> A <boolean>) (Listof A) (Listof A))
+      //
+      // If the "A" in the formals for the predicate was used to resolve types it would typically cause A to become
+      // <any> for the entire type. However, if it's not used to resolve types it will take on the type of the input
+      // list. This adds additional type safety by ensuring the predicate procedure takes the input type.
 
       val polyReturnListType = polyReturn.toValueListType
       val evidenceReturnListType = evidenceReturn.toValueListType
-      val returnResult = visitType(typeVars, polyReturnListType, Nil, evidenceReturnListType, Nil)
 
-      formalsResult ++ returnResult
+      visitType(typeVars, polyReturnListType, Nil, evidenceReturnListType, Nil)
 
     case _ =>
       Result()

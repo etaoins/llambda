@@ -189,8 +189,6 @@ class ResolveTypeVarsSuite extends FunSuite {
     val result = ResolveTypeVars(Set(polyA, polyB, polyC), polyProc, evidence)
 
     assert(result.values == Map(
-      polyA -> NumberType,
-      polyB -> FlonumType,
       polyC -> PortType
     ))
   }
@@ -211,7 +209,6 @@ class ResolveTypeVarsSuite extends FunSuite {
     val result = ResolveTypeVars(Set(polyA, polyB, polyC), polyProc, evidence)
 
     assert(result.values == Map(
-      polyA -> NumberType,
       polyB -> PortType,
       polyC -> BooleanType
     ))
