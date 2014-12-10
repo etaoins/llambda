@@ -4,18 +4,19 @@
   (export dynamic-false dynamic-true typeless-cell typed-dynamic assert-equal assert-true assert-false assert-raises
           assert-within path-for-test-file)
   (begin
-    ; Use a mutable to launder the value so its type information is lost
-    ; There's very little motivation to optimise mutable usage so this should be safe for a long time
-    (define (typeless-cell x)
-      (define mutable #!unit)
-      (set! mutable x)
-      mutable)
-
     ; This is similar to (cast) except it destroys any optimiser information about the underlying value
     (define-syntax typed-dynamic
       (syntax-rules ()
-                    ((typed-cell value <type>)
-                     (cast (typeless-cell value) <type>))))
+                    ((typed-dynamic value <type>)
+                     (begin
+                       (define mutable : <type> value)
+                       (set! mutable value)
+                       mutable))))
+
+    ; Use a mutable to launder the value so its type information is lost
+    ; There's very little motivation to optimise mutable usage so this should be safe for a long time
+    (define (typeless-cell x)
+      (typed-dynamic x <any>))
 
     (define dynamic-false (typeless-cell #f))
     (define dynamic-true (typeless-cell #t))

@@ -142,7 +142,7 @@
   ; Try to get good coverage here
   (define known-content-list '(one two three))
   (define known-length-list (list dynamic-symbol dynamic-symbol dynamic-symbol))
-  (define unknown-length-list (typed-dynamic '(one two three) (Listof <symbol>)))
+  (define unknown-length-list (typed-dynamic '(one two three) <list-element>))
 
   (assert-equal 3 (apply count-args known-content-list))
   (assert-equal 3 (apply count-args known-length-list))
