@@ -42,12 +42,18 @@ class ResolveTypeVarsSuite extends FunSuite {
   }
 
   test("resolving a pair with empty scheme type") {
+    val polyEmpty = EmptySchemeType
+    val evidence = SpecificPairType(ExactIntegerType, FlonumType)
+
+    assert(ResolveTypeVars(Set(polyA), polyEmpty, evidence).values == Map())
+  }
+
+  test("resolving the empty scheme type with pair") {
     val polyPair = SpecificPairType(polyA, polyB)
     val evidence = EmptySchemeType
 
     assert(ResolveTypeVars(Set(polyA), polyPair, evidence).values == Map())
   }
-
 
   test("resolving simple pair type with same car and cdr variables") {
     val polyPair = SpecificPairType(polyA, polyA)
@@ -138,6 +144,14 @@ class ResolveTypeVarsSuite extends FunSuite {
     ))
   }
 
+  test("resolving empty specific vector type with specific vector") {
+    val polyVec = SpecificVectorType(Vector())
+
+    val evidence = SpecificVectorType(Vector())
+
+    assert(ResolveTypeVars(Set(polyA), polyVec, evidence).values == Map())
+  }
+
   test("resolving uniform vector type with specific vector") {
     val polyVec = UniformVectorType(polyA)
 
@@ -149,6 +163,14 @@ class ResolveTypeVarsSuite extends FunSuite {
     assert(ResolveTypeVars(Set(polyA), polyVec, evidence).values == Map(
       polyA -> NumberType
     ))
+  }
+
+  test("resolving uniform vector type with empty specific vector") {
+    val polyVec = UniformVectorType(polyA)
+
+    val evidence = SpecificVectorType(Vector())
+
+    assert(ResolveTypeVars(Set(polyA), polyVec, evidence).values == Map())
   }
 
   test("resolving procedure type from procedure type with identical arity") {

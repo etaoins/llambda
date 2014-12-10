@@ -66,15 +66,15 @@ object ResolveTypeVars {
     case (typeVar : TypeVar, evidence) if typeVars.contains(typeVar) =>
       Result(Map(typeVar -> evidence))
 
+    case (EmptySchemeType, _) | (_, EmptySchemeType) =>
+      Result()
+
     case (polyUnion @ UnionType(polyMembers), _) =>
       val results = polyMembers map { polyMember =>
         visitType(typeVars, polyMember, polyUnion :: polyStack, evidence, evidenceStack)
       }
 
       results.reduce(_ ++ _)
-
-    case (_, EmptySchemeType) =>
-      Result()
 
     case (_, evidenceUnion @ UnionType(evidenceMembers)) =>
       val results = evidenceMembers map { evidenceMember =>
@@ -99,14 +99,14 @@ object ResolveTypeVars {
         visitTypeRef(typeVars, polyRef, polyVec :: polyStack, evidenceRef, evidenceVec :: evidenceStack)
       }
 
-      results.reduce(_ ++ _)
+      results.foldLeft(Result())(_ ++ _)
 
     case (polyVec @ UniformVectorType(polyRef), evidenceVec @ SpecificVectorType(evidenceRefs)) =>
       val results = evidenceRefs map { case evidenceRef =>
         visitTypeRef(typeVars, polyRef, polyVec :: polyStack, evidenceRef, evidenceVec :: evidenceStack)
       }
 
-      results.reduce(_ ++ _)
+      results.foldLeft(Result())(_ ++ _)
 
     case (ProcedureType(polyFixed, polyRestOpt, polyReturn), ProcedureType(evidenceFixed, evidenceRestOpt, evidenceReturn)) =>
       val polyListType = FormalsToListType(polyFixed, polyRestOpt)
