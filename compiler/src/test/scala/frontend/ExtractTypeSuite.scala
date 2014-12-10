@@ -1,13 +1,13 @@
 package io.llambda.compiler.frontend
 import io.llambda
 
-import org.scalatest.FunSuite
+import org.scalatest.{FunSuite, Inside}
 
 import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.valuetype.Implicits._
 
-class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
+class ExtractTypeSuite extends FunSuite with Inside with testutil.ExprHelpers {
   val primitiveScope = new ImmutableScope(collection.mutable.Map(Primitives.bindings.toSeq : _*))
   val nfiScope = new ImmutableScope(testutil.NfiExports(), Some(primitiveScope))
   
@@ -518,5 +518,50 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
         )
       ))
     ))
+  }
+
+  test("polymorphic record type constructors") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    bodyFor("""(define-record-type (ConstBox A) (const-box value) const-box?
+                 ([value : A] const-box-value))
+               (define-type <string-box> (ConstBox <string>))""")(scope)
+
+    inside(scope("<string-box>")) {
+      case BoundType(recordInstance @ vt.RecordTypeInstance(typeVars, recordType)) =>
+        assert(recordType.sourceName === "ConstBox")
+        assert(recordType.typeVars.size === 1)
+
+        val typeVarA = recordType.typeVars(0)
+
+        assert(typeVars.values === Map(
+          typeVarA -> vt.StringType
+        ))
+
+        assert(recordInstance.schemeTypeForField(recordType.fields(0)) === vt.StringType)
+    }
+  }
+
+  test("polymorphic record type inside polymorphic non-record-type") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    bodyFor("""(define-record-type (ConstBox A) (const-box value) const-box?
+                 ([value : A] const-box-value))
+               (define-type (MakeBox A) (ConstBox A))
+               (define-type <string-box> (MakeBox <string>))""")(scope)
+
+    inside(scope("<string-box>")) {
+      case BoundType(recordInstance @ vt.RecordTypeInstance(typeVars, recordType)) =>
+        assert(recordType.sourceName === "ConstBox")
+        assert(recordType.typeVars.size === 1)
+
+        val typeVarA = recordType.typeVars(0)
+
+        assert(typeVars.values === Map(
+          typeVarA -> vt.StringType
+        ))
+
+        assert(recordInstance.schemeTypeForField(recordType.fields(0)) === vt.StringType)
+    }
   }
 }

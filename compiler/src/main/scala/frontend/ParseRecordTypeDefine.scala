@@ -9,7 +9,7 @@ import llambda.compiler.et
 import llambda.compiler.codegen.CompactRepresentationForType
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.valuetype.{polymorphic => pm}
-import llambda.compiler.{Primitives, BoundType, Scope}
+import llambda.compiler.{Primitives, BoundType, Scope, RecordTypeConstructor}
 import llambda.compiler.BadSpecialFormException
 
 private[frontend] object ParseRecordTypeDefine {
@@ -21,15 +21,39 @@ private[frontend] object ParseRecordTypeDefine {
 
   private def parseFields(
       selfSymbol : sst.ScopedSymbol,
+      isConstructor : Boolean,
       selfTypeVar : pm.TypeVar,
+      polyTypeVars : List[(sst.ScopedSymbol, pm.TypeVar)],
       fieldData : List[sst.ScopedDatum],
       inheritedFieldNames : Set[String]
   )(implicit frontendConfig : FrontendConfig) : ListMap[String, ParsedField] = {
-    val typeBindings = List(selfSymbol -> BoundType(selfTypeVar))
+    val selfBindings = if (isConstructor) {
+      // XXX: Support recursive polymorphic instances
+      Nil
+    }
+    else {
+      List(selfSymbol -> BoundType(selfTypeVar))
+    }
+
+    val polyBindings = polyTypeVars map { case (symbol, typeVar) =>
+      symbol -> BoundType(typeVar)
+    }
+
+    val typeBindings = selfBindings ++ polyBindings
     val typeScopeMapping = Scope.mappingForBoundValues(typeBindings)
+
+    // These are poisoned bindings used in mutable fields
+    val mutablePoisonBindings = polyTypeVars map { case (symbol, typeVar) =>
+      symbol -> BoundType(new pm.PoisonTypeVar("Polymorphic type variables cannot appear in mutable fields" ))
+    }
+
+    val mutableTypeBindings = List(selfSymbol -> BoundType(selfTypeVar)) ++ mutablePoisonBindings
+    val mutableTypeScopeMapping = Scope.mappingForBoundValues(mutableTypeBindings)
 
     fieldData.foldLeft(ListMap[String, ParsedField]()) {
       case (parsedFields, fieldDatum @ sst.ScopedProperList(fieldDefDatum :: procedureData)) =>
+        val isMutable = procedureData.length > 1
+
         // We can either be just a symbol and have no type or we can be a Scala/Racket style (symbol : <type>)
         // This is a compatible extension to R7RS
         val (fieldNameSymbol, fieldType) = fieldDefDatum match {
@@ -42,8 +66,15 @@ private[frontend] object ParseRecordTypeDefine {
               sst.ResolvedSymbol(Primitives.AnnotateStorageLocType),
               fieldTypeDatum
           )) =>
+            val rescopedType = if (isMutable) {
+              fieldTypeDatum.rescoped(mutableTypeScopeMapping)
+            }
+            else {
+              fieldTypeDatum.rescoped(typeScopeMapping)
+            }
+
             // Resolve the field's Scheme type
-            val schemeType = ExtractType.extractStableType(fieldTypeDatum.rescoped(typeScopeMapping))
+            val schemeType = ExtractType.extractStableType(rescopedType)
 
             // Rewrite this to a compact native type
             val compactType = CompactRepresentationForType(schemeType)
@@ -116,15 +147,13 @@ private[frontend] object ParseRecordTypeDefine {
         throw new BadSpecialFormException(other, "Record type constructor field names must be symbols")
     }
 
+    val upperBound = recordType.upperBound
+
     for((fieldName, field) <- nameToField) {
       if (!initializedFields.contains(field)) {
         // Make sure this can be initialized to #!unit
-        recordType.typeForField(field) match {
-          case schemeType : vt.SchemeType if vt.SatisfiesType(schemeType, vt.UnitType).get =>
-            // This is okay
-
-          case _ =>
-            throw new BadSpecialFormException(constructorSymbol, "Record field \"" + fieldName + "\" is not initialized in the constructor and its type has no default value")
+        if (vt.SatisfiesType(upperBound.schemeTypeForField(field), vt.UnitType) != Some(true)) {
+          throw new BadSpecialFormException(constructorSymbol, "Record field \"" + fieldName + "\" is not initialized in the constructor and its type has no default value")
         }
       }
     }
@@ -134,45 +163,66 @@ private[frontend] object ParseRecordTypeDefine {
 
   private def parse(
       appliedSymbol : sst.ScopedSymbol,
-      nameSymbol : sst.ScopedSymbol,
-      parentSymbolOpt : Option[sst.ScopedSymbol],
+      nameDatum : sst.ScopedDatum,
+      parentDatumOpt : Option[sst.ScopedDatum],
       constructorSymbol : sst.ScopedSymbol,
       constructorOperands : List[sst.ScopedDatum],
       predicateSymbol : sst.ScopedSymbol,
       fieldData : List[sst.ScopedDatum]
   )(implicit frontendConfig : FrontendConfig) : ParsedRecordTypeDefine = {
-    val parentRecordOpt = parentSymbolOpt map { parentSymbol =>
-      ExtractType.extractSchemeType(parentSymbol) match {
-        case parentRecord : vt.RecordType =>
-          parentRecord
+    val parentInstanceOpt = parentDatumOpt map { parentDatum =>
+      ExtractType.extractSchemeType(parentDatum) match {
+        case parentInstance : vt.RecordTypeInstance =>
+          parentInstance
 
         case _ =>
-          throw new BadSpecialFormException(parentSymbol, "Record types can only inherit from other record types")
+          throw new BadSpecialFormException(parentDatum, "Record types can only inherit from other record types")
       }
     }
 
     // Parse our fields first
-    val parentFieldNames = parentRecordOpt match {
-      case Some(parentRecord) =>
-        parentRecord.fields.map(_.name).toSet
+    val parentFieldNames = parentInstanceOpt match {
+      case Some(parentInstance) =>
+        parentInstance.recordType.fields.map(_.name).toSet
 
       case _ =>
         Set[String]()
+    }
+
+    val (nameSymbol, polyTypeVars, isConstructor) = nameDatum match {
+      case nameSymbol : sst.ScopedSymbol =>
+        (nameSymbol, Nil, false)
+
+      case sst.ScopedProperList((nameSymbol : sst.ScopedSymbol) :: typeVarData) =>
+        val polyTypeVars = typeVarData map ExtractTypeVar
+        (nameSymbol, polyTypeVars, true)
+
+      case other =>
+        val message = s"Unrecognized record name definition. Must be either identifier or (identifier type-vars ...)."
+        throw new BadSpecialFormException(other, message)
     }
 
     // Introduce a type variable referencing the type being defined
     val selfTypeVar = new pm.TypeVar(nameSymbol.name)
 
     // Parse our fields
-    val nameToParsedField = parseFields(nameSymbol, selfTypeVar, fieldData, parentFieldNames)
+    val nameToParsedField = parseFields(nameSymbol, isConstructor, selfTypeVar, polyTypeVars, fieldData, parentFieldNames)
 
     // Build our record type
     val recordFields = nameToParsedField.values.toList.map(_.field)
-    val recordType = new vt.RecordType(nameSymbol.name, recordFields, Some(selfTypeVar), parentRecordOpt)
+    val recordType = new vt.RecordType(
+      sourceName=nameSymbol.name,
+      fields=recordFields,
+      selfTypeVarOpt=Some(selfTypeVar),
+      typeVars=polyTypeVars.map(_._2),
+      parentRecordOpt=parentInstanceOpt
+    )
+
+    val upperBound = recordType.upperBound
 
     // Create our constructor and predicate procedures
     val constructorProcedure = parseConstructor(recordType, constructorSymbol, constructorOperands)
-    val predicateProcedure = (predicateSymbol -> et.TypePredicate(recordType).assignLocationFrom(predicateSymbol))
+    val predicateProcedure = (predicateSymbol -> et.TypePredicate(upperBound).assignLocationFrom(predicateSymbol))
 
     // Collect all of our accessors and mutators
     val accessorProcedures = (nameToParsedField.values.map { parsedField =>
@@ -198,27 +248,36 @@ private[frontend] object ParseRecordTypeDefine {
 
     val allProcedures = constructorProcedure :: predicateProcedure :: (accessorProcedures ++ mutatorProcedures)
 
-    ParsedRecordTypeDefine(nameSymbol, recordType, allProcedures.toMap)
+    val boundValue = if (isConstructor) {
+      // We're a polymorphic record type constructor
+      RecordTypeConstructor(recordType)
+    }
+    else {
+      // We're a monomorphic instance
+      BoundType(upperBound)
+    }
+
+    ParsedRecordTypeDefine(nameSymbol, boundValue, allProcedures.toMap)
   }
 
   def apply(
       appliedSymbol : sst.ScopedSymbol,
       operands : List[sst.ScopedDatum]
   )(implicit frontendConfig : FrontendConfig) : ParsedRecordTypeDefine = operands match {
-    case (nameSymbol : sst.ScopedSymbol) ::
+    case (nameDatum : sst.ScopedDatum) ::
          sst.ScopedProperList((constructorSymbol : sst.ScopedSymbol) :: constructorOperands) ::
          (predicateSymbol : sst.ScopedSymbol) ::
          fieldData =>
 
-      parse(appliedSymbol, nameSymbol, None, constructorSymbol, constructorOperands, predicateSymbol, fieldData)
+      parse(appliedSymbol, nameDatum, None, constructorSymbol, constructorOperands, predicateSymbol, fieldData)
 
-    case (nameSymbol : sst.ScopedSymbol) ::
-         (parentSymbol : sst.ScopedSymbol) ::
+    case (nameDatum : sst.ScopedDatum) ::
+         (parentDatum : sst.ScopedDatum) ::
          sst.ScopedProperList((constructorSymbol : sst.ScopedSymbol) :: constructorOperands) ::
          (predicateSymbol : sst.ScopedSymbol) ::
          fieldData =>
 
-      parse(appliedSymbol, nameSymbol, Some(parentSymbol), constructorSymbol, constructorOperands, predicateSymbol, fieldData)
+      parse(appliedSymbol, nameDatum, Some(parentDatum), constructorSymbol, constructorOperands, predicateSymbol, fieldData)
 
     case _ =>
       throw new BadSpecialFormException(appliedSymbol, "Unrecognized record type form")

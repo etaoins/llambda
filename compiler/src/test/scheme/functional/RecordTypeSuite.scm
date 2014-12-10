@@ -251,3 +251,156 @@
 
   (set-dcdr! dodgy-list '())
   (assert-equal '() (dcdr dodgy-list))))
+
+(define-test "polymorphoc record types" (expect-success
+  (import (llambda typed))
+
+  (define-record-type (Some A) (some val) some?
+                      ([val : A] some-value))
+
+  (define-record-type (None) (none) none?)
+
+  (define-type (Option A) (U (Some A) (None)))
+
+  (define some-string (some "Hello, world!"))
+  (ann some-string (Some <string>))
+
+  (define string-value (some-value some-string))
+  (ann string-value <string>)
+
+  (define-record-type (CustomPair A B) (ccons ccar ccdr) custom-pair?
+                      ([ccar : A] ccar)
+                      ([ccdr : B] ccdr))
+
+  (define custom-list (ccons 1 (ccons 'two (ccons 3.0 '()))))
+  (ann custom-list (CustomPair <exact-integer> (CustomPair <symbol> (CustomPair <flonum> '()))))
+
+  (ann (ccar custom-list) <exact-integer>)
+  (ann (ccdr custom-list) (CustomPair <symbol> (CustomPair <flonum> '())))
+
+  (ann (ccar (ccdr custom-list)) <symbol>)
+  (ann (ccdr (ccdr custom-list)) (CustomPair <flonum> '()))
+
+  (ann (ccar (ccdr (ccdr custom-list))) <flonum>)
+  (ann (ccdr (ccdr (ccdr custom-list))) '())))
+
+(define-test "inheriting polymorphic record types" (expect-success
+  (import (llambda typed))
+
+  (define-record-type (Some A) (some val) some?
+                      ([val : A] some-value))
+
+  (define-record-type <some-string> (Some <string>) (some-string val) some-string?)
+
+  (define string-opt (some-string "Hello, world!"))
+
+  ; We are of our derived instance
+  (ann string-opt <some-string>)
+  ; And our parent instance
+  (ann string-opt (Some <string>))
+  ; Using our parent accessor returns the correct type
+  (ann (some-value string-opt) <string>)))
+
+(define-test "passing polymorphic record types to procedures" (expect-success
+  (import (llambda typed))
+
+  (define-record-type (Some A) (some val) some?
+                      ([val : A] some-value))
+
+  (define-record-type (None) (none) none?)
+
+  (define-type (Option A) (U (Some A) (None)))
+
+  (define (some-string-or-empty [string-opt : (Option <string>)])
+    (if (none? string-opt)
+      ""
+      (some-value string-opt)))
+
+  (assert-equal "Hello!" (some-string-or-empty (some "Hello!")))
+  (assert-equal "" (some-string-or-empty (none)))))
+
+(define-test "attempted dynamic checks for polymorphic record type fail at compile time" (expect-compile-failure
+  (import (llambda typed))
+
+  (define-record-type (Some A) (some val) some?
+                      ([val : A] some-value))
+
+  (define-record-type (None) (none) none?)
+
+  (define-type (Option A) (U (Some A) (None)))
+
+  (define (some-string-or-empty [string-opt : (Option <string>)])
+    (if (none? string-opt)
+      ""
+      (some-value string-opt)))
+
+  (define any-option (typed-dynamic (some "Hello!") (Option <any>)))
+  (some-string-or-empty any-option)))
+
+(define-test "passing polymorphic record type to polymorphic procedure" (expect-success
+  (import (llambda typed))
+
+  (define-record-type (Some A) (some val) some?
+                      ([val : A] some-value))
+
+  (define-record-type (None) (none) none?)
+
+  (define-type (Option A) (U (Some A) (None)))
+
+  (: none-to-false (All (A) (Option A) (U A #f)))
+  (define (none-to-false opt)
+    (if (none? opt)
+      #f
+      (some-value opt)))
+
+  (define dynamic-option (typed-dynamic (some "Hello!") (Option <string>)))
+
+  (ann (none-to-false dynamic-option) (U #f <string>))))
+
+(define-test "polymorphic record type containing procedure" (expect-success
+  (import (llambda typed))
+
+  (define-record-type (Some A) (some val) some?
+                      ([val : A] some-value))
+
+  (define some-minus (some -))
+
+  (assert-equal 2.0 ((some-value some-minus) 7.0 2 3))))
+
+(define-test "polymorphic record type containing procedure passed to polymorpic procedure" (expect-success
+  (import (llambda typed))
+
+  (define-record-type (ValueThunk A B) (value-thunk val proc) value-thunk?
+                      ([val : A] value-thunk-value)
+                      ([proc : (-> A B)] value-thunk-proc))
+
+  (: apply-value-thunk (All (A B) (ValueThunk A B) B))
+  (define (apply-value-thunk thunk)
+    ((value-thunk-proc thunk) (value-thunk-value thunk)))
+
+  (define string-value-thunk (value-thunk "Hello" string->symbol))
+  (ann string-value-thunk (ValueThunk <string> <symbol>))
+
+  (ann (apply-value-thunk string-value-thunk) <symbol>)
+  (assert-equal 'Hello (apply-value-thunk string-value-thunk))))
+
+(define-test "polymorphic record type with upper type bounds" (expect-success
+  (import (llambda typed))
+
+  (define-record-type (NumberedRecord [A : <number>] [B : <exact-integer>]) (numbered-record num-val int-val) numbered-record?
+                      ([num-val : A] numbered-record-num-val)
+                      ([int-val : B] numbered-record-int-val))
+
+  (define num-record (numbered-record 5.0 -1))
+  (ann num-record (NumberedRecord <flonum> <exact-integer>))
+  (ann (numbered-record-num-val num-record) <flonum>)
+  (ann (numbered-record-int-val num-record) <exact-integer>)))
+
+(define-test "constructing polymorphic record type with violated type bounds fails at compile time" (expect-compile-failure
+  (import (llambda typed))
+
+  (define-record-type (NumberedRecord [A : <number>] [B : <exact-integer>]) (numbered-record num-val int-val) numbered-record?
+                      ([num-val : A] numbered-record-num-val)
+                      ([int-val : B] numbered-record-int-val))
+
+  (define num-record (numbered-record 5.0 5.0))))

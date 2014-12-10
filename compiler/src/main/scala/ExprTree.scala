@@ -210,11 +210,11 @@ sealed abstract class RecordProcedure extends ArtificialProcedure {
 case class RecordConstructor(recordType : vt.RecordType, initializedFields : List[vt.RecordField]) extends RecordProcedure {
   override def cloningMap(f : Expr => Expr) : Expr =
     RecordConstructor(recordType, initializedFields).assignLocationFrom(this)
-  
+
   override def schemeType = vt.ProcedureType(
-    fixedArgTypes=initializedFields.map(recordType.typeForField).map(_.schemeType),
+    fixedArgTypes=initializedFields.map(recordType.upperBound.schemeTypeForField),
     restArgMemberTypeOpt=None,
-    returnType=vt.ReturnType.SingleValue(recordType)
+    returnType=vt.ReturnType.SingleValue(recordType.upperBound)
   )
 }
 
@@ -223,9 +223,9 @@ case class RecordAccessor(recordType : vt.RecordType, field : vt.RecordField) ex
     RecordAccessor(recordType, field).assignLocationFrom(this)
   
   override def schemeType = vt.ProcedureType(
-    fixedArgTypes=List(recordType),
+    fixedArgTypes=List(recordType.upperBound),
     restArgMemberTypeOpt=None,
-    returnType=vt.ReturnType.SingleValue(recordType.typeForField(field).schemeType)
+    returnType=vt.ReturnType.SingleValue(recordType.upperBound.schemeTypeForField(field))
   )
 }
 
@@ -234,7 +234,7 @@ case class RecordMutator(recordType : vt.RecordType, field : vt.RecordField) ext
     RecordMutator(recordType, field).assignLocationFrom(this)
 
   override def schemeType = vt.ProcedureType(
-    fixedArgTypes=List(recordType, recordType.typeForField(field).schemeType),
+    fixedArgTypes=List(recordType.upperBound, recordType.upperBound.schemeTypeForField(field)),
     restArgMemberTypeOpt=None,
     returnType=vt.ReturnType.SingleValue(vt.UnitType)
   )

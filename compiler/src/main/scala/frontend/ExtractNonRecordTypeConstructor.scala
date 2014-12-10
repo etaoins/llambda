@@ -4,8 +4,8 @@ import io.llambda
 import llambda.compiler._
 import llambda.compiler.valuetype.{polymorphic => pm}
 
-object ExtractUserDefinedTypeConstructor {
-  def apply(operands : List[sst.ScopedDatum], definition : sst.ScopedDatum) : UserDefinedTypeConstructor = {
+object ExtractNonRecordTypeConstructor {
+  def apply(operands : List[sst.ScopedDatum], definition : sst.ScopedDatum) : NonRecordTypeConstructor = {
     val operandTypes = operands map ExtractTypeVar
 
     // Rescope the definition
@@ -18,6 +18,6 @@ object ExtractUserDefinedTypeConstructor {
 
     // Parse the polymorphic type
     val polyType = ExtractType.extractSchemeType(rescopedDefinition)
-    UserDefinedTypeConstructor(operandTypes.map(_._2), polyType)
+    NonRecordTypeConstructor(operandTypes.map(_._2), polyType)
   }
 }

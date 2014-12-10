@@ -4,6 +4,7 @@ import io.llambda
 import org.scalatest.FunSuite
 
 import llambda.compiler.{celltype => ct}
+import llambda.compiler.valuetype.{polymorphic => pm}
 import Implicits._
 
 class NameForTypeSuite extends FunSuite {
@@ -82,10 +83,32 @@ class NameForTypeSuite extends FunSuite {
     assert(NameForType(UniformProperListType(AnySchemeType)) === "(Listof <any>)")
   }
 
-  test("record type") {
-    assert(NameForType(new RecordType("<custom-record>", Nil)) === "<custom-record>")
+  test("monomorphic record type instance") {
+    val recordInstance = RecordTypeInstance(
+      pm.ReconcileTypeVars.Result(),
+      new RecordType("<custom-record>", Nil)
+    )
+
+    assert(NameForType(recordInstance) === "<custom-record>")
   }
-  
+
+  test("polymorphic record type instance") {
+    val typeVarA = new pm.TypeVar("A")
+    val typeVarB = new pm.TypeVar("B")
+
+    val polyRecordType = new RecordType("PolyRecord", Nil, typeVars=List(typeVarA, typeVarB))
+
+    val recordInstance = RecordTypeInstance(
+      pm.ReconcileTypeVars.Result(Map(
+        typeVarA -> ExactIntegerType,
+        typeVarB -> FlonumType
+      )),
+      polyRecordType
+    )
+
+    assert(NameForType(recordInstance) === "(PolyRecord <exact-integer> <flonum>)")
+  }
+
   test("empty scheme type") {
     assert(NameForType(UnionType(Set())) === "(U)")
   }

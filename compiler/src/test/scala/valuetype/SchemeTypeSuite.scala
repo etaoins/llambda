@@ -4,16 +4,21 @@ import io.llambda
 import org.scalatest.FunSuite
 
 import llambda.compiler.{celltype => ct}
+import llambda.compiler.valuetype.{polymorphic => pm}
 import Implicits._
 
 trait SchemeTypeSuite extends FunSuite {
   protected val recordAtomType = SchemeTypeAtom(ct.RecordCell)
 
-  protected val recordType1 = new RecordType("record1", Nil)
-  protected val recordType1Child1 = new RecordType("record1Child1", Nil, parentRecordOpt=Some(recordType1))
-  protected val recordType1Child2 = new RecordType("record1Child2", Nil, parentRecordOpt=Some(recordType1))
+  protected val recordInstance1 = RecordTypeInstance(
+    pm.ReconcileTypeVars.Result(),
+    new RecordType("record1", Nil)
+  )
 
-  protected val recordType2 = new RecordType("record2", Nil)
+  protected val recordInstance2 = RecordTypeInstance(
+    pm.ReconcileTypeVars.Result(),
+    new RecordType("record2", Nil)
+  )
 
   protected val literalTrue = LiteralBooleanType(true)
   protected val literalFalse = LiteralBooleanType(false)

@@ -56,8 +56,21 @@ object NameForType {
 
         s"(Pairof ${carName} ${cdrName})"
 
-      case recordType : RecordType =>
-        recordType.sourceName
+      case recordInstance : RecordTypeInstance =>
+        val recordName = recordInstance.recordType.sourceName
+
+        if (recordInstance.typeVars.values.isEmpty) {
+          recordName
+        }
+        else {
+          val typeVarValueNames = recordInstance.recordType.typeVars map { typeVar =>
+            recordInstance.typeVars.values.get(typeVar) map { typeValue =>
+              NameForType(typeValue)
+            } getOrElse typeVar.sourceName
+          }
+
+          "(" + recordName + typeVarValueNames.map(" " + _).mkString("") + ")"
+        }
 
       case specificVectorType : SpecificVectorType =>
         val memberTypeNames = specificVectorType.memberTypeRefs map { memberTypeRef =>

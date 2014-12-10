@@ -27,9 +27,10 @@ case class ParsedMultipleValueDefine(
 ) extends ParsedDefine
 
 case class ParsedSimpleDefine(definedSymbol : sst.ScopedSymbol, value : BoundValue) extends ParsedDefine
+
 case class ParsedRecordTypeDefine(
-    typeSymbol : sst.ScopedSymbol,
-    recordType : vt.RecordType,
+    definedSymbol : sst.ScopedSymbol,
+    value : BoundValue,
     procedures : Map[sst.ScopedSymbol, et.ArtificialProcedure]
 ) extends ParsedDefine
 

@@ -25,13 +25,22 @@ object PlanTypeCheck {
     case vt.UnionType(memberTypes)        => memberTypes
   }
 
-  private def testRecordClass(
+  private def testRecordInstance(
       plan : PlanWriter,
       checkValue : BoxedValue,
       valueType : vt.SchemeType,
-      recordType : vt.RecordType
+      recordInstance : vt.RecordTypeInstance
   ) : CheckResult = {
     val flattenedType = flattenType(valueType)
+    val recordType = recordInstance.recordType
+
+    // Are we testing a record polymorph?
+    if (recordInstance != recordType.upperBound) {
+      throw new ImpossibleTypeConversionException(
+        located=plan.activeContextLocated,
+        message=s"Polymorphic record type ${recordInstance} cannot be checked at runtime"
+      )
+    }
 
     // If we contain a generic record type we can be of any record class
     val recordCellType = vt.SchemeTypeAtom(ct.RecordCell)
@@ -42,8 +51,8 @@ object PlanTypeCheck {
     }
     else {
       Some(flattenType(valueType) collect {
-        case recordType : vt.RecordType =>
-          recordType
+        case recordInstance : vt.RecordTypeInstance =>
+          recordInstance.recordType
       } : Set[vt.RecordLikeType])
     }
 
@@ -51,7 +60,7 @@ object PlanTypeCheck {
     val recordCellTemp = checkValue.castToCellTempValue(recordType.cellType)(plan)
 
     val classMatchedPred = ps.Temp(vt.Predicate)
-    plan.steps += ps.TestRecordLikeClass(classMatchedPred, recordCellTemp, recordType, possibleTypesOpt) 
+    plan.steps += ps.TestRecordLikeClass(classMatchedPred, recordCellTemp, recordType, possibleTypesOpt)
     DynamicResult(classMatchedPred)
   }
 
@@ -243,10 +252,10 @@ object PlanTypeCheck {
       testType : vt.NonUnionSchemeType
   ) : CheckResult = {
     testType match {
-      case recordType : vt.RecordType =>
-        branchOnType(plan, checkValue, valueType, recordType.parentType, isTypePlanner=Some({
+      case recordInstance : vt.RecordTypeInstance =>
+        branchOnType(plan, checkValue, valueType, recordInstance.parentType, isTypePlanner=Some({
           (isRecordPlan, remainingType) =>
-            testRecordClass(isRecordPlan, checkValue, remainingType, recordType)
+            testRecordInstance(isRecordPlan, checkValue, remainingType, recordInstance)
         }))
 
       case vt.SpecificPairType(testCarTypeRef, testCdrTypeRef) =>

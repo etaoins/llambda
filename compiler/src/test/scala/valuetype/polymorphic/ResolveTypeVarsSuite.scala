@@ -216,4 +216,63 @@ class ResolveTypeVarsSuite extends FunSuite {
       polyC -> BooleanType
     ))
   }
+
+  test("resolving record instance from record instance") {
+    val polyRecord1InnerTypeVar = new TypeVar("Inner")
+    val polyRecord1 = new RecordType(
+      "poly-record",
+      List(
+        new RecordField("polyField", polyRecord1InnerTypeVar),
+        new RecordField("monoField", PortType)
+      ),
+      typeVars=List(polyRecord1InnerTypeVar)
+    )
+
+    val polyInstance = RecordTypeInstance(
+      ReconcileTypeVars.Result(Map(polyRecord1InnerTypeVar -> polyA)),
+      polyRecord1
+    )
+
+    val evidence = RecordTypeInstance(
+      ReconcileTypeVars.Result(Map(polyRecord1InnerTypeVar -> NumberType)),
+      polyRecord1
+    )
+
+    assert(ResolveTypeVars(Set(polyA), polyInstance, evidence).values == Map(
+      polyA -> NumberType
+    ))
+  }
+
+  test("resolving parent record instance from child  record instance") {
+    val polyRecord1InnerTypeVar = new TypeVar("Inner")
+    val polyRecord1 = new RecordType(
+      "poly-record",
+      List(
+        new RecordField("polyField", polyRecord1InnerTypeVar),
+        new RecordField("monoField", PortType)
+      ),
+      typeVars=List(polyRecord1InnerTypeVar)
+    )
+
+    val polyRecord1Child = new RecordType(
+      "poly-record-child",
+      List(),
+      typeVars=Nil,
+      parentRecordOpt=Some(RecordTypeInstance(
+        ReconcileTypeVars.Result(Map(polyRecord1InnerTypeVar -> SymbolType)),
+        polyRecord1
+      ))
+    )
+
+    val polyInstance = RecordTypeInstance(
+      ReconcileTypeVars.Result(Map(polyRecord1InnerTypeVar -> polyA)),
+      polyRecord1
+    )
+
+    val evidence = polyRecord1Child.upperBound
+
+    assert(ResolveTypeVars(Set(polyA), polyInstance, evidence).values == Map(
+      polyA -> SymbolType
+    ))
+  }
 }

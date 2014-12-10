@@ -200,4 +200,27 @@ class InstantiateTypeSuite extends FunSuite {
 
     assert(InstantiateType(reconciled, polyCaseProc) == expected)
   }
+
+  test("instantiating a record instance") {
+    val polyInner = new TypeVar("Inner")
+    val recordType = new RecordType("<record-type>", Nil, typeVars=List(polyInner))
+
+    val polyOuter = new TypeVar("Inner")
+
+    val recordInstance = RecordTypeInstance(
+      typeVars=ReconcileTypeVars.Result(Map(polyInner -> polyOuter)),
+      recordType=recordType
+    )
+
+    val reconciled = ReconcileTypeVars.Result(Map(
+      polyOuter -> ExactIntegerType
+    ))
+
+    val expected = RecordTypeInstance(
+      typeVars=ReconcileTypeVars.Result(Map(polyInner -> ExactIntegerType)),
+      recordType=recordType
+    )
+
+    assert(InstantiateType(reconciled, recordInstance) == expected)
+  }
 }

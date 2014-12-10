@@ -23,20 +23,70 @@ abstract trait RecordLikeType {
   val sourceName : String
 
   /* Optional parent RecordType for to support inheritance */
-  val parentRecordOpt : Option[RecordLikeType]
+  val parentRecordOpt : Option[RecordTypeInstance]
 
   val fields : List[RecordField]
 
-  /** Returns the instantiated type for the given record field */
-  val typeForField : Map[RecordField, ValueType]
+  /** Returns the physical storage type for each field including inherited fields */
+  val storageTypeForField : Map[RecordField, ValueType]
 
   /** Returns the fields we inherit from our parent recursively */
   def inheritedFields : List[RecordField] =
-    parentRecordOpt.map(_.fieldsWithInherited).getOrElse(Nil)
+    parentRecordOpt.map(_.recordType.fieldsWithInherited).getOrElse(Nil)
 
   /** Returns the fields we introduced followed be the fields we inherit from our parent */
   def fieldsWithInherited : List[RecordField] =
     fields ++ inheritedFields
+
+  val upperBound : RecordLikeTypeInstance
+}
+
+abstract trait RecordLikeTypeInstance {
+  /** Returns the logical Scheme type for the given record field including inherited fields */
+  val schemeTypeForField : Map[RecordField, SchemeType]
+}
+
+class RecordType(
+    val sourceName : String,
+    val fields : List[RecordField],
+    val selfTypeVarOpt : Option[pm.TypeVar] = None,
+    val typeVars : List[pm.TypeVar] = Nil,
+    val parentRecordOpt : Option[RecordTypeInstance] = None
+) extends RecordLikeType {
+  val cellType = ct.RecordCell
+
+  /** Test if this type is equal to or a child of another type */
+  def isEqualToOrChildOf(other : RecordType) : Boolean = {
+    if (other eq this) {
+      true
+    }
+    else {
+      parentRecordOpt match {
+        case Some(parentInstance) =>
+          parentInstance.recordType.isEqualToOrChildOf(other)
+
+        case None =>
+          false
+      }
+    }
+  }
+
+  lazy val upperBound : RecordTypeInstance = {
+    val reconciledVars = pm.ReconcileTypeVars(typeVars.toSet)
+    RecordTypeInstance(reconciledVars, this)
+  }
+
+  lazy val storageTypeForField : Map[RecordField, ValueType] = {
+    val selfTypeVars = selfTypeVarOpt.map(_ -> this.upperBound).toMap
+    val resolvedVars = pm.ResolveTypeVars.Result(selfTypeVars)
+
+    val allTypeVars = typeVars.toSet ++ selfTypeVarOpt
+    val reconciledVars = pm.ReconcileTypeVars(allTypeVars, resolvedVars)
+
+    fields.map({ field =>
+      field -> pm.InstantiateType(reconciledVars, field.typeTemplate)
+    }).toMap ++ parentRecordOpt.map(_.recordType.storageTypeForField).getOrElse(Map())
+  }
 }
 
 /** Pointer to a closure type
@@ -48,8 +98,16 @@ class ClosureType(val sourceName : String, val fields : List[RecordField]) exten
   val cellType = ct.ProcedureCell
   val parentRecordOpt = None
 
+  // Closures don't support recursion or polymorphism - short circuit this
   lazy val typeForField = (fields.map { field =>
-    // Closures don't support recursion or polymorphism - short circuit this
     field -> field.typeTemplate
   }).toMap
+
+  lazy val storageTypeForField = typeForField
+
+  lazy val upperBound = ClosureTypeInstance(this)
+}
+
+case class ClosureTypeInstance(closureType : ClosureType) extends RecordLikeTypeInstance {
+  val schemeTypeForField = closureType.typeForField.mapValues(_.schemeType)
 }

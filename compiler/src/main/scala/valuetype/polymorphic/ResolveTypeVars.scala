@@ -108,6 +108,29 @@ object ResolveTypeVars {
 
       results.foldLeft(Result())(_ ++ _)
 
+    case (polyInstance @ RecordTypeInstance(polTypeVars, polyClass),
+          evidenceInstance @ RecordTypeInstance(evidenceTypeVars, evidenceClass)) =>
+      if (evidenceClass == polyClass) {
+        // We have the same record class; match our type fields directly
+        val results = polyInstance.typeVars.values.values.zip(evidenceInstance.typeVars.values.values) map {
+          case (polyValue, evidenceValue) =>
+            visitType(typeVars, polyValue, Nil, evidenceValue, Nil)
+        }
+
+        results.foldLeft(Result())(_ ++ _)
+      }
+      else {
+        evidenceInstance.recordType.parentRecordOpt match {
+          case Some(evidenceParent) =>
+            // Try our parent type
+            visitType(typeVars, poly, polyStack, evidenceParent, evidenceStack)
+
+          case _ =>
+            // No more parents; we're unrelated
+            Result()
+        }
+      }
+
     case (ProcedureType(polyFixed, polyRestOpt, polyReturn), ProcedureType(evidenceFixed, evidenceRestOpt, evidenceReturn)) =>
       val polyListType = FormalsToListType(polyFixed, polyRestOpt)
       val evidenceListType = FormalsToListType(evidenceFixed, evidenceRestOpt)

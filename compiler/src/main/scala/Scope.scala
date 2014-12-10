@@ -46,11 +46,11 @@ sealed abstract class TypeConstructor extends BoundValue
   */
 abstract class PrimitiveTypeConstructor extends TypeConstructor
 
-/** User defined type constructors 
-  *
-  * These allow the construction of types based off type arguments
-  */
-case class UserDefinedTypeConstructor(vars : List[pm.TypeVar], definition : vt.SchemeType) extends TypeConstructor
+/** User-defined type constructor for non-record types */
+case class NonRecordTypeConstructor(vars : List[pm.TypeVar], definition : vt.SchemeType) extends TypeConstructor
+
+/** User-defined type constructor for record types */
+case class RecordTypeConstructor(recordType : vt.RecordType) extends TypeConstructor
 
 /** Type constructor for literal types such as booleans or symbols */
 case object LiteralTypeConstructor extends TypeConstructor

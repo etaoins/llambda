@@ -108,7 +108,21 @@ object PlanLambdaPolymorph {
       case (argLoc, declType) =>
         val retypedType = argTypeMapping.get(argLoc) match {
           case Some(discoveredType) =>
-            discoveredType & declType
+            val intersectedType = discoveredType & declType
+
+            if (intersectedType != vt.EmptySchemeType) {
+              intersectedType
+            }
+            else {
+              // This means our discovered type isn't compatible with our intersected type. This can happeb for two
+              // reasons:
+              // 1) The declaration is wrong. Use the declaration type so we specifically locate the type error in the
+              //    lambda's body
+              // 2) We're a polymorphic procedure taking a polymorphic type with a type variable in a contravariant
+              //    position. Our "upper bound" isn't compatible with the signature for this polymorph so our retyping
+              //    is wrong. Just use the declaration type which corresponds to our polymorph type
+              declType
+            }
 
           case None =>
             declType

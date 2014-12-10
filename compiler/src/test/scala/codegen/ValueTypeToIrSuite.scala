@@ -101,7 +101,7 @@ class ValueTypeToIrSuite extends FunSuite {
   test("record cell") {
     val recordType = new vt.RecordType("recordType", Nil)
 
-    val typeWithSign = ValueTypeToIr(recordType)
+    val typeWithSign = ValueTypeToIr(recordType.upperBound)
 
     assert(typeWithSign.irType === llvmir.PointerType(ct.RecordCell.irType))
     assert(typeWithSign.signed === None)

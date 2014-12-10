@@ -80,7 +80,7 @@ object ExtractType {
 
   private def applyTypeConstructor(constructorName : sst.ScopedSymbol, operands : List[sst.ScopedDatum], recursiveVars : RecursiveVars) : vt.SchemeType = {
     resolveTypeConstructor(constructorName) match {
-      case UserDefinedTypeConstructor(typeVars, definition) =>
+      case NonRecordTypeConstructor(typeVars, definition) =>
         if (operands.length != typeVars.length) {
           throw new BadSpecialFormException(constructorName, s"Type constructor expects ${typeVars.length} arguments, ${operands.length} provided")
         }
@@ -96,6 +96,21 @@ object ExtractType {
 
         // Instantiate the type
         pm.InstantiateType(reconciledVars, definition)
+
+      case RecordTypeConstructor(recordType) =>
+        val typeVars = recordType.typeVars
+
+        if (operands.length != typeVars.length) {
+          throw new BadSpecialFormException(constructorName, s"Record type constructor expects ${typeVars.length} arguments, ${operands.length} provided")
+        }
+
+        // Extract our type arguments
+        val argTypes = typeVars.zip(operands).map { case (typeVar, operand) =>
+          (typeVar -> extractSchemeType(operand))
+        }
+
+        val reconciledVars = pm.ReconcileTypeVars(typeVars.toSet, pm.ResolveTypeVars.Result(argTypes.toMap), constructorName, true)
+        vt.RecordTypeInstance(reconciledVars, recordType)
 
       case Primitives.UnionType =>
         val memberRecursiveVars = recursiveVars.recursed()
@@ -262,6 +277,10 @@ object ExtractType {
 
     case symbol : sst.ScopedSymbol =>
       symbol.resolve match {
+        case BoundType(poison : pm.PoisonTypeVar) =>
+          // Type variable used in an illegal position
+          throw new BadSpecialFormException(datum, poison.message)
+
         case BoundType(schemeType) => schemeType
 
         case typeConstructor : TypeConstructor =>

@@ -57,7 +57,7 @@ object PackRecordLikeInline {
     }
 
     val fieldsWithType = recordLike.fields map { field =>
-      field -> recordLike.typeForField(field)
+      field -> recordLike.storageTypeForField(field)
     }
 
     if (sizeOfStruct(fieldsWithType.map(_._2), targetPlatform) <= inlineDataBytes) {

@@ -11,7 +11,7 @@ class KnownRecordMutatorProc(recordType : vt.RecordType, field : vt.RecordField)
       hasWorldArg=false,
       hasSelfArg=false,
       restArgMemberTypeOpt=None,
-      fixedArgTypes=List(recordType, recordType.typeForField(field)),
+      fixedArgTypes=List(recordType.upperBound, recordType.storageTypeForField(field)),
       returnType=vt.ReturnType.SingleValue(vt.UnitType),
       attributes=Set()
     ).toPolymorphic
@@ -24,7 +24,7 @@ class KnownRecordMutatorProc(recordType : vt.RecordType, field : vt.RecordField)
       "!"
   
   def planFunction(parentPlan : PlanWriter, allocedSymbol : String) : PlannedFunction = {
-    val fieldType = recordType.typeForField(field)
+    val fieldType = recordType.storageTypeForField(field)
 
     // Set up our arguments
     val recordCellTemp = ps.RecordTemp()
@@ -56,13 +56,13 @@ class KnownRecordMutatorProc(recordType : vt.RecordType, field : vt.RecordField)
   override def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter) : Option[PlanResult] = {
     operands match {
       case List((_, recordValue), (_, newValue)) =>
-        val recordCellTemp = recordValue.toTempValue(recordType)
+        val recordCellTemp = recordValue.toTempValue(recordType.upperBound)
 
         val recordDataTemp = ps.RecordLikeDataTemp()
         plan.steps += ps.LoadRecordLikeData(recordDataTemp, recordCellTemp, recordType) 
 
         // Read the field
-        val fieldType = recordType.typeForField(field)
+        val fieldType = recordType.storageTypeForField(field)
         val newValueTemp = newValue.toTempValue(fieldType)
         plan.steps += ps.SetRecordDataField(recordDataTemp, recordType, field, newValueTemp) 
 

@@ -76,38 +76,22 @@ case object UnicodeChar extends IntLikeType(32, true) {
   *
   * This uniquely identifies a record type even if has the same name and internal structure as another type
   */
-class RecordType(
-    val sourceName : String,
-    val fields : List[RecordField],
-    val selfTypeVarOpt : Option[pm.TypeVar] = None,
-    val parentRecordOpt : Option[RecordType] = None
-) extends CellValueType with NonRecursiveType with DerivedSchemeType with RecordLikeType {
+case class RecordTypeInstance(
+    val typeVars : pm.ReconcileTypeVars.Result,
+    val recordType : RecordType
+) extends CellValueType with NonRecursiveType with DerivedSchemeType with RecordLikeTypeInstance {
   val cellType = ct.RecordCell
   val isGcManaged = true
   val parentType = SchemeTypeAtom(ct.RecordCell)
 
-  /** Test if this type is equal to or a child of another type */
-  def isEqualToOrChildOf(other : RecordType) : Boolean = {
-    if (other eq this) {
-      true
-    }
-    else {
-      parentRecordOpt match {
-        case Some(parentRecordLike) =>
-          parentRecordLike.isEqualToOrChildOf(other)
+  lazy val schemeTypeForField : Map[RecordField, SchemeType] = {
+    val selfTypeVars = recordType.selfTypeVarOpt.map(_ -> this).toMap
+    val reconciledVars = pm.ReconcileTypeVars.Result(typeVars.values ++ selfTypeVars)
 
-        case None =>
-          false
-      }
-    }
+    recordType.fields.map({ field =>
+      field -> pm.InstantiateType(reconciledVars, field.typeTemplate).schemeType
+    }).toMap ++ recordType.parentRecordOpt.map(_.schemeTypeForField).getOrElse(Map())
   }
-
-  lazy val typeForField : Map[RecordField, ValueType] = fields.map({ field =>
-    val selfTypeVars = selfTypeVarOpt.map(_ -> this).toMap
-    val reconciledVars = pm.ReconcileTypeVars.Result(selfTypeVars)
-
-    field -> pm.InstantiateType(reconciledVars, field.typeTemplate)
-  }).toMap ++ parentRecordOpt.map(_.typeForField).getOrElse(Map())
 }
 
 /** Types visible to Scheme programs without using the NFI */

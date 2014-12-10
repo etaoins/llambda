@@ -48,7 +48,9 @@ object BuildRecordLikeTypes {
   )
 
   private def typeAndAllParents(recordLikeType : vt.RecordLikeType) : List[vt.RecordLikeType] = {
-    recordLikeType :: recordLikeType.parentRecordOpt.map(typeAndAllParents).getOrElse(Nil)
+    recordLikeType :: recordLikeType.parentRecordOpt.map({ parentInstance =>
+      typeAndAllParents(parentInstance.recordType)
+    }).getOrElse(Nil)
   }
 
   private def findAllRecordTypes(steps : Iterable[ps.Step]) : List[vt.RecordLikeType] = {
@@ -119,7 +121,7 @@ object BuildRecordLikeTypes {
     val parentStructOpt = parentGeneratedTypeOpt.map(_.irType)
 
     val selfFields = fieldOrder.map { field =>
-      ValueTypeToIr(recordLikeType.typeForField(field)).irType
+      ValueTypeToIr(recordLikeType.storageTypeForField(field)).irType
     }
 
     val irType = StructureType(parentStructOpt.toSeq ++ selfFields)
@@ -206,11 +208,10 @@ object BuildRecordLikeTypes {
     // Output the type maps for each generated type
     val typeMapVars = generatedTypes.values.toList.sortBy(_.classId).map { generatedType =>
       val recordLikeType = generatedType.recordLikeType
+
       val recordCellNullPointer = NullPointerConstant(PointerType(generatedType.irType))
 
-      val fieldToTypeWithInherited = recordLikeType.fieldsWithInherited map { field =>
-        field -> recordLikeType.typeForField(field)
-      }
+      val fieldToTypeWithInherited = recordLikeType.storageTypeForField.toList
 
       // Generate an expression for the offset of each field that points to a cell
       val cellOffsets = fieldToTypeWithInherited.filter(_._2.isGcManaged) map { case (field, fieldType) =>
@@ -290,7 +291,9 @@ object BuildRecordLikeTypes {
     val allTypes = (vt.EmptyClosureType :: findAllRecordTypes(functions.flatMap(_._2.steps))).distinct
 
     // Build a inheritance-based type tree
-    val groupedTypes = allTypes.groupBy(_.parentRecordOpt)
+    val groupedTypes = allTypes.groupBy { recordLikeType =>
+      recordLikeType.parentRecordOpt.map(_.recordType : vt.RecordLikeType)
+    }
 
     val rootTypes = groupedTypes.get(None).getOrElse(Nil)
     val childTypesByParent = groupedTypes collect { case (Some(parent), child) =>

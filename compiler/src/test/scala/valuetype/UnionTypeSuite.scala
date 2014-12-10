@@ -90,13 +90,13 @@ class UnionTypeSuite extends SchemeTypeSuite {
   }
 
   test("union type with record type minus record atom removes the record type") {
-    assert((UnionType(Set(ExactIntegerType, recordType1)) - recordAtomType) ===
+    assert((UnionType(Set(ExactIntegerType, recordInstance1)) - recordAtomType) ===
       ExactIntegerType
     )
   }
   
   test("union type with record atom minus record type does not remove the record atom") {
-    assert((UnionType(Set(ExactIntegerType, recordAtomType)) - recordType2) ===
+    assert((UnionType(Set(ExactIntegerType, recordAtomType)) - recordInstance2) ===
       UnionType(Set(ExactIntegerType, recordAtomType))
     )
   }

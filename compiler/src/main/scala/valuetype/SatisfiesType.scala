@@ -155,14 +155,36 @@ object SatisfiesType {
       case (superValue : LiteralValueType, testingValue : LiteralValueType) =>
         Some(superValue == testingValue)
 
-      case (superRecord : RecordType, testingRecord : RecordType) =>
-        if (testingRecord.isEqualToOrChildOf(superRecord)) {
-          // Testing record is a child record
+      case (superInstance : RecordTypeInstance, testingInstance : RecordTypeInstance) =>
+        val superRecord = superInstance.recordType
+        val testingRecord = testingInstance.recordType
+
+        if (superInstance == testingInstance) {
+          // Our record class and type variables exactly match
+          // This shortcut prevents infinite recursion when testing recursive record types
           Some(true)
+        }
+        else if (testingRecord.isEqualToOrChildOf(superRecord)) {
+          val fieldwiseResults = superRecord.fields map { field =>
+            SatisfiesType(
+              superInstance.schemeTypeForField(field),
+              testingInstance.schemeTypeForField(field)
+            )
+          }
+
+          mergeNonUnionMemberTypeResults(fieldwiseResults.toSet)
         }
         else if (superRecord.isEqualToOrChildOf(testingRecord)) {
           // Testing record is a parent of child record
-          None
+          val fieldwiseResults = testingRecord.fields map { field =>
+            SatisfiesType(
+              superInstance.schemeTypeForField(field),
+              testingInstance.schemeTypeForField(field)
+            )
+          }
+
+          // Add None to the result because we don't know if we're of the child type or not
+          mergeNonUnionMemberTypeResults(fieldwiseResults.toSet + None)
         }
         else {
           // No direct parent-child relationship

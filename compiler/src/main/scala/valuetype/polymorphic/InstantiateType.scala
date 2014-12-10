@@ -88,10 +88,18 @@ object InstantiateType {
     case CaseProcedureType(clauseTypes) =>
       CaseProcedureType(clauseTypes.map(visitProcedureType(typeVars, _)))
 
-    case recordType : RecordType =>
-      // Record types cannot have unresovled type variables inside of them - they must be fully instantiated when
-      // they're bound to a type
-      recordType
+    case RecordTypeInstance(recordTypeVars, recordType) =>
+      // If the record type instance has any of it's inner type varaibles set to an outer type variable snap them to the
+      // correct type here
+      val mappedTypeVars = recordTypeVars.values map {
+        case (innerTypeVar, outerTypeVar : TypeVar) =>
+          innerTypeVar -> typeVars.values(outerTypeVar)
+
+        case other =>
+          other
+      }
+
+      RecordTypeInstance(ReconcileTypeVars.Result(mappedTypeVars), recordType)
 
     case _ : LeafType =>
       poly

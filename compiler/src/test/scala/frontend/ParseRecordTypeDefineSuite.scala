@@ -58,10 +58,12 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
                            new-type?)""")(scope)
 
     inside(scope("<new-type>")) {
-      case BoundType(recordType : vt.RecordType) =>
+      case BoundType(recordInstance : vt.RecordTypeInstance) =>
         val consLoc = storageLocFor(scope, "new-type")
         val predLoc = storageLocFor(scope, "new-type?")
+        val recordType = recordInstance.recordType
 
+        assert(recordInstance.typeVars.values.isEmpty)
         assert(recordType.sourceName === "<new-type>")
         assert(recordType.fields === Nil)
 
@@ -69,7 +71,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
           case et.TopLevelDefine(bindings) :: Nil =>
             assert(bindings.toSet === Set(
               et.SingleBinding(consLoc, et.RecordConstructor(recordType, Nil)),
-              et.SingleBinding(predLoc, et.TypePredicate(recordType))
+              et.SingleBinding(predLoc, et.TypePredicate(recordInstance))
             ))
         }
     }
@@ -84,22 +86,24 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
                            (const-datum new-type-const-datum))""")(scope)
 
     inside(scope("<new-type>")) {
-      case BoundType(recordType : vt.RecordType) =>
+      case BoundType(recordInstance : vt.RecordTypeInstance) =>
         val consLoc = storageLocFor(scope, "new-type")
         val predLoc = storageLocFor(scope, "new-type?")
         val constDatumAccessorLoc = storageLocFor(scope, "new-type-const-datum")
-        
+        val recordType = recordInstance.recordType
+
+        assert(recordInstance.typeVars.values.isEmpty)
         assert(recordType.sourceName === "<new-type>")
 
         val constDatumField = recordType.fieldForName("const-datum")
         // No type defaults to <any>, the most permissive type
-        assert(recordType.typeForField(constDatumField) === vt.AnySchemeType)
+        assert(recordInstance.schemeTypeForField(constDatumField) === vt.AnySchemeType)
 
         inside(exprs) {
           case et.TopLevelDefine(bindings) :: Nil =>
             assert(bindings.toSet === Set(
               et.SingleBinding(consLoc, et.RecordConstructor(recordType, List(constDatumField))),
-              et.SingleBinding(predLoc, et.TypePredicate(recordType)),
+              et.SingleBinding(predLoc, et.TypePredicate(recordInstance)),
               et.SingleBinding(constDatumAccessorLoc, et.RecordAccessor(recordType, constDatumField))
             ))
         }
@@ -115,21 +119,24 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
                            ((const-int : <exact-integer>) new-type-const-int))""")(scope)
 
     inside(scope("<new-type>")) {
-      case BoundType(recordType : vt.RecordType) =>
+      case BoundType(recordInstance : vt.RecordTypeInstance) =>
         val consLoc = storageLocFor(scope, "new-type")
         val predLoc = storageLocFor(scope, "new-type?")
         val constIntAccessorLoc = storageLocFor(scope, "new-type-const-int")
-        
+        val recordType = recordInstance.recordType
+
+        assert(recordInstance.typeVars.values.isEmpty)
         assert(recordType.sourceName === "<new-type>")
 
         val constIntField = recordType.fieldForName("const-int")
-        assert(recordType.typeForField(constIntField) === vt.Int64)
+        assert(recordInstance.schemeTypeForField(constIntField) === vt.ExactIntegerType)
+        assert(recordInstance.recordType.storageTypeForField(constIntField) === vt.Int64)
 
         inside(exprs) {
           case et.TopLevelDefine(bindings) :: Nil =>
             assert(bindings.toSet === Set(
               et.SingleBinding(consLoc, et.RecordConstructor(recordType, List(constIntField))),
-              et.SingleBinding(predLoc, et.TypePredicate(recordType)),
+              et.SingleBinding(predLoc, et.TypePredicate(recordInstance)),
               et.SingleBinding(constIntAccessorLoc, et.RecordAccessor(recordType, constIntField))
             ))
         }
@@ -157,27 +164,31 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
                            ((mutable-int : <exact-integer>) new-type-mutable-int set-new-type-mutable-int!))""")(scope)
 
     inside(scope("<new-type>")) {
-      case BoundType(recordType : vt.RecordType) =>
+      case BoundType(recordInstance : vt.RecordTypeInstance) =>
         val consLoc = storageLocFor(scope, "new-type")
         val predLoc = storageLocFor(scope, "new-type?")
         val constAccessorLoc = storageLocFor(scope, "new-type-const-datum")
         val mutableAccessorLoc = storageLocFor(scope, "new-type-mutable-int")
         val mutableMutatorLoc = storageLocFor(scope, "set-new-type-mutable-int!")
-        
+        val recordType = recordInstance.recordType
+
+        assert(recordInstance.typeVars.values.isEmpty)
         assert(recordType.sourceName === "<new-type>")
-        
+
         val constDatumField = recordType.fieldForName("const-datum")
         val mutableIntField = recordType.fieldForName("mutable-int")
 
-        assert(recordType.typeForField(constDatumField) === vt.AnySchemeType)
+        assert(recordInstance.schemeTypeForField(constDatumField) === vt.AnySchemeType)
+        assert(recordInstance.schemeTypeForField(mutableIntField) === vt.ExactIntegerType)
+
         // <exact-integer> should be implicitly converted to int64 for storage
-        assert(recordType.typeForField(mutableIntField) === vt.Int64)
+        assert(recordInstance.recordType.storageTypeForField(mutableIntField) === vt.Int64)
 
         inside(exprs) {
           case et.TopLevelDefine(bindings) :: Nil =>
             assert(bindings.toSet === Set(
               et.SingleBinding(consLoc, et.RecordConstructor(recordType, List(mutableIntField, constDatumField))),
-              et.SingleBinding(predLoc, et.TypePredicate(recordType)),
+              et.SingleBinding(predLoc, et.TypePredicate(recordInstance)),
               et.SingleBinding(constAccessorLoc, et.RecordAccessor(recordType, constDatumField)),
               et.SingleBinding(mutableAccessorLoc, et.RecordAccessor(recordType, mutableIntField)),
               et.SingleBinding(mutableMutatorLoc, et.RecordMutator(recordType, mutableIntField))
@@ -194,10 +205,12 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
                                 inner-type?)""")(scope)
 
     inside(scope("<inner-type>")) {
-      case BoundType(innerType : vt.RecordType) =>
+      case BoundType(innerInstance : vt.RecordTypeInstance) =>
         val innerConsLoc = storageLocFor(scope, "inner-type")
         val innerPredLoc = storageLocFor(scope, "inner-type?")
-        
+        val innerType = innerInstance.recordType
+
+        assert(innerInstance.typeVars.values.isEmpty)
         assert(innerType.sourceName === "<inner-type>")
         assert(innerType.fields === Nil)
 
@@ -205,7 +218,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
           case et.TopLevelDefine(bindings) :: Nil =>
             assert(bindings.toSet === Set(
               et.SingleBinding(innerConsLoc, et.RecordConstructor(innerType, List())),
-              et.SingleBinding(innerPredLoc, et.TypePredicate(innerType))
+              et.SingleBinding(innerPredLoc, et.TypePredicate(innerInstance))
             ))
         }
     
@@ -215,19 +228,20 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
                                     ((inner-field : <inner-type>) outer-type-inner-field))""")(scope)
 
         inside(scope("<outer-type>")) {
-          case BoundType(outerType : vt.RecordType) =>
+          case BoundType(outerInstance : vt.RecordTypeInstance) =>
             val outerConsLoc = storageLocFor(scope, "outer-type")
             val outerPredLoc = storageLocFor(scope, "outer-type?")
             val innerFieldAccessorLoc = storageLocFor(scope, "outer-type-inner-field")
+            val outerType = outerInstance.recordType
 
             val innerField = outerType.fieldForName("inner-field")
-            assert(outerType.typeForField(innerField) === innerType)
+            assert(outerInstance.schemeTypeForField(innerField) === innerInstance)
 
             inside(outerExprs) {
               case et.TopLevelDefine(bindings) :: Nil =>
                 assert(bindings.toSet === Set(
                   et.SingleBinding(outerConsLoc, et.RecordConstructor(outerType, List(innerField))),
-                  et.SingleBinding(outerPredLoc, et.TypePredicate(outerType)),
+                  et.SingleBinding(outerPredLoc, et.TypePredicate(outerInstance)),
                   et.SingleBinding(innerFieldAccessorLoc, et.RecordAccessor(outerType, innerField))
                 ))
             }
@@ -249,22 +263,24 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
                                   ((const-flonum : <flonum>) child-const-flonum))""")(scope)
 
     inside((scope("<parent>"), scope("<child>"))) {
-      case (BoundType(parentType : vt.RecordType), BoundType(childType : vt.RecordType)) =>
+      case (BoundType(parentInstance : vt.RecordTypeInstance), BoundType(childInstance : vt.RecordTypeInstance)) =>
         val parentConsLoc = storageLocFor(scope, "parent")
         val parentPredLoc = storageLocFor(scope, "parent?")
         val constIntAccessorLoc = storageLocFor(scope, "parent-const-int")
+        val parentType = parentInstance.recordType
 
+        assert(parentInstance.typeVars.values.isEmpty)
         assert(parentType.sourceName === "<parent>")
         assert(parentType.parentRecordOpt === None)
 
         val constIntField = parentType.fieldForName("const-int")
-        assert(parentType.typeForField(constIntField) === vt.Int64)
+        assert(parentInstance.schemeTypeForField(constIntField) === vt.ExactIntegerType)
 
         inside(parentExprs) {
           case et.TopLevelDefine(bindings) :: Nil =>
             assert(bindings.toSet === Set(
               et.SingleBinding(parentConsLoc, et.RecordConstructor(parentType, List(constIntField))),
-              et.SingleBinding(parentPredLoc, et.TypePredicate(parentType)),
+              et.SingleBinding(parentPredLoc, et.TypePredicate(parentInstance)),
               et.SingleBinding(constIntAccessorLoc, et.RecordAccessor(parentType, constIntField))
             ))
         }
@@ -272,18 +288,20 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         val childConsLoc = storageLocFor(scope, "child")
         val childPredLoc = storageLocFor(scope, "child?")
         val constFlonumAccessorLoc = storageLocFor(scope, "child-const-flonum")
+        val childType = childInstance.recordType
 
+        assert(childInstance.typeVars.values.isEmpty)
         assert(childType.sourceName === "<child>")
-        assert(childType.parentRecordOpt === Some(parentType))
+        assert(childType.parentRecordOpt === Some(parentInstance))
 
         val constFlonumField = childType.fieldForName("const-flonum")
-        assert(childType.typeForField(constFlonumField) === vt.Double)
+        assert(childInstance.schemeTypeForField(constFlonumField) === vt.FlonumType)
 
         inside(childExprs) {
           case et.TopLevelDefine(bindings) :: Nil =>
             assert(bindings.toSet === Set(
               et.SingleBinding(childConsLoc, et.RecordConstructor(childType, List(constIntField, constFlonumField))),
-              et.SingleBinding(childPredLoc, et.TypePredicate(childType)),
+              et.SingleBinding(childPredLoc, et.TypePredicate(childInstance)),
               et.SingleBinding(constFlonumAccessorLoc, et.RecordAccessor(childType, constFlonumField))
             ))
         }
@@ -421,24 +439,83 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
                            ([parent : (U <recursive-type> <unit>)] recursive-type-parent))""")(scope)
 
     inside(scope("<recursive-type>")) {
-      case BoundType(recordType : vt.RecordType) =>
+      case BoundType(recordInstance : vt.RecordTypeInstance) =>
         val consLoc = storageLocFor(scope, "recursive-type")
         val predLoc = storageLocFor(scope, "recursive-type?")
         val parentAccessorLoc = storageLocFor(scope, "recursive-type-parent")
+        val recordType = recordInstance.recordType
 
+        assert(recordInstance.typeVars.values.isEmpty)
         assert(recordType.sourceName === "<recursive-type>")
 
         val parentField = recordType.fieldForName("parent")
-        assert(recordType.typeForField(parentField) === vt.UnionType(Set(recordType, vt.UnitType)))
+        assert(recordInstance.schemeTypeForField(parentField) === vt.UnionType(Set(recordInstance, vt.UnitType)))
 
         inside(exprs) {
           case et.TopLevelDefine(bindings) :: Nil =>
             assert(bindings.toSet === Set(
               et.SingleBinding(consLoc, et.RecordConstructor(recordType, List(parentField))),
-              et.SingleBinding(predLoc, et.TypePredicate(recordType)),
+              et.SingleBinding(predLoc, et.TypePredicate(recordInstance)),
               et.SingleBinding(parentAccessorLoc, et.RecordAccessor(recordType, parentField))
             ))
         }
+    }
+  }
+
+  test("polymorphic record type constructor") {
+    val scope = new Scope(collection.mutable.Map(), Some(baseScope))
+
+    val exprs = bodyFor("""(define-record-type (PolyType [A : <number>] B)
+                             (poly-type field-a field-b)
+                             poly-type?
+                             ([field-a : A] poly-type-field-a)
+                             ([field-b : B] poly-type-field-b))""")(scope)
+
+    inside(scope("PolyType")) {
+      case RecordTypeConstructor(recordType : vt.RecordType) =>
+        val consLoc = storageLocFor(scope, "poly-type")
+        val predLoc = storageLocFor(scope, "poly-type?")
+        val fieldAAccessorLoc = storageLocFor(scope, "poly-type-field-a")
+        val fieldBAccessorLoc = storageLocFor(scope, "poly-type-field-b")
+
+        val fieldA = recordType.fieldForName("field-a")
+        val fieldB = recordType.fieldForName("field-b")
+
+        inside(recordType.typeVars) {
+          case List(typeVarA, typeVarB) =>
+            assert(typeVarA.sourceName === "A")
+            assert(typeVarA.upperBound === vt.NumberType)
+
+            assert(typeVarB.sourceName === "B")
+            assert(typeVarB.upperBound === vt.AnySchemeType)
+
+            assert(recordType.sourceName === "PolyType")
+
+            assert(fieldA.typeTemplate === typeVarA)
+            assert(fieldB.typeTemplate === typeVarB)
+        }
+
+        inside(exprs) {
+          case et.TopLevelDefine(bindings) :: Nil =>
+            assert(bindings.toSet === Set(
+              et.SingleBinding(consLoc, et.RecordConstructor(recordType, List(fieldA, fieldB))),
+              et.SingleBinding(predLoc, et.TypePredicate(recordType.upperBound)),
+              et.SingleBinding(fieldAAccessorLoc, et.RecordAccessor(recordType, fieldA)),
+              et.SingleBinding(fieldBAccessorLoc, et.RecordAccessor(recordType, fieldB))
+            ))
+        }
+    }
+  }
+
+  test("polymorphic mutable record field fails") {
+    val scope = new Scope(collection.mutable.Map(), Some(baseScope))
+
+    intercept[BadSpecialFormException] {
+      bodyFor("""(define-record-type (PolyType [A : <number>] B)
+                   (poly-type field-a field-b)
+                   poly-type?
+                   ([field-a : A] poly-type-field-a set-poly-type-field-a!)
+                   ([field-b : B] poly-type-field-b))""")(scope)
     }
   }
 }

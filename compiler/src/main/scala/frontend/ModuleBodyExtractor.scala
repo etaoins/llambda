@@ -126,8 +126,8 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
       case ParsedSimpleDefine(symbol, boundValue) =>
         symbol.scope += (symbol.name -> boundValue)
         Nil
-      case ParsedRecordTypeDefine(typeSymbol, recordType, procedures) =>
-        typeSymbol.scope += (typeSymbol.name -> BoundType(recordType))
+      case ParsedRecordTypeDefine(symbol, boundValue, procedures) =>
+        symbol.scope += (symbol.name -> boundValue)
 
         procedures.map { case (procedureSymbol, expr) =>
           val schemeType = declaredSymbolSchemeType(procedureSymbol)
@@ -371,7 +371,7 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
         Some(ParsedSimpleDefine(typeAlias, BoundType(extractedType)))
 
       case (Primitives.DefineType, sst.ScopedProperList((constructorName : sst.ScopedSymbol) :: operands) :: definition :: Nil) =>
-        val typeConstructor = ExtractUserDefinedTypeConstructor(operands, definition)
+        val typeConstructor = ExtractNonRecordTypeConstructor(operands, definition)
         Some(ParsedSimpleDefine(constructorName, typeConstructor))
 
       case (Primitives.DefineReportProcedure, List(symbol : sst.ScopedSymbol, definitionData)) =>
@@ -511,8 +511,8 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
         symbol.scope += (symbol.name -> boundValue)
         et.Begin(Nil)
 
-      case Some(ParsedRecordTypeDefine(typeSymbol, recordType, procedures)) =>
-        typeSymbol.scope += (typeSymbol.name -> BoundType(recordType))
+      case Some(ParsedRecordTypeDefine(symbol, boundValue, procedures)) =>
+        symbol.scope += (symbol.name -> boundValue)
 
         et.TopLevelDefine((procedures.map { case (procedureSymbol, expr) =>
           val schemeType = declaredSymbolSchemeType(procedureSymbol)

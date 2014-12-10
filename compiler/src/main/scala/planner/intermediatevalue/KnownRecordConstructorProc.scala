@@ -4,6 +4,7 @@ import io.llambda
 import llambda.compiler.{ProcedureSignature, ContextLocated}
 import llambda.compiler.planner._
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.valuetype.{polymorphic => pm}
 import llambda.compiler.planner.{step => ps}
 
 class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields : List[vt.RecordField]) extends KnownArtificialProc(
@@ -11,8 +12,8 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
       hasWorldArg=true,
       hasSelfArg=false,
       restArgMemberTypeOpt=None,
-      fixedArgTypes=initializedFields.map(recordType.typeForField),
-      returnType=vt.ReturnType.SingleValue(recordType),
+      fixedArgTypes=initializedFields.map(recordType.storageTypeForField),
+      returnType=vt.ReturnType.SingleValue(recordType.upperBound),
       attributes=Set()
     ).toPolymorphic
 ){
@@ -25,7 +26,7 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
     val plan = parentPlan.forkPlan()
 
     val fieldToTempValue = (initializedFields.map { field =>
-      val fieldType = recordType.typeForField(field)
+      val fieldType = recordType.storageTypeForField(field)
       (field, ps.Temp(fieldType))
     }).toMap
 
@@ -47,7 +48,7 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
     // Set all our fields
     for(field <- recordType.fieldsWithInherited) {
       val fieldTemp = fieldToTempValue.getOrElse(field, {
-        val fieldType = recordType.typeForField(field)
+        val fieldType = recordType.storageTypeForField(field)
         UnitValue.toTempValue(fieldType)(plan)
       })
 
@@ -66,15 +67,29 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
   }
 
   override def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter) : Option[PlanResult] = {
+    // Try to determine our polymorphic type from our initialised fields
+    val resolvedVars = operands.map(_._2).zip(initializedFields).foldLeft(pm.ResolveTypeVars.Result()) {
+      case (resolved, (operandValue, field)) =>
+        resolved ++ pm.ResolveTypeVars(recordType.typeVars.toSet, field.typeTemplate, operandValue.schemeType)
+    }
+
+    val reconciledVars = pm.ReconcileTypeVars(recordType.typeVars.toSet, resolvedVars, fixApplicable=true)
+    val typeInstance = vt.RecordTypeInstance(reconciledVars, recordType)
+
     if (operands.length != initializedFields.length) {
       // Not the right number of operands
       return None
     }
 
     // Convert our fields to the correct values
-    val fieldToTempValue = (operands.map(_._2).zip(initializedFields) map { case (operandValue, field) =>
-      val fieldType = recordType.typeForField(field)
-      (field -> operandValue.toTempValue(fieldType))
+    val fieldToTempValue = (operands.zip(initializedFields) map { case ((operandLoc, operandValue), field) =>
+      // Note that we need the upper bound type as we physically store the record using the upper bound
+      val fieldType = recordType.storageTypeForField(field)
+      val tempValue = plan.withContextLocation(operandLoc) {
+        operandValue.toTempValue(fieldType)
+      }
+
+      (field -> tempValue)
     }).toMap
 
     // Build the record value
@@ -85,14 +100,14 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
 
     for(field <- recordType.fieldsWithInherited) {
       val fieldTemp = fieldToTempValue.getOrElse(field, {
-        val fieldType = recordType.typeForField(field)
+        val fieldType = recordType.storageTypeForField(field)
         UnitValue.toTempValue(fieldType)(plan)
       })
 
       plan.steps += ps.SetRecordDataField(dataTemp, recordType, field, fieldTemp)
     }
 
-    val resultValue = TempValueToIntermediate(recordType, cellTemp)(plan.config)
+    val resultValue = TempValueToIntermediate(typeInstance, cellTemp)(plan.config)
 
     Some(PlanResult(
       state=state,

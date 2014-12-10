@@ -37,7 +37,7 @@ private case class CapturedMutable(
   parentMutable : MutableValue,
   recordField : vt.RecordField
 ) extends CapturedVariable {
-  val valueType = parentMutable.mutableType
+  val valueType = parentMutable.mutableType.upperBound
 }
  
 private[planner] object FindClosedVars {
@@ -87,7 +87,7 @@ private[planner] object FindClosedVars {
           }
 
       case parentMutable : MutableValue =>
-        val recordField = new vt.RecordField(storageLoc.sourceName, parentMutable.mutableType)
+        val recordField = new vt.RecordField(storageLoc.sourceName, parentMutable.mutableType.upperBound)
         CapturedMutable(storageLoc, parentMutable, recordField)
       }
     }

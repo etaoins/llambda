@@ -9,6 +9,15 @@ import llambda.compiler.valuetype._
   * infrastructure to handle the type variable transparently before it's been resolved.
   */
 class TypeVar(
-    sourceName : String,
+    val sourceName : String,
     val upperBound : SchemeType = AnySchemeType
-) extends RecordType(sourceName, Nil)
+) extends RecordTypeInstance(ReconcileTypeVars.Result(), new RecordType(sourceName, Nil))
+
+/** Represents a type variable being used in an illegal context
+  *
+  * If ExtractType encounters a poison type var it will raise a BadSpecialFormException with the specified message. This
+  * is used to disallow mutable polymorphic record fields, for example.
+  */
+class PoisonTypeVar(
+    val message : String
+) extends TypeVar("!poison!")
