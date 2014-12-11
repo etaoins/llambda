@@ -148,10 +148,14 @@ sealed abstract trait SchemeType extends CellValueType {
     SubtractTypes(this, otherType)
 
   /** Creates a union of this type with another */
-  def +(otherType : SchemeType) : SchemeType = {
-    SchemeType.fromTypeUnion(List(this, otherType))
-  }
-  
+  def +(otherType : SchemeType) : SchemeType =
+    if (this == otherType) {
+      this
+    }
+    else {
+      SchemeType.fromTypeUnion(List(this, otherType))
+    }
+
   /** Returns the applicable type for this type if one exists
     *
     * Unions can only have a single applicable type at once. This will return that applicable type if it exists or None 
