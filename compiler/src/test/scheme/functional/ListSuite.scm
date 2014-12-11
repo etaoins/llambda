@@ -191,6 +191,75 @@
 (define-test "(list-ref) past end of list fails" (expect-failure
   (list-ref '(1 2 3) 3)))
 
+(define-test "(filter)" (expect-success
+  (import (llambda list))
+  (import (llambda typed))
+
+  (cond-expand (immutable-pairs
+    (ann (filter even? '(3 1 4 1 5 9)) (Listof <exact-integer>))))
+
+  (assert-equal '(0 7 8 8 43 -4) (filter number? '(0 7 8 8 43 -4)))
+  (assert-equal '(0 8 8 -4) (filter even? '(0 7 8 8 43 -4)))
+  (assert-equal '() (filter symbol? '(0 7 8 8 43 -4)))
+  (assert-equal '() (filter even? '()))))
+
+(define-test "(remove)" (expect-success
+  (import (llambda list))
+  (import (llambda typed))
+
+  (cond-expand (immutable-pairs
+    (ann (remove even? '(0 7 8 8 43 -4)) (Listof <exact-integer>))))
+
+  (assert-equal '(0 7 8 8 43 -4) (remove symbol? '(0 7 8 8 43 -4)))
+  (assert-equal '(7 43) (remove even? '(0 7 8 8 43 -4)))
+  (assert-equal '() (remove number? '(0 7 8 8 43 -4)))
+  (assert-equal '() (remove even? '()))))
+
+(define-test "(find)" (expect-success
+  (import (llambda list))
+  (import (llambda typed))
+
+  (cond-expand (immutable-pairs
+    (ann (find even? '(3 1 4 1 5 9)) (U <exact-integer> #f))))
+
+  (assert-equal 4 (find even? '(3 1 4 1 5 9)))
+  (assert-equal #f (find even? '()))
+  (assert-equal #f (find symbol? '(3 1 4 1 5 9)))))
+
+(define-test "(find-tail)" (expect-success
+  (import (llambda list))
+  (import (llambda typed))
+
+  (cond-expand (immutable-pairs
+    (ann (find-tail even? '(3 1 37 -8 -5 0 0)) (U (Listof <exact-integer>) #f))))
+
+  (assert-equal '(-8 -5 0 0) (find-tail even? '(3 1 37 -8 -5 0 0)))
+  (assert-equal #f (find-tail even? '(3 1 37 -5)))))
+
+(define-test "(take-while)" (expect-success
+  (import (llambda list))
+  (import (llambda typed))
+
+  (cond-expand (immutable-pairs
+    (ann (take-while number? '(2 18 3 10 22 9)) (Listof <exact-integer>))))
+
+  (assert-equal '(2 18 3 10 22 9) (take-while number? '(2 18 3 10 22 9)))
+  (assert-equal '(2 18) (take-while even? '(2 18 3 10 22 9)))
+  (assert-equal '() (take-while symbol? '(2 18 3 10 22 9)))
+  (assert-equal '() (take-while even? '()))))
+
+(define-test "(drop-while)" (expect-success
+  (import (llambda list))
+  (import (llambda typed))
+
+  (cond-expand (immutable-pairs
+    (ann (drop-while even? '(2 18 3 10 22 9)) (Listof <exact-integer>))))
+
+  (assert-equal '() (drop-while number? '(2 18 3 10 22 9)))
+  (assert-equal '(3 10 22 9) (drop-while even? '(2 18 3 10 22 9)))
+  (assert-equal '(2 18 3 10 22 9) (drop-while symbol? '(2 18 3 10 22 9)))
+  (assert-equal '() (drop-while even? '()))))
+
 (cond-expand
   ((not immutable-pairs)
    (define-test "(list-set!)" (expect (one two three)
