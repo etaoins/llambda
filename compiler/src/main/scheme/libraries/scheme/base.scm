@@ -272,7 +272,7 @@
                         (([to : <type>] [at : <exact-integer>] [from : <type>] [start : <exact-integer>] [end : <exact-integer>])
                          (native-proc to at from start end)))))))
 
-    (define-native-library llbase (static-library "llbase"))
+    (define-native-library llbase (static-library "ll_scheme_base"))
 
     ; Define the length accessors for slicing values
     (define-r7rs vector-length (native-function llbase "llbase_vector_length" (-> <vector> <native-uint32>)))

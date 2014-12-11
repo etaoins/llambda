@@ -6,7 +6,7 @@
   ; write library
   (include-library-declarations "../../interfaces/scheme/write.scm")
   (begin
-    (define-native-library llwrite (static-library "llwrite"))
+    (define-native-library llwrite (static-library "ll_scheme_write"))
 
     (define native-write (world-function llwrite "llwrite_write" (-> <any> <port> <unit>)))
     (define-r7rs write (case-lambda

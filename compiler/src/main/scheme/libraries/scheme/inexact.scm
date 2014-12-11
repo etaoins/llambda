@@ -6,7 +6,7 @@
   ; inexact library
   (include-library-declarations "../../interfaces/scheme/inexact.scm")
   (begin
-    (define-native-library llinexact (static-library "llinexact"))
+    (define-native-library llinexact (static-library "ll_scheme_inexact"))
 
     (define-r7rs finite? (native-function llinexact "llinexact_is_finite" (-> <number> <native-bool>)))
     (define-r7rs infinite? (native-function llinexact "llinexact_is_infinite" (-> <number> <native-bool>)))

@@ -10,7 +10,7 @@
     (define-type <readable> (U <pair> <empty-list> <string> <symbol> <boolean> <number> <char> <vector> <bytevector>
                                <unit>))
 
-    (define-native-library llread (static-library "llread"))
+    (define-native-library llread (static-library "ll_scheme_read"))
 
     (define native-read (world-function llread "llread_read" (-> <port> (U <readable> <eof-object>))))
     (define-r7rs read (case-lambda

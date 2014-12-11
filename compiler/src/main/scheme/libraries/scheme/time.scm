@@ -4,7 +4,7 @@
 
   (include-library-declarations "../../interfaces/scheme/time.scm")
   (begin
-    (define-native-library lltime (static-library "lltime"))
+    (define-native-library lltime (static-library "ll_scheme_time"))
 
     (define-r7rs current-second (native-function lltime "lltime_current_second" (-> <native-double>)))
     (define-r7rs current-jiffy (native-function lltime "lltime_current_jiffy" (-> <native-int64>)))

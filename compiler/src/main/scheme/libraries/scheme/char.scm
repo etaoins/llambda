@@ -6,7 +6,7 @@
   (include-library-declarations "../../interfaces/scheme/char.scm")
 
   (begin
-    (define-native-library llchar (static-library "llchar"))
+    (define-native-library llchar (static-library "ll_scheme_char"))
 
     (define-r7rs char-alphabetic? (native-function llchar "llchar_char_is_alphabetic" (-> <native-unicode-char> <native-bool>)))
     (define-r7rs char-numeric? (native-function llchar "llchar_char_is_numeric" (-> <native-unicode-char> <native-bool>)))

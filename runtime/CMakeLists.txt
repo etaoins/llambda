@@ -54,53 +54,53 @@ add_library(llcore
 	writer/ExternalFormDatumWriter.cpp
 )
 
-add_library(llbase
-	stdlib/base/arithmetic.cpp
-	stdlib/base/boolean.cpp
-	stdlib/base/bytevector.cpp
-	stdlib/base/char.cpp
-	stdlib/base/control.cpp
-	stdlib/base/dynamic.cpp
-	stdlib/base/exception.cpp
-	stdlib/base/input.cpp
-	stdlib/base/list.cpp
-	stdlib/base/map.cpp
-	stdlib/base/number.cpp
-	stdlib/base/numberio.cpp
-	stdlib/base/port.cpp
-	stdlib/base/output.cpp
-	stdlib/base/string.cpp
-	stdlib/base/symbol.cpp
-	stdlib/base/vector.cpp
+add_library(ll_scheme_base
+	stdlib/scheme/base/arithmetic.cpp
+	stdlib/scheme/base/boolean.cpp
+	stdlib/scheme/base/bytevector.cpp
+	stdlib/scheme/base/char.cpp
+	stdlib/scheme/base/control.cpp
+	stdlib/scheme/base/dynamic.cpp
+	stdlib/scheme/base/exception.cpp
+	stdlib/scheme/base/input.cpp
+	stdlib/scheme/base/list.cpp
+	stdlib/scheme/base/map.cpp
+	stdlib/scheme/base/number.cpp
+	stdlib/scheme/base/numberio.cpp
+	stdlib/scheme/base/port.cpp
+	stdlib/scheme/base/output.cpp
+	stdlib/scheme/base/string.cpp
+	stdlib/scheme/base/symbol.cpp
+	stdlib/scheme/base/vector.cpp
 )
 
-add_library(llchar
-	stdlib/char/char.cpp
+add_library(ll_scheme_char
+	stdlib/scheme/char/char.cpp
 	ucd/ucd.cpp
 )
 
-add_library(llinexact
-	stdlib/inexact/inexact.cpp
+add_library(ll_scheme_inexact
+	stdlib/scheme/inexact/inexact.cpp
 )
 
-add_library(llfile
-	stdlib/file/file.cpp
+add_library(ll_scheme_file
+	stdlib/scheme/file/file.cpp
 )
 
-add_library(llprocesscontext
-	stdlib/process-context/process.cpp
+add_library(ll_scheme_processcontext
+	stdlib/scheme/process-context/process.cpp
 )
 
-add_library(llread
-	stdlib/read/read.cpp
+add_library(ll_scheme_read
+	stdlib/scheme/read/read.cpp
 )
 
-add_library(lltime
-	stdlib/time/time.cpp
+add_library(ll_scheme_time
+	stdlib/scheme/time/time.cpp
 )
 
-add_library(llwrite
-	stdlib/write/write.cpp
+add_library(ll_scheme_write
+	stdlib/scheme/write/write.cpp
 )
 
 include_directories(${lliby_SOURCE_DIR})

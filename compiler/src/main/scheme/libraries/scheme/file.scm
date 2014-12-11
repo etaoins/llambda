@@ -6,7 +6,7 @@
   (include-library-declarations "../../interfaces/scheme/file.scm")
 
   (begin
-    (define-native-library llfile (static-library "llfile"))
+    (define-native-library llfile (static-library "ll_scheme_file"))
 
     (define-r7rs file-exists? (native-function llfile "llfile_file_exists" (-> <string> <native-bool>)))
 
