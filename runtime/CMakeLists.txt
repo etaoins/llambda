@@ -54,6 +54,10 @@ add_library(llcore
 	writer/ExternalFormDatumWriter.cpp
 )
 
+add_library(ll_llambda_list
+	stdlib/llambda/list/list.cpp
+)
+
 add_library(ll_scheme_base
 	stdlib/scheme/base/arithmetic.cpp
 	stdlib/scheme/base/boolean.cpp

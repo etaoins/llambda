@@ -260,6 +260,13 @@
   (assert-equal '(2 18 3 10 22 9) (drop-while symbol? '(2 18 3 10 22 9)))
   (assert-equal '() (drop-while even? '()))))
 
+(define-test "(cons*)" (expect-success
+  (import (llambda list))
+
+  (assert-equal '(1 2 3 . 4) (cons* 1 2 3 4))
+  (assert-equal '((1 2) 3 4) (cons* '(1 2) '(3 4)))
+  (assert-equal '4 (cons* 4))))
+
 (cond-expand
   ((not immutable-pairs)
    (define-test "(list-set!)" (expect (one two three)
