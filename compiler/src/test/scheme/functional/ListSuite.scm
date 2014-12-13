@@ -265,7 +265,9 @@
 
   (assert-equal '(1 2 3 . 4) (cons* 1 2 3 4))
   (assert-equal '((1 2) 3 4) (cons* '(1 2) '(3 4)))
-  (assert-equal '4 (cons* 4))))
+  (assert-equal '4 (cons* 4))
+
+  (assert-equal '(1 2 3 4 5) (cons* (append '(1 2 3) (typeless-cell '(4 5)))))))
 
 (define-test "(partition)" (expect-success
   (import (llambda list))

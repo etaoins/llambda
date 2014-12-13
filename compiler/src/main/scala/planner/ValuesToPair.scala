@@ -22,7 +22,7 @@ private[planner] object ValuesToPair {
   def apply(
       carValue : iv.IntermediateValue,
       cdrValue : iv.IntermediateValue,
-      listLengthOpt : Option[Int],
+      listLengthOpt : Option[Long],
       capturable : Boolean = true
   )(implicit plan : PlanWriter) : iv.IntermediateValue = {
     if (plan.config.schemeDialect.pairsAreImmutable) {

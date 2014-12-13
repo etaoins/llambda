@@ -27,7 +27,16 @@ private[planner] object ValuesToList {
       case carValue :: restValues =>
         // Recurse down our cdr
         val cdrValue = apply(restValues, tailValue, capturable)
-        ValuesToPair(carValue, cdrValue, Some(restValues.length + 1), capturable)
+
+        val listLengthOpt = tailValue match {
+          case knownListElement : iv.KnownListElement =>
+            knownListElement.listLengthOpt.map(_ + memberValues.length)
+
+          case _ =>
+            None
+        }
+
+        ValuesToPair(carValue, cdrValue, listLengthOpt, capturable)
 
       case Nil =>
         // No more list values

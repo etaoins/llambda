@@ -764,7 +764,7 @@ case class Return(returnValue : Option[TempValue]) extends Step {
   *
   * SetPairCar and SetPairCdr must be called on the new pair before it is accessed or the next GC barrier
   */
-case class InitPair(result : TempValue, listLengthOpt : Option[Int] = None) extends Step with CellConsumer {
+case class InitPair(result : TempValue, listLengthOpt : Option[Long] = None) extends Step with CellConsumer {
   val inputValues = Set[TempValue]()
   lazy val outputValues = Set(result)
 
