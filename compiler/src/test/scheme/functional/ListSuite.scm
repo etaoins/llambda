@@ -267,6 +267,59 @@
   (assert-equal '((1 2) 3 4) (cons* '(1 2) '(3 4)))
   (assert-equal '4 (cons* 4))))
 
+(define-test "(partition)" (expect-success
+  (import (llambda list))
+  (import (llambda typed))
+
+  (let-values (((true-list false-list) (partition (lambda (x) x) '(one 2 3 four five 6))))
+              (cond-expand
+                (immutable-pairs
+                  (ann true-list (Listof (U <symbol> <exact-integer>)))
+                  (ann false-list (Listof (U <symbol> <exact-integer>)))))
+
+              (assert-equal true-list '(one 2 3 four five 6))
+              (assert-equal false-list '()))
+
+  (let-values (((true-list false-list) (partition symbol? '(one 2 3 four five 6))))
+              (cond-expand
+                (immutable-pairs
+                  (ann true-list (Listof (U <symbol> <exact-integer>)))
+                  (ann false-list (Listof (U <symbol> <exact-integer>)))))
+
+              (assert-equal true-list '(one four five))
+              (assert-equal false-list '(2 3 6)))
+
+  (let-values (((true-list false-list) (partition number? '(one 2 3 four five 6))))
+              (cond-expand
+                (immutable-pairs
+                  (ann true-list (Listof (U <symbol> <exact-integer>)))
+                  (ann false-list (Listof (U <symbol> <exact-integer>)))))
+
+              (assert-equal true-list '(2 3 6))
+              (assert-equal false-list '(one four five)))
+
+  (let-values (((true-list false-list) (partition port? '(one 2 3 four five 6))))
+              (cond-expand
+                (immutable-pairs
+                  (ann true-list (Listof (U <symbol> <exact-integer>)))
+                  (ann false-list (Listof (U <symbol> <exact-integer>)))))
+
+              (assert-equal true-list '())
+              (assert-equal false-list '(one 2 3 four five 6)))
+
+  (cond-expand
+    ((not immutable-pairs)
+     (let ((input-list (list 1 2 3 4 5)))
+       (define (evil-predicate val)
+         ; Mutate the list while we're partitioning - this is undefined but shouldn't crash
+         (set-cdr! input-list 5)
+         #t)
+
+
+       (guard (condition
+                (else 'ignore))
+              (partition evil-predicate input-list)))))))
+
 (cond-expand
   ((not immutable-pairs)
    (define-test "(list-set!)" (expect (one two three)

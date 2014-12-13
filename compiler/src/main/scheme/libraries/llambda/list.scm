@@ -3,7 +3,7 @@
   (import (llambda typed))
   (import (llambda nfi))
 
-  (export cons* filter remove find find-tail take-while drop-while)
+  (export cons* partition filter remove find find-tail take-while drop-while)
 
   ; WeakListof is only a strong type if pair are immutable
   ; This is used avoid producing type checking causing tail recursive procedures to have extremely poor performance
@@ -21,6 +21,8 @@
     (define-native-library lllist (static-library "ll_llambda_list"))
 
     (define cons* (world-function lllist "lllist_cons_star" (-> <any> <any> * <any>)))
+
+    (define partition (world-function lllist "lllist_partition" (All (A) (-> <any> <boolean>) (WeakListof A) (Values (WeakListof A) (WeakListof A)))))
 
     ; For the passed list the head's car will be bound to "value" and have "pred?" applied. If "pred?" returns true
     ; then "true-expr" will be evaluated, otherwise "false-expr". The result of the condition will be returned
