@@ -261,3 +261,18 @@
 (define-test "(string-map) mapping to invalid character fails" (expect-failure
   (string-map (lambda (x) #\x110000)"AbdEgH")))
 
+(define-test "(fold)" (expect-success
+  (import (llambda list))
+  (import (llambda typed))
+
+  (assert-equal 10 (ann (fold + 0 '(1 2 3 4)) <number>))
+  (assert-equal '(four three two one) (ann (fold cons '() '(one two three four)) <list-element>))
+  (assert-equal '() (ann (fold cons '() '()) <list-element>))
+
+  (define symbol-count (fold (lambda (x [count : <exact-integer>]) (if (symbol? x) (+ count 1) count))
+                             0
+                             '(one 2 three four 5 six)))
+
+  (assert-equal 4 (ann symbol-count <exact-integer>))
+
+  (assert-equal '(c 3 b 2 a 1) (fold cons* '() '(a b c) '(1 2 3 4 5)))))

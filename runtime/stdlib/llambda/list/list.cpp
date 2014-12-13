@@ -14,6 +14,7 @@ extern "C"
 {
 
 using PredicateProc = TypedProcedureCell<bool, AnyCell*>;
+using FoldProc = TypedProcedureCell<AnyCell*, AnyCell*, AnyCell*, RestValues<AnyCell>*>;
 
 AnyCell *lllist_cons_star(World &world, AnyCell *headValue, RestValues<AnyCell> *tailValues)
 {
@@ -36,6 +37,55 @@ AnyCell *lllist_cons_star(World &world, AnyCell *headValue, RestValues<AnyCell> 
 	}
 
 	return ListElementCell::createList(world, nonTerminalElements, *tailArgIt);
+}
+
+AnyCell* lllist_fold(World &world, FoldProc *foldProcRaw, AnyCell *initialValue, ProperList<AnyCell> *firstListRaw, RestValues<ProperList<AnyCell>> *restListsRaw)
+{
+	alloc::StrongRef<FoldProc> foldProc(world, foldProcRaw);
+	alloc::StrongRef<AnyCell> accum(world, initialValue);
+
+	// Collect our input lists
+	alloc::StrongRefVector<ListElementCell> inputLists(world);
+	inputLists.push_back(firstListRaw);
+
+	for(auto restList : *restListsRaw)
+	{
+		// Create the strong ref for the rest list
+		inputLists.push_back(restList);
+	}
+
+	const auto inputListCount = inputLists.size();
+
+	std::vector<AnyCell*> inputVector(inputListCount + 1);
+	std::vector<AnyCell*> restArgVector(inputListCount - 1);
+
+	while(true)
+	{
+		// Collect our input from out input lists
+		for(size_t i = 0; i < inputListCount; i++)
+		{
+			if (inputLists[i] == EmptyListCell::instance())
+			{
+				// Reached the end of the list
+				return accum;
+			}
+
+			auto inputListPair = cell_unchecked_cast<PairCell>(inputLists[i]);
+			inputVector[i] = inputListPair->car();
+
+			// Move this forward to the next element
+			inputLists[i] = cell_checked_cast<ListElementCell>(world, inputListPair->cdr(), "Input list mutated during (fold)");
+		}
+
+		inputVector[inputListCount] = accum;
+
+		// Create the rest argument list - the first two input values are passed explicitly
+		std::copy(inputVector.begin() + 2, inputVector.end(), restArgVector.begin());
+		RestValues<AnyCell> *restArgList = RestValues<AnyCell>::create(world, restArgVector);
+
+		auto resultValue = foldProc->apply(world, inputVector[0], inputVector[1], restArgList);
+		accum.setData(resultValue);
+	}
 }
 
 ReturnValues<ProperList<AnyCell>>* lllist_partition(World &world, PredicateProc *predicateProcRaw, ProperList<AnyCell> *listHeadRaw)
