@@ -20,45 +20,40 @@ ReturnValues<AnyCell> *llbase_apply(World &world, TopProcedureCell *procedure, R
 {
 	RestValues<AnyCell> *procArgHead;
 
-	// Do everything inside the block so the RestValues/StrongRoot is destructed before calling the procedure
-	// This reduces the resources we use during recursive calls to (apply) and might allow the compiler to perform
-	// tail call optimization
+	// Find our arguments
+	if (applyArgList->empty())
 	{
-		// Find our arguments
-		if (applyArgList->empty())
+		// This is easy - call with no args
+		procArgHead = applyArgList;
+	}
+	else
+	{
+		// Build our procedure args
+		auto applyArgIt = applyArgList->begin();
+
+		// Standalone args are zero or more args that appear before the final proper list
+		auto standaloneArgCount = applyArgList->size() - 1;
+		std::vector<AnyCell*> standaloneArgs(standaloneArgCount);
+
+		for(RestValues<AnyCell>::size_type i = 0; i < standaloneArgCount; i++)
 		{
-			// This is easy - call with no args
-			procArgHead = applyArgList;
+			standaloneArgs[i] = *(applyArgIt++);
 		}
-		else
+
+		// Ensure the final argument is a proper list
+		// This would violate our calling convention otherwise
+		auto finalListHead = cell_cast<RestValues<AnyCell>>(*applyArgIt);
+
+		if (!finalListHead)
 		{
-			// Build our procedure args
-			auto applyArgIt = applyArgList->begin();
-
-			// Standalone args are zero or more args that appear before the final proper list
-			auto standaloneArgCount = applyArgList->size() - 1;
-			std::vector<AnyCell*> standaloneArgs(standaloneArgCount);
-
-			for(RestValues<AnyCell>::size_type i = 0; i < standaloneArgCount; i++)
-			{
-				standaloneArgs[i] = *(applyArgIt++);
-			}
-
-			// Ensure the final argument is a proper list
-			// This would violate our calling convention otherwise
-			auto finalListHead = cell_cast<RestValues<AnyCell>>(*applyArgIt);
-
-			if (!finalListHead)
-			{
-				signalError(world, "Final argument to (apply) must be a proper list", {*applyArgIt});
-			}
-
-			// Root the procedure cell before allocating the argument list
-			alloc::StrongRoot<TopProcedureCell> procedureRoot(world, &procedure);
-
-			// We verified the final arg is a proper list so this must also be a proper list
-			procArgHead = cell_unchecked_cast<RestValues<AnyCell>>(ListElementCell::createList(world, standaloneArgs, finalListHead));
+			signalError(world, "Final argument to (apply) must be a proper list", {*applyArgIt});
 		}
+
+		// Root the procedure cell before allocating the argument list
+		alloc::StrongRoot<TopProcedureCell> procedureRoot(world, &procedure);
+
+		// We verified the final arg is a proper list so this must also be a proper list
+		procArgHead = cell_unchecked_cast<RestValues<AnyCell>>(ListElementCell::createList(world, standaloneArgs, finalListHead));
 	}
 
 	return procedure->apply(world, procArgHead);
