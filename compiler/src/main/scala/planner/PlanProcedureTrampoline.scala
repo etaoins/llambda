@@ -47,7 +47,7 @@ private[planner] object PlanProcedureTrampoline {
     
     val inRestArgValueOpt = inRestArgTempOpt map { inRestArgTemp =>
       val inRestArgType = vt.UniformProperListType(trampolineSignature.restArgMemberTypeOpt.get)
-      TempValueToIntermediate(inRestArgType, inRestArgTemp)(plan.config)
+      new iv.CellValue(inRestArgType, BoxedValue(ct.ListElementCell, inRestArgTemp))
     }
 
     // Directly map our fixed args
