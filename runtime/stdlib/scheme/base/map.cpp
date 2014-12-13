@@ -45,15 +45,13 @@ namespace
 		// Create the output vector and GC root it
 		alloc::VectorRef outputVector(world, VectorCell::fromFill(world, minimumLength, UnitCell::instance()));
 
+		std::vector<AnyCell*> restArgVector(restVectors.size());
 		for(std::uint32_t i = 0; i < minimumLength; i++)
 		{
 			// Build the rest argument list
-			std::vector<AnyCell*> restArgVector;
-			restArgVector.reserve(restVectors.size());
-
-			for(auto restVector : restVectors)
+			for(size_t j = 0; j < restVectors.size(); j++)
 			{
-				restArgVector.push_back(restVector->elements()[i]);
+				restArgVector[j] = restVectors[j]->elements()[i];
 			}
 
 			RestValues<AnyCell> *restArgList = RestValues<AnyCell>::create(world, restArgVector);
@@ -86,19 +84,17 @@ namespace
 		// Create the vector of output values
 		alloc::StrongRefVector<AnyCell> outputVector(world, minimumLength, nullptr);
 
+		std::vector<AnyCell*> restArgVector(restLists.size());
 		for(std::uint32_t i = 0; i < minimumLength; i++)
 		{
 			// Build the rest argument list
-			std::vector<AnyCell*> restArgVector;
-			restArgVector.reserve(restLists.size());
-
-			for(ListElementCell* &restList : restLists)
+			for(size_t j = 0; j < restLists.size(); j++)
 			{
-				auto restListPair = cell_map_cast<PairCell>(world, restList);
-				restArgVector.push_back(restListPair->car());
+				auto restListPair = cell_map_cast<PairCell>(world, restLists[j]);
+				restArgVector[j] = restListPair->car();
 
 				// Move this forward to the next element
-				restList = cell_map_cast<ListElementCell>(world, restListPair->cdr());
+				restLists[j] = cell_map_cast<ListElementCell>(world, restListPair->cdr());
 			}
 
 			// Create the rest argument list
@@ -131,15 +127,13 @@ namespace
 
 		StringCellBuilder builder(minimumLength);
 
+		std::vector<UnicodeChar> restArgVector(restCharVectors.size());
 		for(std::size_t i = 0; i < minimumLength; i++)
 		{
 			// Build the rest argument list
-			std::vector<UnicodeChar> restArgVector;
-			restArgVector.reserve(restCharVectors.size());
-
-			for(auto restCharVector : restCharVectors)
+			for(size_t j = 0; j < restCharVectors.size(); j++)
 			{
-				restArgVector.push_back(restCharVector[i]);
+				restArgVector[j] = restCharVectors[j][i];
 			}
 
 			// Create the rest argument list
