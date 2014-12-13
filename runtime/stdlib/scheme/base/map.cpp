@@ -24,23 +24,10 @@ namespace
 	using StringMapProcedureCell = TypedProcedureCell<UnicodeChar::CodePoint, UnicodeChar, RestValues<CharCell>*>;
 	using StringIteratorProcedureCell = TypedProcedureCell<UnicodeChar::CodePoint, UnicodeChar, RestValues<CharCell>*>;
 
-	/**
-	 * Variant of cell_cast that raises an error if the cast fails
-	 *
-	 * This is used during (map) to defend against the input lists being modified during the (map) operation causing
-	 * crashes.
-	 */
 	template<class T>
 	T *cell_map_cast(World &world, AnyCell *value)
 	{
-		T *castResult = cell_cast<T>(value);
-
-		if (castResult == nullptr)
-		{
-			signalError(world, "Input list mutated during (map)");
-		}
-
-		return castResult;
+		return cell_checked_cast<T>(world, value, "Input list mutated during (map)");
 	}
 
 	template<typename MapFunction>

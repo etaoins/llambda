@@ -61,13 +61,7 @@ ReturnValues<ProperList<AnyCell>>* lllist_partition(World &world, PredicateProc 
 			falseValues.push_back(headValue);
 		}
 
-		auto *nextHead = cell_cast<ListElementCell>(headPair->cdr());
-
-		if (nextHead == nullptr)
-		{
-			signalError(world, "Input list mutated during (partition)");
-		}
-
+		auto *nextHead = cell_checked_cast<ListElementCell>(world, headPair->cdr(), "Input list mutated during (partition)");
 		listHead.setData(nextHead);
 	}
 
