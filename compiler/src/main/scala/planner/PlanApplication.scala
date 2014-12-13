@@ -73,9 +73,10 @@ private[planner] object PlanApplication {
       operands : List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan : PlanWriter) : PlanResult = {
     // If this is a self-executing lambda try to apply it without planning a function at all
-    // The procedure expression will never be used again so there's no reason to cost the the out-of-line version
+    // The procedure expression will never be used again so there's no reason to cost the the out-of-line version.
+    // Perform this inlining at all optimisation levels because it can propagate important type information
     procExpr match {
-      case lambdaExpr : et.Lambda if plan.config.optimize =>
+      case lambdaExpr : et.Lambda =>
         // We can apply this inline!
         for(inlineValues <- AttemptInlineApply.fromSEL(initialState)(lambdaExpr, operands)) {
           return PlanResult(
@@ -172,5 +173,49 @@ private[planner] object PlanApplication {
       state=registerTypes(procResult.state)(procedureType, procValue, operands.map(_._2)),
       values=invokeValues.withReturnType(procedureType.returnType)
     )
+  }
+
+  private def listToIntermediates(
+      listHeadValue : iv.IntermediateValue
+  )(implicit plan : PlanWriter) : Option[List[iv.IntermediateValue]] =
+    listHeadValue.schemeType match {
+      case _ : vt.SpecificPairType =>
+        // Note that this will do the right thing with KnownListElement instances - no actual load will be performed
+        listToIntermediates(PlanCadr.loadCdr(listHeadValue)) map { tailValues =>
+          PlanCadr.loadCar(listHeadValue) :: tailValues
+        }
+
+      case vt.EmptyListType => Some(Nil)
+      case _ => None
+    }
+
+  def planWithOperandList(initialState : PlannerState)(
+      procExpr : et.Expr,
+      operandList : iv.IntermediateValue
+  )(implicit plan : PlanWriter) : PlanResult = {
+    val loadValuesPlan = plan.forkPlan()
+
+    listToIntermediates(operandList)(loadValuesPlan) match {
+      case Some(argValues) =>
+        // We have a known number of arguments with known types - this is enough to do compile time arity checks,
+        // lambda inlining etc.
+        plan.steps ++= loadValuesPlan.steps
+
+        planWithOperandValues(initialState)(
+          procExpr,
+          argValues.map((procExpr, _))
+        )
+
+      case None =>
+        val procResult = PlanExpr(initialState)(procExpr)
+        val invokableProc = plan.withContextLocation(procExpr) {
+          procResult.values.toSingleValue.toInvokableProcedure
+        }
+
+        PlanResult(
+          state=procResult.state,
+          PlanInvokeApply.withArgumentList(invokableProc, operandList)
+        )
+    }
   }
 }

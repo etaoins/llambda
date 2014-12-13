@@ -28,7 +28,7 @@ abstract trait ReportProcPlanner {
   }
 
   def planWithValue(initialState : PlannerState)(reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter) : Option[iv.IntermediateValue] =
-    throw new Exception("At least one ReportProcPlanner method must be implemented")
+    None
 }
 
 object ReportProcPlanner {

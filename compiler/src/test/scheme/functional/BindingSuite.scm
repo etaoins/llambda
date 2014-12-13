@@ -259,16 +259,30 @@
   (import (llambda typed))
 
   (assert-equal 100 (let-values (((product) (* 5 20)))
+                                (cond-expand (immutable-pairs
+                                               (ann product <exact-integer>)))
+
                                 product))
 
   (assert-equal 35 (let-values (((root rem) (exact-integer-sqrt 32)))
+                               (cond-expand (immutable-pairs
+                                              (ann root <exact-integer>)
+                                              (ann rem <exact-integer>)))
+
                                (* root rem)))
 
   (assert-equal 100 (let-values ((([product : <exact-integer>]) (* 5 20)))
-                                 product))
+                                (cond-expand (immutable-pairs
+                                               (ann product <exact-integer>)))
+
+                                product))
 
   (assert-equal 35 (let-values ((([root : <exact-integer>] [rem : <exact-integer>]) (exact-integer-sqrt 32)))
-                                (* root rem)))))
+                               (cond-expand (immutable-pairs
+                                              (ann root <exact-integer>)
+                                              (ann rem <exact-integer>)))
+
+                               (* root rem)))))
 
 (define-test "(let-values) with mismatched value count fails" (expect-compile-failure
   (assert-equal 100 (let-values (((product extra) (* 5 20)))

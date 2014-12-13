@@ -18,30 +18,8 @@ object ValuesProcPlanner extends ReportProcPlanner {
         PlanApplication(initialState)(producerExpr, Nil)
       }
 
-      producerResult.values.toMultipleValueList() match {
-        case knownListElement : iv.KnownListElement =>
-          knownListElement.toValueListOpt map { argValues =>
-            // We statically know our arguments!
-            val locatedArgValues = argValues.map((producerExpr, _))
-
-            plan.withContextLocation(consumerExpr) {
-              PlanApplication.planWithOperandValues(producerResult.state)(consumerExpr, locatedArgValues)
-            }
-          }
-
-        case otherArgList =>
-          // This is by definition a list but we don't know the contents of the list
-          // We need to fall back to PlanInokeApply on the consumer to treat it like a dynamic (apply)
-          val consumerResult = PlanExpr(producerResult.state)(consumerExpr)
-          val invokableConsumer = plan.withContextLocation(consumerExpr) {
-            consumerResult.values.toSingleValue.toInvokableProcedure
-          }
-
-          Some(PlanResult(
-            state=consumerResult.state,
-            values=PlanInvokeApply.withArgumentList(invokableConsumer, otherArgList)
-          ))
-      }
+      val resultValue = producerResult.values.toMultipleValueList()
+      Some(PlanApplication.planWithOperandList(producerResult.state)(consumerExpr, resultValue))
 
     case _ =>
       None
