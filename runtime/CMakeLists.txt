@@ -174,7 +174,7 @@ set(ALL_TEST_NAMES
 
 foreach( test_name ${ALL_TEST_NAMES} )
 	add_executable(test-${test_name} tests/test-${test_name}.cpp)
-	target_link_libraries(test-${test_name} llcore llchar ${CMAKE_THREAD_LIBS_INIT})
+	target_link_libraries(test-${test_name} llcore ll_scheme_char ${CMAKE_THREAD_LIBS_INIT})
 
 	add_test(${test_name} test-${test_name})
 endforeach()
