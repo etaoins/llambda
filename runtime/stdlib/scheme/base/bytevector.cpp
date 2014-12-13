@@ -50,7 +50,7 @@ void llbase_bytevector_u8_set(World &world, BytevectorCell *bytevector, std::uin
 	}
 }
 
-BytevectorCell *llbase_bytevector(World &world, ProperList<ExactIntegerCell> *argList)
+BytevectorCell *llbase_bytevector(World &world, RestValues<ExactIntegerCell> *argList)
 {
 	auto length = argList->size();
 	SharedByteArray *byteArray = SharedByteArray::createInstance(length);
@@ -66,7 +66,7 @@ BytevectorCell *llbase_bytevector(World &world, ProperList<ExactIntegerCell> *ar
 	return BytevectorCell::withByteArray(world, byteArray, length);
 }
 
-BytevectorCell *llbase_bytevector_append(World &world, ProperList<BytevectorCell> *argList)
+BytevectorCell *llbase_bytevector_append(World &world, RestValues<BytevectorCell> *argList)
 {
 	// Create a std::list
 	auto bytevectorList = std::list<const BytevectorCell*>(argList->begin(), argList->end());

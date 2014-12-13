@@ -16,11 +16,11 @@ using namespace lliby;
 extern "C"
 {
 
-ReturnValuesList *llbase_apply(World &world, TopProcedureCell *procedure, ProperList<AnyCell> *applyArgList)
+ReturnValues<AnyCell> *llbase_apply(World &world, TopProcedureCell *procedure, RestValues<AnyCell> *applyArgList)
 {
-	ProperList<AnyCell> *procArgHead;
+	RestValues<AnyCell> *procArgHead;
 
-	// Do everything inside the block so the ProperList/StrongRoot is destructed before calling the procedure
+	// Do everything inside the block so the RestValues/StrongRoot is destructed before calling the procedure
 	// This reduces the resources we use during recursive calls to (apply) and might allow the compiler to perform
 	// tail call optimization
 	{
@@ -39,14 +39,14 @@ ReturnValuesList *llbase_apply(World &world, TopProcedureCell *procedure, Proper
 			auto standaloneArgCount = applyArgList->size() - 1;
 			std::vector<AnyCell*> standaloneArgs(standaloneArgCount);
 
-			for(ProperList<AnyCell>::size_type i = 0; i < standaloneArgCount; i++)
+			for(RestValues<AnyCell>::size_type i = 0; i < standaloneArgCount; i++)
 			{
 				standaloneArgs[i] = *(applyArgIt++);
 			}
 
 			// Ensure the final argument is a proper list
 			// This would violate our calling convention otherwise
-			auto finalListHead = cell_cast<ProperList<AnyCell>>(*applyArgIt);
+			auto finalListHead = cell_cast<RestValues<AnyCell>>(*applyArgIt);
 
 			if (!finalListHead)
 			{
@@ -57,26 +57,26 @@ ReturnValuesList *llbase_apply(World &world, TopProcedureCell *procedure, Proper
 			alloc::StrongRoot<TopProcedureCell> procedureRoot(world, &procedure);
 
 			// We verified the final arg is a proper list so this must also be a proper list
-			procArgHead = cell_unchecked_cast<ProperList<AnyCell>>(ListElementCell::createList(world, standaloneArgs, finalListHead));
+			procArgHead = cell_unchecked_cast<RestValues<AnyCell>>(ListElementCell::createList(world, standaloneArgs, finalListHead));
 		}
 	}
 
 	return procedure->apply(world, procArgHead);
 }
 
-ReturnValuesList *llbase_values(ProperList<AnyCell> *restArgHead)
+ReturnValues<AnyCell>* llbase_values(RestValues<AnyCell> *restArgHead)
 {
 	return restArgHead;
 }
 
-ReturnValuesList *llbase_call_with_current_continuation(World &world, TypedProcedureCell<ReturnValuesList*, ProcedureCell*> *proc)
+ReturnValues<AnyCell>* llbase_call_with_current_continuation(World &world, TypedProcedureCell<ReturnValues<AnyCell>*, ProcedureCell*> *proc)
 {
 	using dynamic::Continuation;
 	using dynamic::EscapeProcedureCell;
 
 	// This is the procedure we're calling
-	alloc::StrongRef<TypedProcedureCell<ReturnValuesList*, ProcedureCell*>> procRef(world, proc);
-		
+	alloc::StrongRef<TypedProcedureCell<ReturnValues<AnyCell>*, ProcedureCell*>> procRef(world, proc);
+
 	// Create the escape procedure and its args
 	// We build this first as there's no way to GC root a continuation at the moment. This also make sure the 
 	// continuation stays rooted in the resume path so we can access cont->passedValue(). Otherwise switching dynamic
@@ -103,11 +103,11 @@ ReturnValuesList *llbase_call_with_current_continuation(World &world, TypedProce
 	}
 }
 
-ReturnValuesList *llbase_call_with_values(World &world, ThunkProcedureCell *producer, TopProcedureCell *consumerRaw)
+ReturnValues<AnyCell> *llbase_call_with_values(World &world, ThunkProcedureCell *producer, TopProcedureCell *consumerRaw)
 {
 	alloc::StrongRef<TopProcedureCell> consumer(world, consumerRaw);
 
-	ReturnValuesList *values = producer->apply(world);
+	ReturnValues<AnyCell> *values = producer->apply(world);
 	return consumer->apply(world, values);
 }
 

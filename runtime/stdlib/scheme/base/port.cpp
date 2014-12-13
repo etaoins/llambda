@@ -17,7 +17,7 @@
 
 using namespace lliby;
 
-using CallWithPortProcedureCell = TypedProcedureCell<ReturnValuesList*, PortCell*>;
+using CallWithPortProcedureCell = TypedProcedureCell<ReturnValues<AnyCell>*, PortCell*>;
 
 extern "C"
 {
@@ -130,11 +130,11 @@ PortCell* llbase_open_input_bytevector(World &world, BytevectorCell *bytevector)
 	return PortCell::createInstance(world, new BufferInputPort(inputString));
 }
 
-ReturnValuesList *llbase_call_with_port(World &world, PortCell *portCell, CallWithPortProcedureCell *thunk)
+ReturnValues<AnyCell> *llbase_call_with_port(World &world, PortCell *portCell, CallWithPortProcedureCell *thunk)
 {
 	alloc::WeakRef<PortCell> portRef(world, portCell);
 
-	ReturnValuesList *returnValues = thunk->apply(world, portCell);
+	ReturnValues<AnyCell> *returnValues = thunk->apply(world, portCell);
 
 	// If the port hasn't been GCed then close it
 	if (portRef)

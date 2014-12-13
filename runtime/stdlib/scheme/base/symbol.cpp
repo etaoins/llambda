@@ -9,7 +9,7 @@ extern "C"
 
 using namespace lliby;
 
-bool llbase_symbol_equal(SymbolCell *value1, SymbolCell *value2, ProperList<SymbolCell> *argHead)
+bool llbase_symbol_equal(SymbolCell *value1, SymbolCell *value2, RestValues<SymbolCell> *argHead)
 {
 	if (*value1 != *value2)
 	{

@@ -3,7 +3,6 @@
 #include <cassert>
 
 #include "core/error.h"
-#include "binding/ReturnValuesList.h"
 #include "binding/ProperList.h"
 #include "dynamic/Continuation.h"
 
@@ -16,7 +15,7 @@ namespace
 {
 	std::uint32_t registeredClassId = ~0;
 
-	ReturnValuesList *procedureBody(World &world, ProcedureCell *procSelf, ProperList<AnyCell> *argHead)
+	ReturnValues<AnyCell> *procedureBody(World &world, ProcedureCell *procSelf, RestValues<AnyCell> *argHead)
 	{
 		assert(EscapeProcedureCell::isInstance(procSelf));
 

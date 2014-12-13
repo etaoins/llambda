@@ -164,7 +164,7 @@ AnyCell* llbase_list_copy(World &world, AnyCell *sourceHead)
 	return destHead;
 }
 
-AnyCell* llbase_append(World &world, ProperList<AnyCell> *argList)
+AnyCell* llbase_append(World &world, RestValues<AnyCell> *argList)
 {
 	auto argCount = argList->size();
 

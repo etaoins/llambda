@@ -126,7 +126,7 @@ namespace
 extern "C"
 {
 
-NumberCell *llbase_add(World &world, ProperList<NumberCell> *argList)
+NumberCell *llbase_add(World &world, RestValues<NumberCell> *argList)
 {
 	std::int64_t exactSum = 0;
 	double inexactSum = 0.0;
@@ -157,7 +157,7 @@ NumberCell *llbase_add(World &world, ProperList<NumberCell> *argList)
 	}
 }
 
-NumberCell *llbase_mul(World &world, ProperList<NumberCell> *argList)
+NumberCell *llbase_mul(World &world, RestValues<NumberCell> *argList)
 {
 	std::int64_t exactProduct = 1;
 	double inexactProduct = 1.0;
@@ -188,7 +188,7 @@ NumberCell *llbase_mul(World &world, ProperList<NumberCell> *argList)
 	}
 }
 
-NumberCell *llbase_sub(World &world, NumberCell *startValue, ProperList<NumberCell> *argList)
+NumberCell *llbase_sub(World &world, NumberCell *startValue, RestValues<NumberCell> *argList)
 {
 	std::int64_t exactDifference;
 	double inexactDifference;
@@ -246,7 +246,7 @@ NumberCell *llbase_sub(World &world, NumberCell *startValue, ProperList<NumberCe
 	}
 }
 
-NumberCell* llbase_div(World &world, NumberCell *startValue, ProperList<NumberCell> *argList)
+NumberCell* llbase_div(World &world, NumberCell *startValue, RestValues<NumberCell> *argList)
 {
 	if (argList->empty())
 	{
@@ -306,7 +306,7 @@ NumberCell* llbase_div(World &world, NumberCell *startValue, ProperList<NumberCe
 	}
 }
 
-ProperList<ExactIntegerCell>* llbase_truncate_div(World &world, std::int64_t numerator, std::int64_t denominator)
+ReturnValues<ExactIntegerCell>* llbase_truncate_div(World &world, std::int64_t numerator, std::int64_t denominator)
 {
 	if (denominator == 0)
 	{
@@ -316,7 +316,7 @@ ProperList<ExactIntegerCell>* llbase_truncate_div(World &world, std::int64_t num
 	auto quotient = numerator / denominator;
 	auto remainder = numerator % denominator;
 
-	return ProperList<ExactIntegerCell>::emplaceValues(world, {quotient, remainder});
+	return ReturnValues<ExactIntegerCell>::emplaceValues(world, {quotient, remainder});
 }
 
 std::int64_t llbase_truncate_quotient(World &world, std::int64_t numerator, std::int64_t denominator)
@@ -339,7 +339,7 @@ std::int64_t llbase_truncate_remainder(World &world, std::int64_t numerator, std
 	return numerator % denominator;
 }
 
-ProperList<ExactIntegerCell>* llbase_floor_div(World &world, std::int64_t numerator, std::int64_t denominator)
+ReturnValues<ExactIntegerCell>* llbase_floor_div(World &world, std::int64_t numerator, std::int64_t denominator)
 {
 	if (denominator == 0)
 	{
@@ -347,7 +347,7 @@ ProperList<ExactIntegerCell>* llbase_floor_div(World &world, std::int64_t numera
 	}
 
 	auto floorResult = floorDivision(numerator, denominator);
-	return ProperList<ExactIntegerCell>::emplaceValues(world, {floorResult.quotient, floorResult.remainder});
+	return ReturnValues<ExactIntegerCell>::emplaceValues(world, {floorResult.quotient, floorResult.remainder});
 }
 
 std::int64_t llbase_floor_quotient(World &world, std::int64_t numerator, std::int64_t denominator)
@@ -384,7 +384,7 @@ NumberCell* llbase_expt(World &world, NumberCell *base, NumberCell *power)
 	return NumberCell::fromValue(world, floatResult, canBeExact);
 }
 
-std::int64_t llbase_gcd(std::int64_t a, std::int64_t b, ProperList<ExactIntegerCell> *restInts)
+std::int64_t llbase_gcd(std::int64_t a, std::int64_t b, RestValues<ExactIntegerCell> *restInts)
 {
 	std::int64_t result = greatestCommonDivisor(a, b);
 
@@ -396,7 +396,7 @@ std::int64_t llbase_gcd(std::int64_t a, std::int64_t b, ProperList<ExactIntegerC
 	return (result < 0) ? -result : result;
 }
 
-std::int64_t llbase_lcm(std::int64_t a, std::int64_t b, ProperList<ExactIntegerCell> *restInts)
+std::int64_t llbase_lcm(std::int64_t a, std::int64_t b, RestValues<ExactIntegerCell> *restInts)
 {
 	std::int64_t result = leastCommonMultiple(a, b);
 
@@ -408,7 +408,7 @@ std::int64_t llbase_lcm(std::int64_t a, std::int64_t b, ProperList<ExactIntegerC
 	return (result < 0) ? -result : result;
 }
 
-ProperList<ExactIntegerCell>* llbase_exact_integer_sqrt(World &world, std::int64_t val)
+ReturnValues<ExactIntegerCell>* llbase_exact_integer_sqrt(World &world, std::int64_t val)
 {
 	if (val < 0)
 	{
@@ -419,7 +419,7 @@ ProperList<ExactIntegerCell>* llbase_exact_integer_sqrt(World &world, std::int64
 	const std::int64_t floorResult = std::sqrt(val);
 	const std::int64_t remainder = val - (floorResult * floorResult);
 
-	return ProperList<ExactIntegerCell>::emplaceValues(world, {floorResult, remainder});
+	return ReturnValues<ExactIntegerCell>::emplaceValues(world, {floorResult, remainder});
 }
 
 double llbase_numerator(double value)

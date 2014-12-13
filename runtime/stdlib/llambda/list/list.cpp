@@ -8,7 +8,7 @@ using namespace lliby;
 extern "C"
 {
 
-AnyCell *lllist_cons_star(World &world, AnyCell *headValue, ProperList<AnyCell> *tailValues)
+AnyCell *lllist_cons_star(World &world, AnyCell *headValue, RestValues<AnyCell> *tailValues)
 {
 	const auto elementCount = tailValues->size() + 1;
 
@@ -23,7 +23,7 @@ AnyCell *lllist_cons_star(World &world, AnyCell *headValue, ProperList<AnyCell> 
 	nonTerminalElements[0] = headValue;
 
 	auto tailArgIt = tailValues->begin();
-	for(ProperList<AnyCell>::size_type i = 1; i < (elementCount - 1); i++)
+	for(RestValues<AnyCell>::size_type i = 1; i < (elementCount - 1); i++)
 	{
 		nonTerminalElements[i] = *(tailArgIt++);
 	}

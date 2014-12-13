@@ -4,7 +4,6 @@
 
 #include "dynamic/State.h"
 #include "binding/EmptyListCell.h"
-#include "binding/ReturnValuesList.h"
 #include "alloc/cellref.h"
 
 #include "core/error.h"
@@ -20,7 +19,7 @@ namespace
 	// startup
 	std::uint32_t registeredClassId = ~0;
 
-	ReturnValuesList *procedureBody(World &world, ProcedureCell *self, ProperList<AnyCell> *argList)
+	ReturnValues<AnyCell> *procedureBody(World &world, ProcedureCell *self, RestValues<AnyCell> *argList)
 	{
 		assert(ParameterProcedureCell::isInstance(self));
 
@@ -34,7 +33,7 @@ namespace
 		AnyCell *paramValue = State::activeState(world)->valueForParameter(parameterProc);
 
 		// Return a list of values
-		return ReturnValuesList::create(world, {paramValue});
+		return ReturnValues<AnyCell>::create(world, {paramValue});
 	}
 }
 	

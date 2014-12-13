@@ -52,7 +52,7 @@ void llbase_vector_set(World &world, VectorCell *vector, std::uint32_t index, An
 	}
 }
 
-VectorCell *llbase_vector(World &world, ProperList<AnyCell> *argList)
+VectorCell *llbase_vector(World &world, RestValues<AnyCell> *argList)
 {
 	const auto length = argList->size();
 
@@ -63,7 +63,7 @@ VectorCell *llbase_vector(World &world, ProperList<AnyCell> *argList)
 	return VectorCell::fromElements(world, newElements, length);
 }
 
-VectorCell *llbase_vector_append(World &world, ProperList<VectorCell> *argList)
+VectorCell *llbase_vector_append(World &world, RestValues<VectorCell> *argList)
 {
 	// Create a std::vector
 	auto vectorElements = std::vector<const VectorCell*>(argList->begin(), argList->end());

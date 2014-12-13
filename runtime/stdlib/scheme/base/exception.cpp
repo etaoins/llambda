@@ -1,7 +1,6 @@
 #include "binding/AnyCell.h"
 #include "binding/ProcedureCell.h"
 #include "binding/TypedProcedureCell.h"
-#include "binding/ReturnValuesList.h"
 #include "binding/ErrorObjectCell.h"
 #include "binding/BooleanCell.h"
 #include "binding/ProperList.h"
@@ -18,9 +17,9 @@ using namespace lliby;
 extern "C"
 {
 
-using HandlerProcedureCell = TypedProcedureCell<ReturnValuesList*, AnyCell*>;
+using HandlerProcedureCell = TypedProcedureCell<ReturnValues<AnyCell>*, AnyCell*>;
 
-ReturnValuesList* llbase_with_exception_handler(World &world, HandlerProcedureCell *handlerRaw, ThunkProcedureCell *thunk)
+ReturnValues<AnyCell>* llbase_with_exception_handler(World &world, HandlerProcedureCell *handlerRaw, ThunkProcedureCell *thunk)
 {
 	// Root our exception handler
 	alloc::StrongRef<HandlerProcedureCell> handler(world, handlerRaw);
@@ -43,7 +42,7 @@ ReturnValuesList* llbase_with_exception_handler(World &world, HandlerProcedureCe
 
 		// Call the handler in the dynamic environment (raise) was in
 		// This is required by R7RS for reasons mysterious to me
-		ReturnValuesList *handlerResult = handler->apply(world, except.object());
+		ReturnValues<AnyCell> *handlerResult = handler->apply(world, except.object());
 
 		// Is this a resumable exception?
 		if (resumeProcRef != nullptr)
@@ -59,7 +58,7 @@ ReturnValuesList* llbase_with_exception_handler(World &world, HandlerProcedureCe
 	}
 }
 
-ReturnValuesList *llbase_guard_kernel(World &world, HandlerProcedureCell *guardAuxProcRaw, ThunkProcedureCell *thunk)
+ReturnValues<AnyCell> *llbase_guard_kernel(World &world, HandlerProcedureCell *guardAuxProcRaw, ThunkProcedureCell *thunk)
 {
 	alloc::StrongRef<HandlerProcedureCell> guardAuxProc(world, guardAuxProcRaw);
 	alloc::DynamicStateRef expectedStateRef(world, world.activeStateCell);
@@ -86,7 +85,7 @@ void llbase_raise(World &world, AnyCell *obj)
 	throw dynamic::SchemeException(obj);
 }
 
-ReturnValuesList* llbase_raise_continuable(World &world, AnyCell *obj)
+ReturnValues<AnyCell>* llbase_raise_continuable(World &world, AnyCell *obj)
 {
 	using dynamic::EscapeProcedureCell;
 	using dynamic::Continuation;
@@ -108,7 +107,7 @@ ReturnValuesList* llbase_raise_continuable(World &world, AnyCell *obj)
 	}
 }
 
-void llbase_error(World &world, StringCell *message, ProperList<AnyCell> *irritants)
+void llbase_error(World &world, StringCell *message, RestValues<AnyCell> *irritants)
 {
 	llbase_raise(world, ErrorObjectCell::createInstance(world, message, irritants));
 }

@@ -23,7 +23,7 @@ StringCell *llbase_make_string(World &world, std::uint32_t length, UnicodeChar f
 	return StringCell::fromFill(world, length, fill);
 }
 
-StringCell *llbase_string(World &world, ProperList<CharCell> *charProperList)
+StringCell *llbase_string(World &world, RestValues<CharCell> *charProperList)
 {
 	StringCellBuilder builder(charProperList->size());
 
@@ -77,7 +77,7 @@ void llbase_string_set(World &world, StringCell *string, std::uint32_t index, Un
 	}
 }
 
-StringCell* llbase_string_append(World &world, ProperList<StringCell> *argHead)
+StringCell* llbase_string_append(World &world, RestValues<StringCell> *argHead)
 {
 	std::vector<StringCell*> stringList(argHead->begin(), argHead->end());
 
@@ -131,31 +131,31 @@ void llbase_string_mutating_fill(World &world, StringCell *string, UnicodeChar f
 	string->fill(fill, start, end);
 }
 
-bool llbase_string_equal(StringCell *value1, StringCell *value2, ProperList<StringCell> *argHead)
+bool llbase_string_equal(StringCell *value1, StringCell *value2, RestValues<StringCell> *argHead)
 {
 	return stringCompare(value1, value2, argHead,
 			[] (StringCell *value1, StringCell *value2) { return *value1 == *value2; });
 }
 
-bool llbase_string_lt(StringCell *value1, StringCell *value2, ProperList<StringCell> *argHead)
+bool llbase_string_lt(StringCell *value1, StringCell *value2, RestValues<StringCell> *argHead)
 {
 	return stringCompare(value1, value2, argHead,
 			[] (StringCell *value1, StringCell *value2) { return value1->compare(value2) < 0; });
 }
 
-bool llbase_string_gt(StringCell *value1, StringCell *value2, ProperList<StringCell> *argHead)
+bool llbase_string_gt(StringCell *value1, StringCell *value2, RestValues<StringCell> *argHead)
 {
 	return stringCompare(value1, value2, argHead,
 			[] (StringCell *value1, StringCell *value2) { return value1->compare(value2) > 0; });
 }
 
-bool llbase_string_lte(StringCell *value1, StringCell *value2, ProperList<StringCell> *argHead)
+bool llbase_string_lte(StringCell *value1, StringCell *value2, RestValues<StringCell> *argHead)
 {
 	return stringCompare(value1, value2, argHead,
 			[] (StringCell *value1, StringCell *value2) { return value1->compare(value2) <= 0; });
 }
 
-bool llbase_string_gte(StringCell *value1, StringCell *value2, ProperList<StringCell> *argHead)
+bool llbase_string_gte(StringCell *value1, StringCell *value2, RestValues<StringCell> *argHead)
 {
 	return stringCompare(value1, value2, argHead,
 			[] (StringCell *value1, StringCell *value2) { return value1->compare(value2) >= 0; });

@@ -2,7 +2,6 @@
 #define _LLIBY_BINDING_TYPEDPROCEDURECELL_H
 
 #include "ProcedureCell.h"
-#include "ReturnValuesList.h"
 #include "ProperList.h"
 
 #include "alloc/allocator.h"
@@ -69,12 +68,12 @@ private:
  * for procedures explicitly defined the top procedure type. See the TypedProcedureCell documentation for a discussion
  * of why subtyping doesn't work ask expected here.
  */
-using TopProcedureCell = TypedProcedureCell<ReturnValuesList*, ProperList<AnyCell>*>;
+using TopProcedureCell = TypedProcedureCell<ReturnValues<AnyCell>*, RestValues<AnyCell>*>;
 
 /**
  * TypedProcedureCell accepting no arguments and producing any value
  */
-using ThunkProcedureCell = TypedProcedureCell<ReturnValuesList*>;
+using ThunkProcedureCell = TypedProcedureCell<ReturnValues<AnyCell>*>;
 
 }
 

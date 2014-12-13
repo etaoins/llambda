@@ -12,7 +12,7 @@ using namespace lliby;
 namespace
 {
 	template<class ExactCompare, class InexactCompare>
-	bool numericCompare(NumberCell *value1, NumberCell *value2, ProperList<NumberCell> *argHead, ExactCompare exactCompare, InexactCompare inexactCompare)
+	bool numericCompare(NumberCell *value1, NumberCell *value2, RestValues<NumberCell> *argHead, ExactCompare exactCompare, InexactCompare inexactCompare)
 	{
 		auto compareCells = [&] (NumberCell *number1, NumberCell *number2) -> bool
 		{
@@ -86,7 +86,7 @@ namespace
 	}
 
 	template<class ExactCompare, class InexactCompare>
-	NumberCell *selectNumericValue(World &world, NumberCell *initialNumber, ProperList<NumberCell> *argHead, ExactCompare exactCompare, InexactCompare inexactCompare)
+	NumberCell *selectNumericValue(World &world, NumberCell *initialNumber, RestValues<NumberCell> *argHead, ExactCompare exactCompare, InexactCompare inexactCompare)
 	{
 		NumberCell *selectedNumber = initialNumber;
 		bool resultExact = true;
@@ -185,49 +185,49 @@ bool llbase_is_rational(AnyCell *anyCell)
 	}
 }
 
-bool llbase_numeric_equal(NumberCell *value1, NumberCell *value2, ProperList<NumberCell> *argHead)
+bool llbase_numeric_equal(NumberCell *value1, NumberCell *value2, RestValues<NumberCell> *argHead)
 {
 	return numericCompare(value1, value2, argHead,
 			[] (std::int64_t value1, std::int64_t value2) { return value1 == value2; },
 			[] (double value1, double value2) { return value1 == value2; });
 }
 
-bool llbase_numeric_lt(NumberCell *value1, NumberCell *value2, ProperList<NumberCell> *argHead)
+bool llbase_numeric_lt(NumberCell *value1, NumberCell *value2, RestValues<NumberCell> *argHead)
 {
 	return numericCompare(value1, value2, argHead,
 			[] (std::int64_t value1, std::int64_t value2) { return value1 < value2; },
 			[] (double value1, double value2) { return value1 < value2; });
 }
 
-bool llbase_numeric_gt(NumberCell *value1, NumberCell *value2, ProperList<NumberCell> *argHead)
+bool llbase_numeric_gt(NumberCell *value1, NumberCell *value2, RestValues<NumberCell> *argHead)
 {
 	return numericCompare(value1, value2, argHead,
 			[] (std::int64_t value1, std::int64_t value2) { return value1 > value2; },
 			[] (double value1, double value2) { return value1 > value2; });
 }
 
-bool llbase_numeric_lte(NumberCell *value1, NumberCell *value2, ProperList<NumberCell> *argHead)
+bool llbase_numeric_lte(NumberCell *value1, NumberCell *value2, RestValues<NumberCell> *argHead)
 {
 	return numericCompare(value1, value2, argHead,
 			[] (std::int64_t value1, std::int64_t value2) { return value1 <= value2; },
 			[] (double value1, double value2) { return value1 <= value2; });
 }
 
-bool llbase_numeric_gte(NumberCell *value1, NumberCell *value2, ProperList<NumberCell> *argHead)
+bool llbase_numeric_gte(NumberCell *value1, NumberCell *value2, RestValues<NumberCell> *argHead)
 {
 	return numericCompare(value1, value2, argHead,
 			[] (std::int64_t value1, std::int64_t value2) { return value1 >= value2; },
 			[] (double value1, double value2) { return value1 >= value2; });
 }
 
-NumberCell *llbase_max(World &world, NumberCell *currentMaxNumber, ProperList<NumberCell> *argHead)
+NumberCell *llbase_max(World &world, NumberCell *currentMaxNumber, RestValues<NumberCell> *argHead)
 {
 	return selectNumericValue(world, currentMaxNumber, argHead,
 			[] (std::int64_t value1, std::int64_t value2) { return value1 > value2; },
 			[] (double value1, double value2) { return value1 > value2; });
 }
 
-NumberCell *llbase_min(World &world, NumberCell *currentMaxNumber, ProperList<NumberCell> *argHead)
+NumberCell *llbase_min(World &world, NumberCell *currentMaxNumber, RestValues<NumberCell> *argHead)
 {
 	return selectNumericValue(world, currentMaxNumber, argHead,
 			[] (std::int64_t value1, std::int64_t value2) { return value1 < value2; },
