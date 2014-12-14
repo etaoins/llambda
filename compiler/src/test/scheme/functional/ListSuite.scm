@@ -322,6 +322,15 @@
                 (else 'ignore))
               (partition evil-predicate input-list)))))))
 
+(define-test "(zip)" (expect-success
+  (import (llambda list))
+
+  (assert-equal '((one 1 odd) (two 2 even) (three 3 odd)) (zip '(one two three)
+                                                               '(1 2 3)
+                                                               '(odd even odd even odd even odd even)))
+
+  (assert-equal '((1) (2) (3)) (zip '(1 2 3)))))
+
 (cond-expand
   ((not immutable-pairs)
    (define-test "(list-set!)" (expect (one two three)
