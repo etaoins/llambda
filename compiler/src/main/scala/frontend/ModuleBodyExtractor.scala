@@ -41,8 +41,8 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
       case MonomorphicDeclaration(schemeType) =>
         schemeType
 
-      case _ : PolymorphicProcedureDeclaration =>
-        throw new BadSpecialFormException(symbol, "Polymorphic procedure type declaration where monomorphic type was expected")
+      case PolymorphicProcedureDeclaration(polyType) =>
+        polyType.upperBound
     }
 
 
@@ -477,14 +477,7 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
 
           case None =>
             // This is a fresh binding
-            val schemeType = symbolTypeDeclaration(symbol, providedTypeOpt.map(MonomorphicDeclaration)) match {
-              case MonomorphicDeclaration(schemeType) =>
-                schemeType
-
-              case PolymorphicProcedureDeclaration(polyType) =>
-                polyType.upperBound
-            }
-
+            val schemeType = declaredSymbolSchemeType(symbol, providedTypeOpt)
             val boundValue = storageLocConstructor(symbol.name, schemeType)
 
             symbol.scope += (symbol.name -> boundValue)

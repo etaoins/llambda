@@ -287,6 +287,16 @@
   ; semantically correct.
   (assert-equal 5 (int-mapper 5 return-arg))))
 
+(define-test "polymorphic procedure in inner scope" (expect-success
+  (import (llambda typed))
+
+  (assert-equal 5
+                (begin
+                  (: return-self (All (A) A A))
+                  (define (return-self x) x)
+
+                  (return-self 5)))))
+
 (define-test "polymorphic procedure taking parameterized procedure of wrong type fails at compile time" (expect-compile-failure
   (import (llambda typed))
 
