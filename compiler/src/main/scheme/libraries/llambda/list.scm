@@ -3,7 +3,7 @@
   (import (llambda typed))
   (import (llambda nfi))
 
-  (export cons* partition fold filter remove find find-tail take-while drop-while)
+  (export cons* partition fold reduce filter remove find find-tail take-while drop-while)
 
   ; WeakListof is only a strong type if pair are immutable
   ; This is used avoid producing type checking causing tail recursive procedures to have extremely poor performance
@@ -24,6 +24,17 @@
 
     (define partition (world-function lllist "lllist_partition" (All (A) (-> <any> <boolean>) (WeakListof A) (Values (WeakListof A) (WeakListof A)))))
     (define fold (world-function lllist "lllist_fold" (All (A) (-> <any> <any> <any> * A) A (WeakListof <any>) (WeakListof <any>) * A)))
+
+    (: reduce (All (A B) (-> A A A) B (WeakListof A) (U A B)))
+    (define (reduce proc identity lis)
+      (if (null? lis)
+        identity
+        (begin
+          (: inner-fold (All (A) (-> A A A) A (WeakListof A) A))
+          (define (inner-fold proc accum lis)
+            (if (null? lis) accum
+              (inner-fold proc (proc (car lis) accum) (cdr lis))))
+          (inner-fold proc (car lis) (cdr lis)))))
 
     ; For the passed list the head's car will be bound to "value" and have "pred?" applied. If "pred?" returns true
     ; then "true-expr" will be evaluated, otherwise "false-expr". The result of the condition will be returned

@@ -276,3 +276,12 @@
   (assert-equal 4 (ann symbol-count <exact-integer>))
 
   (assert-equal '(c 3 b 2 a 1) (fold cons* '() '(a b c) '(1 2 3 4 5)))))
+
+(define-test "(reduce)" (expect-success
+  (import (llambda list))
+  (import (llambda typed))
+
+  (assert-equal #f (ann (reduce max #f '()) (U #f <number>)))
+  (assert-equal 44 (ann (reduce max #f '(44)) (U #f <number>)))
+  (assert-equal 192 (ann (reduce max #f '(44 -123 57 192)) (U #f <number>)))
+  (assert-equal -123 (ann (reduce min #f '(44 -123 57 192)) (U #f <number>)))))
