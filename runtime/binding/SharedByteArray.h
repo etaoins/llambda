@@ -1,5 +1,5 @@
-#ifndef _LLIBY_UTIL_SHAREDBYTEARRAY_H
-#define _LLIBY_UTIL_SHAREDBYTEARRAY_H
+#ifndef _LLIBY_BINDING_SHAREDBYTEARRAY_H
+#define _LLIBY_BINDING_SHAREDBYTEARRAY_H
 
 #include <cstdlib>
 #include <cstdint>

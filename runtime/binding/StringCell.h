@@ -2,6 +2,8 @@
 #define _LLIBY_BINDING_STRINGCELL_H
 
 #include "AnyCell.h"
+#include "SharedByteArray.h"
+
 #include <list>
 #include <vector>
 #include <ostream>

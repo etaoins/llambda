@@ -22,6 +22,7 @@ add_library(llcore
 	binding/ProcedureCell.cpp
 	binding/RecordCell.cpp
 	binding/RecordLikeCell.cpp
+	binding/SharedByteArray.cpp
 	binding/StringCell.cpp
 	binding/SymbolCell.cpp
 	binding/VectorCell.cpp
@@ -47,7 +48,6 @@ add_library(llcore
 	reader/DatumReader.cpp
 	unicode/utf8.cpp
 	unicode/utf8/InvalidByteSequenceException.cpp
-	util/SharedByteArray.cpp
 	util/portCellToStream.cpp
 	util/utf8ExceptionToSchemeError.cpp
 	writer/DisplayDatumWriter.cpp

@@ -11,6 +11,7 @@
 #include "binding/StringCell.h"
 #include "binding/BytevectorCell.h"
 #include "binding/EofObjectCell.h"
+#include "binding/SharedByteArray.h"
 
 #include "unicode/utf8.h"
 #include "unicode/utf8/InvalidByteSequenceException.h"
@@ -18,7 +19,6 @@
 #include "util/utf8ExceptionToSchemeError.h"
 #include "util/assertSliceValid.h"
 #include "util/portCellToStream.h"
-#include "util/SharedByteArray.h"
 
 #include "port/AbstractPort.h"
 

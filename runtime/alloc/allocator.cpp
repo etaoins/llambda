@@ -6,13 +6,13 @@
 #include "core/World.h"
 
 #include "binding/RecordLikeCell.h"
+#include "binding/SharedByteArray.h"
 
 #include "alloc/AllocCell.h"
 #include "alloc/RangeAlloc.h"
 #include "alloc/Finalizer.h"
 #include "alloc/DynamicMemoryBlock.h"
 #include "alloc/collector.h"
-#include "util/SharedByteArray.h"
 
 // Statically check that everything can fit in to a cell
 #include "generated/sizecheck.h"

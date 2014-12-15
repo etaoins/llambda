@@ -1,4 +1,5 @@
-#include "util/SharedByteArray.h"
+#include "SharedByteArray.h"
+
 #include "platform/memory.h"
 
 #include <cstring>

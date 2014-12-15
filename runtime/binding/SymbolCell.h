@@ -2,6 +2,7 @@
 #define _LLIBY_BINDING_SYMBOLCELL_H
 
 #include "AnyCell.h"
+#include "SharedByteArray.h"
 
 #include <string>
 

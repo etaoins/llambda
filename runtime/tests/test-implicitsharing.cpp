@@ -1,12 +1,11 @@
 #include <cstring>
 
-#include "util/SharedByteArray.h"
-
 #include "alloc/cellref.h"
 
 #include "binding/BytevectorCell.h"
 #include "binding/StringCell.h"
 #include "binding/SymbolCell.h"
+#include "binding/SharedByteArray.h"
 
 #include "core/init.h"
 #include "core/World.h"

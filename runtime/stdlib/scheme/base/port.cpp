@@ -3,6 +3,7 @@
 #include "binding/AnyCell.h"
 #include "binding/PortCell.h"
 #include "binding/TypedProcedureCell.h"
+#include "binding/SharedByteArray.h"
 
 #include "port/AbstractPort.h"
 #include "port/StringOutputPort.h"
@@ -10,8 +11,6 @@
 #include "port/BytevectorOutputPort.h"
 
 #include "alloc/WeakRef.h"
-
-#include "util/SharedByteArray.h"
 
 #include "core/error.h"
 

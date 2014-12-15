@@ -1,4 +1,4 @@
-#include "util/SharedByteArray.h"
+#include "binding/SharedByteArray.h"
 
 #include <cstring>
 
