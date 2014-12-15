@@ -1,6 +1,8 @@
 package io.llambda.compiler.debug
 import io.llambda
 
+import llambda.compiler.SourceLocation
+
 /** Represents a DWARF source context
   *
   * This is used to generate debugging information
@@ -24,7 +26,12 @@ case class FileContext(filename : String) extends SourceContext
   * This is not a case class because the source procedures filename, start line and source name aren't necessarily
   * unique.
   */
-class SubprogramContext(val parentContext : SourceContext, val filenameOpt : Option[String], val startLine : Int, val sourceNameOpt : Option[String]) extends SourceContext
+class SubprogramContext(
+    val parentContext : SourceContext,
+    val filenameOpt : Option[String],
+    val startLocation : SourceLocation,
+    val sourceNameOpt : Option[String]
+) extends SourceContext
 
 object SourceContext {
   def fromFilenameOpt(filenameOpt : Option[String]) =

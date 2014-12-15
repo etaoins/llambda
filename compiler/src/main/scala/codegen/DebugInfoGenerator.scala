@@ -57,13 +57,13 @@ class DebugInfoGenerator(module : llvmir.IrModuleBuilder, functions : Map[String
               contextDescriptor=parentMetadata,
               name=subprogram.sourceNameOpt.getOrElse(""),
               displayName=subprogram.sourceNameOpt.getOrElse(""),
-              definitionLine=subprogram.startLine,
+              definitionLine=subprogram.startLocation.line,
               typeDescriptor=subroutineTypeMetadata,
               compileUnitLocal=true,
               definedInCompileUnit=true,
               optimised=(compileConfig.optimizeLevel > 0),
               llvmFunctionOpt=subprogramToLlvmFunction.get(subprogram),
-              scopeStartLine=subprogram.startLine
+              scopeStartLine=subprogram.startLocation.line
             )
         
           subprogramNodeOpt.map(module.numberMetadataNode)

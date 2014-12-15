@@ -158,7 +158,7 @@ object ExtractLambda {
       new debug.SubprogramContext(
         parentContext=debugContext,
         filenameOpt=location.filenameOpt,
-        startLine=location.line,
+        startLocation=location,
         sourceNameOpt=sourceNameHint
       )
     }

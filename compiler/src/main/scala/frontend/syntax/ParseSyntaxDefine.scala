@@ -58,7 +58,7 @@ private[frontend] object ParseSyntaxDefine {
     val macroDebugContext = new debug.SubprogramContext(   
       parentContext=debugContext,
       filenameOpt=macroLocation.filenameOpt,
-      startLine=macroLocation.line,
+      startLocation=macroLocation,
       sourceNameOpt=Some(definedSymbol.name)
     )
 
