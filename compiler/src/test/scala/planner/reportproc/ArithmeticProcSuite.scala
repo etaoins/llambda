@@ -134,4 +134,30 @@ class ArithmeticProcSuite extends FunSuite with PlanHelpers {
       planStepsFor("(truncate-remainder 5 0)")
     }
   }
+
+  test("static (expt) for powers of two") {
+    assertStaticPlan("(expt 2 0)",
+      ast.IntegerLiteral(1)
+    )
+
+    assertStaticPlan("(expt 2 1)",
+      ast.IntegerLiteral(2)
+    )
+
+    assertStaticPlan("(expt 2 8)",
+      ast.IntegerLiteral(256)
+    )
+
+    assertStaticPlan("(expt 2 16)",
+      ast.IntegerLiteral(65536)
+    )
+
+    assertStaticPlan("(expt 2 32)",
+      ast.IntegerLiteral(4294967296L)
+    )
+
+    assertStaticPlan("(expt 2 62)",
+      ast.IntegerLiteral(4611686018427387904L)
+    )
+  }
 }

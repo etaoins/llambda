@@ -296,6 +296,10 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
     case ("truncate-remainder", List(numerator, denominator)) =>
       performIntegerRemainder(numerator, denominator)
 
+    case ("expt", List((_, iv.ConstantExactIntegerValue(2)), (_, iv.ConstantExactIntegerValue(power))))
+        if (power >= 0) && (power <= 62) =>
+      Some(iv.ConstantExactIntegerValue(1L << power))
+
     case _ =>
       None
   }
