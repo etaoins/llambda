@@ -12,11 +12,11 @@ object SymbolProcPlanner extends ReportProcPlanner {
       reportName : String,
       operands : List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, operands) match {
-    case ("string->symbol", List((_, constantString : iv.ConstantStringValue))) =>
-      Some(new iv.ConstantSymbolValue(constantString.value))
+    case ("string->symbol", List((_, iv.ConstantStringValue(constValue)))) =>
+      Some(iv.ConstantSymbolValue(constValue))
 
-    case ("symbol->string", List((_, constantSymbol : iv.ConstantSymbolValue))) =>
-      Some(new iv.ConstantStringValue(constantSymbol.value))
+    case ("symbol->string", List((_, iv.ConstantSymbolValue(constValue)))) =>
+      Some(iv.ConstantStringValue(constValue))
 
     case _ =>
       None

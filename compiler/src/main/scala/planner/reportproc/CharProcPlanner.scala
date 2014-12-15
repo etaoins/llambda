@@ -20,10 +20,10 @@ object CharProcPlanner extends ReportProcPlanner {
 
     // Compare the values pairwise
     val pairwiseNativePreds = operands.sliding(2).toList flatMap {
-      case List(constant1 : iv.ConstantCharValue, constant2 : iv.ConstantCharValue) =>
-        if (!staticCalc(constant1.value, constant2.value)) {
+      case List(iv.ConstantCharValue(value1), iv.ConstantCharValue(value2)) =>
+        if (!staticCalc(value1, value2)) {
           // This is statically false
-          return Some(new iv.ConstantBooleanValue(false))
+          return Some(iv.ConstantBooleanValue(false))
         }
         else {
           None
@@ -50,7 +50,7 @@ object CharProcPlanner extends ReportProcPlanner {
 
     if (pairwiseNativePreds.isEmpty) {
       // This is statically true
-      return Some(new iv.ConstantBooleanValue(true))
+      return Some(iv.ConstantBooleanValue(true))
     }
 
     // We definitely need to compare at runtime - include our plan steps
@@ -71,8 +71,8 @@ object CharProcPlanner extends ReportProcPlanner {
       reportName : String,
       operands : List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, operands) match {
-    case ("char->integer", List((_, constantChar : iv.ConstantCharValue))) =>
-      Some(new iv.ConstantExactIntegerValue(constantChar.value))
+    case ("char->integer", List((_, iv.ConstantCharValue(constantCharVal)))) =>
+      Some(iv.ConstantExactIntegerValue(constantCharVal))
 
     case ("char->integer", List((charLocated, charValue))) =>
       val int32Temp = plan.withContextLocation(charLocated) {
@@ -81,8 +81,8 @@ object CharProcPlanner extends ReportProcPlanner {
 
       Some(new iv.NativeExactIntegerValue(int32Temp, vt.Int32))
 
-    case ("integer->char", List((_, constantInt : iv.ConstantExactIntegerValue))) =>
-      Some(new iv.ConstantCharValue(constantInt.value.toInt))
+    case ("integer->char", List((_, iv.ConstantExactIntegerValue(constantIntVal)))) =>
+      Some(iv.ConstantCharValue(constantIntVal.toInt))
 
     case ("integer->char", List((intLocated, intValue))) =>
       val int32Temp = plan.withContextLocation(intLocated) {

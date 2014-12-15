@@ -157,11 +157,11 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
       else {
         // Due to NaN we can only do double comparisons if one value is known
         (val1, val2) match {
-          case (static1 : iv.ConstantFlonumValue, dynamic2) if dynamic2.hasDefiniteType(vt.FlonumType) =>
-            flonumCompare(static1.value, dynamic2)
+          case (iv.ConstantFlonumValue(staticVal1), dynamic2) if dynamic2.hasDefiniteType(vt.FlonumType) =>
+            flonumCompare(staticVal1, dynamic2)
 
-          case (dynamic1, static2 : iv.ConstantFlonumValue) if dynamic1.hasDefiniteType(vt.FlonumType) =>
-            flonumCompare(static2.value, dynamic1)
+          case (dynamic1, iv.ConstantFlonumValue(staticVal2)) if dynamic1.hasDefiniteType(vt.FlonumType) =>
+            flonumCompare(staticVal2, dynamic1)
 
           case _ =>
             // We need to invoke the runtime
@@ -192,7 +192,7 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
       StaticValueEqv.valuesAreEqv(val1, val2).map { staticResult =>
         PlanResult(
           state=state,
-          values=SingleValue(new iv.ConstantBooleanValue(staticResult))
+          values=SingleValue(iv.ConstantBooleanValue(staticResult))
         )
       } orElse {
         Some(planEquivalenceProc(state)(ptrCompareEqvTypes, RuntimeFunctions.isEqvSymbol, val1, val2))
@@ -202,7 +202,7 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
       StaticValueEqv.valuesAreEqual(val1, val2).map { staticResult =>
         PlanResult(
           state=state,
-          values=SingleValue(new iv.ConstantBooleanValue(staticResult))
+          values=SingleValue(iv.ConstantBooleanValue(staticResult))
         )
       } orElse {
         Some(planEquivalenceProc(state)(ptrCompareEqualsTypes, RuntimeFunctions.isEqualSymbol, val1, val2))

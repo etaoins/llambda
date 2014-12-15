@@ -29,12 +29,12 @@ object NumberProcPlanner extends ReportProcPlanner {
           // Already an exact int
           Some(knownExactInt)
 
-        case constFlonum : iv.ConstantFlonumValue =>
-          val longValue = constFlonum.value.toLong
+        case iv.ConstantFlonumValue(constFlonumVal) =>
+          val longValue = constFlonumVal.toLong
 
           // Make sure this was lossless
-          if (longValue.toDouble == constFlonum.value) {
-            Some(new iv.ConstantExactIntegerValue(longValue))
+          if (longValue.toDouble == constFlonumVal) {
+            Some(iv.ConstantExactIntegerValue(longValue))
           }
           else {
             None
@@ -53,9 +53,9 @@ object NumberProcPlanner extends ReportProcPlanner {
           // Already a flonum
           Some(knownFlonum)
 
-        case constExactInt : iv.ConstantExactIntegerValue =>
+        case iv.ConstantExactIntegerValue(constExactIntVal) =>
           // Statically convert it to a double
-          Some(new iv.ConstantFlonumValue(constExactInt.value.toDouble))
+          Some(iv.ConstantFlonumValue(constExactIntVal.toDouble))
 
         case knownInt if knownInt.hasDefiniteType(vt.ExactIntegerType) =>
           val intTemp = knownInt.toTempValue(vt.ExactIntegerType)
@@ -78,20 +78,12 @@ object NumberProcPlanner extends ReportProcPlanner {
       val2 : iv.IntermediateValue
   )(implicit plan : PlanWriter) : CompareResult = {
     (val1, val2) match {
-      case (constantExactInt1 : iv.ConstantExactIntegerValue, constantExactInt2 : iv.ConstantExactIntegerValue) =>
-        val compareResult = staticIntCalc(constantExactInt1.value, constantExactInt2.value)
+      case (iv.ConstantExactIntegerValue(constExactIntVal1), iv.ConstantExactIntegerValue(constExactIntVal2)) =>
+        val compareResult = staticIntCalc(constExactIntVal1, constExactIntVal2)
         StaticCompare(compareResult, inexact=false)
 
-      case (constantFlonum1 : iv.ConstantFlonumValue, constantFlonum2 : iv.ConstantFlonumValue) =>
-        val compareResult = staticFlonumCalc(constantFlonum1.value, constantFlonum2.value)
-        StaticCompare(compareResult, inexact=true)
-
-      case (constantExactInt1 : iv.ConstantExactIntegerValue, constantFlonum2 : iv.ConstantFlonumValue) =>
-        val compareResult = staticFlonumCalc(constantExactInt1.value.toDouble, constantFlonum2.value)
-        StaticCompare(compareResult, inexact=true)
-
-      case (constantFlonum1 : iv.ConstantFlonumValue, constantExactInt2 : iv.ConstantExactIntegerValue) =>
-        val compareResult = staticFlonumCalc(constantFlonum1.value, constantExactInt2.value.toDouble)
+      case (constNum1 : iv.ConstantNumberValue, constNum2 : iv.ConstantNumberValue) =>
+        val compareResult = staticFlonumCalc(constNum1.doubleValue, constNum2.doubleValue)
         StaticCompare(compareResult, inexact=true)
 
       case (exactInt1, exactInt2) if exactInt1.hasDefiniteType(vt.ExactIntegerType) && exactInt2.hasDefiniteType(vt.ExactIntegerType) =>
@@ -150,7 +142,7 @@ object NumberProcPlanner extends ReportProcPlanner {
 
       case StaticCompare(false, _) =>
         // This is false - the whole expression must be false!
-        return Some(new iv.ConstantBooleanValue(false))
+        return Some(iv.ConstantBooleanValue(false))
 
       case StaticCompare(true, _) =>
         // We don't need to include constant true values
@@ -162,7 +154,7 @@ object NumberProcPlanner extends ReportProcPlanner {
 
     if (pairwiseNativePreds.isEmpty) {
       // This is statically true
-      return Some(new iv.ConstantBooleanValue(true))
+      return Some(iv.ConstantBooleanValue(true))
     }
 
     // We definitely need to compare at runtime - include our plan steps

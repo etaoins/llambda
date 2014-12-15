@@ -43,29 +43,12 @@ private[reportproc] object StaticValueEqv {
     }
 
     (val1, val2) match {
-      case (constBool1 : iv.ConstantBooleanValue, constBool2 : iv.ConstantBooleanValue) =>
-        Some(constBool1.value == constBool2.value)
+      case (iv.ConstantFlonumValue(val1), iv.ConstantFlonumValue(val2)) =>
+        // This needs to be special to deal with NaN
+        Some(val1.equals(val2))
 
-      case (constSymbol1 : iv.ConstantSymbolValue, constSymbol2 : iv.ConstantSymbolValue) =>
-        Some(constSymbol1.value == constSymbol2.value)
-      
-      case (constString1 : iv.ConstantStringValue, constString2 : iv.ConstantStringValue) =>
-        Some(constString1.value == constString2.value)
-      
-      case (constInteger1 : iv.ConstantExactIntegerValue, constInteger2 : iv.ConstantExactIntegerValue) =>
-        Some(constInteger1.value == constInteger2.value)
-      
-      case (constFlonum1 : iv.ConstantFlonumValue, constFlonum2 : iv.ConstantFlonumValue) =>
-        Some(constFlonum1.value.equals(constFlonum2.value))
-      
-      case (constChar1 : iv.ConstantCharValue, constChar2 : iv.ConstantCharValue) =>
-        Some(constChar1.value == constChar2.value)
-      
-      case (iv.UnitValue, iv.UnitValue) =>
-        Some(true)
-      
-      case (iv.EmptyListValue, iv.EmptyListValue) =>
-        Some(true)
+      case (constVal1 : iv.ConstantValue, constVal2 : iv.ConstantValue) =>
+        Some(constVal1 == constVal2)
 
       case _ =>
         None
@@ -77,11 +60,11 @@ private[reportproc] object StaticValueEqv {
       case (knownPair1 : iv.KnownPair, knownPair2 : iv.KnownPair) =>
        elementsAreEqual(List(knownPair1.car, knownPair1.cdr), List(knownPair2.car, knownPair2.cdr))
 
-      case (constVector1 : iv.ConstantVectorValue, constVector2 : iv.ConstantVectorValue) =>
-        elementsAreEqual(constVector1.elements, constVector2.elements)
-      
-      case (constBytevector1 : iv.ConstantBytevectorValue, constBytevector2 : iv.ConstantBytevectorValue) =>
-        Some(constBytevector1.elements == constBytevector2.elements)
+      case (iv.ConstantVectorValue(elements1), iv.ConstantVectorValue(elements2)) =>
+        elementsAreEqual(elements1, elements2)
+
+      case (iv.ConstantBytevectorValue(elements1), iv.ConstantBytevectorValue(elements2)) =>
+        Some(elements1 == elements2)
 
       case _ =>
         valuesAreEqv(val1, val2)

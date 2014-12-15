@@ -27,11 +27,11 @@ sealed abstract class TrivialConstantValue[T, U <: ps.CreateConstantCell](cellTy
   }
 }
 
-class ConstantStringValue(val value : String) extends TrivialConstantValue(ct.StringCell, value, ps.CreateStringCell.apply) with BoxedOnlyValue {
+case class ConstantStringValue(value : String) extends TrivialConstantValue(ct.StringCell, value, ps.CreateStringCell.apply) with BoxedOnlyValue {
   val typeDescription = "constant string"
 }
 
-class ConstantSymbolValue(val value : String) extends TrivialConstantValue(ct.SymbolCell, value, ps.CreateSymbolCell.apply) with BoxedOnlyValue {
+case class ConstantSymbolValue(value : String) extends TrivialConstantValue(ct.SymbolCell, value, ps.CreateSymbolCell.apply) with BoxedOnlyValue {
   val typeDescription = "constant symbol"
 
   override val schemeType = vt.LiteralSymbolType(value)
@@ -41,7 +41,7 @@ trait ConstantNumberValue extends ConstantValue with UnboxedValue {
   def doubleValue : Double
 }
 
-class ConstantExactIntegerValue(val value : Long) extends TrivialConstantValue(ct.ExactIntegerCell, value, ps.CreateExactIntegerCell.apply) with ConstantNumberValue {
+case class ConstantExactIntegerValue(value : Long) extends TrivialConstantValue(ct.ExactIntegerCell, value, ps.CreateExactIntegerCell.apply) with ConstantNumberValue {
   val typeDescription = "constant exact integer"
   val nativeType = vt.Int64
 
@@ -81,7 +81,7 @@ class ConstantExactIntegerValue(val value : Long) extends TrivialConstantValue(c
     value.toDouble
 }
 
-class ConstantFlonumValue(val value : Double) extends TrivialConstantValue(ct.FlonumCell, value, ps.CreateFlonumCell.apply) with ConstantNumberValue {
+case class ConstantFlonumValue(value : Double) extends TrivialConstantValue(ct.FlonumCell, value, ps.CreateFlonumCell.apply) with ConstantNumberValue {
   val typeDescription = "constant flonum"
   val nativeType = vt.Double
 
@@ -102,7 +102,7 @@ class ConstantFlonumValue(val value : Double) extends TrivialConstantValue(ct.Fl
     value
 }
 
-class ConstantCharValue(val value : Int) extends TrivialConstantValue(ct.CharCell, value, ps.CreateCharCell.apply) with UnboxedValue {
+case class ConstantCharValue(value : Int) extends TrivialConstantValue(ct.CharCell, value, ps.CreateCharCell.apply) with UnboxedValue {
   val typeDescription = "constant character"
   val nativeType = vt.UnicodeChar
 
@@ -117,7 +117,7 @@ class ConstantCharValue(val value : Int) extends TrivialConstantValue(ct.CharCel
   }
 }
 
-class ConstantBooleanValue(val value : Boolean) extends TrivialConstantValue(ct.BooleanCell, value, ps.CreateBooleanCell.apply) with UnboxedValue {
+case class ConstantBooleanValue(value : Boolean) extends TrivialConstantValue(ct.BooleanCell, value, ps.CreateBooleanCell.apply) with UnboxedValue {
   override val schemeType = vt.LiteralBooleanType(value)
   val typeDescription = vt.NameForType(schemeType)
   val nativeType = vt.Predicate
@@ -136,11 +136,11 @@ class ConstantBooleanValue(val value : Boolean) extends TrivialConstantValue(ct.
     impossibleConversion(s"Cannot convert ${typeDescription} to non-boolean native type ${vt.NameForType(nativeType)}")
 }
 
-class ConstantBytevectorValue(val elements : Vector[Short]) extends TrivialConstantValue(ct.BytevectorCell, elements, ps.CreateBytevectorCell.apply) with BoxedOnlyValue {
+case class ConstantBytevectorValue(elements : Vector[Short]) extends TrivialConstantValue(ct.BytevectorCell, elements, ps.CreateBytevectorCell.apply) with BoxedOnlyValue {
   val typeDescription = "constant bytevector"
 }
 
-class ConstantPairValue(val car : ConstantValue, val cdr : ConstantValue) extends ConstantValue(ct.PairCell) with BoxedOnlyValue with KnownPair {
+case class ConstantPairValue(car : ConstantValue, cdr : ConstantValue) extends ConstantValue(ct.PairCell) with BoxedOnlyValue with KnownPair {
   override val schemeType : vt.SchemeType = vt.PairType(car.schemeType, cdr.schemeType)
   val typeDescription = "constant pair"
 
@@ -157,7 +157,7 @@ class ConstantPairValue(val car : ConstantValue, val cdr : ConstantValue) extend
   }
 }
 
-class ConstantVectorValue(val elements : Vector[ConstantValue]) extends ConstantValue(ct.VectorCell) with BoxedOnlyValue {
+case class ConstantVectorValue(elements : Vector[ConstantValue]) extends ConstantValue(ct.VectorCell) with BoxedOnlyValue {
   override val schemeType : vt.SchemeType = vt.SpecificVectorType(elements.map { element =>
     vt.DirectSchemeTypeRef(element.schemeType)
   })
@@ -178,7 +178,7 @@ class ConstantVectorValue(val elements : Vector[ConstantValue]) extends Constant
   }
 }
 
-object EmptyListValue extends ConstantValue(ct.EmptyListCell) with BoxedOnlyValue with KnownListElement {
+case object EmptyListValue extends ConstantValue(ct.EmptyListCell) with BoxedOnlyValue with KnownListElement {
   val typeDescription = "constant empty list"
 
   def toBoxedValue()(implicit plan : PlanWriter) : BoxedValue = {
@@ -192,7 +192,7 @@ object EmptyListValue extends ConstantValue(ct.EmptyListCell) with BoxedOnlyValu
   def toValueListOpt = Some(Nil)
 }
 
-object UnitValue extends ConstantValue(ct.UnitCell) with BoxedOnlyValue {
+case object UnitValue extends ConstantValue(ct.UnitCell) with BoxedOnlyValue {
   val typeDescription = "constant unit value"
 
   def toBoxedValue()(implicit plan : PlanWriter) : BoxedValue = {

@@ -38,19 +38,17 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
     implicit val inlinePlan = plan.forkPlan()
 
     val resultValue = operands.reduceLeft { (op1 : iv.IntermediateValue, op2 : iv.IntermediateValue) => (op1, op2) match {
-      case (constantInt1 : iv.ConstantExactIntegerValue, constantInt2 : iv.ConstantExactIntegerValue) =>
-        new iv.ConstantExactIntegerValue(staticIntCalc(constantInt1.value, constantInt2.value))
+      case (iv.ConstantExactIntegerValue(constantIntVal1), iv.ConstantExactIntegerValue(constantIntVal2)) =>
+        iv.ConstantExactIntegerValue(staticIntCalc(constantIntVal1, constantIntVal2))
 
-      case (constantFlonum1 : iv.ConstantFlonumValue, constantFlonum2 : iv.ConstantFlonumValue) =>
-        new iv.ConstantFlonumValue(staticFlonumCalc(constantFlonum1.value, constantFlonum2.value))
+      case (iv.ConstantFlonumValue(constantFlonumVal1), iv.ConstantFlonumValue(constantFlonumVal2)) =>
+        iv.ConstantFlonumValue(staticFlonumCalc(constantFlonumVal1, constantFlonumVal2))
 
-      case (constantInt1 : iv.ConstantExactIntegerValue, constantFlonum2 : iv.ConstantFlonumValue) =>
-        val flonum1 = constantInt1.value.toDouble
-        new iv.ConstantFlonumValue(staticFlonumCalc(flonum1, constantFlonum2.value))
+      case (iv.ConstantExactIntegerValue(constantIntVal1), iv.ConstantFlonumValue(constantFlonumVal2)) =>
+        iv.ConstantFlonumValue(staticFlonumCalc(constantIntVal1.toDouble, constantFlonumVal2))
 
-      case (constantFlonum1 : iv.ConstantFlonumValue, constantInt2 : iv.ConstantExactIntegerValue) =>
-        val flonum2 = constantInt2.value.toDouble
-        new iv.ConstantFlonumValue(staticFlonumCalc(constantFlonum1.value, flonum2))
+      case (iv.ConstantFlonumValue(constantFlonumVal1), iv.ConstantExactIntegerValue(constantIntVal2)) =>
+        iv.ConstantFlonumValue(staticFlonumCalc(constantFlonumVal1, constantIntVal2.toDouble))
 
       case (dynamic1, dynamic2) =>
         val dynamic1IsInt = dynamic1.hasDefiniteType(vt.ExactIntegerType)
@@ -98,23 +96,18 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
     implicit val inlinePlan = plan.forkPlan()
 
     val resultValue = operands.reduceLeft { (op1 : iv.IntermediateValue, op2 : iv.IntermediateValue) => (op1, op2) match {
-      case (numerIntValue : iv.ConstantExactIntegerValue, denomIntValue : iv.ConstantExactIntegerValue) =>
-        val numerInt = numerIntValue.value
-        val denomInt = denomIntValue.value
-
-        if ((denomInt != 0) && ((numerInt % denomInt) == 0))
-        {
+      case (iv.ConstantExactIntegerValue(numerInt),  iv.ConstantExactIntegerValue(denomInt)) =>
+        if ((denomInt != 0) && ((numerInt % denomInt) == 0)) {
           // This divides exactly
-          new iv.ConstantExactIntegerValue(numerInt / denomInt)
+          iv.ConstantExactIntegerValue(numerInt / denomInt)
         }
-        else
-        {
+        else {
           // This does not divide exactly
-          new iv.ConstantFlonumValue(numerInt.toDouble / denomInt.toDouble)
+          iv.ConstantFlonumValue(numerInt.toDouble / denomInt.toDouble)
         }
 
       case (numerNumValue : iv.ConstantNumberValue, denomNumValue : iv.ConstantNumberValue) =>
-        new iv.ConstantFlonumValue(numerNumValue.doubleValue / denomNumValue.doubleValue)
+        iv.ConstantFlonumValue(numerNumValue.doubleValue / denomNumValue.doubleValue)
 
       case (dynamicNumer, dynamicDenom) =>
         val dynamicNumerIsInt = dynamicNumer.hasDefiniteType(vt.ExactIntegerType)
@@ -155,14 +148,14 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
       denominator : (ContextLocated, iv.IntermediateValue)
   )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
     (numerator, denominator) match {
-      case (_, (denomLoc, constantDenom : iv.ConstantExactIntegerValue)) if constantDenom.value == 0 =>
+      case (_, (denomLoc, iv.ConstantExactIntegerValue(0))) =>
         // Catch divide by zero first
         throw new DivideByZeroException(denomLoc, "Attempted integer division by zero")
 
-      case ((_, constantNumer : iv.ConstantExactIntegerValue),
-            (_, constantDenom : iv.ConstantExactIntegerValue)) =>
-        val resultValue = staticCalc(constantNumer.value, constantDenom.value)
-        Some(new iv.ConstantExactIntegerValue(resultValue))
+      case ((_, iv.ConstantExactIntegerValue(constantNumerVal)),
+            (_, iv.ConstantExactIntegerValue(constantDenomVal))) =>
+        val resultValue = staticCalc(constantNumerVal, constantDenomVal)
+        Some(iv.ConstantExactIntegerValue(resultValue))
 
       case ((numerLoc, dynamicNumer),
             (_, constantDenom : iv.ConstantExactIntegerValue)) =>
@@ -225,10 +218,10 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
       operands : List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, operands) match {
     case ("+", Nil) =>
-      Some(new iv.ConstantExactIntegerValue(0))
+      Some(iv.ConstantExactIntegerValue(0))
 
     case ("*", Nil) =>
-      Some(new iv.ConstantExactIntegerValue(1))
+      Some(iv.ConstantExactIntegerValue(1))
 
     case (reportName, List((operandSourceLoc, singleOperand))) if List("+", "*").contains(reportName) =>
       // Make sure the operand is numeric
@@ -255,7 +248,7 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
 
     case ("-", List((_, singleOperand))) =>
       // This is a special case that negates the passed value
-      val constantZero = new iv.ConstantExactIntegerValue(0)
+      val constantZero = iv.ConstantExactIntegerValue(0)
       performBinaryMixedOp(
         intInstr=ps.IntegerSub.apply,
         flonumInstr=ps.FloatSub.apply,
@@ -290,7 +283,7 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
 
     case ("/", List((_, singleOperand))) =>
       // This is a special case that negates the passed value
-      val constantZero = new iv.ConstantExactIntegerValue(1)
+      val constantZero = iv.ConstantExactIntegerValue(1)
       performNumericDivide(operands=List(constantZero, singleOperand))
 
     case ("/", multipleOperands) =>

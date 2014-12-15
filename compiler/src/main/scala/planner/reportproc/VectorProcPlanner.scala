@@ -26,9 +26,8 @@ object VectorProcPlanner extends ReportProcPlanner {
     val lengthValue = length._2
 
     val unstableType = lengthValue match {
-      case constantInt : iv.ConstantExactIntegerValue if constantInt.value <= maximumVectorTypeSize =>
-        val knownLength = constantInt.value
-        vt.SpecificVectorType(Vector.fill(knownLength.toInt)(fillValue.schemeType)) 
+      case iv.ConstantExactIntegerValue(knownLength) if knownLength <= maximumVectorTypeSize =>
+        vt.SpecificVectorType(Vector.fill(knownLength.toInt)(fillValue.schemeType))
 
       case _ =>
         vt.VectorOfType(fillValue.schemeType)
@@ -106,9 +105,9 @@ object VectorProcPlanner extends ReportProcPlanner {
 
       Some(TempValueToIntermediate(vectorType, vectorTemp)(plan.config))
 
-    case ("vector-length", List((_, constantVector : iv.ConstantVectorValue))) =>
-      Some(new iv.ConstantExactIntegerValue(constantVector.elements.length))
-      
+    case ("vector-length", List((_, iv.ConstantVectorValue(elements)))) =>
+      Some(iv.ConstantExactIntegerValue(elements.length))
+
     case ("vector-length", List((located, vectorValue))) =>
       val vectorTemp = plan.withContextLocation(located) {
         vectorValue.toTempValue(vt.VectorOfType(vt.AnySchemeType))
@@ -118,18 +117,16 @@ object VectorProcPlanner extends ReportProcPlanner {
       plan.steps += ps.LoadVectorLength(resultTemp, vectorTemp)
 
       Some(TempValueToIntermediate(vt.UInt32, resultTemp)(plan.config))
-    
-    case ("vector-ref", List((_, constantVector : iv.ConstantVectorValue), (_, constantInt : iv.ConstantExactIntegerValue))) =>
-      val index = constantInt.value
 
-      if ((index < 0) || (index >= constantVector.elements.length)) {
+    case ("vector-ref", List((_, iv.ConstantVectorValue(elements)), (_, iv.ConstantExactIntegerValue(index)))) =>
+      if ((index < 0) || (index >= elements.length)) {
         throw new OutOfBoundsException(
           plan.activeContextLocated,
           s"Vector index ${index} out of bounds"
         )
       }
 
-      Some(constantVector.elements(index.toInt))
+      Some(elements(index.toInt))
 
     case ("vector-ref", List((vectorLocated, vectorValue), (_, constantInt : iv.ConstantExactIntegerValue))) =>
       vectorValue.schemeType match {

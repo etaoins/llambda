@@ -29,7 +29,7 @@ private[planner] object ValuesToPair {
       (carValue, cdrValue) match {
         case (constantCar : iv.ConstantValue, constantCdr : iv.ConstantValue) =>
           // We can make this a constant pair
-          return new iv.ConstantPairValue(constantCar, constantCdr)
+          return iv.ConstantPairValue(constantCar, constantCdr)
 
         case _ =>
       }

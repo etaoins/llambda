@@ -8,36 +8,36 @@ object DatumToConstantValue {
   def apply(datum : ast.Datum) : iv.ConstantValue = {
     datum match {
       case ast.StringLiteral(content) =>
-        new iv.ConstantStringValue(content)
+        iv.ConstantStringValue(content)
 
       case ast.Symbol(content) =>
-        new iv.ConstantSymbolValue(content)
+        iv.ConstantSymbolValue(content)
 
       case ast.IntegerLiteral(value) =>
-        new iv.ConstantExactIntegerValue(value)
+        iv.ConstantExactIntegerValue(value)
 
       case ast.FlonumLiteral(value) =>
-        new iv.ConstantFlonumValue(value)
+        iv.ConstantFlonumValue(value)
 
       case ast.BooleanLiteral(value) =>
-        new iv.ConstantBooleanValue(value)
-      
+        iv.ConstantBooleanValue(value)
+
       case ast.CharLiteral(value) =>
-        new iv.ConstantCharValue(value)
-      
+        iv.ConstantCharValue(value)
+
       case ast.Pair(car, cdr) =>
         // Recurse down the car and cdr
-        new iv.ConstantPairValue(apply(car), apply(cdr))
+        iv.ConstantPairValue(apply(car), apply(cdr))
 
       case ast.VectorLiteral(elements) =>
-        new iv.ConstantVectorValue(elements.map(apply))
-      
+        iv.ConstantVectorValue(elements.map(apply))
+
       case ast.Bytevector(elements) =>
-        new iv.ConstantBytevectorValue(elements)
+        iv.ConstantBytevectorValue(elements)
 
       case ast.UnitValue() =>
         iv.UnitValue
-      
+
       case ast.EmptyList() =>
         iv.EmptyListValue
     }

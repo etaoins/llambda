@@ -295,10 +295,10 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
 object IntermediateValue {
   def fromLiteralType(literalType : vt.LiteralValueType) : ConstantValue = literalType match {
     case vt.LiteralBooleanType(boolVal) =>
-      new ConstantBooleanValue(boolVal)
+      ConstantBooleanValue(boolVal)
 
     case vt.LiteralSymbolType(name) =>
-      new ConstantSymbolValue(name)
+      ConstantSymbolValue(name)
   }
 }
 

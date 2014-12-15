@@ -14,12 +14,11 @@ object StringProcPlanner extends ReportProcPlanner {
   )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, operands) match {
     case ("string-length", List((stringLocated, stringValue))) =>
       stringValue match {
-        case constantString : iv.ConstantStringValue =>
+        case iv.ConstantStringValue(stringValue) =>
           // This is easy
-          val stringValue = constantString.value
           val codePoints = stringValue.codePointCount(0, stringValue.length)
 
-          Some(new iv.ConstantExactIntegerValue(codePoints))
+          Some(iv.ConstantExactIntegerValue(codePoints))
 
         case dynamicValue =>
           val stringCell = plan.withContextLocation(stringLocated) {

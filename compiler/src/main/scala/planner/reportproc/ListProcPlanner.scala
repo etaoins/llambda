@@ -33,7 +33,7 @@ object ListProcPlanner extends ReportProcPlanner {
 
     case iv.EmptyListValue =>
       // Doesn't exist in the list
-      Some(new iv.ConstantBooleanValue(false))
+      Some(iv.ConstantBooleanValue(false))
 
     case _ =>
       // Not a constant list
@@ -65,7 +65,7 @@ object ListProcPlanner extends ReportProcPlanner {
         case knownListElement : iv.KnownListElement =>
           for(listLength <- knownListElement.listLengthOpt) {
             // Yes, return it directly
-            return Some(new iv.ConstantExactIntegerValue(listLength))
+            return Some(iv.ConstantExactIntegerValue(listLength))
           }
 
         case _ =>
@@ -154,9 +154,7 @@ object ListProcPlanner extends ReportProcPlanner {
     
     case ("list-tail", List((_, listValue), (_, indexValue))) =>
       (listValue, indexValue) match {
-        case (knownListElement : iv.KnownListElement, constantIndexValue : iv.ConstantExactIntegerValue) =>
-          val index = constantIndexValue.value
-
+        case (knownListElement : iv.KnownListElement, iv.ConstantExactIntegerValue(index)) =>
           // If listLengthOpt is defined we're a proper list
           knownListElement.listLengthOpt map { listLength =>
             if ((index < 0) || (index > listLength)) {

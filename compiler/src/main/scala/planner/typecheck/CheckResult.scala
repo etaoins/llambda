@@ -30,8 +30,8 @@ case class DynamicResult(predTemp : ps.TempValue) extends CheckResult {
 
 /** Represents a type check result that's known at compile time */
 case class StaticResult(result : Boolean) extends CheckResult {
-  def toIntermediateValue = 
-    new iv.ConstantBooleanValue(result)
+  def toIntermediateValue =
+    iv.ConstantBooleanValue(result)
 
   def toNativePred()(implicit plan : PlanWriter) = {
     val resultTemp = ps.Temp(vt.Predicate)
