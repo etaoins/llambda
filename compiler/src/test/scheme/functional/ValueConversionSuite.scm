@@ -115,19 +115,19 @@
 (define-test "(make-bytevector) only accepts positive constant lengths" (expect-compile-failure
   (import (llambda nfi))
 
-  (define native-make-bytevector (world-function system-library "llbase_make_bytevector" (<native-uint32> <native-uint8>) -> <bytevector>))
+  (define native-make-bytevector (world-function system-library "llbase_make_bytevector" (-> <native-uint32> <native-uint8> -> <bytevector>)))
   (native-make-bytevector -1 0)))
 
 (define-test "(make-bytevector) only accepts 32bit constant lengths" (expect-compile-failure
   (import (llambda nfi))
 
-  (define native-make-bytevector (world-function system-library "llbase_make_bytevector" (<native-uint32> <native-uint8>) -> <bytevector>))
+  (define native-make-bytevector (world-function system-library "llbase_make_bytevector" (-> <native-uint32> <native-uint8> <bytevector>)))
   (native-make-bytevector 4294967296 0)))
 
 (define-test "(make-bytevector) only accepts positive constant fill values" (expect-compile-failure
   (import (llambda nfi))
 
-  (define native-make-bytevector (world-function system-library "llbase_make_bytevector" (<native-uint32> <native-uint8>) -> <bytevector>))
+  (define native-make-bytevector (world-function system-library "llbase_make_bytevector" (-> <native-uint32> <native-uint8> <bytevector>)))
   (native-make-bytevector 1 -1)))
 
 (define-test "(make-bytevector) only accepts 8bit constant fill values" (expect-compile-failure
