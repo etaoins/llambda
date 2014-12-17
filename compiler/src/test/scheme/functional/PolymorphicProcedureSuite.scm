@@ -238,7 +238,7 @@
   (define exact-1 (typed-dynamic 1 <exact-integer>))
   (define inexact-1 (typed-dynamic 1.0 <flonum>))
 
-  (left-or-right dynamic-true exact-1 inexact-1) <number>))
+  (left-or-right dynamic-true exact-1 inexact-1)))
 
 (define-test "violating Scheme procedure's type bounds fails" (expect-compile-failure
   (import (llambda typed))
