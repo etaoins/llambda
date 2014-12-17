@@ -1,7 +1,7 @@
-(define-test "direct application with insufficent args fails" (expect-failure
+(define-test "direct application with insufficent args fails" (expect-error arity-error?
 	(boolean?)))
 
-(define-test "direct application with extraneous args fails" (expect-failure
+(define-test "direct application with extraneous args fails" (expect-error arity-error?
 	(boolean? #t #f)))
 
 (define-test "applying non-capturing procedure with no arguments" (expect 0
@@ -13,9 +13,10 @@
 (define-test "applying with non-capturing procdure standalone args and terminal proper list" (expect 6
 	(apply + 1 2 '(3))))
 
-(define-test "applying procedure with terminal improper list fails" (expect-failure
+(define-test "applying procedure with terminal improper list fails" (expect-error type-error?
 	(apply + '(2 3 . 5))))
 
+; XXX: This should be (expect-error type-error? ...) but we're treating it as an arity error
 (define-test "applying procedure with terminal non-list fails" (expect-failure
 	(apply - 2)))
 

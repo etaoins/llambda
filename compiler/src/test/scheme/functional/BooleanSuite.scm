@@ -29,16 +29,16 @@
 (define-test "not + is false" (expect #f
 	(not +)))
 
-(define-test "boolean=? requires at least two arguments" (expect-failure
+(define-test "boolean=? requires at least two arguments" (expect-error arity-error?
 	(boolean=? #t)))
 
-(define-test "boolean=? with non-booleans fails" (expect-failure
+(define-test "boolean=? with non-booleans fails" (expect-error type-error?
 	(boolean=? 0 0)))
 
 (define-test "boolean=? with two trues" (expect #t
 	(boolean=? #t #t)))
 
-(define-test "boolean=? with two trues and one zero fails" (expect-failure
+(define-test "boolean=? with two trues and one zero fails" (expect-error type-error?
 	(boolean=? #t #t 0)))
 
 (define-test "boolean=? with three trues" (expect #t

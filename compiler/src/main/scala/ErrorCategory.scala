@@ -20,4 +20,16 @@ object ErrorCategory {
   object DivideByZero       extends ErrorCategory(7)
   object MutateLiteral      extends ErrorCategory(8)
   object UndefinedVariable  extends ErrorCategory(9)
+
+  def fromPredicate : PartialFunction[String, ErrorCategory] = {
+    case "file-error?" => File
+    case "read-error?" => Read
+    case "type-error?" => Type
+    case "arity-error?" => Arity
+    case "range-error?" => Range
+    case "utf8-error?" => Utf8
+    case "divide-by-zero-error?" => DivideByZero
+    case "mutate-literal-error?" => MutateLiteral
+    case "undefined-variable-error?" => UndefinedVariable
+  }
 }

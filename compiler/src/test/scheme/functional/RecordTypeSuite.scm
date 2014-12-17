@@ -47,7 +47,7 @@
 	
 	(single-value-field (single-value "Test string"))))
 
-(define-test "constructing record type with wrong type fails" (expect-failure
+(define-test "constructing record type with wrong type fails" (expect-error type-error?
 	(import (llambda typed))
 
 	(define-record-type <single-value> (single-value field) single-value?
@@ -73,7 +73,7 @@
 	(set-mutable-value-field! instance -20)
 	(mutable-value-field instance)))
 
-(define-test "mutating field with wrong type fails" (expect-failure
+(define-test "mutating field with wrong type fails" (expect-error type-error?
 	(import (llambda typed))
 
 	(define-record-type <mutable-value> (mutable-value field) mutable-value?
@@ -233,6 +233,7 @@
 
 (define-test "recursive record types" (expect-success
   (import (llambda typed))
+  (import (llambda error))
 
   (define-record-type <dodgy-list> (dcons dcar dcdr) dodgy-list?
                       ([dcar : <any>] dcar set-dcar!)

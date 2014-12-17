@@ -9,7 +9,7 @@
   (define dynamic-5 (length (typeless-cell '(1 2 3 4 5))))
   (assert-equal 8 (+ dynamic-5 1 2))))
 
-(define-test "adding single string fails" (expect-failure
+(define-test "adding single string fails" (expect-error type-error?
   (+ "Hello!")))
 
 (define-test "(*)" (expect-success
@@ -23,7 +23,7 @@
   (define dynamic-5 (length (typeless-cell '(1 2 3 4 5))))
   (assert-equal 10 (* dynamic-5 1 2))))
 
-(define-test "multiplying single string fails" (expect-failure
+(define-test "multiplying single string fails" (expect-error type-error?
   (* "Hello!")))
 
 (define-test "(-)" (expect-success
@@ -37,10 +37,10 @@
   (assert-equal 2 (- dynamic-5 1 2))
   (assert-equal -6 (- 1 2 dynamic-5))))
 
-(define-test "subtracting no numbers fails" (expect-failure
+(define-test "subtracting no numbers fails" (expect-error arity-error?
   (-)))
 
-(define-test "subtracting single string fails" (expect-failure
+(define-test "subtracting single string fails" (expect-error type-error?
   (- "Hello!")))
 
 (define-test "(/)" (expect-success
@@ -63,10 +63,10 @@
   ; This divides exactly but contains an inexact value
   (assert-equal 2.0 (/ 20 5.0 2))))
 
-(define-test "dividing single string fails" (expect-failure
+(define-test "dividing single string fails" (expect-error type-error?
   (/ "Hello!")))
 
-(define-test "dividing no numbers fails" (expect-failure
+(define-test "dividing no numbers fails" (expect-error arity-error?
   (/)))
 
 (define-test "(truncate/)" (expect-success
@@ -103,7 +103,7 @@
     (assert-equal 2 quot)
     (assert-equal -1 remain))))
 
-(define-test "(truncate/) by zero fails" (expect-failure
+(define-test "(truncate/) by zero fails" (expect-error divide-by-zero-error?
   (truncate/ 5 0)))
 
 (define-test "(truncate-quotient)" (expect-success
@@ -117,7 +117,7 @@
     (assert-equal -2 (truncate-quotient (typed-dynamic 5 <exact-integer>) -2))
     (assert-equal 2 (truncate-quotient (typed-dynamic -5 <exact-integer>) -2))))
 
-(define-test "(truncate-quotient) by zero fails" (expect-failure
+(define-test "(truncate-quotient) by zero fails" (expect-error divide-by-zero-error?
     (truncate-quotient 5 0)))
 
 (define-test "(truncate-remainder)" (expect-success
@@ -148,7 +148,7 @@
     (assert-equal 2 quot)
     (assert-equal -1 remain))))
 
-(define-test "(floor/) by zero fails" (expect-failure
+(define-test "(floor/) by zero fails" (expect-error divide-by-zero-error?
   (floor/ 5 0)))
 
 (define-test "(floor-quotient)" (expect-success
@@ -157,7 +157,7 @@
     (assert-equal -3 (floor-quotient 5 -2))
     (assert-equal 2 (floor-quotient -5 -2))))
 
-(define-test "(floor-quotient) by zero fails" (expect-failure
+(define-test "(floor-quotient) by zero fails" (expect-error divide-by-zero-error?
     (floor-quotient 5 0)))
 
 (define-test "(floor-remainder)" (expect-success
@@ -176,7 +176,7 @@
 (define-test "(modulo)" (expect 0
   (remainder 10 2)))
 
-(define-test "(truncate-remainder) by zero fails" (expect-failure
+(define-test "(truncate-remainder) by zero fails" (expect-error divide-by-zero-error?
     (truncate-remainder 5 0)))
 
 (define-test "(expt)" (expect-success
@@ -291,7 +291,7 @@
     (assert-equal 2147483648 root)
     (assert-equal 7 rem))))
 
-(define-test "(exact-integer-sqrt) with negative values fails" (expect-failure
+(define-test "(exact-integer-sqrt) with negative values fails" (expect-error range-error?
   (exact-integer-sqrt -1)))
 
 (define-test "(numerator), (denominator)" (expect-success
@@ -357,5 +357,5 @@
   (assert-equal 0.1875 (rationalize 0.2 0.02))
 ))
 
-(define-test "(rationalize) with negative maximum difference fails" (expect-failure
+(define-test "(rationalize) with negative maximum difference fails" (expect-error range-error?
   (rationalize 45.334 -0.5)))

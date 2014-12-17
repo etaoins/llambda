@@ -22,7 +22,7 @@
 	; This assumes (not) takes a truthy
 	(not (typeless-cell '()))))
 
-(define-test "empty list cannot unboxed as bool" (expect-failure
+(define-test "empty list cannot unboxed as bool" (expect-error type-error?
 	; This assumes (boolean=?) takes two native booleans
 	(boolean=? #t (typeless-cell '()))))
 
@@ -30,7 +30,7 @@
 	; This assumes (make-vector) takes an native exact integer
 	(make-vector (typeless-cell 3) #t)))
 
-(define-test "inexact rational cannot be unboxed as integer" (expect-failure
+(define-test "inexact rational cannot be unboxed as integer" (expect-error type-error?
 	; This assumes (make-vector) takes an native exact integer
 	(make-vector (typeless-cell 3.0) #t)))
 
@@ -46,13 +46,13 @@
 	(define fabsf (native-function system-library "fabsf" (-> <native-float> <native-float>)))
 	(fabsf (typeless-cell -10.0))))
 
-(define-test "exact integer cannot be unboxed as double" (expect-failure
+(define-test "exact integer cannot be unboxed as double" (expect-error type-error?
   (import (llambda nfi))
 
 	(define fabs (native-function system-library "fabs" (-> <native-double> <native-double>)))
 	(fabs (typeless-cell 0))))
 
-(define-test "exact integer cannot be unboxed as float" (expect-failure
+(define-test "exact integer cannot be unboxed as float" (expect-error type-error?
   (import (llambda nfi))
 
 	(define fabsf (native-function system-library "fabsf" (-> <native-float> <native-float>)))
@@ -63,14 +63,14 @@
 	; native i32
 	(vector-ref #(a b c) (exact 1))))
 
-(define-test "native i64 cannot be boxed as an inexact rational" (expect-failure
+(define-test "native i64 cannot be boxed as an inexact rational" (expect-error type-error?
   (import (llambda nfi))
 
 	(define inexact->inexact (world-function system-library "llbase_inexact" (-> <flonum> <native-double>)))
 	; This assumes (exact) returns an native i64
 	(inexact->inexact (exact -53))))
 
-(define-test "constant exact integer cannot be boxed as an inexact rational" (expect-failure
+(define-test "constant exact integer cannot be boxed as an inexact rational" (expect-error type-error?
   (import (llambda nfi))
 
 	(define inexact->inexact (world-function system-library "llbase_inexact" (-> <flonum> <native-double>)))
@@ -95,7 +95,7 @@
 	; Thie assumes (boolean=? takes two bools)
 	(boolean=? (not #t) (not #f))))
 
-(define-test "exact integer can be passed to a procedure as float" (expect-failure
+(define-test "exact integer can be passed to a procedure as float" (expect-error type-error?
   (import (llambda nfi))
 
 	; Nothing in the stdlib takes float

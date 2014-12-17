@@ -75,7 +75,7 @@
 		  #f)
 	))))
 
-(define-test "(define) doesn't accept multiple values" (expect-failure
+(define-test "(define) doesn't accept multiple values" (expect-error arity-error?
   (define x (values 1 2 3))))
 
 (define-test "(define) accepts single value produced with (values)" (expect test
@@ -92,11 +92,11 @@
   (call-with-values (lambda () (values 4 5))
                     (lambda (a b) b))))
 
-(define-test "(call-with-values) with mismatched arity fails" (expect-failure
+(define-test "(call-with-values) with mismatched arity fails" (expect-error arity-error?
   (call-with-values (lambda () (values 4 5))
                     (lambda (a b c) b))))
 
-(define-test "(call-with-values) with wrong type fails" (expect-failure
+(define-test "(call-with-values) with wrong type fails" (expect-error type-error?
   (import (llambda typed))
   (call-with-values (lambda () (values 4 5))
                     (lambda ([a : <exact-integer>] [b : <flonum>]) b))))

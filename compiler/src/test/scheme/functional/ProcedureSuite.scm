@@ -93,10 +93,10 @@
 
   (double-binary-op plus 4)))
 
-(define-test "applying datum cells with too many arguments fails" (expect-failure
+(define-test "applying datum cells with too many arguments fails" (expect-error arity-error?
 	((typeless-cell exact?) 80 20)))
 
-(define-test "applying datum cells with insufficient arguments fails" (expect-failure
+(define-test "applying datum cells with insufficient arguments fails" (expect-error arity-error?
 	((typeless-cell exact?))))
 
 (define-test "phied number procedure cannot be applied with non-number arguments" (expect-compile-failure
@@ -113,7 +113,7 @@
 	(define (return-7) 7)
 	(return-7)))
 
-(define-test "typed procedure with mismatched return type fails" (expect-failure
+(define-test "typed procedure with mismatched return type fails" (expect-error type-error?
   (import (llambda typed))
 
   (: bad-proc (-> <number> <string>))
@@ -131,19 +131,19 @@
 	(define (return-value (value : <exact-integer>)) value)
 	(return-value 7)))
 
-(define-test "typed procedure invoked with wrong type fails" (expect-failure
+(define-test "typed procedure invoked with wrong type fails" (expect-error type-error?
   (import (llambda typed))
 	(define (return-value (value : <exact-integer>)) value)
 	(return-value 'symbol)))
 
-(define-test "typed procedure invoked with wrong rest arg type fails" (expect-failure
+(define-test "typed procedure invoked with wrong rest arg type fails" (expect-error type-error?
   (import (llambda typed))
   (define (return-value vals : <exact-integer> *) 
     vals)
 
   (return-value 'symbol)))
 
-(define-test "typed procedure invoked as datum cell with wrong rest arg type fails" (expect-failure
+(define-test "typed procedure invoked as datum cell with wrong rest arg type fails" (expect-error type-error?
   (import (llambda typed))
   (define (return-value vals : <exact-integer> *) 
     vals)

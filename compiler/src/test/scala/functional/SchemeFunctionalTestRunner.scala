@@ -14,9 +14,6 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
   // Implicit import decl every test gets
   private val testImportDecl = datum"(import (llambda nfi) (scheme base) (llambda test-util))"
 
-  // Our special version of (write) that generates less code
-  private val lastValueWriter = datum"""(native-function system-library "llcore_write_stdout" (-> <any> <unit>))"""
-
   private val AbnormalExitCodes = List(
     // SIGILL
     128 + 4,
@@ -29,7 +26,7 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
   )
 
   private val targetPlatform = platform.DetectJvmPlatform()
-    
+
   private case class ExecutionResult(success : Boolean, output : List[ast.Datum], errorString : String)
 
   val resourceBaseDir = "functional/"
@@ -40,7 +37,7 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
     fileParentDir=Some(resourceBaseUrl),
     packageRootDir=Some(resourceBaseUrl)
   )
-  
+
   val stream = getClass.getClassLoader.getResourceAsStream(resourcePath)
 
   if (stream == null) {
@@ -104,7 +101,7 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
   private def runSingleCondition(condition : ast.Datum, schemeDialect : dialect.Dialect, optimizeLevel : Int) {
     condition match {
       case ast.ProperList(ast.Symbol("expect") :: expectedValue :: program) if !program.isEmpty =>
-        val result = executeProgram(program, schemeDialect, optimizeLevel, true)
+        val result = executeProgram(wrapForPrinting(program), schemeDialect, optimizeLevel)
 
         if (!result.success) {
           if (result.errorString.isEmpty) {
@@ -117,9 +114,9 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
         }
 
         assert(result.output === List(expectedValue))
-      
+
       case ast.ProperList(ast.Symbol("expect-output") :: ast.ProperList(expectedOutput) :: program) if !program.isEmpty =>
-        val result = executeProgram(program, schemeDialect, optimizeLevel, false)
+        val result = executeProgram(program, schemeDialect, optimizeLevel)
 
         if (!result.success) {
           if (result.errorString.isEmpty) {
@@ -132,13 +129,13 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
         }
 
         assert(result.output === expectedOutput)
-      
+
       case ast.ProperList(ast.Symbol("expect-success") :: program) if !program.isEmpty =>
         // Make sure the program outputs this at the end
         val canaryValue = ast.Symbol("test-completed")
-        val programWithCanary = program :+ ast.ProperList(List(ast.Symbol("quote"), canaryValue)) 
+        val programWithCanary = program :+ ast.ProperList(List(ast.Symbol("quote"), canaryValue))
 
-        val result = executeProgram(programWithCanary, schemeDialect, optimizeLevel, true)
+        val result = executeProgram(wrapForPrinting(programWithCanary), schemeDialect, optimizeLevel)
 
         if (!result.success) {
           if (result.errorString.isEmpty) {
@@ -151,10 +148,10 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
         }
 
         assert(result.output === List(canaryValue), "Execution did not reach end of test")
-      
+
       case ast.ProperList(ast.Symbol("expect-failure") :: program) if !program.isEmpty =>
         try {
-          val result = executeProgram(program, schemeDialect, optimizeLevel, false)
+          val result = executeProgram(program, schemeDialect, optimizeLevel)
 
           // If we compiled make sure we fail at runtime
           assert(result.success === false, "Execution unexpectedly succeeded")
@@ -163,42 +160,70 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
           case e : SemanticException =>
             // Semantic exceptions are allowed
         }
-      
+
       case ast.ProperList(ast.Symbol("expect-compile-failure") :: program) if !program.isEmpty =>
         intercept[SemanticException] {
-          executeProgram(program, schemeDialect, optimizeLevel, false)
+          executeProgram(program, schemeDialect, optimizeLevel)
         }
-      
+
       case ast.ProperList(ast.Symbol("expect-runtime-failure") :: program) if !program.isEmpty =>
-        val result = executeProgram(program, schemeDialect, optimizeLevel, false)
+        val result = executeProgram(program, schemeDialect, optimizeLevel)
         assert(result.success === false, "Execution unexpectedly succeeded")
+
+      case ast.ProperList(ast.Symbol("expect-error") :: ast.Symbol(errorPredicate) :: program) if !program.isEmpty =>
+        try {
+          val wrappedProgram = wrapForAssertRaises(errorPredicate, program)
+          val result = executeProgram(wrappedProgram, schemeDialect, optimizeLevel)
+
+          if (!result.success) {
+            if (result.errorString.isEmpty) {
+              fail("Execution unexpectedly failed with no output")
+            }
+            else {
+              fail(result.errorString)
+            }
+          }
+        }
+        catch {
+          case expectedError : SemanticException
+            if expectedError.errorCategory == ErrorCategory.fromPredicate(errorPredicate) =>
+        }
 
       case other =>
           fail("Unable to parse condition: " + condition.toString)
     }
   }
 
+  private def wrapForPrinting(program : List[ast.Datum]) : List[ast.Datum] = {
+    // Our special version of (write) that generates less code due to not using parameters
+    val lastValueWriter = datum"""(native-function system-library "llcore_write_stdout" (-> <any> <unit>))"""
+
+    // Modify the last expression to print using lliby_write
+    val wrappedDatum = ast.ProperList(List(
+      lastValueWriter,
+      program.last
+    ))
+
+    program.dropRight(1) :+ wrappedDatum
+  }
+
+  private def wrapForAssertRaises(errorPredicate : String, program : List[ast.Datum]) : List[ast.Datum] = {
+    // Make sure we don't wrap any (import)s the test may have
+    val (testImports, testExprs) = program.span {
+      case ast.ProperList(ast.Symbol("import") :: _) => true
+      case _ => false
+
+    }
+
+    (datum"(import (llambda error))" :: testImports) :+
+      ast.ProperList(ast.Symbol("assert-raises") :: ast.Symbol(errorPredicate) :: testExprs)
+  }
+
   private def utf8InputStreamToString(stream : InputStream) : String =
     Source.fromInputStream(stream, "UTF-8").mkString
 
-  private def executeProgram(program : List[ast.Datum], schemeDialect : dialect.Dialect, optimizeLevel : Int, printLastValue : Boolean) : ExecutionResult = {
-    // Import (llambda nfi) and (scheme base)
-
-    val finalProgram = if (printLastValue) {
-      // Modify the last expression to print using lliby_write
-      val valueDatum = program.last
-
-      val printValueDatum = ast.ProperList(List(
-        lastValueWriter,
-        valueDatum
-      ))
-
-      // Rebuild the program with the import and value printing
-      (testImportDecl :: program.dropRight(1)) :+ printValueDatum
-    }
-    else {
-      testImportDecl :: program
-    }
+  private def executeProgram(program : List[ast.Datum], schemeDialect : dialect.Dialect, optimizeLevel : Int) : ExecutionResult = {
+    val finalProgram = testImportDecl :: program
 
     // Compile the program
     val outputFile = File.createTempFile("llambdafunc", null, null)
@@ -245,7 +270,7 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
 
       // Clean up the temporary executable
       outputFile.delete()
-        
+
       val errorString = utf8InputStreamToString(stderr.get)
 
       if (AbnormalExitCodes.contains(exitValue)) {

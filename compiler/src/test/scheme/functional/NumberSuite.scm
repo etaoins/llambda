@@ -37,14 +37,14 @@
   (assert-false (exact? 3.0))
   (assert-true  (exact? 3.))))
 
-(define-test "exact? fails with non-numbers" (expect-failure
+(define-test "exact? fails with non-numbers" (expect-error type-error?
   (exact? 'notanumber)))
 
 (define-test "(inexact?)" (expect-success
   (assert-true  (inexact? 3.0))
   (assert-false (inexact? 3.))))
 
-(define-test "(inexact?) fails with non-numbers" (expect-failure
+(define-test "(inexact?) fails with non-numbers" (expect-error type-error?
   (inexact? 'notanumber)))
 
 (define-test "(exact-integer?)" (expect-success
@@ -76,7 +76,7 @@
   (assert-false (= dynamic-nan +nan.0))
   (assert-false (= dynamic-nan 0))))
 
-(define-test "equality of two numbers and boolean false is an error" (expect-failure
+(define-test "equality of two numbers and boolean false is an error" (expect-error type-error?
   (= 4.0 4 #f)))
 
 (define-test "(<)" (expect-success

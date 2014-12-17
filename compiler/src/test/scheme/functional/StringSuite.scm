@@ -59,7 +59,7 @@
 (define-test "string-ref on non-BMP Unicode escaped character" (expect #\x1f3c2
 	(string-ref "Hell\x1f3c2;" 4)))
 
-(define-test "string-ref past end of string" (expect-failure
+(define-test "string-ref past end of string" (expect-error range-error?
 	(string-ref "Hell☃!" 10)))
 
 (define-test "string-set! of ASCII character" (expect "*!*"
@@ -67,7 +67,7 @@
 	(string-set! test-string 1 #\!)
 	test-string))
 
-(define-test "string-set! on string literal fails" (expect-failure
+(define-test "string-set! on string literal fails" (expect-error mutate-literal-error?
 	(string-set! "I'm constant" 1 #\!)))
 
 (define-test "string-set! of Unicode character" (expect "**☃"
@@ -80,7 +80,7 @@
 	(string-set! test-string 0 #\x2603)
 	test-string))
 
-(define-test "string-set! past end of string fails" (expect-failure
+(define-test "string-set! past end of string fails" (expect-error range-error?
 	(define test-string (make-string 3 #\*))
 	(string-set! test-string 4 #\x2603)
 	test-string))
@@ -102,7 +102,7 @@
   (assert-equal "Hell☃!" new-string)
   (assert-equal 6 (string-length new-string))))
 
-(define-test "string-append of boolean fails" (expect-failure
+(define-test "string-append of boolean fails" (expect-error type-error?
 	(string-append "Hell" "☃" "!" #f)))
 
 (define-test "(string->list)" (expect-success
@@ -112,10 +112,10 @@
   (assert-equal '() (string->list "Hell☃!" 0 0))
   (assert-equal '() (string->list "Hell☃!" 6 6))))
 
-(define-test "(string->list) with backwards slice fails" (expect-failure
+(define-test "(string->list) with backwards slice fails" (expect-error range-error?
   (string->list "Hell☃!" 2 1)))
 
-(define-test "(string->list) past end of string fails" (expect-failure
+(define-test "(string->list) past end of string fails" (expect-error range-error?
   (string->list "Hell☃!" 0 8)))
 
 (define-test "(string->list) with negative start index fails" (expect-failure
@@ -140,10 +140,10 @@
   (define c (string-copy b 1 3))
   (assert-equal "8☃" c)))
 
-(define-test "(string-copy) with backwards slice fails" (expect-failure
+(define-test "(string-copy) with backwards slice fails" (expect-error range-error?
   (string-copy "1☃3" 2 1)))
 
-(define-test "(string-copy) past end of string fails" (expect-failure
+(define-test "(string-copy) past end of string fails" (expect-error range-error?
   (string-copy "1☃3" 0 4)))
 
 (define-test "(string-copy) with negative start index fails" (expect-failure
@@ -283,24 +283,24 @@
   (string-copy! b 0 a)
   (assert-equal "12345" b)))
 
-(define-test "(string-copy!) on string literal fails" (expect-failure
+(define-test "(string-copy!) on string literal fails" (expect-error mutate-literal-error?
   (define a "12345")
   (define b "abcde")
   (string-copy! b 1 a 0 2)
 
   (assert-equal "a12de" b)))
 
-(define-test "(string-copy!) with backwards slice fails" (expect-failure
+(define-test "(string-copy!) with backwards slice fails" (expect-error range-error?
   (define a "12345")
   (define b (string-copy "abcde"))
   (string-copy! b 1 a 2 0)))
 
-(define-test "(string-copy!) past end of from fails" (expect-failure
+(define-test "(string-copy!) past end of from fails" (expect-error range-error?
   (define a "12345")
   (define b (string-copy "abcde"))
   (string-copy! b 2 a 4 6)))
 
-(define-test "(string-copy!) past end of to fails" (expect-failure
+(define-test "(string-copy!) past end of to fails" (expect-error range-error?
   (define a "12345")
   (define b (string-copy "abcde"))
   (string-copy! b 2 a 1)))
@@ -322,11 +322,11 @@
   (string-fill! test-string #\0 2 5)
   (assert-equal "ℵℵ000ℵℵℵ" test-string)))
 
-(define-test "(string-fill!) with backward slice fails" (expect-failure
+(define-test "(string-fill!) with backward slice fails" (expect-error range-error?
   (define test-string (string-copy "01234567"))
   (string-fill! test-string #\☃ 6 4)))
 
-(define-test "(string-fill!) past end of string fails" (expect-failure
+(define-test "(string-fill!) past end of string fails" (expect-error range-error?
   (define test-string (string-copy "01234567"))
   (string-fill! test-string #\☃ 9)))
 

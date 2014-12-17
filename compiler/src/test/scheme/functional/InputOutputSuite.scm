@@ -299,11 +299,11 @@
   (write-bytevector test-bytevector start-end-output-port 6 8)
   (assert-equal #u8(6 7) (get-output-bytevector start-end-output-port))))
 
-(define-test "(write-string) with backwards slice fails" (expect-failure
+(define-test "(write-string) with backwards slice fails" (expect-error range-error?
   (define output-port (open-output-string))
   (write-string "1☃3" output-port 2 1)))
 
-(define-test "(write-string) past end of string fails" (expect-failure
+(define-test "(write-string) past end of string fails" (expect-error range-error?
   (define output-port (open-output-string))
   (write-string "1☃3" output-port 0 4)))
 
@@ -344,19 +344,19 @@
 
   (assert-true (eof-object? (read-bytevector! test-bytevector input-port)))))
 
-(define-test "(read-bytevector!) on bytevector literal fails" (expect-failure
+(define-test "(read-bytevector!) on bytevector literal fails" (expect-error mutate-literal-error?
   (define test-bytevector #u8(0 0 0 0))
 
   (define input-port (open-input-bytevector #u8(1 2 3 4 5 6 7 8 9 10 11 12)))
   (read-bytevector! test-bytevector input-port)))
 
-(define-test "(read-bytevector!) with backwards slice fails" (expect-failure
+(define-test "(read-bytevector!) with backwards slice fails" (expect-error range-error?
   (define test-bytevector (make-bytevector 4))
 
   (define input-port (open-input-bytevector #u8(1 2 3 4 5 6 7 8 9 10 11 12)))
   (read-bytevector! test-bytevector input-port 3 2)))
 
-(define-test "(read-bytevector!) past end of bytevector fails" (expect-failure
+(define-test "(read-bytevector!) past end of bytevector fails" (expect-error range-error?
   (define test-bytevector (make-bytevector 4))
 
   (define input-port (open-input-bytevector #u8(1 2 3 4 5 6 7 8 9 10 11 12)))

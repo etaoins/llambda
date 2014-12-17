@@ -41,7 +41,7 @@
      (even? 7)
   ))))
 
-(define-test "accessing recursive define before initialization fails" (expect-failure
+(define-test "accessing recursive define before initialization fails" (expect-error undefined-variable-error?
   ((lambda ()
      (define even?
      (lambda (n)
@@ -157,16 +157,16 @@
   (set! num 15.0)
   num))
 
-(define-test "typed top-level define with incompatible initialiser fails" (expect-failure
+(define-test "typed top-level define with incompatible initialiser fails" (expect-error type-error?
   (import (llambda typed))
   (define num : <number> "not a number")))
 
-(define-test "typed declaration with incompatible definition fails" (expect-failure
+(define-test "typed declaration with incompatible definition fails" (expect-error type-error?
   (import (llambda typed))
   (: num <number>)
   (define num "not a number")))
 
-(define-test "mutating typed top-level define with incompatible value fails" (expect-failure
+(define-test "mutating typed top-level define with incompatible value fails" (expect-error type-error?
   (import (llambda typed))
   (define num : <number> 5)
   (set! num "not a string")))
@@ -184,13 +184,13 @@
     (set! num 15.0)
     num))))
 
-(define-test "typed inner define with incompatible initialiser fails" (expect-failure
+(define-test "typed inner define with incompatible initialiser fails" (expect-error type-error?
   (import (llambda typed))
   ((lambda ()
     (define num : <number> "not a number")
   ))))
 
-(define-test "mutating typed inner define with incompatible value fails" (expect-failure
+(define-test "mutating typed inner define with incompatible value fails" (expect-error type-error?
   (import (llambda typed))
   ((lambda ()
     (define num : <number> 5)
@@ -203,7 +203,7 @@
   (let ([x : <number> 7] [y : <exact-integer> 5])
     (+ y x))))
 
-(define-test "typed let with incorrect type fails" (expect-failure
+(define-test "typed let with incorrect type fails" (expect-error type-error?
   (import (llambda typed))
 
   (let ([x : <exact-integer> 7.5])
@@ -217,7 +217,7 @@
            [z : <exact-integer> (+ x y)])
       (* z x)))))
 
-(define-test "typed let* with incorrect type fails" (expect-failure
+(define-test "typed let* with incorrect type fails" (expect-error type-error?
   (import (llambda typed))
 
 	(let ([x : <any> 2] [y : <number> 3])
