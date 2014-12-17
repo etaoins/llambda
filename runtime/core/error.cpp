@@ -20,7 +20,7 @@ extern "C"
 
 using namespace lliby;
 
-void llcore_signal_error(World &world, const char *message, AnyCell *irritant, const char *path, unsigned int lineNumber)
+void llcore_signal_error(World &world, ErrorCategory category, const char *message, AnyCell *irritant, const char *path, unsigned int lineNumber)
 {
 	std::string messageStr;
 
@@ -40,11 +40,11 @@ void llcore_signal_error(World &world, const char *message, AnyCell *irritant, c
 
 	if (irritant != nullptr)
 	{
-		signalError(world, ErrorCategory::Default, messageStr.c_str(), {irritant});
+		signalError(world, category, messageStr.c_str(), {irritant});
 	}
 	else
 	{
-		signalError(world, ErrorCategory::Default, messageStr.c_str(), {});
+		signalError(world, category, messageStr.c_str(), {});
 	}
 }
 

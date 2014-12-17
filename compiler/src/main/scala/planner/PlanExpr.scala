@@ -3,7 +3,7 @@ import io.llambda
 
 import collection.mutable
 
-import llambda.compiler.{et, StorageLocation, ReportProcedure, ContextLocated, RuntimeErrorMessage}
+import llambda.compiler.{et, StorageLocation, ReportProcedure, ContextLocated, ErrorCategory, RuntimeErrorMessage}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
@@ -65,7 +65,12 @@ private[planner] object PlanExpr {
 
           case MutableValue(mutableType, mutableTemp, needsUndefCheck) =>
             if (needsUndefCheck) {
-              val errorMessage = RuntimeErrorMessage("accessUndefined", "Recursively defined value referenced before its initialization")
+              val errorMessage = RuntimeErrorMessage(
+                category=ErrorCategory.UndefinedVariable,
+                name="accessUndefined",
+                text="Recursively defined value referenced before its initialization"
+              )
+
               plan.steps += ps.AssertRecordLikeDefined(mutableTemp, mutableType, errorMessage)
             }
 

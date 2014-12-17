@@ -1,7 +1,7 @@
 package io.llambda.compiler.planner
 import io.llambda
 
-import llambda.compiler.RuntimeErrorMessage
+import llambda.compiler.{ErrorCategory, RuntimeErrorMessage}
 import llambda.compiler.InternalCompilerErrorException
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner.{step => ps}
@@ -77,6 +77,7 @@ case class MultipleValues(multipleValueList : iv.IntermediateValue) extends Resu
     // This is tricky - we need to make sure that we have exactly one value
     // Make sure we're not empty
     val notEnoughValuesMessage = RuntimeErrorMessage(
+      category=ErrorCategory.Arity,
       name="zeroValuesForSingle",
       text="Single value expected; 0 values provided"
     )
@@ -84,6 +85,7 @@ case class MultipleValues(multipleValueList : iv.IntermediateValue) extends Resu
     val carValue = PlanCadr.loadCar(multipleValueList, Some(notEnoughValuesMessage))
 
     val extraValuesMessage = RuntimeErrorMessage(
+      category=ErrorCategory.Arity,
       name="extraValuesForSingle",
       text="Single value expected; multiple values provided"
     )

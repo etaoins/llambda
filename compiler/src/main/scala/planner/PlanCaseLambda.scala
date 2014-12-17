@@ -6,12 +6,13 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{intermediatevalue => iv}
-import llambda.compiler.{RuntimeErrorMessage, ProcedureSignature, ProcedureAttribute}
+import llambda.compiler.{ErrorCategory, RuntimeErrorMessage, ProcedureSignature, ProcedureAttribute}
 
 import llambda.compiler.valuetype.Implicits._
 
 private[planner] object PlanCaseLambda {
   val noMatchingClauseRuntimeErrorMessage = RuntimeErrorMessage(
+    category=ErrorCategory.Arity,
     name="noMatchingCaseLambdaClause",
     text="No matching (case-lambda) clause"
   )

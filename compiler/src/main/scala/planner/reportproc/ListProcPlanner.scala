@@ -3,7 +3,8 @@ import io.llambda
 
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.{RuntimeErrorMessage, ContextLocated, RangeException, InternalCompilerErrorException}
+import llambda.compiler.{ContextLocated, RangeException, InternalCompilerErrorException}
+import llambda.compiler.{ErrorCategory, RuntimeErrorMessage}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
@@ -93,6 +94,7 @@ object ListProcPlanner extends ReportProcPlanner {
       val newValueTemp = newValue.toTempValue(vt.AnySchemeType)
 
       val errorMessage = RuntimeErrorMessage(
+        category=ErrorCategory.MutateLiteral,
         name="setCarImmutable",
         text="(set-car!) attempted on pair literal"
       )
@@ -110,6 +112,7 @@ object ListProcPlanner extends ReportProcPlanner {
       val newValueTemp = newValue.toTempValue(vt.AnySchemeType)
 
       val errorMessage = RuntimeErrorMessage(
+        category=ErrorCategory.MutateLiteral,
         name="setCdrImmutable",
         text="(set-cdr!) attempted on pair literal"
       )

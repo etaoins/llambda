@@ -1,9 +1,11 @@
 package io.llambda.compiler
 import io.llambda
 
-sealed abstract class SemanticException(val located : SourceLocated, message : String) extends 
+sealed abstract class SemanticException(val located : SourceLocated, message : String) extends
     Exception(message + "\n" + located.locationString) {
   val semanticErrorType : String
+
+  val errorCategory : ErrorCategory = ErrorCategory.Default
 }
 
 class DubiousLibraryNameComponentException(located : SourceLocated, val libraryName : String) extends SemanticException(located, libraryName) {
@@ -61,18 +63,26 @@ class ValueNotApplicableException(located : SourceLocated, typeDescription : Str
 
 class TypeException(located : SourceLocated, message : String) extends SemanticException(located, message) {
   val semanticErrorType = "impossible type conversion"
+
+  override val errorCategory = ErrorCategory.Type
 }
 
 class ArityException(located : SourceLocated, message : String) extends SemanticException(located, message) {
   val semanticErrorType = "incompatible arity"
+
+  override val errorCategory = ErrorCategory.Arity
 }
 
 class RangeException(located : SourceLocated, message : String) extends SemanticException(located, message) {
   val semanticErrorType = "out of range"
+
+  override val errorCategory = ErrorCategory.Range
 }
 
 class DivideByZeroException(located : SourceLocated, message : String) extends SemanticException(located, message) {
   val semanticErrorType = "divide by zero"
+
+  override val errorCategory = ErrorCategory.DivideByZero
 }
 
 class DefinitionOutsideTopLevelException(located : SourceLocated) extends BadSpecialFormException(located, "Definitions can only be introduced in at the outermost level or at the beginning of a body") 

@@ -4,37 +4,48 @@ import io.llambda
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.valuetype.Implicits._
 import llambda.compiler.{celltype => ct}
-import llambda.compiler.RuntimeErrorMessage
+import llambda.compiler.{ErrorCategory, RuntimeErrorMessage}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner._
 import llambda.compiler.ProcedureSignature
-import llambda.compiler.{TypeException, InternalCompilerErrorException}
+import llambda.compiler.{TypeException, ArityException, InternalCompilerErrorException}
 
 trait IntermediateValueHelpers {
   def typeDescription : String
 
   /** Helper for signalling impossible conversions */
-  protected def impossibleConversion(message : String)(implicit plan : PlanWriter) = { 
-    throw new TypeException(plan.activeContextLocated, message)
+  protected def impossibleConversion(
+      message : String,
+      errorCategory : ErrorCategory = ErrorCategory.Default
+  )(implicit plan : PlanWriter) = errorCategory match {
+    case ErrorCategory.Arity =>
+      throw new ArityException(plan.activeContextLocated, message)
+
+    case _ =>
+      throw new TypeException(plan.activeContextLocated, message)
   }
 
   protected def impossibleConversionToType(
       targetType : vt.SchemeType,
       errorMessageOpt : Option[RuntimeErrorMessage],
       staticCheck : Boolean = false
-  )(implicit plan : PlanWriter) = if (staticCheck) {
-    val message = errorMessageOpt.map(_.text) getOrElse {
-      s"${typeDescription} does not statically satisfy ${vt.NameForType(targetType)}"
-    }
+  )(implicit plan : PlanWriter) = {
+    val errorCategory = errorMessageOpt.map(_.category).getOrElse(ErrorCategory.Type)
 
-    impossibleConversion(message) 
-  }
-  else {
-    val message = errorMessageOpt.map(_.text) getOrElse {
-      s"Unable to convert ${typeDescription} to ${vt.NameForType(targetType)}"
-    }
+    if (staticCheck) {
+      val message = errorMessageOpt.map(_.text) getOrElse {
+        s"${typeDescription} does not statically satisfy ${vt.NameForType(targetType)}"
+      }
 
-    impossibleConversion(message) 
+      impossibleConversion(message, errorCategory)
+    }
+    else {
+      val message = errorMessageOpt.map(_.text) getOrElse {
+        s"Unable to convert ${typeDescription} to ${vt.NameForType(targetType)}"
+      }
+
+      impossibleConversion(message, errorCategory)
+    }
   }
 }
 
@@ -137,6 +148,7 @@ abstract class IntermediateValue extends IntermediateValueHelpers {
       case None =>
         val errorMessage = errorMessageOpt getOrElse {
           RuntimeErrorMessage(
+            category=ErrorCategory.Type,
             name=s"subcastTo${vt.NameForType(targetType)}Failed",
             text=s"Runtime cast to subtype '${vt.NameForType(targetType)}' failed"
           )

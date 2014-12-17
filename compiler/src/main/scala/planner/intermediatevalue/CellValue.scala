@@ -7,7 +7,7 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.typecheck
 import llambda.compiler.planner._
 import llambda.compiler.{InternalCompilerErrorException, ValueNotApplicableException}
-import llambda.compiler.RuntimeErrorMessage
+import llambda.compiler.{ErrorCategory, RuntimeErrorMessage}
 
 /** Represents a value boxed in an alloc cell
   *
@@ -84,6 +84,7 @@ class CellValue(
     if (vt.SatisfiesType(procedureTypeAtom, schemeType) != Some(true)) {
       val errorMessage = errorMessageOpt getOrElse {
         RuntimeErrorMessage(
+          category=ErrorCategory.Type,
           name=s"subcastTo${vt.NameForType(targetType)}Failed",
           text=s"Union typed value did not have a procedure type while attempting to convert value to procedure"
         )

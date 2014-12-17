@@ -1,7 +1,7 @@
 package io.llambda.compiler.planner
 import io.llambda
 
-import llambda.compiler.RuntimeErrorMessage
+import llambda.compiler.{ErrorCategory, RuntimeErrorMessage}
 
 object ArityRuntimeErrorMessage {
   def insufficientArgs(invokableProc : InvokableProcedure)(implicit plan : PlanWriter) : RuntimeErrorMessage = {
@@ -11,12 +11,14 @@ object ArityRuntimeErrorMessage {
 
     if (signature.restArgMemberTypeOpt.isDefined) {
       RuntimeErrorMessage(
+        category=ErrorCategory.Arity,
         name=s"insufficientArgsFor${nativeSymbol}RequiresAtLeast${fixedArgCount}",
         text=s"Called ${nativeSymbol} with insufficient arguments; requires at least ${fixedArgCount} arguments."
       )
     }
     else {
       RuntimeErrorMessage(
+        category=ErrorCategory.Arity,
         name=s"insufficientArgsFor${nativeSymbol}RequiresExactly${fixedArgCount}",
         text=s"Called ${nativeSymbol} with insufficient arguments; requires exactly ${fixedArgCount} arguments."
       )
@@ -29,6 +31,7 @@ object ArityRuntimeErrorMessage {
     val fixedArgCount = signature.fixedArgTypes.length
 
     RuntimeErrorMessage(
+      category=ErrorCategory.Arity,
       name=s"tooManyArgsFor${nativeSymbol}Requires${fixedArgCount}",
       text=s"Called ${nativeSymbol} with too many arguments; requires exactly ${fixedArgCount} arguments."
     )

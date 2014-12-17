@@ -6,6 +6,7 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.{RuntimeErrorMessage, SourceLocated}
 
 object GenErrorSignal {
+  private val categoryIrType = IntegerType(16)
   private val pathIrType = PointerType(IntegerType(8))
   private val lineNumberIrType = IntegerType(32)
 
@@ -40,9 +41,11 @@ object GenErrorSignal {
     val module = block.function.module
     val signalErrorDecl = RuntimeFunctions.signalError
 
+    val categoryIr = IntegerConstant(categoryIrType, errorMessage.category.runtimeId)
+
     // Define the error string
     val messageStartPtr = defineConstantString(module)(s"${errorMessage.name}ErrorString", errorMessage.text)
-    
+
     val locationOpt = for(located <- locatedOpt; location <- located.locationOpt) yield location
 
     val (fileIr, lineIr) = locationOpt match {
@@ -76,7 +79,7 @@ object GenErrorSignal {
 
     state.terminateFunction(() => {
       // Call llcore_signal_error
-      block.callDecl(None)(signalErrorDecl, List(worldPtr, messageStartPtr, evidencePtr, fileIr, lineIr))
+      block.callDecl(None)(signalErrorDecl, List(worldPtr, categoryIr, messageStartPtr, evidencePtr, fileIr, lineIr))
 
       // Terminate the failure block
       block.unreachable

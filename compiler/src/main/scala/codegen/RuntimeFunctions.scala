@@ -23,6 +23,7 @@ object RuntimeFunctions {
     name="llcore_signal_error",
     arguments=List(
       IrFunction.Argument(PointerType(WorldValue.irType)),
+      IrFunction.Argument(IntegerType(16)),
       IrFunction.Argument(PointerType(IntegerType(8)), Set(IrFunction.NoCapture)),
       IrFunction.Argument(PointerType(ct.AnyCell.irType)),
       IrFunction.Argument(PointerType(IntegerType(8)), Set(IrFunction.NoCapture)),

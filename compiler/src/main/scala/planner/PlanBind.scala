@@ -1,7 +1,8 @@
 package io.llambda.compiler.planner
 import io.llambda
 
-import llambda.compiler.{et, StorageLocation, ReportProcedure, ContextLocated, RuntimeErrorMessage}
+import llambda.compiler.{et, StorageLocation, ReportProcedure, ContextLocated}
+import llambda.compiler.{ErrorCategory, RuntimeErrorMessage}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{intermediatevalue => iv}
@@ -100,12 +101,14 @@ private[planner] object PlanBind {
 
           val insufficientValuesMessage = if (restLocOpt.isDefined) {
             RuntimeErrorMessage(
+              category=ErrorCategory.Arity,
               name=s"insufficientValuesRequiresAtLeast${fixedValueCount}",
               text=s"Insufficient values for multiple value binding; requires at least ${fixedValueCount} values."
             )
           }
           else {
             RuntimeErrorMessage(
+              category=ErrorCategory.Arity,
               name=s"insufficientValueRequiresExactly${fixedValueCount}",
               text=s"Insufficient values for multiple value binding; requires exactly ${fixedValueCount} values."
             )
@@ -120,6 +123,7 @@ private[planner] object PlanBind {
           if (!restLocOpt.isDefined) {
             // Make sure we don't have extra values
             val tooManyValuesMessage = RuntimeErrorMessage(
+              category=ErrorCategory.Arity,
               s"tooManyValuesRequiresExactly${fixedValueCount}",
               s"Too many values in multiple value binding; requires exactly ${fixedValueCount} values."
             )
