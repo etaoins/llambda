@@ -25,7 +25,7 @@ object ExtractNativeFunction {
 
       case other =>
         throw new BadSpecialFormException(other, "Non-attribute used where procedure attribute expected")
-    })(breakOut) : Set[ProcedureAttribute.ProcedureAttribute]
+    })(breakOut) : Set[ProcedureAttribute]
 
     ProcedureSignature(
       hasWorldArg=hasWorldArg,

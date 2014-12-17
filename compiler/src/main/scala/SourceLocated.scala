@@ -80,16 +80,16 @@ abstract trait SourceLocated {
 
 object NoSourceLocation extends SourceLocated
 
+sealed abstract class InlineReason
 object InlineReason {
-  sealed abstract class InlineReason
-  case object MacroExpansion extends InlineReason 
+  case object MacroExpansion extends InlineReason
   case object LambdaInline extends InlineReason
 }
 
 case class InlinePathEntry(
   contextOpt : Option[debug.SourceContext],
   locationOpt : Option[SourceLocation],
-  inlineReason : InlineReason.InlineReason
+  inlineReason : InlineReason
 )
 
 abstract trait ContextLocated extends SourceLocated {

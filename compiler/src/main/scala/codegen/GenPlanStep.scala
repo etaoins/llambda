@@ -16,7 +16,7 @@ object GenPlanStep {
 
   private val fastMathFlags = Set[FastMathFlag]()
 
-  private def stepCompareCondToIntegerIr(stepCond : ps.CompareCond.CompareCond) : IComparisonCond.IComparisonCond = stepCond match {
+  private def stepCompareCondToIntegerIr(stepCond : ps.CompareCond) : IComparisonCond = stepCond match {
     case ps.CompareCond.Equal => IComparisonCond.Equal
     case ps.CompareCond.NotEqual => IComparisonCond.NotEqual
     case ps.CompareCond.GreaterThan => IComparisonCond.GreaterThan
@@ -24,8 +24,8 @@ object GenPlanStep {
     case ps.CompareCond.LessThan => IComparisonCond.LessThan
     case ps.CompareCond.LessThanEqual => IComparisonCond.LessThanEqual
   }
-  
-  private def stepCompareCondToFloatIr(stepCond : ps.CompareCond.CompareCond) : FComparisonCond.FComparisonCond = stepCond match {
+
+  private def stepCompareCondToFloatIr(stepCond : ps.CompareCond) : FComparisonCond = stepCond match {
     case ps.CompareCond.Equal => FComparisonCond.OrderedEqual
     case ps.CompareCond.NotEqual => FComparisonCond.OrderedNotEqual
     case ps.CompareCond.GreaterThan => FComparisonCond.OrderedGreaterThan

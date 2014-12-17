@@ -3,8 +3,8 @@ package io.llambda.llvmir
 case class IrGlobalVariableDef(
     name : String,
     initializer : IrConstant,
-    linkage : Linkage.Linkage = Linkage.Default,
-    visibility : Visibility.Visibility = Visibility.Default,
+    linkage : Linkage = Linkage.Default,
+    visibility : Visibility = Visibility.Default,
     unnamedAddr : Boolean = false,
     constant : Boolean = false) extends Irable with IrNamedGlobal {
   def variable : GlobalVariable =

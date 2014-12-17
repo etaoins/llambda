@@ -3,9 +3,8 @@ import io.llambda
 
 import llambda.compiler.{valuetype => vt}
 
+sealed abstract class ProcedureAttribute
 object ProcedureAttribute {
-  sealed abstract class ProcedureAttribute
-
   /** Indicates a procedure cannot return normally
     *
     * This is typically used for functions that raise exceptions or terminate the program
@@ -29,7 +28,7 @@ case class ProcedureSignature(
   fixedArgTypes : List[vt.ValueType],
   restArgMemberTypeOpt : Option[vt.SchemeType],
   returnType : vt.ReturnType.ReturnType[vt.ValueType],
-  attributes : Set[ProcedureAttribute.ProcedureAttribute]
+  attributes : Set[ProcedureAttribute]
 ) {
   /** Converts this signature to a polymorphic signaure with no type variables */
   def toPolymorphic =

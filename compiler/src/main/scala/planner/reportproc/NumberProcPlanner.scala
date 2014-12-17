@@ -71,7 +71,7 @@ object NumberProcPlanner extends ReportProcPlanner {
   }
 
   private def compareOperands(
-      compareCond : ps.CompareCond.CompareCond,
+      compareCond : ps.CompareCond,
       staticIntCalc : IntegerCompartor,
       staticFlonumCalc : DoubleCompartor,
       val1 : iv.IntermediateValue,
@@ -119,9 +119,9 @@ object NumberProcPlanner extends ReportProcPlanner {
         UnplannableCompare
     }
   }
-  
+
   private def compareOperandList(
-      compareCond : ps.CompareCond.CompareCond,
+      compareCond : ps.CompareCond,
       staticIntCalc : IntegerCompartor,
       staticFlonumCalc : DoubleCompartor,
       operands : List[iv.IntermediateValue]
@@ -195,7 +195,7 @@ object NumberProcPlanner extends ReportProcPlanner {
   }
 
   private def selectOperandList(
-      compareCond : ps.CompareCond.CompareCond,
+      compareCond : ps.CompareCond,
       staticIntCalc : IntegerCompartor,
       staticFlonumCalc : DoubleCompartor,
       operands : List[iv.IntermediateValue]

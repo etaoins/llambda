@@ -11,9 +11,8 @@ abstract trait Irable {
   override def toString = toIr
 }
 
+sealed abstract class Visibility(val toIr : String) extends Irable
 object Visibility {
-  sealed abstract class Visibility(val toIr : String) extends Irable
-
   case object Hidden extends Visibility("hidden")
   case object Protected extends Visibility("protected")
   case object Default extends Visibility("default") {
@@ -21,9 +20,8 @@ object Visibility {
   }
 }
 
+sealed abstract class Linkage(val toIr : String) extends Irable
 object Linkage {
-  sealed abstract class Linkage(val toIr : String) extends Irable
-
   case object Private extends Linkage("private")
   case object Internal extends Linkage("internal")
   case object ExternallyAvailable extends Linkage("externally_available")
@@ -34,9 +32,8 @@ object Linkage {
   val Default = External
 }
 
+sealed abstract class CallingConv(val toIr : String) extends Irable
 object CallingConv {
-  sealed abstract class CallingConv(val toIr : String) extends Irable
-
   case object FastCC extends CallingConv("fastcc")
   case object ColdCC extends CallingConv("coldcc")
   case object CCC extends CallingConv("ccc") {

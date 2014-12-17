@@ -30,12 +30,12 @@ object IrFunction {
 }
 
 sealed abstract trait IrSignatureLike {
-  val callingConv : CallingConv.CallingConv
+  val callingConv : CallingConv
   val result : IrFunction.Result
   val arguments : List[IrFunction.Argument]
   val hasVararg : Boolean
   val attributes : Set[IrFunction.FunctionAttribute]
-  
+
   def irType = FunctionType(result.irType, arguments.map(_.irType), hasVararg)
 }
 
@@ -44,12 +44,12 @@ case class IrSignature(
   arguments : List[IrFunction.Argument],
   hasVararg : Boolean = false,
   attributes : Set[IrFunction.FunctionAttribute] = Set(),
-  callingConv : CallingConv.CallingConv = CallingConv.Default
+  callingConv : CallingConv = CallingConv.Default
 ) extends IrSignatureLike
 
 sealed abstract trait IrFunctionDeclLike extends Irable with IrSignatureLike with IrNamedGlobal {
-  val linkage : Linkage.Linkage
-  val visibility : Visibility.Visibility
+  val linkage : Linkage
+  val visibility : Visibility
   val name : String
   val unnamedAddr : Boolean
   val gc : Option[String]
@@ -92,9 +92,9 @@ case class IrFunctionDecl(
   arguments : List[IrFunction.Argument],
   hasVararg : Boolean = false,
   attributes : Set[IrFunction.FunctionAttribute] = Set(),
-  linkage : Linkage.Linkage = Linkage.Default,
-  visibility : Visibility.Visibility = Visibility.Default,
-  callingConv : CallingConv.CallingConv = CallingConv.Default,
+  linkage : Linkage = Linkage.Default,
+  visibility : Visibility = Visibility.Default,
+  callingConv : CallingConv = CallingConv.Default,
   unnamedAddr : Boolean = false,
   gc : Option[String] = None
 ) extends IrFunctionDeclLike {
@@ -110,10 +110,10 @@ class IrFunctionBuilder(
   val name : String,
   val namedArguments : List[(String, IrFunction.Argument)],
   val hasVararg : Boolean = false,
-  val attributes : Set[IrFunction.FunctionAttribute] = Set(), 
-  val linkage : Linkage.Linkage = Linkage.Default,
-  val visibility : Visibility.Visibility = Visibility.Default,
-  val callingConv : CallingConv.CallingConv = CallingConv.Default,
+  val attributes : Set[IrFunction.FunctionAttribute] = Set(),
+  val linkage : Linkage = Linkage.Default,
+  val visibility : Visibility = Visibility.Default,
+  val callingConv : CallingConv = CallingConv.Default,
   val unnamedAddr : Boolean = false,
   val gc : Option[String] = None
 ) extends IrFunctionDeclLike {

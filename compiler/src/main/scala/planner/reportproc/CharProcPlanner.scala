@@ -11,7 +11,7 @@ object CharProcPlanner extends ReportProcPlanner {
   private type CharComparator = (Int, Int) => Boolean
 
   private def compareOperandList(
-      compareCond : ps.CompareCond.CompareCond,
+      compareCond : ps.CompareCond,
       staticCalc : CharComparator,
       operands : List[iv.IntermediateValue]
   )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {

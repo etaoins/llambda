@@ -1099,9 +1099,8 @@ case class FloatDiv(result : TempValue, val1 : TempValue, val2 : TempValue) exte
     FloatDiv(f(result), f(val1), f(val2)).assignLocationFrom(this)
 }
 
+sealed abstract class CompareCond
 object CompareCond {
-  sealed abstract class CompareCond
-
   case object Equal extends CompareCond
   case object NotEqual extends CompareCond
   case object GreaterThan extends CompareCond
@@ -1114,7 +1113,7 @@ object CompareCond {
   *
   * This can also be used to compare two pointers of the same type, GC managed or otherwise.
   */
-case class IntegerCompare(result : TempValue, cond : CompareCond.CompareCond, signed : Option[Boolean], val1 : TempValue, val2 : TempValue) extends Step with NullipotentStep {
+case class IntegerCompare(result : TempValue, cond : CompareCond, signed : Option[Boolean], val1 : TempValue, val2 : TempValue) extends Step with NullipotentStep {
   lazy val inputValues = Set[TempValue](val1, val2)
   lazy val outputValues = Set[TempValue](result)
   
@@ -1123,7 +1122,7 @@ case class IntegerCompare(result : TempValue, cond : CompareCond.CompareCond, si
 }
 
 /** Performs an ordered comparison between two floating point values */
-case class FloatCompare(result : TempValue, cond : CompareCond.CompareCond, val1 : TempValue, val2 : TempValue) extends Step with NullipotentStep {
+case class FloatCompare(result : TempValue, cond : CompareCond, val1 : TempValue, val2 : TempValue) extends Step with NullipotentStep {
   lazy val inputValues = Set[TempValue](val1, val2)
   lazy val outputValues = Set[TempValue](result)
   

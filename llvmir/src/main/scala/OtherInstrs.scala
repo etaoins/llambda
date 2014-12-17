@@ -1,25 +1,25 @@
 package io.llambda.llvmir
 
-object IComparisonCond {
-  // This doesn't extend Irable because the mnemonic needs to be combined with
-  // an instruction-specific prefix to be valid IR
-  sealed abstract class IComparisonCond(val mnemonic : String, val signedDependent : Boolean)
+// This doesn't extend Irable because the mnemonic needs to be combined with
+// an instruction-specific prefix to be valid IR
+sealed abstract class IComparisonCond(val mnemonic : String, val signedDependent : Boolean)
 
+object IComparisonCond {
   case object Equal extends IComparisonCond("eq", false)
   case object NotEqual extends IComparisonCond("ne", false)
-  
+
   case object GreaterThan extends IComparisonCond("gt", true)
   case object GreaterThanEqual extends IComparisonCond("ge", true)
-  
+
   case object LessThan extends IComparisonCond("lt", true)
   case object LessThanEqual extends IComparisonCond("le", true)
 }
 
-object FComparisonCond {
-  sealed abstract class FComparisonCond(mnemonic : String) extends Irable {
-    def toIr = mnemonic
-  }
+sealed abstract class FComparisonCond(mnemonic : String) extends Irable {
+  def toIr = mnemonic
+}
 
+object FComparisonCond {
   case object False extends FComparisonCond("false")
   case object OrderedEqual extends FComparisonCond("oeq")
   case object OrderedGreaterThan extends FComparisonCond("ogt")
@@ -39,7 +39,7 @@ object FComparisonCond {
 }
 
 private[llvmir] trait OtherInstrs extends IrInstrBuilder {
-  def icmp(resultDest : ResultDestination)(compareCond : IComparisonCond.IComparisonCond, signed : Option[Boolean], val1 : IrValue, val2 : IrValue) = {
+  def icmp(resultDest : ResultDestination)(compareCond : IComparisonCond, signed : Option[Boolean], val1 : IrValue, val2 : IrValue) = {
     if (val1.irType != val2.irType) {
       throw new InconsistentIrException("Attempted icmp with incompatible types")
     }
@@ -68,7 +68,7 @@ private[llvmir] trait OtherInstrs extends IrInstrBuilder {
     resultVar
   }
 
-  def fcmp(resultDest : ResultDestination)(compareCond : FComparisonCond.FComparisonCond, val1 : IrValue, val2 : IrValue) = {
+  def fcmp(resultDest : ResultDestination)(compareCond : FComparisonCond, val1 : IrValue, val2 : IrValue) = {
     if (val1.irType != val2.irType) {
       throw new InconsistentIrException("Attempted fcmp with incompatible types")
     }
