@@ -89,6 +89,8 @@
   (assert-equal "Hell☃!" (get-output-string output-string))))
 
 (define-test "(read-char), (peek-char), (char-ready?)" (expect-success
+  (import (llambda error))
+
   (define empty-port (open-input-string ""))
   (assert-true (char-ready? empty-port))
   (assert-true (eof-object? (peek-char empty-port)))
@@ -140,22 +142,22 @@
   (define invalid-utf8-header-port (open-input-bytevector #u8(#x31 #xff #x33)))
   (assert-equal #\1 (read-char invalid-utf8-header-port))
   (assert-true (char-ready? invalid-utf8-header-port)) ; This should return #t because (read-char) won't block
-  (assert-raises error-object? (peek-char invalid-utf8-header-port)) ; Invalid header byte
-  (assert-raises error-object? (read-char invalid-utf8-header-port))
+  (assert-raises utf8-error? (peek-char invalid-utf8-header-port)) ; Invalid header byte
+  (assert-raises utf8-error? (read-char invalid-utf8-header-port))
   (assert-equal #\3 (read-char invalid-utf8-header-port)) ; Should recover at next character
 
   (define invalid-utf8-overlong-port (open-input-bytevector #u8(#x31 #xe0 #x80 #xaf #x33)))
   (assert-equal #\1 (read-char invalid-utf8-overlong-port))
   (assert-true (char-ready? invalid-utf8-overlong-port))
-  (assert-raises error-object? (peek-char invalid-utf8-overlong-port)) ; Overlong encoding
-  (assert-raises error-object? (read-char invalid-utf8-overlong-port))
+  (assert-raises utf8-error? (peek-char invalid-utf8-overlong-port)) ; Overlong encoding
+  (assert-raises utf8-error? (read-char invalid-utf8-overlong-port))
   (assert-equal #\3 (read-char invalid-utf8-overlong-port)) ; Should recover at next character
 
   (define invalid-utf8-no-continue-port (open-input-bytevector #u8(#x31 #xe2 #x98 #x33)))
   (assert-equal #\1 (read-char invalid-utf8-no-continue-port))
   (assert-true (char-ready? invalid-utf8-no-continue-port))
-  (assert-raises error-object? (peek-char invalid-utf8-no-continue-port)) ; No continuation byte
-  (assert-raises error-object? (read-char invalid-utf8-no-continue-port))
+  (assert-raises utf8-error? (peek-char invalid-utf8-no-continue-port)) ; No continuation byte
+  (assert-raises utf8-error? (read-char invalid-utf8-no-continue-port))
   (assert-equal #\3 (read-char invalid-utf8-no-continue-port)))) ; Should recover at next character
 
 (define-test "(char-ready?) returns false for stdin" (expect-success
@@ -180,6 +182,8 @@
   (write-char #\x110000 (open-output-string))))
 
 (define-test "(read-line)" (expect-success
+  (import (llambda error))
+
   (define test-bytevector (bytevector-append
                             (string->utf8 "ASCII line 1!\n")   ; Pure ASCII
                             (string->utf8 "Unicode line 2‼\n") ; Unicode double exclamation mark
@@ -193,7 +197,7 @@
   (assert-equal "Unicode line 2‼" (read-line input-bytevector))
   (assert-equal "" (read-line input-bytevector))
 
-  (assert-raises error-object? (parameterize ((current-input-port input-bytevector))
+  (assert-raises utf8-error? (parameterize ((current-input-port input-bytevector))
                                              (read-line)))
 
   (assert-equal "Final line 3!!!" (read-line input-bytevector))
@@ -215,6 +219,8 @@
   (assert-true (eof-object? (read-bytevector 0 input-bytevector)))))
 
 (define-test "(read-string)" (expect-success
+  (import (llambda error))
+
   (define valid-utf8-port (open-input-string "Hell☃!"))
   (assert-equal "" (read-string 0 valid-utf8-port))
   (assert-equal "Hell" (read-string 4 valid-utf8-port))
@@ -241,16 +247,16 @@
   (assert-true (eof-object? (read-string 2 boundary-condition-port)))
 
   (define invalid-utf8-header-port (open-input-bytevector #u8(#x31 #x32 #xff #x33 #x34 #x35)))
-  (assert-raises error-object? (read-string 10 invalid-utf8-header-port))
+  (assert-raises utf8-error? (read-string 10 invalid-utf8-header-port))
   ; This should continue properly after the error
   (assert-equal "345" (read-string 10 invalid-utf8-header-port))
   (assert-true (eof-object? (read-string 1 invalid-utf8-header-port)))
 
   (define overlong-encoding-port (open-input-bytevector #u8(#xf0 #x80 #x80 #xaf #xe2 #x98 #x83 #xe0 #x80 #xaf)))
   ; This also mixes (read-char) and (read-string)
-  (assert-raises error-object? (read-string 10 overlong-encoding-port))
+  (assert-raises utf8-error? (read-string 10 overlong-encoding-port))
   (assert-equal #\☃ (read-char overlong-encoding-port))
-  (assert-raises error-object? (read-string 10 overlong-encoding-port))
+  (assert-raises utf8-error? (read-string 10 overlong-encoding-port))
   (assert-true (eof-object? (read-string 1 overlong-encoding-port)))
 
   (define truncated-utf8-port (open-input-bytevector #u8(#x31 #x32 #xe2 #x98)))
@@ -259,7 +265,7 @@
   (assert-true (eof-object? (read-u8 truncated-utf8-port)))
 
   (define missing-continuation-byte-port (open-input-bytevector #u8(#x31 #x32 #xe2 #x98 #x33 #x34)))
-  (assert-raises error-object? (read-string 10 missing-continuation-byte-port))
+  (assert-raises utf8-error? (read-string 10 missing-continuation-byte-port))
   (assert-equal "34" (read-string 10 missing-continuation-byte-port))
   (assert-true (eof-object? (read-string 0 missing-continuation-byte-port)))))
 

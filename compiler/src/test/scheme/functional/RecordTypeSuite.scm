@@ -143,6 +143,7 @@
 
 (define-test "record type inheritance" (expect-success
   (import (llambda typed))
+  (import (llambda error))
 
   (define-record-type <named-number> (named-number name) named-number?
                       ([name : <string>] named-number-name set-named-number-name!))
@@ -185,7 +186,7 @@
     (syntax-rules ()
                   ((assert-lacks-field accessor value)
                    (begin
-                     (assert-raises error-object? (accessor (typeless-cell value)))))))
+                     (assert-raises type-error? (accessor (typeless-cell value)))))))
 
   (assert-has-type named-number? test-named-number)
   (assert-has-type named-number? test-named-int)
@@ -247,7 +248,7 @@
   (assert-equal 4 (dcar (dcdr (dcdr (dcdr dodgy-list)))))
   (assert-equal '() (dcdr (dcdr (dcdr (dcdr dodgy-list)))))
 
-  (assert-raises error-object?
+  (assert-raises type-error?
     (set-dcdr! dodgy-list (typeless-cell #f)))
 
   (set-dcdr! dodgy-list '())

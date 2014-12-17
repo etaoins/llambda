@@ -1,5 +1,6 @@
 (define-test "(read)" (expect-success
   (import (scheme read))
+  (import (llambda error))
 
   (define (open-input-port source)
     (if (string? source)
@@ -45,7 +46,7 @@
   (assert-parses "Hello☃world!" "\"Hello☃world!\"")
 
   ; Invalid UTF-8
-  (assert-parse-raises error-object? #u8(#x22 #xfe #x22))
+  (assert-parse-raises utf8-error? #u8(#x22 #xfe #x22))
 
   (assert-parses '(foo bar baz) "(foo bar baz)")
   (assert-parses '(foo [foobar foobaz 12]) "(foo [foobar foobaz 12])")
@@ -76,7 +77,7 @@
   (assert-parse-raises read-error? "#\\SPACE")
 
   ; Invalid UTF-8
-  (assert-parse-raises error-object? #u8(#x23 #x5c #xfe))
+  (assert-parse-raises utf8-error? #u8(#x23 #x5c #xfe))
 
   (assert-parses #!unit "#!unit")
   (assert-parse-raises read-error? "#!notathing")
