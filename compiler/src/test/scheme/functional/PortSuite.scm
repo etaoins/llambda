@@ -25,10 +25,10 @@
   (assert-false (input-port-open? (current-error-port)))
   (assert-true  (output-port-open? (current-error-port)))))
 
-(define-test "(input-port-open?) on non-port fails" (expect-compile-failure
+(define-test "(input-port-open?) on non-port fails" (expect-compile-error type-error?
   (input-port-open? #f)))
 
-(define-test "(output-port-open?) on non-port fails" (expect-compile-failure
+(define-test "(output-port-open?) on non-port fails" (expect-compile-error type-error?
   (output-port-open? #f)))
 
 (define-test "(close-input-port)" (expect-success

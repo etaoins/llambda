@@ -1,10 +1,10 @@
 (define-test "(call/cc) escape procedure is a procedure" (expect #t
 	(call/cc procedure?)))
 
-(define-test "(call/cc) with non-procedure fails at compile time" (expect-compile-failure
+(define-test "(call/cc) with non-procedure fails at compile time" (expect-compile-error type-error?
 	(call/cc 4)))
 
-(define-test "(call/cc) with procedure of incorrect arity fails at compile time" (expect-compile-failure
+(define-test "(call/cc) with procedure of incorrect arity fails at compile time" (expect-compile-error type-error?
 	(call/cc cons)))
 
 (define-test "captured (call/cc) escape procedure is a procedure" (expect #t
@@ -85,7 +85,7 @@
 (define-test "(call-with-values) with single value" (expect -1
   (call-with-values * -)))
 
-(define-test "(call-with-values) with wrong producer arity fails at compile time" (expect-compile-failure
+(define-test "(call-with-values) with wrong producer arity fails at compile time" (expect-compile-error arity-error?
   (call-with-values (lambda (extra-arg)) -)))
 
 (define-test "(call-with-values) with multiple values" (expect 5

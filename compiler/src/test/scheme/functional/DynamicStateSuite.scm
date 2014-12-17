@@ -92,19 +92,19 @@
 
 	(cons returnValue testValue)))
 
-(define-test "dynamic-wind with incorrect before proc arity fails at compile time" (expect-compile-failure
+(define-test "dynamic-wind with incorrect before proc arity fails at compile time" (expect-compile-error type-error?
   (dynamic-wind
 		(lambda (too))
 		(lambda ())
 		(lambda ()))))
 
-(define-test "dynamic-wind with incorrect thunk proc arity fails at compile time" (expect-compile-failure
+(define-test "dynamic-wind with incorrect thunk proc arity fails at compile time" (expect-compile-error type-error?
   (dynamic-wind
 		(lambda ())
 		(lambda (many))
 		(lambda ()))))
 
-(define-test "dynamic-wind with incorrect after proc arity fails at compile time" (expect-compile-failure
+(define-test "dynamic-wind with incorrect after proc arity fails at compile time" (expect-compile-error type-error?
   (dynamic-wind
 		(lambda ())
 		(lambda ())

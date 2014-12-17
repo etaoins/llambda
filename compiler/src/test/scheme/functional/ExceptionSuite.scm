@@ -40,7 +40,7 @@
 		 (raise 'raised-data)))
 ))
 
-(define-test "exception handler with incorrect thunk arity fails at compile time" (expect-compile-failure
+(define-test "exception handler with incorrect thunk arity fails at compile time" (expect-compile-error type-error?
 	(import (scheme process-context))
 	(with-exception-handler 
 	  (lambda (obj)
@@ -50,7 +50,7 @@
 		 (raise 'raised-data)))
 ))
 
-(define-test "exception handler with incorrect handler arity fails at compile time" (expect-compile-failure
+(define-test "exception handler with incorrect handler arity fails at compile time" (expect-compile-error type-error?
 	(import (scheme process-context))
 	(with-exception-handler 
 	  (lambda ()

@@ -228,7 +228,7 @@
 
   (ann (left-or-right dynamic-true exact-1 inexact-1) <number>)))
 
-(define-test "polymorphic Scheme procedure violating return type variable fails" (expect-compile-failure
+(define-test "polymorphic Scheme procedure violating return type variable fails" (expect-compile-error type-error?
   (import (llambda typed))
 
   (: left-or-right (All (A) <boolean> A A A))
@@ -240,7 +240,7 @@
 
   (left-or-right dynamic-true exact-1 inexact-1)))
 
-(define-test "violating Scheme procedure's type bounds fails" (expect-compile-failure
+(define-test "violating Scheme procedure's type bounds fails" (expect-compile-error type-error?
   (import (llambda typed))
 
   (: left-or-right (All ([A : <number>]) <boolean> A A A))
@@ -297,7 +297,7 @@
 
                   (return-self 5)))))
 
-(define-test "polymorphic procedure taking parameterized procedure of wrong type fails at compile time" (expect-compile-failure
+(define-test "polymorphic procedure taking parameterized procedure of wrong type fails at compile time" (expect-compile-error type-error?
   (import (llambda typed))
 
   (: apply-single (All (A B) (-> A B) A B))

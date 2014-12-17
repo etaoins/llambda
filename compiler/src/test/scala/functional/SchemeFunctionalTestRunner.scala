@@ -161,11 +161,6 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
             // Semantic exceptions are allowed
         }
 
-      case ast.ProperList(ast.Symbol("expect-compile-failure") :: program) if !program.isEmpty =>
-        intercept[SemanticException] {
-          executeProgram(program, schemeDialect, optimizeLevel)
-        }
-
       case ast.ProperList(ast.Symbol("expect-error") :: ast.Symbol(errorPredicate) :: program) if !program.isEmpty =>
         try {
           val wrappedProgram = wrapForAssertRaises(errorPredicate, program)
@@ -179,6 +174,15 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
               fail(result.errorString)
             }
           }
+        }
+        catch {
+          case expectedError : SemanticException
+            if expectedError.errorCategory == ErrorCategory.fromPredicate(errorPredicate) =>
+        }
+
+      case ast.ProperList(ast.Symbol("expect-compile-error") :: ast.Symbol(errorPredicate) :: program) if !program.isEmpty =>
+        try {
+          executeProgram(program, schemeDialect, optimizeLevel)
         }
         catch {
           case expectedError : SemanticException

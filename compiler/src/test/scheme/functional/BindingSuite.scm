@@ -284,16 +284,16 @@
 
                                (* root rem)))))
 
-(define-test "(let-values) with mismatched value count fails" (expect-compile-failure
+(define-test "(let-values) with mismatched value count fails" (expect-compile-error arity-error?
   (assert-equal 100 (let-values (((product extra) (* 5 20)))
                                 product))))
 
-(define-test "typed (let-values) with mismatched value count fails" (expect-compile-failure
+(define-test "typed (let-values) with mismatched value count fails" (expect-compile-error arity-error?
   (import (llambda typed))
   (assert-equal 100 (let-values ((([product : <exact-integer>]) (exact-integer-sqrt 32)))
                                  product))))
 
-(define-test "typed (let-values) with mismatched type fails" (expect-compile-failure
+(define-test "typed (let-values) with mismatched type fails" (expect-compile-error type-error?
   (import (llambda typed))
   (assert-equal 35 (let-values ((([root : <exact-integer>] [rem : <flonum>]) (exact-integer-sqrt 32)))
                                (* root rem)))))
@@ -311,20 +311,20 @@
                   (([x : <symbol>] [y : <symbol>]) (values a b)))
                  (list a b x y)))))
 
-(define-test "(let*-values) with mismatched value count fails" (expect-compile-failure
+(define-test "(let*-values) with mismatched value count fails" (expect-compile-error arity-error?
   (let ((a 'a) (b 'b) (x 'x) (y 'y))
     (let*-values (((a) (values x y))
                   ((x y) (values a b)))
                  (list a b x y)))))
 
-(define-test "(let*-values:) with mismatched value count fails" (expect-compile-failure
+(define-test "(let*-values:) with mismatched value count fails" (expect-compile-error arity-error?
   (import (llambda typed))
   (let ((a 'a) (b 'b) (x 'x) (y 'y))
     (let*-values ((([a : <symbol>] [b : <symbol>] [extra : <symbol>]) (values x y))
                    (([x : <symbol>] [y : <symbol>]) (values a b)))
                   (list a b x y)))))
 
-(define-test "(let*-values) with mismatched type fails" (expect-compile-failure
+(define-test "(let*-values) with mismatched type fails" (expect-compile-error type-error?
   (import (llambda typed))
   (let ((a 'a) (b 'b) (x 'x) (y 'y))
     (let*-values ((([a : <symbol>] [b : <string>]) (values x y))
@@ -389,19 +389,19 @@
                   (set! y 4)
                   (+ x y)))))
 
-(define-test "(define-values) with static mismatched fixed type fails" (expect-compile-failure
+(define-test "(define-values) with static mismatched fixed type fails" (expect-compile-error type-error?
   (import (llambda typed))
   (define-values ([x : <symbol>] [y : <exact-integer>]) (exact-integer-sqrt 17))))
 
-(define-test "(define-values) with static mismatched rest type fails" (expect-compile-failure
+(define-test "(define-values) with static mismatched rest type fails" (expect-compile-error type-error?
   (import (llambda typed))
   (define-values ([x : <any>] [y : <any>] r : <string> *) (values 1 2 #t))))
 
-(define-test "(define-values) with static insufficient values" (expect-compile-failure
+(define-test "(define-values) with static insufficient values" (expect-compile-error arity-error?
   (import (llambda typed))
   (define-values ([x : <exact-integer>] [y : <exact-integer>] [x : <exact-integer>]) (exact-integer-sqrt 17))))
 
-(define-test "(define-values) with static too many values" (expect-compile-failure
+(define-test "(define-values) with static too many values" (expect-compile-error arity-error?
   (import (llambda typed))
   (define-values ([x : <exact-integer>]) (exact-integer-sqrt 17))))
 

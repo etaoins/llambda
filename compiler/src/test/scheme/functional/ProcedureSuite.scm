@@ -99,7 +99,7 @@
 (define-test "applying datum cells with insufficient arguments fails" (expect-error arity-error?
 	((typeless-cell exact?))))
 
-(define-test "phied number procedure cannot be applied with non-number arguments" (expect-compile-failure
+(define-test "phied number procedure cannot be applied with non-number arguments" (expect-compile-error type-error?
   ; + and - have different signatures
   ; However, we should determine that this is impossible because their phied type should be (-> <number> * <number>)
   (define math-proc (if dynamic-true + -))
@@ -306,7 +306,7 @@
 
   (apply-number-proc * -25 -2)))
 
-(define-test "procedure taking typed procedure argument of wrong type fails" (expect-compile-failure
+(define-test "procedure taking typed procedure argument of wrong type fails" (expect-compile-error type-error?
   (import (llambda typed))
   (: apply-number-proc (-> (-> <number> <number> <number>) <exact-integer> <exact-integer> <number>))
   (define (apply-number-proc binary-op val1 val2)

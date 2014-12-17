@@ -19,10 +19,10 @@
   ; Heap symbols
 	(assert-true (symbol=? 'very-long-test-symbol 'very-long-test-symbol 'very-long-test-symbol))))
 
-(define-test "(symbol=?) with one arg fails" (expect-compile-failure
+(define-test "(symbol=?) with one arg fails" (expect-compile-error arity-error?
 	(symbol=? 'test)))
 
-(define-test "(symbol=?) with non-symbol fails" (expect-compile-failure
+(define-test "(symbol=?) with non-symbol fails" (expect-compile-error type-error?
 	(symbol=? 'test 'test "test")))
 
 (define-test "(symbol->string)" (expect-success

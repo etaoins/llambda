@@ -179,7 +179,7 @@
   (assert-equal "" (vector->string #(#\H #\e #\l #\l #\x2603 #\!) 0 0))
   (assert-equal "" (vector->string #(#\H #\e #\l #\l #\x2603 #\!) 6 6))))
 
-(define-test "(vector->string) with constant non-char fails at compile time" (expect-compile-failure
+(define-test "(vector->string) with constant non-char fails at compile time" (expect-compile-error type-error?
   (vector->string #(#\H #\e #\l #\l 'notchar #\!))))
 
 (define-test "(vector->string) with dynamic non-char fails" (expect-error type-error?

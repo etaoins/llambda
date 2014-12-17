@@ -44,7 +44,7 @@
   (assert-equal 6 (case-cell 1 2 3))
   (assert-equal '(1 2 3 4) (case-cell 1 2 3 4))))
 
-(define-test "(case-lambda) with wrong arity fails at compile time" (expect-compile-failure
+(define-test "(case-lambda) with wrong arity fails at compile time" (expect-compile-error arity-error?
   (import (scheme case-lambda))
 
   (define fixed-lambda
@@ -53,7 +53,7 @@
       ((first second) 'second)))
   (fixed-lambda 0 1 2)))
 
-(define-test "(case-lambda) with type fails at compile time" (expect-compile-failure
+(define-test "(case-lambda) with type fails at compile time" (expect-compile-error type-error?
   (import (scheme case-lambda))
   (import (llambda typed))
 
@@ -74,7 +74,7 @@
 
   (ann fixed-lambda (case-> (-> <exact-integer> *) (-> <exact-integer> <symbol> *)))))
 
-(define-test "(case-lambda) cannot be annotated with incompatible case-> type" (expect-compile-failure
+(define-test "(case-lambda) cannot be annotated with incompatible case-> type" (expect-compile-error type-error?
   (import (scheme case-lambda))
   (import (llambda typed))
 

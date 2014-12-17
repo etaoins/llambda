@@ -20,7 +20,7 @@
 (define-test "applying procedure with terminal non-list fails" (expect-failure
 	(apply - 2)))
 
-(define-test "consecutively applying with incompatible arg types fails at compile time" (expect-compile-failure
+(define-test "consecutively applying with incompatible arg types fails at compile time" (expect-compile-error type-error?
   (import (llambda typed))
   (define typeless-vector (typeless-cell #(1 2 3)))
   (define typeless-1 (typeless-cell 1))
@@ -47,7 +47,7 @@
 (define-test "nested apply" (expect 3
 	(apply apply (list + '(1 2)))))
 
-(define-test "applying a typed procedure value with incompatible fixed arg types fails at compile time" (expect-compile-failure
+(define-test "applying a typed procedure value with incompatible fixed arg types fails at compile time" (expect-compile-error type-error?
   (import (llambda typed))
 
   (: apply-binary-op (-> (-> <number> <number> <number>) <number> <symbol> <number>))
@@ -56,7 +56,7 @@
 
   (apply-binary-op + 1 'foo)))
 
-(define-test "applying a typed procedure value with incompatible rest arg types fails at compile time" (expect-compile-failure
+(define-test "applying a typed procedure value with incompatible rest arg types fails at compile time" (expect-compile-error type-error?
   (import (llambda typed))
 
   (: apply-numbers-proc (-> (-> <number> * <number>) <number> <symbol> <number>))
