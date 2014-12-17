@@ -1,7 +1,7 @@
 (define-test "non-empty bytevector is a bytevector" (expect #t
 	(bytevector? #u8(1 2 3))))
 
-(define-test "empty bytevector is  bytevector" (expect #t
+(define-test "empty bytevector is a bytevector" (expect #t
 	(bytevector? #u8())))
 
 (define-test "exact integer is not a bytevector" (expect #f
