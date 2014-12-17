@@ -48,7 +48,6 @@ namespace
 			}
 
 			utf8ExceptionToSchemeError(world, procName, utf8::InvalidHeaderByteException(0, 0));
-			signalError(world, "Invalid UTF-8 header byte in (read-char)");
 		}
 
 		char charBuffer[utf8::LongestByteSequence];
