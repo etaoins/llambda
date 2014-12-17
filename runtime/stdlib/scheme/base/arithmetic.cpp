@@ -310,7 +310,7 @@ ReturnValues<ExactIntegerCell>* llbase_truncate_div(World &world, std::int64_t n
 {
 	if (denominator == 0)
 	{
-		signalError(world, "Attempted (truncate/) by zero");
+		signalError(world, ErrorCategory::DivideByZero, "Attempted (truncate/) by zero");
 	}
 
 	auto quotient = numerator / denominator;
@@ -323,7 +323,7 @@ std::int64_t llbase_truncate_quotient(World &world, std::int64_t numerator, std:
 {
 	if (denominator == 0)
 	{
-		signalError(world, "Attempted (truncate-quotient) by zero");
+		signalError(world, ErrorCategory::DivideByZero, "Attempted (truncate-quotient) by zero");
 	}
 
 	return numerator / denominator;
@@ -333,7 +333,7 @@ std::int64_t llbase_truncate_remainder(World &world, std::int64_t numerator, std
 {
 	if (denominator == 0)
 	{
-		signalError(world, "Attempted (truncate-remainder) by zero");
+		signalError(world, ErrorCategory::DivideByZero, "Attempted (truncate-remainder) by zero");
 	}
 
 	return numerator % denominator;
@@ -343,7 +343,7 @@ ReturnValues<ExactIntegerCell>* llbase_floor_div(World &world, std::int64_t nume
 {
 	if (denominator == 0)
 	{
-		signalError(world, "Attempted (floor/) by zero");
+		signalError(world, ErrorCategory::DivideByZero, "Attempted (floor/) by zero");
 	}
 
 	auto floorResult = floorDivision(numerator, denominator);
@@ -354,7 +354,7 @@ std::int64_t llbase_floor_quotient(World &world, std::int64_t numerator, std::in
 {
 	if (denominator == 0)
 	{
-		signalError(world, "Attempted (floor-quotient) by zero");
+		signalError(world, ErrorCategory::DivideByZero, "Attempted (floor-quotient) by zero");
 	}
 
 	return floorDivision(numerator, denominator).quotient;
@@ -364,7 +364,7 @@ std::int64_t llbase_floor_remainder(World &world, std::int64_t numerator, std::i
 {
 	if (denominator == 0)
 	{
-		signalError(world, "Attempted (floor-remainder) by zero");
+		signalError(world, ErrorCategory::DivideByZero, "Attempted (floor-remainder) by zero");
 	}
 
 	return floorDivision(numerator, denominator).remainder;
@@ -412,7 +412,7 @@ ReturnValues<ExactIntegerCell>* llbase_exact_integer_sqrt(World &world, std::int
 {
 	if (val < 0)
 	{
-		signalError(world, "Attempted (exact-integer-sqrt) with negative value");
+		signalError(world, ErrorCategory::Range, "Attempted (exact-integer-sqrt) with negative value");
 	}
 
 	// This depends on the integral sqrt in C++11
@@ -441,7 +441,7 @@ NumberCell* llbase_rationalize(World &world, NumberCell *valCell, double maxDiff
 	}
 	else if (maxDiff < 0.0)
 	{
-		signalError(world, "Attempted (rationalize) with negative maximum difference");
+		signalError(world, ErrorCategory::Range, "Attempted (rationalize) with negative maximum difference");
 	}
 
 	if (ExactIntegerCell::isInstance(valCell))

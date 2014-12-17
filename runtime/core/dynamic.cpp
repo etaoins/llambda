@@ -26,7 +26,7 @@ void llcore_dynamicenv_set_value(World &world, ProcedureCell *procCell, AnyCell 
 
 	if (paramCell == nullptr)
 	{
-		signalError(world, "Attempted to parameterize non-parameter", {procCell});
+		signalError(world, ErrorCategory::Default, "Attempted to parameterize non-parameter", {procCell});
 	}
 
 	dynamic::State::activeState(world)->setValueForParameter(world, paramCell, value);

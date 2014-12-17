@@ -142,7 +142,7 @@ namespace
 			UnicodeChar result(mapFunc(firstCharVector[i], restArgList));
 			if (!result.isValid())
 			{
-				signalError(world, "(string-map) mapping procedure returned invalid character");
+				signalError(world, ErrorCategory::Default, "(string-map) mapping procedure returned invalid character");
 			}
 			builder << result;
 		}

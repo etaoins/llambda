@@ -204,7 +204,7 @@ AnyCell *llbase_mutating_read_bytevector(World &world, BytevectorCell *bytevecto
 {
 	if (bytevector->isGlobalConstant())
 	{
-		signalError(world, "(bytevector-read!) on bytevector literal", {bytevector});
+		signalError(world, ErrorCategory::MutateLiteral, "(bytevector-read!) on bytevector literal", {bytevector});
 	}
 
 	assertSliceValid(world, "(read-bytevector!)", bytevector, bytevector->length(), start, end);

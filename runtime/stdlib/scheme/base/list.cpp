@@ -78,7 +78,7 @@ void llbase_set_car(World &world, PairCell *pair, AnyCell *obj)
 {
 	if (pair->isGlobalConstant())
 	{
-		signalError(world, "(set-car!) on pair literal", {pair});	
+		signalError(world, ErrorCategory::MutateLiteral, "(set-car!) on pair literal", {pair});
 	}
 
 	return pair->setCar(obj);
@@ -88,7 +88,7 @@ void llbase_set_cdr(World &world, PairCell *pair, AnyCell *obj)
 {
 	if (pair->isGlobalConstant())
 	{
-		signalError(world, "(set-cdr!) on pair literal", {pair});	
+		signalError(world, ErrorCategory::MutateLiteral, "(set-cdr!) on pair literal", {pair});
 	}
 
 	return pair->setCdr(obj);
@@ -184,7 +184,7 @@ AnyCell* llbase_append(World &world, RestValues<AnyCell> *argList)
 
 		if (properList == nullptr)
 		{
-			signalError(world, "Non-list passed to (append) in non-terminal position", {argDatum});
+			signalError(world, ErrorCategory::Type, "Non-list passed to (append) in non-terminal position", {argDatum});
 		}
 
 		appendedElements.insert(appendedElements.end(), properList->begin(), properList->end());
@@ -240,7 +240,7 @@ ListElementCell* llbase_list_tail(World &world, ProperList<AnyCell> *initialHead
 
 		if (pairHead == nullptr)
 		{
-			signalError(world, "(list-tail) on list of insufficient length");
+			signalError(world, ErrorCategory::Range, "(list-tail) on list of insufficient length");
 		}
 
 		// Advance to the next list element

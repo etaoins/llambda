@@ -25,7 +25,7 @@ namespace
 
 		if (!argList->empty())
 		{
-			signalError(world, "Parameter procedures don't accept arguments", {argList});
+			signalError(world, ErrorCategory::Arity, "Parameter procedures don't accept arguments", {argList});
 		}
 
 		// We know we're a parameter procedure because only parameter procedures have us as an entry point
@@ -36,7 +36,7 @@ namespace
 		return ReturnValues<AnyCell>::create(world, {paramValue});
 	}
 }
-	
+
 ParameterProcedureCell* ParameterProcedureCell::createInstance(World &world, AnyCell *initialValueRaw, ConverterProcedureCell *converterProcedureRaw)
 {
 	// Root these across the allocation of the actual procedure cell

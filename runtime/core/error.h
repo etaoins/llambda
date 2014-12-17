@@ -11,7 +11,7 @@ namespace lliby
 class World;
 
 [[noreturn]]
-void signalError(World &world, const char *message, const std::vector<AnyCell*> &irritants = std::vector<AnyCell*>(), ErrorCategory category = ErrorCategory::Default);
+void signalError(World &world, ErrorCategory category, const char *message, const std::vector<AnyCell*> &irritants = std::vector<AnyCell*>());
 
 [[noreturn]]
 void fatalError(const char *message, const lliby::AnyCell *evidence = nullptr);
@@ -27,7 +27,7 @@ T* cell_checked_cast(World &world, AnyCell *cellValue, const char *message)
 
 	if (result == nullptr)
 	{
-		signalError(world, message, {cellValue});
+		signalError(world, ErrorCategory::Type, message, {cellValue});
 	}
 
 	return result;
@@ -40,7 +40,7 @@ const T* cell_checked_cast(World &world, const AnyCell *cellValue, const char *m
 
 	if (result == nullptr)
 	{
-		signalError(world, message, {const_cast<AnyCell*>(cellValue)});
+		signalError(world, ErrorCategory::Type, message, {const_cast<AnyCell*>(cellValue)});
 	}
 
 	return result;

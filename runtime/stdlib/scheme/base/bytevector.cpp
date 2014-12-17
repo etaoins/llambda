@@ -31,7 +31,7 @@ std::uint8_t llbase_bytevector_u8_ref(World &world, BytevectorCell *bytevector, 
 
 	if (byte == BytevectorCell::InvalidByte)
 	{
-		signalError(world, "Bytevector index out of bounds", {bytevector});	
+		signalError(world, ErrorCategory::Range, "Bytevector index out of bounds", {bytevector});
 	}
 
 	return byte;
@@ -41,12 +41,12 @@ void llbase_bytevector_u8_set(World &world, BytevectorCell *bytevector, std::uin
 {
 	if (bytevector->isGlobalConstant())
 	{
-		signalError(world, "(bytevector-set!) on bytevector literal", {bytevector});	
+		signalError(world, ErrorCategory::MutateLiteral, "(bytevector-set!) on bytevector literal", {bytevector});
 	}
 
 	if (!bytevector->setByteAt(index, value))
 	{
-		signalError(world, "Bytevector index out of bounds", {bytevector});	
+		signalError(world, ErrorCategory::Range, "Bytevector index out of bounds", {bytevector});
 	}
 }
 
@@ -104,7 +104,7 @@ void llbase_bytevector_mutating_copy(World &world, BytevectorCell *to, std::uint
 {
 	if (to->isGlobalConstant())
 	{
-		signalError(world, "(bytevector-copy!) on bytevector literal", {to});
+		signalError(world, ErrorCategory::MutateLiteral, "(bytevector-copy!) on bytevector literal", {to});
 	}
 
 	assertSliceValid(world, "(bytevector-copy!)", from, from->length(), start, end);

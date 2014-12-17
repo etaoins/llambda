@@ -37,7 +37,7 @@ void llbase_write_char(World &world, UnicodeChar character, PortCell *portCell)
 {
 	if (!character.isValid())
 	{
-		signalError(world, "(write-char) with invalid character");
+		signalError(world, ErrorCategory::Default, "(write-char) with invalid character");
 	}
 
 	utf8::EncodedChar utf8Bytes(utf8::encodeChar(character));

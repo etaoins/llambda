@@ -27,7 +27,7 @@ void assertSliceValid(World &world, const char *procName, AnyCell *obj, T objLen
 		std::ostringstream message;
 		message << "Slice end index of " << end << " is past length of " << objLength << " in " << procName;
 
-		signalError(world, message.str().c_str(), {obj});
+		signalError(world, ErrorCategory::Range, message.str().c_str(), {obj});
 	}
 
 	if (start > end)
@@ -35,7 +35,7 @@ void assertSliceValid(World &world, const char *procName, AnyCell *obj, T objLen
 		std::ostringstream message;
 		message << "Slice start index of " << start << " is greater than end index of " << end << " in " << procName;
 
-		signalError(world, message.str().c_str(), {obj});
+		signalError(world, ErrorCategory::Range, message.str().c_str(), {obj});
 	}
 }
 

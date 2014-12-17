@@ -28,7 +28,7 @@ PortCell* llfile_open_input_file(World &world, StringCell *filePath)
 	if (!inputPort->inputStream()->good())
 	{
 		delete inputPort;
-		signalError(world, "Unable to open path for reading", {filePath}, ErrorCategory::File);
+		signalError(world, ErrorCategory::File, "Unable to open path for reading", {filePath});
 	}
 
 	return PortCell::createInstance(world, inputPort);
@@ -41,7 +41,7 @@ PortCell* llfile_open_output_file(World &world, StringCell *filePath)
 	if (!outputPort->outputStream()->good())
 	{
 		delete outputPort;
-		signalError(world, "Unable to open path for write", {filePath}, ErrorCategory::File);
+		signalError(world, ErrorCategory::File, "Unable to open path for write", {filePath});
 	}
 
 	return PortCell::createInstance(world, outputPort);
@@ -51,7 +51,7 @@ void llfile_delete_file(World &world, StringCell *filePath)
 {
 	if (unlink(filePath->toUtf8StdString().c_str()) != 0)
 	{
-		signalError(world, "Unable to delete path", {filePath}, ErrorCategory::File);
+		signalError(world, ErrorCategory::File, "Unable to delete path", {filePath});
 	}
 }
 

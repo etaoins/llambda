@@ -146,7 +146,7 @@ std::int64_t llbase_exact(World &world, NumberCell *numeric)
 
 	if (!flonum->isInteger())
 	{
-		signalError(world, "Attempted to convert non-integral inexact rational to exact value", {numeric});
+		signalError(world, ErrorCategory::Default, "Attempted to convert non-integral inexact rational to exact value", {numeric});
 	}
 
 	return static_cast<std::int64_t>(flonum->value());

@@ -46,7 +46,7 @@ ReturnValues<AnyCell> *llbase_apply(World &world, TopProcedureCell *procedure, R
 
 		if (!finalListHead)
 		{
-			signalError(world, "Final argument to (apply) must be a proper list", {*applyArgIt});
+			signalError(world, ErrorCategory::Type, "Final argument to (apply) must be a proper list", {*applyArgIt});
 		}
 
 		// Root the procedure cell before allocating the argument list

@@ -15,11 +15,11 @@ void utf8ExceptionToSchemeError(World &world, const char *procName, const utf8::
 
 	if (obj != nullptr)
 	{
-		signalError(world, message.str().c_str(), {obj});
+		signalError(world, ErrorCategory::Utf8, message.str().c_str(), {obj});
 	}
 	else
 	{
-		signalError(world, message.str().c_str());
+		signalError(world, ErrorCategory::Utf8, message.str().c_str());
 	}
 }
 

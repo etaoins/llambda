@@ -62,7 +62,7 @@ void llbase_close_input_port(World &world, PortCell *portCell)
 
 	if (!port->isInputPort())
 	{
-		signalError(world, "Attempted (close-input-port) on non-input port", {portCell});
+		signalError(world, ErrorCategory::Default, "Attempted (close-input-port) on non-input port", {portCell});
 	}
 
 	port->closeInputPort();
@@ -74,7 +74,7 @@ void llbase_close_output_port(World &world, PortCell *portCell)
 
 	if (!port->isOutputPort())
 	{
-		signalError(world, "Attempted (close-output-port) on non-output port", {portCell});
+		signalError(world, ErrorCategory::Default, "Attempted (close-output-port) on non-output port", {portCell});
 	}
 
 	port->closeOutputPort();
@@ -91,7 +91,7 @@ StringCell* llbase_get_output_string(World &world, PortCell *portCell)
 
 	if (stringOutputPort == nullptr)
 	{
-		signalError(world, "Attempted (get-output-string) on non-output string port", {portCell});
+		signalError(world, ErrorCategory::Default, "Attempted (get-output-string) on non-output string port", {portCell});
 	}
 
 	return stringOutputPort->outputToStringCell(world);
@@ -108,7 +108,7 @@ BytevectorCell* llbase_get_output_bytevector(World &world, PortCell *portCell)
 
 	if (bytevectorOutputPort == nullptr)
 	{
-		signalError(world, "Attempted (get-output-bytevector) on non-output bytevector port", {portCell});
+		signalError(world, ErrorCategory::Default, "Attempted (get-output-bytevector) on non-output bytevector port", {portCell});
 	}
 
 	return bytevectorOutputPort->outputToBytevectorCell(world);

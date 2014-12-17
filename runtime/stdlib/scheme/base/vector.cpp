@@ -33,7 +33,7 @@ AnyCell* llbase_vector_ref(World &world, VectorCell *vector, std::uint32_t index
 
 	if (element == nullptr)
 	{
-		signalError(world, "Vector index out of bounds", {vector});	
+		signalError(world, ErrorCategory::Range, "Vector index out of bounds", {vector});
 	}
 
 	return element;
@@ -43,12 +43,12 @@ void llbase_vector_set(World &world, VectorCell *vector, std::uint32_t index, An
 {
 	if (vector->isGlobalConstant())
 	{
-		signalError(world, "(vector-set!) on vector literal", {vector});	
+		signalError(world, ErrorCategory::MutateLiteral, "(vector-set!) on vector literal", {vector});
 	}
-	
+
 	if (!vector->setElementAt(index, obj))
 	{
-		signalError(world, "Vector index out of bounds", {vector});	
+		signalError(world, ErrorCategory::Range, "Vector index out of bounds", {vector});
 	}
 }
 
@@ -94,7 +94,7 @@ void llbase_vector_mutating_copy(World &world, VectorCell *to, std::uint32_t at,
 {
 	if (to->isGlobalConstant())
 	{
-		signalError(world, "(vector-copy!) on vector literal", {to});
+		signalError(world, ErrorCategory::MutateLiteral, "(vector-copy!) on vector literal", {to});
 	}
 
 	assertSliceValid(world, "(vector-copy!)", from, from->length(), start, end);
@@ -107,7 +107,7 @@ void llbase_vector_mutating_fill(World &world, VectorCell *vector, AnyCell *fill
 {
 	if (vector->isGlobalConstant())
 	{
-		signalError(world, "(vector-fill!) on vector literal", {vector});
+		signalError(world, ErrorCategory::MutateLiteral, "(vector-fill!) on vector literal", {vector});
 	}
 
 	assertSliceValid(world, "(vector-fill!)", vector, vector->length(), start, end);

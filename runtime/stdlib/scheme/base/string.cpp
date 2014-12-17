@@ -17,7 +17,7 @@ StringCell *llbase_make_string(World &world, std::uint32_t length, UnicodeChar f
 {
 	if (!fill.isValid())
 	{
-		signalError(world, "(make-string) with invalid fill character");
+		signalError(world, ErrorCategory::Default, "(make-string) with invalid fill character");
 	}
 
 	return StringCell::fromFill(world, length, fill);
@@ -33,7 +33,7 @@ StringCell *llbase_string(World &world, RestValues<CharCell> *charProperList)
 
 		if (!character.isValid())
 		{
-			signalError(world, "(string) with invalid character", {charProperList});
+			signalError(world, ErrorCategory::Default, "(string) with invalid character", {charProperList});
 		}
 
 		builder << charCell->unicodeChar();
@@ -53,7 +53,7 @@ std::int32_t llbase_string_ref(World &world, StringCell *string, std::uint32_t i
 
 	if (!unicodeChar.isValid())
 	{
-		signalError(world, "(string-ref) past end of string", {string});
+		signalError(world, ErrorCategory::Range, "(string-ref) past end of string", {string});
 	}
 
 	return unicodeChar.codePoint();
@@ -63,17 +63,17 @@ void llbase_string_set(World &world, StringCell *string, std::uint32_t index, Un
 {
 	if (string->isGlobalConstant())
 	{
-		signalError(world, "(string-set!) on a string literal", {string});
+		signalError(world, ErrorCategory::MutateLiteral, "(string-set!) on a string literal", {string});
 	}
 
 	if (!unicodeChar.isValid())
 	{
-		signalError(world, "(string-set!) with invalid character");
+		signalError(world, ErrorCategory::Default, "(string-set!) with invalid character");
 	}
 
 	if (!string->setCharAt(index, unicodeChar))
 	{
-		signalError(world, "(string-set!) past end of string", {string});
+		signalError(world, ErrorCategory::Range, "(string-set!) past end of string", {string});
 	}
 }
 
@@ -105,7 +105,7 @@ void llbase_string_mutating_copy(World &world, StringCell *to, std::uint32_t at,
 {
 	if (to->isGlobalConstant())
 	{
-		signalError(world, "(string-copy!) on string literal", {to});
+		signalError(world, ErrorCategory::MutateLiteral, "(string-copy!) on string literal", {to});
 	}
 
 	assertSliceValid(world, "(string-copy!)", from, from->charLength(), start, end);
@@ -118,12 +118,12 @@ void llbase_string_mutating_fill(World &world, StringCell *string, UnicodeChar f
 {
 	if (string->isGlobalConstant())
 	{
-		signalError(world, "(string-fill!) on string literal", {string});
+		signalError(world, ErrorCategory::MutateLiteral, "(string-fill!) on string literal", {string});
 	}
 
 	if (!fill.isValid())
 	{
-		signalError(world, "(string-fill!) with invalid character");
+		signalError(world, ErrorCategory::Default, "(string-fill!) with invalid character");
 	}
 
 	assertSliceValid(world, "(string-fill!)", string, string->charLength(), start, end);

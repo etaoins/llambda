@@ -38,7 +38,7 @@ SymbolCell *llbase_string_to_symbol(World &world, StringCell *string)
 
 	if (symbol == nullptr)
 	{
-		signalError(world, "(string->symbol) with string exceeding 64KiB");
+		signalError(world, ErrorCategory::Range, "(string->symbol) with string exceeding 64KiB");
 	}
 
 	return symbol;

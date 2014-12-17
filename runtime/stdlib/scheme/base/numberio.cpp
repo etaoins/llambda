@@ -22,7 +22,7 @@ StringCell* llbase_number_to_string(World &world, NumberCell *numberCell, std::u
 {
 	if ((radix != 2) && (radix != 8) && (radix != 10) && (radix != 16))
 	{
-		signalError(world, "(number->string) with illegal radix", {numberCell});
+		signalError(world, ErrorCategory::Default, "(number->string) with illegal radix", {numberCell});
 	}
 
 	std::ostringstream strStream;
@@ -35,7 +35,7 @@ StringCell* llbase_number_to_string(World &world, NumberCell *numberCell, std::u
 		// R7RS allows us to render +nan.0, -inf.0 and +inf.0 in non-decimal radix
 		if ((!std::isnan(floatValue) && !std::isinf(floatValue)) && (radix != 10))
 		{
-			signalError(world, "(number->string) with inexact number and non-decimal radix", {numberCell});
+			signalError(world, ErrorCategory::Default, "(number->string) with inexact number and non-decimal radix", {numberCell});
 		}
 	}
 
@@ -47,7 +47,7 @@ AnyCell* llbase_string_to_number(World &world, StringCell *stringCell, std::uint
 {
 	if ((radix != 2) && (radix != 8) && (radix != 10) && (radix != 16))
 	{
-		signalError(world, "(string->number) with illegal radix", {stringCell});
+		signalError(world, ErrorCategory::Default, "(string->number) with illegal radix", {stringCell});
 	}
 
 	std::string inputString(stringCell->toUtf8StdString());
