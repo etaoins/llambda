@@ -30,7 +30,7 @@ private[frontend] object ParseRecordTypeDefine {
 
     fieldData.foldLeft(ListMap[String, ParsedField]()) {
       case (parsedFields, fieldDatum @ sst.ScopedProperList(fieldDefDatum :: procedureData)) =>
-        // We can either be just a symbol and have no type or we can be a Scala/Racket style (symbol : <type>)
+        // We can either be just a symbol and have no type or we can be a Scala/Racket style [symbol : <type>]
         // This is a compatible extension to R7RS
         val (fieldNameSymbol, fieldType) = fieldDefDatum match {
           case nameSymbol : sst.ScopedSymbol =>

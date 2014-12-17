@@ -112,7 +112,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
     val exprs = bodyFor("""(define-record-type <new-type>
                            (new-type const-int)
                            new-type?
-                           ((const-int : <exact-integer>) new-type-const-int))""")(scope)
+                           ([const-int : <exact-integer>] new-type-const-int))""")(scope)
 
     inside(scope("<new-type>")) {
       case BoundType(recordType : vt.RecordType) =>
@@ -154,7 +154,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
                            (new-type mutable-int const-datum)
                            new-type?
                            (const-datum new-type-const-datum)
-                           ((mutable-int : <exact-integer>) new-type-mutable-int set-new-type-mutable-int!))""")(scope)
+                           ([mutable-int : <exact-integer>] new-type-mutable-int set-new-type-mutable-int!))""")(scope)
 
     inside(scope("<new-type>")) {
       case BoundType(recordType : vt.RecordType) =>
@@ -212,7 +212,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         val outerExprs = bodyFor("""(define-record-type <outer-type>
                                     (outer-type inner-field)
                                     outer-type?
-                                    ((inner-field : <inner-type>) outer-type-inner-field))""")(scope)
+                                    ([inner-field : <inner-type>] outer-type-inner-field))""")(scope)
 
         inside(scope("<outer-type>")) {
           case BoundType(outerType : vt.RecordType) =>
@@ -241,12 +241,12 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
     val parentExprs = bodyFor("""(define-record-type <parent>
                                    (parent const-int)
                                    parent?
-                                   ((const-int : <exact-integer>) parent-const-int))""")(scope)
+                                   ([const-int : <exact-integer>] parent-const-int))""")(scope)
 
     val childExprs = bodyFor("""(define-record-type <child> <parent>
                                   (child const-int const-flonum)
                                   child?
-                                  ((const-flonum : <flonum>) child-const-flonum))""")(scope)
+                                  ([const-flonum : <flonum>] child-const-flonum))""")(scope)
 
     inside((scope("<parent>"), scope("<child>"))) {
       case (BoundType(parentType : vt.RecordType), BoundType(childType : vt.RecordType)) =>
@@ -297,7 +297,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
       bodyFor("""(define-record-type <new-type>
                  (new-type const-int)
                  new-type?
-                 ((const-int : <native-int64>) new-type-const-int)
+                 ([const-int : <native-int64>] new-type-const-int)
                  ((const-int : <exact-integer>) new-type-mutable-int set-new-type-mutable-int!))""")(scope)
     }
   }

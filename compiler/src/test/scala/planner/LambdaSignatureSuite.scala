@@ -56,7 +56,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
   }
   
   test("explicitly typed procedure returning its argument") {
-    val signature = signatureFor("""(lambda ((x : <exact-integer>)) x)""")
+    val signature = signatureFor("""(lambda ([x : <exact-integer>]) x)""")
 
     assert(signature.hasWorldArg === false)
     assert(signature.fixedArgTypes === List(vt.Int64))

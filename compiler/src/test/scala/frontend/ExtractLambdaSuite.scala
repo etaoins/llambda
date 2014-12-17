@@ -117,7 +117,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
 
     inside(exprFor(
       """(: string-to-symbol (-> <string> <symbol>))
-         (define (string-to-symbol (x : <string>)) x)"""
+         (define (string-to-symbol [x : <string>]) x)"""
     )(scope)) {
       case et.TopLevelDefine(List(et.SingleBinding(storageLoc, et.Lambda(polyType, _, _, _, _))))  =>
         val expectedType = vt.ProcedureType(
@@ -132,7 +132,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
 
     inside(exprFor(
       """(: strings-to-symbol (-> <string> <string> * <symbol>))
-         (define (strings-to-symbol (x : <string>) rest : <string> *) x)"""
+         (define (strings-to-symbol [x : <string>] rest : <string> *) x)"""
     )(scope)) {
       case et.TopLevelDefine(List(et.SingleBinding(storageLoc, et.Lambda(polyType, _, _, _, _))))  =>
         val expectedType = vt.ProcedureType(
@@ -151,7 +151,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
 
     inside(exprFor(
       """(: le-to-symbol (-> <list-element> <symbol>))
-         (define (le-to-symbol (x : <pair>)) x)"""
+         (define (le-to-symbol [x : <pair>]) x)"""
     )(scope)) {
       case et.TopLevelDefine(List(et.SingleBinding(storageLoc, et.Lambda(polyType, _, _, _, _))))  =>
         val expectedStorageLocType = vt.ProcedureType(
@@ -172,7 +172,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
 
     inside(exprFor(
       """(: pair-to-symbol (-> <pair> <symbol>))
-         (define (pair-to-symbol (x : <list-element>)) x)"""
+         (define (pair-to-symbol [x : <list-element>]) x)"""
     )(scope)) {
       case et.TopLevelDefine(List(et.SingleBinding(storageLoc, et.Lambda(polyType, _, _, _, _))))  =>
         val expectedType = vt.ProcedureType(
@@ -232,7 +232,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     intercept[BadSpecialFormException] {
       exprFor(
         """(: string-to-symbol (-> <string> <symbol>))
-           (define (string-to-symbol (x : <string>) (y : <string>)) x)"""
+           (define (string-to-symbol [x : <string>] [y : <string>]) x)"""
       )(scope)
     }
   }
@@ -243,7 +243,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     intercept[BadSpecialFormException] {
       exprFor(
         """(: string-to-symbol (-> <string> <symbol>))
-           (define (string-to-symbol (x : <symbol>)) x)"""
+           (define (string-to-symbol [x : <symbol>]) x)"""
       )(scope)
     }
   }
@@ -254,14 +254,14 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     intercept[BadSpecialFormException] {
       exprFor(
         """(: string-to-symbol (-> <string> <string> * <symbol>))
-           (define (string-to-symbol (x : <string>)) x)"""
+           (define (string-to-symbol [x : <string>]) x)"""
       )(scope)
     }
 
     intercept[BadSpecialFormException] {
       exprFor(
         """(: string-to-symbol (-> <string> <string> <symbol>))
-           (define (string-to-symbol (x : <string>) rest : <string> *) x)"""
+           (define (string-to-symbol [x : <string>] rest : <string> *) x)"""
       )(scope)
     }
   }
@@ -335,7 +335,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
   }
 
   test("typed lambdas") {
-    inside(exprFor("(lambda ((x : <number>)) x)")(nfiScope)) {
+    inside(exprFor("(lambda ([x : <number>]) x)")(nfiScope)) {
       case et.Lambda(polyType, List(argX), None, body, _) =>
         assert(polyType === vt.ProcedureType(
           fixedArgTypes=List(vt.NumberType),
@@ -462,7 +462,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
   test("typed one arg lambda shorthand") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
-    val expr = exprFor("(define (return-true (unused-param : <symbol>)) #t)")(scope)
+    val expr = exprFor("(define (return-true [unused-param : <symbol>]) #t)")(scope)
     val procLoc = scope.get("return-true").value
 
     inside(expr) {
@@ -506,7 +506,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
   test("typed fixed and rest arg lambda shorthand") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
-    val expr = exprFor("(define (return-false (some : <boolean>) rest : <string> *) #f)")(scope)
+    val expr = exprFor("(define (return-false [some : <boolean>] rest : <string> *) #f)")(scope)
     val procLoc = scope.get("return-false").value
 
     inside(expr) {
@@ -525,7 +525,7 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
   test("(define-report-procedure) lambda shorthand") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
-    val expr = exprFor("(define-report-procedure (return-false (some : <boolean>) rest : <string> *) #f)")(scope)
+    val expr = exprFor("(define-report-procedure (return-false [some : <boolean>] rest : <string> *) #f)")(scope)
     val procLoc = scope.get("return-false").value
 
     inside(procLoc) {

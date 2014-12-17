@@ -175,7 +175,7 @@
 
 (define-test "typed procedure adding its arguments" (expect 7
   (import (llambda typed))
-	(define (add-two-values (a : <exact-integer>) (b : <exact-integer>)) (+ a b))
+	(define (add-two-values [a : <exact-integer>] [b : <exact-integer>]) (+ a b))
 	(add-two-values 4 3)))
 
 (define-test "procedure returning value can be passed as procedure returning unit" (expect finished
