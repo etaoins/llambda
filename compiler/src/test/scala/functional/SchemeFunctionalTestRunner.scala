@@ -166,10 +166,6 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
           executeProgram(program, schemeDialect, optimizeLevel)
         }
 
-      case ast.ProperList(ast.Symbol("expect-runtime-failure") :: program) if !program.isEmpty =>
-        val result = executeProgram(program, schemeDialect, optimizeLevel)
-        assert(result.success === false, "Execution unexpectedly succeeded")
-
       case ast.ProperList(ast.Symbol("expect-error") :: ast.Symbol(errorPredicate) :: program) if !program.isEmpty =>
         try {
           val wrappedProgram = wrapForAssertRaises(errorPredicate, program)

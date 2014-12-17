@@ -405,26 +405,34 @@
   (import (llambda typed))
   (define-values ([x : <exact-integer>]) (exact-integer-sqrt 17))))
 
-(define-test "(define-values) with dynamic mismatched fixed type fails" (expect-runtime-failure
+(define-test "(define-values) with dynamic mismatched fixed type fails" (expect-success
   (import (llambda typed))
+  (import (llambda error))
 
-  (define returns-two (typeless-cell (lambda () (values 1 2))))
-  (define-values ([x : <symbol>] [y : <exact-integer>]) (returns-two))))
+  (assert-raises type-error?
+    (define returns-two (typeless-cell (lambda () (values 1 2))))
+    (define-values ([x : <symbol>] [y : <exact-integer>]) (returns-two)))))
 
-(define-test "(define-values) with dynamic mismatched rest type fails" (expect-runtime-failure
+(define-test "(define-values) with dynamic mismatched rest type fails" (expect-success
   (import (llambda typed))
+  (import (llambda error))
 
-  (define returns-three (typeless-cell (lambda () (values 1 2 #t))))
-  (define-values ([x : <any>] [y : <any>] r : <string> *) (returns-three))))
+  (assert-raises type-error?
+    (define returns-three (typeless-cell (lambda () (values 1 2 #t))))
+    (define-values ([x : <any>] [y : <any>] r : <string> *) (returns-three)))))
 
-(define-test "(define-values) with dynamic insufficient values" (expect-runtime-failure
+(define-test "(define-values) with dynamic insufficient values" (expect-success
   (import (llambda typed))
+  (import (llambda error))
 
-  (define returns-two (typeless-cell (lambda () (values 1 2))))
-  (define-values ([x : <exact-integer>] [y : <exact-integer>] [x : <exact-integer>]) (returns-two))))
+  (assert-raises arity-error?
+    (define returns-two (typeless-cell (lambda () (values 1 2))))
+    (define-values ([x : <exact-integer>] [y : <exact-integer>] [x : <exact-integer>]) (returns-two)))))
 
-(define-test "(define-values) with dynamic too many values" (expect-runtime-failure
+(define-test "(define-values) with dynamic too many values" (expect-success
   (import (llambda typed))
+  (import (llambda error))
 
-  (define returns-two (typeless-cell (lambda () (values 1 2))))
-  (define-values ([x : <exact-integer>]) (returns-two))))
+  (assert-raises arity-error?
+    (define returns-two (typeless-cell (lambda () (values 1 2))))
+    (define-values ([x : <exact-integer>]) (returns-two)))))

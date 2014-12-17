@@ -34,9 +34,12 @@
 	(import (llambda typed))
   (ann + (-> <number> <number> <number>))))
 
-(define-test "dynamically impossible (cast) fails at runtime" (expect-runtime-failure
+(define-test "dynamically impossible (cast) fails at runtime" (expect-success
 	(import (llambda typed))
-	(cast (typeless-cell #t) <exact-integer>)))
+	(import (llambda error))
+
+  (assert-raises type-error?
+    (cast (typeless-cell #t) <exact-integer>))))
 
 (define-test "dynamically impossible (ann) fails at compile time" (expect-compile-failure
 	(import (llambda typed))
