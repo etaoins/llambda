@@ -80,7 +80,7 @@
 
 (define-test "writing to an open input port fails" (expect-failure
   (import (scheme write))
-  (write "Test" (current-input-stream))))
+  (write "Test" (current-input-port))))
 
 (define-test "writing to a closed ouput port fails" (expect-failure
   (import (scheme write))
