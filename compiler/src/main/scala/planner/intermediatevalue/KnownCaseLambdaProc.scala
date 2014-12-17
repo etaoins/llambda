@@ -5,7 +5,7 @@ import llambda.compiler.{PolymorphicSignature, ContextLocated}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner._
-import llambda.compiler.IncompatibleArityException
+import llambda.compiler.ArityException
 
 case class KnownCaseLambdaClause(
     knownProc : KnownSchemeProc,
@@ -108,7 +108,7 @@ class KnownCaseLambdaProc(
 
       case None =>
         val message = s"No (case-lambda) clause matches an arity of ${operands.length}"
-        throw new IncompatibleArityException(plan.activeContextLocated, message)
+        throw new ArityException(plan.activeContextLocated, message)
     }
   }
 }

@@ -2,7 +2,6 @@ package io.llambda.compiler.planner.reportproc
 import io.llambda
 
 import llambda.compiler.ast
-import llambda.compiler.OutOfBoundsException
 import llambda.compiler.planner.PlanHelpers
 import org.scalatest.FunSuite
 

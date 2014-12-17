@@ -6,7 +6,7 @@ import llambda.compiler.planner.{PlanWriter, BoxedValue, PlanSymbolEquality}
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.codegen.RuntimeFunctions
-import llambda.compiler.{InternalCompilerErrorException, ImpossibleTypeConversionException}
+import llambda.compiler.{InternalCompilerErrorException, TypeException}
 
 object PlanTypeCheck {
   private def unrolledTypeRef(schemeTypeRef : vt.SchemeTypeRef) : vt.SchemeType = {
@@ -295,7 +295,7 @@ object PlanTypeCheck {
         DynamicResult(isCellTypePred)
 
       case _ : vt.ApplicableType =>
-        throw new ImpossibleTypeConversionException(
+        throw new TypeException(
           located=plan.activeContextLocated,
           message=s"Value of type ${valueType} does not statically satisfy procedure type ${testType}"
         )

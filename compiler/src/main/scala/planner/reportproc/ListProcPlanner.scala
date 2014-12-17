@@ -3,7 +3,7 @@ import io.llambda
 
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.{RuntimeErrorMessage, ContextLocated, OutOfBoundsException, InternalCompilerErrorException}
+import llambda.compiler.{RuntimeErrorMessage, ContextLocated, RangeException, InternalCompilerErrorException}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
@@ -158,7 +158,7 @@ object ListProcPlanner extends ReportProcPlanner {
           // If listLengthOpt is defined we're a proper list
           knownListElement.listLengthOpt map { listLength =>
             if ((index < 0) || (index > listLength)) {
-              throw new OutOfBoundsException(plan.activeContextLocated, s"List index ${index} out of bounds")
+              throw new RangeException(plan.activeContextLocated, s"List index ${index} out of bounds")
             }
 
             listTail(knownListElement, index.toInt)

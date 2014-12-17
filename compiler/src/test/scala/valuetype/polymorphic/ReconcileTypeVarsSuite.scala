@@ -5,7 +5,7 @@ import org.scalatest.FunSuite
 
 import llambda.compiler.valuetype._
 import llambda.compiler.NoSourceLocation
-import llambda.compiler.ImpossibleTypeConversionException
+import llambda.compiler.TypeException
 
 import Implicits._
 
@@ -85,7 +85,7 @@ class ReconcileTypeVarsSuite extends FunSuite {
       polyNumA -> PortType
     ))
 
-    intercept[ImpossibleTypeConversionException] {
+    intercept[TypeException] {
       ReconcileTypeVars(typeVars, resolved, NoSourceLocation, true)
     }
   }

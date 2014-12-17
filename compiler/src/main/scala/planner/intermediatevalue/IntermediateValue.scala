@@ -8,15 +8,14 @@ import llambda.compiler.RuntimeErrorMessage
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner._
 import llambda.compiler.ProcedureSignature
-import llambda.compiler.ImpossibleTypeConversionException
-import llambda.compiler.InternalCompilerErrorException
+import llambda.compiler.{TypeException, InternalCompilerErrorException}
 
 trait IntermediateValueHelpers {
   def typeDescription : String
 
   /** Helper for signalling impossible conversions */
   protected def impossibleConversion(message : String)(implicit plan : PlanWriter) = { 
-    throw new ImpossibleTypeConversionException(plan.activeContextLocated, message)
+    throw new TypeException(plan.activeContextLocated, message)
   }
 
   protected def impossibleConversionToType(

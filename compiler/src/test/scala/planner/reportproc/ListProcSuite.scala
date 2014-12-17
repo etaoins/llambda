@@ -1,7 +1,7 @@
 package io.llambda.compiler.planner.reportproc
 import io.llambda
 
-import llambda.compiler.{OutOfBoundsException, ImpossibleTypeConversionException}
+import llambda.compiler.{RangeException, TypeException}
 import llambda.compiler.ast
 import llambda.compiler.planner.PlanHelpers
 import org.scalatest.FunSuite
@@ -204,8 +204,8 @@ class ListProcSuite extends FunSuite with PlanHelpers {
     assertStaticPlan("(list-tail '(1 2 3) 3)",
       ast.EmptyList()
     )
-    
-    intercept[OutOfBoundsException] {
+
+    intercept[RangeException] {
       planStepsFor("(list-tail '(1 2 3) 4)")
     }
   }
@@ -219,7 +219,7 @@ class ListProcSuite extends FunSuite with PlanHelpers {
       ast.IntegerLiteral(3)
     )
 
-    intercept[ImpossibleTypeConversionException] {
+    intercept[TypeException] {
       planStepsFor("(list-ref '(1 2 3) 3)")
     }
   }

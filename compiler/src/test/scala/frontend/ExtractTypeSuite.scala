@@ -470,7 +470,7 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
       ))
     ))
 
-    intercept[ImpossibleTypeConversionException] {
+    intercept[TypeException] {
       // Violates the upper type bound
       bodyFor("(define-type (NumOption [T : <number>]) (U T <empty-list>))")(scope)
       bodyFor("(define-type <bad-option> (NumOption <string>))")(scope)

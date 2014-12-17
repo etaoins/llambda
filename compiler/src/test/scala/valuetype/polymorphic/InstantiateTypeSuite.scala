@@ -5,7 +5,6 @@ import org.scalatest.FunSuite
 
 import llambda.compiler.valuetype._
 import llambda.compiler.NoSourceLocation
-import llambda.compiler.ImpossibleTypeConversionException
 
 import Implicits._
 

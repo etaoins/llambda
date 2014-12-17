@@ -3,7 +3,7 @@ import io.llambda
 
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.ContextLocated
-import llambda.compiler.OutOfBoundsException
+import llambda.compiler.RangeException
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
@@ -120,7 +120,7 @@ object VectorProcPlanner extends ReportProcPlanner {
 
     case ("vector-ref", List((_, iv.ConstantVectorValue(elements)), (_, iv.ConstantExactIntegerValue(index)))) =>
       if ((index < 0) || (index >= elements.length)) {
-        throw new OutOfBoundsException(
+        throw new RangeException(
           plan.activeContextLocated,
           s"Vector index ${index} out of bounds"
         )
@@ -134,7 +134,7 @@ object VectorProcPlanner extends ReportProcPlanner {
           val index = constantInt.value
 
           if (index >= elementTypes.size) {
-            throw new OutOfBoundsException(
+            throw new RangeException(
               plan.activeContextLocated,
               s"Vector index ${index} out of bounds"
             )
@@ -171,7 +171,7 @@ object VectorProcPlanner extends ReportProcPlanner {
           val index = constantInt.value
 
           if (index >= elementTypes.size) {
-            throw new OutOfBoundsException(
+            throw new RangeException(
               plan.activeContextLocated,
               s"Vector index ${index} out of bounds"
             )

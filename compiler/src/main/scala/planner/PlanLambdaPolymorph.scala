@@ -10,7 +10,7 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{StorageLocation, ProcedureSignature, ProcedureAttribute}
 import llambda.compiler.codegen.CompactRepresentationForType
-import llambda.compiler.ImpossibleTypeConversionException
+import llambda.compiler.TypeException
 
 object PlanLambdaPolymorph {
   private sealed abstract class Argument {
@@ -244,7 +244,7 @@ object PlanLambdaPolymorph {
         declaredReturnType
       }
       else {
-        throw new ImpossibleTypeConversionException(
+        throw new TypeException(
           parentPlan.activeContextLocated,
           s"Result return type of ${resultReturnType} cannot be converted to declared return type of ${declaredReturnType}"
         )

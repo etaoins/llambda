@@ -6,7 +6,7 @@ import scala.io.Codec
 import scala.collection.mutable
 
 import llambda.compiler.SourceLocated
-import llambda.compiler.{OutOfBoundsException, InternalCompilerErrorException}
+import llambda.compiler.{RangeException, InternalCompilerErrorException}
 
 import llambda.compiler.planner.{step => ps}
 import llambda.llvmir._
@@ -183,7 +183,7 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
     val inlineUtf8Bytes = ConstantGenerator.maximumInlineSymbolBytes
 
     if (utf8Data.length >= (1L << ct.SymbolCell.byteLengthIrType.bits)) {
-      throw new OutOfBoundsException(sourceLocated, "Constant symbol exceeds maximum symbol length")
+      throw new RangeException(sourceLocated, "Constant symbol exceeds maximum symbol length")
     }
 
     val symbolCell = if (utf8Data.length <= inlineUtf8Bytes) {

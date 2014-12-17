@@ -4,7 +4,7 @@ import io.llambda
 import llambda.compiler.valuetype._
 
 import llambda.compiler.{NoSourceLocation, SourceLocated}
-import llambda.compiler.ImpossibleTypeConversionException
+import llambda.compiler.TypeException
 
 object ReconcileTypeVars {
   case class Result(values : Map[TypeVar, SchemeType] = Map())
@@ -35,7 +35,7 @@ object ReconcileTypeVars {
         case Some(resolvedType) =>
           if (SatisfiesType(upperBound, resolvedType) != Some(true)) {
             if (strictBounds) {
-              throw new ImpossibleTypeConversionException(
+              throw new TypeException(
                 located,
                 s"Unable to instantiate polymorphic type; type variable ${typeVar.sourceName} is set to ${resolvedType} which violates its upper type bound of ${upperBound}"
               )

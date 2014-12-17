@@ -59,16 +59,16 @@ class ValueNotApplicableException(located : SourceLocated, typeDescription : Str
   val semanticErrorType = "not applicable"
 }
 
-class ImpossibleTypeConversionException(located : SourceLocated, message : String) extends SemanticException(located, message) {
+class TypeException(located : SourceLocated, message : String) extends SemanticException(located, message) {
   val semanticErrorType = "impossible type conversion"
 }
 
-class IncompatibleArityException(located : SourceLocated, message : String) extends SemanticException(located, message) { 
+class ArityException(located : SourceLocated, message : String) extends SemanticException(located, message) {
   val semanticErrorType = "incompatible arity"
 }
 
-class OutOfBoundsException(located : SourceLocated, message : String) extends SemanticException(located, message) {
-  val semanticErrorType = "out of bounds"
+class RangeException(located : SourceLocated, message : String) extends SemanticException(located, message) {
+  val semanticErrorType = "out of range"
 }
 
 class DivideByZeroException(located : SourceLocated, message : String) extends SemanticException(located, message) {

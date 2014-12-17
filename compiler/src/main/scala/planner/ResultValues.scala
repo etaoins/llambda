@@ -2,7 +2,7 @@ package io.llambda.compiler.planner
 import io.llambda
 
 import llambda.compiler.RuntimeErrorMessage
-import llambda.compiler.{ImpossibleTypeConversionException, InternalCompilerErrorException}
+import llambda.compiler.InternalCompilerErrorException
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{celltype => ct}

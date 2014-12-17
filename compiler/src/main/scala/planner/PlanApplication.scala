@@ -5,7 +5,7 @@ import llambda.compiler.{et, ContextLocated, ReportProcedure}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner.reportproc.ReportProcPlanner
-import llambda.compiler.{IncompatibleArityException, ImpossibleTypeConversionException}
+import llambda.compiler.ArityException
 import llambda.compiler.codegen.CostForPlanSteps
 
 private[planner] object PlanApplication {
@@ -102,14 +102,14 @@ private[planner] object PlanApplication {
     // Ensure our arity is sane
     if (procedureType.restArgMemberTypeOpt.isDefined) {
       if (operands.length < procedureType.fixedArgTypes.length) {
-        throw new IncompatibleArityException(
+        throw new ArityException(
           located=plan.activeContextLocated,
           message=s"Called procedure with ${operands.length} arguments; requires at least ${procedureType.fixedArgTypes.length} arguments"
         )
       }
     }
     else if (procedureType.fixedArgTypes.length != operands.length) {
-      throw new IncompatibleArityException(
+      throw new ArityException(
         located=plan.activeContextLocated,
         message=s"Called procedure with ${operands.length} arguments; requires exactly ${procedureType.fixedArgTypes.length} arguments"
       )

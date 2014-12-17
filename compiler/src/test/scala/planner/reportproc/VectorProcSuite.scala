@@ -2,7 +2,7 @@ package io.llambda.compiler.planner.reportproc
 import io.llambda
 
 import llambda.compiler.ast
-import llambda.compiler.OutOfBoundsException
+import llambda.compiler.RangeException
 import llambda.compiler.planner.PlanHelpers
 import org.scalatest.FunSuite
 
@@ -22,13 +22,13 @@ class VectorSuite extends FunSuite with PlanHelpers {
       ast.IntegerLiteral(4)
     )
 
-    intercept[OutOfBoundsException] {
+    intercept[RangeException] {
       assertStaticPlan("(vector-ref #(1 2 3 4 5) 6)",
         ast.IntegerLiteral(4)
       )
     }
     
-    intercept[OutOfBoundsException] {
+    intercept[RangeException] {
       assertStaticPlan("(vector-ref #(1 2 3 4 5) -5)",
         ast.IntegerLiteral(4)
       )
