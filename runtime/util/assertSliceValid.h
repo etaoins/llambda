@@ -4,6 +4,7 @@
 #include "core/error.h"
 
 #include <sstream>
+#include <cstdint>
 
 namespace lliby
 {
@@ -20,7 +21,7 @@ namespace lliby
  * @param  end          User supplied end index
  */
 template<typename T>
-void assertSliceValid(World &world, const char *procName, AnyCell *obj, T objLength, T start, T end)
+void assertSliceValid(World &world, const char *procName, AnyCell *obj, T objLength, std::int64_t start, std::int64_t end)
 {
 	if (end > objLength)
 	{
@@ -30,7 +31,14 @@ void assertSliceValid(World &world, const char *procName, AnyCell *obj, T objLen
 		signalError(world, ErrorCategory::Range, message.str().c_str(), {obj});
 	}
 
-	if (start > end)
+	if (start < 0)
+	{
+		std::ostringstream message;
+		message << "Negative slice start index of " << start << " in " << procName;
+
+		signalError(world, ErrorCategory::Range, message.str().c_str(), {obj});
+	}
+	else if (start > end)
 	{
 		std::ostringstream message;
 		message << "Slice start index of " << start << " is greater than end index of " << end << " in " << procName;

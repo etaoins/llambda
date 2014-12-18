@@ -99,7 +99,7 @@
 (define-test "(vector->list) past end of vector fails" (expect-error range-error?
   (vector->list '#(dah dah didah) 0 4)))
 
-(define-test "(vector->list) with negative start index fails" (expect-failure
+(define-test "(vector->list) with negative start index fails" (expect-error range-error?
   (vector->list '#(dah dah didah) -1)))
 
 (define-test "(vector-copy)" (expect-success
@@ -123,7 +123,7 @@
 (define-test "(vector-copy) past end of vector fails" (expect-error range-error?
   (vector-copy '#(dah dah didah) 0 4)))
 
-(define-test "(vector-copy) with negative start index fails" (expect-failure
+(define-test "(vector-copy) with negative start index fails" (expect-error range-error?
   (vector-copy '#(dah dah didah) -1)))
 
 (define-test "(vector-fill!)" (expect-success
@@ -151,7 +151,7 @@
 (define-test "(vector-fill!) past end of vector fails" (expect-error range-error?
   (vector-fill! (vector 'dah 'dah 'didah) #t 0 4)))
 
-(define-test "(vector-fill!) with negative start index fails" (expect-failure
+(define-test "(vector-fill!) with negative start index fails" (expect-error range-error?
   (vector-fill! (vector 'dah 'dah 'didah) #t -1)))
 
 (define-test "(string->vector)" (expect-success
@@ -168,7 +168,7 @@
 (define-test "(string->vector) past end of string fails" (expect-error range-error?
   (string->vector "Hell☃!" 0 8)))
 
-(define-test "(string->vector) with negative start index fails" (expect-failure
+(define-test "(string->vector) with negative start index fails" (expect-error range-error?
   (string->vector "Hell☃!" -1)))
 
 (define-test "(vector->string)" (expect-success
@@ -192,7 +192,7 @@
 (define-test "(vector->string) past end of string fails" (expect-error range-error?
   (vector->string #(#\H #\e #\l #\l #\x2603 #\!) 0 8)))
 
-(define-test "(vector->string) with negative start index fails" (expect-failure
+(define-test "(vector->string) with negative start index fails" (expect-error range-error?
   (vector->string #(#\H #\e #\l #\l #\x2603 #\!) -1)))
 
 (define-test "(vector-copy!)" (expect-success

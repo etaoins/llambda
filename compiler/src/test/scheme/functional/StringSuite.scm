@@ -118,7 +118,7 @@
 (define-test "(string->list) past end of string fails" (expect-error range-error?
   (string->list "Hell☃!" 0 8)))
 
-(define-test "(string->list) with negative start index fails" (expect-failure
+(define-test "(string->list) with negative start index fails" (expect-error range-error?
   (string->list "Hell☃!" -1)))
 
 (define-test "(string-copy)" (expect-success
@@ -146,7 +146,7 @@
 (define-test "(string-copy) past end of string fails" (expect-error range-error?
   (string-copy "1☃3" 0 4)))
 
-(define-test "(string-copy) with negative start index fails" (expect-failure
+(define-test "(string-copy) with negative start index fails" (expect-error range-error?
   (string-copy "1☃3" -1)))
 
 (define-test "(substring)" (expect-success
@@ -290,6 +290,12 @@
 
   (assert-equal "a12de" b)))
 
+(define-test "(string-copy!) with negative start index fails" (expect-error range-error?
+  (define a "12345")
+  (define b (string-copy "abcde"))
+
+  (string-copy! b 1 a -1 2)))
+
 (define-test "(string-copy!) with backwards slice fails" (expect-error range-error?
   (define a "12345")
   (define b (string-copy "abcde"))
@@ -325,6 +331,10 @@
 (define-test "(string-fill!) with backward slice fails" (expect-error range-error?
   (define test-string (string-copy "01234567"))
   (string-fill! test-string #\☃ 6 4)))
+
+(define-test "(string-fill!) with negative start index fails" (expect-error range-error?
+  (define test-string (string-copy "01234567"))
+  (string-fill! test-string #\☃ -1 1)))
 
 (define-test "(string-fill!) past end of string fails" (expect-error range-error?
   (define test-string (string-copy "01234567"))

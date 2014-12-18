@@ -200,7 +200,7 @@ AnyCell *llbase_read_bytevector(World &world, std::uint32_t requestedBytes, Port
 	return BytevectorCell::withByteArray(world, byteArray, readBytes);
 }
 
-AnyCell *llbase_mutating_read_bytevector(World &world, BytevectorCell *bytevector, PortCell *portCell, std::uint32_t start, std::uint32_t end)
+AnyCell *llbase_mutating_read_bytevector(World &world, BytevectorCell *bytevector, PortCell *portCell, std::int64_t start, std::int64_t end)
 {
 	if (bytevector->isGlobalConstant())
 	{

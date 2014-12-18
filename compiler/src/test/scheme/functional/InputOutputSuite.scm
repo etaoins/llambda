@@ -289,6 +289,18 @@
   (write-string test-string start-end-output-port 6 12)
   (assert-equal "盥媯 ビョ禯" (get-output-string start-end-output-port))))
 
+(define-test "(write-string) with backwards slice fails" (expect-error range-error?
+  (define output-port (open-output-string))
+  (write-string "1☃3" output-port 2 1)))
+
+(define-test "(write-string) past end of string fails" (expect-error range-error?
+  (define output-port (open-output-string))
+  (write-string "1☃3" output-port 0 4)))
+
+(define-test "(write-string) with negative start index fails" (expect-error range-error?
+  (define output-port (open-output-string))
+  (write-string "1☃3" output-port -1)))
+
 (define-test "(write-bytevector)" (expect-success
   (define test-bytevector #u8(0 1 2 3 4 5 6 7 8 9))
 
@@ -305,17 +317,17 @@
   (write-bytevector test-bytevector start-end-output-port 6 8)
   (assert-equal #u8(6 7) (get-output-bytevector start-end-output-port))))
 
-(define-test "(write-string) with backwards slice fails" (expect-error range-error?
+(define-test "(write-bytevector) with backwards slice fails" (expect-error range-error?
   (define output-port (open-output-string))
-  (write-string "1☃3" output-port 2 1)))
+  (write-bytevector #u8(1 2 3) output-port 2 1)))
 
-(define-test "(write-string) past end of string fails" (expect-error range-error?
+(define-test "(write-bytevector) past end of string fails" (expect-error range-error?
   (define output-port (open-output-string))
-  (write-string "1☃3" output-port 0 4)))
+  (write-bytevector #u8(1 2 3) output-port 0 4)))
 
-(define-test "(write-string) with negative start index fails" (expect-failure
+(define-test "(write-bytevector) with negative start index fails" (expect-error range-error?
   (define output-port (open-output-string))
-  (write-string "1☃3" output-port -1)))
+  (write-bytevector #u8(1 2 3) output-port -1)))
 
 (define-test "(flush-output-port)" (expect-output (ABC)
   (import (scheme process-context))
@@ -368,7 +380,7 @@
   (define input-port (open-input-bytevector #u8(1 2 3 4 5 6 7 8 9 10 11 12)))
   (read-bytevector! test-bytevector input-port 2 5)))
 
-(define-test "(read-bytevector!) with negative start index fails" (expect-failure
+(define-test "(read-bytevector!) with negative start index fails" (expect-error range-error?
   (define test-bytevector (make-bytevector 4))
 
   (define input-port (open-input-bytevector #u8(1 2 3 4 5 6 7 8 9 10 11 12)))

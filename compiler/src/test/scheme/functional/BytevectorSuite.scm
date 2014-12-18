@@ -92,7 +92,7 @@
 (define-test "(utf8->string) past end of bytevector fails" (expect-error range-error?
   (utf8->string #u8(#x48 #x65 #x6c #x6c #xe2 #x98 #x83 #x21) 0 9)))
 
-(define-test "(utf8->string) with negative start index fails" (expect-failure
+(define-test "(utf8->string) with negative start index fails" (expect-error range-error?
   (utf8->string #u8(#x48 #x65 #x6c #x6c #xe2 #x98 #x83 #x21) -1)))
 
 (define-test "(string->utf8)" (expect-success
@@ -110,7 +110,7 @@
 (define-test "(string->utf8) past end of string fails" (expect-error range-error?
   (string->utf8 "Hell☃!" 0 9)))
 
-(define-test "(string->utf8) with negative start index fails" (expect-failure
+(define-test "(string->utf8) with negative start index fails" (expect-error range-error?
   (string->utf8 "Hell☃!" -1)))
 
 (define-test "(bytevector-copy)" (expect-success
@@ -132,6 +132,15 @@
 
   (assert-equal #u8(2 3 4 5 6 7) (bytevector-copy test-bytevector 2))
   (assert-equal #u8(3 4 5) (bytevector-copy test-bytevector 3 6))))
+
+(define-test "(bytevector-copy) with backwards slice fails" (expect-error range-error?
+  (bytevector-copy #u8(0 1 2 3 4 5) 2 1)))
+
+(define-test "(bytevector-copy) past end of bytevector fails" (expect-error range-error?
+  (bytevector-copy #u8(0 1 2 3 4 5) 0 9)))
+
+(define-test "(bytevector-copy) with negative start index fails" (expect-error range-error?
+  (bytevector-copy #u8(0 1 2 3 4 5) -1)))
 
 (define-test "(bytevector-copy!)" (expect-success
   (define a (bytevector 1 2 3 4 5))

@@ -72,7 +72,7 @@ VectorCell *llbase_vector_append(World &world, RestValues<VectorCell> *argList)
 	return VectorCell::fromAppended(world, vectorElements);
 }
 
-ProperList<AnyCell> *llbase_vector_to_list(World &world, VectorCell *vectorCell, std::uint32_t start, std::uint32_t end)
+ProperList<AnyCell> *llbase_vector_to_list(World &world, VectorCell *vectorCell, std::int64_t start, std::int64_t end)
 {
 	assertSliceValid(world,"(vector->list)", vectorCell, vectorCell->length(), start, end);
 
@@ -83,14 +83,14 @@ ProperList<AnyCell> *llbase_vector_to_list(World &world, VectorCell *vectorCell,
 	return ProperList<AnyCell>::create(world, vectorElements);
 }
 
-VectorCell *llbase_vector_copy(World &world, VectorCell *sourceVector, std::uint32_t start, std::uint32_t end)
+VectorCell *llbase_vector_copy(World &world, VectorCell *sourceVector, std::int64_t start, std::int64_t end)
 {
 	assertSliceValid(world, "(vector-copy)", sourceVector, sourceVector->length(), start, end);
 
 	return sourceVector->copy(world, start, end);
 }
 
-void llbase_vector_mutating_copy(World &world, VectorCell *to, std::uint32_t at, VectorCell *from, std::uint32_t start, std::uint32_t end)
+void llbase_vector_mutating_copy(World &world, VectorCell *to, std::int64_t at, VectorCell *from, std::int64_t start, std::int64_t end)
 {
 	if (to->isGlobalConstant())
 	{
@@ -103,7 +103,7 @@ void llbase_vector_mutating_copy(World &world, VectorCell *to, std::uint32_t at,
 	to->replace(at, from, start, end);
 }
 
-void llbase_vector_mutating_fill(World &world, VectorCell *vector, AnyCell *fill, std::uint32_t start, std::uint32_t end)
+void llbase_vector_mutating_fill(World &world, VectorCell *vector, AnyCell *fill, std::int64_t start, std::int64_t end)
 {
 	if (vector->isGlobalConstant())
 	{
@@ -115,7 +115,7 @@ void llbase_vector_mutating_fill(World &world, VectorCell *vector, AnyCell *fill
 	vector->fill(fill, start, end);
 }
 
-VectorCell* llbase_string_to_vector(World &world, StringCell *string, std::uint32_t start, std::uint32_t end)
+VectorCell* llbase_string_to_vector(World &world, StringCell *string, std::int64_t start, std::int64_t end)
 {
 	assertSliceValid(world, "(string->vector)", string, string->charLength(), start, end);
 
@@ -136,7 +136,7 @@ VectorCell* llbase_string_to_vector(World &world, StringCell *string, std::uint3
 	return VectorCell::fromElements(world, boxedChars, charCount);
 }
 
-StringCell *llbase_vector_to_string(World &world, VectorCell *vector, std::uint32_t start, std::uint32_t end)
+StringCell *llbase_vector_to_string(World &world, VectorCell *vector, std::int64_t start, std::int64_t end)
 {
 	assertSliceValid(world, "(vector->string)", vector, vector->length(), start, end);
 

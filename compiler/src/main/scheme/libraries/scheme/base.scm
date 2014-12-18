@@ -519,16 +519,16 @@
     (define-r7rs vector-set! (world-function llbase "llbase_vector_set" (-> <vector> <native-uint32> <any> <unit>)))
     (define-r7rs vector-append (world-function llbase "llbase_vector_append" (-> <vector> * <vector>)))
 
-    (define native-vector->list (world-function llbase "llbase_vector_to_list" (-> <vector> <native-uint32> <native-uint32> <list>)))
+    (define native-vector->list (world-function llbase "llbase_vector_to_list" (-> <vector> <native-int64> <native-int64> <list>)))
     (define-slice-proc vector->list native-vector->list <vector> vector-length)
 
-    (define native-vector-copy (world-function llbase "llbase_vector_copy" (-> <vector> <native-uint32> <native-uint32> <vector>)))
+    (define native-vector-copy (world-function llbase "llbase_vector_copy" (-> <vector> <native-int64> <native-int64> <vector>)))
     (define-slice-proc vector-copy native-vector-copy <vector> vector-length)
 
-    (define native-vector-copy! (world-function llbase "llbase_vector_mutating_copy" (-> <vector> <native-uint32> <vector> <native-uint32> <native-uint32> <unit>)))
+    (define native-vector-copy! (world-function llbase "llbase_vector_mutating_copy" (-> <vector> <native-int64> <vector> <native-int64> <native-int64> <unit>)))
     (define-mutating-copy-proc vector-copy! native-vector-copy! <vector> vector-length)
 
-    (define native-vector-fill! (world-function llbase "llbase_vector_mutating_fill" (-> <vector> <any> <native-uint32> <native-uint32> <unit>)))
+    (define native-vector-fill! (world-function llbase "llbase_vector_mutating_fill" (-> <vector> <any> <native-int64> <native-int64> <unit>)))
     (define-r7rs vector-fill!
       (case-lambda
         (([target : <vector>] [fill : <any>])
@@ -545,10 +545,10 @@
       (([len : <exact-integer>] [fill : <any>])
        (native-make-vector len fill))))
 
-    (define native-vector->string (world-function llbase "llbase_vector_to_string" (-> (Vectorof <char>) <native-uint32> <native-uint32> <string>)))
+    (define native-vector->string (world-function llbase "llbase_vector_to_string" (-> (Vectorof <char>) <native-int64> <native-int64> <string>)))
     (define-slice-proc vector->string native-vector->string <vector> vector-length)
 
-    (define native-string->vector (world-function llbase "llbase_string_to_vector" (-> <string> <native-uint32> <native-uint32> (Vectorof <char>))))
+    (define native-string->vector (world-function llbase "llbase_string_to_vector" (-> <string> <native-int64> <native-int64> (Vectorof <char>))))
     (define-slice-proc string->vector native-string->vector <string> string-length)
 
     (define-r7rs bytevector? (make-predicate <bytevector>))
@@ -557,13 +557,13 @@
     (define-r7rs bytevector-u8-set! (world-function llbase "llbase_bytevector_u8_set" (-> <bytevector> <native-uint32> <native-uint8> <unit>)))
     (define-r7rs bytevector-append (world-function llbase "llbase_bytevector_append" (-> <bytevector> * <bytevector>)))
 
-    (define native-bytevector-copy (world-function llbase "llbase_bytevector_copy" (-> <bytevector> <native-uint32> <native-uint32> <bytevector>)))
+    (define native-bytevector-copy (world-function llbase "llbase_bytevector_copy" (-> <bytevector> <native-int64> <native-int64> <bytevector>)))
     (define-slice-proc bytevector-copy native-bytevector-copy <bytevector> bytevector-length)
 
-    (define native-bytevector-copy! (world-function llbase "llbase_bytevector_mutating_copy" (-> <bytevector> <native-uint32> <bytevector> <native-uint32> <native-uint32> <unit>)))
+    (define native-bytevector-copy! (world-function llbase "llbase_bytevector_mutating_copy" (-> <bytevector> <native-int64> <bytevector> <native-int64> <native-int64> <unit>)))
     (define-mutating-copy-proc bytevector-copy! native-bytevector-copy! <bytevector> bytevector-length)
 
-    (define native-utf8->string (world-function llbase "llbase_utf8_to_string" (-> <bytevector> <native-uint32> <native-uint32> <string>)))
+    (define native-utf8->string (world-function llbase "llbase_utf8_to_string" (-> <bytevector> <native-int64> <native-int64> <string>)))
     (define-slice-proc utf8->string native-utf8->string <bytevector> bytevector-length)
 
     (define native-make-bytevector (world-function llbase "llbase_make_bytevector" (-> <native-uint32> <native-uint8> <bytevector>)))
@@ -582,21 +582,21 @@
     (define-r7rs string-set! (world-function llbase "llbase_string_set" (-> <string> <native-uint32> <native-unicode-char> <unit>)))
     (define-r7rs string-append (world-function llbase "llbase_string_append" (-> <string> * <string>)))
 
-    (define native-string->list (world-function llbase "llbase_string_to_list" (-> <string> <native-uint32> <native-uint32> (Listof <char>))))
+    (define native-string->list (world-function llbase "llbase_string_to_list" (-> <string> <native-int64> <native-int64> (Listof <char>))))
     (define-slice-proc string->list native-string->list <string> string-length)
 
-    (define native-string->utf8 (world-function llbase "llbase_string_to_utf8" (-> <string> <native-uint32> <native-uint32> <bytevector>)))
+    (define native-string->utf8 (world-function llbase "llbase_string_to_utf8" (-> <string> <native-int64> <native-int64> <bytevector>)))
     (define-slice-proc string->utf8 native-string->utf8 <string> string-length)
 
     ; Unlike other slicing functions the raw slicer is exposed as (substring) to implement the procedure with the same
     ; name defined in R7RS
-    (define-r7rs substring (world-function llbase "llbase_substring" (-> <string> <native-uint32> <native-uint32> <string>)))
+    (define-r7rs substring (world-function llbase "llbase_substring" (-> <string> <native-int64> <native-int64> <string>)))
     (define-slice-proc string-copy substring <string> string-length)
 
-    (define native-string-copy! (world-function llbase "llbase_string_mutating_copy" (-> <string> <native-uint32> <string> <native-uint32> <native-uint32> <unit>)))
+    (define native-string-copy! (world-function llbase "llbase_string_mutating_copy" (-> <string> <native-int64> <string> <native-int64> <native-int64> <unit>)))
     (define-mutating-copy-proc string-copy! native-string-copy! <string> string-length)
 
-    (define native-string-fill! (world-function llbase "llbase_string_mutating_fill" (-> <string> <native-unicode-char> <native-uint32> <native-uint32> <unit>)))
+    (define native-string-fill! (world-function llbase "llbase_string_mutating_fill" (-> <string> <native-unicode-char> <native-int64> <native-int64> <unit>)))
     (define-r7rs string-fill!
       (case-lambda
         (([target : <string>] [fill : <char>])
@@ -684,7 +684,7 @@
     (define-input-proc read-bytevector "llbase_read_bytevector" (-> <native-uint32> <bytevector>))
     (define-input-proc read-string "llbase_read_string" (-> <native-uint32> <string>))
 
-    (define native-read-bytevector! (world-function llbase "llbase_mutating_read_bytevector" (-> <bytevector> <port> <native-uint32> <native-uint32> (U <exact-integer> <eof-object>))))
+    (define native-read-bytevector! (world-function llbase "llbase_mutating_read_bytevector" (-> <bytevector> <port> <native-int64> <native-int64> (U <exact-integer> <eof-object>))))
     (define-r7rs read-bytevector!
                  (case-lambda
                    (([bv : <bytevector>])
@@ -733,7 +733,7 @@
       (([char : <char>] [port : <port>])
        (native-write-char char port))))
 
-    (define native-write-string (world-function llbase "llbase_write_string" (-> <string> <port> <native-uint32> <native-uint32> <unit>)))
+    (define native-write-string (world-function llbase "llbase_write_string" (-> <string> <port> <native-int64> <native-int64> <unit>)))
     (define-r7rs write-string (case-lambda
       (([str : <string>])
        (native-write-string str (current-output-port) 0 (string-length str)))
@@ -744,7 +744,7 @@
       (([str : <string>] [port : <port>] [start : <exact-integer>] [end : <exact-integer>])
        (native-write-string str port start end))))
 
-    (define native-write-bytevector (world-function llbase "llbase_write_bytevector" (-> <bytevector> <port> <native-uint32> <native-uint32> <unit>)))
+    (define native-write-bytevector (world-function llbase "llbase_write_bytevector" (-> <bytevector> <port> <native-int64> <native-int64> <unit>)))
     (define-r7rs write-bytevector (case-lambda
       (([bv : <bytevector>])
        (native-write-bytevector bv (current-output-port) 0 (bytevector-length bv)))

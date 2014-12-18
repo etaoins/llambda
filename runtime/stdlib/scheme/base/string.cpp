@@ -84,7 +84,7 @@ StringCell* llbase_string_append(World &world, RestValues<StringCell> *argHead)
 	return StringCell::fromAppended(world, stringList);
 }
 
-ProperList<CharCell>* llbase_string_to_list(World &world, StringCell *sourceString, std::uint32_t start, std::uint32_t end)
+ProperList<CharCell>* llbase_string_to_list(World &world, StringCell *sourceString, std::int64_t start, std::int64_t end)
 {
 	assertSliceValid(world, "(string->list)", sourceString, sourceString->charLength(), start, end);
 
@@ -95,13 +95,13 @@ ProperList<CharCell>* llbase_string_to_list(World &world, StringCell *sourceStri
 }
 
 // This is also used to implement (string-copy)
-StringCell* llbase_substring(World &world, StringCell *sourceString, std::uint32_t start, std::uint32_t end)
+StringCell* llbase_substring(World &world, StringCell *sourceString, std::int64_t start, std::int64_t end)
 {
 	assertSliceValid(world, "(substring)", sourceString, sourceString->charLength(), start, end);
 	return sourceString->copy(world, start, end);
 }
 
-void llbase_string_mutating_copy(World &world, StringCell *to, std::uint32_t at, StringCell *from, std::uint32_t start, std::uint32_t end)
+void llbase_string_mutating_copy(World &world, StringCell *to, std::int64_t at, StringCell *from, std::int64_t start, std::int64_t end)
 {
 	if (to->isGlobalConstant())
 	{
@@ -114,7 +114,7 @@ void llbase_string_mutating_copy(World &world, StringCell *to, std::uint32_t at,
 	to->replace(at, from, start, end);
 }
 
-void llbase_string_mutating_fill(World &world, StringCell *string, UnicodeChar fill, std::uint32_t start, std::uint32_t end)
+void llbase_string_mutating_fill(World &world, StringCell *string, UnicodeChar fill, std::int64_t start, std::int64_t end)
 {
 	if (string->isGlobalConstant())
 	{

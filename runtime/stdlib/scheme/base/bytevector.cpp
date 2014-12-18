@@ -75,13 +75,13 @@ BytevectorCell *llbase_bytevector_append(World &world, RestValues<BytevectorCell
 	return BytevectorCell::fromAppended(world, bytevectorList);
 }
 
-BytevectorCell *llbase_string_to_utf8(World &world, StringCell *string, std::uint32_t start, std::uint32_t end)
+BytevectorCell *llbase_string_to_utf8(World &world, StringCell *string, std::int64_t start, std::int64_t end)
 {
 	assertSliceValid(world, "(string->utf8)", string, string->charLength(), start, end);
 	return string->toUtf8Bytevector(world, start, end);
 }
 
-StringCell *llbase_utf8_to_string(World &world, BytevectorCell *bytevector, std::uint32_t start, std::uint32_t end)
+StringCell *llbase_utf8_to_string(World &world, BytevectorCell *bytevector, std::int64_t start, std::int64_t end)
 {
 	assertSliceValid(world, "(utf8->string)", bytevector, bytevector->length(), start, end);
 
@@ -95,12 +95,13 @@ StringCell *llbase_utf8_to_string(World &world, BytevectorCell *bytevector, std:
 	}
 }
 
-BytevectorCell *llbase_bytevector_copy(World &world, BytevectorCell *bytevector, std::uint32_t start, std::uint32_t end)
+BytevectorCell *llbase_bytevector_copy(World &world, BytevectorCell *bytevector, std::int64_t start, std::int64_t end)
 {
+	assertSliceValid(world, "(bytevector-copy)", bytevector, bytevector->length(), start, end);
 	return bytevector->copy(world, start, end);
 }
 
-void llbase_bytevector_mutating_copy(World &world, BytevectorCell *to, std::uint32_t at, BytevectorCell *from, std::uint32_t start, std::uint32_t end)
+void llbase_bytevector_mutating_copy(World &world, BytevectorCell *to, std::int64_t at, BytevectorCell *from, std::int64_t start, std::int64_t end)
 {
 	if (to->isGlobalConstant())
 	{
