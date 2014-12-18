@@ -43,8 +43,11 @@
 (define-test "bytevector-u8-ref" (expect 5
 	(bytevector-u8-ref #u8(1 3 5 201 203 205) 2)))
 
-(define-test "bytevector-u8-ref out of bounds fails" (expect-error range-error?
+(define-test "bytevector-u8-ref past end of bytevector fails" (expect-error range-error?
 	(bytevector-u8-ref #u8(1 3 5 201 203 205) 7)))
+
+(define-test "bytevector-u8-ref with negative index fails" (expect-error range-error?
+	(bytevector-u8-ref #u8(1 3 5 201 203 205) -1)))
 
 (define-test "bytevector-u8-ref with non-integer fails" (expect-error type-error?
 	(bytevector-u8-ref #u8(1 3 5 201 203 205) "4")))
@@ -58,6 +61,14 @@
 (define-test "bytevector-u8-set! on bytevector literal fails" (expect-error mutate-literal-error?
 	; We should fail gracefully from this - i.e. no segfault, no silent success
 	(bytevector-u8-set! #u8(1 1 1 1 1 1) 2 2)))
+
+(define-test "bytevector-u8-set! past end of bytevector fails" (expect-error range-error?
+	(define test-bytevector (make-bytevector 5 1))
+	(bytevector-u8-set! test-bytevector 5 2)))
+
+(define-test "bytevector-u8-set! with negative index fails" (expect-error range-error?
+	(define test-bytevector (make-bytevector 5 1))
+	(bytevector-u8-set! test-bytevector -1 2)))
 
 (define-test "(bytevector-append) with no arguments" (expect #u8()
 	(bytevector-append)))

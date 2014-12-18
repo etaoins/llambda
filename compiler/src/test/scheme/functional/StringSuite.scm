@@ -59,8 +59,11 @@
 (define-test "string-ref on non-BMP Unicode escaped character" (expect #\x1f3c2
 	(string-ref "Hell\x1f3c2;" 4)))
 
-(define-test "string-ref past end of string" (expect-error range-error?
+(define-test "string-ref past end of string fails" (expect-error range-error?
 	(string-ref "Hell☃!" 10)))
+
+(define-test "string-ref with negative index fails" (expect-error range-error?
+	(string-ref "Hell☃!" -1)))
 
 (define-test "string-set! of ASCII character" (expect "*!*"
 	(define test-string (make-string 3 #\*))
@@ -83,6 +86,11 @@
 (define-test "string-set! past end of string fails" (expect-error range-error?
 	(define test-string (make-string 3 #\*))
 	(string-set! test-string 4 #\x2603)
+	test-string))
+
+(define-test "string-set! with negative index fails" (expect-error range-error?
+	(define test-string (make-string 3 #\*))
+	(string-set! test-string -1 #\x2603)
 	test-string))
 
 (define-test "string-set! with invalid character fails" (expect-failure

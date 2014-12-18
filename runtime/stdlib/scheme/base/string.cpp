@@ -5,6 +5,7 @@
 #include "core/error.h"
 
 #include "util/assertSliceValid.h"
+#include "util/assertIndexValid.h"
 #include "util/stringCompare.h"
 #include "util/StringCellBuilder.h"
 
@@ -47,19 +48,14 @@ std::uint32_t llbase_string_length(const StringCell *string)
 	return string->charLength();
 }
 
-std::int32_t llbase_string_ref(World &world, StringCell *string, std::uint32_t index)
+std::int32_t llbase_string_ref(World &world, StringCell *string, std::int64_t index)
 {
-	UnicodeChar unicodeChar(string->charAt(index).codePoint());
+	assertIndexValid(world, "(string-ref)", string, string->charLength(), index);
 
-	if (!unicodeChar.isValid())
-	{
-		signalError(world, ErrorCategory::Range, "(string-ref) past end of string", {string});
-	}
-
-	return unicodeChar.codePoint();
+	return string->charAt(index).codePoint();
 }
 
-void llbase_string_set(World &world, StringCell *string, std::uint32_t index, UnicodeChar unicodeChar)
+void llbase_string_set(World &world, StringCell *string, std::int64_t index, UnicodeChar unicodeChar)
 {
 	if (string->isGlobalConstant())
 	{
@@ -71,10 +67,9 @@ void llbase_string_set(World &world, StringCell *string, std::uint32_t index, Un
 		signalError(world, ErrorCategory::Default, "(string-set!) with invalid character");
 	}
 
-	if (!string->setCharAt(index, unicodeChar))
-	{
-		signalError(world, ErrorCategory::Range, "(string-set!) past end of string", {string});
-	}
+	assertIndexValid(world, "(string-set!)", string, string->charLength(), index);
+
+	string->setCharAt(index, unicodeChar);
 }
 
 StringCell* llbase_string_append(World &world, RestValues<StringCell> *argHead)

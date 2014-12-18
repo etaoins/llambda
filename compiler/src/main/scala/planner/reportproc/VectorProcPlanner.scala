@@ -11,7 +11,7 @@ import llambda.compiler.{celltype => ct}
 
 import llambda.compiler.valuetype.Implicits._
 
-object VectorProcPlanner extends ReportProcPlanner {
+object VectorProcPlanner extends ReportProcPlanner with ReportProcPlannerHelpers {
   /** Maximum length of vector type to create
     *
     * This prevents (make-vector) from creating pathologically large vector types that cause the compiler to consume
@@ -119,12 +119,7 @@ object VectorProcPlanner extends ReportProcPlanner {
       Some(TempValueToIntermediate(vt.UInt32, resultTemp)(plan.config))
 
     case ("vector-ref", List((_, iv.ConstantVectorValue(elements)), (_, iv.ConstantExactIntegerValue(index)))) =>
-      if ((index < 0) || (index >= elements.length)) {
-        throw new RangeException(
-          plan.activeContextLocated,
-          s"Vector index ${index} out of bounds"
-        )
-      }
+      assertIndexValid("(vector-ref)", elements.size, index)
 
       Some(elements(index.toInt))
 
@@ -133,13 +128,8 @@ object VectorProcPlanner extends ReportProcPlanner {
         case vectorType @ vt.SpecificVectorType(elementTypes) =>
           val index = constantInt.value
 
-          if (index >= elementTypes.size) {
-            throw new RangeException(
-              plan.activeContextLocated,
-              s"Vector index ${index} out of bounds"
-            )
-          }
-          
+          assertIndexValid("(vector-ref)", elementTypes.size, index)
+
           val vectorTemp = plan.withContextLocation(vectorLocated) {
             vectorValue.toTempValue(vt.VectorOfType(vt.AnySchemeType))
           }
@@ -170,12 +160,7 @@ object VectorProcPlanner extends ReportProcPlanner {
         case vectorType @ vt.SpecificVectorType(elementTypes) =>
           val index = constantInt.value
 
-          if (index >= elementTypes.size) {
-            throw new RangeException(
-              plan.activeContextLocated,
-              s"Vector index ${index} out of bounds"
-            )
-          }
+          assertIndexValid("(vector-ref)", elementTypes.size, index)
 
           val vectorTemp = plan.withContextLocation(vectorLocated) {
             vectorCellValue.toTempValue(vt.VectorOfType(vt.AnySchemeType))

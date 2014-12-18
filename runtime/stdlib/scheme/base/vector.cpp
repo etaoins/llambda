@@ -9,6 +9,7 @@
 
 #include "unicode/UnicodeChar.h"
 
+#include "util/assertIndexValid.h"
 #include "util/assertSliceValid.h"
 #include "util/StringCellBuilder.h"
 
@@ -27,29 +28,23 @@ std::uint32_t llbase_vector_length(VectorCell *vector)
 	return vector->length();
 }
 
-AnyCell* llbase_vector_ref(World &world, VectorCell *vector, std::uint32_t index)
+AnyCell* llbase_vector_ref(World &world, VectorCell *vector, std::int64_t index)
 {
-	AnyCell* element = vector->elementAt(index);
+	assertIndexValid(world,"(vector-ref)", vector, vector->length(), index);
 
-	if (element == nullptr)
-	{
-		signalError(world, ErrorCategory::Range, "Vector index out of bounds", {vector});
-	}
-
-	return element;
+	return vector->elementAt(index);
 }
 
-void llbase_vector_set(World &world, VectorCell *vector, std::uint32_t index, AnyCell *obj)
+void llbase_vector_set(World &world, VectorCell *vector, std::int64_t index, AnyCell *obj)
 {
+	assertIndexValid(world,"(vector-set!)", vector, vector->length(), index);
+
 	if (vector->isGlobalConstant())
 	{
 		signalError(world, ErrorCategory::MutateLiteral, "(vector-set!) on vector literal", {vector});
 	}
 
-	if (!vector->setElementAt(index, obj))
-	{
-		signalError(world, ErrorCategory::Range, "Vector index out of bounds", {vector});
-	}
+	vector->setElementAt(index, obj);
 }
 
 VectorCell *llbase_vector(World &world, RestValues<AnyCell> *argList)

@@ -53,8 +53,11 @@
 (define-test "vector-ref can return procedure" (expect 5
 	((vector-ref (vector +) 0) 2 3)))
 
-(define-test "vector-ref out of bounds fails" (expect-error range-error?
+(define-test "vector-ref past end of vector fails" (expect-error range-error?
 	(vector-ref #(a b c d e f) 7)))
+
+(define-test "vector-ref with negative index fails" (expect-error range-error?
+	(vector-ref #(a b c d e f) -1)))
 
 (define-test "vector-ref with non-integer fails" (expect-error type-error?
 	(vector-ref #(a b c d e f) "4")))
@@ -68,6 +71,14 @@
 (define-test "vector-set! on vector literal fails" (expect-error mutate-literal-error?
 	; Need to make a new vector because vector literals are immutable
 	(vector-set! #(1 2 3 4 5) 2 2)))
+
+(define-test "vector-set! past end of vector fails" (expect-error range-error?
+	(define test-vector (make-vector 5 1))
+	(vector-set! test-vector 5 2)))
+
+(define-test "vector-set! with negative index fails" (expect-error range-error?
+	(define test-vector (make-vector 5 1))
+	(vector-set! test-vector -1 2)))
 
 (define-test "(vector-append) with no arguments" (expect #()
 	(vector-append)))

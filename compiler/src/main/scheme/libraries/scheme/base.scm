@@ -515,8 +515,8 @@
     (define-r7rs vector (world-function llbase "llbase_vector" (-> <any> * <vector>)))
     ; This is the same runtime function but instead of using a rest arg explicitly pass in the list
     (define-r7rs list->vector (world-function llbase "llbase_vector" (-> <list> <vector>)))
-    (define-r7rs vector-ref (world-function llbase "llbase_vector_ref" (All (A) (Vectorof A) <native-uint32> A)))
-    (define-r7rs vector-set! (world-function llbase "llbase_vector_set" (-> <vector> <native-uint32> <any> <unit>)))
+    (define-r7rs vector-ref (world-function llbase "llbase_vector_ref" (All (A) (Vectorof A) <native-int64> A)))
+    (define-r7rs vector-set! (world-function llbase "llbase_vector_set" (-> <vector> <native-int64> <any> <unit>)))
     (define-r7rs vector-append (world-function llbase "llbase_vector_append" (-> <vector> * <vector>)))
 
     (define native-vector->list (world-function llbase "llbase_vector_to_list" (-> <vector> <native-int64> <native-int64> <list>)))
@@ -553,8 +553,8 @@
 
     (define-r7rs bytevector? (make-predicate <bytevector>))
     (define-r7rs bytevector (world-function llbase "llbase_bytevector" (-> <exact-integer> * <bytevector>)))
-    (define-r7rs bytevector-u8-ref (world-function llbase "llbase_bytevector_u8_ref" (-> <bytevector> <native-uint32> <native-uint8>)))
-    (define-r7rs bytevector-u8-set! (world-function llbase "llbase_bytevector_u8_set" (-> <bytevector> <native-uint32> <native-uint8> <unit>)))
+    (define-r7rs bytevector-u8-ref (world-function llbase "llbase_bytevector_u8_ref" (-> <bytevector> <native-int64> <native-uint8>)))
+    (define-r7rs bytevector-u8-set! (world-function llbase "llbase_bytevector_u8_set" (-> <bytevector> <native-int64> <native-uint8> <unit>)))
     (define-r7rs bytevector-append (world-function llbase "llbase_bytevector_append" (-> <bytevector> * <bytevector>)))
 
     (define native-bytevector-copy (world-function llbase "llbase_bytevector_copy" (-> <bytevector> <native-int64> <native-int64> <bytevector>)))
@@ -578,8 +578,8 @@
     (define-r7rs string (world-function llbase "llbase_string" (-> <char> * <string>)))
     ; This is the same runtime function but instead of using a rest arg explicitly pass in the list
     (define-r7rs list->string (world-function llbase "llbase_string" (-> (Listof <char>) <string>)))
-    (define-r7rs string-ref (world-function llbase "llbase_string_ref" (-> <string> <native-uint32> <native-unicode-char>)))
-    (define-r7rs string-set! (world-function llbase "llbase_string_set" (-> <string> <native-uint32> <native-unicode-char> <unit>)))
+    (define-r7rs string-ref (world-function llbase "llbase_string_ref" (-> <string> <native-int64> <native-unicode-char>)))
+    (define-r7rs string-set! (world-function llbase "llbase_string_set" (-> <string> <native-int64> <native-unicode-char> <unit>)))
     (define-r7rs string-append (world-function llbase "llbase_string_append" (-> <string> * <string>)))
 
     (define native-string->list (world-function llbase "llbase_string_to_list" (-> <string> <native-int64> <native-int64> (Listof <char>))))

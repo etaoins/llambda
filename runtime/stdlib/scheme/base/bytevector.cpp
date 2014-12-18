@@ -7,6 +7,7 @@
 #include "unicode/utf8/InvalidByteSequenceException.h"
 #include "core/error.h"
 
+#include "util/assertIndexValid.h"
 #include "util/assertSliceValid.h"
 #include "util/utf8ExceptionToSchemeError.h"
 
@@ -25,29 +26,23 @@ std::uint32_t llbase_bytevector_length(BytevectorCell *bytevector)
 	return bytevector->length();
 }
 
-std::uint8_t llbase_bytevector_u8_ref(World &world, BytevectorCell *bytevector, std::uint32_t index)
+std::uint8_t llbase_bytevector_u8_ref(World &world, BytevectorCell *bytevector, std::int64_t index)
 {
-	auto byte = bytevector->byteAt(index);
+	assertIndexValid(world, "(bytevector-u8-ref)", bytevector, bytevector->length(), index);
 
-	if (byte == BytevectorCell::InvalidByte)
-	{
-		signalError(world, ErrorCategory::Range, "Bytevector index out of bounds", {bytevector});
-	}
-
-	return byte;
+	return bytevector->byteAt(index);
 }
 
-void llbase_bytevector_u8_set(World &world, BytevectorCell *bytevector, std::uint32_t index, std::uint8_t value)
+void llbase_bytevector_u8_set(World &world, BytevectorCell *bytevector, std::int64_t index, std::uint8_t value)
 {
 	if (bytevector->isGlobalConstant())
 	{
 		signalError(world, ErrorCategory::MutateLiteral, "(bytevector-set!) on bytevector literal", {bytevector});
 	}
 
-	if (!bytevector->setByteAt(index, value))
-	{
-		signalError(world, ErrorCategory::Range, "Bytevector index out of bounds", {bytevector});
-	}
+	assertIndexValid(world, "(bytevector-u8-set!)", bytevector, bytevector->length(), index);
+
+	bytevector->setByteAt(index, value);
 }
 
 BytevectorCell *llbase_bytevector(World &world, RestValues<ExactIntegerCell> *argList)
