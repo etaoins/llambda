@@ -79,7 +79,7 @@ SymbolCell* SymbolCell::fromString(World &world, StringCell *string)
 	// Symbols must have a higher inlining threshold than strings for the below logic to work
 	static_assert(
 			sizeof(InlineSymbolCell::m_inlineData) >= sizeof(InlineStringCell::m_inlineData),
-			"Symbols and strings must have the same inlining threshold"
+			"Symbols must have a higher inlining threshold than strings"
 	);
 
 	auto const byteLength = stringRef->byteLength();
