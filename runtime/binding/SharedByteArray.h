@@ -19,6 +19,12 @@ namespace lliby
 class SharedByteArray
 {
 public:
+	constexpr static std::size_t maximumCapacity()
+	{
+		// We're limited by the maximum allocation size
+		return std::numeric_limits<size_t>::max() - sizeof(SharedByteArray);
+	}
+
 	/**
 	 * Creates a new SharedByteArray instance of the exactly the given size
 	 */
@@ -122,10 +128,10 @@ public:
 	static std::size_t instanceCount();
 
 private:
-	typedef std::uint32_t refcount_t;
-	static const std::uint32_t SharedConstantRefCount = std::numeric_limits<refcount_t>::max();
+	using RefCountType = std::uint32_t;
+	static const RefCountType SharedConstantRefCount = std::numeric_limits<RefCountType>::max();
 
-	SharedByteArray(refcount_t initialRefCount);
+	SharedByteArray(RefCountType initialRefCount);
 
 	void operator delete(void *p)
 	{
@@ -138,7 +144,7 @@ private:
 	~SharedByteArray();
 #endif
 
-	std::atomic<refcount_t> m_refCount;
+	std::atomic<RefCountType> m_refCount;
 	std::uint8_t m_data[];
 };
 

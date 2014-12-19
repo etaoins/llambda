@@ -23,7 +23,7 @@ public:
 	 * It's an error if the total number of characters appended to the builder does not match charLength when result()
 	 * is called
 	 */
-	explicit StringCellBuilder(std::uint32_t charLength) :
+	explicit StringCellBuilder(StringCell::CharLengthType charLength) :
 		m_expectedChars(charLength)
 	{
 		// Four bytes is the largest encoding for a UTF-8 chacracter
@@ -46,6 +46,16 @@ public:
 	}
 
 	/**
+	 * Returns the total byte length of UTF-8 encoded data appened to the builder
+	 *
+	 * @sa StringCell::maximumByteLength()
+	 */
+	std::size_t byteLength() const
+	{
+		return m_outputCursor - m_outputBuffer;
+	}
+
+	/**
 	 * Returns the fully built StringCell instance allocated in the passed world
 	 *
 	 * It's an error if the number of appended characters does not match the character count passed to the builder
@@ -53,10 +63,10 @@ public:
 	 */
 	StringCell *result(World &world)
 	{
-#ifndef NDEBUG
+		const std::size_t totalByteLength = m_outputCursor - m_outputBuffer;
+
 		assert(m_actualChars == m_expectedChars);
-#endif
-		const std::uint32_t totalByteLength = m_outputCursor - m_outputBuffer;
+		assert(totalByteLength <= StringCell::maximumByteLength());
 
 		// Create a new string to write in to
 		auto newString = StringCell::createUninitialized(world, totalByteLength, m_expectedChars);
@@ -82,11 +92,11 @@ public:
 
 private:
 	std::uint8_t *m_outputBuffer;
-	std::uint32_t m_expectedChars;
+	StringCell::CharLengthType m_expectedChars;
 	std::uint8_t *m_outputCursor;
 
 #ifndef NDEBUG
-	std::uint32_t m_actualChars = 0;
+	StringCell::CharLengthType m_actualChars = 0;
 #endif
 };
 

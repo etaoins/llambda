@@ -3,7 +3,7 @@
  ************************************************************/
 
 public:
-	std::uint32_t length() const
+	std::int64_t length() const
 	{
 		return m_length;
 	}
@@ -25,5 +25,5 @@ public:
 	}
 
 private:
-	std::uint32_t m_length;
+	std::int64_t m_length;
 	SharedByteArray* m_byteArray;

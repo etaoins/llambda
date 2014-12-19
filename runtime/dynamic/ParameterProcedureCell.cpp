@@ -17,7 +17,7 @@ namespace
 {
 	// This value should blow up the GC as a sanity check that we registered our class with registerRecordClass() at
 	// startup
-	std::uint32_t registeredClassId = ~0;
+	RecordLikeCell::RecordClassIdType registeredClassId = ~0;
 
 	ReturnValues<AnyCell> *procedureBody(World &world, ProcedureCell *self, RestValues<AnyCell> *argList)
 	{

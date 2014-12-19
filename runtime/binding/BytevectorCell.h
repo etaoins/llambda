@@ -14,6 +14,16 @@ class BytevectorCell : public AnyCell
 {
 #include "generated/BytevectorCellMembers.h"
 public:
+	using LengthType = decltype(m_length);
+	using SliceIndexType = std::int64_t;
+
+	constexpr static LengthType maximumLength()
+	{
+		return (std::numeric_limits<LengthType>::max() < SharedByteArray::maximumCapacity()) ?
+			std::numeric_limits<LengthType>::max() :
+			SharedByteArray::maximumCapacity();
+	}
+
 	/**
 	 * Creates a new BytevectorCell backed by the passed SharedByteArray
 	 *
@@ -23,8 +33,8 @@ public:
 	 * @param  byteArray  Byte array to back the bytevector cell
 	 * @param  length     Length of the data in bytes
 	 */
-	static BytevectorCell* withByteArray(World &world, SharedByteArray *byteArray, std::uint32_t length);
-	
+	static BytevectorCell* withByteArray(World &world, SharedByteArray *byteArray, LengthType length);
+
 	/**
 	 * Creates a new BytevectorCell from a copy of the passed data
 	 *
@@ -32,32 +42,32 @@ public:
 	 * @param  data    Byte data to copy in to the new bytevector
 	 * @param  length  Length of the data in bytes
 	 */
-	static BytevectorCell* fromData(World &world, const std::uint8_t *data, std::uint32_t length);
+	static BytevectorCell* fromData(World &world, const std::uint8_t *data, LengthType length);
 
 	static const std::int16_t InvalidByte = -1;
 
-	static BytevectorCell* fromFill(World &world, std::uint32_t length, std::uint8_t fill = 0);
+	static BytevectorCell* fromFill(World &world, LengthType length, std::uint8_t fill = 0);
 	static BytevectorCell* fromAppended(World &world, const std::list<const BytevectorCell*> &byteVectors);
 
-	BytevectorCell* copy(World &world, std::int64_t start = 0, std::int64_t end = -1) const; 
-	bool replace(std::uint32_t offset, const BytevectorCell *from, std::int64_t fromStart = 0, std::int64_t fromEnd = -1);
+	BytevectorCell* copy(World &world, SliceIndexType start = 0, SliceIndexType end = -1) const;
+	bool replace(LengthType offset, const BytevectorCell *from, SliceIndexType fromStart = 0, SliceIndexType fromEnd = -1);
 
-	StringCell* utf8ToString(World &world, std::int64_t start = 0, std::int64_t end = -1);
+	StringCell* utf8ToString(World &world, SliceIndexType start = 0, SliceIndexType end = -1);
 
-	std::int16_t byteAt(std::uint32_t offset) const
+	std::int16_t byteAt(LengthType offset) const
 	{
 		if (offset >= length())
 		{
 			return -1;
 		}
-		
+
 		return byteArray()->data()[offset];
 	}
 
-	bool setByteAt(std::uint32_t offset, std::uint8_t value)
+	bool setByteAt(LengthType offset, std::uint8_t value)
 	{
 		assert(!isGlobalConstant());
-		
+
 		if (offset >= length())
 		{
 			return false;
@@ -70,11 +80,11 @@ public:
 
 		return true;
 	}
-	
+
 	void finalizeBytevector();
 
 protected:
-	BytevectorCell(SharedByteArray *byteArray, std::uint32_t length) :
+	BytevectorCell(SharedByteArray *byteArray, LengthType length) :
 		AnyCell(CellTypeId::Bytevector),
 		m_length(length),
 		m_byteArray(byteArray)

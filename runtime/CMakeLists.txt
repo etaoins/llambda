@@ -49,6 +49,7 @@ add_library(llcore
 	unicode/utf8.cpp
 	unicode/utf8/InvalidByteSequenceException.cpp
 	util/portCellToStream.cpp
+	util/rangeAssertions.cpp
 	util/utf8ExceptionToSchemeError.cpp
 	writer/DisplayDatumWriter.cpp
 	writer/ExternalFormDatumWriter.cpp

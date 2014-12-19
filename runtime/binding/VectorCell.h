@@ -2,7 +2,10 @@
 #define _LLIBY_BINDING_VECTORCELL_H
 
 #include "AnyCell.h"
+
 #include <vector>
+#include <limits>
+#include <algorithm>
 #include <cassert>
 
 namespace lliby
@@ -12,17 +15,36 @@ class VectorCell : public AnyCell
 {
 #include "generated/VectorCellMembers.h"
 public:
-	AnyCell* elementAt(std::uint32_t offset) const
+	using LengthType = decltype(m_length);
+	using SliceIndexType = std::int64_t;
+
+	/**
+	 * Creates a new VectorCell from the passed array of elements
+	 */
+	VectorCell(AnyCell **elements, LengthType length) :
+		AnyCell(CellTypeId::Vector),
+		m_length(length),
+		m_elements(elements)
+	{
+	}
+
+	constexpr static LengthType maximumLength()
+	{
+		// We're limited by our allocation size on both 32bit and 64bit
+		return std::numeric_limits<size_t>::max() / sizeof(AnyCell*);
+	}
+
+	AnyCell* elementAt(LengthType offset) const
 	{
 		if (offset >= length())
 		{
 			return nullptr;
 		}
-		
+
 		return elements()[offset];
 	}
 
-	bool setElementAt(std::uint32_t offset, AnyCell *value)
+	bool setElementAt(LengthType offset, AnyCell *value)
 	{
 		if (offset >= length())
 		{
@@ -40,25 +62,17 @@ public:
 	 *
 	 * This transfers ownership of the elements array to the VectorCell. The array must be allocated using new[]
 	 */
-	static VectorCell* fromElements(World &world, AnyCell **elements, std::uint32_t length);
+	static VectorCell* fromElements(World &world, AnyCell **elements, LengthType length);
 
-	static VectorCell* fromFill(World &world, std::uint32_t length, AnyCell *fill = nullptr);
+	static VectorCell* fromFill(World &world, LengthType length, AnyCell *fill = nullptr);
 	static VectorCell* fromAppended(World &world, const std::vector<const VectorCell*> &vectors);
-	
-	VectorCell* copy(World &world, std::int64_t start = 0, std::int64_t end = -1); 
-	bool replace(std::uint32_t offset, const VectorCell *from, std::int64_t fromStart = 0, std::int64_t fromEnd = -1);
 
-	bool fill(AnyCell *fill, std::int64_t start = 0, std::int64_t end = -1);
-	
+	VectorCell* copy(World &world, SliceIndexType start = 0, SliceIndexType end = -1);
+	bool replace(SliceIndexType offset, const VectorCell *from, SliceIndexType fromStart = 0, SliceIndexType fromEnd = -1);
+
+	bool fill(AnyCell *fill, SliceIndexType start = 0, SliceIndexType end = -1);
+
 	void finalizeVector();
-
-protected:
-	VectorCell(AnyCell **elements, std::uint32_t length) :
-		AnyCell(CellTypeId::Vector),
-		m_length(length),
-		m_elements(elements)
-	{
-	}
 };
 
 }

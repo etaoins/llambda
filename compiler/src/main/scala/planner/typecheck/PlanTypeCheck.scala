@@ -118,7 +118,7 @@ object PlanTypeCheck {
           val vectorTemp = checkValue.castToCellTempValue(ct.VectorCell)(isVectorPlan)
 
           // Find the length of the vector
-          val vectorLengthTemp = ps.Temp(vt.UInt32)
+          val vectorLengthTemp = ps.Temp(vt.Int64)
           isVectorPlan.steps += ps.LoadVectorLength(vectorLengthTemp, vectorTemp)
 
           // Load the vector elements pointer
@@ -126,7 +126,7 @@ object PlanTypeCheck {
           isVectorPlan.steps += ps.LoadVectorElementsData(elementsTemp, vectorTemp)
 
           // Create a temp for the vector index
-          val vectorIndexTemp = ps.Temp(vt.UInt32)
+          val vectorIndexTemp = ps.Temp(vt.Int64)
 
           // Fork the plan
           val loopPlan = isVectorPlan.forkPlan()
@@ -170,8 +170,8 @@ object PlanTypeCheck {
   else {
     val (valueMemberType, testMemberType) = typesToTest(index)
 
-    val indexTemp = ps.Temp(vt.UInt32)
-    plan.steps += ps.CreateNativeInteger(indexTemp, index, 32)
+    val indexTemp = ps.Temp(vt.Int64)
+    plan.steps += ps.CreateNativeInteger(indexTemp, index, vt.Int64.bits)
 
     val elementTemp = ps.Temp(vt.AnySchemeType)
     plan.steps += ps.LoadVectorElement(elementTemp, vectorTemp, elementsTemp, indexTemp)
@@ -200,11 +200,11 @@ object PlanTypeCheck {
         isVectorPlan.steps += ps.LoadVectorElementsData(elementsTemp, vectorTemp)
 
         // Find the length of the vector
-        val vectorLengthTemp = ps.Temp(vt.UInt32)
+        val vectorLengthTemp = ps.Temp(vt.Int64)
         isVectorPlan.steps += ps.LoadVectorLength(vectorLengthTemp, vectorTemp)
 
-        val expectedLengthTemp = ps.Temp(vt.UInt32)
-        isVectorPlan.steps += ps.CreateNativeInteger(expectedLengthTemp, expectedLength, ct.VectorCell.lengthIrType.bits) 
+        val expectedLengthTemp = ps.Temp(vt.Int64)
+        isVectorPlan.steps += ps.CreateNativeInteger(expectedLengthTemp, expectedLength, ct.VectorCell.lengthIrType.bits)
 
         val lengthMatchTemp = ps.Temp(vt.Predicate)
         isVectorPlan.steps += ps.IntegerCompare(lengthMatchTemp, ps.CompareCond.Equal, None, vectorLengthTemp, expectedLengthTemp) 

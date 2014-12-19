@@ -20,6 +20,9 @@
 (define-test "(make-vector) a filled non-empty vector" (expect #(5.0 5.0 5.0)
 	(make-vector 3 5.0)))
 
+(define-test "(make-vector) with a negative length fails" (expect-error range-error?
+	(make-vector -3)))
+
 (define-test "(vector) an empty vector" (expect #()
 	(vector)))
 

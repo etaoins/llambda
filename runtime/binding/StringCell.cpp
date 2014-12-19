@@ -10,7 +10,9 @@
 
 #include "platform/memory.h"
 #include "unicode/utf8.h"
+
 #include "util/StringCellBuilder.h"
+#include "util/adjustSlice.h"
 
 #include "alloc/allocator.h"
 #include "alloc/cellref.h"
@@ -18,7 +20,7 @@
 namespace lliby
 {
 
-StringCell* StringCell::createUninitialized(World &world, std::uint32_t byteLength, std::uint32_t charLength)
+StringCell* StringCell::createUninitialized(World &world, ByteLengthType byteLength, CharLengthType charLength)
 {
 	void *cellPlacement = alloc::allocateCells(world);
 
@@ -58,7 +60,7 @@ StringCell* StringCell::fromUtf8StdString(World &world, const std::string &str)
 	return StringCell::fromUtf8Data(world, reinterpret_cast<const std::uint8_t*>(str.data()), str.size());
 }
 
-StringCell* StringCell::withUtf8ByteArray(World &world, SharedByteArray *byteArray, std::uint32_t byteLength)
+StringCell* StringCell::withUtf8ByteArray(World &world, SharedByteArray *byteArray, ByteLengthType byteLength)
 {
 	if (byteLength <= inlineDataSize())
 	{
@@ -80,7 +82,7 @@ StringCell* StringCell::withUtf8ByteArray(World &world, SharedByteArray *byteArr
 	return new (cellPlacement) HeapStringCell(byteArray, byteLength, charLength);
 }
 
-StringCell* StringCell::fromValidatedUtf8Data(World &world, const std::uint8_t *data, std::uint32_t byteLength, std::uint32_t charLength)
+StringCell* StringCell::fromValidatedUtf8Data(World &world, const std::uint8_t *data, ByteLengthType byteLength, CharLengthType charLength)
 {
 	auto newString = StringCell::createUninitialized(world, byteLength, charLength);
 
@@ -90,7 +92,7 @@ StringCell* StringCell::fromValidatedUtf8Data(World &world, const std::uint8_t *
 	return newString;
 }
 
-StringCell* StringCell::fromUtf8Data(World &world, const std::uint8_t *data, std::uint32_t byteLength)
+StringCell* StringCell::fromUtf8Data(World &world, const std::uint8_t *data, ByteLengthType byteLength)
 {
 	const std::uint8_t *scanPtr = data;
 	const std::uint8_t *endPtr = data + byteLength;
@@ -101,13 +103,13 @@ StringCell* StringCell::fromUtf8Data(World &world, const std::uint8_t *data, std
 	return StringCell::fromValidatedUtf8Data(world, data, byteLength, charLength);
 }
 
-StringCell* StringCell::fromFill(World &world, std::uint32_t length, UnicodeChar fill)
+StringCell* StringCell::fromFill(World &world, CharLengthType length, UnicodeChar fill)
 {
 	// Figure out how many bytes we'll need
 	utf8::EncodedChar encoded(utf8::encodeChar(fill));
 	const std::size_t encodedCharSize = encoded.size;
 
-	const std::uint32_t byteLength = encodedCharSize * length;
+	const ByteLengthType byteLength = encodedCharSize * length;
 
 	// Allocate the string
 	auto newString = StringCell::createUninitialized(world, byteLength, length);
@@ -115,7 +117,7 @@ StringCell* StringCell::fromFill(World &world, std::uint32_t length, UnicodeChar
 	std::uint8_t *utf8Data = newString->utf8Data();
 
 	// Actually fill
-	for(std::uint32_t i = 0; i < length; i++)
+	for(CharLengthType i = 0; i < length; i++)
 	{
 		memcpy(&utf8Data[i * encodedCharSize], encoded.data, encodedCharSize);
 	}
@@ -132,7 +134,7 @@ StringCell* StringCell::fromAppended(World &world, std::vector<StringCell*> &str
 	}
 	
 	std::uint64_t totalByteLength = 0;
-	std::uint32_t totalCharLength = 0;
+	CharLengthType totalCharLength = 0;
 
 	for(auto stringPart : strings)
 	{
@@ -141,7 +143,7 @@ StringCell* StringCell::fromAppended(World &world, std::vector<StringCell*> &str
 	}
 
 	// We only have to check bytelength because charLength must always be <=
-	if (totalByteLength > std::numeric_limits<std::uint32_t>::max())
+	if (totalByteLength > maximumByteLength())
 	{
 		return nullptr;
 	}
@@ -244,12 +246,12 @@ const std::uint8_t* StringCell::constUtf8Data() const
 	return const_cast<StringCell*>(this)->utf8Data();
 }
 
-const std::uint8_t* StringCell::charPointer(std::uint32_t charOffset)
+const std::uint8_t* StringCell::charPointer(CharLengthType charOffset)
 {
 	return charPointer(charOffset, utf8Data(), 0);
 }
 
-const std::uint8_t* StringCell::charPointer(std::uint32_t charOffset, const std::uint8_t *startFrom, std::uint32_t startOffset)
+const std::uint8_t* StringCell::charPointer(CharLengthType charOffset, const std::uint8_t *startFrom, ByteLengthType startOffset)
 {
 	// Is the rest of the string ASCII?
 	// We can determine this by verifying the number remaining bytes in the string are equal to the number of remaining
@@ -294,26 +296,14 @@ const std::uint8_t* StringCell::charPointer(std::uint32_t charOffset, const std:
 	return scanPtr;
 }
 
-StringCell::CharRange StringCell::charRange(std::int64_t start, std::int64_t end)
+StringCell::CharRange StringCell::charRange(SliceIndexType start, SliceIndexType end)
 {
-	if (end == -1)
+	if (!adjustSlice(start, end, charLength()))
 	{
-		end = charLength();
-	}
-	else if (end > charLength())
-	{
-		// The end can't be greater than the string length
 		return CharRange { 0 };
 	}
 
-	if (end < start)
-	{
-		// The end can't be before the start
-		// Combined with the above logic that means the start must also be less than or equal to the length
-		return CharRange { 0 };
-	}
-
-	const std::uint32_t charCount = end - start;
+	const CharLengthType charCount = end - start;
 
 	const std::uint8_t *startPointer = charPointer(start);
 	const std::uint8_t *endPointer = charPointer(end, startPointer, start);
@@ -321,7 +311,7 @@ StringCell::CharRange StringCell::charRange(std::int64_t start, std::int64_t end
 	return CharRange { startPointer, endPointer, charCount };
 }
 
-UnicodeChar StringCell::charAt(std::uint32_t offset) const
+UnicodeChar StringCell::charAt(CharLengthType offset) const
 {
 	if (offset >= charLength())
 	{
@@ -354,14 +344,14 @@ bool StringCell::replaceBytes(const CharRange &range, const std::uint8_t *patter
 	{
 		// Create a new string from pieces of the old string
 		const std::uint64_t newByteLength = byteLength() + requiredBytes - replacedBytes;
-		
-		if (newByteLength > std::numeric_limits<std::uint32_t>::max())
+
+		if (newByteLength > maximumByteLength())
 		{
 			return false;
 		}
 
-		const std::uint32_t initialBytes = range.startPointer - utf8Data(); 
-		const std::uint32_t finalBytes = newByteLength - initialBytes - requiredBytes;
+		const ByteLengthType initialBytes = range.startPointer - utf8Data();
+		const ByteLengthType finalBytes = newByteLength - initialBytes - requiredBytes;
 
 		const bool wasInline = dataIsInline();
 		const bool nowInline = newByteLength <= inlineDataSize();
@@ -471,7 +461,7 @@ bool StringCell::replaceBytes(const CharRange &range, const std::uint8_t *patter
 	return true;
 }
 
-bool StringCell::fill(UnicodeChar unicodeChar, std::int64_t start, std::int64_t end)
+bool StringCell::fill(UnicodeChar unicodeChar, SliceIndexType start, SliceIndexType end)
 {
 	assert(unicodeChar.isValid());
 	CharRange range = charRange(start, end);
@@ -487,7 +477,7 @@ bool StringCell::fill(UnicodeChar unicodeChar, std::int64_t start, std::int64_t 
 	return replaceBytes(range, encoded.data, encoded.size, range.charCount);
 }
 
-bool StringCell::replace(std::uint32_t offset, const StringCell *from, std::int64_t fromStart, std::int64_t fromEnd)
+bool StringCell::replace(CharLengthType offset, const StringCell *from, SliceIndexType fromStart, SliceIndexType fromEnd)
 {
 	CharRange fromRange = const_cast<StringCell*>(from)->charRange(fromStart, fromEnd);
 
@@ -506,13 +496,13 @@ bool StringCell::replace(std::uint32_t offset, const StringCell *from, std::int6
 	return replaceBytes(toRange, fromRange.startPointer, fromRange.byteCount(), 1);
 }
 
-bool StringCell::setCharAt(std::uint32_t offset, UnicodeChar unicodeChar)
+bool StringCell::setCharAt(CharLengthType offset, UnicodeChar unicodeChar)
 {
 	assert(unicodeChar.isValid());
 	return fill(unicodeChar, offset, offset + 1);
 }
 
-StringCell* StringCell::copy(World &world, std::int64_t start, std::int64_t end)
+StringCell* StringCell::copy(World &world, SliceIndexType start, SliceIndexType end)
 {
 	// Allocating a string below can actually change "this"
 	// That is super annoying
@@ -541,7 +531,7 @@ StringCell* StringCell::copy(World &world, std::int64_t start, std::int64_t end)
 		);
 	}
 
-	const std::uint32_t newByteLength = range.byteCount();
+	const ByteLengthType newByteLength = range.byteCount();
 
 	// Create the new string
 	auto newString = StringCell::createUninitialized(world, newByteLength, range.charCount);
@@ -562,8 +552,8 @@ StringCell* StringCell::copy(World &world, std::int64_t start, std::int64_t end)
 
 	return newString;
 }
-	
-std::vector<UnicodeChar> StringCell::unicodeChars(std::int64_t start, std::int64_t end) const
+
+std::vector<UnicodeChar> StringCell::unicodeChars(SliceIndexType start, SliceIndexType end) const
 {
 	if (end == -1)
 	{
@@ -583,7 +573,7 @@ std::vector<UnicodeChar> StringCell::unicodeChars(std::int64_t start, std::int64
 		return std::vector<UnicodeChar>();
 	}
 
-	const std::uint32_t charCount = end - start;
+	const CharLengthType charCount = end - start;
 
 	std::vector<UnicodeChar> ret;
 	ret.reserve(charCount);
@@ -615,7 +605,7 @@ bool StringCell::operator==(const StringCell &other) const
 
 int StringCell::compare(const StringCell *other) const
 {
-	std::uint32_t compareBytes = std::min(byteLength(), other->byteLength());
+	ByteLengthType compareBytes = std::min(byteLength(), other->byteLength());
 
 	// Bytewise comparisons in UTF-8 sort Unicode code points correctly
 	int result = memcmp(constUtf8Data(), other->constUtf8Data(), compareBytes);
@@ -663,7 +653,7 @@ int StringCell::compare(const StringCell *other, UnicodeChar (*converter)(Unicod
 	return 0;
 }
 
-BytevectorCell* StringCell::toUtf8Bytevector(World &world, std::int64_t start, std::int64_t end) 
+BytevectorCell* StringCell::toUtf8Bytevector(World &world, SliceIndexType start, SliceIndexType end)
 {
 	CharRange range = charRange(start, end);
 
@@ -672,7 +662,7 @@ BytevectorCell* StringCell::toUtf8Bytevector(World &world, std::int64_t start, s
 		return nullptr;
 	}
 
-	std::uint32_t newLength = range.endPointer - range.startPointer;
+	ByteLengthType newLength = range.endPointer - range.startPointer;
 	SharedByteArray *byteArray;
 
 	if ((newLength == byteLength()) && !dataIsInline())

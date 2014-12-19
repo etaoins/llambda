@@ -34,7 +34,7 @@ object GenForAll {
 
       val exitBlock = irFunction.startChildBlock("forAllExit")
 
-      val indexType = IntegerType(32)
+      val indexType = IntegerType(64)
       val incedIndex = LocalVariable(irFunction.nameSource.allocate("incedIndex"), indexType)
       val loopCountIr = state.liveTemps(loopCountValueTemp)
 
@@ -42,7 +42,7 @@ object GenForAll {
 
       // Find our loop index
       val loopIndexIr = rangeCheckBlock.phi("loopIndex")(
-        PhiSource(IntegerConstant(IntegerType(32), 0), previousBlock),
+        PhiSource(IntegerConstant(indexType, 0), previousBlock),
         PhiSource(incedIndex, loopContBlock)
       )
 

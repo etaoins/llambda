@@ -89,15 +89,15 @@
 !47 = metadata !{metadata !"Any::gcState->Char", metadata !11}
 !48 = metadata !{metadata !"Char::unicodeChar"}
 
-; {supertype, unsigned length, elements}
-%vector = type {%any, i32, %any**}
+; {supertype, signed length, elements}
+%vector = type {%any, i64, %any**}
 !49 = metadata !{metadata !"Any::typeId->Vector", metadata !10}
 !50 = metadata !{metadata !"Any::gcState->Vector", metadata !11}
 !51 = metadata !{metadata !"Vector::length"}
 !52 = metadata !{metadata !"Vector::elements"}
 
-; {supertype, unsigned length, byteArray}
-%bytevector = type {%any, i32, %sharedByteArray*}
+; {supertype, signed length, byteArray}
+%bytevector = type {%any, i64, %sharedByteArray*}
 !53 = metadata !{metadata !"Any::typeId->Bytevector", metadata !10}
 !54 = metadata !{metadata !"Any::gcState->Bytevector", metadata !11}
 !55 = metadata !{metadata !"Bytevector::length"}

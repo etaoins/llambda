@@ -36,7 +36,7 @@ public:
 	/**
 	 * Creates a new instance of this TypedProcedureCell
 	 */
-	static TypedProcedureCell<R, Args...>* createInstance(World &world, std::uint32_t recordClassId, bool dataIsInline, void *recordData, TypedEntryPoint entryPoint)
+	static TypedProcedureCell<R, Args...>* createInstance(World &world, RecordClassIdType recordClassId, bool dataIsInline, void *recordData, TypedEntryPoint entryPoint)
 	{
 		void *cellPlacement = alloc::allocateCells(world);
 		return new (cellPlacement) TypedProcedureCell<R, Args...>(recordClassId, dataIsInline, recordData, entryPoint);
@@ -53,9 +53,9 @@ public:
 
 	// Runtime testing of procedure cell subtypes is not possible
 	static bool isInstance(const AnyCell *cell) = delete;
-	
+
 private:
-	TypedProcedureCell<R, Args...>(std::uint32_t recordClassId, bool dataIsInline, void *recordData, TypedEntryPoint entryPoint) :
+	TypedProcedureCell<R, Args...>(RecordClassIdType recordClassId, bool dataIsInline, void *recordData, TypedEntryPoint entryPoint) :
 		ProcedureCell(recordClassId, dataIsInline, recordData, reinterpret_cast<void*>(entryPoint))
 	{
 	}

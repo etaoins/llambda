@@ -8,7 +8,7 @@ trait ReportProcPlannerHelpers {
   /** Asserts that an index is within an object of the passed length
     *
     * If this fails a RangeException will be thrown; the function will return normally otherwise. This will throw
-    * errors consistent with runtime/util/assertIndexValid.h
+    * errors consistent with runtime/util/rangeAssertions.h
     */
   protected def assertIndexValid(procName : String, length : Long, index : Long)(implicit plan : PlanWriter) : Unit =
     if (index >= length) {

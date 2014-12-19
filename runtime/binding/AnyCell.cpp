@@ -123,7 +123,7 @@ bool AnyCell::isEqual(const AnyCell *other) const
 			}
 
 			// Compare the vector element for element
-			for(std::uint32_t i = 0; i < thisVector->length(); i++)
+			for(VectorCell::LengthType i = 0; i < thisVector->length(); i++)
 			{
 				if (!thisVector->elements()[i]->isEqual(otherVector->elements()[i]))
 				{

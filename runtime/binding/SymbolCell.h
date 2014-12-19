@@ -19,6 +19,13 @@ class SymbolCell : public AnyCell
 	friend class StringCell;
 	friend class ImplicitSharingTest;
 public:
+	using ByteLengthType = decltype(m_byteLength);
+
+	constexpr static ByteLengthType maximumByteLength()
+	{
+		return std::numeric_limits<ByteLengthType>::max();
+	}
+
 	/**
 	 * Creates a new symbol from an STL string
 	 *
@@ -31,7 +38,7 @@ public:
 	 *
 	 * This will return nullptr if the string is larger than 64KiB
 	 */
-	static SymbolCell* fromUtf8Data(World &world, const std::uint8_t *data, std::uint32_t byteLength);
+	static SymbolCell* fromUtf8Data(World &world, const std::uint8_t *data, ByteLengthType byteLength);
 
 	/**
 	 * Creates a new symbol from a string
@@ -52,7 +59,7 @@ public:
 	void finalizeSymbol();
 
 protected:
-	SymbolCell(std::uint32_t byteLength) :
+	SymbolCell(ByteLengthType byteLength) :
 		AnyCell(CellTypeId::Symbol),
 		m_byteLength(byteLength)
 	{
@@ -68,7 +75,7 @@ class HeapSymbolCell : public SymbolCell
 	friend class StringCell;
 #include "generated/HeapSymbolCellMembers.h"
 private:
-	HeapSymbolCell(SharedByteArray *byteArray, std::uint16_t byteLength, std::uint16_t charLength);
+	HeapSymbolCell(SharedByteArray *byteArray, ByteLengthType byteLength, std::uint16_t charLength);
 };
 
 class InlineSymbolCell : public SymbolCell
@@ -77,7 +84,7 @@ class InlineSymbolCell : public SymbolCell
 	friend class StringCell;
 #include "generated/InlineSymbolCellMembers.h"
 private:
-	InlineSymbolCell(std::uint16_t byteLength);
+	InlineSymbolCell(ByteLengthType byteLength);
 };
 
 }

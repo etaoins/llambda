@@ -8,6 +8,7 @@
 #include <vector>
 #include <ostream>
 #include <string>
+#include <limits>
 
 #include "unicode/UnicodeChar.h"
 
@@ -25,10 +26,24 @@ class StringCell : public AnyCell
 	friend class StringCellBuilder;
 #include "generated/StringCellMembers.h"
 public:
+	using CharLengthType = decltype(m_charLength);
+	using ByteLengthType = decltype(m_byteLength);
+	using SliceIndexType = std::int64_t;
+
+	constexpr static CharLengthType maximumCharLength()
+	{
+		return std::numeric_limits<CharLengthType>::max();
+	}
+
+	constexpr static ByteLengthType maximumByteLength()
+	{
+		return std::numeric_limits<ByteLengthType>::max();
+	}
+
 	static StringCell* fromUtf8StdString(World &world, const std::string &str);
 
-	static StringCell* fromUtf8Data(World &world, const std::uint8_t *data, std::uint32_t byteLength);
-	static StringCell* fromValidatedUtf8Data(World &world, const std::uint8_t *data, std::uint32_t byteLength, std::uint32_t charLength);
+	static StringCell* fromUtf8Data(World &world, const std::uint8_t *data, ByteLengthType byteLength);
+	static StringCell* fromValidatedUtf8Data(World &world, const std::uint8_t *data, ByteLengthType byteLength, CharLengthType charLength);
 
 	/**
 	 * Creates a StringCell using a SharedByteArray
@@ -36,11 +51,11 @@ public:
 	 * If possible the new StringCell will be constructed sharing the passed SharedByteArray. If that occurs then the
 	 * byteArray will have its reference count incremented.
 	 */
-	static StringCell* withUtf8ByteArray(World &world, SharedByteArray *byteArray, std::uint32_t byteLength);
+	static StringCell* withUtf8ByteArray(World &world, SharedByteArray *byteArray, ByteLengthType byteLength);
 
-	static StringCell* fromFill(World &world, std::uint32_t length, UnicodeChar fill);
+	static StringCell* fromFill(World &world, CharLengthType length, UnicodeChar fill);
 	static StringCell* fromSymbol(World &world, SymbolCell *symbol);
-	
+
 	static StringCell* fromAppended(World &world, std::vector<StringCell*> &strings);
 	static StringCell* fromAppended(World &world, const std::vector<StringCell*> &strings)
 	{
@@ -48,16 +63,16 @@ public:
 		return fromAppended(world, stringsCopy);
 	}
 
-	StringCell* copy(World &world, std::int64_t start = 0, std::int64_t end = -1); 
+	StringCell* copy(World &world, SliceIndexType start = 0, SliceIndexType end = -1);
 
-	UnicodeChar charAt(std::uint32_t offset) const;
-	bool setCharAt(std::uint32_t offset, UnicodeChar unicodeChar);
+	UnicodeChar charAt(CharLengthType offset) const;
+	bool setCharAt(CharLengthType offset, UnicodeChar unicodeChar);
 
-	bool fill(UnicodeChar unicodeChar, std::int64_t start = 0, std::int64_t end = -1);
-	bool replace(std::uint32_t offset, const StringCell *from, std::int64_t fromStart = 0, std::int64_t fromEnd = -1);
+	bool fill(UnicodeChar unicodeChar, SliceIndexType start = 0, SliceIndexType end = -1);
+	bool replace(CharLengthType offset, const StringCell *from, SliceIndexType fromStart = 0, SliceIndexType fromEnd = -1);
 
-	std::vector<UnicodeChar> unicodeChars(std::int64_t start = 0, std::int64_t end = -1) const;
-	
+	std::vector<UnicodeChar> unicodeChars(SliceIndexType start = 0, SliceIndexType end = -1) const;
+
 	bool operator==(const StringCell &other) const;
 	
 	bool operator!=(const StringCell &other) const
@@ -77,7 +92,7 @@ public:
 	 */
 	StringCell *toConvertedString(World &world, UnicodeChar (*converter)(UnicodeChar));
 
-	BytevectorCell *toUtf8Bytevector(World &world, std::int64_t start = 0, std::int64_t end = -1);
+	BytevectorCell *toUtf8Bytevector(World &world, SliceIndexType start = 0, SliceIndexType end = -1);
 
 	const std::uint8_t* constUtf8Data() const;
 
@@ -92,7 +107,7 @@ public:
 	{
 		const std::uint8_t *startPointer;
 		const std::uint8_t *endPointer;
-		std::uint32_t charCount;
+		CharLengthType charCount;
 
 		bool isNull() const
 		{
@@ -114,10 +129,10 @@ public:
 	/**
 	 * Returns information about a range of characters
 	 */
-	CharRange charRange(std::int64_t start, std::int64_t end = -1);
+	CharRange charRange(SliceIndexType start, SliceIndexType end = -1);
 
 protected:
-	StringCell(std::uint32_t byteLength, std::uint32_t charLength) :
+	StringCell(ByteLengthType byteLength, CharLengthType charLength) :
 		AnyCell(CellTypeId::String),
 		m_charLength(charLength),
 		m_byteLength(byteLength)
@@ -127,17 +142,17 @@ protected:
 	std::uint8_t* utf8Data();
 
 	// Creates an uninitialized cell with the given size
-	static StringCell* createUninitialized(World &world, std::uint32_t byteLength, std::uint32_t charLength);
+	static StringCell* createUninitialized(World &world, ByteLengthType byteLength, CharLengthType charLength);
 
-	const std::uint8_t *charPointer(std::uint32_t cahrOffset, const std::uint8_t *startFrom, std::uint32_t startOffset);
-	const std::uint8_t *charPointer(std::uint32_t charOffset);
+	const std::uint8_t *charPointer(CharLengthType charOffset, const std::uint8_t *startFrom, ByteLengthType startOffset);
+	const std::uint8_t *charPointer(CharLengthType charOffset);
 
 	bool replaceBytes(const CharRange &range, const std::uint8_t *pattern, unsigned int patternBytes, unsigned int count);
 	
 	static size_t inlineDataSize();
 	bool dataIsInline() const;
 	
-	void setByteLength(std::uint32_t newByteLength)
+	void setByteLength(ByteLengthType newByteLength)
 	{
 		m_byteLength = newByteLength;
 	}
@@ -151,7 +166,7 @@ class HeapStringCell : public StringCell
 	friend class SymbolCell;
 #include "generated/HeapStringCellMembers.h"
 private:
-	HeapStringCell(SharedByteArray *byteArray, std::uint32_t byteLength, std::uint32_t charLength) :
+	HeapStringCell(SharedByteArray *byteArray, ByteLengthType byteLength, CharLengthType charLength) :
 		StringCell(byteLength, charLength),
 		m_heapByteArray(byteArray)
 	{
@@ -169,7 +184,7 @@ class InlineStringCell : public StringCell
 	friend class SymbolCell;
 #include "generated/InlineStringCellMembers.h"
 private:
-	InlineStringCell(std::uint32_t byteLength, std::uint32_t charLength) :
+	InlineStringCell(ByteLengthType byteLength, CharLengthType charLength) :
 		StringCell(byteLength, charLength)
 	{
 	}

@@ -11,12 +11,12 @@ class RecordCell : public RecordLikeCell
 {
 #include "generated/RecordCellMembers.h"
 public:
-	RecordCell(std::uint32_t recordClassId, bool dataIsInline, void *recordData) :
+	RecordCell(RecordClassIdType recordClassId, bool dataIsInline, void *recordData) :
 		RecordLikeCell(CellTypeId::Record, recordClassId, dataIsInline, recordData)
 	{
 	}
 
-	static RecordCell* createInstance(World &world, std::uint32_t recordClassId, bool dataIsInline, void *recordData);
+	static RecordCell* createInstance(World &world, RecordClassIdType recordClassId, bool dataIsInline, void *recordData);
 };
 
 }

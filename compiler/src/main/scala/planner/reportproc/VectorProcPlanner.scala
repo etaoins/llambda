@@ -40,13 +40,16 @@ object VectorProcPlanner extends ReportProcPlanner with ReportProcPlannerHelpers
 
     // Allocate the vector
     val vectorTemp = ps.CellTemp(ct.VectorCell)
-    val elementsTemp = ps.VectorElementsTemp()
 
     val lengthTemp = plan.withContextLocation(length._1) {
-      lengthValue.toTempValue(vt.UInt32)
+      lengthValue.toTempValue(vt.Int64)
     }
 
-    plan.steps += ps.InitVector(vectorTemp, elementsTemp, lengthTemp)
+    plan.steps += ps.InitVector(vectorTemp, lengthTemp)
+
+    // Load the pointer to its elements
+    val elementsTemp = ps.VectorElementsTemp()
+    plan.steps += ps.LoadVectorElementsData(elementsTemp, vectorTemp)
 
     // Create a "true" predicate for our loop exit condition
     val trueTemp = ps.Temp(vt.Predicate)
@@ -55,7 +58,7 @@ object VectorProcPlanner extends ReportProcPlanner with ReportProcPlannerHelpers
     // Initialise it
     val loopBodyPlan = plan.forkPlan()
 
-    val vectorIndexTemp = ps.Temp(vt.UInt32)
+    val vectorIndexTemp = ps.Temp(vt.Int64)
     loopBodyPlan.steps += ps.StoreVectorElement(vectorTemp, elementsTemp, vectorIndexTemp, fillTemp)
 
     val unusedResultTemp = ps.Temp(vt.Predicate)
@@ -90,16 +93,18 @@ object VectorProcPlanner extends ReportProcPlanner with ReportProcPlannerHelpers
       // Create temp values before we init the vector so there's no GC barrier while the vector is uninitialised
       val elementTemps = initialElementValues.map(_.toTempValue(vt.AnySchemeType))
 
-      val lengthTemp = ps.Temp(vt.UInt32)
-      plan.steps += ps.CreateNativeInteger(lengthTemp, initialElements.length, vt.UInt32.bits)
+      val lengthTemp = ps.Temp(vt.Int64)
+      plan.steps += ps.CreateNativeInteger(lengthTemp, initialElements.length, vt.Int64.bits)
 
       val vectorTemp = ps.CellTemp(ct.VectorCell)
+      plan.steps += ps.InitVector(vectorTemp, lengthTemp)
+
       val elementsTemp = ps.VectorElementsTemp()
-      plan.steps += ps.InitVector(vectorTemp, elementsTemp, lengthTemp)
-      
+      plan.steps += ps.LoadVectorElementsData(elementsTemp, vectorTemp)
+
       elementTemps.zipWithIndex.map { case (elementTemp, index) =>
-        val indexTemp = ps.Temp(vt.UInt32)
-        plan.steps += ps.CreateNativeInteger(indexTemp, index, vt.UInt32.bits)
+        val indexTemp = ps.Temp(vt.Int64)
+        plan.steps += ps.CreateNativeInteger(indexTemp, index, vt.Int64.bits)
         plan.steps += ps.StoreVectorElement(vectorTemp, elementsTemp, indexTemp, elementTemp)
       }
 
@@ -113,10 +118,10 @@ object VectorProcPlanner extends ReportProcPlanner with ReportProcPlannerHelpers
         vectorValue.toTempValue(vt.VectorOfType(vt.AnySchemeType))
       }
 
-      val resultTemp = ps.Temp(vt.UInt32)
+      val resultTemp = ps.Temp(vt.Int64)
       plan.steps += ps.LoadVectorLength(resultTemp, vectorTemp)
 
-      Some(TempValueToIntermediate(vt.UInt32, resultTemp)(plan.config))
+      Some(TempValueToIntermediate(vt.Int64, resultTemp)(plan.config))
 
     case ("vector-ref", List((_, iv.ConstantVectorValue(elements)), (_, iv.ConstantExactIntegerValue(index)))) =>
       assertIndexValid("(vector-ref)", elements.size, index)
@@ -140,9 +145,9 @@ object VectorProcPlanner extends ReportProcPlanner with ReportProcPlannerHelpers
 
           // Load the element
           val resultTemp = ps.Temp(vt.AnySchemeType)
-          val indexTemp = constantInt.toTempValue(vt.UInt32)
-          
-          plan.steps += ps.LoadVectorElement(resultTemp, vectorTemp, elementsTemp, indexTemp) 
+          val indexTemp = constantInt.toTempValue(vt.Int64)
+
+          plan.steps += ps.LoadVectorElement(resultTemp, vectorTemp, elementsTemp, indexTemp)
 
           val elementType = vectorType.unrollChildTypeRef(elementTypes(index.toInt))
           Some(new iv.CellValue(elementType, BoxedValue(ct.AnyCell, resultTemp)))
@@ -171,8 +176,8 @@ object VectorProcPlanner extends ReportProcPlanner with ReportProcPlannerHelpers
 
           // Store the element
           plan.steps += ps.LoadVectorElementsData(elementsTemp, vectorTemp)
-          val indexTemp = constantInt.toTempValue(vt.UInt32)
-          
+          val indexTemp = constantInt.toTempValue(vt.Int64)
+
           // Convert the object to a temp value
           val objectTemp = objectValue.toTempValue(vt.AnySchemeType)
           

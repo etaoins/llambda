@@ -7,41 +7,21 @@
 #include "alloc/cellref.h"
 #include "alloc/allocator.h"
 
-namespace
-{
-	bool adjustRange(std::int64_t start, std::int64_t &end, std::uint32_t length)
-	{
-		if (end == -1)
-		{
-			end = length; 
-		}
-		else if (end > length)
-		{
-			return false;
-		}
-
-		if (start > end)
-		{
-			return false;
-		}
-
-		return true;
-	}
-}
+#include "util/adjustSlice.h"
 
 namespace lliby
 {
 
-bool VectorCell::fill(AnyCell *fill, std::int64_t start, std::int64_t end)
+bool VectorCell::fill(AnyCell *fill, SliceIndexType start, SliceIndexType end)
 {
 	// Fill doesn't need to be rooted because we have no allocations
-	if (!adjustRange(start, end, length()))
+	if (!adjustSlice(start, end, length()))
 	{
 		return false;
 	}
-	
+
 	assert(!isGlobalConstant());
-	for(std::uint32_t i = start; i < end; i++)
+	for(LengthType i = start; i < end; i++)
 	{
 		elements()[i] = fill;
 	}
@@ -49,7 +29,7 @@ bool VectorCell::fill(AnyCell *fill, std::int64_t start, std::int64_t end)
 	return true;
 }
 
-VectorCell* VectorCell::fromElements(World &world, AnyCell **elements, std::uint32_t length)
+VectorCell* VectorCell::fromElements(World &world, AnyCell **elements, LengthType length)
 {
 	// Make sure our elements array is GC rooted for the next allocation
 	alloc::StrongRoot<AnyCell> newElementsRoot(world, elements, length);
@@ -57,8 +37,8 @@ VectorCell* VectorCell::fromElements(World &world, AnyCell **elements, std::uint
 	void *cellPlacement = alloc::allocateCells(world);
 	return new (cellPlacement) VectorCell(elements, length);
 }
-	
-VectorCell* VectorCell::fromFill(World &world, std::uint32_t length, AnyCell *fill)
+
+VectorCell* VectorCell::fromFill(World &world, LengthType length, AnyCell *fill)
 {
 	alloc::AnyRef fillRef(world, fill);
 	auto newElements = new AnyCell*[length];
@@ -78,14 +58,14 @@ VectorCell* VectorCell::fromFill(World &world, std::uint32_t length, AnyCell *fi
 
 VectorCell* VectorCell::fromAppended(World &world, const std::vector<const VectorCell*> &vectors)
 {
-	std::uint64_t totalLength = 0;
+	std::int64_t totalLength = 0;
 
 	for(auto vector : vectors)
 	{
 		totalLength += vector->length();
 	}
 
-	if (totalLength > std::numeric_limits<std::uint32_t>::max())
+	if (totalLength > maximumLength())
 	{
 		return nullptr;
 	}
@@ -95,7 +75,7 @@ VectorCell* VectorCell::fromAppended(World &world, const std::vector<const Vecto
 
 	for(auto vector : vectors)
 	{
-		auto bytesToCopy = static_cast<size_t>(vector->length()) * sizeof(AnyCell*);
+		auto bytesToCopy = static_cast<std::size_t>(vector->length()) * sizeof(AnyCell*);
 
 		memcpy(copyPtr, vector->elements(), bytesToCopy);
 		copyPtr += vector->length();
@@ -108,14 +88,14 @@ VectorCell* VectorCell::fromAppended(World &world, const std::vector<const Vecto
 	return new (cellPlacement) VectorCell(newElements, totalLength);
 }
 
-VectorCell* VectorCell::copy(World &world, std::int64_t start, std::int64_t end)
+VectorCell* VectorCell::copy(World &world, SliceIndexType start, SliceIndexType end)
 {
-	if (!adjustRange(start, end, length()))
+	if (!adjustSlice(start, end, length()))
 	{
 		return nullptr;
 	}
 
-	std::uint32_t newLength = end - start;
+	LengthType newLength = end - start;
 	auto newElements = new AnyCell*[newLength];
 
 	memcpy(newElements, &elements()[start], newLength * sizeof(AnyCell*));
@@ -126,14 +106,14 @@ VectorCell* VectorCell::copy(World &world, std::int64_t start, std::int64_t end)
 	return new (cellPlacement) VectorCell(newElements, newLength);
 }
 
-bool VectorCell::replace(std::uint32_t offset, const VectorCell *from, std::int64_t fromStart, std::int64_t fromEnd)
+bool VectorCell::replace(SliceIndexType offset, const VectorCell *from, SliceIndexType fromStart, SliceIndexType fromEnd)
 {
-	if (!adjustRange(fromStart, fromEnd, from->length()))
+	if (!adjustSlice(fromStart, fromEnd, from->length()))
 	{
 		return false;
 	}
 
-	const std::uint32_t replacedLength = fromEnd - fromStart;
+	const LengthType replacedLength = fromEnd - fromStart;
 
 	if ((replacedLength + offset) > length())
 	{

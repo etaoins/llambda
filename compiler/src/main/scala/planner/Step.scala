@@ -625,7 +625,7 @@ case class LoadSymbolByte(
       .assignLocationFrom(this)
 }
 
-/** Loads the length of a bytevector as a UInt32 */
+/** Loads the length of a bytevector as a Int64 */
 case class LoadBytevectorLength(result : TempValue, boxed : TempValue) extends Step with NullipotentStep {
   lazy val inputValues = Set(boxed)
   lazy val outputValues = Set(result)
@@ -638,24 +638,25 @@ case class LoadBytevectorLength(result : TempValue, boxed : TempValue) extends S
   *
   * All elements need to be initialised before it is accessed or the next GC barrier
   *
-  * @param  vectorResult    Boxed vector cell result
-  * @param  elementsResult  Vector element data result
-  * @param  length          Number of elements in the newly allocated vector
+  * @param  result  Boxed vector cell result
+  * @param  length  Number of elements in the newly allocated vector as an Int64
   */
 case class InitVector(
-    vectorResult : TempValue,
-    elementsResult : TempValue,
+    result : TempValue,
     length : TempValue
-) extends Step with CellConsumer {
-  lazy val inputValues = Set(length)
-  lazy val outputValues = Set(vectorResult, elementsResult)
+) extends Step {
+  lazy val inputValues = Set(length, WorldPtrValue)
+  lazy val outputValues = Set(result)
 
   def renamed(f : (TempValue) => TempValue) =
-    InitVector(f(vectorResult), f(elementsResult), f(length)).assignLocationFrom(this)
+    InitVector(f(result), f(length)).assignLocationFrom(this)
+
+  override def canAllocate : Boolean =
+    true
 }
 
 /** Loads the pointer to the vector element data */
-case class LoadVectorElementsData(result : TempValue, vectorCell : TempValue) extends Step with NullipotentStep { 
+case class LoadVectorElementsData(result : TempValue, vectorCell : TempValue) extends Step with NullipotentStep {
   lazy val inputValues = Set(vectorCell)
   lazy val outputValues = Set(result)
   
@@ -663,7 +664,7 @@ case class LoadVectorElementsData(result : TempValue, vectorCell : TempValue) ex
     LoadVectorElementsData(f(result), f(vectorCell)).assignLocationFrom(this)
 }
 
-/** Loads the length of a vector as an Int32 */
+/** Loads the length of a vector as an Int64 */
 case class LoadVectorLength(result : TempValue, boxed : TempValue) extends Step with NullipotentStep {
   lazy val inputValues = Set(boxed)
   lazy val outputValues = Set(result)
@@ -676,7 +677,7 @@ case class LoadVectorLength(result : TempValue, boxed : TempValue) extends Step 
   *
   * @param  vectorCell  Vector to load an element from
   * @param  elements    Vector elements pointer
-  * @param  index       Index of the element to load as a UInt32. This value must be determined to be in range
+  * @param  index       Index of the element to load as an Int64. This value must be determined to be in range
   */
 case class LoadVectorElement(
     result : TempValue,
@@ -695,8 +696,8 @@ case class LoadVectorElement(
   *
   * @param  vectorCell  Vector to load an element from
   * @param  elements    Vector elements pointer
-  * @param  index       Index of the element to load as a UInt32. This value must be determined to be in range
-  * @param  newValue    Boxed value to store at the element index 
+  * @param  index       Index of the element to load as a Int64. This value must be determined to be in range
+  * @param  newValue    Boxed value to store at the element index
   */
 case class StoreVectorElement(
     vectorCell : TempValue,

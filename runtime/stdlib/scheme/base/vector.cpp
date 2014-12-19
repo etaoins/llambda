@@ -9,8 +9,7 @@
 
 #include "unicode/UnicodeChar.h"
 
-#include "util/assertIndexValid.h"
-#include "util/assertSliceValid.h"
+#include "util/rangeAssertions.h"
 #include "util/StringCellBuilder.h"
 
 using namespace lliby;
@@ -18,12 +17,13 @@ using namespace lliby;
 extern "C"
 {
 
-VectorCell *llbase_make_vector(World &world, std::uint32_t length, AnyCell *fill)
+VectorCell *llbase_make_vector(World &world, std::int64_t length, AnyCell *fill)
 {
+	assertLengthValid(world, "(make-vector)", "vector length", VectorCell::maximumLength(), length);
 	return VectorCell::fromFill(world, length, fill);
 }
 
-std::uint32_t llbase_vector_length(VectorCell *vector)
+std::int64_t llbase_vector_length(VectorCell *vector)
 {
 	return vector->length();
 }
@@ -134,14 +134,17 @@ VectorCell* llbase_string_to_vector(World &world, StringCell *string, std::int64
 StringCell *llbase_vector_to_string(World &world, VectorCell *vector, std::int64_t start, std::int64_t end)
 {
 	assertSliceValid(world, "(vector->string)", vector, vector->length(), start, end);
+	assertLengthValid(world, "(vector->string)", "string character length", StringCell::maximumCharLength(), end - start);
 
 	StringCellBuilder builder(end - start);
 
-	for(std::uint32_t i = start; i < end; i++)
+	for(std::int64_t i = start; i < end; i++)
 	{
 		AnyCell *member = vector->elements()[i];
 		builder << cell_unchecked_cast<CharCell>(member)->unicodeChar();
 	}
+
+	assertLengthValid(world, "(vector->string)", "string byte length", StringCell::maximumByteLength(), builder.byteLength());
 
 	return builder.result(world);
 }

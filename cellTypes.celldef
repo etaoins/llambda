@@ -99,12 +99,12 @@ concrete cell Char : Any {
 };
 
 concrete internal cell Vector : Any {
-	uint32 length;
+	int64 length;
 	Any** elements;
 };
 
 concrete cell Bytevector : Any {
-	uint32 length;
+	int64 length;
 	SharedByteArray* byteArray;
 };
 

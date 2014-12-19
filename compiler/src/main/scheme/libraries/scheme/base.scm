@@ -275,8 +275,8 @@
     (define-native-library llbase (static-library "ll_scheme_base"))
 
     ; Define the length accessors for slicing values
-    (define-r7rs vector-length (native-function llbase "llbase_vector_length" (-> <vector> <native-uint32>)))
-    (define-r7rs bytevector-length (native-function llbase "llbase_bytevector_length" (-> <bytevector> <native-uint32>)))
+    (define-r7rs vector-length (native-function llbase "llbase_vector_length" (-> <vector> <native-int64>)))
+    (define-r7rs bytevector-length (native-function llbase "llbase_bytevector_length" (-> <bytevector> <native-int64>)))
     (define-r7rs string-length (native-function llbase "llbase_string_length" (-> <string> <native-uint32>)))
 
     (define-r7rs eqv? (native-function system-library "llcore_is_eqv" (-> <any> <any> <native-bool>)))
@@ -538,7 +538,7 @@
         (([target : <vector>] [fill : <any>] [start : <exact-integer>] [end : <exact-integer>])
          (native-vector-fill! target fill start end))))
 
-    (define native-make-vector (world-function llbase "llbase_make_vector" (-> <native-uint32> <any> <vector>)))
+    (define native-make-vector (world-function llbase "llbase_make_vector" (-> <native-int64> <any> <vector>)))
     (define-r7rs make-vector (case-lambda
       (([len : <exact-integer>])
        (native-make-vector len #!unit))
@@ -566,7 +566,7 @@
     (define native-utf8->string (world-function llbase "llbase_utf8_to_string" (-> <bytevector> <native-int64> <native-int64> <string>)))
     (define-slice-proc utf8->string native-utf8->string <bytevector> bytevector-length)
 
-    (define native-make-bytevector (world-function llbase "llbase_make_bytevector" (-> <native-uint32> <native-uint8> <bytevector>)))
+    (define native-make-bytevector (world-function llbase "llbase_make_bytevector" (-> <native-int64> <native-uint8> <bytevector>)))
     (define-r7rs make-bytevector (case-lambda
       (([len : <exact-integer>])
        (native-make-bytevector len 0))
@@ -574,7 +574,7 @@
        (native-make-bytevector len fill))))
 
     (define-r7rs string? (make-predicate <string>))
-    (define-r7rs make-string (world-function llbase "llbase_make_string" (-> <native-uint32> <native-unicode-char> <string>)))
+    (define-r7rs make-string (world-function llbase "llbase_make_string" (-> <native-int64> <native-unicode-char> <string>)))
     (define-r7rs string (world-function llbase "llbase_string" (-> <char> * <string>)))
     ; This is the same runtime function but instead of using a rest arg explicitly pass in the list
     (define-r7rs list->string (world-function llbase "llbase_string" (-> (Listof <char>) <string>)))
@@ -658,7 +658,7 @@
     (define-r7rs eof-object (native-function llbase "llbase_eof_object" (-> <eof-object>)))
 
     (define-syntax define-input-proc
-      (syntax-rules ()
+      (syntax-rules (<native-int64>)
                     ((define-input-proc name native-symbol (-> <result-type>))
                      (define-r7rs name
                                   (let ((native-proc (world-function llbase native-symbol (-> <port> (U <result-type> <eof-object>)))))
@@ -667,9 +667,9 @@
                                        (native-proc (current-input-port)))
                                       (([port : <port>])
                                        (native-proc port))))))
-                    ((define-input-proc name native-symbol (-> <native-uint32> <result-type>))
+                    ((define-input-proc name native-symbol (-> <native-int64> <result-type>))
                      (define-r7rs name
-                                  (let ((native-proc (world-function llbase native-symbol (-> <native-int32> <port> (U <result-type> <eof-object>)))))
+                                  (let ((native-proc (world-function llbase native-symbol (-> <native-int64> <port> (U <result-type> <eof-object>)))))
                                     (case-lambda
                                       (([count : <exact-integer>])
                                        (native-proc count (current-input-port)))
@@ -681,8 +681,8 @@
     (define-input-proc read-char "llbase_read_char" (-> <char>))
     (define-input-proc peek-char "llbase_peek_char" (-> <char>))
     (define-input-proc read-line "llbase_read_line" (-> <string>))
-    (define-input-proc read-bytevector "llbase_read_bytevector" (-> <native-uint32> <bytevector>))
-    (define-input-proc read-string "llbase_read_string" (-> <native-uint32> <string>))
+    (define-input-proc read-bytevector "llbase_read_bytevector" (-> <native-int64> <bytevector>))
+    (define-input-proc read-string "llbase_read_string" (-> <native-int64> <string>))
 
     (define native-read-bytevector! (world-function llbase "llbase_mutating_read_bytevector" (-> <bytevector> <port> <native-int64> <native-int64> (U <exact-integer> <eof-object>))))
     (define-r7rs read-bytevector!

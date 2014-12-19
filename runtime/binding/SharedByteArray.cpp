@@ -25,7 +25,7 @@ namespace
 }
 
 
-SharedByteArray::SharedByteArray(refcount_t initialRefCount) :
+SharedByteArray::SharedByteArray(RefCountType initialRefCount) :
 	m_refCount(initialRefCount)
 {
 	incrementInstanceCount();

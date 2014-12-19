@@ -96,7 +96,6 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
     val signature = signatureFor("""(lambda (vec index) (vector-ref vec index))""")
 
     // This can be passed anything so it can return anything
-    // Note that this could really be vt.UInt32 but we're not smart enough to figure that out
     assert(signature.fixedArgTypes === List(anyVectorType, vt.Int64))
     assert(signature.returnType === vt.ReturnType.SingleValue(vt.AnySchemeType))
   }

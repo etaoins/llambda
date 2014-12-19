@@ -13,8 +13,7 @@ namespace dynamic
 
 namespace
 {
-	std::uint32_t registeredClassId = ~0;
-
+	RecordLikeCell::RecordClassIdType registeredClassId = ~0;
 	ReturnValues<AnyCell> *procedureBody(World &world, ProcedureCell *procSelf, RestValues<AnyCell> *argHead)
 	{
 		assert(EscapeProcedureCell::isInstance(procSelf));

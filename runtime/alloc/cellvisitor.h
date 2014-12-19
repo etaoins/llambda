@@ -76,7 +76,7 @@ visitEntry:
 	}
 	else if (auto vectorCell = cell_cast<VectorCell>(*rootCellRef))
 	{
-		for(std::uint32_t i = 0; i < vectorCell->length(); i++)
+		for(VectorCell::LengthType i = 0; i < vectorCell->length(); i++)
 		{
 			// Use elements instead of elementsAt to skip the range check
 			visitCell(&vectorCell->elements()[i], visitor);

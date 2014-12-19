@@ -12,14 +12,14 @@
 namespace lliby
 {
 
-HeapSymbolCell::HeapSymbolCell(SharedByteArray *byteArray, std::uint16_t byteLength, std::uint16_t charLength) :
+HeapSymbolCell::HeapSymbolCell(SharedByteArray *byteArray, ByteLengthType byteLength, std::uint16_t charLength) :
 	SymbolCell(byteLength),
 	m_charLength(charLength),
 	m_heapByteArray(byteArray)
 {
 }
 
-InlineSymbolCell::InlineSymbolCell(std::uint16_t byteLength) :
+InlineSymbolCell::InlineSymbolCell(ByteLengthType byteLength) :
 	SymbolCell(byteLength)
 {
 }
@@ -34,13 +34,8 @@ SymbolCell* SymbolCell::fromUtf8StdString(World &world, const std::string &str)
 	return SymbolCell::fromUtf8Data(world, reinterpret_cast<const std::uint8_t *>(str.data()), str.size());
 }
 
-SymbolCell* SymbolCell::fromUtf8Data(World &world, const std::uint8_t *data, std::uint32_t byteLength)
+SymbolCell* SymbolCell::fromUtf8Data(World &world, const std::uint8_t *data, ByteLengthType byteLength)
 {
-	if (byteLength > std::numeric_limits<decltype(m_byteLength)>::max())
-	{
-		return nullptr;
-	}
-
 	const std::uint8_t *scanPtr = data;
 	const std::uint8_t *endPtr = data + byteLength;
 
@@ -84,7 +79,7 @@ SymbolCell* SymbolCell::fromString(World &world, StringCell *string)
 
 	auto const byteLength = stringRef->byteLength();
 
-	if (byteLength > std::numeric_limits<decltype(m_byteLength)>::max())
+	if (byteLength > maximumByteLength())
 	{
 		return nullptr;
 	}

@@ -13,7 +13,7 @@
 
 #include "core/error.h"
 
-#include "util/assertSliceValid.h"
+#include "util/rangeAssertions.h"
 #include "util/portCellToStream.h"
 
 using namespace lliby;

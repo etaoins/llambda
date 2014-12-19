@@ -7,8 +7,7 @@
 #include "unicode/utf8/InvalidByteSequenceException.h"
 #include "core/error.h"
 
-#include "util/assertIndexValid.h"
-#include "util/assertSliceValid.h"
+#include "util/rangeAssertions.h"
 #include "util/utf8ExceptionToSchemeError.h"
 
 using namespace lliby;
@@ -16,12 +15,14 @@ using namespace lliby;
 extern "C"
 {
 
-BytevectorCell *llbase_make_bytevector(World &world, std::uint32_t length, std::uint8_t fill)
+BytevectorCell *llbase_make_bytevector(World &world, std::int64_t length, std::uint8_t fill)
 {
+	assertLengthValid(world, "(make-bytevector)", "bytevector length", BytevectorCell::maximumLength(), length);
+
 	return BytevectorCell::fromFill(world, length, fill);
 }
 
-std::uint32_t llbase_bytevector_length(BytevectorCell *bytevector)
+std::int64_t llbase_bytevector_length(BytevectorCell *bytevector)
 {
 	return bytevector->length();
 }
@@ -79,6 +80,7 @@ BytevectorCell *llbase_string_to_utf8(World &world, StringCell *string, std::int
 StringCell *llbase_utf8_to_string(World &world, BytevectorCell *bytevector, std::int64_t start, std::int64_t end)
 {
 	assertSliceValid(world, "(utf8->string)", bytevector, bytevector->length(), start, end);
+	assertLengthValid(world, "(utf8->string)", "string byte length", StringCell::maximumByteLength(), end - start);
 
 	try
 	{

@@ -24,6 +24,8 @@ class RecordLikeCell : public AnyCell
 {
 #include "generated/RecordLikeCellMembers.h"
 public:
+	using RecordClassIdType = decltype(m_recordClassId);
+
 	static void *allocateRecordData(size_t bytes);
 	void finalize();
 
@@ -42,9 +44,9 @@ public:
 	 * Registers a runtime-created record-like class
 	 *
 	 * @param  offsets  List of offsets of AnyCells inside the record-like data
-	 * @return Unique class ID for the new record-like class 
+	 * @return Unique class ID for the new record-like class
 	 */
-	static std::uint32_t registerRuntimeRecordClass(const std::vector<size_t> &offsets);
+	static RecordClassIdType registerRuntimeRecordClass(const std::vector<size_t> &offsets);
 
 	void setRecordData(void *newData)
 	{
@@ -63,7 +65,7 @@ public:
 	static size_t recordDataInstanceCount();
 
 protected:
-	RecordLikeCell(CellTypeId typeId, std::uint32_t recordClassId, bool dataIsInline, void *recordData) :
+	RecordLikeCell(CellTypeId typeId, RecordClassIdType recordClassId, bool dataIsInline, void *recordData) :
 		AnyCell(typeId),
 		m_dataIsInline(dataIsInline),
 		m_isUndefined(false),
@@ -71,9 +73,9 @@ protected:
 		m_recordData(recordData)
 	{
 	}
-	
+
 	// TypeGenerator.scala always allocates this first
-	static const std::uint32_t EmptyClosureRecordClassId = 0;
+	static const RecordClassIdType EmptyClosureRecordClassId = 0;
 };
 
 }

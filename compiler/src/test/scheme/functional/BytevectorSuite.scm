@@ -19,8 +19,11 @@
 (define-test "(make-bytevector) a filled non-empty bytevector" (expect #u8(5 5 5)
 	(make-bytevector 3 5)))
 
-(define-test "(make-bytevector) a inexact rational fails" (expect-error type-error?
+(define-test "(make-bytevector) with an inexact rational fill fails" (expect-error type-error?
 	(make-bytevector 3 5.0)))
+
+(define-test "(make-bytevector) with a negative length fails" (expect-error range-error?
+	(make-bytevector -3)))
 
 (define-test "(bytevector) an empty bytevector" (expect #u8()
 	(bytevector)))

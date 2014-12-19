@@ -3,49 +3,29 @@
 
 #include "alloc/allocator.h"
 
+#include "util/adjustSlice.h"
+
 #include <limits>
 #include <string.h>
-
-namespace
-{
-	bool adjustRange(std::int64_t start, std::int64_t &end, std::uint32_t length)
-	{
-		if (end == -1)
-		{
-			end = length; 
-		}
-		else if (end > length)
-		{
-			return false;
-		}
-
-		if (start > end)
-		{
-			return false;
-		}
-
-		return true;
-	}
-}
 
 namespace lliby
 {
 
-BytevectorCell* BytevectorCell::withByteArray(World &world, SharedByteArray *byteArray, std::uint32_t length)
+BytevectorCell* BytevectorCell::withByteArray(World &world, SharedByteArray *byteArray, LengthType length)
 {
 	void *cellPlacement = alloc::allocateCells(world);
 	return new (cellPlacement) BytevectorCell(byteArray, length);
 }
-	
-BytevectorCell* BytevectorCell::fromData(World &world, const std::uint8_t *data, std::uint32_t length)
+
+BytevectorCell* BytevectorCell::fromData(World &world, const std::uint8_t *data, LengthType length)
 {
 	SharedByteArray *newByteArray = SharedByteArray::createInstance(length);
 	memcpy(newByteArray->data(), data, length);
 
 	return BytevectorCell::withByteArray(world, newByteArray, length);
 }
-	
-BytevectorCell* BytevectorCell::fromFill(World &world, std::uint32_t length, std::uint8_t fill)
+
+BytevectorCell* BytevectorCell::fromFill(World &world, LengthType length, std::uint8_t fill)
 {
 	SharedByteArray *newByteArray = SharedByteArray::createInstance(length);
 	memset(newByteArray->data(), fill, length);
@@ -68,7 +48,7 @@ BytevectorCell* BytevectorCell::fromAppended(World &world, const std::list<const
 		totalLength += byteVector->length();
 	}
 
-	if (totalLength > std::numeric_limits<std::uint32_t>::max())
+	if (totalLength > maximumLength())
 	{
 		return nullptr;
 	}
@@ -84,10 +64,10 @@ BytevectorCell* BytevectorCell::fromAppended(World &world, const std::list<const
 
 	return BytevectorCell::withByteArray(world, newByteArray, totalLength);
 }
-	
-BytevectorCell* BytevectorCell::copy(World &world, std::int64_t start, std::int64_t end) const
+
+BytevectorCell* BytevectorCell::copy(World &world, SliceIndexType start, SliceIndexType end) const
 {
-	if (!adjustRange(start, end, length()))
+	if (!adjustSlice(start, end, length()))
 	{
 		return nullptr;
 	}
@@ -97,23 +77,23 @@ BytevectorCell* BytevectorCell::copy(World &world, std::int64_t start, std::int6
 		// We can do a copy-on-write here
 		return BytevectorCell::withByteArray(world, byteArray()->ref(), length());
 	}
-	
-	const std::uint32_t newLength = end - start;
+
+	const LengthType newLength = end - start;
 	SharedByteArray *newByteArray = SharedByteArray::createInstance(newLength);
 
 	memcpy(newByteArray->data(), &byteArray()->data()[start], newLength);
 
 	return BytevectorCell::withByteArray(world, newByteArray, newLength);
 }
-	
-bool BytevectorCell::replace(std::uint32_t offset, const BytevectorCell *from, std::int64_t fromStart, std::int64_t fromEnd)
+
+bool BytevectorCell::replace(LengthType offset, const BytevectorCell *from, SliceIndexType fromStart, SliceIndexType fromEnd)
 {
-	if (!adjustRange(fromStart, fromEnd, from->length()))
+	if (!adjustSlice(fromStart, fromEnd, from->length()))
 	{
 		return false;
 	}
 
-	const std::uint32_t replacedLength = fromEnd - fromStart;
+	const LengthType replacedLength = fromEnd - fromStart;
 
 	if ((replacedLength + offset) > length())
 	{
@@ -127,10 +107,10 @@ bool BytevectorCell::replace(std::uint32_t offset, const BytevectorCell *from, s
 
 	return true;
 }
-	
-StringCell* BytevectorCell::utf8ToString(World &world, std::int64_t start, std::int64_t end)
+
+StringCell* BytevectorCell::utf8ToString(World &world, SliceIndexType start, SliceIndexType end)
 {
-	if (!adjustRange(start, end, length()))
+	if (!adjustSlice(start, end, length()))
 	{
 		return nullptr;
 	}

@@ -14,8 +14,11 @@
 (define-test "make non-empty string" (expect "aaaaa"
 	(make-string 5 #\a)))
 
-(define-test "make string with invalid fill character fails" (expect-failure
+(define-test "(make-string) with invalid fill character fails" (expect-failure
 	(make-string 5 #\x110000)))
+
+(define-test "(make-string) with negative length fails" (expect-error range-error?
+	(make-string -5 #\a)))
 
 (define-test "(string) with no arguments" (expect ""
 	(string)))

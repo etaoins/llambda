@@ -17,7 +17,7 @@
 #include "unicode/utf8/InvalidByteSequenceException.h"
 
 #include "util/utf8ExceptionToSchemeError.h"
-#include "util/assertSliceValid.h"
+#include "util/rangeAssertions.h"
 #include "util/portCellToStream.h"
 
 #include "port/AbstractPort.h"
@@ -174,9 +174,11 @@ AnyCell *llbase_read_line(World &world, PortCell *portCell)
 	}
 }
 
-AnyCell *llbase_read_bytevector(World &world, std::uint32_t requestedBytes, PortCell *portCell)
+AnyCell *llbase_read_bytevector(World &world, std::int64_t requestedBytes, PortCell *portCell)
 {
 	std::istream *portStream = portCellToInputStream(world, portCell);
+
+	assertLengthValid(world, "(read-bytevector)", "bytevector length", BytevectorCell::maximumLength(), requestedBytes);
 
 	// Read in to a SharedByteArray so BytevectorCell can use it directly
 	auto byteArray = SharedByteArray::createInstance(requestedBytes);
@@ -223,9 +225,11 @@ AnyCell *llbase_mutating_read_bytevector(World &world, BytevectorCell *bytevecto
 	return ExactIntegerCell::fromValue(world, totalRead);
 }
 
-AnyCell *llbase_read_string(World &world, std::uint32_t requestedChars, PortCell *portCell)
+AnyCell *llbase_read_string(World &world, std::int64_t requestedChars, PortCell *portCell)
 {
 	std::istream *portStream = portCellToInputStream(world, portCell);
+
+	assertLengthValid(world, "(read-string)", "string length", StringCell::maximumCharLength(), requestedChars);
 
 	// Catch zero character reads after we've reached the end of the stream
 	if (portStream->eof())

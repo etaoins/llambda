@@ -17,13 +17,13 @@ class ProcedureCell : public RecordLikeCell
 {
 #include "generated/ProcedureCellMembers.h"
 public:
-	ProcedureCell(std::uint32_t recordClassId, bool dataIsInline, void *recordData, void *entryPoint) :
+	ProcedureCell(RecordClassIdType recordClassId, bool dataIsInline, void *recordData, void *entryPoint) :
 		RecordLikeCell(CellTypeId::Procedure, recordClassId, dataIsInline, recordData),
 		m_entryPoint(entryPoint)
 	{
 	}
 
-	static ProcedureCell* createInstance(World &World, std::uint32_t recordClassId, bool dataIsInline, void *recordData, void *entryPoint);
+	static ProcedureCell* createInstance(World &World, RecordClassIdType recordClassId, bool dataIsInline, void *recordData, void *entryPoint);
 
 	/**
 	 * Indicates if this procedure captures variables from its enclosing scope

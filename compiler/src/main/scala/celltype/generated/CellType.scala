@@ -998,7 +998,7 @@ object CharCell extends ConcreteCellType with CharFields {
 sealed trait VectorFields extends AnyFields {
   val irType : FirstClassType
 
-  val lengthIrType = IntegerType(32)
+  val lengthIrType = IntegerType(64)
   val lengthTbaaNode : Metadata
   val lengthGepIndices : List[Int]
 
@@ -1091,7 +1091,7 @@ object VectorCell extends ConcreteCellType with VectorFields {
 sealed trait BytevectorFields extends AnyFields {
   val irType : FirstClassType
 
-  val lengthIrType = IntegerType(32)
+  val lengthIrType = IntegerType(64)
   val lengthTbaaNode : Metadata
   val lengthGepIndices : List[Int]
 

@@ -218,6 +218,12 @@
   (assert-true (eof-object? (read-bytevector 8 input-bytevector)))
   (assert-true (eof-object? (read-bytevector 0 input-bytevector)))))
 
+(define-test "(read-bytevector) with a negative length fails" (expect-error range-error?
+  (define test-bytevector #u8(1 2 3 4 5 6 7))
+  (define input-bytevector (open-input-bytevector test-bytevector))
+
+  (read-bytevector -1 input-bytevector)))
+
 (define-test "(read-string)" (expect-success
   (import (llambda error))
 
@@ -268,6 +274,12 @@
   (assert-raises utf8-error? (read-string 10 missing-continuation-byte-port))
   (assert-equal "34" (read-string 10 missing-continuation-byte-port))
   (assert-true (eof-object? (read-string 0 missing-continuation-byte-port)))))
+
+(define-test "(read-string) with a negative length fails" (expect-error range-error?
+  (define test-bytevector #u8(1 2 3 4 5 6 7))
+  (define input-bytevector (open-input-bytevector test-bytevector))
+
+  (read-string -1 input-bytevector)))
 
 (define-test "(write-string)" (expect-success
   (define test-string "む姎 媥焯簨盥媯 ビョ禯騪っ鏨 を")

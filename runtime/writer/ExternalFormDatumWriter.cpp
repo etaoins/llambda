@@ -350,7 +350,7 @@ void ExternalFormDatumWriter::renderBytevector(const BytevectorCell *value)
 	bool printedByte = false;
 	m_outStream << "#u8(";
 
-	for(unsigned int i = 0; i < value->length(); i++)
+	for(BytevectorCell::LengthType i = 0; i < value->length(); i++)
 	{
 		if (printedByte)
 		{
@@ -371,7 +371,7 @@ void ExternalFormDatumWriter::renderVector(const VectorCell *value)
 	bool printedElement = false;
 	m_outStream << "#(";
 
-	for(unsigned int i = 0; i < value->length(); i++)
+	for(VectorCell::LengthType i = 0; i < value->length(); i++)
 	{
 		if (printedElement)
 		{

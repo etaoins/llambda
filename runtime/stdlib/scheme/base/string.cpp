@@ -4,8 +4,7 @@
 
 #include "core/error.h"
 
-#include "util/assertSliceValid.h"
-#include "util/assertIndexValid.h"
+#include "util/rangeAssertions.h"
 #include "util/stringCompare.h"
 #include "util/StringCellBuilder.h"
 
@@ -14,8 +13,10 @@ using namespace lliby;
 extern "C"
 {
 
-StringCell *llbase_make_string(World &world, std::uint32_t length, UnicodeChar fill)
+StringCell *llbase_make_string(World &world, std::int64_t length, UnicodeChar fill)
 {
+	assertLengthValid(world, "(make-string)", "string length", StringCell::maximumCharLength(), length);
+
 	if (!fill.isValid())
 	{
 		signalError(world, ErrorCategory::Default, "(make-string) with invalid fill character");

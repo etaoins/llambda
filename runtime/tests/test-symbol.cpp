@@ -47,12 +47,6 @@ void testFromUtf8StdString(World &world)
 
 		ASSERT_TRUE(caughtException);
 	}
-
-	{
-		// Larger than maximum symbol size
-		SymbolCell *oversizeValue = SymbolCell::fromUtf8StdString(world, std::string(65536, ' '));
-		ASSERT_NULL(oversizeValue);
-	}
 }
 
 void testFromString(World &world)

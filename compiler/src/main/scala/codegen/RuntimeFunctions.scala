@@ -77,13 +77,13 @@ object RuntimeFunctions {
     attributes=Set(IrFunction.NoUnwind)
   )
 
-  val vectorElementsAlloc = IrFunctionDecl(
-    result=IrFunction.Result(PointerType(PointerType(ct.AnyCell.irType))),
-    name="llcore_vector_elements_alloc",
+  val vectorAlloc = IrFunctionDecl(
+    result=IrFunction.Result(PointerType(ct.VectorCell.irType)),
+    name="llcore_vector_alloc",
     arguments=List(
-      IrFunction.Argument(IntegerType(32))
-    ),
-    attributes=Set(IrFunction.NoUnwind)
+      Argument(PointerType(WorldValue.irType)),
+      IrFunction.Argument(IntegerType(64))
+    )
   )
 
   val makeParameter = IrFunctionDecl(

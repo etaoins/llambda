@@ -12,7 +12,7 @@ namespace lliby
 
 namespace
 {
-	const std::uint32_t RuntimeRecordClassFlag = 1 << 31; 
+	const std::uint32_t RuntimeRecordClassFlag = 1 << 31;
 	std::vector<RecordClassOffsetMap *> runtimeRecordClassOffsets;
 
 #ifdef _LLIBY_CHECK_LEAKS
@@ -53,7 +53,7 @@ const RecordClassOffsetMap* RecordLikeCell::offsetMap() const
 {
 	if (recordClassId() & RuntimeRecordClassFlag)
 	{
-		const std::uint32_t rawClassId = recordClassId() & ~RuntimeRecordClassFlag;
+		const RecordClassIdType rawClassId = recordClassId() & ~RuntimeRecordClassFlag;
 		return runtimeRecordClassOffsets[rawClassId];
 	}
 	else
@@ -61,12 +61,12 @@ const RecordClassOffsetMap* RecordLikeCell::offsetMap() const
 		return _llambda_compiler_class_map[recordClassId()];
 	}
 }
-	
-std::uint32_t RecordLikeCell::registerRuntimeRecordClass(const std::vector<size_t> &offsets)
+
+RecordLikeCell::RecordClassIdType RecordLikeCell::registerRuntimeRecordClass(const std::vector<size_t> &offsets)
 {
 	// The raw class ID is the index in the runtimeRecordClassOffsets vector
 	const std::uint32_t offsetCount = offsets.size();
-	const std::uint32_t rawClassId = runtimeRecordClassOffsets.size();
+	const RecordClassIdType rawClassId = runtimeRecordClassOffsets.size();
 
 	// Create the offset map
 	RecordClassOffsetMap *offsetMap = nullptr;

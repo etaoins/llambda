@@ -34,7 +34,7 @@ namespace
 	VectorCell* abstractVectorMap(World &world, MapFunction mapFunc, VectorCell *firstVectorRaw, RestValues<VectorCell> *restVectorList)
 	{
 		// This is the minimum length of all of our input vectors
-		std::uint32_t minimumLength = firstVectorRaw->length();
+		VectorCell::LengthType minimumLength = firstVectorRaw->length();
 
 		// Build our vector of input vector cells
 		alloc::StrongRefVector<VectorCell> restVectors(world, restVectorList->begin(), restVectorList->end());
@@ -46,7 +46,7 @@ namespace
 		alloc::VectorRef outputVector(world, VectorCell::fromFill(world, minimumLength, UnitCell::instance()));
 
 		std::vector<AnyCell*> restArgVector(restVectors.size());
-		for(std::uint32_t i = 0; i < minimumLength; i++)
+		for(VectorCell::LengthType i = 0; i < minimumLength; i++)
 		{
 			// Build the rest argument list
 			for(size_t j = 0; j < restVectors.size(); j++)
@@ -71,7 +71,7 @@ namespace
 		alloc::StrongRefVector<ListElementCell> restLists(world);
 
 		// This is the minimum length of all of our input lists first
-		std::uint32_t minimumLength = firstListRaw->size();
+		ProperList<AnyCell>::size_type minimumLength = firstListRaw->size();
 
 		for(auto restList : *restListsRaw)
 		{
@@ -85,7 +85,7 @@ namespace
 		alloc::StrongRefVector<AnyCell> outputVector(world, minimumLength, nullptr);
 
 		std::vector<AnyCell*> restArgVector(restLists.size());
-		for(std::uint32_t i = 0; i < minimumLength; i++)
+		for(ProperList<AnyCell>::size_type i = 0; i < minimumLength; i++)
 		{
 			// Build the rest argument list
 			for(size_t j = 0; j < restLists.size(); j++)

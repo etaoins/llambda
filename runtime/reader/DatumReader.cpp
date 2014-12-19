@@ -413,14 +413,14 @@ AnyCell* DatumReader::parseEnclosedSymbol()
 	// Consume the |
 	rdbuf()->sbumpc();
 
-	SymbolCell *symbol = SymbolCell::fromUtf8StdString(m_world, takeQuotedStringLike(rdbuf(), '|'));
+	std::string symbolData(takeQuotedStringLike(rdbuf(), '|'));
 
-	if (symbol == nullptr)
+	if (symbolData.length() > SymbolCell::maximumByteLength())
 	{
 		throw MalformedDatumException(inputOffset(rdbuf()), "Symbol exceeded 64KiB");
 	}
 
-	return symbol;
+	return SymbolCell::fromUtf8StdString(m_world, symbolData);
 }
 
 AnyCell* DatumReader::parseString()
@@ -446,14 +446,12 @@ AnyCell* DatumReader::parseSymbol()
 		throw MalformedDatumException(inputOffset(rdbuf()), ". reserved for terminating improper lists");
 	}
 
-	SymbolCell *symbol = SymbolCell::fromUtf8StdString(m_world, symbolData);
-
-	if (symbol == nullptr)
+	if (symbolData.length() > SymbolCell::maximumByteLength())
 	{
 		throw MalformedDatumException(inputOffset(rdbuf()), "Symbol exceeded 64KiB");
 	}
 
-	return symbol;
+	return SymbolCell::fromUtf8StdString(m_world, symbolData);
 }
 
 AnyCell* DatumReader::parseSymbolShorthand(const std::string &expanded)

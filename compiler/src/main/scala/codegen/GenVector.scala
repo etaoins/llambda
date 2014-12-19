@@ -5,37 +5,29 @@ import llambda.llvmir._
 import llambda.compiler.{celltype => ct}
 
 object GenVector {
-  case class InitVectorResult(
-      finalState : GenerationState,
-      vectorIr : IrValue,
-      elementsIr : IrValue
-  )
+  def init(state : GenerationState)(worldPtrIr : IrValue, lengthIr : IrValue) : (GenerationState, IrValue) = {
+    val func = state.currentBlock.function
+    val module = func.module
 
-  def init(state : GenerationState)(lengthIr : IrValue) : InitVectorResult = {
-    val block = state.currentBlock
-    val module = block.function.module
-    val allocation = state.currentAllocation
+    val vectorAllocDecl = RuntimeFunctions.vectorAlloc
 
-    // Allocate our vector elements
-    val vectorElementAllocDecl = RuntimeFunctions.vectorElementsAlloc
-
-    module.unlessDeclared(vectorElementAllocDecl) {
-      module.declareFunction(vectorElementAllocDecl)
+    module.unlessDeclared(vectorAllocDecl) {
+      module.declareFunction(vectorAllocDecl)
     }
-    
-    val elementsIr = block.callDecl(Some("vectorElements"))(vectorElementAllocDecl, List(lengthIr)).get
-      
-    // Grab our cell allocation
-    val (newAllocation, vectorIr) = allocation.consumeCells(block)(1, ct.VectorCell)
-    
-    ct.VectorCell.genStoreToLength(block)(lengthIr, vectorIr)
-    ct.VectorCell.genStoreToElements(block)(elementsIr, vectorIr)
 
-    InitVectorResult(
-      finalState=state.copy(currentAllocation=newAllocation),
-      vectorIr=vectorIr,
-      elementsIr=elementsIr
-    )
+    GenGcBarrier(state) {
+      val entryBlock = state.currentBlock
+      val successBlock = func.startChildBlock("vectorAllocSuccess")
+
+      val newVectorIr = entryBlock.invokeDecl(Some("newVector"))(
+        decl=vectorAllocDecl,
+        arguments=List(worldPtrIr, lengthIr),
+        normalBlock=successBlock,
+        exceptionBlock=state.gcCleanUpBlockOpt.get
+      ).get
+
+      (successBlock, newVectorIr)
+    }
   }
 
   def loadElement(block : IrBlockBuilder)(elementsIr : IrValue, indexIr : IrValue) : IrValue = {

@@ -2,7 +2,7 @@
 #include "binding/SymbolCell.h"
 #include "binding/ProperList.h"
 
-#include "core/error.h"
+#include "util/rangeAssertions.h"
 
 extern "C"
 {
@@ -34,14 +34,9 @@ StringCell *llbase_symbol_to_string(World &world, SymbolCell *symbol)
 
 SymbolCell *llbase_string_to_symbol(World &world, StringCell *string)
 {
-	SymbolCell *symbol = SymbolCell::fromString(world, string);
+	assertLengthValid(world, "(string->symbol)", "symbol byte length", SymbolCell::maximumByteLength(), string->byteLength());
 
-	if (symbol == nullptr)
-	{
-		signalError(world, ErrorCategory::Range, "(string->symbol) with string exceeding 64KiB");
-	}
-
-	return symbol;
+	return SymbolCell::fromString(world, string);
 }
 
 }
