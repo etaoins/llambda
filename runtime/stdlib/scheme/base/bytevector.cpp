@@ -19,7 +19,14 @@ BytevectorCell *llbase_make_bytevector(World &world, std::int64_t length, std::u
 {
 	assertLengthValid(world, "(make-bytevector)", "bytevector length", BytevectorCell::maximumLength(), length);
 
-	return BytevectorCell::fromFill(world, length, fill);
+	auto bytevector = BytevectorCell::fromFill(world, length, fill);
+
+	if (bytevector == nullptr)
+	{
+		signalError(world, ErrorCategory::OutOfMemory, "Out of memory in (make-bytevector)");
+	}
+
+	return bytevector;
 }
 
 std::int64_t llbase_bytevector_length(BytevectorCell *bytevector)

@@ -115,8 +115,11 @@
       (rethrower)))))
 
 (define-test "empty lists are not error objects" (expect #f
-	(error-object? '())
-))
+	(error-object? '())))
+
+(define-test "empty lists are not out of memory errors" (expect #f
+  (import (llambda error))
+	(out-of-memory-error? '())))
 
 (define-test "(error) raises a new error object" (expect-output (#t "Test error message" (a b (c d e)))
 	(import (scheme process-context))

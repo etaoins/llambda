@@ -55,4 +55,9 @@ bool llerror_is_undefined_variable_error(AnyCell *obj)
 	return isErrorObjectOfCategory(obj, ErrorCategory::UndefinedVariable);
 }
 
+bool llerror_is_out_of_memory_error(AnyCell *obj)
+{
+	return isErrorObjectOfCategory(obj, ErrorCategory::OutOfMemory);
+}
+
 }

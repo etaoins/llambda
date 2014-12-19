@@ -20,6 +20,7 @@ object ErrorCategory {
   object DivideByZero       extends ErrorCategory(7)
   object MutateLiteral      extends ErrorCategory(8)
   object UndefinedVariable  extends ErrorCategory(9)
+  object OutOfMemory        extends ErrorCategory(9)
 
   def fromPredicate : PartialFunction[String, ErrorCategory] = {
     case "file-error?" => File
@@ -31,5 +32,6 @@ object ErrorCategory {
     case "divide-by-zero-error?" => DivideByZero
     case "mutate-literal-error?" => MutateLiteral
     case "undefined-variable-error?" => UndefinedVariable
+    case "out-of-memory-error?" => OutOfMemory
   }
 }

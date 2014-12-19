@@ -41,7 +41,16 @@ VectorCell* VectorCell::fromElements(World &world, AnyCell **elements, LengthTyp
 VectorCell* VectorCell::fromFill(World &world, LengthType length, AnyCell *fill)
 {
 	alloc::AnyRef fillRef(world, fill);
-	auto newElements = new AnyCell*[length];
+	AnyCell **newElements;
+
+	try
+	{
+		newElements = new AnyCell*[length];
+	}
+	catch(std::bad_alloc &)
+	{
+		return nullptr;
+	}
 
 	void *cellPlacement = alloc::allocateCells(world);
 	auto newVector = new (cellPlacement) VectorCell(newElements, length);

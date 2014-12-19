@@ -20,7 +20,15 @@ extern "C"
 VectorCell *llbase_make_vector(World &world, std::int64_t length, AnyCell *fill)
 {
 	assertLengthValid(world, "(make-vector)", "vector length", VectorCell::maximumLength(), length);
-	return VectorCell::fromFill(world, length, fill);
+
+	auto vector = VectorCell::fromFill(world, length, fill);
+
+	if (vector == nullptr)
+	{
+		signalError(world, ErrorCategory::OutOfMemory, "Out of memory in (make-vector)");
+	}
+
+	return vector;
 }
 
 std::int64_t llbase_vector_length(VectorCell *vector)

@@ -64,7 +64,13 @@ public:
 	 */
 	static VectorCell* fromElements(World &world, AnyCell **elements, LengthType length);
 
+	/**
+	 * Creates a new vector with the given fill element
+	 *
+	 * If a the required memory cannot be allocated then nullptr is returned
+	 */
 	static VectorCell* fromFill(World &world, LengthType length, AnyCell *fill = nullptr);
+
 	static VectorCell* fromAppended(World &world, const std::vector<const VectorCell*> &vectors);
 
 	VectorCell* copy(World &world, SliceIndexType start = 0, SliceIndexType end = -1);

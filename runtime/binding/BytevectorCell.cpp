@@ -28,11 +28,17 @@ BytevectorCell* BytevectorCell::fromData(World &world, const std::uint8_t *data,
 BytevectorCell* BytevectorCell::fromFill(World &world, LengthType length, std::uint8_t fill)
 {
 	SharedByteArray *newByteArray = SharedByteArray::createInstance(length);
+
+	if (newByteArray == nullptr)
+	{
+		return nullptr;
+	}
+
 	memset(newByteArray->data(), fill, length);
 
 	return BytevectorCell::withByteArray(world, newByteArray, length);
 }
-	
+
 BytevectorCell* BytevectorCell::fromAppended(World &world, const std::list<const BytevectorCell*> &byteVectors)
 {
 	if (byteVectors.size() == 1)

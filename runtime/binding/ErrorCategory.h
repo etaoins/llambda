@@ -80,7 +80,12 @@ enum class ErrorCategory : std::uint16_t
 	/**
 	 * Error due to accessing a variable before its definition
 	 */
-	UndefinedVariable = 9
+	UndefinedVariable = 9,
+
+	/**
+	 * Error due to memory exhaustion
+	 */
+	OutOfMemory = 10
 };
 
 }

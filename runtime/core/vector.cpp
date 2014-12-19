@@ -1,5 +1,7 @@
 #include "binding/VectorCell.h"
+
 #include "util/rangeAssertions.h"
+#include "core/error.h"
 
 extern "C"
 {
@@ -11,7 +13,16 @@ VectorCell* llcore_vector_alloc(World &world, std::int64_t length)
 {
 	assertLengthValid(world, "(make-vector)", "vector length", VectorCell::maximumLength(), length);
 
-	auto elements = new AnyCell*[length];
+	AnyCell **elements;
+
+	try
+	{
+		elements = new AnyCell*[length];
+	}
+	catch(std::bad_alloc &)
+	{
+		signalError(world, ErrorCategory::OutOfMemory, "Out of memory while constructing vector");
+	}
 
 	void *cellPlacement = alloc::allocateCells(world);
 	return new (cellPlacement) VectorCell(elements, length);

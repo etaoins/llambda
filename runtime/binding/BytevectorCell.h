@@ -46,7 +46,13 @@ public:
 
 	static const std::int16_t InvalidByte = -1;
 
+	/**
+	 * Creates a new bytevector with the given fill byte
+	 *
+	 * If a the required memory cannot be allocated then nullptr is returned
+	 */
 	static BytevectorCell* fromFill(World &world, LengthType length, std::uint8_t fill = 0);
+
 	static BytevectorCell* fromAppended(World &world, const std::list<const BytevectorCell*> &byteVectors);
 
 	BytevectorCell* copy(World &world, SliceIndexType start = 0, SliceIndexType end = -1) const;

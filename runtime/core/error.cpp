@@ -107,6 +107,9 @@ void fatalError(const char *message, const AnyCell *evidence)
 			case ErrorCategory::UndefinedVariable:
 				std::cerr << "Category: Undefined variable" << std::endl;
 				break;
+			case ErrorCategory::OutOfMemory:
+				std::cerr << "Category: Out of memory" << std::endl;
+				break;
 			}
 
 			// Handle error objects specially
