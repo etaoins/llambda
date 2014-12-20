@@ -70,8 +70,8 @@ private[frontend] object ExpandMacro {
         throw new MatchFailedException
     }
   }
-  
-  // Same as matchPatternListWithRest except it throws a MatchFailedException if there are rest operamds
+
+  // Same as matchPatternListWithRest except it throws a MatchFailedException if there are rest operands
   private def matchPatternList(patternData : List[sst.ScopedDatum], operandData : List[sst.ScopedDatum])(implicit matchConfig : MatchConfig) : MatchedData = {
     val (restOperands, matchData) = matchPatternListWithRest(patternData, operandData)
 
