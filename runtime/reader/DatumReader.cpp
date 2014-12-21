@@ -106,7 +106,7 @@ namespace
 							throw MalformedDatumException(inputOffset(rdbuf), "Empty hex escape");
 						}
 
-						UnicodeChar escapedChar(strtol(hexCode.c_str(), nullptr, 16));
+						UnicodeChar escapedChar(std::stol(hexCode, nullptr, 16));
 
 						utf8::EncodedChar encoded(utf8::encodeChar(escapedChar));
 						accum.append(reinterpret_cast<char*>(encoded.data), encoded.size);
@@ -515,7 +515,7 @@ AnyCell* DatumReader::parseChar()
 
 		if (!hexCode.empty())
 		{
-			return CharCell::createInstance(m_world, strtoll(hexCode.c_str(), nullptr, 16));
+			return CharCell::createInstance(m_world, std::stoll(hexCode, nullptr, 16));
 		}
 	}
 
@@ -678,7 +678,7 @@ AnyCell* DatumReader::parseUnradixedNumber(int radix, bool negative)
 			if (previousSize != numberString.size())
 			{
 				// We took more numbers - we're not exact
-				double doubleValue = std::strtod(numberString.c_str(), nullptr);
+				double doubleValue = std::stod(numberString, nullptr);
 
 				if (negative)
 				{
@@ -717,7 +717,7 @@ AnyCell* DatumReader::parseUnradixedNumber(int radix, bool negative)
 		}
 	}
 
-	std::int64_t intValue = std::strtoll(numberString.c_str(), nullptr, radix);
+	std::int64_t intValue = std::stoll(numberString, nullptr, radix);
 
 	if (negative)
 	{
@@ -898,7 +898,7 @@ AnyCell* DatumReader::parseDatumLabel(char firstDigit)
 		return (c >= '0') && (c <= '9');
 	});
 
-	const long long labelNumber = std::strtoll(labelString.c_str(), nullptr, 10);
+	const long long labelNumber = std::stoll(labelString, nullptr, 10);
 
 	int getChar = rdbuf()->sbumpc();
 
