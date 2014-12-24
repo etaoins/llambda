@@ -9,19 +9,17 @@ class RangeMetadataSuite extends FunSuite {
 
     assert(booleanRange.toIr === "!{i8 0, i8 2}")
   }
-  
-  test("wrapping range") {
-    // This would describe C++ boolean
-    val booleanRange = RangeMetadata(IntegerType(8), (255, 2))
 
-    assert(booleanRange.toIr === "!{i8 255, i8 2}")
+  test("wrapping range") {
+    val wrappingRange = RangeMetadata(IntegerType(8), (255, 2))
+
+    assert(wrappingRange.toIr === "!{i8 255, i8 2}")
   }
 
   test("multiple ranges") {
-    // This would describe C++ boolean
-    val booleanRange = RangeMetadata(IntegerType(32), (0, 2), (4, 5))
+    val multipleRange = RangeMetadata(IntegerType(32), (0, 2), (4, 5))
 
-    assert(booleanRange.toIr === "!{i32 0, i32 2, i32 4, i32 5}")
+    assert(multipleRange.toIr === "!{i32 0, i32 2, i32 4, i32 5}")
   }
 
   test("from single value") {
