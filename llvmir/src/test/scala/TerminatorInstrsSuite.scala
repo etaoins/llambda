@@ -146,16 +146,22 @@ class TerminatorInstrsSuite extends IrTestSuite {
     val normalBlock = createTestBlock("success")
     val exceptionBlock = createTestBlock("exception")
 
+    val booleanRange = RangeMetadata(IntegerType(8), (0, 2))
+    val callMetadata = Map(
+      "range" -> booleanRange
+    )
+
     val block = createTestBlock()
     val resultVar = block.invokeDecl(Some("ret"))(
       decl=decl,
       arguments=List(),
       normalBlock=normalBlock,
-      exceptionBlock=exceptionBlock
+      exceptionBlock=exceptionBlock,
+      metadata=callMetadata
     )
 
     assert(resultVar.isDefined)
-    assertInstr(block, "%ret1 = invoke zeroext i8 @returnSomething() to label %success unwind label %exception")
+    assertInstr(block, "%ret1 = invoke zeroext i8 @returnSomething() to label %success unwind label %exception, !range !{i8 0, i8 2}")
   }
   
   test("invoke discarding value") {

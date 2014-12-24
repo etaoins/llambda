@@ -186,14 +186,20 @@ class OtherInstrsSuite extends IrTestSuite {
       name="returnSomething",
       arguments=declArgs)
 
+    val booleanRange = RangeMetadata(IntegerType(8), (0, 2))
+    val callMetadata = Map(
+      "range" -> booleanRange
+    )
+
     val block = createTestBlock()
     val resultVar = block.callDecl(Some("ret"))(
       decl=decl,
-      arguments=List()
+      arguments=List(),
+      metadata=callMetadata
     )
 
     assert(resultVar.isDefined)
-    assertInstr(block, "%ret1 = call zeroext i8 @returnSomething()")
+    assertInstr(block, "%ret1 = call zeroext i8 @returnSomething(), !range !{i8 0, i8 2}")
   }
   
   test("call discarding value") {

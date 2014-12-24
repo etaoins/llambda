@@ -58,11 +58,24 @@ private[llvmir] trait TerminatorInstrs extends IrInstrBuilder {
     terminateBlock()
   }
   
-  def invokeDecl(resultDestOpt : Option[ResultDestination])(decl : IrFunctionDeclLike, arguments : Seq[IrValue], normalBlock : IrBranchTarget, exceptionBlock : IrBranchTarget) : Option[LocalVariable] = {
-    invoke(resultDestOpt)(decl, decl.irValue, arguments, normalBlock, exceptionBlock)
+  def invokeDecl(resultDestOpt : Option[ResultDestination])(
+      decl : IrFunctionDeclLike,
+      arguments : Seq[IrValue],
+      normalBlock : IrBranchTarget,
+      exceptionBlock : IrBranchTarget,
+      metadata : Map[String, Metadata] = Map()
+  ) : Option[LocalVariable] = {
+    invoke(resultDestOpt)(decl, decl.irValue, arguments, normalBlock, exceptionBlock, metadata)
   }
-  
-  def invoke(resultDestOpt : Option[ResultDestination])(signature : IrSignatureLike, functionPtr : IrValue, arguments : Seq[IrValue], normalBlock : IrBranchTarget, exceptionBlock : IrBranchTarget) : Option[LocalVariable] = {
+
+  def invoke(resultDestOpt : Option[ResultDestination])(
+      signature : IrSignatureLike,
+      functionPtr : IrValue,
+      arguments : Seq[IrValue],
+      normalBlock : IrBranchTarget,
+      exceptionBlock : IrBranchTarget,
+      metadata : Map[String, Metadata] = Map()
+  ) : Option[LocalVariable] = {
     // We only return a result for non-void result types if they specify a result name
     val resultVarOpt = signature.result.irType match {
       case VoidType =>
@@ -84,7 +97,7 @@ private[llvmir] trait TerminatorInstrs extends IrInstrBuilder {
     val callBody = CallLikeInstructionBody(signature, functionPtr, arguments)
     val callParts = assignmentIrOpt.toList ++ List("invoke") ++ List(callBody) ++ targetBlocksIr
 
-    addInstruction(callParts.mkString(" "))
+    addInstruction(callParts.mkString(" "), metadata=metadata)
     terminateBlock()
 
     resultVarOpt

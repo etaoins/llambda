@@ -84,11 +84,22 @@ private[llvmir] trait OtherInstrs extends IrInstrBuilder {
     resultVar
   }
 
-  def callDecl(resultDestOpt : Option[ResultDestination])(decl : IrFunctionDeclLike, arguments : Seq[IrValue], tailCall : Boolean = false) : Option[LocalVariable] = {
-    call(resultDestOpt)(decl, decl.irValue, arguments, tailCall)
+  def callDecl(resultDestOpt : Option[ResultDestination])(
+      decl : IrFunctionDeclLike,
+      arguments : Seq[IrValue],
+      tailCall : Boolean = false,
+      metadata : Map[String, Metadata] = Map()
+  ) : Option[LocalVariable] = {
+    call(resultDestOpt)(decl, decl.irValue, arguments, tailCall, metadata)
   }
 
-  def call(resultDestOpt : Option[ResultDestination])(signature : IrSignatureLike, functionPtr : IrValue, arguments : Seq[IrValue], tailCall : Boolean = false) : Option[LocalVariable] = {
+  def call(resultDestOpt : Option[ResultDestination])(
+      signature : IrSignatureLike,
+      functionPtr : IrValue,
+      arguments : Seq[IrValue],
+      tailCall : Boolean = false,
+      metadata : Map[String, Metadata] = Map()
+  ) : Option[LocalVariable] = {
     // We only return a result for non-void result types if they specify a result name
     val resultVarOpt = signature.result.irType match {
       case VoidType =>
@@ -112,7 +123,7 @@ private[llvmir] trait OtherInstrs extends IrInstrBuilder {
     val callBody = CallLikeInstructionBody(signature, functionPtr, arguments)
     val callParts = assignmentIrOpt.toList ++ tailCallIrOpt.toList ++ List("call", callBody)
 
-    addInstruction(callParts.mkString(" "))
+    addInstruction(callParts.mkString(" "), metadata=metadata)
 
     resultVarOpt
   }
