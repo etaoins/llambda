@@ -31,13 +31,6 @@ StringCell *llbase_string(World &world, RestValues<CharCell> *charProperList)
 
 	for(auto charCell : *charProperList)
 	{
-		UnicodeChar character(charCell->unicodeChar());
-
-		if (!character.isValid())
-		{
-			signalError(world, ErrorCategory::Default, "(string) with invalid character", {charProperList});
-		}
-
 		builder << charCell->unicodeChar();
 	}
 
@@ -61,11 +54,6 @@ void llbase_string_set(World &world, StringCell *string, std::int64_t index, Uni
 	if (string->isGlobalConstant())
 	{
 		signalError(world, ErrorCategory::MutateLiteral, "(string-set!) on a string literal", {string});
-	}
-
-	if (!unicodeChar.isValid())
-	{
-		signalError(world, ErrorCategory::Default, "(string-set!) with invalid character");
 	}
 
 	assertIndexValid(world, "(string-set!)", string, string->charLength(), index);
@@ -115,11 +103,6 @@ void llbase_string_mutating_fill(World &world, StringCell *string, UnicodeChar f
 	if (string->isGlobalConstant())
 	{
 		signalError(world, ErrorCategory::MutateLiteral, "(string-fill!) on string literal", {string});
-	}
-
-	if (!fill.isValid())
-	{
-		signalError(world, ErrorCategory::Default, "(string-fill!) with invalid character");
 	}
 
 	assertSliceValid(world, "(string-fill!)", string, string->charLength(), start, end);

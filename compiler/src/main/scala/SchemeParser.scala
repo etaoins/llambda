@@ -372,15 +372,21 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
     """return"""    ~ push(ast.CharLiteral(0x0d)) |
     """space"""     ~ push(ast.CharLiteral(' ')) |
     """tab"""       ~ push(ast.CharLiteral(0x09)) |
-    ignoreCase("x") ~ capture(oneOrMore(HexDigit)) ~ Whitespace ~> ({ hexCode =>
-      ast.CharLiteral(Integer.parseInt(hexCode, 16))
-    }) |
+    HexCharBody |
     capture(Digit) ~ Whitespace ~> ({ literalCharString =>
       ast.CharLiteral(literalCharString.charAt(0))
     }) |
     capture(ANY) ~ !UnenclosedSymbol ~ Whitespace ~> ({ literalCharString =>
       ast.CharLiteral(literalCharString.charAt(0))
     })
+  }
+
+  def HexCharBody = rule {
+    ignoreCase("x") ~ capture(oneOrMore(HexDigit)) ~ Whitespace ~> { hexCode =>
+      val codePoint = Integer.parseInt(hexCode, 16)
+
+      test(codePoint <= ast.CharLiteral.lastCodePoint) ~ push(ast.CharLiteral(codePoint))
+    }
   }
 
   def DatumLabel = rule {

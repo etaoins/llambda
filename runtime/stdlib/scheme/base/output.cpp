@@ -35,11 +35,6 @@ void llbase_write_u8(World &world, std::uint8_t value, PortCell *portCell)
 
 void llbase_write_char(World &world, UnicodeChar character, PortCell *portCell)
 {
-	if (!character.isValid())
-	{
-		signalError(world, ErrorCategory::Default, "(write-char) with invalid character");
-	}
-
 	utf8::EncodedChar utf8Bytes(utf8::encodeChar(character));
 
 	std::ostream *portStream = portCellToOutputStream(world, portCell);

@@ -8,7 +8,7 @@ import llambda.compiler.planner.{step => ps}
 
 private[codegen] object GenFunction {
   def apply(module : IrModuleBuilder, genGlobals : GenGlobals)(nativeSymbol : String, plannedFunction : planner.PlannedFunction) {
-    val irSignature = ProcedureSignatureToIr(plannedFunction.signature)
+    val irSignature = ProcedureSignatureToIr(plannedFunction.signature).irSignature
 
     val argumentNames = plannedFunction.namedArguments.map(_._1)
     val namedIrArguments = argumentNames.zip(irSignature.arguments)

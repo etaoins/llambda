@@ -1,6 +1,7 @@
 #include "unicode/UnicodeChar.h"
 
 #include "util/charCompare.h"
+#include "core/error.h"
 
 using namespace lliby;
 
@@ -12,8 +13,13 @@ std::int32_t llbase_char_to_integer(UnicodeChar character)
 	return character.codePoint();
 }
 
-std::int32_t llbase_integer_to_char(std::int32_t codePoint)
+UnicodeChar::CodePoint llbase_integer_to_char(World &world, std::int64_t codePoint)
 {
+	if ((codePoint < UnicodeChar::FirstCodePoint) || (codePoint > UnicodeChar::LastCodePoint))
+	{
+		signalError(world, ErrorCategory::Range, "(integer->char) with invalid Unicode code point");
+	}
+
 	return codePoint;
 }
 

@@ -7,7 +7,7 @@ import llambda.llvmir._
 object GenNamedEntryPoint {
   def apply(module : IrModuleBuilder)(signature : ProcedureSignature, nativeSymbol : String, plannedSymbols : Set[String]) : IrValue = {
     // Declare the function
-    val irSignature = ProcedureSignatureToIr(signature)
+    val irSignature = ProcedureSignatureToIr(signature).irSignature
 
     val irFunctionDecl = IrFunctionDecl(
       result=irSignature.result,

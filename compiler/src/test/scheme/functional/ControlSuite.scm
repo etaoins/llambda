@@ -258,9 +258,6 @@
       "abcde")
     v)))
 
-(define-test "(string-map) mapping to invalid character fails" (expect-failure
-  (string-map (lambda (x) #\x110000)"AbdEgH")))
-
 (define-test "(fold)" (expect-success
   (import (llambda list))
   (import (llambda typed))

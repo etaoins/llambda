@@ -21,7 +21,7 @@ class DebugInfoGenerator(module : llvmir.IrModuleBuilder, functions : Map[String
   // Build a map of SubprogramContexts to their LLVM values
   val subprogramToLlvmFunction = (functions.flatMap { case (symbol, plannedFunction) =>
     // Find the IR type of the procedure
-    val irType = ProcedureSignatureToIr(plannedFunction.signature).irType
+    val irType = ProcedureSignatureToIr(plannedFunction.signature).irSignature.irType
 
     // Turn it in to a global variable
     val globalVariable = llvmir.GlobalVariable(symbol, llvmir.PointerType(irType))

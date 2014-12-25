@@ -97,7 +97,7 @@ class ValueTypeToIrSuite extends FunSuite {
     assert(typeWithSign.irType === llvmir.IntegerType(32))
     assert(typeWithSign.signed === Some(true))
   }
-  
+
   test("record cell") {
     val recordType = new vt.RecordType("recordType", Nil)
 

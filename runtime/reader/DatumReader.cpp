@@ -515,7 +515,14 @@ AnyCell* DatumReader::parseChar()
 
 		if (!hexCode.empty())
 		{
-			return CharCell::createInstance(m_world, std::stoll(hexCode, nullptr, 16));
+			auto codePoint = std::stoll(hexCode, nullptr, 16);
+
+			if (codePoint > UnicodeChar::LastCodePoint)
+			{
+				throw MalformedDatumException(inputOffset(rdbuf()), "Invalid Unicode code point");
+			}
+
+			return CharCell::createInstance(m_world, codePoint);
 		}
 	}
 

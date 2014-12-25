@@ -139,12 +139,7 @@ namespace
 			// Create the rest argument list
 			RestValues<CharCell> *restArgList = RestValues<CharCell>::emplaceValues(world, restArgVector);
 
-			UnicodeChar result(mapFunc(firstCharVector[i], restArgList));
-			if (!result.isValid())
-			{
-				signalError(world, ErrorCategory::Default, "(string-map) mapping procedure returned invalid character");
-			}
-			builder << result;
+			builder << UnicodeChar(mapFunc(firstCharVector[i], restArgList));
 		}
 
 		return builder;

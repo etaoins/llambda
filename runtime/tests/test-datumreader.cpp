@@ -424,6 +424,8 @@ void testCharacters(World &world)
 	expectedVector->setElementAt(1, moreTimeSymbol);
 
 	ASSERT_PARSES(R"(#(#\1moretime))", expectedVector);
+
+	ASSERT_INVALID_PARSE(R"(#\x110000)");
 }
 
 void testDatumLabels(World &world)

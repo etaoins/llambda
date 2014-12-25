@@ -178,9 +178,6 @@
   (write-char #\! output-string)
   (assert-equal "Hell☃!" (get-output-string output-string))))
 
-(define-test "(write-char) with invalid character fails" (expect-failure
-  (write-char #\x110000 (open-output-string))))
-
 (define-test "(read-line)" (expect-success
   (import (llambda error))
 

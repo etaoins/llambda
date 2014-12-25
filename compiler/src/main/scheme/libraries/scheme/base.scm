@@ -504,7 +504,7 @@
 
     (define-r7rs char? (make-predicate <char>))
     (define-r7rs char->integer (native-function llbase "llbase_char_to_integer" (-> <native-unicode-char> <native-int32>)))
-    (define-r7rs integer->char (native-function llbase "llbase_integer_to_char" (-> <native-int32> <native-unicode-char>)))
+    (define-r7rs integer->char (world-function llbase "llbase_integer_to_char" (-> <native-int64> <native-unicode-char>)))
     (define-r7rs char=? (native-function llbase "llbase_char_equal" (-> <native-unicode-char> <native-unicode-char> <char> * <native-bool>)))
     (define-r7rs char<? (native-function llbase "llbase_char_lt" (-> <native-unicode-char> <native-unicode-char> <char> * <native-bool>)))
     (define-r7rs char>? (native-function llbase "llbase_char_gt" (-> <native-unicode-char> <native-unicode-char> <char> * <native-bool>)))

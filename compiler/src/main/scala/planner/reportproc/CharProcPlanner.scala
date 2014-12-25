@@ -6,6 +6,8 @@ import llambda.compiler.ContextLocated
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
+import llambda.compiler.ast
+import llambda.compiler.RangeException
 
 object CharProcPlanner extends ReportProcPlanner {
   private type CharComparator = (Int, Int) => Boolean
@@ -81,15 +83,12 @@ object CharProcPlanner extends ReportProcPlanner {
 
       Some(new iv.NativeExactIntegerValue(int32Temp, vt.Int32))
 
-    case ("integer->char", List((_, iv.ConstantExactIntegerValue(constantIntVal)))) =>
-      Some(iv.ConstantCharValue(constantIntVal.toInt))
-
-    case ("integer->char", List((intLocated, intValue))) =>
-      val int32Temp = plan.withContextLocation(intLocated) {
-        intValue.toTempValue(vt.Int32)
+    case ("integer->char", List((intLocated, iv.ConstantExactIntegerValue(constantIntVal)))) =>
+      if ((constantIntVal < ast.CharLiteral.firstCodePoint) || (constantIntVal > ast.CharLiteral.lastCodePoint)) {
+        throw new RangeException(intLocated, "(integer->char) with invalid Unicode code point")
       }
 
-      Some(new iv.NativeCharValue(int32Temp))
+      Some(iv.ConstantCharValue(constantIntVal.toInt))
 
     case ("char=?", operands) if operands.length >= 2 =>
       compareOperandList(ps.CompareCond.Equal, _ == _, operands.map(_._2))

@@ -322,6 +322,11 @@ newline""", "Bare\nnewline")
     // However, non-alphabetic character literals can be immediately followed
     // by another token. This is probably a bad idea to use in practice.
     assertReflexiveParse(raw"#\1moretime", List(ast.CharLiteral('1'), ast.Symbol("moretime")))
+
+    // This is not a valid Unicode code point
+    intercept[ParseErrorException] {
+      SchemeParser.parseStringAsData(raw"#\x110000")
+    }
   }
 
   test("unit") {

@@ -20,15 +20,20 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       attributes=Set()
     )
 
-    val irSignature = ProcedureSignatureToIr(procSignature)
+    val result = ProcedureSignatureToIr(procSignature)
 
-    assert(irSignature === IrSignature(
-      result=Result(VoidType),
-      arguments=Nil,
-      attributes=Set(NoUnwind)
-    ))
+    val expected = ProcedureSignatureToIr.Result(
+      irSignature=IrSignature(
+        result=Result(VoidType),
+        arguments=Nil,
+        attributes=Set(NoUnwind)
+      ),
+      callMetadata=Map()
+    )
+
+    assert(result === expected)
   }
-  
+
   test("fastcc function taking boolean, unsigned int returning signed int") {
     val procSignature = ProcedureSignature(
       hasWorldArg=false,
@@ -39,16 +44,21 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       attributes=Set(ProcedureAttribute.FastCC)
     )
 
-    val irSignature = ProcedureSignatureToIr(procSignature)
+    val result = ProcedureSignatureToIr(procSignature)
 
-    assert(irSignature === IrSignature(
-      result=Result(IntegerType(32), Set(SignExt)),
-      arguments=List(Argument(IntegerType(1), Set(ZeroExt)), Argument(IntegerType(16), Set(ZeroExt))),
-      attributes=Set(NoUnwind),
-      callingConv=CallingConv.FastCC
-    ))
+    val expected = ProcedureSignatureToIr.Result(
+      irSignature=IrSignature(
+        result=Result(IntegerType(32), Set(SignExt)),
+        arguments=List(Argument(IntegerType(1), Set(ZeroExt)), Argument(IntegerType(16), Set(ZeroExt))),
+        attributes=Set(NoUnwind),
+        callingConv=CallingConv.FastCC
+      ),
+      callMetadata=Map()
+    )
+
+    assert(result === expected)
   }
-  
+
   test("function taking only world and self args with noreturn attribute") {
     val procSignature = new ProcedureSignature(
       hasWorldArg=true,
@@ -59,18 +69,23 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       attributes=Set(ProcedureAttribute.NoReturn)
     )
 
-    val irSignature = ProcedureSignatureToIr(procSignature)
+    val result = ProcedureSignatureToIr(procSignature)
 
-    assert(irSignature === IrSignature(
-      result=Result(VoidType),
-      arguments=List(
-        Argument(PointerType(WorldValue.irType)),
-        Argument(PointerType(ct.ProcedureCell.irType))
+    val expected = ProcedureSignatureToIr.Result(
+      irSignature=IrSignature(
+        result=Result(VoidType),
+        arguments=List(
+          Argument(PointerType(WorldValue.irType)),
+          Argument(PointerType(ct.ProcedureCell.irType))
+        ),
+        attributes=Set(IrFunction.NoReturn)
       ),
-      attributes=Set(IrFunction.NoReturn)
-    ))
+      callMetadata=Map()
+    )
+
+    assert(result === expected)
   }
-  
+
   test("function taking only rest args returning unsigned int") {
     val procSignature = ProcedureSignature(
       hasWorldArg=false,
@@ -81,15 +96,20 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       attributes=Set()
     )
 
-    val irSignature = ProcedureSignatureToIr(procSignature)
+    val result = ProcedureSignatureToIr(procSignature)
 
-    assert(irSignature === IrSignature(
-      result=Result(IntegerType(32), Set(ZeroExt)),
-      arguments=List(Argument(PointerType(ct.ListElementCell.irType))),
-      attributes=Set(NoUnwind)
-    ))
+    val expected = ProcedureSignatureToIr.Result(
+      irSignature=IrSignature(
+        result=Result(IntegerType(32), Set(ZeroExt)),
+        arguments=List(Argument(PointerType(ct.ListElementCell.irType))),
+        attributes=Set(NoUnwind)
+      ),
+      callMetadata=Map()
+    )
+
+    assert(result === expected)
   }
-  
+
   test("function taking union of port and symbol returning arbitrary multiple values") {
     val procSignature = ProcedureSignature(
       hasWorldArg=false,
@@ -100,39 +120,51 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       attributes=Set()
     )
 
-    val irSignature = ProcedureSignatureToIr(procSignature)
+    val result = ProcedureSignatureToIr(procSignature)
 
-    assert(irSignature === IrSignature(
-      result=Result(PointerType(ct.ListElementCell.irType)),
-      arguments=List(Argument(PointerType(ct.AnyCell.irType))),
-      attributes=Set(NoUnwind)
-    ))
+    val expected = ProcedureSignatureToIr.Result(
+      irSignature=IrSignature(
+        result=Result(PointerType(ct.ListElementCell.irType)),
+        arguments=List(Argument(PointerType(ct.AnyCell.irType))),
+        attributes=Set(NoUnwind)
+      ),
+      callMetadata=Map()
+    )
+
+    assert(result === expected)
   }
-  
-  test("function taking world, self, two numbers, rest arg returning rational") {
+
+  test("function taking world, self, two numbers, rest arg returning unicode char") {
     val procSignature = ProcedureSignature(
       hasWorldArg=true,
       hasSelfArg=true,
       fixedArgTypes=List(vt.NumberType, vt.NumberType),
       restArgMemberTypeOpt=Some(vt.ExactIntegerType),
-      returnType=vt.ReturnType.SingleValue(vt.FlonumType),
+      returnType=vt.ReturnType.SingleValue(vt.UnicodeChar),
       attributes=Set()
     )
 
-    val irSignature = ProcedureSignatureToIr(procSignature)
+    val result = ProcedureSignatureToIr(procSignature)
 
-    assert(irSignature === IrSignature(
-      result=Result(PointerType(ct.FlonumCell.irType)),
-      arguments=List(
-        Argument(PointerType(WorldValue.irType)),
-        Argument(PointerType(ct.ProcedureCell.irType)),
-        Argument(PointerType(ct.NumberCell.irType)),
-        Argument(PointerType(ct.NumberCell.irType)), 
-        Argument(PointerType(ct.ListElementCell.irType))
+    val expected = ProcedureSignatureToIr.Result(
+      irSignature=IrSignature(
+        result=Result(IntegerType(32), Set(SignExt)),
+        arguments=List(
+          Argument(PointerType(WorldValue.irType)),
+          Argument(PointerType(ct.ProcedureCell.irType)),
+          Argument(PointerType(ct.NumberCell.irType)),
+          Argument(PointerType(ct.NumberCell.irType)),
+          Argument(PointerType(ct.ListElementCell.irType))
+        )
+      ),
+      callMetadata=Map(
+        "range" -> RangeMetadata(IntegerType(32), (0x0, 0x110000))
       )
-    ))
+    )
+
+    assert(result === expected)
   }
-  
+
   test("function only self and returning specific multiple values") {
     val procSignature = ProcedureSignature(
       hasWorldArg=false,
@@ -143,14 +175,19 @@ class ProcedureSignatureToIrSuite extends FunSuite {
       attributes=Set()
     )
 
-    val irSignature = ProcedureSignatureToIr(procSignature)
+    val result = ProcedureSignatureToIr(procSignature)
 
-    assert(irSignature === IrSignature(
-      result=Result(PointerType(ct.PairCell.irType)),
-      arguments=List(
-        Argument(PointerType(ct.ProcedureCell.irType))
+    val expected = ProcedureSignatureToIr.Result(
+      irSignature=IrSignature(
+        result=Result(PointerType(ct.PairCell.irType)),
+        arguments=List(
+          Argument(PointerType(ct.ProcedureCell.irType))
+        ),
+        attributes=Set(NoUnwind)
       ),
-      attributes=Set(NoUnwind)
-    ))
+      callMetadata=Map()
+    )
+
+    assert(result === expected)
   }
 }

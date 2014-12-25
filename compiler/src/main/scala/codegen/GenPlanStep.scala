@@ -146,9 +146,12 @@ object GenPlanStep {
 
     case condBranch : ps.CondBranch =>
       GenCondBranch(state, genGlobals)(condBranch)
-      
+
     case invokeStep @ ps.Invoke(resultOpt, signature, funcPtrTemp, arguments, inputToDispose) =>
-      val irSignature = ProcedureSignatureToIr(signature)
+      val result = ProcedureSignatureToIr(signature)
+      val irSignature = result.irSignature
+      val metadata = result.callMetadata
+
       val irFuncPtr = state.liveTemps(funcPtrTemp)
       val irArguments = arguments.map(state.liveTemps)
 
@@ -173,7 +176,8 @@ object GenPlanStep {
               functionPtr=irFuncPtr,
               arguments=irArguments,
               normalBlock=successBlock,
-              exceptionBlock=preBarrierState.gcCleanUpBlockOpt.get
+              exceptionBlock=preBarrierState.gcCleanUpBlockOpt.get,
+              metadata=metadata
             )
 
             (successBlock, irValue)
@@ -181,8 +185,10 @@ object GenPlanStep {
         }
       }
       else {
-        // This call can't allocate or throw exceptions - skip the barrier and invoke 
-        val irValue = preBarrierState.currentBlock.call(Some("ret"))(irSignature, irFuncPtr, irArguments)
+        // This call can't allocate or throw exceptions - skip the barrier and invoke
+        val block = preBarrierState.currentBlock
+        val irValue = block.call(Some("ret"))(irSignature, irFuncPtr, irArguments, metadata=metadata)
+
         (preBarrierState, irValue)
       }
 
@@ -193,9 +199,12 @@ object GenPlanStep {
         case None =>
           finalState
       }
-    
+
     case ps.TailCall(signature, funcPtrTemp, arguments) =>
-      val irSignature = ProcedureSignatureToIr(signature)
+      val result = ProcedureSignatureToIr(signature)
+      val irSignature = result.irSignature
+      val metadata = result.callMetadata
+
       val irFuncPtr = state.liveTemps(funcPtrTemp)
       val irArguments = arguments.map(state.liveTemps)
 
@@ -206,8 +215,16 @@ object GenPlanStep {
           state.currentBlock.retVoid()
         }
         else {
-          val irRetValueOpt = state.currentBlock.call(Some("ret"))(irSignature, irFuncPtr, irArguments, tailCall=true)
-          state.currentBlock.ret(irRetValueOpt.get)
+          val block = state.currentBlock
+          val irRetValueOpt = block.call(Some("ret"))(
+            irSignature,
+            irFuncPtr,
+            irArguments,
+            tailCall=true,
+            metadata=metadata
+          )
+
+          block.ret(irRetValueOpt.get)
         }
       })
 
@@ -311,7 +328,7 @@ object GenPlanStep {
 
     case ps.LoadProcedureEntryPoint(resultTemp, procTemp, signature) =>
       val procIr = state.liveTemps(procTemp)
-      val signatureIrType =  ProcedureSignatureToIr(signature).irType
+      val signatureIrType =  ProcedureSignatureToIr(signature).irSignature.irType
       val block = state.currentBlock
 
       // Load the entry point

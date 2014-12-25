@@ -3,29 +3,34 @@ import io.llambda
 
 import llambda.compiler.{ProcedureSignature, ProcedureAttribute}
 import llambda.compiler.{celltype => ct}
-import llambda.llvmir.{IrSignature, PointerType, VoidType, IntegerType, CallingConv}
-import llambda.llvmir.IrFunction._
+import llambda.llvmir._
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.ast
 
 object ProcedureSignatureToIr {
-  private def paramSignednessToAttribs(signedness : Option[Boolean]) : Set[ParameterAttribute] = {
+  case class Result(
+      irSignature : IrSignature,
+      callMetadata : Map[String, Metadata]
+  )
+
+  private def paramSignednessToAttribs(signedness : Option[Boolean]) : Set[IrFunction.ParameterAttribute] = {
     signedness match {
-      case Some(true) => Set(SignExt)
-      case Some(false) => Set(ZeroExt)
+      case Some(true) => Set(IrFunction.SignExt)
+      case Some(false) => Set(IrFunction.ZeroExt)
       case None => Set()
     }
   }
 
-  def apply(signature : ProcedureSignature) : IrSignature = {
+  def apply(signature : ProcedureSignature) : Result = {
     val worldArgs = if (signature.hasWorldArg) {
-      List(Argument(PointerType(WorldValue.irType), Set()))
+      List(IrFunction.Argument(PointerType(WorldValue.irType), Set()))
     }
     else {
       Nil
     }
 
     val selfArgs = if (signature.hasSelfArg) {
-      List(Argument(PointerType(ct.ProcedureCell.irType), Set()))
+      List(IrFunction.Argument(PointerType(ct.ProcedureCell.irType), Set()))
     }
     else {
       Nil
@@ -33,11 +38,11 @@ object ProcedureSignatureToIr {
 
     val fixedArgs = signature.fixedArgTypes map (ValueTypeToIr(_)) map {
       case SignedFirstClassType(irType, signedness) =>
-        Argument(irType, paramSignednessToAttribs(signedness))
+        IrFunction.Argument(irType, paramSignednessToAttribs(signedness))
     }
 
     val restArgs = if (signature.restArgMemberTypeOpt.isDefined) {
-      List(Argument(PointerType(ct.ListElementCell.irType), Set()))
+      List(IrFunction.Argument(PointerType(ct.ListElementCell.irType), Set()))
     }
     else {
       Nil
@@ -47,18 +52,30 @@ object ProcedureSignatureToIr {
 
     val result = signature.returnType.representationTypeOpt match {
       case None =>
-        Result(VoidType, Set())
+        IrFunction.Result(VoidType, Set())
 
       case Some(valueType) =>
         val signedType = ValueTypeToIr(valueType)
-        Result(signedType.irType, paramSignednessToAttribs(signedType.signed))
+        IrFunction.Result(signedType.irType, paramSignednessToAttribs(signedType.signed))
     }
+
+    val callMetadata = (signature.returnType match {
+      case vt.ReturnType.SingleValue(vt.UnicodeChar) =>
+        val int32Type = IntegerType(32)
+
+        Map(
+          "range" -> RangeMetadata(int32Type, (ast.CharLiteral.firstCodePoint, ast.CharLiteral.lastCodePoint + 1))
+        )
+
+      case _ =>
+        Map()
+    }) : Map[String, Metadata]
 
     // Convert our internal attributes to LLVM IR ones if applicable
     val explicitAttributes = signature.attributes.collect {
       case ProcedureAttribute.NoReturn =>
-        NoReturn
-    } : Set[FunctionAttribute]
+        IrFunction.NoReturn
+    } : Set[IrFunction.FunctionAttribute]
 
     val attributes = if (signature.hasWorldArg) {
       // World functions can throw exceptions
@@ -67,7 +84,7 @@ object ProcedureSignatureToIr {
     else {
       // Non-world ative functions must not throw exceptions
       // We don't generate a GC safe point for them
-      explicitAttributes + NoUnwind
+      explicitAttributes + IrFunction.NoUnwind
     }
 
     val callingConv = if (signature.attributes.contains(ProcedureAttribute.FastCC)) {
@@ -77,6 +94,9 @@ object ProcedureSignatureToIr {
       CallingConv.Default
     }
 
-    IrSignature(result=result, arguments=allArgs, attributes=attributes, callingConv=callingConv)
+    Result(
+      irSignature=IrSignature(result=result, arguments=allArgs, attributes=attributes, callingConv=callingConv),
+      callMetadata=callMetadata
+    )
   }
 }
