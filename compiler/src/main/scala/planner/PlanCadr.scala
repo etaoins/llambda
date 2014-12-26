@@ -14,7 +14,8 @@ object PlanCadr {
   
   private def loadCadr(
       pairValue : iv.IntermediateValue,
-      errorMessageOpt : Option[RuntimeErrorMessage],
+      emptyListMessageOpt : Option[RuntimeErrorMessage] = None,
+      improperListMessageOpt : Option[RuntimeErrorMessage] = None,
       knownPairLoader : KnownPairLoader,
       typeRefForPairType : TypeRefForPairType,
       planLoader : PlanLoader
@@ -24,10 +25,20 @@ object PlanCadr {
       knownPairLoader(knownPair)
 
     case _ =>
-      val pairTemp = pairValue.toTempValue(vt.AnyPairType, errorMessageOpt)
+      val listValue = if (improperListMessageOpt.isDefined) {
+        // XXX: Once #50 is fixed castToSchemeType can intersect the value's type internally and we can skip the manual
+        // intersection below
+        pairValue.castToSchemeType(vt.ListElementType, improperListMessageOpt)
+        pairValue.withSchemeType(pairValue.schemeType & vt.ListElementType)
+      }
+      else {
+        pairValue
+      }
+
+      val pairTemp = listValue.toTempValue(vt.AnyPairType, emptyListMessageOpt)
 
       // Does this pair have a specific pair type?
-      val resultType = (pairValue.schemeType & vt.AnyPairType)  match {
+      val resultType = (listValue.schemeType & vt.AnyPairType) match {
         case pairType : vt.PairType =>
           val rawResultType = pairType.unrollChildTypeRef(typeRefForPairType(pairType))
 
@@ -45,17 +56,35 @@ object PlanCadr {
       resultValue
   }
 
+  /** Loads the car from the passed pair value
+    *
+    * @param  pairValue               Pair value to load the car of
+    * @param  emptyListMessageOpt     Error to signal if the passed pair is the empty list. This defaults to a generic
+    *                                 type conversion error
+    * @param  improperListMessageOpt  Error to signal if the passed pair is neither a pair or empty list. This defaults
+    *                                 to emptyListMessageOpt
+    */
   def loadCar(
       pairValue : iv.IntermediateValue,
-      errorMessageOpt : Option[RuntimeErrorMessage] = None
+      emptyListMessageOpt : Option[RuntimeErrorMessage] = None,
+      improperListMessageOpt : Option[RuntimeErrorMessage] = None
   )(implicit plan : PlanWriter) : iv.IntermediateValue = {
-    loadCadr(pairValue, errorMessageOpt, _.car, _.carTypeRef, ps.LoadPairCar)
+    loadCadr(pairValue, emptyListMessageOpt, improperListMessageOpt, _.car, _.carTypeRef, ps.LoadPairCar)
   }
-  
+
+  /** Loads the cdr from the passed pair value
+    *
+    * @param  pairValue               Pair value to load the cdr of
+    * @param  emptyListMessageOpt     Error to signal if the passed pair is the empty list. This defaults to a generic
+    *                                 type conversion error
+    * @param  improperListMessageOpt  Error to signal if the passed pair is neither a pair or empty list. This defaults
+    *                                 to emptyListMessageOpt
+    */
   def loadCdr(
       pairValue : iv.IntermediateValue,
-      errorMessageOpt : Option[RuntimeErrorMessage] = None
+      emptyListMessageOpt : Option[RuntimeErrorMessage] = None,
+      improperListMessageOpt : Option[RuntimeErrorMessage] = None
   )(implicit plan : PlanWriter) : iv.IntermediateValue = {
-    loadCadr(pairValue, errorMessageOpt, _.cdr, _.cdrTypeRef, ps.LoadPairCdr)
+    loadCadr(pairValue, emptyListMessageOpt, improperListMessageOpt, _.cdr, _.cdrTypeRef, ps.LoadPairCdr)
   }
 }

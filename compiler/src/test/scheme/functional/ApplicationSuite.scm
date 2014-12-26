@@ -16,9 +16,17 @@
 (define-test "applying procedure with terminal improper list fails" (expect-error type-error?
 	(apply + '(2 3 . 5))))
 
-; XXX: This should be (expect-error type-error? ...) but we're treating it as an arity error
-(define-test "applying procedure with terminal non-list fails" (expect-failure
+(define-test "applying procedure with fixed args with terminal static non-list fails" (expect-compile-error type-error?
 	(apply - 2)))
+
+(define-test "applying procedure with fixed args with terminal dynamic non-list fails" (expect-error type-error?
+	(apply - (typeless-cell 2))))
+
+(define-test "applying procedure without fixed args with terminal static non-list fails" (expect-compile-error type-error?
+	(apply + 2)))
+
+(define-test "applying procedure without fixed args with terminal dynamic non-list fails" (expect-error type-error?
+	(apply + (typeless-cell 2))))
 
 (define-test "consecutively applying with incompatible arg types fails at compile time" (expect-compile-error type-error?
   (import (llambda typed))

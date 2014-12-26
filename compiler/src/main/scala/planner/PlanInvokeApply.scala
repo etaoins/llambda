@@ -3,7 +3,7 @@ import io.llambda
 
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
-import llambda.compiler.{ContextLocated, RuntimeErrorMessage}
+import llambda.compiler.{ContextLocated, RuntimeErrorMessage, ErrorCategory}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 
@@ -55,8 +55,19 @@ object PlanInvokeApply {
 
     val insufficientArgsMessage = ArityRuntimeErrorMessage.insufficientArgs(invokableProc)
 
+    val improperListMessage = RuntimeErrorMessage(
+      category=ErrorCategory.Type,
+      name="applyWithImproperList",
+      text="Attempted application with improper list"
+    )
+
     // Split our arguments in to fixed args and a rest arg
-    val destructuredArgs = DestructureList(argListValue, signature.fixedArgTypes, insufficientArgsMessage)
+    val destructuredArgs = DestructureList(
+      listValue=argListValue,
+      memberTypes=signature.fixedArgTypes,
+      insufficientLengthMessage=insufficientArgsMessage,
+      improperListMessageOpt=Some(improperListMessage)
+    )
 
     val fixedArgTemps = destructuredArgs.memberTemps
     val restArgValue = destructuredArgs.listTailValue
