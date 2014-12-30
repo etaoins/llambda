@@ -2,6 +2,7 @@
   (import (llambda nfi))
   (import (rename (llambda internal primitives) (define-report-procedure define-r7rs)))
   (import (llambda internal features))
+  (import (llambda error))
 
   ; base library
   (include-library-declarations "../../interfaces/scheme/base.scm")
@@ -488,7 +489,10 @@
 
     (: list-ref (All (A) (Listof A) <exact-integer> A))
     (define-r7rs (list-ref l n)
-      (car (list-tail l n)))
+      (define tail (list-tail l n))
+      (if (pair? tail)
+        (car tail)
+        (raise-range-error "(list-ref) at exact end of list" n)))
 
     (define native-make-list (world-function llbase "llbase_make_list" (All (A) <native-uint32> A (Listof A))))
     (define-r7rs make-list (case-lambda

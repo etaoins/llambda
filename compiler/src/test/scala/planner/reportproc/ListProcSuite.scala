@@ -219,8 +219,8 @@ class ListProcSuite extends FunSuite with PlanHelpers {
       ast.IntegerLiteral(3)
     )
 
-    intercept[TypeException] {
-      planStepsFor("(list-ref '(1 2 3) 3)")
+    intercept[RangeException] {
+      planStepsFor("(list-ref '(1 2 3) 4)")
     }
   }
 }

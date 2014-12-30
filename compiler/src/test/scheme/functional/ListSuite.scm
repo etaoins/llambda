@@ -188,9 +188,11 @@
   (assert-equal 'c (list-ref '(a b c d) 2))
   (assert-equal 'c (list-ref '(a b c d) (exact (round 1.8))))))
 
-; XXX: This should be (expect-error range-error?) but we're treating it as a type error
-(define-test "(list-ref) past end of list fails" (expect-failure
+(define-test "(list-ref) at exact end of list fails" (expect-error range-error?
   (list-ref '(1 2 3) 3)))
+
+(define-test "(list-ref) past end of list fails" (expect-error range-error?
+  (list-ref '(1 2 3) 4)))
 
 (define-test "(filter)" (expect-success
   (import (llambda list))
