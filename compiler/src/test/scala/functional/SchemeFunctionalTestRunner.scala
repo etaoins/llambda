@@ -27,7 +27,7 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
 
   private val targetPlatform = platform.DetectJvmPlatform()
 
-  private case class ExecutionResult(success : Boolean, output : List[ast.Datum], errorString : String)
+  private case class ExecutionResult(success : Boolean, output : List[ast.Datum], errorString : String, exitValue : Int)
 
   val resourceBaseDir = "functional/"
   val resourceBaseUrl = getClass.getClassLoader.getResource(resourceBaseDir)
@@ -149,17 +149,9 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
 
         assert(result.output === List(canaryValue), "Execution did not reach end of test")
 
-      case ast.ProperList(ast.Symbol("expect-failure") :: program) if !program.isEmpty =>
-        try {
-          val result = executeProgram(program, schemeDialect, optimizeLevel)
-
-          // If we compiled make sure we fail at runtime
-          assert(result.success === false, "Execution unexpectedly succeeded")
-        }
-        catch {
-          case e : SemanticException =>
-            // Semantic exceptions are allowed
-        }
+      case ast.ProperList(ast.Symbol("expect-exit-value") :: ast.IntegerLiteral(exitValue) :: program) if !program.isEmpty =>
+        val result = executeProgram(program, schemeDialect, optimizeLevel)
+        assert(result.exitValue == exitValue)
 
       case ast.ProperList(ast.Symbol("expect-error") :: ast.Symbol(errorPredicate) :: program) if !program.isEmpty =>
         try {
@@ -185,7 +177,7 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
           executeProgram(program, schemeDialect, optimizeLevel)
         }
         catch {
-          case anyError : SemanticException if errorPredicate == "error-object?" =>
+          case _ : SemanticException if errorPredicate == "error-object?" =>
 
           case expectedError : SemanticException
             if expectedError.errorCategory == ErrorCategory.fromPredicate(errorPredicate) =>
@@ -282,10 +274,10 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
         val outputString = utf8InputStreamToString(stdout.get)
         val output = SchemeParser.parseStringAsData(outputString)
 
-        ExecutionResult(success=true, output=output, errorString=errorString)
+        ExecutionResult(success=true, output=output, errorString=errorString, exitValue)
       }
       else {
-        ExecutionResult(success=false, output=Nil, errorString=errorString)
+        ExecutionResult(success=false, output=Nil, errorString=errorString, exitValue=exitValue)
       }
     }
     finally {

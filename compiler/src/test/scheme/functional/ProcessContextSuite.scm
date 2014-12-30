@@ -1,18 +1,22 @@
-(define-test "(exit) with #t succeeds" (expect-output ()
+(define-test "(exit) with #t" (expect-exit-value 0
 	(import (scheme process-context))
 	(exit #t)))
 
-(define-test "(exit) with #f fails" (expect-failure
+(define-test "(exit) with #f" (expect-exit-value 255
 	(import (scheme process-context))
 	(exit #f)))
 
-(define-test "(exit) with 0 succeeds" (expect-output ()
+(define-test "(exit) with 0" (expect-exit-value 0
 	(import (scheme process-context))
 	(exit 0)))
 
-(define-test "(exit) with 1 fails" (expect-failure
+(define-test "(exit) with 1" (expect-exit-value 1
 	(import (scheme process-context))
 	(exit 1)))
+
+(define-test "(exit) with 142" (expect-exit-value 42
+	(import (scheme process-context))
+	(exit 42)))
 
 (define-test "(exit) unwinds all states" (expect-output (inner-wind outer-wind)
 	(import (scheme process-context))

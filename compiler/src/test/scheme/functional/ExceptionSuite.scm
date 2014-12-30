@@ -1,4 +1,4 @@
-(define-test "uncaught exceptions terminate the program" (expect-failure
+(define-test "uncaught exceptions terminate the program" (expect-exit-value 255
 	(raise 0)))
 
 (define-test "uncaught exceptions unwind all states" (expect-output (two one)
