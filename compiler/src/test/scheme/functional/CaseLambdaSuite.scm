@@ -85,7 +85,7 @@
 
   (ann fixed-lambda (case-> (-> <exact-integer> *) (-> <exact-integer> <string> *)))))
 
-(define-test "R7RS (case-lambda) with wrong arity fails at runtime" (expect-failure
+(define-test "R7RS (case-lambda) with wrong arity fails at runtime" (expect-error error-object?
   (import (llambda r7rs-case-lambda))
 
   (define fixed-lambda

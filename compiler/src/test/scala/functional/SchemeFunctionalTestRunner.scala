@@ -185,6 +185,8 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
           executeProgram(program, schemeDialect, optimizeLevel)
         }
         catch {
+          case anyError : SemanticException if errorPredicate == "error-object?" =>
+
           case expectedError : SemanticException
             if expectedError.errorCategory == ErrorCategory.fromPredicate(errorPredicate) =>
         }
