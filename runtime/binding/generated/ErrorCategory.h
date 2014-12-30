@@ -18,6 +18,7 @@ enum class ErrorCategory : std::uint16_t
 	MutateLiteral = 8,
 	UndefinedVariable = 9,
 	OutOfMemory = 10,
+	InvalidArgument = 11,
 };
 
 #endif

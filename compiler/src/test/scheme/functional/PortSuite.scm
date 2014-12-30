@@ -45,7 +45,7 @@
   ; This should succeed
   (close-input-port input-port)))
 
-(define-test "(close-input-port) on output port fails" (expect-failure
+(define-test "(close-input-port) on output port fails" (expect-error invalid-argument-error?
   (close-input-port (open-output-string))))
 
 (define-test "(close-output-port)" (expect-success
@@ -62,7 +62,7 @@
   ; This should succeed
   (close-output-port output-port)))
 
-(define-test "(close-output-port) on input port fails" (expect-failure
+(define-test "(close-output-port) on input port fails" (expect-error invalid-argument-error?
   (close-output-port (current-input-port))))
 
 (define-test "(close-port)" (expect-success
@@ -78,11 +78,11 @@
   (close-port output-port)
   (assert-false (output-port-open? output-port))))
 
-(define-test "writing to an open input port fails" (expect-failure
+(define-test "writing to an open input port fails" (expect-error invalid-argument-error?
   (import (scheme write))
   (write "Test" (current-input-port))))
 
-(define-test "writing to a closed ouput port fails" (expect-failure
+(define-test "writing to a closed ouput port fails" (expect-error invalid-argument-error?
   (import (scheme write))
 
   (define output-port (open-output-string))
@@ -105,7 +105,7 @@
     (newline)
     (get-output-string (current-output-port)))))
 
-(define-test "(get-output-string) fails on non-output string port" (expect-failure
+(define-test "(get-output-string) fails on non-output string port" (expect-error invalid-argument-error?
   (get-output-string (open-output-bytevector))))
 
 (define-test "output bytevector ports" (expect #u8(#x70 #x69 #x65 #x63 #x65 #x20 #x62 #x79 #x20 #x70 #x69 #x65 #x63 #x65 #x20 #x62 #x79 #x20 #x70 #x69 #x65 #x63 #x65 #x2e #x0a)
@@ -120,7 +120,7 @@
     (newline)
     (get-output-bytevector (current-output-port)))))
 
-(define-test "(get-output-bytevector) fails on non-output bytevector port" (expect-failure
+(define-test "(get-output-bytevector) fails on non-output bytevector port" (expect-error invalid-argument-error?
   (get-output-bytevector (open-output-string))))
 
 (define-test "(open-input-string)" (expect-success

@@ -110,6 +110,9 @@ void fatalError(const char *message, const AnyCell *evidence)
 			case ErrorCategory::OutOfMemory:
 				std::cerr << "Category: Out of memory" << std::endl;
 				break;
+			case ErrorCategory::InvalidArgument:
+				std::cerr << "Category: Invalid argument" << std::endl;
+				break;
 			}
 
 			// Handle error objects specially

@@ -63,4 +63,9 @@ bool llerror_is_out_of_memory_error(AnyCell *obj)
 	return isErrorObjectOfCategory(obj, ErrorCategory::OutOfMemory);
 }
 
+bool llerror_is_invalid_argument_error(AnyCell *obj)
+{
+	return isErrorObjectOfCategory(obj, ErrorCategory::InvalidArgument);
+}
+
 }

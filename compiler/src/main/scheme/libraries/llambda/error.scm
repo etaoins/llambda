@@ -4,7 +4,7 @@
   (import (llambda typed))
   (import (llambda nfi))
 
-  (export type-error? arity-error? range-error? utf8-error? divide-by-zero-error? mutate-literal-error? undefined-variable-error? out-of-memory-error?)
+  (export type-error? arity-error? range-error? utf8-error? divide-by-zero-error? mutate-literal-error? undefined-variable-error? out-of-memory-error? invalid-argument-error?)
   (begin
     (define-native-library llerror (static-library "ll_llambda_error"))
     (define type-error? (native-function llerror "llerror_is_type_error" (-> <any> <native-bool>)))
@@ -15,4 +15,5 @@
     (define mutate-literal-error? (native-function llerror "llerror_is_mutate_literal_error" (-> <any> <native-bool>)))
     (define undefined-variable-error? (native-function llerror "llerror_is_undefined_variable_error" (-> <any> <native-bool>)))
     (define out-of-memory-error? (native-function llerror "llerror_is_out_of_memory_error" (-> <any> <native-bool>)))
+    (define invalid-argument-error? (native-function llerror "llerror_is_invalid_argument_error" (-> <any> <native-bool>)))
 ))

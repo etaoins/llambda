@@ -55,10 +55,10 @@
   (assert-equal "-1.0" (number->string -1.0))
   (assert-equal "-1.0" (number->string -1.0 10))))
 
-(define-test "(number->string) in radix 3 is an error" (expect-failure
+(define-test "(number->string) in radix 3 is an error" (expect-error invalid-argument-error?
   (number->string 17 3)))
 
-(define-test "(number->string) with non-decimal inexact is an error" (expect-failure
+(define-test "(number->string) with non-decimal inexact is an error" (expect-error invalid-argument-error?
   (number->string 17.0 16)))
 
 (define-test "(string->number)" (expect-success
@@ -84,5 +84,5 @@
   (assert-equal #f (string->number "2 5" 16))
   ))
 
-(define-test "(string->number) in radix 3 is an error" (expect-failure
+(define-test "(string->number) in radix 3 is an error" (expect-error invalid-argument-error?
   (string->number "17" 3)))

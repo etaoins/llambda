@@ -39,7 +39,7 @@
 	(parameterize ((param 50))
 		(param))))
 
-(define-test "parameterize with non-parameter fails" (expect-failure
+(define-test "parameterize with non-parameter fails" (expect-error invalid-argument-error?
 	(define not-param +)
 
 	(parameterize ((not-param 50))

@@ -17,6 +17,7 @@ object ErrorCategory {
   object MutateLiteral extends ErrorCategory(8)
   object UndefinedVariable extends ErrorCategory(9)
   object OutOfMemory extends ErrorCategory(10)
+  object InvalidArgument extends ErrorCategory(11)
 
   def fromPredicate : PartialFunction[String, ErrorCategory] = {
     case "default-error?" => Default
@@ -30,5 +31,6 @@ object ErrorCategory {
     case "mutate-literal-error?" => MutateLiteral
     case "undefined-variable-error?" => UndefinedVariable
     case "out-of-memory-error?" => OutOfMemory
+    case "invalid-argument-error?" => InvalidArgument
   }
 }

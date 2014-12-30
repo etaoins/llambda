@@ -22,7 +22,8 @@
   (error-category "divide-by-zero-error?" "divide_by_zero_error" "DivideByZero" #f)
   (error-category "mutate-literal-error?" "mutate_literal_error" "MutateLiteral" #f)
   (error-category "undefined-variable-error?" "undefined_variable_error" "UndefinedVariable" #f)
-  (error-category "out-of-memory-error?" "out_of_memory_error" "OutOfMemory" #f)))
+  (error-category "out-of-memory-error?" "out_of_memory_error" "OutOfMemory" #f)
+  (error-category "invalid-argument-error?" "invalid_argument_error" "InvalidArgument" #f)))
 
 (define (error-category-pred-function [cat : <error-category>])
   (string-append "llerror_is_" (error-category-nfi-name cat)))

@@ -55,7 +55,7 @@
   (assert-equal -32 (exact -32.0))
   (assert-equal 64 (exact 64))))
 
-(define-test "(exact 112.5) fails" (expect-failure
+(define-test "(exact 112.5) fails" (expect-error invalid-argument-error?
   (exact 112.5)))
 
 (define-test "(inexact)" (expect-success
