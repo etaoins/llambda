@@ -17,11 +17,6 @@ StringCell *llbase_make_string(World &world, std::int64_t length, UnicodeChar fi
 {
 	assertLengthValid(world, "(make-string)", "string length", StringCell::maximumCharLength(), length);
 
-	if (!fill.isValid())
-	{
-		signalError(world, ErrorCategory::Default, "(make-string) with invalid fill character");
-	}
-
 	return StringCell::fromFill(world, length, fill);
 }
 
