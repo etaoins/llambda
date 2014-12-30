@@ -125,28 +125,35 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
     UnitDatum | BooleanDatum | VectorDatum | RadixedNumber | BytevectorDatum | CharDatum | DatumLabel | DatumReference
   }
 
+  private def expandSymbolShorthand(location : SourceLocation, expanded : String, datum : ast.Datum) : ast.Datum = {
+    val expandedSymbol = ast.Symbol(expanded)
+    expandedSymbol.locationOpt = Some(location)
+
+    ast.ProperList(List(expandedSymbol, datum))
+  }
+
   // Quotations
   def QuotedDatum = rule {
-    "'" ~ Datum ~> { datum =>
-      ast.ProperList(List(ast.Symbol("quote"), datum))
+    fetchLocation ~ "'" ~ Datum ~> { (location, datum) =>
+      expandSymbolShorthand(location, "quote", datum)
     }
   }
 
   def QuasiquotedDatum = rule {
-    "`" ~ Datum ~> { datum =>
-      ast.ProperList(List(ast.Symbol("quasiquote"), datum))
+    fetchLocation ~ "`" ~ Datum ~> { (location, datum) =>
+      expandSymbolShorthand(location, "quasiquote", datum)
     }
   }
-  
+
   def UnquotedSplicingDatum = rule {
-    ",@" ~ Datum ~> { datum =>
-      ast.ProperList(List(ast.Symbol("unquote-splicing"), datum))
+    fetchLocation ~ ",@" ~ Datum ~> { (location, datum) =>
+      expandSymbolShorthand(location, "unquote-splicing", datum)
     }
   }
-  
+
   def UnquotedDatum = rule {
-    "," ~ Datum ~> { datum =>
-      ast.ProperList(List(ast.Symbol("unquote"), datum))
+    fetchLocation ~ "," ~ Datum ~> { (location, datum) =>
+      expandSymbolShorthand(location, "unquote", datum)
     }
   }
 
