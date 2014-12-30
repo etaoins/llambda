@@ -5,28 +5,37 @@
 (import (llambda typed))
 (import (llambda list))
 
-(define-record-type <error-category> (error-category pred-name nfi-name enum-name r7rs) error-category?
-  ([pred-name : <string>] error-category-pred-name)
+(define-record-type <error-category> (error-category scheme-name nfi-name enum-name r7rs) error-category?
+  ([scheme-name : <string>] error-category-scheme-name)
   ([nfi-name : <string>] error-category-nfi-name)
   ([enum-name : <string>] error-category-enum-name)
   ([r7rs : <boolean>] error-category-r7rs?))
 
 (define unindexed-categories (list
-  (error-category "default-error?" "default_error" "Default" #t)
-  (error-category "file-error?" "file_error" "File" #t)
-  (error-category "read-error?" "read_error" "Read" #t)
-  (error-category "type-error?" "type_error" "Type" #f)
-  (error-category "arity-error?" "arity_error" "Arity" #f)
-  (error-category "range-error?" "range_error" "Range" #f)
-  (error-category "utf8-error?" "utf8_error" "Utf8" #f)
-  (error-category "divide-by-zero-error?" "divide_by_zero_error" "DivideByZero" #f)
-  (error-category "mutate-literal-error?" "mutate_literal_error" "MutateLiteral" #f)
-  (error-category "undefined-variable-error?" "undefined_variable_error" "UndefinedVariable" #f)
-  (error-category "out-of-memory-error?" "out_of_memory_error" "OutOfMemory" #f)
-  (error-category "invalid-argument-error?" "invalid_argument_error" "InvalidArgument" #f)))
+  (error-category "default-error" "default_error" "Default" #t)
+  (error-category "file-error" "file_error" "File" #t)
+  (error-category "read-error" "read_error" "Read" #t)
+  (error-category "type-error" "type_error" "Type" #f)
+  (error-category "arity-error" "arity_error" "Arity" #f)
+  (error-category "range-error" "range_error" "Range" #f)
+  (error-category "utf8-error" "utf8_error" "Utf8" #f)
+  (error-category "divide-by-zero-error" "divide_by_zero_error" "DivideByZero" #f)
+  (error-category "mutate-literal-error" "mutate_literal_error" "MutateLiteral" #f)
+  (error-category "undefined-variable-error" "undefined_variable_error" "UndefinedVariable" #f)
+  (error-category "out-of-memory-error" "out_of_memory_error" "OutOfMemory" #f)
+  (error-category "invalid-argument-error" "invalid_argument_error" "InvalidArgument" #f)))
+
+(define (error-category-pred-name [cat : <error-category>])
+  (string-append (error-category-scheme-name cat) "?"))
 
 (define (error-category-pred-function [cat : <error-category>])
   (string-append "llerror_is_" (error-category-nfi-name cat)))
+
+(define (error-category-raise-name [cat : <error-category>])
+  (string-append "raise-" (error-category-scheme-name cat)))
+
+(define (error-category-raise-function [cat : <error-category>])
+  (string-append "llerror_raise_" (error-category-nfi-name cat)))
 
 (: number-categories (-> <exact-integer> (Listof <error-category>) (Listof (Pairof <exact-integer> <error-category>))))
 (define (number-categories start-at categories)
@@ -122,18 +131,22 @@
                               (string->symbol (error-category-pred-name cat)))
                             (remove error-category-r7rs? unindexed-categories)))
 
+  (define raise-symbols (map (lambda (cat)
+                               (string->symbol (error-category-raise-name cat)))
+                             (remove error-category-r7rs? unindexed-categories)))
+
   (display "; ")
   (write-generated-file-warning)
   (display "\n")
 
   (display "(define-library (llambda error)\n")
-  (display "  (import (scheme base))\n")
+  (display "  (import (llambda internal primitives))\n")
   (display "  (import (llambda typed))\n")
   (display "  (import (llambda nfi))\n")
   (newline)
 
   (display "  ")
-  (write (cons 'export pred-symbols))
+  (write (cons 'export (append pred-symbols raise-symbols)))
   (newline)
 
   (display "  (begin\n")
@@ -142,10 +155,17 @@
 
   (for-each (lambda (cat)
     (define pred-symbol (string->symbol (error-category-pred-name cat)))
-    (define func-name (error-category-pred-function cat))
+    (define pred-func-name (error-category-pred-function cat))
+
+    (define raise-symbol (string->symbol (error-category-raise-name cat)))
+    (define raise-func-name (error-category-raise-function cat))
 
     (display "    ")
-    (write `(define ,pred-symbol ,`(native-function llerror ,func-name (-> <any> <native-bool>))))
+    (write `(define ,pred-symbol ,`(native-function llerror ,pred-func-name (-> <any> <native-bool>))))
+    (display "\n")
+
+    (display "    ")
+    (write `(define ,raise-symbol ,`(world-function llerror ,raise-func-name (-> <string> <any> * <unit>) noreturn)))
     (display "\n")
   ) (remove error-category-r7rs? unindexed-categories))
 
@@ -161,6 +181,7 @@
   (display "#include \"binding/AnyCell.h\"\n")
   (display "#include \"binding/ErrorObjectCell.h\"\n")
   (display "#include \"binding/ErrorCategory.h\"\n")
+  (display "#include \"dynamic/SchemeException.h\"\n")
   (newline)
   (display "using namespace lliby;\n")
   (newline)
@@ -183,12 +204,13 @@
   (newline)
 
   (for-each (lambda (cat)
-    (define func-name (error-category-pred-function cat))
+    (define pred-func-name (error-category-pred-function cat))
+    (define raise-func-name (error-category-raise-function cat))
     (define enum-name (error-category-enum-name cat))
 
     (newline)
     (display "bool ")
-    (display func-name)
+    (display pred-func-name)
     (display "(AnyCell *obj)\n")
 
     (display "{\n")
@@ -196,6 +218,20 @@
     (display "\treturn isErrorObjectOfCategory(obj, ErrorCategory::")
     (display enum-name)
     (display ");\n")
+
+    (display "}\n")
+
+    (newline)
+    (display "void ")
+    (display raise-func-name)
+    (display "(World &world, StringCell *message, RestValues<AnyCell> *irritants)\n")
+
+    (display "{\n")
+
+    (display "\tthrow dynamic::SchemeException(")
+    (display "ErrorObjectCell::createInstance(world, message, irritants, ErrorCategory::")
+    (display enum-name)
+    (display "));\n")
 
     (display "}\n")
 
