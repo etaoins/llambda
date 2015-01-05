@@ -48,21 +48,21 @@ object Compiler {
   private def invokeLlvmCompiler(
       irBytes : Array[Byte],
       output : File,
-      optimizeLevel : Int,
+      optimiseLevel : Int,
       nativeLibraries : Set[NativeLibrary]
   ) : Boolean = {
-    val optimizeArg = s"-O${optimizeLevel}"
+    val optimiseArg = s"-O${optimiseLevel}"
 
-    val llcCmd = List("llc", "-tailcallopt", optimizeArg)
-    val clangCmd = List("clang++", optimizeArg) ++
+    val llcCmd = List("llc", "-tailcallopt", optimiseArg)
+    val clangCmd = List("clang++", optimiseArg) ++
       platformClangFlags ++
       List("-x", "assembler", "-") ++ 
       List("-x", "none") ++
       libraryClangFlags(nativeLibraries) ++
       List("-o", output.getAbsolutePath)
 
-    val compilePipeline = if (optimizeLevel > 1) { 
-      val optCmd = List("opt", "-tailcallopt", optimizeArg)
+    val compilePipeline = if (optimiseLevel > 1) {
+      val optCmd = List("opt", "-tailcallopt", optimiseArg)
 
       optCmd #| llcCmd #| clangCmd
     }
@@ -112,7 +112,7 @@ object Compiler {
     val irBytes = irString.getBytes("UTF-8")
 
     if (!config.emitLlvm) {
-      val result = invokeLlvmCompiler(irBytes, output, config.optimizeLevel, nativeLibraries)
+      val result = invokeLlvmCompiler(irBytes, output, config.optimiseLevel, nativeLibraries)
 
       if (!result) {
         throw new ExternalCompilerException
@@ -148,7 +148,7 @@ object Compiler {
     // Plan execution
     val planConfig = planner.PlanConfig(
       schemeDialect=config.schemeDialect,
-      optimize=config.optimizeLevel > 1,
+      optimise=config.optimiseLevel > 1,
       analysis=analysis
     )
 
@@ -157,7 +157,7 @@ object Compiler {
     val nativeLibraries = plannedProgram.requiredNativeLibraries
     val functions = plannedProgram.functions
 
-    val optimizedFunctions = if (config.optimizeLevel > 1) {
+    val optimisedFunctions = if (config.optimiseLevel > 1) {
       conniverPasses.foldLeft(functions) { case (functions, conniverPass) =>
         conniverPass(functions)
       }
@@ -168,9 +168,9 @@ object Compiler {
     }
 
     // Dispose any unused values
-    val disposedFunctions = optimizedFunctions.mapValues(planner.DisposeValues(_))
+    val disposedFunctions = optimisedFunctions.mapValues(planner.DisposeValues(_))
 
-    // Plan our cell allocations after all optimizations have been done
+    // Plan our cell allocations after all optimisations have been done
     val allocatedFunctions = disposedFunctions.mapValues(planner.PlanCellAllocations(_))
 
     if (config.dumpPlan) {

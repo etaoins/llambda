@@ -67,7 +67,7 @@ object ReportProcPlanner {
   )
 
   def activePlanners(implicit plan : PlanWriter) =
-    if (plan.config.optimize) {
+    if (plan.config.optimise) {
       typingPlanners ++ optimisingPlanners
     }
     else {

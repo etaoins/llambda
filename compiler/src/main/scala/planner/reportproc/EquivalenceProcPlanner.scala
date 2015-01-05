@@ -133,8 +133,8 @@ object EquivalenceProcPlanner extends ReportProcPlanner {
       val2 : iv.IntermediateValue)
   (implicit plan : PlanWriter) : PlanResult = {
     val ptrCompareUnion = vt.UnionType(ptrCompareTypes)
-    
-    val resultValue = if (plan.config.optimize) { 
+
+    val resultValue = if (plan.config.optimise) {
       if ((vt.SatisfiesType(ptrCompareUnion, val1.schemeType) == Some(true)) ||
           (vt.SatisfiesType(ptrCompareUnion, val2.schemeType) == Some(true))) {
         // We can fast path this; the possible types for either value consist entirely of fast path types

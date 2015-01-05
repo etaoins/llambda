@@ -15,7 +15,7 @@ trait PlanHelpers extends FunSuite with Inside {
   private def testPlanConfig(data : List[ast.Datum], optimise : Boolean, includePath : IncludePath = IncludePath()) = {
     val compileConfig = CompileConfig(
       includePath=includePath,
-      optimizeLevel=if (optimise) 0 else 2,
+      optimiseLevel=if (optimise) 0 else 2,
       targetPlatform=platform.Posix64LE,
       schemeDialect=dialect.Dialect.default
     )
@@ -35,7 +35,7 @@ trait PlanHelpers extends FunSuite with Inside {
 
     planner.PlanConfig(
       schemeDialect=dialect.Dialect.default,
-      optimize=optimise,
+      optimise=optimise,
       analysis=analysis
     )
   }

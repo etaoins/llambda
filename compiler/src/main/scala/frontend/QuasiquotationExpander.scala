@@ -6,7 +6,7 @@ import llambda.compiler._
 // This handles quasiquotion based on a few premises:
 //
 // - Only (scheme base) procedures can be used. It would be nice to have both a (lists->vector) and a version of (list)
-//   that can return a constant list. However, it seems overkill to micro-optimize quasiquotion by introducing custom 
+//   that can return a constant list. However, it seems overkill to micro-optimise quasiquotion by introducing custom
 //   runtime procedures at this point
 //
 // - Quasiquoted lists and vectors without unquoting should be represented "for free" as literals

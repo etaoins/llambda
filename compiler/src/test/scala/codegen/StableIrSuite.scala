@@ -11,7 +11,7 @@ class StableIrSuite extends FunSuite {
       
     val compileConfig = CompileConfig(
       includePath=testutil.NonTrivialProgram.includePath,
-      optimizeLevel=2,
+      optimiseLevel=2,
       targetPlatform=platform.Posix64LE,
       schemeDialect=dialect.Dialect.default
     )

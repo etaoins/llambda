@@ -36,7 +36,7 @@ class ExprLocatingSuite extends FunSuite with testutil.ExprHelpers {
     
     val compileConfig = CompileConfig(
       includePath=includePath,
-      optimizeLevel=0,
+      optimiseLevel=0,
       targetPlatform=platform.Posix64LE,
       schemeDialect=dialect.Dialect.default
     )

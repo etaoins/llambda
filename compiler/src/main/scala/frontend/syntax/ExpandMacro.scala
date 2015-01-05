@@ -238,7 +238,7 @@ private[frontend] object ExpandMacro {
 
   private def expandTemplate(template : sst.ScopedDatum, patternVariables : PatternVariables, matchedData : MatchedData)(implicit matchConfig : MatchConfig, expandedFrom : SourceLocated) : sst.ScopedDatum = {
     template match {
-      // Avoid sst.ScopedProperList here so we can fail early in the match as an optimization
+      // Avoid sst.ScopedProperList here so we can fail early in the match as an optimisation
       case sst.ScopedPair(ellipsisSymbol : sst.ScopedSymbol, sst.ScopedPair(subtemplate, sst.NonSymbolLeaf(ast.EmptyList())))
           if matchConfig.isZeroOrMore(ellipsisSymbol) =>
         // Treat ... as literal inside the subtemplate

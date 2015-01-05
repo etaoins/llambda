@@ -25,7 +25,8 @@ private[planner] object PlanExpr {
           apply(planResult.state)(expr)
         }
 
-      case et.Apply(procRef @ et.VarRef(callCcProc : ReportProcedure), args) if callCcNames.contains(callCcProc.reportName) && plan.config.optimize =>
+      case et.Apply(procRef @ et.VarRef(callCcProc : ReportProcedure), args)
+          if callCcNames.contains(callCcProc.reportName) && plan.config.optimise =>
         // This is a (call/cc)
         ReduceCallCc(expr, args)(plan.config) match {
           case SimplifiedCallCc(newArgs) =>

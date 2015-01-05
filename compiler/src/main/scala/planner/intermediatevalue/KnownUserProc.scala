@@ -14,7 +14,7 @@ import llambda.compiler.planner.reportproc.ReportProcPlanner
   * @param selfTempOpt    For procedures with closures a procedure cell containing the procedure's closure. The entry
   *                       point does not have to be initialized; it will be set dynamically to a generated trampoline
   *                       if this value is explicitly converted to a ct.ProcedureCell
-  * @param reportNameOpt  Name of this procedure in R7RS. This is used as a tag to implement certain optimizations
+  * @param reportNameOpt  Name of this procedure in R7RS. This is used as a tag to implement certain optimisations
   *                       elsewhere in the planner. It is not directly used by this class
   */
 class KnownUserProc(

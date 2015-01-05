@@ -31,7 +31,7 @@
 
 (define-test "non-constant procedure values can be applied" (expect 10
 	(define math-op
-		; This is + but our optimizer won't know that
+		; This is + but our optimiser won't know that
 		; That means this has to be converted to a function value at runtime
 
 		; Also note that + and / have different signatures which will have to be

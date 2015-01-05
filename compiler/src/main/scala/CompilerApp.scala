@@ -9,7 +9,7 @@ object CompilerApp extends App {
     inputFile : Option[File] = None,
     outputFile : Option[File] = None,
     emitLlvm : Boolean = false,
-    optimizeLevel : Int = 2,
+    optimiseLevel : Int = 2,
     extraFeatureIdents : Set[String] = Set(),
     genDebugInfo : Boolean = false,
     targetPlatformOpt : Option[platform.TargetPlatform] = None,
@@ -43,16 +43,16 @@ object CompilerApp extends App {
       c.copy(emitLlvm=true)
     } text("emit LLVM assembler instead of object code")
 
-    opt[Int]('O', "optimize") action { (level, c) =>
-      c.copy(optimizeLevel=level)
+    opt[Int]('O', "optimise") action { (level, c) =>
+      c.copy(optimiseLevel=level)
     } validate { level =>
       if ((level < 0) || (level > 3)) {
-        failure("Optimization level must be between 0 and 3 inclusive")
+        failure("Optimisation level must be between 0 and 3 inclusive")
       }
       else {
         success
       }
-    } text("set optimization level")
+    } text("set optimisation level")
 
     opt[String]("target-platform") action { (platformString, c) =>
       c.copy(targetPlatformOpt=Some(stringToPlatform(platformString)))
@@ -160,7 +160,7 @@ object CompilerApp extends App {
           targetPlatform=targetPlatform,
           schemeDialect=config.schemeDialect,
           emitLlvm=config.emitLlvm,
-          optimizeLevel=config.optimizeLevel,
+          optimiseLevel=config.optimiseLevel,
           extraFeatureIdents=config.extraFeatureIdents,
           genDebugInfo=config.genDebugInfo,
           dumpPlan=config.dumpPlan,

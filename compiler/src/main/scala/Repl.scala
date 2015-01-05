@@ -98,7 +98,7 @@ class CompileMode(targetPlatform : platform.TargetPlatform, schemeDialect : dial
   private val frontendConfig = ReplFrontendConfig(targetPlatform, schemeDialect)
   private val compileConfig = CompileConfig(
     includePath=frontendConfig.includePath,
-    optimizeLevel=2,
+    optimiseLevel=2,
     targetPlatform=targetPlatform,
     schemeDialect=schemeDialect
   )

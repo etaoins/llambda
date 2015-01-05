@@ -132,8 +132,8 @@ namespace
 		{
 			// Test the very next range to make sure we're not in the gap
 			// between ranges.
-			// 
-			// This is an optimization that takes advantage of the fact our tree
+			//
+			// This is an optimisation that takes advantage of the fact our tree
 			// is biased towards ASCII values and that there's usually a large
 			// gap after the ASCII ranges before their Unicode counterparts  
 			// start. With this most ASCII queries finish after 1-2 iterations.

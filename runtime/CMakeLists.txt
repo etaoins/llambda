@@ -121,7 +121,7 @@ find_package (Threads)
 # Create compile_commands.json. Clang tools like this
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
-# Enable optimizations by default
+# Enable optimisations by default
 if (NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Release)
 endif()

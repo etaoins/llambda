@@ -24,9 +24,9 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
       ast.Symbol(retypingProcedureName),
       SchemeParser.parseStringAsData(scheme, None).head
     ))
-    
+
     // Reference the procedure to force it to be planned
-    // Higher optimization levels would see right through this but this works on -O 0
+    // Higher optimisation levels would see right through this but this works on -O 0
     val referenceDatum = ast.ProperList(List(
       ast.Symbol("raise"),
       ast.Symbol(retypingProcedureName)

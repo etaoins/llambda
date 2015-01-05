@@ -61,7 +61,7 @@ class DebugInfoGenerator(module : llvmir.IrModuleBuilder, functions : Map[String
               typeDescriptor=subroutineTypeMetadata,
               compileUnitLocal=true,
               definedInCompileUnit=true,
-              optimised=(compileConfig.optimizeLevel > 0),
+              optimised=(compileConfig.optimiseLevel > 0),
               llvmFunctionOpt=subprogramToLlvmFunction.get(subprogram),
               scopeStartLine=subprogram.startLocation.line
             )
@@ -143,7 +143,7 @@ class DebugInfoGenerator(module : llvmir.IrModuleBuilder, functions : Map[String
         sourcePath=metadataForFilePath(entryFilenameOpt.getOrElse("(unnamed)")),
         dwarfLanguage=0x9393, // This is in the DWARF user range. It's ~'ll'
         producer=compilerIdentifier,
-        optimised=(compileConfig.optimizeLevel > 0),
+        optimised=(compileConfig.optimiseLevel > 0),
         subprograms=allSubprograms
       )
     )

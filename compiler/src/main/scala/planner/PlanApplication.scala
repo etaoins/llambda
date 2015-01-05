@@ -133,7 +133,7 @@ private[planner] object PlanApplication {
 
     val invokeValues = PlanInvokeApply.withIntermediateValues(invokableProc, args)(invokePlan)
 
-    if (plan.config.optimize && (initialState.inlineDepth < 8)) {
+    if (plan.config.optimise && (initialState.inlineDepth < 8)) {
       procValue match {
         case schemeProc : iv.KnownSchemeProc if !schemeProc.manifest.isRecursive =>
           // Try to plan this as in inline app[lication

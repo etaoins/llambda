@@ -73,7 +73,7 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
     }
   }
 
-  private def runTestConfiguration(allTests : List[ast.Datum], schemeDialect : dialect.Dialect, optimizeLevel : Int) {
+  private def runTestConfiguration(allTests : List[ast.Datum], schemeDialect : dialect.Dialect, optimiseLevel : Int) {
     // Deal with (cond-expand) for this configuration
     val expandLibraryLoader = new frontend.LibraryLoader(targetPlatform)
     val expandFrontendConfig = frontend.FrontendConfig(
@@ -88,8 +88,8 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
       singleTest match {
         case ast.ProperList(ast.Symbol("define-test") :: ast.StringLiteral(name) :: condition :: Nil) =>
           // Start a nested test
-          test(s"$name (${schemeDialect.name} -O ${optimizeLevel})") {
-            runSingleCondition(condition, schemeDialect, optimizeLevel)
+          test(s"$name (${schemeDialect.name} -O ${optimiseLevel})") {
+            runSingleCondition(condition, schemeDialect, optimiseLevel)
           }
 
         case other =>
@@ -98,10 +98,10 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
     }
   }
 
-  private def runSingleCondition(condition : ast.Datum, schemeDialect : dialect.Dialect, optimizeLevel : Int) {
+  private def runSingleCondition(condition : ast.Datum, schemeDialect : dialect.Dialect, optimiseLevel : Int) {
     condition match {
       case ast.ProperList(ast.Symbol("expect") :: expectedValue :: program) if !program.isEmpty =>
-        val result = executeProgram(wrapForPrinting(program), schemeDialect, optimizeLevel)
+        val result = executeProgram(wrapForPrinting(program), schemeDialect, optimiseLevel)
 
         if (!result.success) {
           if (result.errorString.isEmpty) {
@@ -116,7 +116,7 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
         assert(result.output === List(expectedValue))
 
       case ast.ProperList(ast.Symbol("expect-output") :: ast.ProperList(expectedOutput) :: program) if !program.isEmpty =>
-        val result = executeProgram(program, schemeDialect, optimizeLevel)
+        val result = executeProgram(program, schemeDialect, optimiseLevel)
 
         if (!result.success) {
           if (result.errorString.isEmpty) {
@@ -135,7 +135,7 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
         val canaryValue = ast.Symbol("test-completed")
         val programWithCanary = program :+ ast.ProperList(List(ast.Symbol("quote"), canaryValue))
 
-        val result = executeProgram(wrapForPrinting(programWithCanary), schemeDialect, optimizeLevel)
+        val result = executeProgram(wrapForPrinting(programWithCanary), schemeDialect, optimiseLevel)
 
         if (!result.success) {
           if (result.errorString.isEmpty) {
@@ -150,13 +150,13 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
         assert(result.output === List(canaryValue), "Execution did not reach end of test")
 
       case ast.ProperList(ast.Symbol("expect-exit-value") :: ast.IntegerLiteral(exitValue) :: program) if !program.isEmpty =>
-        val result = executeProgram(program, schemeDialect, optimizeLevel)
+        val result = executeProgram(program, schemeDialect, optimiseLevel)
         assert(result.exitValue == exitValue)
 
       case ast.ProperList(ast.Symbol("expect-error") :: ast.Symbol(errorPredicate) :: program) if !program.isEmpty =>
         try {
           val wrappedProgram = wrapForAssertRaises(errorPredicate, program)
-          val result = executeProgram(wrappedProgram, schemeDialect, optimizeLevel)
+          val result = executeProgram(wrappedProgram, schemeDialect, optimiseLevel)
 
           if (!result.success) {
             if (result.errorString.isEmpty) {
@@ -174,7 +174,7 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
 
       case ast.ProperList(ast.Symbol("expect-compile-error") :: ast.Symbol(errorPredicate) :: program) if !program.isEmpty =>
         try {
-          executeProgram(program, schemeDialect, optimizeLevel)
+          executeProgram(program, schemeDialect, optimiseLevel)
         }
         catch {
           case _ : SemanticException if errorPredicate == "error-object?" =>
@@ -216,7 +216,7 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
   private def utf8InputStreamToString(stream : InputStream) : String =
     Source.fromInputStream(stream, "UTF-8").mkString
 
-  private def executeProgram(program : List[ast.Datum], schemeDialect : dialect.Dialect, optimizeLevel : Int) : ExecutionResult = {
+  private def executeProgram(program : List[ast.Datum], schemeDialect : dialect.Dialect, optimiseLevel : Int) : ExecutionResult = {
     val finalProgram = testImportDecl :: program
 
     // Compile the program
@@ -226,7 +226,7 @@ abstract class SchemeFunctionalTestRunner(testName : String, onlyOptimised : Boo
     try {
       val compileConfig = CompileConfig(
         includePath=includePath,
-        optimizeLevel=optimizeLevel,
+        optimiseLevel=optimiseLevel,
         targetPlatform=targetPlatform,
         schemeDialect=schemeDialect
       )

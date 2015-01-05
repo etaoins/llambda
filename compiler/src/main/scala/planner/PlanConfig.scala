@@ -6,6 +6,6 @@ import llambda.compiler.analyser.AnalysedExprs
 
 case class PlanConfig(
   schemeDialect : dialect.Dialect,
-  optimize : Boolean,
+  optimise : Boolean,
   analysis : AnalysedExprs
 )
