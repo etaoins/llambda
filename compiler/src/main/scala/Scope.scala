@@ -21,7 +21,7 @@ class StorageLocation(
 }
 
 // These are procedure with the semantics of the same procedure defined in R7RS
-// This allows the compiler to optimise or REPL emulate them based on their documented semantics
+// This allows the compiler to optimise them based on their documented semantics
 class ReportProcedure(
     val reportName : String,
     schemeType : vt.SchemeType = vt.AnySchemeType
