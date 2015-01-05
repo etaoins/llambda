@@ -47,10 +47,9 @@ object RuntimeFunctions {
       Argument(PointerType(WorldValue.irType)),
       Argument(PointerType(ct.ProcedureCell.irType)),
       Argument(PointerType(ct.AnyCell.irType))
-    ),
-    attributes=Set(NoUnwind)
+    )
   )
-  
+
   val dynamicenvPop = IrFunctionDecl(
     result=Result(VoidType),
     name="llcore_dynamicenv_pop",
