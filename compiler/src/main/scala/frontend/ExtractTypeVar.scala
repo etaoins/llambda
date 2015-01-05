@@ -11,16 +11,16 @@ object ExtractTypeVar extends (sst.ScopedDatum => (sst.ScopedSymbol, pm.TypeVar)
     */
   def apply(datum : sst.ScopedDatum) : (sst.ScopedSymbol, pm.TypeVar) = datum match {
     case sst.ScopedProperList(List(
-      operandName : sst.ScopedSymbol,
+      argName : sst.ScopedSymbol,
       sst.ResolvedSymbol(Primitives.AnnotateStorageLocType),
       upperBoundDatum : sst.ScopedDatum
     )) =>
       // An upper type bound was supplied
       val upperBound = ExtractType.extractSchemeType(upperBoundDatum)
-      (operandName -> new pm.TypeVar(operandName.name, upperBound))
+      (argName -> new pm.TypeVar(argName.name, upperBound))
 
-    case operandName : sst.ScopedSymbol =>
-      (operandName -> new pm.TypeVar(operandName.name))
+    case argName : sst.ScopedSymbol =>
+      (argName -> new pm.TypeVar(argName.name))
 
     case other =>
       val message = s"Unrecognized type variable definition. Must be either identiifer or [identifier : <upper-bound>]."

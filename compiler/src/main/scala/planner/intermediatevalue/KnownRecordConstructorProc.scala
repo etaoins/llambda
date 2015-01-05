@@ -65,16 +65,18 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
     )
   }
 
-  override def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter) : Option[PlanResult] = {
-    if (operands.length != initializedFields.length) {
-      // Not the right number of operands
+  override def attemptInlineApplication(state : PlannerState)(
+      args : List[(ContextLocated, IntermediateValue)]
+  )(implicit plan : PlanWriter) : Option[PlanResult] = {
+    if (args.length != initializedFields.length) {
+      // Not the right number of args
       return None
     }
 
     // Convert our fields to the correct values
-    val fieldToTempValue = (operands.map(_._2).zip(initializedFields) map { case (operandValue, field) =>
+    val fieldToTempValue = (args.map(_._2).zip(initializedFields) map { case (argValue, field) =>
       val fieldType = recordType.typeForField(field)
-      (field -> operandValue.toTempValue(fieldType))
+      (field -> argValue.toTempValue(fieldType))
     }).toMap
 
     // Build the record value

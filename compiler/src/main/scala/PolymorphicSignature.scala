@@ -16,20 +16,20 @@ case class PolymorphicSignature(
     )
   }
 
-  /** Returns our signature for the given operands */
-  def signatureForOperands(located : SourceLocated, operands : List[vt.SchemeType]) : ProcedureSignature = {
+  /** Returns our signature for the given arguments */
+  def signatureForArgs(located : SourceLocated, args : List[vt.SchemeType]) : ProcedureSignature = {
     if (typeVars.isEmpty) {
       // Skip!
       return template
     }
 
-    val fixedArgResults = (template.fixedArgTypes zip operands) map { case (polyArg, evidenceArg) =>
+    val fixedArgResults = (template.fixedArgTypes zip args) map { case (polyArg, evidenceArg) =>
       pm.ResolveTypeVars(typeVars, polyArg, evidenceArg)
     }
 
     val restArgResults = template.restArgMemberTypeOpt match {
       case Some(polyMemberType) =>
-        operands.drop(template.fixedArgTypes.length) map { evidenceMemberType =>
+        args.drop(template.fixedArgTypes.length) map { evidenceMemberType =>
           pm.ResolveTypeVars(typeVars, polyMemberType, evidenceMemberType)
         }
 

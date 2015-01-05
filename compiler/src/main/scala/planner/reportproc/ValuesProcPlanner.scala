@@ -10,8 +10,8 @@ import llambda.compiler.planner._
 object ValuesProcPlanner extends ReportProcPlanner {
   override def planFromExprs(initialState : PlannerState)(
       reportName : String,
-      operands : List[et.Expr]
-  )(implicit plan : PlanWriter) : Option[PlanResult] = (reportName, operands) match {
+      args : List[et.Expr]
+  )(implicit plan : PlanWriter) : Option[PlanResult] = (reportName, args) match {
     case ("call-with-values", List(producerExpr, consumerExpr))  =>
       // Call the producer, possibly while inlining
       val producerResult = plan.withContextLocation(producerExpr) {
@@ -19,7 +19,7 @@ object ValuesProcPlanner extends ReportProcPlanner {
       }
 
       val resultValue = producerResult.values.toMultipleValueList()
-      Some(PlanApplication.planWithOperandList(producerResult.state)(consumerExpr, resultValue))
+      Some(PlanApplication.planWithArgList(producerResult.state)(consumerExpr, resultValue))
 
     case _ =>
       None
@@ -27,12 +27,12 @@ object ValuesProcPlanner extends ReportProcPlanner {
 
   override def planWithValues(state : PlannerState)(
       reportName : String,
-      operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[ResultValues] = (reportName, operands) match {
-    case ("values", operands) =>
+      args : List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan : PlanWriter) : Option[ResultValues] = (reportName, args) match {
+    case ("values", args) =>
       // We have a specific type here!
-      val operandValues = operands.map(_._2)
-      Some(ResultValues(operandValues))
+      val argValues = args.map(_._2)
+      Some(ResultValues(argValues))
 
     case _ =>
       None

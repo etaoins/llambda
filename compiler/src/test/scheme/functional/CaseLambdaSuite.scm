@@ -138,7 +138,7 @@
 
   (define dynamic-symbol (typed-dynamic 'one <symbol>))
 
-  ; (apply) has a lot of code paths depending on the operands and optimisation level
+  ; (apply) has a lot of code paths depending on the arguments and optimisation level
   ; Try to get good coverage here
   (define known-content-list '(one two three))
   (define known-length-list (list dynamic-symbol dynamic-symbol dynamic-symbol))

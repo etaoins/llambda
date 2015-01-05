@@ -76,8 +76,8 @@ object VectorProcPlanner extends ReportProcPlanner with ReportProcPlannerHelpers
 
   override def planWithValue(state : PlannerState)(
       reportName : String,
-      operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, operands) match {
+      args : List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, args) match {
     case ("make-vector", List(length)) =>
       Some(makeFilledVector(state)(length, iv.UnitValue))
     

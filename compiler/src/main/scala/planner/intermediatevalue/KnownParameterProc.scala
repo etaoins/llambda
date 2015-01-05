@@ -32,11 +32,11 @@ class KnownParameterProc(selfTemp : ps.TempValue, val hasConverter : Boolean) ex
   
   override def toBoxedValue()(implicit plan : PlanWriter) : BoxedValue = 
     BoxedValue(ct.ProcedureCell, selfTemp)
-  
+
   override def attemptInlineApplication(state : PlannerState)(
-      operands : List[(ContextLocated, IntermediateValue)]
+      args : List[(ContextLocated, IntermediateValue)]
   )(implicit plan : PlanWriter) : Option[PlanResult] = {
-    operands match {
+    args match {
       case Nil =>
         // Load this parameter value without going through the parameter procedure's trampoline
         val resultTemp = ps.Temp(vt.AnySchemeType)

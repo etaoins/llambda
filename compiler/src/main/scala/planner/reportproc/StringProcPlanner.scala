@@ -10,8 +10,8 @@ import llambda.compiler.planner._
 object StringProcPlanner extends ReportProcPlanner {
   override def planWithValue(state : PlannerState)(
       reportName : String,
-      operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, operands) match {
+      args : List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, args) match {
     case ("string-length", List((stringLocated, stringValue))) =>
       stringValue match {
         case iv.ConstantStringValue(stringValue) =>

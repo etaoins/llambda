@@ -61,15 +61,15 @@ case class Begin(exprs : List[Expr]) extends Expr {
     subexprs.flatMap(_.toSequence)
 }
 
-case class Apply(procedure : Expr, operands : List[Expr]) extends Expr {
-  val subexprs = procedure :: operands
+case class Apply(procedure : Expr, args : List[Expr]) extends Expr {
+  val subexprs = procedure :: args
 
   def map(f : Expr => Expr) : Apply =
-    Apply(f(procedure), operands.map(f)).assignLocationFrom(this)
+    Apply(f(procedure), args.map(f)).assignLocationFrom(this)
 
-  override def toString = 
-    // Make the operands follow the procedure directly like in Scheme
-    "Apply(" + (procedure :: operands).mkString(", ") + ")"
+  override def toString =
+    // Make the arguments follow the procedure directly like in Scheme
+    "Apply(" + (procedure :: args).mkString(", ") + ")"
 }
 
 case class VarRef(variable : StorageLocation) extends Expr {

@@ -27,7 +27,7 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     }
     
     intercept[BadSpecialFormException] {
-      // Too many args
+      // Too many arguments
       bodyFor("(define-type <another-type> <native-int32> <unicode-char>)")(scope)
     }
   }
@@ -443,14 +443,14 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
   test("defining type constructors") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
-    // No operands (is this useful?)
+    // No args (is this useful?)
     bodyFor("(define-type (Boolean) <boolean>)")(scope)
     bodyFor("(define-type <constructed-boolean> (Boolean))")(scope)
 
     assert(scope("<constructed-boolean>") === BoundType(vt.BooleanType))
 
     intercept[BadSpecialFormException] {
-      // Too many operands
+      // Too many arguments
       bodyFor("(define-type <too-many-args> (Boolean <pair>))")(scope)
     }
 
@@ -459,7 +459,7 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
       bodyFor("(define-type (NonSymbol 1) <boolean>)")(scope)
     }
 
-    // Single operand
+    // Single arg
     bodyFor("(define-type (Option T) (U T <empty-list>))")(scope)
     bodyFor("(define-type <string-option> (Option <string>))")(scope)
 
@@ -477,16 +477,16 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     }
 
     intercept[BadSpecialFormException] {
-      // Not enough operands
+      // Not enough args
       bodyFor("(define-type <insufficient-args> (Option))")(scope)
     }
 
     intercept[BadSpecialFormException] {
-      // Too many operands
+      // Too many args
       bodyFor("(define-type <too-many-args> (Option <pair> <string>))")(scope)
     }
 
-    // Multiple operands and recursive types
+    // Multiple args and recursive types
     bodyFor("(define-type (ListWithTerminator M T) (Rec L (U T (Pairof M L))))")(scope)
 
     bodyFor("(define-type <string-unit-tlist> (ListWithTerminator <string> <unit>))")(scope)

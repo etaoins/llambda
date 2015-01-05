@@ -10,8 +10,8 @@ import llambda.compiler.planner._
 object BytevectorProcPlanner extends ReportProcPlanner {
   override def planWithValue(state : PlannerState)(
       reportName : String,
-      operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, operands) match {
+      args : List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, args) match {
     case ("bytevector-length", List((_, iv.ConstantBytevectorValue(elements)))) =>
       Some(iv.ConstantExactIntegerValue(elements.length))
 

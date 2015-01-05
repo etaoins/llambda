@@ -5,17 +5,17 @@ import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
 
 case class ParsedFormals(
-    fixedOperands : List[(sst.ScopedSymbol, Option[vt.SchemeType])],
-    restOperandOpt : Option[(sst.ScopedSymbol, Option[vt.SchemeType])]
+    fixedArgs : List[(sst.ScopedSymbol, Option[vt.SchemeType])],
+    restArgOpt : Option[(sst.ScopedSymbol, Option[vt.SchemeType])]
 )
 
 object ParseFormals {
   def apply(
-      operandList : List[sst.ScopedDatum],
-      operandTerminator : sst.ScopedDatum
+      argList : List[sst.ScopedDatum],
+      argTerminator : sst.ScopedDatum
   ) : ParsedFormals = {
     val (fixedArgData, restArgNameOpt, restArgMemberTypeOpt) =
-      (operandList.reverse, operandTerminator) match {
+      (argList.reverse, argTerminator) match {
         // This looks for a terminal rest arg in the form: name : <type> *
         case (
             sst.ScopedSymbol(_, "*") ::
@@ -30,18 +30,18 @@ object ParseFormals {
 
         case (_, restArgSymbol : sst.ScopedSymbol) =>
           // This has an untyped rest argument
-          (operandList, Some(restArgSymbol), None)
+          (argList, Some(restArgSymbol), None)
 
         case (_, sst.NonSymbolLeaf(ast.EmptyList())) =>
           // This has no rest argument
-          (operandList, None, None)
+          (argList, None, None)
 
         case (_, datum) =>
           throw new BadSpecialFormException(datum, "Rest argument expected")
       }
 
     // Find the types in our signature
-    val fixedOperands = fixedArgData.map {
+    val fixedArgs = fixedArgData.map {
       case sst.ScopedProperList(List(
           scopedSymbol : sst.ScopedSymbol,
           sst.ResolvedSymbol(Primitives.AnnotateStorageLocType),
@@ -53,17 +53,17 @@ object ParseFormals {
         scopedSymbol -> None
 
       case datum =>
-        val message = s"Unrecognized operand definition. Must be either identiifer or [identifier : <type>]."
+        val message = s"Unrecognized argument definition. Must be either identiifer or [identifier : <type>]."
         throw new BadSpecialFormException(datum, message)
     }
 
-    val restOperandOpt = restArgNameOpt map { restArgName =>
+    val restArgOpt = restArgNameOpt map { restArgName =>
       restArgName -> restArgMemberTypeOpt
     } : Option[(sst.ScopedSymbol, Option[vt.SchemeType])]
 
     ParsedFormals(
-      fixedOperands=fixedOperands,
-      restOperandOpt=restOperandOpt
+      fixedArgs=fixedArgs,
+      restArgOpt=restArgOpt
     )
   }
 }

@@ -66,7 +66,7 @@ abstract class KnownProc(val polySignature : PolymorphicSignature, val selfTempO
     // Can we select a more specific polymorph or case lambda clause?
     targetType.signatures match {
       case List(vt.ProcedureType(fixedTypes, None, _)) =>
-        val selectedPolymorph = toApplicableValueForOperands(fixedTypes)
+        val selectedPolymorph = toApplicableValueForArgs(fixedTypes)
 
         if (!(selectedPolymorph eq this)) {
           return selectedPolymorph.toProcedureTempValue(targetType, errorMessageOpt)
@@ -136,9 +136,9 @@ abstract class KnownProc(val polySignature : PolymorphicSignature, val selfTempO
   def needsClosureRepresentation  = 
     // We only need a closure if we have a closure ourselves (i.e. a self temp)
     selfTempOpt.isDefined
-  
+
   /** Optionally plans an application of this procedure inline at the call site */
-  def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter) : Option[PlanResult] =
+  def attemptInlineApplication(state : PlannerState)(args : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter) : Option[PlanResult] =
     None
 
   override def withSchemeType(newType : vt.SchemeType) : KnownProc =

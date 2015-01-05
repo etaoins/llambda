@@ -16,7 +16,7 @@ private[planner] object AttemptInlineApply {
 
   private def attemptInline(parentState : PlannerState, inlineState : PlannerState)(
       lambdaExpr : et.Lambda,
-      operands : List[(ContextLocated, iv.IntermediateValue)],
+      args : List[(ContextLocated, iv.IntermediateValue)],
       selfTempOpt : Option[ps.TempValue] = None,
       manifestOpt : Option[LambdaManifest] = None
   )(implicit plan : PlanWriter) : Option[ResultValues] = {
@@ -28,8 +28,8 @@ private[planner] object AttemptInlineApply {
       return None
     }
 
-    if ((operands.length < lambdaExpr.fixedArgs.length) ||
-        ((operands.length > lambdaExpr.fixedArgs.length) && !lambdaExpr.restArgOpt.isDefined)) {
+    if ((args.length < lambdaExpr.fixedArgs.length) ||
+        ((args.length > lambdaExpr.fixedArgs.length) && !lambdaExpr.restArgOpt.isDefined)) {
       // Incompatible arity - let PlanInvokeApply fail this
       return None
     }
@@ -82,7 +82,7 @@ private[planner] object AttemptInlineApply {
     val importedValues = directValues ++ closureValues
 
     // Convert our arguments to ImmutableValues
-    val fixedArgImmutables = (lambdaExpr.fixedArgs.zip(operands).map { case (storageLoc, (_, argValue)) =>
+    val fixedArgImmutables = (lambdaExpr.fixedArgs.zip(args).map { case (storageLoc, (_, argValue)) =>
       if (vt.SatisfiesType(storageLoc.schemeType, argValue.schemeType) != Some(true)) {
         // This type cast could fail at runtime
         return None
@@ -93,7 +93,7 @@ private[planner] object AttemptInlineApply {
 
     val restArgImmutables = lambdaExpr.restArgOpt.zip(lambdaExpr.schemeType.restArgMemberTypeOpt) map {
       case (storageLoc, memberType) =>
-        val restValues = operands.drop(lambdaExpr.fixedArgs.length).map(_._2)
+        val restValues = args.drop(lambdaExpr.fixedArgs.length).map(_._2)
 
         for (restValue <- restValues)  {
           if (vt.SatisfiesType(memberType, restValue.schemeType) != Some(true)) {
@@ -122,14 +122,14 @@ private[planner] object AttemptInlineApply {
     *
     * @param  state       State the SEL is executing in
     * @param  lambdaExpr  Lambda expression being self-executed
-    * @param  operands    Operands for the SEL
+    * @param  args        Arguments for the SEL
     * @return Result values if inlining was successful, None otherwise
     */
   def fromSEL(state : PlannerState)(
       lambdaExpr : et.Lambda,
-      operands : List[(ContextLocated, iv.IntermediateValue)]
+      args : List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan : PlanWriter) : Option[ResultValues] =
-    attemptInline(state, state)(lambdaExpr, operands)
+    attemptInline(state, state)(lambdaExpr, args)
 
   /** Attempts to inline an already planned lambda from its manifest
     *
@@ -142,12 +142,12 @@ private[planner] object AttemptInlineApply {
     */
   def fromManifiest(inlineState : PlannerState)(
       manifest : LambdaManifest,
-      operands : List[(ContextLocated, iv.IntermediateValue)],
+      args : List[(ContextLocated, iv.IntermediateValue)],
       selfTempOpt : Option[ps.TempValue] = None
   )(implicit plan : PlanWriter) : Option[ResultValues] =
     attemptInline(manifest.parentState, inlineState)(
       lambdaExpr=manifest.lambdaExpr,
-      operands=operands,
+      args=args,
       selfTempOpt=selfTempOpt,
       manifestOpt=Some(manifest)
     )

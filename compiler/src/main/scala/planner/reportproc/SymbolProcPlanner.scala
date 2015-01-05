@@ -10,8 +10,8 @@ import llambda.compiler.planner._
 object SymbolProcPlanner extends ReportProcPlanner {
   override def planWithValue(state : PlannerState)(
       reportName : String,
-      operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, operands) match {
+      args : List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, args) match {
     case ("string->symbol", List((_, iv.ConstantStringValue(constValue)))) =>
       Some(iv.ConstantSymbolValue(constValue))
 

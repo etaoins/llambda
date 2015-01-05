@@ -90,24 +90,24 @@ class KnownCaseLambdaProc(
   }
 
   /** Returns the clause matching the passed arity or None if no clauses match */
-  def clauseForArityOpt(operandCount : Int) : Option[KnownCaseLambdaClause] = 
+  def clauseForArityOpt(argCount : Int) : Option[KnownCaseLambdaClause] =
     clauses find { clause =>
       val signatureTemplate = clause.knownProc.polySignature.template
       val fixedArgCount = signatureTemplate.fixedArgTypes.length
       val hasRestArg = signatureTemplate.restArgMemberTypeOpt.isDefined
 
-      (operandCount == fixedArgCount) || ((operandCount > fixedArgCount) && hasRestArg)
+      (argCount == fixedArgCount) || ((argCount > fixedArgCount) && hasRestArg)
     }
 
-  override def toApplicableValueForOperands (
-      operands : List[vt.SchemeType]
+  override def toApplicableValueForArgs (
+      args : List[vt.SchemeType]
   )(implicit plan : PlanWriter) : IntermediateValue = {
-    clauseForArityOpt(operands.length) match {
+    clauseForArityOpt(args.length) match {
       case Some(clause) =>
         restoreClause(clause)
 
       case None =>
-        val message = s"No (case-lambda) clause matches an arity of ${operands.length}"
+        val message = s"No (case-lambda) clause matches an arity of ${args.length}"
         throw new ArityException(plan.activeContextLocated, message)
     }
   }

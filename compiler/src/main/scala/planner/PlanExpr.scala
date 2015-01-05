@@ -25,18 +25,18 @@ private[planner] object PlanExpr {
           apply(planResult.state)(expr)
         }
 
-      case et.Apply(procRef @ et.VarRef(callCcProc : ReportProcedure), operands) if callCcNames.contains(callCcProc.reportName) && plan.config.optimize =>
+      case et.Apply(procRef @ et.VarRef(callCcProc : ReportProcedure), args) if callCcNames.contains(callCcProc.reportName) && plan.config.optimize =>
         // This is a (call/cc)
-        ReduceCallCc(expr, operands)(plan.config) match {
-          case SimplifiedCallCc(newOperands) =>
-            PlanApplication(initialState)(procRef, newOperands)
+        ReduceCallCc(expr, args)(plan.config) match {
+          case SimplifiedCallCc(newArgs) =>
+            PlanApplication(initialState)(procRef, newArgs)
 
           case StrippedCallCc(newExpr) =>
             PlanExpr(initialState)(newExpr)
         }
 
-      case et.Apply(procExpr, operandExprs) =>
-        PlanApplication(initialState)(procExpr, operandExprs)
+      case et.Apply(procExpr, argExprs) =>
+        PlanApplication(initialState)(procExpr, argExprs)
 
       case et.TopLevelDefine(bindings) =>
         PlanResult(

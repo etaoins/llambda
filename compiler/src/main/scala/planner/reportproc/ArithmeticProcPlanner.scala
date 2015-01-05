@@ -33,11 +33,11 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
       flonumInstr : BinaryInstrBuilder,
       staticIntCalc : StaticIntegerOp,
       staticFlonumCalc : StaticDoubleOp,
-      operands : List[iv.IntermediateValue]
+      args : List[iv.IntermediateValue]
   )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
     implicit val inlinePlan = plan.forkPlan()
 
-    val resultValue = operands.reduceLeft { (op1 : iv.IntermediateValue, op2 : iv.IntermediateValue) => (op1, op2) match {
+    val resultValue = args.reduceLeft { (op1 : iv.IntermediateValue, op2 : iv.IntermediateValue) => (op1, op2) match {
       case (iv.ConstantExactIntegerValue(constantIntVal1), iv.ConstantExactIntegerValue(constantIntVal2)) =>
         iv.ConstantExactIntegerValue(staticIntCalc(constantIntVal1, constantIntVal2))
 
@@ -91,11 +91,11 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
   }
 
   private def performNumericDivide(
-      operands : List[iv.IntermediateValue]
+      args : List[iv.IntermediateValue]
   )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
     implicit val inlinePlan = plan.forkPlan()
 
-    val resultValue = operands.reduceLeft { (op1 : iv.IntermediateValue, op2 : iv.IntermediateValue) => (op1, op2) match {
+    val resultValue = args.reduceLeft { (op1 : iv.IntermediateValue, op2 : iv.IntermediateValue) => (op1, op2) match {
       case (iv.ConstantExactIntegerValue(numerInt),  iv.ConstantExactIntegerValue(denomInt)) =>
         if ((denomInt != 0) && ((numerInt % denomInt) == 0)) {
           // This divides exactly
@@ -189,8 +189,8 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
 
   override def planWithValues(state : PlannerState)(
     reportName : String,
-    operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[ResultValues] = (reportName, operands) match {
+    args : List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan : PlanWriter) : Option[ResultValues] = (reportName, args) match {
     case ("truncate/", List(numerator, denominator)) =>
       // Handle this here because it produces multiple values
       val inlinePlan = plan.forkPlan()
@@ -208,45 +208,45 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
       }
 
     case _ =>
-      planWithSingleValue(state)(reportName, operands) map { value =>
+      planWithSingleValue(state)(reportName, args) map { value =>
         SingleValue(value)
       }
   }
 
   private def planWithSingleValue(state : PlannerState)(
       reportName : String,
-      operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, operands) match {
+      args : List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, args) match {
     case ("+", Nil) =>
       Some(iv.ConstantExactIntegerValue(0))
 
     case ("*", Nil) =>
       Some(iv.ConstantExactIntegerValue(1))
 
-    case (reportName, List((operandSourceLoc, singleOperand))) if List("+", "*").contains(reportName) =>
-      // Make sure the operand is numeric
-      val numericValue = plan.withContextLocation(operandSourceLoc) {
-        singleOperand.castToSchemeType(vt.NumberType)
+    case (reportName, List((argSourceLoc, singleArg))) if List("+", "*").contains(reportName) =>
+      // Make sure the arg is numeric
+      val numericValue = plan.withContextLocation(argSourceLoc) {
+        singleArg.castToSchemeType(vt.NumberType)
       }
 
       // Return it directly
       Some(numericValue)
 
-    case ("+", multipleOperands) =>
-      val operandValues = multipleOperands.map(_._2)
+    case ("+", multipleArgs) =>
+      val argValues = multipleArgs.map(_._2)
       performBinaryMixedOp(
         intInstr=ps.IntegerAdd.apply,
         flonumInstr=ps.FloatAdd.apply,
         staticIntCalc=_ + _,
         staticFlonumCalc=_ + _,
-        operands=operandValues
+        args=argValues
       )
 
     case ("-", Nil) =>
       // This isn't allowed - let it fail at runtime
       None
 
-    case ("-", List((_, singleOperand))) =>
+    case ("-", List((_, singleArg))) =>
       // This is a special case that negates the passed value
       val constantZero = iv.ConstantExactIntegerValue(0)
       performBinaryMixedOp(
@@ -254,41 +254,41 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
         flonumInstr=ps.FloatSub.apply,
         staticIntCalc=_ - _,
         staticFlonumCalc=_ - _,
-        operands=List(constantZero, singleOperand)
+        args=List(constantZero, singleArg)
       )
 
-    case ("-", multipleOperands) =>
-      val operandValues = multipleOperands.map(_._2)
+    case ("-", multipleArgs) =>
+      val argValues = multipleArgs.map(_._2)
       performBinaryMixedOp(
         intInstr=ps.IntegerSub.apply,
         flonumInstr=ps.FloatSub.apply,
         staticIntCalc=_ - _,
         staticFlonumCalc=_ - _,
-        operands=operandValues
+        args=argValues
       )
 
-    case ("*", multipleOperands) =>
-      val operandValues = multipleOperands.map(_._2)
+    case ("*", multipleArgs) =>
+      val argValues = multipleArgs.map(_._2)
       performBinaryMixedOp(
         intInstr=ps.IntegerMul.apply,
         flonumInstr=ps.FloatMul.apply,
         staticIntCalc=_ * _,
         staticFlonumCalc=_ * _,
-        operands=operandValues
+        args=argValues
       )
 
     case ("/", Nil) =>
       // This isn't allowed - let it fail at runtime
       None
 
-    case ("/", List((_, singleOperand))) =>
+    case ("/", List((_, singleArg))) =>
       // This is a special case that negates the passed value
       val constantZero = iv.ConstantExactIntegerValue(1)
-      performNumericDivide(operands=List(constantZero, singleOperand))
+      performNumericDivide(args=List(constantZero, singleArg))
 
-    case ("/", multipleOperands) =>
-      val operandValues = multipleOperands.map(_._2)
-      performNumericDivide(operandValues)
+    case ("/", multipleArgs) =>
+      val argValues = multipleArgs.map(_._2)
+      performNumericDivide(argValues)
 
     case ("truncate-quotient", List(numerator, denominator)) =>
       performIntegerDivide(numerator, denominator)

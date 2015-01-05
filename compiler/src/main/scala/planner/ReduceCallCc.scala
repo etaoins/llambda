@@ -11,7 +11,7 @@ sealed abstract class CallCcReduction
 /** (call/cc) was stripped off completely */
 case class StrippedCallCc(newExpr : et.Expr) extends CallCcReduction
 /** (call/cc) was simplified */
-case class SimplifiedCallCc(newOperands : List[et.Expr]) extends CallCcReduction
+case class SimplifiedCallCc(newArgs : List[et.Expr]) extends CallCcReduction
 
 object ReduceCallCc {
   private def storageLocReferencedByExpr(storageLoc : StorageLocation, expr : et.Expr) : Boolean = expr match {
@@ -60,7 +60,7 @@ object ReduceCallCc {
       expr.map(replaceExitProcWithReturn(_, exitProc))
   }
 
-  def apply(located : ContextLocated, operands : List[et.Expr])(implicit planConfig : PlanConfig) : CallCcReduction = operands match {
+  def apply(located : ContextLocated, args : List[et.Expr])(implicit planConfig : PlanConfig) : CallCcReduction = args match {
     case List(originalLambdaExpr @ et.Lambda(_, List(exitProc), None, bodyExpr, _)) if !planConfig.analysis.mutableVars.contains(exitProc) =>
       // Try to convert all uses of the exit proc in to a return
       val replacedBodyExpr = replaceExitProcWithReturn(bodyExpr, exitProc)
@@ -99,6 +99,6 @@ object ReduceCallCc {
       }
 
     case _ =>
-      SimplifiedCallCc(operands)
+      SimplifiedCallCc(args)
   }
 }

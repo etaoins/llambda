@@ -10,19 +10,19 @@ import llambda.compiler.{valuetype => vt}
 
 object NumberPredicateProcPlanner extends ReportProcPlanner {
   private def numberTypePredicate(state : PlannerState)(
-    operand : (ContextLocated, iv.IntermediateValue), testingType : vt.SchemeType
+    arg : (ContextLocated, iv.IntermediateValue), testingType : vt.SchemeType
   )(implicit plan : PlanWriter) : PlanResult = {
-    val operandValue = operand._2
+    val argValue = arg._2
 
-    plan.withContextLocation(operand._1) {
-      operandValue.castToSchemeType(vt.NumberType)
+    plan.withContextLocation(arg._1) {
+      argValue.castToSchemeType(vt.NumberType)
     }
 
     // We now know the above is definitely a number
-    val numberConstraintedType = operandValue.schemeType & vt.NumberType
+    val numberConstraintedType = argValue.schemeType & vt.NumberType
 
     val checkResult = PlanTypeCheck(
-      checkValue={operandValue.toBoxedValue()},
+      checkValue={argValue.toBoxedValue()},
       valueType=numberConstraintedType,
       testType=testingType
     )
@@ -33,7 +33,7 @@ object NumberPredicateProcPlanner extends ReportProcPlanner {
     val registeredState = ConstrainType.addCondAction(state)(
       conditionValue=resultValue,
       ConstrainType.CondAction(
-        subjectValue=operandValue,
+        subjectValue=argValue,
         trueConstraint=ConstrainType.IntersectType(testingType),
         falseConstraint=ConstrainType.SubtractType(testingType)
       )
@@ -47,8 +47,8 @@ object NumberPredicateProcPlanner extends ReportProcPlanner {
 
   override def planWithResult(state : PlannerState)(
       reportName : String,
-      operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[PlanResult] = (reportName, operands) match {
+      args : List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan : PlanWriter) : Option[PlanResult] = (reportName, args) match {
     case ("inexact?", List(singleValue)) =>
       Some(numberTypePredicate(state)(singleValue, vt.FlonumType))
     

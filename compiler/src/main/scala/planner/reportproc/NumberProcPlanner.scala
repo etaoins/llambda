@@ -70,7 +70,7 @@ object NumberProcPlanner extends ReportProcPlanner {
       }
   }
 
-  private def compareOperands(
+  private def compareArgs(
       compareCond : ps.CompareCond,
       staticIntCalc : IntegerCompartor,
       staticFlonumCalc : DoubleCompartor,
@@ -120,18 +120,18 @@ object NumberProcPlanner extends ReportProcPlanner {
     }
   }
 
-  private def compareOperandList(
+  private def compareArgList(
       compareCond : ps.CompareCond,
       staticIntCalc : IntegerCompartor,
       staticFlonumCalc : DoubleCompartor,
-      operands : List[iv.IntermediateValue]
+      args : List[iv.IntermediateValue]
   )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
     // Compare in a fork in case we abort the whole thing later
     val comparePlan = plan.forkPlan()
 
-    val pairwiseResults = operands.sliding(2).toList map {
+    val pairwiseResults = args.sliding(2).toList map {
       case List(left, right) =>
-        compareOperands(compareCond, staticIntCalc, staticFlonumCalc, left, right)(comparePlan)
+        compareArgs(compareCond, staticIntCalc, staticFlonumCalc, left, right)(comparePlan)
     }
 
     // Now filter out all the static results
@@ -194,18 +194,18 @@ object NumberProcPlanner extends ReportProcPlanner {
     }
   }
 
-  private def selectOperandList(
+  private def selectArgList(
       compareCond : ps.CompareCond,
       staticIntCalc : IntegerCompartor,
       staticFlonumCalc : DoubleCompartor,
-      operands : List[iv.IntermediateValue]
+      args : List[iv.IntermediateValue]
   )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
     // Compare in a fork in case we abort the whole thing later
     val comparePlan = plan.forkPlan()
 
-    val definiteResult = operands.reduceLeft { (left, right) =>
+    val definiteResult = args.reduceLeft { (left, right) =>
       // Compare these two values
-      val compareResult = compareOperands(compareCond, staticIntCalc, staticFlonumCalc, left, right)(comparePlan)
+      val compareResult = compareArgs(compareCond, staticIntCalc, staticFlonumCalc, left, right)(comparePlan)
 
       compareResult match {
         case UnplannableCompare =>
@@ -248,34 +248,34 @@ object NumberProcPlanner extends ReportProcPlanner {
 
   override def planWithValue(state : PlannerState)(
       reportName : String,
-      operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, operands) match {
-    case ("=", operands) if operands.length >= 2 =>
-      compareOperandList(ps.CompareCond.Equal, _ == _, _ == _, operands.map(_._2))
+      args : List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, args) match {
+    case ("=", args) if args.length >= 2 =>
+      compareArgList(ps.CompareCond.Equal, _ == _, _ == _, args.map(_._2))
 
-    case (">", operands) if operands.length >= 2 =>
-      compareOperandList(ps.CompareCond.GreaterThan, _ > _, _ > _, operands.map(_._2))
+    case (">", args) if args.length >= 2 =>
+      compareArgList(ps.CompareCond.GreaterThan, _ > _, _ > _, args.map(_._2))
 
-    case (">=", operands) if operands.length >= 2 =>
-      compareOperandList(ps.CompareCond.GreaterThanEqual, _ >= _, _ >= _, operands.map(_._2))
+    case (">=", args) if args.length >= 2 =>
+      compareArgList(ps.CompareCond.GreaterThanEqual, _ >= _, _ >= _, args.map(_._2))
 
-    case ("<", operands) if operands.length >= 2 =>
-      compareOperandList(ps.CompareCond.LessThan, _ < _, _ < _, operands.map(_._2))
+    case ("<", args) if args.length >= 2 =>
+      compareArgList(ps.CompareCond.LessThan, _ < _, _ < _, args.map(_._2))
 
-    case ("<=", operands) if operands.length >= 2 =>
-      compareOperandList(ps.CompareCond.LessThanEqual, _ <= _, _ <= _, operands.map(_._2))
+    case ("<=", args) if args.length >= 2 =>
+      compareArgList(ps.CompareCond.LessThanEqual, _ <= _, _ <= _, args.map(_._2))
 
-    case ("max", operands) if operands.length >= 2 =>
-      selectOperandList(ps.CompareCond.GreaterThan, _ > _, _ > _, operands.map(_._2))
+    case ("max", args) if args.length >= 2 =>
+      selectArgList(ps.CompareCond.GreaterThan, _ > _, _ > _, args.map(_._2))
 
-    case ("min", operands) if operands.length >= 2 =>
-      selectOperandList(ps.CompareCond.LessThan, _ < _, _ < _, operands.map(_._2))
+    case ("min", args) if args.length >= 2 =>
+      selectArgList(ps.CompareCond.LessThan, _ < _, _ < _, args.map(_._2))
 
-    case ("exact", List(singleOperand)) =>
-      exactValue(singleOperand._2)
+    case ("exact", List(singleArg)) =>
+      exactValue(singleArg._2)
 
-    case ("inexact", List(singleOperand)) =>
-      inexactValue(singleOperand._2)
+    case ("inexact", List(singleArg)) =>
+      inexactValue(singleArg._2)
 
     case _ =>
       None

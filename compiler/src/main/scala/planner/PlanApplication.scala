@@ -11,7 +11,7 @@ import llambda.compiler.codegen.CostForPlanSteps
 private[planner] object PlanApplication {
   def apply(state : PlannerState)(
       procExpr : et.Expr,
-      operandExprs : List[et.Expr]
+      argExprs : List[et.Expr]
   )(implicit plan : PlanWriter) : PlanResult = {
     // Are we applying a report procedure?
     procExpr match {
@@ -19,9 +19,9 @@ private[planner] object PlanApplication {
         val reportName = reportProc.reportName
         val reportProcPlanners = ReportProcPlanner.activePlanners
 
-        // Can this report procedure be planned without fully evaluating the operand expressions?
+        // Can this report procedure be planned without fully evaluating the argument expressions?
         for(reportProcPlanner <- reportProcPlanners;
-            planResult <- reportProcPlanner.planFromExprs(state)(reportName, operandExprs)) {
+            planResult <- reportProcPlanner.planFromExprs(state)(reportName, argExprs)) {
           return planResult
         }
 
@@ -30,36 +30,36 @@ private[planner] object PlanApplication {
 
     val initialResult = PlanResult(state, SingleValue(iv.UnitValue))
 
-    val operandResults = operandExprs.scanLeft(initialResult) { case (prevResult, operandExpr) =>
-      PlanExpr(prevResult.state)(operandExpr)
+    val argResults = argExprs.scanLeft(initialResult) { case (prevResult, argExpr) =>
+      PlanExpr(prevResult.state)(argExpr)
     }
 
-    // Use the final operand's state
-    val operandState = operandResults.last.state
-    // Zip with the orignal operand expr so we can use it to locate exceptions related to that operand
-    val operands = operandExprs.zip(operandResults.tail.map(_.values.toSingleValue()))
+    // Use the final argument's state
+    val argState = argResults.last.state
+    // Zip with the original argument expr so we can use it to locate exceptions related to that argument
+    val args = argExprs.zip(argResults.tail.map(_.values.toSingleValue()))
 
-    planWithOperandValues(operandState)(procExpr, operands)
+    planWithArgValues(argState)(procExpr, args)
   }
 
   /** Registers the types of our values with the occurrence typing system */
   private def registerTypes(state : PlannerState)(
       procedureType : vt.ProcedureType,
       procValue : iv.IntermediateValue,
-      operands : List[iv.IntermediateValue]
+      args : List[iv.IntermediateValue]
   )(implicit plan : PlanWriter) : PlannerState = {
     val constraint = ConstrainType.IntersectType(procedureType)
     val postProcState = ConstrainType(state)(procValue, constraint)(plan.config)
 
     val fixedArgTypes = procedureType.fixedArgTypes
-    val postFixedArgState = operands.zip(fixedArgTypes).foldLeft(postProcState) {
+    val postFixedArgState = args.zip(fixedArgTypes).foldLeft(postProcState) {
       case (state, (fixedArgValue, argType)) =>
         val constraint = ConstrainType.IntersectType(argType)
         ConstrainType(state)(fixedArgValue, constraint)(plan.config)
     }
 
-    val restOperandValues = operands.drop(fixedArgTypes.length)
-    restOperandValues.foldLeft(postFixedArgState) {
+    val restArgValues = args.drop(fixedArgTypes.length)
+    restArgValues.foldLeft(postFixedArgState) {
       case (state, restArgValue) =>
         val restArgMemberType = procedureType.restArgMemberTypeOpt.get
 
@@ -68,9 +68,9 @@ private[planner] object PlanApplication {
     }
   }
 
-  def planWithOperandValues(initialState : PlannerState)(
+  def planWithArgValues(initialState : PlannerState)(
       procExpr : et.Expr,
-      operands : List[(ContextLocated, iv.IntermediateValue)]
+      args : List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan : PlanWriter) : PlanResult = {
     // If this is a self-executing lambda try to apply it without planning a function at all
     // The procedure expression will never be used again so there's no reason to cost the the out-of-line version.
@@ -78,7 +78,7 @@ private[planner] object PlanApplication {
     procExpr match {
       case lambdaExpr : et.Lambda =>
         // We can apply this inline!
-        for(inlineValues <- AttemptInlineApply.fromSEL(initialState)(lambdaExpr, operands)) {
+        for(inlineValues <- AttemptInlineApply.fromSEL(initialState)(lambdaExpr, args)) {
           return PlanResult(
             state=initialState,
             values=inlineValues
@@ -89,49 +89,49 @@ private[planner] object PlanApplication {
     }
 
     val procResult = PlanExpr(initialState)(procExpr)
-    val procValue = procResult.values.toSingleValue().toApplicableValueForOperands(operands.map(_._2.schemeType))
+    val procValue = procResult.values.toSingleValue().toApplicableValueForArgs(args.map(_._2.schemeType))
 
     val invokableProc = procValue.toInvokableProcedure()
 
     // Resolve our polymorphic procedure type
-    val operandTypes = operands.map(_._2.schemeType)
-    val signature = invokableProc.polySignature.signatureForOperands(plan.activeContextLocated, operandTypes)
+    val argTypes = args.map(_._2.schemeType)
+    val signature = invokableProc.polySignature.signatureForArgs(plan.activeContextLocated, argTypes)
 
     val procedureType = signature.toSchemeProcedureType
 
     // Ensure our arity is sane
     if (procedureType.restArgMemberTypeOpt.isDefined) {
-      if (operands.length < procedureType.fixedArgTypes.length) {
+      if (args.length < procedureType.fixedArgTypes.length) {
         throw new ArityException(
           located=plan.activeContextLocated,
-          message=s"Called procedure with ${operands.length} arguments; requires at least ${procedureType.fixedArgTypes.length} arguments"
+          message=s"Called procedure with ${args.length} arguments; requires at least ${procedureType.fixedArgTypes.length} arguments"
         )
       }
     }
-    else if (procedureType.fixedArgTypes.length != operands.length) {
+    else if (procedureType.fixedArgTypes.length != args.length) {
       throw new ArityException(
         located=plan.activeContextLocated,
-        message=s"Called procedure with ${operands.length} arguments; requires exactly ${procedureType.fixedArgTypes.length} arguments"
+        message=s"Called procedure with ${args.length} arguments; requires exactly ${procedureType.fixedArgTypes.length} arguments"
       )
     }
 
     // Does this procedure support planning its application inline?
     procValue match {
       case knownProc : iv.KnownProc =>
-        for(inlineResult <- knownProc.attemptInlineApplication(procResult.state)(operands)) {
+        for(inlineResult <- knownProc.attemptInlineApplication(procResult.state)(args)) {
           // ReportProcPlanners rarely contrain the types of their arguments. Handle this for them.
           return inlineResult.copy(
-            state=registerTypes(inlineResult.state)(procedureType, procValue, operands.map(_._2))
+            state=registerTypes(inlineResult.state)(procedureType, procValue, args.map(_._2))
           )
         }
 
       case _ =>
     }
 
-    // Plan this as a an invoke (function call)
+    // Plan this as an invoke (function call)
     val invokePlan = plan.forkPlan()
 
-    val invokeValues = PlanInvokeApply.withIntermediateValues(invokableProc, operands)(invokePlan)
+    val invokeValues = PlanInvokeApply.withIntermediateValues(invokableProc, args)(invokePlan)
 
     if (plan.config.optimize && (initialState.inlineDepth < 8)) {
       procValue match {
@@ -141,7 +141,7 @@ private[planner] object PlanApplication {
 
           val inlineValuesOpt = AttemptInlineApply.fromManifiest(procResult.state)(
             manifest=schemeProc.manifest,
-            operands=operands,
+            args=args,
             selfTempOpt=schemeProc.selfTempOpt
           )(inlinePlan)
 
@@ -170,7 +170,7 @@ private[planner] object PlanApplication {
     plan.steps ++= invokePlan.steps
 
     return PlanResult(
-      state=registerTypes(procResult.state)(procedureType, procValue, operands.map(_._2)),
+      state=registerTypes(procResult.state)(procedureType, procValue, args.map(_._2)),
       values=invokeValues.withReturnType(procedureType.returnType)
     )
   }
@@ -189,19 +189,19 @@ private[planner] object PlanApplication {
       case _ => None
     }
 
-  def planWithOperandList(initialState : PlannerState)(
+  def planWithArgList(initialState : PlannerState)(
       procExpr : et.Expr,
-      operandList : iv.IntermediateValue
+      argList : iv.IntermediateValue
   )(implicit plan : PlanWriter) : PlanResult = {
     val loadValuesPlan = plan.forkPlan()
 
-    listToIntermediates(operandList)(loadValuesPlan) match {
+    listToIntermediates(argList)(loadValuesPlan) match {
       case Some(argValues) =>
         // We have a known number of arguments with known types - this is enough to do compile time arity checks,
         // lambda inlining etc.
         plan.steps ++= loadValuesPlan.steps
 
-        planWithOperandValues(initialState)(
+        planWithArgValues(initialState)(
           procExpr,
           argValues.map((procExpr, _))
         )
@@ -214,7 +214,7 @@ private[planner] object PlanApplication {
 
         PlanResult(
           state=procResult.state,
-          PlanInvokeApply.withArgumentList(invokableProc, operandList)
+          PlanInvokeApply.withArgumentList(invokableProc, argList)
         )
     }
   }

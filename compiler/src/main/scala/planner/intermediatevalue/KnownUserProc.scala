@@ -34,13 +34,15 @@ class KnownUserProc(
     new KnownUserProc(polySignature, plannedSymbol, Some(selfTemp), reportNameOpt)
   }
 
-  override def attemptInlineApplication(state : PlannerState)(operands : List[(ContextLocated, IntermediateValue)])(implicit plan : PlanWriter) : Option[PlanResult] = {
+  override def attemptInlineApplication(state : PlannerState)(
+      args : List[(ContextLocated, IntermediateValue)]
+  )(implicit plan : PlanWriter) : Option[PlanResult] = {
     val reportProcPlanners = ReportProcPlanner.activePlanners
 
     // Find the first report proc planner that knowns how to plan us
     for(reportName <- reportNameOpt;
         reportProcPlanner <- reportProcPlanners;
-        planResult <- reportProcPlanner.planWithResult(state)(reportName, operands)) {
+        planResult <- reportProcPlanner.planWithResult(state)(reportName, args)) {
       return Some(planResult)
     }
 

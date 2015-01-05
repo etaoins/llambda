@@ -12,15 +12,15 @@ import llambda.compiler.planner._
 object ApplyProcPlanner extends ReportProcPlanner {
   override def planFromExprs(initialState : PlannerState)(
       reportName : String,
-      operands : List[et.Expr]
-  )(implicit plan : PlanWriter) : Option[PlanResult] = (reportName, operands) match {
+      args : List[et.Expr]
+  )(implicit plan : PlanWriter) : Option[PlanResult] = (reportName, args) match {
     case ("apply", List(applyProcExpr, applyArgsExpr)) =>
       // Don't evaluate applyProcExpr - it could be an inline lambda
       // We want to inline it if at all possible
       val applyArgsResult = PlanExpr(initialState)(applyArgsExpr)
       val resultValue = applyArgsResult.values.toSingleValue()
 
-      Some(PlanApplication.planWithOperandList(applyArgsResult.state)(applyProcExpr, resultValue))
+      Some(PlanApplication.planWithArgList(applyArgsResult.state)(applyProcExpr, resultValue))
 
     case _ =>
       None

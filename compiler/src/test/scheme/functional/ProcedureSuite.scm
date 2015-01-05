@@ -48,8 +48,8 @@
 	(import (llambda typed))
 
   (: double-binary-op (-> (-> <exact-integer> <exact-integer> <exact-integer>) <exact-integer> <exact-integer>))
-  (define (double-binary-op proc operand)
-    (proc operand operand))
+  (define (double-binary-op proc arg)
+    (proc arg arg))
 
   (double-binary-op (typeless-cell +) 4)))
 
@@ -60,8 +60,8 @@
   (set! plus +)
 
   (: double-binary-op (-> (-> <exact-integer> <exact-integer> <exact-integer>) <exact-integer> <exact-integer>))
-  (define (double-binary-op proc operand)
-    (proc operand operand))
+  (define (double-binary-op proc arg)
+    (proc arg arg))
 
   (double-binary-op plus 4)))
 
@@ -75,8 +75,8 @@
   (set! construct cons)
 
   (: double-binary-op (-> (-> <exact-integer> <exact-integer> <any>) <exact-integer> <any>))
-  (define (double-binary-op proc operand)
-    (proc operand operand))
+  (define (double-binary-op proc arg)
+    (proc arg arg))
 
   (assert-equal 8 (double-binary-op plus 4))
   (assert-equal '(4 . 4) (double-binary-op construct 4))))
@@ -88,8 +88,8 @@
   (set! plus +)
 
   (: double-binary-op (-> (-> <exact-integer> <exact-integer> <exact-integer>) <exact-integer> <exact-integer>))
-  (define (double-binary-op proc operand)
-    (proc operand operand))
+  (define (double-binary-op proc arg)
+    (proc arg arg))
 
   (double-binary-op plus 4)))
 

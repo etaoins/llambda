@@ -416,9 +416,8 @@ object AnySchemeType extends UnionType(ct.AnyCell.concreteTypes.map(SchemeTypeAt
 
 /** Empty union of types
   *
-  * No type satisfies this type. It doesn't make sense for values or operands to have the empty type but it's not
-  * explicitly forbiddened. It occurs mostly as a result of operations on other types, such as the intersection
-  * of disjoint types.
+  * No type satisfies this type. It doesn't make sense for values or args to have the empty type but it's not explicitly
+  * forbidden. It occurs mostly as a result of operations on other types, such as the intersection of disjoint types.
   */
 object EmptySchemeType extends UnionType(Set())
 

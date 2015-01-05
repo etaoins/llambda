@@ -40,11 +40,11 @@ object ExtractLambda {
       parsedFormals : ParsedFormals,
       typeDeclaration : LocTypeDeclaration
   ) : ReconciledTypes = {
-    val formalsFixedArgTypes = parsedFormals.fixedOperands map { case (symbol, typeOpt) =>
+    val formalsFixedArgTypes = parsedFormals.fixedArgs map { case (symbol, typeOpt) =>
       symbol -> typeOpt.getOrElse(vt.AnySchemeType)
     }
 
-    val formalsRestArgMemberTypeOpt = parsedFormals.restOperandOpt map { case (symbol, typeOpt) =>
+    val formalsRestArgMemberTypeOpt = parsedFormals.restArgOpt map { case (symbol, typeOpt) =>
       symbol -> typeOpt.getOrElse(vt.AnySchemeType)
     }
 
@@ -131,14 +131,14 @@ object ExtractLambda {
 
   def apply(
       located : SourceLocated,
-      operandList : List[sst.ScopedDatum],
-      operandTerminator : sst.ScopedDatum,
+      argList : List[sst.ScopedDatum],
+      argTerminator : sst.ScopedDatum,
       definition : List[sst.ScopedDatum],
       sourceNameHint : Option[String] = None,
       typeDeclaration : LocTypeDeclaration = MonomorphicDeclaration(vt.AnySchemeType)
   )(debugContext : debug.SourceContext, libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : et.Lambda = {
-    // Parse our operand list
-    val parsedFormals = ParseFormals(operandList, operandTerminator)
+    // Parse our argument list
+    val parsedFormals = ParseFormals(argList, argTerminator)
 
     // Process our type declaration
     val reconciledTypes = reconcileTypes(located, parsedFormals, typeDeclaration)

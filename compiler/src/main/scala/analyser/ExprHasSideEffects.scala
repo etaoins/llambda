@@ -15,17 +15,17 @@ private[analyser] object ExprHasSideEffects extends ((et.Expr) => Boolean) {
       // Procedure definitions themselves are always pure
       false
 
-    case et.Apply(et.VarRef(reportProc : ReportProcedure), operands) =>
-      operands.exists(ExprHasSideEffects) ||
-        ReportProcHasSideEffects(reportProc.reportName, operands.length)
+    case et.Apply(et.VarRef(reportProc : ReportProcedure), args) =>
+      args.exists(ExprHasSideEffects) ||
+        ReportProcHasSideEffects(reportProc.reportName, args.length)
 
-    case et.Apply(lambdaExpr : et.Lambda, operands) =>
-      operands.exists(ExprHasSideEffects) ||
+    case et.Apply(lambdaExpr : et.Lambda, args) =>
+      args.exists(ExprHasSideEffects) ||
         ExprHasSideEffects(lambdaExpr.body)
 
-    case et.Apply(nativeFunc : et.NativeFunction, operands) =>
-      operands.exists(ExprHasSideEffects) ||
-        codegen.RuntimeFunctions.hasSideEffects(nativeFunc.nativeSymbol, operands.length)
+    case et.Apply(nativeFunc : et.NativeFunction, args) =>
+      args.exists(ExprHasSideEffects) ||
+        codegen.RuntimeFunctions.hasSideEffects(nativeFunc.nativeSymbol, args.length)
 
     case apply : et.Apply =>
       true

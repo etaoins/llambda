@@ -5,11 +5,11 @@ import llambda.compiler._
 import llambda.compiler.valuetype.{polymorphic => pm}
 
 object ExtractUserDefinedTypeConstructor {
-  def apply(operands : List[sst.ScopedDatum], definition : sst.ScopedDatum) : UserDefinedTypeConstructor = {
-    val operandTypes = operands map ExtractTypeVar
+  def apply(args : List[sst.ScopedDatum], definition : sst.ScopedDatum) : UserDefinedTypeConstructor = {
+    val argTypes = args map ExtractTypeVar
 
     // Rescope the definition
-    val typeBindings = operandTypes map { case (name, typeVar) =>
+    val typeBindings = argTypes map { case (name, typeVar) =>
       name -> BoundType(typeVar)
     }
 
@@ -18,6 +18,6 @@ object ExtractUserDefinedTypeConstructor {
 
     // Parse the polymorphic type
     val polyType = ExtractType.extractSchemeType(rescopedDefinition)
-    UserDefinedTypeConstructor(operandTypes.map(_._2), polyType)
+    UserDefinedTypeConstructor(argTypes.map(_._2), polyType)
   }
 }

@@ -11,8 +11,8 @@ private[frontend] object ParseProcedureTypeConstructor {
   )
 
   /** Parses a procedure type constructor in to its components without resolving its types */
-  def apply(located : SourceLocated, operands : List[sst.ScopedDatum]) : Result = {
-    operands.reverse match {
+  def apply(located : SourceLocated, args : List[sst.ScopedDatum]) : Result = {
+    args.reverse match {
       case returnDatum :: sst.ScopedSymbol(_, "*") :: restArgMemberDatum :: reverseFixedArgData =>
         Result(reverseFixedArgData.reverse, Some(restArgMemberDatum), returnDatum)
 

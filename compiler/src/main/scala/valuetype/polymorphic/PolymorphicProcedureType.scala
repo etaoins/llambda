@@ -4,10 +4,7 @@ import io.llambda
 import llambda.compiler.valuetype._
 import llambda.compiler.SourceLocated
 
-case class PolymorphicProcedureType(
-  typeVars : Set[TypeVar],
-  template : ProcedureType
-) {
+case class PolymorphicProcedureType(typeVars : Set[TypeVar], template : ProcedureType) {
   private def instantiate(reconciled : ReconcileTypeVars.Result) : ProcedureType = {
     template.copy(
       fixedArgTypes=template.fixedArgTypes.map(InstantiateType(reconciled, _)),
@@ -16,19 +13,19 @@ case class PolymorphicProcedureType(
     )
   }
 
-  def typeForOperands(located : SourceLocated, operands : List[SchemeType]) : ProcedureType = {
+  def typeForArgs(located : SourceLocated, args : List[SchemeType]) : ProcedureType = {
     if (typeVars.isEmpty) {
       // Skip!
       return template
     }
 
-    val fixedArgResults = (template.fixedArgTypes zip operands) map { case (polyArg, evidenceArg) =>
+    val fixedArgResults = (template.fixedArgTypes zip args) map { case (polyArg, evidenceArg) =>
       ResolveTypeVars(typeVars, polyArg, evidenceArg)
     }
 
     val restArgResults = template.restArgMemberTypeOpt match {
       case Some(polyMemberType) =>
-        operands.drop(template.fixedArgTypes.length) map { evidenceMemberType =>
+        args.drop(template.fixedArgTypes.length) map { evidenceMemberType =>
           ResolveTypeVars(typeVars, polyMemberType, evidenceMemberType)
         }
 

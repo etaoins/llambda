@@ -85,12 +85,12 @@ extends KnownUserProc(polySignature, plannedSymbol, selfTempOpt, reportNameOpt) 
     )
   }
 
-  override def toApplicableValueForOperands (
-      operands : List[vt.SchemeType]
+  override def toApplicableValueForArgs (
+      args : List[vt.SchemeType]
   )(implicit plan : PlanWriter) : IntermediateValue =
     if (isPrimaryPolymorph && !manifest.lambdaExpr.polyType.typeVars.isEmpty) {
       val polyType = manifest.lambdaExpr.polyType
-      val resolvedType = polyType.typeForOperands(plan.activeContextLocated, operands)
+      val resolvedType = polyType.typeForArgs(plan.activeContextLocated, args)
 
       if (resolvedType == polyType.upperBound) {
         // We resolved to the same type

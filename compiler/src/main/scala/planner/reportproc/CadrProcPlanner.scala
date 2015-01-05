@@ -10,8 +10,8 @@ import llambda.compiler.planner._
 
 object CadrProcPlanner extends ReportProcPlanner {
   override def planWithValue(initialState : PlannerState)(
-      reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, operands) match {
+      reportName : String, args : List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, args) match {
     case ("car", List((located, pairValue))) =>
       plan.withContextLocation(located) {
         Some(PlanCadr.loadCar(pairValue))

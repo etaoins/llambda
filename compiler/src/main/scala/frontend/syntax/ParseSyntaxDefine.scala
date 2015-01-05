@@ -65,7 +65,11 @@ private[frontend] object ParseSyntaxDefine {
     ParsedSimpleDefine(definedSymbol, new BoundSyntax(ellipsisVariable, literals.toSet, parsedRules, macroDebugContext))
   }
 
-  def apply(appliedSymbol : sst.ScopedSymbol, operands : List[sst.ScopedDatum], debugContext : debug.SourceContext) : ParsedSimpleDefine = operands match {
+  def apply(
+      appliedSymbol : sst.ScopedSymbol,
+      operands : List[sst.ScopedDatum],
+      debugContext : debug.SourceContext
+  ) : ParsedSimpleDefine = operands match {
     case List((definedSymbol : sst.ScopedSymbol),
              sst.ScopedProperList(
                sst.ResolvedSymbol(Primitives.SyntaxRules) :: sst.ScopedProperList(literalData) :: rulesData

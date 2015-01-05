@@ -12,16 +12,16 @@ import llambda.compiler.RangeException
 object CharProcPlanner extends ReportProcPlanner {
   private type CharComparator = (Int, Int) => Boolean
 
-  private def compareOperandList(
+  private def compareArgList(
       compareCond : ps.CompareCond,
       staticCalc : CharComparator,
-      operands : List[iv.IntermediateValue]
+      args : List[iv.IntermediateValue]
   )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
     // Compare in a fork in case we abort the whole thing later
     val comparePlan = plan.forkPlan()
 
     // Compare the values pairwise
-    val pairwiseNativePreds = operands.sliding(2).toList flatMap {
+    val pairwiseNativePreds = args.sliding(2).toList flatMap {
       case List(iv.ConstantCharValue(value1), iv.ConstantCharValue(value2)) =>
         if (!staticCalc(value1, value2)) {
           // This is statically false
@@ -71,8 +71,8 @@ object CharProcPlanner extends ReportProcPlanner {
 
   override def planWithValue(state : PlannerState)(
       reportName : String,
-      operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, operands) match {
+      args : List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, args) match {
     case ("char->integer", List((_, iv.ConstantCharValue(constantCharVal)))) =>
       Some(iv.ConstantExactIntegerValue(constantCharVal))
 
@@ -90,20 +90,20 @@ object CharProcPlanner extends ReportProcPlanner {
 
       Some(iv.ConstantCharValue(constantIntVal.toInt))
 
-    case ("char=?", operands) if operands.length >= 2 =>
-      compareOperandList(ps.CompareCond.Equal, _ == _, operands.map(_._2))
+    case ("char=?", args) if args.length >= 2 =>
+      compareArgList(ps.CompareCond.Equal, _ == _, args.map(_._2))
 
-    case ("char>?", operands) if operands.length >= 2 =>
-      compareOperandList(ps.CompareCond.GreaterThan,  _ > _, operands.map(_._2))
+    case ("char>?", args) if args.length >= 2 =>
+      compareArgList(ps.CompareCond.GreaterThan,  _ > _, args.map(_._2))
 
-    case ("char>=?", operands) if operands.length >= 2 =>
-      compareOperandList(ps.CompareCond.GreaterThanEqual, _ >= _, operands.map(_._2))
+    case ("char>=?", args) if args.length >= 2 =>
+      compareArgList(ps.CompareCond.GreaterThanEqual, _ >= _, args.map(_._2))
 
-    case ("char<?", operands) if operands.length >= 2 =>
-      compareOperandList(ps.CompareCond.LessThan, _ < _, operands.map(_._2))
+    case ("char<?", args) if args.length >= 2 =>
+      compareArgList(ps.CompareCond.LessThan, _ < _, args.map(_._2))
 
-    case ("char<=?", operands) if operands.length >= 2 =>
-      compareOperandList(ps.CompareCond.LessThanEqual, _ <= _, operands.map(_._2))
+    case ("char<=?", args) if args.length >= 2 =>
+      compareArgList(ps.CompareCond.LessThanEqual, _ <= _, args.map(_._2))
 
     case _ =>
       None

@@ -92,27 +92,27 @@ object PlanInvokeApply {
 
   def withIntermediateValues(
       invokableProc : InvokableProcedure,
-      operands : List[(ContextLocated, iv.IntermediateValue)]
+      args : List[(ContextLocated, iv.IntermediateValue)]
   )(implicit plan : PlanWriter) : ResultValues = {
     val signature = invokableProc.polySignature.upperBound
 
-    // Convert all the operands
-    val fixedTemps = operands.zip(signature.fixedArgTypes) map { case ((contextLocated, operand), nativeType) =>
+    // Convert all the args
+    val fixedTemps = args.zip(signature.fixedArgTypes) map { case ((contextLocated, arg), nativeType) =>
       plan.withContextLocation(contextLocated) {
-        operand.toTempValue(nativeType)
+        arg.toTempValue(nativeType)
       }
     }
 
     val restTemps = signature.restArgMemberTypeOpt map { memberType =>
-      val restOperands = operands.drop(signature.fixedArgTypes.length)
+      val restArgs = args.drop(signature.fixedArgTypes.length)
 
-      val restArgs = restOperands map { case (contextLocated, restValue) =>
+      val restArgValues = restArgs map { case (contextLocated, restValue) =>
         plan.withContextLocation(contextLocated) {
           restValue.castToSchemeType(memberType)
         }
       }
 
-      ValuesToList(restArgs, capturable=false).toTempValue(vt.ListElementType)
+      ValuesToList(restArgValues, capturable=false).toTempValue(vt.ListElementType)
     }
 
     PlanInvokeApply.withTempValues(invokableProc, fixedTemps, restTemps)

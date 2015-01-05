@@ -91,14 +91,14 @@ private[frontend] object ParseRecordTypeDefine {
   private def parseConstructor(
       recordType : vt.RecordType,
       constructorSymbol : sst.ScopedSymbol,
-      constructorOperands : List[sst.ScopedDatum]
+      constructorArgs : List[sst.ScopedDatum]
   ) : (sst.ScopedSymbol, et.RecordConstructor) = {
     // Get a list of all of our fields including inherited ones
     val nameToField = (recordType.fieldsWithInherited.map { field =>
       field.name -> field
     }).toMap
 
-    val initializedFields = constructorOperands.foldLeft(List[vt.RecordField]()) {
+    val initializedFields = constructorArgs.foldLeft(List[vt.RecordField]()) {
       case (initialized, symbol @ sst.ScopedSymbol(_, fieldName)) =>
         // Find the field for this symbol
         val field = nameToField.getOrElse(symbol.name, {
@@ -137,7 +137,7 @@ private[frontend] object ParseRecordTypeDefine {
       nameSymbol : sst.ScopedSymbol,
       parentSymbolOpt : Option[sst.ScopedSymbol],
       constructorSymbol : sst.ScopedSymbol,
-      constructorOperands : List[sst.ScopedDatum],
+      constructorArgs : List[sst.ScopedDatum],
       predicateSymbol : sst.ScopedSymbol,
       fieldData : List[sst.ScopedDatum]
   )(implicit frontendConfig : FrontendConfig) : ParsedRecordTypeDefine = {
@@ -171,7 +171,7 @@ private[frontend] object ParseRecordTypeDefine {
     val recordType = new vt.RecordType(nameSymbol.name, recordFields, Some(selfTypeVar), parentRecordOpt)
 
     // Create our constructor and predicate procedures
-    val constructorProcedure = parseConstructor(recordType, constructorSymbol, constructorOperands)
+    val constructorProcedure = parseConstructor(recordType, constructorSymbol, constructorArgs)
     val predicateProcedure = (predicateSymbol -> et.TypePredicate(recordType).assignLocationFrom(predicateSymbol))
 
     // Collect all of our accessors and mutators
@@ -203,22 +203,22 @@ private[frontend] object ParseRecordTypeDefine {
 
   def apply(
       appliedSymbol : sst.ScopedSymbol,
-      operands : List[sst.ScopedDatum]
-  )(implicit frontendConfig : FrontendConfig) : ParsedRecordTypeDefine = operands match {
+      args : List[sst.ScopedDatum]
+  )(implicit frontendConfig : FrontendConfig) : ParsedRecordTypeDefine = args match {
     case (nameSymbol : sst.ScopedSymbol) ::
-         sst.ScopedProperList((constructorSymbol : sst.ScopedSymbol) :: constructorOperands) ::
+         sst.ScopedProperList((constructorSymbol : sst.ScopedSymbol) :: constructorArgs) ::
          (predicateSymbol : sst.ScopedSymbol) ::
          fieldData =>
 
-      parse(appliedSymbol, nameSymbol, None, constructorSymbol, constructorOperands, predicateSymbol, fieldData)
+      parse(appliedSymbol, nameSymbol, None, constructorSymbol, constructorArgs, predicateSymbol, fieldData)
 
     case (nameSymbol : sst.ScopedSymbol) ::
          (parentSymbol : sst.ScopedSymbol) ::
-         sst.ScopedProperList((constructorSymbol : sst.ScopedSymbol) :: constructorOperands) ::
+         sst.ScopedProperList((constructorSymbol : sst.ScopedSymbol) :: constructorArgs) ::
          (predicateSymbol : sst.ScopedSymbol) ::
          fieldData =>
 
-      parse(appliedSymbol, nameSymbol, Some(parentSymbol), constructorSymbol, constructorOperands, predicateSymbol, fieldData)
+      parse(appliedSymbol, nameSymbol, Some(parentSymbol), constructorSymbol, constructorArgs, predicateSymbol, fieldData)
 
     case _ =>
       throw new BadSpecialFormException(appliedSymbol, "Unrecognized record type form")

@@ -57,15 +57,15 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
         boundValue
     }
 
-  private[frontend] def extractBodyDefinition(arguments : List[(sst.ScopedSymbol, BoundValue)], definition : List[sst.ScopedDatum]) : et.Expr = {
+  private[frontend] def extractBodyDefinition(args : List[(sst.ScopedSymbol, BoundValue)], definition : List[sst.ScopedDatum]) : et.Expr = {
     // Find all the scopes in the definition
     val definitionScopes = definition.foldLeft(Set[Scope]()) { (scopes, datum) =>
       scopes ++ UniqueScopesForDatum(datum)
     }
 
     // Introduce new scopes with our arguments injected in to them
-    val argsForScope = arguments groupBy(_._1.scope)
-      
+    val argsForScope = args groupBy(_._1.scope)
+
     val scopeMapping = (definitionScopes map { outerScope => 
       val scopeArgs = argsForScope.getOrElse(outerScope, List())
       
@@ -184,7 +184,11 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
     et.Begin(includeExprs)
   }
 
-  private def extractSymbolApplication(boundValue : BoundValue, appliedSymbol : sst.ScopedSymbol, operands : List[sst.ScopedDatum]) : et.Expr = {
+  private def extractSymbolApplication(
+      boundValue : BoundValue,
+      appliedSymbol : sst.ScopedSymbol,
+      operands : List[sst.ScopedDatum]
+  ) : et.Expr = {
     (boundValue, operands) match {
       case (Primitives.Quote, innerDatum :: Nil) =>
         et.Literal(innerDatum.unscope)
@@ -213,8 +217,8 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
       case (Primitives.Lambda, sst.ScopedListOrDatum(fixedArgData, restArgDatum) :: definition) =>
         ExtractLambda(
           located=appliedSymbol,
-          operandList=fixedArgData,
-          operandTerminator=restArgDatum,
+          argList=fixedArgData,
+          argTerminator=restArgDatum,
           definition=definition
         )(debugContext, libraryLoader, frontendConfig)
 
@@ -252,10 +256,10 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
       case (Primitives.UnquoteSplicing, _) =>
         throw new BadSpecialFormException(appliedSymbol, "Attempted (unquote-splicing) outside of quasiquotation") 
 
-      case (storageLoc : StorageLocation, operands) =>
+      case (storageLoc : StorageLocation, args) =>
         et.Apply(
           et.VarRef(storageLoc).assignLocationAndContextFrom(appliedSymbol, debugContext),
-          operands.map(extractExpr)
+          args.map(extractExpr)
         )
 
       case (Primitives.Cast, valueExpr :: typeDatum :: Nil) =>
@@ -346,8 +350,8 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
         Some(ParsedVarDefine(symbol, None, () => {
           ExtractLambda(
             located=appliedSymbol,
-            operandList=fixedArgs,
-            operandTerminator=restArgDatum,
+            argList=fixedArgs,
+            argTerminator=restArgDatum,
             definition=body,
             sourceNameHint=Some(symbol.name),
             typeDeclaration=symbolTypeDeclaration(symbol)
@@ -370,8 +374,8 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
 
         Some(ParsedSimpleDefine(typeAlias, BoundType(extractedType)))
 
-      case (Primitives.DefineType, sst.ScopedProperList((constructorName : sst.ScopedSymbol) :: operands) :: definition :: Nil) =>
-        val typeConstructor = ExtractUserDefinedTypeConstructor(operands, definition)
+      case (Primitives.DefineType, sst.ScopedProperList((constructorName : sst.ScopedSymbol) :: args) :: definition :: Nil) =>
+        val typeConstructor = ExtractUserDefinedTypeConstructor(args, definition)
         Some(ParsedSimpleDefine(constructorName, typeConstructor))
 
       case (Primitives.DefineReportProcedure, List(symbol : sst.ScopedSymbol, definitionData)) =>
@@ -391,8 +395,8 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
           expr=() => {
             ExtractLambda(
               located=appliedSymbol,
-              operandList=fixedArgs,
-              operandTerminator=restArgDatum,
+              argList=fixedArgs,
+              argTerminator=restArgDatum,
               definition=body,
               sourceNameHint=Some(symbol.name),
               typeDeclaration=symbolTypeDeclaration(symbol)
@@ -428,17 +432,17 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
   }
 
   def parseMultipleValueDefine(
-      operandList : List[sst.ScopedDatum],
-      operandTerminator : sst.ScopedDatum,
+      argList : List[sst.ScopedDatum],
+      argTerminator : sst.ScopedDatum,
       initialiserDatum : sst.ScopedDatum
   ) : ParsedMultipleValueDefine = {
-    val parsedFormals = ParseFormals(operandList, operandTerminator)
+    val parsedFormals = ParseFormals(argList, argTerminator)
 
-    val fixedValueTargets = parsedFormals.fixedOperands map { case (symbol, schemeTypeOpt) =>
+    val fixedValueTargets = parsedFormals.fixedArgs map { case (symbol, schemeTypeOpt) =>
       ValueTarget(symbol, schemeTypeOpt)
     }
 
-    val restValueTargetOpt = parsedFormals.restOperandOpt map { case (symbol, memberTypeOpt) =>
+    val restValueTargetOpt = parsedFormals.restArgOpt map { case (symbol, memberTypeOpt) =>
       ValueTarget(symbol, memberTypeOpt.map(vt.UniformProperListType(_)))
     }
 
@@ -556,9 +560,9 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
           )
 
           expandedExpr.asInlined(inlinePathEntry)
-        
+
         case otherBoundValue =>
-          // Make sure the operands a proper list
+          // Make sure the operands are a proper list
           // XXX: Does R7RS only allow macros to be applied as an improper list?
           cdr match {
             case sst.ScopedProperList(operands) =>
@@ -569,10 +573,10 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
           }
       }
 
-    case sst.ScopedProperList(procedure :: operands) =>
+    case sst.ScopedProperList(procedure :: args) =>
       // Apply the result of the inner expression
       val procedureExpr = extractExpr(procedure)
-      et.Apply(procedureExpr, operands.map(extractExpr))
+      et.Apply(procedureExpr, args.map(extractExpr))
 
     case scopedSymbol : sst.ScopedSymbol =>
       scopedSymbol.resolve match {

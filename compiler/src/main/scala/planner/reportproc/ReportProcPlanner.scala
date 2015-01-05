@@ -9,11 +9,17 @@ import llambda.compiler.planner._
 
 /** Optionally replaces a call to a report procedure with plan steps */
 abstract trait ReportProcPlanner {
-  def planFromExprs(initialState : PlannerState)(reportName : String, operands : List[et.Expr])(implicit plan : PlanWriter) : Option[PlanResult] =
+  def planFromExprs(initialState : PlannerState)(
+      reportName : String,
+      args : List[et.Expr]
+  )(implicit plan : PlanWriter) : Option[PlanResult] =
     None
 
-  def planWithResult(initialState : PlannerState)(reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter) : Option[PlanResult] = {
-    planWithValues(initialState)(reportName, operands) map { values =>
+  def planWithResult(initialState : PlannerState)(
+      reportName : String,
+      args : List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan : PlanWriter) : Option[PlanResult] = {
+    planWithValues(initialState)(reportName, args) map { values =>
       PlanResult(
         state=initialState,
         values=values
@@ -21,13 +27,19 @@ abstract trait ReportProcPlanner {
     }
   }
 
-  def planWithValues(initialState : PlannerState)(reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter) : Option[ResultValues] = {
-    planWithValue(initialState)(reportName, operands) map { value =>
+  def planWithValues(initialState : PlannerState)(
+      reportName : String,
+      args : List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan : PlanWriter) : Option[ResultValues] = {
+    planWithValue(initialState)(reportName, args) map { value =>
       SingleValue(value)
     }
   }
 
-  def planWithValue(initialState : PlannerState)(reportName : String, operands : List[(ContextLocated, iv.IntermediateValue)])(implicit plan : PlanWriter) : Option[iv.IntermediateValue] =
+  def planWithValue(initialState : PlannerState)(
+      reportName : String,
+      args : List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] =
     None
 }
 

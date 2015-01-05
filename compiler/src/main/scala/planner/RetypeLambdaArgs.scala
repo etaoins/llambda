@@ -14,9 +14,9 @@ private[planner] object RetypeLambdaArgs {
     hasRestArg : Boolean,
     canTerminate : Boolean
   ) {
-    def compatibleArity(operandCount : Int) =
-      (operandCount == fixedArgTypes.length) || 
-        ((operandCount > fixedArgTypes.length) && hasRestArg)
+    def compatibleArity(argCount : Int) =
+      (argCount == fixedArgTypes.length) ||
+        ((argCount > fixedArgTypes.length) && hasRestArg)
   }
 
   private type ArgTypes = Map[StorageLocation, vt.SchemeType]
@@ -78,11 +78,11 @@ private[planner] object RetypeLambdaArgs {
 
       collectTypeEvidence(bodyExpr, postBindArgTypes)
 
-    case et.Apply(et.VarRef(procLoc), operandExprs) =>
+    case et.Apply(et.VarRef(procLoc), argExprs) =>
       // Do the proc first
       val knownProcOpt = state.values.get(procLoc) match {
         case Some(ImmutableValue(knownCaseLambda : iv.KnownCaseLambdaProc)) =>
-          knownCaseLambda.clauseForArityOpt(operandExprs.length).map(_.knownProc)
+          knownCaseLambda.clauseForArityOpt(argExprs.length).map(_.knownProc)
 
         case Some(ImmutableValue(knownProc : iv.KnownProc)) =>
           Some(knownProc)
@@ -94,16 +94,16 @@ private[planner] object RetypeLambdaArgs {
       for(knownProc <- knownProcOpt) {
         val signature = knownProc.polySignature.upperBound
 
-        val postFixedArgTypes = operandExprs.zip(signature.fixedArgTypes).foldLeft(argTypes) {
-          case (currentArgTypes, (operandExpr, argValueType)) =>
-            attributeTypeToExpr(operandExpr, argValueType.schemeType, currentArgTypes)
+        val postFixedArgTypes = argExprs.zip(signature.fixedArgTypes).foldLeft(argTypes) {
+          case (currentArgTypes, (argExpr, argValueType)) =>
+            attributeTypeToExpr(argExpr, argValueType.schemeType, currentArgTypes)
         }
 
         // Do we have a typed rest arg?
         val finalArgTypes = signature.restArgMemberTypeOpt match { 
           case Some(memberType) =>
             // Attribute the rest arg member type to all of the rest args
-            val restArgExprs = operandExprs.drop(signature.fixedArgTypes.length)
+            val restArgExprs = argExprs.drop(signature.fixedArgTypes.length)
 
             restArgExprs.foldLeft(postFixedArgTypes) {
               case (currentArgTypes, restArgExpr) =>

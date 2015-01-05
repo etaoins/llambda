@@ -58,11 +58,11 @@ object ListProcPlanner extends ReportProcPlanner {
 
   override def planWithValue(initialState : PlannerState)(
       reportName : String,
-      operands : List[(ContextLocated, iv.IntermediateValue)]
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, operands) match {
-    case ("length", List((_, singleOperand))) =>
+      args : List[(ContextLocated, iv.IntermediateValue)]
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = (reportName, args) match {
+    case ("length", List((_, singleArg))) =>
       // Do we know the length at compile time?
-      singleOperand match {
+      singleArg match {
         case knownListElement : iv.KnownListElement =>
           for(listLength <- knownListElement.listLengthOpt) {
             // Yes, return it directly
@@ -72,8 +72,8 @@ object ListProcPlanner extends ReportProcPlanner {
         case _ =>
       }
 
-      if (singleOperand.isDefiniteProperList) {
-        val listElementTemp = singleOperand.toTempValue(vt.ListElementType)
+      if (singleArg.isDefiniteProperList) {
+        val listElementTemp = singleArg.toTempValue(vt.ListElementType)
         val resultTemp = ps.Temp(vt.UInt32)
 
         // This is a guaranteed proper list - we can quickly calculate the length inline
@@ -125,8 +125,8 @@ object ListProcPlanner extends ReportProcPlanner {
     case ("cons", List((_, carValue), (_, cdrValue))) =>
       Some(ValuesToPair(carValue, cdrValue, None))
     
-    case ("append", operands) =>
-      val (listOperands, terminator) = operands.map(_._2).reverse match {
+    case ("append", args) =>
+      val (listArgs, terminator) = args.map(_._2).reverse match {
         case Nil =>
           // No arguments; return the empty list
           (Nil, iv.EmptyListValue)
@@ -135,7 +135,7 @@ object ListProcPlanner extends ReportProcPlanner {
           (reverseHead.reverse, terminator)
       }
 
-      val headValues = listOperands flatMap {
+      val headValues = listArgs flatMap {
         case knownList : iv.KnownListElement => 
           knownList.toValueListOpt match {
             case Some(valueList) => valueList

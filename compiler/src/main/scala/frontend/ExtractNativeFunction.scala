@@ -9,11 +9,11 @@ import llambda.compiler.{valuetype => vt}
 object ExtractNativeFunction {
   private def extractMonoSignature(
       hasWorldArg : Boolean,
-      operands : List[sst.ScopedDatum],
+      args : List[sst.ScopedDatum],
       procTypeDatum : sst.ScopedDatum,
       attributeData : List[sst.ScopedDatum]
   ) : ProcedureSignature = {
-    val parsed = ParseProcedureTypeConstructor(procTypeDatum, operands)
+    val parsed = ParseProcedureTypeConstructor(procTypeDatum, args)
 
     val fixedArgTypes = parsed.fixedArgData.map(ExtractType.extractValueType(_))
     val restArgMemberTypeOpt = parsed.restArgMemberDatumOpt.map(ExtractType.extractSchemeType(_))
@@ -40,7 +40,7 @@ object ExtractNativeFunction {
   private def extractPolySignature(
       hasWorldArg : Boolean,
       typeVarData : List[sst.ScopedDatum],
-      operands : List[sst.ScopedDatum],
+      args : List[sst.ScopedDatum],
       procTypeDatum : sst.ScopedDatum,
       attributeData : List[sst.ScopedDatum]
   ) : PolymorphicSignature = {
@@ -53,8 +53,8 @@ object ExtractNativeFunction {
 
     val scopeMapping = Scope.mappingForBoundValues(typeBindings)
 
-    val rescopedOperands = operands.map(_.rescoped(scopeMapping))
-    val template = extractMonoSignature(hasWorldArg, rescopedOperands, procTypeDatum, attributeData)
+    val rescopedArgs = args.map(_.rescoped(scopeMapping))
+    val template = extractMonoSignature(hasWorldArg, rescopedArgs, procTypeDatum, attributeData)
 
     PolymorphicSignature(namedTypeVars.map(_._2).toSet, template)
   }
@@ -65,24 +65,24 @@ object ExtractNativeFunction {
       procTypeDatum : sst.ScopedDatum,
       attributeData : List[sst.ScopedDatum]
   ) : PolymorphicSignature = procTypeDatum match {
-    case sst.ScopedProperList(sst.ResolvedSymbol(Primitives.ProcedureType) :: operands) =>
-      extractMonoSignature(hasWorldArg, operands, procTypeDatum, attributeData).toPolymorphic
+    case sst.ScopedProperList(sst.ResolvedSymbol(Primitives.ProcedureType) :: args) =>
+      extractMonoSignature(hasWorldArg, args, procTypeDatum, attributeData).toPolymorphic
 
     // Long form
     case sst.ScopedProperList(List(
       sst.ResolvedSymbol(Primitives.PolymorphicType),
       sst.ScopedProperList(typeVarData),
-      sst.ScopedProperList(sst.ResolvedSymbol(Primitives.ProcedureType) :: operands)
+      sst.ScopedProperList(sst.ResolvedSymbol(Primitives.ProcedureType) :: args)
     )) =>
-      extractPolySignature(hasWorldArg, typeVarData, operands, procTypeDatum, attributeData)
+      extractPolySignature(hasWorldArg, typeVarData, args, procTypeDatum, attributeData)
 
     // Shorthand
     case sst.ScopedProperList(
       sst.ResolvedSymbol(Primitives.PolymorphicType) ::
       sst.ScopedProperList(typeVarData) ::
-      operands
+      args
     ) =>
-      extractPolySignature(hasWorldArg, typeVarData, operands, procTypeDatum, attributeData)
+      extractPolySignature(hasWorldArg, typeVarData, args, procTypeDatum, attributeData)
 
     case _ =>
       throw new BadSpecialFormException(procTypeDatum, "Bad native function type definition")
@@ -90,9 +90,9 @@ object ExtractNativeFunction {
 
   def apply(
       hasWorldArg : Boolean,
-      operands : List[sst.ScopedDatum],
+      args : List[sst.ScopedDatum],
       defineLocation : SourceLocated
-  ) : et.NativeFunction = operands match {
+  ) : et.NativeFunction = args match {
     case libraryDatum :: sst.NonSymbolLeaf(ast.StringLiteral(nativeSymbol)) :: procTypeDatum :: attributeData =>
       val nativeLibrary = ExtractNativeLibrary(libraryDatum)
 
