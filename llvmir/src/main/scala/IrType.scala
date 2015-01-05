@@ -9,6 +9,8 @@ sealed abstract class FirstClassType extends IrType with ReturnableType
 
 sealed abstract class FloatingPointType(val bits : Int) extends FirstClassType
 
+sealed abstract class AggregateType extends FirstClassType
+
 case class UserDefinedType(name : String) extends FirstClassType {
   private val escapedName = EscapeIdentifier(name)
 
@@ -31,7 +33,7 @@ case object VoidType extends IrType with ReturnableType {
   def toIr = "void"
 }
 
-case class ArrayType(elements : Int, innerType : FirstClassType) extends FirstClassType {
+case class ArrayType(elements : Int, innerType : FirstClassType) extends AggregateType {
   def toIr = s"[$elements x $innerType]"
 }
 
@@ -48,7 +50,7 @@ case class FunctionType(returnType : ReturnableType, parameterTypes : Seq[FirstC
   }
 }
 
-case class StructureType(memberTypes : Seq[FirstClassType]) extends FirstClassType {
+case class StructureType(memberTypes : Seq[FirstClassType]) extends AggregateType {
   def toIr = "{" + memberTypes.mkString(", ") + "}"
 }
 

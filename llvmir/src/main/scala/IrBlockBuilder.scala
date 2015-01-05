@@ -34,7 +34,7 @@ private[llvmir] abstract class IrInstrBuilder(protected val nameSource : LocalNa
   }
 }
 
-abstract class IrBlockBuilder(nameSource : LocalNameSource, val label : String) extends IrInstrBuilder(nameSource) with Irable with TerminatorInstrs with MemoryInstrs with BitwiseInstrs with ConversionInstrs with OtherInstrs with BinaryInstrs {
+abstract class IrBlockBuilder(nameSource : LocalNameSource, val label : String) extends IrInstrBuilder(nameSource) with Irable with TerminatorInstrs with MemoryInstrs with BitwiseInstrs with ConversionInstrs with OtherInstrs with BinaryInstrs with AggregateInstrs {
   def comment(text : String) {
     irLines += s"; ${text}"
   }
