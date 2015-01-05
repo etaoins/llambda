@@ -2,6 +2,7 @@ package io.llambda.compiler
 import io.llambda
 
 import java.io.File
+import scala.sys.process._
 
 object CompilerApp extends App {
   case class Config(
@@ -14,7 +15,8 @@ object CompilerApp extends App {
     targetPlatformOpt : Option[platform.TargetPlatform] = None,
     schemeDialect : dialect.Dialect = dialect.Dialect.default,
     dumpPlan : Boolean = false,
-    traceMacroExpansion : Boolean = false
+    traceMacroExpansion : Boolean = false,
+    runAsScript : Boolean = false
   )
 
   private val stringToPlatform = Map(
@@ -92,6 +94,10 @@ object CompilerApp extends App {
       c.copy(traceMacroExpansion=true)
     } text ("trace macro expansion process")
 
+    opt[Unit]('s', "script") action { (_, c) =>
+      c.copy(runAsScript=true)
+    } text ("run program immediately after compilation and delete the result")
+
     help("help")
   }
 
@@ -110,22 +116,33 @@ object CompilerApp extends App {
         }
 
         val output = config.outputFile getOrElse {
-          // Try to intelligently build our output path
-          val inputFilePath = input.getAbsolutePath
-
-          if (!inputFilePath.endsWith(".scm")) {
-            System.err.println(s"Unable to automatically determine output filename")
-            sys.exit(1)
-          }
-
-          val targetExtension = if (config.emitLlvm) {
-            ".ll"
+          if (config.runAsScript) {
+            // Create a temporary file - we should be able to write to tmp and this won't overwrite any existing
+            // binary
+            File.createTempFile("llambdascript", null, null)
           }
           else {
-            ""
-          }
+            // Try to intelligently build our output path based on the name of our input file
+            val inputFilePath = input.getAbsolutePath
 
-          new File(".scm$".r.replaceAllIn(inputFilePath, targetExtension))
+            if (!inputFilePath.endsWith(".scm")) {
+              System.err.println(s"Unable to automatically determine output filename")
+              sys.exit(1)
+            }
+
+            val targetExtension = if (config.emitLlvm) {
+              ".ll"
+            }
+            else {
+              ""
+            }
+
+            new File(".scm$".r.replaceAllIn(inputFilePath, targetExtension))
+          }
+        }
+
+        if (config.runAsScript) {
+          output.deleteOnExit()
         }
 
         // Get the URL of the file's parent directory
@@ -151,6 +168,26 @@ object CompilerApp extends App {
         )
 
         Compiler.compileFile(input, output, compileConfig)
+
+        if (config.runAsScript) {
+          // Proxy our stdin and stdout/stderr to the child process
+          val outputIO = new ProcessIO(BasicIO.input(true), BasicIO.toStdOut, BasicIO.toStdErr)
+
+          // Fork a child process
+          val testProcess = Process(output.getAbsolutePath).run(outputIO)
+
+          // Delete the temporary executable
+          output.delete()
+
+          // Wait for the child process to exit and record the exit value
+          val exitValue = testProcess.exitValue()
+
+          // sbt installs a security manager that won't let us call sys.exit and instead throws an exception, prints a
+          // message and exits. This makes using sys.exit() for successful termination very noisey.
+          if (exitValue != 0) {
+            sys.exit(exitValue)
+          }
+        }
 
       case None =>
         // Launch the REPL
