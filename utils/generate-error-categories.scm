@@ -63,10 +63,15 @@
   (newline)
   (display "#include <cstdint>\n")
   (newline)
+
+  (display "namespace lliby\n")
+  (display "{\n")
+  (newline)
+
   (display "enum class ErrorCategory : std::uint16_t\n")
   (display "{\n")
 
-  (map (lambda (indexed-category)
+  (for-each (lambda (indexed-category)
     (define index (car indexed-category))
     (define category (cdr indexed-category))
 
@@ -79,7 +84,43 @@
 
   (display "};\n")
   (newline)
+
+  (display "const char *schemeNameForErrorCategory(ErrorCategory category);\n")
+  (newline)
+
+  (display "}\n")
+  (newline)
+
   (display "#endif\n"))
+
+(define (write-error-category-cpp)
+  (display "#include \"ErrorCategory.h\"\n")
+  (newline)
+
+  (display "namespace lliby\n")
+  (display "{\n")
+  (newline)
+
+  (display "const char *schemeNameForErrorCategory(ErrorCategory category)\n")
+  (display "{\n")
+  (display "\tswitch(category)\n")
+  (display "\t{\n")
+
+  (for-each (lambda (cat)
+    (display "\tcase ErrorCategory::")
+    (display (error-category-enum-name cat))
+    (display ":\n")
+
+    (display "\t\treturn ")
+    (write (error-category-scheme-name cat))
+    (display ";\n")
+  ) unindexed-categories)
+
+  (display "\t}\n")
+  (display "}\n")
+
+  (newline)
+  (display "}\n"))
 
 ; Writes out ErrorCategory.scala
 (define (write-error-category-scala)
@@ -241,6 +282,8 @@
   (display "}\n"))
 
 (with-output-to-file "runtime/binding/generated/ErrorCategory.h" write-error-category-h)
+(with-output-to-file "runtime/binding/generated/ErrorCategory.cpp" write-error-category-cpp)
+
 (with-output-to-file "compiler/src/main/scala/generated/ErrorCategory.scala" write-error-category-scala)
 (with-output-to-file "compiler/src/main/scheme/libraries/llambda/error.scm" write-error-scheme-library)
 (with-output-to-file "runtime/stdlib/llambda/error/error.cpp" write-error-cpp)

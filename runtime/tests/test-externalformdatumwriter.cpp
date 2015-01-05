@@ -224,9 +224,12 @@ void testRecord(World &world)
 void testErrorObject(World &world)
 {
 	alloc::StringRef errorString(world, StringCell::fromUtf8StdString(world, u8"Test error"));
-	auto errorObj = ErrorObjectCell::createInstance(world, errorString, EmptyListCell::asProperList<AnyCell>());
 
+	auto errorObj = ErrorObjectCell::createInstance(world, errorString, EmptyListCell::asProperList<AnyCell>());
 	assertForm(errorObj, "#!error(Test error)");
+
+	errorObj = ErrorObjectCell::createInstance(world, errorString, EmptyListCell::asProperList<AnyCell>(), ErrorCategory::Arity);
+	assertForm(errorObj, "#!error(arity-error/Test error)");
 }
 
 void testPort(World &world)

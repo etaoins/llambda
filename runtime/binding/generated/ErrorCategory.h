@@ -5,6 +5,9 @@
 
 #include <cstdint>
 
+namespace lliby
+{
+
 enum class ErrorCategory : std::uint16_t
 {
 	Default = 0,
@@ -20,5 +23,9 @@ enum class ErrorCategory : std::uint16_t
 	OutOfMemory = 10,
 	InvalidArgument = 11,
 };
+
+const char *schemeNameForErrorCategory(ErrorCategory category);
+
+}
 
 #endif

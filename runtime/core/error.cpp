@@ -76,43 +76,9 @@ void fatalError(const char *message, const AnyCell *evidence)
 
 		if (auto errorCell = cell_cast<ErrorObjectCell>(evidence))
 		{
-			switch(errorCell->category())
+			if (errorCell->category() != ErrorCategory::Default)
 			{
-			case ErrorCategory::Default:
-				break;
-			case ErrorCategory::File:
-				std::cerr << "Category: File" << std::endl;
-				break;
-			case ErrorCategory::Read:
-				std::cerr << "Category: Read" << std::endl;
-				break;
-			case ErrorCategory::Type:
-				std::cerr << "Category: Type" << std::endl;
-				break;
-			case ErrorCategory::Arity:
-				std::cerr << "Category: Arity" << std::endl;
-				break;
-			case ErrorCategory::Range:
-				std::cerr << "Category: Range" << std::endl;
-				break;
-			case ErrorCategory::Utf8:
-				std::cerr << "Category: UTF-8" << std::endl;
-				break;
-			case ErrorCategory::DivideByZero:
-				std::cerr << "Category: Divide-by-zero" << std::endl;
-				break;
-			case ErrorCategory::MutateLiteral:
-				std::cerr << "Category: Literal mutation" << std::endl;
-				break;
-			case ErrorCategory::UndefinedVariable:
-				std::cerr << "Category: Undefined variable" << std::endl;
-				break;
-			case ErrorCategory::OutOfMemory:
-				std::cerr << "Category: Out of memory" << std::endl;
-				break;
-			case ErrorCategory::InvalidArgument:
-				std::cerr << "Category: Invalid argument" << std::endl;
-				break;
+				std::cerr << "Category: " << schemeNameForErrorCategory(errorCell->category()) << std::endl;
 			}
 
 			// Handle error objects specially

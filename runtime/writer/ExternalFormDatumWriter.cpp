@@ -447,9 +447,16 @@ void ExternalFormDatumWriter::renderRecord(const RecordCell *)
 
 void ExternalFormDatumWriter::renderErrorObject(const ErrorObjectCell *errObj)
 {
-	m_outStream << "#!error(" << errObj->message() << ")";
+	m_outStream << "#!error(";
+
+	if (errObj->category() != ErrorCategory::Default)
+	{
+		m_outStream << schemeNameForErrorCategory(errObj->category()) << "/";
+	}
+
+	m_outStream << errObj->message() << ")";
 }
-	
+
 void ExternalFormDatumWriter::renderPort(const PortCell *value)
 {
 	m_outStream << "#!port";

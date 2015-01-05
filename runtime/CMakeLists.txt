@@ -26,6 +26,7 @@ add_library(llcore
 	binding/StringCell.cpp
 	binding/SymbolCell.cpp
 	binding/VectorCell.cpp
+	binding/generated/ErrorCategory.cpp
 	core/World.cpp
 	core/alloc.cpp
 	core/constinstances.cpp
