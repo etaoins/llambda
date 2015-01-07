@@ -338,6 +338,12 @@
   (assert-equal 1764 (square 42))
   (assert-equal 4.0 (square 2.0))))
 
+(define-test "static (square) fails on integer overflow" (expect-error integer-overflow-error?
+  (force-evaluation (square 281474976710656))))
+
+(define-test "dynamic typed (square) fails on integer overflow" (expect-error integer-overflow-error?
+  (force-evaluation (square (typed-dynamic 281474976710656 <exact-integer>)))))
+
 (define-test "(abs)" (expect-success
   (assert-equal 0 (abs 0))
   (assert-equal 0.0 (abs 0.0))
