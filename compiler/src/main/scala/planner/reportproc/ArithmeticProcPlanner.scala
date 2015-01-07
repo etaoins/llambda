@@ -2,15 +2,16 @@ package io.llambda.compiler.planner.reportproc
 import io.llambda
 
 import llambda.compiler.{valuetype => vt}
-import llambda.compiler.ContextLocated
-import llambda.compiler.DivideByZeroException
+import llambda.compiler.{RuntimeErrorMessage, ContextLocated, ErrorCategory}
+import llambda.compiler.{DivideByZeroException, IntegerOverflowException}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.planner._
 
 object ArithmeticProcPlanner extends ReportProcPlanner {
-  private type BinaryInstrBuilder = (ps.TempValue, ps.TempValue, ps.TempValue) => ps.Step
-  private type StaticIntegerOp = (Long, Long) => Long
+  private type UncheckedInstrBuilder = (ps.TempValue, ps.TempValue, ps.TempValue) => ps.Step
+  private type CheckedInstrBuilder = (ps.TempValue, ps.TempValue, ps.TempValue, RuntimeErrorMessage) => ps.Step
+  private type StaticIntegerOp = (BigInt, BigInt) => BigInt
   private type StaticDoubleOp = (Double, Double) => Double
 
   private def numberToDoubleTemp(
@@ -28,66 +29,113 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
       convertTemp
     }
 
+  sealed abstract class KnownValType
+  case object KnownInt extends KnownValType
+  case object KnownFlonum extends KnownValType
+
+  case class TypedVal(value : iv.IntermediateValue, knownType : KnownValType)
+
   private def performBinaryMixedOp(
-      intInstr : BinaryInstrBuilder,
-      flonumInstr : BinaryInstrBuilder,
+      intInstr : CheckedInstrBuilder,
+      flonumInstr : UncheckedInstrBuilder,
       staticIntCalc : StaticIntegerOp,
       staticFlonumCalc : StaticDoubleOp,
-      args : List[iv.IntermediateValue]
+      args : List[iv.IntermediateValue],
+      intOverflowMessage : RuntimeErrorMessage
   )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
     implicit val inlinePlan = plan.forkPlan()
 
-    val resultValue = args.reduceLeft { (op1 : iv.IntermediateValue, op2 : iv.IntermediateValue) => (op1, op2) match {
-      case (iv.ConstantExactIntegerValue(constantIntVal1), iv.ConstantExactIntegerValue(constantIntVal2)) =>
-        iv.ConstantExactIntegerValue(staticIntCalc(constantIntVal1, constantIntVal2))
+    val typedArgs = args map { arg =>
+      if (arg.hasDefiniteType(vt.ExactIntegerType)) {
+        TypedVal(arg, KnownInt)
+      }
+      else if (arg.hasDefiniteType(vt.FlonumType)) {
+        TypedVal(arg, KnownFlonum)
+      }
+      else {
+        // We don't know the precise type - we can't continue
+        return None
+      }
+    }
 
-      case (iv.ConstantFlonumValue(constantFlonumVal1), iv.ConstantFlonumValue(constantFlonumVal2)) =>
-        iv.ConstantFlonumValue(staticFlonumCalc(constantFlonumVal1, constantFlonumVal2))
+    // Determine if our result is inexact
+    val resultInexact = typedArgs.exists { typedArg =>
+      typedArg.knownType == KnownFlonum
+    }
 
-      case (iv.ConstantExactIntegerValue(constantIntVal1), iv.ConstantFlonumValue(constantFlonumVal2)) =>
-        iv.ConstantFlonumValue(staticFlonumCalc(constantIntVal1.toDouble, constantFlonumVal2))
+    val resultValue = typedArgs.reduceLeft { (arg1 : TypedVal, arg2 : TypedVal) => (arg1, arg2) match {
+      case (TypedVal(iv.ConstantExactIntegerValue(constantIntVal1), _),
+            TypedVal(iv.ConstantExactIntegerValue(constantIntVal2), _)) =>
+        val exactResult = staticIntCalc(BigInt(constantIntVal1), BigInt(constantIntVal2))
 
-      case (iv.ConstantFlonumValue(constantFlonumVal1), iv.ConstantExactIntegerValue(constantIntVal2)) =>
-        iv.ConstantFlonumValue(staticFlonumCalc(constantFlonumVal1, constantIntVal2.toDouble))
-
-      case (dynamic1, dynamic2) =>
-        val dynamic1IsInt = dynamic1.hasDefiniteType(vt.ExactIntegerType)
-        val dynamic1IsFlonum = dynamic1.hasDefiniteType(vt.FlonumType)
-
-        val dynamic2IsInt = dynamic2.hasDefiniteType(vt.ExactIntegerType)
-        val dynamic2IsFlonum = dynamic2.hasDefiniteType(vt.FlonumType)
-
-        if (!(dynamic1IsInt || dynamic1IsFlonum) || !(dynamic2IsInt || dynamic2IsFlonum)) {
-          // We don't have definite types; abort
-          return None
+        if (exactResult.isValidLong) {
+          TypedVal(iv.ConstantExactIntegerValue(exactResult.toLong), KnownInt)
         }
-        else if (dynamic1IsInt && dynamic2IsInt) {
+        else if (resultInexact) {
+          // Promote this to a double
+          TypedVal(iv.ConstantFlonumValue(exactResult.toDouble), KnownFlonum)
+        }
+        else {
+          // Exact result was expected!
+          throw new IntegerOverflowException(plan.activeContextLocated, intOverflowMessage.text)
+        }
+
+      case (TypedVal(iv.ConstantFlonumValue(constantFlonumVal1), _),
+            TypedVal(iv.ConstantFlonumValue(constantFlonumVal2), _)) =>
+        TypedVal(
+          iv.ConstantFlonumValue(staticFlonumCalc(constantFlonumVal1, constantFlonumVal2)),
+          KnownFlonum
+        )
+
+      case (TypedVal(iv.ConstantExactIntegerValue(constantIntVal1), _),
+            TypedVal(iv.ConstantFlonumValue(constantFlonumVal2), _)) =>
+        TypedVal(
+          iv.ConstantFlonumValue(staticFlonumCalc(constantIntVal1.toDouble, constantFlonumVal2)),
+          KnownFlonum
+        )
+
+      case (TypedVal(iv.ConstantFlonumValue(constantFlonumVal1), _),
+            TypedVal(iv.ConstantExactIntegerValue(constantIntVal2), _)) =>
+        TypedVal(
+          iv.ConstantFlonumValue(staticFlonumCalc(constantFlonumVal1, constantIntVal2.toDouble)),
+          KnownFlonum
+        )
+
+      case (TypedVal(dynamic1, type1), TypedVal(dynamic2, type2)) =>
+        if ((type1 == KnownInt) && (type2 == KnownInt)) {
+          if (resultInexact) {
+            // We expect an inexact result - this requires re-trying this computation as inexact on overflow
+            // This is tricky and rare so just let the runtime handle it
+            return None
+          }
+
           // Both integers
           val intTemp1 = dynamic1.toTempValue(vt.Int64)(inlinePlan)
           val intTemp2 = dynamic2.toTempValue(vt.Int64)(inlinePlan)
+
           val resultTemp = ps.Temp(vt.Int64)
+          val overflowTemp = ps.Temp(vt.Predicate)
 
-          inlinePlan.steps += intInstr(resultTemp, intTemp1, intTemp2)
+          inlinePlan.steps += intInstr(resultTemp, intTemp1, intTemp2, intOverflowMessage)
 
-          new iv.NativeExactIntegerValue(resultTemp, vt.Int64)
+          TypedVal(new iv.NativeExactIntegerValue(resultTemp, vt.Int64), KnownInt)
         }
         else {
           // At least one is a double
-          val doubleTemp1 = numberToDoubleTemp(dynamic1, dynamic1IsFlonum)(inlinePlan)
-          val doubleTemp2 = numberToDoubleTemp(dynamic2, dynamic2IsFlonum)(inlinePlan)
+          val doubleTemp1 = numberToDoubleTemp(dynamic1, type1 == KnownFlonum)(inlinePlan)
+          val doubleTemp2 = numberToDoubleTemp(dynamic2, type2 == KnownFlonum)(inlinePlan)
 
           val resultTemp = ps.Temp(vt.Double)
           inlinePlan.steps += flonumInstr(resultTemp, doubleTemp1, doubleTemp2)
 
-          new iv.NativeFlonumValue(resultTemp, vt.Double)
+          TypedVal(new iv.NativeFlonumValue(resultTemp, vt.Double), KnownFlonum)
         }
-
     }}
 
     // We need the inline plan now
     plan.steps ++= inlinePlan.steps
 
-    Some(resultValue)
+    Some(resultValue.value)
   }
 
   private def performNumericDivide(
@@ -142,7 +190,7 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
   }
 
   private def performIntegerDivOp(
-      instr : BinaryInstrBuilder,
+      instr : UncheckedInstrBuilder,
       staticCalc : StaticIntegerOp,
       numerator : (ContextLocated, iv.IntermediateValue),
       denominator : (ContextLocated, iv.IntermediateValue)
@@ -155,7 +203,7 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
       case ((_, iv.ConstantExactIntegerValue(constantNumerVal)),
             (_, iv.ConstantExactIntegerValue(constantDenomVal))) =>
         val resultValue = staticCalc(constantNumerVal, constantDenomVal)
-        Some(iv.ConstantExactIntegerValue(resultValue))
+        Some(iv.ConstantExactIntegerValue(resultValue.toLong))
 
       case ((numerLoc, dynamicNumer),
             (_, constantDenom : iv.ConstantExactIntegerValue)) =>
@@ -233,13 +281,20 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
       Some(numericValue)
 
     case ("+", multipleArgs) =>
+      val intOverflowMessage = RuntimeErrorMessage(
+        category=ErrorCategory.IntegerOverflow,
+        name="addOverflow",
+        text="Integer overflow in (+)"
+      )
+
       val argValues = multipleArgs.map(_._2)
       performBinaryMixedOp(
-        intInstr=ps.IntegerAdd.apply,
+        intInstr=ps.CheckedIntegerAdd.apply,
         flonumInstr=ps.FloatAdd.apply,
         staticIntCalc=_ + _,
         staticFlonumCalc=_ + _,
-        args=argValues
+        args=argValues,
+        intOverflowMessage=intOverflowMessage
       )
 
     case ("-", Nil) =>
@@ -247,34 +302,55 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
       None
 
     case ("-", List((_, singleArg))) =>
+      val intOverflowMessage = RuntimeErrorMessage(
+        category=ErrorCategory.IntegerOverflow,
+        name="invertingSubOverflow",
+        text="Integer overflow in inverting (-)"
+      )
+
       // This is a special case that negates the passed value
       val constantZero = iv.ConstantExactIntegerValue(0)
       performBinaryMixedOp(
-        intInstr=ps.IntegerSub.apply,
+        intInstr=ps.CheckedIntegerSub.apply,
         flonumInstr=ps.FloatSub.apply,
         staticIntCalc=_ - _,
         staticFlonumCalc=_ - _,
-        args=List(constantZero, singleArg)
+        args=List(constantZero, singleArg),
+        intOverflowMessage=intOverflowMessage
       )
 
     case ("-", multipleArgs) =>
+      val intOverflowMessage = RuntimeErrorMessage(
+        category=ErrorCategory.IntegerOverflow,
+        name="subtractingSubOverflow",
+        text="Integer overflow in subtracting (-)"
+      )
+
       val argValues = multipleArgs.map(_._2)
       performBinaryMixedOp(
-        intInstr=ps.IntegerSub.apply,
+        intInstr=ps.CheckedIntegerSub.apply,
         flonumInstr=ps.FloatSub.apply,
         staticIntCalc=_ - _,
         staticFlonumCalc=_ - _,
-        args=argValues
+        args=argValues,
+        intOverflowMessage=intOverflowMessage
       )
 
     case ("*", multipleArgs) =>
+      val intOverflowMessage = RuntimeErrorMessage(
+        category=ErrorCategory.IntegerOverflow,
+        name="mulOverflow",
+        text="Integer overflow in (*)"
+      )
+
       val argValues = multipleArgs.map(_._2)
       performBinaryMixedOp(
-        intInstr=ps.IntegerMul.apply,
+        intInstr=ps.CheckedIntegerMul.apply,
         flonumInstr=ps.FloatMul.apply,
         staticIntCalc=_ * _,
         staticFlonumCalc=_ * _,
-        args=argValues
+        args=argValues,
+        intOverflowMessage=intOverflowMessage
       )
 
     case ("/", Nil) =>

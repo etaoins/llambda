@@ -7,10 +7,22 @@
   (assert-equal 300.0 (+ 100.5 -0.5 200))
 
   (define dynamic-5 (length (typeless-cell '(1 2 3 4 5))))
-  (assert-equal 8 (+ dynamic-5 1 2))))
+  (assert-equal 8 (+ dynamic-5 1 2))
+
+  ; This may cause an intermediate integer overflow but it should eventually succeed because the result is inexact
+  (assert-within 9223372036854775807 32.0 (+ 9223372036854775807 9223372036854775807 -9223372036854775807.0))))
 
 (define-test "adding single string fails" (expect-error type-error?
   (+ "Hello!")))
+
+(define-test "static (+) fails on integer overflow" (expect-error integer-overflow-error?
+  (force-evaluation (+ 9223372036854775807 1))))
+
+(define-test "dynamic typed (+) fails on integer overflow" (expect-error integer-overflow-error?
+  (force-evaluation (+ 9223372036854775807 (typed-dynamic 1 <exact-integer>)))))
+
+(define-test "dynamic untyped (+) fails on integer overflow" (expect-error integer-overflow-error?
+  (force-evaluation (+ 9223372036854775807 (typed-dynamic 1 <any>)))))
 
 (define-test "(*)" (expect-success
   (assert-equal 1 (*))
@@ -21,10 +33,22 @@
   (assert-equal 10050.0 (* 100.5 0.5 200))
 
   (define dynamic-5 (length (typeless-cell '(1 2 3 4 5))))
-  (assert-equal 10 (* dynamic-5 1 2))))
+  (assert-equal 10 (* dynamic-5 1 2))
+
+  ; This may cause an intermediate integer overflow but it should eventually succeed because the result is inexact
+  (assert-within 9223372036854775807 32.0 (* 9223372036854775807 2 0.5))))
 
 (define-test "multiplying single string fails" (expect-error type-error?
   (* "Hello!")))
+
+(define-test "static (*) fails on integer overflow" (expect-error integer-overflow-error?
+  (force-evaluation (* 9223372036854775807 2))))
+
+(define-test "dynamic typed (*) fails on integer overflow" (expect-error integer-overflow-error?
+  (force-evaluation (* 9223372036854775807 (typed-dynamic 2 <exact-integer>)))))
+
+(define-test "dynamic untyped (*) fails on integer overflow" (expect-error integer-overflow-error?
+  (force-evaluation (* 9223372036854775807 (typed-dynamic 2 <any>)))))
 
 (define-test "(-)" (expect-success
   (assert-equal -12 (- 12))
@@ -35,13 +59,34 @@
 
   (define dynamic-5 (length (typeless-cell '(1 2 3 4 5))))
   (assert-equal 2 (- dynamic-5 1 2))
-  (assert-equal -6 (- 1 2 dynamic-5))))
+  (assert-equal -6 (- 1 2 dynamic-5))
+
+  ; This may cause an intermediate integer overflow but it should eventually succeed because the result is inexact
+  (assert-within 9 32.0 (- -9223372036854775807 9223372036854775807 -9223372036854775807 -9223372036854775807.0))))
 
 (define-test "subtracting no numbers fails" (expect-error arity-error?
   (-)))
 
 (define-test "subtracting single string fails" (expect-error type-error?
   (- "Hello!")))
+
+(define-test "static inverting (-) fails on integer overflow" (expect-error integer-overflow-error?
+  (force-evaluation (- -9223372036854775808))))
+
+(define-test "dynamic typed inverting (-) fails on integer overflow" (expect-error integer-overflow-error?
+  (force-evaluation (- (typed-dynamic -9223372036854775808 <exact-integer>)))))
+
+(define-test "dynamic untyped inverting (-) fails on integer overflow" (expect-error integer-overflow-error?
+  (force-evaluation (- (typed-dynamic -9223372036854775808 <any>)))))
+
+(define-test "static subtracting (-) fails on integer overflow" (expect-error integer-overflow-error?
+  (force-evaluation (- -9223372036854775808 1))))
+
+(define-test "dynamic typed subtracting (-) fails on integer overflow" (expect-error integer-overflow-error?
+  (force-evaluation (- -9223372036854775808 (typed-dynamic 1 <exact-integer>)))))
+
+(define-test "dynamic untyped subtracting (-) fails on integer overflow" (expect-error integer-overflow-error?
+  (force-evaluation (- -9223372036854775808 (typed-dynamic 1 <any>)))))
 
 (define-test "(/)" (expect-success
   (assert-equal 0.125 (/ 8))

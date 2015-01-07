@@ -22,6 +22,7 @@ enum class ErrorCategory : std::uint16_t
 	UndefinedVariable = 9,
 	OutOfMemory = 10,
 	InvalidArgument = 11,
+	IntegerOverflow = 12,
 };
 
 const char *schemeNameForErrorCategory(ErrorCategory category);

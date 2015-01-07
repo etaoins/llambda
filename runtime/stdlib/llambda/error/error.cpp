@@ -114,4 +114,14 @@ void llerror_raise_invalid_argument_error(World &world, StringCell *message, Res
 	throw dynamic::SchemeException(ErrorObjectCell::createInstance(world, message, irritants, ErrorCategory::InvalidArgument));
 }
 
+bool llerror_is_integer_overflow_error(AnyCell *obj)
+{
+	return isErrorObjectOfCategory(obj, ErrorCategory::IntegerOverflow);
+}
+
+void llerror_raise_integer_overflow_error(World &world, StringCell *message, RestValues<AnyCell> *irritants)
+{
+	throw dynamic::SchemeException(ErrorObjectCell::createInstance(world, message, irritants, ErrorCategory::IntegerOverflow));
+}
+
 }

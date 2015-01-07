@@ -131,12 +131,24 @@ NumberCell *llbase_add(World &world, RestValues<NumberCell> *argList)
 	std::int64_t exactSum = 0;
 	double inexactSum = 0.0;
 	bool resultInexact = false;
+	bool integerOverflowed = false;
 
 	for (auto numeric : *argList)
 	{
 		if (auto exactInteger = cell_cast<ExactIntegerCell>(numeric))
 		{
-			exactSum += exactInteger->value();
+			long long nonOverflowSum;
+
+			if (__builtin_saddll_overflow(exactSum, exactInteger->value(), &nonOverflowSum))
+			{
+				// Convert to inexact and continue
+				inexactSum += exactInteger->value();
+				integerOverflowed = true;
+			}
+			else
+			{
+				exactSum = nonOverflowSum;
+			}
 		}
 		else
 		{
@@ -153,6 +165,11 @@ NumberCell *llbase_add(World &world, RestValues<NumberCell> *argList)
 	}
 	else
 	{
+		if (integerOverflowed)
+		{
+			signalError(world, ErrorCategory::IntegerOverflow, "Integer overflow in (+)");
+		}
+
 		return ExactIntegerCell::fromValue(world, exactSum);
 	}
 }
@@ -162,12 +179,24 @@ NumberCell *llbase_mul(World &world, RestValues<NumberCell> *argList)
 	std::int64_t exactProduct = 1;
 	double inexactProduct = 1.0;
 	bool resultInexact = false;
+	bool integerOverflowed = false;
 
 	for (auto numeric : *argList)
 	{
 		if (auto exactInteger = cell_cast<ExactIntegerCell>(numeric))
 		{
-			exactProduct *= exactInteger->value();
+			long long nonOverflowProduct;
+
+			if (__builtin_smulll_overflow(exactProduct, exactInteger->value(), &nonOverflowProduct))
+			{
+				// Convert to inexact and continue
+				inexactProduct *= exactInteger->value();
+				integerOverflowed = true;
+			}
+			else
+			{
+				exactProduct = nonOverflowProduct;
+			}
 		}
 		else
 		{
@@ -184,6 +213,11 @@ NumberCell *llbase_mul(World &world, RestValues<NumberCell> *argList)
 	}
 	else
 	{
+		if (integerOverflowed)
+		{
+			signalError(world, ErrorCategory::IntegerOverflow, "Integer overflow in (*)");
+		}
+
 		return ExactIntegerCell::fromValue(world, exactProduct);
 	}
 }
@@ -193,13 +227,21 @@ NumberCell *llbase_sub(World &world, NumberCell *startValue, RestValues<NumberCe
 	std::int64_t exactDifference;
 	double inexactDifference;
 	bool resultInexact;
+	bool integerOverflowed = false;
 
 	if (auto exactInteger = cell_cast<ExactIntegerCell>(startValue))
 	{
 		if (argList->empty())
 		{
 			// Return the inverse
-			return ExactIntegerCell::fromValue(world, -exactInteger->value());
+			long long inverse;
+
+			if (__builtin_ssubll_overflow(0LL, exactInteger->value(), &inverse))
+			{
+				signalError(world, ErrorCategory::IntegerOverflow, "Integer overflow in inverting (-)");
+			}
+
+			return ExactIntegerCell::fromValue(world, inverse);
 		}
 
 		exactDifference = exactInteger->value();
@@ -225,7 +267,18 @@ NumberCell *llbase_sub(World &world, NumberCell *startValue, RestValues<NumberCe
 	{
 		if (auto exactInteger = cell_cast<ExactIntegerCell>(numeric))
 		{
-			exactDifference -= exactInteger->value();
+			long long nonOverflowDifference;
+
+			if (__builtin_ssubll_overflow(exactDifference, exactInteger->value(), &nonOverflowDifference))
+			{
+				// Convert to inexact and continue
+				inexactDifference -= exactInteger->value();
+				integerOverflowed = true;
+			}
+			else
+			{
+				exactDifference = nonOverflowDifference;
+			}
 		}
 		else
 		{
@@ -242,6 +295,11 @@ NumberCell *llbase_sub(World &world, NumberCell *startValue, RestValues<NumberCe
 	}
 	else
 	{
+		if (integerOverflowed)
+		{
+			signalError(world, ErrorCategory::IntegerOverflow, "Integer overflow in subtracting (-)");
+		}
+
 		return ExactIntegerCell::fromValue(world, exactDifference);
 	}
 }

@@ -460,31 +460,34 @@ object GenPlanStep {
 
       val resultIr = GenParameter.genLoadValueForParameterProc(state)(worldPtrIr, parameterProcIr) 
       state.withTempValue(resultTemp -> resultIr)
-    
-    case ps.IntegerAdd(resultTemp, val1Temp, val2Temp) =>
+
+    case checkedStep @ ps.CheckedIntegerAdd(resultTemp, val1Temp, val2Temp, overflowMessage) =>
+      val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
       val val1Ir = state.liveTemps(val1Temp)
       val val2Ir = state.liveTemps(val2Temp)
 
-      val resultIr = state.currentBlock.add("addResult")(integerWrapBehaviour, val1Ir, val2Ir)
+      val (newState, resultIr) = GenCheckedIntegerInstr(state)(worldPtrIr, checkedStep, "add", val1Ir, val2Ir)
 
-      state.withTempValue(resultTemp -> resultIr)
-    
-    case ps.IntegerSub(resultTemp, val1Temp, val2Temp) =>
+      newState.withTempValue(resultTemp -> resultIr)
+
+    case checkedStep @ ps.CheckedIntegerSub(resultTemp, val1Temp, val2Temp, overflowMessage) =>
+      val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
       val val1Ir = state.liveTemps(val1Temp)
       val val2Ir = state.liveTemps(val2Temp)
 
-      val resultIr = state.currentBlock.sub("subResult")(integerWrapBehaviour, val1Ir, val2Ir)
+      val (newState, resultIr) = GenCheckedIntegerInstr(state)(worldPtrIr, checkedStep, "sub", val1Ir, val2Ir)
 
-      state.withTempValue(resultTemp -> resultIr)
-    
-    case ps.IntegerMul(resultTemp, val1Temp, val2Temp) =>
+      newState.withTempValue(resultTemp -> resultIr)
+
+    case checkedStep @ ps.CheckedIntegerMul(resultTemp, val1Temp, val2Temp, overflowMessage) =>
+      val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
       val val1Ir = state.liveTemps(val1Temp)
       val val2Ir = state.liveTemps(val2Temp)
 
-      val resultIr = state.currentBlock.mul("mulResult")(integerWrapBehaviour, val1Ir, val2Ir)
+      val (newState, resultIr) = GenCheckedIntegerInstr(state)(worldPtrIr, checkedStep, "mul", val1Ir, val2Ir)
 
-      state.withTempValue(resultTemp -> resultIr)
-    
+      newState.withTempValue(resultTemp -> resultIr)
+
     case ps.IntegerDiv(resultTemp, signed, val1Temp, val2Temp) =>
       val val1Ir = state.liveTemps(val1Temp)
       val val2Ir = state.liveTemps(val2Temp)

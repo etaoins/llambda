@@ -31,6 +31,8 @@ const char *schemeNameForErrorCategory(ErrorCategory category)
 		return "out-of-memory-error";
 	case ErrorCategory::InvalidArgument:
 		return "invalid-argument-error";
+	case ErrorCategory::IntegerOverflow:
+		return "integer-overflow-error";
 	}
 }
 

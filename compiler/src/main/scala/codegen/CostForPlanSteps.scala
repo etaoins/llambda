@@ -35,10 +35,14 @@ object CostForPlanSteps {
       // These are usually cheap don't require a load
       trivialInstrCost
 
-    case _ : ps.IntegerAdd | _ : ps.IntegerSub | _ : ps.IntegerMul | _ : ps.IntegerDiv | _ : ps.IntegerRem |
-         _ : ps.IntegerCompare | _ : ps.FloatCompare | _ : ps.FloatIsNaN | _ : ps.FloatBitwiseCompare | _ : ps.Return =>
+    case _ : ps.IntegerDiv | _ : ps.IntegerRem | _ : ps.IntegerCompare | _ : ps.FloatCompare | _ : ps.FloatIsNaN |
+         _ : ps.FloatBitwiseCompare | _ : ps.Return =>
       // These effectively map 1:1 to assembler instructions
       trivialInstrCost
+
+    case _ : ps.CheckedIntegerStep =>
+      // These are a trivial instructions + a very predicable branch to hit overflow
+      trivialInstrCost * 2
 
     case _ : ps.FloatAdd | _ : ps.FloatSub | _ : ps.FloatMul | _ : ps.FloatDiv =>
       floatMathCost

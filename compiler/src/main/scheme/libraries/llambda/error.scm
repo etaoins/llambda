@@ -4,7 +4,7 @@
   (import (llambda typed))
   (import (llambda nfi))
 
-  (export type-error? arity-error? range-error? utf8-error? divide-by-zero-error? mutate-literal-error? undefined-variable-error? out-of-memory-error? invalid-argument-error? raise-type-error raise-arity-error raise-range-error raise-utf8-error raise-divide-by-zero-error raise-mutate-literal-error raise-undefined-variable-error raise-out-of-memory-error raise-invalid-argument-error)
+  (export type-error? arity-error? range-error? utf8-error? divide-by-zero-error? mutate-literal-error? undefined-variable-error? out-of-memory-error? invalid-argument-error? integer-overflow-error? raise-type-error raise-arity-error raise-range-error raise-utf8-error raise-divide-by-zero-error raise-mutate-literal-error raise-undefined-variable-error raise-out-of-memory-error raise-invalid-argument-error raise-integer-overflow-error)
   (begin
     (define-native-library llerror (static-library "ll_llambda_error"))
     (define type-error? (native-function llerror "llerror_is_type_error" (-> <any> <native-bool>)))
@@ -25,4 +25,6 @@
     (define raise-out-of-memory-error (world-function llerror "llerror_raise_out_of_memory_error" (-> <string> <any> * <unit>) noreturn))
     (define invalid-argument-error? (native-function llerror "llerror_is_invalid_argument_error" (-> <any> <native-bool>)))
     (define raise-invalid-argument-error (world-function llerror "llerror_raise_invalid_argument_error" (-> <string> <any> * <unit>) noreturn))
+    (define integer-overflow-error? (native-function llerror "llerror_is_integer_overflow_error" (-> <any> <native-bool>)))
+    (define raise-integer-overflow-error (world-function llerror "llerror_raise_integer_overflow_error" (-> <string> <any> * <unit>) noreturn))
 ))

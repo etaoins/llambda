@@ -1019,31 +1019,48 @@ case class PopDynamicState() extends Step {
     this
 }
 
-/** Adds two integers of the same type */
-case class IntegerAdd(result : TempValue, val1 : TempValue, val2 : TempValue) extends Step with NullipotentStep {
-  lazy val inputValues = Set[TempValue](val1, val2)
+/** Performs an integer operation while checking for overflow */
+sealed trait CheckedIntegerStep extends Step {
+  val result : TempValue
+  val val1 : TempValue
+  val val2 : TempValue
+  val overflowMessage : RuntimeErrorMessage
+
+  lazy val inputValues = Set[TempValue](val1, val2, WorldPtrValue)
   lazy val outputValues = Set[TempValue](result)
-  
-  def renamed(f : (TempValue) => TempValue) = 
-    IntegerAdd(f(result), f(val1), f(val2)).assignLocationFrom(this)
+}
+
+/** Adds two integers of the same type */
+case class CheckedIntegerAdd(
+    result : TempValue,
+    val1 : TempValue,
+    val2 : TempValue,
+    overflowMessage : RuntimeErrorMessage
+) extends CheckedIntegerStep with NullipotentStep {
+  def renamed(f : (TempValue) => TempValue) =
+    CheckedIntegerAdd(f(result), f(val1), f(val2), overflowMessage).assignLocationFrom(this)
 }
 
 /** Subtracts two integers of the same type */
-case class IntegerSub(result : TempValue, val1 : TempValue, val2 : TempValue) extends Step with NullipotentStep {
-  lazy val inputValues = Set[TempValue](val1, val2)
-  lazy val outputValues = Set[TempValue](result)
-  
-  def renamed(f : (TempValue) => TempValue) = 
-    IntegerSub(f(result), f(val1), f(val2)).assignLocationFrom(this)
+case class CheckedIntegerSub(
+    result : TempValue,
+    val1 : TempValue,
+    val2 : TempValue,
+    overflowMessage : RuntimeErrorMessage
+) extends CheckedIntegerStep with NullipotentStep {
+  def renamed(f : (TempValue) => TempValue) =
+    CheckedIntegerSub(f(result), f(val1), f(val2), overflowMessage).assignLocationFrom(this)
 }
 
 /** Multiplies two integers of the same type */
-case class IntegerMul(result : TempValue, val1 : TempValue, val2 : TempValue) extends Step with NullipotentStep {
-  lazy val inputValues = Set[TempValue](val1, val2)
-  lazy val outputValues = Set[TempValue](result)
-  
-  def renamed(f : (TempValue) => TempValue) = 
-    IntegerMul(f(result), f(val1), f(val2)).assignLocationFrom(this)
+case class CheckedIntegerMul(
+    result : TempValue,
+    val1 : TempValue,
+    val2 : TempValue,
+    overflowMessage : RuntimeErrorMessage
+) extends CheckedIntegerStep with NullipotentStep {
+  def renamed(f : (TempValue) => TempValue) =
+    CheckedIntegerMul(f(result), f(val1), f(val2), overflowMessage).assignLocationFrom(this)
 }
 
 /** Performs truncating division on two integers of the same type */
