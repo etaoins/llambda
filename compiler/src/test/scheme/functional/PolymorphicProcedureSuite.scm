@@ -131,6 +131,18 @@
   (ann (* exact-1 exact-2) <exact-integer>)
   (ann (* inexact-1 inexact-2) <flonum>)))
 
+(define-test "(expt) is polymorphic" (expect-success
+  (import (llambda typed))
+
+  (define exact-1 (typed-dynamic 1 <exact-integer>))
+  (define exact-2 (typed-dynamic 1 <exact-integer>))
+
+  (define inexact-1 (typed-dynamic 1.0 <flonum>))
+  (define inexact-2 (typed-dynamic 2.0 <flonum>))
+
+  (ann (expt exact-1 exact-2) <exact-integer>)
+  (ann (expt inexact-1 inexact-2) <flonum>)))
+
 (define-test "(square) is polymorphic" (expect-success
   (import (llambda typed))
 

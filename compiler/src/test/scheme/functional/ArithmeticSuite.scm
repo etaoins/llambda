@@ -284,8 +284,10 @@
   ; This is within the range of values we can exactly represent on all platforms
   (assert-true (eqv? (expt 2 53) 9007199254740992))
 
-  ; This is outside the range we can exactly represent
-  (assert-true (eqv? (expt 2 63) 9223372036854775808.0))))
+  (assert-true (eqv? (expt 2 63.0) 9223372036854775808.0))))
+
+(define-test "(expt) fails on integer overflow" (expect-error integer-overflow-error?
+  (force-evaluation (expt 2 63))))
 
 (define-test "rounding procedures" (expect-success
   (assert-equal -5.0 (floor -4.3))

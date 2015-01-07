@@ -365,8 +365,8 @@
     (define-r7rs - (world-function llbase "llbase_sub" (All ([N : <number>]) N N * N)))
     (define-r7rs * (world-function llbase "llbase_mul" (All ([N : <number>]) N * N)))
     (define-r7rs / (world-function llbase "llbase_div" (-> <number> <number> * <number>)))
-    
-    (define-r7rs expt (world-function llbase "llbase_expt" (-> <number> <number> <number>)))
+
+    (define-r7rs expt (world-function llbase "llbase_expt" (All ([N : <number>]) (-> N N N))))
 
     (: square (All ([N : <number>]) N N))
     (define-r7rs (square num)

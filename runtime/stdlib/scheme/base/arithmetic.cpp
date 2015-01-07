@@ -468,7 +468,7 @@ std::int64_t llbase_floor_remainder(World &world, std::int64_t numerator, std::i
 
 NumberCell* llbase_expt(World &world, NumberCell *base, NumberCell *power)
 {
-	const bool canBeExact = base->isExact() && power->isExact();
+	const bool mustBeExact = base->isExact() && power->isExact();
 
 	// Convert to long double to give us 80bits on x86-64 which allow us to have an extended range of exactly
 	// represented integers
@@ -477,7 +477,22 @@ NumberCell* llbase_expt(World &world, NumberCell *base, NumberCell *power)
 
 	const long double floatResult = pow(floatBase, floatPower);
 
-	return NumberCell::fromValue(world, floatResult, canBeExact);
+	if (mustBeExact)
+	{
+		if ((floatResult < std::numeric_limits<std::int64_t>::min()) ||
+		    (floatResult > std::numeric_limits<std::int64_t>::max()))
+		{
+			signalError(world, ErrorCategory::IntegerOverflow, "Integer overflow in (expt)");
+		}
+		else
+		{
+			return ExactIntegerCell::fromValue(world, floatResult);
+		}
+	}
+	else
+	{
+		return FlonumCell::fromValue(world, floatResult);
+	}
 }
 
 std::int64_t llbase_gcd(std::int64_t a, std::int64_t b, RestValues<ExactIntegerCell> *restInts)
