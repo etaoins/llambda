@@ -340,8 +340,9 @@ NumberCell* llbase_div(World &world, NumberCell *startValue, RestValues<NumberCe
 				// We have another integer!
 				std::int64_t denominatorInt = denomintorExactInt->value();
 
-				// Does it divide exactly and is not a divide by zero?
-				if ((denominatorInt != 0) && ((numeratorInt % denominatorInt) == 0))
+				// Does it divide exactly and is not a divide by zero or overflow?
+				if ((denominatorInt != 0) && !integerDivisionWouldOverflow(numeratorInt, denominatorInt) &&
+					((numeratorInt % denominatorInt) == 0))
 				{
 					// Yes!
 					numeratorInt = numeratorInt / denominatorInt;

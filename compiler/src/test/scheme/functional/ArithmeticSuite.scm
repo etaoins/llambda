@@ -106,7 +106,12 @@
   (assert-equal 2 (/ 20 5 2))
 
   ; This divides exactly but contains an inexact value
-  (assert-equal 2.0 (/ 20 5.0 2))))
+  (assert-equal 2.0 (/ 20 5.0 2))
+
+  ; This divides exactly but it causes an integer overflow
+  (assert-equal 9223372036854775808.0 (/ -9223372036854775808 -1))
+  (assert-equal 9223372036854775808.0 (/ (typed-dynamic -9223372036854775808 <exact-integer>) -1))
+  (assert-equal 9223372036854775808.0 (/ -9223372036854775808 (typed-dynamic -1 <exact-integer>)))))
 
 (define-test "dividing single string fails" (expect-error type-error?
   (/ "Hello!")))

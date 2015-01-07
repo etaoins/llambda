@@ -144,6 +144,10 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
     implicit val inlinePlan = plan.forkPlan()
 
     val resultValue = args.reduceLeft { (op1 : iv.IntermediateValue, op2 : iv.IntermediateValue) => (op1, op2) match {
+      case (iv.ConstantExactIntegerValue(Long.MinValue), iv.ConstantExactIntegerValue(-1)) =>
+        // This would cause an integer overflow
+        iv.ConstantFlonumValue(Long.MinValue.toDouble / -1.toDouble)
+
       case (iv.ConstantExactIntegerValue(numerInt),  iv.ConstantExactIntegerValue(denomInt)) =>
         if ((denomInt != 0) && ((numerInt % denomInt) == 0)) {
           // This divides exactly
