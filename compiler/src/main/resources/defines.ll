@@ -18,7 +18,7 @@
 !5 = metadata !{ metadata !"ShadowStackEntry::roots" }
 
 ; {next, cellCount, roots}
-%shadowStackEntry = type {%shadowStackEntry*, i64, [0 x %any*]} 
+%shadowStackEntry = type {%shadowStackEntry*, i64, [0 x %any*]}
 
 ; {refcount, data}
 %sharedByteArray = type {i32, [0 x i8]}
