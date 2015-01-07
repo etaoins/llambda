@@ -6,6 +6,7 @@
 #include <cmath>
 #include <cfloat>
 #include <iostream>
+#include <limits>
 
 #include "core/error.h"
 
@@ -120,6 +121,11 @@ namespace
 		const std::int64_t gcm = greatestCommonDivisor(a, b);
 
 		return product / gcm;
+	}
+
+	bool integerDivisionWouldOverflow(std::int64_t num, std::int64_t denom)
+	{
+		return (num == std::numeric_limits<std::int64_t>::min()) && (denom == -1);
 	}
 }
 
@@ -371,6 +377,11 @@ ReturnValues<ExactIntegerCell>* llbase_truncate_div(World &world, std::int64_t n
 		signalError(world, ErrorCategory::DivideByZero, "Attempted (truncate/) by zero");
 	}
 
+	if (integerDivisionWouldOverflow(numerator, denominator))
+	{
+		signalError(world, ErrorCategory::IntegerOverflow, "Integer overflow in (truncate/)");
+	}
+
 	auto quotient = numerator / denominator;
 	auto remainder = numerator % denominator;
 
@@ -384,6 +395,11 @@ std::int64_t llbase_truncate_quotient(World &world, std::int64_t numerator, std:
 		signalError(world, ErrorCategory::DivideByZero, "Attempted (truncate-quotient) by zero");
 	}
 
+	if (integerDivisionWouldOverflow(numerator, denominator))
+	{
+		signalError(world, ErrorCategory::IntegerOverflow, "Integer overflow in (truncate-quotient)");
+	}
+
 	return numerator / denominator;
 }
 
@@ -394,6 +410,12 @@ std::int64_t llbase_truncate_remainder(World &world, std::int64_t numerator, std
 		signalError(world, ErrorCategory::DivideByZero, "Attempted (truncate-remainder) by zero");
 	}
 
+	if (denominator == -1)
+	{
+		// Avoid integer overflow
+		return 0;
+	}
+
 	return numerator % denominator;
 }
 
@@ -402,6 +424,11 @@ ReturnValues<ExactIntegerCell>* llbase_floor_div(World &world, std::int64_t nume
 	if (denominator == 0)
 	{
 		signalError(world, ErrorCategory::DivideByZero, "Attempted (floor/) by zero");
+	}
+
+	if (integerDivisionWouldOverflow(numerator, denominator))
+	{
+		signalError(world, ErrorCategory::IntegerOverflow, "Integer overflow in (floor/)");
 	}
 
 	auto floorResult = floorDivision(numerator, denominator);
@@ -415,6 +442,11 @@ std::int64_t llbase_floor_quotient(World &world, std::int64_t numerator, std::in
 		signalError(world, ErrorCategory::DivideByZero, "Attempted (floor-quotient) by zero");
 	}
 
+	if (integerDivisionWouldOverflow(numerator, denominator))
+	{
+		signalError(world, ErrorCategory::IntegerOverflow, "Integer overflow in (floor-quotient)");
+	}
+
 	return floorDivision(numerator, denominator).quotient;
 }
 
@@ -423,6 +455,12 @@ std::int64_t llbase_floor_remainder(World &world, std::int64_t numerator, std::i
 	if (denominator == 0)
 	{
 		signalError(world, ErrorCategory::DivideByZero, "Attempted (floor-remainder) by zero");
+	}
+
+	if (denominator == -1)
+	{
+		// Avoid integer overflow
+		return 0;
 	}
 
 	return floorDivision(numerator, denominator).remainder;

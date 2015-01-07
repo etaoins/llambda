@@ -200,13 +200,20 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
         // Catch divide by zero first
         throw new DivideByZeroException(denomLoc, "Attempted integer division by zero")
 
+      case ((_, iv.ConstantExactIntegerValue(Long.MinValue)),
+            (denomLoc, iv.ConstantExactIntegerValue(-1))) =>
+        throw new IntegerOverflowException(denomLoc, "Integer overflow during division")
+
       case ((_, iv.ConstantExactIntegerValue(constantNumerVal)),
             (_, iv.ConstantExactIntegerValue(constantDenomVal))) =>
         val resultValue = staticCalc(constantNumerVal, constantDenomVal)
         Some(iv.ConstantExactIntegerValue(resultValue.toLong))
 
+      // We need a known denominator so we can ensure it won't cause divide-by-zero or overflow. These will be handled
+      // properly by the runtime
       case ((numerLoc, dynamicNumer),
-            (_, constantDenom : iv.ConstantExactIntegerValue)) =>
+            (_, constantDenom @ iv.ConstantExactIntegerValue(constantDenomVal)))
+          if (constantDenomVal != 0) && (constantDenomVal != -1) =>
         val numerTemp = plan.withContextLocation(numerLoc) {
           dynamicNumer.toTempValue(vt.Int64)
         }
@@ -232,8 +239,14 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
   private def performIntegerRemainder(
       numerator : (ContextLocated, iv.IntermediateValue),
       denominator : (ContextLocated, iv.IntermediateValue)
-  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] =
-    performIntegerDivOp(ps.IntegerRem(_, true, _, _), _ % _, numerator, denominator)
+  )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = denominator._2 match {
+    case iv.ConstantExactIntegerValue(1) | iv.ConstantExactIntegerValue(-1) =>
+      // This is both an optimisation and required to avoid overflow when dividing Long.MinValue by -1
+      Some(iv.ConstantExactIntegerValue(0))
+
+    case _ =>
+      performIntegerDivOp(ps.IntegerRem(_, true, _, _), _ % _, numerator, denominator)
+  }
 
   override def planWithValues(state : PlannerState)(
     reportName : String,

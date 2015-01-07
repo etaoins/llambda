@@ -151,30 +151,54 @@
 (define-test "(truncate/) by zero fails" (expect-error divide-by-zero-error?
   (truncate/ 5 0)))
 
-(define-test "(truncate-quotient)" (expect-success
-    (assert-equal 2 (truncate-quotient 5 2))
-    (assert-equal -2 (truncate-quotient -5 2))
-    (assert-equal -2 (truncate-quotient 5 -2))
-    (assert-equal 2 (truncate-quotient -5 -2))
+(define-test "static (truncate/ INT_MIN -1) fails" (expect-error integer-overflow-error?
+  (truncate/ -9223372036854775808 -1)))
 
-    (assert-equal 2 (truncate-quotient (typed-dynamic 5 <exact-integer>) 2))
-    (assert-equal -2 (truncate-quotient (typed-dynamic -5 <exact-integer>) 2))
-    (assert-equal -2 (truncate-quotient (typed-dynamic 5 <exact-integer>) -2))
-    (assert-equal 2 (truncate-quotient (typed-dynamic -5 <exact-integer>) -2))))
+(define-test "dynamic numerator (truncate/ INT_MIN -1) fails" (expect-error integer-overflow-error?
+  (truncate/ (typed-dynamic -9223372036854775808 <exact-integer>) -1)))
+
+(define-test "dynamic denominator (truncate/ INT_MIN -1) fails" (expect-error integer-overflow-error?
+  (truncate/ -9223372036854775808 (typed-dynamic -1 <exact-integer>))))
+
+(define-test "(truncate-quotient)" (expect-success
+  (assert-equal 2 (truncate-quotient 5 2))
+  (assert-equal -2 (truncate-quotient -5 2))
+  (assert-equal -2 (truncate-quotient 5 -2))
+  (assert-equal 2 (truncate-quotient -5 -2))
+
+  (assert-equal 2 (truncate-quotient (typed-dynamic 5 <exact-integer>) 2))
+  (assert-equal -2 (truncate-quotient (typed-dynamic -5 <exact-integer>) 2))
+  (assert-equal -2 (truncate-quotient (typed-dynamic 5 <exact-integer>) -2))
+  (assert-equal 2 (truncate-quotient (typed-dynamic -5 <exact-integer>) -2))))
 
 (define-test "(truncate-quotient) by zero fails" (expect-error divide-by-zero-error?
     (truncate-quotient 5 0)))
 
-(define-test "(truncate-remainder)" (expect-success
-    (assert-equal 1 (truncate-remainder 5 2))
-    (assert-equal -1 (truncate-remainder -5 2))
-    (assert-equal 1 (truncate-remainder 5 -2))
-    (assert-equal -1 (truncate-remainder -5 -2))
+(define-test "static (truncate-quotient INT_MIN -1) fails" (expect-error integer-overflow-error?
+  (truncate-quotient -9223372036854775808 -1)))
 
-    (assert-equal 1 (truncate-remainder (typed-dynamic 5 <exact-integer>) 2))
-    (assert-equal -1 (truncate-remainder (typed-dynamic -5 <exact-integer>) 2))
-    (assert-equal 1 (truncate-remainder (typed-dynamic 5 <exact-integer>) -2))
-    (assert-equal -1 (truncate-remainder (typed-dynamic -5 <exact-integer>) -2))))
+(define-test "dynamic numerator (truncate-quotient INT_MIN -1) fails" (expect-error integer-overflow-error?
+  (truncate-quotient (typed-dynamic -9223372036854775808 <exact-integer>) -1)))
+
+(define-test "dynamic denominator (truncate-quotient INT_MIN -1) fails" (expect-error integer-overflow-error?
+  (truncate-quotient -9223372036854775808 (typed-dynamic -1 <exact-integer>))))
+
+(define-test "(truncate-remainder)" (expect-success
+  (assert-equal 1 (truncate-remainder 5 2))
+  (assert-equal -1 (truncate-remainder -5 2))
+  (assert-equal 1 (truncate-remainder 5 -2))
+  (assert-equal -1 (truncate-remainder -5 -2))
+  ; This causes integer overflow during division
+  (assert-equal 0 (truncate-remainder -9223372036854775808 -1))
+
+  (assert-equal 1 (truncate-remainder (typed-dynamic 5 <exact-integer>) 2))
+  (assert-equal -1 (truncate-remainder (typed-dynamic -5 <exact-integer>) 2))
+  (assert-equal 1 (truncate-remainder (typed-dynamic 5 <exact-integer>) -2))
+  (assert-equal -1 (truncate-remainder (typed-dynamic -5 <exact-integer>) -2))
+  (assert-equal 0 (truncate-remainder -9223372036854775808 (typed-dynamic -1 <exact-integer>)))))
+
+(define-test "(truncate-remainder) by zero fails" (expect-error divide-by-zero-error?
+    (truncate-remainder 5 0)))
 
 (define-test "(floor/)" (expect-success
   (let-values (((quot remain) (floor/ 5 2)))
@@ -196,20 +220,44 @@
 (define-test "(floor/) by zero fails" (expect-error divide-by-zero-error?
   (floor/ 5 0)))
 
+(define-test "static (floor/ INT_MIN -1) fails" (expect-error integer-overflow-error?
+  (floor/ -9223372036854775808 -1)))
+
+(define-test "dynamic numerator (floor/ INT_MIN -1) fails" (expect-error integer-overflow-error?
+  (floor/ (typed-dynamic -9223372036854775808 <exact-integer>) -1)))
+
+(define-test "dynamic denominator (floor/ INT_MIN -1) fails" (expect-error integer-overflow-error?
+  (floor/ -9223372036854775808 (typed-dynamic -1 <exact-integer>))))
+
 (define-test "(floor-quotient)" (expect-success
-    (assert-equal 2 (floor-quotient 5 2))
-    (assert-equal -3 (floor-quotient -5 2))
-    (assert-equal -3 (floor-quotient 5 -2))
-    (assert-equal 2 (floor-quotient -5 -2))))
+  (assert-equal 2 (floor-quotient 5 2))
+  (assert-equal -3 (floor-quotient -5 2))
+  (assert-equal -3 (floor-quotient 5 -2))
+  (assert-equal 2 (floor-quotient -5 -2))))
 
 (define-test "(floor-quotient) by zero fails" (expect-error divide-by-zero-error?
     (floor-quotient 5 0)))
 
+(define-test "static (floor-quotient INT_MIN -1) fails" (expect-error integer-overflow-error?
+  (floor-quotient -9223372036854775808 -1)))
+
+(define-test "dynamic numerator (floor-quotient INT_MIN -1) fails" (expect-error integer-overflow-error?
+  (floor-quotient (typed-dynamic -9223372036854775808 <exact-integer>) -1)))
+
+(define-test "dynamic denominator (floor-quotient INT_MIN -1) fails" (expect-error integer-overflow-error?
+  (floor-quotient -9223372036854775808 (typed-dynamic -1 <exact-integer>))))
+
 (define-test "(floor-remainder)" (expect-success
-    (assert-equal 1 (floor-remainder 5 2))
-    (assert-equal 1 (floor-remainder -5 2))
-    (assert-equal -1 (floor-remainder 5 -2))
-    (assert-equal -1 (floor-remainder -5 -2))))
+  (assert-equal 1 (floor-remainder 5 2))
+  (assert-equal 1 (floor-remainder -5 2))
+  (assert-equal -1 (floor-remainder 5 -2))
+  (assert-equal -1 (floor-remainder -5 -2))
+
+  ; This causes integer overflow during division
+  (assert-equal 0 (floor-remainder -9223372036854775808 -1))))
+
+(define-test "(floor-remainder) by zero fails" (expect-error divide-by-zero-error?
+  (floor-remainder 5 0)))
 
 ; These are legacy aliases
 (define-test "(quotient)" (expect 5
@@ -220,9 +268,6 @@
 
 (define-test "(modulo)" (expect 0
   (remainder 10 2)))
-
-(define-test "(truncate-remainder) by zero fails" (expect-error divide-by-zero-error?
-    (truncate-remainder 5 0)))
 
 (define-test "(expt)" (expect-success
   ; This is exact and within the range we can represent
