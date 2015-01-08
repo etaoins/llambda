@@ -14,9 +14,12 @@
       real)
 
     (define-r7rs (make-polar [mag : <number>] [ang : <number>])
-      (unless (zero? ang)
-        (raise-implementation-restriction-error "Complex numbers are not supported"))
-      mag)
+      (cond
+        ((equal? ang +nan.0) +nan.0)
+        ((zero? ang) mag)
+        ((= ang (* 2 (acos 0))) (- mag))
+        (else
+          (raise-implementation-restriction-error "Complex numbers are not supported"))))
 
     (define-r7rs (real-part [num : <number>])
       num)

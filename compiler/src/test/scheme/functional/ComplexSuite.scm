@@ -21,18 +21,24 @@
 (define-test "(make-polar)" (expect-success
   (import (llambda complex-stub))
 
-  (assert-equal 5 (make-polar 5 0))
-  (assert-equal -5 (make-polar -5 0))
-  (assert-equal 5.0 (make-polar 5.0 0))
-  (assert-equal -5.0 (make-polar -5.0 0))
+  (define pos-real-angle (angle 1.0))
+  (define neg-real-angle (angle -1.0))
 
-  (assert-equal 0.0 (make-polar 0.0 0))
-  (assert-equal -0.0 (make-polar -0.0 0))
+  (assert-equal 0 pos-real-angle)
 
-  (assert-equal +inf.0 (make-polar +inf.0 0))
-  (assert-equal -inf.0 (make-polar -inf.0 0))
+  (assert-equal 5 (make-polar 5 pos-real-angle))
+  (assert-equal -5 (make-polar 5 neg-real-angle))
+  (assert-equal 5.0 (make-polar 5.0 pos-real-angle))
+  (assert-equal -5.0 (make-polar 5.0 neg-real-angle))
 
-  (assert-equal +nan.0 (make-polar +nan.0 0))))
+  (assert-equal 0.0 (make-polar 0.0 pos-real-angle))
+  (assert-equal -0.0 (make-polar 0.0 neg-real-angle))
+
+  (assert-equal +inf.0 (make-polar +inf.0 pos-real-angle))
+  (assert-equal -inf.0 (make-polar +inf.0 neg-real-angle))
+
+  (assert-equal +nan.0 (make-polar +nan.0 pos-real-angle))
+  (assert-equal +nan.0 (make-polar 5.0 +nan.0))))
 
 (define-test "(make-polar) with imaginary part fails" (expect-error implementation-restriction-error?
   (import (llambda complex-stub))
