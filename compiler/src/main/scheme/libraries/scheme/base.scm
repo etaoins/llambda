@@ -657,7 +657,6 @@
     (define-r7rs current-output-port (make-parameter ((world-function system-library "llcore_stdout_port" (-> <port>)))))
     (define-r7rs current-error-port (make-parameter ((world-function system-library "llcore_stderr_port" (-> <port>)))))
 
-    ; We don't support (read) so we can use #!unit for the end-of-file object
     (define-r7rs eof-object? (make-predicate <eof-object>))
     (define-r7rs eof-object (native-function llbase "llbase_eof_object" (-> <eof-object>)))
 
