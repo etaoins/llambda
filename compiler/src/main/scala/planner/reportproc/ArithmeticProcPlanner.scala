@@ -29,28 +29,28 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
       convertTemp
     }
 
-  sealed abstract class KnownValType
-  case object KnownInt extends KnownValType
-  case object KnownFlonum extends KnownValType
+  sealed abstract class KnownOperandType
+  case object KnownInt extends KnownOperandType
+  case object KnownFlonum extends KnownOperandType
 
-  case class TypedVal(value : iv.IntermediateValue, knownType : KnownValType)
+  case class TypedOperand(value : iv.IntermediateValue, knownType : KnownOperandType)
 
   private def performBinaryMixedOp(
       intInstr : CheckedInstrBuilder,
       flonumInstr : UncheckedInstrBuilder,
       staticIntCalc : StaticIntegerOp,
       staticFlonumCalc : StaticDoubleOp,
-      args : List[iv.IntermediateValue],
+      operands : List[iv.IntermediateValue],
       intOverflowMessage : RuntimeErrorMessage
   )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
     implicit val inlinePlan = plan.forkPlan()
 
-    val typedArgs = args map { arg =>
-      if (arg.hasDefiniteType(vt.ExactIntegerType)) {
-        TypedVal(arg, KnownInt)
+    val typedOperands = operands map { operand =>
+      if (operand.hasDefiniteType(vt.ExactIntegerType)) {
+        TypedOperand(operand, KnownInt)
       }
-      else if (arg.hasDefiniteType(vt.FlonumType)) {
-        TypedVal(arg, KnownFlonum)
+      else if (operand.hasDefiniteType(vt.FlonumType)) {
+        TypedOperand(operand, KnownFlonum)
       }
       else {
         // We don't know the precise type - we can't continue
@@ -59,49 +59,49 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
     }
 
     // Determine if our result is inexact
-    val resultInexact = typedArgs.exists { typedArg =>
+    val resultInexact = typedOperands.exists { typedArg =>
       typedArg.knownType == KnownFlonum
     }
 
-    val resultValue = typedArgs.reduceLeft { (arg1 : TypedVal, arg2 : TypedVal) => (arg1, arg2) match {
-      case (TypedVal(iv.ConstantExactIntegerValue(constantIntVal1), _),
-            TypedVal(iv.ConstantExactIntegerValue(constantIntVal2), _)) =>
+    val resultValue = typedOperands.reduceLeft { (op1 : TypedOperand, op2 : TypedOperand) => (op1, op2) match {
+      case (TypedOperand(iv.ConstantExactIntegerValue(constantIntVal1), _),
+            TypedOperand(iv.ConstantExactIntegerValue(constantIntVal2), _)) =>
         val exactResult = staticIntCalc(BigInt(constantIntVal1), BigInt(constantIntVal2))
 
         if (exactResult.isValidLong) {
-          TypedVal(iv.ConstantExactIntegerValue(exactResult.toLong), KnownInt)
+          TypedOperand(iv.ConstantExactIntegerValue(exactResult.toLong), KnownInt)
         }
         else if (resultInexact) {
           // Promote this to a double
-          TypedVal(iv.ConstantFlonumValue(exactResult.toDouble), KnownFlonum)
+          TypedOperand(iv.ConstantFlonumValue(exactResult.toDouble), KnownFlonum)
         }
         else {
           // Exact result was expected!
           throw new IntegerOverflowException(plan.activeContextLocated, intOverflowMessage.text)
         }
 
-      case (TypedVal(iv.ConstantFlonumValue(constantFlonumVal1), _),
-            TypedVal(iv.ConstantFlonumValue(constantFlonumVal2), _)) =>
-        TypedVal(
+      case (TypedOperand(iv.ConstantFlonumValue(constantFlonumVal1), _),
+            TypedOperand(iv.ConstantFlonumValue(constantFlonumVal2), _)) =>
+        TypedOperand(
           iv.ConstantFlonumValue(staticFlonumCalc(constantFlonumVal1, constantFlonumVal2)),
           KnownFlonum
         )
 
-      case (TypedVal(iv.ConstantExactIntegerValue(constantIntVal1), _),
-            TypedVal(iv.ConstantFlonumValue(constantFlonumVal2), _)) =>
-        TypedVal(
+      case (TypedOperand(iv.ConstantExactIntegerValue(constantIntVal1), _),
+            TypedOperand(iv.ConstantFlonumValue(constantFlonumVal2), _)) =>
+        TypedOperand(
           iv.ConstantFlonumValue(staticFlonumCalc(constantIntVal1.toDouble, constantFlonumVal2)),
           KnownFlonum
         )
 
-      case (TypedVal(iv.ConstantFlonumValue(constantFlonumVal1), _),
-            TypedVal(iv.ConstantExactIntegerValue(constantIntVal2), _)) =>
-        TypedVal(
+      case (TypedOperand(iv.ConstantFlonumValue(constantFlonumVal1), _),
+            TypedOperand(iv.ConstantExactIntegerValue(constantIntVal2), _)) =>
+        TypedOperand(
           iv.ConstantFlonumValue(staticFlonumCalc(constantFlonumVal1, constantIntVal2.toDouble)),
           KnownFlonum
         )
 
-      case (TypedVal(dynamic1, type1), TypedVal(dynamic2, type2)) =>
+      case (TypedOperand(other1, type1), TypedOperand(other2, type2)) =>
         if ((type1 == KnownInt) && (type2 == KnownInt)) {
           if (resultInexact) {
             // We expect an inexact result - this requires re-trying this computation as inexact on overflow
@@ -110,25 +110,25 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
           }
 
           // Both integers
-          val intTemp1 = dynamic1.toTempValue(vt.Int64)(inlinePlan)
-          val intTemp2 = dynamic2.toTempValue(vt.Int64)(inlinePlan)
+          val intTemp1 = other1.toTempValue(vt.Int64)(inlinePlan)
+          val intTemp2 = other2.toTempValue(vt.Int64)(inlinePlan)
 
           val resultTemp = ps.Temp(vt.Int64)
           val overflowTemp = ps.Temp(vt.Predicate)
 
           inlinePlan.steps += intInstr(resultTemp, intTemp1, intTemp2, intOverflowMessage)
 
-          TypedVal(new iv.NativeExactIntegerValue(resultTemp, vt.Int64), KnownInt)
+          TypedOperand(new iv.NativeExactIntegerValue(resultTemp, vt.Int64), KnownInt)
         }
         else {
           // At least one is a double
-          val doubleTemp1 = numberToDoubleTemp(dynamic1, type1 == KnownFlonum)(inlinePlan)
-          val doubleTemp2 = numberToDoubleTemp(dynamic2, type2 == KnownFlonum)(inlinePlan)
+          val doubleTemp1 = numberToDoubleTemp(other1, type1 == KnownFlonum)(inlinePlan)
+          val doubleTemp2 = numberToDoubleTemp(other2, type2 == KnownFlonum)(inlinePlan)
 
           val resultTemp = ps.Temp(vt.Double)
           inlinePlan.steps += flonumInstr(resultTemp, doubleTemp1, doubleTemp2)
 
-          TypedVal(new iv.NativeFlonumValue(resultTemp, vt.Double), KnownFlonum)
+          TypedOperand(new iv.NativeFlonumValue(resultTemp, vt.Double), KnownFlonum)
         }
     }}
 
@@ -139,11 +139,11 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
   }
 
   private def performNumericDivide(
-      args : List[iv.IntermediateValue]
+      operands : List[iv.IntermediateValue]
   )(implicit plan : PlanWriter) : Option[iv.IntermediateValue] = {
     implicit val inlinePlan = plan.forkPlan()
 
-    val resultValue = args.reduceLeft { (op1 : iv.IntermediateValue, op2 : iv.IntermediateValue) => (op1, op2) match {
+    val resultValue = operands.reduceLeft { (op1 : iv.IntermediateValue, op2 : iv.IntermediateValue) => (op1, op2) match {
       case (iv.ConstantExactIntegerValue(Long.MinValue), iv.ConstantExactIntegerValue(-1)) =>
         // This would cause an integer overflow
         iv.ConstantFlonumValue(Long.MinValue.toDouble / -1.toDouble)
@@ -310,7 +310,7 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
         flonumInstr=ps.FloatAdd.apply,
         staticIntCalc=_ + _,
         staticFlonumCalc=_ + _,
-        args=argValues,
+        operands=argValues,
         intOverflowMessage=intOverflowMessage
       )
 
@@ -332,7 +332,7 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
         flonumInstr=ps.FloatSub.apply,
         staticIntCalc=_ - _,
         staticFlonumCalc=_ - _,
-        args=List(constantZero, singleArg),
+        operands=List(constantZero, singleArg),
         intOverflowMessage=intOverflowMessage
       )
 
@@ -349,7 +349,7 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
         flonumInstr=ps.FloatSub.apply,
         staticIntCalc=_ - _,
         staticFlonumCalc=_ - _,
-        args=argValues,
+        operands=argValues,
         intOverflowMessage=intOverflowMessage
       )
 
@@ -366,7 +366,7 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
         flonumInstr=ps.FloatMul.apply,
         staticIntCalc=_ * _,
         staticFlonumCalc=_ * _,
-        args=argValues,
+        operands=argValues,
         intOverflowMessage=intOverflowMessage
       )
 
@@ -377,7 +377,7 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
     case ("/", List((_, singleArg))) =>
       // This is a special case that negates the passed value
       val constantZero = iv.ConstantExactIntegerValue(1)
-      performNumericDivide(args=List(constantZero, singleArg))
+      performNumericDivide(List(constantZero, singleArg))
 
     case ("/", multipleArgs) =>
       val argValues = multipleArgs.map(_._2)
