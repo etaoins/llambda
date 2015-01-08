@@ -33,6 +33,8 @@ const char *schemeNameForErrorCategory(ErrorCategory category)
 		return "invalid-argument-error";
 	case ErrorCategory::IntegerOverflow:
 		return "integer-overflow-error";
+	case ErrorCategory::ImplementationRestriction:
+		return "implementation-restriction-error";
 	}
 }
 

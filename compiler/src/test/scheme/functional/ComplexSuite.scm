@@ -14,6 +14,10 @@
 
   (assert-equal +nan.0 (make-rectangular +nan.0 0))))
 
+(define-test "(make-rectangular) with imaginary part fails" (expect-error implementation-restriction-error?
+  (import (llambda complex-stub))
+  (make-rectangular 10.0 50.0)))
+
 (define-test "(make-polar)" (expect-success
   (import (llambda complex-stub))
 
@@ -29,6 +33,10 @@
   (assert-equal -inf.0 (make-polar -inf.0 0))
 
   (assert-equal +nan.0 (make-polar +nan.0 0))))
+
+(define-test "(make-polar) with imaginary part fails" (expect-error implementation-restriction-error?
+  (import (llambda complex-stub))
+  (make-polar 10.0 5.0)))
 
 (define-test "(real-part)" (expect-success
   (import (llambda complex-stub))
@@ -96,3 +104,9 @@
   (assert-within pi 0.001 (angle -inf.0))
 
   (assert-equal +nan.0 (angle +nan.0))))
+
+(define-test "(angle) of zero fails" (expect-error invalid-argument-error?
+  (import (llambda complex-stub))
+
+  (angle 0)))
+

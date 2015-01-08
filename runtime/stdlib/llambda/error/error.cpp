@@ -124,4 +124,14 @@ void llerror_raise_integer_overflow_error(World &world, StringCell *message, Res
 	throw dynamic::SchemeException(ErrorObjectCell::createInstance(world, message, irritants, ErrorCategory::IntegerOverflow));
 }
 
+bool llerror_is_implementation_restriction_error(AnyCell *obj)
+{
+	return isErrorObjectOfCategory(obj, ErrorCategory::ImplementationRestriction);
+}
+
+void llerror_raise_implementation_restriction_error(World &world, StringCell *message, RestValues<AnyCell> *irritants)
+{
+	throw dynamic::SchemeException(ErrorObjectCell::createInstance(world, message, irritants, ErrorCategory::ImplementationRestriction));
+}
+
 }

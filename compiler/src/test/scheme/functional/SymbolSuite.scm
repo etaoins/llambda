@@ -53,5 +53,5 @@
   ; Non-BMP symbol
 	(assert-equal '|Hell🏂!| (string->symbol (symbol->string '|Hell🏂!|)))))
 
-(define-test "(string->symbol) with oversized string fails" (expect-error range-error?
+(define-test "(string->symbol) with oversized string fails" (expect-error implementation-restriction-error?
   (string->symbol (make-string 65536 #\z))))

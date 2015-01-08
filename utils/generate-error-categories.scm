@@ -24,7 +24,8 @@
   (error-category "undefined-variable-error" "undefined_variable_error" "UndefinedVariable" #f)
   (error-category "out-of-memory-error" "out_of_memory_error" "OutOfMemory" #f)
   (error-category "invalid-argument-error" "invalid_argument_error" "InvalidArgument" #f)
-  (error-category "integer-overflow-error" "integer_overflow_error" "IntegerOverflow" #f)))
+  (error-category "integer-overflow-error" "integer_overflow_error" "IntegerOverflow" #f)
+  (error-category "implementation-restriction-error" "implementation_restriction_error" "ImplementationRestriction" #f)))
 
 (define (error-category-pred-name [cat : <error-category>])
   (string-append (error-category-scheme-name cat) "?"))

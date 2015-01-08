@@ -32,7 +32,7 @@ void assertLengthValid(World &world, const char *procName, const char *lengthNam
 		std::ostringstream message;
 		message << "Length of " << length << " exceeds maximum " << lengthName << " of " << maxLength << " in " << procName;
 
-		signalError(world, ErrorCategory::Range, message.str().c_str());
+		signalError(world, ErrorCategory::ImplementationRestriction, message.str().c_str());
 	}
 
 	if (length < 0)
