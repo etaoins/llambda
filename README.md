@@ -1,9 +1,11 @@
 Introduction
 ============
 
-Llambda is a natively compiled Scheme with optional strong typing. The core language is based on R7RS with a number of extensions influenced by Typed Racket and the SRFI community. 
+Llambda is a natively compiled Scheme with optional strong typing. The core language is based on [R7RS](http://trac.sacrideo.us/wg/raw-attachment/wiki/WikiStart/r7rs.pdf) with a number of extensions influenced by [Typed Racket](http://docs.racket-lang.org/ts-guide/) and the [SRFI](http://srfi.schemers.org) community. 
 
-Llambda is implemented with a Scala frontend, LLVM backend and a Scheme and C++11 runtime.
+Llambda is implemented with a [Scala](http://www.scala-lang.org) frontend, [LLVM](http://llvm.org) backend and a Scheme and C++11 runtime.
+
+The language is currently very experimental with all non-R7RS language features in flux. Although it's well tested through an extensive functional test suite very few non-trivial programs have been written in Llambda. The lack of bindings for any non-system libraries make it only suitable for standalone programs operating on standard I/O and files.
 
 Requirements
 ============
@@ -29,7 +31,16 @@ $ cmake ../runtime && make
 Usage
 =====
 
-Once the runtime is built then the ``llambda`` shell script be used used to compile Scheme programs by passing their path on the command line. It will then produce a standalone statically linked exectuable of that programs
+Llambda takes Scheme source files as input and produces standalone statically linked executables. A trivial "Hello, World" application would look like:
+```racket
+(import (scheme base))
+(import (scheme write))
+
+(write "Hello, world!")
+(newline)
+```
+
+The ``llambda`` shell script be can used used to compile Scheme programs by passing their path on the command line. It supports various options which are described by ``llambda --help``. Of particular interest is the ``-s`` option which will immediately run the program instead of producing an exectuable. This can be useful for scripting tasks.
 
 For frequent compilation it is more efficient to use ``sbt`` to run the compiler from within the ``sbt`` environment. This avoids the overhead of launching a JVM for every invokation of the compiler. For example, to compile a program located at ``/home/example/test.scm`` would work as follows:
 
@@ -91,30 +102,30 @@ Procedure Type Constructor
 The procedure type constructor is ``->``. It defines which values a procedure takes and which values it returns. The non-terminal arguments to the type constructor are the types of the arguments the procedure takes and the final argument is the value it returns.
 
 For example, a procedure taking an integer and a <string and returning a character has the following type
-```scheme
+```racket
 (-> <exact-integer> <string> <char>)
 ```
 
 If a procedure takes a rest argument list a ``*`` can be suffixed after the final argument. For example, a prodcure taking zero or more floating point numbers and returning a boolean has the following type
-```scheme
+```racket
 (-> <flonum> * <exact-integer>)
 ```
 
 Annotating Values
 -----------------
 There are two ways to annotate values. The way most familiar to developers from other languages would be explicitly passing the type to ``(define)``. For example, to define ``b`` to have the value ``15`` and the type ``<number>`` we would use the following form
-```scheme
+```racket
 (define b : <number> 15)
 ```
 
 This is clearly not useful with immutable values such as the above. However, with mutable values this can provide an important hint to both the developer and the compiler about which values the variable is intended to take. For example, the following would be caught as an error by the compiler
-```scheme
+```racket
 (define b : <number> 15)
 (set! b "Not a number") ; Not allowed
 ```
 
 Another way to annotate values that's common in the Lisp languages is by providing a forward type declaration. The above define is exactly equivalent to
-```scheme
+```racket
 (: b <number>)
 (define b 15)
 ```
@@ -124,14 +135,14 @@ The forward annotation can appear anywhere in the same scope before the matching
 Annotating Procedures
 ---------------------
 If the complete type for a procedure is known it is often the simplest and most idiomatic to use a forward type declaration with a procedure type
-```scheme
+```racket
 (: multiply-by-two (-> <number> <number>))
 (define (multiply-by-two val)
   (* val 2))
 ```
 
 However, it is also possible to annotate the individual arguments to a procedure using ``[arg : <type>]`` syntax. 
-```scheme
+```racket
 (define (multiply-by-two [val : <number>])
   (* val 2))
 ```
@@ -139,7 +150,7 @@ However, it is also possible to annotate the individual arguments to a procedure
 The square brackets are an extension to R7RS that are treated identically to round brackets. They are only used in type annotations by convention. This identical to the beahviour and conventions of Typed Racket.
 
 Procedures taking a rest argument list need to use ``rest : <type> *``. A procedure taking another procedure and zero or more integers would look like the following
-```scheme
+```racket
 (define (sum-integers [inexact-result : <boolean>] ints : <exact-integer> *)
   (define sum (apply + ints))
   (if inexact-result (inexact sum) sum))
