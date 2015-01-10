@@ -160,7 +160,12 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
     }
   }
 
-  private def extractInclude(scope : Scope, includeNameData : List[sst.ScopedDatum], includeLocation : SourceLocated) : et.Expr = {
+  private def extractInclude(
+      scope : Scope,
+      includeNameData : List[sst.ScopedDatum],
+      includeLocation : SourceLocated,
+      foldCase : Boolean = false
+  ) : et.Expr = {
     val includeResults = ResolveIncludeList(includeNameData.map(_.unscope), includeLocation)(frontendConfig.includePath)
 
     val includeExprs = includeResults flatMap { result =>
@@ -178,7 +183,15 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
       val includeSubprogram = debug.FileContext(result.filename)
 
       val includeBodyExtractor = new ModuleBodyExtractor(includeSubprogram, libraryLoader, innerConfig)
-      includeBodyExtractor(result.data, scope)
+
+      val data = if (foldCase) {
+        result.data.map(_.toCaseFolded)
+      }
+      else {
+        result.data
+      }
+
+      includeBodyExtractor(data, scope)
     }
 
     et.Begin(includeExprs)
@@ -235,6 +248,10 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
         // We need the scope from the (include) to rescope the included file
         val scope = appliedSymbol.scope
         extractInclude(scope, includeNames, appliedSymbol)
+
+      case (Primitives.IncludeCI, includeNames) =>
+        val scope = appliedSymbol.scope
+        extractInclude(scope, includeNames, appliedSymbol, foldCase=true)
 
       case (Primitives.NativeFunction, _) =>
         ExtractNativeFunction(false, operands, appliedSymbol)

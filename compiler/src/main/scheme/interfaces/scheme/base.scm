@@ -1,7 +1,7 @@
 ; export (lambda primitives) that occur in (scheme base)
 ; these are virtual definitions provided by the compiler
-(export lambda quote if else set! syntax-error include quasiquote unquote unquote-splicing define define-values
-        define-syntax syntax-rules define-record-type cond-expand parameterize)
+(export lambda quote if else set! syntax-error include include-ci quasiquote unquote unquote-splicing define
+        define-values define-syntax syntax-rules define-record-type cond-expand parameterize)
 
 (export begin)
 (export let let* letrec* letrec let-syntax letrec-syntax let-values let*-values)
