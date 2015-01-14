@@ -2,7 +2,7 @@ package io.llambda.compiler.functional
 import io.llambda
 
 import java.io.File
-import java.io.{InputStream}
+import java.io.InputStream
 import scala.io.Source
 import scala.sys.process._
 import org.scalatest.{FunSuite, Inside}
