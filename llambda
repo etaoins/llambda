@@ -3,3 +3,7 @@
 # This is a simple wrapper around "sbt run" that attempts to suppress as much output as possible. This can be
 # particularily useful with -s to run the program as a script
 sbt --error "project compiler" "set showSuccess := false" "run $*"
+result = $?
+
+reset
+exit $result
