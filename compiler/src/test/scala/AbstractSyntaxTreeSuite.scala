@@ -2,13 +2,23 @@ package io.llambda.compiler
 import io.llambda
 
 import org.scalatest.FunSuite
-import collection.mutable
 
 class AbstractSyntaxTreeSuite  extends FunSuite {
   test("fold case of symbol") {
     assert(ast.Symbol("UPPER").toCaseFolded === ast.Symbol("upper"))
     assert(ast.Symbol("Mixed").toCaseFolded === ast.Symbol("mixed"))
     assert(ast.Symbol("LOWER").toCaseFolded === ast.Symbol("lower"))
+  }
+
+  test("fold case preserves source location") {
+    val testLoc = SourceLocation(Some("test-file"), "HELLO", 0)
+
+    val testSymbol = ast.Symbol("UPPER")
+    testSymbol.locationOpt = Some(testLoc)
+
+    val foldedSymbol = testSymbol.toCaseFolded
+
+    assert(foldedSymbol.locationOpt === Some(testLoc))
   }
 
   test("fold case of symbols inside pair") {

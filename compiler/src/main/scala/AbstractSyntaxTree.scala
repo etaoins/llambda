@@ -96,7 +96,7 @@ case class Symbol(name : String) extends Leaf {
   val schemeType = vt.LiteralSymbolType(name)
 
   override def toCaseFolded =
-    Symbol(name.toLowerCase)
+    Symbol(name.toLowerCase).assignLocationFrom(this)
 
   override def toString = if (SchemeParser.isValidIdentifier(name)) {
     name
