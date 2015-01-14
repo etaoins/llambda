@@ -9,61 +9,6 @@ import java.io.File
 
 class ReplProcessNonZeroExitException(val code : Int, val output : String) extends Exception(s"Process exited with code ${code}. Output:\n${output}")
 
-/** Base class for all REPL modes */
-abstract class ReplMode(val name : String) {
-  def evaluate(input : String) : Unit
-}
-
-/** Base class for REPL modes that involve parsing scheme */
-abstract class SchemeParsingMode(name : String) extends ReplMode(name) {
-  def evalDatum(data : ast.Datum) : String
-
-  def evaluate(userString : String) {
-    try {
-      val data = SchemeParser.parseStringAsData(userString, Some("input")) 
-
-      for(datum <- data) {
-        println("res: " + evalDatum(datum))
-      }
-    }
-    catch {
-      case semantic : SemanticException =>
-        println(s"${semantic.semanticErrorType}: ${semantic.getMessage}")
-      
-      case parse : ParseErrorException =>
-        println("parse error: " + parse.getMessage)
-      
-      case nonzero : ReplProcessNonZeroExitException  =>
-        println("non-zero exit: " + nonzero.getMessage)
-    }
-  }
-}
-
-abstract class ExprParsingMode(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dialect, name : String) extends SchemeParsingMode(name) {
-  protected val loader = new frontend.LibraryLoader(targetPlatform)
-  private val frontendConfig = ReplFrontendConfig(targetPlatform, schemeDialect)
-  private val schemeBaseBindings = loader.loadSchemeBase(frontendConfig)
-
-  val scope = new Scope(collection.mutable.Map(schemeBaseBindings.toSeq : _*))
-  val debugContext = debug.UnknownContext
-  val bodyExtractor = new frontend.ModuleBodyExtractor(debugContext, loader, frontendConfig)
-
-  def evalDatum(datum : ast.Datum) : String = datum match {
-    case ast.ProperList(ast.Symbol("import") :: _) =>
-      // This is an import decl - import our new bindings
-      val newBindings = frontend.ResolveImportDecl(datum)(loader, frontendConfig)
-
-      scope ++= newBindings
-
-      "loaded"
-    case _ =>
-      // Treat this like a body expression
-      evalExprs(bodyExtractor(List(datum), scope))
-  }
-
-  protected def evalExprs(exprs : List[et.Expr]) : String
-}
-
 private object ReplFrontendConfig {
   def apply(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dialect) : frontend.FrontendConfig =  {
     val currentDirUrl = (new File(System.getProperty("user.dir"))).toURI.toURL
@@ -81,20 +26,8 @@ private object ReplFrontendConfig {
   }
 }
 
-/** Just parses Scheme */
-class ParseOnlyMode extends SchemeParsingMode("parse") {
-  def evalDatum(datum : ast.Datum) : String =
-    datum.toString
-}
-
-/** Extract expressions allowed in a library, program or lambda body */
-class BodyExprMode(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dialect) extends ExprParsingMode(targetPlatform, schemeDialect, "expr") {
-  def evalExprs(exprs : List[et.Expr]) =
-    exprs.mkString(" ")
-}
-
-/** Compiles expressions as a standalone program and executes them */
-class CompileMode(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dialect) extends SchemeParsingMode("compile") {
+/** Implements the REPL loop and switching modes */
+class Repl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dialect) {
   private val frontendConfig = ReplFrontendConfig(targetPlatform, schemeDialect)
   private val compileConfig = CompileConfig(
     includePath=frontendConfig.includePath,
@@ -106,7 +39,7 @@ class CompileMode(targetPlatform : platform.TargetPlatform, schemeDialect : dial
   private val loader = new frontend.LibraryLoader(targetPlatform)
   private val importDecls = new ListBuffer[ast.Datum]
 
-  importDecls +=  
+  importDecls +=
     ast.ProperList(List(
       ast.Symbol("import"),
       ast.ProperList(List(
@@ -159,13 +92,30 @@ class CompileMode(targetPlatform : platform.TargetPlatform, schemeDialect : dial
         outputFile.delete()
       }
   }
-}
 
-/** Implements the REPL loop and switching modes */
-class Repl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dialect) {
+  def evaluate(userString : String) {
+    try {
+      val data = SchemeParser.parseStringAsData(userString, Some("input"))
+
+      for(datum <- data) {
+        println("res: " + evalDatum(datum))
+      }
+    }
+    catch {
+      case semantic : SemanticException =>
+        println(s"${semantic.semanticErrorType}: ${semantic.getMessage}")
+
+      case parse : ParseErrorException =>
+        println("parse error: " + parse.getMessage)
+
+      case nonzero : ReplProcessNonZeroExitException  =>
+        println("non-zero exit: " + nonzero.getMessage)
+    }
+  }
+
   @tailrec
-  private def acceptInput(mode : ReplMode)(implicit reader : ConsoleReader) {
-    val command = reader.readLine(mode.name + "> ")
+  private def acceptInput()(implicit reader : ConsoleReader) {
+    val command = reader.readLine("llambda> ")
 
     // Flush the last command to our history file
     reader.getHistory match {
@@ -177,18 +127,9 @@ class Repl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dia
       case ":quit" =>
         return;
 
-      case ":parse" =>
-        acceptInput(new ParseOnlyMode)
-      
-      case ":expr" =>
-        acceptInput(new BodyExprMode(targetPlatform, schemeDialect))
-      
-      case ":compile" =>
-        acceptInput(new CompileMode(targetPlatform, schemeDialect))
-
       case userString =>
-        mode.evaluate(userString)
-        acceptInput(mode)
+        evaluate(userString)
+        acceptInput()
     }
   }
 
@@ -201,6 +142,6 @@ class Repl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dia
     val reader = new ConsoleReader;
     reader.setHistory(new history.FileHistory(historyFile))
 
-    acceptInput(new CompileMode(targetPlatform, schemeDialect))(reader)
+    acceptInput()(reader)
   }
 }
