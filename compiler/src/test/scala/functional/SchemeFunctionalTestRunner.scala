@@ -237,7 +237,7 @@ abstract class SchemeFunctionalTestRunner(
         schemeDialect=schemeDialect
       )
 
-      Compiler.compileData(finalProgram, outputFile, compileConfig)
+      Compiler.compileData(finalProgram, outputFile, compileConfig, None)
 
       // Create our output logger
       var stdout : Option[InputStream] = None

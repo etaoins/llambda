@@ -86,28 +86,27 @@ object Compiler {
     val outputStream = new FileOutputStream(output)
     outputStream.write(irBytes)
   }
-  
+
   def compileFile(input : File, output : File, config : CompileConfig) : Unit =
     compileData(
-      data=SchemeParser.parseFileAsData(input),
-      output=output,
-      config=config,
-      entryFilenameOpt=Some(input.getPath)
-    )
-  
-  def compileString(inputString : String, output : File, config : CompileConfig) : Unit =
-    compileData(
-      data=SchemeParser.parseStringAsData(inputString),
-      output=output,
-      config=config
+      SchemeParser.parseFileAsData(input),
+      output,
+      config,
+      Some(input.getPath)
     )
 
-  def compileData(data : List[ast.Datum], output : File, config : CompileConfig, entryFilenameOpt : Option[String] = None) : Unit = {
-    val (irString, nativeLibraries) = compileDataToIr(
-      data=data,
-      config=config,
-      entryFilenameOpt=entryFilenameOpt
+  def compileString(inputString : String, output : File, config : CompileConfig) : Unit =
+    compileData(
+      SchemeParser.parseStringAsData(inputString),
+      output,
+      config,
+      None
     )
+
+  private def abstractCompile[T](
+      compileToIr: (T, CompileConfig, Option[String]) => (String, Set[NativeLibrary])
+  )(input : T, output : File, config : CompileConfig, entryFilenameOpt : Option[String]) : Unit = {
+    val (irString, nativeLibraries) = compileToIr(input, config, entryFilenameOpt)
 
     val irBytes = irString.getBytes("UTF-8")
 
@@ -123,6 +122,12 @@ object Compiler {
     }
   }
 
+  val compileData =
+    abstractCompile(compileDataToIr)_
+
+  val compileExprs =
+    abstractCompile(compileExprsToIr)_
+
   def compileDataToIr(
       data : List[ast.Datum],
       config : CompileConfig,
@@ -130,7 +135,7 @@ object Compiler {
   ) : (String, Set[NativeLibrary]) = {
     // Prepare to extract
     val loader = new frontend.LibraryLoader(config.targetPlatform)
-    val featureIdentifiers = FeatureIdentifiers(config.targetPlatform, config.schemeDialect, config.extraFeatureIdents) 
+    val featureIdentifiers = FeatureIdentifiers(config.targetPlatform, config.schemeDialect, config.extraFeatureIdents)
 
     // Extract expressions
     val frontendConfig = frontend.FrontendConfig(
@@ -142,9 +147,17 @@ object Compiler {
 
     val exprs = frontend.ExtractProgram(entryFilenameOpt, data)(loader, frontendConfig)
 
+    compileExprsToIr(exprs, config, entryFilenameOpt)
+  }
+
+  def compileExprsToIr(
+      exprs : List[et.Expr],
+      config : CompileConfig,
+      entryFilenameOpt : Option[String] = None
+  ) : (String, Set[NativeLibrary]) = {
     // Analyse and drop unused top-level defines
     val analysis = analyser.AnalyseExprs(exprs)
-    
+
     // Plan execution
     val planConfig = planner.PlanConfig(
       schemeDialect=config.schemeDialect,

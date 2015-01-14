@@ -5,10 +5,11 @@ import java.io.{InputStream, File}
 
 import scala.io.Source
 import scala.sys.process._
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable
+import scala.collection.JavaConversions._
 import annotation.tailrec
 
-import jline.console.{ConsoleReader, history}
+import jline.console.{ConsoleReader, history, completer}
 
 class ReplProcessNonZeroExitException(val code : Int, val output : String) extends Exception(s"Process exited with code ${code}. Output:\n${output}")
 
@@ -29,9 +30,76 @@ private object ReplFrontendConfig {
   }
 }
 
+/** Tab completion based on the current scope */
+class ScopeCompleter(scope : Scope) extends completer.Completer {
+  private def identifierStart(buffer : String, start : Int, end : Int) : Int = {
+    if (start > 0) {
+      val newStart = start - 1
+      val testIdent = buffer.drop(newStart).take(end - newStart)
+
+      if (SchemeParser.isValidIdentifier(testIdent)) {
+        // There's more identifier to find
+        identifierStart(buffer,newStart, end)
+      }
+      else {
+        // Ran out of identifier
+        start
+      }
+    }
+    else {
+      // We reached the beginning
+      0
+    }
+  }
+
+  def complete(buffer : String, cursor : Int, candidates : java.util.List[CharSequence]) : Int = {
+    if (buffer == null) {
+      candidates.addAll(scope.bindings.keys)
+      0
+    }
+    else {
+      val identStart = identifierStart(buffer, cursor, cursor)
+      val identEnd = cursor
+
+      val ident = buffer.drop(identStart).take(identEnd - identStart)
+      val rawCompletions = scope.bindings.keys.filter(_.startsWith(ident)).toList
+
+      val completions = rawCompletions.toList match {
+        case List(single) =>
+          // This is unambiguous - add a space after to tell the user we're done
+          List(single + " ")
+
+        case other =>
+          other
+      }
+
+      candidates.addAll(completions)
+      identStart
+    }
+  }
+}
+
+/** Class representing the current state of the REPL */
+class ReplState(targetPlatform : platform.TargetPlatform, implicit val frontendConfig : frontend.FrontendConfig) {
+  val loader : frontend.LibraryLoader = new frontend.LibraryLoader(targetPlatform)
+  val extractor = new frontend.ModuleBodyExtractor(debug.UnknownContext, loader, frontendConfig)
+
+  val initialLibraries = List(
+    List("scheme", "base"),
+    List("scheme", "write")
+  )
+
+  val initialBindings = initialLibraries flatMap { stringComponents =>
+    loader.load(stringComponents.map(StringComponent(_)))
+  }
+
+  val scope : Scope = new Scope(mutable.Map(initialBindings : _*))
+}
+
 /** Implements the REPL loop and switching modes */
 class Repl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dialect) {
-  private val frontendConfig = ReplFrontendConfig(targetPlatform, schemeDialect)
+  private implicit val frontendConfig = ReplFrontendConfig(targetPlatform, schemeDialect)
+
   private val compileConfig = CompileConfig(
     includePath=frontendConfig.includePath,
     optimiseLevel=2,
@@ -39,44 +107,52 @@ class Repl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dia
     schemeDialect=schemeDialect
   )
 
-  private val loader = new frontend.LibraryLoader(targetPlatform)
-  private val importDecls = new ListBuffer[ast.Datum]
+  private var state = new ReplState(targetPlatform, frontendConfig)
 
-  importDecls +=
-    ast.ProperList(List(
-      ast.Symbol("import"),
-      ast.ProperList(List(
-        ast.Symbol("scheme"),
-        ast.Symbol("base")
-      )),
-      ast.ProperList(List(
-        ast.Symbol("scheme"),
-        ast.Symbol("write")
-      ))
-    ))
+  // Create our reader
+  val reader = new ConsoleReader;
+
+  // Make our history dir
+  val llambdaDir = new File(System.getProperty("user.home"), ".llambda")
+  llambdaDir.mkdir()
+
+  // Set our history file
+  val historyFile = new File(llambdaDir, "repl-history")
+  reader.setHistory(new history.FileHistory(historyFile))
+
+  // Update our initial auto-completion set
+  setCompleter(new ScopeCompleter(state.scope))
+
+  private def setCompleter(newCompleter : completer.Completer) : Unit = {
+    for(completer <- reader.getCompleters.toList) {
+      reader.removeCompleter(completer)
+    }
+
+    reader.addCompleter(newCompleter)
+  }
 
   def evalDatum(userDatum : ast.Datum) : String = userDatum match {
     case importDecl @ ast.ProperList(ast.Symbol("import") :: _) =>
-      // Make sure this exists up front
-      frontend.ResolveImportDecl(importDecl)(loader, frontendConfig)
+      // Load the library
+      state.scope.bindings ++= frontend.ResolveImportDecl(importDecl)(state.loader, frontendConfig)
 
-      importDecls += importDecl
       "loaded"
 
     case _ =>
-      val outputFile = File.createTempFile("llambdarepl", null, null)
-      outputFile.deleteOnExit()
-
-      // Implicitly import (scheme base) and wrap in (write)
-      // This is encouraged for REPLs by R7RS
-      val programData = importDecls.toList :+
+      val printingDatum =
         ast.ProperList(List(
           ast.Symbol("write"),
           userDatum
         ))
 
+      val printingExprs = state.extractor(List(printingDatum), state.scope)
+      val programExprs = state.loader.libraryExprs ++ printingExprs
+
+      val outputFile = File.createTempFile("llambdarepl", null, null)
+      outputFile.deleteOnExit()
+
       try {
-        Compiler.compileData(programData, outputFile, compileConfig)
+        Compiler.compileExprs(programExprs, outputFile, compileConfig, None)
 
         // Create our output logger
         var stdout : Option[InputStream] = None
@@ -137,6 +213,13 @@ class Repl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dia
     }
 
     command match {
+      case ":reset" =>
+        // Replace our mutable state
+        state = new ReplState(targetPlatform, frontendConfig)
+        setCompleter(new ScopeCompleter(state.scope))
+
+        acceptInput()
+
       case ":quit" =>
         return;
 
@@ -147,14 +230,6 @@ class Repl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dia
   }
 
   def apply() {
-    // Get our history file
-    val llambdaDir = new File(System.getProperty("user.home"), ".llambda")
-    llambdaDir.mkdir()
-    val historyFile = new File(llambdaDir, "repl-history")
-
-    val reader = new ConsoleReader;
-    reader.setHistory(new history.FileHistory(historyFile))
-
     acceptInput()(reader)
   }
 }
