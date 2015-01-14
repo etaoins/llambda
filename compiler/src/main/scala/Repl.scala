@@ -82,6 +82,7 @@ class ScopeCompleter(scope : Scope) extends completer.Completer {
 /** Class representing the current state of the REPL */
 class ReplState(targetPlatform : platform.TargetPlatform, implicit val frontendConfig : frontend.FrontendConfig) {
   val loader : frontend.LibraryLoader = new frontend.LibraryLoader(targetPlatform)
+  val prefixExprs : mutable.ListBuffer[et.Expr] = new mutable.ListBuffer
   val extractor = new frontend.ModuleBodyExtractor(debug.UnknownContext, loader, frontendConfig)
 
   val initialLibraries = List(
@@ -93,7 +94,7 @@ class ReplState(targetPlatform : platform.TargetPlatform, implicit val frontendC
     loader.load(stringComponents.map(StringComponent(_)))
   }
 
-  val scope : Scope = new Scope(mutable.Map(initialBindings : _*))
+  var scope : Scope = new Scope(mutable.Map(initialBindings : _*))
 }
 
 /** Implements the REPL loop and switching modes */
@@ -131,12 +132,70 @@ class Repl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dia
     reader.addCompleter(newCompleter)
   }
 
+  private def exprsToOutputString(exprs : List[et.Expr]) : String = {
+    val outputFile = File.createTempFile("llambdarepl", null, null)
+    outputFile.deleteOnExit()
+
+    try {
+      Compiler.compileExprs(exprs, outputFile, compileConfig, None)
+
+      // Create our output logger
+      var stdout : Option[InputStream] = None
+
+      val outputIO = new ProcessIO(
+        stdin  => Unit, // Don't care
+        stdoutStream => stdout = Some(stdoutStream),
+        BasicIO.toStdErr
+      )
+
+      // Run and capture the output
+      val process = Process(outputFile.getAbsolutePath).run(outputIO)
+
+      val exitValue = process.exitValue()
+      val outputString = Source.fromInputStream(stdout.get, "UTF-8").mkString
+
+      if (exitValue != 0) {
+        throw new ReplProcessNonZeroExitException(exitValue, outputString)
+      }
+
+      outputString
+    }
+    finally {
+      outputFile.delete()
+    }
+  }
+
   def evalDatum(userDatum : ast.Datum) : String = userDatum match {
     case importDecl @ ast.ProperList(ast.Symbol("import") :: _) =>
       // Load the library
       state.scope.bindings ++= frontend.ResolveImportDecl(importDecl)(state.loader, frontendConfig)
 
       "loaded"
+
+    case defineDatum @ ast.ProperList(List(ast.Symbol("define"), ast.Symbol(identifier), _)) =>
+      // Create a test scope in case binding fails
+      val childScope = new Scope(mutable.Map(), Some(state.scope))
+
+      // Bind the value using the original (define)
+      val defineExprs = state.extractor(List(defineDatum), childScope)
+
+      // Then print the bound datum
+      val printingDatum =
+        ast.ProperList(List(
+          ast.Symbol("write"),
+          ast.Symbol(identifier)
+        ))
+
+      val printingExprs = state.extractor(List(printingDatum), childScope)
+      val programExprs = state.loader.libraryExprs ++ state.prefixExprs.toList ++ defineExprs ++ printingExprs
+
+      val resultString = exprsToOutputString(programExprs)
+
+      // Save this if the program worked correctly
+      state.prefixExprs ++= defineExprs
+      state.scope = childScope
+
+      identifier + " => " + resultString
 
     case _ =>
       val printingDatum =
@@ -146,38 +205,9 @@ class Repl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dia
         ))
 
       val printingExprs = state.extractor(List(printingDatum), state.scope)
-      val programExprs = state.loader.libraryExprs ++ printingExprs
+      val programExprs = state.loader.libraryExprs ++ state.prefixExprs.toList ++ printingExprs
 
-      val outputFile = File.createTempFile("llambdarepl", null, null)
-      outputFile.deleteOnExit()
-
-      try {
-        Compiler.compileExprs(programExprs, outputFile, compileConfig, None)
-
-        // Create our output logger
-        var stdout : Option[InputStream] = None
-
-        val outputIO = new ProcessIO(
-          stdin  => Unit, // Don't care
-          stdoutStream => stdout = Some(stdoutStream),
-          BasicIO.toStdErr
-        )
-
-        // Run and capture the output
-        val process = Process(outputFile.getAbsolutePath).run(outputIO)
-
-        val exitValue = process.exitValue()
-        val outputString = Source.fromInputStream(stdout.get, "UTF-8").mkString
-
-        if (process.exitValue() != 0) {
-          throw new ReplProcessNonZeroExitException(process.exitValue(), outputString)
-        }
-
-        outputString
-      }
-      finally {
-        outputFile.delete()
-      }
+      exprsToOutputString(programExprs)
   }
 
   def evaluate(userString : String) {

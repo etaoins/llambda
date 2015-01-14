@@ -16,6 +16,13 @@ class ReplSuite extends FunSuite {
     assert(repl.evalDatum(datum"""(+ 1 2)""") === "3")
   }
 
+  test("simple (define)") {
+    val repl = testRepl()
+
+    assert(repl.evalDatum(datum"""(define x 2)""") === "x => 2")
+    assert(repl.evalDatum(datum"""2""") === "2")
+  }
+
   test("non-zero exit code") {
     val repl = testRepl()
 
