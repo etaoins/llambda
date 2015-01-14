@@ -181,7 +181,6 @@ object Compiler {
     val irString = codegen.GenProgram(
       functions=allocatedFunctions,
       compileConfig=config,
-      featureIdentifiers=featureIdentifiers,
       entryFilenameOpt=entryFilenameOpt
     )
 

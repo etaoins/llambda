@@ -22,7 +22,7 @@ object GenProgram {
     ) mkString "\n"
   }
 
-  def apply(functions : Map[String, planner.PlannedFunction], compileConfig : CompileConfig, featureIdentifiers : Set[String], entryFilenameOpt : Option[String]) : String = {
+  def apply(functions : Map[String, planner.PlannedFunction], compileConfig : CompileConfig, entryFilenameOpt : Option[String]) : String = {
     val module = new IrModuleBuilder
     module.metadataIndexSource.nextIndex = ct.CellType.nextMetadataIndex
 
