@@ -3,6 +3,13 @@ Introduction
 
 Llambda is a natively compiled Scheme with optional strong typing. The core language is based on [R7RS](http://trac.sacrideo.us/wg/raw-attachment/wiki/WikiStart/r7rs.pdf) with a number of extensions influenced by [Typed Racket](http://docs.racket-lang.org/ts-guide/) and the [SRFI](http://srfi.schemers.org) community. 
 
+Llambda implements many of the features expected from a modern programming language including:
+
+* First class functions
+* Unicode support including UTF-8 strings
+* Support for functional programming including higher-order functions such as ``map``, ``reduce`` and ``fold``
+* Safe programming environment with garbage collected memory, enforced bounds checking and checked integer overflow
+
 Llambda is implemented with a [Scala](http://www.scala-lang.org) frontend, [LLVM](http://llvm.org) backend and a Scheme and C++11 runtime.
 
 The language is currently very experimental with all non-R7RS language features in flux. Although it's well tested through an extensive functional test suite very few non-trivial programs have been written in Llambda. The lack of bindings for any non-system libraries make it only suitable for standalone programs operating on standard I/O and files.
