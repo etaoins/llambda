@@ -1,11 +1,14 @@
 package io.llambda.compiler
 import io.llambda
 
-import jline.console.{ConsoleReader, history}
+import java.io.{InputStream, File}
+
+import scala.io.Source
 import scala.sys.process._
 import scala.collection.mutable.ListBuffer
 import annotation.tailrec
-import java.io.File
+
+import jline.console.{ConsoleReader, history}
 
 class ReplProcessNonZeroExitException(val code : Int, val output : String) extends Exception(s"Process exited with code ${code}. Output:\n${output}")
 
@@ -75,12 +78,20 @@ class Repl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dia
       try {
         Compiler.compileData(programData, outputFile, compileConfig)
 
-        var outputString = ""
-        val outLogger = ProcessLogger(line => outputString += line + "\n",
-                                      line => outputString += line + "\n")
+        // Create our output logger
+        var stdout : Option[InputStream] = None
+
+        val outputIO = new ProcessIO(
+          stdin  => Unit, // Don't care
+          stdoutStream => stdout = Some(stdoutStream),
+          BasicIO.toStdErr
+        )
 
         // Run and capture the output
-        val process = Process(outputFile.getAbsolutePath).run(outLogger)
+        val process = Process(outputFile.getAbsolutePath).run(outputIO)
+
+        val exitValue = process.exitValue()
+        val outputString = Source.fromInputStream(stdout.get, "UTF-8").mkString
 
         if (process.exitValue() != 0) {
           throw new ReplProcessNonZeroExitException(process.exitValue(), outputString)
@@ -111,6 +122,8 @@ class Repl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dia
       case nonzero : ReplProcessNonZeroExitException  =>
         println("non-zero exit: " + nonzero.getMessage)
     }
+
+    println()
   }
 
   @tailrec
