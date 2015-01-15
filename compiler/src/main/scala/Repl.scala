@@ -166,6 +166,76 @@ class Repl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dia
     }
   }
 
+  /** Handles evaluating definitions that only produce abstract bindings
+    *
+    * This includes (define-type) and (define-syntax)
+    */
+  def evalSimpleDefine(defineDatum : ast.Datum) : String = {
+    // Evaluating this in our top-level scope and collect any expressions required for record type defines
+    state.prefixExprs ++= state.extractor(List(defineDatum), state.scope)
+
+    "defined"
+  }
+
+  /** Handles evaluating definitions of values and mutations */
+  def evalValueDefine(defineDatum : ast.Datum, identifier : String) : String = {
+    // Create a test scope in case binding fails
+    val childScope = new Scope(mutable.Map(), Some(state.scope))
+
+    // Bind the value using the original (define)
+    val defineExprs = state.extractor(List(defineDatum), childScope)
+
+    // Then print the bound datum
+    val printingDatum =
+      ast.ProperList(List(
+        ast.Symbol("write"),
+        ast.Symbol(identifier)
+      ))
+
+    val printingExprs = state.extractor(List(printingDatum), childScope)
+    val programExprs = state.loader.libraryExprs ++ state.prefixExprs.toList ++ defineExprs ++ printingExprs
+
+    val resultString = exprsToOutputString(programExprs)
+
+    val memoizedExprsOpt = try {
+      val resultData = SchemeParser.parseStringAsData(resultString)
+
+      resultData match {
+        case List(resultDatum) =>
+          // We can replace this with a static datum. This means we don't have to re-evaluate it on every REPL program
+          //  and unstable values are fixed.
+          defineExprs match {
+            case List(et.TopLevelDefine(List(et.SingleBinding(storageLoc, _)))) =>
+              Some(List(et.TopLevelDefine(List(et.SingleBinding(storageLoc, et.Literal(resultDatum))))))
+
+            case List(et.MutateVar(storageLoc, _)) =>
+              Some(List(et.MutateVar(storageLoc, et.Literal(resultDatum))))
+
+            case _ =>
+              None
+          }
+
+        case _ =>
+          None
+      }
+    }
+    catch {
+      case _ : ParseErrorException =>
+        None
+    }
+
+    val newPrefixExprs = memoizedExprsOpt.getOrElse(defineExprs)
+
+    // Save this if the program worked correctly
+    state.prefixExprs ++= newPrefixExprs
+    state.scope = childScope
+
+    // Use a distinct separator for memoized results versus recalculated results
+    val separator = if (memoizedExprsOpt.isDefined) "=>" else "->"
+
+    s"${identifier} ${separator} ${resultString}"
+  }
+
   def evalDatum(userDatum : ast.Datum) : String = userDatum match {
     case importDecl @ ast.ProperList(ast.Symbol("import") :: _) =>
       // Load the library
@@ -173,30 +243,35 @@ class Repl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dia
 
       "loaded"
 
-    case defineDatum @ ast.ProperList(List(ast.Symbol("define"), ast.Symbol(identifier), _)) =>
-      // Create a test scope in case binding fails
-      val childScope = new Scope(mutable.Map(), Some(state.scope))
+    // Simple (define)
+    case defineDatum @ ast.ProperList(ast.Symbol(defineIdent) :: ast.Symbol(identifier) :: _)
+        if state.scope.get(defineIdent) == Some(Primitives.Define) =>
+      evalValueDefine(defineDatum, identifier)
 
-      // Bind the value using the original (define)
-      val defineExprs = state.extractor(List(defineDatum), childScope)
+    // Lambda shorthand
+    case defineDatum @ ast.ProperList(ast.Symbol(defineIdent) :: ast.ProperList(ast.Symbol(identifier) :: _) :: _)
+        if state.scope.get(defineIdent) == Some(Primitives.Define) =>
+      evalValueDefine(defineDatum, identifier)
 
-      // Then print the bound datum
-      val printingDatum =
-        ast.ProperList(List(
-          ast.Symbol("write"),
-          ast.Symbol(identifier)
-        ))
+    // (set!)
+    case defineDatum @ ast.ProperList(ast.Symbol(setIdent) :: ast.Symbol(identifier) :: _)
+        if state.scope.get(setIdent) == Some(Primitives.Set) =>
+      evalValueDefine(defineDatum, identifier)
 
-      val printingExprs = state.extractor(List(printingDatum), childScope)
-      val programExprs = state.loader.libraryExprs ++ state.prefixExprs.toList ++ defineExprs ++ printingExprs
+    // (define-syntax)
+    case defineDatum @ ast.ProperList(ast.Symbol(defineTypeIdent) :: _)
+        if state.scope.get(defineTypeIdent) == Some(Primitives.DefineSyntax) =>
+      evalSimpleDefine(defineDatum)
 
-      val resultString = exprsToOutputString(programExprs)
+    // (define-type)
+    case defineDatum @ ast.ProperList(ast.Symbol(defineTypeIdent) :: _)
+        if state.scope.get(defineTypeIdent) == Some(Primitives.DefineType) =>
+      evalSimpleDefine(defineDatum)
 
-      // Save this if the program worked correctly
-      state.prefixExprs ++= defineExprs
-      state.scope = childScope
-
-      identifier + " => " + resultString
+    // (define-record-type)
+    case defineDatum @ ast.ProperList(ast.Symbol(defineTypeIdent) :: _)
+        if state.scope.get(defineTypeIdent) == Some(Primitives.DefineRecordType) =>
+      evalSimpleDefine(defineDatum)
 
     case _ =>
       val printingDatum =
