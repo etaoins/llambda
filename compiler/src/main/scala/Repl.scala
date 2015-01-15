@@ -356,6 +356,16 @@ class Repl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dia
       case ":quit" =>
         return;
 
+      case ":help" =>
+        println("Special commands:")
+        println(":reset\t\tResets the REPL state including definitions and imported libraries")
+        println(":quit \t\tQuits the REPL")
+        println(":help \t\tPrints this help")
+        println()
+        println("All other input is treated as a top-level Scheme expression")
+
+        acceptInput()
+
       case userString =>
         evaluate(userString)
         acceptInput()
