@@ -110,6 +110,10 @@ class Repl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dia
     schemeDialect=schemeDialect
   )
 
+  // ANSI colour codes
+  val failureColour = 31
+  val successColour = 32
+
   private var state = new ReplState(targetPlatform, frontendConfig)
 
   // Create our reader
@@ -136,6 +140,9 @@ class Repl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dia
 
     reader.addCompleter(newCompleter)
   }
+
+  def colourStr(str : String, colourCode : Int) =
+    s"\u001B[${colourCode}m${str}\u001B[0m"
 
   private def exprsToOutputString(exprs : List[et.Expr]) : String = {
     val outputFile = File.createTempFile("llambdarepl", null, null)
@@ -302,15 +309,16 @@ class Repl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dia
       val data = SchemeParser.parseStringAsData(userString, Some("input"))
 
       for(datum <- data) {
-        println("res: " + evalDatum(datum))
+        println(colourStr("res: ", successColour) + evalDatum(datum))
       }
     }
     catch {
       case semantic : SemanticException =>
-        println(s"${semantic.semanticErrorType}: ${semantic.getMessage}")
+        val colouredError = colourStr(semantic.semanticErrorType, failureColour)
+        println(s"${colouredError}: ${semantic.getMessage}")
 
       case parse : ParseErrorException =>
-        println("parse error: " + parse.getMessage)
+        println(colourStr("parse error: ", failureColour) + parse.getMessage)
 
       case nonzero : ReplProcessNonZeroExitException  =>
         if (!nonzero.stdout.isEmpty) {
@@ -321,7 +329,7 @@ class Repl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dia
           println(s"${nonzero.stderr}")
         }
 
-        println("non-zero exit: " + nonzero.getMessage)
+        println(colourStr("non-zero exit: ", failureColour) + nonzero.getMessage)
     }
 
     println()
