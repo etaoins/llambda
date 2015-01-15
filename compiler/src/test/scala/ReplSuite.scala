@@ -147,7 +147,8 @@ class ReplSuite extends FunSuite {
     catch {
       case nonZero : ReplProcessNonZeroExitException =>
         assert(nonZero.code === 5)
-        assert(nonZero.output === "hello-world")
+        assert(nonZero.stdout === "hello-world")
+        assert(nonZero.stderr === "")
     }
   }
 }

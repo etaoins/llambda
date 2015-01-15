@@ -11,7 +11,8 @@ import annotation.tailrec
 
 import jline.console.{ConsoleReader, history, completer}
 
-class ReplProcessNonZeroExitException(val code : Int, val output : String) extends Exception(s"Process exited with code ${code}. Output:\n${output}")
+class ReplProcessNonZeroExitException(val code : Int, val stdout : String, val stderr : String) extends
+  Exception(s"Process exited with code ${code}")
 
 private object ReplFrontendConfig {
   def apply(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dialect) : frontend.FrontendConfig =  {
@@ -140,26 +141,29 @@ class Repl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dia
     try {
       Compiler.compileExprs(exprs, outputFile, compileConfig, None)
 
-      // Create our output logger
+      // Create our output streams
       var stdout : Option[InputStream] = None
+      var stderr : Option[InputStream] = None
 
       val outputIO = new ProcessIO(
         stdin  => Unit, // Don't care
         stdoutStream => stdout = Some(stdoutStream),
-        BasicIO.toStdErr
+        stderrStream => stderr = Some(stderrStream)
       )
 
       // Run and capture the output
       val process = Process(outputFile.getAbsolutePath).run(outputIO)
 
       val exitValue = process.exitValue()
-      val outputString = Source.fromInputStream(stdout.get, "UTF-8").mkString
+
+      val stdoutString = Source.fromInputStream(stdout.get, "UTF-8").mkString
+      val stderrString = Source.fromInputStream(stderr.get, "UTF-8").mkString
 
       if (exitValue != 0) {
-        throw new ReplProcessNonZeroExitException(exitValue, outputString)
+        throw new ReplProcessNonZeroExitException(exitValue, stdoutString, stderrString)
       }
 
-      outputString
+      stdoutString
     }
     finally {
       outputFile.delete()
@@ -306,6 +310,14 @@ class Repl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dia
         println("parse error: " + parse.getMessage)
 
       case nonzero : ReplProcessNonZeroExitException  =>
+        if (!nonzero.stdout.isEmpty) {
+          println(s"${nonzero.stdout}")
+        }
+
+        if (!nonzero.stderr.isEmpty) {
+          println(s"${nonzero.stderr}")
+        }
+
         println("non-zero exit: " + nonzero.getMessage)
     }
 
