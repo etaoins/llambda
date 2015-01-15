@@ -341,5 +341,6 @@ class Repl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dia
 
   def apply() {
     acceptInput()(reader)
+    reader.getTerminal.restore()
   }
 }
