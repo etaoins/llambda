@@ -71,7 +71,7 @@ class ScopeCompleter(scope : Scope) extends completer.Completer {
           List(single + " ")
 
         case other =>
-          other
+          other.sorted
       }
 
       candidates.addAll(completions)
