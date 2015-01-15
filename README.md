@@ -9,6 +9,7 @@ Llambda implements many of the features expected from a modern programming langu
 * Unicode support including UTF-8 strings
 * Support for functional programming including higher-order functions such as ``map``, ``reduce`` and ``fold``
 * Safe programming environment with garbage collected memory, enforced bounds checking and checked integer overflow
+* [Read-evaluate-print loop](docs/repl.md)
 
 Llambda is implemented with a [Scala](http://www.scala-lang.org) frontend, [LLVM](http://llvm.org) backend and a Scheme and C++11 runtime.
 
