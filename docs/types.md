@@ -21,7 +21,7 @@ The core types are provided by the compiler. By convention the core types and us
 | ``<string>``        | Scheme string
 | ``<symbol>``        | Scheme symbol. Specific symbols can be used as by quoting them, for example ``'one`` is the type of the "one" symbol
 | ``<exact-integer>`` | 64-bit signed integer. This is used to represent lengths and indices as well as being suitable for direct arithmetic
-| ``<flonum>``        | 64-bit IEEE floating point value. These numbers are considered inexact in the Scheme sense.
+| ``<flonum>``        | 64-bit IEEE floating point value
 | ``<number>``        | Union of ``<exact-integer>`` and ``<flonum>``
 | ``<char>``          | Scheme character. All valid Unicode characters are supported
 | ``<vector>``        | Scheme vector
@@ -30,6 +30,8 @@ The core types are provided by the compiler. By convention the core types and us
 | ``<port>``          | Scheme port
 | ``<eof-object>``    | End-of-file object returned by ``(read)`` procedure
 | ``<unit>``          | Unit type, also known as ``void`` in some languages. This is used by procedures not returning a value
+
+More information on the numeric types can be found in the [numbers documentation](numbers.md).
 
 Value Type Constructors
 -----------------------
