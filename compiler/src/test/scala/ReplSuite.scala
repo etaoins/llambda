@@ -16,6 +16,12 @@ class ReplSuite extends FunSuite {
     assert(repl.evalDatum(datum"""(+ 1 2)""") === "3")
   }
 
+  test("evaluting an expression returning multiple values") {
+    val repl = testRepl()
+
+    assert(repl.evalDatum(datum"""(exact-integer-sqrt 18)""") === "(values 4 2)")
+  }
+
   test("simple (define)") {
     val repl = testRepl()
 

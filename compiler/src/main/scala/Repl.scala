@@ -87,7 +87,8 @@ class ReplState(targetPlatform : platform.TargetPlatform, implicit val frontendC
 
   val initialLibraries = List(
     List("scheme", "base"),
-    List("scheme", "write")
+    List("scheme", "write"),
+    List("llambda", "internal", "repl")
   )
 
   val initialBindings = initialLibraries flatMap { stringComponents =>
@@ -200,8 +201,12 @@ class Repl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dia
     case _ =>
       val printingDatum =
         ast.ProperList(List(
-          ast.Symbol("write"),
-          userDatum
+          ast.Symbol("print-thunk-result"),
+          ast.ProperList(List(
+            ast.Symbol("lambda"),
+            ast.ProperList(Nil),
+            userDatum
+          ))
         ))
 
       val printingExprs = state.extractor(List(printingDatum), state.scope)
