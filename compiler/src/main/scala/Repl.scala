@@ -126,6 +126,9 @@ class Repl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dia
   // Update our initial auto-completion set
   setCompleter(new ScopeCompleter(state.scope))
 
+  // Don't expand events - ! is used frequently in Scheme identifiers
+  reader.setExpandEvents(false)
+
   private def setCompleter(newCompleter : completer.Completer) : Unit = {
     for(completer <- reader.getCompleters.toList) {
       reader.removeCompleter(completer)
