@@ -21,7 +21,24 @@ namespace
 
 		for (auto it = begin; it != end; it++)
 		{
-			numeratorValue /= (*it)->toDouble();
+			NumberCell *denominatorCell = *it;
+
+			if (auto denomintorExactInt = cell_cast<ExactIntegerCell>(denominatorCell))
+			{
+				auto denominatorInt = denomintorExactInt->value();
+
+				if (denominatorInt == 0)
+				{
+					signalError(world, ErrorCategory::DivideByZero, "Attempted (/) by exact zero");
+				}
+
+				numeratorValue /= static_cast<double>(denominatorInt);
+			}
+			else
+			{
+				auto denomintorFlonum = cell_unchecked_cast<FlonumCell>(denominatorCell);
+				numeratorValue /= denomintorFlonum->value();
+			}
 		}
 
 		return FlonumCell::fromValue(world, numeratorValue);
@@ -318,7 +335,14 @@ NumberCell* llbase_div(World &world, NumberCell *startValue, RestValues<NumberCe
 		// This can only be exact if startValue is an exact 1 or -1
 		if (auto startExactInt = cell_cast<ExactIntegerCell>(startValue))
 		{
-			if ((startExactInt->value() == 1) || (startExactInt->value() == -1))
+			std::int64_t startInt = startExactInt->value();
+
+			if (startInt == 0)
+			{
+				signalError(world, ErrorCategory::DivideByZero, "Attempted reciprocal (/) by exact zero");
+			}
+
+			if ((startInt == 1) || (startInt == -1))
 			{
 				return startExactInt;
 			}
@@ -340,8 +364,14 @@ NumberCell* llbase_div(World &world, NumberCell *startValue, RestValues<NumberCe
 				// We have another integer!
 				std::int64_t denominatorInt = denomintorExactInt->value();
 
-				// Does it divide exactly and is not a divide by zero or overflow?
-				if ((denominatorInt != 0) && !integerDivisionWouldOverflow(numeratorInt, denominatorInt) &&
+				// Check for divide by zero
+				if (denominatorInt == 0)
+				{
+					signalError(world, ErrorCategory::DivideByZero, "Attempted (/) by exact zero");
+				}
+
+				// Does it divide exactly and is not an or overflow?
+				if (!integerDivisionWouldOverflow(numeratorInt, denominatorInt) &&
 					((numeratorInt % denominatorInt) == 0))
 				{
 					// Yes!

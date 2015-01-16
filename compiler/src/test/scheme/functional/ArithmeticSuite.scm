@@ -96,9 +96,9 @@
   (assert-equal -64.0 (/ 128.0 -0.25 8))
   (assert-equal 1 (/ 1))
   (assert-equal -1 (/ -1))
-  (assert-equal +inf.0 (/ 0))
-  (assert-equal +inf.0 (/ 5 0))
-  (assert-equal -inf.0 (/ -5 0))
+  (assert-equal +inf.0 (/ 0.0))
+  (assert-equal +inf.0 (/ 5 0.0))
+  (assert-equal -inf.0 (/ -5 0.0))
   (assert-equal +nan.0 (/ -5 +nan.0))
   (assert-equal 0.5 (/ 20 5 2 4))
 
@@ -112,6 +112,33 @@
   (assert-equal 9223372036854775808.0 (/ -9223372036854775808 -1))
   (assert-equal 9223372036854775808.0 (/ (typed-dynamic -9223372036854775808 <exact-integer>) -1))
   (assert-equal 9223372036854775808.0 (/ -9223372036854775808 (typed-dynamic -1 <exact-integer>)))))
+
+(define-test "reciprocal (/) with static exact zero fails" (expect-error divide-by-zero-error?
+  (/ 0)))
+
+(define-test "reciprocal (/) with dynamic typed exact zero fails" (expect-error divide-by-zero-error?
+  (/ (typed-dynamic 0 <exact-integer>))))
+
+(define-test "reciprocal (/) with dynamic untyped exact zero fails" (expect-error divide-by-zero-error?
+  (/ (typed-dynamic 0 <any>))))
+
+(define-test "(/) with integer and static exact zero fails" (expect-error divide-by-zero-error?
+  (/ 5 0)))
+
+(define-test "(/) with integer and dynamic typed exact zero fails" (expect-error divide-by-zero-error?
+  (/ 5 (typed-dynamic 0 <exact-integer>))))
+
+(define-test "(/) with integer and dynamic untyped exact zero fails" (expect-error divide-by-zero-error?
+  (/ 5 (typed-dynamic 0 <any>))))
+
+(define-test "(/) with flonum and static exact zero fails" (expect-error divide-by-zero-error?
+  (/ 5.0 0)))
+
+(define-test "(/) with flonum and dynamic typed exact zero fails" (expect-error divide-by-zero-error?
+  (/ 5.0 (typed-dynamic 0 <exact-integer>))))
+
+(define-test "(/) with flonum and dynamic untyped exact zero fails" (expect-error divide-by-zero-error?
+  (/ 5.0 (typed-dynamic 0 <any>))))
 
 (define-test "dividing single string fails" (expect-error type-error?
   (/ "Hello!")))

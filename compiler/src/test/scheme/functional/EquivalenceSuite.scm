@@ -92,7 +92,7 @@
   ; However, if we do a pointer or intermediate value fast path comparison between NaN and itself we will return #t. If
   ; we want to be consistent we should return #t everywhere at all optimisation levels.
   (assert-true (eqv? +nan.0 +nan.0))
-  (assert-true (eqv? (/ 0. 0.) (/ 0. 0.)))
+  (assert-true (eqv? (/ 0.0 0.0) (/ 0.0 0.0)))
   (assert-true (eqv? +nan.0 (typed-dynamic +nan.0 <flonum>)))))
 
 (define-test "char (eqv?)" (expect-success

@@ -149,7 +149,10 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
         iv.ConstantFlonumValue(Long.MinValue.toDouble / -1.toDouble)
 
       case (iv.ConstantExactIntegerValue(numerInt),  iv.ConstantExactIntegerValue(denomInt)) =>
-        if ((denomInt != 0) && ((numerInt % denomInt) == 0)) {
+        if (denomInt == 0) {
+          throw new DivideByZeroException(plan.activeContextLocated, "Attempted (/) by exact zero")
+        }
+        else if ((numerInt % denomInt) == 0) {
           // This divides exactly
           iv.ConstantExactIntegerValue(numerInt / denomInt)
         }
@@ -158,8 +161,15 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
           iv.ConstantFlonumValue(numerInt.toDouble / denomInt.toDouble)
         }
 
-      case (numerNumValue : iv.ConstantNumberValue, denomNumValue : iv.ConstantNumberValue) =>
-        iv.ConstantFlonumValue(numerNumValue.doubleValue / denomNumValue.doubleValue)
+      case (numerNumValue : iv.ConstantNumberValue, iv.ConstantExactIntegerValue(denomIntVal)) =>
+        if (denomIntVal == 0) {
+          throw new DivideByZeroException(plan.activeContextLocated, "Attempted (/) by exact zero")
+        }
+
+        iv.ConstantFlonumValue(numerNumValue.doubleValue / denomIntVal.toDouble)
+
+      case (numerNumValue : iv.ConstantNumberValue, iv.ConstantFlonumValue(denomFlonumVal)) =>
+        iv.ConstantFlonumValue(numerNumValue.doubleValue / denomFlonumVal)
 
       case (dynamicNumer, dynamicDenom) =>
         val dynamicNumerIsInt = dynamicNumer.hasDefiniteType(vt.ExactIntegerType)
@@ -172,8 +182,9 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
           // We don't have definite types; abort
           return None
         }
-        else if (dynamicNumerIsInt && dynamicDenomIsInt) {
-          // This result may be exact or inexact - abort and let the library handle it
+        else if (dynamicDenomIsInt) {
+          // This could be an integer divide by zero. Even if the denominator is non-zero if the numerator is also
+          // an integer we don't know the exactness of our result. Let the library handle this.
           return None
         }
         else  {
