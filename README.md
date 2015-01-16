@@ -65,3 +65,4 @@ Documentation
 * [Type system](docs/types.md) contains information about Llambda's optional typing system
 * [REPL](docs/repl.md) is a basic usage guide for the REPL
 * [Numbers](docs/numbers.md) describes the semantics and performance characteristics of numbers
+* [Errors](docs/errors.md) describes the error model and extended error categories
