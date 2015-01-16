@@ -66,3 +66,4 @@ Documentation
 * [REPL](docs/repl.md) is a basic usage guide for the REPL
 * [Numbers](docs/numbers.md) describes the semantics and performance characteristics of numbers
 * [Errors](docs/errors.md) describes the error model and extended error categories
+* [Dialects](docs/dialects.md) covers the three Scheme dialects supported by Llambda

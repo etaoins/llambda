@@ -16,7 +16,7 @@ The core types are provided by the compiler. By convention all type names are en
 | ``<any>``           | Any Scheme type. This is the top type which contains all other types
 | ``<boolean>``       | ``#t`` or ``#f``. The literal ``#t`` or ``#f`` can also be used as type names to represent a specific boolean value.
 | ``<pair>``          | Standard Scheme pair
-| ``<empty-list>``    | The empty list value. This is also known as "null" in some Lisp dialects
+| ``<empty-list>``    | The empty list value. This is also known as "null" in some Lisp languages
 | ``<list-element>``  | Union of ``<pair>`` and ``<empty-list>``
 | ``<string>``        | Scheme string
 | ``<symbol>``        | Scheme symbol. Specific symbols can be used as by quoting them, for example ``'one`` is the type of the "one" symbol
@@ -46,7 +46,7 @@ By convention type constructors are named with an initial uppercase letter
 | ``(Listof <member>)``     | Creates a proper list type with the containing members of type ``<member>``. The proper list can be of any length.
 | ``(List <member> ...)``   | Creates a proper list type of fixed length with the specified member types
 
-The ``Pairof``, ``Listof`` and ``List`` type constructors depend on immutable pair support for a complete and efficient implementation. If mutable pairs are enabled by using the ``r7rs`` or ``r5rs`` dialects these type constructors can only be used for arguments and return types. They will also generate costly runtime type checks in more situations than dialects with immutable pairs.
+The ``Pairof``, ``Listof`` and ``List`` type constructors depend on immutable pair support for a complete and efficient implementation. If mutable pairs are enabled by using the [``r7rs`` or ``r5rs`` dialects](dialects.md) these type constructors can only be used for arguments and return types. They will also generate costly runtime type checks in more situations than dialects with immutable pairs.
 
 Procedure Type Constructor
 --------------------------
