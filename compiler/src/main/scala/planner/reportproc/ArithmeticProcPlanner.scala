@@ -375,9 +375,9 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
       None
 
     case ("/", List((_, singleArg))) =>
-      // This is a special case that negates the passed value
-      val constantZero = iv.ConstantExactIntegerValue(1)
-      performNumericDivide(List(constantZero, singleArg))
+      // This is a special case that calculates the reciprocal of the passed value
+      val constantOne = iv.ConstantExactIntegerValue(1)
+      performNumericDivide(List(constantOne, singleArg))
 
     case ("/", multipleArgs) =>
       val argValues = multipleArgs.map(_._2)
