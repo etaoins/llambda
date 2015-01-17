@@ -3,7 +3,7 @@
   (import (llambda typed))
   (import (llambda nfi))
 
-  (export cons* xcons fold reduce zip filter remove find find-tail partition take-while drop-while)
+  (export cons* xcons list-tabulate fold reduce zip filter remove find find-tail partition take-while drop-while)
 
   ; WeakListof is only a strong type if pair are immutable
   ; This is used avoid producing type checking causing tail recursive procedures to have extremely poor performance
@@ -25,6 +25,8 @@
     (: xcons (All (D A) D A (Pairof A D)))
     (define (xcons d a)
       (cons a d))
+
+    (define list-tabulate (world-function lllist "lllist_list_tabulate" (All (A) <native-uint32> (-> <exact-integer> A) (WeakListof A))))
 
     (define partition (world-function lllist "lllist_partition" (All (A) (-> <any> <boolean>) (WeakListof A) (Values (WeakListof A) (WeakListof A)))))
     (define fold (world-function lllist "lllist_fold" (All (A) (-> <any> <any> <any> * A) A (WeakListof <any>) (WeakListof <any>) * A)))

@@ -15,6 +15,7 @@ extern "C"
 
 using PredicateProc = TypedProcedureCell<bool, AnyCell*>;
 using FoldProc = TypedProcedureCell<AnyCell*, AnyCell*, AnyCell*, RestValues<AnyCell>*>;
+using TabulateProc = TypedProcedureCell<AnyCell*, std::int64_t>;
 
 AnyCell *lllist_cons_star(World &world, AnyCell *headValue, RestValues<AnyCell> *tailValues)
 {
@@ -119,6 +120,19 @@ ReturnValues<ProperList<AnyCell>>* lllist_partition(World &world, PredicateProc 
 	ProperList<AnyCell> *falseList(ProperList<AnyCell>::create(world, falseValues));
 
 	return ReturnValues<ProperList<AnyCell>>::create(world, {trueList, falseList});
+}
+
+ProperList<AnyCell>* lllist_list_tabulate(World &world, std::uint32_t count, TabulateProc *initProcRaw)
+{
+	alloc::StrongRef<TabulateProc> initProc(world, initProcRaw);
+	alloc::StrongRefVector<AnyCell> resultVec(world);
+
+	for(std::uint32_t i = 0; i < count; i++)
+	{
+		resultVec.push_back(initProc->apply(world, i));
+	}
+
+	return ProperList<AnyCell>::create(world, resultVec);
 }
 
 }

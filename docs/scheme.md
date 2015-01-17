@@ -44,4 +44,4 @@ SRFI-1
 
 Llambda includes a partial implementation of the [SRFI-1](http://srfi.schemers.org/srfi-1/srfi-1.html) list library as ``(llambda list)``. All procedures depending on mutable pairs or already exported by ``(scheme base)`` are explicitly excluded. Additionally, many of the more obscure procedures have yet to be implemented.
 
-``(llambda list)`` exports the following SRFI-1 compatible procedures: ``(cons*)``, ``(xcons)``, ``(fold)``, ``(reduce)``, ``(zip)``, ``(filter)``, ``(remove)``, ``(find)``, ``(find-tail)``, ``(parition)``, ``(take-while)``, ``(drop-while)``,
+``(llambda list)`` exports the following SRFI-1 compatible procedures: ``(cons*)``, ``(xcons)``, ``(list-tabulate)``, ``(fold)``, ``(reduce)``, ``(zip)``, ``(filter)``, ``(remove)``, ``(find)``, ``(find-tail)``, ``(parition)``, ``(take-while)``, ``(drop-while)``,

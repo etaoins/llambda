@@ -343,6 +343,17 @@
 
   (assert-equal '(a b c) (xcons '(b c) 'a))))
 
+(define-test "(list-tabulate)" (expect-success
+  (import (llambda list))
+  (import (llambda typed))
+
+  (cond-expand (immutable-pairs
+    (ann (list-tabulate 4 *) (Listof <number>))))
+
+  (assert-equal '(0 1 2 3) (list-tabulate 4 values))
+
+  (assert-equal '("" "*" "**" "***") (list-tabulate 4 (lambda (n) (make-string n #\*))))))
+
 (cond-expand
   ((not immutable-pairs)
    (define-test "(list-set!)" (expect (one two three)
