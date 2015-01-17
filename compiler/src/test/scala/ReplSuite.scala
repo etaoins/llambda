@@ -7,8 +7,8 @@ import llambda.compiler.SchemeStringImplicits._
 class ReplSuite extends FunSuite {
   private val targetPlatform = platform.DetectJvmPlatform()
 
-  private def testRepl() : Repl =
-    new Repl(targetPlatform, dialect.Dialect.default)
+  private def testRepl(schemeDialect : dialect.Dialect = dialect.Dialect.default) : Repl =
+    new Repl(targetPlatform, schemeDialect)
 
   test("evaluating a trivial expression") {
     val repl = testRepl()
@@ -150,5 +150,15 @@ class ReplSuite extends FunSuite {
         assert(nonZero.stdout === "hello-world")
         assert(nonZero.stderr === "")
     }
+  }
+
+  test("R5RS") {
+    val repl = testRepl(dialect.R5RS)
+
+    // XXX: We can't easily test case insensitivity because it's handled in evaluate(). R5RS isn't really supported so
+    // it's not worth complicating the code to test this
+
+    // Make sure we import (scheme r5rs) implicitly
+    assert(repl.evalDatum(datum"""(inexact->exact 13.0)""") == "13")
   }
 }

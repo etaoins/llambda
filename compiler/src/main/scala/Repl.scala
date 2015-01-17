@@ -90,11 +90,11 @@ class ReplState(targetPlatform : platform.TargetPlatform, implicit val frontendC
     List("scheme", "base"),
     List("scheme", "write"),
     List("llambda", "internal", "repl")
-  )
+  ).map({ strings =>
+    strings.map(StringComponent(_))
+  }) ++ frontendConfig.schemeDialect.implicitLibraryNames
 
-  val initialBindings = initialLibraries flatMap { stringComponents =>
-    loader.load(stringComponents.map(StringComponent(_)))
-  }
+  val initialBindings = initialLibraries.flatMap(loader.load(_))
 
   var scope : Scope = new Scope(mutable.Map(initialBindings : _*))
 }
@@ -308,7 +308,14 @@ class Repl(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dia
     try {
       val data = SchemeParser.parseStringAsData(userString, Some("input"))
 
-      for(datum <- data) {
+      val caseFoldedData = if (schemeDialect.caseFoldPrograms) {
+        data.map(_.toCaseFolded)
+      }
+      else {
+        data
+      }
+
+      for(datum <- caseFoldedData) {
         println(colourStr("res: ", successColour) + evalDatum(datum))
       }
     }
