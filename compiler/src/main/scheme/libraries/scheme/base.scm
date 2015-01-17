@@ -222,12 +222,12 @@
 
     (define-syntax do
       (syntax-rules ()
-                    ((do ((var init step ...) ...)
+                    ((do (([var : <type>] init step ...) ...)
                        (test expr ...)
                        command ...)
                      (letrec
                        ((loop
-                          (lambda (var ...)
+                          (lambda ([var : <type>] ...)
                             (if test
                               (begin
                                 (if #f #f)
@@ -238,6 +238,12 @@
                                 (loop (do "step" var step ...)
                                       ...))))))
                        (loop init ...)))
+                    ((do ((var init step ...) ...)
+                       (test expr ...)
+                       command ...)
+                     (do (([var : <any>] init step ...) ...)
+                       (test expr ...)
+                       command ...))
                     ((do "step" x)
                      x)
                     ((do "step" x y)
