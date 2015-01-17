@@ -21,6 +21,6 @@ The ``r7rs`` dialect follows standard R7RS as closely as possible. It is identic
 ``r5rs``
 --------
 
-The ``r5rs`` dialect is a compatibility mode for working with legacy R5RS programs. This causes the root program file to be parsed case insensitively and the ``(scheme r5rs)`` library to be implicitly imported. This is an imperfect emulation of R5RS; see the "Incompatibilities with R5RS" section of the R7RS report for more information.
+The ``r5rs`` dialect is a compatibility mode for working with legacy R5RS programs. This causes the root program file to be parsed case insensitively and the ``(scheme r5rs)`` library to be implicitly imported. This is an imperfect emulation of R5RS; see the "Incompatibilities with R5RS" section of the [R7RS report](http://trac.sacrideo.us/wg/raw-attachment/wiki/WikiStart/r7rs.pdf) for more information.
 
 Because type constructors typically contain uppercase letters they are inaccessible from ``r5rs`` programs. This means that type annotation support in ``r5rs`` programs is very restricted. Developers wanting more comprehensive type support should use the ``llambda`` or ``r7rs`` dialects.
