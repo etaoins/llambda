@@ -17,6 +17,6 @@ Complex numbers are completely unsupported. A ``(llambda complex-stub)`` library
 Performance
 -----------
 
-If a number's precise type is known it can be represented as a unboxed value and can have native code generated for its arithmetic operations. For this reason it's recommended that performance sensitive numeric code uses [type annotations](types.md) to communicate its expected types to the compiler.
+If a number's precise type is known it can be represented as a unboxed value and can have native code generated for its arithmetic operations. For this reason it's recommended that performance sensitive numeric code uses [type annotations](types.md) to communicate its expected types to the compiler. [Polymorphic procedures](types.md#polymorphic-procedures) can be used where the specific number types being used by a procedure aren't known ahead of time.
 
 When performing integer division ``(truncate/)`` maps to LLVM's model of division while ``(floor/)`` and ``(modulo)`` are implemented in the runtime. If either procedure is suitable then using the ``(truncate/)`` family of procedures will result in significantly better performance.

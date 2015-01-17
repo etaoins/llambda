@@ -105,3 +105,49 @@ Procedures taking a rest argument list need to use ``rest : <type> *``. A proced
 (define (sum-integers [inexact-result : <boolean>] ints : <exact-integer> *)
   (define sum (apply + ints))
   (if inexact-result (inexact sum) sum))
+```
+
+Polymorphic Procedures
+----------------------
+
+Polymorphic procedures have "type variables" inside their signature that are resolved to specific types each time the procedure is used. This allows the procedure to work with multiple types of data while still benefitting from type safety.
+
+This is formally known as [parametric polymorphism](http://en.wikipedia.org/wiki/Parametric_polymorphism) and is similar to generics in Java to templates in C++. As in C++ the Llambda compiler will generate separate specialised native functions for each input type.
+
+There are two main reasons to use polymorphic procedures over Scheme's normal dynamic typing:
+
+* A procedure may have a return type that depends on its input types and it wants to communicate that return type to its callers for type safety or performance. This is particularly common with procedures dealing with lists or numbers.
+* For performance reasons a specialised version of the procedure should be constructed for each input type. This is especially useful with procedures working with numbers or procedure values as it can allow much more efficient code to be generated.
+
+Currently polymorphic procedures can only be created by a type declaration using the ``(All)`` type constructor. For example, a procedure to reverse a list could be defined as follows:
+
+```racket
+; This is an awful implementation of (reverse) in (scheme base)
+(: rev (All (A) (Listof A) (Listof A)))
+(define (rev l)
+  (if (null? l)
+    l
+    (append (rev (cdr l)) (list (car l)))))
+```
+
+This declares that ``rev`` takes a list and returns a list of the same type. If this isn't true an error will be signaled. Typically violations are caught at compile time but some situations will result in runtime checks being generated.
+
+Type variables can also have upper bounds placed on them. This declares that the type variable must resolve to the upper bound or one of its subtypes
+
+For example, the following procedure will multiply any ``<number>`` value by 2
+
+```racket
+(: times-2 (All ([N : <number>]) N N))
+(define (times-2 v)
+  (* 2 v))
+```
+
+Multiple type variables can appear in a type declaration. The following procedure swaps the car and cdr of a pair while preserving its type information
+
+```racket
+ (: swap-pair (All (A D) (Pairof A D) (Pairof D A)))
+(define (swap-pair p)
+  (cons (cdr p) (car p)))
+```
+
+
