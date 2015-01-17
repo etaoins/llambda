@@ -3,6 +3,8 @@ Dialects
 
 Llambda supports three different Scheme dialects selectable using the ``--scheme-dialect`` option to the compiler. The entire program must be compiled with the same dialect. If no dialect is specified then the ``llambda`` dialect is used by default.
 
+All dialects are variations on a core shared language implementation. The [Scheme support documentation](scheme.md) for information on the Scheme language implemented by Llambda.
+
 ``llambda``
 -----------
 

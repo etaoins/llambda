@@ -1,7 +1,7 @@
 Introduction
 ============
 
-Llambda is a natively compiled Scheme with [optional strong typing](docs/types.md). The core language is based on [R7RS](http://trac.sacrideo.us/wg/raw-attachment/wiki/WikiStart/r7rs.pdf) with a number of extensions influenced by [Typed Racket](http://docs.racket-lang.org/ts-guide/) and the [SRFI](http://srfi.schemers.org) community.
+Llambda is a natively compiled Scheme with [optional strong typing](docs/types.md). The core language is based on [R7RS](docs/scheme.md) with a number of extensions influenced by [Typed Racket](http://docs.racket-lang.org/ts-guide/) and the [SRFI](http://srfi.schemers.org) community.
 
 Llambda implements many of the features expected from a modern programming language including:
 
@@ -62,6 +62,7 @@ $ sbt
 Documentation
 =============
 
+* [Scheme support](docs/scheme.md) describes the Scheme support of the current implementation
 * [Type system](docs/types.md) contains information about Llambda's optional typing system
 * [REPL](docs/repl.md) is a basic usage guide for the REPL
 * [Numbers](docs/numbers.md) describes the semantics and performance characteristics of numbers
