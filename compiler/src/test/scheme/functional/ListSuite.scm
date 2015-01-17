@@ -334,6 +334,15 @@
 
   (assert-equal '((1) (2) (3)) (zip '(1 2 3)))))
 
+(define-test "(xcons)" (expect-success
+  (import (llambda list))
+  (import (llambda typed))
+
+  (cond-expand (immutable-pairs
+    (ann (xcons 1 'foo) (Pairof <symbol> <exact-integer>))))
+
+  (assert-equal '(a b c) (xcons '(b c) 'a))))
+
 (cond-expand
   ((not immutable-pairs)
    (define-test "(list-set!)" (expect (one two three)
