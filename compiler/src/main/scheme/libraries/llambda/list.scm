@@ -4,7 +4,7 @@
   (import (llambda nfi))
 
   (export cons* xcons list-tabulate fold reduce zip filter remove find find-tail partition take drop split-at
-          take-while drop-while span break any every count)
+          take-while drop-while span break any every count append-map filter-map)
 
   ; WeakListof is only a strong type if pair are immutable
   ; This is used avoid producing type checking causing tail recursive procedures to have extremely poor performance
@@ -105,4 +105,7 @@
 
     (define any (world-function lllist "lllist_any" (All (A) (-> <any> <any> * A) <list> <list> * (U #f A))))
     (define every (world-function lllist "lllist_every" (All (A) (-> <any> <any> * A) <list> <list> * (U #t A))))
-    (define count (world-function lllist "lllist_count" (-> (-> <any> <any> * <any>) <list> <list> * <native-int64>)))))
+    (define count (world-function lllist "lllist_count" (-> (-> <any> <any> * <any>) <list> <list> * <native-int64>)))
+
+    (define append-map (world-function lllist "lllist_append_map" (All (A) (-> <any> <any> * (Listof A)) <list> <list> * (Listof A))))
+    (define filter-map (world-function lllist "lllist_filter_map" (All (A) (-> <any> <any> * A) <list> <list> * (Listof A))))))

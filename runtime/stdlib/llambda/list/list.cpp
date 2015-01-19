@@ -151,6 +151,8 @@ extern "C"
 using PredicateProc = TypedProcedureCell<bool, AnyCell*>;
 using FoldProc = TypedProcedureCell<AnyCell*, AnyCell*, AnyCell*, RestValues<AnyCell>*>;
 using TabulateProc = TypedProcedureCell<AnyCell*, std::int64_t>;
+using AppendMapProc = TypedProcedureCell<ProperList<AnyCell>*, AnyCell*, RestValues<AnyCell>*>;
+using FilterMapProc = TypedProcedureCell<AnyCell*, AnyCell*, RestValues<AnyCell>*>;
 
 using AnyProc = TypedProcedureCell<AnyCell*, AnyCell*, RestValues<AnyCell>*>;
 using EveryProc = AnyProc;
@@ -406,6 +408,47 @@ std::int64_t lllist_count(World &world, CountProc *predicateProcRaw, ProperList<
 			counter++;
 		}
 	}
+}
+
+ProperList<AnyCell>* lllist_append_map(World &world, AppendMapProc *mapProcRaw, ProperList<AnyCell> *firstListRaw, RestValues<ProperList<AnyCell>> *restListsRaw)
+{
+	alloc::StrongRef<AppendMapProc> mapProc(world, mapProcRaw);
+
+	alloc::StrongRef<AnyCell> firstList(world, firstListRaw);
+	alloc::StrongRefVector<AnyCell> restLists(world, restListsRaw->begin(), restListsRaw->end());
+
+	alloc::StrongRefVector<AnyCell> resultValues(world);
+
+	ProperList<AnyCell> *resultList;
+	while(consumeInputLists(world, firstList, restLists, mapProc, &resultList))
+	{
+		// Splice this list on to the results
+		resultValues.insert(resultValues.end(), resultList->begin(), resultList->end());
+	}
+
+	return ProperList<AnyCell>::create(world, resultValues);
+}
+
+ProperList<AnyCell>* lllist_filter_map(World &world, FilterMapProc *mapProcRaw, ProperList<AnyCell> *firstListRaw, RestValues<ProperList<AnyCell>> *restListsRaw)
+{
+	alloc::StrongRef<FilterMapProc> mapProc(world, mapProcRaw);
+
+	alloc::StrongRef<AnyCell> firstList(world, firstListRaw);
+	alloc::StrongRefVector<AnyCell> restLists(world, restListsRaw->begin(), restListsRaw->end());
+
+	alloc::StrongRefVector<AnyCell> resultValues(world);
+
+	AnyCell *resultValue;
+	while(consumeInputLists(world, firstList, restLists, mapProc, &resultValue))
+	{
+		if (resultValue != BooleanCell::falseInstance())
+		{
+			// Add this value to the results
+			resultValues.push_back(resultValue);
+		}
+	}
+
+	return ProperList<AnyCell>::create(world, resultValues);
 }
 
 }

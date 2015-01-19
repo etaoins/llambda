@@ -292,3 +292,54 @@
   (import (llambda list))
 
   (reduce max #f '(44 -123 57 . 192))))
+
+(define-test "(append-map)" (expect-success
+  (import (llambda list))
+
+  (assert-equal '(1 -1 3 -3 8 -8) (append-map (lambda (x) (list x (- x))) '(1 3 8)))
+  (assert-equal '() (append-map (lambda (x) (list x (- x))) '()))
+  (assert-equal '(1 4 7 2 5 8 3 6 9) (append-map (lambda args args) '(1 2 3) '(4 5 6) '(7 8 9 10)))
+
+  (cond-expand
+    ((not immutable-pairs)
+     (begin
+       (define input-list (list-copy '(1 2 3 4)))
+
+       (define (map-proc n)
+         (set-cdr! (cdr input-list) '())
+         '())
+
+       (guard (condition
+                (else 'ignore))
+              (append-map map-proc input-list)))))))
+
+(define-test "(append-map) with improper list fails" (expect-error type-error?
+  (import (llambda list))
+  (append-map (lambda (x) (list x (- x))) '(1 3 . 8))))
+
+(define-test "(filter-map)" (expect-success
+  (import (llambda list))
+  (import (llambda typed))
+
+  ; XXX: #f can't really appear but our type system isn't rich enough to subtract types at the moment so we include all
+  ; possible returns from the lambda
+  (assert-equal '(1 9 49) (ann (filter-map (lambda (x) (and (number? x) (* x x))) '(a 1 b 3 c 7)) (Listof (U <number> #f))))
+  (assert-equal '() (filter-map (lambda (x) (and (number? x) (* x x))) '()))
+  (assert-equal '((1 one) (3 Three three)) (filter-map (lambda (first . rest) (member first rest)) '(1 2 3 4) '(one two 3) '(1 two Three) '(one TWO three)))
+
+  (cond-expand
+    ((not immutable-pairs)
+     (begin
+       (define input-list (list-copy '(1 2 3 4)))
+
+       (define (map-proc n)
+         (set-cdr! (cdr input-list) '())
+         '())
+
+       (guard (condition
+                (else 'ignore))
+              (filter-map map-proc input-list)))))))
+
+(define-test "(filter-map) on improper list fails" (expect-error type-error?
+  (import (llambda list))
+  (filter-map (lambda (x) (and (number? x) (* x x))) '(a 1 b 3 c . 7))))
