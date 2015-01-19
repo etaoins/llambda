@@ -2,6 +2,8 @@
 #define _LLIBY_CORE_ERROR_H
 
 #include <vector>
+#include <string>
+
 #include "binding/AnyCell.h"
 #include "binding/ErrorCategory.h"
 
@@ -10,11 +12,11 @@ namespace lliby
 
 class World;
 
-[[noreturn]]
-void signalError(World &world, ErrorCategory category, const char *message, const std::vector<AnyCell*> &irritants = std::vector<AnyCell*>());
+[[noreturn, gnu::cold]]
+void signalError(World &world, ErrorCategory category, const std::string &message, const std::vector<AnyCell*> &irritants = std::vector<AnyCell*>());
 
-[[noreturn]]
-void fatalError(const char *message, const lliby::AnyCell *evidence = nullptr);
+[[noreturn, gnu::cold]]
+void fatalError(const std::string &message, const lliby::AnyCell *evidence = nullptr);
 
 
 /**

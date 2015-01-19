@@ -40,11 +40,11 @@ void llcore_signal_error(World &world, ErrorCategory category, const char *messa
 
 	if (irritant != nullptr)
 	{
-		signalError(world, category, messageStr.c_str(), {irritant});
+		signalError(world, category, messageStr, {irritant});
 	}
 	else
 	{
-		signalError(world, category, messageStr.c_str(), {});
+		signalError(world, category, messageStr, {});
 	}
 }
 
@@ -53,7 +53,7 @@ void llcore_signal_error(World &world, ErrorCategory category, const char *messa
 namespace lliby
 {
 
-void signalError(World &world, ErrorCategory category, const char *message, const std::vector<AnyCell*> &irritants)
+void signalError(World &world, ErrorCategory category, const std::string &message, const std::vector<AnyCell*> &irritants)
 {
 	// Convert our C++ data type to Scheme cells
 	std::vector<AnyCell*> irritantsCopy(irritants);
@@ -66,7 +66,7 @@ void signalError(World &world, ErrorCategory category, const char *message, cons
 	throw dynamic::SchemeException(errorObj);
 }
 
-void fatalError(const char *message, const AnyCell *evidence)
+void fatalError(const std::string &message, const AnyCell *evidence)
 {
 	std::cerr << message << std::endl;
 
