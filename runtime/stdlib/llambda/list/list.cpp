@@ -3,6 +3,7 @@
 #include <sstream>
 
 #include "binding/ListElementCell.h"
+#include "binding/BooleanCell.h"
 #include "binding/ProperList.h"
 #include "binding/TypedProcedureCell.h"
 
@@ -87,6 +88,61 @@ namespace
 
 		return {head, tail};
 	}
+
+	/**
+	 * Applies a procedure with the head values from a series of input lists and advances the lists
+	 *
+	 * If any of the lists have reached their end then this will return false and not apply the procedure. The input
+	 * lists are of type AnyCell to reflect that this function and its callers should be prepared to have its input
+	 * lists mutated to improper lists by the passed procedure.
+	 *
+	 * @param  world      World to apply the procedure in
+	 * @param  firstList  Reference to the first proper list of values. This will be advanced to the next element.
+	 * @param  restLists  Vector of other value proper lists. These will be advanced to their next elements.
+	 * @param  proc       Procedure to apply. This will be passed one argument from each of the input lists.
+	 * @param  result     Pointer to a location to store the result value. If this function returns false then the
+	 *                    result will not be written to.
+	 * @return Boolean indicating if all of the input lists were non-empty and the procedure was invoked.
+	 */
+	template<typename T>
+	bool consumeInputLists(World &world, alloc::StrongRef<AnyCell> &firstList, alloc::StrongRefVector<AnyCell> &restLists, alloc::StrongRef<TypedProcedureCell<T, AnyCell*, RestValues<AnyCell>*>> proc, T* result)
+	{
+		auto firstPair = cell_cast<PairCell>(firstList);
+
+		if (firstPair == nullptr)
+		{
+			// Reached end of the first list
+			return false;
+		}
+
+		// Advance the list and store the head value
+		firstList.setData(cell_unchecked_cast<ProperList<AnyCell>>(firstPair->cdr()));
+		AnyCell *firstValue = firstPair->car();
+
+		std::vector<AnyCell*> restValues(restLists.size());
+
+		for(std::size_t i = 0; i < restLists.size(); i++)
+		{
+			auto restPair = cell_cast<PairCell>(restLists[i]);
+
+			if (restPair == nullptr)
+			{
+				return false;
+			}
+
+			// Advance the list and store the head value
+			restLists[i] = cell_unchecked_cast<ProperList<AnyCell>>(restPair->cdr());
+			restValues[i] = restPair->car();
+		}
+
+		// Build the rest argument list
+		RestValues<AnyCell> *restArgList = RestValues<AnyCell>::create(world, restValues);
+
+		// Apply the function
+		*result = proc->apply(world, firstValue, restArgList);
+
+		return true;
+	}
 }
 
 extern "C"
@@ -95,6 +151,10 @@ extern "C"
 using PredicateProc = TypedProcedureCell<bool, AnyCell*>;
 using FoldProc = TypedProcedureCell<AnyCell*, AnyCell*, AnyCell*, RestValues<AnyCell>*>;
 using TabulateProc = TypedProcedureCell<AnyCell*, std::int64_t>;
+
+using AnyProc = TypedProcedureCell<AnyCell*, AnyCell*, RestValues<AnyCell>*>;
+using EveryProc = AnyProc;
+using CountProc = AnyProc;
 
 AnyCell *lllist_cons_star(World &world, AnyCell *headValue, RestValues<AnyCell> *tailValues)
 {
@@ -265,6 +325,87 @@ ReturnValues<ProperList<AnyCell>>* lllist_break(World &world, PredicateProc *pre
 	});
 
 	return ReturnValues<ProperList<AnyCell>>::create(world, {result.head, result.tail});
+}
+
+AnyCell* lllist_any(World &world, AnyProc *predicateProcRaw, ProperList<AnyCell> *firstListRaw, RestValues<ProperList<AnyCell>> *restListsRaw)
+{
+	// GC root everything
+	alloc::StrongRef<AnyProc> predicateProc(world, predicateProcRaw);
+
+	alloc::StrongRef<AnyCell> firstList(world, firstListRaw);
+	alloc::StrongRefVector<AnyCell> restLists(world, restListsRaw->begin(), restListsRaw->end());
+
+	// Run until we get a truth-y value
+	while(true)
+	{
+		AnyCell *resultValue;
+
+		if (!consumeInputLists<AnyCell*>(world, firstList, restLists, predicateProc, &resultValue))
+		{
+			// Ran out of lists
+			return BooleanCell::falseInstance();
+		}
+
+		if (resultValue != BooleanCell::falseInstance())
+		{
+			// Found a non-false value
+			return resultValue;
+		}
+	}
+}
+
+AnyCell* lllist_every(World &world, EveryProc *predicateProcRaw, ProperList<AnyCell> *firstListRaw, RestValues<ProperList<AnyCell>> *restListsRaw)
+{
+	alloc::StrongRef<EveryProc> predicateProc(world, predicateProcRaw);
+
+	alloc::StrongRef<AnyCell> firstList(world, firstListRaw);
+	alloc::StrongRefVector<AnyCell> restLists(world, restListsRaw->begin(), restListsRaw->end());
+
+	// If all lists are empty we should return #t
+	AnyCell *resultValue = BooleanCell::trueInstance();
+
+	// Run until we get a false value
+	while(true)
+	{
+		if (!consumeInputLists<AnyCell*>(world, firstList, restLists, predicateProc, &resultValue))
+		{
+			// Ran out of lists - return the last result value
+			// This depends on consumeInputLists not modifying resultValue when it returns false
+			return resultValue;
+		}
+
+		if (resultValue == BooleanCell::falseInstance())
+		{
+			// Found a false value - we're false
+			return BooleanCell::falseInstance();
+		}
+	}
+}
+
+std::int64_t lllist_count(World &world, CountProc *predicateProcRaw, ProperList<AnyCell> *firstListRaw, RestValues<ProperList<AnyCell>> *restListsRaw)
+{
+	alloc::StrongRef<CountProc> predicateProc(world, predicateProcRaw);
+
+	alloc::StrongRef<AnyCell> firstList(world, firstListRaw);
+	alloc::StrongRefVector<AnyCell> restLists(world, restListsRaw->begin(), restListsRaw->end());
+
+	std::int64_t counter = 0;
+
+	while(true)
+	{
+		AnyCell *resultValue;
+
+		if (!consumeInputLists<AnyCell*>(world, firstList, restLists, predicateProc, &resultValue))
+		{
+			// Out of lists
+			return counter;
+		}
+
+		if (resultValue != BooleanCell::falseInstance())
+		{
+			counter++;
+		}
+	}
 }
 
 }

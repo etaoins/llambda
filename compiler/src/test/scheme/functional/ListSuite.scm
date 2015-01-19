@@ -455,6 +455,104 @@
   (import (llambda list))
   (break even? '(2 18 3 10 22 . 9))))
 
+(define-test "(any)" (expect-success
+  (import (llambda list))
+  (import (llambda typed))
+
+  (assert-equal #t (ann (any integer? '(a 3 b 2.7)) <boolean>))
+  (assert-equal #f (ann (any integer? '(a 3.1 b 2.7)) <boolean>))
+  (assert-equal #f (any integer? '()))
+
+  (assert-equal #t (any < '(3 1 4 1 5) '(2 7 1 8 2)))
+  (assert-equal #f (any < '(3 8 4 8 5) '(2 7 1 8 2)))
+
+  (assert-equal #f (any string->number '("one" "two" "three" "four")))
+  (assert-equal 10 (any string->number '("one" "two" "three" "10")))
+  (assert-equal 16 (any string->number '("one" "two" "three" "10") '(2 8 10 16)))
+
+  (cond-expand
+    ((not immutable-pairs)
+     (begin
+       (define input-list (list-copy '(1 2 3 4)))
+
+       (define (pred-proc n)
+         ; Mutate the list during (map) - this is an undefined operation but shouldn't crash
+         (set-cdr! (cdr input-list) '())
+         #f)
+
+       (guard (condition
+                (else 'ignore))
+              (any pred-proc input-list)))))))
+
+(define-test "(any) with improper list fails" (expect-error type-error?
+  (import (llambda list))
+  (any even? '(2 18 3 10 22 . 9))))
+
+(define-test "(every)" (expect-success
+  (import (llambda list))
+  (import (llambda typed))
+
+  (assert-equal #t (ann (every integer? '(1 2 3 4)) <boolean>))
+  (assert-equal #f (ann (every integer? '(1 2 3 4.1)) <boolean>))
+  (assert-equal #t (every integer? '()))
+
+  (assert-equal #t (every < '(1 2 3 4 5) '(6 7 8 9 10)))
+  (assert-equal #f (every < '(1 2 3 4 5) '(6 7 8 9 10) '(11 12 13 14 0)))
+
+  (assert-equal #f (every string->number '("10" "10" "10" "ten")))
+  (assert-equal 10 (every string->number '("10" "10" "10" "10")))
+  (assert-equal 16 (every string->number '("10" "10" "10" "10") '(2 8 10 16)))
+
+  (cond-expand
+    ((not immutable-pairs)
+     (begin
+       (define input-list (list-copy '(1 2 3 4)))
+
+       (define (pred-proc n)
+         ; Mutate the list during (map) - this is an undefined operation but shouldn't crash
+         (set-cdr! (cdr input-list) '())
+         #t)
+
+       (guard (condition
+                (else 'ignore))
+              (every pred-proc input-list)))))))
+
+(define-test "(every) with improper list fails" (expect-error type-error?
+  (import (llambda list))
+  (every even? '(2 18 3 10 22 . 9))))
+
+(define-test "(count)" (expect-success
+  (import (llambda list))
+  (import (llambda typed))
+
+  (assert-equal 3 (count even? '(3 1 4 1 5 9 2 5 6)))
+  (assert-equal 0 (count even? '()))
+
+  (assert-equal 3 (count < '(1 2 4 8) '(2 4 6 8 10 12 14 16)))
+  (assert-equal 5 (count < '(1 2 3 4 5) '(6 7 8 9 10)))
+
+  (assert-equal 3 (count string->number '("10" "10" "10" "ten")))
+  (assert-equal 4 (count string->number '("10" "10" "10" "10")))
+  (assert-equal 4 (count string->number '("10" "10" "10" "10") '(2 8 10 16)))
+
+  (cond-expand
+    ((not immutable-pairs)
+     (begin
+       (define input-list (list-copy '(1 2 3 4)))
+
+       (define (pred-proc n)
+         ; Mutate the list during (map) - this is an undefined operation but shouldn't crash
+         (set-cdr! (cdr input-list) '())
+         #t)
+
+       (guard (condition
+                (else 'ignore))
+              (count pred-proc input-list)))))))
+
+(define-test "(count) with improper list fails" (expect-error type-error?
+  (import (llambda list))
+  (count even? '(2 18 3 10 22 . 9))))
+
 (cond-expand
   ((not immutable-pairs)
    (define-test "(list-set!)" (expect (one two three)
