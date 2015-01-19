@@ -354,6 +354,95 @@
 
   (assert-equal '("" "*" "**" "***") (list-tabulate 4 (lambda (n) (make-string n #\*))))))
 
+(define-test "(drop)" (expect-success
+  (import (llambda list))
+
+  ; Because (drop) works on non-lists it isn't polymorphic. (list-tail) can be used instead which is identical to (drop)
+  ; but only works on lists
+  (assert-equal '(c d e) (drop '(a b c d e)  2))
+  (assert-equal '(3 . d) (drop '(1 2 3 . d) 2))
+  (assert-equal 'd (drop '(1 2 3 . d) 3))
+  (assert-equal 'foo (drop 'foo 0))))
+
+(define-test "(drop) past end of list fails" (expect-error range-error?
+  (import (llambda list))
+  (drop '(1 2 3) 4)))
+
+(define-test "(take)" (expect-success
+  (import (llambda list))
+
+  (assert-equal '(a b) (take '(a b c d e) 2))
+  (assert-equal '(1 2) (take '(1 2 3 . d) 2))
+  (assert-equal '(1 2 3) (take '(1 2 3 . d) 3))
+  (assert-equal '() (take 'foo 0))))
+
+(define-test "(take) past end of list fails" (expect-error range-error?
+  (import (llambda list))
+  (take '(1 2 3) 4)))
+
+(define-test "(split-at)" (expect-success
+  (import (llambda list))
+
+  (let-values (((head tail) (split-at '(a b c d e f g h) 3)))
+              (assert-equal '(a b c) head)
+              (assert-equal '(d e f g h) tail))
+
+  (let-values (((head tail) (split-at '(1 2 3 . d) 2)))
+              (assert-equal '(1 2) head)
+              (assert-equal '(3 . d) tail))
+
+  (let-values (((head tail) (split-at '(1 2 3 . d) 3)))
+              (assert-equal '(1 2 3) head)
+              (assert-equal 'd tail))
+
+  (let-values (((head tail) (split-at 'foo 0)))
+              (assert-equal '() head)
+              (assert-equal 'foo tail))))
+
+(define-test "(split-at) past end of list fails" (expect-error range-error?
+  (import (llambda list))
+  (split-at '(1 2 3) 4)))
+
+(define-test "(span)" (expect-success
+  (import (llambda list))
+  (import (llambda typed))
+
+  (let-values (((head tail) (span even? '(2 18 3 10 22 9))))
+              (cond-expand (immutable-pairs
+                             (ann head (Listof <exact-integer>))
+                             (ann tail (Listof <exact-integer>))))
+
+              (assert-equal '(2 18) head)
+              (assert-equal '(3 10 22 9) tail))
+
+  (let-values (((head tail) (span symbol? '(2 18 3 10 22 9))))
+              (assert-equal '() head)
+              (assert-equal '(2 18 3 10 22 9) tail))
+
+  (let-values (((head tail) (span even? '())))
+              (assert-equal '() head)
+              (assert-equal '() tail))))
+
+(define-test "(break)" (expect-success
+  (import (llambda list))
+  (import (llambda typed))
+
+  (let-values (((head tail) (break even? '(3 1 4 1 5 9))))
+              (cond-expand (immutable-pairs
+                             (ann head (Listof <exact-integer>))
+                             (ann tail (Listof <exact-integer>))))
+
+              (assert-equal '(3 1) head)
+              (assert-equal '(4 1 5 9) tail))
+
+  (let-values (((head tail) (break symbol? '(3 1 4 1 5 9))))
+              (assert-equal '(3 1 4 1 5 9) head)
+              (assert-equal '() tail))
+
+  (let-values (((head tail) (break even? '())))
+              (assert-equal '() head)
+              (assert-equal '() tail))))
+
 (cond-expand
   ((not immutable-pairs)
    (define-test "(list-set!)" (expect (one two three)

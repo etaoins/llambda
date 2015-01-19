@@ -1,5 +1,7 @@
 #include <vector>
 
+#include <sstream>
+
 #include "binding/ListElementCell.h"
 #include "binding/ProperList.h"
 #include "binding/TypedProcedureCell.h"
@@ -9,6 +11,83 @@
 #include "core/error.h"
 
 using namespace lliby;
+
+namespace
+{
+	struct SplitResult
+	{
+		ProperList<AnyCell> *head;
+		AnyCell *tail;
+	};
+
+	SplitResult splitList(World &world, const char *procName, AnyCell *obj, std::uint32_t count)
+	{
+		AnyCell *tail = obj;
+		alloc::StrongRefVector<AnyCell> headElements(world);
+
+		while(count--)
+		{
+			auto pairTail = cell_cast<PairCell>(tail);
+
+			if (pairTail == nullptr)
+			{
+				std::ostringstream message;
+				message << procName << " on list of insufficient length";
+
+				signalError(world, ErrorCategory::Range, message.str());
+			}
+
+			headElements.push_back(pairTail->car());
+			tail = cell_unchecked_cast<AnyCell>(pairTail->cdr());
+		}
+
+		// Root our tail while we allocate the head list
+		alloc::StrongRoot<AnyCell> tailRoot(world, &tail);
+
+		// Build the head list
+		ProperList<AnyCell> *head = ProperList<AnyCell>::create(world, headElements);
+
+		return {head, tail};
+	}
+
+	struct SpanResult
+	{
+		ProperList<AnyCell> *head;
+		ProperList<AnyCell> *tail;
+	};
+
+	template<typename T>
+	SpanResult spanList(World &world, const char *procName, ProperList<AnyCell> *list, T predicate)
+	{
+		alloc::StrongRef<ProperList<AnyCell>> tail(world, list);
+		alloc::StrongRefVector<AnyCell> headElements(world);
+
+		while(true)
+		{
+			auto pairTail = cell_cast<PairCell>(tail);
+
+			if (pairTail == nullptr)
+			{
+				// Ran out of list
+				break;
+			}
+
+			if (!predicate(pairTail->car()))
+			{
+				// Predicate failed
+				break;
+			}
+
+			headElements.push_back(pairTail->car());
+			tail = cell_unchecked_cast<ProperList<AnyCell>>(pairTail->cdr());
+		}
+
+		// Build the head list
+		ProperList<AnyCell> *head = ProperList<AnyCell>::create(world, headElements);
+
+		return {head, tail};
+	}
+}
 
 extern "C"
 {
@@ -133,6 +212,59 @@ ProperList<AnyCell>* lllist_list_tabulate(World &world, std::uint32_t count, Tab
 	}
 
 	return ProperList<AnyCell>::create(world, resultVec);
+}
+
+ProperList<AnyCell>* lllist_take(World &world, AnyCell *obj, std::uint32_t count)
+{
+	return splitList(world, "(take)", obj, count).head;
+}
+
+AnyCell *lllist_drop(World &world, AnyCell *obj, std::uint32_t count)
+{
+	// Avoid splitList because it will allocate the head list which we don't use
+	AnyCell *tail = obj;
+
+	while(count--)
+	{
+		auto pairTail = cell_cast<PairCell>(tail);
+
+		if (pairTail == nullptr)
+		{
+			signalError(world, ErrorCategory::Range, "(drop) on list of insufficient length");
+		}
+
+		tail = cell_unchecked_cast<AnyCell>(pairTail->cdr());
+	}
+
+	return tail;
+}
+
+ReturnValues<AnyCell>* lllist_split_at(World &world, AnyCell *obj, std::uint32_t count)
+{
+	SplitResult result = splitList(world, "(split-at)", obj, count);
+	return ReturnValues<AnyCell>::create(world, {result.head, result.tail});
+}
+
+ReturnValues<ProperList<AnyCell>>* lllist_span(World &world, PredicateProc *predicateProcRaw, ProperList<AnyCell> *list)
+{
+	alloc::StrongRef<PredicateProc> predicateProc(world, predicateProcRaw);
+
+	SpanResult result = spanList(world, "(span)", list, [&] (AnyCell *datum) {
+		return predicateProc->apply(world, datum);
+	});
+
+	return ReturnValues<ProperList<AnyCell>>::create(world, {result.head, result.tail});
+}
+
+ReturnValues<ProperList<AnyCell>>* lllist_break(World &world, PredicateProc *predicateProcRaw, ProperList<AnyCell> *list)
+{
+	alloc::StrongRef<PredicateProc> predicateProc(world, predicateProcRaw);
+
+	SpanResult result = spanList(world, "(break)", list, [&] (AnyCell *datum) {
+		return !predicateProc->apply(world, datum);
+	});
+
+	return ReturnValues<ProperList<AnyCell>>::create(world, {result.head, result.tail});
 }
 
 }

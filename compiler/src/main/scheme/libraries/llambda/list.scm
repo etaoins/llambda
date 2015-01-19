@@ -3,7 +3,8 @@
   (import (llambda typed))
   (import (llambda nfi))
 
-  (export cons* xcons list-tabulate fold reduce zip filter remove find find-tail partition take-while drop-while)
+  (export cons* xcons list-tabulate fold reduce zip filter remove find find-tail partition take drop split-at
+          take-while drop-while span break)
 
   ; WeakListof is only a strong type if pair are immutable
   ; This is used avoid producing type checking causing tail recursive procedures to have extremely poor performance
@@ -83,6 +84,10 @@
                      (find-tail pred? (cdr lis))
                      #f))
 
+    (define drop (world-function lllist "lllist_drop" (-> <any> <native-uint32> <any>)))
+    (define take (world-function lllist "lllist_take" (-> <any> <native-uint32> <any>)))
+    (define split-at (world-function lllist "lllist_split_at" (-> <any> <native-uint32> (Values (WeakListof <any>) <any>))))
+
     (: take-while (All (A) (-> A <boolean>) (WeakListof A) (WeakListof A)))
     (define (take-while pred? lis)
       (cond-map-head pred? lis value
@@ -93,4 +98,7 @@
     (define (drop-while pred? lis)
       (cond-map-head pred? lis value
                      (drop-while pred? (cdr lis))
-                     lis))))
+                     lis))
+
+    (define span (world-function lllist "lllist_span" (All (A) (-> <any> <boolean>) (WeakListof A) (Values (WeakListof A) (WeakListof A)))))
+    (define break (world-function lllist "lllist_break" (All (A) (-> <any> <boolean>) (WeakListof A) (Values (WeakListof A) (WeakListof A)))))))
