@@ -325,6 +325,10 @@
                 (else 'ignore))
               (partition evil-predicate input-list)))))))
 
+(define-test "(partition) with improper list fails" (expect-error type-error?
+  (import (llambda list))
+  (partition symbol? '(one 2 3 four five . 6))))
+
 (define-test "(zip)" (expect-success
   (import (llambda list))
 
@@ -423,6 +427,10 @@
               (assert-equal '() head)
               (assert-equal '() tail))))
 
+(define-test "(span) with improper list fails" (expect-error type-error?
+  (import (llambda list))
+  (span even? '(2 18 3 10 22 . 9))))
+
 (define-test "(break)" (expect-success
   (import (llambda list))
   (import (llambda typed))
@@ -442,6 +450,10 @@
   (let-values (((head tail) (break even? '())))
               (assert-equal '() head)
               (assert-equal '() tail))))
+
+(define-test "(break) with improper list fails" (expect-error type-error?
+  (import (llambda list))
+  (break even? '(2 18 3 10 22 . 9))))
 
 (cond-expand
   ((not immutable-pairs)

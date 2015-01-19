@@ -274,6 +274,11 @@
 
   (assert-equal '(c 3 b 2 a 1) (fold cons* '() '(a b c) '(1 2 3 4 5)))))
 
+(define-test "(fold) with improper list fails" (expect-error type-error?
+  (import (llambda list))
+
+  (fold + 0 '(1 2 3 . 4))))
+
 (define-test "(reduce)" (expect-success
   (import (llambda list))
   (import (llambda typed))
@@ -282,3 +287,8 @@
   (assert-equal 44 (ann (reduce max #f '(44)) (U #f <number>)))
   (assert-equal 192 (ann (reduce max #f '(44 -123 57 192)) (U #f <number>)))
   (assert-equal -123 (ann (reduce min #f '(44 -123 57 192)) (U #f <number>)))))
+
+(define-test "(reduce) with improper list fails" (expect-error type-error?
+  (import (llambda list))
+
+  (reduce max #f '(44 -123 57 . 192))))

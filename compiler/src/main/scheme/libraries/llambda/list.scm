@@ -27,10 +27,10 @@
     (define (xcons d a)
       (cons a d))
 
-    (define list-tabulate (world-function lllist "lllist_list_tabulate" (All (A) <native-uint32> (-> <exact-integer> A) (WeakListof A))))
+    (define list-tabulate (world-function lllist "lllist_list_tabulate" (All (A) <native-uint32> (-> <exact-integer> A) (Listof A))))
 
-    (define partition (world-function lllist "lllist_partition" (All (A) (-> <any> <boolean>) (WeakListof A) (Values (WeakListof A) (WeakListof A)))))
-    (define fold (world-function lllist "lllist_fold" (All (A) (-> <any> <any> <any> * A) A (WeakListof <any>) (WeakListof <any>) * A)))
+    (define partition (world-function lllist "lllist_partition" (All (A) (-> <any> <boolean>) (Listof A) (Values (Listof A) (Listof A)))))
+    (define fold (world-function lllist "lllist_fold" (All (A) (-> <any> <any> <any> * A) A (Listof <any>) (Listof <any>) * A)))
 
     (: reduce (All (A B) (-> A A A) B (WeakListof A) (U A B)))
     (define (reduce proc identity lis)
@@ -86,7 +86,7 @@
 
     (define drop (world-function lllist "lllist_drop" (-> <any> <native-uint32> <any>)))
     (define take (world-function lllist "lllist_take" (-> <any> <native-uint32> <any>)))
-    (define split-at (world-function lllist "lllist_split_at" (-> <any> <native-uint32> (Values (WeakListof <any>) <any>))))
+    (define split-at (world-function lllist "lllist_split_at" (-> <any> <native-uint32> (Values (Listof <any>) <any>))))
 
     (: take-while (All (A) (-> A <boolean>) (WeakListof A) (WeakListof A)))
     (define (take-while pred? lis)
@@ -100,5 +100,5 @@
                      (drop-while pred? (cdr lis))
                      lis))
 
-    (define span (world-function lllist "lllist_span" (All (A) (-> <any> <boolean>) (WeakListof A) (Values (WeakListof A) (WeakListof A)))))
-    (define break (world-function lllist "lllist_break" (All (A) (-> <any> <boolean>) (WeakListof A) (Values (WeakListof A) (WeakListof A)))))))
+    (define span (world-function lllist "lllist_span" (All (A) (-> <any> <boolean>) (Listof A) (Values (Listof A) (Listof A)))))
+    (define break (world-function lllist "lllist_break" (All (A) (-> <any> <boolean>) (Listof A) (Values (Listof A) (Listof A)))))))
