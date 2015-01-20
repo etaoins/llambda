@@ -22,7 +22,7 @@ class SchemeParserSuite extends FunSuite with Inside {
   def assertParsesAsSymbol(string : String, identifier : String) {
     assertReflexiveParse(string, List(ast.Symbol(identifier)))
   }
-  
+
   def assertParsesAsSymbol(string : String) {
     assertParsesAsSymbol(string, string)
   }
@@ -36,11 +36,11 @@ class SchemeParserSuite extends FunSuite with Inside {
     assertReflexiveParse(shorthand + " (1 . 2)",
       ast.ProperList(List(ast.Symbol(symbolName), ast.Pair(ast.IntegerLiteral(1), ast.IntegerLiteral(2)))) :: Nil
     )
-    
+
     assertReflexiveParse(shorthand + "(real? 1.0)",
       ast.ProperList(List(ast.Symbol(symbolName), ast.ProperList(List(ast.Symbol("real?"), ast.FlonumLiteral(1.0))))) :: Nil
     )
-    
+
     assertReflexiveParse(shorthand + shorthand + "#true",
       ast.ProperList(List(ast.Symbol(symbolName),
         ast.ProperList(List(ast.Symbol(symbolName),
@@ -49,7 +49,7 @@ class SchemeParserSuite extends FunSuite with Inside {
       )) :: Nil
     )
   }
-  
+
   test("empty list") {
     assertReflexiveParse("()", List(ast.EmptyList()))
   }
@@ -57,7 +57,7 @@ class SchemeParserSuite extends FunSuite with Inside {
   test("booleans") {
     assertReflexiveParse("#t", List(ast.BooleanLiteral(true)))
     assertReflexiveParse("#true", List(ast.BooleanLiteral(true)))
-    
+
     assertReflexiveParse("#f", List(ast.BooleanLiteral(false)))
     assertReflexiveParse("#false", List(ast.BooleanLiteral(false)))
   }
@@ -74,7 +74,7 @@ class SchemeParserSuite extends FunSuite with Inside {
       scm"""."""
     }
   }
-  
+
   test("symbols are case sensitive") {
     assert(scm"HELLO" != scm"hello")
   }
@@ -97,9 +97,9 @@ class SchemeParserSuite extends FunSuite with Inside {
     assertReflexiveParse("000", List(ast.IntegerLiteral(0)))
     assertReflexiveParse("10000", List(ast.IntegerLiteral(10000)))
     assertReflexiveParse("-10000", List(ast.IntegerLiteral(-10000)))
-    
+
     assertReflexiveParse("3.", List(ast.IntegerLiteral(3)))
-    
+
     assertReflexiveParse("#b111", List(ast.IntegerLiteral(7)))
     assertReflexiveParse("#B-1000", List(ast.IntegerLiteral(-8)))
 
@@ -111,7 +111,7 @@ class SchemeParserSuite extends FunSuite with Inside {
 
     assertReflexiveParse("#Xdead", List(ast.IntegerLiteral(57005)))
     assertReflexiveParse("#x-b00b5", List(ast.IntegerLiteral(-721077)))
-    
+
     // This is too large to be parsed as a 32bit integer or a double
     assertReflexiveParse("9007199254740993", List(ast.IntegerLiteral(9007199254740993L)))
   }
@@ -129,7 +129,7 @@ class SchemeParserSuite extends FunSuite with Inside {
 
     assertReflexiveParse("+inf.0", List(ast.PositiveInfinityLiteral()))
     assertReflexiveParse("-inf.0", List(ast.NegativeInfinityLiteral()))
-    
+
     assertReflexiveParse("+INF.0", List(ast.PositiveInfinityLiteral()))
     assertReflexiveParse("-INF.0", List(ast.NegativeInfinityLiteral()))
 
@@ -169,14 +169,14 @@ newline""", "Bare\nnewline")
   test("proper lists") {
     assert(scm"(#true integer? |Hello| -1 2.0)" === List(
       ast.ProperList(List(
-        ast.BooleanLiteral(true), 
-        ast.Symbol("integer?"), 
+        ast.BooleanLiteral(true),
+        ast.Symbol("integer?"),
         ast.Symbol("Hello"),
         ast.IntegerLiteral(-1),
         ast.FlonumLiteral(2.0)
       ))
     ))
-    
+
     intercept[ParseErrorException] {
       scm"""open (list"""
     }
@@ -207,18 +207,18 @@ newline""", "Bare\nnewline")
       scm"""(one two three .)"""
     }
   }
-  
+
   test("square proper lists") {
     assert(scm"[#true integer? |Hello| -1 2.0]" === List(
       ast.ProperList(List(
-        ast.BooleanLiteral(true), 
-        ast.Symbol("integer?"), 
+        ast.BooleanLiteral(true),
+        ast.Symbol("integer?"),
         ast.Symbol("Hello"),
         ast.IntegerLiteral(-1),
         ast.FlonumLiteral(2.0)
       ))
     ))
-    
+
     intercept[ParseErrorException] {
       scm"""open (list"""
     }
@@ -233,7 +233,7 @@ newline""", "Bare\nnewline")
           ast.Pair(ast.FlonumLiteral(2.0), ast.PositiveInfinityLiteral()
     )))))
   }
-  
+
   test("no expressions") {
     assert(scm"" === Nil)
   }
@@ -248,15 +248,15 @@ newline""", "Bare\nnewline")
   test("quoted datums") {
     testSymbolShorthand("'", "quote")
   }
-  
+
   test("quasiquoted datums") {
     testSymbolShorthand("`", "quasiquote")
   }
-  
+
   test("unquoted datums") {
     testSymbolShorthand(",", "unquote")
   }
-  
+
   test("splicing unquoted datums") {
     testSymbolShorthand(",@", "unquote-splicing")
   }
@@ -264,7 +264,7 @@ newline""", "Bare\nnewline")
   test("vectors") {
     assertReflexiveParse("#(0 (2 2 2 2) Anna)", List(
       ast.VectorLiteral(Vector(
-        ast.IntegerLiteral(0), 
+        ast.IntegerLiteral(0),
         ast.ProperList(List(
           ast.IntegerLiteral(2),
           ast.IntegerLiteral(2),
@@ -274,7 +274,7 @@ newline""", "Bare\nnewline")
         ast.Symbol("Anna")
       ))
     ))
-    
+
     assertReflexiveParse("#()", List(ast.VectorLiteral(Vector())))
 
     intercept[ParseErrorException] {
@@ -294,7 +294,7 @@ newline""", "Bare\nnewline")
     }
   }
 
-  test("characters") { 
+  test("characters") {
     assertReflexiveParse(raw"#\alarm", List(ast.CharLiteral(0x07)))
     assertReflexiveParse(raw"#\backspace", List(ast.CharLiteral(0x08)))
     assertReflexiveParse(raw"#\delete", List(ast.CharLiteral(0x7f)))
