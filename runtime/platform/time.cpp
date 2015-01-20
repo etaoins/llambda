@@ -53,8 +53,15 @@ double taiEpochSeconds()
 	{
 		fetch_realtime(&ts);
 
-		// The offset from UTC to TAI in 2014-11 is +35 seconds
-		ts.tv_sec += 35;
+		if (ts.tv_sec > 1435708799)
+		{
+			// Leap second introduced on 2015-06-30
+			ts.tv_sec += 36;
+		}
+		else
+		{
+			ts.tv_sec += 35;
+		}
 	}
 
 	return static_cast<double>(ts.tv_sec) + (static_cast<double>(ts.tv_nsec) / NanosInSecond);
