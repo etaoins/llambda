@@ -43,14 +43,14 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   private val IntralineWhitespaceChar = CharPredicate(" \t\r")
   private val NewlineChar = CharPredicate("\n")
   private val WhitespaceChar = IntralineWhitespaceChar ++ NewlineChar
-  
+
   // Whitespace handling
   def Whitespace : Rule0 = rule {
     zeroOrMore(WhitespaceChar | LineComment | DatumComment | BlockComment)
   }
 
   def LineComment = rule {
-    ';' ~ zeroOrMore(noneOf("\n")) 
+    ';' ~ zeroOrMore(noneOf("\n"))
   }
 
   def DatumComment = rule {
@@ -73,19 +73,19 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   }
 
   def Data = rule {
-    Whitespace ~ zeroOrMore(Datum) ~ EOI 
+    Whitespace ~ zeroOrMore(Datum) ~ EOI
   }
 
   // Split data based on its initial character to speed up parsing
   def Datum : Rule1[ast.Datum] = rule {
     fetchLocation ~ run {
       (cursorChar : @switch) match {
-        case '#' => 
+        case '#' =>
           OctoDatum
 
         case '(' =>
           ListDatum
-        
+
         case '[' =>
           SquareListDatum
 
@@ -102,10 +102,10 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
 
         case '\'' =>
           QuotedDatum
-        
+
         case '`' =>
           QuasiquotedDatum
-        
+
         case ',' =>
           UnquotedSplicingDatum | UnquotedDatum
 
@@ -171,13 +171,13 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   def ProperList = rule {
     "(" ~ zeroOrMore(Datum) ~ ")" ~> (ast.ProperList(_))
   }
-  
+
   def ImproperList = rule {
     "(" ~ zeroOrMore(Datum) ~ "." ~ Datum ~ ")" ~> ({ (head, terminator) =>
       ast.AnyList(head, terminator)
     })
   }
-  
+
   def SquareListDatum = rule {
     SquareProperList | SquareImproperList
   }
@@ -185,7 +185,7 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   def SquareProperList = rule {
     "[" ~ zeroOrMore(Datum) ~ "]" ~> (ast.ProperList(_))
   }
-  
+
   def SquareImproperList = rule {
     "[" ~ zeroOrMore(Datum) ~ "." ~ Datum ~ "]" ~> ({ (head, terminator) =>
       ast.AnyList(head, terminator)
@@ -206,19 +206,19 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
       ast.FlonumLiteral(number.toDouble)
     })
   }
-  
+
   def FractionDatum = rule {
     (PositiveFraction | NegativeFraction) ~> (ast.FlonumLiteral(_))
   }
 
   def PositiveFraction = rule {
-    optional('+') ~ UnsignedFraction 
+    optional('+') ~ UnsignedFraction
   }
 
   def NegativeFraction = rule {
     '-' ~ UnsignedFraction ~> (-_)
   }
-  
+
   def UnsignedFraction = rule {
     capture(oneOrMore(Digit)) ~ "/" ~ capture(oneOrMore(Digit)) ~> (_.toDouble / _.toDouble)
   }
@@ -236,7 +236,7 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   }
 
   def IntegerDatum = rule {
-    UnradixedExactInteger ~> (ast.IntegerLiteral(_)) 
+    UnradixedExactInteger ~> (ast.IntegerLiteral(_))
   }
 
   def UnradixedExactInteger = rule {
@@ -254,7 +254,6 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
     RadixedExactInteger ~> (ast.IntegerLiteral(_))
   }
 
-
   def RadixedExactInteger = rule {
     BinaryInteger | OctalInteger | HexInteger
   }
@@ -264,7 +263,7 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
       java.lang.Long.parseLong(number, 2)
     })
   }
-  
+
   def OctalInteger = rule {
     ignoreCase("#o") ~ capture(optional(SignCharacter) ~ oneOrMore(OctalDigit)) ~> ({ number =>
       java.lang.Long.parseLong(number, 8)
@@ -301,8 +300,8 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   def BooleanTrue =  rule {
     ("#true" | "#t")  ~ push(ast.BooleanLiteral(true))
   }
-  
-  def BooleanFalse = 
+
+  def BooleanFalse =
     rule { ("#false" | "#f") ~ push(ast.BooleanLiteral(false)) }
 
   // All backslash escaped chars
@@ -343,7 +342,7 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   def EnclosedSymbolChar = rule {
     ('\\' ~ EscapedChar) | (noneOf("|") ~ appendSB())
   }
-  
+
   // Strings
   def StringDatum = rule {
     '"' ~ clearSB() ~ zeroOrMore(StringChar) ~ '"' ~ Whitespace ~ push(ast.StringLiteral(sb.toString))
@@ -352,7 +351,7 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   def StringChar = rule {
     ('\\' ~ EscapedChar) | (noneOf("\"") ~ appendSB())
   }
-  
+
   // Bytevectors
   def BytevectorDatum = rule {
     "#u8(" ~ zeroOrMore(Byte) ~ ")" ~> ({ elements =>
@@ -418,7 +417,7 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
 
 object SchemeParser {
   def parseFileAsData(input : File) : List[ast.Datum] = {
-    val filename = input.getAbsolutePath 
+    val filename = input.getAbsolutePath
     val inputString = Source.fromFile(input, "UTF-8").mkString
 
     parseStringAsData(inputString, Some(filename))
