@@ -98,6 +98,15 @@ object CompilerApp extends App {
       c.copy(runAsScript=true)
     } text ("run program immediately after compilation and delete the result")
 
+    checkConfig { c =>
+      if (c.runAsScript && c.emitLlvm) {
+        failure("Cannot run program as script while emitting LLVM assembler")
+      }
+      else {
+        success
+      }
+    }
+
     help("help")
   }
 
