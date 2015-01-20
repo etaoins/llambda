@@ -522,6 +522,24 @@ class ExtractLambdaSuite extends FunSuite with Inside with testutil.ExprHelpers 
     }
   }
 
+  test("typed rest arg lambda shorthand with type constructor") {
+    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
+
+    val expr = exprFor("(define (return-false rest : (Listof <string>) *) #f)")(scope)
+    val procLoc = scope.get("return-false").value
+
+    inside(expr) {
+      case et.TopLevelDefine(List(et.SingleBinding(storageLoc, et.Lambda(polyType, Nil, Some(restArg), _, _)))) if procLoc == storageLoc =>
+        assert(polyType === vt.ProcedureType(
+          fixedArgTypes=Nil,
+          restArgMemberTypeOpt=Some(vt.UniformProperListType(vt.StringType)),
+          returnType=vt.ReturnType.ArbitraryValues
+        ).toPolymorphic)
+
+        assert(restArg.schemeType === vt.UniformProperListType(vt.UniformProperListType(vt.StringType)))
+    }
+  }
+
   test("(define-report-procedure) lambda shorthand") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 

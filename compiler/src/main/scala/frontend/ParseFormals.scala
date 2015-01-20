@@ -19,7 +19,7 @@ object ParseFormals {
         // This looks for a terminal rest arg in the form: name : <type> *
         case (
             sst.ScopedSymbol(_, "*") ::
-            (restArgType : sst.ScopedSymbol) ::
+            (restArgType : sst.ScopedDatum) ::
             sst.ResolvedSymbol(Primitives.AnnotateStorageLocType) ::
             (restArgName : sst.ScopedSymbol) ::
             reverseFixedArgs
