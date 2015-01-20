@@ -24,6 +24,16 @@ extern "C"
 {
 
 
+void llerror_raise_file_error(World &world, StringCell *message, RestValues<AnyCell> *irritants)
+{
+	throw dynamic::SchemeException(ErrorObjectCell::createInstance(world, message, irritants, ErrorCategory::File));
+}
+
+void llerror_raise_read_error(World &world, StringCell *message, RestValues<AnyCell> *irritants)
+{
+	throw dynamic::SchemeException(ErrorObjectCell::createInstance(world, message, irritants, ErrorCategory::Read));
+}
+
 bool llerror_is_type_error(AnyCell *obj)
 {
 	return isErrorObjectOfCategory(obj, ErrorCategory::Type);

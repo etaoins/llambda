@@ -7,6 +7,8 @@
   (export type-error? arity-error? range-error? utf8-error? divide-by-zero-error? mutate-literal-error? undefined-variable-error? out-of-memory-error? invalid-argument-error? integer-overflow-error? implementation-restriction-error? raise-type-error raise-arity-error raise-range-error raise-utf8-error raise-divide-by-zero-error raise-mutate-literal-error raise-undefined-variable-error raise-out-of-memory-error raise-invalid-argument-error raise-integer-overflow-error raise-implementation-restriction-error)
   (begin
     (define-native-library llerror (static-library "ll_llambda_error"))
+    (define raise-file-error (world-function llerror "llerror_raise_file_error" (-> <string> <any> * <unit>) noreturn))
+    (define raise-read-error (world-function llerror "llerror_raise_read_error" (-> <string> <any> * <unit>) noreturn))
     (define type-error? (native-function llerror "llerror_is_type_error" (-> <any> <native-bool>)))
     (define raise-type-error (world-function llerror "llerror_raise_type_error" (-> <string> <any> * <unit>) noreturn))
     (define arity-error? (native-function llerror "llerror_is_arity_error" (-> <any> <native-bool>)))

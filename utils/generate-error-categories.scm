@@ -11,8 +11,10 @@
   ([enum-name : <string>] error-category-enum-name)
   ([r7rs : <boolean>] error-category-r7rs?))
 
+(define default-error-category (error-category "default-error" "default_error" "Default" #t))
+
 (define unindexed-categories (list
-  (error-category "default-error" "default_error" "Default" #t)
+  default-error-category
   (error-category "file-error" "file_error" "File" #t)
   (error-category "read-error" "read_error" "Read" #t)
   (error-category "type-error" "type_error" "Type" #f)
@@ -197,20 +199,22 @@
   (newline)
 
   (for-each (lambda (cat)
-    (define pred-symbol (string->symbol (error-category-pred-name cat)))
-    (define pred-func-name (error-category-pred-function cat))
+    (unless (error-category-r7rs? cat)
+      (define pred-symbol (string->symbol (error-category-pred-name cat)))
+      (define pred-func-name (error-category-pred-function cat))
 
-    (define raise-symbol (string->symbol (error-category-raise-name cat)))
-    (define raise-func-name (error-category-raise-function cat))
+      (display "    ")
+      (write `(define ,pred-symbol ,`(native-function llerror ,pred-func-name (-> <any> <native-bool>))))
+      (display "\n"))
 
-    (display "    ")
-    (write `(define ,pred-symbol ,`(native-function llerror ,pred-func-name (-> <any> <native-bool>))))
-    (display "\n")
+    (unless (equal? default-error-category cat)
+      (define raise-symbol (string->symbol (error-category-raise-name cat)))
+      (define raise-func-name (error-category-raise-function cat))
 
-    (display "    ")
-    (write `(define ,raise-symbol ,`(world-function llerror ,raise-func-name (-> <string> <any> * <unit>) noreturn)))
-    (display "\n")
-  ) (remove error-category-r7rs? unindexed-categories))
+      (display "    ")
+      (write `(define ,raise-symbol ,`(world-function llerror ,raise-func-name (-> <string> <any> * <unit>) noreturn)))
+      (display "\n"))
+  ) unindexed-categories)
 
   (display "))\n"))
 
@@ -247,38 +251,43 @@
   (newline)
 
   (for-each (lambda (cat)
-    (define pred-func-name (error-category-pred-function cat))
-    (define raise-func-name (error-category-raise-function cat))
     (define enum-name (error-category-enum-name cat))
 
-    (newline)
-    (display "bool ")
-    (display pred-func-name)
-    (display "(AnyCell *obj)\n")
+    (unless (error-category-r7rs? cat)
+      (define pred-func-name (error-category-pred-function cat))
 
-    (display "{\n")
+      (newline)
+      (display "bool ")
+      (display pred-func-name)
+      (display "(AnyCell *obj)\n")
 
-    (display "\treturn isErrorObjectOfCategory(obj, ErrorCategory::")
-    (display enum-name)
-    (display ");\n")
+      (display "{\n")
 
-    (display "}\n")
+      (display "\treturn isErrorObjectOfCategory(obj, ErrorCategory::")
+      (display enum-name)
+      (display ");\n")
 
-    (newline)
-    (display "void ")
-    (display raise-func-name)
-    (display "(World &world, StringCell *message, RestValues<AnyCell> *irritants)\n")
+      (display "}\n"))
 
-    (display "{\n")
+    (unless (equal? default-error-category cat)
+      (define raise-func-name (error-category-raise-function cat))
 
-    (display "\tthrow dynamic::SchemeException(")
-    (display "ErrorObjectCell::createInstance(world, message, irritants, ErrorCategory::")
-    (display enum-name)
-    (display "));\n")
+      (newline)
+      (display "void ")
+      (display raise-func-name)
+      (display "(World &world, StringCell *message, RestValues<AnyCell> *irritants)\n")
 
-    (display "}\n")
+      (display "{\n")
 
-  ) (remove error-category-r7rs? unindexed-categories))
+      (display "\tthrow dynamic::SchemeException(")
+      (display "ErrorObjectCell::createInstance(world, message, irritants, ErrorCategory::")
+      (display enum-name)
+      (display "));\n")
+
+      (display "}\n"))
+
+
+  ) unindexed-categories)
 
   (newline)
   (display "}\n"))
