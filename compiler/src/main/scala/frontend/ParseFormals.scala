@@ -53,7 +53,7 @@ object ParseFormals {
         scopedSymbol -> None
 
       case datum =>
-        val message = s"Unrecognized argument definition. Must be either identiifer or [identifier : <type>]."
+        val message = s"Unrecognized argument definition. Must be either identifier or [identifier : <type>]."
         throw new BadSpecialFormException(datum, message)
     }
 

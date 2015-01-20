@@ -116,10 +116,10 @@ class IrFunctionSuite extends FunSuite {
         callingConv=CallingConv.FastCC
       ).toIr === "declare fastcc void @funcname()")
   }
-  
-  test("escaped identiifer decl") {
+
+  test("escaped identifier decl") {
     assert(IrFunctionDecl(
-        result=IrFunction.Result(VoidType, Set()), 
+        result=IrFunction.Result(VoidType, Set()),
         name="Function Name",
         arguments=Nil
       ).toIr === "declare void @\"Function Name\"()")

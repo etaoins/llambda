@@ -23,7 +23,7 @@ object ExtractTypeVar extends (sst.ScopedDatum => (sst.ScopedSymbol, pm.TypeVar)
       (argName -> new pm.TypeVar(argName.name))
 
     case other =>
-      val message = s"Unrecognized type variable definition. Must be either identiifer or [identifier : <upper-bound>]."
+      val message = s"Unrecognized type variable definition. Must be either identifier or [identifier : <upper-bound>]."
       throw new BadSpecialFormException(other, message)
   }
 }
