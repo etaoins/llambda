@@ -198,17 +198,39 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   }
 
   def RealDatum = rule {
-    FlonumDatum | FractionDatum | PositiveInfinity | NegativeInfinity | NaNDatum
+    (Rational | ExponentiatedInteger | PositiveInfinity | NegativeInfinity | NaN) ~> (ast.FlonumLiteral(_))
   }
 
-  def FlonumDatum = rule {
-    capture(optional(SignCharacter) ~ zeroOrMore(Digit) ~ optional('.') ~ oneOrMore(Digit)) ~> ({ number =>
-      ast.FlonumLiteral(number.toDouble)
+  def Rational = rule {
+    Flonum | Fraction
+  }
+
+  def Flonum = rule {
+    capture(optional(SignCharacter) ~ zeroOrMore(Digit) ~ optional('.') ~ oneOrMore(Digit)) ~ optional(Exponent) ~> ({ (number, exponentOpt) =>
+      exponentOpt match {
+        case Some(exponent) =>
+          number.toDouble * Math.pow(10, exponent)
+
+        case _ =>
+          number.toDouble
+      }
     })
   }
 
-  def FractionDatum = rule {
-    (PositiveFraction | NegativeFraction) ~> (ast.FlonumLiteral(_))
+  def ExponentiatedInteger = rule {
+    UnradixedExactInteger ~ Exponent ~> { (number, exponent) =>
+      number * Math.pow(10, exponent)
+    }
+  }
+
+  def Exponent = rule {
+    "e" ~ capture(optional(SignCharacter) ~ oneOrMore(Digit)) ~> ({ number =>
+      java.lang.Long.parseLong(number)
+    })
+  }
+
+  def Fraction = rule {
+    PositiveFraction | NegativeFraction
   }
 
   def PositiveFraction = rule {
@@ -224,15 +246,15 @@ class SchemeParser(sourceString : String, filenameOpt : Option[String]) extends 
   }
 
   def PositiveInfinity = rule {
-    ignoreCase("+inf.0") ~ push(ast.FlonumLiteral(Double.PositiveInfinity))
+    ignoreCase("+inf.0") ~ push(Double.PositiveInfinity)
   }
 
   def NegativeInfinity = rule {
-    ignoreCase("-inf.0") ~ push(ast.FlonumLiteral(Double.NegativeInfinity))
+    ignoreCase("-inf.0") ~ push(Double.NegativeInfinity)
   }
 
-  def NaNDatum = rule {
-    SignCharacter ~ ignoreCase("nan.0") ~ push(ast.FlonumLiteral(Double.NaN))
+  def NaN = rule {
+    SignCharacter ~ ignoreCase("nan.0") ~ push(Double.NaN)
   }
 
   def IntegerDatum = rule {

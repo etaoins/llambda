@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <cmath>
 #include <ctype.h>
 
 #include "binding/ExactIntegerCell.h"
@@ -130,6 +131,54 @@ namespace
 				accum.push_back(nextChar);
 			}
 		}
+	}
+
+	/**
+	 * Takes an exponent suffix from a number or returns NaN if a suffix cannot be parsed
+	 */
+	double takeExponent(std::streambuf *rdbuf)
+	{
+		if (rdbuf->sgetc() != 'e')
+		{
+			return NAN;
+		}
+
+		rdbuf->sbumpc();
+
+		char signChar = 0;
+
+		switch(rdbuf->sgetc())
+		{
+		case '-':
+		case '+':
+			signChar = rdbuf->sbumpc();
+			break;
+
+		default:
+			break;
+		}
+
+		std::string numberString(takeDecimal(rdbuf));
+
+		if (numberString.empty())
+		{
+			if (!signChar)
+			{
+				rdbuf->sputbackc(signChar);
+			}
+
+			rdbuf->sputbackc('e');
+			return NAN;
+		}
+
+		std::int64_t intValue = std::stoll(numberString, nullptr);
+
+		if (signChar == '-')
+		{
+			intValue *= -1;
+		}
+
+		return intValue;
 	}
 }
 
@@ -670,9 +719,7 @@ AnyCell* DatumReader::parseUnradixedNumber(int radix, bool negative)
 			numberString.push_back(rdbuf()->sbumpc());
 
 			const auto previousSize = numberString.size();
-			takeWhile(rdbuf(), numberString, [=] (char c) {
-				return (c >= '0') && (c <= ('9'));
-			});
+			takeDecimal(rdbuf(), numberString);
 
 			if (numberString.size() == 1)
 			{
@@ -692,17 +739,20 @@ AnyCell* DatumReader::parseUnradixedNumber(int radix, bool negative)
 					doubleValue = -doubleValue;
 				}
 
+				double exponentValue = takeExponent(rdbuf());
+
+				if (!std::isnan(exponentValue))
+				{
+					doubleValue *= std::pow(10, exponentValue);
+				}
+
 				return FlonumCell::fromValue(m_world, doubleValue);
 			}
 		}
 		else if (peekChar == '/')
 		{
 			rdbuf()->sbumpc();
-			std::string denomString;
-
-			takeWhile(rdbuf(), denomString, [=] (char c) {
-				return (c >= '0') && (c <= '9');
-			});
+			std::string denomString(takeDecimal(rdbuf()));
 
 			if (!denomString.empty())
 			{
@@ -729,6 +779,18 @@ AnyCell* DatumReader::parseUnradixedNumber(int radix, bool negative)
 	if (negative)
 	{
 		intValue = -intValue;
+	}
+
+	if (radix == 10)
+	{
+		double exponentValue = takeExponent(rdbuf());
+
+		if (!std::isnan(exponentValue))
+		{
+			// We have an exponent - we're inexact
+			double doubleValue = intValue * std::pow(10, exponentValue);
+			return FlonumCell::fromValue(m_world, doubleValue);
+		}
 	}
 
 	return ExactIntegerCell::fromValue(m_world, intValue);
@@ -900,10 +962,7 @@ AnyCell* DatumReader::parseBytevector()
 AnyCell* DatumReader::parseDatumLabel(char firstDigit)
 {
 	std::string labelString({firstDigit});
-
-	takeWhile(rdbuf(), labelString, [=] (char c) {
-		return (c >= '0') && (c <= '9');
-	});
+	takeDecimal(rdbuf(), labelString);
 
 	const long long labelNumber = std::stoll(labelString, nullptr, 10);
 

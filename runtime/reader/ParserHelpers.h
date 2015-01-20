@@ -70,6 +70,23 @@ namespace
 	}
 
 	/**
+	 * Takes a decimal number from the stream
+	 */
+	void takeDecimal(std::streambuf *rdbuf, std::string &accum)
+	{
+		takeWhile(rdbuf, accum, [=] (char c) {
+			return (c >= '0') && (c <= '9');
+		});
+	}
+
+	std::string takeDecimal(std::streambuf *rdbuf)
+	{
+		std::string result;
+		takeDecimal(rdbuf, result);
+		return result;
+	}
+
+	/**
 	 * Attempts to consume a given literal string from the stream
 	 *
 	 * @param  rdbuf            Stream buffer to read from

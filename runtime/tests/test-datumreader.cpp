@@ -180,6 +180,15 @@ void testReals(World &world)
 	ASSERT_PARSES("+20/50", FlonumCell::fromValue(world, 0.4));
 	ASSERT_PARSES("-20/2", FlonumCell::fromValue(world, -10.0));
 
+	ASSERT_PARSES("5e-1", FlonumCell::fromValue(world, 0.5));
+	ASSERT_PARSES("5e+1", FlonumCell::fromValue(world, 50.0));
+	ASSERT_PARSES("2.5e5", FlonumCell::fromValue(world, 250000.0));
+	ASSERT_PARSES(".5e0", FlonumCell::fromValue(world, 0.5));
+	ASSERT_PARSES("-5e6", FlonumCell::fromValue(world, -5000000.0));
+
+	ASSERT_PARSES("10eat", ExactIntegerCell::fromValue(world, 10));
+	ASSERT_PARSES("10+eat", ExactIntegerCell::fromValue(world, 10));
+
 	ASSERT_PARSES("+inf.0", FlonumCell::positiveInfinity(world));
 	ASSERT_PARSES("-inf.0", FlonumCell::negativeInfinity(world));
 
