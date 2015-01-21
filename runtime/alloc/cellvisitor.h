@@ -155,18 +155,31 @@ visitEntry:
 template<typename T>
 void visitCellRootList(const CellRootList &cellRootList, T visitor)
 {
-	for(auto node = cellRootList.head();
-		node != nullptr;
-		node = node->next)
+	for(auto node = cellRootList.head(); node != nullptr; node = node->next())
 	{
-		// Visit each cell in this range
-		for(size_t i = 0; i < node->cellCount; i++)
+		if (node->isInternal())
 		{
-			auto cellRef = reinterpret_cast<AnyCell**>(&node->basePointer[i]);
+			auto intNode = static_cast<InternalRootListNode*>(node);
 
-			if (*cellRef != nullptr)
+			// Visit the embedded pointer
+			if (intNode->cell() != nullptr)
 			{
-				visitCell(cellRef, visitor);
+				visitCell(intNode->cellRef(), visitor);
+			}
+		}
+		else
+		{
+			auto externNode = static_cast<ExternalRootListNode*>(node);
+
+			// Visit each cell in this range
+			for(size_t i = 0; i < externNode->cellCount(); i++)
+			{
+				auto cellRef = reinterpret_cast<AnyCell**>(&externNode->basePointer()[i]);
+
+				if (*cellRef != nullptr)
+				{
+					visitCell(cellRef, visitor);
+				}
 			}
 		}
 	}

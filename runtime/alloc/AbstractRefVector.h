@@ -91,14 +91,14 @@ public:
 	}
 
 	AbstractRefVector(const AbstractRefVector<T> &other) :
-		AbstractRoot<T>(AbstractRoot<T>::m_rootList, nullptr, 0),
+		AbstractRoot<T>(&(AbstractRefVector<T>::m_node), nullptr, 0),
 		m_vector(other.m_vector)
 	{
 		updateRootListNode();
 	}
 
 	AbstractRefVector(AbstractRefVector<T> &&other) :
-		AbstractRoot<T>(AbstractRoot<T>::m_rootList, nullptr, 0),
+		AbstractRoot<T>(&(AbstractRefVector<T>::m_node), nullptr, 0),
 		m_vector(std::move(other.m_vector))
 	{
 		updateRootListNode();
@@ -106,7 +106,7 @@ public:
 
 protected:
 	template<typename... Arguments>
-	explicit AbstractRefVector(CellRootList *rootList, Arguments... parameters) :
+	explicit AbstractRefVector(const CellRootIterable *rootList, Arguments... parameters) :
 		AbstractRoot<T>(rootList, nullptr, 0),
 		m_vector(parameters...)
 	{
@@ -116,8 +116,8 @@ protected:
 private:
 	void updateRootListNode()
 	{
-		AbstractRoot<T>::m_node.basePointer = reinterpret_cast<AllocCell**>(m_vector.data());
-		AbstractRoot<T>::m_node.cellCount = m_vector.size();
+		auto newPointer = reinterpret_cast<AllocCell**>(m_vector.data());
+		AbstractRoot<T>::m_node.setData(newPointer, m_vector.size());
 	}
 
 	std::vector<T*> m_vector;

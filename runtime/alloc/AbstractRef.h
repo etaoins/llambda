@@ -37,13 +37,10 @@ protected:
 	 * @param cellRef    Reference to the cell or cell array
 	 * @param cellCount  Number of cells in the cell array
 	 */
-	AbstractRoot(CellRootList *rootList, T** cellRef, size_t cellCount = 1) :
-		m_rootList(rootList)
+	AbstractRoot(const CellRootIterable *rootList, T** cellRef, size_t cellCount = 1)
 	{
-		m_node.basePointer = reinterpret_cast<AllocCell**>(cellRef);
-		m_node.cellCount = cellCount;
-
-		m_rootList->addNode(m_node);
+		m_node.setData(reinterpret_cast<AllocCell**>(cellRef), cellCount);
+		m_node.insertAfter(rootList);
 	}
 
 	AbstractRoot(const AbstractRoot &) = delete;
@@ -53,45 +50,44 @@ protected:
 	 */
 	~AbstractRoot()
 	{
-		m_rootList->removeNode(m_node);
+		m_node.remove();
 	}
 
-	CellRootList *m_rootList;
-	CellRootListNode m_node;
+	ExternalRootListNode m_node;
 };
 
 /**
  * Abstract reference to a single GC managed value
  */
 template<class T>
-class AbstractRef : public AbstractRoot<T>
+class AbstractRef
 {
 public:
-	operator T*() const
-	{
-		return m_cell;
-	}
-	
 	T* data() const
 	{
-		return m_cell;
+		return static_cast<T*>(m_node.cell());
+	}
+
+	operator T*() const
+	{
+		return data();
 	}
 
 	void setData(T* newCell)
 	{
-		m_cell = newCell;
+		m_node.setCell(newCell);
 	}
 
 	T* operator->() const
 	{
-		return m_cell;
+		return data();
 	}
 
 	bool isNull() const
 	{
-		return m_cell == nullptr;
+		return data() == nullptr;
 	}
-	
+
 	bool operator!() const
 	{
 		return isNull();
@@ -103,23 +99,28 @@ public:
 	}
 
 protected:
-	AbstractRef(CellRootList *rootList) : AbstractRef(rootList, nullptr)
+	AbstractRef(const CellRootIterable *rootList, T* cell)
 	{
+		m_node.setCell(cell);
+		m_node.insertAfter(rootList);
 	}
 
-	AbstractRef(CellRootList *rootList, T* cell) :
-		AbstractRoot<T>(rootList, &m_cell, 1),
-		m_cell(cell)
+	AbstractRef(const CellRootIterable *rootList) : AbstractRef(rootList, nullptr)
 	{
 	}
 
 	AbstractRef(const AbstractRef &other) :
-		AbstractRef(other.m_rootList, other.data())
+		AbstractRef(&other.m_node, other.data())
 	{
 	}
 
+	~AbstractRef()
+	{
+		m_node.remove();
+	}
+
 private:
-	T *m_cell;
+	InternalRootListNode m_node;
 };
 
 }

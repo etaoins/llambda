@@ -9,78 +9,60 @@ namespace alloc
 
 namespace
 {
-	void relocateNodePtr(CellRootListNode *&node, std::ptrdiff_t offset)
+	template<class T>
+	void relocatePtr(T *&ptr, std::ptrdiff_t offset)
 	{
-		if (node != nullptr)
+		if (ptr != nullptr)
 		{
 			// Cast to char* so we do byte-based pointer arithmetic
-			node = reinterpret_cast<CellRootListNode*>(reinterpret_cast<char*>(node) + offset);
+			ptr = reinterpret_cast<T*>(reinterpret_cast<char*>(ptr) + offset);
 		}
 	}
 }
 
-void CellRootList::addNode(CellRootListNode &node)
+void CellRootIterable::relocate(std::ptrdiff_t offset, void *oldStackStart, void *oldStackEnd)
 {
-#ifndef NDEBUG
-	// Ensure this hasn't already been rooted
-	for(auto existingNode = head(); existingNode != nullptr; existingNode = existingNode->next)
-	{
-		void *newStart = node.basePointer;
-		void *newEnd = node.basePointer + node.cellCount;
-
-		void *existingStart = existingNode->basePointer;
-		void *existingEnd = existingNode->basePointer + existingNode->cellCount;
-
-		if (((newStart >= existingStart) && (newStart < existingEnd)) ||
-			((newEnd > existingStart) && (newEnd <= existingEnd)))
-		{
-			assert(false);
-		}
-	}
-#endif
-
-	// Add to the active list
-	node.prev = nullptr;
-	node.next = m_head;
-
-	if (m_head)
-	{
-		m_head->prev = &node;
-	}
-
-	m_head = &node;
+	relocatePtr(m_next, offset);
 }
 
-void CellRootList::removeNode(CellRootListNode &node)
+void CellRootListNode::relocate(std::ptrdiff_t offset, void *oldStackStart, void *oldStackEnd)
 {
-	if (node.prev != nullptr)
-	{
-		node.prev->next = node.next;
-	}
-	else
-	{
-		// We have no previous element; we must be the head
-		m_head = node.next;
-	}
+	CellRootIterable::relocate(offset, oldStackStart, oldStackEnd);
 
-	if (node.next != nullptr)
+	relocatePtr(m_prev, offset);
+}
+
+void ExternalRootListNode::relocate(std::ptrdiff_t offset, void *oldStackStart, void *oldStackEnd)
+{
+	CellRootListNode::relocate(offset, oldStackStart, oldStackEnd);
+
+	if ((m_basePointer >= oldStackStart) && (m_basePointer < oldStackEnd))
 	{
-		node.next->prev = node.prev;
+		relocatePtr(m_basePointer, offset);
 	}
+}
+
+void InternalRootListNode::relocate(std::ptrdiff_t offset, void *oldStackStart, void *oldStackEnd)
+{
+	// We don't need any special handling
+	CellRootListNode::relocate(offset, oldStackStart, oldStackEnd);
 }
 
 void CellRootList::relocate(std::ptrdiff_t offset, void *oldStackStart, void *oldStackEnd)
 {
-	relocateNodePtr(m_head, offset);
+	CellRootIterable::relocate(offset, oldStackStart, oldStackEnd);
 
-	for(auto node = head(); node != nullptr; node = node->next)
+	for(auto node = head(); node != nullptr; node = node->next())
 	{
-		relocateNodePtr(node->prev, offset);
-		relocateNodePtr(node->next, offset);
-
-		if ((node->basePointer >= oldStackStart) && (node->basePointer < oldStackEnd))
+		// This could be a virtual function but that would bloat every node with a vtable pointer
+		// Use simple conditional dispatch instead
+		if (node->isInternal())
 		{
-			node->basePointer = reinterpret_cast<AllocCell**>(reinterpret_cast<char*>(node->basePointer) + offset);
+			static_cast<InternalRootListNode*>(node)->relocate(offset, oldStackStart, oldStackEnd);
+		}
+		else
+		{
+			static_cast<ExternalRootListNode*>(node)->relocate(offset, oldStackStart, oldStackEnd);
 		}
 	}
 }
