@@ -75,6 +75,31 @@
 		  #f)
 	))))
 
+(define-test "(call/cc) R7RS examples" (expect-success
+  (assert-equal -3
+                (call-with-current-continuation
+                  (lambda (exit)
+                    (for-each (lambda (x)
+                                (if (negative? x)
+                                  (exit x)))
+                              '(54 0 37 -3 245 19))
+                    #t)))
+
+  (define list-length
+    (lambda (obj)
+      (call-with-current-continuation
+        (lambda (return)
+          (letrec ((r
+                     (lambda (obj)
+                       (cond ((null? obj) 0)
+                             ((pair? obj)
+                              (+ (r (cdr obj)) 1))
+                             (else (return #f))))))
+            (r obj))))))
+
+  (assert-equal 4 (list-length '(1 2 3 4)))
+  (assert-equal #f (list-length '(a b . c)))))
+
 (define-test "(define) doesn't accept multiple values" (expect-error arity-error?
   (define x (values 1 2 3))))
 
