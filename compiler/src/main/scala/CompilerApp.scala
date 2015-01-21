@@ -200,8 +200,7 @@ object CompilerApp extends App {
 
       case None =>
         // Launch the REPL
-        val repl = new Repl(targetPlatform, config.schemeDialect)
-        repl()
+        (new repl.JlineRepl(targetPlatform, config.schemeDialect))()
     }
   }  getOrElse {
     sys.exit(1)

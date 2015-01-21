@@ -12,7 +12,7 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.1" % "test"
 
 libraryDependencies += "com.github.scopt" %% "scopt" % "3.3.0"
 
-libraryDependencies += "jline" % "jline" % "2.11"
+libraryDependencies += "jline" % "jline" % "2.12"
 
 libraryDependencies += "org.parboiled" %% "parboiled" % "2.0.1"
 
