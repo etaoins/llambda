@@ -11,8 +11,10 @@ object FeatureIdentifiers {
   val compilerVersionIdentifier = "llambda-0.0"
 
   private def commonFeatures = Set(
-    // We only support exact integers so don't define this
-    // "exact-closed",
+    // From R7RS errata: "The algebraic operations +, -, *, and expt where the second argument is a non-negative
+    // integer) all produce exact values given exact inputs". This is true because we will either calculate the result
+    // as an integer or raise an integer overflow
+    "exact-closed",
 
     // We don't support any complex numbers
     // "exact-complex"

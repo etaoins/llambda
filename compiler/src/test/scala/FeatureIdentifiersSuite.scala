@@ -7,6 +7,7 @@ class FeatureIdentifiersSuite  extends FunSuite {
   test("posix64be/llambda features") {
     val expectedFeatures = Set(
       "immutable-pairs",
+      "exact-closed",
       "ieee-float",
       "full-unicode",
       "posix",
@@ -16,10 +17,11 @@ class FeatureIdentifiersSuite  extends FunSuite {
 
     assert(expectedFeatures subsetOf FeatureIdentifiers(platform.Posix64BE, dialect.Llambda))
   }
-  
+
   test("posix43le/r7rs features") {
     val expectedFeatures = Set(
       "r7rs",
+      "exact-closed",
       "ieee-float",
       "full-unicode",
       "posix",
@@ -29,10 +31,11 @@ class FeatureIdentifiersSuite  extends FunSuite {
 
     assert(expectedFeatures subsetOf FeatureIdentifiers(platform.Posix32LE, dialect.R7RS))
   }
-  
+
   test("win64/llambda features") {
     val expectedFeatures = Set(
       "immutable-pairs",
+      "exact-closed",
       "ieee-float",
       "full-unicode",
       "windows",
@@ -42,10 +45,11 @@ class FeatureIdentifiersSuite  extends FunSuite {
 
     assert(expectedFeatures subsetOf FeatureIdentifiers(platform.Win64, dialect.Llambda))
   }
-  
+
   test("posix64le/llambda features with extras") {
     val expectedFeatures = Set(
       "immutable-pairs",
+      "exact-closed",
       "ieee-float",
       "full-unicode",
       "posix",
