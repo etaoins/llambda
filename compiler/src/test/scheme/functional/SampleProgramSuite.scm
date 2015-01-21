@@ -1,3 +1,18 @@
+; Taken from R7RS
+(define-test "R7RS factorial" (expect 479001600
+  #|
+  The FACT procedure computes the factorial
+  of a non-negative integer.
+  |#
+  (define fact
+    (lambda (n)
+      (if (= n 0)
+        #;(= n 1)
+        1 ;Base case: return 1
+        (* n (fact (- n 1))))))
+
+  (fact 12)))
+
 ; Taken from http://rosettacode.org/wiki/Sieve_of_Eratosthenes#Scheme
 (define-test "simple sieve of Eratosthenes" (expect (2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97)
   (import (scheme inexact))
