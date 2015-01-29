@@ -18,8 +18,7 @@ The [numbers documentation](numbers.md) describes the subset of the R7RS numeric
 R7RS Optional Library Support
 -----------------------------
 
-R7RS defines a number of additional libraries that implementations may implement. Llambda implements the majority of them with the exception of ``(scheme complex)`` and libraries related to runtime evaluation.
-
+R7RS defines a number of additional libraries that implementations may provide. Llambda implements the majority of them with the exception of ``(scheme complex)`` and libraries related to runtime evaluation.
 
 | Library Name                 | Description                                         | Support
 |------------------------------|-----------------------------------------------------|--------

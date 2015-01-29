@@ -33,14 +33,14 @@ Llambda extends this error system with a number of additional error categories. 
 
 | Error Category                       | Signalling Condition
 |--------------------------------------|---------------------
-| ``type-error``                       | Runtime type check failed
 | ``arity-error``                      | Procedure called with an incompatible number of arguments
-| ``range-error``                      | Collection was indexed outside the bounds of the collection
-| ``utf8-error``                       | Invalid UTF-8 encoding was encountered
 | ``divide-by-zero-error``             | Integer division by zero was attempted. See the [numbers documentation](numbers.md) for more information.
-| ``mutate-literal-error``             | Attempted mutation of a constant string, pair, vector or bytevector
-| ``undefined-variable-error``         | Recursive variable referenced before its definition
-| ``out-of-memory-error``              | Process memory exhausted. This is only raised in certain situations; memory exhaustion is usually fatal.
-| ``integer-overflow-error``           | Integer overflow encountered during arithmetic. See the [numbers documentation](numbers.md) for more information.
 | ``implementation-restriction-error`` | Llambda-specific limitation was encountered in an otherwise valid program
+| ``integer-overflow-error``           | Integer overflow encountered during arithmetic. See the [numbers documentation](numbers.md) for more information.
 | ``invalid-argument-error``           | Invalid argument supplied to a procedure where a more specific error was not applicable
+| ``mutate-literal-error``             | Attempted mutation of a constant string, pair, vector or bytevector
+| ``out-of-memory-error``              | Process memory exhausted. This is only raised in certain situations; memory exhaustion is usually fatal.
+| ``range-error``                      | Collection was indexed outside the bounds of the collection
+| ``type-error``                       | Runtime type check failed
+| ``undefined-variable-error``         | Recursive variable referenced before its definition
+| ``utf8-error``                       | Invalid UTF-8 encoding was encountered

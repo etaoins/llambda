@@ -15,21 +15,21 @@ The core types are provided by the compiler. By convention all type names are en
 |---------------------|------------
 | ``<any>``           | Any Scheme type. This is the top type which contains all other types
 | ``<boolean>``       | ``#t`` or ``#f``. The literal ``#t`` or ``#f`` can also be used as type names to represent a specific boolean value.
-| ``<pair>``          | Standard Scheme pair
+| ``<bytevector>``    | Scheme bytevector
+| ``<char>``          | Scheme character. All valid Unicode characters are supported
 | ``<empty-list>``    | The empty list value. This is also known as "null" in some Lisp languages
-| ``<list-element>``  | Union of ``<pair>`` and ``<empty-list>``
-| ``<string>``        | Scheme string
-| ``<symbol>``        | Scheme symbol. Specific symbols can be used as by quoting them, for example ``'one`` is the type of the "one" symbol
+| ``<eof-object>``    | End-of-file object returned by ``(read)`` procedure
 | ``<exact-integer>`` | 64-bit signed integer. This is used to represent lengths and indices as well as being suitable for direct arithmetic
 | ``<flonum>``        | 64-bit IEEE floating point value
+| ``<list-element>``  | Union of ``<pair>`` and ``<empty-list>``
 | ``<number>``        | Union of ``<exact-integer>`` and ``<flonum>``
-| ``<char>``          | Scheme character. All valid Unicode characters are supported
-| ``<vector>``        | Scheme vector
-| ``<bytevector>``    | Scheme bytevector
-| ``<procedure>``     | General procedure type. More specific procedure types are available through the ``->`` type constructor
+| ``<pair>``          | Standard Scheme pair
 | ``<port>``          | Scheme port
-| ``<eof-object>``    | End-of-file object returned by ``(read)`` procedure
+| ``<procedure>``     | General procedure type. More specific procedure types are available through the ``->`` type constructor
+| ``<string>``        | Scheme string
+| ``<symbol>``        | Scheme symbol. Specific symbols can be used as by quoting them, for example ``'one`` is the type of the "one" symbol
 | ``<unit>``          | Unit type, also known as ``void`` in some languages. This is used by procedures not returning a value
+| ``<vector>``        | Scheme vector
 
 More information on the numeric types can be found in the [numbers documentation](numbers.md).
 
@@ -52,12 +52,12 @@ Procedure Type Constructor
 --------------------------
 The procedure type constructor is ``->``. It defines which values a procedure takes and which values it returns. The non-terminal arguments to the type constructor are the types of the arguments the procedure takes and the final argument is the value it returns.
 
-For example, a procedure taking an integer and a <string and returning a character has the following type
+For example, a procedure taking an integer and a string and returning a character has the following type
 ```racket
 (-> <exact-integer> <string> <char>)
 ```
 
-If a procedure takes a rest argument list a ``*`` can be suffixed after the final argument. For example, a prodcure taking zero or more floating point numbers and returning a boolean has the following type
+If a procedure takes a rest argument list a ``*`` can be suffixed after the final argument. For example, a procedure taking zero or more floating point numbers and returning a boolean has the following type
 ```racket
 (-> <flonum> * <exact-integer>)
 ```
