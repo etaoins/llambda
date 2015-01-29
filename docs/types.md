@@ -62,6 +62,8 @@ If a procedure takes a rest argument list a ``*`` can be suffixed after the fina
 (-> <flonum> * <exact-integer>)
 ```
 
+Scheme procedures can return multiple values using the ``(values)`` procedure. To indicate a procedure returns a specific number values the ``(Values)`` type constructor can be used with the types of the values returned. Alternatively, the special ``*`` type can be used to indicate the procedure returns an arbitrary number of values with unknown types.
+
 Annotating Values
 -----------------
 There are two ways to annotate values. The way most familiar to developers from other languages would be explicitly passing the type to ``(define)``. For example, to define ``b`` to have the value ``15`` and the type ``<number>`` we would use the following form
