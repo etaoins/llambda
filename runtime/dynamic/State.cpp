@@ -40,25 +40,25 @@ namespace
 		return std::vector<DynamicStateCell*>();
 	}
 }
-	
-State::State(ThunkProcedureCell *before, ThunkProcedureCell *after, DynamicStateCell *parentCell) : 
-	mBefore(before),
-	mAfter(after),
-	mParentCell(parentCell)
+
+State::State(ThunkProcedureCell *before, ThunkProcedureCell *after, DynamicStateCell *parentCell) :
+	m_before(before),
+	m_after(after),
+	m_parentCell(parentCell)
 {
 }
-	
+
 AnyCell* State::valueForParameter(ParameterProcedureCell *param) const
 {
-	ParameterValueMap::const_iterator valueIt = mSelfValues.find(param);
+	ParameterValueMap::const_iterator valueIt = m_selfValues.find(param);
 
-	if (valueIt != mSelfValues.end())
+	if (valueIt != m_selfValues.end())
 	{
 		return valueIt->second;
 	}
-	else if (mParentCell)
+	else if (m_parentCell)
 	{
-		return mParentCell->state()->valueForParameter(param);
+		return m_parentCell->state()->valueForParameter(param);
 	}
 	else
 	{
@@ -78,7 +78,7 @@ void State::setValueForParameter(World &world, ParameterProcedureCell *param, An
 		value = converterProc->apply(world, value);
 	}
 
-	mSelfValues[param] = value;
+	m_selfValues[param] = value;
 }
 
 State* State::activeState(World &world)
@@ -91,15 +91,15 @@ void State::pushActiveState(World &world, ThunkProcedureCell *before, ThunkProce
 	alloc::StrongRef<ThunkProcedureCell> beforeRef(world, before);
 	alloc::StrongRef<ThunkProcedureCell> afterRef(world, after);
 
-	// Invoke the before procedure 
+	// Invoke the before procedure
 	if (beforeRef)
 	{
 		beforeRef->apply(world);
 	}
-	
+
 	// Allocate the dynamic state cell
 	DynamicStateCell *pushedDynamicStateCell = DynamicStateCell::createInstance(world, nullptr);
-	
+
 	// Create a state and associated it with the dynamic state cell
 	auto pushedState = new State(beforeRef, afterRef, world.activeStateCell);
 	pushedDynamicStateCell->setState(pushedState);
@@ -120,7 +120,7 @@ void State::popActiveState(World &world)
 		oldActiveState->afterProcedure()->apply(world);
 	}
 }
-	
+
 void State::popAllStates(World &world)
 {
 	while(world.activeStateCell->state()->parentCell() != nullptr)
@@ -128,7 +128,7 @@ void State::popAllStates(World &world)
 		popActiveState(world);
 	}
 }
-	
+
 void State::switchStateCell(World &world, DynamicStateCell *targetStateCell)
 {
 	alloc::DynamicStateRef targetStateRef(world, targetStateCell);
@@ -147,7 +147,7 @@ void State::switchStateCell(World &world, DynamicStateCell *targetStateCell)
 			return;
 		}
 
-		// Is the target state a descendant of our current state? 
+		// Is the target state a descendant of our current state?
 		std::vector<DynamicStateCell*> pathToTargetState = pathToAncestorState(targetStateRef, world.activeStateCell);
 
 		if (!pathToTargetState.empty())
@@ -162,7 +162,7 @@ void State::switchStateCell(World &world, DynamicStateCell *targetStateCell)
 					(*it)->state()->beforeProcedure()->apply(world);
 				}
 
-				world.activeStateCell = *it; 
+				world.activeStateCell = *it;
 			}
 
 			// We're done

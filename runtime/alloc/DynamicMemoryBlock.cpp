@@ -6,33 +6,33 @@ namespace lliby
 {
 namespace alloc
 {
-	
+
 DynamicMemoryBlock::DynamicMemoryBlock(size_t size) :
 	MemoryBlock(),
-	mSize(size)
+	m_size(size)
 {
-	mStartPointer = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+	m_startPointer = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
 
-	if (mStartPointer == MAP_FAILED)
+	if (m_startPointer == MAP_FAILED)
 	{
-		mStartPointer = nullptr;
+		m_startPointer = nullptr;
 	}
 }
 
 DynamicMemoryBlock::~DynamicMemoryBlock()
 {
-	if (mStartPointer != nullptr)
+	if (m_startPointer != nullptr)
 	{
 #ifndef _LLIBY_NO_ADDR_REUSE
 		// Free the old semispace
-		munmap(mStartPointer, mSize);
+		munmap(m_startPointer, m_size);
 #else
 		// Mark the old semispace as unreadable but keep the address space allocated
-		mprotect(mStartPointer, mSize, PROT_NONE);
+		mprotect(m_startPointer, m_size, PROT_NONE);
 #endif
 	}
 }
-	
+
 void DynamicMemoryBlock::init()
 {
 #if !defined(NDEBUG) && defined(__APPLE__)

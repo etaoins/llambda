@@ -14,19 +14,19 @@ namespace alloc
 
 void Finalizer::finalizeHeapAsync(MemoryBlock *rootSegment)
 {
-	std::call_once(mWorkerStartFlag, [=]() {
+	std::call_once(m_workerStartFlag, [=]() {
 		// Start the worker thread
-		mWorkerThread = std::thread(&Finalizer::workerThread, this);
+		m_workerThread = std::thread(&Finalizer::workerThread, this);
 	});
 
 	// Add to the work queue
 	{
-		std::lock_guard<std::mutex> guard(mWorkQueueMutex);
-		mWorkQueue.push(rootSegment);
+		std::lock_guard<std::mutex> guard(m_workQueueMutex);
+		m_workQueue.push(rootSegment);
 	}
 
 	// Notify
-	mWorkQueueCond.notify_one();
+	m_workQueueCond.notify_one();
 }
 
 void Finalizer::finalizeHeapSync(MemoryBlock *rootSegment)
@@ -45,7 +45,7 @@ void Finalizer::finalizeHeapSync(MemoryBlock *rootSegment)
 			// This value is no longer referenced
 			nextCell->finalize();
 		}
-		
+
 		nextCell++;
 	}
 
@@ -69,18 +69,18 @@ void Finalizer::workerThread()
 {
 	while(true)
 	{
-		std::unique_lock<std::mutex> lock(mWorkQueueMutex);
+		std::unique_lock<std::mutex> lock(m_workQueueMutex);
 
 		// Wait for work to do
-		mWorkQueueCond.wait(lock, [=]{return !mWorkQueue.empty();});
+		m_workQueueCond.wait(lock, [=]{return !m_workQueue.empty();});
 
 		// Get the entry
-		MemoryBlock *rootSegment = mWorkQueue.front();
-		mWorkQueue.pop();
+		MemoryBlock *rootSegment = m_workQueue.front();
+		m_workQueue.pop();
 
 		// Release the lock
 		lock.unlock();
-		
+
 		finalizeHeapSync(rootSegment);
 	}
 }

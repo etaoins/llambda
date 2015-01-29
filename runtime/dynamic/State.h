@@ -28,13 +28,13 @@ class State
 {
 public:
 	typedef std::unordered_map<ParameterProcedureCell*, AnyCell*> ParameterValueMap;
-	
+
 	/**
 	 * Creates a new state with a specified parent and before/after procedures
 	 *
-	 * @param  before      Procedure to invoke before activating this state or its children. nullptr will disable this 
+	 * @param  before      Procedure to invoke before activating this state or its children. nullptr will disable this
 	 *                     functionality.
-	 * @param  after       Procedure to invoke after deactivating this state or children. nullptr will disable this 
+	 * @param  after       Procedure to invoke after deactivating this state or children. nullptr will disable this
 	 *                     functionality.
 	 * @param  parentCell  Cell pointer to the parent state or nullptr if this is a root state.
 	 */
@@ -46,7 +46,7 @@ public:
 	 * This will recurse up this state's ancestors. If no value is found the parameter's initial value will be returned.
 	 */
 	AnyCell *valueForParameter(ParameterProcedureCell *param) const;
-	
+
 	/**
 	 * Sets the value for the passed parameter
 	 *
@@ -59,7 +59,7 @@ public:
 	 */
 	DynamicStateCell *parentCell() const
 	{
-		return mParentCell;
+		return m_parentCell;
 	}
 
 	/**
@@ -67,14 +67,14 @@ public:
 	 */
 	State *parent() const
 	{
-		if (mParentCell != nullptr)
+		if (m_parentCell != nullptr)
 		{
-			return mParentCell->state();
+			return m_parentCell->state();
 		}
 
 		return nullptr;
 	}
-	
+
 	/**
 	 * Returns a pointer to the parent cell
 	 *
@@ -82,7 +82,7 @@ public:
 	 */
 	DynamicStateCell** parentCellRef()
 	{
-		return &mParentCell;
+		return &m_parentCell;
 	}
 
 	/**
@@ -90,7 +90,7 @@ public:
 	 */
 	ThunkProcedureCell *beforeProcedure()
 	{
-		return mBefore;
+		return m_before;
 	}
 
 	/**
@@ -100,17 +100,17 @@ public:
 	 */
 	ThunkProcedureCell** beforeProcedureRef()
 	{
-		return &mBefore;
+		return &m_before;
 	}
-	
+
 	/**
 	 * Returns the procedure to invoke after deactivating this state or its children
 	 */
 	ThunkProcedureCell *afterProcedure()
 	{
-		return mAfter;
+		return m_after;
 	}
-	
+
 	/**
 	 * Returns a pointer to the after procedure cell
 	 *
@@ -118,7 +118,7 @@ public:
 	 */
 	ThunkProcedureCell** afterProcedureRef()
 	{
-		return &mAfter;
+		return &m_after;
 	}
 
 	/**
@@ -128,18 +128,18 @@ public:
 	 */
 	const ParameterValueMap& selfValues() const
 	{
-		return mSelfValues;
+		return m_selfValues;
 	}
 
 	/**
-	 * Sets the parameter values of this state 
+	 * Sets the parameter values of this state
 	 *
 	 * This is intended for use by the garbage collector
 	 */
 	void setSelfValues(const ParameterValueMap &newValues)
 	{
-		mSelfValues = newValues;
-	}	
+		m_selfValues = newValues;
+	}
 
 	/**
 	 * Returns the currently active state for this world
@@ -150,9 +150,9 @@ public:
 	 * Creates a child active of the currently active state and makes it active
 	 *
 	 * @param  world   World the state is being pushed in to
-	 * @param  before  Procedure to invoke before activating this state or its children. nullptr will disable this 
+	 * @param  before  Procedure to invoke before activating this state or its children. nullptr will disable this
 	 *                 functionality.
-	 * @param  after   Procedure to invoke after deactivating this state or children. nullptr will disable this 
+	 * @param  after   Procedure to invoke after deactivating this state or children. nullptr will disable this
 	 *                 functionality.
 	 *
 	 * This may re-enter Scheme and invoke the garbage collector if before is not null
@@ -161,7 +161,7 @@ public:
 
 	/**
 	 * Makes the parent of the currently active state active
-	 * 
+	 *
 	 * @param  world   World the state is being popped from
 	 *
 	 * This may re-enter Scheme and invoke the garbage collector
@@ -170,7 +170,7 @@ public:
 
 	/**
 	 * Pops all active states
-	 * 
+	 *
 	 * @param  world   World the states are being popped from
 	 *
 	 * This should be used when cleanly exiting from the world
@@ -185,10 +185,10 @@ public:
 	static void switchStateCell(World &world, DynamicStateCell *);
 
 private:
-	ThunkProcedureCell *mBefore;
-	ThunkProcedureCell *mAfter;
-	DynamicStateCell *mParentCell;
-	ParameterValueMap mSelfValues;
+	ThunkProcedureCell *m_before;
+	ThunkProcedureCell *m_after;
+	DynamicStateCell *m_parentCell;
+	ParameterValueMap m_selfValues;
 };
 
 }

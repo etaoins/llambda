@@ -22,12 +22,12 @@ public:
 private:
 	void workerThread();
 
-	std::thread mWorkerThread;
-	std::once_flag mWorkerStartFlag;
+	std::thread m_workerThread;
+	std::once_flag m_workerStartFlag;
 
-	std::mutex mWorkQueueMutex;
-	std::condition_variable mWorkQueueCond;
-	std::queue<MemoryBlock*> mWorkQueue;
+	std::mutex m_workQueueMutex;
+	std::condition_variable m_workQueueCond;
+	std::queue<MemoryBlock*> m_workQueue;
 };
 
 }

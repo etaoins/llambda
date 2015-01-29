@@ -13,22 +13,22 @@ class DynamicMemoryBlock : public MemoryBlock
 public:
 	DynamicMemoryBlock(size_t size);
 	~DynamicMemoryBlock();
-	
+
 	static void init();
 
 	void* startPointer() const
 	{
-		return mStartPointer;
+		return m_startPointer;
 	}
-	
+
 	size_t size() const
 	{
-		return mSize;
+		return m_size;
 	}
 
 private:
-	void *mStartPointer;
-	size_t mSize;
+	void *m_startPointer;
+	size_t m_size;
 };
 
 }
