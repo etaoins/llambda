@@ -113,6 +113,7 @@
 
 (define-test "(define-predicate) for uniform vectors" (expect-success
   (import (llambda typed))
+  (import (only (llambda internal primitives) Vectorof)) ; (Vectorof is internal)
 
   (define number-vector #(1 2 3.5))
   (define exact-int-vector #(1 2 3))
@@ -146,6 +147,7 @@
 
 (define-test "(define-predicate) for specific vectors" (expect-success
   (import (llambda typed))
+  (import (only (llambda internal primitives) Vector)) ; (Vector is internal)
 
   (define symbol-string-vector #(symbol "string"))
   (define symbol-string-string-vector #(symbol "string" "string"))
@@ -189,6 +191,7 @@
 
 (define-test "(define-predicate) for vector trees" (expect-success
   (import (llambda typed))
+  (import (only (llambda internal primitives) Vectorof)) ; (Vectorof is internal)
 
   (define symbol-vector-tree 
     #(one #(two three #(four)) #()))
