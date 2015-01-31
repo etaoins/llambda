@@ -36,7 +36,7 @@ EscapeProcedureCell* EscapeProcedureCell::createInstance(World &world, Continuat
 void EscapeProcedureCell::registerRecordClass()
 {
 	// Register our closure type so our garbage collector knows what to do
-	registeredClassId = RecordLikeCell::registerRuntimeRecordClass({}); 
+	registeredClassId = RecordLikeCell::registerRuntimeRecordClass(sizeof(Continuation), {});
 }
 
 bool EscapeProcedureCell::isInstance(const ProcedureCell *proc)

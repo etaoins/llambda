@@ -7,7 +7,7 @@
 
 extern "C"
 {
-	struct RecordClassOffsetMap;
+	struct RecordClassMap;
 }
 
 namespace lliby
@@ -35,18 +35,19 @@ public:
 		return &m_recordData;
 	}
 
-	const RecordClassOffsetMap* offsetMap() const;
+	const RecordClassMap* classMap() const;
 	RecordLikeDataStorage dataStorage() const;
-	
+
 	void finalizeRecordLike();
-	
+
 	/**
 	 * Registers a runtime-created record-like class
 	 *
-	 * @param  offsets  List of offsets of AnyCells inside the record-like data
+	 * @param  totalSize  Total size of the of the record-like
+	 * @param  offsets    List of offsets of AnyCells inside the record-like data
 	 * @return Unique class ID for the new record-like class
 	 */
-	static RecordClassIdType registerRuntimeRecordClass(const std::vector<size_t> &offsets);
+	static RecordClassIdType registerRuntimeRecordClass(size_t totalSize, const std::vector<size_t> &offsets);
 
 	void setRecordData(void *newData)
 	{

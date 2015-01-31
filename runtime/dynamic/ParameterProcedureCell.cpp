@@ -74,7 +74,7 @@ void ParameterProcedureCell::registerRecordClass()
 		offsetof(ParameterProcedureClosure, converter)
 	};
 
-	registeredClassId = RecordLikeCell::registerRuntimeRecordClass(offsets);  
+	registeredClassId = RecordLikeCell::registerRuntimeRecordClass(sizeof(ParameterProcedureClosure), offsets);
 }
 
 }

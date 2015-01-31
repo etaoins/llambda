@@ -204,7 +204,7 @@ object BuildRecordLikeTypes {
     val offsetIrType = IntegerType(32)
 
     // Output the type maps for each generated type
-    val typeMapVars = generatedTypes.values.toList.sortBy(_.classId).map { generatedType =>
+    val classMapEntries = generatedTypes.values.toList.sortBy(_.classId).map { generatedType =>
       val recordLikeType = generatedType.recordLikeType
       val recordCellNullPointer = NullPointerConstant(PointerType(generatedType.irType))
 
@@ -225,46 +225,31 @@ object BuildRecordLikeTypes {
         PtrToIntConstant(fieldPointer, offsetIrType)
       }
 
-      if (cellOffsets.isEmpty) {
-        // Nothing to do!
-        None
-      }
-      else {
-        val headerValue = IntegerConstant(offsetIrType, cellOffsets.length)
+      // Total size of the record. This is needed to implement cloning records with native values.
+      val recordSize = GenSizeOf(generatedType.irType, offsetIrType)
 
-        // Make it in to an IR constant
-        val cellOffsetsConstant = ArrayConstant(offsetIrType, headerValue :: cellOffsets)
+      val cellOffsetCount = IntegerConstant(offsetIrType, cellOffsets.length)
 
-        // Define it
-        val typeMapName = module.nameSource.allocate(recordLikeType.sourceName + "Map")
+      // Make it in to an IR constant
+      val cellOffsetsConstant = ArrayConstant(offsetIrType, recordSize :: cellOffsetCount :: cellOffsets)
 
-        // XXX: Clang 3.3 doesn't actually merge these constants. We should investigate doing merging of obviously
-        // identical maps ourselves
-        val typeMapDef = IrGlobalVariableDef(
-          name=typeMapName,
-          initializer=cellOffsetsConstant,
-          linkage=Linkage.Private,
-          unnamedAddr=true,
-          constant=true
-        )
+      // Define it
+      val typeMapName = module.nameSource.allocate(recordLikeType.sourceName + "Map")
 
-        module.defineGlobalVariable(typeMapDef)
-        Some(typeMapDef.variable)
-      }
-    } : List[Option[GlobalVariable]]
+      // XXX: Clang 3.3 doesn't actually merge these constants. We should investigate doing merging of obviously
+      // identical maps ourselves
+      val typeMapDef = IrGlobalVariableDef(
+        name=typeMapName,
+        initializer=cellOffsetsConstant,
+        linkage=Linkage.Private,
+        unnamedAddr=true,
+        constant=true
+      )
 
-    // Now output the class map
-    val classMapEntries = typeMapVars.map { variableOpt =>
-      variableOpt match {
-        case None =>
-          // There's no type map
-          NullPointerConstant(PointerType(offsetIrType))
+      module.defineGlobalVariable(typeMapDef)
 
-        case Some(variable) =>
-          // Convert the array type to a pointer type
-          ElementPointerConstant(offsetIrType, variable, List(0, 0))
-      }
-    }
+      ElementPointerConstant(offsetIrType, typeMapDef.variable, List(0, 0))
+    } : List[IrConstant]
 
     val classMapConstant = ArrayConstant(PointerType(offsetIrType), classMapEntries)
 
