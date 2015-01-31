@@ -5,8 +5,6 @@
 #include "alloc/ShadowStackEntry.h"
 #include "alloc/CellRootList.h"
 
-#include "core/World.h"
-
 namespace lliby
 {
 
