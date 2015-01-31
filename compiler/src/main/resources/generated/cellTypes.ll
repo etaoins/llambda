@@ -150,3 +150,9 @@
 %eofObject = type {%any}
 !85 = metadata !{metadata !"Any::typeId->EofObject", metadata !10}
 !86 = metadata !{metadata !"Any::gcState->EofObject", metadata !11}
+
+; {supertype, mailbox}
+%mailbox = type {%any, i8*}
+!90 = metadata !{metadata !"Any::typeId->Mailbox", metadata !10}
+!91 = metadata !{metadata !"Any::gcState->Mailbox", metadata !11}
+!92 = metadata !{metadata !"Mailbox::mailbox"}

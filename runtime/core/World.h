@@ -5,6 +5,8 @@
 #include "alloc/ShadowStackEntry.h"
 #include "alloc/CellRootList.h"
 
+#include <memory>
+
 namespace lliby
 {
 
@@ -18,6 +20,11 @@ namespace alloc
 class MemoryBlock;
 class AllocCell;
 class CellRootList;
+}
+
+namespace actor
+{
+class Mailbox;
 }
 
 class World
@@ -55,6 +62,32 @@ public:
 	// This is used as temporary storage space while a continuation resumes itself
 	// This is used as temporary storage space while a continuation resumes itself
 	volatile dynamic::Continuation *resumingContinuation;
+
+	/**
+	 * Returns the current mailbox for this world
+	 */
+	const std::shared_ptr<actor::Mailbox>& mailbox() const;
+
+	/**
+	 * Returns the mailbox for the last received message in the world
+	 */
+	const std::weak_ptr<actor::Mailbox>& sender()
+	{
+		return m_sender;
+	}
+
+	/**
+	 * Sets the mailbox of rthe last received message in the world
+	 */
+	void setSender(const std::weak_ptr<actor::Mailbox> &sender)
+	{
+		m_sender = sender;
+	}
+
+private:
+	// This is lazily initialised on first use
+	mutable std::shared_ptr<actor::Mailbox> m_mailbox;
+	std::weak_ptr<actor::Mailbox> m_sender;
 };
 
 }

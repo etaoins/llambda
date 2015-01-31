@@ -41,7 +41,7 @@ void initWorld(World &world)
 	// Nothing to do
 }
 
-void shutdownWorld(World &world)
+void shutdownWorld(World &world, bool lastWorld)
 {
 #ifdef _LLIBY_CHECK_LEAKS
 	// Do one last collection at shutdown
@@ -51,20 +51,24 @@ void shutdownWorld(World &world)
 		exit(-1);
 	}
 
-	if (SharedByteArray::instanceCount() != 0)
+	if (lastWorld)
 	{
-		std::cerr << "SharedByteArray instances leaked on exit!" << std::endl;
-		exit(-1);
-	}
-	
-	if (RecordLikeCell::recordDataInstanceCount() != 0)
-	{
-		std::cerr << "Record data instances leaked on exit!" << std::endl;
-		exit(-1);
+		// Make sure everything is properly freed
+		if (SharedByteArray::instanceCount() != 0)
+		{
+			std::cerr << "SharedByteArray instances leaked on exit!" << std::endl;
+			exit(-1);
+		}
+
+		if (RecordLikeCell::recordDataInstanceCount() != 0)
+		{
+			std::cerr << "Record data instances leaked on exit!" << std::endl;
+			exit(-1);
+		}
 	}
 #endif
 }
-    
+
 AllocCell *allocateCells(World &world, size_t count)
 {
 #ifndef _LLIBY_ALWAYS_GC

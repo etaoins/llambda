@@ -16,7 +16,7 @@ class RangeAlloc;
 void initGlobal();
 
 void initWorld(World &world);
-void shutdownWorld(World &world);
+void shutdownWorld(World &world, bool lastWorld);
 
 /**
  * Allocator for AnyCells

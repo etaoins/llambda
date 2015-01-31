@@ -5,6 +5,8 @@
 #include "alloc/CellRootList.h"
 #include "alloc/allocator.h"
 
+#include "actor/Mailbox.h"
+
 #include "binding/DynamicStateCell.h"
 
 #include "dynamic/State.h"
@@ -47,9 +49,20 @@ void World::launchWorld(void (*entryPoint)(World &))
 		dynamic::State::popAllStates(world);
 		fatalError("Unhandled exception", except.object());
 	}
-	
+
 	dynamic::State::popAllStates(world);
-	alloc::shutdownWorld(world);
+	alloc::shutdownWorld(world, true);
+}
+
+const std::shared_ptr<actor::Mailbox>& World::mailbox() const
+{
+	// Lazily initialise the mailbox
+	if (!m_mailbox)
+	{
+		m_mailbox.reset(new actor::Mailbox);
+	}
+
+	return m_mailbox;
 }
 
 }

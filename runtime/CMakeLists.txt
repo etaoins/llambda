@@ -5,6 +5,8 @@ cmake_minimum_required (VERSION 2.8)
 project (lliby)
 add_library(llcore
 	actor/ActorProcedureCell.cpp
+	actor/Mailbox.cpp
+	actor/Message.cpp
 	actor/cloneCell.cpp
 	alloc/CellRootList.cpp
 	alloc/DynamicMemoryBlock.cpp
@@ -18,6 +20,7 @@ add_library(llcore
 	binding/DynamicStateCell.cpp
 	binding/ErrorObjectCell.cpp
 	binding/ListElementCell.cpp
+	binding/MailboxCell.cpp
 	binding/NumberCell.cpp
 	binding/PairCell.cpp
 	binding/PortCell.cpp

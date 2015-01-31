@@ -87,5 +87,29 @@ AllocCell* Heap::addNewSegment(size_t reserveCount)
 	return m_currentSegmentStart;
 }
 
+void Heap::splice(Heap &other)
+{
+	if (other.m_rootSegment == nullptr)
+	{
+		// Empty heap; nothing to splice
+		return;
+	}
+
+	// Remember our old root segment
+	MemoryBlock *oldRoot = m_rootSegment;
+
+	// Steal the other heap's root
+	m_rootSegment = other.m_rootSegment;
+
+	if (oldRoot != nullptr)
+	{
+		// Point the last segment of the passed heap to the beginning of our heap
+		new (other.m_allocNext) SegmentTerminatorCell(oldRoot);
+	}
+
+	// Destroy the other heap for safety
+	other = Heap();
+}
+
 }
 }

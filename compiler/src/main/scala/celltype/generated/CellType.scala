@@ -54,7 +54,7 @@ sealed abstract class PreconstructedCellType extends ConcreteCellType
 sealed abstract class CellTypeVariant extends CastableValue
 
 object CellType {
-  val nextMetadataIndex = 90L
+  val nextMetadataIndex = 93L
 }
 
 sealed trait AnyFields {
@@ -123,7 +123,7 @@ object AnyCell extends CellType with AnyFields {
   val llvmName = "any"
   val irType = UserDefinedType("any")
   val schemeName = "<any>"
-  val directSubtypes = Set[CellType](UnitCell, ListElementCell, StringCell, SymbolCell, BooleanCell, NumberCell, CharCell, VectorCell, BytevectorCell, RecordLikeCell, ErrorObjectCell, PortCell, EofObjectCell)
+  val directSubtypes = Set[CellType](UnitCell, ListElementCell, StringCell, SymbolCell, BooleanCell, NumberCell, CharCell, VectorCell, BytevectorCell, RecordLikeCell, ErrorObjectCell, PortCell, EofObjectCell, MailboxCell)
 
   val typeIdGepIndices = List(0, 0)
   val gcStateGepIndices = List(0, 1)
@@ -1681,5 +1681,66 @@ object EofObjectCell extends PreconstructedCellType with EofObjectFields {
 
   val typeIdTbaaNode = NumberedMetadata(85L)
   val gcStateTbaaNode = NumberedMetadata(86L)
+}
+
+sealed trait MailboxFields extends AnyFields {
+  val irType : FirstClassType
+
+  val mailboxIrType = PointerType(IntegerType(8))
+  val mailboxTbaaNode : Metadata
+  val mailboxGepIndices : List[Int]
+
+  def genPointerToMailbox(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+    if (valueCell.irType != PointerType(irType)) {
+      throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
+    }
+
+    block.getelementptr("mailboxPtr")(
+      elementType=mailboxIrType,
+      basePointer=valueCell,
+      indices=mailboxGepIndices.map(IntegerConstant(IntegerType(32), _)),
+      inbounds=true
+    )
+  }
+
+  def genStoreToMailbox(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+    val mailboxPtr = genPointerToMailbox(block)(valueCell)
+    val allMetadata = metadata ++ Map("tbaa" -> mailboxTbaaNode)
+    block.store(toStore, mailboxPtr, metadata=allMetadata)
+  }
+
+  def genLoadFromMailbox(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+    val mailboxPtr = genPointerToMailbox(block)(valueCell)
+    val allMetadata = Map("tbaa" -> mailboxTbaaNode) ++ metadata
+    block.load("mailbox")(mailboxPtr, metadata=allMetadata)
+  }
+}
+
+object MailboxCell extends ConcreteCellType with MailboxFields {
+  val llvmName = "mailbox"
+  val irType = UserDefinedType("mailbox")
+  val schemeName = "<mailbox>"
+  val directSubtypes = Set[CellType]()
+
+  val typeId = 18L
+
+  val typeIdGepIndices = List(0, 0, 0)
+  val gcStateGepIndices = List(0, 0, 1)
+  val mailboxGepIndices = List(0, 1)
+
+  val typeIdTbaaNode = NumberedMetadata(90L)
+  val gcStateTbaaNode = NumberedMetadata(91L)
+  val mailboxTbaaNode = NumberedMetadata(92L)
+
+  def createConstant(mailbox : IrConstant) : StructureConstant = {
+    if (mailbox.irType != mailboxIrType) {
+      throw new InternalCompilerErrorException("Unexpected type for field mailbox")
+    }
+
+    StructureConstant(List(
+      AnyCell.createConstant(typeId=typeId),
+      mailbox
+    ), userDefinedType=Some(irType))
+  }
 }
 

@@ -90,6 +90,14 @@ public:
 		return m_rootSegment;
 	}
 
+	/**
+	 * Destructively splices the contents of the passed heap in to this heap
+	 *
+	 * This heap will own all of the memory segments of the passed heap and they will be iterated over during
+	 * finalisation. The passed heap must not be terminated
+	 */
+	void splice(Heap &other);
+
 #ifdef _LLIBY_ALWAYS_GC
 	/**
 	 * Forces a new segment to be allocated on the next allocation

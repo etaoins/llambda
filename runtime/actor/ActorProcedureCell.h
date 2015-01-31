@@ -3,10 +3,13 @@
 
 #include "binding/TypedProcedureCell.h"
 
+#include <memory>
+
 namespace lliby
 {
 namespace actor
 {
+class Mailbox;
 
 /**
  * Represents a procedure passed to the (start-actor) procedure
@@ -16,8 +19,10 @@ class ActorProcedureCell : public TypedProcedureCell<void>
 public:
 	/**
 	 * Launches a new world and executes the actor in that world
+	 *
+	 * @return Mailbox of the newly created actor
 	 */
-	void start();
+	std::shared_ptr<Mailbox> start();
 };
 
 }

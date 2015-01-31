@@ -14,6 +14,7 @@
 #include "PortCell.h"
 #include "DynamicStateCell.h"
 #include "CharCell.h"
+#include "MailboxCell.h"
 
 namespace lliby
 {
@@ -184,6 +185,10 @@ void AnyCell::finalize()
 	else if (auto thisDynamicState = cell_cast<DynamicStateCell>(this))
 	{
 		thisDynamicState->finalizeDynamicState();
+	}
+	else if (auto thisMailbox = cell_cast<MailboxCell>(this))
+	{
+		thisMailbox->finalizeMailbox();
 	}
 }
 
