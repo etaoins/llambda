@@ -29,14 +29,19 @@ void* RecordLikeCell::allocateRecordData(size_t bytes)
 	return malloc(bytes);
 }
 
+void RecordLikeCell::freeRecordData(void *data)
+{
+#ifdef _LLIBY_CHECK_LEAKS
+		recordDataAllocCount.fetch_sub(1, std::memory_order_relaxed);
+#endif
+		free(data);
+}
+
 void RecordLikeCell::finalizeRecordLike()
 {
 	if (!dataIsInline())
 	{
-#ifdef _LLIBY_CHECK_LEAKS
-		recordDataAllocCount.fetch_sub(1, std::memory_order_relaxed);
-#endif
-		free(m_recordData);
+		freeRecordData(m_recordData);
 	}
 }
 

@@ -23,6 +23,9 @@ class CellRootList;
 class World
 {
 public:
+	World();
+	~World();
+
 	static void launchWorld(void (*entryPoint)(World &));
 
 	//
@@ -52,10 +55,6 @@ public:
 	// This is used as temporary storage space while a continuation resumes itself
 	// This is used as temporary storage space while a continuation resumes itself
 	volatile dynamic::Continuation *resumingContinuation;
-	
-private:
-	World();
-	~World();
 };
 
 }
