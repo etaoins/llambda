@@ -13,6 +13,12 @@
   ; Block the parent actor
   (read-line)))
 
+(define-test "(self)" (expect-success
+  (import (llambda actor))
+
+  (! (self) 'message)
+  (assert-equal 'message (receive))))
+
 (define-test "actor value cloning" (expect-success
   (import (llambda actor))
 

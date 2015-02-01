@@ -29,6 +29,11 @@ void llactor_send(World &world, MailboxCell *destMailboxCell, AnyCell *messageCe
 	destMailbox->send(msg);
 }
 
+MailboxCell *llactor_self(World &world)
+{
+	return MailboxCell::createInstance(world, world.mailbox());
+}
+
 AnyCell *llactor_sender(World &world)
 {
 	std::shared_ptr<actor::Mailbox> mailbox(world.sender());
