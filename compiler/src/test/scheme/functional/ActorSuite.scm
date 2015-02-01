@@ -90,6 +90,18 @@
              (assert-raises unclonable-value-error?
                             (ping-pong k))))
 
+  ; Error objects
+  (define orig-error (guard (obj
+                              (else
+                                obj))
+                            (raise-integer-overflow-error "Test error!" 1 2 3)))
+
+  (define cloned-error (ping-pong orig-error))
+
+  (assert-true (integer-overflow-error? cloned-error))
+  (assert-equal "Test error!" (error-object-message cloned-error))
+  (assert-equal '(1 2 3) (error-object-irritants cloned-error))
+
   ; Pairs
   (cond-expand
     ((not immutable-pairs)

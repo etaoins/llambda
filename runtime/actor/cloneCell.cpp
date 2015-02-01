@@ -17,6 +17,7 @@
 #include "binding/StringCell.h"
 #include "binding/SymbolCell.h"
 #include "binding/MailboxCell.h"
+#include "binding/ErrorObjectCell.h"
 #include "binding/ErrorCategory.h"
 
 #include "dynamic/EscapeProcedureCell.h"
@@ -147,6 +148,15 @@ namespace
 		auto placement = heap.allocate();
 		return new (placement) PairCell(car, cdr);
 	}
+
+	ErrorObjectCell *cloneErrorObject(alloc::Heap &heap, ErrorObjectCell *errorObjectCell)
+	{
+		StringCell *message = errorObjectCell->message()->copy(heap);
+		auto irritants = static_cast<ProperList<AnyCell>*>(cloneCell(heap, errorObjectCell->irritants()));
+
+		auto placement = heap.allocate();
+		return new (placement) ErrorObjectCell(message, irritants, errorObjectCell->category());
+	}
 }
 
 AnyCell *cloneCell(alloc::Heap &heap, AnyCell *cell)
@@ -197,6 +207,10 @@ AnyCell *cloneCell(alloc::Heap &heap, AnyCell *cell)
 	{
 		auto placement = heap.allocate();
 		return new (placement) MailboxCell(mailboxCell->mailbox());
+	}
+	else if (auto errorObjectCell = cell_cast<ErrorObjectCell>(cell))
+	{
+		return cloneErrorObject(heap, errorObjectCell);
 	}
 	else if (auto recordLikeCell = cell_cast<RecordLikeCell>(cell))
 	{
