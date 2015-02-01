@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include <sstream>
+#include <unordered_map>
 
 #include "alloc/Heap.h"
 #include "core/error.h"
@@ -39,36 +40,45 @@ using dynamic::State;
 
 namespace
 {
+	struct Context
+	{
+		// Dynamic state to resolve parameter procedures in
+		State *captureState;
+		std::unordered_map<AnyCell*, AnyCell*> clonedCells;
+	};
+
+	AnyCell *cachedClone(alloc::Heap &heap, AnyCell *cell, Context &context);
+
 	// Replaces a cell with a value that can be safely garbage collected
 	void stubCell(void *placement)
 	{
 		new (placement) ExactIntegerCell(0);
 	}
 
-	AnyCell *cloneParamProcCell(alloc::Heap &heap, ParameterProcedureCell *paramProcCell, State *captureState)
+	AnyCell *cloneParamProcCell(alloc::Heap &heap, ParameterProcedureCell *paramProcCell, Context &context)
 	{
 		using namespace dynamic;
 
-		if (captureState == nullptr)
+		if (context.captureState == nullptr)
 		{
 			throw UnclonableCellException(paramProcCell, "Cannot clone parameter procedure with no dynamic state context");
 		}
 
 		// This is a bit tricky - give the cloned parameter procedure t
-		AnyCell *initialValue = cloneCell(heap, captureState->valueForParameter(paramProcCell), captureState);
+		AnyCell *initialValue = cachedClone(heap, context.captureState->valueForParameter(paramProcCell), context);
 
 		ConverterProcedureCell *converterProc = nullptr;
 
 		if (paramProcCell->converterProcedure() != nullptr)
 		{
-			converterProc = static_cast<ConverterProcedureCell*>(cloneCell(heap, paramProcCell->converterProcedure(), captureState));
+			converterProc = static_cast<ConverterProcedureCell*>(cachedClone(heap, paramProcCell->converterProcedure(), context));
 		}
 
 		auto placement = heap.allocate();
 		return new (placement) ParameterProcedureCell(initialValue, converterProc);
 	}
 
-	AnyCell *cloneRecordLikeCell(alloc::Heap &heap, RecordLikeCell *recordLikeCell, State *captureState)
+	AnyCell *cloneRecordLikeCell(alloc::Heap &heap, RecordLikeCell *recordLikeCell, Context &context)
 	{
 		const RecordClassMap *classMap = recordLikeCell->classMap();
 		const bool dataIsInline = recordLikeCell->dataIsInline();
@@ -132,7 +142,7 @@ namespace
 
 			try
 			{
-				*cellRef = cloneCell(heap, *cellRef, captureState);
+				*cellRef = cachedClone(heap, *cellRef, context);
 			}
 			catch (UnclonableCellException &)
 			{
@@ -150,7 +160,7 @@ namespace
 		return newRecordLikeCell;
 	}
 
-	VectorCell *cloneVectorCell(alloc::Heap &heap, VectorCell *vectorCell, State *captureState)
+	VectorCell *cloneVectorCell(alloc::Heap &heap, VectorCell *vectorCell, Context &context)
 	{
 		AnyCell **newData = new AnyCell*[vectorCell->length()];
 
@@ -158,7 +168,7 @@ namespace
 		{
 			for(VectorCell::LengthType i = 0; i < vectorCell->length(); i++)
 			{
-				newData[i] = cloneCell(heap, vectorCell->elements()[i], captureState);
+				newData[i] = cachedClone(heap, vectorCell->elements()[i], context);
 			}
 		}
 		catch (UnclonableCellException &)
@@ -171,103 +181,128 @@ namespace
 		return new (placement) VectorCell(newData, vectorCell->length());
 	}
 
-	PairCell *clonePair(alloc::Heap &heap, PairCell *pairCell, State *captureState)
+	PairCell *clonePair(alloc::Heap &heap, PairCell *pairCell, Context &context)
 	{
-		AnyCell *car = cloneCell(heap, pairCell->car(), captureState);
-		AnyCell *cdr = cloneCell(heap, pairCell->cdr(), captureState);
+		AnyCell *car = cachedClone(heap, pairCell->car(), context);
+		AnyCell *cdr = cachedClone(heap, pairCell->cdr(), context);
 
 		auto placement = heap.allocate();
 		return new (placement) PairCell(car, cdr);
 	}
 
-	ErrorObjectCell *cloneErrorObject(alloc::Heap &heap, ErrorObjectCell *errorObjectCell, State *captureState)
+	ErrorObjectCell *cloneErrorObject(alloc::Heap &heap, ErrorObjectCell *errorObjectCell, Context &context)
 	{
 		StringCell *message = errorObjectCell->message()->copy(heap);
-		auto irritants = static_cast<ProperList<AnyCell>*>(cloneCell(heap, errorObjectCell->irritants(), captureState));
+		auto irritants = static_cast<ProperList<AnyCell>*>(cachedClone(heap, errorObjectCell->irritants(), context));
 
 		auto placement = heap.allocate();
 		return new (placement) ErrorObjectCell(message, irritants, errorObjectCell->category());
+	}
+
+	AnyCell *uncachedClone(alloc::Heap &heap, AnyCell *cell, Context &context)
+	{
+		if (cell->isGlobalConstant())
+		{
+			// This is a global constant; return it directly instead of copying as it accessible from all Worlds
+			return cell;
+		}
+		else if (auto exactIntCell = cell_cast<ExactIntegerCell>(cell))
+		{
+			auto placement = heap.allocate();
+			return new (placement) ExactIntegerCell(exactIntCell->value());
+		}
+		else if (auto flonumCell = cell_cast<FlonumCell>(cell))
+		{
+			auto placement = heap.allocate();
+			return new (placement) FlonumCell(flonumCell->value());
+		}
+		else if (auto charCell = cell_cast<CharCell>(cell))
+		{
+			auto placement = heap.allocate();
+			return new (placement) CharCell(charCell->unicodeChar());
+		}
+		else if (auto bvCell = cell_cast<BytevectorCell>(cell))
+		{
+			auto placement = heap.allocate();
+			return new (placement) BytevectorCell(bvCell->byteArray()->ref(), bvCell->length());
+		}
+		else if (auto vectorCell = cell_cast<VectorCell>(cell))
+		{
+			return cloneVectorCell(heap, vectorCell, context);
+		}
+		else if (auto stringCell = cell_cast<StringCell>(cell))
+		{
+			return stringCell->copy(heap);
+		}
+		else if (auto symbolCell = cell_cast<SymbolCell>(cell))
+		{
+			return symbolCell->copy(heap);
+		}
+		else if (auto pairCell = cell_cast<PairCell>(cell))
+		{
+			return clonePair(heap, pairCell, context);
+		}
+		else if (auto mailboxCell = cell_cast<MailboxCell>(cell))
+		{
+			auto placement = heap.allocate();
+			return new (placement) MailboxCell(mailboxCell->mailbox());
+		}
+		else if (auto errorObjectCell = cell_cast<ErrorObjectCell>(cell))
+		{
+			return cloneErrorObject(heap, errorObjectCell, context);
+		}
+		else if (auto recordLikeCell = cell_cast<RecordLikeCell>(cell))
+		{
+			if (auto paramProcCell = cell_cast<ParameterProcedureCell>(cell))
+			{
+				return cloneParamProcCell(heap, paramProcCell, context);
+			}
+			else if (EscapeProcedureCell::isInstance(cell))
+			{
+				throw UnclonableCellException(cell, "Escape procedures cannot be cloned");
+			}
+			else if (recordLikeCell->isUndefined())
+			{
+				throw UnclonableCellException(cell, "Undefined variables cannot be cloned");
+			}
+			else
+			{
+				return cloneRecordLikeCell(heap, recordLikeCell, context);
+			}
+		}
+		else if (auto portCell = cell_cast<PortCell>(cell))
+		{
+			throw UnclonableCellException(portCell, "Ports cannot be cloned");
+		}
+
+		assert(false);
+		throw UnclonableCellException(cell, "Unknown cell type");
+	}
+
+	AnyCell *cachedClone(alloc::Heap &heap, AnyCell *cell, Context &context)
+	{
+		auto cachedIt = context.clonedCells.find(cell);
+
+		if (cachedIt != context.clonedCells.end())
+		{
+			// We've already cloned this cell; return the same one to keep (eqv?)
+			return cachedIt->second;
+		}
+
+		// There isn't already a cloned cell; clone a new copy
+		auto clonedCell = uncachedClone(heap, cell, context);
+		context.clonedCells[cell] = clonedCell;
+
+		return clonedCell;
 	}
 }
 
 AnyCell *cloneCell(alloc::Heap &heap, AnyCell *cell, State *captureState)
 {
-	if (cell->isGlobalConstant())
-	{
-		// This is a global constant; return it directly instead of copying as it accessible from all Worlds
-		return cell;
-	}
-	else if (auto exactIntCell = cell_cast<ExactIntegerCell>(cell))
-	{
-		auto placement = heap.allocate();
-		return new (placement) ExactIntegerCell(exactIntCell->value());
-	}
-	else if (auto flonumCell = cell_cast<FlonumCell>(cell))
-	{
-		auto placement = heap.allocate();
-		return new (placement) FlonumCell(flonumCell->value());
-	}
-	else if (auto charCell = cell_cast<CharCell>(cell))
-	{
-		auto placement = heap.allocate();
-		return new (placement) CharCell(charCell->unicodeChar());
-	}
-	else if (auto bvCell = cell_cast<BytevectorCell>(cell))
-	{
-		auto placement = heap.allocate();
-		return new (placement) BytevectorCell(bvCell->byteArray()->ref(), bvCell->length());
-	}
-	else if (auto vectorCell = cell_cast<VectorCell>(cell))
-	{
-		return cloneVectorCell(heap, vectorCell, captureState);
-	}
-	else if (auto stringCell = cell_cast<StringCell>(cell))
-	{
-		return stringCell->copy(heap);
-	}
-	else if (auto symbolCell = cell_cast<SymbolCell>(cell))
-	{
-		return symbolCell->copy(heap);
-	}
-	else if (auto pairCell = cell_cast<PairCell>(cell))
-	{
-		return clonePair(heap, pairCell, captureState);
-	}
-	else if (auto mailboxCell = cell_cast<MailboxCell>(cell))
-	{
-		auto placement = heap.allocate();
-		return new (placement) MailboxCell(mailboxCell->mailbox());
-	}
-	else if (auto errorObjectCell = cell_cast<ErrorObjectCell>(cell))
-	{
-		return cloneErrorObject(heap, errorObjectCell, captureState);
-	}
-	else if (auto recordLikeCell = cell_cast<RecordLikeCell>(cell))
-	{
-		if (auto paramProcCell = cell_cast<ParameterProcedureCell>(cell))
-		{
-			return cloneParamProcCell(heap, paramProcCell, captureState);
-		}
-		else if (EscapeProcedureCell::isInstance(cell))
-		{
-			throw UnclonableCellException(cell, "Escape procedures cannot be cloned");
-		}
-		else if (recordLikeCell->isUndefined())
-		{
-			throw UnclonableCellException(cell, "Undefined variables cannot be cloned");
-		}
-		else
-		{
-			return cloneRecordLikeCell(heap, recordLikeCell, captureState);
-		}
-	}
-	else if (auto portCell = cell_cast<PortCell>(cell))
-	{
-		throw UnclonableCellException(portCell, "Ports cannot be cloned");
-	}
+	Context context;
+	context.captureState = captureState;
 
-	assert(false);
-	throw UnclonableCellException(cell, "Unknown cell type");
+	return cachedClone(heap, cell, context);
 }
 
 void UnclonableCellException::signalSchemeError(World &world, const char *procName)

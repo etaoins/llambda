@@ -157,4 +157,11 @@
        (set-car! test-pair 3)
        (assert-equal '(3 . 2) (ping-pong test-pair)))))
 
+  ; Cloning preserves (eqv?)
+  (define same-elem-vec (ping-pong (vector test-vec test-vec test-vec)))
+
+  (assert-true (eqv? (vector-ref same-elem-vec 0) (vector-ref same-elem-vec 1)))
+  (assert-true (eqv? (vector-ref same-elem-vec 1) (vector-ref same-elem-vec 2)))
+
+
   (! ping-pong-actor 'exit)))
