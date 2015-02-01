@@ -12,6 +12,7 @@
 #include "binding/BytevectorCell.h"
 #include "binding/CharCell.h"
 #include "binding/VectorCell.h"
+#include "binding/StringCell.h"
 
 #include "dynamic/EscapeProcedureCell.h"
 
@@ -165,6 +166,10 @@ AnyCell *cloneCell(alloc::Heap &heap, AnyCell *cell)
 	else if (auto vectorCell = cell_cast<VectorCell>(cell))
 	{
 		return cloneVectorCell(heap, vectorCell);
+	}
+	else if (auto stringCell = cell_cast<StringCell>(cell))
+	{
+		return stringCell->copy(heap);
 	}
 	else if (auto recordLikeCell = cell_cast<RecordLikeCell>(cell))
 	{

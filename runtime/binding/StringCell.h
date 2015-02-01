@@ -14,6 +14,10 @@
 
 namespace lliby
 {
+namespace alloc
+{
+class Heap;
+}
 
 class World;
 class ImplicitSharingTest;
@@ -64,6 +68,7 @@ public:
 	}
 
 	StringCell* copy(World &world, SliceIndexType start = 0, SliceIndexType end = -1);
+	StringCell* copy(alloc::Heap &heap);
 
 	UnicodeChar charAt(CharLengthType offset) const;
 	bool setCharAt(CharLengthType offset, UnicodeChar unicodeChar);

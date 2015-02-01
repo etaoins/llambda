@@ -65,4 +65,9 @@
   (vector-set! test-vec 2 (typeless-cell 'one))
   (assert-equal #(0 0 one 0 0) (ping-pong test-vec))
 
+  ; Strings
+  (define test-string (make-string 12 #\*))
+	(string-set! test-string 0 (typeless-cell #\x2603))
+	(assert-equal "☃***********" (ping-pong test-string))
+
   (! ping-pong-actor 'exit)))
