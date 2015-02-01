@@ -44,8 +44,8 @@ namespace
 Continuation* Continuation::capture(World &world)
 {
 	void *stackPointer = &stackPointer;
-	
-	ptrdiff_t stackSize = static_cast<char*>(world.continuationBase) - static_cast<char*>(stackPointer);
+
+	ptrdiff_t stackSize = static_cast<char*>(world.continuationBase()) - static_cast<char*>(stackPointer);
 	assert(stackSize > 0);
 
 	// Allocate a continuation
@@ -53,25 +53,25 @@ Continuation* Continuation::capture(World &world)
 	auto *cont = reinterpret_cast<Continuation*>(RecordLikeCell::allocateRecordData(sizeof(Continuation) + stackSize));
 
 	// Copy the entire stack over
-	memcpy(cont->m_savedStack, static_cast<char*>(world.continuationBase) - stackSize, stackSize); 
-	
+	memcpy(cont->m_savedStack, static_cast<char*>(world.continuationBase()) - stackSize, stackSize);
+
 	// Record the stack size
 	cont->m_savedStackBytes = stackSize;
 
 	// Calculate the offset between the old stack and the new saved heap
-	std::ptrdiff_t relocationOffset = &cont->m_savedStack[stackSize] - static_cast<char*>(world.continuationBase);
-	
-	// Save metadata from the world	
+	std::ptrdiff_t relocationOffset = &cont->m_savedStack[stackSize] - static_cast<char*>(world.continuationBase());
+
+	// Save metadata from the world
 	cont->m_shadowStackHead = world.shadowStackHead;
 	relocateShadowStack(cont->m_shadowStackHead, relocationOffset);
 
-	cont->m_strongRoots = world.strongRoots;
-	cont->m_strongRoots.relocate(relocationOffset, stackPointer, world.continuationBase);
+	cont->m_strongRoots = world.strongRoots();
+	cont->m_strongRoots.relocate(relocationOffset, stackPointer, world.continuationBase());
 
-	cont->m_weakRoots = world.weakRoots;
-	cont->m_weakRoots.relocate(relocationOffset, stackPointer, world.continuationBase);
+	cont->m_weakRoots = world.weakRoots();
+	cont->m_weakRoots.relocate(relocationOffset, stackPointer, world.continuationBase());
 
-	cont->m_dynamicStateCell = world.activeStateCell;
+	cont->m_dynamicStateCell = world.activeStateCell();
 
 	// We don't have a passed value yet
 	cont->m_passedValues = nullptr;
@@ -87,19 +87,19 @@ Continuation* Continuation::capture(World &world)
 	{
 		// Our stack is completely bogus for everything after "currentStackCanary"
 		// We need to rebuild the values we use here
-		cont = const_cast<Continuation*>(world.resumingContinuation);
+		cont = const_cast<Continuation*>(world.resumingContinuation());
 		stackSize = cont->m_savedStackBytes;
-		std::ptrdiff_t delocationOffset = static_cast<char*>(world.continuationBase) -  &cont->m_savedStack[stackSize];
-	
+		std::ptrdiff_t delocationOffset = static_cast<char*>(world.continuationBase()) - &cont->m_savedStack[stackSize];
+
 		// Assign our GC state back in to the world and delocate it back in to place
 		world.shadowStackHead = cont->m_shadowStackHead;
 		relocateShadowStack(world.shadowStackHead, delocationOffset);
 
-		world.strongRoots = cont->m_strongRoots;
-		world.strongRoots.relocate(delocationOffset, &cont->m_savedStack[0], &cont->m_savedStack[stackSize]);
+		world.strongRoots() = cont->m_strongRoots;
+		world.strongRoots().relocate(delocationOffset, &cont->m_savedStack[0], &cont->m_savedStack[stackSize]);
 
-		world.weakRoots = cont->m_weakRoots;
-		world.weakRoots.relocate(delocationOffset, &cont->m_savedStack[0], &cont->m_savedStack[stackSize]);
+		world.weakRoots() = cont->m_weakRoots;
+		world.weakRoots().relocate(delocationOffset, &cont->m_savedStack[0], &cont->m_savedStack[stackSize]);
 
 		// Switch our dynamic state
 		State::switchStateCell(world, cont->m_dynamicStateCell);
@@ -108,7 +108,7 @@ Continuation* Continuation::capture(World &world)
 	}
 	else
 	{
-		// Unexpected return value from longjmp 
+		// Unexpected return value from longjmp
 		abort();
 	}
 }
@@ -117,7 +117,7 @@ void Continuation::resume(World &world, ProperList<AnyCell> *passedValues)
 {
 	void *stackPointer = &stackPointer;
 
-	ptrdiff_t currentStackSize = static_cast<char*>(world.continuationBase) - static_cast<char*>(stackPointer);
+	ptrdiff_t currentStackSize = static_cast<char*>(world.continuationBase()) - static_cast<char*>(stackPointer);
 	assert(currentStackSize > -1);
 
 	if (currentStackSize < m_savedStackBytes)
@@ -130,13 +130,13 @@ void Continuation::resume(World &world, ProperList<AnyCell> *passedValues)
 	}
 
 	// Track that we're the resuming continuation
-	world.resumingContinuation = this;
+	world.setResumingContinuation(this);
 
 	// Stash our passed value inside the continuation
 	m_passedValues = passedValues;
 
 	// Copy the stack back over
-	memcpy(static_cast<char*>(world.continuationBase) - m_savedStackBytes, m_savedStack, m_savedStackBytes); 
+	memcpy(static_cast<char*>(world.continuationBase()) - m_savedStackBytes, m_savedStack, m_savedStackBytes);
 
 	// DO NOT PLACE CODE HERE - THE STACK IS IN AN INCONSISTENT STATE
 

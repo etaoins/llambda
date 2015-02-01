@@ -20,7 +20,7 @@ class StrongRoot : public AbstractRoot<T>
 {
 public:
 	StrongRoot(World &world, T** cellRef, size_t cellCount = 1) :
-		AbstractRoot<T>(&world.strongRoots, cellRef, cellCount)
+		AbstractRoot<T>(&world.strongRoots(), cellRef, cellCount)
 	{
 	}
 };
@@ -36,12 +36,12 @@ class StrongRef : public AbstractRef<T>
 {
 public:
 	StrongRef(World &world) :
-		AbstractRef<T>(&world.strongRoots)
+		AbstractRef<T>(&world.strongRoots())
 	{
 	}
 
 	StrongRef(World &world, T* cell) :
-		AbstractRef<T>(&world.strongRoots, cell)
+		AbstractRef<T>(&world.strongRoots(), cell)
 	{
 	}
 

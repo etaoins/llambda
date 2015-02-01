@@ -15,7 +15,7 @@ class StrongRefVector : public AbstractRefVector<T>
 public:
 	template<typename... Arguments>
 	explicit StrongRefVector(World &world, Arguments... parameters) :
-		AbstractRefVector<T>(&world.strongRoots, parameters...)
+		AbstractRefVector<T>(&world.strongRoots(), parameters...)
 	{
 	}
 };

@@ -23,7 +23,7 @@ namespace
 namespace lliby
 {
 
-World::World() : activeStateCell(&sharedRootStateCell)
+World::World() : m_activeStateCell(&sharedRootStateCell)
 {
 }
 
@@ -40,7 +40,7 @@ World::~World()
 void World::run(const std::function<void(World &)> &func)
 {
 	char stackCanary;
-	continuationBase = &stackCanary;
+	m_continuationBase = &stackCanary;
 
 	try
 	{
