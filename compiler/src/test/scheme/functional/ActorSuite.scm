@@ -29,6 +29,7 @@
 (define-test "actor value cloning" (expect-success
   (import (llambda actor))
   (import (llambda error))
+  (import (llambda typed))
 
   (define ping-pong-actor
     (act (lambda ()
@@ -101,6 +102,32 @@
   (assert-true (integer-overflow-error? cloned-error))
   (assert-equal "Test error!" (error-object-message cloned-error))
   (assert-equal '(1 2 3) (error-object-irritants cloned-error))
+
+  ; Inline records
+  (define-record-type <inline-record> (inline-record native-field cell-field) inline-record?
+                      ([native-field : <exact-integer>] inline-record-native-field)
+                      (cell-field inline-record-cell-field))
+
+  (define test-inline-record (inline-record -67 test-vec))
+  (define cloned-inline (ping-pong test-inline-record))
+
+  (assert-true (inline-record? cloned-inline))
+  (assert-equal -67 (inline-record-native-field cloned-inline))
+  (assert-equal #(0 0 one 0 0) (inline-record-cell-field cloned-inline))
+
+  ; Out-of-line records
+  (define-record-type <ool-record> (ool-record native-field cell-field1 cell-field2) ool-record?
+                      ([native-field : <exact-integer>] ool-record-native-field)
+                      (cell-field1 ool-record-cell-field1)
+                      (cell-field2 ool-record-cell-field2))
+
+  (define test-ool-record (ool-record 15 test-vec test-char))
+  (define cloned-ool (ping-pong test-ool-record))
+
+  (assert-true (ool-record? cloned-ool))
+  (assert-equal 15 (ool-record-native-field cloned-ool))
+  (assert-equal #(0 0 one 0 0) (ool-record-cell-field1 cloned-ool))
+  (assert-equal #\b (ool-record-cell-field2 cloned-ool))
 
   ; Pairs
   (cond-expand

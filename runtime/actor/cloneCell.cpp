@@ -87,7 +87,7 @@ namespace
 
 		if (dataIsInline)
 		{
-			newData = recordLikeCell->recordDataRef();
+			newData = newRecordLikeCell->recordDataRef();
 		}
 
 		std::memcpy(newData, oldData, classMap->totalSize);
