@@ -7,6 +7,8 @@
 #include "binding/ExactIntegerCell.h"
 #include "binding/ProcedureCell.h"
 #include "binding/RecordCell.h"
+#include "binding/ExactIntegerCell.h"
+#include "binding/FlonumCell.h"
 #include "dynamic/EscapeProcedureCell.h"
 #include "classmap/RecordClassMap.h"
 
@@ -114,7 +116,19 @@ AnyCell *cloneCell(alloc::Heap &heap, AnyCell *cell)
 		return cell;
 	}
 
-	if (auto recordLikeCell = cell_cast<RecordLikeCell>(cell))
+	if (auto exactIntCell = cell_cast<ExactIntegerCell>(cell))
+	{
+		auto placement = heap.allocate();
+		return new (placement) ExactIntegerCell(exactIntCell->value());
+
+	}
+	else if (auto flonumCell = cell_cast<FlonumCell>(cell))
+	{
+		auto placement = heap.allocate();
+		return new (placement) FlonumCell(flonumCell->value());
+
+	}
+	else if (auto recordLikeCell = cell_cast<RecordLikeCell>(cell))
 	{
 		if (dynamic::EscapeProcedureCell::isInstance(cell))
 		{

@@ -46,4 +46,7 @@
   (assert-equal #f (ping-pong #f))
   (assert-equal '() (ping-pong '()))
 
+  (assert-equal 5 (ping-pong (+ 2 3)))
+  (assert-equal .5 (ping-pong (/ 1 2)))
+
   (! ping-pong-actor 'exit)))
