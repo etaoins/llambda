@@ -14,6 +14,7 @@ namespace alloc
 class MemoryBlock;
 class RangeAlloc;
 class AllocCell;
+class Finalizer;
 
 /**
  * Represents a heap that cells can be allocated from
@@ -22,6 +23,7 @@ class AllocCell;
  */
 class Heap
 {
+	friend class Finalizer;
 public:
 	/**
 	 * Creates a new heap
@@ -74,11 +76,12 @@ public:
 	}
 
 	/**
-	 * Places a heap terminator at the end of the current segment
-	 *
-	 * This must be called before finalizing the heap
+	 * Returns true if the heap is empty
 	 */
-	void terminate();
+	bool isEmpty() const
+	{
+		return m_rootSegment == nullptr;
+	}
 
 	/**
 	 * Returns the root segment of the heap
@@ -109,6 +112,8 @@ public:
 #endif
 
 private:
+	void terminate();
+
 	ptrdiff_t currentSegmentAllocations() const
 	{
 		return m_allocNext - m_currentSegmentStart;

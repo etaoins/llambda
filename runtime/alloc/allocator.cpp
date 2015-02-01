@@ -78,35 +78,26 @@ RangeAlloc allocateRange(World &world, size_t count)
 
 size_t forceCollection(World &world)
 {
-	// Terminate the old cell heap
-	world.cellHeap.terminate();
-
 	// Make a new cell heap
 	Heap nextCellHeap;
 
 	// Collect in to the new world
 	const size_t reachableCells = collect(world, nextCellHeap);
 
-	// Finalize the heap asynchronously
-	MemoryBlock *rootSegment = world.cellHeap.rootSegment();
-
-	if (rootSegment != nullptr)
-	{
-		/* We can normally finalize memory in a background thread for better concurrency. There are two debug flags
-		 * which require synchronous finalization:
-		 *
-		 * - NO_ADDR_REUSE immediately marks the memory as inaccessible which means the finalizer must be done with it
-		 *   before we return from collection.
-		 *
-		 * - CHECK_LEAKS needs all finalization to be complete at exit. Currently there's no way to wait for the
-		 *   finalizer queue to drain so it makes all finalization synchronous.
-		 */
+	/* We can normally finalize memory in a background thread for better concurrency. There are two debug flags
+	 * which require synchronous finalization:
+	 *
+	 * - NO_ADDR_REUSE immediately marks the memory as inaccessible which means the finalizer must be done with it
+	 *   before we return from collection.
+	 *
+	 * - CHECK_LEAKS needs all finalization to be complete at exit. Currently there's no way to wait for the
+	 *   finalizer queue to drain so it makes all finalization synchronous.
+	 */
 #if !defined(_LLIBY_NO_ADDR_REUSE) && !defined(_LLIBY_CHECK_LEAKS)
-		finalizer->finalizeHeapAsync(rootSegment);
+	finalizer->finalizeHeapAsync(world.cellHeap);
 #else
-		finalizer->finalizeHeapSync(rootSegment);
+	finalizer->finalizeHeapSync(world.cellHeap);
 #endif
-	}
 
 	// Don't count the cells we just moved towards the next GC
 	nextCellHeap.resetAllocationCounter();

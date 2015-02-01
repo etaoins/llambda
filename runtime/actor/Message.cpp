@@ -10,8 +10,7 @@ namespace actor
 Message::~Message()
 {
 	// Explicitly finalize everything in our heap
-	m_heap.terminate();
-	alloc::Finalizer::finalizeHeapSync(m_heap.rootSegment());
+	alloc::Finalizer::finalizeHeapSync(m_heap);
 }
 
 Message* Message::createFromCell(AnyCell *cell, const std::shared_ptr<Mailbox> &sender)

@@ -11,15 +11,18 @@ namespace lliby
 namespace alloc
 {
 
+class Heap;
 class MemoryBlock;
 
 class Finalizer
 {
 public:
-	void finalizeHeapAsync(MemoryBlock *rootSegment);
-	static void finalizeHeapSync(MemoryBlock *rootSegment);
+	void finalizeHeapAsync(Heap &heap);
+	static void finalizeHeapSync(Heap &heap);
 
 private:
+	static void finalizeSegment(MemoryBlock *rootSegment);
+
 	void workerThread();
 
 	std::thread m_workerThread;

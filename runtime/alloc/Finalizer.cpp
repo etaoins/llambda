@@ -1,4 +1,5 @@
 #include "Finalizer.h"
+#include "Heap.h"
 
 #include <cassert>
 
@@ -12,12 +13,14 @@ namespace lliby
 namespace alloc
 {
 
-void Finalizer::finalizeHeapAsync(MemoryBlock *rootSegment)
+void Finalizer::finalizeHeapAsync(Heap &heap)
 {
-	if (rootSegment == nullptr)
+	if (heap.isEmpty())
 	{
 		return;
 	}
+
+	heap.terminate();
 
 	std::call_once(m_workerStartFlag, [=]() {
 		// Start the worker thread
@@ -27,20 +30,26 @@ void Finalizer::finalizeHeapAsync(MemoryBlock *rootSegment)
 	// Add to the work queue
 	{
 		std::lock_guard<std::mutex> guard(m_workQueueMutex);
-		m_workQueue.push(rootSegment);
+		m_workQueue.push(heap.rootSegment());
 	}
 
 	// Notify
 	m_workQueueCond.notify_one();
 }
 
-void Finalizer::finalizeHeapSync(MemoryBlock *rootSegment)
+void Finalizer::finalizeHeapSync(Heap &heap)
 {
-	if (rootSegment == nullptr)
+	if (heap.isEmpty())
 	{
 		return;
 	}
 
+	heap.terminate();
+	finalizeSegment(heap.rootSegment());
+}
+
+void Finalizer::finalizeSegment(MemoryBlock *rootSegment)
+{
 	auto nextCell = static_cast<AllocCell*>(rootSegment->startPointer());
 
 	while((nextCell->gcState() != GarbageState::HeapTerminator) &&
@@ -71,7 +80,7 @@ void Finalizer::finalizeHeapSync(MemoryBlock *rootSegment)
 
 	if (nextSegment != nullptr)
 	{
-		finalizeHeapSync(nextSegment);
+		finalizeSegment(nextSegment);
 	}
 }
 
@@ -91,7 +100,7 @@ void Finalizer::workerThread()
 		// Release the lock
 		lock.unlock();
 
-		finalizeHeapSync(rootSegment);
+		finalizeSegment(rootSegment);
 	}
 }
 

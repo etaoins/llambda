@@ -36,8 +36,7 @@ World::~World()
 	}
 #else
 	// Don't bother collecting; just finalize the heap
-	cellHeap.terminate();
-	alloc::Finalizer::finalizeHeapSync(cellHeap.rootSegment());
+	alloc::Finalizer::finalizeHeapSync(cellHeap);
 #endif
 }
 

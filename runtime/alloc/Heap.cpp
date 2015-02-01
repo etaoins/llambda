@@ -23,7 +23,7 @@ Heap::Heap() :
 	m_nextSegmentSize(SegmentInitialSize)
 {
 }
-	
+
 void Heap::terminate()
 {
 	if (m_allocNext != nullptr)
@@ -31,7 +31,7 @@ void Heap::terminate()
 		new (m_allocNext) HeapTerminatorCell();
 	}
 }
-	
+
 AllocCell* Heap::addNewSegment(size_t reserveCount)
 {
 	// We ran out of space
