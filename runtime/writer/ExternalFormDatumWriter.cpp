@@ -21,6 +21,7 @@
 #include "binding/ErrorObjectCell.h"
 #include "binding/PortCell.h"
 #include "binding/EofObjectCell.h"
+#include "binding/MailboxCell.h"
 
 #include "dynamic/ParameterProcedureCell.h"
 #include "dynamic/EscapeProcedureCell.h"
@@ -115,6 +116,10 @@ void ExternalFormDatumWriter::render(const AnyCell *datum, int defaultRadix)
 	else if (auto eofObj = cell_cast<EofObjectCell>(datum))
 	{
 		renderEofObject(eofObj);
+	}
+	else if (auto value = cell_cast<MailboxCell>(datum))
+	{
+		renderMailbox(value);
 	}
 	else
 	{
@@ -465,6 +470,11 @@ void ExternalFormDatumWriter::renderPort(const PortCell *value)
 void ExternalFormDatumWriter::renderEofObject(const EofObjectCell *value)
 {
 	m_outStream << "#!eof";
+}
+
+void ExternalFormDatumWriter::renderMailbox(const MailboxCell *value)
+{
+	m_outStream << "#!mailbox";
 }
 
 }

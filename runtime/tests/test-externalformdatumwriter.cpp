@@ -21,6 +21,7 @@
 #include "binding/ErrorObjectCell.h"
 #include "binding/PortCell.h"
 #include "binding/EofObjectCell.h"
+#include "binding/MailboxCell.h"
 
 #include "port/StandardOutputPort.h"
 
@@ -243,6 +244,11 @@ void testEofObject()
 	assertForm(EofObjectCell::instance(), "#!eof");
 }
 
+void testMailbox(World &world)
+{
+	assertForm(MailboxCell::createInstance(world, world.mailbox()), "#!mailbox");
+}
+
 void testAll(World &world)
 {
 	testUnit();
@@ -261,6 +267,7 @@ void testAll(World &world)
 	testErrorObject(world);
 	testPort(world);
 	testEofObject();
+	testMailbox(world);
 }
 
 }
