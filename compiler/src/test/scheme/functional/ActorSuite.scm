@@ -70,4 +70,7 @@
 	(string-set! test-string 0 (typeless-cell #\x2603))
 	(assert-equal "☃***********" (ping-pong test-string))
 
+  ; Symbols
+	(assert-equal '|☃***********| (ping-pong (string->symbol test-string)))
+
   (! ping-pong-actor 'exit)))
