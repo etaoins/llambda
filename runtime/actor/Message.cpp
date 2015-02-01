@@ -1,10 +1,18 @@
 #include "actor/Message.h"
 #include "actor/cloneCell.h"
+#include "alloc/Finalizer.h"
 
 namespace lliby
 {
 namespace actor
 {
+
+Message::~Message()
+{
+	// Explicitly finalize everything in our heap
+	m_heap.terminate();
+	alloc::Finalizer::finalizeHeapSync(m_heap.rootSegment());
+}
 
 Message* Message::createFromCell(AnyCell *cell, const std::shared_ptr<Mailbox> &sender)
 {

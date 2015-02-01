@@ -7,6 +7,17 @@ namespace lliby
 namespace actor
 {
 
+Mailbox::~Mailbox()
+{
+	// Free all of our messages. We don't need a lock here - if this isn't being called from the last reference we're
+	// in trouble
+	while(!m_messageQueue.empty())
+	{
+		delete m_messageQueue.front();
+		m_messageQueue.pop();
+	}
+}
+
 void Mailbox::send(Message *message)
 {
 	// Add to the queue

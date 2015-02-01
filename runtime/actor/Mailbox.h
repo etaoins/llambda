@@ -24,6 +24,8 @@ class Message;
 class Mailbox
 {
 public:
+	~Mailbox();
+
 	/**
 	 * Pushes a message on the mailbox's message queue
 	 *

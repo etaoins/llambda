@@ -118,14 +118,17 @@ void testValidateData()
 	ASSERT_INVALID_ENCODING(lonelyFourByte, lonelyFourByte + 4, utf8::MissingContinuationByteException, 0);
 }
 
-}
-
-int main(int argc, char *argv[])
+void testAll(World &world)
 {
-	llcore_init(argc, argv);
-
 	testBytesInSequence();
 	testBytesForChar();
 	testDecodeChar();
 	testValidateData();
+}
+
+}
+
+int main(int argc, char *argv[])
+{
+	llcore_run(testAll, argc, argv);
 }

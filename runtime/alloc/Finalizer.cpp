@@ -14,6 +14,11 @@ namespace alloc
 
 void Finalizer::finalizeHeapAsync(MemoryBlock *rootSegment)
 {
+	if (rootSegment == nullptr)
+	{
+		return;
+	}
+
 	std::call_once(m_workerStartFlag, [=]() {
 		// Start the worker thread
 		m_workerThread = std::thread(&Finalizer::workerThread, this);
@@ -31,6 +36,11 @@ void Finalizer::finalizeHeapAsync(MemoryBlock *rootSegment)
 
 void Finalizer::finalizeHeapSync(MemoryBlock *rootSegment)
 {
+	if (rootSegment == nullptr)
+	{
+		return;
+	}
+
 	auto nextCell = static_cast<AllocCell*>(rootSegment->startPointer());
 
 	while((nextCell->gcState() != GarbageState::HeapTerminator) &&

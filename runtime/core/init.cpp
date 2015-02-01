@@ -1,8 +1,12 @@
 #include "core/init.h"
 #include "dynamic/init.h"
+#include "core/World.h"
 
+#include "core/error.h"
 #include "alloc/allocator.h"
 #include "alloc/DynamicMemoryBlock.h"
+
+#include "dynamic/SchemeException.h"
 
 namespace lliby
 {
@@ -22,7 +26,7 @@ extern "C"
 {
 using namespace lliby;
 
-void llcore_init(int argc, char *argv[])
+void llcore_run(void (*entryPoint)(lliby::World &), int argc, char **argv)
 {
 	// Stash argc and argv
 	initArguments = {argc, argv};
@@ -31,8 +35,19 @@ void llcore_init(int argc, char *argv[])
 
 	dynamic::init();
 
-	// Start the allocator
 	alloc::initGlobal();
+
+	try
+	{
+		World rootWorld;
+		rootWorld.run(entryPoint);
+	}
+	catch (dynamic::SchemeException &except)
+	{
+		fatalError("Unhandled exception", except.object());
+	}
+
+	alloc::shutdownGlobal();
 }
 
 }

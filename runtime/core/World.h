@@ -6,6 +6,7 @@
 #include "alloc/CellRootList.h"
 
 #include <memory>
+#include <functional>
 
 namespace lliby
 {
@@ -30,17 +31,12 @@ class Mailbox;
 class World
 {
 public:
-	World();
-	~World();
-
-	static void launchWorld(void (*entryPoint)(World &));
-
 	//
 	// This is the public section of World
 	// Generated code can access these fields directly
 	// Any changes to the content, size or order of these fields will require codegen changes
 	//
-	
+
 	alloc::ShadowStackEntry *shadowStackHead = nullptr;
 	alloc::Heap cellHeap;
 
@@ -48,7 +44,14 @@ public:
 	// This is the private section of World
 	// This is only used internally by the runtime
 	//
-	
+	World();
+	~World();
+
+	/**
+	 * Sets up the world to run and then calls the passed function
+	 */
+	void run(const std::function<void(World &)> &func);
+
 	DynamicStateCell *activeStateCell;
 
 	// These are lists of strong and weak roots in the current world
@@ -89,13 +92,6 @@ private:
 	mutable std::shared_ptr<actor::Mailbox> m_mailbox;
 	std::weak_ptr<actor::Mailbox> m_sender;
 };
-
-}
-
-extern "C"
-{
-
-void llcore_launch_world(void (*entryPoint)(lliby::World &));
 
 }
 

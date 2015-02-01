@@ -4,6 +4,8 @@
 namespace lliby
 {
 
+class World;
+
 struct CommandLineArguments
 {
 	int argc;
@@ -11,7 +13,7 @@ struct CommandLineArguments
 };
 
 /**
- * Returns the command line arguments passed to llcore_init
+ * Returns the command line arguments passed to llcore_run
  */
 CommandLineArguments commandLineArguments();
 
@@ -21,14 +23,13 @@ extern "C"
 {
 
 /**
- * Initialises the lliby runtime
+ * Initialises the runtime and starts the root world
  *
- * This should be called once before any calls to llcore_launch_world
- *
- * @param  argc  Command line argument count
- * @param  argv  Command line argument values
+ * @param  entryPoint  Entry point to run in the root world
+ * @param  argc        Command line argument count
+ * @param  argv        Command line argument values
  */
-void llcore_init(int argc, char **argv);
+void llcore_run(void (*entryPoint)(lliby::World &), int argc, char **argv);
 
 }
 

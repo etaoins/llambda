@@ -33,38 +33,23 @@ namespace
 
 void initGlobal()
 {
-	finalizer = new Finalizer();
+	finalizer = new Finalizer;
 }
 
-void initWorld(World &world)
-{
-	// Nothing to do
-}
-
-void shutdownWorld(World &world, bool lastWorld)
+void shutdownGlobal()
 {
 #ifdef _LLIBY_CHECK_LEAKS
-	// Do one last collection at shutdown
-	if (forceCollection(world) > 0)
+	// Make sure everything is properly freed
+	if (SharedByteArray::instanceCount() != 0)
 	{
-		std::cerr << "Cells leaked on exit!" << std::endl;
+		std::cerr << "SharedByteArray instances leaked on exit!" << std::endl;
 		exit(-1);
 	}
 
-	if (lastWorld)
+	if (RecordLikeCell::recordDataInstanceCount() != 0)
 	{
-		// Make sure everything is properly freed
-		if (SharedByteArray::instanceCount() != 0)
-		{
-			std::cerr << "SharedByteArray instances leaked on exit!" << std::endl;
-			exit(-1);
-		}
-
-		if (RecordLikeCell::recordDataInstanceCount() != 0)
-		{
-			std::cerr << "Record data instances leaked on exit!" << std::endl;
-			exit(-1);
-		}
+		std::cerr << "Record data instances leaked on exit!" << std::endl;
+		exit(-1);
 	}
 #endif
 }

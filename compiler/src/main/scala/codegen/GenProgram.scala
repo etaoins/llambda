@@ -74,20 +74,14 @@ object GenProgram {
     val entryBlock = mainFunction.entryBlock
 
     // Initialize our runtime
-    val initDecl = RuntimeFunctions.init
-    val launchWorldDecl = RuntimeFunctions.launchWorld
+    val runDecl = RuntimeFunctions.run
 
-    module.declareFunction(initDecl) 
-    module.declareFunction(launchWorldDecl)
+    module.declareFunction(runDecl)
 
-    // Pass argc and argv to llcore_init
-    entryBlock.callDecl(None)(initDecl, List("argc", "argv").map(mainFunction.argumentValues))
-    
-    // Call __llambda_top_level through llcore_launch_world
+    // Call __llambda_top_level through llcore_run
     // __llambda_top_level must be defined by the planner
-    val execValue = GenNamedEntryPoint(module)(LlambdaTopLevelSignature, LlambdaTopLevelSignature.nativeSymbol, plannedSymbols) 
-
-    entryBlock.callDecl(None)(launchWorldDecl, List(execValue), false)
+    val execValue = GenNamedEntryPoint(module)(LlambdaTopLevelSignature, LlambdaTopLevelSignature.nativeSymbol, plannedSymbols)
+    entryBlock.callDecl(None)(runDecl, execValue :: List("argc", "argv").map(mainFunction.argumentValues))
 
     // Return 0
     // Scheme can only return non-zero exit codes using (exit)

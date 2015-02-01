@@ -88,7 +88,5 @@ void testAll(World &world)
 
 int main(int argc, char *argv[])
 {
-	llcore_init(argc, argv);
-	
-	lliby::World::launchWorld(&testAll);
+	llcore_run(testAll, argc, argv);
 }

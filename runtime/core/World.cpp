@@ -2,8 +2,8 @@
 
 #include "core/error.h"
 
-#include "alloc/CellRootList.h"
 #include "alloc/allocator.h"
+#include "alloc/Finalizer.h"
 
 #include "actor/Mailbox.h"
 
@@ -11,7 +11,6 @@
 
 #include "dynamic/State.h"
 #include "dynamic/SchemeException.h"
-#include "dynamic/State.h"
 
 using namespace lliby;
 
@@ -30,28 +29,35 @@ World::World() : activeStateCell(&sharedRootStateCell)
 
 World::~World()
 {
+#ifdef _LLIBY_CHECK_LEAKS
+	if (alloc::forceCollection(*this) > 0)
+	{
+		fatalError("Cells leaked from world on exit");
+	}
+#else
+	// Don't bother collecting; just finalize the heap
+	cellHeap.terminate();
+	alloc::Finalizer::finalizeHeapSync(cellHeap.rootSegment());
+#endif
 }
 
-void World::launchWorld(void (*entryPoint)(World &))
+void World::run(const std::function<void(World &)> &func)
 {
-	World world;
-
-	alloc::initWorld(world);
-	world.continuationBase = &world;
+	char stackCanary;
+	continuationBase = &stackCanary;
 
 	try
 	{
-		entryPoint(world);
+		func(*this);
 	}
 	catch (dynamic::SchemeException &except)
 	{
 		// Call all unwind handlers
-		dynamic::State::popAllStates(world);
-		fatalError("Unhandled exception", except.object());
+		dynamic::State::popAllStates(*this);
+		throw;
 	}
 
-	dynamic::State::popAllStates(world);
-	alloc::shutdownWorld(world, true);
+	dynamic::State::popAllStates(*this);
 }
 
 const std::shared_ptr<actor::Mailbox>& World::mailbox() const
@@ -63,16 +69,6 @@ const std::shared_ptr<actor::Mailbox>& World::mailbox() const
 	}
 
 	return m_mailbox;
-}
-
-}
-
-extern "C"
-{
-
-void llcore_launch_world(void (*entryPoint)(World &))
-{
-	World::launchWorld(entryPoint);
 }
 
 }

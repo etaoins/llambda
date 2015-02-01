@@ -269,12 +269,8 @@ void testCompare()
 	ASSERT_FALSE(smallS.compare(smallLongS) == 0);
 }
 
-}
-
-int main(int argc, char *argv[])
+void testAll(World &)
 {
-	llcore_init(argc, argv);
-
 	testToUpper();
 	testToLower();
 	testToFolded();
@@ -283,4 +279,11 @@ int main(int argc, char *argv[])
 	testUnicodePredicates();
 
 	testCompare();
+}
+
+}
+
+int main(int argc, char *argv[])
+{
+	llcore_run(testAll, argc, argv);
 }

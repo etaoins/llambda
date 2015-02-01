@@ -111,10 +111,6 @@ public:
 
 int main(int argc, char *argv[])
 {
-	llcore_init(argc, argv);
-
-	lliby::World::launchWorld(&lliby::ImplicitSharingTest::testAll);
-
-	return 0;
+	llcore_run(lliby::ImplicitSharingTest::testAll, argc, argv);
 }
 
