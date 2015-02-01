@@ -32,9 +32,17 @@ public:
 	 * Type of the entry point to this procedure
 	 */
 	using TypedEntryPoint = R (*)(World &, ProcedureCell*, Args...);
-	
+
 	/**
 	 * Creates a new instance of this TypedProcedureCell
+	 */
+	TypedProcedureCell<R, Args...>(RecordClassIdType recordClassId, bool dataIsInline, void *recordData, TypedEntryPoint entryPoint) :
+		ProcedureCell(recordClassId, dataIsInline, recordData, reinterpret_cast<void*>(entryPoint))
+	{
+	}
+
+	/**
+	 * Creates a new instance of this TypedProcedureCell in the passed world
 	 */
 	static TypedProcedureCell<R, Args...>* createInstance(World &world, RecordClassIdType recordClassId, bool dataIsInline, void *recordData, TypedEntryPoint entryPoint)
 	{
@@ -46,19 +54,13 @@ public:
 	 * Applies this procedure with the given argument list
 	 */
 	R apply(World &world, Args... args)
-	{ 
+	{
 		auto castEntryPoint = reinterpret_cast<TypedEntryPoint>(entryPoint());
 		return castEntryPoint(world, this, args...);
 	}
 
 	// Runtime testing of procedure cell subtypes is not possible
 	static bool isInstance(const AnyCell *cell) = delete;
-
-private:
-	TypedProcedureCell<R, Args...>(RecordClassIdType recordClassId, bool dataIsInline, void *recordData, TypedEntryPoint entryPoint) :
-		ProcedureCell(recordClassId, dataIsInline, recordData, reinterpret_cast<void*>(entryPoint))
-	{
-	}
 };
 
 /**
