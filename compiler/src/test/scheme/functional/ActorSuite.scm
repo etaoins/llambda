@@ -1,7 +1,9 @@
 (define-test "starting an empty actor" (expect-success
   (import (llambda actor))
 
-  (act (lambda ()))))
+  (define actor (act (lambda ())))
+
+  (assert-true (mailbox? actor))))
 
 (define-test "actor exiting the process" (expect-exit-value 5
   (import (llambda actor))
@@ -15,6 +17,9 @@
 
 (define-test "(self)" (expect-success
   (import (llambda actor))
+
+  (assert-true (mailbox? (self)))
+  (assert-true (mailbox-open? (self)))
 
   (! (self) 'message)
   (assert-equal 'message (receive))))

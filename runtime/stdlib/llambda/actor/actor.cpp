@@ -52,4 +52,9 @@ AnyCell* llactor_receive(World &world)
 	return world.mailbox()->receiveInto(world);
 }
 
+bool llactor_mailbox_is_open(World &world, MailboxCell *mailboxCell)
+{
+	return !mailboxCell->mailbox().expired();
+}
+
 }
