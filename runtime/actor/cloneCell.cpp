@@ -10,6 +10,7 @@
 #include "binding/ExactIntegerCell.h"
 #include "binding/FlonumCell.h"
 #include "binding/BytevectorCell.h"
+#include "binding/CharCell.h"
 
 #include "dynamic/EscapeProcedureCell.h"
 
@@ -128,6 +129,11 @@ AnyCell *cloneCell(alloc::Heap &heap, AnyCell *cell)
 	{
 		auto placement = heap.allocate();
 		return new (placement) FlonumCell(flonumCell->value());
+	}
+	else if (auto charCell = cell_cast<CharCell>(cell))
+	{
+		auto placement = heap.allocate();
+		return new (placement) CharCell(charCell->unicodeChar());
 	}
 	else if (auto bvCell = cell_cast<BytevectorCell>(cell))
 	{

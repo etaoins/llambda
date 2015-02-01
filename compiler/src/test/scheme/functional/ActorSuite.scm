@@ -48,12 +48,16 @@
   (assert-equal '() (ping-pong '()))
 
   ; Numbers
-  (assert-equal 5 (ping-pong (+ 2 3)))
-  (assert-equal .5 (ping-pong (/ 1 2)))
+  (assert-equal 5 (ping-pong (+ (typeless-cell 2) 3)))
+  (assert-equal .5 (ping-pong (/ (typeless-cell 1) 2)))
+
+  ; Characters
+  (define test-char (string-ref (typeless-cell "abc") 1))
+  (assert-equal #\b (ping-pong test-char))
 
   ; Bytevectors
   (define test-bv (make-bytevector 5 0))
-  (bytevector-u8-set! test-bv 2 1)
+  (bytevector-u8-set! test-bv 2 (typeless-cell 1))
   (assert-equal #u8(0 0 1 0 0) (ping-pong test-bv))
 
   (! ping-pong-actor 'exit)))
