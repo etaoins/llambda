@@ -144,4 +144,14 @@ void llerror_raise_implementation_restriction_error(World &world, StringCell *me
 	throw dynamic::SchemeException(ErrorObjectCell::createInstance(world, message, irritants, ErrorCategory::ImplementationRestriction));
 }
 
+bool llerror_is_unclonable_value_error(AnyCell *obj)
+{
+	return isErrorObjectOfCategory(obj, ErrorCategory::UnclonableValue);
+}
+
+void llerror_raise_unclonable_value_error(World &world, StringCell *message, RestValues<AnyCell> *irritants)
+{
+	throw dynamic::SchemeException(ErrorObjectCell::createInstance(world, message, irritants, ErrorCategory::UnclonableValue));
+}
+
 }

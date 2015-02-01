@@ -4,6 +4,7 @@
 #include "binding/UnitCell.h"
 #include "actor/Mailbox.h"
 #include "actor/Message.h"
+#include "actor/cloneCell.h"
 
 using namespace lliby;
 
@@ -12,7 +13,14 @@ extern "C"
 
 MailboxCell* llactor_act(World &world, actor::ActorProcedureCell *actorProc)
 {
-	return MailboxCell::createInstance(world, actorProc->start());
+	try
+	{
+		return MailboxCell::createInstance(world, actorProc->start());
+	}
+	catch(actor::UnclonableCellException &e)
+	{
+		e.signalSchemeError(world, "(act)");
+	}
 }
 
 void llactor_send(World &world, MailboxCell *destMailboxCell, AnyCell *messageCell)
@@ -25,8 +33,15 @@ void llactor_send(World &world, MailboxCell *destMailboxCell, AnyCell *messageCe
 		return;
 	}
 
-	actor::Message *msg = actor::Message::createFromCell(messageCell, world.mailbox());
-	destMailbox->send(msg);
+	try
+	{
+		actor::Message *msg = actor::Message::createFromCell(messageCell, world.mailbox());
+		destMailbox->send(msg);
+	}
+	catch(actor::UnclonableCellException &e)
+	{
+		e.signalSchemeError(world, "(!)");
+	}
 }
 
 MailboxCell *llactor_self(World &world)

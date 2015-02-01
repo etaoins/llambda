@@ -20,6 +20,7 @@ object ErrorCategory {
   object InvalidArgument extends ErrorCategory(11)
   object IntegerOverflow extends ErrorCategory(12)
   object ImplementationRestriction extends ErrorCategory(13)
+  object UnclonableValue extends ErrorCategory(14)
 
   def fromPredicate : PartialFunction[String, ErrorCategory] = {
     case "default-error?" => Default
@@ -36,5 +37,6 @@ object ErrorCategory {
     case "invalid-argument-error?" => InvalidArgument
     case "integer-overflow-error?" => IntegerOverflow
     case "implementation-restriction-error?" => ImplementationRestriction
+    case "unclonable-value-error?" => UnclonableValue
   }
 }

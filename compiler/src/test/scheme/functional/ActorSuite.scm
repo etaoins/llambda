@@ -28,6 +28,7 @@
 
 (define-test "actor value cloning" (expect-success
   (import (llambda actor))
+  (import (llambda error))
 
   (define ping-pong-actor
     (act (lambda ()
@@ -83,6 +84,11 @@
 
   (! copied-mailbox 'hello-self)
   (assert-equal 'hello-self (receive))
+
+  ; Continuations cannot be cloned
+  (call/cc (lambda (k)
+             (assert-raises unclonable-value-error?
+                            (ping-pong k))))
 
   ; Pairs
   (cond-expand

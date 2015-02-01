@@ -1,8 +1,10 @@
 #include "actor/cloneCell.h"
 
 #include <cstring>
+#include <sstream>
 
 #include "alloc/Heap.h"
+#include "core/error.h"
 
 #include "binding/ExactIntegerCell.h"
 #include "binding/ProcedureCell.h"
@@ -15,6 +17,7 @@
 #include "binding/StringCell.h"
 #include "binding/SymbolCell.h"
 #include "binding/MailboxCell.h"
+#include "binding/ErrorCategory.h"
 
 #include "dynamic/EscapeProcedureCell.h"
 
@@ -212,6 +215,14 @@ AnyCell *cloneCell(alloc::Heap &heap, AnyCell *cell)
 	}
 
 	throw UnclonableCellException(cell, "Not implemented");
+}
+
+void UnclonableCellException::signalSchemeError(World &world, const char *procName)
+{
+	std::ostringstream msgStream;
+	msgStream << message() << " in " << procName;
+
+	signalError(world, ErrorCategory::UnclonableValue, msgStream.str(), {cell()});
 }
 
 }

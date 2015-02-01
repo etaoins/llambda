@@ -4,6 +4,7 @@
 namespace lliby
 {
 class AnyCell;
+class World;
 
 namespace alloc
 {
@@ -43,6 +44,15 @@ public:
 	{
 		return m_message;
 	}
+
+	/**
+	 * Converts this exception to a Scheme error
+	 *
+	 * @param  world     World to signal the error in
+	 * @param  obj       Object that was the source of the UTF-8 encoded data
+	 */
+	[[noreturn]]
+	void signalSchemeError(World &world, const char *procName);
 
 private:
 	AnyCell *m_cell;

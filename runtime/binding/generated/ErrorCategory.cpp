@@ -35,6 +35,8 @@ const char *schemeNameForErrorCategory(ErrorCategory category)
 		return "integer-overflow-error";
 	case ErrorCategory::ImplementationRestriction:
 		return "implementation-restriction-error";
+	case ErrorCategory::UnclonableValue:
+		return "unclonable-value-error";
 	}
 }
 
