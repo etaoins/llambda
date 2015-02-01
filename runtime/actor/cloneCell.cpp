@@ -134,6 +134,15 @@ namespace
 		auto placement = heap.allocate();
 		return new (placement) VectorCell(newData, vectorCell->length());
 	}
+
+	PairCell *clonePair(alloc::Heap &heap, PairCell *pairCell)
+	{
+		AnyCell *car = cloneCell(heap, pairCell->car());
+		AnyCell *cdr = cloneCell(heap, pairCell->cdr());
+
+		auto placement = heap.allocate();
+		return new (placement) PairCell(car, cdr);
+	}
 }
 
 AnyCell *cloneCell(alloc::Heap &heap, AnyCell *cell)
@@ -175,6 +184,10 @@ AnyCell *cloneCell(alloc::Heap &heap, AnyCell *cell)
 	else if (auto symbolCell = cell_cast<SymbolCell>(cell))
 	{
 		return symbolCell->copy(heap);
+	}
+	else if (auto pairCell = cell_cast<PairCell>(cell))
+	{
+		return clonePair(heap, pairCell);
 	}
 	else if (auto recordLikeCell = cell_cast<RecordLikeCell>(cell))
 	{

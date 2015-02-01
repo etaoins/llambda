@@ -46,6 +46,7 @@
   (assert-equal #t (ping-pong #t))
   (assert-equal #f (ping-pong #f))
   (assert-equal '() (ping-pong '()))
+  (assert-equal '(a b c d e) (ping-pong '(a b c d e)))
 
   ; Numbers
   (assert-equal 5 (ping-pong (+ (typeless-cell 2) 3)))
@@ -72,5 +73,12 @@
 
   ; Symbols
 	(assert-equal '|☃***********| (ping-pong (string->symbol test-string)))
+
+  (cond-expand
+    ((not immutable-pairs)
+
+     (let ((test-pair (cons 1 2)))
+       (set-car! test-pair 3)
+       (assert-equal '(3 . 2) (ping-pong test-pair)))))
 
   (! ping-pong-actor 'exit)))
