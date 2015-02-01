@@ -60,4 +60,9 @@
   (bytevector-u8-set! test-bv 2 (typeless-cell 1))
   (assert-equal #u8(0 0 1 0 0) (ping-pong test-bv))
 
+  ; Vectors
+  (define test-vec (make-vector 5 0))
+  (vector-set! test-vec 2 (typeless-cell 'one))
+  (assert-equal #(0 0 one 0 0) (ping-pong test-vec))
+
   (! ping-pong-actor 'exit)))

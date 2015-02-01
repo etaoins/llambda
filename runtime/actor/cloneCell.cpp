@@ -11,6 +11,7 @@
 #include "binding/FlonumCell.h"
 #include "binding/BytevectorCell.h"
 #include "binding/CharCell.h"
+#include "binding/VectorCell.h"
 
 #include "dynamic/EscapeProcedureCell.h"
 
@@ -110,6 +111,27 @@ namespace
 
 		return newRecordLikeCell;
 	}
+
+	VectorCell *cloneVectorCell(alloc::Heap &heap, VectorCell *vectorCell)
+	{
+		AnyCell **newData = new AnyCell*[vectorCell->length()];
+
+		try
+		{
+			for(VectorCell::LengthType i = 0; i < vectorCell->length(); i++)
+			{
+				newData[i] = cloneCell(heap, vectorCell->elements()[i]);
+			}
+		}
+		catch (UnclonableCellException &)
+		{
+			delete[] newData;
+			throw;
+		}
+
+		auto placement = heap.allocate();
+		return new (placement) VectorCell(newData, vectorCell->length());
+	}
 }
 
 AnyCell *cloneCell(alloc::Heap &heap, AnyCell *cell)
@@ -139,6 +161,10 @@ AnyCell *cloneCell(alloc::Heap &heap, AnyCell *cell)
 	{
 		auto placement = heap.allocate();
 		return new (placement) BytevectorCell(bvCell->byteArray()->ref(), bvCell->length());
+	}
+	else if (auto vectorCell = cell_cast<VectorCell>(cell))
+	{
+		return cloneVectorCell(heap, vectorCell);
 	}
 	else if (auto recordLikeCell = cell_cast<RecordLikeCell>(cell))
 	{
