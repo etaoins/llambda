@@ -28,8 +28,9 @@ extern "C"
  * @param  entryPoint  Entry point to run in the root world
  * @param  argc        Command line argument count
  * @param  argv        Command line argument values
+ * @param  skipFinal   Skip finalization of the heap on return. This is useful if the process is about to exit
  */
-void llcore_run(void (*entryPoint)(lliby::World &), int argc, char **argv);
+void llcore_run(void (*entryPoint)(lliby::World &), int argc, char **argv, bool skipFinal = false);
 
 }
 

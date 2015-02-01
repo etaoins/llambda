@@ -34,9 +34,6 @@ World::~World()
 	{
 		fatalError("Cells leaked from world on exit");
 	}
-#else
-	// Don't bother collecting; just finalize the heap
-	alloc::Finalizer::finalizeHeapSync(cellHeap);
 #endif
 }
 

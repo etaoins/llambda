@@ -22,6 +22,7 @@ public:
 
 private:
 	static void finalizeSegment(MemoryBlock *rootSegment);
+	static void terminateHeap(Heap &heap);
 
 	void workerThread();
 

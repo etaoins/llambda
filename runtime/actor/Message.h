@@ -22,8 +22,6 @@ class Mailbox;
 class Message
 {
 public:
-	~Message();
-
 	/**
 	 * Creates a new message from the passed cell
 	 *

@@ -81,7 +81,11 @@ object GenProgram {
     // Call __llambda_top_level through llcore_run
     // __llambda_top_level must be defined by the planner
     val execValue = GenNamedEntryPoint(module)(LlambdaTopLevelSignature, LlambdaTopLevelSignature.nativeSymbol, plannedSymbols)
-    entryBlock.callDecl(None)(runDecl, execValue :: List("argc", "argv").map(mainFunction.argumentValues))
+    val skipFinal = IntegerConstant(IntegerType(1), 1)
+
+    val runArgs = List(execValue, mainFunction.argumentValues("argc"), mainFunction.argumentValues("argv"), skipFinal)
+
+    entryBlock.callDecl(None)(runDecl, runArgs)
 
     // Return 0
     // Scheme can only return non-zero exit codes using (exit)

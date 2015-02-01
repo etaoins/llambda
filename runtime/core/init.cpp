@@ -26,7 +26,7 @@ extern "C"
 {
 using namespace lliby;
 
-void llcore_run(void (*entryPoint)(lliby::World &), int argc, char **argv)
+void llcore_run(void (*entryPoint)(lliby::World &), int argc, char **argv, bool skipFinal)
 {
 	// Stash argc and argv
 	initArguments = {argc, argv};
@@ -37,14 +37,27 @@ void llcore_run(void (*entryPoint)(lliby::World &), int argc, char **argv)
 
 	alloc::initGlobal();
 
-	try
 	{
+		// Make sure the world is alive for the exception handler
 		World rootWorld;
-		rootWorld.run(entryPoint);
-	}
-	catch (dynamic::SchemeException &except)
-	{
-		fatalError("Unhandled exception", except.object());
+
+		try
+		{
+			rootWorld.run(entryPoint);
+		}
+		catch (dynamic::SchemeException &except)
+		{
+			fatalError("Unhandled exception", except.object());
+		}
+
+#ifndef _LLIBY_CHECK_LEAKS
+		if (skipFinal)
+		{
+			// Intentionally leak all of the world's cells
+			rootWorld.cellHeap.detach();
+
+		}
+#endif
 	}
 
 	alloc::shutdownGlobal();

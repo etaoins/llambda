@@ -99,11 +99,14 @@ size_t forceCollection(World &world)
 	finalizer->finalizeHeapSync(world.cellHeap);
 #endif
 
-	// Don't count the cells we just moved towards the next GC
-	nextCellHeap.resetAllocationCounter();
+	// The finalizer should've emptied us
+	assert(world.cellHeap.isEmpty());
 
-	// Make this the new heap
-	world.cellHeap = nextCellHeap;
+	// Splice in the new cells
+	world.cellHeap.splice(nextCellHeap);
+
+	// We should have zero allocation counter now
+	assert(world.cellHeap.allocationCounter() == 0);
 
 	return reachableCells;
 }

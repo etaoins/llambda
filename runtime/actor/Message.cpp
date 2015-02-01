@@ -7,12 +7,6 @@ namespace lliby
 namespace actor
 {
 
-Message::~Message()
-{
-	// Explicitly finalize everything in our heap
-	alloc::Finalizer::finalizeHeapSync(m_heap);
-}
-
 Message* Message::createFromCell(AnyCell *cell, const std::shared_ptr<Mailbox> &sender)
 {
 	Message *msg = new Message;

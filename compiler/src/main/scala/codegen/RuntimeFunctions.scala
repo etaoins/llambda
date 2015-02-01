@@ -67,7 +67,8 @@ object RuntimeFunctions {
         PointerType(FunctionType(VoidType, List(PointerType(WorldValue.irType))))
       ),
       IrFunction.Argument(IntegerType(32)),
-      IrFunction.Argument(PointerType(PointerType(IntegerType(8))))
+      IrFunction.Argument(PointerType(PointerType(IntegerType(8)))),
+      IrFunction.Argument(IntegerType(1))
     ),
     attributes=Set(IrFunction.NoUnwind)
   )

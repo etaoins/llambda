@@ -20,7 +20,7 @@ void Finalizer::finalizeHeapAsync(Heap &heap)
 		return;
 	}
 
-	heap.terminate();
+	terminateHeap(heap);
 
 	std::call_once(m_workerStartFlag, [=]() {
 		// Start the worker thread
@@ -35,6 +35,10 @@ void Finalizer::finalizeHeapAsync(Heap &heap)
 
 	// Notify
 	m_workQueueCond.notify_one();
+
+	// Detach all segments from the heap now that we've queued the finalization. This prevents us finalizing the heap
+	// again in its destructor
+	heap.detach();
 }
 
 void Finalizer::finalizeHeapSync(Heap &heap)
@@ -44,8 +48,10 @@ void Finalizer::finalizeHeapSync(Heap &heap)
 		return;
 	}
 
-	heap.terminate();
+	terminateHeap(heap);
 	finalizeSegment(heap.rootSegment());
+
+	heap.detach();
 }
 
 void Finalizer::finalizeSegment(MemoryBlock *rootSegment)
@@ -81,6 +87,14 @@ void Finalizer::finalizeSegment(MemoryBlock *rootSegment)
 	if (nextSegment != nullptr)
 	{
 		finalizeSegment(nextSegment);
+	}
+}
+
+void Finalizer::terminateHeap(Heap &heap)
+{
+	if (heap.m_allocNext != nullptr)
+	{
+		new (heap.m_allocNext) HeapTerminatorCell();
 	}
 }
 

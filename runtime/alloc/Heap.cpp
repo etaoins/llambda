@@ -4,8 +4,8 @@
 #include <stdlib.h>
 
 #include "alloc/MemoryBlock.h"
-#include "alloc/RangeAlloc.h"
 #include "alloc/DynamicMemoryBlock.h"
+#include "alloc/Finalizer.h"
 
 namespace lliby
 {
@@ -19,17 +19,26 @@ namespace
 	const uint64_t SegmentMaximumSize = 1 * 1024 * 1024;
 }
 
-Heap::Heap() :
-	m_nextSegmentSize(SegmentInitialSize)
+Heap::Heap() : m_nextSegmentSize(SegmentInitialSize)
 {
+	detach();
 }
 
-void Heap::terminate()
+void Heap::detach()
 {
-	if (m_allocNext != nullptr)
-	{
-		new (m_allocNext) HeapTerminatorCell();
-	}
+	m_allocNext = nullptr;
+	m_allocEnd = nullptr;
+
+	m_nextSegmentSize = SegmentInitialSize;
+	m_rootSegment = nullptr;
+
+	m_currentSegmentStart = nullptr;
+	m_allocationCounterBase = 0;
+}
+
+Heap::~Heap()
+{
+	Finalizer::finalizeHeapSync(*this);
 }
 
 AllocCell* Heap::addNewSegment(size_t reserveCount)
@@ -106,9 +115,18 @@ void Heap::splice(Heap &other)
 		// Point the last segment of the passed heap to the beginning of our heap
 		new (other.m_allocNext) SegmentTerminatorCell(oldRoot);
 	}
+	else
+	{
+		// Take over the heap's allocation state
+		m_allocNext = other.m_allocNext;
+		m_allocEnd = other.m_allocEnd;
+		m_nextSegmentSize = other.m_nextSegmentSize;
+		m_currentSegmentStart = other.m_currentSegmentStart;
+		m_allocationCounterBase = -currentSegmentAllocations();
+	}
 
 	// Destroy the other heap for safety
-	other = Heap();
+	other.detach();
 }
 
 }
