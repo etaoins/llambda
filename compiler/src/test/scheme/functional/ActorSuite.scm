@@ -21,6 +21,8 @@
   (assert-true (mailbox? (self)))
   (assert-true (mailbox-open? (self)))
 
+  (assert-equal (self) (self))
+
   (! (self) 'message)
   (assert-equal 'message (receive))))
 
@@ -74,6 +76,15 @@
   ; Symbols
 	(assert-equal '|☃***********| (ping-pong (string->symbol test-string)))
 
+  ; Mailboxes
+  (define copied-mailbox (ping-pong (self)))
+
+  (assert-equal copied-mailbox (self))
+
+  (! copied-mailbox 'hello-self)
+  (assert-equal 'hello-self (receive))
+
+  ; Pairs
   (cond-expand
     ((not immutable-pairs)
 

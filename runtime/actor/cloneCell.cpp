@@ -14,6 +14,7 @@
 #include "binding/VectorCell.h"
 #include "binding/StringCell.h"
 #include "binding/SymbolCell.h"
+#include "binding/MailboxCell.h"
 
 #include "dynamic/EscapeProcedureCell.h"
 
@@ -188,6 +189,11 @@ AnyCell *cloneCell(alloc::Heap &heap, AnyCell *cell)
 	else if (auto pairCell = cell_cast<PairCell>(cell))
 	{
 		return clonePair(heap, pairCell);
+	}
+	else if (auto mailboxCell = cell_cast<MailboxCell>(cell))
+	{
+		auto placement = heap.allocate();
+		return new (placement) MailboxCell(mailboxCell->mailbox());
 	}
 	else if (auto recordLikeCell = cell_cast<RecordLikeCell>(cell))
 	{

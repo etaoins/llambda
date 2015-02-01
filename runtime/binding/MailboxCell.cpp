@@ -5,7 +5,7 @@
 namespace lliby
 {
 
-MailboxCell* MailboxCell::createInstance(World &world, const std::shared_ptr<actor::Mailbox> &mailbox)
+MailboxCell* MailboxCell::createInstance(World &world, const std::weak_ptr<actor::Mailbox> &mailbox)
 {
 	void *cellPlacement = alloc::allocateCells(world);
 	return new (cellPlacement) MailboxCell(mailbox);

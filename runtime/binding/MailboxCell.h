@@ -18,13 +18,13 @@ class MailboxCell : public AnyCell
 {
 #include "generated/MailboxCellMembers.h"
 public:
-	explicit MailboxCell(const std::shared_ptr<actor::Mailbox> &mailbox) :
+	explicit MailboxCell(const std::weak_ptr<actor::Mailbox> &mailbox) :
 		AnyCell(CellTypeId::Mailbox),
 		m_mailbox(mailbox)
 	{
 	}
 
-	static MailboxCell* createInstance(World &world, const std::shared_ptr<actor::Mailbox> &mailbox);
+	static MailboxCell* createInstance(World &world, const std::weak_ptr<actor::Mailbox> &mailbox);
 
 	void finalizeMailbox();
 };
