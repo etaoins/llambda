@@ -11,8 +11,9 @@ Message* Message::createFromCell(AnyCell *cell, const std::shared_ptr<Mailbox> &
 {
 	Message *msg = new Message;
 
-	// Clone in to the message's heap
-	msg->m_messageCell = cloneCell(msg->m_heap, cell);
+	// Clone in to the message's heap. Don't give a capture state; we shouldn't be passing parameter procedures via (!)
+	msg->m_messageCell = cloneCell(msg->m_heap, cell, nullptr);
+
 	// Set the sender
 	msg->m_sender = sender;
 

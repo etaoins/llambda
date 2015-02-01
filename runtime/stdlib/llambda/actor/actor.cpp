@@ -15,7 +15,7 @@ MailboxCell* llactor_act(World &world, actor::ActorProcedureCell *actorProc)
 {
 	try
 	{
-		return MailboxCell::createInstance(world, actorProc->start());
+		return MailboxCell::createInstance(world, actorProc->start(world));
 	}
 	catch(actor::UnclonableCellException &e)
 	{

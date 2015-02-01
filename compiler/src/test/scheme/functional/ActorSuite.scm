@@ -15,6 +15,26 @@
   ; Block the parent actor
   (read-line)))
 
+(define-test "actors with dynamic states" (expect-success
+  (import (llambda actor))
+  (import (llambda error))
+
+  (define test-param (make-parameter 5))
+
+  ; We should take the dynamic state we're created in
+  (define my-actor (parameterize ((test-param 10))
+                                 (act (lambda ()
+                                        (receive)
+                                        (! (sender) (test-param))))))
+
+  (! my-actor 'test)
+  (assert-equal 10 (receive))
+
+  ; We shouldn't be able to clone a parameter procedure. Send to ourselves instead of our actor because our actor
+  ; could have already exited
+  (assert-raises unclonable-value-error?
+    (! (self) test-param))))
+
 (define-test "(self)" (expect-success
   (import (llambda actor))
 

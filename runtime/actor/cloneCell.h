@@ -6,6 +6,11 @@ namespace lliby
 class AnyCell;
 class World;
 
+namespace dynamic
+{
+class State;
+}
+
 namespace alloc
 {
 class Heap;
@@ -63,8 +68,13 @@ private:
  * Creates a functionally equivalent copy of the passed cell in the passed heap
  *
  * Certain cells cannot be cloned. An UnclonableCellException will be thrown in that case.
+ *
+ * @param  heap          Heap to clone the cells in to
+ * @param  cell          Root cell to recursively clone
+ * @param  captureState  Dynamic state to capture. When cloning parameter procedures they will take on the value they
+ *                       have in the passed state. If this is nullptr then parameter procedures will unclonable.
  */
-AnyCell *cloneCell(alloc::Heap &heap, AnyCell *cell);
+AnyCell *cloneCell(alloc::Heap &heap, AnyCell *cell, dynamic::State *captureState);
 
 }
 }

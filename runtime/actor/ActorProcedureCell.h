@@ -7,6 +7,8 @@
 
 namespace lliby
 {
+class World;
+
 namespace actor
 {
 class Mailbox;
@@ -22,7 +24,7 @@ public:
 	 *
 	 * @return Mailbox of the newly created actor
 	 */
-	std::shared_ptr<Mailbox> start();
+	std::shared_ptr<Mailbox> start(World &parentWorld);
 };
 
 }

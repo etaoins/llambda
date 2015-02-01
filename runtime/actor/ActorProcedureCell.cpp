@@ -15,7 +15,7 @@ namespace lliby
 namespace actor
 {
 
-std::shared_ptr<Mailbox> ActorProcedureCell::start()
+std::shared_ptr<Mailbox> ActorProcedureCell::start(World &parentWorld)
 {
 	// Create a new world to launch
 	auto *actorWorld = new World;
@@ -24,7 +24,8 @@ std::shared_ptr<Mailbox> ActorProcedureCell::start()
 	std::shared_ptr<Mailbox> actorMailbox(actorWorld->mailbox());
 
 	// Clone ourselves and our closure in to the new world
-	auto clonedSelf = static_cast<ActorProcedureCell*>(cloneCell(actorWorld->cellHeap, this));
+	dynamic::State *captureState = parentWorld.activeStateCell->state();
+	auto clonedSelf = static_cast<ActorProcedureCell*>(cloneCell(actorWorld->cellHeap, this, captureState));
 
 	new std::thread([=] () {
 
