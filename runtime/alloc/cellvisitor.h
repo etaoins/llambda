@@ -20,6 +20,7 @@
 #include "binding/ErrorObjectCell.h"
 #include "binding/PortCell.h"
 #include "binding/DynamicStateCell.h"
+#include "binding/MailboxCell.h"
 
 #include "classmap/RecordClassMap.h"
 
@@ -136,7 +137,8 @@ visitEntry:
 	    cell_cast<SymbolCell>(*rootCellRef) ||
 	    cell_cast<BytevectorCell>(*rootCellRef) ||
 	    cell_cast<CharCell>(*rootCellRef) ||
-	    cell_cast<PortCell>(*rootCellRef))
+	    cell_cast<PortCell>(*rootCellRef) ||
+	    cell_cast<MailboxCell>(*rootCellRef))
 	{
 		// No children
 	}
