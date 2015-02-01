@@ -41,12 +41,19 @@
     (! ping-pong-actor val)
     (receive))
 
+  ; Constants
   (assert-equal 5 (ping-pong 5))
   (assert-equal #t (ping-pong #t))
   (assert-equal #f (ping-pong #f))
   (assert-equal '() (ping-pong '()))
 
+  ; Numbers
   (assert-equal 5 (ping-pong (+ 2 3)))
   (assert-equal .5 (ping-pong (/ 1 2)))
+
+  ; Bytevectors
+  (define test-bv (make-bytevector 5 0))
+  (bytevector-u8-set! test-bv 2 1)
+  (assert-equal #u8(0 0 1 0 0) (ping-pong test-bv))
 
   (! ping-pong-actor 'exit)))

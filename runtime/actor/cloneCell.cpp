@@ -9,7 +9,10 @@
 #include "binding/RecordCell.h"
 #include "binding/ExactIntegerCell.h"
 #include "binding/FlonumCell.h"
+#include "binding/BytevectorCell.h"
+
 #include "dynamic/EscapeProcedureCell.h"
+
 #include "classmap/RecordClassMap.h"
 
 namespace lliby
@@ -120,13 +123,16 @@ AnyCell *cloneCell(alloc::Heap &heap, AnyCell *cell)
 	{
 		auto placement = heap.allocate();
 		return new (placement) ExactIntegerCell(exactIntCell->value());
-
 	}
 	else if (auto flonumCell = cell_cast<FlonumCell>(cell))
 	{
 		auto placement = heap.allocate();
 		return new (placement) FlonumCell(flonumCell->value());
-
+	}
+	else if (auto bvCell = cell_cast<BytevectorCell>(cell))
+	{
+		auto placement = heap.allocate();
+		return new (placement) BytevectorCell(bvCell->byteArray()->ref(), bvCell->length());
 	}
 	else if (auto recordLikeCell = cell_cast<RecordLikeCell>(cell))
 	{
