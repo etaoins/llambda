@@ -24,11 +24,11 @@
   ; We should take the dynamic state we're created in
   (define my-actor (parameterize ((test-param 10))
                                  (act (lambda ()
-                                        (receive)
-                                        (! (sender) (test-param))))))
+                                        (receive (lambda (msg)
+                                                   (! (sender) (test-param))
+                                                   (stop (self))))))))
 
-  (! my-actor 'test)
-  (assert-equal 10 (receive))
+  (assert-equal 10 (ask my-actor 'test))
 
   ; We shouldn't be able to clone a parameter procedure. Send to ourselves instead of our actor because our actor
   ; could have already exited
@@ -38,13 +38,35 @@
 (define-test "(self)" (expect-success
   (import (llambda actor))
 
+  ; Make sure (self) is sane
   (assert-true (mailbox? (self)))
   (assert-true (mailbox-open? (self)))
 
   (assert-equal (self) (self))
 
-  (! (self) 'message)
-  (assert-equal 'message (receive))))
+  (define test-actor
+    (act (lambda ()
+           ; Haven't received our self message
+           (define received-self #f)
+
+           ; Send ourselves a test message
+           (! (self) 'self-message)
+
+           (receive (lambda (msg)
+                      (case msg
+                        ((self-message)
+                         (set! received-self #t))
+
+                        ((synchronise)
+                         (! (sender) 'ok))
+
+                        ((received-self?)
+                         (! (sender) received-self))))))))
+
+  ; Make sure the actor has time to process the self message
+  (ask test-actor 'synchronise)
+
+  (assert-true (ask test-actor 'received-self?))))
 
 (define-test "actor value cloning" (expect-success
   (import (llambda actor))
@@ -53,12 +75,8 @@
 
   (define ping-pong-actor
     (act (lambda ()
-           (let loop ()
-             (define msg (receive))
-
-             (unless (equal? msg 'exit)
-               (! (sender) msg)
-               (loop))))))
+           (receive (lambda (msg)
+                      (! (sender) msg))))))
 
   ; Sends a message to our actor and receives it back
   (define (ping-pong val)
@@ -98,12 +116,7 @@
 	(assert-equal '|☃***********| (ping-pong (string->symbol test-string)))
 
   ; Mailboxes
-  (define copied-mailbox (ping-pong (self)))
-
-  (assert-equal copied-mailbox (self))
-
-  (! copied-mailbox 'hello-self)
-  (assert-equal 'hello-self (receive))
+  (assert-equal (self) (ping-pong (self)))
 
   ; Continuations cannot be cloned
   (call/cc (lambda (k)
@@ -162,5 +175,4 @@
   (assert-true (eqv? (vector-ref same-elem-vec 0) (vector-ref same-elem-vec 1)))
   (assert-true (eqv? (vector-ref same-elem-vec 1) (vector-ref same-elem-vec 2)))
 
-
-  (! ping-pong-actor 'exit)))
+  (stop ping-pong-actor)))

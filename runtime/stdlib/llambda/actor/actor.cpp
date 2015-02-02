@@ -2,6 +2,8 @@
 
 #include "binding/MailboxCell.h"
 #include "binding/UnitCell.h"
+#include "binding/TypedProcedureCell.h"
+
 #include "actor/Mailbox.h"
 #include "actor/Message.h"
 #include "actor/cloneCell.h"
@@ -10,6 +12,8 @@ using namespace lliby;
 
 extern "C"
 {
+
+using ReceiveProc = TypedProcedureCell<void, AnyCell*>;
 
 MailboxCell* llactor_act(World &world, actor::ActorProcedureCell *actorProc)
 {
@@ -84,9 +88,26 @@ AnyCell *llactor_sender(World &world)
 	return MailboxCell::createInstance(world, mailbox);
 }
 
-AnyCell* llactor_receive(World &world)
+void llactor_receive(World &world, ReceiveProc *receiveProcRaw)
 {
-	return world.mailbox()->receiveInto(world);
+	std::shared_ptr<actor::Mailbox> mailbox(world.mailbox());
+	alloc::StrongRef<ReceiveProc> receiveProc(world, receiveProcRaw);
+
+	while(!mailbox->stopRequested())
+	{
+		AnyCell *msg = mailbox->receiveInto(world);
+		receiveProc->apply(world, msg);
+	}
+}
+
+void llactor_stop(MailboxCell *mailboxCell)
+{
+	std::shared_ptr<actor::Mailbox> mailbox(mailboxCell->mailbox());
+
+	if (mailbox)
+	{
+		mailbox->requestStop();
+	}
 }
 
 bool llactor_mailbox_is_open(World &world, MailboxCell *mailboxCell)

@@ -7,6 +7,7 @@
 #include <mutex>
 #include <queue>
 #include <condition_variable>
+#include <atomic>
 
 namespace lliby
 {
@@ -50,10 +51,22 @@ public:
 	 */
 	AnyCell *receiveInto(World &world);
 
+	/**
+	 * Sets a flag indicating if the owner of this mailbox should stop
+	 */
+	void requestStop();
+
+	/**
+	 * Returns true if the owner of this mailbox have been asked to stop
+	 */
+	bool stopRequested() const;
+
 private:
 	std::mutex m_messageQueueMutex;
 	std::condition_variable m_messageQueueCond;
 	std::queue<Message*> m_messageQueue;
+
+	std::atomic<bool> m_stopRequested;
 };
 
 }

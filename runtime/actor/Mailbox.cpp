@@ -64,5 +64,15 @@ AnyCell* Mailbox::receiveInto(World &world)
 	return msgCell;
 }
 
+void Mailbox::requestStop()
+{
+	m_stopRequested = true;
+}
+
+bool Mailbox::stopRequested() const
+{
+	return m_stopRequested;
+}
+
 }
 }
