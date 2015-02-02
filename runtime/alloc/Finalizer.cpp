@@ -7,6 +7,7 @@
 
 #include "alloc/AllocCell.h"
 #include "alloc/MemoryBlock.h"
+#include "sched/Dispatcher.h"
 
 namespace lliby
 {
@@ -22,19 +23,11 @@ void Finalizer::finalizeHeapAsync(Heap &heap)
 
 	terminateHeap(heap);
 
-	std::call_once(m_workerStartFlag, [=]() {
-		// Start the worker thread
-		m_workerThread = std::thread(&Finalizer::workerThread, this);
+	MemoryBlock *rootSegment = heap.rootSegment();
+
+	sched::Dispatcher::defaultInstance().dispatch([=]() {
+		finalizeSegment(rootSegment);
 	});
-
-	// Add to the work queue
-	{
-		std::lock_guard<std::mutex> guard(m_workQueueMutex);
-		m_workQueue.push(heap.rootSegment());
-	}
-
-	// Notify
-	m_workQueueCond.notify_one();
 
 	// Detach all segments from the heap now that we've queued the finalization. This prevents us finalizing the heap
 	// again in its destructor
@@ -95,26 +88,6 @@ void Finalizer::terminateHeap(Heap &heap)
 	if (heap.m_allocNext != nullptr)
 	{
 		new (heap.m_allocNext) HeapTerminatorCell();
-	}
-}
-
-void Finalizer::workerThread()
-{
-	while(true)
-	{
-		std::unique_lock<std::mutex> lock(m_workQueueMutex);
-
-		// Wait for work to do
-		m_workQueueCond.wait(lock, [=]{return !m_workQueue.empty();});
-
-		// Get the entry
-		MemoryBlock *rootSegment = m_workQueue.front();
-		m_workQueue.pop();
-
-		// Release the lock
-		lock.unlock();
-
-		finalizeSegment(rootSegment);
 	}
 }
 

@@ -52,6 +52,7 @@ add_library(llcore
 	port/StandardInputPort.cpp
 	reader/ReadErrorException.cpp
 	reader/DatumReader.cpp
+	sched/Dispatcher.cpp
 	unicode/utf8.cpp
 	unicode/utf8/InvalidByteSequenceException.cpp
 	util/portCellToStream.cpp
