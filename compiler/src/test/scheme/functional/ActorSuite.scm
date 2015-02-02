@@ -62,8 +62,7 @@
 
   ; Sends a message to our actor and receives it back
   (define (ping-pong val)
-    (! ping-pong-actor val)
-    (receive))
+    (ask ping-pong-actor val))
 
   ; Constants
   (assert-equal 5 (ping-pong 5))

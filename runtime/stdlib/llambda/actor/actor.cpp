@@ -44,6 +44,28 @@ void llactor_send(World &world, MailboxCell *destMailboxCell, AnyCell *messageCe
 	}
 }
 
+AnyCell* llactor_ask(World &world, MailboxCell *destMailboxCell, AnyCell *messageCell)
+{
+	// Create a temporary mailbox
+	std::shared_ptr<actor::Mailbox> senderMailbox(new actor::Mailbox());
+	std::shared_ptr<actor::Mailbox> destMailbox(destMailboxCell->mailbox().lock());
+
+	try
+	{
+		if (destMailbox)
+		{
+			actor::Message *msg = actor::Message::createFromCell(messageCell, senderMailbox);
+			destMailbox->send(msg);
+		}
+	}
+	catch(actor::UnclonableCellException &e)
+	{
+		e.signalSchemeError(world, "(ask)");
+	}
+
+	return senderMailbox->receiveInto(world);
+}
+
 MailboxCell *llactor_self(World &world)
 {
 	return MailboxCell::createInstance(world, world.mailbox());
