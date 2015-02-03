@@ -154,4 +154,14 @@ void llerror_raise_unclonable_value_error(World &world, StringCell *message, Res
 	throw dynamic::SchemeException(ErrorObjectCell::createInstance(world, message, irritants, ErrorCategory::UnclonableValue));
 }
 
+bool llerror_is_no_actor_error(AnyCell *obj)
+{
+	return isErrorObjectOfCategory(obj, ErrorCategory::NoActor);
+}
+
+void llerror_raise_no_actor_error(World &world, StringCell *message, RestValues<AnyCell> *irritants)
+{
+	throw dynamic::SchemeException(ErrorObjectCell::createInstance(world, message, irritants, ErrorCategory::NoActor));
+}
+
 }

@@ -54,9 +54,6 @@ AnyCell* Mailbox::receiveInto(World &world)
 	// Take ownership of the heap
 	world.cellHeap.splice(msg->heap());
 
-	// Save the sender so (sender) works
-	world.setSender(msg->sender());
-
 	// Grab the root cell and delete the message
 	AnyCell *msgCell = msg->messageCell();
 	delete msg;

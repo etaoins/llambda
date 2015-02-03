@@ -25,6 +25,7 @@ enum class ErrorCategory : std::uint16_t
 	IntegerOverflow = 12,
 	ImplementationRestriction = 13,
 	UnclonableValue = 14,
+	NoActor = 15,
 };
 
 const char *schemeNameForErrorCategory(ErrorCategory category);

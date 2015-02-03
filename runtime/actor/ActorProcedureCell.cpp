@@ -5,7 +5,9 @@
 
 #include "sched/Dispatcher.h"
 
+#include "actor/ActorContext.h"
 #include "actor/cloneCell.h"
+
 #include "dynamic/SchemeException.h"
 #include "dynamic/State.h"
 #include "core/World.h"
@@ -20,8 +22,11 @@ std::shared_ptr<Mailbox> ActorProcedureCell::start(World &parentWorld)
 	// Create a new world to launch
 	auto *actorWorld = new World;
 
+	// Make the world an actor
+	actorWorld->createActorContext();
+
 	// Make sure we grab a reference to the actor's mailbox before we start the thread so we don't race
-	std::shared_ptr<Mailbox> actorMailbox(actorWorld->mailbox());
+	std::shared_ptr<Mailbox> actorMailbox(actorWorld->actorContext()->mailbox());
 
 	// Clone ourselves and our closure in to the new world
 	dynamic::State *captureState = parentWorld.activeStateCell()->state();

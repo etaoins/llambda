@@ -21,6 +21,7 @@ object ErrorCategory {
   object IntegerOverflow extends ErrorCategory(12)
   object ImplementationRestriction extends ErrorCategory(13)
   object UnclonableValue extends ErrorCategory(14)
+  object NoActor extends ErrorCategory(15)
 
   def fromPredicate : PartialFunction[String, ErrorCategory] = {
     case "default-error?" => Default
@@ -38,5 +39,6 @@ object ErrorCategory {
     case "integer-overflow-error?" => IntegerOverflow
     case "implementation-restriction-error?" => ImplementationRestriction
     case "unclonable-value-error?" => UnclonableValue
+    case "no-actor-error?" => NoActor
   }
 }

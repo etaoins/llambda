@@ -24,6 +24,7 @@
 #include "binding/MailboxCell.h"
 
 #include "port/StandardOutputPort.h"
+#include "actor/Mailbox.h"
 
 #include "alloc/cellref.h"
 #include "assertions.h"
@@ -246,7 +247,8 @@ void testEofObject()
 
 void testMailbox(World &world)
 {
-	assertForm(MailboxCell::createInstance(world, world.mailbox()), "#!mailbox");
+	std::shared_ptr<actor::Mailbox> testMailbox(new actor::Mailbox());
+	assertForm(MailboxCell::createInstance(world, testMailbox), "#!mailbox");
 }
 
 void testAll(World &world)

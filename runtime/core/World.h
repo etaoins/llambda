@@ -25,7 +25,7 @@ class CellRootList;
 
 namespace actor
 {
-class Mailbox;
+class ActorContext;
 }
 
 class World
@@ -87,25 +87,22 @@ public: // Normal C++ API
 	}
 
 	/**
-	 * Returns the current mailbox for this world
+	 * Creates a new actor context for the world
+	 *
+	 * This should be called once before entering the actor's receive loop to set up the world as an actor
+	 *
+	 * @sa actorContext()
 	 */
-	const std::shared_ptr<actor::Mailbox>& mailbox() const;
+	void createActorContext();
 
 	/**
-	 * Returns the mailbox for the last received message in the world
+	 * Returns the actor context for this world or nullptr if none exists
 	 */
-	const std::weak_ptr<actor::Mailbox>& sender()
+	actor::ActorContext* actorContext()
 	{
-		return m_sender;
+		return m_actorContext;
 	}
 
-	/**
-	 * Sets the mailbox of rthe last received message in the world
-	 */
-	void setSender(const std::weak_ptr<actor::Mailbox> &sender)
-	{
-		m_sender = sender;
-	}
 
 protected: // Continuation support
 	/**
@@ -145,9 +142,7 @@ private:
 	volatile dynamic::Continuation *m_resumingContinuation;
 
 	// This is lazily initialised on first use
-	mutable std::shared_ptr<actor::Mailbox> m_mailbox;
-	std::weak_ptr<actor::Mailbox> m_sender;
-
+	actor::ActorContext *m_actorContext = nullptr;
 };
 
 }

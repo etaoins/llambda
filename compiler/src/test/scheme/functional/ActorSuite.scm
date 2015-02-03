@@ -25,24 +25,18 @@
   (define my-actor (parameterize ((test-param 10))
                                  (act (lambda ()
                                         (receive (lambda (msg)
-                                                   (! (sender) (test-param))
-                                                   (stop (self))))))))
+                                                   (! (sender) (test-param))))))))
 
   (assert-equal 10 (ask my-actor 'test))
 
   ; We shouldn't be able to clone a parameter procedure. Send to ourselves instead of our actor because our actor
   ; could have already exited
   (assert-raises unclonable-value-error?
-    (! (self) test-param))))
+    (ask my-actor test-param))))
 
 (define-test "(self)" (expect-success
   (import (llambda actor))
-
-  ; Make sure (self) is sane
-  (assert-true (mailbox? (self)))
-  (assert-true (mailbox-open? (self)))
-
-  (assert-equal (self) (self))
+  (import (llambda error))
 
   (define test-actor
     (act (lambda ()
@@ -60,13 +54,31 @@
                         ((synchronise)
                          (! (sender) 'ok))
 
+                        ((self-is-mailbox?)
+                         (! (sender) (mailbox? (self))))
+
+                        ((self-mailbox-is-open?)
+                         (! (sender) (mailbox-open? (self))))
+
+                        ((self-is-self?)
+                         (! (sender) (equal? (self) (self))))
+
                         ((received-self?)
                          (! (sender) received-self))))))))
+
+  ; We're not an actor - (self) won't work
+  (assert-raises no-actor-error?
+                 (self))
 
   ; Make sure the actor has time to process the self message
   (ask test-actor 'synchronise)
 
-  (assert-true (ask test-actor 'received-self?))))
+  (assert-true (ask test-actor 'received-self?))
+  (assert-true (ask test-actor 'self-is-mailbox?))
+  (assert-true (ask test-actor 'self-mailbox-is-open?))
+  (assert-true (ask test-actor 'self-is-self?))
+
+  (stop test-actor)))
 
 (define-test "actor value cloning" (expect-success
   (import (llambda actor))
@@ -116,7 +128,7 @@
 	(assert-equal '|☃***********| (ping-pong (string->symbol test-string)))
 
   ; Mailboxes
-  (assert-equal (self) (ping-pong (self)))
+  (assert-equal ping-pong-actor (ping-pong ping-pong-actor))
 
   ; Continuations cannot be cloned
   (call/cc (lambda (k)

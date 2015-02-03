@@ -37,6 +37,8 @@ const char *schemeNameForErrorCategory(ErrorCategory category)
 		return "implementation-restriction-error";
 	case ErrorCategory::UnclonableValue:
 		return "unclonable-value-error";
+	case ErrorCategory::NoActor:
+		return "no-actor-error";
 	}
 }
 

@@ -28,7 +28,8 @@
   (error-category "invalid-argument-error" "invalid_argument_error" "InvalidArgument" #f)
   (error-category "integer-overflow-error" "integer_overflow_error" "IntegerOverflow" #f)
   (error-category "implementation-restriction-error" "implementation_restriction_error" "ImplementationRestriction" #f)
-  (error-category "unclonable-value-error" "unclonable_value_error" "UnclonableValue" #f)))
+  (error-category "unclonable-value-error" "unclonable_value_error" "UnclonableValue" #f)
+  (error-category "no-actor-error" "no_actor_error" "NoActor" #f)))
 
 (define (error-category-pred-name [cat : <error-category>])
   (string-append (error-category-scheme-name cat) "?"))

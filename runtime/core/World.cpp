@@ -6,6 +6,7 @@
 #include "alloc/Finalizer.h"
 
 #include "actor/Mailbox.h"
+#include "actor/ActorContext.h"
 
 #include "binding/DynamicStateCell.h"
 
@@ -29,6 +30,9 @@ World::World() : m_activeStateCell(&sharedRootStateCell)
 
 World::~World()
 {
+	// Note that the mailbox itself is reference counted and can go away later
+	delete m_actorContext;
+
 #ifdef _LLIBY_CHECK_LEAKS
 	if (alloc::forceCollection(*this) > 0)
 	{
@@ -56,15 +60,10 @@ void World::run(const std::function<void(World &)> &func)
 	dynamic::State::popAllStates(*this);
 }
 
-const std::shared_ptr<actor::Mailbox>& World::mailbox() const
+void World::createActorContext()
 {
-	// Lazily initialise the mailbox
-	if (!m_mailbox)
-	{
-		m_mailbox.reset(new actor::Mailbox);
-	}
-
-	return m_mailbox;
+	assert(m_actorContext == nullptr);
+	m_actorContext = new actor::ActorContext;
 }
 
 }
