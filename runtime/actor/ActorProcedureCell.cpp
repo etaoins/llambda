@@ -1,9 +1,9 @@
 #include "actor/ActorProcedureCell.h"
 
-#include <thread>
-
 #include "alloc/allocator.h"
 #include "alloc/Finalizer.h"
+
+#include "sched/Dispatcher.h"
 
 #include "actor/cloneCell.h"
 #include "dynamic/SchemeException.h"
@@ -27,8 +27,7 @@ std::shared_ptr<Mailbox> ActorProcedureCell::start(World &parentWorld)
 	dynamic::State *captureState = parentWorld.activeStateCell()->state();
 	auto clonedSelf = static_cast<ActorProcedureCell*>(cloneCell(actorWorld->cellHeap, this, captureState));
 
-	new std::thread([=] () {
-
+	sched::Dispatcher::defaultInstance().dispatch([=] () {
 		try
 		{
 			actorWorld->run([=] (World &world) {
