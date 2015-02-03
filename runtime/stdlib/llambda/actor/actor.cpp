@@ -1,4 +1,4 @@
-#include "actor/ActorProcedureCell.h"
+#include "actor/ActorClosureCell.h"
 
 #include "binding/MailboxCell.h"
 #include "binding/UnitCell.h"
@@ -8,6 +8,7 @@
 #include "actor/Mailbox.h"
 #include "actor/Message.h"
 #include "actor/cloneCell.h"
+#include "actor/run.h"
 
 #include "core/error.h"
 
@@ -18,11 +19,11 @@ extern "C"
 
 using ReceiveProc = TypedProcedureCell<void, AnyCell*>;
 
-MailboxCell* llactor_act(World &world, actor::ActorProcedureCell *actorProc)
+MailboxCell* llactor_act(World &world, actor::ActorClosureCell *closureProc)
 {
 	try
 	{
-		return MailboxCell::createInstance(world, actorProc->start(world));
+		return MailboxCell::createInstance(world, actor::run(world, closureProc));
 	}
 	catch(actor::UnclonableCellException &e)
 	{
@@ -110,36 +111,6 @@ AnyCell *llactor_sender(World &world)
 	}
 
 	return MailboxCell::createInstance(world, mailbox);
-}
-
-void llactor_receive(World &world, ReceiveProc *receiveProcRaw)
-{
-	actor::ActorContext *context = world.actorContext();
-
-	if (context == nullptr)
-	{
-		signalError(world, ErrorCategory::NoActor, "Attempted (receive) outside actor context");
-	}
-
-	std::shared_ptr<actor::Mailbox> mailbox(context->mailbox());
-	alloc::StrongRef<ReceiveProc> receiveProc(world, receiveProcRaw);
-
-	while(!mailbox->stopRequested())
-	{
-		actor::Message *msg = mailbox->receive();
-
-		// Take ownership of the heap
-		world.cellHeap.splice(msg->heap());
-
-		// Grab the root cell and delete the message
-		AnyCell *msgCell = msg->messageCell();
-		delete msg;
-
-		// Update our sender
-		context->setSender(msg->sender());
-
-		receiveProc->apply(world, msgCell);
-	}
 }
 
 void llactor_stop(MailboxCell *mailboxCell)

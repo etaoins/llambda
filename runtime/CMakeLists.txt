@@ -5,10 +5,10 @@ cmake_minimum_required (VERSION 2.8)
 project (lliby)
 add_library(llcore
 	actor/ActorContext.cpp
-	actor/ActorProcedureCell.cpp
 	actor/Mailbox.cpp
 	actor/Message.cpp
 	actor/cloneCell.cpp
+	actor/run.cpp
 	alloc/CellRootList.cpp
 	alloc/DynamicMemoryBlock.cpp
 	alloc/Finalizer.cpp

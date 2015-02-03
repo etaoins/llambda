@@ -1,19 +1,10 @@
 (define-test "starting an empty actor" (expect-success
   (import (llambda actor))
 
-  (define actor (act (lambda ())))
+  (define actor (act (lambda ()
+                       (lambda (msg)))))
 
   (assert-true (mailbox? actor))))
-
-(define-test "actor exiting the process" (expect-exit-value 5
-  (import (llambda actor))
-  (import (scheme process-context))
-
-  (act (lambda ()
-         (exit 5)))
-
-  ; Block the parent actor
-  (read-line)))
 
 (define-test "actors with dynamic states" (expect-success
   (import (llambda actor))
@@ -24,8 +15,8 @@
   ; We should take the dynamic state we're created in
   (define my-actor (parameterize ((test-param 10))
                                  (act (lambda ()
-                                        (receive (lambda (msg)
-                                                   (! (sender) (test-param))))))))
+                                        (lambda (msg)
+                                          (! (sender) (test-param)))))))
 
   (assert-equal 10 (ask my-actor 'test))
 
@@ -46,25 +37,25 @@
            ; Send ourselves a test message
            (! (self) 'self-message)
 
-           (receive (lambda (msg)
-                      (case msg
-                        ((self-message)
-                         (set! received-self #t))
+           (lambda (msg)
+             (case msg
+               ((self-message)
+                (set! received-self #t))
 
-                        ((synchronise)
-                         (! (sender) 'ok))
+               ((synchronise)
+                (! (sender) 'ok))
 
-                        ((self-is-mailbox?)
-                         (! (sender) (mailbox? (self))))
+               ((self-is-mailbox?)
+                (! (sender) (mailbox? (self))))
 
-                        ((self-mailbox-is-open?)
-                         (! (sender) (mailbox-open? (self))))
+               ((self-mailbox-is-open?)
+                (! (sender) (mailbox-open? (self))))
 
-                        ((self-is-self?)
-                         (! (sender) (equal? (self) (self))))
+               ((self-is-self?)
+                (! (sender) (equal? (self) (self))))
 
-                        ((received-self?)
-                         (! (sender) received-self))))))))
+               ((received-self?)
+                (! (sender) received-self)))))))
 
   ; We're not an actor - (self) won't work
   (assert-raises no-actor-error?
@@ -87,8 +78,8 @@
 
   (define ping-pong-actor
     (act (lambda ()
-           (receive (lambda (msg)
-                      (! (sender) msg))))))
+           (lambda (msg)
+             (! (sender) msg)))))
 
   ; Sends a message to our actor and receives it back
   (define (ping-pong val)
