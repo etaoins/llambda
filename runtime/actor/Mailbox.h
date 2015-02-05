@@ -25,6 +25,7 @@ class Message;
 class Mailbox
 {
 public:
+	Mailbox();
 	~Mailbox();
 
 	/**
@@ -36,20 +37,20 @@ public:
 	void send(Message *);
 
 	/**
-	 * Pops a message from the message queue
+	 * Attempts to pop message from the message queue
 	 *
-	 * This is blocking. If the mailbox is empty then this method will block indefinitely until one is received. The
-	 * mailbox passes ownership of the message to its caller.
+	 * This is non-blocking. If the message box is empty then nullptr is returned. The mailbox passes ownership of the
+	 * message to its caller.
 	 */
 	Message *receive();
 
 	/**
-	 * Receives a message in to the passed world
+	 * Asks the mailbox for a synchronous response
 	 *
-	 * This internally calls receive(), splices the message's heap in to the world's heap, frees the message and returns
-	 * to root message cell
+	 * This internally creates a temporary mailbox and sends a message from there. If the actor is currently sleeping
+	 * it will be woken synchronously in the current thread.
 	 */
-	AnyCell *receiveInto(World &world);
+	AnyCell *ask(World &world, AnyCell *requestCell);
 
 	/**
 	 * Sets a flag indicating if the owner of this mailbox should stop
@@ -61,10 +62,16 @@ public:
 	 */
 	bool stopRequested() const;
 
+	/**
+	 * Marks the passed actor World as sleeping on this mailbox
+	 */
+	void sleepActor(World *sleepingReceiver);
+
 private:
 	std::mutex m_messageQueueMutex;
 	std::condition_variable m_messageQueueCond;
 	std::queue<Message*> m_messageQueue;
+	World *m_sleepingReceiver = nullptr;
 
 	std::atomic<bool> m_stopRequested;
 };

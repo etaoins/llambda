@@ -34,16 +34,15 @@
            ; Haven't received our self message
            (define received-self #f)
 
-           ; Send ourselves a test message
-           (! (self) 'self-message)
-
            (lambda (msg)
              (case msg
+               ((send-self-message)
+                ; Send ourselves a test message
+                (! (self) 'self-message)
+                (! (sender) 'okay))
+
                ((self-message)
                 (set! received-self #t))
-
-               ((synchronise)
-                (! (sender) 'ok))
 
                ((self-is-mailbox?)
                 (! (sender) (mailbox? (self))))
@@ -61,8 +60,8 @@
   (assert-raises no-actor-error?
                  (self))
 
-  ; Make sure the actor has time to process the self message
-  (ask test-actor 'synchronise)
+  ; Have the actor send itself a message
+  (assert-equal 'okay (ask test-actor 'send-self-message))
 
   (assert-true (ask test-actor 'received-self?))
   (assert-true (ask test-actor 'self-is-mailbox?))
@@ -179,3 +178,47 @@
   (assert-true (eqv? (vector-ref same-elem-vec 1) (vector-ref same-elem-vec 2)))
 
   (stop ping-pong-actor)))
+
+(define-test "concurrent actor startup and shutdown" (expect-success
+  (import (llambda typed))
+  (import (llambda actor))
+
+  (define (replicating-actor)
+    (define started-children : <exact-integer> 0)
+    (define started-mailbox #!unit)
+
+    (define reply-count : <exact-integer> 0)
+    (define reply-sum : <exact-integer> 0)
+
+    (lambda (msg)
+      (cond
+        ((equal? (car msg) 'start)
+         (define count (cdr msg))
+
+         ; Set our state
+         (set! started-mailbox (sender))
+         (set! started-children count)
+
+         (if (= count 0)
+           ; All done
+           (begin
+             (! (sender) (cons 'result 1))
+             (stop (self)))
+           ; Start some children
+           (map (lambda (_)
+                  ; Have this actor start one less child than we did
+                  (! (act replicating-actor) (cons 'start (- count 1)))
+                  ) (make-list count))))
+
+        ((equal? (car msg) 'result)
+         ; Add the reply to our total sum
+         (set! reply-sum (+ (cdr msg) reply-sum))
+         (set! reply-count (+ reply-count 1))
+
+         (if (= reply-count started-children)
+           (begin
+             (! started-mailbox (cons 'result reply-sum))
+             (stop (self))))))))
+
+  (define root-actor (act replicating-actor))
+  (assert-equal (cons 'result 720) (ask root-actor (cons 'start 6)))))

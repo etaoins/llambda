@@ -3,6 +3,8 @@
 
 #include <memory>
 
+#include "ActorBehaviourCell.h"
+
 namespace lliby
 {
 namespace actor
@@ -41,10 +43,38 @@ public:
 		m_sender = sender;
 	}
 
+	/**
+	 * Returns the current behaviour for the actor
+	 */
+	ActorBehaviourCell* behaviour()
+	{
+		return m_behaviour;
+	}
+
+	/**
+	 * Returns a reference to the current behaviour
+	 *
+	 * This is used by the garbage collector
+	 */
+	ActorBehaviourCell** behaviourRef()
+	{
+		return &m_behaviour;
+	}
+
+	/**
+	 * Returns the current behaviour for the actor
+	 */
+	void setBehaviour(ActorBehaviourCell *behaviour)
+	{
+		m_behaviour = behaviour;
+	}
+
 private:
 	// This is lazily initialised on first use
 	mutable std::shared_ptr<actor::Mailbox> m_mailbox;
 	std::weak_ptr<actor::Mailbox> m_sender;
+
+	ActorBehaviourCell *m_behaviour = nullptr;
 };
 
 

@@ -11,6 +11,8 @@
 #include "alloc/CellRootList.h"
 #include "alloc/Heap.h"
 
+#include "actor/ActorContext.h"
+
 #include "binding/AnyCell.h"
 
 #include "dynamic/State.h"
@@ -122,6 +124,13 @@ size_t collect(World &world, Heap &newHeap)
 	// parameter values can themselves reference other parameter functions this gets extremely tricky.  Parameterization
 	// of an unreachable parameter seems like too much of a corner case to justify the additional code complexity.
 	visitCell(reinterpret_cast<AnyCell**>(&world.activeStateCell()), rootVisitor);
+
+	// Is this world an actor?
+	if (world.actorContext())
+	{
+		// Visit the actor's current behaviour
+		visitCell(reinterpret_cast<AnyCell**>(world.actorContext()->behaviourRef()), rootVisitor);
+	}
 
 	// Visit each runtime weak root
 	visitCellRootList(world.weakRoots(), weakRefVisitor);

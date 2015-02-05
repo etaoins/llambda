@@ -32,6 +32,7 @@ World::~World()
 {
 	// Note that the mailbox itself is reference counted and can go away later
 	delete m_actorContext;
+	m_actorContext = nullptr;
 
 #ifdef _LLIBY_CHECK_LEAKS
 	if (alloc::forceCollection(*this) > 0)
@@ -60,10 +61,12 @@ void World::run(const std::function<void(World &)> &func)
 	dynamic::State::popAllStates(*this);
 }
 
-void World::createActorContext()
+actor::ActorContext* World::createActorContext()
 {
 	assert(m_actorContext == nullptr);
 	m_actorContext = new actor::ActorContext;
+
+	return m_actorContext;
 }
 
 }

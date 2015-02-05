@@ -56,7 +56,10 @@ public: // Normal C++ API
 	~World();
 
 	/**
-	 * Sets up the world to run and then calls the passed function
+	 * Sets up the World to run and executes the passed function.
+	 *
+	 * Once the function returns all dynamic states will be popped. This can be run multiple times consecutively on the
+	 * same World but only one World function can be run at once.
 	 */
 	void run(const std::function<void(World &)> &func);
 
@@ -93,7 +96,7 @@ public: // Normal C++ API
 	 *
 	 * @sa actorContext()
 	 */
-	void createActorContext();
+	actor::ActorContext* createActorContext();
 
 	/**
 	 * Returns the actor context for this world or nullptr if none exists

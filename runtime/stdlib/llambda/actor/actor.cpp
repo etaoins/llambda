@@ -41,16 +41,19 @@ void llactor_send(World &world, MailboxCell *destMailboxCell, AnyCell *messageCe
 		return;
 	}
 
+	std::shared_ptr<actor::Mailbox> senderMailbox;
 	actor::ActorContext *context = world.actorContext();
 
-	if (context == nullptr)
+	// If we don't have an actor context leave the sender mailbox unset. This will eat all messages and return #f for
+	// (mailbox-open?)
+	if (context)
 	{
-		signalError(world, ErrorCategory::NoActor, "Attempted (!) outside actor context");
+		senderMailbox = context->mailbox();
 	}
 
 	try
 	{
-		actor::Message *msg = actor::Message::createFromCell(messageCell, context->mailbox());
+		actor::Message *msg = actor::Message::createFromCell(messageCell, senderMailbox);
 		destMailbox->send(msg);
 	}
 	catch(actor::UnclonableCellException &e)
@@ -61,24 +64,24 @@ void llactor_send(World &world, MailboxCell *destMailboxCell, AnyCell *messageCe
 
 AnyCell* llactor_ask(World &world, MailboxCell *destMailboxCell, AnyCell *messageCell)
 {
-	// Create a temporary mailbox
-	std::shared_ptr<actor::Mailbox> senderMailbox(new actor::Mailbox());
 	std::shared_ptr<actor::Mailbox> destMailbox(destMailboxCell->mailbox().lock());
 
-	try
+	if (!destMailbox)
 	{
-		if (destMailbox)
+		// XXX: Timeout
+		while(true);
+	}
+	else
+	{
+		try
 		{
-			actor::Message *msg = actor::Message::createFromCell(messageCell, senderMailbox);
-			destMailbox->send(msg);
+			return destMailbox->ask(world, messageCell);
+		}
+		catch(actor::UnclonableCellException &e)
+		{
+			e.signalSchemeError(world, "(ask)");
 		}
 	}
-	catch(actor::UnclonableCellException &e)
-	{
-		e.signalSchemeError(world, "(ask)");
-	}
-
-	return senderMailbox->receiveInto(world);
 }
 
 MailboxCell *llactor_self(World &world)
