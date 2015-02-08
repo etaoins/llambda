@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <functional>
+#include <list>
 
 namespace lliby
 {
@@ -26,6 +27,7 @@ class CellRootList;
 namespace actor
 {
 class ActorContext;
+class Mailbox;
 }
 
 class World
@@ -106,6 +108,12 @@ public: // Normal C++ API
 		return m_actorContext;
 	}
 
+	/**
+	 * Adds a child actor to this world
+	 *
+	 * All child actors will be synchronously stopped in the destructor for the world
+	 */
+	void addChildActor(std::weak_ptr<actor::Mailbox> childActor);
 
 protected: // Continuation support
 	/**
@@ -146,6 +154,8 @@ private:
 
 	// This is lazily initialised on first use
 	actor::ActorContext *m_actorContext = nullptr;
+
+	std::list<std::weak_ptr<actor::Mailbox>> m_childActors;
 };
 
 }

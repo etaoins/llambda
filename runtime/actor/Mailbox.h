@@ -63,17 +63,29 @@ public:
 	bool stopRequested() const;
 
 	/**
+	 * Indicates that this actor is stopped
+	 */
+	void stopped();
+
+	/**
+	 * Waits until this actor has stopped
+	 */
+	void waitForStop();
+
+	/**
 	 * Marks the passed actor World as sleeping on this mailbox
 	 */
 	void sleepActor(World *sleepingReceiver);
 
 private:
-	std::mutex m_messageQueueMutex;
+	std::mutex m_mutex;
 	std::condition_variable m_messageQueueCond;
 	std::queue<Message*> m_messageQueue;
 	World *m_sleepingReceiver = nullptr;
 
 	std::atomic<bool> m_stopRequested;
+	std::condition_variable m_stoppedCond;
+	bool m_stopped = false;
 };
 
 }

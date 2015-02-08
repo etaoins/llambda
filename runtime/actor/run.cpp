@@ -37,6 +37,9 @@ std::shared_ptr<Mailbox> run(World &parentWorld, ActorClosureCell *closureCell)
 	// Set our initial behaviour
 	actorWorld->actorContext()->setBehaviour(behaviourCell);
 
+	// Add us a child actor
+	parentWorld.addChildActor(context->mailbox());
+
 	// Go to sleep on receive
 	context->mailbox()->sleepActor(actorWorld);
 
@@ -56,8 +59,7 @@ void wake(World *actorWorld)
 			if (mailbox->stopRequested())
 			{
 				// We should die promptly
-				delete actorWorld;
-				return;
+				break;
 			}
 
 			actor::Message *msg = mailbox->receive();
@@ -91,6 +93,7 @@ void wake(World *actorWorld)
 		// XXX: Support supervision
 	}
 
+	actorWorld->actorContext()->mailbox()->stopped();
 	delete actorWorld;
 }
 

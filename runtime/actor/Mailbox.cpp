@@ -29,7 +29,7 @@ void Mailbox::send(Message *message)
 {
 	// Add to the queue
 	{
-		std::unique_lock<std::mutex> lock(m_messageQueueMutex);
+		std::unique_lock<std::mutex> lock(m_mutex);
 		m_messageQueue.push(message);
 
 		if (m_sleepingReceiver)
@@ -57,7 +57,7 @@ void Mailbox::send(Message *message)
 
 Message* Mailbox::receive()
 {
-	std::lock_guard<std::mutex> lock(m_messageQueueMutex);
+	std::lock_guard<std::mutex> lock(m_mutex);
 
 	if (m_messageQueue.empty())
 	{
@@ -80,7 +80,7 @@ AnyCell* Mailbox::ask(World &world, AnyCell *requestCell)
 
 	// Send the request
 	{
-		std::unique_lock<std::mutex> receiverLock(m_messageQueueMutex);
+		std::unique_lock<std::mutex> receiverLock(m_mutex);
 		m_messageQueue.push(request);
 
 		if (m_sleepingReceiver)
@@ -102,7 +102,7 @@ AnyCell* Mailbox::ask(World &world, AnyCell *requestCell)
 
 	// Block on the sender mailbox for a reply
 	{
-		std::unique_lock<std::mutex> senderLock(senderMailbox->m_messageQueueMutex);
+		std::unique_lock<std::mutex> senderLock(senderMailbox->m_mutex);
 
 		// Wait for the sender mailbox to be non-empty
 		senderMailbox->m_messageQueueCond.wait(senderLock, [=]{return !senderMailbox->m_messageQueue.empty();});
@@ -127,7 +127,24 @@ AnyCell* Mailbox::ask(World &world, AnyCell *requestCell)
 
 void Mailbox::requestStop()
 {
+	std::unique_lock<std::mutex> lock(m_mutex);
 	m_stopRequested = true;
+
+	if (m_sleepingReceiver)
+	{
+		World *toWake = m_sleepingReceiver;
+		m_sleepingReceiver = nullptr;
+
+		lock.unlock();
+
+		// Synchronously wake our receiver in the hopes that it will reply immediately
+		wake(toWake);
+	}
+	else
+	{
+		lock.unlock();
+		m_messageQueueCond.notify_one();
+	}
 }
 
 bool Mailbox::stopRequested() const
@@ -135,9 +152,25 @@ bool Mailbox::stopRequested() const
 	return m_stopRequested;
 }
 
+void Mailbox::stopped()
+{
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		m_stopped = true;
+	}
+
+	m_stoppedCond.notify_all();
+}
+
+void Mailbox::waitForStop()
+{
+	std::unique_lock<std::mutex> lock(m_mutex);
+	m_stoppedCond.wait(lock, [=]{return m_stopped;});
+}
+
 void Mailbox::sleepActor(World *sleepingReceiver)
 {
-	std::lock_guard<std::mutex> guard(m_messageQueueMutex);
+	std::lock_guard<std::mutex> guard(m_mutex);
 
 	assert(m_sleepingReceiver == nullptr);
 	assert(sleepingReceiver->actorContext());

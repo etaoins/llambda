@@ -66,9 +66,7 @@
   (assert-true (ask test-actor 'received-self?))
   (assert-true (ask test-actor 'self-is-mailbox?))
   (assert-true (ask test-actor 'self-mailbox-is-open?))
-  (assert-true (ask test-actor 'self-is-self?))
-
-  (stop test-actor)))
+  (assert-true (ask test-actor 'self-is-self?))))
 
 (define-test "actor value cloning" (expect-success
   (import (llambda actor))
@@ -175,9 +173,7 @@
   (define same-elem-vec (ping-pong (vector test-vec test-vec test-vec)))
 
   (assert-true (eqv? (vector-ref same-elem-vec 0) (vector-ref same-elem-vec 1)))
-  (assert-true (eqv? (vector-ref same-elem-vec 1) (vector-ref same-elem-vec 2)))
-
-  (stop ping-pong-actor)))
+  (assert-true (eqv? (vector-ref same-elem-vec 1) (vector-ref same-elem-vec 2)))))
 
 (define-test "concurrent actor startup and shutdown" (expect-success
   (import (llambda typed))

@@ -34,6 +34,18 @@ World::~World()
 	delete m_actorContext;
 	m_actorContext = nullptr;
 
+	// Wait for our children to stop
+	for(auto weakChildActor : m_childActors)
+	{
+		std::shared_ptr<actor::Mailbox> childActor(weakChildActor.lock());
+
+		if (childActor)
+		{
+			childActor->requestStop();
+			childActor->waitForStop();
+		}
+	}
+
 #ifdef _LLIBY_CHECK_LEAKS
 	if (alloc::forceCollection(*this) > 0)
 	{
@@ -67,6 +79,11 @@ actor::ActorContext* World::createActorContext()
 	m_actorContext = new actor::ActorContext;
 
 	return m_actorContext;
+}
+
+void World::addChildActor(std::weak_ptr<actor::Mailbox> childActor)
+{
+	m_childActors.push_front(childActor);
 }
 
 }
