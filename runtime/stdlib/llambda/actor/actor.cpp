@@ -105,7 +105,7 @@ AnyCell *llactor_sender(World &world)
 		signalError(world, ErrorCategory::NoActor, "Attempted (sender) outside actor context");
 	}
 
-	std::shared_ptr<actor::Mailbox> mailbox(context->sender());
+	std::shared_ptr<actor::Mailbox> mailbox = context->sender().lock();
 
 	if (!mailbox)
 	{

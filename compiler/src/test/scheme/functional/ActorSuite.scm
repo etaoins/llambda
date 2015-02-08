@@ -68,6 +68,22 @@
   (assert-true (ask test-actor 'self-mailbox-is-open?))
   (assert-true (ask test-actor 'self-is-self?))))
 
+(define-test "(sender) is #!unit when message is sent from non-actor" (expect-success
+  (import (llambda actor))
+
+  (define test-actor
+    (act (lambda ()
+           (define saved-sender #f)
+           (lambda (msg)
+             (cond
+               ((equal? msg 'save-sender)
+                (set! saved-sender (sender)))
+               ((equal? msg 'return-sender)
+                (tell (sender) saved-sender)))))))
+
+  (tell test-actor 'save-sender)
+  (assert-equal #!unit (ask test-actor 'return-sender))))
+
 (define-test "actor value cloning" (expect-success
   (import (llambda actor))
   (import (llambda error))
