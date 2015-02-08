@@ -31,7 +31,7 @@ MailboxCell* llactor_act(World &world, actor::ActorClosureCell *closureProc)
 	}
 }
 
-void llactor_send(World &world, MailboxCell *destMailboxCell, AnyCell *messageCell)
+void llactor_tell(World &world, MailboxCell *destMailboxCell, AnyCell *messageCell)
 {
 	std::shared_ptr<actor::Mailbox> destMailbox(destMailboxCell->mailbox().lock());
 

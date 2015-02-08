@@ -16,7 +16,7 @@
   (define my-actor (parameterize ((test-param 10))
                                  (act (lambda ()
                                         (lambda (msg)
-                                          (! (sender) (test-param)))))))
+                                          (tell (sender) (test-param)))))))
 
   (assert-equal 10 (ask my-actor 'test))
 
@@ -38,23 +38,23 @@
              (case msg
                ((send-self-message)
                 ; Send ourselves a test message
-                (! (self) 'self-message)
-                (! (sender) 'okay))
+                (tell (self) 'self-message)
+                (tell (sender) 'okay))
 
                ((self-message)
                 (set! received-self #t))
 
                ((self-is-mailbox?)
-                (! (sender) (mailbox? (self))))
+                (tell (sender) (mailbox? (self))))
 
                ((self-mailbox-is-open?)
-                (! (sender) (mailbox-open? (self))))
+                (tell (sender) (mailbox-open? (self))))
 
                ((self-is-self?)
-                (! (sender) (equal? (self) (self))))
+                (tell (sender) (equal? (self) (self))))
 
                ((received-self?)
-                (! (sender) received-self)))))))
+                (tell (sender) received-self)))))))
 
   ; We're not an actor - (self) won't work
   (assert-raises no-actor-error?
@@ -78,7 +78,7 @@
   (define ping-pong-actor
     (act (lambda ()
            (lambda (msg)
-             (! (sender) msg)))))
+             (tell (sender) msg)))))
 
   ; Sends a message to our actor and receives it back
   (define (ping-pong val)
@@ -202,12 +202,12 @@
          (if (= count 0)
            ; All done
            (begin
-             (! (sender) (cons 'result 1))
+             (tell (sender) (cons 'result 1))
              (stop (self)))
            ; Start some children
            (map (lambda (_)
                   ; Have this actor start one less child than we did
-                  (! (act replicating-actor) (cons 'start (- count 1)))
+                  (tell (act replicating-actor) (cons 'start (- count 1)))
                   ) (make-list count))))
 
         ((equal? (car msg) 'result)
@@ -217,7 +217,7 @@
 
          (if (= reply-count started-children)
            (begin
-             (! started-mailbox (cons 'result reply-sum))
+             (tell started-mailbox (cons 'result reply-sum))
              (stop (self))))))))
 
   (define root-actor (act replicating-actor))
