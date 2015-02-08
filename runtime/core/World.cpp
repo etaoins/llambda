@@ -59,6 +59,8 @@ void World::run(const std::function<void(World &)> &func)
 	char stackCanary;
 	m_continuationBase = &stackCanary;
 
+	m_runSequence++;
+
 	try
 	{
 		func(*this);

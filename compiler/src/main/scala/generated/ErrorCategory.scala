@@ -22,6 +22,7 @@ object ErrorCategory {
   object ImplementationRestriction extends ErrorCategory(13)
   object UnclonableValue extends ErrorCategory(14)
   object NoActor extends ErrorCategory(15)
+  object ExpiredEscapeProcedure extends ErrorCategory(16)
 
   def fromPredicate : PartialFunction[String, ErrorCategory] = {
     case "default-error?" => Default
@@ -40,5 +41,6 @@ object ErrorCategory {
     case "implementation-restriction-error?" => ImplementationRestriction
     case "unclonable-value-error?" => UnclonableValue
     case "no-actor-error?" => NoActor
+    case "expired-escape-procedure-error?" => ExpiredEscapeProcedure
   }
 }

@@ -39,6 +39,8 @@ const char *schemeNameForErrorCategory(ErrorCategory category)
 		return "unclonable-value-error";
 	case ErrorCategory::NoActor:
 		return "no-actor-error";
+	case ErrorCategory::ExpiredEscapeProcedure:
+		return "expired-escape-procedure-error";
 	}
 }
 

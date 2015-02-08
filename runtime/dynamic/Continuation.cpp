@@ -52,6 +52,9 @@ Continuation* Continuation::capture(World &world)
 	// Use allocatedRecorData because this is used as the closure for EscapeProcedureCell
 	auto *cont = reinterpret_cast<Continuation*>(RecordLikeCell::allocateRecordData(sizeof(Continuation) + stackSize));
 
+	// Save our run sequence number
+	cont->m_runSequence = world.runSequence();
+
 	// Copy the entire stack over
 	memcpy(cont->m_savedStack, static_cast<char*>(world.continuationBase()) - stackSize, stackSize);
 
@@ -113,9 +116,14 @@ Continuation* Continuation::capture(World &world)
 	}
 }
 
-void Continuation::resume(World &world, ProperList<AnyCell> *passedValues)
+bool Continuation::resume(World &world, ProperList<AnyCell> *passedValues)
 {
 	void *stackPointer = &stackPointer;
+
+	if (m_runSequence != world.runSequence())
+	{
+		return false;
+	}
 
 	ptrdiff_t currentStackSize = static_cast<char*>(world.continuationBase()) - static_cast<char*>(stackPointer);
 	assert(currentStackSize > -1);
@@ -142,6 +150,9 @@ void Continuation::resume(World &world, ProperList<AnyCell> *passedValues)
 
 	// Now jump back to the original location
 	longjmp(m_jumpTarget, ContinuationResumeCookie);
+
+	// Not reachable
+	return true;
 }
 
 }

@@ -234,3 +234,25 @@
 
   (define root-actor (act replicating-actor))
   (assert-equal (cons 'result 720) (ask root-actor (cons 'start 6)))))
+
+(define-test "captured continuations cannot be used across messages" (expect-success
+  (import (llambda actor))
+  (import (llambda error))
+
+  (define actor
+    (act (lambda ()
+           (define captured-cont #!unit)
+           (lambda (msg)
+             (cond
+               ((equal? msg 'capture)
+                (call/cc (lambda (k)
+                           (set! captured-cont k))))
+               ((equal? msg 'invoke)
+                (guard (obj
+                         (else
+                           (tell (sender) obj)))
+                       (captured-cont))
+                (tell (sender) 'no-except)))))))
+
+  (tell actor 'capture)
+  (assert-true (expired-escape-procedure-error? (ask actor 'invoke)))))

@@ -115,6 +115,17 @@ public: // Normal C++ API
 	 */
 	void addChildActor(std::weak_ptr<actor::Mailbox> childActor);
 
+	/**
+	 * Returns the run sequence number
+	 *
+	 * This is incremented on every call to run(). This is used to prevent continuations from being used across calls to
+	 * run()
+	 */
+	int runSequence()
+	{
+		return m_runSequence;
+	}
+
 protected: // Continuation support
 	/**
 	 * Returns the stack pointer to the top of the World's stack
@@ -149,8 +160,9 @@ private:
 	alloc::CellRootList m_weakRoots;
 
 	void *m_continuationBase;
-
 	volatile dynamic::Continuation *m_resumingContinuation;
+
+	unsigned int m_runSequence = 0;
 
 	// This is lazily initialised on first use
 	actor::ActorContext *m_actorContext = nullptr;
