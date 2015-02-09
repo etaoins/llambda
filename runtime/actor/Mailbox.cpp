@@ -55,12 +55,16 @@ void Mailbox::send(Message *message)
 
 }
 
-Message* Mailbox::receive()
+Message* Mailbox::receive(World *sleepingReceiver)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 
 	if (m_messageQueue.empty())
 	{
+		assert(m_sleepingReceiver == nullptr);
+		assert(sleepingReceiver->actorContext());
+
+		m_sleepingReceiver = sleepingReceiver;
 		return nullptr;
 	}
 

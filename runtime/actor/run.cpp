@@ -62,12 +62,11 @@ void wake(World *actorWorld)
 				break;
 			}
 
-			actor::Message *msg = mailbox->receive();
+			actor::Message *msg = mailbox->receive(actorWorld);
 
 			if (msg == nullptr)
 			{
 				// No more messages; go back to sleep
-				mailbox->sleepActor(actorWorld);
 				return;
 			}
 

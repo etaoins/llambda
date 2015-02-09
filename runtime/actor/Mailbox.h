@@ -39,10 +39,10 @@ public:
 	/**
 	 * Attempts to pop message from the message queue
 	 *
-	 * This is non-blocking. If the message box is empty then nullptr is returned. The mailbox passes ownership of the
-	 * message to its caller.
+	 * This is non-blocking. If the message box is empty then nullptr is returned and the passed World is put to sleep
+	 * on the mailbox. The mailbox passes ownership of the message to its caller.
 	 */
-	Message *receive();
+	Message *receive(World *sleepingReceiver);
 
 	/**
 	 * Asks the mailbox for a synchronous response
