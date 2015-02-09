@@ -208,6 +208,11 @@
          (assert-equal cloned-pair '(3 . 4)) ; Clone is modified
          (assert-equal test-pair '(3 . 2)))))) ; Original is not
 
+  ; stdin, stdout and stderr can be cloned
+  (assert-equal (current-input-port) (ping-pong (current-input-port)))
+  (assert-equal (current-output-port) (ping-pong (current-output-port)))
+  (assert-equal (current-error-port) (ping-pong (current-error-port)))
+
   ; Cloning preserves (eqv?)
   (define same-elem-vec (ping-pong (vector test-vec test-vec test-vec)))
 
@@ -279,3 +284,25 @@
 
   (tell actor 'capture)
   (assert-true (expired-escape-procedure-error? (ask actor 'invoke)))))
+
+(define-test "procedures capturing ports can be used inside actors" (expect-success
+  (import (scheme write))
+  (import (llambda actor))
+
+  (define actor
+    (act (lambda ()
+           (define output-string (open-output-string))
+
+           (lambda (msg)
+             (cond
+               ((equal? 'return-result msg)
+                (tell (sender) (get-output-string output-string)))
+               ((equal? 'append (car msg))
+                ; codegen captures (current-output-port) but never uses it
+                (display (cdr msg) output-string)))))))
+
+  (tell actor '(append . "abc"))
+  (tell actor '(append . "123"))
+  (tell actor '(append . "!"))
+
+  (assert-equal "abc123!" (ask actor 'return-result))))

@@ -15,17 +15,20 @@ extern "C"
 
 PortCell *llcore_stdout_port(World &world)
 {
-	return PortCell::createInstance(world, new StandardOutputPort(std::cout, STDOUT_FILENO));
+	static PortCell constantStdout(new StandardOutputPort(std::cout, STDOUT_FILENO), GarbageState::GlobalConstant);
+	return &constantStdout;
 }
 
 PortCell *llcore_stderr_port(World &world)
 {
-	return PortCell::createInstance(world, new StandardOutputPort(std::cerr, STDERR_FILENO));
+	static PortCell constantStderr(new StandardOutputPort(std::cerr, STDERR_FILENO), GarbageState::GlobalConstant);
+	return &constantStderr;
 }
 
 PortCell *llcore_stdin_port(World &world)
 {
-	return PortCell::createInstance(world, new StandardInputPort(std::cin, STDIN_FILENO));
+	static PortCell constantStdin(new StandardInputPort(std::cin, STDIN_FILENO), GarbageState::GlobalConstant);
+	return &constantStdin;
 }
 
 void llcore_write_stdout(AnyCell *datum)
