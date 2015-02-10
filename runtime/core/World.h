@@ -5,6 +5,8 @@
 #include "alloc/ShadowStackEntry.h"
 #include "alloc/CellRootList.h"
 
+#include "actor/FailureAction.h"
+
 #include <memory>
 #include <functional>
 #include <list>
@@ -92,13 +94,14 @@ public: // Normal C++ API
 	}
 
 	/**
-	 * Creates a new actor context for the world
-	 *
-	 * This should be called once before entering the actor's receive loop to set up the world as an actor
+	 * Sets the world's actor context
 	 *
 	 * @sa actorContext()
 	 */
-	actor::ActorContext* createActorContext();
+	void setActorContext(actor::ActorContext *context)
+	{
+		m_actorContext = context;
+	}
 
 	/**
 	 * Returns the actor context for this world or nullptr if none exists
@@ -114,6 +117,19 @@ public: // Normal C++ API
 	 * All child actors will be synchronously stopped in the destructor for the world
 	 */
 	void addChildActor(std::weak_ptr<actor::Mailbox> childActor);
+
+	/**
+	 * Sets the failure action for new created actor children
+	 */
+	void setChildActorFailureAction(actor::FailureAction action)
+	{
+		m_childActorFailureAction = action;
+	}
+
+	actor::FailureAction childActorFailureAction() const
+	{
+		return m_childActorFailureAction;
+	}
 
 	/**
 	 * Returns the run sequence number
@@ -168,6 +184,7 @@ private:
 	actor::ActorContext *m_actorContext = nullptr;
 
 	std::list<std::weak_ptr<actor::Mailbox>> m_childActors;
+	actor::FailureAction m_childActorFailureAction = actor::FailureAction::Restart;
 };
 
 }

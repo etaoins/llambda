@@ -128,7 +128,7 @@ size_t collect(World &world, Heap &newHeap)
 	// Is this world an actor?
 	if (world.actorContext())
 	{
-		// Visit the actor's current behaviour
+		visitCell(reinterpret_cast<AnyCell**>(world.actorContext()->closureRef()), rootVisitor);
 		visitCell(reinterpret_cast<AnyCell**>(world.actorContext()->behaviourRef()), rootVisitor);
 	}
 

@@ -126,9 +126,34 @@ void llactor_stop(MailboxCell *mailboxCell)
 	}
 }
 
+bool llactor_graceful_stop(MailboxCell *mailboxCell)
+{
+	std::shared_ptr<actor::Mailbox> mailbox(mailboxCell->mailbox());
+
+	// If there's no mailbox we're already stopped
+	if (mailbox)
+	{
+		mailbox->requestStop();
+		mailbox->waitForStop();
+	}
+
+	// XXX: Timeout support
+	return true;
+}
+
 bool llactor_mailbox_is_open(World &world, MailboxCell *mailboxCell)
 {
 	return !mailboxCell->mailbox().expired();
+}
+
+std::int32_t llactor_child_failure_action(World &world)
+{
+	return static_cast<std::int32_t>(world.childActorFailureAction());
+}
+
+void llactor_set_child_failure_action(World &world, std::int32_t failureAction)
+{
+	world.setChildActorFailureAction(static_cast<actor::FailureAction>(failureAction));
 }
 
 }

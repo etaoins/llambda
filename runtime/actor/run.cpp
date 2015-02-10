@@ -4,35 +4,85 @@
 #include "actor/ActorBehaviourCell.h"
 #include "actor/cloneCell.h"
 
+#include "alloc/StrongRef.h"
+
 #include "sched/Dispatcher.h"
 
 #include "dynamic/State.h"
 #include "dynamic/SchemeException.h"
+
+#include "actor/FailureAction.h"
 
 namespace lliby
 {
 namespace actor
 {
 
+namespace
+{
+	/**
+	 * Handles the failure of an actor
+	 *
+	 * @return  True if the actor should continue running, false otherwise
+	 */
+	bool handleActorFailure(World *actorWorld)
+	{
+		ActorContext *context = actorWorld->actorContext();
+		assert(context != nullptr);
+
+		switch(context->selfFailureAction())
+		{
+		case FailureAction::Resume:
+			return true;
+
+		case FailureAction::Restart:
+			try
+			{
+				// Restart the actor
+				actorWorld->run([&] (World &world) {
+					auto behaviourCell = context->closure()->apply(*actorWorld);
+					context->setBehaviour(static_cast<ActorBehaviourCell*>(behaviourCell));
+				});
+
+				return true;
+			}
+			catch (dynamic::SchemeException &except)
+			{
+				// Threw an exception during restart; give up
+				return false;
+			}
+
+		case FailureAction::Stop:
+			return false;
+		}
+	}
+}
+
 std::shared_ptr<Mailbox> run(World &parentWorld, ActorClosureCell *closureCell)
 {
 	// Create a new world to launch
 	auto *actorWorld = new World;
 
-	// Clone ourselves and our closure in to the new world
+	// Clone our closure in to the new world
 	dynamic::State *captureState = parentWorld.activeStateCell()->state();
-	auto clonedSelf = static_cast<ActorClosureCell*>(cloneCell(actorWorld->cellHeap, closureCell, captureState));
+	AnyCell* clonedClosureCell = cloneCell(actorWorld->cellHeap, closureCell, captureState);
+
+	// Take a reference to it so we can store it in the actor context for restart purposes
+	alloc::StrongRef<ActorClosureCell> clonedClosureProc(*actorWorld, static_cast<ActorClosureCell*>(clonedClosureCell));
 
 	ActorBehaviourCell *behaviourCell;
 
 	// Initialise the actor's closure in its world but our thread
 	actorWorld->run([&] (World &world) {
-		behaviourCell = clonedSelf->apply(world);
+		behaviourCell = clonedClosureProc->apply(world);
 	});
 
+	// Determine the actor's failure action
+	actor::FailureAction failureAction = parentWorld.childActorFailureAction();
+
 	// Make the world an actor
-	ActorContext *context = actorWorld->createActorContext();
-	context->setBehaviour(behaviourCell);
+	ActorContext *context = new ActorContext(clonedClosureProc, behaviourCell, failureAction);
+	actorWorld->setActorContext(context);
 
 	// Set our initial behaviour
 	actorWorld->actorContext()->setBehaviour(behaviourCell);
@@ -48,51 +98,60 @@ std::shared_ptr<Mailbox> run(World &parentWorld, ActorClosureCell *closureCell)
 
 void wake(World *actorWorld)
 {
-	try
+	// Pull some useful variables out of our world
+	ActorContext *context = actorWorld->actorContext();
+	std::shared_ptr<Mailbox> mailbox(context->mailbox());
+
+	while(true)
 	{
-		// Pull some useful variables out of our world
-		ActorContext *context = actorWorld->actorContext();
-		std::shared_ptr<Mailbox> mailbox(context->mailbox());
-
-		while(true)
+		if (mailbox->stopRequested())
 		{
-			if (mailbox->stopRequested())
-			{
-				// We should die promptly
-				break;
-			}
+			// We should die promptly
+			break;
+		}
 
-			actor::Message *msg = mailbox->receive(actorWorld);
+		actor::Message *msg = mailbox->receive(actorWorld);
 
-			if (msg == nullptr)
-			{
-				// No more messages; go back to sleep
-				return;
-			}
+		if (msg == nullptr)
+		{
+			// No more messages; go back to sleep
+			return;
+		}
 
-			// Take ownership of the heap
-			actorWorld->cellHeap.splice(msg->heap());
+		// Take ownership of the heap
+		actorWorld->cellHeap.splice(msg->heap());
 
-			// Grab the root cell
-			AnyCell *msgCell = msg->messageCell();
+		// Grab the root cell
+		AnyCell *msgCell = msg->messageCell();
 
-			// Update our sender
-			context->setSender(msg->sender());
+		// Update our sender
+		context->setSender(msg->sender());
 
-			// Delete the message
-			delete msg;
+		// Delete the message
+		delete msg;
 
+		try
+		{
 			actorWorld->run([=] (World &world) {
 				context->behaviour()->apply(world, msgCell);
 			});
 		}
-	}
-	catch (dynamic::SchemeException &except)
-	{
-		// XXX: Support supervision
+		catch (dynamic::SchemeException &except)
+		{
+			if (handleActorFailure(actorWorld))
+			{
+				// Keep going!
+				continue;
+			}
+			else
+			{
+				// Kill the actor
+				break;
+			}
+		}
 	}
 
-	actorWorld->actorContext()->mailbox()->stopped();
+	context->mailbox()->stopped();
 	delete actorWorld;
 }
 

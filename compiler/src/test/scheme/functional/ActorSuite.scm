@@ -4,7 +4,11 @@
   (define actor (act (lambda ()
                        (lambda (msg)))))
 
-  (assert-true (mailbox? actor))))
+  (assert-true (mailbox? actor))
+  (assert-true (mailbox-open? actor))
+
+  (assert-true (graceful-stop actor))
+  (assert-false (mailbox-open? actor))))
 
 (define-test "actors with dynamic states" (expect-success
   (import (llambda actor))
@@ -306,3 +310,77 @@
   (tell actor '(append . "!"))
 
   (assert-equal "abc123!" (ask actor 'return-result))))
+
+(define-test "resume failure action" (expect-success
+  (import (llambda actor))
+
+  ; Resume our children
+  (set-child-failure-action resume-failure-action)
+  (assert-equal resume-failure-action (child-failure-action))
+
+  (define actor
+    (act (lambda ()
+           (define counter 0)
+
+           (lambda (msg)
+             (cond
+               ((equal? 'increment msg)
+                (set! counter (+ counter 1)))
+               ((equal? 'query msg)
+                (tell (sender) counter))
+               ((equal? 'fail msg)
+                (raise "FAILURE")))))))
+
+  (tell actor 'increment)
+  (tell actor 'increment)
+  (tell actor 'increment)
+
+  (assert-equal 3 (ask actor 'query))
+
+  (tell actor 'fail)
+  (tell actor 'increment)
+
+  ; This should keep our state
+  (assert-equal 4 (ask actor 'query))))
+
+(define-test "restart failure action" (expect-success
+  (import (llambda actor))
+
+  ; Restart our children
+  (set-child-failure-action restart-failure-action)
+  (assert-equal restart-failure-action (child-failure-action))
+
+  (define actor
+    (act (lambda ()
+           (define counter 0)
+
+           (lambda (msg)
+             (cond
+               ((equal? 'increment msg)
+                (set! counter (+ counter 1)))
+               ((equal? 'query msg)
+                (tell (sender) counter))
+               ((equal? 'fail msg)
+                (raise "FAILURE")))))))
+
+  (tell actor 'increment)
+  (tell actor 'increment)
+  (tell actor 'increment)
+
+  (assert-equal 3 (ask actor 'query))
+
+  (tell actor 'fail)
+  (tell actor 'increment)
+
+  ; This should have reset our state
+  (assert-equal 1 (ask actor 'query))))
+
+(define-test "stop failure action" (expect-success
+  (import (llambda actor))
+
+  ; Stop our children
+  (set-child-failure-action stop-failure-action)
+  (assert-equal stop-failure-action (child-failure-action))
+
+  ; XXX: We need proper timeout support to ensure our actors actually die without hanging
+))

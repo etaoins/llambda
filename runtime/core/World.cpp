@@ -75,14 +75,6 @@ void World::run(const std::function<void(World &)> &func)
 	dynamic::State::popAllStates(*this);
 }
 
-actor::ActorContext* World::createActorContext()
-{
-	assert(m_actorContext == nullptr);
-	m_actorContext = new actor::ActorContext;
-
-	return m_actorContext;
-}
-
 void World::addChildActor(std::weak_ptr<actor::Mailbox> childActor)
 {
 	m_childActors.push_front(childActor);
