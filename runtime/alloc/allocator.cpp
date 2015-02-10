@@ -1,18 +1,22 @@
 #include "alloc/allocator.h"
 
-#include <stdlib.h>
-#include <iostream>
+#include <cstdlib>
 
 #include "core/World.h"
-
-#include "binding/RecordLikeCell.h"
-#include "binding/SharedByteArray.h"
 
 #include "alloc/AllocCell.h"
 #include "alloc/RangeAlloc.h"
 #include "alloc/Finalizer.h"
 #include "alloc/DynamicMemoryBlock.h"
 #include "alloc/collector.h"
+
+#ifdef _LLIBY_CHECK_LEAKS
+#include <iostream>
+
+#include "binding/RecordLikeCell.h"
+#include "binding/SharedByteArray.h"
+#include "actor/Mailbox.h"
+#endif
 
 // Statically check that everything can fit in to a cell
 #include "generated/sizecheck.h"
@@ -49,6 +53,12 @@ void shutdownGlobal()
 	if (RecordLikeCell::recordDataInstanceCount() != 0)
 	{
 		std::cerr << "Record data instances leaked on exit!" << std::endl;
+		exit(-1);
+	}
+
+	if (actor::Mailbox::instanceCount())
+	{
+		std::cerr << "Actor mailboxes leaked on exit!" << std::endl;
 		exit(-1);
 	}
 #endif

@@ -9,9 +9,19 @@ namespace lliby
 namespace actor
 {
 
+namespace
+{
+#ifdef _LLIBY_CHECK_LEAKS
+	std::atomic<std::size_t> allocationCount(0);
+#endif
+}
+
 Mailbox::Mailbox() :
 	m_stopRequested(false)
 {
+#ifdef _LLIBY_CHECK_LEAKS
+	allocationCount++;
+#endif
 }
 
 Mailbox::~Mailbox()
@@ -23,6 +33,10 @@ Mailbox::~Mailbox()
 		delete m_messageQueue.front();
 		m_messageQueue.pop();
 	}
+
+#ifdef _LLIBY_CHECK_LEAKS
+	allocationCount--;
+#endif
 }
 
 void Mailbox::send(Message *message)
@@ -181,6 +195,22 @@ void Mailbox::sleepActor(World *sleepingReceiver)
 
 	m_sleepingReceiver = sleepingReceiver;
 }
+
+#ifdef _LLIBY_CHECK_LEAKS
+
+std::size_t Mailbox::instanceCount()
+{
+	return allocationCount.load(std::memory_order_relaxed);
+}
+
+#else
+
+std::size_t Mailbox::instanceCount()
+{
+	return 0;
+}
+
+#endif
 
 }
 }

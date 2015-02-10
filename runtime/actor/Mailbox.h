@@ -77,6 +77,13 @@ public:
 	 */
 	void sleepActor(World *sleepingReceiver);
 
+	/**
+	 * Returns the current number of live mailbox instances
+	 *
+	 * This always returns 0 unless _LLIBY_CHECK_LEAKS is defined
+	 */
+	static std::size_t instanceCount();
+
 private:
 	std::mutex m_mutex;
 	std::condition_variable m_messageQueueCond;
