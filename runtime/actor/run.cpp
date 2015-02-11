@@ -100,17 +100,16 @@ void wake(World *actorWorld)
 {
 	// Pull some useful variables out of our world
 	ActorContext *context = actorWorld->actorContext();
-	std::shared_ptr<Mailbox> mailbox(context->mailbox());
 
 	while(true)
 	{
-		if (mailbox->stopRequested())
+		if (context->mailbox()->stopRequested())
 		{
 			// We should die promptly
 			break;
 		}
 
-		actor::Message *msg = mailbox->receive(actorWorld);
+		actor::Message *msg = context->mailbox()->receive(actorWorld);
 
 		if (msg == nullptr)
 		{

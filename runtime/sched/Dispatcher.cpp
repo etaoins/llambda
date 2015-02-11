@@ -10,6 +10,9 @@ namespace sched
 
 Dispatcher::Dispatcher() :
 	m_idleThreads(0)
+#ifdef _LLIBY_CHECK_LEAKS
+	, m_runningThreads(0)
+#endif
 {
 }
 
@@ -41,6 +44,10 @@ void Dispatcher::dispatch(const WorkFunction &work)
 
 void Dispatcher::workerThread(WorkFunction initialWork)
 {
+#ifdef _LLIBY_CHECK_LEAKS
+	m_runningThreads++;
+#endif
+
 	// Do our initial work
 	initialWork();
 
@@ -51,6 +58,10 @@ void Dispatcher::workerThread(WorkFunction initialWork)
 		// We're now idle
 		m_idleThreads++;
 
+#ifdef _LLIBY_CHECK_LEAKS
+		m_drainCond.notify_all();
+#endif
+
 		// Wait for work to do for five seconds
 		std::chrono::seconds timeout(5);
 
@@ -58,6 +69,11 @@ void Dispatcher::workerThread(WorkFunction initialWork)
 		{
 			// Nothing to do; give up our thread
 			m_idleThreads--;
+
+#ifdef _LLIBY_CHECK_LEAKS
+			m_runningThreads--;
+#endif
+
 			return;
 		}
 
@@ -75,6 +91,18 @@ void Dispatcher::workerThread(WorkFunction initialWork)
 		queuedWork();
 	}
 }
+
+#ifdef _LLIBY_CHECK_LEAKS
+
+void Dispatcher::waitForDrain()
+{
+	std::unique_lock<std::mutex> lock(m_mutex);
+	m_drainCond.wait(lock, [=]{
+		return m_runningThreads == m_idleThreads;
+	});
+}
+
+#endif
 
 }
 }

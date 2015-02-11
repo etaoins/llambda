@@ -6,6 +6,7 @@
 #include <mutex>
 #include <queue>
 #include <condition_variable>
+#include <atomic>
 
 namespace lliby
 {
@@ -40,6 +41,18 @@ private:
 	std::int32_t m_idleThreads;
 	std::condition_variable m_workQueueCond;
 	std::queue<WorkFunction> m_workQueue;
+
+#ifdef _LLIBY_CHECK_LEAKS
+public:
+	/**
+	 * Waits for the scheduler to drain all queued work
+	 */
+	void waitForDrain();
+
+private:
+	std::atomic<int32_t> m_runningThreads;
+	std::condition_variable m_drainCond;
+#endif
 };
 
 }

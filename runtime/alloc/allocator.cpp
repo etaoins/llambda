@@ -13,6 +13,7 @@
 #ifdef _LLIBY_CHECK_LEAKS
 #include <iostream>
 
+#include "sched/Dispatcher.h"
 #include "binding/RecordLikeCell.h"
 #include "binding/SharedByteArray.h"
 #include "actor/Mailbox.h"
@@ -43,6 +44,8 @@ void initGlobal()
 void shutdownGlobal()
 {
 #ifdef _LLIBY_CHECK_LEAKS
+	sched::Dispatcher::defaultInstance().waitForDrain();
+
 	// Make sure everything is properly freed
 	if (SharedByteArray::instanceCount() != 0)
 	{
@@ -94,16 +97,11 @@ size_t forceCollection(World &world)
 	// Collect in to the new world
 	const size_t reachableCells = collect(world, nextCellHeap);
 
-	/* We can normally finalize memory in a background thread for better concurrency. There are two debug flags
-	 * which require synchronous finalization:
-	 *
-	 * - NO_ADDR_REUSE immediately marks the memory as inaccessible which means the finalizer must be done with it
-	 *   before we return from collection.
-	 *
-	 * - CHECK_LEAKS needs all finalization to be complete at exit. Currently there's no way to wait for the
-	 *   finalizer queue to drain so it makes all finalization synchronous.
+	/* We can normally finalize memory in a background thread for better concurrency. However,  NO_ADDR_REUSE
+	 * immediately marks the memory as inaccessible which means the finalizer must be done with it before we return
+	 * from collection.
 	 */
-#if !defined(_LLIBY_NO_ADDR_REUSE) && !defined(_LLIBY_CHECK_LEAKS)
+#if !defined(_LLIBY_NO_ADDR_REUSE)
 	finalizer->finalizeHeapAsync(world.cellHeap);
 #else
 	finalizer->finalizeHeapSync(world.cellHeap);
