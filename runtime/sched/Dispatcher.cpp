@@ -61,6 +61,9 @@ void Dispatcher::workerThread(WorkFunction initialWork)
 			return;
 		}
 
+		// We're no longer idle
+		m_idleThreads--;
+
 		// Grab the work
 		WorkFunction queuedWork(m_workQueue.front());
 		m_workQueue.pop();
