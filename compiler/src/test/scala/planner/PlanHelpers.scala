@@ -126,7 +126,7 @@ trait PlanHelpers extends FunSuite with Inside {
             // Depend on the fact the actual list members will be interleaved with the pairs in a predictable way
           case (_ : ps.CreateVectorCell, _ : ps.CreateVectorCell) =>
             // XXX: We need to be more clever to deal with this
-          case (expectedStep : ps.DisposableStep, actualStep : ps.DisposableStep) =>
+          case (expectedStep : ps.MergeableStep, actualStep : ps.MergeableStep) =>
             // Use merge the merge key which will replace the result TempValue with a fixed constant
             assert(expectedStep.mergeKey === actualStep.mergeKey)
 

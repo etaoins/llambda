@@ -7,7 +7,7 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 
 class TempValue(val isGcManaged : Boolean) {
-  override def toString = s"%${this.hashCode.toHexString}" 
+  override def toString = s"%${this.hashCode.toHexString}"
 }
 
 object WorldPtrValue extends TempValue(false)
@@ -82,9 +82,9 @@ sealed trait NestingStep extends Step {
 
   /** Rewrites this step with new inner branches */
   def mapInnerBranches(mapper : (List[Step], TempValue) => (List[Step], TempValue)) : NestingStep
-  
+
   lazy val inputValues =
-    outerInputValues ++ 
+    outerInputValues ++
     innerBranches.flatMap(_._1).flatMap(_.inputValues) ++
     innerBranches.map(_._2)
 }
@@ -92,7 +92,7 @@ sealed trait NestingStep extends Step {
 /** Step requiring a cell from a temporary allocation */
 sealed trait CellConsumer extends Step
 
-/** Step that dispose its input values as part of the step 
+/** Step that dispose its input values as part of the step
   *
   * This is typically used for steps that are GC barriers so they can avoid rooting input values that will be unused
   * after the step completets
@@ -102,6 +102,12 @@ sealed trait InputDisposableStep extends Step {
   def withDisposedInput(inputToDispose : Set[TempValue]) : InputDisposableStep
 }
 
+/** Step producing a values that can be discard if its output values are unused
+  *
+  * These are discarded by ps.DisposeValues
+  */
+sealed trait DiscardableStep extends Step
+
 /** Step producing a value that can be disposed or merged with identical instances of itself
   *
   * These must satisfy the following properties:
@@ -109,20 +115,20 @@ sealed trait InputDisposableStep extends Step {
   * - The step must not have any side effects on global state besides potentially raising an error
   * - The source and destination values must either both be immutable or reference the same location in memory
   *
-  * These are potentially disposed by ps.DisposeValues or merged by conniver.MergeIdenticalSteps
+  * These are potentially merged by conniver.MergeIdenticalSteps
   */
-sealed trait DisposableStep extends Step {
+sealed trait MergeableStep extends Step {
   val result : TempValue
-  
+
   /** Key used to compare if two mergeable steps are the same
-    * 
+    *
     * The default key is just the original mergeable step with the result renamed to a constant value. Other steps may
     * want to override this return a tuple of fields to exclude things like error messages.
     */
    def mergeKey : Any = {
      this.renamed({ tempValue =>
-       if (tempValue == result) {
-         DisposableStep.PlaceholderResultTemp
+       if (outputValues.contains(tempValue)) {
+         MergeableStep.PlaceholderResultTemp
        }
        else {
          tempValue
@@ -131,37 +137,13 @@ sealed trait DisposableStep extends Step {
    }
 }
 
-object DisposableStep {
+object MergeableStep {
   object PlaceholderResultTemp extends TempValue(false)
 }
 
-/** Step without any side effects not depending on mutable state
-  *
-  * Examples of nullipotent steps are loading values from memory, converting values or comparing values. These may be
-  * disposed entirely by DisposeValues if its result is unused. Identical steps are also candidates for merging
-  */
-sealed trait NullipotentStep extends DisposableStep
-
-/** Step without side effects depending on potentially mutable state
-  *
-  * These steps may be discarded completely if the result is unused but they cannot be merged with other steps. Examples
-  * of mutable reads are reading fields from mutable records, vectors or pairs.
-  */
-sealed trait MutableReadStep extends NullipotentStep {
-  // Disable merging
-  override def mergeKey = this
-}
-
-/** Step with side effects
-  *
-  * Examples of idempotent steps are stores. Idempotent steps cannot be disposed even if their result is unused but they
-  * can be merged with identical instances of themselves.
-  */
-sealed trait IdempotentStep extends DisposableStep
-
 /** Step that can conditionally terminate execution based on a test */
-sealed trait AssertStep extends IdempotentStep {
-  val result = DisposableStep.PlaceholderResultTemp
+sealed trait AssertStep extends MergeableStep {
+  val result = MergeableStep.PlaceholderResultTemp
 }
 
 /** Step using a record-like type
@@ -192,11 +174,11 @@ case class Invoke(
 ) extends InvokeLike with InputDisposableStep {
   lazy val inputValues = arguments.toSet + entryPoint
   lazy val outputValues = result.toSet
-    
+
   def withDisposedInput(values : Set[TempValue]) =
     this.copy(inputToDispose=values).assignLocationFrom(this)
 
-  def renamed(f : (TempValue) => TempValue) = 
+  def renamed(f : (TempValue) => TempValue) =
     Invoke(
       result=result.map(f),
       signature=signature,
@@ -211,7 +193,7 @@ case class TailCall(signature : ProcedureSignature, entryPoint : TempValue, argu
   lazy val inputValues = arguments.toSet + entryPoint
   val outputValues = Set[TempValue]()
 
-  def renamed(f : (TempValue) => TempValue) = 
+  def renamed(f : (TempValue) => TempValue) =
     TailCall(
       signature=signature,
       entryPoint=f(entryPoint),
@@ -219,7 +201,7 @@ case class TailCall(signature : ProcedureSignature, entryPoint : TempValue, argu
     ).assignLocationFrom(this)
 }
 
-/** Allocates a given number of cells at runtime 
+/** Allocates a given number of cells at runtime
  *
  * This should only be inserted in to the plan by PlanCellAllocations
  */
@@ -228,7 +210,7 @@ case class AllocateCells(count : Int) extends Step {
   val outputValues = Set[TempValue]()
 
   override def canAllocate = true
-  
+
   def renamed(f : (TempValue) => TempValue) = this
 }
 
@@ -240,12 +222,12 @@ case class AllocateCells(count : Int) extends Step {
 case class DisposeValues(values : Set[TempValue]) extends Step {
   lazy val inputValues = values
   val outputValues = Set[TempValue]()
-  
+
   def renamed(f : (TempValue) => TempValue) =
     DisposeValues(values.map(f)).assignLocationFrom(this)
 }
 
-/** Conditionally branches based on a value 
+/** Conditionally branches based on a value
   *
   * @param result      location to store trueValue or falseValue when the branch completes
   * @param test        i1 value to conditionally branch on
@@ -257,7 +239,7 @@ case class DisposeValues(values : Set[TempValue]) extends Step {
 case class CondBranch(result : TempValue, test : TempValue, trueSteps : List[Step], trueValue : TempValue, falseSteps : List[Step], falseValue : TempValue) extends NestingStep {
   lazy val outerInputValues = Set(test)
   lazy val innerBranches = List((trueSteps, trueValue), (falseSteps, falseValue))
-  
+
   lazy val outputValues = Set(result)
 
   def mapInnerBranches(mapper : (List[Step], TempValue) => (List[Step], TempValue)) = {
@@ -267,7 +249,7 @@ case class CondBranch(result : TempValue, test : TempValue, trueSteps : List[Ste
     CondBranch(result, test, mappedTrueSteps, mappedTrueValue, mappedFalseSteps, mappedFalseValue)
       .assignLocationFrom(this)
   }
-  
+
   def renamed(f : (TempValue) => TempValue) =
     CondBranch(
       result=f(result),
@@ -291,14 +273,14 @@ case class ForAll(
   lazy val innerBranches = List((loopSteps, loopResultPred))
 
   lazy val outputValues = Set(result)
-  
+
   def mapInnerBranches(mapper : (List[Step], TempValue) => (List[Step], TempValue)) = {
     val (mappedLoopSteps, mappedLoopResultPred) = mapper(loopSteps, loopResultPred)
 
     ForAll(result, loopCountValue, loopIndexValue, mappedLoopSteps, mappedLoopResultPred)
       .assignLocationFrom(this)
   }
-  
+
   def renamed(f : (TempValue) => TempValue) =
     ForAll(
       result=f(result),
@@ -315,13 +297,13 @@ case class TestCellType(
     value : TempValue,
     testType : ct.ConcreteCellType,
     possibleTypes : Set[ct.ConcreteCellType] = ct.AnyCell.concreteTypes
-) extends Step with NullipotentStep {
+) extends DiscardableStep with MergeableStep {
   lazy val inputValues = Set(value)
   lazy val outputValues = Set(result)
-  
+
   def renamed(f : (TempValue) => TempValue) =
     TestCellType(f(result), f(value), testType, possibleTypes).assignLocationFrom(this)
-  
+
   private case class MergeKey(value : TempValue, testType : ct.ConcreteCellType)
 
   override def mergeKey : Any =
@@ -330,46 +312,67 @@ case class TestCellType(
 }
 
 /** Casts a cell to another type without checking the validity of the cast */
-case class CastCellToTypeUnchecked(result : TempValue, value : TempValue, toType : ct.CellType) extends Step with NullipotentStep {
+case class CastCellToTypeUnchecked(
+    result : TempValue,
+    value : TempValue,
+    toType : ct.CellType
+) extends DiscardableStep with MergeableStep {
   lazy val inputValues = Set(value)
   lazy val outputValues = Set(result)
-  
+
   def renamed(f : (TempValue) => TempValue) =
     CastCellToTypeUnchecked(f(result), f(value), toType).assignLocationFrom(this)
 }
 
 /** Converts an native integer to another width and/or signedness */
-case class ConvertNativeInteger(result : TempValue, fromValue : TempValue, toBits : Int, signed : Boolean) extends Step with NullipotentStep {
+case class ConvertNativeInteger(
+    result : TempValue,
+    fromValue : TempValue,
+    toBits : Int,
+    signed : Boolean
+) extends DiscardableStep with MergeableStep {
   lazy val inputValues = Set(fromValue)
   lazy val outputValues = Set(result)
-  
+
   def renamed(f : (TempValue) => TempValue) =
     ConvertNativeInteger(f(result), f(fromValue), toBits, signed).assignLocationFrom(this)
 }
 
 /** Converts an native float to another type */
-case class ConvertNativeFloat(result : TempValue, fromValue : TempValue, toType : vt.FpType) extends Step with NullipotentStep {
+case class ConvertNativeFloat(
+    result : TempValue,
+    fromValue : TempValue,
+    toType : vt.FpType
+) extends DiscardableStep with MergeableStep {
   lazy val inputValues = Set(fromValue)
   lazy val outputValues = Set(result)
-  
+
   def renamed(f : (TempValue) => TempValue) =
     ConvertNativeFloat(f(result), f(fromValue), toType).assignLocationFrom(this)
 }
 
 /** Converts an native integer to a float */
-case class ConvertNativeIntegerToFloat(result : TempValue, fromValue : TempValue, fromSigned: Boolean, toType : vt.FpType) extends Step with NullipotentStep {
+case class ConvertNativeIntegerToFloat(
+    result : TempValue,
+    fromValue : TempValue,
+    fromSigned: Boolean,
+    toType : vt.FpType
+) extends DiscardableStep with MergeableStep {
   lazy val inputValues = Set(fromValue)
   lazy val outputValues = Set(result)
-  
+
   def renamed(f : (TempValue) => TempValue) =
     ConvertNativeIntegerToFloat(f(result), f(fromValue), fromSigned, toType).assignLocationFrom(this)
 }
-      
+
 /** Calculates the length of a proper list as a uint32
   *
   * The passed list must be a proper list or the result is undefined
   */
-case class CalcProperListLength(result : TempValue, listHead : TempValue) extends Step with NullipotentStep {
+case class CalcProperListLength(
+    result : TempValue,
+    listHead : TempValue
+) extends DiscardableStep with MergeableStep {
   lazy val inputValues = Set(listHead)
   lazy val outputValues = Set(result)
 
@@ -378,7 +381,7 @@ case class CalcProperListLength(result : TempValue, listHead : TempValue) extend
 }
 
 /** Indicates a step that creates a constant value */
-sealed trait CreateConstant extends Step with NullipotentStep {
+sealed trait CreateConstant extends DiscardableStep with MergeableStep {
   val result : TempValue
   lazy val outputValues = Set(result)
 }
@@ -387,41 +390,45 @@ sealed trait CreateConstant extends Step with NullipotentStep {
   *
   * This can be called with Invoke
   */
-case class CreateNamedEntryPoint(result : TempValue, signature : ProcedureSignature, nativeSymbol : String) extends Step with NullipotentStep {
+case class CreateNamedEntryPoint(
+    result : TempValue,
+    signature : ProcedureSignature,
+    nativeSymbol : String
+) extends DiscardableStep with MergeableStep {
   val inputValues = Set[TempValue]()
   lazy val outputValues = Set(result)
-  
+
   def renamed(f : (TempValue) => TempValue) =
     CreateNamedEntryPoint(f(result), signature, nativeSymbol).assignLocationFrom(this)
 }
 
 /** Indicates a step that creates a constant cell */
-sealed trait CreateConstantCell extends CreateConstant 
+sealed trait CreateConstantCell extends CreateConstant
 
 case class CreateStringCell(result : TempValue, value : String) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
-  
+
   def renamed(f : (TempValue) => TempValue) =
     CreateStringCell(f(result), value).assignLocationFrom(this)
 }
 
 case class CreateSymbolCell(result : TempValue, value : String) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
-  
+
   def renamed(f : (TempValue) => TempValue) =
     CreateSymbolCell(f(result), value).assignLocationFrom(this)
 }
 
 case class CreateExactIntegerCell(result : TempValue, value : Long) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
-  
+
   def renamed(f : (TempValue) => TempValue) =
     CreateExactIntegerCell(f(result), value).assignLocationFrom(this)
 }
 
 case class CreateFlonumCell(result : TempValue, value : Double) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
-  
+
   def renamed(f : (TempValue) => TempValue) =
     CreateFlonumCell(f(result), value).assignLocationFrom(this)
 
@@ -434,61 +441,61 @@ case class CreateFlonumCell(result : TempValue, value : Double) extends CreateCo
 
 case class CreateCharCell(result : TempValue, value : Int) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
-  
+
   def renamed(f : (TempValue) => TempValue) =
     CreateCharCell(f(result), value).assignLocationFrom(this)
 }
 
 case class CreateBooleanCell(result : TempValue, value : Boolean) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
-  
+
   def renamed(f : (TempValue) => TempValue) =
     CreateBooleanCell(f(result), value).assignLocationFrom(this)
 }
 
 case class CreateBytevectorCell(result : TempValue, elements : Vector[Short]) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
-  
+
   def renamed(f : (TempValue) => TempValue) =
     CreateBytevectorCell(f(result), elements).assignLocationFrom(this)
 }
 
 case class CreatePairCell(result : TempValue, car : TempValue, cdr : TempValue, listLengthOpt : Option[Long]) extends CreateConstantCell {
   lazy val inputValues = Set(car, cdr)
-  
+
   def renamed(f : (TempValue) => TempValue) =
     CreatePairCell(f(result), f(car), f(cdr), listLengthOpt).assignLocationFrom(this)
 }
 
 case class CreateVectorCell(result : TempValue, elements : Vector[TempValue]) extends CreateConstantCell {
   lazy val inputValues = elements.toSet
-  
+
   def renamed(f : (TempValue) => TempValue) =
     CreateVectorCell(f(result), elements.map(f)).assignLocationFrom(this)
 }
 
 case class CreateUnitCell(result : TempValue) extends CreateConstantCell {
-  val inputValues = Set[TempValue]()  
-  
+  val inputValues = Set[TempValue]()
+
   def renamed(f : (TempValue) => TempValue) =
     CreateUnitCell(f(result)).assignLocationFrom(this)
 }
 
 case class CreateEmptyListCell(result : TempValue) extends CreateConstantCell {
   val inputValues = Set[TempValue]()
-  
+
   def renamed(f : (TempValue) => TempValue) =
     CreateEmptyListCell(f(result)).assignLocationFrom(this)
 }
 
-/** Creates a procedure with an empty closure 
+/** Creates a procedure with an empty closure
   *
-  * This is equalivent to RecordLikeInit(vt.EmptyClosureType] followed by LoadProcedureEntryPoint except it uses a
+  * This is equivalent to RecordLikeInit(vt.EmptyClosureType] followed by LoadProcedureEntryPoint except it uses a
   * compile time constant cell and is considerably more efficient
   **/
 case class CreateEmptyClosure(result : TempValue, entryPoint : TempValue) extends CreateConstantCell {
   lazy val inputValues = Set(entryPoint)
-  
+
   def renamed(f : (TempValue) => TempValue) =
     CreateEmptyClosure(f(result), f(entryPoint)).assignLocationFrom(this)
 }
@@ -515,7 +522,7 @@ case class CreateNativeFloat(result : TempValue, value : Double, fpType : vt.FpT
 }
 
 /** Indicates a step that unboxes a cell */
-sealed trait UnboxValue extends Step with NullipotentStep {
+sealed trait UnboxValue extends DiscardableStep with MergeableStep {
   val result : TempValue
   val boxed : TempValue
 
@@ -541,19 +548,19 @@ case class UnboxChar(result : TempValue, boxed : TempValue) extends UnboxValue {
 // These aren't quite an unboxing because there's two values per boxed value
 
 /** Loads the car of the passed PairCell as a AnyCell */
-case class LoadPairCar(result : TempValue, boxed : TempValue) extends Step with MutableReadStep {
+case class LoadPairCar(result : TempValue, boxed : TempValue) extends DiscardableStep {
   lazy val inputValues = Set(boxed)
   lazy val outputValues = Set(result)
-  
+
   def renamed(f : (TempValue) => TempValue) =
     LoadPairCar(f(result), f(boxed)).assignLocationFrom(this)
 }
 
 /** Loads the cdr of the passed PairCell as a AnyCell */
-case class LoadPairCdr(result : TempValue, boxed : TempValue) extends Step with MutableReadStep {
+case class LoadPairCdr(result : TempValue, boxed : TempValue) extends DiscardableStep {
   lazy val inputValues = Set(boxed)
   lazy val outputValues = Set(result)
-  
+
   def renamed(f : (TempValue) => TempValue) =
     LoadPairCdr(f(result), f(boxed)).assignLocationFrom(this)
 }
@@ -562,10 +569,14 @@ case class LoadPairCdr(result : TempValue, boxed : TempValue) extends Step with 
   *
   * This is a MutableRead to allow procedures to dynamically change entry points
   */
-case class LoadProcedureEntryPoint(result : TempValue, boxed : TempValue, signature : ProcedureSignature) extends MutableReadStep {
+case class LoadProcedureEntryPoint(
+    result : TempValue,
+    boxed : TempValue,
+    signature : ProcedureSignature
+) extends DiscardableStep {
   lazy val inputValues = Set(boxed)
   lazy val outputValues = Set(result)
-  
+
   def renamed(f : (TempValue) => TempValue) =
     LoadProcedureEntryPoint(f(result), f(boxed), signature)
       .assignLocationFrom(this)
@@ -575,7 +586,10 @@ case class LoadProcedureEntryPoint(result : TempValue, boxed : TempValue, signat
   *
   * This is nullipotent as a string's character length is immutable
   */
-case class LoadStringCharLength(result : TempValue, boxed : TempValue) extends Step with NullipotentStep {
+case class LoadStringCharLength(
+    result : TempValue,
+    boxed : TempValue
+) extends DiscardableStep with MergeableStep {
   lazy val inputValues = Set(boxed)
   lazy val outputValues = Set(result)
 
@@ -592,7 +606,7 @@ case class LoadSymbolByteLength(
     result : TempValue,
     boxed : TempValue,
     possibleLengthsOpt : Option[Set[Int]] = None
-) extends Step with NullipotentStep {
+) extends DiscardableStep with MergeableStep {
   lazy val inputValues = Set(boxed)
   lazy val outputValues = Set(result)
 
@@ -616,7 +630,7 @@ case class LoadSymbolByte(
     offset : TempValue,
     symbolByteLength : Long,
     possibleValuesOpt : Option[Set[Byte]] = None
-) extends Step with NullipotentStep {
+) extends DiscardableStep with MergeableStep {
   lazy val inputValues = Set(boxed, offset)
   lazy val outputValues = Set(result)
 
@@ -626,7 +640,10 @@ case class LoadSymbolByte(
 }
 
 /** Loads the length of a bytevector as a Int64 */
-case class LoadBytevectorLength(result : TempValue, boxed : TempValue) extends Step with NullipotentStep {
+case class LoadBytevectorLength(
+    result : TempValue,
+    boxed : TempValue
+) extends DiscardableStep with MergeableStep {
   lazy val inputValues = Set(boxed)
   lazy val outputValues = Set(result)
 
@@ -656,24 +673,30 @@ case class InitVector(
 }
 
 /** Loads the pointer to the vector element data */
-case class LoadVectorElementsData(result : TempValue, vectorCell : TempValue) extends Step with NullipotentStep {
+case class LoadVectorElementsData(
+    result : TempValue,
+    vectorCell : TempValue
+) extends DiscardableStep with MergeableStep {
   lazy val inputValues = Set(vectorCell)
   lazy val outputValues = Set(result)
-  
+
   def renamed(f : (TempValue) => TempValue) =
     LoadVectorElementsData(f(result), f(vectorCell)).assignLocationFrom(this)
 }
 
 /** Loads the length of a vector as an Int64 */
-case class LoadVectorLength(result : TempValue, boxed : TempValue) extends Step with NullipotentStep {
+case class LoadVectorLength(
+    result : TempValue,
+    boxed : TempValue
+) extends DiscardableStep with MergeableStep {
   lazy val inputValues = Set(boxed)
   lazy val outputValues = Set(result)
-  
+
   def renamed(f : (TempValue) => TempValue) =
     LoadVectorLength(f(result), f(boxed)).assignLocationFrom(this)
 }
 
-/** Loads an element from a vector 
+/** Loads an element from a vector
   *
   * @param  vectorCell  Vector to load an element from
   * @param  elements    Vector elements pointer
@@ -684,15 +707,15 @@ case class LoadVectorElement(
     vectorCell : TempValue,
     elements : TempValue,
     index : TempValue
-) extends Step with MutableReadStep {
+) extends Step with DiscardableStep {
   lazy val inputValues = Set(vectorCell, elements, index)
   lazy val outputValues = Set(result)
 
   def renamed(f : (TempValue) => TempValue) =
-    LoadVectorElement(f(result), f(vectorCell), f(elements), f(index)).assignLocationFrom(this) 
+    LoadVectorElement(f(result), f(vectorCell), f(elements), f(index)).assignLocationFrom(this)
 }
 
-/** Store an element in a vector 
+/** Store an element in a vector
   *
   * @param  vectorCell  Vector to load an element from
   * @param  elements    Vector elements pointer
@@ -709,45 +732,45 @@ case class StoreVectorElement(
   val outputValues = Set[TempValue]()
 
   def renamed(f : (TempValue) => TempValue) =
-    StoreVectorElement(f(vectorCell), f(elements), f(index), f(newValue)).assignLocationFrom(this) 
+    StoreVectorElement(f(vectorCell), f(elements), f(index), f(newValue)).assignLocationFrom(this)
 }
 
 /** Indicates a step that boxes a native value
   *
   * These are mergeable because SSA guarantees native values can't change at runtime
   */
-sealed trait BoxValue extends Step with NullipotentStep {
+sealed trait BoxValue extends DiscardableStep with MergeableStep {
   val result : TempValue
   val unboxed : TempValue
-  
+
   lazy val outputValues = Set(result)
 }
 
 /** Boxes an i8 that's either 0 or 1 as a boolean */
 case class BoxBoolean(result : TempValue, unboxed : TempValue) extends BoxValue {
   lazy val inputValues = Set(unboxed)
-  
+
   def renamed(f : (TempValue) => TempValue) =
     BoxBoolean(f(result), f(unboxed)).assignLocationFrom(this)
 }
 
 case class BoxExactInteger(result : TempValue, unboxed : TempValue) extends BoxValue with CellConsumer {
   lazy val inputValues = Set(unboxed)
-  
+
   def renamed(f : (TempValue) => TempValue) =
     BoxExactInteger(f(result), f(unboxed)).assignLocationFrom(this)
 }
 
 case class BoxFlonum(result : TempValue, unboxed : TempValue) extends BoxValue with CellConsumer {
   lazy val inputValues = Set(unboxed)
-  
+
   def renamed(f : (TempValue) => TempValue) =
     BoxFlonum(f(result), f(unboxed)).assignLocationFrom(this)
 }
 
 case class BoxChar(result : TempValue, unboxed : TempValue) extends BoxValue with CellConsumer {
   lazy val inputValues = Set(unboxed)
-  
+
   def renamed(f : (TempValue) => TempValue) =
     BoxChar(f(result), f(unboxed)).assignLocationFrom(this)
 }
@@ -756,7 +779,7 @@ case class BoxChar(result : TempValue, unboxed : TempValue) extends BoxValue wit
 case class Return(returnValue : Option[TempValue]) extends Step {
   lazy val inputValues = returnValue.toSet
   val outputValues = Set[TempValue]()
-  
+
   def renamed(f : (TempValue) => TempValue) =
     Return(returnValue.map(f)).assignLocationFrom(this)
 }
@@ -790,7 +813,7 @@ case class AssertPairMutable(pairValue : TempValue, errorMessage : RuntimeErrorM
 case class SetPairCar(pairValue : TempValue, newValue : TempValue) extends Step {
   lazy val inputValues = Set[TempValue](pairValue, newValue)
   val outputValues = Set[TempValue]()
-  
+
   def renamed(f : (TempValue) => TempValue) =
     SetPairCar(f(pairValue), f(newValue)).assignLocationFrom(this)
 }
@@ -798,7 +821,7 @@ case class SetPairCar(pairValue : TempValue, newValue : TempValue) extends Step 
 case class SetPairCdr(pairValue : TempValue, newValue : TempValue) extends Step {
   lazy val inputValues = Set[TempValue](pairValue, newValue)
   val outputValues = Set[TempValue]()
-  
+
   def renamed(f : (TempValue) => TempValue) =
     SetPairCdr(f(pairValue), f(newValue)).assignLocationFrom(this)
 }
@@ -866,7 +889,7 @@ case class LoadRecordDataField(
     recordData : TempValue,
     recordLikeType : vt.RecordLikeType,
     recordField : vt.RecordField
-) extends RecordLikeStep with MutableReadStep {
+) extends RecordLikeStep with DiscardableStep {
   lazy val inputValues = Set(recordData)
   lazy val outputValues = Set(result)
 
@@ -880,7 +903,7 @@ case class TestRecordLikeClass(
     recordCell : TempValue,
     recordLikeType : vt.RecordLikeType,
     possibleTypesOpt : Option[Set[vt.RecordLikeType]] = None
-) extends RecordLikeStep with NullipotentStep {
+) extends RecordLikeStep with DiscardableStep with MergeableStep {
   lazy val inputValues = Set(recordCell)
   lazy val outputValues = Set(result)
 
@@ -899,7 +922,7 @@ case class LoadRecordLikeData(
     result : TempValue,
     recordCell : TempValue,
     recordLikeType : vt.RecordLikeType
-) extends RecordLikeStep with MutableReadStep {
+) extends RecordLikeStep with DiscardableStep {
   lazy val inputValues = Set(recordCell)
   lazy val outputValues = Set(result)
 
@@ -914,7 +937,7 @@ case class LoadRecordLikeData(
 case class SetProcedureEntryPoint(procedureCell : TempValue, entryPoint : TempValue) extends Step {
   lazy val inputValues = Set(procedureCell, entryPoint)
   val outputValues = Set[TempValue]()
-  
+
   def renamed(f : (TempValue) => TempValue) =
     SetProcedureEntryPoint(f(procedureCell), f(entryPoint)).assignLocationFrom(this)
 }
@@ -952,7 +975,7 @@ case class CreateParameterProc(
 /** Loads the current value of a parameter procedure
   *
   * This equivalent to applying the parameter procedure but can be implemented more efficiently. In particular, this
-  * doesn't require a GC barrier. 
+  * doesn't require a GC barrier.
   *
   * @param  result         Location to store the AnyCell value for the parameter procedure
   * @param  parameterProc  Parameter procdure to load the value for. The result of passing another procedure here is
@@ -978,7 +1001,7 @@ case class LoadValueForParameterProc(
   * @param  mayHaveConverterProc  Indicates if the set parameter may have a converter procedure. IF this is false more
   *                               efficient code can be generated by avoiding additional GC barriers. If this can't be
   *                               statically determined it should be set to true.
-  */ 
+  */
 case class ParameterizedValue(
     parameterProc : TempValue,
     newValue : TempValue,
@@ -989,7 +1012,7 @@ case class ParameterizedValue(
 }
 
 /** Pushes a new dynamic state with the given parameter values
-  * 
+  *
   * @param parameterValues  Map of parameter procedure IR values to the new value the paramer should take
   */
 case class PushDynamicState(parameterValues : List[ParameterizedValue]) extends Step {
@@ -999,23 +1022,23 @@ case class PushDynamicState(parameterValues : List[ParameterizedValue]) extends 
   }).toSet + WorldPtrValue
 
   val outputValues = Set[TempValue]()
-  
+
   override def canAllocate : Boolean = true
 
-  def renamed(f : (TempValue) => TempValue) = 
+  def renamed(f : (TempValue) => TempValue) =
     PushDynamicState(parameterValues.map(_.renamed(f)))
       .assignLocationFrom(this)
 }
 
-/** Pops the last dynamic state 
-  * 
+/** Pops the last dynamic state
+  *
   * This must be a state pushed with PushDynamicState, not through stdlib functions such as dynamic-wind
   */
 case class PopDynamicState() extends Step {
   lazy val inputValues = Set[TempValue](WorldPtrValue)
   val outputValues = Set[TempValue]()
 
-  def renamed(f : (TempValue) => TempValue) = 
+  def renamed(f : (TempValue) => TempValue) =
     this
 }
 
@@ -1036,7 +1059,7 @@ case class CheckedIntegerAdd(
     val1 : TempValue,
     val2 : TempValue,
     overflowMessage : RuntimeErrorMessage
-) extends CheckedIntegerStep with NullipotentStep {
+) extends CheckedIntegerStep with DiscardableStep with MergeableStep {
   def renamed(f : (TempValue) => TempValue) =
     CheckedIntegerAdd(f(result), f(val1), f(val2), overflowMessage).assignLocationFrom(this)
 }
@@ -1047,7 +1070,7 @@ case class CheckedIntegerSub(
     val1 : TempValue,
     val2 : TempValue,
     overflowMessage : RuntimeErrorMessage
-) extends CheckedIntegerStep with NullipotentStep {
+) extends CheckedIntegerStep with DiscardableStep with MergeableStep {
   def renamed(f : (TempValue) => TempValue) =
     CheckedIntegerSub(f(result), f(val1), f(val2), overflowMessage).assignLocationFrom(this)
 }
@@ -1058,13 +1081,18 @@ case class CheckedIntegerMul(
     val1 : TempValue,
     val2 : TempValue,
     overflowMessage : RuntimeErrorMessage
-) extends CheckedIntegerStep with NullipotentStep {
+) extends CheckedIntegerStep with DiscardableStep with MergeableStep {
   def renamed(f : (TempValue) => TempValue) =
     CheckedIntegerMul(f(result), f(val1), f(val2), overflowMessage).assignLocationFrom(this)
 }
 
 /** Performs truncating division on two integers of the same type */
-case class IntegerDiv(result : TempValue, signed : Boolean, val1 : TempValue, val2 : TempValue) extends Step with NullipotentStep {
+case class IntegerDiv(
+    result : TempValue,
+    signed : Boolean,
+    val1 : TempValue,
+    val2 : TempValue
+) extends DiscardableStep with MergeableStep {
   lazy val inputValues = Set[TempValue](val1, val2)
   lazy val outputValues = Set[TempValue](result)
 
@@ -1073,7 +1101,12 @@ case class IntegerDiv(result : TempValue, signed : Boolean, val1 : TempValue, va
 }
 
 /** Calculats the remainder of truncating division on two integers of the same type */
-case class IntegerRem(result : TempValue, signed : Boolean, val1 : TempValue, val2 : TempValue) extends Step with NullipotentStep {
+case class IntegerRem(
+    result : TempValue,
+    signed : Boolean,
+    val1 : TempValue,
+    val2 : TempValue
+) extends DiscardableStep with MergeableStep {
   lazy val inputValues = Set[TempValue](val1, val2)
   lazy val outputValues = Set[TempValue](result)
 
@@ -1082,38 +1115,54 @@ case class IntegerRem(result : TempValue, signed : Boolean, val1 : TempValue, va
 }
 
 /** Adds two floats of the same type */
-case class FloatAdd(result : TempValue, val1 : TempValue, val2 : TempValue) extends Step with NullipotentStep {
+case class FloatAdd(
+    result : TempValue,
+    val1 : TempValue,
+    val2 : TempValue
+) extends DiscardableStep with MergeableStep {
   lazy val inputValues = Set[TempValue](val1, val2)
   lazy val outputValues = Set[TempValue](result)
-  
-  def renamed(f : (TempValue) => TempValue) = 
+
+  def renamed(f : (TempValue) => TempValue) =
     FloatAdd(f(result), f(val1), f(val2)).assignLocationFrom(this)
 }
 
 /** Subtracts two floats of the same type */
-case class FloatSub(result : TempValue, val1 : TempValue, val2 : TempValue) extends Step with NullipotentStep {
+case class FloatSub(
+    result : TempValue,
+    val1 : TempValue,
+    val2 : TempValue
+) extends DiscardableStep with MergeableStep {
   lazy val inputValues = Set[TempValue](val1, val2)
   lazy val outputValues = Set[TempValue](result)
-  
-  def renamed(f : (TempValue) => TempValue) = 
+
+  def renamed(f : (TempValue) => TempValue) =
     FloatSub(f(result), f(val1), f(val2)).assignLocationFrom(this)
 }
 
 /** Multiplies two floats of the same type */
-case class FloatMul(result : TempValue, val1 : TempValue, val2 : TempValue) extends Step with NullipotentStep {
+case class FloatMul(
+    result : TempValue,
+    val1 : TempValue,
+    val2 : TempValue
+) extends DiscardableStep with MergeableStep {
   lazy val inputValues = Set[TempValue](val1, val2)
   lazy val outputValues = Set[TempValue](result)
-  
-  def renamed(f : (TempValue) => TempValue) = 
+
+  def renamed(f : (TempValue) => TempValue) =
     FloatMul(f(result), f(val1), f(val2)).assignLocationFrom(this)
 }
 
 /** Divides two floats of the same type */
-case class FloatDiv(result : TempValue, val1 : TempValue, val2 : TempValue) extends Step with NullipotentStep {
+case class FloatDiv(
+    result : TempValue,
+    val1 : TempValue,
+    val2 : TempValue
+) extends DiscardableStep with MergeableStep {
   lazy val inputValues = Set[TempValue](val1, val2)
   lazy val outputValues = Set[TempValue](result)
-  
-  def renamed(f : (TempValue) => TempValue) = 
+
+  def renamed(f : (TempValue) => TempValue) =
     FloatDiv(f(result), f(val1), f(val2)).assignLocationFrom(this)
 }
 
@@ -1131,29 +1180,43 @@ object CompareCond {
   *
   * This can also be used to compare two pointers of the same type, GC managed or otherwise.
   */
-case class IntegerCompare(result : TempValue, cond : CompareCond, signed : Option[Boolean], val1 : TempValue, val2 : TempValue) extends Step with NullipotentStep {
+case class IntegerCompare(
+    result : TempValue,
+    cond : CompareCond,
+    signed : Option[Boolean],
+    val1 : TempValue,
+    val2 : TempValue
+) extends DiscardableStep with MergeableStep {
   lazy val inputValues = Set[TempValue](val1, val2)
   lazy val outputValues = Set[TempValue](result)
-  
-  def renamed(f : (TempValue) => TempValue) = 
+
+  def renamed(f : (TempValue) => TempValue) =
     IntegerCompare(f(result), cond, signed, f(val1), f(val2)).assignLocationFrom(this)
 }
 
 /** Performs an ordered comparison between two floating point values */
-case class FloatCompare(result : TempValue, cond : CompareCond, val1 : TempValue, val2 : TempValue) extends Step with NullipotentStep {
+case class FloatCompare(
+    result : TempValue,
+    cond : CompareCond,
+    val1 : TempValue,
+    val2 : TempValue
+) extends DiscardableStep with MergeableStep {
   lazy val inputValues = Set[TempValue](val1, val2)
   lazy val outputValues = Set[TempValue](result)
-  
-  def renamed(f : (TempValue) => TempValue) = 
+
+  def renamed(f : (TempValue) => TempValue) =
     FloatCompare(f(result), cond, f(val1), f(val2)).assignLocationFrom(this)
 }
 
 /** Tests if a floating point value is NaN */
-case class FloatIsNaN(result : TempValue, value : TempValue) extends Step with NullipotentStep {
+case class FloatIsNaN(
+    result : TempValue,
+    value : TempValue
+) extends DiscardableStep with MergeableStep {
   lazy val inputValues = Set[TempValue](value)
   lazy val outputValues = Set[TempValue](result)
-  
-  def renamed(f : (TempValue) => TempValue) = 
+
+  def renamed(f : (TempValue) => TempValue) =
     FloatIsNaN(f(result), f(value)).assignLocationFrom(this)
 }
 
@@ -1166,7 +1229,7 @@ case class FloatBitwiseCompare(
     result : TempValue,
     val1 : TempValue,
     val2 : TempValue
-) extends Step with NullipotentStep {
+) extends DiscardableStep with MergeableStep {
   lazy val inputValues = Set[TempValue](val1, val2)
   lazy val outputValues = Set[TempValue](result)
 

@@ -31,7 +31,7 @@ object MergeIdenticalSteps extends FunctionConniver {
 
           dropAndRename(tailSteps, renames, availableMerges, mappedStep :: acc)
 
-        case mergeableStep : ps.DisposableStep => 
+        case mergeableStep : ps.MergeableStep =>
           // Rename the result temp for comparison purposes
           val mergeKey = mergeableStep.mergeKey
 
