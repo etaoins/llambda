@@ -315,8 +315,8 @@
   (import (llambda actor))
 
   ; Resume our children
-  (set-child-failure-action resume-failure-action)
-  (assert-equal resume-failure-action (child-failure-action))
+  (set-child-failure-action 'resume)
+  (assert-equal 'resume (child-failure-action))
 
   (define actor
     (act (lambda ()
@@ -347,8 +347,8 @@
   (import (llambda actor))
 
   ; Restart our children
-  (set-child-failure-action restart-failure-action)
-  (assert-equal restart-failure-action (child-failure-action))
+  (set-child-failure-action 'restart)
+  (assert-equal 'restart (child-failure-action))
 
   (define actor
     (act (lambda ()
@@ -379,8 +379,8 @@
   (import (llambda actor))
 
   ; Stop our children
-  (set-child-failure-action stop-failure-action)
-  (assert-equal stop-failure-action (child-failure-action))
+  (set-child-failure-action 'stop)
+  (assert-equal 'stop (child-failure-action))
 
   ; XXX: We need proper timeout support to ensure our actors actually die without hanging
 ))
