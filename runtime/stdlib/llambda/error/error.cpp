@@ -164,12 +164,12 @@ void llerror_raise_no_actor_error(World &world, StringCell *message, RestValues<
 	throw dynamic::SchemeException(ErrorObjectCell::createInstance(world, message, irritants, ErrorCategory::NoActor));
 }
 
-bool llerror_is_expired_escape_procedure(AnyCell *obj)
+bool llerror_is_expired_escape_procedure_error(AnyCell *obj)
 {
 	return isErrorObjectOfCategory(obj, ErrorCategory::ExpiredEscapeProcedure);
 }
 
-void llerror_raise_expired_escape_procedure(World &world, StringCell *message, RestValues<AnyCell> *irritants)
+void llerror_raise_expired_escape_procedure_error(World &world, StringCell *message, RestValues<AnyCell> *irritants)
 {
 	throw dynamic::SchemeException(ErrorObjectCell::createInstance(world, message, irritants, ErrorCategory::ExpiredEscapeProcedure));
 }

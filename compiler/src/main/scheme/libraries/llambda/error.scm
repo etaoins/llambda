@@ -35,6 +35,6 @@
     (define raise-unclonable-value-error (world-function llerror "llerror_raise_unclonable_value_error" (-> <string> <any> * <unit>) noreturn))
     (define no-actor-error? (native-function llerror "llerror_is_no_actor_error" (-> <any> <native-bool>)))
     (define raise-no-actor-error (world-function llerror "llerror_raise_no_actor_error" (-> <string> <any> * <unit>) noreturn))
-    (define expired-escape-procedure-error? (native-function llerror "llerror_is_expired_escape_procedure" (-> <any> <native-bool>)))
-    (define raise-expired-escape-procedure-error (world-function llerror "llerror_raise_expired_escape_procedure" (-> <string> <any> * <unit>) noreturn))
+    (define expired-escape-procedure-error? (native-function llerror "llerror_is_expired_escape_procedure_error" (-> <any> <native-bool>)))
+    (define raise-expired-escape-procedure-error (world-function llerror "llerror_raise_expired_escape_procedure_error" (-> <string> <any> * <unit>) noreturn))
 ))
