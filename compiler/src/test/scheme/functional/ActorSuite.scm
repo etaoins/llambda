@@ -10,9 +10,21 @@
   (assert-true (graceful-stop actor))
   (assert-false (mailbox-open? actor))))
 
+(define-test "(ask) with a timeout" (expect-success
+  (import (llambda actor))
+  (import (llambda duration))
+  (import (llambda error))
+
+  (define actor (act (lambda ()
+                       (lambda (msg)))))
+
+  (assert-raises ask-timeout-error?
+                 (ask actor #f (milliseconds 20)))))
+
 (define-test "actors with dynamic states" (expect-success
   (import (llambda actor))
   (import (llambda error))
+  (import (llambda duration))
 
   (define test-param (make-parameter 5))
 
@@ -22,16 +34,17 @@
                                         (lambda (msg)
                                           (tell (sender) (test-param)))))))
 
-  (assert-equal 10 (ask my-actor 'test))
+  (assert-equal 10 (ask my-actor 'test (seconds 2)))
 
   ; We shouldn't be able to clone a parameter procedure. Send to ourselves instead of our actor because our actor
   ; could have already exited
   (assert-raises unclonable-value-error?
-    (ask my-actor test-param))))
+    (ask my-actor test-param (seconds 2)))))
 
 (define-test "(self)" (expect-success
   (import (llambda actor))
   (import (llambda error))
+  (import (llambda duration))
 
   (define test-actor
     (act (lambda ()
@@ -65,15 +78,16 @@
                  (self))
 
   ; Have the actor send itself a message
-  (assert-equal 'okay (ask test-actor 'send-self-message))
+  (assert-equal 'okay (ask test-actor 'send-self-message (seconds 2)))
 
-  (assert-true (ask test-actor 'received-self?))
-  (assert-true (ask test-actor 'self-is-mailbox?))
-  (assert-true (ask test-actor 'self-mailbox-is-open?))
-  (assert-true (ask test-actor 'self-is-self?))))
+  (assert-true (ask test-actor 'received-self? (seconds 2)))
+  (assert-true (ask test-actor 'self-is-mailbox? (seconds 2)))
+  (assert-true (ask test-actor 'self-mailbox-is-open? (seconds 2)))
+  (assert-true (ask test-actor 'self-is-self? (seconds 2)))))
 
 (define-test "(sender) is #!unit when message is sent from non-actor" (expect-success
   (import (llambda actor))
+  (import (llambda duration))
 
   (define test-actor
     (act (lambda ()
@@ -86,12 +100,13 @@
                 (tell (sender) saved-sender)))))))
 
   (tell test-actor 'save-sender)
-  (assert-equal #!unit (ask test-actor 'return-sender))))
+  (assert-equal #!unit (ask test-actor 'return-sender (seconds 2)))))
 
 (define-test "actor value cloning" (expect-success
   (import (llambda actor))
   (import (llambda error))
   (import (llambda typed))
+  (import (llambda duration))
 
   (define ping-pong-actor
     (act (lambda ()
@@ -100,7 +115,7 @@
 
   ; Sends a message to our actor and receives it back
   (define (ping-pong val)
-    (ask ping-pong-actor val))
+    (ask ping-pong-actor val (seconds 2)))
 
   ; Constants
   (assert-equal 5 (ping-pong 5))
@@ -226,6 +241,7 @@
 (define-test "concurrent actor startup and shutdown" (expect-success
   (import (llambda typed))
   (import (llambda actor))
+  (import (llambda duration))
 
   (define (replicating-actor)
     (define started-children : <exact-integer> 0)
@@ -265,11 +281,12 @@
              (stop (self))))))))
 
   (define root-actor (act replicating-actor))
-  (assert-equal (cons 'result 720) (ask root-actor (cons 'start 6)))))
+  (assert-equal (cons 'result 720) (ask root-actor (cons 'start 6) (seconds 20)))))
 
 (define-test "captured continuations cannot be used across messages" (expect-success
   (import (llambda actor))
   (import (llambda error))
+  (import (llambda duration))
 
   (define actor
     (act (lambda ()
@@ -287,11 +304,12 @@
                 (tell (sender) 'no-except)))))))
 
   (tell actor 'capture)
-  (assert-true (expired-escape-procedure-error? (ask actor 'invoke)))))
+  (assert-true (expired-escape-procedure-error? (ask actor 'invoke (seconds 2))))))
 
 (define-test "procedures capturing ports can be used inside actors" (expect-success
   (import (scheme write))
   (import (llambda actor))
+  (import (llambda duration))
 
   (define actor
     (act (lambda ()
@@ -309,10 +327,11 @@
   (tell actor '(append . "123"))
   (tell actor '(append . "!"))
 
-  (assert-equal "abc123!" (ask actor 'return-result))))
+  (assert-equal "abc123!" (ask actor 'return-result (seconds 2)))))
 
 (define-test "resume failure action" (expect-success
   (import (llambda actor))
+  (import (llambda duration))
 
   ; Resume our children
   (set-child-failure-action 'resume)
@@ -335,16 +354,17 @@
   (tell actor 'increment)
   (tell actor 'increment)
 
-  (assert-equal 3 (ask actor 'query))
+  (assert-equal 3 (ask actor 'query (seconds 2)))
 
   (tell actor 'fail)
   (tell actor 'increment)
 
   ; This should keep our state
-  (assert-equal 4 (ask actor 'query))))
+  (assert-equal 4 (ask actor 'query (seconds 2)))))
 
 (define-test "restart failure action" (expect-success
   (import (llambda actor))
+  (import (llambda duration))
 
   ; Restart our children
   (set-child-failure-action 'restart)
@@ -367,20 +387,45 @@
   (tell actor 'increment)
   (tell actor 'increment)
 
-  (assert-equal 3 (ask actor 'query))
+  (assert-equal 3 (ask actor 'query (seconds 2)))
 
   (tell actor 'fail)
   (tell actor 'increment)
 
   ; This should have reset our state
-  (assert-equal 1 (ask actor 'query))))
+  (assert-equal 1 (ask actor 'query (seconds 2)))))
 
 (define-test "stop failure action" (expect-success
   (import (llambda actor))
+  (import (llambda duration))
+  (import (llambda error))
 
   ; Stop our children
   (set-child-failure-action 'stop)
   (assert-equal 'stop (child-failure-action))
 
-  ; XXX: We need proper timeout support to ensure our actors actually die without hanging
-))
+  (define actor
+    (act (lambda ()
+           (define counter 0)
+
+           (lambda (msg)
+             (cond
+               ((equal? 'increment msg)
+                (set! counter (+ counter 1)))
+               ((equal? 'query msg)
+                (tell (sender) counter))
+               ((equal? 'fail msg)
+                (raise "FAILURE")))))))
+
+  (tell actor 'increment)
+  (tell actor 'increment)
+  (tell actor 'increment)
+
+  (assert-equal 3 (ask actor 'query (seconds 2)))
+
+  (tell actor 'fail)
+  (tell actor 'increment)
+
+  ; The actor should answer because its stopped
+  (assert-raises ask-timeout-error?
+    (ask actor 'query (seconds 2)))))

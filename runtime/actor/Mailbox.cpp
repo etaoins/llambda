@@ -1,5 +1,7 @@
 #include "actor/Mailbox.h"
 
+#include <chrono>
+
 #include "core/World.h"
 #include "sched/Dispatcher.h"
 #include "actor/run.h"
@@ -88,8 +90,14 @@ Message* Mailbox::receive(World *sleepingReceiver)
 	return msg;
 }
 
-AnyCell* Mailbox::ask(World &world, AnyCell *requestCell)
+AnyCell* Mailbox::ask(World &world, AnyCell *requestCell, std::int64_t timeoutUsecs)
 {
+	if (stopRequested())
+	{
+		// We'll never get this message - timeout right away
+		return nullptr;
+	}
+
 	// Create a temporary mailbox
 	std::shared_ptr<actor::Mailbox> senderMailbox(new actor::Mailbox());
 
@@ -99,6 +107,7 @@ AnyCell* Mailbox::ask(World &world, AnyCell *requestCell)
 	// Send the request
 	{
 		std::unique_lock<std::mutex> receiverLock(m_mutex);
+
 		m_messageQueue.push(request);
 
 		if (m_sleepingReceiver)
@@ -123,7 +132,16 @@ AnyCell* Mailbox::ask(World &world, AnyCell *requestCell)
 		std::unique_lock<std::mutex> senderLock(senderMailbox->m_mutex);
 
 		// Wait for the sender mailbox to be non-empty
-		senderMailbox->m_messageQueueCond.wait(senderLock, [=]{return !senderMailbox->m_messageQueue.empty();});
+		const std::chrono::microseconds timeout(timeoutUsecs);
+		bool hasMessage = senderMailbox->m_messageQueueCond.wait_for(senderLock, timeout, [=] {
+			return !senderMailbox->m_messageQueue.empty();
+		});
+
+		if (!hasMessage)
+		{
+			// We timed out
+			return nullptr;
+		}
 
 		// Get the message
 		Message *reply = senderMailbox->m_messageQueue.front();

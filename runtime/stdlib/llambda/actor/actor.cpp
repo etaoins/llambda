@@ -62,20 +62,26 @@ void llactor_tell(World &world, MailboxCell *destMailboxCell, AnyCell *messageCe
 	}
 }
 
-AnyCell* llactor_ask(World &world, MailboxCell *destMailboxCell, AnyCell *messageCell)
+AnyCell* llactor_ask(World &world, MailboxCell *destMailboxCell, AnyCell *messageCell, std::int64_t timeoutUsecs)
 {
 	std::shared_ptr<actor::Mailbox> destMailbox(destMailboxCell->mailbox().lock());
 
 	if (!destMailbox)
 	{
-		// XXX: Timeout
-		while(true);
+		signalError(world, ErrorCategory::AskTimeout, "(ask) on closed mailbox");
 	}
 	else
 	{
 		try
 		{
-			return destMailbox->ask(world, messageCell);
+			AnyCell *result = destMailbox->ask(world, messageCell, timeoutUsecs);
+
+			if (result == nullptr)
+			{
+				signalError(world, ErrorCategory::AskTimeout, "(ask) timeout");
+			}
+
+			return result;
 		}
 		catch(actor::UnclonableCellException &e)
 		{

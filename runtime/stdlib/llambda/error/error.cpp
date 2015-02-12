@@ -174,4 +174,14 @@ void llerror_raise_expired_escape_procedure_error(World &world, StringCell *mess
 	throw dynamic::SchemeException(ErrorObjectCell::createInstance(world, message, irritants, ErrorCategory::ExpiredEscapeProcedure));
 }
 
+bool llerror_is_ask_timeout_error(AnyCell *obj)
+{
+	return isErrorObjectOfCategory(obj, ErrorCategory::AskTimeout);
+}
+
+void llerror_raise_ask_timeout_error(World &world, StringCell *message, RestValues<AnyCell> *irritants)
+{
+	throw dynamic::SchemeException(ErrorObjectCell::createInstance(world, message, irritants, ErrorCategory::AskTimeout));
+}
+
 }

@@ -41,6 +41,8 @@ const char *schemeNameForErrorCategory(ErrorCategory category)
 		return "no-actor-error";
 	case ErrorCategory::ExpiredEscapeProcedure:
 		return "expired-escape-procedure-error";
+	case ErrorCategory::AskTimeout:
+		return "ask-timeout-error";
 	}
 }
 

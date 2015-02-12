@@ -4,6 +4,7 @@
 #include "binding/AnyCell.h"
 #include "actor/Message.h"
 
+#include <cstdint>
 #include <mutex>
 #include <queue>
 #include <condition_variable>
@@ -49,8 +50,13 @@ public:
 	 *
 	 * This internally creates a temporary mailbox and sends a message from there. If the actor is currently sleeping
 	 * it will be woken synchronously in the current thread.
+	 *
+	 * @param  world         World to receive the response in
+	 * @param  requestCell   Message cell for the initial request
+	 * @param  timeoutUsecs  Ask timeout in microseconds
+	 * @return Response cell in the passed world or nullptr if the timeout was reached
 	 */
-	AnyCell *ask(World &world, AnyCell *requestCell);
+	AnyCell *ask(World &world, AnyCell *requestCell, std::int64_t timeoutUsecs);
 
 	/**
 	 * Sets a flag indicating if the owner of this mailbox should stop

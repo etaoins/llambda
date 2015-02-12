@@ -2,6 +2,7 @@
   (import (scheme base))
   (import (llambda nfi))
   (import (llambda typed))
+  (import (llambda duration))
 
   (export act tell ask self sender stop graceful-stop mailbox? mailbox-open? child-failure-action
           set-child-failure-action <mailbox> <behaviour> <failure-action>)
@@ -20,7 +21,7 @@
 
     (define act (world-function llactor "llactor_act" (-> (-> <behaviour>) <mailbox>)))
     (define tell (world-function llactor "llactor_tell" (-> <mailbox> <any> <unit>)))
-    (define ask (world-function llactor "llactor_ask" (-> <mailbox> <any> <any>)))
+    (define ask (world-function llactor "llactor_ask" (-> <mailbox> <any> <native-int64> <any>)))
     (define self (world-function llactor "llactor_self" (-> <mailbox>)))
     (define sender (world-function llactor "llactor_sender" (-> (U <unit> <mailbox>))))
     (define stop (native-function llactor "llactor_stop" (-> <mailbox> <unit>)))
