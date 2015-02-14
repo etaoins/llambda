@@ -429,3 +429,51 @@
   ; The actor should answer because its stopped
   (assert-raises ask-timeout-error?
     (ask actor 'query (seconds 2)))))
+
+(define-test "poison pills" (expect-success
+  (import (llambda actor))
+  (import (llambda error))
+  (import (llambda duration))
+
+  (define poison-pill (poison-pill-object))
+  (assert-true (poison-pill-object? poison-pill))
+  (assert-false (poison-pill-object? #f))
+
+  (define child-actor-closure
+    (lambda ()
+      (define counter 0)
+
+      (lambda (msg)
+        (cond
+          ((equal? 'shouldnt-receive msg)
+           (assert-true #f))
+          ((equal? 'increment msg)
+           (set! counter (+ counter 1)))
+          ((equal? 'query msg)
+           (tell (sender) counter))))))
+
+  (define parent-actor-closure
+    (lambda ()
+      (define child-actor (act child-actor-closure))
+      (define reply-mailbox #f)
+      (define reply #f)
+
+      (lambda (msg)
+        (cond
+          ((equal? 'go msg)
+           ; Save the sender
+           (set! reply-mailbox (sender))
+
+           (tell child-actor 'increment)
+           (tell child-actor 'increment)
+           (tell child-actor 'increment)
+           (tell child-actor 'query)
+           (tell child-actor poison-pill)
+           (tell child-actor 'shouldnt-receive))
+
+          (else
+            ; Relay this message to the outer scope
+            (tell reply-mailbox msg))))))
+
+  (define parent-actor (act parent-actor-closure))
+  (assert-equal 3 (ask parent-actor 'go (seconds 2)))))

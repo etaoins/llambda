@@ -30,7 +30,7 @@ public:
 	 */
 	bool capturesVariables() const
 	{
-		return recordClassId() != EmptyClosureRecordClassId;
+		return recordClassId() != EmptyRecordLikeClassId;
 	}
 };
 

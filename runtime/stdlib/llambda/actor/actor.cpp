@@ -4,6 +4,7 @@
 #include "binding/UnitCell.h"
 #include "binding/TypedProcedureCell.h"
 
+#include "actor/PoisonPillCell.h"
 #include "actor/ActorContext.h"
 #include "actor/Mailbox.h"
 #include "actor/Message.h"
@@ -160,6 +161,16 @@ std::int32_t llactor_child_failure_action(World &world)
 void llactor_set_child_failure_action(World &world, std::int32_t failureAction)
 {
 	world.setChildActorFailureAction(static_cast<actor::FailureAction>(failureAction));
+}
+
+actor::PoisonPillCell* llactor_poison_pill_object()
+{
+	return actor::PoisonPillCell::instance();
+}
+
+bool llactor_is_poison_pill_object(AnyCell *cell)
+{
+	return actor::PoisonPillCell::instance() == cell;
 }
 
 }

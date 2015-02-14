@@ -5,7 +5,7 @@
   (import (llambda duration))
 
   (export act tell ask self sender stop graceful-stop mailbox? mailbox-open? child-failure-action
-          set-child-failure-action <mailbox> <behaviour> <failure-action>)
+          set-child-failure-action poison-pill-object poison-pill-object? <mailbox> <behaviour> <failure-action>)
 
   (begin
     (define-native-library llactor (static-library "ll_llambda_actor"))
@@ -51,4 +51,7 @@
         (else 'stop)))
 
     (define-predicate mailbox? <mailbox>)
-    (define mailbox-open? (world-function llactor "llactor_mailbox_is_open" (-> <mailbox> <native-bool>)))))
+    (define mailbox-open? (world-function llactor "llactor_mailbox_is_open" (-> <mailbox> <native-bool>)))
+
+    (define poison-pill-object (native-function llactor "llactor_poison_pill_object" (-> <any>)))
+    (define poison-pill-object? (native-function llactor "llactor_is_poison_pill_object" (-> <any> <native-bool>)))))

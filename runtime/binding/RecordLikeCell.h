@@ -77,8 +77,17 @@ protected:
 	{
 	}
 
+	RecordLikeCell(CellTypeId typeId, RecordClassIdType recordClassId, bool dataIsInline, void *recordData, GarbageState gcState) :
+		AnyCell(typeId, gcState),
+		m_dataIsInline(dataIsInline),
+		m_isUndefined(false),
+		m_recordClassId(recordClassId),
+		m_recordData(recordData)
+	{
+	}
+
 	// TypeGenerator.scala always allocates this first
-	static const RecordClassIdType EmptyClosureRecordClassId = 0;
+	static const RecordClassIdType EmptyRecordLikeClassId = 0;
 };
 
 }

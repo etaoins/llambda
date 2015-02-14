@@ -3,6 +3,7 @@
 #include "actor/ActorContext.h"
 #include "actor/ActorBehaviourCell.h"
 #include "actor/cloneCell.h"
+#include "actor/PoisonPillCell.h"
 
 #include "alloc/StrongRef.h"
 
@@ -115,6 +116,13 @@ void wake(World *actorWorld)
 		{
 			// No more messages; go back to sleep
 			return;
+		}
+
+		if (msg->messageCell() == PoisonPillCell::instance())
+		{
+			// We got a poison pill!
+			delete msg;
+			break;
 		}
 
 		// Take ownership of the heap

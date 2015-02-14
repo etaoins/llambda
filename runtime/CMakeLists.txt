@@ -7,6 +7,7 @@ add_library(llcore
 	actor/ActorContext.cpp
 	actor/Mailbox.cpp
 	actor/Message.cpp
+	actor/PoisonPillCell.cpp
 	actor/cloneCell.cpp
 	actor/run.cpp
 	alloc/CellRootList.cpp
