@@ -4,7 +4,7 @@
 
 #include "core/error.h"
 #include "alloc/allocator.h"
-#include "alloc/DynamicMemoryBlock.h"
+#include "alloc/MemoryBlock.h"
 
 #include "dynamic/SchemeException.h"
 
@@ -30,8 +30,6 @@ void llcore_run(void (*entryPoint)(lliby::World &), int argc, char **argv, bool 
 {
 	// Stash argc and argv
 	initArguments = {argc, argv};
-
-	alloc::DynamicMemoryBlock::init();
 
 	dynamic::init();
 

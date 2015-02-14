@@ -4,7 +4,6 @@
 #include <stdlib.h>
 
 #include "alloc/MemoryBlock.h"
-#include "alloc/DynamicMemoryBlock.h"
 #include "alloc/Finalizer.h"
 
 namespace lliby
@@ -63,7 +62,7 @@ AllocCell* Heap::addNewSegment(size_t reserveCount)
 	}
 
 	// This will update m_allocNext/m_allocEnd
-	auto newSegment = new DynamicMemoryBlock(newSegmentSize);
+	auto newSegment = new MemoryBlock(newSegmentSize);
 
 	if (!newSegment->isValid())
 	{

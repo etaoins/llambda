@@ -11,9 +11,9 @@ add_library(llcore
 	actor/cloneCell.cpp
 	actor/run.cpp
 	alloc/CellRootList.cpp
-	alloc/DynamicMemoryBlock.cpp
 	alloc/Finalizer.cpp
 	alloc/Heap.cpp
+	alloc/MemoryBlock.cpp
 	alloc/allocator.cpp
 	alloc/collector.cpp
 	binding/BytevectorCell.cpp

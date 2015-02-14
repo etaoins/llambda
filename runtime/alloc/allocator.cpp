@@ -7,7 +7,6 @@
 #include "alloc/AllocCell.h"
 #include "alloc/RangeAlloc.h"
 #include "alloc/Finalizer.h"
-#include "alloc/DynamicMemoryBlock.h"
 #include "alloc/collector.h"
 
 #ifdef _LLIBY_CHECK_LEAKS

@@ -11,28 +11,27 @@ namespace alloc
 class MemoryBlock
 {
 public:
-	MemoryBlock()
+	MemoryBlock(std::size_t size);
+	~MemoryBlock();
+
+	void* startPointer() const
 	{
+		return m_startPointer;
 	}
 
-	MemoryBlock(const MemoryBlock &) = delete;
-
-	virtual ~MemoryBlock()
+	std::size_t size() const
 	{
+		return m_size;
 	}
 
 	bool isValid() const
 	{
-		return startPointer() != nullptr;
+		return m_startPointer != nullptr;
 	}
 
-	virtual void* startPointer() const = 0;
-	virtual size_t size() const = 0;
-
-	void* endPointer() const
-	{
-		return static_cast<char*>(startPointer()) + size();
-	}
+private:
+	void *m_startPointer;
+	std::size_t m_size;
 };
 
 }
