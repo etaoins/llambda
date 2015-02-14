@@ -472,3 +472,39 @@
 
   (define parent-actor (act parent-actor-closure))
   (assert-equal 3 (ask parent-actor 'go (seconds 2)))))
+
+(define-test "(become)" (expect-success
+  (import (llambda actor))
+  (import (llambda duration))
+
+  ; This is stolen from the Akka documentation
+  (define actor
+    (act (lambda ()
+           (define (angry msg)
+             (cond
+               ((equal? "foo" msg)
+                (tell (sender) "I'm already angry?"))
+               ((equal? "bar" msg)
+                (become happy))))
+
+           (define (happy msg)
+             (cond
+               ((equal? "bar" msg)
+                (tell (sender) "I'm already happy :-)"))
+               ((equal? "foo" msg)
+                (become happy))))
+
+           (define (initial msg)
+             (cond
+               ((equal? "foo" msg)
+                (become angry))
+               ((equal? "bar" msg)
+                (become happy))))
+
+           initial)))
+
+  (tell actor "foo")
+  (assert-equal "I'm already angry?" (ask actor "foo" (seconds 2)))
+
+  (tell actor "bar")
+  (assert-equal "I'm already happy :-)" (ask actor "bar" (seconds 2)))))

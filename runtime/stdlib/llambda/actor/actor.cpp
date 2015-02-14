@@ -6,6 +6,7 @@
 
 #include "actor/PoisonPillCell.h"
 #include "actor/ActorContext.h"
+#include "actor/ActorBehaviourCell.h"
 #include "actor/Mailbox.h"
 #include "actor/Message.h"
 #include "actor/cloneCell.h"
@@ -171,6 +172,18 @@ actor::PoisonPillCell* llactor_poison_pill_object()
 bool llactor_is_poison_pill_object(AnyCell *cell)
 {
 	return actor::PoisonPillCell::instance() == cell;
+}
+
+void llactor_become(World &world, actor::ActorBehaviourCell *newBehaviour)
+{
+	actor::ActorContext *context = world.actorContext();
+
+	if (context == nullptr)
+	{
+		signalError(world, ErrorCategory::NoActor, "Attempted (become) outside actor context");
+	}
+
+	context->setBehaviour(newBehaviour);
 }
 
 }
