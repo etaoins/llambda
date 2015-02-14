@@ -51,13 +51,11 @@
            ; Haven't received our self message
            (define received-self #f)
 
+           ; Send ourselves a message
+           (tell (self) 'self-message)
+
            (lambda (msg)
              (case msg
-               ((send-self-message)
-                ; Send ourselves a test message
-                (tell (self) 'self-message)
-                (tell (sender) 'okay))
-
                ((self-message)
                 (set! received-self #t))
 
@@ -76,9 +74,6 @@
   ; We're not an actor - (self) won't work
   (assert-raises no-actor-error?
                  (self))
-
-  ; Have the actor send itself a message
-  (assert-equal 'okay (ask test-actor 'send-self-message (seconds 2)))
 
   (assert-true (ask test-actor 'received-self? (seconds 2)))
   (assert-true (ask test-actor 'self-is-mailbox? (seconds 2)))

@@ -66,24 +66,21 @@ std::shared_ptr<Mailbox> run(World &parentWorld, ActorClosureCell *closureCell)
 
 	// Clone our closure in to the new world
 	dynamic::State *captureState = parentWorld.activeStateCell()->state();
-	AnyCell* clonedClosureCell = cloneCell(actorWorld->cellHeap, closureCell, captureState);
-
-	// Take a reference to it so we can store it in the actor context for restart purposes
-	alloc::StrongRef<ActorClosureCell> clonedClosureProc(*actorWorld, static_cast<ActorClosureCell*>(clonedClosureCell));
-
-	ActorBehaviourCell *behaviourCell;
-
-	// Initialise the actor's closure in its world but our thread
-	actorWorld->run([&] (World &world) {
-		behaviourCell = clonedClosureProc->apply(world);
-	});
+	auto clonedClosureCell = static_cast<ActorClosureCell*>(cloneCell(actorWorld->cellHeap, closureCell, captureState));
 
 	// Determine the actor's failure action
 	actor::FailureAction failureAction = parentWorld.childActorFailureAction();
 
 	// Make the world an actor
-	ActorContext *context = new ActorContext(clonedClosureProc, behaviourCell, failureAction);
+	ActorContext *context = new ActorContext(clonedClosureCell, failureAction);
 	actorWorld->setActorContext(context);
+
+	ActorBehaviourCell *behaviourCell;
+
+	// Initialise the actor's closure in its world but our thread
+	actorWorld->run([&] (World &world) {
+		behaviourCell = clonedClosureCell->apply(world);
+	});
 
 	// Set our initial behaviour
 	actorWorld->actorContext()->setBehaviour(behaviourCell);
@@ -91,8 +88,8 @@ std::shared_ptr<Mailbox> run(World &parentWorld, ActorClosureCell *closureCell)
 	// Add us a child actor
 	parentWorld.addChildActor(context->mailbox());
 
-	// Go to sleep on receive
-	context->mailbox()->sleepActor(actorWorld);
+	// See if we've received any messages; if not put ourselves to sleep
+	wake(actorWorld);
 
 	return context->mailbox();
 }

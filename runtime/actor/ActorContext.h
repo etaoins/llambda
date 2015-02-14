@@ -19,7 +19,7 @@ class Mailbox;
 class ActorContext
 {
 public:
-	ActorContext(ActorClosureCell *closure, ActorBehaviourCell *initialBehaviour, FailureAction selfFailureAction);
+	ActorContext(ActorClosureCell *closure, FailureAction selfFailureAction);
 
 	/**
 	 * Returns the current mailbox for this world

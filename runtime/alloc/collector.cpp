@@ -129,7 +129,11 @@ size_t collect(World &world, Heap &newHeap)
 	if (world.actorContext())
 	{
 		visitCell(reinterpret_cast<AnyCell**>(world.actorContext()->closureRef()), rootVisitor);
-		visitCell(reinterpret_cast<AnyCell**>(world.actorContext()->behaviourRef()), rootVisitor);
+
+		if (world.actorContext()->behaviour())
+		{
+			visitCell(reinterpret_cast<AnyCell**>(world.actorContext()->behaviourRef()), rootVisitor);
+		}
 	}
 
 	// Visit each runtime weak root
