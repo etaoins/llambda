@@ -155,7 +155,7 @@ void wake(World *actorWorld)
 		}
 	}
 
-	context->mailbox()->stopped();
+	context->mailbox()->setStopped();
 	delete actorWorld;
 }
 

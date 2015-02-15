@@ -71,7 +71,7 @@ public:
 	/**
 	 * Indicates that this actor is stopped
 	 */
-	void stopped();
+	void setStopped();
 
 	/**
 	 * Waits until this actor has stopped

@@ -188,7 +188,7 @@ bool Mailbox::stopRequested() const
 	return m_stopRequested;
 }
 
-void Mailbox::stopped()
+void Mailbox::setStopped()
 {
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
