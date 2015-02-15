@@ -30,7 +30,7 @@ public:
 	 *
 	 * This does not allocate any memory; it initializes a completely empty heap
 	 */
-	Heap();
+	Heap(std::size_t initialSegementSize);
 
 	/**
 	 * Destroys the Heap by synchronously finalizing all cells on the heap
@@ -136,18 +136,19 @@ private:
 		return m_allocNext - m_currentSegmentStart;
 	}
 
-	AllocCell* addNewSegment(size_t reserveCount);
+	AllocCell* addNewSegment(std::size_t reserveCount);
 
 	alloc::AllocCell *m_allocNext;
 	alloc::AllocCell *m_allocEnd;
 
 	// Size of the next segment to allocate
 	// Note that if an oversized segment has been allocated this might not be the actual size of the current segment
-	uint64_t m_nextSegmentSize;
+	std::size_t m_initialSegmentSize;
+	std::size_t m_nextSegmentSize;
 	MemoryBlock *m_rootSegment;
 
 	alloc::AllocCell *m_currentSegmentStart;
-	std::int64_t m_allocationCounterBase;
+	std::size_t m_allocationCounterBase;
 };
 
 }

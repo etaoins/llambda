@@ -13,12 +13,12 @@ namespace alloc
 
 namespace
 {
-	const uint64_t SegmentInitialSize = 4 * 1024;
-	const uint64_t SegmentGrowthFactor = 4;
-	const uint64_t SegmentMaximumSize = 1 * 1024 * 1024;
+	const std::size_t SegmentGrowthFactor = 4;
+	const std::size_t SegmentMaximumSize = 1 * 1024 * 1024;
 }
 
-Heap::Heap() : m_nextSegmentSize(SegmentInitialSize)
+Heap::Heap(std::size_t initialSegmentSize)
+	: m_initialSegmentSize(initialSegmentSize)
 {
 	detach();
 }
@@ -28,7 +28,7 @@ void Heap::detach()
 	m_allocNext = nullptr;
 	m_allocEnd = nullptr;
 
-	m_nextSegmentSize = SegmentInitialSize;
+	m_nextSegmentSize = m_initialSegmentSize;
 	m_rootSegment = nullptr;
 
 	m_currentSegmentStart = nullptr;
@@ -40,11 +40,10 @@ Heap::~Heap()
 	Finalizer::finalizeHeapSync(*this);
 }
 
-AllocCell* Heap::addNewSegment(size_t reserveCount)
+AllocCell* Heap::addNewSegment(std::size_t reserveCount)
 {
-	// We ran out of space
-	const size_t minimumBytes = (sizeof(AllocCell) * reserveCount) + sizeof(SegmentTerminatorCell);
-	size_t newSegmentSize;
+	const std::size_t minimumBytes = (sizeof(AllocCell) * reserveCount) + sizeof(SegmentTerminatorCell);
+	std::size_t newSegmentSize;
 
 	if (minimumBytes > m_nextSegmentSize)
 	{
@@ -117,6 +116,7 @@ void Heap::splice(Heap &other)
 	else
 	{
 		// Take over the heap's allocation state
+		// Intentionally don't copy m_initialSegmentSize - this is a per-Heap tuning value
 		m_allocNext = other.m_allocNext;
 		m_allocEnd = other.m_allocEnd;
 		m_nextSegmentSize = other.m_nextSegmentSize;

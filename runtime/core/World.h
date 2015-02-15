@@ -48,6 +48,11 @@ public:
 
 public: // Normal C++ API
 	/**
+	 * Start World heaps with 4K allocations
+	 */
+	static const std::size_t InitialHeapSegmentSize = 4 * 1024;
+
+	/**
 	 * Constructs a new non-running world
 	 *
 	 * @sa run()

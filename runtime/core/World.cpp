@@ -24,7 +24,9 @@ namespace
 namespace lliby
 {
 
-World::World() : m_activeStateCell(&sharedRootStateCell)
+World::World() :
+	cellHeap(InitialHeapSegmentSize),
+	m_activeStateCell(&sharedRootStateCell)
 {
 }
 

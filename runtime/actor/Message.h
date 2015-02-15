@@ -49,7 +49,10 @@ public:
 	}
 
 private:
-	Message()
+	static const std::size_t InitialHeapSegmentSize = 128;
+
+	Message() :
+		m_heap(InitialHeapSegmentSize)
 	{
 	}
 

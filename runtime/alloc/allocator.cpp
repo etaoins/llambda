@@ -91,7 +91,7 @@ RangeAlloc allocateRange(World &world, size_t count)
 size_t forceCollection(World &world)
 {
 	// Make a new cell heap
-	Heap nextCellHeap;
+	Heap nextCellHeap(World::InitialHeapSegmentSize);
 
 	// Collect in to the new world
 	const size_t reachableCells = collect(world, nextCellHeap);
