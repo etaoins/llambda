@@ -65,7 +65,7 @@ public:
 		return m_heap;
 	}
 
-	std::weak_ptr<Mailbox> sender() const
+	const std::weak_ptr<Mailbox>& sender() const
 	{
 		return m_sender;
 	}

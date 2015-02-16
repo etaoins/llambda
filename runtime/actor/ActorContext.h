@@ -19,7 +19,7 @@ class Mailbox;
 class ActorContext
 {
 public:
-	ActorContext(ActorClosureCell *closure, std::weak_ptr<Mailbox> supervisor = std::weak_ptr<Mailbox>());
+	ActorContext(ActorClosureCell *closure, const std::weak_ptr<Mailbox> &supervisor);
 
 	/**
 	 * Returns the current mailbox for this world

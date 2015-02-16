@@ -117,7 +117,7 @@ public: // Normal C++ API
 	 *
 	 * All child actors will be synchronously stopped in the destructor for the world
 	 */
-	void addChildActor(std::weak_ptr<actor::Mailbox> childActor);
+	void addChildActor(const std::weak_ptr<actor::Mailbox> &childActor);
 
 	/**
 	 * Returns the run sequence number
