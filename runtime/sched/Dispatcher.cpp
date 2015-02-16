@@ -29,17 +29,27 @@ void Dispatcher::dispatch(const WorkFunction &work)
 
 	if (m_idleThreads < 1)
 	{
-		// We need to launch a new thread - pass it the initial work to do to avoid queue contention
-		std::thread newThread(&Dispatcher::workerThread, this, work);
-		newThread.detach();
-	}
-	else
-	{
-		m_workQueue.push(work);
 		lock.unlock();
 
-		m_workQueueCond.notify_one();
+		try
+		{
+			// We need to launch a new thread - pass it the initial work to do to avoid queue contention
+			std::thread newThread(&Dispatcher::workerThread, this, work);
+			newThread.detach();
+
+			return;
+		}
+		catch(std::system_error &)
+		{
+			// Failed to launch a thread. This can happen on low resource situations. Fall back to queuing
+			lock.lock();
+		}
 	}
+
+	m_workQueue.push(work);
+	lock.unlock();
+
+	m_workQueueCond.notify_one();
 }
 
 void Dispatcher::workerThread(WorkFunction initialWork)
