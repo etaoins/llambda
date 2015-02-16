@@ -44,31 +44,46 @@ Mailbox::~Mailbox()
 void Mailbox::tell(Message *message)
 {
 	// Add to the queue
+	std::unique_lock<std::mutex> lock(m_mutex);
+	m_messageQueue.push(message);
+
+	if (m_sleepingReceiver && (m_state == State::Running))
 	{
-		std::unique_lock<std::mutex> lock(m_mutex);
-		m_messageQueue.push(message);
+		// We're waking the world; null out the sleeper
+		World *toWake = m_sleepingReceiver;
+		m_sleepingReceiver = nullptr;
 
-		if (m_sleepingReceiver && (m_state == State::Running))
-		{
-			// We're waking the world; null out the sleeper
-			World *toWake = m_sleepingReceiver;
-			m_sleepingReceiver = nullptr;
+		lock.unlock();
 
-			lock.unlock();
-
-			sched::Dispatcher::defaultInstance().dispatch([=] {
-				Runner::wake(toWake);
-			});
-		}
-		else
-		{
-			lock.unlock();
-
-			// Notify
-			m_messageQueueCond.notify_one();
-		}
+		sched::Dispatcher::defaultInstance().dispatch([=] {
+			Runner::wake(toWake);
+		});
 	}
+	else
+	{
+		lock.unlock();
 
+		// Notify
+		m_messageQueueCond.notify_one();
+	}
+}
+
+void Mailbox::conditionalQueueWake(World *receiver)
+{
+	std::unique_lock<std::mutex> lock(m_mutex);
+
+	if (m_lifecycleActionRequested || (!m_messageQueue.empty() && (m_state == State::Running)))
+	{
+		lock.unlock();
+
+		sched::Dispatcher::defaultInstance().dispatch([=] {
+			Runner::wake(receiver);
+		});
+	}
+	else
+	{
+		m_sleepingReceiver = receiver;
+	}
 }
 
 Mailbox::ReceiveResult Mailbox::receive(World *sleepingReceiver, Message **msg, LifecycleAction *action)

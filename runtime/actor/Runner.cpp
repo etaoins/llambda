@@ -128,8 +128,8 @@ std::shared_ptr<Mailbox> Runner::start(World &parentWorld, ActorClosureCell *clo
 	// Add us a child actor
 	parentWorld.addChildActor(context->mailbox());
 
-	// See if we've received any messages; if not put ourselves to sleep
-	wake(actorWorld);
+	// Wake if we've received any messages; otherwise go to sleep
+	context->mailbox()->conditionalQueueWake(actorWorld);
 
 	return context->mailbox();
 }

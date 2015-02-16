@@ -461,14 +461,12 @@
 
     (tell actor 'fail)
     (tell actor 'increment)
+    (tell actor 'query)
 
-    ; The actor shouldn't answer because its stopped
-    ; XXX: This will also pass because we're blocking ourselves and can't invoke our supervisor strategy. Once we
-    ; support receive timeouts this should change
-    (assert-raises ask-timeout-error?
-      (ask actor 'query (seconds 2)))
+    (schedule-once (milliseconds 250) (self) 'timed-out)
 
-    (lambda (msg))))))
+    (lambda (msg)
+      (assert-equal 'timed-out msg))))))
 
 (define-test "poison pills" (expect-success
   (import (llambda actor))

@@ -1,5 +1,8 @@
 #include "actor/ActorClosureCell.h"
 
+#include <thread>
+#include <chrono>
+
 #include "binding/MailboxCell.h"
 #include "binding/UnitCell.h"
 #include "binding/TypedProcedureCell.h"
@@ -187,6 +190,12 @@ void llactor_set_supervisor_strategy(World &world, actor::SupervisorStrategyCell
 	}
 
 	context->setSupervisorStrategy(strategy);
+}
+
+void llactor_sleep(std::int64_t sleepUsecs)
+{
+	const std::chrono::microseconds timeout(sleepUsecs);
+	std::this_thread::sleep_for(timeout);
 }
 
 }

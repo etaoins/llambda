@@ -119,6 +119,13 @@ protected:
 	 */
 	void setState(State state);
 
+	/**
+	 * Puts us to sleep if there are no messages in the mailbox; otherwise it will wake us asynchronously
+	 *
+	 * @param  receiver  world to either wake or put to sleep
+	 */
+	void conditionalQueueWake(World *receiver);
+
 private:
 	std::mutex m_mutex;
 

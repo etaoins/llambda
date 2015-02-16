@@ -5,7 +5,7 @@
   (import (llambda duration))
 
   (export act tell ask self sender stop graceful-stop mailbox? mailbox-open? poison-pill-object poison-pill-object?
-          become set-supervisor-strategy <mailbox> <behaviour> <failure-action> <supervisor-strategy>)
+          become set-supervisor-strategy schedule-once <mailbox> <behaviour> <failure-action> <supervisor-strategy>)
 
   (begin
     (define-native-library llactor (static-library "ll_llambda_actor"))
@@ -36,4 +36,18 @@
 
     (define become (world-function llactor "llactor_become" (-> <behaviour> <unit>)))
 
-    (define set-supervisor-strategy (world-function llactor "llactor_set_supervisor_strategy" (-> <supervisor-strategy> <unit>)))))
+    (define set-supervisor-strategy (world-function llactor "llactor_set_supervisor_strategy" (-> <supervisor-strategy> <unit>)))
+
+    ; This is private at the moment
+    (define sleep (native-function llactor "llactor_sleep" (-> <native-int64> <unit>)))
+
+    (: schedule-once (-> <duration> <mailbox> <any> <unit>))
+    (define (schedule-once duration actor msg)
+      (act (lambda ()
+             ; Make sure we run in a background thread
+             (tell (self) 'start)
+
+             (lambda (msg)
+               (sleep duration)
+               (tell actor msg)
+               (stop (self))))))))
