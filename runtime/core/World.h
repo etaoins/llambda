@@ -7,7 +7,7 @@
 
 #include <memory>
 #include <functional>
-#include <list>
+#include <vector>
 
 namespace lliby
 {
@@ -173,7 +173,7 @@ private:
 	// This is lazily initialised on first use
 	actor::ActorContext *m_actorContext = nullptr;
 
-	std::list<std::weak_ptr<actor::Mailbox>> m_childActors;
+	std::vector<std::weak_ptr<actor::Mailbox>> m_childActors;
 };
 
 }

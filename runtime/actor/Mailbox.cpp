@@ -115,7 +115,7 @@ Mailbox::ReceiveResult Mailbox::receive(World *sleepingReceiver, Message **msg, 
 AnyCell* Mailbox::ask(World &world, AnyCell *requestCell, std::int64_t timeoutUsecs)
 {
 	// Create a temporary mailbox
-	std::shared_ptr<actor::Mailbox> senderMailbox(new actor::Mailbox());
+	std::shared_ptr<actor::Mailbox> senderMailbox(std::make_shared<actor::Mailbox>());
 
 	// Create the request
 	actor::Message *request = actor::Message::createFromCell(requestCell, senderMailbox);

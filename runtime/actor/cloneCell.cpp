@@ -291,7 +291,7 @@ namespace
 
 		// There isn't already a cloned cell; clone a new copy
 		auto clonedCell = uncachedClone(heap, cell, context);
-		context.clonedCells[cell] = clonedCell;
+		context.clonedCells.emplace(cell, clonedCell);
 
 		return clonedCell;
 	}
@@ -302,7 +302,8 @@ AnyCell *cloneCell(alloc::Heap &heap, AnyCell *cell, State *captureState)
 	Context context;
 	context.captureState = captureState;
 
-	return cachedClone(heap, cell, context);
+	// Don't bother searching for and caching the top-level cell
+	return uncachedClone(heap, cell, context);
 }
 
 void UnclonableCellException::signalSchemeError(World &world, const char *procName)

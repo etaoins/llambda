@@ -7,7 +7,7 @@ namespace actor
 {
 
 ActorContext::ActorContext(ActorClosureCell *closure, std::weak_ptr<Mailbox> supervisor) :
-	m_mailbox(new Mailbox),
+	m_mailbox(std::make_shared<Mailbox>()),
 	m_closure(closure),
 	m_supervisor(supervisor)
 {

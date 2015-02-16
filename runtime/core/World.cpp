@@ -79,7 +79,7 @@ void World::run(const std::function<void(World &)> &func)
 
 void World::addChildActor(std::weak_ptr<actor::Mailbox> childActor)
 {
-	m_childActors.push_front(childActor);
+	m_childActors.push_back(childActor);
 }
 
 }
