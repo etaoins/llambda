@@ -19,8 +19,6 @@ class Continuation;
 
 namespace alloc
 {
-class MemoryBlock;
-class AllocCell;
 class CellRootList;
 }
 
@@ -170,9 +168,7 @@ private:
 
 	unsigned int m_runSequence = 0;
 
-	// This is lazily initialised on first use
 	actor::ActorContext *m_actorContext = nullptr;
-
 	std::vector<std::weak_ptr<actor::Mailbox>> m_childActors;
 };
 
