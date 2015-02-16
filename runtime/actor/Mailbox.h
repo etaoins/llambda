@@ -7,7 +7,7 @@
 
 #include <cstdint>
 #include <mutex>
-#include <queue>
+#include <deque>
 #include <condition_variable>
 
 namespace lliby
@@ -130,7 +130,7 @@ private:
 	std::mutex m_mutex;
 
 	std::condition_variable m_messageQueueCond;
-	std::queue<Message*> m_messageQueue;
+	std::deque<Message*> m_messageQueue;
 	World *m_sleepingReceiver = nullptr;
 
 	bool m_lifecycleActionRequested = false;

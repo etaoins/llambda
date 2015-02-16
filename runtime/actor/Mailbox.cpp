@@ -30,10 +30,9 @@ Mailbox::~Mailbox()
 {
 	// Free all of our messages. We don't need a lock here - if this isn't being called from the last reference we're
 	// in trouble
-	while(!m_messageQueue.empty())
+	for(auto msg : m_messageQueue)
 	{
-		delete m_messageQueue.front();
-		m_messageQueue.pop();
+		delete msg;
 	}
 
 #ifdef _LLIBY_CHECK_LEAKS
@@ -45,7 +44,7 @@ void Mailbox::tell(Message *message)
 {
 	// Add to the queue
 	std::unique_lock<std::mutex> lock(m_mutex);
-	m_messageQueue.push(message);
+	m_messageQueue.push_back(message);
 
 	if (m_sleepingReceiver && (m_state == State::Running))
 	{
@@ -100,7 +99,7 @@ Mailbox::ReceiveResult Mailbox::receive(World *sleepingReceiver, Message **msg, 
 	else if ((m_state == State::Running) && !m_messageQueue.empty())
 	{
 		*msg = m_messageQueue.front();
-		m_messageQueue.pop();
+		m_messageQueue.pop_front();
 
 		return ReceiveResult::PoppedMessage;
 	}
@@ -124,7 +123,7 @@ AnyCell* Mailbox::ask(World &world, AnyCell *requestCell, std::int64_t timeoutUs
 	{
 		std::unique_lock<std::mutex> receiverLock(m_mutex);
 
-		m_messageQueue.push(request);
+		m_messageQueue.push_back(request);
 
 		if (m_sleepingReceiver && (m_state == State::Running))
 		{
@@ -161,7 +160,7 @@ AnyCell* Mailbox::ask(World &world, AnyCell *requestCell, std::int64_t timeoutUs
 
 		// Get the message
 		Message *reply = senderMailbox->m_messageQueue.front();
-		senderMailbox->m_messageQueue.pop();
+		senderMailbox->m_messageQueue.pop_front();
 
 		// Release the lock
 		senderLock.unlock();
