@@ -61,13 +61,7 @@ AllocCell* Heap::addNewSegment(std::size_t reserveCount)
 	}
 
 	// This will update m_allocNext/m_allocEnd
-	auto newSegment = new MemoryBlock(newSegmentSize);
-
-	if (!newSegment->isValid())
-	{
-		std::cerr << "Unable to allocate " << newSegmentSize << " bytes" << std::endl;
-		exit(-2);
-	}
+	auto newSegment = MemoryBlock::create(newSegmentSize);
 
 	if (m_rootSegment == nullptr)
 	{
@@ -87,7 +81,7 @@ AllocCell* Heap::addNewSegment(std::size_t reserveCount)
 	m_allocNext = m_currentSegmentStart + reserveCount;
 
 	// Find the number of cells we can fit in the segment with room for a segment terminator
-	const size_t usableCellCount = (newSegment->size() - sizeof(SegmentTerminatorCell)) / sizeof(AllocCell);
+	const size_t usableCellCount = (newSegment->size(newSegmentSize) - sizeof(SegmentTerminatorCell)) / sizeof(AllocCell);
 
 	m_allocEnd = reinterpret_cast<AllocCell*>(newSegment->startPointer()) + usableCellCount;
 
