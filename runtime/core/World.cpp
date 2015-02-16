@@ -43,7 +43,7 @@ World::~World()
 
 		if (childActor)
 		{
-			childActor->requestStop();
+			childActor->requestLifecycleAction(actor::LifecycleAction::Stop);
 			childActor->waitForStop();
 		}
 	}

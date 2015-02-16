@@ -8,8 +8,8 @@ add_library(llcore
 	actor/Mailbox.cpp
 	actor/Message.cpp
 	actor/PoisonPillCell.cpp
+	actor/Runner.cpp
 	actor/cloneCell.cpp
-	actor/run.cpp
 	alloc/CellRootList.cpp
 	alloc/Finalizer.cpp
 	alloc/Heap.cpp

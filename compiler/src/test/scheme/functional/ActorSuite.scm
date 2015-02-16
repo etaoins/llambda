@@ -324,46 +324,9 @@
 
   (assert-equal "abc123!" (ask actor 'return-result (seconds 2)))))
 
-(define-test "resume failure action" (expect-success
+(define-test "top-level failure action is restart" (expect-success
   (import (llambda actor))
   (import (llambda duration))
-
-  ; Resume our children
-  (set-child-failure-action 'resume)
-  (assert-equal 'resume (child-failure-action))
-
-  (define actor
-    (act (lambda ()
-           (define counter 0)
-
-           (lambda (msg)
-             (cond
-               ((equal? 'increment msg)
-                (set! counter (+ counter 1)))
-               ((equal? 'query msg)
-                (tell (sender) counter))
-               ((equal? 'fail msg)
-                (raise "FAILURE")))))))
-
-  (tell actor 'increment)
-  (tell actor 'increment)
-  (tell actor 'increment)
-
-  (assert-equal 3 (ask actor 'query (seconds 2)))
-
-  (tell actor 'fail)
-  (tell actor 'increment)
-
-  ; This should keep our state
-  (assert-equal 4 (ask actor 'query (seconds 2)))))
-
-(define-test "restart failure action" (expect-success
-  (import (llambda actor))
-  (import (llambda duration))
-
-  ; Restart our children
-  (set-child-failure-action 'restart)
-  (assert-equal 'restart (child-failure-action))
 
   (define actor
     (act (lambda ()
@@ -390,40 +353,122 @@
   ; This should have reset our state
   (assert-equal 1 (ask actor 'query (seconds 2)))))
 
+(define-test "restart failure action" (expect-success
+  (import (llambda actor))
+  (import (llambda duration))
+
+  (act (lambda ()
+    (define actor
+      (act (lambda ()
+             (define counter 0)
+
+             (lambda (msg)
+               (cond
+                 ((equal? 'increment msg)
+                  (set! counter (+ counter 1)))
+                 ((equal? 'query msg)
+                  (tell (sender) counter))
+                 ((equal? 'fail msg)
+                  (raise "FAILURE")))))))
+
+    ; Restart our children
+    (set-supervisor-strategy (lambda (err)
+                               (assert-equal "FAILURE" err)
+                               'restart))
+
+    (tell actor 'increment)
+    (tell actor 'increment)
+    (tell actor 'increment)
+
+    (assert-equal 3 (ask actor 'query (seconds 2)))
+
+    (tell actor 'fail)
+    (tell actor 'increment)
+
+    (tell actor 'query)
+
+    (lambda (msg)
+      ; This should have reset our state
+      (assert-equal 1 msg))))))
+
+(define-test "resume failure action" (expect-success
+  (import (llambda actor))
+  (import (llambda duration))
+
+  (act (lambda ()
+    (define actor
+      (act (lambda ()
+             (define counter 0)
+
+             (lambda (msg)
+               (cond
+                 ((equal? 'increment msg)
+                  (set! counter (+ counter 1)))
+                 ((equal? 'query msg)
+                  (tell (sender) counter))
+                 ((equal? 'fail msg)
+                  (raise "FAILURE")))))))
+
+    ; Resume our children
+    (set-supervisor-strategy (lambda (err)
+                               (assert-equal "FAILURE" err)
+                               'resume))
+
+    (tell actor 'increment)
+    (tell actor 'increment)
+    (tell actor 'increment)
+
+    (assert-equal 3 (ask actor 'query (seconds 2)))
+
+    (tell actor 'fail)
+    (tell actor 'increment)
+
+    (tell actor 'query)
+
+    (lambda (msg)
+      ; This should keep our state
+      (assert-equal 4 msg))))))
+
 (define-test "stop failure action" (expect-success
   (import (llambda actor))
   (import (llambda duration))
   (import (llambda error))
 
-  ; Stop our children
-  (set-child-failure-action 'stop)
-  (assert-equal 'stop (child-failure-action))
+  (act (lambda ()
+    (define actor
+      (act (lambda ()
+             (define counter 0)
 
-  (define actor
-    (act (lambda ()
-           (define counter 0)
+             (lambda (msg)
+               (cond
+                 ((equal? 'increment msg)
+                  (set! counter (+ counter 1)))
+                 ((equal? 'query msg)
+                  (tell (sender) counter))
+                 ((equal? 'fail msg)
+                  (raise "FAILURE")))))))
 
-           (lambda (msg)
-             (cond
-               ((equal? 'increment msg)
-                (set! counter (+ counter 1)))
-               ((equal? 'query msg)
-                (tell (sender) counter))
-               ((equal? 'fail msg)
-                (raise "FAILURE")))))))
+    ; Restart our children
+    (set-supervisor-strategy (lambda (err)
+                               (assert-equal "FAILURE" err)
+                               'stop))
 
-  (tell actor 'increment)
-  (tell actor 'increment)
-  (tell actor 'increment)
+    (tell actor 'increment)
+    (tell actor 'increment)
+    (tell actor 'increment)
 
-  (assert-equal 3 (ask actor 'query (seconds 2)))
+    (assert-equal 3 (ask actor 'query (seconds 2)))
 
-  (tell actor 'fail)
-  (tell actor 'increment)
+    (tell actor 'fail)
+    (tell actor 'increment)
 
-  ; The actor should answer because its stopped
-  (assert-raises ask-timeout-error?
-    (ask actor 'query (seconds 2)))))
+    ; The actor shouldn't answer because its stopped
+    ; XXX: This will also pass because we're blocking ourselves and can't invoke our supervisor strategy. Once we
+    ; support receive timeouts this should change
+    (assert-raises ask-timeout-error?
+      (ask actor 'query (seconds 2)))
+
+    (lambda (msg))))))
 
 (define-test "poison pills" (expect-success
   (import (llambda actor))

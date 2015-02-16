@@ -5,7 +5,7 @@
 
 #include "actor/ActorClosureCell.h"
 #include "actor/ActorBehaviourCell.h"
-#include "actor/FailureAction.h"
+#include "actor/SupervisorStrategyCell.h"
 
 namespace lliby
 {
@@ -19,7 +19,7 @@ class Mailbox;
 class ActorContext
 {
 public:
-	ActorContext(ActorClosureCell *closure, FailureAction selfFailureAction);
+	ActorContext(ActorClosureCell *closure, std::weak_ptr<Mailbox> supervisor = std::weak_ptr<Mailbox>());
 
 	/**
 	 * Returns the current mailbox for this world
@@ -92,13 +92,39 @@ public:
 	}
 
 	/**
-	 * Sets the failure action for handling our own failures
-	 *
-	 * This is inherited from our parent's childFailureAction()
+	 * Returns the current behaviour for the actor
 	 */
-	FailureAction selfFailureAction() const
+	SupervisorStrategyCell* supervisorStrategy()
 	{
-		return m_selfFailureAction;
+		return m_supervisorStrategy;
+	}
+
+	/**
+	 * Returns a reference to the current behaviour
+	 *
+	 * This is used by the garbage collector
+	 */
+	SupervisorStrategyCell** supervisorStrategyRef()
+	{
+		return &m_supervisorStrategy;
+	}
+
+	/**
+	 * Returns the current behaviour for the actor
+	 */
+	void setSupervisorStrategy(SupervisorStrategyCell *supervisorStrategy)
+	{
+		m_supervisorStrategy = supervisorStrategy;
+	}
+
+	/**
+	 * Returns the supervisor for this actor
+	 *
+	 * If this is a top-level this will be null
+	 */
+	const std::weak_ptr<Mailbox>& supervisor()
+	{
+		return m_supervisor;
 	}
 
 private:
@@ -108,8 +134,9 @@ private:
 
 	ActorClosureCell *m_closure = nullptr;
 	ActorBehaviourCell *m_behaviour = nullptr;
+	SupervisorStrategyCell *m_supervisorStrategy = nullptr;
 
-	FailureAction m_selfFailureAction;
+	std::weak_ptr<actor::Mailbox> m_supervisor;
 };
 
 }

@@ -22,6 +22,19 @@ class Mailbox;
 class Message
 {
 public:
+	enum class Type
+	{
+		/**
+		 * User message sent from (tell) or (ask) including poison pills
+		 */
+		User,
+
+		/**
+		 * Message generated from supervised actor failure
+		 */
+		SupervisedFailure
+	};
+
 	/**
 	 * Creates a new message from the passed cell
 	 *
@@ -29,9 +42,18 @@ public:
 	 * encountered then an UnclonableCellException will be thrown.
 	 *
 	 * @param  cell    Cell to copy in to the message
-	 * @parem  sender  Mailbox of the sender
+	 * @param  sender  Mailbox of the sender
+	 * @param  type    Type of the message
 	 */
-	static Message *createFromCell(AnyCell *cell, const std::shared_ptr<Mailbox> &sender);
+	static Message *createFromCell(AnyCell *cell, const std::shared_ptr<Mailbox> &sender, Type = Type::User);
+
+	/**
+	 * Returns the type of the message
+	 */
+	Type type() const
+	{
+		return m_type;
+	}
 
 	AnyCell* messageCell() const
 	{
@@ -56,8 +78,11 @@ private:
 	{
 	}
 
+	Type m_type;
+
 	AnyCell *m_messageCell;
 	alloc::Heap m_heap;
+
 	std::weak_ptr<Mailbox> m_sender;
 };
 

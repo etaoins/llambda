@@ -134,6 +134,11 @@ size_t collect(World &world, Heap &newHeap)
 		{
 			visitCell(reinterpret_cast<AnyCell**>(world.actorContext()->behaviourRef()), rootVisitor);
 		}
+
+		if (world.actorContext()->supervisorStrategy())
+		{
+			visitCell(reinterpret_cast<AnyCell**>(world.actorContext()->supervisorStrategyRef()), rootVisitor);
+		}
 	}
 
 	// Visit each runtime weak root

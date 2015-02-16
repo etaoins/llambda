@@ -4,7 +4,7 @@
 
 #include "core/World.h"
 #include "sched/Dispatcher.h"
-#include "actor/run.h"
+#include "actor/Runner.h"
 
 namespace lliby
 {
@@ -19,7 +19,7 @@ namespace
 }
 
 Mailbox::Mailbox() :
-	m_stopRequested(false)
+	m_requestedLifecycleAction(LifecycleAction::Resume)
 {
 #ifdef _LLIBY_CHECK_LEAKS
 	allocationCount++;
@@ -41,14 +41,14 @@ Mailbox::~Mailbox()
 #endif
 }
 
-void Mailbox::send(Message *message)
+void Mailbox::tell(Message *message)
 {
 	// Add to the queue
 	{
 		std::unique_lock<std::mutex> lock(m_mutex);
 		m_messageQueue.push(message);
 
-		if (m_sleepingReceiver)
+		if (m_sleepingReceiver && (m_state == State::Running))
 		{
 			// We're waking the world; null out the sleeper
 			World *toWake = m_sleepingReceiver;
@@ -57,7 +57,7 @@ void Mailbox::send(Message *message)
 			lock.unlock();
 
 			sched::Dispatcher::defaultInstance().dispatch([=] {
-				wake(toWake);
+				Runner::wake(toWake);
 			});
 		}
 		else
@@ -71,33 +71,34 @@ void Mailbox::send(Message *message)
 
 }
 
-Message* Mailbox::receive(World *sleepingReceiver)
+Mailbox::ReceiveResult Mailbox::receive(World *sleepingReceiver, Message **msg, LifecycleAction *action)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 
-	if (m_messageQueue.empty())
+	if (m_lifecycleActionRequested)
 	{
-		assert(m_sleepingReceiver == nullptr);
-		assert(sleepingReceiver->actorContext());
+		*action = m_requestedLifecycleAction;
+		m_lifecycleActionRequested = false;
 
-		m_sleepingReceiver = sleepingReceiver;
-		return nullptr;
+		return ReceiveResult::TookLifecycleAction;
+	}
+	else if ((m_state == State::Running) && !m_messageQueue.empty())
+	{
+		*msg = m_messageQueue.front();
+		m_messageQueue.pop();
+
+		return ReceiveResult::PoppedMessage;
 	}
 
-	Message *msg = m_messageQueue.front();
-	m_messageQueue.pop();
+	assert(m_sleepingReceiver == nullptr);
+	assert(sleepingReceiver->actorContext());
 
-	return msg;
+	m_sleepingReceiver = sleepingReceiver;
+	return ReceiveResult::WentToSleep;
 }
 
 AnyCell* Mailbox::ask(World &world, AnyCell *requestCell, std::int64_t timeoutUsecs)
 {
-	if (stopRequested())
-	{
-		// We'll never get this message - timeout right away
-		return nullptr;
-	}
-
 	// Create a temporary mailbox
 	std::shared_ptr<actor::Mailbox> senderMailbox(new actor::Mailbox());
 
@@ -110,7 +111,7 @@ AnyCell* Mailbox::ask(World &world, AnyCell *requestCell, std::int64_t timeoutUs
 
 		m_messageQueue.push(request);
 
-		if (m_sleepingReceiver)
+		if (m_sleepingReceiver && (m_state == State::Running))
 		{
 			World *toWake = m_sleepingReceiver;
 			m_sleepingReceiver = nullptr;
@@ -118,7 +119,7 @@ AnyCell* Mailbox::ask(World &world, AnyCell *requestCell, std::int64_t timeoutUs
 			receiverLock.unlock();
 
 			// Synchronously wake our receiver in the hopes that it will reply immediately
-			wake(toWake);
+			Runner::wake(toWake);
 		}
 		else
 		{
@@ -161,10 +162,18 @@ AnyCell* Mailbox::ask(World &world, AnyCell *requestCell, std::int64_t timeoutUs
 	}
 }
 
-void Mailbox::requestStop()
+void Mailbox::requestLifecycleAction(LifecycleAction action)
 {
 	std::unique_lock<std::mutex> lock(m_mutex);
-	m_stopRequested = true;
+
+	if (m_lifecycleActionRequested && (action <= m_requestedLifecycleAction))
+	{
+		// Nothing to do
+		return;
+	}
+
+	m_lifecycleActionRequested = true;
+	m_requestedLifecycleAction = action;
 
 	if (m_sleepingReceiver)
 	{
@@ -174,7 +183,7 @@ void Mailbox::requestStop()
 		lock.unlock();
 
 		// Synchronously wake our receiver in the hopes that it will reply immediately
-		wake(toWake);
+		Runner::wake(toWake);
 	}
 	else
 	{
@@ -183,35 +192,20 @@ void Mailbox::requestStop()
 	}
 }
 
-bool Mailbox::stopRequested() const
-{
-	return m_stopRequested;
-}
-
-void Mailbox::setStopped()
+void Mailbox::setState(State state)
 {
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
-		m_stopped = true;
+		m_state = state;
 	}
 
-	m_stoppedCond.notify_all();
+	m_stateCond.notify_all();
 }
 
 void Mailbox::waitForStop()
 {
 	std::unique_lock<std::mutex> lock(m_mutex);
-	m_stoppedCond.wait(lock, [=]{return m_stopped;});
-}
-
-void Mailbox::sleepActor(World *sleepingReceiver)
-{
-	std::lock_guard<std::mutex> guard(m_mutex);
-
-	assert(m_sleepingReceiver == nullptr);
-	assert(sleepingReceiver->actorContext());
-
-	m_sleepingReceiver = sleepingReceiver;
+	m_stateCond.wait(lock, [=]{return m_state == State::Stopped;});
 }
 
 #ifdef _LLIBY_CHECK_LEAKS

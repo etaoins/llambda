@@ -5,8 +5,6 @@
 #include "alloc/ShadowStackEntry.h"
 #include "alloc/CellRootList.h"
 
-#include "actor/FailureAction.h"
-
 #include <memory>
 #include <functional>
 #include <list>
@@ -124,19 +122,6 @@ public: // Normal C++ API
 	void addChildActor(std::weak_ptr<actor::Mailbox> childActor);
 
 	/**
-	 * Sets the failure action for new created actor children
-	 */
-	void setChildActorFailureAction(actor::FailureAction action)
-	{
-		m_childActorFailureAction = action;
-	}
-
-	actor::FailureAction childActorFailureAction() const
-	{
-		return m_childActorFailureAction;
-	}
-
-	/**
 	 * Returns the run sequence number
 	 *
 	 * This is incremented on every call to run(). This is used to prevent continuations from being used across calls to
@@ -189,7 +174,6 @@ private:
 	actor::ActorContext *m_actorContext = nullptr;
 
 	std::list<std::weak_ptr<actor::Mailbox>> m_childActors;
-	actor::FailureAction m_childActorFailureAction = actor::FailureAction::Restart;
 };
 
 }

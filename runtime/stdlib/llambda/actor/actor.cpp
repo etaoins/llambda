@@ -7,10 +7,11 @@
 #include "actor/PoisonPillCell.h"
 #include "actor/ActorContext.h"
 #include "actor/ActorBehaviourCell.h"
+#include "actor/SupervisorStrategyCell.h"
 #include "actor/Mailbox.h"
 #include "actor/Message.h"
+#include "actor/Runner.h"
 #include "actor/cloneCell.h"
-#include "actor/run.h"
 
 #include "core/error.h"
 
@@ -25,7 +26,7 @@ MailboxCell* llactor_act(World &world, actor::ActorClosureCell *closureProc)
 {
 	try
 	{
-		return MailboxCell::createInstance(world, actor::run(world, closureProc));
+		return MailboxCell::createInstance(world, actor::Runner::start(world, closureProc));
 	}
 	catch(actor::UnclonableCellException &e)
 	{
@@ -56,7 +57,7 @@ void llactor_tell(World &world, MailboxCell *destMailboxCell, AnyCell *messageCe
 	try
 	{
 		actor::Message *msg = actor::Message::createFromCell(messageCell, senderMailbox);
-		destMailbox->send(msg);
+		destMailbox->tell(msg);
 	}
 	catch(actor::UnclonableCellException &e)
 	{
@@ -130,7 +131,7 @@ void llactor_stop(MailboxCell *mailboxCell)
 
 	if (mailbox)
 	{
-		mailbox->requestStop();
+		mailbox->requestLifecycleAction(actor::LifecycleAction::Stop);
 	}
 }
 
@@ -141,7 +142,7 @@ bool llactor_graceful_stop(MailboxCell *mailboxCell)
 	// If there's no mailbox we're already stopped
 	if (mailbox)
 	{
-		mailbox->requestStop();
+		mailbox->requestLifecycleAction(actor::LifecycleAction::Stop);
 		mailbox->waitForStop();
 	}
 
@@ -152,16 +153,6 @@ bool llactor_graceful_stop(MailboxCell *mailboxCell)
 bool llactor_mailbox_is_open(World &world, MailboxCell *mailboxCell)
 {
 	return !mailboxCell->mailbox().expired();
-}
-
-std::int32_t llactor_child_failure_action(World &world)
-{
-	return static_cast<std::int32_t>(world.childActorFailureAction());
-}
-
-void llactor_set_child_failure_action(World &world, std::int32_t failureAction)
-{
-	world.setChildActorFailureAction(static_cast<actor::FailureAction>(failureAction));
 }
 
 actor::PoisonPillCell* llactor_poison_pill_object()
@@ -184,6 +175,18 @@ void llactor_become(World &world, actor::ActorBehaviourCell *newBehaviour)
 	}
 
 	context->setBehaviour(newBehaviour);
+}
+
+void llactor_set_supervisor_strategy(World &world, actor::SupervisorStrategyCell *strategy)
+{
+	actor::ActorContext *context = world.actorContext();
+
+	if (context == nullptr)
+	{
+		signalError(world, ErrorCategory::NoActor, "Attempted (set-supervisor-strategy) outside actor context");
+	}
+
+	context->setSupervisorStrategy(strategy);
 }
 
 }

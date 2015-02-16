@@ -6,10 +6,10 @@ namespace lliby
 namespace actor
 {
 
-ActorContext::ActorContext(ActorClosureCell *closure, FailureAction selfFailureAction) :
+ActorContext::ActorContext(ActorClosureCell *closure, std::weak_ptr<Mailbox> supervisor) :
 	m_mailbox(new Mailbox),
 	m_closure(closure),
-	m_selfFailureAction(selfFailureAction)
+	m_supervisor(supervisor)
 {
 }
 

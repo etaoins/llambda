@@ -3,12 +3,12 @@
 
 #include "binding/AnyCell.h"
 #include "actor/Message.h"
+#include "actor/LifecycleAction.h"
 
 #include <cstdint>
 #include <mutex>
 #include <queue>
 #include <condition_variable>
-#include <atomic>
 
 namespace lliby
 {
@@ -17,6 +17,7 @@ class World;
 namespace actor
 {
 class Message;
+class Runner;
 
 /**
  * Mailbox for an actor
@@ -25,7 +26,29 @@ class Message;
  */
 class Mailbox
 {
+	friend class Runner;
 public:
+	/**
+	 * State of the mailbox
+	 */
+	enum class State
+	{
+		/**
+		 * Mailbox is running and accepting messages
+		 */
+		Running,
+
+		/**
+		 * Mailbox has failed and is awaiting supervisor action
+		 */
+		Failed,
+
+		/**
+		 * Mailbox has permanently stopped
+		 */
+		Stopped
+	};
+
 	Mailbox();
 	~Mailbox();
 
@@ -35,15 +58,7 @@ public:
 	 * This is asynchronous; it will return as soon as the message is successfully enqueued. The mailbox takes
 	 * ownership of the message.
 	 */
-	void send(Message *);
-
-	/**
-	 * Attempts to pop message from the message queue
-	 *
-	 * This is non-blocking. If the message box is empty then nullptr is returned and the passed World is put to sleep
-	 * on the mailbox. The mailbox passes ownership of the message to its caller.
-	 */
-	Message *receive(World *sleepingReceiver);
+	void tell(Message *);
 
 	/**
 	 * Asks the mailbox for a synchronous response
@@ -59,29 +74,16 @@ public:
 	AnyCell *ask(World &world, AnyCell *requestCell, std::int64_t timeoutUsecs);
 
 	/**
-	 * Sets a flag indicating if the owner of this mailbox should stop
+	 * Request the actor peforms the specified lifecycle action
+	 *
+	 * This is used both for supervision and for stopping
 	 */
-	void requestStop();
-
-	/**
-	 * Returns true if the owner of this mailbox have been asked to stop
-	 */
-	bool stopRequested() const;
-
-	/**
-	 * Indicates that this actor is stopped
-	 */
-	void setStopped();
+	void requestLifecycleAction(LifecycleAction action);
 
 	/**
 	 * Waits until this actor has stopped
 	 */
 	void waitForStop();
-
-	/**
-	 * Marks the passed actor World as sleeping on this mailbox
-	 */
-	void sleepActor(World *sleepingReceiver);
 
 	/**
 	 * Returns the current number of live mailbox instances
@@ -90,15 +92,45 @@ public:
 	 */
 	static std::size_t instanceCount();
 
+// Runner API
+protected:
+	enum class ReceiveResult
+	{
+		TookLifecycleAction,
+		PoppedMessage,
+		WentToSleep
+	};
+
+	/**
+	 * Attempts to pop message from the message queue or take a lifecycle action
+	 *
+	 * This is non-blocking. If the message box is empty then nullptr is returned and the passed World is put to sleep
+	 * on the mailbox.
+	 *
+	 * @param  sleepingReceiver  World to put to sleep if there's nothing to receive
+	 * @param  msg               Out pointer to message if PoppedMessage is returned. The mailbox passes ownership to
+	 *                           the caller
+	 * @param  action            Out pointer to the lifecycle action if TookLifecycleAction is returned
+	 */
+	ReceiveResult receive(World *sleepingReceiver, Message **msg, LifecycleAction *action);
+
+	/**
+	 * Sets the current state of the actor
+	 */
+	void setState(State state);
+
 private:
 	std::mutex m_mutex;
+
 	std::condition_variable m_messageQueueCond;
 	std::queue<Message*> m_messageQueue;
 	World *m_sleepingReceiver = nullptr;
 
-	std::atomic<bool> m_stopRequested;
-	std::condition_variable m_stoppedCond;
-	bool m_stopped = false;
+	bool m_lifecycleActionRequested = false;
+	LifecycleAction m_requestedLifecycleAction;
+
+	std::condition_variable m_stateCond;
+	State m_state = State::Running;
 };
 
 }
