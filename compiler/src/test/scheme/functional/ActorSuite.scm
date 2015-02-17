@@ -595,3 +595,78 @@
 
   (tell double-incrementer 'increment)
   (assert-equal 8 (ask double-incrementer 'query (seconds 2)))))
+
+(define-test "failure in supervisor strategy escalates to supervisor's supervisor" (expect-success
+  (import (llambda actor))
+  (import (llambda duration))
+
+  (define supervisor-supervisor
+    (act (lambda ()
+           (define outer-mailbox #f)
+
+           (define supervisor
+             (act (lambda ()
+                    (define child
+                      (act (lambda ()
+                             (lambda (msg)
+                               (when (equal? msg 'fail)
+                                 (raise "FIRST ERROR"))))))
+
+                    (set-supervisor-strategy (lambda (err)
+                                               (assert-equal "FIRST ERROR" err)
+                                               (raise "SECOND ERROR")
+                                               'stop))
+                    (lambda (msg)
+                      (when (equal? msg 'go)
+                        ; Get our child to fail
+                        (tell child 'fail))))))
+
+           (set-supervisor-strategy (lambda (err)
+                                      (tell outer-mailbox err)
+                                      'stop))
+
+           (lambda (msg)
+             (when (equal? msg 'go)
+               ; Save our sender
+               (set! outer-mailbox (sender))
+               ; Start our child
+               (tell supervisor 'go))))))
+
+  (assert-equal "SECOND ERROR" (ask supervisor-supervisor 'go (seconds 2)))))
+
+(define-test "escalate failure action" (expect-success
+  (import (llambda actor))
+  (import (llambda duration))
+
+  (define supervisor-supervisor
+    (act (lambda ()
+           (define outer-mailbox #f)
+
+           (define supervisor
+             (act (lambda ()
+                    (define child
+                      (act (lambda ()
+                             (lambda (msg)
+                               (when (equal? msg 'fail)
+                                 (raise "FIRST ERROR"))))))
+
+                    (set-supervisor-strategy (lambda (err)
+                                               'escalate))
+
+                    (lambda (msg)
+                      (when (equal? msg 'go)
+                        ; Get our child to fail
+                        (tell child 'fail))))))
+
+           (set-supervisor-strategy (lambda (err)
+                                      (tell outer-mailbox err)
+                                      'stop))
+
+           (lambda (msg)
+             (when (equal? msg 'go)
+               ; Save our sender
+               (set! outer-mailbox (sender))
+               ; Start our child
+               (tell supervisor 'go))))))
+
+  (assert-equal "FIRST ERROR" (ask supervisor-supervisor 'go (seconds 2)))))

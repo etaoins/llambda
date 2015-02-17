@@ -201,6 +201,12 @@ void Runner::wake(World *actorWorld)
 							failureAction = context->supervisorStrategy()->apply(world, msgCell);
 						});
 
+						if (failureAction->byteLength() == 8)
+						{
+							// 'escalate
+							throw dynamic::SchemeException(msgCell);
+						}
+
 						lifecycleAction = failureActionToLifecycleAction(failureAction);
 					}
 					else

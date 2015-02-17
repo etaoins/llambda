@@ -11,7 +11,7 @@
   (begin
     (define-native-library llactor (static-library "ll_llambda_actor"))
 
-    (define-type <failure-action> (U 'resume 'restart 'stop))
+    (define-type <failure-action> (U 'resume 'restart 'stop 'escalate))
     (define-type <supervisor-strategy> (-> <any> <failure-action>))
 
     ; These match the values in runtime/actor/FailureAction.h
