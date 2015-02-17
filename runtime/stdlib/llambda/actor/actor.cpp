@@ -64,7 +64,7 @@ void llactor_tell(World &world, MailboxCell *destMailboxCell, AnyCell *messageCe
 	}
 	catch(actor::UnclonableCellException &e)
 	{
-		e.signalSchemeError(world, "(!)");
+		e.signalSchemeError(world, "(tell)");
 	}
 }
 
