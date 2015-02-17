@@ -4,8 +4,9 @@
   (import (llambda typed))
   (import (llambda duration))
 
-  (export act tell ask self sender stop graceful-stop mailbox? mailbox-open? poison-pill-object poison-pill-object?
-          become set-supervisor-strategy schedule-once <mailbox> <behaviour> <failure-action> <supervisor-strategy>)
+  (export act tell forward ask self sender stop graceful-stop mailbox? mailbox-open? poison-pill-object
+          poison-pill-object? become set-supervisor-strategy schedule-once <mailbox> <behaviour> <failure-action>
+          <supervisor-strategy>)
 
   (begin
     (define-native-library llactor (static-library "ll_llambda_actor"))
@@ -22,6 +23,7 @@
 
     (define act (world-function llactor "llactor_act" (-> (-> <behaviour>) <mailbox>)))
     (define tell (world-function llactor "llactor_tell" (-> <mailbox> <any> <unit>)))
+    (define forward (world-function llactor "llactor_forward" (-> <mailbox> <any> <unit>)))
     (define ask (world-function llactor "llactor_ask" (-> <mailbox> <any> <native-int64> <any>)))
     (define self (world-function llactor "llactor_self" (-> <mailbox>)))
     (define sender (world-function llactor "llactor_sender" (-> (U <unit> <mailbox>))))

@@ -68,6 +68,34 @@ void llactor_tell(World &world, MailboxCell *destMailboxCell, AnyCell *messageCe
 	}
 }
 
+void llactor_forward(World &world, MailboxCell *destMailboxCell, AnyCell *messageCell)
+{
+	std::shared_ptr<actor::Mailbox> destMailbox(destMailboxCell->mailbox().lock());
+
+	if (!destMailbox)
+	{
+		// Destination has gone away
+		return;
+	}
+
+	actor::ActorContext *context = world.actorContext();
+
+	if (context == nullptr)
+	{
+		signalError(world, ErrorCategory::NoActor, "Attempted (forward) outside actor context");
+	}
+
+	try
+	{
+		actor::Message *msg = actor::Message::createFromCell(messageCell, context->sender());
+		destMailbox->tell(msg);
+	}
+	catch(actor::UnclonableCellException &e)
+	{
+		e.signalSchemeError(world, "(forward)");
+	}
+}
+
 AnyCell* llactor_ask(World &world, MailboxCell *destMailboxCell, AnyCell *messageCell, std::int64_t timeoutUsecs)
 {
 	std::shared_ptr<actor::Mailbox> destMailbox(destMailboxCell->mailbox().lock());

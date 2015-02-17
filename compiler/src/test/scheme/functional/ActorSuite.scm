@@ -551,3 +551,47 @@
 
   (tell actor "bar")
   (assert-equal "I'm already happy :-)" (ask actor "bar" (seconds 2)))))
+
+(define-test "(forward)" (expect-success
+  (import (llambda actor))
+  (import (llambda duration))
+
+  (define double-incrementer
+    (act (lambda ()
+           (define child-actor
+             (act (lambda ()
+                    (define counter 0)
+
+                    (lambda (msg)
+                      (cond
+                        ((equal? 'increment msg)
+                         (set! counter (+ counter 1)))
+                        ((equal? 'query msg)
+                         (tell (sender) counter))
+                        ((equal? 'fail msg)
+                         (raise "FAILURE")))))))
+
+           (set-supervisor-strategy
+             (lambda (err)
+               'resume))
+
+           (lambda (msg)
+             (cond
+               ((equal? msg 'increment)
+                ; Forward this message twice
+                (forward child-actor 'increment)
+                (forward child-actor 'increment))
+               (else
+                 (forward child-actor msg)))))))
+
+  (tell double-incrementer 'increment)
+  (tell double-incrementer 'increment)
+  (tell double-incrementer 'increment)
+
+  (assert-equal 6 (ask double-incrementer 'query (seconds 2)))
+
+  ; The double-incrementer should use its resume stategy here
+  (tell double-incrementer 'fail)
+
+  (tell double-incrementer 'increment)
+  (assert-equal 8 (ask double-incrementer 'query (seconds 2)))))

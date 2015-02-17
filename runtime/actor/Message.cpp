@@ -7,7 +7,7 @@ namespace lliby
 namespace actor
 {
 
-Message* Message::createFromCell(AnyCell *cell, const std::shared_ptr<Mailbox> &sender, Type type)
+Message* Message::createFromCell(AnyCell *cell, const std::weak_ptr<Mailbox> &sender, Type type)
 {
 	Message *msg = new Message;
 

@@ -45,7 +45,7 @@ public:
 	 * @param  sender  Mailbox of the sender
 	 * @param  type    Type of the message
 	 */
-	static Message *createFromCell(AnyCell *cell, const std::shared_ptr<Mailbox> &sender, Type = Type::User);
+	static Message *createFromCell(AnyCell *cell, const std::weak_ptr<Mailbox> &sender, Type = Type::User);
 
 	/**
 	 * Returns the type of the message
