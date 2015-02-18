@@ -1,7 +1,7 @@
 Introduction
 ============
 
-Llambda is a natively compiled Scheme with [optional strong typing](docs/types.md). The core language is based on [R7RS](docs/scheme.md) with a number of extensions influenced by [Typed Racket](http://docs.racket-lang.org/ts-guide/) and the [SRFI](http://srfi.schemers.org) community.
+Llambda is a natively compiled Scheme with optional strong typing. The core language is based on [R7RS](http://trac.sacrideo.us/wg/raw-attachment/wiki/WikiStart/r7rs.pdf) with a number of extensions influenced by [Typed Racket](http://docs.racket-lang.org/ts-guide/) and the [SRFI](http://srfi.schemers.org) community.
 
 Llambda implements many of the features expected from a modern programming language including:
 
@@ -9,7 +9,8 @@ Llambda implements many of the features expected from a modern programming langu
 * Unicode support including UTF-8 strings
 * Support for functional programming including higher-order functions such as ``map``, ``reduce`` and ``fold``
 * Safe programming environment with garbage collected memory, enforced bounds checking and checked integer overflow
-* [Read-evaluate-print loop](docs/repl.md)
+* Concurrency support via an implementation of the [Actor model](http://en.wikipedia.org/wiki/Actor_model)
+* Read-evaluate-print loop
 
 Llambda is implemented with a [Scala](http://www.scala-lang.org) frontend, [LLVM](http://llvm.org) backend and a Scheme and C++11 runtime.
 
@@ -62,9 +63,4 @@ $ sbt
 Documentation
 =============
 
-* [Scheme support](docs/scheme.md) describes the Scheme support of the current implementation
-* [Type system](docs/types.md) contains information about Llambda's optional typing system
-* [REPL](docs/repl.md) is a basic usage guide for the REPL
-* [Numbers](docs/numbers.md) describes the semantics and performance characteristics of numbers
-* [Errors](docs/errors.md) describes the error model and extended error categories
-* [Dialects](docs/dialects.md) covers the three Scheme dialects supported by Llambda
+Generated documentation is hosted at [llambda.readthedocs.org](http://llambda.readthedocs.org/)
