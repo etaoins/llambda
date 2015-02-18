@@ -39,7 +39,7 @@ MailboxCell* llactor_act(World &world, actor::ActorClosureCell *closureProc)
 
 void llactor_tell(World &world, MailboxCell *destMailboxCell, AnyCell *messageCell)
 {
-	std::shared_ptr<actor::Mailbox> destMailbox(destMailboxCell->mailbox().lock());
+	std::shared_ptr<actor::Mailbox> destMailbox(destMailboxCell->lockedMailbox());
 
 	if (!destMailbox)
 	{
@@ -98,7 +98,7 @@ void llactor_forward(World &world, MailboxCell *destMailboxCell, AnyCell *messag
 
 AnyCell* llactor_ask(World &world, MailboxCell *destMailboxCell, AnyCell *messageCell, std::int64_t timeoutUsecs)
 {
-	std::shared_ptr<actor::Mailbox> destMailbox(destMailboxCell->mailbox().lock());
+	std::shared_ptr<actor::Mailbox> destMailbox(destMailboxCell->lockedMailbox());
 
 	if (!destMailbox)
 	{
@@ -158,7 +158,7 @@ AnyCell *llactor_sender(World &world)
 
 void llactor_stop(MailboxCell *mailboxCell)
 {
-	std::shared_ptr<actor::Mailbox> mailbox(mailboxCell->mailbox());
+	std::shared_ptr<actor::Mailbox> mailbox(mailboxCell->lockedMailbox());
 
 	if (mailbox)
 	{
@@ -168,7 +168,7 @@ void llactor_stop(MailboxCell *mailboxCell)
 
 bool llactor_graceful_stop(MailboxCell *mailboxCell)
 {
-	std::shared_ptr<actor::Mailbox> mailbox(mailboxCell->mailbox());
+	std::shared_ptr<actor::Mailbox> mailbox(mailboxCell->lockedMailbox());
 
 	// If there's no mailbox we're already stopped
 	if (mailbox)

@@ -8,7 +8,10 @@
   (assert-true (mailbox-open? actor))
 
   (assert-true (graceful-stop actor))
-  (assert-false (mailbox-open? actor))))
+  (assert-false (mailbox-open? actor))
+
+  ; Second graceful-stop should work
+  (assert-true (graceful-stop actor))))
 
 (define-test "(ask) with a timeout" (expect-success
   (import (llambda actor))

@@ -156,8 +156,8 @@ bool AnyCell::isEqual(const AnyCell *other) const
 	{
 		if (auto otherMailboxCell = cell_cast<MailboxCell>(other))
 		{
-			std::shared_ptr<actor::Mailbox> thisMailbox = thisMailboxCell->mailbox().lock();
-			std::shared_ptr<actor::Mailbox> otherMailbox = otherMailboxCell->mailbox().lock();
+			std::shared_ptr<actor::Mailbox> thisMailbox = thisMailboxCell->lockedMailbox();
+			std::shared_ptr<actor::Mailbox> otherMailbox = otherMailboxCell->lockedMailbox();
 
 			// This considers closed mailboxes to be equal. This is similar to how Akka implicitly replaces all inboxes
 			// of dead actors with the "dead-letter" inbox

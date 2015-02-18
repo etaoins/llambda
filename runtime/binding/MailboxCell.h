@@ -24,6 +24,17 @@ public:
 	{
 	}
 
+	/**
+	 * Returns the actor::Mailbox this cell is pointing to
+	 *
+	 * Note that Mailbox cells are weak references. This function attempts to lock a strong reference but it may fail.
+	 * Callers should ensure a reference was obtained.
+	 */
+	std::shared_ptr<actor::Mailbox> lockedMailbox() const
+	{
+		return m_mailbox.lock();
+	}
+
 	static MailboxCell* createInstance(World &world, const std::weak_ptr<actor::Mailbox> &mailbox);
 
 	void finalizeMailbox();
