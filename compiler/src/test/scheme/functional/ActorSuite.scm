@@ -238,45 +238,53 @@
   (import (llambda actor))
   (import (llambda duration))
 
-  (define (replicating-actor)
-    (define started-children : <exact-integer> 0)
-    (define started-mailbox #!unit)
+  (define-record-type <start-message> (start-message children) start-message?
+                      ([children : <exact-integer>] start-message-children))
 
-    (define reply-count : <exact-integer> 0)
+  (define-record-type <result-message> (result-message count) result-message?
+                      ([count : <exact-integer>] result-message-count))
+
+  (: replicating-actor (-> (-> <any> <unit>)))
+  (define (replicating-actor)
+    (define waiting-children : <exact-integer> 0)
+    (define started-mailbox #!unit)
     (define reply-sum : <exact-integer> 0)
 
     (lambda (msg)
       (cond
-        ((equal? (car msg) 'start)
-         (define count (cdr msg))
-
-         ; Set our state
-         (set! started-mailbox (sender))
-         (set! started-children count)
+        ((start-message? msg)
+         (define count (start-message-children msg))
 
          (if (= count 0)
            ; All done
            (begin
-             (tell (sender) (cons 'result 1))
+             (tell (sender) (result-message 1))
              (stop (self)))
-           ; Start some children
-           (map (lambda (_)
-                  ; Have this actor start one less child than we did
-                  (tell (act replicating-actor) (cons 'start (- count 1)))
-                  ) (make-list count))))
-
-        ((equal? (car msg) 'result)
-         ; Add the reply to our total sum
-         (set! reply-sum (+ (cdr msg) reply-sum))
-         (set! reply-count (+ reply-count 1))
-
-         (if (= reply-count started-children)
            (begin
-             (tell started-mailbox (cons 'result reply-sum))
+             ; Set our state
+             (set! started-mailbox (sender))
+             (set! waiting-children count)
+
+             ; Start some children
+             (for-each (lambda (_)
+                         ; Have this actor start one less child than we did
+                         (tell (act replicating-actor) (start-message (- count 1)))
+                         ) (make-list count)))))
+
+        ((result-message? msg)
+         ; Add the reply to our total sum
+         (set! reply-sum (+ (result-message-count msg) reply-sum))
+         (set! waiting-children (- waiting-children 1))
+
+         (if (= waiting-children 0)
+           (begin
+             (tell started-mailbox (result-message reply-sum))
              (stop (self))))))))
 
   (define root-actor (act replicating-actor))
-  (assert-equal (cons 'result 720) (ask root-actor (cons 'start 6) (seconds 20)))))
+  (define result (ask root-actor (start-message 6) (seconds 20)))
+
+  (assert-equal 720 (result-message-count result))))
 
 (define-test "captured continuations cannot be used across messages" (expect-success
   (import (llambda actor))
