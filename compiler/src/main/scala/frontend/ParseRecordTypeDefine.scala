@@ -66,20 +66,23 @@ private[frontend] object ParseRecordTypeDefine {
           throw new BadSpecialFormException(fieldNameSymbol, "Duplicate record field name: " + fieldName)
         }
 
-        // Create the field
-        val field = new vt.RecordField(fieldName, fieldType)
-
         // Determine which procedures this field defines
-        val parsedField = procedureData match {
-          case (accessorSymbol : sst.ScopedSymbol) :: Nil =>
-            ParsedField(field, accessorSymbol, None)
+        val (accessorSymbol, mutatorSymbolOpt) = procedureData match {
+          case List((accessorSymbol : sst.ScopedSymbol)) =>
+            (accessorSymbol, None)
 
-          case (accessorSymbol : sst.ScopedSymbol) :: (mutatorSymbol : sst.ScopedSymbol) :: Nil =>
-            ParsedField(field, accessorSymbol, Some(mutatorSymbol))
+          case List((accessorSymbol : sst.ScopedSymbol), (mutatorSymbol : sst.ScopedSymbol)) =>
+            (accessorSymbol, Some(mutatorSymbol))
 
           case _ =>
             throw new BadSpecialFormException(fieldDatum, "Unrecognized record field procedure definition. One identifier for an accessor must be specified. Another may optionally provided for a mutator.")
         }
+
+        // Create the field
+        val field = new vt.RecordField(fieldName, fieldType, mutable=mutatorSymbolOpt.isDefined)
+
+        // Parse the field
+        val parsedField = ParsedField(field, accessorSymbol, mutatorSymbolOpt)
 
         parsedFields + (fieldName -> parsedField)
 

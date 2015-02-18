@@ -50,6 +50,15 @@ class KnownRecordAccessorProc(recordType : vt.RecordType, field : vt.RecordField
       args : List[(ContextLocated, IntermediateValue)]
   )(implicit plan : PlanWriter) : Option[PlanResult] = {
     args match {
+      case List((_, knownRecord : KnownRecord))
+          if vt.SatisfiesType(recordType, knownRecord.schemeType) == Some(true) && knownRecord.knownFieldValues.contains(field) =>
+        val fieldValue = knownRecord.knownFieldValues(field)
+
+        Some(PlanResult(
+          state=state,
+          values=SingleValue(fieldValue)
+        ))
+
       case List((_, recordValue)) =>
         val recordCellTemp = recordValue.toTempValue(recordType)
 

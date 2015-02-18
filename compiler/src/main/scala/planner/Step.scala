@@ -500,6 +500,27 @@ case class CreateEmptyClosure(result : TempValue, entryPoint : TempValue) extend
     CreateEmptyClosure(f(result), f(entryPoint)).assignLocationFrom(this)
 }
 
+/** Creates a constant record cell
+  *
+  * @param  recordType   Record type to create
+  * @param  fieldValues  Values for the record's fields. All field values must be constants. Additionally, the record
+  *                      type should not contain mutable fields if the record can be mutated by Scheme code
+  * @param  isUndefined  Indicates if the record should be initially marked as undefined
+  */
+case class CreateRecordCell(
+    result : TempValue,
+    recordType : vt.RecordType,
+    fieldValues : Map[vt.RecordField, TempValue],
+    isUndefined : Boolean
+) extends CreateConstantCell with RecordLikeStep {
+  lazy val inputValues = fieldValues.values.toSet
+
+  val recordLikeType = recordType
+
+  def renamed(f : (TempValue) => TempValue) =
+    CreateRecordCell(f(result), recordType, fieldValues.mapValues(f), isUndefined).assignLocationFrom(this)
+}
+
 /** Indicates a step that creates a native constant */
 sealed trait CreateNativeConstant extends CreateConstant {
   val inputValues = Set[TempValue]()

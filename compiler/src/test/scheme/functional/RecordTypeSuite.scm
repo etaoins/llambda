@@ -120,6 +120,18 @@
 
 	(list (single-value-field1 instance) (single-value-field2 instance) (single-value-field3 instance))))
 
+(define-test "constant out-of-line record" (expect (1 2 3)
+  (import (llambda typed))
+
+	(define-record-type <single-value> (single-value field1 field2 field3) single-value?
+		((field1 : <exact-integer>) single-value-field1)
+		((field2 : <exact-integer>) single-value-field2)
+		((field3 : <exact-integer>) single-value-field3))
+
+	(define instance (single-value 1 2 3))
+
+	(list (single-value-field1 instance) (single-value-field2 instance) (single-value-field3 instance))))
+
 (define-test "nested record types" (expect it-actually-worked
   (import (llambda typed))
 
@@ -231,6 +243,22 @@
   (assert-field-value "Int" named-number-name test-named-int)
   (assert-field-value "Flonum"  named-number-name test-named-flonum)
   (assert-field-value "NaN"  named-number-name test-named-nan)))
+
+(define-test "constant out-of-line record inheritance" (expect-success
+  (import (llambda typed))
+
+  (define-record-type <base-record> (base-record field1 field2) base-record?
+                      ([field1 : <exact-integer>] base-record-field1)
+                      ([field2 : <exact-integer>] base-record-field2))
+
+  (define-record-type <child-record> <base-record> (child-record field1 field2 field3) child-record?
+                      ([field3 : <exact-integer>] child-record-field3))
+
+  (define instance (child-record 1 2 3))
+
+  (assert-equal 1 (base-record-field1 instance))
+  (assert-equal 2 (base-record-field2 instance))
+  (assert-equal 3 (child-record-field3 instance))))
 
 (define-test "recursive record types" (expect-success
   (import (llambda typed))

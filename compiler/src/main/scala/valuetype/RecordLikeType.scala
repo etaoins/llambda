@@ -8,8 +8,13 @@ import llambda.compiler.valuetype.{polymorphic => pm}
   *
   * This is not a case class because a field with the same source name and type can be distinct if it's declared in
   * another record type.
+  *
+  * @param  name          Source name of the record field
+  * @param  typeTemplate  Template for the field type. This is expanded to include any recursive type references
+  * @param  mutable       Indicates if this record field is mutable. If all of a records fields are immutable its a
+  *                       candidate to be constructed as a global constant.
   */
-class RecordField(val name : String, val typeTemplate : ValueType)
+class RecordField(val name : String, val typeTemplate : ValueType, val mutable : Boolean)
 
 /** Trait for record-like types
   *

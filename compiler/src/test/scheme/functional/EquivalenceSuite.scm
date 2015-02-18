@@ -120,12 +120,21 @@
 	(assert-false (eqv? (vector 1 2 3) (vector 1 2 3)))))
 
 (define-test "record (eqv?)" (expect-success
-	(define-record-type <unit> (unit) unit?)
+	(define-record-type <immutable> (immutable) immutable?)
+	(define-record-type <mutable> (mutable) mutable?
+                      (field mutable-field set-mutable-field!))
 
-	(let ((var (unit)))
+	(let ((var (immutable)))
 		(assert-true (eqv? var var)))
 
-  (assert-false (eqv? (unit) (unit)))))
+  ; This is an immutable record - we should share these instances
+  (assert-true (eqv? (immutable) (immutable)))
+
+	(let ((var (mutable)))
+		(assert-true (eqv? var var)))
+
+  ; This is a mutable record - we shouldn't share instances
+  (assert-false (eqv? (mutable) (mutable)))))
 
 (define-test "procedure (eqv?)" (expect-success
 	(let ((procecedure (lambda () 5)))

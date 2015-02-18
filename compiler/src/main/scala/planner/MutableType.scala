@@ -5,7 +5,7 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.valuetype.{polymorphic => pm}
 
 /** Value field of mutables */
-case class MutableField(innerType : vt.ValueType) extends vt.RecordField("value", innerType)
+case class MutableField(innerType : vt.ValueType) extends vt.RecordField("value", innerType, mutable=true)
 
 /** Mutable values are implemented as single field records */
 case class MutableType(innerType : vt.ValueType) extends {

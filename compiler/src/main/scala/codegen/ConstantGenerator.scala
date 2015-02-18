@@ -33,6 +33,7 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
   private val bytevectorCache = new mutable.HashMap[Vector[Short], IrConstant]
   private val pairCache = new mutable.HashMap[(IrConstant, IrConstant), IrConstant]
   private val vectorCache = new mutable.HashMap[Vector[IrConstant], IrConstant]
+  private val recordCache = new mutable.HashMap[(vt.RecordType, Map[vt.RecordField, IrConstant], Boolean), IrConstant]
 
   // Maximum value of a 32bit unsigned integer
   private val sharedConstantRefCount = (math.pow(2, 32) - 1).toLong
@@ -118,6 +119,93 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
       elements=ElementPointerConstant(PointerType(ct.AnyCell.irType), elementsDef, List(0, 0)))
 
     defineConstantData(module)(vectorCellName, vectorCell)
+  }
+
+  private def genRecordLikeData(module : IrModuleBuilder, genGlobals : GenGlobals)(
+      recordLikeType : vt.RecordLikeType,
+      fieldTemps : Map[vt.RecordField, IrConstant]
+  ) : StructureConstant = {
+    val generatedType = genGlobals.generatedTypes(recordLikeType)
+
+    // Generate our parent type
+    val parentDataOpt = recordLikeType.parentRecordOpt map { parentType =>
+      genRecordLikeData(module, genGlobals)(parentType, fieldTemps)
+    }
+
+    // Find our self fields and order them
+    val orderedSelfFields = generatedType.fieldToGepIndices.toList.filter({ case (field, gepIndices) =>
+      // Our self fields will only have a single GEP index
+      gepIndices.length == 1
+    }).sortBy(_._2(0))
+
+    val fieldData = orderedSelfFields.map { case (field, _) =>
+      fieldTemps(field)
+    }
+
+    // Build the structure
+    StructureConstant(parentDataOpt.toList ++ fieldData, userDefinedType=Some(generatedType.irType))
+  }
+
+  private def genRecordCell(module : IrModuleBuilder, genGlobals : GenGlobals)(
+      recordType : vt.RecordType,
+      fieldTemps : Map[vt.RecordField, IrConstant],
+      isUndefined : Boolean
+  ) : IrConstant = {
+    val generatedType = genGlobals.generatedTypes(recordType)
+
+    val baseName = module.nameSource.allocate("schemeRecord")
+    val recordCellName = baseName + ".cell"
+
+    generatedType.storageType match {
+      case TypeDataStorage.Empty =>
+        val recordDataNullPtrIr = NullPointerConstant(ct.RecordCell.recordDataIrType)
+        val extraDataNullPtrIr = NullPointerConstant(ct.RecordCell.extraDataIrType)
+
+        val recordCell = ct.RecordCell.createConstant(
+          extraData=extraDataNullPtrIr,
+          dataIsInline=1,
+          isUndefined=if (isUndefined) 1 else 0,
+          recordClassId=generatedType.classId,
+          recordData=recordDataNullPtrIr
+        )
+
+        defineConstantData(module)(recordCellName, recordCell)
+
+      case TypeDataStorage.Inline =>
+        val recordData = genRecordLikeData(module, genGlobals)(recordType, fieldTemps)
+
+        // This is a bit of a hack. Record cells are defined to have a data pointer which we need to replace with our
+        // inline data. Open code the record structure and append our data to the end
+        val inlineRecordCell = StructureConstant(List(
+          ct.AnyCell.createConstant(typeId=ct.RecordCell.typeId),
+          IntegerConstant(ct.RecordCell.dataIsInlineIrType, 1),
+          IntegerConstant(ct.RecordCell.isUndefinedIrType, if (isUndefined) 1 else 0),
+          IntegerConstant(ct.RecordCell.recordClassIdIrType, generatedType.classId)
+        ))
+
+        val packedCell = StructureConstant(List(inlineRecordCell, recordData))
+        val packedCellDef = defineConstantData(module)(recordCellName, packedCell)
+
+        BitcastToConstant(packedCellDef, PointerType(ct.RecordCell.irType))
+
+      case TypeDataStorage.OutOfLine =>
+        val extraDataNullPtrIr = NullPointerConstant(ct.RecordCell.extraDataIrType)
+
+        val recordDataName = baseName + ".data"
+
+        val recordData = genRecordLikeData(module, genGlobals)(recordType, fieldTemps)
+        val recordDataDef = defineConstantData(module)(recordDataName, recordData)
+
+        val recordCell = ct.RecordCell.createConstant(
+          extraData=extraDataNullPtrIr,
+          dataIsInline=0,
+          isUndefined=if (isUndefined) 1 else 0,
+          recordClassId=generatedType.classId,
+          recordData=BitcastToConstant(recordDataDef, ct.RecordCell.recordDataIrType)
+        )
+
+        defineConstantData(module)(recordCellName, recordCell)
+    }
   }
 
   private def genEmptyClosure(module : IrModuleBuilder)(entryPoint : IrConstant) : IrConstant = {
@@ -213,7 +301,7 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
     )
   }
 
-  def apply(state : GenerationState)(createStep : ps.CreateConstant) : IrConstant = {
+  def apply(state : GenerationState, genGlobals : GenGlobals)(createStep : ps.CreateConstant) : IrConstant = {
     val module = state.currentBlock.function.module
 
     createStep match {
@@ -285,6 +373,23 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
 
         vectorCache.getOrElseUpdate(elementIrs, {
           genVectorCell(module)(elementIrs)
+        })
+
+      case ps.CreateRecordCell(_, recordType, fieldTemps, isUndefined) =>
+        val fieldIrs = fieldTemps.map { case (field, fieldTemp) =>
+          state.liveTemps(fieldTemp) match {
+            case constant : IrConstant =>
+              field -> constant
+
+            case other =>
+              throw new InternalCompilerErrorException(s"Attempted to create constant record with non-constant field: ${other}")
+          }
+        }
+
+        val cacheKey = (recordType, fieldIrs, isUndefined)
+
+        recordCache.getOrElseUpdate(cacheKey, {
+          genRecordCell(module, genGlobals)(recordType, fieldIrs, isUndefined)
         })
 
       case ps.CreatePairCell(_, carTemp, cdrTemp, listLengthOpt) =>

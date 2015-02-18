@@ -94,6 +94,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         val constDatumField = recordType.fieldForName("const-datum")
         // No type defaults to <any>, the most permissive type
         assert(recordType.typeForField(constDatumField) === vt.AnySchemeType)
+        assert(constDatumField.mutable === false)
 
         inside(exprs) {
           case et.TopLevelDefine(bindings) :: Nil =>
@@ -124,6 +125,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
 
         val constIntField = recordType.fieldForName("const-int")
         assert(recordType.typeForField(constIntField) === vt.Int64)
+        assert(constIntField.mutable === false)
 
         inside(exprs) {
           case et.TopLevelDefine(bindings) :: Nil =>
@@ -163,15 +165,17 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
         val constAccessorLoc = storageLocFor(scope, "new-type-const-datum")
         val mutableAccessorLoc = storageLocFor(scope, "new-type-mutable-int")
         val mutableMutatorLoc = storageLocFor(scope, "set-new-type-mutable-int!")
-        
-        assert(recordType.sourceName === "<new-type>")
-        
-        val constDatumField = recordType.fieldForName("const-datum")
-        val mutableIntField = recordType.fieldForName("mutable-int")
 
+        assert(recordType.sourceName === "<new-type>")
+
+        val constDatumField = recordType.fieldForName("const-datum")
         assert(recordType.typeForField(constDatumField) === vt.AnySchemeType)
+        assert(constDatumField.mutable === false)
+
+        val mutableIntField = recordType.fieldForName("mutable-int")
         // <exact-integer> should be implicitly converted to int64 for storage
         assert(recordType.typeForField(mutableIntField) === vt.Int64)
+        assert(mutableIntField.mutable === true)
 
         inside(exprs) {
           case et.TopLevelDefine(bindings) :: Nil =>
@@ -222,6 +226,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
 
             val innerField = outerType.fieldForName("inner-field")
             assert(outerType.typeForField(innerField) === innerType)
+            assert(innerField.mutable === false)
 
             inside(outerExprs) {
               case et.TopLevelDefine(bindings) :: Nil =>
@@ -259,6 +264,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
 
         val constIntField = parentType.fieldForName("const-int")
         assert(parentType.typeForField(constIntField) === vt.Int64)
+        assert(constIntField.mutable === false)
 
         inside(parentExprs) {
           case et.TopLevelDefine(bindings) :: Nil =>
@@ -278,6 +284,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
 
         val constFlonumField = childType.fieldForName("const-flonum")
         assert(childType.typeForField(constFlonumField) === vt.Double)
+        assert(constFlonumField.mutable === false)
 
         inside(childExprs) {
           case et.TopLevelDefine(bindings) :: Nil =>
@@ -430,6 +437,7 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
 
         val parentField = recordType.fieldForName("parent")
         assert(recordType.typeForField(parentField) === vt.UnionType(Set(recordType, vt.UnitType)))
+        assert(parentField.mutable === false)
 
         inside(exprs) {
           case et.TopLevelDefine(bindings) :: Nil =>

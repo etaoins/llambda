@@ -157,6 +157,32 @@ case class ConstantPairValue(car : ConstantValue, cdr : ConstantValue) extends C
   }
 }
 
+case class ConstantRecordValue(
+    recordType : vt.RecordType,
+    fieldValues : Map[vt.RecordField, ConstantValue],
+    isUndefined : Boolean
+) extends ConstantValue(ct.RecordCell) with BoxedOnlyValue with KnownRecord {
+  override val schemeType : vt.SchemeType = recordType
+  val typeDescription = s"constant ${recordType.sourceName}"
+
+  // We know all of our field values
+  val knownFieldValues = fieldValues
+
+  def toBoxedValue()(implicit plan : PlanWriter) : BoxedValue = {
+    val constantTemp = ps.CellTemp(cellType, knownConstant=true)
+
+    // Box our values
+    val fieldValueTemps = fieldValues map { case (field, value) =>
+      val fieldType = recordType.typeForField(field)
+      field -> value.toTempValue(fieldType)
+    }
+
+    plan.steps += ps.CreateRecordCell(constantTemp, recordType, fieldValueTemps, isUndefined)
+
+    BoxedValue(cellType, constantTemp)
+  }
+}
+
 case class ConstantVectorValue(elements : Vector[ConstantValue]) extends ConstantValue(ct.VectorCell) with BoxedOnlyValue {
   override val schemeType : vt.SchemeType = vt.SpecificVectorType(elements.map { element =>
     vt.DirectSchemeTypeRef(element.schemeType)

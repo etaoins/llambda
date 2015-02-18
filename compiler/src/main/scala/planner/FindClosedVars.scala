@@ -76,7 +76,7 @@ private[planner] object FindClosedVars {
         case ImmutableValue(parentIntermediate) =>
           if (parentIntermediate.needsClosureRepresentation) {
             val compactType = CompactRepresentationForType(parentIntermediate.preferredRepresentation)
-            val recordField = new vt.RecordField(storageLoc.sourceName, compactType)
+            val recordField = new vt.RecordField(storageLoc.sourceName, compactType, mutable=false)
 
             // We have to capture this
             CapturedImmutable(storageLoc, parentIntermediate, compactType, recordField)
@@ -87,7 +87,8 @@ private[planner] object FindClosedVars {
           }
 
       case parentMutable : MutableValue =>
-        val recordField = new vt.RecordField(storageLoc.sourceName, parentMutable.mutableType)
+        // Note that while this field points to a mutable variable the pointer itself is actually immutable
+        val recordField = new vt.RecordField(storageLoc.sourceName, parentMutable.mutableType, mutable=false)
         CapturedMutable(storageLoc, parentMutable, recordField)
       }
     }

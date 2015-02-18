@@ -157,7 +157,7 @@ private[planner] object PlanCaseLambda {
         val procType = procValue.schemeType
         val procTemp = procValue.toTempValue(procType, convertProcType=false)(parentPlan)
 
-        val recordField = new vt.RecordField(s"clause{$index}", procType)
+        val recordField = new vt.RecordField(s"clause{$index}", procType, mutable=false)
 
         Some(CapturedProc(procTemp, recordField))
       }
