@@ -83,7 +83,7 @@ void State::setValueForParameter(World &world, ParameterProcedureCell *param, An
 
 State* State::activeState(World &world)
 {
-	return world.activeStateCell->state();
+	return world.activeStateCell()->state();
 }
 
 void State::pushActiveState(World &world, ThunkProcedureCell *before, ThunkProcedureCell *after)
@@ -101,18 +101,18 @@ void State::pushActiveState(World &world, ThunkProcedureCell *before, ThunkProce
 	DynamicStateCell *pushedDynamicStateCell = DynamicStateCell::createInstance(world, nullptr);
 
 	// Create a state and associated it with the dynamic state cell
-	auto pushedState = new State(beforeRef, afterRef, world.activeStateCell);
+	auto pushedState = new State(beforeRef, afterRef, world.activeStateCell());
 	pushedDynamicStateCell->setState(pushedState);
 
-	world.activeStateCell = pushedDynamicStateCell;
+	world.activeStateCell() = pushedDynamicStateCell;
 }
 
 void State::popActiveState(World &world)
 {
-	State *oldActiveState = world.activeStateCell->state();
+	State *oldActiveState = world.activeStateCell()->state();
 
 	// Make the old state active and reference it
-	world.activeStateCell = world.activeStateCell->state()->parentCell();
+	world.activeStateCell() = world.activeStateCell()->state()->parentCell();
 
 	// After is executed in the "outer" state
 	if (oldActiveState->afterProcedure())
@@ -123,7 +123,7 @@ void State::popActiveState(World &world)
 
 void State::popAllStates(World &world)
 {
-	while(world.activeStateCell->state()->parentCell() != nullptr)
+	while(world.activeStateCell()->state()->parentCell() != nullptr)
 	{
 		popActiveState(world);
 	}
@@ -141,14 +141,14 @@ void State::switchStateCell(World &world, DynamicStateCell *targetStateCell)
 
 	while(true)
 	{
-		if (world.activeStateCell == targetStateRef.data())
+		if (world.activeStateCell() == targetStateRef.data())
 		{
 			// We're done
 			return;
 		}
 
 		// Is the target state a descendant of our current state?
-		std::vector<DynamicStateCell*> pathToTargetState = pathToAncestorState(targetStateRef, world.activeStateCell);
+		std::vector<DynamicStateCell*> pathToTargetState = pathToAncestorState(targetStateRef, world.activeStateCell());
 
 		if (!pathToTargetState.empty())
 		{
@@ -162,7 +162,7 @@ void State::switchStateCell(World &world, DynamicStateCell *targetStateCell)
 					(*it)->state()->beforeProcedure()->apply(world);
 				}
 
-				world.activeStateCell = *it;
+				world.activeStateCell() = *it;
 			}
 
 			// We're done

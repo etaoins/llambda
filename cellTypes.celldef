@@ -32,6 +32,10 @@ fieldtype State : untypedptr {
 	extern cppname = dynamic::State;
 };
 
+fieldtype MailboxRef : untypedptr {
+	extern cppname = std::weak_ptr<actor::Mailbox>;
+};
+
 root cell Any typetag typeId {
 	TypeId typeId;
 	// This is GarbageState::GlobalConstant
@@ -144,4 +148,8 @@ preconstructed cell EofObject : Any {
 // code.
 concrete runtime cell DynamicState : Any {
 	State *state;
+};
+
+concrete cell Mailbox : Any {
+	MailboxRef mailbox;
 };

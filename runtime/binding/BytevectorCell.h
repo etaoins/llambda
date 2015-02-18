@@ -33,6 +33,22 @@ public:
 	 * @param  byteArray  Byte array to back the bytevector cell
 	 * @param  length     Length of the data in bytes
 	 */
+	BytevectorCell(SharedByteArray *byteArray, LengthType length) :
+		AnyCell(CellTypeId::Bytevector),
+		m_length(length),
+		m_byteArray(byteArray)
+	{
+	}
+
+	/**
+	 * Creates a new BytevectorCell backed by the passed SharedByteArray
+	 *
+	 * The SharedByteArray must already have a reference taken for the bytevector cell
+	 *
+	 * @param  world      World to create the bytevector cell in
+	 * @param  byteArray  Byte array to back the bytevector cell
+	 * @param  length     Length of the data in bytes
+	 */
 	static BytevectorCell* withByteArray(World &world, SharedByteArray *byteArray, LengthType length);
 
 	/**
@@ -90,12 +106,6 @@ public:
 	void finalizeBytevector();
 
 protected:
-	BytevectorCell(SharedByteArray *byteArray, LengthType length) :
-		AnyCell(CellTypeId::Bytevector),
-		m_length(length),
-		m_byteArray(byteArray)
-	{
-	}
 };
 
 }

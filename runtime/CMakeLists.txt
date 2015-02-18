@@ -4,10 +4,16 @@ cmake_minimum_required (VERSION 2.8)
 
 project (lliby)
 add_library(llcore
+	actor/ActorContext.cpp
+	actor/Mailbox.cpp
+	actor/Message.cpp
+	actor/PoisonPillCell.cpp
+	actor/Runner.cpp
+	actor/cloneCell.cpp
 	alloc/CellRootList.cpp
-	alloc/DynamicMemoryBlock.cpp
 	alloc/Finalizer.cpp
 	alloc/Heap.cpp
+	alloc/MemoryBlock.cpp
 	alloc/allocator.cpp
 	alloc/collector.cpp
 	binding/BytevectorCell.cpp
@@ -16,6 +22,7 @@ add_library(llcore
 	binding/DynamicStateCell.cpp
 	binding/ErrorObjectCell.cpp
 	binding/ListElementCell.cpp
+	binding/MailboxCell.cpp
 	binding/NumberCell.cpp
 	binding/PairCell.cpp
 	binding/PortCell.cpp
@@ -47,6 +54,7 @@ add_library(llcore
 	port/StandardInputPort.cpp
 	reader/ReadErrorException.cpp
 	reader/DatumReader.cpp
+	sched/Dispatcher.cpp
 	unicode/utf8.cpp
 	unicode/utf8/InvalidByteSequenceException.cpp
 	util/portCellToStream.cpp
@@ -54,6 +62,10 @@ add_library(llcore
 	util/utf8ExceptionToSchemeError.cpp
 	writer/DisplayDatumWriter.cpp
 	writer/ExternalFormDatumWriter.cpp
+)
+
+add_library(ll_llambda_actor
+	stdlib/llambda/actor/actor.cpp
 )
 
 add_library(ll_llambda_list

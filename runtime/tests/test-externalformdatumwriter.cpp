@@ -21,8 +21,10 @@
 #include "binding/ErrorObjectCell.h"
 #include "binding/PortCell.h"
 #include "binding/EofObjectCell.h"
+#include "binding/MailboxCell.h"
 
 #include "port/StandardOutputPort.h"
+#include "actor/Mailbox.h"
 
 #include "alloc/cellref.h"
 #include "assertions.h"
@@ -243,6 +245,12 @@ void testEofObject()
 	assertForm(EofObjectCell::instance(), "#!eof");
 }
 
+void testMailbox(World &world)
+{
+	std::shared_ptr<actor::Mailbox> testMailbox(new actor::Mailbox());
+	assertForm(MailboxCell::createInstance(world, testMailbox), "#!mailbox");
+}
+
 void testAll(World &world)
 {
 	testUnit();
@@ -261,13 +269,12 @@ void testAll(World &world)
 	testErrorObject(world);
 	testPort(world);
 	testEofObject();
+	testMailbox(world);
 }
 
 }
 
 int main(int argc, char *argv[])
 {
-	llcore_init(argc, argv);
-
-	lliby::World::launchWorld(&testAll);
+	llcore_run(testAll, argc, argv);
 }

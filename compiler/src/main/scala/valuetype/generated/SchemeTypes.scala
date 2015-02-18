@@ -21,6 +21,7 @@ object BytevectorType extends SchemeTypeAtom(ct.BytevectorCell)
 object ErrorObjectType extends SchemeTypeAtom(ct.ErrorObjectCell)
 object PortType extends SchemeTypeAtom(ct.PortCell)
 object EofObjectType extends SchemeTypeAtom(ct.EofObjectCell)
+object MailboxType extends SchemeTypeAtom(ct.MailboxCell)
 
 object IntrinsicSchemeTypes {
   def apply() : Map[String, SchemeType] = Map(
@@ -37,6 +38,7 @@ object IntrinsicSchemeTypes {
     (ct.BytevectorCell.schemeName -> BytevectorType),
     (ct.ErrorObjectCell.schemeName -> ErrorObjectType),
     (ct.PortCell.schemeName -> PortType),
-    (ct.EofObjectCell.schemeName -> EofObjectType)
+    (ct.EofObjectCell.schemeName -> EofObjectType),
+    (ct.MailboxCell.schemeName -> MailboxType)
   )
 }

@@ -235,7 +235,7 @@ void testRecordLikeGc(World &world)
 	};
 
 	// Register the record class
-	const std::uint32_t testClass = RecordLikeCell::registerRuntimeRecordClass({
+	const std::uint32_t testClass = RecordLikeCell::registerRuntimeRecordClass(sizeof(CustomRecordLikeData), {
 			offsetof(CustomRecordLikeData, cell0),
 			offsetof(CustomRecordLikeData, cell1)});
 
@@ -398,9 +398,5 @@ void testAll(World &world)
 
 int main(int argc, char *argv[])
 {
-	llcore_init(argc, argv);
-
-	lliby::World::launchWorld(&testAll);
-
-	return 0;
+	llcore_run(testAll, argc, argv);
 }

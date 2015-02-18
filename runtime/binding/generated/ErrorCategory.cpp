@@ -35,6 +35,14 @@ const char *schemeNameForErrorCategory(ErrorCategory category)
 		return "integer-overflow-error";
 	case ErrorCategory::ImplementationRestriction:
 		return "implementation-restriction-error";
+	case ErrorCategory::UnclonableValue:
+		return "unclonable-value-error";
+	case ErrorCategory::NoActor:
+		return "no-actor-error";
+	case ErrorCategory::ExpiredEscapeProcedure:
+		return "expired-escape-procedure-error";
+	case ErrorCategory::AskTimeout:
+		return "ask-timeout-error";
 	}
 }
 

@@ -57,14 +57,20 @@ object RuntimeFunctions {
       Argument(PointerType(WorldValue.irType))
     )
   )
-  
-  val launchWorld = IrFunctionDecl(
+
+  val run = IrFunctionDecl(
     result=IrFunction.Result(VoidType),
-    name="llcore_launch_world",
-    arguments=List(IrFunction.Argument(
-      // void (*entryPoint)(World *)
-      PointerType(FunctionType(VoidType, List(PointerType(WorldValue.irType))))
-    ))
+    name="llcore_run",
+    arguments=List(
+      IrFunction.Argument(
+        // void (*entryPoint)(World *)
+        PointerType(FunctionType(VoidType, List(PointerType(WorldValue.irType))))
+      ),
+      IrFunction.Argument(IntegerType(32)),
+      IrFunction.Argument(PointerType(PointerType(IntegerType(8)))),
+      IrFunction.Argument(IntegerType(1))
+    ),
+    attributes=Set(IrFunction.NoUnwind)
   )
 
   val recordDataAlloc = IrFunctionDecl(
@@ -135,16 +141,6 @@ object RuntimeFunctions {
       Argument(PointerType(ct.ProcedureCell.irType))
     ),
     attributes=Set(IrFunction.NoUnwind, IrFunction.ReadOnly)
-  )
-
-  val init = IrFunctionDecl(
-    result=IrFunction.Result(VoidType),
-    name="llcore_init",
-    arguments=List(
-      IrFunction.Argument(IntegerType(32)),
-      IrFunction.Argument(PointerType(PointerType(IntegerType(8))))
-    ),
-    attributes=Set(IrFunction.NoUnwind)
   )
 
   def hasSideEffects(symbol : String, arity : Int) : Boolean = (symbol, arity) match {

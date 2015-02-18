@@ -144,4 +144,44 @@ void llerror_raise_implementation_restriction_error(World &world, StringCell *me
 	throw dynamic::SchemeException(ErrorObjectCell::createInstance(world, message, irritants, ErrorCategory::ImplementationRestriction));
 }
 
+bool llerror_is_unclonable_value_error(AnyCell *obj)
+{
+	return isErrorObjectOfCategory(obj, ErrorCategory::UnclonableValue);
+}
+
+void llerror_raise_unclonable_value_error(World &world, StringCell *message, RestValues<AnyCell> *irritants)
+{
+	throw dynamic::SchemeException(ErrorObjectCell::createInstance(world, message, irritants, ErrorCategory::UnclonableValue));
+}
+
+bool llerror_is_no_actor_error(AnyCell *obj)
+{
+	return isErrorObjectOfCategory(obj, ErrorCategory::NoActor);
+}
+
+void llerror_raise_no_actor_error(World &world, StringCell *message, RestValues<AnyCell> *irritants)
+{
+	throw dynamic::SchemeException(ErrorObjectCell::createInstance(world, message, irritants, ErrorCategory::NoActor));
+}
+
+bool llerror_is_expired_escape_procedure_error(AnyCell *obj)
+{
+	return isErrorObjectOfCategory(obj, ErrorCategory::ExpiredEscapeProcedure);
+}
+
+void llerror_raise_expired_escape_procedure_error(World &world, StringCell *message, RestValues<AnyCell> *irritants)
+{
+	throw dynamic::SchemeException(ErrorObjectCell::createInstance(world, message, irritants, ErrorCategory::ExpiredEscapeProcedure));
+}
+
+bool llerror_is_ask_timeout_error(AnyCell *obj)
+{
+	return isErrorObjectOfCategory(obj, ErrorCategory::AskTimeout);
+}
+
+void llerror_raise_ask_timeout_error(World &world, StringCell *message, RestValues<AnyCell> *irritants)
+{
+	throw dynamic::SchemeException(ErrorObjectCell::createInstance(world, message, irritants, ErrorCategory::AskTimeout));
+}
+
 }

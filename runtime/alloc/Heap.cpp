@@ -4,8 +4,7 @@
 #include <stdlib.h>
 
 #include "alloc/MemoryBlock.h"
-#include "alloc/RangeAlloc.h"
-#include "alloc/DynamicMemoryBlock.h"
+#include "alloc/Finalizer.h"
 
 namespace lliby
 {
@@ -14,29 +13,37 @@ namespace alloc
 
 namespace
 {
-	const uint64_t SegmentInitialSize = 4 * 1024;
-	const uint64_t SegmentGrowthFactor = 4;
-	const uint64_t SegmentMaximumSize = 1 * 1024 * 1024;
+	const std::size_t SegmentGrowthFactor = 4;
+	const std::size_t SegmentMaximumSize = 1 * 1024 * 1024;
 }
 
-Heap::Heap() :
-	m_nextSegmentSize(SegmentInitialSize)
+Heap::Heap(std::size_t initialSegmentSize)
+	: m_initialSegmentSize(initialSegmentSize)
 {
+	detach();
 }
-	
-void Heap::terminate()
+
+void Heap::detach()
 {
-	if (m_allocNext != nullptr)
-	{
-		new (m_allocNext) HeapTerminatorCell();
-	}
+	m_allocNext = nullptr;
+	m_allocEnd = nullptr;
+
+	m_nextSegmentSize = m_initialSegmentSize;
+	m_rootSegment = nullptr;
+
+	m_currentSegmentStart = nullptr;
+	m_allocationCounterBase = 0;
 }
-	
-AllocCell* Heap::addNewSegment(size_t reserveCount)
+
+Heap::~Heap()
 {
-	// We ran out of space
-	const size_t minimumBytes = (sizeof(AllocCell) * reserveCount) + sizeof(SegmentTerminatorCell);
-	size_t newSegmentSize;
+	Finalizer::finalizeHeapSync(*this);
+}
+
+AllocCell* Heap::addNewSegment(std::size_t reserveCount)
+{
+	const std::size_t minimumBytes = (sizeof(AllocCell) * reserveCount) + sizeof(SegmentTerminatorCell);
+	std::size_t newSegmentSize;
 
 	if (minimumBytes > m_nextSegmentSize)
 	{
@@ -54,13 +61,7 @@ AllocCell* Heap::addNewSegment(size_t reserveCount)
 	}
 
 	// This will update m_allocNext/m_allocEnd
-	auto newSegment = new DynamicMemoryBlock(newSegmentSize);
-
-	if (!newSegment->isValid())
-	{
-		std::cerr << "Unable to allocate " << newSegmentSize << " bytes" << std::endl;
-		exit(-2);
-	}
+	auto newSegment = MemoryBlock::create(newSegmentSize);
 
 	if (m_rootSegment == nullptr)
 	{
@@ -80,11 +81,45 @@ AllocCell* Heap::addNewSegment(size_t reserveCount)
 	m_allocNext = m_currentSegmentStart + reserveCount;
 
 	// Find the number of cells we can fit in the segment with room for a segment terminator
-	const size_t usableCellCount = (newSegment->size() - sizeof(SegmentTerminatorCell)) / sizeof(AllocCell);
+	const size_t usableCellCount = (newSegment->size(newSegmentSize) - sizeof(SegmentTerminatorCell)) / sizeof(AllocCell);
 
 	m_allocEnd = reinterpret_cast<AllocCell*>(newSegment->startPointer()) + usableCellCount;
 
 	return m_currentSegmentStart;
+}
+
+void Heap::splice(Heap &other)
+{
+	if (other.m_rootSegment == nullptr)
+	{
+		// Empty heap; nothing to splice
+		return;
+	}
+
+	// Remember our old root segment
+	MemoryBlock *oldRoot = m_rootSegment;
+
+	// Steal the other heap's root
+	m_rootSegment = other.m_rootSegment;
+
+	if (oldRoot != nullptr)
+	{
+		// Point the last segment of the passed heap to the beginning of our heap
+		new (other.m_allocNext) SegmentTerminatorCell(oldRoot);
+	}
+	else
+	{
+		// Take over the heap's allocation state
+		// Intentionally don't copy m_initialSegmentSize - this is a per-Heap tuning value
+		m_allocNext = other.m_allocNext;
+		m_allocEnd = other.m_allocEnd;
+		m_nextSegmentSize = other.m_nextSegmentSize;
+		m_currentSegmentStart = other.m_currentSegmentStart;
+		m_allocationCounterBase = -currentSegmentAllocations();
+	}
+
+	// Destroy the other heap for safety
+	other.detach();
 }
 
 }

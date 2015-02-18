@@ -7,7 +7,7 @@
 
 extern "C"
 {
-	struct RecordClassOffsetMap;
+	struct RecordClassMap;
 }
 
 namespace lliby
@@ -27,6 +27,8 @@ public:
 	using RecordClassIdType = decltype(m_recordClassId);
 
 	static void *allocateRecordData(size_t bytes);
+	static void freeRecordData(void *);
+
 	void finalize();
 
 	// Used by the garbage collector to update any references to record data stored inline
@@ -35,18 +37,19 @@ public:
 		return &m_recordData;
 	}
 
-	const RecordClassOffsetMap* offsetMap() const;
+	const RecordClassMap* classMap() const;
 	RecordLikeDataStorage dataStorage() const;
-	
+
 	void finalizeRecordLike();
-	
+
 	/**
 	 * Registers a runtime-created record-like class
 	 *
-	 * @param  offsets  List of offsets of AnyCells inside the record-like data
+	 * @param  totalSize  Total size of the of the record-like
+	 * @param  offsets    List of offsets of AnyCells inside the record-like data
 	 * @return Unique class ID for the new record-like class
 	 */
-	static RecordClassIdType registerRuntimeRecordClass(const std::vector<size_t> &offsets);
+	static RecordClassIdType registerRuntimeRecordClass(size_t totalSize, const std::vector<size_t> &offsets);
 
 	void setRecordData(void *newData)
 	{
@@ -74,8 +77,17 @@ protected:
 	{
 	}
 
+	RecordLikeCell(CellTypeId typeId, RecordClassIdType recordClassId, bool dataIsInline, void *recordData, GarbageState gcState) :
+		AnyCell(typeId, gcState),
+		m_dataIsInline(dataIsInline),
+		m_isUndefined(false),
+		m_recordClassId(recordClassId),
+		m_recordData(recordData)
+	{
+	}
+
 	// TypeGenerator.scala always allocates this first
-	static const RecordClassIdType EmptyClosureRecordClassId = 0;
+	static const RecordClassIdType EmptyRecordLikeClassId = 0;
 };
 
 }

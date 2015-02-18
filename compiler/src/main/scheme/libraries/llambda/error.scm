@@ -4,7 +4,7 @@
   (import (llambda typed))
   (import (llambda nfi))
 
-  (export type-error? arity-error? range-error? utf8-error? divide-by-zero-error? mutate-literal-error? undefined-variable-error? out-of-memory-error? invalid-argument-error? integer-overflow-error? implementation-restriction-error? raise-type-error raise-arity-error raise-range-error raise-utf8-error raise-divide-by-zero-error raise-mutate-literal-error raise-undefined-variable-error raise-out-of-memory-error raise-invalid-argument-error raise-integer-overflow-error raise-implementation-restriction-error)
+  (export type-error? arity-error? range-error? utf8-error? divide-by-zero-error? mutate-literal-error? undefined-variable-error? out-of-memory-error? invalid-argument-error? integer-overflow-error? implementation-restriction-error? unclonable-value-error? no-actor-error? expired-escape-procedure-error? ask-timeout-error? raise-type-error raise-arity-error raise-range-error raise-utf8-error raise-divide-by-zero-error raise-mutate-literal-error raise-undefined-variable-error raise-out-of-memory-error raise-invalid-argument-error raise-integer-overflow-error raise-implementation-restriction-error raise-unclonable-value-error raise-no-actor-error raise-expired-escape-procedure-error raise-ask-timeout-error)
   (begin
     (define-native-library llerror (static-library "ll_llambda_error"))
     (define raise-file-error (world-function llerror "llerror_raise_file_error" (-> <string> <any> * <unit>) noreturn))
@@ -31,4 +31,12 @@
     (define raise-integer-overflow-error (world-function llerror "llerror_raise_integer_overflow_error" (-> <string> <any> * <unit>) noreturn))
     (define implementation-restriction-error? (native-function llerror "llerror_is_implementation_restriction_error" (-> <any> <native-bool>)))
     (define raise-implementation-restriction-error (world-function llerror "llerror_raise_implementation_restriction_error" (-> <string> <any> * <unit>) noreturn))
+    (define unclonable-value-error? (native-function llerror "llerror_is_unclonable_value_error" (-> <any> <native-bool>)))
+    (define raise-unclonable-value-error (world-function llerror "llerror_raise_unclonable_value_error" (-> <string> <any> * <unit>) noreturn))
+    (define no-actor-error? (native-function llerror "llerror_is_no_actor_error" (-> <any> <native-bool>)))
+    (define raise-no-actor-error (world-function llerror "llerror_raise_no_actor_error" (-> <string> <any> * <unit>) noreturn))
+    (define expired-escape-procedure-error? (native-function llerror "llerror_is_expired_escape_procedure_error" (-> <any> <native-bool>)))
+    (define raise-expired-escape-procedure-error (world-function llerror "llerror_raise_expired_escape_procedure_error" (-> <string> <any> * <unit>) noreturn))
+    (define ask-timeout-error? (native-function llerror "llerror_is_ask_timeout_error" (-> <any> <native-bool>)))
+    (define raise-ask-timeout-error (world-function llerror "llerror_raise_ask_timeout_error" (-> <string> <any> * <unit>) noreturn))
 ))

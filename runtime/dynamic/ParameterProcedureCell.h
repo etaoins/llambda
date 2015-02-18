@@ -31,14 +31,19 @@ public:
 	 *
 	 * @param world               Current world pointer
 	 * @param initialValue        Initial value for the parameter. This should be pre-converted using
-	 *                            converterProcedure by the caller. State::applyConverterProcedure() can be used for 
+	 *                            converterProcedure by the caller. State::applyConverterProcedure() can be used for
 	 *                            this purpose.
-	 * @param converterProcedure  Procedure to invoke to convert parameterized values for this parameter. If the 
+	 * @param converterProcedure  Procedure to invoke to convert parameterized values for this parameter. If the
 	 *                            identity function should be used nullptr can be passed to avoid the overhead of
 	 *                            re-entering Scheme,
 	 */
+	ParameterProcedureCell(AnyCell *initialValue, ConverterProcedureCell *converterProcedure = nullptr);
+
+	/**
+	 * Creates a new parameter procedure cell instance in the passed world
+	 */
 	static ParameterProcedureCell *createInstance(World &world, AnyCell *initialValue, ConverterProcedureCell *converterProcedure = nullptr);
- 
+
 	/**
 	 * Returns the initial value for this parameter
 	 *

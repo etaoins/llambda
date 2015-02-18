@@ -16,6 +16,11 @@ public:
 	{
 	}
 
+	RecordCell(RecordClassIdType recordClassId, bool dataIsInline, void *recordData, GarbageState gcState) :
+		RecordLikeCell(CellTypeId::Record, recordClassId, dataIsInline, recordData, gcState)
+	{
+	}
+
 	static RecordCell* createInstance(World &world, RecordClassIdType recordClassId, bool dataIsInline, void *recordData);
 };
 

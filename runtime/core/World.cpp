@@ -2,14 +2,16 @@
 
 #include "core/error.h"
 
-#include "alloc/CellRootList.h"
 #include "alloc/allocator.h"
+#include "alloc/Finalizer.h"
+
+#include "actor/Mailbox.h"
+#include "actor/ActorContext.h"
 
 #include "binding/DynamicStateCell.h"
 
 #include "dynamic/State.h"
 #include "dynamic/SchemeException.h"
-#include "dynamic/State.h"
 
 using namespace lliby;
 
@@ -22,44 +24,62 @@ namespace
 namespace lliby
 {
 
-World::World() : activeStateCell(&sharedRootStateCell)
+World::World() :
+	cellHeap(InitialHeapSegmentSize),
+	m_activeStateCell(&sharedRootStateCell)
 {
 }
 
 World::~World()
 {
+	// Note that the mailbox itself is reference counted and can go away later
+	delete m_actorContext;
+	m_actorContext = nullptr;
+
+	// Wait for our children to stop
+	for(auto weakChildActor : m_childActors)
+	{
+		std::shared_ptr<actor::Mailbox> childActor(weakChildActor.lock());
+
+		if (childActor)
+		{
+			childActor->requestLifecycleAction(actor::LifecycleAction::Stop);
+			childActor->waitForStop();
+		}
+	}
+
+#ifdef _LLIBY_CHECK_LEAKS
+	if (alloc::forceCollection(*this) > 0)
+	{
+		fatalError("Cells leaked from world on exit");
+	}
+#endif
 }
 
-void World::launchWorld(void (*entryPoint)(World &))
+void World::run(const std::function<void(World &)> &func)
 {
-	World world;
+	char stackCanary;
+	m_continuationBase = &stackCanary;
 
-	alloc::initWorld(world);
-	world.continuationBase = &world;
+	m_runSequence++;
 
 	try
 	{
-		entryPoint(world);
+		func(*this);
 	}
 	catch (dynamic::SchemeException &except)
 	{
 		// Call all unwind handlers
-		dynamic::State::popAllStates(world);
-		fatalError("Unhandled exception", except.object());
+		dynamic::State::popAllStates(*this);
+		throw;
 	}
-	
-	dynamic::State::popAllStates(world);
-	alloc::shutdownWorld(world);
+
+	dynamic::State::popAllStates(*this);
 }
 
-}
-
-extern "C"
+void World::addChildActor(const std::weak_ptr<actor::Mailbox> &childActor)
 {
-
-void llcore_launch_world(void (*entryPoint)(World &))
-{
-	World::launchWorld(entryPoint);
+	m_childActors.push_back(childActor);
 }
 
 }

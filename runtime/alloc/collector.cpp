@@ -11,6 +11,8 @@
 #include "alloc/CellRootList.h"
 #include "alloc/Heap.h"
 
+#include "actor/ActorContext.h"
+
 #include "binding/AnyCell.h"
 
 #include "dynamic/State.h"
@@ -112,7 +114,7 @@ size_t collect(World &world, Heap &newHeap)
 	};
 
 	// Visit each runtime GC root
-	visitCellRootList(world.strongRoots, rootVisitor);
+	visitCellRootList(world.strongRoots(), rootVisitor);
 
 	// Visit each compiler GC root
 	visitShadowStack(world.shadowStackHead, rootVisitor);
@@ -121,10 +123,26 @@ size_t collect(World &world, Heap &newHeap)
 	// XXX: In theory if a parameter function isn't referenced it's safe to remove it from all states. However, because
 	// parameter values can themselves reference other parameter functions this gets extremely tricky.  Parameterization
 	// of an unreachable parameter seems like too much of a corner case to justify the additional code complexity.
-	visitCell(reinterpret_cast<AnyCell**>(&world.activeStateCell), rootVisitor);
+	visitCell(reinterpret_cast<AnyCell**>(&world.activeStateCell()), rootVisitor);
+
+	// Is this world an actor?
+	if (world.actorContext())
+	{
+		visitCell(reinterpret_cast<AnyCell**>(world.actorContext()->closureRef()), rootVisitor);
+
+		if (world.actorContext()->behaviour())
+		{
+			visitCell(reinterpret_cast<AnyCell**>(world.actorContext()->behaviourRef()), rootVisitor);
+		}
+
+		if (world.actorContext()->supervisorStrategy())
+		{
+			visitCell(reinterpret_cast<AnyCell**>(world.actorContext()->supervisorStrategyRef()), rootVisitor);
+		}
+	}
 
 	// Visit each runtime weak root
-	visitCellRootList(world.weakRoots, weakRefVisitor);
+	visitCellRootList(world.weakRoots(), weakRefVisitor);
 
 	return reachableCells;
 }

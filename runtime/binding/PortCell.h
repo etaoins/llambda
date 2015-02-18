@@ -18,6 +18,12 @@ public:
 	{
 	}
 
+	PortCell(AbstractPort *port, GarbageState gcState) :
+		AnyCell(CellTypeId::Port, gcState),
+		m_port(port)
+	{
+	}
+
 	static PortCell* createInstance(World &world, AbstractPort *port);
 
 	void finalizePort();

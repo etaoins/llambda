@@ -25,7 +25,7 @@ ReturnValues<AnyCell>* llbase_with_exception_handler(World &world, HandlerProced
 	alloc::StrongRef<HandlerProcedureCell> handler(world, handlerRaw);
 
 	// Keep track of our dynamic state
-	alloc::DynamicStateRef expectedStateRef(world, world.activeStateCell);
+	alloc::DynamicStateRef expectedStateRef(world, world.activeStateCell());
 
 	try
 	{
@@ -61,7 +61,7 @@ ReturnValues<AnyCell>* llbase_with_exception_handler(World &world, HandlerProced
 ReturnValues<AnyCell> *llbase_guard_kernel(World &world, HandlerProcedureCell *guardAuxProcRaw, ThunkProcedureCell *thunk)
 {
 	alloc::StrongRef<HandlerProcedureCell> guardAuxProc(world, guardAuxProcRaw);
-	alloc::DynamicStateRef expectedStateRef(world, world.activeStateCell);
+	alloc::DynamicStateRef expectedStateRef(world, world.activeStateCell());
 
 	try
 	{

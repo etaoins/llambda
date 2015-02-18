@@ -37,9 +37,10 @@ public:
 	/**
 	 * Resumes the continuation passing the specified value
 	 *
-	 * This will cause the original capture() call to return again on a copy of its original stack
+	 * This will cause the original capture() call to return again on a copy of its original stack. If the escape
+	 * procedure was captured with a different run sequence than the passed World then false will be returned.
 	 */
-	void resume(World &world, ProperList<AnyCell> *passedValues);
+	bool resume(World &world, ProperList<AnyCell> *passedValues);
 
 	/**
 	 * Returns the captured value passed to resume() value and sets it to null
@@ -108,6 +109,13 @@ public:
 
 private:
 	Continuation() = delete;
+
+	/**
+	 * The World run sequence number the continuation was created in
+	 *
+	 * @sa World::runSequence(
+	 */
+	unsigned int m_runSequence;
 
 	/**
 	 * Number of bytes of stack copied starting from World::continuationBase

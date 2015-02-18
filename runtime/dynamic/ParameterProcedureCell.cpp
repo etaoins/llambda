@@ -37,14 +37,10 @@ namespace
 	}
 }
 
-ParameterProcedureCell* ParameterProcedureCell::createInstance(World &world, AnyCell *initialValueRaw, ConverterProcedureCell *converterProcedureRaw)
+ParameterProcedureCell::ParameterProcedureCell(AnyCell *initialValue, ConverterProcedureCell *converterProcedure) :
+	TopProcedureCell(registeredClassId, false, allocateRecordData(sizeof(ParameterProcedureClosure)), &procedureBody)
 {
-	// Root these across the allocation of the actual procedure cell
-	alloc::AnyRef initialValue(world, initialValueRaw);
-	alloc::ProcedureRef converterProcedure(world, converterProcedureRaw);
-
-	auto closure = static_cast<ParameterProcedureClosure*>(allocateRecordData(sizeof(ParameterProcedureClosure)));
-	TopProcedureCell *procedureCell = TopProcedureCell::createInstance(world, registeredClassId, false, closure, &procedureBody);
+	auto closure = static_cast<ParameterProcedureClosure*>(recordData());
 
 	closure->initialValue = initialValue;
 
@@ -57,8 +53,17 @@ ParameterProcedureCell* ParameterProcedureCell::createInstance(World &world, Any
 	{
 		closure->converter = converterProcedure;
 	}
+}
 
-	return static_cast<ParameterProcedureCell*>(procedureCell);
+ParameterProcedureCell* ParameterProcedureCell::createInstance(World &world, AnyCell *initialValueRaw, ConverterProcedureCell *converterProcedureRaw)
+{
+	// Root these across the allocation of the actual procedure cell
+	alloc::AnyRef initialValue(world, initialValueRaw);
+	alloc::StrongRef<ConverterProcedureCell> converterProcedure(world, converterProcedureRaw);
+
+	void *placement = alloc::allocateCells(world);
+
+	return new (placement) ParameterProcedureCell(initialValue, converterProcedure);
 }
 
 bool ParameterProcedureCell::isInstance(const ProcedureCell *proc)
@@ -74,7 +79,7 @@ void ParameterProcedureCell::registerRecordClass()
 		offsetof(ParameterProcedureClosure, converter)
 	};
 
-	registeredClassId = RecordLikeCell::registerRuntimeRecordClass(offsets);  
+	registeredClassId = RecordLikeCell::registerRuntimeRecordClass(sizeof(ParameterProcedureClosure), offsets);
 }
 
 }

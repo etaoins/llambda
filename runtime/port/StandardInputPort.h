@@ -4,6 +4,7 @@
 #include "AbstractPort.h"
 
 #include <unistd.h>
+#include <atomic>
 
 namespace lliby
 {
@@ -25,10 +26,10 @@ public:
 
 	void closeInputPort() override
 	{
-		if (isInputPortOpen())
+		int toClose = m_fd;
+		if (m_fd.compare_exchange_strong(toClose, ClosedFd))
 		{
-			close(m_fd);
-			m_fd = ClosedFd;
+			close(toClose);
 		}
 	}
 
@@ -41,7 +42,7 @@ public:
 
 private:
 	std::istream &m_inputStream;
-	int m_fd;
+	std::atomic<int> m_fd;
 };
 
 }

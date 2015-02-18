@@ -1,18 +1,22 @@
 #include "alloc/allocator.h"
 
-#include <stdlib.h>
-#include <iostream>
+#include <cstdlib>
 
 #include "core/World.h"
-
-#include "binding/RecordLikeCell.h"
-#include "binding/SharedByteArray.h"
 
 #include "alloc/AllocCell.h"
 #include "alloc/RangeAlloc.h"
 #include "alloc/Finalizer.h"
-#include "alloc/DynamicMemoryBlock.h"
 #include "alloc/collector.h"
+
+#ifdef _LLIBY_CHECK_LEAKS
+#include <iostream>
+
+#include "sched/Dispatcher.h"
+#include "binding/RecordLikeCell.h"
+#include "binding/SharedByteArray.h"
+#include "actor/Mailbox.h"
+#endif
 
 // Statically check that everything can fit in to a cell
 #include "generated/sizecheck.h"
@@ -33,38 +37,35 @@ namespace
 
 void initGlobal()
 {
-	finalizer = new Finalizer();
+	finalizer = new Finalizer;
 }
 
-void initWorld(World &world)
-{
-	// Nothing to do
-}
-
-void shutdownWorld(World &world)
+void shutdownGlobal()
 {
 #ifdef _LLIBY_CHECK_LEAKS
-	// Do one last collection at shutdown
-	if (forceCollection(world) > 0)
-	{
-		std::cerr << "Cells leaked on exit!" << std::endl;
-		exit(-1);
-	}
+	sched::Dispatcher::defaultInstance().waitForDrain();
 
+	// Make sure everything is properly freed
 	if (SharedByteArray::instanceCount() != 0)
 	{
 		std::cerr << "SharedByteArray instances leaked on exit!" << std::endl;
 		exit(-1);
 	}
-	
+
 	if (RecordLikeCell::recordDataInstanceCount() != 0)
 	{
 		std::cerr << "Record data instances leaked on exit!" << std::endl;
 		exit(-1);
 	}
+
+	if (actor::Mailbox::instanceCount())
+	{
+		std::cerr << "Actor mailboxes leaked on exit!" << std::endl;
+		exit(-1);
+	}
 #endif
 }
-    
+
 AllocCell *allocateCells(World &world, size_t count)
 {
 #ifndef _LLIBY_ALWAYS_GC
@@ -89,41 +90,30 @@ RangeAlloc allocateRange(World &world, size_t count)
 
 size_t forceCollection(World &world)
 {
-	// Terminate the old cell heap
-	world.cellHeap.terminate();
-
 	// Make a new cell heap
-	Heap nextCellHeap;
+	Heap nextCellHeap(World::InitialHeapSegmentSize);
 
 	// Collect in to the new world
 	const size_t reachableCells = collect(world, nextCellHeap);
 
-	// Finalize the heap asynchronously
-	MemoryBlock *rootSegment = world.cellHeap.rootSegment();
-
-	if (rootSegment != nullptr)
-	{
-		/* We can normally finalize memory in a background thread for better concurrency. There are two debug flags
-		 * which require synchronous finalization:
-		 *
-		 * - NO_ADDR_REUSE immediately marks the memory as inaccessible which means the finalizer must be done with it
-		 *   before we return from collection.
-		 *
-		 * - CHECK_LEAKS needs all finalization to be complete at exit. Currently there's no way to wait for the
-		 *   finalizer queue to drain so it makes all finalization synchronous.
-		 */
-#if !defined(_LLIBY_NO_ADDR_REUSE) && !defined(_LLIBY_CHECK_LEAKS)
-		finalizer->finalizeHeapAsync(rootSegment);
+	/* We can normally finalize memory in a background thread for better concurrency. However,  NO_ADDR_REUSE
+	 * immediately marks the memory as inaccessible which means the finalizer must be done with it before we return
+	 * from collection.
+	 */
+#if !defined(_LLIBY_NO_ADDR_REUSE)
+	finalizer->finalizeHeapAsync(world.cellHeap);
 #else
-		finalizer->finalizeHeapSync(rootSegment);
+	finalizer->finalizeHeapSync(world.cellHeap);
 #endif
-	}
 
-	// Don't count the cells we just moved towards the next GC
-	nextCellHeap.resetAllocationCounter();
+	// The finalizer should've emptied us
+	assert(world.cellHeap.isEmpty());
 
-	// Make this the new heap
-	world.cellHeap = nextCellHeap;
+	// Splice in the new cells
+	world.cellHeap.splice(nextCellHeap);
+
+	// We should have zero allocation counter now
+	assert(world.cellHeap.allocationCounter() == 0);
 
 	return reachableCells;
 }

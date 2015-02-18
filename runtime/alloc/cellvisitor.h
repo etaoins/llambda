@@ -20,6 +20,7 @@
 #include "binding/ErrorObjectCell.h"
 #include "binding/PortCell.h"
 #include "binding/DynamicStateCell.h"
+#include "binding/MailboxCell.h"
 
 #include "classmap/RecordClassMap.h"
 
@@ -84,15 +85,20 @@ visitEntry:
 	}
 	else if (auto recordLikeCell = cell_cast<RecordLikeCell>(*rootCellRef))
 	{
-		const RecordClassOffsetMap *offsetMap = recordLikeCell->offsetMap();
-
-		// Does this have any child cells and is it not undefined?
-		if ((offsetMap != nullptr) && !recordLikeCell->isUndefined())
+		if (auto escapeProcCell = cell_cast<dynamic::EscapeProcedureCell>(*rootCellRef))
 		{
-			// Yes, iterate over them
-			for(std::uint32_t i = 0; i < offsetMap->offsetCount; i++)
+			if (escapeProcCell->continuation() != nullptr)
 			{
-				const std::uint32_t byteOffset = offsetMap->offsets[i];
+				visitContinuation(escapeProcCell->continuation(), visitor);
+			}
+		}
+		else if (!recordLikeCell->isUndefined())
+		{
+			const RecordClassMap *classMap = recordLikeCell->classMap();
+
+			for(std::uint32_t i = 0; i < classMap->offsetCount; i++)
+			{
+				const std::uint32_t byteOffset = classMap->offsets[i];
 				std::uint8_t *cellRef;
 
 				if (recordLikeCell->dataIsInline())
@@ -106,13 +112,6 @@ visitEntry:
 				}
 
 				visitCell(reinterpret_cast<AnyCell**>(cellRef), visitor);
-			}
-		}
-		else if (auto escapeProcCell = cell_cast<dynamic::EscapeProcedureCell>(*rootCellRef))
-		{
-			if (escapeProcCell->continuation() != nullptr)
-			{
-				visitContinuation(escapeProcCell->continuation(), visitor);
 			}
 		}
 	}
@@ -138,7 +137,8 @@ visitEntry:
 	    cell_cast<SymbolCell>(*rootCellRef) ||
 	    cell_cast<BytevectorCell>(*rootCellRef) ||
 	    cell_cast<CharCell>(*rootCellRef) ||
-	    cell_cast<PortCell>(*rootCellRef))
+	    cell_cast<PortCell>(*rootCellRef) ||
+	    cell_cast<MailboxCell>(*rootCellRef))
 	{
 		// No children
 	}

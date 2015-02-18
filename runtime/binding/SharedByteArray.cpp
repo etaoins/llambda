@@ -11,7 +11,9 @@ namespace lliby
 
 namespace
 {
+#ifdef _LLIBY_CHECK_LEAKS
 	std::atomic<std::size_t> allocationCount(0);
+#endif
 
 	std::size_t objectSizeForBytes(std::size_t bytes)
 	{

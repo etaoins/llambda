@@ -553,6 +553,24 @@ StringCell* StringCell::copy(World &world, SliceIndexType start, SliceIndexType 
 	return newString;
 }
 
+StringCell* StringCell::copy(alloc::Heap &heap)
+{
+	void *cellPlacement = heap.allocate();
+
+	if (dataIsInline())
+	{
+		auto inlineCopy = new (cellPlacement) InlineStringCell(byteLength(), charLength());
+		memcpy(inlineCopy->utf8Data(), utf8Data(), byteLength());
+
+		return inlineCopy;
+	}
+	else
+	{
+		auto heapThis = static_cast<HeapStringCell*>(this);
+		return new (cellPlacement) HeapStringCell(heapThis->heapByteArray()->ref(), byteLength(), charLength());
+	}
+}
+
 std::vector<UnicodeChar> StringCell::unicodeChars(SliceIndexType start, SliceIndexType end) const
 {
 	if (end == -1)

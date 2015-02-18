@@ -13,7 +13,7 @@ namespace lliby
 namespace
 {
 	const std::uint32_t RuntimeRecordClassFlag = 1 << 31;
-	std::vector<RecordClassOffsetMap *> runtimeRecordClassOffsets;
+	std::vector<RecordClassMap *> runtimeRecordClassMaps;
 
 #ifdef _LLIBY_CHECK_LEAKS
 	std::atomic<size_t> recordDataAllocCount(0);
@@ -28,18 +28,23 @@ void* RecordLikeCell::allocateRecordData(size_t bytes)
 
 	return malloc(bytes);
 }
-	
+
+void RecordLikeCell::freeRecordData(void *data)
+{
+#ifdef _LLIBY_CHECK_LEAKS
+		recordDataAllocCount.fetch_sub(1, std::memory_order_relaxed);
+#endif
+		free(data);
+}
+
 void RecordLikeCell::finalizeRecordLike()
 {
 	if (!dataIsInline())
 	{
-#ifdef _LLIBY_CHECK_LEAKS
-		recordDataAllocCount.fetch_sub(1, std::memory_order_relaxed);
-#endif
-		free(m_recordData);
+		freeRecordData(m_recordData);
 	}
 }
-	
+
 size_t RecordLikeCell::recordDataInstanceCount()
 {
 #ifdef _LLIBY_CHECK_LEAKS
@@ -48,13 +53,13 @@ size_t RecordLikeCell::recordDataInstanceCount()
 	return 0;
 #endif
 }
-	
-const RecordClassOffsetMap* RecordLikeCell::offsetMap() const
+
+const RecordClassMap* RecordLikeCell::classMap() const
 {
 	if (recordClassId() & RuntimeRecordClassFlag)
 	{
 		const RecordClassIdType rawClassId = recordClassId() & ~RuntimeRecordClassFlag;
-		return runtimeRecordClassOffsets[rawClassId];
+		return runtimeRecordClassMaps[rawClassId];
 	}
 	else
 	{
@@ -62,28 +67,24 @@ const RecordClassOffsetMap* RecordLikeCell::offsetMap() const
 	}
 }
 
-RecordLikeCell::RecordClassIdType RecordLikeCell::registerRuntimeRecordClass(const std::vector<size_t> &offsets)
+RecordLikeCell::RecordClassIdType RecordLikeCell::registerRuntimeRecordClass(size_t totalSize, const std::vector<size_t> &offsets)
 {
-	// The raw class ID is the index in the runtimeRecordClassOffsets vector
+	// The raw class ID is the index in the runtimeRecordClass vector
 	const std::uint32_t offsetCount = offsets.size();
-	const RecordClassIdType rawClassId = runtimeRecordClassOffsets.size();
+	const RecordClassIdType rawClassId = runtimeRecordClassMaps.size();
 
 	// Create the offset map
-	RecordClassOffsetMap *offsetMap = nullptr;
-	
-	if (offsetCount > 0)
+	RecordClassMap *classMap = static_cast<RecordClassMap*>(malloc(sizeof(std::uint32_t) * (offsetCount + 2)));
+
+	classMap->totalSize = totalSize;
+	classMap->offsetCount = offsetCount;
+
+	for(std::uint32_t i = 0; i < offsetCount; i++)
 	{
-		offsetMap = static_cast<RecordClassOffsetMap*>(malloc(sizeof(std::uint32_t) * (offsetCount + 1)));
-
-		offsetMap->offsetCount = offsetCount;
-
-		for(std::uint32_t i = 0; i < offsetCount; i++)
-		{
-			offsetMap->offsets[i] = offsets[i];
-		}
+		classMap->offsets[i] = offsets[i];
 	}
 
-	runtimeRecordClassOffsets.push_back(offsetMap);
+	runtimeRecordClassMaps.push_back(classMap);
 
 	return rawClassId | RuntimeRecordClassFlag;
 }

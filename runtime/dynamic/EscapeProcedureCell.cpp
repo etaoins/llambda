@@ -4,7 +4,9 @@
 
 #include "core/error.h"
 #include "binding/ProperList.h"
+#include "binding/ErrorObjectCell.h"
 #include "dynamic/Continuation.h"
+#include "dynamic/SchemeException.h"
 
 namespace lliby
 {
@@ -20,7 +22,10 @@ namespace
 
 		// Call the continuation
 		Continuation *continuation = static_cast<EscapeProcedureCell*>(procSelf)->continuation();
-		continuation->resume(world, argHead);
+		if (!continuation->resume(world, argHead))
+		{
+			signalError(world, ErrorCategory::ExpiredEscapeProcedure, "Attempted to invoke an expired escape procedure");
+		}
 
 		// This code is unreachable
 		__builtin_unreachable();
@@ -36,7 +41,7 @@ EscapeProcedureCell* EscapeProcedureCell::createInstance(World &world, Continuat
 void EscapeProcedureCell::registerRecordClass()
 {
 	// Register our closure type so our garbage collector knows what to do
-	registeredClassId = RecordLikeCell::registerRuntimeRecordClass({}); 
+	registeredClassId = RecordLikeCell::registerRuntimeRecordClass(sizeof(Continuation), {});
 }
 
 bool EscapeProcedureCell::isInstance(const ProcedureCell *proc)

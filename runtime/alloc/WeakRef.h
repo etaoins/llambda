@@ -21,15 +21,15 @@ class WeakRef : public AbstractRef<T>
 {
 public:
 	WeakRef(World &world) :
-		AbstractRef<T>(&world.weakRoots)
+		AbstractRef<T>(&world.weakRoots())
 	{
 	}
 
 	WeakRef(World &world, T* cell) :
-		AbstractRef<T>(&world.weakRoots, cell)
+		AbstractRef<T>(&world.weakRoots(), cell)
 	{
 	}
-	
+
 	WeakRef& operator=(T* newCell)
 	{
 		this->setData(newCell);

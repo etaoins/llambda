@@ -8,6 +8,10 @@
 
 namespace lliby
 {
+namespace alloc
+{
+class Heap;
+}
 
 class World;
 class StringCell;
@@ -55,7 +59,14 @@ public:
 	{
 		return !(*this == other);
 	}
-	
+
+	/**
+	 * Copies this symbol on to another heap
+	 *
+	 * This does not make sense within the same world as symbols are immutable
+	 */
+	SymbolCell* copy(alloc::Heap &heap);
+
 	void finalizeSymbol();
 
 protected:

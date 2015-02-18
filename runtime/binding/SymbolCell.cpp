@@ -142,7 +142,30 @@ bool SymbolCell::operator==(const SymbolCell &other) const
 	return memcmp(constUtf8Data(), other.constUtf8Data(), byteLength()) == 0;
 }
 
-void SymbolCell::finalizeSymbol() 
+SymbolCell* SymbolCell::copy(alloc::Heap &heap)
+{
+	void *cellPlacement = heap.allocate();
+
+	if (dataIsInline())
+	{
+		auto inlineCopy = new (cellPlacement) InlineSymbolCell(byteLength());
+		memcpy(inlineCopy->m_inlineData, constUtf8Data(), byteLength());
+
+		return inlineCopy;
+	}
+	else
+	{
+		auto heapThis = static_cast<HeapSymbolCell*>(this);
+
+		return new (cellPlacement) HeapSymbolCell(
+				heapThis->heapByteArray()->ref(),
+				byteLength(),
+				heapThis->charLength()
+		);
+	}
+}
+
+void SymbolCell::finalizeSymbol()
 {
 	if (!dataIsInline())
 	{
