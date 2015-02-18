@@ -1,0 +1,10 @@
+site_name: 'Llambda'
+repo_url: https://github.com/etaoins/llambda
+pages:
+    - ['index.md', 'Intoduction']
+    - ['repl.md', 'REPL']
+    - ['scheme.md', 'Scheme Support']
+    - ['dialects.md', 'Dialects']
+    - ['numbers.md', 'Numbers']
+    - ['types.md', 'Type System']
+    - ['errors.md', 'Errors']
