@@ -95,11 +95,11 @@
 (define-test "conditional with garbage collection in only one branch" (expect true
    (define result 'not-executed)
 
-   (if dynamic-true
+   (if (dynamic-true)
      (begin
        (cons 1 2)
        (set! result 'true))
-     (begin 
+     (begin
        (set! result 'false)))
 
    result))
@@ -107,7 +107,7 @@
 (define-test "conditional with GC root in one branch and termination in the other" (expect test
   (import (scheme process-context))
 
-  (if dynamic-false
+  (if (dynamic-false)
     (begin
       ; This branch doesn't continue
       (exit #t))

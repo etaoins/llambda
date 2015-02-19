@@ -37,7 +37,7 @@
 		; Also note that + and / have different signatures which will have to be
 		; normalized when they're boxed. This doesn't matter for our current
 		; implementation but it may matter if we try to be more tricky
-		(if dynamic-true + /))
+		(if (dynamic-true) + /))
 
 	(math-op 2 3 5)))
 
@@ -102,7 +102,7 @@
 (define-test "phied number procedure cannot be applied with non-number arguments" (expect-compile-error type-error?
   ; + and - have different signatures
   ; However, we should determine that this is impossible because their phied type should be (-> <number> * <number>)
-  (define math-proc (if dynamic-true + -))
+  (define math-proc (if (dynamic-true) + -))
   (math-proc 'one 'two)))
 
 (define-test "procedure returning nothing" (expect #!unit
@@ -329,9 +329,9 @@
 
       manual-length)
 
-    (assert-equal 5 ((make-length-counter dynamic-false) '(1 2 3 4 5 . 6)))
+    (assert-equal 5 ((make-length-counter (dynamic-false)) '(1 2 3 4 5 . 6)))
     (assert-raises string?
-      ((make-length-counter dynamic-true) '(1 2 3 4 5 . 6)))))
+      ((make-length-counter (dynamic-true)) '(1 2 3 4 5 . 6)))))
 
 (cond-expand
   (immutable-pairs
@@ -366,9 +366,9 @@
 
   (call-with-values
     (lambda ()
-      (values 
-        (if dynamic-true write exit)
-        (if dynamic-false + -)))
+      (values
+        (if (dynamic-true) write exit)
+        (if (dynamic-false) + -)))
     (lambda (writer proc)
       (writer (proc 1 2))))))
 

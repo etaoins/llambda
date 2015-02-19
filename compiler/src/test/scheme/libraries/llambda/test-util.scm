@@ -22,8 +22,11 @@
     (define (force-evaluation x)
       (typed-dynamic x <any>))
 
-    (define dynamic-false (typeless-cell #f))
-    (define dynamic-true (typeless-cell #t))
+    (define (dynamic-false)
+      (typeless-cell #f))
+
+    (define (dynamic-true)
+      (typeless-cell #t))
 
     (define-syntax assert-equal
       (syntax-rules ()

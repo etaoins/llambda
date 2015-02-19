@@ -238,7 +238,7 @@
   (define exact-1 (typed-dynamic 1 <exact-integer>))
   (define inexact-1 (typed-dynamic 1.0 <flonum>))
 
-  (ann (left-or-right dynamic-true exact-1 inexact-1) <number>)))
+  (ann (left-or-right (dynamic-true) exact-1 inexact-1) <number>)))
 
 (define-test "polymorphic Scheme procedure violating return type variable fails" (expect-compile-error type-error?
   (import (llambda typed))
@@ -250,7 +250,7 @@
   (define exact-1 (typed-dynamic 1 <exact-integer>))
   (define inexact-1 (typed-dynamic 1.0 <flonum>))
 
-  (left-or-right dynamic-true exact-1 inexact-1)))
+  (left-or-right (dynamic-true) exact-1 inexact-1)))
 
 (define-test "violating Scheme procedure's type bounds fails" (expect-compile-error type-error?
   (import (llambda typed))
@@ -262,7 +262,7 @@
   (define exact-1 (typed-dynamic 1 <exact-integer>))
   (define string-val (typed-dynamic "Hello" <string>))
 
-  (left-or-right dynamic-true exact-1 string-val)))
+  (left-or-right (dynamic-true) exact-1 string-val)))
 
 (define-test "capturing polymorphic Scheme procedure" (expect-success
   (import (llambda typed))

@@ -212,7 +212,7 @@
   ; complexity. Instead just ensure that we derive a type that includes both <string> and <symbol> to make sure the type
   ; constraint system isn't over-constraining the type.
   (if (or (string? typeless-string) (symbol? typeless-string))
-    (when dynamic-false 
+    (when (dynamic-false)
       ; Note that this is (cast), not (ann). This means the type conversion only needs to be possible, not proven.
       (cast typeless-string <string>)
       (cast typeless-string <symbol>)))))

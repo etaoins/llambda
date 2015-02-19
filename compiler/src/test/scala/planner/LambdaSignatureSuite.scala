@@ -133,11 +133,10 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
   test("types used across (if) branches are unioned together") {
     val signature = signatureFor("""
       (lambda (value)
-        (if dynamic-true
+        (if (dynamic-true)
           (cast value <string>)
           (cast value <symbol>)))""")
 
-    assert(signature.fixedArgTypes === List(vt.UnionType(Set(vt.StringType, vt.SymbolType))))
     assert(signature.returnType === vt.ReturnType.SingleValue(vt.UnionType(Set(vt.StringType, vt.SymbolType))))
   }
   
@@ -245,7 +244,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
   test("procedure returning multiple values across (if)") {
     val signature = signatureFor("""
       (lambda () 
-        (if dynamic-true
+        (if (dynamic-true)
           (values 1 'a #f)
           (values 2 '() #t)))""")
 

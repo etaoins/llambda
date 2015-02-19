@@ -167,15 +167,14 @@
 ))
 
 (define-test "runtime errors leave the garbage collector in a consistent state" (expect (outer . (one . two))
-  (cons 'outer 
+  (cons 'outer
     (call/cc (lambda (normal-exit)
       (with-exception-handler
         (lambda (obj)
           (normal-exit (cons 'one 'two)))
         (lambda ()
           ; This will blow up at runtime
-          (vector-ref #(1 2 3) dynamic-true))))))
-))
+          (vector-ref #(1 2 3) (dynamic-true)))))))))
 
 (define-test "(raise-continuable)" (expect-output ("should be a number" 65)
 	(import (scheme write))

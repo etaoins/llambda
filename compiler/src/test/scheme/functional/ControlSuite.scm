@@ -63,14 +63,14 @@
 
 (define-test "(call/cc) exiting from both branch sides" (expect one
 	(call/cc (lambda (return)
-		(if dynamic-true 
+		(if (dynamic-true)
 		  (return 'one)
 		  (return 'two))
 	))))
 
 (define-test "(call/cc) exiting from one branch side" (expect one
 	(call/cc (lambda (return)
-		(if dynamic-true 
+		(if (dynamic-true)
 		  (return 'one)
 		  #f)
 	))))
@@ -136,7 +136,7 @@
 
 (define-test "multiple values returned from (if)" (expect (1 2 3 4)
   (define (return-multiple)
-    (if dynamic-true
+    (if (dynamic-true)
       (values 1 2 3 4)
       (values 4 5 6 7)))
 

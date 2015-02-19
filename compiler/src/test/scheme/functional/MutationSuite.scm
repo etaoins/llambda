@@ -5,7 +5,7 @@
 
 (define-test "mutatation across branches" (expect 3
 	(define x 1)
-	(if dynamic-false
+	(if (dynamic-false)
 	  (set! x 2)
 	  (set! x 3))
 	x))
