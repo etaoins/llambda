@@ -65,6 +65,12 @@ sealed trait Step extends ContextLocated {
     * This means the heap state has to be fully in sync - we can have no allocated but uninitialized conses, etc.
     */
   def canAllocate : Boolean = false
+
+  /** Indicates if this step can be disposed if its output values are unused
+    *
+    * These are discarded by ps.DisposeValues
+    */
+  def discardable : Boolean = false
 }
 
 sealed trait NestingStep extends Step {
@@ -106,7 +112,9 @@ sealed trait InputDisposableStep extends Step {
   *
   * These are discarded by ps.DisposeValues
   */
-sealed trait DiscardableStep extends Step
+sealed trait DiscardableStep extends Step {
+  override def discardable = true
+}
 
 /** Step producing a value that can be disposed or merged with identical instances of itself
   *
@@ -170,7 +178,8 @@ case class Invoke(
     signature : ProcedureSignature,
     entryPoint : TempValue,
     arguments : List[TempValue],
-    inputToDispose : Set[TempValue] = Set()
+    inputToDispose : Set[TempValue] = Set(),
+    override val discardable : Boolean = false
 ) extends InvokeLike with InputDisposableStep {
   lazy val inputValues = arguments.toSet + entryPoint
   lazy val outputValues = result.toSet
@@ -184,7 +193,8 @@ case class Invoke(
       signature=signature,
       entryPoint=f(entryPoint),
       arguments=arguments.map(f),
-      inputToDispose=inputToDispose
+      inputToDispose=inputToDispose,
+      discardable=discardable
     ).assignLocationFrom(this)
 }
 
@@ -997,6 +1007,7 @@ case class CreateParameterProc(
   lazy val outputValues = Set(result)
 
   override def canAllocate = true
+  override def discardable = !converterProcOpt.isDefined
 
   def withDisposedInput(values : Set[TempValue]) =
     this.copy(inputToDispose=values).assignLocationFrom(this)

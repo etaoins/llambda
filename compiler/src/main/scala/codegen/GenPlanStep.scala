@@ -147,7 +147,7 @@ object GenPlanStep {
     case condBranch : ps.CondBranch =>
       GenCondBranch(state, genGlobals)(condBranch)
 
-    case invokeStep @ ps.Invoke(resultOpt, signature, funcPtrTemp, arguments, inputToDispose) =>
+    case invokeStep @ ps.Invoke(resultOpt, signature, funcPtrTemp, arguments, inputToDispose, _) =>
       val result = ProcedureSignatureToIr(signature)
       val irSignature = result.irSignature
       val metadata = result.callMetadata

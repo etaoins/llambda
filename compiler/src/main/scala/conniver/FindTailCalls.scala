@@ -12,7 +12,7 @@ import llambda.compiler.planner.{step => ps}
   */
 object FindTailCalls extends FunctionConniver {
   private def replaceTailStep(tailStep : ps.Step, retValueOpt : Option[ps.TempValue]) : (ps.Step, Boolean) = tailStep match {
-    case ps.Invoke(`retValueOpt`, signature, entryPoint, arguments, _)  =>
+    case ps.Invoke(`retValueOpt`, signature, entryPoint, arguments, _, _)  =>
       // This is a tail call - replace the ps.Invoke with an equivalent ps.TailCall
       val replacedStep = ps.TailCall(signature, entryPoint, arguments)
         .assignLocationFrom(tailStep)

@@ -6,6 +6,7 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner._
 import llambda.compiler.planner.reportproc.ReportProcPlanner
+import llambda.compiler.codegen.RuntimeFunctions
 
 /** Represents a user-provided procedure with a known signature and direct entry point
   *
@@ -48,5 +49,8 @@ class KnownUserProc(
 
     None
   }
+
+  override def hasSideEffects(arity : Int) : Boolean =
+    RuntimeFunctions.hasSideEffects(plannedSymbol, arity)
 }
 

@@ -74,7 +74,8 @@ object DisposeValues {
       val newAcc = newStep :: (disposeSteps ++ acc)
       discardUnusedValues(branchInputValues, reverseTail, newUsedValues, newAcc)
 
-    case (discardableStep : ps.DiscardableStep) :: reverseTail if (usedValues & discardableStep.outputValues).isEmpty =>
+    case discardableStep :: reverseTail
+        if discardableStep.discardable && (usedValues & discardableStep.outputValues).isEmpty =>
       // We can drop this step completely
       discardUnusedValues(branchInputValues, reverseTail, usedValues, acc)
 

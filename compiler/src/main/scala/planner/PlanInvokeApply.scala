@@ -31,17 +31,19 @@ object PlanInvokeApply {
     else {
       Nil
     }
-    
+
     val argTemps = worldTemps ++ selfTemps ++ fixedTemps ++ restTemps
+
+    val discardable = !invokableProc.hasSideEffects(fixedTemps.length)
 
     signature.returnType match {
       case vt.ReturnType.SingleValue(vt.UnitType) =>
-        plan.steps += ps.Invoke(None, signature, entryPointTemp, argTemps)
+        plan.steps += ps.Invoke(None, signature, entryPointTemp, argTemps, discardable=discardable)
         SingleValue(iv.UnitValue)
 
       case otherType =>
         val resultTemp = ps.Temp(otherType.representationTypeOpt.get)
-        plan.steps += ps.Invoke(Some(resultTemp), signature, entryPointTemp, argTemps)
+        plan.steps += ps.Invoke(Some(resultTemp), signature, entryPointTemp, argTemps, discardable=discardable)
 
         TempValueToResults(otherType, resultTemp)
     }

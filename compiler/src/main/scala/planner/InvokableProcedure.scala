@@ -22,4 +22,11 @@ trait InvokableProcedure {
 
   /** Creates a copy of this invokable procedure with a new self temp */
   def withSelfTemp(tempValue : ps.TempValue) : InvokableProcedure
+
+  /** Indicates if this procedure has side effects
+    *
+    * If not then unused invokations of this procedure may be discarded
+    */
+  def hasSideEffects(arity : Int) : Boolean =
+    true
 }
