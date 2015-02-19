@@ -3,7 +3,7 @@ import io.llambda
 
 import llambda.compiler.planner.{step => ps}
 
-private object FindUsedFunctions {
+object FindUsedFunctions {
   private def usedFunctionsForSteps(
       plannedFunctions : Map[String, PlannedFunction],
       steps : List[ps.Step],

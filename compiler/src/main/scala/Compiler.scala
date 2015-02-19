@@ -6,6 +6,8 @@ import scala.io.Source
 import scala.language.postfixOps
 import scala.sys.process._
 
+import codegen.LlambdaTopLevelSignature
+
 class ExternalCompilerException extends Exception
 
 object Compiler {
@@ -183,8 +185,11 @@ object Compiler {
     // Dispose any unused values
     val disposedFunctions = optimisedFunctions.mapValues(planner.DisposeValues(_))
 
+    // Prune unused functions again
+    val usedFunctions = planner.FindUsedFunctions(disposedFunctions, LlambdaTopLevelSignature.nativeSymbol)
+
     // Plan our cell allocations after all optimisations have been done
-    val allocatedFunctions = disposedFunctions.mapValues(planner.PlanCellAllocations(_))
+    val allocatedFunctions = usedFunctions.mapValues(planner.PlanCellAllocations(_))
 
     if (config.dumpPlan) {
       println(planner.PrettyPrintPlan(allocatedFunctions))
