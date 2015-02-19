@@ -6,7 +6,6 @@
 #include <mutex>
 #include <queue>
 #include <condition_variable>
-#include <atomic>
 
 namespace lliby
 {
@@ -22,6 +21,7 @@ public:
 	 * Creates a new standlone dispatcher
 	 */
 	Dispatcher();
+	~Dispatcher();
 
 	/**
 	 * Returns a shared instance of the dispatcher
@@ -33,26 +33,30 @@ public:
 	 */
 	void dispatch(const WorkFunction &work);
 
+	/**
+	 * Waits for the scheduler to drain all queued work and all worker threads to exit
+	 *
+	 * Note that this does not prevent new work from being dispatched. This means this function may not make progress
+	 * when work is being concurrently dipsatched.
+	 *
+	 * This is implicitly called by the destructor but it can also be used to checkpoint a running Dispatcher. This is
+	 * fairly heavyweight so it should only be used for debugging purposes.
+	 */
+	void waitForDrain();
+
 private:
 	void workerThread(WorkFunction initialWork);
 
 	std::mutex m_mutex;
 
 	std::int32_t m_idleThreads;
+	std::int32_t m_runningThreads;
+
 	std::condition_variable m_workQueueCond;
 	std::queue<WorkFunction> m_workQueue;
 
-#ifdef _LLIBY_CHECK_LEAKS
-public:
-	/**
-	 * Waits for the scheduler to drain all queued work
-	 */
-	void waitForDrain();
-
-private:
-	std::atomic<int32_t> m_runningThreads;
+	bool m_draining = false;
 	std::condition_variable m_drainCond;
-#endif
 };
 
 }

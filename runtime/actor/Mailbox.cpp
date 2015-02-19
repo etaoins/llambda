@@ -1,6 +1,7 @@
 #include "actor/Mailbox.h"
 
 #include <chrono>
+#include <atomic>
 
 #include "core/World.h"
 #include "sched/Dispatcher.h"

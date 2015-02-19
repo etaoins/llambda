@@ -8,19 +8,25 @@ namespace lliby
 namespace sched
 {
 
-Dispatcher::Dispatcher() :
-	m_idleThreads(0)
-#ifdef _LLIBY_CHECK_LEAKS
-	, m_runningThreads(0)
-#endif
+namespace
 {
+	Dispatcher DefaultInstance;
+}
+
+Dispatcher::Dispatcher() :
+	m_idleThreads(0),
+	m_runningThreads(0)
+{
+}
+
+Dispatcher::~Dispatcher()
+{
+	waitForDrain();
 }
 
 Dispatcher& Dispatcher::defaultInstance()
 {
-	// Static initialisation is thread safe in C++11
-	static Dispatcher inst;
-	return inst;
+	return DefaultInstance;
 }
 
 void Dispatcher::dispatch(const WorkFunction &work)
@@ -29,6 +35,7 @@ void Dispatcher::dispatch(const WorkFunction &work)
 
 	if (m_idleThreads < 1)
 	{
+		m_runningThreads++;
 		lock.unlock();
 
 		try
@@ -43,6 +50,9 @@ void Dispatcher::dispatch(const WorkFunction &work)
 		{
 			// Failed to launch a thread. This can happen on low resource situations. Fall back to queuing
 			lock.lock();
+			m_runningThreads--;
+
+			m_drainCond.notify_all();
 		}
 	}
 
@@ -54,10 +64,6 @@ void Dispatcher::dispatch(const WorkFunction &work)
 
 void Dispatcher::workerThread(WorkFunction initialWork)
 {
-#ifdef _LLIBY_CHECK_LEAKS
-	m_runningThreads++;
-#endif
-
 	// Do our initial work
 	initialWork();
 
@@ -68,27 +74,21 @@ void Dispatcher::workerThread(WorkFunction initialWork)
 		// We're now idle
 		m_idleThreads++;
 
-#ifdef _LLIBY_CHECK_LEAKS
-		m_drainCond.notify_all();
-#endif
-
-		// Wait for work to do for five seconds
+		// Wait until we we either timeout or start draining
 		std::chrono::seconds timeout(5);
-
-		if (!m_workQueueCond.wait_for(lock, timeout, [=]{return !m_workQueue.empty();}))
-		{
-			// Nothing to do; give up our thread
-			m_idleThreads--;
-
-#ifdef _LLIBY_CHECK_LEAKS
-			m_runningThreads--;
-#endif
-
-			return;
-		}
+		m_workQueueCond.wait_for(lock, timeout, [=]{return m_draining || !m_workQueue.empty();});
 
 		// We're no longer idle
 		m_idleThreads--;
+
+		if (m_workQueue.empty())
+		{
+			// Nothing to do; give up our thread
+			m_runningThreads--;
+			m_drainCond.notify_all();
+
+			return;
+		}
 
 		// Grab the work
 		WorkFunction queuedWork(m_workQueue.front());
@@ -102,17 +102,24 @@ void Dispatcher::workerThread(WorkFunction initialWork)
 	}
 }
 
-#ifdef _LLIBY_CHECK_LEAKS
-
 void Dispatcher::waitForDrain()
 {
 	std::unique_lock<std::mutex> lock(m_mutex);
-	m_drainCond.wait(lock, [=]{
-		return m_runningThreads == m_idleThreads;
-	});
-}
 
-#endif
+	// Signal that we want to drain
+	m_draining = true;
+
+	// Wake up all of our worker threads so they notice we're draining
+	m_workQueueCond.notify_all();
+
+	// Wait for all of the threads to stop
+	m_drainCond.wait(lock, [=]{
+		return m_workQueue.empty() && m_runningThreads == 0;
+	});
+
+	// We're no longer draining
+	m_draining = false;
+}
 
 }
 }
