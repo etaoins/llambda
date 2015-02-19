@@ -223,22 +223,17 @@ private[planner] object PlanCaseLambda {
     val outerSelfTempOpt = if (closureRequired) {
       // Save the closure values from the parent's scope
       val cellTemp = ps.RecordTemp()
-      val dataTemp = ps.RecordLikeDataTemp()
 
-      parentPlan.steps += ps.InitRecordLike(cellTemp, dataTemp, closureType, isUndefined=false)
+      val fieldValues = (plannedClauses flatMap { plannedClause =>
+        plannedClause.capturedProcOpt map { capturedProc =>
+          capturedProc.recordField -> capturedProc.outerProcTemp
+        }
+      }).toMap
 
-      for(plannedClause <- plannedClauses;
-          capturedProc <- plannedClause.capturedProcOpt) {
-        val recordField = capturedProc.recordField
-        val procTemp = capturedProc.outerProcTemp
-
-        parentPlan.steps += ps.SetRecordDataField(dataTemp, closureType, recordField, procTemp)
-      }
-
-      // Store our entry point
       val entryPointTemp = ps.EntryPointTemp()
+
       parentPlan.steps += ps.CreateNamedEntryPoint(entryPointTemp, signature, nativeSymbol)
-      parentPlan.steps += ps.SetProcedureEntryPoint(cellTemp, entryPointTemp)
+      parentPlan.steps += ps.InitProcedure(cellTemp, closureType, entryPointTemp, fieldValues)
 
       Some(cellTemp)
     }

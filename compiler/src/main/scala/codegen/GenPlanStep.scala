@@ -338,13 +338,25 @@ object GenPlanStep {
 
       state.withTempValue(resultTemp -> castEntryPointIr)
 
-    case initStep : ps.InitRecordLike  =>
-      val (initedState, initedRecordLike) = GenInitRecordLike(state, genGlobals.generatedTypes)(initStep)
+    case initStep : ps.InitRecord =>
+      val (initedState, resultIr) = GenInitRecordLike(state, genGlobals.generatedTypes)(initStep)
 
       initedState
-        .withTempValue(initStep.cellResult -> initedRecordLike.recordCell)
-        .withTempValue(initStep.dataResult -> initedRecordLike.recordData)
-    
+        .withTempValue(initStep.result -> resultIr)
+
+    case initStep : ps.InitProcedure =>
+      val (initedState, resultIr) = GenInitRecordLike(state, genGlobals.generatedTypes)(initStep)
+
+      // Store the entry point
+      val entryPointIr = state.liveTemps(initStep.entryPoint)
+      val block = state.currentBlock
+
+      val castEntryPointIr = block.bitcastTo("castEntryPoint")(entryPointIr, ct.ProcedureCell.entryPointIrType)
+      ct.ProcedureCell.genStoreToEntryPoint(state.currentBlock)(castEntryPointIr, resultIr)
+
+      initedState
+        .withTempValue(initStep.result -> resultIr)
+
     case ps.TestRecordLikeClass(resultTemp, recordCellTemp, recordLikeType, possibleTypesOpt) => 
       val generatedType = genGlobals.generatedTypes(recordLikeType)
       val generatedPossibleTypes = possibleTypesOpt map { possibleTypes =>
@@ -416,18 +428,6 @@ object GenPlanStep {
 
       state.withTempValue(resultTemp -> resultIr)
       
-    case ps.SetProcedureEntryPoint(procedureCellTemp, entryPointTemp) =>
-      val procedureCellIr = state.liveTemps(procedureCellTemp)
-      val entryPointIr = state.liveTemps(entryPointTemp)
-
-      // Store the entry point
-      val block = state.currentBlock
-
-      val castEntryPointIr = block.bitcastTo("castEntryPoint")(entryPointIr, ct.ProcedureCell.entryPointIrType)
-      ct.ProcedureCell.genStoreToEntryPoint(state.currentBlock)(castEntryPointIr, procedureCellIr)
-
-      state
-
     case ps.DisposeValues(disposedTemps) =>
       state.copy(
         liveTemps=state.liveTemps -- disposedTemps

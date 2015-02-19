@@ -847,25 +847,54 @@ case class SetPairCdr(pairValue : TempValue, newValue : TempValue) extends Step 
     SetPairCdr(f(pairValue), f(newValue)).assignLocationFrom(this)
 }
 
-/** Allocates a cell for a record of a given type
- *
- * @param cellResult   location to store the record cell
- * @param dataResult   location to store the uninitialized record data
- * @param recordType   type of record to create
- * @param isUndefined  flag indicating if this value should be initially marked undefined. This can be tested with
- *                     AssertRecordLikeDefined. This is used in the implementation of recursive values
- */
-case class InitRecordLike(
-    cellResult : TempValue,
-    dataResult : TempValue,
-    recordLikeType : vt.RecordLikeType,
+/** Step creating a record-like cell */
+sealed trait InitRecordLikeStep extends RecordLikeStep with CellConsumer with DiscardableStep {
+  /** Resulting record-like cell */
+  val result : TempValue
+
+  /** Record-like type being constructed */
+  val recordLikeType : vt.RecordLikeType
+
+  /** Initial values for the record-like's fields */
+  val fieldValues : Map[vt.RecordField, TempValue]
+
+  /** Indicates if the record should be initialially marked as undefined. This can be tested with
+    * AssertRecordLikeDefined. This can be used to implemented recursive values.
+    */
+  val isUndefined : Boolean
+}
+
+/** Allocates a cell for a record of a given type */
+case class InitRecord(
+    result : TempValue,
+    recordLikeType : vt.RecordType,
+    fieldValues : Map[vt.RecordField, TempValue],
     isUndefined : Boolean
-) extends RecordLikeStep with CellConsumer {
-  val inputValues = Set[TempValue]()
-  val outputValues = Set(cellResult, dataResult)
+) extends InitRecordLikeStep {
+  lazy val inputValues = fieldValues.map(_._2).toSet
+  lazy val outputValues = Set(result)
 
   def renamed(f : (TempValue) => TempValue) =
-    InitRecordLike(f(cellResult), f(dataResult), recordLikeType, isUndefined).assignLocationFrom(this)
+    InitRecord(f(result), recordLikeType, fieldValues.mapValues(f), isUndefined).assignLocationFrom(this)
+}
+
+/** Allocates a cell for a procedure with the given closure type and entry point
+  *
+  * @param  entryPoint  Entry point for the procedure cell. This can be constructed with CreateNamedEntryPoint.
+  */
+case class InitProcedure(
+    result : TempValue,
+    recordLikeType : vt.ClosureType,
+    entryPoint : TempValue,
+    fieldValues : Map[vt.RecordField, TempValue]
+) extends InitRecordLikeStep {
+  lazy val inputValues = fieldValues.map(_._2).toSet + entryPoint
+  lazy val outputValues = Set(result)
+
+  val isUndefined = false
+
+  def renamed(f : (TempValue) => TempValue) =
+    InitProcedure(f(result), recordLikeType, f(entryPoint), fieldValues.mapValues(f)).assignLocationFrom(this)
 }
 
 /** Sets a record as defined */
@@ -949,18 +978,6 @@ case class LoadRecordLikeData(
 
   def renamed(f : (TempValue) => TempValue) =
     LoadRecordLikeData(f(result), f(recordCell), recordLikeType).assignLocationFrom(this)
-}
-
-/** Sets the entry point of a procedure
-  *
-  * The procedure should be created using RecordLikeInit with a ClosureType
-  */
-case class SetProcedureEntryPoint(procedureCell : TempValue, entryPoint : TempValue) extends Step {
-  lazy val inputValues = Set(procedureCell, entryPoint)
-  val outputValues = Set[TempValue]()
-
-  def renamed(f : (TempValue) => TempValue) =
-    SetProcedureEntryPoint(f(procedureCell), f(entryPoint)).assignLocationFrom(this)
 }
 
 /** Creates a new parameter procedure

@@ -114,11 +114,9 @@ class CellValue(
 
     // Create the adapter procedure cell
     val adapterProcTemp = ps.CellTemp(ct.ProcedureCell)
-    val adapterDataTemp = ps.RecordLikeDataTemp()
 
-    plan.steps += ps.InitRecordLike(adapterProcTemp, adapterDataTemp, AdapterProcType, false)
-    plan.steps += ps.SetRecordDataField(adapterDataTemp, AdapterProcType, AdapterProcField, targetProcTemp)
-    plan.steps += ps.SetProcedureEntryPoint(adapterProcTemp, trampEntryPointTemp)
+    val adapterFields = Map[vt.RecordField, ps.TempValue](AdapterProcField -> targetProcTemp)
+    plan.steps += ps.InitProcedure(adapterProcTemp, AdapterProcType, trampEntryPointTemp, adapterFields)
 
     adapterProcTemp
   }

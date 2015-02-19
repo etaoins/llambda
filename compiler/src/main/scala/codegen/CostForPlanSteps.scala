@@ -54,10 +54,10 @@ object CostForPlanSteps {
       // This is a load from memory
       loadCost
 
-    case _ : ps.SetPairCar | _ : ps.SetPairCdr | _ : ps.SetProcedureEntryPoint | _ : ps.SetRecordDataField |
-         _ : ps.SetRecordLikeDefined | _ : ps.StoreVectorElement =>
+    case _ : ps.SetPairCar | _ : ps.SetPairCdr | _ : ps.SetRecordDataField | _ : ps.SetRecordLikeDefined |
+         _ : ps.StoreVectorElement =>
       storeCost
-    
+
     case _ : ps.TestCellType | _ : ps.TestRecordLikeClass =>
       // These are typically a load + test
       loadCost + trivialInstrCost
@@ -78,9 +78,13 @@ object CostForPlanSteps {
       // Add an additional instruction for dealing with looping
       (loadCost + (trivialInstrCost * 2)) * 5
 
-    case _ : ps.InitPair | _ : ps.InitRecordLike | _ : ps.InitVector =>
+    case _ : ps.InitPair | _ : ps.InitVector =>
       // This requires an allocation and a store to the cell type
       cellConsumptionCost
+
+    case initRecordLike : ps.InitRecordLikeStep =>
+      // This requires an allocation and then a store for each field
+      cellConsumptionCost + (initRecordLike.fieldValues.size * storeCost)
 
     case _ : ps.BoxValue =>
       // This requires an allocation plus a store of the boxed value

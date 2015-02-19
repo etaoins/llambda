@@ -63,17 +63,15 @@ object PlanLambdaPolymorph {
 
         // Init the mutable
         val mutableTemp = ps.RecordTemp()
-        val recordDataTemp = ps.RecordLikeDataTemp()
 
         // Determine our type and convert the argument to it
         val compactInnerType = CompactRepresentationForType(argument.valueType)
         val mutableType = MutableType(compactInnerType)
         val tempValue = argValue.toTempValue(compactInnerType)
 
-        plan.steps += ps.InitRecordLike(mutableTemp, recordDataTemp, mutableType, isUndefined=false)
-
         // Set the value
-        plan.steps += ps.SetRecordDataField(recordDataTemp, mutableType, mutableType.recordField, tempValue)
+        val fieldValues = Map[vt.RecordField, ps.TempValue](mutableType.recordField -> tempValue)
+        plan.steps += ps.InitRecord(mutableTemp, mutableType, fieldValues, isUndefined=false)
 
         state.withValue(argument.storageLoc -> MutableValue(mutableType, mutableTemp, false))
       }

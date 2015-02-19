@@ -97,11 +97,9 @@ abstract class KnownProc(val polySignature : PolymorphicSignature, val selfTempO
     selfTempOpt match {
       case Some(selfTemp) =>
         // Create a closure for the adapter pointing to our original closure
-        val adapterDataTemp = ps.RecordLikeDataTemp()
 
-        plan.steps += ps.InitRecordLike(adapterProcTemp, adapterDataTemp, AdapterProcType, false)
-        plan.steps += ps.SetRecordDataField(adapterDataTemp, AdapterProcType, AdapterProcField, selfTemp)
-        plan.steps += ps.SetProcedureEntryPoint(adapterProcTemp, trampEntryPointTemp)
+        val adapterFields = Map[vt.RecordField, ps.TempValue](AdapterProcField -> selfTemp)
+        plan.steps += ps.InitProcedure(adapterProcTemp, AdapterProcType, trampEntryPointTemp, adapterFields)
 
       case None =>
         plan.steps += ps.CreateEmptyClosure(adapterProcTemp, trampEntryPointTemp)

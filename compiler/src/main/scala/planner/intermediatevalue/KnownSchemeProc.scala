@@ -66,11 +66,9 @@ extends KnownUserProc(polySignature, plannedSymbol, selfTempOpt, reportNameOpt) 
 
       // Create the polymorph procedure cell
       val polymorphProcTemp = ps.CellTemp(ct.ProcedureCell)
-      val polymorphDataTemp = ps.RecordLikeDataTemp()
 
-      plan.steps += ps.InitRecordLike(polymorphProcTemp, polymorphDataTemp, AdapterProcType, false)
-      plan.steps += ps.SetRecordDataField(polymorphDataTemp, AdapterProcType, AdapterProcField, selfTemp)
-      plan.steps += ps.SetProcedureEntryPoint(polymorphProcTemp, polymorphEntryPointTemp)
+      val adapterFields = Map[vt.RecordField, ps.TempValue](AdapterProcField -> selfTemp)
+      plan.steps += ps.InitProcedure(polymorphProcTemp, AdapterProcType, polymorphEntryPointTemp, adapterFields)
 
       polymorphProcTemp
     }

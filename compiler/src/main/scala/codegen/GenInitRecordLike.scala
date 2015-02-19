@@ -6,12 +6,10 @@ import llambda.compiler.planner.{step => ps}
 import llambda.compiler.{valuetype => vt}
 
 object GenInitRecordLike {
-  case class InitializedRecordLike(recordCell : IrValue, recordData : IrValue)
-
   def apply(
       state : GenerationState,
       generatedTypes : Map[vt.RecordLikeType, GeneratedType]
-  )(initStep : ps.InitRecordLike) : (GenerationState, InitializedRecordLike) = {
+  )(initStep : ps.InitRecordLikeStep) : (GenerationState, IrValue) = {
     val cellType = initStep.recordLikeType.cellType
 
     val block = state.currentBlock
@@ -71,15 +69,15 @@ object GenInitRecordLike {
       cellType.genStoreToIsUndefined(block)(IntegerConstant(cellType.isUndefinedIrType, 1), recordCell)
     }
 
+    for((field, valueTemp) <- initStep.fieldValues) {
+      val valueIr = state.liveTemps(valueTemp)
+      GenSetRecordDataField(block)(castRecordData, generatedType, field, valueIr)
+    }
+
     val newState = state.copy(
       currentAllocation=newAllocation
     )
 
-    val recordLike = InitializedRecordLike(
-      recordCell=recordCell,
-      recordData=castRecordData
-    )
-
-    (newState, recordLike)
+    (newState, recordCell)
   }
 }

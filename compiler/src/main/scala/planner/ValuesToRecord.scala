@@ -18,15 +18,7 @@ private[planner] object ValuesToRecord {
     }
 
     val cellTemp = ps.RecordTemp()
-    val dataTemp = ps.RecordLikeDataTemp()
-
-    plan.steps += ps.InitRecordLike(cellTemp, dataTemp, recordType, isUndefined=isUndefined)
-
-    // Set all our fields
-    for((field, fieldTemp) <- fieldToTempValue) {
-      plan.steps += ps.SetRecordDataField(dataTemp, recordType, field, fieldTemp)
-    }
-
+    plan.steps += ps.InitRecord(cellTemp, recordType, fieldToTempValue, isUndefined=isUndefined)
     cellTemp
   }
 

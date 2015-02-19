@@ -40,19 +40,18 @@ class KnownRecordConstructorProc(recordType : vt.RecordType, initializedFields :
 
     // Initialize the record
     val cellTemp = ps.RecordTemp()
-    val dataTemp = ps.RecordLikeDataTemp()
 
-    plan.steps += ps.InitRecordLike(cellTemp, dataTemp, recordType, isUndefined=false)
-
-    // Set all our fields
-    for(field <- recordType.fieldsWithInherited) {
+    // Find our field values
+    val allFieldValues = (recordType.fieldsWithInherited map { field =>
       val fieldTemp = fieldToTempValue.getOrElse(field, {
         val fieldType = recordType.typeForField(field)
         UnitValue.toTempValue(fieldType)(plan)
       })
 
-      plan.steps += ps.SetRecordDataField(dataTemp, recordType, field, fieldTemp)
-    }
+      field -> fieldTemp
+    }).toMap
+
+    plan.steps += ps.InitRecord(cellTemp, recordType, allFieldValues, isUndefined=false)
 
     // Return the record
     plan.steps += ps.Return(Some(cellTemp))

@@ -51,13 +51,11 @@ private[planner] object PlanBind {
       val postrecursiveState = neededNonSelfRecursives.foldLeft(prerecursiveState) { case (state, storageLoc) =>
         val recursiveTemp = ps.RecordTemp()
 
-        val recordDataTemp = ps.RecordLikeDataTemp()
-
         // Mark this value as undefined so a runtime error will be raised if it is accessed
         val compactInnerType = CompactRepresentationForType(storageLoc.schemeType)
         val mutableType = MutableType(compactInnerType)
 
-        plan.steps += ps.InitRecordLike(recursiveTemp, recordDataTemp, mutableType, isUndefined=true)
+        plan.steps += ps.InitRecord(recursiveTemp, mutableType, Map(), isUndefined=true)
 
         state.withValue(storageLoc -> MutableValue(mutableType, recursiveTemp, true))
       }
@@ -179,11 +177,8 @@ private[planner] object PlanBind {
             val initialValueTemp = initialIntermediate.toTempValue(compactInnerType)
 
             // Create a new mutable
-            val recordDataTemp = ps.RecordLikeDataTemp()
-            plan.steps += ps.InitRecordLike(mutableTemp, recordDataTemp, mutableType, isUndefined=false)
-
-            // Set the value
-            plan.steps += ps.SetRecordDataField(recordDataTemp, mutableType, mutableType.recordField, initialValueTemp)
+            val fieldValues = Map[vt.RecordField, ps.TempValue](mutableType.recordField -> initialValueTemp)
+            plan.steps += ps.InitRecord(mutableTemp, mutableType, fieldValues, isUndefined=false)
 
             MutableValue(mutableType, mutableTemp, false)
           }

@@ -9,8 +9,11 @@ import llambda.compiler.planner.{intermediatevalue => iv}
 import llambda.compiler.{StorageLocation, ProcedureSignature, ProcedureAttribute}
 
 private[planner] object PlanLambda {
-  private def storeClosureData(closureDataTemp : ps.TempValue, closureType : vt.ClosureType, capturedVariables : List[CapturedVariable])(implicit plan : PlanWriter) : Unit = {
-    for(capturedVar <- capturedVariables) {
+  private def closureFieldValues(
+      closureType : vt.ClosureType,
+      capturedVariables : List[CapturedVariable]
+  )(implicit plan : PlanWriter) : Map[vt.RecordField, ps.TempValue] = {
+    capturedVariables.map({ capturedVar =>
       val varTemp = capturedVar match {
         case immutable : CapturedImmutable =>
           // Cast the value to its preferred type
@@ -22,8 +25,8 @@ private[planner] object PlanLambda {
       }
 
       // Store to the field
-      plan.steps += ps.SetRecordDataField(closureDataTemp, closureType, capturedVar.recordField, varTemp)
-    }
+      (capturedVar.recordField -> varTemp)
+    }).toMap
   }
 
   def apply(parentState : PlannerState, parentPlan : PlanWriter)(
@@ -72,17 +75,14 @@ private[planner] object PlanLambda {
     val outerSelfTempOpt = if (!capturedVariables.isEmpty) {
       // Save the closure values from the parent's scope
       val cellTemp = ps.RecordTemp()
-      val dataTemp = ps.RecordLikeDataTemp()
 
-      parentPlan.steps += ps.InitRecordLike(cellTemp, dataTemp, closureType, isUndefined=false)
-
-      // Create our closure
-      storeClosureData(dataTemp, closureType, capturedVariables)(parentPlan)
-
-      // Store our entry point
+      // Create our entry point
       val entryPointTemp = ps.EntryPointTemp()
       parentPlan.steps += ps.CreateNamedEntryPoint(entryPointTemp, plannedFunction.signature, nativeSymbol)
-      parentPlan.steps += ps.SetProcedureEntryPoint(cellTemp, entryPointTemp)
+
+      // Create our closure
+      val closureFields = closureFieldValues(closureType, capturedVariables)(parentPlan)
+      parentPlan.steps += ps.InitProcedure(cellTemp, closureType, entryPointTemp, closureFields)
 
       Some(cellTemp)
     }
