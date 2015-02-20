@@ -3,10 +3,12 @@ import io.llambda
 
 import io.llambda.compiler._
 
-import java.io.{InputStream, File}
+import java.io.File
 
 import scala.collection.mutable
 import annotation.tailrec
+
+import llambda.compiler.SchemeStringImplicits._
 
 class ReplProcessNonZeroExitException(val code : Int, val stdout : String, val stderr : String) extends
   Exception(s"Process exited with code ${code}")
@@ -54,7 +56,8 @@ class Evaluator(targetPlatform : platform.TargetPlatform, schemeDialect : dialec
   val initialLibraries = List(
     List("scheme", "base"),
     List("scheme", "write"),
-    List("llambda", "internal", "repl")
+    List("llambda", "internal", "repl"),
+    List("llambda", "nfi")
   ).map({ strings =>
     strings.map(StringComponent(_))
   }) ++ frontendConfig.schemeDialect.implicitLibraryNames
@@ -95,7 +98,7 @@ class Evaluator(targetPlatform : platform.TargetPlatform, schemeDialect : dialec
     // Then print the bound datum
     val printingDatum =
       ast.ProperList(List(
-        ast.Symbol("write"),
+        ast.Symbol("write-stdout"),
         ast.Symbol(identifier)
       ))
 

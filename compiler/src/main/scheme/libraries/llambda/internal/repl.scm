@@ -1,17 +1,19 @@
 (define-library (llambda internal repl)
   (import (scheme base))
-  (import (scheme write))
   (import (llambda typed))
+  (import (llambda nfi))
 
-  (export print-thunk-result)
+  (export write-stdout print-thunk-result)
 
   (begin
+    (define write-stdout (native-function system-library "llcore_write_stdout" (-> <any> <unit>)))
+
     ; This is used to pretty print results inside the REPL. This works like (write) unless multiple values are provided.
     (define (print-thunk-result [thunk : (-> *)])
       (call-with-values thunk
                         (lambda vals
                           (if (= 1 (length vals))
                             ; Only one value
-                            (write (car vals))
+                            (write-stdout (car vals))
                             ; Multiple values
-                            (write `(values ,@vals))))))))
+                            (write-stdout `(values ,@vals))))))))
