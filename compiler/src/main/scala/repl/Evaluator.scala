@@ -5,8 +5,6 @@ import io.llambda.compiler._
 
 import java.io.{InputStream, File}
 
-import scala.io.Source
-import scala.sys.process._
 import scala.collection.mutable
 import annotation.tailrec
 
@@ -66,39 +64,13 @@ class Evaluator(targetPlatform : platform.TargetPlatform, schemeDialect : dialec
   var scope : Scope = new Scope(mutable.Map(initialBindings : _*))
 
   private def exprsToOutputString(exprs : List[et.Expr]) : String = {
-    val outputFile = File.createTempFile("llambdarepl", null, null)
-    outputFile.deleteOnExit()
+    val result = Compiler.runExprs(exprs, compileConfig, Nil)
 
-    try {
-      Compiler.compileExprs(exprs, outputFile, compileConfig, None)
-
-      // Create our output streams
-      var stdout : Option[InputStream] = None
-      var stderr : Option[InputStream] = None
-
-      val outputIO = new ProcessIO(
-        stdin  => Unit, // Don't care
-        stdoutStream => stdout = Some(stdoutStream),
-        stderrStream => stderr = Some(stderrStream)
-      )
-
-      // Run and capture the output
-      val process = Process(outputFile.getAbsolutePath).run(outputIO)
-
-      val exitValue = process.exitValue()
-
-      val stdoutString = Source.fromInputStream(stdout.get, "UTF-8").mkString
-      val stderrString = Source.fromInputStream(stderr.get, "UTF-8").mkString
-
-      if (exitValue != 0) {
-        throw new ReplProcessNonZeroExitException(exitValue, stdoutString, stderrString)
-      }
-
-      stdoutString
+    if (result.exitValue != 0) {
+      throw new ReplProcessNonZeroExitException(result.exitValue, result.stdout, result.stderr)
     }
-    finally {
-      outputFile.delete()
-    }
+
+    result.stdout
   }
 
   /** Handles evaluating definitions that only produce abstract bindings

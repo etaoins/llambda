@@ -1,4 +1,4 @@
-package io.llambda.compiler.conniver
+package io.llambda.compiler.planner.conniver
 import io.llambda
 
 import scala.collection.immutable.ListMap

@@ -13,7 +13,7 @@ class ExtractProgramSuite extends FunSuite with Inside {
       schemeDialect=dialect.Dialect.default
     )
 
-    frontend.ExtractProgram(None, data)(new LibraryLoader(platform.Posix64LE), frontendConfig)
+    frontend.ExtractProgram(data)(new LibraryLoader(platform.Posix64LE), frontendConfig)
   }
 
   test("initial environment has no bindings") {

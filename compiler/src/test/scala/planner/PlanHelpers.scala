@@ -30,7 +30,7 @@ trait PlanHelpers extends FunSuite with Inside {
     )
     
     val loader = new frontend.LibraryLoader(compileConfig.targetPlatform)
-    val exprs = frontend.ExtractProgram(None, data)(loader, frontendConfig)
+    val exprs = frontend.ExtractProgram(data)(loader, frontendConfig)
     val analysis = analyser.AnalyseExprs(exprs)
 
     planner.PlanConfig(
@@ -48,7 +48,7 @@ trait PlanHelpers extends FunSuite with Inside {
     val constantValue = DatumToConstantValue(datum)
 
     constantValue.toTempValue(vt.AnySchemeType)(planWriter)
-    planWriter.steps.toList
+    conniver.MergeIdenticalSteps.mergeSteps(planWriter.steps.toList)
   }
 
   private def filterPlanStep : PartialFunction[ps.Step, Boolean] = {
@@ -112,7 +112,7 @@ trait PlanHelpers extends FunSuite with Inside {
     val planSteps = planStepsFor(scheme)
     
     inside(planSteps.reverse) {
-      case ps.Return(None) :: (_ : ps.Invoke) :: reverseActualSteps =>
+      case (_ : ps.TailCall) :: reverseActualSteps =>
         // These are the steps we expect to see
         val expectedSteps = stepsForConstantDatum(expected).filter(filterPlanStep)
         // These are the steps we actually saw

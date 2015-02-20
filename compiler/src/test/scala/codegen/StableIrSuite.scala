@@ -18,7 +18,13 @@ class StableIrSuite extends FunSuite {
 
     // Compile the program 4 times
     val compiledVersions = (0 until 4).map { _ =>
-      Compiler.compileDataToIr(parsed, compileConfig)
+      val plannedProgram = Compiler.planData(parsed, compileConfig)
+
+      codegen.GenProgram(
+        functions=plannedProgram.functions,
+        compileConfig=compileConfig,
+        entryFilenameOpt=None
+      )
     }
 
     for(irPair <- compiledVersions.sliding(2)) {

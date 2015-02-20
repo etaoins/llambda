@@ -4,7 +4,6 @@ import io.llambda
 import java.io.File
 import java.io.InputStream
 import scala.io.Source
-import scala.sys.process._
 import org.scalatest.{FunSuite, Inside}
 
 import llambda.compiler._
@@ -198,7 +197,7 @@ abstract class SchemeFunctionalTestRunner(
     // Our special version of (write) that generates less code due to not using parameters
     val lastValueWriter = datum"""(native-function system-library "llcore_write_stdout" (-> <any> <unit>))"""
 
-    // Modify the last expression to print using lliby_write
+    // Modify the last expression to print using llcore_write_stdout
     val wrappedDatum = ast.ProperList(List(
       lastValueWriter,
       program.last
@@ -226,68 +225,37 @@ abstract class SchemeFunctionalTestRunner(
     val finalProgram = testImportDecl :: program
 
     // Compile the program
-    val outputFile = File.createTempFile("llambdafunc", null, null)
-    outputFile.deleteOnExit()
+    val compileConfig = CompileConfig(
+      includePath=includePath,
+      optimiseLevel=optimiseLevel,
+      targetPlatform=targetPlatform,
+      schemeDialect=schemeDialect
+    )
 
-    try {
-      val compileConfig = CompileConfig(
-        includePath=includePath,
-        optimiseLevel=optimiseLevel,
-        targetPlatform=targetPlatform,
-        schemeDialect=schemeDialect
-      )
+    // Build our environment
+    val testFilesBaseUrl = getClass.getClassLoader.getResource("test-files/")
+    val testFilesBaseDir = new File(testFilesBaseUrl.toURI).getAbsolutePath
 
-      Compiler.compileData(finalProgram, outputFile, compileConfig, None)
+    val extraEnv = List[(String, String)](
+      "LLAMBDA_TEST" -> "1",
+      "LLAMBDA_TEST_FILES_BASE" -> testFilesBaseDir
+    )
 
-      // Create our output logger
-      var stdout : Option[InputStream] = None
-      var stderr : Option[InputStream] = None
+    val result = Compiler.runData(finalProgram, compileConfig, extraEnv)
 
-      val outputIO = new ProcessIO(
-        stdin  => Unit, // Don't care
-        stdoutStream => stdout = Some(stdoutStream),
-        stderrStream => stderr = Some(stderrStream)
-      )
+    val errorString = result.stderr
+    val exitValue = result.exitValue
 
-      // Build our environment
-      val testFilesBaseUrl = getClass.getClassLoader.getResource("test-files/")
-      val testFilesBaseDir = new File(testFilesBaseUrl.toURI).getAbsolutePath
-
-      val extraEnv = List[(String, String)](
-        "LLAMBDA_TEST" -> "1",
-        "LLAMBDA_TEST_FILES_BASE" -> testFilesBaseDir
-      )
-
-      // Call the program
-      val testProcess = Process(
-        command=outputFile.getAbsolutePath,
-        cwd=None,
-        extraEnv=extraEnv : _*
-      ).run(outputIO)
-
-      // Request the exit value now which will wait for the process to finish
-      val exitValue = testProcess.exitValue()
-
-      // Clean up the temporary executable
-      outputFile.delete()
-
-      val errorString = utf8InputStreamToString(stderr.get)
-
-      if (AbnormalExitCodes.contains(exitValue)) {
-        fail("Execution abnormally terminated with signal " + (exitValue - 128))
-      }
-      else if (exitValue == 0) {
-        val outputString = utf8InputStreamToString(stdout.get)
-        val output = SchemeParser.parseStringAsData(outputString)
-
-        ExecutionResult(success=true, output=output, errorString=errorString, exitValue)
-      }
-      else {
-        ExecutionResult(success=false, output=Nil, errorString=errorString, exitValue=exitValue)
-      }
+    if (AbnormalExitCodes.contains(exitValue)) {
+      fail("Execution abnormally terminated with signal " + (exitValue - 128))
     }
-    finally {
-      outputFile.delete()
+    else if (exitValue == 0) {
+      val output = SchemeParser.parseStringAsData(result.stdout)
+
+      ExecutionResult(success=true, output=output, errorString=errorString, exitValue)
+    }
+    else {
+      ExecutionResult(success=false, output=Nil, errorString=errorString, exitValue=exitValue)
     }
   }
 }

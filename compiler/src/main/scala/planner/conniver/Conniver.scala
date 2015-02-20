@@ -1,4 +1,4 @@
-package io.llambda.compiler.conniver
+package io.llambda.compiler.planner.conniver
 import io.llambda
 
 import llambda.compiler.planner._
@@ -16,7 +16,7 @@ abstract class Conniver extends Function1[Map[String, PlannedFunction], Map[Stri
   */
 abstract class FunctionConniver extends Conniver {
   protected def conniveFunction(function : PlannedFunction) : PlannedFunction
-  
+
   def apply(plannedFunctions : Map[String, PlannedFunction]) : Map[String, PlannedFunction] =
     plannedFunctions.mapValues(conniveFunction)
 }

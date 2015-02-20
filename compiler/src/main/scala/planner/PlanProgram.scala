@@ -11,6 +11,12 @@ case class PlannedProgram(
 )
 
 object PlanProgram {
+  private val conniverPasses = List[conniver.Conniver](
+    conniver.MergeIdenticalSteps,
+    conniver.UnboxEarly,
+    conniver.FindTailCalls
+  )
+
   def apply(exprs : List[et.Expr])(planConfig : PlanConfig) : PlannedProgram = {
     val plan = PlanWriter(planConfig)
 
@@ -19,7 +25,7 @@ object PlanProgram {
     // __llambda_top_level is a void function
     plan.steps += ps.Return(None)
 
-    val allPlannedFunctions = 
+    val allPlannedFunctions =
       (plan.plannedFunctions + (LlambdaTopLevelSignature.nativeSymbol -> PlannedFunction(
         signature=LlambdaTopLevelSignature,
         namedArguments=List("world" -> ps.WorldPtrValue),
@@ -27,8 +33,27 @@ object PlanProgram {
         debugContextOpt=None
       ))).toMap
 
-    val usedFunctions = FindUsedFunctions(allPlannedFunctions, LlambdaTopLevelSignature.nativeSymbol)
+    val initialUsedFunctions = FindUsedFunctions(allPlannedFunctions, LlambdaTopLevelSignature.nativeSymbol)
 
-    PlannedProgram(usedFunctions, plan.requiredNativeLibraries.toSet)
+    val optimisedFunctions = if (planConfig.optimise) {
+      conniverPasses.foldLeft(initialUsedFunctions) { case (functions, conniverPass) =>
+        conniverPass(functions)
+      }
+    }
+    else {
+      // This is required for correctness
+      conniver.FindTailCalls(initialUsedFunctions)
+    }
+
+    // Dispose any unused values
+    val disposedFunctions = optimisedFunctions.mapValues(DisposeValues(_))
+
+    // Prune unused functions again
+    val finalUsedFunctions = FindUsedFunctions(disposedFunctions, LlambdaTopLevelSignature.nativeSymbol)
+
+    // Plan our cell allocations after all optimisations have been done
+    val allocatedFunctions = finalUsedFunctions.mapValues(PlanCellAllocations(_))
+
+    PlannedProgram(allocatedFunctions, plan.requiredNativeLibraries.toSet)
   }
 }

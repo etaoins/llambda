@@ -4,9 +4,13 @@ import io.llambda
 import llambda.compiler._
 
 object ExtractProgram {
-  def apply(filenameOpt : Option[String], data : List[ast.Datum])(implicit libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : List[et.Expr] = {
+  def apply(data : List[ast.Datum])(implicit libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : List[et.Expr] = {
     // Load any implicit libraries our dialect requires
     val implicitBindings = frontendConfig.schemeDialect.implicitLibraryNames.flatMap(libraryLoader.load(_))
+
+    val filenameOpt = for(datum <- data.headOption;
+                          location <- datum.locationOpt;
+                          filename <- location.filenameOpt) yield filename
 
     // Support dialects that want case folded programs
     val caseFoldedData = if (frontendConfig.schemeDialect.caseFoldPrograms) {

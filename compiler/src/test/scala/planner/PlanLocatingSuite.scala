@@ -18,7 +18,10 @@ class PlanLocatingSuite extends FunSuite with PlanHelpers {
             // Otherwise we'll blow up on the RefineArgumentTypes' magic to keep the original untyped argument temp alive
 
           case _ : ps.AllocateCells =>
-            // This doesn't come from a particular source line - these are inserted by PlanCellAllocations:w
+            // This doesn't come from a particular source line - these are inserted by PlanCellAllocations
+            //
+          case _ : ps.DisposeValues =>
+            // This doesn't come from a particular source line - these are inserted by DisposeValues
 
           case ps.LoadRecordLikeData(_, _, _ : vt.ClosureType) |
                ps.LoadRecordDataField(_, _, _ : vt.ClosureType, _) =>
@@ -36,7 +39,7 @@ class PlanLocatingSuite extends FunSuite with PlanHelpers {
 
   test("all non-housekeeping steps are source located after planning") {
     val programData = testutil.NonTrivialProgram.data
-    
+
     val functions = planForData(
       data=programData,
       optimise=true,

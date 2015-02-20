@@ -1,4 +1,4 @@
-package io.llambda.compiler.conniver
+package io.llambda.compiler.planner.conniver
 import io.llambda
 
 import llambda.compiler.planner._

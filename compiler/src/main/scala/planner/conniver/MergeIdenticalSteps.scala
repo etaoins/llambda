@@ -1,4 +1,4 @@
-package io.llambda.compiler.conniver
+package io.llambda.compiler.planner.conniver
 import io.llambda
 
 import llambda.compiler.planner._
@@ -56,9 +56,12 @@ object MergeIdenticalSteps extends FunctionConniver {
       (acc.reverse, renames)
   }
 
+  def mergeSteps(steps : List[ps.Step]) : List[ps.Step] =
+    dropAndRename(steps, Map(), Map(), Nil)._1
+
   protected def conniveFunction(function : PlannedFunction) : PlannedFunction = {
     function.copy(
-      steps=dropAndRename(function.steps, Map(), Map(), Nil)._1
+      steps=mergeSteps(function.steps)
     )
   }
 }
