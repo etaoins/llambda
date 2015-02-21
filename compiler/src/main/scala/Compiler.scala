@@ -171,7 +171,8 @@ object Compiler {
       RunResult(
         stdout=stdoutString,
         stderr=stderrString,
-        exitValue=exitValue
+        exitValue=exitValue,
+        runMethod=RunResult.ExternalProgram
       )
     }
     finally {

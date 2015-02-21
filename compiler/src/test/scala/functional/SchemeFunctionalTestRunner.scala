@@ -30,7 +30,13 @@ abstract class SchemeFunctionalTestRunner(
 
   private val targetPlatform = platform.DetectJvmPlatform()
 
-  private case class ExecutionResult(success : Boolean, output : List[ast.Datum], errorString : String, exitValue : Int)
+  private case class ExecutionResult(
+      success : Boolean,
+      output : List[ast.Datum],
+      errorString : String,
+      exitValue : Int,
+      runMethod : RunResult.RunMethod
+  )
 
   val resourceBaseDir = "functional/"
   val resourceBaseUrl = getClass.getClassLoader.getResource(resourceBaseDir)
@@ -135,7 +141,7 @@ abstract class SchemeFunctionalTestRunner(
 
         assert(result.output === expectedOutput)
 
-      case ast.ProperList(ast.Symbol("expect-success") :: program) if !program.isEmpty =>
+      case ast.ProperList(ast.Symbol(testType @ ("expect-success" | "expect-static-success")) :: program) if !program.isEmpty =>
         // Make sure the program outputs this at the end
         val canaryValue = ast.Symbol("test-completed")
         val programWithCanary = program :+ ast.ProperList(List(ast.Symbol("quote"), canaryValue))
@@ -150,6 +156,13 @@ abstract class SchemeFunctionalTestRunner(
             // Use the error string the program provided
             fail(result.errorString)
           }
+        }
+
+        // Did we expect the optimiser to evaluate this?
+        if ((testType == "expect-static-success") &&
+            (optimiseLevel == 2) &&
+            (result.runMethod != RunResult.Interpreted)) {
+          fail("Test could not be statically evaluated at -O 2")
         }
 
         assert(result.output === List(canaryValue), "Execution did not reach end of test")
@@ -256,10 +269,10 @@ abstract class SchemeFunctionalTestRunner(
     else if (exitValue == 0) {
       val output = SchemeParser.parseStringAsData(result.stdout)
 
-      ExecutionResult(success=true, output=output, errorString=errorString, exitValue)
+      ExecutionResult(success=true, output=output, errorString=errorString, exitValue, result.runMethod)
     }
     else {
-      ExecutionResult(success=false, output=Nil, errorString=errorString, exitValue=exitValue)
+      ExecutionResult(success=false, output=Nil, errorString=errorString, exitValue, result.runMethod)
     }
   }
 }

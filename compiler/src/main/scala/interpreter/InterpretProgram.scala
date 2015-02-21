@@ -18,6 +18,6 @@ object InterpretProgram {
       InterpretStep(state, step)
     }
 
-    RunResult(finalState.stdout, finalState.stderr, 0)
+    RunResult(finalState.stdout, finalState.stderr, 0, RunResult.Interpreted)
   }
 }

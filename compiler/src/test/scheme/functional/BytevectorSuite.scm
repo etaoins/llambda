@@ -1,11 +1,7 @@
-(define-test "non-empty bytevector is a bytevector" (expect #t
-	(bytevector? #u8(1 2 3))))
-
-(define-test "empty bytevector is a bytevector" (expect #t
-	(bytevector? #u8())))
-
-(define-test "exact integer is not a bytevector" (expect #f
-	(bytevector? 4)))
+(define-test "(bytevector?)" (expect-static-success
+	(assert-true (bytevector? #u8(1 2 3)))
+	(assert-true (bytevector? #u8()))
+	(assert-false (bytevector? 4))))
 
 (define-test "(make-bytevector) an uninitialized empty bytevector" (expect #u8()
 	(make-bytevector 0)))
@@ -31,11 +27,9 @@
 (define-test "(bytevector) a non-empty bytevector" (expect #u8(1 3 5 1 3 5)
 	(bytevector 1 3 5 1 3 5)))
 
-(define-test "bytevector length of non-empty constant bytevector" (expect 3
-	(bytevector-length #u8(1 2 3))))
-
-(define-test "vector length of empty constant bytevector" (expect 0
-	(bytevector-length #u8())))
+(define-test "static bytevector length" (expect-static-success
+	(assert-equal 3 (bytevector-length #u8(1 2 3)))
+	(assert-equal 0 (bytevector-length #u8()))))
 
 (define-test "bytevector length of non-empty constructed bytevector" (expect 15
 	(bytevector-length (make-bytevector 15 129))))
