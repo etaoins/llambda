@@ -183,13 +183,17 @@ abstract class SchemeFunctionalTestRunner(
         }
         catch {
           case _ : SemanticException if errorPredicate == "error-object?" =>
+            return
 
           case expectedError : SemanticException
-            if expectedError.errorCategory == ErrorCategory.fromPredicate(errorPredicate) =>
+              if expectedError.errorCategory == ErrorCategory.fromPredicate(errorPredicate) =>
+            return
         }
 
+        fail("Compilation unexpectedly succeeded")
+
       case other =>
-          fail("Unable to parse condition: " + condition.toString)
+        fail("Unable to parse condition: " + condition.toString)
     }
   }
 
