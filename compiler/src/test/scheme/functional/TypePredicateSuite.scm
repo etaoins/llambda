@@ -71,7 +71,7 @@
   (assert-true  (false? #f))
   (assert-false (false? #t))))
 
-(define-test "(define-predicate) for pairs" (expect-success
+(define-test "(define-predicate) for pairs" (expect-static-success
   (import (llambda typed))
 
   (define-predicate any-pair? (Pairof <any> <any>))
@@ -81,15 +81,15 @@
   (assert-true  (any-pair? '(1 . 2)))
   (assert-true  (any-pair? '(foo . "bar")))
   (assert-true  (any-pair? '("bar" . foo)))
-  
+
   (assert-false (string-symbol-pair? '(1 . 2)))
   (assert-false (string-symbol-pair? '(foo . "bar")))
   (assert-true  (string-symbol-pair? '("bar" . foo)))
-  
+
   (assert-false (symbol-string-pair? '(1 . 2)))
   (assert-true  (symbol-string-pair? '(foo . "bar")))
   (assert-false (symbol-string-pair? '("bar" . foo)))
-  
+
   (define-predicate two-number-proper-list? (Pairof <number> (Pairof <number> <empty-list>)))
 
   (assert-true (two-number-proper-list? '(1 2)))
@@ -97,9 +97,9 @@
   (assert-false (two-number-proper-list? '(1 . 2)))
   (assert-false (two-number-proper-list? '(1 sneaky-symbol)))))
 
-(define-test "(define-predicate) for lists" (expect-success
+(define-test "(define-predicate) for lists" (expect-static-success
   (import (llambda typed))
-    
+
   (define-predicate string-list? (Listof <string>))
   (define-predicate symbol-list? (Listof <symbol>))
 

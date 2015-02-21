@@ -13,9 +13,10 @@
       (set! captured-proc escape-proc)))
    (procedure? captured-proc)))
 
-(define-test "trivial (call/cc) invoking escape procedure" (expect 5
-	(call/cc (lambda (return)
-		(return 5)))))
+(define-test "trivial (call/cc) invoking escape procedure" (expect-static-success
+  (assert-equal 5
+    (call/cc (lambda (return)
+      (return 5))))))
 
 (define-test "(call/cc) invoking escape procedure with multiple values" (expect 21
   (call-with-values
@@ -39,12 +40,12 @@
     (set! return -)
 		(return 5)))))
 
-(define-test "nested (call/cc) invoking both escape procedures" (expect 15
-	(call/cc (lambda (outer-return)
-		(outer-return (call/cc (lambda (inner-return)
-			(inner-return 15)
-		)))
-	))))
+(define-test "nested (call/cc) invoking both escape procedures" (expect-static-success
+  (assert-equal 15
+    (call/cc (lambda (outer-return)
+      (outer-return (call/cc (lambda (inner-return)
+        (inner-return 15)
+      ))))))))
 
 (define-test "nested (call/cc) invoking only inner escape procedure" (expect -15
 	(call/cc (lambda (outer-return)
@@ -113,9 +114,10 @@
 (define-test "(call-with-values) with wrong producer arity fails at compile time" (expect-compile-error arity-error?
   (call-with-values (lambda (extra-arg)) -)))
 
-(define-test "(call-with-values) with multiple values" (expect 5
-  (call-with-values (lambda () (values 4 5))
-                    (lambda (a b) b))))
+(define-test "(call-with-values) with multiple values" (expect-static-success
+  (assert-equal 9
+    (call-with-values (lambda () (values 4 5))
+                      (lambda (a b) (+ a b))))))
 
 (define-test "(call-with-values) with mismatched arity fails" (expect-error arity-error?
   (call-with-values (lambda () (values 4 5))

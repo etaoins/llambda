@@ -1,3 +1,20 @@
+(define-test "static (case-lambda)" (expect-static-success
+  (import (scheme case-lambda))
+  (import (llambda r7rs-case-lambda))
+
+  (define case-function
+    (case-lambda
+      ((first) (- first))
+      ((first second) (* first second))))
+
+  (define r7rs-case-function
+    (r7rs-case-lambda
+      ((first) (- first))
+      ((first second) (* first second))))
+
+  (assert-equal 19 (+ (case-function 4 5) (case-function 1)))
+  (assert-equal 19 (+ (r7rs-case-function 4 5) (r7rs-case-function 1)))))
+
 (define-test "simple (case-lambda)" (expect ((0 1 2) . (3 4))
  (import (scheme case-lambda))
 

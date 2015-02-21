@@ -113,18 +113,20 @@
 
   (assert-equal #\s (char-foldcase #\x017F))))
 
-(define-test "(char->integer)" (expect-success
+(define-test "static (char->integer)" (expect-static-success
   (assert-equal #x41 (char->integer #\x41))
   (assert-equal #x4141 (char->integer #\x4141))
-  (assert-equal #x1f3c2 (char->integer #\x1f3c2))
+  (assert-equal #x1f3c2 (char->integer #\x1f3c2))))
 
+(define-test "dynamic (char->integer)" (expect-success
   (assert-equal #x1f3c2 (char->integer (typed-dynamic #\x1f3c2 <char>)))))
 
-(define-test "(integer->char)" (expect-success
+(define-test "static (integer->char)" (expect-static-success
 	(assert-equal #\x41 (integer->char #x41))
 	(assert-equal #\x4141 (integer->char #x4141))
-	(assert-equal #\x1f3c2 (integer->char #x1f3c2))
+	(assert-equal #\x1f3c2 (integer->char #x1f3c2))))
 
+(define-test "dynamic (integer->char)" (expect-success
 	(assert-equal #\x1f3c2 (integer->char (typed-dynamic #x1f3c2 <exact-integer>)))))
 
 (define-test "(integer->char) with negative code point fails" (expect-error range-error?
@@ -133,7 +135,7 @@
 (define-test "(integer->char) with out of range code point fails" (expect-error range-error?
   (integer->char #x110000)))
 
-(define-test "(char=?)" (expect-success
+(define-test "(char=?)" (expect-static-success
   (assert-false (char=? #\a #\b))
   (assert-true  (char=? #\a #\a))
   (assert-false (char=? #\a #\A))
@@ -142,7 +144,7 @@
   (assert-true  (char=? #\a #\a #\a))
   (assert-false (char=? #\a #\a #\b))))
 
-(define-test "(char<?)" (expect-success
+(define-test "(char<?)" (expect-static-success
   (assert-true  (char<? #\a #\b))
   (assert-false (char<? #\a #\a))
   (assert-false (char<? #\a #\A))
@@ -152,7 +154,7 @@
   (assert-false (char<? #\b #\b #\b))
   (assert-false (char<? #\c #\b #\a))))
 
-(define-test "(char>?)" (expect-success
+(define-test "(char>?)" (expect-static-success
   (assert-false (char>? #\a #\b))
   (assert-false (char>? #\a #\a))
   (assert-true  (char>? #\a #\A))
@@ -162,7 +164,7 @@
   (assert-false (char>? #\b #\b #\b))
   (assert-true  (char>? #\c #\b #\a))))
 
-(define-test "(char<=?)" (expect-success
+(define-test "(char<=?)" (expect-static-success
   (assert-true  (char<=? #\a #\b))
   (assert-true  (char<=? #\a #\a))
   (assert-false (char<=? #\a #\A))
@@ -172,7 +174,7 @@
   (assert-true  (char<=? #\b #\b #\b))
   (assert-false (char<=? #\c #\b #\a))))
 
-(define-test "(char>=?)" (expect-success
+(define-test "(char>=?)" (expect-static-success
   (assert-false (char>=? #\a #\b))
   (assert-true  (char>=? #\a #\a))
   (assert-true  (char>=? #\a #\A))

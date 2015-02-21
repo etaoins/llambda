@@ -35,7 +35,7 @@
   (assert-equal "Hell🏂!" non-bmp-string)
   (assert-equal 6 (string-length non-bmp-string))))
 
-(define-test "(string->symbol)" (expect-success
+(define-test "(string->symbol)" (expect-static-success
   ; Inline symbol; inline string
 	(assert-equal 'mISSISSIppi (string->symbol "mISSISSIppi"))
   ; Inline symbol; heap string
@@ -43,7 +43,7 @@
   ; Heap symbol; heap string
 	(assert-equal 'Yamagawaokachiyogamizu (string->symbol "Yamagawaokachiyogamizu"))))
 
-(define-test "(string->symbol (symbol->string))" (expect-success
+(define-test "(string->symbol (symbol->string))" (expect-static-success
   ; Inline symbol; inline string
 	(assert-equal 'LollyPop (string->symbol (symbol->string 'LollyPop)))
   ; Inline symbol; heap string

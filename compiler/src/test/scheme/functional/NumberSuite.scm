@@ -8,7 +8,7 @@
   (assert-false (number? '()))
   (assert-false (number? (typeless-cell '())))))
 
-(define-test "(real?)" (expect-success
+(define-test "(real?)" (expect-static-success
   (assert-true  (real? 4))
   (assert-true  (real? -5.0))
   (assert-false (real? '()))))
@@ -21,7 +21,7 @@
   (assert-false (rational? +nan.0))
   (assert-false (rational? '()))))
 
-(define-test "(complex?)" (expect-success
+(define-test "(complex?)" (expect-static-success
   (assert-true  (complex? 4))
   (assert-true  (complex? -5.0))
   (assert-false (complex? '()))))
@@ -33,7 +33,7 @@
   (assert-false (integer? +nan.0))
   (assert-false (integer? '()))))
 
-(define-test "(exact?)" (expect-success
+(define-test "(exact?)" (expect-static-success
   (assert-false (exact? 3.0))
   (assert-true  (exact? 3.))))
 
@@ -51,51 +51,53 @@
   (assert-true (exact-integer? 32))
   (assert-false (exact-integer? 32.0))))
 
-(define-test "(exact)" (expect-success
+(define-test "(exact)" (expect-static-success
   (assert-equal -32 (exact -32.0))
   (assert-equal 64 (exact 64))))
 
 (define-test "(exact 112.5) fails" (expect-error invalid-argument-error?
   (exact 112.5)))
 
-(define-test "(inexact)" (expect-success
+(define-test "(inexact)" (expect-static-success
   (assert-equal 567.0 (inexact 567))
   (assert-equal -3289.5 (inexact -3289.5))
   ; This is the closest float to the passed value
   (assert-equal 9007199254740992.0 (inexact 9007199254740993))))
 
-(define-test "(=)" (expect-success
-  (define dynamic-nan (typed-dynamic +nan.0 <flonum>))
-
+(define-test "static (=)" (expect-static-success
   (assert-true  (= 4.0 4))
   (assert-true  (= 0.0 -0.0))
   (assert-true  (= 4.0 4 4.0))
   (assert-false (= 4.0 5.6))
   (assert-false (= 4.0 4 5.6))
-  (assert-false (= +nan.0 +nan.0))
+  (assert-false (= +nan.0 +nan.0))))
+
+(define-test "dynamic (=)" (expect-success
+  (define dynamic-nan (typed-dynamic +nan.0 <flonum>))
+
   (assert-false (= dynamic-nan +nan.0))
   (assert-false (= dynamic-nan 0))))
 
 (define-test "equality of two numbers and boolean false is an error" (expect-error type-error?
   (= 4.0 4 #f)))
 
-(define-test "(<)" (expect-success
-  (define dynamic-nan (typed-dynamic +nan.0 <flonum>))
-
+(define-test "static (<)" (expect-static-success
   (assert-false (< 4.0 4))
   (assert-false (< -0.0 0.0))
   (assert-false (< 4.0 4 4.0))
   (assert-false (< 5.6 4.0))
   (assert-false (< 5.6 0 -4.5))
   (assert-true  (< 4.0 5.6))
-  (assert-true  (< 4.0 4.5 5.6))
+  (assert-true  (< 4.0 4.5 5.6))))
+
+(define-test "dynamic (<)" (expect-success
+  (define dynamic-nan (typed-dynamic +nan.0 <flonum>))
+
   (assert-false (< +nan.0 +nan.0))
   (assert-false (< dynamic-nan +nan.0))
   (assert-false (< dynamic-nan 0))))
 
-(define-test "(>)" (expect-success
-  (define dynamic-nan (typed-dynamic +nan.0 <flonum>))
-
+(define-test "static (>)" (expect-static-success
   (assert-false (> 4.0 4))
   (assert-false (> -0.0 0.0))
   (assert-false (> 4.0 4 4.0))
@@ -103,13 +105,15 @@
   (assert-true  (> 5.6 0 -4.5))
   (assert-false (> 4.0 5.6))
   (assert-false (> 4.0 4.5 5.6))
-  (assert-false (> +nan.0 +nan.0))
+  (assert-false (> +nan.0 +nan.0))))
+
+(define-test "dynamic (>)" (expect-success
+  (define dynamic-nan (typed-dynamic +nan.0 <flonum>))
+
   (assert-false (> dynamic-nan +nan.0))
   (assert-false (> dynamic-nan 0))))
 
-(define-test "(<=)" (expect-success
-  (define dynamic-nan (typed-dynamic +nan.0 <flonum>))
-
+(define-test "static (<=)" (expect-static-success
   (assert-true  (<= 4.0 4))
   (assert-true  (<= -0.0 0.0))
   (assert-true  (<= 4.0 4 4.0))
@@ -117,13 +121,15 @@
   (assert-false (<= 5.6 0 -4.5))
   (assert-true  (<= 4.0 5.6))
   (assert-true  (<= 4.0 4.5 5.6))
-  (assert-false (<= +nan.0 +nan.0))
+  (assert-false (<= +nan.0 +nan.0))))
+
+(define-test "dynamic (<=)" (expect-success
+  (define dynamic-nan (typed-dynamic +nan.0 <flonum>))
+
   (assert-false (<= dynamic-nan +nan.0))
   (assert-false (<= dynamic-nan 0))))
 
-(define-test "(>=)" (expect-success
-  (define dynamic-nan (typed-dynamic +nan.0 <flonum>))
-
+(define-test "static (>=)" (expect-static-success
   (assert-true  (>= 4.0 4))
   (assert-true  (>= -0.0 0.0))
   (assert-true  (>= 4.0 4 4.0))
@@ -131,7 +137,11 @@
   (assert-true  (>= 5.6 0 -4.5))
   (assert-false (>= 4.0 5.6))
   (assert-false (>= 4.0 4.5 5.6))
-  (assert-false (>= +nan.0 +nan.0))
+  (assert-false (>= +nan.0 +nan.0))))
+
+(define-test "dynamic (>=)" (expect-success
+  (define dynamic-nan (typed-dynamic +nan.0 <flonum>))
+
   (assert-false (>= dynamic-nan +nan.0))
   (assert-false (>= dynamic-nan 0))))
 
@@ -165,7 +175,7 @@
   ; This is inside the range we specify but outside of the byte range
   (assert-false (typeless-byte-in-range 0 300 500))))
 
-(define-test "(zero?)" (expect-success
+(define-test "(zero?)" (expect-static-success
   (assert-true  (zero? 0))
   (assert-true  (zero? 0.0))
   (assert-false (zero? 34))
@@ -188,7 +198,7 @@
   (assert-false (odd? -1024))
   (assert-true  (odd? -777))))
 
-(define-test "(positive?)" (expect-success
+(define-test "(positive?)" (expect-static-success
   (assert-false (positive? +nan.0))
   (assert-false (positive? 0))
   (assert-false (positive? 0.0))
@@ -200,7 +210,7 @@
   (assert-false (positive? -35))
   (assert-false (positive? -456.7))))
 
-(define-test "(negative?)" (expect-success
+(define-test "(negative?)" (expect-static-success
   (assert-false (negative? +nan.0))
   (assert-false (negative? 0))
   (assert-false (negative? 0.0))
@@ -212,14 +222,20 @@
   (assert-true  (negative? -35))
   (assert-true  (negative? -456.7))))
 
-(define-test "(max)" (expect-success
+(define-test "(max)" (expect-static-success
   (assert-equal -1 (max -1))
   (assert-equal 3 (max -1 2 3 2))
   (assert-equal 3.0 (max -1 2.5 3 2))
   (assert-equal 3.7 (max -1 2.5 3.7 2))))
 
-(define-test "(min)" (expect-success
+(define-test "(max) with non-numeric argument fails" (expect-compile-error type-error?
+  (max #t)))
+
+(define-test "(min)" (expect-static-success
   (assert-equal -1 (min -1))
   (assert-equal -2 (min -1 2 3 -2))
   (assert-equal -3.0 (min -1 2.5 -3 2))
   (assert-equal -1.75 (min -1.75 2.5 3.7 2))))
+
+(define-test "(min) with non-numeric argument fails" (expect-compile-error type-error?
+  (min #t)))

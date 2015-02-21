@@ -4,14 +4,16 @@
 (define-test "direct application with extraneous args fails" (expect-error arity-error?
 	(boolean? #t #f)))
 
-(define-test "applying non-capturing procedure with no arguments" (expect 0
-	(apply +)))
+(define-test "static (apply)" (expect-static-success
+  (define one 1)
+  (define two 2)
 
-(define-test "applying non-capturing procedure with just proper list" (expect 5
-	(apply + '(2 3))))
-
-(define-test "applying with non-capturing procdure standalone args and terminal proper list" (expect 6
-	(apply + 1 2 '(3))))
+	(assert-equal 0 (apply +))
+	(assert-equal 5 (apply + '(2 3)))
+	(assert-equal 6 (apply + 1 2 '(3)))
+  (assert-equal 10 (apply + (cons 1 '(2 3 4))))
+  (assert-equal 10 (apply + (append '(1 2) '(3 4))))
+  (assert-equal 10 (apply + (append (list one two) '(3 4))))))
 
 (define-test "applying procedure with terminal improper list fails" (expect-error type-error?
 	(apply + '(2 3 . 5))))

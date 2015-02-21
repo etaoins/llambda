@@ -1,32 +1,31 @@
-(define-test "(pair?)" (expect-success
+(define-test "static (pair?)" (expect-static-success
 	(assert-true  (pair? '(a . b)))
-	(assert-true  (pair? (typeless-cell '(a . b))))
-
 	(assert-true  (pair? '(a  b c)))
-	(assert-true  (pair? (typeless-cell '(a  b c))))
-
   (assert-false (pair? '()))
-  (assert-false (pair? (typeless-cell '())))
+  (assert-false (pair? #(a b)))))
 
-  (assert-false (pair? #(a b)))
+(define-test "dynamic (pair?)" (expect-success
+	(assert-true  (pair? (typeless-cell '(a . b))))
+	(assert-true  (pair? (typeless-cell '(a  b c))))
+  (assert-false (pair? (typeless-cell '())))
   (assert-false (pair? (typeless-cell '())))))
 
-(define-test "(null?)" (expect-success
+(define-test "static (null?)" (expect-static-success
 	(assert-true  (null? '()))
-	(assert-true  (null? (typeless-cell '())))
-
   (assert-false (null? '(a b c)))
+  (assert-false (null? #(a b c)))))
+
+(define-test "dynamic (null?)" (expect-success
+	(assert-true  (null? (typeless-cell '())))
   (assert-false (null? (typeless-cell '(a b c))))
+  (assert-false (null? (typeless-cell #(a b c))))))
 
-  (assert-false (null? #(a b c)))
-  (assert-false (null? (typeless-cell #(a b c)))))) 
-
-(define-test "(list?)" (expect-success
+(define-test "static (list?)" (expect-static-success
    (assert-true  (list? '(a b c)))
    (assert-true  (list? '()))
    (assert-false (list? '(a . b)))))
 
-(define-test "(cons)" (expect-success
+(define-test "(cons)" (expect-static-success
 	(assert-equal '(a)
                 (cons 'a '()))
 
@@ -40,15 +39,23 @@
                 (cons 'a 3))
 
   (assert-equal '((a b) . c)
-                (cons '(a b) 'c))))
+                (cons '(a b) 'c))
 
+  (assert-equal 5
+    (let ((x (cons 2 3)))
+        (+ (car x) (cdr x))))))
 
-(define-test "(car)" (expect-success
+(define-test "(car)" (expect-static-success
   (assert-equal 'a (car '(a b c)))
   (assert-equal '(a) (car '((a) b c)))
 	(assert-equal 1 (car '(1 . 2)))))
 
-(define-test "(length)" (expect-success
+(define-test "(cdr)" (expect-static-success
+  (assert-equal '(b c) (cdr '(a b c)))
+  (assert-equal '(b c) (cdr '((a) b c)))
+	(assert-equal 2 (cdr '(1 . 2)))))
+
+(define-test "(length)" (expect-static-success
   (assert-equal 3 (length '(a b c)))
 	(assert-equal 3 (length '(a (b) (c d e))))
 	(assert-equal 0 (length '()))))
@@ -86,7 +93,8 @@
       (assert-equal '(1.0 2.0 3.0) immutable-list)
       (assert-equal '(-1.0 2.0 3.0) copied-list)))))
 
-(define-test "(list)" (expect-success
+(define-test "(list)" (expect-static-success
+	(assert-true (null? (list)))
 	(assert-equal '() (list))
 	(assert-equal '(1 2 3) (list 1 2 3))))
 
@@ -100,7 +108,7 @@
       (assert-false (list? test-list))
       (assert-equal '(1 . 2) test-list)))))
 
-(define-test "(append)" (expect-success
+(define-test "(append)" (expect-static-success
 	(assert-equal '() (append))
 	(assert-equal 'a (append 'a))
 	(assert-equal '(1 2 3 4 5 6) (append '(1 2) '(3 4) '(5 6)))
@@ -110,7 +118,7 @@
 (define-test "(append) with non-terminal non-list fails" (expect-error type-error?
 	(append '(1 2) 3 '(4 5))))
 
-(define-test "(memq)" (expect-success
+(define-test "(memq)" (expect-static-success
 	(assert-equal '(a b c) (memq 'a '(a b c)))
   (assert-equal '(b c) (memq 'b '(a b c)))
   (assert-false (memq 'a '(b c d)))
@@ -119,8 +127,8 @@
     ; memq isn't recurive
     (assert-false (memq (list 'a) '(b (a) c)))))))
 
-(define-test "(member) is recursive" (expect ((a) c)
-	(member (list 'a) '(b (a) c))))
+(define-test "(member) is recursive" (expect-static-success
+	(assert-equal '((a) c) (member (list 'a) '(b (a) c)))))
 
 ; This is technically unspecified for memq because integer comparison is
 ; unspecified for eq?
@@ -171,7 +179,7 @@
 
   (assert-equal '(5 7) (assv 5 '((2 3) (5 7) (11 13))))))
 
-(define-test "(list-tail)" (expect-success
+(define-test "(list-tail)" (expect-static-success
   (assert-equal '(1 2 3) (list-tail '(1 2 3) 0))
   (assert-equal '(2 3) (list-tail '(1 2 3) 1))
   (assert-equal '(3) (list-tail '(1 2 3) 2))
@@ -184,8 +192,11 @@
   ; This is so we don't try to be too clever and directly return the argument when the index is 0
   (list-tail #f 0)))
 
-(define-test "(list-ref)" (expect-success
+(define-test "static (list-ref)" (expect-static-success
   (assert-equal 'c (list-ref '(a b c d) 2))
+  (assert-equal 'd (list-ref (list 'a 'b 'c 'd) 3))))
+
+(define-test "dynamic (list-ref)" (expect-success
   (assert-equal 'c (list-ref '(a b c d) (exact (round 1.8))))))
 
 (define-test "(list-ref) at exact end of list fails" (expect-error range-error?

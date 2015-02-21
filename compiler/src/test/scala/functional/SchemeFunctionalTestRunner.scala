@@ -161,6 +161,7 @@ abstract class SchemeFunctionalTestRunner(
         // Did we expect the optimiser to evaluate this?
         if ((testType == "expect-static-success") &&
             (optimiseLevel == 2) &&
+            (schemeDialect== dialect.Dialect.default) &&
             (result.runMethod != RunResult.Interpreted)) {
           fail("Test could not be statically evaluated at -O 2")
         }

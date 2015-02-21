@@ -1,4 +1,4 @@
-(define-test "R7RS (if) examples" (expect-success
+(define-test "R7RS (if) examples" (expect-static-success
   (assert-equal 'yes (if (> 3 2) 'yes 'no))
   (assert-equal 'no (if (> 2 3) 'yes 'no))
 
@@ -14,6 +14,16 @@
 
   (assert-equal 2 (cond ((assv 'b '((a 1) (b 2))) => cadr)
                         (else #f)))))
+
+(define-test "nested branches" (expect-static-success
+  (assert-equal 'false  (if (if #t #f #t) 'true 'false))))
+
+(define-test "branching on boolean operations" (expect-static-success
+  (assert-equal 'true  (if (not #f) 'true 'false))
+  (assert-equal 'true  (if (or #f #t) 'true 'false))
+  (assert-equal 'false (if (or #f #f) 'true 'false))
+  (assert-equal 'true  (if (and #t #t) 'true 'false))
+  (assert-equal 'false (if (and #t #f) 'true 'false))))
 
 (define-test "(cond) without arrows or else" (expect true
 	(cond (#f 'false)
@@ -39,16 +49,24 @@
 	  ((2 3 5 7) 'prime)
 	  ((1 4 6 8 9) 'composite))))
 
-(define-test "(case) without matching clause" (expect #!unit
-	(case (car '(c d)) 
-	  ((a) 'a)
-	  ((b) 'b))))
+(define-test "(case) without matching clause" (expect-static-success
+  (assert-equal #!unit
+    (case (car '(c d))
+      ((a) 'a)
+      ((b) 'b)))))
 
-(define-test "(case) with arrow" (expect c
-	(case (car '(c d))
-	  ((a e i o u) 'vowel)
-	  ((w y) 'semivowel)
-	  (else => (lambda (x) x)))))
+(define-test "(case) with arrow" (expect-success
+  (assert-equal 'c
+    (case (car '(c d))
+      ((a e i o u) 'vowel)
+      ((w y) 'semivowel)
+      (else => (lambda (x) x))))
+
+  (assert-equal 'vowel
+    (case (car '(a d))
+      ((a e i o u) 'vowel)
+      ((w y) 'semivowel)
+      (else => (lambda (x) x))))))
 
 (define-test "empty (and) evaluates to true" (expect #t
 	(and)))

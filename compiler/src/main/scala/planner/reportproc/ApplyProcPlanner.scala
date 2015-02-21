@@ -14,13 +14,21 @@ object ApplyProcPlanner extends ReportProcPlanner {
       reportName : String,
       args : List[et.Expr]
   )(implicit plan : PlanWriter) : Option[PlanResult] = (reportName, args) match {
-    case ("apply", List(applyProcExpr, applyArgsExpr)) =>
-      // Don't evaluate applyProcExpr - it could be an inline lambda
-      // We want to inline it if at all possible
-      val applyArgsResult = PlanExpr(initialState)(applyArgsExpr)
-      val resultValue = applyArgsResult.values.toSingleValue()
+    case ("apply", List(applyProcExpr)) =>
+      Some(PlanApplication.planWithArgList(initialState)(applyProcExpr, iv.EmptyListValue))
 
-      Some(PlanApplication.planWithArgList(applyArgsResult.state)(applyProcExpr, resultValue))
+    case ("apply", applyProcExpr :: applyArgExprs) =>
+      val initialResult = PlanResult(initialState, SingleValue(iv.UnitValue))
+
+      val applyArgResults = applyArgExprs.scanLeft(initialResult) { case (prevResult, applyArgExpr) =>
+        PlanExpr(prevResult.state)(applyArgExpr)
+      }
+
+      val argState = applyArgResults.last.state
+      val applyArgs = applyArgResults.tail.map(_.values.toSingleValue())
+
+      val argList = ValuesToList(applyArgs.dropRight(1), applyArgs.last)
+      Some(PlanApplication.planWithArgList(argState)(applyProcExpr, argList))
 
     case _ =>
       None

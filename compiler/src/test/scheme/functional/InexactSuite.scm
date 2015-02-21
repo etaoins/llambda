@@ -50,7 +50,7 @@
   (assert-true  (infinite? +inf.0))
   (assert-false (infinite? +nan.0))))
 
-(define-test "(nan?)" (expect-success
+(define-test "(nan?)" (expect-static-success
   (import (scheme inexact))
   (assert-false (nan? 3))
   (assert-false (nan? 4.5))

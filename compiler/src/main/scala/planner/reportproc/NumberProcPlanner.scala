@@ -265,10 +265,13 @@ object NumberProcPlanner extends ReportProcPlanner {
     case ("<=", args) if args.length >= 2 =>
       compareArgList(ps.CompareCond.LessThanEqual, _ <= _, _ <= _, args.map(_._2))
 
-    case ("max", args) if args.length >= 2 =>
+    case ("max" | "min", List((_, singleArg))) =>
+      Some(singleArg.castToSchemeType(vt.NumberType))
+
+    case ("max", args) if args.length > 1 =>
       selectArgList(ps.CompareCond.GreaterThan, _ > _, _ > _, args.map(_._2))
 
-    case ("min", args) if args.length >= 2 =>
+    case ("min", args) if args.length > 1 =>
       selectArgList(ps.CompareCond.LessThan, _ < _, _ < _, args.map(_._2))
 
     case ("exact", List(singleArg)) =>

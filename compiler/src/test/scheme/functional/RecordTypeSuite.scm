@@ -18,12 +18,12 @@
 	
 	(type1? (type2-cons))))
 
-(define-test "constructing record type with one typeless initialized immutable field" (expect 1
+(define-test "constructing record type with one typeless initialized immutable field" (expect-static-success
 	(define-record-type <single-value> (single-value field) single-value?
 		(field single-value-field))
 	
 	(define instance (single-value 1))
-	(single-value-field instance)))
+	(assert-equal 1 (single-value-field instance))))
 
 (define-test "record types can be converted to and from typeless data" (expect 1
 	(define-record-type <single-value> (single-value field) single-value?
@@ -39,13 +39,13 @@
 	(define instance (single-value))
 	(single-value-field instance)))
 
-(define-test "constructing record type with one typed immutable field" (expect "Test string"
+(define-test "constructing record type with one typed immutable field" (expect-static-success
 	(import (llambda typed))
 
 	(define-record-type <single-value> (single-value field) single-value?
 		((field : <string>) single-value-field))
-	
-	(single-value-field (single-value "Test string"))))
+
+	(assert-equal "Test string" (single-value-field (single-value "Test string")))))
 
 (define-test "constructing record type with wrong type fails" (expect-error type-error?
 	(import (llambda typed))
@@ -120,7 +120,7 @@
 
 	(list (single-value-field1 instance) (single-value-field2 instance) (single-value-field3 instance))))
 
-(define-test "constant out-of-line record" (expect (1 2 3)
+(define-test "constant out-of-line record" (expect-static-success
   (import (llambda typed))
 
 	(define-record-type <single-value> (single-value field1 field2 field3) single-value?
@@ -130,7 +130,9 @@
 
 	(define instance (single-value 1 2 3))
 
-	(list (single-value-field1 instance) (single-value-field2 instance) (single-value-field3 instance))))
+	(assert-equal 1 (single-value-field1 instance))
+  (assert-equal 2 (single-value-field2 instance))
+  (assert-equal 3 (single-value-field3 instance))))
 
 (define-test "nested record types" (expect it-actually-worked
   (import (llambda typed))

@@ -1,11 +1,11 @@
-(define-test "(vector?)" (expect-success
+(define-test "static (vector?)" (expect-static-success
 	(assert-true  (vector? #(1 2 3)))
-	(assert-true  (vector? (typeless-cell #(1 2 3))))
-
 	(assert-true  (vector? #()))
-	(assert-true  (vector? (typeless-cell #())))
+	(assert-false (vector? 4))))
 
-	(assert-false (vector? 4))
+(define-test "dynamic (vector?)" (expect-success
+	(assert-true  (vector? (typeless-cell #(1 2 3))))
+	(assert-true  (vector? (typeless-cell #())))
 	(assert-false (vector? (typeless-cell 4)))))
 
 (define-test "(make-vector) an uninitialized empty vector" (expect #()
@@ -38,11 +38,9 @@
 (define-test "(list->vector) with non-list fails" (expect-error type-error?
 	(list->vector 'a)))
 
-(define-test "vector length of non-empty constant vector" (expect 3
-	(vector-length #(1 2 3))))
-
-(define-test "vector length of empty constant vector" (expect 0
-	(vector-length #())))
+(define-test "static (vector-length)" (expect-static-success
+	(assert-equal 3 (vector-length #(1 2 3)))
+	(assert-equal 0 (vector-length #()))))
 
 (define-test "vector length of non-empty constructed vector" (expect 15
 	(vector-length (make-vector 15 #f))))
@@ -50,8 +48,8 @@
 (define-test "vector length of empty constructed vector" (expect 0
 	(vector-length (make-vector 0 #f))))
 
-(define-test "vector-ref" (expect c
-	(vector-ref #(a b c d e f) 2)))
+(define-test "static (vector-ref)" (expect-static-success
+	(assert-equal 'c (vector-ref #(a b c d e f) 2))))
 
 (define-test "vector-ref can return procedure" (expect 5
 	((vector-ref (vector +) 0) 2 3)))
@@ -62,7 +60,7 @@
 (define-test "vector-ref with negative index fails" (expect-error range-error?
 	(vector-ref #(a b c d e f) -1)))
 
-(define-test "vector-ref with non-integer fails" (expect-error type-error?
+(define-test "vector-ref with non-integer fails" (expect-compile-error type-error?
 	(vector-ref #(a b c d e f) "4")))
 
 (define-test "vector-set!" (expect #(1 1 2 1 1)

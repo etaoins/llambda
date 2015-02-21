@@ -20,6 +20,62 @@
   (assert-equal '(3 4 5 6) ((lambda x x) 3 4 5 6))
   (assert-equal '(5 6) ((lambda (x y . z) z) 3 4 5 6))))
 
+(define-test "static self-executing lambdas" (expect-static-success
+  (assert-equal 15 ((lambda () 15)))
+  (assert-equal 25 ((lambda (arg) arg) 25))
+  (assert-equal #t ((lambda rest-args (null? rest-args))))))
+
+(define-test "static bound procedures" (expect-static-success
+  (define (count-rest-args . rest-args)
+    (length rest-args))
+  (assert-equal 5 (count-rest-args 1 2 3 4 5))
+
+  (define (add-first-2 . rest-args)
+    (+ (car rest-args) (car (cdr rest-args))))
+  (assert-equal 3 (add-first-2 1 2 3 4 5))
+
+  ; This has to recursively inline
+  (define (add-two n)
+    (+ 2 n))
+  (define (times-four n)
+    (* (add-two 2) n))
+  (assert-equal 32 (times-four 8))
+
+  (assert-equal 15
+    (let ((return-15 (lambda () 15)))
+      (return-15)))
+
+  (assert-equal -10
+    (let ((return-arg (lambda (arg) arg)))
+      (return-arg -10)))
+
+  (assert-equal #t
+    (let ((has-no-args? (lambda rest-args (null? rest-args))))
+      (has-no-args?)))
+
+  ; This needs to capture val-times-two during inlining from the parent scope
+  (define (capturing-times-four val)
+    (define (val-times-two) (+ val val))
+    (+ (val-times-two) (val-times-two)))
+
+  (assert-equal -24 (capturing-times-four -6))))
+
+(define-test "static procedure values" (expect-static-success
+   (define (add2 val) (+ val 2))
+   (define (apply-proc-to-arg proc arg)
+     (proc arg))
+   (assert-equal 8 (apply-proc-to-arg add2 6))
+
+   (define proc-from-let (let ((mutliplier 2))
+     (lambda (to-multiply)
+       (* mutliplier to-multiply))))
+   (assert-equal -10 (proc-from-let -5))
+
+   (define (multi-op val1 val2 use-minus)
+     (define operator (if use-minus - +))
+     (operator val1 val2))
+   (multi-op 4 10 #f)))
+
 (define-test "procedures accepting procedure arguments are procedures" (expect-success
   (import (llambda typed))
 

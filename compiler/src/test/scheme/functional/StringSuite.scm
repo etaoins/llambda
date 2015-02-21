@@ -29,17 +29,11 @@
 (define-test "list->string with Unicode chars" (expect "Hell☃!"
 	(list->string '(#\H #\e #\l #\l #\x2603 #\!))))
 
-(define-test "length of empty string" (expect 0
-	(string-length "")))
-
-(define-test "length of ASCII string" (expect 5
-	(string-length "Hello")))
- 
-(define-test "length of BMP Unicode string" (expect 6
-	(string-length "Hell☃!")))
-
-(define-test "length of non-BMP Unicode string" (expect 6
-	(string-length "Hell🏂!")))
+(define-test "(string-length)" (expect-static-success
+  (assert-equal 0 (string-length ""))
+  (assert-equal 5 (string-length "Hello"))
+  (assert-equal 6 (string-length "Hell☃!"))
+  (assert-equal 6 (string-length "Hell🏂!"))))
 
 (define-test "string-ref on ASCII character" (expect #\e
 	(string-ref "Hell☃!" 1)))

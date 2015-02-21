@@ -1,4 +1,4 @@
-(define-test "(+)" (expect-success
+(define-test "static (+)" (expect-static-success
   (assert-equal 0 (+))
   (assert-equal 12 (+ 12))
   (assert-equal -450.5 (+ -450.5))
@@ -6,11 +6,12 @@
   (assert-equal 300.0 (+ 100.5 -0.5 200.0))
   (assert-equal 300.0 (+ 100.5 -0.5 200))
 
-  (define dynamic-5 (length (typeless-cell '(1 2 3 4 5))))
-  (assert-equal 8 (+ dynamic-5 1 2))
-
   ; This may cause an intermediate integer overflow but it should eventually succeed because the result is inexact
   (assert-within 9223372036854775807 32.0 (+ 9223372036854775807 9223372036854775807 -9223372036854775807.0))))
+
+(define-test "dynamic (+)" (expect-success
+  (define dynamic-5 (length (typeless-cell '(1 2 3 4 5))))
+  (assert-equal 8 (+ dynamic-5 1 2))))
 
 (define-test "adding single string fails" (expect-error type-error?
   (+ "Hello!")))
@@ -24,7 +25,7 @@
 (define-test "dynamic untyped (+) fails on integer overflow" (expect-error integer-overflow-error?
   (force-evaluation (+ 9223372036854775807 (typed-dynamic 1 <any>)))))
 
-(define-test "(*)" (expect-success
+(define-test "static (*)" (expect-static-success
   (assert-equal 1 (*))
   (assert-equal 12 (* 12))
   (assert-equal -450.5 (* -450.5))
@@ -32,11 +33,12 @@
   (assert-equal -10050.0 (* 100.5 -0.5 200.0))
   (assert-equal 10050.0 (* 100.5 0.5 200))
 
-  (define dynamic-5 (length (typeless-cell '(1 2 3 4 5))))
-  (assert-equal 10 (* dynamic-5 1 2))
-
   ; This may cause an intermediate integer overflow but it should eventually succeed because the result is inexact
   (assert-within 9223372036854775807 32.0 (* 9223372036854775807 2 0.5))))
+
+(define-test "dynamic (*)" (expect-success
+  (define dynamic-5 (length (typeless-cell '(1 2 3 4 5))))
+  (assert-equal 10 (* dynamic-5 1 2))))
 
 (define-test "multiplying single string fails" (expect-error type-error?
   (* "Hello!")))
@@ -50,19 +52,20 @@
 (define-test "dynamic untyped (*) fails on integer overflow" (expect-error integer-overflow-error?
   (force-evaluation (* 9223372036854775807 (typed-dynamic 2 <any>)))))
 
-(define-test "(-)" (expect-success
+(define-test "static (-)" (expect-static-success
   (assert-equal -12 (- 12))
   (assert-equal 450.5 (- -450.5))
   (assert-equal -26363 (- 4135 -3547 34045))
   (assert-equal -99.0 (- 100.5 -0.5 200.0))
   (assert-equal -100.0 (- 100.5 0.5 200))
 
-  (define dynamic-5 (length (typeless-cell '(1 2 3 4 5))))
-  (assert-equal 2 (- dynamic-5 1 2))
-  (assert-equal -6 (- 1 2 dynamic-5))
-
   ; This may cause an intermediate integer overflow but it should eventually succeed because the result is inexact
   (assert-within 9 32.0 (- -9223372036854775807 9223372036854775807 -9223372036854775807 -9223372036854775807.0))))
+
+(define-test "dynamic (-)" (expect-success
+  (define dynamic-5 (length (typeless-cell '(1 2 3 4 5))))
+  (assert-equal 2 (- dynamic-5 1 2))
+  (assert-equal -6 (- 1 2 dynamic-5))))
 
 (define-test "subtracting no numbers fails" (expect-error arity-error?
   (-)))
@@ -88,7 +91,7 @@
 (define-test "dynamic untyped subtracting (-) fails on integer overflow" (expect-error integer-overflow-error?
   (force-evaluation (- -9223372036854775808 (typed-dynamic 1 <any>)))))
 
-(define-test "(/)" (expect-success
+(define-test "static (/)" (expect-static-success
   (assert-equal 0.125 (/ 8))
   (assert-equal -4.0 (/ -0.25))
   (assert-equal 0.15 (/ 3 4 5))
@@ -109,7 +112,9 @@
   (assert-equal 2.0 (/ 20 5.0 2))
 
   ; This divides exactly but it causes an integer overflow
-  (assert-equal 9223372036854775808.0 (/ -9223372036854775808 -1))
+  (assert-equal 9223372036854775808.0 (/ -9223372036854775808 -1))))
+
+(define-test "dynamic (/)" (expect-success
   (assert-equal 9223372036854775808.0 (/ (typed-dynamic -9223372036854775808 <exact-integer>) -1))
   (assert-equal 9223372036854775808.0 (/ -9223372036854775808 (typed-dynamic -1 <exact-integer>)))))
 
@@ -192,12 +197,13 @@
 (define-test "dynamic denominator (truncate/ INT_MIN -1) fails" (expect-error integer-overflow-error?
   (truncate/ -9223372036854775808 (typed-dynamic -1 <exact-integer>))))
 
-(define-test "(truncate-quotient)" (expect-success
+(define-test "static (truncate-quotient)" (expect-static-success
   (assert-equal 2 (truncate-quotient 5 2))
   (assert-equal -2 (truncate-quotient -5 2))
   (assert-equal -2 (truncate-quotient 5 -2))
-  (assert-equal 2 (truncate-quotient -5 -2))
+  (assert-equal 2 (truncate-quotient -5 -2))))
 
+(define-test "dynamic (truncate-quotient)" (expect-success
   (assert-equal 2 (truncate-quotient (typed-dynamic 5 <exact-integer>) 2))
   (assert-equal -2 (truncate-quotient (typed-dynamic -5 <exact-integer>) 2))
   (assert-equal -2 (truncate-quotient (typed-dynamic 5 <exact-integer>) -2))
@@ -215,14 +221,15 @@
 (define-test "dynamic denominator (truncate-quotient INT_MIN -1) fails" (expect-error integer-overflow-error?
   (truncate-quotient -9223372036854775808 (typed-dynamic -1 <exact-integer>))))
 
-(define-test "(truncate-remainder)" (expect-success
+(define-test "static (truncate-remainder)" (expect-static-success
   (assert-equal 1 (truncate-remainder 5 2))
   (assert-equal -1 (truncate-remainder -5 2))
   (assert-equal 1 (truncate-remainder 5 -2))
   (assert-equal -1 (truncate-remainder -5 -2))
   ; This causes integer overflow during division
-  (assert-equal 0 (truncate-remainder -9223372036854775808 -1))
+  (assert-equal 0 (truncate-remainder -9223372036854775808 -1))))
 
+(define-test "dynamic (truncate-remainder)" (expect-success
   (assert-equal 1 (truncate-remainder (typed-dynamic 5 <exact-integer>) 2))
   (assert-equal -1 (truncate-remainder (typed-dynamic -5 <exact-integer>) 2))
   (assert-equal 1 (truncate-remainder (typed-dynamic 5 <exact-integer>) -2))
@@ -301,10 +308,15 @@
 (define-test "(modulo)" (expect 0
   (remainder 10 2)))
 
-(define-test "(expt)" (expect-success
-  ; This is exact and within the range we can represent
-  (assert-true (eqv? (expt 2 16) 65536))
+(define-test "static (expt)" (expect-static-success
+  (assert-equal 1 (expt 2 0))
+  (assert-equal 2 (expt 2 1))
+  (assert-equal 256 (expt 2 8))
+  (assert-equal 65536 (expt 2 16))
+  (assert-equal 4294967296 (expt 2 32))
+  (assert-equal 4611686018427387904 (expt 2 62))))
 
+(define-test "dynamic (expt)" (expect-success
   ; These are inexact versions of the above
   (assert-true (eqv? (expt 2.0 16) 65536.0))
   (assert-true (eqv? (expt 2 16.0) 65536.0))
