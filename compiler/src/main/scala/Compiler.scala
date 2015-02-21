@@ -133,6 +133,13 @@ object Compiler {
   )(input : T, config : CompileConfig, extraEnv : List[(String, String)] = Nil) : RunResult = {
     val plannedProgram = planInput(input, config)
 
+    try {
+      return interpreter.InterpretProgram(plannedProgram)
+    }
+    catch {
+      case _ : interpreter.UninterpretableException =>
+    }
+
     val outputFile = File.createTempFile("llambda", null, null)
     outputFile.deleteOnExit()
 
