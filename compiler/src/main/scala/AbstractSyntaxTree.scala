@@ -76,7 +76,7 @@ case class FlonumLiteral(value : Double) extends NumberLiteral {
     case Double.PositiveInfinity => "+inf.0"
     case Double.NegativeInfinity => "-inf.0"
     case nan if nan.isNaN        => "+nan.0"
-    case _ => value.toString
+    case _ => String.format("%f", Double.box(value))
   }
 }
 
