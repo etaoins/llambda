@@ -89,9 +89,9 @@ object ExtractNativeFunction {
   }
 
   def apply(
+      located : SourceLocated,
       hasWorldArg : Boolean,
-      args : List[sst.ScopedDatum],
-      defineLocation : SourceLocated
+      args : List[sst.ScopedDatum]
   ) : et.NativeFunction = args match {
     case libraryDatum :: sst.NonSymbolLeaf(ast.StringLiteral(nativeSymbol)) :: procTypeDatum :: attributeData =>
       val nativeLibrary = ExtractNativeLibrary(libraryDatum)
@@ -105,6 +105,6 @@ object ExtractNativeFunction {
       )
 
     case _ =>
-      throw new BadSpecialFormException(defineLocation, "Bad native function symbol definition")
+      throw new BadSpecialFormException(located, "Bad native function symbol definition")
   }
 }
