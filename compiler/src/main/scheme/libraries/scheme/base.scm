@@ -13,11 +13,6 @@
     (define-syntax else
       (syntax-rules ()))
 
-    (define-syntax begin
-      (syntax-rules ()
-                    ((begin exp ...)
-                     ((lambda () exp ...)))))
-
     (define-syntax let
       (syntax-rules ()
                     ((let ((name val) ...) body1 body2 ...)

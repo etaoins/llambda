@@ -436,3 +436,19 @@
   (assert-raises arity-error?
     (define returns-two (typeless-cell (lambda () (values 1 2))))
     (define-values ([x : <exact-integer>]) (returns-two)))))
+
+(define-test "body (begin) splices definitions in to current scope" (expect-success
+  (define a 1)
+  (begin
+    (define b 2))
+
+  (assert-equal 3 (+ a b))
+
+  (define (add-2 val)
+    ; This is also a nested (begin)
+    (begin
+      (begin
+        (define two 2)))
+    (+ val two))
+
+  (assert-equal 5 (add-2 3))))

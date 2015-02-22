@@ -45,7 +45,6 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
         polyType.upperBound
     }
 
-
   private def valueTargetToLoc(valueTarget : ValueTarget, defaultType : vt.SchemeType) : StorageLocation =
     valueTarget match {
       case ValueTarget(symbol, providedTypeOpt) =>
@@ -56,6 +55,28 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
 
         boundValue
     }
+
+  /** Expands a datum in an outermost or body context
+    *
+    * This expands any top-level macros and flattens any (begin)s
+    */
+  private def expandBodyDatum(datum : sst.ScopedDatum) : List[sst.ScopedDatum] = datum match {
+    case sst.ScopedPair(appliedSymbol : sst.ScopedSymbol, cdr) =>
+      (appliedSymbol.resolveOpt, cdr) match {
+        case (Some(syntax : BoundSyntax), _) =>
+          // This is a macro - expand it
+          val expandedDatum = ExpandMacro(syntax, cdr, datum, trace=frontendConfig.traceMacroExpansion)
+          expandBodyDatum(expandedDatum)
+
+        case (Some(Primitives.Begin), sst.ScopedProperList(innerExprs)) =>
+          // This is a (begin) - flatten it
+          innerExprs.flatMap(expandBodyDatum)
+
+        case _ => List(datum)
+      }
+
+    case _ => List(datum)
+  }
 
   private[frontend] def extractBodyDefinition(args : List[(sst.ScopedSymbol, BoundValue)], definition : List[sst.ScopedDatum]) : et.Expr = {
     // Find all the scopes in the definition
@@ -91,11 +112,14 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
 
     // Rescope our definition
     val scopedDefinition = definition.map(_.rescoped(scopeMapping))
-    
+
+    // Expand any macros or (begin)s recursively
+    val expandedDefinition = scopedDefinition.flatMap(expandBodyDatum)
+
     // Split our definition is to (define)s and a body
     val defineBuilder = new ListBuffer[ParsedDefine]
 
-    val bodyData = scopedDefinition.dropWhile { datum =>
+    val bodyData = expandedDefinition.dropWhile { datum =>
       parseDefineDatum(datum) match {
         case Some(define) =>
           defineBuilder += define
@@ -169,9 +193,6 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
     val includeResults = ResolveIncludeList(includeNameData.map(_.unscope), includeLocation)(frontendConfig.includePath)
 
     val includeExprs = includeResults flatMap { result =>
-      // XXX: Should we disallow body defines here in a non-body context?
-      // R7RS says (include) should act like a (begin) with the contents of the files. Its example definition of (begin)
-      // uses a self-executing lambda which would create a body context. This seems to imply this is allowed.
       val innerConfig = frontendConfig.copy(
         includePath=result.innerIncludePath
       )
@@ -203,6 +224,19 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
       operands : List[sst.ScopedDatum]
   ) : et.Expr = {
     (boundValue, operands) match {
+      case (Primitives.Begin, exprs) =>
+        // Create a new scope using a self-executing lambda
+        val beginLambda = ExtractLambda(
+          located=appliedSymbol,
+          argList=Nil,
+          argTerminator=sst.NonSymbolLeaf(ast.EmptyList()),
+          definition=exprs
+        )(debugContext, libraryLoader, frontendConfig)
+
+        beginLambda.assignLocationFrom(appliedSymbol)
+
+        et.Apply(beginLambda, Nil)
+
       case (Primitives.Quote, innerDatum :: Nil) =>
         et.Literal(innerDatum.unscope)
 
@@ -323,20 +357,10 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
   }
 
   private def parseDefineDatum(datum : sst.ScopedDatum) : Option[ParsedDefine] = datum match {
-    case sst.ScopedPair(appliedSymbol : sst.ScopedSymbol, cdr) =>
+    case sst.ScopedProperList((appliedSymbol : sst.ScopedSymbol) :: operands) =>
       appliedSymbol.resolveOpt match {
-        case Some(syntax : BoundSyntax) =>
-          // This is a macro - expand it
-          val expandedDatum = ExpandMacro(syntax, cdr, datum, trace=frontendConfig.traceMacroExpansion)
-          parseDefineDatum(expandedDatum)
-
         case Some(otherBoundValue) =>
-          cdr match {
-            case sst.ScopedProperList(operands) =>
-              parseDefine(otherBoundValue, appliedSymbol, operands)
-
-            case _ => None
-          }
+          parseDefine(otherBoundValue, appliedSymbol, operands)
 
         case _ => None
       }
@@ -638,13 +662,12 @@ final class ModuleBodyExtractor(debugContext : debug.SourceContext, libraryLoade
       throw new MalformedExprException(malformed, malformed.toString)
   }).assignLocationAndContextFrom(datum, debugContext)
 
-  def apply(data : List[ast.Datum], evalScope : Scope) : List[et.Expr] = data flatMap { datum => 
+  def apply(data : List[ast.Datum], evalScope : Scope) : List[et.Expr] = data flatMap { datum =>
     // Annotate our symbols with our current scope
     val scopedDatum = sst.ScopedDatum(evalScope, datum)
 
-    extractOutermostLevelExpr(scopedDatum) match {
-      case et.Begin(Nil) => None
-      case other => Some(other)
+    expandBodyDatum(scopedDatum).flatMap {
+      extractOutermostLevelExpr(_).toSequence
     }
   }
 }

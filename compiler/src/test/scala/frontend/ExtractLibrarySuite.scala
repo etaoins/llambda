@@ -148,13 +148,9 @@ class ExtractLibrarySuite extends FunSuite with Inside {
                 assert(exprs === 
                   List(
                     et.TopLevelDefine(List(et.SingleBinding(storageLocA, et.Literal(ast.IntegerLiteral(1))))),
-                    et.Begin(List(
-                      et.TopLevelDefine(List(et.SingleBinding(storageLocB, et.Literal(ast.IntegerLiteral(2))))),
-                      et.Begin(List(
-                        et.VarRef(storageLocA),
-                        et.VarRef(storageLocB)
-                      ))
-                    ))
+                    et.TopLevelDefine(List(et.SingleBinding(storageLocB, et.Literal(ast.IntegerLiteral(2))))),
+                    et.VarRef(storageLocA),
+                    et.VarRef(storageLocB)
                   )
                 )
             }
@@ -175,13 +171,9 @@ class ExtractLibrarySuite extends FunSuite with Inside {
                 assert(exprs === 
                   List(
                     et.TopLevelDefine(List(et.SingleBinding(storageLocA, et.Literal(ast.IntegerLiteral(1))))),
-                    et.Begin(List(
-                      et.TopLevelDefine(List(et.SingleBinding(storageLocB, et.Literal(ast.IntegerLiteral(2))))),
-                      et.Begin(List(
-                        et.VarRef(storageLocA),
-                        et.VarRef(storageLocB)
-                      ))
-                    ))
+                    et.TopLevelDefine(List(et.SingleBinding(storageLocB, et.Literal(ast.IntegerLiteral(2))))),
+                    et.VarRef(storageLocA),
+                    et.VarRef(storageLocB)
                   )
                 )
             }

@@ -114,6 +114,28 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
     }
   }
 
+  test("(begin) in top-level context") {
+    assert(bodyFor("(begin 1 2)")(primitiveScope) === List(
+      et.Literal(ast.IntegerLiteral(1)),
+      et.Literal(ast.IntegerLiteral(2))
+    ))
+  }
+
+  test("(begin) in expression context") {
+    inside(exprFor("(+ (begin 1 2))")(plusScope)) {
+      case et.Apply(
+        et.VarRef(plusLoc),
+        List(et.Apply(
+          et.Lambda(_, Nil, None, et.Begin(List(
+            et.Literal(ast.IntegerLiteral(1)),
+            et.Literal(ast.IntegerLiteral(2))
+          )), _),
+          Nil
+        ))
+      ) =>
+    }
+  }
+
   test("set!") {
     // Make a storage location for a
     val storageLoc = new StorageLocation("a")
@@ -496,7 +518,19 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
         assert(inner != shadowed)
     }
   }
-  
+
+  test("splicing (begin) in lambda") {
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+
+    val expressions = bodyFor(
+      """(lambda () (begin (define x 2)))"""
+    )(scope)
+
+    inside(expressions) {
+      case List(et.Lambda(_, Nil, None, et.InternalDefine(List(et.SingleBinding(inner, _)), _), _)) =>
+    }
+  }
+
   test("type declaration can shadow") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
 
@@ -623,47 +657,43 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
 
   test("trivial include") {
     // Simple include should return an et.Begin with the contents of the ifle
-    assert(exprFor("""(include "includes/include1.scm")""") ===
-      et.Begin(List(
-        et.Literal(ast.StringLiteral("include1-line1")), 
+    assert(bodyFor("""(include "includes/include1.scm")""")(primitiveScope) ===
+      List(
+        et.Literal(ast.StringLiteral("include1-line1")),
         et.Literal(ast.StringLiteral("include1-line2"))
-      ))
+      )
     )
   }
 
   test("include multiple files in order") {
     // (include) with multiple files should read them in order and wrap them
     // in a single et.Begin
-    assert(exprFor("""(include "includes/include1.scm" "includes/include2.scm")""") ===
-      et.Begin(List(
-        et.Literal(ast.StringLiteral("include1-line1")), 
+    assert(bodyFor("""(include "includes/include1.scm" "includes/include2.scm")""")(primitiveScope) ===
+      List(
+        et.Literal(ast.StringLiteral("include1-line1")),
         et.Literal(ast.StringLiteral("include1-line2")),
-        et.Literal(ast.StringLiteral("include2-line1")), 
+        et.Literal(ast.StringLiteral("include2-line1")),
         et.Literal(ast.StringLiteral("include2-line2"))
-      ))
+      )
     )
   }
 
   test("include handles relative includes and scope correctly") {
     // This tests both relative (include)s and that scoping works correctly
     val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
-    val expression = exprFor("""(include "includes/definea.scm")""")(scope)
+    val expressions = bodyFor("""(include "includes/definea.scm")""")(scope)
 
     inside(scope("a")) {
       case storageLocA : StorageLocation =>
         inside(scope("b")) {
           case storageLocB : StorageLocation =>
-            assert(expression === 
-              et.Begin(List(
+            assert(expressions ===
+              List(
                 et.TopLevelDefine(List(et.SingleBinding(storageLocA, et.Literal(ast.IntegerLiteral(1))))),
-                et.Begin(List(
-                  et.TopLevelDefine(List(et.SingleBinding(storageLocB, et.Literal(ast.IntegerLiteral(2))))),
-                  et.Begin(List(
-                    et.VarRef(storageLocA),
-                    et.VarRef(storageLocB)
-                  ))
-                ))
-              ))
+                et.TopLevelDefine(List(et.SingleBinding(storageLocB, et.Literal(ast.IntegerLiteral(2))))),
+                et.VarRef(storageLocA),
+                et.VarRef(storageLocB)
+              )
             )
         }
     }
@@ -672,11 +702,11 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
   test("include-ci") {
     // Simple include should return an et.Begin with the contents of the ifle
     assert(exprFor("""(include-ci "includes/vector-include.scm")""") ===
-      et.Begin(List(et.Literal(ast.VectorLiteral(Vector(
+      et.Literal(ast.VectorLiteral(Vector(
         ast.Symbol("upper"),
         ast.Symbol("mixed"),
         ast.Symbol("lower")
-      )))))
+      )))
     )
   }
 
@@ -741,12 +771,12 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
   
   test("cond-expand with one true clause") {
     // We would normally expand this to an empty et.Begin but it's disallowed by R7RS
-    assert(exprFor("""(cond-expand ((library (scheme base)) 1 2 3))""") ===
-      et.Begin(List(
+    assert(bodyFor("""(cond-expand ((library (scheme base)) 1 2 3))""")(primitiveScope) ===
+      List(
         et.Literal(ast.IntegerLiteral(1)),
         et.Literal(ast.IntegerLiteral(2)),
         et.Literal(ast.IntegerLiteral(3))
-      ))
+      )
     )
   }
   
@@ -757,12 +787,12 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
   
   test("cond-expand with one false with else") {
     // We would normally expand this to an empty et.Begin but it's disallowed by R7RS
-    assert(exprFor("""(cond-expand ((not llambda) 1 2 3) (else 4 5 6))""") ===
-      et.Begin(List(
+    assert(bodyFor("""(cond-expand ((not llambda) 1 2 3) (else 4 5 6))""")(primitiveScope) ===
+      List(
         et.Literal(ast.IntegerLiteral(4)),
         et.Literal(ast.IntegerLiteral(5)),
         et.Literal(ast.IntegerLiteral(6))
-      ))
+      )
     )
   }
   

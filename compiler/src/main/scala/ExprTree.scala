@@ -51,6 +51,11 @@ object Expr {
   }
 }
 
+/** Wraps zero or more subexpressions
+  *
+  * This has no semantic meaning itself; it merely allows mulitple expressions to appear where a single expression is
+  * expected. The value of the Begin expression is that of its last subexpression or #!unit if it is empty
+  */
 case class Begin(exprs : List[Expr]) extends Expr {
   val subexprs = exprs
 
