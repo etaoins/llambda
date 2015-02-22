@@ -1,7 +1,6 @@
 package io.llambda.compiler.frontend
 import io.llambda
 
-import collection.mutable.ListBuffer
 import collection.immutable.ListMap
 
 import llambda.compiler.sst
@@ -9,7 +8,7 @@ import llambda.compiler.et
 import llambda.compiler.codegen.CompactRepresentationForType
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.valuetype.{polymorphic => pm}
-import llambda.compiler.{Primitives, BoundType, Scope}
+import llambda.compiler.{Primitives, BoundType, Scope, SourceLocated}
 import llambda.compiler.BadSpecialFormException
 
 private[frontend] object ParseRecordTypeDefine {
@@ -136,7 +135,6 @@ private[frontend] object ParseRecordTypeDefine {
   }
 
   private def parse(
-      appliedSymbol : sst.ScopedSymbol,
       nameSymbol : sst.ScopedSymbol,
       parentSymbolOpt : Option[sst.ScopedSymbol],
       constructorSymbol : sst.ScopedSymbol,
@@ -205,7 +203,7 @@ private[frontend] object ParseRecordTypeDefine {
   }
 
   def apply(
-      appliedSymbol : sst.ScopedSymbol,
+      located : SourceLocated,
       args : List[sst.ScopedDatum]
   )(implicit frontendConfig : FrontendConfig) : ParsedRecordTypeDefine = args match {
     case (nameSymbol : sst.ScopedSymbol) ::
@@ -213,7 +211,7 @@ private[frontend] object ParseRecordTypeDefine {
          (predicateSymbol : sst.ScopedSymbol) ::
          fieldData =>
 
-      parse(appliedSymbol, nameSymbol, None, constructorSymbol, constructorArgs, predicateSymbol, fieldData)
+      parse(nameSymbol, None, constructorSymbol, constructorArgs, predicateSymbol, fieldData)
 
     case (nameSymbol : sst.ScopedSymbol) ::
          (parentSymbol : sst.ScopedSymbol) ::
@@ -221,9 +219,9 @@ private[frontend] object ParseRecordTypeDefine {
          (predicateSymbol : sst.ScopedSymbol) ::
          fieldData =>
 
-      parse(appliedSymbol, nameSymbol, Some(parentSymbol), constructorSymbol, constructorArgs, predicateSymbol, fieldData)
+      parse(nameSymbol, Some(parentSymbol), constructorSymbol, constructorArgs, predicateSymbol, fieldData)
 
     case _ =>
-      throw new BadSpecialFormException(appliedSymbol, "Unrecognized record type form")
+      throw new BadSpecialFormException(located, "Unrecognized record type form")
   }
 }
