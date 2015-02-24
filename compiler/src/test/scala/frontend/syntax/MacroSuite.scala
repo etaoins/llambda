@@ -130,7 +130,26 @@ class MacroSuite extends FunSuite with Inside with OptionValues with testutil.Ex
       case et.Lambda(_, Nil, None, et.Lambda(_, Nil, None, et.VarRef(`plusLoc`), Some(_)), Some(_)) =>
     }
   }
-  
+
+  test("macro inside lambda shadows outer macro") {
+    // This is to ensure when we attempt to split our body definition in to bindings and body expressions we don't get
+    // overeager and expand using the outer macro definition
+    inside(exprFor(
+      """(define-syntax shadowed-macro
+           (syntax-rules ()
+             ((shadowed-macro)
+               'outer)))
+         (lambda ()
+           (define-syntax shadowed-macro
+             (syntax-rules ()
+               ((shadowed-macro)
+                 'inner)))
+           (shadowed-macro))"""
+    )(plusScope)) {
+      case et.Lambda(_, Nil, None, et.Literal(ast.Symbol("inner")), Some(_)) =>
+    }
+  }
+
   test("two value expansion") {
     implicit val syntaxScope = new Scope(collection.mutable.Map(), Some(primitiveScope))
 

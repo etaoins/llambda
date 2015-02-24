@@ -6,23 +6,7 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.valuetype.Implicits._
 import llambda.compiler.frontend.syntax.ExpandMacro
 
-/** Abstract base class for extracting expresions
-  *
-  * This handles all expression extraction except for handling definitions which needs to be implemented differently for
-  * outermost and inner expressions
-  */
- private[frontend] abstract class ExprExtractor {
-  /** Handles a definition encountered during expression extraction
-    *
-    * @param  located       Location of the definition
-    * @param  parsedDefine  Parsed definition
-    * @return Expression to extract
-    */
-  protected def handleParsedDefine(
-      located : SourceLocated,
-      parsedDefine : ParsedDefine
-  )(implicit context : FrontendContext) : et.Expr
-
+private[frontend] object ExtractExpr {
   private def extractInclude(
       scope : Scope,
       includeNameData : List[sst.ScopedDatum],
@@ -57,7 +41,7 @@ import llambda.compiler.frontend.syntax.ExpandMacro
     et.Begin(includeExprs)
   }
 
-  private def extractSymbolApplication(
+  private def extractNonDefineApplication(
       boundValue : BoundValue,
       appliedSymbol : sst.ScopedSymbol,
       operands : List[sst.ScopedDatum]
@@ -66,7 +50,7 @@ import llambda.compiler.frontend.syntax.ExpandMacro
       case (storageLoc : StorageLocation, args) =>
         et.Apply(
           et.VarRef(storageLoc).assignLocationAndContextFrom(appliedSymbol, context.debugContext),
-          args.map(ExtractInnerExpr.apply)
+          args.map(ExtractExpr.apply)
         )
 
       case (Primitives.Begin, exprs) =>
@@ -87,21 +71,21 @@ import llambda.compiler.frontend.syntax.ExpandMacro
 
       case (Primitives.If, test :: trueExpr :: falseExpr :: Nil) =>
         et.Cond(
-          ExtractInnerExpr(test),
-          ExtractInnerExpr(trueExpr),
-          ExtractInnerExpr(falseExpr))
+          ExtractExpr(test),
+          ExtractExpr(trueExpr),
+          ExtractExpr(falseExpr))
 
       case (Primitives.If, test :: trueExpr :: Nil) =>
         et.Cond(
-          ExtractInnerExpr(test),
-          ExtractInnerExpr(trueExpr),
+          ExtractExpr(test),
+          ExtractExpr(trueExpr),
           et.Literal(ast.UnitValue()).assignLocationAndContextFrom(appliedSymbol, context.debugContext)
         )
 
       case (Primitives.Set, (mutatingSymbol : sst.ScopedSymbol) :: value :: Nil) =>
         mutatingSymbol.resolve match {
           case storageLoc : StorageLocation =>
-            et.MutateVar(storageLoc, ExtractInnerExpr(value))
+            et.MutateVar(storageLoc, ExtractExpr(value))
           case _ =>
             throw new BadSpecialFormException(mutatingSymbol, s"Attempted (set!) non-variable ${mutatingSymbol.name}")
         }
@@ -140,11 +124,11 @@ import llambda.compiler.frontend.syntax.ExpandMacro
 
       case (Primitives.Quasiquote, sst.ScopedProperList(listData) :: Nil) =>
         val schemeBase = context.libraryLoader.loadSchemeBase(context.config)
-        (new ListQuasiquotationExpander(ExtractInnerExpr.apply, schemeBase))(listData)
+        (new ListQuasiquotationExpander(ExtractExpr.apply, schemeBase))(listData)
 
       case (Primitives.Quasiquote, sst.ScopedVectorLiteral(elements) :: Nil) =>
         val schemeBase = context.libraryLoader.loadSchemeBase(context.config)
-        (new VectorQuasiquotationExpander(ExtractInnerExpr.apply, schemeBase))(elements.toList)
+        (new VectorQuasiquotationExpander(ExtractExpr.apply, schemeBase))(elements.toList)
 
       case (Primitives.Unquote, _) =>
         throw new BadSpecialFormException(appliedSymbol, "Attempted (unquote) outside of quasiquotation")
@@ -153,21 +137,21 @@ import llambda.compiler.frontend.syntax.ExpandMacro
         throw new BadSpecialFormException(appliedSymbol, "Attempted (unquote-splicing) outside of quasiquotation")
 
       case (Primitives.Cast, valueExpr :: typeDatum :: Nil) =>
-        et.Cast(ExtractInnerExpr(valueExpr), ExtractType.extractSchemeType(typeDatum), false)
+        et.Cast(ExtractExpr(valueExpr), ExtractType.extractSchemeType(typeDatum), false)
 
       case (Primitives.AnnotateExprType, valueExpr :: typeDatum :: Nil) =>
-        et.Cast(ExtractInnerExpr(valueExpr), ExtractType.extractSchemeType(typeDatum), true)
+        et.Cast(ExtractExpr(valueExpr), ExtractType.extractSchemeType(typeDatum), true)
 
       case (Primitives.CondExpand, firstClause :: restClauses) =>
         val expandedData = CondExpander.expandScopedData(firstClause :: restClauses)(context.libraryLoader, context.config)
 
-        et.Begin(expandedData.map(ExtractInnerExpr.apply))
+        et.Begin(expandedData.map(ExtractExpr.apply))
 
       case (Primitives.Parameterize, sst.ScopedProperList(parameterData) :: bodyData) =>
         val parameters = parameterData map { parameterDatum =>
           parameterDatum match {
             case sst.ScopedProperList(List(parameter, value)) =>
-              (ExtractInnerExpr(parameter), ExtractInnerExpr(value))
+              (ExtractExpr(parameter), ExtractExpr(value))
 
             case _ =>
               throw new BadSpecialFormException(parameterDatum, "Parameters must be defined as (parameter value)")
@@ -195,24 +179,31 @@ import llambda.compiler.frontend.syntax.ExpandMacro
     }
   }
 
-  private def extractApplicationLike(
+  /** Extract an expression from an application
+    *
+    * @param  boundValue     Bound value being applied
+    * @param  appliedSymbol  Symbol being applied. This is used to locate exceptions and scope includes
+    * @param  operands       Operands for the symbol application
+    */
+  private def extractApplication(
       boundValue : BoundValue,
       appliedSymbol : sst.ScopedSymbol,
       operands : List[sst.ScopedDatum]
-  )(implicit context : FrontendContext) : et.Expr = {
-    // Try to parse this as a type of definition
-    ParseDefine(appliedSymbol, boundValue, operands) match {
-      case Some(define) =>
-        handleParsedDefine(appliedSymbol, define)
+  )(implicit context : FrontendContext) : et.Expr = boundValue match {
+    case primitiveDefine : PrimitiveDefineExpr =>
+      throw new DefinitionOutsideTopLevelException(appliedSymbol)
 
-      case None =>
-        // Apply the symbol
-        // This is the only way to "apply" syntax and primitives
-        // They cannot appear as normal expression values
-        extractSymbolApplication(boundValue, appliedSymbol, operands)
-    }
+    case _ =>
+      // Apply the symbol
+      // This is the only way to "apply" syntax and primitives
+      // They cannot appear as normal expression values
+      extractNonDefineApplication(boundValue, appliedSymbol, operands)
   }
 
+  /** Extracts an expression from the passed scoped data
+    *
+    * If definitions are allowed in this level they should be handled before calling this method
+    */
   def apply(datum : sst.ScopedDatum)(implicit context : FrontendContext) : et.Expr = (datum match {
     case sst.ScopedPair(appliedSymbol : sst.ScopedSymbol, cdr) =>
       appliedSymbol.resolve match {
@@ -241,7 +232,7 @@ import llambda.compiler.frontend.syntax.ExpandMacro
           // XXX: Does R7RS only allow macros to be applied as an improper list?
           cdr match {
             case sst.ScopedProperList(operands) =>
-              extractApplicationLike(otherBoundValue, appliedSymbol, operands)
+              extractApplication(otherBoundValue, appliedSymbol, operands)
 
             case improperList =>
               throw new MalformedExprException(improperList, "Non-syntax cannot be applied as an improper list")
@@ -250,8 +241,8 @@ import llambda.compiler.frontend.syntax.ExpandMacro
 
     case sst.ScopedProperList(procedure :: args) =>
       // Apply the result of the inner expression
-      val procedureExpr = ExtractInnerExpr(procedure)
-      et.Apply(procedureExpr, args.map(ExtractInnerExpr.apply))
+      val procedureExpr = ExtractExpr(procedure)
+      et.Apply(procedureExpr, args.map(ExtractExpr.apply))
 
     case scopedSymbol : sst.ScopedSymbol =>
       scopedSymbol.resolve match {

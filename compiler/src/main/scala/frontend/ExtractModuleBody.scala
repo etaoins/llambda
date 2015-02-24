@@ -3,9 +3,9 @@ import io.llambda
 
 import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
+import llambda.compiler.frontend.syntax.ExpandMacro
 
-/** Function object for extracting expressions at the outermost level */
-private object ExtractOutermostExpr extends ExprExtractor {
+object ExtractModuleBody  {
   private def guardOutermostDefinition(symbol : sst.ScopedSymbol)(implicit context : FrontendContext) {
     if (!context.config.schemeDialect.allowTopLevelRedefinition && symbol.resolveOpt.isDefined) {
       throw new DuplicateDefinitionException(symbol)
@@ -15,7 +15,7 @@ private object ExtractOutermostExpr extends ExprExtractor {
   protected def handleParsedDefine(
       located : SourceLocated,
       parsedDefine : ParsedDefine
-  )(implicit context : FrontendContext) : et.Expr = parsedDefine match {
+  )(implicit context : FrontendContext) : List[et.Expr] = parsedDefine match {
     case ParsedVarDefine(symbol, providedTypeOpt, exprBlock, storageLocConstructor) =>
       // There's a wart in Scheme that allows a top-level (define) to become a (set!) if the value is already defined as
       // a storage location
@@ -25,7 +25,7 @@ private object ExtractOutermostExpr extends ExprExtractor {
 
         case Some(storageLoc : StorageLocation) =>
           // Convert this to a (set!)
-          et.MutateVar(storageLoc, exprBlock())
+          List(et.MutateVar(storageLoc, exprBlock()))
 
         case Some(_) =>
           throw new BadSpecialFormException(symbol, s"Attempted mutating (define) non-variable ${symbol.name}")
@@ -36,7 +36,7 @@ private object ExtractOutermostExpr extends ExprExtractor {
           val boundValue = storageLocConstructor(symbol.name, schemeType)
 
           symbol.scope += (symbol.name -> boundValue)
-          et.TopLevelDefine(List(et.SingleBinding(boundValue, exprBlock())))
+          List(et.TopLevelDefine(List(et.SingleBinding(boundValue, exprBlock()))))
       }
 
     case ParsedMultipleValueDefine(fixedValueTargets, restValueTargetOpt, exprBlock) =>
@@ -50,19 +50,19 @@ private object ExtractOutermostExpr extends ExprExtractor {
       val fixedLocs = fixedValueTargets.map(_.createStorageLoc(vt.AnySchemeType))
       val restLocOpt = restValueTargetOpt.map(_.createStorageLoc(vt.UniformProperListType(vt.AnySchemeType)))
 
-      et.TopLevelDefine(List(et.MultipleValueBinding(fixedLocs, restLocOpt, exprBlock())))
+      List(et.TopLevelDefine(List(et.MultipleValueBinding(fixedLocs, restLocOpt, exprBlock()))))
 
     case ParsedSimpleDefine(symbol, boundValue) =>
       guardOutermostDefinition(symbol)
 
       // This doesn't create any expression tree nodes
       symbol.scope += (symbol.name -> boundValue)
-      et.Begin(Nil)
+      Nil
 
     case ParsedRecordTypeDefine(typeSymbol, recordType, procedures) =>
       typeSymbol.scope += (typeSymbol.name -> BoundType(recordType))
 
-      et.TopLevelDefine((procedures.map { case (procedureSymbol, expr) =>
+      List(et.TopLevelDefine((procedures.map { case (procedureSymbol, expr) =>
         val schemeType = SchemeTypeForSymbol(procedureSymbol)
         val storageLoc = new StorageLocation(procedureSymbol.name, schemeType)
 
@@ -71,14 +71,37 @@ private object ExtractOutermostExpr extends ExprExtractor {
         procedureSymbol.scope += (procedureSymbol.name -> storageLoc)
 
         et.SingleBinding(storageLoc, expr)
-      }).toList)
+      }).toList))
 
     case ParsedTypeAnnotation =>
-      et.Begin(Nil)
+      Nil
   }
-}
 
-object ExtractModuleBody  {
+  private def extractOutermostExpr(
+      datum : sst.ScopedDatum
+  )(implicit context : FrontendContext) : List[et.Expr] = datum match {
+    case sst.ScopedPair(appliedSymbol : sst.ScopedSymbol, cdr) =>
+      (appliedSymbol.resolve, cdr) match {
+        case (syntax : BoundSyntax, _) =>
+          // This is a macro - expand it
+          val expandedDatum = ExpandMacro(syntax, cdr, datum, trace=context.config.traceMacroExpansion)
+          extractOutermostExpr(expandedDatum)
+
+        case (Primitives.Begin, sst.ScopedProperList(innerExprData)) =>
+          // This is a (begin) - flatten it
+          innerExprData.flatMap(extractOutermostExpr)
+
+        case (definePrimitive : PrimitiveDefineExpr, sst.ScopedProperList(operands)) =>
+          handleParsedDefine(datum, ParseDefine(datum, definePrimitive, operands))
+
+        case _ =>
+          ExtractExpr(datum).toSequence
+      }
+
+    case _ =>
+      ExtractExpr(datum).toSequence
+  }
+
   /** Converts the body of a module (library or program) to a list of expressions
     *
     * @param  data       Scheme date of the module's body
@@ -88,9 +111,6 @@ object ExtractModuleBody  {
     data flatMap { datum =>
       // Annotate our symbols with our current scope
       val scopedDatum = sst.ScopedDatum(evalScope, datum)
-
-      ExpandBodyDatum(scopedDatum).flatMap {
-        ExtractOutermostExpr(_).toSequence
-      }
+      extractOutermostExpr(scopedDatum)
     }
 }

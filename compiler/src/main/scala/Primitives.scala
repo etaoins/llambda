@@ -1,6 +1,8 @@
 package io.llambda.compiler
 import io.llambda
 
+sealed abstract trait PrimitiveDefineExpr extends PrimitiveExpr
+
 /** Bindings for the primitive expressions and type constructors */
 object Primitives {
   object Begin extends PrimitiveExpr
@@ -15,15 +17,8 @@ object Primitives {
   object Quasiquote extends PrimitiveExpr
   object Unquote extends PrimitiveExpr
   object UnquoteSplicing extends PrimitiveExpr
-  object Define extends PrimitiveExpr
-  object DefineValues extends PrimitiveExpr
-  object DefineSyntax extends PrimitiveExpr
-  object DefineRecordType extends PrimitiveExpr
-  object DefineType extends PrimitiveExpr
-  object DefineReportProcedure extends PrimitiveExpr
   object Cast extends PrimitiveExpr
   object AnnotateExprType extends PrimitiveExpr
-  object AnnotateStorageLocType extends PrimitiveExpr
   object CondExpand extends PrimitiveExpr
   object Parameterize extends PrimitiveExpr
   object MakePredicate extends PrimitiveExpr
@@ -31,7 +26,15 @@ object Primitives {
   object Wildcard extends PrimitiveExpr
   object SyntaxRules extends PrimitiveExpr
 
-  object DefineNativeLibrary extends PrimitiveExpr
+  object Define extends PrimitiveDefineExpr
+  object DefineValues extends PrimitiveDefineExpr
+  object DefineSyntax extends PrimitiveDefineExpr
+  object DefineRecordType extends PrimitiveDefineExpr
+  object DefineType extends PrimitiveDefineExpr
+  object DefineReportProcedure extends PrimitiveDefineExpr
+  object DefineNativeLibrary extends PrimitiveDefineExpr
+  object AnnotateStorageLocType extends PrimitiveDefineExpr
+
   object StaticLibrary extends PrimitiveExpr
   object NativeFunction extends PrimitiveExpr
   object WorldFunction extends PrimitiveExpr

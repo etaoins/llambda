@@ -110,28 +110,27 @@ object ParseDefine {
     ParsedMultipleValueDefine(
       fixedValueTargets=fixedValueTargets,
       restValueTargetOpt=restValueTargetOpt,
-      expr=() => {ExtractInnerExpr(initialiserDatum) }
+      expr=() => {ExtractExpr(initialiserDatum) }
     )
   }
 
-  /** Attempts to parse an application as a type of definition
+  /** Parses an application as a type of definition
     *
-    * @param  located    Source location of the application
-    * @param  boundVaue  Bound value being applied. If this corresponds to one of the definition primitives it will be parsed as
-    *                    such
-    * @param  operands   Operands the the application
+    * @param  located          Source location of the application
+    * @param  primitiveDefine  Primitive define expression being applied
+    * @param  operands         Operands the the application
     * @return Parsed definition or None if it cannot be parsed as a definition
     */
   def apply(
       located : SourceLocated,
-      boundValue : BoundValue,
+      primitiveDefine : PrimitiveDefineExpr,
       operands : List[sst.ScopedDatum]
-  )(implicit context : FrontendContext) : Option[ParsedDefine] =
-    (boundValue, operands) match {
+  )(implicit context : FrontendContext) : ParsedDefine =
+    (primitiveDefine, operands) match {
       case (Primitives.Define, List(symbol : sst.ScopedSymbol, value)) =>
-        Some(ParsedVarDefine(symbol, None, () => {
-          ExtractInnerExpr(value)
-        }))
+        ParsedVarDefine(symbol, None, () => {
+          ExtractExpr(value)
+        })
 
       case (Primitives.Define, List(
           symbol : sst.ScopedSymbol,
@@ -141,12 +140,12 @@ object ParseDefine {
       )) =>
         val providedType = ExtractType.extractStableType(typeDatum)(context.config)
 
-        Some(ParsedVarDefine(symbol, Some(providedType), () => {
-          ExtractInnerExpr(value)
-        }))
+        ParsedVarDefine(symbol, Some(providedType), () => {
+          ExtractExpr(value)
+        })
 
       case (Primitives.Define, sst.ScopedAnyList((symbol : sst.ScopedSymbol) :: fixedArgs, restArgDatum) :: body) =>
-        Some(ParsedVarDefine(symbol, None, () => {
+        ParsedVarDefine(symbol, None, () => {
           ExtractLambda(
             located=located,
             argList=fixedArgs,
@@ -155,40 +154,40 @@ object ParseDefine {
             sourceNameHint=Some(symbol.name),
             typeDeclaration=LocTypeDeclarationForSymbol(symbol)
           ).assignLocationAndContextFrom(located, context.debugContext)
-        }))
+        })
 
       case (Primitives.DefineValues, List(sst.ScopedListOrDatum(operands, operandTerminator), initialiser)) =>
-        Some(parseMultipleValueDefine(operands, operandTerminator, initialiser))
+        parseMultipleValueDefine(operands, operandTerminator, initialiser)
 
       case (Primitives.DefineSyntax, _) =>
-        Some(ParseSyntaxDefine(located, operands, context.debugContext))
+        ParseSyntaxDefine(located, operands, context.debugContext)
 
       case (Primitives.DefineRecordType, _) =>
-        Some(ParseRecordTypeDefine(located, operands)(context.config))
+        ParseRecordTypeDefine(located, operands)(context.config)
 
       case (Primitives.DefineType, (typeAlias : sst.ScopedSymbol) :: typeDatum :: Nil) =>
         // Allow the type's new name to be a recursion marker inside the definition
         val recursiveVars = ExtractType.RecursiveVars(Map(typeAlias.name -> 0))
         val extractedType = ExtractType.extractValueType(typeDatum, recursiveVars)
 
-        Some(ParsedSimpleDefine(typeAlias, BoundType(extractedType)))
+        ParsedSimpleDefine(typeAlias, BoundType(extractedType))
 
       case (Primitives.DefineType, sst.ScopedProperList((constructorName : sst.ScopedSymbol) :: args) :: definition :: Nil) =>
         val typeConstructor = ExtractUserDefinedTypeConstructor(args, definition)
-        Some(ParsedSimpleDefine(constructorName, typeConstructor))
+        ParsedSimpleDefine(constructorName, typeConstructor)
 
       case (Primitives.DefineReportProcedure, List(symbol : sst.ScopedSymbol, definitionData)) =>
-        Some(ParsedVarDefine(
+        ParsedVarDefine(
           definedSymbol=symbol,
           providedType=None,
           expr=() => {
-            ExtractInnerExpr(definitionData)
+            ExtractExpr(definitionData)
           },
           storageLocConstructor=(new ReportProcedure(_, _))
-        ))
+        )
 
       case (Primitives.DefineReportProcedure, sst.ScopedAnyList((symbol : sst.ScopedSymbol) :: fixedArgs, restArgDatum) :: body) =>
-        Some(ParsedVarDefine(
+        ParsedVarDefine(
           definedSymbol=symbol,
           providedType=None,
           expr=() => {
@@ -202,10 +201,10 @@ object ParseDefine {
             ).assignLocationAndContextFrom(located, context.debugContext)
           },
           storageLocConstructor=(new ReportProcedure(_, _))
-        ))
+        )
 
       case (Primitives.DefineNativeLibrary, List(libAlias : sst.ScopedSymbol, libDatum)) =>
-        Some(ParsedSimpleDefine(libAlias, ExtractNativeLibrary(libDatum)))
+        ParsedSimpleDefine(libAlias, ExtractNativeLibrary(libDatum))
 
       case (Primitives.AnnotateStorageLocType, List(declaredSymbol : sst.ScopedSymbol, typeDatum)) =>
         val declarationType = ExtractType.extractLocTypeDeclaration(typeDatum)
@@ -225,9 +224,10 @@ object ParseDefine {
         // Record this declaration
         declaredSymbol.scope.typeDeclarations += (declaredSymbol -> declarationType)
 
-        Some(ParsedTypeAnnotation)
+        ParsedTypeAnnotation
 
-      case _ => None
+      case _ =>
+        throw new BadSpecialFormException(located, "Unrecognised definition syntax")
   }
 
 }

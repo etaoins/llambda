@@ -5,23 +5,58 @@ import llambda.compiler.et
 import llambda.compiler.sst
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler._
+import llambda.compiler.frontend.syntax.ExpandMacro
 
-import collection.mutable.ListBuffer
+import annotation.tailrec
+
+private object FindBodyDefines {
+  case class Result(parsedDefines : List[ParsedDefine], bodyData : List[sst.ScopedDatum])
+
+  /** Splits a body in to definitions and body expressions
+    *
+    * This will extract definitions from the body until a non-define is encountered. It will then return all parsed
+    * defines and the remaining data.
+    */
+  def apply(
+      data : List[sst.ScopedDatum],
+      definesAcc : List[ParsedDefine] = Nil
+  )(implicit context : FrontendContext) : Result = data match {
+    case (pairDatum @ sst.ScopedPair(appliedSymbol : sst.ScopedSymbol, cdr)) :: restData =>
+      (appliedSymbol.resolveOpt, cdr) match {
+        case (Some(syntax : BoundSyntax), _) =>
+          // This is a macro - expand it
+          val expandedDatum = ExpandMacro(syntax, cdr, pairDatum, trace=context.config.traceMacroExpansion)
+          apply(expandedDatum :: restData, definesAcc)
+
+        case (Some(Primitives.Begin), sst.ScopedProperList(innerExprData)) =>
+          // This is a (begin) - flatten it
+          apply(innerExprData ++ restData, definesAcc)
+
+        case (Some(definePrimitive : PrimitiveDefineExpr), sst.ScopedProperList(operands)) =>
+          val parsedDefine = ParseDefine(pairDatum, definePrimitive, operands)
+
+          parsedDefine match {
+            case ParsedSimpleDefine(symbol, boundValue) =>
+              // Inject this macro, type etc. in to the scope so any future bindings can use it
+              symbol.scope += (symbol.name -> boundValue)
+              apply(restData, definesAcc)
+
+            case _ =>
+              apply(restData, parsedDefine :: definesAcc)
+          }
+
+        case _ =>
+          // Not a define
+          Result(definesAcc.reverse, data)
+      }
+
+    case otherData =>
+      // Not a define
+      Result(definesAcc.reverse, otherData)
+  }
+}
 
 private[frontend] object ExtractBodyDefinition {
-  private def parseDefineDatum(datum : sst.ScopedDatum)(implicit context : FrontendContext) : Option[ParsedDefine] =
-    datum match {
-      case sst.ScopedProperList((appliedSymbol : sst.ScopedSymbol) :: operands) =>
-        appliedSymbol.resolveOpt match {
-          case Some(otherBoundValue) =>
-            ParseDefine(appliedSymbol, otherBoundValue, operands)
-
-          case _ => None
-        }
-
-      case _ => None
-    }
-
   /** Extracts the definition of a body with the given arguments
     *
     * The primary type of body definition in Scheme occurs in a procedure. However, these also occuring in other
@@ -71,23 +106,11 @@ private[frontend] object ExtractBodyDefinition {
     // Rescope our definition
     val scopedDefinition = definition.map(_.rescoped(scopeMapping))
 
-    // Expand any macros or (begin)s recursively
-    val expandedDefinition = scopedDefinition.flatMap(ExpandBodyDatum.apply)
-
     // Split our definition is to (define)s and a body
-    val defineBuilder = new ListBuffer[ParsedDefine]
-
-    val bodyData = expandedDefinition.dropWhile { datum =>
-      parseDefineDatum(datum) match {
-        case Some(define) =>
-          defineBuilder += define
-          true
-        case None => false
-      }
-    }
+    val foundDefines = FindBodyDefines(scopedDefinition)
 
     // Expand our scopes with all of the defines
-    val bindingBlocks = defineBuilder.toList flatMap {
+    val bindingBlocks = foundDefines.parsedDefines flatMap {
       case ParsedVarDefine(symbol, providedTypeOpt, exprBlock, storageLocConstructor) =>
         val schemeType = SchemeTypeForSymbol(symbol, providedTypeOpt)
         val boundValue = storageLocConstructor(symbol.name, schemeType)
@@ -129,7 +152,7 @@ private[frontend] object ExtractBodyDefinition {
 
     // Find the expressions in our body
     val bodyExpr = et.Expr.fromSequence(
-      bodyData.map(ExtractInnerExpr.apply)
+      foundDefines.bodyData.map(ExtractExpr(_))
     )
 
     // Finish the inner scopes
