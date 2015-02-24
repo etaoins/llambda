@@ -66,7 +66,7 @@ private[frontend] object ParseSyntaxDefine {
   }
 
   def apply(
-      appliedSymbol : sst.ScopedSymbol,
+      located : SourceLocated,
       operands : List[sst.ScopedDatum],
       debugContext : debug.SourceContext
   ) : ParsedSimpleDefine = operands match {
@@ -86,6 +86,6 @@ private[frontend] object ParseSyntaxDefine {
       parseTransformers(definedSymbol, SyntaxVariable.fromSymbol(ellipsisSymbol), literalData, rulesData, debugContext)
 
     case _ =>
-      throw new BadSpecialFormException(appliedSymbol, "Unrecognized (define-syntax) form")
+      throw new BadSpecialFormException(located, "Unrecognized (define-syntax) form")
   }
 }

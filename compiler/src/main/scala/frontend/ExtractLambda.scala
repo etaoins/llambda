@@ -167,7 +167,7 @@ object ExtractLambda {
     val bodyContext = parentContext.copy(debugContext=bodyDebugContext)
 
     // Extract the body
-    val bodyExpr = ExtractModuleBody.extractBodyDefinition(
+    val bodyExpr = ExtractBodyDefinition(
       args=boundFixedArgs ++ boundRestArgOpt,
       definition=definition
     )(bodyContext)
