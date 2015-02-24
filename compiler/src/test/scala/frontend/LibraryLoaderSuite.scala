@@ -4,8 +4,8 @@ import io.llambda
 import org.scalatest.FunSuite
 import llambda.compiler._
 
-class LibraryLoaderSuite extends FunSuite { 
-  implicit val defaultFrontendConfig = 
+class LibraryLoaderSuite extends FunSuite {
+  implicit val defaultFrontendConfig =
     FrontendConfig(
       includePath=IncludePath(),
       featureIdentifiers=Set(),
@@ -22,22 +22,22 @@ class LibraryLoaderSuite extends FunSuite {
 
     assert(loader.exists(nonExistantName) === false)
   }
-  
+
   test("dubious library names") {
     val loader = new LibraryLoader(platform.Posix64LE)
 
     intercept[DubiousLibraryNameComponentException] {
       loader.load(StringComponent("foo/bar") :: Nil)
     }
-    
+
     intercept[DubiousLibraryNameComponentException] {
       loader.exists(StringComponent("foo/bar") :: Nil)
     }
-    
+
     intercept[DubiousLibraryNameComponentException] {
       loader.load(StringComponent("bar\u0000baz") :: Nil)
     }
-    
+
     intercept[DubiousLibraryNameComponentException] {
       loader.exists(StringComponent("bar\u0000baz") :: Nil)
     }
@@ -61,7 +61,7 @@ class LibraryLoaderSuite extends FunSuite {
 
     assert(loader.exists(List("llambda", "internal", "primitives").map(StringComponent(_))) === true)
   }
-  
+
   test("load llambda nfi") {
     val loader = new LibraryLoader(platform.Posix64LE)
     val bindings = loader.load(StringComponent("llambda") :: StringComponent("nfi") :: Nil)
@@ -76,7 +76,7 @@ class LibraryLoaderSuite extends FunSuite {
       loader.load(List(StringComponent("test"), StringComponent("unmatchedname")))
     }
   }
-  
+
   test("unmatched library name exists") {
     val loader = new LibraryLoader(platform.Posix64LE)
 
@@ -92,13 +92,13 @@ class LibraryLoaderSuite extends FunSuite {
 
     assert(loader.libraryExprs.length === 1)
   }
-  
+
   test("single expression library exists") {
     val loader = new LibraryLoader(platform.Posix64LE)
 
     assert(loader.exists(List(StringComponent("test"), StringComponent("singleexpr"))) === true)
   }
-  
+
   test("load single expression library with non-default include path") {
     val loader = new LibraryLoader(platform.Posix64LE)
 
@@ -115,7 +115,7 @@ class LibraryLoaderSuite extends FunSuite {
 
     assert(loader.libraryExprs.length === 1)
   }
-  
+
   test("single expression library with non-default include path exists") {
     val loader = new LibraryLoader(platform.Posix64LE)
 
@@ -138,7 +138,7 @@ class LibraryLoaderSuite extends FunSuite {
 
     assert(loader.libraryExprs.length === 1)
   }
-  
+
   test("multiple top-level data library") {
     val loader = new LibraryLoader(platform.Posix64LE)
 

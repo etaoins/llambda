@@ -49,8 +49,13 @@ trait ExprHelpers extends FunSuite with OptionValues {
     val data = SchemeParser.parseStringAsData(scheme)
 
     val frontendConfig = frontendConfigForDialect(schemeDialect)
-    val bodyExtractor = new frontend.ModuleBodyExtractor(debugContext, libraryLoader, frontendConfig)
-    val exprs = bodyExtractor(data, scope)
+    val frontendContext = frontend.FrontendContext(
+      frontendConfig,
+      libraryLoader,
+      debugContext
+    )
+
+    val exprs = frontend.ExtractModuleBody(data, scope)(frontendContext)
 
     frontend.FinishScope(scope)
 

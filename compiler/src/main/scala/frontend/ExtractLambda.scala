@@ -136,7 +136,7 @@ object ExtractLambda {
       definition : List[sst.ScopedDatum],
       sourceNameHint : Option[String] = None,
       typeDeclaration : LocTypeDeclaration = MonomorphicDeclaration(vt.AnySchemeType)
-  )(debugContext : debug.SourceContext, libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : et.Lambda = {
+  )(implicit parentContext : FrontendContext) : et.Lambda = {
     // Parse our argument list
     val parsedFormals = ParseFormals(argList, argTerminator)
 
@@ -156,7 +156,7 @@ object ExtractLambda {
     // Create a subprogram for debug info purposes
     val subprogramDebugContextOpt = definition.headOption.flatMap(_.locationOpt).map { location =>
       new debug.SubprogramContext(
-        parentContext=debugContext,
+        parentContext=parentContext.debugContext,
         filenameOpt=location.filenameOpt,
         startLocation=location,
         sourceNameOpt=sourceNameHint
@@ -164,10 +164,13 @@ object ExtractLambda {
     }
 
     val bodyDebugContext = subprogramDebugContextOpt.getOrElse(debug.UnknownContext)
+    val bodyContext = parentContext.copy(debugContext=bodyDebugContext)
 
     // Extract the body
-    val extractor = new ModuleBodyExtractor(bodyDebugContext, libraryLoader, frontendConfig)
-    val bodyExpr = extractor.extractBodyDefinition(boundFixedArgs ++ boundRestArgOpt, definition)
+    val bodyExpr = ExtractModuleBody.extractBodyDefinition(
+      args=boundFixedArgs ++ boundRestArgOpt,
+      definition=definition
+    )(bodyContext)
 
     et.Lambda(
       polyType=reconciledTypes.polymorphicType,

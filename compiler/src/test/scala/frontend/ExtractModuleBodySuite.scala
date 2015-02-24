@@ -7,7 +7,7 @@ import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.valuetype.Implicits._
 
-class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues with testutil.ExprHelpers {
+class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with testutil.ExprHelpers {
   implicit val primitiveScope = new ImmutableScope(collection.mutable.Map(Primitives.bindings.toSeq : _*))
   
   val plusLoc = new StorageLocation("+")
@@ -779,12 +779,12 @@ class ModuleBodyExtractorSuite extends FunSuite with Inside with OptionValues wi
       )
     )
   }
-  
+
   test("cond-expand with one false clause") {
-    // ModuleBodyExtractor removes the empty et.Begin
+    // ExtractModuleBody removes the empty et.Begin
     assert(bodyFor("""(cond-expand (not-a-feature 1 2 3))""")(primitiveScope) === Nil)
   }
-  
+
   test("cond-expand with one false with else") {
     // We would normally expand this to an empty et.Begin but it's disallowed by R7RS
     assert(bodyFor("""(cond-expand ((not llambda) 1 2 3) (else 4 5 6))""")(primitiveScope) ===

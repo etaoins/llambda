@@ -51,7 +51,8 @@ class Evaluator(targetPlatform : platform.TargetPlatform, schemeDialect : dialec
 
   val loader : frontend.LibraryLoader = new frontend.LibraryLoader(targetPlatform)
   val prefixExprs : mutable.ListBuffer[et.Expr] = new mutable.ListBuffer
-  val extractor = new frontend.ModuleBodyExtractor(debug.UnknownContext, loader, frontendConfig)
+
+  implicit val frontendContext = frontend.FrontendContext(frontendConfig, loader, debug.UnknownContext)
 
   val initialLibraries = List(
     List("scheme", "base"),
@@ -82,7 +83,7 @@ class Evaluator(targetPlatform : platform.TargetPlatform, schemeDialect : dialec
     */
   private def evalSimpleDefine(defineDatum : ast.Datum) : String = {
     // Evaluating this in our top-level scope and collect any expressions required for record type defines
-    prefixExprs ++= extractor(List(defineDatum), scope)
+    prefixExprs ++= frontend.ExtractModuleBody(List(defineDatum), scope)
 
     "defined"
   }
@@ -93,7 +94,7 @@ class Evaluator(targetPlatform : platform.TargetPlatform, schemeDialect : dialec
     val childScope = new Scope(mutable.Map(), Some(scope))
 
     // Bind the value using the original (define)
-    val defineExprs = extractor(List(defineDatum), childScope)
+    val defineExprs = frontend.ExtractModuleBody(List(defineDatum), childScope)
 
     // Then print the bound datum
     val printingDatum =
@@ -102,7 +103,7 @@ class Evaluator(targetPlatform : platform.TargetPlatform, schemeDialect : dialec
         ast.Symbol(identifier)
       ))
 
-    val printingExprs = extractor(List(printingDatum), childScope)
+    val printingExprs = frontend.ExtractModuleBody(List(printingDatum), childScope)
     val programExprs = loader.libraryExprs ++ prefixExprs.toList ++ defineExprs ++ printingExprs
 
     val resultString = exprsToOutputString(programExprs)
@@ -194,7 +195,7 @@ class Evaluator(targetPlatform : platform.TargetPlatform, schemeDialect : dialec
           ))
         ))
 
-      val printingExprs = extractor(List(printingDatum), scope)
+      val printingExprs = frontend.ExtractModuleBody(List(printingDatum), scope)
       val programExprs = loader.libraryExprs ++ prefixExprs.toList ++ printingExprs
 
       exprsToOutputString(programExprs)

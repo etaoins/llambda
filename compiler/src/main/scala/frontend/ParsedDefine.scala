@@ -33,6 +33,6 @@ case class ParsedRecordTypeDefine(
     procedures : Map[sst.ScopedSymbol, et.ArtificialProcedure]
 ) extends ParsedDefine
 
-// This doesn't introduce any bound values - it just signals to ModuleBodyExtractor to not attempt to parse the define
+// This doesn't introduce any bound values - it just signals to ExtractModuleBody to not attempt to parse the define
 // as a normal expression
 case object ParsedTypeAnnotation extends ParsedDefine

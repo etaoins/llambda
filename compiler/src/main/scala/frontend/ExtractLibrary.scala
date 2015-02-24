@@ -89,9 +89,14 @@ private[frontend] object ExtractLibrary {
           )
 
           val debugContext = debug.SourceContext.fromFilenameOpt(filenameOpt)
-          val bodyExtractor = new ModuleBodyExtractor(debugContext, libraryLoader, beginConfig)
 
-          bodyExtractor(exprs, scope)
+          val beginContext = FrontendContext(
+            beginConfig,
+            libraryLoader,
+            debugContext
+          )
+
+          ExtractModuleBody(exprs, scope)(beginContext)
 
         case (_, other) =>
           throw new BadSpecialFormException(other, "Bad begin declaration")
