@@ -129,7 +129,7 @@ private[frontend] object ExtractBodyDefinition {
 
     // Find the expressions in our body
     val bodyExpr = et.Expr.fromSequence(
-      bodyData.map(ExtractExpr(_, false))
+      bodyData.map(ExtractInnerExpr.apply)
     )
 
     // Finish the inner scopes

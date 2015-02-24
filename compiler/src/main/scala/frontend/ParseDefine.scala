@@ -110,7 +110,7 @@ object ParseDefine {
     ParsedMultipleValueDefine(
       fixedValueTargets=fixedValueTargets,
       restValueTargetOpt=restValueTargetOpt,
-      expr=() => {ExtractExpr(initialiserDatum) }
+      expr=() => {ExtractInnerExpr(initialiserDatum) }
     )
   }
 
@@ -130,7 +130,7 @@ object ParseDefine {
     (boundValue, operands) match {
       case (Primitives.Define, List(symbol : sst.ScopedSymbol, value)) =>
         Some(ParsedVarDefine(symbol, None, () => {
-          ExtractExpr(value)
+          ExtractInnerExpr(value)
         }))
 
       case (Primitives.Define, List(
@@ -142,7 +142,7 @@ object ParseDefine {
         val providedType = ExtractType.extractStableType(typeDatum)(context.config)
 
         Some(ParsedVarDefine(symbol, Some(providedType), () => {
-          ExtractExpr(value)
+          ExtractInnerExpr(value)
         }))
 
       case (Primitives.Define, sst.ScopedAnyList((symbol : sst.ScopedSymbol) :: fixedArgs, restArgDatum) :: body) =>
@@ -182,7 +182,7 @@ object ParseDefine {
           definedSymbol=symbol,
           providedType=None,
           expr=() => {
-            ExtractExpr(definitionData)
+            ExtractInnerExpr(definitionData)
           },
           storageLocConstructor=(new ReportProcedure(_, _))
         ))
