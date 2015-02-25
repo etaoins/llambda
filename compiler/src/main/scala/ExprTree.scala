@@ -144,29 +144,38 @@ case class CaseLambda(
     vt.CaseProcedureType(clauses.map(_.schemeType))
 }
 
-sealed abstract class Binding {
-  def storageLocs : List[StorageLocation]
-  def initialiser : Expr
-
-  def map(f : Expr => Expr) : Binding
-}
-
-case class SingleBinding(storageLoc : StorageLocation, initialiser : Expr) extends Binding {
-  def storageLocs = List(storageLoc)
-
-  def map(f : Expr => Expr) =
-    SingleBinding(storageLoc, f(initialiser))
-}
-
-case class MultipleValueBinding(
+/** Binding on an initialiser to zero or more values
+  *
+  * @param  fixedArgLocs  Storage locations to deconstruct the initial values in to
+  * @param  restLocOpt    Optional location to place the rest list of values
+  * @param  initialiser   Initialiser producing the values to bind
+  */
+case class Binding(
     fixedLocs : List[StorageLocation],
     restLocOpt : Option[StorageLocation],
     initialiser : Expr
-) extends Binding {
+) {
   def storageLocs = fixedLocs ++ restLocOpt.toList
 
   def map(f : Expr => Expr) =
-    MultipleValueBinding(fixedLocs, restLocOpt, f(initialiser))
+    Binding(fixedLocs, restLocOpt, f(initialiser))
+}
+
+/** Companion object for bindings of a single value
+  *
+  * This is the vast majority of bindings in Scheme so this is a convenient shorthand for dealing with them
+  */
+object SingleBinding {
+  def unapply(binding : Binding) : Option[(StorageLocation, Expr)] = binding match {
+    case Binding(List(singleLoc), None, initialiser) =>
+      Some((singleLoc, initialiser))
+
+    case _ =>
+      None
+  }
+
+  def apply(storageLoc : StorageLocation, expr : et.Expr) =
+    Binding(List(storageLoc), None, expr)
 }
 
 case class TopLevelDefine(bindings : List[Binding]) extends Expr {

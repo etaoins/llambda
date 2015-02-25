@@ -71,7 +71,7 @@ private[planner] object RetypeLambdaArgs {
         case (currentArgTypes, et.SingleBinding(bindLoc, bindExpr)) =>
           attributeTypeToExpr(bindExpr, bindLoc.schemeType, currentArgTypes)
 
-        case (currentArgTypes, _ : et.MultipleValueBinding) =>
+        case (currentArgTypes, _) =>
           // We don't support annotating multiple values
           currentArgTypes
       }

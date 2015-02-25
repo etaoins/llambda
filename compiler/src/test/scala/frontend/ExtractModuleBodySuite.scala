@@ -207,7 +207,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     assert(expressions === List(
       et.TopLevelDefine(List(
-        et.MultipleValueBinding(List(storageLocX, storageLocY), None, et.Literal(ast.IntegerLiteral(2)))
+        et.Binding(List(storageLocX, storageLocY), None, et.Literal(ast.IntegerLiteral(2)))
       ))
     ))
   }
@@ -226,7 +226,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     assert(expressions === List(
       et.TopLevelDefine(List(
-        et.MultipleValueBinding(Nil, Some(storageLocR), et.Literal(ast.IntegerLiteral(2)))
+        et.Binding(Nil, Some(storageLocR), et.Literal(ast.IntegerLiteral(2)))
       ))
     ))
   }
@@ -265,7 +265,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     assert(expressions === List(
       et.TopLevelDefine(List(
-        et.MultipleValueBinding(List(storageLocX, storageLocY), Some(storageLocR), et.Literal(ast.IntegerLiteral(2)))
+        et.Binding(List(storageLocX, storageLocY), Some(storageLocR), et.Literal(ast.IntegerLiteral(2)))
       ))
     ))
   }
@@ -292,7 +292,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     assert(expressions === List(
       et.TopLevelDefine(List(
-        et.MultipleValueBinding(List(storageLocX, storageLocY), None, et.Literal(ast.IntegerLiteral(2)))
+        et.Binding(List(storageLocX, storageLocY), None, et.Literal(ast.IntegerLiteral(2)))
       ))
     ))
   }
@@ -311,7 +311,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     assert(expressions === List(
       et.TopLevelDefine(List(
-        et.MultipleValueBinding(Nil, Some(storageLocR), et.Literal(ast.IntegerLiteral(2)))
+        et.Binding(Nil, Some(storageLocR), et.Literal(ast.IntegerLiteral(2)))
       ))
     ))
   }
@@ -349,7 +349,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
 
     assert(expressions === List(
       et.TopLevelDefine(List(
-        et.MultipleValueBinding(List(storageLocX, storageLocY), Some(storageLocR), et.Literal(ast.IntegerLiteral(2)))
+        et.Binding(List(storageLocX, storageLocY), Some(storageLocR), et.Literal(ast.IntegerLiteral(2)))
       ))
     ))
   }

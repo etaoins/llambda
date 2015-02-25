@@ -43,7 +43,7 @@ private[planner] object PlanBind {
 
           (isSelfRecursiveLambda, neededNonSelfRecursives)
 
-        case _ : et.MultipleValueBinding =>
+        case _ =>
           // Multiple value bindings can't be recursive
           (false, neededRecursives)
       }
@@ -78,7 +78,7 @@ private[planner] object PlanBind {
         case et.SingleBinding(storageLoc, otherExpr) =>
           PlanExpr(postrecursiveState)(otherExpr, Some(storageLoc.sourceName))
 
-        case et.MultipleValueBinding(_, _, initialiser) =>
+        case et.Binding(_, _, initialiser) =>
           // Multiple value bindings don't support source names as one expression maps to multiple storage locations
           PlanExpr(postrecursiveState)(initialiser, None)
       }
@@ -93,7 +93,7 @@ private[planner] object PlanBind {
 
           Map(storageLoc -> initialIntermediate)
 
-        case et.MultipleValueBinding(fixedLocs, restLocOpt, _) =>
+        case et.Binding(fixedLocs, restLocOpt, _) =>
           val fixedValueCount = fixedLocs.length
           val memberTypes = fixedLocs.map(_.schemeType)
 

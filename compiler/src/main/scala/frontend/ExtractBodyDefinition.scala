@@ -125,7 +125,7 @@ private[frontend] object ExtractBodyDefinition {
         val restLocOpt = restValueTargetOpt.map(_.createStorageLoc(vt.UniformProperListType(vt.AnySchemeType)))
 
         List(
-          { () => et.MultipleValueBinding(fixedLocs, restLocOpt, exprBlock()) }
+          { () => et.Binding(fixedLocs, restLocOpt, exprBlock()) }
         )
 
       case ParsedSimpleDefine(symbol, boundValue) =>

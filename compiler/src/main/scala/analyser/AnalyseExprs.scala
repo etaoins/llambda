@@ -52,7 +52,7 @@ object AnalyseExprs  {
         case et.SingleBinding(storageLoc, initialiser) =>
           TopLevelDefineRequired(storageLoc, initialiser, acc)
 
-        case _ : et.MultipleValueBinding =>
+        case _ =>
           // We don't have enough information in the expression tree to determine if the initialiser will provide
           // enough values to satisfy the value target list
           true
@@ -91,7 +91,7 @@ object AnalyseExprs  {
             // Recurse down our initialiser
             handleNestedExpr(initialiser, accWithBinding)
 
-          case (et.MultipleValueBinding(_, _, initialiser), previousAcc) =>
+          case (et.Binding(_, _, initialiser), previousAcc) =>
             // We don't record any initialiser information for multiple value bindings
             handleNestedExpr(initialiser, previousAcc)
         }

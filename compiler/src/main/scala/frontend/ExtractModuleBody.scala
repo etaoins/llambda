@@ -50,7 +50,7 @@ object ExtractModuleBody {
       val fixedLocs = fixedValueTargets.map(_.createStorageLoc(vt.AnySchemeType))
       val restLocOpt = restValueTargetOpt.map(_.createStorageLoc(vt.UniformProperListType(vt.AnySchemeType)))
 
-      List(et.TopLevelDefine(List(et.MultipleValueBinding(fixedLocs, restLocOpt, exprBlock()))))
+      List(et.TopLevelDefine(List(et.Binding(fixedLocs, restLocOpt, exprBlock()))))
 
     case ParsedSimpleDefine(symbol, boundValue) =>
       guardOutermostRedefinition(symbol)
