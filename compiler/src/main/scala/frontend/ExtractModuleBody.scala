@@ -5,8 +5,8 @@ import llambda.compiler._
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.frontend.syntax.ExpandMacro
 
-object ExtractModuleBody  {
-  private def guardOutermostDefinition(symbol : sst.ScopedSymbol)(implicit context : FrontendContext) {
+object ExtractModuleBody {
+  private def guardOutermostRedefinition(symbol : sst.ScopedSymbol)(implicit context : FrontendContext) {
     if (!context.config.schemeDialect.allowTopLevelRedefinition && symbol.resolveOpt.isDefined) {
       throw new DuplicateDefinitionException(symbol)
     }
@@ -53,7 +53,7 @@ object ExtractModuleBody  {
       List(et.TopLevelDefine(List(et.MultipleValueBinding(fixedLocs, restLocOpt, exprBlock()))))
 
     case ParsedSimpleDefine(symbol, boundValue) =>
-      guardOutermostDefinition(symbol)
+      guardOutermostRedefinition(symbol)
 
       // This doesn't create any expression tree nodes
       symbol.scope += (symbol.name -> boundValue)
@@ -66,7 +66,7 @@ object ExtractModuleBody  {
         val schemeType = SchemeTypeForSymbol(procedureSymbol)
         val storageLoc = new StorageLocation(procedureSymbol.name, schemeType)
 
-        guardOutermostDefinition(procedureSymbol)
+        guardOutermostRedefinition(procedureSymbol)
 
         procedureSymbol.scope += (procedureSymbol.name -> storageLoc)
 
