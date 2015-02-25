@@ -9,37 +9,22 @@ import llambda.compiler.frontend.syntax.ParseSyntaxDefine
 
 abstract sealed class ParsedDefine
 
-/** Parsed single variable definition
-  *
-  * This is typically the result of parsing a normal (define)
+/** Target for a value in a multiple value define
   *
   * @param  definedSymbol          Symbol being defined
-  * @param  providedType           Optional type annotation for the defined variable
-  * @param  expr                   Closure providing the initialiser for the variable. This is a closure to allow the
-  *                                scope to have any recursive bindings injected before evaluating the initialiser.
+  * @param  providedTypeOpt        Optional type annotation for the defined variable
   * @param  storageLocConstructor  Closure constructing the storage location for the variable. This is used to implement
   *                                (define-report-procedure) which constructs specially annotated storage locations
   */
-case class ParsedVarDefine(
-    definedSymbol : sst.ScopedSymbol,
-    providedType : Option[vt.SchemeType],
-    expr : () => et.Expr,
-    storageLocConstructor : (String, vt.SchemeType) => StorageLocation = (new StorageLocation(_, _))
-) extends ParsedDefine
-
-/** Target for a value in a multiple value define
-  *
-  * @param  definedSymbol  Symbol being defined
-  * @param  providedType   Option type annotation for the defined variable
-  */
 case class ValueTarget(
     definedSymbol : sst.ScopedSymbol,
-    providedType : Option[vt.SchemeType]
+    providedTypeOpt : Option[vt.SchemeType],
+    storageLocConstructor : (String, vt.SchemeType) => StorageLocation = (new StorageLocation(_, _))
 ) {
-  /** Creates a storage location for this value target in the defined symbol's scope */
-  def createStorageLoc(defaultType : vt.SchemeType) : StorageLocation = {
-    val schemeType = SchemeTypeForSymbol(definedSymbol, providedType, defaultType)
-    val boundValue = new StorageLocation(definedSymbol.name, schemeType)
+  /** Creates and binds a storage location for this value target in the defined symbol's scope */
+  def bindStorageLoc(defaultType : vt.SchemeType) : StorageLocation = {
+    val schemeType = SchemeTypeForSymbol(definedSymbol, providedTypeOpt, defaultType)
+    val boundValue = storageLocConstructor(definedSymbol.name, schemeType)
 
     definedSymbol.scope += (definedSymbol.name -> boundValue)
 
@@ -47,15 +32,13 @@ case class ValueTarget(
   }
 }
 
-/** Parsed multiple value define
-  *
-  * This is the result of parsing a (define-values)
+/** Parsed definition for zero or more variables
   *
   * @param  fixedValueTargets   Targets for the fixed variables
   * @param  restValueTargetOpt  Optional target for the rest list variable
   * @param  expr                Closure providing the multiple value initialiser
   */
-case class ParsedMultipleValueDefine(
+case class ParsedVarsDefine(
     fixedValueTargets : List[ValueTarget],
     restValueTargetOpt : Option[ValueTarget],
     expr : () => et.Expr
@@ -96,7 +79,7 @@ object ParseDefine {
       argList : List[sst.ScopedDatum],
       argTerminator : sst.ScopedDatum,
       initialiserDatum : sst.ScopedDatum
-  )(implicit context : FrontendContext) : ParsedMultipleValueDefine = {
+  )(implicit context : FrontendContext) : ParsedVarsDefine = {
     val parsedFormals = ParseFormals(argList, argTerminator)
 
     val fixedValueTargets = parsedFormals.fixedArgs map { case (symbol, schemeTypeOpt) =>
@@ -107,7 +90,7 @@ object ParseDefine {
       ValueTarget(symbol, memberTypeOpt.map(vt.UniformProperListType(_)))
     }
 
-    ParsedMultipleValueDefine(
+    ParsedVarsDefine(
       fixedValueTargets=fixedValueTargets,
       restValueTargetOpt=restValueTargetOpt,
       expr=() => {ExtractExpr(initialiserDatum) }
@@ -128,7 +111,9 @@ object ParseDefine {
   )(implicit context : FrontendContext) : ParsedDefine =
     (primitiveDefine, operands) match {
       case (Primitives.Define, List(symbol : sst.ScopedSymbol, value)) =>
-        ParsedVarDefine(symbol, None, () => {
+        val valueTarget = ValueTarget(definedSymbol=symbol, providedTypeOpt=None)
+
+        ParsedVarsDefine(List(valueTarget), None, () => {
           ExtractExpr(value)
         })
 
@@ -139,13 +124,16 @@ object ParseDefine {
           value
       )) =>
         val providedType = ExtractType.extractStableType(typeDatum)(context.config)
+        val valueTarget = ValueTarget(definedSymbol=symbol, providedTypeOpt=Some(providedType))
 
-        ParsedVarDefine(symbol, Some(providedType), () => {
+        ParsedVarsDefine(List(valueTarget), None, () => {
           ExtractExpr(value)
         })
 
       case (Primitives.Define, sst.ScopedAnyList((symbol : sst.ScopedSymbol) :: fixedArgs, restArgDatum) :: body) =>
-        ParsedVarDefine(symbol, None, () => {
+        val valueTarget = ValueTarget(definedSymbol=symbol, providedTypeOpt=None)
+
+        ParsedVarsDefine(List(valueTarget), None, () => {
           ExtractLambda(
             located=located,
             argList=fixedArgs,
@@ -177,19 +165,30 @@ object ParseDefine {
         ParsedSimpleDefine(constructorName, typeConstructor)
 
       case (Primitives.DefineReportProcedure, List(symbol : sst.ScopedSymbol, definitionData)) =>
-        ParsedVarDefine(
+        val valueTarget = ValueTarget(
           definedSymbol=symbol,
-          providedType=None,
-          expr=() => {
-            ExtractExpr(definitionData)
-          },
+          providedTypeOpt=None,
           storageLocConstructor=(new ReportProcedure(_, _))
         )
 
+        ParsedVarsDefine(
+          fixedValueTargets=List(valueTarget),
+          restValueTargetOpt=None,
+          expr=() => {
+            ExtractExpr(definitionData)
+          }
+        )
+
       case (Primitives.DefineReportProcedure, sst.ScopedAnyList((symbol : sst.ScopedSymbol) :: fixedArgs, restArgDatum) :: body) =>
-        ParsedVarDefine(
+        val valueTarget = ValueTarget(
           definedSymbol=symbol,
-          providedType=None,
+          providedTypeOpt=None,
+          storageLocConstructor=(new ReportProcedure(_, _))
+        )
+
+        ParsedVarsDefine(
+          fixedValueTargets=List(valueTarget),
+          restValueTargetOpt=None,
           expr=() => {
             ExtractLambda(
               located=located,
@@ -199,8 +198,7 @@ object ParseDefine {
               sourceNameHint=Some(symbol.name),
               typeDeclaration=LocTypeDeclarationForSymbol(symbol)
             ).assignLocationAndContextFrom(located, context.debugContext)
-          },
-          storageLocConstructor=(new ReportProcedure(_, _))
+          }
         )
 
       case (Primitives.DefineNativeLibrary, List(libAlias : sst.ScopedSymbol, libDatum)) =>

@@ -16,7 +16,9 @@ object ExtractModuleBody {
       located : SourceLocated,
       parsedDefine : ParsedDefine
   )(implicit context : FrontendContext) : List[et.Expr] = parsedDefine match {
-    case ParsedVarDefine(symbol, providedTypeOpt, exprBlock, storageLocConstructor) =>
+    case ParsedVarsDefine(List(valueTarget), None, exprBlock) =>
+      val symbol = valueTarget.definedSymbol
+
       // There's a wart in Scheme that allows a top-level (define) to become a (set!) if the value is already defined as
       // a storage location
       symbol.resolveOpt match {
@@ -32,14 +34,11 @@ object ExtractModuleBody {
 
         case None =>
           // This is a fresh binding
-          val schemeType = SchemeTypeForSymbol(symbol, providedTypeOpt)
-          val boundValue = storageLocConstructor(symbol.name, schemeType)
-
-          symbol.scope += (symbol.name -> boundValue)
+          val boundValue = valueTarget.bindStorageLoc(vt.AnySchemeType)
           List(et.TopLevelDefine(List(et.SingleBinding(boundValue, exprBlock()))))
       }
 
-    case ParsedMultipleValueDefine(fixedValueTargets, restValueTargetOpt, exprBlock) =>
+    case ParsedVarsDefine(fixedValueTargets, restValueTargetOpt, exprBlock) =>
       // Don't support re-defining top-level values with (define-values) in any dialect
       for (symbol <- (fixedValueTargets ++ restValueTargetOpt).map(_.definedSymbol)) {
         if (symbol.resolveOpt.isDefined) {
@@ -47,8 +46,8 @@ object ExtractModuleBody {
         }
       }
 
-      val fixedLocs = fixedValueTargets.map(_.createStorageLoc(vt.AnySchemeType))
-      val restLocOpt = restValueTargetOpt.map(_.createStorageLoc(vt.UniformProperListType(vt.AnySchemeType)))
+      val fixedLocs = fixedValueTargets.map(_.bindStorageLoc(vt.AnySchemeType))
+      val restLocOpt = restValueTargetOpt.map(_.bindStorageLoc(vt.UniformProperListType(vt.AnySchemeType)))
 
       List(et.TopLevelDefine(List(et.Binding(fixedLocs, restLocOpt, exprBlock()))))
 

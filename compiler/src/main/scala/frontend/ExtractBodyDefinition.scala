@@ -111,18 +111,9 @@ private[frontend] object ExtractBodyDefinition {
 
     // Expand our scopes with all of the defines
     val bindingBlocks = foundDefines.parsedDefines flatMap {
-      case ParsedVarDefine(symbol, providedTypeOpt, exprBlock, storageLocConstructor) =>
-        val schemeType = SchemeTypeForSymbol(symbol, providedTypeOpt)
-        val boundValue = storageLocConstructor(symbol.name, schemeType)
-
-        symbol.scope += (symbol.name -> boundValue)
-
-        List(
-          { () => et.SingleBinding(boundValue, exprBlock()) }
-        )
-      case ParsedMultipleValueDefine(fixedValueTargets, restValueTargetOpt, exprBlock) =>
-        val fixedLocs = fixedValueTargets.map(_.createStorageLoc(vt.AnySchemeType))
-        val restLocOpt = restValueTargetOpt.map(_.createStorageLoc(vt.UniformProperListType(vt.AnySchemeType)))
+      case ParsedVarsDefine(fixedValueTargets, restValueTargetOpt, exprBlock) =>
+        val fixedLocs = fixedValueTargets.map(_.bindStorageLoc(vt.AnySchemeType))
+        val restLocOpt = restValueTargetOpt.map(_.bindStorageLoc(vt.UniformProperListType(vt.AnySchemeType)))
 
         List(
           { () => et.Binding(fixedLocs, restLocOpt, exprBlock()) }
