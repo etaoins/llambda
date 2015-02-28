@@ -125,13 +125,10 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     inside(exprFor("(+ (begin 1 2))")(plusScope)) {
       case et.Apply(
         et.VarRef(plusLoc),
-        List(et.Apply(
-          et.Lambda(_, Nil, None, et.Begin(List(
-            et.Literal(ast.IntegerLiteral(1)),
-            et.Literal(ast.IntegerLiteral(2))
-          )), _),
-          Nil
-        ))
+        List(et.Begin(List(
+          et.Literal(ast.IntegerLiteral(1)),
+          et.Literal(ast.IntegerLiteral(2))
+        )))
       ) =>
     }
   }

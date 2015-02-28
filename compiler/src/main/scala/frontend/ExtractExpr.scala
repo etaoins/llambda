@@ -53,18 +53,8 @@ private[frontend] object ExtractExpr {
           args.map(ExtractExpr.apply)
         )
 
-      case (Primitives.Begin, exprs) =>
-        // Create a new scope using a self-executing lambda
-        val beginLambda = ExtractLambda(
-          located=appliedSymbol,
-          argList=Nil,
-          argTerminator=sst.NonSymbolLeaf(ast.EmptyList()),
-          definition=exprs
-        )
-
-        beginLambda.assignLocationFrom(appliedSymbol)
-
-        et.Apply(beginLambda, Nil)
+      case (Primitives.Begin, exprData) =>
+        ExtractBodyDefinition(Nil, exprData)
 
       case (Primitives.Quote, innerDatum :: Nil) =>
         et.Literal(innerDatum.unscope)
