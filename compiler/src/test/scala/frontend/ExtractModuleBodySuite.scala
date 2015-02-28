@@ -653,7 +653,7 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
   }
 
   test("trivial include") {
-    // Simple include should return an et.Begin with the contents of the ifle
+    // Simple include should return an et.Begin with the contents of the file
     assert(bodyFor("""(include "includes/include1.scm")""")(primitiveScope) ===
       List(
         et.Literal(ast.StringLiteral("include1-line1")),

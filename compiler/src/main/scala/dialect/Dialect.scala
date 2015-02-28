@@ -19,7 +19,7 @@ sealed abstract class Dialect {
 
   /** Indicates if the root program file should be case folded
     *
-    * This does not apply to included files or library; (include-ci) can be used to explicitly include files case
+    * This does not apply to included files or libraries; (include-ci) can be used to explicitly include files case
     * insensitively
     */
   def caseFoldPrograms : Boolean
