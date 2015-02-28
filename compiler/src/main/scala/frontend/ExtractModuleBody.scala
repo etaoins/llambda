@@ -12,7 +12,7 @@ object ExtractModuleBody {
     }
   }
 
-  protected def handleParsedDefine(
+  private def handleParsedDefine(
       located : SourceLocated,
       parsedDefine : ParsedDefine
   )(implicit context : FrontendContext) : List[et.Expr] = parsedDefine match {
