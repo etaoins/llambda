@@ -115,6 +115,25 @@ class ExtractLibrarySuite extends FunSuite with Inside {
     }
   }
 
+  test("single body include-ci") {
+    inside(libraryFor(
+        """(define-library (example lib)
+             (import (llambda internal primitives))
+             (include-ci "includes/vector-include.scm"))"""
+    )) {
+       case Library(_, bindings, exprs) =>
+         assert(exprs ===
+           List(
+             et.Literal(ast.VectorLiteral(Vector(
+               ast.Symbol("upper"),
+               ast.Symbol("mixed"),
+               ast.Symbol("lower")
+             )))
+           )
+         )
+    }
+  }
+
   test("multiple body include") {
     inside(libraryFor(
         """(define-library (example lib)

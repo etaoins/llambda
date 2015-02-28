@@ -6,14 +6,21 @@ import collection.mutable.{ListBuffer, MapBuilder}
 
 private[frontend] object ExtractLibrary {
   private def expandDecls(datum : ast.Datum)(implicit libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : List[(IncludePath, ast.Datum)] = datum match {
-    case ast.ProperList(ast.Symbol("include") :: includeNameData) =>
+    case ast.ProperList(ast.Symbol(includeType @ ("include" | "include-ci")) :: includeNameData) =>
       // Include the files and wrap them in (begin)
       val includeResults = ResolveIncludeList(includeNameData, datum)(frontendConfig.includePath)
 
       includeResults map { result =>
-        (result.innerIncludePath, ast.ProperList(ast.Symbol("begin") :: result.data))
+        val foldedData = if (includeType == "include-ci") {
+          result.data.map(_.toCaseFolded)
+        }
+        else {
+          result.data
+        }
+
+        (result.innerIncludePath, ast.ProperList(ast.Symbol("begin") :: foldedData))
       }
-    
+
     case ast.ProperList(ast.Symbol("include-library-declarations") :: includeNameData) =>
       // Splice the includes in directly
       val includeResults = ResolveIncludeList(includeNameData, datum)(frontendConfig.includePath)
