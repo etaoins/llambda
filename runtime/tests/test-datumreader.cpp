@@ -166,6 +166,9 @@ void testIntegers(World &world)
 	ASSERT_PARSES("#x-b00b5", ExactIntegerCell::fromValue(world, -721077));
 
 	ASSERT_PARSES("9007199254740993", ExactIntegerCell::fromValue(world, 9007199254740993LL));
+
+	// Out-of-range
+	ASSERT_INVALID_PARSE("9223372036854775808");
 }
 
 void testReals(World &world)

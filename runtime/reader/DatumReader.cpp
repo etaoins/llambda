@@ -774,7 +774,16 @@ AnyCell* DatumReader::parseUnradixedNumber(int radix, bool negative)
 		}
 	}
 
-	std::int64_t intValue = std::stoll(numberString, nullptr, radix);
+	std::int64_t intValue;
+
+	try
+	{
+		intValue = std::stoll(numberString, nullptr, radix);
+	}
+	catch(std::out_of_range)
+	{
+		throw MalformedDatumException(inputOffset(rdbuf()), "Exact integer value out-of-range");
+	}
 
 	if (negative)
 	{
