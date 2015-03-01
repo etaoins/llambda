@@ -5,59 +5,56 @@
 			 (z (+ x y)))
 		(* z x)))))
 
-(define-test "recursive function definition in lambda body" (expect #t
-  ((lambda ()
+(define-test "recursive procedure definition in lambda body" (expect #t
+  (begin
      (define even?
      (lambda (n)
        (if (zero? n)
        #t
        (odd? (- n 1)))))
-     
+
      (define odd?
      (lambda (n)
        (if (zero? n)
        #f
        (even? (- n 1)))))
 
-     (even? 8)
-  ))))
+     (even? 8))))
 
-(define-test "recursive mutable function definition in lambda body" (expect #t
-  ((lambda ()
+(define-test "recursive mutable procedure definition in lambda body" (expect #t
+  (begin
      (define even?
      (lambda (n)
        (if (zero? n)
        #t
        (odd? (- n 1)))))
-     
+
      (define odd?
      (lambda (n)
        (if (zero? n)
        #f
        (even? (- n 1)))))
-	 
+
      ; Setting this to a procedure returning true means (even?) will always return true
      (set! odd? (lambda (n) #t))
-     (even? 7)
-  ))))
+     (even? 7))))
 
 (define-test "accessing recursive define before initialization fails" (expect-error undefined-variable-error?
-  ((lambda ()
+  (begin
      (define even?
      (lambda (n)
        (if (zero? n)
        #t
        (odd? (- n 1)))))
 
-     ; This used to be five-is-odd but the inliner would actually resolve this successfuly at compile time at -O 2 
+     ; This used to be five-is-odd but the inliner would actually resolve this successfuly at compile time at -O 2
      (define eleven-is-odd (odd? 11))
-     
+
      (define odd?
      (lambda (n)
        (if (zero? n)
        #f
-       (even? (- n 1)))))
-  ))))
+       (even? (- n 1))))))))
 
 (define-test "recursive lambda can capture non-lambda from same binding" (expect 11
   (define (count-until n)
@@ -173,29 +170,27 @@
 
 (define-test "simple typed inner define" (expect 5
   (import (llambda typed))
-  ((lambda ()
+  (begin
     (define num : <number> 5)
-    num))))
+    num)))
 
 (define-test "mutating typed inner define" (expect 15.0
   (import (llambda typed))
-  ((lambda ()
+  (begin
     (define num : <number> 5)
     (set! num 15.0)
-    num))))
+    num)))
 
 (define-test "typed inner define with incompatible initialiser fails" (expect-error type-error?
   (import (llambda typed))
-  ((lambda ()
-    (define num : <number> "not a number")
-  ))))
+  (begin
+    (define num : <number> "not a number"))))
 
 (define-test "mutating typed inner define with incompatible value fails" (expect-error type-error?
   (import (llambda typed))
-  ((lambda ()
+  (begin
     (define num : <number> 5)
-    (set! num "not a string")
-  ))))
+    (set! num "not a string"))))
 
 (define-test "simple typed let" (expect 12
   (import (llambda typed))
