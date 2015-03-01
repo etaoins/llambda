@@ -31,7 +31,7 @@ void assertIndexValid(World &world, const char *procName, AnyCell *obj, std::int
  * @param  maxLength    Maximum length of the object type in the same units as "length"
  * @param  length       User supplied length
  */
-void assertLengthValid(World &world, const char *procName, const char *lengthName, std::int64_t maxLength, std::int64_t index);
+void assertLengthValid(World &world, const char *procName, const char *lengthName, std::int64_t maxLength, std::int64_t length);
 
 /** Validates that slice indices are valid for a given object length
  *
