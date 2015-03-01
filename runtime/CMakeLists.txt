@@ -174,6 +174,15 @@ if (${ENABLE_GC_DEBUGGING} STREQUAL "yes")
 	endif()
 endif()
 
+# Build the fuzzer
+set(ENABLE_DATUM_FUZZ_DRIVER "no" CACHE STRING "Build a driver program for the datum reader and writer suitable for use with afl-fuzz")
+if (${ENABLE_DATUM_FUZZ_DRIVER} STREQUAL "yes")
+	add_executable(datum-fuzz-driver
+		tools/datum-fuzz-driver.cpp
+	)
+	target_link_libraries(datum-fuzz-driver llcore ${CMAKE_THREAD_LIBS_INIT})
+endif()
+
 # Add tests
 include(CTest)
 set(CTEST_MEMCHECK_COMMAND "valgrind")
