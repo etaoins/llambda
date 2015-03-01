@@ -20,11 +20,8 @@ object NonTrivialProgram {
 
   lazy val data : List[ast.Datum] = { 
     val lifeProgramPath = s"${lifeBaseDir}life.scm"
-  
-    val includePath = frontend.IncludePath(
-      fileParentDir=Some(lifeBaseUrl),
-      packageRootDir=Some(lifeBaseUrl)
-    )
+
+    val includePath = frontend.IncludePath(List(lifeBaseUrl))
 
     val stream = getClass.getClassLoader.getResourceAsStream(lifeProgramPath)
 
@@ -36,8 +33,5 @@ object NonTrivialProgram {
     SchemeParser.parseStringAsData(lifeProgramSource, Some(s":/${lifeProgramPath}"))
   }
 
-  lazy val includePath = frontend.IncludePath(
-    fileParentDir=Some(lifeBaseUrl),
-    packageRootDir=Some(lifeBaseUrl)
-  )
+  lazy val includePath = frontend.IncludePath(List(lifeBaseUrl))
 }

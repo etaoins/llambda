@@ -3,25 +3,25 @@ import io.llambda
 
 import java.net.URL
 
-case class IncludePath(
-  fileParentDir : Option[URL] = None,
-  packageRootDir : Option[URL] = None,
-  userConfiguredPaths : Seq[URL] = Nil
-) {
-  // Don't allow relative imports of libaries from the current file
-  // Libraries are supposed to include their full path in their definition
-  // Allowing file-relative imports would be confusing
-  def librarySearchRoots : Seq[URL] = 
-    (packageRootDir.toSeq ++ userConfiguredPaths ++ IncludePath.systemLibraryPaths).distinct
+/** Represents a list of paths to search for libraries and included files */
+case class IncludePath(userConfiguredPaths : Seq[URL]) {
+  /** Returns a list of paths to search for libraries */
+  def librarySearchRoots : Seq[URL] =
+    (userConfiguredPaths ++ IncludePath.systemLibraryPaths).distinct
 
-  // Only allow (include)s relative to the current file and the user configured  paths. To include from the program
-  // root dir either relative paths or proper libraries can be used.
-  // Don't allow includes from the system library path. Any include files are  intended for internal use only and will
-  // be relative to the including file.
+  /** Returns a list of paths for search for includes
+    *
+    * This intentionally doesn't include library paths. Libraries should only expose library definitions and should be
+    * free to use internal relative includes without polluting the global include namespace.
+    */
   def includeSearchRoots : Seq[URL] =
-    (fileParentDir.toSeq ++ userConfiguredPaths).distinct
+    userConfiguredPaths
 }
 
 object IncludePath {
-  val systemLibraryPaths = getClass.getClassLoader.getResource("libraries/") :: Nil
+  /** List of system library search paths
+    *
+    * These are searched for libraries after all user configured paths
+    */
+  val systemLibraryPaths = List(getClass.getClassLoader.getResource("libraries/"))
 }

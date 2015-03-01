@@ -8,7 +8,7 @@ object NfiExports {
   def apply() : collection.mutable.Map[String, BoundValue] = {
     val libraryLoader = new LibraryLoader(platform.Posix64LE)
     implicit val frontendConfig = frontend.FrontendConfig(
-      includePath=IncludePath(),
+      includePath=IncludePath(Nil),
       featureIdentifiers=Set(),
       schemeDialect=dialect.Dialect.default
     )

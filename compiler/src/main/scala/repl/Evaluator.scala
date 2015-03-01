@@ -22,10 +22,7 @@ private object ReplFrontendConfig {
   def apply(targetPlatform : platform.TargetPlatform, schemeDialect : dialect.Dialect) : frontend.FrontendConfig =  {
     val currentDirUrl = (new File(System.getProperty("user.dir"))).toURI.toURL
 
-    val includePath = frontend.IncludePath(
-      fileParentDir=Some(currentDirUrl),
-      packageRootDir=Some(currentDirUrl)
-    )
+    val includePath = frontend.IncludePath(List(currentDirUrl))
 
     frontend.FrontendConfig(
       includePath=includePath,

@@ -12,7 +12,11 @@ import llambda.compiler.{valuetype => vt}
 trait PlanHelpers extends FunSuite with Inside {
   val topLevelSymbol = codegen.LlambdaTopLevelSignature.nativeSymbol
 
-  private def testPlanConfig(data : List[ast.Datum], optimise : Boolean, includePath : IncludePath = IncludePath()) = {
+  private def testPlanConfig(
+      data : List[ast.Datum],
+      optimise : Boolean,
+      includePath : IncludePath = IncludePath(Nil)
+  ) = {
     val compileConfig = CompileConfig(
       includePath=includePath,
       optimiseLevel=if (optimise) 0 else 2,
@@ -41,7 +45,11 @@ trait PlanHelpers extends FunSuite with Inside {
   }
 
   /** Returns a map of planned functions to the given Scheme data */
-  protected def planForData(data : List[ast.Datum], optimise : Boolean, includePath : IncludePath = IncludePath()) : Map[String, PlannedFunction] = {
+  protected def planForData(
+      data : List[ast.Datum],
+      optimise : Boolean,
+      includePath : IncludePath = IncludePath(Nil)
+  ) : Map[String, PlannedFunction] = {
     val planConfig = testPlanConfig(data, optimise, includePath)
     planner.PlanProgram(planConfig.analysis.usedTopLevelExprs)(planConfig).functions
   }

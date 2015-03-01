@@ -6,6 +6,24 @@ import llambda.compiler.{valuetype => vt}
 import llambda.compiler.frontend.syntax.ExpandMacro
 
 object ExtractModuleBody {
+  private def extractInclude(
+      located : SourceLocated,
+      scope : Scope,
+      includeNameData : List[sst.ScopedDatum],
+      foldCase : Boolean = false
+  )(implicit context : FrontendContext) : List[et.Expr] = {
+    val includeData = ResolveIncludeList(located, includeNameData.map(_.unscope))(context.config.includePath)
+
+    val foldedData = if (foldCase) {
+      includeData.map(_.toCaseFolded)
+    }
+    else {
+      includeData
+    }
+
+    ExtractModuleBody(foldedData, scope)
+  }
+
   private def guardOutermostRedefinition(symbol : sst.ScopedSymbol)(implicit context : FrontendContext) {
     if (!context.config.schemeDialect.allowTopLevelRedefinition && symbol.resolveOpt.isDefined) {
       throw new DuplicateDefinitionException(symbol)
@@ -89,6 +107,15 @@ object ExtractModuleBody {
         case (Primitives.Begin, sst.ScopedProperList(innerExprData)) =>
           // This is a (begin) - flatten it
           innerExprData.flatMap(extractOutermostExpr)
+
+        case (Primitives.Include, sst.ScopedProperList(includeNames)) =>
+          // We need the scope from the (include) to rescope the included file
+          val scope = appliedSymbol.scope
+          extractInclude(appliedSymbol, scope, includeNames)
+
+        case (Primitives.IncludeCI, sst.ScopedProperList(includeNames)) =>
+          val scope = appliedSymbol.scope
+          extractInclude(appliedSymbol, scope, includeNames, foldCase=true)
 
         case (definePrimitive : PrimitiveDefineExpr, sst.ScopedProperList(operands)) =>
           handleParsedDefine(datum, ParseDefine(datum, definePrimitive, operands))

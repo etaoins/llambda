@@ -158,10 +158,7 @@ object CompilerApp extends App {
         val inputDirUrl = input.getParentFile.toURI.toURL
 
         // Build the include path
-        val includePath = frontend.IncludePath(
-          fileParentDir=Some(inputDirUrl),
-          packageRootDir=Some(inputDirUrl)
-        )
+        val includePath = frontend.IncludePath(List(inputDirUrl))
 
         // Create our compiler config
         val compileConfig = CompileConfig(

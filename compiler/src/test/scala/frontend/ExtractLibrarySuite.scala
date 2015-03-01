@@ -6,12 +6,8 @@ import llambda.compiler._
 
 class ExtractLibrarySuite extends FunSuite with Inside {
   val resourceBaseUrl = getClass.getClassLoader.getResource("")
-  val includeBaseUrl = getClass.getClassLoader.getResource("includes/")
-  
-  val includePath = IncludePath(
-    fileParentDir=Some(resourceBaseUrl),
-    packageRootDir=Some(resourceBaseUrl)
-  )
+
+  val includePath = IncludePath(List(resourceBaseUrl))
 
   val frontendConfig = FrontendConfig(
     includePath=includePath,
@@ -23,7 +19,7 @@ class ExtractLibrarySuite extends FunSuite with Inside {
 
   def libraryFor(scheme : String) : Library = {
     val datum :: Nil = SchemeParser.parseStringAsData(scheme)
-    ExtractLibrary(None, datum)(new LibraryLoader(platform.Posix64LE), frontendConfig)
+    ExtractLibrary(datum)(new LibraryLoader(platform.Posix64LE), frontendConfig)
   }
   
   test("empty datum is invalid") {

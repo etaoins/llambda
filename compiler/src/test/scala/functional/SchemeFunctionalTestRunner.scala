@@ -42,10 +42,7 @@ abstract class SchemeFunctionalTestRunner(
   val resourceBaseUrl = getClass.getClassLoader.getResource(resourceBaseDir)
   val resourcePath = s"${resourceBaseDir}${testName}.scm"
 
-  val includePath = frontend.IncludePath(
-    fileParentDir=Some(resourceBaseUrl),
-    packageRootDir=Some(resourceBaseUrl)
-  )
+  val includePath = frontend.IncludePath(List(resourceBaseUrl))
 
   val stream = getClass.getClassLoader.getResourceAsStream(resourcePath)
 

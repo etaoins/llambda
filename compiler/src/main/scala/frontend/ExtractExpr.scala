@@ -8,37 +8,22 @@ import llambda.compiler.frontend.syntax.ExpandMacro
 
 private[frontend] object ExtractExpr {
   private def extractInclude(
+      located : SourceLocated,
       scope : Scope,
       includeNameData : List[sst.ScopedDatum],
-      includeLocation : SourceLocated,
       foldCase : Boolean = false
   )(implicit context : FrontendContext) : et.Expr = {
-    val includeResults = ResolveIncludeList(includeNameData.map(_.unscope), includeLocation)(context.config.includePath)
+    val includeData = ResolveIncludeList(located, includeNameData.map(_.unscope))(context.config.includePath)
 
-    val includeExprs = includeResults flatMap { result =>
-      val innerConfig = context.config.copy(
-        includePath=result.innerIncludePath
-      )
-
-      // XXX: What should we use for a subprogram here if we're including inside a lambda?
-      // Clang appears to create synthetic lexical block entries just so it can attach a new filename to the source
-      // lines. This likely requires a more in-depth study of the DWARF specification. For now assume we're being
-      // included at the top level
-      val includeSubprogram = debug.FileContext(result.filename)
-
-      val includeContext = context.copy(config=innerConfig, debugContext=includeSubprogram)
-
-      val data = if (foldCase) {
-        result.data.map(_.toCaseFolded)
-      }
-      else {
-        result.data
-      }
-
-      ExtractModuleBody(data, scope)(includeContext)
+    val foldedData = if (foldCase) {
+      includeData.map(_.toCaseFolded)
+    }
+    else {
+      includeData
     }
 
-    et.Begin(includeExprs)
+    val scopedData = foldedData.map(sst.ScopedDatum(scope, _))
+    ExtractBodyDefinition(Nil, scopedData)
   }
 
   private def extractNonDefineApplication(
@@ -100,11 +85,11 @@ private[frontend] object ExtractExpr {
       case (Primitives.Include, includeNames) =>
         // We need the scope from the (include) to rescope the included file
         val scope = appliedSymbol.scope
-        extractInclude(scope, includeNames, appliedSymbol)
+        extractInclude(appliedSymbol, scope, includeNames)
 
       case (Primitives.IncludeCI, includeNames) =>
         val scope = appliedSymbol.scope
-        extractInclude(scope, includeNames, appliedSymbol, foldCase=true)
+        extractInclude(appliedSymbol, scope, includeNames, foldCase=true)
 
       case (Primitives.NativeFunction, _) =>
         ExtractNativeFunction(appliedSymbol, false, operands)

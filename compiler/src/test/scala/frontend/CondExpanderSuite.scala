@@ -13,7 +13,7 @@ class CondExpanderSuite extends FunSuite {
     val parsedClauses = clauseList.map(SchemeParser.parseStringAsData(_, None).head)
 
     val frontendConfig = FrontendConfig(
-      includePath=IncludePath(),
+      includePath=IncludePath(Nil),
       featureIdentifiers=featureIdentifiers,
       schemeDialect=dialect.Dialect.default
     )

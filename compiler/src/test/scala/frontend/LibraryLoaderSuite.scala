@@ -7,7 +7,7 @@ import llambda.compiler._
 class LibraryLoaderSuite extends FunSuite {
   implicit val defaultFrontendConfig =
     FrontendConfig(
-      includePath=IncludePath(),
+      includePath=IncludePath(Nil),
       featureIdentifiers=Set(),
       schemeDialect=dialect.Dialect.default
     )

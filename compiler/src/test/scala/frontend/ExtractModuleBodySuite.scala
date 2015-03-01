@@ -696,6 +696,46 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
     }
   }
 
+  test("include in lambda body context") {
+    val expr = exprFor("""(lambda () (define c 3) (include "includes/definea.scm") c)""")
+
+    inside(expr) {
+      case et.Lambda(_, Nil, None, et.InternalDefine(List(
+          et.SingleBinding(bindLocC, et.Literal(ast.IntegerLiteral(3))),
+          et.SingleBinding(bindLocA, et.Literal(ast.IntegerLiteral(1))),
+          et.SingleBinding(bindLocB, et.Literal(ast.IntegerLiteral(2)))
+        ),
+        et.Begin(List(
+          et.VarRef(refLocA),
+          et.VarRef(refLocB),
+          et.VarRef(refLocC)
+        ))
+      ), _) =>
+        assert(bindLocA === refLocA)
+        assert(bindLocB === refLocB)
+        assert(bindLocC === refLocC)
+    }
+  }
+
+  test("include in expression context") {
+    val scope = new Scope(collection.mutable.Map(), Some(primitiveScope))
+    val expr = exprFor("""(define d (include "includes/definea.scm"))""")(scope)
+
+    inside(expr) {
+      case et.TopLevelDefine(List(et.SingleBinding(_, et.InternalDefine(List(
+          et.SingleBinding(bindLocA, et.Literal(ast.IntegerLiteral(1))),
+          et.SingleBinding(bindLocB, et.Literal(ast.IntegerLiteral(2)))
+        ),
+        et.Begin(List(
+          et.VarRef(refLocA),
+          et.VarRef(refLocB)
+        ))
+      )))) =>
+        assert(bindLocA === refLocA)
+        assert(bindLocB === refLocB)
+    }
+  }
+
   test("include-ci") {
     // Simple include should return an et.Begin with the contents of the ifle
     assert(exprFor("""(include-ci "includes/vector-include.scm")""") ===

@@ -1,18 +1,39 @@
 package io.llambda.compiler.frontend
 import io.llambda
 
+import java.net.URL
+import java.io.File
+
 import llambda.compiler._
 
 private[frontend] object ResolveIncludeList {
-  def apply(includeNameData : List[ast.Datum], includeLocation : SourceLocated = NoSourceLocation)(implicit includePath : IncludePath) : List[IncludeLoadResult] = {
+  /** Resolves a list of files to include to a corresponding list of included files
+    *
+    * @param  located          Source location of the include. This is to support both relative includes and to report
+    *                          errors
+    * @param  includeNameData  User supplied body of the (include) or (include-ci). Currently only lists of one or more
+    *                          strings are supported; all other input will raise a BadSpecialFormException
+    * @return Include load results for the include name data
+    */
+  def apply(
+      located : SourceLocated,
+      includeNameData : List[ast.Datum]
+  )(implicit includePath : IncludePath) : List[ast.Datum] = {
     if (includeNameData.isEmpty) {
-      throw new BadSpecialFormException(includeLocation, "At least one file required for include")
+      throw new BadSpecialFormException(located, "At least one file required for include")
     }
 
+    // If we have a source location filename add that to our include path
+    val relativeIncludeRootOpt = located.locationOpt.flatMap(_.filenameOpt).map { filename =>
+      new URL(new File(filename).toURI.toURL, ".")
+    }
+
+    val allSearchRoots = relativeIncludeRootOpt.toList ++ includePath.includeSearchRoots
+
     // All include names must be strings
-    includeNameData map {
+    includeNameData flatMap {
       case includeLiteral @ ast.StringLiteral(includeName) =>
-        IncludeLoader(includePath.includeSearchRoots, includeName) match {
+        IncludeLoader(allSearchRoots, includeName) match {
           case Some(result) => result
           case _ =>
             throw new IncludeNotFoundException(includeLiteral, includeName)

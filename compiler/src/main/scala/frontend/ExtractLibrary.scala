@@ -2,49 +2,47 @@ package io.llambda.compiler.frontend
 import io.llambda
 
 import llambda.compiler._
-import collection.mutable.{ListBuffer, MapBuilder}
 
 private[frontend] object ExtractLibrary {
-  private def expandDecls(datum : ast.Datum)(implicit libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : List[(IncludePath, ast.Datum)] = datum match {
+  private def expandDecls(datum : ast.Datum)(implicit libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : List[ast.Datum] = datum match {
     case ast.ProperList(ast.Symbol(includeType @ ("include" | "include-ci")) :: includeNameData) =>
       // Include the files and wrap them in (begin)
-      val includeResults = ResolveIncludeList(includeNameData, datum)(frontendConfig.includePath)
+      val includeData = ResolveIncludeList(datum, includeNameData)(frontendConfig.includePath)
 
-      includeResults map { result =>
-        val foldedData = if (includeType == "include-ci") {
-          result.data.map(_.toCaseFolded)
-        }
-        else {
-          result.data
-        }
-
-        (result.innerIncludePath, ast.ProperList(ast.Symbol("begin") :: foldedData))
+      val foldedData = if (includeType == "include-ci") {
+        includeData.map(_.toCaseFolded)
       }
+      else {
+        includeData
+      }
+
+      List(ast.ProperList(ast.Symbol("begin") :: foldedData))
 
     case ast.ProperList(ast.Symbol("include-library-declarations") :: includeNameData) =>
       // Splice the includes in directly
-      val includeResults = ResolveIncludeList(includeNameData, datum)(frontendConfig.includePath)
-      
-      includeResults flatMap { result =>
-        result.data flatMap { datum =>
-          // Recursively expand inner decls
-          val innerFrontendConfig = frontendConfig.copy(
-            includePath=result.innerIncludePath
-          )
+      val includeData = ResolveIncludeList(datum, includeNameData)(frontendConfig.includePath)
 
-          expandDecls(datum)(libraryLoader, innerFrontendConfig)
-        }
-      }
+      // Recursively expand inner decls
+      includeData flatMap expandDecls
 
     case ast.ProperList(ast.Symbol("cond-expand") :: firstClause :: restClauses) =>
       // Evaluate the (cond-expand)
       CondExpander.expandData(firstClause :: restClauses).flatMap(expandDecls)
 
     case nonExpand =>
-      List((frontendConfig.includePath, nonExpand))
+      List(nonExpand)
   }
 
-  def apply(filenameOpt : Option[String], datum : ast.Datum, expectedName : Option[Seq[LibraryNameComponent]] = None)(implicit libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : Library = datum match {
+  /** Extracts an Sheme library for a library datum
+    *
+    * @param  datum         Top-level datum for the library definition
+    * @param  expectedName  Expected name for the library. This function will raise LibraryNameMismatchException
+    *                       if the library's defined name does not match
+    */
+  def apply(
+      datum : ast.Datum,
+      expectedName : Option[Seq[LibraryNameComponent]] = None
+  )(implicit libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : Library = datum match {
     case ast.ProperList(ast.Symbol("define-library") :: libraryNameData :: decls) =>
       // Parse the library name
       val libraryName = ParseLibraryName(libraryNameData)
@@ -66,21 +64,19 @@ private[frontend] object ExtractLibrary {
         val Import, Export, Begin = Value
       }
 
-      val groupedDecls = expandedDecls.groupBy { case (_, datum) =>
-        datum match {
-          // Be cheap and just check the starting symbol here for grouping purposes
-          // If it's not a proper list we should notice later on
-          case ast.Pair(ast.Symbol("import"), _) => DeclType.Import
-          case ast.Pair(ast.Symbol("export"), _) => DeclType.Export
-          case ast.Pair(ast.Symbol("begin"), _) => DeclType.Begin
-          case other =>
-            throw new BadSpecialFormException(other, "Bad library declaration")
-        }
+      val groupedDecls = expandedDecls.groupBy {
+        // Be cheap and just check the starting symbol here for grouping purposes
+        // If it's not a proper list we should notice later on
+        case ast.Pair(ast.Symbol("import"), _) => DeclType.Import
+        case ast.Pair(ast.Symbol("export"), _) => DeclType.Export
+        case ast.Pair(ast.Symbol("begin"), _) => DeclType.Begin
+        case other =>
+          throw new BadSpecialFormException(other, "Bad library declaration")
       }
 
       // Resolve all imports
       val importDecls = groupedDecls.getOrElse(DeclType.Import, List())
-      val initialBindings = importDecls.map(_._2)flatMap { importDecl =>
+      val initialBindings = importDecls.flatMap { importDecl =>
         ResolveImportDecl(importDecl)
       }
       
@@ -90,22 +86,19 @@ private[frontend] object ExtractLibrary {
       val beginDeclData = groupedDecls.getOrElse(DeclType.Begin, List())
 
       val expressions = beginDeclData flatMap {
-        case (beginIncludePath, ast.ProperList(ast.Symbol("begin") :: exprs)) =>
-          val beginConfig = frontendConfig.copy(
-            includePath=beginIncludePath
-          )
-
+        case ast.ProperList((beginSymbol @ ast.Symbol("begin")) :: exprs) =>
+          val filenameOpt = beginSymbol.locationOpt.flatMap(_.filenameOpt)
           val debugContext = debug.SourceContext.fromFilenameOpt(filenameOpt)
 
           val beginContext = FrontendContext(
-            beginConfig,
+            frontendConfig,
             libraryLoader,
             debugContext
           )
 
           ExtractModuleBody(exprs, scope)(beginContext)
 
-        case (_, other) =>
+        case other =>
           throw new BadSpecialFormException(other, "Bad begin declaration")
       }
 
@@ -116,7 +109,7 @@ private[frontend] object ExtractLibrary {
       val exportDecls = groupedDecls.getOrElse(DeclType.Export, List())
 
       // Flatten out our decls
-      val exportSpecs = exportDecls map(_._2) flatMap {
+      val exportSpecs = exportDecls.flatMap {
         case ast.ProperList(ast.Symbol("export") :: decls) => decls
         case other => throw new BadSpecialFormException(other, "Bad export declaration")
       }

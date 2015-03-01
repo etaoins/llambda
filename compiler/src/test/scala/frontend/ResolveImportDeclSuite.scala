@@ -7,7 +7,7 @@ import llambda.compiler._
 class ResolveImportDeclSuite extends FunSuite { 
   def bindingFor(scheme : String) = {
     val frontendConfig = FrontendConfig(
-      includePath=IncludePath(),
+      includePath=IncludePath(Nil),
       featureIdentifiers=Set(),
       schemeDialect=dialect.Dialect.default
     )
