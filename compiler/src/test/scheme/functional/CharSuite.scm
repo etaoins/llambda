@@ -1,8 +1,6 @@
-(define-test "'3' is a character" (expect #t
-	(char? #\3)))
-
-(define-test "number 3 is not a character" (expect #f
-	(char? 3)))
+(define-test "(char?)" (expect-static-success
+	(assert-true  (char? #\3))
+	(assert-false (char? 3))))
 
 (define-test "digit-value" (expect-success
   (import (scheme char))
