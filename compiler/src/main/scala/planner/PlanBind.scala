@@ -49,17 +49,28 @@ private[planner] object PlanBind {
       }
 
       val postrecursiveState = neededNonSelfRecursives.foldLeft(prerecursiveState) { case (state, storageLoc) =>
-        val recursiveTemp = ps.RecordTemp()
+        // If we're an immutable value then peek at our initialiser when creating the mutable value. This allows us to
+        // get basic signature information from lambdas without explicit type declarations for better error reporting
+        // and optimisation
+        val valueType = if (plan.config.analysis.mutableVars.contains(storageLoc)) {
+          vt.AnySchemeType
+        }
+        else {
+          bindings.collectFirst {
+            case et.SingleBinding(`storageLoc`, expr) => expr.schemeType
+          } getOrElse vt.AnySchemeType
+        }
 
-        // Mark this value as undefined so a runtime error will be raised if it is accessed
-        val compactInnerType = CompactRepresentationForType(storageLoc.schemeType)
+        val compactInnerType = CompactRepresentationForType(storageLoc.schemeType & valueType)
         val mutableType = MutableType(compactInnerType)
 
+        // Mark this value as undefined so a runtime error will be raised if it is accessed
+        val recursiveTemp = ps.RecordTemp()
         plan.steps += ps.InitRecord(recursiveTemp, mutableType, Map(), isUndefined=true)
 
         state.withValue(storageLoc -> MutableValue(mutableType, recursiveTemp, true))
       }
-      
+
       val initialValueResult = binding match {
         case et.SingleBinding(storageLoc, lambdaExpr : et.Lambda) if isSelfRecursiveLambda =>
           plan.withContextLocation(binding.initialiser) {

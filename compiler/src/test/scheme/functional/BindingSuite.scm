@@ -39,6 +39,16 @@
      (set! odd? (lambda (n) #t))
      (even? 7))))
 
+(define-test "calling untyped recursive procedure with wrong arity fails at compile time" (expect-compile-error arity-error?
+  ; We should peek at the signature for (takes-one) and determine this is invalid at compile time
+  (begin
+    (define (takes-one a) a)
+    (define (takes-two a b)
+      ; Error!
+      (takes-one a b))
+
+    (takes-two 1 2))))
+
 (define-test "accessing recursive define before initialization fails" (expect-error undefined-variable-error?
   (begin
      (define even?
