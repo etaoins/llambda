@@ -564,6 +564,19 @@
   (import (llambda list))
   (count even? '(2 18 3 10 22 . 9))))
 
+(define-test "(iota)" (expect-success
+  (import (llambda list))
+
+  (assert-equal '() (iota 0))
+  (assert-equal '() (iota 0 5))
+  (assert-equal '() (iota 0 5 -1))
+
+  (assert-equal '(0 1 2 3 4) (iota 5))
+  (assert-equal '(5 6 7 8 9) (iota 5 5))
+  (assert-equal '(5.0 6.0 7.0 8.0 9.0) (iota 5 5.0))
+  (assert-equal '(5 4 3 2 1) (iota 5 5 -1))
+  (assert-equal '(5.0 4.0 3.0 2.0 1.0) (iota 5 5 -1.0))))
+
 (cond-expand
   ((not immutable-pairs)
    (define-test "(list-set!)" (expect (one two three)

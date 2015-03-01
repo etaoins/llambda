@@ -1,9 +1,10 @@
 (define-library (llambda list)
   (import (scheme base))
+  (import (scheme case-lambda))
   (import (llambda typed))
   (import (llambda nfi))
 
-  (export cons* xcons list-tabulate fold reduce zip filter remove find find-tail partition take drop split-at
+  (export cons* xcons list-tabulate iota fold reduce zip filter remove find find-tail partition take drop split-at
           take-while drop-while span break any every count append-map filter-map)
 
   ; WeakListof is only a strong type if pair are immutable
@@ -28,6 +29,15 @@
       (cons a d))
 
     (define list-tabulate (world-function lllist "lllist_list_tabulate" (All (A) <native-uint32> (-> <exact-integer> A) (Listof A))))
+
+    (define native-iota (world-function lllist "lllist_iota" (All ([N : <number>]) <native-uint32> N N (Listof N))))
+    (define iota (case-lambda
+                   (([count : <exact-integer>])
+                    (native-iota count 0 1))
+                   (([count : <exact-integer>] [start : <number>])
+                    (native-iota count start 1))
+                   (([count : <exact-integer>] [start : <number>] [step : <number>])
+                    (native-iota count start step))))
 
     (define partition (world-function lllist "lllist_partition" (All (A) (-> <any> <boolean>) (Listof A) (Values (Listof A) (Listof A)))))
     (define fold (world-function lllist "lllist_fold" (All (A) (-> <any> <any> <any> * A) A (Listof <any>) (Listof <any>) * A)))
