@@ -155,15 +155,25 @@ void testPair(World &world)
 void testBytevector(World &world)
 {
 	{
-		auto *emptyVector = BytevectorCell::fromData(world, nullptr, 0);
-		assertForm(emptyVector, "#u8()");
+		auto *emptyBytevector = BytevectorCell::fromData(world, nullptr, 0);
+		assertForm(emptyBytevector, "#u8()");
 	}
 
 	{
 		uint8_t testData[5] = { 100, 101, 202, 203, 204 };
-		auto *testVector = BytevectorCell::fromData(world, testData, 5); 
+		auto *testBytevector = BytevectorCell::fromData(world, testData, 5);
 
-		assertForm(testVector, "#u8(100 101 202 203 204)");
+		assertForm(testBytevector, "#u8(100 101 202 203 204)");
+	}
+
+	{
+		alloc::CharRef testChar(world, CharCell::createInstance(world, UnicodeChar(0x03bb)));
+
+		uint8_t testData[5] = { 100, 101, 202, 203, 204 };
+		alloc::BytevectorRef testBytevector(world, BytevectorCell::fromData(world, testData, 5));
+
+		auto *testPair = PairCell::createInstance(world, testChar, testBytevector);
+		assertForm(testPair, "(#\\x3bb . #u8(100 101 202 203 204))");
 	}
 }
 

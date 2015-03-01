@@ -363,7 +363,7 @@ void ExternalFormDatumWriter::renderBytevector(const BytevectorCell *value)
 			m_outStream << " ";
 		}
 
-		m_outStream << value->byteAt(i);
+		m_outStream << std::dec << value->byteAt(i);
 
 		printedByte = true;
 	}
