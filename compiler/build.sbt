@@ -8,7 +8,7 @@ scalaVersion := "2.11.5"
 
 scalacOptions ++= Seq("-deprecation", "-feature", "-Xlint")
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.1" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
 
 libraryDependencies += "com.github.scopt" %% "scopt" % "3.3.0"
 
