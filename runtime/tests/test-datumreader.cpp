@@ -16,6 +16,8 @@
 #include "binding/ProperList.h"
 #include "binding/CharCell.h"
 
+#include "unicode/utf8/InvalidByteSequenceException.h"
+
 #include "reader/DatumReader.h"
 #include "reader/ReadErrorException.h"
 #include "writer/ExternalFormDatumWriter.h"
@@ -456,6 +458,70 @@ void testDatumLabels(World &world)
     ASSERT_INVALID_PARSE("(#123=(a b c) . (d e #456#))");
 }
 
+void testErrorRecovery(World &world)
+{
+	{
+		bool caughtException = false;
+
+		// Snowmen aren't valid start characters for data in R7RS
+		std::istringstream inputStream(u8"☃123");
+		DatumReader reader(world, inputStream);
+
+		try
+		{
+			reader.parse();
+		}
+		catch(const MalformedDatumException &e)
+		{
+			ASSERT_TRUE(e.offset() == 0);
+			caughtException = true;
+		}
+
+		ASSERT_TRUE(caughtException);
+
+		// Parse the next value
+		AnyCell *nextDatum = reader.parse();
+
+		// Make sure it's an integer
+		ExactIntegerCell *nextExactInt = cell_cast<ExactIntegerCell>(nextDatum);
+		ASSERT_TRUE(nextExactInt != nullptr);
+
+		// Make sure it has the correct value
+		ASSERT_EQUAL(nextExactInt->value(), 123);
+	}
+
+	{
+		bool caughtException = false;
+
+		std::istringstream inputStream("\xFE" "123");
+		DatumReader reader(world, inputStream);
+
+		try
+		{
+			reader.parse();
+		}
+		catch(const utf8::InvalidHeaderByteException &e)
+		{
+			caughtException = true;
+
+			ASSERT_EQUAL(e.startOffset(), 0);
+			ASSERT_EQUAL(e.endOffset(), 0);
+		}
+
+		ASSERT_TRUE(caughtException);
+
+		// Parse the next value
+		AnyCell *nextDatum = reader.parse();
+
+		// Make sure it's an integer
+		ExactIntegerCell *nextExactInt = cell_cast<ExactIntegerCell>(nextDatum);
+		ASSERT_TRUE(nextExactInt != nullptr);
+
+		// Make sure it has the correct value
+		ASSERT_EQUAL(nextExactInt->value(), 123);
+	}
+}
+
 void testAll(World &world)
 {
 	testEmptyInput(world);
@@ -479,6 +545,7 @@ void testAll(World &world)
 	testUnit(world);
 	testComments(world);
 	testDatumLabels(world);
+	testErrorRecovery(world);
 }
 
 }

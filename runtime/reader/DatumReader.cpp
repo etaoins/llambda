@@ -33,11 +33,6 @@ namespace lliby
 
 namespace
 {
-	int inputOffset(std::streambuf *rdbuf)
-	{
-		return rdbuf->pubseekoff(0, std::ios::cur, std::ios::in);
-	}
-
 	bool isIdentifierChar(char c)
 	{
 		return
@@ -488,7 +483,12 @@ AnyCell* DatumReader::parseSymbol()
 
 	if (symbolData.empty())
 	{
-		throw MalformedDatumException(inputOffset(rdbuf()), "Unrecognized start character");
+		int errorOffset = inputOffset(rdbuf());
+
+		// Skip past this character
+		skipUtf8Character(rdbuf());
+
+		throw MalformedDatumException(errorOffset, "Unrecognized start character");
 	}
 	else if (symbolData == ".")
 	{

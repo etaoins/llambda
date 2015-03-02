@@ -2,8 +2,23 @@
 #include <string>
 #include <ctype.h>
 
+#include "unicode/utf8.h"
+#include "unicode/utf8/InvalidByteSequenceException.h"
+
 namespace
 {
+	using namespace lliby;
+
+	/**
+	 * Returns the byte offset of the given rdbuf
+	 *
+	 * @param  rdbuf  Stream buffer to fetch the offset of
+	 */
+	int inputOffset(std::streambuf *rdbuf)
+	{
+		return rdbuf->pubseekoff(0, std::ios::cur, std::ios::in);
+	}
+
 	/**
 	 * Discards characters from a string while they satisfy a predicate
 	 *
@@ -142,6 +157,32 @@ namespace
 
 			rdbuf->sbumpc();
 			accum.push_back(actualChar);
+		}
+	}
+
+	/**
+	 * Skips the next UTF-8 byte sequence from the input
+	 *
+	 * @param  rdbuf  Stream buffer to skip
+	 */
+	void skipUtf8Character(std::streambuf *rdbuf)
+	{
+		const int headerByte = rdbuf->sgetc();
+		int sequenceBytes = utf8::bytesInSequence(headerByte);
+
+		if (sequenceBytes > 0)
+		{
+			while(sequenceBytes--)
+			{
+				rdbuf->sbumpc();
+			}
+		}
+		else
+		{
+			const int offset = inputOffset(rdbuf);
+
+			rdbuf->sbumpc();
+			throw utf8::InvalidHeaderByteException(0, offset);
 		}
 	}
 }
