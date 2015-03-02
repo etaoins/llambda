@@ -10,6 +10,22 @@ namespace
 	using namespace lliby;
 
 	/**
+	 * Puts back the passed string on to the given rdbuf
+	 *
+	 * This repeatedly calls sputbackc to place the string back on the stream buffer
+	 *
+	 * @param  rdbuf  Stream buffer to put the string back on
+	 * @param  str    String to put back
+	 */
+	void putBackString(std::streambuf *rdbuf, const std::string &str)
+	{
+		for(auto i = str.size(); i > 0; i--)
+		{
+			rdbuf->sputbackc(str[i - 1]);
+		}
+	}
+
+	/**
 	 * Returns the byte offset of the given rdbuf
 	 *
 	 * @param  rdbuf  Stream buffer to fetch the offset of
@@ -130,6 +146,7 @@ namespace
 			if (actualChar == EOF)
 			{
 				// Ran out of stream
+				putBackString(rdbuf, accum);
 				return false;
 			}
 
@@ -147,11 +164,7 @@ namespace
 			if (!matched)
 			{
 				// Put everything back
-				for(auto i = accum.size(); i > 0; i--)
-				{
-					rdbuf->sputbackc(accum[i - 1]);
-				}
-
+				putBackString(rdbuf, accum);
 				return false;
 			}
 

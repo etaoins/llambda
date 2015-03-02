@@ -125,6 +125,8 @@ void testSymbols(World &world)
 	ASSERT_SYMBOL_PARSE("-");
 	ASSERT_SYMBOL_PARSE("-bar");
 
+	ASSERT_SYMBOL_PARSE("-i");
+
 	// This is too large
 	ASSERT_INVALID_PARSE(std::string(65536, 'z'));
 
