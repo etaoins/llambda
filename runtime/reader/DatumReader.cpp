@@ -703,14 +703,14 @@ AnyCell* DatumReader::parseUnradixedNumber(int radix, bool negative)
 	std::string numberString;
 
 	takeWhile(rdbuf(), numberString, [=] (char c) -> bool {
-		if ((c >= '0') && (c <= ('0' + std::max(10, radix) - 1)))
+		if ((c >= '0') && (c <= ('0' + std::min(10, radix) - 1)))
 		{
 			return true;
 		}
 		else if (radix > 10)
 		{
 			char lowerC = tolower(c);
-			return (lowerC >= 'a') && (lowerC <= ('a' + radix - 10));
+			return (lowerC >= 'a') && (lowerC < ('a' + radix - 10));
 		}
 		else
 		{

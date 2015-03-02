@@ -173,6 +173,16 @@ void testIntegers(World &world)
 
 	// Out-of-range
 	ASSERT_INVALID_PARSE("9223372036854775808");
+
+	// Invalid for octal
+	ASSERT_INVALID_PARSE("#o8");
+
+	// Invalid for decimal
+	ASSERT_INVALID_PARSE("#da");
+
+	// Invalid for hex
+	ASSERT_INVALID_PARSE("#xg");
+	ASSERT_INVALID_PARSE("#x:");
 }
 
 void testReals(World &world)
