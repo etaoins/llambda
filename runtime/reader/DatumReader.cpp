@@ -532,6 +532,11 @@ AnyCell* DatumReader::parseSymbolShorthand(const std::string &expanded)
 	alloc::SymbolRef expandedSymbol(m_world, SymbolCell::fromUtf8StdString(m_world, expanded));
 	AnyCell *innerDatum = parse();
 
+	if (innerDatum == EofObjectCell::instance())
+	{
+		throw UnexpectedEofException(inputOffset(rdbuf()), "Unexpected end of input after symbol shorthand");
+	}
+
 	return ProperList<AnyCell>::create(m_world, {expandedSymbol, innerDatum});
 }
 

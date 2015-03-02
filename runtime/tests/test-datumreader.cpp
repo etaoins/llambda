@@ -400,6 +400,9 @@ void testSymbolShorthand(World &world, std::string shorthand, std::string expans
 
 	expectedList = ProperList<AnyCell>::create(world, {expansionSymbol, innerList});
 	ASSERT_PARSES(shorthand + shorthand + "#true", expectedList);
+
+	// Unexpected EOF while reading a shorthand
+	ASSERT_INVALID_PARSE("'");
 }
 
 void testQuotedData(World &world)

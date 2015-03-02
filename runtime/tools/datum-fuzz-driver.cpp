@@ -181,7 +181,20 @@ namespace
 			std::istringstream inStream(outStream.str());
 			DatumReader secondReader(world, inStream);
 
-			alloc::AnyRef secondReadRef(world, secondReader.parse());
+			alloc::AnyRef secondReadRef(world);
+
+			try
+			{
+				secondReadRef.setData(secondReader.parse());
+			}
+			catch(const ReadErrorException &e)
+			{
+				ExternalFormDatumWriter errorWriter(std::cerr);
+
+				std::cerr << "First read:" << std::endl;
+				errorWriter.render(firstReadRef);
+				std::cerr << std::endl << std::endl;
+			}
 
 			// Make sure they're equal
 			if (!isEqualish(firstReadRef, secondReadRef))
