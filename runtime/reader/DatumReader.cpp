@@ -988,7 +988,16 @@ AnyCell* DatumReader::parseDatumLabel(char firstDigit)
 	std::string labelString({firstDigit});
 	takeDecimal(rdbuf(), labelString);
 
-	const long long labelNumber = std::stoll(labelString, nullptr, 10);
+	long long labelNumber;
+
+	try
+	{
+		labelNumber = std::stoll(labelString, nullptr, 10);
+	}
+	catch(std::out_of_range)
+	{
+		throw MalformedDatumException(inputOffset(rdbuf()), "Datum label out-of-range");
+	}
 
 	int getChar = rdbuf()->sbumpc();
 

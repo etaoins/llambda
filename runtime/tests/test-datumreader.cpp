@@ -472,7 +472,14 @@ void testDatumLabels(World &world)
 
     ASSERT_PARSES("(#123=(a b c) . (d e #123#))", PairCell::createInstance(world, commonList, nestedList));
 
+	// Datum label doesn't exist
     ASSERT_INVALID_PARSE("(#123=(a b c) . (d e #456#))");
+
+	// Trying to define a datum label with a huge label numbe
+    ASSERT_INVALID_PARSE("#9223372036854775808=(a b c)");
+
+	// Trying to reference a huge datum label
+    ASSERT_INVALID_PARSE("#9223372036854775808#");
 }
 
 void testErrorRecovery(World &world)
