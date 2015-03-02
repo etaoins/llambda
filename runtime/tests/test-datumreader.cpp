@@ -226,6 +226,11 @@ void testStrings(World &world)
 	ASSERT_STRING_PARSE("Here's text \\\n    containing just one line""", """Here's text containing just one line""");
 
 	ASSERT_INVALID_PARSE("\"open string");
+
+	// Invalid Unicode code point
+	ASSERT_INVALID_PARSE(R"("\x110000;")");
+	// Too big for 64bit integers
+	ASSERT_INVALID_PARSE(R"("\xFFFFFFFFFFFFFFFFFF;")");
 }
 
 void testProperList(World &world)

@@ -47,6 +47,27 @@ namespace
 			(c < 0x7f);
 	}
 
+	UnicodeChar parseHexCharacter(int errorOffset, const std::string &hexCode)
+	{
+		long codePoint;
+
+		try
+		{
+			codePoint = std::stol(hexCode, nullptr, 16);
+		}
+		catch(std::out_of_range)
+		{
+			throw MalformedDatumException(errorOffset, "Invalid Unicode code point");
+		}
+
+		if (codePoint > UnicodeChar::LastCodePoint)
+		{
+			throw MalformedDatumException(errorOffset, "Invalid Unicode code point");
+		}
+
+		return UnicodeChar(codePoint);
+	}
+
 	std::string takeQuotedStringLike(std::streambuf *rdbuf, char quoteChar)
 	{
 		std::string accum;
@@ -102,7 +123,7 @@ namespace
 							throw MalformedDatumException(inputOffset(rdbuf), "Empty hex escape");
 						}
 
-						UnicodeChar escapedChar(std::stol(hexCode, nullptr, 16));
+						UnicodeChar escapedChar = parseHexCharacter(inputOffset(rdbuf), hexCode);
 
 						utf8::EncodedChar encoded(utf8::encodeChar(escapedChar));
 						accum.append(reinterpret_cast<char*>(encoded.data), encoded.size);
@@ -564,14 +585,8 @@ AnyCell* DatumReader::parseChar()
 
 		if (!hexCode.empty())
 		{
-			auto codePoint = std::stoll(hexCode, nullptr, 16);
-
-			if (codePoint > UnicodeChar::LastCodePoint)
-			{
-				throw MalformedDatumException(inputOffset(rdbuf()), "Invalid Unicode code point");
-			}
-
-			return CharCell::createInstance(m_world, codePoint);
+			UnicodeChar escapedChar = parseHexCharacter(inputOffset(rdbuf()), hexCode);
+			return CharCell::createInstance(m_world, escapedChar);
 		}
 	}
 
