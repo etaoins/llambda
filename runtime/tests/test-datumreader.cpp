@@ -216,6 +216,10 @@ void testReals(World &world)
 	ASSERT_PARSES("-NaN.0", FlonumCell::NaN(world));
 
 	ASSERT_INVALID_PARSE(".");
+	ASSERT_INVALID_PARSE("#b.");
+	ASSERT_INVALID_PARSE("#o.");
+	ASSERT_INVALID_PARSE("#d.");
+	ASSERT_INVALID_PARSE("#x.");
 }
 
 void testStrings(World &world)

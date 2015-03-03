@@ -723,7 +723,8 @@ AnyCell* DatumReader::parseUnradixedNumber(int radix, bool negative)
 		}
 	});
 
-	if (numberString.empty() && (rdbuf()->sgetc() != '.'))
+	// Allow decimal numbers to start with a decimal point
+	if (numberString.empty() && !((rdbuf()->sgetc() == '.') && (radix == 10)))
 	{
 		// Not valid
 		throw MalformedDatumException(inputOffset(rdbuf()), "No valid number found after number prefix");
