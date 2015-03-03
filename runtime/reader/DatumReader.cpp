@@ -187,7 +187,16 @@ namespace
 			return NAN;
 		}
 
-		std::int64_t intValue = std::stoll(numberString, nullptr);
+		std::int64_t intValue;
+
+		try
+		{
+			intValue = std::stoll(numberString, nullptr);
+		}
+		catch(std::out_of_range)
+		{
+			throw MalformedDatumException(inputOffset(rdbuf), "Exponent out-of-range");
+		}
 
 		if (signChar == '-')
 		{

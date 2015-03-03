@@ -220,6 +220,7 @@ void testReals(World &world)
 	ASSERT_INVALID_PARSE("#o.");
 	ASSERT_INVALID_PARSE("#d.");
 	ASSERT_INVALID_PARSE("#x.");
+	ASSERT_INVALID_PARSE("1e9223372036854775808");
 }
 
 void testStrings(World &world)
