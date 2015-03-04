@@ -215,6 +215,11 @@ void testReals(World &world)
 	ASSERT_PARSES("+NaN.0", FlonumCell::NaN(world));
 	ASSERT_PARSES("-NaN.0", FlonumCell::NaN(world));
 
+	ASSERT_PARSES("+inf.00", FlonumCell::positiveInfinity(world));
+	ASSERT_PARSES("-inf.00", FlonumCell::negativeInfinity(world));
+	ASSERT_PARSES("+nan.00", FlonumCell::NaN(world));
+	ASSERT_PARSES("-nan.00", FlonumCell::NaN(world));
+
 	ASSERT_INVALID_PARSE(".");
 	ASSERT_INVALID_PARSE("#b.");
 	ASSERT_INVALID_PARSE("#o.");

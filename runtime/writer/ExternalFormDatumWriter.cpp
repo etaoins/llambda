@@ -1,6 +1,7 @@
 #include "ExternalFormDatumWriter.h"
 
 #include <cassert>
+#include <strings.h>
 #include <iomanip>
 #include <cmath>
 
@@ -41,10 +42,132 @@ namespace
 			(byteValue != 0x22);
 	}
 
-	bool byteIsSyntaxCharacter(std::uint8_t c)
+	bool byteIsSymbolInitial(std::uint8_t c)
 	{
-		return (c == '|') || (c == '"') || (c == '[') || (c == ']') || (c == '(') || (c == ')') || (c == '#') ||
-			   (c == '\'') || (c == '`') || (c == ',');
+		// Letter?
+		if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+		{
+			return true;
+		}
+
+		return (c == '!' || c == '$' || c == '%' || c == '&' || c == '*' || c == '/' || c == ':' || c == '<' ||
+				c == '=' || c == '>' || c == '?' || c == '^' || c == '_' || c == '~');
+	}
+
+	bool byteIsSymbolSubsequent(std::uint8_t c)
+	{
+		if (c >= 0x7f)
+		{
+			// Non-ASCII
+			return false;
+		}
+
+		if (c == '|' || c == '"' || c == '[' || c == ']' || c == '(' || c == ')' || c == '#' || c == '\'' ||
+		    c == '`' || c == ',')
+		{
+			// Syntax character
+			return false;
+		}
+
+		return stringLikeByteIsDirectlyPrintable(c);
+	}
+
+	bool byteIsExplicitSign(std::uint8_t c)
+	{
+		return (c == '+') || (c == '-');
+	}
+
+	bool byteIsSignSubsequent(std::uint8_t c)
+	{
+		return byteIsExplicitSign(c) || byteIsSymbolInitial(c) || (c == '@');
+	}
+
+	bool byteIsDotSubsequent(std::uint8_t c)
+	{
+		return byteIsSignSubsequent(c) || (c == '.');
+	}
+
+	bool strIsInfNan(const std::uint8_t *utf8Data, std::uint32_t byteLength)
+	{
+		return (byteLength >= 6) && byteIsExplicitSign(utf8Data[0]) &&
+		       (!strncasecmp(reinterpret_cast<const char *>(&utf8Data[1]), "inf.0", 5) ||
+		        !strncasecmp(reinterpret_cast<const char *>(&utf8Data[1]), "nan.0", 5));
+	}
+
+	bool strIsPeculiarIdentifier(const std::uint8_t *utf8Data, std::uint32_t byteLength)
+	{
+		if (strIsInfNan(utf8Data, byteLength))
+		{
+			return false;
+		}
+
+		if (byteLength == 1)
+		{
+			return byteIsExplicitSign(utf8Data[0]);
+		}
+
+		assert(byteLength > 1);
+
+		if (byteIsExplicitSign(utf8Data[0]))
+		{
+			if (byteIsSignSubsequent(utf8Data[1]))
+			{
+				for(std::uint32_t i = 2; i < byteLength; i++)
+				{
+					if (!byteIsSymbolSubsequent(utf8Data[i]))
+					{
+						return false;
+					}
+				}
+
+				return true;
+			}
+			else if ((utf8Data[1] == '.') && (byteLength > 2))
+			{
+				// Shift off the explicit sign
+				return strIsPeculiarIdentifier(&utf8Data[1], byteLength - 1);
+			}
+		}
+		else if ((utf8Data[0] == '.') && byteIsDotSubsequent(utf8Data[1]))
+		{
+			for(std::uint32_t i = 2; i < byteLength; i++)
+			{
+				if (!byteIsSymbolSubsequent(utf8Data[i]))
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
+	bool strIsIdentifier(const std::uint8_t *utf8Data, std::uint32_t byteLength)
+	{
+		if (byteLength == 0)
+		{
+			// Empty identifier
+			return false;
+		}
+
+		// Scan the symbol to determine if we need quotes
+		if (!byteIsSymbolInitial(utf8Data[0]))
+		{
+			return strIsPeculiarIdentifier(utf8Data, byteLength);
+		}
+
+		for(std::uint32_t i = 1; i < byteLength; i++)
+		{
+			if (!byteIsSymbolSubsequent(utf8Data[i]))
+			{
+				// Not a symbol subsequent
+				return false;
+			}
+		}
+
+		return true;
 	}
 }
 
@@ -257,24 +380,9 @@ void ExternalFormDatumWriter::renderFlonum(const FlonumCell *value)
 
 void ExternalFormDatumWriter::renderStringLike(const std::uint8_t *utf8Data, std::uint32_t byteLength, std::uint8_t quoteChar, bool needsQuotes)
 {
-	if (byteLength == 0)
+	if (!needsQuotes)
 	{
-		// This is for the empty symbol which is represented by ||
-		needsQuotes = true;
-	}
-	else if (!needsQuotes)
-	{
-		// Scan the string to determine if we need quotes
-		for(std::uint32_t i = 0; i < byteLength; i++)
-		{
-			const std::uint8_t byteValue = utf8Data[i];
-
-			if ((byteValue > 0x7f) || !stringLikeByteIsDirectlyPrintable(byteValue) || byteIsSyntaxCharacter(byteValue))
-			{
-				needsQuotes = true;
-				break;
-			}
-		}
+		needsQuotes = !strIsIdentifier(utf8Data, byteLength);
 	}
 
 	if (!needsQuotes)

@@ -102,7 +102,7 @@ case class Symbol(name : String) extends Leaf {
     name
   }
   else {
-    "|" + name.replace("|", "\\|") + "|"
+    "|" + name.replace("\\", "\\\\").replace("|", "\\|") + "|"
   }
 }
 

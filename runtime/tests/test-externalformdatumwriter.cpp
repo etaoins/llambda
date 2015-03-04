@@ -118,6 +118,55 @@ void testSymbol(World &world)
 
 	// This is allowed as @ is only special after a ,
 	assertForm(symbolFor(world, u8"Mid@at"), u8"Mid@at");
+
+	// These are "peculiar identifiers"
+	assertForm(symbolFor(world, "+"), u8"+");
+	assertForm(symbolFor(world, "-"), u8"-");
+
+	// (explicit sign) (sign subseqqent) (subsequent)*
+	assertForm(symbolFor(world, "++"), u8"++");
+	assertForm(symbolFor(world, "+@"), u8"+@");
+	assertForm(symbolFor(world, "-+foo"), u8"-+foo");
+	assertForm(symbolFor(world, "+@foo"), u8"+@foo");
+
+	// (explicit sign) . (dot subsequent) (subsequent)*
+	assertForm(symbolFor(world, "+.+"), u8"+.+");
+	assertForm(symbolFor(world, "-.@"), u8"-.@");
+	assertForm(symbolFor(world, "+.."), u8"+..");
+	assertForm(symbolFor(world, "-.+foo"), u8"-.+foo");
+	assertForm(symbolFor(world, "+.@foo"), u8"+.@foo");
+	assertForm(symbolFor(world, "-..foo"), u8"-..foo");
+
+	// . (dot subsequent) (subsequent)*
+	assertForm(symbolFor(world, ".+"), u8".+");
+	assertForm(symbolFor(world, ".@"), u8".@");
+	assertForm(symbolFor(world, ".."), u8"..");
+	assertForm(symbolFor(world, ".+foo"), u8".+foo");
+	assertForm(symbolFor(world, ".@foo"), u8".@foo");
+	assertForm(symbolFor(world, "..foo"), u8"..foo");
+
+	// These are also numbers
+	assertForm(symbolFor(world, u8"0"), u8"|0|");
+	assertForm(symbolFor(world, u8"+0"), u8"|+0|");
+	assertForm(symbolFor(world, u8"-0"), u8"|-0|");
+	assertForm(symbolFor(world, u8"0.5"), u8"|0.5|");
+	assertForm(symbolFor(world, u8"+0.5"), u8"|+0.5|");
+	assertForm(symbolFor(world, u8"-0.5"), u8"|-0.5|");
+	assertForm(symbolFor(world, u8"2/3"), u8"|2/3|");
+	assertForm(symbolFor(world, u8"+2/3"), u8"|+2/3|");
+	assertForm(symbolFor(world, u8"-2/3"), u8"|-2/3|");
+	assertForm(symbolFor(world, u8"+inf.0"), u8"|+inf.0|");
+	assertForm(symbolFor(world, u8"-inf.0"), u8"|-inf.0|");
+	assertForm(symbolFor(world, u8"+nan.0"), u8"|+nan.0|");
+	assertForm(symbolFor(world, u8"-nan.0"), u8"|-nan.0|");
+	assertForm(symbolFor(world, u8"+INF.0"), u8"|+INF.0|");
+	assertForm(symbolFor(world, u8"-INF.0"), u8"|-INF.0|");
+	assertForm(symbolFor(world, u8"+NaN.0"), u8"|+NaN.0|");
+	assertForm(symbolFor(world, u8"-NaN.0"), u8"|-NaN.0|");
+	assertForm(symbolFor(world, u8"+inf.00"), u8"|+inf.00|");
+	assertForm(symbolFor(world, u8"-inf.00"), u8"|-inf.00|");
+	assertForm(symbolFor(world, u8"+nan.00"), u8"|+nan.00|");
+	assertForm(symbolFor(world, u8"-nan.00"), u8"|-nan.00|");
 }
 
 void testString(World &world)

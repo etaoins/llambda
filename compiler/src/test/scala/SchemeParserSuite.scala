@@ -85,6 +85,7 @@ class SchemeParserSuite extends FunSuite with Inside {
     assertParsesAsSymbol("""|\||""", "|")
     assertParsesAsSymbol("""|two\x20;words|""", "two words")
     assertParsesAsSymbol("||", "")
+    assertParsesAsSymbol("|0|", "0")
     assertParsesAsSymbol("""|\t\t|""", "\t\t")
 
     intercept[ParseErrorException] {
@@ -146,6 +147,12 @@ class SchemeParserSuite extends FunSuite with Inside {
 
     assertReflexiveParse("+NaN.0", List(ast.NaNLiteral()))
     assertReflexiveParse("-NaN.0", List(ast.NaNLiteral()))
+
+    // An identifier is any sequence (...)  provided that it does not have a prefix which is a valid number
+    assertReflexiveParse("+inf.00", List(ast.PositiveInfinityLiteral(), ast.IntegerLiteral(0)))
+    assertReflexiveParse("-inf.00", List(ast.NegativeInfinityLiteral(), ast.IntegerLiteral(0)))
+    assertReflexiveParse("+nan.00", List(ast.NaNLiteral(), ast.IntegerLiteral(0)))
+    assertReflexiveParse("-nan.00", List(ast.NaNLiteral(), ast.IntegerLiteral(0)))
   }
 
   test("strings") {
