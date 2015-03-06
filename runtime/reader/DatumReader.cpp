@@ -762,7 +762,16 @@ AnyCell* DatumReader::parseUnradixedNumber(int radix, bool negative)
 			if (previousSize != numberString.size())
 			{
 				// We took more numbers - we're not exact
-				double doubleValue = std::stod(numberString, nullptr);
+				double doubleValue;
+
+				try
+				{
+					doubleValue = std::stod(numberString, nullptr);
+				}
+				catch (std::out_of_range)
+				{
+					throw new MalformedDatumException(inputOffset(rdbuf()), "Floating point value out-of-range");
+				}
 
 				if (negative)
 				{
