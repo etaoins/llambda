@@ -29,7 +29,6 @@ public:
 	 *
 	 * The SharedByteArray must already have a reference taken for the bytevector cell
 	 *
-	 * @param  world      World to create the bytevector cell in
 	 * @param  byteArray  Byte array to back the bytevector cell
 	 * @param  length     Length of the data in bytes
 	 */

@@ -16,9 +16,9 @@ class World;
  * As it is not possible to test a procedure's type during runtime its exact type must be explicitly known before the
  * procedure can be applied. Due to the fact our calling convention passes rest arguments as the final argument what may
  * be compatible types in Scheme are represented using distinct TypedProcedureCell types. For example, while (->
- * <number> <number> <number>) is a subtype of (-> <any> * <any>) they have different native signatures due to differing
- * number of fixed argumetns. For this reason the exact procedure type must be known and the normal subtyping rules
- * do not apply.
+ * \<number\> \<number\> \<number\>) is a subtype of (-> \<any\> * \<any\>) they have different native signatures due to
+ * differing number of fixed argumetns. For this reason the exact procedure type must be known and the normal subtyping
+ * rules do not apply.
  *
  * If a (world-function) is declared in Scheme to take a certain function type the compiler will ensure that a
  * ProcedureCell with the corresponding typed entry point is generated and passed to the native function. Conversely,

@@ -16,12 +16,12 @@ namespace lliby
 	 * Represents the head of a proper list
 	 *
 	 * Proper lists are defined by Scheme to be a pair with a cdr of either a the empty list or another proper list.
-	 * On the Scheme side they're defined with the type (Listof <type>) where <type> is the type of the car values.
+	 * On the Scheme side they're defined with the type (Listof \<type\>) where \<type\> is the type of the car values.
 	 * This is the analogous C++ representation. It supports forward iteration, size calculations and construction of
-	 * new instances via ::create.
+	 * new instances via ProperList::create().
 	 *
-	 * This implements ::isInstance() which allows cell_cast<> and cell_unchecked_cast<> to convert other cells to
-	 * the appropriate ProperList type.
+	 * This implements ProperList::isInstance() which allows cell_cast<> and cell_unchecked_cast<> to convert other
+	 * cells to the appropriate ProperList type.
 	 */
 	template<class T>
 	class ProperList : public ListElementCell

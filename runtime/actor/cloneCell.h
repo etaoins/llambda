@@ -54,7 +54,7 @@ public:
 	 * Converts this exception to a Scheme error
 	 *
 	 * @param  world     World to signal the error in
-	 * @param  obj       Object that was the source of the UTF-8 encoded data
+	 * @param  procName  Name of the Scheme procedure signalling the error
 	 */
 	[[noreturn]]
 	void signalSchemeError(World &world, const char *procName);

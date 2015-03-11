@@ -1,0 +1,10 @@
+PROJECT_NAME     = "Llambda Runtime"
+PROJECT_BRIEF    = "Llambda's C++ runtime"
+OUTPUT_DIRECTORY = docs
+INPUT            = actor/ alloc/ binding/ dynamic/ platform/ port/ reader/ sched/ ucd/ unicode/ util/ writer/
+FILE_PATTERNS    = *.h
+RECURSIVE        = YES
+
+JAVADOC_AUTOBRIEF = YES
+
+GENERATE_LATEX = NO

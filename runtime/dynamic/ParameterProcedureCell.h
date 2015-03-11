@@ -29,7 +29,6 @@ public:
 	 *
 	 * This will enter the allocator and can potentially trigger GC
 	 *
-	 * @param world               Current world pointer
 	 * @param initialValue        Initial value for the parameter. This should be pre-converted using
 	 *                            converterProcedure by the caller. State::applyConverterProcedure() can be used for
 	 *                            this purpose.
