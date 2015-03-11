@@ -71,9 +71,14 @@ namespace
 					return false;
 				}
 
-				// Do a fuzzy comparison. Also check for equality to handle infinities
-				return (leftFlonum->value() == rightFlonum->value()) ||
-					(std::fabs(leftFlonum->value() - rightFlonum->value()) < 0.001);
+				// Handle infinities
+				if (leftFlonum->value() == rightFlonum->value())
+				{
+					return true;
+				}
+
+				double ratio = leftFlonum->value() / rightFlonum->value();
+				return (ratio > 0.99) && (ratio < 1.01);
 			}
 		}
 		else if (auto leftSymbol = cell_cast<SymbolCell>(left))
