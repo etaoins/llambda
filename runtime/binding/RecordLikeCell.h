@@ -29,8 +29,6 @@ public:
 	static void *allocateRecordData(size_t bytes);
 	static void freeRecordData(void *);
 
-	void finalize();
-
 	// Used by the garbage collector to update any references to record data stored inline
 	void** recordDataRef()
 	{
