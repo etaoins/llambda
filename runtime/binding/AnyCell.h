@@ -52,11 +52,6 @@ public:
 	 */
 	bool isEqual(const AnyCell *other) const;
 
-	void setGcState(GarbageState gcState)
-	{
-		m_gcState = gcState;
-	}
-
 	void finalize();
 
 protected:
