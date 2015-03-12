@@ -367,7 +367,7 @@ void ExternalFormDatumWriter::renderFlonum(const FlonumCell *value)
 	}
 	else
 	{
-		m_outStream << std::setprecision(256) << number;
+		m_outStream << std::setprecision(1024) << number;
 
 		double unused;
 		if (std::modf(number, &unused) == 0.0)
