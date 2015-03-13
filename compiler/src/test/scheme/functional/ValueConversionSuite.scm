@@ -59,9 +59,9 @@
 	(fabsf (typeless-cell -10))))
 
 (define-test "native i64 can be passed as an native i32" (expect b
-	; This assumes (exact) returns an native i64 and (vector-ref) takes an
-	; native i32
-	(vector-ref #(a b c) (exact 1))))
+	; This assumes (exact) returns an native i64
+	(define native-abs (native-function system-library "abs" (-> <native-int32> <native-int32>)))
+	(vector-ref #(a b c) (native-abs -1))))
 
 (define-test "native i64 cannot be boxed as an inexact rational" (expect-error type-error?
   (import (llambda nfi))
