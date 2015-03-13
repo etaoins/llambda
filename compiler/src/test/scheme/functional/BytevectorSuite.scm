@@ -1,70 +1,70 @@
 (define-test "(bytevector?)" (expect-static-success
-	(assert-true (bytevector? #u8(1 2 3)))
-	(assert-true (bytevector? #u8()))
-	(assert-false (bytevector? 4))))
+  (assert-true (bytevector? #u8(1 2 3)))
+  (assert-true (bytevector? #u8()))
+  (assert-false (bytevector? 4))))
 
 (define-test "(make-bytevector)" (expect-success
-	(assert-equal #u8() (make-bytevector 0))
-	(assert-equal #u8() (make-bytevector 0 0))
-	(assert-equal #u8(0 0 0) (make-bytevector 3))
-	(assert-equal #u8(5 5 5) (make-bytevector 3 5))))
+  (assert-equal #u8() (make-bytevector 0))
+  (assert-equal #u8() (make-bytevector 0 0))
+  (assert-equal #u8(0 0 0) (make-bytevector 3))
+  (assert-equal #u8(5 5 5) (make-bytevector 3 5))))
 
 (define-test "(make-bytevector) with an inexact rational fill fails" (expect-error type-error?
-	(make-bytevector 3 5.0)))
+  (make-bytevector 3 5.0)))
 
 (define-test "(make-bytevector) with a negative length fails" (expect-error range-error?
-	(make-bytevector -3)))
+  (make-bytevector -3)))
 
 (define-test "(bytevector)" (expect-success
-	(assert-equal #u8() (bytevector))
-	(assert-equal #u8(1 3 5 1 3 5) (bytevector 1 3 5 1 3 5))))
+  (assert-equal #u8() (bytevector))
+  (assert-equal #u8(1 3 5 1 3 5) (bytevector 1 3 5 1 3 5))))
 
 (define-test "static bytevector length" (expect-static-success
-	(assert-equal 3 (bytevector-length #u8(1 2 3)))
-	(assert-equal 0 (bytevector-length #u8()))))
+  (assert-equal 3 (bytevector-length #u8(1 2 3)))
+  (assert-equal 0 (bytevector-length #u8()))))
 
 (define-test "dynamic bytevector length" (expect-success
-	(assert-equal 15 (bytevector-length (make-bytevector 15 129)))
-	(assert-equal 0 (bytevector-length (make-bytevector 0 15)))))
+  (assert-equal 15 (bytevector-length (make-bytevector 15 129)))
+  (assert-equal 0 (bytevector-length (make-bytevector 0 15)))))
 
 (define-test "bytevector-u8-ref" (expect 5
-	(bytevector-u8-ref #u8(1 3 5 201 203 205) 2)))
+  (bytevector-u8-ref #u8(1 3 5 201 203 205) 2)))
 
 (define-test "bytevector-u8-ref past end of bytevector fails" (expect-error range-error?
-	(bytevector-u8-ref #u8(1 3 5 201 203 205) 7)))
+  (bytevector-u8-ref #u8(1 3 5 201 203 205) 7)))
 
 (define-test "bytevector-u8-ref with negative index fails" (expect-error range-error?
-	(bytevector-u8-ref #u8(1 3 5 201 203 205) -1)))
+  (bytevector-u8-ref #u8(1 3 5 201 203 205) -1)))
 
 (define-test "bytevector-u8-ref with non-integer fails" (expect-error type-error?
-	(bytevector-u8-ref #u8(1 3 5 201 203 205) "4")))
+  (bytevector-u8-ref #u8(1 3 5 201 203 205) "4")))
 
 (define-test "bytevector-u8-set!" (expect #u8(1 1 2 1 1)
-	; Need to make a new bytevector because vector literals are immutable
-	(define test-bytevector (make-bytevector 5 1))
-	(bytevector-u8-set! test-bytevector 2 2)
-	test-bytevector))
+  ; Need to make a new bytevector because vector literals are immutable
+  (define test-bytevector (make-bytevector 5 1))
+  (bytevector-u8-set! test-bytevector 2 2)
+  test-bytevector))
 
 (define-test "bytevector-u8-set! on bytevector literal fails" (expect-error mutate-literal-error?
-	; We should fail gracefully from this - i.e. no segfault, no silent success
-	(bytevector-u8-set! #u8(1 1 1 1 1 1) 2 2)))
+  ; We should fail gracefully from this - i.e. no segfault, no silent success
+  (bytevector-u8-set! #u8(1 1 1 1 1 1) 2 2)))
 
 (define-test "bytevector-u8-set! past end of bytevector fails" (expect-error range-error?
-	(define test-bytevector (make-bytevector 5 1))
-	(bytevector-u8-set! test-bytevector 5 2)))
+  (define test-bytevector (make-bytevector 5 1))
+  (bytevector-u8-set! test-bytevector 5 2)))
 
 (define-test "bytevector-u8-set! with negative index fails" (expect-error range-error?
-	(define test-bytevector (make-bytevector 5 1))
-	(bytevector-u8-set! test-bytevector -1 2)))
+  (define test-bytevector (make-bytevector 5 1))
+  (bytevector-u8-set! test-bytevector -1 2)))
 
 (define-test "(bytevector-append)" (expect-success
-	(assert-equal #u8() (bytevector-append))
-	(assert-equal #u8(1 2 3) (bytevector-append #u8(1 2 3)))
-	(assert-equal #u8(1 2 3 4 5 6) (bytevector-append #u8(1 2) #u8(3 4) #u8(5 6)))
-	(assert-equal #u8() (bytevector-append #u8() #u8() #u8()))))
+  (assert-equal #u8() (bytevector-append))
+  (assert-equal #u8(1 2 3) (bytevector-append #u8(1 2 3)))
+  (assert-equal #u8(1 2 3 4 5 6) (bytevector-append #u8(1 2) #u8(3 4) #u8(5 6)))
+  (assert-equal #u8() (bytevector-append #u8() #u8() #u8()))))
 
 (define-test "(bytevector-append) with non-bytevector fails" (expect-error type-error?
-	(bytevector-append #u8(1 2) #(3 4))))
+  (bytevector-append #u8(1 2) #(3 4))))
 
 (define-test "(utf8->string)" (expect-success
   (assert-equal "" (utf8->string #u8()))

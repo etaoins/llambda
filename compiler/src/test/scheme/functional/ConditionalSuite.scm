@@ -26,28 +26,28 @@
   (assert-equal 'false (if (and #t #f) 'true 'false))))
 
 (define-test "(cond) without arrows or else" (expect true
-	(cond (#f 'false)
-			(#t 'true))))
+  (cond (#f 'false)
+      (#t 'true))))
 
 (define-test "(cond) with arrows, without else" (expect #f
-	(cond (#f => not)
-			; This becomes (not #t)
-			(#t => not))))
+  (cond (#f => not)
+      ; This becomes (not #t)
+      (#t => not))))
 
 (define-test "(cond) without arrows, with else" (expect else
-	(cond (#f 'false1)
-			(#f 'false2)
-			(else 'else))))
+  (cond (#f 'false1)
+      (#f 'false2)
+      (else 'else))))
 
 (define-test "(cond) with arrows and else" (expect else
-	(cond (#f => not)
-			(#f => not)
-			(else 'else))))
+  (cond (#f => not)
+      (#f => not)
+      (else 'else))))
 
 (define-test "(case) matching clause" (expect composite
-	(case (* 2 3)
-	  ((2 3 5 7) 'prime)
-	  ((1 4 6 8 9) 'composite))))
+  (case (* 2 3)
+    ((2 3 5 7) 'prime)
+    ((1 4 6 8 9) 'composite))))
 
 (define-test "(case) without matching clause" (expect-static-success
   (assert-equal #!unit
@@ -69,38 +69,38 @@
       (else => (lambda (x) x))))))
 
 (define-test "(and)" (expect-static-success
-	(assert-equal #t (and))
-	(assert-equal #f (and #t #f))
-	(assert-equal '(f g) (and 1 2 'c '(f g)))))
+  (assert-equal #t (and))
+  (assert-equal #f (and #t #f))
+  (assert-equal '(f g) (and 1 2 'c '(f g)))))
 
 (define-test "(or)" (expect-static-success
-	(assert-equal #f (or))
-	(assert-equal #t (or #t #f))
-	(assert-equal '(b c) (or #f '(b c) #t))))
+  (assert-equal #f (or))
+  (assert-equal #t (or #t #f))
+  (assert-equal '(b c) (or #f '(b c) #t))))
 
 (define-test "(when) with true condition" (expect executed
-	(define result 'not-executed)
-	(when (= 1 1.0)
-	  (set! result 'executed))
-	result))
+  (define result 'not-executed)
+  (when (= 1 1.0)
+    (set! result 'executed))
+  result))
 
 (define-test "(when) with false condition" (expect not-executed
-	(define result 'not-executed)
-	(when (= 1 6)
-	  (set! result 'executed))
-	result))
+  (define result 'not-executed)
+  (when (= 1 6)
+    (set! result 'executed))
+  result))
 
 (define-test "(unless) with true condition" (expect not-executed
-	(define result 'not-executed)
-	(unless (= 1 1.0)
-	  (set! result 'executed))
-	result))
+  (define result 'not-executed)
+  (unless (= 1 1.0)
+    (set! result 'executed))
+  result))
 
 (define-test "(unless) with false condition" (expect executed
-	(define result 'not-executed)
-	(unless (= 1 6)
-	  (set! result 'executed))
-	result))
+  (define result 'not-executed)
+  (unless (= 1 6)
+    (set! result 'executed))
+  result))
 
 (define-test "conditional with garbage collection in only one branch" (expect true
    (define result 'not-executed)

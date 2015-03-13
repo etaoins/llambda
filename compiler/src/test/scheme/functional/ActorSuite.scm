@@ -152,16 +152,16 @@
 
   ; Strings
   (define test-string (make-string 12 #\*))
-	(string-set! test-string 0 (typeless-cell #\x2603))
+  (string-set! test-string 0 (typeless-cell #\x2603))
 
-	(define cloned-string (ping-pong test-string)) ; Clone
+  (define cloned-string (ping-pong test-string)) ; Clone
   (string-set! cloned-string 11 #\!) ; Modify the clone
 
-	(assert-equal "☃**********!" (ping-pong cloned-string)) ; Clone is modified
-	(assert-equal "☃***********" (ping-pong test-string)) ; Original is not
+  (assert-equal "☃**********!" (ping-pong cloned-string)) ; Clone is modified
+  (assert-equal "☃***********" (ping-pong test-string)) ; Original is not
 
   ; Symbols
-	(assert-equal '|☃***********| (ping-pong (string->symbol test-string)))
+  (assert-equal '|☃***********| (ping-pong (string->symbol test-string)))
 
   ; Mailboxes
   (assert-equal ping-pong-actor (ping-pong ping-pong-actor))

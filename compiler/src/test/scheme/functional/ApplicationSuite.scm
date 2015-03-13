@@ -1,34 +1,34 @@
 (define-test "direct application with insufficent args fails" (expect-error arity-error?
-	(boolean?)))
+  (boolean?)))
 
 (define-test "direct application with extraneous args fails" (expect-error arity-error?
-	(boolean? #t #f)))
+  (boolean? #t #f)))
 
 (define-test "static (apply)" (expect-static-success
   (define one 1)
   (define two 2)
 
-	(assert-equal 0 (apply +))
-	(assert-equal 5 (apply + '(2 3)))
-	(assert-equal 6 (apply + 1 2 '(3)))
+  (assert-equal 0 (apply +))
+  (assert-equal 5 (apply + '(2 3)))
+  (assert-equal 6 (apply + 1 2 '(3)))
   (assert-equal 10 (apply + (cons 1 '(2 3 4))))
   (assert-equal 10 (apply + (append '(1 2) '(3 4))))
   (assert-equal 10 (apply + (append (list one two) '(3 4))))))
 
 (define-test "applying procedure with terminal improper list fails" (expect-error type-error?
-	(apply + '(2 3 . 5))))
+  (apply + '(2 3 . 5))))
 
 (define-test "applying procedure with fixed args with terminal static non-list fails" (expect-compile-error type-error?
-	(apply - 2)))
+  (apply - 2)))
 
 (define-test "applying procedure with fixed args with terminal dynamic non-list fails" (expect-error type-error?
-	(apply - (typeless-cell 2))))
+  (apply - (typeless-cell 2))))
 
 (define-test "applying procedure without fixed args with terminal static non-list fails" (expect-compile-error type-error?
-	(apply + 2)))
+  (apply + 2)))
 
 (define-test "applying procedure without fixed args with terminal dynamic non-list fails" (expect-error type-error?
-	(apply + (typeless-cell 2))))
+  (apply + (typeless-cell 2))))
 
 (define-test "consecutively applying with incompatible arg types fails at compile time" (expect-compile-error type-error?
   (import (llambda typed))
@@ -55,7 +55,7 @@
   (assert-equal 1 counter)))
 
 (define-test "nested apply" (expect 3
-	(apply apply (list + '(1 2)))))
+  (apply apply (list + '(1 2)))))
 
 (define-test "applying a typed procedure value with incompatible fixed arg types fails at compile time" (expect-compile-error type-error?
   (import (llambda typed))
@@ -85,16 +85,16 @@
   (apply-binary-op + 1 2)))
 
 (define-test "applying a capturing procedure" (expect 7
-	(define (create-adder-proc to-add)
-	  (lambda (value)
-		 (+ to-add value)))
+  (define (create-adder-proc to-add)
+    (lambda (value)
+     (+ to-add value)))
 
-	(apply (create-adder-proc 5) '(2))))
+  (apply (create-adder-proc 5) '(2))))
 
 ; This is from R7RS except sqrt is replaced by - due to lack of sqrt
 (define-test "composing using apply" (expect -900
-	(define compose
-	  (lambda (f g)
-		 (lambda args
-			(f (apply g args)))))
-	((compose - *) 12 75)))
+  (define compose
+    (lambda (f g)
+     (lambda args
+      (f (apply g args)))))
+  ((compose - *) 12 75)))

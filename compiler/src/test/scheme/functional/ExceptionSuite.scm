@@ -1,87 +1,81 @@
 (define-test "uncaught exceptions terminate the program" (expect-exit-value 255
-	(raise 0)))
+  (raise 0)))
 
 (define-test "uncaught exceptions unwind all states" (expect-output (two one)
-	(import (scheme write))
-	(import (scheme process-context))
-	(dynamic-wind
-	  (lambda ())
-	  (lambda ()
-		 (dynamic-wind
-			(lambda ())
-			(lambda ()
-			  (raise 0)
-			  (dynamic-wind
-				 (lambda ())
-				 (lambda ())
-				 (lambda ()
-					(write 'three)
-					(newline))))
-			(lambda ()
-			  (write 'two)
-			  (newline))))
-	  (lambda ()
-		 (write 'one)
-		 (newline)
-		 (exit 0)))
-))
+  (import (scheme write))
+  (import (scheme process-context))
+  (dynamic-wind
+    (lambda ())
+    (lambda ()
+     (dynamic-wind
+      (lambda ())
+      (lambda ()
+        (raise 0)
+        (dynamic-wind
+         (lambda ())
+         (lambda ())
+         (lambda ()
+          (write 'three)
+          (newline))))
+      (lambda ()
+        (write 'two)
+        (newline))))
+    (lambda ()
+     (write 'one)
+     (newline)
+     (exit 0)))))
 
 (define-test "exception handlers are called when an exception is raised" (expect-output (handled raised-data)
-	(import (scheme write))
-	(import (scheme process-context))
-	(with-exception-handler 
-	  (lambda (obj)
-		 (write 'handled)
-		 (newline)
-		 (write obj)
-		 (exit #t))
+  (import (scheme write))
+  (import (scheme process-context))
+  (with-exception-handler
+    (lambda (obj)
+     (write 'handled)
+     (newline)
+     (write obj)
+     (exit #t))
 
-	  (lambda ()
-		 (raise 'raised-data)))
-))
+    (lambda ()
+     (raise 'raised-data)))))
 
 (define-test "exception handler with incorrect thunk arity fails at compile time" (expect-compile-error type-error?
-	(import (scheme process-context))
-	(with-exception-handler 
-	  (lambda (obj)
-		 (exit #f))
+  (import (scheme process-context))
+  (with-exception-handler
+    (lambda (obj)
+     (exit #f))
 
-	  (lambda (too many args)
-		 (raise 'raised-data)))
-))
+    (lambda (too many args)
+     (raise 'raised-data)))))
 
 (define-test "exception handler with incorrect handler arity fails at compile time" (expect-compile-error type-error?
-	(import (scheme process-context))
-	(with-exception-handler 
-	  (lambda ()
-		 (exit #f))
+  (import (scheme process-context))
+  (with-exception-handler
+    (lambda ()
+     (exit #f))
 
-	  (lambda ()
-		 (raise 'raised-data)))
-))
+    (lambda ()
+     (raise 'raised-data)))))
 
 (define-test "with-exception-handler returns inner value when no exception is raised" (expect inner-value
-	(with-exception-handler
-	  (lambda (x))
-	  (lambda ()
-		 'inner-value))
-))
+  (with-exception-handler
+    (lambda (x))
+    (lambda ()
+     'inner-value))))
 
 (define-test "exception handlers are called with the dynamic environment of the (raise)" (expect inner-value
-	(import (scheme process-context))
-	(import (scheme write))
+  (import (scheme process-context))
+  (import (scheme write))
 
-	(define test-param (make-parameter 'outer-value))
-	
-	(with-exception-handler
-	  (lambda (obj)
-		 (write (test-param))
-		 (exit #t))
+  (define test-param (make-parameter 'outer-value))
 
-	  (lambda ()
-		 (parameterize ((test-param 'inner-value))
-							(raise 'test))))
-))
+  (with-exception-handler
+    (lambda (obj)
+     (write (test-param))
+     (exit #t))
+
+    (lambda ()
+     (parameterize ((test-param 'inner-value))
+              (raise 'test))))))
 
 (define-test "exception handlers can have their continuation captured" (expect-output ("About to continute" "Original exception")
   (import (scheme base))
@@ -90,13 +84,13 @@
 
   (with-exception-handler
     (lambda (except)
-      ; 6) Output the original exeption 
+      ; 6) Output the original exeption
       (write except)
       (exit #t))
     (lambda ()
       ; 4) Capture this continuation in to something that can rethrow the original exception
       (define rethrower
-        (call/cc 
+        (call/cc
           (lambda (exit-all)
             (with-exception-handler
               (lambda (except)
@@ -115,27 +109,26 @@
       (rethrower)))))
 
 (define-test "empty lists are not error objects" (expect #f
-	(error-object? '())))
+  (error-object? '())))
 
 (define-test "empty lists are not out of memory errors" (expect #f
   (import (llambda error))
-	(out-of-memory-error? '())))
+  (out-of-memory-error? '())))
 
 (define-test "(error) raises a new error object" (expect-output (#t "Test error message" (a b (c d e)))
-	(import (scheme process-context))
-	(import (scheme write))
+  (import (scheme process-context))
+  (import (scheme write))
 
-	(with-exception-handler
-	  (lambda (obj)
-		 (write (error-object? obj))
-		 (newline)
-		 (write (error-object-message obj))
-		 (newline)
-		 (write (error-object-irritants obj))
-		 (exit #t))
-	  (lambda ()
-		 (error "Test error message" 'a 'b (list 'c 'd 'e))))
-))
+  (with-exception-handler
+    (lambda (obj)
+     (write (error-object? obj))
+     (newline)
+     (write (error-object-message obj))
+     (newline)
+     (write (error-object-irritants obj))
+     (exit #t))
+    (lambda ()
+     (error "Test error message" 'a 'b (list 'c 'd 'e))))))
 
 (define-test "(error) does not raise a (file-error?)" (expect-success
   (guard (obj
@@ -144,27 +137,25 @@
          (error "Test error!"))))
 
 (define-test "if an exception handler returns an exception is raised again" (expect-output (inner outer)
-	(import (scheme process-context))
-	(import (scheme write))
+  (import (scheme process-context))
+  (import (scheme write))
 
-	(with-exception-handler
-	  (lambda (obj)
-		 ; "obj" is actually undefined here by R7RS
-		 ; llambda reuses th obj from the original exception but that's
-		 ; technically an implementation detail
-		 (write 'outer)
-		 (exit #t))
+  (with-exception-handler
+    (lambda (obj)
+     ; "obj" is actually undefined here by R7RS
+     ; llambda reuses th obj from the original exception but that's
+     ; technically an implementation detail
+     (write 'outer)
+     (exit #t))
 
-	  (lambda ()
-		 (with-exception-handler 
-			(lambda (obj)
-			  (write 'inner)
-			  (newline))
+    (lambda ()
+     (with-exception-handler
+      (lambda (obj)
+        (write 'inner)
+        (newline))
 
-			(lambda ()
-			  (raise 'test)))))
-
-))
+      (lambda ()
+        (raise 'test)))))))
 
 (define-test "runtime errors leave the garbage collector in a consistent state" (expect (outer . (one . two))
   (cons 'outer
@@ -177,7 +168,7 @@
           (vector-ref #(1 2 3) (dynamic-true)))))))))
 
 (define-test "(raise-continuable)" (expect-output ("should be a number" 65)
-	(import (scheme write))
+  (import (scheme write))
   (write
     (with-exception-handler
       (lambda (con)
@@ -195,7 +186,7 @@
 
 (define-test "(guard)" (expect-success
   ; This matches the first clause
-  (assert-equal 42 
+  (assert-equal 42
     (guard (condition
              ((assq 'a condition) => cdr)
              ((assq 'b condition)))
@@ -207,7 +198,7 @@
              ((assq 'a condition) => cdr)
              ((assq 'b condition)))
            (raise (list (cons 'b 23)))))
-  
+
   ; This matches the else
   (assert-equal 'fallthrough
     (guard (condition
@@ -215,7 +206,7 @@
              ((assq 'b condition))
              (else 'fallthrough))
            (raise (list (cons 'c 23)))))
-  
+
   ; This doesn't invoke the handler it all and returns a single value
   (assert-equal 'no-except
     (guard (condition
@@ -316,7 +307,7 @@
                      (r7rs-guard-aux reraise clause1 clause2 ...)))))
 
   ; This matches the first clause
-  (assert-equal 42 
+  (assert-equal 42
     (r7rs-guard (condition
              ((assq 'a condition) => cdr)
              ((assq 'b condition)))
@@ -328,7 +319,7 @@
              ((assq 'a condition) => cdr)
              ((assq 'b condition)))
            (raise (list (cons 'b 23)))))
-  
+
   ; This matches the else
   (assert-equal 'fallthrough
     (r7rs-guard (condition
@@ -336,7 +327,7 @@
              ((assq 'b condition))
              (else 'fallthrough))
            (raise (list (cons 'c 23)))))
-  
+
   ; This doesn't invoke the handler it all and returns a single value
   (assert-equal 'no-except
     (r7rs-guard (condition

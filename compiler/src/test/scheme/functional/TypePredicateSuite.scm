@@ -13,14 +13,14 @@
   (import (llambda typed))
 
   ; Create the type with an initial predicate
-	(define-record-type <single-value> (single-value field) single-value?
-		(field single-value-field))
-	
+  (define-record-type <single-value> (single-value field) single-value?
+    (field single-value-field))
+
   (define instance (single-value 1))
 
   ; Use (make-predicate) here to synthesize a new predicate
   ; This should be identical to the one (define-record-type) created
-  (assert-true ((make-predicate <single-value>) instance)) 
+  (assert-true ((make-predicate <single-value>) instance))
   (assert-false ((make-predicate <single-value>) 4))))
 
 (define-test "(define-predicate)" (expect-success
@@ -44,7 +44,7 @@
 
 (define-test "(define-predicate) for unions of record types" (expect-success
   (import (llambda typed))
-	
+
   (define-record-type <record1> (record1) record1?)
   (define-record-type <record2> (record2) record2?)
   (define-record-type <record3> (record3) record3?)
@@ -66,7 +66,7 @@
   (assert-false (true? "Hello, world!"))
   (assert-false (true? #f))
   (assert-true  (true? #t))
-  
+
   (assert-false (false? "Hello, world!"))
   (assert-true  (false? #f))
   (assert-false (false? #t))))
@@ -123,10 +123,10 @@
   (define untyped-exact-int-vector (typeless-cell exact-int-vector))
   (define untyped-mixed-vector (typeless-cell mixed-vector))
   (define untyped-empty-vector (typeless-cell empty-vector))
-  
+
   (define-predicate number-vector? (Vectorof <number>))
   (define-predicate exact-int-vector? (Vectorof <exact-integer>))
-  
+
   (assert-true  (number-vector? number-vector))
   (assert-true  (number-vector? exact-int-vector))
   (assert-false (number-vector? mixed-vector))
@@ -135,7 +135,7 @@
   (assert-true  (number-vector? untyped-exact-int-vector))
   (assert-false (number-vector? untyped-mixed-vector))
   (assert-true  (number-vector? untyped-empty-vector))
-  
+
   (assert-false (exact-int-vector? number-vector))
   (assert-true  (exact-int-vector? exact-int-vector))
   (assert-false (exact-int-vector? mixed-vector))
@@ -179,7 +179,7 @@
   (assert-true  (symbol-string-string-vector? untyped-symbol-string-string-vector))
   (assert-false (symbol-string-string-vector? untyped-exact-int-vector))
   (assert-false (symbol-string-string-vector? untyped-empty-vector))
-  
+
   (assert-false (empty-vector? symbol-string-vector))
   (assert-false (empty-vector? symbol-string-string-vector))
   (assert-false (empty-vector? exact-int-vector))
@@ -193,7 +193,7 @@
   (import (llambda typed))
   (import (only (llambda internal primitives) Vectorof)) ; (Vectorof is internal)
 
-  (define symbol-vector-tree 
+  (define symbol-vector-tree
     #(one #(two three #(four)) #()))
 
   (define mixed-vector-tree
@@ -206,13 +206,13 @@
 
   (assert-true  (symbol-vector-tree? symbol-vector-tree))
   (assert-false (symbol-vector-tree? mixed-vector-tree))
-  
+
   (assert-true  (symbol-vector-tree? untyped-symbol-vector-tree))
   (assert-false (symbol-vector-tree? untyped-mixed-vector-tree))))
 
 (define-test "(define-predicate) for binary trees" (expect-success
   (import (llambda typed))
-    
+
   (define-predicate string-tree? (Rec BT (U <string> (Pairof BT BT))))
 
   (define string-list '("one" "two"))
@@ -220,7 +220,7 @@
   (define string-tree '("one" . ("three" . "four")))
   (define untyped-string-tree (typeless-cell string-tree))
   (define untyped-string-list (typeless-cell string-list))
-  
+
   (define symbol-list '(one two))
   (define bare-symbol 'one)
   (define symbol-tree '(one . (three . four)))
@@ -232,7 +232,7 @@
   (assert-true  (string-tree? string-tree))
   (assert-true  (string-tree? untyped-string-tree))
   (assert-false (string-tree? untyped-string-list))
-  
+
   (assert-false (string-tree? symbol-list))
   (assert-false (string-tree? bare-symbol))
   (assert-false (string-tree? symbol-tree))
@@ -241,7 +241,7 @@
 
 (define-test "(define-predicate) for associative lists" (expect-success
   (import (llambda typed))
-  
+
   (define symbol-list '(one two))
   (define bare-symbol 'one)
   (define symbol-to-int-alist '((one 1) (two 2) (three 3)))

@@ -1,22 +1,22 @@
 (define-test "static (pair?)" (expect-static-success
-	(assert-true  (pair? '(a . b)))
-	(assert-true  (pair? '(a  b c)))
+  (assert-true  (pair? '(a . b)))
+  (assert-true  (pair? '(a  b c)))
   (assert-false (pair? '()))
   (assert-false (pair? #(a b)))))
 
 (define-test "dynamic (pair?)" (expect-success
-	(assert-true  (pair? (typeless-cell '(a . b))))
-	(assert-true  (pair? (typeless-cell '(a  b c))))
+  (assert-true  (pair? (typeless-cell '(a . b))))
+  (assert-true  (pair? (typeless-cell '(a  b c))))
   (assert-false (pair? (typeless-cell '())))
   (assert-false (pair? (typeless-cell '())))))
 
 (define-test "static (null?)" (expect-static-success
-	(assert-true  (null? '()))
+  (assert-true  (null? '()))
   (assert-false (null? '(a b c)))
   (assert-false (null? #(a b c)))))
 
 (define-test "dynamic (null?)" (expect-success
-	(assert-true  (null? (typeless-cell '())))
+  (assert-true  (null? (typeless-cell '())))
   (assert-false (null? (typeless-cell '(a b c))))
   (assert-false (null? (typeless-cell #(a b c))))))
 
@@ -26,7 +26,7 @@
    (assert-false (list? '(a . b)))))
 
 (define-test "(cons)" (expect-static-success
-	(assert-equal '(a)
+  (assert-equal '(a)
                 (cons 'a '()))
 
   (assert-equal '((a) b c d)
@@ -48,23 +48,23 @@
 (define-test "(car)" (expect-static-success
   (assert-equal 'a (car '(a b c)))
   (assert-equal '(a) (car '((a) b c)))
-	(assert-equal 1 (car '(1 . 2)))))
+  (assert-equal 1 (car '(1 . 2)))))
 
 (define-test "(cdr)" (expect-static-success
   (assert-equal '(b c) (cdr '(a b c)))
   (assert-equal '(b c) (cdr '((a) b c)))
-	(assert-equal 2 (cdr '(1 . 2)))))
+  (assert-equal 2 (cdr '(1 . 2)))))
 
 (define-test "(length)" (expect-static-success
   (assert-equal 3 (length '(a b c)))
-	(assert-equal 3 (length '(a (b) (c d e))))
-	(assert-equal 0 (length '()))))
+  (assert-equal 3 (length '(a (b) (c d e))))
+  (assert-equal 0 (length '()))))
 
 (define-test "length of improper list fails" (expect-error type-error?
-	(length '(1 . 2))))
+  (length '(1 . 2))))
 
 (define-test "make-list" (expect-success
-	(assert-equal '() (make-list 0))
+  (assert-equal '() (make-list 0))
   (assert-equal '() (make-list 0 4.0))
   (assert-equal '(#!unit #!unit #!unit #!unit) (make-list 4))
   (assert-equal '(4.0 4.0 4.0 4.0) (make-list 4 4.0))
@@ -72,7 +72,7 @@
 
 (define-test "(list-copy) of degenerate lists" (expect-success
   (assert-equal '() (list-copy '()))
-	(assert-equal '(1 2 . 3) (list-copy '(1 2 . 3)))
+  (assert-equal '(1 2 . 3) (list-copy '(1 2 . 3)))
   ; This is allowed by R7RS. Single objects can be considered degenerate forms of improper lists so this makes sense.
   (assert-equal 'a (list-copy 'a))))
 
@@ -94,32 +94,32 @@
       (assert-equal '(-1.0 2.0 3.0) copied-list)))))
 
 (define-test "(list)" (expect-static-success
-	(assert-true (null? (list)))
-	(assert-equal '() (list))
-	(assert-equal '(1 2 3) (list 1 2 3))))
+  (assert-true (null? (list)))
+  (assert-equal '() (list))
+  (assert-equal '(1 2 3) (list 1 2 3))))
 
 (cond-expand
   ((not immutable-pairs)
     (define-test "mutating (list) to improper" (expect-success
       (define test-list (list 1 2 3))
       (set-cdr! test-list 2)
-      
+
       ; No longer an improper list
       (assert-false (list? test-list))
       (assert-equal '(1 . 2) test-list)))))
 
 (define-test "(append)" (expect-static-success
-	(assert-equal '() (append))
-	(assert-equal 'a (append 'a))
-	(assert-equal '(1 2 3 4 5 6) (append '(1 2) '(3 4) '(5 6)))
+  (assert-equal '() (append))
+  (assert-equal 'a (append 'a))
+  (assert-equal '(1 2 3 4 5 6) (append '(1 2) '(3 4) '(5 6)))
   (assert-equal '() (append '() '() '()))
   (assert-equal 'a (append '() 'a))))
 
 (define-test "(append) with non-terminal non-list fails" (expect-error type-error?
-	(append '(1 2) 3 '(4 5))))
+  (append '(1 2) 3 '(4 5))))
 
 (define-test "(memq)" (expect-static-success
-	(assert-equal '(a b c) (memq 'a '(a b c)))
+  (assert-equal '(a b c) (memq 'a '(a b c)))
   (assert-equal '(b c) (memq 'b '(a b c)))
   (assert-false (memq 'a '(b c d)))
 
@@ -128,12 +128,12 @@
     (assert-false (memq (list 'a) '(b (a) c)))))))
 
 (define-test "(member) is recursive" (expect-static-success
-	(assert-equal '((a) c) (member (list 'a) '(b (a) c)))))
+  (assert-equal '((a) c) (member (list 'a) '(b (a) c)))))
 
 ; This is technically unspecified for memq because integer comparison is
 ; unspecified for eq?
 (define-test "(memv) on number list" (expect (101 102)
-	(memv 101 '(100 101 102))))
+  (memv 101 '(100 101 102))))
 
 (cond-expand ((not immutable-pairs)
   (define-test "(set-car!) of cons" (expect (new-car . old-cdr)
@@ -588,6 +588,6 @@
      (let ((ls (list 'one 'two 'five)))
        (list-set! ls 5 'three)
        ls)))
-   
+
    (define-test "(list-set!) on constant list fails" (expect-error mutate-literal-error?
      (list-set! '(0 1 2) 1  "oops")))))

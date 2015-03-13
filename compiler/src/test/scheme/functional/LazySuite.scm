@@ -50,7 +50,7 @@
             (delay (cons h (stream-filter p? t)))
             (stream-filter p? t))))))
   (assert-equal 5 (head (tail (tail (stream-filter odd? integers)))))))
-  
+
 (define-test "(force) only computes a value once" (expect-success
   (import (scheme lazy))
   (define count 0)
@@ -144,7 +144,7 @@
 
   (define-syntax match
     (syntax-rules ()
-                  ((match exp 
+                  ((match exp
                           (()      exp1)
                           ((h . t) exp2))
                    (let ((lst exp))
@@ -159,7 +159,7 @@
 
   (define (stream-filter p? s)
     (delay-force (match (force s)
-                 (()      (delay '())) 
+                 (()      (delay '()))
                  ((h . t) (if (p? h)
                             (delay (cons h (stream-filter p? t)))
                             (stream-filter p? t))))))

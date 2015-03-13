@@ -9,9 +9,9 @@
 
   (assert-equal 1 (mcar test-mpair))
   (assert-equal 2 (mcdr test-mpair))
-  
+
   (set-mcar! test-mpair 'left)
   (set-mcdr! test-mpair 'right)
-  
+
   (assert-equal 'left (mcar test-mpair))
   (assert-equal 'right (mcdr test-mpair))))

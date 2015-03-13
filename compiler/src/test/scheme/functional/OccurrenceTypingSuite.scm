@@ -16,7 +16,7 @@
   (define typed-case (case-lambda
     (([first : <exact-integer>]) first)
     (([first : <flonum>] [second : <exact-integer>]) first)))
-  
+
   (define first (typeless-cell 1.5))
   (define second (typeless-cell 4))
 
@@ -54,7 +54,7 @@
   (define typeless-3 (typeless-cell 3))
 
   (: apply-numbers-proc (-> (-> <number> * <number>) <any> <any> <number>))
-  (define (apply-numbers-proc numbers-proc op1 op2) 
+  (define (apply-numbers-proc numbers-proc op1 op2)
     (define result (numbers-proc op1 op2))
     (ann op1 <number>)
     (ann op2 <number>)
@@ -102,7 +102,7 @@
   (define typeless-bool2 (cast (typeless-cell #f) <boolean>))
 
   (if (and typeless-bool1 typeless-bool2)
-    (begin 
+    (begin
       (ann typeless-bool2 #t)
       (ann typeless-bool2 #t)))))
 
@@ -184,7 +184,7 @@
   (define typeless-symbol (cast (typeless-cell 'test) <any>))
 
   (if (and (string? typeless-string) (symbol? typeless-symbol))
-    (begin 
+    (begin
       (ann typeless-string <string>)
       (ann typeless-symbol <symbol>)))))
 
@@ -199,7 +199,7 @@
      (ann typeless-string <string>))
     ((symbol? typeless-symbol)
      (ann typeless-symbol <symbol>))
-    (else 
+    (else
      (ann typeless-string <exact-integer>)))))
 
 (define-test "branching on type predicates with (or)" (expect-success

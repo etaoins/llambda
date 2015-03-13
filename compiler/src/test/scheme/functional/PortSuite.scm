@@ -90,7 +90,7 @@
   (write "Test" output-port)))
 
 (define-test "ports can be parameterized" (expect #t
-	(parameterize ((current-output-port (current-error-port)))
+  (parameterize ((current-output-port (current-error-port)))
     (eqv? (current-output-port) (current-error-port)))))
 
 (define-test "output string ports" (expect "piece by piece by piece.\n"

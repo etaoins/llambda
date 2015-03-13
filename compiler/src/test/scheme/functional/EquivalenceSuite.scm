@@ -1,18 +1,18 @@
 (define-test "boolean (eqv?)" (expect-static-success
-	(assert-true (eqv? #t #t))
-	(assert-true (eqv? #f #f))
-	(assert-false (eqv? #f #t))))
+  (assert-true (eqv? #t #t))
+  (assert-true (eqv? #f #f))
+  (assert-false (eqv? #f #t))))
 
 (define-test "static symbol (eqv?)" (expect-static-success
-	(assert-true (eqv? 'test 'test))
-	(assert-false (eqv? 'one 'two))
-	(assert-false (eqv? 'one '()))))
+  (assert-true (eqv? 'test 'test))
+  (assert-false (eqv? 'one 'two))
+  (assert-false (eqv? 'one '()))))
 
 (define-test "dynamic symbol (eqv?)" (expect-success
-	(assert-true (eqv? (string->symbol "test") (string->symbol "test")))
-	(assert-true (eqv? 'test (string->symbol "test")))
-	(assert-true (eqv?  (typed-dynamic 'test <symbol>) (typed-dynamic 'test <symbol>)))
-	(assert-false (eqv?  (typed-dynamic 'one <symbol>) (typed-dynamic 'two <symbol>)))))
+  (assert-true (eqv? (string->symbol "test") (string->symbol "test")))
+  (assert-true (eqv? 'test (string->symbol "test")))
+  (assert-true (eqv?  (typed-dynamic 'test <symbol>) (typed-dynamic 'test <symbol>)))
+  (assert-false (eqv?  (typed-dynamic 'one <symbol>) (typed-dynamic 'two <symbol>)))))
 
 (define-test "static string (eqv?)" (expect-static-success
   (assert-true  (eqv? "one" "one"))
@@ -79,14 +79,14 @@
   (assert-true  (eqv? heap-five 'test-long-heap-symbol-five))))
 
 (define-test "static numeric (eqv?)" (expect-static-success
-	(assert-true (eqv? -163 -163))
-	(assert-true (eqv? (- 163) (- 163)))
-	(assert-true (eqv? 153.5 153.5))
-	(assert-true (eqv? (- -153.5) (- -153.5)))
-	(assert-true (eqv? +inf.0 +inf.0))
-	(assert-false (eqv? -163 -163.0))
-	(assert-false (eqv? -163 3435))
-	(assert-false (eqv? -163.5 3435.5))
+  (assert-true (eqv? -163 -163))
+  (assert-true (eqv? (- 163) (- 163)))
+  (assert-true (eqv? 153.5 153.5))
+  (assert-true (eqv? (- -153.5) (- -153.5)))
+  (assert-true (eqv? +inf.0 +inf.0))
+  (assert-false (eqv? -163 -163.0))
+  (assert-false (eqv? -163 3435))
+  (assert-false (eqv? -163.5 3435.5))
   (assert-false (eqv? 0.0 -0.0))))
 
 (define-test "dynamic numeric (eqv?)" (expect-success
@@ -106,16 +106,16 @@
   (assert-true (eqv? +nan.0 (typed-dynamic +nan.0 <flonum>)))))
 
 (define-test "char (eqv?)" (expect-static-success
-	(assert-true (eqv? #\a #\a))
-	(assert-true (eqv? #\a (integer->char (char->integer #\a))))
-	(assert-false (eqv? #\a #\b))))
+  (assert-true (eqv? #\a #\a))
+  (assert-true (eqv? #\a (integer->char (char->integer #\a))))
+  (assert-false (eqv? #\a #\b))))
 
 (define-test "null (eqv?)" (expect-static-success
-	(assert-true (eqv? '() '()))))
+  (assert-true (eqv? '() '()))))
 
 (define-test "pair (eqv?)" (expect-success
-	(let ((var '(a b)))
-		(assert-true (eqv? var var)))
+  (let ((var '(a b)))
+    (assert-true (eqv? var var)))
 
   (assert-false (eqv? '() '(1 2 3)))
 
@@ -124,31 +124,31 @@
     (assert-false (eqv? (list 1 2 3) (list 1 2 3)))))))
 
 (define-test "vector (eqv?)" (expect-success
-	(let ((var #(1 2 3)))
-		(assert-true (eqv? var var)))
+  (let ((var #(1 2 3)))
+    (assert-true (eqv? var var)))
 
-	(assert-false (eqv? (vector 1 2 3) (vector 1 2 3)))))
+  (assert-false (eqv? (vector 1 2 3) (vector 1 2 3)))))
 
 (define-test "record (eqv?)" (expect-success
-	(define-record-type <immutable> (immutable) immutable?)
-	(define-record-type <mutable> (mutable) mutable?
+  (define-record-type <immutable> (immutable) immutable?)
+  (define-record-type <mutable> (mutable) mutable?
                       (field mutable-field set-mutable-field!))
 
-	(let ((var (immutable)))
-		(assert-true (eqv? var var)))
+  (let ((var (immutable)))
+    (assert-true (eqv? var var)))
 
   ; This is an immutable record - we should share these instances
   (assert-true (eqv? (immutable) (immutable)))
 
-	(let ((var (mutable)))
-		(assert-true (eqv? var var)))
+  (let ((var (mutable)))
+    (assert-true (eqv? var var)))
 
   ; This is a mutable record - we shouldn't share instances
   (assert-false (eqv? (mutable) (mutable)))))
 
 (define-test "procedure (eqv?)" (expect-success
-	(let ((procecedure (lambda () 5)))
-		(assert-true (eqv? procecedure procecedure)))
+  (let ((procecedure (lambda () 5)))
+    (assert-true (eqv? procecedure procecedure)))
 
   (assert-true (eqv? eqv? eqv?))
 
@@ -158,20 +158,20 @@
   (assert-false (eqv? procecedure1 procecedure2))))
 
 (define-test "1 and #t are not eqv" (expect #f
-	(eqv? 1 #t)))
+  (eqv? 1 #t)))
 
 (define-test "constant 'a and 'a are eq" (expect #t
-	(eq? 'a 'a)))
+  (eq? 'a 'a)))
 
 (cond-expand ((not immutable-pairs)
   (define-test "constructed lists are not eq" (expect #f
     (eq? (list 'a) (list 'a))))))
 
 (define-test "'() and '() are eq" (expect #t
-	(eq? '() '())))
+  (eq? '() '())))
 
 (define-test "native functions are eq" (expect #t
-	(eq? car car)))
+  (eq? car car)))
 
 (define-test "values in the same argument are eq" (expect-success
   (define (arg-is-self-eq? x) (eq? x x))
@@ -195,23 +195,23 @@
   (assert-true (eq? test-proc test-proc))))
 
 (define-test "calculated 'test and 'test are eq" (expect #t
-	(eq? (string->symbol "test") (string->symbol "test"))))
+  (eq? (string->symbol "test") (string->symbol "test"))))
 
 (define-test "constant 'a and 'a are equal" (expect #t
-	(equal? 'a 'a)))
+  (equal? 'a 'a)))
 
 (define-test "list (equal?)" (expect-static-success
-	(assert-true (equal? '(a) '(a)))
-	(assert-true (equal? (list 1 2 3) (list 1 2 3)))
-	(assert-false (equal? (list 1 2 3) (list 1 2 5)))
-	(assert-false (equal? '(1 2 3 . 4) '(1 2 3 . 5)))
-	(assert-true (equal? '(a (b) c) '(a (b) c)))))
+  (assert-true (equal? '(a) '(a)))
+  (assert-true (equal? (list 1 2 3) (list 1 2 3)))
+  (assert-false (equal? (list 1 2 3) (list 1 2 5)))
+  (assert-false (equal? '(1 2 3 . 4) '(1 2 3 . 5)))
+  (assert-true (equal? '(a (b) c) '(a (b) c)))))
 
 (define-test "constant strings are equal" (expect-static-success
-	(assert-true (equal? "abc" "abc"))))
+  (assert-true (equal? "abc" "abc"))))
 
 (define-test "constant exact integers are equal" (expect-static-success
-	(assert-true (equal? 2 2))))
+  (assert-true (equal? 2 2))))
 
 (define-test "static vector (equal?)" (expect-static-success
   (assert-true  (equal? #(1 2 (3 4)) #(1 2 (3 4))))
@@ -224,9 +224,9 @@
   (assert-false (equal? #(1 2 3 4) #f))))
 
 (define-test "dynamic vector (equal?)" (expect-success
-	(assert-true (equal? (make-vector 5 'a) (make-vector 5 'a)))
-	(assert-false (equal? (make-vector 5 'a) (make-vector 6 'a)))
-	(assert-false (equal? (make-vector 5 'a) (make-vector 5 'b)))))
+  (assert-true (equal? (make-vector 5 'a) (make-vector 5 'a)))
+  (assert-false (equal? (make-vector 5 'a) (make-vector 6 'a)))
+  (assert-false (equal? (make-vector 5 'a) (make-vector 5 'b)))))
 
 (define-test "static bytevector (equal?)" (expect-static-success
   (assert-true (equal? #u8(1 2 3 4) #u8(1 2 3 4)))
@@ -235,6 +235,6 @@
   (assert-false (equal? #u8(1 2 3 4) #f))))
 
 (define-test "dynamic bytevector (equal?)" (expect-success
-	(assert-true (equal? (make-bytevector 5 200) (make-bytevector 5 200)))
-	(assert-false (equal? (make-bytevector 5 200) (make-bytevector 6 200)))
-	(assert-false (equal? (make-bytevector 5 100) (make-bytevector 5 200)))))
+  (assert-true (equal? (make-bytevector 5 200) (make-bytevector 5 200)))
+  (assert-false (equal? (make-bytevector 5 200) (make-bytevector 6 200)))
+  (assert-false (equal? (make-bytevector 5 100) (make-bytevector 5 200)))))

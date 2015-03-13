@@ -496,8 +496,7 @@
 
   (assert-equal 0.0 (rationalize 0.2 0.5))
   (assert-equal 0.25 (rationalize 0.2 0.1))
-  (assert-equal 0.1875 (rationalize 0.2 0.02))
-))
+  (assert-equal 0.1875 (rationalize 0.2 0.02))))
 
 (define-test "(rationalize) with negative maximum difference fails" (expect-error range-error?
   (rationalize 45.334 -0.5)))

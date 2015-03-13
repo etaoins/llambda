@@ -40,8 +40,7 @@
     (assert-true (eof-object? (read-line utf8-file)))))
 
   (with-input-from-file (path-for-test-file "utf8-file") (lambda ()
-    (assert-equal "溮煡煟 鍹餳駷 厊圪妀 輠 轈鄻" (read-line))))
-  ))
+    (assert-equal "溮煡煟 鍹餳駷 厊圪妀 輠 轈鄻" (read-line))))))
 
 (define-test "(open-output-file)" (expect-success
   (import (scheme file))

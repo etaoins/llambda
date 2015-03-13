@@ -1,33 +1,33 @@
 ; This test assumes the inline -> heap transition happens after 12 bytes
 (define-test "string constant is string" (expect #t
-	(string? "Hello, world!")))
+  (string? "Hello, world!")))
 
 (define-test "string constant of maximum inline size" (expect "crash-length"
-	"crash-length"))
+  "crash-length"))
 
 (define-test "empty list is not string" (expect #f
-	(string? '())))
+  (string? '())))
 
 (define-test "make empty string" (expect ""
-	(make-string 0 #\null)))
+  (make-string 0 #\null)))
 
 (define-test "make non-empty string" (expect "aaaaa"
-	(make-string 5 #\a)))
+  (make-string 5 #\a)))
 
 (define-test "(make-string) with negative length fails" (expect-error range-error?
-	(make-string -5 #\a)))
+  (make-string -5 #\a)))
 
 (define-test "(string) with no arguments" (expect ""
-	(string)))
+  (string)))
 
 (define-test "(string) with Unicode arguments" (expect "Hell☃!"
-	(string #\H #\e #\l #\l #\x2603 #\!)))
+  (string #\H #\e #\l #\l #\x2603 #\!)))
 
 (define-test "list->string with empty list" (expect ""
-	(list->string '())))
+  (list->string '())))
 
 (define-test "list->string with Unicode chars" (expect "Hell☃!"
-	(list->string '(#\H #\e #\l #\l #\x2603 #\!))))
+  (list->string '(#\H #\e #\l #\l #\x2603 #\!))))
 
 (define-test "(string-length)" (expect-static-success
   (assert-equal 0 (string-length ""))
@@ -36,56 +36,56 @@
   (assert-equal 6 (string-length "Hell🏂!"))))
 
 (define-test "string-ref on ASCII character" (expect #\e
-	(string-ref "Hell☃!" 1)))
+  (string-ref "Hell☃!" 1)))
 
 (define-test "string-ref on BMP Unicode character" (expect #\x2603
-	(string-ref "Hell☃!" 4)))
+  (string-ref "Hell☃!" 4)))
 
 (define-test "string-ref on non-BMP Unicode literal character" (expect #\x1f3c2
-	(string-ref "Hell🏂!" 4)))
+  (string-ref "Hell🏂!" 4)))
 
 (define-test "string-ref on non-BMP Unicode escaped character" (expect #\x1f3c2
-	(string-ref "Hell\x1f3c2;" 4)))
+  (string-ref "Hell\x1f3c2;" 4)))
 
 (define-test "string-ref past end of string fails" (expect-error range-error?
-	(string-ref "Hell☃!" 10)))
+  (string-ref "Hell☃!" 10)))
 
 (define-test "string-ref with negative index fails" (expect-error range-error?
-	(string-ref "Hell☃!" -1)))
+  (string-ref "Hell☃!" -1)))
 
 (define-test "string-set! of ASCII character" (expect "*!*"
-	(define test-string (make-string 3 #\*))
-	(string-set! test-string 1 #\!)
-	test-string))
+  (define test-string (make-string 3 #\*))
+  (string-set! test-string 1 #\!)
+  test-string))
 
 (define-test "string-set! on string literal fails" (expect-error mutate-literal-error?
-	(string-set! "I'm constant" 1 #\!)))
+  (string-set! "I'm constant" 1 #\!)))
 
 (define-test "string-set! of Unicode character" (expect "**☃"
-	(define test-string (make-string 3 #\*))
-	(string-set! test-string 2 #\x2603)
-	test-string))
+  (define test-string (make-string 3 #\*))
+  (string-set! test-string 2 #\x2603)
+  test-string))
 
 (define-test "string-set! on an inline string creating a heap string" (expect "☃***********"
-	(define test-string (make-string 12 #\*))
-	(string-set! test-string 0 #\x2603)
-	test-string))
+  (define test-string (make-string 12 #\*))
+  (string-set! test-string 0 #\x2603)
+  test-string))
 
 (define-test "string-set! past end of string fails" (expect-error range-error?
-	(define test-string (make-string 3 #\*))
-	(string-set! test-string 4 #\x2603)
-	test-string))
+  (define test-string (make-string 3 #\*))
+  (string-set! test-string 4 #\x2603)
+  test-string))
 
 (define-test "string-set! with negative index fails" (expect-error range-error?
-	(define test-string (make-string 3 #\*))
-	(string-set! test-string -1 #\x2603)
-	test-string))
+  (define test-string (make-string 3 #\*))
+  (string-set! test-string -1 #\x2603)
+  test-string))
 
 (define-test "string-append of no strings" (expect ""
-	(string-append)))
+  (string-append)))
 
 (define-test "string-append of one string" (expect "Hello"
-	(string-append "Hello")))
+  (string-append "Hello")))
 
 (define-test "string-append of three strings" (expect-success
   (define new-string (string-append "Hell" "☃" "!"))
@@ -94,7 +94,7 @@
   (assert-equal 6 (string-length new-string))))
 
 (define-test "string-append of boolean fails" (expect-error type-error?
-	(string-append "Hell" "☃" "!" #f)))
+  (string-append "Hell" "☃" "!" #f)))
 
 (define-test "(string->list)" (expect-success
   (assert-equal '(#\H #\e #\l #\l #\x2603 #\!) (string->list "Hell☃!"))

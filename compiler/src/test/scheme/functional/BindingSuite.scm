@@ -1,9 +1,9 @@
 (define-test "simple let*" (expect 70
-	; This is taken from R7RS
-	(let ((x 2) (y 3))
-	  (let* ((x 7)
-			 (z (+ x y)))
-		(* z x)))))
+  ; This is taken from R7RS
+  (let ((x 2) (y 3))
+    (let* ((x 7)
+       (z (+ x y)))
+    (* z x)))))
 
 (define-test "recursive procedure definition in lambda body" (expect #t
   (begin
@@ -79,21 +79,21 @@
 
 (define-test "hygienic scoped macro binding using let-syntax" (expect (now . outer)
   (define result1 (let-syntax ((given-that (syntax-rules ()
-										 ((given-that test stmt1 stmt2 ...)
-										  (if test
-											(begin stmt1
-												   stmt2 ...))))))
-	; This is also a s)eaky hygiene test from R7RS
-	; "if" is just a normal variable in the below code
-	; Overriding it must not interfere with the original report "if" in the macro above once its expanded
-	(let ((if #t))
-	  (given-that if (set! if 'now))
-	  if)))
+                     ((given-that test stmt1 stmt2 ...)
+                      (if test
+                      (begin stmt1
+                           stmt2 ...))))))
+  ; This is also a s)eaky hygiene test from R7RS
+  ; "if" is just a normal variable in the below code
+  ; Overriding it must not interfere with the original report "if" in the macro above once its expanded
+  (let ((if #t))
+    (given-that if (set! if 'now))
+    if)))
   
   (define result2 (let ((x 'outer))
-	(let-syntax ((m (syntax-rules () ((m) x))))
-	  (let ((x 'inner))
-		(m)))))
+  (let-syntax ((m (syntax-rules () ((m) x))))
+    (let ((x 'inner))
+    (m)))))
   (cons result1 result2))) 
 
 (define-test "hygienic scoped macro binding using letrec-syntax" (expect 7
@@ -225,7 +225,7 @@
 (define-test "typed let* with incorrect type fails" (expect-error type-error?
   (import (llambda typed))
 
-	(let ([x : <any> 2] [y : <number> 3])
+  (let ([x : <any> 2] [y : <number> 3])
     (let* ([x : <exact-integer> 7]
            [z : <string> (+ x y)])
       (* z x)))))

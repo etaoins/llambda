@@ -1,14 +1,14 @@
 (define-test "(char?)" (expect-static-success
-	(assert-true  (char? #\3))
-	(assert-false (char? 3))))
+  (assert-true  (char? #\3))
+  (assert-false (char? 3))))
 
 (define-test "digit-value" (expect-success
   (import (scheme char))
 
-	(assert-equal 3 (digit-value #\3))
-	(assert-equal 4 (digit-value #\x0664))
-	(assert-equal 0 (digit-value #\x0AE6))
-	(assert-equal #f (digit-value #\x0EA6))))
+  (assert-equal 3 (digit-value #\3))
+  (assert-equal 4 (digit-value #\x0664))
+  (assert-equal 0 (digit-value #\x0AE6))
+  (assert-equal #f (digit-value #\x0EA6))))
 
 (define-test "(char-alphabetic?)" (expect-success
   (import (scheme char))
@@ -120,12 +120,12 @@
   (assert-equal #x1f3c2 (char->integer (typed-dynamic #\x1f3c2 <char>)))))
 
 (define-test "static (integer->char)" (expect-static-success
-	(assert-equal #\x41 (integer->char #x41))
-	(assert-equal #\x4141 (integer->char #x4141))
-	(assert-equal #\x1f3c2 (integer->char #x1f3c2))))
+  (assert-equal #\x41 (integer->char #x41))
+  (assert-equal #\x4141 (integer->char #x4141))
+  (assert-equal #\x1f3c2 (integer->char #x1f3c2))))
 
 (define-test "dynamic (integer->char)" (expect-success
-	(assert-equal #\x1f3c2 (integer->char (typed-dynamic #x1f3c2 <exact-integer>)))))
+  (assert-equal #\x1f3c2 (integer->char (typed-dynamic #x1f3c2 <exact-integer>)))))
 
 (define-test "(integer->char) with negative code point fails" (expect-error range-error?
   (integer->char -1)))
