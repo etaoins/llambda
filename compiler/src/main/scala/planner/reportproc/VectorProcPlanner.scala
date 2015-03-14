@@ -34,42 +34,15 @@ object VectorProcPlanner extends ReportProcPlanner with ReportProcPlannerHelpers
     }
 
     val stableType = vt.StabiliseType(unstableType, plan.config.schemeDialect)
-    
-    // Get the fill before be allocate the vector
-    val fillTemp = fillValue.toTempValue(vt.AnySchemeType)
-
-    // Allocate the vector
-    val vectorTemp = ps.CellTemp(ct.VectorCell)
 
     val lengthTemp = plan.withContextLocation(length._1) {
       lengthValue.toTempValue(vt.Int64)
     }
 
-    plan.steps += ps.InitVector(vectorTemp, lengthTemp)
+    val fillTemp = fillValue.toTempValue(vt.AnySchemeType)
 
-    // Load the pointer to its elements
-    val elementsTemp = ps.VectorElementsTemp()
-    plan.steps += ps.LoadVectorElementsData(elementsTemp, vectorTemp)
-
-    // Create a "true" predicate for our loop exit condition
-    val trueTemp = ps.Temp(vt.Predicate)
-    plan.steps += ps.CreateNativeInteger(trueTemp, 1, vt.Predicate.bits)
-
-    // Initialise it
-    val loopBodyPlan = plan.forkPlan()
-
-    val vectorIndexTemp = ps.Temp(vt.Int64)
-    loopBodyPlan.steps += ps.StoreVectorElement(vectorTemp, elementsTemp, vectorIndexTemp, fillTemp)
-
-    val unusedResultTemp = ps.Temp(vt.Predicate)
-    
-    plan.steps += ps.ForAll(
-      result=unusedResultTemp,
-      loopCountValue=lengthTemp,
-      loopIndexValue=vectorIndexTemp,
-      loopSteps=loopBodyPlan.steps.toList,
-      loopResultPred=trueTemp
-    )
+    val vectorTemp = ps.CellTemp(ct.VectorCell)
+    plan.steps += ps.InitFilledVector(vectorTemp, lengthTemp, fillTemp)
 
     new iv.CellValue(stableType, BoxedValue(ct.VectorCell, vectorTemp), knownAllocated=true)
   }
@@ -90,23 +63,10 @@ object VectorProcPlanner extends ReportProcPlanner with ReportProcPlannerHelpers
         vt.DirectSchemeTypeRef(elementValue.schemeType)
       }).toVector)
 
-      // Create temp values before we init the vector so there's no GC barrier while the vector is uninitialised
-      val elementTemps = initialElementValues.map(_.toTempValue(vt.AnySchemeType))
-
-      val lengthTemp = ps.Temp(vt.Int64)
-      plan.steps += ps.CreateNativeInteger(lengthTemp, initialElements.length, vt.Int64.bits)
+      val elementTemps = initialElementValues.map(_.toTempValue(vt.AnySchemeType)).toVector
 
       val vectorTemp = ps.CellTemp(ct.VectorCell)
-      plan.steps += ps.InitVector(vectorTemp, lengthTemp)
-
-      val elementsTemp = ps.VectorElementsTemp()
-      plan.steps += ps.LoadVectorElementsData(elementsTemp, vectorTemp)
-
-      elementTemps.zipWithIndex.map { case (elementTemp, index) =>
-        val indexTemp = ps.Temp(vt.Int64)
-        plan.steps += ps.CreateNativeInteger(indexTemp, index, vt.Int64.bits)
-        plan.steps += ps.StoreVectorElement(vectorTemp, elementsTemp, indexTemp, elementTemp)
-      }
+      plan.steps += ps.InitVector(vectorTemp, elementTemps)
 
       Some(TempValueToIntermediate(vectorType, vectorTemp)(plan.config))
 

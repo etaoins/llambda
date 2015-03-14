@@ -291,11 +291,18 @@ object GenPlanStep {
 
       state.withTempValue(resultTemp -> lengthIr)
 
-    case ps.InitVector(resultTemp, length) =>
+    case ps.InitVector(resultTemp, elements) =>
+      val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
+
+      val (finalState, vectorIr) = GenVector.init(state)(worldPtrIr, elements)
+
+      finalState.withTempValue(resultTemp -> vectorIr)
+
+    case ps.InitFilledVector(resultTemp, length, fill) =>
       val worldPtrIr = state.liveTemps(ps.WorldPtrValue)
       val lengthIr = state.liveTemps(length)
 
-      val (finalState, vectorIr) = GenVector.init(state)(worldPtrIr, lengthIr)
+      val (finalState, vectorIr) = GenVector.initFilled(state)(worldPtrIr, lengthIr, fill)
 
       finalState.withTempValue(resultTemp -> vectorIr)
 

@@ -78,9 +78,16 @@ object CostForPlanSteps {
       // Add an additional instruction for dealing with looping
       (loadCost + (trivialInstrCost * 2)) * 5
 
-    case _ : ps.InitPair | _ : ps.InitVector =>
+    case _ : ps.InitPair =>
       // This requires an allocation and a store to the cell type
       cellConsumptionCost
+
+    case ps.InitVector(_, elements) =>
+      cellConsumptionCost + (elements.length * storeCost)
+
+    case _ : ps.InitFilledVector =>
+      // Assume the average vector is 8 elements long
+      cellConsumptionCost + (8 * storeCost)
 
     case initRecordLike : ps.InitRecordLikeStep =>
       // This requires an allocation and then a store for each field

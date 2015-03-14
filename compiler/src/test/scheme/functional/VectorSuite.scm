@@ -15,11 +15,12 @@
   (assert-equal #(5.0 5.0 5.0) (make-vector 3 5.0))))
 
 (define-test "(make-vector) with a negative length fails" (expect-error range-error?
-  (make-vector -3)))
+  (force-evaluation (make-vector -3))))
 
 (define-test "(vector) " (expect-success
   (assert-equal #() (vector))
-  (assert-equal #(a b c) (vector 'a 'b 'c))))
+  (assert-equal #(a b c) (vector 'a 'b 'c))
+  (assert-equal #(#(1)) (vector (vector 1)))))
 
 (define-test "(list->vector) an empty vector" (expect-success
   (assert-equal #() (list->vector '()))

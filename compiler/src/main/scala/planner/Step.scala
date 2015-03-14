@@ -682,22 +682,41 @@ case class LoadBytevectorLength(
     LoadBytevectorLength(f(result), f(boxed)).assignLocationFrom(this)
 }
 
-/** Creates a new uninitialised vector of the given length
+/** Creates a new dynamically allocated vector with specific elements
   *
-  * All elements need to be initialised before it is accessed or the next GC barrier
-  *
-  * @param  result  Boxed vector cell result
-  * @param  length  Number of elements in the newly allocated vector as an Int64
+  * @param  result    Result value as VectorCell
+  * @param  elements  Elements to initialise the vector with as AnyCell
   */
 case class InitVector(
     result : TempValue,
-    length : TempValue
-) extends Step {
-  lazy val inputValues = Set(length, WorldPtrValue)
+    elements : Vector[TempValue]
+) extends DiscardableStep {
+  lazy val inputValues = elements.toSet + WorldPtrValue
   lazy val outputValues = Set(result)
 
   def renamed(f : (TempValue) => TempValue) =
-    InitVector(f(result), f(length)).assignLocationFrom(this)
+    InitVector(f(result), elements.map(f)).assignLocationFrom(this)
+
+  override def canAllocate : Boolean =
+    true
+}
+
+/** Creates a new dynamically allocated vector with a fill value
+  *
+  * @param  result  Result value as VectorCell
+  * @param  length  Length of the new vector as Int64
+  * @param  fill    Value to fill the vector with as AnyCell
+  */
+case class InitFilledVector(
+    result : TempValue,
+    length : TempValue,
+    fill : TempValue
+) extends DiscardableStep {
+  lazy val inputValues = Set(length, fill, WorldPtrValue)
+  lazy val outputValues = Set(result)
+
+  def renamed(f : (TempValue) => TempValue) =
+    InitFilledVector(f(result), f(length), f(fill)).assignLocationFrom(this)
 
   override def canAllocate : Boolean =
     true
