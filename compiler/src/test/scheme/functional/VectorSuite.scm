@@ -31,9 +31,7 @@
 
 (define-test "static (vector-length)" (expect-static-success
   (assert-equal 3 (vector-length #(1 2 3)))
-  (assert-equal 0 (vector-length #()))))
-
-(define-test "dynamic (vector-length)" (expect-success
+  (assert-equal 0 (vector-length #()))
   (assert-equal 0 (vector-length (make-vector 0 #f)))
   (assert-equal 15 (vector-length (make-vector 15 #f)))))
 

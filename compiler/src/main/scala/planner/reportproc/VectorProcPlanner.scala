@@ -56,8 +56,8 @@ object VectorProcPlanner extends ReportProcPlanner with ReportProcPlannerHelpers
 
       Some(new iv.KnownVectorCellValue(initialElements.length, vectorTemp))
 
-    case ("vector-length", List((_, iv.ConstantVectorValue(elements)))) =>
-      Some(iv.ConstantExactIntegerValue(elements.length))
+    case ("vector-length", List((_, knownVector : iv.KnownVector))) =>
+      Some(iv.ConstantExactIntegerValue(knownVector.vectorLength))
 
     case ("vector-length", List((located, vectorValue))) =>
       val vectorTemp = plan.withContextLocation(located) {
