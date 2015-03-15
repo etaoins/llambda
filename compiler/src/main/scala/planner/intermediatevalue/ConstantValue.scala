@@ -47,21 +47,7 @@ case class ConstantExactIntegerValue(value : Long) extends TrivialConstantValue(
 
   def toNativeTempValue(nativeType : vt.NativeType, errorMessageOpt : Option[RuntimeErrorMessage])(implicit plan : PlanWriter) : ps.TempValue = nativeType match {
     case intType : vt.IntType =>
-      val minIntValue = if (intType.signed) {
-        -1L << (intType.bits - 1)
-      }
-      else {
-        0
-      }
-      
-      val maxIntValue = if (intType.signed) {
-        (1L << (intType.bits - 1)) - 1
-      }
-      else {
-        (1L << intType.bits) - 1
-      }
-
-      if ((value < minIntValue) || (value > maxIntValue)) {
+      if ((value < intType.minIntValue) || (value > intType.maxIntValue)) {
         val message = s"Constant exact integer ${value} cannot be represented by native integer type ${nativeType}"
         impossibleConversion(message)
       }

@@ -29,6 +29,10 @@ object VectorProcPlanner extends ReportProcPlanner with ReportProcPlannerHelpers
 
     lengthValue match {
       case iv.ConstantExactIntegerValue(knownLength) =>
+        plan.withContextLocation(length._1) {
+          assertLengthValid("(make-vector)", "vector length", vt.Int64.maxIntValue, knownLength)
+        }
+
         new iv.KnownVectorCellValue(knownLength, vectorTemp)
 
       case _ =>
@@ -100,7 +104,7 @@ object VectorProcPlanner extends ReportProcPlanner with ReportProcPlannerHelpers
     )) =>
       val index = constantInt.value
 
-      assertIndexValid("(vector-ref)", vectorCellValue.vectorLength, index)
+      assertIndexValid("(vector-set!)", vectorCellValue.vectorLength, index)
 
       val vectorTemp = vectorCellValue.toTempValue(vectorCellValue.schemeType)
 

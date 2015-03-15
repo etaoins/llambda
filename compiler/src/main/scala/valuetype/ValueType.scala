@@ -47,6 +47,20 @@ case object Predicate extends IntLikeType(1, false) {
 /** Native integer type representing a Scheme exact integer */
 sealed abstract class IntType(bits : Int, signed : Boolean) extends IntLikeType(bits, signed) {
   val schemeType = ExactIntegerType
+
+  def minIntValue = if (signed) {
+    -1L << (bits - 1)
+  }
+  else {
+    0
+  }
+
+  def maxIntValue = if (signed) {
+    (1L << (bits - 1)) - 1
+  }
+  else {
+    (1L << bits) - 1
+  }
 }
 
 case object Int8 extends IntType(8, true)

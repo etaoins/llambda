@@ -20,7 +20,7 @@ namespace lliby
  */
 void assertIndexValid(World &world, const char *procName, AnyCell *obj, std::int64_t objLength, std::int64_t index);
 
-/** Validates that an length is valid for a given object type
+/** Validates that a length is valid for a given object type
  *
  * If the length is valid this function will return normally; otherwise, an error will be signalled in the passed world.
  *
