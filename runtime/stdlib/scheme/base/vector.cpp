@@ -149,7 +149,14 @@ StringCell *llbase_vector_to_string(World &world, VectorCell *vector, std::int64
 	for(std::int64_t i = start; i < end; i++)
 	{
 		AnyCell *member = vector->elements()[i];
-		builder << cell_unchecked_cast<CharCell>(member)->unicodeChar();
+		auto *charMember = cell_cast<CharCell>(member);
+
+		if (charMember == nullptr)
+		{
+			signalError(world, ErrorCategory::Type, "(vector->string) with vector containing non-character", {member});
+		}
+
+		builder << charMember->unicodeChar();
 	}
 
 	assertLengthValid(world, "(vector->string)", "string byte length", StringCell::maximumByteLength(), builder.byteLength());

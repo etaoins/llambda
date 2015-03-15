@@ -183,11 +183,9 @@ case class ConstantRecordValue(
   }
 }
 
-case class ConstantVectorValue(elements : Vector[ConstantValue]) extends ConstantValue(ct.VectorCell) with BoxedOnlyValue {
-  override val schemeType : vt.SchemeType = vt.SpecificVectorType(elements.map { element =>
-    vt.DirectSchemeTypeRef(element.schemeType)
-  })
-
+case class ConstantVectorValue(
+    elements : Vector[ConstantValue]
+) extends ConstantValue(ct.VectorCell) with BoxedOnlyValue with KnownVector {
   val typeDescription = "constant vector"
 
   def toBoxedValue()(implicit plan : PlanWriter) : BoxedValue = {
@@ -202,6 +200,8 @@ case class ConstantVectorValue(elements : Vector[ConstantValue]) extends Constan
 
     BoxedValue(cellType, constantTemp)
   }
+
+  val vectorLength = elements.length.toLong
 }
 
 case object EmptyListValue extends ConstantValue(ct.EmptyListCell) with BoxedOnlyValue with KnownListElement {

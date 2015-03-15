@@ -93,57 +93,6 @@ class InstantiateTypeSuite extends FunSuite {
     assert(InstantiateType(reconciled, polyUnion) == expected)
   }
 
-  test("instantiating a uniform vector") {
-    val polyVec = UniformVectorType(polyA)
-
-    val reconciled = ReconcileTypeVars.Result(Map(
-      polyA -> ExactIntegerType
-    ))
-
-    val expected = UniformVectorType(
-      ExactIntegerType
-    )
-
-    assert(InstantiateType(reconciled, polyVec) == expected)
-  }
-
-  test("instantiating a specific vector") {
-    val polyVec = SpecificVectorType(Vector(polyA, polyB, polyA))
-
-    val reconciled = ReconcileTypeVars.Result(Map(
-      polyA -> ExactIntegerType,
-      polyB -> FlonumType
-    ))
-
-    val expected = SpecificVectorType(Vector(
-      ExactIntegerType,
-      FlonumType,
-      ExactIntegerType
-    ))
-
-    assert(InstantiateType(reconciled, polyVec) == expected)
-  }
-
-  test("instantiating a uniform vector of pairs") {
-    val polyVec = UniformVectorType(
-      SpecificPairType(polyB, polyA)
-    )
-
-    val reconciled = ReconcileTypeVars.Result(Map(
-      polyA -> ExactIntegerType,
-      polyB -> FlonumType
-    ))
-
-    val expected = UniformVectorType(
-      SpecificPairType(
-        FlonumType,
-        ExactIntegerType
-      )
-    )
-
-    assert(InstantiateType(reconciled, polyVec) == expected)
-  }
-
   test("instantiating a procedure type") {
     val polyProc = ProcedureType(
       fixedArgTypes=List(polyA, PortType),

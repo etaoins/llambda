@@ -520,7 +520,7 @@
     (define-r7rs vector (world-function llbase "llbase_vector" (-> <any> * <vector>)))
     ; This is the same runtime function but instead of using a rest arg explicitly pass in the list
     (define-r7rs list->vector (world-function llbase "llbase_vector" (-> <list> <vector>)))
-    (define-r7rs vector-ref (world-function llbase "llbase_vector_ref" (All (A) (Vectorof A) <native-int64> A)))
+    (define-r7rs vector-ref (world-function llbase "llbase_vector_ref" (-> <vector> <native-int64> <any>)))
     (define-r7rs vector-set! (world-function llbase "llbase_vector_set" (-> <vector> <native-int64> <any> <unit>)))
     (define-r7rs vector-append (world-function llbase "llbase_vector_append" (-> <vector> * <vector>)))
 
@@ -550,10 +550,10 @@
       (([len : <exact-integer>] [fill : <any>])
        (native-make-vector len fill))))
 
-    (define native-vector->string (world-function llbase "llbase_vector_to_string" (-> (Vectorof <char>) <native-int64> <native-int64> <string>)))
+    (define native-vector->string (world-function llbase "llbase_vector_to_string" (-> <vector> <native-int64> <native-int64> <string>)))
     (define-slice-proc vector->string native-vector->string <vector> vector-length)
 
-    (define native-string->vector (world-function llbase "llbase_string_to_vector" (-> <string> <native-int64> <native-int64> (Vectorof <char>))))
+    (define native-string->vector (world-function llbase "llbase_string_to_vector" (-> <string> <native-int64> <native-int64> <vector>)))
     (define-slice-proc string->vector native-string->vector <string> string-length)
 
     (define-r7rs bytevector? (make-predicate <bytevector>))

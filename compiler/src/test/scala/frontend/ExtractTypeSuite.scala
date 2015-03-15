@@ -154,53 +154,6 @@ class ExtractTypeSuite extends FunSuite with testutil.ExprHelpers {
     }
   }
 
-  test("defining specific vector types") {
-    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
-
-    bodyFor("(define-type <mixed-vector> (Vector <string> <symbol>))")(scope)
-    assert(scope("<mixed-vector>") === BoundType(
-      vt.SpecificVectorType(Vector[vt.SchemeTypeRef](
-        vt.StringType,
-        vt.SymbolType
-      ))
-    ))
-    
-    bodyFor("(define-type <empty-vector> (Vector))")(scope)
-    assert(scope("<empty-vector>") === BoundType(
-      vt.SpecificVectorType(Vector[vt.SchemeTypeRef]())
-    ))
-
-  }
-
-  test("defining uniform vector types") {
-    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
-    
-    bodyFor("(define-type <string-vector> (Vectorof <string>))")(scope)
-    assert(scope("<string-vector>") === BoundType(vt.UniformVectorType(vt.StringType)))
-    
-    intercept[BadSpecialFormException] {
-      // Too many arguments
-      bodyFor("(define-type <too-many-args> (Vectorof <string> <string> <string>))")(scope)
-    }
-    
-    intercept[BadSpecialFormException] {
-      // Not enough arguments
-      bodyFor("(define-type <insufficient-args> (Vectorof))")(scope)
-    }
-  }
-  
-  test("defining recursive vector types") {
-    val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
-    
-    bodyFor("(define-type <string-vector-tree> (Rec VT (U <string> (Vectorof VT))))")(scope)
-    assert(scope("<string-vector-tree>") === BoundType(
-      vt.UnionType(Set(
-        vt.StringType,
-        vt.UniformVectorType(vt.RecursiveSchemeTypeRef(1))
-      ))
-    ))
-  }
-  
   test("defining homogeneous list types") {
     val scope = new Scope(collection.mutable.Map(), Some(nfiScope))
     val stringListType = vt.UniformProperListType(vt.StringType)

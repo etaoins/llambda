@@ -59,19 +59,6 @@ object NameForType {
       case recordType : RecordType =>
         recordType.sourceName
 
-      case specificVectorType : SpecificVectorType =>
-        val memberTypeNames = specificVectorType.memberTypeRefs map { memberTypeRef =>
-          stackedNameForTypeRef(memberTypeRef, typeStack, recurseVarNames)
-        }
-
-        "(Vector" + memberTypeNames.map(" " + _).mkString("") + ")" 
-      
-      case uniformVectorType : UniformVectorType =>
-        val memberTypeRef = uniformVectorType.memberTypeRef
-        val memberTypeName = stackedNameForTypeRef(memberTypeRef, typeStack, recurseVarNames)
-
-        s"(Vectorof ${memberTypeName})"
-
       case procType : ProcedureType =>
         nameForProcedureType(procType)
 

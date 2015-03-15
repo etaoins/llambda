@@ -221,13 +221,6 @@
   (ann (round exact-1) <exact-integer>)
   (ann (round inexact-1) <flonum>)))
 
-(define-test "(vector-ref) is polymorphic" (expect-success
-  (import (llambda typed))
-
-  (define exact-1 (typed-dynamic 1 <exact-integer>))
-
-  (ann (vector-ref #(1 2 3) exact-1) <exact-integer>)))
-
 (define-test "simple polymorphic Scheme procedure" (expect-success
   (import (llambda typed))
 

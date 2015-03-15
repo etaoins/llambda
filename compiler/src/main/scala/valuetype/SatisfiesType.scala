@@ -178,47 +178,6 @@ object SatisfiesType {
 
         mergeNonUnionMemberTypeResults(memberResults)
 
-      case (UniformVectorType(superMemberTypeRef), UniformVectorType(testingMemberTypeRef)) =>
-        satisfiesTypeRef(superMemberTypeRef, superStack, testingMemberTypeRef, testingStack)
-
-      case (UniformVectorType(DirectSchemeTypeRef(AnySchemeType)), SchemeTypeAtom(ct.VectorCell)) =>
-        Some(true)
-      
-      case (SpecificVectorType(superMemberTypeRefs), SpecificVectorType(testingMemberTypeRefs)) =>
-        if (superMemberTypeRefs.size != testingMemberTypeRefs.size) {
-          // Different lengths
-          Some(false)
-        }
-        else {
-          val memberResults = (superMemberTypeRefs zip testingMemberTypeRefs) map {
-            case (superMemberTypeRef, testingMemberTypeRef) =>
-              satisfiesTypeRef(superMemberTypeRef, superStack, testingMemberTypeRef, testingStack)
-          }
-        
-          mergeNonUnionMemberTypeResults(memberResults.toSet)
-        }
-
-      case (UniformVectorType(superMemberTypeRef), SpecificVectorType(testingMemberTypeRefs)) =>
-        val memberResults = testingMemberTypeRefs.map { testingMemberTypeRef =>
-          satisfiesTypeRef(superMemberTypeRef, superStack, testingMemberTypeRef, testingStack)
-        }
-          
-        mergeNonUnionMemberTypeResults(memberResults.toSet)
-
-      case (SpecificVectorType(superMemberTypeRefs), UniformVectorType(testingMemberTypeRef)) =>
-        val memberResults = superMemberTypeRefs.map { superMemberTypeRef =>
-          satisfiesTypeRef(superMemberTypeRef, superStack, testingMemberTypeRef, testingStack)
-        }
-
-        if (memberResults.contains(Some(false))) {
-          // Definitely doesn't match
-          Some(false)
-        }
-        else {
-          // May match depending on the length of the uniform vector
-          None
-        }
-
       case (superApplicable : ApplicableType, testingApplicable : ApplicableType) =>
         satifiesApplicableType(superApplicable, testingApplicable)
 

@@ -64,7 +64,7 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
           ("<list>" -> BoundType(vt.UniformProperListType(vt.AnySchemeType))) +
           ("<pair>" -> BoundType(vt.AnyPairType)) +
           ("<procedure>" -> BoundType(vt.SchemeTypeAtom(ct.ProcedureCell))) +
-          ("<vector>" -> BoundType(vt.VectorOfType(vt.AnySchemeType))) +
+          ("<vector>" -> BoundType(vt.VectorType)) +
           ("->" -> Primitives.ProcedureType) +
           ("define-native-library" -> Primitives.DefineNativeLibrary) +
           ("static-library" -> Primitives.StaticLibrary) +

@@ -70,18 +70,6 @@ object InstantiateType {
 
       SpecificPairType(replacedCar, replacedCdr)
 
-    case SpecificVectorType(memberTypeRefs) =>
-      val replacedMemberTypeRefs = memberTypeRefs map { memberTypeRef =>
-        visitTypeRef(typeVars, memberTypeRef)
-      }
-
-      SpecificVectorType(replacedMemberTypeRefs)
-
-    case UniformVectorType(memberTypeRef)  =>
-      val replacedMemberType = visitTypeRef(typeVars, memberTypeRef)
-
-      VectorOfType(replacedMemberType)
-
     case procType : ProcedureType =>
       visitProcedureType(typeVars, procType)
 

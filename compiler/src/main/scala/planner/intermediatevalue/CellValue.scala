@@ -14,13 +14,10 @@ import llambda.compiler.{ErrorCategory, RuntimeErrorMessage}
   * @param  schemeType      Scheme type of the CellValue. For types that are accessible from Scheme code this must be a
   *                         stable type
   * @param  boxedValue      BoxedValue containing the value's TempValue and cell type
-  * @param  knownAllocated  True if this cell is known to be allocated from the garbage collector. Otherwise the value
-  *                         may be a compile-time constant value.
   */
 class CellValue(
     val schemeType : vt.SchemeType,
-    val boxedValue : BoxedValue,
-    val knownAllocated : Boolean = false
+    val boxedValue : BoxedValue
 ) extends IntermediateValue {
   lazy val typeDescription = s"cell of type ${schemeType}"
 
@@ -177,7 +174,7 @@ class CellValue(
       IntermediateValue.fromLiteralType(literalType)
 
     case _ =>
-      new CellValue(newType, boxedValue, knownAllocated)
+      new CellValue(newType, boxedValue)
   }
   
   def preferredRepresentation : vt.ValueType =

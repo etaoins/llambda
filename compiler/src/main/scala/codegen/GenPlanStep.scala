@@ -659,8 +659,5 @@ object GenPlanStep {
 
       // Continue with the successful block
       state.copy(currentBlock=successBlock)
-  
-    case forAllStep : ps.ForAll =>
-      GenForAll(state, genGlobals)(forAllStep)
   }
 }

@@ -271,36 +271,6 @@ case class CondBranch(result : TempValue, test : TempValue, trueSteps : List[Ste
     ).assignLocationFrom(this)
 }
 
-/** Checks if the loop body returns true for every index */
-case class ForAll(
-    result : TempValue,
-    loopCountValue : TempValue,
-    loopIndexValue : TempValue,
-    loopSteps : List[Step],
-    loopResultPred : TempValue
-) extends NestingStep {
-  lazy val outerInputValues = Set(loopCountValue)
-  lazy val innerBranches = List((loopSteps, loopResultPred))
-
-  lazy val outputValues = Set(result)
-
-  def mapInnerBranches(mapper : (List[Step], TempValue) => (List[Step], TempValue)) = {
-    val (mappedLoopSteps, mappedLoopResultPred) = mapper(loopSteps, loopResultPred)
-
-    ForAll(result, loopCountValue, loopIndexValue, mappedLoopSteps, mappedLoopResultPred)
-      .assignLocationFrom(this)
-  }
-
-  def renamed(f : (TempValue) => TempValue) =
-    ForAll(
-      result=f(result),
-      loopCountValue=f(loopCountValue),
-      loopIndexValue=f(loopIndexValue),
-      loopSteps=loopSteps.map(_.renamed(f)),
-      loopResultPred=f(loopResultPred)
-    ).assignLocationFrom(this)
-}
-
 /** Tests if a cell is of a given type */
 case class TestCellType(
     result : TempValue,

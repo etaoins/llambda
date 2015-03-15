@@ -18,16 +18,6 @@ object StabiliseType {
     case pairType : SpecificPairType if !schemeDialect.pairsAreImmutable =>
       AnyPairType
 
-    case SpecificVectorType(memberTypeRefs) =>
-      val anyMemberTypeRefs = memberTypeRefs map { _ =>
-        DirectSchemeTypeRef(AnySchemeType)
-      }
-
-      SpecificVectorType(anyMemberTypeRefs)
-
-    case UniformVectorType(_) =>
-      SchemeTypeAtom(ct.VectorCell)
-
     case other =>
       other
   }

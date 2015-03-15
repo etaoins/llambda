@@ -90,24 +90,6 @@ object ResolveTypeVars {
       visitTypeRef(typeVars, polyPair.carTypeRef, newPolyStack, evidencePair.carTypeRef, newEvidenceStack) ++
         visitTypeRef(typeVars, polyPair.cdrTypeRef, newPolyStack, evidencePair.cdrTypeRef, newEvidenceStack)
 
-    case (polyVec @ UniformVectorType(polyRef), evidenceVec @ UniformVectorType(evidenceRef)) =>
-      visitTypeRef(typeVars, polyRef, polyVec :: polyStack, evidenceRef, evidenceVec :: evidenceStack)
-
-    case (polyVec @ SpecificVectorType(polyRefs), evidenceVec @ SpecificVectorType(evidenceRefs))
-        if polyRefs.size == evidenceRefs.size =>
-      val results = (polyRefs zip evidenceRefs) map { case (polyRef, evidenceRef) =>
-        visitTypeRef(typeVars, polyRef, polyVec :: polyStack, evidenceRef, evidenceVec :: evidenceStack)
-      }
-
-      results.foldLeft(Result())(_ ++ _)
-
-    case (polyVec @ UniformVectorType(polyRef), evidenceVec @ SpecificVectorType(evidenceRefs)) =>
-      val results = evidenceRefs map { case evidenceRef =>
-        visitTypeRef(typeVars, polyRef, polyVec :: polyStack, evidenceRef, evidenceVec :: evidenceStack)
-      }
-
-      results.foldLeft(Result())(_ ++ _)
-
     case (ProcedureType(polyFixed, polyRestOpt, polyReturn), ProcedureType(evidenceFixed, evidenceRestOpt, evidenceReturn)) =>
       // Intentionally do not use the formals to resolve polymorphic variables. The formals aren't "evidence" of types
       // as they're passed input from other polymorphic collections. For example, the signature for (filter) might be:

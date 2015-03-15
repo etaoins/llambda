@@ -174,9 +174,7 @@ object ProperList {
 }
 
 case class VectorLiteral(elements : Vector[Datum]) extends Datum {
-  val schemeType = vt.SpecificVectorType(elements.map { memberValue =>
-    vt.DirectSchemeTypeRef(memberValue.schemeType)
-  })
+  val schemeType = vt.VectorType
 
   def toCaseFolded : Datum =
     VectorLiteral(elements.map(_.toCaseFolded))

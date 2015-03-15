@@ -120,59 +120,6 @@ class ResolveTypeVarsSuite extends FunSuite {
     ))
   }
 
-  test("resolving uniform vector type with uniform vector") {
-    val polyVec = UniformVectorType(polyA)
-    val evidence = UniformVectorType(ExactIntegerType)
-
-    assert(ResolveTypeVars(Set(polyA), polyVec, evidence).values == Map(
-      polyA -> ExactIntegerType
-    ))
-  }
-
-  test("resolving specific vector type with specific vector") {
-    val polyVec = SpecificVectorType(Vector(polyA, polyB, polyA))
-
-    val evidence = SpecificVectorType(Vector(
-      ExactIntegerType,
-      PortType,
-      FlonumType
-    ))
-
-    assert(ResolveTypeVars(Set(polyA, polyB), polyVec, evidence).values == Map(
-      polyA -> NumberType,
-      polyB -> PortType
-    ))
-  }
-
-  test("resolving empty specific vector type with specific vector") {
-    val polyVec = SpecificVectorType(Vector())
-
-    val evidence = SpecificVectorType(Vector())
-
-    assert(ResolveTypeVars(Set(polyA), polyVec, evidence).values == Map())
-  }
-
-  test("resolving uniform vector type with specific vector") {
-    val polyVec = UniformVectorType(polyA)
-
-    val evidence = SpecificVectorType(Vector(
-      ExactIntegerType,
-      FlonumType
-    ))
-
-    assert(ResolveTypeVars(Set(polyA), polyVec, evidence).values == Map(
-      polyA -> NumberType
-    ))
-  }
-
-  test("resolving uniform vector type with empty specific vector") {
-    val polyVec = UniformVectorType(polyA)
-
-    val evidence = SpecificVectorType(Vector())
-
-    assert(ResolveTypeVars(Set(polyA), polyVec, evidence).values == Map())
-  }
-
   test("resolving procedure type from procedure type with identical arity") {
     val polyProc = ProcedureType(
       fixedArgTypes=List(polyA, polyB),

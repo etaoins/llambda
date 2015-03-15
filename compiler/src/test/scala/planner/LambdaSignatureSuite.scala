@@ -13,8 +13,6 @@ import org.scalatest.FunSuite
 class LambdaSignatureSuite extends FunSuite with PlanHelpers{
   private def retypingProcedureName = "retyping-procedure"
 
-  private val anyVectorType = vt.VectorOfType(vt.AnySchemeType)
-
   private def signatureFor(scheme : String) : ProcedureSignature = {
     val importDecl = datum"(import (scheme base) (llambda typed) (llambda test-util))"
 
@@ -96,7 +94,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
     val signature = signatureFor("""(lambda (vec index) (vector-ref vec index))""")
 
     // This can be passed anything so it can return anything
-    assert(signature.fixedArgTypes === List(anyVectorType, vt.Int64))
+    assert(signature.fixedArgTypes === List(vt.VectorType, vt.Int64))
     assert(signature.returnType === vt.ReturnType.SingleValue(vt.AnySchemeType))
   }
   
@@ -104,14 +102,14 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
     val signature = signatureFor("""(lambda (len fill) (make-vector len fill))""")
 
     assert(signature.fixedArgTypes === List(vt.Int64, vt.AnySchemeType))
-    assert(signature.returnType === vt.ReturnType.SingleValue(anyVectorType))
+    assert(signature.returnType === vt.ReturnType.SingleValue(vt.VectorType))
   }
   
   test("typed procedure proxying (vector-ref)") {
     val signature = signatureFor("""(lambda ([vec : <vector>] [index : <number>]) (vector-ref vec index))""")
 
     // We should refine <number> in to <exact-integer>
-    assert(signature.fixedArgTypes === List(anyVectorType, vt.Int64))
+    assert(signature.fixedArgTypes === List(vt.VectorType, vt.Int64))
     assert(signature.returnType === vt.ReturnType.SingleValue(vt.AnySchemeType))
   }
   
@@ -119,14 +117,14 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
     val signature = signatureFor("""(lambda ([vec : (U <vector> <char>)] [index : <number>]) (vector-ref vec index))""")
 
     // We should refine <number> in to <exact-integer>
-    assert(signature.fixedArgTypes === List(anyVectorType, vt.Int64))
+    assert(signature.fixedArgTypes === List(vt.VectorType, vt.Int64))
     assert(signature.returnType === vt.ReturnType.SingleValue(vt.AnySchemeType))
   }
   
   test("procedure proxying (vector-set!)") {
     val signature = signatureFor("""(lambda (vec index) (vector-set! vec index #f))""")
 
-    assert(signature.fixedArgTypes === List(anyVectorType, vt.Int64))
+    assert(signature.fixedArgTypes === List(vt.VectorType, vt.Int64))
     assert(signature.returnType === vt.ReturnType.SingleValue(vt.UnitType))
   }
 
@@ -148,7 +146,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
 
     // Because the (vector-ref) is unconditionally executed the condition
     // should change the conditional
-    assert(signature.fixedArgTypes === List(anyVectorType, vt.Int64))
+    assert(signature.fixedArgTypes === List(vt.VectorType, vt.Int64))
     assert(signature.returnType === vt.ReturnType.SingleValue(vt.AnySchemeType))
   }
 
@@ -210,7 +208,7 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
         (/ 0 0)
         (vector-ref vec index))""")
 
-    assert(signature.fixedArgTypes === List(anyVectorType, vt.NumberType))
+    assert(signature.fixedArgTypes === List(vt.VectorType, vt.NumberType))
     assert(signature.returnType === vt.ReturnType.SingleValue(vt.AnySchemeType))
   }
   

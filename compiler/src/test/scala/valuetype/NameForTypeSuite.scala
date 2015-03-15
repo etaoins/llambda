@@ -107,39 +107,6 @@ class NameForTypeSuite extends FunSuite {
     assert(NameForType(binaryTreeType(SymbolType)) === "(Rec A (U (Pairof A A) <symbol>))")
   }
 
-  test("(Vector <string> <symbol> <flonum>)") {
-    val vectorType = SpecificVectorType(Vector[SchemeTypeRef](StringType, SymbolType, FlonumType))
-    assert(NameForType(vectorType) === "(Vector <string> <symbol> <flonum>)")
-  }
-
-  test("(Vector)") {
-    val vectorType = SpecificVectorType(Vector[SchemeTypeRef]())
-    assert(NameForType(vectorType) === "(Vector)")
-  }
-  
-  test("(Vectorof <number>)") {
-    val vectorType = UniformVectorType(NumberType)
-    assert(NameForType(vectorType) === "(Vectorof <number>)")
-  }
-  
-  test("(Rec A (U <symbol> (Vectorof A)))") {
-    val vectorType = UnionType(Set(
-      SymbolType,
-      UniformVectorType(RecursiveSchemeTypeRef(1))
-    ))
-
-    assert(NameForType(vectorType) === "(Rec A (U (Vectorof A) <symbol>))")
-  }
-  
-  test("(Rec A (U <symbol> (Vector A)))") {
-    val vectorType = UnionType(Set(
-      SymbolType,
-      SpecificVectorType(Vector(RecursiveSchemeTypeRef(1)))
-    ))
-
-    assert(NameForType(vectorType) === "(Rec A (U (Vector A) <symbol>))")
-  }
-
   test("(-> <number>)") {
     val procedureType = ProcedureType(
       fixedArgTypes=Nil,

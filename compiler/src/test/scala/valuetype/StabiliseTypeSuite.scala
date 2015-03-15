@@ -28,25 +28,4 @@ class StabiliseTypeSuite extends FunSuite {
     val stringList = UniformProperListType(StringType)
     assert(StabiliseType(stringList, dialect.R7RS) === ListElementType)
   }
-
-  test("uniform vector type is stabilised to vector type atom") {
-    val stringVector = UniformVectorType(StringType)
-    assert(StabiliseType(stringVector, dialect.Llambda) === SchemeTypeAtom(ct.VectorCell))
-  }
-
-  test("specific vector type is stabilised to same length vector of <any>") {
-    val threeStringVector = SpecificVectorType(Vector[SchemeTypeRef](
-      StringType,
-      StringType,
-      StringType
-    ))
-    
-    val threeAnyVector = SpecificVectorType(Vector[SchemeTypeRef](
-      AnySchemeType,
-      AnySchemeType,
-      AnySchemeType
-    ))
-
-    assert(StabiliseType(threeStringVector, dialect.Llambda) === threeAnyVector)
-  }
 }
