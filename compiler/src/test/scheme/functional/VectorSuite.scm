@@ -22,7 +22,7 @@
   (assert-equal #(a b c) (vector 'a 'b 'c))
   (assert-equal #(#(1)) (vector (vector 1)))))
 
-(define-test "(list->vector) an empty vector" (expect-success
+(define-test "(list->vector)" (expect-success
   (assert-equal #() (list->vector '()))
   (assert-equal #(a b c) (list->vector '(a b c)))))
 
@@ -33,7 +33,8 @@
   (assert-equal 3 (vector-length #(1 2 3)))
   (assert-equal 0 (vector-length #()))
   (assert-equal 0 (vector-length (make-vector 0 #f)))
-  (assert-equal 15 (vector-length (make-vector 15 #f)))))
+  (assert-equal 15 (vector-length (make-vector 15 #f)))
+  (assert-equal 5 (vector-length (list->vector '(1 2 3 4 5))))))
 
 (define-test "static (vector-ref)" (expect-static-success
   (assert-equal 'c (vector-ref #(a b c d e f) 2))))
@@ -77,9 +78,11 @@
 (define-test "(vector-append) with non-vector fails" (expect-error type-error?
   (vector-append '(1 2) '(3 4))))
 
-(define-test "(vector->list)" (expect-success
+(define-test "static (vector->list)" (expect-static-success
   (assert-equal '() (vector->list #()))
-  (assert-equal '(dah dah didah) (vector->list #(dah dah didah)))
+  (assert-equal '(dah dah didah) (vector->list #(dah dah didah)))))
+
+(define-test "dynamic (vector->list)" (expect-success
   (assert-equal '(dah didah) (vector->list '#(dah dah didah) 1))
   (assert-equal '(dah) (vector->list '#(dah dah didah) 1 2))
   (assert-equal '() (vector->list '#(dah dah didah) 0 0))

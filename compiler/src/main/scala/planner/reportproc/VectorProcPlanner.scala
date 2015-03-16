@@ -138,6 +138,19 @@ object VectorProcPlanner extends ReportProcPlanner with ReportProcPlannerHelpers
 
       Some(iv.UnitValue)
 
+    case ("list->vector", List((_, knownList : iv.KnownListElement))) =>
+      knownList.toValueListOpt map { initialElements =>
+        val elementTemps = initialElements.map(_.toTempValue(vt.AnySchemeType)).toVector
+
+        val vectorTemp = ps.CellTemp(ct.VectorCell)
+        plan.steps += ps.InitVector(vectorTemp, elementTemps)
+
+        new iv.KnownVectorCellValue(initialElements.length, vectorTemp)
+      }
+
+    case ("vector->list", List((_, iv.ConstantVectorValue(elements)))) =>
+      Some(ValuesToList(elements.toList))
+
     case _ =>
       None
   }
