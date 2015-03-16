@@ -18,6 +18,23 @@ object VectorProcPlanner extends ReportProcPlanner with ReportProcPlannerHelpers
   )(implicit plan : PlanWriter) : iv.IntermediateValue = {
     val lengthValue = length._2
 
+    val knownLengthOpt = lengthValue match {
+      case iv.ConstantExactIntegerValue(knownLength) =>
+        plan.withContextLocation(length._1) {
+          assertLengthValid("(make-vector)", "vector length", vt.Int64.maxIntValue, knownLength)
+        }
+
+        Some(knownLength)
+
+      case _ =>
+        None
+    }
+
+    if (knownLengthOpt == Some(0L)) {
+      // We can use q constant vector - there's no way to mutate a zero length vector
+      return iv.ConstantVectorValue(Vector())
+    }
+
     val lengthTemp = plan.withContextLocation(length._1) {
       lengthValue.toTempValue(vt.Int64)
     }
@@ -27,15 +44,11 @@ object VectorProcPlanner extends ReportProcPlanner with ReportProcPlannerHelpers
     val vectorTemp = ps.CellTemp(ct.VectorCell)
     plan.steps += ps.InitFilledVector(vectorTemp, lengthTemp, fillTemp)
 
-    lengthValue match {
-      case iv.ConstantExactIntegerValue(knownLength) =>
-        plan.withContextLocation(length._1) {
-          assertLengthValid("(make-vector)", "vector length", vt.Int64.maxIntValue, knownLength)
-        }
-
+    knownLengthOpt match {
+      case Some(knownLength) =>
         new iv.KnownVectorCellValue(knownLength, vectorTemp)
 
-      case _ =>
+      case None =>
         new iv. CellValue(vt.VectorType, BoxedValue(ct.VectorCell, vectorTemp))
     }
   }
@@ -49,6 +62,9 @@ object VectorProcPlanner extends ReportProcPlanner with ReportProcPlannerHelpers
 
     case ("make-vector", List(length, (_, fillValue))) =>
       Some(makeFilledVector(state)(length, fillValue))
+
+    case ("vector", Nil) =>
+      Some(new iv.ConstantVectorValue(Vector()))
 
     case ("vector", initialElements) =>
       val initialElementValues = initialElements.map(_._2)
