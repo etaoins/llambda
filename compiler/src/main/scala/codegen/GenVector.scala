@@ -6,6 +6,8 @@ import llambda.compiler.{celltype => ct}
 import llambda.compiler.planner.{step => ps}
 
 object GenVector {
+  private val vectorDataTbaaNode = NumberedMetadata(6)
+
   private def createUninitialised(state : GenerationState)(
       worldPtrIr : IrValue,
       lengthIr : IrValue
@@ -112,7 +114,7 @@ object GenVector {
       inbounds=true
     )
 
-    block.load("element")(elementPtrIr)
+    block.load("element")(elementPtrIr, metadata=Map("tbaa" -> vectorDataTbaaNode))
   }
 
   def storeElement(block : IrBlockBuilder)(dataIr : IrValue, indexIr : IrValue, newValueIr : IrValue) : Unit = {
@@ -123,6 +125,6 @@ object GenVector {
       inbounds=true
     )
 
-    block.store(newValueIr, elementPtrIr)
+    block.store(newValueIr, elementPtrIr, metadata=Map("tbaa" -> vectorDataTbaaNode))
   }
 }

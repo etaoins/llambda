@@ -17,6 +17,8 @@
 !4 = metadata !{ metadata !"ShadowStackEntry::cellCount" }
 !5 = metadata !{ metadata !"ShadowStackEntry::roots" }
 
+!6 = metadata !{ metadata !"VectorCell::m_elements" }
+
 ; {next, cellCount, roots}
 %shadowStackEntry = type {%shadowStackEntry*, i64, [0 x %any*]}
 
