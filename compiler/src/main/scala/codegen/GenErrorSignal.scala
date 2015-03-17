@@ -14,7 +14,7 @@ object GenErrorSignal {
     val stringConstantVar = IrGlobalVariableDef(
       name=constantName,
       initializer=StringConstant.fromUtf8String(text),
-      visibility=Visibility.Hidden,
+      linkage=Linkage.Private,
       constant=true,
       unnamedAddr=true)
 
