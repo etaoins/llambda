@@ -4,7 +4,7 @@ import io.llambda
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.planner.{step => ps}
-import llambda.compiler.planner.{PlanWriter, BoxedValue}
+import llambda.compiler.planner.{PlanWriter, BoxedValue, AssertIntInRange}
 import llambda.compiler.RuntimeErrorMessage
 
 sealed abstract class NativeValue(
@@ -53,12 +53,14 @@ class NativePredicateValue(tempValue : ps.TempValue) extends NativeValue(vt.Pred
 class NativeExactIntegerValue(tempValue : ps.TempValue, nativeType : vt.IntType) extends NativeValue(nativeType, ct.ExactIntegerCell, tempValue) {
   override def planCastToNativeTempValue(targetType : vt.NativeType)(implicit plan : PlanWriter) : ps.TempValue = targetType match {
     case intType : vt.IntType =>
+      AssertIntInRange(tempValue, nativeType, intType)
+
       val convTemp = ps.Temp(nativeType)
       plan.steps += ps.ConvertNativeInteger(convTemp, tempValue, intType.bits, intType.signed)
 
       convTemp
 
-    case _ => 
+    case _ =>
       impossibleConversion(s"Cannot convert ${typeDescription} to non-integer native type ${vt.NameForType(targetType)}") 
   }
 

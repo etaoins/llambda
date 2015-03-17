@@ -135,3 +135,19 @@
 
   (define native-make-bytevector (world-function system-library "llbase_make_bytevector" (-> <native-uint32> <native-int8> <bytevector>)))
   (native-make-bytevector 1 256)))
+
+(define-test "converting an integer too large for <native-uint32> fails" (expect-error type-error?
+  ; This assumes (make-list) takes a <native-uint32>
+  (make-list (typeless-cell (+ (expt 2 32) 1)))))
+
+(define-test "converting an integer too small for <native-int32> fails" (expect-error type-error?
+  ; This assumes (make-list) takes a <native-uint32>
+  (make-list (typeless-cell -1))))
+
+(define-test "converting an integer too large for <native-uint8> fails" (expect-error type-error?
+  ; This assumes (make-list) takes a <native-uint8>
+  (make-bytevector 1 (typeless-cell 256))))
+
+(define-test "converting an integer too small for <native-int8> fails" (expect-error type-error?
+  ; This assumes (make-list) takes a <native-uint8>
+  (make-bytevector 1 (typeless-cell -1))))
