@@ -4,7 +4,7 @@ version := "0.0.1"
 
 organization := "io.llambda"
 
-scalaVersion := "2.11.5"
+scalaVersion := "2.11.6"
 
 scalacOptions ++= Seq("-deprecation", "-feature", "-Xlint")
 
