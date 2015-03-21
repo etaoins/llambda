@@ -182,7 +182,7 @@
 
   (define raise-symbols (map (lambda (cat)
                                (string->symbol (error-category-raise-name cat)))
-                             (remove error-category-r7rs? unindexed-categories)))
+                             (remove (lambda (cat) (equal? default-error-category cat)) unindexed-categories)))
 
   (display "; ")
   (write-generated-file-warning)

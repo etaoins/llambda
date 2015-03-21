@@ -184,6 +184,12 @@
         (+ (raise-continuable "should be a number")
            23))))))
 
+(define-test "(raise-read-error)" (expect-success
+  (import (llambda error))
+
+  (assert-raises read-error?
+                 (raise-read-error "Oops!"))))
+
 (define-test "(guard)" (expect-success
   ; This matches the first clause
   (assert-equal 42

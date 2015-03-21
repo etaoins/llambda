@@ -4,7 +4,7 @@
   (import (llambda typed))
   (import (llambda nfi))
 
-  (export type-error? arity-error? range-error? utf8-error? divide-by-zero-error? mutate-literal-error? undefined-variable-error? out-of-memory-error? invalid-argument-error? integer-overflow-error? implementation-restriction-error? unclonable-value-error? no-actor-error? expired-escape-procedure-error? ask-timeout-error? raise-type-error raise-arity-error raise-range-error raise-utf8-error raise-divide-by-zero-error raise-mutate-literal-error raise-undefined-variable-error raise-out-of-memory-error raise-invalid-argument-error raise-integer-overflow-error raise-implementation-restriction-error raise-unclonable-value-error raise-no-actor-error raise-expired-escape-procedure-error raise-ask-timeout-error)
+  (export type-error? arity-error? range-error? utf8-error? divide-by-zero-error? mutate-literal-error? undefined-variable-error? out-of-memory-error? invalid-argument-error? integer-overflow-error? implementation-restriction-error? unclonable-value-error? no-actor-error? expired-escape-procedure-error? ask-timeout-error? raise-file-error raise-read-error raise-type-error raise-arity-error raise-range-error raise-utf8-error raise-divide-by-zero-error raise-mutate-literal-error raise-undefined-variable-error raise-out-of-memory-error raise-invalid-argument-error raise-integer-overflow-error raise-implementation-restriction-error raise-unclonable-value-error raise-no-actor-error raise-expired-escape-procedure-error raise-ask-timeout-error)
   (begin
     (define-native-library llerror (static-library "ll_llambda_error"))
     (define raise-file-error (world-function llerror "llerror_raise_file_error" (-> <string> <any> * <unit>) noreturn))
