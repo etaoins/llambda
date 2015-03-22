@@ -157,7 +157,7 @@
   (assert-equal '(c b a) (reverse '(a b c)))
   (assert-equal '((e (f)) d (b c) a) (reverse '(a (b c) d (e (f)))))))
 
-(define-test "base cadr procedures" (expect-success
+(define-test "base cadr procedures" (expect-static-success
   (define test-list '((1 . 2) (3 . 4)))
 
   (assert-equal 1 (caar test-list))
@@ -349,7 +349,7 @@
 
   (assert-equal '((1) (2) (3)) (zip '(1 2 3)))))
 
-(define-test "(xcons)" (expect-success
+(define-test "(xcons)" (expect-static-success
   (import (llambda list))
   (import (llambda typed))
 

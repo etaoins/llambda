@@ -1,4 +1,4 @@
-(define-test "quasiquote list" (expect-success
+(define-test "quasiquote list" (expect-static-success
   (assert-equal '() `())
   (assert-equal '(1 2 3) `(1 2 3))
   (assert-equal '(1 5 4) `(1 ,(+ 2 3) 4))

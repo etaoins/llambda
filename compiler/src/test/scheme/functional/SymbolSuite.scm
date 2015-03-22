@@ -25,7 +25,7 @@
 (define-test "(symbol=?) with non-symbol fails" (expect-compile-error type-error?
   (symbol=? 'test 'test "test")))
 
-(define-test "(symbol->string)" (expect-success
+(define-test "(symbol->string)" (expect-static-success
   ; Inline symbol
   (assert-equal "flying-cat" (symbol->string 'flying-cat))
   ; Heap symbol

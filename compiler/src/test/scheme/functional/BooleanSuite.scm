@@ -1,4 +1,4 @@
-(define-test "static (boolean?)" (expect-success
+(define-test "static (boolean?)" (expect-static-success
   (assert-true  (boolean? #f))
   (assert-true  (boolean? #t))
   (assert-false (boolean? 0))

@@ -55,7 +55,7 @@
       ((a) 'a)
       ((b) 'b)))))
 
-(define-test "(case) with arrow" (expect-success
+(define-test "(case) with arrow" (expect-static-success
   (assert-equal 'c
     (case (car '(c d))
       ((a e i o u) 'vowel)

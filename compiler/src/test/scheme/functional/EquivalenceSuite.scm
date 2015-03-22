@@ -113,7 +113,7 @@
 (define-test "null (eqv?)" (expect-static-success
   (assert-true (eqv? '() '()))))
 
-(define-test "pair (eqv?)" (expect-success
+(define-test "pair (eqv?)" (expect-static-success
   (let ((var '(a b)))
     (assert-true (eqv? var var)))
 
@@ -173,7 +173,7 @@
 (define-test "native functions are eq" (expect #t
   (eq? car car)))
 
-(define-test "values in the same argument are eq" (expect-success
+(define-test "values in the same argument are eq" (expect-static-success
   (define (arg-is-self-eq? x) (eq? x x))
 
   (assert-true (arg-is-self-eq? '(a)))
@@ -181,7 +181,7 @@
   (assert-true (arg-is-self-eq? #u8(1 2 3 4)))
   (assert-true (arg-is-self-eq? (lambda (x) x)))))
 
-(define-test "values in the same variable are eq" (expect-success
+(define-test "values in the same variable are eq" (expect-static-success
   (define test-list '(a))
   (assert-true (eq? test-list test-list))
 

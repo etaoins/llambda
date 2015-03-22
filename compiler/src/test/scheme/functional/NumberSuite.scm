@@ -1,11 +1,11 @@
-(define-test "(number?)" (expect-success
+(define-test "static (number?)" (expect-static-success
   (assert-true  (number? 4))
-  (assert-true  (number? (typeless-cell 4)))
-
   (assert-true  (number? -5.0))
-  (assert-true  (number? (typeless-cell -5.0)))
+  (assert-false (number? '()))))
 
-  (assert-false (number? '()))
+(define-test "dynamic (number?)" (expect-success
+  (assert-true  (number? (typeless-cell 4)))
+  (assert-true  (number? (typeless-cell -5.0)))
   (assert-false (number? (typeless-cell '())))))
 
 (define-test "(real?)" (expect-static-success
@@ -40,14 +40,14 @@
 (define-test "exact? fails with non-numbers" (expect-error type-error?
   (exact? 'notanumber)))
 
-(define-test "(inexact?)" (expect-success
+(define-test "(inexact?)" (expect-static-success
   (assert-true  (inexact? 3.0))
   (assert-false (inexact? 3.))))
 
 (define-test "(inexact?) fails with non-numbers" (expect-error type-error?
   (inexact? 'notanumber)))
 
-(define-test "(exact-integer?)" (expect-success
+(define-test "(exact-integer?)" (expect-static-success
   (assert-true (exact-integer? 32))
   (assert-false (exact-integer? 32.0))))
 
@@ -184,14 +184,14 @@
   (assert-false (zero? -inf.0))
   (assert-false (zero? +nan.0))))
 
-(define-test "(even?)" (expect-success
+(define-test "(even?)" (expect-static-success
   (assert-true  (even? 1024))
   (assert-false (even? 777))
   (assert-true  (even? 0))
   (assert-true  (even? -1024))
   (assert-false (even? -777))))
 
-(define-test "(odd?)" (expect-success
+(define-test "(odd?)" (expect-static-success
   (assert-false (odd? 1024))
   (assert-true  (odd? 777))
   (assert-false (odd? 0))
