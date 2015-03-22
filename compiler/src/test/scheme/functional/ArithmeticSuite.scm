@@ -333,16 +333,20 @@
 (define-test "(expt) fails on integer overflow" (expect-error integer-overflow-error?
   (force-evaluation (expt 2 63))))
 
-(define-test "rounding procedures" (expect-success
+(define-test "static rounding procedures" (expect-static-success
   (assert-equal -5.0 (floor -4.3))
   (assert-equal -4.0 (ceiling -4.3))
-  (assert-equal -4.0 (truncate -4.3))
+  (assert-equal -4   (truncate -4))
   (assert-equal -4.0 (round -4.3))
   (assert-equal 3.0  (floor 3.5))
   (assert-equal 4.0  (ceiling 3.5))
-  (assert-equal 3.0  (truncate 3.5))
+  (assert-equal 3    (truncate 3))
   (assert-equal 4.0  (round 3.5))
   (assert-equal 7    (round 7))))
+
+(define-test "dynamic rounding procedures" (expect-success
+  (assert-equal -4.0 (truncate -4.3))
+  (assert-equal 3.0  (truncate 3.5))))
 
 (define-test "typed procedure adding multiple number types" (expect-success
   (import (llambda typed))

@@ -197,7 +197,7 @@
   (assert-equal 'd (list-ref (list 'a 'b 'c 'd) 3))))
 
 (define-test "dynamic (list-ref)" (expect-success
-  (assert-equal 'c (list-ref '(a b c d) (exact (round 1.8))))))
+  (assert-equal 'c (list-ref '(a b c d) (typed-dynamic 2 <exact-integer>)))))
 
 (define-test "(list-ref) at exact end of list fails" (expect-error range-error?
   (list-ref '(1 2 3) 3)))

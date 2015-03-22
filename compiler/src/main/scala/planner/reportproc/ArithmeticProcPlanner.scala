@@ -404,6 +404,27 @@ object ArithmeticProcPlanner extends ReportProcPlanner {
         if (power >= 0) && (power <= 62) =>
       Some(iv.ConstantExactIntegerValue(1L << power))
 
+    case ("floor", List((_, constExactInt : iv.ConstantExactIntegerValue))) =>
+      Some(constExactInt)
+
+    case ("ceiling", List((_, constExactInt : iv.ConstantExactIntegerValue))) =>
+      Some(constExactInt)
+
+    case ("truncate", List((_, constExactInt : iv.ConstantExactIntegerValue))) =>
+      Some(constExactInt)
+
+    case ("round", List((_, constExactInt : iv.ConstantExactIntegerValue))) =>
+      Some(constExactInt)
+
+    case ("floor", List((_, iv.ConstantFlonumValue(value)))) =>
+      Some(new iv.ConstantFlonumValue(Math.floor(value)))
+
+    case ("ceiling", List((_, iv.ConstantFlonumValue(value)))) =>
+      Some(new iv.ConstantFlonumValue(Math.ceil(value)))
+
+    case ("round", List((_, iv.ConstantFlonumValue(value)))) =>
+      Some(new iv.ConstantFlonumValue(Math.round(value)))
+
     case _ =>
       None
   }

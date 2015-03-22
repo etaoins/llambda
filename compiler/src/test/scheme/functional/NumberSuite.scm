@@ -26,7 +26,7 @@
   (assert-true  (complex? -5.0))
   (assert-false (complex? '()))))
 
-(define-test "(integer?)" (expect-success
+(define-test "(integer?)" (expect-static-success
   (assert-true  (integer? 4))
   (assert-true  (integer? -5.0))
   (assert-false (integer? -5.5))
