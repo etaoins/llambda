@@ -55,6 +55,7 @@ object ReportProcPlanner {
   // These planners primarily exist for optimisation
   val optimisingPlanners = List[ReportProcPlanner](
     ArithmeticProcPlanner,
+    BooleanProcPlanner,
     BytevectorProcPlanner,
     CadrProcPlanner,
     CharProcPlanner,
