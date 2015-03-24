@@ -184,4 +184,14 @@ void llerror_raise_ask_timeout_error(World &world, StringCell *message, RestValu
 	throw dynamic::SchemeException(ErrorObjectCell::createInstance(world, message, irritants, ErrorCategory::AskTimeout));
 }
 
+bool llerror_is_match_error(AnyCell *obj)
+{
+	return isErrorObjectOfCategory(obj, ErrorCategory::Match);
+}
+
+void llerror_raise_match_error(World &world, StringCell *message, RestValues<AnyCell> *irritants)
+{
+	throw dynamic::SchemeException(ErrorObjectCell::createInstance(world, message, irritants, ErrorCategory::Match));
+}
+
 }

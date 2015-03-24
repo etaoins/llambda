@@ -24,6 +24,7 @@ object ErrorCategory {
   object NoActor extends ErrorCategory(15)
   object ExpiredEscapeProcedure extends ErrorCategory(16)
   object AskTimeout extends ErrorCategory(17)
+  object Match extends ErrorCategory(18)
 
   def fromPredicate : PartialFunction[String, ErrorCategory] = {
     case "default-error?" => Default
@@ -44,5 +45,6 @@ object ErrorCategory {
     case "no-actor-error?" => NoActor
     case "expired-escape-procedure-error?" => ExpiredEscapeProcedure
     case "ask-timeout-error?" => AskTimeout
+    case "match-error?" => Match
   }
 }

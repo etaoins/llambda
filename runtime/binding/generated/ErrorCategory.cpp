@@ -43,6 +43,8 @@ const char *schemeNameForErrorCategory(ErrorCategory category)
 		return "expired-escape-procedure-error";
 	case ErrorCategory::AskTimeout:
 		return "ask-timeout-error";
+	case ErrorCategory::Match:
+		return "match-error";
 	}
 }
 

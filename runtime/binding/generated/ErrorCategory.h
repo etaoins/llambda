@@ -28,6 +28,7 @@ enum class ErrorCategory : std::uint16_t
 	NoActor = 15,
 	ExpiredEscapeProcedure = 16,
 	AskTimeout = 17,
+	Match = 18,
 };
 
 const char *schemeNameForErrorCategory(ErrorCategory category);

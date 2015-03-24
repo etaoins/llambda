@@ -31,7 +31,8 @@
   (error-category "unclonable-value-error" "unclonable_value_error" "UnclonableValue" #f)
   (error-category "no-actor-error" "no_actor_error" "NoActor" #f)
   (error-category "expired-escape-procedure-error" "expired_escape_procedure_error" "ExpiredEscapeProcedure" #f)
-  (error-category "ask-timeout-error" "ask_timeout_error" "AskTimeout" #f)))
+  (error-category "ask-timeout-error" "ask_timeout_error" "AskTimeout" #f)
+  (error-category "match-error" "match_error" "Match" #f)))
 
 (define (error-category-pred-name [cat : <error-category>])
   (string-append (error-category-scheme-name cat) "?"))
