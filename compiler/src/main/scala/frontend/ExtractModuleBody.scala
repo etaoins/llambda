@@ -76,10 +76,16 @@ object ExtractModuleBody {
       symbol.scope += (symbol.name -> boundValue)
       Nil
 
-    case ParsedRecordTypeDefine(typeSymbol, recordType, procedures) =>
+    case ParsedRecordTypeDefine(typeSymbol, recordType, (constructorSym, constructorExpr), procedures) =>
       typeSymbol.scope += (typeSymbol.name -> BoundType(recordType))
 
-      List(et.TopLevelDefine((procedures.map { case (procedureSymbol, expr) =>
+      val constructorType = SchemeTypeForSymbol(constructorSym)
+      val constructorLoc = new BoundRecordConstructor(constructorExpr, constructorSym.name, constructorType)
+      constructorSym.scope += (constructorSym.name -> constructorLoc)
+
+      val constructorBinding = et.SingleBinding(constructorLoc, constructorExpr)
+
+      val bindings = constructorBinding :: (procedures.map { case (procedureSymbol, expr) =>
         val schemeType = SchemeTypeForSymbol(procedureSymbol)
         val storageLoc = new StorageLocation(procedureSymbol.name, schemeType)
 
@@ -88,7 +94,9 @@ object ExtractModuleBody {
         procedureSymbol.scope += (procedureSymbol.name -> storageLoc)
 
         et.SingleBinding(storageLoc, expr)
-      }).toList))
+      }).toList
+
+      List(et.TopLevelDefine(bindings))
 
     case ParsedTypeAnnotation =>
       Nil

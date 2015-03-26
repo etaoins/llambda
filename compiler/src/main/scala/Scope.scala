@@ -20,6 +20,18 @@ class StorageLocation(
   override def toString = "$" + sourceName
 }
 
+/** Record type constructor binding
+  *
+  * This is used to distinguish record type constructor for unapplication in pattern matching
+  *
+  * @param  constructor  Record type constructor for this binding
+  */
+class BoundRecordConstructor(
+    val constructor : et.RecordConstructor,
+    sourceName : String,
+    schemeType : vt.SchemeType = vt.AnySchemeType
+) extends StorageLocation(sourceName, schemeType)
+
 // These are procedure with the semantics of the same procedure defined in R7RS
 // This allows the compiler to optimise them based on their documented semantics
 class ReportProcedure(

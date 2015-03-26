@@ -149,6 +149,10 @@ private[frontend] object ExtractExpr {
 
         et.TypePredicate(nonProcType)
 
+      case (Primitives.PatternMatch, valueDatum :: clauseData) =>
+        val valueExpr = ExtractExpr(valueDatum)
+        ExtractPatternMatch(valueExpr, clauseData)
+
       case otherPrimitive =>
         throw new BadSpecialFormException(appliedSymbol, "Invalid primitive syntax")
     }

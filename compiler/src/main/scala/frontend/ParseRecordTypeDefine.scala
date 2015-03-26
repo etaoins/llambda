@@ -197,9 +197,9 @@ private[frontend] object ParseRecordTypeDefine {
       seenSymbols + procSymbol
     }
 
-    val allProcedures = constructorProcedure :: predicateProcedure :: (accessorProcedures ++ mutatorProcedures)
+    val allProcedures = predicateProcedure :: (accessorProcedures ++ mutatorProcedures)
 
-    ParsedRecordTypeDefine(nameSymbol, recordType, allProcedures.toMap)
+    ParsedRecordTypeDefine(nameSymbol, recordType, constructorProcedure, allProcedures.toMap)
   }
 
   def apply(

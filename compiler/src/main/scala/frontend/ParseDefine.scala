@@ -58,13 +58,15 @@ case class ParsedSimpleDefine(definedSymbol : sst.ScopedSymbol, value : BoundVal
   *
   * This is the result of parsing a (define-record-type)
   *
-  * @param  typeSymbol  Symbol for the newly introduced record type
-  * @param  recordType  The new record type
-  * @param  procedures  The associated procedures for the record type
+  * @param  typeSymbol   Symbol for the newly introduced record type
+  * @param  recordType   The new record type
+  * @param  constructor  Constructor procedure for the record type
+  * @param  procedures   The associated procedures for the record type
   */
 case class ParsedRecordTypeDefine(
     typeSymbol : sst.ScopedSymbol,
     recordType : vt.RecordType,
+    constructor : (sst.ScopedSymbol, et.RecordConstructor),
     procedures : Map[sst.ScopedSymbol, et.ArtificialProcedure]
 ) extends ParsedDefine
 
