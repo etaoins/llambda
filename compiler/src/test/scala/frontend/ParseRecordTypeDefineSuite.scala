@@ -77,6 +77,11 @@ class ParseRecordTypeDefineSuite extends FunSuite with testutil.ExprHelpers with
             ))
         }
     }
+
+    // The constructor binding should be immutable so it can be used for pattern matching unapplication
+    intercept[BadSpecialFormException] {
+      bodyFor("(set! new-type 4)")(scope)
+    }
   }
 
   test("single read-only untyped field") {

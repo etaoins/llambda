@@ -650,6 +650,11 @@ class ExtractModuleBodySuite extends FunSuite with Inside with OptionValues with
       case et.TopLevelDefine(List(et.SingleBinding(loc, et.Lambda(_, Nil, None, et.Literal(ast.BooleanLiteral(false)), _)))) =>
         assert(loc === listBinding)
     }
+
+    // (define-report-procedure) bindings should be immutable
+    intercept[BadSpecialFormException] {
+      bodyFor("(set! list 4)")(scope)
+    }
   }
 
   test("trivial include") {

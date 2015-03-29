@@ -18,6 +18,9 @@ class StorageLocation(
     val schemeType : vt.SchemeType = vt.AnySchemeType
 ) extends BoundValue {
   override def toString = "$" + sourceName
+
+  /** Indicates if mutations of this location should be forbidden */
+  val forceImmutable : Boolean = false
 }
 
 /** Record type constructor binding
@@ -30,7 +33,11 @@ class BoundRecordConstructor(
     val constructor : et.RecordConstructor,
     sourceName : String,
     schemeType : vt.SchemeType = vt.AnySchemeType
-) extends StorageLocation(sourceName, schemeType)
+) extends StorageLocation(sourceName, schemeType) {
+  // If we allow mutation then pattern matching can be "tricked" in to matching a variable initialised with a record
+  // type constructor and then rebound to another value
+  override val forceImmutable = true
+}
 
 // These are procedure with the semantics of the same procedure defined in R7RS
 // This allows the compiler to optimise them based on their documented semantics
@@ -39,6 +46,11 @@ class ReportProcedure(
     schemeType : vt.SchemeType = vt.AnySchemeType
 ) extends StorageLocation(reportName, schemeType) {
   override def toString = "&" + reportName
+
+  // R7RS doesn't allow mutating imported definition and (define-report-procedure) should only be used as library
+  // exports. This prevents us from treating a variable initialised as a report procedure and rebound to another value
+  // as a report procedure with the original reportName
+  override val forceImmutable = true
 }
 
 // These are primitive expressions treated specially by the frontend

@@ -60,7 +60,13 @@ private[frontend] object ExtractExpr {
       case (Primitives.Set, (mutatingSymbol : sst.ScopedSymbol) :: value :: Nil) =>
         mutatingSymbol.resolve match {
           case storageLoc : StorageLocation =>
-            et.MutateVar(storageLoc, ExtractExpr(value))
+            if (storageLoc.forceImmutable) {
+              throw new BadSpecialFormException(mutatingSymbol, s"Attempted (set!) of immutable binding ${mutatingSymbol.name}")
+            }
+            else {
+              et.MutateVar(storageLoc, ExtractExpr(value))
+            }
+
           case _ =>
             throw new BadSpecialFormException(mutatingSymbol, s"Attempted (set!) non-variable ${mutatingSymbol.name}")
         }

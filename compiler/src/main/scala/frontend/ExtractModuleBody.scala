@@ -44,8 +44,13 @@ object ExtractModuleBody {
           throw new DuplicateDefinitionException(symbol)
 
         case Some(storageLoc : StorageLocation) =>
-          // Convert this to a (set!)
-          List(et.MutateVar(storageLoc, exprBlock()))
+          if (storageLoc.forceImmutable) {
+            throw new BadSpecialFormException(symbol, s"Attempted mutating (define) of immutable binding ${symbol.name}")
+          }
+          else {
+            // Convert this to a (set!)
+            List(et.MutateVar(storageLoc, exprBlock()))
+          }
 
         case Some(_) =>
           throw new BadSpecialFormException(symbol, s"Attempted mutating (define) non-variable ${symbol.name}")
