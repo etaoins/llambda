@@ -115,3 +115,15 @@
   (assert-equal 2 (matcher (two-fields 1 2)))
   (assert-equal 'starts-with-symbol (matcher (two-fields 'one 2)))
   (assert-equal 'two (matcher (three-fields 'one 'two 'three)))))
+
+(define-test "match has result type of a union of the clause results" (expect-success
+  (import (llambda match))
+  (import (llambda typed))
+
+  (define match-result
+    (match (typeless-cell 1)
+           (1 'one)
+           (2 'two)
+           (3 'three)))
+
+  (ann match-result (U 'one 'two 'three))))

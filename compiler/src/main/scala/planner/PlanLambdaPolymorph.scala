@@ -259,12 +259,21 @@ object PlanLambdaPolymorph {
 
     val steps = procPlan.steps.toList
 
-    val (worldPtrOpt, procSignature) = if (canRefineSignature && !WorldPtrUsedBySteps(steps)) {
+    val (worldPtrOpt, strippedWorldPtrSignature) = if (canRefineSignature && !WorldPtrUsedBySteps(steps)) {
       // World pointer is not required, strip it out
       (None, initialSignature.copy(hasWorldArg=false, returnType=returnType))
     }
     else {
       (Some(ps.WorldPtrValue), initialSignature.copy(returnType=returnType))
+    }
+
+    val procSignature = if (planResult.values eq UnreachableValue) {
+      strippedWorldPtrSignature.copy(
+        attributes=strippedWorldPtrSignature.attributes + ProcedureAttribute.NoReturn
+      )
+    }
+    else {
+      strippedWorldPtrSignature
     }
 
     val argumentUniquer = new SourceNameUniquer

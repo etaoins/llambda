@@ -126,3 +126,13 @@
       (define new-vector (vector 1 2 3))
       (vector-set! new-vector 1 'test)
       (vector-ref new-vector 1)))))
+
+(define-test "conditional with termination in one branch uses the type from the other branch" (expect-success
+  (import (llambda typed))
+
+  (define result
+    (if dynamic-true
+      'true-symbol
+      (raise "Not reachable!")))
+
+  (ann result 'true-symbol)))

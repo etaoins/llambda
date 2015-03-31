@@ -22,7 +22,13 @@ private[planner] object PlanExpr {
         )
 
         exprs.foldLeft(initialResult) { case (planResult, expr) =>
-          apply(planResult.state)(expr)
+          if (planResult.values eq UnreachableValue) {
+            // This code is unreachable - check if the code is valid but keep track of the fact we're not reachable
+            apply(planResult.state)(expr).copy(values=UnreachableValue)
+          }
+          else {
+            apply(planResult.state)(expr)
+          }
         }
 
       case et.Apply(procRef @ et.VarRef(callCcProc : ReportProcedure), args)

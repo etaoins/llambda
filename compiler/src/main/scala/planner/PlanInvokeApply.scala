@@ -3,7 +3,7 @@ import io.llambda
 
 import llambda.compiler.planner.{step => ps}
 import llambda.compiler.planner.{intermediatevalue => iv}
-import llambda.compiler.{ContextLocated, RuntimeErrorMessage, ErrorCategory}
+import llambda.compiler.{ContextLocated, RuntimeErrorMessage, ErrorCategory, ProcedureAttribute}
 import llambda.compiler.{valuetype => vt}
 import llambda.compiler.{celltype => ct}
 
@@ -39,7 +39,13 @@ object PlanInvokeApply {
     signature.returnType match {
       case vt.ReturnType.SingleValue(vt.UnitType) =>
         plan.steps += ps.Invoke(None, signature, entryPointTemp, argTemps, discardable=discardable)
-        SingleValue(iv.UnitValue)
+
+        if (signature.attributes.contains(ProcedureAttribute.NoReturn)) {
+          UnreachableValue
+        }
+        else {
+          SingleValue(iv.UnitValue)
+        }
 
       case otherType =>
         val resultTemp = ps.Temp(otherType.representationTypeOpt.get)

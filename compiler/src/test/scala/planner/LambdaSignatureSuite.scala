@@ -262,4 +262,24 @@ class LambdaSignatureSuite extends FunSuite with PlanHelpers{
     assert(signature.fixedArgTypes === Nil)
     assert(signature.returnType === vt.ReturnType.MultipleValues(multipleValueListType))
   }
+
+  test("procedure unconditionally terminating is annotated as NoReturn") {
+    val signature = signatureFor("""
+      (lambda ()
+        (error "ALWAYS TERMINATE"))
+    """)
+
+    assert(signature.attributes.contains(ProcedureAttribute.NoReturn))
+  }
+
+  test("procedure unconditionally terminating in branches is annotated as NoReturn") {
+    val signature = signatureFor("""
+      (lambda ()
+        (if dynamic-true
+          (error "TERMINATES TRUE")
+          (error "TERMINATES FALSE")))
+    """)
+
+    assert(signature.attributes.contains(ProcedureAttribute.NoReturn))
+  }
 }

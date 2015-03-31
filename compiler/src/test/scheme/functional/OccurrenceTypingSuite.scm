@@ -257,6 +257,16 @@
   (if cond-result
     (ann cond-result <symbol>))))
 
+(define-test "(if) with terminating branch uses other branch type information afterwards" (expect-success
+  (import (llambda typed))
+
+  (define string-or-int (typed-dynamic 5 (U <string> <exact-integer>)))
+
+  (if (string? string-or-int)
+    (error "I hate strings!"))
+
+  (ann string-or-int <exact-integer>)))
+
 (cond-expand ((not immutable-pairs)
   (define-test "(list?) occurrence typing doesn't survive a (set-cdr!)" (expect #f
     (import (llambda typed))

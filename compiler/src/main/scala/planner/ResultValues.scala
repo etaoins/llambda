@@ -114,6 +114,15 @@ case class MultipleValues(multipleValueList : iv.IntermediateValue) extends Resu
     MultipleValues(multipleValueList.withSchemeType(newReturnType.toValueListType))
 }
 
+/** Return value from a procedure that cannot return
+  *
+  * This can safely be treated as a unit value but we can special case this for optimisation purposes
+  */
+object UnreachableValue extends SingleValue(iv.UnitValue) {
+  override def withReturnType(newReturnType : vt.ReturnType.ReturnType[vt.SchemeType]) : ResultValues =
+    this
+}
+
 object ResultValues {
   def apply(
       values : List[iv.IntermediateValue]

@@ -127,29 +127,52 @@ object PlanCond {
         val initialFalseState = ConstrainType(testResult.state)(testValue, falseConstraint)(plan.config)
         val falseResult = PlanExpr(initialFalseState)(falseExpr)(falseWriter)
         val falseValues = falseResult.values
-    
-        val planPhiResult = PlanResultValuesPhi(trueWriter, trueValues, falseWriter, falseValues)
-        val resultValues = planPhiResult.resultValues
 
-        plan.steps += ps.CondBranch(
-          planPhiResult.resultTemp,
-          truthyPred,
-          trueWriter.steps.toList, planPhiResult.leftTempValue,
-          falseWriter.steps.toList, planPhiResult.rightTempValue
-        )
-        val constrainedState = constrainResultValues(testResult.state)(
-          testValue=testValue,
-          trueState=trueResult.state,
-          trueValues=trueValues,
-          falseState=falseResult.state,
-          falseValues=falseValues,
-          resultValues=resultValues
-        )
+        if (trueValues eq UnreachableValue) {
+          // True branch terminates unconditionally; place it inside the branch and move the false branch after so we
+          // can avoid the phi
+          val unitTemp = iv.UnitValue.toTempValue(vt.UnitType)
+          val resultTemp = ps.Temp(vt.UnitType)
 
-        PlanResult(
-          state=constrainedState,
-          values=resultValues
-        )
+          plan.steps += ps.CondBranch(resultTemp, truthyPred, trueWriter.steps.toList, unitTemp, Nil, unitTemp)
+
+          plan.steps ++= falseWriter.steps
+          falseResult
+        }
+        else if (falseValues eq UnreachableValue) {
+          val unitTemp = iv.UnitValue.toTempValue(vt.UnitType)
+          val resultTemp = ps.Temp(vt.UnitType)
+
+          plan.steps += ps.CondBranch(resultTemp, truthyPred, Nil, unitTemp, falseWriter.steps.toList, unitTemp)
+
+          plan.steps ++= trueWriter.steps
+          trueResult
+        }
+        else {
+          val planPhiResult = PlanResultValuesPhi(trueWriter, trueValues, falseWriter, falseValues)
+          val resultValues = planPhiResult.resultValues
+
+          plan.steps += ps.CondBranch(
+            planPhiResult.resultTemp,
+            truthyPred,
+            trueWriter.steps.toList, planPhiResult.leftTempValue,
+            falseWriter.steps.toList, planPhiResult.rightTempValue
+          )
+
+          val constrainedState = constrainResultValues(testResult.state)(
+            testValue=testValue,
+            trueState=trueResult.state,
+            trueValues=trueValues,
+            falseState=falseResult.state,
+            falseValues=falseValues,
+            resultValues=resultValues
+          )
+
+          PlanResult(
+            state=constrainedState,
+            values=resultValues
+          )
+        }
     }
   }
 }
