@@ -62,12 +62,7 @@ object LiveValuesAtBarrier {
             LiveValuesAtBarrier(tail, initialValues)
         }
 
-      case (_ : ps.Return | _ : ps.TailCall) :: _ =>
-        // These terminate - no need to root anything past this
-        NoBarrier
-
-      case (invokeStep : ps.Invoke) :: _ if invokeStep.signature.attributes.contains(ProcedureAttribute.NoReturn) =>
-        // These throw exceptions or exit
+      case terminating :: _ if terminating.alwaysTerminates =>
         NoBarrier
 
       case (inputDisposable : ps.InputDisposableStep) :: tail =>

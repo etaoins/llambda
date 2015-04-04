@@ -1,7 +1,7 @@
 package io.llambda.compiler.planner.step
 import io.llambda
 
-import llambda.compiler.{ProcedureSignature, ContextLocated, RuntimeErrorMessage}
+import llambda.compiler.{ProcedureSignature, ContextLocated, RuntimeErrorMessage, ProcedureAttribute}
 import llambda.compiler.ast
 import llambda.compiler.{celltype => ct}
 import llambda.compiler.{valuetype => vt}
@@ -71,6 +71,9 @@ sealed trait Step extends ContextLocated {
     * These are discarded by ps.DisposeValues
     */
   def discardable : Boolean = false
+
+  /** Indicates if this step always terminates */
+  def alwaysTerminates : Boolean = false
 }
 
 sealed trait NestingStep extends Step {
@@ -196,6 +199,9 @@ case class Invoke(
       inputToDispose=inputToDispose,
       discardable=discardable
     ).assignLocationFrom(this)
+
+  override def alwaysTerminates =
+    signature.attributes.contains(ProcedureAttribute.NoReturn)
 }
 
 /** Invokes a procedure and immediately returns the value */
@@ -209,6 +215,8 @@ case class TailCall(signature : ProcedureSignature, entryPoint : TempValue, argu
       entryPoint=f(entryPoint),
       arguments=arguments.map(f)
     ).assignLocationFrom(this)
+
+  override def alwaysTerminates = true
 }
 
 /** Allocates a given number of cells at runtime
@@ -802,6 +810,8 @@ case class Return(returnValue : Option[TempValue]) extends Step {
 
   def renamed(f : (TempValue) => TempValue) =
     Return(returnValue.map(f)).assignLocationFrom(this)
+
+  override def alwaysTerminates = true
 }
 
 /** Initialises a new pair with an undefined car and cdr
