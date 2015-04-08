@@ -70,7 +70,7 @@ case class SingleValue(value : iv.IntermediateValue) extends ResultValues {
       case _ =>
         throw new InternalCompilerErrorException("Attempted to retype result values with incompatible type")
     }
-  }
+}
 
 case class MultipleValues(multipleValueList : iv.IntermediateValue) extends ResultValues {
   def toSingleValue()(implicit plan : PlanWriter) : iv.IntermediateValue = {
