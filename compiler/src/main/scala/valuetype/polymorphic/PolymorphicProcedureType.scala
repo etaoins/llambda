@@ -13,7 +13,7 @@ case class PolymorphicProcedureType(typeVars : Set[TypeVar], template : Procedur
     )
   }
 
-  def typeForArgs(located : SourceLocated, args : List[SchemeType]) : ProcedureType = {
+  def typeForArgs(args : List[SchemeType]) : ProcedureType = {
     if (typeVars.isEmpty) {
       // Skip!
       return template

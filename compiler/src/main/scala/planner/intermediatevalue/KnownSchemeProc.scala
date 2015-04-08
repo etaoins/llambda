@@ -88,7 +88,7 @@ extends KnownUserProc(polySignature, plannedSymbol, selfTempOpt, reportNameOpt) 
   )(implicit plan : PlanWriter) : IntermediateValue =
     if (isPrimaryPolymorph && !manifest.lambdaExpr.polyType.typeVars.isEmpty) {
       val polyType = manifest.lambdaExpr.polyType
-      val resolvedType = polyType.typeForArgs(plan.activeContextLocated, args)
+      val resolvedType = polyType.typeForArgs(args)
 
       if (resolvedType == polyType.upperBound) {
         // We resolved to the same type
