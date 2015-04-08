@@ -8,7 +8,7 @@ import llambda.compiler.{valuetype => vt}
 object TopLevelDefineRequired {
   def apply(storageLoc : StorageLocation, initialiser : et.Expr, analysis : AnalysedExprs) : Boolean =
     // Is this value used anywhere?
-    analysis.usedVars.contains(storageLoc) ||
+    analysis.varUses.contains(storageLoc) ||
       // Do we need to keep ths around for a later mutable set operation?
       analysis.mutableVars.contains(storageLoc) ||
       // Is it not known if the initialiser satifies the type for the storage loc

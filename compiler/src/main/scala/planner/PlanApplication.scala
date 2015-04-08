@@ -149,7 +149,18 @@ private[planner] object PlanApplication {
             val inlineCost = CostForPlanSteps(inlinePlan.steps.toList)
             val invokeCost = CostForPlanSteps(invokePlan.steps.toList)
 
-            if (inlineCost <= invokeCost) {
+            // Is this the only use of the lambda?
+            val isOnlyUse = procExpr match {
+              case et.VarRef(storageLoc) =>
+                // Does this only have a single use, including its self procedure cell?
+                (plan.config.analysis.varUses(storageLoc) == 1) &&
+                 !schemeProc.selfTempOpt.isDefined
+
+              case _ =>
+                false
+            }
+
+            if (isOnlyUse || (inlineCost <= invokeCost)) {
               // Use the inline plan
               plan.steps ++= inlinePlan.steps
 

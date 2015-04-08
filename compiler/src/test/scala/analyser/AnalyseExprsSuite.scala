@@ -28,10 +28,11 @@ class AnalyseExprsSuite extends FunSuite {
           et.SingleBinding(testLocA, et.Literal(ast.BooleanLiteral(false)))
         )
       ),
+      et.VarRef(testLocB),
       et.VarRef(testLocA),
       et.VarRef(testLocB)
     )
-    
+
     assert(AnalyseExprs(testExprs) === AnalysedExprs(
       usedTopLevelExprs=testExprs,
       mutableVars=Set(),
@@ -39,10 +40,13 @@ class AnalyseExprsSuite extends FunSuite {
         (testLocA -> et.Literal(ast.BooleanLiteral(true))),
         (testLocA -> et.Literal(ast.BooleanLiteral(false)))
       ),
-      usedVars=Set(testLocA, testLocB)
+      varUses=Map(
+        testLocA -> 1,
+        testLocB -> 2
+      )
     ))
   }
-  
+
   test("native symbols") {
     val testSignature = ProcedureSignature(
       hasWorldArg=true,
@@ -110,7 +114,9 @@ class AnalyseExprsSuite extends FunSuite {
       usedTopLevelExprs=expectedUsedExprs,
       mutableVars=Set(testLocA),
       constantTopLevelBindings=Nil,
-      usedVars=Set(testLocA)
+      varUses=Map(
+        testLocA -> 1
+      )
     ))
   }
 
@@ -156,10 +162,12 @@ class AnalyseExprsSuite extends FunSuite {
       usedTopLevelExprs=testExprs,
       mutableVars=Set(testLocA),
       constantTopLevelBindings=Nil,
-      usedVars=Set(testLocA)
+      varUses=Map(
+        testLocA -> 1
+      )
     ))
   }
-  
+
   test("mutate var inside lambda parameters make a var mutable") {
     val testLocA = new StorageLocation("testLocA")
     val testLocB = new StorageLocation("testLocB")
@@ -190,10 +198,12 @@ class AnalyseExprsSuite extends FunSuite {
       usedTopLevelExprs=testExprs,
       mutableVars=Set(testLocA),
       constantTopLevelBindings=Nil,
-      usedVars=Set(testLocA)
+      varUses=Map(
+        testLocA -> 1
+      )
     ))
   }
-  
+
   test("mutate var inside self-executing lambda makes a var mutable") {
     val testLocA = new StorageLocation("testLocA")
 
@@ -221,10 +231,12 @@ class AnalyseExprsSuite extends FunSuite {
       usedTopLevelExprs=testExprs,
       mutableVars=Set(testLocA),
       constantTopLevelBindings=Nil,
-      usedVars=Set(testLocA)
+      varUses=Map(
+        testLocA -> 1
+      )
     ))
   }
-  
+
   test("mutate var captured inside lambda makes a var mutable") {
     val testLocA = new StorageLocation("testLocA")
 
@@ -249,7 +261,9 @@ class AnalyseExprsSuite extends FunSuite {
       usedTopLevelExprs=testExprs,
       mutableVars=Set(testLocA),
       constantTopLevelBindings=Nil,
-      usedVars=Set(testLocA)
+      varUses=Map(
+        testLocA -> 1
+      )
     ))
   }
 
@@ -280,7 +294,9 @@ class AnalyseExprsSuite extends FunSuite {
       constantTopLevelBindings=List(
         testLocB -> et.MutateVar(testLocA, et.Literal(ast.EmptyList()))
       ),
-      usedVars=Set(testLocB)
+      varUses=Map(
+        testLocB -> 1
+      )
     ))
   }
 
