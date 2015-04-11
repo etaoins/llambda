@@ -58,8 +58,8 @@ preconstructed cell EmptyList : ListElement {
 };
 
 concrete cell String : Any {
-	uint32 charLength;
 	uint32 byteLength;
+	uint32 charLength;
 };
 
 variant cell InlineString : String {

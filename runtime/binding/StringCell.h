@@ -139,11 +139,11 @@ public:
 protected:
 	StringCell(ByteLengthType byteLength, CharLengthType charLength) :
 		AnyCell(CellTypeId::String),
-		m_charLength(charLength),
-		m_byteLength(byteLength)
+		m_byteLength(byteLength),
+		m_charLength(charLength)
 	{
 	}
-	
+
 	std::uint8_t* utf8Data();
 
 	// Creates an uninitialized cell with the given size

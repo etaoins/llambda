@@ -3,14 +3,14 @@
  ************************************************************/
 
 public:
-	std::uint32_t charLength() const
-	{
-		return m_charLength;
-	}
-
 	std::uint32_t byteLength() const
 	{
 		return m_byteLength;
+	}
+
+	std::uint32_t charLength() const
+	{
+		return m_charLength;
 	}
 
 public:
@@ -25,5 +25,5 @@ public:
 	}
 
 private:
-	std::uint32_t m_charLength;
 	std::uint32_t m_byteLength;
+	std::uint32_t m_charLength;

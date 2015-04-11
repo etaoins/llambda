@@ -332,38 +332,13 @@ object EmptyListCell extends PreconstructedCellType with EmptyListFields {
 sealed trait StringFields extends AnyFields {
   val irType : FirstClassType
 
-  val charLengthIrType = IntegerType(32)
-  val charLengthTbaaNode : Metadata
-  val charLengthGepIndices : List[Int]
-
   val byteLengthIrType = IntegerType(32)
   val byteLengthTbaaNode : Metadata
   val byteLengthGepIndices : List[Int]
 
-  def genPointerToCharLength(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
-    if (valueCell.irType != PointerType(irType)) {
-      throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
-    }
-
-    block.getelementptr("charLengthPtr")(
-      elementType=charLengthIrType,
-      basePointer=valueCell,
-      indices=charLengthGepIndices.map(IntegerConstant(IntegerType(32), _)),
-      inbounds=true
-    )
-  }
-
-  def genStoreToCharLength(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
-    val charLengthPtr = genPointerToCharLength(block)(valueCell)
-    val allMetadata = metadata ++ Map("tbaa" -> charLengthTbaaNode)
-    block.store(toStore, charLengthPtr, metadata=allMetadata)
-  }
-
-  def genLoadFromCharLength(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
-    val charLengthPtr = genPointerToCharLength(block)(valueCell)
-    val allMetadata = Map("tbaa" -> charLengthTbaaNode) ++ metadata
-    block.load("charLength")(charLengthPtr, metadata=allMetadata)
-  }
+  val charLengthIrType = IntegerType(32)
+  val charLengthTbaaNode : Metadata
+  val charLengthGepIndices : List[Int]
 
   def genPointerToByteLength(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
     if (valueCell.irType != PointerType(irType)) {
@@ -389,6 +364,31 @@ sealed trait StringFields extends AnyFields {
     val allMetadata = Map("tbaa" -> byteLengthTbaaNode) ++ metadata
     block.load("byteLength")(byteLengthPtr, metadata=allMetadata)
   }
+
+  def genPointerToCharLength(block : IrBlockBuilder)(valueCell : IrValue) : IrValue = {
+    if (valueCell.irType != PointerType(irType)) {
+      throw new InternalCompilerErrorException(s"Unexpected type for cell value. Passed ${valueCell.irType}, expected ${PointerType(irType)}")
+    }
+
+    block.getelementptr("charLengthPtr")(
+      elementType=charLengthIrType,
+      basePointer=valueCell,
+      indices=charLengthGepIndices.map(IntegerConstant(IntegerType(32), _)),
+      inbounds=true
+    )
+  }
+
+  def genStoreToCharLength(block : IrBlockBuilder)(toStore : IrValue, valueCell : IrValue, metadata : Map[String, Metadata] = Map())  {
+    val charLengthPtr = genPointerToCharLength(block)(valueCell)
+    val allMetadata = metadata ++ Map("tbaa" -> charLengthTbaaNode)
+    block.store(toStore, charLengthPtr, metadata=allMetadata)
+  }
+
+  def genLoadFromCharLength(block : IrBlockBuilder)(valueCell : IrValue, metadata : Map[String, Metadata] = Map()) : IrValue = {
+    val charLengthPtr = genPointerToCharLength(block)(valueCell)
+    val allMetadata = Map("tbaa" -> charLengthTbaaNode) ++ metadata
+    block.load("charLength")(charLengthPtr, metadata=allMetadata)
+  }
 }
 
 object StringCell extends ConcreteCellType with StringFields {
@@ -401,19 +401,19 @@ object StringCell extends ConcreteCellType with StringFields {
 
   val typeIdGepIndices = List(0, 0, 0)
   val gcStateGepIndices = List(0, 0, 1)
-  val charLengthGepIndices = List(0, 1)
-  val byteLengthGepIndices = List(0, 2)
+  val byteLengthGepIndices = List(0, 1)
+  val charLengthGepIndices = List(0, 2)
 
   val typeIdTbaaNode = NumberedMetadata(23L)
   val gcStateTbaaNode = NumberedMetadata(24L)
-  val charLengthTbaaNode = NumberedMetadata(25L)
-  val byteLengthTbaaNode = NumberedMetadata(26L)
+  val byteLengthTbaaNode = NumberedMetadata(25L)
+  val charLengthTbaaNode = NumberedMetadata(26L)
 
-  def createConstant(charLength : Long, byteLength : Long) : StructureConstant = {
+  def createConstant(byteLength : Long, charLength : Long) : StructureConstant = {
     StructureConstant(List(
       AnyCell.createConstant(typeId=typeId),
-      IntegerConstant(charLengthIrType, charLength),
-      IntegerConstant(byteLengthIrType, byteLength)
+      IntegerConstant(byteLengthIrType, byteLength),
+      IntegerConstant(charLengthIrType, charLength)
     ), userDefinedType=Some(irType))
   }
 }
@@ -457,23 +457,23 @@ object InlineStringCell extends CellTypeVariant with InlineStringFields {
 
   val typeIdGepIndices = List(0, 0, 0, 0)
   val gcStateGepIndices = List(0, 0, 0, 1)
-  val charLengthGepIndices = List(0, 0, 1)
-  val byteLengthGepIndices = List(0, 0, 2)
+  val byteLengthGepIndices = List(0, 0, 1)
+  val charLengthGepIndices = List(0, 0, 2)
   val inlineDataGepIndices = List(0, 1)
 
   val inlineDataTbaaNode = NumberedMetadata(27L)
   val typeIdTbaaNode = NumberedMetadata(23L)
   val gcStateTbaaNode = NumberedMetadata(24L)
-  val charLengthTbaaNode = NumberedMetadata(25L)
-  val byteLengthTbaaNode = NumberedMetadata(26L)
+  val byteLengthTbaaNode = NumberedMetadata(25L)
+  val charLengthTbaaNode = NumberedMetadata(26L)
 
-  def createConstant(inlineData : IrConstant, charLength : Long, byteLength : Long) : StructureConstant = {
+  def createConstant(inlineData : IrConstant, byteLength : Long, charLength : Long) : StructureConstant = {
     if (inlineData.irType != inlineDataIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field inlineData")
     }
 
     StructureConstant(List(
-      StringCell.createConstant(charLength=charLength, byteLength=byteLength),
+      StringCell.createConstant(byteLength=byteLength, charLength=charLength),
       inlineData
     ), userDefinedType=Some(irType))
   }
@@ -518,23 +518,23 @@ object HeapStringCell extends CellTypeVariant with HeapStringFields {
 
   val typeIdGepIndices = List(0, 0, 0, 0)
   val gcStateGepIndices = List(0, 0, 0, 1)
-  val charLengthGepIndices = List(0, 0, 1)
-  val byteLengthGepIndices = List(0, 0, 2)
+  val byteLengthGepIndices = List(0, 0, 1)
+  val charLengthGepIndices = List(0, 0, 2)
   val heapByteArrayGepIndices = List(0, 1)
 
   val heapByteArrayTbaaNode = NumberedMetadata(28L)
   val typeIdTbaaNode = NumberedMetadata(23L)
   val gcStateTbaaNode = NumberedMetadata(24L)
-  val charLengthTbaaNode = NumberedMetadata(25L)
-  val byteLengthTbaaNode = NumberedMetadata(26L)
+  val byteLengthTbaaNode = NumberedMetadata(25L)
+  val charLengthTbaaNode = NumberedMetadata(26L)
 
-  def createConstant(heapByteArray : IrConstant, charLength : Long, byteLength : Long) : StructureConstant = {
+  def createConstant(heapByteArray : IrConstant, byteLength : Long, charLength : Long) : StructureConstant = {
     if (heapByteArray.irType != heapByteArrayIrType) {
       throw new InternalCompilerErrorException("Unexpected type for field heapByteArray")
     }
 
     StructureConstant(List(
-      StringCell.createConstant(charLength=charLength, byteLength=byteLength),
+      StringCell.createConstant(byteLength=byteLength, charLength=charLength),
       heapByteArray
     ), userDefinedType=Some(irType))
   }

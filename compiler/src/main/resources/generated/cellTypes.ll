@@ -30,12 +30,12 @@
 !21 = metadata !{metadata !"Any::typeId->ListElement->EmptyList", metadata !14}
 !22 = metadata !{metadata !"Any::gcState->ListElement->EmptyList", metadata !15}
 
-; {supertype, unsigned charLength, unsigned byteLength}
+; {supertype, unsigned byteLength, unsigned charLength}
 %string = type {%any, i32, i32}
 !23 = metadata !{metadata !"Any::typeId->String", metadata !10}
 !24 = metadata !{metadata !"Any::gcState->String", metadata !11}
-!25 = metadata !{metadata !"String::charLength"}
-!26 = metadata !{metadata !"String::byteLength"}
+!25 = metadata !{metadata !"String::byteLength"}
+!26 = metadata !{metadata !"String::charLength"}
 
 ; {supertype, inlineData}
 %inlineString = type {%string, [12 x i8]}
