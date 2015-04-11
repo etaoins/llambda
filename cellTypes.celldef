@@ -123,8 +123,7 @@ concrete internal cell Procedure : RecordLike {
 	untypedptr entryPoint;
 };
 
-// Records are internal because each record class is exposed as its own 
-// first-class type in Scheme
+// Records are internal because each record class is exposed as its own first-class type in Scheme
 concrete internal cell Record : RecordLike {
 	untypedptr extraData;
 };
