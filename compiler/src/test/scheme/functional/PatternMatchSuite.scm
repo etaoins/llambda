@@ -41,12 +41,12 @@
 (define-test "cons matches" (expect-static-success
   (import (llambda match))
 
-  (define (matcher val)
-    (match val
-           ((cons 'left _) 'matches-left)
-           ((cons _ 'right) 'matches-right)
-           ((cons one (cons two (cons three '()))) (list three two one))
-           ((cons captured-car captured-cdr) (list captured-car captured-cdr))))
+  (define matcher
+    (match-lambda
+      ((cons 'left _) 'matches-left)
+      ((cons _ 'right) 'matches-right)
+      ((cons one (cons two (cons three '()))) (list three two one))
+      ((cons captured-car captured-cdr) (list captured-car captured-cdr))))
 
   (assert-equal '(1 (2)) (matcher '(1 2)))
   (assert-equal '(3 2 1) (matcher '(1 2 3)))
@@ -67,12 +67,12 @@
 (define-test "list matches" (expect-static-success
   (import (llambda match))
 
-  (define (matcher val)
-    (match val
-           ((list) 'null)
-           ((list _) 'one)
-           ((list _ _) 'two)
-           ((list first second third) second)))
+  (define matcher
+    (match-lambda
+      ((list) 'null)
+      ((list _) 'one)
+      ((list _ _) 'two)
+      ((list first second third) second)))
 
   (assert-equal 'null (matcher '()))
   (assert-equal 'one (matcher '(1)))
@@ -83,11 +83,11 @@
   (import (llambda match))
   (import (llambda typed))
 
-  (define (matcher val)
-    (match val
-           ((cons [int-var : <exact-integer>] _) int-var)
-           ((cons _ [symbol-var : <symbol>]) symbol-var)
-           (_ 'other)))
+  (define matcher
+    (match-lambda
+      ((cons [int-var : <exact-integer>] _) int-var)
+      ((cons _ [symbol-var : <symbol>]) symbol-var)
+      (_ 'other)))
 
   (assert-equal 5 (matcher '(5 . symbol)))
   (assert-equal 'symbol (matcher '(#f . symbol)))
@@ -106,11 +106,11 @@
                       (second three-fields-second)
                       (third three-fields-third))
 
-  (define (matcher val)
-    (match val
-           ((two-fields [first : <symbol>] second) 'starts-with-symbol)
-           ((two-fields first second) second)
-           ((three-fields first second third) second)))
+  (define matcher
+    (match-lambda
+      ((two-fields [first : <symbol>] second) 'starts-with-symbol)
+      ((two-fields first second) second)
+      ((three-fields first second third) second)))
 
   (assert-equal 2 (matcher (two-fields 1 2)))
   (assert-equal 'starts-with-symbol (matcher (two-fields 'one 2)))
