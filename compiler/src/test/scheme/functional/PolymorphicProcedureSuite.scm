@@ -310,3 +310,12 @@
     (proc val))
 
   (apply-single symbol->string "Hello")))
+
+(define-test "applying a polymorphic procedure checks its return type" (expect-error type-error?
+  (import (llambda typed))
+
+  (: halve-number (All ([A : <number>]) A A))
+  (define (halve-number n)
+    (/ n 2))
+
+  (halve-number 3)))

@@ -44,6 +44,13 @@ sealed abstract class ResultValues {
   }
 
   def withReturnType(newReturnType : vt.ReturnType.ReturnType[vt.SchemeType]) : ResultValues
+
+  /** Casts this value to to another ReturnType
+    *
+    * This works analogously to IntermediateValue.toSchemeType(). If the value can't satisfy the target type then a
+    * TypeException will be thrown. If the value may satisfy the target type then a runtime type check will be planned.
+    */
+  def castToReturnType(targetType : vt.ReturnType.ReturnType[vt.SchemeType])(implicit plan : PlanWriter) : ResultValues
 }
 
 case class SingleValue(value : iv.IntermediateValue) extends ResultValues {
@@ -70,6 +77,27 @@ case class SingleValue(value : iv.IntermediateValue) extends ResultValues {
       case _ =>
         throw new InternalCompilerErrorException("Attempted to retype result values with incompatible type")
     }
+
+  def castToReturnType(
+      targetType : vt.ReturnType.ReturnType[vt.SchemeType]
+  )(implicit plan : PlanWriter) : ResultValues = {
+    targetType.toValueListType  match {
+      case vt.SpecificPairType(
+        vt.DirectSchemeTypeRef(newSingleValueType),
+        vt.DirectSchemeTypeRef(vt.EmptyListType)
+      ) =>
+        SingleValue(value.castToSchemeType(newSingleValueType))
+
+      case otherListType =>
+        if (vt.SatisfiesType(otherListType, vt.SpecificProperListType(List(value.schemeType))) == Some(true)) {
+          // We already satisfy the type; don't convert ourselves to MultipleValues which doesn't optimise as well
+          this
+        }
+        else {
+          MultipleValues(ValuesToList(List(value), capturable=false).castToSchemeType(otherListType))
+        }
+    }
+  }
 }
 
 case class MultipleValues(multipleValueList : iv.IntermediateValue) extends ResultValues {
@@ -112,6 +140,11 @@ case class MultipleValues(multipleValueList : iv.IntermediateValue) extends Resu
 
   def withReturnType(newReturnType : vt.ReturnType.ReturnType[vt.SchemeType]) : ResultValues =
     MultipleValues(multipleValueList.withSchemeType(newReturnType.toValueListType))
+
+  def castToReturnType(
+      targetType : vt.ReturnType.ReturnType[vt.SchemeType]
+  )(implicit plan : PlanWriter) : ResultValues =
+    MultipleValues(multipleValueList.castToSchemeType(targetType.toValueListType))
 }
 
 /** Return value from a procedure that cannot return
@@ -120,6 +153,11 @@ case class MultipleValues(multipleValueList : iv.IntermediateValue) extends Resu
   */
 object UnreachableValue extends SingleValue(iv.UnitValue) {
   override def withReturnType(newReturnType : vt.ReturnType.ReturnType[vt.SchemeType]) : ResultValues =
+    this
+
+  override def castToReturnType(
+      targetType : vt.ReturnType.ReturnType[vt.SchemeType]
+  )(implicit plan : PlanWriter) : ResultValues =
     this
 }
 

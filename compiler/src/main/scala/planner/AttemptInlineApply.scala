@@ -39,6 +39,8 @@ private[planner] object AttemptInlineApply {
       return None
     }
 
+    val procType = lambdaExpr.polyType.typeForArgs(args.map(_._2.schemeType))
+
     val closedVars = FindClosedVars(parentState, lambdaExpr.body, None)
 
     val valueSources = closedVars map {
@@ -112,7 +114,12 @@ private[planner] object AttemptInlineApply {
     )
 
     val planResult = PlanExpr(inlineBodyState)(lambdaExpr.body)
-    Some(planResult.values)
+
+    // Make sure our return type is of the declared type
+    val stableReturnType = vt.StabiliseReturnType(procType.returnType, plan.config.schemeDialect)
+    val castValues = planResult.values.castToReturnType(stableReturnType)
+
+    Some(castValues)
   }
 
   /** Attempts to inline a self-executing lambda

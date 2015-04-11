@@ -98,3 +98,13 @@
      (lambda args
       (f (apply g args)))))
   ((compose - *) 12 75)))
+
+(define-test "applying a typed procedure checks its return type" (expect-error type-error?
+  (import (llambda typed))
+
+  (: exact-half (-> <exact-integer> <exact-integer>))
+  (define (exact-half n)
+    (/ n 2))
+
+  ; This would normally result in 1.5 but the return type is declared as <exact-integer>
+  (exact-half 3)))
