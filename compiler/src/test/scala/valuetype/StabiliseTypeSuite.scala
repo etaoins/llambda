@@ -9,23 +9,50 @@ import org.scalatest.FunSuite
 import Implicits._
 
 class StabiliseTypeSuite extends FunSuite {
-  test("pair type is preserved in llambda dialect") {
-    val stringPair = SpecificPairType(StringType, StringType)
+  val StringToStringProcedure = ProcedureType(
+    fixedArgTypes=List(StringType),
+    restArgMemberTypeOpt=None,
+    returnType=ReturnType.SingleValue(StringType)
+  )
+
+  private val stringPair = SpecificPairType(StringType, StringType)
+  private val stringList = UniformProperListType(StringType)
+
+  private val procPair = SpecificPairType(StringToStringProcedure, StringToStringProcedure)
+  private val procList = UniformProperListType(StringToStringProcedure)
+
+  test("non-applicable pair type is preserved in llambda dialect") {
     assert(StabiliseType(stringPair, dialect.Llambda) === stringPair)
   }
 
-  test("pair type is converted to any pair type in the R7RS dialect") {
-    val stringPair = SpecificPairType(StringType, StringType)
+  test("non-applicable pair type is converted to any pair type in the R7RS dialect") {
     assert(StabiliseType(stringPair, dialect.R7RS) === AnyPairType)
   }
-  
-  test("proper list type is preserved in llambda dialect") {
-    val stringList = UniformProperListType(StringType)
+
+  test("non-applicable proper list type is preserved in llambda dialect") {
     assert(StabiliseType(stringList, dialect.Llambda) === stringList)
   }
 
-  test("proper list type is converted to ListElementType in R7RS dialect") {
-    val stringList = UniformProperListType(StringType)
+  test("non-applicable proper list type is converted to ListElementType in R7RS dialect") {
     assert(StabiliseType(stringList, dialect.R7RS) === ListElementType)
+  }
+
+  test("applicable pair type elements are converted to top procedure type in llambda dialect") {
+    assert(StabiliseType(procPair, dialect.Llambda) === SpecificPairType(
+      TopProcedureType,
+      TopProcedureType
+    ))
+  }
+
+  test("applicable pair type is converted to any pair type in the R7RS dialect") {
+    assert(StabiliseType(procPair, dialect.R7RS) === AnyPairType)
+  }
+
+  test("applicable proper list type elements are converted to top procedure type in llambda dialect") {
+    assert(StabiliseType(procList, dialect.Llambda) === UniformProperListType(TopProcedureType))
+  }
+
+  test("applicable proper list type is converted to ListElementType in R7RS dialect") {
+    assert(StabiliseType(procList, dialect.R7RS) === ListElementType)
   }
 }
