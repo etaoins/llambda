@@ -129,11 +129,15 @@ object GenPlanStep {
       val cellIr = state.liveTemps(cellTemp)
 
       // Build range metadata from our possible types
-      val rangeMetadata = RangeMetadata.fromPossibleValues(
+      val rangeMetadataOpt = RangeMetadata.fromPossibleValues(
         integerType=ct.AnyCell.typeIdIrType,
         possibleTypes.map(_.typeId)
       )
-      val loadMetadata = Map("range" -> rangeMetadata)
+
+      val loadMetadata = rangeMetadataOpt match {
+        case Some(rangeMetadata) => Map("range" -> rangeMetadata)
+        case _ =>                   Map[String, Metadata]()
+      }
 
       // Load the type ID
       val block = state.currentBlock
@@ -261,15 +265,16 @@ object GenPlanStep {
     case ps.LoadSymbolByteLength(resultTemp, stringTemp, possibleLengthsOpt) =>
       val symbolIr = state.liveTemps(stringTemp)
 
-      val loadMetadata = possibleLengthsOpt match {
-        case Some(possibleLengths) =>
-          Map("range" -> RangeMetadata.fromPossibleValues(
-            integerType=ct.SymbolCell.byteLengthIrType,
-            possibleLengths.map(_.toLong)
-          ))
+      val rangeMetadataOpt = possibleLengthsOpt flatMap { possibleLengths =>
+        RangeMetadata.fromPossibleValues(
+          integerType=ct.SymbolCell.byteLengthIrType,
+          possibleLengths.map(_.toLong)
+        )
+      }
 
-        case _ =>
-          Map[String, Metadata]()
+      val loadMetadata = rangeMetadataOpt match {
+        case Some(rangeMetadata) => Map("range" -> rangeMetadata)
+        case _ =>                   Map[String, Metadata]()
       }
 
       val lengthIr = ct.SymbolCell.genLoadFromByteLength(state.currentBlock)(symbolIr, loadMetadata)

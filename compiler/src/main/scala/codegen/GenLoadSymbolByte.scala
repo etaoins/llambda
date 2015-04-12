@@ -29,15 +29,16 @@ object GenLoadSymbolByte {
       block.getelementptr("bytePtr")(IntegerType(8), sharedByteArrayIr, gepIndices)
     }
 
-    val loadMetadata = possibleValuesOpt match {
-      case Some(possibleValues) =>
-        Map("range" -> RangeMetadata.fromPossibleValues(
-          integerType=IntegerType(8),
-          possibleValues.map(_.toLong)
-        ))
+    val rangeMetadataOpt = possibleValuesOpt flatMap { case possibleValues =>
+      RangeMetadata.fromPossibleValues(
+        integerType=IntegerType(8),
+        possibleValues.map(_.toLong)
+      )
+    }
 
-      case _ =>
-        Map[String, Metadata]()
+    val loadMetadata = rangeMetadataOpt match {
+      case Some(rangeMetadata) => Map("range" -> rangeMetadata)
+      case _ =>                   Map[String, Metadata]()
     }
 
     block.load("byteValue")(bytePtr, metadata=loadMetadata)

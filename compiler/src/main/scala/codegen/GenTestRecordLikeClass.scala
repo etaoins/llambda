@@ -13,23 +13,21 @@ object GenTestRecordLikeClass {
     // Find the cell type of our record cell
     val cellType = generatedType.recordLikeType.cellType
 
-    val loadMetadata = possibleTypesOpt match {
-      case Some(possibleTypes) =>
-        // Account for the record type itself and any possible derived types
-        val possibleClassIds = possibleTypes flatMap { possibleType =>
-          (possibleType.classId to possibleType.lastChildClassId)
-        }
+    val rangeMetadataOpt = possibleTypesOpt flatMap { possibleTypes =>
+      // Account for the record type itself and any possible derived types
+      val possibleClassIds = possibleTypes flatMap { possibleType =>
+        (possibleType.classId to possibleType.lastChildClassId)
+      }
 
-        val rangeMetadata = RangeMetadata.fromPossibleValues(
-          integerType=cellType.recordClassIdIrType,
-          possibleClassIds
-        )
+      RangeMetadata.fromPossibleValues(
+        integerType=cellType.recordClassIdIrType,
+        possibleClassIds
+      )
+    }
 
-        Map("range" -> rangeMetadata)
-
-      case _ =>
-        // No types provided
-        Map[String, RangeMetadata]()
+    val loadMetadata = rangeMetadataOpt match {
+      case Some(rangeMetadata) => Map("range" -> rangeMetadata)
+      case _ =>                   Map[String, Metadata]()
     }
 
     // Load the actual class ID
