@@ -3,10 +3,22 @@
  ************************************************************/
 
 public:
+	std::uint32_t heapByteLength() const
+	{
+		return m_heapByteLength;
+	}
+
+	std::uint32_t heapCharLength() const
+	{
+		return m_heapCharLength;
+	}
+
 	SharedByteArray* heapByteArray() const
 	{
 		return m_heapByteArray;
 	}
 
 private:
+	std::uint32_t m_heapByteLength;
+	std::uint32_t m_heapCharLength;
 	SharedByteArray* m_heapByteArray;

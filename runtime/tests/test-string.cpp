@@ -637,13 +637,13 @@ void testFill(World &world)
 	
 	{
 		// This also converts an inline string to a heap string
-		StringCell *helloValue = StringCell::fromUtf8StdString(world, u8"Hello");
+		StringCell *helloValue = StringCell::fromUtf8StdString(world, u8"Hello!!!!");
 
 		ASSERT_EQUAL(helloValue->fill(UnicodeChar(0x2603), 1), true);
 
-		ASSERT_EQUAL(helloValue->byteLength(), 13);
-		ASSERT_EQUAL(helloValue->charLength(), 5);
-		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"H☃☃☃☃", 13), 0);
+		ASSERT_EQUAL(helloValue->byteLength(), 25);
+		ASSERT_EQUAL(helloValue->charLength(), 9);
+		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"H☃☃☃☃☃☃☃☃", 25), 0);
 	}
 	
 	{
@@ -698,13 +698,13 @@ void testFill(World &world)
 	
 	{
 		// This also converts a heap string to an inline string
-		StringCell *helloValue = StringCell::fromUtf8StdString(world, u8"☃☃☃☃☃");
-		
+		StringCell *helloValue = StringCell::fromUtf8StdString(world, u8"☃☃☃☃☃☃☃☃☃");
+
 		ASSERT_EQUAL(helloValue->fill(UnicodeChar('Y'), 1), true);
 
-		ASSERT_EQUAL(helloValue->byteLength(), 7);
-		ASSERT_EQUAL(helloValue->charLength(), 5);
-		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"☃YYYY", 7), 0);
+		ASSERT_EQUAL(helloValue->byteLength(), 11);
+		ASSERT_EQUAL(helloValue->charLength(), 9);
+		ASSERT_EQUAL(memcmp(helloValue->constUtf8Data(), u8"☃YYYYYYYY", 11), 0);
 	}
 
 	{

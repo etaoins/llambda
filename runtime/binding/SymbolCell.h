@@ -23,7 +23,7 @@ class SymbolCell : public AnyCell
 	friend class StringCell;
 	friend class ImplicitSharingTest;
 public:
-	using ByteLengthType = decltype(m_byteLength);
+	using ByteLengthType = std::uint32_t;
 
 	constexpr static ByteLengthType maximumByteLength()
 	{
@@ -67,16 +67,31 @@ public:
 	 */
 	SymbolCell* copy(alloc::Heap &heap);
 
+	/**
+	 * Returns the length of the symbol's UTF-8 data in bytes
+	 */
+	ByteLengthType byteLength() const;
+
+	/**
+	 * Returns the length of the symbol in Unicode code points
+	 */
+	std::uint32_t charLength() const;
+
 	void finalizeSymbol();
 
 protected:
-	SymbolCell(ByteLengthType byteLength) :
+	/**
+	 * Value that m_inlineByteLength takes when the symbol is stored on the heap
+	 */
+	static const std::uint8_t HeapInlineByteLength = 255;
+
+	SymbolCell(std::uint8_t inlineByteLength) :
 		AnyCell(CellTypeId::Symbol),
-		m_byteLength(byteLength)
+		m_inlineByteLength(inlineByteLength)
 	{
 	}
 
-	static size_t inlineDataSize();
+	static std::size_t inlineDataSize();
 	bool dataIsInline() const;
 };
 
@@ -86,7 +101,7 @@ class HeapSymbolCell : public SymbolCell
 	friend class StringCell;
 #include "generated/HeapSymbolCellMembers.h"
 private:
-	HeapSymbolCell(SharedByteArray *byteArray, ByteLengthType byteLength, std::uint16_t charLength);
+	HeapSymbolCell(SharedByteArray *byteArray, ByteLengthType byteLength, std::uint32_t charLength);
 };
 
 class InlineSymbolCell : public SymbolCell
@@ -95,8 +110,49 @@ class InlineSymbolCell : public SymbolCell
 	friend class StringCell;
 #include "generated/InlineSymbolCellMembers.h"
 private:
-	InlineSymbolCell(ByteLengthType byteLength);
+	InlineSymbolCell(std::uint8_t byteLength, std::uint8_t charLength);
 };
+
+inline bool SymbolCell::dataIsInline() const
+{
+	return inlineByteLength() != HeapInlineByteLength;
+}
+
+inline const std::uint8_t* SymbolCell::constUtf8Data() const
+{
+	if (dataIsInline())
+	{
+		return static_cast<const InlineSymbolCell*>(this)->inlineData();
+	}
+	else
+	{
+		return static_cast<const HeapSymbolCell*>(this)->heapByteArray()->data();
+	}
+}
+
+inline SymbolCell::ByteLengthType SymbolCell::byteLength() const
+{
+	if (dataIsInline())
+	{
+		return m_inlineByteLength;
+	}
+	else
+	{
+		return static_cast<const HeapSymbolCell*>(this)->heapByteLength();
+	}
+}
+
+inline std::uint32_t SymbolCell::charLength() const
+{
+	if (dataIsInline())
+	{
+		return static_cast<const InlineSymbolCell*>(this)->inlineCharLength();
+	}
+	else
+	{
+		return static_cast<const HeapSymbolCell*>(this)->heapCharLength();
+	}
+}
 
 }
 

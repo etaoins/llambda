@@ -61,7 +61,7 @@ object PlanSymbolEquality {
 
       // Create our static length
       val staticLengthTemp = ps.Temp(vt.UInt16)
-      plan.steps += ps.CreateNativeInteger(staticLengthTemp, staticByteLength, 16)
+      plan.steps += ps.CreateNativeInteger(staticLengthTemp, staticByteLength, 32)
 
       // Compare them
       val lengthMatchPred = ps.Temp(vt.Predicate)

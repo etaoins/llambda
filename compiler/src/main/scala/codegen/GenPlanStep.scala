@@ -256,30 +256,11 @@ object GenPlanStep {
 
       state.withTempValue(resultTemp -> cdrIr)
 
-    case ps.LoadStringCharLength(resultTemp, stringTemp) =>
-      val stringIr = state.liveTemps(stringTemp)
-      val lengthIr = ct.StringCell.genLoadFromCharLength(state.currentBlock)(stringIr)
+    case ps.LoadSymbolByteLength(resultTemp, symbolTemp, possibleLengthsOpt) =>
+      val symbolIr = state.liveTemps(symbolTemp)
+      val (newState, resultIr) = GenLoadSymbolByteLength(state)(symbolIr, possibleLengthsOpt)
 
-      state.withTempValue(resultTemp -> lengthIr)
-
-    case ps.LoadSymbolByteLength(resultTemp, stringTemp, possibleLengthsOpt) =>
-      val symbolIr = state.liveTemps(stringTemp)
-
-      val rangeMetadataOpt = possibleLengthsOpt flatMap { possibleLengths =>
-        RangeMetadata.fromPossibleValues(
-          integerType=ct.SymbolCell.byteLengthIrType,
-          possibleLengths.map(_.toLong)
-        )
-      }
-
-      val loadMetadata = rangeMetadataOpt match {
-        case Some(rangeMetadata) => Map("range" -> rangeMetadata)
-        case _ =>                   Map[String, Metadata]()
-      }
-
-      val lengthIr = ct.SymbolCell.genLoadFromByteLength(state.currentBlock)(symbolIr, loadMetadata)
-
-      state.withTempValue(resultTemp -> lengthIr)
+      newState.withTempValue(resultTemp -> resultIr)
 
     case ps.LoadSymbolByte(resultTemp, symbolTemp, offsetTemp, symbolByteLength, possibleValuesOpt) =>
       val block = state.currentBlock

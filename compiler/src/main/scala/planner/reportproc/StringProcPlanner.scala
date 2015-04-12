@@ -20,15 +20,8 @@ object StringProcPlanner extends ReportProcPlanner {
 
           Some(iv.ConstantExactIntegerValue(codePoints))
 
-        case dynamicValue =>
-          val stringCell = plan.withContextLocation(stringLocated) {
-            dynamicValue.toTempValue(vt.StringType)
-          }
-
-          val resultTemp = ps.Temp(vt.UInt32)
-          plan.steps += ps.LoadStringCharLength(resultTemp, stringCell)
-
-          Some(new iv.NativeExactIntegerValue(resultTemp, vt.UInt32))
+        case _ =>
+          None
       }
 
     case _ =>

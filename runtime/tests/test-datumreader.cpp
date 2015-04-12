@@ -127,9 +127,6 @@ void testSymbols(World &world)
 
 	ASSERT_SYMBOL_PARSE("-i");
 
-	// This is too large
-	ASSERT_INVALID_PARSE(std::string(65536, 'z'));
-
 	ASSERT_INVALID_PARSE(".");
 }
 
@@ -141,9 +138,6 @@ void testEnclosedSymbols(World &world)
 	ASSERT_PARSES(R"(|two\x20;words|)", SymbolCell::fromUtf8StdString(world, "two words"));
 	ASSERT_PARSES(R"(||)", SymbolCell::fromUtf8StdString(world, ""));
 	ASSERT_PARSES(R"(|\t\t|)", SymbolCell::fromUtf8StdString(world, "\t\t"));
-
-	// This is too large
-	ASSERT_INVALID_PARSE("|" + std::string(65536, 'z') + "|");
 
 	ASSERT_INVALID_PARSE("|foo");
 }

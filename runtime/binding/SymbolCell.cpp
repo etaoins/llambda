@@ -12,15 +12,17 @@
 namespace lliby
 {
 
-HeapSymbolCell::HeapSymbolCell(SharedByteArray *byteArray, ByteLengthType byteLength, std::uint16_t charLength) :
-	SymbolCell(byteLength),
-	m_charLength(charLength),
+HeapSymbolCell::HeapSymbolCell(SharedByteArray *byteArray, ByteLengthType byteLength, std::uint32_t charLength) :
+	SymbolCell(HeapInlineByteLength),
+	m_heapByteLength(byteLength),
+	m_heapCharLength(charLength),
 	m_heapByteArray(byteArray)
 {
 }
 
-InlineSymbolCell::InlineSymbolCell(ByteLengthType byteLength) :
-	SymbolCell(byteLength)
+InlineSymbolCell::InlineSymbolCell(std::uint8_t byteLength, std::uint8_t charLength) :
+	SymbolCell(byteLength),
+	m_inlineCharLength(charLength)
 {
 }
 
@@ -46,7 +48,7 @@ SymbolCell* SymbolCell::fromUtf8Data(World &world, const std::uint8_t *data, Byt
 
 	if (byteLength <= inlineDataSize())
 	{
-		auto inlineSymbol = new (cellPlacement) InlineSymbolCell(byteLength);
+		auto inlineSymbol = new (cellPlacement) InlineSymbolCell(byteLength, charLength);
 		memcpy(inlineSymbol->inlineData(), data, byteLength);
 
 		return inlineSymbol;
@@ -56,13 +58,7 @@ SymbolCell* SymbolCell::fromUtf8Data(World &world, const std::uint8_t *data, Byt
 		SharedByteArray *newByteArray = SharedByteArray::createInstance(byteLength);
 		memcpy(newByteArray->data(), data, byteLength);
 
-		auto heapSymbol = new (cellPlacement) HeapSymbolCell(
-				newByteArray,
-				byteLength,
-				charLength
-		);
-
-		return heapSymbol;
+		return new (cellPlacement) HeapSymbolCell(newByteArray, byteLength, charLength);
 	}
 }
 
@@ -71,58 +67,37 @@ SymbolCell* SymbolCell::fromString(World &world, StringCell *string)
 	alloc::StringRef stringRef(world, string);
 	void *cellPlacement = alloc::allocateCells(world);
 
-	// Symbols must have a higher inlining threshold than strings for the below logic to work
+	// Symbols must have the same inlining threshold as strings for the below logic to work
 	static_assert(
-			sizeof(InlineSymbolCell::m_inlineData) >= sizeof(InlineStringCell::m_inlineData),
-			"Symbols must have a higher inlining threshold than strings"
+			sizeof(InlineSymbolCell::m_inlineData) == sizeof(InlineStringCell::m_inlineData),
+			"Symbols and strings must have the same inlining threshold"
 	);
 
-	auto const byteLength = stringRef->byteLength();
+	if (stringRef->dataIsInline())
+	{
+		auto inlineString = static_cast<InlineStringCell*>(stringRef.data());
 
-	if (byteLength > maximumByteLength())
-	{
-		return nullptr;
-	}
-	else if (byteLength <= inlineDataSize())
-	{
-		// Create an inline symbol
-		auto newInlineSymbol = new (cellPlacement) InlineSymbolCell(
-				stringRef->byteLength()
+		auto inlineSymbol = new (cellPlacement) InlineSymbolCell(
+				inlineString->inlineByteLength(),
+				inlineString->inlineCharLength()
 		);
 
 		// Copy the inline data over
-		const void *srcData = stringRef->constUtf8Data();
-		memcpy(newInlineSymbol->inlineData(), srcData, byteLength);
+		const void *srcData = inlineString->inlineData();
+		memcpy(inlineSymbol->inlineData(), srcData, inlineString->inlineByteLength());
 
-		return newInlineSymbol;
+		return inlineSymbol;
 	}
 	else
 	{
 		auto heapString = static_cast<HeapStringCell*>(stringRef.data());
 
-		// Share the heap string's byte array
+		// Share the heap strings's byte array
 		return new (cellPlacement) HeapSymbolCell(
 				heapString->heapByteArray()->ref(),
-				byteLength,
-				heapString->charLength()
+				heapString->heapByteLength(),
+				heapString->heapCharLength()
 		);
-	}
-}
-
-bool SymbolCell::dataIsInline() const
-{
-	return byteLength() <= inlineDataSize();
-}
-	
-const std::uint8_t* SymbolCell::constUtf8Data() const
-{
-	if (dataIsInline())
-	{
-		return static_cast<const InlineSymbolCell*>(this)->inlineData();
-	}
-	else
-	{
-		return static_cast<const HeapSymbolCell*>(this)->heapByteArray()->data();
 	}
 }
 
@@ -138,7 +113,7 @@ bool SymbolCell::operator==(const SymbolCell &other) const
 		// We're either the same cell or implicitly sharing the same data
 		return true;
 	}
-	
+
 	return memcmp(constUtf8Data(), other.constUtf8Data(), byteLength()) == 0;
 }
 
@@ -148,8 +123,14 @@ SymbolCell* SymbolCell::copy(alloc::Heap &heap)
 
 	if (dataIsInline())
 	{
-		auto inlineCopy = new (cellPlacement) InlineSymbolCell(byteLength());
-		memcpy(inlineCopy->m_inlineData, constUtf8Data(), byteLength());
+		auto inlineThis = static_cast<InlineSymbolCell*>(this);
+
+		auto inlineCopy = new (cellPlacement) InlineSymbolCell(
+				inlineThis->inlineByteLength(),
+				inlineThis->inlineCharLength()
+		);
+
+		memcpy(inlineCopy->m_inlineData, constUtf8Data(), inlineThis->inlineByteLength());
 
 		return inlineCopy;
 	}
@@ -159,8 +140,8 @@ SymbolCell* SymbolCell::copy(alloc::Heap &heap)
 
 		return new (cellPlacement) HeapSymbolCell(
 				heapThis->heapByteArray()->ref(),
-				byteLength(),
-				heapThis->charLength()
+				heapThis->heapByteLength(),
+				heapThis->heapCharLength()
 		);
 	}
 }

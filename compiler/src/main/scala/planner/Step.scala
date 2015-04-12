@@ -591,23 +591,7 @@ case class LoadProcedureEntryPoint(
       .assignLocationFrom(this)
 }
 
-/** Loads the length of a string in characters as a UInt32
-  *
-  * This is nullipotent as a string's character length is immutable
-  */
-case class LoadStringCharLength(
-    result : TempValue,
-    boxed : TempValue
-) extends DiscardableStep with MergeableStep {
-  lazy val inputValues = Set(boxed)
-  lazy val outputValues = Set(result)
-
-  def renamed(f : (TempValue) => TempValue) =
-    LoadStringCharLength(f(result), f(boxed))
-      .assignLocationFrom(this)
-}
-
-/** Loads the length of a symbol in bytes as a UInt16
+/** Loads the length of a symbol in bytes as a UInt32
   *
   * This is nullipotent as a symbol's byte length is immutable
   */

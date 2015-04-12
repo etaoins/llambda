@@ -86,13 +86,6 @@ void testFromString(World &world)
 		ASSERT_EQUAL(testSymbol->byteLength(), 25);
 		ASSERT_EQUAL(memcmp(testSymbol->constUtf8Data(),  "Look it's a snowman: ☃!", 25), 0);
 	}
-
-	{
-		alloc::StringRef asciiOversizeString(world, StringCell::fromFill(world, 65536, UnicodeChar(' ')));
-
-		SymbolCell *testSymbol = SymbolCell::fromString(world, asciiOversizeString);
-		ASSERT_NULL(testSymbol);
-	}
 }
 
 void testAll(World &world)

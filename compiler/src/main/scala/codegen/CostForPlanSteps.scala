@@ -49,8 +49,8 @@ object CostForPlanSteps {
     
     case _ : ps.UnboxValue | _ : ps.LoadPairCar | _ : ps.LoadPairCdr | _ : ps.LoadProcedureEntryPoint |
          _ : ps.LoadVectorLength | _ : ps.LoadRecordLikeData | _ : ps.LoadRecordDataField | _ : ps.LoadVectorElement |
-         _ : ps.LoadVectorElementsData | _ : ps.LoadStringCharLength | _ : ps.LoadBytevectorLength |
-         _ : ps.LoadSymbolByteLength | _ : ps.LoadSymbolByte =>
+         _ : ps.LoadVectorElementsData | _ : ps.LoadBytevectorLength | _ : ps.LoadSymbolByteLength |
+         _ : ps.LoadSymbolByte =>
       // This is a load from memory
       loadCost
 

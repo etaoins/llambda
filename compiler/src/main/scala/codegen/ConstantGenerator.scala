@@ -233,16 +233,16 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
     val stringCellName = baseName + ".cell"
 
     val utf8Data = Codec.toUTF8(value)
-    val inlineUtf8Bytes = ConstantGenerator.maximumInlineStringBytes
+    val inlineUtf8Bytes = ct.StringCellConstants.maximumInlineStringBytes
 
     val stringCell = if (utf8Data.length <= inlineUtf8Bytes) {
       // We can do this inline
       val utf8Constant = genInlineUtf8Constant(module)(utf8Data, inlineUtf8Bytes)
 
       ct.InlineStringCell.createConstant(
+        inlineCharLength=charLengthForString(value),
         inlineData=utf8Constant,
-        charLength=charLengthForString(value),
-        byteLength=utf8Data.length
+        inlineByteLength=utf8Data.length
       )
     }
     else {
@@ -250,9 +250,10 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
       val utf8Constant = genHeapUtf8Constant(module)(baseName, utf8Data)
 
       ct.HeapStringCell.createConstant(
+        heapByteLength=utf8Data.length,
+        heapCharLength=charLengthForString(value),
         heapByteArray=utf8Constant,
-        charLength=charLengthForString(value),
-        byteLength=utf8Data.length
+        inlineByteLength=ct.SymbolCellConstants.heapSymbolInlineByteLength
       )
     }
 
@@ -262,25 +263,22 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
       PointerType(ct.StringCell.irType)
     )
   }
-  
-  private def genSymbolCell(module : IrModuleBuilder)(value : String, sourceLocated : SourceLocated) : IrConstant = {
+
+  private def genSymbolCell(module : IrModuleBuilder)(value : String) : IrConstant = {
     val baseName = module.nameSource.allocate("schemeSymbol")
     val symbolCellName = baseName + ".cell"
 
     val utf8Data = Codec.toUTF8(value)
-    val inlineUtf8Bytes = ConstantGenerator.maximumInlineSymbolBytes
-
-    if (utf8Data.length >= (1L << ct.SymbolCell.byteLengthIrType.bits)) {
-      throw new RangeException(sourceLocated, "Constant symbol exceeds maximum symbol length")
-    }
+    val inlineUtf8Bytes = ct.SymbolCellConstants.maximumInlineSymbolBytes
 
     val symbolCell = if (utf8Data.length <= inlineUtf8Bytes) {
       // We can do this inline
       val utf8Constant = genInlineUtf8Constant(module)(utf8Data, inlineUtf8Bytes)
 
       ct.InlineSymbolCell.createConstant(
+        inlineCharLength=charLengthForString(value),
         inlineData=utf8Constant,
-        byteLength=utf8Data.length
+        inlineByteLength=utf8Data.length
       )
     }
     else {
@@ -288,9 +286,10 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
       val utf8Constant = genHeapUtf8Constant(module)(baseName, utf8Data)
 
       ct.HeapSymbolCell.createConstant(
+        heapByteLength=utf8Data.length,
+        heapCharLength=charLengthForString(value),
         heapByteArray=utf8Constant,
-        byteLength=utf8Data.length,
-        charLength=charLengthForString(value)
+        inlineByteLength=ct.SymbolCellConstants.heapSymbolInlineByteLength
       )
     }
 
@@ -312,7 +311,7 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
 
       case ps.CreateSymbolCell(_, value) =>
         symbolCache.getOrElseUpdate(value, {
-          genSymbolCell(module)(value, createStep)
+          genSymbolCell(module)(value)
         })
 
       case ps.CreateExactIntegerCell(_, value) =>
@@ -448,22 +447,3 @@ class ConstantGenerator(generatedTypes : Map[vt.RecordLikeType, GeneratedType]) 
     }
   }
 }
-
-object ConstantGenerator {
-  private def arrayElementsForIrType(irType : IrType) : Int= irType match {
-    case ArrayType(elements, _) =>
-      elements
-
-    case _ =>
-      throw new InternalCompilerErrorException("Expected cell member to be array")
-  }
-
-  /** Maximum number of bytes that an can be stored in an inline symbol */
-  lazy val maximumInlineSymbolBytes =
-    arrayElementsForIrType(ct.InlineSymbolCell.inlineDataIrType)
-
-  /** Maximum number of bytes that an can be stored in an inline string */
-  lazy val maximumInlineStringBytes =
-    arrayElementsForIrType(ct.InlineStringCell.inlineDataIrType)
-}
-

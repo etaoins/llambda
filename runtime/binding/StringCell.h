@@ -30,8 +30,8 @@ class StringCell : public AnyCell
 	friend class StringCellBuilder;
 #include "generated/StringCellMembers.h"
 public:
-	using CharLengthType = decltype(m_charLength);
-	using ByteLengthType = decltype(m_byteLength);
+	using CharLengthType = std::uint32_t;
+	using ByteLengthType = std::uint32_t;
 	using SliceIndexType = std::int64_t;
 
 	constexpr static CharLengthType maximumCharLength()
@@ -43,6 +43,29 @@ public:
 	{
 		return std::numeric_limits<ByteLengthType>::max();
 	}
+
+	struct CharRange
+	{
+		const std::uint8_t *startPointer;
+		const std::uint8_t *endPointer;
+		CharLengthType charCount;
+
+		bool isNull() const
+		{
+			return startPointer == nullptr;
+		};
+
+		unsigned int byteCount() const
+		{
+			return endPointer - startPointer;
+		}
+
+		void relocate(ptrdiff_t byteDelta)
+		{
+			startPointer += byteDelta;
+			endPointer += byteDelta;
+		}
+	};
 
 	static StringCell* fromUtf8StdString(World &world, const std::string &str);
 
@@ -79,7 +102,7 @@ public:
 	std::vector<UnicodeChar> unicodeChars(SliceIndexType start = 0, SliceIndexType end = -1) const;
 
 	bool operator==(const StringCell &other) const;
-	
+
 	bool operator!=(const StringCell &other) const
 	{
 		return !(*this == other);
@@ -99,6 +122,21 @@ public:
 
 	BytevectorCell *toUtf8Bytevector(World &world, SliceIndexType start = 0, SliceIndexType end = -1);
 
+	/**
+	 * Returns information about a range of characters
+	 */
+	CharRange charRange(SliceIndexType start, SliceIndexType end = -1);
+
+	/**
+	 * Returns the length of the symbol's UTF-8 data in bytes
+	 */
+	ByteLengthType byteLength() const;
+
+	/**
+	 * Returns the length of the symbol in Unicode code points
+	 */
+	CharLengthType charLength() const;
+
 	const std::uint8_t* constUtf8Data() const;
 
 	std::string toUtf8StdString() const
@@ -108,39 +146,15 @@ public:
 
 	void finalizeString();
 
-	struct CharRange
-	{
-		const std::uint8_t *startPointer;
-		const std::uint8_t *endPointer;
-		CharLengthType charCount;
-
-		bool isNull() const
-		{
-			return startPointer == nullptr;
-		};
-
-		unsigned int byteCount() const
-		{
-			return endPointer - startPointer;
-		}
-
-		void relocate(ptrdiff_t byteDelta)
-		{
-			startPointer += byteDelta;
-			endPointer += byteDelta;
-		}
-	};
-
-	/**
-	 * Returns information about a range of characters
-	 */
-	CharRange charRange(SliceIndexType start, SliceIndexType end = -1);
-
 protected:
-	StringCell(ByteLengthType byteLength, CharLengthType charLength) :
+	/**
+	 * Value that m_inlineByteLength takes when the string is stored on the heap
+	 */
+	static const std::uint8_t HeapInlineByteLength = 255;
+
+	StringCell(std::uint8_t inlineByteLength) :
 		AnyCell(CellTypeId::String),
-		m_byteLength(byteLength),
-		m_charLength(charLength)
+		m_inlineByteLength(inlineByteLength)
 	{
 	}
 
@@ -152,15 +166,11 @@ protected:
 	const std::uint8_t *charPointer(CharLengthType charOffset, const std::uint8_t *startFrom, ByteLengthType startOffset);
 	const std::uint8_t *charPointer(CharLengthType charOffset);
 
+	void setLengths(ByteLengthType newByteLength, CharLengthType newCharLength);
 	bool replaceBytes(const CharRange &range, const std::uint8_t *pattern, unsigned int patternBytes, unsigned int count);
-	
+
 	static size_t inlineDataSize();
 	bool dataIsInline() const;
-	
-	void setByteLength(ByteLengthType newByteLength)
-	{
-		m_byteLength = newByteLength;
-	}
 
 	std::size_t byteCapacity() const;
 };
@@ -171,12 +181,14 @@ class HeapStringCell : public StringCell
 	friend class SymbolCell;
 #include "generated/HeapStringCellMembers.h"
 private:
-	HeapStringCell(SharedByteArray *byteArray, ByteLengthType byteLength, CharLengthType charLength) :
-		StringCell(byteLength, charLength),
+	HeapStringCell(SharedByteArray *byteArray, ByteLengthType heapByteLength, CharLengthType heapCharLength) :
+		StringCell(HeapInlineByteLength),
+		m_heapByteLength(heapByteLength),
+		m_heapCharLength(heapCharLength),
 		m_heapByteArray(byteArray)
 	{
 	}
-	
+
 	void setHeapByteArray(SharedByteArray* newHeapByteArray)
 	{
 		m_heapByteArray = newHeapByteArray;
@@ -189,8 +201,9 @@ class InlineStringCell : public StringCell
 	friend class SymbolCell;
 #include "generated/InlineStringCellMembers.h"
 private:
-	InlineStringCell(ByteLengthType byteLength, CharLengthType charLength) :
-		StringCell(byteLength, charLength)
+	InlineStringCell(std::uint8_t inlineByteLength, std::uint8_t inlineCharLength) :
+		StringCell(inlineByteLength),
+		m_inlineCharLength(inlineCharLength)
 	{
 	}
 };
@@ -200,6 +213,47 @@ inline std::ostream & operator<<(std::ostream &os, const StringCell* stringCell)
 	// We are not NULL terminated by default
 	os.write(reinterpret_cast<const char*>(stringCell->constUtf8Data()), stringCell->byteLength());
 	return os;
+}
+
+inline bool StringCell::dataIsInline() const
+{
+	return inlineByteLength() != HeapInlineByteLength;
+}
+
+inline const std::uint8_t* StringCell::constUtf8Data() const
+{
+	if (dataIsInline())
+	{
+		return static_cast<const InlineStringCell*>(this)->inlineData();
+	}
+	else
+	{
+		return static_cast<const HeapStringCell*>(this)->heapByteArray()->data();
+	}
+}
+
+inline StringCell::ByteLengthType StringCell::byteLength() const
+{
+	if (dataIsInline())
+	{
+		return m_inlineByteLength;
+	}
+	else
+	{
+		return static_cast<const HeapStringCell*>(this)->heapByteLength();
+	}
+}
+
+inline std::uint32_t StringCell::charLength() const
+{
+	if (dataIsInline())
+	{
+		return static_cast<const InlineStringCell*>(this)->inlineCharLength();
+	}
+	else
+	{
+		return static_cast<const HeapStringCell*>(this)->heapCharLength();
+	}
 }
 
 }

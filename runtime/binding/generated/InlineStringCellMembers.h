@@ -3,6 +3,11 @@
  ************************************************************/
 
 public:
+	std::uint8_t inlineCharLength() const
+	{
+		return m_inlineCharLength;
+	}
+
 	const std::uint8_t* inlineData() const
 	{
 		return m_inlineData;
@@ -14,4 +19,5 @@ public:
 	}
 
 private:
-	std::uint8_t m_inlineData[12];
+	std::uint8_t m_inlineCharLength;
+	std::uint8_t m_inlineData[20];
