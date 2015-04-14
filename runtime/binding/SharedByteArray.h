@@ -90,7 +90,23 @@ public:
 	 *
 	 * @return  Pointer to the current instance
 	 */
-	SharedByteArray* ref();
+	SharedByteArray* ref()
+	{
+		if (isSharedConstant())
+		{
+			// Don't increment; we're readonly
+			return this;
+		}
+
+		// We don't need any memory ordering here
+
+		// In the case of refing to pass to another thread is sufficient to make the refcount increment itself visible.
+		// In the case of one thread incrementing and then decrementing later the decrement itself will enforce memory
+		// ordering. This ensures other threads won't falsely delete the byte array.
+		m_refCount.fetch_add(1u, std::memory_order_relaxed);
+
+		return this;
+	}
 
 	/**
 	 * Decreases the reference count of the instance and deletes it if the caller was holding the last reference
