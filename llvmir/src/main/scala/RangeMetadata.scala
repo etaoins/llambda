@@ -8,7 +8,7 @@ import scala.annotation.tailrec
   * documentation for more information.
   */
 case class RangeMetadata(integerType : IntegerType, ranges : (Long, Long)*) extends MetadataNode {
-  val memberOpts = ranges flatMap { case (start, end) =>
+  val operandOpts = ranges flatMap { case (start, end) =>
     List(
       Some(IntegerConstant(integerType, start)),
       Some(IntegerConstant(integerType, end))

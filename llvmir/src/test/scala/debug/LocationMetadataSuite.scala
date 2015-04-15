@@ -16,9 +16,9 @@ class LocationMetadataSuite extends FunSuite {
       originalScopeOpt=None
     )
 
-    assert(locationNode.toIrWithType === "metadata !{i32 12, i32 4, metadata !1, null}")
+    assert(locationNode.toIr === "!{i32 12, i32 4, !1, null}")
   }
-  
+
   test("trivial inlined location") {
     val fakeScope = NumberedMetadata(1)
     val fakeOriginalScope = NumberedMetadata(2)
@@ -30,6 +30,6 @@ class LocationMetadataSuite extends FunSuite {
       originalScopeOpt=Some(fakeOriginalScope)
     )
 
-    assert(locationNode.toIrWithType === "metadata !{i32 12, i32 4, metadata !1, metadata !2}")
+    assert(locationNode.toIr === "!{i32 12, i32 4, !1, !2}")
   }
 }

@@ -12,6 +12,6 @@ class NumberedMetadataDefSuite extends FunSuite {
       ))
     )
 
-    assert(metadataDef.toIr === "!12 = metadata !{i32 5, null}")
+    assert(metadataDef.toIr === "!12 = !{i32 5, null}")
   }
 }

@@ -8,7 +8,9 @@ sealed abstract class IrValue extends Irable {
   def toIrWithType = irType.toIr + " " + toIr
 }
 
-sealed abstract class IrConstant extends IrValue
+sealed abstract class IrConstant extends IrValue with MetadataOperand {
+  def toMetadataIr = toIrWithType
+}
 
 case class LocalVariable(name : String, irType : FirstClassType) extends IrValue {
   def toIr = "%" + EscapeIdentifier(name)
@@ -155,54 +157,4 @@ case class IntToPtrConstant(value : IrConstant, toType : PointerType) extends Ir
   def toIr : String = {
     s"inttoptr (${value.toIrWithType} to ${toType.toIr})"
   }
-}
-
-/** Represents a metadata value
-  *
-  * These are used to annotate LLVM IR with arbitrary metadata. They do not represent a concrete value at runtim 
-  */
-sealed abstract class Metadata extends IrConstant {
-  val irType = MetadataType
-}
-
-case class MetadataString(stringBytes : Seq[Byte]) extends Metadata {
-  def toIr : String = {
-    "!" + BytesToIrString(stringBytes)
-  }
-}
-
-object MetadataString {
-  def fromUtf8String(str : String) : MetadataString = {
-    MetadataString(Codec.toUTF8(str))
-  }
-}
-
-abstract class MetadataNode extends Metadata {
-  val memberOpts : Seq[Option[IrConstant]]
-
-  private def memberOptToIrWithType(memberOpt : Option[IrConstant]) =
-    memberOpt.map(_.toIrWithType).getOrElse("null")
-
-  def toIr : String = {
-    "!{" + memberOpts.map(memberOptToIrWithType).mkString(", ") + "}"
-  }
-  
-  protected def listToNotNullMetadata(metadataList : List[Metadata]) : Metadata = {
-    if (metadataList.isEmpty) {
-      // Not sure why this is a thing
-      UserDefinedMetadataNode(List(
-        Some(IntegerConstant(IntegerType(32), 0))
-      ))
-    }
-    else {
-      UserDefinedMetadataNode(metadataList.map(Some(_)))
-    }
-  }
-
-}
-
-case class UserDefinedMetadataNode(memberOpts : Seq[Option[IrConstant]]) extends MetadataNode
-
-case class NumberedMetadata(index : Long) extends Metadata {
-  def toIr = "!" + index.toString
 }

@@ -7,7 +7,7 @@ sealed abstract class ModuleFlagMetadata extends MetadataNode {
   val flagName : String
   val value : IrConstant
 
-  lazy val memberOpts = List(
+  lazy val operandOpts = List(
     Some(IntegerConstant(IntegerType(32), flagId)),
     Some(MetadataString.fromUtf8String(flagName)),
     Some(value)

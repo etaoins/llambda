@@ -15,11 +15,11 @@ class CompileUnitMetadataSuite extends FunSuite {
       producer="llvmir unit test"
     )
 
-    assert(compileUnitNode.toIrWithType === 
-      """metadata !{i32 786449, metadata !1, i32 12, metadata !"llvmir unit test", i1 0, metadata !"", i32 0, metadata !{i32 0}, metadata !{i32 0}, metadata !{i32 0}, metadata !{i32 0}, metadata !{i32 0}, metadata !""}"""
+    assert(compileUnitNode.toIr ===
+      """!{i32 786449, !1, i32 12, !"llvmir unit test", i1 0, !"", i32 0, !{i32 0}, !{i32 0}, !{i32 0}, !{i32 0}, !{i32 0}, !""}"""
     )
   }
-  
+
   test("christmas tree compile unit") {
     val sourcePathMetadata = NumberedMetadata(1)
     
@@ -50,14 +50,14 @@ class CompileUnitMetadataSuite extends FunSuite {
       splitDebugFilename="lol.wut"
     )
 
-    assert(compileUnitNode.toIrWithType === 
-      """metadata !{i32 786449, metadata !1, i32 12, metadata !"llvmir unit test", i1 1, metadata !"--some-flag", i32 556, """ +
-      """metadata !{metadata !2}, """ +
-      """metadata !{metadata !3, metadata !4}, """ +
-      """metadata !{metadata !5}, """ +
-      """metadata !{metadata !6, metadata !7}, """ +
-      """metadata !{metadata !8}, """ +
-      """metadata !"lol.wut"}"""
+    assert(compileUnitNode.toIr ===
+      """!{i32 786449, !1, i32 12, !"llvmir unit test", i1 1, !"--some-flag", i32 556, """ +
+      """!{!2}, """ +
+      """!{!3, !4}, """ +
+      """!{!5}, """ +
+      """!{!6, !7}, """ +
+      """!{!8}, """ +
+      """!"lol.wut"}"""
     )
   }
 }

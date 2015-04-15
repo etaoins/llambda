@@ -16,7 +16,7 @@ case class CompileUnitMetadata(
     importedEntities : List[Metadata] = Nil,
     splitDebugFilename : String = ""
 ) extends MetadataNode {
-  val memberOpts = List(
+  val operandOpts = List(
     IntegerConstant(IntegerType(32), 786449), // DW_TAG_compile_unit
     sourcePath,
     IntegerConstant(IntegerType(32), dwarfLanguage),

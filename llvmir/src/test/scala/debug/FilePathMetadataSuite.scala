@@ -8,12 +8,12 @@ class FilePathMetadataSuite extends FunSuite {
   test("trivial file path") {
     val filePathNode = FilePathMetadata("file.scm", "/home/example")
 
-    assert(filePathNode.toIrWithType === """metadata !{metadata !"file.scm", metadata !"/home/example"}""")
+    assert(filePathNode.toIr === """!{!"file.scm", !"/home/example"}""")
   }
-  
+
   test("trivial file path from Java File") {
     val filePathNode = FilePathMetadata.fromFile(new File("/home/example/file.scm"))
 
-    assert(filePathNode.toIrWithType === """metadata !{metadata !"file.scm", metadata !"/home/example"}""")
+    assert(filePathNode.toIr === """!{!"file.scm", !"/home/example"}""")
   }
 }

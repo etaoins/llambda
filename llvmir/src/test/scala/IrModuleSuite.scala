@@ -82,8 +82,8 @@ class IrModuleSuite extends FunSuite {
     assert(module.toIr ===
       "%myInt64 = type i64\n" +
       "%\"needs-escape-64\" = type i64\n" +
-      "!0 = metadata !{metadata !\"typegen unit tests\"}\n" +
-      "!1 = metadata !{metadata !\"root type\"}\n" +
+      "!0 = !{!\"typegen unit tests\"}\n" +
+      "!1 = !{!\"root type\"}\n" +
       "!llvm.ident = !{!0}\n" +
       "@helloWorldString = unnamed_addr constant [14 x i8] c\"Hello, world!\\00\"\n" + 
       "declare i32 @\"Put String\"(i8* nocapture) nounwind\n" +

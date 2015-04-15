@@ -6,18 +6,18 @@
 
 %cell = type {[24 x i8]}
 
-!0 = metadata !{ metadata !"World::shadowStackHead" }
-!1 = metadata !{ metadata !"World::allocNext" }
-!2 = metadata !{ metadata !"World::allocEnd" }
+!0 = !{ !"World::shadowStackHead" }
+!1 = !{ !"World::allocNext" }
+!2 = !{ !"World::allocEnd" }
 
 ; {shadowStackHead, allocNext, allocEnd}
 %world = type {%shadowStackEntry*, %cell*, %cell*}
 
-!3 = metadata !{ metadata !"ShadowStackEntry::next" }
-!4 = metadata !{ metadata !"ShadowStackEntry::cellCount" }
-!5 = metadata !{ metadata !"ShadowStackEntry::roots" }
+!3 = !{ !"ShadowStackEntry::next" }
+!4 = !{ !"ShadowStackEntry::cellCount" }
+!5 = !{ !"ShadowStackEntry::roots" }
 
-!6 = metadata !{ metadata !"VectorCell::m_elements" }
+!6 = !{ !"VectorCell::m_elements" }
 
 ; {next, cellCount, roots}
 %shadowStackEntry = type {%shadowStackEntry*, i64, [0 x %any*]}

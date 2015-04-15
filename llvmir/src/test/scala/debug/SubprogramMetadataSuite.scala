@@ -10,7 +10,7 @@ class SubprogramMetadataSuite extends FunSuite {
     val fakeSourcePath = NumberedMetadata(1)
     val fakeContext = NumberedMetadata(5)
     val fakeTypeDescriptor = NumberedMetadata(6)
-    
+
     val llvmFunction = GlobalVariable("main", PointerType(FunctionType(
       returnType=IntegerType(32),
       parameterTypes=List(IntegerType(32), PointerType(PointerType(IntegerType(8))))
@@ -37,9 +37,9 @@ class SubprogramMetadataSuite extends FunSuite {
       functionVariables=Nil,
       scopeStartLine=9
     )
-    
-    assert(subprogramNode.toIrWithType ===
-      """metadata !{i32 786478, metadata !1, metadata !5, metadata !"main", metadata !"mainDisplay", metadata !"", i32 8, metadata !6, i1 0, i1 1, i32 0, i32 0, null, i32 256, i1 1, i32 (i32, i8**)* @main, null, null, metadata !{i32 0}, i32 9}"""
+
+    assert(subprogramNode.toIr ===
+      """!{i32 786478, !1, !5, !"main", !"mainDisplay", !"", i32 8, !6, i1 0, i1 1, i32 0, i32 0, null, i32 256, i1 1, i32 (i32, i8**)* @main, null, null, !{i32 0}, i32 9}"""
     )
   }
 
@@ -70,8 +70,8 @@ class SubprogramMetadataSuite extends FunSuite {
       scopeStartLine=4
     )
 
-    assert(subprogramNode.toIrWithType ===
-      """metadata !{i32 786478, metadata !1, metadata !5, metadata !"inlineMe", metadata !"inlineMe", metadata !"", i32 3, metadata !6, i1 1, i1 0, i32 0, i32 0, null, i32 0, i1 0, null, null, null, metadata !{i32 0}, i32 4}"""
+    assert(subprogramNode.toIr ===
+      """!{i32 786478, !1, !5, !"inlineMe", !"inlineMe", !"", i32 3, !6, i1 1, i1 0, i32 0, i32 0, null, i32 0, i1 0, null, null, null, !{i32 0}, i32 4}"""
     )
   }
 }

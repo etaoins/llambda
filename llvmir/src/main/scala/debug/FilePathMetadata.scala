@@ -5,7 +5,7 @@ import java.io.File
 import io.llambda.llvmir._
 
 case class FilePathMetadata(filename : String, path : String) extends MetadataNode {
-  val memberOpts = List(
+  val operandOpts = List(
     Some(MetadataString.fromUtf8String(filename)),
     Some(MetadataString.fromUtf8String(path))
   )

@@ -11,18 +11,18 @@ class ModuleFlagMetadataSuite extends FunSuite {
       debugInfoVersion=6
     )
 
-    assert(debugInfoMetadata.toIrWithType === 
-      """metadata !{i32 1, metadata !"Debug Info Version", i32 6}"""
+    assert(debugInfoMetadata.toIr ===
+      """!{i32 1, !"Debug Info Version", i32 6}"""
     )
   }
-  
+
   test("dwarf version metadata") {
     val dwarfMetadata = DwarfVersionMetadata(
       dwarfVersion=3
     )
 
-    assert(dwarfMetadata.toIrWithType === 
-      """metadata !{i32 2, metadata !"Dwarf Version", i32 3}"""
+    assert(dwarfMetadata.toIr ===
+      """!{i32 2, !"Dwarf Version", i32 3}"""
     )
   }
 }

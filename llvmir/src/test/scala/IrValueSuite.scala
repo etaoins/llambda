@@ -191,7 +191,6 @@ class IrValueSuite extends FunSuite {
   test("metadata string") {
     val testMetadata = MetadataString.fromUtf8String("Hello\nworld")
     assert(testMetadata.toIr === "!\"Hello\\0Aworld\"")
-    assert(testMetadata.toIrWithType === "metadata !\"Hello\\0Aworld\"")
   }
 
   test("user defined metadata node") {
@@ -202,12 +201,12 @@ class IrValueSuite extends FunSuite {
       Some(UserDefinedMetadataNode(Nil))
     ))
 
-    assert(testMetadata.toIrWithType === """metadata !{metadata !"teststr", i32 5, null, metadata !{}}""")
+    assert(testMetadata.toIr === """!{!"teststr", i32 5, null, !{}}""")
   }
 
   test("numbered metadata") {
     val testMetadata = NumberedMetadata(55)
 
-    assert(testMetadata.toIrWithType === "metadata !55")
+    assert(testMetadata.toIr === "!55")
   }
 }

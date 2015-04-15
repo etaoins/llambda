@@ -24,7 +24,7 @@ case class SubprogramMetadata(
     scopeStartLine : Int
 
 ) extends MetadataNode {
-  val memberOpts = List(
+  val operandOpts = List(
     Some(IntegerConstant(IntegerType(32), 786478)), // DW_TAG_subprogram
     Some(sourcePath),
     Some(contextDescriptor),

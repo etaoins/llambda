@@ -8,7 +8,7 @@ case class LocationMetadata(
   scope : Metadata,
   originalScopeOpt : Option[Metadata]
 ) extends MetadataNode {
-  val memberOpts = List(
+  val operandOpts = List(
     Some(IntegerConstant(IntegerType(32), line)),
     Some(IntegerConstant(IntegerType(32), column)),
     Some(scope),
