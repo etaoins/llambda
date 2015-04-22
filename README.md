@@ -19,7 +19,7 @@ The language is currently very experimental with all non-R7RS language features 
 Requirements
 ============
 
-* Modern Unix-like operating system such as Mac OS X, Linux or FreeBSD. Llambda is explicitly tested on Mac OS X 10.10, Ubuntu 14.10 and FreeBSD 10.1 after every major change.
+* Modern Unix-like operating system such as Mac OS X, Linux or FreeBSD. Llambda is explicitly tested on Mac OS X 10.10, Ubuntu 15.04 and FreeBSD 10.1 after every major change.
 * [CMake](http://www.cmake.org) 2.8
 * [LLVM](http://llvm.org) 3.5
 * [Clang](http://clang.llvm.org) 3.5
@@ -37,7 +37,7 @@ $ cd build
 $ cmake ../runtime && make
 ```
 
-A [Dockerfile](https://docs.docker.com/reference/builder/) is also provided that will build a standalone Llambda environment based on Ubuntu 14.10
+A [Dockerfile](https://docs.docker.com/reference/builder/) is also provided that will build a standalone Llambda environment based on Ubuntu 15.04
 
 Usage
 =====
