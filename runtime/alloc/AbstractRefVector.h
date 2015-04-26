@@ -91,14 +91,14 @@ public:
 	}
 
 	AbstractRefVector(const AbstractRefVector<T> &other) :
-		AbstractRoot<T>(&(AbstractRefVector<T>::m_node), nullptr, 0),
+		AbstractRoot<T>(&other.m_node, nullptr, 0),
 		m_vector(other.m_vector)
 	{
 		updateRootListNode();
 	}
 
 	AbstractRefVector(AbstractRefVector<T> &&other) :
-		AbstractRoot<T>(&(AbstractRefVector<T>::m_node), nullptr, 0),
+		AbstractRoot<T>(&other.m_node, nullptr, 0),
 		m_vector(std::move(other.m_vector))
 	{
 		updateRootListNode();
