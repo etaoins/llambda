@@ -85,8 +85,8 @@
 
   (define matcher
     (match-lambda
-      ((cons [int-var : <exact-integer>] _) int-var)
-      ((cons _ [symbol-var : <symbol>]) symbol-var)
+      ((cons [int-var : <exact-integer>] _) (ann int-var <exact-integer>))
+      ((cons _ [symbol-var : <symbol>]) (ann symbol-var <symbol>))
       (_ 'other)))
 
   (assert-equal 5 (matcher '(5 . symbol)))
