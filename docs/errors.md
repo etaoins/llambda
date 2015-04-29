@@ -44,3 +44,4 @@ Llambda extends this error system with a number of additional error categories. 
 | ``type-error``                       | Runtime type check failed
 | ``undefined-variable-error``         | Recursive variable referenced before its definition
 | ``utf8-error``                       | Invalid UTF-8 encoding was encountered
+| ``match-error``                      | Pattern matching failed to match any clauses

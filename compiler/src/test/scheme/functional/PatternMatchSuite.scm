@@ -127,3 +127,12 @@
            (3 'three)))
 
   (ann match-result (U 'one 'two 'three))))
+
+(define-test "(match-lambda)" (expect-success
+  (import (llambda match))
+
+  (define sum-list (match-lambda
+    ['() 0]
+    [(cons head tail) (+ head (sum-list tail))]))
+
+  (assert-equal 15 (sum-list '(1 2 3 4 5)))))

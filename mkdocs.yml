@@ -7,4 +7,5 @@ pages:
     - ['dialects.md', 'Dialects']
     - ['numbers.md', 'Numbers']
     - ['types.md', 'Type System']
+    - ['pattern-matching.md', 'Pattern Matching']
     - ['errors.md', 'Errors']

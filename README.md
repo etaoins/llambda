@@ -10,6 +10,7 @@ Llambda implements many of the features expected from a modern programming langu
 * Support for functional programming including higher-order functions such as ``map``, ``reduce`` and ``fold``
 * Safe programming environment with garbage collected memory, enforced bounds checking and checked integer overflow
 * Concurrency support via an implementation of the [Actor model](http://en.wikipedia.org/wiki/Actor_model)
+* Pattern matching
 * Read-evaluate-print loop
 
 Llambda is implemented with a [Scala](http://www.scala-lang.org) frontend, [LLVM](http://llvm.org) backend and a Scheme and C++11 runtime.
