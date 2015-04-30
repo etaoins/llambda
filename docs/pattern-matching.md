@@ -67,9 +67,9 @@ The following code will return string description of some basic values.
 ```racket
 (match value
   [#f
-    "Boolean true"]
-  [#t
     "Boolean false"]
+  [#t
+    "Boolean true"]
   [[_ : <string>]
     "String"]
   [[_ : <symbol>]

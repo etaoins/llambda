@@ -147,7 +147,7 @@ For example, the following procedure will multiply any ``<number>`` value by 2
 Multiple type variables can appear in a type declaration. The following procedure swaps the car and cdr of a pair while preserving its type information
 
 ```racket
- (: swap-pair (All (A D) (Pairof A D) (Pairof D A)))
+(: swap-pair (All (A D) (Pairof A D) (Pairof D A)))
 (define (swap-pair p)
   (cons (cdr p) (car p)))
 ```
