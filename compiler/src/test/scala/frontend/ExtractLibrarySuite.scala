@@ -15,7 +15,7 @@ class ExtractLibrarySuite extends FunSuite with Inside {
     schemeDialect=dialect.Dialect.default
   )
 
-  val exampleName = List(StringComponent("example"), StringComponent("lib"))
+  val exampleName = List("example", "lib")
 
   def libraryFor(scheme : String) : Library = {
     val datum :: Nil = SchemeParser.parseStringAsData(scheme)

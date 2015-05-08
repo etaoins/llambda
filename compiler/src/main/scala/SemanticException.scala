@@ -22,7 +22,7 @@ class IncludeNotFoundException(located : SourceLocated, filename : String) exten
   val semanticErrorType = "include not found"
 }
 
-class LibraryNameMismatchException(located : SourceLocated, val loadedName : Seq[LibraryNameComponent], val definedName : List[LibraryNameComponent]) extends
+class LibraryNameMismatchException(located : SourceLocated, val loadedName : Seq[String], val definedName : List[String]) extends
   SemanticException(located, "(" + loadedName.mkString(" ") + ") doesn't match (" + definedName.mkString(" ") + ")") {
   val semanticErrorType = "library name mismatch"
 }

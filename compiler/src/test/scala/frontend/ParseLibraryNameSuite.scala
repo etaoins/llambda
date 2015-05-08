@@ -6,23 +6,27 @@ import llambda.compiler._
 
 import SchemeStringImplicits._
 
-class ParseLibraryNameSuite extends FunSuite { 
+class ParseLibraryNameSuite extends FunSuite {
   test("single string component") {
-    assert(ParseLibraryName(datum"(scheme)") === List(StringComponent("scheme")))
+    assert(ParseLibraryName(datum"(scheme)") === List("scheme"))
   }
-  
-  test("single integer component") {
-    assert(ParseLibraryName(datum"(1)") === List(IntegerComponent(1)))
+
+  test("positive integer component") {
+    assert(ParseLibraryName(datum"(1)") === List("1"))
   }
-  
+
+  test("zero integer component") {
+    assert(ParseLibraryName(datum"(0)") === List("0"))
+  }
+
   test("multiple string component") {
-    assert(ParseLibraryName(datum"(scheme base)") === List(StringComponent("scheme"), StringComponent("base")))
+    assert(ParseLibraryName(datum"(scheme base)") === List("scheme", "base"))
   }
-  
+
   test("mixed components") {
-    assert(ParseLibraryName(datum"(scheme 1)") === List(StringComponent("scheme"), IntegerComponent(1)))
+    assert(ParseLibraryName(datum"(scheme 1)") === List("scheme", "1"))
   }
-  
+
   test("no components failure") {
     intercept[InvalidLibraryNameException] {
       ParseLibraryName(datum"()")
@@ -32,12 +36,6 @@ class ParseLibraryNameSuite extends FunSuite {
   test("negative integer component failure") {
     intercept[InvalidLibraryNameException] {
       ParseLibraryName(datum"(test -1)")
-    }
-  }
-  
-  test("zero component failure") {
-    intercept[InvalidLibraryNameException] {
-      ParseLibraryName(datum"(test 0)")
     }
   }
 

@@ -12,7 +12,9 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
   private val loadedFiles = collection.mutable.Map.empty[String, Map[String, BoundValue]]
   private var featuresStorageLoc : Option[StorageLocation] = None
 
-  private def loadLibraryFile(filename : String, libraryName : Seq[LibraryNameComponent], loadLocation : SourceLocated)(implicit frontendConfig : FrontendConfig) : Map[String, BoundValue] = {
+  private def loadLibraryFile(
+      filename : String, libraryName : Seq[String], loadLocation : SourceLocated
+  )(implicit frontendConfig : FrontendConfig) : Map[String, BoundValue] = {
     implicit val includePath = frontendConfig.includePath
     val searchRoots = includePath.librarySearchRoots
 
@@ -32,7 +34,9 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
     library.exports
   }
 
-  private def loadLibraryFileOnce(filename : String, libraryName : Seq[LibraryNameComponent], loadLocation : SourceLocated)(implicit frontendConfig : FrontendConfig) : Map[String, BoundValue] = {
+  private def loadLibraryFileOnce(
+      filename : String, libraryName : Seq[String], loadLocation : SourceLocated
+  )(implicit frontendConfig : FrontendConfig) : Map[String, BoundValue] = {
     loadedFiles.getOrElse(filename, {
       val newBindings = loadLibraryFile(filename, libraryName, loadLocation)
       loadedFiles += (filename -> newBindings)
@@ -40,11 +44,13 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
     })
   }
 
-  private def builtinLibraryBindings(libraryName : Seq[LibraryNameComponent])(implicit frontendConfig : FrontendConfig) : Option[Map[String, BoundValue]] = libraryName match {
-    case List(StringComponent("llambda"), StringComponent("internal"), StringComponent("primitives")) =>
+  private def builtinLibraryBindings(
+      libraryName : Seq[String]
+  )(implicit frontendConfig : FrontendConfig) : Option[Map[String, BoundValue]] = libraryName match {
+    case List("llambda", "internal", "primitives") =>
       Some(Primitives.bindings)
-    
-    case List(StringComponent("llambda"), StringComponent("internal"), StringComponent("features")) =>
+
+    case List("llambda", "internal", "features") =>
       if (!featuresStorageLoc.isDefined) {
         // Create this on demand
         val storageLoc = new ReportProcedure("features")
@@ -56,8 +62,8 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
       Some(
         Map("features" -> featuresStorageLoc.get)
       )
-    
-    case List(StringComponent("llambda"), StringComponent("nfi")) =>
+
+    case List("llambda", "nfi") =>
       Some(
         // Our NFI types depend on our target platform
         IntrinsicTypes(targetPlatform).mapValues(BoundType.apply) +
@@ -79,28 +85,29 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
       None
   }
 
-  private def filenameForLibrary(libraryName : Seq[LibraryNameComponent], loadLocation : SourceLocated) : String = 
-    (libraryName map {
-      case StringComponent(str) => 
-        // These are reserved characters for POSIX paths
-        if (str.contains(0) || str.contains('/')) {
-          throw new DubiousLibraryNameComponentException(loadLocation, str)
-        }
-        else {
-          str
-        }
-      case IntegerComponent(int) => 
-        int.toString
-    }).mkString("/") + ".scm"
+  private def filenameForLibrary(libraryName : Seq[String], loadLocation : SourceLocated) : String = {
+    libraryName.foreach { str =>
+      // These are reserved characters for POSIX paths
+      if (str.contains(0) || str.contains('/')) {
+        throw new DubiousLibraryNameComponentException(loadLocation, str)
+      }
+    }
 
-  def load(libraryName : Seq[LibraryNameComponent], loadLocation : SourceLocated = NoSourceLocation)(implicit frontendConfig : FrontendConfig) : Map[String, BoundValue] =
+    libraryName.mkString("/") + ".scm"
+  }
+
+  def load(
+      libraryName : Seq[String], loadLocation : SourceLocated = NoSourceLocation
+  )(implicit frontendConfig : FrontendConfig) : Map[String, BoundValue] =
     builtinLibraryBindings(libraryName) getOrElse {
       // Load this as a file
       val filename = filenameForLibrary(libraryName, loadLocation)
       loadLibraryFileOnce(filename, libraryName, loadLocation)
     }
 
-  def exists(libraryName : Seq[LibraryNameComponent], loadLocation : SourceLocated = NoSourceLocation)(implicit frontendConfig : FrontendConfig) : Boolean = {
+  def exists(
+      libraryName : Seq[String], loadLocation : SourceLocated = NoSourceLocation
+  )(implicit frontendConfig : FrontendConfig) : Boolean = {
     implicit val includePath = frontendConfig.includePath
 
     if (builtinLibraryBindings(libraryName).isDefined) {
@@ -124,8 +131,8 @@ class LibraryLoader(targetPlatform : platform.TargetPlatform) {
   }
 
   def loadSchemeBase(implicit frontendConfig : FrontendConfig) =
-    load(List("scheme", "base").map(StringComponent(_)), NoSourceLocation)
+    load(List("scheme", "base"), NoSourceLocation)
 
-  def libraryExprs : List[et.Expr] = 
+  def libraryExprs : List[et.Expr] =
     exprBuffer.toList
 }

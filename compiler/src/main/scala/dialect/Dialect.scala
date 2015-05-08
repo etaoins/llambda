@@ -1,8 +1,6 @@
 package io.llambda.compiler.dialect
 import io.llambda
 
-import llambda.compiler.{LibraryNameComponent, StringComponent}
-
 /** Represents a Scheme language dialect */
 sealed abstract class Dialect {
   /** Human-readable name of the dialect */
@@ -25,7 +23,7 @@ sealed abstract class Dialect {
   def caseFoldPrograms : Boolean
 
   /** List of libraries to implicitly load in the main program */
-  def implicitLibraryNames : List[Seq[LibraryNameComponent]]
+  def implicitLibraryNames : List[Seq[String]]
 }
 
 /** R5RS compatibility mode */
@@ -36,7 +34,7 @@ object R5RS extends Dialect {
   val allowTopLevelRedefinition = true
   val caseFoldPrograms = true
   val implicitLibraryNames = List(
-    List("scheme", "r5rs").map(StringComponent(_))
+    List("scheme", "r5rs")
   )
 }
 

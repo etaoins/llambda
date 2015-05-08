@@ -56,9 +56,7 @@ class Evaluator(targetPlatform : platform.TargetPlatform, schemeDialect : dialec
     List("scheme", "write"),
     List("llambda", "internal", "repl"),
     List("llambda", "nfi")
-  ).map({ strings =>
-    strings.map(StringComponent(_))
-  }) ++ frontendConfig.schemeDialect.implicitLibraryNames
+  ) ++ frontendConfig.schemeDialect.implicitLibraryNames
 
   val initialBindings = initialLibraries.flatMap(loader.load(_))
 

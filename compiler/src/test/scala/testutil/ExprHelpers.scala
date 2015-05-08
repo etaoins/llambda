@@ -27,8 +27,8 @@ trait ExprHelpers extends FunSuite with OptionValues {
 
   val schemeBaseBindings = libraryLoader.loadSchemeBase(frontendConfig)
   def schemeBaseScope = new Scope(collection.mutable.Map(schemeBaseBindings.toSeq : _*))
-  
-  val typedLambdaBindings = libraryLoader.load(List("llambda", "typed").map(StringComponent(_)), NoSourceLocation)(frontendConfig)
+
+  val typedLambdaBindings = libraryLoader.load(List("llambda", "typed"), NoSourceLocation)(frontendConfig)
   def typedLambdaScope = new Scope(collection.mutable.Map((schemeBaseBindings ++ typedLambdaBindings).toSeq : _*))
 
   def exprFor(scheme : String)(implicit scope : Scope) = {

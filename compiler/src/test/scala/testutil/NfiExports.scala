@@ -13,7 +13,7 @@ object NfiExports {
       schemeDialect=dialect.Dialect.default
     )
 
-    val exports = libraryLoader.load(List(StringComponent("llambda"), StringComponent("nfi")))
+    val exports = libraryLoader.load(List("llambda", "nfi"))
 
     collection.mutable.Map(exports.toSeq : _*)
   }

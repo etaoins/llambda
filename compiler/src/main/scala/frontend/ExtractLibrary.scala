@@ -40,8 +40,7 @@ private[frontend] object ExtractLibrary {
     *                       if the library's defined name does not match
     */
   def apply(
-      datum : ast.Datum,
-      expectedName : Option[Seq[LibraryNameComponent]] = None
+      datum : ast.Datum, expectedName : Option[Seq[String]] = None
   )(implicit libraryLoader : LibraryLoader, frontendConfig : FrontendConfig) : Library = datum match {
     case ast.ProperList(ast.Symbol("define-library") :: libraryNameData :: decls) =>
       // Parse the library name

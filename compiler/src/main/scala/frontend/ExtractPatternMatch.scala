@@ -24,7 +24,7 @@ object ExtractPatternMatch {
     */
   private def expectedVarLoc(
       locName : String,
-      libraryName : Seq[LibraryNameComponent]= List(StringComponent("scheme"), StringComponent("base"))
+      libraryName : Seq[String]= List("scheme", "base")
   )(implicit context : FrontendContext) : StorageLocation = {
     val bindings = context.libraryLoader.load(libraryName, NoSourceLocation)(context.config)
 
@@ -256,7 +256,7 @@ object ExtractPatternMatch {
     * This signals a match-error with the match value as evidence
     */
   private def matchErrorClause(implicit context : FrontendContext) : et.Lambda = {
-    val errorProcLoc = expectedVarLoc("raise-match-error", List("llambda", "error").map(StringComponent(_)))
+    val errorProcLoc = expectedVarLoc("raise-match-error", List("llambda", "error"))
     val evidenceLoc = new StorageLocation("<evidence>")
 
     val bodyExpr = et.Apply(
