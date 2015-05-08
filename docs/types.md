@@ -152,4 +152,42 @@ Multiple type variables can appear in a type declaration. The following procedur
   (cons (cdr p) (car p)))
 ```
 
+Record Types
+------------
 
+Llambda extends the record types in R7RS to support various typing features. This allows them to be used similarly to algebraic data types in other functional languages, especially when combined with [pattern matching](pattern-matching.md).
+
+Every record type definition in Llambda introduces a distinct first class type bound to the first argument to ``(define-record-type)``. This can be used to refer to the record type anywhere a type is expected, such as type annotations.
+
+```racket
+(define-record-type <point> (point x y) point?
+  [x point-x]
+  [y point-y])
+
+(: add-points (-> <point> <point> <point>))
+(define (add-points first second)
+  (point
+    (+ (point-x first) (point-x second))
+    (+ (point-y first) (point-y second))))
+```
+
+Typed fields allow record type definitions to specify any field's type using type annotation syntax on the field's name. This can have benefits for type safety, self-documentation and performance. As the default field initialiser is ``<unit>`` fields with types not including ``<unit>`` must be explicitly initialised by appearing in the constructor.
+
+
+```racket
+(define-record-type <file-position> (file-position filename line column) file-position?
+  [[filename : <string>] file-position-filename]
+  [[line : <exact-integer>] file-position-line]
+  [[column : <exact-intger>] file-position-column])
+```
+
+Record type inheritance allows a record type to inherit the fields of another. A child record type instance can be used whenever an instance of the parent type is expected. Inheritance is specified providing a parent record type name as an additional argument after the child record type's name. Fields in any inherited record types can be initialised by specifying their field name in the child record type's constructor.
+
+```racket
+(define-record-type <point> (point x y) point?
+  [[x : <flonum>] point-x]
+  [[y : <flonum>] point-y])
+
+(define-record-type <point-3d> <point> (point-3d x y z) point-3d?
+  [[z : <flonum>] point-z])
+```
